@@ -9,7 +9,7 @@ from pydantic.error_wrappers import ValidationError
 from gammapy.analysis import Analysis, AnalysisConfig
 from gammapy.datasets import MapDataset, SpectrumDatasetOnOff
 from gammapy.maps import WcsGeom, WcsNDMap
-from gammapy.modeling.models import Models
+from gammapy.modeling.models import DatasetModels
 from gammapy.utils.testing import requires_data, requires_dependency
 
 CONFIG_PATH = Path(__file__).resolve().parent / ".." / "config"
@@ -138,14 +138,14 @@ def test_set_models():
     analysis.get_datasets()
     models_str = Path(MODEL_FILE).read_text()
     analysis.set_models(models=models_str)
-    assert isinstance(analysis.models, Models)
+    assert isinstance(analysis.models, DatasetModels)
     assert len(analysis.models) == 2
     assert  analysis.models.names == ['source', 'stacked-bkg']
     with pytest.raises(TypeError):
         analysis.set_models(0)
     
     new_source = analysis.models["source"].copy(name="source2")
-    analysis.set_models(models=new_source, extend=False)
+    analysis.set_models(models=[new_source], extend=False)
     assert len(analysis.models) == 2
     assert  analysis.models.names == ['source2', 'stacked-bkg']
 

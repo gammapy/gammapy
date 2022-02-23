@@ -24,7 +24,7 @@ from gammapy.makers import (
 )
 from gammapy.maps import Map, MapAxis, RegionGeom, WcsGeom
 from gammapy.modeling import Fit
-from gammapy.modeling.models import FoVBackgroundModel, Models
+from gammapy.modeling.models import FoVBackgroundModel, Models, DatasetModels
 from gammapy.utils.pbar import progress_bar
 from gammapy.utils.scripts import make_path
 
@@ -59,6 +59,8 @@ class Analysis:
 
     @property
     def models(self):
+        if not self.datasets:
+            raise RuntimeError("No datasets set.")
         return self.datasets.models
     
     @models.setter
@@ -182,20 +184,26 @@ class Analysis:
         log.info("Reading model.")
         if isinstance(models, str):
             models = Models.from_yaml(models)
+        elif isinstance(models, Models):
+            pass
+        elif isinstance(models, DatasetModels) or isinstance(models, list):
+            models = Models(models)
         else:
             raise TypeError(f"Invalid type: {models!r}")
 
         if extend:
             models.extend(self.datasets.models)
 
+        self.datasets.models = models
+
         if self.config.datasets.type == "3d":
+            bkg_models = []
             for dataset in self.datasets:
                 if dataset.background_model is None:
-                    bkg_model = FoVBackgroundModel(dataset_name=dataset.name)
-
-                models.append(bkg_model)
-
-        self.datasets.models = models
+                   bkg_models.append(FoVBackgroundModel(dataset_name=dataset.name))
+            if bkg_models:
+                models.extend(bkg_models)
+                self.datasets.models = models
 
         log.info(models)
 
