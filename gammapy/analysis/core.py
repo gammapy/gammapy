@@ -53,10 +53,17 @@ class Analysis:
         self.datastore = None
         self.observations = None
         self.datasets = None
-        self.models = None
         self.fit = Fit()
         self.fit_result = None
         self.flux_points = None
+
+    @property
+    def models(self):
+        return self.datasets.models
+    
+    @models.setter
+    def models(self, models):
+        self.set_models(models, extend=False)
 
     @property
     def config(self):
@@ -174,25 +181,23 @@ class Analysis:
 
         log.info("Reading model.")
         if isinstance(models, str):
-            self.models = Models.from_yaml(models)
-        elif isinstance(models, Models):
-            self.models = models
+            models = Models.from_yaml(models)
         else:
             raise TypeError(f"Invalid type: {models!r}")
 
         if extend:
-            self.models.extend(self.datasets.models)
+            models.extend(self.datasets.models)
 
         if self.config.datasets.type == "3d":
             for dataset in self.datasets:
                 if dataset.background_model is None:
                     bkg_model = FoVBackgroundModel(dataset_name=dataset.name)
 
-                self.models.append(bkg_model)
+                models.append(bkg_model)
 
-        self.datasets.models = self.models
+        self.datasets.models = models
 
-        log.info(self.models)
+        log.info(models)
 
     def read_models(self, filename=None, extend=True):
         """Read models from YAML file.
@@ -263,7 +268,7 @@ class Analysis:
         config = self.config
         if filename is None:
             filename = self.config.general.datasets_file
-        else: 
+        else:
             config.general.datasets_file = filename
             self.update_config(config)
         if filename_models is None:

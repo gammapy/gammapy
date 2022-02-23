@@ -132,15 +132,22 @@ def test_get_observations_missing_irf():
 
 @requires_data()
 def test_set_models():
-    config = get_example_config("1d")
+    config = get_example_config("3d")
     analysis = Analysis(config)
     analysis.get_observations()
     analysis.get_datasets()
     models_str = Path(MODEL_FILE).read_text()
     analysis.set_models(models=models_str)
     assert isinstance(analysis.models, Models)
+    assert len(analysis.models) == 2
+    assert  analysis.models.names == ['source', 'stacked-bkg']
     with pytest.raises(TypeError):
         analysis.set_models(0)
+    
+    new_source = analysis.models["source"].copy(name="source2")
+    analysis.set_models(models=new_source, extend=False)
+    assert len(analysis.models) == 2
+    assert  analysis.models.names == ['source2', 'stacked-bkg']
 
 
 @requires_dependency("iminuit")
@@ -426,3 +433,26 @@ def test_usage_errors():
         analysis.get_flux_points()
     with pytest.raises(ValidationError):
         analysis.config.datasets.type = "None"
+        
+@requires_data()
+def test_datasets_io(tmpdir):
+    config = get_example_config("3d")
+    analysis = Analysis(config)
+    analysis.get_observations()
+    analysis.get_datasets()
+    models_str = Path(MODEL_FILE).read_text()
+    analysis.set_models(models=models_str)
+
+    filename = tmpdir / "datasets.yaml"
+    filename_models = tmpdir / "models.yaml"
+
+    analysis.write_datasets(filename, filename_models)
+    assert str(analysis.config.general.datasets_file) == str(filename)
+    assert str(analysis.config.general.models_file) == str(filename_models)
+
+    analysis = Analysis(config)
+    analysis.read_datasets(filename, filename_models)
+    assert str(analysis.config.general.datasets_file) == str(filename)
+    assert str(analysis.config.general.models_file) == str(filename_models)
+    assert len(analysis.datasets.models) == 2
+    assert  analysis.models.names == ['source', 'stacked-bkg']
