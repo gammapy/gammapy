@@ -223,8 +223,7 @@ class Analysis:
             models = Models.read(filename)
             self.set_models(models, extend)
             log.info(f"Models loaded from {filename}.")
-        else:
-            self.models = None
+
 
     def read_datasets(self, filename=None, filename_models=None):
         """Read datasets from YAML file.

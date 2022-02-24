@@ -438,10 +438,14 @@ def test_usage_errors():
 def test_datasets_io(tmpdir):
     config = get_example_config("3d")
     analysis = Analysis(config)
+    
+    analysis.read_datasets()
+    assert analysis.datasets == None
+    
     analysis.get_observations()
     analysis.get_datasets()
     models_str = Path(MODEL_FILE).read_text()
-    analysis.set_models(models=models_str)
+    analysis.models = models_str
 
     filename = tmpdir / "datasets.yaml"
     filename_models = tmpdir / "models.yaml"
