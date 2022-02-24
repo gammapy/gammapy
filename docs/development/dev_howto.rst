@@ -18,11 +18,11 @@ You should import from the "end-user namespaces", not the "implementation module
 
 .. testcode::
 
-   from gammapy.data import EventList  # good
+   from gammapy.data import EventList # good
    from gammapy.data.event_list import EventList # bad
 
-   from gammapy.stats import cash  # good
-   from gammapy.stats.fit_statistics import cash  # bad
+   from gammapy.stats import cash # good
+   from gammapy.stats.fit_statistics import cash # bad
 
 The end-user namespace is the location that is shown in the API docs, i.e. you can
 use the Sphinx full-text search to quickly find it.
@@ -33,7 +33,7 @@ names, that would be too much to remember.
 
 The only reason to import from a module directly is if you need to access a private
 function, class or variable (something that is not listed in ``__all__`` and thus not
-imported into the end-user namespace.
+imported into the end-user namespace).
 
 Note that this means that in the definition of an "end-user namespace", e.g. in the
 ``gammapy/data/__init__.py`` file, the imports have to be sorted in a way such that
@@ -43,8 +43,8 @@ Functions returning several values
 ----------------------------------
 
 It is up to the developer to decide how to return multiple things from functions and methods.
-For up to three things, if callers usually will want access to several things,
-using a ``tuple`` or ``collections.namedtuple`` is OK.
+For up to three things, if callers will usually want access to several things,
+using a ``tuple`` or ``collections.namedtuple`` is ok.
 For three or more things, using a Python ``dict`` instead should be preferred.
 
 Skip unit tests for some Astropy versions
@@ -91,7 +91,7 @@ to assert on the unit and value separately:
     assert actual.unit == 'deg'
     assert_allclose(actual.value, 0.33333333)
 
-Note that  `~astropy.units.Quantity` can be compared to unit strings directly.
+Note that `~astropy.units.Quantity` can be compared to unit strings directly.
 Also note that the default for ``assert_allclose`` is ``atol=0`` and ``rtol=1e-7``,
 so when using it, you have to give the reference value with a precision of
 ``rtol ~ 1e-8``, i.e. 8 digits to be on the safe side (or pass a lower ``rtol`` or set an ``atol``).
@@ -122,7 +122,7 @@ rendering of the plot, which can raise errors as well. Here is a short example:
             plt.plot([1., 2., 3., 4., 5.])
 
 With this approach we make sure that the plotting code is at least executed once
-and runs completely (up to saving the plot to file) without errors. In future we
+and runs completely (up to saving the plot to file) without errors. In future, we
 will maybe change to something like https://github.com/matplotlib/pytest-mpl
 to ensure that correct plots are produced.
 
@@ -131,7 +131,7 @@ Making a pull request with new or modified datasets
 
 Datasets used in tests are hosted in the `gammapy-data <https://github.com/gammapy/gammapy-data>`__ GitHub
 repository. It is recommended that developers have `$GAMMAPY_DATA` environment variable pointing to the local folder
-where they have fetched the `gammapy-data <https://github.com/gammapy/gammapy-data>`__  GitHub repository,
+where they have fetched the `gammapy-data <https://github.com/gammapy/gammapy-data>`__ GitHub repository,
 so they can push and pull eventual modification of its content.
 
 Making a pull request which skips GitHub Actions
@@ -252,15 +252,15 @@ You should use ``origin=0`` when calling any of the pixel to world or world to p
 Performance
 -----------
 
-Currently Gammapy is 99% Python and scientific Python code. Most memory used is in Numpy arrays,
+Currently, Gammapy is 99% Python and scientific Python code. Most memory used is in Numpy arrays,
 since most Gammapy and Astropy objects hold the data in Numpy arrays, and there's some fraction
 of memory in Python objects. We have 1% of Cython code, although it's not really needed in those
 cases, we could rewrite that using just Numpy.
 
 In the future, we plan to benchmark and improve the performance both of our existing code
 (e.g. avoid temp copies of Numpy arrays, better algorithms), and also to introduce parallel
-execution that can take advantage of multi-core CPUs (and maybe even multiple machines).
-There's many options how to do that, e.g. using Numba, Cython, Dask, Ray, multiprocessing
+execution that can take advantage of multicore CPUs (and maybe even multiple machines).
+There are many options how to do that, e.g. using Numba, Cython, Dask, Ray, multiprocessing
 to name a few. Also, parallelism can be introduced for different tasks and at different levels,
 e.g. during data reduction, or at the dataset or model component or at the function level.
 This is planned for 2020, but really prototyping and pull requests on performance are welcome
@@ -273,7 +273,7 @@ Caplog fixture
 
 Inside tests, we have the possibility to change the log level for the captured 
 log messages using the ``caplog`` fixture which allow you to access and control log capturing.
-When logging is part of your function and you want to verify the right message is logged 
+When logging is part of your function, and you want to verify the right message is logged 
 with the expected logging level:
 
 .. testcode::
@@ -318,7 +318,7 @@ to the function you're writing):
 
 This allows callers flexible control over which random number generator
 (i.e. which `numpy.random.RandomState` instance) is used and how it's initialised.
-The default ``random_state='random-seed'`` means "create a new RNG, seed it in a random way",
+The default ``random_state='random-seed'`` means "create a new RNG, seed it randomly",
 i.e. different random numbers will be generated on every call.
 
 There's a few ways to get deterministic results from a script that call
@@ -438,7 +438,7 @@ places) are GPL3 or LGPL licensed.
 
 Now the GPL3 and LGPL license contains clauses that other package that copy or modify it must be released under
 the same license.
-We take the standpoint that Gammapy is independent from these libraries, because we don't copy or modify them.
+We take the standpoint that Gammapy is independent of these libraries, because we don't copy or modify them.
 This is a common standpoint, e.g. ``astropy.wcs`` is BSD licensed, but uses the LGPL-licensed WCSLib.
 
 Note that if you distribute Gammapy together with one of the GPL dependencies,
@@ -448,7 +448,7 @@ Changelog
 ---------
 
 In Gammapy we keep a :ref:`changelog` with a list of pull requests.
-We sort by release and within the release by PR number (largest first).
+We sort by release and within the release by PR number (the largest first).
 
 As explained in the :ref:`astropy:changelog-format` section in the Astropy docs,
 there are (at least) two approaches for adding to the changelog, each with pros
@@ -474,7 +474,7 @@ separately as a dependency.
 
 For ``gammapy.extern`` we don't generate Sphinx API docs.
 To see what is there, check out the ``gammapy/extern`` directory locally or on
-`Github <https://github.com/gammapy/gammapy/tree/master/gammapy/extern>`__.
+`GitHub <https://github.com/gammapy/gammapy/tree/master/gammapy/extern>`__.
 Notes on the bundled files are kept in the docstring of
 `gammapy/extern/__init__.py <https://github.com/gammapy/gammapy/blob/master/gammapy/extern/__init__.py>`__.
 
@@ -486,7 +486,7 @@ data grids, or to reproject diffuse models on data grids.
 
 The default interpolator we use is `scipy.interpolate.RegularGridInterpolator` because it's fast and robust
 (more fancy interpolation schemes can lead to unstable response in some cases, so more careful checking
-across all of parameter space would be needed).
+across all parameter space would be needed).
 
 You should use this pattern to implement a function of method that does interpolation:
 
@@ -507,14 +507,14 @@ You should use this pattern to implement a function of method that does interpol
         interpolator = RegularGridInterpolator(..., **interp_kwargs)
 
 Since the other defaults are ``method='linear'`` and ``fill_value=nan``, this implies that linear interpolation
-is used and `NaN`_ values are returned for points outside of the interpolation domain.
+is used and `NaN`_ values are returned for points outside the interpolation domain.
 This is a compromise between the alternatives:
 
 * ``bounds_error=True`` -- Very "safe", refuse to return results for any points if one of the points is outside the valid domain.
   Can be annoying for the caller to not get any result.
 * ``bounds_error=False, fill_value=nan`` -- Medium "safe". Always return a result, but put NaN values to make it easy
   for analysers to spot that there's an issue in their results (if pixels with NaN are used, that will usually lead
-  to NaN values in high level analysis results.
+  to NaN values in high level analysis results).
 * ``bounds_error=False, fill_value=0`` -- Less "safe".
   Extrapolate with zero.
   Can be very convenient for the caller to avoid dealing with NaN,
@@ -671,9 +671,9 @@ nice printed version of the string instead of ``\n``::
 
     p = Person()
     p.info()
-    "Hi, my name is Anna and I'm 8 years old.\nI live in Heidelberg"
+    "Hi, my name is Anna, and I'm 8 years old.\nI live in Heidelberg"
     print(p.info())
-    Hi, my name is Anna and I'm 8 years old.
+    Hi, my name is Anna, and I'm 8 years old.
     I live in Heidelberg
 
 To make ``info`` print by default, and be re-usable from ``__str__`` and make it
@@ -706,7 +706,7 @@ tested. E.g. a ``NameError`` or ``AttributeError`` because some attribute name
 changed, and updating the repr / str / info was forgotten. So tests should be added
 that execute these methods once. You can write the reference string in the output,
 but that is not required (and actually very hard for cases where you have floats
-or Numpy arrays or str, where formatting differs across Python or Numpy version.
+or Numpy arrays or str, where formatting differs across Python or Numpy version).
 Example what to put as a test::
 
     def test_person_txt():
