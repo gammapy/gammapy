@@ -90,6 +90,34 @@ class AccordionHeader(Directive):
         )
         return c.run()
 
+
+class AccordionFooter(Directive):
+    """
+    Inserts HTML code to close an accordion box in the How To.
+    """
+
+    def run(self):
+        raw = """
+                    </div>
+                </div>
+            </div>
+        </div>        
+        """
+        include_lines = raw.splitlines()
+        c = Raw(
+            self.name,
+            ["html"],
+            self.options,
+            include_lines,  # content
+            self.lineno,
+            self.content_offset,
+            self.block_text,
+            self.state,
+            self.state_machine,
+        )
+        return c.run()
+
+
 class HowtoHLI(Include):
     """Directive to insert how-to for high-level interface"""
 
@@ -155,3 +183,4 @@ def gammapy_sphinx_ext_activate():
     register_directive("gp-image", DocsImage)
     register_directive("gp-howto-hli", HowtoHLI)
     register_directive("accordion-header", AccordionHeader)
+    register_directive("accordion-footer", AccordionFooter)
