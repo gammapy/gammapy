@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Session class driving the high level interface API"""
-import os
 import logging
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
