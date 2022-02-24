@@ -148,32 +148,10 @@ take the difference. Note that in Gammapy, the fit statistic is defined as ``S =
 
 .. accordion-footer::
 
-
-
-..
-    box
-
-.. raw:: html
-
-    <div id="accordion" class="shadow tutorial-accordion">
-        <div class="card tutorial-card">
-            <div class="card-header collapsed card-link" data-toggle="collapse" data-target="#collapseEleven">
-                <div class="d-flex flex-row tutorial-card-header-1">
-                    <div class="d-flex flex-row tutorial-card-header-2">
-                        <button class="btn btn-dark btn-sm"></button>
-                        Compute cumulative significance
-                    </div>
-                    <span class="badge gs-badge-link">
-
-`Straight to tutorial... <../tutorials/analysis/1D/spectral_analysis.html#Source-statistic>`__
-
-.. raw:: html
-
-                    </span>
-                </div>
-            </div>
-            <div id="collapseEleven" class="collapse" data-parent="#accordion">
-                <div class="card-body">
+.. accordion-header:: 
+    :id: collapseEleven
+    :title: Compute cumulative significance
+    :link: ../tutorials/analysis/1D/spectral_analysis.html#Source-statistic
 
 A classical plot in gamma-ray astronomy is the cumulative significance of a
 source as a function of observing time. In Gammapy, you can produce it with 1D
@@ -181,46 +159,12 @@ source as a function of observing time. In Gammapy, you can produce it with 1D
 access the total statistics with the ``info_table(cumulative=True)`` method of
 `~gammapy.datasets.Datasets`.
 
-.. raw:: html
+.. accordion-footer::
 
-                    <div class="d-flex flex-row">
-                        <span class="badge gs-badge-link">
-
-`To the spectral analysis tutorial... <../tutorials/analysis/1D/spectral_analysis.html#Source-statistic>`__
-
-.. raw:: html
-
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-..
-    box
-
-.. raw:: html
-
-    <div id="accordion" class="shadow tutorial-accordion">
-        <div class="card tutorial-card">
-            <div class="card-header collapsed card-link" data-toggle="collapse" data-target="#collapseTwelve">
-                <div class="d-flex flex-row tutorial-card-header-1">
-                    <div class="d-flex flex-row tutorial-card-header-2">
-                        <button class="btn btn-dark btn-sm"></button>
-                        Detect sources in a map
-                    </div>
-                    <span class="badge gs-badge-link">
-
-`Straight to tutorial... <../tutorials/analysis/2D/detect.html>`__
-
-.. raw:: html
-
-                    </span>
-                </div>
-            </div>
-            <div id="collapseTwelve" class="collapse" data-parent="#accordion">
-                <div class="card-body">
+.. accordion-header:: 
+    :id: collapseTwelve
+    :title: Detect sources in a map
+    :link: ../tutorials/analysis/2D/detect.html
 
 Gammapy provides methods to perform source detection in a 2D map. First step is
 to produce a significance map, i.e. a map giving the probability that the flux
@@ -230,39 +174,11 @@ used. A simple correlated Li & Ma significance can be used, in particular for
 ON-OFF datasets. The second step consists in applying a peak finer algorithm,
 such as `~gammapy.estimators.utils.find_peaks`.
 
-.. raw:: html
+.. accordion-footer::
 
-                    <div class="d-flex flex-row">
-                        <span class="badge gs-badge-link">
-
-`To the source detection tutorial... <../tutorials/analysis/2D/detect.html>`__
-
-.. raw:: html
-
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-..
-    box
-
-.. raw:: html
-
-    <div id="accordion" class="shadow tutorial-accordion">
-        <div class="card tutorial-card">
-            <div class="card-header collapsed card-link" data-toggle="collapse" data-target="#collapseThirteen">
-                <div class="d-flex flex-row tutorial-card-header-1">
-                    <div class="d-flex flex-row tutorial-card-header-2">
-                        <button class="btn btn-dark btn-sm"></button>
-                        Astrophysical source modeling
-                    </div>
-                </div>
-            </div>
-            <div id="collapseThirteen" class="collapse" data-parent="#accordion">
-                <div class="card-body">
+.. accordion-header:: 
+    :id: collapseThirteen
+    :title: Astrophysical source modeling
 
 It is possible to combine Gammapy with astrophysical modeling codes, if they
 provide a Python interface. Usually this requires some glue code to be written,
@@ -271,118 +187,30 @@ wrapper class around the Naima spectral model and radiation classes, which then
 allows modeling and fitting of Naima models within Gammapy (e.g. using CTA,
 H.E.S.S. or Fermi-LAT data).
 
-.. raw:: html
+.. accordion-footer::
 
-                </div>
-            </div>
-        </div>
-    </div>
-
-..
-    box
-
-.. raw:: html
-
-    <div id="accordion" class="shadow tutorial-accordion">
-        <div class="card tutorial-card">
-            <div class="card-header collapsed card-link" data-toggle="collapse" data-target="#collapseFourteen">
-                <div class="d-flex flex-row tutorial-card-header-1">
-                    <div class="d-flex flex-row tutorial-card-header-2">
-                        <button class="btn btn-dark btn-sm"></button>
-                        Implement a custom model
-                    </div>
-                    <span class="badge gs-badge-link">
-
-`Straight to tutorial... <../tutorials/api/models.html#Implementing-a-Custom-Model>`__
-
-.. raw:: html
-
-                    </span>
-                </div>
-            </div>
-            <div id="collapseFourteen" class="collapse" data-parent="#accordion">
-                <div class="card-body">
+.. accordion-header:: 
+    :id: collapseFourteen
+    :title: Implement a custom model
+    :link: ../tutorials/api/models.html#Implementing-a-Custom-Model
 
 Gammapy allows the flexibility of using user-defined models for analysis.
 
-.. raw:: html
+.. accordion-footer::
 
-                    <div class="d-flex flex-row">
-                        <span class="badge gs-badge-link">
-
-`To the models tutorial... <../tutorials/api/models.html#Implementing-a-Custom-Model>`__
-
-.. raw:: html
-
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-..
-    box
-
-.. raw:: html
-
-    <div id="accordion" class="shadow tutorial-accordion">
-        <div class="card tutorial-card">
-            <div class="card-header collapsed card-link" data-toggle="collapse" data-target="#collapseFifteen">
-                <div class="d-flex flex-row tutorial-card-header-1">
-                    <div class="d-flex flex-row tutorial-card-header-2">
-                        <button class="btn btn-dark btn-sm"></button>
-                        Energy dependent spatial models
-                    </div>
-                    <span class="badge gs-badge-link">
-
-`Straight to tutorial... <../tutorials/api/models.html#Models-with-energy-dependent-morphology>`__
-
-.. raw:: html
-
-                    </span>
-                </div>
-            </div>
-            <div id="collapseFifteen" class="collapse" data-parent="#accordion">
-                <div class="card-body">
+.. accordion-header:: 
+    :id: collapseFifteen
+    :title: Energy dependent spatial models
+    :link: ../tutorials/api/models.html#Models-with-energy-dependent-morphology
 
 While Gammapy does not ship energy dependent spatial models, it is possible to define
 such models within the modeling framework.
 
-.. raw:: html
+.. accordion-footer::
 
-                    <div class="d-flex flex-row">
-                        <span class="badge gs-badge-link">
-
-`To the models tutorial... <../tutorials/api/models.html#Models-with-Energy-dependent-morphology>`__
-
-.. raw:: html
-
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-..
-    box
-
-.. raw:: html
-
-    <div id="accordion" class="shadow tutorial-accordion">
-        <div class="card tutorial-card">
-            <div class="card-header collapsed card-link" data-toggle="collapse" data-target="#collapseSixteen">
-                <div class="d-flex flex-row tutorial-card-header-1">
-                    <div class="d-flex flex-row tutorial-card-header-2">
-                        <button class="btn btn-dark btn-sm"></button>
-                        Reduce memory budget for large datasets
-                    </div>
-                </div>
-            </div>
-            <div id="collapseSixteen" class="collapse" data-parent="#accordion">
-                <div class="card-body">
+.. accordion-header:: 
+    :id: collapseSixteen
+    :title: Reduce memory budget for large datasets
 
 When dealing with surveys and large sky regions, the amount of memory required might become
 problematic, in particular because of the default settings of the IRF maps stored in the
@@ -397,31 +225,11 @@ used to sample the PSF. This will reduce the quality of the PSF description.
 - If one or several IRFs are not required for the study at hand, it is possible not to build them
 by removing it from the list of options passed to the `~gammapy.makers.MapDatasetMaker`.
 
+.. accordion-footer::
 
-.. raw:: html
-
-                </div>
-            </div>
-        </div>
-    </div>
-
-..
-    box
-
-.. raw:: html
-
-    <div id="accordion" class="shadow tutorial-accordion">
-        <div class="card tutorial-card">
-            <div class="card-header collapsed card-link" data-toggle="collapse" data-target="#collapseSeventeen">
-                <div class="d-flex flex-row tutorial-card-header-1">
-                    <div class="d-flex flex-row tutorial-card-header-2">
-                        <button class="btn btn-dark btn-sm"></button>
-                        Copy part of a data store
-                    </div>
-                </div>
-            </div>
-            <div id="collapseSeventeen" class="collapse" data-parent="#accordion">
-                <div class="card-body">
+.. accordion-header:: 
+    :id: collapseSeventeen
+    :title: Copy part of a data store
 
 To share specific data from a database, it might be necessary to create a new data storage with
 a limited set of observations and summary files following the scheme described in gadf_.
@@ -429,76 +237,20 @@ This is possible with the method `~gammapy.data.DataStore.copy_obs` provided by 
 `~gammapy.data.DataStore`. It allows to copy individual observations files in a given directory
 and build the associated observation and HDU tables.
 
+.. accordion-footer::
 
-.. raw:: html
-
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-..
-    box
-
-.. raw:: html
-
-    <div id="accordion" class="shadow tutorial-accordion">
-        <div class="card tutorial-card">
-            <div class="card-header collapsed card-link" data-toggle="collapse" data-target="#collapseEighteen">
-                <div class="d-flex flex-row tutorial-card-header-1">
-                    <div class="d-flex flex-row tutorial-card-header-2">
-                        <button class="btn btn-dark btn-sm"></button>
-                        Interpolate onto a different geometry
-                    </div>
-                    <span class="badge gs-badge-link">
-
-`Straight to tutorial... <../tutorials/api/maps.html#Filling-maps-from-interpolation>`__
-
-.. raw:: html
-
-                    </span>
-                </div>
-            </div>
-            <div id="collapseEighteen" class="collapse" data-parent="#accordion">
-                <div class="card-body">
+.. accordion-header:: 
+    :id: collapseEighteen
+    :title: Interpolate onto a different geometry
+    :link: ../tutorials/api/maps.html#Filling-maps-from-interpolation
 
 To interpolate maps onto a different geometry use `~gammapy.maps.Map.interp_to_geom`.
 
-.. raw:: html
+.. accordion-footer::
 
-                    <div class="d-flex flex-row">
-                        <span class="badge gs-badge-link">
-
-`To the maps tutorial... <../tutorials/api/maps.html#Filling-maps-from-interpolation>`__
-
-.. raw:: html
-
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-..
-    box
-
-.. raw:: html
-
-    <div id="accordion" class="shadow tutorial-accordion">
-        <div class="card tutorial-card">
-            <div class="card-header collapsed card-link" data-toggle="collapse" data-target="#collapseNineteen">
-                <div class="d-flex flex-row tutorial-card-header-1">
-                    <div class="d-flex flex-row tutorial-card-header-2">
-                        <button class="btn btn-dark btn-sm"></button>
-                        Suppress warnings
-                    </div>
-                </div>
-            </div>
-            <div id="collapseNineteen" class="collapse" data-parent="#accordion">
-                <div class="card-body">
+.. accordion-header:: 
+    :id: collapseNineteen
+    :title: Suppress warnings
 
 In general it is not recommended to suppress warnings from code because they
 might point to potential issues or help debugging a non-working script. However
@@ -515,10 +267,4 @@ warning like so:
         warnings.simplefilter('ignore', VerifyWarning)
         # do stuff here
 
-
-.. raw:: html
-
-                </div>
-            </div>
-        </div>
-    </div>
+.. accordion-footer::

@@ -1,13 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import copy
 import logging
+
 import numpy as np
 from astropy.convolution import Tophat2DKernel
 from astropy.coordinates import Angle
+
 from gammapy.datasets import MapDataset, MapDatasetOnOff
 from gammapy.maps import Map
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from gammapy.stats import CashCountsStatistic, WStatCountsStatistic
+
 from ..core import Estimator
 from ..utils import estimate_exposure_reco_energy
 from .core import FluxMaps
@@ -103,8 +106,8 @@ class ExcessMapEstimator(Estimator):
         Spectral model used for the computation of the flux map.
         If None, a Power Law of index 2 is assumed (default).
 
-    Examples:
-    ---------
+    Examples
+    --------
     >>> from gammapy.datasets import MapDataset
     >>> from gammapy.estimators import ExcessMapEstimator
     >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
