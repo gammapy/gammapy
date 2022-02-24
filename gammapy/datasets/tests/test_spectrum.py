@@ -26,7 +26,7 @@ from gammapy.utils.testing import (
     requires_data,
     requires_dependency,
 )
-from gammapy.utils.time import time_ref_to_dict
+from gammapy.utils.time import reference_time_to_header
 
 
 def test_data_shape(spectrum_dataset):
@@ -767,7 +767,7 @@ def _read_hess_obs():
 
 
 def make_gti(times, time_ref="2010-01-01"):
-    meta = time_ref_to_dict(time_ref)
+    meta = reference_time_to_header(time_ref)
     table = Table(times, meta=meta)
     return GTI(table)
 

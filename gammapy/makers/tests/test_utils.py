@@ -23,7 +23,7 @@ from gammapy.makers.utils import (
 from gammapy.maps import HpxGeom, MapAxis, WcsGeom, WcsNDMap
 from gammapy.modeling.models import ConstantSpectralModel
 from gammapy.utils.testing import requires_data
-from gammapy.utils.time import time_ref_to_dict
+from gammapy.utils.time import reference_time_to_header
 
 
 @pytest.fixture(scope="session")
@@ -323,7 +323,7 @@ class TestTheta2Table:
                 DEADC=1,
             )
             events.meta.update(obs_info)
-            meta = time_ref_to_dict("2010-01-01")
+            meta = reference_time_to_header(Time("2010-01-01"))
             gti_table = Table({"START": [1], "STOP": [3]}, meta=meta)
             gti = GTI(gti_table)
 

@@ -20,6 +20,7 @@ from gammapy.modeling.models import (
 )
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
+from gammapy.utils.time import reference_time_to_header
 
 
 # TODO: add light-curve test case from scratch
@@ -38,11 +39,11 @@ def test_light_curve_str(light_curve):
 
 @requires_data()
 def test_light_curve_evaluate(light_curve):
-    t = Time(59500, format="mjd")
+    t = Time(59500, format="mjd", scale="tt")
     val = light_curve(t)
     assert_allclose(val, 0.015512, rtol=1e-5)
 
-    t = Time(46300, format="mjd")
+    t = Time(46300, format="mjd", scale="tt")
     val = light_curve.evaluate(t.mjd, ext=3)
     assert_allclose(val, 0.01551196, rtol=1e-5)
 
@@ -57,12 +58,16 @@ def ph_curve(x, amplitude=0.5, x0=0.01):
 
 
 def test_time_sampling(tmp_path):
+    t_ref = Time("2010-01-01T00:00:00", scale="tt")
+    t_min = Time("2010-01-01T00:00:00", scale="tt")
+    t_max = Time("2010-01-01T08:00:00", scale="tt")
+
     time = np.arange(0, 10, 0.06) * u.hour
 
     table = Table()
     table["TIME"] = time
     table["NORM"] = rate(time)
-    table.meta = dict(MJDREFI=55197.0, MJDREFF=0, TIMEUNIT="hour")
+    table.meta.update(reference_time_to_header(t_ref))
     temporal_model = LightCurveTemplateTemporalModel(table)
 
     filename = str(make_path(tmp_path / "tmp.fits"))
@@ -72,9 +77,6 @@ def test_time_sampling(tmp_path):
     assert model_read.filename == filename
     assert_allclose(model_read.table["TIME"].quantity.value, time.value)
 
-    t_ref = "2010-01-01T00:00:00"
-    t_min = "2010-01-01T00:00:00"
-    t_max = "2010-01-01T08:00:00"
 
     sampler = temporal_model.sample_time(
         n_events=2, t_min=t_min, t_max=t_max, random_state=0, t_delta="10 min"
@@ -87,7 +89,7 @@ def test_time_sampling(tmp_path):
     table = Table()
     table["TIME"] = time
     table["NORM"] = np.ones(len(time))
-    table.meta = dict(MJDREFI=55197.0, MJDREFF=0, TIMEUNIT="hour")
+    table.meta.update(reference_time_to_header(Time(55197.0, format='mjd', scale='tt')))
     temporal_model_uniform = LightCurveTemplateTemporalModel(table)
 
     sampler_uniform = temporal_model_uniform.sample_time(
@@ -120,16 +122,17 @@ def test_time_sampling(tmp_path):
 
 
 def test_lightcurve_temporal_model_integral():
+    t_ref = Time("2010-01-01T00:00:00", scale="tt")
     time = np.arange(0, 10, 0.06) * u.hour
     table = Table()
     table["TIME"] = time
     table["NORM"] = np.ones(len(time))
-    table.meta = dict(MJDREFI=55197.0, MJDREFF=0, TIMEUNIT="hour")
+    table.meta.update(reference_time_to_header(t_ref))
     temporal_model = LightCurveTemplateTemporalModel(table)
 
     start = [1, 3, 5] * u.hour
     stop = [2, 3.5, 6] * u.hour
-    gti = GTI.create(start, stop, reference_time=Time("2010-01-01T00:00:00"))
+    gti = GTI.create(start, stop, reference_time=t_ref)
 
     val = temporal_model.integral(gti.time_start, gti.time_stop)
     assert len(val) == 3

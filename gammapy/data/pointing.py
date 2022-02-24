@@ -6,7 +6,7 @@ from astropy.units import Quantity
 from astropy.utils import lazyproperty
 from gammapy.utils.fits import earth_location_from_dict
 from gammapy.utils.scripts import make_path
-from gammapy.utils.time import time_ref_from_dict
+from gammapy.utils.time import reference_time_from_header
 
 __all__ = ["FixedPointingInfo", "PointingInfo"]
 
@@ -87,7 +87,7 @@ class FixedPointingInfo:
     @lazyproperty
     def time_ref(self):
         """Time reference (`~astropy.time.Time`)."""
-        return time_ref_from_dict(self.meta)
+        return reference_time_from_header(self.meta)
 
     @lazyproperty
     def time_start(self):
@@ -234,7 +234,7 @@ class PointingInfo:
     @lazyproperty
     def time_ref(self):
         """Time reference (`~astropy.time.Time`)."""
-        return time_ref_from_dict(self.table.meta)
+        return reference_time_from_header(self.table.meta)
 
     @lazyproperty
     def duration(self):

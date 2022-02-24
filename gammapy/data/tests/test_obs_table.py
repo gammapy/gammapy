@@ -7,7 +7,11 @@ from gammapy.data import observatory_locations
 from gammapy.data.obs_table import ObservationTable, ObservationTableChecker
 from gammapy.utils.random import get_random_state, sample_sphere
 from gammapy.utils.testing import requires_data
-from gammapy.utils.time import time_ref_from_dict, time_relative_to_ref
+from gammapy.utils.time import (
+    reference_time_from_header,
+    time_relative_to_ref,
+    reference_time_to_header,
+)
 
 
 def make_test_observation_table(
@@ -70,22 +74,19 @@ def make_test_observation_table(
 
     # build a time reference as the start of 2010
     dateref = Time("2010-01-01T00:00:00")
-    dateref_mjd_fra, dateref_mjd_int = np.modf(dateref.mjd)
 
     # define table header
     obs_table.meta["OBSERVATORY_NAME"] = observatory_name
-    obs_table.meta["MJDREFI"] = dateref_mjd_int
-    obs_table.meta["MJDREFF"] = dateref_mjd_fra
-    obs_table.meta["TIMESYS"] = "TT"
+    obs_table.meta.update(reference_time_to_header(dateref))
     obs_table.meta["TIMEUNIT"] = "s"
     obs_table.meta["TIMEREF"] = "LOCAL"
+
     if use_abs_time:
         # show the observation times in UTC
         obs_table.meta["TIME_FORMAT"] = "absolute"
     else:
         # show the observation times in seconds after the reference
         obs_table.meta["TIME_FORMAT"] = "relative"
-    header = obs_table.meta
 
     # obs id
     obs_id = np.arange(n_obs_start, n_obs_start + n_obs)
@@ -115,7 +116,7 @@ def make_test_observation_table(
     # check if time interval selected is more than 1 day
     if (dateend - datestart).jd > 1.0:
         # keep only the integer part (i.e. the day, not the fraction of the day)
-        time_start_f, time_start_i = np.modf(time_start.mjd)
+        _, time_start_i = np.modf(time_start.mjd)
         time_start = Time(time_start_i, format="mjd", scale="utc")
 
         # random generation of night hours: 6 h (from 22 h to 4 h), leaving 1/2 h
@@ -135,9 +136,7 @@ def make_test_observation_table(
         time_start = Time(time_start.isot)
     else:
         # show the observation times in seconds after the reference
-        time_start = time_relative_to_ref(time_start, header)
-        # converting to quantity (better treatment of units)
-        time_start = Quantity(time_start.sec, "second")
+        time_start = time_relative_to_ref(time_start, dateref)
 
     obs_table["TSTART"] = time_start
 
@@ -179,7 +178,7 @@ def make_test_observation_table(
         obstime = Time(obs_table["TSTART"])
         obstime += TimeDelta(obs_table["ONTIME"]) / 2.0
     else:
-        obstime = time_ref_from_dict(obs_table.meta)
+        obstime = reference_time_from_header(obs_table.meta)
         obstime += TimeDelta(obs_table["TSTART"])
         obstime += TimeDelta(obs_table["ONTIME"]) / 2.0
     location = observatory_locations[observatory_name]

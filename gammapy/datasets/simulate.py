@@ -9,6 +9,7 @@ from gammapy.data import EventList, observatory_locations
 from gammapy.maps import MapCoord
 from gammapy.modeling.models import ConstantTemporalModel
 from gammapy.utils.random import get_random_state
+from gammapy.utils.time import reference_time_to_header, time_relative_to_ref
 
 __all__ = ["MapDatasetEventSampler"]
 
@@ -49,7 +50,7 @@ class MapDatasetEventSampler:
             t_max=time_stop,
             random_state=self.random_state,
         )
-        table["TIME"] = u.Quantity(((time.mjd - time_ref.mjd) * u.day).to(u.s)).to("s")
+        table["TIME"] = time_relative_to_ref(time, time_ref)
         return table
 
     def sample_sources(self, dataset):
@@ -231,14 +232,11 @@ class MapDatasetEventSampler:
 
         meta["OBS_ID"] = observation.obs_id
 
-        meta["TSTART"] = (
-            ((observation.tstart.mjd - dataset.gti.time_ref.mjd) * u.day).to(u.s).value
-        )
-        meta["TSTOP"] = (
-            ((observation.tstop.mjd - dataset.gti.time_ref.mjd) * u.day).to(u.s).value
-        )
-        meta["ONTIME"] = observation.observation_time_duration.to("s").value
-        meta["LIVETIME"] = observation.observation_live_time_duration.to("s").value
+        time_ref = dataset.gti.time_ref
+        meta["TSTART"] = time_relative_to_ref(observation.tstart, time_ref).to_value(u.s)
+        meta["TSTOP"] = time_relative_to_ref(observation.tstop, time_ref).to_value(u.s)
+        meta["ONTIME"] = observation.observation_time_duration.to_value(u.s)
+        meta["LIVETIME"] = observation.observation_live_time_duration.to_value(u.s)
         meta["DEADC"] = 1 - observation.observation_dead_time_fraction
 
         meta["RA_PNT"] = observation.pointing_radec.icrs.ra.deg
@@ -282,11 +280,9 @@ class MapDatasetEventSampler:
             meta["RA_OBJ"] = model.position.icrs.ra.deg
             meta["DEC_OBJ"] = model.position.icrs.dec.deg
 
-        meta["TELAPSE"] = dataset.gti.time_sum.to("s").value
-        meta["MJDREFI"] = int(dataset.gti.time_ref.mjd)
-        meta["MJDREFF"] = dataset.gti.time_ref.mjd % 1
+        meta["TELAPSE"] = dataset.gti.time_sum.to_value(u.s)
+        meta.update(reference_time_to_header(dataset.gti.time_ref))
         meta["TIMEUNIT"] = "s"
-        meta["TIMESYS"] = dataset.gti.time_ref.scale
         meta["TIMEREF"] = "LOCAL"
         meta["DATE-OBS"] = dataset.gti.time_start.isot[0][0:10]
         meta["DATE-END"] = dataset.gti.time_stop.isot[0][0:10]

@@ -8,8 +8,8 @@ from astropy.time import Time
 from astropy.units import Quantity
 from gammapy.utils.scripts import make_path
 from gammapy.utils.time import (
-    time_ref_from_dict,
-    time_ref_to_dict,
+    reference_time_from_header,
+    reference_time_to_header,
     time_relative_to_ref,
 )
 
@@ -80,7 +80,7 @@ class GTI:
         start = Quantity(start, ndmin=1)
         stop = Quantity(stop, ndmin=1)
         reference_time = Time(reference_time)
-        meta = time_ref_to_dict(reference_time)
+        meta = reference_time_to_header(reference_time)
         table = Table({"START": start.to("s"), "STOP": stop.to("s")}, meta=meta)
         return cls(table)
 
@@ -132,7 +132,7 @@ class GTI:
     @property
     def time_ref(self):
         """Time reference (`~astropy.time.Time`)."""
-        return time_ref_from_dict(self.table.meta)
+        return reference_time_from_header(self.table.meta)
 
     @property
     def time_sum(self):
@@ -178,7 +178,7 @@ class GTI:
         reference_time = Time(reference_time)
         start = Time([_[0] for _ in time_intervals]) - reference_time
         stop = Time([_[1] for _ in time_intervals]) - reference_time
-        meta = time_ref_to_dict(reference_time)
+        meta = reference_time_to_header(reference_time)
         table = Table({"START": start.to("s"), "STOP": stop.to("s")}, meta=meta)
         return cls(table=table)
 
@@ -201,8 +201,8 @@ class GTI:
         gti_within = self.table[mask]
 
         # crop the GTIs
-        start_met = time_relative_to_ref(time_interval[0], self.table.meta)
-        stop_met = time_relative_to_ref(time_interval[1], self.table.meta)
+        start_met = time_relative_to_ref(time_interval[0], self.time_ref)
+        stop_met = time_relative_to_ref(time_interval[1], self.time_ref)
         np.clip(
             gti_within["START"],
             start_met.value,

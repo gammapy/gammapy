@@ -279,7 +279,7 @@ def test_mde_run(dataset, models):
     assert_allclose(meta["MJDREFI"], 51544)
     assert_allclose(meta["MJDREFF"], 0.0007428703684126958)
     assert meta["TIMEUNIT"] == "s"
-    assert meta["TIMESYS"] == "tt"
+    assert meta["TIMESYS"] == "TT"
     assert meta["TIMEREF"] == "LOCAL"
     assert meta["DATE-OBS"] == "2000-01-01"
     assert meta["DATE-END"] == "2000-01-01"

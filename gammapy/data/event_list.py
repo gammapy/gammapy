@@ -13,7 +13,7 @@ from gammapy.maps import MapAxis, MapCoord, RegionGeom, WcsNDMap
 from gammapy.utils.fits import earth_location_from_dict
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
-from gammapy.utils.time import time_ref_from_dict
+from gammapy.utils.time import reference_time_from_header, absolute_time
 from .gti import GTI
 
 __all__ = ["EventList"]
@@ -214,7 +214,7 @@ class EventList:
     @property
     def time_ref(self):
         """Time reference (`~astropy.time.Time`)."""
-        return time_ref_from_dict(self.table.meta)
+        return reference_time_from_header(self.table.meta)
 
     @property
     def time(self):
@@ -227,17 +227,23 @@ class EventList:
         when e.g. adding them to the reference time.
         """
         met = u.Quantity(self.table["TIME"].astype("float64"), "second")
-        return self.time_ref + met
+        return absolute_time(met, self.time_ref)
 
     @property
     def observation_time_start(self):
         """Observation start time (`~astropy.time.Time`)."""
-        return self.time_ref + u.Quantity(self.table.meta["TSTART"], "second")
+        return absolute_time(
+            u.Quantity(self.table.meta["TSTART"], "second"),
+            self.time_ref,
+        )
 
     @property
     def observation_time_stop(self):
         """Observation stop time (`~astropy.time.Time`)."""
-        return self.time_ref + u.Quantity(self.table.meta["TSTOP"], "second")
+        return absolute_time(
+            u.Quantity(self.table.meta["TSTOP"], "second"),
+            self.time_ref,
+        )
 
     @property
     def radec(self):

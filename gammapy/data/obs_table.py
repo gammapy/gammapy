@@ -8,7 +8,7 @@ from astropy.utils import lazyproperty
 from gammapy.utils.regions import SphericalCircleSkyRegion
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
-from gammapy.utils.time import time_ref_from_dict
+from gammapy.utils.time import reference_time_from_header
 
 __all__ = ["ObservationTable"]
 
@@ -45,7 +45,7 @@ class ObservationTable(Table):
     @property
     def time_ref(self):
         """Time reference (`~astropy.time.Time`)."""
-        return time_ref_from_dict(self.meta)
+        return reference_time_from_header(self.meta)
 
     @property
     def time_start(self):

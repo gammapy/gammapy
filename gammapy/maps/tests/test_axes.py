@@ -10,7 +10,7 @@ from gammapy.data import GTI
 from gammapy.maps import LabelMapAxis, MapAxes, MapAxis, RegionNDMap, TimeMapAxis
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import assert_time_allclose, requires_data, requires_dependency, mpl_plot_check
-from gammapy.utils.time import time_ref_to_dict
+from gammapy.utils.time import reference_time_to_header
 
 MAP_AXIS_INTERP = [
     (np.array([0.25, 0.75, 1.0, 2.0]), "lin"),
@@ -530,7 +530,7 @@ def test_from_table_time_axis():
     table = Table()
     table["TIME_MIN"] = t_min
     table["TIME_MAX"] = t_max
-    table.meta.update(time_ref_to_dict(t0))
+    table.meta.update(reference_time_to_header(t0))
     table.meta["AXCOLS1"] = "TIME_MIN,TIME_MAX"
 
     axis = TimeMapAxis.from_table(table, format="gadf")

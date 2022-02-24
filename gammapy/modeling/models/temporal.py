@@ -10,7 +10,7 @@ from gammapy.maps import RegionNDMap, TimeMapAxis
 from gammapy.modeling import Parameter
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.scripts import make_path
-from gammapy.utils.time import time_ref_from_dict
+from gammapy.utils.time import reference_time_from_header
 from .core import ModelBase
 
 
@@ -133,7 +133,7 @@ class TemporalModel(ModelBase):
         ontime = u.Quantity((t_max - t_min).sec, "s")
 
         time_unit = (
-            u.Unit(self.table.meta["TIMEUNIT"])
+            u.Unit(self.table["TIME"].unit)
             if hasattr(self, "table")
             else ontime.unit
         )
@@ -486,16 +486,23 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         TODO: This doesn't read the XML part of the model yet.
         """
         filename = str(make_path(path))
-        return cls(Table.read(filename), filename=filename)
+        table = Table.read(filename)
+
+        # it seems some files are missing the unit from the column description
+        if table["TIME"].unit is None:
+            table["TIME"].unit = u.Unit(table.meta["TIMEUNIT"])
+
+        return cls(table, filename=filename)
 
     def write(self, path=None, overwrite=False):
         if path is None:
             path = self.filename
+
         if path is None:
             raise ValueError(f"filename is required for {self.tag}")
-        else:
-            self.filename = str(make_path(path))
-            self.table.write(self.filename, overwrite=overwrite)
+
+        self.filename = str(make_path(path))
+        self.table.write(self.filename, overwrite=overwrite)
 
     @lazyproperty
     def _interpolator(self, ext=0):
@@ -505,13 +512,11 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
     @lazyproperty
     def _time_ref(self):
-        return time_ref_from_dict(self.table.meta)
+        return reference_time_from_header(self.table.meta)
 
     @lazyproperty
     def _time(self):
-        return self._time_ref + self.table["TIME"].data * getattr(
-            u, self.table.meta["TIMEUNIT"]
-        )
+        return self._time_ref + self.table["TIME"].quantity
 
     def evaluate(self, time, ext=0):
         """Evaluate for a given time.

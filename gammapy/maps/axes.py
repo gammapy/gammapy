@@ -10,7 +10,7 @@ from astropy.table import Column, Table, hstack
 from astropy.time import Time
 from astropy.utils import lazyproperty
 from gammapy.utils.interpolation import interpolation_scale
-from gammapy.utils.time import time_ref_from_dict, time_ref_to_dict
+from gammapy.utils.time import reference_time_from_header, reference_time_to_header
 from .utils import INVALID_INDEX, edges_from_lo_hi
 
 __all__ = ["MapAxes", "MapAxis", "TimeMapAxis", "LabelMapAxis"]
@@ -1789,7 +1789,7 @@ class MapAxes(Sequence):
                     table[colname] = np.ravel(v[idx])
 
                 if isinstance(ax, TimeMapAxis):
-                    ref_dict = time_ref_to_dict(ax.reference_time)
+                    ref_dict = reference_time_to_header(ax.reference_time)
                     table.meta.update(ref_dict)
 
         elif format in ["ogip", "ogip-sherpa", "ogip", "ogip-arf"]:
@@ -2491,13 +2491,13 @@ class TimeMapAxis:
             axcols = table.meta.get("AXCOLS{}".format(idx + 1))
             colnames = axcols.split(",")
             name = colnames[0].replace("_MIN", "").lower()
-            reference_time = time_ref_from_dict(table.meta)
+            reference_time = reference_time_from_header(table.meta)
             edges_min = np.unique(table[colnames[0]].quantity)
             edges_max = np.unique(table[colnames[1]].quantity)
         elif format == "fermi-fgl":
             meta = table.meta.copy()
             meta["MJDREFF"] = str(meta["MJDREFF"]).replace("D-4", "e-4")
-            reference_time = time_ref_from_dict(meta=meta)
+            reference_time = reference_time_from_header(meta=meta)
             name = "time"
             edges_min = table["Hist_Start"][:-1]
             edges_max = table["Hist_Start"][1:]
@@ -2597,7 +2597,7 @@ class TimeMapAxis:
             key_interp = f"INTERP{idx}"
             header[key_interp] = self.interp
 
-            ref_dict = time_ref_to_dict(self.reference_time)
+            ref_dict = reference_time_to_header(self.reference_time)
             header.update(ref_dict)
         else:
             raise ValueError(f"Unknown format {format}")

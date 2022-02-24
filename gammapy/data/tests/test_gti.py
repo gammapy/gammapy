@@ -6,7 +6,7 @@ from astropy.table import Table
 from astropy.time import Time
 from gammapy.data import GTI
 from gammapy.utils.testing import assert_time_allclose, requires_data
-from gammapy.utils.time import time_ref_to_dict
+from gammapy.utils.time import reference_time_to_header
 
 
 @requires_data()
@@ -86,8 +86,8 @@ def test_select_time(time_interval, expected_length, expected_times):
         assert_time_allclose(gti_selected.time_stop[-1], expected_times[1])
 
 
-def make_gti(times, time_ref="2010-01-01"):
-    meta = time_ref_to_dict(time_ref)
+def make_gti(times, time_ref=Time("2010-01-01", scale="tt")):
+    meta = reference_time_to_header(time_ref)
     table = Table(times, meta=meta)
     return GTI(table)
 
