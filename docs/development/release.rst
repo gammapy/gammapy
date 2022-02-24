@@ -14,7 +14,7 @@ Overview
 We have structured the procedure in three phases:
 
 #. "Pre release" -- on a day (or several days) before making the release
-#. "Make release"  -- on the day of making the release
+#. "Make release" -- on the day of making the release
    (tag the stable version and make source release on PyPI)
 #. "Post release" -- on the day when announcing the release
    (ideally only two or three days after making the release)
@@ -36,10 +36,7 @@ Pre release
 
 Steps to prepare for the release (e.g. a week before) to check that things are in order:
 
-#. Check the issue (example: https://github.com/gammapy/gammapy/issues/302 )
-   and milestone (example: https://github.com/gammapy/gammapy/milestones/0.14 )
-   for the release. Try to get developers to finish up their PRs, try to help
-   fix bugs, and postpone non-critical issues to the next release.
+#. Try to get developers to finish up their PRs, try to help fix bugs, and postpone non-critical issues to the next release.
 #. Do these extra checks and clean up any warnings / errors that come up::
 
        make polish
@@ -52,7 +49,7 @@ Steps to prepare for the release (e.g. a week before) to check that things are i
    Links are at https://github.com/gammapy/gammapy#status-shields
 #. Check that the changelog is complete, by going through the list of GitHub issues for the
    release milestone.
-#. Check the author list in CITATION.cff by running the ``def/authors.py`` script. Manually
+#. Check the author list in CITATION.cff by running the ``dev/authors.py`` script. Manually
    fi any mismatches and finally sort by commits.
 
 
@@ -61,30 +58,32 @@ Make release
 
 Steps for the day of the release:
 
-- Follow the instructions how to release an Astropy affiliated package `<https://docs.astropy.org/en/stable/development/astropy-package-template.html>`__.
+#. Follow the instructions how to release an Astropy affiliated package:
 
-In the `gammapy repo <https://github.com/gammapy/gammapy>`__:
+   * `<https://docs.astropy.org/en/stable/development/astropy-package-template.html>`__.
 
-- Edit `docs/index.rst` and change the version numbers in the text.
+#. In the `gammapy repo <https://github.com/gammapy/gammapy>`__:
 
-In the `gammapy-docs repo <https://github.com/gammapy/gammapy-docs>`__:
+   * Edit ``docs/getting-started/index.rst`` and change the version numbers in the text.
 
-- Build an updated version of the dev docs using the manual GitHub action.
-- Copy the `docs/dev` folder as a new `docs/0.14` folder.
-- In the `0.14/docs/_downloads` folder, rename `notebooks-dev.tar` file as `notebooks-0.14.tar`.
-- Edit `stable/index.html` to point to `0.14/index.html`.
-- Edit `stable/switcher.json` to add the new version.
+#. In the `gammapy-docs repo <https://github.com/gammapy/gammapy-docs>`__:
 
-In the `gammapy-web repo <https://github.com/gammapy/gammapy-webpage>`__:
+   * Copy the ``docs/dev`` folder as a new ``docs/0.14`` folder.
+   * In the ``0.14/docs/_downloads`` folder, rename ``notebooks-dev.tar`` file as ``notebooks-0.14.tar``.
+   * Edit ``stable/index.html`` to point to ``0.14/index.html``.
+   * Edit ``stable/switcher.json`` to add the new version.
 
-- Mention the release on the front page and on the news page.
-- In the `download/install` folder, copy `gammapy-0.13-environment.yml` file as `gammapy-0.14-environment.yml`.
-- Adapt the dependency conda env name and versions as required in this file.
+#. In the `gammapy-web repo <https://github.com/gammapy/gammapy-webpage>`__:
 
-Finally:
+   * Mention the release on the front page and on the news page.
+   * In the ``download/install`` folder, copy ``gammapy-0.13-environment.yml`` file as ``gammapy-0.14-environment.yml``.
+   * Adapt the dependency conda env name and versions as required in this file.
 
-- Update the Gammapy conda-forge package at https://github.com/conda-forge/gammapy-feedstock
-- Encourage the Gammapy developers to try out the new stable version (update and run tests) via the GitHub issue for the release and wait a day or two for feedback.
+#. Finally:
+
+   * Update the Gammapy conda-forge package at https://github.com/conda-forge/gammapy-feedstock
+   * Encourage the Gammapy developers to try out the new stable version (update and run tests) via the GitHub issue for the release and wait a day or two for feedback.
+
 
 Post release
 ------------
@@ -93,7 +92,7 @@ Steps for the day to announce the release:
 
 #. Send release announcement to the Gammapy mailing list and on Gammapy Slack
    (using the version you drafted in
-   https://github.com/gammapy/gammapy/tree/master/dev/notes ).
+   https://github.com/gammapy/gammapy/tree/master/dev/notes).
 #. If it's a big release with important new features or fixes,
    also send the release announcement to the following mailing lists
    (decide on a case by case basis, if it's relevant to the group of people):
@@ -105,7 +104,7 @@ Steps for the day to announce the release:
 #. Make sure the release milestone and issue is closed on GitHub
 #. Update these release notes with any useful infos / steps that you learned
    while making the release (ideally try to script / automate the task or check,
-   e.g. as a ``make release-check-xyz`` target.
+   e.g. as a ``make release-check-xyz`` target).
 #. Update version number in Binder `Dockerfile` in
    `gammapy-webpage repository <https://github.com/gammapy/gammapy-webpage>`__ master branch
    and tag the release for Binder.
