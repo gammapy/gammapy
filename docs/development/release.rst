@@ -47,10 +47,10 @@ Steps to prepare for the release (e.g. a week before) to check that things are i
        make flake8
 
 #. Check external HTML links from the docs (see :ref:`here <dev-check_html_links>`).
-#. Check that the Github actions CI build is working.
+#. Check that the GitHub actions CI build is working.
 
    Links are at https://github.com/gammapy/gammapy#status-shields
-#. Check that the changelog is complete, by going through the list of Github issues for the
+#. Check that the changelog is complete, by going through the list of GitHub issues for the
    release milestone.
 #. Check the author list in CITATION.cff by running the ``def/authors.py`` script. Manually
    fi any mismatches and finally sort by commits.
@@ -69,7 +69,7 @@ In the `gammapy repo <https://github.com/gammapy/gammapy>`__:
 
 In the `gammapy-docs repo <https://github.com/gammapy/gammapy-docs>`__:
 
-- Build an updated version of the dev docs using the manual Github action.
+- Build an updated version of the dev docs using the manual GitHub action.
 - Copy the `docs/dev` folder as a new `docs/0.14` folder.
 - In the `0.14/docs/_downloads` folder, rename `notebooks-dev.tar` file as `notebooks-0.14.tar`.
 - Edit `stable/index.html` to point to `0.14/index.html`.
@@ -84,7 +84,7 @@ In the `gammapy-web repo <https://github.com/gammapy/gammapy-webpage>`__:
 Finally:
 
 - Update the Gammapy conda-forge package at https://github.com/conda-forge/gammapy-feedstock
-- Encourage the Gammapy developers to try out the new stable version (update and run tests) via the Github issue for the release and wait a day or two for feedback.
+- Encourage the Gammapy developers to try out the new stable version (update and run tests) via the GitHub issue for the release and wait a day or two for feedback.
 
 Post release
 ------------
@@ -102,7 +102,7 @@ Steps for the day to announce the release:
     * https://lists.nasa.gov/mailman/listinfo/open-gamma-ray-astro
     * CTA DATA list (cta-wp-dm@cta-observatory.org)
     * hess-analysis
-#. Make sure the release milestone and issue is closed on Github
+#. Make sure the release milestone and issue is closed on GitHub
 #. Update these release notes with any useful infos / steps that you learned
    while making the release (ideally try to script / automate the task or check,
    e.g. as a ``make release-check-xyz`` target.

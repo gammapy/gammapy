@@ -13,7 +13,7 @@ What is this?
 code, tests or documentation. It's partly an introduction to the process, partly
 a guide to some technical aspects.**
 
-It is *not* a tutorial introduction explaining all the tools (git, Github,
+It is *not* a tutorial introduction explaining all the tools (git, GitHub,
 Sphinx, pytest) or code (Python, Numpy, Scipy, Astropy) in detail. In the
 Gammapy docs, we don't have such a tutorial introduction written up, but we're
 happy to point out other tutorials or help you get started at any skill level
@@ -59,7 +59,7 @@ After you've done a few contributions to Gammapy and know about the status of
 ongoing work, the best way to proceed is to file an issue or pull request on
 Github at the stage where you want feedback or review. Sometimes you're not sure
 how to best do something, and you start by discussing it on the mailing list or
-in a Github issue. Sometimes you know how you'd like to do it, and you just code
+in a GitHub issue. Sometimes you know how you'd like to do it, and you just code
 or write it up and make a pull request when it's basically finished.
 
 In any case, please keep the following point also in mind ...
@@ -68,7 +68,7 @@ In any case, please keep the following point also in mind ...
 Make small pull requests
 ========================
 
-**Contributions to Gammapy happen via pull requests on Github. We like them small.**
+**Contributions to Gammapy happen via pull requests on GitHub. We like them small.**
 
 So as we'll explain in more detail below, the contribution cycle to Gammapy is roughly:
 
@@ -218,7 +218,7 @@ Make a pull request
 ===================
 
 * make a pull request
-* check diff on Github
+* check diff on GitHub
 * check tests on travis-ci
 
 Code review

@@ -49,7 +49,7 @@ those commands like this:
     grep '$ ' log.txt | grep -v '# '
     # This output looks OK, but it has a ton of non-visible characters.
     # I did not find a way to get rid of those, but this works:
-    # Manually copy the output on the terminal into a gist on github.
+    # Manually copy the output on the terminal into a gist on GitHub.
     # Then manually copy that gist content into a file log2.txt
     cat log2.txt | cut -c 3- > commands.sh
 

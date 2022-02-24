@@ -129,9 +129,9 @@ to ensure that correct plots are produced.
 Making a pull request with new or modified datasets
 ---------------------------------------------------
 
-Datasets used in tests are hosted in the `gammapy-data <https://github.com/gammapy/gammapy-data>`__ Github
+Datasets used in tests are hosted in the `gammapy-data <https://github.com/gammapy/gammapy-data>`__ GitHub
 repository. It is recommended that developers have `$GAMMAPY_DATA` environment variable pointing to the local folder
-where they have fetched the `gammapy-data <https://github.com/gammapy/gammapy-data>`__  Github repository,
+where they have fetched the `gammapy-data <https://github.com/gammapy/gammapy-data>`__  GitHub repository,
 so they can push and pull eventual modification of its content.
 
 Making a pull request which skips GitHub Actions

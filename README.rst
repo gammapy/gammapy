@@ -21,7 +21,7 @@ Status shields
 
 * .. image:: https://github.com/gammapy/gammapy/workflows/CI/badge.svg
     :target: https://github.com/gammapy/gammapy/actions
-    :alt: Github actions CI
+    :alt: GitHub actions CI
 
 * .. image:: https://codecov.io/gh/gammapy/gammapy/branch/master/graph/badge.svg
     :target: https://codecov.io/gh/gammapy/gammapy

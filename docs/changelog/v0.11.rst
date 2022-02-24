@@ -84,7 +84,7 @@ Pull requests
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
 
-See the complete `Gammapy 0.11 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?q=is%3Apr+milestone%3A0.11+is%3Aclosed>`__.
+See the complete `Gammapy 0.11 merged pull requests list on GitHub <https://github.com/gammapy/gammapy/pulls?q=is%3Apr+milestone%3A0.11+is%3Aclosed>`__.
 
 - [#2098] Remove gammapy.datasets submodule (Axel Donath)
 - [#2097] Clean up tutorial notebooks (Christoph Deil)

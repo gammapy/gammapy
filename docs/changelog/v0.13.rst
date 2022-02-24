@@ -72,7 +72,7 @@ Pull requests
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
 
-See the complete `Gammapy v0.13 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=✓&q=is%3Apr+milestone%3A0.13+>`__.
+See the complete `Gammapy v0.13 merged pull requests list on GitHub <https://github.com/gammapy/gammapy/pulls?utf8=✓&q=is%3Apr+milestone%3A0.13+>`__.
 
 - [#2296] Implement model YAML serialisation (Quentin Remy)
 - [#2310] Remove old ``LightCurveEstimator`` class (Axel Donath)

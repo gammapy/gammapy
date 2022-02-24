@@ -58,7 +58,7 @@ Pull requests
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
 
-See the complete `Gammapy 0.10 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?q=is%3Apr+milestone%3A0.10+is%3Aclosed>`__.
+See the complete `Gammapy 0.10 merged pull requests list on GitHub <https://github.com/gammapy/gammapy/pulls?q=is%3Apr+milestone%3A0.10+is%3Aclosed>`__.
 
 - [#2001] Use GAMMAPY_DATA everywhere / remove GAMMAPY_EXTRA (José Enrique Ruiz)
 - [#2000] Fix cta_simulation notebook, use CTA prod 3 IRFs (Régis Terrier)

@@ -24,10 +24,10 @@ documentation guidelines, or that we actually do differently in Gammapy.
 These are listed here so that Gammapy developers have a reference.
 
 Usually the quickest way to figure out how something should be done is to browse the Astropy
-or Gammapy code a bit (either locally with your editor or online on Github or via the HTML docs),
+or Gammapy code a bit (either locally with your editor or online on GitHub or via the HTML docs),
 or search the Numpy or Astropy documentation guidelines mentioned above.
 If that doesn't quickly turn up something useful, please ask by putting a comment on the issue or
-pull request you're working on on Github, or send an email to the Gammapy mailing list.
+pull request you're working on on GitHub, or send an email to the Gammapy mailing list.
 
 Functions or class methods that return a single object
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
