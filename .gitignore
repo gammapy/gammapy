@@ -91,3 +91,11 @@ dev/crab
 *.fits
 *.fits.gz
 *.root
+
+# Linting
+.trunk
+.flake8
+.isort.cfg
+.shellcheckrc
+.hadolint.yaml
+.markdownlint.yaml
