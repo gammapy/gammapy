@@ -133,7 +133,9 @@ div.admonition.seealso {
   font-size: 12px;
 }
 
-.output_area tr:nth-child(even) {background-color: var(--gammapy-lightgray);}
+.output_area tr:nth-child(even) {
+  background-color: var(--gammapy-lightgray);
+}
 
 th {
   background-color: #f2f2f2;
@@ -174,7 +176,7 @@ table.docutils {
 
 .intro-card .card-header {
   border: none;
-  background-color:white;
+  background-color: white;
   color: #150458 !important;
   font-size: var(--pst-font-size-h5);
   font-weight: bold;
@@ -183,17 +185,17 @@ table.docutils {
 
 .intro-card .card-footer {
   border: none;
-  background-color:white;
+  background-color: white;
 }
 
-.intro-card .card-footer p.card-text{
+.intro-card .card-footer p.card-text {
   max-width: 220px;
   margin-left: auto;
   margin-right: auto;
 }
 
 .custom-button {
-  background-color:#DCDCDC;
+  background-color: #dcdcdc;
   border: none;
   color: #484848;
   text-align: center;
@@ -228,4 +230,62 @@ table.docutils {
 .btn-group-sm > .btn,
 .btn-sm {
   padding: 0 5px;
+}
+
+/* intro to tutorial collapsed cards */
+
+.tutorial-accordion {
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.tutorial-card .card-header.card-link .btn {
+  margin-right: 12px;
+}
+
+.tutorial-card .card-header.card-link .btn:after {
+  content: "-";
+}
+
+.tutorial-card .card-header.card-link.collapsed .btn:after {
+  content: "+";
+}
+
+.tutorial-card-header-1 {
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tutorial-card-header-2 {
+  justify-content: flex-start;
+  align-items: center;
+  font-size: 1.3rem;
+}
+
+.tutorial-card .card-header {
+  cursor: pointer;
+  background-color: white;
+}
+
+.tutorial-card .card-body {
+  background-color: #f0f0f0;
+}
+
+.tutorial-card .badge {
+  background-color: #130654;
+  margin: 10px 10px 10px 10px;
+  padding: 5px;
+}
+
+.tutorial-card .gs-badge-link p {
+  margin: 0px;
+}
+
+.tutorial-card .gs-badge-link a {
+  color: white;
+  text-decoration: none;
+}
+
+.tutorial-card .badge:hover {
+  background-color: grey;
 }
