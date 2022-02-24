@@ -16,358 +16,88 @@ it's not a complete list of how to do everything in Gammapy.
 
 Please give feedback and suggest additions to this page!
 
-..
-   header 
 
-.. raw:: html
-
-    <div class="container">
-
-..
-   box
-
-.. raw:: html
-
-    <div id="accordion" class="shadow tutorial-accordion">
-        <div class="card tutorial-card">
-            <div class="card-header collapsed card-link" data-toggle="collapse" data-target="#collapseOne">
-                <div class="d-flex flex-row tutorial-card-header-1">
-                    <div class="d-flex flex-row tutorial-card-header-2">
-                        <button class="btn btn-dark btn-sm"></button>
-                        Spell and pronounce Gammapy
-                    </div>
-                    <span class="badge gs-badge-link">
-
-`Listen <http://ipa-reader.xyz/?text=ˈ%C9%A1æməpaɪ&voice=Amy>`__
-
-.. raw:: html
-
-                    </span>
-                </div>
-            </div>
-            <div id="collapseOne" class="collapse" data-parent="#accordion">
-                <div class="card-body">
+.. accordion-header:: 
+    :id: collapseOne
+    :title: Spell and pronounce Gammapy
 
 The recommended spelling is "Gammapy" as proper name. The recommended
 pronunciation is [ɡæməpaɪ] where the syllable "py" is pronounced like
-the english word "pie". 
+the english word "pie". You can listen to it `here <http://ipa-reader.xyz/?text=ˈ%C9%A1æməpaɪ&voice=Amy>`__.
 
-.. raw:: html
+.. accordion-footer::
 
-                </div>
-            </div>
-        </div>
-    </div>
-
-..
-    box
-
-.. raw:: html
-
-    <div id="accordion" class="shadow tutorial-accordion">
-        <div class="card tutorial-card">
-            <div class="card-header collapsed card-link" data-toggle="collapse" data-target="#collapseTwo">
-                <div class="d-flex flex-row tutorial-card-header-1">
-                    <div class="d-flex flex-row tutorial-card-header-2">
-                        <button class="btn btn-dark btn-sm"></button>
-                         Access IACT DL3 data
-                    </div>
-                    <span class="badge gs-badge-link">
-
-`Straight to tutorial... <../tutorials/data/hess.html#DL3-DR1>`__
-
-.. raw:: html
-
-                    </span>
-                </div>
-            </div>
-            <div id="collapseTwo" class="collapse" data-parent="#accordion">
-                <div class="card-body">
+.. accordion-header:: 
+    :id: collapseTwo
+    :title: Access IACT DL3 data
+    :link: ../tutorials/data/hess.html#DL3-DR1
 
 To access IACT data in the DL3 format, use the `~gammapy.data.DataStore`. It allows
 easy access to observations stored in the DL3 data library. 
 It is also internally used by the high level interface `~gammapy.analysis.Analysis`.
 
-.. raw:: html
+.. accordion-footer::
 
-                    <div class="d-flex flex-row">
-                        <span class="badge gs-badge-link">
-
-`To the H.E.S.S. tutorial... <../tutorials/data/hess.html#DL3-DR1>`__
-
-.. raw:: html
-
-                        </span>
-                        <span class="badge gs-badge-link">
-
-`To the HLI tutorial... <../tutorials/starting/analysis_1.html#Setting-the-data-to-use>`__
-
-.. raw:: html
-
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-..
-    box
-
-.. raw:: html
-
-    <div id="accordion" class="shadow tutorial-accordion">
-        <div class="card tutorial-card">
-            <div class="card-header collapsed card-link" data-toggle="collapse" data-target="#collapseThree">
-                <div class="d-flex flex-row tutorial-card-header-1">
-                    <div class="d-flex flex-row tutorial-card-header-2">
-                        <button class="btn btn-dark btn-sm"></button>
-                         Select observations
-                    </div>
-                    <span class="badge gs-badge-link">
-
-`Straight to tutorial... <../tutorials/starting/analysis_2.html#Defining-the-datastore-and-selecting-observations>`__
-
-.. raw:: html
-
-                    </span>
-                </div>
-            </div>
-            <div id="collapseThree" class="collapse" data-parent="#accordion">
-                <div class="card-body">
+.. accordion-header:: 
+    :id: collapseThree
+    :title: Select observations
+    :link: ../tutorials/starting/analysis_2.html#Defining-the-datastore-and-selecting-observations
 
 The `~gammapy.data.DataStore` provides access to a summary table of all observations available.
 It can be used to select observations with various criterion. You can for instance apply a cone search
 or also select observations based on other information available using the `~gammapy.data.ObservationTable.select_observations` method.
 
+.. accordion-footer::
 
-.. raw:: html
+.. accordion-header:: 
+    :id: collapseFour
+    :title: Make an on-axis equivalent livetime map
+    :link: ../tutorials/data/hess.html#On-axis-equivalent-livetime
 
-                    <div class="d-flex flex-row">
-                        <span class="badge gs-badge-link">
+The `~gammapy.data.DataStore` provides access to a summary table of all observations available.
+It can be used to select observations with various criterion. You can for instance apply a cone search
+or also select observations based on other information available using the `~gammapy.data.ObservationTable.select_observations` method.
 
-`To the Analysis tutorial... <../tutorials/starting/analysis_2.html#Defining-the-datastore-and-selecting-observations>`__
+.. accordion-footer::
 
-.. raw:: html
-
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-..
-    box
-
-.. raw:: html
-
-    <div id="accordion" class="shadow tutorial-accordion">
-        <div class="card tutorial-card">
-            <div class="card-header collapsed card-link" data-toggle="collapse" data-target="#collapseFour">
-                <div class="d-flex flex-row tutorial-card-header-1">
-                    <div class="d-flex flex-row tutorial-card-header-2">
-                        <button class="btn btn-dark btn-sm"></button>
-                         Make an on-axis equivalent livetime map
-                    </div>
-                    <span class="badge gs-badge-link">
-
-`Straight to tutorial... <../tutorials/data/hess.html#On-axis-equivalent-livetime>`__
-
-.. raw:: html
-
-                    </span>
-                </div>
-            </div>
-            <div id="collapseFour" class="collapse" data-parent="#accordion">
-                <div class="card-body">
-
-IACT detection efficiency varies in the FoV. To have an estimate
-of the effective exposure with respect to the on-axis one,
-it can be useful to build an on-axis equivalent livetime map.
-
-.. raw:: html
-
-                    <div class="d-flex flex-row">
-                        <span class="badge gs-badge-link">
-
-`To the H.E.S.S. tutorial... <../tutorials/data/hess.html#On-axis-equivalent-livetime>`__
-
-.. raw:: html
-
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-..
-    box
-
-.. raw:: html
-
-    <div id="accordion" class="shadow tutorial-accordion">
-        <div class="card tutorial-card">
-            <div class="card-header collapsed card-link" data-toggle="collapse" data-target="#collapseFive">
-                <div class="d-flex flex-row tutorial-card-header-1">
-                    <div class="d-flex flex-row tutorial-card-header-2">
-                        <button class="btn btn-dark btn-sm"></button>
-                         Check IRFs
-                    </div>
-                    <span class="badge gs-badge-link">
-
-`Straight to tutorial... <../tutorials/data/cta.html#IRFs>`__
-
-.. raw:: html
-
-                    </span>
-                </div>
-            </div>
-            <div id="collapseFive" class="collapse" data-parent="#accordion">
-                <div class="card-body">
+.. accordion-header:: 
+    :id: collapseFive
+    :title: Check IRFs
+    :link: ../tutorials/data/cta.html#IRFs
 
 Gammapy offers a number of methods to explore the content of the various IRFs
 contained in an observation. This is usually done thanks to their ``peek()``
 methods. 
 
-.. raw:: html
+.. accordion-footer::
 
-                    <div class="d-flex flex-row">
-                        <span class="badge gs-badge-link">
-
-`To the CTA tutorial... <../tutorials/data/cta.html#IRFs>`__
-
-.. raw:: html
-
-                        </span>
-                        <span class="badge gs-badge-link">
-
-`To the H.E.S.S tutorial... <../tutorials/data/hess.html#DL3-DR1>`__
-
-.. raw:: html
-
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-..
-    box
-
-.. raw:: html
-
-    <div id="accordion" class="shadow tutorial-accordion">
-        <div class="card tutorial-card">
-            <div class="card-header collapsed card-link" data-toggle="collapse" data-target="#collapseSix">
-                <div class="d-flex flex-row tutorial-card-header-1">
-                    <div class="d-flex flex-row tutorial-card-header-2">
-                        <button class="btn btn-dark btn-sm"></button>
-                        Model 2D images
-                    </div>
-                    <span class="badge gs-badge-link">
-
-`Straight to tutorial... <../tutorials/index.html#d-image>`__
-
-.. raw:: html
-
-                    </span>
-                </div>
-            </div>
-            <div id="collapseSix" class="collapse" data-parent="#accordion">
-                <div class="card-body">
+.. accordion-header:: 
+    :id: collapseSix
+    :title: Model 2D images
+    :link: ../tutorials/index.html#d-image
 
 Gammapy treats 2D maps as 3D cubes with one bin in energy. Sometimes, you might want to use previously 
 obtained images lacking an energy axis (eg: reduced using traditional IACT tools) for modeling and fitting 
 inside Gammapy. In this case, it is necessary to attach an `energy` axis on as it is showm in the tutorials.
 
-.. raw:: html
+.. accordion-footer::
 
-                    <div class="d-flex flex-row">
-                        <span class="badge gs-badge-link">
-
-`To the 2D tutorials... <../tutorials/data/cta.html#IRFs>`__
-
-.. raw:: html
-
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-..
-    box
-
-.. raw:: html
-
-    <div id="accordion" class="shadow tutorial-accordion">
-        <div class="card tutorial-card">
-            <div class="card-header collapsed card-link" data-toggle="collapse" data-target="#collapseSeven">
-                <div class="d-flex flex-row tutorial-card-header-1">
-                    <div class="d-flex flex-row tutorial-card-header-2">
-                        <button class="btn btn-dark btn-sm"></button>
-                        Extract 1D spectra
-                    </div>
-                    <span class="badge gs-badge-link">
-
-`Straight to tutorial... <../tutorials/analysis/1D/spectral_analysis.html>`__
-
-.. raw:: html
-
-                    </span>
-                </div>
-            </div>
-            <div id="collapseSeven" class="collapse" data-parent="#accordion">
-                <div class="card-body">
+.. accordion-header:: 
+    :id: collapseSeven
+    :title: Extract 1D spectra
+    :link: ../tutorials/analysis/1D/spectral_analysis.html
 
 The `~gammapy.analysis.Analysis` class can perform spectral extraction. The
 `~gammapy.analysis.AnalysisConfig` must be defined to produce '1d' datasets.
 Alternatively, you can follow the spectral analysis tutorial.
 
-.. raw:: html
+.. accordion-footer::
 
-                    <div class="d-flex flex-row">
-                        <span class="badge gs-badge-link">
 
-`To the spectral analysis tutorial... <../tutorials/analysis/1D/spectral_analysis.html>`__
-
-.. raw:: html
-
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-..
-    box
-
-.. raw:: html
-
-    <div id="accordion" class="shadow tutorial-accordion">
-        <div class="card tutorial-card">
-            <div class="card-header collapsed card-link" data-toggle="collapse" data-target="#collapseEight">
-                <div class="d-flex flex-row tutorial-card-header-1">
-                    <div class="d-flex flex-row tutorial-card-header-2">
-                        <button class="btn btn-dark btn-sm"></button>
-                        Extract a lightcurve
-                    </div>
-                    <span class="badge gs-badge-link">
-
-`Straight to tutorial... <../tutorials/analysis/time/light_curve.html>`__
-
-.. raw:: html
-
-                    </span>
-                </div>
-            </div>
-            <div id="collapseEight" class="collapse" data-parent="#accordion">
-                <div class="card-body">
+.. accordion-header:: 
+    :id: collapseEight
+    :title: Extract a lightcurve
+    :link: ../tutorials/analysis/time/light_curve.html
 
 The light curve estimation tutorial shows how to extract a run-wise lightcurve.
 
@@ -379,46 +109,11 @@ reduction which will produce datasets in the correct time range. The light curve
 extraction can then be performed as usual with the
 `~gammapy.estimators.LightCurveEstimator`. This is demonstrated in the light curve flare tutorial.
 
-.. raw:: html
+.. accordion-footer::
 
-                    <div class="d-flex flex-row">
-                        <span class="badge gs-badge-link">
-
-`To the light curve estimation tutorial... <../tutorials/analysis/time/light_curve.html>`__
-
-.. raw:: html
-
-                        </span>
-                        <span class="badge gs-badge-link">
-
-`To the light curve flare tutorial... <../tutorials/analysis/time/light_curve_flare.html>`__
-
-.. raw:: html
-
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-..
-    box
-
-.. raw:: html
-
-    <div id="accordion" class="shadow tutorial-accordion">
-        <div class="card tutorial-card">
-            <div class="card-header collapsed card-link" data-toggle="collapse" data-target="#collapseNine">
-                <div class="d-flex flex-row tutorial-card-header-1">
-                    <div class="d-flex flex-row tutorial-card-header-2">
-                        <button class="btn btn-dark btn-sm"></button>
-                        Choose units for plotting
-                    </div>
-                </div>
-            </div>
-            <div id="collapseNine" class="collapse" data-parent="#accordion">
-                <div class="card-body">
+.. accordion-header:: 
+    :id: collapseNine
+    :title: Choose units for plotting
 
 Units for plotting are handled with a combination of `matplotlib` and `astropy.units`.
 For most plotting methods Gammapy forwards additional keywords to the corresponding
@@ -434,31 +129,11 @@ you to define the x and y axis units using `astropy.units`. Here is a minimal ex
     fp = FluxPoints.read(filename)
     fp.plot(sed_type="e2dnde", xunits=u.erg, yunits=u.Unit("erg cm-2 s-1"))
 
-.. raw:: html
+.. accordion-footer::
 
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-..
-    box
-
-.. raw:: html
-
-    <div id="accordion" class="shadow tutorial-accordion">
-        <div class="card tutorial-card">
-            <div class="card-header collapsed card-link" data-toggle="collapse" data-target="#collapseTen">
-                <div class="d-flex flex-row tutorial-card-header-1">
-                    <div class="d-flex flex-row tutorial-card-header-2">
-                        <button class="btn btn-dark btn-sm"></button>
-                        Compute source significance
-                    </div>
-                </div>
-            </div>
-            <div id="collapseTen" class="collapse" data-parent="#accordion">
-                <div class="card-body">
+.. accordion-header:: 
+    :id: collapseTen
+    :title: Compute source significance
 
 Estimate the significance of a source, or more generally of an additional model
 component (such as e.g. a spectral line on top of a power-law spectrum), is done
@@ -471,12 +146,9 @@ take the difference. Note that in Gammapy, the fit statistic is defined as ``S =
 - 2 * log(L)`` for likelihood ``L``, such that ``TS = S_0 - S_1``. See
 :ref:`overview_datasets` for an overview of fit statistics used.
 
-.. raw:: html
+.. accordion-footer::
 
-                </div>
-            </div>
-        </div>
-    </div>
+
 
 ..
     box
