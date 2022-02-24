@@ -1,8 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+from distutils.extension import Extension
+
+import numpy as np
 import setuptools
 from Cython.Build import cythonize
-from distutils.extension import Extension
-import numpy as np
 
 
 def make_cython_extension(filename):
