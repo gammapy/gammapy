@@ -12,12 +12,7 @@ from configparser import ConfigParser
 from pkg_resources import get_distribution
 
 # Load all the global Astropy configuration
-from sphinx_astropy.conf import (
-    exclude_patterns,
-    extensions,
-    intersphinx_mapping,
-    rst_epilog,
-)
+from sphinx_astropy.conf import *
 
 # Sphinx-gallery config
 from sphinx_gallery.sorting import FileNameSortKey
