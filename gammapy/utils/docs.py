@@ -19,11 +19,14 @@ Here's some good resources with working examples:
 import os
 from configparser import ConfigParser
 from pathlib import Path
+
+from docutils.parsers.rst import Directive
 from docutils.parsers.rst.directives import register_directive
 from docutils.parsers.rst.directives.body import CodeBlock
 from docutils.parsers.rst.directives.images import Image
-from docutils.parsers.rst.directives.misc import Include
+from docutils.parsers.rst.directives.misc import Include, Raw
 from sphinx.util import logging
+
 from gammapy.analysis import AnalysisConfig
 
 try:
@@ -41,6 +44,51 @@ conf.read(PATH_CFG / "setup.cfg")
 build_docs_cfg = dict(conf.items("build_docs"))
 PATH_NBS = build_docs_cfg["downloadable-notebooks"]
 
+
+class AccordionHeader(Directive):
+    """
+    Inserts HTML code to open an accordion box in the How To.
+    """
+
+    option_spec = {"id": str, "title": str, "link": str}
+
+    def run(self):
+        raw = f"""
+            <div id="accordion" class="shadow tutorial-accordion">
+        <div class="card tutorial-card">
+            <div class="card-header collapsed card-link" data-toggle="collapse" data-target="#{self.options["id"]}">
+                <div class="d-flex flex-row tutorial-card-header-1">
+                    <div class="d-flex flex-row tutorial-card-header-2">
+                        <button class="btn btn-dark btn-sm"></button>
+                        {self.options["title"]}
+                    </div>
+        """
+        if self.options.get("link", None):
+            raw += f"""
+             <span class="badge gs-badge-link">
+             <a class="reference external" href="{self.options["link"]}">Straight to tutorial…</a>
+             </span>
+             """
+        raw += f"""    
+
+                </div>
+            </div>
+            <div id="{self.options["id"]}" class="collapse" data-parent="#accordion">
+                <div class="card-body">
+        """
+        include_lines = raw.splitlines()
+        c = Raw(
+            self.name,
+            ["html"],
+            self.options,
+            include_lines,  # content
+            self.lineno,
+            self.content_offset,
+            self.block_text,
+            self.state,
+            self.state_machine,
+        )
+        return c.run()
 
 class HowtoHLI(Include):
     """Directive to insert how-to for high-level interface"""
@@ -106,3 +154,4 @@ def gammapy_sphinx_ext_activate():
     # Register our directives and roles with Sphinx
     register_directive("gp-image", DocsImage)
     register_directive("gp-howto-hli", HowtoHLI)
+    register_directive("accordion-header", AccordionHeader)
