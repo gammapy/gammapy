@@ -62,7 +62,7 @@ Pull requests
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
 
-See the complete `Gammapy 0.9 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?q=is%3Apr+milestone%3A0.9+is%3Aclosed>`__.
+See the complete `Gammapy 0.9 merged pull requests list on GitHub <https://github.com/gammapy/gammapy/pulls?q=is%3Apr+milestone%3A0.9+is%3Aclosed>`__.
 
 - [#1949] Add fit minos_contour method (Christoph Deil)
 - [#1937] No copy of input and result model in fit (Christoph Deil)

@@ -81,7 +81,7 @@ Pull requests
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
 
-See the complete `Gammapy 0.6 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.6+is%3Amerged+>`__.
+See the complete `Gammapy 0.6 merged pull requests list on GitHub <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.6+is%3Amerged+>`__.
 
 - [#1006] Add possibility to skip runs based on alpha in SpectrumExtraction (Johannes King)
 - [#1002] Containment correction in SpectrumObservation via AREASCAL (Johannes King)

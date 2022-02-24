@@ -240,6 +240,6 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 - [#3145] Change the _compute_flux_spatial method on MapEvaluator (Fabio Pintore)
 - [#3141] Allow SkyModel.integrate_geom to integrate over a RegionGeom (Fabio Pintore)
 - [#3140] Add an option to ExcessMapEstimator to choose to correlate off events (Mathieu de Bony)
-- [#3138] Migrate Travis CI to Github actions (Jose Enrique Ruiz)
+- [#3138] Migrate Travis CI to GitHub actions (Jose Enrique Ruiz)
 - [#3136] Evaluate spatial model in RegionGeom (Laura Olivera Nieto)
 - [#3131] Further remove code duplication between SpectrumDataset and MapDataset (Axel Donath)

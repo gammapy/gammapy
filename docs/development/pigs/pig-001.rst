@@ -61,7 +61,7 @@ PIGs are written as RST files in the ``docs/development/pigs`` folder in the
 main Gammapy repository, and submitted as pull requests.
 
 Most discussions concerning Gammapy will happen by talking to each other
-directly (calls or face-to-face), or online on the mailing list or Github. If
+directly (calls or face-to-face), or online on the mailing list or GitHub. If
 you're not sure if you should write a PIG, please don't! Instead bring the topic
 up in discussions first with other Gammapy developers, or on the mailing list,
 to get some initial feedback. This will let you figure out if writing a PIG will
@@ -96,7 +96,7 @@ reasons. In Gammapy many PIGs will also be about implementing better solutions
 and a major question will be whether to change and improve the existing
 implementation, or whether to just put a new one, and in that case what the plan
 concerning the old code is. `PEP 481`_ is an example of a "process" PEP,
-proposing to move CPython development to git and Github. For Gammapy, we might
+proposing to move CPython development to git and GitHub. For Gammapy, we might
 also have "process" PIGs in the future, e.g. concerning release cycle or package
 distribution or support for users and other projects relying on Gammapy. It's
 good to think these things through and write them down to make sure it's clear
@@ -113,7 +113,7 @@ in collaboration with others it can eventually be realised.
 PIG review
 ==========
 
-PIG review happens on the pull request on Github.
+PIG review happens on the pull request on GitHub.
 
 When a PIG is put up, an announcement with a link to the pull request should be
 sent both to the Gammapy mailing list and the Gammapy coordinator list.
@@ -121,7 +121,7 @@ sent both to the Gammapy mailing list and the Gammapy coordinator list.
 Anyone is welcome to review it and is encouraged to share their thoughts in the
 discussion!
 
-Please note that Github hides inline comments after they have been edited, so we
+Please note that GitHub hides inline comments after they have been edited, so we
 suggest that you use inline comments for minor points like spelling mistakes
 only. Put your main feedback as normal comments in the "Conversation" tab, so
 that for someone reading the discussion later they will see your comment

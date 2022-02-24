@@ -56,7 +56,7 @@ Pull requests
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
 
-See the complete `Gammapy v0.12 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=✓&q=is%3Apr+milestone%3A0.12+>`__.
+See the complete `Gammapy v0.12 merged pull requests list on GitHub <https://github.com/gammapy/gammapy/pulls?utf8=✓&q=is%3Apr+milestone%3A0.12+>`__.
 
 - [#2171] Remove Poisson chi2 approximations (Christoph Deil)
 - [#2169] Remove warning astropy_helpers.sphinx.conf is deprecated (José Enrique Ruiz)

@@ -3,21 +3,22 @@
 #
 # Gammapy documentation build configuration file.
 
-import os
 import datetime
+import os
+
+# Get configuration information from setup.cfg
+from configparser import ConfigParser
+
 from pkg_resources import get_distribution
 
 # Load all the global Astropy configuration
 from sphinx_astropy.conf import *
 
-# Load utils docs functions
-from gammapy.utils.docs import gammapy_sphinx_ext_activate
-
 # Sphinx-gallery config
 from sphinx_gallery.sorting import FileNameSortKey
 
-# Get configuration information from setup.cfg
-from configparser import ConfigParser
+# Load utils docs functions
+from gammapy.utils.docs import gammapy_sphinx_ext_activate
 
 conf = ConfigParser()
 conf.read([os.path.join(os.path.dirname(__file__), "..", "setup.cfg")])
@@ -65,7 +66,7 @@ extensions.extend(
         "sphinx_gallery.gen_gallery",
         "sphinx.ext.doctest",
         "sphinx_panels",
-        "sphinx_copybutton"
+        "sphinx_copybutton",
     ]
 )
 nbsphinx_execute = "never"
@@ -119,8 +120,8 @@ html_favicon = os.path.join(html_static_path[0], "gammapy_logo.ico")
 
 # Custom sidebar templates, maps document names to template names.
 html_sidebars = {
-   'search': 'search-field.html',
-   'navigation': 'sidebar-nav-bs.html',
+    "search": "search-field.html",
+    "navigation": "sidebar-nav-bs.html",
 }
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
@@ -132,7 +133,7 @@ html_sidebars = {
 html_title = "{} v{}".format(project, release)
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = project + "doc"
+htmlhelp_basename = f"{project}doc"
 
 html_theme_options = {
     # toc options
@@ -154,14 +155,14 @@ html_theme_options = {
             "name": "Slack",
             "url": "https://gammapy.slack.com/",
             "icon": "fab fa-slack",
-        }
+        },
     ],
     "switcher": {
         "json_url": "https://docs.gammapy.org/stable/switcher.json",
         "url_template": "https://docs.gammapy.org/{version}/",
         "version_match": version,
     },
-    "navbar_end": ["version-switcher", "navbar-icon-links"]
+    "navbar_end": ["version-switcher", "navbar-icon-links"],
 }
 
 # Theme style
@@ -175,14 +176,15 @@ gammapy_sphinx_ext_activate()
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-    ("index", project + ".tex", project + " Documentation", author, "manual")
+    ("index", f"{project}.tex", f"{project} Documentation", author, "manual")
 ]
 
 # -- Options for manual page output --------------------------------------------
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [("index", project.lower(), project + " Documentation", [author], 1)]
+man_pages = [("index", project.lower(), f"{project} Documentation", [author], 1)]
+
 
 # -- Other options --
 

@@ -240,7 +240,7 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 - [#3145] Change the _compute_flux_spatial method on MapEvaluator (Fabio Pintore)
 - [#3141] Allow SkyModel.integrate_geom to integrate over a RegionGeom (Fabio Pintore)
 - [#3140] Add an option to ExcessMapEstimator to choose to correlate off events (Mathieu de Bony)
-- [#3138] Migrate Travis CI to Github actions (Jose Enrique Ruiz)
+- [#3138] Migrate Travis CI to GitHub actions (Jose Enrique Ruiz)
 - [#3136] Evaluate spatial model in RegionGeom (Laura Olivera Nieto)
 - [#3131] Further remove code duplication between SpectrumDataset and MapDataset (Axel Donath)
 
@@ -403,7 +403,7 @@ Pull Requests
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
 
-See the complete `Gammapy v0.18 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?q=is%3Apr+is%3Aclosed+milestone%3A0.18>`__.
+See the complete `Gammapy v0.18 merged pull requests list on GitHub <https://github.com/gammapy/gammapy/pulls?q=is%3Apr+is%3Aclosed+milestone%3A0.18>`__.
 
 
 - [#3106] Remove default FoVBackgroundModel (Axel Donath)
@@ -577,7 +577,7 @@ Pull Requests
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
 
-See the complete `Gammapy v0.17 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?q=is%3Apr+milestone%3A0.17+is%3Aclosed>`__.
+See the complete `Gammapy v0.17 merged pull requests list on GitHub <https://github.com/gammapy/gammapy/pulls?q=is%3Apr+milestone%3A0.17+is%3Aclosed>`__.
 
 
 - [#2846] Add more meta data keywords for sampled event lists (Fabio Pintore)
@@ -710,7 +710,7 @@ Pull Requests
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
 
-See the complete `Gammapy v0.16 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?q=is%3Apr+milestone%3A0.16+is%3Aclosed>`__.
+See the complete `Gammapy v0.16 merged pull requests list on GitHub <https://github.com/gammapy/gammapy/pulls?q=is%3Apr+milestone%3A0.16+is%3Aclosed>`__.
 
 
 - [#2756] Add config params for get_flux_points method in High level interface (José Enrique Ruiz)
@@ -855,7 +855,7 @@ Pull Requests
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
 
-See the complete `Gammapy v0.15 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=✓&q=is%3Apr+milestone%3A0.14>`__.
+See the complete `Gammapy v0.15 merged pull requests list on GitHub <https://github.com/gammapy/gammapy/pulls?utf8=✓&q=is%3Apr+milestone%3A0.14>`__.
 
 
 - [#2660] Remove tutorials/source_population_model.ipynb (Christoph Deil)
@@ -1007,7 +1007,7 @@ Pull Requests
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
 
-See the complete `Gammapy v0.14 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=✓&q=is%3Apr+milestone%3A0.14>`__.
+See the complete `Gammapy v0.14 merged pull requests list on GitHub <https://github.com/gammapy/gammapy/pulls?utf8=✓&q=is%3Apr+milestone%3A0.14>`__.
 
 - [#2412] Remove model XML serialization (Quentin Remy)
 - [#2404] Clean up spectral model names (Christoph Deil)
@@ -1125,7 +1125,7 @@ Pull Requests
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
 
-See the complete `Gammapy v0.13 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=✓&q=is%3Apr+milestone%3A0.13+>`__.
+See the complete `Gammapy v0.13 merged pull requests list on GitHub <https://github.com/gammapy/gammapy/pulls?utf8=✓&q=is%3Apr+milestone%3A0.13+>`__.
 
 - [#2296] Implement model YAML serialisation (Quentin Remy)
 - [#2310] Remove old ``LightCurveEstimator`` class (Axel Donath)
@@ -1221,7 +1221,7 @@ Pull Requests
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
 
-See the complete `Gammapy v0.12 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=✓&q=is%3Apr+milestone%3A0.12+>`__.
+See the complete `Gammapy v0.12 merged pull requests list on GitHub <https://github.com/gammapy/gammapy/pulls?utf8=✓&q=is%3Apr+milestone%3A0.12+>`__.
 
 - [#2171] Remove Poisson chi2 approximations (Christoph Deil)
 - [#2169] Remove warning astropy_helpers.sphinx.conf is deprecated (José Enrique Ruiz)
@@ -1339,7 +1339,7 @@ Pull requests
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
 
-See the complete `Gammapy 0.11 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?q=is%3Apr+milestone%3A0.11+is%3Aclosed>`__.
+See the complete `Gammapy 0.11 merged pull requests list on GitHub <https://github.com/gammapy/gammapy/pulls?q=is%3Apr+milestone%3A0.11+is%3Aclosed>`__.
 
 - [#2098] Remove gammapy.datasets submodule (Axel Donath)
 - [#2097] Clean up tutorial notebooks (Christoph Deil)
@@ -1431,7 +1431,7 @@ Pull requests
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
 
-See the complete `Gammapy 0.10 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?q=is%3Apr+milestone%3A0.10+is%3Aclosed>`__.
+See the complete `Gammapy 0.10 merged pull requests list on GitHub <https://github.com/gammapy/gammapy/pulls?q=is%3Apr+milestone%3A0.10+is%3Aclosed>`__.
 
 - [#2001] Use GAMMAPY_DATA everywhere / remove GAMMAPY_EXTRA (José Enrique Ruiz)
 - [#2000] Fix cta_simulation notebook, use CTA prod 3 IRFs (Régis Terrier)
@@ -1511,7 +1511,7 @@ Pull requests
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
 
-See the complete `Gammapy 0.9 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?q=is%3Apr+milestone%3A0.9+is%3Aclosed>`__.
+See the complete `Gammapy 0.9 merged pull requests list on GitHub <https://github.com/gammapy/gammapy/pulls?q=is%3Apr+milestone%3A0.9+is%3Aclosed>`__.
 
 - [#1949] Add fit minos_contour method (Christoph Deil)
 - [#1937] No copy of input and result model in fit (Christoph Deil)
@@ -1673,7 +1673,7 @@ Pull requests
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
 
-See the complete `Gammapy 0.8 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.8+is%3Amerged+>`__.
+See the complete `Gammapy 0.8 merged pull requests list on GitHub <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.8+is%3Amerged+>`__.
 
 - [#1822] Use GAMMAPY_DATA in Gammapy codebase (José Enrique Ruiz)
 - [#1821] Improve analysis 3D tutorial (Axel Donath)
@@ -1898,7 +1898,7 @@ Pull requests
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
 
-See the complete `Gammapy 0.7 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.7+is%3Amerged+>`__.
+See the complete `Gammapy 0.7 merged pull requests list on GitHub <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.7+is%3Amerged+>`__.
 
 - [#1319] Fix a bug in SpectrumStacker (Anne Lemière)
 - [#1318] Improve MapCoord interface (Matthew Wood)
@@ -2069,7 +2069,7 @@ Pull requests
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
 
-See the complete `Gammapy 0.6 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.6+is%3Amerged+>`__.
+See the complete `Gammapy 0.6 merged pull requests list on GitHub <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.6+is%3Amerged+>`__.
 
 - [#1006] Add possibility to skip runs based on alpha in SpectrumExtraction (Johannes King)
 - [#1002] Containment correction in SpectrumObservation via AREASCAL (Johannes King)
@@ -2183,7 +2183,7 @@ Pull requests
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
 
-See the complete `Gammapy 0.5 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.5+is%3Amerged+>`__.
+See the complete `Gammapy 0.5 merged pull requests list on GitHub <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.5+is%3Amerged+>`__.
 
 - [#790] Add powerlaw energy flux integral for ``gamma=2`` (Axel Donath)
 - [#789] Fix Wstat (Johannes King)
@@ -2294,7 +2294,7 @@ Pull requests
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
 
-See the complete `Gammapy 0.4 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.4+is%3Amerged+>`__.
+See the complete `Gammapy 0.4 merged pull requests list on GitHub <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.4+is%3Amerged+>`__.
 
 - [#518] Fixes and cleanup for SkyMap (Axel Donath)
 - [#511] Add exposure image computation (Léa Jouvin)
