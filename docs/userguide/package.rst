@@ -128,12 +128,20 @@ Support for simulation of TeV source populations and dark matter models.
 
 The methods are implemented in :ref:`gammapy.astro <api_astro>`.
 
+.. _overview_stats:
+
+:ref:`Statistical utility functions <stats>`
+++++++++++++++++++++++++++++++++++++++++++++++++
+
+The methods are implemented in :ref:`gammapy.stats <api_stats>`.
 
 
-* Statistical utility functions in :ref:`gammapy.stats <stats>`
+
+
+
+
 * Command line tools in :ref:`gammapy.scripts <CLI>`
 * Utils and visulization
-
 
 
 
@@ -154,4 +162,5 @@ the first and second analysis tutorials at :ref:`tutorials`.
     hli
     catalog
     ../astro/index
+    stats
     
