@@ -1,5 +1,8 @@
 .. include:: ../references.txt
 
+
+
+
 .. _overview_package:
 
 Package structure
@@ -26,8 +29,9 @@ are explained in more detail in the following sections.
 .. _overview_data:
 
 
-Data access and selection (DL3)
--------------------------------
+:ref:`Data access and selection (DL3) <data>`
+---------------------------------------------
+
 
 The analysis of gamma-ray data with Gammapy starts at the "data level 3" (DL3, ref?).
 At this level the data is stored as lists of gamma-like events and the corresponding
@@ -38,8 +42,7 @@ as pointing] direction, observation time and observation conditions. The main FI
 supported by Gammapy is documented on the `Gamma Astro Data Formats`_ page.
 
 The access to the data and instrument response is implemented in
-:ref:`gammapy.data <data>` and :ref:`gammapy.irf <irf>`.
-
+:ref:`gammapy.data <api_data>` and :ref:`gammapy.irf <api_irf>`.
 
 .. _overview_data_reduction:
 
@@ -128,3 +131,8 @@ What next?
 After this overview of the Gammapy package, we suggest to continue by trying it out,
 following the instructions in :ref:`installation`, :ref:`getting-started` and then
 the first and second analysis tutorials at :ref:`tutorials`.
+
+.. toctree::
+    :hidden:
+
+    dl3
