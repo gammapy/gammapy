@@ -295,7 +295,7 @@ def test_excess_map_estimator_map_dataset_on_off_reco_exposure(
     reco_exposure = estimate_exposure_reco_energy(
         simple_dataset_on_off, spectral_model=spectral_model
     )
-    assert_allclose(reco_exposure.data.sum(), 7.977796e12, rtol=0.001)
+    assert_allclose(reco_exposure.data.sum(), 8e12, rtol=0.001)
 
 
 def test_incorrect_selection():

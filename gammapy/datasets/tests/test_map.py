@@ -319,7 +319,7 @@ def test_to_spectrum_dataset(sky_model, geom, geom_etrue, edisp_mode):
         == 3
     )
 
-    assert_allclose(spectrum_dataset.edisp.exposure_map.data[1], 3.070917e09, rtol=1e-5)
+    assert_allclose(spectrum_dataset.edisp.exposure_map.data[1], 3.069227e+09, rtol=1e-5)
     assert np.sum(spectrum_dataset_mask.counts.data) == 0
     assert spectrum_dataset_mask.data_shape == (2, 1, 1)
     assert spectrum_dataset_corrected.exposure.unit == "m2s"
@@ -723,8 +723,8 @@ def test_map_fit_linked(sky_model, geom, geom_etrue):
     assert sky_model2.parameters["index"] is sky_model.parameters["index"]
     assert sky_model2.parameters["reference"] is sky_model.parameters["reference"]
 
-    assert len(datasets.models.parameters.unique_parameters) == 20 
-    assert datasets.models.covariance.shape == (22,22) 
+    assert len(datasets.models.parameters.unique_parameters) == 20
+    assert datasets.models.covariance.shape == (22,22)
 
 
 @requires_dependency("iminuit")
