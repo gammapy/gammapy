@@ -1,0 +1,121 @@
+.. _gammapy_0p11_release:
+
+0.11 (Mar 29, 2019)
+-------------------
+
+Summary
+~~~~~~~
+
+- Released Mar 29, 2019
+- 11 contributors
+- 2 months of work
+- 65 pull requests (not all listed below)
+
+What's new?
+~~~~~~~~~~~
+
+Gammapy v0.11 implements a large part of the new joint-likelihood fitting
+framework proposed in `PIG 8 - datasets`_ . This includes the introduction of the
+``FluxPointsDataset``, ``MapDataset`` and ``Datasets`` classes, which now represent
+the main interface to the ``Fit`` class and fitting backends in Gammapy. As a
+first use-case of the new dataset classes we added a tutorial demonstrating a
+joint-likelihood fit of a CTA 1DC Galactic center observations. We also
+considerably improved the performance of the 3D likelihood evaluation by
+evaluating the source model components on smaller cutouts of the map.
+We also added a tutorial demonstrating the use of the ``MapDataset`` class for
+MCMC sampling and show how to interface Gammapy to the widely used emcee package.
+Gammapy v0.11 also includes a new pulsar analysis tutorial. It demonstrates
+how to compute phase curves and phase resolved sky maps with Gammapy.
+To better support classical analysis methods in our main API we implemented
+a ``MapMakerRing`` class, that provides ring and adaptive ring background
+estimation for map and image estimation.
+
+Gammapy v0.11 improves the support for the scipy and sherpa fitting backends. It
+now implements full support of parameter freezing and parameter limits for both
+backends. We also added a ``reoptimize`` option to the ``Fit.likelihood_profile``
+method to compute likelihood profiles with reoptimizing remaining free parameters.
+
+For Gammapy v0.11 we added a ``SkyEllipse`` model to support fitting of elongated
+sources and changed the parametrization of the ``SkyGaussian`` to integrate correctly
+on the sphere. The spatial model classes now feature simple support for coordinate
+frames, such that the position of the source can be defined and fitted independently
+of the coordinate system of the data. Gammapy v0.11 now supports the evaluation
+non-radially symmetric 3D background models and defining multiple background models
+for a single ``MapDataset``.
+
+Gammapy v0.11 drops support for Python 2.7, only Python 3.5 or newer is supported (see `PIG 3`_).
+If you have any questions or need help to install Python 3, or to update your
+scripts and notebooks to work in Python 3, please contact us any time on the
+Gammapy mailing list or Slack. We apologise for the disruption and are happy to
+help with this transition. Note that Gammapy v0.10 will remain available and is
+Python 2 compatible forever, so sticking with that version might be an option
+in some cases. pip and conda should handle this correctly, i.e. automatically
+pick the last compatible version (Gammapy v0.10) on Python 2, or if you try
+to force installation of a later version by explicitly giving a version number,
+emit an error and exit without installing or updating.
+
+For Gammapy v0.11 we removed the unmaintained ``gammapy.datasets`` sub-module.
+Please use the ``gammapy download`` command to download datasets instead and
+the ``$GAMMAPY_DATA`` environment variable to access the data directly from
+your local gammapy-datasets folder.
+
+.. _PIG 3: https://github.com/gammapy/gammapy/pull/1278
+.. _PIG 8 - datasets: https://github.com/gammapy/gammapy/pull/1986
+
+Contributors
+~~~~~~~~~~~~
+
+In alphabetical order by first name:
+
+- Atreyee Sinha
+- Axel Donath
+- Brigitta Sipocz
+- Christoph Deil
+- Fabio Acero
+- hugovk
+- Jason Watson (new)
+- José Enrique Ruiz
+- Lars Mohrmann
+- Luca Giunti (new)
+- Régis Terrier
+
+Pull requests
+~~~~~~~~~~~~~
+
+This list is incomplete. Small improvements and bug fixes are not listed here.
+
+See the complete `Gammapy 0.11 merged pull requests list on GitHub <https://github.com/gammapy/gammapy/pulls?q=is%3Apr+milestone%3A0.11+is%3Aclosed>`__.
+
+- [#2098] Remove gammapy.datasets submodule (Axel Donath)
+- [#2097] Clean up tutorial notebooks (Christoph Deil)
+- [#2093] Clean up PSF3D / TablePSF interpolation unit handling (Axel Donath)
+- [#2085] Improve EDispMap and PSFMap stacking (Régis Terrier)
+- [#2077] Add MCMC tutorial using emcee (Fabio Acero)
+- [#2076] Clean up maps/wcs.py (Axel Donath)
+- [#2071] Implement MapDataset npred evaluation using cutouts (Axel Donath)
+- [#2069] Improve support for scipy fitting backend (Axel Donath)
+- [#2066] Add SkyModel.position and frame attribute (Axel Donath)
+- [#2065] Add evaluation radius to SkyEllipse model (Luca Giunti)
+- [#2064] Add simulate_dataset() convenience function (Fabio Acero)
+- [#2054] Add likelihood profile reoptimize option (Axel Donath)
+- [#2051] Add WcsGeom.cutout() method (Léa Jouvin)
+- [#2050] Add notebook for 3D joint analysis (Léa Jouvin)
+- [#2049] Add EventList.select_map_mask() method (Régis Terrier)
+- [#2046] Add SkyEllipse model (Luca Giunti)
+- [#2039] Simplify and move energy threshold computation (Axel Donath)
+- [#2038] Add tutorial for pulsar analysis (Marion Spir-Jacob)
+- [#2037] Add parameter freezing for sherpa backend (Axel Donath)
+- [#2035] Fix symmetry issue in solid angle calculation for WcsGeom (Jason Watson)
+- [#2034] Change SkyGaussian to spherical representation (Luca Giunti)
+- [#2033] Add evaluation of asymmetric background models (Jason Watson)
+- [#2031] Add EDispMap class (Régis Terrier)
+- [#2030] Add Datasets class (Axel Donath)
+- [#2028] Add hess notebook to gammapy download list (José Enrique Ruiz)
+- [#2026] Refactor MapFit into MapDataset (Atreyee Sinha)
+- [#2023] Add FluxPointsDataset class (Axel Donath)
+- [#2022] Refactor TablePSF class (Axel Donath)
+- [#2019] Simplify PSF stacking and containment radius computation (Axel Donath)
+- [#2017] Updating astropy_helpers to 3.1 (Brigitta Sipocz)
+- [#2016] Drop support for Python 2 (hugovk)
+- [#2012] Drop Python 2 support (Christoph Deil)
+- [#2009] Improve field-of-view coordinate transformations (Lars Mohrmann)

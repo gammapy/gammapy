@@ -883,7 +883,7 @@ class DatasetModels(collections.abc.Sequence):
 
     @property
     def positions(self):
-        """Positions of the models (`SkyCoord`)"""
+        """Positions of the models (`~astropy.coordinates.SkyCoord`)"""
         positions = []
 
         for model in self.select(tag="sky-model"):

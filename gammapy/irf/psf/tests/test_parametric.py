@@ -40,6 +40,10 @@ class TestEnergyDependentMultiGaussPSF:
 
         assert_allclose(desired, [0.14775, 0.18675, 0.25075] * u.deg, rtol=1e-3)
 
+    def test_to_unit(self, psf):
+        with pytest.raises(NotImplementedError):
+            psf.to_unit("deg-2")
+
     def test_to_psf3d(self, psf):
         rads = np.linspace(0.0, 1.0, 101) * u.deg
         psf_3d = psf.to_psf3d(rads)

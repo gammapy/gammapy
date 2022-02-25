@@ -135,7 +135,7 @@ Alternatives
 Decision
 ========
 
-This proposal was discussed extensively on Github (`GH 2255`_), and also
+This proposal was discussed extensively on GitHub (`GH 2255`_), and also
 in-person at the Gammapy coding sprint in Nov 2019. The exact mechanism and
 implementation for uncertainty propagation needs to be worked out (see the
 prototype notebook), this will happen at the coding sprint later this week.

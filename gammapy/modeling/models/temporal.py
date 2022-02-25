@@ -57,7 +57,7 @@ class TemporalModel(ModelBase):
 
         Parameters
         ----------
-        t_min, t_max: `~astropy.time.Time`
+        t_min, t_max : `~astropy.time.Time`
             Lower and upper bound of integration range
 
         Returns
@@ -184,9 +184,9 @@ class ConstantTemporalModel(TemporalModel):
 
         Parameters
         ----------
-        t_min: `~astropy.time.Time`
+        t_min : `~astropy.time.Time`
             Start times of observation
-        t_max: `~astropy.time.Time`
+        t_max : `~astropy.time.Time`
             Stop times of observation
 
         Returns
@@ -208,7 +208,7 @@ class LinearTemporalModel(TemporalModel):
         Constant term of the baseline flux
     beta : `~astropy.units.Quantity`
         Time variation coefficient of the flux
-    t_ref: `~astropy.units.Quantity`
+    t_ref : `~astropy.units.Quantity`
         The reference time in mjd. Frozen per default, at 2000-01-01.
     """
 
@@ -229,9 +229,9 @@ class LinearTemporalModel(TemporalModel):
 
         Parameters
         ----------
-        t_min: `~astropy.time.Time`
+        t_min : `~astropy.time.Time`
             Start times of observation
-        t_max: `~astropy.time.Time`
+        t_max : `~astropy.time.Time`
             Stop times of observation
 
         Returns
@@ -259,7 +259,7 @@ class ExpDecayTemporalModel(TemporalModel):
     ----------
     t0 : `~astropy.units.Quantity`
         Decay time scale
-    t_ref: `~astropy.units.Quantity`
+    t_ref : `~astropy.units.Quantity`
         The reference time in mjd. Frozen per default, at 2000-01-01 .
     """
 
@@ -279,9 +279,9 @@ class ExpDecayTemporalModel(TemporalModel):
 
         Parameters
         ----------
-        t_min: `~astropy.time.Time`
+        t_min : `~astropy.time.Time`
             Start times of observation
-        t_max: `~astropy.time.Time`
+        t_max : `~astropy.time.Time`
             Stop times of observation
 
         Returns
@@ -299,12 +299,12 @@ class ExpDecayTemporalModel(TemporalModel):
 class GaussianTemporalModel(TemporalModel):
     r"""A Gaussian temporal profile
 
-    ..math::
+    .. math::
             F(t) = exp( -0.5 * \frac{ (t - t_{ref})^2 } { \sigma^2 })
 
     Parameters
     ----------
-    t_ref: `~astropy.units.Quantity`
+    t_ref : `~astropy.units.Quantity`
         The reference time in mjd at the peak.
     sigma : `~astropy.units.Quantity`
         Width of the gaussian profile.
@@ -325,9 +325,9 @@ class GaussianTemporalModel(TemporalModel):
 
         Parameters
         ----------
-        t_min: `~astropy.time.Time`
+        t_min : `~astropy.time.Time`
             Start times of observation
-        t_max: `~astropy.time.Time`
+        t_max : `~astropy.time.Time`
             Stop times of observation
 
         Returns
@@ -350,14 +350,14 @@ class GaussianTemporalModel(TemporalModel):
 class GeneralizedGaussianTemporalModel(TemporalModel):
     r"""A generalized Gaussian temporal profile
 
-    ..math::
-            F(t) = exp( - 0.5 * (\frac{|t - t_{ref}|}{t_rise}) ^ {1 / \eta})   for  t < t_ref
+    .. math::
+            F(t) = exp( - 0.5 * (\frac{ \lvert t - t_{ref} \rvert}{t_rise}) ^ {1 / \eta})   for  t < t_ref
             
-            F(t) = exp( - 0.5 * (\frac{|t - t_{ref}|}{t_decay}) ^ {1 / \eta})   for  t > t_ref            
+            F(t) = exp( - 0.5 * (\frac{ \lvert t - t_{ref} \rvert}{t_decay}) ^ {1 / \eta})   for  t > t_ref
 
     Parameters
     ----------
-    t_ref: `~astropy.units.Quantity`
+    t_ref : `~astropy.units.Quantity`
         The time of the pulse's maximum intensity.
     t_rise : `~astropy.units.Quantity`
         Rise time constant.

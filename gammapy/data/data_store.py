@@ -118,7 +118,7 @@ class DataStore:
             Data store
 
         Examples
-        -------
+        --------
         >>> from gammapy.data import DataStore
         >>> data_store = DataStore.from_dir('$GAMMAPY_DATA/hess-dl3-dr1')
         """
@@ -239,7 +239,13 @@ class DataStore:
 
         row = self.obs_table.select_obs_id(obs_id=obs_id)[0]
         kwargs = {"obs_id": int(obs_id)}
-        kwargs["obs_info"] = table_row_to_dict(row)
+
+        # add info from table meta, e.g. the time references
+        kwargs["obs_info"] = {
+            k: v for k, v in self.obs_table.meta.items()
+            if not k.startswith('HDU')  # Ignore GADF structure of index table
+        }
+        kwargs["obs_info"].update(table_row_to_dict(row))
 
         hdu_list = ["events", "gti", "aeff", "edisp", "psf", "bkg", "rad_max"]
 

@@ -73,12 +73,12 @@ from ``gammapy-extra/notebooks`` to ``gammapy/notebooks``. We propose to store
 the notebooks in the repository without output cells filled. Removing output
 cells before committing has the advantage that the files are small, and that the
 diff in the pull request is also small and review becomes possible. On the other
-hand, the output is not directly visible on Github. Note that in any case, a
+hand, the output is not directly visible on GitHub. Note that in any case, a
 rendered version of the notebooks will be available via the docs, that is
 already in place.  We count on developer documentation and code review to
 guarantee empty-output notebooks stored in ``gammapy/notebooks``, though we can
 also explore `nbstripout`_ for a potential implementation of an automated
-mechanism to remove outputs from notebooks in the Github repository.
+mechanism to remove outputs from notebooks in the GitHub repository.
 
 In the process of documentation building the notebooks will be texted and
 executed automatically, so the static HTML-formatted notebooks will contain
@@ -99,7 +99,7 @@ To ship notebooks and example data to users, we propose to introduce a ``gammapy
 download`` command. This work and discussion how it should work in detail has
 started in `GH 1369`_. Roughly, the idea is that users will use ``gammapy
 download`` to download a version of the notebooks matching the version of the
-Gammapy code, by fetching the files from Github. A ``gammapy download
+Gammapy code, by fetching the files from GitHub. A ``gammapy download
 tutorials`` command will download all notebooks and the input datasets related.
 Not output datasets from the notebooks will be downloaded. All files will be
 copied into a ``$CWD/gammapy-tutorials`` folder, the datasets placed in a
@@ -113,7 +113,7 @@ The URLs of the input files used by the notebooks should be noted in the
 the list of notebooks to download as tutorials. For the different stable
 releases, the list of tutorials to download, their locations and datasets used
 are declared in YAML files placed in the ``download/tutorials`` folder of the
-`gammapy-webpage`_ Github repository. The same happens for conda working
+`gammapy-webpage`_ GitHub repository. The same happens for conda working
 environments of stable releases declared in files placed in the
 ``download/install`` folder of that repository. The datasets are not versioned
 and are similarly declared in the ``download/data`` folder.
@@ -142,7 +142,7 @@ we also don't ship HTML documentation with the code, but separately.
 Decision
 ========
 
-This PIG was extensively discussed on Github, as well as online and in-person
+This PIG was extensively discussed on GitHub, as well as online and in-person
 meetings. It was then implemented in summer 2018, and we shipped the new setup
 with Gammapy v0.8 and tried the development workflow for a few weeks. The
 solution works well so far and does solve the notebook and dataset issues that

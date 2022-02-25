@@ -1,0 +1,116 @@
+.. _gammapy_0p5_release:
+
+0.5 (Nov 22, 2016)
+------------------
+
+Summary
+~~~~~~~
+
+- Released Nov 22, 2016
+- 12 contributors (5 new)
+- 7 months of work
+- 184 pull requests (not all listed below)
+- Requires Python 2.7 or 3.4+, Numpy 1.8+, Scipy 0.15+, Astropy 1.2+, Sherpa 4.8.2+
+
+What's new?
+~~~~~~~~~~~
+
+- Tutorial-style getting started documentation as Jupyter notebooks
+- Removed ``gammapy.regions`` and have switched to the move complete
+  and powerful `regions <https://astropy-regions.readthedocs.io/en/stable/>`__ package
+  (planned to be added to the Astropy core within the next year).
+- ``gammapy.spectrum`` - Many 1-dimensional spectrum analysis improvements (e.g. spectral point computation)
+- ``gammapy.image`` - Many ``SkyImage`` improvements, adaptive ring background estimation, asmooth algorithm
+- ``gammapy.detect`` - CWT and TS map improvements
+- ``gammapy.time`` - A lightcurve class and variability test
+- ``gammapy.irf`` - Many improvements to IRF classes, especially the PSF classes.
+- Many improved tests and test coverage
+
+Contributors
+~~~~~~~~~~~~
+
+- Axel Donath
+- Brigitta Sipocz
+- Christoph Deil
+- Domenico Tiziani (new)
+- Helen Poon (new)
+- Johannes King
+- Julien Lefaucheur (new)
+- Léa Jouvin
+- Matthew Wood (new)
+- Nachiketa Chakraborty (new)
+- Olga Vorokh
+- Régis Terrier
+
+Pull requests
+~~~~~~~~~~~~~
+
+This list is incomplete. Small improvements and bug fixes are not listed here.
+
+See the complete `Gammapy 0.5 merged pull requests list on GitHub <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.5+is%3Amerged+>`__.
+
+- [#790] Add powerlaw energy flux integral for ``gamma=2`` (Axel Donath)
+- [#789] Fix Wstat (Johannes King)
+- [#783] Add PHA type II file I/O to SpectrumObservationList (Johannes King)
+- [#778] Fix Gauss PSF energy bin issue (Léa Jouvin)
+- [#777] Rewrite crab spectrum as class (Axel Donath)
+- [#774] Add skyimage smooth method (Axel Donath)
+- [#772] Stack EDISP for a set of observations (Léa Jouvin)
+- [#767] Improve PSF checker and add a test (Christoph Deil)
+- [#766] Improve SkyCube convolution and npred computation (Axel Donath)
+- [#763] Add TablePSFChecker (Domenico Tiziani)
+- [#762] Add IRFStacker class (Léa Jouvin)
+- [#759] Improve SkyCube energy axes (Axel Donath)
+- [#754] Change EventList from Table subclass to attribute (Christoph Deil)
+- [#753] Improve SkyCube class (Axel Donath)
+- [#746] Add image asmooth algorithm (Axel Donath)
+- [#740] Add SpectrumObservationStacker (Johannes King)
+- [#739] Improve kernel background estimator (Axel Donath)
+- [#738] Fix reflected region pixel origin issue (Léa Jouvin)
+- [#733] Add spectral table model (Julien Lefaucheur)
+- [#731] Add energy dispersion RMF integration (Léa Jouvin)
+- [#719] Add adaptive ring background estimation (Axel Donath)
+- [#713] Improve ring background estimation (Axel Donath)
+- [#710] Misc image and cube cleanup (Christoph Deil)
+- [#709] Spectrum energy grouping (Christoph Deil)
+- [#679] Add flux point computation method (Johannes King)
+- [#677] Fermi 3FGL and 2FHL spectrum plotting (Axel Donath)
+- [#661] Improve continuous wavelet transform (Olga Vorokh)
+- [#660] Add Fermipy sky image code to Gammapy (Matthew Wood)
+- [#653] Add up- and downsampling to SkyImage (Axel Donath)
+- [#649] Change to astropy regions package (Christoph Deil)
+- [#648] Add class to load CTA IRFs (Julien Lefaucheur)
+- [#647] Add SpectrumSimulation class (Johannes King)
+- [#641] Add ECPL model, energy flux and integration methods (Axel Donath)
+- [#640] Remove pyfact (Christoph Deil)
+- [#635] Fix TS maps low stats handling (Axel Donath)
+- [#631] Fix ExclusionMask.distance (Olga Vorokh)
+- [#628] Add flux points computation methods (Johannes King)
+- [#622] Make gammapy.time great again (Christoph Deil)
+- [#599] Move powerlaw utility functions to separate namespace (Christoph Deil)
+- [#594] Fix setup.py and docs/conf.py configparser import (Christoph Deil)
+- [#593] Remove gammapy/hspec (Christoph Deil)
+- [#591] Add spectrum energy flux computation (Axel Donath)
+- [#582] Add SkyImageList (Olga Vorokh)
+- [#558] Finish change to use gammapy.extern.regions (Johannes King and Christoph Deil)
+- [#569] Add detection utilities à la BgStats (Julien Lefaucheur)
+- [#565] Add exptest time variability test (Helen Poon)
+- [#564] Add LightCurve class (Nachiketa Chakraborty)
+- [#559] Add paste, cutout and look_up methods to SkyMap class (Axel Donath)
+- [#557] Add spectrum point source containment correction option (Régis Terrier)
+- [#556] Add offset-dependent table PSF class (Domenico Tiziani)
+- [#549] Add mean PSF computation (Léa Jouvin)
+- [#547] Add astropy.regions to gammapy.extern (Johannes King)
+- [#546] Add Target class (Johannes King)
+- [#545] Add PointingInfo class (Christoph Deil)
+- [#544] Improve SkyMap.coordinates (Olga Vorokh)
+- [#541] Refactor effective area IRFs to use NDDataArray (Johannes King)
+- [#535] Add spectrum and flux points to HGPS catalog (Axel Donath)
+- [#531] Add ObservationTableSummary class (Julien Lefaucheur)
+- [#530] Update readthedocs links from .org to .io (Brigitta Sipocz)
+- [#529] Add data_summary method to DataStore (Johannes King)
+- [#527] Add n-dim data base class for gammapy.irf (Johannes King)
+- [#526] Add King PSF evaluate and to_table_psf methods (Léa Jouvin)
+- [#524] Improve image pipe class (Léa Jouvin)
+- [#523] Add Gauss PSF to_table_psf method (Axel Donath)
+- [#521] Fix image pipe class (Léa Jouvin)

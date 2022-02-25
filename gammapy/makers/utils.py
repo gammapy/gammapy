@@ -115,8 +115,8 @@ def make_map_background_irf(
     pointing : `~gammapy.data.FixedPointingInfo` or `~astropy.coordinates.SkyCoord`
         Observation pointing
 
-        - If a ``FixedPointingInfo`` is passed, FOV coordinates are properly computed.
-        - If a ``SkyCoord`` is passed, FOV frame rotation is not taken into account.
+        - If a `~gammapy.data.FixedPointingInfo` is passed, FOV coordinates are properly computed.
+        - If a `~astropy.coordinates.SkyCoord` is passed, FOV frame rotation is not taken into account.
     ontime : `~astropy.units.Quantity`
         Observation ontime. i.e. not corrected for deadtime
         see https://gamma-astro-data-formats.readthedocs.io/en/stable/irfs/full_enclosure/bkg/index.html#notes)

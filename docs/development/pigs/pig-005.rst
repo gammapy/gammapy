@@ -92,7 +92,7 @@ runtime of tests. Implement required bugfixes. Maintenance is as important as
 adding new features, but will be mostly taken over by experienced developers.
 
 Improve the Gammapy development workflow. Improve developer documentation.
-Define Github labels, projects and milestones to reflect the content of the
+Define GitHub labels, projects and milestones to reflect the content of the
 roadmap.
 
 Documentation

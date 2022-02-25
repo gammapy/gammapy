@@ -4,6 +4,7 @@ import scipy.ndimage
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
+from gammapy.datasets import SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.datasets.map import MapEvaluator
 from gammapy.maps import WcsNDMap
 from gammapy.modeling.models import (
@@ -12,10 +13,7 @@ from gammapy.modeling.models import (
     SkyModel,
 )
 
-__all__ = [
-    "estimate_exposure_reco_energy",
-    "find_peaks",
-]
+__all__ = ["estimate_exposure_reco_energy", "find_peaks", "resample_energy_edges"]
 
 
 def find_peaks(image, threshold, min_distance=1):
@@ -119,9 +117,9 @@ def estimate_exposure_reco_energy(dataset, spectral_model=None, normalize=True):
 
     Parameters
     ----------
-    dataset:`~gammapy.datasets.MapDataset` or `~gammapy.datasets.MapDatasetOnOff`
+    dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.MapDatasetOnOff`
             the input dataset
-    spectral_model: `~gammapy.modeling.models.SpectralModel`
+    spectral_model : `~gammapy.modeling.models.SpectralModel`
             assumed spectral shape. If none, a Power Law of index 2 is assumed
     normalize : bool
         Normalize the exposure to the total integrated flux of the spectral model.
@@ -157,3 +155,70 @@ def estimate_exposure_reco_energy(dataset, spectral_model=None, normalize=True):
         reco_exposure = reco_exposure / ref_flux[:, np.newaxis, np.newaxis]
 
     return reco_exposure
+
+
+def _satisfies_conditions(info_dict, conditions):
+    satisfies = True
+    for key in conditions.keys():
+        satisfies &= info_dict[key.strip("_min")] > conditions[key]
+    return satisfies
+
+
+def resample_energy_edges(dataset, conditions={}):
+    """Return energy edges that satisfy given condition on the per bin statistics.
+
+    Parameters
+    ----------
+    dataset:`~gammapy.datasets.SpectrumDataset` or `~gammapy.datasets.SpectrumDatasetOnOff`
+            the input dataset
+    conditions : dict
+        Keyword arguments containing the per-bin conditions used to resample the axis.
+        Available options are: 'counts_min', 'background_min', 'excess_min', 'sqrt_ts_min', 'npred_min',
+        'npred_background_min', 'npred_signal_min'.
+    Returns
+    -------
+    energy_edges : list of `~astropy.units.Quantity`
+        Energy edges for the resampled energy axis.
+    """
+    if not isinstance(dataset, (SpectrumDataset, SpectrumDatasetOnOff)):
+        raise NotImplementedError(
+            "This method is currently supported for spectral datasets only."
+        )
+
+    available_conditions = [
+        "counts_min",
+        "background_min",
+        "excess_min",
+        "sqrt_ts_min",
+        "npred_min",
+        "npred_background_min",
+        "npred_signal_min",
+    ]
+    for key in conditions.keys():
+        if key not in available_conditions:
+            raise ValueError(
+                f"Unrecognized option {key}. The available methods are: {available_conditions}."
+            )
+
+    axis = dataset.counts.geom.axes["energy"]
+    energy_min_all, energy_max_all = dataset.energy_range_total
+    energy_edges = [energy_max_all]
+
+    while energy_edges[-1] > energy_min_all:
+        for energy_min in reversed(axis.edges_min):
+            if energy_min >= energy_edges[-1]:
+                continue
+            elif len(energy_edges) == 1 and energy_min == energy_min_all:
+                raise ValueError("The given conditions cannot be met.")
+
+            sliced = dataset.slice_by_energy(
+                energy_min=energy_min, energy_max=energy_edges[-1]
+            )
+
+            with np.errstate(invalid="ignore"):
+                info = sliced.info_dict()
+
+            if _satisfies_conditions(info, conditions):
+                energy_edges.append(energy_min)
+                break
+    return u.Quantity(energy_edges[::-1])

@@ -1,0 +1,218 @@
+.. _gammapy_0p8_release:
+
+0.8 (Sep 23, 2018)
+------------------
+
+Summary
+~~~~~~~
+
+- Released Sep 23, 2018
+- 24 contributors (6 new)
+- 7 months of work
+- 314 pull requests (not all listed below)
+
+What's new?
+~~~~~~~~~~~
+
+Gammapy v0.8 features major updates to maps and modeling, as well as
+installation and how to get started with tutorial notebooks. It also contains
+many smaller additions, as well as many fixes and improvements.
+
+The new ``gammapy.maps`` is now used for all map-based analysis (2D images and
+3D cubes with an energy axis). The old SkyImage and SkyCube classes have been
+removed. All code and documentation has been updated to use ``gammapy.maps``. To
+learn about the new maps classes, see the ``intro_maps`` tutorial at
+:ref:`tutorials` and the :ref:`gammapy.maps <maps>` documentation page.
+
+The new ``gammapy.utils.fitting`` contains a simple modeling and fitting
+framework, that allows the use of ``iminuit`` and ``sherpa`` optimisers as
+"backends" for any fit in Gammapy. The classes in ``gammapy.spectrum.models`` (1D
+spectrum models) are updated, and ``gammapy.image.models`` (2D spatial models) and
+``gammapy.cube.models`` (3D cube models) was added. The ``SpectrumFit`` class was
+updated and a ``MapFit`` to fit models to maps was added. This part of Gammapy
+remains work in progress, some changes and major improvements are planned for
+the coming months.
+
+With Gammapy v0.8, we introduce the ``gammapy download`` command to download
+tutorial notebooks and example datasets. A step by step guide is here:
+:ref:`getting-started`. Previously tutorial notebooks were maintained in a
+separate ``gammapy-extra`` repository, which was inconvenient for users to clone
+and use, and more importantly wasn't version-coupled with the Gammapy code
+repository, causing major issues in this phase where Gammapy is still under
+heavy development.
+
+The recommended way to install Gammapy (described at :ref:`getting-started`) is
+now to use conda and to create an environment with dependencies pinned to fixed
+versions to get a consistent and reproducible environment. E.g. the Gammapy v0.8
+environment uses Python 3.6, Numpy 1.15 and Astropy 3.0. As before, Gammapy is
+compatible with a wide range of versions of Numpy and Astropy from the past
+years and many installation options are available for Gammapy (e.g. pip or
+Macports) in addition to conda. But we wanted to offer this new "stable
+recommended environment" option for Gammapy as a default.
+
+The new ``analysis_3d`` notebook shows how to run a 3D analysis for IACT data
+using the ``MapMaker`` and ``MapFit`` classes. The ``simulate_3d`` shows how to
+simulate and fit a source using CTA instrument response functions. The
+simulation is done on a binned 3D cube, not via unbinned event sampling. The
+``fermi_lat`` tutorial shows how to analyse high-energy Fermi-LAT data with
+events, exposure and PSF pre-computed using the Fermi science tools. The
+``hess`` and ``light_curve`` tutorial show how to analyse data from the recent
+first H.E.S.S. test data release. You can find these tutorials and more at
+:ref:`tutorials`.
+
+Another addition in Gammapy v0.8 is :ref:`gammapy.astro.darkmatter
+<astro-darkmatter>`, which contains spatial and spectral models commonly used in
+dark matter searches using gamma-ray data.
+
+The number of optional dependencies used in Gammapy has been reduced. Sherpa is
+now an optional fitting backend, modeling is built-in in Gammapy. The following
+packages are no longer used in Gammapy: scikit-image, photutils, pandas, aplpy.
+The code quality and test coverage in Gammapy has been improved a lot.
+
+This release also contains a large number of small improvements and bug fixes to
+the existing code, listed below in the changelog.
+
+We are continuing to develop Gammapy at high speed, significant improvements on
+maps and modeling, but also on the data and IRF classes are planned for the
+coming months and the v0.9 release in fall 2019. We apologise if you are already
+using Gammapy for science studies and papers and have to update your scripts and
+notebooks to work with the new Gammapy version. If possible, stick with a given
+stable version of Gammapy. If you update to a newer version, let us know if you
+have any issues or questions. We're happy to help!
+
+Gammapy v0.8 works on Linux, MacOS and Windows, with Python 3.5, 3.6 as well as
+legacy Python 2.7.
+
+Contributors
+~~~~~~~~~~~~
+
+- Andrew Chen (new)
+- Atreyee Sinha
+- Axel Donath
+- Brigitta Sipocz
+- Bruno Khelifi
+- Christoph Deil
+- Cosimo Nigro
+- David Fidalgo (new)
+- Fabio Acero
+- Gabriel Emery (new)
+- Hubert Siejkowski (new)
+- Jean-Philippe Lenain
+- Johannes King
+- José Enrique Ruiz
+- Kai Brügge
+- Lars Mohrmann
+- Laura Vega Garcia (new)
+- Léa Jouvin
+- Marion Spir-Jacob (new)
+- Matthew Wood
+- Matthias Wegen
+- Oscar Blanch
+- Régis Terrier
+- Roberta Zanin
+
+Pull requests
+~~~~~~~~~~~~~
+
+This list is incomplete. Small improvements and bug fixes are not listed here.
+
+See the complete `Gammapy 0.8 merged pull requests list on GitHub <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.8+is%3Amerged+>`__.
+
+- [#1822] Use GAMMAPY_DATA in Gammapy codebase (José Enrique Ruiz)
+- [#1821] Improve analysis 3D tutorial (Axel Donath)
+- [#1818] Add HESS and background modeling tutorial (Christoph Deil)
+- [#1812] Add Fit likelihood profile method (Axel Donath)
+- [#1808] Rewrite getting started, improve tutorials and install pages (Christoph Deil)
+- [#1800] Add ObservationTableChecker and improve EVENTS checker (Christoph Deil)
+- [#1799] Fix EnergyDispersion write and to_sherpa (Régis Terrier)
+- [#1791] Move tutorial notebooks to the Gammapy repository (José Enrique Ruiz)
+- [#1785] Unify API of Gammapy Fit classes (Axel Donath)
+- [#1764] Format all code in Gammapy black (Christoph Deil)
+- [#1761] Add black notebooks functionality (José Enrique Ruiz)
+- [#1760] Add conda env file for release v0.8 (José Enrique Ruiz)
+- [#1759] Add find_peaks for images (Christoph Deil)
+- [#1755] Change map FITS unit header key to standard "BUNIT" (Christoph Deil)
+- [#1751] Improve EventList and data checkers (Christoph Deil)
+- [#1750] Remove EventListDataset class (Christoph Deil)
+- [#1748] Add DataStoreChecker and ObservationChecker (Christoph Deil)
+- [#1746] Unify and fix testing of plot methods (Axel Donath)
+- [#1731] Fix and unify Map.iter_by_image (Axel Donath)
+- [#1711] Clean up map reprojection code (Axel Donath)
+- [#1702] Add mask filter option to MapFit (Axel Donath)
+- [#1697] Improve convolution code and tests (Axel Donath)
+- [#1696] Add parameter auto scale (Johannes Kind and Christoph Deil)
+- [#1695] Add WcsNDMap convolve method (Axel Donath)
+- [#1685] Add quantity support to map coordinates (Axel Donath)
+- [#1681] Add make_images method in MapMaker (Axel Donath)
+- [#1675] Add gammapy.stats.excess_matching_significance (Christoph Deil)
+- [#1660] Fix spectrum energy grouping, use nearest neighbor method (Johannes King)
+- [#1658] Bundle skimage block_reduce in gammapy.extern (Christoph Deil)
+- [#1634] Add SkyDiffuseCube model for 3D maps (Roberta Zanin and Christoph Deil)
+- [#1630] Add new observation container class (David Fidalgo)
+- [#1616] Improve reflected background region finder (Régis Terrier)
+- [#1606] Change FluxPointFitter to use minuit (Axel Donath)
+- [#1605] Remove old sherpa backend from SpectrumFit (Johannes King)
+- [#1594] Remove SkyImage and SkyCube (Christoph Deil)
+- [#1582] Migrate ring background to use gammapy.maps (Régis Terrier)
+- [#1576] Migrate detect.cwt to use gammapy.maps (Hubert Siejkowski)
+- [#1573] Migrate image measure and profile to use gammapy.maps (Axel Donath)
+- [#1568] Remove IACT and Fermi-LAT basic image estimators (Christoph Deil)
+- [#1564] Migrate gammapy.detect to use gammapy.maps (Axel Donath)
+- [#1562] Add MapMaker run method (Atreyee Sinha)
+- [#1558] Integrate background spectrum in MapMaker (Léa Jouvin)
+- [#1556] Sync sky model parameters with components (Christoph Deil)
+- [#1554] Introduce map copy method (Axel Donath)
+- [#1543] Add plot_interactive method for 3D maps (Fabio Acero)
+- [#1527] Migrate ASmooth to use gammapy.maps (Christoph Deil)
+- [#1517] Remove cta_utils and CTASpectrumObservation (Christoph Deil)
+- [#1515] Remove old background model code (Christoph Deil)
+- [#1505] Remove old Sherpa 3D map analysis code (Christoph Deil)
+- [#1495] Change MapMaker to allow partially contained observations (Atreyee Sinha)
+- [#1492] Add robust periodogram to gammapy.time (Matthias Wegen)
+- [#1489] Add + operator for SkyModel (Johannes King)
+- [#1476] Add evaluate method Background3D IRF (Léa Jouvin)
+- [#1475] Add field-of-view coordinate transformations (Lars Mohrmann)
+- [#1474] Add more models to the xml model registry (Fabio Acero)
+- [#1470] Add background to map model evaluator (Atreyee Sinha)
+- [#1456] Add light curve upper limits (Bruno Khelifi)
+- [#1447] Add a PSFKernel to perform PSF convolution on Maps (Régis Terrier)
+- [#1446] Add WCS map cutout method (Atreyee Sinha)
+- [#1444] Add map smooth method (Atreyee Sinha)
+- [#1443] Add slice_by_idx methods to gammapy.maps (Axel Donath)
+- [#1435] Add __repr__ methods to Maps and related classes (Axel Donath)
+- [#1433] Fix map write for custom axis name (Christoph Deil)
+- [#1432] Add PSFMap class (Régis Terrier)
+- [#1426] Add background estimation for phase-resolved spectra (Marion Spir-Jacob)
+- [#1421] Add map region mask (Régis Terrier)
+- [#1412] Change to default overwrite=False in gammapy.maps (Christoph Deil)
+- [#1408] Fix 1D spectrum joint fit (Johannes King)
+- [#1406] Add adaptive lightcurve time binning method (Gabriel Emery)
+- [#1401] Remove old spatial models and CatalogImageEstimator (Christoph Deil)
+- [#1397] Add XML SkyModel serialization (Johannes King)
+- [#1395] Change Map.get_coord to return a MapCoord object (Régis Terrier)
+- [#1387] Update catalog to new model classes (Christoph Deil)
+- [#1381] Add 3D fit example using gammapy.maps (Johannes King)
+- [#1386] Improve spatial models and add diffuse models (Johannes King)
+- [#1378] Change 3D model evaluation from SkyCube to Map (Christoph Deil)
+- [#1377] Add more SkySpatialModel subclasses (Johannes King)
+- [#1376] Add new SpatialModel base class (Johannes King)
+- [#1374] Add units to gammapy.maps (Régis Terrier)
+- [#1373] Improve 3D analysis code using gammapy.maps (Christoph Deil)
+- [#1372] Add 3D analysis functions using gammapy.maps (Régis Terrier)
+- [#1369] Add gammapy download command (José Enrique Ruiz)
+- [#1367] Add first draft of LightCurve model class (Christoph Deil)
+- [#1362] Fix map sum_over_axes (Christoph Deil)
+- [#1360] Sphinx RTD responsive theme for documentation (José Enrique Ruiz)
+- [#1357] Add map geom pixel solid angle computation (Régis Terrier)
+- [#1354] Apply FOV mask to all maps in ring background estimator (Lars Mohrmann)
+- [#1347] Fix bug in LightCurveEstimator (Lars Mohrmann)
+- [#1346] Fix bug in map .fits.gz write (change map data transpose) (Christoph Deil)
+- [#1345] Improve docs for SpectrumFit (Johannes King)
+- [#1343] Apply containment correction in true energy (Johannes King)
+- [#1341] Remove u.ct from gammapy.spectrum (Johannes King)
+- [#1339] Add create fixed time interval method for light curves (Gabriel Emery)
+- [#1337] Enable rate models in SpectrumSimulation (Johannes King)
+- [#1334] Fix AREASCAL read for PHA count spectrum (Régis Terrier)
+- [#1331] Fix background image estimate (Régis Terrier)
+- [#1317] Add function to compute counts maps (Régis Terrier)
+- [#1231] Improve HESS HGPS catalog source class (Christoph Deil)

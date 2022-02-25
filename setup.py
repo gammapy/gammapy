@@ -2,8 +2,8 @@
 import setuptools
 from Cython.Build import cythonize
 from distutils.extension import Extension
-import numpy as np
 
+import numpy as np
 
 def make_cython_extension(filename):
     return Extension(

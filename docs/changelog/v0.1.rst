@@ -1,0 +1,66 @@
+.. _gammapy_0p1_release:
+
+0.1 (Aug 25, 2014)
+------------------
+
+Summary
+~~~~~~~
+
+- Released Aug 25, 2014
+- 5 contributors
+- 15 months of work
+- 82 pull requests
+- Requires Astropy version 0.4 or later.
+
+Contributors
+~~~~~~~~~~~~
+
+- Rolf Bühler
+- Christoph Deil
+- Axel Donath
+- Ellis Owen
+- Régis Terrier
+
+Pull requests
+~~~~~~~~~~~~~
+
+Note that Gammapy development started out directly in the master branch,
+i.e. for some things there is no pull request we can list here.
+
+- [#180] Clean up datasets code and docs (Christoph Deil)
+- [#177] Misc code and docs cleanup (Christoph Deil)
+- [#176] Add new gammapy.data sub-package (Christoph Deil)
+- [#167] Add image profile function (Ellis Owen)
+- [#166] Add SED from Cube function (Ellis Owen)
+- [#160] Add code to make model images from a source catalog (Ellis Owen)
+- [#157] Re-write Galaxy modeling code (Axel Donath)
+- [#156] Add Fermi Vela dataset (Ellis Owen)
+- [#155] Add PSF convolve function (Ellis Owen)
+- [#154] Add Fermi PSF convolution method (Ellis Owen)
+- [#151] Improve npred cube functionality (Ellis Owen)
+- [#150] Add npred cube computation (Christoph Deil and Ellis Owen)
+- [#142] Add EffectiveAreaTable and EnergyDependentMultiGaussPSF classes (Axel Donath)
+- [#138] Add Crab flux point dataset (Rolf Bühler)
+- [#128] Add flux point computation using Lafferty & Wyatt (1995) (Ellis Owen)
+- [#122] Add morphology models as Astropy models (Axel Donath)
+- [#117] Improve synthetic Milky Way modeling (Christoph Deil)
+- [#116] Add Galactic source catalog simulation methods (Christoph Deil)
+- [#109] Python 2 / 3 compatibility with a single codebase (Christoph Deil)
+- [#103] Add datasets functions to fetch Fermi catalogs (Ellis Owen)
+- [#100] Add image plotting routines (Christoph Deil)
+- [#96] Add wstat likelihood function for spectra and images (Christoph Deil)
+- [#88] Add block reduce function for HDUs (Ellis Owen)
+- [#84] Add TablePSF and Fermi PSF (Christoph Deil)
+- [#68] Integrate PyFACT functionality in Gammapy (Christoph Deil)
+- [#67] Add image measure methods (Christoph Deil)
+- [#66] Add plotting module and HESS colormap (Axel Donath)
+- [#65] Add model image and image measurement functionality (Axel Donath)
+- [#64] Add coordinate string IAU designation format (Christoph Deil)
+- [#58] Add per-pixel solid angle function in image utils (Ellis Owen)
+- [#48] Add sphere and power-law sampling functions (Christoph Deil)
+- [#34] Rename tevpy to gammapy (Christoph Deil)
+- [#25] Add continuous wavelet transform class (Régis Terrier)
+- [#12] Add coverage reports to continuous integration on coveralls (Christoph Deil)
+- [#11] Add blob detection (Axel Donath)
+- Rename tevpy to gammapy in `commit 7e955f <https://github.com/cdeil/gammapy/commit/7e955ffae71353f7b10c9de4a69b977e7c036c6d>`__ on Aug 19, 2013 (Christoph Deil)
+- Start tevpy repo with `commit 11af4c <https://github.com/gammapy/gammapy/commit/11af4c7436bb79f8e2cae8d0441693232eebe1ba>`__ on May 15, 2013 (Christoph Deil)

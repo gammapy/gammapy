@@ -56,8 +56,8 @@ class EventList:
     table : `~astropy.table.Table`
         Event list table
 
-    Examples:
-    ---------
+    Examples
+    --------
     >>> from gammapy.data import EventList
     >>> events = EventList.read("$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_110380.fits")
     >>> print(events)

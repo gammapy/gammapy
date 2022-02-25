@@ -1,0 +1,104 @@
+.. _gammapy_0p4_release:
+
+0.4 (Apr 20, 2016)
+------------------
+
+Summary
+~~~~~~~
+
+- Released Apr 20, 2016
+- 10 contributors (5 new)
+- 8 months of work
+- 108 pull requests (not all listed below)
+- Requires Python 2.7 or 3.4+, Numpy 1.8+, Scipy 0.15+, Astropy 1.0+, Sherpa 4.8+
+
+What's new?
+~~~~~~~~~~~
+
+- Women are hacking on Gammapy!
+- IACT data access via DataStore and HDU index tables
+- Radially-symmetric background modeling
+- Improved 2-dim image analysis
+- 1-dim spectral analysis
+- Add sub-package ``gammapy.cube`` and start working on 3-dim cube analysis
+- Continuous integration testing for Windows on Appveyor added
+  (Windows support for Gammapy is preliminary and incomplete)
+
+Contributors
+~~~~~~~~~~~~
+
+- Axel Donath
+- Brigitta Sipocz (new)
+- Christoph Deil
+- Dirk Lennarz (new)
+- Johannes King
+- Jonathan Harris
+- Léa Jouvin (new)
+- Luigi Tibaldo (new)
+- Manuel Paz Arribas
+- Olga Vorokh (new)
+
+Pull requests
+~~~~~~~~~~~~~
+
+This list is incomplete. Small improvements and bug fixes are not listed here.
+
+See the complete `Gammapy 0.4 merged pull requests list on GitHub <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.4+is%3Amerged+>`__.
+
+- [#518] Fixes and cleanup for SkyMap (Axel Donath)
+- [#511] Add exposure image computation (Léa Jouvin)
+- [#510] Add acceptance curve smoothing method (Léa Jouvin)
+- [#507] Add Fermi catalog spectrum evaluation and plotting (Johannes King)
+- [#506] Improve TS map computation performance (Axel Donath)
+- [#503] Add FOV background image modeling (Léa Jouvin)
+- [#502] Add DataStore subset method (Johannes King)
+- [#487] Add SkyMap class (Axel Donath)
+- [#485] Add OffDataBackgroundMaker (Léa Jouvin)
+- [#484] Add Sherpa cube analysis prototype (Axel Donath)
+- [#481] Add new gammapy.cube sub-package (Axel Donath)
+- [#478] Add observation stacking method for spectra (Léa Jouvin and Johannes King)
+- [#475] Add tests for TS map image computation (Olga Vorokh)
+- [#474] Improve significance image analysis (Axel Donath)
+- [#473] Improve tests for HESS data (Johannes King)
+- [#462] Misc cleanup (Christoph Deil)
+- [#461] Pacman (Léa Jouvin)
+- [#459] Add radially symmetric FOV background model (Léa Jouvin)
+- [#457] Improve data and observation handling (Christoph Deil)
+- [#456] Fix and improvements to TS map tool (Olga Vorokh)
+- [#455] Improve IRF interpolation and extrapolation (Christoph Deil)
+- [#447] Add King profile PSF class (Christoph Deil)
+- [#436] Restructure spectrum package and command line tool (Johannes King)
+- [#435] Add info about Gammapy contact points and gammapy-extra (Christoph Deil)
+- [#421] Add spectrum fit serialisation code (Johannes King)
+- [#403] Improve spectrum analysis (Johannes King)
+- [#415] Add EventList plots (Jonathan Harris)
+- [#414] Add Windows tests on Appveyor (Christoph Deil)
+- [#398] Add function to compute exposure cubes (Luigi Tibaldo)
+- [#396] Rewrite spectrum analysis (Johannes King)
+- [#395] Fix misc issues with IRF classes (Johannes King)
+- [#394] Move some data specs to gamma-astro-data-formats (Christoph Deil)
+- [#392] Use external ci-helpers (Brigitta Sipocz)
+- [#387] Improve Gammapy catalog query and browser (Christoph Deil)
+- [#383] Add EnergyOffsetArray (Léa Jouvin)
+- [#379] Add gammapy.region and reflected region computation (Johannes King)
+- [#375] Misc cleanup of scripts and docs (Christoph Deil)
+- [#371] Improve catalog utils (Christoph Deil)
+- [#369] Improve the data management toolbox (Christoph Deil)
+- [#367] Add Feldman Cousins algorithm (Dirk Lennarz)
+- [#364] Improve catalog classes and gammapy-extra data handling (Jonathan Harris, Christoph Deil)
+- [#361] Add gammapy-spectrum-pipe (Johannes King)
+- [#359] Add 1D spectrum analysis tool based on gammapy.hspec (Johannes King)
+- [#353] Add some scripts and examples (Christoph Deil)
+- [#352] Add data management tools (Christoph Deil)
+- [#351] Rewrite EnergyDispersion class (Johannes King)
+- [#348] Misc code cleanup (Christoph Deil)
+- [#347] Add background cube model comparison plot script (Manuel Paz Arribas)
+- [#342] Add gammapy-bin-image test (Christoph Deil)
+- [#339] Remove PoissonLikelihoodFitter (Christoph Deil)
+- [#338] Add example script for cube background models (Manuel Paz Arribas)
+- [#337] Fix sherpa morphology fitting script (Axel Donath)
+- [#335] Improve background model simulation (Manuel Paz Arribas)
+- [#332] Fix TS map boundary handling (Axel Donath)
+- [#330] Add EnergyDispersion and CountsSpectrum (Johannes King)
+- [#319] Make background cube models (Manuel Paz Arribas)
+- [#290] Improve energy handling (Johannes King)

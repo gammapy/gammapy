@@ -1,53 +1,160 @@
-
 :root {
-    --gammapy-primary: rgb(224, 10, 52);
-    --gammapy-secondary: #1e254a;
-    --gammapy-lightgray: #f2f2f2;;
+  --gammapy-primary: rgb(224, 10, 52);
+  --gammapy-secondary: #1e254a;
+  --gammapy-lightgray: #f2f2f2;
 }
 
-/* sidebar header (and topbar for mobile) */
- .wy-side-nav-search, .wy-nav-top {
-   background: var(--gammapy-secondary);
- }
-
-/* sidebar */
- .wy-nav-side {
-   background: var(--gammapy-secondary);
+body {
+  color: rgb(30, 37, 74);
+  font-family: "Fira Sans", sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
 }
 
-/* links outside nav */
-.rst-content a:link, .rst-content a:visited {
-   color: var(--gammapy-primary);
-   text-decoration: none;
- }
+p {
+  color: rgb(30, 37, 74);
+  font-family: "Fira Sans", sans-serif;
+}
 
-/* admonitions only */
+/* navbar */
+.navbar {
+  background-color: var(--gammapy-secondary) !important;
+  color: white;
+}
+
+.navbar-light .navbar-nav li a.nav-link {
+  color: var(--gammapy-lightgray);
+  font-size: 16px;
+}
+
+.navbar-light .navbar-nav li a.nav-link:hover,
+.navbar-light .navbar-nav > .active > .nav-link {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+#navbar-icon-links i.fa-github-square::before {
+  color: white;
+}
+
+.col-lg-9 {
+  -ms-flex: 0 0 91.66667%;
+  flex: 0 0 91.66667%;
+  flex-basis: 91.6667%;
+  max-width: 91.66667%;
+}
+
+/* pre */
+.pre {
+  font-size: 12px;
+}
+
+.docutils > .pre,
+.external > .pre,
+.descname > .pre {
+  font-weight: bold;
+  color: #425bab;
+}
+
+.sig-paren {
+  font-size: 12px;
+}
+
+/* links */
+a,
+.prev-next-area a p.prev-next-title,
+a > .docutils > .pre {
+  color: var(--gammapy-primary);
+}
+
+a:hover,
+.prev-next-area a:hover p.prev-next-title,
+a > .docutils > .pre {
+  color: rgb(0, 91, 129);
+}
+
+/* admonitions */
 .admonition.note {
-   background: var(--gammapy-lightgray);
+  background: var(--gammapy-lightgray);
+}
+
+div.admonition.note > .admonition-title {
+  color: var(--gammapy-lightgray);
+  background-color: var(--gammapy-secondary);
+}
+
+.admonition.note,
+div.admonition.note {
+  border-color: var(--gammapy-secondary);
+}
+
+.admonition.note > .admonition-title::before {
+  color: var(--gammapy-lightgray);
+}
+
+.admonition.warning {
+  background: var(--gammapy-lightgray);
+}
+
+div.admonition.warning > .admonition-title {
+  color: var(--gammapy-lightgray);
+  background-color: var(--gammapy-secondary);
+}
+
+.admonition.warning,
+div.admonition.warning {
+  border-color: var(--gammapy-secondary);
+}
+
+.admonition.warning > .admonition-title::before {
+  color: var(--gammapy-lightgray);
+}
+
+.admonition.seealso {
+  background: var(--gammapy-lightgray);
+}
+
+div.admonition.seealso > .admonition-title {
+  color: var(--gammapy-lightgray);
+  background-color: var(--gammapy-secondary);
+}
+
+.admonition.seealso,
+div.admonition.seealso {
+  border-color: var(--gammapy-secondary);
+}
+
+.admonition.seealso > .admonition-title::before {
+  color: var(--gammapy-lightgray);
 }
 
 /* font size smaller and striped cols in notebook tables */
 .output_area {
-    font-size: 12px;
+  font-size: 12px;
 }
-.output_area tr:nth-child(even) {background-color: var(--gammapy-lightgray);}
+
+.output_area tr:nth-child(even) {
+  background-color: var(--gammapy-lightgray);
+}
+
 th {
-    background-color: #f2f2f2;
-    padding-right: 8px;
-    text-align: left;
+  background-color: #f2f2f2;
+  padding-right: 8px;
+  text-align: left;
 }
 
 /* font size smaller and not-stripped cols in API tables */
 table.docutils {
-    font-size: 14px;
+  font-size: 14px;
 }
+
 .rst-content table.docutils:not(.field-list) tr:nth-child(2n-1) td,
 .wy-table-striped tr:nth-child(2n-1) td,
 .wy-table-odd td {
-     background-color: #fff;
+  background-color: #fff;
 }
 
-/* Main index page overview cards */
+/* main index page overview cards */
 
 .intro-card {
   background: #fff;
@@ -69,7 +176,7 @@ table.docutils {
 
 .intro-card .card-header {
   border: none;
-  background-color:white;
+  background-color: white;
   color: #150458 !important;
   font-size: var(--pst-font-size-h5);
   font-weight: bold;
@@ -78,17 +185,17 @@ table.docutils {
 
 .intro-card .card-footer {
   border: none;
-  background-color:white;
+  background-color: white;
 }
 
-.intro-card .card-footer p.card-text{
+.intro-card .card-footer p.card-text {
   max-width: 220px;
   margin-left: auto;
   margin-right: auto;
 }
 
 .custom-button {
-  background-color:#DCDCDC;
+  background-color: #dcdcdc;
   border: none;
   color: #484848;
   text-align: center;
@@ -118,4 +225,67 @@ table.docutils {
 .btn-secondary:hover {
   background-color: #666;
   border-color: #666;
+}
+
+.btn-group-sm > .btn,
+.btn-sm {
+  padding: 0 5px;
+}
+
+/* intro to tutorial collapsed cards */
+
+.tutorial-accordion {
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.tutorial-card .card-header.card-link .btn {
+  margin-right: 12px;
+}
+
+.tutorial-card .card-header.card-link .btn:after {
+  content: "-";
+}
+
+.tutorial-card .card-header.card-link.collapsed .btn:after {
+  content: "+";
+}
+
+.tutorial-card-header-1 {
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tutorial-card-header-2 {
+  justify-content: flex-start;
+  align-items: center;
+  font-size: 1.3rem;
+}
+
+.tutorial-card .card-header {
+  cursor: pointer;
+  background-color: white;
+}
+
+.tutorial-card .card-body {
+  background-color: #f0f0f0;
+}
+
+.tutorial-card .badge {
+  background-color: #130654;
+  margin: 10px 10px 10px 10px;
+  padding: 5px;
+}
+
+.tutorial-card .gs-badge-link p {
+  margin: 0px;
+}
+
+.tutorial-card .gs-badge-link a {
+  color: white;
+  text-decoration: none;
+}
+
+.tutorial-card .badge:hover {
+  background-color: grey;
 }

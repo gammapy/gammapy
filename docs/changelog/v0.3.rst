@@ -1,0 +1,58 @@
+.. _gammapy_0p3_release:
+
+0.3 (Aug 13, 2015)
+------------------
+
+Summary
+~~~~~~~
+
+- Released Aug 13, 2015
+- 9 contributors (5 new)
+- 4 months of work
+- 24 pull requests
+- Requires Astropy version 1.0 or later.
+- On-off likelihood spectral analysis was added in gammapy.hspec,
+  contributed by Régis Terrier and Ignasi Reichardt.
+  It will be refactored and is thus not part of the public API.
+- The Gammapy 0.3 release is the basis for an `ICRC 2015 poster contribution <https://indico.cern.ch/event/344485/session/142/contribution/695>`__
+
+Contributors
+~~~~~~~~~~~~
+
+- Manuel Paz Arribas
+- Christoph Deil
+- Axel Donath
+- Jonathan Harris (new)
+- Johannes King (new)
+- Stefan Klepser (new)
+- Ignasi Reichardt (new)
+- Régis Terrier
+- Victor Zabalza (new)
+
+Pull requests
+~~~~~~~~~~~~~
+
+- [#326] Fix Debian install instructions (Victor Zabalza)
+- [#318] Set up and document logging for Gammapy (Christoph Deil)
+- [#317] Using consistent plotting style in docs (Axel Donath)
+- [#312] Add an "About Gammapy" page to the docs (Christoph Deil)
+- [#306] Use assert_quantity_allclose from Astropy (Manuel Paz Arribas)
+- [#301] Simplified attribute docstrings (Manuel Paz Arribas)
+- [#299] Add cube background model class (Manuel Paz Arribas)
+- [#296] Add interface to HESS FitSpectrum JSON output (Christoph Deil)
+- [#295] Observation table subset selection (Manuel Paz Arribas)
+- [#291] Remove gammapy.shower package (Christoph Deil)
+- [#289] Add a simple Makefile for Gammapy. (Manuel Paz Arribas)
+- [#286] Function to plot Fermi 3FGL light curves (Jonathan Harris)
+- [#285] Add infos how to handle times in Gammapy (Christoph Deil)
+- [#283] Consistent random number handling and improve sample_sphere (Manuel Paz Arribas)
+- [#280] Add new subpackage: gammapy.time (Christoph Deil)
+- [#279] Improve SNRcat dataset (Christoph Deil)
+- [#278] Document observation tables and improve gammapy.obs (Manuel Paz Arribas)
+- [#276] Add EffectiveAreaTable exporter to EffectiveAreaTable2D (Johannes King)
+- [#273] Fix TS map header writing and temp file handling (Axel Donath)
+- [#264] Add hspec - spectral analysis using Sherpa (Régis Terrier, Ignasi Reichardt, Christoph Deil)
+- [#262] Add SNRCat dataset access function (Christoph Deil)
+- [#261] Fix spiral arm model bar radius (Stefan Klepser)
+- [#260] Add offset-dependent effective area IRF class (Johannes King)
+- [#256] EventList class fixes and new features (Christoph Deil)

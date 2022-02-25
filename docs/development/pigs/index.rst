@@ -11,7 +11,7 @@ major addition or change to Gammapy. See :ref:`pig-001` for further information.
 
 Below is a list of merged PIGs, i.e. the ones that are finalised, with status
 "accepted" or "rejected" or "withdrawn". The ones with "draft" status, i.e. that
-are under discussion, can be found on Github as `pull requests with the "pig"
+are under discussion, can be found on GitHub as `pull requests with the "pig"
 label`_ .
 
 .. toctree::

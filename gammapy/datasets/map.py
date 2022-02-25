@@ -134,8 +134,6 @@ class MapDataset(Dataset):
 
     Examples
     --------
-    Example of loading a dataset
-
     >>> from gammapy.datasets import MapDataset
     >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz", name="cta_dataset")
     >>> print(dataset)
@@ -416,6 +414,12 @@ class MapDataset(Dataset):
         """Energy range maps defined by the mask_fit only."""
         return self._energy_range(self.mask_fit)
 
+    @property
+    def energy_range_total(self):
+        """Largest energy range among all pixels, defined by the full mask (mask_safe and mask_fit)."""
+        energy_min_map, energy_max_map = self.energy_range
+        return np.nanmin(energy_min_map.quantity), np.nanmax(energy_max_map.quantity)
+
     def npred(self):
         """Total predicted source and background counts
 
@@ -449,8 +453,7 @@ class MapDataset(Dataset):
                 if self._background_cached is None:
                     self._background_cached = background * values
                 else:
-                    self._background_cached.data = background.data * values.value
-                    self._background_cached.unit = background.unit
+                    self._background_cached.quantity = background.quantity * values.value
             return self._background_cached
         else:
             return background
@@ -607,7 +610,6 @@ class MapDataset(Dataset):
 
         Examples
         --------
-
         >>> from gammapy.datasets import MapDataset
         >>> from gammapy.maps import WcsGeom, MapAxis
 
@@ -869,8 +871,8 @@ class MapDataset(Dataset):
         ax : `~astropy.visualization.wcsaxes.WCSAxes`
             WCSAxes object.
 
-        Example
-        -------
+        Examples
+        --------
         >>> from gammapy.datasets import MapDataset
         >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
         >>> kwargs = {"cmap": "RdBu_r", "vmin":-5, "vmax":5, "add_cbar": True}
@@ -1689,8 +1691,8 @@ class MapDataset(Dataset):
         dataset : `MapDataset` or `SpectrumDataset`
             Sliced dataset
 
-        Example
-        -------
+        Examples
+        --------
         >>> from gammapy.datasets import MapDataset
         >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
         >>> slices = {"energy": slice(0, 3)} #to get the first 3 energy slices
@@ -1747,8 +1749,8 @@ class MapDataset(Dataset):
         dataset : `MapDataset`
             Sliced Dataset
 
-        Example
-        -------
+        Examples
+        --------
         >>> from gammapy.datasets import MapDataset
         >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
         >>> sliced = dataset.slice_by_energy(energy_min="1 TeV", energy_max="5 TeV")

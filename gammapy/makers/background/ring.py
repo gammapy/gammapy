@@ -236,8 +236,8 @@ class RingBackgroundMaker(Maker):
         Exclusion mask
 
 
-    Example
-    -------
+    Examples
+    --------
     See: For a usage example, see `ring_background.html <../../../docs/tutorials/analysis/2D/ring_background.ipynb>`__
 
     See Also

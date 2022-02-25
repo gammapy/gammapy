@@ -3,6 +3,7 @@ import abc
 import json
 import numpy as np
 from astropy.io import fits
+import astropy.units as u
 from ..core import Map
 from ..io import find_bands_hdu, find_bintable_hdu
 from .geom import HpxGeom
@@ -156,7 +157,7 @@ class HpxMap(Map):
 
         # exposure maps have an additional GTI hdu
         if format == "fgst-bexpcube" and "GTI" in hdu_list:
-            hpx_map.unit = "cm2 s"
+            hpx_map._unit = u.Unit("cm2 s")
 
         return hpx_map
 

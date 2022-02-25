@@ -64,6 +64,11 @@ class LightCurveEstimator(FluxPointsEstimator):
         Fit instance specifying the backend and fit options.
     reoptimize : bool
         Re-optimize other free model parameters. Default is True.
+
+    Examples
+    --------
+    For a usage example see `light_curve.html <../../../docs/tutorials/analysis/time/light_curve.html>`__
+
     """
 
     tag = "LightCurveEstimator"

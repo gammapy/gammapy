@@ -71,4 +71,4 @@ Help!?
 ------
 
 If you have any questions or issues, please ask for help on the Gammapy Slack,
-mailing list or on Github, see `Gammapy contact`_.
+mailing list or on GitHub, see `Gammapy contact`_.
