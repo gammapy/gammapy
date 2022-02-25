@@ -135,13 +135,18 @@ The methods are implemented in :ref:`gammapy.astro <api_astro>`.
 
 The methods are implemented in :ref:`gammapy.stats <api_stats>`.
 
+.. _overview_scripts:
+
+:ref:`Command line tools <CLI>`
+++++++++++++++++++++++++++++++++++++++++++++++++
+
+The methods are implemented in :ref:`gammapy.scripts <api_CLI>`.
 
 
 
 
 
-* Command line tools in :ref:`gammapy.scripts <CLI>`
-* Utils and visulization
+* Utils and visualization
 
 
 
@@ -163,4 +168,5 @@ the first and second analysis tutorials at :ref:`tutorials`.
     catalog
     ../astro/index
     stats
+    cli
     
