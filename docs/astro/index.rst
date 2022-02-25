@@ -6,7 +6,7 @@ astro - Astrophysics
 
 .. currentmodule:: gammapy.astro
 
-.. automodapi:: gammapy.astro.source
+.. automodapi:: gammapy.astro.darkmatter
     :no-inheritance-diagram:
     :include-all-objects:
 
@@ -14,8 +14,6 @@ astro - Astrophysics
     :no-inheritance-diagram:
     :include-all-objects:
 
-.. automodapi:: gammapy.astro.darkmatter
+.. automodapi:: gammapy.astro.source
     :no-inheritance-diagram:
     :include-all-objects:
-
-            

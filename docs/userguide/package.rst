@@ -164,7 +164,7 @@ The methods are implemented in :ref:`gammapy.utils <api_utils>`.
     dl3
     makers
     dl4
-    model_estimators
+    modeling
     hli
     catalog
     astro

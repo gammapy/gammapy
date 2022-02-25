@@ -8,10 +8,6 @@ utils - Utilities
 
 .. currentmodule:: gammapy.utils
 
-.. automodapi:: gammapy.utils.units
-    :no-inheritance-diagram:
-    :include-all-objects:
-
 .. automodapi:: gammapy.utils.coordinates
     :no-inheritance-diagram:
     :include-all-objects:
@@ -21,10 +17,6 @@ utils - Utilities
     :include-all-objects:
 
 .. automodapi:: gammapy.utils.interpolation
-    :no-inheritance-diagram:
-    :include-all-objects:
-
-.. automodapi:: gammapy.utils.table
     :no-inheritance-diagram:
     :include-all-objects:
 
@@ -44,10 +36,18 @@ utils - Utilities
     :no-inheritance-diagram:
     :include-all-objects:
 
+.. automodapi:: gammapy.utils.table
+    :no-inheritance-diagram:
+    :include-all-objects:
+
 .. automodapi:: gammapy.utils.testing
     :no-inheritance-diagram:
     :include-all-objects:
 
 .. automodapi:: gammapy.utils.time
+    :no-inheritance-diagram:
+    :include-all-objects:
+
+.. automodapi:: gammapy.utils.units
     :no-inheritance-diagram:
     :include-all-objects:
