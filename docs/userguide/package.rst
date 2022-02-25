@@ -146,8 +146,12 @@ A command line interface (CLI) for commonly used and easy to configure analysis 
 
 The methods are implemented in :ref:`gammapy.scripts <api_CLI>`.
 
+:ref:`Plotting features <visualization>`
+++++++++++++++++++++++++++++++++++++++++++++++++
 
+Helper functions and classes to create publication-quality images.
 
+The methods are implemented in :ref:`gammapy.visualization <api_visualization>`.
 
 .. _overview_utils:
 
@@ -170,6 +174,6 @@ The methods are implemented in :ref:`gammapy.utils <api_utils>`.
     astro
     stats
     cli
-
+    visualization
     utils
     
