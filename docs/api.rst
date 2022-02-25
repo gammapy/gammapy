@@ -12,19 +12,19 @@ methods. All classes and functions exposed in ``gammapy.*`` namespace are public
 .. toctree::
     :maxdepth: 2
 
-    analysis/index
     data/index
+    irf/index
     makers/index
     datasets/index
+    maps/index
     modeling/index
     estimators/index
 
-    irf/index
-    maps/index
+    analysis/index
     catalog/index
-
     astro/index
-    scripts/index
     stats/index
-    visualization/index
+
+    scripts/index
     utils/index
+    visualization/index
