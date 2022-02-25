@@ -320,7 +320,7 @@ def test_interp_methods():
     assert_allclose(actual, 4.2)
 
     actual = m.interp_by_coord({"lon": 0.07, "lat": 0.03}, method="nearest")
-    assert_allclose(actual, 4.)
+    assert_allclose(actual, 3.)
 
 
 def test_wcsndmap_interp_by_coord_fill_value():

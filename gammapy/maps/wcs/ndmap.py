@@ -128,7 +128,7 @@ class WcsNDMap(WcsMap):
         idx = pix_tuple_to_idx(idx)
         return self.data.T[idx]
 
-    def interp_by_coord(self, coords, method="nearest", fill_value=None):
+    def interp_by_coord(self, coords, method="linear", fill_value=None):
 
         if self.geom.is_regular:
             pix = self.geom.coord_to_pix(coords)
@@ -136,7 +136,7 @@ class WcsNDMap(WcsMap):
         else:
             return self._interp_by_coord_griddata(coords, method=method)
 
-    def interp_by_pix(self, pix, method="nearest", fill_value=None):
+    def interp_by_pix(self, pix, method="linear", fill_value=None):
         if not self.geom.is_regular:
             raise ValueError("interp_by_pix only supported for regular geom.")
 
