@@ -62,8 +62,8 @@ The data reduction and background estimation methods are implemented in
 
 .. _overview_datasets:
 
-Datasets (DL4)
---------------
+:ref:`Datasets (DL4) <datasets>`
+--------------------------------
 
 The datasets classes bundle reduced data in form of maps, reduced IRFs, models and
 fit statistics. Different sub-classes support different analysis methods
@@ -73,8 +73,8 @@ fitting allowing to combine different measurements, e.g. from different observat
 but also from different instruments or event classes. They can also be used for binned
 simulation as well as event sampling to simulate DL3 events data.
 
-To learn more about datasets, see :ref:`gammapy.datasets <datasets>` and
-:ref:`gammapy.maps <maps>`.
+To learn more about datasets, see :ref:`gammapy.datasets <api_datasets>` and
+:ref:`gammapy.maps <api_maps>`.
 
 
 .. _overview_modeling:
@@ -134,3 +134,4 @@ the first and second analysis tutorials at :ref:`tutorials`.
 
     dl3
     makers
+    dl4

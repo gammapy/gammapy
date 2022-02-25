@@ -24,8 +24,8 @@ Once some observation selection has been selected, the user can build a list of 
 a `~gammapy.data.Observations` object, which will be used for the data reduction process.
 
 
-Getting started
-===============
+Getting started with data
+-------------------------
 
 You can use the `~gammapy.data.EventList` class to load IACT gamma-ray event lists:
 
@@ -53,7 +53,8 @@ to load IACT data. E.g. an alternative way to load the events for observation ID
     events = data_store.obs(23523).events
 
 The index tables
-================
+----------------
+
 A typical way to organize the files relevant to the data we are interested in are the index tables.
 There are two tables:
 
@@ -67,7 +68,8 @@ More details on these tables and their content can be found in https://gamma-ast
 
 
 Working with event lists
-========================
+------------------------
+
 To take a quick look at the events inside the list, one can use `~gammapy.data.EventList.peek()`
 
 .. plot::
@@ -110,7 +112,8 @@ of the sky.
 
 
 Combining event lists and GTIs
-==============================
+------------------------------
+
 Both event lists and GTIs can be stacked into a larger one. An `~gammapy.data.EventList` can also be created `~gammapy.data.EventList.from_stack`, that is,
 from a list of `~gammapy.data.EventList` objects.
 
@@ -135,7 +138,8 @@ from a list of `~gammapy.data.EventList` objects.
     combined_events = EventList.from_stack([events_1, events_2])
 
 Writing event lists and GTIs to file
-====================================
+------------------------------------
+
 To write the events or GTIs separately, one can just save the underlying
 `astropy.table.Table`. However, it is usually best to save the events and
 their associated GTIs together in the same FITS file. This can be done using
@@ -160,7 +164,7 @@ the `~gammapy.data.EventList.write` method:
 
 
 Using gammapy.data
-==================
+------------------
 
 Gammapy tutorial notebooks that show examples using ``gammapy.data``:
 
@@ -215,7 +219,7 @@ Variable          Definition
 
 
 Using gammapy.irf
-=================
+-----------------
 
 If you'd like to learn more about using `gammapy.irf`, read the following 
 sub-pages:
