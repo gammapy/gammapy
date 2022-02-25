@@ -163,8 +163,17 @@ class FluxPointsDataset(Dataset):
 
         filename = make_path(filename)
         table = Table.read(filename)
+        mask_fit = None
+        mask_safe = None
+        if "mask_safe" in table.colnames:
+            mask_safe = table["mask_safe"].data.astype("bool")
+        if "mask_fit" in table.colnames:
+            mask_fit = table["mask_fit"].data.astype("bool")
         return cls(
-            name=make_name(name), data=FluxPoints.from_table(table, format=format)
+            name=make_name(name),
+            data=FluxPoints.from_table(table, format=format),
+            mask_fit=mask_fit,
+            mask_safe=mask_safe
         )
 
     @classmethod
