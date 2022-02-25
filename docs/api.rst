@@ -26,5 +26,5 @@ methods. All classes and functions exposed in ``gammapy.*`` namespace are public
     stats/index
 
     scripts/index
-    utils/index
     visualization/index
+    utils/index

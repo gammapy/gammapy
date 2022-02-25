@@ -22,9 +22,7 @@ are explained in more detail in the following sections.
     the data flow is illustrated with shaded arrows. The top section
     shows the data levels as defined by `CTA`_.
 
-
 .. _overview_data:
-
 
 :ref:`Data access and selection (DL3) <data>`
 ---------------------------------------------
@@ -91,20 +89,21 @@ Independently or subsequently to the global modelling, the data can be
 re-grouped to compute flux points, light curves and flux as well as significance
 maps in energy bands.
 
-To learn more about modeling and fitting, see  :ref:`gammapy.modeling <api_modeling>`
+To learn more about modeling and fitting, see :ref:`gammapy.modeling <api_modeling>`
 and :ref:`gammapy.estimators <api_estimators>`.
 
 
 .. _overview_hli:
 
-High Level Analysis Interface
------------------------------
+:ref:`High Level Analysis Interface <analysis>`
+-----------------------------------------------
+
 To define and execute a full data analysis process from a YAML configuration file,
 Gammapy implements a high level analysis interface. It exposes a subset of
 the functionality that is available in the sub-packages to support
 standard analysis use case in a convenient way.
 
-The high level analysis interface can be found in :ref:`gammapy.analysis <analysis>`.
+The high level analysis interface methods are implemented in :ref:`gammapy.analysis <api_analysis>`
 
 .. _overview_other:
 
@@ -136,4 +135,5 @@ the first and second analysis tutorials at :ref:`tutorials`.
     makers
     dl4
     model_estimators
+    hli
     
