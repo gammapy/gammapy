@@ -105,15 +105,19 @@ standard analysis use case in a convenient way.
 
 The high level analysis interface methods are implemented in :ref:`gammapy.analysis <api_analysis>`
 
-.. _overview_other:
+.. _overview_catalog:
+
+:ref:`Source catalogs <catalog>`
+--------------------------------
+
+Access to a variety of GeV-TeV gamma-ray catalogs.
+
+The catalog methods are implemented in :ref:`gammapy.catalog <api_catalog>`.
 
 Other
 -----
 
-Gammapy offers additional functionality in sub-packages not related to the
-standard analysis work flow described above. This includes:
-
-* Access to a variety of GeV-TeV gamma-ray catalogs in :ref:`gammapy.catalog <catalog>`
+*  in :ref:`gammapy.catalog <catalog>`
 * Support for simulation of TeV source populations and dark matter models in :ref:`gammapy.astro <astro>`
 * Statistical utility functions in :ref:`gammapy.stats <stats>`
 * Command line tools in :ref:`gammapy.scripts <CLI>`
@@ -136,4 +140,5 @@ the first and second analysis tutorials at :ref:`tutorials`.
     dl4
     model_estimators
     hli
+    catalog
     
