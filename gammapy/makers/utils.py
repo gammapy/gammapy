@@ -5,8 +5,7 @@ from itertools import combinations
 from astropy.coordinates import Angle, SkyOffsetFrame
 from astropy.table import Table
 import astropy.units as u
-from gammapy.data import FixedPointingInfo
-from gammapy.irf import EDispMap, PSFMap
+from gammapy.irf import EDispMap, PSFMap, FoVAlignment
 from gammapy.maps import Map, RegionGeom, RegionNDMap
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.stats import WStatCountsStatistic
@@ -168,19 +167,23 @@ def make_map_background_irf(
     if bkg.has_offset_axis:
         coords["offset"] = sky_coord.separation(pointing)
     else:
-        if isinstance(pointing, FixedPointingInfo):
+        if bkg.fov_alignment == FoVAlignment.ALTAZ:
             altaz_coord = sky_coord.transform_to(pointing.altaz_frame)
 
             # Compute FOV coordinates of map relative to pointing
             fov_lon, fov_lat = sky_to_fov(
                 altaz_coord.az, altaz_coord.alt, pointing.altaz.az, pointing.altaz.alt
             )
-        else:
+        elif bkg.fov_alignment == FoVAlignment.RADEC:
             # Create OffsetFrame
-            frame = SkyOffsetFrame(origin=pointing)
+            frame = SkyOffsetFrame(origin=pointing.radec)
             pseudo_fov_coord = sky_coord.transform_to(frame)
             fov_lon = pseudo_fov_coord.lon
             fov_lat = pseudo_fov_coord.lat
+        else:
+            raise ValueError(
+                f"Unsupported background coordinate system: {bkg.fov_alignment!r}"
+            )
 
         coords["fov_lon"] = fov_lon
         coords["fov_lat"] = fov_lat
