@@ -79,8 +79,8 @@ To learn more about datasets, see :ref:`gammapy.datasets <api_datasets>` and
 
 .. _overview_modeling:
 
-Modeling and Fitting (DL4 to DL5)
----------------------------------
+:ref:`Modeling and Fitting (DL4 to DL5) <modeling>`
+---------------------------------------------------
 
 The next step is then typically to model and fit the datasets, either
 individually, or in a joint likelihood analysis. For this purpose Gammapy
@@ -91,8 +91,8 @@ Independently or subsequently to the global modelling, the data can be
 re-grouped to compute flux points, light curves and flux as well as significance
 maps in energy bands.
 
-To learn more about modeling and fitting, see  :ref:`gammapy.modeling <modeling>`
-and :ref:`gammapy.estimators <estimators>`.
+To learn more about modeling and fitting, see  :ref:`gammapy.modeling <api_modeling>`
+and :ref:`gammapy.estimators <api_estimators>`.
 
 
 .. _overview_hli:
@@ -135,3 +135,5 @@ the first and second analysis tutorials at :ref:`tutorials`.
     dl3
     makers
     dl4
+    model_estimators
+    
