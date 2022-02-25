@@ -1,8 +1,5 @@
 .. include:: ../references.txt
 
-
-
-
 .. _overview_package:
 
 Package structure
@@ -46,8 +43,8 @@ The access to the data and instrument response is implemented in
 
 .. _overview_data_reduction:
 
-Data reduction (DL3 to DL4)
----------------------------
+:ref:`Data reduction (DL3 to DL4) <makers>`
+-------------------------------------------
 
 In the next stage of the analysis the user selects a coordinates system, region or
 energy binning and events are binned into multidimensional data structures (maps)
@@ -61,7 +58,7 @@ typically written to disk to allow users to read them back at any time later
 for modeling and fitting.
 
 The data reduction and background estimation methods are implemented in
-:ref:`gammapy.makers <makers>`.
+:ref:`gammapy.makers <api_makers>`.
 
 .. _overview_datasets:
 
@@ -136,3 +133,4 @@ the first and second analysis tutorials at :ref:`tutorials`.
     :hidden:
 
     dl3
+    makers
