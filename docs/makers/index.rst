@@ -4,9 +4,6 @@
 makers - Data reduction
 ***********************
 
-Reference/API
-=============
-
 .. automodapi:: gammapy.makers
     :no-inheritance-diagram:
     :include-all-objects:
