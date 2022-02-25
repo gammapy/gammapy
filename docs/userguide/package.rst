@@ -133,6 +133,8 @@ The methods are implemented in :ref:`gammapy.astro <api_astro>`.
 :ref:`Statistical utility functions <stats>`
 ++++++++++++++++++++++++++++++++++++++++++++++++
 
+Statistical estimators, fit statistics and algorithms commonly used in gamma-ray astronomy
+
 The methods are implemented in :ref:`gammapy.stats <api_stats>`.
 
 .. _overview_scripts:
@@ -140,13 +142,22 @@ The methods are implemented in :ref:`gammapy.stats <api_stats>`.
 :ref:`Command line tools <CLI>`
 ++++++++++++++++++++++++++++++++++++++++++++++++
 
+A command line interface (CLI) for some very commonly used and easy to configure analysis tasks.
+
 The methods are implemented in :ref:`gammapy.scripts <api_CLI>`.
 
 
+.. _overview_utils:
+
+:ref:`Utility functions <utils>`
+++++++++++++++++++++++++++++++++++++++++++++++++
+
+Utility functions that are used in many places or don’t fit in one of the other packages.
+
+The methods are implemented in :ref:`gammapy.utils <api_utils>`.
 
 
 
-* Utils and visualization
 
 
 
@@ -169,4 +180,5 @@ the first and second analysis tutorials at :ref:`tutorials`.
     ../astro/index
     stats
     cli
+    utils
     
