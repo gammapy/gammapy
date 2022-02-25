@@ -6,39 +6,16 @@ astro - Astrophysics
 
 .. currentmodule:: gammapy.astro
 
-Introduction
-============
+.. automodapi:: gammapy.astro.source
+    :no-inheritance-diagram:
+    :include-all-objects:
 
-This module contains utility functions for some astrophysical scenarios:
+.. automodapi:: gammapy.astro.population
+    :no-inheritance-diagram:
+    :include-all-objects:
 
-* `gammapy.astro.source` for astrophysical source models
-* `gammapy.astro.population` for astrophysical population models
-* `gammapy.astro.darkmatter` for dark matter spatial and spectral models
+.. automodapi:: gammapy.astro.darkmatter
+    :no-inheritance-diagram:
+    :include-all-objects:
 
-The ``gammapy.astro`` sub-package is in a prototyping phase and its scope and future
-are currently being discussed. It is likely that some of the functionality will
-be removed or split out into a separate package at some point.
-
-Getting started
-===============
-
-The ``gammapy.astro`` namespace is empty. Use these import statements:
-
-.. testcode::
-
-    from gammapy.astro import source
-    from gammapy.astro import population
-    from gammapy.astro import darkmatter
-
-Please refer to the Getting Started section of each module for a further
-introduction
-
-Sub-packages
-============
-
-.. toctree::
-    :maxdepth: 1
-
-    source/index
-    population/index
-    darkmatter/index
+            

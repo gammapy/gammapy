@@ -102,7 +102,7 @@ Gammapy implements a high level analysis interface. It exposes a subset of
 the functionality that is available in the sub-packages to support
 standard analysis use case in a convenient way.
 
-The high level analysis interface methods are implemented in :ref:`gammapy.analysis <api_analysis>`
+The high level analysis interface methods are implemented in :ref:`gammapy.analysis <api_analysis>`.
 
 
 .. _overview_other:
@@ -117,12 +117,12 @@ Other
 
 Access to a variety of GeV-TeV gamma-ray catalogs.
 
-The catalog methods are implemented in :ref:`gammapy.catalog <api_catalog>`.
+The methods are implemented in :ref:`gammapy.catalog <api_catalog>`.
 
 .. _overview_astro:
 
-:ref:`astro - Astropyhics <api_astro>`
-++++++++++++++++++++++++++++++++++++++
+:ref:`Astropyhics <astro>`
+++++++++++++++++++++++++++
 
 Support for simulation of TeV source populations and dark matter models.
 
@@ -133,7 +133,7 @@ The methods are implemented in :ref:`gammapy.astro <api_astro>`.
 :ref:`Statistical utility functions <stats>`
 ++++++++++++++++++++++++++++++++++++++++++++++++
 
-Statistical estimators, fit statistics and algorithms commonly used in gamma-ray astronomy
+Statistical estimators, fit statistics and algorithms commonly used in gamma-ray astronomy.
 
 The methods are implemented in :ref:`gammapy.stats <api_stats>`.
 
@@ -142,9 +142,11 @@ The methods are implemented in :ref:`gammapy.stats <api_stats>`.
 :ref:`Command line tools <CLI>`
 ++++++++++++++++++++++++++++++++++++++++++++++++
 
-A command line interface (CLI) for some very commonly used and easy to configure analysis tasks.
+A command line interface (CLI) for commonly used and easy to configure analysis tasks.
 
 The methods are implemented in :ref:`gammapy.scripts <api_CLI>`.
+
+
 
 
 .. _overview_utils:
@@ -156,18 +158,6 @@ Utility functions that are used in many places or don’t fit in one of the othe
 
 The methods are implemented in :ref:`gammapy.utils <api_utils>`.
 
-
-
-
-
-
-What next?
-----------
-
-After this overview of the Gammapy package, we suggest to continue by trying it out,
-following the instructions in :ref:`installation`, :ref:`getting-started` and then
-the first and second analysis tutorials at :ref:`tutorials`.
-
 .. toctree::
     :hidden:
 
@@ -177,8 +167,9 @@ the first and second analysis tutorials at :ref:`tutorials`.
     model_estimators
     hli
     catalog
-    ../astro/index
+    astro
     stats
     cli
+
     utils
     

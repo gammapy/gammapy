@@ -1,8 +1,8 @@
 .. _astro-population:
 
-*****************************************************************
-Astrophysical source population models (gammapy.astro.population)
-*****************************************************************
+**************************************
+Astrophysical source population models
+**************************************
 
 .. currentmodule:: gammapy.astro.population
 
@@ -69,10 +69,3 @@ Velocity distributions
 Here is a comparison plot of all available velocity distribution functions:
 
 .. plot:: astro/population/plot_velocity_distributions.py
-
-Reference/API
-=============
-
-.. automodapi:: gammapy.astro.population
-    :no-inheritance-diagram:
-    :include-all-objects:
