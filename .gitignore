@@ -61,6 +61,7 @@ MANIFEST
 # notebooks
 *.ipynb_checkpoints
 docs/_static/notebooks
+docs/_downloads/notebooks-dev.tar
 docs/modeling/gallery
 
 docs/tutorials/analysis/3D/crab-3datasets
@@ -90,3 +91,11 @@ dev/crab
 *.fits
 *.fits.gz
 *.root
+
+# Linting
+.trunk
+.flake8
+.isort.cfg
+.shellcheckrc
+.hadolint.yaml
+.markdownlint.yaml

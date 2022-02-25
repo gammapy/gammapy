@@ -180,7 +180,7 @@ bot break user scripts.
 Decision
 ========
 
-This PIG was extensively discussed on Github, as well as in Gammapy weekly calls
+This PIG was extensively discussed on GitHub, as well as in Gammapy weekly calls
 and at the Feb 2018 and July 2018 Gammapy meetings. Doing this move to new
 analysis code based on gammapy.maps was never controversial, bug API and
 implementation discussions were ongoing.

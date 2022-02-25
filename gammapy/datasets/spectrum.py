@@ -22,7 +22,7 @@ class PlotMixin:
     ):
         """Plot spectrum and residuals in two panels.
 
-        Calls `~SpectrumDataset.plot_excess` and `~SpectrumDataset.plot_residuals`.
+        Calls `~SpectrumDataset.plot_excess` and `~SpectrumDataset.plot_residuals_spectral`.
 
         Parameters
         ----------
@@ -33,12 +33,27 @@ class PlotMixin:
         kwargs_spectrum : dict
             Keyword arguments passed to `~SpectrumDataset.plot_excess`.
         kwargs_residuals : dict
-            Keyword arguments passed to `~SpectrumDataset.plot_residuals`.
+            Keyword arguments passed to `~SpectrumDataset.plot_residuals_spectral`.
 
         Returns
         -------
         ax_spectrum, ax_residuals : `~matplotlib.axes.Axes`
             Spectrum and residuals plots.
+
+        Examples
+        --------
+        >>> #Creating a spectral dataset
+        >>> from gammapy.datasets import SpectrumDatasetOnOff
+        >>> from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
+        >>> dataset = SpectrumDatasetOnOff.read(f"$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits")
+        >>> p = PowerLawSpectralModel()
+        >>> dataset.models = SkyModel(spectral_model=p)
+        >>> #optional configurations
+        >>> kwargs_excess = {"color": "blue", "markersize":8, "marker":'s', }
+        >>> kwargs_npred_signal = {"color": "black", "ls":"--"}
+        >>> kwargs_spectrum = {"kwargs_excess":kwargs_excess, "kwargs_npred_signal":kwargs_npred_signal}
+        >>> kwargs_residuals = {"color": "black", "markersize":4, "marker":'s', } #optional configuration
+        >>> dataset.plot_fit(kwargs_residuals=kwargs_residuals, kwargs_spectrum=kwargs_spectrum)  # doctest: +SKIP
         """
         from matplotlib.gridspec import GridSpec
 
@@ -119,6 +134,19 @@ class PlotMixin:
         -------
         ax : `~matplotlib.axes.Axes`
             Axes object.
+
+        Examples
+        --------
+        >>> #Reading a spectral dataset
+        >>> from gammapy.datasets import SpectrumDatasetOnOff
+        >>> dataset = SpectrumDatasetOnOff.read(f"$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits")
+        >>> dataset.mask_fit = dataset.mask_safe.copy()
+        >>> dataset.mask_fit.data[40:46]=False #setting dummy mask_fit for illustration
+        >>> #Plot the masks on top of the counts histogram
+        >>> kwargs_safe = {"color":"green", "alpha":0.2} #optinonal arguments to configure
+        >>> kwargs_fit = {"color":"pink", "alpha":0.2}
+        >>> ax=dataset.plot_counts() # doctest: +SKIP
+        >>> dataset.plot_masks(ax=ax, kwargs_fit=kwargs_fit, kwargs_safe=kwargs_safe)  # doctest: +SKIP
         """
 
         kwargs_fit = kwargs_fit or {}
@@ -135,6 +163,7 @@ class PlotMixin:
         if self.mask_safe:
             self.mask_safe.plot_mask(ax=ax, **kwargs_safe)
 
+        ax.legend()
         return ax
 
     def plot_excess(
@@ -159,6 +188,19 @@ class PlotMixin:
         -------
         ax : `~matplotlib.axes.Axes`
             Axes object.
+
+        Examples
+        --------
+        >>> #Creating a spectral dataset
+        >>> from gammapy.datasets import SpectrumDatasetOnOff
+        >>> from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
+        >>> dataset = SpectrumDatasetOnOff.read(f"$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits")
+        >>> p = PowerLawSpectralModel()
+        >>> dataset.models = SkyModel(spectral_model=p)
+        >>> #Plot the excess in blue and the npred in black dotted lines
+        >>> kwargs_excess = {"color": "blue", "markersize":8, "marker":'s', }
+        >>> kwargs_npred_signal = {"color": "black", "ls":"--"}
+        >>> dataset.plot_excess(kwargs_excess=kwargs_excess, kwargs_npred_signal=kwargs_npred_signal)  # doctest: +SKIP
         """
         kwargs_excess = kwargs_excess or {}
         kwargs_npred_signal = kwargs_npred_signal or {}
@@ -299,6 +341,7 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
     @classmethod
     def from_dict(cls, data, **kwargs):
         """Create spectrum dataset from dict.
+        Reads file from the disk as specified in the dict
 
         Parameters
         ----------

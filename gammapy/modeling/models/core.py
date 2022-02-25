@@ -13,6 +13,10 @@ from gammapy.maps import Map, RegionGeom
 from gammapy.modeling import Covariance, Parameter, Parameters
 from gammapy.utils.scripts import make_name, make_path
 
+
+__all__ = ["Model", "Models", "DatasetModels", "ModelBase"]
+
+
 log = logging.getLogger(__name__)
 
 
@@ -47,9 +51,6 @@ def _get_model_class_from_dict(data):
     elif "temporal" in data:
         cls = TEMPORAL_MODEL_REGISTRY.get_cls(data["temporal"]["type"])
     return cls
-
-
-__all__ = ["Model", "Models", "DatasetModels"]
 
 
 class ModelBase:
@@ -464,9 +465,8 @@ class DatasetModels(collections.abc.Sequence):
             data, sort_keys=False, indent=4, width=80, default_flow_style=False
         )
 
-    def to_dict(self, full_output=False, overwrite_templates=False):
-        """Convert to dict."""
-        # update linked parameters labels
+    def update_link_label(self):
+        """update linked parameters labels used for serialization and print"""
         params_list = []
         params_shared = []
         for param in self.parameters:
@@ -477,6 +477,12 @@ class DatasetModels(collections.abc.Sequence):
                 params_shared.append(param)
         for param in params_shared:
             param._link_label_io = param.name + "@" + make_name()
+
+
+    def to_dict(self, full_output=False, overwrite_templates=False):
+        """Convert to dict."""
+
+        self.update_link_label()
 
         models_data = []
         for model in self._models:
@@ -554,6 +560,9 @@ class DatasetModels(collections.abc.Sequence):
         table.write(make_path(filename), **kwargs)
 
     def __str__(self):
+        
+        self.update_link_label()
+
         str_ = f"{self.__class__.__name__}\n\n"
 
         for idx, model in enumerate(self):
@@ -874,7 +883,7 @@ class DatasetModels(collections.abc.Sequence):
 
     @property
     def positions(self):
-        """Positions of the models (`SkyCoord`)"""
+        """Positions of the models (`~astropy.coordinates.SkyCoord`)"""
         positions = []
 
         for model in self.select(tag="sky-model"):

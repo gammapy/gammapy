@@ -99,6 +99,11 @@ class SourceCatalog(abc.ABC):
         """Catalog description (str)."""
         pass
 
+    @property
+    @abc.abstractmethod
+    def tag(self):
+        pass
+
     source_object_class = SourceCatalogObject
     """Source class (`SourceCatalogObject`)."""
 
@@ -110,7 +115,7 @@ class SourceCatalog(abc.ABC):
     def __str__(self):
         return (
             f"{self.__class__.__name__}:\n"
-            f"    name: {self.name}\n"
+            f"    name: {self.tag}\n"
             f"    description: {self.description}\n"
             f"    sources: {len(self.table)}\n"
         )

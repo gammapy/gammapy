@@ -82,7 +82,7 @@ is done automatically by `astropy.coordinates.AltAz` when the
 `astropy.coordinates.AltAz.obstime` is set with a `~astropy.time.Time` object in
 any scale, no need for explicit time scale transformations in Gammapy (although
 if you do want to explicitly compute it, it's easy, see `here
-<http://docs.astropy.org/en/latest/time/index.html#sidereal-time>`__).
+<https://docs.astropy.org/en/latest/api/astropy.time.Time.html#astropy.time.Time.sidereal_time>`__).
 
 The `Fermi-LAT time systems in a nutshell`_ page gives a good, brief explanation
 of the differences between the relevant time scales ``UT1``, ``UTC`` and ``TT``.

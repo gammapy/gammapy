@@ -2,9 +2,9 @@
 
 .. _data:
 
-***************************************
-data - DL3 data access and observations
-***************************************
+********************************
+data - DL3 data and observations
+********************************
 
 .. currentmodule:: gammapy.data
 
@@ -142,7 +142,8 @@ Writing event lists and GTIs to file
 ====================================
 To write the events or GTIs separately, one can just save the underlying
 `astropy.table.Table`. However, it is usually best to save the events and
-their associated GTIs together in the same FITS file.
+their associated GTIs together in the same FITS file. This can be done using
+the `~gammapy.data.EventList.write` method:
 
 .. testcode::
 
@@ -154,17 +155,11 @@ their associated GTIs together in the same FITS file.
     gti = GTI.read(filename)
 
     # Save separately
-    events.table.meta = {"extname": "EVENTS"}
-    events.table.write("test_events.fits.gz")
+    events.write("test_events.fits.gz", gti=None)
     gti.write("test_gti.fits.gz")
 
     # Save together
-    from astropy.io import fits
-    primary_hdu = fits.PrimaryHDU()
-    events_hdu = fits.BinTableHDU(data=events.table, name="events")
-    gti_hdu = fits.BinTableHDU(gti.table, name="gti")
-    hdulist = fits.HDUList([primary_hdu, events_hdu, gti_hdu])
-    hdulist.writeto("test_together.fits.gz")
+    events.write("test_events_with_GTI.fits.gz", gti=gti)
 
 
 

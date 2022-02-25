@@ -72,10 +72,9 @@ analyse the following datasets:
 
 
 In general, `OnOff` datasets should be used when the
-background is estimated from real off counts
-(eg: `RingBackground` or `ReflectedBackground`),
+background is estimated from real off counts,
 rather than from a background model.
-The `FluxPointDataset` is used to fit pre-computed flux points
+The `~gammapy.datasets.FluxPointsDataset` is used to fit pre-computed flux points
 when no convolution with IRFs are needed.
 
 
@@ -88,8 +87,7 @@ objects) with an energy axis. There are no spatial axes or information, the 1D
 spectra are obtained for a given on region.
 
 Note that in Gammapy, 2D image analyses are done with 3D cubes with a single
-energy bin, e.g. for modeling and fitting,
-see the `2D map analysis tutorial <./tutorials/image_analysis.html>`__.
+energy bin, e.g. for modeling and fitting.
 
 To analyse multiple runs, you can either stack the datasets together, or perform
 a joint fit across multiple datasets.

@@ -3,7 +3,10 @@ import numpy as np
 # taken from the matploltlib documentation
 # https://matplotlib.org/3.1.0/gallery/images_contours_and_fields/image_annotated_heatmap.html#sphx-glr-gallery-images-contours-and-fields-image-annotated-heatmap-py
 
-__all__ = ["plot_heatmap", "annotate_heatmap"]
+__all__ = [
+    "annotate_heatmap",
+    "plot_heatmap",
+]
 
 
 def plot_heatmap(

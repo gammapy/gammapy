@@ -34,6 +34,10 @@ class TestSourceCatalogHGPS:
         assert len(cat.table) == 78
 
     @staticmethod
+    def test_str(cat):
+        assert "name: hgps" in str(cat.__str__())
+
+    @staticmethod
     def test_positions(cat):
         assert len(cat.positions) == 78
 

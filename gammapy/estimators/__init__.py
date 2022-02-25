@@ -1,10 +1,39 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Estimators."""
 from gammapy.utils.registry import Registry
-from .core import *
-from .map import *
-from .points import *
-from .profile import *
+from .core import Estimator
+from .map import (
+    ASmoothMapEstimator,
+    FluxMaps,
+    ExcessMapEstimator,
+    TSMapEstimator,
+)
+from .points import (
+    FluxPoints,
+    LightCurveEstimator,
+    FluxProfileEstimator,
+    FluxPointsEstimator,
+    SensitivityEstimator,
+)
+from .profile import ImageProfile, ImageProfileEstimator
+
+
+__all__ = [
+    "ASmoothMapEstimator",
+    "Estimator",
+    "ESTIMATOR_REGISTRY",
+    "ExcessMapEstimator",
+    "FluxMaps",
+    "FluxPoints",
+    "FluxPointsEstimator",
+    "FluxProfileEstimator",
+    "ImageProfile",
+    "ImageProfileEstimator",
+    "LightCurveEstimator",
+    "SensitivityEstimator",
+    "TSMapEstimator",
+]
+
 
 ESTIMATOR_REGISTRY = Registry(
     [
@@ -19,10 +48,3 @@ ESTIMATOR_REGISTRY = Registry(
 )
 """Registry of estimator classes in Gammapy."""
 
-__all__ = [
-    "ESTIMATOR_REGISTRY",
-    "FluxPoints",
-    "FluxMaps",
-    "Estimator",
-]
-__all__.extend(cls.__name__ for cls in ESTIMATOR_REGISTRY)

@@ -76,7 +76,7 @@ class Fit:
         Global backend used for fitting, default : minuit
     optimize_opts : dict
         Keyword arguments passed to the optimizer. For the `"minuit"` backend
-        see https://iminuit.readthedocs.io/en/latest/api.html#iminuit.Minuit
+        see https://iminuit.readthedocs.io/en/stable/reference.html#iminuit.Minuit
         for a detailed description of the available options. If there is an entry
         'migrad_opts', those options will be passed to `iminuit.Minuit.migrad()`.
 
@@ -241,21 +241,22 @@ class Fit:
         result : `CovarianceResult`
             Results
         """
-        datasets, parameters = self._parse_datasets(datasets=datasets)
+        datasets, unique_pars = self._parse_datasets(datasets=datasets)
+        parameters = datasets.models.parameters
 
         kwargs = self.covariance_opts.copy()
         kwargs["minuit"] = self.minuit
         backend = kwargs.pop("backend", self.backend)
         compute = registry.get("covariance", backend)
 
-        with parameters.restore_status():
+        with unique_pars.restore_status():
             if self.backend == "minuit":
                 method = "hesse"
             else:
                 method = ""
 
             factor_matrix, info = compute(
-                parameters=parameters, function=datasets.stat_sum, **kwargs
+                parameters=unique_pars, function=datasets.stat_sum, **kwargs
             )
 
             datasets.models.covariance = Covariance.from_factor_matrix(
@@ -635,7 +636,7 @@ class FitResult:
     @property
     def covariance_result(self):
         """Optimize result"""
-        return self._optimize_result
+        return self._covariance_result
 
     def __repr__(self):
         str_ = ""

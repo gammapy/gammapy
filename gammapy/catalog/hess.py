@@ -15,9 +15,9 @@ from .core import SourceCatalog, SourceCatalogObject, format_flux_points_table
 
 __all__ = [
     "SourceCatalogHGPS",
+    "SourceCatalogLargeScaleHGPS",
     "SourceCatalogObjectHGPS",
     "SourceCatalogObjectHGPSComponent",
-    "SourceCatalogLargeScaleHGPS",
 ]
 
 # Flux factor, used for printing

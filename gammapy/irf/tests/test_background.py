@@ -78,6 +78,9 @@ def test_background_3d_basics(bkg_3d):
     bkg_2d = bkg_3d.to_2d()
     assert bkg_2d.data.data.shape == (2, 3)
 
+    bkg_3d_new_unit = bkg_3d.to_unit("s-1 MeV-1 sr-1")
+    assert_allclose(bkg_3d_new_unit.data[1, 1, 1], 0.1)
+
 
 def test_background_3d_read_write(tmp_path, bkg_3d):
     bkg_3d.to_table_hdu().writeto(tmp_path / "bkg3d.fits")
@@ -218,6 +221,39 @@ def test_background_3d_read_gadf():
     assert bkg.axes.names == ["energy", "fov_lon", "fov_lat"]
     assert data.shape == (20, 15, 15)
     assert data.unit == "s-1 MeV-1 sr-1"
+
+
+def test_bkg_3d_wrong_units():
+    energy = [0.1, 10, 1000] * u.TeV
+    energy_axis = MapAxis.from_energy_edges(energy)
+
+    fov_lon = [0, 1, 2, 3] * u.deg
+    fov_lon_axis = MapAxis.from_edges(fov_lon, name="fov_lon")
+
+    fov_lat = [0, 1, 2, 3] * u.deg
+    fov_lat_axis = MapAxis.from_edges(fov_lat, name="fov_lat")
+
+    wrong_unit = u.cm**2 * u.s
+    data = np.ones((2, 3, 3)) * wrong_unit
+    with pytest.raises(ValueError) as error:
+        Background3D(axes=[energy_axis, fov_lon_axis, fov_lat_axis],
+                 data=data)
+    assert error.match("Error: (.*) is not an allowed unit. (.*) requires (.*) data quantities.")
+
+
+def test_bkg_2d_wrong_units():
+    energy = [0.1, 10, 1000] * u.TeV
+    energy_axis = MapAxis.from_energy_edges(energy)
+    
+    offset_axis = MapAxis.from_edges([0, 1, 2], unit="deg", name="offset")
+
+    wrong_unit = u.cm**2 * u.s
+    data = np.ones((energy_axis.nbin, offset_axis.nbin)) * wrong_unit
+    bkg2d_test = Background2D(axes=[energy_axis, offset_axis])
+    with pytest.raises(ValueError) as error:
+        Background2D(axes=[energy_axis, offset_axis],
+                 data=data)
+        assert error.match(f"Error: {wrong_unit} is not an allowed unit. {bkg2d_test.tag} requires {bkg2d_test.default_unit} data quantities.")
 
 
 def test_background_2d_read_missing_hducls():

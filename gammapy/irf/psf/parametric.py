@@ -17,7 +17,7 @@ class ParametricPSF(PSF):
     """Parametric PSF base class
 
     Parameters
-    -----------
+    ----------
     axes : list of `MapAxis` or `MapAxes`
         Axes
     data : dict of `~numpy.ndarray`, or `~numpy.recarray`
@@ -60,9 +60,9 @@ class ParametricPSF(PSF):
         """Map unit (`~astropy.units.Unit`)"""
         return self._unit
 
-    @unit.setter
-    def unit(self, values):
-        self._unit = {key: u.Unit(val) for key, val in values.items()}
+    def to_unit(self, unit):
+        """Convert IRF to unit."""
+        raise NotImplementedError
 
     @property
     def _interpolators(self):
@@ -167,6 +167,7 @@ class ParametricPSF(PSF):
             data[name] = values.reshape(axes.shape)
             unit[name] = column.unit or ""
 
+        unit = {key: u.Unit(val) for key, val in unit.items()}
         return cls(axes=axes, data=data, meta=table.meta.copy(), unit=unit)
 
     def to_psf3d(self, rad=None):
@@ -191,7 +192,7 @@ class ParametricPSF(PSF):
         energy_axis_true = self.axes["energy_true"]
 
         if rad is None:
-            rad_axis = RAD_AXIS_DEFAULT.center
+            rad_axis = RAD_AXIS_DEFAULT
         else:
             rad_axis = MapAxis.from_edges(rad, name="rad")
 

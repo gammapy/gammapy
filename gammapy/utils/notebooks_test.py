@@ -1,5 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Test if Jupyter notebooks work."""
+from argparse import ArgumentParser
+from functools import partial
 import logging
 import os
 import shutil
@@ -8,6 +10,11 @@ from configparser import ConfigParser
 from pathlib import Path
 from gammapy.scripts.jupyter import notebook_run
 from gammapy.utils.scripts import get_notebooks_paths
+from multiprocessing.pool import Pool
+import tempfile
+
+parser = ArgumentParser()
+parser.add_argument('-j', '--n-jobs', type=int)
 
 log = logging.getLogger(__name__)
 PATH_CFG = Path(__file__).resolve().parent / ".." / ".."
@@ -19,32 +26,34 @@ setup_cfg = dict(conf.items("metadata"))
 URL_GAMMAPY_MASTER = setup_cfg["url_raw_github"]
 
 
+def run_notebook(notebook_path, tmp_dir):
+    path_dest = tmp_dir / notebook_path.name
+    shutil.copyfile(notebook_path, path_dest)
+    return notebook_run(path_dest)
+
+
 def main():
+    args = parser.parse_args()
+
     logging.basicConfig(level=logging.INFO)
 
     if "GAMMAPY_DATA" not in os.environ:
         log.info("GAMMAPY_DATA environment variable not set.")
         log.info("Running notebook tests requires this environment variable.")
         log.info("Exiting now.")
-        sys.exit()
+        sys.exit(1)
 
-    passed = True
+    notebooks = list(get_notebooks_paths())
+    log.info('Found %d notebooks', len(notebooks))
 
-    # setup
-    path_temp = Path("temp")
-    path_temp.mkdir()
+    with tempfile.TemporaryDirectory(suffix='_gammapy_nb_test') as tmp_dir:
+        tmp_dir = Path(tmp_dir)
 
-    try:
-        for nb_path in get_notebooks_paths():
-            path_dest = path_temp / nb_path.name
-            shutil.copyfile(nb_path, path_dest)
-            if not notebook_run(path_dest):
-                passed = False
-    finally:
-        # tear down
-        shutil.rmtree(path_temp, ignore_errors=True)
+        with Pool(args.n_jobs) as pool:
+            run_nb = partial(run_notebook, tmp_dir=tmp_dir)
+            passed = pool.map(run_nb, notebooks)
 
-    if not passed:
+    if not all(passed):
         sys.exit("Some tests failed. Existing now.")
 
 

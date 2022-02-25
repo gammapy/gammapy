@@ -48,6 +48,7 @@ class EnergyDispersion2D(IRF):
 
     tag = "edisp_2d"
     required_axes = ["energy_true", "migra", "offset"]
+    default_unit = u.one
 
     def _mask_out_bounds(self, invalid):
         return (

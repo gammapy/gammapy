@@ -1,0 +1,113 @@
+.. _gammapy_0p13_release:
+
+0.13 (Jul 26, 2019)
+-------------------
+
+Summary
+~~~~~~~
+
+- Released Jul 26, 2019
+- 15 contributors
+- 2 months of work
+- 72 pull requests (not all listed below)
+
+What's new?
+~~~~~~~~~~~
+
+The Gammapy v0.13 release includes many bug-fixes, a lot of clean-up work
+and some new features.
+
+Gammapy v0.13 implements a new ``SpectralGaussian`` and ``PLSuperExpCutoff4FGL``
+model. To support binned simulation of counts data in a uniform
+way ``MapDataset.fake()``, ``SpectrumDataset.fake()`` and ``SpectrumDatasetOnOff.fake()``
+methods were implemented, which simulate binned counts maps and spectra from models.
+In addition a nice string representations for all of the dataset classes was implemented
+together with convenience functions to compute residuals using different methods on all
+of them. The algorithm and API of the current ``LightCurveEstimator`` was changed to
+use datasets. Now it is possible to compute lightcurves using spectral as well
+as cube based analyses. The definition of the position angle of the ``SkyEllipse`` model
+was changed to follow IAU conventions.
+
+The handling of sky regions in Gammapy was unified as described in `PIG 10`_.
+For convenience regions can now also be created from DS9 region strings. The clean-up
+process of ``gammapy.spectrum`` was continued by removing the ``PHACountsSpectrum``
+class, which is now fully replaced by the ``SpectrumDatasetOnOff`` class. The
+``Energy`` and ``EnergyBounds`` classes were also removed. Grids of energies can be
+created and handled directly using the ``MapAxis`` object now.
+
+The algorithm to compute solid angles for maps was fixed, so that it gives correct
+results for WCS projections even with high spatial distortions. Standard analyses
+using TAN or CAR projections are only affected on a <1% level. Different units
+for the energy axis of the counts and exposure map in a ``MapDataset`` are now
+handled correctly.
+
+The recommended conda environment for Gammapy v0.13 was updated. It now relies
+on Python 3.7, Ipython 7.5, Scipy 1.3, Matplotlib 3.1, Astropy 3.1, and Healpy 1.12.
+These updates should be backwards compatible. Scripts and notebooks should
+run and give the same results.
+
+Contributors
+~~~~~~~~~~~~
+
+In alphabetical order by first name:
+
+- Atreyee Sinha
+- Axel Donath
+- Brigitta Sipocz
+- Bruno Khelifi
+- Christoph Deil
+- Fabio Pintore
+- Fabio Acero
+- Kaori Nakashima
+- José Enrique Ruiz
+- Léa Jouvin
+- Luca Giunti
+- Quentin Remy
+- Régis Terrier
+- Silvia Manconi
+- Yu Wun Wong
+
+Pull requests
+~~~~~~~~~~~~~
+
+This list is incomplete. Small improvements and bug fixes are not listed here.
+
+See the complete `Gammapy v0.13 merged pull requests list on GitHub <https://github.com/gammapy/gammapy/pulls?utf8=✓&q=is%3Apr+milestone%3A0.13+>`__.
+
+- [#2296] Implement model YAML serialisation (Quentin Remy)
+- [#2310] Remove old ``LightCurveEstimator`` class (Axel Donath)
+- [#2305] Remove ``SpectrumSimulation`` class (Axel Donath)
+- [#2300] Change to IAU convention for position angle in SkyEllipse model (Luca Giunti)
+- [#2298] Implement ``.fake()`` methods on datasets (Léa Jouvin)
+- [#2297] Implement Fermi 4FGL catalog spectral models and catalog (Kaori Nakashima & Yu Wun Wong)
+- [#2294] Fix pulsar spin-down model bug (Silvia Manconi)
+- [#2289] Add ``gammapy/utils/fitting/sampling.py`` (Fabio Acero)
+- [#2287] Implement ``__str__`` methoda for dataset (Léa Jouvin)
+- [#2278] Refactor class ``CrabSpectrum`` in a function (Léa Jouvin)
+- [#2277] Implement GTI union (Régis Terrier)
+- [#2276] Fix map pixel solid angle computation (Axel Donath)
+- [#2272] Remove ``SpectrumStats`` class (Axel Donath)
+- [#2264] Implement ``MapDataset`` FITS I/O (Axel Donath)
+- [#2262] Clean up sky region select code (Christoph Deil)
+- [#2259] Fix ``Fit.minos_contour`` method for frozen parameters  (Axel Donath)
+- [#2257] Update astropy-helpers to v3.2.1 (Brigitta Sipocz)
+- [#2254] Add select_region method for event lists (Régis Terrier)
+- [#2250] Remove ``PHACountsSpectrum`` class (Axel Donath)
+- [#2244] Implement ``SpectralGaussian`` model class (Léa Jouvin)
+- [#2243] Speed up mcmc_sampling tutorial (Fabio Acero)
+- [#2240] Remove use of NDDataArray from CountsSpectrum (Axel Donath)
+- [#2239] Remove GeneralRandom class (Axel Donath)
+- [#2238] Implement ``MapEventSampler`` class (Fabio Pintore)
+- [#2237] Remove ``Energy`` and ``EnergyBounds`` classes (Axel Donath)
+- [#2235] Remove unused functions in stats/data.py (Régis Terrier)
+- [#2230] Improve spectrum/models.py coverage (Régis Terrier)
+- [#2229] Implement ``InverseCDFSampler`` class (Fabio Pintore)
+- [#2217] Refactor gammapy download (José Enrique Ruiz)
+- [#2206] Remove unused map iter_by_pix and iter_by_coord methods (Christoph Deil)
+- [#2204] Clean up ``gammapy.utils.random`` (Fabio Pintore)
+- [#2200] Update astropy_helpers to v3.2 (Brigitta Sipocz)
+- [#2192] Improve ``gammapy.astro`` code and tests (Christoph Deil)
+- [#2129] PIG 10 - Regions (Christoph Deil)
+- [#2089] Improve ``ReflectedRegionsFinder`` class (Bruno Khelifi)
+
+.. _PIG 10: https://docs.gammapy.org/dev/development/pigs/pig-010.html

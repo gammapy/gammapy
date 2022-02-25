@@ -1,3 +1,10 @@
-from .core import *
-from .geom import *
-from .ndmap import *
+from .core import WcsMap
+from .geom import WcsGeom
+from .ndmap import WcsNDMap
+
+
+__all__ = [
+    "WcsGeom",
+    "WcsMap",
+    "WcsNDMap",
+]

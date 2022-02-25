@@ -64,6 +64,7 @@ class EffectiveAreaTable2D(IRF):
 
     tag = "aeff_2d"
     required_axes = ["energy_true", "offset"]
+    default_unit = u.m**2
 
     def plot_energy_dependence(self, ax=None, offset=None, **kwargs):
         """Plot effective area versus energy for a given offset.

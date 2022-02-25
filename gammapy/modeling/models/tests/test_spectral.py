@@ -4,7 +4,9 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-from gammapy.maps import MapAxis
+from astropy.table import Table
+from gammapy.utils.scripts import make_path
+from gammapy.maps import MapAxis, RegionNDMap
 from gammapy.modeling.models import (
     SPECTRAL_MODEL_REGISTRY,
     BrokenPowerLawSpectralModel,
@@ -26,6 +28,7 @@ from gammapy.modeling.models import (
     SmoothBrokenPowerLawSpectralModel,
     SuperExpCutoffPowerLaw4FGLSpectralModel,
     TemplateSpectralModel,
+    TemplateNDSpectralModel,
 )
 from gammapy.utils.testing import (
     assert_quantity_allclose,
@@ -962,3 +965,102 @@ def test_integral_exp_cut_off_power_law_large_number_of_bins():
     flux = exppowerlaw.integral(energy_min, energy_max)
 
     assert_allclose(flux.value, expected_flux.value, rtol=0.01)
+
+
+def test_template_ND(tmpdir):
+    energy_axis = MapAxis.from_bounds(
+        1.0, 100, 10, interp="log", name="energy_true", unit="GeV"
+    )
+    norm = MapAxis.from_bounds(0, 10, 10, interp="lin", name="norm", unit="")
+    tilt = MapAxis.from_bounds(-1.0, 1, 5, interp="lin", name="tilt", unit="")
+    region_map = RegionNDMap.create(
+        region="icrs;point(83.63, 22.01)", axes=[energy_axis, norm, tilt]
+    )
+    region_map.data[:, :, :5, 0, 0] = 1
+    region_map.data[:, :, 5:, 0, 0] = 2
+
+    template = TemplateNDSpectralModel(region_map)
+    assert len(template.parameters) == 2
+    assert template.parameters["norm"].value == 5
+    assert template.parameters["tilt"].value == 0
+    assert_allclose(template([1, 100, 1000] * u.GeV), [1.0, 2.0, 2.0])
+
+    template.parameters["norm"].value = 1
+    template.filename = str(tmpdir / "template_ND.fits")
+    template.write()
+    dict_ = template.to_dict()
+    template_new = TemplateNDSpectralModel.from_dict(dict_)
+    assert_allclose(template_new.map.data, region_map.data)
+    assert len(template_new.parameters) == 2
+    assert template_new.parameters["norm"].value == 1
+    assert template_new.parameters["tilt"].value == 0
+
+def test_template_ND_no_energy(tmpdir):
+    norm = MapAxis.from_bounds(0, 10, 10, interp="lin", name="norm", unit="")
+    tilt = MapAxis.from_bounds(-1.0, 1, 5, interp="lin", name="tilt", unit="")
+    region_map = RegionNDMap.create(
+        region="icrs;point(83.63, 22.01)", axes=[norm, tilt]
+    )
+    region_map.data[ :, :5, 0, 0] = 1
+    region_map.data[ :, 5:, 0, 0] = 2
+
+    with pytest.raises(ValueError):
+        TemplateNDSpectralModel(region_map)
+
+
+@requires_data()
+def test_template_ND_EBL(tmpdir):
+    
+    #TODO: add RegionNDMap.read(format="xspec")
+    # Create EBL data array
+    filename="$GAMMAPY_DATA/ebl/ebl_franceschini.fits.gz"
+    filename = make_path(filename)
+    table_param = Table.read(filename, hdu="PARAMETERS")
+    npar = len(table_param)
+    par_axes = []
+    idx_data = []
+    for k in range(npar):
+        name=table_param["NAME"][k].lower().strip()
+        param, idx = np.unique(table_param[0]["VALUE"], return_index=True)
+        par_axes.append(MapAxis(param,node_type="center", interp="lin", name=name, unit=""))
+        idx_data.append(idx)
+    idx_data.append(Ellipsis)
+    idx_data = tuple(idx_data)
+
+    # Get energy values
+    table_energy = Table.read(filename, hdu="ENERGIES")
+    energy_lo = u.Quantity(
+        table_energy["ENERG_LO"], "keV", copy=False
+    )  # unit not stored in file
+    energy_hi = u.Quantity(
+        table_energy["ENERG_HI"], "keV", copy=False
+    )  # unit not stored in file
+    energy = np.sqrt(energy_lo * energy_hi)
+
+    # Get spectrum values
+    table_spectra = Table.read(filename, hdu="SPECTRA")
+
+    energy_axis = MapAxis(
+        energy,node_type="center", interp="log", name="energy_true"
+    )
+    region_map = RegionNDMap.create(
+        region="galactic;point(0, 0)", axes=[energy_axis]+par_axes
+    )
+    #TODO: here we use a fake position, is it possible to allow region=None ?
+    data = table_spectra["INTPSPEC"].data[idx_data]
+    region_map.data[:,:, 0, 0] = data
+    
+
+    template = TemplateNDSpectralModel(region_map)
+    assert len(template.parameters) == 1
+    assert_allclose(template.parameters["redshift"].value, 1.001, rtol=1e-3)
+    expected = [9.950501e-01, 4.953951e-01, 1.588062e-06]
+    assert_allclose(template([1, 100, 1000] * u.GeV), expected, rtol=1e-3)
+    template.parameters["redshift"].value = 0.1
+    template.filename = str(tmpdir / "template_ND_ebl_franceschini.fits")
+    template.write()
+    dict_ = template.to_dict()
+    template_new = TemplateNDSpectralModel.from_dict(dict_)
+    assert_allclose(template_new.map.data, region_map.data)
+    assert len(template.parameters) == 1
+    assert_allclose(template.parameters["redshift"].value, 0.1)

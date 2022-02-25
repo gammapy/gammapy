@@ -39,11 +39,11 @@ class Map(abc.ABC):
         self._geom = geom
 
         if isinstance(data, u.Quantity):
-            self.unit = unit
+            self._unit = u.Unit(unit)
             self.quantity = data
         else:
             self.data = data
-            self.unit = unit
+            self._unit = u.Unit(unit)
 
         if meta is None:
             self.meta = {}
@@ -102,10 +102,6 @@ class Map(abc.ABC):
         """Map unit (`~astropy.units.Unit`)"""
         return self._unit
 
-    @unit.setter
-    def unit(self, val):
-        self._unit = u.Unit(val)
-
     @property
     def meta(self):
         """Map meta (`dict`)"""
@@ -132,7 +128,7 @@ class Map(abc.ABC):
         val = u.Quantity(val, copy=False)
 
         self.data = val.value
-        self.unit = val.unit
+        self._unit = val.unit
 
     @staticmethod
     def create(**kwargs):
@@ -1216,12 +1212,12 @@ class Map(abc.ABC):
 
         Parameters
         ----------
-        position : `SkyCoord`
+        position : `~astropy.coordinates.SkyCoord`
             Test position
 
         Returns
         -------
-        position : `SkyCoord`
+        position : `~astropy.coordinates.SkyCoord`
             Nearest position in the mask
         """
         if not self.geom.is_image:

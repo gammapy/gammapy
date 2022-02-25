@@ -7,11 +7,11 @@ from astropy.convolution import Gaussian2DKernel
 
 __all__ = [
     "array_stats_str",
+    "round_up_to_even",
+    "round_up_to_odd",
     "shape_2N",
     "shape_divisible_by",
     "symmetric_crop_pad_width",
-    "round_up_to_odd",
-    "round_up_to_even",
 ]
 
 

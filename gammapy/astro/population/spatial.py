@@ -8,16 +8,16 @@ from gammapy.utils.random import get_random_state
 
 __all__ = [
     "CaseBattacharya1998",
+    "Exponential",
     "FaucherKaspi2006",
+    "FaucherSpiral",
+    "LogSpiral",
     "Lorimer2006",
     "Paczynski1990",
+    "radial_distributions",
+    "ValleeSpiral",
     "YusifovKucuk2004",
     "YusifovKucuk2004B",
-    "Exponential",
-    "LogSpiral",
-    "FaucherSpiral",
-    "ValleeSpiral",
-    "radial_distributions",
 ]
 
 # Simulation range used for random number drawing

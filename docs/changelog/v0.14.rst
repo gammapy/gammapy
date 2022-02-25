@@ -1,0 +1,114 @@
+.. _gammapy_0p14_release:
+
+0.14 (Sep 30, 2019)
+-------------------
+
+Summary
+~~~~~~~
+
+- Released Sep 30, 2019
+- 8 contributors
+- 101 pull requests (not all listed below)
+
+What's new?
+~~~~~~~~~~~
+
+Gammapy v0.14 features a new high level analysis interface. Starting from
+a YAML configuration file, it supports the standard use-cases of joint
+or stacked 3D as well as 1D reflected region analyses. It also supports
+computation of flux points for all cases. The usage of this new ``Analysis``
+class is demonstrated in the `hess tutorial <https://docs.gammapy.org/0.14/notebooks/hess.html>`__.
+
+Following the proposal in :ref:`pig-016` the subpackages ``gammapy.background``
+and ``gammapy.image`` were removed. Existing functionality was moved to the
+``gammapy.cube`` and ``gammapy.spectrum`` subpackages.
+
+A new subpackage ``gammapy.modeling`` subpackage as introduced. All spectral,
+spatial, temporal and combined models were moved to the new namespace and
+renamed following a consistent naming scheme. This provides a much clearer
+structure of the model types and hierarchy for users.
+
+The ``SkyEllipse`` model was removed. Instead the ``GaussianSpatialModel``
+as well as the ``DiskSpatialModel`` now support parameters for
+elongation. A bug that lead to an incorrect flux normalization of the
+``PointSpatialModel`` at high latitudes was fixed. The default coordinate
+frame for all spatial models was changed to ``icrs``. A new
+``ConstantTemporalModel`` was introduced.
+
+A new ``MapDataset.to_spectrum_dataset()`` method allows to reduce a map
+dataset to a spectrum dataset in a specified analysis region. The
+``SpectrumDatasetOnOffStacker`` was removed and placed by a ``SpectrumDatasetOnOff.stack()``
+and ``Datasets.stack_reduce()`` method. A ``SpectrumDataset.stack()``
+method was also added.
+
+Following :ref:`pig-013` the support for Python 3.5 was dropped with Gammapy v0.14.
+At the same time the versions of the required dependencies were updated to
+Numpy 1.16, Scipy 1.2, Astropy 3.2, Regions 0.5, Pyyaml 5.1, Click 7.0 and
+Jsonschema 3.0.
+
+Contributors
+~~~~~~~~~~~~
+
+In alphabetical order by first name:
+
+- Atreyee Sinha
+- Axel Donath
+- Christoph Deil
+- Régis Terrier
+- Fabio Pintore
+- Quentin Remy
+- José Enrique Ruiz
+- Johannes King
+- Luca Giunti
+- Léa Jouvin
+
+Pull requests
+~~~~~~~~~~~~~
+
+This list is incomplete. Small improvements and bug fixes are not listed here.
+
+See the complete `Gammapy v0.14 merged pull requests list on GitHub <https://github.com/gammapy/gammapy/pulls?utf8=✓&q=is%3Apr+milestone%3A0.14>`__.
+
+- [#2412] Remove model XML serialization (Quentin Remy)
+- [#2404] Clean up spectral model names (Christoph Deil)
+- [#2401] Clean up spatial model names (Christoph Deil)
+- [#2400] Clean up temporal model names (Christoph Deil)
+- [#2385] Change spatial model default frame to icrs (Christoph Deil)
+- [#2381] Add ``MapDataset.stack()``  (Atreyee Sinha)
+- [#2379] Cleanup ``WcsNDMap`` FITS convention handling (Axel Donath)
+- [#2378] Add support for 3D analysis in the high level interface (José Enrique Ruiz)
+- [#2377] Implement ``WcsGeom`` coord caching (Axel Donath)
+- [#2375] Adapt ``MapMakerObs`` to return a ``MapDataset`` (Atreyee Sinha)
+- [#2368] Add ``MapDataset.create()`` method (Atreyee Sinha)
+- [#2367] Fix SkyPointSource evaluation (Christoph Deil)
+- [#2366] Remove lon wrapping in spatial models (Christoph Deil)
+- [#2365] Remove gammapy/maps/measure.py (Christoph Deil)
+- [#2360] Add ``SpectrumDatasetOnOff.stack()`` (Régis Terrier)
+- [#2359] Remove ``BackgroundModels`` class (Axel Donath)
+- [#2358] Adapt MapMakerObs to also compute an EDispMap and PSFMap (Atreyee Sinha)
+- [#2356] Add ``SpectrumDataset.stack()`` (Régis Terrier)
+- [#2354] Move gammapy.utils.fitting to gammapy.modeling (Christoph Deil)
+- [#2351] Change OrderedDict to dict  (Christoph Deil)
+- [#2347] Simplify ``EdispMap.stack()`` and ``PsfMap.stack()`` (Luca Giunti)
+- [#2346] Add ``SpectrumDatasetOnOff.create()`` (Régis Terrier)
+- [#2345] Add ``SpectrumDataset.create()`` (Régis Terrier)
+- [#2344] Change return type of ``WcsGeom.get_coord()`` to quantities (Axel Donath)
+- [#2343] Implement ``WcsNDMap.sample()`` and remove ``MapEventSampler`` (Fabio Pintore)
+- [#2342] Add zero clipping in ``MapEvaluator.apply_psf`` (Luca Giunti)
+- [#2338] Add model registries and ``Model.from_dict()`` method (Quentin Remy)
+- [#2335] Remove ``SpectrumAnalysisIACT`` class (José Enrique Ruiz)
+- [#2334] Simplify and extend background model handling (Axel Donath)
+- [#2330] Migrate SpectrumAnalysisIACT to the high level interface (José Enrique Ruiz)
+- [#2326] Fix bug in the spectral gaussian model evaluate method (Léa Jouvin)
+- [#2323] Add high level Config and Analysis classes (José Enrique Ruiz)
+- [#2321] Dissolve ``gammapy.image`` (Christoph Deil)
+- [#2320] Dissolve ``gammapy.background`` (Christoph Deil)
+- [#2314] Add datasets serialization (Quentin Remy)
+- [#2313] Add elongated gaussian model (Luca Giunti)
+- [#2308] Use parfive in gammapy download (José Enrique Ruiz)
+- [#2292] Implement ``MapDataset.to_spectrum_dataset()`` method (Régis Terrier)
+- [#2279] Update Gammapy packaging, removing astropy-helpers (Christoph Deil)
+- [#2274] PIG 16 - Gammapy package structure (Christoph Deil)
+- [#2219] PIG 12 - High level interface (José Enrique Ruiz)
+- [#2218] PIG 13 - Gammapy dependencies and distribution (Christoph Deil)
+- [#2136] PIG 9 - Event sampling (Fabio Pintore)

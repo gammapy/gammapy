@@ -11,9 +11,12 @@ channels:
   - conda-forge
   - sherpa
 
+variables:
+  PYTHONNOUSERSITE: "1"
+
 dependencies:
   # core dependencies
-  - python==3.7
+  - python=3.7
   - pip
   - astropy
   - click
@@ -26,9 +29,11 @@ dependencies:
   - scipy
   # test dependencies
   - codecov
-  - pytest
+  - pytest=6
   - pytest-astropy
   - pytest-cov
+  - pytest-xdist
+  - coverage=6.2
   - pytest-xdist
   - requests
   - tqdm
@@ -53,17 +58,17 @@ dependencies:
   - pydocstyle
   - pylint
   - setuptools_scm
-  - sphinx==2.4.4
+  - sphinx
   - sphinx-astropy
   - sphinx-click
   - sphinx-gallery
-  - sphinx_rtd_theme
+  - sphinx-panels
+  - sphinx-copybutton
+  - pydata-sphinx-theme
   - twine
   - yamllint
-  - nbformat==5.0.8
-  - docutils==0.16
-  - h5py==2.10.0
+  - nbformat
+  - h5py
   - ruamel.yaml
   - pip:
       - pytest-sphinx
-

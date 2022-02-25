@@ -1,11 +1,31 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Source catalogs."""
 from gammapy.utils.registry import Registry
-from .core import *
-from .fermi import *
-from .gammacat import *
-from .hawc import *
-from .hess import *
+from .core import SourceCatalog, SourceCatalogObject
+from .fermi import (
+    SourceCatalogObject4FGL,
+    SourceCatalogObject3FGL,
+    SourceCatalogObject2FHL,
+    SourceCatalogObject3FHL,
+    SourceCatalog4FGL,
+    SourceCatalog3FGL,
+    SourceCatalog2FHL,
+    SourceCatalog3FHL,
+)
+from .gammacat import SourceCatalogGammaCat, SourceCatalogObjectGammaCat
+
+from .hawc import (
+    SourceCatalog2HWC,
+    SourceCatalog3HWC,
+    SourceCatalogObject2HWC,
+    SourceCatalogObject3HWC,
+)
+from .hess import (
+    SourceCatalogHGPS,
+    SourceCatalogObjectHGPS,
+    SourceCatalogObjectHGPSComponent,
+    SourceCatalogLargeScaleHGPS,
+)
 
 CATALOG_REGISTRY = Registry(
     [
@@ -25,17 +45,23 @@ CATALOG_REGISTRY = Registry(
 __all__ = [
     "CATALOG_REGISTRY",
     "SourceCatalog",
-    "SourceCatalogObjectHGPS",
-    "SourceCatalogObject2FHL",
-    "SourceCatalogObject3FHL",
-    "SourceCatalogObject3FGL",
-    "SourceCatalogObject4FGL",
-    "SourceCatalogObject2HWC",
-    "SourceCatalogObject3HWC",
-    "SourceCatalogObjectGammaCat",
-    "SourceCatalogObjectHGPSComponent",
+    "SourceCatalog2FHL",
+    "SourceCatalog2HWC",
+    "SourceCatalog3FGL",
+    "SourceCatalog3FHL",
+    "SourceCatalog3HWC",
+    "SourceCatalog4FGL",
+    "SourceCatalogGammaCat",
+    "SourceCatalogHGPS",
     "SourceCatalogLargeScaleHGPS",
     "SourceCatalogObject",
+    "SourceCatalogObject2FHL",
+    "SourceCatalogObject2HWC",
+    "SourceCatalogObject3FGL",
+    "SourceCatalogObject3FHL",
+    "SourceCatalogObject3HWC",
+    "SourceCatalogObject4FGL",
+    "SourceCatalogObjectGammaCat",
+    "SourceCatalogObjectHGPS",
+    "SourceCatalogObjectHGPSComponent",
 ]
-
-__all__.extend(cls.__name__ for cls in CATALOG_REGISTRY)

@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Functions to compute TS images."""
-import contextlib
 import functools
 import logging
 import warnings
@@ -54,7 +53,7 @@ class TSMapEstimator(Estimator):
     r"""Compute TS map from a MapDataset using different optimization methods.
 
     The map is computed fitting by a single parameter norm fit. The fit is
-    simplified by finding roots of the the derivative of the fit statistics using
+    simplified by finding roots of the derivative of the fit statistics using
     various root finding algorithms. The approach is described in Appendix A
     in Stewart (2009).
 
@@ -110,6 +109,33 @@ class TSMapEstimator(Estimator):
                \right.
 
     Where :math:`F` is the fitted flux norm.
+
+    Examples
+    --------
+    >>> import astropy.units as u
+    >>> from gammapy.estimators import TSMapEstimator
+    >>> from gammapy.datasets import MapDataset
+    >>> from gammapy.modeling.models import (SkyModel, PowerLawSpectralModel,PointSpatialModel)
+    >>> spatial_model = PointSpatialModel()
+    >>> spectral_model = PowerLawSpectralModel(amplitude="1e-22 cm-2 s-1 keV-1", index=2)
+    >>> model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
+    >>> dataset = MapDataset.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc.fits.gz")
+    >>> estimator = TSMapEstimator(model, kernel_width="1 deg",energy_edges=[10, 100] * u.GeV, downsampling_factor=4)
+    >>> maps = estimator.run(dataset)
+    >>> print(maps)
+    FluxMaps
+    --------
+    <BLANKLINE>
+      geom                   : WcsGeom
+      axes                   : ['lon', 'lat', 'energy']
+      shape                  : (400, 200, 1)
+      quantities             : ['ts', 'norm', 'niter', 'norm_err', 'npred', 'npred_excess', 'stat', 'stat_null', 'success']
+      ref. model             : pl
+      n_sigma                : 1
+      n_sigma_ul             : 2
+      sqrt_ts_threshold_ul   : 2
+      sed type init          : None
+
 
     References
     ----------
@@ -390,11 +416,9 @@ class TSMapEstimator(Estimator):
         if self.n_jobs is None:
             results = list(map(wrap, positions))
         else:
-            with contextlib.closing(Pool(processes=self.n_jobs)) as pool:
+            with Pool(processes=self.n_jobs) as pool:
                 log.info("Using {} jobs to compute TS map.".format(self.n_jobs))
                 results = pool.map(wrap, positions)
-
-            pool.join()
 
         result = {}
 

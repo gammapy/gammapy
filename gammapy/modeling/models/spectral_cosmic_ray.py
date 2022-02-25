@@ -10,6 +10,11 @@ from gammapy.modeling import Parameter
 from .spectral import PowerLawSpectralModel, SpectralModel
 
 
+__all__ = [
+    "create_cosmic_ray_spectral_model",
+]
+
+
 class _LogGaussianSpectralModel(SpectralModel):
     r"""Log Gaussian spectral model with a weird parametrisation.
 

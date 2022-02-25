@@ -6,7 +6,7 @@
 .. _Practical Python for Astronomers Tutorial: http://python4astronomers.github.io/
 .. _GammaLib: http://gammalib.sourceforge.net
 .. _ctools: http://cta.irap.omp.eu/ctools
-.. _3ML: https://threeml.stanford.edu/
+.. _3ML: https://github.com/threeML/threeML
 .. _numpy: http://www.numpy.org/
 .. _affiliated package: http://www.astropy.org/affiliated/index.html
 .. _regions: https://astropy-regions.readthedocs.io
@@ -42,9 +42,7 @@
 .. _click: http://click.pocoo.org/
 .. _sphinx-click: https://github.com/click-contrib/sphinx-click
 .. _pycrflux: https://github.com/akira-okumura/pycrflux
-.. _act-analysis: https://bitbucket.org/kosack/act-analysis
 .. _VHEObserverTools: https://github.com/kialio/VHEObserverTools
-.. _photon_simulator: http://yt-project.org/doc/analyzing/analysis_modules/photon_simulator.html
 .. _PINT: https://github.com/nanograv/PINT
 .. _Gamera: https://github.com/JoachimHahn/GAMERA
 .. _gammatools: https://github.com/woodmd/gammatools
@@ -70,6 +68,7 @@
 .. _Fermi ScienceTools: https://fermi.gsfc.nasa.gov/ssc/data/analysis/software/
 .. _FermiPy: https://github.com/fermiPy/fermipy
 .. _gadf: https://gamma-astro-data-formats.readthedocs.io/
+.. _Gamma Astro Data Formats: https://gamma-astro-data-formats.readthedocs.io/
 
 .. _April 2016 IACT data meeting: https://github.com/open-gamma-ray-astro/2016-04_IACT_DL3_Meeting/
 

@@ -91,7 +91,7 @@ class EDispKernel(IRF):
 
         Parameters
         ----------
-        lo_threshold :`~astropy.units.Quantity`, optional
+        lo_threshold : `~astropy.units.Quantity`, optional
             Low reco energy threshold
         hi_threshold : `~astropy.units.Quantity`, optional
             High reco energy threshold

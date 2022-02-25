@@ -2,9 +2,21 @@
 # this contains imports plugins that configure py.test for astropy tests.
 # by importing them here in conftest.py they are discoverable by py.test
 # no matter how it is invoked within the source tree.
+import pytest
 import os
-from astropy.tests.helper import enable_deprecations_as_exceptions
+import numpy as np
 from pytest_astropy_header.display import PYTEST_HEADER_MODULES
+from gammapy.modeling.models import (
+    Models,
+    PowerLawSpectralModel,
+    ConstantTemporalModel,
+    SkyModel,
+)
+from gammapy.maps import MapAxis, RegionNDMap
+from astropy.time import Time
+from gammapy.data import GTI
+import astropy.units as u
+from gammapy.datasets import SpectrumDataset
 
 # TODO: activate this again and handle deprecations in the code
 # enable_deprecations_as_exceptions(warnings_to_ignore_entire_module=["iminuit", "naima"])
@@ -47,3 +59,46 @@ def pytest_configure(config):
         print('Setting matplotlib backend to "agg" for the tests.')
     except ImportError:
         pass
+
+
+@pytest.fixture()
+def spectrum_dataset():
+    #TODO: change the fixture scope to "session". This currently crashes fitting tests 
+    name = "test"
+    energy = np.logspace(-1, 1, 31) * u.TeV
+    livetime = 100 * u.s
+
+    pwl = PowerLawSpectralModel(
+        index=2.1,
+        amplitude="1e5 cm-2 s-1 TeV-1",
+        reference="0.1 TeV",
+    )
+
+    temp_mod = ConstantTemporalModel()
+
+    model = SkyModel(spectral_model=pwl, temporal_model=temp_mod, name="test-source")
+    axis = MapAxis.from_edges(energy, interp="log", name="energy")
+    axis_true = MapAxis.from_edges(energy, interp="log", name="energy_true")
+
+    background = RegionNDMap.create(region="icrs;circle(0, 0, 0.1)", axes=[axis])
+
+    models = Models([model])
+    exposure = RegionNDMap.create(region="icrs;circle(0, 0, 0.1)", axes=[axis_true])
+    exposure.quantity = u.Quantity("1 cm2") * livetime
+    bkg_rate = np.ones(30) / u.s
+    background.quantity = bkg_rate * livetime
+
+    start = [1, 3, 5] * u.day
+    stop = [2, 3.5, 6] * u.day
+    t_ref = Time(55555, format="mjd")
+    gti = GTI.create(start, stop, reference_time=t_ref)
+
+    dataset = SpectrumDataset(
+        models=models,
+        exposure=exposure,
+        background=background,
+        name=name,
+        gti=gti,
+    )
+    dataset.fake(random_state=23)
+    return dataset

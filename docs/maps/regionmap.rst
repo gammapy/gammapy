@@ -12,7 +12,7 @@ This page provides examples and documentation specific to the Region
 classes. These objects are used to bundle the energy distribution - or any other
 non-spatial axis - of quantities (counts, exposure, ...) inside of a given region in the sky while retaining
 the information of the chosen spatial region.
-In particular, they are suited for so-called 1D analysis (see https://docs.gammapy.org/dev/references.html#glossary).
+In particular, they are suited for so-called 1D analysis (see :ref:`references`).
 
 
 RegionGeom

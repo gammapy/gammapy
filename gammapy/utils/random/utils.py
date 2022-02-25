@@ -7,14 +7,14 @@ from astropy.coordinates import Angle
 from astropy.time import TimeDelta
 
 __all__ = [
+    "draw",
     "get_random_state",
+    "normalize",
+    "pdf",
+    "sample_powerlaw",
     "sample_sphere",
     "sample_sphere_distance",
-    "sample_powerlaw",
     "sample_times",
-    "normalize",
-    "draw",
-    "pdf",
 ]
 
 

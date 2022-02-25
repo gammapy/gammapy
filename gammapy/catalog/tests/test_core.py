@@ -12,6 +12,7 @@ class SomeSourceCatalog(SourceCatalog):
     """Minimal test source catalog class for unit tests."""
 
     name = "test123"
+    tag = "test123"
     description = "Test source catalog"
 
 
@@ -29,6 +30,7 @@ class TestSourceCatalog:
 
     def test_str(self):
         assert "description" in str(self.cat)
+        assert "name" in str(self.cat)
 
     def test_table(self):
         assert_allclose(self.cat.table["RA"][1], 43.3)

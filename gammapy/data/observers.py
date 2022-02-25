@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Location of gamma-ray observatories."""
 from astropy.coordinates import EarthLocation
+import astropy.units as u
 
 __all__ = ["observatory_locations"]
 
@@ -92,4 +93,14 @@ observatory_locations["veritas"] = EarthLocation(
 # https://en.wikipedia.org/wiki/Fred_Lawrence_Whipple_Observatory
 observatory_locations["whipple"] = EarthLocation(
     lon="-110d52m42s", lat="31d40m52s", height="2606m"
+)
+
+# communication with ASTRI Project Manager
+observatory_locations["astri"] = EarthLocation(
+    lon="-16d30m20.99s", lat="28d17m60.0s", height="2370m"
+)
+
+# coordinates from fact-tools (based on google earth)
+observatory_locations["fact"] = EarthLocation(
+    lat=28.761647 * u.deg, lon=-17.891116 * u.deg, height=2200 * u.m,
 )

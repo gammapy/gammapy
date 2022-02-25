@@ -40,6 +40,10 @@ class TestEnergyDependentMultiGaussPSF:
 
         assert_allclose(desired, [0.14775, 0.18675, 0.25075] * u.deg, rtol=1e-3)
 
+    def test_to_unit(self, psf):
+        with pytest.raises(NotImplementedError):
+            psf.to_unit("deg-2")
+
     def test_to_psf3d(self, psf):
         rads = np.linspace(0.0, 1.0, 101) * u.deg
         psf_3d = psf.to_psf3d(rads)
@@ -59,6 +63,10 @@ class TestEnergyDependentMultiGaussPSF:
             energy_true=energy, offset=theta, fraction=containment
         )
         assert_allclose(np.squeeze(desired), actual, atol=0.005)
+
+        # test default case
+        psf_3d_def = psf.to_psf3d()
+        assert psf_3d_def.axes["rad"].nbin == 66
 
     @requires_dependency("matplotlib")
     def test_peek(self, psf):

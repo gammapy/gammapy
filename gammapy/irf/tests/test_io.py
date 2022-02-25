@@ -5,6 +5,7 @@ import astropy.units as u
 from astropy.io import fits
 from astropy.units import Quantity
 from gammapy.irf import (
+    RadMax2D,
     Background3D,
     EffectiveAreaTable2D,
     EnergyDispersion2D,
@@ -148,6 +149,24 @@ def test_irf_dict_from_file_duplicate_irfs(caplog, tmp_path):
 
     assert "more than one HDU" in caplog.text
     assert "loaded the PSF HDU in the dictionary" in caplog.text
+
+
+@requires_data()
+def test_irf_dict_from_file_fixed_rad_max():
+    """test that for point-like IRF without RAD_MAX_2D HDU a RadMax2D with a
+    single value is generated from the RAD_MAX header keyword"""
+    irf = load_irf_dict_from_file(
+        "$GAMMAPY_DATA/joint-crab/dl3/magic/run_05029748_DL3.fits"
+    )
+
+    assert "RAD_MAX" in irf["aeff"].meta
+    assert "rad_max" in irf
+    assert isinstance(irf["rad_max"], RadMax2D)
+
+    # check that has a single-bin in energy and offset
+    assert irf["rad_max"].axes["energy"].nbin == 1
+    assert irf["rad_max"].axes["offset"].nbin == 1
+    assert irf["rad_max"].quantity.to_value("deg") == irf["aeff"].meta["RAD_MAX"]
 
 
 class TestIRFWrite:

@@ -84,7 +84,8 @@ def reflected_regions_bkg_maker():
     exclusion_mask = ~geom.region_mask([exclusion_region])
 
     return ReflectedRegionsBackgroundMaker(
-        exclusion_mask=exclusion_mask, min_distance_input="0.2 deg"
+        exclusion_mask=exclusion_mask,
+        min_distance_input="0.2 deg"
     )
 
 

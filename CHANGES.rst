@@ -1,5 +1,6 @@
+@@ -1,2530 +0,0 @@
 1.0rc (unreleased)
-----------------
+------------------
 
 - No changes yet
 
@@ -239,7 +240,7 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 - [#3145] Change the _compute_flux_spatial method on MapEvaluator (Fabio Pintore)
 - [#3141] Allow SkyModel.integrate_geom to integrate over a RegionGeom (Fabio Pintore)
 - [#3140] Add an option to ExcessMapEstimator to choose to correlate off events (Mathieu de Bony)
-- [#3138] Migrate Travis CI to Github actions (Jose Enrique Ruiz)
+- [#3138] Migrate Travis CI to GitHub actions (Jose Enrique Ruiz)
 - [#3136] Evaluate spatial model in RegionGeom (Laura Olivera Nieto)
 - [#3131] Further remove code duplication between SpectrumDataset and MapDataset (Axel Donath)
 
@@ -341,7 +342,7 @@ accordingly to an ``EBLAbsorptionNormSpectralModel``. A new
 have been introduced.
 
 Gammapy v0.18 comes now with support for custom energy dependent spatial models.
-An example for this can be found in the `models tutorial <tutorials/models.html>`__.
+An example for this can be found in the `models tutorial <https://docs.gammapy.org/0.18/tutorials/models.html>`__.
 The ``SkyDiffuseCube`` has been removed, the same functionality can now be
 achieved with the ``TemplateSpatialModel``. Following the proposal in
 `PIG 21`_, short YAML tags were introduced for all models. An overview of the
@@ -364,7 +365,8 @@ The ``Map`` class now supports boolean and comparator operations, such as
 
 A ``Fit.stat_surface()`` method was introduced which allows to compute a
 fit statistic surface. In addition an option to store the trace of the fit was
-added. Both are demonstrated in dedicated sections in the `modeling and fitting tutorial <tutorials/modeling.html>`__
+added. Both are demonstrated in dedicated sections in the
+`modeling and fitting tutorial <https://docs.gammapy.org/0.18/tutorials/modeling.html>`__.
 
 Following the proposal in `PIG 19`_, the ``gammapy.time`` sub-package was removed.
 All functionality related to light curves can be found in ``gammapy.estimators``.
@@ -401,7 +403,7 @@ Pull Requests
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
 
-See the complete `Gammapy v0.18 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?q=is%3Apr+is%3Aclosed+milestone%3A0.18>`__.
+See the complete `Gammapy v0.18 merged pull requests list on GitHub <https://github.com/gammapy/gammapy/pulls?q=is%3Apr+is%3Aclosed+milestone%3A0.18>`__.
 
 
 - [#3106] Remove default FoVBackgroundModel (Axel Donath)
@@ -505,11 +507,11 @@ API for Gammapy v1.0.
 The main feature introduces in Gammapy v0.17 is event sampling. Based
 on the newly introduced ``MapDatasetEventSampler`` class, event lists can be
 sampled from a ``MapDataset`` object. The use of this class is shown in a dedicated
-`event sampling tutorial <tutorials/event_sampling.html>`__. Gammapy v0.17 now
+`event sampling tutorial <https://docs.gammapy.org/0.17/notebooks/event_sampling.html>`__. Gammapy v0.17 now
 supports simulation and fitting of temporal models. Both are demonstrated in the
-`lightcurve simulation tutorial <tutorials/light_curve_simulation.html>`__.
+`lightcurve simulation tutorial <https://docs.gammapy.org/0.17/notebooks/light_curve_simulation.html>`__.
 A more general introduction to modeling and fitting in Gammapy is now available
-as a `modeling and fitting tutorial <tutorials/modeling.html>`__
+as a `modeling and fitting tutorial <https://docs.gammapy.org/0.17/notebooks/modeling.html>`__.
 
 Following the proposal in `PIG 19`_ the sub-package structure of Gammapy was
 unified. Instead of grouping the main functionality by use-case it is now
@@ -575,7 +577,7 @@ Pull Requests
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
 
-See the complete `Gammapy v0.17 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?q=is%3Apr+milestone%3A0.17+is%3Aclosed>`__.
+See the complete `Gammapy v0.17 merged pull requests list on GitHub <https://github.com/gammapy/gammapy/pulls?q=is%3Apr+milestone%3A0.17+is%3Aclosed>`__.
 
 
 - [#2846] Add more meta data keywords for sampled event lists (Fabio Pintore)
@@ -660,10 +662,10 @@ different methods of adapting the norm and tilt of a field of view background
 model to the data.
 
 To provide a visual overview of the available models in Gammapy a
-`model gallery <modeling/gallery/index.rst>`__ was added. A general introduction
-on how to work with the different models is now available in a dedicated `models tutorial <tutorials/models.html>`__.
+`model gallery <https://docs.gammapy.org/0.16/modeling/gallery/index.html>`__ was added. A general introduction
+on how to work with the different models is now available in a dedicated `models tutorial <https://docs.gammapy.org/0.16/notebooks/models.html>`__.
 The spectral analysis of an extended source is demonstrated in the newly
-added `extended source spectral analysis tutorial <tutorials/extended_source_spectral_analysis.ipynb>`__.
+added `extended source spectral analysis tutorial <https://docs.gammapy.org/0.16/notebooks/extended_source_spectral_analysis.html>`__.
 
 To further improve API consistency the ``EnergyDispersion`` class
 was renamed to ``EDispKernel`` and the ``SkyModels`` class was
@@ -708,7 +710,7 @@ Pull Requests
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
 
-See the complete `Gammapy v0.16 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?q=is%3Apr+milestone%3A0.16+is%3Aclosed>`__.
+See the complete `Gammapy v0.16 merged pull requests list on GitHub <https://github.com/gammapy/gammapy/pulls?q=is%3Apr+milestone%3A0.16+is%3Aclosed>`__.
 
 
 - [#2756] Add config params for get_flux_points method in High level interface (José Enrique Ruiz)
@@ -776,17 +778,17 @@ For Gammapy v0.15 the high level ``Analysis`` class was moved to the newly
 introduced ``gammapy.analysis`` sub-package. The syntax of the YAML config
 file was simplified and validation of config parameters is now available
 for interactive use of the ``Analysis`` class as well. Both is demonstrated in the
-`first analysis with Gammapy notebook <tutorials/analysis_1.html>`__.
+`first analysis with Gammapy notebook <tutorials/starting/analysis_1.html>`__.
 In addition a new ``gammapy analysis`` command line tool was introduced,
 which executes the data reduction part of an analysis, based on a given config
 file.
 
 Following the proposal in `PIG 18`_ the structure of the documentation was
-improved. The new `overview page <overview.rst>`__ gives an introduction and
+improved. The new `overview page <https://docs.gammapy.org/0.15/overview.html>`__ gives an introduction and
 overview of the Gammapy analysis workflow and package structure. The structure
-and content of the `tutorials page <tutorials/index.rst>`__ was simplified and
-cleaned up and a `how to <howto.rst>`__ page was introduced. A tutorial notebook
-showing how to do a joint `multi-instrument analysis <tutorials/analysis_mwl.html>`__
+and content of the `tutorials <https://docs.gammapy.org/0.15/tutorials/index.html>`__ page was simplified and
+cleaned up and a `how to page <https://docs.gammapy.org/0.15/howto.html>`__ was introduced. A tutorial notebook
+showing how to do a joint `multi-instrument analysis <https://docs.gammapy.org/0.15/notebooks/analysis_mwl.html>`__
 of the Crab Nebula using H.E.S.S. and Fermi-LAT data and HAWC flux points was added.
 
 Another focus of the work for Gammapy v0.15 was the clean-up and unification of
@@ -796,8 +798,8 @@ and ``SpectrumDatasetMaker`` which directly produce a ``MapDataset`` or
 were adapted by introducing a ``ReflectedRegionsBackgroundMaker``,
 ``RingBackgroundMaker`` and ``AdaptiveRingbackgroundMaker``. Those makers can
 also be chained to create custom data reduction workflows. The new data reduction
-API is shown in the `second analysis with Gammapy notebook <tutorials/analysis_2.html>`__
-and corresponding `docs page <cube/index.rst>`__.
+API is shown in the `second analysis with Gammapy notebook <https://docs.gammapy.org/0.15/notebooks/analysis_mwl.html>`__
+and corresponding `docs page <https://docs.gammapy.org/0.15/cube/index.html>`__.
 
 A ``MapDatasetOnOff`` class was introduced to handle on-off observation based analyses
 and as a container for image based ring-background estimation. All datasets now
@@ -806,19 +808,19 @@ geometry or energy specification. Gammapy now supports spatially varying PSF and
 energy dispersion in the data reduction as well as during fitting. By introducing
 an in memory ``Observation`` class Gammapy now features unified support for
 binned simulations of spectrum and map datasets. This is shown in the
-`1d simulation <tutorials/spectrum_simulation.html>`__ and
-`3d simulation <tutorials/simulate_3d.html>`__ tutorial notebooks.
+`1d simulation <https://docs.gammapy.org/0.15/notebooks/spectrum_simulation.html>`__ and
+`3d simulation <https://docs.gammapy.org/0.15/notebooks/simulate_3d.html>`__ tutorial notebooks.
 
 The ``LightCurveEstimator`` was improved to use the GTIs defined on datasets
 and allow for grouping of datasets according to provided time intervals. Details
-are explained on the `time docs page <time/index.rst>`__ and the newly added
-`flare light curve notebook <tutorials/light_curve_flare.html>`__.
+are explained on the `time docs page <https://docs.gammapy.org/0.15/time/index.html>`__
+and the newly added `flare light curve notebook <https://docs.gammapy.org/0.15/notebooks/light_curve_flare.html>`__.
 
 The support for 2FHL and 4FGL was improved by adding attributes returning
 spatial and spectral models as well as lightcurves to the corresponding objects.
 The support for the Fermi-LAT 1FHL catalog was dropped. An overview can be found
-on the `catalog docs page <catalog/index.rst>`__ and the `catalog tutorial notebook
-<tutorials/catalog.html>`__.
+on the `catalog docs page <https://docs.gammapy.org/0.15/catalog/index.html>`__ and the
+`catalog tutorial notebook <https://docs.gammapy.org/0.15/notebooks/catalog.html>`__.
 
 Error propagation is now fully supported for the ``AbsorbedSpectralModel`` and
 ``NaimaModel``.
@@ -853,7 +855,7 @@ Pull Requests
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
 
-See the complete `Gammapy v0.15 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=✓&q=is%3Apr+milestone%3A0.14>`__.
+See the complete `Gammapy v0.15 merged pull requests list on GitHub <https://github.com/gammapy/gammapy/pulls?utf8=✓&q=is%3Apr+milestone%3A0.14>`__.
 
 
 - [#2660] Remove tutorials/source_population_model.ipynb (Christoph Deil)
@@ -956,7 +958,7 @@ Gammapy v0.14 features a new high level analysis interface. Starting from
 a YAML configuration file, it supports the standard use-cases of joint
 or stacked 3D as well as 1D reflected region analyses. It also supports
 computation of flux points for all cases. The usage of this new ``Analysis``
-class is demonstrated in the `hess.html <./tutorials/hess.html>`__ tutorial.
+class is demonstrated in the `hess tutorial <https://docs.gammapy.org/0.14/notebooks/hess.html>`__.
 
 Following the proposal in :ref:`pig-016` the subpackages ``gammapy.background``
 and ``gammapy.image`` were removed. Existing functionality was moved to the
@@ -1005,7 +1007,7 @@ Pull Requests
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
 
-See the complete `Gammapy v0.14 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=✓&q=is%3Apr+milestone%3A0.14>`__.
+See the complete `Gammapy v0.14 merged pull requests list on GitHub <https://github.com/gammapy/gammapy/pulls?utf8=✓&q=is%3Apr+milestone%3A0.14>`__.
 
 - [#2412] Remove model XML serialization (Quentin Remy)
 - [#2404] Clean up spectral model names (Christoph Deil)
@@ -1123,7 +1125,7 @@ Pull Requests
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
 
-See the complete `Gammapy v0.13 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=✓&q=is%3Apr+milestone%3A0.13+>`__.
+See the complete `Gammapy v0.13 merged pull requests list on GitHub <https://github.com/gammapy/gammapy/pulls?utf8=✓&q=is%3Apr+milestone%3A0.13+>`__.
 
 - [#2296] Implement model YAML serialisation (Quentin Remy)
 - [#2310] Remove old ``LightCurveEstimator`` class (Axel Donath)
@@ -1197,7 +1199,7 @@ gamma-ray data. To improve the fit convergence of the ``SkyDisk`` and ``SkyEllip
 models we introduced a new parameter defining the slope of the edge of these models.
 
 If you would like to know how to adapt your old spectral analysis scripts to Gammapy
-v0.12, please checkout the updated tutorial notebooks (https://docs.gammapy.org/0.12/tutorials.html)
+v0.12, please checkout the updated `tutorial notebooks <https://docs.gammapy.org/0.12/tutorials.html>`__
 and `get in contact with us <https://gammapy.org/contact.html>`__ anytime if you need help.
 
 **Contributors:**
@@ -1219,7 +1221,7 @@ Pull Requests
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
 
-See the complete `Gammapy v0.12 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=✓&q=is%3Apr+milestone%3A0.12+>`__.
+See the complete `Gammapy v0.12 merged pull requests list on GitHub <https://github.com/gammapy/gammapy/pulls?utf8=✓&q=is%3Apr+milestone%3A0.12+>`__.
 
 - [#2171] Remove Poisson chi2 approximations (Christoph Deil)
 - [#2169] Remove warning astropy_helpers.sphinx.conf is deprecated (José Enrique Ruiz)
@@ -1337,7 +1339,7 @@ Pull requests
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
 
-See the complete `Gammapy 0.11 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?q=is%3Apr+milestone%3A0.11+is%3Aclosed>`__.
+See the complete `Gammapy 0.11 merged pull requests list on GitHub <https://github.com/gammapy/gammapy/pulls?q=is%3Apr+milestone%3A0.11+is%3Aclosed>`__.
 
 - [#2098] Remove gammapy.datasets submodule (Axel Donath)
 - [#2097] Clean up tutorial notebooks (Christoph Deil)
@@ -1429,7 +1431,7 @@ Pull requests
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
 
-See the complete `Gammapy 0.10 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?q=is%3Apr+milestone%3A0.10+is%3Aclosed>`__.
+See the complete `Gammapy 0.10 merged pull requests list on GitHub <https://github.com/gammapy/gammapy/pulls?q=is%3Apr+milestone%3A0.10+is%3Aclosed>`__.
 
 - [#2001] Use GAMMAPY_DATA everywhere / remove GAMMAPY_EXTRA (José Enrique Ruiz)
 - [#2000] Fix cta_simulation notebook, use CTA prod 3 IRFs (Régis Terrier)
@@ -1509,7 +1511,7 @@ Pull requests
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
 
-See the complete `Gammapy 0.9 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?q=is%3Apr+milestone%3A0.9+is%3Aclosed>`__.
+See the complete `Gammapy 0.9 merged pull requests list on GitHub <https://github.com/gammapy/gammapy/pulls?q=is%3Apr+milestone%3A0.9+is%3Aclosed>`__.
 
 - [#1949] Add fit minos_contour method (Christoph Deil)
 - [#1937] No copy of input and result model in fit (Christoph Deil)
@@ -1671,7 +1673,7 @@ Pull requests
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
 
-See the complete `Gammapy 0.8 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.8+is%3Amerged+>`__.
+See the complete `Gammapy 0.8 merged pull requests list on GitHub <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.8+is%3Amerged+>`__.
 
 - [#1822] Use GAMMAPY_DATA in Gammapy codebase (José Enrique Ruiz)
 - [#1821] Improve analysis 3D tutorial (Axel Donath)
@@ -1811,8 +1813,7 @@ Documentation:
   notebooks easier to navigate and search, a rendered static version of the notebooks was integrated
   in the Sphinx-based documentation (the one you are looking at) at :ref:`tutorials`.
 - Most of the Gammapy tutorials can be executed directly in the browser via the https://mybinder.org/
-  service. There is a "launch in binder" link at the top of each tutorial in the docs,
-  see e.g. here: `CTA data analysis with Gammapy <tutorials/cta_data_analysis.html>`__
+  service. There is a "launch in binder" link at the top of each tutorial in the docs.
 - A page was created to collect the information for CTA members how to get started with Gammapy
   and with contact / support channels: https://gammapy.org/cta.html
 
@@ -1897,7 +1898,7 @@ Pull requests
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
 
-See the complete `Gammapy 0.7 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.7+is%3Amerged+>`__.
+See the complete `Gammapy 0.7 merged pull requests list on GitHub <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.7+is%3Amerged+>`__.
 
 - [#1319] Fix a bug in SpectrumStacker (Anne Lemière)
 - [#1318] Improve MapCoord interface (Matthew Wood)
@@ -2068,7 +2069,7 @@ Pull requests
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
 
-See the complete `Gammapy 0.6 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.6+is%3Amerged+>`__.
+See the complete `Gammapy 0.6 merged pull requests list on GitHub <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.6+is%3Amerged+>`__.
 
 - [#1006] Add possibility to skip runs based on alpha in SpectrumExtraction (Johannes King)
 - [#1002] Containment correction in SpectrumObservation via AREASCAL (Johannes King)
@@ -2153,7 +2154,7 @@ Summary
 
 - Tutorial-style getting started documentation as Jupyter notebooks
 - Removed ``gammapy.regions`` and have switched to the move complete
-  and powerful `regions <http://astropy-regions.readthedocs.io/>`__ package
+  and powerful `regions <https://astropy-regions.readthedocs.io/en/stable/>`__ package
   (planned to be added to the Astropy core within the next year).
 - ``gammapy.spectrum`` - Many 1-dimensional spectrum analysis improvements (e.g. spectral point computation)
 - ``gammapy.image`` - Many ``SkyImage`` improvements, adaptive ring background estimation, asmooth algorithm
@@ -2182,7 +2183,7 @@ Pull requests
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
 
-See the complete `Gammapy 0.5 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.5+is%3Amerged+>`__.
+See the complete `Gammapy 0.5 merged pull requests list on GitHub <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.5+is%3Amerged+>`__.
 
 - [#790] Add powerlaw energy flux integral for ``gamma=2`` (Axel Donath)
 - [#789] Fix Wstat (Johannes King)
@@ -2293,7 +2294,7 @@ Pull requests
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
 
-See the complete `Gammapy 0.4 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.4+is%3Amerged+>`__.
+See the complete `Gammapy 0.4 merged pull requests list on GitHub <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.4+is%3Amerged+>`__.
 
 - [#518] Fixes and cleanup for SkyMap (Axel Donath)
 - [#511] Add exposure image computation (Léa Jouvin)

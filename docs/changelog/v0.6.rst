@@ -1,0 +1,149 @@
+.. _gammapy_0p6_release:
+
+0.6 (Apr 28, 2017)
+------------------
+
+Summary
+~~~~~~~
+
+- Released Apr 28, 2017
+- 14 contributors (5 new)
+- 5 months of work
+- 147 pull requests (not all listed below)
+
+What's new?
+~~~~~~~~~~~
+
+- Release and installation
+    - Until now, we had a roughly bi-yearly release cycle for Gammapy.
+      Starting now, we will make stable releases more often, to ship features and fixes to Gammapy users more quickly.
+    - Gammapy 0.6 requires Python 2.7 or 3.4+, Numpy 1.8+, Scipy 0.15+, Astropy 1.3+, Sherpa 4.9.0+ .
+      Most things will still work with older Astropy and Sherpa, but we dropped testing
+      for older versions from our continuous integration.
+    - Gammapy is now available via Macports, a package manager for Mac OS (``port install py35-gammapy``)
+- Documentation
+    - Added many tutorials as Jupyter notebooks (linked to from the docs front-page)
+    - Misc docs improvements and new getting started notebooks
+- For CTA
+    - Better support for CTA IRFs
+    - A notebook showing how to analyse some simulated CTA data (preliminary files from first data challenge)
+    - Better support and documentation for CTA will be the focus of the next release (0.7).
+- For Fermi-LAT
+    - Introduced a reference dataset: https://github.com/gammapy/gammapy-fermi-lat-data
+    - Added convenience class to work with Fermi-LAT datasets
+- gammapy.catalog
+    - Add support for gamma-cat, an open data collection and source catalog for gamma-ray astronomy
+      (https://github.com/gammapy/gamma-cat)
+    - Access to more Fermi-LAT catalogs (1FHL, 2FHL, 3FHL)
+- gammapy.spectrum
+    - Better flux point class
+    - Add flux point SED fitter
+    - EBL-absorbed spectral models
+    - Improved spectrum simulation class
+- gammapy.image
+    - Add image radial and box profiles
+    - Add adaptive ring background estimation
+    - Add adaptive image smooth algorithm
+- gammapy.cube
+    - Add prototype for 3D analysis of IACT data (work in progress)
+- gammapy.time
+    - Add prototype lightcurve estimator for IACT data (work in progress)
+- gammapy.irf
+    - Many IRF classes now rewritten to use the generic ``NDDataArray`` and axis classes
+    - Better handling of energy dispersion
+- gammapy.utils
+    - Add gammapy.utils.modeling (work in progress)
+    - Add gammapy.utils.sherpa (generic interface to sherpa for fitting, with models
+      and likelihood function defined in Gammapy) (work in progress)
+- Many small bugfixes and improvements throughout the codebase and documentation
+
+Contributors
+~~~~~~~~~~~~
+
+- Arjun Voruganti (new)
+- Arpit Gogia (new)
+- Axel Donath
+- Brigitta Sipocz
+- Bruno Khelifi (new)
+- Christoph Deil
+- Dirk Lennarz
+- Fabio Acero (new)
+- Johannes King
+- Julien Lefaucheur
+- Lars Mohrmann (new)
+- Léa Jouvin
+- Nachiketa Chakraborty
+- Régis Terrier
+- Zé Vinícius (new)
+
+Pull requests
+~~~~~~~~~~~~~
+
+This list is incomplete. Small improvements and bug fixes are not listed here.
+
+See the complete `Gammapy 0.6 merged pull requests list on GitHub <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.6+is%3Amerged+>`__.
+
+- [#1006] Add possibility to skip runs based on alpha in SpectrumExtraction (Johannes King)
+- [#1002] Containment correction in SpectrumObservation via AREASCAL (Johannes King)
+- [#1001] Add SpectrumAnalysisIACT (Johannes King)
+- [#997] Add compute_chisq method to lightcurve class (Nachiketa Chakraborty)
+- [#994] Improve Gammapy installation docs (Christoph Deil)
+- [#988] Add spectral model absorbed by EBL that can be fit (Julien Lefaucheur)
+- [#985] Improve error methods on spectral models (Axel Donath)
+- [#979] Add flux point fitter class (Axel Donath)
+- [#976] Fixes to Galactic population simulation (Christoph Deil)
+- [#975] Add PLSuperExpCutoff3FGL spectral model (Axel Donath)
+- [#966] Remove SkyMask (merge with SkyImage) (Christoph Deil)
+- [#950] Add light curve computation (Julien Lefaucheur)
+- [#933] Change IRF plotting from imshow to pcolormesh (Axel Donath)
+- [#932] Change NDDataArray default_interp_kwargs to extrapolate (Johannes King)
+- [#919] Fix Double plot issue in notebooks and improve events.peek() (Fabio Acero)
+- [#911] Improve EnergyDispersion2D get_response and tests (Régis Terrier)
+- [#906] Fix catalog getitem to work with numpy int index (Zé Vinícius)
+- [#898] Add printout for 3FGL catalog objects (Arjun Voruganti)
+- [#893] Add Fermi-LAT 3FGL catalog object lightcurve property (Arpit Gogia)
+- [#888] Improve CTA IRF and simulation classes (point-like analysis) (Julien Lefaucheur)
+- [#885] Improve spectral model uncertainty handling (Axel Donath)
+- [#884] Improve BinnedDataAxis handling of lo / hi binning (Johannes King)
+- [#883] Improve spectrum docs page (Johannes King)
+- [#881] Add support for observations with different energy binning in SpectrumFit (Lars Mohrmann)
+- [#875] Add CTA spectrum simulation example (Julien Lefaucheur)
+- [#872] Add SED type e2dnde to FluxPoints (Johannes King)
+- [#871] Add Parameter class to SpectralModel (Johannes King)
+- [#870] Clean up docstrings in background sub-package (Arpit Gogia)
+- [#868] Add Fermi-LAT 3FHL catalogue (Julien Lefaucheur)
+- [#865] Add Fermi basic image estimator (Axel Donath)
+- [#864] Improve edisp.apply to support different true energy axes (Johannes King)
+- [#859] Remove old image_profile function (Axel Donath)
+- [#858] Fix Fermi catalog flux point upper limits (Axel Donath)
+- [#855] Add Fermi-LAT 1FHL catalogue (Julien Lefaucheur)
+- [#854] Add Fermi-LAT dataset class (Axel Donath)
+- [#851] Write Macports install docs (Christoph Deil)
+- [#847] Fix Sherpa spectrum OGIP file issue (Régis Terrier and Johannes King)
+- [#842] Add AbsorbedSpectralModel and improve CTA IRF class (Julien Lefaucheur)
+- [#840] Fix energy binning issue in cube pipe (Léa Jouvin)
+- [#837] Fix containment fraction issue for table PSF (Léa Jouvin)
+- [#836] Fix spectrum observation write issue (Léa Jouvin)
+- [#835] Add image profile estimator class (Axel Donath)
+- [#834] Bump to require Astropy v1.3 (Christoph Deil)
+- [#833] Add image profile class (Axel Donath)
+- [#832] Improve NDDataArray (use composition, not inheritance) (Johannes King)
+- [#831] Add CTA Sensitivity class and plot improvements (Julien Lefaucheur)
+- [#830] Add gammapy.utils.modeling and GammaCat to XML (Christoph Deil)
+- [#827] Add energy dispersion for 3D spectral analysis (Léa Jouvin)
+- [#826] Add sky cube computation for IACT data (Léa Jouvin)
+- [#825] Update astropy-helpers to v1.3 (Brigitta Sipocz)
+- [#824] Add XSPEC table absorption model to spectral table model (Julien Lefaucheur)
+- [#820] Add morphology models for gamma-cat sources (Axel Donath)
+- [#816] Add class to access CTA point-like responses (Julien Lefaucheur)
+- [#814] Remove old flux point classes (Axel Donath)
+- [#813] Improve Feldman Cousins code (Dirk Lennarz)
+- [#812] Improve differential flux point computation code (Axel Donath)
+- [#811] Adapt catalogs to new flux point class (Axel Donath)
+- [#810] Add new flux point class (Axel Donath)
+- [#798] Add Fvar variability measure for light curves (Nachiketa Chakraborty)
+- [#796] Improve LogEnergyAxis object (Axel Donath)
+- [#797] Improve WStat implementation (Johannes King)
+- [#793] Add GammaCat source catalog (Axel Donath)
+- [#791] Misc fixes to spectrum fitting code (Johannes King)
+- [#784] Improve SkyCube exposure computation (Léa Jouvin)

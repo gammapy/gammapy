@@ -87,7 +87,7 @@ def cli_download_notebooks(release, out):
     localfolder = Path(out) / release
     url_file_env = f"{ENVS_BASE_URL}/gammapy-{release}-environment.yml"
     if release == "dev":
-        url_file_env = f"https://raw.githubusercontent.com/gammapy/gammapy/master/environment-dev.yml"
+        url_file_env = "https://raw.githubusercontent.com/gammapy/gammapy/master/environment-dev.yml"
 
     yaml_destination_file = localfolder / f"gammapy-{release}-environment.yml"
     progress_download(url_file_env, yaml_destination_file)

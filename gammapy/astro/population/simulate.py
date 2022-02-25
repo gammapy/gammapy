@@ -25,13 +25,13 @@ from .spatial import (
 from .velocity import VMAX, VMIN, velocity_distributions
 
 __all__ = [
-    "make_catalog_random_positions_cube",
-    "make_catalog_random_positions_sphere",
-    "make_base_catalog_galactic",
-    "add_snr_parameters",
+    "add_observed_parameters",
     "add_pulsar_parameters",
     "add_pwn_parameters",
-    "add_observed_parameters",
+    "add_snr_parameters",
+    "make_base_catalog_galactic",
+    "make_catalog_random_positions_cube",
+    "make_catalog_random_positions_sphere",
 ]
 
 

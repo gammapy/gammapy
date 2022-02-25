@@ -5,11 +5,11 @@ from astropy.units import Quantity, Unit
 
 __all__ = [
     "cartesian",
+    "D_SUN_TO_GALACTIC_CENTER",
     "galactic",
-    "velocity_glon_glat",
     "motion_since_birth",
     "polar",
-    "D_SUN_TO_GALACTIC_CENTER",
+    "velocity_glon_glat",
 ]
 
 # TODO: replace this with the default from the Galactocentric frame in astropy.coordinates

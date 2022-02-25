@@ -45,6 +45,20 @@ def pix_to_coord(edges, pix, interp="lin"):
     return scale.inverse(interp_fn(pix))
 
 
+PLOT_AXIS_LABEL = {
+    "energy": "Energy",
+    "energy_true": "True Energy",
+    "offset": "FoV Offset",
+    "rad": "Source Offset",
+    "migra": "Energy / True Energy",
+    "fov_lon": "FoV Lon.",
+    "fov_lat": "FoV Lat.",
+    "time": "Time",
+}
+
+DEFAULT_LABEL_TEMPLATE = '{quantity} [{unit}]'
+
+
 class MapAxis:
     """Class representing an axis of a map.
 
@@ -195,11 +209,6 @@ class MapAxis:
         """Name of the axis."""
         return self._name
 
-    @name.setter
-    def name(self, value):
-        """Name of the axis."""
-        self._name = value
-
     @lazyproperty
     def edges(self):
         """Return array of bin edges."""
@@ -278,7 +287,9 @@ class MapAxis:
         """
         ax.set_xscale(self.as_plot_scale)
 
-        xlabel = self.name.capitalize() + f" [{ax.xaxis.units}]"
+        xlabel = DEFAULT_LABEL_TEMPLATE.format(
+                                        quantity=PLOT_AXIS_LABEL.get(self.name, self.name.capitalize())
+                                        , unit=self.unit )
         ax.set_xlabel(xlabel)
         ax.set_xlim(self.bounds)
         return ax
@@ -1598,13 +1609,16 @@ class MapAxes(Sequence):
         return self.__class__(axes=axes)
 
     def __getitem__(self, idx):
-        if isinstance(idx, (int, slice)):
+        if isinstance(idx, int):
             return self._axes[idx]
         elif isinstance(idx, str):
             for ax in self._axes:
                 if ax.name == idx:
                     return ax
             raise KeyError(f"No axes: {idx!r}")
+        elif isinstance(idx, slice):
+            axes = self._axes[idx]
+            return self.__class__(axes=axes)
         elif isinstance(idx, list):
             axes = []
             for name in idx:
@@ -1925,7 +1939,7 @@ class MapAxes(Sequence):
                 ax = MapAxis(ax)
 
             if ax.name == "":
-                ax.name = f"axis{idx}"
+                ax._name = f"axis{idx}"
 
             axes_out.append(ax)
 
@@ -2187,8 +2201,9 @@ class TimeMapAxis:
         import matplotlib.pyplot as plt
         from matplotlib.dates import DateFormatter
 
-        xlabel = self.name.capitalize() + f" [{self.time_format}]"
-
+        xlabel = DEFAULT_LABEL_TEMPLATE.format(
+                                        quantity=PLOT_AXIS_LABEL.get(self.name, self.name.capitalize())
+                                        , unit=self.time_format )
         ax.set_xlabel(xlabel)
 
         if self.time_format == "iso":

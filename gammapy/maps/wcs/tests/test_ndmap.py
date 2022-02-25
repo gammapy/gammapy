@@ -844,7 +844,7 @@ def test_binary_dilate():
     assert_allclose(mask.data.sum(), 8048)
 
     mask = mask.binary_dilate(width=(10, 10), kernel="box")
-    assert_allclose(mask.data.sum(), 9203)
+    assert_allclose(mask.data.sum(), 9203, rtol=3e-3)
 
 
 def test_binary_dilate_erode_3d():

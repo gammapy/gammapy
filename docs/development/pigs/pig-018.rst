@@ -275,11 +275,11 @@ Implementing this PIG is a lot of work, roughly 2 months of full-time work. We
 suggest that, after the PIG is accepted, one coordinator spends a few days to do
 quick additions / removals / renames / rearrangements, so that the structure of
 the RST and IPYNB files we want is in place. For this we propose the coordinator
-to fill the `Documentation Github project`_ with a list of 20-30 tasks that
+to fill the `Documentation GitHub project`_ with a list of 20-30 tasks that
 should be done (each 1-2 days of work, not longer) and asks for help. Each task
 is usually to edit one notebook or RST page, and needs one author and one
 reviewer. It is then up to those two people to coordinate their work: they can
-open a Github issue to discuss, or they can just do a phone call or meet.
+open a GitHub issue to discuss, or they can just do a phone call or meet.
 Eventually there is a pull request and when it's in a state where both are
 happy, and it's merged in. Whether to use "notes" or "issues" for each task will
 be discussed during the development of the PIG and and will be basically up to
@@ -318,5 +318,5 @@ weeks, but also in 2020 and after.
 .. _ADASS XVIII proceedings: http://www.aspbooks.org/publications/523/357.pdf
 .. _Glossary: https://docs.gammapy.org/0.14/references.html#glossary
 .. _Jupytext: https://jupytext.readthedocs.io
-.. _Documentation Github project: https://github.com/gammapy/gammapy/projects/1
-.. _HowTo documentation page: https://docs.gammapy.org/dev/howto.html
+.. _Documentation GitHub project: https://github.com/gammapy/gammapy/projects/1
+.. _HowTo documentation page: https://docs.gammapy.org/dev/development/dev_howto.html

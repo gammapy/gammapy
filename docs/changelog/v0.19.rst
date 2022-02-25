@@ -1,0 +1,245 @@
+.. _gammapy_0p19_release:
+
+0.19 (Nov 22nd, 2021)
+---------------------
+
+Summary
+~~~~~~~
+
+- Released November 22, 2021
+- 19 contributors
+- 390 pull requests so far (not all listed below)
+
+What's new?
+~~~~~~~~~~~
+
+Gammapy v0.19 comes with many new features, further unified API, bug fixes
+and improved performance. It provides a nearly complete API for the coming 1.0 release.
+API changes a relatively limited and concern mostly the `gammapy.estimators` subpackage.
+Its API has been unified and now heavily relies on the ``Map`` structure.
+
+A wiki page containing specific information on the main API changes from v0.18.2 to v0.19 is available
+`here <https://github.com/gammapy/gammapy/wiki/Main-API-changes-from-v0.18.2-to-v0.19>`__.
+
+Documentation has been significantly reorganized. In particular, the tutorials have been
+restructured into subfolders based of the type of treatment described. Tutorials are now
+presented in a `nice gallery view <https://docs.gammapy.org/0.19/tutorials/index.html>`__ format. Some tutorials have been removed because their
+objectives are too specific for the general documentation. To present these specific, possibly
+contributed examples, a new web page and repository has been created: `gammapy.recipes <https://github.com/gammapy/gammapy-recipes>`__.
+Please follow `these instructions <https://gammapy.github.io/gammapy-recipes/_build/html/contributing.html>`__
+if you would like to contribute to the Gammapy recipes with your own.
+
+Several additions were made to the `gammapy.maps` subpackage.
+A new ``Maps`` container has been introduced. It is a `dict` like structure that stores ``Map``
+objects sharing the same geometry. It allows easy serialization and I/O to FITS for such objects.
+A ``MapAxes`` class, a container for ``MapAxis`` objects, has been introduced as well. It provides
+several convenience functionality to handle multiple non-spatial axes. This is especially useful
+after the addition of new axis type. So far, ``MapAxis`` only supports contiguous axes defined either
+through their edges or their centers. Non-contiguous axes types have been added. ``TimeMapAxis``
+provides an axis for non-adjacent time intervals. Similarly, ``LabelMapAxis`` provides an axis
+for non-numeric entries.
+
+The `gammapy.estimators` package has been largely restructured. All ``Estimator`` objects now share the
+same default options, in particular the full error and upper limit calculations are no longer
+calculated by default, but passing an option `selection_optional` parameter.
+The class ``FluxMaps`` has been introduced to provide a uniform scheme for the products of the ``Estimators``.
+It uses the ``Map`` API as a common container for estimator results. Region based maps, ``RegionNDMap``, are
+used to contain ``FluxPointsEstimator`` and ``LightCurveEstimator`` results and WCS based maps, ``WcsNDMap``, for
+``TSMapEstimator`` and ``ExcessMapEstimator``. This provides many advantages.
+Internally, this reduce a lot the code duplication and remove unnecessary structures. For instance, the
+``LightCurve`` class has been removed since all its functionalities are now supported by the ``FluxPoints``,
+since they can carry a ``TimeMapAxis``. The internal data model of high level products is therefore much more
+independent of the data formats defined outside gammapy. Some convenience methods have been introduced to support
+flux conversion from estimates based on a reference model and `norm` values into various fluxes as defined
+in gadf (namely `dnde`, `e2dnde`, `flux` or `eflux`). ``FluxMaps`` also allows simple serialization of the maps.
+Following this new scheme, a ``FluxProfileEstimator`` has been added.
+
+
+The subpackage `gammapy.datasets` has been re-organized. Its API does not change significantly but
+it has been simplified internally.
+``SpectrumDataset`` now inherits from ``MapDataset`` which removes a lot of code duplication.
+The APIs for the creation of both map and spectrum datasets are now similar and rely on ``Geom``.
+IRFs can now be natively integrated or averaged over the region using a simple `use_region_center`
+parameter in the ``SpectrumDatasetMaker``. Model evaluation is now possible on a ``RegionGeom``
+thanks to the ``RegionGeom.wcs``. Spatial models can now be evaluated using ``SpectrumDataset``.
+These changes allow for a direct support of extended sources in 1D analysis. In addition, healpy
+support has been improved with the addition of a `convolve` method on the
+``HpxNDMap`` (which relies on a local WCS projection) and improved I/O methods.
+Computation of `npred` on a ``MapDataset`` with a ``HpxGeom`` geometry is now possible.
+
+
+`gammapy.irf` has been significantly updated. A general ``IRF`` base class is now used. It relies
+on ``MapAxes`` and ``Quantity`` and provides most of the methods such as interpolation and I/O.
+A registry of IRFs is now added. All these new features, considerably simplify the addition of a
+type of IRF for a user.
+
+
+Model handling has been strongly simplified thanks to a number of helper methods allowing e.g.
+to freeze all spectral or spatial parameters of a given ``Models`` object, to select all
+components of a ``Models`` lying inside a given region.
+
+New catalog information has been added on `gammapy.catalog`, namely the data release 2 of the 4FGL
+and the third HAWC catalog.
+
+For Gammapy v0.19 we dropped the support for Python 3.6, please use Python 3.7 or later. We
+also updated to use regions v0.5 and iminuit 2.8.4. After changes in the Travis CI platform,
+the Continuous Integration (CI) has been simplified and moved from Travis to GitHub actions.
+
+Contributors
+~~~~~~~~~~~~
+
+In alphabetical order by first name:
+
+- Alexis Coutinho
+- Atreyee Sinha
+- Axel Donath
+- Bruno Khelifi
+- Cosimo Nigro
+- Dimitri Papadopoulos
+- Fabio Acero
+- Fabio Pintore
+- Jalel Hajlaoui
+- Johannes Buchner
+- José Enrique Ruiz
+- Laura Olivera Nieto
+- Luca Giunti
+- Mathieu de Bony
+- Maximilian Nöthe
+- Quentin Remy
+- Régis Terrier
+- Sebastian Panny
+- Vikas Joshi
+
+Pull requests
+~~~~~~~~~~~~~
+
+This list is incomplete. Small improvements and bug fixes are not listed here.
+
+- [#3592] Avoid copy in background model evaluation (Quentin Rémy)
+- [#3584] Return Maps object in ASmoothMapEstimator (Axel Donath)
+- [#3568] Add test for event sampler using CTA IRF alpha configuration (Fabio Pintore)
+- [#3561] Add FluxPoints.is_ul setter and fix its serialisation (Quentin Rémy)
+- [#3559] Codespell infrastructure (Dimitri Papadopoulos)
+- [#3544] Add FluxMaps.success quantity (Bruno Khelifi)
+- [#3529] Correct map evaluator to avoid memory overload (Régis Terrier)
+- [#3523] Add .sample_time to GaussianTemporalMode` and ExpDecayTemporalModel (Fabio Pintore)
+- [#3515] Add RadMax2d IRF (Maximilian Nöthe)
+- [#3491] Use FluxMaps as return type for ExcessMapEstimator (Axel Donath)
+- [#3488] Add a Datasets API notebook (Atreyee Sinha)
+- [#3480] Implement FluxProfileEstimator (Axel Donath)
+- [#3474] Return min/max energy maps from energy_range methods (Alexis Coutinho)
+- [#3471] Rename MapDataset.to_spectrum and improve docstring (Axel Donath)
+- [#3468] Prevents spatial model integration if no psf is present and add test (Régis Terrier)
+- [#3466] Restructure gammapy maps with subfolders (Axel Donath)
+- [#3458] Support binned time series format in FluxPoints.to_table() (Axel Donath)
+- [#3454] Add npred quantities to flux point computation (Axel Donath)
+- [#3453] Adapt Gammapy to regions v0.5 (Axel Donath)
+- [#3449] Remove LightCurve class (Axel Donath)
+- [#3447] Implement plotting of stat profiles for lightcurves (Axel Donath)
+- [#3446] corrected axis label units for PSF containment radius (Sebastian Panny)
+- [#3445] Use FluxPoints object in LightcurveEstimator (Axel Donath)
+- [#3439] Allow to choose scaling method per parameter (Quentin Rémy)
+- [#3438] Unify plot unit handling (Axel Donath)
+- [#3434] Time axis plotting (Axel Donath)
+- [#3428] Support serialisation of TimeMapAxis (Axel Donath)
+- [#3426] Cleanup reflected regions finder (Axel Donath)
+- [#3423] Implement LabelMapAxis (Axel Donath)
+- [#3420] Disable IRF extrapolation (Quentin Rémy)
+- [#3418] Refactor FluxPoints to rely on maps internally (Axel Donath)
+- [#3416] Mask invalid background values in SafeMaskMaker (Quentin Rémy)
+- [#3413] Introduce inheritance for Estimator classes (Axel Donath)
+- [#3409] Support iminuit v2.0 (Axel Donath)
+- [#3406] Add scan specification to the Parameter object (Axel Donath)
+- [#3404] Add is_pointlike property on irfs (Régis Terrier)
+- [#3403] Add sparse option to get_coord() methods (Axel Donath)
+- [#3402] Rename energy_range to energy_bounds (Fabio Pintore)
+- [#3399] Implement WcsGeom.from_aligned (Axel Donath)
+- [#3397] Use string for model name in npred_signal() (Atreyee Sinha)
+- [#3395] Remove counts data caching from MapDataset (Axel Donath)
+- [#3393] Implement TimeMapAxis class  (Régis Terrier)
+- [#3392] Implement padding for TSMapEstimator (Axel Donath)
+- [#3390] Fix parameter type for PiecewiseNormSpectralModel and NaimaSpectralModel (Quentin Rémy)
+- [#3381] Fix FoVBackgroundMaker error (Atreyee Sinha)
+- [#3379] Use find_roots to call root finding methods (Quentin Rémy)
+- [#3377] Expand $GAMMAPY_DATA defined in HLI config (Jose Enrique Ruiz)
+- [#3374] Fix off position only created for first observation in make_theta_squared_table (Maximilian Nöthe)
+- [#3369] Enable reading psf and edisp for MapDatasetOnOff (Atreyee Sinha)
+- [#3363] Read healpy maps with col name (Vikas Joshi)
+- [#3358] Complete test coverage in docstrings of python files (Jose Enrique Ruiz)
+- [#3357] Improve test coverage in RST files (Jose Enrique Ruiz)
+- [#3353] Tweak in MapEvaluator.need_update for performance (Quentin Rémy)
+- [#3349] Cleanup MapEvaluator and add more caching (Quentin Rémy)
+- [#3347] Simplify and refactor installation instructions (Jose Enrique Ruiz)
+- [#3346] Allow Npred computation for Healpix MapDataset (Laura Olivera Nieto)
+- [#3343] Display progress bar in gammapy (Luca Giunti)
+- [#3342] Add truncation value to npred in cash statistics calculation (Régis Terrier)
+- [#3338] Add fixed_offset attribute to SafeMaskMaker (Fabio Pintore)
+- [#3337] Rename BackgroundModel to TemplateNPredModel (Axel Donath)
+- [#3335] Changed p-value for CountsStatistic (Régis Terrier)
+- [#3333] Add sed_type keyword to SpectralModel.plot (Fabio Pintore)
+- [#3328] Make FluxPoints inherit from FluxEstimate (Axel Donath)
+- [#3323] Implement HpxNDMap.convolve() (Laura Olivera Nieto)
+- [#3320] Add functionality to read healpy maps (Vikas Joshi)
+- [#3319] Modify FoVBackgroundMaker to take spectral model as argument (Régis Terrier)
+- [#3314] Implement HpxNDMap.smooth() (Laura Olivera Nieto)
+- [#3310] Hpx separation method (Vikas Joshi)
+- [#3309] Improve doc and cleanup for selection_optional argument in estimators (Quentin Rémy)
+- [#3308] Implement HpxNDMap.to_region_nd_map (Axel Donath)
+- [#3307] Add support for ExcessMapEstimator on high level interface (Régis Terrier)
+- [#3306] Allow to specify spectral model in ExcessMapEstimator (Quentin Rémy)
+- [#3305] Implement HpxGeom.to_binsz() (Axel Donath)
+- [#3304] Implement stacking of healpix maps (Axel Donath)
+- [#3303] Fix npred after energy resampling in ExcessMapEstimator (Quentin Rémy)
+- [#3302] Implement healpix cutout (Axel Donath)
+- [#3301] Change HLI default for Fit range (Régis Terrier)
+- [#3293] Add link to tutorials as thumbnails in API docs (Jose Enrique Ruiz)
+- [#3285] Use FluxMaps in TSMapEstimator (Axel Donath)
+- [#3284] Fixing Matplotlib deprecation of nonposx (Fabio Acero)
+- [#3283] Add Models.plot_spatial() (Atreyee Sinha)
+- [#3281] Refactor and shorten overview docs page (Axel Donath)
+- [#3279] Improve visibility of models gallery (Jose Enrique Ruiz)
+- [#3278] Extend documentation of quantities returned by estimators (Axel Donath)
+- [#3277] Change Estimator optional default selection (Axel Donath)
+- [#3276] Group tutorials files in category folders (Jose Enrique Ruiz)
+- [#3272] Add SourceCatalog.to_models() and improve models selection from catalogues (Quentin Rémy)
+- [#3262] Cleanup maps tutorial and rst page (Quentin Rémy)
+- [#3258] Add support for RegionGeom to MapDataset (Axel Donath)
+- [#3257] Remove code duplication in EDispMap.to_edisp_kernel_map() (Axel Donath)
+- [#3254] Add .mailmap (Maximilian Nöthe)
+- [#3246] Clean up and fix WcsNDMap binary operations (Axel Donath)
+- [#3243] Support I/O for RegionGeom in MapDataset (Axel Donath)
+- [#3241] Update 4FGL catalogue to DR2 (Quentin Rémy)
+- [#3238] Unify integration in EDispMap.get_edisp_kernel() and EnergyDispersion2D.get_edisp_kernel() (Axel Donath)
+- [#3230] Expand extended source analysis tutorial (Laura Olivera Nieto)
+- [#3228] Remove EffectiveAreaTable class (Axel Donath)
+- [#3222] Add alternative parametrization for ShellSpatialModel (Quentin Rémy)
+- [#3219] Add missing values interpolation for Background3D (Quentin Rémy)
+- [#3217] Make is_norm_spectral_model as classproperty (Atreyee Sinha)
+- [#3216] Add a notebook to explain model management (Atreyee Sinha)
+- [#3211] Refactor notebooks processing (Jose Enrique Ruiz)
+- [#3208] Cleanup Dataset.plot_residuals() (Atreyee Sinha)
+- [#3207] Remove EnergyDependentTablePSF (Axel Donath)
+- [#3202] Add an option to the SpectrumDatasetMaker to average IRFs over a Region (Laura Olivera-Nieto)
+- [#3199] Enable tests of code in RST files and in docstrings of Python scripts (Jose Enrique Ruiz)
+- [#3197] Introduce PSF and ParametricPSF base classes (Axel Donath)
+- [#3191] Remove code duplication between SpectrumDatasetMaker and MapDatasetMaker (Axel Donath)
+- [#3185] Introduce IRF base class and remove code duplication (Axel Donath)
+- [#3182] Introduce FluxEstimate class (Régis Terrier)
+- [#3180] Remove code duplication from models.spectral (Fabio Pintore)
+- [#3178] Clean up PSF classes in gammapy.irf (Axel Donath)
+- [#3173] Restructure hawc catalog in 2hwc and 3hwc (Jalel Hajlaoui)
+- [#3169] Add .select_region() and .select_mask() methods to Models (Quentin Rémy)
+- [#3168] Remove evaluator update from models setter (Quentin Rémy)
+- [#3165] Improve documentation of RegionGeom and RegionNDMap (Laura Olivera Nieto)
+- [#3162] Correct Models.from_dict to check input parameters names (Régis Terrier)
+- [#3158] Add binary_erosion/dilation to WcsNDMap (Quentin Rémy)
+- [#3155] Add a tutorials notebooks gallery layout (Jose Enrique Ruiz)
+- [#3153] Refactor gammapy download (Jose Enrique Ruiz)
+- [#3152] Unify dataset I/O interface (Axel Donath)
+- [#3148] Add various models and parameters management options (Quentin Rémy)
+- [#3145] Change the _compute_flux_spatial method on MapEvaluator (Fabio Pintore)
+- [#3141] Allow SkyModel.integrate_geom to integrate over a RegionGeom (Fabio Pintore)
+- [#3140] Add an option to ExcessMapEstimator to choose to correlate off events (Mathieu de Bony)
+- [#3138] Migrate Travis CI to GitHub actions (Jose Enrique Ruiz)
+- [#3136] Evaluate spatial model in RegionGeom (Laura Olivera Nieto)
+- [#3131] Further remove code duplication between SpectrumDataset and MapDataset (Axel Donath)

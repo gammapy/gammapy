@@ -15,14 +15,14 @@ __all__ = ["FluxPointsDataset"]
 
 class FluxPointsDataset(Dataset):
     """
-    Fit a set of flux points with a parametric model.
+    Bundle a set of flux points with a parametric model, to compute fit statistic function using chi2 statistics.
 
     Parameters
     ----------
     models : `~gammapy.modeling.models.Models`
         Models (only spectral part needs to be set)
     data : `~gammapy.estimators.FluxPoints`
-        Flux points.
+        Flux points. Must be sorted along the energy axis
     mask_fit : `numpy.ndarray`
         Mask to apply for fitting
     mask_safe : `numpy.ndarray`
@@ -35,21 +35,44 @@ class FluxPointsDataset(Dataset):
     --------
     Load flux points from file and fit with a power-law model::
 
-        from gammapy.modeling import Fit
-        from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
-        from gammapy.estimators import FluxPoints
-        from gammapy.datasets import FluxPointsDataset
+    >>> from gammapy.modeling import Fit
+    >>> from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
+    >>> from gammapy.estimators import FluxPoints
+    >>> from gammapy.datasets import FluxPointsDataset
 
-        filename = "$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits"
-        flux_points = FluxPoints.read(filename)
+    >>> #load precomputed flux points
+    >>> filename = "$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits"
+    >>> flux_points = FluxPoints.read(filename)
 
-        model = SkyModel(spectral_model=PowerLawSpectralModel())
+    >>> model = SkyModel(spectral_model=PowerLawSpectralModel())
 
-        dataset = FluxPointsDataset(model, flux_points)
-        fit = Fit()
-        result = fit.run([dataset])
-        print(result)
-        print(result.parameters.to_table())
+    >>> #create dataset and fit
+    >>> dataset = FluxPointsDataset(model, flux_points)
+    >>> fit = Fit()
+    >>> result = fit.run([dataset])
+    >>> print(result)
+    OptimizeResult
+    <BLANKLINE>
+    	backend    : minuit
+    	method     : migrad
+    	success    : True
+    	message    : Optimization terminated successfully.
+    	nfev       : 135
+    	total stat : 25.21
+    <BLANKLINE>
+    CovarianceResult
+    <BLANKLINE>
+    	backend    : minuit
+    	method     : hesse
+    	success    : True
+    	message    : Hesse terminated successfully.
+
+    >>> print(result.parameters.to_table())
+          type      name     value         unit        error   min max frozen link
+    -------- --------- ---------- -------------- --------- --- --- ------ ----
+    spectral     index 2.2159e+00                1.043e-02 nan nan  False
+    spectral amplitude 2.1619e-13 cm-2 s-1 TeV-1 1.901e-14 nan nan  False
+    spectral reference 1.0000e+00            TeV 0.000e+00 nan nan   True
 
     Note: In order to reproduce the example you need the tests datasets folder.
     You may download it with the command
@@ -184,14 +207,13 @@ class FluxPointsDataset(Dataset):
 
         str_ += "\t{:32}: {} \n".format("Number of models", n_models)
 
-        str_ += "\t{:32}: {}\n".format(
-            "Number of parameters", len(self.models.parameters)
-        )
-        str_ += "\t{:32}: {}\n\n".format(
-            "Number of free parameters", len(self.models.parameters.free_parameters)
-        )
-
         if self.models is not None:
+            str_ += "\t{:32}: {}\n".format(
+                "Number of parameters", len(self.models.parameters)
+            )
+            str_ += "\t{:32}: {}\n\n".format(
+                "Number of free parameters", len(self.models.parameters.free_parameters)
+            )
             str_ += "\t" + "\n\t".join(str(self.models).split("\n")[2:])
 
         return str_.expandtabs(tabsize=2)
@@ -218,7 +240,7 @@ class FluxPointsDataset(Dataset):
         return ((data - model) / sigma.quantity[:, 0, 0]).to_value("") ** 2
 
     def residuals(self, method="diff"):
-        """Compute the flux point residuals ().
+        """Compute flux point residuals
 
         Parameters
         ----------
@@ -267,6 +289,22 @@ class FluxPointsDataset(Dataset):
         -------
         ax_spectrum, ax_residuals : `~matplotlib.axes.Axes`
             Flux points, best fit model and residuals plots.
+
+        Examples
+        --------
+        >>> from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
+        >>> from gammapy.estimators import FluxPoints
+        >>> from gammapy.datasets import FluxPointsDataset
+
+        >>> #load precomputed flux points
+        >>> filename = "$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits"
+        >>> flux_points = FluxPoints.read(filename)
+        >>> model = SkyModel(spectral_model=PowerLawSpectralModel())
+        >>> dataset = FluxPointsDataset(model, flux_points)
+        >>> #configuring optional parameters
+        >>> kwargs_spectrum = {"kwargs_model": {"color":"red", "ls":"--"}, "kwargs_fp":{"color":"green", "marker":"o"}}
+        >>> kwargs_residuals = {"color": "blue", "markersize":4, "marker":'s', }
+        >>> dataset.plot_fit(kwargs_residuals=kwargs_residuals, kwargs_spectrum=kwargs_spectrum) # doctest: +SKIP
         """
         import matplotlib.pyplot as plt
         from matplotlib.gridspec import GridSpec
@@ -315,6 +353,7 @@ class FluxPointsDataset(Dataset):
         -------
         ax : `~matplotlib.axes.Axes`
             Axes object.
+
         """
         import matplotlib.pyplot as plt
 
@@ -374,6 +413,22 @@ class FluxPointsDataset(Dataset):
         -------
         ax : `~matplotlib.axes.Axes`
             Axes object.
+
+        Examples
+        --------
+        >>> from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
+        >>> from gammapy.estimators import FluxPoints
+        >>> from gammapy.datasets import FluxPointsDataset
+
+        >>> #load precomputed flux points
+        >>> filename = "$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits"
+        >>> flux_points = FluxPoints.read(filename)
+        >>> model = SkyModel(spectral_model=PowerLawSpectralModel())
+        >>> dataset = FluxPointsDataset(model, flux_points)
+        >>> #configuring optional parameters
+        >>> kwargs_model = {"color":"red", "ls":"--"}
+        >>> kwargs_fp = {"color":"green", "marker":"o"}
+        >>> dataset.plot_spectrum(kwargs_fp=kwargs_fp, kwargs_model=kwargs_model) # doctest: +SKIP
         """
         kwargs_fp = (kwargs_fp or {}).copy()
         kwargs_model = (kwargs_model or {}).copy()

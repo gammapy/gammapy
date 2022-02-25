@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import logging
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
@@ -15,6 +16,7 @@ from gammapy.datasets import SpectrumDataset
 from gammapy.makers import (
     ReflectedRegionsBackgroundMaker,
     ReflectedRegionsFinder,
+    WobbleRegionsFinder,
     SpectrumDatasetMaker,
 )
 from gammapy.maps import MapAxis, RegionGeom, WcsGeom
@@ -54,7 +56,11 @@ def observations():
 
 @pytest.fixture()
 def reflected_bkg_maker(exclusion_mask):
-    return ReflectedRegionsBackgroundMaker(exclusion_mask=exclusion_mask)
+    finder = ReflectedRegionsFinder()
+    return ReflectedRegionsBackgroundMaker(
+        region_finder=finder,
+        exclusion_mask=exclusion_mask,
+    )
 
 
 region_finder_param = [
@@ -73,29 +79,33 @@ def test_find_reflected_regions(
 ):
     pointing = pointing_pos
     finder = ReflectedRegionsFinder(
-        center=pointing,
-        region=on_region,
-        exclusion_mask=exclusion_mask,
         min_distance_input="0 deg",
     )
-    regions = finder.run()
+    regions, _ = finder.run(
+        center=pointing, region=on_region,
+        exclusion_mask=exclusion_mask,
+    )
     assert len(regions) == nreg1
     assert_quantity_allclose(regions[3].center.icrs.ra, reg3_ra, rtol=1e-2)
 
     # Test without exclusion
-    finder.exclusion_mask = None
-    regions = finder.run()
+    regions, _ = finder.run(center=pointing, region=on_region)
     assert len(regions) == nreg2
 
     # Test with too small exclusion
     small_mask = exclusion_mask.cutout(pointing, Angle("0.1 deg"))
-    finder.exclusion_mask = small_mask
-    regions = finder.run()
+    regions, _ = finder.run(
+        center=pointing, region=on_region,
+        exclusion_mask=small_mask,
+    )
     assert len(regions) == nreg3
 
     # Test with maximum number of regions
     finder.max_region_number = 5
-    regions = finder.run()
+    regions, _ = finder.run(
+        center=pointing, region=on_region,
+        exclusion_mask=small_mask,
+    )
     assert len(regions) == 5
 
     # Test with an other type of region
@@ -107,9 +117,11 @@ def test_find_reflected_regions(
         outer_height=0.6 * u.deg,
         angle=130 * u.deg,
     )
-    finder.region = on_ellipse_annulus
-    finder.reference_map = None
-    regions = finder.run()
+    regions, _ = finder.run(
+        region=on_ellipse_annulus,
+        center=pointing,
+        exclusion_mask=small_mask,
+    )
     assert len(regions) == 5
 
 
@@ -129,9 +141,9 @@ def test_non_circular_regions(region, nreg):
     pointing = SkyCoord(0.0, 0.0, unit="deg")
 
     finder = ReflectedRegionsFinder(
-        center=pointing, region=region, min_distance_input="0 deg"
+        min_distance_input="0 deg"
     )
-    regions = finder.run()
+    regions, _ = finder.run(center=pointing, region=region)
     assert len(regions) == nreg
 
 
@@ -139,12 +151,13 @@ def test_non_circular_regions(region, nreg):
 def test_bad_on_region(exclusion_mask, on_region):
     pointing = SkyCoord(83.63, 22.01, unit="deg", frame="icrs")
     finder = ReflectedRegionsFinder(
+        min_distance_input="0 deg",
+    )
+    regions, _ = finder.run(
         center=pointing,
         region=on_region,
         exclusion_mask=exclusion_mask,
-        min_distance_input="0 deg",
     )
-    regions = finder.run()
     assert len(regions) == 0
 
 
@@ -235,3 +248,104 @@ def test_reflected_bkg_maker_no_off_background(reflected_bkg_maker, observations
 
     assert_allclose(datasets[0].counts_off.data, 0)
     assert_allclose(datasets[0].acceptance_off, 0)
+
+
+def test_wobble_regions_finder():
+    center = SkyCoord(83.6333313, 21.51444435, unit="deg", frame="icrs")
+    source_angle = 35 * u.deg
+
+    on_region = CircleSkyRegion(
+        center=center,
+        radius=0.15 * u.deg,
+    )
+    pointing = on_region.center.directional_offset_by(
+        separation=0.4 * u.deg,
+        position_angle=180 * u.deg + source_angle,
+    )
+
+    assert u.isclose(pointing.position_angle(on_region.center).to(u.deg), source_angle, rtol=0.05)
+    n_off_regions = 3
+
+    finder = WobbleRegionsFinder(n_off_regions)
+    regions, _ = finder.run(on_region, pointing)
+
+    assert len(regions) == 3
+
+    for i, off_region in enumerate(regions, start=1):
+        assert u.isclose(pointing.separation(off_region.center), 0.4 * u.deg)
+        expected = source_angle + 360 * u.deg * i / (n_off_regions + 1)
+        assert u.isclose(
+            pointing.position_angle(off_region.center).to(u.deg),
+            expected.to(u.deg),
+            rtol=0.001,
+        )
+
+    # test with exclusion region
+    pos = pointing.directional_offset_by(
+        separation=0.4 * u.deg,
+        position_angle=source_angle + 90 * u.deg,
+    )
+    exclusion_region = CircleSkyRegion(pos, Angle(0.2, "deg"))
+    geom = WcsGeom.create(skydir=pos, binsz=0.01, width=10.0)
+    exclusion_mask = ~geom.region_mask([exclusion_region])
+
+    finder = WobbleRegionsFinder(n_off_regions)
+    regions, _ = finder.run(on_region, pointing, exclusion_mask)
+
+    assert len(regions) == 2
+
+
+def test_wobble_regions_finder_overlapping(caplog):
+    '''Test that overlapping regions are not produced'''
+    center = SkyCoord(83.6333313, 21.51444435, unit="deg", frame="icrs")
+    source_angle = 35 * u.deg
+
+    on_region = CircleSkyRegion(
+        center=center,
+        radius=0.5 * u.deg,
+    )
+    pointing = on_region.center.directional_offset_by(
+        separation=0.4 * u.deg,
+        position_angle=180 * u.deg + source_angle,
+    )
+
+    n_off_regions = 3
+
+    finder = WobbleRegionsFinder(n_off_regions)
+
+    with caplog.at_level(logging.WARNING):
+        regions, _ = finder.run(on_region, pointing)
+
+    assert len(regions) == 0
+    assert caplog.record_tuples == [(
+        'gammapy.makers.background.reflected',
+        logging.WARNING,
+        'Found overlapping off regions, returning no regions',
+    )]
+
+
+@requires_data()
+def test_reflected_bkg_maker_with_wobble_finder(on_region, observations, exclusion_mask):
+    datasets = []
+
+    reflected_bkg_maker = ReflectedRegionsBackgroundMaker(
+        region_finder=WobbleRegionsFinder(n_off_regions=3),
+        exclusion_mask=exclusion_mask,
+    )
+
+    e_reco = MapAxis.from_edges(np.logspace(0, 2, 5) * u.TeV, name="energy")
+
+    geom = RegionGeom(region=on_region, axes=[e_reco])
+    dataset_empty = SpectrumDataset.create(geom=geom)
+
+    spectrum_dataset_maker = SpectrumDatasetMaker(selection=["counts"])
+
+    for obs in observations:
+        dataset = spectrum_dataset_maker.run(dataset_empty, obs)
+        dataset_on_off = reflected_bkg_maker.run(dataset, obs)
+        datasets.append(dataset_on_off)
+
+    regions_0 = compound_region_to_regions(datasets[0].counts_off.geom.region)
+    regions_1 = compound_region_to_regions(datasets[1].counts_off.geom.region)
+    assert_allclose(len(regions_0), 3)
+    assert_allclose(len(regions_1), 3)

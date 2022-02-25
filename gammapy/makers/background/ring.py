@@ -223,10 +223,8 @@ class AdaptiveRingBackgroundMaker(Maker):
 
 
 class RingBackgroundMaker(Maker):
-    """Ring background method for cartesian coordinates.
-
-    - Step 1: apply exclusion mask
-    - Step 2: ring-correlate
+    """Perform a local renormalisation of the existing background template, using a
+    ring kernel. Expected signal regions should be removed by passing an exclusion mask
 
     Parameters
     ----------
@@ -236,6 +234,11 @@ class RingBackgroundMaker(Maker):
         Ring width
     exclusion_mask : `~gammapy.maps.WcsNDMap`
         Exclusion mask
+
+
+    Examples
+    --------
+    See: For a usage example, see `ring_background.html <../../../docs/tutorials/analysis/2D/ring_background.ipynb>`__
 
     See Also
     --------

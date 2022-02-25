@@ -3,8 +3,8 @@ from gammapy.maps import MapAxis
 from gammapy.maps.utils import edges_from_lo_hi
 
 __all__ = [
-    "plot_spectrum_datasets_off_regions",
     "plot_contour_line",
+    "plot_spectrum_datasets_off_regions",
     "plot_theta_squared_table",
 ]
 

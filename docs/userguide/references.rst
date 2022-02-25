@@ -1,4 +1,4 @@
-.. include:: references.txt
+.. include:: ../references.txt
 
 .. _references:
 
@@ -161,9 +161,6 @@ Software references:
 .. [Robitaille2013] `Robitaille et al. (2013) <https://ui.adsabs.harvard.edu/abs/2013A%26A...558A..33A>`_
    "Astropy: A community Python package for astronomy"
 
-.. [Knoedlseder2016] `Knödlseder et at. (2016) <https://ui.adsabs.harvard.edu/abs/2016A%26A...593A...1K>`_
-   "GammaLib and ctools. A software framework for the analysis of astronomical gamma-ray data"
-
 .. [FSSC2013] `Fermi LAT Collaboration (2013) <https://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/overview.html>`_
    "Science Tools: LAT Data Analysis Tools"
 
@@ -189,9 +186,7 @@ Here are some other software packages for gamma-ray astronomy:
 * `Gamera`_ --- a C++ gamma-ray source modeling package (SED, SNR model, Galactic population model) with a Python wrapper called Gappa by Joachim Hahn
 * `FLaapLUC`_ --- Fermi/LAT automatic aperture photometry light-curve pipeline by Jean-Philippe Lenain
 * http://voparis-cta-client.obspm.fr/ --- prototype web app for CTA data access / analysis, not open source.
-* `act-analysis`_ --- Python scripts and Makefiles for some common gamma-ray data analysis tasks by Karl Kosack
 * `VHEObserverTools`_ --- tools to predict detectability at VHE by Jeremy Perkins
-* `photon_simulator`_ --- Python code to simulate X-ray observations
 * `pycrflux`_ --- Python module to plot cosmic-ray flux
 * Andy strong has C++ codes (GALPROP and Galplot) for Galactic cosmic rays and emission
   and source population synthesis at http://www.mpe.mpg.de/~aws/propagate.html .

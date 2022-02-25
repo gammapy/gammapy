@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from gammapy.makers.tests.test_spectrum import observations_magic_dl3
 import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
@@ -17,7 +16,6 @@ from gammapy.makers import (
 )
 from gammapy.maps import MapAxis, RegionGeom, WcsGeom
 from gammapy.utils.testing import requires_data
-from gammapy.utils.scripts import make_path
 
 
 @pytest.fixture(scope="session")

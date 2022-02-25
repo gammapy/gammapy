@@ -1,10 +1,21 @@
 from gammapy.utils.registry import Registry
-from .background import *
-from .core import *
-from .map import *
-from .reduce import *
-from .safe import *
-from .spectrum import *
+
+from .core import Maker
+from .background import (
+    AdaptiveRingBackgroundMaker,
+    FoVBackgroundMaker,
+    PhaseBackgroundMaker,
+    ReflectedRegionsBackgroundMaker,
+    ReflectedRegionsFinder,
+    RegionsFinder,
+    RingBackgroundMaker,
+    WobbleRegionsFinder,
+)
+
+from .map import MapDatasetMaker
+from .reduce import DatasetsMaker
+from .safe import SafeMaskMaker
+from .spectrum import SpectrumDatasetMaker
 
 MAKER_REGISTRY = Registry(
     [
@@ -21,5 +32,19 @@ MAKER_REGISTRY = Registry(
 )
 """Registry of maker classes in Gammapy."""
 
-__all__ = ["MAKER_REGISTRY", "Maker"]
-__all__.extend(cls.__name__ for cls in MAKER_REGISTRY)
+__all__ = [
+    "AdaptiveRingBackgroundMaker",
+    "DatasetsMaker",
+    "FoVBackgroundMaker",
+    "Maker",
+    "MAKER_REGISTRY",
+    "MapDatasetMaker",
+    "PhaseBackgroundMaker",
+    "ReflectedRegionsBackgroundMaker",
+    "ReflectedRegionsFinder",
+    "RegionsFinder",
+    "RingBackgroundMaker",
+    "SafeMaskMaker",
+    "SpectrumDatasetMaker",
+    "WobbleRegionsFinder",
+]

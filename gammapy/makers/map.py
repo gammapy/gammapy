@@ -1,12 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-import numpy as np
 import astropy.units as u
 from astropy.table import Table
-from gammapy.maps.region.ndmap import RegionNDMap
-from regions import PointSkyRegion, CircleSkyRegion
+from regions import PointSkyRegion
 from gammapy.irf import EDispKernelMap, PSFMap
-from gammapy.maps import Map, RegionGeom
+from gammapy.maps import Map
 from .core import Maker
 from .utils import (
     make_edisp_kernel_map,
@@ -23,7 +21,7 @@ log = logging.getLogger(__name__)
 
 
 class MapDatasetMaker(Maker):
-    """Make maps for a single IACT observation.
+    """Make binned maps for a single IACT observation.
 
     Parameters
     ----------
@@ -36,6 +34,56 @@ class MapDatasetMaker(Maker):
     background_interp_missing_data: bool
         Interpolate missing values in background 3d map.
         Default is True, have to be set to True for CTA IRF.
+
+    Examples
+    --------
+    This example shows how to run the MapMaker for a single observation
+
+    >>> from gammapy.data import DataStore
+    >>> from gammapy.datasets import MapDataset
+    >>> from gammapy.maps import WcsGeom, MapAxis
+    >>> from gammapy.makers import MapDatasetMaker
+
+    >>>  #load an observation
+    >>> data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
+    >>> obs = data_store.obs(23523)
+
+    >>> #prepare the geom
+    >>> energy_axis = MapAxis.from_energy_bounds(1.0, 10.0, 4, unit="TeV")
+    >>> energy_axis_true = MapAxis.from_energy_bounds( 0.5, 20, 10, unit="TeV", name="energy_true")
+    >>> geom = WcsGeom.create(skydir=(83.633, 22.014), binsz=0.02, width=(2, 2), frame="icrs", proj="CAR", axes=[energy_axis])
+
+    >>> #Run the maker
+    >>> empty = MapDataset.create(geom=geom, energy_axis_true=energy_axis_true, name="empty")
+    >>> maker = MapDatasetMaker()
+    >>> dataset = maker.run(empty, obs)
+    >>> print(dataset)
+    MapDataset
+    ----------
+    <BLANKLINE>
+      Name                            : empty
+    <BLANKLINE>
+      Total counts                    : 787
+      Total background counts         : 684.52
+      Total excess counts             : 102.48
+    <BLANKLINE>
+      Predicted counts                : 684.52
+      Predicted background counts     : 684.52
+      Predicted excess counts         : nan
+    <BLANKLINE>
+      Exposure min                    : 7.01e+07 m2 s
+      Exposure max                    : 1.10e+09 m2 s
+    <BLANKLINE>
+      Number of total bins            : 40000
+      Number of fit bins              : 40000
+    <BLANKLINE>
+      Fit statistic type              : cash
+      Fit statistic value (-2 log(L)) : nan
+    <BLANKLINE>
+      Number of models                : 0
+      Number of parameters            : 0
+      Number of free parameters       : 0
+
     """
 
     tag = "MapDatasetMaker"

@@ -4,9 +4,10 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
 from regions import CircleSkyRegion, RectangleSkyRegion
-from gammapy.data import EventList
+from gammapy.data import EventList, GTI
 from gammapy.maps import MapAxis, WcsGeom
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
+import pytest
 
 
 @requires_data()
@@ -19,6 +20,56 @@ class TestEventListBase:
     def test_select_parameter(self):
         events = self.events.select_parameter("ENERGY", (0.8 * u.TeV, 5.0 * u.TeV))
         assert len(events.table) == 2716
+
+    def test_write(self):
+        # Without GTI
+        self.events.write("test.fits", overwrite=True)
+        read_again = EventList.read("test.fits")
+
+        # the meta dictionaries match because the input one
+        # already has the EXTNAME keyword
+        assert self.events.table.meta == read_again.table.meta
+        assert (self.events.table == read_again.table).all()
+
+        dummy_events = EventList(Table())
+        dummy_events.write("test.fits", overwrite=True)
+        read_again = EventList.read("test.fits")
+        assert read_again.table.meta['EXTNAME'] == "EVENTS"
+        assert read_again.table.meta['HDUCLASS'] == "GADF"
+        assert read_again.table.meta['HDUCLAS1'] == "EVENTS"
+
+        # With GTI
+        gti = GTI.read("$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz")
+        self.events.write("test.fits", overwrite=True, gti=gti)
+        read_again_ev = EventList.read("test.fits")
+        read_again_gti = GTI.read("test.fits")
+
+        assert self.events.table.meta == read_again_ev.table.meta
+        assert (self.events.table == read_again_ev.table).all()
+        assert gti.table.meta == read_again_gti.table.meta
+        assert (gti.table == read_again_gti.table).all()
+
+        # test that it won't work if gti is not a GTI
+        with pytest.raises(TypeError):
+            self.events.write("test.fits", overwrite=True, gti=gti.table)
+        # test that it won't work if format is not "gadf"
+        with pytest.raises(ValueError):
+            self.events.write("test.fits", overwrite=True, format='something')
+        # test that it won't work if the basic headers are wrong
+        with pytest.raises(ValueError):
+            dummy_events = EventList(Table())
+            dummy_events.table.meta['HDUCLAS1'] = 'response'
+            dummy_events.write("test.fits", overwrite=True)
+        with pytest.raises(ValueError):
+            dummy_events = EventList(Table())
+            dummy_events.table.meta['HDUCLASS'] = "ogip"
+            dummy_events.write("test.fits", overwrite=True)
+
+        # test that it works when the srings are right but lowercase
+        dummy_events = EventList(Table())
+        dummy_events.table.meta['HDUCLASS'] = "gadf"
+        dummy_events.table.meta['HDUCLAS1'] = "events"
+        dummy_events.write("test.fits", overwrite=True)
 
 
 @requires_data()

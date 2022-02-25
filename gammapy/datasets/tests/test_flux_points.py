@@ -74,6 +74,9 @@ def test_flux_point_dataset_serialization(tmp_path):
 @requires_data()
 def test_flux_point_dataset_str(dataset):
     assert "FluxPointsDataset" in str(dataset)
+    # check print if no models present
+    dataset.models = None
+    assert "FluxPointsDataset" in str(dataset)
 
 
 @requires_data()

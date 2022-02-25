@@ -20,6 +20,18 @@ IRF_DL3_AXES_SPECIFICATION = {
     "MIGRA": {"name": "migra", "interp": "lin"},
 }
 
+COMMON_HEADERS = {
+    'HDUCLASS': 'GADF',
+    'HDUDOC': 'https://github.com/open-gamma-ray-astro/gamma-astro-data-formats',
+    'HDUVERS': '0.2',
+}
+
+COMMON_IRF_HEADERS = {
+    **COMMON_HEADERS,
+    'HDUCLAS1': 'RESPONSE',
+}
+
+
 
 # The key is the class tag.
 # TODO: extend the info here with the minimal header info
@@ -27,26 +39,45 @@ IRF_DL3_HDU_SPECIFICATION = {
     "bkg_3d": {
         "extname": "BACKGROUND",
         "column_name": "BKG",
-        "hduclas2": "BKG",
+        "mandatory_keywords": {
+            **COMMON_IRF_HEADERS,
+            "HDUCLAS2": "BKG",
+            "HDUCLAS3": "FULL-ENCLOSURE",  # added here to have HDUCLASN in order
+            "HDUCLAS4": "BKG_3D",
+        }
     },
     "bkg_2d": {
         "extname": "BACKGROUND",
         "column_name": "BKG",
-        "hduclas2": "BKG",
+        "mandatory_keywords": {
+            **COMMON_IRF_HEADERS,
+            "HDUCLAS2": "BKG",
+            "HDUCLAS3": "FULL-ENCLOSURE",  # added here to have HDUCLASN in order
+            "HDUCLAS4": "BKG_2D",
+        }
     },
     "edisp_2d": {
         "extname": "ENERGY DISPERSION",
         "column_name": "MATRIX",
-        "hduclas2": "EDISP",
+        "mandatory_keywords": {
+            **COMMON_IRF_HEADERS,
+            "HDUCLAS2": "EDISP",
+            "HDUCLAS3": "FULL-ENCLOSURE",  # added here to have HDUCLASN in order
+            "HDUCLAS4": "EDISP_2D",
+        }
     },
     "psf_table": {
         "extname": "PSF_2D_TABLE",
         "column_name": "RPSF",
-        "hduclas2": "PSF",
+        "mandatory_keywords": {
+            **COMMON_IRF_HEADERS,
+            "HDUCLAS2": "RPSF",
+            "HDUCLAS3": "FULL-ENCLOSURE",  # added here to have HDUCLASN in order
+            "HDUCLAS4": "PSF_TABLE",
+        }
     },
     "psf_3gauss": {
         "extname": "PSF_2D_GAUSS",
-        "hduclas2": "PSF",
         "column_name": {
             "sigma_1": "SIGMA_1",
             "sigma_2": "SIGMA_2",
@@ -55,24 +86,45 @@ IRF_DL3_HDU_SPECIFICATION = {
             "ampl_2": "AMPL_2",
             "ampl_3": "AMPL_3",
         },
+        "mandatory_keywords": {
+            **COMMON_IRF_HEADERS,
+            "HDUCLAS2": "RPSF",
+            "HDUCLAS3": "FULL-ENCLOSURE",  # added here to have HDUCLASN in order
+            "HDUCLAS4": "PSF_3GAUSS",
+        }
     },
     "psf_king": {
         "extname": "PSF_2D_KING",
-        "hduclas2": "PSF",
         "column_name": {
             "sigma": "SIGMA",
             "gamma": "GAMMA",
         },
+        "mandatory_keywords": {
+            **COMMON_IRF_HEADERS,
+            "HDUCLAS2": "RPSF",
+            "HDUCLAS3": "FULL-ENCLOSURE",  # added here to have HDUCLASN in order
+            "HDUCLAS4": "PSF_KING",
+        }
     },
     "aeff_2d": {
         "extname": "EFFECTIVE AREA",
         "column_name": "EFFAREA",
-        "hduclas2": "EFF_AREA",
+        "mandatory_keywords": {
+            **COMMON_IRF_HEADERS,
+            "HDUCLAS2": "EFF_AREA",
+            "HDUCLAS3": "FULL-ENCLOSURE",  # added here to have HDUCLASN in order
+            "HDUCLAS4": "AEFF_2D",
+        }
     },
     "rad_max_2d": {
         "extname": "RAD_MAX",
         "column_name": "RAD_MAX",
-        "hduclas2": "RAD_MAX",
+        "mandatory_keywords": {
+            **COMMON_IRF_HEADERS,
+            "HDUCLAS2": "RAD_MAX",
+            "HDUCLAS3": "POINT-LIKE",
+            "HDUCLAS4": "RAD_MAX_2D",
+        }
     },
 }
 
@@ -153,17 +205,23 @@ def load_irf_dict_from_file(filename):
         dictionary with instances of the Gammapy objects corresponding
         to the IRF components
     """
+    from .rad_max import RadMax2D
+
     filename = make_path(filename)
 
     hdulist = fits.open(make_path(filename))
 
     irf_dict = {}
 
+    is_pointlike = False
+
     for hdu in hdulist:
         hdu_class = hdu.header.get("HDUCLAS1", "").lower()
 
         if hdu_class == "response":
             hdu_class = hdu.header.get("HDUCLAS4", "").lower()
+
+            is_pointlike |= hdu.header["HDUCLAS3"] == "POINT-LIKE"
 
             loc = HDULocation(
                 hdu_class=hdu_class,
@@ -185,4 +243,8 @@ def load_irf_dict_from_file(filename):
                     irf_dict[name] = data
         else:  # not an IRF component
             continue
+
+    if is_pointlike and "rad_max" not in irf_dict:
+        irf_dict["rad_max"] = RadMax2D.from_irf(irf_dict['aeff'])
+
     return irf_dict

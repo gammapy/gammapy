@@ -1,0 +1,77 @@
+.. _gammapy_0p10_release:
+
+0.10 (Jan 28, 2019)
+-------------------
+
+Summary
+~~~~~~~
+
+- Released Jan 28, 2019
+- 7 contributors
+- 2 months of work
+- 30 pull requests (not all listed below)
+
+What's new?
+~~~~~~~~~~~
+
+Gammapy v0.10 is a small release. An option to have a background model with
+parameters such as normalization and spectral tilt was added. The curated
+example datasets were improved, the ``gammapy download`` script and access of
+example data from the tutorials via the ``GAMMAPY_DATA`` environment variable
+were improved. A notebook ``image_analysis`` showing how to use Gammapy to make
+and model 2D images for a given given energy band, as a special case of the
+existing 3D map-based analysis was added.
+
+A lot of the work recently went into planning the work ahead for 2019. See the
+`Gammapy 1.0 roadmap`_ and the `PIG 7 - models`_ as well as `PIG 8 - datasets`_
+and get in touch if you want to contribute. We plan to ship a first version of
+the new datasets API in Gammapy v0.11 in March 2019.
+
+Gammapy v0.10 is the last Gammapy release that supports Python 2 (see `PIG 3`_).
+If you have any questions or need help to install Python 3, or to update your
+scripts and notebooks to work in Python 3, please contact us any time on the
+Gammapy mailing list or Slack. We apologise for the disruption and are happy to
+help with this transition.
+
+pyyaml is now a core dependency of Gammapy, i.e. will always be automatically
+installed as a dependency. Instructions for installing Gammapy on Windows, and
+continuous testing on Windows were improved.
+
+.. _PIG 3: https://github.com/gammapy/gammapy/pull/1278
+.. _PIG 7 - models: https://github.com/gammapy/gammapy/pull/1971
+.. _PIG 8 - datasets: https://github.com/gammapy/gammapy/pull/1986
+.. _Gammapy 1.0 roadmap: https://github.com/gammapy/gammapy/pull/1841
+
+Contributors
+~~~~~~~~~~~~
+
+- Atreyee Sinha
+- Axel Donath
+- Christoph Deil
+- David Fidalgo
+- José Enrique Ruiz
+- Lars Mohrmann
+- Régis Terrier
+
+Pull requests
+~~~~~~~~~~~~~
+
+This list is incomplete. Small improvements and bug fixes are not listed here.
+
+See the complete `Gammapy 0.10 merged pull requests list on GitHub <https://github.com/gammapy/gammapy/pulls?q=is%3Apr+milestone%3A0.10+is%3Aclosed>`__.
+
+- [#2001] Use GAMMAPY_DATA everywhere / remove GAMMAPY_EXTRA (José Enrique Ruiz)
+- [#2000] Fix cta_simulation notebook, use CTA prod 3 IRFs (Régis Terrier)
+- [#1998] Fix SensitivityEstimator after IRF API change (Régis Terrier)
+- [#1995] Add pyyaml as core dependency (Christoph Deil)
+- [#1994] Unify Fermi-LAT datasets used in Gammapy (Axel Donath)
+- [#1991] Improve SourceCatalogObjectHGPS spatial model (Axel Donath)
+- [#1990] Add background model for map fit (Atreyee Sinha)
+- [#1989] Add tutorial notebook for 2D image analysis (Atreyee Sinha)
+- [#1988] Improve gammapy download (José Enrique Ruiz)
+- [#1979] Improve output units of spectral models (Axel Donath)
+- [#1975] Improve EnergyDependentTablePSF evaluate methods (Axel Donath)
+- [#1969] Improve ObservationStats (Lars Mohrmann)
+- [#1966] Add ObservationFilter select methods (David Fidalgo)
+- [#1962] Change data access in notebooks to GAMMAPY_DATA (José Enrique Ruiz)
+- [#1951] Add keepdim option for maps (Atreyee Sinha)

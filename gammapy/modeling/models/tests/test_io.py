@@ -26,11 +26,16 @@ from gammapy.utils.scripts import read_yaml, write_yaml
 from gammapy.utils.testing import requires_data
 
 
+@pytest.fixture(scope="session")
 @requires_data()
-def test_dict_to_skymodels():
+def models():
     filename = get_pkg_data_filename("data/examples.yaml")
     models_data = read_yaml(filename)
     models = Models.from_dict(models_data)
+    return models
+
+@requires_data()
+def test_dict_to_skymodels(models):
 
     assert len(models) == 5
 
@@ -99,10 +104,8 @@ def test_dict_to_skymodels():
 
 
 @requires_data()
-def test_sky_models_io(tmp_path):
+def test_sky_models_io(tmp_path, models):
     # TODO: maybe change to a test case where we create a model programmatically?
-    filename = get_pkg_data_filename("data/examples.yaml")
-    models = Models.read(filename)
     models.covariance = np.eye(len(models.parameters))
     models.write(tmp_path / "tmp.yaml", full_output=True)
     models = Models.read(tmp_path / "tmp.yaml")
@@ -280,9 +283,7 @@ def test_all_model_instances(model):
 
 
 @requires_data()
-def test_missing_parameters():
-    filename = get_pkg_data_filename("data/examples.yaml")
-    models = Models.read(filename)
+def test_missing_parameters(models):
     assert models["source1"].spatial_model.e in models.parameters
     assert len(models["source1"].spatial_model.parameters) == 6
 
@@ -317,3 +318,22 @@ def test_io_temporal():
         for p in sky_model.temporal_model.parameters:
             assert_allclose(read_model.temporal_model.parameters[p.name].value, p.value)
             assert read_model.temporal_model.parameters[p.name].unit == p.unit
+
+
+@requires_data()
+def test_link_label(models):
+    skymodels = models.select(tag="sky-model")
+    skymodels[0].spectral_model.reference = skymodels[1].spectral_model.reference
+    dict_ = skymodels.to_dict()
+    label0 = dict_["components"][0]["spectral"]["parameters"][2]["link"]
+    label1 = dict_["components"][1]["spectral"]["parameters"][2]["link"]
+    assert label0 == label1
+
+    txt = skymodels.__str__()
+    lines = txt.splitlines()
+    n_link = 0 
+    for line in lines:
+        if "@" in line:
+            assert "reference" in line
+            n_link +=1 
+    assert n_link == 2

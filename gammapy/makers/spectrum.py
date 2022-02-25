@@ -12,7 +12,7 @@ class SpectrumDatasetMaker(MapDatasetMaker):
     """Make spectrum for a single IACT observation.
 
     The irfs and background are computed at a single fixed offset,
-    which is recommend only for point-sources.
+    which is recommended only for point-sources.
 
     Parameters
     ----------
@@ -25,7 +25,9 @@ class SpectrumDatasetMaker(MapDatasetMaker):
     background_oversampling : int
         Background evaluation oversampling factor in energy.
     use_region_center : bool
-        Approximate the IRFs by the value at the center of the region
+        If True, approximate the IRFs by the value at the center of the region
+        If False, the IRFs are averaged over the entire region
+
     """
 
     tag = "SpectrumDatasetMaker"

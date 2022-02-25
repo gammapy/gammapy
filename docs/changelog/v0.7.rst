@@ -1,0 +1,215 @@
+.. _gammapy_0p7_release:
+
+0.7 (Feb 28, 2018)
+------------------
+
+Summary
+~~~~~~~
+
+- Released Feb 28, 2018
+- 25 contributors (16 new)
+- 10 months of work
+- 178 pull requests (not all listed below)
+
+What's new?
+~~~~~~~~~~~
+
+Installation:
+
+- Gammapy 0.7 supports legacy Python 2.7, as well as Python 3.5 and 3.6.
+  If you are still using Python 2.7 with Gammapy, please update to Python 3. Let
+  us know if you need any help with the update, or are blocked from updating for
+  some reason, by filling out the 1-minute `Gammapy installation questionnaire`_
+  form. This will help us make a plan how to finish the Python 2 -> 3 transition
+  and to set a timeline (`PIG 3`_).
+- The Gammapy conda packages are now distributed via the ``conda-forge`` channel,
+  i.e. to install or update Gammapy use the command ``conda install gammapy -c
+  conda-forge``. Most other packages have also moved to ``conda-forge`` in the
+  past years, the previously used ``astropy`` and ``openastronomy`` channels are
+  no longer needed.
+- We now have a conda ``environment.yml`` file that contains all packages used
+  in the tutorials. See instructions here: :ref:`tutorials`.
+
+Documentation:
+
+- We have created a separate project webpage at https://gammapy.org .
+  The https://docs.gammapy.org page is not just for the Gammapy documentation.
+- A lot of new tutorials were added in the form of Jupyter notebooks. To make the content of the
+  notebooks easier to navigate and search, a rendered static version of the notebooks was integrated
+  in the Sphinx-based documentation (the one you are looking at) at :ref:`tutorials`.
+- Most of the Gammapy tutorials can be executed directly in the browser via the https://mybinder.org/
+  service. There is a "launch in binder" link at the top of each tutorial in the docs.
+- A page was created to collect the information for CTA members how to get started with Gammapy
+  and with contact / support channels: https://gammapy.org/cta.html
+
+Gammapy Python package:
+
+- This release contains many bug fixes and improvements to the existing code,
+  ranging from IRF interpolation to spectrum and lightcurve computation. Most of
+  the improvements (see the list of pull requests below) were driven by user
+  reports and feedback from CTA, HESS, MAGIC and Fermi-LAT analysis. Please
+  update to the new version and keep filing bug reports and feature requests!
+- A new sub-package `gammapy.maps` was added that features WCS and HEALPix based maps,
+  arbitrary extra axes in addition to the two spatial dimensions (e.g. energy,
+  time or event type). Support for multi-resolution and sparse maps is work in
+  progress. These new maps classes were implemented based on the experience
+  gained from the existing ``SkyImage`` and ``SkyCube`` classes as well as the
+  Fermi science tools, Fermipy and pointlike. Work on new analysis code based on
+  ``gammapy.maps`` within Gammapy is starting now (see `PIG 2`_). Users are
+  encouraged to start using ``gammapy.maps`` in their scripts. The plan is to
+  keep the existing ``SkyImage`` and ``SkyCube`` and image / cube analysis code
+  that we have now mostly unchanged (only apply bugfixes), and to remove them at
+  some future date after the transition to the use of ``gammapy.maps`` within
+  Gammapy (including all tests and documentation and tutorials) is complete and
+  users had some time to update their code. If you have any questions or need
+  help with ``gammapy.maps`` or find an issue or missing feature, let us know!
+
+Command line interface:
+
+- The Gammapy command-line interface was changed to use a single command
+  ``gammapy`` multiple sub-commands (like ``gammapy info`` or ``gammapy image
+  bin``). Discussions on developing the high level interface for Gammapy (e.g.
+  as a set of command line tools, or a config file driven analysis) are starting
+  now.
+
+Organisation:
+
+- A webpage at https://gammapy.org/ was set up, separate from the Gammapy
+  documentation page https://docs.gammapy.org/ .
+- The Gammapy project and team organisation was set up with clear roles and
+  responsibilities, in a way to help the Gammapy project grow, and to support
+  astronomers and projects like CTA using Gammapy better. This is described at
+  https://gammapy.org/team.html .
+- To improve the quality of Gammapy, we have set up a proposal-driven process
+  for major improvements for Gammapy, described in :ref:`pig-001`. We are now
+  starting to use this to design a better low level analysis code (`PIG 2`_) and
+  to define a plan to finish the Python 2-> 3 transition (`PIG 3`_).
+
+.. _PIG 2: https://github.com/gammapy/gammapy/pull/1277
+.. _PIG 3: https://github.com/gammapy/gammapy/pull/1278
+.. _Gammapy installation questionnaire: https://goo.gl/forms/0QuYYyyPCbKnFJJI3
+
+Contributors
+~~~~~~~~~~~~
+
+- Anne Lemière (new)
+- Arjun Voruganti
+- Atreyee Sinha (new)
+- Axel Donath
+- Brigitta Sipocz
+- Bruno Khelifi (new)
+- Christoph Deil
+- Cosimo Nigro (new)
+- Jean-Philippe Lenain (new)
+- Johannes King
+- José Enrique Ruiz (new)
+- Julien Lefaucheur
+- Kai Brügge (new)
+- Lab Saha (new)
+- Lars Mohrmann
+- Léa Jouvin
+- Matthew Wood
+- Matthias Wegen (new)
+- Oscar Blanch (new)
+- Peter Deiml (new)
+- Régis Terrier
+- Roberta Zanin (new)
+- Rubén López-Coto (new)
+- Thomas Armstrong (new)
+- Thomas Vuillaume (new)
+- Yves Gallant (new)
+
+Pull requests
+~~~~~~~~~~~~~
+
+This list is incomplete. Small improvements and bug fixes are not listed here.
+
+See the complete `Gammapy 0.7 merged pull requests list on GitHub <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.7+is%3Amerged+>`__.
+
+- [#1319] Fix a bug in SpectrumStacker (Anne Lemière)
+- [#1318] Improve MapCoord interface (Matthew Wood)
+- [#1316] Add flux point estimation for multiple observations (Lars Mohrmann)
+- [#1312] Add Background 2D class (Léa Jouvin)
+- [#1305] Fix exposure and flux units in IACTBasicImageEstimator (Yves Gallant)
+- [#1300] Add PhaseCurve class for periodic systems (Lab Saha)
+- [#1294] Fix IACTBasicImageEstimator psf method (Yves Gallant)
+- [#1291] Add meta attribute to maps (Léa Jouvin)
+- [#1290] Change image_pipe and fov to include a minimum offset cut (Atreyee Sinha)
+- [#1289] Fix excess for given significance computation (Oscar Blanch)
+- [#1287] Fix time in LightCurveEstimator result table (Jean-Philippe Lenain)
+- [#1281] Add methods for WCS maps (Matthew Wood)
+- [#1266] No pytest import from non-test code (Christoph Deil)
+- [#1268] Fix PSF3D.to_energy_dependent_table_psf (Christoph Deil)
+- [#1246] Improve map read method (Matthew Wood)
+- [#1240] Finish change to Click in gammapy.scripts (Christoph Deil)
+- [#1238] Clean up catalog image code (Axel Donath)
+- [#1235] Introduce main ``gammapy`` command line tool (Axel Donath and Christoph Deil)
+- [#1227] Remove gammapy-data-show and gammapy-cube-bin (Christoph Deil)
+- [#1226] Make DataStoreObservation properties less lazy (Christoph Deil)
+- [#1220] Fix flux point computation for non-power-law models (Axel Donath)
+- [#1215] Finish integration of Jupyter notebooks with Sphinx docs (Jose Enrique Ruiz)
+- [#1211] Add IRF write methods (Thomas Armstrong)
+- [#1210] Fix min energy handling in SpectrumEnergyGrouper (Julien Lefaucheur and Christoph Deil)
+- [#1207] Add theta2 distribution plot to EventList class (Thomas Vuillaume)
+- [#1204] Consistently use mode='constant' in convolutions of RingBackgroundEstimator (Lars Mohrmann)
+- [#1195] Change IRF extrapolation behaviour (Christoph Deil)
+- [#1190] Refactor gammapy.maps methods for calculating index and coordinate arrays (Matthew Wood)
+- [#1183] Add function to compute background cube (Roberta Zanin and Christoph Deil)
+- [#1179] Fix two bugs in LightCurveEstimator, and improve speed considerably (Lars Mohrmann)
+- [#1176] Integrate tutorial notebooks in Sphinx documentation (Jose Enrique Ruiz)
+- [#1170] Add sparse map prototype (Matthew Wood)
+- [#1169] Remove old HEALPix image and cube classes (Christoph Deil)
+- [#1166] Fix ring background estimation (Axel Donath)
+- [#1162] Add ``gammapy.irf.Background3D`` (Roberta Zanin and Christoph Deil)
+- [#1150] Fix PSF evaluate error at low energy and high offset (Bruno Khelifi)
+- [#1134] Add MAGIC Crab reference spectrum (Cosimo Nigro)
+- [#1133] Fix energy_resolution method in EnergyDispersion class (Lars Mohrmann)
+- [#1127] Fix 3FHL spectral indexes for PowerLaw model (Julien Lefaucheur)
+- [#1115] Fix energy bias computation (Cosimo Nigro)
+- [#1110] Remove ATNF catalog class and Green catalog load function (Christoph Deil)
+- [#1108] Add HAWC 2HWC catalog (Peter Deiml)
+- [#1107] Rewrite GaussianBand2D model (Axel Donath)
+- [#1105] Emit warning when HDU loading from index is ambiguous (Lars Mohrmann)
+- [#1104] Change conda install instructions to conda-forge channel (Christoph Deil)
+- [#1103] Remove catalog and data browser Flask web apps (Christoph Deil)
+- [#1102] Add 3FGL spatial models (Axel Donath)
+- [#1100] Add energy reference for exposure map (Léa Jouvin)
+- [#1098] Improve flux point fitter (Axel Donath)
+- [#1093] Implement I/O methods for ``gammapy.maps`` (Matthew Wood)
+- [#1092] Add random seed argument for CTA simulations (Julien Lefaucheur)
+- [#1090] Add default parameters for spectral models (Axel Donath)
+- [#1089] Fix Fermi-LAT catalog flux points property (Axel Donath)
+- [#1088] Update Gammapy to match Astropy region changes (Johannes King)
+- [#1087] Add peak energy property to some spectral models (Axel Donath)
+- [#1085] Update astropy-helpers to v2.0 (Brigitta Sipocz)
+- [#1084] Add flux points upper limit estimation (Axel Donath)
+- [#1083] Add JSON-serialisable source catalog object dict (Arjun Voruganti)
+- [#1082] Add observation sanity check method to DataStore (Lars Mohrmann)
+- [#1078] Add printout for 3FHL and gamma-cat sources (Arjun Voruganti)
+- [#1076] Development in ``gammapy.maps`` (Matthew Wood)
+- [#1073] Fix spectrum fit for case of no EDISP (Johannes King)
+- [#1070] Add Lomb-Scargle detection function (Matthias Wegen)
+- [#1069] Add easy access to parameter errors (Johannes King)
+- [#1067] Add flux upper limit computation to TSImageEstimator (Axel Donath)
+- [#1065] Add skip_missing option to ``DataStore.obs_list`` (Johannes King)
+- [#1057] Use system pytest rather than astropy (Brigitta Sipocz)
+- [#1054] Development in ``gammapy.maps`` (Matthew Wood)
+- [#1053] Add sensitivity computation (Bruno Khelifi)
+- [#1051] Improve 3D simulation / analysis example (Roberta Zanin)
+- [#1045] Fix energy dispersion apply and to_sherpa (Johannes King)
+- [#1043] Make ``gammapy.spectrum.powerlaw`` private (Christoph Deil)
+- [#1040] Add combined 3D model and simple npred function (Christoph Deil)
+- [#1038] Remove ``gammapy.utils.mpl_style`` (Christoph Deil)
+- [#1136] Improve CTA sensitivity estimator (Axel Donath and Kai Brügge)
+- [#1035] Some cleanup of FluxPoints code and tests (Christoph Deil)
+- [#1032] Improve table unit standardisation and flux points (Christoph Deil)
+- [#1031] Add HGPS catalog spatial models (Axel Donath)
+- [#1029] Add 3D model simulation example (Roberta Zanin)
+- [#1027] Add gamma-cat resource and resource index classes (Christoph Deil)
+- [#1026] Fix Fermi catalog flux points upper limits (Axel Donath)
+- [#1025] Remove spectrum butterfly class (Christoph Deil)
+- [#1021] Fix spiralarm=False case in make_base_catalog_galactic (Ruben Lopez-Coto)
+- [#1014] Introduce TSImageEstimator class (Axel Donath)
+- [#1013] Add Fermi-LAT 3FHL spatial models (Axel Donath)
+- [#845] Add background model component to SpectrumFit (Johannes King)
+- [#111] Include module-level variables in API docs (Christoph Deil)

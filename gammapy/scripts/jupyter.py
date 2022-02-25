@@ -54,10 +54,10 @@ def execute_notebook(path, kernel="python3", loglevel=30):
     completed_process = subprocess.run(cmd)
     t = time.time() - t
     if completed_process.returncode:
-        log.error(f"Error executing file: {path}")
+        log.error(f"Error executing notebook: {path.name} in {path.parent}")
         return False
     else:
-        log.info(f"   ... Executing duration: {t:.1f} seconds")
+        log.info(f"   ... DURATION {path.name}: {t:.1f} seconds")
         return True
 
 
@@ -161,7 +161,7 @@ def notebook_run(path, kernel="python3"):
     """Execute and parse a Jupyter notebook exposing broken cells."""
     import nbformat
 
-    log.info(f"   ... EXECUTING: {path}")
+    log.info(f"   ... EXECUTING: {path.name} in {path.parent}")
     passed = execute_notebook(path, kernel)
     rawnb = nbformat.read(str(path), as_version=nbformat.NO_CONVERT)
     report = ""
@@ -184,10 +184,10 @@ def notebook_run(path, kernel="python3"):
             break
 
     if passed:
-        log.info("   ... PASSED")
+        log.info(f"   ... PASSED {path.name}")
         return True
     else:
-        log.info("   ... FAILED")
+        log.info(f"   ... FAILED {path.name}")
         log.info(report)
         return False
 
@@ -231,6 +231,8 @@ def cli_jupyter_tar(out):
     """Create a tar file with the notebooks in docs."""
 
     tar_name = Path(out)
+    tar_name.parent.mkdir(parents=True, exist_ok=True)
+
     with tarfile.open(tar_name, "w:") as tar:
         for name in get_notebooks_paths():
             path_tail = str(name).split(str(PATH_DOCS.resolve()))[1]
