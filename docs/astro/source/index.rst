@@ -1,8 +1,8 @@
 .. _astro-source:
 
-****************************************************
-Astrophysical source models (`gammapy.astro.source`)
-****************************************************
+**************************************************
+Astrophysical source models (gammapy.astro.source)
+**************************************************
 
 .. currentmodule:: gammapy.astro.source
 

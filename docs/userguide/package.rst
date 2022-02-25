@@ -92,7 +92,6 @@ maps in energy bands.
 To learn more about modeling and fitting, see :ref:`gammapy.modeling <api_modeling>`
 and :ref:`gammapy.estimators <api_estimators>`.
 
-
 .. _overview_hli:
 
 :ref:`High Level Analysis Interface <analysis>`
@@ -105,25 +104,38 @@ standard analysis use case in a convenient way.
 
 The high level analysis interface methods are implemented in :ref:`gammapy.analysis <api_analysis>`
 
+
+.. _overview_other:
+
+Other
+----- 
+
 .. _overview_catalog:
 
 :ref:`Source catalogs <catalog>`
---------------------------------
+++++++++++++++++++++++++++++++++
 
 Access to a variety of GeV-TeV gamma-ray catalogs.
 
 The catalog methods are implemented in :ref:`gammapy.catalog <api_catalog>`.
 
-Other
------
+.. _overview_astro:
 
-*  in :ref:`gammapy.catalog <catalog>`
-* Support for simulation of TeV source populations and dark matter models in :ref:`gammapy.astro <astro>`
+:ref:`astro - Astropyhics <api_astro>`
+++++++++++++++++++++++++++++++++++++++
+
+Support for simulation of TeV source populations and dark matter models.
+
+The methods are implemented in :ref:`gammapy.astro <api_astro>`.
+
+
+
 * Statistical utility functions in :ref:`gammapy.stats <stats>`
 * Command line tools in :ref:`gammapy.scripts <CLI>`
+* Utils and visulization
 
 
-.. _overview_next:
+
 
 What next?
 ----------
@@ -141,4 +153,5 @@ the first and second analysis tutorials at :ref:`tutorials`.
     model_estimators
     hli
     catalog
+    ../astro/index
     

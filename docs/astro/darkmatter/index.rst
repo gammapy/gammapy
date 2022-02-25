@@ -1,8 +1,8 @@
 .. _astro-darkmatter:
 
-****************************************
-Dark matter (`gammapy.astro.darkmatter`)
-****************************************
+**************************************
+Dark matter (gammapy.astro.darkmatter)
+**************************************
 
 .. currentmodule:: gammapy.astro.darkmatter
 

@@ -1,4 +1,4 @@
-.. _astro:
+.. _api_astro:
 
 ********************
 astro - Astrophysics
