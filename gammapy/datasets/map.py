@@ -2077,6 +2077,8 @@ class MapDatasetOnOff(MapDataset):
         background : `Map`
             Background map
         """
+        if self.counts_off is None:
+            return None
         return self.alpha * self.counts_off
 
     def stat_array(self):
