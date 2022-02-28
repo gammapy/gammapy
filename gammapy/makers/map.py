@@ -3,7 +3,7 @@ import logging
 import astropy.units as u
 from astropy.table import Table
 from regions import PointSkyRegion
-from gammapy.irf import EDispKernelMap, PSFMap
+from gammapy.irf import EDispKernelMap, PSFMap, FoVAlignment
 from gammapy.maps import Map
 from .core import Maker
 from .utils import (
@@ -210,16 +210,11 @@ class MapDatasetMaker(Maker):
         if isinstance(bkg, Map):
             return bkg.interp_to_geom(geom=geom, preserve_counts=True)
 
-        bkg_coordsys = observation.bkg.meta.get("FOVALIGN", "RADEC")
-        if bkg_coordsys == "ALTAZ":
+        if observation.bkg.fov_alignment == FoVAlignment.ALTAZ:
             pointing = observation.fixed_pointing_info
-        elif bkg_coordsys == "RADEC":
-            pointing = observation.pointing_radec
         else:
-            raise ValueError(
-                f"Invalid background coordinate system: {bkg_coordsys!r}\n"
-                "Options: ALTAZ, RADEC"
-            )
+            pointing = observation.pointing_radec
+
         use_region_center = getattr(self, "use_region_center", True)
 
         if self.background_interp_missing_data:

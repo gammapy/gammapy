@@ -13,9 +13,22 @@ from gammapy.utils.interpolation import (
     interpolation_scale,
 )
 from gammapy.utils.scripts import make_path
-from .io import IRF_DL3_HDU_SPECIFICATION, IRF_MAP_HDU_SPECIFICATION
+from enum import Enum
+from .io import IRF_DL3_HDU_SPECIFICATION, IRF_MAP_HDU_SPECIFICATION, gadf_is_pointlike
 
 log = logging.getLogger(__name__)
+
+
+class FoVAlignment(str, Enum):
+    '''
+    Orientation of the Field of View Coordinate System
+
+    Currently, only two possible alignments are supported: alignment with
+    the horizontal coordinate system (ALTAZ) and alignment with the equatorial
+    coordinate system (RADEC).
+    '''
+    ALTAZ = "ALTAZ"
+    RADEC = "RADEC"
 
 
 class IRF(metaclass=abc.ABCMeta):
@@ -29,6 +42,10 @@ class IRF(metaclass=abc.ABCMeta):
         Data
     unit : str or `~astropy.units.Unit`
         Unit, ignored if data is a Quantity.
+    is_pointlike: boolean
+        True for point-like IRFs, False for full-enclosure.
+    fov_alignment: `FoVAlignment`
+        The orientation of the field of view coordinate system.
     meta : dict
         Meta data
     """
@@ -38,10 +55,22 @@ class IRF(metaclass=abc.ABCMeta):
         fill_value=0.0,
     )
 
-    def __init__(self, axes, data=0, unit="", meta=None, interp_kwargs=None):
+    def __init__(
+        self,
+        axes,
+        data=0,
+        unit="",
+        is_pointlike=False,
+        fov_alignment=FoVAlignment.RADEC,
+        meta=None,
+        interp_kwargs=None,
+    ):
         axes = MapAxes(axes)
         axes.assert_names(self.required_axes)
         self._axes = axes
+        self.fov_alignment = FoVAlignment(fov_alignment)
+        self._is_pointlike = is_pointlike
+
         if isinstance(data, u.Quantity):
             self.data = data.value
             if not self.default_unit.is_equivalent(data.unit):
@@ -69,7 +98,7 @@ class IRF(metaclass=abc.ABCMeta):
     @property
     def is_pointlike(self):
         """Whether the IRF is pointlike of full containment."""
-        return self.meta.get("is_pointlike", False)
+        return self._is_pointlike
 
     @property
     def has_offset_axis(self):
@@ -411,9 +440,11 @@ class IRF(metaclass=abc.ABCMeta):
         column_name = IRF_DL3_HDU_SPECIFICATION[cls.tag]["column_name"]
         data = table[column_name].quantity[0].transpose()
 
-        if "HDUCLAS3" in table.meta and table.meta["HDUCLAS3"] == "POINT-LIKE":
-            table.meta["is_pointlike"] = True
-        return cls(axes=axes, data=data.value, meta=table.meta, unit=data.unit)
+        return cls(
+            axes=axes, data=data.value, meta=table.meta, unit=data.unit,
+            is_pointlike=gadf_is_pointlike(table.meta),
+            fov_alignment=table.meta.get("FOVALIGN", "RADEC"),
+        )
 
     def to_table(self, format="gadf-dl3"):
         """Convert to table
@@ -441,7 +472,6 @@ class IRF(metaclass=abc.ABCMeta):
             else:
                 table.meta["HDUCLAS3"] = "FULL-ENCLOSURE"
 
-            table.meta.pop("is_pointlike", None)
             table[spec["column_name"]] = self.quantity.T[np.newaxis]
         else:
             raise ValueError(f"Not a valid supported format: '{format}'")

@@ -5,6 +5,7 @@ import astropy.units as u
 from astropy.visualization import quantity_support
 from gammapy.maps import MapAxes, MapAxis
 from .core import IRF
+from .io import gadf_is_pointlike
 
 __all__ = ["Background3D", "Background2D"]
 
@@ -71,7 +72,11 @@ class BackgroundIRF(IRF):
             log.debug("Transposing background table on read")
             data = data.transpose()
 
-        return cls(axes=axes, data=data.value, meta=table.meta, unit=data.unit)
+        return cls(
+            axes=axes, data=data.value, meta=table.meta, unit=data.unit,
+            is_pointlike=gadf_is_pointlike(table.meta),
+            fov_alignment=table.meta.get("FOVALIGN", "RADEC"),
+        )
 
 
 class Background3D(BackgroundIRF):

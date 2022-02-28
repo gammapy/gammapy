@@ -21,6 +21,7 @@ from .psf import (
     PSF3D,
 )
 from .rad_max import RadMax2D
+from .core import FoVAlignment
 
 
 __all__ = [
@@ -32,6 +33,7 @@ __all__ = [
     "EffectiveAreaTable2D",
     "EnergyDependentMultiGaussPSF",
     "EnergyDispersion2D",
+    "FoVAlignment",
     "IRF_REGISTRY",
     "load_cta_irfs",
     "load_irf_dict_from_file",
