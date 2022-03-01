@@ -163,7 +163,7 @@ def make_map_background_irf(
         sky_coord = map_coord.skycoord
         d_omega = image_geom.solid_angle()
 
-    if bkg.is_offset_dependent:
+    if bkg.has_offset_axis:
         coords["offset"] = sky_coord.separation(pointing)
     else:
         if isinstance(pointing, FixedPointingInfo):

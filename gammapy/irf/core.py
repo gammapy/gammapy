@@ -72,8 +72,8 @@ class IRF(metaclass=abc.ABCMeta):
         return self.meta.get("is_pointlike", False)
 
     @property
-    def is_offset_dependent(self):
-        """Whether the IRF depends on offset"""
+    def has_offset_axis(self):
+        """Whether the IRF explicitly depends on offset"""
         return "offset" in self.required_axes
 
     @property
