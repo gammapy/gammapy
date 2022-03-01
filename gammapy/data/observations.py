@@ -340,7 +340,7 @@ class Observation:
         if "bkg" in self.available_irfs:
             bkg = self.bkg
 
-            if not bkg.is_offset_dependent:
+            if not bkg.has_offset_axis:
                 bkg = bkg.to_2d()
 
             bkg.plot(ax=axes_dict["bkg"])
