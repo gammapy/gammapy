@@ -491,7 +491,9 @@ def apply_rad_max(events, rad_max, position):
     if rad_max.data.shape == (1, 1):
         rad_max_for_events = rad_max.quantity[0, 0]
     else:
-        rad_max_for_events = rad_max.evaluate(energy=events.energy, offset=offset)
+        rad_max_for_events = rad_max.evaluate(
+            method="nearest", energy=events.energy, offset=offset
+        )
 
     selected = separation <= rad_max_for_events
     return events.select_row_subset(selected)

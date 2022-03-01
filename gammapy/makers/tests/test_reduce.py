@@ -281,8 +281,8 @@ def test_dataset_maker_spectrum_rad_max(observations_magic_rad_max):
     counts_off = dataset_on_off.counts_off
     assert counts.unit == ""
     assert counts_off.unit == ""
-    assert_allclose(counts.data.sum(), 1078, rtol=1e-5)
-    assert_allclose(counts_off.data.sum(), 2046, rtol=1e-5)
+    assert_allclose(counts.data.sum(), 1088, rtol=1e-5)
+    assert_allclose(counts_off.data.sum(), 2053, rtol=1e-5)
 
     exposure = dataset_on_off.exposure
     assert exposure.unit == "m2 s"
