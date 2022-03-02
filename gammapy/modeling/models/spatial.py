@@ -887,7 +887,7 @@ class Shell2SpatialModel(SpatialModel):
 
         The bin min size is defined as r_0*eta.
         """
-        return self.eta.value * self.r_0
+        return self.eta.value * self.r_0.quantity
 
     @property
     def evaluation_radius(self):
