@@ -272,7 +272,7 @@ class IRF(metaclass=abc.ABCMeta):
             if coord is not None:
                 coords_default[key] = u.Quantity(coord, copy=False)
 
-        data = self._interpolate(tuple(coords_default.values()), method=method)
+        data = self._interpolate(coords_default.values(), method=method)
 
         if self.interp_kwargs["fill_value"] is not None:
             idxs = self.axes.coord_to_idx(coords_default, clip=False)

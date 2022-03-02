@@ -3,6 +3,7 @@
 import numpy as np
 import scipy.interpolate
 from astropy import units as u
+from itertools import compress
 
 __all__ = [
     "interpolate_profile",
@@ -67,6 +68,8 @@ class ScaledRegularGridInterpolator:
 
         if not np.any(self._include_dimensions):
             kwargs["method"] = "nearest"
+        else:
+            values_scaled = np.squeeze(values_scaled)
 
         if axis is None:
             self._interpolate = scipy.interpolate.RegularGridInterpolator(
@@ -78,10 +81,10 @@ class ScaledRegularGridInterpolator:
             )
 
     def _scale_points(self, points):
-        points_scaled = np.array([scale(p) for p, scale in zip(points, self.scale_points)])
+        points_scaled = [scale(p) for p, scale in zip(points, self.scale_points)]
 
         if np.any(self._include_dimensions):
-            points_scaled = points_scaled[self._include_dimensions]
+            points_scaled = compress(points_scaled, self._include_dimensions)
 
         return tuple(points_scaled)
 
