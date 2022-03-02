@@ -1034,7 +1034,7 @@ class TemplateSpatialModel(SpatialModel):
         Normalize the input map so that it integrates to unity.
     interp_kwargs : dict
         Interpolation keyword arguments passed to `gammapy.maps.Map.interp_by_coord`.
-        Default arguments are {'interp': 'linear', 'fill_value': 0}.
+        Default arguments are {'method': 'linear', 'fill_value': 0}.
     """
 
     tag = ["TemplateSpatialModel", "template"]

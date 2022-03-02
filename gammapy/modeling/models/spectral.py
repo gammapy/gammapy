@@ -1569,12 +1569,12 @@ class TemplateNDSpectralModel(SpectralModel):
     Parameters
     ----------
     map : `~gammapy.maps.RegionNDMap`
-        Map template. 
+        Map template.
     meta : dict, optional
         Meta information, meta['filename'] will be used for serialization
     interp_kwargs : dict
-        Interpolation keyword arguments passed to `gammapy.maps.Map.interp_by_coord`.
-        Default arguments are {'interp': 'linear', 'fill_value': 0}.
+        Interpolation keyword arguments passed to `gammapy.maps.Map.interp_by_pix`.
+        Default arguments are {'method': 'linear', 'fill_value': 0}.
     """
 
     tag = ["TemplateNDSpectralModel", "templateND"]
