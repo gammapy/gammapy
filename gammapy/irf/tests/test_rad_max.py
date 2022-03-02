@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.maps import MapAxis
 from gammapy.irf import RadMax2D, EffectiveAreaTable2D
@@ -30,8 +31,8 @@ def test_rad_max_roundtrip(tmp_path):
     rad_max_2d.write(tmp_path / "rad_max.fits")
     rad_max_read = RadMax2D.read(tmp_path / "rad_max.fits")
 
-    assert np.all(rad_max_read.data.data == rad_max)
-    assert np.all(rad_max_read.data.data == rad_max_read.data.data)
+    assert np.all(rad_max_read.data == rad_max)
+    assert np.all(rad_max_read.data == rad_max_read.data)
 
 
 def test_rad_max_from_irf():
@@ -76,5 +77,10 @@ def test_rad_max_single_bin():
     offset_axis = MapAxis.from_bounds(0., 5, 1, unit="deg", name="offset", )
     rad_max = RadMax2D(data=[[0.1]] * u.deg, axes=[energy_axis, offset_axis])
 
-    value = rad_max.evaluate(1 * u.TeV)
+    value = rad_max.evaluate(energy=1 * u.TeV, offset=1 * u.deg)
     assert_allclose(value, 0.1 * u.deg)
+
+    value = rad_max.evaluate(energy=[1, 2, 3] * u.TeV, offset=[[1]] * u.deg)
+    assert value.shape == (1, 3)
+    assert_allclose(value, 0.1 * u.deg)
+

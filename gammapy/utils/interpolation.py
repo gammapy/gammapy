@@ -54,21 +54,19 @@ class ScaledRegularGridInterpolator:
 
         self.scale_points = [interpolation_scale(scale) for scale in points_scale]
         self.scale = interpolation_scale(values_scale)
-        self._include_dim = [len(p) > 1 for p in points]
-
-        points_scaled = tuple(
-            [
-                scale(p)
-                for p, scale, _ in zip(points, self.scale_points, self._include_dim)
-                if _
-            ]
-        )
-        values_scaled = self.scale(values).squeeze()
         self.axis = axis
+
+        self._include_dimensions = [len(p) > 1 for p in points]
+
+        values_scaled = self.scale(values)
+        points_scaled = self._scale_points(points=points)
 
         if extrapolate:
             kwargs.setdefault("bounds_error", False)
             kwargs.setdefault("fill_value", None)
+
+        if not np.any(self._include_dimensions):
+            kwargs["method"] = "nearest"
 
         if axis is None:
             self._interpolate = scipy.interpolate.RegularGridInterpolator(
@@ -78,6 +76,14 @@ class ScaledRegularGridInterpolator:
             self._interpolate = scipy.interpolate.interp1d(
                 points_scaled[0], values_scaled, axis=axis
             )
+
+    def _scale_points(self, points):
+        points_scaled = np.array([scale(p) for p, scale in zip(points, self.scale_points)])
+
+        if np.any(self._include_dimensions):
+            points_scaled = points_scaled[self._include_dimensions]
+
+        return tuple(points_scaled)
 
     def __call__(self, points, method="linear", clip=True, **kwargs):
         """Interpolate data points.
@@ -92,14 +98,7 @@ class ScaledRegularGridInterpolator:
         clip : bool
             Clip values at zero after interpolation.
         """
-
-        points = tuple(
-            [
-                scale(p)
-                for scale, p, _ in zip(self.scale_points, points, self._include_dim)
-                if _
-            ]
-        )
+        points = self._scale_points(points=points)
 
         if self.axis is None:
             points = np.broadcast_arrays(*points)
