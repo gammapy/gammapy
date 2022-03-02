@@ -188,7 +188,7 @@ class AdaptiveRingBackgroundMaker(Maker):
 
         return cubes
 
-    def run(self, dataset):
+    def run(self, dataset, observation=None):
         """Run adaptive ring background maker
 
         Parameters
@@ -309,7 +309,7 @@ class RingBackgroundMaker(Maker):
 
         return maps_off
 
-    def run(self, dataset):
+    def run(self, dataset, observation=None):
         """Run ring background maker
 
         Parameters

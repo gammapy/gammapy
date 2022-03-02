@@ -2,7 +2,7 @@ import logging
 from multiprocessing import Pool
 import numpy as np
 from astropy.coordinates import Angle
-from gammapy.datasets import Datasets, MapDataset, SpectrumDataset
+from gammapy.datasets import Datasets, MapDataset, MapDatasetOnOff, SpectrumDataset
 from .core import Maker
 from .safe import SafeMaskMaker
 
@@ -27,7 +27,7 @@ class DatasetsMaker(Maker):
         Number of processes to run in parallel
         Default is None
     cutout_mode : str
-        Cutout mode. Default is "partial"
+        Cutout mode. Default is "trim"
     cutout_width : str or `~astropy.coordinates.Angle`,
         Cutout width. Default is None, If Default is determined
     """
@@ -39,7 +39,7 @@ class DatasetsMaker(Maker):
         makers,
         stack_datasets=True,
         n_jobs=None,
-        cutout_mode="partial",
+        cutout_mode="trim",
         cutout_width=None,
     ):
         self.log = logging.getLogger(__name__)
@@ -107,6 +107,8 @@ class DatasetsMaker(Maker):
 
     def callback(self, dataset):
         if self.stack_datasets:
+            if isinstance(self._dataset, MapDataset) and isinstance(dataset, MapDatasetOnOff):
+                dataset = dataset.to_map_dataset(dataset)
             self._dataset.stack(dataset)
         else:
             self._datasets.append(dataset)
