@@ -1,12 +1,12 @@
 import numpy as np
 import astropy.units as u
 from gammapy.maps import MapAxis
+from gammapy.irf import RadMax2D, EffectiveAreaTable2D
+
 import pytest
 
 
 def test_rad_max_roundtrip(tmp_path):
-    from gammapy.irf import RadMax2D
-
     n_energy = 10
     energy_axis = MapAxis.from_energy_bounds(
         50 * u.GeV, 100 * u.TeV, n_energy, name="energy"
@@ -35,8 +35,6 @@ def test_rad_max_roundtrip(tmp_path):
 
 
 def test_rad_max_from_irf():
-    from gammapy.irf import RadMax2D, EffectiveAreaTable2D
-
     e_bins = 3
     o_bins = 2
     energy_axis = MapAxis.from_energy_bounds(1 * u.TeV, 10 * u.TeV, nbin=e_bins, name='energy_true')
@@ -71,3 +69,12 @@ def test_rad_max_from_irf():
     assert rad_max.axes['offset'].edges[1] == aeff.axes['offset'].edges[-1]
     assert rad_max.quantity.shape == (1, 1)
     assert rad_max.quantity[0, 0] == 0.2 * u.deg
+
+
+def test_rad_max_single_bin():
+    energy_axis = MapAxis.from_energy_bounds(0.01, 100, 1, unit="TeV")
+    offset_axis = MapAxis.from_bounds(0., 5, 1, unit="deg", name="offset", )
+    rad_max = RadMax2D(data=[[0.1]] * u.deg, axes=[energy_axis, offset_axis])
+
+    value = rad_max.evaluate(1 * u.TeV)
+    assert_allclose(value, 0.1 * u.deg)
