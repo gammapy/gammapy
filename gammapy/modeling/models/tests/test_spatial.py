@@ -58,6 +58,7 @@ def test_sky_gaussian():
     radius = model.evaluation_radius
     assert radius.unit == "deg"
     assert_allclose(radius.value, 5 * sigma.value)
+    assert_allclose(model.evaluation_bin_size_min, (1./3.) * u.deg)
 
     # test the normalization for an elongated Gaussian near the Galactic Plane
     m_geom_1 = WcsGeom.create(
@@ -153,6 +154,7 @@ def test_sky_disk():
     radius = model.evaluation_radius
     assert radius.unit == "deg"
     assert_allclose(radius.to_value("deg"), 2.222)
+    assert_allclose(model.evaluation_bin_size_min, 0.198 * u.deg)
 
     # test the normalization for an elongated ellipse near the Galactic Plane
     m_geom_1 = WcsGeom.create(
@@ -235,6 +237,7 @@ def test_sky_shell():
     assert radius.unit == "deg"
     assert_allclose(radius.value, rad.value + width.value)
     assert isinstance(model.to_region(), CircleAnnulusSkyRegion)
+    assert_allclose(model.evaluation_bin_size_min, 2 * u.deg)
 
 
 def test_sky_shell2():
@@ -252,6 +255,7 @@ def test_sky_shell2():
     assert_allclose(radius.value, rad.value + width.value)
     assert_allclose(model.r_in.value, rad.value)
     assert isinstance(model.to_region(), CircleAnnulusSkyRegion)
+    assert_allclose(model.evaluation_bin_size_min, 2 * u.deg)
 
 
 def test_sky_diffuse_constant():
