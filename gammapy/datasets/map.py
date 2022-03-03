@@ -1201,6 +1201,11 @@ class MapDataset(Dataset):
         dataset = cls.read(filename, name=data["name"], lazy=lazy, cache=cache)
         return dataset
 
+    @property
+    def _counts_statistic(self):
+        """Counts statistics of the dataset."""
+        return CashCountsStatistic(self.counts, self.background)
+
     def info_dict(self, in_safe_data_range=True):
         """Info dict with summary statistics, summed over energy
 
@@ -1223,19 +1228,22 @@ class MapDataset(Dataset):
             mask = slice(None)
 
         counts = 0
+
+        sum_stat = self._counts_statistic[mask].sum()
+
         if self.counts:
-            counts = self.counts.data[mask].sum()
+            counts = sum_stat.n_on
 
         info["counts"] = int(counts)
 
         background = np.nan
         if self.background:
-            background = self.background.data[mask].sum()
+            background = sum_stat.n_bkg
 
         info["background"] = float(background)
 
-        info["excess"] = counts - background
-        info["sqrt_ts"] = CashCountsStatistic(counts, background).sqrt_ts
+        info["excess"] = sum_stat.n_sig
+        info["sqrt_ts"] = sum_stat.sqrt_ts
 
         npred = np.nan
         if self.models or not np.isnan(background):
