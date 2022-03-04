@@ -196,7 +196,7 @@ class ConstantTemporalModel(TemporalModel):
         """Evaluate at given times."""
         return np.ones(time.shape)
 
-    def integral(self, t_min, t_max):
+    def integral(self, t_min, t_max, energy=None):
         """Evaluate the integrated flux within the given time intervals
 
         Parameters
@@ -241,7 +241,7 @@ class LinearTemporalModel(TemporalModel):
         """Evaluate at given times"""
         return alpha + beta * (time - t_ref)
 
-    def integral(self, t_min, t_max):
+    def integral(self, t_min, t_max, energy=None):
         """Evaluate the integrated flux within the given time intervals
 
         Parameters
@@ -291,7 +291,7 @@ class ExpDecayTemporalModel(TemporalModel):
         """Evaluate at given times"""
         return np.exp(-(time - t_ref) / t0)
 
-    def integral(self, t_min, t_max):
+    def integral(self, t_min, t_max, energy=None):
         """Evaluate the integrated flux within the given time intervals
 
         Parameters
@@ -337,7 +337,7 @@ class GaussianTemporalModel(TemporalModel):
     def evaluate(time, t_ref, sigma):
         return np.exp(-((time - t_ref) ** 2) / (2 * sigma ** 2))
 
-    def integral(self, t_min, t_max, **kwargs):
+    def integral(self, t_min, t_max, energy=None):
         """Evaluate the integrated flux within the given time intervals
 
         Parameters
@@ -400,7 +400,7 @@ class GeneralizedGaussianTemporalModel(TemporalModel):
         val = np.where(time < t_ref, val_rise, val_decay)
         return val
     
-    def integral(self, t_min, t_max, **kwargs):
+    def integral(self, t_min, t_max, energy=None):
         """Evaluate the integrated flux within the given time intervals
 
         Parameters
@@ -553,7 +553,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         """
         return self._interpolator(time, ext=ext)
 
-    def integral(self, t_min, t_max):
+    def integral(self, t_min, t_max, energy=None):
         """Evaluate the integrated flux within the given time intervals
 
         Parameters
@@ -607,7 +607,7 @@ class PowerLawTemporalModel(TemporalModel):
         """Evaluate at given times"""
         return np.power((time - t_ref) / t0, alpha)
 
-    def integral(self, t_min, t_max):
+    def integral(self, t_min, t_max, energy=None):
         """Evaluate the integrated flux within the given time intervals
 
         Parameters
@@ -663,7 +663,7 @@ class SineTemporalModel(TemporalModel):
         """Evaluate at given times"""
         return 1.0 + amp * np.sin(omega * (time - t_ref))
 
-    def integral(self, t_min, t_max):
+    def integral(self, t_min, t_max, energy=None):
         """Evaluate the integrated flux within the given time intervals
 
         Parameters

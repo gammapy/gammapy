@@ -312,8 +312,9 @@ class MapEvaluator:
 
     def compute_temporal_norm(self):
         """Compute temporal norm"""
+        energy = self.geom.axes["energy_true"].edges
         integral = self.model.temporal_model.integral(
-            self.gti.time_start, self.gti.time_stop
+            self.gti.time_start, self.gti.time_stop, energy
         )
         return np.sum(integral)
 
