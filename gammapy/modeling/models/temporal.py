@@ -34,7 +34,7 @@ class TemporalModel(ModelBase):
 
     _type = "temporal"
 
-    def __call__(self, time):
+    def __call__(self, time, energy=None):
         """Evaluate model
 
         Parameters
@@ -44,7 +44,24 @@ class TemporalModel(ModelBase):
         """
         kwargs = {par.name: par.quantity for par in self.parameters}
         time = u.Quantity(time.mjd, "day")
+
+        if energy is None and self.is_energy_dependent:
+            raise ValueError("Missing energy value for evaluation")
+
+        if energy is not None:
+            kwargs["energy"] = energy
+
         return self.evaluate(time, **kwargs)
+
+    _is_energy_dependent = False
+
+    @property
+    def is_energy_dependent(self):
+        return self._is_energy_dependent
+
+    @is_energy_dependent.setter
+    def is_energy_dependent(self, state=False):
+        self._is_energy_dependent = state
 
     @property
     def type(self):
