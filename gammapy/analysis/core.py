@@ -206,83 +206,67 @@ class Analysis:
 
         log.info(models)
 
-    def read_models(self, filename=None, extend=True):
-        """Read models from YAML file.
-       
-        Parameters
-        ----------
-        filename : str
-            path to  the model file
-        extend : bool
-            Extent the exiting models on the datasets or replace them.
-        By default the filename is taken from the configuration file.
-        If provided here the configuration will be uptdated.
-        """        
-        _, filename = self._update_datasets_files(filename_models=filename)
-        if filename is not None :
-            models = Models.read(filename)
-            self.set_models(models, extend)
-            log.info(f"Models loaded from {filename}.")
-
-
-    def read_datasets(self, filename=None, filename_models=None):
-        """Read datasets from YAML file.
-        
-        Parameters
-        ----------
-        filename : str
-            path to  the datasets file
-        filename_models : str
-            path to  the model file
-        By default these filenames are taken from the configuration file.
-        If provided here the configuration will be uptdated.
+    def write_models(self, overwrite=True, write_covariance=True):
+        """Write models to YAML file.
+           Filename is taken from the configuration file.
         """
 
-        filename, filename_models = self._update_datasets_files(filename, filename_models)
+        filename_models = self.config.general.models_file
+        if filename_models is not None:
+            self.models.write(filename_models,
+                              overwrite=overwrite,
+                              write_covariance=write_covariance)
+            log.info(f"Datasets stored to {filename_models}.")
+        else:
+            raise RuntimeError("Missing models_file in config.general")
+   
+
+    def read_datasets(self):
+        """Read datasets from YAML file.
+        Filenames are taken from the configuration file.
+
+        Parameters
+        ----------
+        overwrite : bool
+            overwrite datasets FITS files
+        write_covariance : bool
+            save covariance or not
+        """
+
+        filename = self.config.general.datasets_file
+        filename_models = self.config.general.models_file
         if filename is not None:
-            self.datasets = Datasets.read(filename, filename_models)
+            self.datasets = Datasets.read(filename)
+            self.set_models(filename_models)
             log.info(f"Datasets loaded from {filename}.")
             log.info(f"Models loaded from {filename_models}.")
         else:
-            self.datasets = None
+            raise RuntimeError("Missing datasets_file in config.general")
 
 
-    def write_datasets(self, filename=None, filename_models=None):
+    def write_datasets(self, overwrite=True, write_covariance=True):
         """Write datasets to YAML file.
-        
+        Filenames are taken from the configuration file.
+
         Parameters
         ----------
-        filename : str
-            path to  the datasets file
-        filename_models : str
-            path to  the model file
-        By default these filenames are taken from the configuration file.
-        If provided here the configuration will be uptdated.
+        overwrite : bool
+            overwrite datasets FITS files
+        write_covariance : bool
+            save covariance or not
         """
 
-        filename, filename_models = self._update_datasets_files(filename, filename_models)
+        filename = self.config.general.datasets_file
+        filename_models = self.config.general.models_file
         if filename is not None:
             self.datasets.write(filename,
                                  filename_models,
-                                 overwrite=True,
-                                 write_covariance=True)
+                                 overwrite=overwrite,
+                                 write_covariance=write_covariance)
             log.info(f"Datasets stored to {filename}.")
             log.info(f"Datasets stored to {filename_models}.")
-
-
-    def _update_datasets_files(self, filename=None, filename_models=None):
-        config = self.config
-        if filename is None:
-            filename = self.config.general.datasets_file
         else:
-            config.general.datasets_file = filename
-            self.update_config(config)
-        if filename_models is None:
-            filename_models = self.config.general.models_file
-        else: 
-            config.general.models_file = filename_models
-            self.update_config(config)
-        return filename, filename_models 
+            raise RuntimeError("Missing datasets_file in config.general")
 
 
     def run_fit(self):
