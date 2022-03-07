@@ -230,7 +230,8 @@ class GeneralConfig(GammapyBaseConfig):
     log: LogConfig = LogConfig()
     outdir: str = "."
     n_jobs: int = 1
-
+    datasets_file: Path = None
+    models_file: Path = None
 
 class AnalysisConfig(GammapyBaseConfig):
     """Gammapy analysis configuration."""

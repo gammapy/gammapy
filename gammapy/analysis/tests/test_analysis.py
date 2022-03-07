@@ -9,7 +9,7 @@ from pydantic.error_wrappers import ValidationError
 from gammapy.analysis import Analysis, AnalysisConfig
 from gammapy.datasets import MapDataset, SpectrumDatasetOnOff
 from gammapy.maps import WcsGeom, WcsNDMap
-from gammapy.modeling.models import Models
+from gammapy.modeling.models import DatasetModels
 from gammapy.utils.testing import requires_data, requires_dependency
 
 CONFIG_PATH = Path(__file__).resolve().parent / ".." / "config"
@@ -132,15 +132,22 @@ def test_get_observations_missing_irf():
 
 @requires_data()
 def test_set_models():
-    config = get_example_config("1d")
+    config = get_example_config("3d")
     analysis = Analysis(config)
     analysis.get_observations()
     analysis.get_datasets()
     models_str = Path(MODEL_FILE).read_text()
     analysis.set_models(models=models_str)
-    assert isinstance(analysis.models, Models)
+    assert isinstance(analysis.models, DatasetModels)
+    assert len(analysis.models) == 2
+    assert  analysis.models.names == ['source', 'stacked-bkg']
     with pytest.raises(TypeError):
         analysis.set_models(0)
+    
+    new_source = analysis.models["source"].copy(name="source2")
+    analysis.set_models(models=[new_source], extend=False)
+    assert len(analysis.models) == 2
+    assert  analysis.models.names == ['source2', 'stacked-bkg']
 
 
 @requires_dependency("iminuit")
@@ -419,10 +426,42 @@ def test_usage_errors():
     with pytest.raises(RuntimeError):
         analysis.get_datasets()
     with pytest.raises(RuntimeError):
-        analysis.read_models(MODEL_FILE)
+        analysis.read_datasets()
+    with pytest.raises(RuntimeError):
+        analysis.write_datasets()
+    with pytest.raises(TypeError):
+        analysis.read_models()
+    with pytest.raises(RuntimeError):
+        analysis.write_models()
     with pytest.raises(RuntimeError):
         analysis.run_fit()
     with pytest.raises(RuntimeError):
         analysis.get_flux_points()
     with pytest.raises(ValidationError):
         analysis.config.datasets.type = "None"
+        
+@requires_data()
+def test_datasets_io(tmpdir):
+    config = get_example_config("3d")
+
+    analysis = Analysis(config)    
+    analysis.get_observations()
+    analysis.get_datasets()
+    models_str = Path(MODEL_FILE).read_text()
+    analysis.models = models_str
+
+    config.general.datasets_file = tmpdir / "datasets.yaml"
+    config.general.models_file = tmpdir / "models.yaml"
+    analysis.write_datasets()    
+    analysis = Analysis(config)
+    analysis.read_datasets()
+    assert len(analysis.datasets.models) == 2
+    assert  analysis.models.names == ['source', 'stacked-bkg']
+
+    analysis.models[0].parameters["index"].value = 3
+    analysis.write_models()
+    analysis = Analysis(config)
+    analysis.read_datasets()
+    assert len(analysis.datasets.models) == 2
+    assert  analysis.models.names == ['source', 'stacked-bkg']
+    assert analysis.models[0].parameters["index"].value == 3

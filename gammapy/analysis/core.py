@@ -23,7 +23,7 @@ from gammapy.makers import (
 )
 from gammapy.maps import Map, MapAxis, RegionGeom, WcsGeom
 from gammapy.modeling import Fit
-from gammapy.modeling.models import FoVBackgroundModel, Models
+from gammapy.modeling.models import FoVBackgroundModel, Models, DatasetModels
 from gammapy.utils.pbar import progress_bar
 from gammapy.utils.scripts import make_path
 
@@ -52,10 +52,19 @@ class Analysis:
         self.datastore = None
         self.observations = None
         self.datasets = None
-        self.models = None
         self.fit = Fit()
         self.fit_result = None
         self.flux_points = None
+
+    @property
+    def models(self):
+        if not self.datasets:
+            raise RuntimeError("No datasets defined. Impossible to set models.")
+        return self.datasets.models
+    
+    @models.setter
+    def models(self, models):
+        self.set_models(models, extend=False)
 
     @property
     def config(self):
@@ -156,45 +165,120 @@ class Analysis:
         else:  # 3d
             self._map_making()
 
-    def set_models(self, models):
+
+    def set_models(self, models, extend=True):
         """Set models on datasets.
-
         Adds `FoVBackgroundModel` if not present already
-
+        
         Parameters
         ----------
         models : `~gammapy.modeling.models.Models` or str
             Models object or YAML models string
+        extend : bool
+            Extend the exiting models on the datasets or replace them.
         """
         if not self.datasets or len(self.datasets) == 0:
             raise RuntimeError("Missing datasets")
 
         log.info("Reading model.")
         if isinstance(models, str):
-            self.models = Models.from_yaml(models)
+            models = Models.from_yaml(models)
         elif isinstance(models, Models):
-            self.models = models
+            pass
+        elif isinstance(models, DatasetModels) or isinstance(models, list):
+            models = Models(models)
         else:
             raise TypeError(f"Invalid type: {models!r}")
 
-        self.models.extend(self.datasets.models)
+        if extend:
+            models.extend(self.datasets.models)
 
-        if self.config.datasets.type == "3d":
-            for dataset in self.datasets:
-                if dataset.background_model is None:
-                    bkg_model = FoVBackgroundModel(dataset_name=dataset.name)
+        self.datasets.models = models
 
-                self.models.append(bkg_model)
+        bkg_models = []
+        for dataset in self.datasets:
+            if dataset.tag == "MapDataset" and dataset.background_model is None:
+               bkg_models.append(FoVBackgroundModel(dataset_name=dataset.name))
+        if bkg_models:
+            models.extend(bkg_models)
+            self.datasets.models = models
 
-        self.datasets.models = self.models
+        log.info(models)
 
-        log.info(self.models)
 
-    def read_models(self, path):
-        """Read models from YAML file."""
+    def read_models(self, path, extend=True):
+        """Read models from YAML file.
+
+        Parameters
+        ----------
+        path : str
+            path to the model file
+        extend : bool
+            Extend the exiting models on the datasets or replace them.
+        """
+
         path = make_path(path)
         models = Models.read(path)
-        self.set_models(models)
+        self.set_models(models, extend=extend)
+        log.info(f"Models loaded from {path}.")
+
+
+    def write_models(self, overwrite=True, write_covariance=True):
+        """Write models to YAML file.
+           File name is taken from the configuration file.
+        """
+
+        filename_models = self.config.general.models_file
+        if filename_models is not None:
+            self.models.write(filename_models,
+                              overwrite=overwrite,
+                              write_covariance=write_covariance)
+            log.info(f"Models loaded from {filename_models}.")
+        else:
+            raise RuntimeError("Missing models_file in config.general")
+   
+
+    def read_datasets(self):
+        """Read datasets from YAML file.
+        File names are taken from the configuration file.
+
+        """
+
+        filename = self.config.general.datasets_file
+        filename_models = self.config.general.models_file
+        if filename is not None:
+            self.datasets = Datasets.read(filename)
+            log.info(f"Datasets loaded from {filename}.")
+            if filename_models is not  None:
+                self.read_models(filename_models, extend=False)
+        else:
+            raise RuntimeError("Missing datasets_file in config.general")
+
+
+    def write_datasets(self, overwrite=True, write_covariance=True):
+        """Write datasets to YAML file.
+        File names are taken from the configuration file.
+
+        Parameters
+        ----------
+        overwrite : bool
+            overwrite datasets FITS files
+        write_covariance : bool
+            save covariance or not
+        """
+
+        filename = self.config.general.datasets_file
+        filename_models = self.config.general.models_file
+        if filename is not None:
+            self.datasets.write(filename,
+                                 filename_models,
+                                 overwrite=overwrite,
+                                 write_covariance=write_covariance)
+            log.info(f"Datasets stored to {filename}.")
+            log.info(f"Datasets stored to {filename_models}.")
+        else:
+            raise RuntimeError("Missing datasets_file in config.general")
+
 
     def run_fit(self):
         """Fitting reduced datasets to model."""
@@ -217,7 +301,7 @@ class Analysis:
     def get_flux_points(self):
         """Calculate flux points for a specific model component."""
         if not self.datasets:
-            raise RuntimeError("No datasets set.")
+            raise RuntimeError("No datasets defined. Impossible to compute flux points.")
 
         fp_settings = self.config.flux_points
         log.info("Calculating flux points.")
@@ -243,12 +327,13 @@ class Analysis:
         excess_settings = self.config.excess_map
         log.info("Computing excess maps.")
 
-        if self.config.datasets.type == "1d":
-            raise ValueError("Cannot compute excess map for 1D dataset")
-
-        # Here we could possibly stack the datasets if needed.
+        # TODO: Here we could possibly stack the datasets if needed
+        # or allow to compute the excess map for each dataset
         if len(self.datasets) > 1:
             raise ValueError("Datasets must be stacked to compute the excess map")
+
+        if self.datasets[0].tag not in ["MapDataset", "MapDatasetOnOff"]:
+            raise ValueError("Cannot compute excess map for 1D dataset")
 
         energy_edges = self._make_energy_axis(excess_settings.energy_edges)
         if energy_edges is not None:
