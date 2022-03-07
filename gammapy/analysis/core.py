@@ -59,7 +59,7 @@ class Analysis:
     @property
     def models(self):
         if not self.datasets:
-            raise RuntimeError("No datasets set.")
+            raise RuntimeError("No datasets defined. Impossible to set models.")
         return self.datasets.models
     
     @models.setter
@@ -175,7 +175,7 @@ class Analysis:
         models : `~gammapy.modeling.models.Models` or str
             Models object or YAML models string
         extend : bool
-            Extent the exiting models on the datasets or replace them.
+            Extend the exiting models on the datasets or replace them.
         """
         if not self.datasets or len(self.datasets) == 0:
             raise RuntimeError("Missing datasets")
@@ -195,14 +195,13 @@ class Analysis:
 
         self.datasets.models = models
 
-        if self.config.datasets.type == "3d":
-            bkg_models = []
-            for dataset in self.datasets:
-                if dataset.background_model is None:
-                   bkg_models.append(FoVBackgroundModel(dataset_name=dataset.name))
-            if bkg_models:
-                models.extend(bkg_models)
-                self.datasets.models = models
+        bkg_models = []
+        for dataset in self.datasets:
+            if dataset.tag == "MapDataset" and dataset.background_model is None:
+               bkg_models.append(FoVBackgroundModel(dataset_name=dataset.name))
+        if bkg_models:
+            models.extend(bkg_models)
+            self.datasets.models = models
 
         log.info(models)
 
@@ -215,7 +214,7 @@ class Analysis:
         path : str
             path to the model file
         extend : bool
-            Extent the exiting models on the datasets or replace them.
+            Extend the exiting models on the datasets or replace them.
         """
 
         path = make_path(path)
@@ -302,7 +301,7 @@ class Analysis:
     def get_flux_points(self):
         """Calculate flux points for a specific model component."""
         if not self.datasets:
-            raise RuntimeError("No datasets set.")
+            raise RuntimeError("No datasets defined. Impossible to compute flux points.")
 
         fp_settings = self.config.flux_points
         log.info("Calculating flux points.")
@@ -328,12 +327,13 @@ class Analysis:
         excess_settings = self.config.excess_map
         log.info("Computing excess maps.")
 
-        if self.config.datasets.type == "1d":
-            raise ValueError("Cannot compute excess map for 1D dataset")
-
-        # Here we could possibly stack the datasets if needed.
+        # TODO: Here we could possibly stack the datasets if needed
+        # or allow to compute the excess map for each dataset
         if len(self.datasets) > 1:
             raise ValueError("Datasets must be stacked to compute the excess map")
+
+        if self.datasets[0].tag not in ["MapDataset", "MapDatasetOnOff"]:
+            raise ValueError("Cannot compute excess map for 1D dataset")
 
         energy_edges = self._make_energy_axis(excess_settings.energy_edges)
         if energy_edges is not None:
