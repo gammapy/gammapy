@@ -426,7 +426,13 @@ def test_usage_errors():
     with pytest.raises(RuntimeError):
         analysis.get_datasets()
     with pytest.raises(RuntimeError):
-        analysis.read_models(MODEL_FILE)
+        analysis.read_datasets()
+    with pytest.raises(RuntimeError):
+        analysis.write_datasets()
+    with pytest.raises(TypeError):
+        analysis.read_models()
+    with pytest.raises(RuntimeError):
+        analysis.write_models()
     with pytest.raises(RuntimeError):
         analysis.run_fit()
     with pytest.raises(RuntimeError):
@@ -437,26 +443,25 @@ def test_usage_errors():
 @requires_data()
 def test_datasets_io(tmpdir):
     config = get_example_config("3d")
-    analysis = Analysis(config)
-    
-    analysis.read_datasets()
-    assert analysis.datasets == None
-    
+
+    analysis = Analysis(config)    
     analysis.get_observations()
     analysis.get_datasets()
     models_str = Path(MODEL_FILE).read_text()
     analysis.models = models_str
 
-    filename = tmpdir / "datasets.yaml"
-    filename_models = tmpdir / "models.yaml"
-
-    analysis.write_datasets(filename, filename_models)
-    assert str(analysis.config.general.datasets_file) == str(filename)
-    assert str(analysis.config.general.models_file) == str(filename_models)
-
+    config.general.datasets_file = tmpdir / "datasets.yaml"
+    config.general.models_file = tmpdir / "models.yaml"
+    analysis.write_datasets()    
     analysis = Analysis(config)
-    analysis.read_datasets(filename, filename_models)
-    assert str(analysis.config.general.datasets_file) == str(filename)
-    assert str(analysis.config.general.models_file) == str(filename_models)
+    analysis.read_datasets()
     assert len(analysis.datasets.models) == 2
     assert  analysis.models.names == ['source', 'stacked-bkg']
+
+    analysis.models[0].parameters["index"].value = 3
+    analysis.write_models()
+    analysis = Analysis(config)
+    analysis.read_datasets()
+    assert len(analysis.datasets.models) == 2
+    assert  analysis.models.names == ['source', 'stacked-bkg']
+    assert analysis.models[0].parameters["index"].value == 3

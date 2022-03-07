@@ -206,9 +206,27 @@ class Analysis:
 
         log.info(models)
 
+
+    def read_models(self, path, extend=True):
+        """Read models from YAML file.
+
+        Parameters
+        ----------
+        path : str
+            path to the model file
+        extend : bool
+            Extent the exiting models on the datasets or replace them.
+        """
+
+        path = make_path(path)
+        models = Models.read(path)
+        self.set_models(models, extend=extend)
+        log.info(f"Models loaded from {path}.")
+
+
     def write_models(self, overwrite=True, write_covariance=True):
         """Write models to YAML file.
-           Filename is taken from the configuration file.
+           File name is taken from the configuration file.
         """
 
         filename_models = self.config.general.models_file
@@ -216,37 +234,31 @@ class Analysis:
             self.models.write(filename_models,
                               overwrite=overwrite,
                               write_covariance=write_covariance)
-            log.info(f"Datasets stored to {filename_models}.")
+            log.info(f"Models loaded from {filename_models}.")
         else:
             raise RuntimeError("Missing models_file in config.general")
    
 
     def read_datasets(self):
         """Read datasets from YAML file.
-        Filenames are taken from the configuration file.
+        File names are taken from the configuration file.
 
-        Parameters
-        ----------
-        overwrite : bool
-            overwrite datasets FITS files
-        write_covariance : bool
-            save covariance or not
         """
 
         filename = self.config.general.datasets_file
         filename_models = self.config.general.models_file
         if filename is not None:
             self.datasets = Datasets.read(filename)
-            self.set_models(filename_models)
             log.info(f"Datasets loaded from {filename}.")
-            log.info(f"Models loaded from {filename_models}.")
+            if filename_models is not  None:
+                self.read_models(filename_models, extend=False)
         else:
             raise RuntimeError("Missing datasets_file in config.general")
 
 
     def write_datasets(self, overwrite=True, write_covariance=True):
         """Write datasets to YAML file.
-        Filenames are taken from the configuration file.
+        File names are taken from the configuration file.
 
         Parameters
         ----------
