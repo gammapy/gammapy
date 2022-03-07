@@ -248,7 +248,7 @@ class Analysis:
 
 
     def write_datasets(self, filename=None, filename_models=None):
-        """Write datasets from YAML file.
+        """Write datasets to YAML file.
         
         Parameters
         ----------
