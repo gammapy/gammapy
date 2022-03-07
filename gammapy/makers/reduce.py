@@ -28,12 +28,12 @@ class DatasetsMaker(Maker):
     cutout_mode : {'trim', 'partial', 'strict'}
         Used only to cutout the refrence MapDataset around each processed observation.
         Mode is an option for Cutout2D, for details see `~astropy.nddata.utils.Cutout2D`.
-        Default is "trim"..
+        Default is "trim".
     cutout_width : tuple of `~astropy.coordinates.Angle`
         Angular sizes of the region in (lon, lat) in that specific order.
         If only one value is passed, a square region is extracted.
-        If None it is set to 2*offset-max if this option is given to the SafeMaskmaker 
-        otherwise it returns an error.
+        If None it returns an error, except if the list of makers includes a `SafeMaskMaker`
+        with the offset-max method defined. In that case it is set to two times `offset_max`.
     """
 
     tag = "DatasetsMaker"
