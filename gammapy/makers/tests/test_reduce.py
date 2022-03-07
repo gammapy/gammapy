@@ -37,10 +37,10 @@ def observations_hess():
 def observations_magic_rad_max():
     observations = [
         Observation.read(
-            "$GAMMAPY_DATA/magic/rad_max/data/magic_dl3_run_05029747.fits"
+            "$GAMMAPY_DATA/magic/rad_max/data/20131004_05029747_DL3_CrabNebula-W0.40+035.fits"
         ),
         Observation.read(
-            "$GAMMAPY_DATA/magic/rad_max/data/magic_dl3_run_05029748.fits"
+            "$GAMMAPY_DATA/magic/rad_max/data/20131004_05029748_DL3_CrabNebula-W0.40+215.fits"
         ),
     ]
     return observations
@@ -263,30 +263,26 @@ def test_dataset_maker_spectrum_rad_max(observations_magic_rad_max):
 
     observation = observations_magic_rad_max[0]
 
-    # test file is broken, always overlapping regions in low energy
-    # max_theta = np.sin(np.pi / (n_off + 1)) * offset
-    invalid = observation.rad_max.quantity > (0.28 * u.deg)
-    observation.rad_max.quantity[invalid] = 0.28 * u.deg
-
     maker = SpectrumDatasetMaker(
         containment_correction=False, selection=["counts", "exposure", "edisp"]
     )
     dataset = maker.run(get_spectrumdataset_rad_max("spec"), observation)
 
-    finder = WobbleRegionsFinder(n_off_regions=3)
+    finder = WobbleRegionsFinder(n_off_regions=1)
     bkg_maker = ReflectedRegionsBackgroundMaker(region_finder=finder)
     dataset_on_off = bkg_maker.run(dataset, observation)
 
     counts = dataset_on_off.counts
     counts_off = dataset_on_off.counts_off
     assert counts.unit == ""
+    assert counts_off is not None, "Extracting off counts failed"
     assert counts_off.unit == ""
-    assert_allclose(counts.data.sum(), 1088, rtol=1e-5)
-    assert_allclose(counts_off.data.sum(), 2053, rtol=1e-5)
+    assert_allclose(counts.data.sum(), 949, rtol=1e-5)
+    assert_allclose(counts_off.data.sum(), 517, rtol=1e-5)
 
     exposure = dataset_on_off.exposure
     assert exposure.unit == "m2 s"
-    assert_allclose(exposure.data.mean(), 68714990.52908568, rtol=1e-5)
+    assert_allclose(exposure.data.mean(), 67838458.245686, rtol=1e-5)
 
 
 @requires_data()
@@ -308,8 +304,6 @@ def test_dataset_maker_spectrum_global_rad_max():
     counts_off = dataset_on_off.counts_off
     assert counts.unit == ""
     assert counts_off.unit == ""
-    print(counts.data)
-    print(counts_off.data)
     assert_allclose(counts.data.sum(), 437, rtol=1e-5)
     assert_allclose(counts_off.data.sum(), 273, rtol=1e-5)
 
