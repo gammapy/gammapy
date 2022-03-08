@@ -235,7 +235,6 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         "ASSOC_GAM2",
         "ASSOC_GAM3",
     ]
-    _energy_edges = u.Quantity([50, 100, 300, 1000, 3000, 10000, 30000, 300000], "MeV")
 
     def _info_more(self):
         d = self.data
@@ -437,7 +436,7 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
                 "reference": self.data["Pivot_Energy"],
                 "amplitude": self.data["PLEC_Flux_Density"],
                 "index_1": index_1,
-                "index_2": self.data["Unc_PLEC_Exp_Index"],
+                "index_2": self.data["PLEC_Exp_Index"],
                 "expfactor": expfactor,
             }
             errs = {
@@ -462,8 +461,8 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         table = Table()
         table.meta.update(self.flux_points_meta)
 
-        table["e_min"] = self._energy_edges[:-1]
-        table["e_max"] = self._energy_edges[1:]
+        table["e_min"] = self.data["fp_energy_edges"][:-1]
+        table["e_max"] = self.data["fp_energy_edges"][1:]
 
         flux = self._get_flux_values("Flux_Band")
         flux_err = self._get_flux_values("Unc_Flux_Band")
@@ -1284,11 +1283,17 @@ class SourceCatalog4FGL(SourceCatalog):
         )
 
         self.extended_sources_table = Table.read(filename, hdu="ExtendedSources")
-        self.hist_table = Table.read(filename, hdu="Hist_Start")
+        try:
+            self.hist_table = Table.read(filename, hdu="Hist_Start")
+        except KeyError:
+            pass
         try:
             self.hist2_table = Table.read(filename, hdu="Hist2_Start")
         except KeyError:
             pass
+        
+        table = Table.read(filename, hdu="EnergyBounds")
+        self.flux_points_energy_edges = np.unique(np.c_[table["LowerEnergy"].quantity, table["UpperEnergy"].quantity])
 
 
 class SourceCatalog2FHL(SourceCatalog):
