@@ -1228,22 +1228,18 @@ class MapDataset(Dataset):
             mask = slice(None)
 
         counts = 0
-
-        sum_stat = self._counts_statistic[mask].sum()
-
-        if self.counts:
+        background, excess, sqrt_ts = np.nan, np.nan, np.nan
+        if self.counts and self.background:
+            sum_stat = self._counts_statistic[mask].sum()
             counts = sum_stat.n_on
+            background = sum_stat.n_bkg
+            excess = sum_stat.n_sig
+            sqrt_ts = sum_stat.sqrt_ts
 
         info["counts"] = int(counts)
-
-        background = np.nan
-        if self.background:
-            background = sum_stat.n_bkg
-
+        info["excess"] = float(excess)
+        info["sqrt_ts"] = sqrt_ts
         info["background"] = float(background)
-
-        info["excess"] = sum_stat.n_sig
-        info["sqrt_ts"] = sum_stat.sqrt_ts
 
         npred = np.nan
         if self.models or not np.isnan(background):
@@ -1990,6 +1986,11 @@ class MapDatasetOnOff(MapDataset):
             mu_sig=mu_sig,
         )
         return np.nan_to_num(on_stat_)
+
+    @property
+    def _counts_statistic(self):
+        """Counts statistics of the dataset."""
+        return WStatCountsStatistic(self.counts, self.counts_off, self.alpha)
 
     @classmethod
     def from_geoms(
