@@ -73,7 +73,7 @@ def test_fov_bkg_maker_incorrect_method():
 
 
 @requires_data()
-def test_fov_bkg_maker_scale(obs_dataset, exclusion_mask, caplog):
+def test_fov_bkg_maker_scale(obs_dataset, exclusion_mask):
     fov_bkg_maker = FoVBackgroundMaker(method="scale", exclusion_mask=exclusion_mask)
     test_dataset = obs_dataset.copy(name="test-fov")
 
@@ -284,3 +284,18 @@ def test_fov_bkg_maker_scale_fail(obs_dataset, exclusion_mask, caplog):
     assert "WARNING" in [_.levelname for _ in caplog.records]
     message1 = "FoVBackgroundMaker failed. Only -1940 background counts outside exclusion mask for test-fov. Setting mask to False."
     assert message1 in [_.message for _ in caplog.records]
+
+@requires_data()
+def test_fov_bkg_maker_mask_fit_handling(obs_dataset, exclusion_mask):
+    fov_bkg_maker = FoVBackgroundMaker(method="scale", exclusion_mask=exclusion_mask)
+    test_dataset = obs_dataset.copy(name="test-fov")
+    region = CircleSkyRegion(obs_dataset._geom.center_skydir, Angle(0.4, "deg"))
+    test_dataset.mask_fit = obs_dataset._geom.region_mask(regions=[region])
+
+    dataset = fov_bkg_maker.run(test_dataset)
+
+    model = dataset.models[f"{dataset.name}-bkg"].spectral_model
+
+    assert_allclose(model.norm.value, 0.9975, rtol=1e-3)
+    assert_allclose(model.norm.error, 0.1115, rtol=1e-3)
+    assert_allclose(model.tilt.value, 0.0, rtol=1e-2)

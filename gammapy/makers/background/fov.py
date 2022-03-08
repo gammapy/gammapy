@@ -193,8 +193,10 @@ class FoVBackgroundMaker(Maker):
 
         """
         mask_fit = dataset.mask_fit
-
-        dataset.mask_fit = self.make_exclusion_mask(dataset)
+        if mask_fit:
+            dataset.mask_fit *= self.make_exclusion_mask(dataset)
+        else:
+            dataset.mask_fit = self.make_exclusion_mask(dataset)
 
         if dataset.background_model is None:
             dataset = self.make_default_fov_background_model(dataset)
