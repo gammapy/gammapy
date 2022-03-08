@@ -1227,14 +1227,19 @@ class MapDataset(Dataset):
         else:
             mask = slice(None)
 
+        summed_stat = self._counts_statistic[mask].sum()
+
         counts = 0
+        if self.counts:
+            counts = summed_stat.n_on
+
         background, excess, sqrt_ts = np.nan, np.nan, np.nan
-        if self.counts and self.background:
-            sum_stat = self._counts_statistic[mask].sum()
-            counts = sum_stat.n_on
-            background = sum_stat.n_bkg
-            excess = sum_stat.n_sig
-            sqrt_ts = sum_stat.sqrt_ts
+        if self.background:
+            background = summed_stat.n_bkg
+
+        if self.background and self.counts:
+            excess = summed_stat.n_sig
+            sqrt_ts = summed_stat.sqrt_ts
 
         info["counts"] = int(counts)
         info["excess"] = float(excess)
@@ -2367,36 +2372,30 @@ class MapDatasetOnOff(MapDataset):
         else:
             mask = slice(None)
 
+        summed_stat = self._counts_statistic[mask].sum()
+
         counts_off = 0
         if self.counts_off is not None:
-            counts_off = self.counts_off.data[mask].sum()
+            counts_off = summed_stat.n_off
 
         info["counts_off"] = int(counts_off)
 
         acceptance = 1
         if self.acceptance:
-            # TODO: handle energy dependent a_on / a_off
             acceptance = self.acceptance.data[mask].sum()
 
         info["acceptance"] = float(acceptance)
 
         acceptance_off = np.nan
+        alpha = np.nan
+
         if self.acceptance_off:
-            acceptance_off = acceptance * counts_off / info["background"]
+            alpha = summed_stat.alpha
+            acceptance_off = acceptance/alpha
 
         info["acceptance_off"] = float(acceptance_off)
-
-        alpha = np.nan
-        if self.acceptance_off and self.acceptance:
-            alpha = np.mean(self.alpha.data[mask])
-
         info["alpha"] = float(alpha)
 
-        info["sqrt_ts"] = WStatCountsStatistic(
-            info["counts"],
-            info["counts_off"],
-            acceptance / acceptance_off,
-        ).sqrt_ts
         info["stat_sum"] = self.stat_sum()
         return info
 

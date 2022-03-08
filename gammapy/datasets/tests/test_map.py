@@ -1494,7 +1494,7 @@ def test_info_dict_on_off(images):
     assert_allclose(info_dict["counts_off"], 20407510.0, rtol=1e-3)
     assert_allclose(info_dict["acceptance"], 4272.7075, rtol=1e-3)
     assert_allclose(info_dict["acceptance_off"], 20175596.0, rtol=1e-3)
-    assert_allclose(info_dict["alpha"], 0.000169, rtol=1e-3)
+    assert_allclose(info_dict["alpha"], 0.00021176, rtol=1e-3)
     assert_allclose(info_dict["ontime"].value, 3600)
 
 

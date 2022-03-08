@@ -251,7 +251,10 @@ class CashCountsStatistic(CountsStatistic):
         return self
 
     def __getitem__(self, key):
-        return CashCountsStatistic(self.n_on[key], self.n_bkg[key])
+        if self.n_on.shape != ():
+            return CashCountsStatistic(self.n_on[key], self.n_bkg[key])
+        elif key in [0, slice(None), slice(0,1)]:
+            return self
 
 class WStatCountsStatistic(CountsStatistic):
     """Class to compute statistics (significance, asymmetric errors , ul) for Poisson distributed variable
@@ -354,4 +357,7 @@ class WStatCountsStatistic(CountsStatistic):
         return self
 
     def __getitem__(self, key):
-        return WStatCountsStatistic(self.n_on[key], self.n_off[key], self.alpha[key])
+        if self.n_on.shape != ():
+            return WStatCountsStatistic(self.n_on[key], self.n_off[key], self.alpha[key])
+        elif key in [0, slice(None), slice(0,1)]:
+            return self
