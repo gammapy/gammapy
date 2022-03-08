@@ -268,9 +268,14 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         elif spec_type == "PLSuperExpCutoff":
             tag = "PLEC"
             fmt = "{:<45s} : {:.4f} +- {:.4f}\n"
-            ss += fmt.format(
-                "Exponential factor", d["PLEC_Expfactor"], d["Unc_PLEC_Expfactor"]
-            )
+            if "PLEC_ExpfactorS" in d:
+                ss += fmt.format(
+                    "Exponential factor", d["PLEC_ExpfactorS"], d["Unc_PLEC_ExpfactorS"]
+                )
+            else:
+                ss += fmt.format(
+                    "Exponential factor", d["PLEC_Expfactor"], d["Unc_PLEC_Expfactor"]
+                )                
             ss += "{:<45s} : {:.4f} +- {:.4f}\n".format(
                 "Super-exponential cutoff index",
                 d["PLEC_Exp_Index"],
@@ -415,20 +420,32 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
                 "beta": self.data["Unc_LP_beta"],
             }
         elif spec_type == "PLSuperExpCutoff":
-            tag = "SuperExpCutoffPowerLaw4FGLSpectralModel"
+            if  "PLEC_ExpfactorS" in self.data : 
+                tag = "SuperExpCutoffPowerLaw4FGLSpectralModel"
+                expfactor =  self.data["PLEC_ExpfactorS"]
+                expfactor_err = self.data["Unc_PLEC_ExpfactorS"]
+                index_1 = self.data["PLEC_IndexS"]
+                index_1_err = self.data["Unc_PLEC_IndexS"]
+            else:
+                tag = "SuperExpCutoffPowerLaw4FGLDR1SpectralModel"
+                expfactor =  self.data["PLEC_Expfactor"]
+                expfactor_err = self.data["Unc_PLEC_Expfactor"]
+                index_1 = self.data["PLEC_Index"]
+                index_1_err = self.data["Unc_PLEC_Index"]
+
             pars = {
                 "reference": self.data["Pivot_Energy"],
                 "amplitude": self.data["PLEC_Flux_Density"],
-                "index_1": self.data["PLEC_Index"],
-                "index_2": self.data["PLEC_Exp_Index"],
-                "expfactor": self.data["PLEC_Expfactor"],
+                "index_1": index_1,
+                "index_2": self.data["Unc_PLEC_Exp_Index"],
+                "expfactor": expfactor,
             }
             errs = {
                 "amplitude": self.data["Unc_PLEC_Flux_Density"],
-                "index_1": self.data["Unc_PLEC_Index"],
+                "index_1": index_1_err,
                 "index_2": np.nan_to_num(float(self.data["Unc_PLEC_Exp_Index"])),
-                "expfactor": self.data["Unc_PLEC_Expfactor"],
-            }
+                "expfactor": expfactor_err,
+            }                
         else:
             raise ValueError(f"Invalid spec_type: {spec_type!r}")
 
@@ -1243,7 +1260,7 @@ class SourceCatalog4FGL(SourceCatalog):
     description = "LAT 8-year point source catalog"
     source_object_class = SourceCatalogObject4FGL
 
-    def __init__(self, filename="$GAMMAPY_DATA/catalogs/fermi/gll_psc_v27.fit.gz"):
+    def __init__(self, filename="$GAMMAPY_DATA/catalogs/fermi/gll_psc_v28.fit.gz"):
         filename = make_path(filename)
         table = Table.read(filename, hdu="LAT_Point_Source_Catalog")
         table_standardise_units_inplace(table)
