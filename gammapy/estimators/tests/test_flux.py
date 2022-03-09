@@ -201,3 +201,10 @@ def test_flux_estimator_naima_model():
 
     assert_allclose(scale_model.norm.min, np.nan)
     assert_allclose(scale_model.norm.max, np.nan)
+
+def test_flux_estimator_set_norm_parameter_default():
+    estimator = FluxEstimator()
+    norm_default = estimator._set_norm_parameter()
+
+    assert_allclose(norm_default.min, estimator.norm_min)
+    assert_allclose(norm_default.max, estimator.norm_max)
