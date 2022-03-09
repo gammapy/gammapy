@@ -1,20 +1,27 @@
 r"""
 .. _super-exp-cutoff-powerlaw-4fgl-spectral-model:
 
-Super exponential cutoff power law model used for 4FGL
-======================================================
+Super Exponential Cutoff Power Law Model used for 4FGL-DR3
+==========================================================
 
 This model parametrises super exponential cutoff power-law model spectrum used for 4FGL.
 
 It is defined by the following equation:
 
 .. math::
-    \phi(E) = \phi_0 \cdot \left(\frac{E}{E_0}\right)^{-\Gamma_1}
-              \exp \left(
-                  a \left( E_0 ^{\Gamma_2} - E^{\Gamma_2} \right)
-              \right)
 
-See Equation (3) in https://arxiv.org/pdf/1902.10045.pdf
+
+    \phi(e) = 
+            \begin{cases}
+                \phi_0 \cdot \left(\frac{E}{E_0}\right)^{\frac{\a}{\Gamma_2} -\Gamma_1} \cdot \exp \left(
+                  \frac{\a}{\Gamma_2^2} \left( 1 - \left(\frac{E}{E_0}\right)^{\frac{\a}{\Gamma_2} \right)
+              \right)&
+                              \\
+                \phi_0 \cdot \left(\frac{E}{E_0}\right)^{ -\Gamma_1 - \frac{\a}{2} \ln \frac{E}{E_0} - \frac{\a \Gamma_2}{6} \ln^2 \frac{E}{E_0} - \frac{\a \Gamma_2^2}{24} \ln^3 \frac{E}{E_0}}\\
+                0 & \text{for } \left| \Gamma_2 \ln \frac{E}{E_0}  \right|
+            \end{cases}
+            
+See Equation (2) and (3) in https://arxiv.org/pdf/2201.11184.pdf
 """
 
 # %%
@@ -30,7 +37,7 @@ from gammapy.modeling.models import (
     SuperExpCutoffPowerLaw4FGLSpectralModel,
 )
 
-energy_bounds = [0.1, 100] * u.TeV
+energy_range = [0.1, 100] * u.TeV
 model = SuperExpCutoffPowerLaw4FGLSpectralModel(
     index_1=1,
     index_2=2,
@@ -38,7 +45,7 @@ model = SuperExpCutoffPowerLaw4FGLSpectralModel(
     reference="1 TeV",
     expfactor=1e-2,
 )
-model.plot(energy_bounds)
+model.plot(energy_range)
 plt.grid(which="both")
 plt.ylim(1e-24, 1e-10)
 

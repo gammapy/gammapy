@@ -1358,7 +1358,7 @@ class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
     reference : `~astropy.units.Quantity`
         :math:`E_0`
     expfactor : `~astropy.units.Quantity`
-        :math:`a`, given as dimensionless value but
+        :math:`a`, given as dimensionless value
     """
 
     tag = ["SuperExpCutoffPowerLaw4FGLSpectralModel", "secpl-4fgl"]
