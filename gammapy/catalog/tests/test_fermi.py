@@ -17,7 +17,6 @@ from gammapy.modeling.models import (
     PowerLaw2SpectralModel,
     PowerLawSpectralModel,
     SuperExpCutoffPowerLaw3FGLSpectralModel,
-    SuperExpCutoffPowerLaw4FGLSpectralModel,
     SuperExpCutoffPowerLaw4FGLDR1SpectralModel,
 )
 from gammapy.utils.gauss import Gauss2DPDF
