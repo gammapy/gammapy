@@ -27,11 +27,11 @@ import matplotlib.pyplot as plt
 from gammapy.modeling.models import (
     Models,
     SkyModel,
-    SuperExpCutoffPowerLaw4FGLSDR1pectralModel,
+    SuperExpCutoffPowerLaw4FGLDR1SpectralModel,
 )
 
 energy_range = [0.1, 100] * u.TeV
-model = SuperExpCutoffPowerLaw4FGLSDR1pectralModel(
+model = SuperExpCutoffPowerLaw4FGLDR1SpectralModel(
     index_1=1,
     index_2=2,
     amplitude="1e-12 TeV-1 cm-2 s-1",
