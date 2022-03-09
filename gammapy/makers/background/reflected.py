@@ -331,7 +331,7 @@ class ReflectedRegionsFinder(RegionsFinder):
             WCS for the determined regions
         """
         if isinstance(region, PointSkyRegion):
-            raise NotImplementedError(
+            raise TypeError(
                 '`ReflectedRegionsFinder` does not work for `PointSkyRegion`'
                 ', use `WobbleRegionsFinder` instead'
             )
