@@ -27,6 +27,7 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SmoothBrokenPowerLawSpectralModel,
     SuperExpCutoffPowerLaw4FGLSpectralModel,
+    SuperExpCutoffPowerLaw4FGLDR1SpectralModel,
     TemplateSpectralModel,
     TemplateNDSpectralModel,
 )
@@ -50,6 +51,13 @@ def table_model():
 
 
 TEST_MODELS = [
+    dict(
+        name="constant",
+        model=ConstantSpectralModel(const=4 / u.cm ** 2 / u.s / u.TeV),
+        val_at_2TeV=u.Quantity(4, "cm-2 s-1 TeV-1"),
+        integral_1_10TeV=u.Quantity(35.9999999999999, "cm-2 s-1"),
+        eflux_1_10TeV=u.Quantity(198.00000000000006, "TeV cm-2 s-1"),
+    ),
     dict(
         name="powerlaw",
         model=PowerLawSpectralModel(
@@ -133,8 +141,8 @@ TEST_MODELS = [
         eflux_1_10TeV=u.Quantity(5.340285560055799, "TeV cm-2 s-1"),
     ),
     dict(
-        name="plsec_4fgl",
-        model=SuperExpCutoffPowerLaw4FGLSpectralModel(
+        name="plsec_4fgl_dr1",
+        model=SuperExpCutoffPowerLaw4FGLDR1SpectralModel(
             index_1=1.5,
             index_2=2,
             amplitude=1 / u.cm ** 2 / u.s / u.TeV,
@@ -144,6 +152,19 @@ TEST_MODELS = [
         val_at_2TeV=u.Quantity(0.3431043087721737, "cm-2 s-1 TeV-1"),
         integral_1_10TeV=u.Quantity(1.2125247, "cm-2 s-1"),
         eflux_1_10TeV=u.Quantity(3.38072082, "TeV cm-2 s-1"),
+    ),
+    dict(
+        name="plsec_4fgl",
+        model=SuperExpCutoffPowerLaw4FGLSpectralModel(
+            index_1=1.5,
+            index_2=2,
+            amplitude=1 / u.cm ** 2 / u.s / u.TeV,
+            reference=1 * u.TeV,
+            expfactor=1e-2,
+        ),
+        val_at_2TeV=u.Quantity(0.35212994, "cm-2 s-1 TeV-1"),
+        integral_1_10TeV=u.Quantity(1.328499, "cm-2 s-1"),
+        eflux_1_10TeV=u.Quantity(4.067067, "TeV cm-2 s-1"),
     ),
     dict(
         name="logpar",
@@ -182,13 +203,6 @@ TEST_MODELS = [
         integral_1_10TeV=u.Quantity(2.255689748270628, "cm-2 s-1"),
         eflux_1_10TeV=u.Quantity(3.9586515834989267, "TeV cm-2 s-1"),
         e_peak=0.74082 * u.TeV,
-    ),
-    dict(
-        name="constant",
-        model=ConstantSpectralModel(const=4 / u.cm ** 2 / u.s / u.TeV),
-        val_at_2TeV=u.Quantity(4, "cm-2 s-1 TeV-1"),
-        integral_1_10TeV=u.Quantity(35.9999999999999, "cm-2 s-1"),
-        eflux_1_10TeV=u.Quantity(198.00000000000006, "TeV cm-2 s-1"),
     ),
     dict(
         name="powerlaw_index1",
@@ -295,8 +309,8 @@ TEST_MODELS = [
 
 TEST_MODELS.append(
     dict(
-        name="compound3",
-        model=TEST_MODELS[0]["model"] + TEST_MODELS[0]["model"],
+        name="compound6",
+        model=TEST_MODELS[0]["model"] + u.Quantity(4, "cm-2 s-1 TeV-1"),
         val_at_2TeV=TEST_MODELS[0]["val_at_2TeV"] * 2,
         integral_1_10TeV=TEST_MODELS[0]["integral_1_10TeV"] * 2,
         eflux_1_10TeV=TEST_MODELS[0]["eflux_1_10TeV"] * 2,
@@ -305,13 +319,14 @@ TEST_MODELS.append(
 
 TEST_MODELS.append(
     dict(
-        name="compound6",
-        model=TEST_MODELS[11]["model"] + u.Quantity(4, "cm-2 s-1 TeV-1"),
-        val_at_2TeV=TEST_MODELS[11]["val_at_2TeV"] * 2,
-        integral_1_10TeV=TEST_MODELS[11]["integral_1_10TeV"] * 2,
-        eflux_1_10TeV=TEST_MODELS[11]["eflux_1_10TeV"] * 2,
+        name="compound3",
+        model=TEST_MODELS[1]["model"] + TEST_MODELS[1]["model"],
+        val_at_2TeV=TEST_MODELS[1]["val_at_2TeV"] * 2,
+        integral_1_10TeV=TEST_MODELS[1]["integral_1_10TeV"] * 2,
+        eflux_1_10TeV=TEST_MODELS[1]["eflux_1_10TeV"] * 2,
     )
 )
+
 
 TEST_MODELS.append(
     dict(
@@ -443,7 +458,7 @@ def test_model_plot_sed_type():
 
 
 def test_to_from_dict():
-    spectrum = TEST_MODELS[0]
+    spectrum = TEST_MODELS[1]
     model = spectrum["model"]
 
     model_dict = model.to_dict()
@@ -477,7 +492,7 @@ def test_to_from_dict():
 
 
 def test_to_from_dict_partial_input(caplog):
-    spectrum = TEST_MODELS[0]
+    spectrum = TEST_MODELS[1]
     model = spectrum["model"]
 
     model_dict = model.to_dict()
@@ -503,7 +518,7 @@ def test_to_from_dict_partial_input(caplog):
 
 
 def test_to_from_dict_compound():
-    spectrum = TEST_MODELS[-2]
+    spectrum = TEST_MODELS[-3]
     model = spectrum["model"]
     assert spectrum["name"] == "compound6"
     model_dict = model.to_dict()
