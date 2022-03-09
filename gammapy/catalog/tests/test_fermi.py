@@ -18,6 +18,7 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SuperExpCutoffPowerLaw3FGLSpectralModel,
     SuperExpCutoffPowerLaw4FGLSpectralModel,
+    SuperExpCutoffPowerLaw4FGLDR1SpectralModel,
 )
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.testing import (
@@ -47,7 +48,7 @@ SOURCES_4FGL = [
         idx=7,
         name="4FGL J0002.8+6217",
         str_ref_file="data/4fgl_J0002.8+6217.txt",
-        spec_type=SuperExpCutoffPowerLaw4FGLSpectralModel,
+        spec_type=SuperExpCutoffPowerLaw4FGLDR1SpectralModel,
         dnde=u.Quantity(2.084e-09, "cm-2 s-1 GeV-1"),
         dnde_err=u.Quantity(1.0885e-10, "cm-2 s-1 GeV-1"),
     ),
@@ -132,6 +133,16 @@ SOURCES_3FHL = [
     ),
 ]
 
+@requires_data()
+def test_4FGL_DR3():
+    cat = SourceCatalog4FGL("$GAMMAPY_DATA/catalogs/fermi/gll_psc_v28.fit.gz")
+    source = cat["4FGL J0534.5+2200"]
+    model =source.spectral_model()
+    fp = source.flux_points
+    not_ul = ~fp.is_ul.data.squeeze()
+    fp_dnde = fp.dnde.quantity.squeeze()[not_ul]
+    model_dnde = model(fp.energy_ref[not_ul])
+    assert_quantity_allclose(model_dnde, fp_dnde, rtol=0.07)
 
 @requires_data()
 class TestFermi4FGLObject:
