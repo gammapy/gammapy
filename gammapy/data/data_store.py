@@ -515,11 +515,18 @@ class DataStoreMaker:
         info["N_TELS"] = header.get("N_TELS", na_int)
         info["OBJECT"] = header.get("OBJECT", na_str)
 
+
+        # Not part of the spec, but good to know from which file the info comes
+
         # This is the info needed to link from EVENTS to IRFs
         info["CALDB"] = header.get("CALDB", na_str)
         info["IRF"] = header.get("IRF", na_str)
+        if info["CALDB"] != na_str and info["CALDB"] != na_str:
+            caldb_irf = CalDBIRF.from_meta(info)
+            info["IRF_FILE"] = str(caldb_irf.file_path)
+        else:
+            info["IRF_FILE"] = header.get("IRF_FILE", na_str)
 
-        # Not part of the spec, but good to know from which file the info comes
         info["EVENTS_FILENAME"] = str(path)
         info["EVENT_COUNT"] = header["NAXIS2"]
         return info
@@ -582,11 +589,11 @@ class DataStoreMaker:
         yield dict(HDU_TYPE="events", HDU_CLASS="events", HDU_NAME="EVENTS", **info)
         yield dict(HDU_TYPE="gti", HDU_CLASS="gti", HDU_NAME="GTI", **info)
 
-        caldb_irf = CalDBIRF.from_meta(events_info)
+        irf_path = Path(events_info["IRF_FILE"])
         info = dict(
             OBS_ID=events_info["OBS_ID"],
-            FILE_DIR=caldb_irf.file_dir,
-            FILE_NAME=caldb_irf.file_name,
+            FILE_DIR=irf_path.parent.as_posix(),
+            FILE_NAME=irf_path.name,
         )
         yield dict(
             HDU_TYPE="aeff", HDU_CLASS="aeff_2d", HDU_NAME="EFFECTIVE AREA", **info
@@ -623,5 +630,9 @@ class CalDBIRF:
         return f"$CALDB/data/{telescop}/{self.caldb}/bcf/{self.irf}"
 
     @property
+    def file_path(self):
+        return Path(self.file_dir).glob("*")[0]
+
+    @property
     def file_name(self):
-        return "irf_file.fits"
+        return self.file_path.name
