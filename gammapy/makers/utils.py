@@ -556,6 +556,7 @@ def make_counts_off_rad_max(
     )
 
     if len(off_regions) == 0:
+        log.warn("RegionsFinder returned no regions")
         # counts_off=None, acceptance_off=0
         return None, RegionNDMap.from_geom(on_geom, data=0)
 

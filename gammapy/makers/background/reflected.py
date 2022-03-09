@@ -169,7 +169,17 @@ class WobbleRegionsFinder(RegionsFinder):
             angle = i * increment
             region_test = region_pix.rotate(center_pixel, angle)
 
-            if exclusion_mask is None or not np.any(region_test.contains(excluded_pixels)):
+            # for PointSkyRegion, we test if the point is inside the exclusion mask
+            # otherwise we test if there is overlap
+
+            excluded = False
+            if exclusion_mask is not None:
+                if isinstance(region, PointSkyRegion):
+                    excluded = (excluded_pixels.separation(region_test.center) < 1).any()
+                else:
+                    excluded = region_test.contains(excluded_pixels).any()
+
+            if not excluded:
                 regions.append(region_test)
 
 

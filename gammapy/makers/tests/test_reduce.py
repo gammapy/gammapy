@@ -325,6 +325,55 @@ def test_dataset_maker_spectrum_rad_max_overlapping(observations_magic_rad_max, 
     with caplog.at_level(logging.WARNING):
         dataset_on_off = bkg_maker.run(dataset, observation)
 
+    assert caplog.record_tuples == [(
+        'gammapy.makers.background.reflected',
+        logging.WARNING,
+        'Found overlapping off regions, returning no regions',
+    )]
+
     # overlapping off regions means not counts will be filled
     assert dataset_on_off.counts_off is None
     assert (dataset_on_off.acceptance_off.data == 0).all()
+
+
+@requires_data()
+def test_dataset_maker_spectrum_rad_max_all_excluded(observations_magic_rad_max, caplog):
+    """test the energy-dependent spectrum extraction"""
+
+    observation = observations_magic_rad_max[0]
+
+    maker = SpectrumDatasetMaker(
+        containment_correction=False, selection=["counts", "exposure", "edisp"]
+    )
+    dataset = maker.run(get_spectrumdataset_rad_max("spec"), observation)
+
+    # excludes all possible off regions
+    exclusion_region = CircleSkyRegion(
+        center=observation.pointing_radec,
+        radius=1 * u.deg,
+    )
+    geom = WcsGeom.create(
+        npix=(150, 150), binsz=0.05, skydir=observation.pointing_radec, proj="TAN", frame="icrs"
+    )
+
+    exclusion_mask = ~geom.region_mask([exclusion_region])
+
+    finder = WobbleRegionsFinder(n_off_regions=1)
+    bkg_maker = ReflectedRegionsBackgroundMaker(
+        region_finder=finder,
+        exclusion_mask=exclusion_mask,
+    )
+
+    with caplog.at_level(logging.WARNING):
+        dataset_on_off = bkg_maker.run(dataset, observation)
+
+    # overlapping off regions means not counts will be filled
+    assert dataset_on_off.counts_off is None
+    assert (dataset_on_off.acceptance_off.data == 0).all()
+
+    assert len(caplog.record_tuples) == 2
+    assert caplog.record_tuples[0] == (
+        'gammapy.makers.utils',
+        logging.WARNING,
+        "RegionsFinder returned no regions"
+    )
