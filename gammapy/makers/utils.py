@@ -499,7 +499,7 @@ def apply_rad_max(events, rad_max, position):
     return events.select_row_subset(selected)
 
 
-def are_regions_overlapping_rad_max(regions, rad_max, offset):
+def are_regions_overlapping_rad_max(regions, rad_max, offset, e_min, e_max):
     """
     Calculate pair-wise separations between all regions and compare with rad_max
     to find overlaps.
@@ -515,6 +515,14 @@ def are_regions_overlapping_rad_max(regions, rad_max, offset):
         rad_max_at_offset = rad_max.quantity[0, 0]
     else:
         rad_max_at_offset = rad_max.evaluate(offset=offset)
+        # do not check bins outside of energy range
+        edges_min = rad_max.axes['energy'].edges_min
+        edges_max = rad_max.axes['energy'].edges_max
+        # to be sure all possible values are included, we check
+        # for the *upper* energy bin to be larger than e_min and the *lower* edge
+        # to be larger than e_max
+        mask = (edges_max >= e_min) & (edges_min <= e_max)
+        rad_max_at_offset = rad_max_at_offset[mask]
 
     return np.any(separations[np.newaxis, :] < (2 * rad_max_at_offset))
 
@@ -561,14 +569,15 @@ def make_counts_off_rad_max(
         return None, RegionNDMap.from_geom(on_geom, data=0)
 
 
+    # check for overlap
+    energy_axis = on_geom.axes["energy"]
     offset = on_geom.region.center.separation(events.pointing_radec)
-    if are_regions_overlapping_rad_max([on_geom.region] + off_regions, rad_max, offset):
+    e_min, e_max = energy_axis.edges[[0, -1]]
+    regions = [on_geom.region] + off_regions
+    if are_regions_overlapping_rad_max(regions, rad_max, offset, e_min, e_max):
         log.warning("Found overlapping on/off regions, choose less off regions")
         # counts_off=None, acceptance_off=0
         return None, RegionNDMap.from_geom(on_geom, data=0)
-
-    # check for overlap
-    energy_axis = on_geom.axes["energy"]
 
     off_region_geom = RegionGeom.from_regions(
         regions=off_regions,

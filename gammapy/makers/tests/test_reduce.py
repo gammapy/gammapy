@@ -75,16 +75,16 @@ def get_spectrumdataset(name):
     )
 
 
-def get_spectrumdataset_rad_max(name):
+def get_spectrumdataset_rad_max(name, e_min=0.005 * u.TeV):
     """get the spectrum dataset maker for the energy-dependent spectrum extraction"""
     target_position = SkyCoord(ra=83.63, dec=22.01, unit="deg", frame="icrs")
     on_center = PointSkyRegion(target_position)
 
     energy_axis = MapAxis.from_energy_bounds(
-        0.005, 50, nbin=28, per_decade=False, unit="TeV", name="energy"
+        e_min, 50, nbin=28, per_decade=False, unit="TeV", name="energy"
     )
     energy_axis_true = MapAxis.from_energy_bounds(
-        0.005, 50, nbin=20, per_decade=False, unit="TeV", name="energy_true"
+        e_min, 50, nbin=20, per_decade=False, unit="TeV", name="energy_true"
     )
 
     geom = RegionGeom.create(region=on_center, axes=[energy_axis])
@@ -317,23 +317,34 @@ def test_dataset_maker_spectrum_rad_max_overlapping(observations_magic_rad_max, 
     maker = SpectrumDatasetMaker(
         containment_correction=False, selection=["counts", "exposure", "edisp"]
     )
-    dataset = maker.run(get_spectrumdataset_rad_max("spec"), observation)
 
     finder = WobbleRegionsFinder(n_off_regions=5)
     bkg_maker = ReflectedRegionsBackgroundMaker(region_finder=finder)
 
     with caplog.at_level(logging.WARNING):
+        dataset = maker.run(get_spectrumdataset_rad_max("spec"), observation)
         dataset_on_off = bkg_maker.run(dataset, observation)
 
-    assert caplog.record_tuples == [(
-        'gammapy.makers.background.reflected',
+    assert len(caplog.record_tuples) == 2
+    assert caplog.record_tuples[0] == (
+        'gammapy.makers.utils',
         logging.WARNING,
-        'Found overlapping off regions, returning no regions',
-    )]
+        'Found overlapping on/off regions, choose less off regions'
+    )
 
     # overlapping off regions means not counts will be filled
     assert dataset_on_off.counts_off is None
     assert (dataset_on_off.acceptance_off.data == 0).all()
+
+    # test that it works if we only look at higher energies with lower
+    # rad max, allowing more off regions
+    caplog.clear()
+    with caplog.at_level(logging.WARNING):
+        dataset = maker.run(get_spectrumdataset_rad_max("spec", e_min=250 * u.GeV), observation)
+        dataset_on_off = bkg_maker.run(dataset, observation)
+        assert dataset_on_off.counts_off is not None
+
+    assert len(caplog.records) == 0
 
 
 @requires_data()
