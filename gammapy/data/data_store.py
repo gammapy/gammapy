@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import os
 import logging
 import subprocess
 from pathlib import Path
@@ -631,8 +632,9 @@ class CalDBIRF:
 
     @property
     def file_path(self):
-        return Path(self.file_dir).glob("*")[0]
+        return Path(f"{self.file_dir}/{self.file_name}")
 
     @property
     def file_name(self):
-        return self.file_path.name
+        path = Path(os.path.expandvars(self.file_dir))
+        return list(path.glob("*"))[0].name
