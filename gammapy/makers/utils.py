@@ -1,9 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
+from itertools import combinations
 from astropy.coordinates import Angle, SkyOffsetFrame
 from astropy.table import Table
-from regions import CircleSkyRegion
+import astropy.units as u
 from gammapy.data import FixedPointingInfo
 from gammapy.irf import EDispMap, PSFMap
 from gammapy.maps import Map, RegionGeom, RegionNDMap
@@ -13,6 +14,7 @@ from gammapy.utils.coordinates import sky_to_fov
 
 
 __all__ = [
+    "make_counts_rad_max",
     "make_edisp_kernel_map",
     "make_edisp_map",
     "make_map_background_irf",
@@ -472,26 +474,61 @@ def make_counts_rad_max(geom, rad_max, events):
     counts : `~gammapy.maps.RegionNDMap`
         Counts vs estimated energy extracted from the ON region.
     """
-    rad_max = get_rad_max_vs_energy(rad_max, events.pointing_radec, geom)
+    selected_events = apply_rad_max(events, rad_max, geom.region.center)
 
-    counts_list = []
-
-    # create and fill a map per each energy bin, fetch the counts
-    for i, rad in enumerate(rad_max):
-        on_region = CircleSkyRegion(center=geom.center_skydir, radius=rad)
-        energy_range = geom.axes["energy"].slice(i)
-        on_region_geom = RegionGeom(on_region, axes=[energy_range])
-        counts = Map.from_geom(on_region_geom)
-        counts.fill_events(events)
-        counts_list.append(counts.data[0])
-
-    counts = RegionNDMap.from_geom(geom, data=np.asarray(counts_list))
+    counts_geom = RegionGeom(geom.region, axes=[geom.axes['energy']])
+    counts = Map.from_geom(counts_geom)
+    counts.fill_events(selected_events)
 
     return counts
 
 
+def apply_rad_max(events, rad_max, position):
+    '''Apply the RAD_MAX cut to the event list for given region'''
+    offset = position.separation(events.pointing_radec)
+    separation = position.separation(events.radec)
+
+    if rad_max.data.shape == (1, 1):
+        rad_max_for_events = rad_max.quantity[0, 0]
+    else:
+        rad_max_for_events = rad_max.evaluate(
+            method="nearest", energy=events.energy, offset=offset
+        )
+
+    selected = separation <= rad_max_for_events
+    return events.select_row_subset(selected)
+
+
+def are_regions_overlapping_rad_max(regions, rad_max, offset, e_min, e_max):
+    """
+    Calculate pair-wise separations between all regions and compare with rad_max
+    to find overlaps.
+    """
+    separations = u.Quantity([
+        a.center.separation(b.center)
+        for a, b in combinations(regions, 2)
+    ])
+
+
+    # evaluate fails with a single bin somewhere trying to interpolate
+    if rad_max.data.shape == (1, 1):
+        rad_max_at_offset = rad_max.quantity[0, 0]
+    else:
+        rad_max_at_offset = rad_max.evaluate(offset=offset)
+        # do not check bins outside of energy range
+        edges_min = rad_max.axes['energy'].edges_min
+        edges_max = rad_max.axes['energy'].edges_max
+        # to be sure all possible values are included, we check
+        # for the *upper* energy bin to be larger than e_min and the *lower* edge
+        # to be larger than e_max
+        mask = (edges_max >= e_min) & (edges_min <= e_max)
+        rad_max_at_offset = rad_max_at_offset[mask]
+
+    return np.any(separations[np.newaxis, :] < (2 * rad_max_at_offset))
+
+
 def make_counts_off_rad_max(
-    geom,
+    on_geom,
     rad_max,
     events,
     region_finder,
@@ -505,7 +542,7 @@ def make_counts_off_rad_max(
     Parameters
     ----------
     geom: `~gammapy.maps.RegionGeom`
-        reference map geom
+        reference map geom for the on region
     rad_max: `~gammapy.irf.RadMax2D`
         the RAD_MAX_2D table IRF
     events: `~gammapy.data.EventList`
@@ -519,44 +556,43 @@ def make_counts_off_rad_max(
     acceptance_off : `~gammapy.maps.RegionNDMap`
         ratio of the acceptances of the OFF to ON regions.
     """
-    rad_max = get_rad_max_vs_energy(rad_max, events.pointing_radec, geom)
 
-    counts_off_list = []
-    acceptance_off_list = []
-
-    # we have to define an ON region and a region finder for each energy bin
-    for i, rad in enumerate(rad_max):
-
-        on_region = CircleSkyRegion(center=geom.center_skydir, radius=rad)
-        energy_range = geom.axes["energy"].slice(i)
-
-        regions, wcs = region_finder.run(
-            center=events.pointing_radec,
-            region=on_region,
-            exclusion_mask=exclusion_mask,
-        )
-
-        if len(regions) > 0:
-            off_region_geom = RegionGeom.from_regions(
-                regions=regions,
-                axes=[energy_range],
-                wcs=wcs,
-            )
-            counts_off = RegionNDMap.from_geom(geom=off_region_geom)
-            counts_off.fill_events(events)
-            counts_off_list.append(counts_off.data[0])
-        else:
-            log.warning(
-                f"ReflectedRegionsBackgroundMaker failed in estimated energy bin {i}."
-            )
-            counts_off_list.append([[0]])
-
-        acceptance_off_list.append(len(regions))
-
-    # create the final arrays with the OFF counts and the acceptance
-    counts_off = RegionNDMap.from_geom(geom=geom, data=np.asarray(counts_off_list))
-    acceptance_off = RegionNDMap.from_geom(
-        geom=geom, data=np.asarray(acceptance_off_list)
+    off_regions, wcs = region_finder.run(
+        center=events.pointing_radec,
+        region=on_geom.region,
+        exclusion_mask=exclusion_mask,
     )
+
+    if len(off_regions) == 0:
+        log.warn("RegionsFinder returned no regions")
+        # counts_off=None, acceptance_off=0
+        return None, RegionNDMap.from_geom(on_geom, data=0)
+
+
+    # check for overlap
+    energy_axis = on_geom.axes["energy"]
+    offset = on_geom.region.center.separation(events.pointing_radec)
+    e_min, e_max = energy_axis.edges[[0, -1]]
+    regions = [on_geom.region] + off_regions
+    if are_regions_overlapping_rad_max(regions, rad_max, offset, e_min, e_max):
+        log.warning("Found overlapping on/off regions, choose less off regions")
+        # counts_off=None, acceptance_off=0
+        return None, RegionNDMap.from_geom(on_geom, data=0)
+
+    off_region_geom = RegionGeom.from_regions(
+        regions=off_regions,
+        axes=[energy_axis],
+        wcs=wcs,
+    )
+
+    counts_off = RegionNDMap.from_geom(geom=off_region_geom)
+    acceptance_off = RegionNDMap.from_geom(
+        geom=off_region_geom,
+        data=np.full(energy_axis.nbin, len(off_regions))
+    )
+
+    for off_region in off_regions:
+        selected_events = apply_rad_max(events, rad_max, off_region.center)
+        counts_off.fill_events(selected_events)
 
     return counts_off, acceptance_off

@@ -169,21 +169,42 @@ class WobbleRegionsFinder(RegionsFinder):
             angle = i * increment
             region_test = region_pix.rotate(center_pixel, angle)
 
-            if exclusion_mask is None or not np.any(region_test.contains(excluded_pixels)):
+            # for PointSkyRegion, we test if the point is inside the exclusion mask
+            # otherwise we test if there is overlap
+
+            excluded = False
+            if exclusion_mask is not None:
+                if isinstance(region, PointSkyRegion):
+                    excluded = (excluded_pixels.separation(region_test.center) < 1).any()
+                else:
+                    excluded = region_test.contains(excluded_pixels).any()
+
+            if not excluded:
                 regions.append(region_test)
 
 
-        # check for overlaps
+        # We cannot check for overlap of PointSkyRegion here, this is done later
+        # in make_counts_off_rad_max in the rad_max case
+        if not isinstance(region, PointSkyRegion):
+            if self._are_regions_overlapping(regions, reference_geom):
+                log.warning('Found overlapping off regions, returning no regions')
+                return [], reference_geom.wcs
+
+        return [r.to_sky(reference_geom.wcs) for r in regions], reference_geom.wcs
+
+
+    @staticmethod
+    def _are_regions_overlapping(regions, reference_geom):
+        # check for overl
         masks = [
             region.to_mask().to_image(reference_geom._shape) > 0
             for region in regions
         ]
         for mask_a, mask_b in combinations(masks, 2):
             if np.any(mask_a & mask_b):
-                log.warning('Found overlapping off regions, returning no regions')
-                return [], reference_geom.wcs
+                return True
 
-        return [r.to_sky(reference_geom.wcs) for r in regions], reference_geom.wcs
+        return False
 
 
 class ReflectedRegionsFinder(RegionsFinder):
@@ -309,6 +330,12 @@ class ReflectedRegionsFinder(RegionsFinder):
         wcs: `~astropy.wcs.WCS`
             WCS for the determined regions
         """
+        if isinstance(region, PointSkyRegion):
+            raise TypeError(
+                '`ReflectedRegionsFinder` does not work for `PointSkyRegion`'
+                ', use `WobbleRegionsFinder` instead'
+            )
+
         regions = []
 
         reference_geom = self._create_reference_geometry(region, center)
@@ -396,11 +423,13 @@ class ReflectedRegionsBackgroundMaker(Maker):
         counts_off : `~gammapy.maps.RegionNDMap`
             Counts vs estimated energy extracted from the OFF regions.
         """
-        if dataset.counts.geom.is_region and isinstance(
-            dataset.counts.geom.region, PointSkyRegion
-        ):
+        on_geom = dataset.counts.geom
+        if observation.rad_max is not None:
+            if not isinstance(on_geom.region, PointSkyRegion):
+                raise ValueError('Must use PointSkyRegion on region in point-like analysis')
+
             counts_off, acceptance_off = make_counts_off_rad_max(
-                geom=dataset.counts.geom,
+                on_geom=on_geom,
                 rad_max=observation.rad_max,
                 events=observation.events,
                 region_finder=self.region_finder,
@@ -410,22 +439,22 @@ class ReflectedRegionsBackgroundMaker(Maker):
         else:
             regions, wcs = self.region_finder.run(
                 center=observation.pointing_radec,
-                region=dataset.counts.geom.region,
+                region=on_geom.region,
                 exclusion_mask=self.exclusion_mask,
             )
 
-            energy_axis = dataset.counts.geom.axes["energy"]
+            energy_axis = on_geom.axes["energy"]
 
             if len(regions) > 0:
-                geom = RegionGeom.from_regions(
+                off_geom = RegionGeom.from_regions(
                     regions=regions,
                     axes=[energy_axis],
                     wcs=wcs,
                 )
 
-                counts_off = RegionNDMap.from_geom(geom=geom)
+                counts_off = RegionNDMap.from_geom(geom=off_geom)
                 counts_off.fill_events(observation.events)
-                acceptance_off = RegionNDMap.from_geom(geom=geom, data=len(regions))
+                acceptance_off = RegionNDMap.from_geom(geom=off_geom, data=len(regions))
             else:
                 # if no OFF regions are found, off is set to None and acceptance_off to zero
                 log.warning(
@@ -433,7 +462,7 @@ class ReflectedRegionsBackgroundMaker(Maker):
                 )
 
                 counts_off = None
-                acceptance_off = RegionNDMap.from_geom(geom=dataset._geom, data=0)
+                acceptance_off = RegionNDMap.from_geom(geom=on_geom, data=0)
 
         return counts_off, acceptance_off
 
