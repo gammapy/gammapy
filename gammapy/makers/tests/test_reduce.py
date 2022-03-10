@@ -135,7 +135,7 @@ def makers_spectrum(exclusion_mask):
             "dataset": get_mapdataset(name="linear_staking"),
             "stack_datasets": True,
             "cutout_width": None,
-            "n_jobs": None,
+            "n_jobs": 1,
         },
         {
             "dataset": get_mapdataset(name="parallel"),
@@ -189,7 +189,7 @@ def test_datasetsmaker_map_cutout_width(observations_cta, makers_map, tmp_path):
         stack_datasets=True,
         cutout_mode="partial",
         cutout_width="5 deg",
-        n_jobs=None,
+        n_jobs=1,
     )
     datasets = makers.run(get_mapdataset(name="linear_staking_1deg"), observations_cta)
 
@@ -211,7 +211,7 @@ def test_datasetsmaker_map_2steps(observations_cta, makers_map, tmp_path):
         stack_datasets=False,
         cutout_mode="partial",
         cutout_width="5 deg",
-        n_jobs=None,
+        n_jobs=1,
     )
 
     dataset = get_mapdataset(name="2steps")
@@ -226,7 +226,7 @@ def test_datasetsmaker_map_2steps(observations_cta, makers_map, tmp_path):
         stack_datasets=True,
         cutout_mode="partial",
         cutout_width="5 deg",
-        n_jobs=None,
+        n_jobs=1,
     )
     datasets = makers.run(dataset, observations_cta, datasets)
 
