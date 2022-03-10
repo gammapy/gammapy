@@ -10,6 +10,7 @@ __all__ = ["load_cta_irfs", "load_irf_dict_from_file"]
 log = logging.getLogger(__name__)
 
 
+
 IRF_DL3_AXES_SPECIFICATION = {
     "THETA": {"name": "offset", "interp": "lin"},
     "ENERG": {"name": "energy_true", "interp": "log"},
@@ -134,6 +135,11 @@ IRF_MAP_HDU_SPECIFICATION = {
     "edisp_map": "edisp",
     "psf_map": "psf",
 }
+
+
+def gadf_is_pointlike(header):
+    '''Check if a GADF IRF is pointlike based on the header'''
+    return header.get('HDUCLAS3') == "POINT-LIKE"
 
 
 def load_cta_irfs(filename):

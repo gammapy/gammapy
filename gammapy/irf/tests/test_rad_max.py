@@ -44,19 +44,16 @@ def test_rad_max_from_irf():
     aeff = EffectiveAreaTable2D(
         data=u.Quantity(np.ones((e_bins, o_bins)), u.m**2, copy=False),
         axes=[energy_axis, offset_axis],
+        is_pointlike=True,
     )
 
     with pytest.raises(ValueError):
         # not a point-like IRF
         RadMax2D.from_irf(aeff)
 
-
-    aeff.meta['is_pointlike'] = True
-
     with pytest.raises(ValueError):
         # missing rad_max
         RadMax2D.from_irf(aeff)
-
 
     aeff.meta['RAD_MAX'] = '0.2 deg'
     with pytest.raises(ValueError):
