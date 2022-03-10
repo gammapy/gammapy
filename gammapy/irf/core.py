@@ -68,7 +68,7 @@ class IRF(metaclass=abc.ABCMeta):
         axes = MapAxes(axes)
         axes.assert_names(self.required_axes)
         self._axes = axes
-        self.fov_alignment = FoVAlignment(fov_alignment)
+        self._fov_alignment = FoVAlignment(fov_alignment)
         self._is_pointlike = is_pointlike
 
         if isinstance(data, u.Quantity):
@@ -104,6 +104,11 @@ class IRF(metaclass=abc.ABCMeta):
     def has_offset_axis(self):
         """Whether the IRF explicitly depends on offset"""
         return "offset" in self.required_axes
+
+    @property
+    def fov_alignment(self):
+        """Alignment of the field of view coordinate axes, see `FoVAlignment`"""
+        return self._fov_alignment
 
     @property
     def data(self):
