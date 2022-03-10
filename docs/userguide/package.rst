@@ -126,5 +126,5 @@ What next?
 ----------
 
 After this overview of the Gammapy package, we suggest to continue by trying it out,
-following the instructions in :ref:`install`, :ref:`getting-started` and then
+following the instructions in :ref:`installation`, :ref:`getting-started` and then
 the first and second analysis tutorials at :ref:`tutorials`.

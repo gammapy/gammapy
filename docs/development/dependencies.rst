@@ -7,7 +7,7 @@ Dependencies
 Gammapy is a Python package built on Numpy, Scipy and Astropy, as well as a few other
 required dependencies. For certain functionality, optional dependencies are
 used. The recommended way to install Gammapy is via a conda environment which
-includes all required and optional dependencies (see :ref:`install`).
+includes all required and optional dependencies (see :ref:`installation`).
 
 Note that when you install Gammapy with conda (or actually any alternative
 distribution channel), you have a full package manager at your fingertips. You
@@ -39,7 +39,7 @@ Optional dependencies
 ---------------------
 
 The optional dependencies listed here are the packages listed in the conda
-environment specification (see :ref:`install`). This is a mix of packages that
+environment specification (see :ref:`installation`). This is a mix of packages that
 make it convenient to use Gammapy (e.g. ``ipython`` or ``jupyter``), or that add
 extra functionality (e.g. ``matplotlib`` to make plots, ``naima`` for physical
 SED modeling).

@@ -1,6 +1,6 @@
 .. include:: ../references.txt
 
-.. _troubleshooting:
+.. _troubleshoot:
 
 
 Troubleshooting

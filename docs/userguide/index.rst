@@ -5,16 +5,11 @@
 User guide
 ==========
 
-
-.. toctree::
-    :maxdepth: 1
-
-    analysis
-    package
-
 .. toctree::
     :hidden:
 
+    analysis
+    package
     ../tutorials/index
     howto
     ../modeling/gallery/index
@@ -25,6 +20,36 @@ User guide
 .. panels::
     :card: + intro-card text-center
     :column: col-lg-6 col-md-6 col-sm-6 col-xs-12 d-flex
+
+    ---
+    :img-top: ../_static/atom.png
+
+    Gamma-ray data analysis
+    ^^^^^^^^^^^^^^^^^^^^^^^
+
+    A short introduction to gamma-ray data analysis.
+
+    +++
+
+    .. link-button:: gamma_ray_analysis
+            :type: ref
+            :text: To the intro
+            :classes: btn-block btn-secondary stretched-link
+
+    ---
+    :img-top: ../_static/box.png
+
+    Package structure
+    ^^^^^^^^^^^^^^^^^
+
+    An overview of the main concepts in Gammapy package.
+
+    +++
+
+    .. link-button:: package
+            :type: ref
+            :text: To the overview
+            :classes: btn-block btn-secondary stretched-link
 
     ---
     :img-top: ../_static/index_user_guide.svg

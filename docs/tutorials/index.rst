@@ -9,7 +9,7 @@ This page lists the Gammapy tutorials that are available as `Jupyter`_ notebooks
 You can read them here, or execute them using a temporary cloud server in Binder.
 
 To execute them locally, you have to first install Gammapy locally (see
-:ref:`install`) and download the tutorial notebooks and example datasets (see
+:ref:`installation`) and download the tutorial notebooks and example datasets (see
 :ref:`getting-started`). Once Gammapy is installed, remember that you can always
 use ``gammapy info`` to check your setup.
 

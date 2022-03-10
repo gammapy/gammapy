@@ -88,8 +88,9 @@ copyright = "{}, {}".format(datetime.datetime.now().year, setup_cfg["author"])
 
 version = get_distribution(project).version
 release = version
+switch_version = version
 if len(version) > 5:
-    version = "dev"
+    switch_version = "dev"
 
 # -- Options for HTML output ---------------------------------------------------
 
@@ -160,7 +161,7 @@ html_theme_options = {
     "switcher": {
         "json_url": "https://docs.gammapy.org/stable/switcher.json",
         "url_template": "https://docs.gammapy.org/{version}/",
-        "version_match": version,
+        "version_match": switch_version,
     },
     "navbar_end": ["version-switcher", "navbar-icon-links"],
 }
