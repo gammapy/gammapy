@@ -1,4 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import logging
+import numpy as np
 from numpy.testing import assert_allclose
 from astropy.time import Time
 from gammapy.data import FixedPointingInfo, PointingInfo
@@ -107,3 +109,22 @@ class TestPointingInfo:
         assert_allclose(pos.az.deg, 11.45751357)
         assert_allclose(pos.alt.deg, 41.34088901)
         assert pos.name == "altaz"
+
+
+
+def test_altaz_without_location(caplog):
+    meta = {'ALT_PNT': 20.0, 'AZ_PNT': 170.0}
+    pointing = FixedPointingInfo(meta)
+
+    with caplog.at_level(logging.WARNING):
+        altaz = pointing.altaz
+        assert altaz.alt.deg == 20.0
+        assert altaz.az.deg == 170.0
+
+
+    pointing = FixedPointingInfo({})
+
+    with caplog.at_level(logging.WARNING):
+        altaz = pointing.altaz
+        assert np.isnan(altaz.alt.value)
+        assert np.isnan(altaz.az.value)
