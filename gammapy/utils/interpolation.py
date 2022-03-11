@@ -66,9 +66,16 @@ class ScaledRegularGridInterpolator:
             kwargs.setdefault("bounds_error", False)
             kwargs.setdefault("fill_value", None)
 
+        method = kwargs.get("method", None)
+
         if not np.any(self._include_dimensions):
-            kwargs["method"] = "nearest"
-        else:
+            if method != "nearest":
+                raise ValueError(
+                    "Interpolating scalar values requires using "
+                    "method='nearest' explicitely."
+                )
+
+        if np.any(self._include_dimensions):
             values_scaled = np.squeeze(values_scaled)
 
         if axis is None:

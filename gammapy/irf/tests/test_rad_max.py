@@ -75,7 +75,12 @@ def test_rad_max_from_irf():
 def test_rad_max_single_bin():
     energy_axis = MapAxis.from_energy_bounds(0.01, 100, 1, unit="TeV")
     offset_axis = MapAxis.from_bounds(0., 5, 1, unit="deg", name="offset", )
-    rad_max = RadMax2D(data=[[0.1]] * u.deg, axes=[energy_axis, offset_axis])
+
+    rad_max = RadMax2D(
+        data=[[0.1]] * u.deg,
+        axes=[energy_axis, offset_axis],
+        interp_kwargs={"method": "nearest", "fill_value": None}
+    )
 
     value = rad_max.evaluate(energy=1 * u.TeV, offset=1 * u.deg)
     assert_allclose(value, 0.1 * u.deg)
