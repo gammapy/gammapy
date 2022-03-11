@@ -32,11 +32,9 @@ class RadMax2D(IRF):
     required_axes = ["energy", "offset"]
     default_unit = u.deg
 
-
     @classmethod
     def from_irf(cls, irf):
-        '''
-        Create a RadMax2D instance from another IRF component.
+        """Create a RadMax2D instance from another IRF component.
 
         This reads the RAD_MAX metadata keyword from the irf and creates
         a RadMax2D with a single bin in energy and offset using the
@@ -57,21 +55,25 @@ class RadMax2D(IRF):
         -----
         This assumes the true energy axis limits are also valid for the
         reco energy limits.
-        '''
+        """
         if not irf.is_pointlike:
-            raise ValueError('RadMax2D.from_irf is only valid for point-like irfs')
+            raise ValueError("RadMax2D.from_irf requires a point-like irf")
 
-        if 'RAD_MAX' not in irf.meta:
-            raise ValueError('irf does not contain RAD_MAX keyword')
+        if "RAD_MAX" not in irf.meta:
+            raise ValueError("Irf does not contain RAD_MAX keyword")
 
         rad_max_value = irf.meta["RAD_MAX"]
         if not isinstance(rad_max_value, float):
-            raise ValueError('RAD_MAX must be a float')
+            raise ValueError(
+                f"RAD_MAX must be a float, got '{type(rad_max_value)}' instead"
+            )
 
         energy_axis = irf.axes["energy_true"].copy(name="energy").squash()
         offset_axis = irf.axes["offset"].squash()
 
         return cls(
-            data=u.Quantity([[rad_max_value]], u.deg),
+            data=rad_max_value,
             axes=[energy_axis, offset_axis],
+            unit="deg",
+            interp_kwargs={"method": "nearest", "fill_value": None},
         )
