@@ -476,10 +476,8 @@ def make_counts_rad_max(geom, rad_max, events):
     """
     selected_events = apply_rad_max(events, rad_max, geom.region.center)
 
-    counts_geom = RegionGeom(geom.region, axes=[geom.axes['energy']])
-    counts = Map.from_geom(counts_geom)
+    counts = Map.from_geom(geom=geom)
     counts.fill_events(selected_events)
-
     return counts
 
 
