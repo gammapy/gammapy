@@ -484,16 +484,13 @@ def make_counts_rad_max(geom, rad_max, events):
 
 
 def apply_rad_max(events, rad_max, position):
-    '''Apply the RAD_MAX cut to the event list for given region'''
+    """Apply the RAD_MAX cut to the event list for given region"""
     offset = position.separation(events.pointing_radec)
     separation = position.separation(events.radec)
 
-    if rad_max.data.shape == (1, 1):
-        rad_max_for_events = rad_max.quantity[0, 0]
-    else:
-        rad_max_for_events = rad_max.evaluate(
-            method="nearest", energy=events.energy, offset=offset
-        )
+    rad_max_for_events = rad_max.evaluate(
+        method="nearest", energy=events.energy, offset=offset
+    )
 
     selected = separation <= rad_max_for_events
     return events.select_row_subset(selected)
