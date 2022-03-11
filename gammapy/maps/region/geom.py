@@ -144,6 +144,12 @@ class RegionGeom(Geom):
         return self._region
 
     @property
+    def is_all_point_sky_regions(self):
+        """Whether regions are all point regions"""
+        regions = compound_region_to_regions(self.region)
+        return np.all([isinstance(_, PointSkyRegion) for _ in regions])
+
+    @property
     def axes(self):
         """List of non-spatial axes."""
         return self._axes
