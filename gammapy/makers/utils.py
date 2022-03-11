@@ -428,34 +428,6 @@ def make_theta_squared_table(
     return table
 
 
-def get_rad_max_vs_energy(rad_max, pointing, geom):
-    """Obtain the values of `RAD_MAX` at a given offset and for an array of
-    estimated energy values (in the geom energy axis).
-
-    Parameters
-    ----------
-    rad_max : `~gammapy.irf.RadMax2D`
-        the RAD_MAX_2D table IRF
-    geom : `~gammapy.maps.Geom`
-        the map geom to be used
-    pointing : `~astropy.coordinates.SkyCoord`
-        pointing direction
-
-    Returns
-    -------
-    array : `~astropy.units.Quantity`
-        Values of the `RAD_MAX` corresponding to each estimated energy bin center.
-    """
-    on_center = geom.center_skydir
-    offset = on_center.separation(pointing)
-
-    rad_max_vals = rad_max.evaluate(
-        offset=offset, energy=geom.axes["energy"].center
-    )
-
-    return rad_max_vals
-
-
 def make_counts_rad_max(geom, rad_max, events):
     """Extract the counts using for the ON region size the values in the
     `RAD_MAX_2D` table.
