@@ -446,24 +446,13 @@ def make_counts_rad_max(geom, rad_max, events):
     counts : `~gammapy.maps.RegionNDMap`
         Counts vs estimated energy extracted from the ON region.
     """
-    selected_events = apply_rad_max(events, rad_max, geom.region.center)
+    selected_events = events.select_rad_max(
+        rad_max=rad_max, position=geom.region.center
+    )
 
     counts = Map.from_geom(geom=geom)
     counts.fill_events(selected_events)
     return counts
-
-
-def apply_rad_max(events, rad_max, position):
-    """Apply the RAD_MAX cut to the event list for given region"""
-    offset = position.separation(events.pointing_radec)
-    separation = position.separation(events.radec)
-
-    rad_max_for_events = rad_max.evaluate(
-        method="nearest", energy=events.energy, offset=offset
-    )
-
-    selected = separation <= rad_max_for_events
-    return events.select_row_subset(selected)
 
 
 def are_regions_overlapping_rad_max(regions, rad_max, offset, e_min, e_max):
@@ -475,7 +464,6 @@ def are_regions_overlapping_rad_max(regions, rad_max, offset, e_min, e_max):
         a.center.separation(b.center)
         for a, b in combinations(regions, 2)
     ])
-
 
     # evaluate fails with a single bin somewhere trying to interpolate
     if rad_max.data.shape == (1, 1):
@@ -531,7 +519,7 @@ def make_counts_off_rad_max(
     )
 
     if len(off_regions) == 0:
-        log.warn("RegionsFinder returned no regions")
+        log.warning("RegionsFinder returned no regions")
         # counts_off=None, acceptance_off=0
         return None, RegionNDMap.from_geom(on_geom, data=0)
 
@@ -559,7 +547,9 @@ def make_counts_off_rad_max(
     )
 
     for off_region in off_regions:
-        selected_events = apply_rad_max(events, rad_max, off_region.center)
+        selected_events = events.select_rad_max(
+            rad_max=rad_max, position=off_region.center
+        )
         counts_off.fill_events(selected_events)
 
     return counts_off, acceptance_off
