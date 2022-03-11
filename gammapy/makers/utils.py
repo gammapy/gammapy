@@ -465,19 +465,15 @@ def are_regions_overlapping_rad_max(regions, rad_max, offset, e_min, e_max):
         for a, b in combinations(regions, 2)
     ])
 
-    # evaluate fails with a single bin somewhere trying to interpolate
-    if rad_max.data.shape == (1, 1):
-        rad_max_at_offset = rad_max.quantity[0, 0]
-    else:
-        rad_max_at_offset = rad_max.evaluate(offset=offset)
-        # do not check bins outside of energy range
-        edges_min = rad_max.axes['energy'].edges_min
-        edges_max = rad_max.axes['energy'].edges_max
-        # to be sure all possible values are included, we check
-        # for the *upper* energy bin to be larger than e_min and the *lower* edge
-        # to be larger than e_max
-        mask = (edges_max >= e_min) & (edges_min <= e_max)
-        rad_max_at_offset = rad_max_at_offset[mask]
+    rad_max_at_offset = rad_max.evaluate(offset=offset)
+    # do not check bins outside of energy range
+    edges_min = rad_max.axes['energy'].edges_min
+    edges_max = rad_max.axes['energy'].edges_max
+    # to be sure all possible values are included, we check
+    # for the *upper* energy bin to be larger than e_min and the *lower* edge
+    # to be larger than e_max
+    mask = (edges_max >= e_min) & (edges_min <= e_max)
+    rad_max_at_offset = rad_max_at_offset[mask]
 
     return np.any(separations[np.newaxis, :] < (2 * rad_max_at_offset))
 
