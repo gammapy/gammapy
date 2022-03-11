@@ -87,7 +87,7 @@ class TemporalModel(ModelBase):
         # TODO: this is a work-around for https://github.com/astropy/astropy/issues/10501
         return u.Quantity(np.sum(diff.to_value("day")), "day")
 
-    def plot(self, time_range, ax=None, **kwargs):
+    def plot(self, time_range, ax=None, energy=None, **kwargs):
         """
         Plot Temporal Model.
 
@@ -97,6 +97,8 @@ class TemporalModel(ModelBase):
             times to plot the model
         ax : `~matplotlib.axes.Axes`, optional
             Axis to plot on
+        energy: `~astropy.units.quantity`
+            Array of energies for energy dependent models
         **kwargs : dict
             Keywords forwarded to `~matplotlib.pyplot.errorbar`
 
@@ -115,7 +117,7 @@ class TemporalModel(ModelBase):
         kwargs.setdefault("marker", "None")
         kwargs.setdefault("ls", "-")
         kwargs.setdefault("xerr", None)
-        m.quantity = self(time_axis.time_mid)
+        m.quantity = self(time_axis.time_mid, energy=energy)
         ax = m.plot(ax=ax, **kwargs)
         ax.set_ylabel("Norm / A.U.")
         return ax

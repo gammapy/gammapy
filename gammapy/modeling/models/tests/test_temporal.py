@@ -15,6 +15,7 @@ from gammapy.modeling.models import (
     LinearTemporalModel,
     PowerLawSpectralModel,
     PowerLawTemporalModel,
+    ConstantSpectralModel,
     SineTemporalModel,
     SkyModel,
 )
@@ -316,3 +317,45 @@ def test_plot_constant_model():
     constant_model = ConstantTemporalModel(const=1)
     with mpl_plot_check():
         constant_model.plot(time_range)
+
+
+class MyCustomTemporalModel(TemporalModel):
+    """Spectrally varying temporal model where the index depends time
+
+        F(t) = (E/E0)^-\alpha
+        where \alpha = (\alpha_0 t/t_ref)^-beta
+    """
+
+    tag = "MyCustomTemporalModel"
+    is_energy_dependent = True
+    beta = Parameter("beta", 2.0)
+    _t_ref_default = Time("2000-01-01")
+    t_ref = Parameter("t_ref", _t_ref_default.mjd, unit="day", frozen=True)
+    E0 = Parameter("E0", "1 TeV", frozen=True)
+
+    @staticmethod
+    def evaluate(time, energy, t_ref, beta, E0):
+        alpha = np.power((time/t_ref), -beta)
+        return np.power((energy / E0), -alpha)
+
+    def integral(self, t_min, t_max, energy):
+        pars = self.parameters
+
+        t_ref = Time(pars["t_ref"].quantity, format="mjd")
+        beta = pars["beta"].quantity
+        E0 = pars["E0"].quantity
+        value = self.evaluate(
+            t_max, energy, t_ref, beta, E0
+        ) - self.evaluate(t_min, energy, t_ref, beta, E0)
+        return  value / self.time_sum(t_min, t_max)
+
+def test_energy_dependent_model():
+    temporal_model = MyCustomTemporalModel()
+    assert temporal_model.is_energy_dependent = True
+
+    model = SkyModel(
+        spectral_model=ConstantSpectralModel(), temporal_model=temporal_model
+    )
+    mode
+
+
