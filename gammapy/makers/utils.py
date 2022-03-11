@@ -428,34 +428,6 @@ def make_theta_squared_table(
     return table
 
 
-def get_rad_max_vs_energy(rad_max, pointing, geom):
-    """Obtain the values of `RAD_MAX` at a given offset and for an array of
-    estimated energy values (in the geom energy axis).
-
-    Parameters
-    ----------
-    rad_max : `~gammapy.irf.RadMax2D`
-        the RAD_MAX_2D table IRF
-    geom : `~gammapy.maps.Geom`
-        the map geom to be used
-    pointing : `~astropy.coordinates.SkyCoord`
-        pointing direction
-
-    Returns
-    -------
-    array : `~astropy.units.Quantity`
-        Values of the `RAD_MAX` corresponding to each estimated energy bin center.
-    """
-    on_center = geom.center_skydir
-    offset = on_center.separation(pointing)
-
-    rad_max_vals = rad_max.evaluate(
-        offset=offset, energy=geom.axes["energy"].center
-    )
-
-    return rad_max_vals
-
-
 def make_counts_rad_max(geom, rad_max, events):
     """Extract the counts using for the ON region size the values in the
     `RAD_MAX_2D` table.
@@ -474,29 +446,13 @@ def make_counts_rad_max(geom, rad_max, events):
     counts : `~gammapy.maps.RegionNDMap`
         Counts vs estimated energy extracted from the ON region.
     """
-    selected_events = apply_rad_max(events, rad_max, geom.region.center)
+    selected_events = events.select_rad_max(
+        rad_max=rad_max, position=geom.region.center
+    )
 
-    counts_geom = RegionGeom(geom.region, axes=[geom.axes['energy']])
-    counts = Map.from_geom(counts_geom)
+    counts = Map.from_geom(geom=geom)
     counts.fill_events(selected_events)
-
     return counts
-
-
-def apply_rad_max(events, rad_max, position):
-    '''Apply the RAD_MAX cut to the event list for given region'''
-    offset = position.separation(events.pointing_radec)
-    separation = position.separation(events.radec)
-
-    if rad_max.data.shape == (1, 1):
-        rad_max_for_events = rad_max.quantity[0, 0]
-    else:
-        rad_max_for_events = rad_max.evaluate(
-            method="nearest", energy=events.energy, offset=offset
-        )
-
-    selected = separation <= rad_max_for_events
-    return events.select_row_subset(selected)
 
 
 def are_regions_overlapping_rad_max(regions, rad_max, offset, e_min, e_max):
@@ -509,20 +465,15 @@ def are_regions_overlapping_rad_max(regions, rad_max, offset, e_min, e_max):
         for a, b in combinations(regions, 2)
     ])
 
-
-    # evaluate fails with a single bin somewhere trying to interpolate
-    if rad_max.data.shape == (1, 1):
-        rad_max_at_offset = rad_max.quantity[0, 0]
-    else:
-        rad_max_at_offset = rad_max.evaluate(offset=offset)
-        # do not check bins outside of energy range
-        edges_min = rad_max.axes['energy'].edges_min
-        edges_max = rad_max.axes['energy'].edges_max
-        # to be sure all possible values are included, we check
-        # for the *upper* energy bin to be larger than e_min and the *lower* edge
-        # to be larger than e_max
-        mask = (edges_max >= e_min) & (edges_min <= e_max)
-        rad_max_at_offset = rad_max_at_offset[mask]
+    rad_max_at_offset = rad_max.evaluate(offset=offset)
+    # do not check bins outside of energy range
+    edges_min = rad_max.axes['energy'].edges_min
+    edges_max = rad_max.axes['energy'].edges_max
+    # to be sure all possible values are included, we check
+    # for the *upper* energy bin to be larger than e_min and the *lower* edge
+    # to be larger than e_max
+    mask = (edges_max >= e_min) & (edges_min <= e_max)
+    rad_max_at_offset = rad_max_at_offset[mask]
 
     return np.any(separations[np.newaxis, :] < (2 * rad_max_at_offset))
 
@@ -564,7 +515,7 @@ def make_counts_off_rad_max(
     )
 
     if len(off_regions) == 0:
-        log.warn("RegionsFinder returned no regions")
+        log.warning("RegionsFinder returned no regions")
         # counts_off=None, acceptance_off=0
         return None, RegionNDMap.from_geom(on_geom, data=0)
 
@@ -592,7 +543,9 @@ def make_counts_off_rad_max(
     )
 
     for off_region in off_regions:
-        selected_events = apply_rad_max(events, rad_max, off_region.center)
+        selected_events = events.select_rad_max(
+            rad_max=rad_max, position=off_region.center
+        )
         counts_off.fill_events(selected_events)
 
     return counts_off, acceptance_off
