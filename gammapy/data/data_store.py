@@ -154,7 +154,7 @@ class DataStore:
         return cls(hdu_table=hdu_table, obs_table=obs_table)
 
     @classmethod
-    def from_events_files(cls, paths):
+    def from_events_files(cls, events_paths, irfs_paths=None):
         """Create from a list of event filenames.
 
         HDU and observation index tables will be created from the EVENTS header.
@@ -171,11 +171,18 @@ class DataStore:
 
         .. _ctobssim: http://cta.irap.omp.eu/ctools/users/reference_manual/ctobssim.html
 
+        Parameters
+        -------
+        events_paths : list of  str or Path
+            List of paths to the events files
+            
         Returns
         -------
-        data_store : `DataStore`
-            Data store
-
+        irfs_paths : list of  str or Path
+            List of paths to the IRFs files, if provided must be the same length than `events_paths`.
+            If None the events file header have to contain CALDB and IRF keywords to locate the IRF file,
+            otherwise the IRFs are assumed to be contained in the events files.
+            
         Examples
         --------
         This is how you can access a single event list::
@@ -205,7 +212,7 @@ class DataStore:
         >>> data_store.hdu_table.write("hdu-index.fits.gz") # doctest: +SKIP
         >>> data_store.obs_table.write("obs-index.fits.gz") # doctest: +SKIP
         """
-        return DataStoreMaker(paths).run()
+        return DataStoreMaker(events_paths, irfs_paths).run()
 
     def info(self, show=True):
         """Print some info."""
@@ -434,7 +441,6 @@ class DataStoreChecker(Checker):
                 "level": "error",
                 "msg": "Inconsistent OBS_ID in obs and HDU index tables",
             }
-
         # TODO: obs table and events header should have the same times
 
     def check_observations(self):
@@ -451,11 +457,15 @@ class DataStoreMaker:
     Users will usually call this via `DataStore.from_events_files`.
     """
 
-    def __init__(self, paths):
-        if isinstance(paths, (str, Path)):
+    def __init__(self, events_paths, irfs_paths=None):
+        if isinstance(events_paths, (str, Path)):
             raise TypeError("Need list of paths, not a single string or Path object.")
 
-        self.paths = [make_path(path) for path in paths]
+        self.events_paths = [make_path(path) for path in events_paths]
+        if irfs_paths:
+             self.irfs_paths = [make_path(path) for path in irfs_paths]
+        else:
+            self.irfs_paths = [None]*len(events_paths)
 
         # Cache for EVENTS file header information, to avoid multiple reads
         self._events_info = {}
@@ -465,22 +475,22 @@ class DataStoreMaker:
         obs_table = self.make_obs_table()
         return DataStore(hdu_table=hdu_table, obs_table=obs_table)
 
-    def get_events_info(self, path):
-        if path not in self._events_info:
-            self._events_info[path] = self.read_events_info(path)
+    def get_events_info(self, events_path, irf_path=None):
+        if events_path not in self._events_info:
+            self._events_info[events_path] = self.read_events_info(events_path, irf_path)
 
-        return self._events_info[path]
+        return self._events_info[events_path]
 
-    def get_obs_info(self, path):
+    def get_obs_info(self, events_path, irf_path=None):
         # We could add or remove info here depending on what we want in the obs table
-        return self.get_events_info(path)
+        return self.get_events_info(events_path, irf_path)
 
     @staticmethod
-    def read_events_info(path):
+    def read_events_info(events_path, irf_path=None):
         """Read mandatory events header info"""
-        log.debug(f"Reading {path}")
+        log.debug(f"Reading {events_path}")
 
-        with fits.open(path, memmap=False) as hdu_list:
+        with fits.open(events_path, memmap=False) as hdu_list:
             header = hdu_list["EVENTS"].header
 
         na_int, na_str = -1, "NOT AVAILABLE"
@@ -518,24 +528,25 @@ class DataStoreMaker:
 
 
         # Not part of the spec, but good to know from which file the info comes
+        info["EVENTS_FILENAME"] = str(events_path)
+        info["EVENT_COUNT"] = header["NAXIS2"]
 
         # This is the info needed to link from EVENTS to IRFs
         info["CALDB"] = header.get("CALDB", na_str)
         info["IRF"] = header.get("IRF", na_str)
-        if info["CALDB"] != na_str and info["CALDB"] != na_str:
+        if irf_path is not None:
+            info["IRF_FILENAME"] = str(irf_path)
+        elif info["CALDB"] != na_str and info["CALDB"] != na_str:
             caldb_irf = CalDBIRF.from_meta(info)
-            info["IRF_FILE"] = str(caldb_irf.file_path)
+            info["IRF_FILENAME"] = str(caldb_irf.file_path)
         else:
-            info["IRF_FILE"] = header.get("IRF_FILE", na_str)
-
-        info["EVENTS_FILENAME"] = str(path)
-        info["EVENT_COUNT"] = header["NAXIS2"]
+            info["IRF_FILENAME"] = info["EVENTS_FILENAME"]
         return info
 
     def make_obs_table(self):
         rows = []
-        for path in self.paths:
-            row = self.get_obs_info(path)
+        for events_path, irf_path in zip(self.events_paths, self.irfs_paths):
+            row = self.get_obs_info(events_path, irf_path)
             rows.append(row)
 
         names = list(rows[0].keys())
@@ -562,8 +573,8 @@ class DataStoreMaker:
 
     def make_hdu_table(self):
         rows = []
-        for path in self.paths:
-            rows.extend(self.get_hdu_table_rows(path))
+        for events_path, irf_path in zip(self.events_paths, self.irfs_paths):
+            rows.extend(self.get_hdu_table_rows(events_path, irf_path))
 
         names = list(rows[0].keys())
         # names = ['OBS_ID', 'HDU_TYPE', 'HDU_CLASS', 'FILE_DIR', 'FILE_NAME', 'HDU_NAME']
@@ -579,18 +590,18 @@ class DataStoreMaker:
 
         return table
 
-    def get_hdu_table_rows(self, path):
-        events_info = self.get_events_info(path)
+    def get_hdu_table_rows(self, events_path, irf_path=None):
+        events_info = self.get_obs_info(events_path, irf_path)
 
         info = dict(
             OBS_ID=events_info["OBS_ID"],
-            FILE_DIR=path.parent.as_posix(),
-            FILE_NAME=path.name,
+            FILE_DIR=events_path.parent.as_posix(),
+            FILE_NAME=events_path.name,
         )
         yield dict(HDU_TYPE="events", HDU_CLASS="events", HDU_NAME="EVENTS", **info)
         yield dict(HDU_TYPE="gti", HDU_CLASS="gti", HDU_NAME="GTI", **info)
 
-        irf_path = Path(events_info["IRF_FILE"])
+        irf_path = Path(events_info["IRF_FILENAME"])
         info = dict(
             OBS_ID=events_info["OBS_ID"],
             FILE_DIR=irf_path.parent.as_posix(),
