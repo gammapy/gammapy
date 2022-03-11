@@ -246,7 +246,7 @@ authors:
 - given-names: Tyler
   family-names: Cahill
   affiliation: Iowa State University, Ames IA, US
-version: 0.18.2
+version: 0.19
 date-released: 2020-11-19
 repository-code: https://github.com/gammapy/gammapy
 license: BSD-3-Clause
