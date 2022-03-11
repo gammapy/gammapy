@@ -173,12 +173,12 @@ class DataStore:
 
         Parameters
         -------
-        events_paths : list of  str or Path
+        events_paths : list of str or Path
             List of paths to the events files
             
-        irfs_paths : list of  str or Path
-            List of paths to the IRFs files, if provided must be the same length than `events_paths`.
-            If None the events file header have to contain CALDB and IRF keywords to locate the IRF file,
+        irfs_paths : str, Path, or list of str or Path
+            Path to the IRFs file. If a list is provided it must be the same length than `events_paths`.
+            If None the events files have to contain CALDB and IRF header keywords to locate the IRF files,
             otherwise the IRFs are assumed to be contained in the events files.
         
         Returns
@@ -465,10 +465,10 @@ class DataStoreMaker:
             raise TypeError("Need list of paths, not a single string or Path object.")
 
         self.events_paths = [make_path(path) for path in events_paths]
-        if irfs_paths:
-             self.irfs_paths = [make_path(path) for path in irfs_paths]
+        if irfs_paths is None or isinstance(irfs_paths, (str, Path)):
+            self.irfs_paths = [make_path(irfs_paths)] * len(events_paths)
         else:
-            self.irfs_paths = [None]*len(events_paths)
+            self.irfs_paths = [make_path(path) for path in irfs_paths]
 
         # Cache for EVENTS file header information, to avoid multiple reads
         self._events_info = {}
@@ -650,5 +650,5 @@ class CalDBIRF:
 
     @property
     def file_name(self):
-        path = Path(os.path.expandvars(self.file_dir))
+        path = make_path(self.file_dir)
         return list(path.glob("*"))[0].name
