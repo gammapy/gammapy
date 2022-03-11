@@ -176,12 +176,15 @@ class DataStore:
         events_paths : list of  str or Path
             List of paths to the events files
             
-        Returns
-        -------
         irfs_paths : list of  str or Path
             List of paths to the IRFs files, if provided must be the same length than `events_paths`.
             If None the events file header have to contain CALDB and IRF keywords to locate the IRF file,
             otherwise the IRFs are assumed to be contained in the events files.
+        
+        Returns
+        -------
+        data_store : `DataStore`
+            Data store
             
         Examples
         --------
