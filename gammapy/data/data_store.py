@@ -539,7 +539,7 @@ class DataStoreMaker:
         info["IRF"] = header.get("IRF", na_str)
         if irf_path is not None:
             info["IRF_FILENAME"] = str(irf_path)
-        elif info["CALDB"] != na_str and info["CALDB"] != na_str:
+        elif info["CALDB"] != na_str and info["IRF"] != na_str:
             caldb_irf = CalDBIRF.from_meta(info)
             info["IRF_FILENAME"] = str(caldb_irf.file_path)
         else:
