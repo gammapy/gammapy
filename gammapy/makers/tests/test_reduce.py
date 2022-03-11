@@ -325,9 +325,9 @@ def test_dataset_maker_spectrum_rad_max_overlapping(observations_magic_rad_max, 
         dataset = maker.run(get_spectrumdataset_rad_max("spec"), observation)
         dataset_on_off = bkg_maker.run(dataset, observation)
 
-    assert len(caplog.record_tuples) == 2
+    assert len(caplog.record_tuples) == 3
     assert caplog.record_tuples[0] == (
-        'gammapy.makers.utils',
+        'gammapy.makers.background.reflected',
         logging.WARNING,
         'Found overlapping on/off regions, choose less off regions'
     )
@@ -384,7 +384,7 @@ def test_dataset_maker_spectrum_rad_max_all_excluded(observations_magic_rad_max,
 
     assert len(caplog.record_tuples) == 2
     assert caplog.record_tuples[0] == (
-        'gammapy.makers.utils',
+        'gammapy.makers.background.reflected',
         logging.WARNING,
-        "RegionsFinder returned no regions"
+        "ReflectedRegionsBackgroundMaker failed. No OFF region found outside exclusion mask for datasets 'spec'."
     )
