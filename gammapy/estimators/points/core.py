@@ -495,13 +495,12 @@ class FluxPoints(FluxMaps):
             kwargs.setdefault("uplims", is_ul)
 
         # set flux points plotting defaults
-        if y_errp:
+        if y_errp and y_errn:
             y_errp = scale_plot_flux(y_errp, energy_power=energy_power).quantity
-
-        if y_errn:
             y_errn = scale_plot_flux(y_errn, energy_power=energy_power).quantity
-
-        kwargs.setdefault("yerr", (y_errn, y_errp))
+            kwargs.setdefault("yerr", (y_errn, y_errp))
+        else:
+            kwargs.setdefault("yerr", None)
 
         flux = scale_plot_flux(flux=flux.to_unit(flux_unit), energy_power=energy_power)
         ax = flux.plot(ax=ax, **kwargs)
