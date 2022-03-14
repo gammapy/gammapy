@@ -146,9 +146,6 @@ class TestDataStoreChecker:
 @requires_data("gammapy-data")
 class TestDataStoreMaker:
 
-    # Note: IRF access requires the CALDB env var
-    caldb_path = Path(os.environ["GAMMAPY_DATA"]) / Path("cta-1dc/caldb")
-
     def setup(self):
         paths = [
             f"$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_{obs_id:06d}.fits"
@@ -161,7 +158,9 @@ class TestDataStoreMaker:
         # self.data_store.obs_table.write("obs-index.fits.gz", overwrite=True)
 
     def test_obs_table(self, monkeypatch):
-        monkeypatch.setenv("CALDB", str(self.caldb_path))
+        # Note: IRF access requires the CALDB env var
+        caldb_path = Path(os.environ["GAMMAPY_DATA"]) / Path("cta-1dc/caldb")
+        monkeypatch.setenv("CALDB", str(caldb_path))
 
         table = self.data_store.obs_table
         assert table.__class__.__name__ == "ObservationTable"
@@ -176,7 +175,9 @@ class TestDataStoreMaker:
         # assert table.time_start[-1].iso == "spam"
 
     def test_hdu_table(self, monkeypatch):
-        monkeypatch.setenv("CALDB", str(self.caldb_path))
+        # Note: IRF access requires the CALDB env var
+        caldb_path = Path(os.environ["GAMMAPY_DATA"]) / Path("cta-1dc/caldb")
+        monkeypatch.setenv("CALDB", str(caldb_path))
 
         table = self.data_store.hdu_table
         assert table.__class__.__name__ == "HDUIndexTable"
@@ -188,7 +189,9 @@ class TestDataStoreMaker:
 
     def test_observation(self, monkeypatch):
         """Check that one observation can be accessed OK"""
-        monkeypatch.setenv("CALDB", str(self.caldb_path))
+        # Note: IRF access requires the CALDB env var
+        caldb_path = Path(os.environ["GAMMAPY_DATA"]) / Path("cta-1dc/caldb")
+        monkeypatch.setenv("CALDB", str(caldb_path))
 
         obs = self.data_store.obs(110380)
         assert obs.obs_id == 110380
