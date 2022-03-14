@@ -65,9 +65,12 @@ def test_datastore_from_file(tmpdir):
 
 
 @requires_data()
-def test_datastore_from_events():
+def test_datastore_from_events(monkeypatch):
     # Test that `DataStore.from_events_files` works.
     # The real tests for `DataStoreMaker` are below.
+    caldb_path = Path(os.environ["GAMMAPY_DATA"]) / Path("cta-1dc/caldb")
+    monkeypatch.setenv("CALDB", str(caldb_path))
+
     path = "$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_110380.fits"
     data_store = DataStore.from_events_files([path])
     assert len(data_store.obs_table) == 1
@@ -142,6 +145,10 @@ class TestDataStoreChecker:
 
 @requires_data("gammapy-data")
 class TestDataStoreMaker:
+
+    # Note: IRF access requires the CALDB env var
+    caldb_path = Path(os.environ["GAMMAPY_DATA"]) / Path("cta-1dc/caldb")
+
     def setup(self):
         paths = [
             f"$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_{obs_id:06d}.fits"
@@ -153,7 +160,9 @@ class TestDataStoreMaker:
         # self.data_store.hdu_table.write("hdu-index.fits.gz", overwrite=True)
         # self.data_store.obs_table.write("obs-index.fits.gz", overwrite=True)
 
-    def test_obs_table(self):
+    def test_obs_table(self, monkeypatch):
+        monkeypatch.setenv("CALDB", str(self.caldb_path))
+
         table = self.data_store.obs_table
         assert table.__class__.__name__ == "ObservationTable"
         assert len(table) == 4
@@ -166,7 +175,9 @@ class TestDataStoreMaker:
         # assert table.time_start[0].iso == "spam"
         # assert table.time_start[-1].iso == "spam"
 
-    def test_hdu_table(self):
+    def test_hdu_table(self, monkeypatch):
+        monkeypatch.setenv("CALDB", str(self.caldb_path))
+
         table = self.data_store.hdu_table
         assert table.__class__.__name__ == "HDUIndexTable"
         assert len(table) == 24
@@ -177,15 +188,13 @@ class TestDataStoreMaker:
 
     def test_observation(self, monkeypatch):
         """Check that one observation can be accessed OK"""
+        monkeypatch.setenv("CALDB", str(self.caldb_path))
+
         obs = self.data_store.obs(110380)
         assert obs.obs_id == 110380
 
         assert obs.events.time[0].iso == "2021-01-21 12:00:03.045"
         assert obs.gti.time_start[0].iso == "2021-01-21 12:00:00.000"
-
-        # Note: IRF access requires the CALDB env var
-        caldb_path = Path(os.environ["GAMMAPY_DATA"]) / Path("cta-1dc/caldb")
-        monkeypatch.setenv("CALDB", str(caldb_path))
 
         assert obs.aeff.__class__.__name__ == "EffectiveAreaTable2D"
         assert obs.bkg.__class__.__name__ == "Background3D"
