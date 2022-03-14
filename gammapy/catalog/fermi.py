@@ -508,15 +508,19 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
 
         if interval == "1-year":
             tag = "Flux_History"
+            if tag not in self.data or "time_axis" not in self.data:
+                raise ValueError(
+                    "'1-year' interval is not available for this catalogue version"
+                )
             time_axis = self.data["time_axis"]
             tag_sqrt_ts = "Sqrt_TS_History"
+
         elif interval == "2-month":
             tag = "Flux2_History"
-            if tag not in self.data:
+            if tag not in self.data or "time_axis_2" not in self.data:
                 raise ValueError(
-                    "Only '1-year' interval is available for this catalogue version"
+                    "2-month interval is not available for this catalogue version"
                 )
-
             time_axis = self.data["time_axis_2"]
             tag_sqrt_ts = "Sqrt_TS2_History"
         else:
@@ -1285,10 +1289,14 @@ class SourceCatalog4FGL(SourceCatalog):
         self.extended_sources_table = Table.read(filename, hdu="ExtendedSources")
         try:
             self.hist_table = Table.read(filename, hdu="Hist_Start")
+            if "MJDREFI"  not in self.hist_table.meta:
+                self.hist_table.meta = Table.read(filename, hdu="GTI").meta
         except KeyError:
             pass
         try:
             self.hist2_table = Table.read(filename, hdu="Hist2_Start")
+            if "MJDREFI"  not in self.hist_table.meta:
+                self.hist2_table.meta = Table.read(filename, hdu="GTI").meta
         except KeyError:
             pass
         
