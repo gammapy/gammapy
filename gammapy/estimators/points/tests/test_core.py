@@ -6,7 +6,7 @@ import astropy.units as u
 from astropy.table import Table
 from gammapy.catalog.fermi import SourceCatalog3FGL, SourceCatalog4FGL
 from gammapy.estimators import FluxPoints
-from gammapy.modeling.models import SpectralModel
+from gammapy.modeling.models import SpectralModel, PowerLawSpectralModel
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import (
     assert_quantity_allclose,
@@ -289,3 +289,16 @@ def test_is_ul(tmp_path):
     assert_allclose(fp.is_ul.data.squeeze(), is_ul)
     table = fp.to_table()
     assert_allclose(table["is_ul"].data.data, is_ul)
+
+def test_flux_points_plot_no_error_bar():
+    table = Table()
+    pwl = PowerLawSpectralModel()
+    e_ref = np.geomspace(1, 100, 7) * u.TeV
+
+    table["e_ref"] = e_ref
+    table["dnde"] = pwl(e_ref)
+    table.meta["SED_TYPE"] = "dnde"
+
+    flux_points = FluxPoints.from_table(table)
+    with mpl_plot_check():
+       flux_points.plot(sed_type="flux")
