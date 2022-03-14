@@ -650,4 +650,4 @@ class CalDBIRF:
     @property
     def file_name(self):
         path = make_path(self.file_dir)
-        return list(path.glob("*"))[0].name
+        return list(path.iterdir())[0].name
