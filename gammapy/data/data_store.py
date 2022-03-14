@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import os
 import logging
 import subprocess
 from pathlib import Path
@@ -650,4 +651,7 @@ class CalDBIRF:
     @property
     def file_name(self):
         path = make_path(self.file_dir)
+        path_str = str(path)
+        if "$CALDB" in path_str:
+            path = Path(path_str.replace("$CALDB", os.environ["CALDB"]))
         return list(path.iterdir())[0].name
