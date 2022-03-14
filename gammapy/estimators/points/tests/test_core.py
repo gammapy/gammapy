@@ -290,6 +290,7 @@ def test_is_ul(tmp_path):
     table = fp.to_table()
     assert_allclose(table["is_ul"].data.data, is_ul)
 
+@requires_dependency("matplotlib")
 def test_flux_points_plot_no_error_bar():
     table = Table()
     pwl = PowerLawSpectralModel()
