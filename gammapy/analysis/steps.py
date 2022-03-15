@@ -310,17 +310,20 @@ class DatasetsAnalysisStep(AnalysisStepBase):
         maker = self._create_dataset_maker()
         maker_safe_mask = self._create_safe_mask_maker()
         bkg_maker = self._create_background_maker()
+
         makers = [maker, maker_safe_mask, bkg_maker]
         makers = [maker for maker in makers if maker is not None]
+
         self.analysis.log.info("Start the data reduction loop.")
-        
+
         datasets_maker = DatasetsMaker(makers,
                                       stack_datasets=datasets_settings.stack,
                                       n_jobs=self.analysis.config.general.n_jobs,
-                                      cutout_mode='partial',
+                                      cutout_mode='trim',
                                       cutout_width=2 * offset_max)
         self.analysis.datasets = datasets_maker.run(stacked, self.analysis.observations)
         #TODO: move progress bar to DatasetsMaker but how with multiprocessing ?
+
 
     def _spectrum_extraction(self):
         """Run all steps for the spectrum extraction."""
