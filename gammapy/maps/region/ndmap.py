@@ -258,6 +258,8 @@ class RegionNDMap(Map):
             Dictionary to store meta data.
         wcs : `~astropy.wcs.WCS`
             WCS projection to use for local projections of the region
+        binsz_wcs: `~astropy.units.Quantity` ot str
+            Bin size used for the default WCS, if wcs=None.
         data : `~numpy.ndarray`
             Data array
 
@@ -364,6 +366,7 @@ class RegionNDMap(Map):
             yield tuple(idx), self.quantity[tuple(idx)]
 
     def fill_by_idx(self, idx, weights=None):
+        # inherited docstring
         # TODO: too complex, simplify!
         idx = pix_tuple_to_idx(idx)
 
@@ -381,13 +384,16 @@ class RegionNDMap(Map):
         self.data.T.flat[idx] += weights
 
     def get_by_idx(self, idxs):
+        # inherited docstring
         return self.data[idxs[::-1]]
 
     def interp_by_coord(self, coords, **kwargs):
+        # inherited docstring
         pix = self.geom.coord_to_pix(coords)
         return self.interp_by_pix(pix, **kwargs)
 
     def interp_by_pix(self, pix, **kwargs):
+        # inherited docstring
         grid_pix = [np.arange(n, dtype=float) for n in self.data.shape[::-1]]
 
         if np.any(np.isfinite(self.data)):
@@ -406,6 +412,7 @@ class RegionNDMap(Map):
         return fn(tuple(pix), clip=False)
 
     def set_by_idx(self, idx, value):
+        # inherited docstring
         self.data[idx[::-1]] = value
 
     @classmethod

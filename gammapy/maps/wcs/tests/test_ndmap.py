@@ -292,13 +292,6 @@ def test_wcsndmap_interp_by_coord(npix, binsz, frame, proj, skydir, axes):
     coords = m.geom.get_coord().flat
     m.set_by_coord(coords, coords[1].value)
     assert_allclose(coords[1].value, m.interp_by_coord(coords, method="nearest"))
-    assert_allclose(coords[1].value, m.interp_by_coord(coords, method="linear"))
-    assert_allclose(coords[1].value, m.interp_by_coord(coords, method="linear"))
-
-    # if geom.is_regular and not geom.is_allsky:
-    #    assert_allclose(
-    #        coords[1].to_value("deg"), m.interp_by_coord(coords, interp="cubic")
-    #    )
 
 
 def test_interp_by_coord_quantities():
@@ -317,6 +310,17 @@ def test_interp_by_coord_quantities():
 
     coords_dict["energy"] = 1 * u.TeV
     assert_allclose(42.0, m.interp_by_coord(coords_dict, method="nearest"))
+
+
+def test_interp_methods():
+    m = Map.create(npix=(3, 3))
+    m.data += np.arange(9).reshape((3, 3))
+
+    actual = m.interp_by_coord({"lon": 0.07, "lat": 0.03}, method="linear")
+    assert_allclose(actual, 4.2)
+
+    actual = m.interp_by_coord({"lon": 0.07, "lat": 0.03}, method="nearest")
+    assert_allclose(actual, 3.)
 
 
 def test_wcsndmap_interp_by_coord_fill_value():

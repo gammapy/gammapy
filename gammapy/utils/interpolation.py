@@ -35,6 +35,9 @@ class ScaledRegularGridInterpolator:
         a 'log' scaling is recommended.
     axis : int or None
         Axis along which to interpolate.
+    method : {"linear", "nearest"}
+        Default interpolation method. Can be overwritten when calling the
+        `ScaledRegularGridInterpolator`.
     **kwargs : dict
         Keyword arguments passed to `RegularGridInterpolator`.
     """
@@ -95,7 +98,7 @@ class ScaledRegularGridInterpolator:
 
         return tuple(points_scaled)
 
-    def __call__(self, points, method="linear", clip=True, **kwargs):
+    def __call__(self, points, method=None, clip=True, **kwargs):
         """Interpolate data points.
 
         Parameters
@@ -103,8 +106,9 @@ class ScaledRegularGridInterpolator:
         points : tuple of `~numpy.ndarray` or `~astropy.units.Quantity`
             Tuple of coordinate arrays of the form (x_1, x_2, x_3, ...). Arrays are
             broadcasted internally.
-        method : {"linear", "nearest"}
-            Linear or nearest neighbour interpolation.
+        method : {None, "linear", "nearest"}
+            Linear or nearest neighbour interpolation. None will choose the default
+            defined on init.
         clip : bool
             Clip values at zero after interpolation.
         """
