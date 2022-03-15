@@ -55,6 +55,16 @@ class TimeType(Time):
         return Time(v)
 
 
+class AnalysisStepEnum(str, Enum):
+    data_reduction = "data-reduction"
+    observations = "observations"
+    datasets = "datasets"
+    excess_map = "excess-map"
+    fit = "fit"
+    flux_points = "flux-points"
+    light_curve = "light-curve"
+    
+
 class ReductionTypeEnum(str, Enum):
     spectrum = "1d"
     cube = "3d"
@@ -235,6 +245,9 @@ class GeneralConfig(GammapyBaseConfig):
     n_jobs: int = 1
     datasets_file: Path = None
     models_file: Path = None
+    steps: List[AnalysisStepEnum] = ["data-reduction", "fit", "flux-points"]
+    overwrite: List[bool] = [True, True, True]
+
 
 class AnalysisConfig(GammapyBaseConfig):
     """Gammapy analysis configuration."""
