@@ -2,7 +2,6 @@
 """classes containing the analysis steps supported by the high level interface"""
 
 import abc
-import os
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
 from regions import CircleSkyRegion
@@ -27,8 +26,10 @@ from gammapy.modeling import Fit
 from gammapy.utils.pbar import progress_bar
 from gammapy.utils.scripts import make_path, make_name
 
+
 class AnalysisStepBase(abc.ABC):
     tag = "analysis-step"
+
     def __init__(self, analysis, name=None, overwrite=True):
         self.analysis = analysis
         self.overwrite = overwrite
@@ -65,14 +66,11 @@ class DataReductionAnalysisStep(AnalysisStepBase):
         self.fit = Fit()
         self.fit_result = None
         self.flux_points = None
+
     def run(self):
-        filepath = self.analysis.config.general.datasets_file
-        if filepath is not None and os.path.exists(filepath) and not self.overwrite:
-            self.analysis.read_datasets()
-        else:
-            ObservationsAnalysisStep(self.analysis, self.overwrite).run()
-            DatasetsAnalysisStep(self.analysis, self.overwrite).get_datasets()
-            self.analysis.write_datasets()
+        #TODO: check if exits and read else run and write 
+        ObservationsAnalysisStep(self.analysis, self.overwrite).run()
+        DatasetsAnalysisStep(self.analysis, self.overwrite).get_datasets()
             
 class ObservationsAnalysisStep(AnalysisStepBase):
     tag = "observations"
@@ -82,7 +80,7 @@ class ObservationsAnalysisStep(AnalysisStepBase):
         observations_settings = self.analysis.config.observations
         self._set_data_store()
 
-        log.info("Fetching observations.")
+        self.analysis.log.info("Fetching observations.")
         ids = self._make_obs_table_selection()
 
         self.analysis.observations = self.analysis.datastore.get_observations(
@@ -99,16 +97,16 @@ class ObservationsAnalysisStep(AnalysisStepBase):
             self.analysis.observations = self.analysis.observations.select_time(time_intervals)
 
         for obs in self.analysis.observations:
-            log.debug(obs)
+            self.analysis.log.debug(obs)
 
     def _set_data_store(self):
         """Set the datastore on the Analysis object."""
         path = make_path(self.analysis.config.observations.datastore)
         if path.is_file():
-            log.debug(f"Setting datastore from file: {path}")
+            self.analysis.log.debug(f"Setting datastore from file: {path}")
             self.analysis.datastore = DataStore.from_file(path)
         elif path.is_dir():
-            log.debug(f"Setting datastore from directory: {path}")
+            self.analysis.log.debug(f"Setting datastore from directory: {path}")
             self.analysis.datastore = DataStore.from_dir(path)
         else:
             raise FileNotFoundError(f"Datastore not found: {path}")
@@ -153,12 +151,8 @@ class DatasetsAnalysisStep(AnalysisStepBase):
     tag = "datasets"
 
     def run(self):
-        filepath = self.analysis.config.datasets_file
-        if filepath is not None and os.path.exists(filepath) and not self.overwrite:
-            self.analysis.read_datasets()
-        else:
-            self.get_datasets()
-            self.analysis.write_datasets()
+        #TODO: check if exits and read else run and write 
+        self.get_datasets()
 
     def get_datasets(self):
         """Produce reduced datasets."""
@@ -209,7 +203,7 @@ class DatasetsAnalysisStep(AnalysisStepBase):
 
     def _create_geometry(self):
         """Create the geometry."""
-        log.debug("Creating geometry.")
+        self.analysis.log.debug("Creating geometry.")
         datasets_settings = self.analysis.config.datasets
         geom_settings = datasets_settings.geom
         axes = [make_energy_axis(geom_settings.axes.energy)]
@@ -225,7 +219,7 @@ class DatasetsAnalysisStep(AnalysisStepBase):
 
     def _create_reference_dataset(self, name=None):
         """Create the reference dataset for the current analysis."""
-        log.debug("Creating target Dataset.")
+        self.analysis.log.debug("Creating target Dataset.")
         geom = self._create_geometry()
 
         geom_settings = self.analysis.config.datasets.geom
@@ -244,7 +238,7 @@ class DatasetsAnalysisStep(AnalysisStepBase):
 
     def _create_dataset_maker(self):
         """Create the Dataset Maker."""
-        log.debug("Creating the target Dataset Maker.")
+        self.analysis.log.debug("Creating the target Dataset Maker.")
 
         datasets_settings = self.analysis.config.datasets
         if datasets_settings.type == "3d":
@@ -264,7 +258,7 @@ class DatasetsAnalysisStep(AnalysisStepBase):
 
     def _create_safe_mask_maker(self):
         """Create the SafeMaskMaker."""
-        log.debug("Creating the mask_safe Maker.")
+        self.analysis.log.debug("Creating the mask_safe Maker.")
 
         safe_mask_selection = self.analysis.config.datasets.safe_mask.methods
         safe_mask_settings = self.analysis.config.datasets.safe_mask.parameters
@@ -272,7 +266,7 @@ class DatasetsAnalysisStep(AnalysisStepBase):
 
     def _create_background_maker(self):
         """Create the Background maker."""
-        log.info("Creating the background Maker.")
+        self.analysis.log.info("Creating the background Maker.")
 
         datasets_settings = self.analysis.config.datasets
         bkg_maker_config = {}
@@ -287,22 +281,22 @@ class DatasetsAnalysisStep(AnalysisStepBase):
 
         bkg_maker = None
         if bkg_method == "fov_background":
-            log.debug(f"Creating FoVBackgroundMaker with arguments {bkg_maker_config}")
+            self.analysis.log.debug(f"Creating FoVBackgroundMaker with arguments {bkg_maker_config}")
             bkg_maker = FoVBackgroundMaker(**bkg_maker_config)
         elif bkg_method == "ring":
             bkg_maker = RingBackgroundMaker(**bkg_maker_config)
-            log.debug(f"Creating RingBackgroundMaker with arguments {bkg_maker_config}")
+            self.analysis.log.debug(f"Creating RingBackgroundMaker with arguments {bkg_maker_config}")
             if datasets_settings.geom.axes.energy.nbins > 1:
                 raise ValueError(
                     "You need to define a single-bin energy geometry for your dataset."
                 )
         elif bkg_method == "reflected":
             bkg_maker = ReflectedRegionsBackgroundMaker(**bkg_maker_config)
-            log.debug(
+            self.analysis.log.debug(
                 f"Creating ReflectedRegionsBackgroundMaker with arguments {bkg_maker_config}"
             )
         else:
-            log.warning("No background maker set. Check configuration.")
+            self.analysis.log.warning("No background maker set. Check configuration.")
         return bkg_maker
 
     def _map_making(self):
@@ -310,7 +304,7 @@ class DatasetsAnalysisStep(AnalysisStepBase):
         datasets_settings = self.analysis.config.datasets
         offset_max = datasets_settings.geom.selection.offset_max
 
-        log.info("Creating reference dataset and makers.")
+        self.analysis.log.info("Creating reference dataset and makers.")
         stacked = self._create_reference_dataset(name="stacked")
 
         maker = self._create_dataset_maker()
@@ -318,7 +312,7 @@ class DatasetsAnalysisStep(AnalysisStepBase):
         bkg_maker = self._create_background_maker()
         makers = [maker, maker_safe_mask, bkg_maker]
         makers = [maker for maker in makers if maker is not None]
-        log.info("Start the data reduction loop.")
+        self.analysis.log.info("Start the data reduction loop.")
         
         datasets_maker = DatasetsMaker(makers,
                                       stack_datasets=datasets_settings.stack,
@@ -330,7 +324,7 @@ class DatasetsAnalysisStep(AnalysisStepBase):
 
     def _spectrum_extraction(self):
         """Run all steps for the spectrum extraction."""
-        log.info("Reducing spectrum datasets.")
+        self.analysis.log.info("Reducing spectrum datasets.")
         datasets_settings = self.analysis.config.datasets
         dataset_maker = self._create_dataset_maker()
         safe_mask_maker = self._create_safe_mask_maker()
@@ -340,17 +334,17 @@ class DatasetsAnalysisStep(AnalysisStepBase):
 
         datasets = []
         for obs in progress_bar(self.analysis.observations, desc="Observations"):
-            log.debug(f"Processing observation {obs.obs_id}")
+            self.analysis.log.debug(f"Processing observation {obs.obs_id}")
             dataset = dataset_maker.run(reference.copy(), obs)
             if bkg_maker is not None:
                 dataset = bkg_maker.run(dataset, obs)
                 if dataset.counts_off is None:
-                    log.debug(
+                    self.analysis.log.debug(
                         f"No OFF region found for observation {obs.obs_id}. Discarding."
                     )
                     continue
             dataset = safe_mask_maker.run(dataset, obs)
-            log.debug(dataset)
+            self.analysis.log.debug(dataset)
             datasets.append(dataset)
         self.analysis.datasets = Datasets(datasets)
 
@@ -381,7 +375,7 @@ class ExcessMapAnalysisStep(AnalysisStepBase):
         """Calculate excess map with respect to the current model."""
         excess_settings = self.analysis.config.excess_map
         #TODO: allow a list of kernel sizes
-        log.info("Computing excess maps.")
+        self.analysis.log.info("Computing excess maps.")
 
         if self.analysis.config.datasets.type == "1d":
             raise ValueError("Cannot compute excess map for 1D dataset")
@@ -417,10 +411,10 @@ class FitAnalysisStep(AnalysisStepBase):
                 geom = dataset.counts.geom
                 dataset.mask_fit = geom.energy_mask(energy_min, energy_max)
     
-        log.info("Fitting datasets.")
+        self.analysis.log.info("Fitting datasets.")
         result = self.analysis.fit.run(datasets=self.analysis.datasets)
         self.analysis.fit_result = result
-        log.info(self.analysis.fit_result)
+        self.analysis.log.info(self.analysis.fit_result)
 
 
 class FluxPointsAnalysisStep(AnalysisStepBase):
@@ -431,7 +425,7 @@ class FluxPointsAnalysisStep(AnalysisStepBase):
             raise RuntimeError("No datasets set.")
     
         fp_settings = self.analysis.config.flux_points
-        log.info("Calculating flux points.")
+        self.analysis.log.info("Calculating flux points.")
         energy_edges = make_energy_axis(fp_settings.energy).edges
         flux_point_estimator = FluxPointsEstimator(
             energy_edges=energy_edges,
@@ -447,21 +441,21 @@ class FluxPointsAnalysisStep(AnalysisStepBase):
         )
         cols = ["e_ref", "dnde", "dnde_ul", "dnde_err", "sqrt_ts"]
         table = self.analysis.flux_points.data.to_table(sed_type="dnde")
-        log.info("\n{}".format(table[cols]))
+        self.analysis.log.info("\n{}".format(table[cols]))
 
 class LightCurveAnalysisStep(AnalysisStepBase):
     tag= "light-curve"
     def run(self):
         """Calculate light curve for a specific model component."""
         lc_settings = self.analysis.config.light_curve
-        log.info("Computing light curve.")
+        self.analysis.log.info("Computing light curve.")
         energy_edges = make_energy_axis(lc_settings.energy_edges).edges
 
         if (
             lc_settings.time_intervals.start is None
             or lc_settings.time_intervals.stop is None
         ):
-            log.info(
+            self.analysis.log.info(
                 "Time intervals not defined. Extract light curve on datasets GTIs."
             )
             time_intervals = None
@@ -482,7 +476,7 @@ class LightCurveAnalysisStep(AnalysisStepBase):
         )
         lc = light_curve_estimator.run(datasets=self.analysis.datasets)
         self.analysis.light_curve = lc
-        log.info(
+        self.analysis.log.info(
             "\n{}".format(
                 self.analysis.light_curve.to_table(format="lightcurve", sed_type="flux")
             )
