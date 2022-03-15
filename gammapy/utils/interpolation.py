@@ -35,6 +35,9 @@ class ScaledRegularGridInterpolator:
         a 'log' scaling is recommended.
     axis : int or None
         Axis along which to interpolate.
+    method : {"linear", "nearest"}
+        Default interpolation method. Can be overwritten when calling the
+        `ScaledRegularGridInterpolator`.
     **kwargs : dict
         Keyword arguments passed to `RegularGridInterpolator`.
     """

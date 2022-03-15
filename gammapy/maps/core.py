@@ -805,7 +805,7 @@ class Map(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def interp_by_coord(self, coords, method="nearest", fill_value=None):
+    def interp_by_coord(self, coords, method="linear", fill_value=None):
         """Interpolate map values at the given map coordinates.
 
         Parameters
@@ -814,11 +814,9 @@ class Map(abc.ABC):
             Coordinate arrays for each dimension of the map.  Tuple
             should be ordered as (lon, lat, x_0, ..., x_n) where x_i
             are coordinates for non-spatial dimensions of the map.
-        method : {"nearest", "linear"}
-            Method to interpolate data values. By default no
-            interpolation is performed and the return value will be
-            the amplitude of the pixel encompassing the given
-            coordinate.
+        method : {"linear", "nearest"}
+            Method to interpolate data values. By default linear
+            interpolation is performed.
         fill_value : None or float value
             The value to use for points outside of the interpolation domain.
             If None, values outside the domain are extrapolated.
@@ -831,7 +829,7 @@ class Map(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def interp_by_pix(self, pix, method="nearest", fill_value=None):
+    def interp_by_pix(self, pix, method="linear", fill_value=None):
         """Interpolate map values at the given pixel coordinates.
 
         Parameters
@@ -841,11 +839,9 @@ class Map(abc.ABC):
             map.  Tuple should be ordered as (p_lon, p_lat, p_0, ...,
             p_n) where p_i are pixel coordinates for non-spatial
             dimensions of the map.
-        method : {"nearest", "linear"}
-            Method to interpolate data values.  By default no
-            interpolation is performed and the return value will be
-            the amplitude of the pixel encompassing the given
-            coordinate.
+        method : {"linear", "nearest"}
+            Method to interpolate data values. By default linear
+            interpolation is performed.
         fill_value : None or float value
             The value to use for points outside of the interpolation domain.
             If None, values outside the domain are extrapolated.
