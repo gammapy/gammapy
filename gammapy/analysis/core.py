@@ -228,6 +228,19 @@ class Analysis:
             raise RuntimeError("Missing datasets_file in config.general")
 
 
+    def check_datasets(self):
+        if not self.datasets and not self.config.general.datasets_file:
+            raise RuntimeError("Missing datasets")
+        elif not self.datasets:
+            self.read_datasets()
+    
+    def check_models(self):
+        if not self.models and not self.config.general.models_file:
+            raise RuntimeError("Missing models")
+        elif not self.models:
+            self.read_models(self.config.general.models_file)
+
+
     def update_config(self, config):
         """Update the configuration."""
         self.config = self.config.update(config=config)
