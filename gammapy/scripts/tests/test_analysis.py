@@ -13,16 +13,19 @@ def test_cli_analysis_config(tmp_path):
 
 @requires_data()
 def test_cli_analysis_run(tmp_path):
+    
     path_config = tmp_path / "config.yaml"
+    path_datasets = tmp_path / "datasets.yaml"
     config = get_example_config("1d")
+    config.datasets.background.method = "reflected"
+    config.general.datasets_file = str(path_datasets)
+    config.general.steps = ["data-reduction"]
+
     config.write(path_config)
-    path_datasets = tmp_path / "datasets"
     args = [
         "analysis",
         "run",
         f"--filename={path_config}",
-        f"--out={path_datasets}",
-        "--overwrite",
     ]
     run_cli(cli, args)
     assert path_datasets.exists()
