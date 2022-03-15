@@ -2,6 +2,7 @@
 """classes containing the analysis steps supported by the high level interface"""
 
 import abc
+import os
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
 from regions import CircleSkyRegion
@@ -22,13 +23,14 @@ from gammapy.makers import (
     DatasetsMaker
 )
 from gammapy.maps import Map, MapAxis, RegionGeom, WcsGeom
-from gammapy.modeling import Fit
 from gammapy.utils.pbar import progress_bar
 from gammapy.utils.scripts import make_path, make_name
 
 
 class AnalysisStepBase(abc.ABC):
     tag = "analysis-step"
+    require_datasets = False
+    require_models = False
 
     def __init__(self, analysis, name=None, overwrite=True):
         self.analysis = analysis
@@ -39,8 +41,15 @@ class AnalysisStepBase(abc.ABC):
     def name(self):
         return self._name
     
-    @abc.abstractmethod
     def run(self):
+        if self.require_datasets:
+            self.analysis.check_datasets()
+        if self.require_models:
+            self.analysis.check_models()
+        self._run()
+    
+    @abc.abstractmethod
+    def _run(self):
         pass
 
 
@@ -56,26 +65,19 @@ class AnalysisStep:
 class DataReductionAnalysisStep(AnalysisStepBase):
     tag = "data-reduction"
 
-    def __init__(self, config):
-        self.config = config
-        self.config.set_logging()
-        self.datastore = None
-        self.observations = None
-        self.datasets = None
-        self.models = None
-        self.fit = Fit()
-        self.fit_result = None
-        self.flux_points = None
+    def _run(self):
+        filepath = self.analysis.config.general.datasets_file
+        if filepath is not None and os.path.exists(filepath) and not self.overwrite:
+            self.analysis.read_datasets()
+        else:
+            ObservationsAnalysisStep(self.analysis, self.overwrite).run()
+            DatasetsAnalysisStep(self.analysis, self.overwrite).get_datasets()
+            self.analysis.write_datasets()
 
-    def run(self):
-        #TODO: check if exits and read else run and write 
-        ObservationsAnalysisStep(self.analysis, self.overwrite).run()
-        DatasetsAnalysisStep(self.analysis, self.overwrite).get_datasets()
-            
 class ObservationsAnalysisStep(AnalysisStepBase):
     tag = "observations"
 
-    def run(self):
+    def _run(self):
         """Fetch observations from the data store according to criteria defined in the configuration."""
         observations_settings = self.analysis.config.observations
         self._set_data_store()
@@ -150,8 +152,8 @@ class ObservationsAnalysisStep(AnalysisStepBase):
 class DatasetsAnalysisStep(AnalysisStepBase):
     tag = "datasets"
 
-    def run(self):
-        #TODO: check if exits and read else run and write 
+    def _run(self):
+        #TODO: check if exits and read else run and write
         self.get_datasets()
 
     def get_datasets(self):
@@ -374,7 +376,9 @@ def make_energy_axis(axis, name="energy"):
 
 class ExcessMapAnalysisStep(AnalysisStepBase):
     tag = "excess-map"
-    def run(self):
+    require_datasets = True
+
+    def _run(self):
         """Calculate excess map with respect to the current model."""
         excess_settings = self.analysis.config.excess_map
         #TODO: allow a list of kernel sizes
@@ -398,13 +402,14 @@ class ExcessMapAnalysisStep(AnalysisStepBase):
         )
         self.analysis.excess_map = excess_map_estimator.run(self.analysis.datasets[0])
 
+
 class FitAnalysisStep(AnalysisStepBase):
     tag = "fit"
-    def run(self):
-        """Fitting reduced datasets to model."""
-        if not self.analysis.models:
-            raise RuntimeError("Missing models")
-    
+    require_datasets = True
+    require_models = True
+
+    def _run(self):
+        """Fitting reduced datasets to model."""  
         fit_settings = self.analysis.config.fit
         for dataset in self.analysis.datasets:
             if fit_settings.fit_range:
@@ -422,13 +427,14 @@ class FitAnalysisStep(AnalysisStepBase):
 
 class FluxPointsAnalysisStep(AnalysisStepBase):
     tag="flux-points"
-    def run(self):
-        """Calculate flux points for a specific model component."""
-        if not self.analysis.datasets:
-            raise RuntimeError("No datasets set.")
+    require_datasets = True
+    require_models = True
     
+    def _run(self):
+        """Calculate flux points for a specific model component."""
         fp_settings = self.analysis.config.flux_points
         self.analysis.log.info("Calculating flux points.")
+
         energy_edges = make_energy_axis(fp_settings.energy).edges
         flux_point_estimator = FluxPointsEstimator(
             energy_edges=energy_edges,
@@ -448,7 +454,10 @@ class FluxPointsAnalysisStep(AnalysisStepBase):
 
 class LightCurveAnalysisStep(AnalysisStepBase):
     tag= "light-curve"
-    def run(self):
+    require_datasets = True
+    require_models = True
+
+    def _run(self):
         """Calculate light curve for a specific model component."""
         lc_settings = self.analysis.config.light_curve
         self.analysis.log.info("Computing light curve.")
@@ -469,6 +478,9 @@ class LightCurveAnalysisStep(AnalysisStepBase):
                     lc_settings.time_intervals.start, lc_settings.time_intervals.stop
                 )
             ]
+
+        self.analysis.check_datasets()
+        self.analysis.check_models()
 
         light_curve_estimator = LightCurveEstimator(
             time_intervals=time_intervals,
