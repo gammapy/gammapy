@@ -29,8 +29,8 @@ from gammapy.utils.scripts import make_path, make_name
 
 class AnalysisStepBase(abc.ABC):
     tag = "analysis-step"
-    require_datasets = False
-    require_models = False
+    requires_datasets = False
+    requires_models = False
 
     def __init__(self, analysis, name=None, overwrite=True):
         self.analysis = analysis
@@ -42,9 +42,9 @@ class AnalysisStepBase(abc.ABC):
         return self._name
     
     def run(self):
-        if self.require_datasets:
+        if self.requires_datasets:
             self.analysis.check_datasets()
-        if self.require_models:
+        if self.requires_models:
             self.analysis.check_models()
         self._run()
     
@@ -376,7 +376,7 @@ def make_energy_axis(axis, name="energy"):
 
 class ExcessMapAnalysisStep(AnalysisStepBase):
     tag = "excess-map"
-    require_datasets = True
+    requires_datasets = True
 
     def _run(self):
         """Calculate excess map with respect to the current model."""
@@ -405,8 +405,8 @@ class ExcessMapAnalysisStep(AnalysisStepBase):
 
 class FitAnalysisStep(AnalysisStepBase):
     tag = "fit"
-    require_datasets = True
-    require_models = True
+    requires_datasets = True
+    requires_models = True
 
     def _run(self):
         """Fitting reduced datasets to model."""  
@@ -427,8 +427,8 @@ class FitAnalysisStep(AnalysisStepBase):
 
 class FluxPointsAnalysisStep(AnalysisStepBase):
     tag="flux-points"
-    require_datasets = True
-    require_models = True
+    requires_datasets = True
+    requires_models = True
     
     def _run(self):
         """Calculate flux points for a specific model component."""
@@ -454,8 +454,8 @@ class FluxPointsAnalysisStep(AnalysisStepBase):
 
 class LightCurveAnalysisStep(AnalysisStepBase):
     tag= "light-curve"
-    require_datasets = True
-    require_models = True
+    requires_datasets = True
+    requires_models = True
 
     def _run(self):
         """Calculate light curve for a specific model component."""
