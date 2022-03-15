@@ -571,7 +571,7 @@ class FluxMaps:
     def flux_ref(self):
         """Reference integral flux"""
         if not self.is_convertible_to_flux_sed_type:
-            raise ValueError("Missing energy range definition, cannot convert to flux sed type.")
+            raise ValueError("Missing energy range definition, cannot convert to sed type 'flux'.")
 
         energy_min = self.energy_axis.edges[:-1]
         energy_max = self.energy_axis.edges[1:]
@@ -582,7 +582,7 @@ class FluxMaps:
     def eflux_ref(self):
         """Reference energy flux"""
         if not self.is_convertible_to_flux_sed_type:
-            raise ValueError("Missing energy range definition, cannot convert to flux sed type.")
+            raise ValueError("Missing energy range definition, cannot convert to sed type 'eflux'.")
 
         energy_min = self.energy_axis.edges[:-1]
         energy_max = self.energy_axis.edges[1:]

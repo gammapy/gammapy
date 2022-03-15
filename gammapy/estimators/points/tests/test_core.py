@@ -314,6 +314,7 @@ def test_is_ul(tmp_path):
     table = fp.to_table()
     assert_allclose(table["is_ul"].data.data, is_ul)
 
+
 @requires_dependency("matplotlib")
 def test_flux_points_plot_no_error_bar():
     table = Table()
@@ -326,4 +327,4 @@ def test_flux_points_plot_no_error_bar():
 
     flux_points = FluxPoints.from_table(table)
     with mpl_plot_check():
-       flux_points.plot(sed_type="flux")
+       _ = flux_points.plot(sed_type="dnde")
