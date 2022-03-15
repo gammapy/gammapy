@@ -43,24 +43,27 @@ class FluxPointsDataset(Dataset):
     >>> dataset = FluxPointsDataset.read(filename)
     >>> model = SkyModel(spectral_model=PowerLawSpectralModel())
     >>> dataset.models = model
+
+    Make the fit
+    
     >>> fit = Fit()
     >>> result = fit.run([dataset])
     >>> print(result)
     OptimizeResult
     <BLANKLINE>
-        backend    : minuit
-        method     : migrad
-        success    : True
-        message    : Optimization terminated successfully.
-        nfev       : 135
-        total stat : 25.21
+    	backend    : minuit
+    	method     : migrad
+    	success    : True
+    	message    : Optimization terminated successfully.
+    	nfev       : 135
+    	total stat : 25.21
     <BLANKLINE>
     CovarianceResult
     <BLANKLINE>
-        backend    : minuit
-        method     : hesse
-        success    : True
-        message    : Hesse terminated successfully.
+    	backend    : minuit
+    	method     : hesse
+    	success    : True
+    	message    : Hesse terminated successfully.
 
     >>> print(result.parameters.to_table())
           type      name     value         unit        error   min max frozen link
