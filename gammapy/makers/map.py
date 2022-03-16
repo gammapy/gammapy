@@ -3,7 +3,7 @@ import logging
 import astropy.units as u
 from astropy.table import Table
 from regions import PointSkyRegion
-from gammapy.irf import EDispKernelMap, PSFMap, FoVAlignment
+from gammapy.irf import EDispKernelMap, PSFMap
 from gammapy.maps import Map
 from .core import Maker
 from .utils import (
@@ -210,18 +210,13 @@ class MapDatasetMaker(Maker):
         if isinstance(bkg, Map):
             return bkg.interp_to_geom(geom=geom, preserve_counts=True)
 
-        if observation.bkg.fov_alignment == FoVAlignment.ALTAZ:
-            pointing = observation.fixed_pointing_info
-        else:
-            pointing = observation.pointing_radec
-
         use_region_center = getattr(self, "use_region_center", True)
 
         if self.background_interp_missing_data:
             bkg.interp_missing_data(axis_name="energy")
 
         return make_map_background_irf(
-            pointing=pointing,
+            pointing=observation.fixed_pointing_info,
             ontime=observation.observation_time_duration,
             bkg=bkg,
             geom=geom,
