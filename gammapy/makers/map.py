@@ -3,7 +3,7 @@ import logging
 import astropy.units as u
 from astropy.table import Table
 from regions import PointSkyRegion
-from gammapy.irf import EDispKernelMap, PSFMap, FoVAlignment
+from gammapy.irf import EDispKernelMap, PSFMap
 from gammapy.maps import Map
 from .core import Maker
 from .utils import (
