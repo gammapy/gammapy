@@ -92,6 +92,7 @@ class DataStore:
 
         hdu_table = HDUIndexTable.read(filename, hdu=hdu_hdu, format="fits")
 
+        obs_table=None
         if hdu_obs:
             obs_table = ObservationTable.read(filename, hdu=hdu_obs, format="fits")
 

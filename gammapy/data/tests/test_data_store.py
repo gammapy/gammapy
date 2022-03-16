@@ -236,9 +236,13 @@ def test_datastore_from_dir_no_obs_index(caplog):
     )
 
     obs = data_store.obs(23523)
+    observations = data_store.get_observations([23523, 23592])
 
     assert data_store.obs_table is None
     assert "WARNING" in [record.levelname for record in caplog.records]
     message = "Cannot find observation index file : bad_name."
     assert message in [record.message for record in caplog.records]
     assert "No observation index table." in data_store.info(show=False)
+
+    assert obs.obs_info is None
+    assert len(observations) == 2
