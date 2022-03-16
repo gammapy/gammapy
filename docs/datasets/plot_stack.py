@@ -3,7 +3,7 @@
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 import matplotlib.pyplot as plt
-from gammapy.data import Observation
+from gammapy.data import Observation, observatory_locations
 from gammapy.datasets import SpectrumDataset
 from gammapy.datasets.map import MIGRA_AXIS_DEFAULT
 from gammapy.irf import EffectiveAreaTable2D, EnergyDispersion2D
@@ -35,6 +35,7 @@ observation = Observation.create(
     irfs={"aeff": aeff, "edisp": edisp},
     tstart=0 * u.h,
     tstop=0.5 * u.h,
+    location=observatory_locations["hess"],
 )
 
 geom = RegionGeom.create("icrs;circle(0, 0, 0.1)", axes=[energy_reco])
