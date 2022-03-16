@@ -79,7 +79,6 @@ def energy_str_formatting(E):
     str : str
         Returns a string with energy unit formatted        
     """    
-    E.to('eV')
     if (E >= 1e3*u.eV) and (E < 1e6*u.eV):
         E = E.to('keV')
     elif (E >= 1e6*u.eV) and (E < 1e9*u.eV):
