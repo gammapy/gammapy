@@ -3,6 +3,7 @@
 import logging
 import astropy.units as u
 import numpy as np
+from math import floor
 
 __all__ = ["standardise_unit", "unit_from_fits_image_hdu"]
 
@@ -79,19 +80,15 @@ def energy_str_formatting(E):
     str : str
         Returns a string with energy unit formatted        
     """    
-    i = floor(np.log10(E.to_value(u.eV)) / 3)
+    i = floor(np.log10(E.to_value(u.eV)) / 3) # a new unit every 3 decades
     if i > 4:  # default for very large values
         unit = u.PeV
     else:  # get best large unit
         unit = (u.eV, u.keV, u.MeV, u.GeV, u.TeV, u.PeV)[i]
 
     v = E.to_value(unit)
-    if v < 10:
-        prec=2
-    elif (v >= 10) and (v < 100):
-        prec=1
-    elif (v >= 100) and (v < 1000):
-        prec=0
+    i=floor(np.log10(v))
+    prec=(2,1,0)[i]
 
     return f"{v:0.{prec}f} {unit}"
 
