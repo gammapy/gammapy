@@ -236,7 +236,7 @@ def test_datastore_from_dir_no_obs_index(caplog):
     )
 
     obs = data_store.obs(23523)
-    observations = data_store.get_observations([23523, 23592])
+    observations = data_store.get_observations()
 
     assert data_store.obs_table is None
     assert "WARNING" in [record.levelname for record in caplog.records]
@@ -245,4 +245,4 @@ def test_datastore_from_dir_no_obs_index(caplog):
     assert "No observation index table." in data_store.info(show=False)
 
     assert obs.obs_info is None
-    assert len(observations) == 2
+    assert len(observations) == 105
