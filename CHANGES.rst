@@ -38,7 +38,6 @@ Improved CI. Use mamba. Added pyflakes step to CI. Parallel execution of noteboo
 Pull Requests
 +++++++++++++
 This list is incomplete. Small improvements and bug fixes are not listed here.
-Take into account method argument in WcsNDMap.interp_by_coord
 - [#3837] Allow nearest neighbor interpolation with scalar data (Axel Donath)
 - [#3817] Improve documentation theme (Jose Enrique Ruiz)
 - [#3810] Fix doc strings in estimators (Atreyee Sinha)
