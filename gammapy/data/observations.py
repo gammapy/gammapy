@@ -6,8 +6,11 @@ import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
 from astropy.units import Quantity
-from gammapy.utils.fits import LazyFitsData, earth_location_from_dict
+import astropy.units as u
+from gammapy.utils.fits import LazyFitsData, earth_location_to_dict
 from gammapy.utils.testing import Checker
+from gammapy.utils.time import time_ref_to_dict, time_relative_to_ref
+from astropy.utils import lazyproperty
 from .event_list import EventList, EventListChecker
 from .filters import ObservationFilter
 from .gti import GTI
@@ -124,25 +127,34 @@ class Observation:
         return gti
 
     @staticmethod
-    def _get_obs_info(pointing, deadtime_fraction):
+    def _get_obs_info(pointing, deadtime_fraction, time_start, time_stop, reference_time, location):
         """Create obs info dict from in memory data"""
-        return {
+        obs_info = {
             "RA_PNT": pointing.icrs.ra.deg,
             "DEC_PNT": pointing.icrs.dec.deg,
             "DEADC": 1 - deadtime_fraction,
         }
+        obs_info.update(time_ref_to_dict(reference_time))
+        obs_info['TSTART'] = time_relative_to_ref(time_start, obs_info).to_value(u.s)
+        obs_info['TSTOP'] = time_relative_to_ref(time_stop, obs_info).to_value(u.s)
+
+        if location is not None:
+            obs_info.update(earth_location_to_dict(location))
+
+        return obs_info
 
     @classmethod
     def create(
         cls,
         pointing,
+        location=None,
         obs_id=0,
         livetime=None,
         tstart=None,
         tstop=None,
         irfs=None,
         deadtime_fraction=0.0,
-        reference_time="2000-01-01",
+        reference_time=Time("2000-01-01 00:00:00"),
     ):
         """Create an observation.
 
@@ -156,11 +168,13 @@ class Observation:
             Observation ID as identifier
         livetime : ~astropy.units.Quantity`
             Livetime exposure of the simulated observation
-        tstart : `~astropy.units.Quantity`
-            Start time of observation w.r.t reference_time
-        tstop : `~astropy.units.Quantity` w.r.t reference_time
-            Stop time of observation
-        irfs : dict
+        tstart: `~astropy.time.Time` or `~astropy.units.Quantity`
+            Start time of observation as `~astropy.time.Time` or duration
+            relative to `reference_time`
+        tstop: `astropy.time.Time` or `~astropy.units.Quantity`
+            Stop time of observation as `~astropy.time.Time` or duration
+            relative to `reference_time`
+        irfs: dict
             IRFs used for simulating the observation: `bkg`, `aeff`, `psf`, `edisp`
         deadtime_fraction : float, optional
             Deadtime fraction, defaults to 0
@@ -172,15 +186,20 @@ class Observation:
         obs : `gammapy.data.MemoryObservation`
         """
         if tstart is None:
-            tstart = Quantity(0.0, "hr")
+            tstart = reference_time.copy()
 
         if tstop is None:
             tstop = tstart + Quantity(livetime)
 
-        gti = GTI.create([tstart], [tstop], reference_time=reference_time)
+        gti = GTI.create(tstart, tstop, reference_time=reference_time)
 
         obs_info = cls._get_obs_info(
-            pointing=pointing, deadtime_fraction=deadtime_fraction
+            pointing=pointing,
+            deadtime_fraction=deadtime_fraction,
+            time_start=gti.time_start[0],
+            time_stop=gti.time_stop[0],
+            reference_time=reference_time,
+            location=location,
         )
 
         return cls(
@@ -240,35 +259,34 @@ class Observation:
         """
         return 1 - self.obs_info["DEADC"]
 
+    @lazyproperty
+    def fixed_pointing_info(self):
+        """Fixed pointing info for this observation (`FixedPointingInfo`)."""
+        meta = self.obs_info.copy() if self.obs_info is not None else {}
+        if self.events is not None:
+            meta.update(self.events.table.meta)
+        return FixedPointingInfo(meta)
+
     @property
     def pointing_radec(self):
         """Pointing RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)."""
-        lon, lat = (
-            self.obs_info.get("RA_PNT", np.nan),
-            self.obs_info.get("DEC_PNT", np.nan),
-        )
-        return SkyCoord(lon, lat, unit="deg", frame="icrs")
+        return self.fixed_pointing_info.radec
 
     @property
     def pointing_altaz(self):
-        """Pointing ALT / AZ sky coordinates (`~astropy.coordinates.SkyCoord`)."""
-        alt, az = (
-            self.obs_info.get("ALT_PNT", np.nan),
-            self.obs_info.get("AZ_PNT", np.nan),
-        )
-        return SkyCoord(az, alt, unit="deg", frame="altaz")
+        return self.fixed_pointing_info.altaz
 
     @property
     def pointing_zen(self):
         """Pointing zenith angle sky (`~astropy.units.Quantity`)."""
-        return Quantity(self.obs_info.get("ZEN_PNT", np.nan), unit="deg")
+        return self.fixed_pointing_info.altaz.zen
 
     @property
-    def fixed_pointing_info(self):
-        """Fixed pointing info for this observation (`FixedPointingInfo`)."""
-        return FixedPointingInfo(self.events.table.meta)
+    def observatory_earth_location(self):
+        """Observatory location (`~astropy.coordinates.EarthLocation`)."""
+        return self.fixed_pointing_info.location
 
-    @property
+    @lazyproperty
     def target_radec(self):
         """Target RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)."""
         lon, lat = (
@@ -276,11 +294,6 @@ class Observation:
             self.obs_info.get("DEC_OBJ", np.nan),
         )
         return SkyCoord(lon, lat, unit="deg", frame="icrs")
-
-    @property
-    def observatory_earth_location(self):
-        """Observatory location (`~astropy.coordinates.EarthLocation`)."""
-        return earth_location_from_dict(self.obs_info)
 
     @property
     def muoneff(self):

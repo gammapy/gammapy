@@ -136,3 +136,14 @@ def test_gti_write(tmp_path):
     assert_time_allclose(new_gti.time_start, gti.time_start)
     assert_time_allclose(new_gti.time_stop, gti.time_stop)
     assert new_gti.table.meta["MJDREFF"] == gti.table.meta["MJDREFF"]
+
+
+def test_gti_from_time():
+    '''Test astropy time is supported as input for GTI.create'''
+    start = Time("2020-01-01T20:00:00")
+    stop = Time("2020-01-01T20:15:00")
+    ref = Time("2020-01-01T00:00:00")
+    gti = GTI.create(start, stop, ref)
+
+    assert u.isclose(gti.table["START"], 20 * u.hour)
+    assert u.isclose(gti.table["STOP"], 20 * u.hour + 15 * u.min)

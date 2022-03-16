@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import SkyCoord, EarthLocation
 from astropy.time import Time
 from astropy.units import Quantity
 from gammapy.data import DataStore, Observation
@@ -33,7 +33,7 @@ def test_observation(data_store):
     c = SkyCoord(83.63333129882812, 21.51444435119629, unit="deg")
     assert_skycoord_allclose(obs.pointing_radec, c)
 
-    c = SkyCoord(22.481705, 41.38979, unit="deg")
+    c = SkyCoord(22.558341, 41.950807, unit="deg")
     assert_skycoord_allclose(obs.pointing_altaz, c)
 
     c = SkyCoord(83.63333129882812, 22.01444435119629, unit="deg")
@@ -227,20 +227,28 @@ def test_observations_select_time_time_intervals_list(data_store):
 
 @requires_data()
 def test_observation_cta_1dc():
-    livetime = 5.0 * u.hr
+    ontime = 5.0 * u.hr
     pointing = SkyCoord(0, 0, unit="deg", frame="galactic")
     irfs = load_cta_irfs(
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     )
 
+    t_ref = Time('2020-01-01T00:00:00')
+    tstart = 20 * u.hour
+    location = EarthLocation(lon="-70d18m58.84s", lat="-24d41m0.34s", height="2000m")
+
     obs = Observation.create(
-        pointing, livetime=livetime, irfs=irfs, deadtime_fraction=0.1
+        pointing, irfs=irfs, deadtime_fraction=0.1,
+        tstart=tstart,
+        tstop=tstart + ontime,
+        reference_time=t_ref,
+        location=location,
     )
 
     assert_skycoord_allclose(obs.pointing_radec, pointing.icrs)
-    assert_allclose(obs.observation_live_time_duration, 0.9 * livetime)
+    assert_allclose(obs.observation_live_time_duration, 0.9 * ontime)
     assert_allclose(obs.target_radec.ra, np.nan)
-    assert_allclose(obs.pointing_zen, np.nan)
+    assert not np.isnan(obs.pointing_zen)
     assert_allclose(obs.muoneff, 1)
 
 

@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import SkyCoord, EarthLocation
 from gammapy.data import Observation
 from gammapy.datasets import MapDataset, SpectrumDatasetOnOff
 from gammapy.estimators import FluxPoints, FluxPointsEstimator
@@ -112,7 +112,12 @@ def simulate_map_dataset(random_state=0, name=None):
     pwl = PowerLawSpectralModel(amplitude="1e-11 cm-2 s-1 TeV-1")
     skymodel = SkyModel(spatial_model=gauss, spectral_model=pwl, name="source")
 
-    obs = Observation.create(pointing=skydir, livetime=1 * u.h, irfs=irfs)
+    obs = Observation.create(
+        pointing=skydir,
+        livetime=1 * u.h,
+        irfs=irfs,
+        location=EarthLocation(lon="-70d18m58.84s", lat="-24d41m0.34s", height="2000m"),
+    )
     empty = MapDataset.create(geom, name=name)
     maker = MapDatasetMaker(selection=["exposure", "background", "psf", "edisp"])
     dataset = maker.run(empty, obs)

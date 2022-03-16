@@ -97,7 +97,7 @@ def test_safe_mask_maker_bkg_invalid(observations_hess_dl3):
     axis_true = MapAxis.from_bounds(
         0.1, 50, nbin=30, unit="TeV", name="energy_true", interp="log"
     )
-    geom = WcsGeom.create(npix=(11, 11), axes=[axis], skydir=obs.pointing_radec)
+    geom = WcsGeom.create(npix=(9, 9), axes=[axis], skydir=obs.pointing_radec)
 
     empty_dataset = MapDataset.create(geom=geom, energy_axis_true=axis_true)
     dataset_maker = MapDatasetMaker()

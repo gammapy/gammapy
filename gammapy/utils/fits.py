@@ -4,6 +4,7 @@ import sys
 from astropy.coordinates import Angle, EarthLocation
 from astropy.io import fits
 from astropy.units import Quantity
+import astropy.units as u
 from .scripts import make_path
 
 log = logging.getLogger(__name__)
@@ -154,3 +155,12 @@ def earth_location_from_dict(meta):
         raise KeyError("The GEOALT or ALTITUDE header keyword must be set")
 
     return EarthLocation(lon=lon, lat=lat, height=height)
+
+
+def earth_location_to_dict(location):
+    """Create `~astropy.coordinates.EarthLocation` from FITS header dict."""
+    return {
+        "GEOLON": location.lon.deg,
+        "GEOLAT": location.lat.deg,
+        "ALTITUDE": location.height.to_value(u.m),
+    }

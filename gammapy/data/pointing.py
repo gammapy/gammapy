@@ -1,5 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import logging
+import numpy as np
 import scipy.interpolate
+import astropy.units as u
 from astropy.coordinates import AltAz, CartesianRepresentation, SkyCoord
 from astropy.table import Table
 from astropy.units import Quantity
@@ -7,6 +10,9 @@ from astropy.utils import lazyproperty
 from gammapy.utils.fits import earth_location_from_dict
 from gammapy.utils.scripts import make_path
 from gammapy.utils.time import time_ref_from_dict
+
+
+log = logging.getLogger(__name__)
 
 __all__ = ["FixedPointingInfo", "PointingInfo"]
 
@@ -129,7 +135,21 @@ class FixedPointingInfo:
     @lazyproperty
     def altaz(self):
         """ALT/AZ pointing position computed from RA/DEC (`~astropy.coordinates.SkyCoord`)."""
-        return self.radec.transform_to(self.altaz_frame)
+        try:
+            frame = self.altaz_frame
+        except KeyError:
+            log.warn(
+                "Location or time information missing,"
+                " using ALT_PNT/AZ_PNT and incomplete frame"
+            )
+            return SkyCoord(
+                alt=self.meta.get('ALT_PNT', np.nan),
+                az=self.meta.get('AZ_PNT', np.nan),
+                unit=u.deg,
+                frame=AltAz()
+            )
+
+        return self.radec.transform_to(frame)
 
 
 class PointingInfo:
