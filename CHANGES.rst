@@ -3,7 +3,66 @@
 ------------------
 
 - No changes yet
+- 14 contributors
+- 83 pull requests (not all listed below)
 
+**What's new**
+
+Support for energy dependent ON region spectral extraction has been added. The RADMAX IRF
+is now fully supported. A specific `WobbleRegionFinder` has been introduced to find OFF regions.
+A set of two test observations have been provided by the MAGIC collaboration to perform
+testing and validation of the method. They have been added to the gammapy-data repository.
+We thank the Magic collaboration for their contribution.
+
+Documentation has been completely restructured. The PyData Sphinx theme is now applied.
+Added automated testing of docstring example code. All docstrings have been fixed.
+
+Improved CI. Use mamba. Added pyflakes step to CI. Parallel execution of notebooks and tests.
+
+**Contributors**
+- Fabio Acero
+- Arnau Aguasca
+- Tyler Cahill
+- Axel Donath
+- Luca Giunti
+- Cosimo Nigro
+- Maximilian Nöthe
+- Laura Olivera-Nieto
+- Dimitri Papadopoulos
+- Fabio Pintore
+- Quentin Remy
+- Jose Enrique Ruiz
+- Atreyee Sinha
+- Régis Terrier
+
+Pull Requests
++++++++++++++
+This list is incomplete. Small improvements and bug fixes are not listed here.
+Take into account method argument in WcsNDMap.interp_by_coord
+- [#3837] Allow nearest neighbor interpolation with scalar data (Axel Donath)
+- [#3817] Improve documentation theme (Jose Enrique Ruiz)
+- [#3810] Fix doc strings in estimators (Atreyee Sinha)
+- [#3806] Improve documentation for the DatasetsMaker (Quentin Remy)
+- [#3804] Event wise rad max (Maximilian Nöthe)
+- [#3802] Use DatasetsMaker in Analysis class (Quentin Remy)
+- [#3797] Refactor pointing information handling and Observation.create (Maximilian Nöthe)
+- [#3796] Helper function to rebin map axis (Luca Giunti)
+- [#3783] Speed docs building process (Jose Enrique Ruiz)
+- [#3777] Validate EnergyDispersion2D units (Fabio Pintore)
+- [#3761] Execute notebooks in parallel (Maximilian Nöthe)
+- [#3760] Fix issues reported by pyflakes and add pyflakes step to ci (Maximilian Nöthe)
+- [#3748] Fix doc strings for makers and datasets (Atreyee Sinha)
+- [#3740] Common format axis labels (Fabio Pintore)
+- [#3733] Add new RegionsFinder that uses a fixed number of regions symmetrically distributed on the circle (Cosimo Nigro)
+- [#3728] Add missing required GADF headers in IRF classes (Maximilian Nöthe)
+- [#3722] Switch documentation to PyData Sphinx Theme (Jose Enrique Ruiz)
+- [#3720] Add convenience method to write EventLists to file (Laura Olivera Nieto)
+- [#3713] Fix matplotlib 3.5+ incompatibility with WcsNDMap.plot() (tmcahill)
+- [#3712] Added a notebook tutorial showing an energy-dependent spectrum extraction (Cosimo Nigro)
+- [#3699] Use mamba in CI jobs (Maximilian Nöthe)
+- [#3684] Started to implement the energy-dependent 1D spectrum extraction (Cosimo Nigro)
+- [#3669] Add GeneralizedGaussianTemporalModel (Arnau Aguasca)
+- [#3535] Add TemplateNDSpectralModel (Quentin Remy)
 
 0.19 (Nov 22nd, 2021)
 ---------------------
