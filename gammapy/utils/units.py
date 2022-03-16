@@ -79,25 +79,21 @@ def energy_str_formatting(E):
     str : str
         Returns a string with energy unit formatted        
     """    
-    if (E >= 1e3*u.eV) and (E < 1e6*u.eV):
-        E = E.to('keV')
-    elif (E >= 1e6*u.eV) and (E < 1e9*u.eV):
-        E = E.to('MeV')
-    elif (E >= 1e9*u.eV) and (E < 1e12*u.eV):
-        E = E.to('GeV')
-    elif (E >= 1e12*u.eV) and (E < 1e15*u.eV):
-        E = E.to('TeV')
-    elif (E >= 1e15*u.eV):
-        E = E.to('PeV')
+    i = floor(np.log10(E.to_value(u.eV)) / 3)
+    if i > 4:  # default for very large values
+        unit = u.PeV
+    else:  # get best large unit
+        unit = (u.eV, u.keV, u.MeV, u.GeV, u.TeV, u.PeV)[i]
 
-    if E.value < 10:
+    v = E.to_value(unit)
+    if v < 10:
         prec=2
-    elif (E.value >= 10) and (E.value < 100):
+    elif (v >= 10) and (v < 100):
         prec=1
-    elif (E.value >= 100) and (E.value < 1000):
+    elif (v >= 100) and (v < 1000):
         prec=0
-    
-    return f"{E.value:0.{prec}f} {E.unit}"
+
+    return f"{v:0.{prec}f} {unit}"
 
 def energy_unit_format(E):
     """
