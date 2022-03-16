@@ -102,6 +102,25 @@ class EventList:
         table = Table.read(filename, **kwargs)
         return cls(table=table)
 
+    def to_table_hdu(self, format="gadf"):
+        """
+        Convert event list to a `~astropy.io.fits.BinTableHDU`
+
+        Parameters
+        ----------
+        format: str
+            Output format, currently only "gadf" is supported
+
+        Returns
+        -------
+        hdu: `astropy.io.fits.BinTableHDU`
+            EventList converted to FITS representation
+        """
+        if format != "gadf":
+            raise ValueError(f"Only the 'gadf' format supported, got {format}")
+
+        return fits.BinTableHDU(self.table, name="EVENTS")
+
     def write(self, filename, gti=None, overwrite=False, format='gadf'):
         """Write the event list to a FITS file.
 
@@ -127,32 +146,30 @@ class EventList:
 
         meta_dict = self.table.meta
 
-        if "HDUCLAS1" in meta_dict.keys() and meta_dict["HDUCLAS1"].lower() != "events":
-            raise ValueError("The HDUCLAS1 keyword should be EVENTS for an EventList")
+        if "HDUCLAS1" in meta_dict.keys() and meta_dict["HDUCLAS1"] != "EVENTS":
+            raise ValueError("The HDUCLAS1 keyword must be 'EVENTS' for an EventList")
         else:
             meta_dict["HDUCLAS1"] = "EVENTS"
 
 
-        if "HDUCLASS" in meta_dict.keys() and meta_dict["HDUCLASS"].lower() != format:
-            raise ValueError("The HDUCLASS keyword should match the format")
+        if "HDUCLASS" in meta_dict.keys() and meta_dict["HDUCLASS"] != "GADF":
+            raise ValueError("The HDUCLASS must be 'GADF' for format 'gadf'")
         else:
-            meta_dict["HDUCLASS"] = format.upper()
+            meta_dict["HDUCLASS"] = "GADF"
 
         filename = make_path(filename)
 
         primary_hdu = fits.PrimaryHDU()
-        hdu_evt = fits.BinTableHDU(self.table, name='EVENTS')
+        hdu_evt = self.to_table_hdu(format=format)
         hdu_all = fits.HDUList([primary_hdu, hdu_evt])
 
         if gti is not None:
             if not isinstance(gti, GTI):
                 raise TypeError('gti must be an instance of GTI')
-            hdu_gti = fits.BinTableHDU(gti.table, name="GTI")
+            hdu_gti = gti.to_table_hdu(format=format)
             hdu_all.append(hdu_gti)
 
         hdu_all.writeto(filename, overwrite=overwrite)
-
-
 
     @classmethod
     def from_stack(cls, event_lists, **kwargs):

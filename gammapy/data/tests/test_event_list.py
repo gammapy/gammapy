@@ -65,11 +65,12 @@ class TestEventListBase:
             dummy_events.table.meta['HDUCLASS'] = "ogip"
             dummy_events.write("test.fits", overwrite=True)
 
-        # test that it works when the srings are right but lowercase
-        dummy_events = EventList(Table())
-        dummy_events.table.meta['HDUCLASS'] = "gadf"
-        dummy_events.table.meta['HDUCLAS1'] = "events"
-        dummy_events.write("test.fits", overwrite=True)
+        # test that it we also get the error when the only the case is wrong
+        with pytest.raises(ValueError):
+            dummy_events = EventList(Table())
+            dummy_events.table.meta['HDUCLASS'] = "gadf"
+            dummy_events.table.meta['HDUCLAS1'] = "events"
+            dummy_events.write("test.fits", overwrite=True)
 
 
 @requires_data()

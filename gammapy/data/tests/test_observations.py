@@ -324,3 +324,36 @@ class TestObservationChecker:
         assert records[5]["msg"] == "Loading aeff failed"
         assert records[7]["msg"] == "Loading edisp failed"
         assert records[9]["msg"] == "Loading psf failed"
+
+
+
+@requires_data()
+def test_observation_write(tmp_path):
+    obs = Observation.read(
+        "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz"
+    )
+    path = tmp_path / "obs.fits.gz"
+    obs.write(path)
+    obs_read = obs.read(path)
+
+    assert obs_read.events is not None
+    assert obs_read.gti is not None
+    assert obs_read.aeff is not None
+    assert obs_read.edisp is not None
+    assert obs_read.bkg is not None
+    assert obs_read.rad_max is None
+
+    # unsupported format
+    with pytest.raises(ValueError):
+        obs.write(tmp_path / "foo.fits.gz", format="cool-new-format")
+
+    # no irfs
+    path = tmp_path / "obs_no_irfs.fits.gz"
+    obs.write(path, include_irfs=False)
+    obs_read = obs.read(path)
+    assert obs_read.events is not None
+    assert obs_read.gti is not None
+    assert obs_read.aeff is None
+    assert obs_read.edisp is None
+    assert obs_read.bkg is None
+    assert obs_read.rad_max is None
