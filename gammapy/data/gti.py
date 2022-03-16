@@ -6,6 +6,7 @@ from astropy.io import fits
 from astropy.table import Table, vstack
 from astropy.time import Time
 from astropy.units import Quantity
+import astropy.units as u
 from gammapy.utils.scripts import make_path
 from gammapy.utils.time import (
     time_ref_from_dict,
@@ -70,16 +71,23 @@ class GTI:
 
         Parameters
         ----------
-        start : `~astropy.units.Quantity`
-            start times w.r.t. reference time
-        stop : `~astropy.units.Quantity`
-            stop times w.r.t. reference time
+        start : `~astropy.time.Time` or `~astropy.units.Quantity`
+            Start times, if a quantity then w.r.t. reference time
+        stop : `~astropy.time.Time` or `~astropy.units.Quantity`
+            Stop times, if a quantity then w.r.t. reference time
         reference_time : `~astropy.time.Time`
             the reference time to use in GTI definition
         """
+        reference_time = Time(reference_time)
+
+        if isinstance(start, Time):
+            start = (start - reference_time).to(u.s)
+
+        if isinstance(stop, Time):
+            stop = (stop - reference_time).to(u.s)
+
         start = Quantity(start, ndmin=1)
         stop = Quantity(stop, ndmin=1)
-        reference_time = Time(reference_time)
         meta = time_ref_to_dict(reference_time)
         table = Table({"START": start.to("s"), "STOP": stop.to("s")}, meta=meta)
         return cls(table)

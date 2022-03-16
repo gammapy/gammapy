@@ -191,21 +191,13 @@ class Observation:
         if tstop is None:
             tstop = tstart + Quantity(livetime)
 
-        if not isinstance(tstart, Time):
-            tstart = reference_time + tstart
-
-        if not isinstance(tstop, Time):
-            tstop = reference_time + tstop
-
-        tstart_rel = (tstart - reference_time).to(u.s)
-        tstop_rel = (tstop - reference_time).to(u.s)
-        gti = GTI.create([tstart_rel], [tstop_rel], reference_time=reference_time)
+        gti = GTI.create(tstart, tstop, reference_time=reference_time)
 
         obs_info = cls._get_obs_info(
             pointing=pointing,
             deadtime_fraction=deadtime_fraction,
-            time_start=tstart,
-            time_stop=tstop,
+            time_start=gti.time_start[0],
+            time_stop=gti.time_stop[0],
             reference_time=reference_time,
             location=location,
         )
