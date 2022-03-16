@@ -18,8 +18,8 @@ def test_energy_str_formatting():
 def test_energy_unit_format():
     E = 1.556e2 *u.TeV
     assert energy_unit_format(E) == '156 TeV'
-    E = np.array([1e3,3.5e6,400.4e12])*u.eV
-    assert energy_unit_format(E) == ['1.00 keV', '3.50 MeV', '400 TeV']
+    E = np.array([1e3,3.5e6,400.4e12,1512.5e12])*u.eV
+    assert energy_unit_format(E) == ['1.00 keV', '3.50 MeV', '400 TeV','1.51 PeV']
     E = [1.54e2*u.GeV, 4300*u.keV, 300.6e12*u.eV] 
     assert energy_unit_format(E) == ['154 GeV', '4.30 MeV', '301 TeV']
 

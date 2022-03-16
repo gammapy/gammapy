@@ -90,4 +90,3 @@ dev/crab
 *.fits
 *.fits.gz
 *.root
-environment-dev.yml

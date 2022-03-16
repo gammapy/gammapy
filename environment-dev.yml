@@ -13,6 +13,7 @@ channels:
 
 dependencies:
   # core dependencies
+  - python==3.7
   - pip
   - astropy
   - click
@@ -36,8 +37,10 @@ dependencies:
   - ipython
   - jupyter
   - jupyterlab
+  - naima
   - pandas
   - reproject
+  - sherpa
   - iminuit>=2.8.0
   # dev dependencies
   - black
