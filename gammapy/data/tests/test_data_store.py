@@ -227,3 +227,18 @@ def test_datastore_header_info_in_obs_info(data_store):
     assert "GEOLAT" in obs.obs_info
     # make sure we don't add the OBS_INDEX HDUCLAS
     assert "HDUCLAS1" not in obs.obs_info
+
+@requires_data()
+def test_datastore_from_dir_no_obs_index(caplog):
+    """Test the `from_dir` method."""
+    data_store = DataStore.from_dir(
+        "$GAMMAPY_DATA/hess-dl3-dr1/", "hdu-index.fits.gz", "bad_name"
+    )
+
+    obs = data_store.obs(23523)
+
+    assert data_store.obs_table is None
+    assert "WARNING" in [record.levelname for record in caplog.records]
+    message = "Cannot find observation index file : bad_name."
+    assert message in [record.message for record in caplog.records]
+    assert "No observation index table." in data_store.info(show=False)

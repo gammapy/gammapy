@@ -2,6 +2,7 @@
 import logging
 import subprocess
 from pathlib import Path
+import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
@@ -91,7 +92,8 @@ class DataStore:
 
         hdu_table = HDUIndexTable.read(filename, hdu=hdu_hdu, format="fits")
 
-        obs_table = ObservationTable.read(filename, hdu=hdu_obs, format="fits")
+        if hdu_obs:
+            obs_table = ObservationTable.read(filename, hdu=hdu_obs, format="fits")
 
         return cls(hdu_table=hdu_table, obs_table=obs_table)
 
@@ -146,9 +148,10 @@ class DataStore:
         hdu_table.meta["BASE_DIR"] = str(base_dir)
 
         if not obs_table_filename.exists():
-            raise OSError(f"File not found: {obs_table_filename}")
-        log.debug(f"Reading {obs_table_filename}")
-        obs_table = ObservationTable.read(obs_table_filename, format="fits")
+            log.warning(f"Cannot find observation index file : {obs_table_filename}.")
+            obs_table = None
+        else:
+            obs_table = ObservationTable.read(obs_table_filename, format="fits")
 
         return cls(hdu_table=hdu_table, obs_table=obs_table)
 
@@ -211,7 +214,10 @@ class DataStore:
         s = "Data store:\n"
         s += self.hdu_table.summary()
         s += "\n\n"
-        s += self.obs_table.summary()
+        if self.obs_table:
+            s += self.obs_table.summary()
+        else:
+            s += "No observation index table."
 
         if show:
             print(s)
@@ -231,21 +237,20 @@ class DataStore:
         observation : `~gammapy.data.Observation`
             Observation container
         """
-        if obs_id not in self.obs_table["OBS_ID"]:
-            raise ValueError(f"OBS_ID = {obs_id} not in obs index table.")
-
         if obs_id not in self.hdu_table["OBS_ID"]:
             raise ValueError(f"OBS_ID = {obs_id} not in HDU index table.")
 
-        row = self.obs_table.select_obs_id(obs_id=obs_id)[0]
         kwargs = {"obs_id": int(obs_id)}
 
-        # add info from table meta, e.g. the time references
-        kwargs["obs_info"] = {
-            k: v for k, v in self.obs_table.meta.items()
-            if not k.startswith('HDU')  # Ignore GADF structure of index table
-        }
-        kwargs["obs_info"].update(table_row_to_dict(row))
+        if self.obs_table and obs_id in self.obs_table["OBS_ID"]:
+            row = self.obs_table.select_obs_id(obs_id=obs_id)[0]
+
+            # add info from table meta, e.g. the time references
+            kwargs["obs_info"] = {
+                k: v for k, v in self.obs_table.meta.items()
+                if not k.startswith('HDU')  # Ignore GADF structure of index table
+            }
+            kwargs["obs_info"].update(table_row_to_dict(row))
 
         hdu_list = ["events", "gti", "aeff", "edisp", "psf", "bkg", "rad_max"]
 
@@ -292,7 +297,7 @@ class DataStore:
             )
 
         if obs_id is None:
-            obs_id = self.obs_table["OBS_ID"].data
+            obs_id = np.unique(self.hdu_table["OBS_ID"].data)
 
         obs_list = []
 
