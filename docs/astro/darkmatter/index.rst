@@ -1,8 +1,8 @@
 .. _astro-darkmatter:
 
-****************************************
-Dark matter (`gammapy.astro.darkmatter`)
-****************************************
+***********
+Dark matter
+***********
 
 .. currentmodule:: gammapy.astro.darkmatter
 
@@ -102,8 +102,8 @@ likelihoods, for any combination of parameter values in some underlying
 particle model. GamLike can somehow be use to reproduce HESS results (Section
 6.2.2. of the DarkBit paper). But I don't fully understand how.
 
-Using `gammapy.astro.darkmatter`
-================================
+Using gammapy.astro.darkmatter
+==============================
 
 Gammapy tutorial notebooks that show examples using ``gammapy.astro.darkmatter``:
 
@@ -111,17 +111,6 @@ Gammapy tutorial notebooks that show examples using ``gammapy.astro.darkmatter``
 
    ../../tutorials/api/astro_dark_matter.ipynb
 
-
-Reference/API
-=============
-
-.. automodapi:: gammapy.astro.darkmatter
-    :no-inheritance-diagram:
-    :include-all-objects:
-
-.. automodapi:: gammapy.astro.darkmatter.profiles
-    :no-inheritance-diagram:
-    :include-all-objects:
 
 .. _GammaLib 1.3 release: http://cta.irap.omp.eu/gammalib-devel/admin/release_history/1.3.html
 .. _Feature request #1520:  https://cta-redmine.irap.omp.eu/issues/1520

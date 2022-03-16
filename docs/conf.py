@@ -139,7 +139,7 @@ htmlhelp_basename = f"{project}doc"
 html_theme_options = {
     # toc options
     "collapse_navigation": False,
-    "navigation_depth": 1,
+    "navigation_depth": 2,
     # links in menu
     "icon_links": [
         {
