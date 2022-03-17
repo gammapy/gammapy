@@ -18,7 +18,8 @@ class FoVBackgroundMaker(Maker):
     The dataset background model can be simply scaled (method="scale") or fitted (method="fit")
     on the dataset counts.
 
-    The normalization is performed outside the exclusion mask that is passed on init.
+    The normalization is performed outside the exclusion mask that is passed on init. This also internally 
+    takes into account the dataset fit mask.
 
     If a SkyModel is set on the input dataset its parameters
     are frozen during the fov re-normalization.
@@ -183,8 +184,6 @@ class FoVBackgroundMaker(Maker):
 
     def run(self, dataset, observation=None):
         """Run FoV background maker.
-
-        This internally takes into account both the exclusion mask and the dataset fit mask.
         
         Parameters
         ----------
