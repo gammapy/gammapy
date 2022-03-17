@@ -184,8 +184,8 @@ class FoVBackgroundMaker(Maker):
     def run(self, dataset, observation=None):
         """Run FoV background maker.
 
-        Fit the background model norm
-
+        This internally takes into account both the exclusion mask and the dataset fit mask.
+        
         Parameters
         ----------
         dataset : `~gammapy.datasets.MapDataset`
