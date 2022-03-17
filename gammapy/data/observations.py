@@ -71,7 +71,7 @@ class Observation:
         obs_filter=None,
     ):
         self.obs_id = obs_id
-        self.obs_info = obs_info
+        self._obs_info = obs_info
         self.aeff = aeff
         self.edisp = edisp
         self.psf = psf
@@ -258,6 +258,14 @@ class Observation:
         which in turn is used in the exposure and flux computation.
         """
         return 1 - self.obs_info["DEADC"]
+
+    @lazyproperty
+    def obs_info(self):
+        """Observation info dictionary."""
+        if self.events is not None:
+            return {k: v for k, v in self.events.table.meta.items() if not k.startswith('HDU')}
+        else:
+            return self._obs_info
 
     @lazyproperty
     def fixed_pointing_info(self):

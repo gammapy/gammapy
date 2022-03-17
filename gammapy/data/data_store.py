@@ -152,6 +152,7 @@ class DataStore:
             log.warning(f"Cannot find observation index file : {obs_table_filename}.")
             obs_table = None
         else:
+            log.debug(f"Reading {obs_table_filename}")
             obs_table = ObservationTable.read(obs_table_filename, format="fits")
 
         return cls(hdu_table=hdu_table, obs_table=obs_table)
@@ -242,16 +243,6 @@ class DataStore:
             raise ValueError(f"OBS_ID = {obs_id} not in HDU index table.")
 
         kwargs = {"obs_id": int(obs_id)}
-
-        if self.obs_table and obs_id in self.obs_table["OBS_ID"]:
-            row = self.obs_table.select_obs_id(obs_id=obs_id)[0]
-
-            # add info from table meta, e.g. the time references
-            kwargs["obs_info"] = {
-                k: v for k, v in self.obs_table.meta.items()
-                if not k.startswith('HDU')  # Ignore GADF structure of index table
-            }
-            kwargs["obs_info"].update(table_row_to_dict(row))
 
         hdu_list = ["events", "gti", "aeff", "edisp", "psf", "bkg", "rad_max"]
 

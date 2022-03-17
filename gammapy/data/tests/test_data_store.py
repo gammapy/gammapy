@@ -244,5 +244,5 @@ def test_datastore_from_dir_no_obs_index(caplog):
     assert message in [record.message for record in caplog.records]
     assert "No observation index table." in data_store.info(show=False)
 
-    assert obs.obs_info is None
+    assert obs.obs_info["ONTIME"] == 1687.0
     assert len(observations) == 105
