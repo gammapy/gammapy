@@ -28,11 +28,11 @@ jobs:
         with:
           args: "--infile ./CITATION.cff --format codemeta --outfile codemeta.json"
 
-      - name: Convert CITATION.cff to Zenodo metadata format
-        uses: citation-file-format/cffconvert-github-action@2.0.0
+      - name: Fix codemeta.json
         if: success()
-        with:
-          args: "--infile ./CITATION.cff --format zenodo --outfile .zenodo.json"
+        run: |
+          cd dev && python codemeta.py     
+
 
       - name: commit changes
         uses: stefanzweifel/git-auto-commit-action@v4.1.6
