@@ -68,6 +68,11 @@ class DataStore:
     def __str__(self):
         return self.info(show=False)
 
+    @property
+    def obs_ids(self):
+        """Return list of obs_ids contained in the datastore."""
+        return np.unique(self.hdu_table["OBS_ID"].data)
+
     @classmethod
     def from_file(cls, filename, hdu_hdu="HDU_INDEX", hdu_obs="OBS_INDEX"):
         """Create a Datastore from a FITS file.
@@ -139,6 +144,8 @@ class DataStore:
             obs_table_filename = make_path(obs_table_filename)
             if (base_dir / obs_table_filename).exists():
                 obs_table_filename = base_dir / obs_table_filename
+            else:
+                raise IOError(f"File not found : {base_dir / obs_table_filename}")
         else:
             obs_table_filename = base_dir / cls.DEFAULT_OBS_TABLE
 
@@ -149,7 +156,7 @@ class DataStore:
         hdu_table.meta["BASE_DIR"] = str(base_dir)
 
         if not obs_table_filename.exists():
-            log.warning(f"Cannot find observation index file : {obs_table_filename}.")
+            log.warning("Cannot find default obs-index table.")
             obs_table = None
         else:
             log.debug(f"Reading {obs_table_filename}")
@@ -289,7 +296,7 @@ class DataStore:
             )
 
         if obs_id is None:
-            obs_id = np.unique(self.hdu_table["OBS_ID"].data)
+            obs_id = self.obs_ids
 
         obs_list = []
 

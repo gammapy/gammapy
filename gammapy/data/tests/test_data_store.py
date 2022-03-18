@@ -229,20 +229,29 @@ def test_datastore_header_info_in_obs_info(data_store):
     assert "HDUCLAS1" not in obs.obs_info
 
 @requires_data()
-def test_datastore_from_dir_no_obs_index(caplog):
+def test_datastore_bad_name():
+    with pytest.raises(IOError):
+        DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/", "hdu-index.fits.gz", "bad")
+
+
+@requires_data()
+def test_datastore_from_dir_no_obs_index(caplog, tmpdir):
     """Test the `from_dir` method."""
-    data_store = DataStore.from_dir(
-        "$GAMMAPY_DATA/hess-dl3-dr1/", "hdu-index.fits.gz", "bad_name"
-    )
+
+    # Create small datastore and remove obs-index table
+    DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/").copy_obs([23523, 23592], tmpdir)
+    os.remove(tmpdir / "obs-index.fits.gz")
+
+    data_store = DataStore.from_dir(tmpdir)
 
     obs = data_store.obs(23523)
     observations = data_store.get_observations()
 
     assert data_store.obs_table is None
     assert "WARNING" in [record.levelname for record in caplog.records]
-    message = "Cannot find observation index file : bad_name."
+    message = "Cannot find default obs-index table."
     assert message in [record.message for record in caplog.records]
     assert "No observation index table." in data_store.info(show=False)
 
     assert obs.obs_info["ONTIME"] == 1687.0
-    assert len(observations) == 105
+    assert len(observations) == 2
