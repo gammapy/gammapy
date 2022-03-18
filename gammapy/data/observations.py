@@ -262,18 +262,15 @@ class Observation:
     @lazyproperty
     def obs_info(self):
         """Observation info dictionary."""
+        meta = self._obs_info.copy() if self._obs_info is not None else {}
         if self.events is not None:
-            return {k: v for k, v in self.events.table.meta.items() if not k.startswith('HDU')}
-        else:
-            return self._obs_info
+            meta.update({k: v for k, v in self.events.table.meta.items() if not k.startswith('HDU')})
+        return meta
 
     @lazyproperty
     def fixed_pointing_info(self):
         """Fixed pointing info for this observation (`FixedPointingInfo`)."""
-        meta = self.obs_info.copy() if self.obs_info is not None else {}
-        if self.events is not None:
-            meta.update(self.events.table.meta)
-        return FixedPointingInfo(meta)
+        return FixedPointingInfo(self.obs_info)
 
     @property
     def pointing_radec(self):
