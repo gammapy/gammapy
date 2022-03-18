@@ -38,6 +38,11 @@ jobs:
         run: |
           eossr-metadata-validator codemeta.json 
 
+      - name: Convert codemeta.json to Zenodo metadata format
+        if: success()
+        run: |
+          eossr-codemeta2zenodo -i codemeta.json
+      
       - name: commit changes
         uses: stefanzweifel/git-auto-commit-action@v4.1.6
         if: success()
