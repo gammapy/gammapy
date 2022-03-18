@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
+import numpy as np
 from numpy.testing import assert_allclose
 from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
@@ -73,7 +74,7 @@ def test_fov_bkg_maker_incorrect_method():
 
 
 @requires_data()
-def test_fov_bkg_maker_scale(obs_dataset, exclusion_mask, caplog):
+def test_fov_bkg_maker_scale(obs_dataset, exclusion_mask):
     fov_bkg_maker = FoVBackgroundMaker(method="scale", exclusion_mask=exclusion_mask)
     test_dataset = obs_dataset.copy(name="test-fov")
 
@@ -99,6 +100,7 @@ def test_fov_bkg_maker_scale_nocounts(obs_dataset, exclusion_mask, caplog):
     assert "WARNING" in [_.levelname for _ in caplog.records]
     message1 = "FoVBackgroundMaker failed. Only 0 counts outside exclusion mask for test-fov. Setting mask to False."
     assert message1 in [_.message for _ in caplog.records]
+
 
 @requires_data()
 @requires_dependency("iminuit")
@@ -227,18 +229,22 @@ def test_fov_bkg_maker_with_source_model(obs_dataset, exclusion_mask, caplog):
     assert not dataset.models.parameters["index"].frozen
     assert not dataset.models.parameters["lon_0"].frozen
 
-    #test  
+    # test
     model.spectral_model.amplitude.value *= 1e5
     fov_bkg_maker = FoVBackgroundMaker(method="scale")
     dataset = fov_bkg_maker.run(test_dataset)
     assert "WARNING" in [_.levelname for _ in caplog.records]
-    message1 = 'FoVBackgroundMaker failed. Negative residuals counts for test-fov. Setting mask to False.'
+    message1 = "FoVBackgroundMaker failed. Negative residuals counts for test-fov. Setting mask to False."
     assert message1 in [_.message for _ in caplog.records]
+
 
 @requires_data()
 @requires_dependency("iminuit")
 def test_fov_bkg_maker_fit_with_tilt(obs_dataset, exclusion_mask):
-    fov_bkg_maker = FoVBackgroundMaker(method="fit", exclusion_mask=exclusion_mask,)
+    fov_bkg_maker = FoVBackgroundMaker(
+        method="fit",
+        exclusion_mask=exclusion_mask,
+    )
 
     test_dataset = obs_dataset.copy(name="test-fov")
 
@@ -284,3 +290,20 @@ def test_fov_bkg_maker_scale_fail(obs_dataset, exclusion_mask, caplog):
     assert "WARNING" in [_.levelname for _ in caplog.records]
     message1 = "FoVBackgroundMaker failed. Only -1940 background counts outside exclusion mask for test-fov. Setting mask to False."
     assert message1 in [_.message for _ in caplog.records]
+
+
+@requires_data()
+def test_fov_bkg_maker_mask_fit_handling(obs_dataset, exclusion_mask):
+    fov_bkg_maker = FoVBackgroundMaker(method="scale", exclusion_mask=exclusion_mask)
+    test_dataset = obs_dataset.copy(name="test-fov")
+    region = CircleSkyRegion(obs_dataset._geom.center_skydir, Angle(0.4, "deg"))
+    mask_fit = obs_dataset._geom.region_mask(regions=[region])
+    test_dataset.mask_fit = mask_fit
+
+    dataset = fov_bkg_maker.run(test_dataset)
+    assert np.all(test_dataset.mask_fit == mask_fit) == True
+
+    model = dataset.models[f"{dataset.name}-bkg"].spectral_model
+    assert_allclose(model.norm.value, 0.9975, rtol=1e-3)
+    assert_allclose(model.norm.error, 0.1115, rtol=1e-3)
+    assert_allclose(model.tilt.value, 0.0, rtol=1e-2)
