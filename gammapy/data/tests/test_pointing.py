@@ -1,10 +1,20 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
+
+import pytest
 import numpy as np
 from numpy.testing import assert_allclose
+
+import astropy.units as u
 from astropy.time import Time
+from astropy.coordinates import SkyCoord, AltAz, ICRS
+
 from gammapy.data import FixedPointingInfo, PointingInfo
+from gammapy.data.pointing import PointingMode
 from gammapy.utils.testing import assert_time_allclose, requires_data
+from gammapy.data.observers import observatory_locations
+from gammapy.utils.fits import earth_location_to_dict
+from gammapy.utils.time import time_ref_to_dict, time_relative_to_ref
 
 
 @requires_data()
@@ -128,3 +138,91 @@ def test_altaz_without_location(caplog):
         altaz = pointing.altaz
         assert np.isnan(altaz.alt.value)
         assert np.isnan(altaz.az.value)
+
+
+def test_fixed_pointing_info_fixed_icrs():
+    location = observatory_locations["cta_south"]
+    start = Time("2020-11-01T03:00:00")
+    stop = Time("2020-11-01T03:15:00")
+    ref = Time("2020-11-01T00:00:00")
+    pointing_icrs = SkyCoord(ra=83.28 * u.deg, dec=21.78 * u.deg)
+
+    meta = time_ref_to_dict(ref)
+    meta['TSTART'] = time_relative_to_ref(start, meta).to_value(u.s)
+    meta['TSTOP'] = time_relative_to_ref(stop, meta).to_value(u.s)
+    meta.update(earth_location_to_dict(location))
+    meta["RA_PNT"] = pointing_icrs.ra.deg
+    meta["DEC_PNT"] = pointing_icrs.dec.deg
+
+    pointing = FixedPointingInfo(meta=meta)
+
+    # not given, but assumed if missing
+    assert pointing.mode == PointingMode.POINTING
+    assert pointing.fixed_icrs == pointing_icrs
+    assert pointing.fixed_altaz is None
+
+    altaz = pointing.get_altaz(start)
+    assert altaz.obstime == start
+    assert isinstance(altaz.frame, AltAz)
+    assert np.all(u.isclose(pointing_icrs.ra, pointing.get_icrs(start).ra))
+
+    back_trafo = altaz.transform_to("icrs")
+    assert u.isclose(back_trafo.ra, pointing_icrs.ra)
+    assert u.isclose(back_trafo.dec, pointing_icrs.dec)
+
+    times = start + np.linspace(0, 1, 50) * (stop - start)
+    altaz = pointing.get_altaz(times)
+    assert len(altaz) == len(times)
+    assert np.all(altaz.obstime == times)
+    assert isinstance(altaz.frame, AltAz)
+
+    back_trafo = altaz.transform_to("icrs")
+    assert u.isclose(back_trafo.ra, pointing_icrs.ra).all()
+    assert u.isclose(back_trafo.dec, pointing_icrs.dec).all()
+    assert np.all(u.isclose(pointing_icrs.ra, pointing.get_icrs(times).ra))
+
+
+def test_fixed_pointing_info_fixed_altaz():
+    location = observatory_locations["cta_south"]
+    start = Time("2020-11-01T03:00:00")
+    stop = Time("2020-11-01T03:15:00")
+    ref = Time("2020-11-01T00:00:00")
+    pointing_icrs = SkyCoord(ra=83.28 * u.deg, dec=21.78 * u.deg)
+    pointing_altaz = pointing_icrs.transform_to(AltAz(obstime=start, location=location))
+
+    meta = time_ref_to_dict(ref)
+    meta['TSTART'] = time_relative_to_ref(start, meta).to_value(u.s)
+    meta['TSTOP'] = time_relative_to_ref(stop, meta).to_value(u.s)
+    meta.update(earth_location_to_dict(location))
+    meta["OBS_MODE"] = "DRIFT"
+    meta["ALT_PNT"] = pointing_altaz.alt.deg
+    meta["AZ_PNT"] = pointing_altaz.az.deg
+
+    pointing = FixedPointingInfo(meta=meta)
+
+    # not given, but assumed if missing
+    assert pointing.mode == PointingMode.DRIFT
+    assert pointing.fixed_icrs is None
+    assert u.isclose(pointing.fixed_altaz.alt, pointing_altaz.alt)
+    assert u.isclose(pointing.fixed_altaz.az, pointing_altaz.az)
+
+    icrs = pointing.get_icrs(start)
+    assert icrs.obstime == start
+    assert isinstance(icrs.frame, ICRS)
+
+    back_trafo = icrs.transform_to(pointing_altaz.frame)
+    assert u.isclose(back_trafo.alt, pointing_altaz.alt)
+    assert u.isclose(back_trafo.az, pointing_altaz.az)
+
+    times = start + np.linspace(0, 1, 50) * (stop - start)
+    icrs = pointing.get_icrs(times)
+    assert len(icrs) == len(times)
+    assert np.all(icrs.obstime == times)
+    assert isinstance(icrs.frame, ICRS)
+
+    back_trafo = icrs.transform_to(AltAz(location=location, obstime=times))
+    assert u.isclose(back_trafo.alt, pointing_altaz.alt).all()
+    assert u.isclose(back_trafo.az, pointing_altaz.az).all()
+
+    assert np.all(u.isclose(pointing_altaz.alt, pointing.get_altaz(times).alt))
+    assert np.all(u.isclose(pointing_altaz.az, pointing.get_altaz(times).az))
