@@ -31,7 +31,7 @@ jobs:
       - name: Fix codemeta.json
         if: success()
         run: |
-          cd dev && python codemeta.py     
+          cd dev && python codemeta.py
 
       - name: Validate codemeta.json
         if: success()
