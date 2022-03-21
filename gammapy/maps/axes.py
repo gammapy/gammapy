@@ -1330,13 +1330,15 @@ class MapAxes(Sequence):
     @property
     def is_flat(self):
         """Whether axes is flat"""
-        return np.all(self.shape == 1)
+        shape = np.array(self.shape)
+        return np.all(shape == 1)
 
     @property
     def is_unidimensional(self):
         """Whether axes is unidimensional"""
-        value = (np.array(self.shape) > 1).sum()
-        return value == 1
+        shape = np.array(self.shape)
+        non_zero = np.count_nonzero(shape > 1)
+        return self.is_flat or non_zero == 1
 
     @property
     def reverse(self):
