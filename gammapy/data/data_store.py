@@ -7,7 +7,6 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from gammapy.utils.scripts import make_path
-from gammapy.utils.table import table_row_to_dict
 from gammapy.utils.testing import Checker
 from .hdu_index_table import HDUIndexTable
 from .obs_table import ObservationTable, ObservationTableChecker
@@ -144,8 +143,8 @@ class DataStore:
             obs_table_filename = make_path(obs_table_filename)
             if (base_dir / obs_table_filename).exists():
                 obs_table_filename = base_dir / obs_table_filename
-            else:
-                raise IOError(f"File not found : {base_dir / obs_table_filename}")
+            elif not obs_table_filename.exists():
+                raise IOError(f"File not found : {obs_table_filename}")
         else:
             obs_table_filename = base_dir / cls.DEFAULT_OBS_TABLE
 
