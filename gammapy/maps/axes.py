@@ -23,39 +23,32 @@ def flat_if_equal(array):
         return array
 
 
-def coord_to_pix(edges, coord, interp="lin"):
-    """Convert axis to pixel coordinates for given interpolation scheme."""
-    scale = interpolation_scale(interp)
-    kwargs = {
-        "fill_value": "extrapolate",
-        "x": scale(edges),
-        "y": np.arange(len(edges), dtype=float),
-    }
+class AxisCoordInterpolator:
+    """Axis coord interpolator"""
+    def __init__(self, edges, interp="lin"):
+        self.scale = interpolation_scale(interp)
+        self.x = self.scale(edges)
+        self.y = np.arange(len(edges), dtype=float)
+        self.fill_value = "extrapolate"
 
-    # change to nearest neighbour interpolation for single bins
-    if len(edges) == 1:
-        kwargs["kind"] = 0
+        if len(edges) == 1:
+            self.kind = 0
+        else:
+            self.kind = 1
 
-    interp_fn = scipy.interpolate.interp1d(**kwargs)
-    return interp_fn(scale(coord))
+    def coord_to_pix(self, coord):
+        """Pix to coord"""
+        interp_fn = scipy.interpolate.interp1d(
+            x=self.x, y=self.y, kind=self.kind, fill_value=self.fill_value
+        )
+        return interp_fn(self.scale(coord))
 
-
-def pix_to_coord(edges, pix, interp="lin"):
-    """Convert pixel to grid coordinates for given interpolation scheme."""
-    scale = interpolation_scale(interp)
-
-    kwargs = {
-        "fill_value": "extrapolate",
-        "x": np.arange(len(edges), dtype=float),
-        "y": scale(edges),
-    }
-
-    # change to nearest neighbour interpolation for single bins
-    if len(edges) == 1:
-        kwargs["kind"] = 0
-
-    interp_fn = scipy.interpolate.interp1d(**kwargs)
-    return scale.inverse(interp_fn(pix))
+    def pix_to_coord(self, pix):
+        """Coord to pix"""
+        interp_fn = scipy.interpolate.interp1d(
+            x=self.y, y=self.x, kind=self.kind, fill_value=self.fill_value
+        )
+        return self.scale.inverse(interp_fn(pix))
 
 
 PLOT_AXIS_LABEL = {
@@ -204,6 +197,11 @@ class MapAxis:
 
     def __hash__(self):
         return id(self)
+
+    @lazyproperty
+    def _transform(self):
+        """Interpolate coordinates to pixel"""
+        return AxisCoordInterpolator(edges=self._nodes, interp=self.interp)
 
     @property
     def is_energy_axis(self):
@@ -660,7 +658,7 @@ class MapAxis:
             Array of axis coordinate values.
         """
         pix = pix - self._pix_offset
-        values = pix_to_coord(self._nodes, pix, interp=self._interp)
+        values = self._transform.pix_to_coord(pix=pix)
         return u.Quantity(values, unit=self.unit, copy=False)
 
     def pix_to_idx(self, pix, clip=False):
@@ -702,7 +700,7 @@ class MapAxis:
             Array of pixel coordinate values.
         """
         coord = u.Quantity(coord, self.unit, copy=False).value
-        pix = coord_to_pix(self._nodes, coord, interp=self._interp)
+        pix = self._transform.coord_to_pix(coord=coord)
         return np.array(pix + self._pix_offset, ndmin=1)
 
     def coord_to_idx(self, coord, clip=False):
