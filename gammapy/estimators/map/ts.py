@@ -134,7 +134,7 @@ class TSMapEstimator(Estimator):
       n_sigma                : 1
       n_sigma_ul             : 2
       sqrt_ts_threshold_ul   : 2
-      sed type init          : None
+      sed type init          : likelihood
 
 
     References

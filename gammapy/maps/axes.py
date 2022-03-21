@@ -23,26 +23,32 @@ def flat_if_equal(array):
         return array
 
 
-def coord_to_pix(edges, coord, interp="lin"):
-    """Convert axis to pixel coordinates for given interpolation scheme."""
-    scale = interpolation_scale(interp)
+class AxisCoordInterpolator:
+    """Axis coord interpolator"""
+    def __init__(self, edges, interp="lin"):
+        self.scale = interpolation_scale(interp)
+        self.x = self.scale(edges)
+        self.y = np.arange(len(edges), dtype=float)
+        self.fill_value = "extrapolate"
 
-    interp_fn = scipy.interpolate.interp1d(
-        scale(edges), np.arange(len(edges), dtype=float), fill_value="extrapolate"
-    )
+        if len(edges) == 1:
+            self.kind = 0
+        else:
+            self.kind = 1
 
-    return interp_fn(scale(coord))
+    def coord_to_pix(self, coord):
+        """Pix to coord"""
+        interp_fn = scipy.interpolate.interp1d(
+            x=self.x, y=self.y, kind=self.kind, fill_value=self.fill_value
+        )
+        return interp_fn(self.scale(coord))
 
-
-def pix_to_coord(edges, pix, interp="lin"):
-    """Convert pixel to grid coordinates for given interpolation scheme."""
-    scale = interpolation_scale(interp)
-
-    interp_fn = scipy.interpolate.interp1d(
-        np.arange(len(edges), dtype=float), scale(edges), fill_value="extrapolate"
-    )
-
-    return scale.inverse(interp_fn(pix))
+    def pix_to_coord(self, pix):
+        """Coord to pix"""
+        interp_fn = scipy.interpolate.interp1d(
+            x=self.y, y=self.x, kind=self.kind, fill_value=self.fill_value
+        )
+        return self.scale.inverse(interp_fn(pix))
 
 
 PLOT_AXIS_LABEL = {
@@ -101,9 +107,6 @@ class MapAxis:
 
         if ~(np.all(nodes == np.sort(nodes)) or np.all(nodes[::-1] == np.sort(nodes))):
             raise ValueError("MapAxis: node values must be sorted")
-
-        if len(nodes) == 1 and node_type == "center":
-            raise ValueError("Single bins can only be used with node-type 'edges'")
 
         if isinstance(nodes, u.Quantity):
             unit = nodes.unit if nodes.unit is not None else ""
@@ -194,6 +197,11 @@ class MapAxis:
 
     def __hash__(self):
         return id(self)
+
+    @lazyproperty
+    def _transform(self):
+        """Interpolate coordinates to pixel"""
+        return AxisCoordInterpolator(edges=self._nodes, interp=self.interp)
 
     @property
     def is_energy_axis(self):
@@ -291,7 +299,9 @@ class MapAxis:
                                         quantity=PLOT_AXIS_LABEL.get(self.name, self.name.capitalize())
                                         , unit=self.unit )
         ax.set_xlabel(xlabel)
-        ax.set_xlim(self.bounds)
+        xmin, xmax = self.bounds
+        if not xmin == xmax:
+            ax.set_xlim(self.bounds)
         return ax
 
     def format_plot_yaxis(self, ax):
@@ -648,7 +658,7 @@ class MapAxis:
             Array of axis coordinate values.
         """
         pix = pix - self._pix_offset
-        values = pix_to_coord(self._nodes, pix, interp=self._interp)
+        values = self._transform.pix_to_coord(pix=pix)
         return u.Quantity(values, unit=self.unit, copy=False)
 
     def pix_to_idx(self, pix, clip=False):
@@ -690,7 +700,7 @@ class MapAxis:
             Array of pixel coordinate values.
         """
         coord = u.Quantity(coord, self.unit, copy=False).value
-        pix = coord_to_pix(self._nodes, coord, interp=self._interp)
+        pix = self._transform.coord_to_pix(coord=coord)
         return np.array(pix + self._pix_offset, ndmin=1)
 
     def coord_to_idx(self, coord, clip=False):
@@ -1320,13 +1330,15 @@ class MapAxes(Sequence):
     @property
     def is_flat(self):
         """Whether axes is flat"""
-        return np.all(self.shape == 1)
+        shape = np.array(self.shape)
+        return np.all(shape == 1)
 
     @property
     def is_unidimensional(self):
         """Whether axes is unidimensional"""
-        value = (np.array(self.shape) > 1).sum()
-        return value == 1
+        shape = np.array(self.shape)
+        non_zero = np.count_nonzero(shape > 1)
+        return self.is_flat or non_zero == 1
 
     @property
     def reverse(self):

@@ -234,6 +234,30 @@ class TestFluxPoints:
 
 
 @requires_data()
+def test_flux_points_single_bin_dnde():
+    path = make_path("$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits")
+    table = Table.read(path)
+
+    table_single_bin = table[1:2]
+    fp = FluxPoints.from_table(table_single_bin, sed_type="dnde")
+
+    with pytest.raises(ValueError):
+        _ = fp.flux_ref
+
+    with mpl_plot_check():
+        fp.plot(sed_type="e2dnde")
+
+    with pytest.raises(ValueError):
+        fp.to_table(sed_type="flux")
+
+    table = fp.to_table(sed_type="dnde")
+
+    assert_allclose(table["e_ref"], 153.992 * u.MeV, rtol=0.001)
+    assert "e_min" not in table.colnames
+    assert "e_max" not in table.colnames
+
+
+@requires_data()
 def test_compute_flux_points_dnde_fermi():
     """
     Test compute_flux_points_dnde on fermi source.
@@ -290,6 +314,7 @@ def test_is_ul(tmp_path):
     table = fp.to_table()
     assert_allclose(table["is_ul"].data.data, is_ul)
 
+
 @requires_dependency("matplotlib")
 def test_flux_points_plot_no_error_bar():
     table = Table()
@@ -302,4 +327,4 @@ def test_flux_points_plot_no_error_bar():
 
     flux_points = FluxPoints.from_table(table)
     with mpl_plot_check():
-       flux_points.plot(sed_type="flux")
+       _ = flux_points.plot(sed_type="dnde")
