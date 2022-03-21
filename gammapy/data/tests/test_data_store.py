@@ -255,3 +255,8 @@ def test_datastore_from_dir_no_obs_index(caplog, tmpdir):
 
     assert obs.obs_info["ONTIME"] == 1687.0
     assert len(observations) == 2
+
+    data_store.copy_obs([23523], tmpdir, overwrite=True)
+    data_store_copy = DataStore.from_dir(tmpdir)
+    assert len(data_store_copy.obs_ids) == 1
+    assert data_store_copy.obs_table == None

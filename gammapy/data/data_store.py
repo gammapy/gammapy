@@ -349,7 +349,8 @@ class DataStore:
             subhdutable.add_index("HDU_CLASS")
             with subhdutable.index_mode("discard_on_copy"):
                 subhdutable = subhdutable.loc[hdu_class]
-        subobstable = self.obs_table.select_obs_id(obs_id)
+        if self.obs_table:
+            subobstable = self.obs_table.select_obs_id(obs_id)
 
         for idx in range(len(subhdutable)):
             # Changes to the file structure could be made here
@@ -367,8 +368,9 @@ class DataStore:
         filename = outdir / self.DEFAULT_HDU_TABLE
         subhdutable.write(filename, format="fits", overwrite=overwrite)
 
-        filename = outdir / self.DEFAULT_OBS_TABLE
-        subobstable.write(str(filename), format="fits", overwrite=overwrite)
+        if self.obs_table:
+            filename = outdir / self.DEFAULT_OBS_TABLE
+            subobstable.write(str(filename), format="fits", overwrite=overwrite)
 
     def check(self, checks="all"):
         """Check index tables and data files.
