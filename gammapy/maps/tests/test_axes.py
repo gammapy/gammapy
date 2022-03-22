@@ -694,7 +694,7 @@ def test_mixed_axes():
 
     table = Table.read(hdu)
 
-    assert table["LABEL"].dtype == np.dtype("<U7")
+    assert table["LABEL"].dtype == np.dtype("U7")
     assert len(table) == 24
 
 
