@@ -27,11 +27,11 @@ import matplotlib.pyplot as plt
 from gammapy.modeling.models import (
     Models,
     SkyModel,
-    SuperExpCutoffPowerLaw4FGLDR1SpectralModel,
+    SuperExpCutoffPowerLaw4FGLSpectralModel,
 )
 
 energy_range = [0.1, 100] * u.TeV
-model = SuperExpCutoffPowerLaw4FGLDR1SpectralModel(
+model = SuperExpCutoffPowerLaw4FGLSpectralModel(
     index_1=1,
     index_2=2,
     amplitude="1e-12 TeV-1 cm-2 s-1",
@@ -47,7 +47,7 @@ plt.ylim(1e-24, 1e-10)
 # -------------------
 # Here is an example YAML file using the model:
 
-model = SkyModel(spectral_model=model, name="super-exp-cutoff-power-law-4fgl-dr1-model")
+model = SkyModel(spectral_model=model, name="super-exp-cutoff-power-law-4fgl-model")
 models = Models([model])
 
 print(models.to_yaml())

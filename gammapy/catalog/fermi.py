@@ -420,13 +420,13 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
             }
         elif spec_type == "PLSuperExpCutoff":
             if  "PLEC_ExpfactorS" in self.data : 
-                tag = "SuperExpCutoffPowerLaw4FGLSpectralModel"
+                tag = "SuperExpCutoffPowerLaw4FGLDR3SpectralModel"
                 expfactor =  self.data["PLEC_ExpfactorS"]
                 expfactor_err = self.data["Unc_PLEC_ExpfactorS"]
                 index_1 = self.data["PLEC_IndexS"]
                 index_1_err = self.data["Unc_PLEC_IndexS"]
             else:
-                tag = "SuperExpCutoffPowerLaw4FGLDR1SpectralModel"
+                tag = "SuperExpCutoffPowerLaw4FGLSpectralModel"
                 expfactor =  self.data["PLEC_Expfactor"]
                 expfactor_err = self.data["Unc_PLEC_Expfactor"]
                 index_1 = self.data["PLEC_Index"]

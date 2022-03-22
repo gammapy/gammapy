@@ -46,8 +46,8 @@ __all__ = [
     "SmoothBrokenPowerLawSpectralModel",
     "SpectralModel",
     "SuperExpCutoffPowerLaw3FGLSpectralModel",
+    "SuperExpCutoffPowerLaw4FGLDR3SpectralModel",
     "SuperExpCutoffPowerLaw4FGLSpectralModel",
-    "SuperExpCutoffPowerLaw4FGLDR1SpectralModel",
     "TemplateSpectralModel",
 ]
 
@@ -1301,10 +1301,10 @@ class SuperExpCutoffPowerLaw3FGLSpectralModel(SpectralModel):
         return pwl * cutoff
 
 
-class SuperExpCutoffPowerLaw4FGLDR1SpectralModel(SpectralModel):
+class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
     r"""Spectral super exponential cutoff power-law model used for 4FGL-DR1 (and DR2).
     See equation (4) of https://arxiv.org/pdf/1902.10045.pdf
-    For more information see :ref:`super-exp-cutoff-powerlaw-4fgl-dr1-spectral-model`.
+    For more information see :ref:`super-exp-cutoff-powerlaw-4fgl-spectral-model`.
 
     Parameters
     ----------
@@ -1321,7 +1321,7 @@ class SuperExpCutoffPowerLaw4FGLDR1SpectralModel(SpectralModel):
         internally assumes unit of :math: `[E_0]` power :math:`-\Gamma_2`
     """
 
-    tag = ["SuperExpCutoffPowerLaw4FGLDR1SpectralModel", "secpl-4fgl-dr1"]
+    tag = ["SuperExpCutoffPowerLaw4FGLSpectralModel", "secpl-4fgl"]
     amplitude = Parameter(
         "amplitude", "1e-12 cm-2 s-1 TeV-1", scale_method="scale10", interp="log"
     )
@@ -1342,10 +1342,10 @@ class SuperExpCutoffPowerLaw4FGLDR1SpectralModel(SpectralModel):
         return pwl * cutoff
 
 
-class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
+class SuperExpCutoffPowerLaw4FGLDR3SpectralModel(SpectralModel):
     r"""Spectral super exponential cutoff power-law model used for 4FGL-DR3.
     See equations (2) and (3) of https://arxiv.org/pdf/2201.11184.pdf
-    For more information see :ref:`super-exp-cutoff-powerlaw-4fgl-spectral-model`.
+    For more information see :ref:`super-exp-cutoff-powerlaw-4fgl-dr3-spectral-model`.
 
     Parameters
     ----------
@@ -1361,7 +1361,7 @@ class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
         :math:`a`, given as dimensionless value
     """
 
-    tag = ["SuperExpCutoffPowerLaw4FGLSpectralModel", "secpl-4fgl"]
+    tag = ["SuperExpCutoffPowerLaw4FGLDR3SpectralModel", "secpl-4fgl-dr3"]
     amplitude = Parameter(
         "amplitude", "1e-12 cm-2 s-1 TeV-1", scale_method="scale10", interp="log"
     )

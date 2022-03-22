@@ -26,8 +26,8 @@ from gammapy.modeling.models import (
     PowerLawNormSpectralModel,
     PowerLawSpectralModel,
     SmoothBrokenPowerLawSpectralModel,
+    SuperExpCutoffPowerLaw4FGLDR3SpectralModel,
     SuperExpCutoffPowerLaw4FGLSpectralModel,
-    SuperExpCutoffPowerLaw4FGLDR1SpectralModel,
     TemplateSpectralModel,
     TemplateNDSpectralModel,
 )
@@ -142,7 +142,7 @@ TEST_MODELS = [
     ),
     dict(
         name="plsec_4fgl_dr1",
-        model=SuperExpCutoffPowerLaw4FGLDR1SpectralModel(
+        model=SuperExpCutoffPowerLaw4FGLSpectralModel(
             index_1=1.5,
             index_2=2,
             amplitude=1 / u.cm ** 2 / u.s / u.TeV,
@@ -155,7 +155,7 @@ TEST_MODELS = [
     ),
     dict(
         name="plsec_4fgl",
-        model=SuperExpCutoffPowerLaw4FGLSpectralModel(
+        model=SuperExpCutoffPowerLaw4FGLDR3SpectralModel(
             index_1=1.5,
             index_2=2,
             amplitude=1 / u.cm ** 2 / u.s / u.TeV,

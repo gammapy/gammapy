@@ -17,7 +17,7 @@ from gammapy.modeling.models import (
     PowerLaw2SpectralModel,
     PowerLawSpectralModel,
     SuperExpCutoffPowerLaw3FGLSpectralModel,
-    SuperExpCutoffPowerLaw4FGLDR1SpectralModel,
+    SuperExpCutoffPowerLaw4FGLSpectralModel,
 )
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.testing import (
@@ -47,7 +47,7 @@ SOURCES_4FGL = [
         idx=7,
         name="4FGL J0002.8+6217",
         str_ref_file="data/4fgl_J0002.8+6217.txt",
-        spec_type=SuperExpCutoffPowerLaw4FGLDR1SpectralModel,
+        spec_type=SuperExpCutoffPowerLaw4FGLSpectralModel,
         dnde=u.Quantity(2.084e-09, "cm-2 s-1 GeV-1"),
         dnde_err=u.Quantity(1.0885e-10, "cm-2 s-1 GeV-1"),
     ),

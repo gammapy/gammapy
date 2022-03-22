@@ -232,8 +232,8 @@ def make_all_models():
     yield Model.create("ExpCutoffPowerLawNormSpectralModel", "spectral")
     yield Model.create("ExpCutoffPowerLaw3FGLSpectralModel", "spectral")
     yield Model.create("SuperExpCutoffPowerLaw3FGLSpectralModel", "spectral")
+    yield Model.create("SuperExpCutoffPowerLaw4FGLDR3SpectralModel", "spectral")
     yield Model.create("SuperExpCutoffPowerLaw4FGLSpectralModel", "spectral")
-    yield Model.create("SuperExpCutoffPowerLaw4FGLDR1SpectralModel", "spectral")
     yield Model.create("LogParabolaSpectralModel", "spectral")
     yield Model.create("LogParabolaNormSpectralModel", "spectral")
     yield Model.create(
