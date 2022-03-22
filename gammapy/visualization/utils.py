@@ -1,6 +1,7 @@
 import numpy as np
 from gammapy.maps import MapAxis
 from gammapy.maps.utils import edges_from_lo_hi
+from scipy.interpolate import CubicSpline
 
 __all__ = [
     "plot_contour_line",
@@ -65,7 +66,9 @@ def plot_spectrum_datasets_off_regions(
     from matplotlib.legend_handler import HandlerPatch, HandlerTuple
     from matplotlib.patches import CirclePolygon, Patch
 
-    ax = ax or plt.gca(projection=datasets[0].counts_off.geom.wcs)
+    if ax is None:
+        ax = plt.subplot(projection=datasets[0].counts_off.geom.wcs)
+
     legend = legend or legend is None and len(datasets) <= 10
     legend_kwargs = legend_kwargs or {}
     handles, labels = [], []
@@ -111,8 +114,6 @@ def plot_spectrum_datasets_off_regions(
 
 def plot_contour_line(ax, x, y, **kwargs):
     """Plot smooth curve from contour points"""
-    from scipy.interpolate import CubicSpline
-
     # close contour
     xf = np.append(x, x[0])
     yf = np.append(y, y[0])
