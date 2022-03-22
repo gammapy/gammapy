@@ -2,16 +2,31 @@
 """Model parameter classes."""
 import collections.abc
 import copy
+from enum import Enum
 import itertools
 import logging
 import numpy as np
 from astropy import units as u
+from astropy.utils import classproperty
 from gammapy.utils.interpolation import interpolation_scale
 from gammapy.utils.table import table_from_row_data
 
 __all__ = ["Parameter", "Parameters"]
 
 log = logging.getLogger(__name__)
+
+
+class ParameterTypes(Enum):
+    SPATIAL = "spatial"
+    SPECTRAL = "spectral"
+    TEMPORAL = "temporal"
+    NORM = "norm"
+    AUTO = "auto"
+
+    @classproperty
+    def values(cls):
+        """Valid enum values"""
+        return [_.value for _ in cls]
 
 
 def _get_parameters_str(parameters):
@@ -91,6 +106,8 @@ class Parameter:
         Method used to set ``factor`` and ``scale``
     interp : {"lin", "sqrt", "log"}
         Parameter scaling to use for the scan.
+    type : {'auto', 'spatial', 'spectral', 'temporal', 'norm'}
+        Parameter type.
 
     """
 
@@ -111,6 +128,7 @@ class Parameter:
         scan_values=None,
         scale_method="scale10",
         interp="lin",
+        type="auto",
     ):
         if not isinstance(name, str):
             raise TypeError(f"Name must be string, got '{type(name)}' instead")
@@ -122,7 +140,11 @@ class Parameter:
         self.max = max
         self.frozen = frozen
         self._error = error
-        self._type = None
+
+        if type not in ParameterTypes.values:
+            raise ValueError(f"Not a valid parameter type {type}, choose from {ParameterTypes.values}")
+
+        self._type = type
 
         # TODO: move this to a setter method that can be called from `__set__` also!
         # Having it here is bad: behaviour not clear if Quantity and `unit` is passed.
@@ -145,8 +167,12 @@ class Parameter:
     def __get__(self, instance, owner):
         if instance is None:
             return self
+
         par = instance.__dict__[self.name]
-        par._type = getattr(instance, "type", None)
+
+        if par._type == ParameterTypes.AUTO.value:
+            par._type = getattr(instance, "type", None)
+
         return par
 
     def __set__(self, instance, value):
@@ -155,6 +181,11 @@ class Parameter:
         else:
             par = instance.__dict__[self.name]
             raise TypeError(f"Cannot assign {value!r} to parameter {par!r}")
+
+    @property
+    def is_norm(self):
+        """Whether the parameter represents the norm of the model"""
+        return self.type == ParameterTypes.NORM.value
 
     @property
     def type(self):
@@ -408,10 +439,12 @@ class Parameter:
             "frozen": self.frozen,
             "interp": self.interp,
             "scale_method": self.scale_method,
+            "type": self.type,
         }
 
         if self._link_label_io is not None:
             output["link"] = self._link_label_io
+
         return output
 
     def autoscale(self):
@@ -437,6 +470,7 @@ class Parameter:
                 scale = np.power(10.0, exponent)
                 self.factor = value / scale
                 self.scale = scale
+
         elif self.scale_method == "factor1":
             self.factor, self.scale = 1, self.value
 
@@ -613,11 +647,13 @@ class Parameters(collections.abc.Sequence):
     @classmethod
     def from_dict(cls, data):
         parameters = []
+
         for par in data:
             link_label = par.pop("link", None)
             parameter = Parameter(**par)
             parameter._link_label_io = link_label
             parameters.append(parameter)
+
         return cls(parameters=parameters)
 
     def set_parameter_factors(self, factors):
