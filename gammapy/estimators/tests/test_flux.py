@@ -170,13 +170,16 @@ def test_flux_estimator_norm_range_template():
     assert_allclose(scale_model.norm.max, 10)
     assert scale_model.norm.interp == "log"
 
+
 def test_flux_estimator_compound_model():
     pl = PowerLawSpectralModel()
     pl.amplitude.min = 1e-15
     pl.amplitude.max = 1e-10
+
     pln = PowerLawNormSpectralModel()
     pln.norm.value = 0.1
-    spectral_model = pl*pln
+    pln.norm.frozen = True
+    spectral_model = pl * pln
     model = SkyModel(spectral_model=spectral_model, name="test")
 
     estimator = FluxEstimator(source="test", selection_optional=[], reoptimize=True)
@@ -185,6 +188,7 @@ def test_flux_estimator_compound_model():
 
     assert_allclose(scale_model.norm.min, 1e-3)
     assert_allclose(scale_model.norm.max, 1e2)
+
 
 @requires_dependency("naima")
 def test_flux_estimator_naima_model():
