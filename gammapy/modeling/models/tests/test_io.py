@@ -34,6 +34,7 @@ def models():
     models = Models.from_dict(models_data)
     return models
 
+
 @requires_data()
 def test_dict_to_skymodels(models):
 
@@ -332,9 +333,9 @@ def test_link_label(models):
 
     txt = skymodels.__str__()
     lines = txt.splitlines()
-    n_link = 0 
+    n_link = 0
     for line in lines:
         if "@" in line:
             assert "reference" in line
-            n_link +=1 
+            n_link +=1
     assert n_link == 2

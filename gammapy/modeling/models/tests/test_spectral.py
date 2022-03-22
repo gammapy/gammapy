@@ -231,7 +231,7 @@ TEST_MODELS = [
     dict(
         name="GaussianSpectralModel",
         model=GaussianSpectralModel(
-            norm=4 / u.cm ** 2 / u.s, mean=2 * u.TeV, sigma=0.2 * u.TeV
+            amplitude=4 / u.cm ** 2 / u.s, mean=2 * u.TeV, sigma=0.2 * u.TeV
         ),
         val_at_2TeV=u.Quantity(7.978845608028654, "cm-2 s-1 TeV-1"),
         val_at_3TeV=u.Quantity(2.973439029468601e-05, "cm-2 s-1 TeV-1"),
@@ -344,8 +344,13 @@ TEST_MODELS.append(
 @pytest.mark.parametrize("spectrum", TEST_MODELS, ids=lambda _: _["name"])
 def test_models(spectrum):
     model = spectrum["model"]
+
     for p in model.parameters:
-        assert p._type == "spectral"
+        if p.is_norm:
+            assert p.type == "norm"
+        else:
+            assert p.type == "spectral"
+
     energy = 2 * u.TeV
     value = model(energy)
     energies = [2, 3] * u.TeV
@@ -512,7 +517,7 @@ def test_to_from_dict_partial_input(caplog):
     desired = [par.frozen for par in model.parameters]
     assert_allclose(actual, desired)
     assert "WARNING" in [_.levelname for _ in caplog.records]
-    assert "Parameter reference not defined. Using default value: 1.0 TeV" in [
+    assert "Parameter 'reference' not defined in YAML file. Using default value: 1.0 TeV" in [
         _.message for _ in caplog.records
     ]
 
@@ -614,14 +619,14 @@ def test_pwl_pivot_energy():
     assert_quantity_allclose(pwl.pivot_energy, 3.3540034240210987 * u.TeV)
 
 
-def test_TemplateSpectralModel_evaluate_tiny():
+def test_template_spectral_model_evaluate_tiny():
     energy = np.array([1.00000000e06, 1.25892541e06, 1.58489319e06, 1.99526231e06])
     values = np.array([4.39150790e-38, 1.96639562e-38, 8.80497507e-39, 3.94262401e-39])
 
     model = TemplateSpectralModel(
         energy=energy, values=values * u.Unit("MeV-1 s-1 sr-1")
     )
-    result = model.evaluate(energy)
+    result = model(energy)
     tiny = np.finfo(np.float32).tiny
     mask = abs(values) - tiny > tiny
     np.testing.assert_allclose(
@@ -631,7 +636,7 @@ def test_TemplateSpectralModel_evaluate_tiny():
     assert np.all(result[mask] == 0.0)
 
 
-def test_TemplateSpectralModel_single_value():
+def test_template_spectral_model_single_value():
     energy = [1]*u.TeV
     values = [1e-12]* u.Unit("TeV-1 s-1 cm-2")
 
@@ -643,7 +648,7 @@ def test_TemplateSpectralModel_single_value():
     assert_allclose(result.data, 1e-12)
 
 
-def test_TemplateSpectralModel_compound():
+def test_template_spectral_model_compound():
     energy = [1.00e06, 1.25e06, 1.58e06, 1.99e06] * u.MeV
     values = [4.39e-7, 1.96e-7, 8.80e-7, 3.94e-7] * u.Unit("MeV-1 s-1 sr-1")
 
@@ -1037,7 +1042,7 @@ def test_template_ND_no_energy(tmpdir):
 
 @requires_data()
 def test_template_ND_EBL(tmpdir):
-    
+
     #TODO: add RegionNDMap.read(format="xspec")
     # Create EBL data array
     filename="$GAMMAPY_DATA/ebl/ebl_franceschini.fits.gz"
@@ -1076,7 +1081,7 @@ def test_template_ND_EBL(tmpdir):
     #TODO: here we use a fake position, is it possible to allow region=None ?
     data = table_spectra["INTPSPEC"].data[idx_data]
     region_map.data[:,:, 0, 0] = data
-    
+
 
     template = TemplateNDSpectralModel(region_map)
     assert len(template.parameters) == 1
