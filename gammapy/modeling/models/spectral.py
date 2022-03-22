@@ -601,7 +601,7 @@ class ConstantSpectralModel(SpectralModel):
     """
 
     tag = ["ConstantSpectralModel", "const"]
-    const = Parameter("const", "1e-12 cm-2 s-1 TeV-1")
+    const = Parameter("const", "1e-12 cm-2 s-1 TeV-1", type="norm")
 
     @staticmethod
     def evaluate(energy, const):
@@ -687,7 +687,11 @@ class PowerLawSpectralModel(SpectralModel):
     tag = ["PowerLawSpectralModel", "pl"]
     index = Parameter("index", 2.0)
     amplitude = Parameter(
-        "amplitude", "1e-12 cm-2 s-1 TeV-1", scale_method="scale10", interp="log"
+        "amplitude",
+        "1e-12 cm-2 s-1 TeV-1",
+        scale_method="scale10",
+        interp="log",
+        type="norm",
     )
     reference = Parameter("reference", "1 TeV", frozen=True)
 
@@ -804,7 +808,7 @@ class PowerLawNormSpectralModel(SpectralModel):
     """
 
     tag = ["PowerLawNormSpectralModel", "pl-norm"]
-    norm = Parameter("norm", 1, unit="", interp="log")
+    norm = Parameter("norm", 1, unit="", interp="log", type="norm")
     tilt = Parameter("tilt", 0, frozen=True)
     reference = Parameter("reference", "1 TeV", frozen=True)
 
@@ -902,7 +906,11 @@ class PowerLaw2SpectralModel(SpectralModel):
     tag = ["PowerLaw2SpectralModel", "pl-2"]
 
     amplitude = Parameter(
-        "amplitude", "1e-12 cm-2 s-1", scale_method="scale10", interp="log"
+        name="amplitude",
+        value="1e-12 cm-2 s-1",
+        scale_method="scale10",
+        interp="log",
+        type="norm",
     )
     index = Parameter("index", 2)
     emin = Parameter("emin", "0.1 TeV", frozen=True)
@@ -986,7 +994,11 @@ class BrokenPowerLawSpectralModel(SpectralModel):
     index1 = Parameter("index1", 2.0)
     index2 = Parameter("index2", 2.0)
     amplitude = Parameter(
-        "amplitude", "1e-12 cm-2 s-1 TeV-1", scale_method="scale10", interp="log"
+        name="amplitude",
+        value="1e-12 cm-2 s-1 TeV-1",
+        scale_method="scale10",
+        interp="log",
+        type="norm",
     )
     ebreak = Parameter("ebreak", "1 TeV")
 
@@ -1030,7 +1042,11 @@ class SmoothBrokenPowerLawSpectralModel(SpectralModel):
     index1 = Parameter("index1", 2.0)
     index2 = Parameter("index2", 2.0)
     amplitude = Parameter(
-        "amplitude", "1e-12 cm-2 s-1 TeV-1", scale_method="scale10", interp="log"
+        name="amplitude",
+        value="1e-12 cm-2 s-1 TeV-1",
+        scale_method="scale10",
+        interp="log",
+        type="norm",
     )
     ebreak = Parameter("ebreak", "1 TeV")
     reference = Parameter("reference", "1 TeV", frozen=True)
@@ -1062,7 +1078,6 @@ class PiecewiseNormSpectralModel(SpectralModel):
     interp : str
         Interpolation scaling in {"log", "lin"}. Default is "log"
     """
-
     tag = ["PiecewiseNormSpectralModel", "piecewise-norm"]
 
     def __init__(self, energy, norms=None, interp="log"):
@@ -1155,7 +1170,11 @@ class ExpCutoffPowerLawSpectralModel(SpectralModel):
 
     index = Parameter("index", 1.5)
     amplitude = Parameter(
-        "amplitude", "1e-12 cm-2 s-1 TeV-1", scale_method="scale10", interp="log"
+        name="amplitude",
+        value="1e-12 cm-2 s-1 TeV-1",
+        scale_method="scale10",
+        interp="log",
+        type="norm",
     )
     reference = Parameter("reference", "1 TeV", frozen=True)
     lambda_ = Parameter("lambda_", "0.1 TeV-1")
@@ -1212,7 +1231,7 @@ class ExpCutoffPowerLawNormSpectralModel(SpectralModel):
     tag = ["ExpCutoffPowerLawNormSpectralModel", "ecpl-norm"]
 
     index = Parameter("index", 1.5)
-    norm = Parameter("norm", 1, unit="", interp="log")
+    norm = Parameter("norm", 1, unit="", interp="log", type="norm")
     reference = Parameter("reference", "1 TeV", frozen=True)
     lambda_ = Parameter("lambda_", "0.1 TeV-1")
     alpha = Parameter("alpha", "1.0", frozen=True)
@@ -1246,7 +1265,11 @@ class ExpCutoffPowerLaw3FGLSpectralModel(SpectralModel):
     tag = ["ExpCutoffPowerLaw3FGLSpectralModel", "ecpl-3fgl"]
     index = Parameter("index", 1.5)
     amplitude = Parameter(
-        "amplitude", "1e-12 cm-2 s-1 TeV-1", scale_method="scale10", interp="log"
+        "amplitude",
+        "1e-12 cm-2 s-1 TeV-1",
+        scale_method="scale10",
+        interp="log",
+        type="norm",
     )
     reference = Parameter("reference", "1 TeV", frozen=True)
     ecut = Parameter("ecut", "10 TeV")
@@ -1286,7 +1309,11 @@ class SuperExpCutoffPowerLaw3FGLSpectralModel(SpectralModel):
 
     tag = ["SuperExpCutoffPowerLaw3FGLSpectralModel", "secpl-3fgl"]
     amplitude = Parameter(
-        "amplitude", "1e-12 cm-2 s-1 TeV-1", scale_method="scale10", interp="log"
+        "amplitude",
+        "1e-12 cm-2 s-1 TeV-1",
+        scale_method="scale10",
+        interp="log",
+        type="norm",
     )
     reference = Parameter("reference", "1 TeV", frozen=True)
     ecut = Parameter("ecut", "10 TeV")
@@ -1323,7 +1350,11 @@ class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
 
     tag = ["SuperExpCutoffPowerLaw4FGLSpectralModel", "secpl-4fgl"]
     amplitude = Parameter(
-        "amplitude", "1e-12 cm-2 s-1 TeV-1", scale_method="scale10", interp="log"
+        "amplitude",
+        "1e-12 cm-2 s-1 TeV-1",
+        scale_method="scale10",
+        interp="log",
+        type="norm",
     )
     reference = Parameter("reference", "1 TeV", frozen=True)
     expfactor = Parameter("expfactor", "1e-2")
@@ -1410,7 +1441,11 @@ class LogParabolaSpectralModel(SpectralModel):
     """
     tag = ["LogParabolaSpectralModel", "lp"]
     amplitude = Parameter(
-        "amplitude", "1e-12 cm-2 s-1 TeV-1", scale_method="scale10", interp="log"
+        "amplitude",
+        "1e-12 cm-2 s-1 TeV-1",
+        scale_method="scale10",
+        interp="log",
+        type="norm",
     )
     reference = Parameter("reference", "10 TeV", frozen=True)
     alpha = Parameter("alpha", 2)
@@ -1463,7 +1498,7 @@ class LogParabolaNormSpectralModel(SpectralModel):
     LogParabolaSpectralModel
     """
     tag = ["LogParabolaNormSpectralModel", "lp-norm"]
-    norm = Parameter("norm", 1, unit="", interp="log")
+    norm = Parameter("norm", 1, unit="", interp="log", type="norm")
     reference = Parameter("reference", "10 TeV", frozen=True)
     alpha = Parameter("alpha", 2)
     beta = Parameter("beta", 1)
@@ -1502,7 +1537,7 @@ class TemplateSpectralModel(SpectralModel):
     meta : dict, optional
         Meta information, meta['filename'] will be used for serialization
     """
-
+    norm = Parameter("norm", 1, unit="", interp="log", type="norm", frozen=True)
     tag = ["TemplateSpectralModel", "template"]
 
     def __init__(
@@ -1578,9 +1613,9 @@ class TemplateSpectralModel(SpectralModel):
         kwargs.setdefault("interp_kwargs", {"values_scale": "lin"})
         return cls(energy=energy, values=values, **kwargs)
 
-    def evaluate(self, energy):
+    def evaluate(self, energy, norm):
         """Evaluate the model (static function)."""
-        return self._evaluate((energy,), clip=True)
+        return norm * self._evaluate((energy,), clip=True)
 
     def to_dict(self, full_output=False):
         return {
@@ -1657,7 +1692,7 @@ class TemplateNDSpectralModel(SpectralModel):
                 points_scale.append(axis.interp)
                 parameters.append(parameter)
             else:
-                has_energy|=True
+                has_energy |= True
         if not has_energy:
             raise ValueError("Invalid map, no energy axis found")
 
@@ -1678,11 +1713,12 @@ class TemplateNDSpectralModel(SpectralModel):
         coord = {"energy_true": energy}
         coord.update(kwargs)
 
-        pixels = [0,0] + [self.map.geom.axes[key].coord_to_pix(value) for key, value in coord.items()]
+        pixels = [0, 0] + [
+            self.map.geom.axes[key].coord_to_pix(value) for key, value in coord.items()
+        ]
 
         val = self.map.interp_by_pix(pixels, **self._interp_kwargs)
         return u.Quantity(val, self.map.unit, copy=False)
-
 
     def write(self, overwrite=False):
         if self.filename is None:
@@ -1721,7 +1757,7 @@ class ScaleSpectralModel(SpectralModel):
     """
 
     tag = ["ScaleSpectralModel", "scale"]
-    norm = Parameter("norm", 1, unit="", interp="log")
+    norm = Parameter("norm", 1, unit="", interp="log", type="norm")
 
     def __init__(self, model, norm=norm.quantity):
         self.model = model
@@ -2078,7 +2114,7 @@ class GaussianSpectralModel(SpectralModel):
 
     Parameters
     ----------
-    norm : `~astropy.units.Quantity`
+    amplitude : `~astropy.units.Quantity`
         :math:`N_0`
     mean : `~astropy.units.Quantity`
         :math:`\bar{E}`
@@ -2087,14 +2123,16 @@ class GaussianSpectralModel(SpectralModel):
     """
 
     tag = ["GaussianSpectralModel", "gauss"]
-    norm = Parameter("norm", 1e-12 * u.Unit("cm-2 s-1"), interp="log")
+    amplitude = Parameter(
+        "amplitude", 1e-12 * u.Unit("cm-2 s-1"), interp="log", type="norm"
+    )
     mean = Parameter("mean", 1 * u.TeV)
     sigma = Parameter("sigma", 2 * u.TeV)
 
     @staticmethod
-    def evaluate(energy, norm, mean, sigma):
+    def evaluate(energy, amplitude, mean, sigma):
         return (
-            norm
+            amplitude
             / (sigma * np.sqrt(2 * np.pi))
             * np.exp(-((energy - mean) ** 2) / (2 * sigma ** 2))
         )
@@ -2120,7 +2158,7 @@ class GaussianSpectralModel(SpectralModel):
         ).to_value("")
 
         return (
-            self.norm.quantity
+            self.amplitude.quantity
             / 2
             * (scipy.special.erf(u_max) - scipy.special.erf(u_min))
         )
@@ -2145,8 +2183,8 @@ class GaussianSpectralModel(SpectralModel):
         u_max = (
             (energy_max - self.mean.quantity) / (np.sqrt(2) * self.sigma.quantity)
         ).to_value("")
-        a = self.norm.quantity * self.sigma.quantity / np.sqrt(2 * np.pi)
-        b = self.norm.quantity * self.mean.quantity / 2
+        a = self.amplitude.quantity * self.sigma.quantity / np.sqrt(2 * np.pi)
+        b = self.amplitude.quantity * self.mean.quantity / 2
         return a * (np.exp(-(u_min ** 2)) - np.exp(-(u_max ** 2))) + b * (
             scipy.special.erf(u_max) - scipy.special.erf(u_min)
         )
