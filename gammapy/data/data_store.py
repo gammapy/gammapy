@@ -190,6 +190,8 @@ class DataStore:
         This is how you can access a single event list::
 
         >>> from gammapy.data import DataStore
+        >>> import os
+        >>> os.environ["CALDB"] = os.environ["GAMMAPY_DATA"] + "/cta-1dc/caldb"
         >>> path = "$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_110380.fits"
         >>> data_store = DataStore.from_events_files([path])
         >>> observations = data_store.get_observations()
