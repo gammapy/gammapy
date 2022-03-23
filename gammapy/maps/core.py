@@ -1012,6 +1012,50 @@ class Map(abc.ABC):
 
         return Map.from_geom(geom, data=data, unit=self.unit)
 
+    def reproject(self, geom, preserve_counts=False, oversampling_factor=10, axis_name=None):
+        """Reproject map to input geometry.
+
+        Parameters
+        ----------
+        geom : `~gammapy.maps.Geom`
+            Target Map geometry
+        preserve_counts : bool
+            Preserve the integral over each bin.  This should be true
+            if the map is an integral quantity (e.g. counts) and false if
+            the map is a differential quantity (e.g. intensity)
+        oversampling_factor : int
+           Minimal factor between the bin size of the output map and the oversampled base map.
+
+        Returns
+        -------
+        output_map : `Map`
+            Reprojected Map
+        """
+        if not hasattr(geom, "pixel_scales"):
+            raise TypeError(f"Reproject is not supported for {type(geom)}")
+        if not hasattr(self.geom, "pixel_scales"):
+            raise TypeError(f"Reproject is not supported for {type(geom)}")
+        
+        output_map = Map.from_geom(geom)
+        base_factor = geom.pixel_scales.min()/self.geom.pixel_scales.min()
+        print(base_factor)
+        if base_factor > oversampling_factor:
+            input_map = self
+        else:
+            factor = int(np.ceil(oversampling_factor / base_factor))
+            print(factor)
+            try:
+                input_map = self.upsample(factor=factor, preserve_counts=preserve_counts, axis_name=axis_name)
+            except(TypeError):
+                input_map = self.upsample(factor=factor, preserve_counts=preserve_counts)
+
+        coords = input_map.geom.get_coord()
+        output_map.fill_by_coord(coords,
+                                 weights=input_map.quantity,
+                                 preserve_counts=preserve_counts
+                                 )
+        return output_map
+
     def fill_events(self, events):
         """Fill event coordinates (`~gammapy.data.EventList`)."""
         self.fill_by_coord(events.map_coord(self.geom))
