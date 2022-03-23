@@ -1016,7 +1016,7 @@ class Map(abc.ABC):
         """Fill event coordinates (`~gammapy.data.EventList`)."""
         self.fill_by_coord(events.map_coord(self.geom))
 
-    def fill_by_coord(self, coords, weights=None):
+    def fill_by_coord(self, coords, weights=None, preserve_counts=True):
         """Fill pixels at ``coords`` with given ``weights``.
 
         Parameters
@@ -1027,11 +1027,15 @@ class Map(abc.ABC):
             are coordinates for non-spatial dimensions of the map.
         weights : `~numpy.ndarray`
             Weights vector. Default is weight of one.
+        preserve_counts : bool
+            Preserve the integral over each bin.  This should be true
+            if the map is an integral quantity (e.g. counts) and false if
+            the map is a differential quantity (e.g. intensity)
         """
         idx = self.geom.coord_to_idx(coords)
-        self.fill_by_idx(idx, weights)
+        self.fill_by_idx(idx, weights=weights, preserve_counts=preserve_counts)
 
-    def fill_by_pix(self, pix, weights=None):
+    def fill_by_pix(self, pix, weights=None, preserve_counts=True):
         """Fill pixels at ``pix`` with given ``weights``.
 
         Parameters
@@ -1044,12 +1048,16 @@ class Map(abc.ABC):
             indices will be rounded to the nearest integer.
         weights : `~numpy.ndarray`
             Weights vector. Default is weight of one.
+        preserve_counts : bool
+            Preserve the integral over each bin.  This should be true
+            if the map is an integral quantity (e.g. counts) and false if
+            the map is a differential quantity (e.g. intensity)
         """
         idx = pix_tuple_to_idx(pix)
-        return self.fill_by_idx(idx, weights=weights)
+        return self.fill_by_idx(idx, weights=weights, preserve_counts=preserve_counts)
 
     @abc.abstractmethod
-    def fill_by_idx(self, idx, weights=None):
+    def fill_by_idx(self, idx, weights=None, preserve_counts=True):
         """Fill pixels at ``idx`` with given ``weights``.
 
         Parameters
@@ -1060,6 +1068,10 @@ class Map(abc.ABC):
             for WCS maps and (I_hpx, I_0, ..., I_n) for HEALPix maps.
         weights : `~numpy.ndarray`
             Weights vector. Default is weight of one.
+        preserve_counts : bool
+            Preserve the integral over each bin.  This should be true
+            if the map is an integral quantity (e.g. counts) and false if
+            the map is a differential quantity (e.g. intensity)
         """
         pass
 
