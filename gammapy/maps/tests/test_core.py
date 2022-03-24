@@ -454,15 +454,18 @@ def test_interp_to_geom():
     )
 
     test_map = Map.from_geom(geom_initial, unit="")
-    test_map.data = value * np.ones(test_map.data.shape)
+    test_map.data = value * np.eye(test_map.data.shape[0])
     geom_target = WcsGeom.create(
         skydir=(20, 20),
-        width=(5, 5),
+        width=(6, 6),
         binsz=0.1 * u.deg,
     )
-    new_map = test_map.interp_to_geom(geom_target, preserve_counts=True)
+    new_map = test_map.interp_to_geom(geom_target,
+                                      fill_value=0.,
+                                      method="nearest",
+                                      preserve_counts=True)
     assert np.floor(np.sum(new_map.data)) == np.sum(test_map.data)
-
+    #False for  method="linear", the default
 
 @requires_dependency("matplotlib")
 def test_map_plot_mask():
