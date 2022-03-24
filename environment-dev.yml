@@ -24,7 +24,7 @@ dependencies:
   - numpy
   - pydantic
   - pyyaml
-  - regions
+  - regions=0.5
   - matplotlib>=3.4,<3.5
   - scipy
   # test dependencies
