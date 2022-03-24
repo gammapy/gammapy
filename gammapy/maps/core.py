@@ -1038,12 +1038,10 @@ class Map(abc.ABC):
         
         output_map = Map.from_geom(geom)
         base_factor = geom.pixel_scales.min()/self.geom.pixel_scales.min()
-        print(base_factor)
-        if base_factor > oversampling_factor:
+        if base_factor >= oversampling_factor:
             input_map = self
         else:
             factor = int(np.ceil(oversampling_factor / base_factor))
-            print(factor)
             try:
                 input_map = self.upsample(factor=factor, preserve_counts=preserve_counts, axis_name=axis_name)
             except(TypeError):
