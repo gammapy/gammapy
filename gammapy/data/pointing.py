@@ -275,7 +275,7 @@ class FixedPointingInfo:
         frame = AltAz(location=self.location, obstime=obstime)
 
         if self.mode == PointingMode.POINTING:
-            return self.get_icrs(obstime).transform_to(frame)
+            return self.fixed_icrs.transform_to(frame)
 
         if self.mode == PointingMode.DRIFT:
             # see https://github.com/astropy/astropy/issues/12965
