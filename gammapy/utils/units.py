@@ -94,7 +94,7 @@ def energy_unit_format(E):
     Format an energy quantity (or a list of quantities) to a string (or list of string) representations.
     Parameters
     ----------    
-    E: `~astropy.units.Quantity`
+    E: `~astropy.units.Quantity` or sequence thereof
         Quantity or list of quantities
     Returns
     -------
