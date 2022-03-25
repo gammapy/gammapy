@@ -105,8 +105,6 @@ def energy_unit_format(E):
     if not np.shape(E):  # scalar
         return energy_str_formatting(E)
     
-    E_fmt = []     
-    for i, E_ in enumerate(E):
-        E_fmt.append(energy_str_formatting(E[i]))
+    E_fmt = [energy_str_formatting(e) for e in E]
     return E_fmt
     
