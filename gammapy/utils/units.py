@@ -102,9 +102,12 @@ def energy_unit_format(E):
         Returns a string or list of strings with energy unit formatted        
     """   
 
-    if not np.shape(E):  # scalar
-        return energy_str_formatting(E)
-    
-    E_fmt = [energy_str_formatting(e) for e in E]
-    return E_fmt
-    
+    if (isinstance(E, (list, tuple)) == True):
+        E_fmt = [energy_str_formatting(e) for e in E]
+        return E_fmt        
+    elif (isinstance(E, u.quantity.Quantity) == True):
+        if E.size > 1:
+            E_fmt = [energy_str_formatting(e) for e in E]
+            return E_fmt                      
+        else:
+            return energy_str_formatting(E)
