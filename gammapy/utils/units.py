@@ -88,7 +88,7 @@ def energy_str_formatting(E):
 
     v = E.to_value(unit)
     i=floor(np.log10(v))
-    prec=(2,1,0)[i]
+    prec = (2,1,0)[i] if i < 3 else 0
 
     return f"{v:0.{prec}f} {unit}"
 
