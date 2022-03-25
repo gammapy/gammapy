@@ -69,7 +69,9 @@ analyse the following datasets:
      -
      - `chi2`
 
-
+In addition to the above quantities, a dataset can optionally have a
+`meta_table` serialised, which can contain relevant information about the observations
+used to create the dataset.
 In general, `OnOff` datasets should be used when the
 background is estimated from real off counts,
 rather than from a background model.
