@@ -9,11 +9,9 @@ def test_standardise_unit():
     assert standardise_unit("ct cm-2 s-1") == "cm-2 s-1"
     assert standardise_unit("cm-2 s-1") == "cm-2 s-1"
 
-def test_energy_str_formatting():
-    assert energy_str_formatting(1530e4 *u.keV) == "15.3 GeV"
-    assert energy_str_formatting(1530 *u.GeV) == "1.53 TeV"
-    assert energy_str_formatting(1530 *u.GeV) == "1.53 TeV"
-    assert energy_str_formatting(1530.5e8 *u.keV) == "153 TeV"
+@pytest.parametrize("q, expect", [(1530e4 *u.keV, "15.3 GeV"), (1530 *u.GeV, "1.53 TeV"), (1530 *u.GeV, "1.53 TeV"), (1530.5e8 *u.keV, "153 TeV")])
+def test_energy_str_formatting(q, expect):
+    assert energy_str_formatting(q) == expect
 
 def test_energy_unit_format():
     E = 1.556e2 *u.TeV
