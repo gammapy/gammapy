@@ -346,10 +346,7 @@ def test_models(spectrum):
     model = spectrum["model"]
 
     for p in model.parameters:
-        if p.is_norm:
-            assert p.type == "norm"
-        else:
-            assert p.type == "spectral"
+        assert p.type == "spectral"
 
     energy = 2 * u.TeV
     value = model(energy)

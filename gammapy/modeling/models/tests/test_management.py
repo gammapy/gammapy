@@ -259,7 +259,6 @@ def test_bounds(models):
     models.set_parameters_bounds(
         tag=["pl", "pl-norm"],
         model_type="spectral",
-        parameter_type="norm",
         min=0,
         max=None,
     )

@@ -73,7 +73,6 @@ class SkyModel(ModelBase):
         is_norm = np.array([par.is_norm for par in spectral_model.parameters])
 
         if not np.any(is_norm):
-            print(spectral_model)
             raise ValueError("Spectral model used with SkyModel requires a norm type parameter.")
 
         is_free_norm = np.array([par.is_norm for par in spectral_model.parameters.free_parameters])

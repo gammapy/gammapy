@@ -788,7 +788,7 @@ class DatasetModels(collections.abc.Sequence):
         return restore_models_status(self, restore_values)
 
     def set_parameters_bounds(
-        self, tag, model_type, parameter_type=None, parameters_names=None, min=None, max=None, value=None
+        self, tag, model_type, parameters_names=None, min=None, max=None, value=None
     ):
         """Set bounds for the selected models types and parameters names
 
@@ -798,8 +798,6 @@ class DatasetModels(collections.abc.Sequence):
             Tag of the models
         model_type :  {"spatial", "spectral", "temporal"}
             Type of model
-        parameter_type: {"norm", "spatial", "spectral", "temporal"}
-            Type of parameter
         parameters_names : str or list
             parameters names
         min : float
@@ -810,7 +808,7 @@ class DatasetModels(collections.abc.Sequence):
             init value
         """
         models = self.select(tag=tag, model_type=model_type)
-        parameters = models.parameters.select(name=parameters_names, type=parameter_type)
+        parameters = models.parameters.select(name=parameters_names, type=model_type)
         n = len(parameters)
 
         if min is not None:

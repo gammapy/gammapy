@@ -127,6 +127,7 @@ class Parameter:
         self.frozen = frozen
         self._error = error
         self._is_norm = is_norm
+        self._type = None
 
         # TODO: move this to a setter method that can be called from `__set__` also!
         # Having it here is bad: behaviour not clear if Quantity and `unit` is passed.
@@ -418,7 +419,7 @@ class Parameter:
             "frozen": self.frozen,
             "interp": self.interp,
             "scale_method": self.scale_method,
-            "type": self.type,
+            "is_norm": self.is_norm,
         }
 
         if self._link_label_io is not None:
