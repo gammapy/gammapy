@@ -67,6 +67,8 @@ class OGIPDatasetWriter(DatasetWriter):
         Which format to use.
     overwrite : bool
         Overwrite existing files?
+
+    If a meta table was present on the dataset, it will be written as filename_meta_table.fits
     """
 
     tag = ["ogip", "ogip-sherpa"]
@@ -100,6 +102,7 @@ class OGIPDatasetWriter(DatasetWriter):
             "respfile": name.format("_rmf"),
             "backfile": name.format("_bkg"),
             "ancrfile": name.format("_arf"),
+            "meta_table": name.format("_meta_table"),
         }
 
     def get_ogip_meta(self, dataset, is_bkg=False):
@@ -125,11 +128,14 @@ class OGIPDatasetWriter(DatasetWriter):
         filenames = OGIPDatasetWriter.get_filenames(self.filename)
         meta["ANCRFILE"] = filenames["ancrfile"]
 
-        if dataset.edisp:
+        if dataset.counts_off:
             meta["BACKFILE"] = filenames["backfile"]
 
-        if dataset.counts_off:
+        if dataset.edisp:
             meta["RESPFILE"] = filenames["respfile"]
+
+        if dataset.meta_table:
+            meta["meta_table"] = filenames["meta_table"]
 
         return meta
 
@@ -153,6 +159,21 @@ class OGIPDatasetWriter(DatasetWriter):
 
         if dataset.edisp:
             self.write_rmf(dataset, filename=path / filenames["respfile"])
+
+        if dataset.meta_table:
+            self.write_meta_table(dataset, filename=path / filenames["meta_table"])
+
+    def write_meta_table(self, dataset, filename):
+        """Write the meta table.
+
+        Parameters
+        ----------
+        dataset : `SpectrumDatasetOnOff`
+            Dataset to write
+        filename : str or `Path`
+            Filename to use.
+        """
+        dataset.meta_table.write(filename, overwrite=self.overwrite)
 
     def write_rmf(self, dataset, filename):
         """Write energy dispersion.
@@ -321,6 +342,9 @@ class OGIPDatasetReader(DatasetReader):
         if "RESPFILE" in pha_meta:
             filenames["rmffile"] = self.get_valid_path(pha_meta["RESPFILE"])
 
+        if "meta_table" in pha_meta:
+            filenames["meta_table"] = self.get_valid_path(pha_meta["meta_table"])
+
         return filenames
 
     @staticmethod
@@ -419,6 +443,25 @@ class OGIPDatasetReader(DatasetReader):
         exposure.meta["livetime"] = livetime
         return exposure
 
+    @staticmethod
+    def read_meta_table(filename):
+        """Read meta table
+
+        Parameters
+        ----------
+        filename : str or `Path`
+            PHA file name
+        livetime : `Quantity`
+            Livetime
+
+        Returns
+        -------
+        table : `~astropy.table.Table`
+            Meta table
+        """
+        table = Table.read(filename)
+        return table
+
     def read(self):
         """Read dataset
 
@@ -442,5 +485,8 @@ class OGIPDatasetReader(DatasetReader):
 
         if "rmffile" in filenames:
             kwargs["edisp"] = self.read_rmf(filenames["rmffile"], exposure=exposure)
+
+        if "meta_table" in filenames:
+            kwargs["meta_table"] = self.read_meta_table(filenames["meta_table"])
 
         return SpectrumDatasetOnOff(name=name, exposure=exposure, **kwargs)

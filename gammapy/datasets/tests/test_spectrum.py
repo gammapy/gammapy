@@ -681,6 +681,13 @@ class TestSpectrumOnOff:
         assert_allclose(np.squeeze(grouped.acceptance), 4)
         assert_allclose(np.squeeze(grouped.acceptance_off), 40)
 
+    def test_meta_table_serialisation(self, tmp_path):
+        meta_table = Table(data=[[1.0 * u.h], [111]], names=["livetime", "obs_id"])
+        self.dataset.meta_table = meta_table
+        self.dataset.write(tmp_path / "pha-test.fits")
+        dataset_new = SpectrumDatasetOnOff.read(tmp_path / "pha-test.fits")
+        dataset_new.meta_table["livetime"] == 1.0 * u.h
+
 
 @requires_data()
 @requires_dependency("iminuit")

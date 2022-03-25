@@ -350,12 +350,27 @@ class MyCustomTemporalModel(TemporalModel):
         return  value / self.time_sum(t_min, t_max)
 
 def test_energy_dependent_model():
+    t_ref = Time(55555, format="mjd")
+    start = [1, 3, 5] * u.day
+    stop = [2, 3.5, 6] * u.day
+    gti = GTI.create(start, stop, reference_time=t_ref)
+
     temporal_model = MyCustomTemporalModel()
     assert temporal_model.is_energy_dependent = True
+    val = temporal_model.integral(gti.time_start, gti.time_stop)
+    assert len(val) == 3
+    assert_allclose(np.sum(val), 1.08261, rtol=1e-5)
+
+    val = temporal_model(t)
+    assert_allclose(val, 0.25, rtol=1e-5)
 
     model = SkyModel(
         spectral_model=ConstantSpectralModel(), temporal_model=temporal_model
     )
-    mode
+
+
+    model.evaluate(energy=energy, time=gti)
+    assert
+    assert_allclose(model.data.sum(), 9.9e-11, rtol=1e-3)
 
 
