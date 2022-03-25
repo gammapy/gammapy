@@ -1978,7 +1978,6 @@ class NaimaSpectralModel(SpectralModel):
         import naima
 
         self.radiative_model = radiative_model
-        self._particle_distribution = self.radiative_model.particle_distribution
         self.distance = u.Quantity(distance)
         self.seed = seed
 
@@ -1987,16 +1986,17 @@ class NaimaSpectralModel(SpectralModel):
 
         self.nested_models = nested_models
 
-        if isinstance(self._particle_distribution, naima.models.TableModel):
+        if isinstance(self.particle_distribution, naima.models.TableModel):
             param_names = ["amplitude"]
         else:
-            param_names = self._particle_distribution.param_names
+            param_names = self.particle_distribution.param_names
 
         parameters = []
 
         for name in param_names:
-            value = getattr(self._particle_distribution, name)
-            parameter = Parameter(name, value)
+            value = getattr(self.particle_distribution, name)
+            is_norm = (name == "amplitude")
+            parameter = Parameter(name, value, is_norm=is_norm)
             parameters.append(parameter)
 
         # In case of a synchrotron radiative model, append B to the fittable parameters
@@ -2006,20 +2006,39 @@ class NaimaSpectralModel(SpectralModel):
             parameters.append(parameter)
 
         # In case of a synchrotron self compton model, append B and Rpwn to the fittable parameters
-        if (
-            isinstance(self.radiative_model, naima.models.InverseCompton)
-            and "SSC" in self.nested_models
-        ):
+        if self.include_ssc:
             B = self.nested_models["SSC"]["B"]
             radius = self.nested_models["SSC"]["radius"]
             parameters.append(Parameter("B", B))
             parameters.append(Parameter("radius", radius, frozen=True))
 
-        for p in parameters:
-            p.scale_method = "scale10"
-
         self.default_parameters = Parameters(parameters)
+        self.ssc_energy = np.logspace(-7, 9, 100) * u.eV
         super().__init__()
+
+    @property
+    def include_ssc(self):
+        """Whether the model includes an SSC component"""
+        import naima
+        is_ic_model = isinstance(self.radiative_model, naima.models.InverseCompton)
+        return is_ic_model and "SSC" in self.nested_models
+
+    @property
+    def ssc_model(self):
+        """Synchrotron model"""
+        import naima
+        if self.include_ssc:
+            return naima.models.Synchrotron(
+                self.particle_distribution,
+                B=self.B.quantity,
+                Eemax=self.radiative_model.Eemax,
+                Eemin=self.radiative_model.Eemin,
+            )
+
+    @property
+    def particle_distribution(self):
+        """Particle distribution"""
+        return self.radiative_model.particle_distribution
 
     def _evaluate_ssc(
         self,
@@ -2034,17 +2053,7 @@ class NaimaSpectralModel(SpectralModel):
         "https://naima.readthedocs.io/en/latest/examples.html#crab-nebula-ssc-model"
 
         """
-        import naima
-
-        SYN = naima.models.Synchrotron(
-            self._particle_distribution,
-            B=self.B.quantity,
-            Eemax=self.radiative_model.Eemax,
-            Eemin=self.radiative_model.Eemin,
-        )
-
-        Esy = np.logspace(-7, 9, 100) * u.eV
-        Lsy = SYN.flux(Esy, distance=0 * u.cm)  # use distance 0 to get luminosity
+        Lsy = self.ssc_model.flux(self.ssc_energy, distance=0 * u.cm)  # use distance 0 to get luminosity
         phn_sy = Lsy / (4 * np.pi * self.radius.quantity ** 2 * const.c) * 2.24
         # The factor 2.24 comes from the assumption on uniform synchrotron
         # emissivity inside a sphere
@@ -2053,7 +2062,7 @@ class NaimaSpectralModel(SpectralModel):
             self.radiative_model.seed_photon_fields["SSC"] = {
                 "isotropic": True,
                 "type": "array",
-                "energy": Esy,
+                "energy": self.ssc_energy,
                 "photon_density": phn_sy,
             }
         else:
@@ -2061,23 +2070,33 @@ class NaimaSpectralModel(SpectralModel):
 
         dnde = self.radiative_model.flux(
             energy, seed=self.seed, distance=self.distance
-        ) + SYN.flux(energy, distance=self.distance)
+        ) + self.ssc_model.flux(energy, distance=self.distance)
         return dnde
 
-    def evaluate(self, energy, **kwargs):
-        """Evaluate the model."""
-        import naima
-
+    def _update_naima_parameters(self, **kwargs):
+        """Update Naima model parameters"""
         for name, value in kwargs.items():
-            setattr(self._particle_distribution, name, value)
+            setattr(self.particle_distribution, name, value)
 
         if "B" in self.radiative_model.param_names:
             self.radiative_model.B = self.B.quantity
 
-        if (
-            isinstance(self.radiative_model, naima.models.InverseCompton)
-            and "SSC" in self.nested_models
-        ):
+    def evaluate(self, energy, **kwargs):
+        """Evaluate the model.
+
+        Parameters
+        ----------
+        energy : `~astropy.units.Quantity`
+            Energy to evaluate the model at.
+
+        Returns
+        -------
+        dnde : `~astropy.units.Quantity`
+            Differential flux at given energy.
+        """
+        self._update_naima_parameters(**kwargs)
+
+        if self.include_ssc:
             dnde = self._evaluate_ssc(energy.flatten())
         elif self.seed is not None:
             dnde = self.radiative_model.flux(
@@ -2090,7 +2109,7 @@ class NaimaSpectralModel(SpectralModel):
         unit = 1 / (energy.unit * u.cm ** 2 * u.s)
         return dnde.to(unit)
 
-    def to_dict(self, full_output=True):
+    def to_dict(self, **kwargs):
         # for full_output to True otherwise broken
         return super().to_dict(full_output=True)
 

@@ -2,12 +2,10 @@
 """Model parameter classes."""
 import collections.abc
 import copy
-from enum import Enum
 import itertools
 import logging
 import numpy as np
 from astropy import units as u
-from astropy.utils import classproperty
 from gammapy.utils.interpolation import interpolation_scale
 from gammapy.utils.table import table_from_row_data
 
