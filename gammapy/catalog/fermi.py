@@ -1250,11 +1250,14 @@ class SourceCatalog3FGL(SourceCatalog):
 
 
 class SourceCatalog4FGL(SourceCatalog):
-    """Fermi-LAT 4FGL-DR2 source catalog.
+    """Fermi-LAT 4FGL source catalog.
 
-    - https://arxiv.org/abs/1902.10045 (4FGL paper)
-    - https://arxiv.org/abs/2005.11208 (DR2 document)
-    - https://fermi.gsfc.nasa.gov/ssc/data/access/lat/10yr_catalog/
+    - https://arxiv.org/abs/1902.10045 (DR1)
+    - https://arxiv.org/abs/2005.11208 (DR2)
+    - https://arxiv.org/abs/2201.11184 (DR3)
+
+    By default we use the file of the DR3 initial release
+    from https://fermi.gsfc.nasa.gov/ssc/data/access/lat/12yr_catalog/
 
     One source is represented by `~gammapy.catalog.SourceCatalogObject4FGL`.
     """
