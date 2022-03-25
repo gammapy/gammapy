@@ -96,7 +96,7 @@ class DataStore:
 
         hdu_table = HDUIndexTable.read(filename, hdu=hdu_hdu, format="fits")
 
-        obs_table=None
+        obs_table = None
         if hdu_obs:
             obs_table = ObservationTable.read(filename, hdu=hdu_obs, format="fits")
 
@@ -155,7 +155,7 @@ class DataStore:
         hdu_table.meta["BASE_DIR"] = str(base_dir)
 
         if not obs_table_filename.exists():
-            log.warning("Cannot find default obs-index table.")
+            log.info("Cannot find default obs-index table.")
             obs_table = None
         else:
             log.debug(f"Reading {obs_table_filename}")

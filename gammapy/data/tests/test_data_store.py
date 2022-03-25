@@ -248,9 +248,6 @@ def test_datastore_from_dir_no_obs_index(caplog, tmpdir):
     observations = data_store.get_observations()
 
     assert data_store.obs_table is None
-    assert "WARNING" in [record.levelname for record in caplog.records]
-    message = "Cannot find default obs-index table."
-    assert message in [record.message for record in caplog.records]
     assert "No observation index table." in data_store.info(show=False)
 
     assert obs.obs_info["ONTIME"] == 1687.0
