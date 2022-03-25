@@ -160,6 +160,10 @@ class Parameter:
             par = instance.__dict__[self.name]
             raise TypeError(f"Cannot assign {value!r} to parameter {par!r}")
 
+    def __set_name__(self, owner, name):
+        if not self._name == name:
+            raise ValueError(f"Expected parameter name '{name}', got {self._name}")
+
     @property
     def is_norm(self):
         """Whether the parameter represents the norm of the model"""
