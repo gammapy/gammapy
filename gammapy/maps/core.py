@@ -1140,12 +1140,11 @@ class Map(abc.ABC):
                     options =  energy_unit_format(axis.center)
                 else:
                     options = axis.as_plot_labels
+            elif axis.name == "energy":
+                E = energy_unit_format(axis.edges)
+                options = [f"{E[i]} - {E[i+1]}" for i in range(len(E)-1)]
             else:
-                if axis.name == "energy":
-                    E = energy_unit_format(axis.edges)
-                    options = [f"{E[i]} - {E[i+1]}" for i in range(len(E)-1)]
-                else:
-                    options = axis.as_plot_labels
+                options = axis.as_plot_labels
             interact_kwargs[axis.name] = SelectionSlider(
                 options=options,
                 description=f"Select {axis.name}:",
