@@ -14,6 +14,12 @@ from .observations import Observation, ObservationChecker, Observations
 
 __all__ = ["DataStore"]
 
+REQUIRED_IRFS = {
+    "full-enclosure": ["aeff", "edisp", "psf", "bkg"],
+    "point-like": ["aeff", "edisp"],
+    "all-optional":  ["aeff", "edisp", "psf", "bkg", "rad_max"],
+}
+
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
@@ -317,15 +323,11 @@ class DataStore:
             Container holding a list of `~gammapy.data.Observation`
         """
 
-        all_hdu = ["aeff", "edisp", "psf", "bkg", "rad_max"]
+        all_hdu = REQUIRED_IRFS["all-optional"]
         is_all_optinal = required_irf == "all-optional"
-        
-        if required_irf == "full-enclosure":
-            required_irf = ["aeff", "edisp", "psf", "bkg"]
-        elif required_irf == "point-like":
-            required_irf = ["aeff", "edisp"]
-        elif required_irf == "all-optional":
-            required_irf = all_hdu
+
+        if isinstance(required_irf, str) and required_irf in REQUIRED_IRFS.keys():
+            required_irf = REQUIRED_IRFS[required_irf]
 
         if not set(required_irf).issubset(all_hdu):
             difference = set(required_irf).difference(all_hdu)

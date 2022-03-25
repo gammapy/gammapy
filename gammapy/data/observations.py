@@ -119,6 +119,11 @@ class Observation:
         return available_hdus
 
     @property
+    def available_irfs(self):
+        """Which IRFs are available"""
+        return [ _ for _ in self.available_hdus if _ not in ["events", "gti"]]
+
+    @property
     def events(self):
         events = self.obs_filter.filter_events(self._events)
         return events
