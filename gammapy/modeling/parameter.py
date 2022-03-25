@@ -16,19 +16,6 @@ __all__ = ["Parameter", "Parameters"]
 log = logging.getLogger(__name__)
 
 
-class ParameterTypes(Enum):
-    SPATIAL = "spatial"
-    SPECTRAL = "spectral"
-    TEMPORAL = "temporal"
-    NORM = "norm"
-    AUTO = "auto"
-
-    @classproperty
-    def values(cls):
-        """Valid enum values"""
-        return [_.value for _ in cls]
-
-
 def _get_parameters_str(parameters):
     str_ = ""
 
@@ -106,9 +93,8 @@ class Parameter:
         Method used to set ``factor`` and ``scale``
     interp : {"lin", "sqrt", "log"}
         Parameter scaling to use for the scan.
-    type : {'auto', 'spatial', 'spectral', 'temporal', 'norm'}
-        Parameter type.
-
+    is_norm : bool
+        Whether the parameter represents the flux norm of the model.
     """
 
     def __init__(
@@ -128,7 +114,7 @@ class Parameter:
         scan_values=None,
         scale_method="scale10",
         interp="lin",
-        type="auto",
+        is_norm=False,
     ):
         if not isinstance(name, str):
             raise TypeError(f"Name must be string, got '{type(name)}' instead")
@@ -140,11 +126,7 @@ class Parameter:
         self.max = max
         self.frozen = frozen
         self._error = error
-
-        if type not in ParameterTypes.values:
-            raise ValueError(f"Not a valid parameter type {type}, choose from {ParameterTypes.values}")
-
-        self._type = type
+        self._is_norm = is_norm
 
         # TODO: move this to a setter method that can be called from `__set__` also!
         # Having it here is bad: behaviour not clear if Quantity and `unit` is passed.
@@ -169,10 +151,7 @@ class Parameter:
             return self
 
         par = instance.__dict__[self.name]
-
-        if par._type == ParameterTypes.AUTO.value:
-            par._type = getattr(instance, "type", None)
-
+        par._type = getattr(instance, "type", None)
         return par
 
     def __set__(self, instance, value):
@@ -185,7 +164,7 @@ class Parameter:
     @property
     def is_norm(self):
         """Whether the parameter represents the norm of the model"""
-        return self.type == ParameterTypes.NORM.value
+        return self._is_norm
 
     @property
     def type(self):
