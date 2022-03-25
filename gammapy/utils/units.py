@@ -81,10 +81,7 @@ def energy_str_formatting(E):
         Returns a string with energy unit formatted        
     """    
     i = floor(np.log10(E.to_value(u.eV)) / 3) # a new unit every 3 decades
-    if i > 4:  # default for very large values
-        unit = u.PeV
-    else:  # get best large unit
-        unit = (u.eV, u.keV, u.MeV, u.GeV, u.TeV, u.PeV)[i]
+    unit = (u.eV, u.keV, u.MeV, u.GeV, u.TeV, u.PeV)[i] if i < 5 else u.PeV        
 
     v = E.to_value(unit)
     i=floor(np.log10(v))
