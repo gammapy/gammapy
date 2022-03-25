@@ -1106,6 +1106,7 @@ def get_map_dataset_onoff(images, **kwargs):
 @requires_data()
 def test_map_dataset_on_off_fits_io(images, tmp_path):
     dataset = get_map_dataset_onoff(images)
+    dataset.meta_table = Table(data=[[1.0*u.h], [111]], names=["livetime", "obs_id"])
     gti = GTI.create([0 * u.s], [1 * u.h], reference_time="2010-01-01T00:00:00")
     dataset.gti = gti
 
@@ -1129,6 +1130,7 @@ def test_map_dataset_on_off_fits_io(images, tmp_path):
         "MASK_SAFE",
         "MASK_SAFE_BANDS",
         "GTI",
+        "META_TABLE",
         "COUNTS_OFF",
         "COUNTS_OFF_BANDS",
         "ACCEPTANCE",
@@ -1143,6 +1145,8 @@ def test_map_dataset_on_off_fits_io(images, tmp_path):
 
     dataset_new = MapDatasetOnOff.read(tmp_path / "test.fits")
     assert dataset_new.mask.data.dtype == bool
+    assert dataset_new.meta_table["livetime"] == 1.0*u.h
+    assert dataset_new.meta_table["obs_id"] == 111
 
     assert_allclose(dataset.counts.data, dataset_new.counts.data)
     assert_allclose(dataset.counts_off.data, dataset_new.counts_off.data)

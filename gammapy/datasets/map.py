@@ -1116,6 +1116,9 @@ class MapDataset(Dataset):
         if self.gti is not None:
             hdulist.append(fits.BinTableHDU(self.gti.table, name="GTI"))
 
+        if self.meta_table is not None:
+            hdulist.append(fits.BinTableHDU(self.meta_table, name="META_TABLE"))
+
         return hdulist
 
     @classmethod
@@ -1191,6 +1194,10 @@ class MapDataset(Dataset):
         if "GTI" in hdulist:
             gti = GTI(Table.read(hdulist, hdu="GTI"))
             kwargs["gti"] = gti
+
+        if "META_TABLE" in hdulist:
+            meta_table = Table.read(hdulist, hdu="META_TABLE")
+            kwargs["meta_table"] = meta_table
 
         return cls(**kwargs)
 
@@ -2441,6 +2448,10 @@ class MapDatasetOnOff(MapDataset):
         if "GTI" in hdulist:
             gti = GTI(Table.read(hdulist, hdu="GTI"))
             kwargs["gti"] = gti
+
+        if "META_TABLE" in hdulist:
+            meta_table = Table.read(hdulist, hdu="META_TABLE")
+            kwargs["meta_table"] = meta_table
         return cls(**kwargs)
 
     def info_dict(self, in_safe_data_range=True):
