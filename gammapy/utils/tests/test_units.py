@@ -11,10 +11,12 @@ def test_standardise_unit():
     assert standardise_unit("cm-2 s-1") == "cm-2 s-1"
 
 values = [
+    (1530 *u.eV, "1.53 keV"),
+    (1530 *u.keV, "1.53 MeV"),
     (1530e4 *u.keV, "15.3 GeV"),
     (1530 *u.GeV, "1.53 TeV"),
-    (1530 *u.GeV, "1.53 TeV"),
-    (1530.5e8 *u.keV, "153 TeV") 
+    (1530.5e8 *u.keV, "153 TeV"),
+    (1530.5 *u.TeV, "1.53 PeV") 
 ]
 
 @pytest.mark.parametrize("q, expect", values)
