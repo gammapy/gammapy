@@ -52,6 +52,7 @@ dependencies:
   - codespell
   - flake8
   - isort
+  - jinja2=3.0
   - nbsphinx
   - numdifftools
   - pandoc
