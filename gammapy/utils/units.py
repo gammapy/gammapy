@@ -102,7 +102,7 @@ def energy_unit_format(E):
         Returns a string or list of strings with energy unit formatted        
     """   
 
-    if (isinstance(E, (list, tuple, np.ndarray)) == False):
+    if not np.shape(E):  # scalar
         return energy_str_formatting(E)
     #Additional test for scalar quantities like 1*u.TeV
     if isinstance(E, u.quantity.Quantity):
