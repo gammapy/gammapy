@@ -107,6 +107,25 @@ class GTI:
         table = Table.read(filename, hdu=hdu)
         return cls(table)
 
+    def to_table_hdu(self, format='gadf'):
+        '''
+        Convert this GTI instance to a `astropy.io.fits.BinTableHDU`.
+
+        Parameters
+        ----------
+        format: str
+            Output format, currently only "gadf" is supported
+
+        Returns
+        -------
+        hdu: `astropy.io.fits.BinTableHDU`
+            GTI table converted to FITS representation
+        '''
+        if format != 'gadf':
+            raise ValueError(f'Only the "gadf" format supported, got {format}')
+
+        return fits.BinTableHDU(self.table, name="GTI")
+
     def write(self, filename, **kwargs):
         """Write to file.
 
@@ -115,7 +134,7 @@ class GTI:
         filename : str or `Path`
             File name to write to.
         """
-        hdu = fits.BinTableHDU(self.table, name="GTI")
+        hdu = self.to_table_hdu()
         hdulist = fits.HDUList([fits.PrimaryHDU(), hdu])
         hdulist.writeto(make_path(filename), **kwargs)
 
