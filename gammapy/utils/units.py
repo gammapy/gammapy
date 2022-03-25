@@ -104,10 +104,6 @@ def energy_unit_format(E):
 
     if not np.shape(E):  # scalar
         return energy_str_formatting(E)
-    #Additional test for scalar quantities like 1*u.TeV
-    if isinstance(E, u.quantity.Quantity):
-        if E.shape == ():
-           return energy_str_formatting(E)
     
     E_fmt = []     
     for i, E_ in enumerate(E):
