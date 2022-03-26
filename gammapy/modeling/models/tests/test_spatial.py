@@ -289,7 +289,7 @@ def test_sky_diffuse_map(caplog):
     assert_allclose(val.value, desired)
 
     res = model.evaluate_geom(model.map.geom)
-    assert_allclose(np.sum(res.value), 32816514.42078349)
+    assert_allclose(np.sum(res.value), 32826159.74707)
     radius = model.evaluation_radius
 
     assert radius.unit == "deg"
