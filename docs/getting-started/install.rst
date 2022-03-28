@@ -172,8 +172,8 @@ recent version via pip:
     sudo apt-get install python3-gammapy
     pip install -U gammapy
 
-Upgrade
-=======
+Upgrade existing installation
+=============================
 
 Using Anaconda / Miniconda
 --------------------------
