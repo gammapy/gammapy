@@ -11,85 +11,88 @@ Getting started
     install
     usage
     troubleshooting
-    upgrade
-    otherinstall
 
+Installation
+------------
 
 .. panels::
-    :card: + intro-card text-center
-    :column: col-lg-6 col-md-6 col-sm-6 col-xs-12 d-flex
+    :column: col-lg-6 col-md-6 col-sm-12 col-xs-12 p-3
+
+    Working with conda?
+    ^^^^^^^^^^^^^^^^^^^
+
+    Gammapy is part of the `Anaconda <https://docs.continuum.io/anaconda/>`__
+    distribution and can be installed with Anaconda or Miniconda:
+
+    .. code-block:: bash
+
+        conda install gammapy
 
     ---
-    :img-top: ../_static/install.png
 
-    Installation
-    ^^^^^^^^^^^^
+    Prefer pip?
+    ^^^^^^^^^^^
 
-    Install and set-up.
+    Gammapy can be installed via pip from `PyPI <https://pypi.org/project/gammapy/>`__.
 
-    +++
+    .. code-block:: bash
 
-    .. link-button:: installation
-            :type: ref
-            :text: To the installation
-            :classes: btn-block btn-secondary stretched-link
-
-    ---
-    :img-top: ../_static/using.png
-
-    Using Gammapy
-    ^^^^^^^^^^^^^
-
-    Different ways on how to use Gammapy.
-
-    +++
-
-    .. link-button:: usage
-            :type: ref
-            :text: To the usage items
-            :classes: btn-block btn-secondary stretched-link
-
-    ---
-    :img-top: ../_static/gears.png
-
-    Troubleshooting
-    ^^^^^^^^^^^^^^^
-
-    In case you may have install issues.
-
-    +++
-
-    .. link-button:: troubleshoot
-            :type: ref
-            :text: To the troubleshooting
-            :classes: btn-block btn-secondary stretched-link
-
-    ---
-    :img-top: ../_static/upgrade.png
-
-    Upgrade
-    ^^^^^^^
-
-    A short recipe on how to upgrade.
-
-    +++
-
-    .. link-button:: upgrading
-            :type: ref
-            :text: To the upgrade
-            :classes: btn-block btn-secondary stretched-link
+        pip install gammapy
 
     ---
     :column: col-12 p-3
 
-    Installation by other methods
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    In-depth instructions?
+    ^^^^^^^^^^^^^^^^^^^^^^
 
-    Installing with pip or other package managers.
+    Working with virtual environments? Installing a specific version? Installing from source?  Check the advanced
+    installation page.
 
-    +++
-
-    .. link-button:: other-install
+    .. link-button:: install
         :type: ref
         :text: Learn more
         :classes: btn-secondary stretched-link
+
+
+.. _download-tutorials:
+
+Download Tutorials
+------------------
+
+You can now proceed to download the Gammapy tutorial notebooks and the example
+datasets used there (at the moment from `CTA`_, `H.E.S.S.`_. and `Fermi-LAT`_).
+The total size to download is ~180 MB. Select the location where you want
+to install the datasets and proceed with the following commands:
+
+.. code-block:: bash
+
+    gammapy download notebooks --release 0.19
+    gammapy download datasets
+    export GAMMAPY_DATA=$PWD/gammapy-datasets
+
+You might want to put the definition of the ``$GAMMAPY_DATA`` environment
+variable in your shell profile setup file that is executed when you open a new
+terminal (for example ``$HOME/.bash_profile``).
+
+If you are not using the ``bash`` shell, handling of shell environment variables
+might be different, e.g. in some shells the command to use is ``set`` or something
+else instead of ``export``, and also the profile setup file will be different.
+
+On Windows, you should set the ``GAMMAPY_DATA`` environment variable in the
+"Environment Variables" settings dialog, as explained e.g.
+`here <https://docs.python.org/3/using/windows.html#excursus-setting-environment-variables>`__
+
+The datasets are curated and stable, the notebooks are still under development
+just like Gammapy itself, and thus stored in a sub-folder that contains the
+Gammapy version number.
+
+If there are issues, note that you can just delete the folder any time using ``rm
+-r gammapy-tutorials`` and start over.
+
+What next?
+==========
+
+Congratulations! You are all set to start using Gammapy!
+
+* To learn how to use Gammapy, go to :ref:`tutorials`.
+* If you're new to conda, Python and Jupyter, read the :ref:`using-gammapy` guide.
