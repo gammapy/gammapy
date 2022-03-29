@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from astropy import units as u
+from gammapy.modeling import Parameter
 from .spectral import (
     ExpCutoffPowerLawSpectralModel,
     LogParabolaSpectralModel,
@@ -19,16 +20,16 @@ class MeyerCrabSpectralModel(SpectralModel):
 
     Reference: https://ui.adsabs.harvard.edu/abs/2010A%26A...523A...2M, Appendix D
     """
-
+    norm = Parameter("norm", value=1, frozen=True, is_norm=True)
     coefficients = [-0.00449161, 0, 0.0473174, -0.179475, -0.53616, -10.2708]
 
     @staticmethod
-    def evaluate(energy):
+    def evaluate(energy, norm):
         polynomial = np.poly1d(MeyerCrabSpectralModel.coefficients)
         log_energy = np.log10(energy.to_value("TeV"))
         log_flux = polynomial(log_energy)
         flux = u.Quantity(np.power(10, log_flux), "erg / (cm2 s)", copy=False)
-        return flux / energy ** 2
+        return norm * flux / energy ** 2
 
 
 def create_crab_spectral_model(reference="meyer"):

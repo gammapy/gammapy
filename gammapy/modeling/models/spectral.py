@@ -1078,6 +1078,7 @@ class PiecewiseNormSpectralModel(SpectralModel):
     interp : str
         Interpolation scaling in {"log", "lin"}. Default is "log"
     """
+
     tag = ["PiecewiseNormSpectralModel", "piecewise-norm"]
 
     def __init__(self, energy, norms=None, interp="log"):
@@ -1394,7 +1395,11 @@ class SuperExpCutoffPowerLaw4FGLDR3SpectralModel(SpectralModel):
 
     tag = ["SuperExpCutoffPowerLaw4FGLDR3SpectralModel", "secpl-4fgl-dr3"]
     amplitude = Parameter(
-        "amplitude", "1e-12 cm-2 s-1 TeV-1", scale_method="scale10", interp="log"
+        name="amplitude",
+        value="1e-12 cm-2 s-1 TeV-1",
+        scale_method="scale10",
+        interp="log",
+        is_norm=True,
     )
     reference = Parameter("reference", "1 TeV", frozen=True)
     expfactor = Parameter("expfactor", "1e-2")
@@ -1404,19 +1409,20 @@ class SuperExpCutoffPowerLaw4FGLDR3SpectralModel(SpectralModel):
     @staticmethod
     def evaluate(energy, amplitude, reference, expfactor, index_1, index_2):
         """Evaluate the model (static function)."""
-        #https://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/source_models.html#PLSuperExpCutoff4
+        # https://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/source_models.html#PLSuperExpCutoff4
         pwl = amplitude * (energy / reference) ** (-index_1)
         cutoff = (energy / reference) ** (expfactor / index_2) * np.exp(
-            expfactor
-            / index_2 ** 2
-            * (1 - (energy / reference)** index_2)
+            expfactor / index_2 ** 2 * (1 - (energy / reference) ** index_2)
         )
 
         mask = np.abs(index_2 * np.log(energy / reference)) < 1e-2
         ln_ = np.log(energy[mask] / reference)
-        power = expfactor * (ln_ / 2. + index_2 / 6. * ln_ ** 2. + index_2 ** 2. / 24. * ln_ ** 3)
+        power = expfactor * (
+            ln_ / 2.0 + index_2 / 6.0 * ln_ ** 2.0 + index_2 ** 2.0 / 24.0 * ln_ ** 3
+        )
         cutoff[mask] = (energy[mask] / reference) ** power
         return pwl * cutoff
+
 
 class LogParabolaSpectralModel(SpectralModel):
     r"""Spectral log parabola model.
@@ -1537,6 +1543,7 @@ class TemplateSpectralModel(SpectralModel):
     meta : dict, optional
         Meta information, meta['filename'] will be used for serialization
     """
+
     norm = Parameter("norm", 1, unit="", interp="log", is_norm=True, frozen=True)
     tag = ["TemplateSpectralModel", "template"]
 
@@ -1995,7 +2002,7 @@ class NaimaSpectralModel(SpectralModel):
 
         for name in param_names:
             value = getattr(self.particle_distribution, name)
-            is_norm = (name == "amplitude")
+            is_norm = name == "amplitude"
             parameter = Parameter(name, value, is_norm=is_norm)
             parameters.append(parameter)
 
@@ -2020,6 +2027,7 @@ class NaimaSpectralModel(SpectralModel):
     def include_ssc(self):
         """Whether the model includes an SSC component"""
         import naima
+
         is_ic_model = isinstance(self.radiative_model, naima.models.InverseCompton)
         return is_ic_model and "SSC" in self.nested_models
 
@@ -2027,6 +2035,7 @@ class NaimaSpectralModel(SpectralModel):
     def ssc_model(self):
         """Synchrotron model"""
         import naima
+
         if self.include_ssc:
             return naima.models.Synchrotron(
                 self.particle_distribution,
@@ -2053,7 +2062,9 @@ class NaimaSpectralModel(SpectralModel):
         "https://naima.readthedocs.io/en/latest/examples.html#crab-nebula-ssc-model"
 
         """
-        Lsy = self.ssc_model.flux(self.ssc_energy, distance=0 * u.cm)  # use distance 0 to get luminosity
+        Lsy = self.ssc_model.flux(
+            self.ssc_energy, distance=0 * u.cm
+        )  # use distance 0 to get luminosity
         phn_sy = Lsy / (4 * np.pi * self.radius.quantity ** 2 * const.c) * 2.24
         # The factor 2.24 comes from the assumption on uniform synchrotron
         # emissivity inside a sphere
@@ -2109,7 +2120,7 @@ class NaimaSpectralModel(SpectralModel):
         unit = 1 / (energy.unit * u.cm ** 2 * u.s)
         return dnde.to(unit)
 
-    def to_dict(self, **kwargs):
+    def to_dict(self, full_output=True):
         # for full_output to True otherwise broken
         return super().to_dict(full_output=True)
 
