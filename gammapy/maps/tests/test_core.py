@@ -640,7 +640,7 @@ def test_map_reproject_hpx_to_wcs():
     assert_allclose(actual, [287.5, 1055.5, 1823.5], rtol=1e-3)
     
 @requires_dependency("reproject")
-def test_map_reproject_wcs_to_wcs():
+def test_map_reproject_wcs_to_wcs_with_axes():
     energy_nodes = np.arange(3)
     time_nodes = np.arange(4)
 
@@ -661,9 +661,7 @@ def test_map_reproject_wcs_to_wcs():
     data = spatial_data + energy_data + 0.5 * time_data
     m = WcsNDMap(geom_wcs_1, data=data)
     m_r = m.reproject(geom_wcs_2, method="polygon")
-
     assert m.data.shape == m_r.data.shape
-
     for data, idx in m_r.iter_by_image():
         ref = idx[1] + 0.5 * idx[0]
         assert_allclose(np.nanmean(data), ref)
@@ -671,15 +669,17 @@ def test_map_reproject_wcs_to_wcs():
     geom_wcs_3 = WcsGeom.create(skydir=(0, 0), npix=(11, 11), binsz=0.1, axes=[axis2], frame="galactic")
     with pytest.raises(TypeError):
         m.reproject(geom_wcs_3 , method="polygon")
-        
-    axis1_up =  axis1.upsample(factor=2)
-    geom_wcs_4 = geom_wcs_1.copy(axes= [axis1_up, axis2])
-    m_r = m.reproject(geom_wcs_4, method="polygon")
-    for data, idx in m_r.iter_by_image():
+
+    factor = 2
+    axis1_up =  axis1.upsample(factor=factor)
+    axis2_up =  axis2.upsample(factor=factor)
+    geom_wcs_4 = geom_wcs_1.copy(axes= [axis1_up, axis2_up])
+    m_r_4 = m.reproject(geom_wcs_4, method="polygon", fill_value=np.nan)
+    for data, idx in m_r_4.iter_by_image():
         ref = idx[1] + 0.5 * idx[0]
-        assert_allclose(np.nanmean(data), ref)
-   
-       
+        assert_allclose(np.nanmean(data), ref/factor)
+
+
 def test_wcsndmap_reproject_allsky_car():
     geom = WcsGeom.create(binsz=10.0, proj="CAR", frame="icrs")
     m = WcsNDMap(geom)

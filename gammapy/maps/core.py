@@ -1023,6 +1023,10 @@ class Map(abc.ABC):
             Preserve the integral over each bin.  This should be true
             if the map is an integral quantity (e.g. counts) and false if
             the map is a differential quantity (e.g. intensity)
+        fill_value : None or float value
+            The value to use for points outside of the interpolation domain.
+            If None, values outside the domain are extrapolated.
+            Used only if the non-spatial axes require to be interpolated.
         method : {'oversampling', 'polygon'}
             Method to reproject data to a new projection
             -oversampling: the base map is oversampled and 
@@ -1030,8 +1034,8 @@ class Map(abc.ABC):
             -polygon: flux-conserving spherical polygon intersection
             from reproject.reproject_exact
         oversampling_factor : int
-           Used only for the oversampling method.
            Minimal factor between the bin size of the output map and the oversampled base map.
+           Used only for the oversampling method.
 
         Returns
         -------
@@ -1074,7 +1078,7 @@ class Map(abc.ABC):
             raise TypeError(f"Available methods are 'oversmapling' or 'polygon'.")
 
         if requires_interp:
-            return new_map.interp_to_geom(geom, preserve_counts=preserve_counts)
+            return new_map.interp_to_geom(geom, preserve_counts=preserve_counts, fill_value=fill_value)
         else:
             return new_map
 
