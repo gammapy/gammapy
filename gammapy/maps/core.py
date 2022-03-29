@@ -1045,9 +1045,17 @@ class Map(abc.ABC):
         if isinstance(self.geom, RegionGeom):
             raise TypeError(f"Reproject is not supported for {type(self.geom)}")
         
-        #TODO validate axes
+        if geom.is_image:
+            axes = [ax.copy() for ax in self.geom.axes]
+            geom = geom.copy(axes=axes)
+            axes_eq = True
+        else:
+            axes_eq = geom.ndim == self.geom.ndim
+            axes_eq &= np.all(
+                [ax0 == ax1 for ax0, ax1 in zip(geom.axes, self.geom.axes)]
+            )
 
-        if geom.axes != self.geom.axes:
+        if not axes_eq:
             target_geom = geom.copy(axes=self.geom.axes) 
             requires_interp = True
         else:
@@ -1091,9 +1099,9 @@ class Map(abc.ABC):
         from .hpx import HpxGeom
 
         if isinstance(geom, HpxGeom):
-            raise TypeError(f"Reproject is not supported for {type(geom)}")
+            raise TypeError(f"Reproject method 'polygon' is not supported for {type(geom)}")
         if isinstance(self.geom, HpxGeom):
-            raise TypeError(f"Reproject is not supported for {type(self.geom)}")
+            raise TypeError(f"Reproject method 'polygon' is not supported for {type(self.geom)}")
 
         data = np.empty(geom.data_shape)
 
