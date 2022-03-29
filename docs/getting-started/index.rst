@@ -25,7 +25,7 @@ Installation
 
     .. code-block:: bash
 
-        conda install gammapy
+        conda install -c conda-forge gammapy
 
     ---
 
@@ -45,13 +45,41 @@ Installation
     In-depth instructions?
     ^^^^^^^^^^^^^^^^^^^^^^
 
-    Working with virtual environments? Installing a specific version? Installing from source?  Check the advanced
+    Update existing version? Working with virtual environments? Installing a specific version? Check the advanced
     installation page.
 
     .. link-button:: install
         :type: ref
         :text: Learn more
         :classes: btn-secondary stretched-link
+
+.. _download-tutorials:
+
+Download Tutorial Datasets
+--------------------------
+
+You can now proceed to download the Gammapy tutorial notebooks and the example
+datasets. The total size to download is ~180 MB. Select the location where you
+want to install the datasets and proceed with the following commands:
+
+.. code-block:: bash
+
+    gammapy download notebooks --release 0.19
+    gammapy download datasets
+    export GAMMAPY_DATA=$PWD/gammapy-datasets
+
+You might want to put the definition of the ``$GAMMAPY_DATA`` environment
+variable in your shell profile setup file that is executed when you open a new
+terminal (for example ``$HOME/.bash_profile``).
+
+.. note::
+
+    If you are not using the ``bash`` shell, handling of shell environment variables
+    might be different, e.g. in some shells the command to use is ``set`` or something
+    else instead of ``export``, and also the profile setup file will be different.
+    On Windows, you should set the ``GAMMAPY_DATA`` environment variable in the
+    "Environment Variables" settings dialog, as explained e.g.
+    `here <https://docs.python.org/3/using/windows.html#excursus-setting-environment-variables>`__
 
 
 Introduction
@@ -86,7 +114,7 @@ Alternatively, you can follow the spectral analysis tutorial.
 
 Gammapy treats 2D maps as 3D cubes with one bin in energy. Sometimes, you might want to use previously
 obtained images lacking an energy axis (eg: reduced using traditional IACT tools) for modeling and fitting
-inside Gammapy. In this case, it is necessary to attach an `energy` axis on as it is showm in the tutorials.
+inside Gammapy. In this case, it is necessary to attach an `energy` axis on as it is shown in the tutorials.
 
 .. accordion-footer::
 
@@ -100,7 +128,7 @@ The light curve estimation tutorial shows how to extract a run-wise lightcurve.
 
 To perform an analysis in a time range smaller than that of an observation, it
 is necessary to filter the latter with its `~gammapy.data.Observations.select_time` method. This produces
-an new observation containing events in the specified time range. With the new
+a new observation containing events in the specified time range. With the new
 `~gammapy.data.Observations` it is then possible to perform the usual data
 reduction which will produce datasets in the correct time range. The light curve
 extraction can then be performed as usual with the
@@ -118,7 +146,7 @@ to produce a significance map, i.e. a map giving the probability that the flux
 measured at each position is a background fluctuation. For a
 `~gammapy.datasets.MapDataset`, the class `~gammapy.estimators.TSMapEstimator` can be
 used. A simple correlated Li & Ma significance can be used, in particular for
-ON-OFF datasets. The second step consists in applying a peak finer algorithm,
+ON-OFF datasets. The second step consists in applying a peak finder algorithm,
 such as `~gammapy.estimators.utils.find_peaks`.
 
 .. accordion-footer::
@@ -132,35 +160,6 @@ Gammapy offers the possibility to combine data from multiple instruments
 in a "joint-likelihood" fit.
 
 .. accordion-footer::
-
-
-.. _download-tutorials:
-
-Download Tutorial Datasets
---------------------------
-
-You can now proceed to download the Gammapy tutorial notebooks and the example
-datasets. The total size to download is ~180 MB. Select the location where you
-want to install the datasets and proceed with the following commands:
-
-.. code-block:: bash
-
-    gammapy download notebooks --release 0.19
-    gammapy download datasets
-    export GAMMAPY_DATA=$PWD/gammapy-datasets
-
-You might want to put the definition of the ``$GAMMAPY_DATA`` environment
-variable in your shell profile setup file that is executed when you open a new
-terminal (for example ``$HOME/.bash_profile``).
-
-.. note::
-
-    If you are not using the ``bash`` shell, handling of shell environment variables
-    might be different, e.g. in some shells the command to use is ``set`` or something
-    else instead of ``export``, and also the profile setup file will be different.
-    On Windows, you should set the ``GAMMAPY_DATA`` environment variable in the
-    "Environment Variables" settings dialog, as explained e.g.
-    `here <https://docs.python.org/3/using/windows.html#excursus-setting-environment-variables>`__
 
 
 What next?
