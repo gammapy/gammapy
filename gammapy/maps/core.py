@@ -1023,7 +1023,14 @@ class Map(abc.ABC):
             Preserve the integral over each bin.  This should be true
             if the map is an integral quantity (e.g. counts) and false if
             the map is a differential quantity (e.g. intensity)
+        method : {'oversampling', 'polygon'}
+            Method to reproject data to a new projection
+            -oversampling: the base map is oversampled and 
+             its bins are re-distributed into a map with the target geom.
+            -polygon: flux-conserving spherical polygon intersection
+            from reproject.reproject_exact
         oversampling_factor : int
+           Used only for the oversampling method.
            Minimal factor between the bin size of the output map and the oversampled base map.
 
         Returns
@@ -1031,21 +1038,45 @@ class Map(abc.ABC):
         output_map : `Map`
             Reprojected Map
         """
-        if not hasattr(geom, "pixel_scales"):
+        from .region import RegionGeom
+
+        if isinstance(geom, RegionGeom):
             raise TypeError(f"Reproject is not supported for {type(geom)}")
-        if not hasattr(self.geom, "pixel_scales"):
-            raise TypeError(f"Reproject is not supported for {type(geom)}")
+        if isinstance(self.geom, RegionGeom):
+            raise TypeError(f"Reproject is not supported for {type(self.geom)}")
         
+        #TODO validate axes
+
+        if geom.axes != self.geom.axes:
+            target_geom = geom.copy(axes=self.geom.axes) 
+            requires_interp = True
+        else:
+            target_geom = geom
+            requires_interp = False
+        
+        if method == "oversampling":
+            new_map = self._reproject_oversampling(target_geom,
+                                                   preserve_counts=preserve_counts,
+                                                   oversampling_factor=oversampling_factor)
+        elif method == "polygon":
+            new_map = self._reproject_polygon(target_geom,
+                                              preserve_counts=preserve_counts)
+        else:
+            raise TypeError(f"Available methods are 'oversmapling' or 'polygon'.")
+
+        if requires_interp:
+            return new_map.interp_to_geom(geom, preserve_counts=preserve_counts)
+        else:
+            return new_map
+
+    def _reproject_oversampling(self, geom, preserve_counts=False, oversampling_factor=10):
         output_map = Map.from_geom(geom)
         base_factor = geom.pixel_scales.min()/self.geom.pixel_scales.min()
         if base_factor >= oversampling_factor:
             input_map = self
         else:
             factor = int(np.ceil(oversampling_factor / base_factor))
-            try:
-                input_map = self.upsample(factor=factor, preserve_counts=preserve_counts, axis_name=axis_name)
-            except(TypeError):
-                input_map = self.upsample(factor=factor, preserve_counts=preserve_counts)
+            input_map = self.upsample(factor=factor, preserve_counts=preserve_counts)
 
         coords = input_map.geom.get_coord()
         output_map.fill_by_coord(coords,
@@ -1053,6 +1084,29 @@ class Map(abc.ABC):
                                  preserve_counts=preserve_counts
                                  )
         return output_map
+
+
+    def _reproject_polygon(self, geom, preserve_counts=False):
+        from reproject import reproject_exact
+        from .hpx import HpxGeom
+
+        if isinstance(geom, HpxGeom):
+            raise TypeError(f"Reproject is not supported for {type(geom)}")
+        if isinstance(self.geom, HpxGeom):
+            raise TypeError(f"Reproject is not supported for {type(self.geom)}")
+
+        data = np.empty(geom.data_shape)
+
+        for img, idx in self.iter_by_image():
+            vals, footprint = reproject_exact(
+                (img, self.geom.wcs), geom.wcs, shape_out=data[idx].shape
+            )
+            data[idx] = vals
+            
+        if preserve_counts:
+            data *= geom.solid_angle().to_value("deg2")
+
+        return self._init_copy(geom=geom, data=data)
 
     def fill_events(self, events):
         """Fill event coordinates (`~gammapy.data.EventList`)."""
