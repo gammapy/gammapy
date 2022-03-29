@@ -46,6 +46,7 @@ __all__ = [
     "SmoothBrokenPowerLawSpectralModel",
     "SpectralModel",
     "SuperExpCutoffPowerLaw3FGLSpectralModel",
+    "SuperExpCutoffPowerLaw4FGLDR3SpectralModel",
     "SuperExpCutoffPowerLaw4FGLSpectralModel",
     "TemplateSpectralModel",
 ]
@@ -1301,8 +1302,8 @@ class SuperExpCutoffPowerLaw3FGLSpectralModel(SpectralModel):
 
 
 class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
-    r"""Spectral super exponential cutoff power-law model used for 4FGL.
-
+    r"""Spectral super exponential cutoff power-law model used for 4FGL-DR1 (and DR2).
+    See equation (4) of https://arxiv.org/pdf/1902.10045.pdf
     For more information see :ref:`super-exp-cutoff-powerlaw-4fgl-spectral-model`.
 
     Parameters
@@ -1317,7 +1318,7 @@ class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
         :math:`E_0`
     expfactor : `~astropy.units.Quantity`
         :math:`a`, given as dimensionless value but
-        internally assumes unit of :math:`[E_0]` power :math:`-\Gamma_2`
+        internally assumes unit of :math: `[E_0]` power :math:`-\Gamma_2`
     """
 
     tag = ["SuperExpCutoffPowerLaw4FGLSpectralModel", "secpl-4fgl"]
@@ -1340,6 +1341,51 @@ class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
         )
         return pwl * cutoff
 
+
+class SuperExpCutoffPowerLaw4FGLDR3SpectralModel(SpectralModel):
+    r"""Spectral super exponential cutoff power-law model used for 4FGL-DR3.
+    See equations (2) and (3) of https://arxiv.org/pdf/2201.11184.pdf
+    For more information see :ref:`super-exp-cutoff-powerlaw-4fgl-dr3-spectral-model`.
+
+    Parameters
+    ----------
+    index_1 : `~astropy.units.Quantity`
+        :math:`\Gamma_1`
+    index_2 : `~astropy.units.Quantity`
+        :math:`\Gamma_2`
+    amplitude : `~astropy.units.Quantity`
+        :math:`\phi_0`
+    reference : `~astropy.units.Quantity`
+        :math:`E_0`
+    expfactor : `~astropy.units.Quantity`
+        :math:`a`, given as dimensionless value
+    """
+
+    tag = ["SuperExpCutoffPowerLaw4FGLDR3SpectralModel", "secpl-4fgl-dr3"]
+    amplitude = Parameter(
+        "amplitude", "1e-12 cm-2 s-1 TeV-1", scale_method="scale10", interp="log"
+    )
+    reference = Parameter("reference", "1 TeV", frozen=True)
+    expfactor = Parameter("expfactor", "1e-2")
+    index_1 = Parameter("index_1", 1.5)
+    index_2 = Parameter("index_2", 2)
+
+    @staticmethod
+    def evaluate(energy, amplitude, reference, expfactor, index_1, index_2):
+        """Evaluate the model (static function)."""
+        #https://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/source_models.html#PLSuperExpCutoff4
+        pwl = amplitude * (energy / reference) ** (-index_1)
+        cutoff = (energy / reference) ** (expfactor / index_2) * np.exp(
+            expfactor
+            / index_2 ** 2
+            * (1 - (energy / reference)** index_2)
+        )
+
+        mask = np.abs(index_2 * np.log(energy / reference)) < 1e-2
+        ln_ = np.log(energy[mask] / reference)
+        power = expfactor * (ln_ / 2. + index_2 / 6. * ln_ ** 2. + index_2 ** 2. / 24. * ln_ ** 3)
+        cutoff[mask] = (energy[mask] / reference) ** power
+        return pwl * cutoff
 
 class LogParabolaSpectralModel(SpectralModel):
     r"""Spectral log parabola model.

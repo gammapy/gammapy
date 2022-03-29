@@ -132,6 +132,16 @@ SOURCES_3FHL = [
     ),
 ]
 
+@requires_data()
+def test_4FGL_DR3():
+    cat = SourceCatalog4FGL("$GAMMAPY_DATA/catalogs/fermi/gll_psc_v28.fit.gz")
+    source = cat["4FGL J0534.5+2200"]
+    model =source.spectral_model()
+    fp = source.flux_points
+    not_ul = ~fp.is_ul.data.squeeze()
+    fp_dnde = fp.dnde.quantity.squeeze()[not_ul]
+    model_dnde = model(fp.energy_ref[not_ul])
+    assert_quantity_allclose(model_dnde, fp_dnde, rtol=0.07)
 
 @requires_data()
 class TestFermi4FGLObject:

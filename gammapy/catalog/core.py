@@ -214,17 +214,28 @@ class SourceCatalog(abc.ABC):
         data = table_row_to_dict(self.table[index])
         data[SourceCatalogObject._row_index_key] = index
 
+        fp_energy_edges = getattr(self, "flux_points_energy_edges", None)
+
+        if fp_energy_edges:
+            data["fp_energy_edges"] = fp_energy_edges
+        
         hist_table = getattr(self, "hist_table", None)
         hist2_table = getattr(self, "hist2_table", None)
 
+
         if hist_table:
-            data["time_axis"] = TimeMapAxis.from_table(hist_table, format="fermi-fgl")
+            try:
+                data["time_axis"] = TimeMapAxis.from_table(hist_table, format="fermi-fgl")
+            except KeyError:
+                pass
 
         if hist2_table:
-            data["time_axis_2"] = TimeMapAxis.from_table(
-                hist2_table, format="fermi-fgl"
-            )
-
+            try:
+                data["time_axis_2"] = TimeMapAxis.from_table(
+                    hist2_table, format="fermi-fgl"
+                )
+            except KeyError:
+                pass
         if "Extended_Source_Name" in data:
             name_extended = data["Extended_Source_Name"].strip()
         elif "Source_Name" in data:

@@ -235,7 +235,6 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         "ASSOC_GAM2",
         "ASSOC_GAM3",
     ]
-    _energy_edges = u.Quantity([50, 100, 300, 1000, 3000, 10000, 30000, 300000], "MeV")
 
     def _info_more(self):
         d = self.data
@@ -268,9 +267,14 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         elif spec_type == "PLSuperExpCutoff":
             tag = "PLEC"
             fmt = "{:<45s} : {:.4f} +- {:.4f}\n"
-            ss += fmt.format(
-                "Exponential factor", d["PLEC_Expfactor"], d["Unc_PLEC_Expfactor"]
-            )
+            if "PLEC_ExpfactorS" in d:
+                ss += fmt.format(
+                    "Exponential factor", d["PLEC_ExpfactorS"], d["Unc_PLEC_ExpfactorS"]
+                )
+            else:
+                ss += fmt.format(
+                    "Exponential factor", d["PLEC_Expfactor"], d["Unc_PLEC_Expfactor"]
+                )                
             ss += "{:<45s} : {:.4f} +- {:.4f}\n".format(
                 "Super-exponential cutoff index",
                 d["PLEC_Exp_Index"],
@@ -415,20 +419,32 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
                 "beta": self.data["Unc_LP_beta"],
             }
         elif spec_type == "PLSuperExpCutoff":
-            tag = "SuperExpCutoffPowerLaw4FGLSpectralModel"
+            if  "PLEC_ExpfactorS" in self.data : 
+                tag = "SuperExpCutoffPowerLaw4FGLDR3SpectralModel"
+                expfactor =  self.data["PLEC_ExpfactorS"]
+                expfactor_err = self.data["Unc_PLEC_ExpfactorS"]
+                index_1 = self.data["PLEC_IndexS"]
+                index_1_err = self.data["Unc_PLEC_IndexS"]
+            else:
+                tag = "SuperExpCutoffPowerLaw4FGLSpectralModel"
+                expfactor =  self.data["PLEC_Expfactor"]
+                expfactor_err = self.data["Unc_PLEC_Expfactor"]
+                index_1 = self.data["PLEC_Index"]
+                index_1_err = self.data["Unc_PLEC_Index"]
+
             pars = {
                 "reference": self.data["Pivot_Energy"],
                 "amplitude": self.data["PLEC_Flux_Density"],
-                "index_1": self.data["PLEC_Index"],
+                "index_1": index_1,
                 "index_2": self.data["PLEC_Exp_Index"],
-                "expfactor": self.data["PLEC_Expfactor"],
+                "expfactor": expfactor,
             }
             errs = {
                 "amplitude": self.data["Unc_PLEC_Flux_Density"],
-                "index_1": self.data["Unc_PLEC_Index"],
+                "index_1": index_1_err,
                 "index_2": np.nan_to_num(float(self.data["Unc_PLEC_Exp_Index"])),
-                "expfactor": self.data["Unc_PLEC_Expfactor"],
-            }
+                "expfactor": expfactor_err,
+            }                
         else:
             raise ValueError(f"Invalid spec_type: {spec_type!r}")
 
@@ -445,8 +461,8 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         table = Table()
         table.meta.update(self.flux_points_meta)
 
-        table["e_min"] = self._energy_edges[:-1]
-        table["e_max"] = self._energy_edges[1:]
+        table["e_min"] = self.data["fp_energy_edges"][:-1]
+        table["e_max"] = self.data["fp_energy_edges"][1:]
 
         flux = self._get_flux_values("Flux_Band")
         flux_err = self._get_flux_values("Unc_Flux_Band")
@@ -492,15 +508,19 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
 
         if interval == "1-year":
             tag = "Flux_History"
+            if tag not in self.data or "time_axis" not in self.data:
+                raise ValueError(
+                    "'1-year' interval is not available for this catalogue version"
+                )
             time_axis = self.data["time_axis"]
             tag_sqrt_ts = "Sqrt_TS_History"
+
         elif interval == "2-month":
             tag = "Flux2_History"
-            if tag not in self.data:
+            if tag not in self.data or "time_axis_2" not in self.data:
                 raise ValueError(
-                    "Only '1-year' interval is available for this catalogue version"
+                    "2-month interval is not available for this catalogue version"
                 )
-
             time_axis = self.data["time_axis_2"]
             tag_sqrt_ts = "Sqrt_TS2_History"
         else:
@@ -1230,11 +1250,14 @@ class SourceCatalog3FGL(SourceCatalog):
 
 
 class SourceCatalog4FGL(SourceCatalog):
-    """Fermi-LAT 4FGL-DR2 source catalog.
+    """Fermi-LAT 4FGL source catalog.
 
-    - https://arxiv.org/abs/1902.10045 (4FGL paper)
-    - https://arxiv.org/abs/2005.11208 (DR2 document)
-    - https://fermi.gsfc.nasa.gov/ssc/data/access/lat/10yr_catalog/
+    - https://arxiv.org/abs/1902.10045 (DR1)
+    - https://arxiv.org/abs/2005.11208 (DR2)
+    - https://arxiv.org/abs/2201.11184 (DR3)
+
+    By default we use the file of the DR3 initial release
+    from https://fermi.gsfc.nasa.gov/ssc/data/access/lat/12yr_catalog/
 
     One source is represented by `~gammapy.catalog.SourceCatalogObject4FGL`.
     """
@@ -1243,7 +1266,7 @@ class SourceCatalog4FGL(SourceCatalog):
     description = "LAT 8-year point source catalog"
     source_object_class = SourceCatalogObject4FGL
 
-    def __init__(self, filename="$GAMMAPY_DATA/catalogs/fermi/gll_psc_v27.fit.gz"):
+    def __init__(self, filename="$GAMMAPY_DATA/catalogs/fermi/gll_psc_v28.fit.gz"):
         filename = make_path(filename)
         table = Table.read(filename, hdu="LAT_Point_Source_Catalog")
         table_standardise_units_inplace(table)
@@ -1267,11 +1290,21 @@ class SourceCatalog4FGL(SourceCatalog):
         )
 
         self.extended_sources_table = Table.read(filename, hdu="ExtendedSources")
-        self.hist_table = Table.read(filename, hdu="Hist_Start")
         try:
-            self.hist2_table = Table.read(filename, hdu="Hist2_Start")
+            self.hist_table = Table.read(filename, hdu="Hist_Start")
+            if "MJDREFI"  not in self.hist_table.meta:
+                self.hist_table.meta = Table.read(filename, hdu="GTI").meta
         except KeyError:
             pass
+        try:
+            self.hist2_table = Table.read(filename, hdu="Hist2_Start")
+            if "MJDREFI"  not in self.hist_table.meta:
+                self.hist2_table.meta = Table.read(filename, hdu="GTI").meta
+        except KeyError:
+            pass
+        
+        table = Table.read(filename, hdu="EnergyBounds")
+        self.flux_points_energy_edges = np.unique(np.c_[table["LowerEnergy"].quantity, table["UpperEnergy"].quantity])
 
 
 class SourceCatalog2FHL(SourceCatalog):
