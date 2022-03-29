@@ -1075,7 +1075,7 @@ class Map(abc.ABC):
             new_map = self._reproject_polygon(target_geom,
                                               preserve_counts=preserve_counts)
         else:
-            raise TypeError(f"Available methods are 'oversmapling' or 'polygon'.")
+            raise TypeError("Available methods are 'oversampling' or 'polygon'.")
 
         if requires_interp:
             return new_map.interp_to_geom(geom, preserve_counts=preserve_counts, fill_value=fill_value)
