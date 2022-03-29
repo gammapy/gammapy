@@ -1,8 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
-import astropy.units as u
-from astropy.coordinates import SkyCoord
 from gammapy.maps import Map, MapAxis, Maps, RegionNDMap, WcsGeom
 from gammapy.utils.testing import assert_allclose
 
