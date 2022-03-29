@@ -21,8 +21,7 @@ Installation
     Working with conda?
     ^^^^^^^^^^^^^^^^^^^
 
-    Gammapy is part of the `Anaconda <https://docs.continuum.io/anaconda/>`__
-    distribution and can be installed with Anaconda or Miniconda:
+    Gammapy can be installed with `Anaconda <https://docs.continuum.io/anaconda/>`__ or Miniconda:
 
     .. code-block:: bash
 
@@ -55,6 +54,86 @@ Installation
         :classes: btn-secondary stretched-link
 
 
+Introduction
+------------
+
+.. accordion-header::
+    :id: collapseTwo
+    :title: How to access gamma-ray data
+    :link: ../tutorials/data/hess.html#DL3-DR1
+
+To access IACT data in the DL3 format, use the `~gammapy.data.DataStore`. It allows
+easy access to observations stored in the DL3 data library.
+It is also internally used by the high level interface `~gammapy.analysis.Analysis`.
+
+.. accordion-footer::
+
+.. accordion-header::
+    :id: collapseSeven
+    :title: How to compute a 1D spectrum
+    :link: ../tutorials/analysis/1D/spectral_analysis.html
+
+The `~gammapy.analysis.Analysis` class can perform spectral extraction. The
+`~gammapy.analysis.AnalysisConfig` must be defined to produce '1d' datasets.
+Alternatively, you can follow the spectral analysis tutorial.
+
+.. accordion-footer::
+
+.. accordion-header::
+    :id: collapseSix
+    :title: How to compute a 2D image
+    :link: ../tutorials/index.html#d-image
+
+Gammapy treats 2D maps as 3D cubes with one bin in energy. Sometimes, you might want to use previously
+obtained images lacking an energy axis (eg: reduced using traditional IACT tools) for modeling and fitting
+inside Gammapy. In this case, it is necessary to attach an `energy` axis on as it is showm in the tutorials.
+
+.. accordion-footer::
+
+
+.. accordion-header::
+    :id: collapseEight
+    :title: How to compute a lightcurve
+    :link: ../tutorials/analysis/time/light_curve.html
+
+The light curve estimation tutorial shows how to extract a run-wise lightcurve.
+
+To perform an analysis in a time range smaller than that of an observation, it
+is necessary to filter the latter with its `~gammapy.data.Observations.select_time` method. This produces
+an new observation containing events in the specified time range. With the new
+`~gammapy.data.Observations` it is then possible to perform the usual data
+reduction which will produce datasets in the correct time range. The light curve
+extraction can then be performed as usual with the
+`~gammapy.estimators.LightCurveEstimator`. This is demonstrated in the light curve flare tutorial.
+
+.. accordion-footer::
+
+.. accordion-header::
+    :id: collapseTwelve
+    :title: How to detect sources in an image
+    :link: ../tutorials/analysis/2D/detect.html
+
+Gammapy provides methods to perform source detection in a 2D map. First step is
+to produce a significance map, i.e. a map giving the probability that the flux
+measured at each position is a background fluctuation. For a
+`~gammapy.datasets.MapDataset`, the class `~gammapy.estimators.TSMapEstimator` can be
+used. A simple correlated Li & Ma significance can be used, in particular for
+ON-OFF datasets. The second step consists in applying a peak finer algorithm,
+such as `~gammapy.estimators.utils.find_peaks`.
+
+.. accordion-footer::
+
+.. accordion-header::
+    :id: collapseTwenty
+    :title: How to combine data from multiple instruments
+    :link: ../tutorials/analysis/3D/analysis_mwl.html
+
+Gammapy offers the possibility to combine data from multiple instruments
+in a "joint-likelihood" fit.
+
+.. accordion-footer::
+
+
 .. _download-tutorials:
 
 Download Tutorial Datasets
@@ -83,9 +162,6 @@ terminal (for example ``$HOME/.bash_profile``).
     "Environment Variables" settings dialog, as explained e.g.
     `here <https://docs.python.org/3/using/windows.html#excursus-setting-environment-variables>`__
 
-The datasets are curated and stable, the notebooks are still under development
-just like Gammapy itself, and thus stored in a sub-folder that contains the
-Gammapy version number.
 
 What next?
 ==========

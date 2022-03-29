@@ -17,7 +17,7 @@ it's not a complete list of how to do everything in Gammapy.
 Please give feedback and suggest additions to this page!
 
 
-.. accordion-header:: 
+.. accordion-header::
     :id: collapseOne
     :title: Spell and pronounce Gammapy
 
@@ -27,18 +27,7 @@ the english word "pie". You can listen to it `here <http://ipa-reader.xyz/?text=
 
 .. accordion-footer::
 
-.. accordion-header:: 
-    :id: collapseTwo
-    :title: Access IACT DL3 data
-    :link: ../tutorials/data/hess.html#DL3-DR1
-
-To access IACT data in the DL3 format, use the `~gammapy.data.DataStore`. It allows
-easy access to observations stored in the DL3 data library. 
-It is also internally used by the high level interface `~gammapy.analysis.Analysis`.
-
-.. accordion-footer::
-
-.. accordion-header:: 
+.. accordion-header::
     :id: collapseThree
     :title: Select observations
     :link: ../tutorials/starting/analysis_2.html#Defining-the-datastore-and-selecting-observations
@@ -49,7 +38,7 @@ or also select observations based on other information available using the `~gam
 
 .. accordion-footer::
 
-.. accordion-header:: 
+.. accordion-header::
     :id: collapseFour
     :title: Make an on-axis equivalent livetime map
     :link: ../tutorials/data/hess.html#On-axis-equivalent-livetime
@@ -60,58 +49,18 @@ or also select observations based on other information available using the `~gam
 
 .. accordion-footer::
 
-.. accordion-header:: 
+.. accordion-header::
     :id: collapseFive
     :title: Check IRFs
     :link: ../tutorials/data/cta.html#IRFs
 
 Gammapy offers a number of methods to explore the content of the various IRFs
 contained in an observation. This is usually done thanks to their ``peek()``
-methods. 
+methods.
 
 .. accordion-footer::
 
-.. accordion-header:: 
-    :id: collapseSix
-    :title: Model 2D images
-    :link: ../tutorials/index.html#d-image
-
-Gammapy treats 2D maps as 3D cubes with one bin in energy. Sometimes, you might want to use previously 
-obtained images lacking an energy axis (eg: reduced using traditional IACT tools) for modeling and fitting 
-inside Gammapy. In this case, it is necessary to attach an `energy` axis on as it is showm in the tutorials.
-
-.. accordion-footer::
-
-.. accordion-header:: 
-    :id: collapseSeven
-    :title: Extract 1D spectra
-    :link: ../tutorials/analysis/1D/spectral_analysis.html
-
-The `~gammapy.analysis.Analysis` class can perform spectral extraction. The
-`~gammapy.analysis.AnalysisConfig` must be defined to produce '1d' datasets.
-Alternatively, you can follow the spectral analysis tutorial.
-
-.. accordion-footer::
-
-
-.. accordion-header:: 
-    :id: collapseEight
-    :title: Extract a lightcurve
-    :link: ../tutorials/analysis/time/light_curve.html
-
-The light curve estimation tutorial shows how to extract a run-wise lightcurve.
-
-To perform an analysis in a time range smaller than that of an observation, it
-is necessary to filter the latter with its `~gammapy.data.Observations.select_time` method. This produces
-an new observation containing events in the specified time range. With the new
-`~gammapy.data.Observations` it is then possible to perform the usual data
-reduction which will produce datasets in the correct time range. The light curve
-extraction can then be performed as usual with the
-`~gammapy.estimators.LightCurveEstimator`. This is demonstrated in the light curve flare tutorial.
-
-.. accordion-footer::
-
-.. accordion-header:: 
+.. accordion-header::
     :id: collapseNine
     :title: Choose units for plotting
 
@@ -131,7 +80,7 @@ you to define the x and y axis units using `astropy.units`. Here is a minimal ex
 
 .. accordion-footer::
 
-.. accordion-header:: 
+.. accordion-header::
     :id: collapseTen
     :title: Compute source significance
 
@@ -148,7 +97,7 @@ take the difference. Note that in Gammapy, the fit statistic is defined as ``S =
 
 .. accordion-footer::
 
-.. accordion-header:: 
+.. accordion-header::
     :id: collapseEleven
     :title: Compute cumulative significance
     :link: ../tutorials/analysis/1D/spectral_analysis.html#Source-statistic
@@ -161,24 +110,28 @@ access the total statistics with the ``info_table(cumulative=True)`` method of
 
 .. accordion-footer::
 
-.. accordion-header:: 
-    :id: collapseTwelve
-    :title: Detect sources in a map
-    :link: ../tutorials/analysis/2D/detect.html
+.. accordion-header::
+    :id: collapseFourteen
+    :title: Implement a custom model
+    :link: ../tutorials/api/models.html#Implementing-a-Custom-Model
 
-Gammapy provides methods to perform source detection in a 2D map. First step is
-to produce a significance map, i.e. a map giving the probability that the flux
-measured at each position is a background fluctuation. For a
-`~gammapy.datasets.MapDataset`, the class `~gammapy.estimators.TSMapEstimator` can be
-used. A simple correlated Li & Ma significance can be used, in particular for
-ON-OFF datasets. The second step consists in applying a peak finer algorithm,
-such as `~gammapy.estimators.utils.find_peaks`.
+Gammapy allows the flexibility of using user-defined models for analysis.
 
 .. accordion-footer::
 
-.. accordion-header:: 
+.. accordion-header::
+    :id: collapseFifteen
+    :title: Energy dependent spatial models
+    :link: ../tutorials/api/models.html#Models-with-energy-dependent-morphology
+
+While Gammapy does not ship energy dependent spatial models, it is possible to define
+such models within the modeling framework.
+
+.. accordion-footer::
+
+.. accordion-header::
     :id: collapseThirteen
-    :title: Astrophysical source modeling
+    :title: How to model astrophysical source spectra
 
 It is possible to combine Gammapy with astrophysical modeling codes, if they
 provide a Python interface. Usually this requires some glue code to be written,
@@ -189,26 +142,7 @@ H.E.S.S. or Fermi-LAT data).
 
 .. accordion-footer::
 
-.. accordion-header:: 
-    :id: collapseFourteen
-    :title: Implement a custom model
-    :link: ../tutorials/api/models.html#Implementing-a-Custom-Model
-
-Gammapy allows the flexibility of using user-defined models for analysis.
-
-.. accordion-footer::
-
-.. accordion-header:: 
-    :id: collapseFifteen
-    :title: Energy dependent spatial models
-    :link: ../tutorials/api/models.html#Models-with-energy-dependent-morphology
-
-While Gammapy does not ship energy dependent spatial models, it is possible to define
-such models within the modeling framework.
-
-.. accordion-footer::
-
-.. accordion-header:: 
+.. accordion-header::
     :id: collapseSixteen
     :title: Reduce memory budget for large datasets
 
@@ -227,7 +161,7 @@ by removing it from the list of options passed to the `~gammapy.makers.MapDatase
 
 .. accordion-footer::
 
-.. accordion-header:: 
+.. accordion-header::
     :id: collapseSeventeen
     :title: Copy part of a data store
 
@@ -239,7 +173,7 @@ and build the associated observation and HDU tables.
 
 .. accordion-footer::
 
-.. accordion-header:: 
+.. accordion-header::
     :id: collapseEighteen
     :title: Interpolate onto a different geometry
     :link: ../tutorials/api/maps.html#Filling-maps-from-interpolation
@@ -248,7 +182,7 @@ To interpolate maps onto a different geometry use `~gammapy.maps.Map.interp_to_g
 
 .. accordion-footer::
 
-.. accordion-header:: 
+.. accordion-header::
     :id: collapseNineteen
     :title: Suppress warnings
 

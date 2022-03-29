@@ -37,7 +37,7 @@ for `Fermi-LAT`_ and `HAWC`_ data analysis.
     ^^^^^^^^^^^^^^^
 
     New to *Gammapy*? Check out the getting started documents. They contain information
-    on how to install and start using *Gammapy'* in your local desktop.
+    on how to install and start using *Gammapy* on your local desktop computer.
 
     +++
 
