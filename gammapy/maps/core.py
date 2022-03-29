@@ -1054,7 +1054,7 @@ class Map(abc.ABC):
             geom = geom.copy(axes=axes)
             axes_eq = True
         elif geom.ndim != self.geom.ndim:
-            raise TypeError(f"Invalid axes in the target geom.")
+            raise TypeError("Invalid axes in the target geom.")
         else:
             axes_eq = np.all(
                 [ax0 == ax1 for ax0, ax1 in zip(geom.axes, self.geom.axes)]
