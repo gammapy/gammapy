@@ -30,6 +30,9 @@ pwl = PowerLawSpectralModel(
 lp = LogParabolaSpectralModel(
     amplitude="1e-12 cm-2 s-1 TeV-1", reference="10 TeV", alpha=2.0, beta=1.0
 )
+
+# freeze the amplitude to avoid degeneracy when fitting
+lp.amplitude.frozen = True
 model = CompoundSpectralModel(pwl, lp, operator.add)
 model.plot(energy_bounds)
 plt.grid(which="both")
