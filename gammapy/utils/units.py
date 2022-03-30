@@ -74,7 +74,7 @@ def energy_str_formatting(E):
     Parameters
     ----------    
     E: `~astropy.units.Quantity`
-        Quantity
+        Scalar Quantity.
     Returns
     -------
     str : str
