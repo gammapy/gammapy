@@ -292,8 +292,9 @@ def test_mde_run(dataset, models):
     assert meta["CONV_DEP"] == 0
     assert meta["CONV_RA"] == 0
     assert meta["CONV_DEC"] == 0
+    assert meta["MID00000"] == 0
+    assert meta["MMN00000"] == "test-bkg"
     assert meta["MID00001"] == 1
-    assert meta["MID00002"] == 2
     assert meta["NMCIDS"] == 2
     assert_allclose(float(meta["ALT_PNT"]), float("-13.5345076464"), rtol=1e-7)
     assert_allclose(float(meta["AZ_PNT"]), float("228.82981620065763"), rtol=1e-7)

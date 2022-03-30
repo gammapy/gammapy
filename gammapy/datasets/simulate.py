@@ -295,8 +295,12 @@ class MapDatasetEventSampler:
         meta["CONV_DEC"] = 0
 
         for idx, model in enumerate(dataset.models):
-            meta["MID{:05d}".format(idx + 1)] = idx + 1
-            meta["MMN{:05d}".format(idx + 1)] = model.name
+            if model.name != dataset.background_model.name:
+                meta["MID{:05d}".format(idx + 1)] = idx + 1
+                meta["MMN{:05d}".format(idx + 1)] = model.name
+            else:
+                meta["MID{:05d}".format(0)] = 0
+                meta["MMN{:05d}".format(0)] = model.name
         meta["NMCIDS"] = len(dataset.models)
 
         # Necessary for DataStore, but they should be ALT and AZ instead!
