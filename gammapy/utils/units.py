@@ -67,19 +67,26 @@ def unit_from_fits_image_hdu(header):
 
     return standardise_unit(unit)
 
-def energy_str_formatting(E):
+def energy_unit_format(E):
     """
     Format energy quantities to a string representation that is more comfortable to read
     by swithcing to the most relevant unit (keV, MeV, GeV, TeV) and changing the float precision.
     Parameters
     ----------    
     E: `~astropy.units.Quantity`
-        Scalar Quantity.
+        Quantity or list of quantities
     Returns
     -------
     str : str
-        Returns a string with energy unit formatted        
+        Returns a string or tuple of strings with energy unit formatted        
     """    
+    try:
+         iter(E)
+    except TypeError:
+         pass
+    else:
+         return tuple(map(energy_unit_format, E))
+
     i = floor(np.log10(E.to_value(u.eV)) / 3) # a new unit every 3 decades
     unit = (u.eV, u.keV, u.MeV, u.GeV, u.TeV, u.PeV)[i] if i < 5 else u.PeV        
 
@@ -88,26 +95,3 @@ def energy_str_formatting(E):
     prec = (2,1,0)[i] if i < 3 else 0
 
     return f"{v:0.{prec}f} {unit}"
-
-def energy_unit_format(E):
-    """
-    Format an energy quantity (or a list of quantities) to a string (or list of string) representations.
-    Parameters
-    ----------    
-    E: `~astropy.units.Quantity` or sequence thereof
-        Quantity or list of quantities
-    Returns
-    -------
-    str : str
-        Returns a string or list of strings with energy unit formatted        
-    """   
-
-    if (isinstance(E, (list, tuple)) == True):
-        E_fmt = [energy_str_formatting(e) for e in E]
-        return E_fmt        
-    elif (isinstance(E, u.quantity.Quantity) == True):
-        if E.size > 1:
-            E_fmt = [energy_str_formatting(e) for e in E]
-            return E_fmt                      
-        else:
-            return energy_str_formatting(E)
