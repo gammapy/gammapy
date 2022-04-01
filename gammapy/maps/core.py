@@ -1083,7 +1083,7 @@ class Map(abc.ABC):
             return new_map
 
     def _reproject_oversampling(self, geom, preserve_counts=False, oversampling_factor=10):
-        output_map = Map.from_geom(geom)
+        output_map = Map.from_geom(geom, unit=self.unit)
         base_factor = geom.pixel_scales.min()/self.geom.pixel_scales.min()
         if base_factor >= oversampling_factor:
             input_map = self
