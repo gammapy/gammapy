@@ -21,10 +21,8 @@ Gammapy
 
 
 `Gammapy <https://gammapy.org>`__ is a community-developed, open-source Python package for gamma-ray
-astronomy built on Numpy, Scipy and Astropy.
-
-**Gammapy is the core library for the** `CTA`_ **Science Tools**
-and can also be used to analyse data from existing imaging atmospheric Cherenkov telescopes
+astronomy built on Numpy, Scipy and Astropy. **It is the core library for the** `CTA`_ **Science Tools**
+but can also be used to analyse data from existing imaging atmospheric Cherenkov telescopes
 (IACTs), such as `H.E.S.S.`_, `MAGIC`_ and `VERITAS`_. It also provides some support
 for `Fermi-LAT`_ and `HAWC`_ data analysis.
 
@@ -39,7 +37,7 @@ for `Fermi-LAT`_ and `HAWC`_ data analysis.
     ^^^^^^^^^^^^^^^
 
     New to *Gammapy*? Check out the getting started documents. They contain information
-    on how to install and start using *Gammapy'* in your local desktop.
+    on how to install and start using *Gammapy* on your local desktop computer.
 
     +++
 
