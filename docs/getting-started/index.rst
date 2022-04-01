@@ -81,9 +81,15 @@ terminal (for example ``$HOME/.bash_profile``).
     "Environment Variables" settings dialog, as explained e.g.
     `here <https://docs.python.org/3/using/windows.html#excursus-setting-environment-variables>`__
 
+Congratulations! You are all set to start using Gammapy!
 
-Introduction
-------------
+* To learn how to use Gammapy, go to :ref:`tutorials`.
+* If you're new to conda, Python and Jupyter, read the :ref:`using-gammapy` guide.
+* If you encountered any issues you can check the :ref:`troubleshoot` guide.
+
+
+Analysis Overview
+-----------------
 
 .. accordion-header::
     :id: collapseTwo
@@ -161,12 +167,3 @@ in a "joint-likelihood" fit.
 
 .. accordion-footer::
 
-
-What next?
-==========
-
-Congratulations! You are all set to start using Gammapy!
-
-* To learn how to use Gammapy, go to :ref:`tutorials`.
-* If you're new to conda, Python and Jupyter, read the :ref:`using-gammapy` guide.
-* If you encountered any issues you can check the :ref:`troubleshoot` guide.
