@@ -498,3 +498,18 @@ def test_flux_points_estimator_small_edges():
     assert_allclose(fp.ts.data[0, 0, 0], 2156.96959291)
     assert np.isnan(fp.ts.data[1, 0, 0])
     assert np.isnan(fp.npred.data[1, 0, 0])
+
+
+@requires_dependency("iminuit")
+def test_flux_points_recompute_ul(fpe_pwl):
+    datasets, fpe = fpe_pwl
+    fp = fpe.run(datasets)
+    table = fp.to_table("flux")
+    assert_allclose(
+        table["flux_ul"], [2.629819e-12, 9.319243e-13, 9.004449e-14], rtol=1e-3
+    )
+    fp.recompute_ul(n_sigma_ul=4)
+    table = fp.to_table("flux")
+    assert_allclose(
+        table["flux_ul"], [2.93166296e-12, 1.05421128e-12, 1.22660055e-13], rtol=1e-3
+    )

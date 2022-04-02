@@ -9,6 +9,7 @@ from gammapy.maps import MapAxis, Maps, RegionNDMap, TimeMapAxis
 from gammapy.maps.axes import flat_if_equal
 from gammapy.modeling.models import TemplateSpectralModel
 from gammapy.modeling.models.spectral import scale_plot_flux
+from gammapy.modeling.scipy import stat_profile_ul_scipy
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_standardise_units_copy
 from ..map.core import DEFAULT_UNIT, FluxMaps
@@ -612,3 +613,45 @@ class FluxPoints(FluxMaps):
             ax.figure.colorbar(caxes, ax=ax, label=label)
 
         return ax
+
+    def recompute_ul(self, n_sigma_ul=2, **kwargs):
+        """Recompute upper limits corresponding to the given value.
+        The pre-computed stat profiles must exist for the re-computation.
+        Modifies the object in place.
+
+        Parameters
+        ----------
+        n_sigma_ul : int
+            Number of sigma to use for upper limit computation. Default is 2.
+        **kwargs : dict
+            Keyword arguments passed to `~scipy.optimize.brentq`.
+        """
+
+        if self.has_stat_profiles is False:
+            raise ValueError(
+                "Stat profiles not present. Upper limit computation is not possible"
+            )
+
+        delta_ts = n_sigma_ul ** 2
+
+        value_scan = self.stat_scan.geom.axes["norm"].center
+        idx = (Ellipsis, 0, 0)
+        stat_scan_full = self.stat_scan.data[idx]
+        stat_min = self.stat.data
+        # TODO: can probably be simplified
+        if len(stat_scan_full.shape) == 2:
+            stat_scan_full = stat_scan_full.reshape((1,) + stat_scan_full.shape)
+            stat_min = stat_min.reshape((1,) + stat_min.shape)
+
+        ncols1 = stat_scan_full.shape[0]
+        ncols2 = stat_scan_full.shape[1]
+
+        norm_ul = np.empty(shape=(ncols1, ncols2))
+        for i in range(ncols1):
+            for j in range(ncols2):
+                stat_scan = np.ravel(stat_scan_full[i][j] - stat_min[i][j])
+                norm_ul[i][j] = stat_profile_ul_scipy(
+                    value_scan, stat_scan, delta_ts=delta_ts, **kwargs
+                )
+
+        self.norm_ul.data = norm_ul.reshape(self.norm.data.shape)
