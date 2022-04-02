@@ -503,6 +503,7 @@ def test_flux_points_estimator_small_edges():
 @requires_dependency("iminuit")
 def test_flux_points_recompute_ul(fpe_pwl):
     datasets, fpe = fpe_pwl
+    fpe.selection_optional = ["all"]
     fp = fpe.run(datasets)
     table = fp.to_table("flux")
     assert_allclose(
