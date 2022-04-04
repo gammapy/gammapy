@@ -70,6 +70,46 @@ def test_set_model(spectrum_dataset):
     assert spectrum_dataset.models["test"] is model
 
 
+def test_spectrum_dataset_fits_io(spectrum_dataset, tmp_path):
+    spectrum_dataset.meta_table = Table(
+        data=[[1.0 * u.h], [111]], names=["livetime", "obs_id"]
+    )
+    hdulist = spectrum_dataset.to_hdulist()
+    actual = [hdu.name for hdu in hdulist]
+    desired = [
+        "PRIMARY",
+        "COUNTS",
+        "COUNTS_BANDS",
+        "COUNTS_REGION",
+        "EXPOSURE",
+        "EXPOSURE_BANDS",
+        "EXPOSURE_REGION",
+        "BACKGROUND",
+        "BACKGROUND_BANDS",
+        "BACKGROUND_REGION",
+        "GTI",
+        "META_TABLE",
+    ]
+
+    assert actual == desired
+
+    spectrum_dataset.write(tmp_path / "test.fits")
+    dataset_new = SpectrumDataset.read(tmp_path / "test.fits", name="test")
+
+    assert_allclose(spectrum_dataset.counts.data, dataset_new.counts.data)
+    assert_allclose(
+        spectrum_dataset.npred_background().data, dataset_new.npred_background().data
+    )
+    assert dataset_new.edisp is None
+    assert dataset_new.edisp is None
+    assert dataset_new.name is "test"
+
+    assert_allclose(spectrum_dataset.exposure.data, dataset_new.exposure.data)
+    assert spectrum_dataset.counts.geom == dataset_new.counts.geom
+
+    assert_allclose(dataset_new.meta_table["obs_id"], 111)
+
+
 def test_npred_models():
     e_reco = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3)
 
@@ -540,6 +580,13 @@ class TestSpectrumOnOff:
         assert newdataset.counts_off is None
         assert newdataset.edisp is None
         assert newdataset.gti is None
+
+    def test_spectrum_dataset_onoff_fits_io(self, tmp_path):
+        self.dataset.write(tmp_path / "test.fits", format="gadf")
+        d1 = SpectrumDatasetOnOff.read(tmp_path / "test.fits", format="gadf")
+        assert isinstance(d1.counts.geom, RegionGeom)
+        assert d1.exposure == self.dataset.exposure
+        assert_allclose(d1.counts_off.data, self.dataset.counts_off.data)
 
     def test_energy_mask(self):
         mask = self.dataset.counts.geom.energy_mask(
