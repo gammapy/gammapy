@@ -635,23 +635,11 @@ class FluxPoints(FluxMaps):
         delta_ts = n_sigma_ul ** 2
 
         value_scan = self.stat_scan.geom.axes["norm"].center
-        idx = (Ellipsis, 0, 0)
-        stat_scan_full = self.stat_scan.data[idx]
-        stat_min = self.stat.data
-        # TODO: can probably be simplified
-        if len(stat_scan_full.shape) == 2:
-            stat_scan_full = stat_scan_full.reshape((1,) + stat_scan_full.shape)
-            stat_min = stat_min.reshape((1,) + stat_min.shape)
-
-        ncols1 = stat_scan_full.shape[0]
-        ncols2 = stat_scan_full.shape[1]
-
-        norm_ul = np.empty(shape=(ncols1, ncols2))
-        for i in range(ncols1):
-            for j in range(ncols2):
-                stat_scan = np.ravel(stat_scan_full[i][j] - stat_min[i][j])
-                norm_ul[i][j] = stat_profile_ul_scipy(
-                    value_scan, stat_scan, delta_ts=delta_ts, **kwargs
-                )
-
-        self.norm_ul.data = norm_ul.reshape(self.norm.data.shape)
+        shape_axes = self.stat_scan.geom._shape[slice(3, None)]
+        for idx in np.ndindex(shape_axes):
+            stat_scan = (
+                self.stat_scan.data[idx].squeeze() - self.stat.data[idx].squeeze()
+            )
+            self.norm_ul.data[idx] = stat_profile_ul_scipy(
+                value_scan, stat_scan, delta_ts=delta_ts, **kwargs
+            )
