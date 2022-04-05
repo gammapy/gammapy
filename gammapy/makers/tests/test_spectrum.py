@@ -84,8 +84,7 @@ def reflected_regions_bkg_maker():
     exclusion_mask = ~geom.region_mask([exclusion_region])
 
     return ReflectedRegionsBackgroundMaker(
-        exclusion_mask=exclusion_mask,
-        min_distance_input="0.2 deg"
+        exclusion_mask=exclusion_mask, min_distance_input="0.2 deg"
     )
 
 
@@ -207,7 +206,7 @@ def test_safe_mask_maker_dl3(spectrum_dataset_crab, observations_hess_dl3):
     assert mask_safe.data.sum() == 3
 
     mask_safe = safe_mask_maker.make_mask_energy_bkg_peak(dataset)
-    assert mask_safe.data.sum() == 3
+    assert mask_safe.data.sum() == 4
 
 
 @requires_data()
@@ -245,7 +244,6 @@ def test_region_center_spectrum_dataset_maker_magic_dl3(
     maker_correction = SpectrumDatasetMaker(
         containment_correction=True, selection=["exposure"]
     )
-
 
     # containment correction should fail
     with pytest.raises(ValueError):
