@@ -243,7 +243,7 @@ class FluxMaps:
 
     @property
     def has_ul(self):
-        """Whether the flux estimate has either sqrt(ts) or ts defined"""
+        """Whether the flux estimate has norm_ul defined"""
         return "norm_ul" in self._data
 
     @property
@@ -263,7 +263,7 @@ class FluxMaps:
 
     @property
     def n_sigma(self):
-        """n sigma UL"""
+        """n sigma"""
         return self.meta.get("n_sigma", 1)
 
     @property
