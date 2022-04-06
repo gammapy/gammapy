@@ -6,7 +6,15 @@ from .simulate import MapDatasetEventSampler
 from .spectrum import SpectrumDataset, SpectrumDatasetOnOff
 from .io import OGIPDatasetWriter, OGIPDatasetReader
 
-DATASET_REGISTRY = Registry([MapDataset, SpectrumDatasetOnOff, FluxPointsDataset])
+DATASET_REGISTRY = Registry(
+    [
+        MapDataset,
+        MapDatasetOnOff,
+        SpectrumDataset,
+        SpectrumDatasetOnOff,
+        FluxPointsDataset,
+    ]
+)
 """Registry of dataset classes in Gammapy."""
 
 __all__ = [
