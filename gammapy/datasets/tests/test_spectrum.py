@@ -102,7 +102,7 @@ def test_spectrum_dataset_fits_io(spectrum_dataset, tmp_path):
     )
     assert dataset_new.edisp is None
     assert dataset_new.edisp is None
-    assert dataset_new.name is "test"
+    assert dataset_new.name == "test"
 
     assert_allclose(spectrum_dataset.exposure.data, dataset_new.exposure.data)
     assert spectrum_dataset.counts.geom == dataset_new.counts.geom
