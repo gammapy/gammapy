@@ -73,6 +73,9 @@ class TestSourceCatalogHGPS:
         models = cat.to_models(components_status="merged")
         assert len(models) == 78
 
+        gaussians = models.select(tag="gauss", model_type="spatial")
+        assert np.all([m.spatial_model.sigma.value > 0. for m in gaussians])
+
 
 @requires_data()
 class TestSourceCatalogObjectHGPS:

@@ -565,7 +565,8 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         """
 
         spatial_type = self.data["Spatial_Model"]
-        if spatial_type in {"2-Gaussian", "3-Gaussian"}:
+        missing_size = spatial_type=="Gaussian" and self.spatial_model().sigma.value==0
+        if spatial_type in {"2-Gaussian", "3-Gaussian"} or missing_size:
             models = []
             spectral_model = self.spectral_model(which=which)
             for component in self.components:
