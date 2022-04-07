@@ -226,3 +226,35 @@ def test_datastore_header_info_in_obs_info(data_store):
     assert "GEOLAT" in obs.obs_info
     # make sure we don't add the OBS_INDEX HDUCLAS
     assert "HDUCLAS1" not in obs.obs_info
+
+@requires_data()
+def test_datastore_bad_name():
+    with pytest.raises(IOError):
+        DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/", "hdu-index.fits.gz", "bad")
+
+
+@requires_data()
+def test_datastore_from_dir_no_obs_index(caplog, tmpdir):
+    """Test the `from_dir` method."""
+
+    # Create small datastore and remove obs-index table
+    DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/").copy_obs([23523, 23592], tmpdir)
+    os.remove(tmpdir / "obs-index.fits.gz")
+
+    data_store = DataStore.from_dir(tmpdir)
+
+    obs = data_store.obs(23523)
+    observations = data_store.get_observations()
+
+    assert data_store.obs_table is None
+    assert "No observation index table." in data_store.info(show=False)
+
+    assert obs.obs_info["ONTIME"] == 1687.0
+    assert len(observations) == 2
+
+    test_dir = tmpdir / "test"
+    os.mkdir(test_dir)
+    data_store.copy_obs([23523], test_dir)
+    data_store_copy = DataStore.from_dir(test_dir)
+    assert len(data_store_copy.obs_ids) == 1
+    assert data_store_copy.obs_table == None

@@ -2,11 +2,11 @@
 import logging
 import subprocess
 from pathlib import Path
+import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from gammapy.utils.scripts import make_path
-from gammapy.utils.table import table_row_to_dict
 from gammapy.utils.testing import Checker
 from .hdu_index_table import HDUIndexTable
 from .obs_table import ObservationTable, ObservationTableChecker
@@ -67,6 +67,11 @@ class DataStore:
     def __str__(self):
         return self.info(show=False)
 
+    @property
+    def obs_ids(self):
+        """Return list of obs_ids contained in the datastore."""
+        return np.unique(self.hdu_table["OBS_ID"].data)
+
     @classmethod
     def from_file(cls, filename, hdu_hdu="HDU_INDEX", hdu_obs="OBS_INDEX"):
         """Create a Datastore from a FITS file.
@@ -91,7 +96,9 @@ class DataStore:
 
         hdu_table = HDUIndexTable.read(filename, hdu=hdu_hdu, format="fits")
 
-        obs_table = ObservationTable.read(filename, hdu=hdu_obs, format="fits")
+        obs_table = None
+        if hdu_obs:
+            obs_table = ObservationTable.read(filename, hdu=hdu_obs, format="fits")
 
         return cls(hdu_table=hdu_table, obs_table=obs_table)
 
@@ -136,6 +143,8 @@ class DataStore:
             obs_table_filename = make_path(obs_table_filename)
             if (base_dir / obs_table_filename).exists():
                 obs_table_filename = base_dir / obs_table_filename
+            elif not obs_table_filename.exists():
+                raise IOError(f"File not found : {obs_table_filename}")
         else:
             obs_table_filename = base_dir / cls.DEFAULT_OBS_TABLE
 
@@ -146,9 +155,11 @@ class DataStore:
         hdu_table.meta["BASE_DIR"] = str(base_dir)
 
         if not obs_table_filename.exists():
-            raise OSError(f"File not found: {obs_table_filename}")
-        log.debug(f"Reading {obs_table_filename}")
-        obs_table = ObservationTable.read(obs_table_filename, format="fits")
+            log.info("Cannot find default obs-index table.")
+            obs_table = None
+        else:
+            log.debug(f"Reading {obs_table_filename}")
+            obs_table = ObservationTable.read(obs_table_filename, format="fits")
 
         return cls(hdu_table=hdu_table, obs_table=obs_table)
 
@@ -223,7 +234,10 @@ class DataStore:
         s = "Data store:\n"
         s += self.hdu_table.summary()
         s += "\n\n"
-        s += self.obs_table.summary()
+        if self.obs_table:
+            s += self.obs_table.summary()
+        else:
+            s += "No observation index table."
 
         if show:
             print(s)
@@ -243,21 +257,10 @@ class DataStore:
         observation : `~gammapy.data.Observation`
             Observation container
         """
-        if obs_id not in self.obs_table["OBS_ID"]:
-            raise ValueError(f"OBS_ID = {obs_id} not in obs index table.")
-
         if obs_id not in self.hdu_table["OBS_ID"]:
             raise ValueError(f"OBS_ID = {obs_id} not in HDU index table.")
 
-        row = self.obs_table.select_obs_id(obs_id=obs_id)[0]
         kwargs = {"obs_id": int(obs_id)}
-
-        # add info from table meta, e.g. the time references
-        kwargs["obs_info"] = {
-            k: v for k, v in self.obs_table.meta.items()
-            if not k.startswith('HDU')  # Ignore GADF structure of index table
-        }
-        kwargs["obs_info"].update(table_row_to_dict(row))
 
         hdu_list = ["events", "gti", "aeff", "edisp", "psf", "bkg", "rad_max"]
 
@@ -304,7 +307,7 @@ class DataStore:
             )
 
         if obs_id is None:
-            obs_id = self.obs_table["OBS_ID"].data
+            obs_id = self.obs_ids
 
         obs_list = []
 
@@ -357,7 +360,8 @@ class DataStore:
             subhdutable.add_index("HDU_CLASS")
             with subhdutable.index_mode("discard_on_copy"):
                 subhdutable = subhdutable.loc[hdu_class]
-        subobstable = self.obs_table.select_obs_id(obs_id)
+        if self.obs_table:
+            subobstable = self.obs_table.select_obs_id(obs_id)
 
         for idx in range(len(subhdutable)):
             # Changes to the file structure could be made here
@@ -375,8 +379,9 @@ class DataStore:
         filename = outdir / self.DEFAULT_HDU_TABLE
         subhdutable.write(filename, format="fits", overwrite=overwrite)
 
-        filename = outdir / self.DEFAULT_OBS_TABLE
-        subobstable.write(str(filename), format="fits", overwrite=overwrite)
+        if self.obs_table:
+            filename = outdir / self.DEFAULT_OBS_TABLE
+            subobstable.write(str(filename), format="fits", overwrite=overwrite)
 
     def check(self, checks="all"):
         """Check index tables and data files.

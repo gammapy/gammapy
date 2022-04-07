@@ -74,7 +74,7 @@ class Observation:
         obs_filter=None,
     ):
         self.obs_id = obs_id
-        self.obs_info = obs_info
+        self._obs_info = obs_info
         self.aeff = aeff
         self.edisp = edisp
         self.psf = psf
@@ -263,12 +263,17 @@ class Observation:
         return 1 - self.obs_info["DEADC"]
 
     @lazyproperty
+    def obs_info(self):
+        """Observation info dictionary."""
+        meta = self._obs_info.copy() if self._obs_info is not None else {}
+        if self.events is not None:
+            meta.update({k: v for k, v in self.events.table.meta.items() if not k.startswith('HDU')})
+        return meta
+
+    @lazyproperty
     def fixed_pointing_info(self):
         """Fixed pointing info for this observation (`FixedPointingInfo`)."""
-        meta = self.obs_info.copy() if self.obs_info is not None else {}
-        if self.events is not None:
-            meta.update(self.events.table.meta)
-        return FixedPointingInfo(meta)
+        return FixedPointingInfo(self.obs_info)
 
     @property
     def pointing_radec(self):
