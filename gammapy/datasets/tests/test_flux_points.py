@@ -6,9 +6,15 @@ from astropy.table import Table
 from gammapy.datasets import Datasets, FluxPointsDataset
 from gammapy.estimators import FluxPoints
 from gammapy.modeling import Fit
-from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
+from gammapy.modeling.models import (
+    PowerLawSpectralModel,
+    SkyModel,
+    ExpDecayTemporalModel,
+)
+from gammapy.data import GTI
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
+import astropy.units as u
 
 
 @pytest.fixture()
@@ -24,18 +30,18 @@ def dataset():
     path = "$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits"
     table = Table.read(make_path(path))
     table["e_ref"] = table["e_ref"].quantity.to("TeV")
+    gti = GTI.create(start=0 * u.s, stop=30 * u.min)
     data = FluxPoints.from_table(table, format="gadf-sed")
+    data.gti = gti
     model = SkyModel(
         spectral_model=PowerLawSpectralModel(
             index=2.3, amplitude="2e-13 cm-2 s-1 TeV-1", reference="1 TeV"
         )
     )
-
     obs_table = Table()
     obs_table["TELESCOP"] = ["CTA"]
     obs_table["OBS_ID"] = ["0001"]
     obs_table["INSTRUME"] = ["South_Z20_50h"]
-
     dataset = FluxPointsDataset(model, data, meta_table=obs_table)
     return dataset
 
@@ -82,6 +88,16 @@ def test_flux_point_dataset_str(dataset):
     # check print if no models present
     dataset.models = None
     assert "FluxPointsDataset" in str(dataset)
+
+
+@requires_data()
+def test_flux_point_dataset_flux_pred(dataset):
+
+    assert_allclose(dataset.flux_pred()[0].value, 0.00022766, rtol=1e-2)
+    dataset.models[0].temporal_model = ExpDecayTemporalModel(
+        t0=5.0 * u.hr, t_ref=51543.5 * u.d
+    )
+    assert_allclose(dataset.flux_pred()[0].value, 0.000472, rtol=1e-3)
 
 
 @requires_data()

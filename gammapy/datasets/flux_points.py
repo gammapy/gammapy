@@ -51,19 +51,19 @@ class FluxPointsDataset(Dataset):
     >>> print(result)
     OptimizeResult
     <BLANKLINE>
-    	backend    : minuit
-    	method     : migrad
-    	success    : True
-    	message    : Optimization terminated successfully.
-    	nfev       : 135
-    	total stat : 25.21
+        backend    : minuit
+        method     : migrad
+        success    : True
+        message    : Optimization terminated successfully.
+        nfev       : 135
+        total stat : 25.21
     <BLANKLINE>
     CovarianceResult
     <BLANKLINE>
-    	backend    : minuit
-    	method     : hesse
-    	success    : True
-    	message    : Hesse terminated successfully.
+        backend    : minuit
+        method     : hesse
+        success    : True
+        message    : Hesse terminated successfully.
 
     >>> print(result.parameters.to_table())
       type      name     value         unit      ... max frozen is_norm link
@@ -176,7 +176,7 @@ class FluxPointsDataset(Dataset):
             name=make_name(name),
             data=FluxPoints.from_table(table, format=format),
             mask_fit=mask_fit,
-            mask_safe=mask_safe
+            mask_safe=mask_safe,
         )
 
     @classmethod
@@ -259,7 +259,13 @@ class FluxPointsDataset(Dataset):
         """Compute predicted flux."""
         flux = 0.0
         for model in self.models:
-            flux += model.spectral_model(self.data.energy_ref)
+            flux_model = model.spectral_model(self.data.energy_ref)
+            if model.temporal_model is not None:
+                integral = model.temporal_model.integral(
+                    self.gti.time_start, self.gti.time_stop
+                )
+                flux_model *= np.sum(integral)
+            flux += flux_model
         return flux
 
     def stat_array(self):
