@@ -648,9 +648,10 @@ def test_recompute_ul():
     table = lightcurve.to_table(format="lightcurve", sed_type="dnde")
     assert_allclose(table["dnde_ul"][0], [3.26070325e-13, 1.15935401e-14], rtol=1e-3)
 
-    lightcurve.recompute_ul(n_sigma_ul=4)
-    table = lightcurve.to_table(format="lightcurve", sed_type="dnde")
-    assert_allclose(table["dnde_ul"][0], [3.77456115e-13, 1.37442101e-14], rtol=1e-3)
+    new_lightcurve = lightcurve.recompute_ul(n_sigma_ul=4)
+    new_table = new_lightcurve.to_table(format="lightcurve", sed_type="dnde")
+    assert_allclose(new_table["dnde_ul"][0], [3.77456115e-13, 1.37442101e-14], rtol=1e-3)
+    assert new_lightcurve.meta["n_sigma_ul"] == 4
 
     # test if scan is not present
     selection = []

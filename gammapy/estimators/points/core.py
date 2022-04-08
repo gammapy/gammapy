@@ -13,6 +13,7 @@ from gammapy.modeling.scipy import stat_profile_ul_scipy
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_standardise_units_copy
 from ..map.core import DEFAULT_UNIT, FluxMaps
+from copy import copy
 
 __all__ = ["FluxPoints"]
 
@@ -617,7 +618,6 @@ class FluxPoints(FluxMaps):
     def recompute_ul(self, n_sigma_ul=2, **kwargs):
         """Recompute upper limits corresponding to the given value.
         The pre-computed stat profiles must exist for the re-computation.
-        Modifies the object in place.
 
         Parameters
         ----------
@@ -625,6 +625,11 @@ class FluxPoints(FluxMaps):
             Number of sigma to use for upper limit computation. Default is 2.
         **kwargs : dict
             Keyword arguments passed to `~scipy.optimize.brentq`.
+
+        Returns
+        --------
+        flux_points : `FluxPoints`
+            A new FluxPoints object with modified upper limits
         """
 
         if self.has_stat_profiles is False:
@@ -634,12 +639,16 @@ class FluxPoints(FluxMaps):
 
         delta_ts = n_sigma_ul ** 2
 
+        flux_points = copy(self)
+
         value_scan = self.stat_scan.geom.axes["norm"].center
         shape_axes = self.stat_scan.geom._shape[slice(3, None)]
         for idx in np.ndindex(shape_axes):
             stat_scan = (
                 self.stat_scan.data[idx].squeeze() - self.stat.data[idx].squeeze()
             )
-            self.norm_ul.data[idx] = stat_profile_ul_scipy(
+            flux_points.norm_ul.data[idx] = stat_profile_ul_scipy(
                 value_scan, stat_scan, delta_ts=delta_ts, **kwargs
             )
+        flux_points.meta["n_sigma_ul"] = n_sigma_ul
+        return flux_points
