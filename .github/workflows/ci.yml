@@ -47,11 +47,11 @@ jobs:
       - name: install python3.8
         if: contains(matrix.name, '3.8')
         run: |
-          sed -i '' 's/python=3.7/python=3.8/' environment-dev.yml
+          sed -i tmp 's/python=3.7/python=3.8/' environment-dev.yml
       - name: install python3.9
         if: contains(matrix.name, '3.9')
         run: |
-          sed -i '' 's/python=3.7/python=3.9/' environment-dev.yml
+          sed -i tmp 's/python=3.7/python=3.9/' environment-dev.yml
       - name: add core dependencies env file
         if: contains(matrix.name, 'core-deps')
         run: |
