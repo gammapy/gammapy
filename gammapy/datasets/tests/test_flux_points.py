@@ -2,7 +2,8 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.table import Table
+from astropy.table import Table, Column
+from astropy.time import Time
 from gammapy.datasets import Datasets, FluxPointsDataset
 from gammapy.estimators import FluxPoints
 from gammapy.modeling import Fit
@@ -98,6 +99,28 @@ def test_flux_point_dataset_flux_pred(dataset):
         t0=5.0 * u.hr, t_ref=51543.5 * u.d
     )
     assert_allclose(dataset.flux_pred()[0].value, 0.000472, rtol=1e-3)
+
+def test_flux_point_dataset_creation():
+    meta = dict(TIMESYS="utc", SED_TYPE="flux")
+
+    table = Table(
+        meta=meta,
+        data=[
+            Column(Time(["2010-01-01", "2010-01-03"]).mjd, "time_min"),
+            Column(Time(["2010-01-03", "2010-01-10"]).mjd, "time_max"),
+            Column([[1.0, 2.0], [1.0, 2.0]], "e_min", unit="TeV"),
+            Column([[2.0, 4.0], [2.0, 4.0]], "e_max", unit="TeV"),
+            Column([[1e-11, 1e-12], [3e-11, 3e-12]], "flux", unit="cm-2 s-1"),
+            Column([[0.1e-11, 1e-13], [0.3e-11, 3e-13]], "flux_err", unit="cm-2 s-1"),
+            Column([[np.nan, np.nan], [3.6e-11, 3.6e-12]], "flux_ul", unit="cm-2 s-1"),
+            Column([[False, False], [True, True]], "is_ul"),
+        ],
+    )
+
+    flux_points = FluxPoints.from_table(table=table, format="lightcurve")
+    with pytest.raises(ValueError):
+        FluxPointsDataset(data=flux_points)
+
 
 
 @requires_data()
