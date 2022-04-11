@@ -99,11 +99,11 @@ def test_lightcurve_properties_flux(lc):
 # is no header info in CSV to store the time scale!
 
 
-@pytest.mark.parametrize("format", ["fits"])
-def test_lightcurve_read_write(tmp_path, lc, format):
-    table = lc.to_table(format="lightcurve", sed_type="flux")
-    table.write(tmp_path / "tmp", format=format)
-    lc = FluxPoints.read(tmp_path / "tmp", format="lightcurve")
+@pytest.mark.parametrize("sed_type", ["dnde", "flux", "likelihood"])
+def test_lightcurve_read_write(tmp_path, lc, sed_type):
+    lc.write(tmp_path / "tmp.fits", format="lightcurve", sed_type=sed_type)
+
+    lc = FluxPoints.read(tmp_path / "tmp.fits", format="lightcurve")
 
     # Check if time-related info round-trips
     axis = lc.geom.axes["time"]
