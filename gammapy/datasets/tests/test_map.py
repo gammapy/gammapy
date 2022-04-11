@@ -1143,37 +1143,44 @@ def test_map_dataset_on_off_fits_io(images, lazy, tmp_path):
 
     dataset.write(tmp_path / "test.fits")
 
-    dataset_new = MapDatasetOnOff.read(tmp_path / "test.fits", lazy=lazy)
-    assert dataset_new.mask.data.dtype == bool
-    assert dataset_new.meta_table["livetime"] == 1.0*u.h
-    assert dataset_new.meta_table["obs_id"] == 111
-
-    assert_allclose(dataset.counts.data, dataset_new.counts.data)
-    assert_allclose(dataset.counts_off.data, dataset_new.counts_off.data)
-    assert_allclose(dataset.acceptance.data, dataset_new.acceptance.data)
-    assert_allclose(dataset.acceptance_off.data, dataset_new.acceptance_off.data)
-    assert_allclose(dataset.exposure.data, dataset_new.exposure.data)
-    assert_allclose(dataset.mask_safe, dataset_new.mask_safe)
-
-    assert np.all(dataset.mask_safe.data == dataset_new.mask_safe.data)
-    assert dataset.mask_safe.geom == dataset_new.mask_safe.geom
-    assert dataset.counts.geom == dataset_new.counts.geom
-    assert dataset.exposure.geom == dataset_new.exposure.geom
-
-    assert_allclose(
-        dataset.gti.time_sum.to_value("s"), dataset_new.gti.time_sum.to_value("s")
-    )
-
-    assert dataset.psf.psf_map == dataset_new.psf.psf_map
-    assert dataset.psf.exposure_map == dataset_new.psf.exposure_map
-    assert dataset.edisp.edisp_map == dataset_new.edisp.edisp_map
-    assert dataset.edisp.exposure_map == dataset_new.edisp.exposure_map
+    if lazy:
+        with pytest.raises(NotImplementedError):
+            dataset_new = MapDatasetOnOff.read(tmp_path / "test.fits", lazy=lazy)
+    else:
+        dataset_new = MapDatasetOnOff.read(tmp_path / "test.fits", lazy=lazy)
+        assert dataset_new.mask.data.dtype == bool
+        assert dataset_new.meta_table["livetime"] == 1.0*u.h
+        assert dataset_new.meta_table["obs_id"] == 111
+    
+        assert_allclose(dataset.counts.data, dataset_new.counts.data)
+        assert_allclose(dataset.counts_off.data, dataset_new.counts_off.data)
+        assert_allclose(dataset.acceptance.data, dataset_new.acceptance.data)
+        assert_allclose(dataset.acceptance_off.data, dataset_new.acceptance_off.data)
+        assert_allclose(dataset.exposure.data, dataset_new.exposure.data)
+        assert_allclose(dataset.mask_safe, dataset_new.mask_safe)
+    
+        assert np.all(dataset.mask_safe.data == dataset_new.mask_safe.data)
+        assert dataset.mask_safe.geom == dataset_new.mask_safe.geom
+        assert dataset.counts.geom == dataset_new.counts.geom
+        assert dataset.exposure.geom == dataset_new.exposure.geom
+    
+        assert_allclose(
+            dataset.gti.time_sum.to_value("s"), dataset_new.gti.time_sum.to_value("s")
+        )
+    
+        assert dataset.psf.psf_map == dataset_new.psf.psf_map
+        assert dataset.psf.exposure_map == dataset_new.psf.exposure_map
+        assert dataset.edisp.edisp_map == dataset_new.edisp.edisp_map
+        assert dataset.edisp.exposure_map == dataset_new.edisp.exposure_map
 
 @requires_data()
 def test_map_datasets_on_off_fits_io(images, tmp_path):
     dataset = get_map_dataset_onoff(images)
     Datasets([dataset]).write(tmp_path / "test.yaml")
-    datasets = Datasets.read(tmp_path / "test.yaml")
+    datasets = Datasets.read(tmp_path / "test.yaml", lazy=False)
+    with pytest.raises(NotImplementedError):
+        datasets = Datasets.read(tmp_path / "test.yaml", lazy=True)
+
     dataset_new = datasets[0]
 
     assert dataset.name == dataset_new.name

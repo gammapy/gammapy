@@ -2371,8 +2371,9 @@ class MapDatasetOnOff(MapDataset):
 
     @classmethod
     def _read_lazy(cls, filename, name=None, cache=True, format="gadf"):
-        #TODO: implement _read_lazy, for now only avoid it to prevent fail
-        return cls.read(filename, name=name, lazy=False, cache=cache, format=format)
+        raise NotImplementedError(
+                f"Lazy loading is not implemented for {cls}, please use option lazy=False."
+                )
 
     @classmethod
     def from_hdulist(cls, hdulist, name=None, format="gadf"):
