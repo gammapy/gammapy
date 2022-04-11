@@ -631,6 +631,18 @@ def test_TemplateSpectralModel_evaluate_tiny():
     assert np.all(result[mask] == 0.0)
 
 
+def test_TemplateSpectralModel_single_value():
+    energy = [1]*u.TeV
+    values = [1e-12]* u.Unit("TeV-1 s-1 cm-2")
+
+    model = TemplateSpectralModel(
+        energy=energy, values=values
+    )
+    result = model.evaluate([0.5, 2]*u.TeV)
+
+    assert_allclose(result.data, 1e-12)
+
+
 def test_TemplateSpectralModel_compound():
     energy = [1.00e06, 1.25e06, 1.58e06, 1.99e06] * u.MeV
     values = [4.39e-7, 1.96e-7, 8.80e-7, 3.94e-7] * u.Unit("MeV-1 s-1 sr-1")
