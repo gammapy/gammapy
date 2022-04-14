@@ -141,24 +141,6 @@ class TestDataStoreChecker:
         assert len(records) == 32
 
 
-
-@requires_data()
-def test_datastore_get_observations(data_store, caplog):
-    """Test loading data and IRF files via the DataStore"""
-    observations = data_store.get_observations([23523, 23592])
-    assert observations[0].obs_id == 23523
-    observations = data_store.get_observations()
-    assert len(observations) == 105
-
-    with pytest.raises(ValueError):
-        data_store.get_observations([11111, 23592])
-
-    observations = data_store.get_observations([11111, 23523], skip_missing=True)
-    assert observations[0].obs_id == 23523
-    assert "WARNING" in [_.levelname for _ in caplog.records]
-    assert "Skipping missing obs_id: 11111" in [_.message for _ in caplog.records]
-
-
 @pytest.fixture()
 def data_store_dc1(monkeypatch):
     paths = [
@@ -169,15 +151,6 @@ def data_store_dc1(monkeypatch):
     monkeypatch.setenv("CALDB", str(caldb_path))
     return DataStore.from_events_files(paths)
 
-@requires_data()
-def test_datastore_from_events(data_store_dc1):
-    # Test that `DataStore.from_events_files` works.
-    # The real tests for `DataStoreMaker` are below.
-
-    path = "$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_110380.fits"
-    data_store = DataStore.from_events_files([path])
-    assert len(data_store.obs_table) == 1
-    assert len(data_store.hdu_table) == 6
 
 @requires_data()
 def test_datastoremaker_obs_table(data_store_dc1):
