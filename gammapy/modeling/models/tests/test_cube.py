@@ -245,6 +245,14 @@ def test_background_model(background):
     assert_allclose(npred2.data[0][0][0], 2.254e-07, rtol=1e-3)
     assert_allclose(npred2.data.sum(), 7.352e-06, rtol=1e-3)
 
+def test_background_slice(background):
+    bkg1 = TemplateNPredModel(background)
+    e_edges = background.geom.axes[0].edges
+    bkg1_slice = bkg1.slice_by_energy(e_edges[0], e_edges[1]) #1 bin slice
+    assert bkg1_slice.name == bkg1_slice.name
+    assert bkg1_slice.map.data.shape == bkg1.map.sum_over_axes().data.shape
+    assert_allclose(bkg1_slice.map.data[0,:,:], bkg1.map.data[0,:,:], rtol=1e-5)
+
 
 def test_background_model_io(tmpdir, background):
     filename = str(tmpdir / "test-bkg-file.fits")
