@@ -1519,6 +1519,9 @@ class TemplateSpectralModel(SpectralModel):
         interp_kwargs.setdefault("values_scale", "log")
         interp_kwargs.setdefault("points_scale", ("log",))
 
+        if len(energy)==1:
+            interp_kwargs["method"] = "nearest"
+
         self._evaluate = ScaledRegularGridInterpolator(
             points=(energy,), values=values, **interp_kwargs
         )
