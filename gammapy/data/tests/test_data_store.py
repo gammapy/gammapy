@@ -8,6 +8,7 @@ import astropy.units as u
 from gammapy.data import DataStore
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import requires_data
+import logging
 
 @pytest.fixture()
 def data_store():
@@ -62,6 +63,26 @@ def test_datastore_from_file(tmpdir):
 
     assert data_store.obs_table["OBS_ID"][0] == 20136
 
+
+@requires_data()
+def test_datastore_get_observations(data_store, caplog):
+    """Test loading data and IRF files via the DataStore"""
+    observations = data_store.get_observations([23523, 23592])
+    assert observations[0].obs_id == 23523
+    observations = data_store.get_observations()
+    assert len(observations) == 105
+
+    with pytest.raises(ValueError):
+        data_store.get_observations([11111, 23592])
+
+    with caplog.at_level(logging.WARNING):
+        observations = data_store.get_observations([11111, 23523], skip_missing=True)
+        assert observations[0].obs_id == 23523
+        assert "Skipping missing obs_id: 11111" in [_.message for _ in caplog.records]
+    with caplog.at_level(logging.INFO):
+        observations = data_store.get_observations([11111, 23523], skip_missing=True)
+        assert "Observations selected: 1 out of 2." in [_.message for _ in caplog.records]
+
 @requires_data()
 def test_broken_links_datastore(data_store):
     # Test that datastore without complete IRFs are properly loaded
@@ -70,7 +91,7 @@ def test_broken_links_datastore(data_store):
     hdu_table.remove_row(index)
     hdu_table._hdu_type_stripped = np.array([_.strip() for _ in hdu_table["HDU_TYPE"]])
     observations = data_store.get_observations(
-        [23523, 23526], required_irf=["aeff", "bkg"]
+        [23523, 23526], required_irf=["aeff", "edisp"]
     )
     assert len(observations) == 1
 
@@ -112,24 +133,6 @@ class TestDataStoreChecker:
         assert len(records) == 32
 
 
-
-@requires_data()
-def test_datastore_get_observations(data_store, caplog):
-    """Test loading data and IRF files via the DataStore"""
-    observations = data_store.get_observations([23523, 23592])
-    assert observations[0].obs_id == 23523
-    observations = data_store.get_observations()
-    assert len(observations) == 105
-
-    with pytest.raises(ValueError):
-        data_store.get_observations([11111, 23592])
-
-    observations = data_store.get_observations([11111, 23523], skip_missing=True)
-    assert observations[0].obs_id == 23523
-    assert "WARNING" in [_.levelname for _ in caplog.records]
-    assert "Skipping missing obs_id: 11111" in [_.message for _ in caplog.records]
-
-
 @pytest.fixture()
 def data_store_dc1(monkeypatch):
     paths = [
@@ -142,13 +145,14 @@ def data_store_dc1(monkeypatch):
 
 @requires_data()
 def test_datastore_from_events(data_store_dc1):
+    # data_store_dc1 fixture is needed to set CALDB
     # Test that `DataStore.from_events_files` works.
     # The real tests for `DataStoreMaker` are below.
-
     path = "$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_110380.fits"
     data_store = DataStore.from_events_files([path])
     assert len(data_store.obs_table) == 1
     assert len(data_store.hdu_table) == 6
+
 
 @requires_data()
 def test_datastoremaker_obs_table(data_store_dc1):

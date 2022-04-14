@@ -106,18 +106,23 @@ class Observation:
         return self._rad_max
 
     @property
+    def available_hdus(self):
+        """Which HDUs are available"""
+        available_hdus = []
+        keys = ["_events", "_gti", "aeff", "edisp", "psf", "bkg", "_rad_max"]
+        hdus = ["events", "gti", "aeff", "edisp", "psf", "bkg", "rad_max"]
+        for key, hdu in zip(keys, hdus):
+            available = self.__dict__.get(key, False)
+            available_hdu = self.__dict__.get(f"_{hdu}_hdu", False)
+            available_hdu_ = self.__dict__.get(f"_{key}_hdu", False)
+            if available or available_hdu or available_hdu_:
+                available_hdus.append(hdu)
+        return available_hdus
+
+    @property
     def available_irfs(self):
-        """Which irfs are available"""
-        available_irf = []
-
-        for irf in ["aeff", "edisp", "psf", "bkg", "rad_max"]:
-            available = self.__dict__.get(irf, False)
-            available_hdu = self.__dict__.get(f"_{irf}_hdu", False)
-
-            if available or available_hdu:
-                available_irf.append(irf)
-
-        return available_irf
+        """Which IRFs are available"""
+        return [ _ for _ in self.available_hdus if _ not in ["events", "gti"]]
 
     @property
     def events(self):
@@ -343,7 +348,7 @@ class Observation:
         """
         import matplotlib.pyplot as plt
 
-        n_irfs = len(self.available_irfs)
+        n_irfs = len(self.available_hdus)
 
         fig, axes = plt.subplots(
             nrows=n_irfs // 2,
@@ -352,13 +357,13 @@ class Observation:
             gridspec_kw={"wspace": 0.25, "hspace": 0.25},
         )
 
-        axes_dict = dict(zip(self.available_irfs, axes.flatten()))
+        axes_dict = dict(zip(self.available_hdus, axes.flatten()))
 
-        if "aeff" in self.available_irfs:
+        if "aeff" in self.available_hdus:
             self.aeff.plot(ax=axes_dict["aeff"])
             axes_dict["aeff"].set_title("Effective area")
 
-        if "bkg" in self.available_irfs:
+        if "bkg" in self.available_hdus:
             bkg = self.bkg
 
             if not bkg.has_offset_axis:
@@ -369,13 +374,13 @@ class Observation:
         else:
             logging.warning(f"No background model found for obs {self.obs_id}.")
 
-        if "psf" in self.available_irfs:
+        if "psf" in self.available_hdus:
             self.psf.plot_containment_radius_vs_energy(ax=axes_dict["psf"])
             axes_dict["psf"].set_title("Point spread function")
         else:
             logging.warning(f"No PSF found for obs {self.obs_id}.")
 
-        if "edisp" in self.available_irfs:
+        if "edisp" in self.available_hdus:
             self.edisp.plot_bias(ax=axes_dict["edisp"], add_cbar=True)
             axes_dict["edisp"].set_title("Energy dispersion")
         else:

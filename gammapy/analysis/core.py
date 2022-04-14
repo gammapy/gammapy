@@ -135,9 +135,9 @@ class Analysis:
 
         log.info("Fetching observations.")
         ids = self._make_obs_table_selection()
-
+        required_irf = [_.value for _ in observations_settings.required_irf]
         self.observations = self.datastore.get_observations(
-            ids, skip_missing=True, required_irf=observations_settings.required_irf
+            ids, skip_missing=True, required_irf=required_irf
         )
 
         if observations_settings.obs_time.start is not None:
