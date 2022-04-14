@@ -1138,9 +1138,9 @@ class Models(DatasetModels, collections.abc.MutableSequence):
         del self._models[self.index(key)]
 
     def __setitem__(self, key, model):
-        from gammapy.modeling.models import FoVBackgroundModel, SkyModel
+        from gammapy.modeling.models import FoVBackgroundModel, SkyModel, TemplateNPredModel
 
-        if isinstance(model, (SkyModel, FoVBackgroundModel)):
+        if isinstance(model, (SkyModel, FoVBackgroundModel, TemplateNPredModel)):
             self._models[self.index(key)] = model
         else:
             raise TypeError(f"Invalid type: {model!r}")
