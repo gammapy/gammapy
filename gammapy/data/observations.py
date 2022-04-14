@@ -109,12 +109,13 @@ class Observation:
     def available_hdus(self):
         """Which HDUs are available"""
         available_hdus = []
-        keys = ["_events", "_gti", "aeff", "edisp", "psf", "bkg", "rad_max"]
+        keys = ["_events", "_gti", "aeff", "edisp", "psf", "bkg", "_rad_max"]
         hdus = ["events", "gti", "aeff", "edisp", "psf", "bkg", "rad_max"]
         for key, hdu in zip(keys, hdus):
             available = self.__dict__.get(key, False)
-            available_hdu = self.__dict__.get(f"_{key}_hdu", False)
-            if available or available_hdu:
+            available_hdu = self.__dict__.get(f"_{hdu}_hdu", False)
+            available_hdu_ = self.__dict__.get(f"_{key}_hdu", False)
+            if available or available_hdu or available_hdu_:
                 available_hdus.append(hdu)
         return available_hdus
 
