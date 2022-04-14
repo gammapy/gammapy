@@ -63,14 +63,6 @@ def test_datastore_from_file(tmpdir):
 
     assert data_store.obs_table["OBS_ID"][0] == 20136
 
-@requires_data()
-def test_datastore_from_events():
-    # Test that `DataStore.from_events_files` works.
-    # The real tests for `DataStoreMaker` are below.
-    path = "$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_110380.fits"
-    data_store = DataStore.from_events_files([path])
-    assert len(data_store.obs_table) == 1
-    assert len(data_store.hdu_table) == 6
 
 @requires_data()
 def test_datastore_get_observations(data_store, caplog):
@@ -150,6 +142,16 @@ def data_store_dc1(monkeypatch):
     caldb_path = Path(os.environ["GAMMAPY_DATA"]) / Path("cta-1dc/caldb")
     monkeypatch.setenv("CALDB", str(caldb_path))
     return DataStore.from_events_files(paths)
+
+@requires_data()
+def test_datastore_from_events(data_store_dc1):
+    # data_store_dc1 fixture is needed to set CALDB
+    # Test that `DataStore.from_events_files` works.
+    # The real tests for `DataStoreMaker` are below.
+    path = "$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_110380.fits"
+    data_store = DataStore.from_events_files([path])
+    assert len(data_store.obs_table) == 1
+    assert len(data_store.hdu_table) == 6
 
 
 @requires_data()
