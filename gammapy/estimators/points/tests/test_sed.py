@@ -399,6 +399,9 @@ def test_run_template_npred(fpe_map_pwl, tmpdir):
     model = TemplateNPredModel(dataset.background, datasets_names=[dataset.name])
     models.append(model)
     dataset.models = models
+    
+    fpe.run(dataset)
+    fpe.sum_over_energy_groups = True
     fpe.run(dataset)
 
 @requires_data()

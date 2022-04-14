@@ -203,7 +203,10 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
             models_copy = Models(datasets.models.copy())
             for k, m in enumerate(models_copy):
                 if m.tag == "TemplateNPredModel":
-                    models_copy[k] = m.slice_by_energy(energy_min, energy_max)
+                    m_sliced = m.slice_by_energy(energy_min, energy_max)
+                    if self.sum_over_energy_groups:
+                        m_sliced.map = m_sliced.map.sum_over_axes(keepdims=True)
+                    models_copy[k] = m_sliced
             datasets_sliced.models = models_copy
             return super().run(datasets=datasets_sliced)
         else:
