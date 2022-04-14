@@ -11,6 +11,9 @@ from gammapy.datasets.flux_points import _get_reference_model
 from gammapy.maps import MapAxis
 from gammapy.modeling import Fit
 from gammapy.utils.deprecation import deprecated_attribute
+from gammapy.modeling.models import Models
+from gammapy.utils.pbar import progress_bar
+from gammapy.utils.table import table_from_row_data
 from ..flux import FluxEstimator
 from .core import FluxPoints
 
@@ -197,7 +200,11 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
             )
 
         if len(datasets_sliced) > 0:
-            datasets_sliced.models = datasets.models.copy()
+            models_copy = Models(datasets.models.copy())
+            for k, m in enumerate(models_copy):
+                if m.tag == "TemplateNPredModel":
+                    models_copy[k] = m.slice_by_energy(energy_min, energy_max)
+            datasets_sliced.models = models_copy
             return super().run(datasets=datasets_sliced)
         else:
             log.warning(f"No dataset contribute in range {energy_min}-{energy_max}")

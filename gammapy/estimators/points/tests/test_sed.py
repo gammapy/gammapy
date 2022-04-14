@@ -22,8 +22,10 @@ from gammapy.modeling.models import (
     Models,
     PiecewiseNormSpectralModel,
     PowerLawSpectralModel,
+    TemplateNPredModel,
     SkyModel,
     TemplateSpatialModel,
+    Models,
 )
 from gammapy.utils import parallel
 from gammapy.utils.testing import requires_data, requires_dependency
@@ -389,6 +391,15 @@ def test_run_map_pwl_reoptimize(fpe_map_pwl_reoptimize):
     actual = table["stat_scan"][0] - table["stat"][0]
     assert_allclose(actual, [9.788123, 0.486066, 17.603708], rtol=1e-2)
 
+@requires_dependency("iminuit")
+def test_run_template_npred(fpe_map_pwl, tmpdir):
+    datasets, fpe = fpe_map_pwl
+    dataset = datasets[0]
+    models = Models(dataset.models)
+    model = TemplateNPredModel(dataset.background, datasets_names=[dataset.name])
+    models.append(model)
+    dataset.models = models
+    fpe.run(dataset)
 
 @requires_data()
 def test_reoptimize_no_free_parameters(fpe_pwl, caplog):
