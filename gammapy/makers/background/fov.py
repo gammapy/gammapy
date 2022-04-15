@@ -2,6 +2,7 @@
 """FoV background estimation."""
 import logging
 import numpy as np
+from gammapy.datasets import SpectrumDataset
 from gammapy.maps import Map
 from gammapy.modeling import Fit
 from gammapy.modeling.models import FoVBackgroundModel, Model
@@ -191,6 +192,9 @@ class FoVBackgroundMaker(Maker):
             Input map dataset.
 
         """
+        if isinstance(dataset, SpectrumDataset):
+            raise TypeError(f"FoVBackgroundMAker does not support {type(dataset)}.")
+
         mask_fit = dataset.mask_fit
         if mask_fit:
             dataset.mask_fit *= self.make_exclusion_mask(dataset)
