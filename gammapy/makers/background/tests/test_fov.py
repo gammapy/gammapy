@@ -5,9 +5,9 @@ from numpy.testing import assert_allclose
 from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
 from gammapy.data import DataStore
-from gammapy.datasets import MapDataset
+from gammapy.datasets import MapDataset, SpectrumDataset
 from gammapy.makers import FoVBackgroundMaker, MapDatasetMaker, SafeMaskMaker
-from gammapy.maps import MapAxis, WcsGeom
+from gammapy.maps import MapAxis, WcsGeom, RegionGeom
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
     FoVBackgroundModel,
@@ -307,3 +307,19 @@ def test_fov_bkg_maker_mask_fit_handling(obs_dataset, exclusion_mask):
     assert_allclose(model.norm.value, 0.9975, rtol=1e-3)
     assert_allclose(model.norm.error, 0.1115, rtol=1e-3)
     assert_allclose(model.tilt.value, 0.0, rtol=1e-2)
+
+@requires_data()
+def test_fov_bkg_maker_spectrumdataset(obs_dataset):
+    from regions import CircleSkyRegion
+    maker = FoVBackgroundMaker()
+    energy_axis = MapAxis.from_edges([1, 10], unit="TeV", name="energy", interp="log")
+    region = CircleSkyRegion(obs_dataset._geom.center_skydir, Angle('0.1 deg'))
+    geom = RegionGeom.create(region, axes=[energy_axis])
+    dataset = SpectrumDataset.create(geom)
+
+    with pytest.raises(TypeError):
+        maker.run(dataset)
+
+    region_dataset = obs_dataset.to_region_map_dataset(region)
+    with pytest.raises(TypeError):
+        maker.run(region_dataset)
