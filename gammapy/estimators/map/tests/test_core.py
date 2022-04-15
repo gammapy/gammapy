@@ -425,3 +425,18 @@ def test_flux_map_from_dict_inconsistent_units(wcs_flux_map, reference_model):
     assert flux_map.norm.unit == ""
     assert_allclose(flux_map.norm_err.data[:, 0, 0], 0.1)
     assert flux_map.norm_err.unit == ""
+
+def test_flux_map_check_node_types(wcs_flux_map, region_map_flux_estimate, reference_model):
+    ref_map = FluxMaps(wcs_flux_map, reference_model)
+    ref_region_map = FluxMaps(region_map_flux_estimate, reference_model)
+
+    assert ref_map.dnde.geom.axes[0].node_type == 'center'
+    assert ref_map.e2dnde.geom.axes[0].node_type == 'center'
+    assert ref_map.flux.geom.axes[0].node_type == 'edges'
+    assert ref_map.eflux.geom.axes[0].node_type == 'edges'
+
+    assert ref_region_map.dnde_err.geom.axes[0].node_type == 'center'
+    assert ref_region_map.e2dnde_ul.geom.axes[0].node_type == 'center'
+    assert ref_region_map.flux_err.geom.axes[0].node_type == 'edges'
+    assert ref_region_map.eflux_ul.geom.axes[0].node_type == 'edges'
+
