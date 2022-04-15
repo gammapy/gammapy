@@ -2368,6 +2368,13 @@ class MapDatasetOnOff(MapDataset):
 
         return hdulist
 
+
+    @classmethod
+    def _read_lazy(cls, filename, name=None, cache=True, format="gadf"):
+        raise NotImplementedError(
+                f"Lazy loading is not implemented for {cls}, please use option lazy=False."
+                )
+
     @classmethod
     def from_hdulist(cls, hdulist, name=None, format="gadf"):
         """Create map dataset from list of HDUs.
