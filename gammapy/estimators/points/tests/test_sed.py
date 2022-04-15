@@ -392,6 +392,7 @@ def test_run_map_pwl_reoptimize(fpe_map_pwl_reoptimize):
     assert_allclose(actual, [9.788123, 0.486066, 17.603708], rtol=1e-2)
 
 @requires_dependency("iminuit")
+@requires_data()
 def test_run_template_npred(fpe_map_pwl, tmpdir):
     datasets, fpe = fpe_map_pwl
     dataset = datasets[0]
