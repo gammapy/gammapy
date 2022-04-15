@@ -192,7 +192,7 @@ class FoVBackgroundMaker(Maker):
 
         """
         if isinstance(dataset.counts.geom, RegionGeom):
-            raise TypeError(f"FoVBackgroundMaker does not support region based datasets.")
+            raise TypeError("FoVBackgroundMaker does not support region based datasets.")
 
         mask_fit = dataset.mask_fit
         if mask_fit:
