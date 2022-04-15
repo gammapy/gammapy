@@ -447,21 +447,27 @@ def test_interp_to_geom():
     assert interp_hpx_map.geom == hpx_geom_target
 
     # Preserving the counts
+    binsz = 0.2 * u.deg
     geom_initial = WcsGeom.create(
         skydir=(20, 20),
-        width=(5, 5),
+        width=(1, 1),
         binsz=0.2 * u.deg,
     )
 
+    factor = 2
     test_map = Map.from_geom(geom_initial, unit="")
-    test_map.data = value * np.ones(test_map.data.shape)
+    test_map.data = value * np.eye(test_map.data.shape[0])
     geom_target = WcsGeom.create(
         skydir=(20, 20),
-        width=(5, 5),
-        binsz=0.1 * u.deg,
+        width=(1.5, 1.5),
+        binsz=binsz/factor,
     )
-    new_map = test_map.interp_to_geom(geom_target, preserve_counts=True)
-    assert np.floor(np.sum(new_map.data)) == np.sum(test_map.data)
+    new_map = test_map.interp_to_geom(geom_target,
+                                      fill_value=0.,
+                                      method="nearest",
+                                      preserve_counts=True)
+    assert_allclose(new_map.data[8,8], test_map.data[4,4]/factor**2,  rtol=1e-4)
+    assert_allclose(new_map.data[0,8], 0.,  rtol=1e-4)
 
 
 @requires_dependency("matplotlib")

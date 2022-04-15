@@ -888,7 +888,7 @@ class Map(abc.ABC):
             data = map_copy.get_by_coord(coords)
             data = np.nan_to_num(data, nan=fill_value).astype(bool)
         else:
-            data = map_copy.interp_by_coord(coords, **kwargs)
+            data = map_copy.interp_by_coord(coords, fill_value=fill_value, **kwargs)
 
         if preserve_counts:
             data *= geom.solid_angle().to_value("deg2")
