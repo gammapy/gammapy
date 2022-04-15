@@ -70,11 +70,13 @@ def unit_from_fits_image_hdu(header):
 def energy_unit_format(E):
     """
     Format energy quantities to a string representation that is more comfortable to read
-    by swithcing to the most relevant unit (keV, MeV, GeV, TeV) and changing the float precision.
+    by switching to the most relevant unit (keV, MeV, GeV, TeV) and changing the float precision.
+
     Parameters
     ----------    
     E: `~astropy.units.Quantity`
         Quantity or list of quantities
+
     Returns
     -------
     str : str

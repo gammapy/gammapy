@@ -1066,12 +1066,12 @@ class Map(abc.ABC):
             image_wcs.plot(ax=ax, **kwargs)
 
             if axis.node_type == "center":
-                if axis.name == "energy":
+                if axis.name == "energy" or axis.name == "energy_true":
                     info =  energy_unit_format(axis.center[idx])
                 else:
                     info = f"{axis.center[idx]:.1f}"
             else:
-                if axis.name == "energy":
+                if axis.name == "energy" or axis.name == "energy_true":
                     info = f"{energy_unit_format(axis.edges[idx])} - {energy_unit_format(axis.edges[idx+1])}"
                 else:
                     info = f"{axis.edges[idx]:.1f} - {axis.edges[idx + 1]:.1f} "
@@ -1136,11 +1136,11 @@ class Map(abc.ABC):
 
         for axis in self.geom.axes:
             if axis.node_type == "center":
-                if axis.name == "energy":
+                if axis.name == "energy" or axis.name == "energy_true":
                     options =  energy_unit_format(axis.center)
                 else:
                     options = axis.as_plot_labels
-            elif axis.name == "energy":
+            elif axis.name == "energy" or axis.name == "energy_true":
                 E = energy_unit_format(axis.edges)
                 options = [f"{E[i]} - {E[i+1]}" for i in range(len(E)-1)]
             else:
