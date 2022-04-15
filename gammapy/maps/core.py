@@ -7,6 +7,7 @@ import numpy as np
 from astropy import units as u
 from astropy.io import fits
 from gammapy.utils.scripts import make_path
+from gammapy.utils.units import energy_unit_format
 from .axes import MapAxis
 from .coord import MapCoord
 from .geom import pix_tuple_to_idx
@@ -1057,10 +1058,15 @@ class Map(abc.ABC):
             image_wcs.plot(ax=ax, **kwargs)
 
             if axis.node_type == "center":
-                info = f"{axis.center[idx]:.1f}"
+                if axis.name == "energy" or axis.name == "energy_true":
+                    info =  energy_unit_format(axis.center[idx])
+                else:
+                    info = f"{axis.center[idx]:.1f}"
             else:
-                info = f"{axis.edges[idx]:.1f} - {axis.edges[idx + 1]:.1f} "
-
+                if axis.name == "energy" or axis.name == "energy_true":
+                    info = f"{energy_unit_format(axis.edges[idx])} - {energy_unit_format(axis.edges[idx+1])}"
+                else:
+                    info = f"{axis.edges[idx]:.1f} - {axis.edges[idx + 1]:.1f} "
             ax.set_title(f"{axis.name.capitalize()} " + info)
             lon, lat = ax.coords[0], ax.coords[1]
             lon.set_ticks_position("b")
@@ -1121,7 +1127,16 @@ class Map(abc.ABC):
         interact_kwargs = {}
 
         for axis in self.geom.axes:
-            options = axis.as_plot_labels
+            if axis.node_type == "center":
+                if axis.name == "energy" or axis.name == "energy_true":
+                    options =  energy_unit_format(axis.center)
+                else:
+                    options = axis.as_plot_labels
+            elif axis.name == "energy" or axis.name == "energy_true":
+                E = energy_unit_format(axis.edges)
+                options = [f"{E[i]} - {E[i+1]}" for i in range(len(E)-1)]
+            else:
+                options = axis.as_plot_labels
             interact_kwargs[axis.name] = SelectionSlider(
                 options=options,
                 description=f"Select {axis.name}:",
