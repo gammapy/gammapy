@@ -1023,10 +1023,6 @@ class Map(abc.ABC):
             Preserve the integral over each bin.  This should be true
             if the map is an integral quantity (e.g. counts) and false if
             the map is a differential quantity (e.g. intensity)
-        fill_value : None or float value
-            The value to use for points outside of the interpolation domain.
-            If None, values outside the domain are extrapolated.
-            Used only if the non-spatial axes require to be interpolated.
         method : {'oversampling', 'polygon'}
             Method to reproject data to a new projection
             -oversampling: the base map is oversampled and 
@@ -1036,6 +1032,14 @@ class Map(abc.ABC):
         oversampling_factor : int
            Minimal factor between the bin size of the output map and the oversampled base map.
            Used only for the oversampling method.
+        interp_axes: bool
+            If False return a map with the original non-spatial axes,
+            otherwise interpolate to the axes of the target geom if necessary
+            (after the spatial reprojection).
+        fill_value : None or float value
+            The value to use for points outside of the interpolation domain.
+            If None, values outside the domain are extrapolated.
+            Used only if `interp_axes` is True and if the non-spatial axes require to be interpolated.
 
         Returns
         -------
@@ -1044,10 +1048,9 @@ class Map(abc.ABC):
         """
         from .region import RegionGeom
 
-        if isinstance(geom, RegionGeom):
-            raise TypeError(f"Reproject is not supported for {type(geom)}")
-        if isinstance(self.geom, RegionGeom):
-            raise TypeError(f"Reproject is not supported for {type(self.geom)}")
+        if isinstance(geom, RegionGeom) or isinstance(self.geom, RegionGeom):
+            raise TypeError(f"Reproject from {type(self.geom)} to {type(geom)} is not supported")
+
         
         if geom.is_image:
             axes = [ax.copy() for ax in self.geom.axes]
@@ -1056,17 +1059,15 @@ class Map(abc.ABC):
         elif geom.ndim != self.geom.ndim:
             raise TypeError("Invalid axes in the target geom.")
         else:
-            axes_eq = np.all(
-                [ax0 == ax1 for ax0, ax1 in zip(geom.axes, self.geom.axes)]
-            )
+            axes_eq = geom.axes == self.geom.axes
 
         if not axes_eq:
             target_geom = geom.copy(axes=self.geom.axes) 
-            requires_interp = True
+            interp_axes &= True
         else:
             target_geom = geom
-            requires_interp = False
-        
+            interp_axes &= False
+
         if method == "oversampling":
             new_map = self._reproject_oversampling(target_geom,
                                                    preserve_counts=preserve_counts,
@@ -1077,12 +1078,15 @@ class Map(abc.ABC):
         else:
             raise TypeError("Available methods are 'oversampling' or 'polygon'.")
 
-        if requires_interp:
+        if interp_axes:
             return new_map.interp_to_geom(geom, preserve_counts=preserve_counts, fill_value=fill_value)
         else:
             return new_map
 
     def _reproject_oversampling(self, geom, preserve_counts=False, oversampling_factor=10):
+        """ reproject using oversampling: the base map is oversampled and 
+        its bins are re-distributed into a map with the target geom."""
+
         output_map = Map.from_geom(geom, unit=self.unit)
         base_factor = geom.pixel_scales.min()/self.geom.pixel_scales.min()
         if base_factor >= oversampling_factor:
@@ -1100,25 +1104,30 @@ class Map(abc.ABC):
 
 
     def _reproject_polygon(self, geom, preserve_counts=False):
+        """reproject using flux-conserving spherical polygon intersection method
+        from reproject.reproject_exact """
+
         from reproject import reproject_exact
         from .hpx import HpxGeom
 
-        if isinstance(geom, HpxGeom):
-            raise TypeError(f"Reproject method 'polygon' is not supported for {type(geom)}")
-        if isinstance(self.geom, HpxGeom):
-            raise TypeError(f"Reproject method 'polygon' is not supported for {type(self.geom)}")
+        if preserve_counts:
+            raise ValueError("preserve_counts=True option not supported for 'polygon' method")
+
+        if isinstance(geom, HpxGeom) or isinstance(self.geom, HpxGeom):
+            raise TypeError(f"Reproject from {type(self.geom)} to {type(geom)} is not supported for 'polygon' method ")
 
         data = np.empty(geom.data_shape)
 
         for img, idx in self.iter_by_image():
+            if preserve_counts:
+                solid_angle = self.geom.solid_angle().to_value("deg2")[idx]
+                print(solid_angle[idx].shape)
+                img = img.copy() / solid_angle
             vals, footprint = reproject_exact(
                 (img, self.geom.wcs), geom.wcs, shape_out=data[idx].shape
             )
             data[idx] = vals
             
-        if preserve_counts:
-            data *= geom.solid_angle().to_value("deg2")
-
         return self._init_copy(geom=geom, data=data)
 
     def fill_events(self, events):

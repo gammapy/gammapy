@@ -511,6 +511,9 @@ def test_reproject_2d():
     map1_new = map1_repro.reproject(geom1_large, preserve_counts=True)
     assert_allclose(np.sum(map1_repro), np.sum(map1_new), rtol=1e-5)
 
+    with pytest.raises(ValueError):
+        map1_repro = map1.reproject(geom2, method="polygon", preserve_counts=True)
+
     map1_repro = map1.reproject(geom2, preserve_counts=False)
     map1_new = map1_repro.reproject(geom1_large, preserve_counts=False)
     assert_allclose(np.sum(map1_repro*geom2.solid_angle()),
@@ -622,6 +625,8 @@ def test_map_reproject_wcs_to_hpx():
     actual = m_r.get_by_coord({"lon": 0, "lat": 0, "energy": [1.0, 3.16227766, 10.0]})
     assert_allclose(actual, [65.0, 186.0, 307.0], rtol=1e-3)
 
+    with pytest.raises(TypeError):
+        m.reproject(geom_hpx, method="polygon")
 
 def test_map_reproject_hpx_to_wcs():
     axis = MapAxis.from_bounds(
@@ -638,7 +643,10 @@ def test_map_reproject_hpx_to_wcs():
     m_r = m.reproject(geom_wcs)
     actual = m_r.get_by_coord({"lon": 0, "lat": 0, "energy": [1.0, 3.16227766, 10.0]})
     assert_allclose(actual, [287.5, 1055.5, 1823.5], rtol=1e-3)
-    
+
+    with pytest.raises(TypeError):
+        m.reproject(geom_hpx, method="polygon")
+
 @requires_dependency("reproject")
 def test_map_reproject_wcs_to_wcs_with_axes():
     energy_nodes = np.arange(3)
