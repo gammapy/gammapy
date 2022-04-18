@@ -634,13 +634,13 @@ def test_template_spectral_model_evaluate_tiny():
 
 
 def test_template_spectral_model_single_value():
-    energy = [1]*u.TeV
-    values = [1e-12]* u.Unit("TeV-1 s-1 cm-2")
+    energy = [1] * u.TeV
+    values = [1e-12] * u.Unit("TeV-1 s-1 cm-2")
 
     model = TemplateSpectralModel(
         energy=energy, values=values
     )
-    result = model.evaluate([0.5, 2]*u.TeV)
+    result = model(energy=[0.5, 2] * u.TeV)
 
     assert_allclose(result.data, 1e-12)
 
