@@ -493,15 +493,21 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         for energy_min, energy_max in progress_bar(
             energy_axis.iter_by_edges, desc="Energy bins"
         ):
-            sliced_dataset = dataset.slice_by_energy(
+            dataset_sliced = dataset.slice_by_energy(
                 energy_min=energy_min, energy_max=energy_max, name=dataset.name
             )
 
             if self.sum_over_energy_groups:
-                sliced_dataset = sliced_dataset.to_image(name=dataset.name)
+                dataset_sliced = dataset_sliced.to_image(name=dataset.name)
 
-            sliced_dataset.models = dataset_models
-            result = self.estimate_flux_map(sliced_dataset)
+            if dataset_models is not None:
+                models_sliced = dataset_models.slice_by_energy(
+                    energy_min=energy_min,
+                    energy_max=energy_max,
+                    sum_over_energy_groups=self.sum_over_energy_groups,
+                )
+                dataset_sliced.models = models_sliced
+            result = self.estimate_flux_map(dataset_sliced)
             results.append(result)
 
         maps = Maps()

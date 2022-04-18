@@ -200,14 +200,14 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
             )
 
         if len(datasets_sliced) > 0:
-            models_copy = Models(datasets.models.copy())
-            for k, m in enumerate(models_copy):
-                if m.tag == "TemplateNPredModel":
-                    m_sliced = m.slice_by_energy(energy_min, energy_max)
-                    if self.sum_over_energy_groups:
-                        m_sliced.map = m_sliced.map.sum_over_axes(keepdims=True)
-                    models_copy[k] = m_sliced
-            datasets_sliced.models = models_copy
+            if datasets.models is not None:
+                models_sliced = datasets.models.slice_by_energy(
+                    energy_min=energy_min,
+                    energy_max=energy_max,
+                    sum_over_energy_groups=self.sum_over_energy_groups,
+                )
+                datasets_sliced.models = models_sliced
+
             return super().run(datasets=datasets_sliced)
         else:
             log.warning(f"No dataset contribute in range {energy_min}-{energy_max}")

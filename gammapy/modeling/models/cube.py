@@ -1094,12 +1094,12 @@ class TemplateNPredModel(ModelBase):
         self.spectral_model.tilt.value = 0
 
     def slice_by_energy(self, energy_min=None, energy_max=None, name=None):
-        """Select and slice datasets in energy range
+        """Select and slice model template in energy range
 
         Parameters
         ----------
         energy_min, energy_max : `~astropy.units.Quantity`
-            Energy bounds to compute the flux point for.
+            Energy bounds of the slice.
         name : str
             Name of the sliced model.
 

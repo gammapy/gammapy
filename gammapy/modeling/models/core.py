@@ -681,6 +681,30 @@ class DatasetModels(collections.abc.Sequence):
             models=models, covariance_data=self.covariance.data.copy()
         )
 
+    def slice_by_energy(self, energy_min, energy_max, sum_over_energy_groups=False):
+        """Copy models and slice TemplateNPredModel in energy range
+        
+        Parameters
+        ----------
+        energy_min, energy_max : `~astropy.units.Quantity`
+            Energy bounds of the slice
+        sum_over_energy_groups : bool
+            Whether to sum over the energy groups or not.
+        
+        Returns
+        -------
+        models : `Models`
+            Sliced models
+        """
+        models_sliced = Models(self.copy())
+        for k, m in enumerate(models_sliced):
+            if m.tag == "TemplateNPredModel":
+                m_sliced = m.slice_by_energy(energy_min, energy_max)
+                if sum_over_energy_groups:
+                    m_sliced.map = m_sliced.map.sum_over_axes(keepdims=True)
+                models_sliced[k] = m_sliced
+        return models_sliced
+
     def select(
         self,
         name_substring=None,
