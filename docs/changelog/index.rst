@@ -1,15 +1,10 @@
 .. _changelog:
 
-*********
-Changelog
-*********
+*************
+Release Notes
+*************
 
-This is the changelog for Gammapy.
-For now we use a one-line description of every pull request, roughly in chronological order.
-
-We don't list every pull request.
-Maintenance and cleanup changes (e.g. to update astropy-helpers or fix the docs build)
-are not of interest to users and are not listed here.
+This is the list of changes to Gammapy between each release. For full details, see the `commit logs <https://github.com/gammapy/gammapy/commits/master>`_.
 
 A complete list of Gammapy contributors is at https://gammapy.org/team.html
 
