@@ -632,7 +632,7 @@ class FluxPoints(FluxMaps):
             A new FluxPoints object with modified upper limits
         """
 
-        if self.has_stat_profiles is False:
+        if not self.has_stat_profiles:
             raise ValueError(
                 "Stat profiles not present. Upper limit computation is not possible"
             )

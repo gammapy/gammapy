@@ -645,12 +645,14 @@ def test_recompute_ul():
         energy_edges=[1, 3, 30] * u.TeV, selection_optional=selection, n_sigma_ul=2
     )
     lightcurve = estimator.run(datasets)
-    table = lightcurve.to_table(format="lightcurve", sed_type="dnde")
-    assert_allclose(table["dnde_ul"][0], [3.26070325e-13, 1.15935401e-14], rtol=1e-3)
+    assert_allclose(
+        lightcurve.dnde_ul.data[0], [[[3.260703e-13]], [[1.159354e-14]]], rtol=1e-3
+    )
 
     new_lightcurve = lightcurve.recompute_ul(n_sigma_ul=4)
-    new_table = new_lightcurve.to_table(format="lightcurve", sed_type="dnde")
-    assert_allclose(new_table["dnde_ul"][0], [3.77456115e-13, 1.37442101e-14], rtol=1e-3)
+    assert_allclose(
+        new_lightcurve.dnde_ul.data[0], [[[3.774561e-13]], [[1.374421e-14]]], rtol=1e-3
+    )
     assert new_lightcurve.meta["n_sigma_ul"] == 4
 
     # test if scan is not present
