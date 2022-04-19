@@ -1543,6 +1543,27 @@ class Map(abc.ABC):
             data=np.stack(data), geom=geom.to_cube(axes=[axis]), unit=maps[0].unit
         )
 
+    def split_by_axis(self, axis_name):
+        """
+        Split a Map along an axis into multiple maps
+
+        Parameters:
+        -----------
+        axis_name : str
+            Name of the axis to split
+
+        Returns:
+        -------
+        maps: list
+            A list of `~gammapy.maps.Map`
+        """
+        maps = []
+        axis = self.geom.axes[axis_name]
+        for idx in range(axis.nbin):
+            m = self.slice_by_idx({axis_name: idx})
+            maps.append(m)
+        return maps
+
     def to_cube(self, axes):
         """Append non-spatial axes to create a higher-dimensional Map.
 

@@ -564,3 +564,22 @@ def test_iter_by_axis():
     for m in m_4d.iter_by_axis(axis_name="energy", keepdims=False):
         assert m.data.ndim == 3
         assert m.geom.axes.names == ["time"]
+
+
+def test_split_by_axis():
+    time_axis = MapAxis.from_bounds(
+        0,
+        24,
+        nbin=24,
+        unit="hour",
+        name="time",
+    )
+    energy_axis = MapAxis.from_bounds(
+        1, 100, nbin=4, unit="TeV", name="energy", interp="log"
+    )
+    m_4d = Map.create(
+        binsz=0.02, width=(10, 5), frame="galactic", axes=[energy_axis, time_axis]
+    )
+    maps = m_4d.split_by_axis("time")
+    assert len(maps) == 24
+
