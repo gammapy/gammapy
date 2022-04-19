@@ -1,12 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
-from itertools import combinations
 from astropy.coordinates import Angle, SkyOffsetFrame
 from astropy.table import Table
-import astropy.units as u
 from gammapy.irf import EDispMap, PSFMap, FoVAlignment
-from gammapy.maps import Map, RegionGeom, RegionNDMap
+from gammapy.maps import Map, RegionNDMap
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.stats import WStatCountsStatistic
 from gammapy.utils.coordinates import sky_to_fov
