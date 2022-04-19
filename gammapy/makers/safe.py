@@ -223,9 +223,11 @@ class SafeMaskMaker(Maker):
     def make_mask_energy_bkg_peak(dataset):
         """Make safe energy mask based on the binned background.
 
-        The energy threshold is defined as the upper edge of the energy
-        bin with the highest predicted background rate. This method is motivated
-        by its use in the HESS DL3 validation paper: https://arxiv.org/pdf/1910.08088.pdf
+        The energy threshold is defined as the lower edge of the energy
+        bin with the highest predicted background rate. This is to ensure analysis in
+        a region where a  Powerlaw approximation to the background spectrum is valid.
+        The is motivated by its use in the HESS DL3
+        validation paper: https://arxiv.org/pdf/1910.08088.pdf
 
         Parameters
         ----------
@@ -241,7 +243,7 @@ class SafeMaskMaker(Maker):
         background_spectrum = dataset.npred_background().get_spectrum()
         idx = np.argmax(background_spectrum.data, axis=0)
         energy_axis = geom.axes["energy"]
-        energy_min = energy_axis.pix_to_coord(idx)
+        energy_min = energy_axis.edges[idx]
         return geom.energy_mask(energy_min=energy_min)
 
     @staticmethod

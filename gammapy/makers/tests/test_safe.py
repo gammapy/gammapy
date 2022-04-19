@@ -73,7 +73,7 @@ def test_safe_mask_maker(observations, caplog):
     assert_allclose(mask_edisp_bias_offset.data.sum(), 1694)
 
     mask_bkg_peak = safe_mask_maker.make_mask_energy_bkg_peak(dataset)
-    assert_allclose(mask_bkg_peak.data.sum(), 1815)
+    assert_allclose(mask_bkg_peak.data.sum(), 1936)
     assert "WARNING" in [_.levelname for _ in caplog.records]
     message1 = "No default thresholds defined for obs 110380"
     assert message1 in [_.message for _ in caplog.records]
@@ -85,6 +85,14 @@ def test_safe_mask_maker(observations, caplog):
     mask_edisp_bias_noroot = safe_mask_maker_noroot.make_mask_energy_edisp_bias(dataset)
     assert_allclose(mask_aeff_max_noroot.data.sum(), 1815)
     assert_allclose(mask_edisp_bias_noroot.data.sum(), 1936)
+
+    ## test if the peak is in the first bin
+    axis = MapAxis.from_bounds(1.0, 10, nbin=6, unit="TeV", name="energy", interp="log")
+    geom = WcsGeom.create(npix=(5, 5), axes=[axis], skydir=obs.pointing_radec)
+    empty_dataset = MapDataset.create(geom=geom, energy_axis_true=axis_true)
+    dataset = dataset_maker.run(empty_dataset, obs)
+    mask_bkg_peak = safe_mask_maker.make_mask_energy_bkg_peak(dataset)
+    assert np.all(mask_bkg_peak)
 
 
 @requires_data()
