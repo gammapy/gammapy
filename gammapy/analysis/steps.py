@@ -79,8 +79,14 @@ class DataSelectionAnalysisStep(AnalysisStepBase):
         if filepath is not None and os.path.exists(filepath) and not self.overwrite:
             self.data.read_datasets()
         else:
-            ObservationsAnalysisStep(self.overwrite).run(self.data)
-            DatasetsAnalysisStep(self.overwrite).srun(self.data)
+            obs_step = ObservationsAnalysisStep(
+                self.config, log=self.log, overwrite=self.overwrite
+            )
+            datasets_step = DatasetsAnalysisStep(
+                self.config, log=self.log, overwrite=self.overwrite
+            )
+            obs_step.run(self.data)
+            datasets_step.run(self.data)
             self.data.write_datasets()
 
 
@@ -426,7 +432,7 @@ class FitAnalysisStep(AnalysisStepBase):
         """Fitting reduced datasets to model."""
         if not self.data.models:
             raise RuntimeError("Missing models")
-            
+
         fit_settings = self.config.fit
         for dataset in self.data.datasets:
             if fit_settings.fit_range:
@@ -447,10 +453,12 @@ class FluxPointsAnalysisStep(AnalysisStepBase):
 
     def _run(self):
         """Calculate flux points for a specific model component."""
-        
+
         if not self.data.datasets:
-            raise RuntimeError("No datasets defined. Impossible to compute flux points.")
-            
+            raise RuntimeError(
+                "No datasets defined. Impossible to compute flux points."
+            )
+
         fp_settings = self.config.flux_points
         self.log.info("Calculating flux points.")
 
