@@ -219,7 +219,7 @@ def test_reflected_bkg_maker_no_off(reflected_bkg_maker, observations, caplog):
 
     message1 = (
         f"ReflectedRegionsBackgroundMaker failed. "
-        f"No OFF region found outside exclusion mask for {datasets[0].name}."
+        f"No OFF region found outside exclusion mask for dataset '{datasets[0].name}'."
     )
     message2 = (
         f"ReflectedRegionsBackgroundMaker failed. "
