@@ -7,20 +7,17 @@
 
 Gammapy
 -------
-.. image:: https://img.shields.io/badge/Acknowledge-Cite-blue.svg
-    :target: https://gammapy.org/acknowledging.html
-
 **Date**: |today| **Version**: |version|
 
 **Useful links**:
-:ref:`installation` |
-`Source Repository <https://github.com/gammapy/gammapy/issues>`__ |
+`Web page <https://gammapy.org>`__ |
+`Recipes <https://gammapy.github.io/gammapy-recipes>`__  |
 `Discussions <https://github.com/gammapy/gammapy/discussions>`__ |
-`Tutorials <tutorials/index.html>`__ |
+`Acknowledging <https://gammapy.org/acknowledging.html>`__ |
 `Contact <https://gammapy.org/contact.html>`__
 
 
-`Gammapy <https://gammapy.org>`__ is a community-developed, open-source Python package for gamma-ray
+Gammapy is a community-developed, open-source Python package for gamma-ray
 astronomy built on Numpy, Scipy and Astropy. **It is the core library for the** `CTA`_ **Science Tools**
 but can also be used to analyse data from existing imaging atmospheric Cherenkov telescopes
 (IACTs), such as `H.E.S.S.`_, `MAGIC`_ and `VERITAS`_. It also provides some support
@@ -105,6 +102,7 @@ for `Fermi-LAT`_ and `HAWC`_ data analysis.
 
     getting-started/index
     userguide/index
+    tutorials/index
     api
     development/index
     changelog/index
