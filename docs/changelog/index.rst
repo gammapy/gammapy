@@ -1,11 +1,11 @@
 .. _changelog:
 
 *************
-Release Notes
+Release notes
 *************
 
-This is the list of changes to Gammapy between each release. For full details, see the `commit logs <https://github.com/gammapy/gammapy/commits/master>`_.
-
+This is the list of changes to Gammapy between each release. For full details,
+see the `commit logs <https://github.com/gammapy/gammapy/commits/master>`_.
 A complete list of Gammapy contributors is at https://gammapy.org/team.html
 
 Version 1.0rc (unreleased)
