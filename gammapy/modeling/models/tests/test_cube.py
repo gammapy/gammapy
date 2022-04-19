@@ -243,7 +243,7 @@ def test_background_model_io(tmpdir, background):
     filename = str(tmpdir / "test-bkg-file.fits")
     bkg = TemplateNPredModel(background, filename=filename)
     bkg.spectral_model.norm.value = 2.0
-    bkg.map.write(filename, overwrite=True)
+    bkg.write(overwrite=True)
     bkg_dict = bkg.to_dict()
     bkg_read = bkg.from_dict(bkg_dict)
 
@@ -251,6 +251,11 @@ def test_background_model_io(tmpdir, background):
         bkg_read.evaluate().data.sum(), background.data.sum() * 2.0, rtol=1e-3
     )
     assert bkg_read.filename == filename
+
+def test_background_model_io_missing_file(tmpdir, background):
+    bkg = TemplateNPredModel(background, filename=None)
+    with pytest.raises(IOError):
+        bkg.write(overwrite=True)
 
 
 def test_background_model_copy(background):

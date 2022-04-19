@@ -525,6 +525,9 @@ class DatasetModels(collections.abc.Sequence):
                 and "template" in model.spatial_model.tag
             ):
                 model.spatial_model.write(overwrite=overwrite_templates)
+            if model.tag == "TemplateNPredModel":
+                model.write(overwrite=overwrite_templates)
+
 
         if self._covar_file is not None:
             return {

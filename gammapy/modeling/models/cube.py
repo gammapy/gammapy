@@ -15,6 +15,11 @@ from .core import Model, ModelBase, Models
 from .spatial import ConstantSpatialModel, SpatialModel
 from .spectral import PowerLawNormSpectralModel, SpectralModel, TemplateSpectralModel
 from .temporal import TemporalModel
+import logging
+import os
+
+log = logging.getLogger(__name__)
+
 
 __all__ = [
     "create_fermi_isotropic_diffuse_model",
@@ -916,6 +921,14 @@ class TemplateNPredModel(ModelBase):
 
         return data
 
+    def write(self, overwrite=False):
+        if self.filename is None:
+            raise IOError("Missing filename")
+        elif os.path.isfile(make_path(self.filename)) and not overwrite:
+            log.warning("Template file already exits, and overwrite is False")
+        else:
+            self.map.write(self.filename)
+
     @classmethod
     def from_dict(cls, data):
         from gammapy.modeling.models import (
@@ -939,16 +952,8 @@ class TemplateNPredModel(ModelBase):
 
         if "filename" in data:
             bkg_map = Map.read(data["filename"])
-        elif "map" in data:
-            bkg_map = data["map"]
         else:
-            # TODO: for now create a fake map for serialization,
-            # uptdated in MapDataset.from_dict()
-            axis = MapAxis.from_edges(np.logspace(-1, 1, 2), unit=u.TeV, name="energy")
-            geom = WcsGeom.create(
-                skydir=(0, 0), npix=(1, 1), frame="galactic", axes=[axis]
-            )
-            bkg_map = Map.from_geom(geom)
+            raise IOError("Missing filename")
 
         return cls(
             map=bkg_map,
