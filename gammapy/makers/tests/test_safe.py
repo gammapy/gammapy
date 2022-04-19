@@ -92,7 +92,7 @@ def test_safe_mask_maker(observations, caplog):
     empty_dataset = MapDataset.create(geom=geom, energy_axis_true=axis_true)
     dataset = dataset_maker.run(empty_dataset, obs)
     mask_bkg_peak = safe_mask_maker.make_mask_energy_bkg_peak(dataset)
-    assert_allclose(np.all(mask_bkg_peak), True)
+    assert np.all(mask_bkg_peak)
 
 
 @requires_data()
