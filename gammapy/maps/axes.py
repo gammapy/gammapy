@@ -62,7 +62,7 @@ PLOT_AXIS_LABEL = {
     "time": "Time",
 }
 
-DEFAULT_LABEL_TEMPLATE = '{quantity} [{unit}]'
+DEFAULT_LABEL_TEMPLATE = "{quantity} [{unit}]"
 
 
 class MapAxis:
@@ -280,6 +280,34 @@ class MapAxis:
 
         return mpl_scale[self.interp]
 
+    def to_node_type(self, node_type):
+        """Return MapAxis copy chaning its node type to node_type.
+
+        Parameters
+        ----------
+        node_type : str 'edges' or 'center'
+            the target node type
+
+        Returns
+        -------
+        axis : `~gammapy.maps.MapAxis`
+            the new MapAxis
+        """
+        if node_type == self.node_type:
+            return self
+        else:
+            if node_type == "center":
+                nodes = self.center
+            else:
+                nodes = self.edges
+            return self.__class__(
+                nodes=nodes,
+                interp=self.interp,
+                name=self.name,
+                node_type=node_type,
+                unit=self.unit,
+            )
+
     def format_plot_xaxis(self, ax):
         """Format plot axis
 
@@ -296,8 +324,9 @@ class MapAxis:
         ax.set_xscale(self.as_plot_scale)
 
         xlabel = DEFAULT_LABEL_TEMPLATE.format(
-                                        quantity=PLOT_AXIS_LABEL.get(self.name, self.name.capitalize())
-                                        , unit=self.unit )
+            quantity=PLOT_AXIS_LABEL.get(self.name, self.name.capitalize()),
+            unit=self.unit,
+        )
         ax.set_xlabel(xlabel)
         xmin, xmax = self.bounds
         if not xmin == xmax:
@@ -2214,8 +2243,9 @@ class TimeMapAxis:
         from matplotlib.dates import DateFormatter
 
         xlabel = DEFAULT_LABEL_TEMPLATE.format(
-                                        quantity=PLOT_AXIS_LABEL.get(self.name, self.name.capitalize())
-                                        , unit=self.time_format )
+            quantity=PLOT_AXIS_LABEL.get(self.name, self.name.capitalize()),
+            unit=self.time_format,
+        )
         ax.set_xlabel(xlabel)
 
         if self.time_format == "iso":

@@ -61,7 +61,7 @@ def gti():
 
 @pytest.fixture(scope="session")
 def diffuse_model():
-    axis = MapAxis.from_nodes([0.1, 100], name="energy_true", unit="TeV", interp="log")
+    axis = MapAxis.from_edges([0.1, 1 ,100], name="energy_true", unit="TeV", interp="log")
     m = Map.create(
         npix=(4, 3), binsz=2, axes=[axis], unit="cm-2 s-1 MeV-1 sr-1", frame="galactic"
     )

@@ -338,7 +338,7 @@ class HpxNDMap(HpxMap):
         else:
             return self.copy()
 
-    def interp_by_coord(self, coords, method="linear"):
+    def interp_by_coord(self, coords, method="linear", fill_value=None):
         # inherited docstring
         coords = MapCoord.create(coords, frame=self.geom.frame)
 
@@ -349,7 +349,7 @@ class HpxNDMap(HpxMap):
         else:
             raise ValueError(f"Invalid interpolation method: {method!r}")
 
-    def interp_by_pix(self, pix, method=None):
+    def interp_by_pix(self, pix, method=None, fill_value=None):
         """Interpolate map values at the given pixel coordinates."""
         raise NotImplementedError
 

@@ -65,11 +65,14 @@ class FrameEnum(str, Enum):
     galactic = "galactic"
 
 
-class RequiredIRFEnum(str, Enum):
+class RequiredHDUEnum(str, Enum):
+    events = "events"
+    gti = "gti"
     aeff = "aeff"
     bkg = "bkg"
     edisp = "edisp"
     psf = "psf"
+    rad_max = "rad_max"
 
 
 class BackgroundMethodEnum(str, Enum):
@@ -215,7 +218,7 @@ class ObservationsConfig(GammapyBaseConfig):
     obs_file: Path = None
     obs_cone: SpatialCircleConfig = SpatialCircleConfig()
     obs_time: TimeRangeConfig = TimeRangeConfig()
-    required_irf: List[RequiredIRFEnum] = ["aeff", "edisp", "psf", "bkg"]
+    required_irf: List[RequiredHDUEnum] = ["aeff", "edisp", "psf", "bkg"]
 
 
 class LogConfig(GammapyBaseConfig):

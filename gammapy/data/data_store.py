@@ -2,11 +2,11 @@
 import logging
 import subprocess
 from pathlib import Path
+import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from gammapy.utils.scripts import make_path
-from gammapy.utils.table import table_row_to_dict
 from gammapy.utils.testing import Checker
 from .hdu_index_table import HDUIndexTable
 from .obs_table import ObservationTable, ObservationTableChecker
@@ -14,7 +14,14 @@ from .observations import Observation, ObservationChecker, Observations
 
 __all__ = ["DataStore"]
 
+REQUIRED_IRFS = {
+    "full-enclosure": ["aeff", "edisp", "psf", "bkg"],
+    "point-like": ["aeff", "edisp"],
+    "all-optional":  ["aeff", "edisp", "psf", "bkg", "rad_max"],
+}
+
 log = logging.getLogger(__name__)
+log.setLevel(logging.INFO)
 
 
 class DataStore:
@@ -67,6 +74,11 @@ class DataStore:
     def __str__(self):
         return self.info(show=False)
 
+    @property
+    def obs_ids(self):
+        """Return list of obs_ids contained in the datastore."""
+        return np.unique(self.hdu_table["OBS_ID"].data)
+
     @classmethod
     def from_file(cls, filename, hdu_hdu="HDU_INDEX", hdu_obs="OBS_INDEX"):
         """Create a Datastore from a FITS file.
@@ -91,7 +103,9 @@ class DataStore:
 
         hdu_table = HDUIndexTable.read(filename, hdu=hdu_hdu, format="fits")
 
-        obs_table = ObservationTable.read(filename, hdu=hdu_obs, format="fits")
+        obs_table = None
+        if hdu_obs:
+            obs_table = ObservationTable.read(filename, hdu=hdu_obs, format="fits")
 
         return cls(hdu_table=hdu_table, obs_table=obs_table)
 
@@ -136,6 +150,8 @@ class DataStore:
             obs_table_filename = make_path(obs_table_filename)
             if (base_dir / obs_table_filename).exists():
                 obs_table_filename = base_dir / obs_table_filename
+            elif not obs_table_filename.exists():
+                raise IOError(f"File not found : {obs_table_filename}")
         else:
             obs_table_filename = base_dir / cls.DEFAULT_OBS_TABLE
 
@@ -146,14 +162,16 @@ class DataStore:
         hdu_table.meta["BASE_DIR"] = str(base_dir)
 
         if not obs_table_filename.exists():
-            raise OSError(f"File not found: {obs_table_filename}")
-        log.debug(f"Reading {obs_table_filename}")
-        obs_table = ObservationTable.read(obs_table_filename, format="fits")
+            log.info("Cannot find default obs-index table.")
+            obs_table = None
+        else:
+            log.debug(f"Reading {obs_table_filename}")
+            obs_table = ObservationTable.read(obs_table_filename, format="fits")
 
         return cls(hdu_table=hdu_table, obs_table=obs_table)
 
     @classmethod
-    def from_events_files(cls, paths):
+    def from_events_files(cls, events_paths, irfs_paths=None):
         """Create from a list of event filenames.
 
         HDU and observation index tables will be created from the EVENTS header.
@@ -170,16 +188,28 @@ class DataStore:
 
         .. _ctobssim: http://cta.irap.omp.eu/ctools/users/reference_manual/ctobssim.html
 
+        Parameters
+        -------
+        events_paths : list of str or Path
+            List of paths to the events files
+            
+        irfs_paths : str, Path, or list of str or Path
+            Path to the IRFs file. If a list is provided it must be the same length than `events_paths`.
+            If None the events files have to contain CALDB and IRF header keywords to locate the IRF files,
+            otherwise the IRFs are assumed to be contained in the events files.
+        
         Returns
         -------
         data_store : `DataStore`
             Data store
-
+            
         Examples
         --------
         This is how you can access a single event list::
 
         >>> from gammapy.data import DataStore
+        >>> import os
+        >>> os.environ["CALDB"] = os.environ["GAMMAPY_DATA"] + "/cta-1dc/caldb"
         >>> path = "$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_110380.fits"
         >>> data_store = DataStore.from_events_files([path])
         >>> observations = data_store.get_observations()
@@ -204,57 +234,67 @@ class DataStore:
         >>> data_store.hdu_table.write("hdu-index.fits.gz") # doctest: +SKIP
         >>> data_store.obs_table.write("obs-index.fits.gz") # doctest: +SKIP
         """
-        return DataStoreMaker(paths).run()
+        return DataStoreMaker(events_paths, irfs_paths).run()
 
     def info(self, show=True):
         """Print some info."""
         s = "Data store:\n"
         s += self.hdu_table.summary()
         s += "\n\n"
-        s += self.obs_table.summary()
+        if self.obs_table:
+            s += self.obs_table.summary()
+        else:
+            s += "No observation index table."
 
         if show:
             print(s)
         else:
             return s
 
-    def obs(self, obs_id):
+    def obs(self, obs_id, required_irf="full-enclosure"):
         """Access a given `~gammapy.data.Observation`.
 
         Parameters
         ----------
         obs_id : int
             Observation ID.
+        required_irf : list of str or str
+            The list can include the following options:
+            * `events` : Events
+            * `gti` :  Good time intervals
+            * `aeff` : Effective area
+            * `bkg` : Background
+            * `edisp`: Energy dispersion
+            * `psf` : Point Spread Function
+            * `rad_max` : Maximal radius
+            Alternatively single string can be used as shortcut:
+            * `full-enclosure` : ["events", "gti", "aeff", "edisp", "psf", "bkg"]
+            * `point-like` : ["events", "gti", "aeff", "edisp"]
 
         Returns
         -------
         observation : `~gammapy.data.Observation`
             Observation container
+            
         """
-        if obs_id not in self.obs_table["OBS_ID"]:
-            raise ValueError(f"OBS_ID = {obs_id} not in obs index table.")
-
         if obs_id not in self.hdu_table["OBS_ID"]:
             raise ValueError(f"OBS_ID = {obs_id} not in HDU index table.")
 
-        row = self.obs_table.select_obs_id(obs_id=obs_id)[0]
         kwargs = {"obs_id": int(obs_id)}
 
-        # add info from table meta, e.g. the time references
-        kwargs["obs_info"] = {
-            k: v for k, v in self.obs_table.meta.items()
-            if not k.startswith('HDU')  # Ignore GADF structure of index table
-        }
-        kwargs["obs_info"].update(table_row_to_dict(row))
-
-        hdu_list = ["events", "gti", "aeff", "edisp", "psf", "bkg", "rad_max"]
-
-        for hdu in hdu_list:
+        if required_irf == "full-enclosure":
+            hdus = ["events", "gti", "aeff", "edisp", "psf", "bkg"]
+        elif required_irf == "point-like":
+            hdus = ["events", "gti", "aeff", "edisp"]
+        else:
+            hdus = ["events", "gti"] + required_irf
+        for hdu in hdus:
             kwargs[hdu] = self.hdu_table.hdu_location(obs_id=obs_id, hdu_type=hdu)
 
         return Observation(**kwargs)
 
-    def get_observations(self, obs_id=None, skip_missing=False, required_irf="all"):
+
+    def get_observations(self, obs_id=None, skip_missing=False, required_irf="full-enclosure"):
         """Generate a `~gammapy.data.Observations`.
 
         Parameters
@@ -263,42 +303,49 @@ class DataStore:
             Observation IDs (default of ``None`` means "all")
         skip_missing : bool, optional
             Skip missing observations, default: False
-        required_irf : list of str
+        required_irf : list of str or str
             Runs will be added to the list of observations only if the
-            required IRFs are present. Otherwise, the given run will be skipped
-            Available options are:
+            required HDUs are present. Otherwise, the given run will be skipped
+            The list can include the following options:
+            * `events` : Events
+            * `gti` :  Good time intervals
             * `aeff` : Effective area
             * `bkg` : Background
             * `edisp`: Energy dispersion
             * `psf` : Point Spread Function
-            By default, all the IRFs are required.
+            * `rad_max` : Maximal radius
+            Alternatively single string can be used as shortcut:
+            * `full-enclosure` : ["events", "gti", "aeff", "edisp", "psf", "bkg"]
+            * `point-like` : ["events", "gti", "aeff", "edisp"]
+            * `all-optional` : no HDUs are required, only warnings will be emitted
+                               for missing HDUs among all possibilities.
 
         Returns
         -------
         observations : `~gammapy.data.Observations`
             Container holding a list of `~gammapy.data.Observation`
         """
-        available_irf = ["aeff", "edisp", "psf", "bkg"]
 
-        if required_irf == "all":
-            required_irf = available_irf
-        elif required_irf is None:
-            required_irf = []
+        all_hdu = REQUIRED_IRFS["all-optional"]
+        is_all_optional = required_irf == "all-optional"
 
-        if not set(required_irf).issubset(available_irf):
-            difference = set(required_irf).difference(available_irf)
+        if isinstance(required_irf, str) and required_irf in REQUIRED_IRFS.keys():
+            required_irf = REQUIRED_IRFS[required_irf]
+
+        if not set(required_irf).issubset(all_hdu):
+            difference = set(required_irf).difference(all_hdu)
             raise ValueError(
-                f"{difference} is not a valid irf key. Choose from: {available_irf}"
+                f"{difference} is not a valid hdu key. Choose from: {all_hdu}"
             )
 
         if obs_id is None:
-            obs_id = self.obs_table["OBS_ID"].data
+            obs_id = self.obs_ids
 
         obs_list = []
 
         for _ in obs_id:
             try:
-                obs = self.obs(_)
+                obs = self.obs(_, required_irf)
             except ValueError as err:
                 if skip_missing:
                     log.warning(f"Skipping missing obs_id: {_!r}")
@@ -306,11 +353,11 @@ class DataStore:
                 else:
                     raise err
 
-            if set(required_irf).issubset(obs.available_irfs):
+            if is_all_optional or set(required_irf).issubset(obs.available_hdus):
                 obs_list.append(obs)
             else:
-                log.warning(f"Skipping run with missing IRFs; obs_id: {_!r}")
-
+                log.warning(f"Skipping run with missing HDUs; obs_id: {_!r}")
+        log.info(f"Observations selected: {len(obs_list)} out of {len(obs_id)}.")
         return Observations(obs_list)
 
     def copy_obs(self, obs_id, outdir, hdu_class=None, verbose=False, overwrite=False):
@@ -345,7 +392,8 @@ class DataStore:
             subhdutable.add_index("HDU_CLASS")
             with subhdutable.index_mode("discard_on_copy"):
                 subhdutable = subhdutable.loc[hdu_class]
-        subobstable = self.obs_table.select_obs_id(obs_id)
+        if self.obs_table:
+            subobstable = self.obs_table.select_obs_id(obs_id)
 
         for idx in range(len(subhdutable)):
             # Changes to the file structure could be made here
@@ -363,8 +411,9 @@ class DataStore:
         filename = outdir / self.DEFAULT_HDU_TABLE
         subhdutable.write(filename, format="fits", overwrite=overwrite)
 
-        filename = outdir / self.DEFAULT_OBS_TABLE
-        subobstable.write(str(filename), format="fits", overwrite=overwrite)
+        if self.obs_table:
+            filename = outdir / self.DEFAULT_OBS_TABLE
+            subobstable.write(str(filename), format="fits", overwrite=overwrite)
 
     def check(self, checks="all"):
         """Check index tables and data files.
@@ -433,7 +482,6 @@ class DataStoreChecker(Checker):
                 "level": "error",
                 "msg": "Inconsistent OBS_ID in obs and HDU index tables",
             }
-
         # TODO: obs table and events header should have the same times
 
     def check_observations(self):
@@ -450,11 +498,15 @@ class DataStoreMaker:
     Users will usually call this via `DataStore.from_events_files`.
     """
 
-    def __init__(self, paths):
-        if isinstance(paths, (str, Path)):
+    def __init__(self, events_paths, irfs_paths=None):
+        if isinstance(events_paths, (str, Path)):
             raise TypeError("Need list of paths, not a single string or Path object.")
 
-        self.paths = [make_path(path) for path in paths]
+        self.events_paths = [make_path(path) for path in events_paths]
+        if irfs_paths is None or isinstance(irfs_paths, (str, Path)):
+            self.irfs_paths = [make_path(irfs_paths)] * len(events_paths)
+        else:
+            self.irfs_paths = [make_path(path) for path in irfs_paths]
 
         # Cache for EVENTS file header information, to avoid multiple reads
         self._events_info = {}
@@ -464,22 +516,22 @@ class DataStoreMaker:
         obs_table = self.make_obs_table()
         return DataStore(hdu_table=hdu_table, obs_table=obs_table)
 
-    def get_events_info(self, path):
-        if path not in self._events_info:
-            self._events_info[path] = self.read_events_info(path)
+    def get_events_info(self, events_path, irf_path=None):
+        if events_path not in self._events_info:
+            self._events_info[events_path] = self.read_events_info(events_path, irf_path)
 
-        return self._events_info[path]
+        return self._events_info[events_path]
 
-    def get_obs_info(self, path):
+    def get_obs_info(self, events_path, irf_path=None):
         # We could add or remove info here depending on what we want in the obs table
-        return self.get_events_info(path)
+        return self.get_events_info(events_path, irf_path)
 
     @staticmethod
-    def read_events_info(path):
+    def read_events_info(events_path, irf_path=None):
         """Read mandatory events header info"""
-        log.debug(f"Reading {path}")
+        log.debug(f"Reading {events_path}")
 
-        with fits.open(path, memmap=False) as hdu_list:
+        with fits.open(events_path, memmap=False) as hdu_list:
             header = hdu_list["EVENTS"].header
 
         na_int, na_str = -1, "NOT AVAILABLE"
@@ -515,19 +567,27 @@ class DataStoreMaker:
         info["N_TELS"] = header.get("N_TELS", na_int)
         info["OBJECT"] = header.get("OBJECT", na_str)
 
+
+        # Not part of the spec, but good to know from which file the info comes
+        info["EVENTS_FILENAME"] = str(events_path)
+        info["EVENT_COUNT"] = header["NAXIS2"]
+
         # This is the info needed to link from EVENTS to IRFs
         info["CALDB"] = header.get("CALDB", na_str)
         info["IRF"] = header.get("IRF", na_str)
-
-        # Not part of the spec, but good to know from which file the info comes
-        info["EVENTS_FILENAME"] = str(path)
-        info["EVENT_COUNT"] = header["NAXIS2"]
+        if irf_path is not None:
+            info["IRF_FILENAME"] = str(irf_path)
+        elif info["CALDB"] != na_str and info["IRF"] != na_str:
+            caldb_irf = CalDBIRF.from_meta(info)
+            info["IRF_FILENAME"] = str(caldb_irf.file_path)
+        else:
+            info["IRF_FILENAME"] = info["EVENTS_FILENAME"]
         return info
 
     def make_obs_table(self):
         rows = []
-        for path in self.paths:
-            row = self.get_obs_info(path)
+        for events_path, irf_path in zip(self.events_paths, self.irfs_paths):
+            row = self.get_obs_info(events_path, irf_path)
             rows.append(row)
 
         names = list(rows[0].keys())
@@ -554,8 +614,8 @@ class DataStoreMaker:
 
     def make_hdu_table(self):
         rows = []
-        for path in self.paths:
-            rows.extend(self.get_hdu_table_rows(path))
+        for events_path, irf_path in zip(self.events_paths, self.irfs_paths):
+            rows.extend(self.get_hdu_table_rows(events_path, irf_path))
 
         names = list(rows[0].keys())
         # names = ['OBS_ID', 'HDU_TYPE', 'HDU_CLASS', 'FILE_DIR', 'FILE_NAME', 'HDU_NAME']
@@ -571,22 +631,22 @@ class DataStoreMaker:
 
         return table
 
-    def get_hdu_table_rows(self, path):
-        events_info = self.get_events_info(path)
+    def get_hdu_table_rows(self, events_path, irf_path=None):
+        events_info = self.get_obs_info(events_path, irf_path)
 
         info = dict(
             OBS_ID=events_info["OBS_ID"],
-            FILE_DIR=path.parent.as_posix(),
-            FILE_NAME=path.name,
+            FILE_DIR=events_path.parent.as_posix(),
+            FILE_NAME=events_path.name,
         )
         yield dict(HDU_TYPE="events", HDU_CLASS="events", HDU_NAME="EVENTS", **info)
         yield dict(HDU_TYPE="gti", HDU_CLASS="gti", HDU_NAME="GTI", **info)
 
-        caldb_irf = CalDBIRF.from_meta(events_info)
+        irf_path = Path(events_info["IRF_FILENAME"])
         info = dict(
             OBS_ID=events_info["OBS_ID"],
-            FILE_DIR=caldb_irf.file_dir,
-            FILE_NAME=caldb_irf.file_name,
+            FILE_DIR=irf_path.parent.as_posix(),
+            FILE_NAME=irf_path.name,
         )
         yield dict(
             HDU_TYPE="aeff", HDU_CLASS="aeff_2d", HDU_NAME="EFFECTIVE AREA", **info
@@ -623,5 +683,10 @@ class CalDBIRF:
         return f"$CALDB/data/{telescop}/{self.caldb}/bcf/{self.irf}"
 
     @property
+    def file_path(self):
+        return Path(f"{self.file_dir}/{self.file_name}")
+
+    @property
     def file_name(self):
-        return "irf_file.fits"
+        path = make_path(self.file_dir)
+        return list(path.iterdir())[0].name
