@@ -19,7 +19,7 @@ def test_cli_analysis_run(tmp_path):
     config = get_example_config("1d")
     config.datasets.background.method = "reflected"
     config.general.datasets_file = str(path_datasets)
-    config.general.steps = ["data-reduction"]
+    config.general.steps = ["data-selection"]
 
     config.write(path_config)
     args = [

@@ -9,6 +9,7 @@ from gammapy.modeling.models import FoVBackgroundModel, Models, DatasetModels
 from gammapy.utils.scripts import make_path
 
 from .steps import AnalysisStep
+
 __all__ = ["Analysis"]
 
 log = logging.getLogger(__name__)
@@ -39,12 +40,13 @@ class Analysis:
         self.fit_result = None
         self.flux_points = None
 
+
     @property
     def models(self):
         if not self.datasets:
             raise RuntimeError("No datasets defined. Impossible to set models.")
         return self.datasets.models
-    
+
     @models.setter
     def models(self, models):
         self.set_models(models, extend=False)
@@ -69,19 +71,18 @@ class Analysis:
             overwrite = self.config.general.overwrite
         else:
             if overwrite is None:
-                overwrite = [True]*len(steps)
-        for k,step in enumerate(steps):
+                overwrite = [True] * len(steps)
+        for k, step in enumerate(steps):
             if isinstance(overwrite, list):
                 overwrite_step = overwrite[k]
-            else :
+            else:
                 overwrite_step = overwrite
-            anlysis_step = AnalysisStep.create(step,
-                                               self,
-                                               overwrite=overwrite_step,
-                                               **kwargs)
-            anlysis_step.run()
+            analysis_step = AnalysisStep.create(
+                step, self.config, log=self.log, overwrite=overwrite_step, **kwargs
+            )
+            analysis_step.run(self)
 
-    #keep these methods to be backward compatible
+    # keep these methods to be backward compatible
     def get_observations(self):
         """Fetch observations from the data store according to criteria defined in the configuration."""
         self.run(steps=["observations"])
@@ -105,7 +106,6 @@ class Analysis:
     def get_light_curve(self):
         """Calculate light curve for a specific model component."""
         self.run(steps=["light-curve"])
-
 
     def set_models(self, models, extend=True):
         """Set models on datasets.
@@ -139,13 +139,12 @@ class Analysis:
         bkg_models = []
         for dataset in self.datasets:
             if dataset.tag == "MapDataset" and dataset.background_model is None:
-               bkg_models.append(FoVBackgroundModel(dataset_name=dataset.name))
+                bkg_models.append(FoVBackgroundModel(dataset_name=dataset.name))
         if bkg_models:
             models.extend(bkg_models)
             self.datasets.models = models
 
         self.log.info(models)
-
 
     def read_models(self, path, extend=True):
         """Read models from YAML file.
@@ -163,7 +162,6 @@ class Analysis:
         self.set_models(models, extend=extend)
         self.log.info(f"Models loaded from {path}.")
 
-
     def write_models(self, overwrite=True, write_covariance=True):
         """Write models to YAML file.
            File name is taken from the configuration file.
@@ -171,13 +169,12 @@ class Analysis:
 
         filename_models = self.config.general.models_file
         if filename_models is not None:
-            self.models.write(filename_models,
-                              overwrite=overwrite,
-                              write_covariance=write_covariance)
+            self.models.write(
+                filename_models, overwrite=overwrite, write_covariance=write_covariance
+            )
             self.log.info(f"Models loaded from {filename_models}.")
         else:
             raise RuntimeError("Missing models_file in config.general")
-   
 
     def read_datasets(self):
         """Read datasets from YAML file.
@@ -190,11 +187,10 @@ class Analysis:
         if filename is not None:
             self.datasets = Datasets.read(filename)
             self.log.info(f"Datasets loaded from {filename}.")
-            if filename_models is not  None:
+            if filename_models is not None:
                 self.read_models(filename_models, extend=False)
         else:
             raise RuntimeError("Missing datasets_file in config.general")
-
 
     def write_datasets(self, overwrite=True, write_covariance=True):
         """Write datasets to YAML file.
@@ -211,28 +207,16 @@ class Analysis:
         filename = self.config.general.datasets_file
         filename_models = self.config.general.models_file
         if filename is not None:
-            self.datasets.write(filename,
-                                 filename_models,
-                                 overwrite=overwrite,
-                                 write_covariance=write_covariance)
+            self.datasets.write(
+                filename,
+                filename_models,
+                overwrite=overwrite,
+                write_covariance=write_covariance,
+            )
             self.log.info(f"Datasets stored to {filename}.")
             self.log.info(f"Datasets stored to {filename_models}.")
         else:
             raise RuntimeError("Missing datasets_file in config.general")
-
-
-    def check_datasets(self):
-        if not self.datasets and not self.config.general.datasets_file:
-            raise RuntimeError("Missing datasets")
-        elif not self.datasets:
-            self.read_datasets()
-    
-    def check_models(self):
-        if not self.models and not self.config.general.models_file:
-            raise RuntimeError("Missing models")
-        elif not self.models:
-            self.read_models(self.config.general.models_file)
-
 
     def update_config(self, config):
         self.config = self.config.update(config=config)

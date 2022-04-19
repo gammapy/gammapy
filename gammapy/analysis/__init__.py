@@ -4,27 +4,29 @@ from gammapy.utils.registry import Registry
 from .config import AnalysisConfig
 from .core import Analysis
 
-from.steps import (
-        DataReductionAnalysisStep,
-        ObservationsAnalysisStep,
-        DatasetsAnalysisStep,
-        ExcessMapAnalysisStep,
-        FitAnalysisStep,
-        FluxPointsAnalysisStep,
-        LightCurveAnalysisStep,        
-        )
+from .steps import (
+    DataSelectionAnalysisStep,
+    ObservationsAnalysisStep,
+    DatasetsAnalysisStep,
+    ExcessMapAnalysisStep,
+    FitAnalysisStep,
+    FluxPointsAnalysisStep,
+    LightCurveAnalysisStep,
+)
 
 __all__ = [
     "Analysis",
     "AnalysisConfig",
 ]
 
-ANALYSIS_STEP_REGISTRY = Registry([
-        DataReductionAnalysisStep,
+ANALYSIS_STEP_REGISTRY = Registry(
+    [
+        DataSelectionAnalysisStep,
         ObservationsAnalysisStep,
         DatasetsAnalysisStep,
         ExcessMapAnalysisStep,
         FitAnalysisStep,
         FluxPointsAnalysisStep,
         LightCurveAnalysisStep,
-        ])
+    ]
+)
