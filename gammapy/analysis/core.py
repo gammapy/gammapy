@@ -11,6 +11,7 @@ from gammapy.utils.pbar import progress_bar
 from gammapy.utils.scripts import make_path
 
 from .steps import AnalysisStep
+
 __all__ = ["Analysis"]
 
 log = logging.getLogger(__name__)
@@ -77,19 +78,18 @@ class Analysis:
             overwrite = self.config.general.overwrite
         else:
             if overwrite is None:
-                overwrite = [True]*len(steps)
-        for k,step in enumerate(steps):
+                overwrite = [True] * len(steps)
+        for k, step in enumerate(steps):
             if isinstance(overwrite, list):
                 overwrite_step = overwrite[k]
-            else :
+            else:
                 overwrite_step = overwrite
-            anlysis_step = AnalysisStep.create(step,
-                                               self,
-                                               overwrite=overwrite_step,
-                                               **kwargs)
-            anlysis_step.run()
+            analysis_step = AnalysisStep.create(
+                step, self.config, log=self.log, overwrite=overwrite_step, **kwargs
+            )
+            analysis_step.run(self)
 
-    #keep these methods to be backward compatible
+    # keep these methods to be backward compatible
     def get_observations(self):
         """Fetch observations from the data store according to criteria defined in the configuration."""
         self.run(steps=["observations"])
@@ -113,7 +113,6 @@ class Analysis:
     def get_light_curve(self):
         """Calculate light curve for a specific model component."""
         self.run(steps=["light-curve"])
-
 
     def set_models(self, models, extend=True):
         """Set models on datasets.
@@ -226,20 +225,6 @@ class Analysis:
             log.info(f"Datasets stored to {filename_models}.")
         else:
             raise RuntimeError("Missing datasets_file in config.general")
-
-
-    def check_datasets(self):
-        if not self.datasets and not self.config.general.datasets_file:
-            raise RuntimeError("Missing datasets")
-        elif not self.datasets:
-            self.read_datasets()
-    
-    def check_models(self):
-        if not self.models and not self.config.general.models_file:
-            raise RuntimeError("Missing models")
-        elif not self.models:
-            self.read_models(self.config.general.models_file)
-
 
     def update_config(self, config):
         """Update the configuration."""
