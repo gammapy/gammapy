@@ -40,7 +40,6 @@ class Analysis:
         self.fit_result = None
         self.flux_points = None
 
-
     @property
     def models(self):
         if not self.datasets:
