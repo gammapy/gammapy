@@ -297,9 +297,6 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         from .io import OGIPDatasetReader
 
         if format == "gadf":
-            kwargs.setdefault("name", None)
-            kwargs.setdefault("lazy", False)
-            kwargs.setdefault("cache", True)
             return super().read(filename, format="gadf", **kwargs)
 
         reader = OGIPDatasetReader(filename=filename)
