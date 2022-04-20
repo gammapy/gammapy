@@ -250,6 +250,7 @@ def test_bounds(models):
         max=5,
         value=2.4,
     )
+
     pl_mask = models.selection_mask(tag="pl", model_type="spectral")
     assert np.all([m.spectral_model.index.value == 2.4 for m in models[pl_mask]])
     assert np.all([m.spectral_model.index.min == 0 for m in models[pl_mask]])
@@ -258,13 +259,13 @@ def test_bounds(models):
     models.set_parameters_bounds(
         tag=["pl", "pl-norm"],
         model_type="spectral",
-        parameters_names=["norm", "amplitude"],
         min=0,
         max=None,
     )
-    bkg_mask = models.selection_mask(tag="TemplateNPredModel")
     assert np.all([m.spectral_model.amplitude.min == 0 for m in models[pl_mask]])
-    assert np.all([m._spectral_model.norm.min == 0 for m in models[bkg_mask]])
+
+    bkg_mask = models.selection_mask(tag="TemplateNPredModel")
+    assert np.all([m.spectral_model.norm.min == 0 for m in models[bkg_mask]])
 
 
 def test_freeze(models):

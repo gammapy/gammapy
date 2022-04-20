@@ -91,7 +91,8 @@ class Parameter:
         Method used to set ``factor`` and ``scale``
     interp : {"lin", "sqrt", "log"}
         Parameter scaling to use for the scan.
-
+    is_norm : bool
+        Whether the parameter represents the flux norm of the model.
     """
 
     def __init__(
@@ -111,6 +112,7 @@ class Parameter:
         scan_values=None,
         scale_method="scale10",
         interp="lin",
+        is_norm=False,
     ):
         if not isinstance(name, str):
             raise TypeError(f"Name must be string, got '{type(name)}' instead")
@@ -122,6 +124,7 @@ class Parameter:
         self.max = max
         self.frozen = frozen
         self._error = error
+        self._is_norm = is_norm
         self._type = None
 
         # TODO: move this to a setter method that can be called from `__set__` also!
@@ -145,6 +148,7 @@ class Parameter:
     def __get__(self, instance, owner):
         if instance is None:
             return self
+
         par = instance.__dict__[self.name]
         par._type = getattr(instance, "type", None)
         return par
@@ -155,6 +159,15 @@ class Parameter:
         else:
             par = instance.__dict__[self.name]
             raise TypeError(f"Cannot assign {value!r} to parameter {par!r}")
+
+    def __set_name__(self, owner, name):
+        if not self._name == name:
+            raise ValueError(f"Expected parameter name '{name}', got {self._name}")
+
+    @property
+    def is_norm(self):
+        """Whether the parameter represents the norm of the model"""
+        return self._is_norm
 
     @property
     def type(self):
@@ -408,10 +421,12 @@ class Parameter:
             "frozen": self.frozen,
             "interp": self.interp,
             "scale_method": self.scale_method,
+            "is_norm": self.is_norm,
         }
 
         if self._link_label_io is not None:
             output["link"] = self._link_label_io
+
         return output
 
     def autoscale(self):
@@ -437,6 +452,7 @@ class Parameter:
                 scale = np.power(10.0, exponent)
                 self.factor = value / scale
                 self.scale = scale
+
         elif self.scale_method == "factor1":
             self.factor, self.scale = 1, self.value
 
@@ -613,11 +629,13 @@ class Parameters(collections.abc.Sequence):
     @classmethod
     def from_dict(cls, data):
         parameters = []
+
         for par in data:
             link_label = par.pop("link", None)
             parameter = Parameter(**par)
             parameter._link_label_io = link_label
             parameters.append(parameter)
+
         return cls(parameters=parameters)
 
     def set_parameter_factors(self, factors):

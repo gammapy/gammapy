@@ -235,3 +235,11 @@ def test_plot_models(caplog):
     assert "Skipping model m2 - no spatial component present" in [
         _.message for _ in caplog.records
     ]
+
+
+def test_parameter_name():
+    with pytest.raises(RuntimeError):
+        class MyTestModel:
+            par = Parameter("wrong-name", value=3)
+
+        _ = MyTestModel()

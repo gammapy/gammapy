@@ -71,6 +71,7 @@ class ModelBase:
                 par = value
 
             setattr(self, par.name, par)
+
         self._covariance = Covariance(self.parameters)
 
     def __getattribute__(self, name):
@@ -146,7 +147,8 @@ class ModelBase:
         return copy.deepcopy(self)
 
     def to_dict(self, full_output=False):
-        """Create dict for YAML serialisation"""
+        """Create dict for YAML serialisation
+        """
         tag = self.tag[0] if isinstance(self.tag, list) else self.tag
         params = self.parameters.to_dict()
 
@@ -164,11 +166,13 @@ class ModelBase:
 
                 if init["unit"] == "":
                     del par["unit"]
+
         data = {"type": tag, "parameters": params}
-        if self._type is None:
+
+        if self.type is None:
             return data
         else:
-            return {self._type: data}
+            return {self.type: data}
 
     @classmethod
     def from_dict(cls, data):
@@ -176,11 +180,13 @@ class ModelBase:
 
         par_data = []
         key0 = next(iter(data))
+
         if key0 in ["spatial", "temporal", "spectral"]:
             data = data[key0]
+
         if data["type"] not in cls.tag:
             raise ValueError(
-                f"Invalid model type {data['type']} for Class {cls.__name__}"
+                f"Invalid model type {data['type']} for class {cls.__name__}"
             )
 
         input_names = [_["name"] for _ in data["parameters"]]
@@ -192,7 +198,7 @@ class ModelBase:
                 par_dict.update(data["parameters"][index])
             except ValueError:
                 log.warning(
-                    f"Parameter {par_dict['name']} not defined. Using default value: {par_dict['value']} {par_dict['unit']}"
+                    f"Parameter '{par_dict['name']}' not defined in YAML file. Using default value: {par_dict['value']} {par_dict['unit']}"
                 )
             par_data.append(par_dict)
 
@@ -560,7 +566,7 @@ class DatasetModels(collections.abc.Sequence):
         table.write(make_path(filename), **kwargs)
 
     def __str__(self):
-        
+
         self.update_link_label()
 
         str_ = f"{self.__class__.__name__}\n\n"
@@ -782,16 +788,16 @@ class DatasetModels(collections.abc.Sequence):
         return restore_models_status(self, restore_values)
 
     def set_parameters_bounds(
-        self, tag, model_type, parameters_names, min=None, max=None, value=None
+        self, tag, model_type, parameters_names=None, min=None, max=None, value=None
     ):
         """Set bounds for the selected models types and parameters names
 
         Parameters
         ----------
         tag : str or list
-            tag of the models
-        model_type : {"spatial", "spectral"}
-            type of models
+            Tag of the models
+        model_type :  {"spatial", "spectral", "temporal"}
+            Type of model
         parameters_names : str or list
             parameters names
         min : float
@@ -801,7 +807,6 @@ class DatasetModels(collections.abc.Sequence):
         value : float
             init value
         """
-
         models = self.select(tag=tag, model_type=model_type)
         parameters = models.parameters.select(name=parameters_names, type=model_type)
         n = len(parameters)

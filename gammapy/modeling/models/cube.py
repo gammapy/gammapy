@@ -69,6 +69,17 @@ class SkyModel(ModelBase):
         self.apply_irf = apply_irf
         self.datasets_names = datasets_names
         self._check_unit()
+
+        is_norm = np.array([par.is_norm for par in spectral_model.parameters])
+
+        if not np.any(is_norm):
+            raise ValueError("Spectral model used with SkyModel requires a norm type parameter.")
+
+        is_free_norm = np.array([par.is_norm for par in spectral_model.parameters.free_parameters])
+
+        if np.sum(is_free_norm) > 1:
+            raise ValueError("Spectral model used with SkyModel can only have a single free norm type parameter.")
+
         super().__init__()
 
     @property
@@ -805,6 +816,7 @@ class TemplateNPredModel(ModelBase):
         from gammapy.modeling.models import SPECTRAL_MODEL_REGISTRY
 
         spectral_data = data.get("spectral")
+
         if spectral_data is not None:
             model_class = SPECTRAL_MODEL_REGISTRY.get_cls(spectral_data["type"])
             spectral_model = model_class.from_dict(spectral_data)
