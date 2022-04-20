@@ -7,6 +7,7 @@ from astropy.io import fits
 from gammapy.maps import MapAxis, WcsGeom
 from gammapy.utils.scripts import make_path
 from gammapy.modeling.models import Models, FoVBackgroundModel
+from scipy.stats import median_absolute_deviation as mad
 
 
 class ObservationsEventsSampler:
@@ -80,10 +81,16 @@ class ObservationsEventsSampler:
         etrue = observation.psf.axes["energy_true"].edges  # only where psf is defined
         eres = observation.edisp.to_edisp_kernel(0 * u.deg).get_resolution(etrue)
         eres = eres[np.isfinite(eres)]
-        nbin_per_decade = np.nan_to_num(
-            int(np.rint(2.0 / np.min(eres.value))), nan=np.inf
-        )
-        nbin_per_decade = np.minimum(nbin_per_decade, self.nbin_per_decade_max)
+        if eres.size > 0:
+            # remove outliers
+            beyond_mad = np.median(eres) - mad(eres) * eres.unit
+            eres[eres < beyond_mad] = np.nan
+            nbin_per_decade = np.nan_to_num(
+                int(np.rint(2.0 / np.nanmin(eres.value))), nan=np.inf
+            )
+            nbin_per_decade = np.minimum(nbin_per_decade, self.nbin_per_decade_max)
+        else:
+            nbin_per_decade = self.nbin_per_decade_max
 
         etrue_axis = MapAxis.from_energy_bounds(
             etrue[0],
@@ -99,10 +106,18 @@ class ObservationsEventsSampler:
 
         # bin size estimated from the minimal r68 of the psf
         psf_r68 = observation.psf.containment_radius(
-            0.68, energy_true=etrue[-1], offset=0.0 * u.deg
+            0.68, energy_true=etrue, offset=0.0 * u.deg
         )
-        binsz = np.nan_to_num(psf_r68, nan=-np.inf)
-        binsz = np.maximum(binsz, self.binsz_min)
+        psf_r68 = psf_r68[np.isfinite(psf_r68)]
+        if psf_r68.size > 0:
+            # remove outliers
+            beyond_mad = np.median(psf_r68) - mad(psf_r68) * psf_r68.unit
+            psf_r68[psf_r68 < beyond_mad] = np.nan
+            binsz = np.nan_to_num(np.nanmin(psf_r68), nan=-np.inf)
+            binsz = np.maximum(binsz, self.binsz_min)
+        else:
+            binsz = self.binsz_min
+
         # width estimated from the rad_max or the offset_max
         if observation.rad_max is not None:
             width = 2.0 * np.max(observation.rad_max)
