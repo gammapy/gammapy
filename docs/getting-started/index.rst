@@ -85,7 +85,7 @@ Analysis Overview
 -----------------
 
 .. accordion-header::
-    :id: collapseTwo
+    :id: collapseOne
     :title: How to access gamma-ray data
     :link: ../tutorials/data/cta.html
 
@@ -105,7 +105,7 @@ Water Cherenkov Observatories. This data can be read directly using the
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseSeven
+    :id: collapseTwo
     :title: How to compute a 1D spectrum
     :link: ../tutorials/analysis/1D/spectral_analysis.html
 
@@ -128,7 +128,7 @@ Flux points can be computed using the `~gammapy.estimators.FluxPointsEstimator`.
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseSix
+    :id: collapseThree
     :title: How to compute a 2D image
     :link: ../tutorials/index.html#d-image
 
@@ -147,7 +147,7 @@ inside Gammapy. In this case, it is necessary to attach an `energy` axis on as i
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseTwelve
+    :id: collapseFour
     :title: How to compute a 3D cube
     :link: ../tutorials/analysis/3D/analysis_3d.html
 
@@ -169,7 +169,7 @@ Gammapy can also simulate events. Flux points can be computed using the
 
 
 .. accordion-header::
-    :id: collapseEight
+    :id: collapseFive
     :title: How to compute a lightcurve
     :link: ../tutorials/analysis/time/light_curve.html
 
@@ -190,7 +190,7 @@ curve is computed using the `~gammapy.estimators.LightCurveEstimator`.
 
 
 .. accordion-header::
-    :id: collapseTwenty
+    :id: collapseSix
     :title: How to combine data from multiple instruments
     :link: ../tutorials/analysis/3D/analysis_mwl.html
 
