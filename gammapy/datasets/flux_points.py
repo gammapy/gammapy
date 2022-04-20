@@ -89,7 +89,7 @@ class FluxPointsDataset(Dataset):
         name=None,
         meta_table=None,
     ):
-        if data.geom.ndim != 3 or data.geom.has_energy_axis is False:
+        if data.geom.ndim != 3 or not data.geom.has_energy_axis:
             raise ValueError("FluxPointsDataset only supports an energy axis")
         self.data = data
         self.mask_fit = mask_fit

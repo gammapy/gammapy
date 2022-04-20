@@ -615,6 +615,7 @@ class FluxPoints(FluxMaps):
 
         return ax
 
+
     def recompute_ul(self, n_sigma_ul=2, **kwargs):
         """Recompute upper limits corresponding to the given value.
         The pre-computed stat profiles must exist for the re-computation.
@@ -663,3 +664,7 @@ class FluxPoints(FluxMaps):
             )
         flux_points.meta["n_sigma_ul"] = n_sigma_ul
         return flux_points
+
+
+        
+

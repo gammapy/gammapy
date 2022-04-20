@@ -570,16 +570,16 @@ def test_split_by_axis():
     time_axis = MapAxis.from_bounds(
         0,
         24,
-        nbin=24,
+        nbin=3,
         unit="hour",
         name="time",
     )
     energy_axis = MapAxis.from_bounds(
-        1, 100, nbin=4, unit="TeV", name="energy", interp="log"
+        1, 100, nbin=2, unit="TeV", name="energy", interp="log"
     )
     m_4d = Map.create(
-        binsz=0.02, width=(10, 5), frame="galactic", axes=[energy_axis, time_axis]
+        binsz=1.0, width=(10, 5), frame="galactic", axes=[energy_axis, time_axis]
     )
     maps = m_4d.split_by_axis("time")
-    assert len(maps) == 24
+    assert len(maps) == 3
 
