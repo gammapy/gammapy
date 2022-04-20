@@ -8,7 +8,7 @@ with open(FILENAME, "r") as f:
     data = json.load(f)
 data["maintainer"] = data["author"][0]
 data["readme"] = "https://gammapy.org"
-data["issuetracker"] = "https://github.com/gammapy/gammapy/issues"
+data["issueTracker"] = "https://github.com/gammapy/gammapy/issues"
 
 with open(FILENAME, "w") as f:
     json.dump(data, f, indent=4)
