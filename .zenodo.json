@@ -1,0 +1,330 @@
+{
+    "access_right": "open",
+    "communities": [
+        {
+            "identifier": "escape2020"
+        }
+    ],
+    "creators": [
+        {
+            "affiliation": "Center for Astrophysics | Harvard & Smithsonian, CfA, 60 Garden St., 02138 Cambridge MA, US",
+            "name": "Donath, Axel",
+            "orcid": "0000-0003-4568-7005"
+        },
+        {
+            "affiliation": "HeidelbergCement AG, Berliner Stra\u00dfe 6, 69120 Heidelberg, Germany",
+            "name": "Deil, Christoph"
+        },
+        {
+            "affiliation": "Astroparticle and Cosmology Laboratory CNRS, Universit\u00e9 de Paris, 10 Rue Alice Domon et L\u00e9onie Duquet, 75013 Paris, France",
+            "name": "Terrier, R\u00e9gis",
+            "orcid": "0000-0002-8219-4667"
+        },
+        {
+            "affiliation": "Pamyra",
+            "name": "King, Johannes"
+        },
+        {
+            "affiliation": "Instituto de Astrof\u00edsica de Andaluc\u00eda - CSIC, Gta. de la Astronom\u00eda, 18008 Granada, Spain",
+            "name": "Ruiz, Jose Enrique",
+            "orcid": "0000-0003-3274-4445"
+        },
+        {
+            "affiliation": "Max Planck Institut f\u00fcr Kernphysik, MPIK, Saupfercheckweg 1, 69117 Heidelberg, Germany",
+            "name": "Remy, Quentin",
+            "orcid": "0000-0002-8815-6530"
+        },
+        {
+            "name": "Jouvin, L\u00e9a"
+        },
+        {
+            "affiliation": "Universidad Complutense de Madrid EMFTEL, UCM, Plaza de la Ciencias, 28040 Madrid, Spain",
+            "name": "Sinha, Atreyee",
+            "orcid": "0000-0002-9238-7163"
+        },
+        {
+            "affiliation": "Facebook, 1 Hacker Way, Menlo Park, CA 94025, US",
+            "name": "Wood, Matthew"
+        },
+        {
+            "affiliation": "INAF/IASF, via Ugo La Malfa 153,  90146 Palermo, Italy",
+            "name": "Pintore, Fabio"
+        },
+        {
+            "name": "Paz Arribas, Manuel"
+        },
+        {
+            "affiliation": "Max Planck Institut f\u00fcr Kernphysik, MPIK, Saupfercheckweg 1, 69117 Heidelberg, Germany",
+            "name": "Olivera, Laura"
+        },
+        {
+            "affiliation": "Astroparticle and Cosmology Laboratory CNRS, Universit\u00e9 de Paris, 10 Rue Alice Domon et L\u00e9onie Duquet, 75013 Paris, France",
+            "name": "Giunti, Luca"
+        },
+        {
+            "affiliation": "CNRS",
+            "name": "Khelifi, Bruno"
+        },
+        {
+            "affiliation": "National Tsing Hua University Institute of Astronomy, Hsinchu, Taiwan",
+            "name": "Owen, Ellis",
+            "orcid": "0000-0003-1052-6439"
+        },
+        {
+            "affiliation": "California Institute of Technology, Pasadena CA, US",
+            "name": "Sip\u0151cz, Brigitta",
+            "orcid": "0000-0002-3713-6337"
+        },
+        {
+            "name": "Vorokh, Olga"
+        },
+        {
+            "name": "Lefaucheur, Julien"
+        },
+        {
+            "affiliation": "DAp/AIM, CEA-Saclay/CNRS, France",
+            "name": "Acero, Fabio",
+            "orcid": "0000-0002-6606-2816"
+        },
+        {
+            "affiliation": "Aperio Software, Insight House, Riverside Business Park, Stoney Common Road, Stansted, Essex, CM24 8PL, UK",
+            "name": "Robitaille, Thomas"
+        },
+        {
+            "name": "Fidalgo, David"
+        },
+        {
+            "name": "D. Harris, Jonathan"
+        },
+        {
+            "affiliation": "Institut de Fisica d'altes Energies, IFAE, Edifici Cn, Campus UAB, 08193 Bellaterra (Barcelona), Spain",
+            "name": "Nigro, Cosimo"
+        },
+        {
+            "affiliation": "Max Planck Institut f\u00fcr Kernphysik, MPIK, Saupfercheckweg 1, 69117 Heidelberg, Germany",
+            "name": "Mohrmann, Lars"
+        },
+        {
+            "affiliation": "Amazon, Atlanta GA, US",
+            "name": "Lennarz, Dirk"
+        },
+        {
+            "affiliation": "Astroparticle and Cosmology Laboratory CNRS, Universit\u00e9 de Paris, 10 Rue Alice Domon et L\u00e9onie Duquet, 75013 Paris, France",
+            "name": "Eddine Hajlaoui, Jalel"
+        },
+        {
+            "affiliation": "Universidade de S\u00e3o Paulo, Brazil",
+            "name": "de Almeida Coutinho, Alexis"
+        },
+        {
+            "name": "Wegenmat, Matthias"
+        },
+        {
+            "name": "Papadopoulos, Dimitri"
+        },
+        {
+            "affiliation": "TU Dortmund University, Otto-Hahn-Str. 4a 44227 Dortmund, Germany",
+            "name": "N\u00f6the, Maximilian",
+            "orcid": "0000-0001-7993-8189"
+        },
+        {
+            "name": "Chakraborty, Nachiketa"
+        },
+        {
+            "affiliation": "Mozilla, Mountain View, CA",
+            "name": "Droettboom, Michael"
+        },
+        {
+            "name": "Poon, Helen"
+        },
+        {
+            "name": "Voruganti, Arjun"
+        },
+        {
+            "affiliation": "DESY",
+            "name": "Watson, Jason"
+        },
+        {
+            "name": "Armstrong, Thomas"
+        },
+        {
+            "affiliation": "Friedrich-Alexander-Universit\u00e4t Erlangen-N\u00fcrnberg, Erlangen Centre for Astroparticle Physics, Erwin-Rommel-Str. 1 91058 Erlangen, Germany",
+            "name": "Joshi, Vikas"
+        },
+        {
+            "affiliation": "Space Telescope Science Institute, STScI, 3700 San Martin Drive, 21218 Baltimore MD, US",
+            "name": "Tollerud, Erik"
+        },
+        {
+            "name": "M. Bray, Erik"
+        },
+        {
+            "name": "Tiziani, Domenico"
+        },
+        {
+            "name": "Emery, Gabriel"
+        },
+        {
+            "name": "Siejkowski, Hubert"
+        },
+        {
+            "affiliation": "Point 8 GmbH, Rheinlanddamm 201, 44139 Dortmund, Germany",
+            "name": "Br\u00fcgge, Kai"
+        },
+        {
+            "affiliation": "Institute de Recherche en Astrophysique et Planetologie, IRAP,",
+            "name": "Tibaldo, Luigi"
+        },
+        {
+            "name": "Gogia, Arpit"
+        },
+        {
+            "name": "Minaya, Ignacio"
+        },
+        {
+            "name": "Spir-Jacob, Marion"
+        },
+        {
+            "name": "Gallant, Yves"
+        },
+        {
+            "affiliation": "Department of Physics, University of the Free State, PO Box339, Bloemfontein 9300, South Africa",
+            "name": "W. Chen, Andrew"
+        },
+        {
+            "affiliation": "CTA Observatory gGmbH, Via Piero Gobetti 93/3 40129 Bologna, Italy",
+            "name": "Zanin, Roberta",
+            "orcid": "0000-0001-6320-1801"
+        },
+        {
+            "name": "Lenain, Jean-Philippe"
+        },
+        {
+            "affiliation": "Space Telescope Science Institute, STScI, 3700 San Martin Drive, 21218 Baltimore MD, US",
+            "name": "Bradley, Larry"
+        },
+        {
+            "affiliation": "Friedrich-Alexander-Universit\u00e4t Erlangen-N\u00fcrnberg, Erlangen Centre for Astroparticle Physics, Erwin-Rommel-Str. 1 91058 Erlangen, Germany",
+            "name": "Nakashima, Kaori"
+        },
+        {
+            "affiliation": "Astroparticle and Cosmology Laboratory CNRS, Universit\u00e9 de Paris, 10 Rue Alice Domon et L\u00e9onie Duquet, 75013 Paris, France",
+            "name": "Lemi\u00e8re, Anne"
+        },
+        {
+            "name": "de Bony, Mathieu"
+        },
+        {
+            "name": "Craig, Matthew"
+        },
+        {
+            "affiliation": "Center for Astrophysics | Harvard & Smithsonian, CfA, 60 Garden St., 02138 Cambridge MA, US",
+            "name": "Saha, Lab"
+        },
+        {
+            "name": "Vinicius, Z\u00e9"
+        },
+        {
+            "name": "Barbary, Kyle"
+        },
+        {
+            "affiliation": "Universit\u00e9 Savoie Mont Blanc, CNRS, Laboratoire d\u2019Annecyde Physique des Particules - IN2P3, 74000 Annecy, France",
+            "name": "Vuillaume, Thomas"
+        },
+        {
+            "name": "Ginsburg, Adam"
+        },
+        {
+            "name": "Morcuende, Daniel"
+        },
+        {
+            "name": "Contreras, Jos\u00e9 Luis"
+        },
+        {
+            "name": "Vega Garcia, Laura"
+        },
+        {
+            "name": "Blanch Bigas, Oscar"
+        },
+        {
+            "name": "Zabalza, V\u00edctor"
+        },
+        {
+            "affiliation": "Michigan State University, Department of Physics and Astronomy, 428 S Shaw Ln East Lansing, MI 48824, US",
+            "name": "Kerzendorf, Wolfgang"
+        },
+        {
+            "affiliation": "Deutsches Elektronen-Synchrotron, DESY, Platanenallee 6 15738 Zeuthen, Germany",
+            "name": "Buehler, Rolf"
+        },
+        {
+            "name": "Panny, Sebastian"
+        },
+        {
+            "name": "Manconi, Silvia"
+        },
+        {
+            "affiliation": "Deutsches Elektronen-Synchrotron, DESY, Platanenallee 6 15738 Zeuthen, Germany",
+            "name": "Klepser, Stefan"
+        },
+        {
+            "name": "Deiml, Peter"
+        },
+        {
+            "name": "Buchner, Johannes"
+        },
+        {
+            "name": "van Kemenade, Hugo"
+        },
+        {
+            "name": "O. Lebigot, Eric"
+        },
+        {
+            "name": "Weaver, Benjamin Alan"
+        },
+        {
+            "name": "Bose, Debanjan"
+        },
+        {
+            "name": "L\u00f3pez-Coto, Rub\u00e9n"
+        },
+        {
+            "name": "Carter, Sam"
+        },
+        {
+            "affiliation": "Iowa State University, Ames IA, US",
+            "name": "Cahill, Tyler"
+        }
+    ],
+    "description": "Gammapy analyzes gamma-ray data and creates sky images, spectra and lightcurves, from event lists and instrument response information; it can also determine the position, morphology and spectra of gamma-ray sources. It is used to analyze data from H.E.S.S., Fermi-LAT, and the Cherenkov Telescope Array (CTA).",
+    "grants": [
+        {
+            "id": "10.13039/501100000780::824064"
+        }
+    ],
+    "keywords": [
+        "Astronomy",
+        "Gamma-rays",
+        "Data analysis"
+    ],
+    "language": "eng",
+    "license": "BSD-3-Clause",
+    "publication_date": "2020-11-19",
+    "related_identifiers": [
+        {
+            "identifier": "https://github.com/gammapy/gammapy",
+            "relation": "isDerivedFrom",
+            "resource_type": "software",
+            "scheme": "url"
+        },
+        {
+            "identifier": "https://gammapy.org",
+            "relation": "isDocumentedBy",
+            "resource_type": "publication-softwaredocumentation",
+            "scheme": "url"
+        }
+    ],
+    "title": "Gammapy: Python toolbox for gamma-ray astronomy",
+    "upload_type": "software",
+    "version": 0.19
+}
