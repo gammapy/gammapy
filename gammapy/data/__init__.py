@@ -11,6 +11,7 @@ from .obs_table import ObservationTable
 from .observations import Observation, Observations
 from .pointing import FixedPointingInfo, PointingInfo, PointingMode
 from .utils import get_irfs_features
+from .simulate import ObservationsEventsSampler
 
 __all__ = [
     "DataStore",
@@ -21,7 +22,7 @@ __all__ = [
     "Observation",
     "ObservationFilter",
     "Observations",
-    "ObservationMetaData",
+    "ObservationsEventsSampler",
     "ObservationTable",
     "observatory_locations",
     "PointingInfo",

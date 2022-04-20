@@ -40,7 +40,7 @@ class ObservationsEventsSampler:
         self,
         models=None,
         binsz_min=0.01 * u.deg,
-        width_max = 12*u.deg,
+        width_max=12 * u.deg,
         nbin_per_decade_max=30,
         outdir="./data/",
         prefix=None,
