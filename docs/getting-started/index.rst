@@ -55,7 +55,7 @@ Installation
 
 .. _download-tutorials:
 
-Download Tutorial Datasets
+Tutorial Datasets Download
 --------------------------
 
 You can now proceed to download the Gammapy tutorial notebooks and the example
@@ -81,24 +81,26 @@ terminal (for example ``$HOME/.bash_profile``).
     "Environment Variables" settings dialog, as explained e.g.
     `here <https://docs.python.org/3/using/windows.html#excursus-setting-environment-variables>`__
 
-Congratulations! You are all set to start using Gammapy!
-
-* To learn how to use Gammapy, go to :ref:`tutorials`.
-* If you're new to conda, Python and Jupyter, read the :ref:`using-gammapy` guide.
-* If you encountered any issues you can check the :ref:`troubleshoot` guide.
-
-
 Analysis Overview
 -----------------
 
 .. accordion-header::
     :id: collapseTwo
     :title: How to access gamma-ray data
-    :link: ../tutorials/data/hess.html#DL3-DR1
+    :link: ../tutorials/data/cta.html
 
-To access IACT data in the DL3 format, use the `~gammapy.data.DataStore`. It allows
-easy access to observations stored in the DL3 data library.
-It is also internally used by the high level interface `~gammapy.analysis.Analysis`.
+Gammapy can read and access data from multiple gamma-ray instruments. Data from
+Imaging Atmospheric Cherenkov Telescopes, such as `CTA`_, `H.E.S.S.`_, `MAGIC`_
+and `VERITAS`_, is typically accessed from the **event list data level**, called "DL3".
+This is most easily done using the `~gammapy.data.DataStore` class. In addition data
+can also be accessed from the **level of binned events and pre-reduced instrument response functions**,
+so called "DL4". This is typically the case for `Fermi-LAT`_ data or data from
+Water Cherenkov Observatories. This data can be read directly using the
+`~gammapy.maps.Map` and `~gammapy.irf.core.IRFMap` classes.
+
+:link-badge:`../tutorials/data/cta.html,"CTA data tutorial",cls=badge-primary text-white`
+:link-badge:`../tutorials/data/hess.html,"HESS data tutorial",cls=badge-primary text-white`
+:link-badge:`../tutorials/data/fermi_lat.html,"Fermi-LAT data tutorial",cls=badge-primary text-white`
 
 .. accordion-footer::
 
@@ -107,9 +109,21 @@ It is also internally used by the high level interface `~gammapy.analysis.Analys
     :title: How to compute a 1D spectrum
     :link: ../tutorials/analysis/1D/spectral_analysis.html
 
-The `~gammapy.analysis.Analysis` class can perform spectral extraction. The
-`~gammapy.analysis.AnalysisConfig` must be defined to produce '1d' datasets.
-Alternatively, you can follow the spectral analysis tutorial.
+Gammapy lets you create a 1D spectrum by defining an analysis region in
+the sky and energy binning using  `~gammapy.maps.RegionGeom` object.
+The **events and instrument response are binned** into `~gammapy.maps.RegionNDMap`
+and `~gammapy.irf.IRFMap` objects. In addition you can choose to estimate
+the background from data using e.g. a **reflected regions method**.
+Flux points can be computed using the `~gammapy.estimators.FluxPointsEstimator`.
+
+.. image:: ../_static/1d-analysis-image.png
+    :width: 100%
+
+|
+
+:link-badge:`../tutorials/analysis/1D/spectral_analysis.html,"1D analysis tutorial",cls=badge-primary text-white`
+:link-badge:`../tutorials/analysis/1D/spectral_analysis_rad_max.html,"1D analysis tutorial with point-like IRFs",cls=badge-primary text-white`
+:link-badge:`../tutorials/analysis/1D/extended_source_spectral_analysis.html,"1D analysis tutorial of extended sources",cls=badge-primary text-white`
 
 .. accordion-footer::
 
@@ -122,6 +136,35 @@ Gammapy treats 2D maps as 3D cubes with one bin in energy. Sometimes, you might 
 obtained images lacking an energy axis (eg: reduced using traditional IACT tools) for modeling and fitting
 inside Gammapy. In this case, it is necessary to attach an `energy` axis on as it is shown in the tutorials.
 
+.. image:: ../_static/2d-analysis-image.png
+    :width: 100%
+
+|
+
+:link-badge:`../tutorials/analysis/2D/modeling_2D.html,"2D analysis tutorial",cls=badge-primary text-white`
+:link-badge:`../tutorials/analysis/2D/ring_background.html,"2D analysis tutorial with ring background",cls=badge-primary text-white`
+
+.. accordion-footer::
+
+.. accordion-header::
+    :id: collapseTwelve
+    :title: How to compute a 3D cube
+    :link: ../tutorials/analysis/3D/analysis_3d.html
+
+Gammapy lets you perform a combined spectral and spatial analysis as well.
+This is sometimes called in jargon a "cube analysis". Based on the 3D data reduction
+Gammapy can also simulate events. Flux points can be computed using the
+`~gammapy.estimators.FluxPointsEstimator`.
+
+.. image:: ../_static/3d-analysis-image.png
+    :width: 100%
+
+|
+
+:link-badge:`../tutorials/analysis/3D/analysis_3D.html,"3D analysis tutorial",cls=badge-primary text-white`
+:link-badge:`../tutorials/analysis/3D/event_sampling.html,"3D analysis tutorial with event sampling",cls=badge-primary text-white`
+
+
 .. accordion-footer::
 
 
@@ -130,40 +173,38 @@ inside Gammapy. In this case, it is necessary to attach an `energy` axis on as i
     :title: How to compute a lightcurve
     :link: ../tutorials/analysis/time/light_curve.html
 
-The light curve estimation tutorial shows how to extract a run-wise lightcurve.
+Gammapy allows you to compute light curves in various ways. Light curves
+can be computed for a **1D or 3D analysis scenario** (see above) by either
+grouping or splitting the DL3 data into multiple time intervals. Grouping
+mutiple observations allows for computing e.g. a **monthly or nightly light curves**,
+while splitting of a single observation allows to compute **light curves for flares**.
+You can also compute light curves in multiple energy bands. In all cases the light
+curve is computed using the `~gammapy.estimators.LightCurveEstimator`.
 
-To perform an analysis in a time range smaller than that of an observation, it
-is necessary to filter the latter with its `~gammapy.data.Observations.select_time` method. This produces
-a new observation containing events in the specified time range. With the new
-`~gammapy.data.Observations` it is then possible to perform the usual data
-reduction which will produce datasets in the correct time range. The light curve
-extraction can then be performed as usual with the
-`~gammapy.estimators.LightCurveEstimator`. This is demonstrated in the light curve flare tutorial.
 
-.. accordion-footer::
+:link-badge:`../tutorials/analysis/time/light_cuve.html,"Light curve tutorial",cls=badge-primary text-white`
+:link-badge:`../tutorials/analysis/time/light_curve_flare.html,"Light curve tutorial for flares",cls=badge-primary text-white`
 
-.. accordion-header::
-    :id: collapseTwelve
-    :title: How to detect sources in an image
-    :link: ../tutorials/analysis/2D/detect.html
-
-Gammapy provides methods to perform source detection in a 2D map. First step is
-to produce a significance map, i.e. a map giving the probability that the flux
-measured at each position is a background fluctuation. For a
-`~gammapy.datasets.MapDataset`, the class `~gammapy.estimators.TSMapEstimator` can be
-used. A simple correlated Li & Ma significance can be used, in particular for
-ON-OFF datasets. The second step consists in applying a peak finder algorithm,
-such as `~gammapy.estimators.utils.find_peaks`.
 
 .. accordion-footer::
+
 
 .. accordion-header::
     :id: collapseTwenty
     :title: How to combine data from multiple instruments
     :link: ../tutorials/analysis/3D/analysis_mwl.html
 
-Gammapy offers the possibility to combine data from multiple instruments
-in a "joint-likelihood" fit.
+Gammapy offers the possibility to **combine data from multiple instruments**
+in a "joint-likelihood" fit. This can be done at **multiple data levels** and
+independent dimensionality of the data. Gammapy can handle 1D and 3D datasets
+at the same time and can also include e.g. flux points in a combined likelihood fit.
+
+:link-badge:`../tutorials/analysis/3D/analysis_mwl.html,"Combined 1D / 3D analysis tutorial",cls=badge-primary text-white`
+:link-badge:`../tutorials/analysis/1D/sed_fitting.html,"SED fitting tutorial",cls=badge-primary text-white`
+
 
 .. accordion-footer::
 
+You can also go to :ref:`tutorials` to see all available tutorials.
+If you're new to conda, Python and Jupyter, maybe also read the :ref:`using-gammapy` guide.
+If you encountered any issues you can check the :ref:`troubleshoot` guide.
