@@ -6,7 +6,7 @@ from astropy.io import fits
 from astropy.table import Table
 from astropy.utils import classproperty
 from gammapy.data import GTI
-from gammapy.maps import Map, Maps
+from gammapy.maps import Map, Maps, TimeMapAxis
 from gammapy.modeling.models import (
     Models,
     PowerLawSpectralModel,
@@ -579,7 +579,9 @@ class FluxMaps:
     def flux_ref(self):
         """Reference integral flux"""
         if not self.is_convertible_to_flux_sed_type:
-            raise ValueError("Missing energy range definition, cannot convert to sed type 'flux'.")
+            raise ValueError(
+                "Missing energy range definition, cannot convert to sed type 'flux'."
+            )
 
         energy_min = self.energy_axis.edges[:-1]
         energy_max = self.energy_axis.edges[1:]
@@ -590,7 +592,9 @@ class FluxMaps:
     def eflux_ref(self):
         """Reference energy flux"""
         if not self.is_convertible_to_flux_sed_type:
-            raise ValueError("Missing energy range definition, cannot convert to sed type 'eflux'.")
+            raise ValueError(
+                "Missing energy range definition, cannot convert to sed type 'eflux'."
+            )
 
         energy_min = self.energy_axis.edges[:-1]
         energy_max = self.energy_axis.edges[1:]
@@ -817,6 +821,45 @@ class FluxMaps:
             data=data, reference_model=reference.reference_model, meta=meta, gti=gti
         )
 
+    def split_by_axis(self, axis_name):
+        """Create a set of FluxMaps by splitting along an axis
+
+        Parameters:
+        ----------
+        axis_name: str
+            Name of the axis to split on
+
+        Returns:
+        -------
+        flux_maps: list
+            A list of `~gammapy.estimators.FluxMaps`
+        """
+
+        split_maps = {}
+        flux_maps = []
+        for amap in self.available_quantities:
+            split_maps[amap] = getattr(self, amap).split_by_axis(axis_name)
+
+        axis = self.geom.axes["time"]
+
+        gti = self.gti
+        for idx in range(axis.nbin):
+            if isinstance(axis, TimeMapAxis):
+                gti = self.gti.select_time([axis.time_min[idx], axis.time_max[idx]])
+            maps = {}
+            for amap in self.available_quantities:
+                maps[amap] = split_maps[amap][idx]
+            flux_maps.append(
+                self.__class__.from_maps(
+                    maps=maps,
+                    sed_type=self.sed_type_init,
+                    reference_model=self.reference_model,
+                    gti=gti,
+                    meta=self.meta,
+                )
+            )
+        return flux_maps
+
     @classmethod
     def from_maps(cls, maps, sed_type=None, reference_model=None, gti=None, meta=None):
         """Create FluxMaps from a dictionary of maps.
@@ -962,9 +1005,7 @@ class FluxMaps:
             maps=maps, sed_type=sed_type, reference_model=reference_model, gti=gti
         )
 
-    def write(
-        self, filename, filename_model=None, overwrite=False, sed_type=None
-    ):
+    def write(self, filename, filename_model=None, overwrite=False, sed_type=None):
         """Write flux map to file.
 
         Parameters

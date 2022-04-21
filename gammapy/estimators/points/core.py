@@ -664,7 +664,3 @@ class FluxPoints(FluxMaps):
             )
         flux_points.meta["n_sigma_ul"] = n_sigma_ul
         return flux_points
-
-
-        
-
