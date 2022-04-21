@@ -554,20 +554,22 @@ class IRF(metaclass=abc.ABCMeta):
             data=data, axes=axes, meta=self.meta.copy(), unit=self.unit
         )
 
-    def compare(self, other, rtol=1e-3):
+    def compare(self, other, **kwargs):
         """Compare two IRFs for equivalency
 
         Parameters
         ----------
         other: the irf to compare against
             `gammapy.irfs.IRF`
-        rtol: float
-            relative tolerance for the data
+        kwargs: dict
+                keywords passed to `numpy.allclose`
 
         Returns
         -------
         state: bool
         """
+
+        kwargs.setdefault("rtol", 1e-3)
 
         if not isinstance(other, self.__class__):
             return False
@@ -577,7 +579,7 @@ class IRF(metaclass=abc.ABCMeta):
                 continue
             return False
 
-        return np.allclose(self.quantity, other.quantity, rtol=rtol)
+        return np.allclose(self.quantity, other.quantity, **kwargs)
 
     def __eq__(self, other):
         return self.compare(other)

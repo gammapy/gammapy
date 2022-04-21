@@ -248,20 +248,23 @@ class ParametricPSF(PSF):
         value = self.evaluate_direct(rad=rad, **pars)
         return value
 
-    def compare(self, other, rtol=1e-3):
+    def compare(self, other, **kwargs):
         """Compare two IRFs for equivalency
 
         Parameters
         ----------
         other: the irf to compare against
                     `gammapy.irfs.IRF`
-        rtol: float
-                relative tolerance for the data
+        kwargs: dict
+                keywords passed to `numpy.allclose`
 
         Returns
         -------
         state: bool
         """
+
+        kwargs.setdefault("rtol", 1e-3)
+
         if not isinstance(other, self.__class__):
             return False
 
@@ -272,7 +275,7 @@ class ParametricPSF(PSF):
 
         state = True
         for key in self.quantity.keys():
-            state *= np.allclose(self.quantity[key], other.quantity[key])
+            state *= np.allclose(self.quantity[key], other.quantity[key], **kwargs)
 
         return state
 
