@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
+from copy import deepcopy
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
@@ -84,12 +85,14 @@ class TestEnergyDispersion2D:
         axes = MapAxes([energy_axis_true, migra_axis, offset_axis])
 
         data = np.ones(shape=axes.shape)
-        
+
         edisp_test = EnergyDispersion2D(axes=axes)
         with pytest.raises(ValueError) as error:
-            wrong_unit = u.m**2
+            wrong_unit = u.m ** 2
             EnergyDispersion2D(axes=axes, data=data * wrong_unit)
-            assert error.match(f"Error: {wrong_unit} is not an allowed unit. {edisp_test.tag} requires {edisp_test.default_unit} data quantities.")
+            assert error.match(
+                f"Error: {wrong_unit} is not an allowed unit. {edisp_test.tag} requires {edisp_test.default_unit} data quantities."
+            )
 
         edisp = EnergyDispersion2D(axes=axes, data=data)
 
@@ -112,6 +115,11 @@ class TestEnergyDispersion2D:
     def test_peek(self):
         with mpl_plot_check():
             self.edisp.peek()
+
+    def test_eq(self):
+        assert not self.edisp2 == self.edisp
+        edisp1 = deepcopy(self.edisp)
+        assert self.edisp == edisp1
 
 
 @requires_data("gammapy-data")

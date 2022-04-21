@@ -248,6 +248,34 @@ class ParametricPSF(PSF):
         value = self.evaluate_direct(rad=rad, **pars)
         return value
 
+    def compare(self, other, rtol=1e-3):
+        """Compare two IRFs for equivalency
+
+        Parameters
+        ----------
+        other: the irf to compare against
+                    `gammapy.irfs.IRF`
+        rtol: float
+                relative tolerance for the data
+
+        Returns
+        -------
+        state: bool
+        """
+        if not isinstance(other, self.__class__):
+            return False
+
+        for x1, x2 in zip(self.axes, other.axes):
+            if x1 == x2:
+                continue
+            return False
+
+        state = True
+        for key in self.quantity.keys():
+            state *= np.allclose(self.quantity[key], other.quantity[key])
+
+        return state
+
 
 def get_sigmas_and_norms(**kwargs):
     """Convert scale and amplitude to norms"""
