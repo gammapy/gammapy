@@ -143,7 +143,19 @@ H.E.S.S. or Fermi-LAT data).
 .. accordion-footer::
 
 .. accordion-header::
+
     :id: collapseSHowToEleven
+    :title: How to model temporal profiles
+    :link: ../tutorials/analysis/time/light_curve_simulation.html#Fitting-temporal-models
+
+Temporal models can be directly fit on available lightcurves,
+or on the reduced datasets. This is done through a joint fitting of the datasets,
+one for each time bin.
+
+.. accordion-footer::
+
+.. accordion-header::
+    :id: collapseSixteen
     :title: Reduce memory budget for large datasets
 
 When dealing with surveys and large sky regions, the amount of memory required might become
