@@ -612,7 +612,7 @@ class FluxPoints(FluxMaps):
         if add_cbar:
             label = "Fit statistic difference"
             ax.figure.colorbar(caxes, ax=ax, label=label)
-            
+
         return ax
 
 

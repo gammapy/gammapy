@@ -471,4 +471,8 @@ def test_flux_map_split():
     assert len(split_maps) == 3
     assert split_maps[0].available_quantities == ref_map.available_quantities
     assert_allclose(split_maps[0].gti.time_stop.value, 51545.3340, rtol=1e-3)
+<<<<<<< HEAD
 >>>>>>> e1c6f0011 (add split_by_axis)
+=======
+    assert split_maps[0].reference_model == ref_map.reference_model
+>>>>>>> 63a90dc94 (improve test)
