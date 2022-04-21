@@ -1,0 +1,48 @@
+name: cffconvert
+
+on:
+  push:
+    paths:
+      - CITATION.cff
+
+jobs:
+  validate:
+    name: "cffconvert"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install eossr        
+        run: |
+          pip install eossr
+
+      - name: Check out a copy of the repository
+        uses: actions/checkout@v2
+
+      - name: Check whether the citation metadata from CITATION.cff is valid
+        uses: citation-file-format/cffconvert-github-action@2.0.0
+        with:
+          args: "--validate"
+
+      - name: Convert CITATION.cff to Codemeta metadata format
+        uses: citation-file-format/cffconvert-github-action@2.0.0
+        if: success()
+        with:
+          args: "--infile ./CITATION.cff --format codemeta --outfile codemeta.json"
+
+      - name: Fix codemeta.json
+        if: success()
+        run: |
+          cd dev && python codemeta.py
+
+      - name: Validate codemeta.json
+        if: success()
+        run: |
+          eossr-metadata-validator codemeta.json 
+      
+      - name: commit changes
+        uses: stefanzweifel/git-auto-commit-action@v4.1.6
+        if: success()
+        with:
+          commit_author: GitHub Actions <actions@github.com>
+          commit_message: commit metadata files 
+
+        

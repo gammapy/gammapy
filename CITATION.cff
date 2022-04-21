@@ -1,6 +1,6 @@
 # YAML 1.2
 # Metadata for citation of this software according to the CFF format (https://citation-file-format.github.io/)
-cff-version: 1.0.3
+cff-version: 1.2.0
 message: This research made use of Gammapy, a community-developed core Python package
   for gamma-ray astronomy. https://ui.adsabs.harvard.edu/abs/2017ICRC...35..766D/abstract
 title: 'Gammapy: Python toolbox for gamma-ray astronomy'
@@ -27,7 +27,7 @@ authors:
 - given-names: Johannes
   family-names: King
   affiliation: Pamyra
-- given-names: Jose Enrique
+- given-names: José Enrique
   family-names: Ruiz
   affiliation: Instituto de Astrofísica de Andalucía - CSIC, Gta. de la Astronomía,
     18008 Granada, Spain
@@ -247,10 +247,10 @@ authors:
 - given-names: Tyler
   family-names: Cahill
   affiliation: Iowa State University, Ames IA, US
-version: 0.18.2
+version: 0.19
 date-released: 2020-11-19
 repository-code: https://github.com/gammapy/gammapy
-license: BSD3
+license: BSD-3-Clause
 keywords:
 - Astronomy
 - "Gamma-rays"
@@ -265,7 +265,9 @@ identifiers:
 - type: "doi"
   value: 10.5281/zenodo.4701489
   description: Zenodo DOI v0.16
-- type: "bibcode"
+- type: "other"
   value: "2017ascl.soft11014D"
-- type: "ascl-id"
+  description: ASCL Bibcode
+- type: "other"
   value: "1711.014"
+  description: ASCL identifier
