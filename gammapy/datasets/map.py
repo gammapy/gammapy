@@ -1227,19 +1227,16 @@ class MapDataset(Dataset):
         else:
             mask = slice(None)
 
-        summed_stat = self._counts_statistic[mask].sum()
-
         counts = 0
+        background, excess, sqrt_ts = np.nan, np.nan, np.nan
         if self.counts:
+            summed_stat = self._counts_statistic[mask].sum()
             counts = summed_stat.n_on
 
-        background, excess, sqrt_ts = np.nan, np.nan, np.nan
-        if self.background:
-            background = summed_stat.n_bkg
-
-        if self.background and self.counts:
-            excess = summed_stat.n_sig
-            sqrt_ts = summed_stat.sqrt_ts
+            if self.background:
+                background = summed_stat.n_bkg
+                excess = summed_stat.n_sig
+                sqrt_ts = summed_stat.sqrt_ts
 
         info["counts"] = int(counts)
         info["excess"] = float(excess)

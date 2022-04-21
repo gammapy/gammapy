@@ -158,7 +158,7 @@ class CountsStatistic(abc.ABC):
             it.iternext()
         return n_sig
 
-    def sum(self):
+    def sum(self, axis=None):
         """Return summed CountsStatistics.
 
         Parameters
@@ -173,11 +173,8 @@ class CountsStatistic(abc.ABC):
              the return stat object
         """
 
-    def __add__(self, other):
-        """Add CountsStatistic arrays."""
-
-    def __iadd__(self, other):
-        """Add CountsStatistic arrays in place."""
+    def stack(self, other):
+        """Stack CountsStatistic arrays."""
 
 
 class CashCountsStatistic(CountsStatistic):
@@ -234,27 +231,8 @@ class CashCountsStatistic(CountsStatistic):
         bkg = self.n_bkg.sum(axis=axis)
         return CashCountsStatistic(n_on, bkg)
 
-    def __add__(self, other):
-        if not isinstance(other, CashCountsStatistic):
-            raise TypeError(f"Cannot add CountsStatistic to {other.__class__}")
-
-        n_on = self.n_on + other.n_on
-        bkg = self.n_bkg + other.n_bkg
-        return CashCountsStatistic(n_on, bkg)
-
-    def __iadd__(self, other):
-        if not isinstance(other, CashCountsStatistic):
-            raise TypeError(f"Cannot add CountsStatistic to {other.__class__}")
-
-        self.n_on += other.n_on
-        self.mu_bkg += other.n_bkg
-        return self
-
     def __getitem__(self, key):
-        if self.n_on.shape != ():
-            return CashCountsStatistic(self.n_on[key], self.n_bkg[key])
-        elif key in [0, slice(None), slice(0,1)]:
-            return self
+        return CashCountsStatistic(self.n_on[key], self.n_bkg[key])
 
 class WStatCountsStatistic(CountsStatistic):
     """Class to compute statistics (significance, asymmetric errors , ul) for Poisson distributed variable
@@ -335,29 +313,5 @@ class WStatCountsStatistic(CountsStatistic):
         alpha = self.n_bkg.sum(axis=axis)/n_off
         return WStatCountsStatistic(n_on, n_off, alpha)
 
-    def __add__(self, other):
-        if not isinstance(other, WStatCountsStatistic):
-            raise TypeError(f"Cannot add WStatCountsStatistic to {other.__class__}")
-
-        n_on = self.n_on + other.n_on
-        n_off = self.n_off + other.n_off
-        n_bkg = self.n_bkg + other.n_bkg
-        alpha = n_bkg/n_off
-        return WStatCountsStatistic(n_on, n_off, alpha)
-
-    def __iadd__(self, other):
-        if not isinstance(other, WStatCountsStatistic):
-            raise TypeError(f"Cannot add WStatCountsStatistic to {other.__class__}")
-
-        self.n_on += other.n_on
-        n_off = self.n_off + other.n_off
-        n_bkg = self.n_bkg + other.n_bkg
-        self.alpha = n_bkg/n_off
-        self.n_off = n_off
-        return self
-
     def __getitem__(self, key):
-        if self.n_on.shape != ():
-            return WStatCountsStatistic(self.n_on[key], self.n_off[key], self.alpha[key])
-        elif key in [0, slice(None), slice(0,1)]:
-            return self
+        return WStatCountsStatistic(self.n_on[key], self.n_off[key], self.alpha[key])
