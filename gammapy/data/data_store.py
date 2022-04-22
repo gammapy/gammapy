@@ -76,7 +76,7 @@ class DataStore:
 
     @property
     def obs_ids(self):
-        """Return list of obs_ids contained in the datastore."""
+        """Return the sorted obs_ids contained in the datastore."""
         return np.unique(self.hdu_table["OBS_ID"].data)
 
     @classmethod
@@ -301,6 +301,8 @@ class DataStore:
         ----------
         obs_id : list
             Observation IDs (default of ``None`` means "all")
+            If not given, all observations ordered by OBS_ID are returned.
+            This is not necessarily the order in the ``obs_table``.
         skip_missing : bool, optional
             Skip missing observations, default: False
         required_irf : list of str or str
