@@ -4,13 +4,13 @@ import astropy.units as u
 from astropy.visualization import quantity_support
 from gammapy.maps import Map, MapAxis, MapCoord, WcsGeom
 from gammapy.modeling.models import PowerLawSpectralModel
-from gammapy.utils.gauss import Gauss2DPDF
+from gammapy.utils.gauss import Gauss2DPDF, AsymmetricGauss2DPDF
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from ..core import IRFMap
 from .core import PSF
 from .kernel import PSFKernel
 
-__all__ = ["PSFMap"]
+__all__ = ["PSFMap", "PSFKernelMap"]
 
 
 class IRFLikePSF(PSF):
@@ -490,3 +490,161 @@ class PSFMap(IRFMap):
 
     def __str__(self):
         return str(self.psf_map)
+
+
+class PSFKernelMap(IRFMap):
+    tag = "psf_kernel_map"
+    required_axes = ["psf_lon","psf_lat", "energy_true"]
+
+    def __init__(self, psf_kernel_map, exposure_map=None):
+        super().__init__(irf_map=psf_kernel_map, exposure_map=exposure_map)
+
+    @property
+    def psf_kernel_map(self):
+        return self._irf_map
+
+    @psf_kernel_map.setter
+    def psf_kernel_map(self, value):
+        self._irf_map = value
+
+    @classmethod
+    def from_gauss(cls, energy_axis_true, psf_lon_axis=None, psf_lat_axis=None, sigma=0.1 * u.deg, geom=None):
+        """Create all-sky PSF kernel map from Gaussian width.
+
+        This is used for testing and examples.
+
+        The width can be the same for all energies
+        or be an array with one or two values per energy node.
+        The first value corresponds to the lon direction.
+
+        Parameters
+        ----------
+        energy_axis_true : `~gammapy.maps.MapAxis`
+            True energy axis.
+        rad_axis : `~gammapy.maps.MapAxis`
+            Offset angle wrt source position axis.
+        sigma : `~astropy.coordinates.Angle`
+            Gaussian width.
+        geom : `Geom`
+            Image geometry. By default an allsky geometry is created.
+
+        Returns
+        -------
+        psf_kernel_map : `PSFKernelMap`
+            Point spread function map.
+        """
+        LONLAT_AXIS_DEFAULT = MapAxis.from_bounds(-1, 1, nbin=11, unit='deg')
+
+        if not all([psf_lon_axis, psf_lat_axis]):
+            psf_lon_axis = LONLAT_AXIS_DEFAULT.copy()
+            psf_lat_axis = LONLAT_AXIS_DEFAULT.copy()
+            psf_lon_axis.name = 'psf_lon'
+            psf_lat_axis.name = 'psf_lat'
+
+        if geom is None:
+            geom = WcsGeom.create(
+                npix=(2, 1),
+                proj="CAR",
+                binsz=180,
+            )
+
+        geom = geom.to_cube([psf_lon_axis,psf_lat_axis, energy_axis_true])
+
+        coords = geom.get_coord(sparse=True)
+
+        # for now let's ignore energy dependent sigma and assume
+        # that it is either a tuple or a number
+        sigma = u.Quantity(sigma)
+        if np.size(sigma) == 1:
+            sigma =[sigma, sigma]
+        gauss = AsymmetricGauss2DPDF(sigma[0], sigma[1])
+
+        data = gauss(coords['psf_lon'],coords['psf_lat']) * np.ones(geom.data_shape)
+
+        psf_kernel_map = Map.from_geom(geom=geom, data=data.to_value("sr-1"), unit="sr-1")
+
+        geom_exposure = geom.squash(axis_name='psf_lon').squash(axis_name='psf_lat')
+        exposure_map = Map.from_geom(
+            geom=geom_exposure, unit="m2 s", data=1.0
+        )
+        return cls(psf_kernel_map=psf_kernel_map, exposure_map=exposure_map)
+
+
+    @classmethod
+    def from_geom(cls, geom):
+        """Create PSF kernel map from geom.
+
+        By default a symmetric gaussian PSF kernel is created.
+
+        Parameters
+        ----------
+        geom : `~gammapy.maps.Geom`
+            PSF kernel map geometry. Must have
+            an energy_true axis and both
+            psf_lon and psf_lat axes.
+
+        Returns
+        -------
+        psf_kernel_map : `PSFKernelMap`
+            PSF kernel map.
+        """
+        geom.axes.assert_names(cls.required_axes)
+
+        psf_lon_axis = geom.axes["psf_lon"]
+        psf_lat_axis = geom.axes["psf_lat"]
+        energy_axis_true = geom.axes["energy_true"]
+
+        return cls.from_gauss(energy_axis_true, psf_lon_axis, psf_lat_axis, sigma=0.1 * u.deg, geom=geom.to_image())
+
+    def get_psf_kernel(
+        self, geom=None, position=None,
+    ):
+        """Returns the PSF kernel at the given position.
+
+        The PSF is returned in the form of a PSFKernel which holds a WcsNDMap defined by the input Geom.
+
+        Parameters
+        ----------
+        geom : `~gammapy.maps.Geom`
+            Target geometry to use. If None is provided, the kernel will
+            be returned with the same geometry as is contained in the PSFKernelMap
+        position : `~astropy.coordinates.SkyCoord`
+            Target position. Should be a single coordinate. By default the
+            center position of the PSFKernelMap is used.
+
+        Returns
+        -------
+        kernel : `~gammapy.irf.PSFKernel`
+            the resulting kernel
+        """
+        if position is None:
+            position = self.psf_kernel_map.geom.center_skydir
+
+        position = self._get_nearest_valid_position(position)
+
+        kernel_data = self.psf_kernel_map.to_region_nd_map(region=position)
+
+        width = 2*np.max(np.abs([kernel_data.geom.axes['psf_lon'].edges.min().to_value('deg'),
+                      kernel_data.geom.axes['psf_lat'].edges.min().to_value('deg'),
+                      kernel_data.geom.axes['psf_lon'].edges.max().to_value('deg'),
+                      kernel_data.geom.axes['psf_lat'].edges.max().to_value('deg')]))
+
+        if geom is None:
+            geom_center = position
+        else:
+            geom_center = geom.center_skydir
+
+        kernel_geom = WcsGeom.create(skydir=geom_center,
+                            binsz=(kernel_data.geom.axes['psf_lon'].bin_width,
+                                  kernel_data.geom.axes['psf_lat'].bin_width),
+                            width = width,
+                            axes = [kernel_data.geom.axes['energy_true']])
+
+
+        kernel_map = Map.from_geom(kernel_geom, data = kernel_data.data[:,:,:,0,0])
+
+        if geom is not None:
+            kernel_map = kernel_map.interp_to_geom(geom)
+        kernel_map.data = np.clip(kernel_map.data,0,np.inf)
+
+        return PSFKernel(kernel_map, normalize=True)
