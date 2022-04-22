@@ -520,4 +520,4 @@ def test_flux_points_recompute_ul(fpe_pwl):
 
     # check that it returns a sensible value
     fp2 = fp.recompute_ul(n_sigma_ul=2)
-    assert_allclose(fp2.flux_ul.data, fp.flux_ul.data, rtol=1e-3)
+    assert_allclose(fp2.flux_ul.data, fp.flux_ul.data, rtol=1e-2)
