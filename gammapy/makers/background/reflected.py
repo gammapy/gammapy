@@ -1,12 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
+from numpy.testing import assert_allclose
 import numpy as np
 from itertools import combinations
 from abc import ABCMeta, abstractmethod
 
 from astropy import units as u
 from astropy.coordinates import Angle
-from regions import PixCoord, PointSkyRegion
+from regions import PixCoord, PointSkyRegion, CircleSkyRegion
 from gammapy.datasets import SpectrumDatasetOnOff
 from gammapy.maps import RegionGeom, RegionNDMap, WcsGeom, WcsNDMap
 from ..core import Maker
@@ -469,11 +470,21 @@ class ReflectedRegionsBackgroundMaker(Maker):
 
         is_point_like = observation.rad_max is not None
 
-        if is_point_like and not geom.is_all_point_sky_regions:
-            raise ValueError(
-                "Must use PointSkyRegion on region in point-like analysis,"
-                f" got {type(geom.region)} instead"
-            )
+        if is_point_like:
+            if not observation.rad_max.check_geom(geom):
+                if isinstance(geom.region, CircleSkyRegion):
+                    rad_max = observation.rad_max.quantity
+                    radius = geom.region.radius
+                    raise ValueError(
+                            f"CircleSkyRegion radius must be equal to RADMAX "
+                            f"for point-like IRFs with fixed RADMAX. "
+                            f"Expected {rad_max} got {radius}."
+                        )
+                else:
+                    raise ValueError(
+                        "Must use PointSkyRegion on region in point-like analysis,"
+                        f" got {type(geom.region)} instead"
+                    )
 
         regions_off, wcs = self.region_finder.run(
             center=observation.pointing_radec,
