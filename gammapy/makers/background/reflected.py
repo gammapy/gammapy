@@ -468,23 +468,25 @@ class ReflectedRegionsBackgroundMaker(Maker):
         energy_axis = geom.axes["energy"]
         events = observation.events
 
-        is_point_like = observation.rad_max is not None
+        is_point_like = False
 
-        if is_point_like:
-            if not observation.rad_max.check_geom(geom):
-                if isinstance(geom.region, CircleSkyRegion):
+        if observation.rad_max is not None:
+            if isinstance(geom.region, CircleSkyRegion):
+                if not observation.rad_max.check_geom(geom):
                     rad_max = observation.rad_max.quantity
                     radius = geom.region.radius
                     raise ValueError(
-                            f"CircleSkyRegion radius must be equal to RADMAX "
-                            f"for point-like IRFs with fixed RADMAX. "
-                            f"Expected {rad_max} got {radius}."
-                        )
-                else:
-                    raise ValueError(
-                        "Must use PointSkyRegion on region in point-like analysis,"
-                        f" got {type(geom.region)} instead"
+                        f"CircleSkyRegion radius must be equal to RADMAX "
+                        f"for point-like IRFs with fixed RADMAX. "
+                        f"Expected {rad_max} got {radius}."
                     )
+            elif not geom.is_all_point_sky_regions:
+                raise ValueError(
+                    "Must use PointSkyRegion on region in point-like analysis,"
+                    f" got {type(geom.region)} instead"
+                )
+            else:
+                is_point_like = True
 
         regions_off, wcs = self.region_finder.run(
             center=observation.pointing_radec,
@@ -492,7 +494,7 @@ class ReflectedRegionsBackgroundMaker(Maker):
             exclusion_mask=self.exclusion_mask,
         )
 
-        if is_point_like and len(regions_off) > 0:
+        if geom.is_all_point_sky_regions and len(regions_off) > 0:
             regions_off = self._filter_regions_off_rad_max(
                 regions_off, energy_axis, geom, events, observation.rad_max
             )
