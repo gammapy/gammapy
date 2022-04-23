@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-from numpy.testing import assert_allclose
 import numpy as np
 from itertools import combinations
 from abc import ABCMeta, abstractmethod
@@ -482,8 +481,8 @@ class ReflectedRegionsBackgroundMaker(Maker):
                             f"Expected {rad_max} got {radius}."
                         )
                 else:
-                    raise TypeError(f"Only circular regions can be used with fixed rad_max IRF and "
-                                    f"ReflectedRegionsFinder.")
+                    raise TypeError("Only circular regions can be used with fixed rad_max IRF and "
+                                    "ReflectedRegionsFinder.")
             elif not geom.is_all_point_sky_regions:
                 raise ValueError(
                     "Must use PointSkyRegion on region in point-like analysis,"
