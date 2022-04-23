@@ -406,14 +406,14 @@ def test_reflected_bkg_maker_fixed_rad_max_bad(reflected_bkg_maker, observations
 
     dataset = maker.run(dataset_empty, obs)
     with pytest.raises(ValueError):
-        dataset_on_off = reflected_bkg_maker.run(dataset, obs)
+        reflected_bkg_maker.run(dataset, obs)
 
     region_bad_shape = RectangleSkyRegion(pos, 0.2*u.deg, 0.2*u.deg)
     geom_bad_shape = RegionGeom(region_bad_shape, axes=[e_reco])
     dataset_empty = SpectrumDataset.create(geom=geom_bad_shape)
 
     dataset = maker.run(dataset_empty, obs)
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         reflected_bkg_maker.run(dataset, obs)
 
     region_point_shape = PointSkyRegion(pos)

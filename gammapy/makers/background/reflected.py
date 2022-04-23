@@ -471,15 +471,19 @@ class ReflectedRegionsBackgroundMaker(Maker):
         is_point_like = False
 
         if observation.rad_max is not None:
-            if isinstance(geom.region, CircleSkyRegion):
-                if not observation.rad_max.check_geom(geom):
-                    rad_max = observation.rad_max.quantity
-                    radius = geom.region.radius
-                    raise ValueError(
-                        f"CircleSkyRegion radius must be equal to RADMAX "
-                        f"for point-like IRFs with fixed RADMAX. "
-                        f"Expected {rad_max} got {radius}."
-                    )
+            if isinstance(self.region_finder, ReflectedRegionsFinder):
+                if isinstance(geom.region, CircleSkyRegion):
+                    if not observation.rad_max.check_geom(geom):
+                        rad_max = observation.rad_max.quantity
+                        radius = geom.region.radius
+                        raise ValueError(
+                            f"CircleSkyRegion radius must be equal to RADMAX "
+                            f"for point-like IRFs with fixed RADMAX. "
+                            f"Expected {rad_max} got {radius}."
+                        )
+                else:
+                    raise TypeError(f"Only circular regions can be used with fixed rad_max IRF and "
+                                    f"ReflectedRegionsFinder.")
             elif not geom.is_all_point_sky_regions:
                 raise ValueError(
                     "Must use PointSkyRegion on region in point-like analysis,"
