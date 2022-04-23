@@ -103,3 +103,6 @@ def test_rad_max_single_bin():
     assert rad_max.is_fixed_radmax
     assert rad_max.check_geom(geom)
 
+    geom = RegionGeom.create("fk5;box(0,0,0.1,0.1)")
+    assert rad_max.check_geom(geom) is False
+

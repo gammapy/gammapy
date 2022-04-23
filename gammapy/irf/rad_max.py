@@ -146,8 +146,6 @@ class RadMax2D(IRF):
                 valid = np.allclose(geom.region.radius.to_value('deg'),
                                     self.quantity.to_value('deg'),
                                     rtol)
-            else:
-                raise TypeError("CircleSkyRegion can only be used with fixed RADMAX point-like IRFs.")
         elif geom.is_all_point_sky_regions:
             valid = True
         return valid
