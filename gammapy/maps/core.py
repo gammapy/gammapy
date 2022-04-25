@@ -1095,11 +1095,10 @@ class Map(abc.ABC):
             factor = int(np.ceil(oversampling_factor / base_factor))
             input_map = self.upsample(factor=factor, preserve_counts=preserve_counts)
 
-        coords = input_map.geom.get_coord()
-        output_map.fill_by_coord(coords,
-                                 weights=input_map.quantity,
-                                 preserve_counts=preserve_counts
-                                 )
+        output_map.resample(input_map.geom,
+                            weights=input_map.quantity,
+                            preserve_counts=preserve_counts
+                            )
         return output_map
 
 
@@ -1130,19 +1129,13 @@ class Map(abc.ABC):
             
         return self._init_copy(geom=geom, data=data)
 
-    def fill_events(self, events):
-        """Fill event coordinates (`~gammapy.data.EventList`)."""
-        self.fill_by_coord(events.map_coord(self.geom))
-
-    def fill_by_coord(self, coords, weights=None, preserve_counts=True):
-        """Fill pixels at ``coords`` with given ``weights``.
+    def resample(self, geom, weights=None, preserve_counts=True):
+        """Resample pixels to ``geom`` with given ``weights``.
 
         Parameters
         ----------
-        coords : tuple or `~gammapy.maps.MapCoord`
-            Coordinate arrays for each dimension of the map.  Tuple
-            should be ordered as (lon, lat, x_0, ..., x_n) where x_i
-            are coordinates for non-spatial dimensions of the map.
+        geom : `~gammapy.maps.Geom`
+            Target Map geometry
         weights : `~numpy.ndarray`
             Weights vector. Default is weight of one.
         preserve_counts : bool
@@ -1150,33 +1143,13 @@ class Map(abc.ABC):
             if the map is an integral quantity (e.g. counts) and false if
             the map is a differential quantity (e.g. intensity)
         """
+        coords = geom.get_coord()
         idx = self.geom.coord_to_idx(coords)
-        self.fill_by_idx(idx, weights=weights, preserve_counts=preserve_counts)
-
-    def fill_by_pix(self, pix, weights=None, preserve_counts=True):
-        """Fill pixels at ``pix`` with given ``weights``.
-
-        Parameters
-        ----------
-        pix : tuple
-            Tuple of pixel index arrays for each dimension of the map.
-            Tuple should be ordered as (I_lon, I_lat, I_0, ..., I_n)
-            for WCS maps and (I_hpx, I_0, ..., I_n) for HEALPix maps.
-            Pixel indices can be either float or integer type.  Float
-            indices will be rounded to the nearest integer.
-        weights : `~numpy.ndarray`
-            Weights vector. Default is weight of one.
-        preserve_counts : bool
-            Preserve the integral over each bin.  This should be true
-            if the map is an integral quantity (e.g. counts) and false if
-            the map is a differential quantity (e.g. intensity)
-        """
-        idx = pix_tuple_to_idx(pix)
-        return self.fill_by_idx(idx, weights=weights, preserve_counts=preserve_counts)
+        return self.resample_by_idx(idx, weights=weights, preserve_counts=preserve_counts)
 
     @abc.abstractmethod
-    def fill_by_idx(self, idx, weights=None, preserve_counts=True):
-        """Fill pixels at ``idx`` with given ``weights``.
+    def resample_by_idx(self, idx, weights=None, preserve_counts=False):
+        """Resample pixels at ``idx`` with given ``weights``.
 
         Parameters
         ----------
@@ -1190,6 +1163,57 @@ class Map(abc.ABC):
             Preserve the integral over each bin.  This should be true
             if the map is an integral quantity (e.g. counts) and false if
             the map is a differential quantity (e.g. intensity)
+        """
+        pass
+
+    def fill_events(self, events):
+        """Fill event coordinates (`~gammapy.data.EventList`)."""
+        self.fill_by_coord(events.map_coord(self.geom))
+
+    def fill_by_coord(self, coords, weights=None):
+        """Fill pixels at ``coords`` with given ``weights``.
+
+        Parameters
+        ----------
+        coords : tuple or `~gammapy.maps.MapCoord`
+            Coordinate arrays for each dimension of the map.  Tuple
+            should be ordered as (lon, lat, x_0, ..., x_n) where x_i
+            are coordinates for non-spatial dimensions of the map.
+        weights : `~numpy.ndarray`
+            Weights vector. Default is weight of one.
+        """
+        idx = self.geom.coord_to_idx(coords)
+        self.fill_by_idx(idx, weights=weights)
+
+    def fill_by_pix(self, pix, weights=None):
+        """Fill pixels at ``pix`` with given ``weights``.
+
+        Parameters
+        ----------
+        pix : tuple
+            Tuple of pixel index arrays for each dimension of the map.
+            Tuple should be ordered as (I_lon, I_lat, I_0, ..., I_n)
+            for WCS maps and (I_hpx, I_0, ..., I_n) for HEALPix maps.
+            Pixel indices can be either float or integer type.  Float
+            indices will be rounded to the nearest integer.
+        weights : `~numpy.ndarray`
+            Weights vector. Default is weight of one.
+        """
+        idx = pix_tuple_to_idx(pix)
+        return self.fill_by_idx(idx, weights=weights)
+
+    @abc.abstractmethod
+    def fill_by_idx(self, idx, weights=None):
+        """Fill pixels at ``idx`` with given ``weights``.
+
+        Parameters
+        ----------
+        idx : tuple
+            Tuple of pixel index arrays for each dimension of the map.
+            Tuple should be ordered as (I_lon, I_lat, I_0, ..., I_n)
+            for WCS maps and (I_hpx, I_0, ..., I_n) for HEALPix maps.
+        weights : `~numpy.ndarray`
+            Weights vector. Default is weight of one.
         """
         pass
 
