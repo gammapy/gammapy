@@ -93,15 +93,16 @@ class EDispMap(IRFMap):
         """Normalize PSF map"""
         self.edisp_map.normalize(axis_name="migra")
 
-    def get_edisp_kernel(self, position=None, energy_axis=None):
+    def get_edisp_kernel(self, energy_axis, position=None):
         """Get energy dispersion at a given position.
 
         Parameters
         ----------
-        position : `~astropy.coordinates.SkyCoord`
-            the target position. Should be a single coordinates
         energy_axis : `MapAxis`
             Reconstructed energy axis
+        position : `~astropy.coordinates.SkyCoord`
+            the target position. Should be a single coordinates
+
 
         Returns
         -------
