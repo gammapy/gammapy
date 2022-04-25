@@ -137,6 +137,14 @@ class Background3D(BackgroundIRF):
         )
 
     def peek(self, figsize=(10, 8)):
+        """Quick-look summary plots.
+
+        Parameters
+        ----------
+        figsize : tuple
+            Size of the figure.
+
+        """
         return self.to_2d().peek(figsize)
 
     def plot_at_energy(

@@ -578,7 +578,14 @@ class EDispKernel(IRF):
         return ax
 
     def peek(self, figsize=(15, 5)):
-        """Quick-look summary plot."""
+        """Quick-look summary plots.
+
+        Parameters
+        ----------
+        figsize : tuple
+            Size of the figure.
+
+        """
         import matplotlib.pyplot as plt
 
         fig, axes = plt.subplots(nrows=1, ncols=2, figsize=figsize)

@@ -1879,13 +1879,9 @@ class MapDataset(Dataset):
 
         Parameters
         ----------
-        fig : `~matplotlib.figure.Figure`
-            Figure to add AxesSubplot on.
+        figsize : tuple
+            Size of the figure.
 
-        Returns
-        -------
-        ax1, ax2, ax3 : `~matplotlib.axes.AxesSubplot`
-            Counts, excess and exposure.
         """
 
         def plot_mask(ax, mask, **kwargs):
