@@ -500,14 +500,8 @@ class PSFMap(IRFMap):
 
         Parameters
         ----------
-        fig : `~matplotlib.figure.Figure`
-            Figure to add AxesSubplot on.
-
-        Returns
-        -------
-        ax1, ax2, ax3, ax4 : `~matplotlib.axes.AxesSubplot`
-            Containment radius at the center, PSF profile at the center,
-            exposure map and containment radius map at 1 TeV.
+        figsize : tuple
+            Size of figure.
         """
 
         import matplotlib.pyplot as plt
