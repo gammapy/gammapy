@@ -9,9 +9,11 @@ from gammapy.maps import MapAxis, Maps, RegionNDMap, TimeMapAxis
 from gammapy.maps.axes import flat_if_equal
 from gammapy.modeling.models import TemplateSpectralModel
 from gammapy.modeling.models.spectral import scale_plot_flux
+from gammapy.modeling.scipy import stat_profile_ul_scipy
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_standardise_units_copy
 from ..map.core import DEFAULT_UNIT, FluxMaps
+from copy import deepcopy
 
 __all__ = ["FluxPoints"]
 
@@ -612,3 +614,52 @@ class FluxPoints(FluxMaps):
             ax.figure.colorbar(caxes, ax=ax, label=label)
 
         return ax
+
+    def recompute_ul(self, n_sigma_ul=2, **kwargs):
+        """Recompute upper limits corresponding to the given value.
+        The pre-computed stat profiles must exist for the re-computation.
+
+        Parameters
+        ----------
+        n_sigma_ul : int
+            Number of sigma to use for upper limit computation. Default is 2.
+        **kwargs : dict
+            Keyword arguments passed to `~scipy.optimize.brentq`.
+
+        Returns
+        --------
+        flux_points : `FluxPoints`
+            A new FluxPoints object with modified upper limits
+
+        Examples
+        --------
+        >>> from gammapy.estimators import FluxPoints
+        >>> filename = '$GAMMAPY_DATA/tests/spectrum/flux_points/binlike.fits'
+        >>> flux_points = FluxPoints.read(filename)
+        >>> flux_points_recomputed = flux_points.recompute_ul(n_sigma_ul=3)
+        >>> print(flux_points.meta["n_sigma_ul"], flux_points.flux_ul.data[0])
+        2.0 [[3.95451985e-09]]
+        >>> print(flux_points_recomputed.meta["n_sigma_ul"], flux_points_recomputed.flux_ul.data[0])
+        3 [[6.22245374e-09]]
+        """
+
+        if not self.has_stat_profiles:
+            raise ValueError(
+                "Stat profiles not present. Upper limit computation is not possible"
+            )
+
+        delta_ts = n_sigma_ul ** 2
+
+        flux_points = deepcopy(self)
+
+        value_scan = self.stat_scan.geom.axes["norm"].center
+        shape_axes = self.stat_scan.geom._shape[slice(3, None)]
+        for idx in np.ndindex(shape_axes):
+            stat_scan = np.abs(
+                self.stat_scan.data[idx].squeeze() - self.stat.data[idx].squeeze()
+            )
+            flux_points.norm_ul.data[idx] = stat_profile_ul_scipy(
+                value_scan, stat_scan, delta_ts=delta_ts, **kwargs
+            )
+        flux_points.meta["n_sigma_ul"] = n_sigma_ul
+        return flux_points

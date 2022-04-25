@@ -634,3 +634,32 @@ def test_lightcurve_estimator_map_datasets():
     assert_allclose(table["norm_err"][0], [0.031508], rtol=1e-2)
     assert_allclose(table["counts"][0], [[2205, 2220]])
     assert_allclose(table["ts"][0], [2557.346464], rtol=1e-2)
+
+
+@requires_data()
+@requires_dependency("iminuit")
+def test_recompute_ul():
+    datasets = get_spectrum_datasets()
+    selection = ["all"]
+    estimator = LightCurveEstimator(
+        energy_edges=[1, 3, 30] * u.TeV, selection_optional=selection, n_sigma_ul=2
+    )
+    lightcurve = estimator.run(datasets)
+    assert_allclose(
+        lightcurve.dnde_ul.data[0], [[[3.260703e-13]], [[1.159354e-14]]], rtol=1e-3
+    )
+
+    new_lightcurve = lightcurve.recompute_ul(n_sigma_ul=4)
+    assert_allclose(
+        new_lightcurve.dnde_ul.data[0], [[[3.774561e-13]], [[1.374421e-14]]], rtol=1e-3
+    )
+    assert new_lightcurve.meta["n_sigma_ul"] == 4
+
+    # test if scan is not present
+    selection = []
+    estimator = LightCurveEstimator(
+        energy_edges=[1, 30] * u.TeV, selection_optional=selection
+    )
+    lightcurve = estimator.run(datasets)
+    with pytest.raises(ValueError):
+        lightcurve.recompute_ul(n_sigma_ul=4)
