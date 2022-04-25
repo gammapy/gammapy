@@ -9,6 +9,36 @@ __all__ = ["WStatCountsStatistic", "CashCountsStatistic"]
 
 
 class CountsStatistic(abc.ABC):
+    """Counts statistics base class"""
+    @property
+    @abc.abstractmethod
+    def stat_null(self):
+        pass
+
+    @property
+    @abc.abstractmethod
+    def stat_max(self):
+        pass
+
+    @property
+    @abc.abstractmethod
+    def n_sig(self):
+        pass
+
+    @property
+    @abc.abstractmethod
+    def n_bkg(self):
+        pass
+
+    @property
+    @abc.abstractmethod
+    def error(self):
+        pass
+
+    @abc.abstractmethod
+    def _stat_fcn(self):
+        pass
+
     @property
     def ts(self):
         """Return stat difference (TS) of measured excess versus no excess."""
@@ -40,8 +70,7 @@ class CountsStatistic(abc.ABC):
         n_sigma : float
             Confidence level of the uncertainty expressed in number of sigma. Default is 1.
         """
-
-        errn = np.zeros_like(self.n_on, dtype="float")
+        errn = np.zeros_like(self.n_sig, dtype="float")
         min_range = self.n_sig - 2 * n_sigma * (self.error + 1)
 
         it = np.nditer(errn, flags=["multi_index"])
@@ -121,6 +150,10 @@ class CountsStatistic(abc.ABC):
             it.iternext()
         return ul
 
+    @abc.abstractmethod
+    def _n_sig_matching_significance_fcn(self):
+        pass
+
     def n_sig_matching_significance(self, significance):
         """Compute excess matching a given significance.
 
@@ -158,6 +191,7 @@ class CountsStatistic(abc.ABC):
             it.iternext()
         return n_sig
 
+    @abc.abstractmethod
     def sum(self, axis=None):
         """Return summed CountsStatistics.
 
@@ -172,9 +206,7 @@ class CountsStatistic(abc.ABC):
         stat : `~gammapy.stats.CountsStatistics`
              the return stat object
         """
-
-    def stack(self, other):
-        """Stack CountsStatistic arrays."""
+        pass
 
 
 class CashCountsStatistic(CountsStatistic):
@@ -229,10 +261,11 @@ class CashCountsStatistic(CountsStatistic):
     def sum(self, axis=None):
         n_on = self.n_on.sum(axis=axis)
         bkg = self.n_bkg.sum(axis=axis)
-        return CashCountsStatistic(n_on, bkg)
+        return CashCountsStatistic(n_on=n_on, mu_bkg=bkg)
 
     def __getitem__(self, key):
-        return CashCountsStatistic(self.n_on[key], self.n_bkg[key])
+        return CashCountsStatistic(n_on=self.n_on[key], mu_bkg=self.n_bkg[key])
+
 
 class WStatCountsStatistic(CountsStatistic):
     """Class to compute statistics (significance, asymmetric errors , ul) for Poisson distributed variable
@@ -254,6 +287,7 @@ class WStatCountsStatistic(CountsStatistic):
         self.n_on = np.asanyarray(n_on)
         self.n_off = np.asanyarray(n_off)
         self.alpha = np.asanyarray(alpha)
+
         if mu_sig is None:
             self.mu_sig = np.zeros_like(self.n_on)
         else:
@@ -310,8 +344,10 @@ class WStatCountsStatistic(CountsStatistic):
     def sum(self, axis=None):
         n_on = self.n_on.sum(axis=axis)
         n_off = self.n_off.sum(axis=axis)
-        alpha = self.n_bkg.sum(axis=axis)/n_off
-        return WStatCountsStatistic(n_on, n_off, alpha)
+        alpha = self.n_bkg.sum(axis=axis) / n_off
+        return WStatCountsStatistic(n_on=n_on, n_off=n_off, alpha=alpha)
 
     def __getitem__(self, key):
-        return WStatCountsStatistic(self.n_on[key], self.n_off[key], self.alpha[key])
+        return WStatCountsStatistic(
+            n_on=self.n_on[key], n_off=self.n_off[key], alpha=self.alpha[key]
+        )
