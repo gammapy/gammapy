@@ -254,6 +254,20 @@ class EDispMap(IRFMap):
 
         return cls.from_geom(geom)
 
+    def peek(self, figsize=(15,5)):
+        """Quick-look summary plots.
+        Plots corresponding to the center of the map.
+
+        Parameters
+        ----------
+        figsize : tuple
+            Size of figure.
+
+        """
+        e_reco = self.edisp_map.geom.axes[1].copy()
+        e_reco.name = 'energy'
+
+        self.get_edisp_kernel(energy_axis=e_reco).peek(figsize)
 
 class EDispKernelMap(IRFMap):
     """Energy dispersion kernel map.
@@ -484,6 +498,8 @@ class EDispKernelMap(IRFMap):
 
     def peek(self, figsize=(15, 5)):
         """Quick-look summary plots.
+        Plots corresponding to the center of the map.
+
 
         Parameters
         ----------
