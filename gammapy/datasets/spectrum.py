@@ -3,7 +3,7 @@ import logging
 import numpy as np
 from gammapy.utils.scripts import make_path
 from .map import MapDataset, MapDatasetOnOff
-from .utils import get_axes, get_figure
+from .utils import get_axes
 
 __all__ = ["SpectrumDatasetOnOff", "SpectrumDataset"]
 
@@ -229,7 +229,7 @@ class PlotMixin:
         """
         import matplotlib.pyplot as plt
 
-        fig, ax1, ax2, ax3 = plt.subplots(1, 3, figsize=figsize)
+        fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=figsize)
 
         ax1.set_title("Counts")
         self.plot_counts(ax1)

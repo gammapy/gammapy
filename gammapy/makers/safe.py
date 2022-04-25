@@ -212,16 +212,16 @@ class SafeMaskMaker(Maker):
 
         if isinstance(edisp, EDispKernelMap):
             if position:
-                edisp = edisp.get_edisp_kernel(position)
+                edisp = edisp.get_edisp_kernel(position=position)
             else:
-                edisp = edisp.get_edisp_kernel(self.position)
+                edisp = edisp.get_edisp_kernel(position=self.position)
         else:
             if position:
                 e_reco = dataset._geom.axes["energy"].edges
-                edisp = edisp.get_edisp_kernel(position, e_reco)
+                edisp = edisp.get_edisp_kernel(position=position, energy_axis=e_reco)
             else:
                 e_reco = dataset._geom.axes["energy"].edges
-                edisp = edisp.get_edisp_kernel(self.position, e_reco)
+                edisp = edisp.get_edisp_kernel(position=self.position, energy_axis=e_reco)
 
         energy_min = edisp.get_bias_energy(self.bias_percent / 100)
         return geom.energy_mask(energy_min=energy_min[0])

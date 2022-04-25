@@ -301,7 +301,7 @@ def test_make_edisp_kernel_map():
     pointing = SkyCoord(0, 0, frame="icrs", unit="deg")
     edispmap = make_edisp_kernel_map(edisp, pointing, geom)
 
-    kernel = edispmap.get_edisp_kernel(pointing)
+    kernel = edispmap.get_edisp_kernel(position=pointing)
     assert_allclose(kernel.pdf_matrix[:, 0], (1.0, 1.0, 0.0, 0.0, 0.0, 0.0), atol=1e-14)
     assert_allclose(kernel.pdf_matrix[:, 1], (0.0, 0.0, 1.0, 1.0, 0.0, 0.0), atol=1e-14)
     assert_allclose(kernel.pdf_matrix[:, 2], (0.0, 0.0, 0.0, 0.0, 1.0, 1.0), atol=1e-14)
