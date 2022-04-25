@@ -1294,6 +1294,11 @@ class MapDataset(Dataset):
         dataset = cls.read(filename, name=data["name"], lazy=lazy, cache=cache)
         return dataset
 
+    @property
+    def _counts_statistic(self):
+        """Counts statistics of the dataset."""
+        return CashCountsStatistic(self.counts, self.background)
+
     def info_dict(self, in_safe_data_range=True):
         """Info dict with summary statistics, summed over energy
 
@@ -1316,19 +1321,20 @@ class MapDataset(Dataset):
             mask = slice(None)
 
         counts = 0
+        background, excess, sqrt_ts = np.nan, np.nan, np.nan
         if self.counts:
-            counts = self.counts.data[mask].sum()
+            summed_stat = self._counts_statistic[mask].sum()
+            counts = summed_stat.n_on
+
+            if self.background:
+                background = summed_stat.n_bkg
+                excess = summed_stat.n_sig
+                sqrt_ts = summed_stat.sqrt_ts
 
         info["counts"] = int(counts)
-
-        background = np.nan
-        if self.background:
-            background = self.background.data[mask].sum()
-
+        info["excess"] = float(excess)
+        info["sqrt_ts"] = sqrt_ts
         info["background"] = float(background)
-
-        info["excess"] = counts - background
-        info["sqrt_ts"] = CashCountsStatistic(counts, background).sqrt_ts
 
         npred = np.nan
         if self.models or not np.isnan(background):
@@ -2102,6 +2108,11 @@ class MapDatasetOnOff(MapDataset):
         )
         return np.nan_to_num(on_stat_)
 
+    @property
+    def _counts_statistic(self):
+        """Counts statistics of the dataset."""
+        return WStatCountsStatistic(self.counts, self.counts_off, self.alpha)
+
     @classmethod
     def from_geoms(
         cls,
@@ -2488,36 +2499,30 @@ class MapDatasetOnOff(MapDataset):
         else:
             mask = slice(None)
 
+        summed_stat = self._counts_statistic[mask].sum()
+
         counts_off = 0
         if self.counts_off is not None:
-            counts_off = self.counts_off.data[mask].sum()
+            counts_off = summed_stat.n_off
 
         info["counts_off"] = int(counts_off)
 
         acceptance = 1
         if self.acceptance:
-            # TODO: handle energy dependent a_on / a_off
             acceptance = self.acceptance.data[mask].sum()
 
         info["acceptance"] = float(acceptance)
 
         acceptance_off = np.nan
+        alpha = np.nan
+
         if self.acceptance_off:
-            acceptance_off = acceptance * counts_off / info["background"]
+            alpha = summed_stat.alpha
+            acceptance_off = acceptance/alpha
 
         info["acceptance_off"] = float(acceptance_off)
-
-        alpha = np.nan
-        if self.acceptance_off and self.acceptance:
-            alpha = np.mean(self.alpha.data[mask])
-
         info["alpha"] = float(alpha)
 
-        info["sqrt_ts"] = WStatCountsStatistic(
-            info["counts"],
-            info["counts_off"],
-            acceptance / acceptance_off,
-        ).sqrt_ts
         info["stat_sum"] = self.stat_sum()
         return info
 

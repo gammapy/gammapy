@@ -188,3 +188,63 @@ def test_wstat_excess_matching_significance(n_off, alpha, significance, result):
     excess = stat.n_sig_matching_significance(significance)
 
     assert_allclose(excess, result, rtol=1e-2)
+
+def test_cash_sum():
+    on = [1, 2 , 3]
+    bkg = [0.5, 0.7, 1.3]
+
+    stat = CashCountsStatistic(on, bkg)
+    stat_sum = stat.sum()
+
+    assert stat_sum.n_on == 6
+    assert stat_sum.n_bkg == 2.5
+
+    new_size = (2, 10, 3)
+    on = np.resize(on, new_size)
+    bkg = np.resize(bkg, new_size)
+
+    stat = CashCountsStatistic(on, bkg)
+    stat_sum = stat.sum(axis=(2))
+
+    assert stat_sum.n_on.shape == (2,10)
+    assert_allclose(stat_sum.n_on, 6)
+    assert_allclose(stat_sum.n_bkg, 2.5)
+
+    stat_sum = stat.sum(axis=(0,1))
+
+    assert stat_sum.n_on.shape == (3,)
+    assert_allclose(stat_sum.n_on, (20, 40, 60))
+    assert_allclose(stat_sum.n_bkg, (10, 14, 26))
+
+def test_wstat_sum():
+    on = [1, 2 , 3]
+    off = [5, 14, 8]
+    alpha = [0.1, 0.05, 0.1625]
+
+    stat = WStatCountsStatistic(on, off, alpha)
+    stat_sum = stat.sum()
+
+    assert stat_sum.n_on == 6
+    assert stat_sum.n_off == 27
+    assert stat_sum.n_bkg == 2.5
+    assert_allclose(stat_sum.alpha, 0.0925925925925925)
+
+    new_size = (2, 10, 3)
+    off = np.resize(off, new_size)
+    on = np.resize(on, new_size)
+    alpha = np.resize(alpha, new_size)
+
+    stat = WStatCountsStatistic(on, off, alpha)
+    stat_sum = stat.sum(axis=(2))
+
+    assert stat_sum.n_on.shape == (2,10)
+    assert_allclose(stat_sum.n_on, 6)
+    assert_allclose(stat_sum.n_bkg, 2.5)
+    assert_allclose(stat_sum.alpha, 0.0925925925925925)
+
+    stat_sum = stat.sum(axis=(0,1))
+
+    assert stat_sum.n_on.shape == (3,)
+    assert_allclose(stat_sum.n_on, (20, 40, 60))
+    assert_allclose(stat_sum.n_bkg, (10, 14, 26))
+
