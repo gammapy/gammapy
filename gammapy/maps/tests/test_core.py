@@ -506,16 +506,16 @@ def test_reproject_2d():
                            frame="galactic"
                            )
 
-    map1_repro = map1.reproject(geom2, preserve_counts=True)
+    map1_repro = map1.reproject_to_geom(geom2, preserve_counts=True)
     assert_allclose(np.sum(map1_repro), np.sum(map1), rtol=1e-5)
-    map1_new = map1_repro.reproject(geom1_large, preserve_counts=True)
+    map1_new = map1_repro.reproject_to_geom(geom1_large, preserve_counts=True)
     assert_allclose(np.sum(map1_repro), np.sum(map1_new), rtol=1e-5)
 
     with pytest.raises(ValueError):
-        map1_repro = map1.reproject(geom2, method="polygon", preserve_counts=True)
+        map1_repro = map1.reproject_to_geom(geom2, method="polygon", preserve_counts=True)
 
-    map1_repro = map1.reproject(geom2, preserve_counts=False)
-    map1_new = map1_repro.reproject(geom1_large, preserve_counts=False)
+    map1_repro = map1.reproject_to_geom(geom2, preserve_counts=False)
+    map1_new = map1_repro.reproject_to_geom(geom1_large, preserve_counts=False)
     assert_allclose(np.sum(map1_repro*geom2.solid_angle()),
                     np.sum(map1_new*geom1_large.solid_angle()),
                     rtol=1e-3
@@ -531,13 +531,13 @@ def test_reproject_2d():
                            )
     geom1_large = WcsGeom.create(npix=npix1+5, frame="icrs")
 
-    map1_repro = map1.reproject(geom2, preserve_counts=True)
+    map1_repro = map1.reproject_to_geom(geom2, preserve_counts=True)
     assert_allclose(np.sum(map1_repro), np.sum(map1), rtol=1e-5)
-    map1_new = map1_repro.reproject(geom1_large, preserve_counts=True)
+    map1_new = map1_repro.reproject_to_geom(geom1_large, preserve_counts=True)
     assert_allclose(np.sum(map1_repro), np.sum(map1_new), rtol=1e-3)
 
-    map1_repro = map1.reproject(geom2, preserve_counts=False)
-    map1_new = map1_repro.reproject(geom1_large, preserve_counts=False)
+    map1_repro = map1.reproject_to_geom(geom2, preserve_counts=False)
+    map1_new = map1_repro.reproject_to_geom(geom1_large, preserve_counts=False)
     assert_allclose(np.sum(map1_repro*geom2.solid_angle()),
                     np.sum(map1_new*geom1_large.solid_angle()),
                     rtol=1e-3
@@ -621,12 +621,12 @@ def test_map_reproject_wcs_to_hpx():
     data = np.arange(11 * 11 * 3).reshape(geom_wcs.data_shape)
     m = WcsNDMap(geom_wcs, data=data)
 
-    m_r = m.reproject(geom_hpx)
+    m_r = m.reproject_to_geom(geom_hpx)
     actual = m_r.get_by_coord({"lon": 0, "lat": 0, "energy": [1.0, 3.16227766, 10.0]})
     assert_allclose(actual, [65.0, 186.0, 307.0], rtol=1e-3)
 
     with pytest.raises(TypeError):
-        m.reproject(geom_hpx, method="polygon")
+        m.reproject_to_geom(geom_hpx, method="polygon")
 
 def test_map_reproject_hpx_to_wcs():
     axis = MapAxis.from_bounds(
@@ -640,12 +640,12 @@ def test_map_reproject_hpx_to_wcs():
     data = np.arange(3 * 768).reshape(geom_hpx.data_shape)
     m = HpxNDMap(geom_hpx, data=data)
 
-    m_r = m.reproject(geom_wcs)
+    m_r = m.reproject_to_geom(geom_wcs)
     actual = m_r.get_by_coord({"lon": 0, "lat": 0, "energy": [1.0, 3.16227766, 10.0]})
     assert_allclose(actual, [287.5, 1055.5, 1823.5], rtol=1e-3)
 
     with pytest.raises(TypeError):
-        m.reproject(geom_hpx, method="polygon")
+        m.reproject_to_geom(geom_hpx, method="polygon")
 
 @requires_dependency("reproject")
 def test_map_reproject_wcs_to_wcs_with_axes():
@@ -668,7 +668,7 @@ def test_map_reproject_wcs_to_wcs_with_axes():
     time_data = time_nodes.reshape(4, 1, 1, 1)
     data = spatial_data + energy_data + 0.5 * time_data
     m = WcsNDMap(geom_wcs_1, data=data)
-    m_r = m.reproject(geom_wcs_2, method="polygon")
+    m_r = m.reproject_to_geom(geom_wcs_2, method="polygon")
     assert m.data.shape == m_r.data.shape
     for data, idx in m_r.iter_by_image():
         ref = idx[1] + 0.5 * idx[0]
@@ -676,13 +676,13 @@ def test_map_reproject_wcs_to_wcs_with_axes():
  
     geom_wcs_3 = WcsGeom.create(skydir=(0, 0), npix=(11, 11), binsz=0.1, axes=[axis2], frame="galactic")
     with pytest.raises(TypeError):
-        m.reproject(geom_wcs_3 , method="polygon")
+        m.reproject_to_geom(geom_wcs_3 , method="polygon")
 
     factor = 2
     axis1_up =  axis1.upsample(factor=factor)
     axis2_up =  axis2.upsample(factor=factor)
     geom_wcs_4 = geom_wcs_1.copy(axes= [axis1_up, axis2_up])
-    m_r_4 = m.reproject(geom_wcs_4, method="polygon", fill_value=np.nan)
+    m_r_4 = m.reproject_to_geom(geom_wcs_4, method="polygon", fill_value=np.nan)
     for data, idx in m_r_4.iter_by_image():
         ref = idx[1] + 0.5 * idx[0]
         assert_allclose(np.nanmean(data), ref/factor)
@@ -700,11 +700,11 @@ def test_wcsndmap_reproject_allsky_car():
     )
     expected =  np.mean([m.data[0,0], m.data[0,-1]]) #wrap at 180deg
 
-    m0 = m.reproject(geom0)
+    m0 = m.reproject_to_geom(geom0)
     assert_allclose(m0.data[0], expected)
 
     geom1 = HpxGeom.create(binsz=5.0, frame="icrs")
-    m1 = m.reproject(geom1)
+    m1 = m.reproject_to_geom(geom1)
     mask = np.abs(m1.geom.get_coord()[0]-180)<=5
     assert_allclose(np.unique(m1.data[mask])[1], expected)
 
