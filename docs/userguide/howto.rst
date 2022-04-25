@@ -18,7 +18,7 @@ Please give feedback and suggest additions to this page!
 
 
 .. accordion-header::
-    :id: collapseOne
+    :id: collapseHowToOne
     :title: Spell and pronounce Gammapy
 
 The recommended spelling is "Gammapy" as proper name. The recommended
@@ -28,7 +28,7 @@ the english word "pie". You can listen to it `here <http://ipa-reader.xyz/?text=
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseThree
+    :id: collapseHowToTwo
     :title: Select observations
     :link: ../tutorials/starting/analysis_2.html#Defining-the-datastore-and-selecting-observations
 
@@ -39,7 +39,7 @@ or also select observations based on other information available using the `~gam
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseFour
+    :id: collapseHowToThree
     :title: Make an on-axis equivalent livetime map
     :link: ../tutorials/data/hess.html#On-axis-equivalent-livetime
 
@@ -50,7 +50,7 @@ or also select observations based on other information available using the `~gam
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseFive
+    :id: collapseHowToFour
     :title: Check IRFs
     :link: ../tutorials/data/cta.html#IRFs
 
@@ -61,7 +61,7 @@ methods.
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseNine
+    :id: collapseHowToFive
     :title: Choose units for plotting
 
 Units for plotting are handled with a combination of `matplotlib` and `astropy.units`.
@@ -81,7 +81,7 @@ you to define the x and y axis units using `astropy.units`. Here is a minimal ex
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseTen
+    :id: collapseHowToSix
     :title: Compute source significance
 
 Estimate the significance of a source, or more generally of an additional model
@@ -98,7 +98,7 @@ take the difference. Note that in Gammapy, the fit statistic is defined as ``S =
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseEleven
+    :id: collapseHowToSeven
     :title: Compute cumulative significance
     :link: ../tutorials/analysis/1D/spectral_analysis.html#Source-statistic
 
@@ -111,7 +111,7 @@ access the total statistics with the ``info_table(cumulative=True)`` method of
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseFourteen
+    :id: collapseHowToEight
     :title: Implement a custom model
     :link: ../tutorials/api/models.html#Implementing-a-Custom-Model
 
@@ -120,7 +120,7 @@ Gammapy allows the flexibility of using user-defined models for analysis.
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseFifteen
+    :id: collapseHowToNine
     :title: Energy dependent spatial models
     :link: ../tutorials/api/models.html#Models-with-energy-dependent-morphology
 
@@ -130,7 +130,7 @@ such models within the modeling framework.
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseThirteen
+    :id: collapseHowToTen
     :title: How to model astrophysical source spectra
 
 It is possible to combine Gammapy with astrophysical modeling codes, if they
@@ -143,7 +143,7 @@ H.E.S.S. or Fermi-LAT data).
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseSixteen
+    :id: collapseSHowToEleven
     :title: Reduce memory budget for large datasets
 
 When dealing with surveys and large sky regions, the amount of memory required might become
@@ -162,7 +162,7 @@ by removing it from the list of options passed to the `~gammapy.makers.MapDatase
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseSeventeen
+    :id: collapseHowToTwelve
     :title: Copy part of a data store
 
 To share specific data from a database, it might be necessary to create a new data storage with
@@ -174,7 +174,7 @@ and build the associated observation and HDU tables.
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseEighteen
+    :id: collapseHowToThirteen
     :title: Interpolate onto a different geometry
     :link: ../tutorials/api/maps.html#Filling-maps-from-interpolation
 
@@ -183,7 +183,7 @@ To interpolate maps onto a different geometry use `~gammapy.maps.Map.interp_to_g
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseNineteen
+    :id: collapseHowToFourteen
     :title: Suppress warnings
 
 In general it is not recommended to suppress warnings from code because they

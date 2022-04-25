@@ -27,10 +27,10 @@ Before attempting to make a contribution, you should *use* Gammapy a bit at leas
 
 We'd like to note that there are many ways to contribute to the Gammapy project.
 For example if you mention it to a colleague or suggest it to a student, or if
-you use it and `acknowledge Gammapy <https://gammapy.org/acknowledging.html>`__ 
-in a presentation, poster or publication, or if you report an issue on the mailing list, 
-those are contributions we value. The rest of this page though is concerned only with 
-the process and technical steps how to contribute a code or documentation change via a 
+you use it and `acknowledge Gammapy <https://gammapy.org/acknowledging.html>`__
+in a presentation, poster or publication, or if you report an issue on the mailing list,
+those are contributions we value. The rest of this page though is concerned only with
+the process and technical steps how to contribute a code or documentation change via a
 **pull request** against the Gammapy repository.
 
 So let's assume you've used Gammapy for a while, and now you'd like to fix or
@@ -134,9 +134,11 @@ commands to set up an environment for Gammapy development:
     git clone https://github.com/[your-github-username]/gammapy.git
     cd gammapy
     conda env create -f environment-dev.yml
+
     # To speed up the environment solving you can use mamba instead of conda
     # mamba env create -f environment-dev.yml
     conda activate gammapy-dev
+
     # for conda versions <4.4.0 you may have to execute
     # 'source activate gammapy-dev' instead
     git remote add gammapy git@github.com:gammapy/gammapy.git
@@ -149,8 +151,16 @@ It is also common to stick with the name ``origin`` for your repository and to
 use ``upstream`` for the repository you forked from. In any case, you can use
 ``$ git remote -v`` to list all your configured remotes.
 
-When developing gammapy you never want to work on the ``master`` branch, but
-always on a dedicated feature branch. 
+In case you are working with the development version environment and you want to update this
+environment with the content present in `environment-dev.yml` see below:
+
+.. code-block:: bash
+
+    $ conda env update environment-dev.yml --prune
+
+
+When developing Gammapy you never want to work on the ``master`` branch, but
+always on a dedicated feature branch.
 
 .. code-block:: bash
 
@@ -164,7 +174,7 @@ To *activate* your development version (branch) of Gammapy in your environment:
     pip install -e .
 
 This build is necessary to compile the few Cython code (``*.pyx``). If you skip
-this step, some imports depending on Cython code will fail. If you want to remove the generated 
+this step, some imports depending on Cython code will fail. If you want to remove the generated
 files run ``make clean``.
 
 For the development it is also convenient to have declared ``$GAMMAPY_DATA`` environment variable.

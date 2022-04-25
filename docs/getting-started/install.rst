@@ -5,106 +5,58 @@
 Installation
 ============
 
+There are many ways to install Python and Gammapy as a user. On this page we list the most common ones.
+In general **we recommend to use virtual environments** when using Gammapy. This ways you have full
+control over additional packages that you may use in your analysis and you work with
+well defined computing environments, that you can share and allow **reproducibility of your
+scientific analysis results**. If you want to learn about using virtual environments see :ref:`virtual-envs`.
+You can also :ref:`install Gammapy for development <dev_setup>`.
+
 .. _anaconda:
 
 Using Anaconda / Miniconda
 --------------------------
-
-The easiest way to install Gammapy is to install the Anaconda
-distribution from https://www.anaconda.com/download/ and then to install
-Gammapy and its dependencies by executing this command in a terminal:
-
-.. code-block:: bash
-
-    conda install -c conda-forge gammapy
-
-Though this is one line command is the standard way to install a software package using Anaconda, **we recommend to
-make use of an environment definition file** that we provide, so you can get additional useful packages together with
-Gammapy in a virtual isolated environment. If you want to learn about using virtual environments see
-:ref:`virtual-envs`. In order to proceed in this way, just copy and paste in your terminal the two lines below:
+The easiest way to install Gammapy is to install the `Anaconda <https://www.anaconda.com/download/>`__
+or `Miniconda <https://docs.conda.io/en/latest/miniconda.html>`__ Python distribution.
+To install the latest stable version of Gammapy and its dependencies using conda,
+execute this command in a terminal:
 
 .. code-block:: bash
 
-    curl -O https://gammapy.org/download/install/gammapy-0.19-environment.yml
-    conda env create -f gammapy-0.19-environment.yml
+    $ conda install -c conda-forge gammapy
 
-.. note::
+To update an existing installation you can use:
 
-    On Windows, you have to open up the conda environment file and delete the
-    lines with ``sherpa`` and ``healpy``. Those are optional dependencies that
-    currently aren't available on Windows.
+.. code-block:: bash
 
+    $ conda update gammapy
+
+To install a specific version of Gammapy just execute:
+
+.. code-block:: bash
+
+    $ conda install -c conda-forge gammapy=0.19
+
+If you encountered any issues you can check the :ref:`troubleshoot` guide.
 
 Using Mamba
 -----------
-Alternatively, you can use `mamba <https://mamba.readthedocs.io/>` for the installation.
+Alternatively, you can use `Mamba <https://mamba.readthedocs.io/>`__ for the installation.
 Mamba is an alternative package manager that support most of conda’s command but offers higher installation
-speed and more reliable environment solutions. To install ``mamba`` in the base environment:
+speed and more reliable environment solutions. To install ``mamba`` in the Conda base environment:
 
 .. code-block:: bash
 
-    conda install mamba -n base -c conda-forge
+    $ conda install mamba -n base -c conda-forge
 
 then:
 
 .. code-block:: bash
 
-    curl -O https://gammapy.org/download/install/gammapy-0.19-environment.yml
-    mamba env create -f gammapy-0.19-environment.yml
+    $ mamba install gammapy
 
-
-Both options will create a conda environment called ``gammapy-0.19`` which you can activate via:
-
-.. code-block:: bash
-
-    conda activate gammapy-0.19
-
-Note that you have to execute that activation command (but not the environment
-creation command) every time you open a new terminal window, because the default
-with conda is the base environment, which might not have Gammapy installed.
-
-To check your Gammapy installation, you can use this command:
-
-.. code-block:: bash
-
-    gammapy info
-
-To leave the environment, you may activate another one or just type:
-
-.. code-block:: bash
-
-    conda deactivate
-
-.. _virtual-envs:
-
-Using virtual environments
---------------------------
-
-We recommend to create an isolated virtual environment for each version of Gammapy, so that you have full
-control over additional packages that you may use in your analysis. We provide, for each stable release of Gammapy,
-a YAML file that allows you to easily create a specific conda execution environment. This could also help you on
-improving reproducibility within the users community. See installation instructions on :ref:`getting-started` section.
-
-You may prefer to create your virtual environments with Python `venv` command instead of using Anaconda.
-To create a virtual environment with `venv` (Python 3.5+ required) run the command:
-
-.. code-block:: bash
-
-    $ python -m venv gammapy-env
-
-which will create one in a `gammapy-env` folder. To activate it:
-
-.. code-block:: bash
-
-    $ . gammapy-env/bin/activate
-
-After that you can install Gammapy using `pip` as well as other packages you may need.
-
-To leave the environment, you may activate another one or just type:
-
-.. code-block:: bash
-
-    $ deactivate
+Mamba supports of the commands that are available for conda. So updating and installing specific versions
+works the same way as above except for replacing the ``conda`` with the ``mamba`` command.
 
 .. _install-pip:
 
@@ -118,7 +70,19 @@ using `pip`_:
 
    $ python -m pip install gammapy
 
-To install the current Gammapy **development** version using `pip`_:
+To update an existing installation you can use:
+
+.. code-block:: bash
+
+   $ python -m pip install gammapy --upgrade
+
+To install a specific version of Gammapy you can use:
+
+.. code-block:: bash
+
+    $ python -m pip install gammapy==0.19
+
+To install the current Gammapy **development** version using `pip`_ you can use:
 
 .. code-block:: bash
 
@@ -130,9 +94,9 @@ Or like this, if you want to study or edit the code locally:
 
    $ git clone https://github.com/gammapy/gammapy.git
    $ cd gammapy
-   $ pip install .
+   $ python -m pip install .
 
-How to get set up for Gammapy development is described here: :ref:`dev_setup`
+If you encountered any issues you can check the :ref:`troubleshoot` guide.
 
 .. _install-other:
 
@@ -144,7 +108,7 @@ can install Gammapy via:
 
 .. code-block:: bash
 
-    sudo apt-get install python3-gammapy
+    $ sudo apt-get install python3-gammapy
 
 To get a more fully featured scientific Python environment, you can install
 other Python packages using the system package manager (``apt-get`` in this
@@ -154,51 +118,12 @@ Example:
 
 .. code-block:: bash
 
-    sudo apt-get install \
+    $ sudo apt-get install \
         python3-pip python3-matplotlib \
         ipython3-notebook python3-gammapy
 
-    python3 -m pip install antigravity
+    $ python3 -m pip install antigravity
 
-Note that also on Linux, the recommended way to install Gammapy is via
-``conda``. The ``conda`` install is maintained by the Gammapy team and gives you
-usually a very recent version (releases every 2 months), whereas the Linux
-package managers typically have release cycles of 6 months, or yearly or longer,
-meaning that you'll get an older version of Gammapy. But you can always get a
-recent version via pip:
-
-.. code-block:: bash
-
-    sudo apt-get install python3-gammapy
-    pip install -U gammapy
-
-Upgrade existing installation
-=============================
-
-Using Anaconda / Miniconda
---------------------------
-
-We recommend to make use of a **conda environment definition file** that we provide for each version
-of Gammapy, so you can get a specific version of Gammapy as we as its library dependencies and additional
-useful packages in a virtual isolated environment.
-
-You may find below the commands used to upgrade Gammapy to the v0.19 version.
-
-.. code-block:: bash
-
-    $ curl -O https://gammapy.org/download/install/gammapy-0.19-environment.yml
-    $ conda env create -f gammapy-0.19-environment.yml
-
-
-If you want to remove a previous version og Gammapy just use the standard conda command below.
-
-.. code-block:: bash
-
-    $ conda env remove -n gammapy-0.18.2
-
-In case you are working with the development version environment and you want to update this
-environment with the content present in `environment-dev.yml` see below.
-
-.. code-block:: bash
-
-    $ conda env update environment-dev.yml --prune
+Note that the Linux package managers typically have release cycles of 6 months,
+or yearly or longer, meaning that you'll typically  get an older version of
+Gammapy. But you can always get a recent version via `pip` or `conda` (see above).

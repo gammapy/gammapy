@@ -21,7 +21,7 @@ from .psf import (
     PSF3D,
 )
 from .rad_max import RadMax2D
-from .core import FoVAlignment
+from .core import FoVAlignment, IRFMap
 
 
 __all__ = [
@@ -35,6 +35,7 @@ __all__ = [
     "EnergyDispersion2D",
     "FoVAlignment",
     "IRF_REGISTRY",
+    "IRFMap",
     "load_cta_irfs",
     "load_irf_dict_from_file",
     "ParametricPSF",
