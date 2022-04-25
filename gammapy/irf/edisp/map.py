@@ -481,3 +481,14 @@ class EDispKernelMap(IRFMap):
         return self.__class__(
             edisp_kernel_map=new_edisp_map, exposure_map=self.exposure_map
         )
+
+    def peek(self, figsize=(15, 5)):
+        """Quick-look summary plots.
+
+        Parameters
+        ----------
+        figsize : tuple
+            Size of figure.
+
+        """
+        self.get_edisp_kernel().peek(figsize)
