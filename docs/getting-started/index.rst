@@ -26,7 +26,7 @@ Installation
 
     .. code-block:: bash
 
-        conda install -c conda-forge gammapy
+        $ conda install -c conda-forge gammapy
 
     ---
 
@@ -38,7 +38,7 @@ Installation
 
     .. code-block:: bash
 
-        pip install gammapy
+        $ pip install gammapy
 
     ---
     :column: col-12 p-3
@@ -67,8 +67,8 @@ and then just execute the following commands in the terminal:
 
 .. code-block:: bash
 
-    curl -O https://gammapy.org/download/install/gammapy-0.19-environment.yml
-    conda env create -f gammapy-0.19-environment.yml
+    $ curl -O https://gammapy.org/download/install/gammapy-0.19-environment.yml
+    $ conda env create -f gammapy-0.19-environment.yml
 
 .. note::
 
@@ -80,7 +80,7 @@ Once the environment has been created you can activate it using:
 
 .. code-block:: bash
 
-    conda activate gammapy-v0.19
+    $ conda activate gammapy-v0.19
 
 You can now proceed to download the Gammapy tutorial notebooks and the example
 datasets. The total size to download is ~180 MB. Select the location where you
@@ -88,9 +88,9 @@ want to install the datasets and proceed with the following commands:
 
 .. code-block:: bash
 
-    gammapy download notebooks --release 0.19
-    gammapy download datasets
-    export GAMMAPY_DATA=$PWD/gammapy-datasets
+    $ gammapy download notebooks --release 0.19
+    $ gammapy download datasets
+    $ export GAMMAPY_DATA=$PWD/gammapy-datasets
 
 You might want to put the definition of the ``$GAMMAPY_DATA`` environment
 variable in your shell profile setup file that is executed when you open a new
@@ -109,8 +109,8 @@ Finally start a notebook server by executing:
 
 .. code-block:: bash
 
-    cd notebooks
-    jupyter notebook
+    $ cd notebooks
+    $ jupyter notebook
 
 If you are new to conda, Python and Jupyter, maybe also read the :ref:`using-gammapy` guide.
 If you encountered any issues you can check the :ref:`troubleshoot` guide.
