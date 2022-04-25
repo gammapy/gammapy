@@ -9,6 +9,7 @@ Getting started
     :hidden:
 
     install
+    environments
     usage
     troubleshooting
 
@@ -53,10 +54,33 @@ Installation
         :text: Learn more
         :classes: btn-secondary stretched-link
 
-.. _download-tutorials:
+.. _quickstart-setup:
 
-Tutorial Datasets Download
---------------------------
+Quickstart Setup
+----------------
+
+The best way to get started and learn Gammapy are the :ref:`tutorials`. For
+convenience we provide a pre-defined conda environment file, so you can
+get additional useful packages together with Gammapy in a virtual isolated
+environment. First install `Miniconda <https://docs.conda.io/en/latest/miniconda.html>`__
+and then just execute the following commands in the terminal:
+
+.. code-block:: bash
+
+    curl -O https://gammapy.org/download/install/gammapy-0.19-environment.yml
+    conda env create -f gammapy-0.19-environment.yml
+
+.. note::
+
+    On Windows, you have to open up the conda environment file and delete the
+    lines with ``sherpa`` and ``healpy``. Those are optional dependencies that
+    currently aren't available on Windows.
+
+Once the environment has been created you can activate it using:
+
+.. code-block:: bash
+
+    conda activate gammapy-v0.19
 
 You can now proceed to download the Gammapy tutorial notebooks and the example
 datasets. The total size to download is ~180 MB. Select the location where you
@@ -81,8 +105,18 @@ terminal (for example ``$HOME/.bash_profile``).
     "Environment Variables" settings dialog, as explained e.g.
     `here <https://docs.python.org/3/using/windows.html#excursus-setting-environment-variables>`__
 
-Analysis Overview
------------------
+Finally start a notebook server by executing:
+
+.. code-block:: bash
+
+    cd notebooks
+    jupyter notebook
+
+If you are new to conda, Python and Jupyter, maybe also read the :ref:`using-gammapy` guide.
+If you encountered any issues you can check the :ref:`troubleshoot` guide.
+
+Tutorials Overview
+------------------
 
 .. accordion-header::
     :id: collapseOne
@@ -205,6 +239,3 @@ at the same time and can also include e.g. flux points in a combined likelihood 
 
 .. accordion-footer::
 
-You can also go to :ref:`tutorials` to see all available tutorials.
-If you're new to conda, Python and Jupyter, maybe also read the :ref:`using-gammapy` guide.
-If you encountered any issues you can check the :ref:`troubleshoot` guide.
