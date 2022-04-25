@@ -1202,7 +1202,10 @@ class MapDataset(Dataset):
         return cls(**kwargs)
 
     def write(self, filename, overwrite=False):
-        """Write map dataset to file.
+        """Write Dataset to file.
+
+        A MapDataset is serialised using the GADF format with a WCS geometry.
+        A SpectrumDataset uses the same format, with a RegionGeom.
 
         Parameters
         ----------
@@ -1254,7 +1257,7 @@ class MapDataset(Dataset):
 
     @classmethod
     def read(cls, filename, name=None, lazy=False, cache=True, format="gadf"):
-        """Read map dataset from file.
+        """Read a dataset from file.
 
         Parameters
         ----------

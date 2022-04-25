@@ -255,21 +255,6 @@ class SpectrumDataset(PlotMixin, MapDataset):
     stat_type = "cash"
     tag = "SpectrumDataset"
 
-    def write(self, *args, **kwargs):
-        raise NotImplementedError("Method not supported on a spectrum dataset")
-
-    def read(self, *args, **kwargs):
-        raise NotImplementedError("Method not supported on a spectrum dataset")
-
-    def to_hdulist(self, *args, **kwargs):
-        raise NotImplementedError("Method not supported on a spectrum dataset")
-
-    def from_hdulist(self, *args, **kwargs):
-        raise NotImplementedError("Method not supported on a spectrum dataset")
-
-    def from_dict(self, *args, **kwargs):
-        raise NotImplementedError("Method not supported on a spectrum dataset")
-
     def cutout(self, *args, **kwargs):
         raise NotImplementedError("Method not supported on a spectrum dataset")
 
@@ -290,27 +275,29 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
     def plot_residuals_spatial(self, *args, **kwargs):
         raise NotImplementedError("Method not supported on a spectrum dataset")
 
-    def to_hdulist(self, *args, **kwargs):
-        raise NotImplementedError("Method not supported on a spectrum dataset")
-
-    def from_hdulist(self, *args, **kwargs):
-        raise NotImplementedError("Method not supported on a spectrum dataset")
-
     @classmethod
-    def read(cls, filename):
+    def read(cls, filename, format="ogip", **kwargs):
         """Read from file
 
-        For now, filename is assumed to the name of a PHA file where BKG file, ARF, and RMF names
+        For OGIP formats, filename is assumed to the name of a PHA file where
+        BKG file, ARF, and RMF names
         must be set in the PHA header and be present in the same folder.
+        For details, see `OGIPDatasetReader.read`
 
-        For formats specs see `OGIPDatasetReader.read`
+        For the GADF format, a MapDataset serialisation is used
 
         Parameters
         ----------
         filename : `~pathlib.Path` or str
             OGIP PHA file to read
+        format : {"ogip", "ogip-sherpa", "gadf"}
+            Format to use.
+        kwargs : arguments passed to `MapDataset.read`
         """
         from .io import OGIPDatasetReader
+
+        if format == "gadf":
+            return super().read(filename, format="gadf", **kwargs)
 
         reader = OGIPDatasetReader(filename=filename)
         return reader.read()
@@ -318,9 +305,9 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
     def write(self, filename, overwrite=False, format="ogip"):
         """Write spectrum dataset on off to file.
 
-        Currently only the OGIP format is supported
-
-        For formats specs see `OGIPDatasetWriter`
+        Can be serialised either as a `MapDataset` with a `RegionGeom`
+        following the GADF specifications, or as per the OGIP format.
+        For OGIP formats specs see `OGIPDatasetWriter`
 
         Parameters
         ----------
@@ -328,15 +315,20 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
             Filename to write to.
         overwrite : bool
             Overwrite existing file.
-        format : {"ogip", "ogip-sherpa"}
+        format : {"ogip", "ogip-sherpa", "gadf"}
             Format to use.
         """
         from .io import OGIPDatasetWriter
 
-        writer = OGIPDatasetWriter(
-            filename=filename, format=format, overwrite=overwrite
-        )
-        writer.write(self)
+        if format == "gadf":
+            super().write(filename=filename, overwrite=overwrite)
+        elif format in ["ogip", "ogip-sherpa"]:
+            writer = OGIPDatasetWriter(
+                filename=filename, format=format, overwrite=overwrite
+            )
+            writer.write(self)
+        else:
+            raise ValueError(f"{format} is not a valid serialisation format")
 
     @classmethod
     def from_dict(cls, data, **kwargs):

@@ -1,8 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from numpy.testing import assert_allclose
-from gammapy.datasets import Datasets
+from gammapy.datasets import Datasets, SpectrumDataset
 from gammapy.modeling.models import DatasetModels
 from gammapy.utils.testing import requires_data, requires_dependency
+import astropy.units as u
+from regions import CircleSkyRegion
 
 
 @requires_data()
@@ -71,3 +73,35 @@ def test_datasets_to_io(tmp_path):
 
     dataset_copy = dataset0.copy(name="dataset0-copy")
     assert dataset_copy.models is None
+
+
+@requires_data()
+@requires_dependency("iminuit")
+def test_spectrum_datasets_to_io(tmp_path):
+    filedata = "$GAMMAPY_DATA/tests/models/gc_example_datasets.yaml"
+    filemodel = "$GAMMAPY_DATA/tests/models/gc_example_models.yaml"
+
+    datasets = Datasets.read(
+        filename=filedata,
+        filename_models=filemodel,
+    )
+    reg = CircleSkyRegion(center=datasets[0]._geom.center_skydir, radius=1.0 * u.deg)
+    dataset0 = datasets[0].to_spectrum_dataset(reg)
+    datasets1 = Datasets([dataset0, datasets[1]])
+    datasets1.write(
+        filename=tmp_path / "written_datasets.yaml",
+        filename_models=tmp_path / "written_models.yaml",
+    )
+
+    datasets_read = Datasets.read(
+        filename=tmp_path / "written_datasets.yaml",
+        filename_models=tmp_path / "written_models.yaml",
+    )
+
+    assert len(datasets_read.parameters) == 19
+
+    assert len(datasets_read) == 2
+
+    assert datasets_read[0].counts.data.sum() == 18429
+    assert_allclose(datasets_read[0].exposure.data.sum(), 2.034089e10, atol=0.1)
+    assert isinstance(datasets_read[0], SpectrumDataset)
