@@ -227,6 +227,8 @@ class PlotMixin:
             Size of the figure.
 
         """
+        import matplotlib.pyplot as plt
+
         fig, ax1, ax2, ax3 = plt.subplots(1, 3, figsize=figsize)
 
         ax1.set_title("Counts")
