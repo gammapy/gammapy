@@ -14,7 +14,7 @@ from gammapy.irf import (
 )
 from gammapy.makers.utils import make_edisp_map, make_map_exposure_true_energy
 from gammapy.maps import MapAxis, MapCoord, RegionGeom, WcsGeom
-
+from gammapy.utils.testing import mpl_plot_check, requires_dependency
 
 def fake_aeff2d(area=1e6 * u.m ** 2):
     offsets = np.array((0.0, 1.0, 2.0, 3.0)) * u.deg
@@ -311,3 +311,8 @@ def test_edisp_kernel_map_resample_axis():
 
     assert im.edisp_map.data.shape == (10, 2, 1, 2)
     assert_allclose(res, 1.0, rtol=1e-5)
+
+@requires_dependency("matplotlib")
+def test_peek(self):
+    with mpl_plot_check():
+        self.peek()
