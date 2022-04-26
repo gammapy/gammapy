@@ -1,5 +1,5 @@
 import astropy.units as u
-
+from astropy.visualization import quantity_support
 from .core import IRF
 
 __all__ = [
@@ -77,3 +77,40 @@ class RadMax2D(IRF):
             unit="deg",
             interp_kwargs={"method": "nearest", "fill_value": None},
         )
+
+    def plot_rad_max_vs_energy(self, ax=None,  **kwargs):
+        """Plot rad max value against energy.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.pyplot.Axes`
+            Axes to plot on.
+        **kwargs : dict
+            Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`
+
+        Returns
+        -------
+        ax : `~matplotlib.pyplot.Axes`
+             Axes to plot on.
+        """
+        import matplotlib.pyplot as plt
+
+        if ax is None:
+            ax = plt.gca()
+
+        energy_axis = self.axes["energy"]
+        offset_axis = self.axes["offset"]
+
+        with quantity_support():
+            for value in offset_axis.center:
+                rad_max = self.evaluate(offset=value)
+                label = f"Offset {value:.2f}"
+                kwargs.setdefault("label", label)
+                ax.plot(energy_axis.center, rad_max, **kwargs)
+
+        energy_axis.format_plot_xaxis(ax=ax)
+        ax.set_ylim(0 * u.deg, None)
+        ax.legend(loc="best")
+        ax.set_ylabel(f"Rad max. ({ax.yaxis.units})")
+        ax.yaxis.set_major_formatter("{x:.1f}")
+        return ax

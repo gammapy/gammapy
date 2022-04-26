@@ -3,11 +3,13 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.maps import MapAxis
 from gammapy.irf import RadMax2D, EffectiveAreaTable2D
+from gammapy.utils.testing import mpl_plot_check, requires_dependency
 
 import pytest
 
 
-def test_rad_max_roundtrip(tmp_path):
+@pytest.fixture()
+def rad_max_2d():
     n_energy = 10
     energy_axis = MapAxis.from_energy_bounds(
         50 * u.GeV, 100 * u.TeV, n_energy, name="energy"
@@ -19,7 +21,7 @@ def test_rad_max_roundtrip(tmp_path):
     shape = (n_energy, n_offset)
     rad_max = np.linspace(0.1, 0.5, n_energy * n_offset).reshape(shape)
 
-    rad_max_2d = RadMax2D(
+    return RadMax2D(
         axes=[
             energy_axis,
             offset_axis,
@@ -28,11 +30,19 @@ def test_rad_max_roundtrip(tmp_path):
         unit=u.deg,
     )
 
+
+def test_rad_max_roundtrip(rad_max_2d, tmp_path):
     rad_max_2d.write(tmp_path / "rad_max.fits")
     rad_max_read = RadMax2D.read(tmp_path / "rad_max.fits")
 
-    assert np.all(rad_max_read.data == rad_max)
-    assert np.all(rad_max_read.data == rad_max_read.data)
+    assert_allclose(rad_max_read.data, rad_max_2d.data)
+    assert rad_max_2d.axes == rad_max_read.axes
+
+
+@requires_dependency("matplotlib")
+def test_rad_max_plot(rad_max_2d):
+    with mpl_plot_check():
+        rad_max_2d.plot_rad_max_vs_energy()
 
 
 def test_rad_max_from_irf():
