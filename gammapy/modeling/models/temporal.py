@@ -33,6 +33,7 @@ class TemporalModel(ModelBase):
     evaluates on  astropy.time.Time objects"""
 
     _type = "temporal"
+    _is_energy_dependent = False
 
     def __call__(self, time, energy=None):
         """Evaluate model
@@ -41,6 +42,8 @@ class TemporalModel(ModelBase):
         ----------
         time : `~astropy.time.Time`
             Time object
+        energy : `~astropy.quantity`
+            Used for energy dependent models
         """
         kwargs = {par.name: par.quantity for par in self.parameters}
         time = u.Quantity(time.mjd, "day")
@@ -53,15 +56,9 @@ class TemporalModel(ModelBase):
 
         return self.evaluate(time, **kwargs)
 
-    _is_energy_dependent = False
-
     @property
     def is_energy_dependent(self):
         return self._is_energy_dependent
-
-    @is_energy_dependent.setter
-    def is_energy_dependent(self, state=False):
-        self._is_energy_dependent = state
 
     @property
     def type(self):

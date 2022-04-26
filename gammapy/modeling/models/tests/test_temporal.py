@@ -21,6 +21,7 @@ from gammapy.modeling.models import (
 )
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
+from gammapy.maps import MapAxis
 
 
 # TODO: add light-curve test case from scratch
@@ -320,7 +321,7 @@ def test_plot_constant_model():
 
 
 class MyCustomTemporalModel(TemporalModel):
-    """Spectrally varying temporal model where the index depends time
+    """Temporal model with spectral variability
 
         F(t) = (E/E0)^-\alpha
         where \alpha = (\alpha_0 t/t_ref)^-beta
@@ -356,7 +357,7 @@ def test_energy_dependent_model():
     gti = GTI.create(start, stop, reference_time=t_ref)
 
     temporal_model = MyCustomTemporalModel()
-    assert temporal_model.is_energy_dependent = True
+    assert temporal_model.is_energy_dependent is True
     val = temporal_model.integral(gti.time_start, gti.time_stop)
     assert len(val) == 3
     assert_allclose(np.sum(val), 1.08261, rtol=1e-5)
@@ -368,6 +369,7 @@ def test_energy_dependent_model():
         spectral_model=ConstantSpectralModel(), temporal_model=temporal_model
     )
 
+    energy = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3, name="energy_true")
 
     model.evaluate(energy=energy, time=gti)
     assert
