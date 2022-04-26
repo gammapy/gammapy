@@ -117,12 +117,19 @@ class SafeMaskMaker(Maker):
         if observation is None:
             raise ValueError("Method 'offset-max' requires an observation object.")
 
-        try:
-            energy_max = observation.aeff.meta["HI_THRES"] * u.TeV
-            energy_min = observation.aeff.meta["LO_THRES"] * u.TeV
-        except KeyError:
-            log.warning(f"No default thresholds defined for obs {observation.obs_id}")
-            energy_min, energy_max = None, None
+        energy_max = observation.aeff.meta.get("HI_THRES", None)
+
+        if energy_max:
+            energy_max = energy_max * u.TeV
+        else:
+            log.warning(f"No default upper safe energy threshold defined for obs {observation.obs_id}")
+
+        energy_min = observation.aeff.meta.get("LO_THRES", None)
+
+        if energy_min:
+            energy_min = energy_min * u.TeV
+        else:
+            log.warning(f"No default lower safe energy threshold defined for obs {observation.obs_id}")
 
         return dataset._geom.energy_mask(energy_min=energy_min, energy_max=energy_max)
 
