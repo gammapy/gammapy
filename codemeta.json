@@ -593,5 +593,5 @@
         "givenName": "Axel"
     },
     "readme": "https://gammapy.org",
-    "issuetracker": "https://github.com/gammapy/gammapy/issues"
+    "issueTracker": "https://github.com/gammapy/gammapy/issues"
 }
