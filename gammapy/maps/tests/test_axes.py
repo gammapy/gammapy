@@ -605,6 +605,16 @@ def test_axes_basics():
 
     assert axes.primary_axis.name == "time"
 
+    new_axes = axes.copy()
+    assert new_axes[0] == new_axes[0]
+    assert new_axes[1] == new_axes[1]
+    assert new_axes == axes
+
+    energy_axis = MapAxis.from_energy_edges([1, 4] * u.TeV)
+    new_axes = MapAxes([energy_axis, time_axis.copy()])
+    assert new_axes != axes
+
+
 def test_axes_getitem():
     axis1 = MapAxis.from_bounds(1, 4, 3, name="a1")
     axis2 = axis1.copy(name="a2")
