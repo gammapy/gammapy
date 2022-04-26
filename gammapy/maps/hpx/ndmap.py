@@ -737,7 +737,7 @@ class HpxNDMap(HpxMap):
 
         return val
 
-    def resample_by_idx(self, idx, weights=None, preserve_counts=False):
+    def _resample_by_idx(self, idx, weights=None, preserve_counts=False):
         idx = pix_tuple_to_idx(idx)
         msk = np.all(np.stack([t != INVALID_INDEX.int for t in idx]), axis=0)
         if weights is not None:
@@ -760,7 +760,7 @@ class HpxNDMap(HpxMap):
         self.data.T.flat[idx_local] += weights
 
     def fill_by_idx(self, idx, weights=None):
-        return self.resample_by_idx(idx, weights=weights, preserve_counts=True)
+        return self._resample_by_idx(idx, weights=weights, preserve_counts=True)
 
     def set_by_idx(self, idx, vals):
         idx = pix_tuple_to_idx(idx)

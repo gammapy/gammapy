@@ -911,10 +911,10 @@ class Map(abc.ABC):
         """
         coords = geom.get_coord()
         idx = self.geom.coord_to_idx(coords)
-        return self.resample_by_idx(idx, weights=weights, preserve_counts=preserve_counts)
+        return self._resample_by_idx(idx, weights=weights, preserve_counts=preserve_counts)
 
     @abc.abstractmethod
-    def resample_by_idx(self, idx, weights=None, preserve_counts=False):
+    def _resample_by_idx(self, idx, weights=None, preserve_counts=False):
         """Resample pixels at ``idx`` with given ``weights``.
 
         Parameters

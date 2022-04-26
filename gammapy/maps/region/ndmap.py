@@ -365,7 +365,7 @@ class RegionNDMap(Map):
             idx[idx_axis] = slice(None)
             yield tuple(idx), self.quantity[tuple(idx)]
 
-    def resample_by_idx(self, idx, weights=None, preserve_counts=False):
+    def _resample_by_idx(self, idx, weights=None, preserve_counts=False):
         # inherited docstring
         # TODO: too complex, simplify!
         idx = pix_tuple_to_idx(idx)
@@ -386,7 +386,7 @@ class RegionNDMap(Map):
         self.data.T.flat[idx] += weights
 
     def fill_by_idx(self, idx, weights=None):
-        return self.resample_by_idx(idx, weights=weights, preserve_counts=True)
+        return self._resample_by_idx(idx, weights=weights, preserve_counts=True)
 
     def get_by_idx(self, idxs):
         # inherited docstring
