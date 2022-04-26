@@ -2014,6 +2014,15 @@ class MapAxes(Sequence):
         """Center coordinates"""
         return tuple([ax.pix_to_coord((float(ax.nbin) - 1.0) / 2.0) for ax in self])
 
+    def __eq__(self, other):
+        return np.all([ax0 == ax1 for ax0, ax1 in zip(other, self)])
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def copy(self):
+        """Init map axes instance by copying each axis."""
+        return self.__class__([_.copy() for _ in self])
 
 class TimeMapAxis:
     """Class representing a time axis.
