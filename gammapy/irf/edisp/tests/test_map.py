@@ -313,6 +313,11 @@ def test_edisp_kernel_map_resample_axis():
     assert_allclose(res, 1.0, rtol=1e-5)
 
 @requires_dependency("matplotlib")
-def test_peek(self):
+def test_peek():
+    e_reco = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=3)
+    e_true = MapAxis.from_energy_bounds(
+        "0.08 TeV", "20 TeV", nbin=5, name="energy_true"
+    )
+    edisp = EDispKernelMap.from_diagonal_response(e_reco, e_true)
     with mpl_plot_check():
-        self.peek()
+        edisp.peek()
