@@ -264,8 +264,8 @@ class EDispMap(IRFMap):
             Size of figure.
 
         """
-        e_reco = self.edisp_map.geom.axes[1].copy()
-        e_reco.name = 'energy'
+        e_true = self.edisp_map.geom.axes[1]
+        e_reco = MapAxis.from_energy_bounds(e_true.edges.min(), e_true.edges.max(), nbin = len(e_true.center), name='energy')
 
         self.get_edisp_kernel(energy_axis=e_reco).peek(figsize)
 
