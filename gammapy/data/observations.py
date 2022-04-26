@@ -84,7 +84,6 @@ class Observation:
         self._events = events
         self.obs_filter = obs_filter or ObservationFilter()
 
-
     @property
     def rad_max(self):
         # prevent circular import
