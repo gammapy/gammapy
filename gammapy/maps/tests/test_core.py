@@ -678,15 +678,6 @@ def test_map_reproject_wcs_to_wcs_with_axes():
     with pytest.raises(TypeError):
         m.reproject_to_geom(geom_wcs_3 , method="polygon")
 
-    factor = 2
-    axis1_up =  axis1.upsample(factor=factor)
-    axis2_up =  axis2.upsample(factor=factor)
-    geom_wcs_4 = geom_wcs_1.copy(axes= [axis1_up, axis2_up])
-    m_r_4 = m.reproject_to_geom(geom_wcs_4, method="polygon", fill_value=np.nan)
-    for data, idx in m_r_4.iter_by_image():
-        ref = idx[1] + 0.5 * idx[0]
-        assert_allclose(np.nanmean(data), ref/factor)
-
 
 def test_wcsndmap_reproject_allsky_car():
     geom = WcsGeom.create(binsz=10.0, proj="CAR", frame="icrs")

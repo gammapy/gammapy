@@ -1032,14 +1032,6 @@ class Map(abc.ABC):
         oversampling_factor : int
            Minimal factor between the bin size of the output map and the oversampled base map.
            Used only for the oversampling method.
-        interp_axes: bool
-            If False return a map with the original non-spatial axes,
-            otherwise interpolate to the axes of the target geom if necessary
-            (after the spatial reprojection).
-        fill_value : None or float value
-            The value to use for points outside of the interpolation domain.
-            If None, values outside the domain are extrapolated.
-            Used only if `interp_axes` is True and if the non-spatial axes require to be interpolated.
 
         Returns
         -------
@@ -1063,10 +1055,8 @@ class Map(abc.ABC):
 
         if not axes_eq:
             target_geom = geom.copy(axes=self.geom.axes) 
-            interp_axes &= True
         else:
             target_geom = geom
-            interp_axes &= False
 
         if method == "oversampling":
             new_map = self._reproject_oversampling(target_geom,
@@ -1077,11 +1067,7 @@ class Map(abc.ABC):
                                               preserve_counts=preserve_counts)
         else:
             raise TypeError("Available methods are 'oversampling' or 'polygon'.")
-
-        if interp_axes:
-            return new_map.interp_to_geom(geom, preserve_counts=preserve_counts, fill_value=fill_value)
-        else:
-            return new_map
+        return new_map
 
     def _reproject_oversampling(self, geom, preserve_counts=False, oversampling_factor=10):
         """ reproject using oversampling: the base map is oversampled and 
