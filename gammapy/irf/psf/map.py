@@ -6,7 +6,6 @@ from gammapy.maps import Map, MapAxis, MapCoord, WcsGeom
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.random import InverseCDFSampler, get_random_state
-from matplotlib.ticker import FormatStrFormatter
 from ..core import IRFMap
 from .core import PSF
 from .kernel import PSFKernel
@@ -425,6 +424,7 @@ class PSFMap(IRFMap):
 
         """
         import matplotlib.pyplot as plt
+        from matplotlib.ticker import FormatStrFormatter
 
         ax = plt.gca() if ax is None else ax
 
@@ -467,6 +467,7 @@ class PSFMap(IRFMap):
 
         """
         import matplotlib.pyplot as plt
+        from matplotlib.ticker import FormatStrFormatter
 
         ax = plt.gca() if ax is None else ax
 
