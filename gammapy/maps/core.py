@@ -390,6 +390,24 @@ class Map(abc.ABC):
         hdulist = self.to_hdulist(**kwargs)
         hdulist.writeto(str(make_path(filename)), overwrite=overwrite)
 
+    def iter_by_axis(self, axis_name, keepdims=False):
+        """"Iterate over a given axis
+
+        Yields
+        ------
+        map : `Map`
+            Map iteration.
+
+        See also
+        --------
+        iter_by_image : iterate by image returning a map
+        """
+        axis = self.geom.axes[axis_name]
+        for idx in range(axis.nbin):
+            idx_axis = slice(idx, idx + 1) if keepdims else idx
+            slices = {axis_name: idx_axis}
+            yield self.slice_by_idx(slices=slices)
+
     def iter_by_image(self, keepdims=False):
         """Iterate over image planes of a map.
 
