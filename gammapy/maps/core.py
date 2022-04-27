@@ -390,6 +390,16 @@ class Map(abc.ABC):
         hdulist = self.to_hdulist(**kwargs)
         hdulist.writeto(str(make_path(filename)), overwrite=overwrite)
 
+    def iter_by_image(self, keepdims=False):
+        """Iterate over image planes of the map."""
+        for idx in np.ndindex(self.geom.shape_axes):
+            if keepdims:
+                names = self.geom.axes.names
+                slices = {name: slice(_, _ + 1) for name, _ in zip(names, idx)}
+                yield self.slice_by_idx(slices=slices)
+            else:
+                yield self.get_image_by_idx(idx=idx)
+
     def iter_by_image_data(self):
         """Iterate over image planes of the map.
 
