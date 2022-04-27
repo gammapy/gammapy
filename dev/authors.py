@@ -8,7 +8,8 @@ from pathlib import Path
 log = logging.getLogger(__name__)
 
 EXCLUDE_AUTHORS = [
-    "azure-pipelines[bot]"
+    "azure-pipelines[bot]",
+    "GitHub Actions"
 ]
 
 PATH = Path(__file__).parent.parent
