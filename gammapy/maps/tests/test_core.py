@@ -493,7 +493,7 @@ def test_map_plot_mask():
         mask.plot_mask()
 
 
-def test_resample():
+def test_resample_wcs_wcs():
     npix1=3 
     geom1 = WcsGeom.create(npix=npix1, frame="icrs")
     map1 = Map.from_geom(geom1, data=np.eye(npix1))
@@ -509,7 +509,7 @@ def test_resample():
                     np.sum(map1*geom1.solid_angle()),
                     rtol=1e-3
                     )
-
+def test_resample_wcs_hpx():
     geom1 = HpxGeom.create(nside=32, frame="icrs")
     map1 = Map.from_geom(geom1, data=1.)
     geom2 = HpxGeom.create(skydir=SkyCoord(0.,0., unit=u.deg),
