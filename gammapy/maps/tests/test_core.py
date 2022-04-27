@@ -491,3 +491,35 @@ def test_map_plot_mask():
 
     with mpl_plot_check():
         mask.plot_mask()
+
+
+def test_resample_wcs_wcs():
+    npix1=3 
+    geom1 = WcsGeom.create(npix=npix1, frame="icrs")
+    map1 = Map.from_geom(geom1, data=np.eye(npix1))
+
+    geom2 = WcsGeom.create(skydir=SkyCoord(0.,0., unit=u.deg),
+                           binsz=0.5,
+                           npix=7,
+                           frame="galactic"
+                           )
+    map2 = Map.from_geom(geom2)
+    map2.resample(geom1, weights=map1.quantity, preserve_counts=False)
+    assert_allclose(np.sum(map2*geom2.solid_angle()),
+                    np.sum(map1*geom1.solid_angle()),
+                    rtol=1e-3
+                    )
+def test_resample_wcs_hpx():
+    geom1 = HpxGeom.create(nside=32, frame="icrs")
+    map1 = Map.from_geom(geom1, data=1.)
+    geom2 = HpxGeom.create(skydir=SkyCoord(0.,0., unit=u.deg),
+                           nside=8,
+                           frame="galactic"
+                           )
+    map2 = Map.from_geom(geom2)
+    map2.resample(geom1, weights=map1.quantity, preserve_counts=False)
+    assert_allclose(np.sum(map2*geom2.solid_angle()),
+                    np.sum(map1*geom1.solid_angle()),
+                    rtol=1e-3
+                    )
+    
