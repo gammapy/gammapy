@@ -247,6 +247,9 @@ authors:
 - given-names: Tyler
   family-names: Cahill
   affiliation: Iowa State University, Ames IA, US
+- given-names: Arnau
+  family-names: Aguasca Cabot
+  affiliation: Institute of cosmos sciences, ICCUB, Martí i Franquès 1, 08028 Barcelona
 version: 0.19
 date-released: 2020-11-19
 repository-code: https://github.com/gammapy/gammapy
