@@ -494,7 +494,7 @@ def test_map_plot_mask():
 
 
 def test_resample_wcs_wcs():
-    npix1=3 
+    npix1=3
     geom1 = WcsGeom.create(npix=npix1, frame="icrs")
     map1 = Map.from_geom(geom1, data=np.eye(npix1))
 
@@ -509,6 +509,8 @@ def test_resample_wcs_wcs():
                     np.sum(map1*geom1.solid_angle()),
                     rtol=1e-3
                     )
+
+
 def test_resample_wcs_hpx():
     geom1 = HpxGeom.create(nside=32, frame="icrs")
     map1 = Map.from_geom(geom1, data=1.)
@@ -522,4 +524,43 @@ def test_resample_wcs_hpx():
                     np.sum(map1*geom1.solid_angle()),
                     rtol=1e-3
                     )
-    
+
+
+def test_iter_by_image():
+    time_axis = MapAxis.from_bounds(
+        0, 3, nbin=3, unit="hour", name="time", interp="lin"
+    )
+
+    energy_axis = MapAxis.from_bounds(
+        1, 100, nbin=4, unit="TeV", name="energy", interp="log"
+    )
+
+    m_4d = Map.create(
+        binsz=0.2, width=(1, 1), frame="galactic", axes=[energy_axis, time_axis]
+    )
+
+    for m in m_4d.iter_by_image(keepdims=True):
+        assert m.data.ndim == 4
+        assert m.geom.axes.names == ["energy", "time"]
+
+    for m in m_4d.iter_by_image(keepdims=False):
+        assert m.data.ndim == 2
+        assert m.geom.axes.names == []
+
+
+def test_iter_by_axis():
+    time_axis = MapAxis.from_bounds(
+        0, 3, nbin=3, unit="hour", name="time", interp="lin"
+    )
+
+    energy_axis = MapAxis.from_bounds(
+        1, 100, nbin=4, unit="TeV", name="energy", interp="log"
+    )
+
+    m_4d = Map.create(
+        binsz=0.2, width=(1, 1), frame="galactic", axes=[energy_axis, time_axis]
+    )
+
+    for m in m_4d.iter_by_axis(axis_name="energy", keepdims=False):
+        assert m.data.ndim == 3
+        assert m.geom.axes.names == ["time"]
