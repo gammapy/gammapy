@@ -343,7 +343,7 @@ class RegionNDMap(Map):
 
         return self._init_copy(geom=geom, data=data)
 
-    def iter_by_axis(self, axis_name):
+    def iter_by_axis_data(self, axis_name):
         """Iterate data by axis
 
         Parameters
