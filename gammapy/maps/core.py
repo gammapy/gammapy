@@ -390,7 +390,7 @@ class Map(abc.ABC):
         hdulist = self.to_hdulist(**kwargs)
         hdulist.writeto(str(make_path(filename)), overwrite=overwrite)
 
-    def iter_by_image(self):
+    def iter_by_image_data(self):
         """Iterate over image planes of the map.
 
         This is a generator yielding ``(data, idx)`` tuples,

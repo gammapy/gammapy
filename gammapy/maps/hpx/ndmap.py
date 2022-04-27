@@ -456,7 +456,7 @@ class HpxNDMap(HpxMap):
             )
             full_sky_map = HpxNDMap.from_geom(full_sky_geom)
 
-            for img, idx in self.iter_by_image():
+            for img, idx in self.iter_by_image_data():
                 full_sky_map.data[idx][ipix] = img
         else:
             full_sky_map = self
@@ -472,7 +472,7 @@ class HpxNDMap(HpxMap):
 
         smoothed_data = np.empty(self.data.shape, dtype=float)
 
-        for img, idx in full_sky_map.iter_by_image():
+        for img, idx in full_sky_map.iter_by_image_data():
             img = img.astype(float)
 
             if self.geom.nest:
@@ -651,7 +651,7 @@ class HpxNDMap(HpxMap):
                 axes=self.geom.axes,
             )
             full_sky_map = HpxNDMap.from_geom(full_sky_geom)
-            for img, idx in self.iter_by_image():
+            for img, idx in self.iter_by_image_data():
                 full_sky_map.data[idx][ipix] = img
         else:
             full_sky_map = self
@@ -675,7 +675,7 @@ class HpxNDMap(HpxMap):
 
         # Do the convolution in each image plane
         convolved_data = np.empty(self.data.shape, dtype=float)
-        for img, idx in full_sky_map.iter_by_image():
+        for img, idx in full_sky_map.iter_by_image_data():
             img = img.astype(float)
             if nest:
                 # reorder to ring to do the convolution

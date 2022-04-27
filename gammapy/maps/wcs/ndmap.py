@@ -154,11 +154,11 @@ class WcsNDMap(WcsMap):
         interp_data = fn(tuple(pix), clip=False)
 
         if fill_value is not None:
-             idxs = self.geom.pix_to_idx(pix, clip=False) 
-             invalid = np.broadcast_arrays(*[idx == -1 for idx in idxs]) 
+             idxs = self.geom.pix_to_idx(pix, clip=False)
+             invalid = np.broadcast_arrays(*[idx == -1 for idx in idxs])
              mask = np.any(invalid, axis=0)
              if not interp_data.shape:
-                 mask = mask.squeeze() 
+                 mask = mask.squeeze()
              interp_data[mask] =fill_value
              interp_data[~np.isfinite(interp_data)] = fill_value
 
@@ -728,7 +728,7 @@ class WcsNDMap(WcsMap):
                     self.data.astype(np.float32), kernel[idx], method=method, mode=mode
                 )
         else:
-            for img, idx in self.iter_by_image():
+            for img, idx in self.iter_by_image_data():
                 ikern = Ellipsis if kernel.ndim == 2 else idx
                 data[idx] = convolve(
                     img.astype(np.float32), kernel[ikern], method=method, mode=mode
@@ -767,7 +767,7 @@ class WcsNDMap(WcsMap):
 
         smoothed_data = np.empty(self.data.shape, dtype=float)
 
-        for img, idx in self.iter_by_image():
+        for img, idx in self.iter_by_image_data():
             img = img.astype(float)
             if kernel == "gauss":
                 data = ndi.gaussian_filter(img, width, **kwargs)
