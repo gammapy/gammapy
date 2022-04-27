@@ -403,6 +403,28 @@ class Map(abc.ABC):
         for idx in np.ndindex(self.geom.shape_axes):
             yield self.data[idx[::-1]], idx[::-1]
 
+    def iter_by_axis_data(self, axis_name):
+        """Iterate data by axis
+
+        Parameters
+        ----------
+        axis_name : str
+            Axis name
+
+        Returns
+        -------
+        idx, data : tuple, `~astropy.units.Quantity`
+            Data and index
+        """
+        idx_axis = self.geom.axes.index_data(axis_name)
+        shape = list(self.data.shape)
+        shape[idx_axis] = 1
+
+        for idx in np.ndindex(*shape):
+            idx = list(idx)
+            idx[idx_axis] = slice(None)
+            yield tuple(idx), self.quantity[tuple(idx)]
+
     def coadd(self, map_in, weights=None):
         """Add the contents of ``map_in`` to this map.
 

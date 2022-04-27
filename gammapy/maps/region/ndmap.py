@@ -98,7 +98,7 @@ class RegionNDMap(Map):
         )
 
         for label_axis, (idx, quantity) in zip(
-            labels, self.iter_by_axis(axis_name=axis.name)
+            labels, self.iter_by_axis_data(axis_name=axis.name)
         ):
             if isinstance(yerr_nd, tuple):
                 yerr = yerr_nd[0][idx], yerr_nd[1][idx]
