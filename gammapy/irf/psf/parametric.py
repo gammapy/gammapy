@@ -248,8 +248,8 @@ class ParametricPSF(PSF):
         value = self.evaluate_direct(rad=rad, **pars)
         return value
 
-    def compare(self, other, **kwargs):
-        """Compare two IRFs for equivalency
+    def data_allclose(self, other, **kwargs):
+        """Compare two PSF data for equivalency
 
         Parameters
         ----------
@@ -263,18 +263,10 @@ class ParametricPSF(PSF):
         state: bool
         """
 
-        kwargs.setdefault("rtol", 1e-3)
-
-        if not isinstance(other, self.__class__):
-            return False
-
-        for x1, x2 in zip(self.axes, other.axes):
-            if x1 == x2:
-                continue
-            return False
-
         state = True
         for key in self.quantity.keys():
+            if self.quantity[key].shape != other.quantity[key].shape:
+                state = False
             state *= np.allclose(self.quantity[key], other.quantity[key], **kwargs)
 
         return state
