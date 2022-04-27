@@ -391,7 +391,22 @@ class Map(abc.ABC):
         hdulist.writeto(str(make_path(filename)), overwrite=overwrite)
 
     def iter_by_image(self, keepdims=False):
-        """Iterate over image planes of the map."""
+        """Iterate over image planes of a map.
+
+        Parameters
+        ----------
+        keepdims : bool
+            Keep dimensions.
+
+        Yields
+        ------
+        map : `Map`
+            Map iteration.
+
+        See also
+        --------
+        iter_by_image_data : iterate returning data and index
+        """
         for idx in np.ndindex(self.geom.shape_axes):
             if keepdims:
                 names = self.geom.axes.names
@@ -403,12 +418,18 @@ class Map(abc.ABC):
     def iter_by_image_data(self):
         """Iterate over image planes of the map.
 
-        This is a generator yielding ``(data, idx)`` tuples,
-        where ``data`` is a `numpy.ndarray` view of the image plane data,
-        and ``idx`` is a tuple of int, the index of the image plane.
-
         The image plane index is in data order, so that the data array can be
         indexed directly.
+
+        Yields
+        ------
+        (data, idx) : tuple
+            Where ``data`` is a `numpy.ndarray` view of the image plane data,
+            and ``idx`` is a tuple of int, the index of the image plane.
+
+        See also
+        --------
+        iter_by_image : iterate returning a map
         """
         for idx in np.ndindex(self.geom.shape_axes):
             yield self.data[idx[::-1]], idx[::-1]
