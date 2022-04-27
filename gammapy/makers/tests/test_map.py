@@ -375,10 +375,10 @@ def test_interpolate_map_dataset():
 
     # test edispmap
     pdfmatrix_preinterp = edispmap.get_edisp_kernel(
-        SkyCoord("0 deg", "0 deg")
+        position=SkyCoord("0 deg", "0 deg")
     ).pdf_matrix
     pdfmatrix_postinterp = dataset.edisp.get_edisp_kernel(
-        SkyCoord("0 deg", "0 deg")
+        position=SkyCoord("0 deg", "0 deg")
     ).pdf_matrix
     assert_allclose(pdfmatrix_preinterp, pdfmatrix_postinterp, atol=1e-7)
 

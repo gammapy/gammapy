@@ -365,6 +365,8 @@ class ImageProfile:
 
         Parameters
         ----------
+        figsize : tuple
+            Size of the figure.
         **kwargs : dict
             Keyword arguments passed to `ImageProfile.plot_profile()`
 

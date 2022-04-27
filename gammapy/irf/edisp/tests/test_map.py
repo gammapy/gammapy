@@ -14,7 +14,7 @@ from gammapy.irf import (
 )
 from gammapy.makers.utils import make_edisp_map, make_map_exposure_true_energy
 from gammapy.maps import MapAxis, MapCoord, RegionGeom, WcsGeom
-
+from gammapy.utils.testing import mpl_plot_check, requires_dependency
 
 def fake_aeff2d(area=1e6 * u.m ** 2):
     offsets = np.array((0.0, 1.0, 2.0, 3.0)) * u.deg
@@ -107,7 +107,7 @@ def test_edisp_map_to_energydispersion():
     position = SkyCoord(0, 0, unit="deg")
     energy_axis = MapAxis.from_edges(np.logspace(-0.3, 0.2, 200) * u.TeV, name="energy")
 
-    edisp = edmap.get_edisp_kernel(position, energy_axis=energy_axis)
+    edisp = edmap.get_edisp_kernel(position=position, energy_axis=energy_axis)
     # Note that the bias and resolution are rather poorly evaluated on an EnergyDispersion object
     assert_allclose(edisp.get_bias(energy_true=1.0 * u.TeV), 0.0, atol=3e-2)
     assert_allclose(edisp.get_resolution(energy_true=1.0 * u.TeV), 0.2, atol=3e-2)
@@ -162,7 +162,7 @@ def test_edisp_from_diagonal_response(position):
     )
 
     edisp_map = EDispMap.from_diagonal_response(energy_axis_true)
-    edisp_kernel = edisp_map.get_edisp_kernel(position, energy_axis=energy_axis)
+    edisp_kernel = edisp_map.get_edisp_kernel(position=position, energy_axis=energy_axis)
 
     sum_kernel = np.sum(edisp_kernel.data, axis=1)
 
@@ -183,7 +183,7 @@ def test_edisp_map_to_edisp_kernel_map():
 
     edisp_kernel_map = edisp_map.to_edisp_kernel_map(energy_axis)
     position = SkyCoord(0, 0, unit="deg")
-    kernel = edisp_kernel_map.get_edisp_kernel(position)
+    kernel = edisp_kernel_map.get_edisp_kernel(position=position)
 
     assert edisp_kernel_map.exposure_map.geom.axes[0].name == "energy"
     actual = kernel.pdf_matrix.sum(axis=0)
@@ -212,7 +212,7 @@ def test_edisp_kernel_map_stack():
     edisp_1.stack(edisp_2, weights=weights)
 
     position = SkyCoord(0, 0, unit="deg")
-    kernel = edisp_1.get_edisp_kernel(position)
+    kernel = edisp_1.get_edisp_kernel(position=position)
 
     actual = kernel.pdf_matrix.sum(axis=0)
     exposure = edisp_1.exposure_map.data[:, 0, 0, 0]
@@ -311,3 +311,17 @@ def test_edisp_kernel_map_resample_axis():
 
     assert im.edisp_map.data.shape == (10, 2, 1, 2)
     assert_allclose(res, 1.0, rtol=1e-5)
+
+@requires_dependency("matplotlib")
+def test_peek():
+    e_reco = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=3)
+    e_true = MapAxis.from_energy_bounds(
+        "0.08 TeV", "20 TeV", nbin=5, name="energy_true"
+    )
+    edisp = EDispKernelMap.from_diagonal_response(e_reco, e_true)
+    with mpl_plot_check():
+        edisp.peek()
+    edisp = EDispMap.from_diagonal_response(e_true)
+    with mpl_plot_check():
+        edisp.peek()
+

@@ -93,15 +93,16 @@ class EDispMap(IRFMap):
         """Normalize PSF map"""
         self.edisp_map.normalize(axis_name="migra")
 
-    def get_edisp_kernel(self, position=None, energy_axis=None):
+    def get_edisp_kernel(self, energy_axis, position=None):
         """Get energy dispersion at a given position.
 
         Parameters
         ----------
-        position : `~astropy.coordinates.SkyCoord`
-            the target position. Should be a single coordinates
         energy_axis : `MapAxis`
             Reconstructed energy axis
+        position : `~astropy.coordinates.SkyCoord`
+            the target position. Should be a single coordinates
+
 
         Returns
         -------
@@ -253,6 +254,20 @@ class EDispMap(IRFMap):
 
         return cls.from_geom(geom)
 
+    def peek(self, figsize=(15,5)):
+        """Quick-look summary plots.
+        Plots corresponding to the center of the map.
+
+        Parameters
+        ----------
+        figsize : tuple
+            Size of figure.
+
+        """
+        e_true = self.edisp_map.geom.axes[1]
+        e_reco = MapAxis.from_energy_bounds(e_true.edges.min(), e_true.edges.max(), nbin = len(e_true.center), name='energy')
+
+        self.get_edisp_kernel(energy_axis=e_reco).peek(figsize)
 
 class EDispKernelMap(IRFMap):
     """Energy dispersion kernel map.
@@ -480,3 +495,16 @@ class EDispKernelMap(IRFMap):
         return self.__class__(
             edisp_kernel_map=new_edisp_map, exposure_map=self.exposure_map
         )
+
+    def peek(self, figsize=(15, 5)):
+        """Quick-look summary plots.
+        Plots corresponding to the center of the map.
+
+
+        Parameters
+        ----------
+        figsize : tuple
+            Size of figure.
+
+        """
+        self.get_edisp_kernel().peek(figsize)

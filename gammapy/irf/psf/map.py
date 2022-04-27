@@ -424,6 +424,7 @@ class PSFMap(IRFMap):
 
         """
         import matplotlib.pyplot as plt
+        from matplotlib.ticker import FormatStrFormatter
 
         ax = plt.gca() if ax is None else ax
 
@@ -440,6 +441,7 @@ class PSFMap(IRFMap):
 
         ax.semilogx()
         ax.legend(loc="best")
+        ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
         ax.set_xlabel(f"Energy ({ax.xaxis.units})")
         ax.set_ylabel(f"Containment radius ({ax.yaxis.units})")
         return ax
@@ -465,6 +467,7 @@ class PSFMap(IRFMap):
 
         """
         import matplotlib.pyplot as plt
+        from matplotlib.ticker import FormatStrFormatter
 
         ax = plt.gca() if ax is None else ax
 
@@ -485,8 +488,47 @@ class PSFMap(IRFMap):
         ax.set_yscale("log")
         ax.set_xlabel(f"Rad ({ax.xaxis.units})")
         ax.set_ylabel(f"PSF ({ax.yaxis.units})")
+        ax.xaxis.set_major_formatter(FormatStrFormatter('%.2f'))
         plt.legend()
         return ax
 
     def __str__(self):
         return str(self.psf_map)
+
+
+    def peek(self, figsize=(12, 10)):
+        """Quick-look summary plots.
+
+        Parameters
+        ----------
+        figsize : tuple
+            Size of figure.
+        """
+
+        import matplotlib.pyplot as plt
+
+        fig, axes = plt.subplots(
+            ncols=2,
+            nrows=2,
+            subplot_kw={"projection": self.psf_map.geom.wcs},
+            figsize=figsize,
+            gridspec_kw={"hspace": 0.3, "wspace": 0.3},
+        )
+
+        axes = axes.flat
+        axes[0].remove()
+        ax0 = fig.add_subplot(2, 2, 1)
+        ax0.set_title("Containment radius at center of map")
+        self.plot_containment_radius_vs_energy(ax = ax0)
+
+        axes[1].remove()
+        ax1 = fig.add_subplot(2, 2, 2)
+        ax1.set_ylim(1e-4, 1e4)
+        ax1.set_title("PSF at center of map")
+        self.plot_psf_vs_rad(ax = ax1)
+
+        axes[2].set_title("Exposure")
+        self.exposure_map.reduce_over_axes().plot(ax = axes[2], add_cbar=True)
+
+        axes[3].set_title("Containment radius at 1 TeV")
+        self.containment_radius_map(energy_true=2*u.TeV).plot(ax = axes[3], add_cbar=True)

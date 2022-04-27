@@ -166,7 +166,7 @@ class MapEvaluator:
         if edisp:
             energy_axis = geom.axes["energy"]
             self.edisp = edisp.get_edisp_kernel(
-                self.model.position, energy_axis=energy_axis
+                position=self.model.position, energy_axis=energy_axis
             )
 
         # lookup psf

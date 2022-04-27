@@ -3,7 +3,7 @@ import logging
 import numpy as np
 from gammapy.utils.scripts import make_path
 from .map import MapDataset, MapDatasetOnOff
-from .utils import get_axes, get_figure
+from .utils import get_axes
 
 __all__ = ["SpectrumDatasetOnOff", "SpectrumDataset"]
 
@@ -218,21 +218,18 @@ class PlotMixin:
         ax.legend(numpoints=1)
         return ax
 
-    def peek(self, fig=None):
+    def peek(self, figsize=(16,4)):
         """Quick-look summary plots.
 
         Parameters
         ----------
-        fig : `~matplotlib.figure.Figure`
-            Figure to add AxesSubplot on.
+        figsize : tuple
+            Size of the figure.
 
-        Returns
-        -------
-        ax1, ax2, ax3 : `~matplotlib.axes.AxesSubplot`
-            Counts, effective area and energy dispersion subplots.
         """
-        fig = get_figure(fig, 16, 4)
-        ax1, ax2, ax3 = fig.subplots(1, 3)
+        import matplotlib.pyplot as plt
+
+        fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=figsize)
 
         ax1.set_title("Counts")
         self.plot_counts(ax1)
@@ -247,8 +244,6 @@ class PlotMixin:
         if self.edisp is not None:
             kernel = self.edisp.get_edisp_kernel()
             kernel.plot_matrix(ax=ax3, add_cbar=True)
-
-        return ax1, ax2, ax3
 
 
 class SpectrumDataset(PlotMixin, MapDataset):
