@@ -24,14 +24,14 @@ authors:
   affiliation: Astroparticle and Cosmology Laboratory CNRS, Université de Paris, 10
     Rue Alice Domon et Léonie Duquet, 75013 Paris, France
   orcid: https://orcid.org/0000-0002-8219-4667
-- given-names: Johannes
-  family-names: King
-  affiliation: Pamyra
 - given-names: José Enrique
   family-names: Ruiz
   affiliation: Instituto de Astrofísica de Andalucía - CSIC, Gta. de la Astronomía,
     18008 Granada, Spain
   orcid: https://orcid.org/0000-0003-3274-4445
+- given-names: Johannes
+  family-names: King
+  affiliation: Pamyra
 - given-names: Quentin
   family-names: Remy
   affiliation: Max Planck Institut für Kernphysik, MPIK, Saupfercheckweg 1, 69117
@@ -44,18 +44,18 @@ authors:
   affiliation: Universidad Complutense de Madrid EMFTEL, UCM, Plaza de la Ciencias,
     28040 Madrid, Spain
   orcid: https://orcid.org/0000-0002-9238-7163
-- given-names: Matthew
-  family-names: Wood
-  affiliation: Facebook, 1 Hacker Way, Menlo Park, CA 94025, US
 - given-names: Fabio
   family-names: Pintore
   affiliation: INAF/IASF, via Ugo La Malfa 153,  90146 Palermo, Italy
-- given-names: Manuel
-  family-names: Paz Arribas
+- given-names: Matthew
+  family-names: Wood
+  affiliation: Facebook, 1 Hacker Way, Menlo Park, CA 94025, US
 - given-names: Laura
   family-names: Olivera
   affiliation: Max Planck Institut für Kernphysik, MPIK, Saupfercheckweg 1, 69117
     Heidelberg, Germany
+- given-names: Manuel
+  family-names: Paz Arribas
 - given-names: Luca
   family-names: Giunti
   affiliation: Astroparticle and Cosmology Laboratory CNRS, Université de Paris, 10
@@ -63,22 +63,30 @@ authors:
 - given-names: Bruno
   family-names: Khelifi
   affiliation: CNRS
-- given-names: Ellis
-  family-names: Owen
-  affiliation: National Tsing Hua University Institute of Astronomy, Hsinchu, Taiwan
-  orcid: https://orcid.org/0000-0003-1052-6439
-- given-names: Brigitta
-  family-names: Sipőcz
-  affiliation: California Institute of Technology, Pasadena CA, US
-  orcid: https://orcid.org/0000-0002-3713-6337
-- given-names: Olga
-  family-names: Vorokh
-- given-names: Julien
-  family-names: Lefaucheur
 - given-names: Fabio
   family-names: Acero
   affiliation: DAp/AIM, CEA-Saclay/CNRS, France
   orcid: https://orcid.org/0000-0002-6606-2816
+- given-names: Ellis
+  family-names: Owen
+  affiliation: National Tsing Hua University Institute of Astronomy, Hsinchu, Taiwan
+  orcid: https://orcid.org/0000-0003-1052-6439
+- given-names: Maximilian
+  family-names: Nöthe
+  affiliation: TU Dortmund University, Otto-Hahn-Str. 4a 44227 Dortmund, Germany
+  orcid: https://orcid.org/0000-0001-7993-8189
+- given-names: Olga
+  family-names: Vorokh
+- given-names: Brigitta
+  family-names: Sipőcz
+  affiliation: California Institute of Technology, Pasadena CA, US
+  orcid: https://orcid.org/0000-0002-3713-6337
+- given-names: Julien
+  family-names: Lefaucheur
+- given-names: Cosimo
+  family-names: Nigro
+  affiliation: Institut de Fisica d'altes Energies, IFAE, Edifici Cn, Campus UAB,
+    08193 Bellaterra (Barcelona), Spain
 - given-names: Thomas
   family-names: Robitaille
   affiliation: Aperio Software, Insight House, Riverside Business Park, Stoney Common
@@ -88,10 +96,6 @@ authors:
 - given-names: Jonathan
   name-particle: D.
   family-names: Harris
-- given-names: Cosimo
-  family-names: Nigro
-  affiliation: Institut de Fisica d'altes Energies, IFAE, Edifici Cn, Campus UAB,
-    08193 Bellaterra (Barcelona), Spain
 - given-names: Lars
   family-names: Mohrmann
   affiliation: Max Planck Institut für Kernphysik, MPIK, Saupfercheckweg 1, 69117
@@ -111,55 +115,54 @@ authors:
   family-names: Wegenmat
 - given-names: Dimitri
   family-names: Papadopoulos
-- given-names: Maximilian
-  family-names: Nöthe
-  affiliation: TU Dortmund University, Otto-Hahn-Str. 4a 44227 Dortmund, Germany
-  orcid: https://orcid.org/0000-0001-7993-8189
 - given-names: Nachiketa
   family-names: Chakraborty
 - given-names: Michael
   family-names: Droettboom
   affiliation: Mozilla, Mountain View, CA
-- given-names: Helen
-  family-names: Poon
 - given-names: Arjun
   family-names: Voruganti
+- given-names: Helen
+  family-names: Poon
 - given-names: Jason
   family-names: Watson
   affiliation: DESY
 - given-names: Thomas
   family-names: Armstrong
+- given-names: Erik
+  family-names: Tollerud
+  affiliation: Space Telescope Science Institute, STScI, 3700 San Martin Drive, 21218
+    Baltimore MD, US
 - given-names: Vikas
   family-names: Joshi
   affiliation: Friedrich-Alexander-Universität Erlangen-Nürnberg, Erlangen Centre
     for Astroparticle Physics, Erwin-Rommel-Str. 1 91058 Erlangen, Germany
 - given-names: Erik
-  family-names: Tollerud
-  affiliation: Space Telescope Science Institute, STScI, 3700 San Martin Drive, 21218
-    Baltimore MD, US
-- given-names: Erik
   name-particle: M.
   family-names: Bray
-- given-names: Domenico
-  family-names: Tiziani
 - given-names: Gabriel
   family-names: Emery
-- given-names: Hubert
-  family-names: Siejkowski
+- given-names: Arnau
+  family-names: Aguasca Cabot
+  affiliation: Institute of cosmos sciences, ICCUB, Martí i Franquès 1, 08028 Barcelona
+- given-names: Domenico
+  family-names: Tiziani
 - given-names: Kai
   family-names: Brügge
   affiliation: Point 8 GmbH, Rheinlanddamm 201, 44139 Dortmund, Germany
+- given-names: Arpit
+  family-names: Gogia
+- given-names: Hubert
+  family-names: Siejkowski
+- given-names: Ignacio
+  family-names: Minaya
 - given-names: Luigi
   family-names: Tibaldo
   affiliation: Institute de Recherche en Astrophysique et Planetologie, IRAP,
-- given-names: Arpit
-  family-names: Gogia
-- given-names: Ignacio
-  family-names: Minaya
-- given-names: Marion
-  family-names: Spir-Jacob
 - given-names: Yves
   family-names: Gallant
+- given-names: Marion
+  family-names: Spir-Jacob
 - given-names: Andrew
   name-particle: W.
   family-names: Chen
@@ -169,8 +172,6 @@ authors:
   family-names: Zanin
   affiliation: CTA Observatory gGmbH, Via Piero Gobetti 93/3 40129 Bologna, Italy
   orcid: https://orcid.org/0000-0001-6320-1801
-- given-names: Jean-Philippe
-  family-names: Lenain
 - given-names: Larry
   family-names: Bradley
   affiliation: Space Telescope Science Institute, STScI, 3700 San Martin Drive, 21218
@@ -179,46 +180,68 @@ authors:
   family-names: Nakashima
   affiliation: Friedrich-Alexander-Universität Erlangen-Nürnberg, Erlangen Centre
     for Astroparticle Physics, Erwin-Rommel-Str. 1 91058 Erlangen, Germany
-- given-names: Anne
-  family-names: Lemière
-  affiliation: Astroparticle and Cosmology Laboratory CNRS, Université de Paris, 10
-    Rue Alice Domon et Léonie Duquet, 75013 Paris, France
 - given-names: Mathieu
   family-names: de Bony
 - given-names: Matthew
   family-names: Craig
+- given-names: Jean-Philippe
+  family-names: Lenain
+- given-names: Anne
+  family-names: Lemière
+  affiliation: Astroparticle and Cosmology Laboratory CNRS, Université de Paris, 10
+    Rue Alice Domon et Léonie Duquet, 75013 Paris, France
 - given-names: Lab
   family-names: Saha
   affiliation: Center for Astrophysics | Harvard & Smithsonian, CfA, 60 Garden St.,
     02138 Cambridge MA, US
-- given-names: Zé
-  family-names: Vinicius
 - given-names: Kyle
   family-names: Barbary
+- given-names: Zé
+  family-names: Vinicius
 - given-names: Thomas
   family-names: Vuillaume
   affiliation: Université Savoie Mont Blanc, CNRS, Laboratoire d’Annecyde Physique
     des Particules - IN2P3, 74000 Annecy, France
-- given-names: Adam
-  family-names: Ginsburg
-- given-names: Daniel
-  family-names: Morcuende
-- given-names: José Luis
-  family-names: Contreras
-- given-names: Laura
-  family-names: Vega Garcia
-- given-names: Oscar
-  family-names: Blanch Bigas
 - given-names: Víctor
   family-names: Zabalza
 - given-names: Wolfgang
   family-names: Kerzendorf
   affiliation: Michigan State University, Department of Physics and Astronomy, 428
     S Shaw Ln East Lansing, MI 48824, US
+- given-names: José Luis
+  family-names: Contreras
+- given-names: Daniel
+  family-names: Morcuende
+- given-names: Laura
+  family-names: Vega Garcia
+- given-names: Oscar
+  family-names: Blanch Bigas
+- given-names: Tyler
+  family-names: Cahill
+  affiliation: Iowa State University, Ames IA, US
+- given-names: Adam
+  family-names: Ginsburg
+- given-names: Benjamin Alan
+  family-names: Weaver
+- given-names: Johannes
+  family-names: Buchner
+- given-names: Hugo
+  family-names: van Kemenade
+- given-names: Eric
+  name-particle: O.
+  family-names: Lebigot
+- given-names: Peter
+  family-names: Deiml
+- given-names: Debanjan
+  family-names: Bose
 - given-names: Rolf
   family-names: Buehler
   affiliation: Deutsches Elektronen-Synchrotron, DESY, Platanenallee 6 15738 Zeuthen,
     Germany
+- given-names: Rubén
+  family-names: López-Coto
+- given-names: Sam
+  family-names: Carter
 - given-names: Sebastian
   family-names: Panny
 - given-names: Silvia
@@ -227,29 +250,6 @@ authors:
   family-names: Klepser
   affiliation: Deutsches Elektronen-Synchrotron, DESY, Platanenallee 6 15738 Zeuthen,
     Germany
-- given-names: Peter
-  family-names: Deiml
-- given-names: Johannes
-  family-names: Buchner
-- given-names: Hugo
-  family-names: van Kemenade
-- given-names: Eric
-  name-particle: O.
-  family-names: Lebigot
-- given-names: Benjamin Alan
-  family-names: Weaver
-- given-names: Debanjan
-  family-names: Bose
-- given-names: Rubén
-  family-names: López-Coto
-- given-names: Sam
-  family-names: Carter
-- given-names: Tyler
-  family-names: Cahill
-  affiliation: Iowa State University, Ames IA, US
-- given-names: Arnau
-  family-names: Aguasca Cabot
-  affiliation: Institute of cosmos sciences, ICCUB, Martí i Franquès 1, 08028 Barcelona
 version: 0.19
 date-released: 2020-11-19
 repository-code: https://github.com/gammapy/gammapy
