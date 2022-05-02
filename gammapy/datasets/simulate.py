@@ -7,7 +7,7 @@ from astropy.table import Table
 import gammapy
 from gammapy.data import EventList, observatory_locations
 from gammapy.maps import MapCoord
-from gammapy.modeling.models import ConstantTemporalModel
+from gammapy.modeling.models import ConstantTemporalModel, Models
 from gammapy.utils.random import get_random_state
 
 __all__ = ["MapDatasetEventSampler"]
@@ -295,12 +295,8 @@ class MapDatasetEventSampler:
         meta["CONV_DEC"] = 0
 
         for idx, model in enumerate(dataset.models):
-            if model.name != dataset.background_model.name:
-                meta["MID{:05d}".format(idx + 1)] = idx + 1
-                meta["MMN{:05d}".format(idx + 1)] = model.name
-            else:
-                meta["MID{:05d}".format(0)] = 0
-                meta["MMN{:05d}".format(0)] = model.name
+            meta["MID{:05d}".format(idx)] = idx
+            meta["MMN{:05d}".format(idx)] = model.name
         meta["NMCIDS"] = len(dataset.models)
 
         # Necessary for DataStore, but they should be ALT and AZ instead!
@@ -355,6 +351,16 @@ class MapDatasetEventSampler:
             Event list.
         """
         if len(dataset.models) > 1:
+            for i, mod in enumerate(dataset.models):
+                if mod.tag[0] == "FoVBackgroundModel":
+                    break
+
+            sky_model = np.delete(dataset.models, i, 0)
+            fov_bkg = dataset.models[i]
+            model_new = Models([fov_bkg])
+            model_new.extend(sky_model)
+            dataset.models = model_new
+
             events_src = self.sample_sources(dataset)
 
             if len(events_src.table) > 0:
