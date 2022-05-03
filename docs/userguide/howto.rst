@@ -65,18 +65,22 @@ methods.
     :title: Choose units for plotting
 
 Units for plotting are handled with a combination of `matplotlib` and `astropy.units`.
-For most plotting methods Gammapy forwards additional keywords to the corresponding
-matplotlib plot method, including the `xunits` and `yunits` keywords, which allows
+The methods `ax.xaxis.set_units()` and `ax.yaxis.set_units()` allow
 you to define the x and y axis units using `astropy.units`. Here is a minimal example:
 
 .. code::
 
-    from gammapy.estimators import FluxPoints
-    from astropy import units as u
+        import matplotlib.pyplot as plt
+        from gammapy.estimators import FluxPoints
+        from astropy import units as u
 
-    filename = "$GAMMAPY_DATA/hawc_crab/HAWC19_flux_points.fits"
-    fp = FluxPoints.read(filename)
-    fp.plot(sed_type="e2dnde", xunits=u.erg, yunits=u.Unit("erg cm-2 s-1"))
+        filename = "$GAMMAPY_DATA/hawc_crab/HAWC19_flux_points.fits"
+        fp = FluxPoints.read(filename)
+
+        ax = plt.subplot()
+        ax.xaxis.set_units(u.eV)
+        ax.yaxis.set_units(u.Unit("erg cm-2 s-1"))
+        fp.plot(sed_type="e2dnde")
 
 .. accordion-footer::
 
