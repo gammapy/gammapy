@@ -89,7 +89,7 @@ class MapDatasetEventSampler:
             if len(table) > 0:
                 table["MC_ID"] = idx + 1
                 table.meta["MID{:05d}".format(idx + 1)] = idx + 1
-                table.meta["MMN{:05d}".format(idx + 1)] = dataset.models[idx].name
+                table.meta["MMN{:05d}".format(idx + 1)] = evaluator.model.name
             else:
                 mcid = table.Column(name="MC_ID", length=0, dtype=int)
                 table.add_column(mcid)
@@ -121,11 +121,8 @@ class MapDatasetEventSampler:
         table["RA"] = table["RA_TRUE"]
         table["DEC"] = table["DEC_TRUE"]
 
-        for i, mod in enumerate(dataset.models):
-            if mod.tag[0] == "FoVBackgroundModel":
-                break
         table.meta["MID{:05d}".format(0)] = 0
-        table.meta["MMN{:05d}".format(0)] = dataset.models[i].name
+        table.meta["MMN{:05d}".format(0)] = dataset.background_model.name
 
         return EventList(table)
 
