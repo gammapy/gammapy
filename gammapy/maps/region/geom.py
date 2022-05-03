@@ -719,7 +719,7 @@ class RegionGeom(Geom):
             else:
                 self._region = other.region
 
-    def plot_region(self, ax=None, **kwargs):
+    def plot_region(self, ax=None, kwargs_point=None, **kwargs):
         """Plot region in the sky.
 
         Parameters
@@ -738,7 +738,8 @@ class RegionGeom(Geom):
         """
         from astropy.visualization.wcsaxes import WCSAxes
         import matplotlib.pyplot as plt
-        from matplotlib.collections import PatchCollection
+
+        kwargs_point = kwargs_point or {}
 
         if ax is None:
             ax = plt.gca()
@@ -749,11 +750,18 @@ class RegionGeom(Geom):
                 m = Map.from_geom(wcs_geom.to_image())
                 ax = m.plot(add_cbar=False)
 
-        regions = compound_region_to_regions(self.region)
-        artists = [region.to_pixel(wcs=ax.wcs).as_artist() for region in regions]
-
         kwargs.setdefault("fc", "None")
+        kwargs_point.setdefault("color", kwargs.get("edgecolor"))
+        kwargs_point.setdefault("markeredgecolor", "None")
 
-        patches = PatchCollection(artists, **kwargs)
-        ax.add_collection(patches)
+        for region in compound_region_to_regions(self.region):
+            region_pix = region.to_pixel(wcs=ax.wcs)
+
+            if isinstance(region, PointSkyRegion):
+                artist = region_pix.as_artist(**kwargs_point)
+            else:
+                artist = region_pix.as_artist(**kwargs)
+
+            ax.add_artist(artist)
+
         return ax

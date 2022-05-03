@@ -287,11 +287,11 @@ class DataStore:
             hdus = ["events", "gti", "aeff", "edisp"]
         else:
             hdus = ["events", "gti"] + required_irf
+
         for hdu in hdus:
             kwargs[hdu] = self.hdu_table.hdu_location(obs_id=obs_id, hdu_type=hdu)
 
         return Observation(**kwargs)
-
 
     def get_observations(self, obs_id=None, skip_missing=False, required_irf="full-enclosure"):
         """Generate a `~gammapy.data.Observations`.
