@@ -113,10 +113,12 @@ class FluxEstimator(ParameterEstimator):
         ref_model = models[self.source].spectral_model
         scale_model = ScaleSpectralModel(ref_model)
 
-        if "amplitude" in ref_model.parameters.names:
-            scaled_parameter = ref_model.parameters["amplitude"]
+        for scaled_parameter in ref_model.parameters:
+            if scaled_parameter.is_norm:
+                break
         else:
-            scaled_parameter = ref_model.parameters["norm"]
+            raise ValueError(f"{self.tag} requires a 'norm' or 'amplitude' parameter"
+                             " in the model to run")
 
         scale_model.norm = self._set_norm_parameter(scale_model.norm, scaled_parameter)
         return scale_model
