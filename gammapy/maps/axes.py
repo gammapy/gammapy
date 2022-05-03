@@ -325,7 +325,7 @@ class MapAxis:
 
         xlabel = DEFAULT_LABEL_TEMPLATE.format(
             quantity=PLOT_AXIS_LABEL.get(self.name, self.name.capitalize()),
-            unit=self.unit,
+            unit=ax.xaxis.units,
         )
         ax.set_xlabel(xlabel)
         xmin, xmax = self.bounds
@@ -348,7 +348,10 @@ class MapAxis:
         """
         ax.set_yscale(self.as_plot_scale)
 
-        ylabel = self.name.capitalize() + f" [{ax.yaxis.units}]"
+        ylabel = DEFAULT_LABEL_TEMPLATE.format(
+            quantity=PLOT_AXIS_LABEL.get(self.name, self.name.capitalize()),
+            unit=ax.yaxis.units,
+        )
         ax.set_ylabel(ylabel)
         ax.set_ylim(self.bounds)
         return ax
