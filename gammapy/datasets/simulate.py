@@ -88,6 +88,8 @@ class MapDatasetEventSampler:
             table = self._sample_coord_time(npred, temporal_model, dataset.gti)
             if len(table) > 0:
                 table["MC_ID"] = idx + 1
+                table.meta["MID{:05d}".format(idx + 1)] = idx + 1
+                table.meta["MMN{:05d}".format(idx + 1)] = evaluator.model.name
             else:
                 mcid = table.Column(name="MC_ID", length=0, dtype=int)
                 table.add_column(mcid)
@@ -118,6 +120,9 @@ class MapDatasetEventSampler:
         table["ENERGY"] = table["ENERGY_TRUE"]
         table["RA"] = table["RA_TRUE"]
         table["DEC"] = table["DEC_TRUE"]
+
+        table.meta["MID{:05d}".format(0)] = 0
+        table.meta["MMN{:05d}".format(0)] = dataset.background_model.name
 
         return EventList(table)
 
@@ -294,9 +299,6 @@ class MapDatasetEventSampler:
         meta["CONV_RA"] = 0
         meta["CONV_DEC"] = 0
 
-        for idx, model in enumerate(dataset.models):
-            meta["MID{:05d}".format(idx + 1)] = idx + 1
-            meta["MMN{:05d}".format(idx + 1)] = model.name
         meta["NMCIDS"] = len(dataset.models)
 
         # Necessary for DataStore, but they should be ALT and AZ instead!
@@ -377,7 +379,7 @@ class MapDatasetEventSampler:
 
         events = self.event_det_coords(observation, events)
         events.table["EVENT_ID"] = np.arange(len(events.table))
-        events.table.meta = self.event_list_meta(dataset, observation)
+        events.table.meta.update(self.event_list_meta(dataset, observation))
 
         geom = dataset._geom
         selection = geom.contains(events.map_coord(geom))
