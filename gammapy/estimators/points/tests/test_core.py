@@ -6,6 +6,7 @@ import astropy.units as u
 from astropy.table import Table
 from gammapy.catalog.fermi import SourceCatalog3FGL, SourceCatalog4FGL
 from gammapy.estimators import FluxPoints
+from gammapy.estimators.map.core import DEFAULT_UNIT
 from gammapy.modeling.models import SpectralModel, PowerLawSpectralModel
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import (
@@ -218,8 +219,17 @@ class TestFluxPoints:
 
     @requires_dependency("matplotlib")
     def test_plot(self, flux_points):
+        import matplotlib.pyplot as plt
+
+        fig = plt.figure()
+        ax = fig.add_axes([0.2, 0.2, 0.7, 0.7])
+        ax.xaxis.set_units(u.eV)
+
+        yunit = DEFAULT_UNIT[flux_points.sed_type_init]
+        ax.yaxis.set_units(yunit)
+
         with mpl_plot_check():
-            flux_points.plot()
+            flux_points.plot(ax=ax)
 
     @requires_dependency("matplotlib")
     def test_plot_likelihood(self, flux_points_likelihood):

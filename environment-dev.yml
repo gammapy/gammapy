@@ -18,7 +18,7 @@ dependencies:
   # core dependencies
   - python=3.7
   - pip
-  - astropy>=5.0
+  - astropy
   - click
   - cython
   - numpy
