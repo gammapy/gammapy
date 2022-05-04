@@ -238,9 +238,12 @@ class TestFluxPoints:
 
     @requires_dependency("matplotlib")
     def test_plot_likelihood_error(self, flux_points_likelihood):
+        import matplotlib.pyplot as plt
         del flux_points_likelihood._data["stat_scan"]
+
         with pytest.raises(AttributeError):
-            flux_points_likelihood.plot_ts_profiles()
+            ax = plt.subplot()
+            flux_points_likelihood.plot_ts_profiles(ax=ax)
 
 
 @requires_data()
