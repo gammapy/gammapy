@@ -18,6 +18,7 @@ def optimize_scipy(parameters, function, store_trace=False, **kwargs):
     pars = [par.factor for par in parameters.free_parameters]
 
     bounds = []
+
     for par in parameters.free_parameters:
         parmin = par.factor_min if not np.isnan(par.factor_min) else None
         parmax = par.factor_max if not np.isnan(par.factor_max) else None
