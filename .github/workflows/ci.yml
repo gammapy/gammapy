@@ -177,13 +177,13 @@ jobs:
         with:
           environment-file: environment-dev.yml
           extra-specs: |
-            click==7.0
-            pydantic==1.0
-            pyyaml==5.1
-            regions==0.5
-            scipy==1.2
-            astropy==4.3
-            numpy==1.19
+            click=7.0
+            pydantic=1.0
+            pyyaml=5.1
+            regions=0.5
+            scipy=1.2
+            astropy=4.3
+            numpy=1.19
       - name: install gammapy
         run: |
           pip install -e .
