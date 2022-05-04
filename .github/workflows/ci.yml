@@ -30,28 +30,24 @@ jobs:
       fail-fast: false # true
       matrix:
         include:
-          - name: Linux python 3.7 all-deps
+          - name: Linux python 3.8 all-deps
             os: ubuntu-latest
           - name: Linux python 3.8 core-deps
             os: ubuntu-latest
           - name: Linux python 3.9 core-deps
             os: ubuntu-latest
-          - name: Windows python 3.7 core-deps
+          - name: Windows python 3.8 core-deps
             os: windows-latest
-            python: 3.7
+            python: 3.8
           - name: Mac python 3.8 core-deps
             os: macos-latest
     steps:
       - name: checkout repo
         uses: actions/checkout@v2
-      - name: install python3.8
-        if: contains(matrix.name, '3.8')
-        run: |
-          sed -itmp 's/python=3.7/python=3.8/' environment-dev.yml
       - name: install python3.9
         if: contains(matrix.name, '3.9')
         run: |
-          sed -itmp 's/python=3.7/python=3.9/' environment-dev.yml
+          sed -itmp 's/python=3.8/python=3.9/' environment-dev.yml
       - name: add core dependencies env file
         if: contains(matrix.name, 'core-deps')
         run: |
@@ -59,12 +55,12 @@ jobs:
           mv env1 environment-dev.yml
           cat environment-dev.yml
       - name: install dependencies with pip
-        if: matrix.name=='Windows python 3.7 core-deps'
+        if: matrix.name=='Windows python 3.8 core-deps'
         run: |
           pip install astropy click cython numpy pydantic pyyaml regions scipy
           pip install pytest pytest-astropy requests tqdm pytest-xdist
       - name: create and activate env
-        if: matrix.name!='Windows python 3.7 core-deps'
+        if: matrix.name!='Windows python 3.8 core-deps'
         uses: mamba-org/provision-with-micromamba@main
         with:
           environment-file: environment-dev.yml
@@ -83,7 +79,7 @@ jobs:
         run: |
           make test
   notebooks:
-    name: Linux python 3.7 notebooks all-deps
+    name: Linux python 3.8 notebooks all-deps
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -108,7 +104,7 @@ jobs:
         run: |
           make test-nb
   sphinx:
-    name: Linux python 3.7 sphinx all-deps
+    name: Linux python 3.8 sphinx all-deps
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -141,7 +137,7 @@ jobs:
           unset GAMMAPY_DATA
           make test
   conda-build:
-    name: Linux python 3.7 conda-build all-deps
+    name: Linux python 3.8 conda-build all-deps
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -165,7 +161,7 @@ jobs:
           conda build --version
           python setup.py bdist_conda
   oldest:
-    name: Linux python 3.7 old-versions core
+    name: Linux python 3.8 old-versions core
     runs-on: ubuntu-latest
     defaults:
       run:
