@@ -837,7 +837,8 @@ def test_binary_erode():
     assert_allclose(mask.data.sum(), 4832)
 
     mask = mask.binary_erode(width=0.2 * u.deg, kernel="box", use_fft=True)
-    assert_allclose(mask.data.sum(), 3372)
+    # Due to fft noise the result is not exact here. See https://github.com/gammapy/gammapy/issues/3662
+    assert_allclose(mask.data.sum(), 3372, atol=20)
 
 
 def test_binary_dilate():
@@ -848,7 +849,8 @@ def test_binary_dilate():
     assert_allclose(mask.data.sum(), 8048)
 
     mask = mask.binary_dilate(width=(10, 10), kernel="box")
-    assert_allclose(mask.data.sum(), 9203, rtol=3e-3)
+    # Due to fft noise the result is not exact here. See https://github.com/gammapy/gammapy/issues/3662
+    assert_allclose(mask.data.sum(), 9203, atol=20)
 
 
 def test_binary_dilate_erode_3d():
