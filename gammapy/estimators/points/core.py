@@ -500,6 +500,7 @@ class FluxPoints(FluxMaps):
         y_errn, y_errp = self._plot_get_flux_err(sed_type=sed_type)
 
         is_ul = self.is_ul.data
+
         if self.has_ul and y_errn and is_ul.any():
             flux_ul = getattr(self, sed_type + "_ul").quantity
             y_errn.data[is_ul] = 0.5 * flux_ul[is_ul].to_value(y_errn.unit)
@@ -567,7 +568,12 @@ class FluxPoints(FluxMaps):
         if isinstance(axis, TimeMapAxis) and not axis.is_contiguous:
             axis = axis.to_contiguous()
 
-        yunits = kwargs.pop("yunits", DEFAULT_UNIT[sed_type])
+        if ax.yaxis.units is None:
+            yunits = DEFAULT_UNIT[sed_type]
+        else:
+            yunits = ax.yaxis.units
+
+        ax.yaxis.set_units(yunits)
 
         flux_ref = getattr(self, sed_type + "_ref").to(yunits)
 

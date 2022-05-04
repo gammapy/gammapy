@@ -408,9 +408,8 @@ class SpectralModel(ModelBase):
             n_points,
         )
 
-        kwargs.setdefault(
-            "yunits", DEFAULT_UNIT[sed_type] * energy.unit ** energy_power
-        )
+        if ax.yaxis.units is None:
+            ax.yaxis.set_units(DEFAULT_UNIT[sed_type] * energy.unit ** energy_power)
 
         flux, _ = self._get_plot_flux(sed_type=sed_type, energy=energy)
 
@@ -485,9 +484,9 @@ class SpectralModel(ModelBase):
         kwargs.setdefault("facecolor", "black")
         kwargs.setdefault("alpha", 0.2)
         kwargs.setdefault("linewidth", 0)
-        kwargs.setdefault(
-            "yunits", DEFAULT_UNIT[sed_type] * energy.unit ** energy_power
-        )
+
+        if ax.yaxis.units is None:
+            ax.yaxis.set_units(DEFAULT_UNIT[sed_type] * energy.unit ** energy_power)
 
         flux, flux_err = self._get_plot_flux(sed_type=sed_type, energy=energy)
         y_lo = scale_plot_flux(flux - flux_err, energy_power).quantity[:, 0, 0]
