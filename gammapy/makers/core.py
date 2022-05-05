@@ -26,9 +26,9 @@ class Maker(abc.ABC):
         max_len = np.max([len(_) for _ in names]) + 1
 
         for name in names:
-            value = getattr(self, name, "not available")
+            value = getattr(self, name, None)
 
-            if value == "not available":
+            if value is None:
                 continue
             else:
                 s += f"\t{name:{max_len}s}: {value}\n"
