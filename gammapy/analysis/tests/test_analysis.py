@@ -141,14 +141,14 @@ def test_set_models():
     analysis.set_models(models=models_str)
     assert isinstance(analysis.models, DatasetModels)
     assert len(analysis.models) == 2
-    assert  analysis.models.names == ['source', 'stacked-bkg']
+    assert analysis.models.names == ["source", "stacked-bkg"]
     with pytest.raises(TypeError):
         analysis.set_models(0)
-    
+
     new_source = analysis.models["source"].copy(name="source2")
     analysis.set_models(models=[new_source], extend=False)
     assert len(analysis.models) == 2
-    assert  analysis.models.names == ['source2', 'stacked-bkg']
+    assert analysis.models.names == ["source2", "stacked-bkg"]
 
 
 @requires_dependency("iminuit")
@@ -412,8 +412,7 @@ def test_analysis_3d_joint_datasets():
         rtol=1e-6,
     )
     assert_allclose(
-        analysis.datasets[0].background_model.spectral_model.tilt.value, 0.0,
-        rtol=1e-6,
+        analysis.datasets[0].background_model.spectral_model.tilt.value, 0.0, rtol=1e-6,
     )
     assert_allclose(
         analysis.datasets[1].background_model.spectral_model.norm.value,
@@ -443,12 +442,13 @@ def test_usage_errors():
         analysis.get_flux_points()
     with pytest.raises(ValidationError):
         analysis.config.datasets.type = "None"
-        
+
+
 @requires_data()
 def test_datasets_io(tmpdir):
     config = get_example_config("3d")
 
-    analysis = Analysis(config)    
+    analysis = Analysis(config)
     analysis.get_observations()
     analysis.get_datasets()
     models_str = Path(MODEL_FILE).read_text()
@@ -456,16 +456,16 @@ def test_datasets_io(tmpdir):
 
     config.general.datasets_file = tmpdir / "datasets.yaml"
     config.general.models_file = tmpdir / "models.yaml"
-    analysis.write_datasets()    
+    analysis.write_datasets()
     analysis = Analysis(config)
     analysis.read_datasets()
     assert len(analysis.datasets.models) == 2
-    assert  analysis.models.names == ['source', 'stacked-bkg']
+    assert analysis.models.names == ["source", "stacked-bkg"]
 
     analysis.models[0].parameters["index"].value = 3
     analysis.write_models()
     analysis = Analysis(config)
     analysis.read_datasets()
     assert len(analysis.datasets.models) == 2
-    assert  analysis.models.names == ['source', 'stacked-bkg']
+    assert analysis.models.names == ["source", "stacked-bkg"]
     assert analysis.models[0].parameters["index"].value == 3
