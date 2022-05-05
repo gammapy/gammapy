@@ -1,8 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 from numpy.testing import assert_allclose
-from gammapy.datasets import Datasets
+from gammapy.datasets import Datasets, SpectrumDatasetOnOff
 from gammapy.modeling.tests.test_fit import MyDataset
+from gammapy.utils.testing import requires_data
 
 
 @pytest.fixture(scope="session")
@@ -40,7 +41,7 @@ def test_names(datasets):
     assert datasets.names == ["test-1", "test-2"]
 
 
-def test_Datasets_mutation():
+def test_datasets_mutation():
     dat = MyDataset(name="test-1")
     dats = Datasets([MyDataset(name="test-2"), MyDataset(name="test-3")])
     dats2 = Datasets([MyDataset(name="test-4"), MyDataset(name="test-5")])
@@ -61,7 +62,28 @@ def test_Datasets_mutation():
 
     with pytest.raises(ValueError, match="Dataset names must be unique"):
         dats.append(dat)
+
     with pytest.raises(ValueError, match="Dataset names must be unique"):
         dats.insert(0, dat)
+
     with pytest.raises(ValueError, match="Dataset names must be unique"):
         dats.extend(dats2)
+
+
+@requires_data()
+def test_datasets_info_table():
+    datasets_hess = Datasets()
+
+    for obs_id in [23523, 23526]:
+        dataset = SpectrumDatasetOnOff.read(
+            f"$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs{obs_id}.fits"
+        )
+        datasets_hess.append(dataset)
+
+    table = datasets_hess.info_table()
+    assert table["name"][0] == "23523"
+    assert table["name"][1] == "23526"
+
+    table = datasets_hess.info_table(cumulative=True)
+    assert table["name"][0] == "stacked"
+    assert table["name"][1] == "stacked"
