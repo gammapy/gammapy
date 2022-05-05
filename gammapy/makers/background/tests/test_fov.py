@@ -7,7 +7,7 @@ from regions import CircleSkyRegion
 from gammapy.data import DataStore
 from gammapy.datasets import MapDataset, SpectrumDataset
 from gammapy.makers import FoVBackgroundMaker, MapDatasetMaker, SafeMaskMaker
-from gammapy.maps import MapAxis, WcsGeom, RegionGeom
+from gammapy.maps import MapAxis, WcsGeom, RegionGeom, Map
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
     FoVBackgroundModel,
@@ -308,6 +308,7 @@ def test_fov_bkg_maker_mask_fit_handling(obs_dataset, exclusion_mask):
     assert_allclose(model.norm.error, 0.1115, rtol=1e-3)
     assert_allclose(model.tilt.value, 0.0, rtol=1e-2)
 
+
 @requires_data()
 def test_fov_bkg_maker_spectrumdataset(obs_dataset):
     from regions import CircleSkyRegion
@@ -323,3 +324,9 @@ def test_fov_bkg_maker_spectrumdataset(obs_dataset):
     region_dataset = obs_dataset.to_region_map_dataset(region)
     with pytest.raises(TypeError):
         maker.run(region_dataset)
+
+
+def test_fov_background_maker_str():
+    exclusion_mask = Map.create(binsz=0.2, width=(2, 2))
+    maker_fov = FoVBackgroundMaker(exclusion_mask=exclusion_mask)
+    assert "FoVBackgroundMaker" in str(maker_fov)
