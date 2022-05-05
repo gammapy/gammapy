@@ -11,7 +11,11 @@ A complete list of Gammapy contributors is at https://gammapy.org/team.html
 Version 1.0rc (unreleased)
 --------------------------
 
-- No changes yet
+.. toctree::
+   :maxdepth: 2
+
+   v1.0rc
+
 
 Version 0.19
 ------------
