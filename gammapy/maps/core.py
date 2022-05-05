@@ -1103,7 +1103,7 @@ class Map(abc.ABC):
 
         data = np.empty(geom.data_shape)
 
-        for img, idx in self.iter_by_image():
+        for img, idx in self.iter_by_image_data():
             if preserve_counts:
                 solid_angle = self.geom.solid_angle().to_value("deg2")[idx]
                 print(solid_angle[idx].shape)

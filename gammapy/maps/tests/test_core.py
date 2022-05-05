@@ -670,7 +670,7 @@ def test_map_reproject_wcs_to_wcs_with_axes():
     m = WcsNDMap(geom_wcs_1, data=data)
     m_r = m.reproject_to_geom(geom_wcs_2, method="polygon")
     assert m.data.shape == m_r.data.shape
-    for data, idx in m_r.iter_by_image():
+    for data, idx in m_r.iter_by_image_data():
         ref = idx[1] + 0.5 * idx[0]
         assert_allclose(np.nanmean(data), ref)
  
