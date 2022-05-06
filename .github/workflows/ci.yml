@@ -174,17 +174,15 @@ jobs:
       - name: checkout repo
         uses: actions/checkout@v2
       - name: create and activate env
-        uses: mamba-org/provision-with-micromamba@main
+        uses: conda-incubator/setup-miniconda@v2
         with:
-          environment-file: environment-dev.yml
-          extra-specs: |
-            click=7.0
-            pydantic=1.0
-            pyyaml=5.1
-            regions=0.5
-            scipy=1.2
-            astropy=4.3
-            numpy=1.19
+          python-version: 3.8
+          mamba-version: "*"
+          channels: conda-forge, defaults
+          channel-priority: true
+      - name: install dependencies
+        run: |
+            mamba install click=7.0 pydantic=1.0 pyyaml=5.1 regions=0.5 scipy=1.2 astropy=4.3 numpy=1.19
       - name: install gammapy
         run: |
           pip install -e .
@@ -193,4 +191,5 @@ jobs:
           gammapy download datasets
       - name: test simple
         run: |
+          gammapy info
           make test
