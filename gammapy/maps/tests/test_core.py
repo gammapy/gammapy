@@ -460,14 +460,13 @@ def test_interp_to_geom():
     geom_target = WcsGeom.create(
         skydir=(20, 20),
         width=(1.5, 1.5),
-        binsz=binsz/factor,
+        binsz=binsz / factor,
     )
-    new_map = test_map.interp_to_geom(geom_target,
-                                      fill_value=0.,
-                                      method="nearest",
-                                      preserve_counts=True)
-    assert_allclose(new_map.data[8,8], test_map.data[4,4]/factor**2,  rtol=1e-4)
-    assert_allclose(new_map.data[0,8], 0.,  rtol=1e-4)
+    new_map = test_map.interp_to_geom(
+        geom_target, fill_value=0.0, method="nearest", preserve_counts=True
+    )
+    assert_allclose(new_map.data[8, 8], test_map.data[4, 4] / factor ** 2, rtol=1e-4)
+    assert_allclose(new_map.data[0, 8], 0.0, rtol=1e-4)
 
 
 @requires_dependency("matplotlib")
@@ -494,36 +493,35 @@ def test_map_plot_mask():
 
 
 def test_resample_wcs_wcs():
-    npix1=3
+    npix1 = 3
     geom1 = WcsGeom.create(npix=npix1, frame="icrs")
     map1 = Map.from_geom(geom1, data=np.eye(npix1))
 
-    geom2 = WcsGeom.create(skydir=SkyCoord(0.,0., unit=u.deg),
-                           binsz=0.5,
-                           npix=7,
-                           frame="galactic"
-                           )
+    geom2 = WcsGeom.create(
+        skydir=SkyCoord(0.0, 0.0, unit=u.deg), binsz=0.5, npix=7, frame="galactic"
+    )
     map2 = Map.from_geom(geom2)
     map2.resample(geom1, weights=map1.quantity, preserve_counts=False)
-    assert_allclose(np.sum(map2*geom2.solid_angle()),
-                    np.sum(map1*geom1.solid_angle()),
-                    rtol=1e-3
-                    )
+    assert_allclose(
+        np.sum(map2 * geom2.solid_angle()),
+        np.sum(map1 * geom1.solid_angle()),
+        rtol=1e-3,
+    )
 
 
 def test_resample_wcs_hpx():
     geom1 = HpxGeom.create(nside=32, frame="icrs")
-    map1 = Map.from_geom(geom1, data=1.)
-    geom2 = HpxGeom.create(skydir=SkyCoord(0.,0., unit=u.deg),
-                           nside=8,
-                           frame="galactic"
-                           )
+    map1 = Map.from_geom(geom1, data=1.0)
+    geom2 = HpxGeom.create(
+        skydir=SkyCoord(0.0, 0.0, unit=u.deg), nside=8, frame="galactic"
+    )
     map2 = Map.from_geom(geom2)
     map2.resample(geom1, weights=map1.quantity, preserve_counts=False)
-    assert_allclose(np.sum(map2*geom2.solid_angle()),
-                    np.sum(map1*geom1.solid_angle()),
-                    rtol=1e-3
-                    )
+    assert_allclose(
+        np.sum(map2 * geom2.solid_angle()),
+        np.sum(map1 * geom1.solid_angle()),
+        rtol=1e-3,
+    )
 
 
 def test_iter_by_image():
@@ -582,5 +580,3 @@ def test_split_by_axis():
     )
     maps = m_4d.split_by_axis("time")
     assert len(maps) == 3
-
-
