@@ -554,28 +554,6 @@ class IRF(metaclass=abc.ABCMeta):
             data=data, axes=axes, meta=self.meta.copy(), unit=self.unit
         )
 
-    def axes_all_close(self, other):
-        """Compare two IRF types and axes
-        Parameters
-        ----------
-        other: the irf to compare against
-            `gammapy.irfs.IRF`
-        kwargs: dict
-                keywords passed to `numpy.allclose`
-
-        Returns
-        -------
-        state: bool
-        """
-        if not isinstance(other, self.__class__):
-            return False
-
-        for x1, x2 in zip(self.axes, other.axes):
-            if x1 != x2:
-                return False
-
-        return True
-
     def data_allclose(self, other, **kwargs):
         """Compare two data IRFs for equivalency
 
@@ -597,7 +575,9 @@ class IRF(metaclass=abc.ABCMeta):
         return np.allclose(self.quantity, other.quantity, **kwargs)
 
     def __eq__(self, other):
-        return bool(self.axes_all_close(other) * self.data_allclose(other))
+        class_eq = isinstance(other, self.__class__)
+        axes_eq = self.axes == other.axes
+        return bool(class_eq * axes_eq * self.data_allclose(other))
 
 
 class IRFMap:
