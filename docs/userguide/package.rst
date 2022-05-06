@@ -7,6 +7,7 @@ Gammapy analysis workflow and package structure
 
 .. toctree::
     :hidden:
+    :includehidden:
 
     dl3
     makers
