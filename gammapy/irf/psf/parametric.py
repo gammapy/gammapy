@@ -373,10 +373,9 @@ class PSFKing(ParametricPSF):
             Containment
         """
         with np.errstate(divide="ignore", invalid="ignore"):
-            term_1 = -((1 + rad ** 2 / (2 * gamma * sigma ** 2)) ** -gamma)
-            term_2 = rad ** 2 + 2 * gamma * sigma ** 2
-            term_3 = 2 * gamma * sigma ** 2
-            containment = term_1 * term_2 / term_3
+            powterm = 1 - gamma
+            term = (1 + rad ** 2 / (2 * gamma * sigma ** 2)) ** powterm
+            containment = 1 - term
 
         return containment
 
