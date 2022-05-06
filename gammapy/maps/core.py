@@ -563,7 +563,7 @@ class Map(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def upsample(self, factor, order=0, preserve_counts=True, axis=None):
+    def upsample(self, factor, order=0, preserve_counts=True, axis_name=None):
         """Upsample the spatial dimension by a given factor.
 
         Parameters
@@ -576,7 +576,7 @@ class Map(abc.ABC):
             Preserve the integral over each bin.  This should be true
             if the map is an integral quantity (e.g. counts) and false if
             the map is a differential quantity (e.g. intensity).
-        axis : str
+        axis_name : str
             Which axis to upsample. By default spatial axes are upsampled.
 
 
