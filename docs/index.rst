@@ -103,6 +103,6 @@ for `Fermi-LAT`_ and `HAWC`_ data analysis.
     getting-started/index
     userguide/index
     tutorials/index
-    api
+    userguide/howto
     development/index
     changelog/index
