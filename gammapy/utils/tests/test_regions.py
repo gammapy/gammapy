@@ -45,6 +45,23 @@ def test_compound_region_center_single():
     assert_allclose(center.galactic.b, 1 * u.deg, atol=1e-6)
 
 
+def test_compound_region_center_concentric():
+    regions_ds9 = (
+        "galactic;"
+        "circle(0,0,0.1);"
+        "circle(0,0,0.2);"
+    )
+
+    regions = Regions.parse(regions_ds9, format="ds9")
+
+    region = regions_to_compound_region(regions)
+
+    center = compound_region_center(region)
+
+    assert_allclose(center.galactic.l.wrap_at("180d"), 0 * u.deg, atol=1e-6)
+    assert_allclose(center.galactic.b, 0 * u.deg, atol=1e-6)
+
+
 def test_spherical_circle_sky_region():
     region = SphericalCircleSkyRegion(
         center=SkyCoord(10 * u.deg, 20 * u.deg), radius=10 * u.deg

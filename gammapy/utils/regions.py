@@ -64,8 +64,6 @@ def compound_region_center(compound_region):
 
     ra, dec = positions.icrs.ra.wrap_at("180d").deg, positions.icrs.dec.deg
 
-
-
     bounds = [
         (np.min(ra), np.max(ra)),
         (np.min(dec), np.max(dec)),
