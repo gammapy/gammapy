@@ -130,7 +130,7 @@ def test_psf_king_containment_radius(psf_king):
         fraction=0.68, energy_true=1 * u.TeV, offset=0.0 * u.deg
     )
 
-    assert_allclose(radius, 0.65975 * u.deg, rtol=1e-5)
+    assert_allclose(radius, 0.14575 * u.deg, rtol=1e-5)
 
 
 @requires_data()

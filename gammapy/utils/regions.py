@@ -14,7 +14,7 @@ Options: keep as-is, hide from the docs, or to remove it completely
 """
 import operator
 import numpy as np
-from scipy.optimize import minimize
+from scipy.optimize import minimize, Bounds
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from regions import (
@@ -51,6 +51,7 @@ def compound_region_center(compound_region):
         Geometric median of the positions of the individual regions
     """
     regions = compound_region_to_regions(compound_region)
+
     if len(regions) == 1:
         return regions[0].center
 
@@ -64,12 +65,13 @@ def compound_region_center(compound_region):
 
     ra, dec = positions.icrs.ra.wrap_at("180d").deg, positions.icrs.dec.deg
 
+    ub = np.array([np.max(ra), np.max(dec)])
+    lb = np.array([np.min(ra), np.min(dec)])
 
-
-    bounds = [
-        (np.min(ra), np.max(ra)),
-        (np.min(dec), np.max(dec)),
-    ]
+    if np.all(ub == lb):
+        bounds = None
+    else:
+        bounds = Bounds(ub=ub, lb=lb)
 
     result = minimize(
         f,

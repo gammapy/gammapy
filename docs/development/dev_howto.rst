@@ -9,7 +9,7 @@ Developer How To
 Python version support
 ----------------------
 
-In Gammapy we currently support Python 3.7 or later.
+In Gammapy we currently support Python 3.8 or later.
 
 Where should I import from?
 ---------------------------
@@ -137,9 +137,9 @@ so they can push and pull eventual modification of its content.
 Making a pull request which skips GitHub Actions
 -------------------------------------------------
 
-For minor PRs (eg: correcting typos in doc-strings) we can skip GitHub Actions. 
+For minor PRs (eg: correcting typos in doc-strings) we can skip GitHub Actions.
 Adding ``[ci skip]`` in a specific commit message will skip CI for that specific commit which can be useful for draft or incomplete PR.
-For details, `see here. <https://github.blog/changelog/2021-02-08-github-actions-skip-pull-request-and-push-workflows-with-skip-ci/>`__ 
+For details, `see here. <https://github.blog/changelog/2021-02-08-github-actions-skip-pull-request-and-push-workflows-with-skip-ci/>`__
 
 Fix non-Unix line endings
 -------------------------
@@ -271,9 +271,9 @@ any time.
 Caplog fixture
 --------------
 
-Inside tests, we have the possibility to change the log level for the captured 
+Inside tests, we have the possibility to change the log level for the captured
 log messages using the ``caplog`` fixture which allow you to access and control log capturing.
-When logging is part of your function, and you want to verify the right message is logged 
+When logging is part of your function, and you want to verify the right message is logged
 with the expected logging level:
 
 .. testcode::
