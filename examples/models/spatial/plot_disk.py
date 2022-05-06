@@ -12,7 +12,7 @@ By default, the model is symmetric, i.e. a disk:
 
     \phi(lon, lat) = \frac{1}{2 \pi (1 - \cos{r_0}) } \cdot
             \begin{cases}
-                1 & \text{for } \theta \leq r_0 \
+                1 & \text{for } \theta \leq r_0 \\
                 0 & \text{for } \theta > r_0
             \end{cases}
 
