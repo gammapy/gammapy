@@ -45,13 +45,11 @@ def test_compound_region_center_single():
     assert_allclose(center.galactic.b, 1 * u.deg, atol=1e-6)
 
 
-class TestSphericalCircleSkyRegion:
-    def setup(self):
-        self.region = SphericalCircleSkyRegion(
-            center=SkyCoord(10 * u.deg, 20 * u.deg), radius=10 * u.deg
-        )
+def test_spherical_circle_sky_region():
+    region = SphericalCircleSkyRegion(
+        center=SkyCoord(10 * u.deg, 20 * u.deg), radius=10 * u.deg
+    )
 
-    def test_contains(self):
-        coord = SkyCoord([20.1, 22] * u.deg, 20 * u.deg)
-        mask = self.region.contains(coord)
-        assert_equal(mask, [True, False])
+    coord = SkyCoord([20.1, 22] * u.deg, 20 * u.deg)
+    mask = region.contains(coord)
+    assert_equal(mask, [True, False])
