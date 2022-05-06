@@ -52,21 +52,30 @@ Main analysis steps
     At this level the data is stored as lists of gamma-like events and the corresponding
     instrument response functions (IRFs).
 
-Analysis geometry definition (gammapy.maps)
+:ref:`Analysis geometry definition (gammapy.maps) <maps>`
     Gammapy represents data on multi-dimensional maps which are defined with a geometry
     representing spatial and spectral coordinates. The former can be a spherical map
     projection system or a simple sky region.
+
+From DL3 to DL4
+^^^^^^^^^^^^^^^
 
 :ref:`Data reduction (gammapy.makers) <makers>`
     The events and instrument response are projected onto the selected geometry.
     To limit uncertainties, additional background estimation methods are applied
     and "safe" data analysis range is determined.
 
+DL4
+^^^
+
 :ref:`Datasets (gammapy.datasets) <datasets>`
     The datasets classes bundle reduced data in form of maps, reduced IRFs, models and
     fit statistics and allow to perform likelihood fitting. Different classes support different
     analysis methods and fit statistics. The datasets are used to perform joint-likelihood
     fitting allowing to combine different measurements,
+
+From DL4 to DL5
+^^^^^^^^^^^^^^^
 
 :ref:`Built-in models (gammapy.modeling.models) <model-gallery>`
     Gammapy provides a variety of built in models including spectral,
