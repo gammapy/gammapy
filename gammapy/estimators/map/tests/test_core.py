@@ -427,7 +427,6 @@ def test_flux_map_from_dict_inconsistent_units(wcs_flux_map, reference_model):
     assert_allclose(flux_map.norm_err.data[:, 0, 0], 0.1)
     assert flux_map.norm_err.unit == ""
 
-<<<<<<< HEAD
 def test_flux_map_check_node_types(wcs_flux_map, region_map_flux_estimate, reference_model):
     ref_map = FluxMaps(wcs_flux_map, reference_model)
     ref_region_map = FluxMaps(region_map_flux_estimate, reference_model)
@@ -442,9 +441,9 @@ def test_flux_map_check_node_types(wcs_flux_map, region_map_flux_estimate, refer
     assert ref_region_map.flux_err.geom.axes[0].node_type == 'edges'
     assert ref_region_map.eflux_ul.geom.axes[0].node_type == 'edges'
 
-=======
 
-def test_flux_map_split():
+
+def test_flux_map_iter_by_axis():
     axis1 = MapAxis.from_energy_edges((0.1, 1.0, 10.0), unit="TeV")
     axis2 = TimeMapAxis.from_time_bounds(
         Time(51544, format="mjd"), Time(51548, format="mjd"), 3
@@ -467,12 +466,10 @@ def test_flux_map_split():
     gti = GTI.create(start, stop)
     ref_map = FluxMaps(maps, gti=gti, reference_model=PowerLawSpectralModel())
 
-    split_maps = ref_map.split_by_axis("time")
+    split_maps = list(ref_map.iter_by_axis("time"))
     assert len(split_maps) == 3
     assert split_maps[0].available_quantities == ref_map.available_quantities
     assert_allclose(split_maps[0].gti.time_stop.value, 51545.3340, rtol=1e-3)
-<<<<<<< HEAD
->>>>>>> e1c6f0011 (add split_by_axis)
-=======
+
     assert split_maps[0].reference_model == ref_map.reference_model
->>>>>>> 63a90dc94 (improve test)
+

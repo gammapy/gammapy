@@ -583,3 +583,4 @@ def test_split_by_axis():
     maps = m_4d.split_by_axis("time")
     assert len(maps) == 3
 
+

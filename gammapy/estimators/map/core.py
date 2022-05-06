@@ -821,44 +821,44 @@ class FluxMaps:
             data=data, reference_model=reference.reference_model, meta=meta, gti=gti
         )
 
-    def split_by_axis(self, axis_name):
+    def iter_by_axis(self, axis_name, keepdims=False):
         """Create a set of FluxMaps by splitting along an axis
 
         Parameters:
-        ----------
+        ---------
         axis_name: str
-            Name of the axis to split on
+             Name of the axis to split on
+        keepdims: bool
+            Whether to keep the split axis with a single bin
 
         Returns:
         -------
-        flux_maps: list
-            A list of `~gammapy.estimators.FluxMaps`
+        flux_maps: `FluxMap`
+            FluxMap iteration
+
         """
 
         split_maps = {}
-        flux_maps = []
-        for amap in self.available_quantities:
-            split_maps[amap] = getattr(self, amap).split_by_axis(axis_name)
-
-        axis = self.geom.axes["time"]
-
+        axis = self.geom.axes[axis_name]
         gti = self.gti
+
+        for amap in self.available_quantities:
+            split_maps[amap] = list(getattr(self, amap).iter_by_axis(axis_name))
+
         for idx in range(axis.nbin):
-            if isinstance(axis, TimeMapAxis):
-                gti = self.gti.select_time([axis.time_min[idx], axis.time_max[idx]])
             maps = {}
             for amap in self.available_quantities:
                 maps[amap] = split_maps[amap][idx]
-            flux_maps.append(
-                self.__class__.from_maps(
-                    maps=maps,
-                    sed_type=self.sed_type_init,
-                    reference_model=self.reference_model,
-                    gti=gti,
-                    meta=self.meta,
-                )
+                if isinstance(axis, TimeMapAxis):
+                    gti = self.gti.select_time([axis.time_min[idx], axis.time_max[idx]])
+
+            yield self.__class__.from_maps(
+                maps=maps,
+                sed_type=self.sed_type_init,
+                reference_model=self.reference_model,
+                gti=gti,
+                meta=self.meta,
             )
-        return flux_maps
 
     @classmethod
     def from_maps(cls, maps, sed_type=None, reference_model=None, gti=None, meta=None):
