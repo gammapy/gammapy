@@ -102,6 +102,7 @@ jobs:
           gammapy download datasets
       - name: test notebooks
         run: |
+          gammapy info
           make test-nb
   sphinx:
     name: Linux python 3.8 sphinx all-deps
