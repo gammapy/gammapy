@@ -7,116 +7,76 @@ User guide
 
 .. toctree::
     :hidden:
+    :maxdepth: 1
+    :titlesonly:
 
-    dl3
-    makers
-    dl4
-     ../modeling/gallery/index
-    modeling
-    estimators
-    hli
-    cli
-    catalog
-    astro
-    stats
-    visualization
-    utils
+    package
+    howto
+    ../modeling/gallery/index
     Gammapy recipes <https://gammapy.github.io/gammapy-recipes>
     references
 
+.. panels::
+    :card: + intro-card text-center
+    :column: col-lg-6 col-md-6 col-sm-6 col-xs-12 d-flex
 
-Gamma-ray analysis workflow
----------------------------
+    ---
+    :img-top: ../_static/box.png
 
-:ref:`Fig. 1 <data_flow>` illustrates the standard analysis flow and the corresponding
-sub-package structure of Gammapy. Gammapy can be typically used with the configuration
-based high level analysis API or as a standard Python library by importing the functionality
-from sub-packages. The different data levels and data reduction steps and how they map to
-the Gammapy API are explained in more detail in the following.
+    Analysis workflow and package structure
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. _data_flow:
+    An overview of the main concepts in Gammapy package.
 
-.. figure:: ../_static/data-flow-gammapy.png
-    :width: 100%
+    +++
 
-    Fig. 1 Data flow and sub-package structure of Gammapy. The folder icons
-    represent the corresponding sub-packages. The direction of the
-    the data flow is illustrated with shaded arrows. The top section
-    shows the data levels as defined by `CTA`_.
-
-Main analysis steps
--------------------
-
-:ref:`Data access and selection (gammapy.data) <data>`
-    The analysis of gamma-ray data with Gammapy starts at the "data level 3".
-    At this level the data is stored as lists of gamma-like events and the corresponding
-    instrument response functions (IRFs).
-
-:ref:`Analysis geometry definition (gammapy.maps) <maps>`
-    Gammapy represents data on multi-dimensional maps which are defined with a geometry
-    representing spatial and spectral coordinates. The former can be a spherical map
-    projection system or a simple sky region.
-
-From DL3 to DL4
-^^^^^^^^^^^^^^^
-
-:ref:`Data reduction (gammapy.makers) <makers>`
-    The events and instrument response are projected onto the selected geometry.
-    To limit uncertainties, additional background estimation methods are applied
-    and "safe" data analysis range is determined.
-
-DL4
-^^^
-
-:ref:`Datasets (gammapy.datasets) <datasets>`
-    The datasets classes bundle reduced data in form of maps, reduced IRFs, models and
-    fit statistics and allow to perform likelihood fitting. Different classes support different
-    analysis methods and fit statistics. The datasets are used to perform joint-likelihood
-    fitting allowing to combine different measurements,
-
-From DL4 to DL5
-^^^^^^^^^^^^^^^
-
-:ref:`Built-in models (gammapy.modeling.models) <model-gallery>`
-    Gammapy provides a variety of built in models including spectral,
-    spatial and temporal model classes to describe the gamma-ray emission in the sky.
-
-:ref:`Modeling and Fitting (gammapy.modeling) <modeling>`
-    Gammapy provides a uniform interface to multiple fitting backends to fit the datasets
-    model parameters on the reduced data with maximum likelihood techniques.
-
-:ref:`Estimating flux quantities (gammapy.estimators) <estimators>`
-    In addition to the global modelling and fitting, Gammapy provides utility classes to
-    compute flux points, light curves and flux as well as significance maps in energy bands.
+    .. link-button:: package
+            :type: ref
+            :text: To the overview
+            :classes: btn-block btn-secondary stretched-link
 
 
-Configurable analysis
----------------------
+    ---
+    :img-top: ../_static/index_contribute.svg
 
-:ref:`High Level Analysis Interface (gammapy.analysis) <analysis>`
-    To define and execute a full data analysis process from a YAML configuration file,
-    Gammapy implements a high level analysis interface. It exposes a subset of
-    the functionality that is available in the sub-packages to support
-    standard analysis use case in a convenient way.
+    How To
+    ^^^^^^
 
-:ref:`Command line tools (gammapy.scripts) <CLI>`
-    A minimal command line interface (CLI) is provided for commonly used and easy
-    to configure analysis tasks.
+    A short “frequently asked question” entries for Gammapy.
 
-Additional utilities
---------------------
+    +++
 
-:ref:`Source catalogs (gammapy.catalog) <catalog>`
-    Access to a variety of GeV-TeV gamma-ray catalogs.
+    .. link-button:: ../userguide/howto
+            :type: ref
+            :text: To the How To
+            :classes: btn-block btn-secondary stretched-link
 
-:ref:`Statistical utility functions (gammapy.stats) <stats>`
-    Statistical estimators, fit statistics and algorithms commonly used in gamma-ray astronomy.
+    ---
+    :img-top: ../_static/galleryicon.png
 
-:ref:`Astrophysics (gammapy.astro) <astro>`
-    Support for simulation of TeV source populations and dark matter models.
+    Model gallery
+    ^^^^^^^^^^^^^
 
-:ref:`Plotting features (gammapy.visualization) <visualization>`
-    Helper functions and classes to create publication-quality images.
+    Gammapy provides a large choice of spatial, spectral and temporal models.
 
-:ref:`Utility functions (gammapy.utils) <utils>`
-    Utility functions that are used in many places or don’t fit in one of the other packages.
+    +++
+
+    .. link-button:: ../modeling/gallery/index
+            :type: ref
+            :text: To the model gallery
+            :classes: btn-block btn-secondary stretched-link
+
+    ---
+    :img-top: ../_static/glossaryicon.png
+
+    Gammapy recipes
+    ^^^^^^^^^^^^^^^
+
+    A collection of **user contributed** notebooks covering aspects not present in the official tutorials.
+
+    +++
+
+    .. link-button:: https://gammapy.github.io/gammapy-recipes
+            :type: url
+            :text: To the recipes
+            :classes: btn-block btn-secondary stretched-link
