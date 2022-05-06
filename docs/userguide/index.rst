@@ -7,40 +7,24 @@ User guide
 
 .. toctree::
     :hidden:
+    :maxdepth: 1
+    :titlesonly:
 
-    analysis
     package
-    ../tutorials/index
     howto
     ../modeling/gallery/index
     Gammapy recipes <https://gammapy.github.io/gammapy-recipes>
     references
-
 
 .. panels::
     :card: + intro-card text-center
     :column: col-lg-6 col-md-6 col-sm-6 col-xs-12 d-flex
 
     ---
-    :img-top: ../_static/atom.png
-
-    Gamma-ray data analysis
-    ^^^^^^^^^^^^^^^^^^^^^^^
-
-    A short introduction to gamma-ray data analysis.
-
-    +++
-
-    .. link-button:: gamma_ray_analysis
-            :type: ref
-            :text: To the intro
-            :classes: btn-block btn-secondary stretched-link
-
-    ---
     :img-top: ../_static/box.png
 
-    Package structure
-    ^^^^^^^^^^^^^^^^^
+    Analysis workflow and package structure
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
     An overview of the main concepts in Gammapy package.
 
@@ -51,20 +35,6 @@ User guide
             :text: To the overview
             :classes: btn-block btn-secondary stretched-link
 
-    ---
-    :img-top: ../_static/index_user_guide.svg
-
-    Tutorials
-    ^^^^^^^^^
-
-    The Gammapy tutorials available as Jupyter notebooks.
-
-    +++
-
-    .. link-button:: ../tutorials/index
-            :type: ref
-            :text: To the tutorials
-            :classes: btn-block btn-secondary stretched-link
 
     ---
     :img-top: ../_static/index_contribute.svg
