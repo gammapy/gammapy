@@ -2,6 +2,7 @@
 """Spatial models."""
 import logging
 import os
+import inspect
 import numpy as np
 import scipy.integrate
 import scipy.special
@@ -1035,6 +1036,11 @@ class TemplateSpatialModel(SpatialModel):
     interp_kwargs : dict
         Interpolation keyword arguments passed to `gammapy.maps.Map.interp_by_coord`.
         Default arguments are {'method': 'linear', 'fill_value': 0}.
+    Filename : str
+        Name of the map file
+    data_deepcopy : bool
+        Create a deepcopy of the map data or directly use the original. True by default, can be turned
+        to False to save memory in case of large maps.
     """
 
     tag = ["TemplateSpatialModel", "template"]
@@ -1046,6 +1052,7 @@ class TemplateSpatialModel(SpatialModel):
         normalize=True,
         interp_kwargs=None,
         filename=None,
+        data_deepcopy=True
     ):
         if (map.data < 0).any():
             log.warning("Map has negative values. Check and fix this!")
@@ -1068,10 +1075,13 @@ class TemplateSpatialModel(SpatialModel):
             map = map.copy(data=data, unit="sr-1")
 
         if map.unit.is_equivalent(""):
-            map = map.copy(unit="sr-1")
+            map = map.copy(data=map.data, unit="sr-1")
             log.warning("Missing spatial template unit, assuming sr^-1")
 
-        self._map = map.copy()
+        if data_deepcopy:
+            self._map = map.copy()
+        else:
+            self._map = map.copy(data=map.data)
 
         self.meta = {} if meta is None else meta
         interp_kwargs = {} if interp_kwargs is None else interp_kwargs
@@ -1080,6 +1090,17 @@ class TemplateSpatialModel(SpatialModel):
         self._interp_kwargs = interp_kwargs
         self.filename = filename
         super().__init__()
+
+    def copy(self, data_deepcopy=False):
+        """Copy model"""
+        return self.__class__(
+            map=self.map,
+            meta=self.meta,
+            normalize=self.normalize,
+            interp_kwargs=self._interp_kwargs,
+            filename=self.filename,
+            data_deepcopy=data_deepcopy
+        )
 
     @property
     def map(self):
