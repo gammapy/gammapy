@@ -272,9 +272,11 @@ class RegionNDMap(Map):
         return cls(geom=geom, dtype=dtype, unit=unit, meta=meta, data=data)
 
     def downsample(
-        self, factor, preserve_counts=True, axis_name="energy", weights=None
+        self, factor, preserve_counts=True, axis_name=None, weights=None
     ):
         """Downsample the non-spatial dimension by a given factor.
+
+        By default the first axes is downsampled.
 
         Parameters
         ----------
@@ -296,7 +298,7 @@ class RegionNDMap(Map):
             Downsampled region map.
         """
         if axis_name is None:
-            return self.copy()
+            axis_name = self.geom.axes[0].name
 
         geom = self.geom.downsample(factor=factor, axis_name=axis_name)
 
@@ -316,13 +318,17 @@ class RegionNDMap(Map):
 
         return self._init_copy(geom=geom, data=data)
 
-    def upsample(self, factor, preserve_counts=True, axis_name="energy"):
+    def upsample(self, factor, order=0, preserve_counts=True, axis_name=None):
         """Upsample the non-spatial dimension by a given factor.
+
+        By default the first axes is upsampled.
 
         Parameters
         ----------
         factor : int
             Upsampling factor.
+        order : int
+            Order of the interpolation used for upsampling.
         preserve_counts : bool
             Preserve the integral over each bin.  This should be true
             if the RegionNDMap is an integral quantity (e.g. counts) and false if
@@ -335,6 +341,9 @@ class RegionNDMap(Map):
         map : `RegionNDMap`
             Upsampled region map.
         """
+        if axis_name is None:
+            axis_name = self.geom.axes[0].name
+
         geom = self.geom.upsample(factor=factor, axis_name=axis_name)
         data = self.interp_by_coord(geom.get_coord())
 
