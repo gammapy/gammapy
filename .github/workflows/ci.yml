@@ -182,7 +182,7 @@ jobs:
           channel-priority: true
       - name: install dependencies
         run: |
-            mamba install click=7.0 pydantic=1.0 pyyaml=5.1 regions=0.5 scipy=1.2 astropy=4.3 numpy=1.19
+            mamba install click=7.0 pydantic=1.0 pyyaml=5.1 regions=0.5 scipy=1.4 astropy=4.3 numpy=1.19
       - name: install gammapy
         run: |
           pip install -e .
