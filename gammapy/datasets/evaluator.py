@@ -312,16 +312,11 @@ class MapEvaluator:
 
     def compute_temporal_norm(self):
         """Compute temporal norm"""
-        if self.model.temporal_model.is_energy_dependent:
-            energy = self.geom.axes["energy_true"].edges
-            integral = self.model.temporal_model.integral(
-                self.gti.time_start, self.gti.time_stop, energy
-            )
-        else:
-            integral = self.model.temporal_model.integral(
-                self.gti.time_start, self.gti.time_stop
-            )
-            return np.sum(integral)
+        energy = self.geom.axes["energy_true"].center
+        integral = self.model.temporal_model.integral(
+            self.gti.time_start, self.gti.time_stop, energy
+        )
+        return np.sum(integral, axis=0).reshape((-1, 1, 1))
 
     def apply_exposure(self, flux):
         """Compute npred cube

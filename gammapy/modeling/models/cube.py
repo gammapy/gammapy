@@ -322,10 +322,10 @@ class SkyModel(ModelBase):
 
         if (self.temporal_model is not None) and (time is not None):
             if self.temporal_model.is_energy_dependent:
-                temporal = self.temporal_model(time, energy)
+                temporal = self.temporal_model(time, energy).T
             else:
                 temporal = self.temporal_model(time)
-            value = value * temporal
+            value = (value * temporal).T
 
         return value
 
@@ -338,7 +338,9 @@ class SkyModel(ModelBase):
             value = value * self.spatial_model.evaluate_geom(geom)
 
         if self.temporal_model:
-            integral = self.temporal_model.integral(gti.time_start, gti.time_stop, coords["energy_true"])
+            integral = self.temporal_model.integral(
+                gti.time_start, gti.time_stop, coords["energy_true"]
+            )
             value = value * np.sum(integral)
 
         return value
@@ -379,7 +381,9 @@ class SkyModel(ModelBase):
             )
 
         if self.temporal_model:
-            integral = self.temporal_model.integral(gti.time_start, gti.time_stop, energy)
+            integral = self.temporal_model.integral(
+                gti.time_start, gti.time_stop, energy
+            )
             value = value * np.sum(integral)
 
         return Map.from_geom(geom=geom, data=value.value, unit=value.unit)

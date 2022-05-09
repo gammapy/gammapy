@@ -390,5 +390,20 @@ def test_energy_dependent_model():
         spectral_model=ConstantSpectralModel(), temporal_model=temporal_model
     )
 
-    val = model.evaluate(lon=0, lat=0, energy=energy, time=t_ref + start)
+    val = model.evaluate(lon=None, lat=None, energy=energy, time=t_ref + start)
     assert_allclose(val.sum().value, 1.425e-11, rtol=1e-3)
+
+    # test evaluation on a dataset
+    from gammapy.datasets import MapDataset
+    from regions import CircleSkyRegion
+    from astropy.coordinates import SkyCoord
+
+    cta_dataset = MapDataset.read(
+        "$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz", name="cta_dataset"
+    )
+    region = CircleSkyRegion(
+        center=SkyCoord(0, 0, unit="deg", frame="galactic"), radius=1.0 * u.deg
+    )
+    ds = cta_dataset.to_spectrum_dataset(region)
+    ds.models = model
+    assert_allclose(ds.npred().data.sum(), 13172.582827, rtol=1e-3)
