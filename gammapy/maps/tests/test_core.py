@@ -618,7 +618,7 @@ def test_map_reproject_wcs_to_hpx():
     data = np.arange(11 * 11 * 3).reshape(geom_wcs.data_shape)
     m = WcsNDMap(geom_wcs, data=data)
 
-    m_r = m.reproject_spatial_geom(geom_hpx)
+    m_r = m.reproject_spatial_geom(geom_hpx.to_image())
     actual = m_r.get_by_coord({"lon": 0, "lat": 0, "energy": [1.0, 3.16227766, 10.0]})
     assert_allclose(actual, [65.0, 186.0, 307.0], rtol=1e-3)
 
@@ -635,7 +635,7 @@ def test_map_reproject_hpx_to_wcs():
     data = np.arange(3 * 768).reshape(geom_hpx.data_shape)
     m = HpxNDMap(geom_hpx, data=data)
 
-    m_r = m.reproject_spatial_geom(geom_wcs)
+    m_r = m.reproject_spatial_geom(geom_wcs.to_image())
     actual = m_r.get_by_coord({"lon": 0, "lat": 0, "energy": [1.0, 3.16227766, 10.0]})
     assert_allclose(actual, [287.5, 1055.5, 1823.5], rtol=1e-3)
 
@@ -664,7 +664,8 @@ def test_map_reproject_wcs_to_wcs_with_axes():
     assert m.data.shape == m_r.data.shape
     for data, idx in m_r.iter_by_image_data():
         ref = idx[1] + 0.5 * idx[0]
-        assert_allclose(np.nanmean(data), ref)
+        if np.any(data>0):
+            assert_allclose(np.nanmean(data[data>0]), ref)
 
     with pytest.raises(TypeError):
         m_r.reproject_spatial_geom(geom_wcs_1)
