@@ -391,6 +391,34 @@ def test_reflected_bkg_maker_fixed_rad_max(reflected_bkg_maker, observations_fix
     assert_allclose(len(regions_0), 6)
 
 @requires_data()
+def test_reflected_bkg_maker_fixed_rad_max_wobble(exclusion_mask, observations_fixed_rad_max):
+    reflected_bkg_maker = ReflectedRegionsBackgroundMaker(
+        region_finder=WobbleRegionsFinder(n_off_regions=3),
+        exclusion_mask=exclusion_mask,
+    )
+    e_reco = MapAxis.from_energy_bounds(0.1, 10, 5, unit="TeV")
+    e_true = MapAxis.from_energy_bounds(0.1, 10, 5, unit="TeV", name="energy_true")
+
+    pos = SkyCoord(83.63, 22.01, unit="deg", frame="icrs")
+    radius = Angle(0.1414, "deg")
+    region = CircleSkyRegion(pos, radius)
+
+    geom = RegionGeom(region=region, axes=[e_reco])
+    dataset_empty = SpectrumDataset.create(geom=geom, energy_axis_true=e_true)
+
+    maker = SpectrumDatasetMaker(selection=["counts"])
+
+    obs = observations_fixed_rad_max[0]
+    dataset = maker.run(dataset_empty, obs)
+    dataset_on_off = reflected_bkg_maker.run(dataset, obs)
+
+    assert_allclose(dataset_on_off.counts_off.data.sum(), 102)
+
+    regions_0 = compound_region_to_regions(dataset_on_off.counts_off.geom.region)
+    assert_allclose(len(regions_0), 3)
+
+
+@requires_data()
 def test_reflected_bkg_maker_fixed_rad_max_bad(reflected_bkg_maker, observations_fixed_rad_max):
     e_reco = MapAxis.from_energy_bounds(0.1, 10, 5, unit="TeV")
 
