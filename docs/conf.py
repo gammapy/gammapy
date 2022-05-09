@@ -140,6 +140,7 @@ html_theme_options = {
     # toc options
     "collapse_navigation": False,
     "navigation_depth": 2,
+    "show_prev_next": False,
     # links in menu
     "icon_links": [
         {
@@ -160,7 +161,6 @@ html_theme_options = {
     ],
     "switcher": {
         "json_url": "https://docs.gammapy.org/stable/switcher.json",
-        "url_template": "https://docs.gammapy.org/{version}/",
         "version_match": switch_version,
     },
     "navbar_end": ["version-switcher", "navbar-icon-links"],
