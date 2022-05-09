@@ -1,8 +1,8 @@
 .. _maps:
 
-========
-Sky maps
-========
+==============
+Sky maps (DL4)
+==============
 
 `gammapy.maps` contains classes for representing pixelized data structures with
 at least two spatial dimensions representing coordinates on a sphere (e.g. an
@@ -304,6 +304,7 @@ found in the following sub-pages:
 
 .. toctree::
     :maxdepth: 1
+    :hidden:
 
     ../maps/hpxmap
     ../maps/regionmap
