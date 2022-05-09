@@ -769,10 +769,10 @@ class TemplateNPredModel(ModelBase):
         name = make_name(name)
         return self.__class__(
             map=self.map,
-            spectral_model=None,
+            spectral_model=self.spectral_model,
             name=name,
             filename=self.filename,
-            datasets_names=None,
+            datasets_names=self.datasets_names,
             data_deepcopy=data_deepcopy
         )
 
