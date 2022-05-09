@@ -18,6 +18,7 @@ from gammapy.modeling.models import (
     PowerLawTemporalModel,
     ConstantSpectralModel,
     SineTemporalModel,
+    TemporalModel,
     SkyModel,
 )
 from gammapy.utils.scripts import make_path
@@ -342,7 +343,10 @@ class MyCustomTemporalModel(TemporalModel):
     @staticmethod
     def evaluate(time, energy, t_ref, beta, E0):
         alpha = np.power((time / t_ref), -beta)
-        return np.power((energy / E0), -alpha)
+        dim = energy / E0
+        if not np.isscalar(dim.value):
+            dim = np.expand_dims(dim, axis=1)
+        return np.power(dim, -alpha)
 
     def integral(self, t_min, t_max, energy):
         pars = self.parameters
@@ -351,14 +355,17 @@ class MyCustomTemporalModel(TemporalModel):
         E0 = pars["E0"].quantity
         integral = []
         for t1, t2 in zip(t_min, t_max):
-            integral.append(
-                scipy.integrate.quad(
-                    func=self.evaluate,
-                    a=t1.mjd,
-                    b=t2.mjd,
-                    args=(energy, t_ref.mjd, beta, E0),
-                )[0]
-            )
+            integral_ene = []
+            for ene in energy:
+                integral_ene.append(
+                    scipy.integrate.quad(
+                        func=self.evaluate,
+                        a=t1.mjd,
+                        b=t2.mjd,
+                        args=(ene, t_ref.mjd, beta, E0),
+                    )[0]
+                )
+            integral.append(integral_ene)
         return integral / self.time_sum(t_min, t_max).to_value("d")
 
 
@@ -371,9 +378,9 @@ def test_energy_dependent_model():
 
     temporal_model = MyCustomTemporalModel()
     assert temporal_model.is_energy_dependent is True
-    val = temporal_model.integral(gti.time_start, gti.time_stop, 0.3 * u.TeV)
+    val = temporal_model.integral(gti.time_start, gti.time_stop, [0.3, 1.0] * u.TeV)
     assert len(val) == 3
-    assert_allclose(np.sum(val), 3.27411, rtol=1e-5)
+    assert_allclose(np.sum(val), 4.274116, rtol=1e-5)
 
     t = Time(55556, format="mjd")
     val = temporal_model(t, 3 * u.TeV)
@@ -383,5 +390,5 @@ def test_energy_dependent_model():
         spectral_model=ConstantSpectralModel(), temporal_model=temporal_model
     )
 
-    val = model.evaluate(energy=energy, time=gti)
-    assert_allclose(val.data.sum(), 9.9e-11, rtol=1e-3)
+    val = model.evaluate(lon=0, lat=0, energy=energy, time=t_ref + start)
+    assert_allclose(val.sum().value, 1.425e-11, rtol=1e-3)
