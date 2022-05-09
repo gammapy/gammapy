@@ -321,7 +321,11 @@ class SkyModel(ModelBase):
             value = value * spatial  # pylint:disable=not-callable
 
         if (self.temporal_model is not None) and (time is not None):
-            value = value * self.temporal_model(time)
+            if self.temporal_model.is_energy_dependent:
+                temporal = self.temporal_model(time, energy)
+            else:
+                temporal = self.temporal_model(time)
+            value = value * temporal
 
         return value
 
@@ -375,7 +379,7 @@ class SkyModel(ModelBase):
             )
 
         if self.temporal_model:
-            integral = self.temporal_model.integral(gti.time_start, gti.time_stop)
+            integral = self.temporal_model.integral(gti.time_start, gti.time_stop, energy)
             value = value * np.sum(integral)
 
         return Map.from_geom(geom=geom, data=value.value, unit=value.unit)

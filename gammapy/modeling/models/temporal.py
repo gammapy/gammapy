@@ -420,7 +420,6 @@ class GeneralizedGaussianTemporalModel(TemporalModel):
         t_decay = pars["t_decay"].quantity
         eta = pars["eta"].quantity
         t_ref = Time(pars["t_ref"].quantity, format = "mjd")
-
         integral = scipy.integrate.quad(self.evaluate, t_min.mjd, t_max.mjd, args=(t_ref.mjd,t_rise,t_decay,eta))[0]
         return integral / self.time_sum(t_min, t_max).to_value("d")
 
