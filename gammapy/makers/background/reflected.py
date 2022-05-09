@@ -6,7 +6,7 @@ from abc import ABCMeta, abstractmethod
 
 from astropy import units as u
 from astropy.coordinates import Angle
-from regions import PixCoord, PointSkyRegion
+from regions import PixCoord, PointSkyRegion, CircleSkyRegion
 from gammapy.datasets import SpectrumDatasetOnOff
 from gammapy.maps import RegionGeom, RegionNDMap, WcsGeom, WcsNDMap
 from ..core import Maker
@@ -467,13 +467,26 @@ class ReflectedRegionsBackgroundMaker(Maker):
         energy_axis = geom.axes["energy"]
         events = observation.events
 
-        is_point_like = observation.rad_max is not None
+        is_point_sky_region = geom.is_all_point_sky_regions
 
-        if is_point_like and not geom.is_all_point_sky_regions:
-            raise ValueError(
-                "Must use PointSkyRegion on region in point-like analysis,"
-                f" got {type(geom.region)} instead"
-            )
+        if observation.rad_max is not None:
+            if not observation.rad_max.check_geom(geom):
+                if observation.rad_max.is_fixed_radmax:
+                    if isinstance(geom.region, CircleSkyRegion):
+                        rad_max = observation.rad_max.quantity
+                        radius = geom.region.radius
+                        raise ValueError(
+                            f"CircleSkyRegion radius must be equal to RADMAX "
+                            f"for point-like IRFs with fixed RADMAX. "
+                            f"Expected {rad_max} got {radius}."
+                        )
+                    else:
+                        raise TypeError("Incorrect region type for point-like analysis.")
+                else:
+                    raise ValueError(
+                        "Must use PointSkyRegion on region in point-like analysis,"
+                        f" got {type(geom.region)} instead"
+                    )
 
         regions_off, wcs = self.region_finder.run(
             center=observation.pointing_radec,
@@ -481,7 +494,7 @@ class ReflectedRegionsBackgroundMaker(Maker):
             exclusion_mask=self.exclusion_mask,
         )
 
-        if is_point_like and len(regions_off) > 0:
+        if geom.is_all_point_sky_regions and len(regions_off) > 0:
             regions_off = self._filter_regions_off_rad_max(
                 regions_off, energy_axis, geom, events, observation.rad_max
             )
@@ -499,7 +512,7 @@ class ReflectedRegionsBackgroundMaker(Maker):
             wcs=wcs,
         )
 
-        if is_point_like:
+        if is_point_sky_region:
             counts_off = make_counts_off_rad_max(
                 geom_off=geom_off,
                 rad_max=observation.rad_max,
