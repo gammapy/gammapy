@@ -467,12 +467,12 @@ class ReflectedRegionsBackgroundMaker(Maker):
         energy_axis = geom.axes["energy"]
         events = observation.events
 
-        is_point_like = False
+        is_point_sky_region = geom.is_all_point_sky_regions
 
         if observation.rad_max is not None:
-            if isinstance(self.region_finder, ReflectedRegionsFinder):
-                if isinstance(geom.region, CircleSkyRegion):
-                    if not observation.rad_max.check_geom(geom):
+            if not observation.rad_max.check_geom(geom):
+                if observation.rad_max.is_fixed_radmax:
+                    if isinstance(geom.region, CircleSkyRegion):
                         rad_max = observation.rad_max.quantity
                         radius = geom.region.radius
                         raise ValueError(
@@ -480,16 +480,13 @@ class ReflectedRegionsBackgroundMaker(Maker):
                             f"for point-like IRFs with fixed RADMAX. "
                             f"Expected {rad_max} got {radius}."
                         )
+                    else:
+                        raise TypeError("Incorrect region type for point-like analysis.")
                 else:
-                    raise TypeError("Only circular regions can be used with fixed rad_max IRF and "
-                                    "ReflectedRegionsFinder.")
-            elif not geom.is_all_point_sky_regions:
-                raise ValueError(
-                    "Must use PointSkyRegion on region in point-like analysis,"
-                    f" got {type(geom.region)} instead"
-                )
-            else:
-                is_point_like = True
+                    raise ValueError(
+                        "Must use PointSkyRegion on region in point-like analysis,"
+                        f" got {type(geom.region)} instead"
+                    )
 
         regions_off, wcs = self.region_finder.run(
             center=observation.pointing_radec,
@@ -515,7 +512,7 @@ class ReflectedRegionsBackgroundMaker(Maker):
             wcs=wcs,
         )
 
-        if is_point_like:
+        if is_point_sky_region:
             counts_off = make_counts_off_rad_max(
                 geom_off=geom_off,
                 rad_max=observation.rad_max,
