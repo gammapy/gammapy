@@ -559,14 +559,15 @@ class IRF(metaclass=abc.ABCMeta):
 
         Parameters
         ----------
-        other: the irf to compare against
+        other : the irf to compare against
             `gammapy.irfs.IRF`
-        kwargs: dict
+        kwargs : dict
                 keywords passed to `numpy.allclose`
+                The default tolerance is rtol=1e-3
 
         Returns
         -------
-        state: bool
+        state : bool
         """
 
         kwargs.setdefault("rtol", 1e-3)
@@ -577,7 +578,7 @@ class IRF(metaclass=abc.ABCMeta):
     def __eq__(self, other):
         class_eq = isinstance(other, self.__class__)
         axes_eq = self.axes == other.axes
-        return bool(class_eq * axes_eq * self.data_allclose(other))
+        return bool(class_eq and axes_eq and self.data_allclose(other))
 
 
 class IRFMap:

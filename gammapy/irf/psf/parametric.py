@@ -253,23 +253,22 @@ class ParametricPSF(PSF):
 
         Parameters
         ----------
-        other: the irf to compare against
+        other : the irf to compare against
                     `gammapy.irfs.IRF`
-        kwargs: dict
+        kwargs : dict
                 keywords passed to `numpy.allclose`
 
         Returns
         -------
-        state: bool
+        state : bool
         """
-
-        state = True
         for key in self.quantity.keys():
             if self.quantity[key].shape != other.quantity[key].shape:
-                state = False
-            state *= np.allclose(self.quantity[key], other.quantity[key], **kwargs)
+                return False
+            if not np.allclose(self.quantity[key], other.quantity[key], **kwargs):
+                return False
 
-        return state
+        return True
 
 
 def get_sigmas_and_norms(**kwargs):
