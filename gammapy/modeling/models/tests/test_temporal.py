@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
+import scipy
 from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.table import Table
@@ -21,7 +22,7 @@ from gammapy.modeling.models import (
 )
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
-from gammapy.maps import MapAxis
+from gammapy.modeling.parameter import Parameter
 
 
 # TODO: add light-curve test case from scratch
@@ -222,14 +223,18 @@ def test_generalized_gaussian_temporal_model_evaluate():
     t_ref = 46300 * u.d
     t_rise = 2.0 * u.d
     t_decay = 2.0 * u.d
-    eta = 1/2
-    temporal_model = GeneralizedGaussianTemporalModel(t_ref=t_ref, t_rise=t_rise, t_decay=t_decay, eta=eta)
+    eta = 1 / 2
+    temporal_model = GeneralizedGaussianTemporalModel(
+        t_ref=t_ref, t_rise=t_rise, t_decay=t_decay, eta=eta
+    )
     val = temporal_model(t)
     assert_allclose(val, 0.882497, rtol=1e-5)
 
 
 def test_generalized_gaussian_temporal_model_integral():
-    temporal_model = GeneralizedGaussianTemporalModel(t_ref=50003 * u.d, t_rise="2.0 day", t_decay="2.0 day", eta=1/2)
+    temporal_model = GeneralizedGaussianTemporalModel(
+        t_ref=50003 * u.d, t_rise="2.0 day", t_decay="2.0 day", eta=1 / 2
+    )
     start = 1 * u.day
     stop = 2 * u.day
     t_ref = Time(50000, format="mjd")
@@ -323,56 +328,60 @@ def test_plot_constant_model():
 class MyCustomTemporalModel(TemporalModel):
     """Temporal model with spectral variability
 
-        F(t) = (E/E0)^-\alpha
-        where \alpha = (\alpha_0 t/t_ref)^-beta
+    F(t) = (E/E0)^-\alpha
+    where \alpha = (\alpha_0 t/t_ref)^-beta
     """
 
     tag = "MyCustomTemporalModel"
     is_energy_dependent = True
-    beta = Parameter("beta", 2.0)
+    beta = Parameter("beta", 0.2)
     _t_ref_default = Time("2000-01-01")
     t_ref = Parameter("t_ref", _t_ref_default.mjd, unit="day", frozen=True)
     E0 = Parameter("E0", "1 TeV", frozen=True)
 
     @staticmethod
     def evaluate(time, energy, t_ref, beta, E0):
-        alpha = np.power((time/t_ref), -beta)
+        alpha = np.power((time / t_ref), -beta)
         return np.power((energy / E0), -alpha)
 
     def integral(self, t_min, t_max, energy):
         pars = self.parameters
-
         t_ref = Time(pars["t_ref"].quantity, format="mjd")
         beta = pars["beta"].quantity
         E0 = pars["E0"].quantity
-        value = self.evaluate(
-            t_max, energy, t_ref, beta, E0
-        ) - self.evaluate(t_min, energy, t_ref, beta, E0)
-        return  value / self.time_sum(t_min, t_max)
+        integral = []
+        for t1, t2 in zip(t_min, t_max):
+            integral.append(
+                scipy.integrate.quad(
+                    func=self.evaluate,
+                    a=t1.mjd,
+                    b=t2.mjd,
+                    args=(energy, t_ref.mjd, beta, E0),
+                )[0]
+            )
+        return integral / self.time_sum(t_min, t_max).to_value("d")
+
 
 def test_energy_dependent_model():
     t_ref = Time(55555, format="mjd")
     start = [1, 3, 5] * u.day
     stop = [2, 3.5, 6] * u.day
     gti = GTI.create(start, stop, reference_time=t_ref)
+    energy = [0.3, 1, 3, 10, 30] * u.TeV
 
     temporal_model = MyCustomTemporalModel()
     assert temporal_model.is_energy_dependent is True
-    val = temporal_model.integral(gti.time_start, gti.time_stop)
+    val = temporal_model.integral(gti.time_start, gti.time_stop, 0.3 * u.TeV)
     assert len(val) == 3
-    assert_allclose(np.sum(val), 1.08261, rtol=1e-5)
+    assert_allclose(np.sum(val), 3.27411, rtol=1e-5)
 
-    val = temporal_model(t)
-    assert_allclose(val, 0.25, rtol=1e-5)
+    t = Time(55556, format="mjd")
+    val = temporal_model(t, 3 * u.TeV)
+    assert_allclose(val, 0.3388, rtol=1e-3)
 
     model = SkyModel(
         spectral_model=ConstantSpectralModel(), temporal_model=temporal_model
     )
 
-    energy = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3, name="energy_true")
-
-    model.evaluate(energy=energy, time=gti)
-    assert
-    assert_allclose(model.data.sum(), 9.9e-11, rtol=1e-3)
-
-
+    val = model.evaluate(energy=energy, time=gti)
+    assert_allclose(val.data.sum(), 9.9e-11, rtol=1e-3)
