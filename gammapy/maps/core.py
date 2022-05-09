@@ -1050,10 +1050,8 @@ class Map(abc.ABC):
         else:
             raise TypeError("Invalid target geometry, use geom.to_image()")
 
-        target_geom = geom.copy(axes=self.geom.axes) 
-
-        output_map = Map.from_geom(target_geom, unit=self.unit)
-        base_factor = target_geom.pixel_scales.min()/self.geom.pixel_scales.min()
+        output_map = Map.from_geom(geom, unit=self.unit)
+        base_factor = geom.pixel_scales.min()/self.geom.pixel_scales.min()
         if base_factor >= oversampling_factor:
             input_map = self
         else:
@@ -1065,7 +1063,6 @@ class Map(abc.ABC):
                             preserve_counts=preserve_counts
                             )
         return output_map
-
 
 
     def fill_events(self, events):
