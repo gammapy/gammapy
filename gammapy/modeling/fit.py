@@ -217,9 +217,11 @@ class Fit:
         # Copy final results into the parameters object
         parameters.set_parameter_factors(factors)
         parameters.check_limits()
+
+        models_copy = datasets.models.copy()
         return OptimizeResult(
-            parameters=parameters.copy(),
-            models=datasets.models.copy(),
+            parameters=models_copy.parameters,
+            models=models_copy,
             total_stat=datasets.stat_sum(),
             backend=backend,
             method=kwargs.get("method", backend),

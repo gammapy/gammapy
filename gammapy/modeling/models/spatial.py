@@ -2,7 +2,6 @@
 """Spatial models."""
 import logging
 import os
-import inspect
 import numpy as np
 import scipy.integrate
 import scipy.special
