@@ -147,8 +147,7 @@ class ModelBase:
         return copy.deepcopy(self)
 
     def to_dict(self, full_output=False):
-        """Create dict for YAML serialisation
-        """
+        """Create dict for YAML serialisation"""
         tag = self.tag[0] if isinstance(self.tag, list) else self.tag
         params = self.parameters.to_dict()
 
@@ -483,7 +482,6 @@ class DatasetModels(collections.abc.Sequence):
                 params_shared.append(param)
         for param in params_shared:
             param._link_label_io = param.name + "@" + make_name()
-
 
     def to_dict(self, full_output=False, overwrite_templates=False):
         """Convert to dict."""
@@ -893,7 +891,7 @@ class DatasetModels(collections.abc.Sequence):
 
         for model in self.select(tag="sky-model"):
             if model.position:
-                positions.append(model.position)
+                positions.append(model.position.icrs)
             else:
                 log.warning(
                     f"Skipping model {model.name} - no spatial component present"
@@ -909,11 +907,20 @@ class DatasetModels(collections.abc.Sequence):
         regions: list of `~regions.SkyRegion`
             Regions
         """
+        from . import ConstantSpatialModel, ConstantFluxSpatialModel
+
         regions = []
 
         for model in self.select(tag="sky-model"):
             try:
                 region = model.spatial_model.to_region()
+                if isinstance(model.spatial_model, ConstantSpatialModel) or isinstance(
+                    model.spatial_model, ConstantFluxSpatialModel
+                ):
+                    log.warning(
+                        f"Skipping model {model.name} - ConstantSpatialModels have no defined region"
+                    )
+                    continue
                 regions.append(region)
             except AttributeError:
                 log.warning(

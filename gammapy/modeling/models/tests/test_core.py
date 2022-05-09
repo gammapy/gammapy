@@ -8,6 +8,7 @@ from gammapy.modeling.models import (
     ModelBase,
     Models,
     SkyModel,
+    ConstantSpatialModel,
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
@@ -228,17 +229,22 @@ def test_plot_models(caplog):
     )
     m1 = SkyModel(spectral_model=p1, spatial_model=g1, name="m1")
     m2 = SkyModel(spectral_model=p2, name="m2")
-    models = Models([m1, m2])
+    m3 = SkyModel(spectral_model=p1, spatial_model=ConstantSpatialModel(), name="m3")
+    models = Models([m1, m2, m3])
 
     models.plot_regions()
     assert "WARNING" in [_.levelname for _ in caplog.records]
     assert "Skipping model m2 - no spatial component present" in [
         _.message for _ in caplog.records
     ]
+    assert "Skipping model m3 - ConstantSpatialModels have no defined region" in [
+        _.message for _ in caplog.records
+    ]
 
 
 def test_parameter_name():
     with pytest.raises(RuntimeError):
+
         class MyTestModel:
             par = Parameter("wrong-name", value=3)
 
