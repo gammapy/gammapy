@@ -112,6 +112,10 @@ def test_run(backend):
     assert_allclose(correlation[0, 2], 0, atol=1e-7)
     assert_allclose(correlation[1, 2], 0, atol=1e-7)
 
+    # Verify that the fit result models are independent of the dataset ones
+    pars["x"].value = 3
+    assert_allclose(result.parameters["x"].value, 2, rtol=1e-3)
+
 @pytest.mark.parametrize("backend", ["minuit"])
 def test_run_linked(backend):
     dataset = MyDataset()
