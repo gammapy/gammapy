@@ -97,7 +97,7 @@ observatory_locations["whipple"] = EarthLocation(
 
 # communication with ASTRI Project Manager
 observatory_locations["astri"] = EarthLocation(
-    lon="-16d30m20.99s", lat="28d17m60.0s", height="2370m"
+    lon="-16d30m20.99s", lat="28d18m00.0s", height="2370m"
 )
 
 # coordinates from fact-tools (based on google earth)
