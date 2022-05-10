@@ -19,6 +19,7 @@ are now required dependencies. Matplotlib >=3.5 is now supported.
 **New features**
 
 *Support for energy dependent ON region spectral extraction has been added*
+
 - The RADMAX IRF is now fully supported.
 - A specific `WobbleRegionFinder` has been introduced to find OFF regions at symmetric positions
 from the center of the field-of-view.
@@ -27,12 +28,14 @@ It uses a set of two test observations provided by the MAGIC collaboration to pe
 testing and validation of the method. We thank the Magic collaboration for their contribution.
 
 *New theme and re-structuration of the documentation*
+
 - The documentation has been completely restructured. The PyData Sphinx theme is now applied.
 - An automated testing of docstring example code has been added. All docstrings have been fixed.
 
 **Bug fixes and improvements**
 
 *gammapy.data*
+
 - To correctly track observation information for simulations, `Observation.create()`
 now takes an `observatory_location` argument (default is `None`).
 - an `EventList.write()` convenience method has been added.
@@ -41,29 +44,35 @@ now takes an `observatory_location` argument (default is `None`).
 shortcuts are provided for `full-containment` (default) and `point-like`.
 
 *gammapy.estimators*
+
 - A method to resample the energy axis of a `Dataset` based on counts statistics criteria
 (e.g. minimum number of `counts` or `counts_off`):
 `gammapy.estimators.utils.resample_energy_axis()`
 
 
 *gammapy.makers*
+
 - The behaviour of the `bkg-peak` method of the `SafeMaskMaker` has been changed to avoid
 removing the first energy bin if the maximum number of background counts is
 in the first energy bin.
 
 *gammapy.modeling*
+
 - A new `is_norm` property has been added to the `Parameter` object. It is used to determine
 the parameter giving the flux normalization and solves a bug with the flux point estimation
 using a `CompoundModel`.
 - `Fit.covariance()` now correctly handles shared (linked) parameters.
 
 *gammapy.analysis*
+
 - `DatasetsMaker` is now internally used and can be configured in the yaml file
 
 *gammapy.catalog*
+
 - The 4FGL data release 3 has been added.
 
 **DevOps**
+
 - The CI grid has been updated and improved. A pyflakes step has been added. For efficiency,
 micromamba is used. Notebooks and tests are executed in parallel.
 
