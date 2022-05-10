@@ -426,6 +426,7 @@ def test_mask_shape():
     dataset_2.psf = None
     dataset_1.edisp = None
     dataset_2.edisp = None
+    dataset_2.mask_safe = None
 
     model = SkyModel(
         spectral_model=PowerLawSpectralModel(),
