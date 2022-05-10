@@ -16,22 +16,8 @@ from DL3 data to binned datasets. In the data reduction step the DL3 data is pre
 by binning events into a counts map and interpolating the exposure, background,
 psf and energy dispersion on the chosen analysis geometry.
 
-
-Using gammapy.makers
-====================
-
-Gammapy tutorial notebooks that show examples using ``gammapy.makers``:
-
-.. nbgallery::
- 
-   ../tutorials/api/makers.ipynb
-   ../tutorials/starting/analysis_2.ipynb
-   ../tutorials/analysis/3D/analysis_3d.ipynb
-   ../tutorials/analysis/3D/simulate_3d.ipynb
-   ../tutorials/analysis/1D/spectral_analysis.ipynb
-   ../tutorials/analysis/1D/spectrum_simulation.ipynb
-
-Other examples using background makers:
+Background estimation
+---------------------
 
 .. toctree::
     :maxdepth: 1
@@ -39,3 +25,20 @@ Other examples using background makers:
     ../makers/fov
     ../makers/reflected
     ../makers/ring
+
+
+
+Using gammapy.makers
+====================
+
+Gammapy tutorial notebooks that show examples using ``gammapy.makers``:
+
+.. nbgallery::
+
+   ../tutorials/api/makers.ipynb
+   ../tutorials/starting/analysis_2.ipynb
+   ../tutorials/analysis/3D/analysis_3d.ipynb
+   ../tutorials/analysis/3D/simulate_3d.ipynb
+   ../tutorials/analysis/1D/spectral_analysis.ipynb
+   ../tutorials/analysis/1D/spectrum_simulation.ipynb
+

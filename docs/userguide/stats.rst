@@ -304,6 +304,7 @@ Using gammapy.stats
 
 .. toctree::
     :maxdepth: 1
+    :hidden:
 
     ../stats/fit_statistics
     ../stats/wstat_derivation
