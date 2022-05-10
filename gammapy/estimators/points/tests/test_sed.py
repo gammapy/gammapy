@@ -413,6 +413,7 @@ def test_no_likelihood_contribution():
     assert_allclose(table["counts"], 0)
 
 
+@requires_dependency("iminuit")
 def test_mask_shape():
     axis = MapAxis.from_edges([1.0, 3.0, 10.0], unit="TeV", interp="log", name="energy")
     geom_1 = WcsGeom.create(binsz=1, width=3, axes=[axis])
@@ -443,6 +444,7 @@ def test_mask_shape():
     table = fp.to_table()
 
     assert_allclose(table["counts"], 0)
+    assert_allclose(table["npred"], 0)
 
 
 @requires_dependency("iminuit")
