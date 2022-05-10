@@ -595,11 +595,13 @@ class RegionGeom(Geom):
         if self.region is None:
             raise ValueError("Region definition required.")
 
-        # TODO: make this a to_hdulist() method
         region_list = compound_region_to_regions(self.region)
+
         pixel_region_list = []
+
         for reg in region_list:
             pixel_region_list.append(reg.to_pixel(self.wcs))
+
         table = Regions(pixel_region_list).serialize(format="fits")
 
         header = WcsGeom(wcs=self.wcs, npix=self.wcs.array_shape).to_header()
@@ -698,13 +700,15 @@ class RegionGeom(Geom):
             region_table = QTable.read(hdulist[region_hdu])
             wcs = WcsGeom.from_header(region_table.meta).wcs
 
+            regions_pix = Regions.parse(data=region_table, format="fits")
             regions = []
 
-            for reg in Regions.parse(data=region_table, format="fits"):
+            for region_pix in regions_pix:
                 # TODO: remove workaround once regions issue with fits serialization is sorted out
                 # see https://github.com/astropy/regions/issues/400
-                reg.meta["include"] = True
-                regions.append(reg.to_sky(wcs))
+                region_pix.meta["include"] = True
+                regions.append(region_pix.to_sky(wcs))
+
             region = regions_to_compound_region(regions)
         else:
             region, wcs = None, None
