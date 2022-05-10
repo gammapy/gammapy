@@ -170,10 +170,13 @@ class FluxPointsDataset(Dataset):
         table = Table.read(filename)
         mask_fit = None
         mask_safe = None
+
         if "mask_safe" in table.colnames:
             mask_safe = table["mask_safe"].data.astype("bool")
+
         if "mask_fit" in table.colnames:
             mask_fit = table["mask_fit"].data.astype("bool")
+
         return cls(
             name=make_name(name),
             data=FluxPoints.from_table(table, format=format),
@@ -262,11 +265,13 @@ class FluxPointsDataset(Dataset):
         flux = 0.0
         for model in self.models:
             flux_model = model.spectral_model(self.data.energy_ref)
+
             if model.temporal_model is not None:
                 integral = model.temporal_model.integral(
                     self.gti.time_start, self.gti.time_stop
                 )
                 flux_model *= np.sum(integral)
+
             flux += flux_model
         return flux
 
