@@ -7,18 +7,52 @@
 - 14 contributors
 - 133 pull requests (not all listed below)
 
-**What's new**
+**Package structure and dependencies**
 
-Support for energy dependent ON region spectral extraction has been added. The RADMAX IRF
-is now fully supported. A specific `WobbleRegionFinder` has been introduced to find OFF regions.
-A set of two test observations have been provided by the MAGIC collaboration to perform
-testing and validation of the method. They have been added to the gammapy-data repository.
-We thank the Magic collaboration for their contribution.
+This new release provides a v1.0 release candidate (v1.0rc) . It serves as the basis for the
+first long term stable (LTS) release of Gammapy. To ensure long term support, the minimal
+astropy version is 5.0, and the minimal python version is 3.8.
 
-Documentation has been completely restructured. The PyData Sphinx theme is now applied.
-Added automated testing of docstring example code. All docstrings have been fixed.
+Because they are necessary to the vast majority of Gammapy use cases, iminuit and matplotlib
+are now required dependencies. Matplotlib >=3.5 is now supported.
 
-Improved CI. Use mamba. Added pyflakes step to CI. Parallel execution of notebooks and tests.
+**New features**
+
+*Support for energy dependent ON region spectral extraction has been added*
+- The RADMAX IRF is now fully supported.
+- A specific `WobbleRegionFinder` has been introduced to find OFF regions at symmetric positions
+from the center of the field-of-view.
+- A tutorial demonstrating how to perform a point-like analysis is provided.
+It uses a set of two test observations provided by the MAGIC collaboration to perform
+testing and validation of the method. We thank the Magic collaboration for their contribution.
+
+*New theme and re-structuration of the documentation*
+- The documentation has been completely restructured. The PyData Sphinx theme is now applied.
+- An automated testing of docstring example code has been added. All docstrings have been fixed.
+
+**Bug fixes and improvements**
+
+*gammapy.data*
+- an `EventList.write()` convenience method has been added.
+- the observation table is now optional on the `DataStore` as per g.a.d.f.
+- a list of required irfs can be passed to `DataStore.get_observations()`. Predefined
+shortcuts are provided for `full-containment` (default) and `point-like`.
+
+*gammapy.modeling*
+- A new `is_norm` property has been added to the `Parameter` object. It is used to determine
+the parameter giving the flux normalization and solves a bug with the flux point estimation
+using a `CompoundModel`.
+- `Fit.covariance()` now correctly handles shared (linked) parameters.
+
+*gammapy.analysis*
+- `DatasetsMaker` is now internally used
+
+*gammapy.catalog*
+- The 4FGL data release 3 has been added.
+
+**DevOps**
+- The CI grid has been updated and improved. A pyflakes step has been added. For efficiency,
+micromamba is used. Notebooks and tests are executed in parallel.
 
 **Contributors**
 - Fabio Acero
