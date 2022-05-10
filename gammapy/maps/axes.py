@@ -2027,6 +2027,7 @@ class MapAxes(Sequence):
         """Init map axes instance by copying each axis."""
         return self.__class__([_.copy() for _ in self])
 
+
 class TimeMapAxis:
     """Class representing a time axis.
 
@@ -2163,6 +2164,17 @@ class TimeMapAxis:
             raise ValueError("Time axis is not contiguous")
 
         return edges_from_lo_hi(self.edges_min, self.edges_max)
+
+    @property
+    def bounds(self):
+        """Bounds of the axis (~astropy.units.Quantity)"""
+        return self.edges_min[0], self.edges_max[-1]
+
+    @property
+    def time_bounds(self):
+        """Bounds of the axis (~astropy.units.Quantity)"""
+        t_min, t_max = self.bounds
+        return t_min + self.reference_time, t_max + self.reference_time
 
     @property
     def time_min(self):

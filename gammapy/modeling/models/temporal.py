@@ -92,7 +92,6 @@ class TemporalModel(ModelBase):
         time_axis = TimeMapAxis.from_time_bounds(
             time_min=time_min, time_max=time_max, nbin=100
         )
-        time_axis.time_format = "mjd"
 
         m = RegionNDMap.create(region=None, axes=[time_axis])
         kwargs.setdefault("marker", "None")
@@ -352,7 +351,7 @@ class GeneralizedGaussianTemporalModel(TemporalModel):
 
     .. math::
             F(t) = exp( - 0.5 * (\frac{ \lvert t - t_{ref} \rvert}{t_rise}) ^ {1 / \eta})   for  t < t_ref
-            
+
             F(t) = exp( - 0.5 * (\frac{ \lvert t - t_{ref} \rvert}{t_decay}) ^ {1 / \eta})   for  t > t_ref
 
     Parameters
@@ -365,7 +364,7 @@ class GeneralizedGaussianTemporalModel(TemporalModel):
         Decay time constant.
     eta : `~astropy.units.Quantity`
         Inverse pulse sharpness -> higher values implies a more peaked pulse
-    
+
     """
 
     tag = ["GeneralizedGaussianTemporalModel", "gengauss"]
@@ -382,7 +381,7 @@ class GeneralizedGaussianTemporalModel(TemporalModel):
         val_decay = np.exp( - 0.5 * (np.abs(u.Quantity(time - t_ref,"d")) ** (1/eta)) / (t_decay ** (1/eta)))
         val = np.where(time < t_ref, val_rise, val_decay)
         return val
-    
+
     def integral(self, t_min, t_max, **kwargs):
         """Evaluate the integrated flux within the given time intervals
 
@@ -398,7 +397,7 @@ class GeneralizedGaussianTemporalModel(TemporalModel):
         norm : float
             Integrated flux norm on the given time intervals
         """
-        
+
         pars = self.parameters
         t_rise = pars["t_rise"].quantity
         t_decay = pars["t_decay"].quantity

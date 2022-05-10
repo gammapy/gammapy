@@ -5,9 +5,10 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
+from astropy.time import Time
 from gammapy.data import GTI
 from gammapy.estimators import FluxMaps
-from gammapy.maps import MapAxis, Maps, RegionGeom, WcsNDMap
+from gammapy.maps import MapAxis, Maps, RegionGeom, WcsNDMap, TimeMapAxis
 from gammapy.modeling.models import (
     LogParabolaSpectralModel,
     PointSpatialModel,
@@ -426,17 +427,50 @@ def test_flux_map_from_dict_inconsistent_units(wcs_flux_map, reference_model):
     assert_allclose(flux_map.norm_err.data[:, 0, 0], 0.1)
     assert flux_map.norm_err.unit == ""
 
-def test_flux_map_check_node_types(wcs_flux_map, region_map_flux_estimate, reference_model):
+
+def test_flux_map_check_node_types(
+    wcs_flux_map, region_map_flux_estimate, reference_model
+):
     ref_map = FluxMaps(wcs_flux_map, reference_model)
     ref_region_map = FluxMaps(region_map_flux_estimate, reference_model)
 
-    assert ref_map.dnde.geom.axes[0].node_type == 'center'
-    assert ref_map.e2dnde.geom.axes[0].node_type == 'center'
-    assert ref_map.flux.geom.axes[0].node_type == 'edges'
-    assert ref_map.eflux.geom.axes[0].node_type == 'edges'
+    assert ref_map.dnde.geom.axes[0].node_type == "center"
+    assert ref_map.e2dnde.geom.axes[0].node_type == "center"
+    assert ref_map.flux.geom.axes[0].node_type == "edges"
+    assert ref_map.eflux.geom.axes[0].node_type == "edges"
 
-    assert ref_region_map.dnde_err.geom.axes[0].node_type == 'center'
-    assert ref_region_map.e2dnde_ul.geom.axes[0].node_type == 'center'
-    assert ref_region_map.flux_err.geom.axes[0].node_type == 'edges'
-    assert ref_region_map.eflux_ul.geom.axes[0].node_type == 'edges'
+    assert ref_region_map.dnde_err.geom.axes[0].node_type == "center"
+    assert ref_region_map.e2dnde_ul.geom.axes[0].node_type == "center"
+    assert ref_region_map.flux_err.geom.axes[0].node_type == "edges"
+    assert ref_region_map.eflux_ul.geom.axes[0].node_type == "edges"
 
+
+def test_flux_map_iter_by_axis():
+    axis1 = MapAxis.from_energy_edges((0.1, 1.0, 10.0), unit="TeV")
+    axis2 = TimeMapAxis.from_time_bounds(
+        Time(51544, format="mjd"), Time(51548, format="mjd"), 3
+    )
+    geom = RegionGeom.create("galactic;circle(0, 0, 0.1)", axes=[axis1, axis2])
+
+    maps = Maps.from_geom(
+        geom=geom, names=["norm", "norm_err", "norm_errn", "norm_errp", "norm_ul"]
+    )
+    val = np.ones(geom.data_shape)
+
+    maps["norm"].data = val
+    maps["norm_err"].data = 0.1 * val
+    maps["norm_errn"].data = 0.2 * val
+    maps["norm_errp"].data = 0.15 * val
+    maps["norm_ul"].data = 2.0 * val
+
+    start = u.Quantity([1, 2, 3], "day")
+    stop = u.Quantity([1.5, 2.5, 3.9], "day")
+    gti = GTI.create(start, stop)
+    ref_map = FluxMaps(maps, gti=gti, reference_model=PowerLawSpectralModel())
+
+    split_maps = list(ref_map.iter_by_axis("time"))
+    assert len(split_maps) == 3
+    assert split_maps[0].available_quantities == ref_map.available_quantities
+    assert_allclose(split_maps[0].gti.time_stop.value, 51545.3340, rtol=1e-3)
+
+    assert split_maps[0].reference_model == ref_map.reference_model

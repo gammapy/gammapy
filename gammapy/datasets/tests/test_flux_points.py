@@ -2,13 +2,20 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.table import Table
+from astropy.table import Table, Column
+from astropy.time import Time
 from gammapy.datasets import Datasets, FluxPointsDataset
 from gammapy.estimators import FluxPoints
 from gammapy.modeling import Fit
-from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
+from gammapy.modeling.models import (
+    PowerLawSpectralModel,
+    SkyModel,
+    ExpDecayTemporalModel,
+)
+from gammapy.data import GTI
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
+import astropy.units as u
 
 
 @pytest.fixture()
@@ -24,18 +31,18 @@ def dataset():
     path = "$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits"
     table = Table.read(make_path(path))
     table["e_ref"] = table["e_ref"].quantity.to("TeV")
+    gti = GTI.create(start=0 * u.s, stop=30 * u.min)
     data = FluxPoints.from_table(table, format="gadf-sed")
+    data.gti = gti
     model = SkyModel(
         spectral_model=PowerLawSpectralModel(
             index=2.3, amplitude="2e-13 cm-2 s-1 TeV-1", reference="1 TeV"
         )
     )
-
     obs_table = Table()
     obs_table["TELESCOP"] = ["CTA"]
     obs_table["OBS_ID"] = ["0001"]
     obs_table["INSTRUME"] = ["South_Z20_50h"]
-
     dataset = FluxPointsDataset(model, data, meta_table=obs_table)
     return dataset
 
@@ -82,6 +89,38 @@ def test_flux_point_dataset_str(dataset):
     # check print if no models present
     dataset.models = None
     assert "FluxPointsDataset" in str(dataset)
+
+
+@requires_data()
+def test_flux_point_dataset_flux_pred(dataset):
+
+    assert_allclose(dataset.flux_pred()[0].value, 0.00022766, rtol=1e-2)
+    dataset.models[0].temporal_model = ExpDecayTemporalModel(
+        t0=5.0 * u.hr, t_ref=51543.5 * u.d
+    )
+    assert_allclose(dataset.flux_pred()[0].value, 0.000472, rtol=1e-3)
+
+def test_flux_point_dataset_creation():
+    meta = dict(TIMESYS="utc", SED_TYPE="flux")
+
+    table = Table(
+        meta=meta,
+        data=[
+            Column(Time(["2010-01-01", "2010-01-03"]).mjd, "time_min"),
+            Column(Time(["2010-01-03", "2010-01-10"]).mjd, "time_max"),
+            Column([[1.0, 2.0], [1.0, 2.0]], "e_min", unit="TeV"),
+            Column([[2.0, 4.0], [2.0, 4.0]], "e_max", unit="TeV"),
+            Column([[1e-11, 1e-12], [3e-11, 3e-12]], "flux", unit="cm-2 s-1"),
+            Column([[0.1e-11, 1e-13], [0.3e-11, 3e-13]], "flux_err", unit="cm-2 s-1"),
+            Column([[np.nan, np.nan], [3.6e-11, 3.6e-12]], "flux_ul", unit="cm-2 s-1"),
+            Column([[False, False], [True, True]], "is_ul"),
+        ],
+    )
+
+    flux_points = FluxPoints.from_table(table=table, format="lightcurve")
+    with pytest.raises(ValueError):
+        FluxPointsDataset(data=flux_points)
+
 
 
 @requires_data()

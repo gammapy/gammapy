@@ -210,7 +210,7 @@ class Datasets(collections.abc.MutableSequence):
 
         for dataset in self:
             if dataset.mask is not None:
-                value = dataset.mask.data.any()
+                value = np.any(dataset.mask)
             else:
                 value = True
             contributions.append(value)
