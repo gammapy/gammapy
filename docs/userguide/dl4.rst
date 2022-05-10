@@ -222,7 +222,7 @@ Serialisation of datasets
 -------------------------
 
 `~gammapy.datasets.MapDataset` and `~gammapy.datasets.MapDatasetOnOff` are serialised according to `GADF Sky Maps <https://gamma-astro-data-formats.readthedocs.io/en/v0.2/skymaps/index.html>`__.
-A hdulist is cretaed with the different attributes, and each of these are written with the data
+A hdulist is created with the different attributes, and each of these are written with the data
 contained in a `BinTableHDU` with a `WcsGeom` and a `BANDS HDU` specifying the non-spatial dimensions.
 Optionally, a `meta_table` is also written as an `astropy.table.Table` containing various information
 about the observations which created the dataset. While the `meta_table` can contain useful information for
