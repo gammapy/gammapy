@@ -45,6 +45,11 @@ Built-in models
 Gammapy provides a large choice of spatial, spectral and temporal models.
 You may check out the whole list of built-in models in the :ref:`model-gallery`.
 
+Custom models
+---------------
+
+Gammapy provides an easy interface to
+`create your own custom models <../tutorials/api/models.ipynb#Implementing-a-custom-model>`__
 
 Using gammapy.modeling
 ----------------------

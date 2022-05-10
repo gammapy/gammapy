@@ -109,6 +109,9 @@ References
 This is the bibliography containing the literature references for the implemented methods
 referenced from the Gammapy docs.
 
+.. [Abdalla2018] `H.E.S.S. Collaboration (2018) <https://www.aanda.org/articles/aa/abs/2018/04/aa32098-17/aa32098-17.html>`_,
+    "The H.E.S.S. Galactic plane survey"
+
 .. [Albert2007] `Albert et al. (2007) <https://ui.adsabs.harvard.edu/abs/2007NIMPA.583..494A>`_,
    "Unfolding of differential energy spectra in the MAGIC experiment",
 
@@ -134,6 +137,9 @@ referenced from the Gammapy docs.
 .. [Meyer2010] `Meyer et al. (2010) <https://ui.adsabs.harvard.edu/abs/2010A%26A...523A...2M>`_,
    "The Crab Nebula as a standard candle in very high-energy astrophysics"
 
+.. [Mohrmann2019] `Mohrmann et al. (2019) <https://www.aanda.org/articles/aa/abs/2019/12/aa36452-19/aa36452-19.html>`_,
+    "Validation of open-source science tools and background model construction in γ-ray astronomy"
+
 .. [Naurois2012] `de Naurois (2012) <http://inspirehep.net/record/1122589>`_,
    "Very High Energy astronomy from H.E.S.S. to CTA. Opening of a new astronomical window on the non-thermal Universe",
 
@@ -145,10 +151,3 @@ referenced from the Gammapy docs.
 
 .. [Stewart2009] `Stewart (2009) <https://ui.adsabs.harvard.edu/abs/2009A%26A...495..989S>`_,
    "Maximum-likelihood detection of sources among Poissonian noise"
-
-.. [Abdalla2018] `H.E.S.S. Collaboration (2018) <https://www.aanda.org/articles/aa/abs/2018/04/aa32098-17/aa32098-17.html>`_,
-    "The H.E.S.S. Galactic plane survey"
-
-.. [Mohrmann2019] `Mohrmann et al. (2019) <https://www.aanda.org/articles/aa/abs/2019/12/aa36452-19/aa36452-19.html>`_,
-    "Validation of open-source science tools and background model construction in γ-ray astronomy"
-

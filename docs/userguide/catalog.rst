@@ -12,6 +12,7 @@ Source catalogs
 * ``2fhl`` / `SourceCatalog2FHL` - LAT second high-energy source catalog
 * ``3fhl`` / `SourceCatalog3FHL` - LAT third high-energy source catalog
 * ``2hwc`` / `SourceCatalog2HWC` - 2HWC catalog from the HAWC observatory
+* ``3hwc`` / `SourceCatalog3HWC` - 3HWC catalog from the HAWC observatory
 
 For each catalog, a `SourceCatalog` class is provided to represent the catalog table,
 and a matching `SourceCatalogObject` class to represent one catalog source and table row.
