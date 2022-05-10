@@ -78,7 +78,7 @@ These statistic functions are at the heart of the model fitting approach in gamm
 used to estimate the best fit values of model parameters and their associated confidence intervals.
 
 They are used also to estimate the excess counts significance, i.e. the probability that
-a given number of measured events :math:`\n_{on}` actually contains some signal events :math:`n_{sig}`,
+a given number of measured events :math:`n_{on}` actually contains some signal events :math:`n_{sig}`,
 as well as the errors associated to this estimated number of signal counts.
 
 Estimating TS
@@ -293,14 +293,14 @@ for which the TS variation is :math:`2^2 = 4`.
 
 On the following plot, we show how the 1 :math:`\sigma` and 2 :math:`\sigma` confidence errors
 relate to the fit statistic profile.
+
 .. plot:: stats/plot_cash_errors.py
 
 
 These are references describing the available methods: [LiMa1983]_, [Cash1979]_,
 [Stewart2009]_, [Rolke2005]_, [Feldman1998]_, [Cousins2007]_.
 
-Using gammapy.stats
-===================
+
 
 .. toctree::
     :maxdepth: 1

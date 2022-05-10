@@ -166,9 +166,9 @@ Flux points can be computed using the `~gammapy.estimators.FluxPointsEstimator`.
     :title: How to compute a 2D image
     :link: ../tutorials/index.html#d-image
 
-Gammapy treats 2D maps as 3D cubes with one bin in energy. Sometimes, you might want to use previously
-obtained images lacking an energy axis (eg: reduced using traditional IACT tools) for modeling and fitting
-inside Gammapy. In this case, it is necessary to attach an `energy` axis on as it is shown in the tutorials.
+Gammapy treats 2D maps as 3D cubes with one bin in energy. Computation
+of 2D images can be done following a 3D analysis with one bin with a
+fixed spectral index, or following the classical ring background estimation.
 
 .. image:: ../_static/2d-analysis-image.png
     :width: 100%

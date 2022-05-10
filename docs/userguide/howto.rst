@@ -147,7 +147,6 @@ H.E.S.S. or Fermi-LAT data).
 .. accordion-footer::
 
 .. accordion-header::
-
     :id: collapseSHowToEleven
     :title: How to model temporal profiles
     :link: ../tutorials/analysis/time/light_curve_simulation.html#Fitting-temporal-models
@@ -159,7 +158,7 @@ one for each time bin.
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseSixteen
+    :id: collapseHowToTwelve
     :title: Reduce memory budget for large datasets
 
 When dealing with surveys and large sky regions, the amount of memory required might become
@@ -178,7 +177,7 @@ by removing it from the list of options passed to the `~gammapy.makers.MapDatase
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseHowToTwelve
+    :id: collapseHowToThirteen
     :title: Copy part of a data store
 
 To share specific data from a database, it might be necessary to create a new data storage with
@@ -190,7 +189,7 @@ and build the associated observation and HDU tables.
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseHowToThirteen
+    :id: collapseHowToFourteen
     :title: Interpolate onto a different geometry
     :link: ../tutorials/api/maps.html#Filling-maps-from-interpolation
 
@@ -199,7 +198,7 @@ To interpolate maps onto a different geometry use `~gammapy.maps.Map.interp_to_g
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseHowToFourteen
+    :id: collapseHowToFifteen
     :title: Suppress warnings
 
 In general it is not recommended to suppress warnings from code because they
