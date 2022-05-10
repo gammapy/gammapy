@@ -158,7 +158,7 @@ one for each time bin.
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseSHowToTwelve
+    :id: collapseHowToTwelve
     :title: Reduce memory budget for large datasets
 
 When dealing with surveys and large sky regions, the amount of memory required might become
