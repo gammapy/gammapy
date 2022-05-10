@@ -15,7 +15,6 @@ from regions import (
     EllipseSkyRegion,
     PointSkyRegion,
     RectangleSkyRegion,
-    RegionVisual
 )
 from gammapy.maps import Map, WcsGeom
 from gammapy.modeling import Parameter
