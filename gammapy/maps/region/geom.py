@@ -731,7 +731,7 @@ class RegionGeom(Geom):
             else:
                 self._region = other.region
 
-    def plot_region(self, ax=None, kwargs_point=None, **kwargs):
+    def plot_region(self, ax=None, kwargs_point=None, path_effect=None, **kwargs):
         """Plot region in the sky.
 
         Parameters
@@ -740,6 +740,11 @@ class RegionGeom(Geom):
             Axes to plot on. If no axes are given,
             the region is shown using the minimal
             equivalent WCS geometry.
+        kwargs_point : dict
+            Keyword arguments passed to `~matplotlib.lines.Line2D` for plotting
+            of point sources
+        path_effect : `~matplotlib.patheffects.PathEffect`
+            Path effect applied to artists and lines.
         **kwargs : dict
             Keyword arguments forwarded to `~regions.PixelRegion.as_artist`
 
@@ -763,8 +768,9 @@ class RegionGeom(Geom):
                 ax = m.plot(add_cbar=False)
 
         kwargs.setdefault("fc", "None")
+        kwargs.setdefault("ec", "tab:blue")
         kwargs_point.setdefault("color", kwargs.get("edgecolor"))
-        kwargs_point.setdefault("markeredgecolor", "None")
+        kwargs_point.setdefault("marker", "*")
 
         for region in compound_region_to_regions(self.region):
             region_pix = region.to_pixel(wcs=ax.wcs)
@@ -773,6 +779,9 @@ class RegionGeom(Geom):
                 artist = region_pix.as_artist(**kwargs_point)
             else:
                 artist = region_pix.as_artist(**kwargs)
+
+            if path_effect:
+                artist.add_path_effect(path_effect)
 
             ax.add_artist(artist)
 

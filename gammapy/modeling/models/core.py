@@ -952,32 +952,14 @@ class DatasetModels(collections.abc.Sequence):
         ax : `~astropy.visualization.WcsAxes`
             WCS axes
         """
-        from astropy.visualization.wcsaxes import WCSAxes
-
-        kwargs_point = kwargs_point or {}
-
-        if ax is None or not isinstance(ax, WCSAxes):
-            ax = Map.from_geom(self.wcs_geom).plot()
-
-        kwargs.setdefault("color", "tab:blue")
-        kwargs.setdefault("fc", "None")
-        kwargs_point.setdefault("marker", "*")
-        kwargs_point.setdefault("markersize", 10)
-        kwargs_point.setdefault("markeredgecolor", "None")
-        kwargs_point.setdefault("color", kwargs["color"])
-
-        for region in self.to_regions():
-            if isinstance(region, PointSkyRegion):
-                artist = region.to_pixel(ax.wcs).as_artist(**kwargs_point)
-            else:
-                artist = region.to_pixel(ax.wcs).as_artist(**kwargs)
-
-            if path_effect:
-                artist.set_path_effects([path_effect])
-
-            ax.add_artist(artist)
-
-        return ax
+        regions = self.to_regions()
+        geom = RegionGeom.from_regions(regions=regions)
+        return geom.plot_region(
+            ax=ax,
+            kwargs_point=kwargs_point,
+            path_effect=path_effect,
+            **kwargs
+        )
 
     def plot_positions(self, ax=None, **kwargs):
         """ "Plot the centers of the spatial models on a given wcs axis
