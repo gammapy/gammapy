@@ -26,7 +26,7 @@
             "@type": "Person",
             "affiliation": {
                 "@type": "Organization",
-                "name": "Astroparticle and Cosmology Laboratory CNRS, Universit\u00e9 de Paris, 10 Rue Alice Domon et L\u00e9onie Duquet, 75013 Paris, France"
+                "name": "Astroparticule and Cosmologie, Universit\u00e9 Paris Cit\u00e9, CNRS/IN2P3, F-75013 Paris, France"
             },
             "familyName": "Terrier",
             "givenName": "R\u00e9gis"
@@ -111,18 +111,19 @@
             "@type": "Person",
             "affiliation": {
                 "@type": "Organization",
-                "name": "Astroparticle and Cosmology Laboratory CNRS, Universit\u00e9 de Paris, 10 Rue Alice Domon et L\u00e9onie Duquet, 75013 Paris, France"
+                "name": "Astroparticule and Cosmologie, Universit\u00e9 Paris Cit\u00e9, CNRS/IN2P3, F-75013 Paris, France"
             },
             "familyName": "Giunti",
             "givenName": "Luca"
         },
         {
+            "@id": "https://orcid.org/0000-0001-6876-5577",
             "@type": "Person",
             "affiliation": {
                 "@type": "Organization",
-                "name": "Astroparticle and Cosmology Laboratory CNRS, Universit\u00e9 de Paris, 10 Rue Alice Domon et L\u00e9onie Duquet, 75013 Paris, France"
+                "name": "Astroparticule and Cosmologie, Universit\u00e9 Paris Cit\u00e9, CNRS/IN2P3, F-75013 Paris, France"
             },
-            "familyName": "Khelifi",
+            "familyName": "Kh\u00e9lifi",
             "givenName": "Bruno"
         },
         {
@@ -195,13 +196,13 @@
         },
         {
             "@type": "Person",
-            "familyName": "Fidalgo",
-            "givenName": "David"
+            "familyName": "D. Harris",
+            "givenName": "Jonathan"
         },
         {
             "@type": "Person",
-            "familyName": "D. Harris",
-            "givenName": "Jonathan"
+            "familyName": "Fidalgo",
+            "givenName": "David"
         },
         {
             "@type": "Person",
@@ -225,7 +226,7 @@
             "@type": "Person",
             "affiliation": {
                 "@type": "Organization",
-                "name": "Astroparticle and Cosmology Laboratory CNRS, Universit\u00e9 de Paris, 10 Rue Alice Domon et L\u00e9onie Duquet, 75013 Paris, France"
+                "name": "Astroparticule and Cosmologie, Universit\u00e9 Paris Cit\u00e9, CNRS/IN2P3, F-75013 Paris, France"
             },
             "familyName": "Eddine Hajlaoui",
             "givenName": "Jalel"
@@ -265,6 +266,15 @@
         },
         {
             "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "DESY"
+            },
+            "familyName": "Watson",
+            "givenName": "Jason"
+        },
+        {
+            "@type": "Person",
             "familyName": "Voruganti",
             "givenName": "Arjun"
         },
@@ -277,24 +287,15 @@
             "@type": "Person",
             "affiliation": {
                 "@type": "Organization",
-                "name": "DESY"
+                "name": "Space Telescope Science Institute, STScI, 3700 San Martin Drive, 21218 Baltimore MD, US"
             },
-            "familyName": "Watson",
-            "givenName": "Jason"
+            "familyName": "Tollerud",
+            "givenName": "Erik"
         },
         {
             "@type": "Person",
             "familyName": "Armstrong",
             "givenName": "Thomas"
-        },
-        {
-            "@type": "Person",
-            "affiliation": {
-                "@type": "Organization",
-                "name": "Space Telescope Science Institute, STScI, 3700 San Martin Drive, 21218 Baltimore MD, US"
-            },
-            "familyName": "Tollerud",
-            "givenName": "Erik"
         },
         {
             "@type": "Person",
@@ -312,11 +313,6 @@
         },
         {
             "@type": "Person",
-            "familyName": "Emery",
-            "givenName": "Gabriel"
-        },
-        {
-            "@type": "Person",
             "affiliation": {
                 "@type": "Organization",
                 "name": "Institute of cosmos sciences, ICCUB, Mart\u00ed i Franqu\u00e8s 1, 08028 Barcelona"
@@ -326,8 +322,18 @@
         },
         {
             "@type": "Person",
+            "familyName": "Emery",
+            "givenName": "Gabriel"
+        },
+        {
+            "@type": "Person",
             "familyName": "Tiziani",
             "givenName": "Domenico"
+        },
+        {
+            "@type": "Person",
+            "familyName": "Minaya",
+            "givenName": "Ignacio"
         },
         {
             "@type": "Person",
@@ -340,18 +346,13 @@
         },
         {
             "@type": "Person",
-            "familyName": "Gogia",
-            "givenName": "Arpit"
-        },
-        {
-            "@type": "Person",
             "familyName": "Siejkowski",
             "givenName": "Hubert"
         },
         {
             "@type": "Person",
-            "familyName": "Minaya",
-            "givenName": "Ignacio"
+            "familyName": "Gogia",
+            "givenName": "Arpit"
         },
         {
             "@type": "Person",
@@ -402,6 +403,11 @@
         },
         {
             "@type": "Person",
+            "familyName": "Lenain",
+            "givenName": "Jean-Philippe"
+        },
+        {
+            "@type": "Person",
             "affiliation": {
                 "@type": "Organization",
                 "name": "Friedrich-Alexander-Universit\u00e4t Erlangen-N\u00fcrnberg, Erlangen Centre for Astroparticle Physics, Erwin-Rommel-Str. 1 91058 Erlangen, Germany"
@@ -421,20 +427,6 @@
         },
         {
             "@type": "Person",
-            "familyName": "Lenain",
-            "givenName": "Jean-Philippe"
-        },
-        {
-            "@type": "Person",
-            "affiliation": {
-                "@type": "Organization",
-                "name": "Astroparticle and Cosmology Laboratory CNRS, Universit\u00e9 de Paris, 10 Rue Alice Domon et L\u00e9onie Duquet, 75013 Paris, France"
-            },
-            "familyName": "Lemi\u00e8re",
-            "givenName": "Anne"
-        },
-        {
-            "@type": "Person",
             "affiliation": {
                 "@type": "Organization",
                 "name": "Center for Astrophysics | Harvard & Smithsonian, CfA, 60 Garden St., 02138 Cambridge MA, US"
@@ -444,13 +436,22 @@
         },
         {
             "@type": "Person",
-            "familyName": "Barbary",
-            "givenName": "Kyle"
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Astroparticule and Cosmologie, Universit\u00e9 Paris Cit\u00e9, CNRS/IN2P3, F-75013 Paris, France"
+            },
+            "familyName": "Lemi\u00e8re",
+            "givenName": "Anne"
         },
         {
             "@type": "Person",
             "familyName": "Vinicius",
             "givenName": "Z\u00e9"
+        },
+        {
+            "@type": "Person",
+            "familyName": "Barbary",
+            "givenName": "Kyle"
         },
         {
             "@type": "Person",
@@ -463,27 +464,18 @@
         },
         {
             "@type": "Person",
-            "familyName": "Zabalza",
-            "givenName": "V\u00edctor"
-        },
-        {
-            "@type": "Person",
-            "affiliation": {
-                "@type": "Organization",
-                "name": "Michigan State University, Department of Physics and Astronomy, 428 S Shaw Ln East Lansing, MI 48824, US"
-            },
-            "familyName": "Kerzendorf",
-            "givenName": "Wolfgang"
-        },
-        {
-            "@type": "Person",
-            "familyName": "Contreras",
-            "givenName": "Jos\u00e9 Luis"
+            "familyName": "Ginsburg",
+            "givenName": "Adam"
         },
         {
             "@type": "Person",
             "familyName": "Morcuende",
             "givenName": "Daniel"
+        },
+        {
+            "@type": "Person",
+            "familyName": "Contreras",
+            "givenName": "Jos\u00e9 Luis"
         },
         {
             "@type": "Person",
@@ -506,57 +498,22 @@
         },
         {
             "@type": "Person",
-            "familyName": "Ginsburg",
-            "givenName": "Adam"
-        },
-        {
-            "@type": "Person",
-            "familyName": "Weaver",
-            "givenName": "Benjamin Alan"
-        },
-        {
-            "@type": "Person",
-            "familyName": "Buchner",
-            "givenName": "Johannes"
-        },
-        {
-            "@type": "Person",
-            "familyName": "van Kemenade",
-            "givenName": "Hugo"
-        },
-        {
-            "@type": "Person",
-            "familyName": "O. Lebigot",
-            "givenName": "Eric"
-        },
-        {
-            "@type": "Person",
-            "familyName": "Deiml",
-            "givenName": "Peter"
-        },
-        {
-            "@type": "Person",
-            "familyName": "Bose",
-            "givenName": "Debanjan"
+            "familyName": "Zabalza",
+            "givenName": "V\u00edctor"
         },
         {
             "@type": "Person",
             "affiliation": {
                 "@type": "Organization",
-                "name": "Deutsches Elektronen-Synchrotron, DESY, Platanenallee 6 15738 Zeuthen, Germany"
+                "name": "Michigan State University, Department of Physics and Astronomy, 428 S Shaw Ln East Lansing, MI 48824, US"
             },
-            "familyName": "Buehler",
-            "givenName": "Rolf"
+            "familyName": "Kerzendorf",
+            "givenName": "Wolfgang"
         },
         {
             "@type": "Person",
-            "familyName": "L\u00f3pez-Coto",
-            "givenName": "Rub\u00e9n"
-        },
-        {
-            "@type": "Person",
-            "familyName": "Carter",
-            "givenName": "Sam"
+            "familyName": "Deiml",
+            "givenName": "Peter"
         },
         {
             "@type": "Person",
@@ -576,12 +533,65 @@
             },
             "familyName": "Klepser",
             "givenName": "Stefan"
+        },
+        {
+            "@type": "Person",
+            "familyName": "Buchner",
+            "givenName": "Johannes"
+        },
+        {
+            "@type": "Person",
+            "familyName": "van Kemenade",
+            "givenName": "Hugo"
+        },
+        {
+            "@type": "Person",
+            "familyName": "O. Lebigot",
+            "givenName": "Eric"
+        },
+        {
+            "@type": "Person",
+            "familyName": "Weaver",
+            "givenName": "Benjamin Alan"
+        },
+        {
+            "@type": "Person",
+            "familyName": "Bose",
+            "givenName": "Debanjan"
+        },
+        {
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Iowa State University, Ames IA, US"
+            },
+            "familyName": "Chromey",
+            "givenName": "Alisha"
+        },
+        {
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Deutsches Elektronen-Synchrotron, DESY, Platanenallee 6 15738 Zeuthen, Germany"
+            },
+            "familyName": "Buehler",
+            "givenName": "Rolf"
+        },
+        {
+            "@type": "Person",
+            "familyName": "L\u00f3pez-Coto",
+            "givenName": "Rub\u00e9n"
+        },
+        {
+            "@type": "Person",
+            "familyName": "Carter",
+            "givenName": "Sam"
         }
     ],
     "codeRepository": "https://github.com/gammapy/gammapy",
     "datePublished": "2020-11-19",
     "description": "Gammapy analyzes gamma-ray data and creates sky images, spectra and lightcurves, from event lists and instrument response information; it can also determine the position, morphology and spectra of gamma-ray sources. It is used to analyze data from H.E.S.S., Fermi-LAT, and the Cherenkov Telescope Array (CTA).",
-    "identifier": "https://doi.org/10.5281/zenodo.4701500",
+    "identifier": "https://doi.org/10.5281/zenodo.5721467",
     "keywords": [
         "Astronomy",
         "Gamma-rays",
