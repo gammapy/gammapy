@@ -4,7 +4,7 @@ import numpy as np
 from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord
 from astropy.io import fits
-from astropy.table import QTable
+from astropy.table import QTable, Table
 from astropy.utils import lazyproperty
 from astropy.wcs.utils import (
     proj_plane_pixel_area,
@@ -697,10 +697,14 @@ class RegionGeom(Geom):
             region_hdu = hdu + "_" + region_hdu
 
         if region_hdu in hdulist:
-            region_table = QTable.read(hdulist[region_hdu])
-            wcs = WcsGeom.from_header(region_table.meta).wcs
+            try:
+                region_table = QTable.read(hdulist[region_hdu])
+                regions_pix = Regions.parse(data=region_table, format="fits")
+            except TypeError:
+                region_table = Table.read(hdulist[region_hdu])
+                regions_pix = Regions.parse(data=region_table, format="fits")
 
-            regions_pix = Regions.parse(data=region_table, format="fits")
+            wcs = WcsGeom.from_header(region_table.meta).wcs
             regions = []
 
             for region_pix in regions_pix:
