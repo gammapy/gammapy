@@ -21,8 +21,7 @@ authors:
   affiliation: HeidelbergCement AG, Berliner Straße 6, 69120 Heidelberg, Germany
 - given-names: Régis
   family-names: Terrier
-  affiliation: Astroparticle and Cosmology Laboratory CNRS, Université de Paris Cité, 10
-    Rue Alice Domon et Léonie Duquet, 75013 Paris, France
+  affiliation: Astroparticule and Cosmologie, Université Paris Cité, CNRS/IN2P3, F-75013 Paris, France
   orcid: https://orcid.org/0000-0002-8219-4667
 - given-names: José Enrique
   family-names: Ruiz
@@ -58,12 +57,10 @@ authors:
   family-names: Paz Arribas
 - given-names: Luca
   family-names: Giunti
-  affiliation: Astroparticle and Cosmology Laboratory CNRS, Université de Paris Cité, 10
-    Rue Alice Domon et Léonie Duquet, 75013 Paris, France
+  affiliation: Astroparticule and Cosmologie, Université Paris Cité, CNRS/IN2P3, F-75013 Paris, France
 - given-names: Bruno
-  family-names: Khelifi
-  affiliation: Astroparticle and Cosmology Laboratory CNRS, Université de Paris Cité, 10
-    Rue Alice Domon et Léonie Duquet, 75013 Paris, France
+  family-names: Khélifi
+  affiliation: Astroparticule and Cosmologie, Université Paris Cité, CNRS/IN2P3, F-75013 Paris, France
   orcid: https://orcid.org/0000-0001-6876-5577
 - given-names: Fabio
   family-names: Acero
@@ -108,8 +105,7 @@ authors:
 - given-names: Jalel
   name-particle: Eddine
   family-names: Hajlaoui
-  affiliation: Astroparticle and Cosmology Laboratory CNRS, Université de Paris Cité, 10
-    Rue Alice Domon et Léonie Duquet, 75013 Paris, France
+  affiliation: Astroparticule and Cosmologie, Université Paris Cité, CNRS/IN2P3, F-75013 Paris, France
 - given-names: Alexis
   family-names: de Almeida Coutinho
   affiliation: Universidade de São Paulo, Brazil
@@ -190,8 +186,7 @@ authors:
   family-names: Lenain
 - given-names: Anne
   family-names: Lemière
-  affiliation: Astroparticle and Cosmology Laboratory CNRS, Université de Paris Cité, 10
-    Rue Alice Domon et Léonie Duquet, 75013 Paris, France
+  affiliation: Astroparticule and Cosmologie, Université Paris Cité, CNRS/IN2P3, F-75013 Paris, France
 - given-names: Lab
   family-names: Saha
   affiliation: Center for Astrophysics | Harvard & Smithsonian, CfA, 60 Garden St.,
@@ -261,6 +256,9 @@ keywords:
 - "Gamma-rays"
 - "Data analysis"
 identifiers:
+- type: "doi"
+  value: 10.5281/zenodo.5721467
+  description: Zenodo DOI v0.19
 - type: "doi"
   value: 10.5281/zenodo.4701500
   description: Zenodo DOI v0.18.2
