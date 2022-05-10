@@ -15,6 +15,7 @@ from regions import (
     EllipseSkyRegion,
     PointSkyRegion,
     RectangleSkyRegion,
+    RegionVisual
 )
 from gammapy.maps import Map, WcsGeom
 from gammapy.modeling import Parameter
@@ -40,7 +41,6 @@ __all__ = [
 log = logging.getLogger(__name__)
 
 MAX_OVERSAMPLING = 200
-
 
 
 def compute_sigma_eff(lon_0, lat_0, lon, lat, phi, major_axis, e):
@@ -125,12 +125,7 @@ class SpatialModel(ModelBase):
     def position_error(self):
         """Get 95% containment position error as (`~regions.EllipseSkyRegion`)"""
         if self.covariance is None:
-            return EllipseSkyRegion(
-                center=self.position,
-                height=np.nan * u.deg,
-                width=np.nan * u.deg,
-                angle=np.nan * u.deg,
-            )
+            raise ValueError("No position error information available.")
 
         pars = self.parameters
         sub_covar = self.covariance.get_subcovariance(["lon_0", "lat_0"]).data.copy()
@@ -960,14 +955,12 @@ class ConstantSpatialModel(SpatialModel):
         """Evaluate model."""
         return value
 
-    @staticmethod
-    def to_region(**kwargs):
-        """Model outline (`~regions.EllipseSkyRegion`)."""
-        return EllipseSkyRegion(
-            center=SkyCoord(np.nan * u.deg, np.nan * u.deg),
-            height=np.nan * u.deg,
-            width=np.nan * u.deg,
-            angle=np.nan * u.deg,
+    def to_region(self, **kwargs):
+        """Model outline (`~regions.RectangleSkyRegion`)."""
+        return RectangleSkyRegion(
+            center=SkyCoord(0 * u.deg, 0 * u.deg, frame=self.frame),
+            height=180 * u.deg,
+            width=360 * u.deg,
             **kwargs,
         )
 
@@ -1007,14 +1000,12 @@ class ConstantFluxSpatialModel(SpatialModel):
         """Evaluate model."""
         return Map.from_geom(geom=geom, data=1)
 
-    @staticmethod
-    def to_region(**kwargs):
-        """Model outline (`~regions.EllipseSkyRegion`)."""
-        return EllipseSkyRegion(
-            center=SkyCoord(np.nan * u.deg, np.nan * u.deg),
-            height=np.nan * u.deg,
-            width=np.nan * u.deg,
-            angle=np.nan * u.deg,
+    def to_region(self, **kwargs):
+        """Model outline (`~regions.RectangleSkyRegion`)."""
+        return RectangleSkyRegion(
+            center=SkyCoord(0 * u.deg, 0 * u.deg, frame=self.frame),
+            height=180 * u.deg,
+            width=360 * u.deg,
             **kwargs,
         )
 
@@ -1083,11 +1074,11 @@ class TemplateSpatialModel(SpatialModel):
             self._map = map.copy(data=map.data)
 
         self.meta = {} if meta is None else meta
-        
+
         interp_kwargs = {} if interp_kwargs is None else interp_kwargs
         interp_kwargs.setdefault("method", "linear")
         interp_kwargs.setdefault("fill_value", 0)
-        
+
         self._interp_kwargs = interp_kwargs
         self.filename = filename
         super().__init__()
