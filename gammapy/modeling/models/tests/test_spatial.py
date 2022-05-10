@@ -267,7 +267,7 @@ def test_sky_diffuse_constant():
     assert_allclose(val.value, 42)
     radius = model.evaluation_radius
     assert radius is None
-    assert isinstance(model.to_region(), EllipseSkyRegion)
+    assert isinstance(model.to_region(), RectangleSkyRegion)
 
 
 @requires_dependency("matplotlib")
