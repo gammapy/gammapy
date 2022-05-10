@@ -21,7 +21,7 @@ authors:
   affiliation: HeidelbergCement AG, Berliner Straße 6, 69120 Heidelberg, Germany
 - given-names: Régis
   family-names: Terrier
-  affiliation: Astroparticle and Cosmology Laboratory CNRS, Université de Paris, 10
+  affiliation: Astroparticle and Cosmology Laboratory CNRS, Université de Paris Cité, 10
     Rue Alice Domon et Léonie Duquet, 75013 Paris, France
   orcid: https://orcid.org/0000-0002-8219-4667
 - given-names: José Enrique
@@ -58,12 +58,13 @@ authors:
   family-names: Paz Arribas
 - given-names: Luca
   family-names: Giunti
-  affiliation: Astroparticle and Cosmology Laboratory CNRS, Université de Paris, 10
+  affiliation: Astroparticle and Cosmology Laboratory CNRS, Université de Paris Cité, 10
     Rue Alice Domon et Léonie Duquet, 75013 Paris, France
 - given-names: Bruno
   family-names: Khelifi
-  affiliation: Astroparticle and Cosmology Laboratory CNRS, Université de Paris, 10
+  affiliation: Astroparticle and Cosmology Laboratory CNRS, Université de Paris Cité, 10
     Rue Alice Domon et Léonie Duquet, 75013 Paris, France
+  orcid: https://orcid.org/0000-0001-6876-5577
 - given-names: Fabio
   family-names: Acero
   affiliation: DAp/AIM, CEA-Saclay/CNRS, France
@@ -107,7 +108,7 @@ authors:
 - given-names: Jalel
   name-particle: Eddine
   family-names: Hajlaoui
-  affiliation: Astroparticle and Cosmology Laboratory CNRS, Université de Paris, 10
+  affiliation: Astroparticle and Cosmology Laboratory CNRS, Université de Paris Cité, 10
     Rue Alice Domon et Léonie Duquet, 75013 Paris, France
 - given-names: Alexis
   family-names: de Almeida Coutinho
@@ -189,7 +190,7 @@ authors:
   family-names: Lenain
 - given-names: Anne
   family-names: Lemière
-  affiliation: Astroparticle and Cosmology Laboratory CNRS, Université de Paris, 10
+  affiliation: Astroparticle and Cosmology Laboratory CNRS, Université de Paris Cité, 10
     Rue Alice Domon et Léonie Duquet, 75013 Paris, France
 - given-names: Lab
   family-names: Saha
@@ -275,3 +276,6 @@ identifiers:
 - type: "other"
   value: "1711.014"
   description: ASCL identifier
+- type: "hal"  
+  value: hal-03663345 
+  description: HAL v0.19
