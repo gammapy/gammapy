@@ -218,6 +218,28 @@ even fit convergence might be an issue for a large number of datasets.
 To strike a balance, what might be a practical solution for analysis of many runs is to
 stack runs taken under similar conditions and then do a joint fit on the stacked datasets.
 
+Serialisation of datasets
+-------------------------
+
+`~gammapy.datasets.MapDataset` and `~gammapy.datasets.MapDatasetOnOff` are serialised according to `GADF Sky Maps <https://gamma-astro-data-formats.readthedocs.io/en/v0.2/skymaps/index.html>`__.
+A hdulist is cretaed with the different attributes, and each of these are written with the data
+contained in a `BinTableHDU` with a `WcsGeom` and a `BANDS HDU` specifying the non-spatial dimensions.
+Optionally, a `meta_table` is also written as an `astropy.table.Table` containing various information
+about the observations which created the dataset. While the `meta_table` can contain useful information for
+later stage analysis, it is not used anywhere internally within gammapy.
+
+`~gammapy.datasets.SpectrumDataset` follows a similar convention as for `~gammapy.datasets.MapDataset`, but uses a
+`~gammapy.maps.RegionGeom`. The region definition follows the standard FITS format, as described
+`here <https://fits.gsfc.nasa.gov/registry/region.html>`__. `~gammapy.datasets.SpectrumDatasetOnOff` can be serialised
+either according to the above specification, or (by default), according to the
+`OGIP standards <https://gamma-astro-data-formats.readthedocs.io/en/v0.1/ogip/index.html>`__.
+
+`~gammapy.datasets.FluxPointsDatasets` are serialised as `gammapy.estimators.FluxPoints` objects, which contains
+a set of `gammapy.maps.Map` objects storing the estimated flux as function of energy, and some optional quantities like
+typically errors, upper limits, etc. It also contains a reference model,
+serialised as a `~gammapy.modeling.models.TemplateSpectralModel`.
+
+
 Using gammapy.datasets
 ----------------------
 
