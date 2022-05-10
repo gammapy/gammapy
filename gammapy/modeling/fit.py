@@ -218,10 +218,8 @@ class Fit:
         parameters.set_parameter_factors(factors)
         parameters.check_limits()
 
-        models_copy = datasets.models.copy()
         return OptimizeResult(
-            parameters=models_copy.parameters,
-            models=models_copy,
+            models=datasets.models.copy(),
             total_stat=datasets.stat_sum(),
             backend=backend,
             method=kwargs.get("method", backend),
@@ -534,8 +532,7 @@ class CovarianceResult(FitStepResult):
 class OptimizeResult(FitStepResult):
     """Optimize result object."""
 
-    def __init__(self, parameters, models, nfev, total_stat, trace, **kwargs):
-        self._parameters = parameters
+    def __init__(self, models, nfev, total_stat, trace, **kwargs):
         self._models = models
         self._nfev = nfev
         self._total_stat = total_stat
@@ -545,7 +542,7 @@ class OptimizeResult(FitStepResult):
     @property
     def parameters(self):
         """Best fit parameters"""
-        return self._parameters
+        return self.models.parameters
 
     @property
     def models(self):
