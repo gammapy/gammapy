@@ -78,7 +78,7 @@ Analysis steps
 
 :ref:`estimators`
     In addition to the global modelling and fitting, Gammapy provides utility classes to
-    compute flux points, light curves and flux as well as significance maps in energy bands.
+    compute and store flux points, light curves and flux as well as significance maps in energy bands.
 
 
 Configurable analysis
