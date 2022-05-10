@@ -4,14 +4,21 @@ import numpy as np
 from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord
 from astropy.io import fits
-from astropy.table import Table
+from astropy.table import QTable
 from astropy.utils import lazyproperty
 from astropy.wcs.utils import (
     proj_plane_pixel_area,
     proj_plane_pixel_scales,
     wcs_to_celestial_frame,
 )
-from regions import CompoundSkyRegion, PixCoord, PointSkyRegion, Regions, SkyRegion
+from regions import (
+    CompoundSkyRegion,
+    PixCoord,
+    PointSkyRegion,
+    Regions,
+    RectanglePixelRegion,
+    SkyRegion
+)
 from gammapy.utils.regions import (
     compound_region_center,
     compound_region_to_regions,
@@ -121,7 +128,12 @@ class RegionGeom(Geom):
         for region_pix in regions_pix[1:]:
             bbox = bbox.union(region_pix.bounding_box)
 
-        rectangle_pix = bbox.to_region()
+        try:
+            rectangle_pix = bbox.to_region()
+        except ValueError:
+            rectangle_pix = RectanglePixelRegion(
+                center=PixCoord(*bbox.center[::-1]), width=1, height=1
+            )
         return rectangle_pix.to_sky(self.wcs)
 
     @property
@@ -683,7 +695,7 @@ class RegionGeom(Geom):
             region_hdu = hdu + "_" + region_hdu
 
         if region_hdu in hdulist:
-            region_table = Table.read(hdulist[region_hdu])
+            region_table = QTable.read(hdulist[region_hdu])
             wcs = WcsGeom.from_header(region_table.meta).wcs
 
             regions = []
