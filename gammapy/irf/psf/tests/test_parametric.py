@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
+from copy import deepcopy
 from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import Angle
@@ -67,6 +68,13 @@ class TestEnergyDependentMultiGaussPSF:
         # test default case
         psf_3d_def = psf.to_psf3d()
         assert psf_3d_def.axes["rad"].nbin == 66
+
+    def test_eq(self, psf):
+        psf1 = deepcopy(psf)
+        assert psf1 == psf
+
+        psf1.data[0][0] = 10
+        assert not psf1 == psf
 
     @requires_dependency("matplotlib")
     def test_peek(self, psf):

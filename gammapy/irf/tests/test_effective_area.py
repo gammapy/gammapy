@@ -85,13 +85,14 @@ def test_to_table():
 
 
 def test_to_table_is_pointlike():
-    energy_axis = MapAxis.from_energy_bounds('1 TeV', '10 TeV',
-                                            nbin=3, name='energy_true')
-    offset_axis = MapAxis.from_bounds(0 * u.deg, 2 * u.deg,
-                                      nbin=2, name='offset')
+    energy_axis = MapAxis.from_energy_bounds(
+        "1 TeV", "10 TeV", nbin=3, name="energy_true"
+    )
+    offset_axis = MapAxis.from_bounds(0 * u.deg, 2 * u.deg, nbin=2, name="offset")
 
-    aeff = EffectiveAreaTable2D(data=np.ones((3, 2)) * u.m**2,
-                                axes=[energy_axis, offset_axis])
+    aeff = EffectiveAreaTable2D(
+        data=np.ones((3, 2)) * u.m ** 2, axes=[energy_axis, offset_axis]
+    )
     hdu = aeff.to_table_hdu()
     assert "is_pointlike" not in hdu.header
 
@@ -111,12 +112,13 @@ def test_wrong_axis_order():
             axes=[energy_axis_true, offset_axis], data=data, unit="cm2"
         )
 
+
 def test_wrong_units():
     energy_axis_true = MapAxis.from_energy_bounds(
         "1 TeV", "10 TeV", nbin=10, name="energy_true"
     )
 
-    offset_axis = MapAxis.from_bounds(0 * u.deg, 2 * u.deg, nbin=2, name='offset')
+    offset_axis = MapAxis.from_bounds(0 * u.deg, 2 * u.deg, nbin=2, name="offset")
 
     wrong_unit = u.TeV
     data = np.ones((energy_axis_true.nbin, offset_axis.nbin)) * wrong_unit
@@ -125,7 +127,10 @@ def test_wrong_units():
     with pytest.raises(ValueError) as error:
         EffectiveAreaTable2D(data=data, axes=[energy_axis_true, offset_axis])
 
-        assert error.match(f"Error: {wrong_unit} is not an allowed unit. {area_test.tag} requires {area_test.default_unit} data quantities.")
+        assert error.match(
+            f"Error: {wrong_unit} is not an allowed unit. {area_test.tag} requires {area_test.default_unit} data quantities."
+        )
+
 
 @requires_data("gammapy-data")
 def test_aeff2d_pointlike():
@@ -136,3 +141,19 @@ def test_aeff2d_pointlike():
 
     assert aeff.is_pointlike
     assert hdu.header["HDUCLAS3"] == "POINT-LIKE"
+
+
+def test_eq():
+    energy1 = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=2, name="energy_true")
+
+    energy2 = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3, name="energy_true")
+
+    offset_axis = MapAxis.from_bounds(0 * u.deg, 2 * u.deg, nbin=2, name="offset")
+
+    data1 = np.ones((energy1.nbin, offset_axis.nbin)) * u.cm ** 2
+    data2 = np.ones((energy2.nbin, offset_axis.nbin)) * u.cm ** 2
+
+    aeff1 = EffectiveAreaTable2D(data=data1, axes=[energy1, offset_axis])
+    aeff2 = EffectiveAreaTable2D(data=data2, axes=[energy2, offset_axis])
+
+    assert not aeff1 == aeff2

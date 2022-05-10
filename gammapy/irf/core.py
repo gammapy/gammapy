@@ -20,13 +20,14 @@ log = logging.getLogger(__name__)
 
 
 class FoVAlignment(str, Enum):
-    '''
+    """
     Orientation of the Field of View Coordinate System
 
     Currently, only two possible alignments are supported: alignment with
     the horizontal coordinate system (ALTAZ) and alignment with the equatorial
     coordinate system (RADEC).
-    '''
+    """
+
     ALTAZ = "ALTAZ"
     RADEC = "RADEC"
 
@@ -74,7 +75,9 @@ class IRF(metaclass=abc.ABCMeta):
         if isinstance(data, u.Quantity):
             self.data = data.value
             if not self.default_unit.is_equivalent(data.unit):
-                raise ValueError(f"Error: {data.unit} is not an allowed unit. {self.tag} requires {self.default_unit} data quantities.")
+                raise ValueError(
+                    f"Error: {data.unit} is not an allowed unit. {self.tag} requires {self.default_unit} data quantities."
+                )
             else:
                 self._unit = data.unit
         else:
@@ -224,7 +227,9 @@ class IRF(metaclass=abc.ABCMeta):
             IRF with new unit and converted data
         """
         data = self.quantity.to_value(unit)
-        return self.__class__(self.axes, data = data, meta = self.meta, interp_kwargs = self.interp_kwargs)
+        return self.__class__(
+            self.axes, data=data, meta=self.meta, interp_kwargs=self.interp_kwargs
+        )
 
     @property
     def axes(self):
@@ -448,7 +453,10 @@ class IRF(metaclass=abc.ABCMeta):
         data = table[column_name].quantity[0].transpose()
 
         return cls(
-            axes=axes, data=data.value, meta=table.meta, unit=data.unit,
+            axes=axes,
+            data=data.value,
+            meta=table.meta,
+            unit=data.unit,
             is_pointlike=gadf_is_pointlike(table.meta),
             fov_alignment=table.meta.get("FOVALIGN", "RADEC"),
         )
@@ -545,6 +553,32 @@ class IRF(metaclass=abc.ABCMeta):
         return self.__class__(
             data=data, axes=axes, meta=self.meta.copy(), unit=self.unit
         )
+
+    def data_allclose(self, other, **kwargs):
+        """Compare two data IRFs for equivalency
+
+        Parameters
+        ----------
+        other : the irf to compare against
+            `gammapy.irfs.IRF`
+        kwargs : dict
+                keywords passed to `numpy.allclose`
+                The default tolerance is rtol=1e-3
+
+        Returns
+        -------
+        state : bool
+        """
+
+        kwargs.setdefault("rtol", 1e-3)
+        if self.data.shape != other.data.shape:
+            return False
+        return np.allclose(self.quantity, other.quantity, **kwargs)
+
+    def __eq__(self, other):
+        class_eq = isinstance(other, self.__class__)
+        axes_eq = self.axes == other.axes
+        return bool(class_eq and axes_eq and self.data_allclose(other))
 
 
 class IRFMap:

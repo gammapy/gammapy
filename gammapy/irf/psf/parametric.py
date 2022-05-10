@@ -248,6 +248,28 @@ class ParametricPSF(PSF):
         value = self.evaluate_direct(rad=rad, **pars)
         return value
 
+    def data_allclose(self, other, **kwargs):
+        """Compare two PSF data for equivalency
+
+        Parameters
+        ----------
+        other : the irf to compare against
+                    `gammapy.irfs.IRF`
+        kwargs : dict
+                keywords passed to `numpy.allclose`
+
+        Returns
+        -------
+        state : bool
+        """
+        for key in self.quantity.keys():
+            if self.quantity[key].shape != other.quantity[key].shape:
+                return False
+            if not np.allclose(self.quantity[key], other.quantity[key], **kwargs):
+                return False
+
+        return True
+
 
 def get_sigmas_and_norms(**kwargs):
     """Convert scale and amplitude to norms"""

@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
+from copy import deepcopy
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
@@ -233,27 +234,29 @@ def test_bkg_3d_wrong_units():
     fov_lat = [0, 1, 2, 3] * u.deg
     fov_lat_axis = MapAxis.from_edges(fov_lat, name="fov_lat")
 
-    wrong_unit = u.cm**2 * u.s
+    wrong_unit = u.cm ** 2 * u.s
     data = np.ones((2, 3, 3)) * wrong_unit
     with pytest.raises(ValueError) as error:
-        Background3D(axes=[energy_axis, fov_lon_axis, fov_lat_axis],
-                 data=data)
-    assert error.match("Error: (.*) is not an allowed unit. (.*) requires (.*) data quantities.")
+        Background3D(axes=[energy_axis, fov_lon_axis, fov_lat_axis], data=data)
+    assert error.match(
+        "Error: (.*) is not an allowed unit. (.*) requires (.*) data quantities."
+    )
 
 
 def test_bkg_2d_wrong_units():
     energy = [0.1, 10, 1000] * u.TeV
     energy_axis = MapAxis.from_energy_edges(energy)
-    
+
     offset_axis = MapAxis.from_edges([0, 1, 2], unit="deg", name="offset")
 
-    wrong_unit = u.cm**2 * u.s
+    wrong_unit = u.cm ** 2 * u.s
     data = np.ones((energy_axis.nbin, offset_axis.nbin)) * wrong_unit
     bkg2d_test = Background2D(axes=[energy_axis, offset_axis])
     with pytest.raises(ValueError) as error:
-        Background2D(axes=[energy_axis, offset_axis],
-                 data=data)
-        assert error.match(f"Error: {wrong_unit} is not an allowed unit. {bkg2d_test.tag} requires {bkg2d_test.default_unit} data quantities.")
+        Background2D(axes=[energy_axis, offset_axis], data=data)
+        assert error.match(
+            f"Error: {wrong_unit} is not an allowed unit. {bkg2d_test.tag} requires {bkg2d_test.default_unit} data quantities."
+        )
 
 
 def test_background_2d_read_missing_hducls():
@@ -389,3 +392,11 @@ def test_plot(bkg_2d):
 
     with mpl_plot_check():
         bkg_2d.peek()
+
+
+def test_eq(bkg_2d):
+    bkg1 = deepcopy(bkg_2d)
+    assert bkg1 == bkg_2d
+
+    bkg1.data[0][0] = 10
+    assert not bkg1 == bkg_2d
