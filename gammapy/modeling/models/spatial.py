@@ -1037,7 +1037,7 @@ class TemplateSpatialModel(SpatialModel):
         Default arguments are {'method': 'linear', 'fill_value': 0}.
     Filename : str
         Name of the map file
-    data_deepcopy : bool
+    copy_data : bool
         Create a deepcopy of the map data or directly use the original. True by default, can be turned
         to False to save memory in case of large maps.
     """
@@ -1051,7 +1051,7 @@ class TemplateSpatialModel(SpatialModel):
         normalize=True,
         interp_kwargs=None,
         filename=None,
-        data_deepcopy=True
+        copy_data=True
     ):
         if (map.data < 0).any():
             log.warning("Map has negative values. Check and fix this!")
@@ -1077,20 +1077,22 @@ class TemplateSpatialModel(SpatialModel):
             map = map.copy(data=map.data, unit="sr-1")
             log.warning("Missing spatial template unit, assuming sr^-1")
 
-        if data_deepcopy:
+        if copy_data:
             self._map = map.copy()
         else:
             self._map = map.copy(data=map.data)
 
         self.meta = {} if meta is None else meta
+        
         interp_kwargs = {} if interp_kwargs is None else interp_kwargs
         interp_kwargs.setdefault("method", "linear")
         interp_kwargs.setdefault("fill_value", 0)
+        
         self._interp_kwargs = interp_kwargs
         self.filename = filename
         super().__init__()
 
-    def copy(self, data_deepcopy=False):
+    def copy(self, copy_data=False):
         """Copy model"""
         return self.__class__(
             map=self.map,
@@ -1098,7 +1100,7 @@ class TemplateSpatialModel(SpatialModel):
             normalize=self.normalize,
             interp_kwargs=self._interp_kwargs,
             filename=self.filename,
-            data_deepcopy=data_deepcopy
+            copy_data=copy_data
         )
 
     @property

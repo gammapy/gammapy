@@ -715,7 +715,7 @@ class TemplateNPredModel(ModelBase):
     spectral_model : `~gammapy.modeling.models.SpectralModel`
         Normalized spectral model,
         default is `~gammapy.modeling.models.PowerLawNormSpectralModel`
-    data_deepcopy : bool
+    copy_data : bool
         Create a deepcopy of the map data or directly use the original. True by default, can be turned
         to False to save memory in case of large maps.
     """
@@ -730,7 +730,7 @@ class TemplateNPredModel(ModelBase):
         name=None,
         filename=None,
         datasets_names=None,
-        data_deepcopy=True
+        copy_data=True
     ):
         if isinstance(map, Map):
             axis = map.geom.axes["energy"]
@@ -739,7 +739,7 @@ class TemplateNPredModel(ModelBase):
                     'Need an integrated map, energy axis node_type="edges"'
                 )
 
-        if data_deepcopy:
+        if copy_data:
             self.map = map.copy()
         else:
             self.map = map
@@ -764,7 +764,7 @@ class TemplateNPredModel(ModelBase):
         self.datasets_names = datasets_names
         super().__init__()
 
-    def copy(self, name=None, data_deepcopy=False):
+    def copy(self, name=None, copy_data=False):
         """Copy model"""
         name = make_name(name)
         return self.__class__(
@@ -773,7 +773,7 @@ class TemplateNPredModel(ModelBase):
             name=name,
             filename=self.filename,
             datasets_names=self.datasets_names,
-            data_deepcopy=data_deepcopy
+            copy_data=copy_data
         )
 
     @property
