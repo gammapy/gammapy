@@ -227,6 +227,17 @@ def test_background_model_io(tmpdir, background):
     assert bkg_read.filename == filename
 
 
+def test_background_model_copy(background):
+    background_copy = background.copy()
+    bkg = TemplateNPredModel(background_copy)
+    bkg.map.data +=  1.0
+    assert np.all(background_copy.data == background.data) # Check that the original map is unchanged
+
+    bkg_copy = bkg.copy()
+    bkg_copy.map.data +=  1.0
+    assert np.all(bkg_copy.map.data == bkg.map.data) # Check that the map has now changed
+
+
 def test_parameters(sky_models):
     parnames = [
         "index",

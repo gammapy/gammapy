@@ -327,7 +327,6 @@ def test_sky_diffuse_map_3d():
         model.plot()
 
 
-@requires_data()
 def test_sky_diffuse_map_normalize():
     # define model map with a constant value of 1
     model_map = Map.create(map_type="wcs", width=(10, 5), binsz=0.5, unit="sr-1")
@@ -343,6 +342,29 @@ def test_sky_diffuse_map_normalize():
     assert vals.unit == ""
     integral = vals.sum()
     assert_allclose(integral.value, 1, rtol=1e-4)
+
+
+def test_sky_diffuse_map_copy():
+    # define model map with a constant value of 1
+    model_map = Map.create(map_type="wcs", width=(1, 1), binsz=0.5, unit="sr-1")
+    model_map.data += 1.0
+
+    model = TemplateSpatialModel(model_map, normalize=False)
+    assert np.all(model.map.data == model_map.data)
+    model.map.data += 1
+    # Check that the original map is unchanged
+    assert np.all(model_map.data == np.ones_like(model_map.data))
+
+    model = TemplateSpatialModel(model_map, normalize=False, copy_data=False)
+    assert np.all(model.map.data == model_map.data)
+    model.map.data += 1
+    # Check that the original map has also been changed
+    assert np.all(model.map.data == model_map.data)
+
+    model_copy = model.copy(copy_data=False)
+    model_copy.map.data += 1
+    # Check that the original map has also been changed
+    assert np.all(model.map.data == model_copy.map.data)
 
 
 def test_evaluate_on_fk5_map():

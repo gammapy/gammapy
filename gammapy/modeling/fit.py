@@ -217,8 +217,9 @@ class Fit:
         # Copy final results into the parameters object
         parameters.set_parameter_factors(factors)
         parameters.check_limits()
+
         return OptimizeResult(
-            parameters=parameters,
+            models=datasets.models.copy(),
             total_stat=datasets.stat_sum(),
             backend=backend,
             method=kwargs.get("method", backend),
@@ -531,8 +532,8 @@ class CovarianceResult(FitStepResult):
 class OptimizeResult(FitStepResult):
     """Optimize result object."""
 
-    def __init__(self, parameters, nfev, total_stat, trace, **kwargs):
-        self._parameters = parameters
+    def __init__(self, models, nfev, total_stat, trace, **kwargs):
+        self._models = models
         self._nfev = nfev
         self._total_stat = total_stat
         self._trace = trace
@@ -541,7 +542,12 @@ class OptimizeResult(FitStepResult):
     @property
     def parameters(self):
         """Best fit parameters"""
-        return self._parameters
+        return self.models.parameters
+
+    @property
+    def models(self):
+        """Best fit models"""
+        return self._models
 
     @property
     def trace(self):
@@ -585,6 +591,12 @@ class FitResult:
     def parameters(self):
         """Best fit parameters of the optimization step"""
         return self.optimize_result.parameters
+
+    # TODO: is the convenience access needed?
+    @property
+    def models(self):
+        """Best fit parameters of the optimization step"""
+        return self.optimize_result.models
 
     # TODO: is the convenience access needed?
     @property

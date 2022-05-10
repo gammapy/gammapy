@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Cube models (axes: lon, lat, energy)."""
-import copy
 import numpy as np
 import astropy.units as u
 from astropy.nddata import NoOverlapError
@@ -716,6 +715,9 @@ class TemplateNPredModel(ModelBase):
     spectral_model : `~gammapy.modeling.models.SpectralModel`
         Normalized spectral model,
         default is `~gammapy.modeling.models.PowerLawNormSpectralModel`
+    copy_data : bool
+        Create a deepcopy of the map data or directly use the original. True by default, can be turned
+        to False to save memory in case of large maps.
     """
 
     tag = "TemplateNPredModel"
@@ -728,6 +730,7 @@ class TemplateNPredModel(ModelBase):
         name=None,
         filename=None,
         datasets_names=None,
+        copy_data=True
     ):
         if isinstance(map, Map):
             axis = map.geom.axes["energy"]
@@ -736,7 +739,11 @@ class TemplateNPredModel(ModelBase):
                     'Need an integrated map, energy axis node_type="edges"'
                 )
 
-        self.map = map
+        if copy_data:
+            self.map = map.copy()
+        else:
+            self.map = map
+
         self._name = make_name(name)
         self.filename = filename
 
@@ -756,6 +763,18 @@ class TemplateNPredModel(ModelBase):
                 )
         self.datasets_names = datasets_names
         super().__init__()
+
+    def copy(self, name=None, copy_data=False):
+        """Copy model"""
+        name = make_name(name)
+        return self.__class__(
+            map=self.map,
+            spectral_model=self.spectral_model,
+            name=name,
+            filename=self.filename,
+            datasets_names=self.datasets_names,
+            copy_data=copy_data
+        )
 
     @property
     def name(self):
@@ -843,12 +862,6 @@ class TemplateNPredModel(ModelBase):
             datasets_names=data.get("datasets_names"),
             filename=data.get("filename"),
         )
-
-    def copy(self, name=None):
-        """A deep copy."""
-        new = copy.deepcopy(self)
-        new._name = make_name(name)
-        return new
 
     def cutout(self, position, width, mode="trim", name=None):
         """Cutout background model.
