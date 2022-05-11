@@ -54,7 +54,7 @@ class PWN:
 
         Reference: https://ui.adsabs.harvard.edu/abs/2006ARA%26A..44...17G (Formula 8).
         """
-        term1 = (self.snr.e_sn ** 3 * self.pulsar.L_0 ** 2) / (self.snr.m_ejecta ** 5)
+        term1 = (self.snr.e_sn**3 * self.pulsar.L_0**2) / (self.snr.m_ejecta**5)
         return (1.44 * term1 ** (1.0 / 10) * t ** (6.0 / 5)).cgs
 
     @lazyproperty

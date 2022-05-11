@@ -236,6 +236,7 @@ class GeneralConfig(GammapyBaseConfig):
     datasets_file: Path = None
     models_file: Path = None
 
+
 class AnalysisConfig(GammapyBaseConfig):
     """Gammapy analysis configuration."""
 

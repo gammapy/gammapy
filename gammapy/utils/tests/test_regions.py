@@ -46,11 +46,7 @@ def test_compound_region_center_single():
 
 
 def test_compound_region_center_concentric():
-    regions_ds9 = (
-        "galactic;"
-        "circle(0,0,0.1);"
-        "circle(0,0,0.2);"
-    )
+    regions_ds9 = "galactic;" "circle(0,0,0.1);" "circle(0,0,0.2);"
 
     regions = Regions.parse(regions_ds9, format="ds9")
 

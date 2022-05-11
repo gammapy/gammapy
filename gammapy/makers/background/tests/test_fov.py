@@ -307,9 +307,10 @@ def test_fov_bkg_maker_mask_fit_handling(obs_dataset, exclusion_mask):
 @requires_data()
 def test_fov_bkg_maker_spectrumdataset(obs_dataset):
     from regions import CircleSkyRegion
+
     maker = FoVBackgroundMaker()
     energy_axis = MapAxis.from_edges([1, 10], unit="TeV", name="energy", interp="log")
-    region = CircleSkyRegion(obs_dataset._geom.center_skydir, Angle('0.1 deg'))
+    region = CircleSkyRegion(obs_dataset._geom.center_skydir, Angle("0.1 deg"))
     geom = RegionGeom.create(region, axes=[energy_axis])
     dataset = SpectrumDataset.create(geom)
 

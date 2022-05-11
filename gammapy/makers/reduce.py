@@ -111,7 +111,9 @@ class DatasetsMaker(Maker):
 
     def callback(self, dataset):
         if self.stack_datasets:
-            if isinstance(self._dataset, MapDataset) and isinstance(dataset, MapDatasetOnOff):
+            if isinstance(self._dataset, MapDataset) and isinstance(
+                dataset, MapDatasetOnOff
+            ):
                 dataset = dataset.to_map_dataset(dataset)
             self._dataset.stack(dataset)
         else:

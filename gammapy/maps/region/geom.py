@@ -18,7 +18,7 @@ from regions import (
     PointSkyRegion,
     Regions,
     RectanglePixelRegion,
-    SkyRegion
+    SkyRegion,
 )
 from gammapy.utils.regions import (
     compound_region_center,
@@ -334,7 +334,7 @@ class RegionGeom(Geom):
             # all other types of regions should implement area
             area = self.region.to_pixel(self.wcs).area
 
-        solid_angle = area * proj_plane_pixel_area(self.wcs) * u.deg ** 2
+        solid_angle = area * proj_plane_pixel_area(self.wcs) * u.deg**2
         return solid_angle.to("sr")
 
     def bin_volume(self):

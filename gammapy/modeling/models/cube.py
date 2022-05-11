@@ -73,12 +73,18 @@ class SkyModel(ModelBase):
         is_norm = np.array([par.is_norm for par in spectral_model.parameters])
 
         if not np.any(is_norm):
-            raise ValueError("Spectral model used with SkyModel requires a norm type parameter.")
+            raise ValueError(
+                "Spectral model used with SkyModel requires a norm type parameter."
+            )
 
-        is_free_norm = np.array([par.is_norm for par in spectral_model.parameters.free_parameters])
+        is_free_norm = np.array(
+            [par.is_norm for par in spectral_model.parameters.free_parameters]
+        )
 
         if np.sum(is_free_norm) > 1:
-            raise ValueError("Spectral model used with SkyModel can only have a single free norm type parameter.")
+            raise ValueError(
+                "Spectral model used with SkyModel can only have a single free norm type parameter."
+            )
 
         super().__init__()
 
@@ -761,7 +767,7 @@ class TemplateNPredModel(ModelBase):
         name=None,
         filename=None,
         datasets_names=None,
-        copy_data=True
+        copy_data=True,
     ):
         if isinstance(map, Map):
             axis = map.geom.axes["energy"]

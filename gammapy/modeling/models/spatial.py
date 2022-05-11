@@ -48,7 +48,7 @@ def compute_sigma_eff(lon_0, lat_0, lon, lat, phi, major_axis, e):
     """Effective radius, used for the evaluation of elongated models"""
     phi_0 = position_angle(lon_0, lat_0, lon, lat)
     d_phi = phi - phi_0
-    minor_axis = Angle(major_axis * np.sqrt(1 - e ** 2))
+    minor_axis = Angle(major_axis * np.sqrt(1 - e**2))
 
     a2 = (major_axis * np.sin(d_phi)) ** 2
     b2 = (minor_axis * np.cos(d_phi)) ** 2
@@ -131,7 +131,7 @@ class SpatialModel(ModelBase):
         pars = self.parameters
         sub_covar = self.covariance.get_subcovariance(["lon_0", "lat_0"]).data.copy()
         cos_lat = np.cos(self.lat_0.quantity.to_value("rad"))
-        sub_covar[0, 0] *= cos_lat ** 2.0
+        sub_covar[0, 0] *= cos_lat**2.0
         sub_covar[0, 1] *= cos_lat
         sub_covar[1, 0] *= cos_lat
         eig_vals, eig_vecs = np.linalg.eig(sub_covar)
@@ -228,7 +228,7 @@ class SpatialModel(ModelBase):
             upsampled_geom = wcs_geom.upsample(oversampling_factor, axis_name=None)
 
             # assume the upsampled solid angles are approximately factor**2 smaller
-            values = self.evaluate_geom(upsampled_geom) / oversampling_factor ** 2
+            values = self.evaluate_geom(upsampled_geom) / oversampling_factor**2
             upsampled = Map.from_geom(upsampled_geom, unit=values.unit)
             upsampled += values
 
@@ -570,7 +570,7 @@ class GaussianSpatialModel(SpatialModel):
             Model outline.
         """
 
-        minor_axis = Angle(self.sigma.quantity * np.sqrt(1 - self.e.quantity ** 2))
+        minor_axis = Angle(self.sigma.quantity * np.sqrt(1 - self.e.quantity**2))
         return EllipseSkyRegion(
             center=self.position,
             height=2 * x_sigma * self.sigma.quantity,
@@ -658,7 +658,7 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
             Model outline.
         """
 
-        minor_axis = Angle(self.r_0.quantity * np.sqrt(1 - self.e.quantity ** 2))
+        minor_axis = Angle(self.r_0.quantity * np.sqrt(1 - self.e.quantity**2))
         return EllipseSkyRegion(
             center=self.position,
             height=2 * x_r_0 * self.r_0.quantity,
@@ -725,7 +725,7 @@ class DiskSpatialModel(SpatialModel):
     @staticmethod
     def _evaluate_norm_factor(r_0, e):
         """Compute the normalization factor."""
-        semi_minor = r_0 * np.sqrt(1 - e ** 2)
+        semi_minor = r_0 * np.sqrt(1 - e**2)
 
         def integral_fcn(x, a, b):
             A = 1 / np.sin(a) ** 2
@@ -767,7 +767,7 @@ class DiskSpatialModel(SpatialModel):
 
     def to_region(self, **kwargs):
         """Model outline (`~regions.EllipseSkyRegion`)."""
-        minor_axis = Angle(self.r_0.quantity * np.sqrt(1 - self.e.quantity ** 2))
+        minor_axis = Angle(self.r_0.quantity * np.sqrt(1 - self.e.quantity**2))
         return EllipseSkyRegion(
             center=self.position,
             height=2 * self.r_0.quantity,
@@ -826,14 +826,14 @@ class ShellSpatialModel(SpatialModel):
         sep = angular_separation(lon, lat, lon_0, lat_0)
         radius_out = radius + width
 
-        norm = 3 / (2 * np.pi * (radius_out ** 3 - radius ** 3))
+        norm = 3 / (2 * np.pi * (radius_out**3 - radius**3))
 
         with np.errstate(invalid="ignore"):
             # np.where and np.select do not work with quantities, so we use the
             # workaround with indexing
-            value = np.sqrt(radius_out ** 2 - sep ** 2)
+            value = np.sqrt(radius_out**2 - sep**2)
             mask = sep < radius
-            value[mask] = (value - np.sqrt(radius ** 2 - sep ** 2))[mask]
+            value[mask] = (value - np.sqrt(radius**2 - sep**2))[mask]
             value[sep > radius_out] = 0
 
         return norm * value
@@ -901,14 +901,14 @@ class Shell2SpatialModel(SpatialModel):
         sep = angular_separation(lon, lat, lon_0, lat_0)
         r_in = (1 - eta) * r_0
 
-        norm = 3 / (2 * np.pi * (r_0 ** 3 - r_in ** 3))
+        norm = 3 / (2 * np.pi * (r_0**3 - r_in**3))
 
         with np.errstate(invalid="ignore"):
             # np.where and np.select do not work with quantities, so we use the
             # workaround with indexing
-            value = np.sqrt(r_0 ** 2 - sep ** 2)
+            value = np.sqrt(r_0**2 - sep**2)
             mask = sep < r_in
-            value[mask] = (value - np.sqrt(r_in ** 2 - sep ** 2))[mask]
+            value[mask] = (value - np.sqrt(r_in**2 - sep**2))[mask]
             value[sep > r_0] = 0
 
         return norm * value
@@ -1041,7 +1041,7 @@ class TemplateSpatialModel(SpatialModel):
         normalize=True,
         interp_kwargs=None,
         filename=None,
-        copy_data=True
+        copy_data=True,
     ):
         if (map.data < 0).any():
             log.warning("Map has negative values. Check and fix this!")

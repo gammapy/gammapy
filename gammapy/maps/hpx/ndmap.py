@@ -289,23 +289,29 @@ class HpxNDMap(HpxMap):
 
     def upsample(self, factor, order=0, preserve_counts=True, axis_name=None):
         if axis_name:
-            raise NotImplementedError("HpxNDMap.upsample does currently not support upsampling of non-spatial axes.")
+            raise NotImplementedError(
+                "HpxNDMap.upsample does currently not support upsampling of non-spatial axes."
+            )
 
-        if order !=0:
-            raise ValueError("HpxNDMap.upsample currently only supports nearest upsampling")
+        if order != 0:
+            raise ValueError(
+                "HpxNDMap.upsample currently only supports nearest upsampling"
+            )
 
         geom = self.geom.upsample(factor)
         coords = geom.get_coord()
         data = self.get_by_coord(coords)
 
         if preserve_counts:
-            data /= factor ** 2
+            data /= factor**2
 
         return self._init_copy(geom=geom, data=data)
 
     def downsample(self, factor, preserve_counts=True, axis_name=None):
         if axis_name:
-            raise NotImplementedError("HpxNDMap does currently not support upsampling of non-spatial axes.")
+            raise NotImplementedError(
+                "HpxNDMap does currently not support upsampling of non-spatial axes."
+            )
 
         geom = self.geom.downsample(factor)
         coords = self.geom.get_coord()
@@ -315,7 +321,7 @@ class HpxNDMap(HpxMap):
         map_out.fill_by_coord(coords, vals)
 
         if not preserve_counts:
-            map_out.data /= factor ** 2
+            map_out.data /= factor**2
 
         return map_out
 

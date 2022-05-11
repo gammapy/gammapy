@@ -487,6 +487,7 @@ class Fit:
 
 class FitStepResult:
     """Fit result base class"""
+
     def __init__(self, backend, method, success, message):
         self._success = success
         self._message = message
@@ -525,6 +526,7 @@ class FitStepResult:
 
 class CovarianceResult(FitStepResult):
     """Covariance result object."""
+
     def __init__(self, matrix=None, **kwargs):
         self._matrix = matrix
         super().__init__(**kwargs)
@@ -537,6 +539,7 @@ class CovarianceResult(FitStepResult):
 
 class OptimizeResult(FitStepResult):
     """Optimize result object."""
+
     def __init__(self, models, nfev, total_stat, trace, **kwargs):
         self._models = models
         self._nfev = nfev

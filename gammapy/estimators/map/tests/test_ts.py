@@ -27,7 +27,7 @@ def fake_dataset():
     dataset.psf = PSFMap.from_gauss(axis_true, sigma="0.05 deg")
     dataset.mask_safe += np.ones(dataset.data_shape, dtype=bool)
     dataset.background += 1
-    dataset.exposure += 1e12 * u.cm ** 2 * u.s
+    dataset.exposure += 1e12 * u.cm**2 * u.s
 
     spatial_model = PointSpatialModel()
     spectral_model = PowerLawSpectralModel(amplitude="1e-10 cm-2s-1TeV-1", index=2)

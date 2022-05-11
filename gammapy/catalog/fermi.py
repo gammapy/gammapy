@@ -274,7 +274,7 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
             else:
                 ss += fmt.format(
                     "Exponential factor", d["PLEC_Expfactor"], d["Unc_PLEC_Expfactor"]
-                )                
+                )
             ss += "{:<45s} : {:.4f} +- {:.4f}\n".format(
                 "Super-exponential cutoff index",
                 d["PLEC_Exp_Index"],
@@ -419,15 +419,15 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
                 "beta": self.data["Unc_LP_beta"],
             }
         elif spec_type == "PLSuperExpCutoff":
-            if  "PLEC_ExpfactorS" in self.data : 
+            if "PLEC_ExpfactorS" in self.data:
                 tag = "SuperExpCutoffPowerLaw4FGLDR3SpectralModel"
-                expfactor =  self.data["PLEC_ExpfactorS"]
+                expfactor = self.data["PLEC_ExpfactorS"]
                 expfactor_err = self.data["Unc_PLEC_ExpfactorS"]
                 index_1 = self.data["PLEC_IndexS"]
                 index_1_err = self.data["Unc_PLEC_IndexS"]
             else:
                 tag = "SuperExpCutoffPowerLaw4FGLSpectralModel"
-                expfactor =  self.data["PLEC_Expfactor"]
+                expfactor = self.data["PLEC_Expfactor"]
                 expfactor_err = self.data["Unc_PLEC_Expfactor"]
                 index_1 = self.data["PLEC_Index"]
                 index_1_err = self.data["Unc_PLEC_Index"]
@@ -444,7 +444,7 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
                 "index_1": index_1_err,
                 "index_2": np.nan_to_num(float(self.data["Unc_PLEC_Exp_Index"])),
                 "expfactor": expfactor_err,
-            }                
+            }
         else:
             raise ValueError(f"Invalid spec_type: {spec_type!r}")
 
@@ -1292,19 +1292,21 @@ class SourceCatalog4FGL(SourceCatalog):
         self.extended_sources_table = Table.read(filename, hdu="ExtendedSources")
         try:
             self.hist_table = Table.read(filename, hdu="Hist_Start")
-            if "MJDREFI"  not in self.hist_table.meta:
+            if "MJDREFI" not in self.hist_table.meta:
                 self.hist_table.meta = Table.read(filename, hdu="GTI").meta
         except KeyError:
             pass
         try:
             self.hist2_table = Table.read(filename, hdu="Hist2_Start")
-            if "MJDREFI"  not in self.hist_table.meta:
+            if "MJDREFI" not in self.hist_table.meta:
                 self.hist2_table.meta = Table.read(filename, hdu="GTI").meta
         except KeyError:
             pass
-        
+
         table = Table.read(filename, hdu="EnergyBounds")
-        self.flux_points_energy_edges = np.unique(np.c_[table["LowerEnergy"].quantity, table["UpperEnergy"].quantity])
+        self.flux_points_energy_edges = np.unique(
+            np.c_[table["LowerEnergy"].quantity, table["UpperEnergy"].quantity]
+        )
 
 
 class SourceCatalog2FHL(SourceCatalog):

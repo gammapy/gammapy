@@ -266,9 +266,7 @@ class RegionNDMap(Map):
         geom = RegionGeom.create(region=region, axes=axes, wcs=wcs, binsz_wcs=binsz_wcs)
         return cls(geom=geom, dtype=dtype, unit=unit, meta=meta, data=data)
 
-    def downsample(
-        self, factor, preserve_counts=True, axis_name=None, weights=None
-    ):
+    def downsample(self, factor, preserve_counts=True, axis_name=None, weights=None):
         """Downsample the non-spatial dimension by a given factor.
 
         By default the first axes is downsampled.

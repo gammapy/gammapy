@@ -34,7 +34,7 @@ class Covariance:
     def __init__(self, parameters, data=None):
         self.parameters = parameters
         if data is None:
-            data = np.diag([p.error ** 2 for p in self.parameters])
+            data = np.diag([p.error**2 for p in self.parameters])
 
         self._data = np.asanyarray(data, dtype=float)
 

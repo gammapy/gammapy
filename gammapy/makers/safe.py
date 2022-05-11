@@ -122,14 +122,18 @@ class SafeMaskMaker(Maker):
         if energy_max:
             energy_max = energy_max * u.TeV
         else:
-            log.warning(f"No default upper safe energy threshold defined for obs {observation.obs_id}")
+            log.warning(
+                f"No default upper safe energy threshold defined for obs {observation.obs_id}"
+            )
 
         energy_min = observation.aeff.meta.get("LO_THRES", None)
 
         if energy_min:
             energy_min = energy_min * u.TeV
         else:
-            log.warning(f"No default lower safe energy threshold defined for obs {observation.obs_id}")
+            log.warning(
+                f"No default lower safe energy threshold defined for obs {observation.obs_id}"
+            )
 
         return dataset._geom.energy_mask(energy_min=energy_min, energy_max=energy_max)
 
@@ -221,7 +225,9 @@ class SafeMaskMaker(Maker):
                 edisp = edisp.get_edisp_kernel(position=position, energy_axis=e_reco)
             else:
                 e_reco = dataset._geom.axes["energy"].edges
-                edisp = edisp.get_edisp_kernel(position=self.position, energy_axis=e_reco)
+                edisp = edisp.get_edisp_kernel(
+                    position=self.position, energy_axis=e_reco
+                )
 
         energy_min = edisp.get_bias_energy(self.bias_percent / 100)
         return geom.energy_mask(energy_min=energy_min[0])

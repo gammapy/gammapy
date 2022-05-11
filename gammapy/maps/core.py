@@ -392,7 +392,7 @@ class Map(abc.ABC):
         hdulist.writeto(str(make_path(filename)), overwrite=overwrite)
 
     def iter_by_axis(self, axis_name, keepdims=False):
-        """"Iterate over a given axis
+        """ "Iterate over a given axis
 
         Yields
         ------
@@ -961,7 +961,9 @@ class Map(abc.ABC):
         """
         coords = geom.get_coord()
         idx = self.geom.coord_to_idx(coords)
-        return self._resample_by_idx(idx, weights=weights, preserve_counts=preserve_counts)
+        return self._resample_by_idx(
+            idx, weights=weights, preserve_counts=preserve_counts
+        )
 
     @abc.abstractmethod
     def _resample_by_idx(self, idx, weights=None, preserve_counts=False):
@@ -1144,7 +1146,7 @@ class Map(abc.ABC):
 
             if axis.node_type == "center":
                 if axis.name == "energy" or axis.name == "energy_true":
-                    info =  energy_unit_format(axis.center[idx])
+                    info = energy_unit_format(axis.center[idx])
                 else:
                     info = f"{axis.center[idx]:.1f}"
             else:
@@ -1213,12 +1215,12 @@ class Map(abc.ABC):
         for axis in self.geom.axes:
             if axis.node_type == "center":
                 if axis.name == "energy" or axis.name == "energy_true":
-                    options =  energy_unit_format(axis.center)
+                    options = energy_unit_format(axis.center)
                 else:
                     options = axis.as_plot_labels
             elif axis.name == "energy" or axis.name == "energy_true":
                 E = energy_unit_format(axis.edges)
-                options = [f"{E[i]} - {E[i+1]}" for i in range(len(E)-1)]
+                options = [f"{E[i]} - {E[i+1]}" for i in range(len(E) - 1)]
             else:
                 options = axis.as_plot_labels
             interact_kwargs[axis.name] = SelectionSlider(

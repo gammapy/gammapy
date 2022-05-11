@@ -3,7 +3,12 @@ import logging
 import numpy as np
 import scipy.interpolate
 import astropy.units as u
-from astropy.coordinates import AltAz, CartesianRepresentation, SkyCoord, UnitSphericalRepresentation
+from astropy.coordinates import (
+    AltAz,
+    CartesianRepresentation,
+    SkyCoord,
+    UnitSphericalRepresentation,
+)
 from astropy.table import Table
 from astropy.units import Quantity
 from astropy.utils import lazyproperty
@@ -30,13 +35,14 @@ class PointingMode(Enum):
     * DRIFT: The telscope observes a fixed position in the AltAz frame
 
     OGIP also defines RASTER, SLEW and SCAN. These cannot be treated using
-    a fixed pointing position in either frame, so they would require the 
+    a fixed pointing position in either frame, so they would require the
     pointing table, which is at the moment not supported by gammapy.
 
     The H.E.S.S. data releases uses the not-defined value "WOBBLE",
     which we assume to be the same as "POINTING", making the assumption
     that one observation only contains a single wobble position.
     """
+
     POINTING = auto()
     DRIFT = auto()
 
@@ -198,10 +204,10 @@ class FixedPointingInfo:
                 " using ALT_PNT/AZ_PNT and incomplete frame"
             )
             return SkyCoord(
-                alt=self.meta.get('ALT_PNT', np.nan),
-                az=self.meta.get('AZ_PNT', np.nan),
+                alt=self.meta.get("ALT_PNT", np.nan),
+                az=self.meta.get("AZ_PNT", np.nan),
                 unit=u.deg,
-                frame=AltAz()
+                frame=AltAz(),
             )
 
         return self.radec.transform_to(frame)
@@ -249,7 +255,7 @@ class FixedPointingInfo:
         """
         if self.mode == PointingMode.POINTING:
             icrs = self.fixed_icrs
-            return SkyCoord(ra=icrs.ra, dec=icrs.dec, obstime=obstime, frame='icrs')
+            return SkyCoord(ra=icrs.ra, dec=icrs.dec, obstime=obstime, frame="icrs")
 
         if self.mode == PointingMode.DRIFT:
             return self.get_altaz(obstime).icrs
@@ -437,7 +443,9 @@ class PointingInfo:
         x_new = scipy.interpolate.interp1d(mjd_support, xyz.x)(mjd)
         y_new = scipy.interpolate.interp1d(mjd_support, xyz.y)(mjd)
         z_new = scipy.interpolate.interp1d(mjd_support, xyz.z)(mjd)
-        return CartesianRepresentation(x_new, y_new, z_new).represent_as(UnitSphericalRepresentation)
+        return CartesianRepresentation(x_new, y_new, z_new).represent_as(
+            UnitSphericalRepresentation
+        )
 
     def altaz_interpolate(self, time):
         """Interpolate pointing for a given time."""
@@ -459,7 +467,7 @@ class PointingInfo:
         return SkyCoord(
             self._interpolate_cartesian(self.time.mjd, self.radec, obstime.mjd),
             obstime=obstime,
-            frame='icrs',
+            frame="icrs",
         )
 
     def get_altaz(self, obstime):
@@ -479,7 +487,7 @@ class PointingInfo:
             Time for which to get the pointing position in AltAz frame
         """
         # give precedence to ALT_PNT / AZ_PNT if present
-        if 'ALT_PNT' in self.table and 'AZ_PNT' in self.table:
+        if "ALT_PNT" in self.table and "AZ_PNT" in self.table:
             altaz = self.altaz_from_table
             frame = AltAz(obstime=obstime, location=self.location)
             return SkyCoord(

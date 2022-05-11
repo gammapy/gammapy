@@ -20,6 +20,7 @@ class MeyerCrabSpectralModel(SpectralModel):
 
     Reference: https://ui.adsabs.harvard.edu/abs/2010A%26A...523A...2M, Appendix D
     """
+
     norm = Parameter("norm", value=1, frozen=True, is_norm=True)
     coefficients = [-0.00449161, 0, 0.0473174, -0.179475, -0.53616, -10.2708]
 
@@ -29,7 +30,7 @@ class MeyerCrabSpectralModel(SpectralModel):
         log_energy = np.log10(energy.to_value("TeV"))
         log_flux = polynomial(log_energy)
         flux = u.Quantity(np.power(10, log_flux), "erg / (cm2 s)", copy=False)
-        return norm * flux / energy ** 2
+        return norm * flux / energy**2
 
 
 def create_crab_spectral_model(reference="meyer"):

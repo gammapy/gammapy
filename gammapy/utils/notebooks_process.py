@@ -16,7 +16,7 @@ from gammapy.scripts.jupyter import notebook_run
 from gammapy.utils.scripts import get_notebooks_paths
 
 parser = ArgumentParser()
-parser.add_argument('-j', '--n-jobs', type=int)
+parser.add_argument("-j", "--n-jobs", type=int)
 
 log = logging.getLogger(__name__)
 PATH_CFG = Path(__file__).resolve().parent / ".." / ".."
@@ -126,7 +126,7 @@ def build_notebooks(args):
         write_notebook(Path(args.src).resolve())
         return
 
-    log.info('Found %d notebooks', len(notebooks))
+    log.info("Found %d notebooks", len(notebooks))
     with Pool(args.n_jobs) as pool:
         pool.map(write_notebook, notebooks)
 

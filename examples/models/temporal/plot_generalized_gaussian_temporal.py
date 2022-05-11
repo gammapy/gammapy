@@ -22,20 +22,21 @@ from astropy import units as u
 from astropy.units import Quantity
 from astropy.time import Time
 import matplotlib.pyplot as plt
-from gammapy.modeling.models import (GeneralizedGaussianTemporalModel,
+from gammapy.modeling.models import (
+    GeneralizedGaussianTemporalModel,
     Models,
     PowerLawSpectralModel,
-    SkyModel)
+    SkyModel,
+)
 
 t_rise = Quantity(0.1, "d")
 t_decay = Quantity(1, "d")
-eta = Quantity(2/3, "")
+eta = Quantity(2 / 3, "")
 t_ref = Time("2020-10-01")
 time_range = [t_ref - 1 * u.d, t_ref + 1 * u.d]
-gen_gaussian_model = GeneralizedGaussianTemporalModel(t_ref = t_ref.mjd * u.d,\
-                                                  t_rise = t_rise,\
-                                                  t_decay = t_decay,\
-                                                  eta = eta)
+gen_gaussian_model = GeneralizedGaussianTemporalModel(
+    t_ref=t_ref.mjd * u.d, t_rise=t_rise, t_decay=t_decay, eta=eta
+)
 gen_gaussian_model.plot(time_range)
 plt.grid(which="both")
 

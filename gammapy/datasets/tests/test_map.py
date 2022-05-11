@@ -319,7 +319,7 @@ def test_to_spectrum_dataset(sky_model, geom, geom_etrue, edisp_mode):
         == 3
     )
 
-    assert_allclose(spectrum_dataset.edisp.exposure_map.data[1], 3.069227e+09, rtol=1e-5)
+    assert_allclose(spectrum_dataset.edisp.exposure_map.data[1], 3.069227e09, rtol=1e-5)
     assert np.sum(spectrum_dataset_mask.counts.data) == 0
     assert spectrum_dataset_mask.data_shape == (2, 1, 1)
     assert spectrum_dataset_corrected.exposure.unit == "m2s"
@@ -687,6 +687,7 @@ def test_map_fit(sky_model, geom, geom_etrue):
     dataset_1.npred()
     assert not dataset_1.evaluators["test-model"].contributes
 
+
 @requires_data()
 def test_map_fit_linked(sky_model, geom, geom_etrue):
     dataset_1 = get_map_dataset(geom, geom_etrue, name="test-1")
@@ -721,7 +722,7 @@ def test_map_fit_linked(sky_model, geom, geom_etrue):
     assert sky_model2.parameters["reference"] is sky_model.parameters["reference"]
 
     assert len(datasets.models.parameters.unique_parameters) == 20
-    assert datasets.models.covariance.shape == (22,22)
+    assert datasets.models.covariance.shape == (22, 22)
 
 
 @requires_data()
@@ -848,7 +849,7 @@ def test_stack(sky_model):
         energy_axis=axis, energy_axis_true=axis_etrue, geom=geom
     )
     edisp.exposure_map.quantity = (
-        1e0 * u.m ** 2 * u.s * np.ones(edisp.exposure_map.data.shape)
+        1e0 * u.m**2 * u.s * np.ones(edisp.exposure_map.data.shape)
     )
 
     bkg1 = Map.from_geom(geom)
@@ -858,7 +859,7 @@ def test_stack(sky_model):
     cnt1.data = 1.0 * np.ones(cnt1.data.shape)
 
     exp1 = Map.from_geom(geom_etrue)
-    exp1.quantity = 1e7 * u.m ** 2 * u.s * np.ones(exp1.data.shape)
+    exp1.quantity = 1e7 * u.m**2 * u.s * np.ones(exp1.data.shape)
 
     mask1 = Map.from_geom(geom)
     mask1.data = np.ones(mask1.data.shape, dtype=bool)
@@ -880,7 +881,7 @@ def test_stack(sky_model):
     cnt2.data = 1.0 * np.ones(cnt2.data.shape)
 
     exp2 = Map.from_geom(geom_etrue)
-    exp2.quantity = 1e7 * u.m ** 2 * u.s * np.ones(exp2.data.shape)
+    exp2.quantity = 1e7 * u.m**2 * u.s * np.ones(exp2.data.shape)
 
     mask2 = Map.from_geom(geom)
     mask2.data = np.ones(mask2.data.shape, dtype=bool)
@@ -1098,11 +1099,12 @@ def get_map_dataset_onoff(images, **kwargs):
         **kwargs,
     )
 
+
 @requires_data()
 @pytest.mark.parametrize("lazy", [False, True])
 def test_map_dataset_on_off_fits_io(images, lazy, tmp_path):
     dataset = get_map_dataset_onoff(images)
-    dataset.meta_table = Table(data=[[1.0*u.h], [111]], names=["livetime", "obs_id"])
+    dataset.meta_table = Table(data=[[1.0 * u.h], [111]], names=["livetime", "obs_id"])
     gti = GTI.create([0 * u.s], [1 * u.h], reference_time="2010-01-01T00:00:00")
     dataset.gti = gti
 
@@ -1145,7 +1147,7 @@ def test_map_dataset_on_off_fits_io(images, lazy, tmp_path):
     else:
         dataset_new = MapDatasetOnOff.read(tmp_path / "test.fits", lazy=lazy)
         assert dataset_new.mask.data.dtype == bool
-        assert dataset_new.meta_table["livetime"] == 1.0*u.h
+        assert dataset_new.meta_table["livetime"] == 1.0 * u.h
         assert dataset_new.meta_table["obs_id"] == 111
 
         assert_allclose(dataset.counts.data, dataset_new.counts.data)
@@ -1169,6 +1171,7 @@ def test_map_dataset_on_off_fits_io(images, lazy, tmp_path):
         assert dataset.edisp.edisp_map == dataset_new.edisp.edisp_map
         assert dataset.edisp.exposure_map == dataset_new.edisp.exposure_map
 
+
 @requires_data()
 def test_map_datasets_on_off_fits_io(images, tmp_path):
     dataset = get_map_dataset_onoff(images)
@@ -1186,6 +1189,7 @@ def test_map_datasets_on_off_fits_io(images, tmp_path):
     assert_allclose(dataset.acceptance_off.data, dataset_new.acceptance_off.data)
     assert_allclose(dataset.exposure.data, dataset_new.exposure.data)
     assert_allclose(dataset.mask_safe, dataset_new.mask_safe)
+
 
 def test_create_onoff(geom):
     # tests empty datasets created

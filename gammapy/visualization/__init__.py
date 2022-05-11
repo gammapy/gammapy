@@ -18,4 +18,3 @@ __all__ = [
     "plot_spectrum_datasets_off_regions",
     "plot_theta_squared_table",
 ]
-

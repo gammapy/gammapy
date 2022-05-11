@@ -23,7 +23,6 @@ def test_irf_init_quantity():
     assert np.all(irf.quantity == irf2.quantity)
 
 
-
 def test_immutable():
     energy_axis = MapAxis.from_energy_bounds(10, 100, 10, unit="TeV", name="energy")
     offset_axis = MapAxis.from_bounds(0, 2.5, 5, unit="deg", name="offset")

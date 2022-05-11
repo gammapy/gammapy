@@ -14,7 +14,7 @@ from multiprocessing.pool import Pool
 import tempfile
 
 parser = ArgumentParser()
-parser.add_argument('-j', '--n-jobs', type=int)
+parser.add_argument("-j", "--n-jobs", type=int)
 
 log = logging.getLogger(__name__)
 PATH_CFG = Path(__file__).resolve().parent / ".." / ".."
@@ -44,9 +44,9 @@ def main():
         sys.exit(1)
 
     notebooks = list(get_notebooks_paths())
-    log.info('Found %d notebooks', len(notebooks))
+    log.info("Found %d notebooks", len(notebooks))
 
-    with tempfile.TemporaryDirectory(suffix='_gammapy_nb_test') as tmp_dir:
+    with tempfile.TemporaryDirectory(suffix="_gammapy_nb_test") as tmp_dir:
         tmp_dir = Path(tmp_dir)
 
         with Pool(args.n_jobs) as pool:

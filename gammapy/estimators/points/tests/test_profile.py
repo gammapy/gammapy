@@ -25,7 +25,7 @@ def get_simple_dataset_on_off():
     dataset.counts_off += 1
     dataset.acceptance += 1
     dataset.acceptance_off += 1
-    dataset.exposure += 1000 * u.m ** 2 * u.s
+    dataset.exposure += 1000 * u.m**2 * u.s
     dataset.gti = GTI.create([0 * u.s], [5 * u.h], reference_time="2010-01-01T00:00:00")
     return dataset
 

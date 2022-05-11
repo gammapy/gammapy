@@ -155,16 +155,15 @@ class WcsNDMap(WcsMap):
         interp_data = fn(tuple(pix), clip=False)
 
         if fill_value is not None:
-             idxs = self.geom.pix_to_idx(pix, clip=False)
-             invalid = np.broadcast_arrays(*[idx == -1 for idx in idxs])
-             mask = np.any(invalid, axis=0)
-             if not interp_data.shape:
-                 mask = mask.squeeze()
-             interp_data[mask] =fill_value
-             interp_data[~np.isfinite(interp_data)] = fill_value
+            idxs = self.geom.pix_to_idx(pix, clip=False)
+            invalid = np.broadcast_arrays(*[idx == -1 for idx in idxs])
+            mask = np.any(invalid, axis=0)
+            if not interp_data.shape:
+                mask = mask.squeeze()
+            interp_data[mask] = fill_value
+            interp_data[~np.isfinite(interp_data)] = fill_value
 
         return interp_data
-
 
     def _interp_by_coord_griddata(self, coords, method="linear"):
         grid_coords = self.geom.get_coord()

@@ -3,7 +3,9 @@
 from gammapy.utils.registry import Registry
 from .core import Model, Models, DatasetModels, ModelBase
 from .cube import (
-    SkyModel, FoVBackgroundModel, TemplateNPredModel,
+    SkyModel,
+    FoVBackgroundModel,
+    TemplateNPredModel,
     create_fermi_isotropic_diffuse_model,
 )
 from .spatial import (
@@ -62,7 +64,6 @@ from .temporal import (
     PowerLawTemporalModel,
     SineTemporalModel,
 )
-
 
 
 __all__ = [

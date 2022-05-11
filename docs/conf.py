@@ -41,10 +41,16 @@ numfig = False
 intersphinx_mapping.pop("h5py", None)
 intersphinx_mapping["matplotlib"] = ("https://matplotlib.org/", None)
 intersphinx_mapping["astropy"] = ("http://docs.astropy.org/en/latest/", None)
-intersphinx_mapping["regions"] = ("https://astropy-regions.readthedocs.io/en/latest/", None)
+intersphinx_mapping["regions"] = (
+    "https://astropy-regions.readthedocs.io/en/latest/",
+    None,
+)
 intersphinx_mapping["reproject"] = ("https://reproject.readthedocs.io/en/latest/", None)
 intersphinx_mapping["naima"] = ("https://naima.readthedocs.io/en/latest/", None)
-intersphinx_mapping["gadf"] = ("https://gamma-astro-data-formats.readthedocs.io/en/latest/", None)
+intersphinx_mapping["gadf"] = (
+    "https://gamma-astro-data-formats.readthedocs.io/en/latest/",
+    None,
+)
 intersphinx_mapping["iminuit"] = ("https://iminuit.readthedocs.io/en/latest/", None)
 intersphinx_mapping["pandas"] = ("https://pandas.pydata.org/pandas-docs/stable/", None)
 

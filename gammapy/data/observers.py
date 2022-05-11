@@ -102,5 +102,7 @@ observatory_locations["astri"] = EarthLocation(
 
 # coordinates from fact-tools (based on google earth)
 observatory_locations["fact"] = EarthLocation(
-    lat=28.761647 * u.deg, lon=-17.891116 * u.deg, height=2200 * u.m,
+    lat=28.761647 * u.deg,
+    lon=-17.891116 * u.deg,
+    height=2200 * u.m,
 )

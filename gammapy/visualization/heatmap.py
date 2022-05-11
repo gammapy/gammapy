@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+
 # taken from the matploltlib documentation
 # https://matplotlib.org/3.1.0/gallery/images_contours_and_fields/image_annotated_heatmap.html#sphx-glr-gallery-images-contours-and-fields-image-annotated-heatmap-py
 

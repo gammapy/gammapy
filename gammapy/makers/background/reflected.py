@@ -498,7 +498,9 @@ class ReflectedRegionsBackgroundMaker(Maker):
 
         is_point_sky_region = geom.is_all_point_sky_regions
 
-        if rad_max and not is_rad_max_compatible_region_geom(rad_max=rad_max, geom=geom):
+        if rad_max and not is_rad_max_compatible_region_geom(
+            rad_max=rad_max, geom=geom
+        ):
             raise ValueError(
                 "Must use `PointSkyRegion` or `CircleSkyRegion` with rad max equivalent radius in point-like analysis,"
                 f" got {type(geom.region)} instead"

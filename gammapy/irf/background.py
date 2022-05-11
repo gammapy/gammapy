@@ -75,7 +75,10 @@ class BackgroundIRF(IRF):
             data = data.transpose()
 
         return cls(
-            axes=axes, data=data.value, meta=table.meta, unit=data.unit,
+            axes=axes,
+            data=data.value,
+            meta=table.meta,
+            unit=data.unit,
             is_pointlike=gadf_is_pointlike(table.meta),
             fov_alignment=table.meta.get("FOVALIGN", "RADEC"),
         )

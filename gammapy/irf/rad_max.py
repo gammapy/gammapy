@@ -80,7 +80,7 @@ class RadMax2D(IRF):
             interp_kwargs={"method": "nearest", "fill_value": None},
         )
 
-    def plot_rad_max_vs_energy(self, ax=None,  **kwargs):
+    def plot_rad_max_vs_energy(self, ax=None, **kwargs):
         """Plot rad max value against energy.
 
         Parameters
@@ -119,5 +119,3 @@ class RadMax2D(IRF):
     def is_fixed_rad_max(self):
         """Returns True if rad_max axes are flat."""
         return self.axes.is_flat
-
-

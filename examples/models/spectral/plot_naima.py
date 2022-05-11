@@ -38,7 +38,7 @@ particle_distribution = naima.models.ExponentialCutoffPowerLaw(
 )
 radiative_model = naima.radiative.InverseCompton(
     particle_distribution,
-    seed_photon_fields=["CMB", ["FIR", 26.5 * u.K, 0.415 * u.eV / u.cm ** 3]],
+    seed_photon_fields=["CMB", ["FIR", 26.5 * u.K, 0.415 * u.eV / u.cm**3]],
     Eemin=100 * u.GeV,
 )
 

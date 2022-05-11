@@ -68,7 +68,7 @@ def shape_2N(shape, N=3):
         New shape extended to integers divisible by 2^N
     """
     shape = np.array(shape)
-    new_shape = shape + (2 ** N - np.mod(shape, 2 ** N))
+    new_shape = shape + (2**N - np.mod(shape, 2**N))
     return tuple(new_shape)
 
 

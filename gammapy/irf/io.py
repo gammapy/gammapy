@@ -10,7 +10,6 @@ __all__ = ["load_cta_irfs", "load_irf_dict_from_file"]
 log = logging.getLogger(__name__)
 
 
-
 IRF_DL3_AXES_SPECIFICATION = {
     "THETA": {"name": "offset", "interp": "lin"},
     "ENERG": {"name": "energy_true", "interp": "log"},
@@ -22,16 +21,15 @@ IRF_DL3_AXES_SPECIFICATION = {
 }
 
 COMMON_HEADERS = {
-    'HDUCLASS': 'GADF',
-    'HDUDOC': 'https://github.com/open-gamma-ray-astro/gamma-astro-data-formats',
-    'HDUVERS': '0.2',
+    "HDUCLASS": "GADF",
+    "HDUDOC": "https://github.com/open-gamma-ray-astro/gamma-astro-data-formats",
+    "HDUVERS": "0.2",
 }
 
 COMMON_IRF_HEADERS = {
     **COMMON_HEADERS,
-    'HDUCLAS1': 'RESPONSE',
+    "HDUCLAS1": "RESPONSE",
 }
-
 
 
 # The key is the class tag.
@@ -45,7 +43,7 @@ IRF_DL3_HDU_SPECIFICATION = {
             "HDUCLAS2": "BKG",
             "HDUCLAS3": "FULL-ENCLOSURE",  # added here to have HDUCLASN in order
             "HDUCLAS4": "BKG_3D",
-        }
+        },
     },
     "bkg_2d": {
         "extname": "BACKGROUND",
@@ -55,7 +53,7 @@ IRF_DL3_HDU_SPECIFICATION = {
             "HDUCLAS2": "BKG",
             "HDUCLAS3": "FULL-ENCLOSURE",  # added here to have HDUCLASN in order
             "HDUCLAS4": "BKG_2D",
-        }
+        },
     },
     "edisp_2d": {
         "extname": "ENERGY DISPERSION",
@@ -65,7 +63,7 @@ IRF_DL3_HDU_SPECIFICATION = {
             "HDUCLAS2": "EDISP",
             "HDUCLAS3": "FULL-ENCLOSURE",  # added here to have HDUCLASN in order
             "HDUCLAS4": "EDISP_2D",
-        }
+        },
     },
     "psf_table": {
         "extname": "PSF_2D_TABLE",
@@ -75,7 +73,7 @@ IRF_DL3_HDU_SPECIFICATION = {
             "HDUCLAS2": "RPSF",
             "HDUCLAS3": "FULL-ENCLOSURE",  # added here to have HDUCLASN in order
             "HDUCLAS4": "PSF_TABLE",
-        }
+        },
     },
     "psf_3gauss": {
         "extname": "PSF_2D_GAUSS",
@@ -92,7 +90,7 @@ IRF_DL3_HDU_SPECIFICATION = {
             "HDUCLAS2": "RPSF",
             "HDUCLAS3": "FULL-ENCLOSURE",  # added here to have HDUCLASN in order
             "HDUCLAS4": "PSF_3GAUSS",
-        }
+        },
     },
     "psf_king": {
         "extname": "PSF_2D_KING",
@@ -105,7 +103,7 @@ IRF_DL3_HDU_SPECIFICATION = {
             "HDUCLAS2": "RPSF",
             "HDUCLAS3": "FULL-ENCLOSURE",  # added here to have HDUCLASN in order
             "HDUCLAS4": "PSF_KING",
-        }
+        },
     },
     "aeff_2d": {
         "extname": "EFFECTIVE AREA",
@@ -115,7 +113,7 @@ IRF_DL3_HDU_SPECIFICATION = {
             "HDUCLAS2": "EFF_AREA",
             "HDUCLAS3": "FULL-ENCLOSURE",  # added here to have HDUCLASN in order
             "HDUCLAS4": "AEFF_2D",
-        }
+        },
     },
     "rad_max_2d": {
         "extname": "RAD_MAX",
@@ -125,7 +123,7 @@ IRF_DL3_HDU_SPECIFICATION = {
             "HDUCLAS2": "RAD_MAX",
             "HDUCLAS3": "POINT-LIKE",
             "HDUCLAS4": "RAD_MAX_2D",
-        }
+        },
     },
 }
 
@@ -138,8 +136,8 @@ IRF_MAP_HDU_SPECIFICATION = {
 
 
 def gadf_is_pointlike(header):
-    '''Check if a GADF IRF is pointlike based on the header'''
-    return header.get('HDUCLAS3') == "POINT-LIKE"
+    """Check if a GADF IRF is pointlike based on the header"""
+    return header.get("HDUCLAS3") == "POINT-LIKE"
 
 
 def load_cta_irfs(filename):
@@ -251,6 +249,6 @@ def load_irf_dict_from_file(filename):
             continue
 
     if is_pointlike and "rad_max" not in irf_dict:
-        irf_dict["rad_max"] = RadMax2D.from_irf(irf_dict['aeff'])
+        irf_dict["rad_max"] = RadMax2D.from_irf(irf_dict["aeff"])
 
     return irf_dict

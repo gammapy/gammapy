@@ -66,7 +66,7 @@ def _confidence_scipy_brentq(
 ):
 
     ts_diff = TSDifference(
-        function, parameters, parameter, reoptimize, ts_diff=sigma ** 2
+        function, parameters, parameter, reoptimize, ts_diff=sigma**2
     )
 
     lower_bound = parameter.factor

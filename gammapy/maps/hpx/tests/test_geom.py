@@ -97,7 +97,7 @@ def test_ravel_hpx_index():
 
 
 def make_test_nside(nside, nside0, nside1):
-    npix = 12 * nside ** 2
+    npix = 12 * nside**2
     nside_test = np.concatenate(
         (nside0 * np.ones(npix // 2, dtype=int), nside1 * np.ones(npix // 2, dtype=int))
     )
@@ -118,7 +118,7 @@ def make_test_nside(nside, nside0, nside1):
 def test_get_superpixels(nside_subpix, nside_superpix, nest):
     import healpy as hp
 
-    npix = 12 * nside_subpix ** 2
+    npix = 12 * nside_subpix**2
     subpix = np.arange(npix)
     ang_subpix = hp.pix2ang(nside_subpix, subpix, nest=nest)
     superpix = get_superpixels(subpix, nside_subpix, nside_superpix, nest=nest)
@@ -144,7 +144,7 @@ def test_get_superpixels(nside_subpix, nside_superpix, nest):
 def test_get_subpixels(nside_superpix, nside_subpix, nest):
     import healpy as hp
 
-    npix = 12 * nside_superpix ** 2
+    npix = 12 * nside_superpix**2
     superpix = np.arange(npix)
     subpix = get_subpixels(superpix, nside_superpix, nside_subpix, nest=nest)
     ang1 = hp.pix2ang(nside_subpix, subpix, nest=nest)
@@ -349,7 +349,7 @@ def test_hpx_nside_to_order():
     )
 
     order = np.linspace(1, 10, 10).astype(int)
-    nside = 2 ** order
+    nside = 2**order
     assert_allclose(nside_to_order(nside), order)
     assert_allclose(nside_to_order(nside).reshape((2, 5)), order.reshape((2, 5)))
 
@@ -627,7 +627,7 @@ def test_hpxgeom_from_header():
     pars = {
         "HPX_REG": "DISK(110.,75.,2.)",
         "EXTNAME": "SKYMAP",
-        "NSIDE": 2 ** 6,
+        "NSIDE": 2**6,
         "ORDER": 6,
         "PIXTYPE": "HEALPIX",
         "ORDERING": "RING",

@@ -47,7 +47,7 @@ def test_set_subcovariance(covariance_diagonal, covariance):
 
 def test_get_subcovariance(covariance_diagonal, covariance):
     covar = covariance_diagonal.get_subcovariance(covariance.parameters)
-    assert_allclose(np.diag(covar), [0.1 ** 2, 0.2 ** 2])
+    assert_allclose(np.diag(covar), [0.1**2, 0.2**2])
 
 
 def test_scipy_mvn(covariance):

@@ -10,6 +10,7 @@ from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import requires_data
 import logging
 
+
 @pytest.fixture()
 def data_store():
     return DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
@@ -81,7 +82,10 @@ def test_datastore_get_observations(data_store, caplog):
         assert "Skipping missing obs_id: 11111" in [_.message for _ in caplog.records]
     with caplog.at_level(logging.INFO):
         observations = data_store.get_observations([11111, 23523], skip_missing=True)
-        assert "Observations selected: 1 out of 2." in [_.message for _ in caplog.records]
+        assert "Observations selected: 1 out of 2." in [
+            _.message for _ in caplog.records
+        ]
+
 
 @requires_data()
 def test_broken_links_datastore(data_store):
@@ -143,6 +147,7 @@ def data_store_dc1(monkeypatch):
     monkeypatch.setenv("CALDB", str(caldb_path))
     return DataStore.from_events_files(paths)
 
+
 @requires_data()
 def test_datastore_from_events(data_store_dc1):
     # data_store_dc1 fixture is needed to set CALDB
@@ -162,11 +167,15 @@ def test_datastoremaker_obs_table(data_store_dc1):
     assert len(table.colnames) == 22
     assert table["CALDB"][0] == "1dc"
     assert table["IRF"][0] == "South_z20_50h"
-    assert table["IRF_FILENAME"][0] == "$CALDB/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
+    assert (
+        table["IRF_FILENAME"][0]
+        == "$CALDB/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
+    )
 
     # TODO: implement https://github.com/gammapy/gammapy/issues/1218 and add tests here
     # assert table.time_start[0].iso == "spam"
     # assert table.time_start[-1].iso == "spam"
+
 
 @requires_data()
 def test_datastoremaker_hdu_table(data_store_dc1):
@@ -176,6 +185,7 @@ def test_datastoremaker_hdu_table(data_store_dc1):
     hdu_class = ["events", "gti", "aeff_2d", "edisp_2d", "psf_3gauss", "bkg_3d"]
     assert list(data_store_dc1.hdu_table["HDU_CLASS"]) == 4 * hdu_class
     assert table["FILE_DIR"][2] == "$CALDB/data/cta/1dc/bcf/South_z20_50h"
+
 
 @requires_data()
 def test_datastoremaker_observation(data_store_dc1):
@@ -193,10 +203,12 @@ def test_datastoremaker_observation(data_store_dc1):
     assert obs.psf.__class__.__name__ == "EnergyDependentMultiGaussPSF"
 
 
-@requires_data('gammapy-data')
+@requires_data("gammapy-data")
 def test_datastore_fixed_rad_max():
     data_store = DataStore.from_dir("$GAMMAPY_DATA/joint-crab/dl3/magic")
-    observations = data_store.get_observations([5029748], required_irf=['aeff', 'edisp'])
+    observations = data_store.get_observations(
+        [5029748], required_irf=["aeff", "edisp"]
+    )
 
     assert len(observations) == 1
     obs = observations[0]
@@ -206,14 +218,14 @@ def test_datastore_fixed_rad_max():
     assert u.allclose(obs.rad_max.quantity, np.sqrt(0.02) * u.deg)
 
     # test it also works with edisp (removing aeff)
-    obs = data_store.get_observations([5029748], required_irf=['aeff', 'edisp'])[0]
+    obs = data_store.get_observations([5029748], required_irf=["aeff", "edisp"])[0]
     obs.aeff = None
     assert obs.rad_max is not None
     assert obs.rad_max.quantity.shape == (1, 1)
     assert u.allclose(obs.rad_max.quantity, 0.1414213 * u.deg)
 
     # removing the last irf means we have no rad_max info
-    obs = data_store.get_observations([5029748], required_irf=['aeff', 'edisp'])[0]
+    obs = data_store.get_observations([5029748], required_irf=["aeff", "edisp"])[0]
     obs.aeff = None
     obs.edisp = None
     assert obs.rad_max is None
@@ -221,7 +233,7 @@ def test_datastore_fixed_rad_max():
 
 @requires_data()
 def test_datastore_header_info_in_obs_info(data_store):
-    '''Test information from the obs index header is propagated into obs_info'''
+    """Test information from the obs index header is propagated into obs_info"""
     obs = data_store.obs(obs_id=23523)
 
     assert "MJDREFI" in obs.obs_info
@@ -230,6 +242,7 @@ def test_datastore_header_info_in_obs_info(data_store):
     assert "GEOLAT" in obs.obs_info
     # make sure we don't add the OBS_INDEX HDUCLAS
     assert "HDUCLAS1" not in obs.obs_info
+
 
 @requires_data()
 def test_datastore_bad_name():

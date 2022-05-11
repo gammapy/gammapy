@@ -31,7 +31,7 @@ def fake_psf3d(sigma=0.15 * u.deg, shape="gauss"):
 
     Rmid = 0.5 * (R[:-1] + R[1:])
     if shape == "gauss":
-        val = np.exp(-0.5 * Rmid ** 2 / sigma ** 2)
+        val = np.exp(-0.5 * Rmid**2 / sigma**2)
     else:
         val = Rmid < sigma
 
@@ -45,7 +45,7 @@ def fake_psf3d(sigma=0.15 * u.deg, shape="gauss"):
     )
 
 
-def fake_aeff2d(area=1e6 * u.m ** 2):
+def fake_aeff2d(area=1e6 * u.m**2):
     energy_axis_true = MapAxis.from_energy_bounds(
         "0.1 TeV", "10 TeV", nbin=4, name="energy_true"
     )

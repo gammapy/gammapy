@@ -122,7 +122,7 @@ class Observation:
     @property
     def available_irfs(self):
         """Which IRFs are available"""
-        return [ _ for _ in self.available_hdus if _ not in ["events", "gti"]]
+        return [_ for _ in self.available_hdus if _ not in ["events", "gti"]]
 
     @property
     def events(self):
@@ -135,7 +135,9 @@ class Observation:
         return gti
 
     @staticmethod
-    def _get_obs_info(pointing, deadtime_fraction, time_start, time_stop, reference_time, location):
+    def _get_obs_info(
+        pointing, deadtime_fraction, time_start, time_stop, reference_time, location
+    ):
         """Create obs info dict from in memory data"""
         obs_info = {
             "RA_PNT": pointing.icrs.ra.deg,
@@ -143,8 +145,8 @@ class Observation:
             "DEADC": 1 - deadtime_fraction,
         }
         obs_info.update(time_ref_to_dict(reference_time))
-        obs_info['TSTART'] = time_relative_to_ref(time_start, obs_info).to_value(u.s)
-        obs_info['TSTOP'] = time_relative_to_ref(time_stop, obs_info).to_value(u.s)
+        obs_info["TSTART"] = time_relative_to_ref(time_start, obs_info).to_value(u.s)
+        obs_info["TSTOP"] = time_relative_to_ref(time_stop, obs_info).to_value(u.s)
 
         if location is not None:
             obs_info.update(earth_location_to_dict(location))
@@ -272,7 +274,13 @@ class Observation:
         """Observation info dictionary."""
         meta = self._obs_info.copy() if self._obs_info is not None else {}
         if self.events is not None:
-            meta.update({k: v for k, v in self.events.table.meta.items() if not k.startswith('HDU')})
+            meta.update(
+                {
+                    k: v
+                    for k, v in self.events.table.meta.items()
+                    if not k.startswith("HDU")
+                }
+            )
         return meta
 
     @lazyproperty

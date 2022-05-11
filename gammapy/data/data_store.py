@@ -17,7 +17,7 @@ __all__ = ["DataStore"]
 REQUIRED_IRFS = {
     "full-enclosure": ["aeff", "edisp", "psf", "bkg"],
     "point-like": ["aeff", "edisp"],
-    "all-optional":  ["aeff", "edisp", "psf", "bkg", "rad_max"],
+    "all-optional": ["aeff", "edisp", "psf", "bkg", "rad_max"],
 }
 
 log = logging.getLogger(__name__)
@@ -296,7 +296,9 @@ class DataStore:
 
         return Observation(**kwargs)
 
-    def get_observations(self, obs_id=None, skip_missing=False, required_irf="full-enclosure"):
+    def get_observations(
+        self, obs_id=None, skip_missing=False, required_irf="full-enclosure"
+    ):
         """Generate a `~gammapy.data.Observations`.
 
         Parameters
@@ -525,7 +527,9 @@ class DataStoreMaker:
 
     def get_events_info(self, events_path, irf_path=None):
         if events_path not in self._events_info:
-            self._events_info[events_path] = self.read_events_info(events_path, irf_path)
+            self._events_info[events_path] = self.read_events_info(
+                events_path, irf_path
+            )
 
         return self._events_info[events_path]
 
@@ -573,7 +577,6 @@ class DataStoreMaker:
         info["TIME-END"] = header.get("TIME_END", na_str)
         info["N_TELS"] = header.get("N_TELS", na_int)
         info["OBJECT"] = header.get("OBJECT", na_str)
-
 
         # Not part of the spec, but good to know from which file the info comes
         info["EVENTS_FILENAME"] = str(events_path)

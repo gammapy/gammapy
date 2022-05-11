@@ -58,6 +58,7 @@ def models():
     bkg_model = FoVBackgroundModel(dataset_name="test")
     return [model, bkg_model]
 
+
 @pytest.fixture()
 def model_alternative():
     spatial_model1 = GaussianSpatialModel(
@@ -65,7 +66,7 @@ def model_alternative():
     )
 
     spectral_model = PowerLawSpectralModel(amplitude="1e-11 cm-2 s-1 TeV-1")
-    
+
     mod1 = SkyModel(
         spatial_model=spatial_model1,
         spectral_model=spectral_model,
@@ -96,6 +97,7 @@ def model_alternative():
 
     model2 = Models([mod1, mod2, bkg_model, mod3])
     return model2
+
 
 @pytest.fixture(scope="session")
 def dataset():
@@ -152,7 +154,10 @@ def test_mde_sample_weak_src(dataset, models):
     livetime = 10.0 * u.hr
     pointing = SkyCoord(0, 0, unit="deg", frame="galactic")
     obs = Observation.create(
-        obs_id=1001, pointing=pointing, livetime=livetime, irfs=irfs,
+        obs_id=1001,
+        pointing=pointing,
+        livetime=livetime,
+        irfs=irfs,
         location=LOCATION,
     )
 
@@ -236,7 +241,10 @@ def test_event_det_coords(dataset, models):
     livetime = 1.0 * u.hr
     pointing = SkyCoord(0, 0, unit="deg", frame="galactic")
     obs = Observation.create(
-        obs_id=1001, pointing=pointing, livetime=livetime, irfs=irfs,
+        obs_id=1001,
+        pointing=pointing,
+        livetime=livetime,
+        irfs=irfs,
         location=LOCATION,
     )
 
@@ -260,7 +268,10 @@ def test_mde_run(dataset, models):
     livetime = 1.0 * u.hr
     pointing = SkyCoord(0, 0, unit="deg", frame="galactic")
     obs = Observation.create(
-        obs_id=1001, pointing=pointing, livetime=livetime, irfs=irfs,
+        obs_id=1001,
+        pointing=pointing,
+        livetime=livetime,
+        irfs=irfs,
         location=LOCATION,
     )
 
@@ -353,7 +364,10 @@ def test_irf_alpha_config(dataset, models):
     livetime = 1.0 * u.hr
     pointing = SkyCoord(0, 0, unit="deg", frame="galactic")
     obs = Observation.create(
-        obs_id=1001, pointing=pointing, livetime=livetime, irfs=irfs,
+        obs_id=1001,
+        pointing=pointing,
+        livetime=livetime,
+        irfs=irfs,
         location=LOCATION,
     )
 
@@ -371,7 +385,10 @@ def test_mde_run_switchoff(dataset, models):
     livetime = 1.0 * u.hr
     pointing = SkyCoord(0, 0, unit="deg", frame="galactic")
     obs = Observation.create(
-        obs_id=1001, pointing=pointing, livetime=livetime, irfs=irfs,
+        obs_id=1001,
+        pointing=pointing,
+        livetime=livetime,
+        irfs=irfs,
         location=LOCATION,
     )
 
@@ -405,7 +422,10 @@ def test_events_datastore(tmp_path, dataset, models):
     livetime = 10.0 * u.hr
     pointing = SkyCoord(0, 0, unit="deg", frame="galactic")
     obs = Observation.create(
-        obs_id=1001, pointing=pointing, livetime=livetime, irfs=irfs,
+        obs_id=1001,
+        pointing=pointing,
+        livetime=livetime,
+        irfs=irfs,
         location=LOCATION,
     )
 
@@ -421,6 +441,7 @@ def test_events_datastore(tmp_path, dataset, models):
 
     DataStore.from_events_files([str(tmp_path / "events.fits")])
 
+
 @requires_data()
 def test_MC_ID(model_alternative):
     irfs = load_cta_irfs(
@@ -429,19 +450,20 @@ def test_MC_ID(model_alternative):
     livetime = 0.1 * u.hr
     pointing = SkyCoord(0, 0, unit="deg", frame="galactic")
     obs = Observation.create(
-        obs_id=1001, pointing=pointing, livetime=livetime, irfs=irfs,
+        obs_id=1001,
+        pointing=pointing,
+        livetime=livetime,
+        irfs=irfs,
         location=LOCATION,
     )
 
     energy_axis = MapAxis.from_energy_bounds(
         "1.0 TeV", "10 TeV", nbin=10, per_decade=True
-        )
+    )
     energy_axis_true = MapAxis.from_energy_bounds(
         "0.5 TeV", "20 TeV", nbin=20, per_decade=True, name="energy_true"
-        )
-    migra_axis = MapAxis.from_bounds(
-        0.5, 2, nbin=150, node_type="edges", name="migra"
-        )
+    )
+    migra_axis = MapAxis.from_bounds(0.5, 2, nbin=150, node_type="edges", name="migra")
 
     geom = WcsGeom.create(
         skydir=pointing,
@@ -452,21 +474,21 @@ def test_MC_ID(model_alternative):
     )
 
     empty = MapDataset.create(
-            geom,
-            energy_axis_true=energy_axis_true,
-            migra_axis=migra_axis,
-            name="test",
-                )
+        geom,
+        energy_axis_true=energy_axis_true,
+        migra_axis=migra_axis,
+        name="test",
+    )
     maker = MapDatasetMaker(selection=["exposure", "background", "psf", "edisp"])
     dataset = maker.run(empty, obs)
 
     dataset.models = model_alternative
     sampler = MapDatasetEventSampler(random_state=0)
     events = sampler.run(dataset=dataset, observation=obs)
-    
+
     assert len(events.table) == 215
     assert len(np.where(events.table["MC_ID"] == 0)[0]) == 40
-    
+
     meta = events.table.meta
     assert meta["MID00000"] == 0
     assert meta["MMN00000"] == "test-bkg"

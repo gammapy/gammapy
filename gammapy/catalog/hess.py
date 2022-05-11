@@ -381,7 +381,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
         # Use Gaussian analytical error propagation,
         # tested against the uncertainties package
-        err = err / val ** 2
+        err = err / val**2
         val = 1.0 / val
 
         ss += "{:<20s} : {:.2f} +/- {:.2f} TeV\n".format("ECPL E_cut", val, err)
@@ -565,7 +565,9 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         """
 
         spatial_type = self.data["Spatial_Model"]
-        missing_size = spatial_type=="Gaussian" and self.spatial_model().sigma.value==0
+        missing_size = (
+            spatial_type == "Gaussian" and self.spatial_model().sigma.value == 0
+        )
         if spatial_type in {"2-Gaussian", "3-Gaussian"} or missing_size:
             models = []
             spectral_model = self.spectral_model(which=which)

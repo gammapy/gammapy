@@ -12,7 +12,7 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
     TemplateSpatialModel,
-    NaimaSpectralModel
+    NaimaSpectralModel,
 )
 from gammapy.utils.testing import requires_data, requires_dependency
 
@@ -189,7 +189,10 @@ def test_flux_estimator_compound_model():
 @requires_dependency("naima")
 def test_flux_estimator_naima_model():
     import naima
-    ECPL = naima.models.ExponentialCutoffPowerLaw(1e36 * u.Unit("1/eV"), 1 * u.TeV, 2.1, 13 * u.TeV)
+
+    ECPL = naima.models.ExponentialCutoffPowerLaw(
+        1e36 * u.Unit("1/eV"), 1 * u.TeV, 2.1, 13 * u.TeV
+    )
     IC = naima.models.InverseCompton(ECPL, seed_photon_fields=["CMB"])
     naima_model = NaimaSpectralModel(IC)
 

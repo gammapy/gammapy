@@ -53,7 +53,7 @@ def table_model():
 TEST_MODELS = [
     dict(
         name="constant",
-        model=ConstantSpectralModel(const=4 / u.cm ** 2 / u.s / u.TeV),
+        model=ConstantSpectralModel(const=4 / u.cm**2 / u.s / u.TeV),
         val_at_2TeV=u.Quantity(4, "cm-2 s-1 TeV-1"),
         integral_1_10TeV=u.Quantity(35.9999999999999, "cm-2 s-1"),
         eflux_1_10TeV=u.Quantity(198.00000000000006, "TeV cm-2 s-1"),
@@ -62,7 +62,7 @@ TEST_MODELS = [
         name="powerlaw",
         model=PowerLawSpectralModel(
             index=2.3 * u.Unit(""),
-            amplitude=4 / u.cm ** 2 / u.s / u.TeV,
+            amplitude=4 / u.cm**2 / u.s / u.TeV,
             reference=1 * u.TeV,
         ),
         val_at_2TeV=u.Quantity(4 * 2.0 ** (-2.3), "cm-2 s-1 TeV-1"),
@@ -73,7 +73,7 @@ TEST_MODELS = [
         name="powerlaw",
         model=PowerLawSpectralModel(
             index=2 * u.Unit(""),
-            amplitude=4 / u.cm ** 2 / u.s / u.TeV,
+            amplitude=4 / u.cm**2 / u.s / u.TeV,
             reference=1 * u.TeV,
         ),
         val_at_2TeV=u.Quantity(1.0, "cm-2 s-1 TeV-1"),
@@ -107,7 +107,7 @@ TEST_MODELS = [
         name="ecpl",
         model=ExpCutoffPowerLawSpectralModel(
             index=1.6 * u.Unit(""),
-            amplitude=4 / u.cm ** 2 / u.s / u.TeV,
+            amplitude=4 / u.cm**2 / u.s / u.TeV,
             reference=1 * u.TeV,
             lambda_=0.1 / u.TeV,
         ),
@@ -132,7 +132,7 @@ TEST_MODELS = [
         name="ecpl_3fgl",
         model=ExpCutoffPowerLaw3FGLSpectralModel(
             index=2.3 * u.Unit(""),
-            amplitude=4 / u.cm ** 2 / u.s / u.TeV,
+            amplitude=4 / u.cm**2 / u.s / u.TeV,
             reference=1 * u.TeV,
             ecut=10 * u.TeV,
         ),
@@ -145,7 +145,7 @@ TEST_MODELS = [
         model=SuperExpCutoffPowerLaw4FGLSpectralModel(
             index_1=1.5,
             index_2=2,
-            amplitude=1 / u.cm ** 2 / u.s / u.TeV,
+            amplitude=1 / u.cm**2 / u.s / u.TeV,
             reference=1 * u.TeV,
             expfactor=1e-2,
         ),
@@ -158,7 +158,7 @@ TEST_MODELS = [
         model=SuperExpCutoffPowerLaw4FGLDR3SpectralModel(
             index_1=1.5,
             index_2=2,
-            amplitude=1 / u.cm ** 2 / u.s / u.TeV,
+            amplitude=1 / u.cm**2 / u.s / u.TeV,
             reference=1 * u.TeV,
             expfactor=1e-2,
         ),
@@ -170,7 +170,7 @@ TEST_MODELS = [
         name="logpar",
         model=LogParabolaSpectralModel(
             alpha=2.3 * u.Unit(""),
-            amplitude=4 / u.cm ** 2 / u.s / u.TeV,
+            amplitude=4 / u.cm**2 / u.s / u.TeV,
             reference=1 * u.TeV,
             beta=0.5 * u.Unit(""),
         ),
@@ -195,7 +195,7 @@ TEST_MODELS = [
         name="logpar10",
         model=LogParabolaSpectralModel.from_log10(
             alpha=2.3 * u.Unit(""),
-            amplitude=4 / u.cm ** 2 / u.s / u.TeV,
+            amplitude=4 / u.cm**2 / u.s / u.TeV,
             reference=1 * u.TeV,
             beta=1.151292546497023 * u.Unit(""),
         ),
@@ -208,7 +208,7 @@ TEST_MODELS = [
         name="powerlaw_index1",
         model=PowerLawSpectralModel(
             index=1 * u.Unit(""),
-            amplitude=2 / u.cm ** 2 / u.s / u.TeV,
+            amplitude=2 / u.cm**2 / u.s / u.TeV,
             reference=1 * u.TeV,
         ),
         val_at_2TeV=u.Quantity(1.0, "cm-2 s-1 TeV-1"),
@@ -219,7 +219,7 @@ TEST_MODELS = [
         name="ecpl_2",
         model=ExpCutoffPowerLawSpectralModel(
             index=2.0 * u.Unit(""),
-            amplitude=4 / u.cm ** 2 / u.s / u.TeV,
+            amplitude=4 / u.cm**2 / u.s / u.TeV,
             reference=1 * u.TeV,
             lambda_=0.1 / u.TeV,
         ),
@@ -231,7 +231,7 @@ TEST_MODELS = [
     dict(
         name="GaussianSpectralModel",
         model=GaussianSpectralModel(
-            amplitude=4 / u.cm ** 2 / u.s, mean=2 * u.TeV, sigma=0.2 * u.TeV
+            amplitude=4 / u.cm**2 / u.s, mean=2 * u.TeV, sigma=0.2 * u.TeV
         ),
         val_at_2TeV=u.Quantity(7.978845608028654, "cm-2 s-1 TeV-1"),
         val_at_3TeV=u.Quantity(2.973439029468601e-05, "cm-2 s-1 TeV-1"),
@@ -243,7 +243,7 @@ TEST_MODELS = [
         name="ecpl",
         model=ExpCutoffPowerLawSpectralModel(
             index=1.8 * u.Unit(""),
-            amplitude=4 / u.cm ** 2 / u.s / u.TeV,
+            amplitude=4 / u.cm**2 / u.s / u.TeV,
             reference=1 * u.TeV,
             lambda_=0.1 / u.TeV,
             alpha=0.8,
@@ -258,7 +258,7 @@ TEST_MODELS = [
         model=BrokenPowerLawSpectralModel(
             index1=1.5 * u.Unit(""),
             index2=2.5 * u.Unit(""),
-            amplitude=4 / u.cm ** 2 / u.s / u.TeV,
+            amplitude=4 / u.cm**2 / u.s / u.TeV,
             ebreak=0.5 * u.TeV,
         ),
         val_at_2TeV=u.Quantity(0.125, "cm-2 s-1 TeV-1"),
@@ -270,7 +270,7 @@ TEST_MODELS = [
         model=SmoothBrokenPowerLawSpectralModel(
             index1=1.5 * u.Unit(""),
             index2=2.5 * u.Unit(""),
-            amplitude=4 / u.cm ** 2 / u.s / u.TeV,
+            amplitude=4 / u.cm**2 / u.s / u.TeV,
             ebreak=0.5 * u.TeV,
             reference=1 * u.TeV,
             beta=1,
@@ -284,7 +284,7 @@ TEST_MODELS = [
         model=SmoothBrokenPowerLawSpectralModel(
             index1=2.5 * u.Unit(""),
             index2=1.5 * u.Unit(""),
-            amplitude=4 / u.cm ** 2 / u.s / u.TeV,
+            amplitude=4 / u.cm**2 / u.s / u.TeV,
             ebreak=0.5 * u.TeV,
             reference=1 * u.TeV,
             beta=1,
@@ -512,9 +512,10 @@ def test_to_from_dict_partial_input(caplog):
     desired = [par.frozen for par in model.parameters]
     assert_allclose(actual, desired)
     assert "WARNING" in [_.levelname for _ in caplog.records]
-    assert "Parameter 'reference' not defined in YAML file. Using default value: 1.0 TeV" in [
-        _.message for _ in caplog.records
-    ]
+    assert (
+        "Parameter 'reference' not defined in YAML file. Using default value: 1.0 TeV"
+        in [_.message for _ in caplog.records]
+    )
 
 
 def test_to_from_dict_compound():
@@ -605,7 +606,7 @@ def test_pwl_pivot_energy():
     pwl = PowerLawSpectralModel(amplitude="5.35510540e-11 cm-2 s-1 TeV-1")
 
     pwl.covariance = [
-        [0.0318377 ** 2, 6.56889442e-14, 0],
+        [0.0318377**2, 6.56889442e-14, 0],
         [6.56889442e-14, 0, 0],
         [0, 0, 0],
     ]
@@ -634,9 +635,7 @@ def test_template_spectral_model_single_value():
     energy = [1] * u.TeV
     values = [1e-12] * u.Unit("TeV-1 s-1 cm-2")
 
-    model = TemplateSpectralModel(
-        energy=energy, values=values
-    )
+    model = TemplateSpectralModel(energy=energy, values=values)
     result = model(energy=[0.5, 2] * u.TeV)
 
     assert_allclose(result.data, 1e-12)
@@ -683,7 +682,7 @@ class TestNaimaModel:
             amplitude=2e33 / u.eV, e_0=10 * u.TeV, alpha=2.5
         )
         radiative_model = naima.radiative.PionDecay(
-            particle_distribution, nh=1 * u.cm ** -3
+            particle_distribution, nh=1 * u.cm**-3
         )
         model = NaimaSpectralModel(radiative_model)
         for p in model.parameters:
@@ -802,8 +801,8 @@ class TestNaimaModel:
             ECBPL,
             seed_photon_fields=[
                 "CMB",
-                ["FIR", 70 * u.K, 0.5 * u.eV / u.cm ** 3],
-                ["NIR", 5000 * u.K, 1 * u.eV / u.cm ** 3],
+                ["FIR", 70 * u.K, 0.5 * u.eV / u.cm**3],
+                ["NIR", 5000 * u.K, 1 * u.eV / u.cm**3],
             ],
             Eemax=50 * u.PeV,
             Eemin=0.1 * u.GeV,
@@ -830,7 +829,7 @@ class TestNaimaModel:
             amplitude=2e33 / u.eV, e_0=10 * u.TeV, alpha=2.5
         )
         radiative_model = naima.radiative.PionDecay(
-            particle_distribution, nh=1 * u.cm ** -3
+            particle_distribution, nh=1 * u.cm**-3
         )
         model = NaimaSpectralModel(radiative_model)
 
@@ -1021,14 +1020,15 @@ def test_template_ND(tmpdir):
     assert template_new.parameters["norm"].value == 1
     assert template_new.parameters["tilt"].value == 0
 
+
 def test_template_ND_no_energy(tmpdir):
     norm = MapAxis.from_bounds(0, 10, 10, interp="lin", name="norm", unit="")
     tilt = MapAxis.from_bounds(-1.0, 1, 5, interp="lin", name="tilt", unit="")
     region_map = RegionNDMap.create(
         region="icrs;point(83.63, 22.01)", axes=[norm, tilt]
     )
-    region_map.data[ :, :5, 0, 0] = 1
-    region_map.data[ :, 5:, 0, 0] = 2
+    region_map.data[:, :5, 0, 0] = 1
+    region_map.data[:, 5:, 0, 0] = 2
 
     with pytest.raises(ValueError):
         TemplateNDSpectralModel(region_map)
@@ -1037,18 +1037,20 @@ def test_template_ND_no_energy(tmpdir):
 @requires_data()
 def test_template_ND_EBL(tmpdir):
 
-    #TODO: add RegionNDMap.read(format="xspec")
+    # TODO: add RegionNDMap.read(format="xspec")
     # Create EBL data array
-    filename="$GAMMAPY_DATA/ebl/ebl_franceschini.fits.gz"
+    filename = "$GAMMAPY_DATA/ebl/ebl_franceschini.fits.gz"
     filename = make_path(filename)
     table_param = Table.read(filename, hdu="PARAMETERS")
     npar = len(table_param)
     par_axes = []
     idx_data = []
     for k in range(npar):
-        name=table_param["NAME"][k].lower().strip()
+        name = table_param["NAME"][k].lower().strip()
         param, idx = np.unique(table_param[0]["VALUE"], return_index=True)
-        par_axes.append(MapAxis(param,node_type="center", interp="lin", name=name, unit=""))
+        par_axes.append(
+            MapAxis(param, node_type="center", interp="lin", name=name, unit="")
+        )
         idx_data.append(idx)
     idx_data.append(Ellipsis)
     idx_data = tuple(idx_data)
@@ -1066,16 +1068,13 @@ def test_template_ND_EBL(tmpdir):
     # Get spectrum values
     table_spectra = Table.read(filename, hdu="SPECTRA")
 
-    energy_axis = MapAxis(
-        energy,node_type="center", interp="log", name="energy_true"
-    )
+    energy_axis = MapAxis(energy, node_type="center", interp="log", name="energy_true")
     region_map = RegionNDMap.create(
-        region="galactic;point(0, 0)", axes=[energy_axis]+par_axes
+        region="galactic;point(0, 0)", axes=[energy_axis] + par_axes
     )
-    #TODO: here we use a fake position, is it possible to allow region=None ?
+    # TODO: here we use a fake position, is it possible to allow region=None ?
     data = table_spectra["INTPSPEC"].data[idx_data]
-    region_map.data[:,:, 0, 0] = data
-
+    region_map.data[:, :, 0, 0] = data
 
     template = TemplateNDSpectralModel(region_map)
     assert len(template.parameters) == 1

@@ -25,7 +25,7 @@ from gammapy.modeling.models import ExpCutoffPowerLaw3FGLSpectralModel, Models, 
 energy_bounds = [0.1, 100] * u.TeV
 model = ExpCutoffPowerLaw3FGLSpectralModel(
     index=2.3 * u.Unit(""),
-    amplitude=4 / u.cm ** 2 / u.s / u.TeV,
+    amplitude=4 / u.cm**2 / u.s / u.TeV,
     reference=1 * u.TeV,
     ecut=10 * u.TeV,
 )

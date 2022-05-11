@@ -651,7 +651,7 @@ class FluxPoints(FluxMaps):
                 "Stat profiles not present. Upper limit computation is not possible"
             )
 
-        delta_ts = n_sigma_ul ** 2
+        delta_ts = n_sigma_ul**2
 
         flux_points = deepcopy(self)
 

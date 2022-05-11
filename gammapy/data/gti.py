@@ -107,8 +107,8 @@ class GTI:
         table = Table.read(filename, hdu=hdu)
         return cls(table)
 
-    def to_table_hdu(self, format='gadf'):
-        '''
+    def to_table_hdu(self, format="gadf"):
+        """
         Convert this GTI instance to a `astropy.io.fits.BinTableHDU`.
 
         Parameters
@@ -120,8 +120,8 @@ class GTI:
         -------
         hdu: `astropy.io.fits.BinTableHDU`
             GTI table converted to FITS representation
-        '''
-        if format != 'gadf':
+        """
+        if format != "gadf":
             raise ValueError(f'Only the "gadf" format supported, got {format}')
 
         return fits.BinTableHDU(self.table, name="GTI")

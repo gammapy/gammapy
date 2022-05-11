@@ -21,7 +21,7 @@ class TestGauss2DPDF:
         # http://en.wikipedia.org/wiki/Multivariate_normal_distribution#Bivariate_case
         for g in self.gs:
             actual = g(0 * u.deg, 0 * u.deg)
-            desired = 1 / (2 * np.pi * g.sigma ** 2)
+            desired = 1 / (2 * np.pi * g.sigma**2)
             assert_allclose(actual, desired)
 
     def test_containment(self):

@@ -197,7 +197,9 @@ def make_orthogonal_rectangle_sky_regions(start_pos, end_pos, wcs, height, nbin=
     return regions
 
 
-def make_concentric_annulus_sky_regions(center, radius_max, radius_min=1e-5 * u.deg, nbin=11):
+def make_concentric_annulus_sky_regions(
+    center, radius_max, radius_min=1e-5 * u.deg, nbin=11
+):
     """Make a list of concentric annulus regions.
 
     Parameters

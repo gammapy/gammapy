@@ -388,7 +388,7 @@ def make_theta_squared_table(
     create_off = position_off is None
     for observation in observations:
         separation = position.separation(observation.events.radec)
-        counts, _ = np.histogram(separation ** 2, theta_squared_axis.edges)
+        counts, _ = np.histogram(separation**2, theta_squared_axis.edges)
         table["counts"] += counts
 
         if create_off:
@@ -403,7 +403,7 @@ def make_theta_squared_table(
         separation_off = position_off.separation(observation.events.radec)
 
         # Extract the ON and OFF theta2 distribution from the two positions.
-        counts_off, _ = np.histogram(separation_off ** 2, theta_squared_axis.edges)
+        counts_off, _ = np.histogram(separation_off**2, theta_squared_axis.edges)
         table["counts_off"] += counts_off
 
         # Normalisation between ON and OFF is one
@@ -477,7 +477,9 @@ def make_counts_off_rad_max(geom_off, rad_max, events):
         OFF Counts vs estimated energy extracted from the ON region.
     """
     if not geom_off.is_all_point_sky_regions:
-        raise ValueError(f"Only supports PointSkyRegions, got {geom_off.region} instead")
+        raise ValueError(
+            f"Only supports PointSkyRegions, got {geom_off.region} instead"
+        )
 
     counts_off = RegionNDMap.from_geom(geom=geom_off)
 

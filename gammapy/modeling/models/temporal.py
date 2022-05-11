@@ -317,7 +317,7 @@ class GaussianTemporalModel(TemporalModel):
 
     @staticmethod
     def evaluate(time, t_ref, sigma):
-        return np.exp(-((time - t_ref) ** 2) / (2 * sigma ** 2))
+        return np.exp(-((time - t_ref) ** 2) / (2 * sigma**2))
 
     def integral(self, t_min, t_max, **kwargs):
         """Evaluate the integrated flux within the given time intervals
@@ -370,15 +370,23 @@ class GeneralizedGaussianTemporalModel(TemporalModel):
     tag = ["GeneralizedGaussianTemporalModel", "gengauss"]
 
     _t_ref_default = Time("2000-01-01")
-    t_ref = Parameter("t_ref", _t_ref_default.mjd, unit = "day", frozen=False)
+    t_ref = Parameter("t_ref", _t_ref_default.mjd, unit="day", frozen=False)
     t_rise = Parameter("t_rise", "1d", frozen=False)
     t_decay = Parameter("t_decay", "1d", frozen=False)
-    eta = Parameter("eta", 1/2, unit = "", frozen=False)
+    eta = Parameter("eta", 1 / 2, unit="", frozen=False)
 
     @staticmethod
     def evaluate(time, t_ref, t_rise, t_decay, eta):
-        val_rise = np.exp( - 0.5 * (np.abs(u.Quantity(time - t_ref,"d")) ** (1/eta)) / (t_rise ** (1/eta)))
-        val_decay = np.exp( - 0.5 * (np.abs(u.Quantity(time - t_ref,"d")) ** (1/eta)) / (t_decay ** (1/eta)))
+        val_rise = np.exp(
+            -0.5
+            * (np.abs(u.Quantity(time - t_ref, "d")) ** (1 / eta))
+            / (t_rise ** (1 / eta))
+        )
+        val_decay = np.exp(
+            -0.5
+            * (np.abs(u.Quantity(time - t_ref, "d")) ** (1 / eta))
+            / (t_decay ** (1 / eta))
+        )
         val = np.where(time < t_ref, val_rise, val_decay)
         return val
 
@@ -402,9 +410,11 @@ class GeneralizedGaussianTemporalModel(TemporalModel):
         t_rise = pars["t_rise"].quantity
         t_decay = pars["t_decay"].quantity
         eta = pars["eta"].quantity
-        t_ref = Time(pars["t_ref"].quantity, format = "mjd")
+        t_ref = Time(pars["t_ref"].quantity, format="mjd")
 
-        integral = scipy.integrate.quad(self.evaluate, t_min.mjd, t_max.mjd, args=(t_ref.mjd,t_rise,t_decay,eta))[0]
+        integral = scipy.integrate.quad(
+            self.evaluate, t_min.mjd, t_max.mjd, args=(t_ref.mjd, t_rise, t_decay, eta)
+        )[0]
         return integral / self.time_sum(t_min, t_max).to_value("d")
 
 

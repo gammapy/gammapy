@@ -311,7 +311,7 @@ def add_pulsar_parameters(
     p0_birth = Quantity(p0_birth, "s")
 
     log10_b_psr = random_state.normal(B_mean, B_stdv, len(table))
-    b_psr = Quantity(10 ** log10_b_psr, "G")
+    b_psr = Quantity(10**log10_b_psr, "G")
 
     # Compute pulsar parameters
     psr = Pulsar(p0_birth, b_psr)
@@ -428,7 +428,7 @@ def add_observed_parameters(table, obs_pos=None):
 
     try:
         luminosity = table["luminosity"]
-        flux = luminosity / (4 * np.pi * distance ** 2)
+        flux = luminosity / (4 * np.pi * distance**2)
         table["flux"] = Column(flux.value, unit=flux.unit, description="Source flux")
     except KeyError:
         pass

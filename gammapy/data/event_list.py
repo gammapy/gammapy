@@ -122,7 +122,7 @@ class EventList:
 
         return fits.BinTableHDU(self.table, name="EVENTS")
 
-    def write(self, filename, gti=None, overwrite=False, format='gadf'):
+    def write(self, filename, gti=None, overwrite=False, format="gadf"):
         """Write the event list to a FITS file.
 
         If a GTI object is provided, it is saved into
@@ -152,7 +152,6 @@ class EventList:
         else:
             meta_dict["HDUCLAS1"] = "EVENTS"
 
-
         if "HDUCLASS" in meta_dict.keys() and meta_dict["HDUCLASS"] != "GADF":
             raise ValueError("The HDUCLASS must be 'GADF' for format 'gadf'")
         else:
@@ -166,7 +165,7 @@ class EventList:
 
         if gti is not None:
             if not isinstance(gti, GTI):
-                raise TypeError('gti must be an instance of GTI')
+                raise TypeError("gti must be an instance of GTI")
             hdu_gti = gti.to_table_hdu(format=format)
             hdu_all.append(hdu_gti)
 

@@ -61,7 +61,7 @@ class Analysis:
         if not self.datasets:
             raise RuntimeError("No datasets defined. Impossible to set models.")
         return self.datasets.models
-    
+
     @models.setter
     def models(self, models):
         self.set_models(models, extend=False)
@@ -165,11 +165,10 @@ class Analysis:
         else:  # 3d
             self._map_making()
 
-
     def set_models(self, models, extend=True):
         """Set models on datasets.
         Adds `FoVBackgroundModel` if not present already
-        
+
         Parameters
         ----------
         models : `~gammapy.modeling.models.Models` or str
@@ -198,13 +197,12 @@ class Analysis:
         bkg_models = []
         for dataset in self.datasets:
             if dataset.tag == "MapDataset" and dataset.background_model is None:
-               bkg_models.append(FoVBackgroundModel(dataset_name=dataset.name))
+                bkg_models.append(FoVBackgroundModel(dataset_name=dataset.name))
         if bkg_models:
             models.extend(bkg_models)
             self.datasets.models = models
 
         log.info(models)
-
 
     def read_models(self, path, extend=True):
         """Read models from YAML file.
@@ -222,21 +220,19 @@ class Analysis:
         self.set_models(models, extend=extend)
         log.info(f"Models loaded from {path}.")
 
-
     def write_models(self, overwrite=True, write_covariance=True):
         """Write models to YAML file.
-           File name is taken from the configuration file.
+        File name is taken from the configuration file.
         """
 
         filename_models = self.config.general.models_file
         if filename_models is not None:
-            self.models.write(filename_models,
-                              overwrite=overwrite,
-                              write_covariance=write_covariance)
+            self.models.write(
+                filename_models, overwrite=overwrite, write_covariance=write_covariance
+            )
             log.info(f"Models loaded from {filename_models}.")
         else:
             raise RuntimeError("Missing models_file in config.general")
-   
 
     def read_datasets(self):
         """Read datasets from YAML file.
@@ -249,11 +245,10 @@ class Analysis:
         if filename is not None:
             self.datasets = Datasets.read(filename)
             log.info(f"Datasets loaded from {filename}.")
-            if filename_models is not  None:
+            if filename_models is not None:
                 self.read_models(filename_models, extend=False)
         else:
             raise RuntimeError("Missing datasets_file in config.general")
-
 
     def write_datasets(self, overwrite=True, write_covariance=True):
         """Write datasets to YAML file.
@@ -270,15 +265,16 @@ class Analysis:
         filename = self.config.general.datasets_file
         filename_models = self.config.general.models_file
         if filename is not None:
-            self.datasets.write(filename,
-                                 filename_models,
-                                 overwrite=overwrite,
-                                 write_covariance=write_covariance)
+            self.datasets.write(
+                filename,
+                filename_models,
+                overwrite=overwrite,
+                write_covariance=write_covariance,
+            )
             log.info(f"Datasets stored to {filename}.")
             log.info(f"Datasets stored to {filename_models}.")
         else:
             raise RuntimeError("Missing datasets_file in config.general")
-
 
     def run_fit(self):
         """Fitting reduced datasets to model."""
@@ -301,7 +297,9 @@ class Analysis:
     def get_flux_points(self):
         """Calculate flux points for a specific model component."""
         if not self.datasets:
-            raise RuntimeError("No datasets defined. Impossible to compute flux points.")
+            raise RuntimeError(
+                "No datasets defined. Impossible to compute flux points."
+            )
 
         fp_settings = self.config.flux_points
         log.info("Calculating flux points.")
@@ -537,13 +535,15 @@ class Analysis:
 
         log.info("Start the data reduction loop.")
 
-        datasets_maker = DatasetsMaker(makers,
-                                      stack_datasets=datasets_settings.stack,
-                                      n_jobs=self.config.general.n_jobs,
-                                      cutout_mode='trim',
-                                      cutout_width=2 * offset_max)
+        datasets_maker = DatasetsMaker(
+            makers,
+            stack_datasets=datasets_settings.stack,
+            n_jobs=self.config.general.n_jobs,
+            cutout_mode="trim",
+            cutout_width=2 * offset_max,
+        )
         self.datasets = datasets_maker.run(stacked, self.observations)
-        #TODO: move progress bar to DatasetsMaker but how with multiprocessing ?
+        # TODO: move progress bar to DatasetsMaker but how with multiprocessing ?
 
     def _spectrum_extraction(self):
         """Run all steps for the spectrum extraction."""

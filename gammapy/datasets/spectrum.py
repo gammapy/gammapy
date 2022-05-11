@@ -218,7 +218,7 @@ class PlotMixin:
         ax.legend(numpoints=1)
         return ax
 
-    def peek(self, figsize=(16,4)):
+    def peek(self, figsize=(16, 4)):
         """Quick-look summary plots.
 
         Parameters

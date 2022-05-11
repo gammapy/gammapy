@@ -46,22 +46,22 @@ def test_observation_peek(data_store, caplog):
         obs = Observation.read(
             "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz"
         )
-    
+
         with mpl_plot_check():
             obs.peek()
-    
+
         obs.bkg = None
-    
+
         with mpl_plot_check():
             obs.peek()
-    
+
         message = "No background model found for obs 23523."
         assert message in [record.message for record in caplog.records]
 
         obs.psf = None
         with mpl_plot_check():
             obs.peek()
-    
+
         assert "WARNING" in [record.levelname for record in caplog.records]
         message = "No PSF found for obs 23523."
         assert message in [record.message for record in caplog.records]
@@ -232,12 +232,14 @@ def test_observation_cta_1dc():
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     )
 
-    t_ref = Time('2020-01-01T00:00:00')
+    t_ref = Time("2020-01-01T00:00:00")
     tstart = 20 * u.hour
     location = EarthLocation(lon="-70d18m58.84s", lat="-24d41m0.34s", height="2000m")
 
     obs = Observation.create(
-        pointing, irfs=irfs, deadtime_fraction=0.1,
+        pointing,
+        irfs=irfs,
+        deadtime_fraction=0.1,
         tstart=tstart,
         tstop=tstart + ontime,
         reference_time=t_ref,
@@ -265,7 +267,7 @@ def test_observation_read():
 
     assert obs.obs_id == 20136
     assert len(obs.events.energy) == 11243
-    assert obs.available_hdus == ["events","gti", "aeff", "edisp", "psf", "bkg"]
+    assert obs.available_hdus == ["events", "gti", "aeff", "edisp", "psf", "bkg"]
     assert_allclose(val.value, 278000.54120855, rtol=1e-5)
     assert val.unit == "m2"
 
@@ -283,7 +285,7 @@ def test_observation_read_single_file():
 
     assert obs.obs_id == 20136
     assert len(obs.events.energy) == 11243
-    assert obs.available_hdus == ["events","gti", "aeff", "edisp", "psf", "bkg"]
+    assert obs.available_hdus == ["events", "gti", "aeff", "edisp", "psf", "bkg"]
     assert_allclose(val.value, 273372.44851054, rtol=1e-5)
     assert val.unit == "m2"
 
@@ -292,9 +294,7 @@ def test_observation_read_single_file():
 def test_observation_read_single_file_fixed_rad_max():
     """check that for a point-like observation without the RAD_MAX_2D table
     a RadMax2D object is generated from the RAD_MAX keyword"""
-    obs = Observation.read(
-        "$GAMMAPY_DATA/joint-crab/dl3/magic/run_05029748_DL3.fits"
-    )
+    obs = Observation.read("$GAMMAPY_DATA/joint-crab/dl3/magic/run_05029748_DL3.fits")
 
     assert obs.rad_max is not None
     assert obs.rad_max.quantity.shape == (1, 1)
@@ -323,7 +323,6 @@ class TestObservationChecker:
         assert records[5]["msg"] == "Loading aeff failed"
         assert records[7]["msg"] == "Loading edisp failed"
         assert records[9]["msg"] == "Loading psf failed"
-
 
 
 @requires_data()

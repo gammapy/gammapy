@@ -58,7 +58,7 @@ def test_sky_gaussian():
     radius = model.evaluation_radius
     assert radius.unit == "deg"
     assert_allclose(radius.value, 5 * sigma.value)
-    assert_allclose(model.evaluation_bin_size_min, (1./3.) * u.deg)
+    assert_allclose(model.evaluation_bin_size_min, (1.0 / 3.0) * u.deg)
 
     # test the normalization for an elongated Gaussian near the Galactic Plane
     m_geom_1 = WcsGeom.create(

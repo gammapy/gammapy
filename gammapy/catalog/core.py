@@ -218,14 +218,15 @@ class SourceCatalog(abc.ABC):
 
         if fp_energy_edges:
             data["fp_energy_edges"] = fp_energy_edges
-        
+
         hist_table = getattr(self, "hist_table", None)
         hist2_table = getattr(self, "hist2_table", None)
 
-
         if hist_table:
             try:
-                data["time_axis"] = TimeMapAxis.from_table(hist_table, format="fermi-fgl")
+                data["time_axis"] = TimeMapAxis.from_table(
+                    hist_table, format="fermi-fgl"
+                )
             except KeyError:
                 pass
 

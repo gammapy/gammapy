@@ -34,12 +34,14 @@ class TestEventListBase:
         dummy_events = EventList(Table())
         dummy_events.write("test.fits", overwrite=True)
         read_again = EventList.read("test.fits")
-        assert read_again.table.meta['EXTNAME'] == "EVENTS"
-        assert read_again.table.meta['HDUCLASS'] == "GADF"
-        assert read_again.table.meta['HDUCLAS1'] == "EVENTS"
+        assert read_again.table.meta["EXTNAME"] == "EVENTS"
+        assert read_again.table.meta["HDUCLASS"] == "GADF"
+        assert read_again.table.meta["HDUCLAS1"] == "EVENTS"
 
         # With GTI
-        gti = GTI.read("$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz")
+        gti = GTI.read(
+            "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz"
+        )
         self.events.write("test.fits", overwrite=True, gti=gti)
         read_again_ev = EventList.read("test.fits")
         read_again_gti = GTI.read("test.fits")
@@ -54,22 +56,22 @@ class TestEventListBase:
             self.events.write("test.fits", overwrite=True, gti=gti.table)
         # test that it won't work if format is not "gadf"
         with pytest.raises(ValueError):
-            self.events.write("test.fits", overwrite=True, format='something')
+            self.events.write("test.fits", overwrite=True, format="something")
         # test that it won't work if the basic headers are wrong
         with pytest.raises(ValueError):
             dummy_events = EventList(Table())
-            dummy_events.table.meta['HDUCLAS1'] = 'response'
+            dummy_events.table.meta["HDUCLAS1"] = "response"
             dummy_events.write("test.fits", overwrite=True)
         with pytest.raises(ValueError):
             dummy_events = EventList(Table())
-            dummy_events.table.meta['HDUCLASS'] = "ogip"
+            dummy_events.table.meta["HDUCLASS"] = "ogip"
             dummy_events.write("test.fits", overwrite=True)
 
         # test that it we also get the error when the only the case is wrong
         with pytest.raises(ValueError):
             dummy_events = EventList(Table())
-            dummy_events.table.meta['HDUCLASS'] = "gadf"
-            dummy_events.table.meta['HDUCLAS1'] = "events"
+            dummy_events.table.meta["HDUCLASS"] = "gadf"
+            dummy_events.table.meta["HDUCLAS1"] = "events"
             dummy_events.write("test.fits", overwrite=True)
 
 

@@ -454,7 +454,9 @@ class MapDataset(Dataset):
                 if self._background_cached is None:
                     self._background_cached = background * values
                 else:
-                    self._background_cached.quantity = background.quantity * values.value
+                    self._background_cached.quantity = (
+                        background.quantity * values.value
+                    )
             return self._background_cached
         else:
             return background
@@ -1716,14 +1718,14 @@ class MapDataset(Dataset):
         >>> sliced = dataset.slice_by_idx(slices)
         >>> print(sliced.geoms["geom"])
         WcsGeom
-	        axes       : ['lon', 'lat', 'energy']
-	        shape      : (320, 240, 3)
-	        ndim       : 3
-	        frame      : galactic
-	        projection : CAR
-	        center     : 0.0 deg, 0.0 deg
-	        width      : 8.0 deg x 6.0 deg
-	        wcs ref    : 0.0 deg, 0.0 deg
+                axes       : ['lon', 'lat', 'energy']
+                shape      : (320, 240, 3)
+                ndim       : 3
+                frame      : galactic
+                projection : CAR
+                center     : 0.0 deg, 0.0 deg
+                width      : 8.0 deg x 6.0 deg
+                wcs ref    : 0.0 deg, 0.0 deg
         """
         name = make_name(name)
         kwargs = {"gti": self.gti, "name": name, "meta_table": self.meta_table}
@@ -2377,12 +2379,11 @@ class MapDatasetOnOff(MapDataset):
 
         return hdulist
 
-
     @classmethod
     def _read_lazy(cls, filename, name=None, cache=True, format="gadf"):
         raise NotImplementedError(
-                f"Lazy loading is not implemented for {cls}, please use option lazy=False."
-                )
+            f"Lazy loading is not implemented for {cls}, please use option lazy=False."
+        )
 
     @classmethod
     def from_hdulist(cls, hdulist, name=None, format="gadf"):
@@ -2513,7 +2514,7 @@ class MapDatasetOnOff(MapDataset):
 
         if self.acceptance_off:
             alpha = summed_stat.alpha
-            acceptance_off = acceptance/alpha
+            acceptance_off = acceptance / alpha
 
         info["acceptance_off"] = float(acceptance_off)
         info["alpha"] = float(alpha)

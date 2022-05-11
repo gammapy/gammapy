@@ -88,7 +88,7 @@ class TestEnergyDispersion2D:
 
         edisp_test = EnergyDispersion2D(axes=axes)
         with pytest.raises(ValueError) as error:
-            wrong_unit = u.m ** 2
+            wrong_unit = u.m**2
             EnergyDispersion2D(axes=axes, data=data * wrong_unit)
             assert error.match(
                 f"Error: {wrong_unit} is not an allowed unit. {edisp_test.tag} requires {edisp_test.default_unit} data quantities."

@@ -102,7 +102,7 @@ class SensitivityEstimator(Estimator):
         phi_0 = excess / npred
 
         dnde_model = self.spectrum(energy=energy)
-        dnde = phi_0.data[:, 0, 0] * dnde_model * energy ** 2
+        dnde = phi_0.data[:, 0, 0] * dnde_model * energy**2
         return dnde.to("erg / (cm2 s)")
 
     def _get_criterion(self, excess, bkg):

@@ -19,7 +19,7 @@ __all__ = [
 class DMProfile(abc.ABC):
     """DMProfile model base class."""
 
-    LOCAL_DENSITY = 0.3 * u.GeV / (u.cm ** 3)
+    LOCAL_DENSITY = 0.3 * u.GeV / (u.cm**3)
     """Local dark matter density as given in refenrece 2"""
     DISTANCE_GC = 8.33 * u.kpc
     """Distance to the Galactic Center as given in reference 2"""
@@ -132,7 +132,7 @@ class EinastoProfile(DMProfile):
     @staticmethod
     def evaluate(radius, r_s, alpha, rho_s):
         rr = radius / r_s
-        exponent = (2 / alpha) * (rr ** alpha - 1)
+        exponent = (2 / alpha) * (rr**alpha - 1)
         return rho_s * np.exp(-1 * exponent)
 
 
@@ -165,7 +165,7 @@ class IsothermalProfile(DMProfile):
     @staticmethod
     def evaluate(radius, r_s, rho_s):
         rr = radius / r_s
-        return rho_s / (1 + rr ** 2)
+        return rho_s / (1 + rr**2)
 
 
 class BurkertProfile(DMProfile):
@@ -197,7 +197,7 @@ class BurkertProfile(DMProfile):
     @staticmethod
     def evaluate(radius, r_s, rho_s):
         rr = radius / r_s
-        return rho_s / ((1 + rr) * (1 + rr ** 2))
+        return rho_s / ((1 + rr) * (1 + rr**2))
 
 
 class MooreProfile(DMProfile):
@@ -232,4 +232,4 @@ class MooreProfile(DMProfile):
     def evaluate(radius, r_s, rho_s):
         rr = radius / r_s
         rr_ = r_s / radius
-        return rho_s * rr_ ** 1.16 * (1 + rr) ** (-1.84)
+        return rho_s * rr_**1.16 * (1 + rr) ** (-1.84)

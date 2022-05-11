@@ -117,8 +117,10 @@ class FluxEstimator(ParameterEstimator):
             if scaled_parameter.is_norm:
                 break
         else:
-            raise ValueError(f"{self.tag} requires a 'norm' or 'amplitude' parameter"
-                             " in the model to run")
+            raise ValueError(
+                f"{self.tag} requires a 'norm' or 'amplitude' parameter"
+                " in the model to run"
+            )
 
         scale_model.norm = self._set_norm_parameter(scale_model.norm, scaled_parameter)
         return scale_model

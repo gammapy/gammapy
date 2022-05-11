@@ -278,7 +278,7 @@ class TSMapEstimator(Estimator):
         if kernel is None:
             kernel = self.estimate_kernel(dataset=dataset)
 
-        kernel = kernel.data / np.sum(kernel.data ** 2)
+        kernel = kernel.data / np.sum(kernel.data**2)
 
         with np.errstate(invalid="ignore", divide="ignore"):
             flux = (dataset.counts - dataset.npred()) / exposure
@@ -548,7 +548,7 @@ class SimpleMapDataset:
 
     def stat_2nd_derivative(self, norm):
         """Stat 2nd derivative"""
-        term_top = self.model ** 2 * self.counts
+        term_top = self.model**2 * self.counts
         term_bottom = (self.background + norm * self.model) ** 2
         mask = term_bottom == 0
         return (term_top / term_bottom)[~mask].sum()
@@ -651,7 +651,7 @@ class BrentqFluxEstimator(Estimator):
         norm_err = result["norm_err"]
 
         def ts_diff(x):
-            return (stat_best + n_sigma ** 2) - dataset.stat_sum(x)
+            return (stat_best + n_sigma**2) - dataset.stat_sum(x)
 
         if positive:
             min_norm = norm

@@ -54,12 +54,14 @@ def observations():
     obs_ids = [23523, 23526]
     return datastore.get_observations(obs_ids)
 
+
 @pytest.fixture(scope="session")
 def observations_fixed_rad_max():
     """Example observation list for testing."""
     datastore = DataStore.from_dir("$GAMMAPY_DATA/joint-crab/dl3/magic/")
     obs_ids = [5029748]
     return datastore.get_observations(obs_ids, required_irf="point-like")
+
 
 @pytest.fixture()
 def reflected_bkg_maker(exclusion_mask):
@@ -307,7 +309,7 @@ def test_wobble_regions_finder():
 
 
 def test_wobble_regions_finder_overlapping(caplog):
-    '''Test that overlapping regions are not produced'''
+    """Test that overlapping regions are not produced"""
     center = SkyCoord(83.6333313, 21.51444435, unit="deg", frame="icrs")
     source_angle = 35 * u.deg
 
@@ -365,8 +367,11 @@ def test_reflected_bkg_maker_with_wobble_finder(
     assert_allclose(len(regions_0), 3)
     assert_allclose(len(regions_1), 3)
 
+
 @requires_data()
-def test_reflected_bkg_maker_fixed_rad_max(reflected_bkg_maker, observations_fixed_rad_max):
+def test_reflected_bkg_maker_fixed_rad_max(
+    reflected_bkg_maker, observations_fixed_rad_max
+):
     e_reco = MapAxis.from_energy_bounds(0.1, 10, 5, unit="TeV")
     e_true = MapAxis.from_energy_bounds(0.1, 10, 5, unit="TeV", name="energy_true")
 
@@ -390,7 +395,9 @@ def test_reflected_bkg_maker_fixed_rad_max(reflected_bkg_maker, observations_fix
 
 
 @requires_data()
-def test_reflected_bkg_maker_fixed_rad_max_wobble(exclusion_mask, observations_fixed_rad_max):
+def test_reflected_bkg_maker_fixed_rad_max_wobble(
+    exclusion_mask, observations_fixed_rad_max
+):
     reflected_bkg_maker = ReflectedRegionsBackgroundMaker(
         region_finder=WobbleRegionsFinder(n_off_regions=3),
         exclusion_mask=exclusion_mask,
@@ -418,7 +425,9 @@ def test_reflected_bkg_maker_fixed_rad_max_wobble(exclusion_mask, observations_f
 
 
 @requires_data()
-def test_reflected_bkg_maker_fixed_rad_max_bad(reflected_bkg_maker, observations_fixed_rad_max):
+def test_reflected_bkg_maker_fixed_rad_max_bad(
+    reflected_bkg_maker, observations_fixed_rad_max
+):
     e_reco = MapAxis.from_energy_bounds(0.1, 10, 5, unit="TeV")
 
     pos = SkyCoord(83.63, 22.01, unit="deg", frame="icrs")
@@ -435,7 +444,7 @@ def test_reflected_bkg_maker_fixed_rad_max_bad(reflected_bkg_maker, observations
     with pytest.raises(ValueError):
         reflected_bkg_maker.run(dataset, obs)
 
-    region_bad_shape = RectangleSkyRegion(pos, 0.2*u.deg, 0.2*u.deg)
+    region_bad_shape = RectangleSkyRegion(pos, 0.2 * u.deg, 0.2 * u.deg)
     geom_bad_shape = RegionGeom(region_bad_shape, axes=[e_reco])
     dataset_empty = SpectrumDataset.create(geom=geom_bad_shape)
 

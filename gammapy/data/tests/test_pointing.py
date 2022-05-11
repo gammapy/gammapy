@@ -120,16 +120,14 @@ class TestPointingInfo:
         assert pos.name == "altaz"
 
 
-
 def test_altaz_without_location(caplog):
-    meta = {'ALT_PNT': 20.0, 'AZ_PNT': 170.0}
+    meta = {"ALT_PNT": 20.0, "AZ_PNT": 170.0}
     pointing = FixedPointingInfo(meta)
 
     with caplog.at_level(logging.WARNING):
         altaz = pointing.altaz
         assert altaz.alt.deg == 20.0
         assert altaz.az.deg == 170.0
-
 
     pointing = FixedPointingInfo({})
 
@@ -147,8 +145,8 @@ def test_fixed_pointing_info_fixed_icrs():
     pointing_icrs = SkyCoord(ra=83.28 * u.deg, dec=21.78 * u.deg)
 
     meta = time_ref_to_dict(ref)
-    meta['TSTART'] = time_relative_to_ref(start, meta).to_value(u.s)
-    meta['TSTOP'] = time_relative_to_ref(stop, meta).to_value(u.s)
+    meta["TSTART"] = time_relative_to_ref(start, meta).to_value(u.s)
+    meta["TSTOP"] = time_relative_to_ref(stop, meta).to_value(u.s)
     meta.update(earth_location_to_dict(location))
     meta["RA_PNT"] = pointing_icrs.ra.deg
     meta["DEC_PNT"] = pointing_icrs.dec.deg
@@ -190,8 +188,8 @@ def test_fixed_pointing_info_fixed_altaz():
     pointing_altaz = pointing_icrs.transform_to(AltAz(obstime=start, location=location))
 
     meta = time_ref_to_dict(ref)
-    meta['TSTART'] = time_relative_to_ref(start, meta).to_value(u.s)
-    meta['TSTOP'] = time_relative_to_ref(stop, meta).to_value(u.s)
+    meta["TSTART"] = time_relative_to_ref(start, meta).to_value(u.s)
+    meta["TSTOP"] = time_relative_to_ref(stop, meta).to_value(u.s)
     meta.update(earth_location_to_dict(location))
     meta["OBS_MODE"] = "DRIFT"
     meta["ALT_PNT"] = pointing_altaz.alt.deg

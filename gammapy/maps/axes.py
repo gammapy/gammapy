@@ -26,6 +26,7 @@ def flat_if_equal(array):
 
 class AxisCoordInterpolator:
     """Axis coord interpolator"""
+
     def __init__(self, edges, interp="lin"):
         self.scale = interpolation_scale(interp)
         self.x = self.scale(edges)
@@ -470,7 +471,7 @@ class MapAxis:
         elif interp == "log":
             nodes = np.exp(np.linspace(np.log(lo_bnd), np.log(hi_bnd), nnode))
         elif interp == "sqrt":
-            nodes = np.linspace(lo_bnd ** 0.5, hi_bnd ** 0.5, nnode) ** 2.0
+            nodes = np.linspace(lo_bnd**0.5, hi_bnd**0.5, nnode) ** 2.0
         else:
             raise ValueError(f"Invalid interp: {interp}")
 

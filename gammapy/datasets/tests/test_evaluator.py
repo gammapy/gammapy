@@ -13,7 +13,7 @@ from gammapy.modeling.models import (
     Models,
     PointSpatialModel,
     SkyModel,
-    PowerLawSpectralModel
+    PowerLawSpectralModel,
 )
 from gammapy.utils.gauss import Gauss2DPDF
 
@@ -68,7 +68,9 @@ def test_compute_flux_spatial_no_psf():
     models = SkyModel(spectral_model=spectral_model, spatial_model=spatial_model)
     model = Models(models)
 
-    exposure_region = RegionNDMap.create(region, axes=[energy_axis_true], unit="m2 s", data=1.0)
+    exposure_region = RegionNDMap.create(
+        region, axes=[energy_axis_true], unit="m2 s", data=1.0
+    )
 
     evaluator = MapEvaluator(model=model[0], exposure=exposure_region)
     flux = evaluator.compute_flux_spatial()
@@ -113,15 +115,24 @@ def test_large_oversampling():
     assert_allclose(flux_3.data.sum(), nbin, rtol=1e-4)
     assert_allclose(flux_4.data.sum(), nbin, rtol=1e-4)
 
+
 def test_compute_npred_sign():
     center = SkyCoord("0 deg", "0 deg", frame="galactic")
     energy_axis_true = MapAxis.from_energy_bounds(
         ".1 TeV", "10 TeV", nbin=2, name="energy_true"
     )
-    geom = WcsGeom.create(skydir=center, width=1*u.deg, axes = [energy_axis_true], frame='galactic', binsz=0.2*u.deg)
+    geom = WcsGeom.create(
+        skydir=center,
+        width=1 * u.deg,
+        axes=[energy_axis_true],
+        frame="galactic",
+        binsz=0.2 * u.deg,
+    )
 
-    spectral_model_pos = PowerLawSpectralModel(index = 2, amplitude="1e-11 TeV-1 s-1 m-2")
-    spectral_model_neg = PowerLawSpectralModel(index = 2, amplitude="-1e-11 TeV-1 s-1 m-2")
+    spectral_model_pos = PowerLawSpectralModel(index=2, amplitude="1e-11 TeV-1 s-1 m-2")
+    spectral_model_neg = PowerLawSpectralModel(
+        index=2, amplitude="-1e-11 TeV-1 s-1 m-2"
+    )
 
     spatial_model = PointSpatialModel(
         lon_0=0 * u.deg, lat_0=0 * u.deg, frame="galactic"

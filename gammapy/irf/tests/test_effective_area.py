@@ -37,7 +37,7 @@ def test_basic(aeff):
 
 def test_from_parametrization():
     # Log center of this is 100 GeV
-    area_ref = 1.65469579e07 * u.cm ** 2
+    area_ref = 1.65469579e07 * u.cm**2
 
     axis = MapAxis.from_energy_edges([80, 125] * u.GeV, name="energy_true")
     area = EffectiveAreaTable2D.from_parametrization(axis, "HESS")
@@ -89,7 +89,7 @@ def test_to_table_is_pointlike():
     offset_axis = MapAxis.from_bounds(0 * u.deg, 2 * u.deg, nbin=2, name="offset")
 
     aeff = EffectiveAreaTable2D(
-        data=np.ones((3, 2)) * u.m ** 2, axes=[energy_axis, offset_axis]
+        data=np.ones((3, 2)) * u.m**2, axes=[energy_axis, offset_axis]
     )
     hdu = aeff.to_table_hdu()
     assert "is_pointlike" not in hdu.header
@@ -148,8 +148,8 @@ def test_eq():
 
     offset_axis = MapAxis.from_bounds(0 * u.deg, 2 * u.deg, nbin=2, name="offset")
 
-    data1 = np.ones((energy1.nbin, offset_axis.nbin)) * u.cm ** 2
-    data2 = np.ones((energy2.nbin, offset_axis.nbin)) * u.cm ** 2
+    data1 = np.ones((energy1.nbin, offset_axis.nbin)) * u.cm**2
+    data2 = np.ones((energy2.nbin, offset_axis.nbin)) * u.cm**2
 
     aeff1 = EffectiveAreaTable2D(data=data1, axes=[energy1, offset_axis])
     aeff2 = EffectiveAreaTable2D(data=data2, axes=[energy2, offset_axis])

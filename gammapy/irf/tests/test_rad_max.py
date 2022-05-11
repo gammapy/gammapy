@@ -47,8 +47,10 @@ def test_rad_max_plot(rad_max_2d):
 def test_rad_max_from_irf():
     e_bins = 3
     o_bins = 2
-    energy_axis = MapAxis.from_energy_bounds(1 * u.TeV, 10 * u.TeV, nbin=e_bins, name='energy_true')
-    offset_axis = MapAxis.from_bounds(0 * u.deg, 3 * u.deg, nbin=o_bins, name='offset')
+    energy_axis = MapAxis.from_energy_bounds(
+        1 * u.TeV, 10 * u.TeV, nbin=e_bins, name="energy_true"
+    )
+    offset_axis = MapAxis.from_bounds(0 * u.deg, 3 * u.deg, nbin=o_bins, name="offset")
     aeff = EffectiveAreaTable2D(
         data=u.Quantity(np.ones((e_bins, o_bins)), u.m**2, copy=False),
         axes=[energy_axis, offset_axis],
@@ -63,32 +65,38 @@ def test_rad_max_from_irf():
         # missing rad_max
         RadMax2D.from_irf(aeff)
 
-    aeff.meta['RAD_MAX'] = '0.2 deg'
+    aeff.meta["RAD_MAX"] = "0.2 deg"
     with pytest.raises(ValueError):
         # invalid format
         RadMax2D.from_irf(aeff)
 
-    aeff.meta['RAD_MAX'] = 0.2
+    aeff.meta["RAD_MAX"] = 0.2
     rad_max = RadMax2D.from_irf(aeff)
 
-    assert rad_max.axes['energy'].nbin == 1
-    assert rad_max.axes['offset'].nbin ==  1
-    assert rad_max.axes['energy'].edges[0] == aeff.axes['energy_true'].edges[0]
-    assert rad_max.axes['energy'].edges[1] == aeff.axes['energy_true'].edges[-1]
-    assert rad_max.axes['offset'].edges[0] == aeff.axes['offset'].edges[0]
-    assert rad_max.axes['offset'].edges[1] == aeff.axes['offset'].edges[-1]
+    assert rad_max.axes["energy"].nbin == 1
+    assert rad_max.axes["offset"].nbin == 1
+    assert rad_max.axes["energy"].edges[0] == aeff.axes["energy_true"].edges[0]
+    assert rad_max.axes["energy"].edges[1] == aeff.axes["energy_true"].edges[-1]
+    assert rad_max.axes["offset"].edges[0] == aeff.axes["offset"].edges[0]
+    assert rad_max.axes["offset"].edges[1] == aeff.axes["offset"].edges[-1]
     assert rad_max.quantity.shape == (1, 1)
     assert rad_max.quantity[0, 0] == 0.2 * u.deg
 
 
 def test_rad_max_single_bin():
     energy_axis = MapAxis.from_energy_bounds(0.01, 100, 1, unit="TeV")
-    offset_axis = MapAxis.from_bounds(0., 5, 1, unit="deg", name="offset", )
+    offset_axis = MapAxis.from_bounds(
+        0.0,
+        5,
+        1,
+        unit="deg",
+        name="offset",
+    )
 
     rad_max = RadMax2D(
         data=[[0.1]] * u.deg,
         axes=[energy_axis, offset_axis],
-        interp_kwargs={"method": "nearest", "fill_value": None}
+        interp_kwargs={"method": "nearest", "fill_value": None},
     )
 
     value = rad_max.evaluate(energy=1 * u.TeV, offset=1 * u.deg)
@@ -99,4 +107,3 @@ def test_rad_max_single_bin():
     assert_allclose(value, 0.1 * u.deg)
 
     assert rad_max.is_fixed_rad_max
-

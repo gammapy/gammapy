@@ -31,7 +31,7 @@ class _LogGaussianSpectralModel(SpectralModel):
         return (
             L
             / (energy * w * np.sqrt(2 * np.pi))
-            * np.exp(-((np.log(energy / Ep)) ** 2) / (2 * w ** 2))
+            * np.exp(-((np.log(energy / Ep)) ** 2) / (2 * w**2))
         )
 
 
@@ -88,13 +88,10 @@ def create_cosmic_ray_spectral_model(particle="proton"):
             reference=1 * u.TeV,
         )
     elif particle == "electron":
-        return (
-            PowerLawSpectralModel(
-                amplitude=6.85e-5 * u.Unit("1 / (m2 s TeV sr)") * omega,
-                index=3.21,
-                reference=1 * u.TeV,
-            )
-            + _LogGaussianSpectralModel(L=3.19e-3 * u.Unit("1 / (m2 s sr)") * omega)
-        )
+        return PowerLawSpectralModel(
+            amplitude=6.85e-5 * u.Unit("1 / (m2 s TeV sr)") * omega,
+            index=3.21,
+            reference=1 * u.TeV,
+        ) + _LogGaussianSpectralModel(L=3.19e-3 * u.Unit("1 / (m2 s sr)") * omega)
     else:
         raise ValueError(f"Invalid particle: {particle!r}")

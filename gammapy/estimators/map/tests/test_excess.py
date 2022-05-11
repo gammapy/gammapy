@@ -141,7 +141,7 @@ def test_significance_map_estimator_map_dataset(simple_dataset):
 
 
 def test_significance_map_estimator_map_dataset_exposure(simple_dataset):
-    simple_dataset.exposure += 1e10 * u.cm ** 2 * u.s
+    simple_dataset.exposure += 1e10 * u.cm**2 * u.s
     axis = simple_dataset.exposure.geom.axes[0]
     simple_dataset.psf = PSFMap.from_gauss(axis, sigma="0.05 deg")
 

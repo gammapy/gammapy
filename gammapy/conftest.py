@@ -64,7 +64,7 @@ def pytest_configure(config):
 
 @pytest.fixture()
 def spectrum_dataset():
-    #TODO: change the fixture scope to "session". This currently crashes fitting tests 
+    # TODO: change the fixture scope to "session". This currently crashes fitting tests
     name = "test"
     energy = np.logspace(-1, 1, 31) * u.TeV
     livetime = 100 * u.s

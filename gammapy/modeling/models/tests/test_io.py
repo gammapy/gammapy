@@ -337,5 +337,5 @@ def test_link_label(models):
     for line in lines:
         if "@" in line:
             assert "reference" in line
-            n_link +=1
+            n_link += 1
     assert n_link == 2

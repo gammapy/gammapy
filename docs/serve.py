@@ -1,10 +1,10 @@
-'''
+"""
 Serve the docs page and open in default browser.
 
 Combination of these two SO (license CC-BY-SA 4.0) answers:
 https://stackoverflow.com/a/51295415/3838691
 https://stackoverflow.com/a/52531444/3838691
-'''
+"""
 import time
 from threading import Thread
 import webbrowser
@@ -24,7 +24,7 @@ def open_docs():
     webbrowser.open(url)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     Thread(target=open_docs).start()
     Handler = partial(SimpleHTTPRequestHandler, directory=directory)
     httpd = HTTPServer(server_address, Handler)

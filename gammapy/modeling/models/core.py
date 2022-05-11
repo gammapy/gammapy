@@ -59,7 +59,7 @@ class ModelBase:
 
     _type = None
 
-    def __init__(self,  **kwargs):
+    def __init__(self, **kwargs):
         # Copy default parameters from the class to the instance
         default_parameters = self.default_parameters.copy()
 
@@ -120,7 +120,7 @@ class ModelBase:
         self._check_covariance()
         for par in self.parameters:
             pars = Parameters([par])
-            error = np.nan_to_num(par.error ** 2, nan=1)
+            error = np.nan_to_num(par.error**2, nan=1)
             covar = Covariance(pars, data=[[error]])
             self._covariance.set_subcovariance(covar)
 

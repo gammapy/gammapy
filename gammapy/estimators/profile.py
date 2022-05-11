@@ -102,7 +102,7 @@ class ImageProfileEstimator(Estimator):
                 profile_err = np.sqrt(profile)
             elif image_err:
                 # gaussian error propagation
-                err_sum = scipy.ndimage.sum(image_err.data ** 2, labels.data, index)
+                err_sum = scipy.ndimage.sum(image_err.data**2, labels.data, index)
                 profile_err = np.sqrt(err_sum)
 
         elif p["method"] == "mean":
@@ -110,7 +110,7 @@ class ImageProfileEstimator(Estimator):
             profile = scipy.ndimage.mean(image.data, labels.data, index)
             if image_err:
                 N = scipy.ndimage.sum(~np.isnan(image_err.data), labels.data, index)
-                err_sum = scipy.ndimage.sum(image_err.data ** 2, labels.data, index)
+                err_sum = scipy.ndimage.sum(image_err.data**2, labels.data, index)
                 profile_err = np.sqrt(err_sum) / N
 
         return profile, profile_err
@@ -252,7 +252,7 @@ class ImageProfile:
                 profile_err = table["profile_err"]
                 # use gaussian error propagation
                 box = Box1DKernel(width)
-                err_sum = scipy.ndimage.convolve(profile_err ** 2, box.array ** 2)
+                err_sum = scipy.ndimage.convolve(profile_err**2, box.array**2)
                 smoothed_err = np.sqrt(err_sum)
         elif kernel == "gauss":
             smoothed = scipy.ndimage.gaussian_filter(
@@ -262,7 +262,7 @@ class ImageProfile:
             if "profile_err" in table.colnames:
                 profile_err = table["profile_err"]
                 gauss = Gaussian1DKernel(width)
-                err_sum = scipy.ndimage.convolve(profile_err ** 2, gauss.array ** 2)
+                err_sum = scipy.ndimage.convolve(profile_err**2, gauss.array**2)
                 smoothed_err = np.sqrt(err_sum)
         else:
             raise ValueError("Not valid kernel choose either 'box' or 'gauss'")

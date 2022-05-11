@@ -15,7 +15,7 @@ class TestFindRoots:
         return np.cos(x)
 
     def h(self, x):
-        return x ** 3 - 1
+        return x**3 - 1
 
     def test_methods(self):
 

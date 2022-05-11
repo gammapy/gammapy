@@ -631,6 +631,7 @@ def test_axes_getitem():
     assert isinstance(axes[["a3", "a1"]], MapAxes)
     assert axes[["a3", "a1"]][0].name == "a3"
 
+
 def test_label_map_axis_basics():
     axis = LabelMapAxis(labels=["label-1", "label-2"], name="label-axis")
 
@@ -711,8 +712,8 @@ def test_mixed_axes():
 
 def test_map_axis_format_plot_xaxis():
     axis = MapAxis.from_energy_bounds(
-            "0.03 TeV", "300 TeV", nbin=20,
-            per_decade=True, name="energy_true")
+        "0.03 TeV", "300 TeV", nbin=20, per_decade=True, name="energy_true"
+    )
 
     with mpl_plot_check():
         ax = plt.gca()
@@ -725,7 +726,10 @@ def test_map_axis_format_plot_xaxis():
 
 def test_time_map_axis_format_plot_xaxis(time_intervals):
     axis = TimeMapAxis(
-        time_intervals["t_min"], time_intervals["t_max"], time_intervals["t_ref"], name="time"
+        time_intervals["t_min"],
+        time_intervals["t_max"],
+        time_intervals["t_ref"],
+        name="time",
     )
 
     with mpl_plot_check():

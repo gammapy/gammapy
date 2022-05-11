@@ -79,7 +79,7 @@ class Gauss2DPDF:
         containment_fraction : `~numpy.ndarray`
             Containment fraction
         """
-        return 1 - np.exp(-0.5 * rad ** 2 / self._sigma2)
+        return 1 - np.exp(-0.5 * rad**2 / self._sigma2)
 
     def containment_radius(self, containment_fraction):
         """Containment angle for a given containment fraction.
@@ -109,7 +109,7 @@ class Gauss2DPDF:
         gauss_convolve : `~gammapy.modeling.models.Gauss2DPDF`
             Convolution of both Gaussians.
         """
-        new_sigma = np.sqrt(self._sigma2 + sigma ** 2)
+        new_sigma = np.sqrt(self._sigma2 + sigma**2)
         return Gauss2DPDF(new_sigma)
 
 

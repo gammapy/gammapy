@@ -141,14 +141,14 @@ def test_set_models():
     analysis.set_models(models=models_str)
     assert isinstance(analysis.models, DatasetModels)
     assert len(analysis.models) == 2
-    assert  analysis.models.names == ['source', 'stacked-bkg']
+    assert analysis.models.names == ["source", "stacked-bkg"]
     with pytest.raises(TypeError):
         analysis.set_models(0)
 
     new_source = analysis.models["source"].copy(name="source2")
     analysis.set_models(models=[new_source], extend=False)
     assert len(analysis.models) == 2
-    assert analysis.models.names == ['source2', 'stacked-bkg']
+    assert analysis.models.names == ["source2", "stacked-bkg"]
 
 
 @requires_data()
@@ -409,7 +409,8 @@ def test_analysis_3d_joint_datasets():
         rtol=1e-6,
     )
     assert_allclose(
-        analysis.datasets[0].background_model.spectral_model.tilt.value, 0.0,
+        analysis.datasets[0].background_model.spectral_model.tilt.value,
+        0.0,
         rtol=1e-6,
     )
     assert_allclose(
@@ -440,6 +441,7 @@ def test_usage_errors():
     with pytest.raises(ValidationError):
         analysis.config.datasets.type = "None"
 
+
 @requires_data()
 def test_datasets_io(tmpdir):
     config = get_example_config("3d")
@@ -456,12 +458,12 @@ def test_datasets_io(tmpdir):
     analysis = Analysis(config)
     analysis.read_datasets()
     assert len(analysis.datasets.models) == 2
-    assert  analysis.models.names == ['source', 'stacked-bkg']
+    assert analysis.models.names == ["source", "stacked-bkg"]
 
     analysis.models[0].parameters["index"].value = 3
     analysis.write_models()
     analysis = Analysis(config)
     analysis.read_datasets()
     assert len(analysis.datasets.models) == 2
-    assert  analysis.models.names == ['source', 'stacked-bkg']
+    assert analysis.models.names == ["source", "stacked-bkg"]
     assert analysis.models[0].parameters["index"].value == 3

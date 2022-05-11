@@ -39,10 +39,10 @@ class LWTestModel(SpectralModel):
 class XSqrTestModel(SpectralModel):
     @staticmethod
     def evaluate(x):
-        return x ** 2
+        return x**2
 
     def integral(self, xmin, xmax, **kwargs):
-        return 1.0 / 3 * (xmax ** 3 - xmin ** 2)
+        return 1.0 / 3 * (xmax**3 - xmin**2)
 
     def inverse(self, y):
         return np.sqrt(y)
@@ -219,7 +219,6 @@ class TestFluxPoints:
 
     def test_plot(self, flux_points):
 
-
         fig = plt.figure()
         ax = fig.add_axes([0.2, 0.2, 0.7, 0.7])
         ax.xaxis.set_units(u.eV)
@@ -334,4 +333,4 @@ def test_flux_points_plot_no_error_bar():
 
     flux_points = FluxPoints.from_table(table)
     with mpl_plot_check():
-       _ = flux_points.plot(sed_type="dnde")
+        _ = flux_points.plot(sed_type="dnde")

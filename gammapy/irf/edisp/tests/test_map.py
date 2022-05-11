@@ -16,7 +16,8 @@ from gammapy.makers.utils import make_edisp_map, make_map_exposure_true_energy
 from gammapy.maps import MapAxis, MapCoord, RegionGeom, WcsGeom
 from gammapy.utils.testing import mpl_plot_check
 
-def fake_aeff2d(area=1e6 * u.m ** 2):
+
+def fake_aeff2d(area=1e6 * u.m**2):
     offsets = np.array((0.0, 1.0, 2.0, 3.0)) * u.deg
 
     energy_axis_true = MapAxis.from_energy_bounds(
@@ -162,7 +163,9 @@ def test_edisp_from_diagonal_response(position):
     )
 
     edisp_map = EDispMap.from_diagonal_response(energy_axis_true)
-    edisp_kernel = edisp_map.get_edisp_kernel(position=position, energy_axis=energy_axis)
+    edisp_kernel = edisp_map.get_edisp_kernel(
+        position=position, energy_axis=energy_axis
+    )
 
     sum_kernel = np.sum(edisp_kernel.data, axis=1)
 
@@ -312,6 +315,7 @@ def test_edisp_kernel_map_resample_axis():
     assert im.edisp_map.data.shape == (10, 2, 1, 2)
     assert_allclose(res, 1.0, rtol=1e-5)
 
+
 def test_peek():
     e_reco = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=3)
     e_true = MapAxis.from_energy_bounds(
@@ -323,4 +327,3 @@ def test_peek():
     edisp = EDispMap.from_diagonal_response(e_true)
     with mpl_plot_check():
         edisp.peek()
-

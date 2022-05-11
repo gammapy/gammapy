@@ -18,7 +18,7 @@ class FoVBackgroundMaker(Maker):
     The dataset background model can be simply scaled (method="scale") or fitted (method="fit")
     on the dataset counts.
 
-    The normalization is performed outside the exclusion mask that is passed on init. This also internally 
+    The normalization is performed outside the exclusion mask that is passed on init. This also internally
     takes into account the dataset fit mask.
 
     If a SkyModel is set on the input dataset its parameters
@@ -134,7 +134,7 @@ class FoVBackgroundMaker(Maker):
         return mask
 
     def _make_masked_summed_counts(self, dataset):
-        """"Compute the sums of the counts, npred, and bacground maps within the mask"""
+        """ "Compute the sums of the counts, npred, and bacground maps within the mask"""
 
         npred = dataset.npred()
         mask = dataset.mask & ~np.isnan(npred)
@@ -148,7 +148,7 @@ class FoVBackgroundMaker(Maker):
         }
 
     def _verify_requirements(self, dataset):
-        """"Verify that the requirements of min_counts
+        """ "Verify that the requirements of min_counts
         and min_npred_background are satisfied"""
 
         total = self._make_masked_summed_counts(dataset)
@@ -184,7 +184,7 @@ class FoVBackgroundMaker(Maker):
 
     def run(self, dataset, observation=None):
         """Run FoV background maker.
-        
+
         Parameters
         ----------
         dataset : `~gammapy.datasets.MapDataset`
@@ -192,7 +192,9 @@ class FoVBackgroundMaker(Maker):
 
         """
         if isinstance(dataset.counts.geom, RegionGeom):
-            raise TypeError("FoVBackgroundMaker does not support region based datasets.")
+            raise TypeError(
+                "FoVBackgroundMaker does not support region based datasets."
+            )
 
         mask_fit = dataset.mask_fit
         if mask_fit:

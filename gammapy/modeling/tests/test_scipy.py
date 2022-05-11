@@ -102,7 +102,7 @@ def test_scipy_confidence(pars):
 
 def test_stat_profile_ul_scipy():
     x = np.linspace(-5, 5, 7)
-    y = x ** 2
+    y = x**2
     ul = stat_profile_ul_scipy(x, y)
     assert_allclose(ul, 2)
 

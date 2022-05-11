@@ -61,7 +61,9 @@ def gti():
 
 @pytest.fixture(scope="session")
 def diffuse_model():
-    axis = MapAxis.from_edges([0.1, 1 ,100], name="energy_true", unit="TeV", interp="log")
+    axis = MapAxis.from_edges(
+        [0.1, 1, 100], name="energy_true", unit="TeV", interp="log"
+    )
     m = Map.create(
         npix=(4, 3), binsz=2, axes=[axis], unit="cm-2 s-1 MeV-1 sr-1", frame="galactic"
     )
@@ -230,12 +232,16 @@ def test_background_model_io(tmpdir, background):
 def test_background_model_copy(background):
     background_copy = background.copy()
     bkg = TemplateNPredModel(background_copy)
-    bkg.map.data +=  1.0
-    assert np.all(background_copy.data == background.data) # Check that the original map is unchanged
+    bkg.map.data += 1.0
+    assert np.all(
+        background_copy.data == background.data
+    )  # Check that the original map is unchanged
 
     bkg_copy = bkg.copy()
-    bkg_copy.map.data +=  1.0
-    assert np.all(bkg_copy.map.data == bkg.map.data) # Check that the map has now changed
+    bkg_copy.map.data += 1.0
+    assert np.all(
+        bkg_copy.map.data == bkg.map.data
+    )  # Check that the map has now changed
 
 
 def test_parameters(sky_models):
@@ -256,9 +262,11 @@ def test_parameters(sky_models):
     p2 = sky_models[0].parameters["lon_0"]
     assert p1 is p2
 
+
 def test_str(sky_models):
     assert "Component 0" in str(sky_models)
     assert "Component 1" in str(sky_models)
+
 
 def test_get_item(sky_models):
     model = sky_models["source-2"]
@@ -269,6 +277,7 @@ def test_get_item(sky_models):
 
     with pytest.raises(ValueError):
         sky_models["spam"]
+
 
 def test_names(sky_models):
     assert sky_models.names == ["source-2", "source-3"]
@@ -628,7 +637,7 @@ class MyCustomGaussianModel(SpatialModel):
         sep = angular_separation(lon, lat, lon_0, lat_0)
 
         exponent = -0.5 * (sep / sigma) ** 2
-        norm = 1 / (2 * np.pi * sigma ** 2)
+        norm = 1 / (2 * np.pi * sigma**2)
         return norm * np.exp(exponent)
 
     @property

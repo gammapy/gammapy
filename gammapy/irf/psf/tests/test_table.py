@@ -25,9 +25,10 @@ def test_psf_3d_wrong_units():
     data = np.ones((energy_axis.nbin, offset_axis.nbin, rad_axis.nbin)) * wrong_unit
     psf3d_test = PSF3D(axes=[energy_axis, offset_axis, rad_axis])
     with pytest.raises(ValueError) as error:
-        PSF3D(axes=[energy_axis, offset_axis, rad_axis],
-                 data=data)
-        assert error.match(f"Error: {wrong_unit} is not an allowed unit. {psf3d_test.tag} requires {psf3d_test.default_unit} data quantities.")
+        PSF3D(axes=[energy_axis, offset_axis, rad_axis], data=data)
+        assert error.match(
+            f"Error: {wrong_unit} is not an allowed unit. {psf3d_test.tag} requires {psf3d_test.default_unit} data quantities."
+        )
 
 
 @requires_data()
@@ -46,7 +47,7 @@ def test_psf_3d_basics(psf_3d):
     assert psf_3d.unit == "sr-1"
 
     psf_3d_new_unit = psf_3d.to_unit("deg-2")
-    assert_allclose(psf_3d_new_unit.data, psf_3d.data/3282.8063, rtol=1e-6)
+    assert_allclose(psf_3d_new_unit.data, psf_3d.data / 3282.8063, rtol=1e-6)
 
     assert_allclose(psf_3d.meta["LO_THRES"], 0.01)
 

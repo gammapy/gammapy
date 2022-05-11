@@ -279,7 +279,7 @@ class TestSpectrumMakerChain:
             (
                 dict(containment_correction=False),
                 dict(
-                    n_on=125, sigma=18.953014, aeff=580254.9 * u.m ** 2, edisp=0.23635
+                    n_on=125, sigma=18.953014, aeff=580254.9 * u.m**2, edisp=0.23635
                 ),
             ),
             (
@@ -287,7 +287,7 @@ class TestSpectrumMakerChain:
                 dict(
                     n_on=125,
                     sigma=18.953014,
-                    aeff=375314.356461 * u.m ** 2,
+                    aeff=375314.356461 * u.m**2,
                     edisp=0.23635,
                 ),
             ),

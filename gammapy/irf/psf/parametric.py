@@ -289,7 +289,7 @@ def get_sigmas_and_norms(**kwargs):
     scale = kwargs["scale"]
     ones = np.ones(scale.shape)
     amplitudes = u.Quantity([ones, kwargs["ampl_2"], kwargs["ampl_3"]])
-    norms = 2 * scale * amplitudes * sigmas ** 2
+    norms = 2 * scale * amplitudes * sigmas**2
     return sigmas, norms
 
 
@@ -407,7 +407,7 @@ class PSFKing(ParametricPSF):
         """
         with np.errstate(divide="ignore", invalid="ignore"):
             powterm = 1 - gamma
-            term = (1 + rad ** 2 / (2 * gamma * sigma ** 2)) ** powterm
+            term = (1 + rad**2 / (2 * gamma * sigma**2)) ** powterm
             containment = 1 - term
 
         return containment
@@ -429,8 +429,8 @@ class PSFKing(ParametricPSF):
             PSF value
         """
         with np.errstate(divide="ignore"):
-            term1 = 1 / (2 * np.pi * sigma ** 2)
+            term1 = 1 / (2 * np.pi * sigma**2)
             term2 = 1 - 1 / gamma
-            term3 = (1 + rad ** 2 / (2 * gamma * sigma ** 2)) ** (-gamma)
+            term3 = (1 + rad**2 / (2 * gamma * sigma**2)) ** (-gamma)
 
         return term1 * term2 * term3

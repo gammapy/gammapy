@@ -139,7 +139,7 @@ def test_gti_write(tmp_path):
 
 
 def test_gti_from_time():
-    '''Test astropy time is supported as input for GTI.create'''
+    """Test astropy time is supported as input for GTI.create"""
     start = Time("2020-01-01T20:00:00")
     stop = Time("2020-01-01T20:15:00")
     ref = Time("2020-01-01T00:00:00")

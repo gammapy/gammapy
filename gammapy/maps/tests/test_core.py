@@ -283,7 +283,7 @@ def test_map_arithmetics(map_type):
     m2.data += 1.0
 
     # addition
-    m1 += 1 * u.cm ** 2
+    m1 += 1 * u.cm**2
     assert m1.unit == u.Unit("m2")
     assert_allclose(m1.data, 1e-4)
 
@@ -292,7 +292,7 @@ def test_map_arithmetics(map_type):
     assert_allclose(m3.data, 1.0001)
 
     # subtraction
-    m3 -= 1 * u.cm ** 2
+    m3 -= 1 * u.cm**2
     assert m3.unit == u.Unit("m2")
     assert_allclose(m3.data, 1.0)
 
@@ -327,23 +327,23 @@ def test_map_arithmetics(map_type):
     assert m1.unit == u.Unit("")
     assert_allclose(m1.data, 4)
 
-    lt_m2 = m2 < 1.5 * u.m ** 2
+    lt_m2 = m2 < 1.5 * u.m**2
     assert lt_m2.data.dtype == bool
     assert_allclose(lt_m2, True)
 
-    le_m2 = m2 <= 10000 * u.cm ** 2
+    le_m2 = m2 <= 10000 * u.cm**2
     assert_allclose(le_m2, True)
 
-    gt_m2 = m2 > 15000 * u.cm ** 2
+    gt_m2 = m2 > 15000 * u.cm**2
     assert_allclose(gt_m2, False)
 
     ge_m2 = m2 >= m2
     assert_allclose(ge_m2, True)
 
-    eq_m2 = m2 == 500 * u.cm ** 2
+    eq_m2 = m2 == 500 * u.cm**2
     assert_allclose(eq_m2, False)
 
-    ne_m2 = m2 != 500 * u.cm ** 2
+    ne_m2 = m2 != 500 * u.cm**2
     assert_allclose(ne_m2, True)
 
 
@@ -465,7 +465,7 @@ def test_interp_to_geom():
     new_map = test_map.interp_to_geom(
         geom_target, fill_value=0.0, method="nearest", preserve_counts=True
     )
-    assert_allclose(new_map.data[8, 8], test_map.data[4, 4] / factor ** 2, rtol=1e-4)
+    assert_allclose(new_map.data[8, 8], test_map.data[4, 4] / factor**2, rtol=1e-4)
     assert_allclose(new_map.data[0, 8], 0.0, rtol=1e-4)
 
 

@@ -389,7 +389,7 @@ class HpxGeom(Geom):
     @property
     def npix_max(self):
         """Max. number of pixels"""
-        maxpix = 12 * self.nside ** 2
+        maxpix = 12 * self.nside**2
         return maxpix * np.ones(self.shape_axes, dtype=int)
 
     @property

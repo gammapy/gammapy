@@ -169,8 +169,8 @@ def sample_sphere_distance(
     #     a = 1 / (r_max ^ 3 - r_min ^ 3)
     #     b = -a * r_min ** 3
 
-    a = 1.0 / (distance_max ** 3 - distance_min ** 3)
-    b = -a * distance_min ** 3
+    a = 1.0 / (distance_max**3 - distance_min**3)
+    b = -a * distance_min**3
 
     # Now for inverse transform sampling we need to use the inverse of
     #     u = a * r ^ 3 + b
@@ -215,7 +215,7 @@ def sample_powerlaw(x_min, x_max, gamma, size=None, random_state="random-seed"):
     size = int(size)
 
     exp = -gamma
-    base = random_state.uniform(x_min ** exp, x_max ** exp, size)
+    base = random_state.uniform(x_min**exp, x_max**exp, size)
     x = base ** (1 / exp)
 
     return x

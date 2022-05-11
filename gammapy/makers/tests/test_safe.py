@@ -45,16 +45,13 @@ def dataset(observation_cta_1dc):
 
     empty_dataset = MapDataset.create(geom=geom, energy_axis_true=axis_true)
     dataset_maker = MapDatasetMaker()
-    return dataset_maker.run(
-        dataset=empty_dataset, observation=observation_cta_1dc
-    )
+    return dataset_maker.run(dataset=empty_dataset, observation=observation_cta_1dc)
 
 
 @requires_data()
 def test_safe_mask_maker_offset_max(dataset, observation_cta_1dc):
     safe_mask_maker = SafeMaskMaker(
-        offset_max="3 deg",
-        position=observation_cta_1dc.pointing_radec
+        offset_max="3 deg", position=observation_cta_1dc.pointing_radec
     )
 
     mask_offset = safe_mask_maker.make_mask_offset_max(
@@ -65,9 +62,7 @@ def test_safe_mask_maker_offset_max(dataset, observation_cta_1dc):
 
 @requires_data()
 def test_safe_mask_maker_aeff_default(dataset, observation_cta_1dc, caplog):
-    safe_mask_maker = SafeMaskMaker(
-        position=observation_cta_1dc.pointing_radec
-    )
+    safe_mask_maker = SafeMaskMaker(position=observation_cta_1dc.pointing_radec)
 
     mask_energy_aeff_default = safe_mask_maker.make_mask_energy_aeff_default(
         dataset=dataset, observation=observation_cta_1dc
@@ -86,9 +81,7 @@ def test_safe_mask_maker_aeff_default(dataset, observation_cta_1dc, caplog):
 
 @requires_data()
 def test_safe_mask_maker_aeff_max(dataset, observation_cta_1dc):
-    safe_mask_maker = SafeMaskMaker(
-        position=observation_cta_1dc.pointing_radec
-    )
+    safe_mask_maker = SafeMaskMaker(position=observation_cta_1dc.pointing_radec)
 
     mask_aeff_max = safe_mask_maker.make_mask_energy_aeff_max(dataset)
 
@@ -97,9 +90,7 @@ def test_safe_mask_maker_aeff_max(dataset, observation_cta_1dc):
 
 @requires_data()
 def test_safe_mask_maker_offset_max_fixed_offset(dataset, observation_cta_1dc):
-    safe_mask_maker_offset = SafeMaskMaker(
-        offset_max="3 deg", fixed_offset=1.5 * u.deg
-    )
+    safe_mask_maker_offset = SafeMaskMaker(offset_max="3 deg", fixed_offset=1.5 * u.deg)
 
     mask_aeff_max_offset = safe_mask_maker_offset.make_mask_energy_aeff_max(
         dataset=dataset, observation=observation_cta_1dc
@@ -110,8 +101,7 @@ def test_safe_mask_maker_offset_max_fixed_offset(dataset, observation_cta_1dc):
 @requires_data()
 def test_safe_mask_maker_edisp_bias(dataset, observation_cta_1dc):
     safe_mask_maker = SafeMaskMaker(
-        bias_percent=0.02,
-        position=observation_cta_1dc.pointing_radec
+        bias_percent=0.02, position=observation_cta_1dc.pointing_radec
     )
 
     mask_edisp_bias = safe_mask_maker.make_mask_energy_edisp_bias(dataset=dataset)
@@ -132,9 +122,7 @@ def test_safe_mask_maker_edisp_bias_fixed_offset(dataset, observation_cta_1dc):
 
 @requires_data()
 def test_safe_mask_maker_bkg_peak(dataset, observation_cta_1dc):
-    safe_mask_maker = SafeMaskMaker(
-        position=observation_cta_1dc.pointing_radec
-    )
+    safe_mask_maker = SafeMaskMaker(position=observation_cta_1dc.pointing_radec)
 
     mask_bkg_peak = safe_mask_maker.make_mask_energy_bkg_peak(dataset)
     assert_allclose(mask_bkg_peak.data.sum(), 1936)
@@ -142,9 +130,7 @@ def test_safe_mask_maker_bkg_peak(dataset, observation_cta_1dc):
 
 @requires_data()
 def test_safe_mask_maker_bkg_peak_first_bin(dataset, observation_cta_1dc):
-    safe_mask_maker = SafeMaskMaker(
-        position=observation_cta_1dc.pointing_radec
-    )
+    safe_mask_maker = SafeMaskMaker(position=observation_cta_1dc.pointing_radec)
 
     dataset_maker = MapDatasetMaker()
 

@@ -10,6 +10,7 @@ __all__ = ["WStatCountsStatistic", "CashCountsStatistic"]
 
 class CountsStatistic(abc.ABC):
     """Counts statistics base class"""
+
     @property
     @abc.abstractmethod
     def stat_null(self):
@@ -80,7 +81,7 @@ class CountsStatistic(abc.ABC):
                 min_range[it.multi_index],
                 self.n_sig[it.multi_index],
                 nbin=1,
-                args=(self.stat_max[it.multi_index] + n_sigma ** 2, it.multi_index),
+                args=(self.stat_max[it.multi_index] + n_sigma**2, it.multi_index),
             )
             if np.isnan(roots[0]):
                 errn[it.multi_index] = -self.n_on[it.multi_index]
@@ -111,7 +112,7 @@ class CountsStatistic(abc.ABC):
                 self.n_sig[it.multi_index],
                 max_range[it.multi_index],
                 nbin=1,
-                args=(self.stat_max[it.multi_index] + n_sigma ** 2, it.multi_index),
+                args=(self.stat_max[it.multi_index] + n_sigma**2, it.multi_index),
             )
             errp[it.multi_index] = roots[0]
             it.iternext()
@@ -144,7 +145,7 @@ class CountsStatistic(abc.ABC):
                 min_range[it.multi_index],
                 max_range[it.multi_index],
                 nbin=1,
-                args=(ts_ref + n_sigma ** 2, it.multi_index),
+                args=(ts_ref + n_sigma**2, it.multi_index),
             )
             ul[it.multi_index] = roots[0]
             it.iternext()
@@ -306,7 +307,7 @@ class WStatCountsStatistic(CountsStatistic):
     @property
     def error(self):
         """Approximate error from the covariance matrix."""
-        return np.sqrt(self.n_on + self.alpha ** 2 * self.n_off)
+        return np.sqrt(self.n_on + self.alpha**2 * self.n_off)
 
     @property
     def stat_null(self):

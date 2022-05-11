@@ -136,10 +136,12 @@ def test_run_linked(backend):
     fit.run([dataset])
 
     assert len(dataset.models.parameters.unique_parameters) == 3
-    assert dataset.models.covariance.shape == (6,6)
-    expected = [[1.00000000e+00, 1.69728073e-30, 4.76456033e-16],
-                [1.69728073e-30, 1.00000000e+00, 3.56230294e-15],
-                [4.76456033e-16, 3.56230294e-15, 1.00000000e+00]]
+    assert dataset.models.covariance.shape == (6, 6)
+    expected = [
+        [1.00000000e00, 1.69728073e-30, 4.76456033e-16],
+        [1.69728073e-30, 1.00000000e00, 3.56230294e-15],
+        [4.76456033e-16, 3.56230294e-15, 1.00000000e00],
+    ]
     assert_allclose(dataset.models[0].covariance.data, expected)
     assert_allclose(dataset.models[1].covariance.data, expected)
 
@@ -171,6 +173,7 @@ def test_optimize(backend):
 # TODO: add some extra covariance tests, in addition to run
 # Probably mainly if error message is OK if optimize didn't run first.
 # def test_covariance():
+
 
 @pytest.mark.parametrize("backend", ["minuit"])
 def test_confidence(backend):

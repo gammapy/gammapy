@@ -254,7 +254,7 @@ class EDispMap(IRFMap):
 
         return cls.from_geom(geom)
 
-    def peek(self, figsize=(15,5)):
+    def peek(self, figsize=(15, 5)):
         """Quick-look summary plots.
         Plots corresponding to the center of the map.
 
@@ -265,9 +265,15 @@ class EDispMap(IRFMap):
 
         """
         e_true = self.edisp_map.geom.axes[1]
-        e_reco = MapAxis.from_energy_bounds(e_true.edges.min(), e_true.edges.max(), nbin = len(e_true.center), name='energy')
+        e_reco = MapAxis.from_energy_bounds(
+            e_true.edges.min(),
+            e_true.edges.max(),
+            nbin=len(e_true.center),
+            name="energy",
+        )
 
         self.get_edisp_kernel(energy_axis=e_reco).peek(figsize)
+
 
 class EDispKernelMap(IRFMap):
     """Energy dispersion kernel map.

@@ -47,4 +47,3 @@ ESTIMATOR_REGISTRY = Registry(
     ]
 )
 """Registry of estimator classes in Gammapy."""
-
