@@ -68,7 +68,7 @@ fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(10, 4))
 
 axes[0].set_title("Stacked Energy Dispersion Matrix")
 axes[1].set_title("Predicted Counts")
-stacked.edisp.get_edisp_kernel().plot_matrix(ax=axes[0], vmin=0, vmax=0.5)
+stacked.edisp.get_edisp_kernel().plot_matrix(ax=axes[0])
 npred_stacked.plot_hist(ax=axes[1], label="npred stacked")
 stacked.counts.plot_hist(ax=axes[1], ls="--", label="stacked npred")
 plt.legend()
