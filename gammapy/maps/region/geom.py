@@ -701,6 +701,7 @@ class RegionGeom(Geom):
                 region_table = QTable.read(hdulist[region_hdu])
                 regions_pix = Regions.parse(data=region_table, format="fits")
             except TypeError:
+                # TODO: this is needed to support regions=0.5
                 region_table = Table.read(hdulist[region_hdu])
                 regions_pix = Regions.parse(data=region_table, format="fits")
 
