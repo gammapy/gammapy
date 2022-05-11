@@ -14,7 +14,6 @@ from gammapy.utils.regions import (
     make_concentric_annulus_sky_regions,
     make_orthogonal_rectangle_sky_regions,
 )
-from gammapy.utils.testing import requires_dependency
 
 
 def get_simple_dataset_on_off():

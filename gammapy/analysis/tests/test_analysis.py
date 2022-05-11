@@ -10,7 +10,7 @@ from gammapy.analysis import Analysis, AnalysisConfig
 from gammapy.datasets import MapDataset, SpectrumDatasetOnOff
 from gammapy.maps import WcsGeom, WcsNDMap
 from gammapy.modeling.models import DatasetModels
-from gammapy.utils.testing import requires_data, requires_dependency
+from gammapy.utils.testing import requires_data
 import logging
 
 CONFIG_PATH = Path(__file__).resolve().parent / ".." / "config"
