@@ -4,14 +4,21 @@ import numpy as np
 from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord
 from astropy.io import fits
-from astropy.table import Table
+from astropy.table import QTable, Table
 from astropy.utils import lazyproperty
 from astropy.wcs.utils import (
     proj_plane_pixel_area,
     proj_plane_pixel_scales,
     wcs_to_celestial_frame,
 )
-from regions import CompoundSkyRegion, PixCoord, PointSkyRegion, Regions, SkyRegion
+from regions import (
+    CompoundSkyRegion,
+    PixCoord,
+    PointSkyRegion,
+    Regions,
+    RectanglePixelRegion,
+    SkyRegion
+)
 from gammapy.utils.regions import (
     compound_region_center,
     compound_region_to_regions,
@@ -121,7 +128,12 @@ class RegionGeom(Geom):
         for region_pix in regions_pix[1:]:
             bbox = bbox.union(region_pix.bounding_box)
 
-        rectangle_pix = bbox.to_region()
+        try:
+            rectangle_pix = bbox.to_region()
+        except ValueError:
+            rectangle_pix = RectanglePixelRegion(
+                center=PixCoord(*bbox.center[::-1]), width=1, height=1
+            )
         return rectangle_pix.to_sky(self.wcs)
 
     @property
@@ -583,11 +595,13 @@ class RegionGeom(Geom):
         if self.region is None:
             raise ValueError("Region definition required.")
 
-        # TODO: make this a to_hdulist() method
         region_list = compound_region_to_regions(self.region)
+
         pixel_region_list = []
+
         for reg in region_list:
             pixel_region_list.append(reg.to_pixel(self.wcs))
+
         table = Regions(pixel_region_list).serialize(format="fits")
 
         header = WcsGeom(wcs=self.wcs, npix=self.wcs.array_shape).to_header()
@@ -683,16 +697,22 @@ class RegionGeom(Geom):
             region_hdu = hdu + "_" + region_hdu
 
         if region_hdu in hdulist:
-            region_table = Table.read(hdulist[region_hdu])
-            wcs = WcsGeom.from_header(region_table.meta).wcs
+            try:
+                region_table = QTable.read(hdulist[region_hdu])
+                regions_pix = Regions.parse(data=region_table, format="fits")
+            except TypeError:
+                region_table = Table.read(hdulist[region_hdu])
+                regions_pix = Regions.parse(data=region_table, format="fits")
 
+            wcs = WcsGeom.from_header(region_table.meta).wcs
             regions = []
 
-            for reg in Regions.parse(data=region_table, format="fits"):
+            for region_pix in regions_pix:
                 # TODO: remove workaround once regions issue with fits serialization is sorted out
                 # see https://github.com/astropy/regions/issues/400
-                reg.meta["include"] = True
-                regions.append(reg.to_sky(wcs))
+                region_pix.meta["include"] = True
+                regions.append(region_pix.to_sky(wcs))
+
             region = regions_to_compound_region(regions)
         else:
             region, wcs = None, None
@@ -719,7 +739,7 @@ class RegionGeom(Geom):
             else:
                 self._region = other.region
 
-    def plot_region(self, ax=None, kwargs_point=None, **kwargs):
+    def plot_region(self, ax=None, kwargs_point=None, path_effect=None, **kwargs):
         """Plot region in the sky.
 
         Parameters
@@ -728,6 +748,11 @@ class RegionGeom(Geom):
             Axes to plot on. If no axes are given,
             the region is shown using the minimal
             equivalent WCS geometry.
+        kwargs_point : dict
+            Keyword arguments passed to `~matplotlib.lines.Line2D` for plotting
+            of point sources
+        path_effect : `~matplotlib.patheffects.PathEffect`
+            Path effect applied to artists and lines.
         **kwargs : dict
             Keyword arguments forwarded to `~regions.PixelRegion.as_artist`
 
@@ -751,8 +776,9 @@ class RegionGeom(Geom):
                 ax = m.plot(add_cbar=False)
 
         kwargs.setdefault("fc", "None")
+        kwargs.setdefault("ec", "tab:blue")
         kwargs_point.setdefault("color", kwargs.get("edgecolor"))
-        kwargs_point.setdefault("markeredgecolor", "None")
+        kwargs_point.setdefault("marker", "*")
 
         for region in compound_region_to_regions(self.region):
             region_pix = region.to_pixel(wcs=ax.wcs)
@@ -761,6 +787,9 @@ class RegionGeom(Geom):
                 artist = region_pix.as_artist(**kwargs_point)
             else:
                 artist = region_pix.as_artist(**kwargs)
+
+            if path_effect:
+                artist.add_path_effect(path_effect)
 
             ax.add_artist(artist)
 

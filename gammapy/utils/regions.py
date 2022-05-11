@@ -197,7 +197,7 @@ def make_orthogonal_rectangle_sky_regions(start_pos, end_pos, wcs, height, nbin=
     return regions
 
 
-def make_concentric_annulus_sky_regions(center, radius_max, nbin=11):
+def make_concentric_annulus_sky_regions(center, radius_max, radius_min=1e-5 * u.deg, nbin=11):
     """Make a list of concentric annulus regions.
 
     Parameters
@@ -206,6 +206,8 @@ def make_concentric_annulus_sky_regions(center, radius_max, nbin=11):
         Center coordinate
     radius_max : `~astropy.units.Quantity`
         Maximum radius.
+    radius_min : `~astropy.units.Quantity`
+        Minimum radius.
     nbin : int
         Number of boxes along the line
 
@@ -216,7 +218,7 @@ def make_concentric_annulus_sky_regions(center, radius_max, nbin=11):
     """
     regions = []
 
-    edges = np.linspace(0 * u.deg, u.Quantity(radius_max), nbin)
+    edges = np.linspace(radius_min, u.Quantity(radius_max), nbin)
 
     for r_in, r_out in zip(edges[:-1], edges[1:]):
         region = CircleAnnulusSkyRegion(

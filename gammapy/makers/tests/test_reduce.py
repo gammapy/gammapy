@@ -75,7 +75,7 @@ def get_spectrumdataset(name):
     )
 
 
-def get_spectrumdataset_rad_max(name, e_min=0.005 * u.TeV):
+def get_spectrum_dataset_rad_max(name, e_min=0.005 * u.TeV):
     """get the spectrum dataset maker for the energy-dependent spectrum extraction"""
     target_position = SkyCoord(ra=83.63, dec=22.01, unit="deg", frame="icrs")
     on_center = PointSkyRegion(target_position)
@@ -154,7 +154,7 @@ def makers_spectrum(exclusion_mask):
     ],
 )
 @requires_data()
-def test_datasetsmaker_map(pars, observations_cta, makers_map):
+def test_datasets_maker_map(pars, observations_cta, makers_map):
     makers = DatasetsMaker(
         makers_map,
         stack_datasets=pars["stack_datasets"],
@@ -185,7 +185,7 @@ def test_datasetsmaker_map(pars, observations_cta, makers_map):
 
 
 @requires_data()
-def test_datasetsmaker_map_cutout_width(observations_cta, makers_map, tmp_path):
+def test_datasets_maker_map_cutout_width(observations_cta, makers_map, tmp_path):
     makers = DatasetsMaker(
         makers_map,
         stack_datasets=True,
@@ -206,7 +206,7 @@ def test_datasetsmaker_map_cutout_width(observations_cta, makers_map, tmp_path):
 
 
 @requires_data()
-def test_datasetsmaker_map_2steps(observations_cta, makers_map, tmp_path):
+def test_datasets_maker_map_2steps(observations_cta, makers_map, tmp_path):
 
     makers = DatasetsMaker(
         [MapDatasetMaker()],
@@ -266,7 +266,7 @@ def test_dataset_maker_spectrum_rad_max(observations_magic_rad_max):
     maker = SpectrumDatasetMaker(
         containment_correction=False, selection=["counts", "exposure", "edisp"]
     )
-    dataset = maker.run(get_spectrumdataset_rad_max("spec"), observation)
+    dataset = maker.run(get_spectrum_dataset_rad_max("spec"), observation)
 
     finder = WobbleRegionsFinder(n_off_regions=1)
     bkg_maker = ReflectedRegionsBackgroundMaker(region_finder=finder)
@@ -294,7 +294,7 @@ def test_dataset_maker_spectrum_global_rad_max():
     maker = SpectrumDatasetMaker(
         containment_correction=False, selection=["counts", "exposure", "edisp"]
     )
-    dataset = maker.run(get_spectrumdataset_rad_max("spec"), observation)
+    dataset = maker.run(get_spectrum_dataset_rad_max("spec"), observation)
 
     finder = WobbleRegionsFinder(n_off_regions=3)
     bkg_maker = ReflectedRegionsBackgroundMaker(region_finder=finder)
@@ -322,7 +322,7 @@ def test_dataset_maker_spectrum_rad_max_overlapping(observations_magic_rad_max, 
     bkg_maker = ReflectedRegionsBackgroundMaker(region_finder=finder)
 
     with caplog.at_level(logging.WARNING):
-        dataset = maker.run(get_spectrumdataset_rad_max("spec"), observation)
+        dataset = maker.run(get_spectrum_dataset_rad_max("spec"), observation)
         dataset_on_off = bkg_maker.run(dataset, observation)
 
     assert len(caplog.record_tuples) == 3
@@ -340,7 +340,7 @@ def test_dataset_maker_spectrum_rad_max_overlapping(observations_magic_rad_max, 
     # rad max, allowing more off regions
     caplog.clear()
     with caplog.at_level(logging.WARNING):
-        dataset = maker.run(get_spectrumdataset_rad_max("spec", e_min=250 * u.GeV), observation)
+        dataset = maker.run(get_spectrum_dataset_rad_max("spec", e_min=250 * u.GeV), observation)
         dataset_on_off = bkg_maker.run(dataset, observation)
         assert dataset_on_off.counts_off is not None
 
@@ -356,7 +356,7 @@ def test_dataset_maker_spectrum_rad_max_all_excluded(observations_magic_rad_max,
     maker = SpectrumDatasetMaker(
         containment_correction=False, selection=["counts", "exposure", "edisp"]
     )
-    dataset = maker.run(get_spectrumdataset_rad_max("spec"), observation)
+    dataset = maker.run(get_spectrum_dataset_rad_max("spec"), observation)
 
     # excludes all possible off regions
     exclusion_region = CircleSkyRegion(

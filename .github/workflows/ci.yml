@@ -131,7 +131,7 @@ jobs:
           make docs-sphinx
       - name: test code in docs and docstrings
         run: |
-          pytest --doctest-glob="*.rst" docs/
+          pytest --doctest-glob="*.rst" --ignore-glob=docs/development/pigs/*.rst docs/
           pytest --doctest-modules --ignore-glob=*/tests gammapy
       - name: test without datasets
         run: |
