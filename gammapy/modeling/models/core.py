@@ -4,6 +4,7 @@ import copy
 import logging
 from os.path import split
 import numpy as np
+import matplotlib.pyplot as plt
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
@@ -973,7 +974,6 @@ class DatasetModels(collections.abc.Sequence):
             Wcs axes
         """
         from astropy.visualization.wcsaxes import WCSAxes
-        import matplotlib.pyplot as plt
 
         if ax is None or not isinstance(ax, WCSAxes):
             ax = Map.from_geom(self.wcs_geom).plot()

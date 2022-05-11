@@ -3,6 +3,7 @@
 import logging
 import os
 import numpy as np
+import matplotlib.pyplot as plt
 import scipy.integrate
 import scipy.special
 import astropy.units as u
@@ -337,8 +338,6 @@ class SpatialModel(ModelBase):
         ax : `~matplotlib.axes.Axes`, optional
             Axis
         """
-        import matplotlib.pyplot as plt
-
         # plot center position
         lon, lat = self.lon_0.value, self.lat_0.value
 

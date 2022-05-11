@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Covariance class"""
 import numpy as np
+import matplotlib.pyplot as plt
 import scipy
 from .parameter import Parameters
 
@@ -154,7 +155,6 @@ class Covariance:
             Axis
 
         """
-        import matplotlib.pyplot as plt
         from gammapy.visualization import annotate_heatmap, plot_heatmap
 
         npars = len(self.parameters)

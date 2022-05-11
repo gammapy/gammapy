@@ -2,6 +2,7 @@
 """Spectral models for Gammapy."""
 import operator
 import numpy as np
+import matplotlib.pyplot as plt
 import scipy.optimize
 import scipy.special
 import astropy.units as u
@@ -393,7 +394,6 @@ class SpectralModel(ModelBase):
         ax : `~matplotlib.axes.Axes`, optional
             Axis
         """
-        import matplotlib.pyplot as plt
         from gammapy.estimators.map.core import DEFAULT_UNIT
 
         ax = plt.gca() if ax is None else ax
@@ -466,7 +466,6 @@ class SpectralModel(ModelBase):
         ax : `~matplotlib.axes.Axes`, optional
             Axis
         """
-        import matplotlib.pyplot as plt
         from gammapy.estimators.map.core import DEFAULT_UNIT
 
         ax = plt.gca() if ax is None else ax

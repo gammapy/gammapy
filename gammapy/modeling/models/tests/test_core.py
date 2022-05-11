@@ -204,7 +204,6 @@ def test_set_parameters_from_table():
 
 
 @requires_data()
-@requires_dependency("matplotlib")
 def test_plot_models(caplog):
     models = Models.read("$GAMMAPY_DATA/tests/models/gc_example_models.yaml")
 

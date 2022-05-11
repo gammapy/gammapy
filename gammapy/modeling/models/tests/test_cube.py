@@ -651,7 +651,6 @@ def test_energy_dependent_model():
     assert_allclose(model.data.sum(), 9.9e-11, rtol=1e-3)
 
 
-@requires_dependency("matplotlib")
 def test_plot_grid(geom_true):
     spatial_model = MyCustomGaussianModel(frame="galactic")
     with mpl_plot_check():

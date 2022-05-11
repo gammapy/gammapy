@@ -413,7 +413,6 @@ def test_model_unit():
     assert value.unit == "cm-2 s-1 TeV-1"
 
 
-@requires_dependency("matplotlib")
 def test_model_plot():
     pwl = PowerLawSpectralModel(
         amplitude=1e-12 * u.Unit("TeV-1 cm-2 s-1"), reference=1 * u.Unit("TeV"), index=2
@@ -427,7 +426,6 @@ def test_model_plot():
         pwl.plot_error((1 * u.TeV, 10 * u.TeV))
 
 
-@requires_dependency("matplotlib")
 def test_model_plot_sed_type():
     pwl = PowerLawSpectralModel(
         amplitude=1e-12 * u.Unit("TeV-1 cm-2 s-1"), reference=1 * u.Unit("TeV"), index=2
@@ -535,7 +533,6 @@ def test_to_from_dict_compound():
     assert_quantity_allclose(actual, desired)
 
 
-@requires_dependency("matplotlib")
 @requires_data()
 def test_table_model_from_file():
     filename = "$GAMMAPY_DATA/ebl/ebl_franceschini.fits.gz"

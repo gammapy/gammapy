@@ -310,7 +310,6 @@ def test_with_skymodel(light_curve):
     assert "temporal" in out
 
 
-@requires_dependency("matplotlib")
 def test_plot_constant_model():
     time_range = [Time.now(), Time.now() + 1 * u.d]
     constant_model = ConstantTemporalModel(const=1)
