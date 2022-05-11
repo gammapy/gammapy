@@ -3,6 +3,7 @@
 import os
 import sys
 from numpy.testing import assert_allclose
+import matplotlib.pyplot as plt
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
@@ -210,7 +211,6 @@ def mpl_plot_check():
     than writing to disk.
     """
     from io import BytesIO
-    import matplotlib.pyplot as plt
 
     class MPLPlotCheck:
         def __enter__(self):

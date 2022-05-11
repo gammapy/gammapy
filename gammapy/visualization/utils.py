@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 from gammapy.maps import MapAxis
 from gammapy.maps.utils import edges_from_lo_hi
 from scipy.interpolate import CubicSpline
@@ -62,7 +63,6 @@ def plot_spectrum_datasets_off_regions(
         plot_spectrum_datasets_off_regions(datasets2, ax, legend=True, legend_kwargs=dict(ncol=2))
         plot_spectrum_datasets_off_regions(datasets3, ax, legend=False, edgecolor='magenta')
     """
-    import matplotlib.pyplot as plt
     from matplotlib.legend_handler import HandlerPatch, HandlerTuple
     from matplotlib.patches import CirclePolygon, Patch
 
@@ -154,8 +154,6 @@ def plot_theta_squared_table(table):
     table : `~astropy.table.Table`
         Required columns: theta2_min, theta2_max, counts, counts_off and alpha
     """
-    import matplotlib.pyplot as plt
-
     theta2_edges = edges_from_lo_hi(
         table["theta2_min"].quantity, table["theta2_max"].quantity
     )
