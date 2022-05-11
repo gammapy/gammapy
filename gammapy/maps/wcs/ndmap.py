@@ -2,6 +2,7 @@
 import logging
 from collections import OrderedDict
 import numpy as np
+import matplotlib.pyplot as plt
 import scipy.interpolate
 import scipy.ndimage as ndi
 import scipy.signal
@@ -359,7 +360,6 @@ class WcsNDMap(WcsMap):
             WCS axis object
         """
         from astropy.visualization import simple_norm
-        import matplotlib.pyplot as plt
 
         if not self.geom.is_flat:
             raise TypeError("Use .plot_interactive() for Map dimension > 2")
@@ -443,7 +443,6 @@ class WcsNDMap(WcsMap):
 
     def _plot_default_axes(self, ax):
         from astropy.visualization.wcsaxes.frame import EllipticalFrame
-        import matplotlib.pyplot as plt
 
         if ax is None:
             fig = plt.gcf()

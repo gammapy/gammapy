@@ -1,6 +1,7 @@
 import copy
 from functools import lru_cache
 import numpy as np
+import matplotlib.pyplot as plt
 from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord
 from astropy.io import fits
@@ -785,7 +786,6 @@ class RegionGeom(Geom):
             Axes to plot on.
         """
         from astropy.visualization.wcsaxes import WCSAxes
-        import matplotlib.pyplot as plt
 
         kwargs_point = kwargs_point or {}
 

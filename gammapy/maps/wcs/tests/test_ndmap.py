@@ -594,7 +594,6 @@ def test_convolve_kernel_size_error():
         m.convolve(kernel)
 
 
-@requires_dependency("matplotlib")
 def test_plot():
     axis = MapAxis([0, 1], node_type="edges")
     m = WcsNDMap.create(binsz=0.1 * u.deg, width=1 * u.deg, axes=[axis])
@@ -602,7 +601,6 @@ def test_plot():
         m.plot(add_cbar=True)
 
 
-@requires_dependency("matplotlib")
 def test_plot_grid():
     axis = MapAxis([0, 1, 2], node_type="edges")
     m = WcsNDMap.create(binsz=0.1 * u.deg, width=1 * u.deg, axes=[axis])
@@ -610,7 +608,6 @@ def test_plot_grid():
         m.plot_grid()
 
 
-@requires_dependency("matplotlib")
 def test_plot_allsky():
     axis = MapAxis([0, 1], node_type="edges")
     m = WcsNDMap.create(binsz=10 * u.deg, axes=[axis])
@@ -618,7 +615,6 @@ def test_plot_allsky():
         m.plot()
 
 
-@requires_dependency("matplotlib")
 def test_plot_nan():
     m = Map.create(width=10, binsz=1)
     m.data += np.nan

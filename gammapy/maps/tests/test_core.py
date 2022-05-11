@@ -469,7 +469,6 @@ def test_interp_to_geom():
     assert_allclose(new_map.data[0, 8], 0.0, rtol=1e-4)
 
 
-@requires_dependency("matplotlib")
 def test_map_plot_mask():
     from regions import CircleSkyRegion
 

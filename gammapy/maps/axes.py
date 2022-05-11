@@ -3,6 +3,7 @@ import copy
 import inspect
 from collections.abc import Sequence
 import numpy as np
+import matplotlib.pyplot as plt
 import scipy
 import astropy.units as u
 from astropy.io import fits
@@ -2316,7 +2317,6 @@ class TimeMapAxis:
         ax : `~matplotlib.pyplot.Axis`
             Formatted plot axis
         """
-        import matplotlib.pyplot as plt
         from matplotlib.dates import DateFormatter
 
         xlabel = DEFAULT_LABEL_TEMPLATE.format(

@@ -4,6 +4,7 @@ import copy
 import inspect
 import json
 import numpy as np
+import matplotlib.pyplot as plt
 from astropy import units as u
 from astropy.io import fits
 from gammapy.utils.scripts import make_path
@@ -1096,8 +1097,6 @@ class Map(abc.ABC):
         axes : `~numpy.ndarray` of `~matplotlib.pyplot.Axes`
             Axes grid
         """
-        import matplotlib.pyplot as plt
-
         if len(self.geom.axes) > 1:
             raise ValueError("Grid plotting is only supported for one non spatial axis")
 
@@ -1196,7 +1195,6 @@ class Map(abc.ABC):
             m.plot_interactive(rc_params=rc_params)
         """
         import matplotlib as mpl
-        import matplotlib.pyplot as plt
         from ipywidgets import RadioButtons, SelectionSlider
         from ipywidgets.widgets.interaction import fixed, interact
 

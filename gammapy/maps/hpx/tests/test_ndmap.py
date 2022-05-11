@@ -312,14 +312,12 @@ def test_coadd_unit():
     assert_allclose(m1.data, 1.0001)
 
 
-@requires_dependency("matplotlib")
 def test_plot():
     m = HpxNDMap.create(binsz=10)
     with mpl_plot_check():
         m.plot()
 
 
-@requires_dependency("matplotlib")
 def test_plot_grid():
     axis = MapAxis([0, 1, 2], node_type="edges")
     m = HpxNDMap.create(binsz=0.1 * u.deg, width=1, axes=[axis])
@@ -327,7 +325,6 @@ def test_plot_grid():
         m.plot_grid()
 
 
-@requires_dependency("matplotlib")
 def test_plot_poly():
     m = HpxNDMap.create(binsz=10)
     with mpl_plot_check():
@@ -604,7 +601,6 @@ def test_hpxmap_read_healpy(tmp_path):
     assert_allclose(diff, 0.0)
 
 
-@requires_dependency("matplotlib")
 def test_map_plot_mask():
     geom = HpxGeom.create(nside=16)
 

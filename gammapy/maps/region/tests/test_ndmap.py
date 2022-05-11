@@ -2,6 +2,7 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
+import matplotlib.pyplot as plt
 from astropy import units as u
 from astropy.time import Time
 from regions import CircleSkyRegion
@@ -71,10 +72,7 @@ def test_region_nd_map_sum_over_axes(region_map):
     assert_allclose(region_map_summed_weights.data, 10)
 
 
-@requires_dependency("matplotlib")
 def test_region_nd_map_plot(region_map):
-    import matplotlib.pyplot as plt
-
     with mpl_plot_check():
         region_map.plot()
 
@@ -83,7 +81,6 @@ def test_region_nd_map_plot(region_map):
         region_map.plot_region(ax=ax)
 
 
-@requires_dependency("matplotlib")
 def test_region_nd_map_plot_two_axes():
     energy_axis = MapAxis.from_energy_edges([1, 3, 10] * u.TeV)
 
@@ -108,7 +105,6 @@ def test_region_nd_map_plot_two_axes():
         m.plot()
 
 
-@requires_dependency("matplotlib")
 def test_region_nd_map_plot_label_axis():
     energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=5)
     label_axis = LabelMapAxis(labels=["dataset-1", "dataset-2"], name="dataset")
@@ -139,7 +135,6 @@ def test_label_axis_io(tmpdir):
     assert m.geom.axes["energy"] == m_new.geom.axes["energy"]
 
 
-@requires_dependency("matplotlib")
 def test_region_plot_mask(region_map):
     mask = region_map.geom.energy_mask(2.5 * u.TeV, 6 * u.TeV)
     with mpl_plot_check():
