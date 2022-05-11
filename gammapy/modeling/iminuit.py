@@ -3,6 +3,7 @@
 import logging
 import numpy as np
 from scipy.stats import chi2, norm
+from iminuit import Minuit
 from .likelihood import Likelihood
 
 __all__ = [
@@ -30,8 +31,6 @@ class MinuitLikelihood(Likelihood):
 
 
 def setup_iminuit(parameters, function, store_trace=False, **kwargs):
-    from iminuit import Minuit
-
     minuit_func = MinuitLikelihood(function, parameters, store_trace=store_trace)
 
     pars, errors, limits = make_minuit_par_kwargs(parameters)

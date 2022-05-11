@@ -107,7 +107,7 @@ class Fit:
 
     def __init__(
         self,
-        backend="iminuit",
+        backend="minuit",
         optimize_opts=None,
         covariance_opts=None,
         confidence_opts=None,
