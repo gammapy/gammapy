@@ -9,7 +9,7 @@ from gammapy.data import DataStore
 from gammapy.irf import PSF3D, EffectiveAreaTable2D, PSFMap
 from gammapy.makers.utils import make_map_exposure_true_energy, make_psf_map
 from gammapy.maps import Map, MapAxis, MapCoord, RegionGeom, WcsGeom
-from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
+from gammapy.utils.testing import mpl_plot_check, requires_data
 
 
 @pytest.fixture(scope="session")

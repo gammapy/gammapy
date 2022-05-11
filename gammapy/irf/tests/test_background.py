@@ -6,7 +6,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.irf import Background2D, Background3D
 from gammapy.maps import MapAxis
-from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
+from gammapy.utils.testing import mpl_plot_check, requires_data
 
 
 @pytest.fixture(scope="session")

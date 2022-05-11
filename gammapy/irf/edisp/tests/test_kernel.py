@@ -4,7 +4,7 @@ from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
 from gammapy.irf import EDispKernel
 from gammapy.maps import MapAxis
-from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
+from gammapy.utils.testing import mpl_plot_check, requires_data
 
 
 class TestEDispKernel:

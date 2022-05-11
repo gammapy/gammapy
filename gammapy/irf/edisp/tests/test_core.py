@@ -7,7 +7,7 @@ import astropy.units as u
 from astropy.coordinates import Angle
 from gammapy.irf import EnergyDispersion2D
 from gammapy.maps import MapAxes, MapAxis
-from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
+from gammapy.utils.testing import mpl_plot_check, requires_data
 
 
 @requires_data()
