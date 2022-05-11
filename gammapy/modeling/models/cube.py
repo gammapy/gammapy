@@ -6,6 +6,7 @@ from astropy.nddata import NoOverlapError
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Covariance, Parameters
 from gammapy.modeling.parameter import _get_parameters_str
+from gammapy.modeling.covariance import copy_covariance
 from gammapy.utils.fits import LazyFitsData
 from gammapy.utils.scripts import make_name, make_path
 from .core import Model, ModelBase, Models
@@ -379,10 +380,26 @@ class SkyModel(ModelBase):
 
         return Map.from_geom(geom=geom, data=value.value, unit=value.unit)
 
-    def copy(self, name=None, **kwargs):
-        """Copy SkyModel"""
+    @copy_covariance
+    def copy(self, name=None, copy_data=False, **kwargs):
+        """Copy sky model
+
+        Parameters
+        ----------
+        name : str
+            Assign a new name to the copied model.
+        copy_data : bool
+            Copy the data arrays attached to models.
+        **kwargs : dict
+            Keyword arguments forwarded to `SkyModel`
+
+        Returns
+        -------
+        model : `SkyModel`
+            Copied sky model.
+        """
         if self.spatial_model is not None:
-            spatial_model = self.spatial_model.copy()
+            spatial_model = self.spatial_model.copy(copy_data=copy_data)
         else:
             spatial_model = None
 
@@ -592,7 +609,8 @@ class FoVBackgroundModel(ModelBase):
         self._spectral_model = spectral_model
         super().__init__()
 
-    def contributes(self, *args, **kwargs):
+    @staticmethod
+    def contributes(*args, **kwargs):
         """FoV background models always contribute"""
         return True
 
@@ -638,13 +656,12 @@ class FoVBackgroundModel(ModelBase):
         """Evaluate model"""
         return self.spectral_model(energy)
 
-    def copy(self, **kwargs):
+    @copy_covariance
+    def copy(self, name=None, copy_data=False, **kwargs):
         """Copy SkyModel"""
-        kwargs.pop("name")
-        if "spectral_model" not in kwargs:
-            kwargs.setdefault("spectral_model", self.spectral_model.copy())
-        if "dataset_name" not in kwargs:
-            kwargs.setdefault("dataset_name", self.datasets_names[0])
+        kwargs.setdefault("spectral_model", self.spectral_model.copy())
+        kwargs.setdefault("dataset_name", self.datasets_names[0])
+
         return self.__class__(**kwargs)
 
     def to_dict(self, full_output=False):
@@ -764,15 +781,29 @@ class TemplateNPredModel(ModelBase):
         self.datasets_names = datasets_names
         super().__init__()
 
+    @copy_covariance
     def copy(self, name=None, copy_data=False):
-        """Copy model"""
+        """Copy template npred model.
+
+        Parameters
+        ----------
+        name : str
+            Assign a new name to the copied model.
+        copy_data : bool
+            Copy the data arrays attached to models.
+
+        Returns
+        -------
+        model : `TemplateNPredModel`
+            Copied template npred model.
+        """
         name = make_name(name)
         return self.__class__(
             map=self.map,
-            spectral_model=self.spectral_model,
+            spectral_model=self.spectral_model.copy(),
             name=name,
             filename=self.filename,
-            datasets_names=self.datasets_names,
+            datasets_names=self.datasets_names.copy(),
             copy_data=copy_data
         )
 
