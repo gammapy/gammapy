@@ -2,7 +2,7 @@
 import matplotlib.pyplot as plt
 from astropy.coordinates import Angle
 from gammapy.maps import Map
-from gammapy.utils.testing import mpl_plot_check, requires_dependency
+from gammapy.utils.testing import mpl_plot_check
 from gammapy.visualization import MapPanelPlotter
 
 

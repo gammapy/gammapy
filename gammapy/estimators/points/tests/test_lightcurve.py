@@ -14,8 +14,7 @@ from gammapy.estimators.points.tests.test_sed import (
 )
 from gammapy.modeling import Fit
 from gammapy.modeling.models import FoVBackgroundModel, PowerLawSpectralModel, SkyModel
-from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
-
+from gammapy.utils.testing import mpl_plot_check, requires_data
 
 @pytest.fixture(scope="session")
 def lc():

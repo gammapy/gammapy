@@ -9,7 +9,6 @@ from gammapy.maps import WcsGeom, WcsNDMap
 from gammapy.utils.testing import (
     assert_quantity_allclose,
     mpl_plot_check,
-    requires_dependency,
 )
 
 

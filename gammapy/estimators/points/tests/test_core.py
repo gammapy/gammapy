@@ -14,7 +14,6 @@ from gammapy.utils.testing import (
     assert_quantity_allclose,
     mpl_plot_check,
     requires_data,
-    requires_dependency,
 )
 
 FLUX_POINTS_FILES = [
