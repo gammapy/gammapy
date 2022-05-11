@@ -93,7 +93,7 @@ def test_run(backend):
     assert result.success
     assert result.optimize_result.method == "migrad"
     assert result.covariance_result.method == "hesse"
-    assert result.covariance_result.success == True
+    assert result.covariance_result.success
 
     assert_allclose(pars["x"].value, 2, rtol=1e-3)
     assert_allclose(pars["y"].value, 3e2, rtol=1e-3)
@@ -111,6 +111,12 @@ def test_run(backend):
     # Verify that the fit result models are independent of the dataset ones
     pars["x"].value = 3
     assert_allclose(result.parameters["x"].value, 2, rtol=1e-3)
+
+    # check parameters from the result object
+    pars = result.parameters
+    assert_allclose(pars["x"].error, 1, rtol=1e-7)
+    assert_allclose(pars["y"].error, 1, rtol=1e-7)
+    assert_allclose(pars["z"].error, 1, rtol=1e-7)
 
 
 @pytest.mark.parametrize("backend", ["minuit"])

@@ -8,6 +8,17 @@ from .parameter import Parameters
 __all__ = ["Covariance"]
 
 
+def copy_covariance(func):
+    """Copy covariance decorator for model objects."""
+
+    def decorate(self, **kwargs):
+        result = func(self, **kwargs)
+        result.covariance = self.covariance.data.copy()
+        return result
+
+    return decorate
+
+
 class Covariance:
     """Parameter covariance class
 
