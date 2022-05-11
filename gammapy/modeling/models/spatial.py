@@ -1083,27 +1083,27 @@ class TemplateSpatialModel(SpatialModel):
         super().__init__()
 
     @copy_covariance
-    def copy(self, copy_data=False):
+    def copy(self, copy_data=False, **kwargs):
         """Copy model
 
         Parameters
         ----------
         copy_data : bool
             Whether to copy the data.
+        **kwargs : dict
+            Keyword arguments forwarded to `TemplateSpatialModel`
 
         Returns
         -------
         model : `TemplateSpatialModel`
             Copied template spatial model.
         """
-        return self.__class__(
-            map=self.map,
-            meta=self.meta,
-            normalize=self.normalize,
-            interp_kwargs=self._interp_kwargs,
-            filename=self.filename,
-            copy_data=copy_data
-        )
+        kwargs.setdefault("map", self.map)
+        kwargs.setdefault("meta", self.meta.copy())
+        kwargs.setdefault("normalize", self.normalize)
+        kwargs.setdefault("interp_kwargs", self._interp_kwargs)
+        kwargs.setdefault("filename", self.filename)
+        return self.__class__(copy_data=copy_data, **kwargs)
 
     @property
     def map(self):

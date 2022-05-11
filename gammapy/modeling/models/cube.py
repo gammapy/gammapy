@@ -658,10 +658,24 @@ class FoVBackgroundModel(ModelBase):
 
     @copy_covariance
     def copy(self, name=None, copy_data=False, **kwargs):
-        """Copy SkyModel"""
+        """Copy FoVBackgroundModel
+
+        Parameters
+        ----------
+        name : str
+            Ignored, present for API compatibility.
+        copy_data : bool
+            Ignored, present for API compatibility.
+        **kwargs : dict
+            Keyword arguments forwarded to `FoVBackgroundModel`
+
+        Returns
+        -------
+        model : `FoVBackgroundModel`
+            Copied FoV background model.
+        """
         kwargs.setdefault("spectral_model", self.spectral_model.copy())
         kwargs.setdefault("dataset_name", self.datasets_names[0])
-
         return self.__class__(**kwargs)
 
     def to_dict(self, full_output=False):
@@ -782,7 +796,7 @@ class TemplateNPredModel(ModelBase):
         super().__init__()
 
     @copy_covariance
-    def copy(self, name=None, copy_data=False):
+    def copy(self, name=None, copy_data=False, **kwargs):
         """Copy template npred model.
 
         Parameters
@@ -791,6 +805,8 @@ class TemplateNPredModel(ModelBase):
             Assign a new name to the copied model.
         copy_data : bool
             Copy the data arrays attached to models.
+        **kwargs : dict
+            Keyword arguments forwarded to `TemplateNPredModel`
 
         Returns
         -------
@@ -798,14 +814,11 @@ class TemplateNPredModel(ModelBase):
             Copied template npred model.
         """
         name = make_name(name)
-        return self.__class__(
-            map=self.map,
-            spectral_model=self.spectral_model.copy(),
-            name=name,
-            filename=self.filename,
-            datasets_names=self.datasets_names,
-            copy_data=copy_data
-        )
+        kwargs.setdefault("map", self.map)
+        kwargs.setdefault("spectral_model", self.spectral_model.copy())
+        kwargs.setdefault("filename", self.filename)
+        kwargs.setdefault("datasets_names", self.datasets_names)
+        return self.__class__(name=name, copy_data=copy_data, **kwargs)
 
     @property
     def name(self):
