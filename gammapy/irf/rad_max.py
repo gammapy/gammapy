@@ -1,7 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import astropy.units as u
-import numpy as np
-from regions import CircleSkyRegion
 from astropy.visualization import quantity_support
 from .core import IRF
 
