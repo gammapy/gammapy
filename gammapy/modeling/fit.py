@@ -270,6 +270,7 @@ class Fit:
             method=method,
             success=info["success"],
             message=info["message"],
+            matrix=datasets.models.covariance.data.copy(),
         )
 
     def confidence(self, datasets, parameter, sigma=1, reoptimize=True):
@@ -486,7 +487,6 @@ class Fit:
 
 class FitStepResult:
     """Fit result base class"""
-
     def __init__(self, backend, method, success, message):
         self._success = success
         self._message = message
@@ -525,13 +525,18 @@ class FitStepResult:
 
 class CovarianceResult(FitStepResult):
     """Covariance result object."""
+    def __init__(self, matrix=None, **kwargs):
+        self._matrix = matrix
+        super().__init__(**kwargs)
 
-    pass
+    @property
+    def matrix(self):
+        """Covariance matrix (`~numpy.ndarray`)"""
+        return self._matrix
 
 
 class OptimizeResult(FitStepResult):
     """Optimize result object."""
-
     def __init__(self, models, nfev, total_stat, trace, **kwargs):
         self._models = models
         self._nfev = nfev
@@ -584,6 +589,10 @@ class FitResult:
 
     def __init__(self, optimize_result=None, covariance_result=None):
         self._optimize_result = optimize_result
+
+        if covariance_result:
+            self.optimize_result.models.covariance = covariance_result.matrix
+
         self._covariance_result = covariance_result
 
     # TODO: is the convenience access needed?
