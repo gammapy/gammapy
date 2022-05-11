@@ -19,6 +19,7 @@ from regions import (
 )
 from gammapy.maps import Map, WcsGeom
 from gammapy.modeling import Parameter
+from gammapy.modeling.covariance import copy_covariance
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.scripts import make_path
 from .core import ModelBase
@@ -1081,8 +1082,20 @@ class TemplateSpatialModel(SpatialModel):
         self.filename = filename
         super().__init__()
 
+    @copy_covariance
     def copy(self, copy_data=False):
-        """Copy model"""
+        """Copy model
+
+        Parameters
+        ----------
+        copy_data : bool
+            Whether to copy the data.
+
+        Returns
+        -------
+        model : `TemplateSpatialModel`
+            Copied template spatial model.
+        """
         return self.__class__(
             map=self.map,
             meta=self.meta,
