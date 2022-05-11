@@ -156,7 +156,6 @@ def test_non_circular_regions(region, nreg):
     assert len(regions) == nreg
 
 
-@requires_dependency("matplotlib")
 def test_bad_on_region(exclusion_mask, on_region):
     pointing = SkyCoord(83.63, 22.01, unit="deg", frame="icrs")
     finder = ReflectedRegionsFinder(
