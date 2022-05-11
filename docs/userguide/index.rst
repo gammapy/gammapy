@@ -32,7 +32,7 @@ User guide
 
     .. link-button:: package
             :type: ref
-            :text: To the overview
+            :text: To the package overview
             :classes: btn-block btn-secondary stretched-link
 
 
