@@ -23,7 +23,7 @@ from gammapy.modeling.models import (
     ShellSpatialModel,
     TemplateSpatialModel,
 )
-from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
+from gammapy.utils.testing import mpl_plot_check, requires_data
 
 
 def test_sky_point_source():
@@ -270,7 +270,6 @@ def test_sky_diffuse_constant():
     assert isinstance(model.to_region(), RectangleSkyRegion)
 
 
-@requires_dependency("matplotlib")
 @requires_data()
 def test_sky_diffuse_map(caplog):
     filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits"
@@ -397,7 +396,6 @@ def test_evaluate_fk5_model():
     assert data.sum() > 0
 
 
-@requires_dependency("matplotlib")
 def test_spatial_model_plot():
     model = PointSpatialModel()
     model.covariance = np.diag([0.01, 0.01])

@@ -1,5 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.colors import PowerNorm
 from astropy.io import fits
 from astropy.table import Table
 from astropy.units import Quantity
@@ -518,9 +520,6 @@ class EDispKernel(IRF):
         ax : `~matplotlib.axes.Axes`
             Axis
         """
-        import matplotlib.pyplot as plt
-        from matplotlib.colors import PowerNorm
-
         kwargs.setdefault("cmap", "GnBu")
         norm = PowerNorm(gamma=0.5, vmin=0, vmax=1)
         kwargs.setdefault("norm", norm)
@@ -560,8 +559,6 @@ class EDispKernel(IRF):
         ax : `~matplotlib.axes.Axes`, optional
             Plot axis
         """
-        import matplotlib.pyplot as plt
-
         ax = plt.gca() if ax is None else ax
 
         energy = self.axes["energy_true"].center
@@ -586,8 +583,6 @@ class EDispKernel(IRF):
             Size of the figure.
 
         """
-        import matplotlib.pyplot as plt
-
         fig, axes = plt.subplots(nrows=1, ncols=2, figsize=figsize)
         self.plot_bias(ax=axes[0])
         self.plot_matrix(ax=axes[1])

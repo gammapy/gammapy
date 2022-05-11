@@ -1,6 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.gridspec import GridSpec
 from gammapy.utils.scripts import make_path
 from .map import MapDataset, MapDatasetOnOff
 from .utils import get_axes
@@ -55,8 +57,6 @@ class PlotMixin:
         >>> kwargs_residuals = {"color": "black", "markersize":4, "marker":'s', } #optional configuration
         >>> dataset.plot_fit(kwargs_residuals=kwargs_residuals, kwargs_spectrum=kwargs_spectrum)  # doctest: +SKIP
         """
-        from matplotlib.gridspec import GridSpec
-
         gs = GridSpec(7, 1)
         ax_spectrum, ax_residuals = get_axes(
             ax_spectrum,
@@ -227,8 +227,6 @@ class PlotMixin:
             Size of the figure.
 
         """
-        import matplotlib.pyplot as plt
-
         fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=figsize)
 
         ax1.set_title("Counts")

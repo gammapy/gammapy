@@ -8,7 +8,7 @@ from astropy.coordinates import Angle
 from astropy.io import fits
 from astropy.utils.data import get_pkg_data_filename
 from gammapy.irf import EnergyDependentMultiGaussPSF, PSFKing
-from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
+from gammapy.utils.testing import mpl_plot_check, requires_data
 
 
 @requires_data()
@@ -76,7 +76,6 @@ class TestEnergyDependentMultiGaussPSF:
         psf1.data[0][0] = 10
         assert not psf1 == psf
 
-    @requires_dependency("matplotlib")
     def test_peek(self, psf):
         with mpl_plot_check():
             psf.peek()

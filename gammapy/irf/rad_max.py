@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import matplotlib.pyplot as plt
 import astropy.units as u
 from astropy.visualization import quantity_support
 from .core import IRF
@@ -94,8 +95,6 @@ class RadMax2D(IRF):
         ax : `~matplotlib.pyplot.Axes`
              Axes to plot on.
         """
-        import matplotlib.pyplot as plt
-
         if ax is None:
             ax = plt.gca()
 

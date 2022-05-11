@@ -25,6 +25,7 @@ from gammapy.datasets import SpectrumDataset
 # when running the tests
 PYTEST_HEADER_MODULES["cython"] = "cython"
 PYTEST_HEADER_MODULES["iminuit"] = "iminuit"
+PYTEST_HEADER_MODULES["matplotlib"] = "matplotlib"
 PYTEST_HEADER_MODULES["astropy"] = "astropy"
 PYTEST_HEADER_MODULES["regions"] = "regions"
 PYTEST_HEADER_MODULES["healpy"] = "healpy"

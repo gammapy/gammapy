@@ -6,7 +6,7 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.units import Quantity, Unit
 from gammapy.maps import HpxGeom, HpxNDMap, Map, MapAxis, TimeMapAxis, WcsGeom, WcsNDMap
-from gammapy.utils.testing import mpl_plot_check, requires_dependency
+from gammapy.utils.testing import mpl_plot_check
 
 pytest.importorskip("healpy")
 
@@ -469,7 +469,6 @@ def test_interp_to_geom():
     assert_allclose(new_map.data[0, 8], 0.0, rtol=1e-4)
 
 
-@requires_dependency("matplotlib")
 def test_map_plot_mask():
     from regions import CircleSkyRegion
 

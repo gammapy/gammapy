@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
+import matplotlib.pyplot as plt
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
@@ -953,7 +954,6 @@ class HpxNDMap(HpxMap):
         # FIXME: Figure out how to force a square aspect-ratio like imshow
 
         import healpy as hp
-        import matplotlib.pyplot as plt
         from matplotlib.collections import PatchCollection
         from matplotlib.patches import Polygon
 

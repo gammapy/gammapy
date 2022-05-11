@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Helper functions and functions for plotting gamma-ray images."""
+from matplotlib.colors import LinearSegmentedColormap
 
 __all__ = ["colormap_hess", "colormap_milagro"]
 
@@ -42,8 +43,6 @@ def colormap_hess(transition=0.5, width=0.1):
     >>> transition = normalize(5)
     >>> cmap = colormap_hess(transition=transition)
     """
-    from matplotlib.colors import LinearSegmentedColormap
-
     # Compute normalised values (range 0 to 1) that
     # correspond to red, blue, yellow.
     red = float(transition)
@@ -113,7 +112,6 @@ def colormap_milagro(transition=0.5, width=0.0001, huestart=0.6):
     >>> cmap = colormap_milagro(transition=transition)
     """
     from colorsys import hls_to_rgb
-    from matplotlib.colors import LinearSegmentedColormap
 
     # Compute normalised red, blue, yellow values
     transition = float(transition)

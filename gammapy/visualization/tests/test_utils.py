@@ -1,14 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
+import matplotlib.pyplot as plt
 from astropy.table import Table
-from gammapy.utils.testing import mpl_plot_check, requires_dependency
+from gammapy.utils.testing import mpl_plot_check
 from gammapy.visualization import plot_contour_line, plot_theta_squared_table
 
 
-@requires_dependency("matplotlib")
 def test_map_panel_plotter():
-    import matplotlib.pyplot as plt
-
     t = np.linspace(0.0, 6.1, 10)
     x = np.cos(t)
     y = np.sin(t)
@@ -18,7 +16,6 @@ def test_map_panel_plotter():
         plot_contour_line(ax, x, y)
 
 
-@requires_dependency("matplotlib")
 def test_plot_theta2_distribution():
     table = Table()
     table["theta2_min"] = [0, 0.1]

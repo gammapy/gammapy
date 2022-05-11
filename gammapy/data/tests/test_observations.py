@@ -14,7 +14,6 @@ from gammapy.utils.testing import (
     assert_time_allclose,
     mpl_plot_check,
     requires_data,
-    requires_dependency,
 )
 
 
@@ -41,7 +40,6 @@ def test_observation(data_store):
     assert_skycoord_allclose(obs.target_radec, c)
 
 
-@requires_dependency("matplotlib")
 @requires_data()
 def test_observation_peek(data_store, caplog):
     with caplog.at_level(logging.WARNING):

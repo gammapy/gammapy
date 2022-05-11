@@ -3,6 +3,7 @@ import collections.abc
 import copy
 import logging
 import numpy as np
+import matplotlib.pyplot as plt
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
@@ -345,8 +346,6 @@ class Observation:
         figsize : tuple
             Figure size
         """
-        import matplotlib.pyplot as plt
-
         n_irfs = len(self.available_hdus)
 
         fig, axes = plt.subplots(

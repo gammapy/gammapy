@@ -1,6 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.colors import LogNorm
 import astropy.units as u
 from astropy.visualization import quantity_support
 from gammapy.maps import MapAxes, MapAxis
@@ -165,8 +167,6 @@ class Background3D(BackgroundIRF):
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
         """
-        import matplotlib.pyplot as plt
-
         n = len(energy)
         cols = min(ncols, n)
         rows = 1 + (n - 1) // cols
@@ -274,9 +274,6 @@ class Background2D(BackgroundIRF):
 
     def plot(self, ax=None, add_cbar=True, **kwargs):
         """Plot energy offset dependence of the background model."""
-        import matplotlib.pyplot as plt
-        from matplotlib.colors import LogNorm
-
         ax = plt.gca() if ax is None else ax
 
         energy_axis, offset_axis = self.axes["energy"], self.axes["offset"]
@@ -313,8 +310,6 @@ class Background2D(BackgroundIRF):
         ax : `~matplotlib.axes.Axes`
             Axis
         """
-        import matplotlib.pyplot as plt
-
         ax = plt.gca() if ax is None else ax
 
         if energy is None:
@@ -355,8 +350,6 @@ class Background2D(BackgroundIRF):
         ax : `~matplotlib.axes.Axes`
             Axis
         """
-        import matplotlib.pyplot as plt
-
         ax = plt.gca() if ax is None else ax
 
         if offset is None:
@@ -393,8 +386,6 @@ class Background2D(BackgroundIRF):
         ax : `~matplotlib.axes.Axes`
             Axis
         """
-        import matplotlib.pyplot as plt
-
         ax = plt.gca() if ax is None else ax
 
         offset_axis = self.axes["offset"]
@@ -413,8 +404,6 @@ class Background2D(BackgroundIRF):
 
     def peek(self, figsize=(10, 8)):
         """Quick-look summary plots."""
-        import matplotlib.pyplot as plt
-
         fig, axes = plt.subplots(nrows=2, ncols=2, figsize=figsize)
         self.plot(ax=axes[1][1])
         self.plot_offset_dependence(ax=axes[0][0])

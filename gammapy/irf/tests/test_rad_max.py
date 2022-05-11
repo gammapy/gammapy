@@ -3,7 +3,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.maps import MapAxis
 from gammapy.irf import RadMax2D, EffectiveAreaTable2D
-from gammapy.utils.testing import mpl_plot_check, requires_dependency
+from gammapy.utils.testing import mpl_plot_check
 
 import pytest
 
@@ -39,7 +39,6 @@ def test_rad_max_roundtrip(rad_max_2d, tmp_path):
     assert rad_max_2d.axes == rad_max_read.axes
 
 
-@requires_dependency("matplotlib")
 def test_rad_max_plot(rad_max_2d):
     with mpl_plot_check():
         rad_max_2d.plot_rad_max_vs_energy()

@@ -1,5 +1,6 @@
 from itertools import product
 import numpy as np
+import matplotlib.pyplot as plt
 from scipy.ndimage.measurements import label as ndi_label
 from astropy import units as u
 from astropy.io import fits
@@ -69,8 +70,6 @@ class RegionNDMap(Map):
         ax : `~matplotlib.pyplot.Axis`
             Axis used for plotting
         """
-        import matplotlib.pyplot as plt
-
         ax = ax or plt.gca()
 
         if axis_name is None:
@@ -147,8 +146,6 @@ class RegionNDMap(Map):
         ax : `~matplotlib.pyplot.Axis`
             Axis used for plotting
         """
-        import matplotlib.pyplot as plt
-
         ax = plt.gca() if ax is None else ax
 
         kwargs.setdefault("histtype", "step")
@@ -207,8 +204,6 @@ class RegionNDMap(Map):
         ax : `~matplotlib.pyplot.Axis`
             Axis used for plotting
         """
-        import matplotlib.pyplot as plt
-
         if not self.is_mask:
             raise ValueError("This is not a mask and cannot be plotted")
 

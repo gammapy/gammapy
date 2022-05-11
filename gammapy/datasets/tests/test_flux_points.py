@@ -190,7 +190,6 @@ class TestFluxPointFit:
         assert_allclose(ts_diff, [110.244116, 0.0, 110.292074], rtol=1e-2, atol=1e-7)
 
     @staticmethod
-    @requires_dependency("matplotlib")
     def test_fp_dataset_plot_fit(dataset):
 
         with mpl_plot_check():

@@ -2,6 +2,7 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
+import matplotlib.pyplot as plt
 import astropy.units as u
 from astropy.table import Table
 from astropy.time import Time
@@ -9,7 +10,7 @@ from astropy.visualization import quantity_support
 from gammapy.data import GTI
 from gammapy.maps import LabelMapAxis, MapAxes, MapAxis, RegionNDMap, TimeMapAxis
 from gammapy.utils.scripts import make_path
-from gammapy.utils.testing import assert_time_allclose, requires_data, requires_dependency, mpl_plot_check
+from gammapy.utils.testing import assert_time_allclose, requires_data, mpl_plot_check
 from gammapy.utils.time import time_ref_to_dict
 
 MAP_AXIS_INTERP = [
@@ -708,9 +709,7 @@ def test_mixed_axes():
     assert len(table) == 24
 
 
-@requires_dependency("matplotlib")
 def test_map_axis_format_plot_xaxis():
-    import matplotlib.pyplot as plt
     axis = MapAxis.from_energy_bounds(
             "0.03 TeV", "300 TeV", nbin=20,
             per_decade=True, name="energy_true")
@@ -724,9 +723,7 @@ def test_map_axis_format_plot_xaxis():
     assert ax1.xaxis.label.properties()["text"] == "True Energy [TeV]"
 
 
-@requires_dependency("matplotlib")
 def test_time_map_axis_format_plot_xaxis(time_intervals):
-    import matplotlib.pyplot as plt
     axis = TimeMapAxis(
         time_intervals["t_min"], time_intervals["t_max"], time_intervals["t_ref"], name="time"
     )

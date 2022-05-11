@@ -19,7 +19,7 @@ from gammapy.modeling.models import (
     SkyModel,
 )
 from gammapy.utils.scripts import make_path
-from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
+from gammapy.utils.testing import mpl_plot_check, requires_data
 
 
 # TODO: add light-curve test case from scratch
@@ -310,7 +310,6 @@ def test_with_skymodel(light_curve):
     assert "temporal" in out
 
 
-@requires_dependency("matplotlib")
 def test_plot_constant_model():
     time_range = [Time.now(), Time.now() + 1 * u.d]
     constant_model = ConstantTemporalModel(const=1)

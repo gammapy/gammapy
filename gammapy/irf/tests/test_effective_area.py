@@ -9,7 +9,6 @@ from gammapy.utils.testing import (
     assert_quantity_allclose,
     mpl_plot_check,
     requires_data,
-    requires_dependency,
 )
 
 
@@ -56,7 +55,6 @@ def test_from_parametrization():
     assert area.meta["TELESCOP"] == "HESS"
 
 
-@requires_dependency("matplotlib")
 @requires_data()
 def test_plot(aeff):
     with mpl_plot_check():

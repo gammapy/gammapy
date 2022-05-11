@@ -27,7 +27,7 @@ from gammapy.modeling.models import (
     TemplateSpatialModel,
     create_fermi_isotropic_diffuse_model,
 )
-from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
+from gammapy.utils.testing import mpl_plot_check, requires_data
 
 
 @pytest.fixture(scope="session")
@@ -651,7 +651,6 @@ def test_energy_dependent_model():
     assert_allclose(model.data.sum(), 9.9e-11, rtol=1e-3)
 
 
-@requires_dependency("matplotlib")
 def test_plot_grid(geom_true):
     spatial_model = MyCustomGaussianModel(frame="galactic")
     with mpl_plot_check():

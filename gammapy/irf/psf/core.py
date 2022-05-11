@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
+import matplotlib.pyplot as plt
 from astropy import units as u
 from astropy.visualization import quantity_support
 from gammapy.utils.array import array_stats_str
@@ -139,8 +140,6 @@ class PSF(IRF):
              Axes to plot on.
 
         """
-        import matplotlib.pyplot as plt
-
         ax = plt.gca() if ax is None else ax
 
         energy_true = self.axes["energy_true"]
@@ -179,8 +178,6 @@ class PSF(IRF):
         ax : `~matplotlib.pyplot.Axes`
              Axes to plot on.
         """
-        import matplotlib.pyplot as plt
-
         ax = plt.gca() if ax is None else ax
 
         energy = self.axes["energy_true"]
@@ -228,7 +225,6 @@ class PSF(IRF):
             True energy at which to plot the profile
 
         """
-        import matplotlib.pyplot as plt
         from gammapy.datasets.map import RAD_AXIS_DEFAULT
 
         ax = plt.gca() if ax is None else ax
@@ -263,8 +259,6 @@ class PSF(IRF):
             Size of the figure.
 
         """
-        import matplotlib.pyplot as plt
-
         fig, axes = plt.subplots(nrows=1, ncols=3, figsize=figsize)
 
         self.plot_containment_radius(fraction=0.68, ax=axes[0])

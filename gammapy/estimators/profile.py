@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Tools to create profiles (i.e. 1D "slices" from 2D images)."""
 import numpy as np
+import matplotlib.pyplot as plt
 import scipy.ndimage
 from astropy import units as u
 from astropy.convolution import Box1DKernel, Gaussian1DKernel
@@ -286,8 +287,6 @@ class ImageProfile:
         ax : `~matplotlib.axes.Axes`
             Axes object
         """
-        import matplotlib.pyplot as plt
-
         if ax is None:
             ax = plt.gca()
 
@@ -314,8 +313,6 @@ class ImageProfile:
         ax : `~matplotlib.axes.Axes`
             Axes object
         """
-        import matplotlib.pyplot as plt
-
         if ax is None:
             ax = plt.gca()
 
@@ -375,8 +372,6 @@ class ImageProfile:
         ax : `~matplotlib.axes.Axes`
             Axes object
         """
-        import matplotlib.pyplot as plt
-
         fig = plt.figure(figsize=figsize)
         ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
         ax = self.plot(ax, **kwargs)

@@ -2,11 +2,12 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
+import matplotlib.pyplot as plt
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion, RectangleSkyRegion, CompoundSkyRegion
 from gammapy.maps import MapAxis, RegionGeom, WcsGeom
-from gammapy.utils.testing import mpl_plot_check, requires_dependency
+from gammapy.utils.testing import mpl_plot_check
 
 
 @pytest.fixture()
@@ -373,10 +374,7 @@ def test_get_wcs_coord_and_weights(region):
     assert region_coord.shape == weights.shape
 
 
-@requires_dependency("matplotlib")
 def test_region_nd_map_plot(region):
-    import matplotlib.pyplot as plt
-
     geom = RegionGeom(region)
 
     ax = plt.subplot(projection=geom.wcs)
