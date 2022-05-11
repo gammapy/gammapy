@@ -259,6 +259,7 @@ class DataStore:
             Observation ID.
         required_irf : list of str or str
             The list can include the following options:
+
             * `events` : Events
             * `gti` :  Good time intervals
             * `aeff` : Effective area
@@ -266,7 +267,9 @@ class DataStore:
             * `edisp`: Energy dispersion
             * `psf` : Point Spread Function
             * `rad_max` : Maximal radius
+
             Alternatively single string can be used as shortcut:
+
             * `full-enclosure` : ["events", "gti", "aeff", "edisp", "psf", "bkg"]
             * `point-like` : ["events", "gti", "aeff", "edisp"]
 
