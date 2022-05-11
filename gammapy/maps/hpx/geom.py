@@ -1379,10 +1379,10 @@ class HpxGeom(Geom):
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
-            return NotImplemented
+            return False
 
         if self.is_allsky and not other.is_allsky:
-            return NotImplemented
+            return False
 
         # check overall shape and axes compatibility
         if self.data_shape != other.data_shape:

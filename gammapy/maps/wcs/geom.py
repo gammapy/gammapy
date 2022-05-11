@@ -1126,27 +1126,50 @@ class WcsGeom(Geom):
         # check WCS consistency with a priori tolerance of 1e-6
         return self.wcs.wcs.compare(other.wcs.wcs, cmp=2, tolerance=tolerance)
 
+    def is_allclose(self, other, rtol_wcs=1e-6, rtol_axes=1e-6, atol_axes=1e-6):
+        """Compare two data IRFs for equivalency
+
+        Parameters
+        ----------
+        other : the irf to compare against
+            `gammapy.irfs.IRF`
+        rtol_wcs : float
+            Relative tolerance for the wcs comparison.
+        rtol_axes : float
+            Relative tolerance for the axes comparison.
+        atol_axes : float
+            Relative tolerance for the axes comparison.
+
+        Returns
+        -------
+        is_allclose : bool
+            Whether the IRF is all close.
+        """
+        if not isinstance(other, self.__class__):
+            return TypeError(f"Cannot compare {type(self)} and {type(other)}")
+
+        if self.data_shape != other.data_shape:
+            return False
+
+        axes_eq = self.axes.is_allclose(other.axes, rtol=rtol_axes, atol=atol_axes)
+
+        # check WCS consistency with a priori tolerance of 1e-6
+        # cmp=1 parameter ensures no comparison with ancillary information
+        # see https://github.com/astropy/astropy/pull/4522/files
+        wcs_eq = self.wcs.wcs.compare(other.wcs.wcs, cmp=2, tolerance=rtol_wcs)
+
+        return axes_eq and wcs_eq
+
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
-            return NotImplemented
+            return False
 
         if not (self.is_regular and other.is_regular):
             raise NotImplementedError(
                 "Geom comparison is not possible for irregular geometries."
             )
 
-        # check overall shape and axes compatibility
-        if self.data_shape != other.data_shape:
-            return False
-
-        for axis, otheraxis in zip(self.axes, other.axes):
-            if axis != otheraxis:
-                return False
-
-        # check WCS consistency with a priori tolerance of 1e-6
-        # cmp=1 parameter ensures no comparison with ancillary information
-        # see https://github.com/astropy/astropy/pull/4522/files
-        return self.wcs.wcs.compare(other.wcs.wcs, cmp=1, tolerance=1e-6)
+        return self.is_allclose(other=other, rtol_wcs=1e-6, rtol_axes=1e-6)
 
     def __ne__(self, other):
         return not self.__eq__(other)
