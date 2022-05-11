@@ -339,7 +339,6 @@ def test_spectrum_dataset_stack_nondiagonal_no_bkg(spectrum_dataset):
     assert_allclose(kernel.get_resolution(1 * u.TeV), 0.1581, atol=1e-2)
 
 
-@requires_dependency("matplotlib")
 def test_peek(spectrum_dataset):
     with mpl_plot_check():
         spectrum_dataset.peek()
@@ -494,7 +493,6 @@ class TestSpectrumOnOff:
         assert isinstance(ds, SpectrumDataset)
         assert_allclose(ds.background.data.sum(), 4)
 
-    @requires_dependency("matplotlib")
     def test_peek(self):
         dataset = self.dataset.copy()
         dataset.models = SkyModel(spectral_model=PowerLawSpectralModel())
@@ -502,7 +500,6 @@ class TestSpectrumOnOff:
         with mpl_plot_check():
             dataset.peek()
 
-    @requires_dependency("matplotlib")
     def test_plot_fit(self):
         dataset = self.dataset.copy()
         dataset.models = SkyModel(spectral_model=PowerLawSpectralModel())
@@ -510,7 +507,6 @@ class TestSpectrumOnOff:
         with mpl_plot_check():
             dataset.plot_fit()
 
-    @requires_dependency("matplotlib")
     def test_plot_off_regions(self):
         from gammapy.visualization import plot_spectrum_datasets_off_regions
 

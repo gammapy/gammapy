@@ -1,6 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.gridspec import GridSpec
 from astropy import units as u
 from astropy.table import Table
 from astropy.visualization import quantity_support
@@ -352,9 +354,6 @@ class FluxPointsDataset(Dataset):
         >>> kwargs_residuals = {"color": "blue", "markersize":4, "marker":'s', }
         >>> dataset.plot_fit(kwargs_residuals=kwargs_residuals, kwargs_spectrum=kwargs_spectrum) # doctest: +SKIP
         """
-        import matplotlib.pyplot as plt
-        from matplotlib.gridspec import GridSpec
-
         fig = plt.figure(figsize=(9, 7))
 
         gs = GridSpec(7, 1)
@@ -401,8 +400,6 @@ class FluxPointsDataset(Dataset):
             Axes object.
 
         """
-        import matplotlib.pyplot as plt
-
         ax = ax or plt.gca()
 
         fp = self.data

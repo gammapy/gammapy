@@ -1,6 +1,5 @@
 def get_figure(fig, width, height):
     import matplotlib.pyplot as plt
-
     if plt.get_fignums():
         if not fig:
             fig = plt.gcf()

@@ -619,7 +619,6 @@ def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
     assert_allclose(stacked1.edisp.edisp_map, stacked.edisp.edisp_map)
 
 
-@requires_dependency("matplotlib")
 @requires_data()
 def test_map_fit(sky_model, geom, geom_etrue):
     dataset_1 = get_map_dataset(geom, geom_etrue, name="test-1")
@@ -1565,7 +1564,6 @@ def test_slice_by_idx():
     assert_allclose(axis.edges[0].value, 0.210175, rtol=1e-5)
 
 
-@requires_dependency("matplotlib")
 def test_plot_residual_onoff():
     axis = MapAxis.from_energy_bounds(1, 10, 2, unit="TeV")
     geom = WcsGeom.create(npix=(10, 10), binsz=0.05, axes=[axis])
@@ -1828,7 +1826,6 @@ def test_map_dataset_hpx_geom_npred(geom_hpx_partial):
     assert_allclose(dataset.npred().data.sum(), 54, rtol=1e-3)
 
 
-@requires_dependency("matplotlib")
 @requires_data()
 def test_peek(images):
     dataset = get_map_dataset_onoff(images)

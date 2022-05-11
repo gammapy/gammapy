@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
+import matplotlib.pyplot as plt
 import astropy.units as u
 from astropy.io import fits
 from astropy.table import Table
@@ -1887,8 +1888,6 @@ class MapDataset(Dataset):
         def plot_mask(ax, mask, **kwargs):
             if mask is not None:
                 mask.plot_mask(ax=ax, **kwargs)
-
-        import matplotlib.pyplot as plt
 
         fig, axes = plt.subplots(
             ncols=2,
