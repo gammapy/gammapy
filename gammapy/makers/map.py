@@ -7,12 +7,12 @@ from gammapy.irf import EDispKernelMap, PSFMap
 from gammapy.maps import Map
 from .core import Maker
 from .utils import (
+    make_counts_rad_max,
     make_edisp_kernel_map,
     make_edisp_map,
     make_map_background_irf,
     make_map_exposure_true_energy,
     make_psf_map,
-    make_counts_rad_max,
 )
 
 __all__ = ["MapDatasetMaker"]

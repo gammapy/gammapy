@@ -1,17 +1,17 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Test if Jupyter notebooks work."""
-from argparse import ArgumentParser
-from functools import partial
 import logging
 import os
 import shutil
 import sys
+import tempfile
+from argparse import ArgumentParser
 from configparser import ConfigParser
+from functools import partial
+from multiprocessing.pool import Pool
 from pathlib import Path
 from gammapy.scripts.jupyter import notebook_run
 from gammapy.utils.scripts import get_notebooks_paths
-from multiprocessing.pool import Pool
-import tempfile
 
 parser = ArgumentParser()
 parser.add_argument("-j", "--n-jobs", type=int)

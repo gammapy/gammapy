@@ -14,7 +14,7 @@ Options: keep as-is, hide from the docs, or to remove it completely
 """
 import operator
 import numpy as np
-from scipy.optimize import minimize, Bounds
+from scipy.optimize import Bounds, minimize
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from regions import (

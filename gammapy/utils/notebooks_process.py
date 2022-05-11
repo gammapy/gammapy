@@ -5,12 +5,11 @@ import os
 import shutil
 import subprocess
 import sys
-import nbformat
 from argparse import ArgumentParser
 from configparser import ConfigParser
 from multiprocessing.pool import Pool
 from pathlib import Path
-
+import nbformat
 from gammapy import __version__
 from gammapy.scripts.jupyter import notebook_run
 from gammapy.utils.scripts import get_notebooks_paths

@@ -6,8 +6,7 @@ from .reflected import (
     RegionsFinder,
     WobbleRegionsFinder,
 )
-from .ring import RingBackgroundMaker, AdaptiveRingBackgroundMaker
-
+from .ring import AdaptiveRingBackgroundMaker, RingBackgroundMaker
 
 __all__ = [
     "AdaptiveRingBackgroundMaker",

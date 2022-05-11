@@ -13,7 +13,6 @@ from gammapy.utils.scripts import make_path
 from gammapy.utils.time import time_ref_from_dict
 from .core import ModelBase
 
-
 __all__ = [
     "ConstantTemporalModel",
     "ExpDecayTemporalModel",

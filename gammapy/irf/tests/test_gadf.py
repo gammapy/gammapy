@@ -1,5 +1,5 @@
-import astropy.units as u
 import numpy as np
+import astropy.units as u
 
 
 def test_effective_area_2d_to_gadf():

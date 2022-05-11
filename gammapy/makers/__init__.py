@@ -1,6 +1,4 @@
 from gammapy.utils.registry import Registry
-
-from .core import Maker
 from .background import (
     AdaptiveRingBackgroundMaker,
     FoVBackgroundMaker,
@@ -11,7 +9,7 @@ from .background import (
     RingBackgroundMaker,
     WobbleRegionsFinder,
 )
-
+from .core import Maker
 from .map import MapDatasetMaker
 from .reduce import DatasetsMaker
 from .safe import SafeMaskMaker

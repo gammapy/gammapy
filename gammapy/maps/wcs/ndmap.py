@@ -2,7 +2,6 @@
 import logging
 from collections import OrderedDict
 import numpy as np
-import matplotlib.pyplot as plt
 import scipy.interpolate
 import scipy.ndimage as ndi
 import scipy.signal
@@ -18,6 +17,7 @@ from regions import (
     RectangleSkyRegion,
     SkyRegion,
 )
+import matplotlib.pyplot as plt
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.units import unit_from_fits_image_hdu

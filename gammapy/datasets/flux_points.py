@@ -1,11 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.gridspec import GridSpec
 from astropy import units as u
 from astropy.table import Table
 from astropy.visualization import quantity_support
+import matplotlib.pyplot as plt
+from matplotlib.gridspec import GridSpec
 from gammapy.modeling.models import DatasetModels
 from gammapy.utils.scripts import make_name, make_path
 from .core import Dataset

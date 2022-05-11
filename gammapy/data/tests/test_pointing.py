@@ -1,18 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-
 import numpy as np
 from numpy.testing import assert_allclose
-
 import astropy.units as u
+from astropy.coordinates import ICRS, AltAz, SkyCoord
 from astropy.time import Time
-from astropy.coordinates import SkyCoord, AltAz, ICRS
-
 from gammapy.data import FixedPointingInfo, PointingInfo
-from gammapy.data.pointing import PointingMode
-from gammapy.utils.testing import assert_time_allclose, requires_data
 from gammapy.data.observers import observatory_locations
+from gammapy.data.pointing import PointingMode
 from gammapy.utils.fits import earth_location_to_dict
+from gammapy.utils.testing import assert_time_allclose, requires_data
 from gammapy.utils.time import time_ref_to_dict, time_relative_to_ref
 
 

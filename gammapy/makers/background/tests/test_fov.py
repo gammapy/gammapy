@@ -7,7 +7,7 @@ from regions import CircleSkyRegion
 from gammapy.data import DataStore
 from gammapy.datasets import MapDataset, SpectrumDataset
 from gammapy.makers import FoVBackgroundMaker, MapDatasetMaker, SafeMaskMaker
-from gammapy.maps import MapAxis, WcsGeom, RegionGeom, Map
+from gammapy.maps import Map, MapAxis, RegionGeom, WcsGeom
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
     FoVBackgroundModel,

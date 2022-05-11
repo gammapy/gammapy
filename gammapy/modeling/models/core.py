@@ -4,16 +4,15 @@ import copy
 import logging
 from os.path import split
 import numpy as np
-import matplotlib.pyplot as plt
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
+import matplotlib.pyplot as plt
 import yaml
 from gammapy.maps import Map, RegionGeom
 from gammapy.modeling import Covariance, Parameter, Parameters
 from gammapy.modeling.covariance import copy_covariance
 from gammapy.utils.scripts import make_name, make_path
-
 
 __all__ = ["Model", "Models", "DatasetModels", "ModelBase"]
 

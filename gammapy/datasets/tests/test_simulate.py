@@ -3,26 +3,25 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-from astropy.coordinates import SkyCoord, EarthLocation
+from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.io import fits
 from astropy.table import Table
 from astropy.time import Time
 from gammapy.data import GTI, DataStore, Observation
-from gammapy.datasets import MapDatasetEventSampler, MapDataset
+from gammapy.datasets import MapDataset, MapDatasetEventSampler
 from gammapy.datasets.tests.test_map import get_map_dataset
 from gammapy.irf import load_cta_irfs
 from gammapy.makers import MapDatasetMaker
 from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling.models import (
-    Models,
     FoVBackgroundModel,
     GaussianSpatialModel,
     LightCurveTemplateTemporalModel,
+    Models,
     PowerLawSpectralModel,
     SkyModel,
 )
 from gammapy.utils.testing import requires_data
-
 
 LOCATION = EarthLocation(lon="-70d18m58.84s", lat="-24d41m0.34s", height="2000m")
 

@@ -5,7 +5,6 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.table import Table
-from gammapy.utils.scripts import make_path
 from gammapy.maps import MapAxis, RegionNDMap
 from gammapy.modeling.models import (
     SPECTRAL_MODEL_REGISTRY,
@@ -28,9 +27,10 @@ from gammapy.modeling.models import (
     SmoothBrokenPowerLawSpectralModel,
     SuperExpCutoffPowerLaw4FGLDR3SpectralModel,
     SuperExpCutoffPowerLaw4FGLSpectralModel,
-    TemplateSpectralModel,
     TemplateNDSpectralModel,
+    TemplateSpectralModel,
 )
+from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import (
     assert_quantity_allclose,
     mpl_plot_check,

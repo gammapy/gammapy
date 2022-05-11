@@ -1,12 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Tools to create profiles (i.e. 1D "slices" from 2D images)."""
 import numpy as np
-import matplotlib.pyplot as plt
 import scipy.ndimage
 from astropy import units as u
 from astropy.convolution import Box1DKernel, Gaussian1DKernel
 from astropy.coordinates import Angle
 from astropy.table import Table
+import matplotlib.pyplot as plt
 from .core import Estimator
 
 __all__ = ["ImageProfile", "ImageProfileEstimator"]

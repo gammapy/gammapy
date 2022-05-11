@@ -3,18 +3,18 @@ import collections.abc
 import copy
 import logging
 import numpy as np
-import matplotlib.pyplot as plt
-from astropy.io import fits
+import astropy.units as u
 from astropy.coordinates import SkyCoord
+from astropy.io import fits
 from astropy.time import Time
 from astropy.units import Quantity
-import astropy.units as u
+from astropy.utils import lazyproperty
+import matplotlib.pyplot as plt
+from gammapy import __version__
 from gammapy.utils.fits import LazyFitsData, earth_location_to_dict
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_to_dict, time_relative_to_ref
-from astropy.utils import lazyproperty
-from gammapy import __version__
 from .event_list import EventList, EventListChecker
 from .filters import ObservationFilter
 from .gti import GTI

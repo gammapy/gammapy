@@ -9,7 +9,6 @@ from astropy import units as u
 from gammapy.modeling import Parameter
 from .spectral import PowerLawSpectralModel, SpectralModel
 
-
 __all__ = [
     "create_cosmic_ray_spectral_model",
 ]

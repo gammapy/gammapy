@@ -1,10 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.colors import LogNorm
 import astropy.units as u
 from astropy.visualization import quantity_support
+import matplotlib.pyplot as plt
+from matplotlib.colors import LogNorm
 from gammapy.maps import MapAxes, MapAxis
 from .core import IRF
 from .io import gadf_is_pointlike

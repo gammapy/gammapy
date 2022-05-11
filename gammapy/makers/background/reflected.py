@@ -1,12 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-import numpy as np
-from itertools import combinations
 from abc import ABCMeta, abstractmethod
-
+from itertools import combinations
+import numpy as np
 from astropy import units as u
 from astropy.coordinates import Angle
-from regions import PixCoord, PointSkyRegion, CircleSkyRegion
+from regions import CircleSkyRegion, PixCoord, PointSkyRegion
 from gammapy.datasets import SpectrumDatasetOnOff
 from gammapy.maps import RegionGeom, RegionNDMap, WcsGeom, WcsNDMap
 from ..core import Maker

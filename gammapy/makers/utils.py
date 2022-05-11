@@ -3,13 +3,12 @@ import logging
 import numpy as np
 from astropy.coordinates import Angle, SkyOffsetFrame
 from astropy.table import Table
-from gammapy.irf import EDispMap, PSFMap, FoVAlignment
+from gammapy.irf import EDispMap, FoVAlignment, PSFMap
 from gammapy.maps import Map, RegionNDMap
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.stats import WStatCountsStatistic
 from gammapy.utils.coordinates import sky_to_fov
 from gammapy.utils.regions import compound_region_to_regions
-
 
 __all__ = [
     "make_counts_rad_max",

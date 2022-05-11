@@ -1,14 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import logging
 import os
 from pathlib import Path
 import pytest
 import numpy as np
-from astropy.io import fits
 import astropy.units as u
+from astropy.io import fits
 from gammapy.data import DataStore
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import requires_data
-import logging
 
 
 @pytest.fixture()

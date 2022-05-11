@@ -1,14 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
-import matplotlib.pyplot as plt
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.table import Table
+import matplotlib.pyplot as plt
 from gammapy.catalog.fermi import SourceCatalog3FGL, SourceCatalog4FGL
 from gammapy.estimators import FluxPoints
 from gammapy.estimators.map.core import DEFAULT_UNIT
-from gammapy.modeling.models import SpectralModel, PowerLawSpectralModel
+from gammapy.modeling.models import PowerLawSpectralModel, SpectralModel
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import (
     assert_quantity_allclose,

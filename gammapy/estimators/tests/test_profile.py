@@ -6,10 +6,7 @@ from astropy.coordinates import Angle, SkyCoord
 from astropy.table import Table
 from gammapy.estimators import ImageProfile, ImageProfileEstimator
 from gammapy.maps import WcsGeom, WcsNDMap
-from gammapy.utils.testing import (
-    assert_quantity_allclose,
-    mpl_plot_check,
-)
+from gammapy.utils.testing import assert_quantity_allclose, mpl_plot_check
 
 
 @pytest.fixture(scope="session")

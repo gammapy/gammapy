@@ -2,8 +2,8 @@
 import abc
 import json
 import numpy as np
-from astropy.io import fits
 import astropy.units as u
+from astropy.io import fits
 from ..core import Map
 from ..io import find_bands_hdu, find_bintable_hdu
 from .geom import HpxGeom

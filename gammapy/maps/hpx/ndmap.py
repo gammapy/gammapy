@@ -1,11 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
-import matplotlib.pyplot as plt
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from regions import PointSkyRegion
+import matplotlib.pyplot as plt
 from gammapy.utils.units import unit_from_fits_image_hdu
 from ..coord import MapCoord
 from ..geom import pix_tuple_to_idx

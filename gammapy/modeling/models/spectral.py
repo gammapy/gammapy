@@ -1,8 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Spectral models for Gammapy."""
+import logging
 import operator
+import os
 import numpy as np
-import matplotlib.pyplot as plt
 import scipy.optimize
 import scipy.special
 import astropy.units as u
@@ -10,6 +11,7 @@ from astropy import constants as const
 from astropy.table import Table
 from astropy.utils.decorators import classproperty
 from astropy.visualization import quantity_support
+import matplotlib.pyplot as plt
 from gammapy.maps import MapAxis, RegionNDMap
 from gammapy.modeling import Parameter, Parameters
 from gammapy.utils.integrate import trapz_loglog
@@ -20,7 +22,6 @@ from gammapy.utils.interpolation import (
 from gammapy.utils.roots import find_roots
 from gammapy.utils.scripts import make_path
 from .core import ModelBase
-import os, logging
 
 log = logging.getLogger(__name__)
 

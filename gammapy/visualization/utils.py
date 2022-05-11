@@ -1,8 +1,8 @@
 import numpy as np
+from scipy.interpolate import CubicSpline
 import matplotlib.pyplot as plt
 from gammapy.maps import MapAxis
 from gammapy.maps.utils import edges_from_lo_hi
-from scipy.interpolate import CubicSpline
 
 __all__ = [
     "plot_contour_line",

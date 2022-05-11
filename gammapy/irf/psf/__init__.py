@@ -1,6 +1,6 @@
 from .kernel import PSFKernel
 from .map import PSFMap
-from .parametric import ParametricPSF, EnergyDependentMultiGaussPSF, PSFKing
+from .parametric import EnergyDependentMultiGaussPSF, ParametricPSF, PSFKing
 from .table import PSF3D
 
 __all__ = [

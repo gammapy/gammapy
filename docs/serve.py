@@ -6,10 +6,10 @@ https://stackoverflow.com/a/51295415/3838691
 https://stackoverflow.com/a/52531444/3838691
 """
 import time
-from threading import Thread
 import webbrowser
 from functools import partial
 from http.server import HTTPServer, SimpleHTTPRequestHandler
+from threading import Thread
 
 ip = "localhost"
 port = 8000

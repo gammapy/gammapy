@@ -8,7 +8,7 @@ from astropy.io import fits
 from astropy.time import Time
 from gammapy.data import GTI
 from gammapy.estimators import FluxMaps
-from gammapy.maps import MapAxis, Maps, RegionGeom, WcsNDMap, TimeMapAxis
+from gammapy.maps import MapAxis, Maps, RegionGeom, TimeMapAxis, WcsNDMap
 from gammapy.modeling.models import (
     LogParabolaSpectralModel,
     PointSpatialModel,

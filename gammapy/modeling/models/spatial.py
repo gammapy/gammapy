@@ -3,7 +3,6 @@
 import logging
 import os
 import numpy as np
-import matplotlib.pyplot as plt
 import scipy.integrate
 import scipy.special
 import astropy.units as u
@@ -17,13 +16,13 @@ from regions import (
     PointSkyRegion,
     RectangleSkyRegion,
 )
+import matplotlib.pyplot as plt
 from gammapy.maps import Map, WcsGeom
 from gammapy.modeling import Parameter
 from gammapy.modeling.covariance import copy_covariance
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.scripts import make_path
 from .core import ModelBase
-
 
 __all__ = [
     "ConstantFluxSpatialModel",

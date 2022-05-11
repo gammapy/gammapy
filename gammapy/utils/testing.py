@@ -3,10 +3,10 @@
 import os
 import sys
 from numpy.testing import assert_allclose
-import matplotlib.pyplot as plt
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
+import matplotlib.pyplot as plt
 
 __all__ = [
     "assert_quantity_allclose",

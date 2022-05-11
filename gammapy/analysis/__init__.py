@@ -3,7 +3,6 @@
 from .config import AnalysisConfig
 from .core import Analysis
 
-
 __all__ = [
     "Analysis",
     "AnalysisConfig",

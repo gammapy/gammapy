@@ -1,11 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.colors import PowerNorm
 from astropy.io import fits
 from astropy.table import Table
 from astropy.units import Quantity
 from astropy.visualization import quantity_support
+import matplotlib.pyplot as plt
+from matplotlib.colors import PowerNorm
 from gammapy.maps import MapAxis
 from gammapy.utils.scripts import make_path
 from ..core import IRF

@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import matplotlib.pyplot as plt
 from astropy.coordinates import Angle
+import matplotlib.pyplot as plt
 from gammapy.maps import Map
 from gammapy.utils.testing import mpl_plot_check
 from gammapy.visualization import MapPanelPlotter

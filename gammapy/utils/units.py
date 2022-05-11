@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Units and Quantity related helper functions"""
 import logging
-import astropy.units as u
-import numpy as np
 from math import floor
+import numpy as np
+import astropy.units as u
 
 __all__ = ["standardise_unit", "unit_from_fits_image_hdu"]
 

@@ -3,12 +3,7 @@ import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.modeling import Parameter, Parameters
-from gammapy.modeling.models import (
-    Model,
-    ModelBase,
-    Models,
-    SkyModel,
-)
+from gammapy.modeling.models import Model, ModelBase, Models, SkyModel
 from gammapy.utils.testing import mpl_plot_check, requires_data
 
 

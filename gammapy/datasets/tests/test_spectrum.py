@@ -20,11 +20,7 @@ from gammapy.modeling.models import (
 )
 from gammapy.utils.random import get_random_state
 from gammapy.utils.regions import compound_region_to_regions
-from gammapy.utils.testing import (
-    assert_time_allclose,
-    mpl_plot_check,
-    requires_data,
-)
+from gammapy.utils.testing import assert_time_allclose, mpl_plot_check, requires_data
 from gammapy.utils.time import time_ref_to_dict
 
 

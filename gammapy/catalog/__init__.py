@@ -3,17 +3,16 @@
 from gammapy.utils.registry import Registry
 from .core import SourceCatalog, SourceCatalogObject
 from .fermi import (
-    SourceCatalogObject4FGL,
-    SourceCatalogObject3FGL,
-    SourceCatalogObject2FHL,
-    SourceCatalogObject3FHL,
-    SourceCatalog4FGL,
-    SourceCatalog3FGL,
     SourceCatalog2FHL,
+    SourceCatalog3FGL,
     SourceCatalog3FHL,
+    SourceCatalog4FGL,
+    SourceCatalogObject2FHL,
+    SourceCatalogObject3FGL,
+    SourceCatalogObject3FHL,
+    SourceCatalogObject4FGL,
 )
 from .gammacat import SourceCatalogGammaCat, SourceCatalogObjectGammaCat
-
 from .hawc import (
     SourceCatalog2HWC,
     SourceCatalog3HWC,
@@ -22,9 +21,9 @@ from .hawc import (
 )
 from .hess import (
     SourceCatalogHGPS,
+    SourceCatalogLargeScaleHGPS,
     SourceCatalogObjectHGPS,
     SourceCatalogObjectHGPSComponent,
-    SourceCatalogLargeScaleHGPS,
 )
 
 CATALOG_REGISTRY = Registry(

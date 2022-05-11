@@ -5,10 +5,10 @@ import astropy.units as u
 from astropy.io import fits
 from astropy.units import Quantity
 from gammapy.irf import (
-    RadMax2D,
     Background3D,
     EffectiveAreaTable2D,
     EnergyDispersion2D,
+    RadMax2D,
     load_cta_irfs,
     load_irf_dict_from_file,
 )

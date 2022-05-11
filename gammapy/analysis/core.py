@@ -13,17 +13,17 @@ from gammapy.estimators import (
     LightCurveEstimator,
 )
 from gammapy.makers import (
+    DatasetsMaker,
     FoVBackgroundMaker,
     MapDatasetMaker,
     ReflectedRegionsBackgroundMaker,
     RingBackgroundMaker,
     SafeMaskMaker,
     SpectrumDatasetMaker,
-    DatasetsMaker,
 )
 from gammapy.maps import Map, MapAxis, RegionGeom, WcsGeom
 from gammapy.modeling import Fit
-from gammapy.modeling.models import FoVBackgroundModel, Models, DatasetModels
+from gammapy.modeling.models import DatasetModels, FoVBackgroundModel, Models
 from gammapy.utils.pbar import progress_bar
 from gammapy.utils.scripts import make_path
 

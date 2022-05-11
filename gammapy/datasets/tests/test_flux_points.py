@@ -2,20 +2,20 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.table import Table, Column
+import astropy.units as u
+from astropy.table import Column, Table
 from astropy.time import Time
+from gammapy.data import GTI
 from gammapy.datasets import Datasets, FluxPointsDataset
 from gammapy.estimators import FluxPoints
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
+    ExpDecayTemporalModel,
     PowerLawSpectralModel,
     SkyModel,
-    ExpDecayTemporalModel,
 )
-from gammapy.data import GTI
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
-import astropy.units as u
 
 
 @pytest.fixture()

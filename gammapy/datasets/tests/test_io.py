@@ -1,10 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from numpy.testing import assert_allclose
+import astropy.units as u
+from regions import CircleSkyRegion
 from gammapy.datasets import Datasets, SpectrumDataset
 from gammapy.modeling.models import DatasetModels
 from gammapy.utils.testing import requires_data
-import astropy.units as u
-from regions import CircleSkyRegion
 
 
 @requires_data()

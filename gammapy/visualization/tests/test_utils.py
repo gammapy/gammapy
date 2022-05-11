@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
-import matplotlib.pyplot as plt
 from astropy.table import Table
+import matplotlib.pyplot as plt
 from gammapy.utils.testing import mpl_plot_check
 from gammapy.visualization import plot_contour_line, plot_theta_squared_table
 

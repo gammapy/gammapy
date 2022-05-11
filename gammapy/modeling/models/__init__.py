@@ -1,70 +1,65 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Built-in models in Gammapy."""
 from gammapy.utils.registry import Registry
-from .core import Model, Models, DatasetModels, ModelBase
+from .core import DatasetModels, Model, ModelBase, Models
 from .cube import (
-    SkyModel,
     FoVBackgroundModel,
+    SkyModel,
     TemplateNPredModel,
     create_fermi_isotropic_diffuse_model,
 )
 from .spatial import (
-    SpatialModel,
-    PointSpatialModel,
+    ConstantFluxSpatialModel,
+    ConstantSpatialModel,
+    DiskSpatialModel,
     GaussianSpatialModel,
     GeneralizedGaussianSpatialModel,
-    DiskSpatialModel,
-    ShellSpatialModel,
+    PointSpatialModel,
     Shell2SpatialModel,
-    ConstantSpatialModel,
-    ConstantFluxSpatialModel,
+    ShellSpatialModel,
+    SpatialModel,
     TemplateSpatialModel,
 )
 from .spectral import (
-    scale_plot_flux,
-    integrate_spectrum,
-    SpectralModel,
-    ConstantSpectralModel,
-    CompoundSpectralModel,
-    PowerLawSpectralModel,
-    PowerLawNormSpectralModel,
-    PowerLaw2SpectralModel,
     BrokenPowerLawSpectralModel,
-    SmoothBrokenPowerLawSpectralModel,
-    PiecewiseNormSpectralModel,
-    ExpCutoffPowerLawSpectralModel,
-    ExpCutoffPowerLawNormSpectralModel,
+    CompoundSpectralModel,
+    ConstantSpectralModel,
+    EBLAbsorptionNormSpectralModel,
     ExpCutoffPowerLaw3FGLSpectralModel,
+    ExpCutoffPowerLawNormSpectralModel,
+    ExpCutoffPowerLawSpectralModel,
+    GaussianSpectralModel,
+    LogParabolaNormSpectralModel,
+    LogParabolaSpectralModel,
+    NaimaSpectralModel,
+    PiecewiseNormSpectralModel,
+    PowerLaw2SpectralModel,
+    PowerLawNormSpectralModel,
+    PowerLawSpectralModel,
+    ScaleSpectralModel,
+    SmoothBrokenPowerLawSpectralModel,
+    SpectralModel,
     SuperExpCutoffPowerLaw3FGLSpectralModel,
     SuperExpCutoffPowerLaw4FGLDR3SpectralModel,
     SuperExpCutoffPowerLaw4FGLSpectralModel,
-    LogParabolaSpectralModel,
-    LogParabolaNormSpectralModel,
-    TemplateSpectralModel,
     TemplateNDSpectralModel,
-    ScaleSpectralModel,
-    EBLAbsorptionNormSpectralModel,
-    NaimaSpectralModel,
-    GaussianSpectralModel,
+    TemplateSpectralModel,
+    integrate_spectrum,
+    scale_plot_flux,
 )
-
 from .spectral_cosmic_ray import create_cosmic_ray_spectral_model
-from .spectral_crab import (
-    MeyerCrabSpectralModel,
-    create_crab_spectral_model,
-)
+from .spectral_crab import MeyerCrabSpectralModel, create_crab_spectral_model
 from .temporal import (
-    TemporalModel,
     ConstantTemporalModel,
-    LinearTemporalModel,
     ExpDecayTemporalModel,
     GaussianTemporalModel,
     GeneralizedGaussianTemporalModel,
     LightCurveTemplateTemporalModel,
+    LinearTemporalModel,
     PowerLawTemporalModel,
     SineTemporalModel,
+    TemporalModel,
 )
-
 
 __all__ = [
     "BrokenPowerLawSpectralModel",

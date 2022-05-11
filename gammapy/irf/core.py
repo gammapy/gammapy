@@ -1,6 +1,7 @@
 import abc
 import logging
 from copy import deepcopy
+from enum import Enum
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
@@ -13,7 +14,6 @@ from gammapy.utils.interpolation import (
     interpolation_scale,
 )
 from gammapy.utils.scripts import make_path
-from enum import Enum
 from .io import IRF_DL3_HDU_SPECIFICATION, IRF_MAP_HDU_SPECIFICATION, gadf_is_pointlike
 
 log = logging.getLogger(__name__)

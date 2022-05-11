@@ -12,9 +12,9 @@ from gammapy.makers import (
     FoVBackgroundMaker,
     MapDatasetMaker,
     ReflectedRegionsBackgroundMaker,
-    WobbleRegionsFinder,
     SafeMaskMaker,
     SpectrumDatasetMaker,
+    WobbleRegionsFinder,
 )
 from gammapy.maps import MapAxis, RegionGeom, WcsGeom
 from gammapy.utils.testing import requires_data

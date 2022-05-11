@@ -3,26 +3,20 @@
 Instrument response functions (IRFs).
 """
 from gammapy.utils.registry import Registry
-from .background import Background3D, Background2D
-from .edisp import (
-    EnergyDispersion2D,
-    EDispKernel,
-    EDispKernelMap,
-    EDispMap,
-)
+from .background import Background2D, Background3D
+from .core import FoVAlignment, IRFMap
+from .edisp import EDispKernel, EDispKernelMap, EDispMap, EnergyDispersion2D
 from .effective_area import EffectiveAreaTable2D
 from .io import load_cta_irfs, load_irf_dict_from_file
 from .psf import (
-    PSFKernel,
-    PSFMap,
-    ParametricPSF,
-    EnergyDependentMultiGaussPSF,
-    PSFKing,
     PSF3D,
+    EnergyDependentMultiGaussPSF,
+    ParametricPSF,
+    PSFKernel,
+    PSFKing,
+    PSFMap,
 )
 from .rad_max import RadMax2D
-from .core import FoVAlignment, IRFMap
-
 
 __all__ = [
     "Background2D",

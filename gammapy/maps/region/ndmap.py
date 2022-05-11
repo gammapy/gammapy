@@ -1,12 +1,12 @@
 from itertools import product
 import numpy as np
-import matplotlib.pyplot as plt
 from scipy.ndimage.measurements import label as ndi_label
 from astropy import units as u
 from astropy.io import fits
 from astropy.nddata import block_reduce
 from astropy.table import Table
 from astropy.visualization import quantity_support
+import matplotlib.pyplot as plt
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator, StatProfileScale
 from gammapy.utils.scripts import make_path
 from ..axes import MapAxes

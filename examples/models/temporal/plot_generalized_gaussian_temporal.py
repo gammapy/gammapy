@@ -19,8 +19,8 @@ This model parametrises a generalized Gaussian time model.
 # Here is an example plot of the model:
 
 from astropy import units as u
-from astropy.units import Quantity
 from astropy.time import Time
+from astropy.units import Quantity
 import matplotlib.pyplot as plt
 from gammapy.modeling.models import (
     GeneralizedGaussianTemporalModel,

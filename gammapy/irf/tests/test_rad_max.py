@@ -1,11 +1,10 @@
+import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
+from gammapy.irf import EffectiveAreaTable2D, RadMax2D
 from gammapy.maps import MapAxis
-from gammapy.irf import RadMax2D, EffectiveAreaTable2D
 from gammapy.utils.testing import mpl_plot_check
-
-import pytest
 
 
 @pytest.fixture()

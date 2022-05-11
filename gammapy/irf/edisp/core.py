@@ -1,11 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.colors import PowerNorm
 import scipy.special
 from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord
 from astropy.visualization import quantity_support
+import matplotlib.pyplot as plt
+from matplotlib.colors import PowerNorm
 from gammapy.maps import MapAxes, MapAxis, RegionGeom
 from ..core import IRF
 

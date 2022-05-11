@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import json
 import numpy as np
-from astropy.io import fits
 import astropy.units as u
+from astropy.io import fits
 from ..core import Map
 from ..io import JsonQuantityEncoder, find_bands_hdu, find_hdu
 from .geom import WcsGeom

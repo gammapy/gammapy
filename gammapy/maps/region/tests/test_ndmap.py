@@ -2,10 +2,10 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-import matplotlib.pyplot as plt
 from astropy import units as u
 from astropy.time import Time
 from regions import CircleSkyRegion
+import matplotlib.pyplot as plt
 from gammapy.data import EventList
 from gammapy.irf import EDispKernel
 from gammapy.maps import (

@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
-import matplotlib.pyplot as plt
 from astropy import units as u
 from astropy.visualization import quantity_support
+import matplotlib.pyplot as plt
 from gammapy.utils.array import array_stats_str
 from ..core import IRF
 

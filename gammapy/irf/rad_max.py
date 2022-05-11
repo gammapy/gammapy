@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import matplotlib.pyplot as plt
 import astropy.units as u
 from astropy.visualization import quantity_support
+import matplotlib.pyplot as plt
 from .core import IRF
 
 __all__ = [

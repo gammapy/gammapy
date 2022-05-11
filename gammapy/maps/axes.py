@@ -3,13 +3,13 @@ import copy
 import inspect
 from collections.abc import Sequence
 import numpy as np
-import matplotlib.pyplot as plt
 import scipy
 import astropy.units as u
 from astropy.io import fits
 from astropy.table import Column, Table, hstack
 from astropy.time import Time
 from astropy.utils import lazyproperty
+import matplotlib.pyplot as plt
 from gammapy.utils.interpolation import interpolation_scale
 from gammapy.utils.time import time_ref_from_dict, time_ref_to_dict
 from .utils import INVALID_INDEX, edges_from_lo_hi

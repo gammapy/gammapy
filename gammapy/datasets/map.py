@@ -1,11 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
-import matplotlib.pyplot as plt
 import astropy.units as u
 from astropy.io import fits
 from astropy.table import Table
 from regions import CircleSkyRegion
+import matplotlib.pyplot as plt
 from gammapy.data import GTI
 from gammapy.irf import EDispKernelMap, EDispMap, PSFKernel, PSFMap
 from gammapy.maps import Map, MapAxis

@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+from copy import deepcopy
 import pytest
 import numpy as np
-from copy import deepcopy
 from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import Angle

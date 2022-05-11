@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-import numpy as np
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
 from gammapy.datasets.evaluator import MapEvaluator
@@ -12,8 +12,8 @@ from gammapy.modeling.models import (
     GaussianSpatialModel,
     Models,
     PointSpatialModel,
-    SkyModel,
     PowerLawSpectralModel,
+    SkyModel,
 )
 from gammapy.utils.gauss import Gauss2DPDF
 

@@ -10,7 +10,6 @@ from gammapy.maps import RegionNDMap
 from gammapy.utils.scripts import make_path
 from .spectrum import SpectrumDatasetOnOff
 
-
 __all__ = [
     "DatasetReader",
     "DatasetWriter",

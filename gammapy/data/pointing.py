@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
+from enum import Enum, auto
 import numpy as np
 import scipy.interpolate
 import astropy.units as u
@@ -15,9 +16,6 @@ from astropy.utils import lazyproperty
 from gammapy.utils.fits import earth_location_from_dict
 from gammapy.utils.scripts import make_path
 from gammapy.utils.time import time_ref_from_dict
-
-from enum import Enum, auto
-
 
 log = logging.getLogger(__name__)
 

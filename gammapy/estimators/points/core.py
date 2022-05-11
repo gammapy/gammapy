@@ -1,11 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
+from copy import deepcopy
 import numpy as np
-import matplotlib.pyplot as plt
 from scipy import stats
 from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
 from astropy.visualization import quantity_support
+import matplotlib.pyplot as plt
 from gammapy.maps import MapAxis, Maps, RegionNDMap, TimeMapAxis
 from gammapy.maps.axes import flat_if_equal
 from gammapy.modeling.models import TemplateSpectralModel
@@ -14,7 +15,6 @@ from gammapy.modeling.scipy import stat_profile_ul_scipy
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_standardise_units_copy
 from ..map.core import DEFAULT_UNIT, FluxMaps
-from copy import deepcopy
 
 __all__ = ["FluxPoints"]
 

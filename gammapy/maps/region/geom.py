@@ -1,7 +1,6 @@
 import copy
 from functools import lru_cache
 import numpy as np
-import matplotlib.pyplot as plt
 from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord
 from astropy.io import fits
@@ -16,10 +15,11 @@ from regions import (
     CompoundSkyRegion,
     PixCoord,
     PointSkyRegion,
-    Regions,
     RectanglePixelRegion,
+    Regions,
     SkyRegion,
 )
+import matplotlib.pyplot as plt
 from gammapy.utils.regions import (
     compound_region_center,
     compound_region_to_regions,

@@ -4,7 +4,6 @@ from .covariance import Covariance
 from .fit import Fit
 from .parameter import Parameter, Parameters
 
-
 __all__ = [
     "Covariance",
     "Fit",

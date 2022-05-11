@@ -4,9 +4,9 @@ import copy
 import inspect
 import json
 import numpy as np
-import matplotlib.pyplot as plt
 from astropy import units as u
 from astropy.io import fits
+import matplotlib.pyplot as plt
 from gammapy.utils.scripts import make_path
 from gammapy.utils.units import energy_unit_format
 from .axes import MapAxis

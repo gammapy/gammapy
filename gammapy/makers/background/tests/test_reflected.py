@@ -9,24 +9,21 @@ from regions import (
     CircleSkyRegion,
     EllipseAnnulusSkyRegion,
     EllipseSkyRegion,
-    RectangleSkyRegion,
     PointSkyRegion,
+    RectangleSkyRegion,
 )
 from gammapy.data import DataStore
 from gammapy.datasets import SpectrumDataset
 from gammapy.makers import (
     ReflectedRegionsBackgroundMaker,
     ReflectedRegionsFinder,
-    WobbleRegionsFinder,
-    SpectrumDatasetMaker,
     SafeMaskMaker,
+    SpectrumDatasetMaker,
+    WobbleRegionsFinder,
 )
 from gammapy.maps import MapAxis, RegionGeom, WcsGeom
 from gammapy.utils.regions import compound_region_to_regions
-from gammapy.utils.testing import (
-    assert_quantity_allclose,
-    requires_data,
-)
+from gammapy.utils.testing import assert_quantity_allclose, requires_data
 
 
 @pytest.fixture(scope="session")

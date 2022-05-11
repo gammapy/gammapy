@@ -10,7 +10,6 @@ from .observations import Observation, Observations
 from .observers import observatory_locations
 from .pointing import FixedPointingInfo, PointingInfo
 
-
 __all__ = [
     "DataStore",
     "EventList",

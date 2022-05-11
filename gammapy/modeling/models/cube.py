@@ -5,8 +5,8 @@ import astropy.units as u
 from astropy.nddata import NoOverlapError
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Covariance, Parameters
-from gammapy.modeling.parameter import _get_parameters_str
 from gammapy.modeling.covariance import copy_covariance
+from gammapy.modeling.parameter import _get_parameters_str
 from gammapy.utils.fits import LazyFitsData
 from gammapy.utils.scripts import make_name, make_path
 from .core import Model, ModelBase, Models

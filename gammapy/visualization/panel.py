@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Helper functions and functions for plotting gamma-ray images."""
 import numpy as np
-from matplotlib.gridspec import GridSpec
 from astropy.coordinates import Angle
+from matplotlib.gridspec import GridSpec
 
 __all__ = ["MapPanelPlotter"]
 

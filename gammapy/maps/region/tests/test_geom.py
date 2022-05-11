@@ -2,10 +2,10 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-import matplotlib.pyplot as plt
 import astropy.units as u
 from astropy.coordinates import SkyCoord
-from regions import CircleSkyRegion, RectangleSkyRegion, CompoundSkyRegion
+from regions import CircleSkyRegion, CompoundSkyRegion, RectangleSkyRegion
+import matplotlib.pyplot as plt
 from gammapy.maps import MapAxis, RegionGeom, WcsGeom
 from gammapy.utils.testing import mpl_plot_check
 

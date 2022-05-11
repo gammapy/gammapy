@@ -2,12 +2,12 @@
 """
 from .fov import fov_to_sky, sky_to_fov
 from .other import (
+    D_SUN_TO_GALACTIC_CENTER,
     cartesian,
     galactic,
-    velocity_glon_glat,
     motion_since_birth,
     polar,
-    D_SUN_TO_GALACTIC_CENTER,
+    velocity_glon_glat,
 )
 
 __all__ = [

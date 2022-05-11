@@ -4,7 +4,6 @@ from .profile import FluxProfileEstimator
 from .sed import FluxPointsEstimator
 from .sensitivity import SensitivityEstimator
 
-
 __all__ = [
     "FluxPoints",
     "FluxPointsEstimator",

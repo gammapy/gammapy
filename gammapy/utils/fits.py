@@ -1,10 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import sys
+import astropy.units as u
 from astropy.coordinates import Angle, EarthLocation
 from astropy.io import fits
 from astropy.units import Quantity
-import astropy.units as u
 from .scripts import make_path
 
 log = logging.getLogger(__name__)

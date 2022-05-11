@@ -2,21 +2,21 @@
 # this contains imports plugins that configure py.test for astropy tests.
 # by importing them here in conftest.py they are discoverable by py.test
 # no matter how it is invoked within the source tree.
-import pytest
 import os
+import pytest
 import numpy as np
+import astropy.units as u
+from astropy.time import Time
 from pytest_astropy_header.display import PYTEST_HEADER_MODULES
+from gammapy.data import GTI
+from gammapy.datasets import SpectrumDataset
+from gammapy.maps import MapAxis, RegionNDMap
 from gammapy.modeling.models import (
+    ConstantTemporalModel,
     Models,
     PowerLawSpectralModel,
-    ConstantTemporalModel,
     SkyModel,
 )
-from gammapy.maps import MapAxis, RegionNDMap
-from astropy.time import Time
-from gammapy.data import GTI
-import astropy.units as u
-from gammapy.datasets import SpectrumDataset
 
 # TODO: activate this again and handle deprecations in the code
 # enable_deprecations_as_exceptions(warnings_to_ignore_entire_module=["iminuit", "naima"])

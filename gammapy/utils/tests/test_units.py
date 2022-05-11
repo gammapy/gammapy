@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
-from gammapy.utils.units import standardise_unit, energy_unit_format
-import astropy.units as u
 import numpy as np
+import astropy.units as u
 from gammapy.maps import MapAxis
+from gammapy.utils.units import energy_unit_format, standardise_unit
 
 
 def test_standardise_unit():

@@ -2,11 +2,11 @@
 import copy
 from operator import le, lt
 import numpy as np
+import astropy.units as u
 from astropy.io import fits
 from astropy.table import Table, vstack
 from astropy.time import Time
 from astropy.units import Quantity
-import astropy.units as u
 from gammapy.utils.scripts import make_path
 from gammapy.utils.time import (
     time_ref_from_dict,
