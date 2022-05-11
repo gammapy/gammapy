@@ -554,31 +554,40 @@ class IRF(metaclass=abc.ABCMeta):
             data=data, axes=axes, meta=self.meta.copy(), unit=self.unit
         )
 
-    def data_allclose(self, other, **kwargs):
+    def is_allclose(self, other, rtol_axes=1e-3, atol_axes=1e-6, **kwargs):
         """Compare two data IRFs for equivalency
 
         Parameters
         ----------
-        other : the irf to compare against
-            `gammapy.irfs.IRF`
-        kwargs : dict
+        other : `gammapy.irfs.IRF`
+            The irf to compare against
+        rtol_axes : float
+            Relative tolerance for the axes comparison.
+        atol_axes : float
+            Relative tolerance for the axes comparison.
+        **kwargs : dict
                 keywords passed to `numpy.allclose`
-                The default tolerance is rtol=1e-3
 
         Returns
         -------
-        state : bool
+        is_allclose : bool
+            Whether the IRF is all close.
         """
+        if not isinstance(other, self.__class__):
+            return TypeError(f"Cannot compare {type(self)} and {type(other)}")
 
-        kwargs.setdefault("rtol", 1e-3)
         if self.data.shape != other.data.shape:
             return False
-        return np.allclose(self.quantity, other.quantity, **kwargs)
+
+        axes_eq = self.axes.is_allclose(other.axes, rtol=rtol_axes, atol=atol_axes)
+        data_eq = np.allclose(self.quantity, other.quantity, **kwargs)
+        return axes_eq and data_eq
 
     def __eq__(self, other):
-        class_eq = isinstance(other, self.__class__)
-        axes_eq = self.axes == other.axes
-        return bool(class_eq and axes_eq and self.data_allclose(other))
+        if not isinstance(other, self.__class__):
+            return False
+
+        return self.is_allclose(other=other, rtol=1e-3, rtol_axes=1e-6)
 
 
 class IRFMap:

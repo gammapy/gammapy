@@ -174,23 +174,40 @@ class MapAxis:
         aligned = np.allclose(np.round(pix_all) - pix_all, 0, atol=atol)
         return aligned and self.interp == other.interp
 
-    def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            return NotImplemented
+    def is_allclose(self, other, **kwargs):
+        """Check if other map axis is all close.
 
-        # TODO: implement an allclose method for MapAxis and call it here
+        Parameters
+        ----------
+        other : `MapAxis`
+            Other map axis
+        **kwargs : dict
+            Keyword arguments forwarded to `~numpy.allclose`
+
+        Returns
+        -------
+        is_allclose : bool
+            Whether other axis is allclose
+        """
+        if not isinstance(other, self.__class__):
+            return TypeError(f"Cannot compare {type(self)} and {type(other)}")
+
         if self.edges.shape != other.edges.shape:
             return False
         if not self.unit.is_equivalent(other.unit):
             return False
         return (
-            np.allclose(
-                self.edges.to(other.unit).value, other.edges.value, atol=1e-6, rtol=1e-6
-            )
+            np.allclose(self.edges, other.edges, **kwargs)
             and self._node_type == other._node_type
             and self._interp == other._interp
             and self.name.upper() == other.name.upper()
         )
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+
+        return self.is_allclose(other, rtol=1e-6, atol=1e-6)
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -2017,8 +2034,31 @@ class MapAxes(Sequence):
         """Center coordinates"""
         return tuple([ax.pix_to_coord((float(ax.nbin) - 1.0) / 2.0) for ax in self])
 
+    def is_allclose(self, other, **kwargs):
+        """Check if other map axes are all close.
+
+        Parameters
+        ----------
+        other : `MapAxes`
+            Other map axes
+        **kwargs : dict
+            Keyword arguments forwarded to `~MapAxis.is_allclose`
+
+        Returns
+        -------
+        is_allclose : bool
+            Whether other axes are all close
+        """
+        if not isinstance(other, self.__class__):
+            return TypeError(f"Cannot compare {type(self)} and {type(other)}")
+
+        return np.all([ax0.is_allclose(ax1, **kwargs) for ax0, ax1 in zip(other, self)])
+
     def __eq__(self, other):
-        return np.all([ax0 == ax1 for ax0, ax1 in zip(other, self)])
+        if not isinstance(other, self.__class__):
+            return False
+
+        return self.is_allclose(other, rtol=1e-6, atol=1e-6)
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -2297,9 +2337,23 @@ class TimeMapAxis:
                 f' expected "{required_name}", got: "{self.name}"'
             )
 
-    def __eq__(self, other):
+    def is_allclose(self, other, **kwargs):
+        """Check if other map axis is all close.
+
+        Parameters
+        ----------
+        other : `TimeMapAxis`
+            Other map axis
+        **kwargs : dict
+            Keyword arguments forwarded to `~numpy.allclose`
+
+        Returns
+        -------
+        is_allclose : bool
+            Whether other axis is allclose
+        """
         if not isinstance(other, self.__class__):
-            return NotImplemented
+            return TypeError(f"Cannot compare {type(self)} and {type(other)}")
 
         if self._edges_min.shape != other._edges_min.shape:
             return False
@@ -2309,11 +2363,17 @@ class TimeMapAxis:
         delta_max = self.time_max - other.time_max
 
         return (
-            np.allclose(delta_min.to_value("s"), 0.0, atol=1e-6)
-            and np.allclose(delta_max.to_value("s"), 0.0, atol=1e-6)
+            np.allclose(delta_min.to_value("s"), 0.0, **kwargs)
+            and np.allclose(delta_max.to_value("s"), 0.0, **kwargs)
             and self._interp == other._interp
             and self.name.upper() == other.name.upper()
         )
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+
+        return self.is_allclose(other=other, atol=1e-6)
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -2933,13 +2993,31 @@ class LabelMapAxis:
         str_ += fmt.format("labels", "{0}".format(list(self._labels)))
         return str_.expandtabs(tabsize=2)
 
-    def __eq__(self, other):
+    def is_allclose(self, other, **kwargs):
+        """Check if other map axis is all close.
+
+        Parameters
+        ----------
+        other : `LabelMapAxis`
+            Other map axis
+
+        Returns
+        -------
+        is_allclose : bool
+            Whether other axis is allclose
+        """
         if not isinstance(other, self.__class__):
-            return NotImplemented
+            return TypeError(f"Cannot compare {type(self)} and {type(other)}")
 
         name_equal = self.name.upper() == other.name.upper()
         labels_equal = np.all(self.center == other.center)
         return name_equal & labels_equal
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+
+        return self.is_allclose(other=other)
 
     def __ne__(self, other):
         return not self.__eq__(other)

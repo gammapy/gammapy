@@ -1633,6 +1633,35 @@ class Map(abc.ABC):
         data = self.quantity.to_value(unit)
         return self.from_geom(self.geom, data=data, unit=unit)
 
+    def is_allclose(self, other, rtol_axes=1e-3, atol_axes=1e-6, **kwargs):
+        """Compare two Maps for close equivalency
+
+        Parameters
+        ----------
+        other : `gammapy.maps.Map`
+            The Map to compare against
+        rtol_axes : float
+            Relative tolerance for the axes comparison.
+        atol_axes : float
+            Relative tolerance for the axes comparison.
+        **kwargs : dict
+                keywords passed to `numpy.allclose`
+
+        Returns
+        -------
+        is_allclose : bool
+            Whether the Map is all close.
+        """
+        if not isinstance(other, self.__class__):
+            return TypeError(f"Cannot compare {type(self)} and {type(other)}")
+
+        if self.data.shape != other.data.shape:
+            return False
+
+        axes_eq = self.axes.is_allclose(other.axes, rtol=rtol_axes, atol=atol_axes)
+        data_eq = np.allclose(self.quantity, other.quantity, **kwargs)
+        return axes_eq and data_eq
+
     def __repr__(self):
         geom = self.geom.__class__.__name__
         axes = ["skycoord"] if self.geom.is_hpx else ["lon", "lat"]
