@@ -2,6 +2,7 @@
 import collections
 import logging
 import numpy as np
+import matplotlib.pyplot as plt
 from astropy import units as u
 from astropy.coordinates import AltAz, Angle, SkyCoord
 from astropy.coordinates.angle_utilities import angular_separation
@@ -434,8 +435,6 @@ class EventList:
         ax : `~matplotlib.axes.Axes` or None
             Axes
         """
-        import matplotlib.pyplot as plt
-
         ax = plt.gca() if ax is None else ax
 
         energy_axis = self._default_plot_energy_axis
@@ -467,8 +466,6 @@ class EventList:
         ax : `~matplotlib.axes.Axes`
             Axes
         """
-        import matplotlib.pyplot as plt
-
         ax = plt.gca() if ax is None else ax
 
         # Note the events are not necessarily in time order
@@ -544,8 +541,6 @@ class EventList:
         Note how we passed the ``bins`` option of `matplotlib.pyplot.hist` to control the histogram binning,
         in this case 30 bins ranging from 0 to (0.3 deg)^2.
         """
-        import matplotlib.pyplot as plt
-
         ax = plt.gca() if ax is None else ax
 
         if center is None:
@@ -580,7 +575,6 @@ class EventList:
         ax : `~matplotlib.pyplot.Axis`
             Plot axis
         """
-        import matplotlib.pyplot as plt
         from matplotlib.colors import LogNorm
 
         ax = plt.gca() if ax is None else ax
@@ -828,7 +822,6 @@ class EventList:
             Whether to look at the events allsky
         """
         import matplotlib.gridspec as gridspec
-        import matplotlib.pyplot as plt
 
         if allsky:
             gs = gridspec.GridSpec(nrows=2, ncols=2)
