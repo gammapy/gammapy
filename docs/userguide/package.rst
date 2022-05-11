@@ -57,7 +57,7 @@ Analysis steps
     as multidimensional data classes.
 
 :ref:`makers`
-    The events and instrument response are projected onto the selected geometry.
+    The events and instrument response are projected and binned onto the selected geometry.
     To limit uncertainties, additional background estimation methods are applied
     and "safe" data analysis range is determined.
 
