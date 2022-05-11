@@ -1,5 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.ticker import FormatStrFormatter
 import astropy.units as u
 from astropy.visualization import quantity_support
 from gammapy.maps import Map, MapAxis, MapCoord, WcsGeom
@@ -423,9 +425,6 @@ class PSFMap(IRFMap):
              Axes to plot on.
 
         """
-        import matplotlib.pyplot as plt
-        from matplotlib.ticker import FormatStrFormatter
-
         ax = plt.gca() if ax is None else ax
 
         position = self.psf_map.geom.center_skydir
@@ -466,9 +465,6 @@ class PSFMap(IRFMap):
              Axes to plot on.
 
         """
-        import matplotlib.pyplot as plt
-        from matplotlib.ticker import FormatStrFormatter
-
         ax = plt.gca() if ax is None else ax
 
         rad = self.psf_map.geom.axes["rad"].center
@@ -504,9 +500,6 @@ class PSFMap(IRFMap):
         figsize : tuple
             Size of figure.
         """
-
-        import matplotlib.pyplot as plt
-
         fig, axes = plt.subplots(
             ncols=2,
             nrows=2,

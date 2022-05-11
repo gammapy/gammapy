@@ -312,7 +312,6 @@ def test_edisp_kernel_map_resample_axis():
     assert im.edisp_map.data.shape == (10, 2, 1, 2)
     assert_allclose(res, 1.0, rtol=1e-5)
 
-@requires_dependency("matplotlib")
 def test_peek():
     e_reco = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=3)
     e_true = MapAxis.from_energy_bounds(

@@ -39,7 +39,6 @@ def test_rad_max_roundtrip(rad_max_2d, tmp_path):
     assert rad_max_2d.axes == rad_max_read.axes
 
 
-@requires_dependency("matplotlib")
 def test_rad_max_plot(rad_max_2d):
     with mpl_plot_check():
         rad_max_2d.plot_rad_max_vs_energy()

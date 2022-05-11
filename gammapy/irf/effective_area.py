@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
+import matplotlib.pyplot as plt
 import astropy.units as u
 from astropy.visualization import quantity_support
 from gammapy.maps import MapAxes, MapAxis
@@ -83,8 +84,6 @@ class EffectiveAreaTable2D(IRF):
         ax : `~matplotlib.axes.Axes`
             Axis
         """
-        import matplotlib.pyplot as plt
-
         ax = plt.gca() if ax is None else ax
 
         if offset is None:
@@ -121,8 +120,6 @@ class EffectiveAreaTable2D(IRF):
         ax : `~matplotlib.axes.Axes`
             Axis
         """
-        import matplotlib.pyplot as plt
-
         ax = plt.gca() if ax is None else ax
 
         if energy is None:
@@ -149,8 +146,6 @@ class EffectiveAreaTable2D(IRF):
 
     def plot(self, ax=None, add_cbar=True, **kwargs):
         """Plot effective area image."""
-        import matplotlib.pyplot as plt
-
         ax = plt.gca() if ax is None else ax
 
         energy = self.axes["energy_true"]
@@ -187,8 +182,6 @@ class EffectiveAreaTable2D(IRF):
             Size of the figure.
 
         """
-        import matplotlib.pyplot as plt
-
         fig, axes = plt.subplots(nrows=1, ncols=3, figsize=figsize)
         self.plot(ax=axes[2])
         self.plot_energy_dependence(ax=axes[0])

@@ -1,5 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.colors import PowerNorm
 import scipy.special
 from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord
@@ -177,8 +179,6 @@ class EnergyDispersion2D(IRF):
         ax : `~matplotlib.axes.Axes`
             Axis
         """
-        import matplotlib.pyplot as plt
-
         ax = plt.gca() if ax is None else ax
 
         if offset is None:
@@ -226,9 +226,6 @@ class EnergyDispersion2D(IRF):
         ax : `~matplotlib.axes.Axes`
             Axis
         """
-        import matplotlib.pyplot as plt
-        from matplotlib.colors import PowerNorm
-
         kwargs.setdefault("cmap", "GnBu")
         kwargs.setdefault("norm", PowerNorm(gamma=0.5))
 
@@ -266,8 +263,6 @@ class EnergyDispersion2D(IRF):
         figsize : (float, float)
             Size of the resulting plot
         """
-        import matplotlib.pyplot as plt
-
         fig, axes = plt.subplots(nrows=1, ncols=3, figsize=figsize)
         self.plot_bias(ax=axes[0])
         self.plot_migration(ax=axes[1])

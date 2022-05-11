@@ -86,17 +86,14 @@ class TestEDispKernel:
         actual = edisp2.pdf_matrix[indices]
         assert_allclose(actual, desired)
 
-    @requires_dependency("matplotlib")
     def test_plot_matrix(self):
         with mpl_plot_check():
             self.edisp.plot_matrix()
 
-    @requires_dependency("matplotlib")
     def test_plot_bias(self):
         with mpl_plot_check():
             self.edisp.plot_bias()
 
-    @requires_dependency("matplotlib")
     def test_peek(self):
         with mpl_plot_check():
             self.edisp.peek()

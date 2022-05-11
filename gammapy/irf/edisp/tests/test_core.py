@@ -101,17 +101,14 @@ class TestEnergyDispersion2D:
         assert_equal(hdu.data["ENERG_LO"][0], energy[:-1].value)
         assert hdu.header["TUNIT1"] == edisp.axes["energy_true"].unit
 
-    @requires_dependency("matplotlib")
     def test_plot_migration(self):
         with mpl_plot_check():
             self.edisp.plot_migration()
 
-    @requires_dependency("matplotlib")
     def test_plot_bias(self):
         with mpl_plot_check():
             self.edisp.plot_bias()
 
-    @requires_dependency("matplotlib")
     def test_peek(self):
         with mpl_plot_check():
             self.edisp.peek()

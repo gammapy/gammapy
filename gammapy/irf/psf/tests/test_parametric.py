@@ -76,7 +76,6 @@ class TestEnergyDependentMultiGaussPSF:
         psf1.data[0][0] = 10
         assert not psf1 == psf
 
-    @requires_dependency("matplotlib")
     def test_peek(self, psf):
         with mpl_plot_check():
             psf.peek()
