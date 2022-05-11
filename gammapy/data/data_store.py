@@ -260,18 +260,18 @@ class DataStore:
         required_irf : list of str or str
             The list can include the following options:
 
-            * `events` : Events
-            * `gti` :  Good time intervals
-            * `aeff` : Effective area
-            * `bkg` : Background
-            * `edisp`: Energy dispersion
-            * `psf` : Point Spread Function
-            * `rad_max` : Maximal radius
+            * `"events"` : Events
+            * `"gti"` :  Good time intervals
+            * `"aeff"` : Effective area
+            * `"bkg"` : Background
+            * `"edisp"`: Energy dispersion
+            * `"psf"` : Point Spread Function
+            * `"rad_max"` : Maximal radius
 
             Alternatively single string can be used as shortcut:
 
-            * `full-enclosure` : ["events", "gti", "aeff", "edisp", "psf", "bkg"]
-            * `point-like` : ["events", "gti", "aeff", "edisp"]
+            * `"full-enclosure"` : includes `["events", "gti", "aeff", "edisp", "psf", "bkg"]`
+            * `"point-like"` : includes `["events", "gti", "aeff", "edisp"]`
 
         Returns
         -------
@@ -312,19 +312,19 @@ class DataStore:
             required HDUs are present. Otherwise, the given run will be skipped
             The list can include the following options:
 
-            * `events` : Events
-            * `gti` :  Good time intervals
-            * `aeff` : Effective area
-            * `bkg` : Background
-            * `edisp`: Energy dispersion
-            * `psf` : Point Spread Function
-            * `rad_max` : Maximal radius
+            * `"events"` : Events
+            * `"gti"` :  Good time intervals
+            * `"aeff"` : Effective area
+            * `"bkg"` : Background
+            * `"edisp"`: Energy dispersion
+            * `"psf"` : Point Spread Function
+            * `"rad_max"` : Maximal radius
 
             Alternatively single string can be used as shortcut:
 
-            * `full-enclosure` : ["events", "gti", "aeff", "edisp", "psf", "bkg"]
-            * `point-like` : ["events", "gti", "aeff", "edisp"]
-            * `all-optional` : no HDUs are required, only warnings will be emitted
+            * `"full-enclosure"` : includes `["events", "gti", "aeff", "edisp", "psf", "bkg"]`
+            * `"point-like"` : includes `["events", "gti", "aeff", "edisp"]`
+            * `"all-optional"` : no HDUs are required, only warnings will be emitted
               for missing HDUs among all possibilities.
 
         Returns
