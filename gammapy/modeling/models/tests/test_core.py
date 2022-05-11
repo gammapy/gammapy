@@ -237,8 +237,23 @@ def test_plot_models(caplog):
     ]
 
 
+def test_positions():
+    p1 = Model.create(
+        "pl",
+        model_type="spectral",
+    )
+    g1 = Model.create("gauss", model_type="spatial")
+    m1 = SkyModel(spectral_model=p1, spatial_model=g1, name="m1")
+    g3 = Model.create("gauss", model_type="spatial", frame="galactic")
+    m3 = SkyModel(spectral_model=p1, spatial_model=g3, name="m3")
+    models = Models([m1, m3])
+    pos = models.positions
+    assert_allclose(pos.galactic[0].l.value, 96.337, rtol=1e-3)
+
+
 def test_parameter_name():
     with pytest.raises(RuntimeError):
+
         class MyTestModel:
             par = Parameter("wrong-name", value=3)
 

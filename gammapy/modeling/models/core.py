@@ -146,8 +146,7 @@ class ModelBase:
         return copy.deepcopy(self)
 
     def to_dict(self, full_output=False):
-        """Create dict for YAML serialisation
-        """
+        """Create dict for YAML serialisation"""
         tag = self.tag[0] if isinstance(self.tag, list) else self.tag
         params = self.parameters.to_dict()
 
@@ -482,7 +481,6 @@ class DatasetModels(collections.abc.Sequence):
                 params_shared.append(param)
         for param in params_shared:
             param._link_label_io = param.name + "@" + make_name()
-
 
     def to_dict(self, full_output=False, overwrite_templates=False):
         """Convert to dict."""
@@ -892,7 +890,7 @@ class DatasetModels(collections.abc.Sequence):
 
         for model in self.select(tag="sky-model"):
             if model.position:
-                positions.append(model.position)
+                positions.append(model.position.icrs)
             else:
                 log.warning(
                     f"Skipping model {model.name} - no spatial component present"
@@ -954,10 +952,7 @@ class DatasetModels(collections.abc.Sequence):
         regions = self.to_regions()
         geom = RegionGeom.from_regions(regions=regions)
         return geom.plot_region(
-            ax=ax,
-            kwargs_point=kwargs_point,
-            path_effect=path_effect,
-            **kwargs
+            ax=ax, kwargs_point=kwargs_point, path_effect=path_effect, **kwargs
         )
 
     def plot_positions(self, ax=None, **kwargs):
