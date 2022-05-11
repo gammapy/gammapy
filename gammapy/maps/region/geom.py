@@ -593,7 +593,7 @@ class RegionGeom(Geom):
         Returns
         -------
         is_allclose : bool
-            Whether the IRF is all close.
+            Whether the geometry is all close.
         """
         if not isinstance(other, self.__class__):
             return TypeError(f"Cannot compare {type(self)} and {type(other)}")

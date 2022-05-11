@@ -1143,7 +1143,7 @@ class WcsGeom(Geom):
         Returns
         -------
         is_allclose : bool
-            Whether the IRF is all close.
+            Whether the geometry is all close.
         """
         if not isinstance(other, self.__class__):
             return TypeError(f"Cannot compare {type(self)} and {type(other)}")
@@ -1156,7 +1156,7 @@ class WcsGeom(Geom):
         # check WCS consistency with a priori tolerance of 1e-6
         # cmp=1 parameter ensures no comparison with ancillary information
         # see https://github.com/astropy/astropy/pull/4522/files
-        wcs_eq = self.wcs.wcs.compare(other.wcs.wcs, cmp=2, tolerance=rtol_wcs)
+        wcs_eq = self.wcs.wcs.compare(other.wcs.wcs, cmp=1, tolerance=rtol_wcs)
 
         return axes_eq and wcs_eq
 
