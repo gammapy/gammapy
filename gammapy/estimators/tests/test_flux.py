@@ -42,7 +42,6 @@ def hess_datasets():
 
 
 @requires_data()
-@requires_dependency("iminuit")
 def test_flux_estimator_fermi_no_reoptimization(fermi_datasets):
     estimator = FluxEstimator(
         0,
@@ -71,7 +70,6 @@ def test_flux_estimator_fermi_no_reoptimization(fermi_datasets):
 
 
 @requires_data()
-@requires_dependency("iminuit")
 def test_flux_estimator_fermi_with_reoptimization(fermi_datasets):
     estimator = FluxEstimator(0, selection_optional=None, reoptimize=True)
 
@@ -86,7 +84,6 @@ def test_flux_estimator_fermi_with_reoptimization(fermi_datasets):
 
 
 @requires_data()
-@requires_dependency("iminuit")
 def test_flux_estimator_1d(hess_datasets):
     estimator = FluxEstimator(
         source="Crab", selection_optional=["errn-errp", "ul"], reoptimize=False
@@ -112,7 +109,6 @@ def test_flux_estimator_1d(hess_datasets):
 
 
 @requires_data()
-@requires_dependency("iminuit")
 def test_inhomogeneous_datasets(fermi_datasets, hess_datasets):
     datasets = Datasets()
 

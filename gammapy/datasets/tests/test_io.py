@@ -8,7 +8,6 @@ from regions import CircleSkyRegion
 
 
 @requires_data()
-@requires_dependency("iminuit")
 def test_datasets_to_io(tmp_path):
     filedata = "$GAMMAPY_DATA/tests/models/gc_example_datasets.yaml"
     filemodel = "$GAMMAPY_DATA/tests/models/gc_example_models.yaml"
@@ -76,7 +75,6 @@ def test_datasets_to_io(tmp_path):
 
 
 @requires_data()
-@requires_dependency("iminuit")
 def test_spectrum_datasets_to_io(tmp_path):
     filedata = "$GAMMAPY_DATA/tests/models/gc_example_datasets.yaml"
     filemodel = "$GAMMAPY_DATA/tests/models/gc_example_models.yaml"

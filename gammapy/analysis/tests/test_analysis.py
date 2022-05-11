@@ -144,14 +144,13 @@ def test_set_models():
     assert  analysis.models.names == ['source', 'stacked-bkg']
     with pytest.raises(TypeError):
         analysis.set_models(0)
-    
+
     new_source = analysis.models["source"].copy(name="source2")
     analysis.set_models(models=[new_source], extend=False)
     assert len(analysis.models) == 2
-    assert  analysis.models.names == ['source2', 'stacked-bkg']
+    assert analysis.models.names == ['source2', 'stacked-bkg']
 
 
-@requires_dependency("iminuit")
 @requires_data()
 def test_analysis_1d():
     cfg = """
@@ -273,7 +272,6 @@ def test_exclusion_region(tmp_path):
     assert len(analysis.datasets) == 1
 
 
-@requires_dependency("iminuit")
 @requires_data()
 def test_analysis_1d_stacked_no_fit_range():
     cfg = """
@@ -370,7 +368,6 @@ def test_analysis_no_bkg_3d(caplog):
         ]
 
 
-@requires_dependency("iminuit")
 @requires_data()
 def test_analysis_3d():
     config = get_example_config("3d")
@@ -422,7 +419,6 @@ def test_analysis_3d_joint_datasets():
     )
 
 
-@requires_dependency("iminuit")
 @requires_data()
 def test_usage_errors():
     config = get_example_config("1d")
@@ -443,12 +439,12 @@ def test_usage_errors():
         analysis.get_flux_points()
     with pytest.raises(ValidationError):
         analysis.config.datasets.type = "None"
-        
+
 @requires_data()
 def test_datasets_io(tmpdir):
     config = get_example_config("3d")
 
-    analysis = Analysis(config)    
+    analysis = Analysis(config)
     analysis.get_observations()
     analysis.get_datasets()
     models_str = Path(MODEL_FILE).read_text()
@@ -456,7 +452,7 @@ def test_datasets_io(tmpdir):
 
     config.general.datasets_file = tmpdir / "datasets.yaml"
     config.general.models_file = tmpdir / "models.yaml"
-    analysis.write_datasets()    
+    analysis.write_datasets()
     analysis = Analysis(config)
     analysis.read_datasets()
     assert len(analysis.datasets.models) == 2

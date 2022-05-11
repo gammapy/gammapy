@@ -100,6 +100,7 @@ def test_flux_point_dataset_flux_pred(dataset):
     )
     assert_allclose(dataset.flux_pred()[0].value, 0.000472, rtol=1e-3)
 
+
 def test_flux_point_dataset_creation():
     meta = dict(TIMESYS="utc", SED_TYPE="flux")
 
@@ -122,10 +123,8 @@ def test_flux_point_dataset_creation():
         FluxPointsDataset(data=flux_points)
 
 
-
 @requires_data()
 class TestFluxPointFit:
-    @requires_dependency("iminuit")
     def test_fit_pwl_minuit(self, dataset):
         fit = Fit()
         result = fit.run(dataset)
@@ -152,7 +151,6 @@ class TestFluxPointFit:
         assert_allclose(reference.value, 1, rtol=1e-8)
 
     @staticmethod
-    @requires_dependency("iminuit")
     def test_stat_profile(dataset):
         fit = Fit()
         result = fit.run(datasets=dataset)
