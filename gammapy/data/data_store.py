@@ -308,6 +308,7 @@ class DataStore:
             Runs will be added to the list of observations only if the
             required HDUs are present. Otherwise, the given run will be skipped
             The list can include the following options:
+
             * `events` : Events
             * `gti` :  Good time intervals
             * `aeff` : Effective area
@@ -315,11 +316,13 @@ class DataStore:
             * `edisp`: Energy dispersion
             * `psf` : Point Spread Function
             * `rad_max` : Maximal radius
+
             Alternatively single string can be used as shortcut:
+
             * `full-enclosure` : ["events", "gti", "aeff", "edisp", "psf", "bkg"]
             * `point-like` : ["events", "gti", "aeff", "edisp"]
             * `all-optional` : no HDUs are required, only warnings will be emitted
-                               for missing HDUs among all possibilities.
+              for missing HDUs among all possibilities.
 
         Returns
         -------
