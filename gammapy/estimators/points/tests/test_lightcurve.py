@@ -16,6 +16,7 @@ from gammapy.modeling import Fit
 from gammapy.modeling.models import FoVBackgroundModel, PowerLawSpectralModel, SkyModel
 from gammapy.utils.testing import mpl_plot_check, requires_data
 
+
 @pytest.fixture(scope="session")
 def lc():
     meta = dict(TIMESYS="utc", SED_TYPE="flux")
@@ -555,7 +556,7 @@ def get_map_datasets():
     gti2 = GTI.create("1 h", "2 h", "2010-01-01T00:00:00")
     dataset_2.gti = gti2
 
-    model = dataset_1.models["source"].copy("test_source")
+    model = dataset_1.models["source"].copy(name="test_source")
     bkg_model_1 = FoVBackgroundModel(dataset_name="dataset_1")
     bkg_model_2 = FoVBackgroundModel(dataset_name="dataset_2")
 

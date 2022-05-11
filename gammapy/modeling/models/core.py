@@ -144,7 +144,7 @@ class ModelBase:
         )
 
     @copy_covariance
-    def copy(self, copy_data=False):
+    def copy(self, name=None, copy_data=False):
         """A deep copy."""
         return copy.deepcopy(self)
 

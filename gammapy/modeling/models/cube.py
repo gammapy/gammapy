@@ -803,7 +803,7 @@ class TemplateNPredModel(ModelBase):
             spectral_model=self.spectral_model.copy(),
             name=name,
             filename=self.filename,
-            datasets_names=self.datasets_names.copy(),
+            datasets_names=self.datasets_names,
             copy_data=copy_data
         )
 
