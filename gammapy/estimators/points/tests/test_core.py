@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
+import matplotlib.pyplot as plt
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.table import Table
@@ -217,9 +218,8 @@ class TestFluxPoints:
         assert_allclose(flux_points_likelihood.n_sigma_ul, 2)
         assert flux_points_likelihood.sed_type_init == "likelihood"
 
-    @requires_dependency("matplotlib")
     def test_plot(self, flux_points):
-        import matplotlib.pyplot as plt
+
 
         fig = plt.figure()
         ax = fig.add_axes([0.2, 0.2, 0.7, 0.7])
@@ -231,14 +231,11 @@ class TestFluxPoints:
         with mpl_plot_check():
             flux_points.plot(ax=ax)
 
-    @requires_dependency("matplotlib")
     def test_plot_likelihood(self, flux_points_likelihood):
         with mpl_plot_check():
             flux_points_likelihood.plot_ts_profiles()
 
-    @requires_dependency("matplotlib")
     def test_plot_likelihood_error(self, flux_points_likelihood):
-        import matplotlib.pyplot as plt
         del flux_points_likelihood._data["stat_scan"]
 
         with pytest.raises(AttributeError):
@@ -287,7 +284,6 @@ def test_compute_flux_points_dnde_fermi():
 
 
 @requires_data()
-@requires_dependency("matplotlib")
 def test_plot_fp_no_ul():
     path = make_path("$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits")
     table = Table.read(path)
@@ -328,7 +324,6 @@ def test_is_ul(tmp_path):
     assert_allclose(table["is_ul"].data.data, is_ul)
 
 
-@requires_dependency("matplotlib")
 def test_flux_points_plot_no_error_bar():
     table = Table()
     pwl = PowerLawSpectralModel()

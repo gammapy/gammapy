@@ -130,7 +130,6 @@ class TestImageProfile:
         assert smoothed.profile_err.mean() < cosine_profile.profile_err.mean()
 
     @staticmethod
-    @requires_dependency("matplotlib")
     def test_peek(cosine_profile):
         with mpl_plot_check():
             cosine_profile.peek()

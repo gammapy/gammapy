@@ -112,7 +112,6 @@ def test_lightcurve_read_write(tmp_path, lc, sed_type):
     assert_allclose(axis.time_mid.mjd, [55198, 55202.5])
 
 
-@requires_dependency("matplotlib")
 def test_lightcurve_plot(lc, lc_2d):
     with mpl_plot_check():
         lc.plot()

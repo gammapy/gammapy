@@ -373,7 +373,6 @@ def test_flux_map_init_no_reference_model(wcs_flux_map, caplog):
     assert "No reference model set for FluxMaps." in [_.message for _ in caplog.records]
 
 
-@requires_dependency("matplotlib")
 def test_get_flux_point(wcs_flux_map, reference_model):
     fluxmap = FluxMaps(wcs_flux_map, reference_model)
     coord = SkyCoord(0.0, 0.0, unit="deg", frame="galactic")

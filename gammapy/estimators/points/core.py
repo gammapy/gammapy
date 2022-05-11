@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
+import matplotlib.pyplot as plt
 from scipy import stats
 from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
@@ -481,8 +482,6 @@ class FluxPoints(FluxMaps):
         ax : `~matplotlib.axes.Axes`
             Axis object
         """
-        import matplotlib.pyplot as plt
-
         if sed_type is None:
             sed_type = self.sed_type_plot_default
 
@@ -547,8 +546,6 @@ class FluxPoints(FluxMaps):
         ax : `~matplotlib.axes.Axes`
             Axis object
         """
-        import matplotlib.pyplot as plt
-
         if ax is None:
             ax = plt.gca()
 
