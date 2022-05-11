@@ -4,8 +4,8 @@
 ------------------
 
 - No changes yet
-- 14 contributors
-- 163 pull requests (not all listed below)
+- 15 contributors
+- 167 pull requests (not all listed below)
 
 **Package structure and dependencies**
 
@@ -62,10 +62,12 @@ in the first energy bin.
 the parameter giving the flux normalization and solves a bug with the flux point estimation
 using a `CompoundModel`.
 - `Fit.covariance()` now correctly handles shared (linked) parameters.
+- `FitResult` now contains a copy of the `Models` after the fit. Its `parameters` attribute
+is not modified by further manipulation of the initial model.
 
 *gammapy.analysis*
 
-- `DatasetsMaker` is now internally used and can be configured in the yaml file
+- `DatasetsMaker` is now internally used and can be configured in the yaml file.
 
 *gammapy.catalog*
 
@@ -80,6 +82,7 @@ micromamba is used. Notebooks and tests are executed in parallel.
 - Fabio Acero
 - Arnau Aguasca
 - Tyler Cahill
+- Alisha Chromey
 - Axel Donath
 - Luca Giunti
 - Cosimo Nigro
@@ -95,7 +98,18 @@ micromamba is used. Notebooks and tests are executed in parallel.
 Pull Requests
 +++++++++++++
 This list is incomplete. Small improvements and bug fixes are not listed here.
-- [#]
+- [#3941] Introduce matplotlib as required dependency (Régis Terrier)
+- [#3936] Introduce iminuit as required dependency (Axel Donath)
+- [#3933] Add support for regions v0.6 (Axel Donath)
+- [#3918] Improve fit results (Luca Giunti)
+- [#3915] Fix evaluate_containment calculation in class PSFKing(ParametricPSF) (Alisha Chromey)
+- [#3906] Require astropy v>=5.0 (Axel Donath)
+- [#3905] Use .is_norm property in FluxEstimator (Axel Donath)
+- [#3904] Fix bug on MC_ID when sampling IRF background events (Fabio Pintore)
+- [#3898] Add Map.resample method (Quentin Rémy)
+- [#3895] Add MapAxes .__eq__, .__neq__, and .copy() (Quentin Rémy)
+- [#3892] Allow for regular reflected region analysis with fixed rad_max IRFs (Régis Terrier)
+- [#3887] Implement __eq__ for DL3 IRFs (Atreyee Sinha)
 - [#3876] Add temporal model on flux point dataset (Atreyee Sinha)
 - [#3874] Allow MapDatasetOff in Datasets serialization and avoid read_lazy (Quentin Rémy)
 - [#3873] Modify SafeMaskMaker to ignore data only below the background peak (Atreyee Sinha)
