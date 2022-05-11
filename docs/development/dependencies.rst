@@ -31,6 +31,8 @@ install gammapy -c conda-forge`` or ``pip install gammapy``.
 * scipy_ - numerical methods (interpolation, integration, convolution)
 * Astropy_ - core package for Astronomy in Python
 * regions_ - Astropy sky region package
+* matplotlib_ for plotting
+* iminuit_ for fitting by optimization
 * click_ - used for the ``gammapy`` command line tool
 * PyYAML_ - support for YAML_ format (config and results files)
 * pydantic_ - support config file validation
@@ -45,10 +47,8 @@ extra functionality (e.g. ``matplotlib`` to make plots, ``naima`` for physical
 SED modeling).
 
 * ipython_, jupyter_ and jupyterlab_ for interactive analysis
-* matplotlib_ for plotting
 * pandas_ for working with tables (not used within Gammapy)
 * healpy_ for `HEALPIX`_ data handling
-* iminuit_ for fitting by optimization
 * Sherpa_ for modeling and fitting
 * naima_ for SED modeling
 * emcee_ for fitting by MCMC sampling
