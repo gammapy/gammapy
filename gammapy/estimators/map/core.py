@@ -821,18 +821,18 @@ class FluxMaps:
         )
 
     def iter_by_axis(self, axis_name, keepdims=False):
-        """Create a set of FluxMaps by splitting along an axis
+        """Create a set of FluxMaps by splitting along an axis.
 
-        Parameters:
-        ---------
-        axis_name: str
+        Parameters
+        ----------
+        axis_name : str
              Name of the axis to split on
-        keepdims: bool
+        keepdims : bool
             Whether to keep the split axis with a single bin
 
-        Returns:
+        Returns
         -------
-        flux_maps: `FluxMap`
+        flux_maps : `FluxMap`
             FluxMap iteration
 
         """

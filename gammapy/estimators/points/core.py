@@ -630,7 +630,7 @@ class FluxPoints(FluxMaps):
             Keyword arguments passed to `~scipy.optimize.brentq`.
 
         Returns
-        --------
+        -------
         flux_points : `FluxPoints`
             A new FluxPoints object with modified upper limits
 

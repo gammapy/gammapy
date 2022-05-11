@@ -1542,17 +1542,16 @@ class Map(abc.ABC):
         )
 
     def split_by_axis(self, axis_name):
-        """
-        Split a Map along an axis into multiple maps
+        """Split a Map along an axis into multiple maps.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         axis_name : str
             Name of the axis to split
 
-        Returns:
+        Returns
         -------
-        maps: list
+        maps : list
             A list of `~gammapy.maps.Map`
         """
         maps = []
