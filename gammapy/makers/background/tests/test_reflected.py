@@ -390,6 +390,7 @@ def test_reflected_bkg_maker_fixed_rad_max(reflected_bkg_maker, observations_fix
     regions_0 = compound_region_to_regions(dataset_on_off.counts_off.geom.region)
     assert_allclose(len(regions_0), 6)
 
+
 @requires_data()
 def test_reflected_bkg_maker_fixed_rad_max_wobble(exclusion_mask, observations_fixed_rad_max):
     reflected_bkg_maker = ReflectedRegionsBackgroundMaker(
@@ -441,7 +442,7 @@ def test_reflected_bkg_maker_fixed_rad_max_bad(reflected_bkg_maker, observations
     dataset_empty = SpectrumDataset.create(geom=geom_bad_shape)
 
     dataset = maker.run(dataset_empty, obs)
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         reflected_bkg_maker.run(dataset, obs)
 
     region_point_shape = PointSkyRegion(pos)
@@ -449,5 +450,5 @@ def test_reflected_bkg_maker_fixed_rad_max_bad(reflected_bkg_maker, observations
     dataset_empty = SpectrumDataset.create(geom=geom_point_shape)
 
     dataset = maker.run(dataset_empty, obs)
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         reflected_bkg_maker.run(dataset, obs)

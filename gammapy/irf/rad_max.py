@@ -1,7 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import astropy.units as u
-import numpy as np
-from regions import CircleSkyRegion
 from astropy.visualization import quantity_support
 from .core import IRF
 
@@ -119,35 +117,8 @@ class RadMax2D(IRF):
         return ax
 
     @property
-    def is_fixed_radmax(self):
+    def is_fixed_rad_max(self):
         """Returns True if rad_max axes are flat."""
         return self.axes.is_flat
-
-    def check_geom(self, geom, rtol = 0.01):
-        """Check if input RegionGeom is compatible with rad_max for point-like analysis.
-
-        Parameters
-        ----------
-        geom : `~gammapy.maps.RegionGeom`
-            input RegionGeom.
-        rtol : float
-            relative tolerance
-
-        Returns
-        -------
-        valid : bool
-            True if rad_max is fixed and region is a CircleSkyRegion with compatible radius
-            True if region is a PointSkyRegion
-            False otherwise.
-        """
-        valid = False
-        if isinstance(geom.region, CircleSkyRegion):
-            if self.is_fixed_radmax:
-                valid = np.allclose(geom.region.radius.to_value('deg'),
-                                    self.quantity.to_value('deg'),
-                                    rtol)
-        elif geom.is_all_point_sky_regions:
-            valid = True
-        return valid
 
 

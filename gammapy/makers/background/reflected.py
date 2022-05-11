@@ -45,6 +45,40 @@ def are_regions_overlapping_rad_max(regions, rad_max, offset, e_min, e_max):
     return np.any(separations[np.newaxis, :] < (2 * rad_max_at_offset))
 
 
+def is_rad_max_compatible_region_geom(rad_max, geom, rtol=1e-3):
+    """Check if input RegionGeom is compatible with rad_max for point-like analysis.
+
+    Parameters
+    ----------
+    geom : `~gammapy.maps.RegionGeom`
+        input RegionGeom.
+    rtol : float
+        relative tolerance
+
+    Returns
+    -------
+    valid : bool
+        True if rad_max is fixed and region is a CircleSkyRegion with compatible radius
+        True if region is a PointSkyRegion
+        False otherwise.
+    """
+    if geom.is_all_point_sky_regions:
+        valid = True
+    elif isinstance(geom.region, CircleSkyRegion) and rad_max.is_fixed_rad_max:
+        valid = np.allclose(geom.region.radius, rad_max.quantity, rtol)
+
+        if not valid:
+            raise ValueError(
+                f"CircleSkyRegion radius must be equal to RADMAX "
+                f"for point-like IRFs with fixed RADMAX. "
+                f"Expected {rad_max.quantity} got {geom.region.radius}."
+            )
+    else:
+        valid = False
+
+    return valid
+
+
 class RegionsFinder(metaclass=ABCMeta):
     """Baseclass for regions finders
 
@@ -350,12 +384,6 @@ class ReflectedRegionsFinder(RegionsFinder):
         wcs: `~astropy.wcs.WCS`
             WCS for the determined regions
         """
-        if isinstance(region, PointSkyRegion):
-            raise TypeError(
-                "`ReflectedRegionsFinder` does not work for `PointSkyRegion`"
-                ", use `WobbleRegionsFinder` instead"
-            )
-
         regions = []
 
         reference_geom = self._create_reference_geometry(region, center)
@@ -466,27 +494,15 @@ class ReflectedRegionsBackgroundMaker(Maker):
         geom = dataset.counts.geom
         energy_axis = geom.axes["energy"]
         events = observation.events
+        rad_max = observation.rad_max
 
         is_point_sky_region = geom.is_all_point_sky_regions
 
-        if observation.rad_max is not None:
-            if not observation.rad_max.check_geom(geom):
-                if observation.rad_max.is_fixed_radmax:
-                    if isinstance(geom.region, CircleSkyRegion):
-                        rad_max = observation.rad_max.quantity
-                        radius = geom.region.radius
-                        raise ValueError(
-                            f"CircleSkyRegion radius must be equal to RADMAX "
-                            f"for point-like IRFs with fixed RADMAX. "
-                            f"Expected {rad_max} got {radius}."
-                        )
-                    else:
-                        raise TypeError("Incorrect region type for point-like analysis.")
-                else:
-                    raise ValueError(
-                        "Must use PointSkyRegion on region in point-like analysis,"
-                        f" got {type(geom.region)} instead"
-                    )
+        if rad_max and not is_rad_max_compatible_region_geom(rad_max=rad_max, geom=geom):
+            raise ValueError(
+                "Must use `PointSkyRegion` or `CircleSkyRegion` with rad max equivalent radius in point-like analysis,"
+                f" got {type(geom.region)} instead"
+            )
 
         regions_off, wcs = self.region_finder.run(
             center=observation.pointing_radec,

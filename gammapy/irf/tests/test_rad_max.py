@@ -1,7 +1,7 @@
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-from gammapy.maps import MapAxis, RegionGeom
+from gammapy.maps import MapAxis
 from gammapy.irf import RadMax2D, EffectiveAreaTable2D
 from gammapy.utils.testing import mpl_plot_check, requires_dependency
 
@@ -99,10 +99,5 @@ def test_rad_max_single_bin():
     assert value.shape == (1, 3)
     assert_allclose(value, 0.1 * u.deg)
 
-    geom = RegionGeom.create("fk5;circle(0,0,0.1)")
-    assert rad_max.is_fixed_radmax
-    assert rad_max.check_geom(geom)
-
-    geom = RegionGeom.create("fk5;box(0,0,0.1,0.1)")
-    assert rad_max.check_geom(geom) is False
+    assert rad_max.is_fixed_rad_max
 
