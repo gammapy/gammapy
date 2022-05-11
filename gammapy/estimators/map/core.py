@@ -445,14 +445,11 @@ class FluxMaps:
         return data
 
     @staticmethod
-    def _change_energy_axis_node_type(input_map, node_type="center"):
+    def _use_center_as_labels(input_map):
         """Change the node_type of the input map."""
         energy_axis = input_map.geom.axes["energy"]
-        new_axis = energy_axis.to_node_type(node_type)
-        geom = input_map.geom.replace_axis(axis=new_axis)
-        return Map.from_geom(
-            geom, data=input_map.data, unit=input_map.unit, meta=input_map.meta
-        )
+        energy_axis.use_center_as_plot_labels = True
+        return input_map
 
     @property
     def npred_excess_ref(self):
@@ -606,52 +603,52 @@ class FluxMaps:
     @property
     def dnde(self):
         """Return differential flux (dnde) SED values."""
-        return self._change_energy_axis_node_type(self.norm * self.dnde_ref)
+        return self._use_center_as_labels(self.norm * self.dnde_ref)
 
     @property
     def dnde_err(self):
         """Return differential flux (dnde) SED errors."""
-        return self._change_energy_axis_node_type(self.norm_err * self.dnde_ref)
+        return self._use_center_as_labels(self.norm_err * self.dnde_ref)
 
     @property
     def dnde_errn(self):
         """Return differential flux (dnde) SED negative errors."""
-        return self._change_energy_axis_node_type(self.norm_errn * self.dnde_ref)
+        return self._use_center_as_labels(self.norm_errn * self.dnde_ref)
 
     @property
     def dnde_errp(self):
         """Return differential flux (dnde) SED positive errors."""
-        return self._change_energy_axis_node_type(self.norm_errp * self.dnde_ref)
+        return self._use_center_as_labels(self.norm_errp * self.dnde_ref)
 
     @property
     def dnde_ul(self):
         """Return differential flux (dnde) SED upper limit."""
-        return self._change_energy_axis_node_type(self.norm_ul * self.dnde_ref)
+        return self._use_center_as_labels(self.norm_ul * self.dnde_ref)
 
     @property
     def e2dnde(self):
         """Return differential energy flux (e2dnde) SED values."""
-        return self._change_energy_axis_node_type(self.norm * self.e2dnde_ref)
+        return self._use_center_as_labels(self.norm * self.e2dnde_ref)
 
     @property
     def e2dnde_err(self):
         """Return differential energy flux (e2dnde) SED errors."""
-        return self._change_energy_axis_node_type(self.norm_err * self.e2dnde_ref)
+        return self._use_center_as_labels(self.norm_err * self.e2dnde_ref)
 
     @property
     def e2dnde_errn(self):
         """Return differential energy flux (e2dnde) SED negative errors."""
-        return self._change_energy_axis_node_type(self.norm_errn * self.e2dnde_ref)
+        return self._use_center_as_labels(self.norm_errn * self.e2dnde_ref)
 
     @property
     def e2dnde_errp(self):
         """Return differential energy flux (e2dnde) SED positive errors."""
-        return self._change_energy_axis_node_type(self.norm_errp * self.e2dnde_ref)
+        return self._use_center_as_labels(self.norm_errp * self.e2dnde_ref)
 
     @property
     def e2dnde_ul(self):
         """Return differential energy flux (e2dnde) SED upper limit."""
-        return self._change_energy_axis_node_type(self.norm_ul * self.e2dnde_ref)
+        return self._use_center_as_labels(self.norm_ul * self.e2dnde_ref)
 
     @property
     def flux(self):
