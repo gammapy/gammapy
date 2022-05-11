@@ -11,6 +11,7 @@ from astropy.table import Table
 import yaml
 from gammapy.maps import Map, RegionGeom
 from gammapy.modeling import Covariance, Parameter, Parameters
+from gammapy.modeling.covariance import copy_covariance
 from gammapy.utils.scripts import make_name, make_path
 
 
@@ -58,7 +59,7 @@ class ModelBase:
 
     _type = None
 
-    def __init__(self, **kwargs):
+    def __init__(self,  **kwargs):
         # Copy default parameters from the class to the instance
         default_parameters = self.default_parameters.copy()
 
@@ -142,7 +143,8 @@ class ModelBase:
             [getattr(self, name) for name in self.default_parameters.names]
         )
 
-    def copy(self):
+    @copy_covariance
+    def copy(self, copy_data=False):
         """A deep copy."""
         return copy.deepcopy(self)
 
@@ -437,6 +439,8 @@ class DatasetModels(collections.abc.Sequence):
             path to write files
         overwrite : bool
             overwrite YAML files
+        full_output : bool
+            Store full parameter output.
         overwrite_templates : bool
             overwrite templates FITS files
         write_covariance : bool
@@ -513,7 +517,6 @@ class DatasetModels(collections.abc.Sequence):
         # Warning: splitting of parameters will break is source name has a "." in its name.
         model_name = [name.split(".")[0] for name in self.parameters_unique_names]
         table.add_column(model_name, name="model", index=0)
-        self._table_cached = table
         return table
 
     def update_parameters_from_table(self, t):
@@ -527,6 +530,8 @@ class DatasetModels(collections.abc.Sequence):
 
         Parameters
         ----------
+        path : str or `Path`
+            Base path
         filename : str
             Filename
         **kwargs : dict
@@ -607,9 +612,27 @@ class DatasetModels(collections.abc.Sequence):
     def _ipython_key_completions_(self):
         return self.names
 
-    def copy(self):
-        """A deep copy."""
-        return copy.deepcopy(self)
+    @copy_covariance
+    def copy(self, copy_data=False):
+        """A deep copy.
+
+        Parameters
+        ----------
+        copy_data : bool
+            Whether to copy data attached to template models
+
+        Returns
+        -------
+        models: `Models`
+            Copied models.
+        """
+        models = []
+
+        for model in self:
+            model_copy = model.copy(name=model.name, copy_data=copy_data)
+            models.append(model_copy)
+
+        return self.__class__(models=models)
 
     def select(
         self,
@@ -865,21 +888,31 @@ class DatasetModels(collections.abc.Sequence):
 
         Parameters
         ----------
+        geom : `Geom`
+            Map geometry of the result template model.
         spectral_model : `~gammapy.modeling.models.SpectralModel`
             One of the NormSpectralMdel
         name : str
             Name of the new model
 
+        Returns
+        -------
+        model : `SkyModel`
+            Template sky model.
         """
         from . import PowerLawNormSpectralModel, SkyModel, TemplateSpatialModel
 
         unit = u.Unit("1 / (cm2 s sr TeV)")
         map_ = Map.from_geom(geom, unit=unit)
+
         for m in self:
             map_ += m.evaluate_geom(geom).to(unit)
+
         spatial_model = TemplateSpatialModel(map_, normalize=False)
+
         if spectral_model is None:
             spectral_model = PowerLawNormSpectralModel()
+
         return SkyModel(
             spectral_model=spectral_model, spatial_model=spatial_model, name=name
         )
