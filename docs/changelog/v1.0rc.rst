@@ -5,7 +5,7 @@
 
 - No changes yet
 - 14 contributors
-- 133 pull requests (not all listed below)
+- 163 pull requests (not all listed below)
 
 **Package structure and dependencies**
 
@@ -95,6 +95,8 @@ micromamba is used. Notebooks and tests are executed in parallel.
 Pull Requests
 +++++++++++++
 This list is incomplete. Small improvements and bug fixes are not listed here.
+- [#]
+- [#3876] Add temporal model on flux point dataset (Atreyee Sinha)
 - [#3874] Allow MapDatasetOff in Datasets serialization and avoid read_lazy (Quentin Rémy)
 - [#3873] Modify SafeMaskMaker to ignore data only below the background peak (Atreyee Sinha)
 - [#3860] Introduce is_norm parameter property (Axel Donath)
