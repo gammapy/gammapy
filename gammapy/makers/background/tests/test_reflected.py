@@ -26,7 +26,6 @@ from gammapy.utils.regions import compound_region_to_regions
 from gammapy.utils.testing import (
     assert_quantity_allclose,
     requires_data,
-    requires_dependency,
 )
 
 

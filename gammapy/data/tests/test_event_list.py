@@ -6,7 +6,7 @@ from astropy.table import Table
 from regions import CircleSkyRegion, RectangleSkyRegion
 from gammapy.data import EventList, GTI
 from gammapy.maps import MapAxis, WcsGeom
-from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
+from gammapy.utils.testing import mpl_plot_check, requires_data
 import pytest
 
 

@@ -7,7 +7,7 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion, RectangleSkyRegion, CompoundSkyRegion
 from gammapy.maps import MapAxis, RegionGeom, WcsGeom
-from gammapy.utils.testing import mpl_plot_check, requires_dependency
+from gammapy.utils.testing import mpl_plot_check
 
 
 @pytest.fixture()

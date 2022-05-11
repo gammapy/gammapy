@@ -23,7 +23,7 @@ from gammapy.modeling.models import (
     ShellSpatialModel,
     TemplateSpatialModel,
 )
-from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
+from gammapy.utils.testing import mpl_plot_check, requires_data
 
 
 def test_sky_point_source():

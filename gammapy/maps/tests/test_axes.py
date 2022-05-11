@@ -10,7 +10,7 @@ from astropy.visualization import quantity_support
 from gammapy.data import GTI
 from gammapy.maps import LabelMapAxis, MapAxes, MapAxis, RegionNDMap, TimeMapAxis
 from gammapy.utils.scripts import make_path
-from gammapy.utils.testing import assert_time_allclose, requires_data, requires_dependency, mpl_plot_check
+from gammapy.utils.testing import assert_time_allclose, requires_data, mpl_plot_check
 from gammapy.utils.time import time_ref_to_dict
 
 MAP_AXIS_INTERP = [

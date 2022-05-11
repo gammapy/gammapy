@@ -24,7 +24,6 @@ from gammapy.utils.testing import (
     assert_time_allclose,
     mpl_plot_check,
     requires_data,
-    requires_dependency,
 )
 from gammapy.utils.time import time_ref_to_dict
 

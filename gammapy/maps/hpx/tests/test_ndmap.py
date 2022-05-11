@@ -10,7 +10,7 @@ from gammapy.irf import PSFKernel, PSFMap
 from gammapy.maps import HpxGeom, HpxMap, HpxNDMap, Map, MapAxis, WcsGeom
 from gammapy.maps.hpx.io import HpxConv
 from gammapy.maps.io import find_bintable_hdu
-from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
+from gammapy.utils.testing import mpl_plot_check, requires_data
 
 pytest.importorskip("healpy")
 
