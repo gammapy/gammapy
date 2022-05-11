@@ -571,7 +571,7 @@ class IRF(metaclass=abc.ABCMeta):
         Returns
         -------
         is_allclose : bool
-            Wheter th IRF is all close.
+            Whether the IRF is all close.
         """
         if not isinstance(other, self.__class__):
             return TypeError(f"Cannot compare {type(self)} and {type(other)}")

@@ -248,27 +248,39 @@ class ParametricPSF(PSF):
         value = self.evaluate_direct(rad=rad, **pars)
         return value
 
-    def data_allclose(self, other, **kwargs):
-        """Compare two PSF data for equivalency
+    def is_allclose(self, other, rtol_axes=1e-3, atol_axes=1e-6, **kwargs):
+        """Compare two data IRFs for equivalency
 
         Parameters
         ----------
         other : the irf to compare against
-                    `gammapy.irfs.IRF`
-        kwargs : dict
+            `gammapy.irfs.ParametricPSF`
+        rtol_axes : float
+            Relative tolerance for the axes comparison.
+        atol_axes : float
+            Relative tolerance for the axes comparison.
+        **kwargs : dict
                 keywords passed to `numpy.allclose`
 
         Returns
         -------
-        state : bool
+        is_allclose : bool
+            Whether the IRF is all close.
         """
+        if not isinstance(other, self.__class__):
+            return TypeError(f"Cannot compare {type(self)} and {type(other)}")
+
+        data_eq = True
+
         for key in self.quantity.keys():
             if self.quantity[key].shape != other.quantity[key].shape:
                 return False
-            if not np.allclose(self.quantity[key], other.quantity[key], **kwargs):
-                return False
 
-        return True
+            data_eq &= np.allclose(self.quantity[key], other.quantity[key], **kwargs)
+
+        axes_eq = self.axes.is_allclose(other.axes, rtol=rtol_axes, atol=atol_axes)
+        return axes_eq and data_eq
+
 
 
 def get_sigmas_and_norms(**kwargs):
