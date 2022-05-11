@@ -16,7 +16,7 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
 )
-from gammapy.utils.testing import requires_data, requires_dependency
+from gammapy.utils.testing import requires_data
 
 
 @pytest.fixture(scope="session")
@@ -103,7 +103,6 @@ def test_fov_bkg_maker_scale_nocounts(obs_dataset, exclusion_mask, caplog):
 
 
 @requires_data()
-@requires_dependency("iminuit")
 def test_fov_bkg_maker_fit(obs_dataset, exclusion_mask):
     fov_bkg_maker = FoVBackgroundMaker(method="fit", exclusion_mask=exclusion_mask)
 
@@ -141,7 +140,6 @@ def test_fov_bkg_maker_fit(obs_dataset, exclusion_mask):
 
 @pytest.mark.xfail
 @requires_data()
-@requires_dependency("iminuit")
 def test_fov_bkg_maker_fit_nocounts(obs_dataset, exclusion_mask, caplog):
     fov_bkg_maker = FoVBackgroundMaker(method="fit", exclusion_mask=exclusion_mask)
 
@@ -162,7 +160,6 @@ def test_fov_bkg_maker_fit_nocounts(obs_dataset, exclusion_mask, caplog):
 
 
 @requires_data()
-@requires_dependency("iminuit")
 def test_fov_bkg_maker_with_source_model(obs_dataset, exclusion_mask, caplog):
 
     test_dataset = obs_dataset.copy(name="test-fov")
@@ -239,7 +236,6 @@ def test_fov_bkg_maker_with_source_model(obs_dataset, exclusion_mask, caplog):
 
 
 @requires_data()
-@requires_dependency("iminuit")
 def test_fov_bkg_maker_fit_with_tilt(obs_dataset, exclusion_mask):
     fov_bkg_maker = FoVBackgroundMaker(
         method="fit",
@@ -259,7 +255,6 @@ def test_fov_bkg_maker_fit_with_tilt(obs_dataset, exclusion_mask):
 
 
 @requires_data()
-@requires_dependency("iminuit")
 def test_fov_bkg_maker_fit_fail(obs_dataset, exclusion_mask, caplog):
     fov_bkg_maker = FoVBackgroundMaker(method="fit", exclusion_mask=exclusion_mask)
 

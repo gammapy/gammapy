@@ -149,7 +149,6 @@ def test_npred_spatial_model(spectrum_dataset):
     assert spectrum_dataset.evaluators["test"].psf is None
 
 
-@requires_dependency("iminuit")
 def test_fit(spectrum_dataset):
     """Simple CASH fit to the on vector"""
     fit = Fit()
@@ -683,7 +682,6 @@ class TestSpectrumOnOff:
 
 
 @requires_data()
-@requires_dependency("iminuit")
 class TestSpectralFit:
     """Test fit in astrophysical scenario"""
 
@@ -718,7 +716,6 @@ class TestSpectralFit:
         for obs in self.datasets:
             obs.models = model
 
-    @requires_dependency("iminuit")
     def test_basic_results(self):
         self.set_model(self.pwl)
         result = self.fit.run([self.datasets[0]])
@@ -1054,7 +1051,6 @@ def test_spectrum_dataset_on_off_to_yaml(tmpdir):
     assert datasets_read[1].counts.data.sum() == datasets[1].counts.data.sum()
 
 
-@requires_dependency("iminuit")
 class TestFit:
     """Test fit on counts spectra without any IRFs"""
 

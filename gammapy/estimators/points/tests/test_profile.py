@@ -14,7 +14,6 @@ from gammapy.utils.regions import (
     make_concentric_annulus_sky_regions,
     make_orthogonal_rectangle_sky_regions,
 )
-from gammapy.utils.testing import requires_dependency
 
 
 def get_simple_dataset_on_off():
@@ -47,7 +46,6 @@ def make_horizontal_boxes(wcs):
     )
 
 
-@requires_dependency("iminuit")
 def test_profile_content():
     mapdataset_onoff = get_simple_dataset_on_off()
     wcs = mapdataset_onoff.counts.geom.wcs
@@ -81,7 +79,6 @@ def test_profile_content():
     assert_allclose(ul, [111.32, 111.32], atol=1e-2)
 
 
-@requires_dependency("iminuit")
 def test_radial_profile():
     dataset = get_simple_dataset_on_off()
     geom = dataset.counts.geom
@@ -118,7 +115,6 @@ def test_radial_profile():
     assert_allclose(ul, [72.074, 72.074], rtol=1e-3)
 
 
-@requires_dependency("iminuit")
 def test_radial_profile_one_interval():
     dataset = get_simple_dataset_on_off()
     geom = dataset.counts.geom
@@ -153,7 +149,6 @@ def test_radial_profile_one_interval():
     assert_allclose(ul, [130.394824], rtol=1e-3)
 
 
-@requires_dependency("iminuit")
 def test_serialisation(tmpdir):
     dataset = get_simple_dataset_on_off()
     geom = dataset.counts.geom

@@ -619,7 +619,6 @@ def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
     assert_allclose(stacked1.edisp.edisp_map, stacked.edisp.edisp_map)
 
 
-@requires_dependency("iminuit")
 @requires_dependency("matplotlib")
 @requires_data()
 def test_map_fit(sky_model, geom, geom_etrue):
@@ -689,7 +688,6 @@ def test_map_fit(sky_model, geom, geom_etrue):
     dataset_1.npred()
     assert not dataset_1.evaluators["test-model"].contributes
 
-@requires_dependency("iminuit")
 @requires_data()
 def test_map_fit_linked(sky_model, geom, geom_etrue):
     dataset_1 = get_map_dataset(geom, geom_etrue, name="test-1")
@@ -727,7 +725,6 @@ def test_map_fit_linked(sky_model, geom, geom_etrue):
     assert datasets.models.covariance.shape == (22,22)
 
 
-@requires_dependency("iminuit")
 @requires_data()
 def test_map_fit_one_energy_bin(sky_model, geom_image):
     energy_axis = geom_image.axes["energy"]
@@ -1151,23 +1148,23 @@ def test_map_dataset_on_off_fits_io(images, lazy, tmp_path):
         assert dataset_new.mask.data.dtype == bool
         assert dataset_new.meta_table["livetime"] == 1.0*u.h
         assert dataset_new.meta_table["obs_id"] == 111
-    
+
         assert_allclose(dataset.counts.data, dataset_new.counts.data)
         assert_allclose(dataset.counts_off.data, dataset_new.counts_off.data)
         assert_allclose(dataset.acceptance.data, dataset_new.acceptance.data)
         assert_allclose(dataset.acceptance_off.data, dataset_new.acceptance_off.data)
         assert_allclose(dataset.exposure.data, dataset_new.exposure.data)
         assert_allclose(dataset.mask_safe, dataset_new.mask_safe)
-    
+
         assert np.all(dataset.mask_safe.data == dataset_new.mask_safe.data)
         assert dataset.mask_safe.geom == dataset_new.mask_safe.geom
         assert dataset.counts.geom == dataset_new.counts.geom
         assert dataset.exposure.geom == dataset_new.exposure.geom
-    
+
         assert_allclose(
             dataset.gti.time_sum.to_value("s"), dataset_new.gti.time_sum.to_value("s")
         )
-    
+
         assert dataset.psf.psf_map == dataset_new.psf.psf_map
         assert dataset.psf.exposure_map == dataset_new.psf.exposure_map
         assert dataset.edisp.edisp_map == dataset_new.edisp.edisp_map

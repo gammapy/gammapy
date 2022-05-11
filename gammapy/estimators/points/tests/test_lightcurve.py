@@ -164,7 +164,6 @@ def get_spectrum_datasets():
 
 
 @requires_data()
-@requires_dependency("iminuit")
 def test_group_datasets_in_time_interval():
     # Doing a LC on one hour bin
     datasets = Datasets(get_spectrum_datasets())
@@ -182,7 +181,6 @@ def test_group_datasets_in_time_interval():
 
 
 @requires_data()
-@requires_dependency("iminuit")
 def test_group_datasets_in_time_interval_outflows():
     datasets = Datasets(get_spectrum_datasets())
     # Check Overflow
@@ -204,7 +202,6 @@ def test_group_datasets_in_time_interval_outflows():
 
 
 @requires_data()
-@requires_dependency("iminuit")
 def test_lightcurve_estimator_fit_options():
     # Doing a LC on one hour bin
     datasets = get_spectrum_datasets()
@@ -229,7 +226,6 @@ def test_lightcurve_estimator_fit_options():
 
 
 @requires_data()
-@requires_dependency("iminuit")
 def test_lightcurve_estimator_spectrum_datasets():
     # Doing a LC on one hour bin
     datasets = get_spectrum_datasets()
@@ -281,7 +277,6 @@ def test_lightcurve_estimator_spectrum_datasets():
 
 
 @requires_data()
-@requires_dependency("iminuit")
 def test_lightcurve_estimator_spectrum_datasets_2_energy_bins():
     # Doing a LC on one hour bin
     datasets = get_spectrum_datasets()
@@ -400,7 +395,6 @@ def test_lightcurve_estimator_spectrum_datasets_2_energy_bins():
 
 
 @requires_data()
-@requires_dependency("iminuit")
 def test_lightcurve_estimator_spectrum_datasets_with_mask_fit():
     # Doing a LC on one hour bin
     datasets = get_spectrum_datasets()
@@ -433,7 +427,6 @@ def test_lightcurve_estimator_spectrum_datasets_with_mask_fit():
 
 
 @requires_data()
-@requires_dependency("iminuit")
 def test_lightcurve_estimator_spectrum_datasets_default():
     # Test default time interval: each time interval is equal to the gti of each dataset, here one hour
     datasets = get_spectrum_datasets()
@@ -449,7 +442,6 @@ def test_lightcurve_estimator_spectrum_datasets_default():
 
 
 @requires_data()
-@requires_dependency("iminuit")
 def test_lightcurve_estimator_spectrum_datasets_notordered():
     # Test that if the time intervals given are not ordered in time, it is first ordered correctly and then
     # compute as expected
@@ -472,7 +464,6 @@ def test_lightcurve_estimator_spectrum_datasets_notordered():
 
 
 @requires_data()
-@requires_dependency("iminuit")
 def test_lightcurve_estimator_spectrum_datasets_largerbin():
     # Test all dataset in a single LC bin, here two hours
     datasets = get_spectrum_datasets()
@@ -501,7 +492,6 @@ def test_lightcurve_estimator_spectrum_datasets_largerbin():
 
 
 @requires_data()
-@requires_dependency("iminuit")
 def test_lightcurve_estimator_spectrum_datasets_emptybin():
     # Test all dataset in a single LC bin, here two hours
     datasets = get_spectrum_datasets()
@@ -523,7 +513,6 @@ def test_lightcurve_estimator_spectrum_datasets_emptybin():
 
 
 @requires_data()
-@requires_dependency("iminuit")
 def test_lightcurve_estimator_spectrum_datasets_timeoverlaped():
     # Check that it returns a ValueError if the time intervals overlapped
     datasets = get_spectrum_datasets()
@@ -540,7 +529,6 @@ def test_lightcurve_estimator_spectrum_datasets_timeoverlaped():
 
 
 @requires_data()
-@requires_dependency("iminuit")
 def test_lightcurve_estimator_spectrum_datasets_gti_not_include_in_time_intervals():
     # Check that it returns a ValueError if the time intervals are smaller than the dataset GTI.
     datasets = get_spectrum_datasets()
@@ -580,7 +568,6 @@ def get_map_datasets():
 
 
 @requires_data()
-@requires_dependency("iminuit")
 def test_lightcurve_estimator_map_datasets():
     datasets = get_map_datasets()
 
@@ -637,7 +624,6 @@ def test_lightcurve_estimator_map_datasets():
 
 
 @requires_data()
-@requires_dependency("iminuit")
 def test_recompute_ul():
     datasets = get_spectrum_datasets()
     selection = ["all"]

@@ -7,8 +7,6 @@ from gammapy.estimators.parameter import ParameterEstimator
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from gammapy.utils.testing import requires_data
 
-pytest.importorskip("iminuit")
-
 
 @pytest.fixture
 def crab_datasets_1d():

@@ -19,7 +19,7 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
 )
-from gammapy.utils.testing import requires_data, requires_dependency
+from gammapy.utils.testing import requires_data
 
 
 # TODO: use pre-generated data instead
@@ -180,7 +180,6 @@ def test_str(fpe_pwl):
     assert "FluxPointsEstimator" in str(fpe)
 
 
-@requires_dependency("iminuit")
 def test_run_pwl(fpe_pwl, tmpdir):
     datasets, fpe = fpe_pwl
 
@@ -262,7 +261,6 @@ def test_run_pwl(fpe_pwl, tmpdir):
     assert fp_new.meta["sed_type_init"] == "likelihood"
 
 
-@requires_dependency("iminuit")
 def test_run_ecpl(fpe_ecpl, tmpdir):
     datasets, fpe = fpe_ecpl
 
@@ -306,7 +304,6 @@ def test_run_ecpl(fpe_ecpl, tmpdir):
     assert fp_new.meta["sed_type_init"] == "likelihood"
 
 
-@requires_dependency("iminuit")
 @requires_data()
 def test_run_map_pwl(fpe_map_pwl, tmpdir):
     datasets, fpe = fpe_map_pwl
@@ -350,7 +347,6 @@ def test_run_map_pwl(fpe_map_pwl, tmpdir):
     assert fp_new.meta["sed_type_init"] == "likelihood"
 
 
-@requires_dependency("iminuit")
 @requires_data()
 def test_run_map_pwl_reoptimize(fpe_map_pwl_reoptimize):
     datasets, fpe = fpe_map_pwl_reoptimize
@@ -376,7 +372,6 @@ def test_run_map_pwl_reoptimize(fpe_map_pwl_reoptimize):
     assert_allclose(actual, [9.788123, 0.486066, 17.603708], rtol=1e-2)
 
 
-@requires_dependency("iminuit")
 @requires_data()
 def test_flux_points_estimator_no_norm_scan(fpe_pwl, tmpdir):
     datasets, fpe = fpe_pwl
@@ -413,7 +408,6 @@ def test_no_likelihood_contribution():
     assert_allclose(table["counts"], 0)
 
 
-@requires_dependency("iminuit")
 def test_mask_shape():
     axis = MapAxis.from_edges([1.0, 3.0, 10.0], unit="TeV", interp="log", name="energy")
     geom_1 = WcsGeom.create(binsz=1, width=3, axes=[axis])
@@ -447,7 +441,6 @@ def test_mask_shape():
     assert_allclose(table["npred"], 0)
 
 
-@requires_dependency("iminuit")
 def test_run_pwl_parameter_range(fpe_pwl):
     pl = PowerLawSpectralModel(amplitude="1e-16 cm-2s-1TeV-1")
 
@@ -487,7 +480,6 @@ def test_run_pwl_parameter_range(fpe_pwl):
     assert_allclose(actual, [-1.006081, -0.364848, -0.927819], rtol=1e-2)
 
 
-@requires_dependency("iminuit")
 def test_flux_points_estimator_small_edges():
     pl = PowerLawSpectralModel(amplitude="1e-11 cm-2s-1TeV-1")
 
@@ -503,7 +495,6 @@ def test_flux_points_estimator_small_edges():
     assert np.isnan(fp.npred.data[1, 0, 0])
 
 
-@requires_dependency("iminuit")
 def test_flux_points_recompute_ul(fpe_pwl):
     datasets, fpe = fpe_pwl
     fpe.selection_optional = ["all"]

@@ -159,7 +159,7 @@ class Fit:
 
         if self.backend not in registry.register["covariance"]:
             log.warning("No covariance estimate - not supported by this backend.")
-            return optimize_result
+            return FitResult(optimize_result=optimize_result)
 
         covariance_result = self.covariance(datasets=datasets)
 
@@ -637,7 +637,11 @@ class FitResult:
     @property
     def success(self):
         """Total success flag"""
-        success = self.optimize_result.success and self.covariance_result.success
+        success = self.optimize_result.success
+
+        if self.covariance_result:
+            success &= self.covariance_result.success
+
         return success
 
     @property
