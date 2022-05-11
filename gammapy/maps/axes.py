@@ -135,6 +135,7 @@ class MapAxis:
             raise ValueError(f"Invalid node type: {node_type!r}")
 
         self._nbin = nbin
+        self._use_center_as_plot_labels = None
 
     def assert_name(self, required_name):
         """Assert axis name if a specific one is required.
@@ -268,16 +269,28 @@ class MapAxis:
         )
 
     @property
+    def use_center_as_plot_labels(self):
+        """Use center as plot labels"""
+        if self._use_center_as_plot_labels is not None:
+            return self._use_center_as_plot_labels
+
+        return self.node_type == "center"
+
+    @use_center_as_plot_labels.setter
+    def use_center_as_plot_labels(self, value):
+        """Use center as plot labels"""
+        self._use_center_as_plot_labels = bool(value)
+
+    @property
     def as_plot_labels(self):
         """Return list of axis plot labels"""
-        if self.node_type == "edges":
+        if self.use_center_as_plot_labels:
+            labels = [f"{val:.2e}" for val in self.center]
+        else:
             labels = [
                 f"{val_min:.2e} - {val_max:.2e}"
                 for val_min, val_max in self.iter_by_edges
             ]
-        else:
-            labels = [f"{val:.2e}" for val in self.center]
-
         return labels
 
     @property
