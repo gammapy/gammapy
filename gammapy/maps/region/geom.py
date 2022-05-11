@@ -583,8 +583,8 @@ class RegionGeom(Geom):
 
         Parameters
         ----------
-        other : the irf to compare against
-            `gammapy.irfs.IRF`
+        other : `RegionGeom`
+            Geom to compare against.
         rtol_axes : float
             Relative tolerance for the axes comparison.
         atol_axes : float

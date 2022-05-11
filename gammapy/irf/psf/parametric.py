@@ -31,7 +31,7 @@ class ParametricPSF(PSF):
     @property
     @abc.abstractmethod
     def required_parameters(self):
-        pass
+        return []
 
     @abc.abstractmethod
     def evaluate_direct(self, rad, **kwargs):
@@ -253,8 +253,8 @@ class ParametricPSF(PSF):
 
         Parameters
         ----------
-        other : the irf to compare against
-            `gammapy.irfs.ParametricPSF`
+        other : `gammapy.irfs.ParametricPSF`
+            The PSF to compare against
         rtol_axes : float
             Relative tolerance for the axes comparison.
         atol_axes : float
@@ -280,7 +280,6 @@ class ParametricPSF(PSF):
 
         axes_eq = self.axes.is_allclose(other.axes, rtol=rtol_axes, atol=atol_axes)
         return axes_eq and data_eq
-
 
 
 def get_sigmas_and_norms(**kwargs):

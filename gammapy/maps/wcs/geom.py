@@ -1126,19 +1126,19 @@ class WcsGeom(Geom):
         # check WCS consistency with a priori tolerance of 1e-6
         return self.wcs.wcs.compare(other.wcs.wcs, cmp=2, tolerance=tolerance)
 
-    def is_allclose(self, other, rtol_wcs=1e-6, rtol_axes=1e-6, atol_axes=1e-6):
+    def is_allclose(self, other, rtol_axes=1e-6, atol_axes=1e-6, rtol_wcs=1e-6):
         """Compare two data IRFs for equivalency
 
         Parameters
         ----------
-        other : the irf to compare against
-            `gammapy.irfs.IRF`
-        rtol_wcs : float
-            Relative tolerance for the wcs comparison.
+        other :  `WcsGeom`
+            Geom to compare against
         rtol_axes : float
             Relative tolerance for the axes comparison.
         atol_axes : float
             Relative tolerance for the axes comparison.
+        rtol_wcs : float
+            Relative tolerance for the wcs comparison.
 
         Returns
         -------
