@@ -67,8 +67,8 @@ and then just execute the following commands in the terminal:
 
 .. code-block:: bash
 
-    $ curl -O https://gammapy.org/download/install/gammapy-0.19-environment.yml
-    $ conda env create -f gammapy-0.19-environment.yml
+    $ curl -O https://gammapy.org/download/install/gammapy-0.20-environment.yml
+    $ conda env create -f gammapy-0.20-environment.yml
 
 .. note::
 
@@ -80,7 +80,7 @@ Once the environment has been created you can activate it using:
 
 .. code-block:: bash
 
-    $ conda activate gammapy-v0.19
+    $ conda activate gammapy-v0.20
 
 You can now proceed to download the Gammapy tutorial notebooks and the example
 datasets. The total size to download is ~180 MB. Select the location where you
@@ -88,7 +88,7 @@ want to install the datasets and proceed with the following commands:
 
 .. code-block:: bash
 
-    $ gammapy download notebooks --release 0.19
+    $ gammapy download notebooks --release 0.20
     $ gammapy download datasets
     $ export GAMMAPY_DATA=$PWD/gammapy-datasets
 
