@@ -8,7 +8,7 @@ Summary
 
 - Released May 12th, 2022
 - 15 contributors
-- 167 pull requests (not all listed below)
+- 184 pull requests (not all listed below)
 
 **Package structure and dependencies**
 
