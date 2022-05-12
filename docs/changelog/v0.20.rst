@@ -1,20 +1,23 @@
-.. _gammapy_1p0rc_release:
+.. _gammapy_0p20_release:
 
-1.0rc (unreleased)
-------------------
+0.20 (May 12th, 2022)
+---------------------
 
-- No changes yet
+Summary
+~~~~~~~
+
+- Released May 12th, 2022
 - 15 contributors
 - 167 pull requests (not all listed below)
 
 **Package structure and dependencies**
 
-This new release provides a v1.0 release candidate (v1.0rc) . It serves as the basis for the
+This new release provides a release candidate for v1.0. It serves as the basis for the
 first long term stable (LTS) release of Gammapy. To ensure long term support, the minimal
 astropy version is 5.0, and the minimal python version is 3.8.
 
 Because they are necessary to the vast majority of Gammapy use cases, iminuit and matplotlib
-are now required dependencies. Matplotlib >=3.5 is now supported.
+are now required dependencies. Matplotlib >=3.5 is now supported as well as regions 0.6.
 
 **New features**
 

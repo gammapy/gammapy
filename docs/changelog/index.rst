@@ -8,13 +8,13 @@ This is the list of changes to Gammapy between each release. For full details,
 see the `commit logs <https://github.com/gammapy/gammapy/commits/master>`_.
 A complete list of Gammapy contributors is at https://gammapy.org/team.html
 
-Version 1.0rc (unreleased)
---------------------------
+Version 0.20 (May 12th, 2022)
+-----------------------------
 
 .. toctree::
    :maxdepth: 2
 
-   v1.0rc
+   v0.20
 
 
 Version 0.19
