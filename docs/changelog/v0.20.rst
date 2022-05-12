@@ -1,0 +1,148 @@
+.. _gammapy_0p20_release:
+
+0.20 (May 12th, 2022)
+---------------------
+
+Summary
+~~~~~~~
+
+- Released May 12th, 2022
+- 15 contributors
+- 167 pull requests (not all listed below)
+
+**Package structure and dependencies**
+
+This new release provides a release candidate for v1.0. It serves as the basis for the
+first long term stable (LTS) release of Gammapy. To ensure long term support, the minimal
+astropy version is 5.0, and the minimal python version is 3.8.
+
+Because they are necessary to the vast majority of Gammapy use cases, iminuit and matplotlib
+are now required dependencies. Matplotlib >=3.5 is now supported as well as regions 0.6.
+
+**New features**
+
+*Support for energy dependent ON region spectral extraction has been added*
+
+- The RADMAX IRF is now fully supported.
+- A specific `WobbleRegionFinder` has been introduced to find OFF regions at symmetric positions
+from the center of the field-of-view.
+- A tutorial demonstrating how to perform a point-like analysis is provided.
+It uses a set of two test observations provided by the MAGIC collaboration to perform
+testing and validation of the method. We thank the Magic collaboration for their contribution.
+
+*New theme and re-structuration of the documentation*
+
+- The documentation has been completely restructured. The PyData Sphinx theme is now applied.
+- An automated testing of docstring example code has been added. All docstrings have been fixed.
+
+**Bug fixes and improvements**
+
+*gammapy.data*
+
+- To correctly track observation information for simulations, `Observation.create()`
+now takes an `observatory_location` argument (default is `None`).
+- an `EventList.write()` convenience method has been added.
+- the observation table is now optional on the `DataStore` as per g.a.d.f.
+- a list of required irfs can be passed to `DataStore.get_observations()`. Predefined
+shortcuts are provided for `full-containment` (default) and `point-like`.
+
+*gammapy.estimators*
+
+- A method to resample the energy axis of a `Dataset` based on counts statistics criteria
+(e.g. minimum number of `counts` or `counts_off`):
+`gammapy.estimators.utils.resample_energy_axis()`
+
+
+*gammapy.makers*
+
+- The behaviour of the `bkg-peak` method of the `SafeMaskMaker` has been changed to avoid
+removing the first energy bin if the maximum number of background counts is
+in the first energy bin.
+
+*gammapy.modeling*
+
+- A new `is_norm` property has been added to the `Parameter` object. It is used to determine
+the parameter giving the flux normalization and solves a bug with the flux point estimation
+using a `CompoundModel`.
+- `Fit.covariance()` now correctly handles shared (linked) parameters.
+- `FitResult` now contains a copy of the `Models` after the fit. Its `parameters` attribute
+is not modified by further manipulation of the initial model.
+
+*gammapy.analysis*
+
+- `DatasetsMaker` is now internally used and can be configured in the yaml file.
+
+*gammapy.catalog*
+
+- The 4FGL data release 3 has been added.
+
+**DevOps**
+
+- The CI grid has been updated and improved. A pyflakes step has been added. For efficiency,
+micromamba is used. Notebooks and tests are executed in parallel.
+
+**Contributors**
+- Fabio Acero
+- Arnau Aguasca
+- Tyler Cahill
+- Alisha Chromey
+- Axel Donath
+- Luca Giunti
+- Cosimo Nigro
+- Maximilian Nöthe
+- Laura Olivera-Nieto
+- Dimitri Papadopoulos
+- Fabio Pintore
+- Quentin Remy
+- Jose Enrique Ruiz
+- Atreyee Sinha
+- Régis Terrier
+
+Pull Requests
++++++++++++++
+This list is incomplete. Small improvements and bug fixes are not listed here.
+- [#3941] Introduce matplotlib as required dependency (Régis Terrier)
+- [#3936] Introduce iminuit as required dependency (Axel Donath)
+- [#3933] Add support for regions v0.6 (Axel Donath)
+- [#3918] Improve fit results (Luca Giunti)
+- [#3915] Fix evaluate_containment calculation in class PSFKing(ParametricPSF) (Alisha Chromey)
+- [#3906] Require astropy v>=5.0 (Axel Donath)
+- [#3905] Use .is_norm property in FluxEstimator (Axel Donath)
+- [#3904] Fix bug on MC_ID when sampling IRF background events (Fabio Pintore)
+- [#3898] Add Map.resample method (Quentin Rémy)
+- [#3895] Add MapAxes .__eq__, .__neq__, and .copy() (Quentin Rémy)
+- [#3892] Allow for regular reflected region analysis with fixed rad_max IRFs (Régis Terrier)
+- [#3887] Implement __eq__ for DL3 IRFs (Atreyee Sinha)
+- [#3876] Add temporal model on flux point dataset (Atreyee Sinha)
+- [#3874] Allow MapDatasetOff in Datasets serialization and avoid read_lazy (Quentin Rémy)
+- [#3873] Modify SafeMaskMaker to ignore data only below the background peak (Atreyee Sinha)
+- [#3860] Introduce is_norm parameter property (Axel Donath)
+- [#3856] Make obs_table optional on DataStore (Régis Terrier)
+- [#3846] Allows DataStoreMaker to be used with IRFs not following CALDB structure (Quentin Rémy)
+- [#3842] Update SourceCatalog4FGL class to support changes in data release 3 (Quentin Remy)
+- [#3837] Allow nearest neighbor interpolation with scalar data (Axel Donath)
+- [#3833] Automate generation of codemeta.json and .zenodo.json files (Jose Enrique Ruiz)
+- [#3817] Improve documentation theme (Jose Enrique Ruiz)
+- [#3810] Fix doc strings in estimators (Atreyee Sinha)
+- [#3806] Improve documentation for the DatasetsMaker (Quentin Remy)
+- [#3804] Event wise rad max (Maximilian Nöthe)
+- [#3802] Use DatasetsMaker in Analysis class (Quentin Remy)
+- [#3797] Refactor pointing information handling and Observation.create (Maximilian Nöthe)
+- [#3796] Helper function to rebin map axis (Luca Giunti)
+- [#3783] Speed docs building process (Jose Enrique Ruiz)
+- [#3777] Validate EnergyDispersion2D units (Fabio Pintore)
+- [#3761] Execute notebooks in parallel (Maximilian Nöthe)
+- [#3760] Fix issues reported by pyflakes and add pyflakes step to ci (Maximilian Nöthe)
+- [#3752] Human readable energy units string formatting for plot_interactive & plot_grid (Fabio Acero)
+- [#3748] Fix doc strings for makers and datasets (Atreyee Sinha)
+- [#3740] Common format axis labels (Fabio Pintore)
+- [#3733] Add new RegionsFinder that uses a fixed number of regions symmetrically distributed on the circle (Cosimo Nigro)
+- [#3728] Add missing required GADF headers in IRF classes (Maximilian Nöthe)
+- [#3722] Switch documentation to PyData Sphinx Theme (Jose Enrique Ruiz)
+- [#3720] Add convenience method to write EventLists to file (Laura Olivera Nieto)
+- [#3713] Fix matplotlib 3.5+ incompatibility with WcsNDMap.plot() (tmcahill)
+- [#3712] Added a notebook tutorial showing an energy-dependent spectrum extraction (Cosimo Nigro)
+- [#3699] Use mamba in CI jobs (Maximilian Nöthe)
+- [#3684] Started to implement the energy-dependent 1D spectrum extraction (Cosimo Nigro)
+- [#3669] Add GeneralizedGaussianTemporalModel (Arnau Aguasca)
+- [#3535] Add TemplateNDSpectralModel (Quentin Remy)
