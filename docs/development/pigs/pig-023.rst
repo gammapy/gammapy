@@ -16,7 +16,7 @@ Abstract
 ========
 
 This PIG proposes the general plan for timing of releases and their version numbers to start
-with the release v1.0. Following the approach of astropy (ref APE 2), versions numbered
+with the release v1.0. Following the approach of astropy (described in APE 2), versions numbered
 vX.0 are designated "long-term support" (LTS) and are released on typical timescales
 of two years. New features releases have a shorter cycle of about 6 months and are numbered
 X.Y (with Y>0). Bugfix releases are applied on both the current feature release and the LTS
@@ -46,21 +46,19 @@ on this took place during January 2022 co-Corking week (link?).
 Release scheduling and LTS
 ==========================
 
-%%%% Adapter
-Releases between feature releases will only contain bugfixes, not new
-features. (See the "Releases and backwards compatibility" section below for more
-on what is considered a bug fix).
+Following on the current scheme, a typical timescale between new feature releases is 6 months.
+More rapid releases can occur when important new features are to be distributed to users.
+Feature releases can introduce backwards incompatible changes w.r.t. previous versions.
+Those changes have to be mentioned in the release notes.
 
-Additionally, some feature releases will be designated "long-term support" (LTS)
-releases, and these will continue to receive bugfixes for at least two years
-(i.e., typically 3 regular feature releases will follow an LTS release).  This
-addresses the first issue by applying a time-based release cycle, meaning no
-feature will need to wait more than six months before reaching users.
-Simultaneously, it addresses the second concern by providing a guarantee to
-facilities that if they use an LTS, they can count on releases fixing critical
-bugs for at least two years.  Finally, the LTS releases also act as a convenient
-time to submit new Astropy journal papers.
-%%%%%
+In addition, bugfix releases can correct new feature versions.
+A bugfix must neither introduce new major functionality nor break backwards compatibility in the
+public API, unless the API has an actual mistake that needs to be fixed.
+Documentation improvements can be part of a bugfix release. Bugfixes are
+applied to the current feature release.
+
+Finally, long-term support (LTS) releases will have a timescale of about 2 years (or about
+3-4 feature releases) and will continue to receive bugfixes until the next LTS release.
 
 Version numbering
 =================
@@ -81,121 +79,50 @@ Gammapy will follow the astropy version scheme i.e. of the form ``x.y.z``, with 
 * 1.3.1 (bug fix release on the feature branch)
 * 2.0.0 (LTS release, six months after 1.3.0)
 
-Feature freeze/testing calendar
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Release preparation, feature freeze
+===================================
 
-Because bug checking/fixing and preparation for release take time, a feature
-freeze will need to be enacted *before* the time of a given feature release.
-Such a feature freeze will mean no more major new feature pull requests will be
-accepted for that version, but minor improvements, bug fixes, or documentation
-additions are still acceptable.  The standard calendar for a release will be:
+Specify the typical calendar to prepare for a feature release?
 
-* -6 months: previous release
-* -1 month: feature freeze, beta release, branch created
-* -1 week: release candidate
+To prepare for a new feature release. A feature freeze has to occur (when?).
+From that point no new major feature is accepted for the coming release.
+Minor improvements, bug fixes, or documentation additions are still acceptable.
 
-This is not meant to be an exactly strict calendar, as the day of the week,
-existence of holidays, and degree of readiness of key features or critical bug
-fixes necessitate slop in the exact timing.  So more what you'd call guidelines
-than actual rules.
+No alpha or beta release ar expected for Gammapy. For testing purposes, a limited
+release candidate can be distributed (is it necessary? systematic? only on Pypi?
+how long before the actual release?)
 
-Rapid Feature Releases
-^^^^^^^^^^^^^^^^^^^^^^
+A specific version branch is created with version numbering (e.g. v1.2).
 
-This plan is not meant to exclude the possibility of releases *more* frequent
-than every six months.  Six months should be considered both the maximum and the
-default timeline, but a *shorter* time between releases is allowable, if the
-community agrees it is worthwhile. When/if this happens, the subsequent LTS
-release should be timed such that is at least two years after the last LTS, even
-though that may mean there are more than 3 releases between the LTSs.
+Deprecation
+===========
 
-For example, if a new feature is perceived by the Astropy developer community as
-being of great importance, and is completed only three months after the v1.0
-release, a v1.1 release could occur at that time.  Once that release has
-completed, the release clock is "reset", so v1.2 would be released six months
-after v1.1, even though it is not yet 12 months after v1.0. The next two
-releases would then be v1.3 and v1.4, because v1.4 would only be 21 months after
-v1.0. v2.0 would then either come three months or six months later, depending on
-how much work is planned to be new in v2.0.
+At least one feature release before removing some API?
 
-Releases and backwards compatibility
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Should Gammapy emit a deprecation warning?
 
-As defined here, a "bugfix release" must not break backwards compatibility as
-defined by the public API, and it also should not introduce new major features.
-The exception to this is cases where the API has an actual mistake that needs to
-be fixed, such as a function argument that is missing but was clearly intended
-to be there. Further, a bugfix release *can* include documentation improvements,
-and in the future there may be some sort of "sandbox" package to act as a
-preview or testbed for new additions to come in the next feature release.
+Development workflow
+====================
 
-Feature releases do *not* guarantee backwards compatibility with previous
-releases.  However, all backwards incompatible changes should always be
-mentioned in the release notes for a new version.  Furthermore, when possible, a
-backwards incompatible change should generate an `AstropyDeprecationWarning` for
-at least one feature release version before actually making the change
-permanent, to allow codes to transition to the new interface. A future APE may
-add to or change this with a more concrete policy on when and for how long
-something should be deprecated.
+See astropy release workflow
 
 
-Branches and pull requests
---------------------------
+Support of python Cython, numpy and astropy versions
+====================================================
 
-N/A
+see [APE 18](https://github.com/astropy/astropy-APEs/blob/main/APE18.rst)
+see [NEP 29](https://numpy.org/neps/nep-0029-deprecation_policy.html)
+
 
 
 Implementation
---------------
-
-If this APE is accepted, a few organizational steps will be required:
-
-* The currently under-development version "v0.4" will be the first following
-  the release cycle.  Because v0.3 was released On the last Monday in Nov 2013,
-  the feature freeze and beta for v0.4 will be scheduled for the last Monday in
-  April 2014, With a release at the end of May 2014.  The milestone on GitHub
-  will thus need to be updated to match this.
-* The first LTS release (v1.0) will then come six months after v0.4, so an
-  appropriate milestone will need to be added to GitHub.  Following that,
-  milestones should be added as needed to reflect the versioning scheme
-  described in this APE.
-* The documentation should be updated to mention the existence of LTS releases
-  and make it clear that they come with a promise of two years of bug fixes (as
-  needed). It should also add a link to this APE so that those interested in the
-  numbering scheme can look here for details.
-
-
-Backward compatibility
-----------------------
-
-N/A
+==============
 
 
 Alternatives
-------------
-
-An alternative version numbering scheme mentioned on astropy-dev was to continue
-the current scheme of ``0.x.y``, and simply append `-LTS` for LTS releases. The
-disadvantage of this approach is that the first version number is then rendered
-essentially meaningless.  That is, given its nature as a research library, it is
-unlikely to ever be "feature-complete", and hence there is no clear break point
-for a 1.0 version.  The scheme proposed here simply assigns a different meaning
-to the major version as "number of LTSs since the start of the project".
-
-Another alternative is to use `semantic versioning <http://semver.org/>`_. The
-disadvantage of that approach for Astropy is that it is very likely that *all*
-versions in the foreseeable future will break backwards compatibility to some
-extent.  In semantic versioning, this would mean all versions would need to be
-of the form ``x.0.y``, rendering the minor version number meaningless.
+============
 
 
-Decision rationale
-------------------
 
-There was a fair amount of discussion on  `the GitHub PR
-<https://github.com/astropy/astropy-APEs/pull/2>`_, but mainly specific details,
-rather than objections to the general scheme.  The largest change from the
-original proposal was the addition of the idea that *less than* six month
-releases were acceptable. The above content reflects those suggestions, and the
-APE was accepted 12/10/13, as there were no significant objections from the
-community.
+Decision
+========
