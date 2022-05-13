@@ -80,7 +80,7 @@ Once the environment has been created you can activate it using:
 
 .. code-block:: bash
 
-    $ conda activate gammapy-v0.20
+    $ conda activate gammapy-0.20
 
 You can now proceed to download the Gammapy tutorial notebooks and the example
 datasets. The total size to download is ~180 MB. Select the location where you
