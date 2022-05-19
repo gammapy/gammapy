@@ -169,6 +169,8 @@ def make_map_background_irf(
         coords["offset"] = sky_coord.separation(pointing_radec)
     else:
         if bkg.fov_alignment == FoVAlignment.ALTAZ:
+            if not isinstance(pointing, FixedPointingInfo):
+                raise(TypeError, "make_map_background_irf requires FixedPointingInfo if BackgroundIRF.fov_alignement is ALTAZ")
             altaz_coord = sky_coord.transform_to(pointing.altaz_frame)
 
             # Compute FOV coordinates of map relative to pointing
