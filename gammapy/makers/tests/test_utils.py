@@ -168,9 +168,9 @@ def bkg_3d_custom(symmetry="constant"):
     )
 
 
-def test_map_background_2d(bkg_2d):
+def test_map_background_2d(bkg_2d, fixed_pointing_info):
     axis = MapAxis.from_edges([0.1, 1, 10], name="energy", unit="TeV", interp="log")
-    skydir = SkyCoord("0d", "0d", frame="galactic")
+    skydir = fixed_pointing_info.radec.galactic #SkyCoord("0d", "0d", frame="galactic")
     geom = WcsGeom.create(npix=(3, 3), binsz=4, axes=[axis], skydir=skydir)
 
     bkg = make_map_background_irf(
@@ -180,7 +180,16 @@ def test_map_background_2d(bkg_2d):
         geom=geom,
     )
 
-    assert_allclose(bkg.data[:, 1, 1], [1.807479, 0.183212], rtol=1e-5)
+    assert_allclose(bkg.data[:, 1, 1], [1.807438, 0.183207], rtol=1e-5)
+
+    # Check that function works also passing the FixedPointingInfo
+    bkg_fpi = make_map_background_irf(
+        pointing=fixed_pointing_info,
+        ontime="42 s",
+        bkg=bkg_2d,
+        geom=geom,
+    )
+    assert_allclose(bkg.data, bkg_fpi.data, rtol=1e-5)
 
 
 def make_map_background_irf_with_symmetry(fpi, symmetry="constant"):
