@@ -3,6 +3,7 @@ import logging
 import numpy as np
 from astropy.coordinates import Angle, SkyOffsetFrame
 from astropy.table import Table
+from gammapy.data import FixedPointingInfo
 from gammapy.irf import EDispMap, FoVAlignment, PSFMap
 from gammapy.maps import Map, RegionNDMap
 from gammapy.modeling.models import PowerLawSpectralModel
@@ -150,6 +151,8 @@ def make_map_background_irf(
 
     coords = {"energy": geom.axes["energy"].edges.reshape((-1, 1, 1))}
 
+    pointing_radec = pointing.radec if isinstance(pointing, FixedPointingInfo) else pointing
+
     if not use_region_center:
         image_geom = geom.to_wcs_geom().to_image()
         region_coord, weights = geom.get_wcs_coord_and_weights()
@@ -163,7 +166,7 @@ def make_map_background_irf(
         d_omega = image_geom.solid_angle()
 
     if bkg.has_offset_axis:
-        coords["offset"] = sky_coord.separation(pointing)
+        coords["offset"] = sky_coord.separation(pointing_radec)
     else:
         if bkg.fov_alignment == FoVAlignment.ALTAZ:
             altaz_coord = sky_coord.transform_to(pointing.altaz_frame)
@@ -174,7 +177,7 @@ def make_map_background_irf(
             )
         elif bkg.fov_alignment == FoVAlignment.RADEC:
             # Create OffsetFrame
-            frame = SkyOffsetFrame(origin=pointing.radec)
+            frame = SkyOffsetFrame(origin=pointing_radec)
             pseudo_fov_coord = sky_coord.transform_to(frame)
             fov_lon = pseudo_fov_coord.lon
             fov_lat = pseudo_fov_coord.lat
