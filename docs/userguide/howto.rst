@@ -220,11 +220,12 @@ warning like so:
 
 .. accordion-header::
     :id: collapseHowToSixteen
-    :title: Display progress bar
+    :title: Displaying a progress bar
 
 Gammapy provides the possibility of displaying a `tqdm`
-progress bar to monitor the advancement of time-consuming processes. The
-way to activate this functionality is the following:
+progress bar to monitor the advancement of time-consuming processes. To activate this
+functionality, make sure that `tqdm` is installed and add the following code snippet
+to your code:
 
 .. testcode::
 
