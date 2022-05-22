@@ -107,9 +107,9 @@ class MapEvaluator:
     def needs_update(self):
         """Check whether the model component has drifted away from its support."""
         # TODO: simplify and clean up
-        if not self.contributes:
-            return False
         if isinstance(self.model, TemplateNPredModel):
+            return False
+        if not self.contributes:
             return False
         elif self.exposure is None:
             return True
