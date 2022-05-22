@@ -109,7 +109,7 @@ class MapEvaluator:
         # TODO: simplify and clean up
         if isinstance(self.model, TemplateNPredModel):
             return False
-        if not self.contributes:
+        elif not self.contributes:
             return False
         elif self.exposure is None:
             return True
