@@ -2530,13 +2530,12 @@ class MapDatasetOnOff(MapDataset):
         Acceptance is the average of all acceptances while acceptance OFF
         is taken such that number of excess is preserved in the on_region.
 
-        Effective area is taken from the average exposure divided by the livetime.
-        Here we assume it is the sum of the GTIs.
+        Effective area is taken from the average exposure.
 
         The energy dispersion kernel is obtained at the on_region center.
         Only regions with centers are supported.
 
-        The model is not exported to the ~gammapy.dataset.SpectrumDataset.
+        The models are not exported to the ~gammapy.dataset.SpectrumDatasetOnOff.
         It must be set after the dataset extraction.
 
         Parameters
