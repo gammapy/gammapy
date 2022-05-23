@@ -233,7 +233,7 @@ def test_bkg_3d_wrong_units():
     fov_lat = [0, 1, 2, 3] * u.deg
     fov_lat_axis = MapAxis.from_edges(fov_lat, name="fov_lat")
 
-    wrong_unit = u.cm**2 * u.s
+    wrong_unit = u.cm ** 2 * u.s
     data = np.ones((2, 3, 3)) * wrong_unit
     with pytest.raises(ValueError) as error:
         Background3D(axes=[energy_axis, fov_lon_axis, fov_lat_axis], data=data)
@@ -248,7 +248,7 @@ def test_bkg_2d_wrong_units():
 
     offset_axis = MapAxis.from_edges([0, 1, 2], unit="deg", name="offset")
 
-    wrong_unit = u.cm**2 * u.s
+    wrong_unit = u.cm ** 2 * u.s
     data = np.ones((energy_axis.nbin, offset_axis.nbin)) * wrong_unit
     bkg2d_test = Background2D(axes=[energy_axis, offset_axis])
     with pytest.raises(ValueError) as error:
@@ -390,6 +390,9 @@ def test_plot(bkg_2d):
 
     with mpl_plot_check():
         bkg_2d.peek()
+
+    with mpl_plot_check():
+        bkg_2d.plot_at_energy(energy=[1.0, 5.0] * u.TeV)
 
 
 def test_eq(bkg_2d):
