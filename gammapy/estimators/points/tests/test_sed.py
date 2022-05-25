@@ -373,6 +373,24 @@ def test_run_map_pwl_reoptimize(fpe_map_pwl_reoptimize):
 
 
 @requires_data()
+def test_reoptimize_no_free_parameters(fpe_pwl, fpe_map_pwl, caplog):
+    # test spectra
+    datasets, fpe = fpe_pwl
+    fpe.reoptimize = True
+    fp = fpe.run(datasets)
+    assert "WARNING" in [record.levelname for record in caplog.records]
+    message = "No free parameters to reoptimize. Setting reoptimize to False"
+    assert message in [record.message for record in caplog.records]
+
+    # test map
+    datasets, fpe = fpe_map_pwl
+    fpe.reoptimize = True
+    fpe.selection_optional = None
+    fp = fpe.run(datasets)
+    assert "WARNING" in [record.levelname for record in caplog.records]
+
+
+@requires_data()
 def test_flux_points_estimator_no_norm_scan(fpe_pwl, tmpdir):
     datasets, fpe = fpe_pwl
     fpe.selection_optional = None

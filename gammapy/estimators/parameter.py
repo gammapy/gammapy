@@ -308,6 +308,13 @@ class ParameterEstimator(Estimator):
 
         with datasets.parameters.restore_status():
 
+            if len(datasets.parameters.free_parameters.names) == 1:
+                if self.reoptimize:
+                    log.warning(
+                        f"No free parameters to reoptimize. Setting reoptimize to False"
+                    )
+                    self.reoptimize = False
+
             if not self.reoptimize:
                 datasets.parameters.freeze_all()
                 parameter.frozen = False
