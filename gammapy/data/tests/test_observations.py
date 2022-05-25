@@ -50,22 +50,6 @@ def test_observation_peek(data_store, caplog):
         with mpl_plot_check():
             obs.peek()
 
-        obs.bkg = None
-
-        with mpl_plot_check():
-            obs.peek()
-
-        message = "No background model found for obs 23523."
-        assert message in [record.message for record in caplog.records]
-
-        obs.psf = None
-        with mpl_plot_check():
-            obs.peek()
-
-        assert "WARNING" in [record.levelname for record in caplog.records]
-        message = "No PSF found for obs 23523."
-        assert message in [record.message for record in caplog.records]
-
 
 @requires_data()
 @pytest.mark.parametrize(
