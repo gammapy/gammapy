@@ -100,7 +100,7 @@ Releases
 --------
 
 Each Gammapy release should be associated with an updated list of authors. The list of authors is composed by
-people who contributed as listed in the previous sub-section to the current, and the previous release in
+people who contributed as listed in the previous sub-section to the current, or in the previous release in
 order to account for long contributions (e.g. management of depreciated features, improvement/debugging of features,
 etc). Any additional author can be inserted into the list for its special contribution when requested by the Gammapy
 Coordination Committee.
