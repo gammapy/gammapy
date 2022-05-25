@@ -346,7 +346,7 @@ class Observation:
         checker = ObservationChecker(self)
         return checker.run(checks=checks)
 
-    def peek(self, figsize=(12, 10)):
+    def peek(self, figsize=(15, 10)):
         """Quick-look plots in a few panels.
 
         Parameters
@@ -354,22 +354,26 @@ class Observation:
         figsize : tuple
             Figure size
         """
-        n_irfs = len(self.available_hdus)
+        plot_hdus = self.available_hdus
+        if "gti" in plot_hdus:
+            plot_hdus.remove("gti")
+
+        n_irfs = len(plot_hdus)
 
         fig, axes = plt.subplots(
             nrows=n_irfs // 2,
             ncols=2 + n_irfs % 2,
             figsize=figsize,
-            gridspec_kw={"wspace": 0.25, "hspace": 0.25},
+            gridspec_kw={"wspace": 0.3, "hspace": 0.3},
         )
 
-        axes_dict = dict(zip(self.available_hdus, axes.flatten()))
+        axes_dict = dict(zip(plot_hdus, axes.flatten()))
 
-        if "aeff" in self.available_hdus:
+        if "aeff" in plot_hdus:
             self.aeff.plot(ax=axes_dict["aeff"])
             axes_dict["aeff"].set_title("Effective area")
 
-        if "bkg" in self.available_hdus:
+        if "bkg" in plot_hdus:
             bkg = self.bkg
 
             if not bkg.has_offset_axis:
@@ -377,20 +381,21 @@ class Observation:
 
             bkg.plot(ax=axes_dict["bkg"])
             axes_dict["bkg"].set_title("Background rate")
-        else:
-            logging.warning(f"No background model found for obs {self.obs_id}.")
 
-        if "psf" in self.available_hdus:
+        if "psf" in plot_hdus:
             self.psf.plot_containment_radius_vs_energy(ax=axes_dict["psf"])
             axes_dict["psf"].set_title("Point spread function")
-        else:
-            logging.warning(f"No PSF found for obs {self.obs_id}.")
 
-        if "edisp" in self.available_hdus:
+        if "edisp" in plot_hdus:
             self.edisp.plot_bias(ax=axes_dict["edisp"], add_cbar=True)
             axes_dict["edisp"].set_title("Energy dispersion")
-        else:
-            logging.warning(f"No energy dispersion found for obs {self.obs_id}.")
+
+        if "rad_max" in plot_hdus:
+            self.rad_max.plot_rad_max_vs_energy(ax=axes_dict["rad_max"])
+
+        if "events" in plot_hdus:
+            self.events.plot_image(ax=axes_dict["events"])
+            axes_dict["events"].set_title("Events")
 
     def select_time(self, time_interval):
         """Select a time interval of the observation.
