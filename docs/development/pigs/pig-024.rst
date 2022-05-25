@@ -67,8 +67,8 @@ Definition of a `Contributor`
 
 Contributing to Gammapy can be made in different ways:
 
-- adding or updgrading lines of our Python code,
-- adding or improving the documentation (rst pages, docstring, gammapy-webpage),
+- editing Gammapy source code,
+- editing the documentation (rst pages, docstring, gammapy-webpage),
 - updating or improving our DevOps environment (CI, GitHub configurations, gammapy-docs, release processes, etc),
 - adding or upgrading our associated projects (gammapy-benchmarks, gammapy-data, gammapy-extra, gammapy-cat, gammapy-recipes),
 - contributing to the maintenance of our repositories (conda-forge, PyPI, Zenodo, HAL, docker-hub, etc) or open hub (openhub, etc)
