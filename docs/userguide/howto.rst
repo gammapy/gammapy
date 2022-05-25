@@ -222,7 +222,7 @@ warning like so:
     :id: collapseHowToSixteen
     :title: Displaying a progress bar
 
-Gammapy provides the possibility of displaying a `tqdm`
+Gammapy provides the possibility of displaying a 
 progress bar to monitor the advancement of time-consuming processes. To activate this
 functionality, make sure that `tqdm` is installed and add the following code snippet
 to your code:
