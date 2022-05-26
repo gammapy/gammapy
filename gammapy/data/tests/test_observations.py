@@ -41,14 +41,21 @@ def test_observation(data_store):
 
 
 @requires_data()
-def test_observation_peek(data_store, caplog):
-    with caplog.at_level(logging.WARNING):
-        obs = Observation.read(
-            "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz"
-        )
+def test_observation_peek(data_store):
 
-        with mpl_plot_check():
-            obs.peek()
+    obs = Observation.read(
+        "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz"
+    )
+
+    with mpl_plot_check():
+        obs.peek()
+
+    obs_with_radmax = Observation.read(
+        "$GAMMAPY_DATA/magic/rad_max/data/20131004_05029747_DL3_CrabNebula-W0.40+035.fits"
+    )
+
+    with mpl_plot_check():
+        obs_with_radmax.peek()
 
 
 @requires_data()

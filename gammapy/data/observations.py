@@ -354,9 +354,10 @@ class Observation:
         figsize : tuple
             Figure size
         """
-        plot_hdus = self.available_hdus
-        if "gti" in plot_hdus:
-            plot_hdus.remove("gti")
+
+        plottable_hds = ["events", "aeff", "psf", "edisp", "bkg", "rad_max"]
+
+        plot_hdus = list(set(self.available_hdus) & set(plottable_hds))
 
         n_irfs = len(plot_hdus)
 
