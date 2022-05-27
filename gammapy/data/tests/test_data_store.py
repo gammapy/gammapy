@@ -285,7 +285,7 @@ def test_data_store_required_irf_pointlike_fixed_rad_max():
     assert len(obs) == 1
     assert u.allclose(obs[0].rad_max.quantity, np.sqrt(0.02) * u.deg)
 
-    obs = store.get_observations([5029748], required_irf=['aeff', 'edisp', 'rad_max'])
+    obs = store.get_observations([5029748], required_irf=['aeff', 'edisp'])
     assert len(obs) == 1
     assert u.allclose(obs[0].rad_max.quantity, np.sqrt(0.02) * u.deg)
 

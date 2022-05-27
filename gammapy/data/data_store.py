@@ -14,11 +14,16 @@ from .observations import Observation, ObservationChecker, Observations
 
 __all__ = ["DataStore"]
 
+ALL_IRFS = ["aeff", "edisp", "psf", "bkg", "rad_max"]
+ALL_HDUS = ["events", "gti"] + ALL_IRFS
 REQUIRED_IRFS = {
-    "full-enclosure": ["aeff", "edisp", "psf", "bkg"],
-    "point-like": ["aeff", "edisp"],
-    "all-optional": ["aeff", "edisp", "psf", "bkg", "rad_max"],
+    "full-enclosure": {"aeff", "edisp", "psf", "bkg"},
+    "point-like": {"aeff", "edisp"},
+    "all-optional": {},
 }
+
+class MissingRequiredHDU(IOError):
+    pass
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
@@ -284,15 +289,29 @@ class DataStore:
 
         kwargs = {"obs_id": int(obs_id)}
 
-        if required_irf == "full-enclosure":
-            hdus = ["events", "gti", "aeff", "edisp", "psf", "bkg"]
-        elif required_irf == "point-like":
-            hdus = ["events", "gti", "aeff", "edisp"]
-        else:
-            hdus = ["events", "gti"] + required_irf
+        # check for the "short forms"
+        if isinstance(required_irf, str):
+            required_irf = REQUIRED_IRFS[required_irf]
 
-        for hdu in hdus:
-            kwargs[hdu] = self.hdu_table.hdu_location(obs_id=obs_id, hdu_type=hdu)
+        if not set(required_irf).issubset(ALL_IRFS):
+            difference = set(required_irf).difference(ALL_IRFS)
+            raise ValueError(
+                f"{difference} is not a valid hdu key. Choose from: {ALL_IRFS}"
+            )
+
+        required_hdus = {"event", "gti"}.union(required_irf)
+
+        for hdu in ALL_HDUS:
+            hdu_location = self.hdu_table.hdu_location(
+                obs_id=obs_id, hdu_type=hdu, warn_missing=False,
+            )
+            if hdu_location is not None:
+                kwargs[hdu] = hdu_location
+            else:
+                if hdu in required_hdus:
+                    raise MissingRequiredHDU(
+                        f"Required HDU {hdu} not found in observation {obs_id}"
+                    )
 
         return Observation(**kwargs)
 
@@ -335,18 +354,6 @@ class DataStore:
             Container holding a list of `~gammapy.data.Observation`
         """
 
-        all_hdu = REQUIRED_IRFS["all-optional"]
-        is_all_optional = required_irf == "all-optional"
-
-        if isinstance(required_irf, str) and required_irf in REQUIRED_IRFS.keys():
-            required_irf = REQUIRED_IRFS[required_irf]
-
-        if not set(required_irf).issubset(all_hdu):
-            difference = set(required_irf).difference(all_hdu)
-            raise ValueError(
-                f"{difference} is not a valid hdu key. Choose from: {all_hdu}"
-            )
-
         if obs_id is None:
             obs_id = self.obs_ids
 
@@ -361,11 +368,12 @@ class DataStore:
                     continue
                 else:
                     raise err
+            except MissingRequiredHDU as e:
+                log.warning(f"Skipping run with missing HDUs; {e}")
+                continue
 
-            if is_all_optional or set(required_irf).issubset(obs.available_hdus):
-                obs_list.append(obs)
-            else:
-                log.warning(f"Skipping run with missing HDUs; obs_id: {_!r}")
+            obs_list.append(obs)
+
         log.info(f"Observations selected: {len(obs_list)} out of {len(obs_id)}.")
         return Observations(obs_list)
 
