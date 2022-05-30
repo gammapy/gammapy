@@ -217,3 +217,19 @@ warning like so:
         # do stuff here
 
 .. accordion-footer::
+
+.. accordion-header::
+    :id: collapseHowToSixteen
+    :title: Displaying a progress bar
+
+Gammapy provides the possibility of displaying a 
+progress bar to monitor the advancement of time-consuming processes. To activate this
+functionality, make sure that `tqdm` is installed and add the following code snippet
+to your code:
+
+.. testcode::
+
+    from gammapy.utils import pbar
+    pbar.SHOW_PROGRESS_BAR = True
+
+.. accordion-footer::
