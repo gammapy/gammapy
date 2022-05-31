@@ -126,7 +126,7 @@ class ParameterEstimator(Estimator):
             # compute ts value
             parameter.value = self.null_value
 
-            if self.reoptimize:
+            if self._reoptimize:
                 parameter.frozen = True
                 _ = self.fit.optimize(datasets=datasets)
 
@@ -167,7 +167,7 @@ class ParameterEstimator(Estimator):
             datasets=datasets,
             parameter=parameter,
             sigma=self.n_sigma,
-            reoptimize=self.reoptimize,
+            reoptimize=self._reoptimize,
         )
 
         return {
@@ -204,7 +204,7 @@ class ParameterEstimator(Estimator):
         self.fit.optimize(datasets=datasets)
 
         profile = self.fit.stat_profile(
-            datasets=datasets, parameter=parameter, reoptimize=self.reoptimize
+            datasets=datasets, parameter=parameter, reoptimize=self._reoptimize
         )
 
         return {
@@ -238,7 +238,7 @@ class ParameterEstimator(Estimator):
             datasets=datasets,
             parameter=parameter,
             sigma=self.n_sigma_ul,
-            reoptimize=self.reoptimize,
+            reoptimize=self._reoptimize,
         )
         return {f"{parameter.name}_ul": res["errp"] + parameter.value}
 
@@ -308,14 +308,16 @@ class ParameterEstimator(Estimator):
 
         with datasets.parameters.restore_status():
 
+            self._reoptimize = self.reoptimize
+
             if len(datasets.parameters.free_parameters.names) == 1:
                 if self.reoptimize:
                     log.warning(
                         f"No free parameters to reoptimize. Setting reoptimize to False"
                     )
-                    self.reoptimize = False
+                self._reoptimize = False
 
-            if not self.reoptimize:
+            if not self._reoptimize:
                 datasets.parameters.freeze_all()
                 parameter.frozen = False
 

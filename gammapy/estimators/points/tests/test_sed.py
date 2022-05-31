@@ -381,6 +381,7 @@ def test_reoptimize_no_free_parameters(fpe_pwl, caplog):
     assert "WARNING" in [record.levelname for record in caplog.records]
     message = "No free parameters to reoptimize. Setting reoptimize to False"
     assert message in [record.message for record in caplog.records]
+    assert fpe.reoptimize is True
 
 
 @requires_data()
