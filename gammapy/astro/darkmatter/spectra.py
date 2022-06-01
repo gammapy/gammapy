@@ -22,7 +22,7 @@ class PrimaryFlux:
 
     References
     ----------
-    * `2011JCAP...03..051 <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051>`_
+    * `2011JCAP...03..051 <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
     * Cirelli et al (2016): http://www.marcocirelli.net/PPPC4DMID.html
     """
 
