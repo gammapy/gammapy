@@ -301,17 +301,21 @@ class DataStore:
 
         required_hdus = {"event", "gti"}.union(required_irf)
 
+        missing_hdus = []
         for hdu in ALL_HDUS:
             hdu_location = self.hdu_table.hdu_location(
                 obs_id=obs_id, hdu_type=hdu, warn_missing=False,
             )
             if hdu_location is not None:
                 kwargs[hdu] = hdu_location
-            else:
-                if hdu in required_hdus:
-                    raise MissingRequiredHDU(
-                        f"Required HDU {hdu} not found in observation {obs_id}"
-                    )
+            elif hdu in required_hdus:
+                missing_hdus.append(hdu)
+
+
+        if len(missing_hdus) > 0:
+            raise MissingRequiredHDU(
+                f"Required HDUs {missing_hdus} not found in observation {obs_id}"
+            )
 
         return Observation(**kwargs)
 
