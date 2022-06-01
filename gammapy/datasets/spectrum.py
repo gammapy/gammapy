@@ -205,10 +205,13 @@ class PlotMixin:
         kwargs_excess = kwargs_excess or {}
         kwargs_npred_signal = kwargs_npred_signal or {}
 
+        # Determine the uncertainty on yerr
+        yerr = (-self._counts_statistic.compute_errn(), self._counts_statistic.compute_errp())
+
         plot_kwargs = kwargs.copy()
         plot_kwargs.update(kwargs_excess)
         plot_kwargs.setdefault("label", "Excess counts")
-        ax = self.excess.plot(ax, yerr=np.sqrt(np.abs(self.excess.data)), **plot_kwargs)
+        ax = self.excess.plot(ax, yerr=yerr, **plot_kwargs)
 
         plot_kwargs = kwargs.copy()
         plot_kwargs.update(kwargs_npred_signal)
