@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 from gammapy.utils.scripts import make_path
