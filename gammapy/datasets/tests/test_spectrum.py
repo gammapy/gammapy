@@ -502,12 +502,6 @@ class TestSpectrumOnOff:
         with mpl_plot_check():
             dataset.plot_fit()
 
-    def test_plot_off_regions(self):
-        from gammapy.visualization import plot_spectrum_datasets_off_regions
-
-        with mpl_plot_check():
-            plot_spectrum_datasets_off_regions([self.dataset])
-
     def test_to_from_ogip_files(self, tmp_path):
         dataset = self.dataset.copy(name="test")
         dataset.write(tmp_path / "test.fits")
