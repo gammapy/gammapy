@@ -360,43 +360,51 @@ class Observation:
         plot_hdus = list(set(self.available_hdus) & set(plottable_hds))
 
         n_irfs = len(plot_hdus)
+        nrows = n_irfs // 2
+        ncols = 2 + n_irfs % 2
 
         fig, axes = plt.subplots(
-            nrows=n_irfs // 2,
-            ncols=2 + n_irfs % 2,
+            nrows=nrows,
+            ncols=ncols,
             figsize=figsize,
             gridspec_kw={"wspace": 0.3, "hspace": 0.3},
         )
 
-        axes_dict = dict(zip(plot_hdus, axes.flatten()))
+        for idx in range(nrows * ncols):
+            ax = axes.flat[idx]
+            try:
+                if plot_hdus[idx] == "aeff":
+                    self.aeff.plot(ax=ax)
+                    ax.set_title("Effective area")
 
-        if "aeff" in plot_hdus:
-            self.aeff.plot(ax=axes_dict["aeff"])
-            axes_dict["aeff"].set_title("Effective area")
+                if plot_hdus[idx] == "bkg":
+                    bkg = self.bkg
+                    if not bkg.has_offset_axis:
+                        bkg = bkg.to_2d()
+                    bkg.plot(ax=ax)
+                    ax.set_title("Background rate")
 
-        if "bkg" in plot_hdus:
-            bkg = self.bkg
+                if plot_hdus[idx] == "psf":
+                    self.psf.plot_containment_radius_vs_energy(ax=ax)
+                    ax.set_title("Point spread function")
 
-            if not bkg.has_offset_axis:
-                bkg = bkg.to_2d()
+                if plot_hdus[idx] == "edisp":
+                    self.edisp.plot_bias(ax=ax, add_cbar=True)
+                    ax.set_title("Energy dispersion")
 
-            bkg.plot(ax=axes_dict["bkg"])
-            axes_dict["bkg"].set_title("Background rate")
+                if plot_hdus[idx] == "rad_max":
+                    self.rad_max.plot_rad_max_vs_energy(ax=ax)
+                    ax.set_title("Rad max")
 
-        if "psf" in plot_hdus:
-            self.psf.plot_containment_radius_vs_energy(ax=axes_dict["psf"])
-            axes_dict["psf"].set_title("Point spread function")
-
-        if "edisp" in plot_hdus:
-            self.edisp.plot_bias(ax=axes_dict["edisp"], add_cbar=True)
-            axes_dict["edisp"].set_title("Energy dispersion")
-
-        if "rad_max" in plot_hdus:
-            self.rad_max.plot_rad_max_vs_energy(ax=axes_dict["rad_max"])
-
-        if "events" in plot_hdus:
-            self.events.plot_image(ax=axes_dict["events"])
-            axes_dict["events"].set_title("Events")
+                if plot_hdus[idx] == "events":
+                    m = self.events._counts_image(allsky=False)
+                    ax.remove()
+                    ax = fig.add_subplot(nrows, ncols, idx + 1, projection=m.geom.wcs)
+                    m.plot(ax=ax, stretch="sqrt", vmin=0, add_cbar=True)
+                    ax.set_title("Events")
+            except IndexError:
+                ax.set_visible(False)
+                continue
 
     def select_time(self, time_interval):
         """Select a time interval of the observation.
