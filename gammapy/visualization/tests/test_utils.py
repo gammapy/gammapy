@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
+from numpy.testing import assert_allclose
 from astropy.table import Table
 import matplotlib.pyplot as plt
 from gammapy.utils.testing import mpl_plot_check
@@ -41,7 +42,9 @@ def test_plot_spectrum_datasets_off_regions():
         ax=ax, datasets=[dataset_1, dataset_2, dataset_3]
     )
 
-
+    assert_allclose(ax.patches[0].get_edgecolor(), (0.121569, 0.466667, 0.705882, 1.), rtol=1e-2)
+    assert_allclose(ax.patches[2].get_edgecolor(), (1., 0.498039, 0.054902, 1.), rtol=1e-2)
+    assert ax.lines[0].get_color() == "green"
 
 
 def test_map_panel_plotter():

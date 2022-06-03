@@ -12,6 +12,7 @@ __all__ = [
 
 
 ARTIST_TO_LINE_PROPERTIES = {
+    "color": "markeredgecolor",
     "edgecolor": "markeredgecolor",
     "ec": "markeredgecolor",
     "facecolor": "markerfacecolor",
@@ -84,12 +85,13 @@ def plot_spectrum_datasets_off_regions(
     handles, labels = [], []
 
     prop_cycle = kwargs.pop("prop_cycle", plt.rcParams["axes.prop_cycle"])
-    plot_kwargs = kwargs.copy()
-    plot_kwargs["facecolor"] = "None"
 
     for props, dataset in zip(prop_cycle(), datasets):
-        plot_kwargs["edgecolor"] = props.pop("color")
+        plot_kwargs = kwargs.copy()
+        plot_kwargs["facecolor"] = "None"
+        plot_kwargs.setdefault("edgecolor", props.pop("color"))
         plot_kwargs.update(props)
+        
         dataset.counts_off.plot_region(ax, **plot_kwargs)
 
         # create proxy artist for the custom legend
@@ -118,6 +120,8 @@ def plot_spectrum_datasets_off_regions(
         legend_kwargs.setdefault("handletextpad", 0.5)
         legend_kwargs["handler_map"] = {Patch: patch_handler, tuple: tuple_handler}
         ax.legend(handles, labels, **legend_kwargs)
+
+    return ax
 
 
 def plot_contour_line(ax, x, y, **kwargs):
