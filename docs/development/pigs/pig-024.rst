@@ -68,8 +68,8 @@ Contributing to Gammapy can be made in different ways:
 
 - contributing to gammapy source code,
 - contributing to our documentation (rst pages, docstring, gammapy-webpage),
-- contributing to our DevOps environment (CI, GitHub configurations, gammapy-docs, release processes, etc),
-- contributing to our associated projects (gammapy-benchmarks, gammapy-data, gammapy-extra, gammapy-cat, gammapy-recipes),
+- contributing to our DevOps environment (CI, docs and package deployment, GitHub configuration, etc),
+- contributing to our associated projects (gammapy-benchmarks, gammapy-data, gammapy-extra),
 - contributing to the maintenance of our repositories (conda-forge, PyPI, Zenodo, HAL, docker-hub, etc) or open hub (openhub, etc),
 - leading the precise tasks identified by the Lead Developers,
 - organizing and leading hands-on sessions or schools,
@@ -83,8 +83,6 @@ Any contribution on these topics renders the user as an official Gammapy contrib
     `ORCID <https://orcid.org/>`_ identifier and store it into your GitHub user profile, and inform the developers
     of any change of affiliation.
 
-As Gammapy is an open project, we encourage users to provide feedback on the usage of Gammapy, on features, on issues
-via our communication channels.
 
 Definition of the `Maintainer`
 ------------------------------
@@ -159,7 +157,8 @@ D/ Acknowledgement
 
 One has the freedom to precisely mention acknowledgements associated with the publication. 
 In practice, it is recommended to precise the grants or fellowships given to some authors.
-One should in any case always acknowledge the Astropy project, to which we are affiliated.
+One should in any case always acknowledge the astropy project, to which we are affiliated, and the librairies
+numpy, scipy, matplotlib, iminuit.
 
 Contributions in conferences
 -----------------------------
@@ -206,6 +205,9 @@ that the authors' order follows these rules. In this case, integration within a 
 Finally, a second script located in the gammapy-webpage repository should be settled in order to create the list of
 contributors in HTML format for the `team` web page. This script would read one of the metadata files (e.g.
 ``citation.cff``) to create such list.
+
+Concerning the contributions to conferences, their handling should be realised properly in a repository under the Gammapy organisation.
+
 
 6. Suggestions
 ==============
