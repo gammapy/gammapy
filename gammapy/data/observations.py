@@ -19,6 +19,7 @@ from .event_list import EventList, EventListChecker
 from .filters import ObservationFilter
 from .gti import GTI
 from .pointing import FixedPointingInfo
+from itertools import zip_longest
 
 __all__ = ["Observation", "Observations"]
 
@@ -357,7 +358,8 @@ class Observation:
 
         plottable_hds = ["events", "aeff", "psf", "edisp", "bkg", "rad_max"]
 
-        plot_hdus = list(set(self.available_hdus) & set(plottable_hds))
+        plot_hdus = list(set(plottable_hds) & set(self.available_hdus))
+        plot_hdus.sort()
 
         n_irfs = len(plot_hdus)
         nrows = n_irfs // 2
@@ -370,41 +372,39 @@ class Observation:
             gridspec_kw={"wspace": 0.3, "hspace": 0.3},
         )
 
-        for idx in range(nrows * ncols):
-            ax = axes.flat[idx]
-            try:
-                if plot_hdus[idx] == "aeff":
-                    self.aeff.plot(ax=ax)
-                    ax.set_title("Effective area")
+        for idx, (ax, name) in enumerate(zip_longest(axes.flat, plot_hdus)):
+            if name == "aeff":
+                self.aeff.plot(ax=ax)
+                ax.set_title("Effective area")
 
-                if plot_hdus[idx] == "bkg":
-                    bkg = self.bkg
-                    if not bkg.has_offset_axis:
-                        bkg = bkg.to_2d()
-                    bkg.plot(ax=ax)
-                    ax.set_title("Background rate")
+            if name == "bkg":
+                bkg = self.bkg
+                if not bkg.has_offset_axis:
+                    bkg = bkg.to_2d()
+                bkg.plot(ax=ax)
+                ax.set_title("Background rate")
 
-                if plot_hdus[idx] == "psf":
-                    self.psf.plot_containment_radius_vs_energy(ax=ax)
-                    ax.set_title("Point spread function")
+            if name == "psf":
+                self.psf.plot_containment_radius_vs_energy(ax=ax)
+                ax.set_title("Point spread function")
 
-                if plot_hdus[idx] == "edisp":
-                    self.edisp.plot_bias(ax=ax, add_cbar=True)
-                    ax.set_title("Energy dispersion")
+            if name == "edisp":
+                self.edisp.plot_bias(ax=ax, add_cbar=True)
+                ax.set_title("Energy dispersion")
 
-                if plot_hdus[idx] == "rad_max":
-                    self.rad_max.plot_rad_max_vs_energy(ax=ax)
-                    ax.set_title("Rad max")
+            if name == "rad_max":
+                self.rad_max.plot_rad_max_vs_energy(ax=ax)
+                ax.set_title("Rad max")
 
-                if plot_hdus[idx] == "events":
-                    m = self.events._counts_image(allsky=False)
-                    ax.remove()
-                    ax = fig.add_subplot(nrows, ncols, idx + 1, projection=m.geom.wcs)
-                    m.plot(ax=ax, stretch="sqrt", vmin=0, add_cbar=True)
-                    ax.set_title("Events")
-            except IndexError:
+            if name == "events":
+                m = self.events._counts_image(allsky=False)
+                ax.remove()
+                ax = fig.add_subplot(nrows, ncols, idx + 1, projection=m.geom.wcs)
+                m.plot(ax=ax, stretch="sqrt", vmin=0, add_cbar=True)
+                ax.set_title("Events")
+
+            if name is None:
                 ax.set_visible(False)
-                continue
 
     def select_time(self, time_interval):
         """Select a time interval of the observation.
