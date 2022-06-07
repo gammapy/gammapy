@@ -1979,11 +1979,12 @@ class NaimaSpectralModel(SpectralModel):
     tag = ["NaimaSpectralModel", "naima"]
 
     def __init__(
-        self, radiative_model, distance=1.0 * u.kpc, seed=None, nested_models=None
+        self, radiative_model, distance=1.0 * u.kpc, seed=None, nested_models=None, use_cache=False
     ):
         import naima
 
         self.radiative_model = radiative_model
+        self.radiative_model._memoize = use_cache
         self.distance = u.Quantity(distance)
         self.seed = seed
 
