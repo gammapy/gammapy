@@ -75,7 +75,7 @@ def scale_plot_flux(flux, energy_power=0):
     except IndexError:
         eunit = energy.unit
     y = flux * np.power(energy, energy_power)
-    return y.to_unit(flux.unit * eunit**energy_power)
+    return y.to_unit(flux.unit * eunit ** energy_power)
 
 
 def integrate_spectrum(func, energy_min, energy_max, ndecade=100):
@@ -323,7 +323,7 @@ class SpectralModel(ModelBase):
             "ref_dnde": self(energy),
             "ref_flux": self.integral(energy_min, energy_max),
             "ref_eflux": self.energy_flux(energy_min, energy_max),
-            "ref_e2dnde": self(energy) * energy**2,
+            "ref_e2dnde": self(energy) * energy ** 2,
         }
 
     def _get_plot_flux(self, energy, sed_type):
@@ -334,7 +334,7 @@ class SpectralModel(ModelBase):
             flux.quantity, flux_err.quantity = self.evaluate_error(energy.center)
 
         elif sed_type == "e2dnde":
-            flux.quantity, flux_err.quantity = energy.center**2 * self.evaluate_error(
+            flux.quantity, flux_err.quantity = energy.center ** 2 * self.evaluate_error(
                 energy.center
             )
 
@@ -403,14 +403,10 @@ class SpectralModel(ModelBase):
             sed_type = "norm"
 
         energy_min, energy_max = energy_bounds
-        energy = MapAxis.from_energy_bounds(
-            energy_min,
-            energy_max,
-            n_points,
-        )
+        energy = MapAxis.from_energy_bounds(energy_min, energy_max, n_points,)
 
         if ax.yaxis.units is None:
-            ax.yaxis.set_units(DEFAULT_UNIT[sed_type] * energy.unit**energy_power)
+            ax.yaxis.set_units(DEFAULT_UNIT[sed_type] * energy.unit ** energy_power)
 
         flux, _ = self._get_plot_flux(sed_type=sed_type, energy=energy)
 
@@ -475,18 +471,14 @@ class SpectralModel(ModelBase):
             sed_type = "norm"
 
         energy_min, energy_max = energy_bounds
-        energy = MapAxis.from_energy_bounds(
-            energy_min,
-            energy_max,
-            n_points,
-        )
+        energy = MapAxis.from_energy_bounds(energy_min, energy_max, n_points,)
 
         kwargs.setdefault("facecolor", "black")
         kwargs.setdefault("alpha", 0.2)
         kwargs.setdefault("linewidth", 0)
 
         if ax.yaxis.units is None:
-            ax.yaxis.set_units(DEFAULT_UNIT[sed_type] * energy.unit**energy_power)
+            ax.yaxis.set_units(DEFAULT_UNIT[sed_type] * energy.unit ** energy_power)
 
         flux, flux_err = self._get_plot_flux(sed_type=sed_type, energy=energy)
         y_lo = scale_plot_flux(flux - flux_err, energy_power).quantity[:, 0, 0]
@@ -745,7 +737,7 @@ class PowerLawSpectralModel(SpectralModel):
         """
         val = -1 * index + 2
 
-        prefactor = amplitude * reference**2 / val
+        prefactor = amplitude * reference ** 2 / val
         upper = (energy_max / reference) ** val
         lower = (energy_min / reference) ** val
         energy_flux = prefactor * (upper - lower)
@@ -756,7 +748,7 @@ class PowerLawSpectralModel(SpectralModel):
             # see https://www.wolframalpha.com/input/?i=a+*+x+*+(x%2Fb)+%5E+(-2)
             # for reference
             energy_flux[mask] = (
-                amplitude * reference**2 * np.log(energy_max / energy_min)[mask]
+                amplitude * reference ** 2 * np.log(energy_max / energy_min)[mask]
             )
 
         return energy_flux
@@ -786,7 +778,7 @@ class PowerLawSpectralModel(SpectralModel):
         reference = self.reference.quantity
         amplitude = self.amplitude.quantity
         cov_index_ampl = self.covariance.data[0, 1] * amplitude.unit
-        return reference * np.exp(cov_index_ampl / (amplitude * index_err**2))
+        return reference * np.exp(cov_index_ampl / (amplitude * index_err ** 2))
 
 
 class PowerLawNormSpectralModel(SpectralModel):
@@ -838,7 +830,7 @@ class PowerLawNormSpectralModel(SpectralModel):
         """Evaluate the energy flux (static function)"""
         val = -1 * tilt + 2
 
-        prefactor = norm * reference**2 / val
+        prefactor = norm * reference ** 2 / val
         upper = (energy_max / reference) ** val
         lower = (energy_min / reference) ** val
         energy_flux = prefactor * (upper - lower)
@@ -849,7 +841,7 @@ class PowerLawNormSpectralModel(SpectralModel):
             # see https://www.wolframalpha.com/input/?i=a+*+x+*+(x%2Fb)+%5E+(-2)
             # for reference
             energy_flux[mask] = (
-                norm * reference**2 * np.log(energy_max / energy_min)[mask]
+                norm * reference ** 2 * np.log(energy_max / energy_min)[mask]
             )
 
         return energy_flux
@@ -879,7 +871,7 @@ class PowerLawNormSpectralModel(SpectralModel):
         reference = self.reference.quantity
         norm = self.norm.quantity
         cov_tilt_norm = self.covariance.data[0, 1] * norm.unit
-        return reference * np.exp(cov_tilt_norm / (norm * tilt_err**2))
+        return reference * np.exp(cov_tilt_norm / (norm * tilt_err ** 2))
 
 
 class PowerLaw2SpectralModel(SpectralModel):
@@ -1367,8 +1359,8 @@ class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
         pwl = amplitude * (energy / reference) ** (-index_1)
         cutoff = np.exp(
             expfactor
-            / reference.unit**index_2
-            * (reference**index_2 - energy**index_2)
+            / reference.unit ** index_2
+            * (reference ** index_2 - energy ** index_2)
         )
         return pwl * cutoff
 
@@ -1411,13 +1403,13 @@ class SuperExpCutoffPowerLaw4FGLDR3SpectralModel(SpectralModel):
         # https://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/source_models.html#PLSuperExpCutoff4
         pwl = amplitude * (energy / reference) ** (-index_1)
         cutoff = (energy / reference) ** (expfactor / index_2) * np.exp(
-            expfactor / index_2**2 * (1 - (energy / reference) ** index_2)
+            expfactor / index_2 ** 2 * (1 - (energy / reference) ** index_2)
         )
 
         mask = np.abs(index_2 * np.log(energy / reference)) < 1e-2
         ln_ = np.log(energy[mask] / reference)
         power = expfactor * (
-            ln_ / 2.0 + index_2 / 6.0 * ln_**2.0 + index_2**2.0 / 24.0 * ln_**3
+            ln_ / 2.0 + index_2 / 6.0 * ln_ ** 2.0 + index_2 ** 2.0 / 24.0 * ln_ ** 3
         )
         cutoff[mask] = (energy[mask] / reference) ** power
         return pwl * cutoff
@@ -1547,11 +1539,7 @@ class TemplateSpectralModel(SpectralModel):
     tag = ["TemplateSpectralModel", "template"]
 
     def __init__(
-        self,
-        energy,
-        values,
-        interp_kwargs=None,
-        meta=None,
+        self, energy, values, interp_kwargs=None, meta=None,
     ):
         self.energy = energy
         self.values = u.Quantity(values, copy=False)
@@ -1979,7 +1967,12 @@ class NaimaSpectralModel(SpectralModel):
     tag = ["NaimaSpectralModel", "naima"]
 
     def __init__(
-        self, radiative_model, distance=1.0 * u.kpc, seed=None, nested_models=None, use_cache=False
+        self,
+        radiative_model,
+        distance=1.0 * u.kpc,
+        seed=None,
+        nested_models=None,
+        use_cache=False,
     ):
         import naima
 
@@ -2050,8 +2043,7 @@ class NaimaSpectralModel(SpectralModel):
         return self.radiative_model.particle_distribution
 
     def _evaluate_ssc(
-        self,
-        energy,
+        self, energy,
     ):
         """
         Compute photon density spectrum from synchrotron emission for synchrotron self-compton model,
@@ -2065,7 +2057,7 @@ class NaimaSpectralModel(SpectralModel):
         Lsy = self.ssc_model.flux(
             self.ssc_energy, distance=0 * u.cm
         )  # use distance 0 to get luminosity
-        phn_sy = Lsy / (4 * np.pi * self.radius.quantity**2 * const.c) * 2.24
+        phn_sy = Lsy / (4 * np.pi * self.radius.quantity ** 2 * const.c) * 2.24
         # The factor 2.24 comes from the assumption on uniform synchrotron
         # emissivity inside a sphere
 
@@ -2117,7 +2109,7 @@ class NaimaSpectralModel(SpectralModel):
             dnde = self.radiative_model.flux(energy.flatten(), distance=self.distance)
 
         dnde = dnde.reshape(energy.shape)
-        unit = 1 / (energy.unit * u.cm**2 * u.s)
+        unit = 1 / (energy.unit * u.cm ** 2 * u.s)
         return dnde.to(unit)
 
     def to_dict(self, full_output=True):
@@ -2164,7 +2156,7 @@ class GaussianSpectralModel(SpectralModel):
         return (
             amplitude
             / (sigma * np.sqrt(2 * np.pi))
-            * np.exp(-((energy - mean) ** 2) / (2 * sigma**2))
+            * np.exp(-((energy - mean) ** 2) / (2 * sigma ** 2))
         )
 
     def integral(self, energy_min, energy_max, **kwargs):
@@ -2215,6 +2207,6 @@ class GaussianSpectralModel(SpectralModel):
         ).to_value("")
         a = self.amplitude.quantity * self.sigma.quantity / np.sqrt(2 * np.pi)
         b = self.amplitude.quantity * self.mean.quantity / 2
-        return a * (np.exp(-(u_min**2)) - np.exp(-(u_max**2))) + b * (
+        return a * (np.exp(-(u_min ** 2)) - np.exp(-(u_max ** 2))) + b * (
             scipy.special.erf(u_max) - scipy.special.erf(u_min)
         )
