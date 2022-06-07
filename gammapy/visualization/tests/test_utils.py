@@ -44,7 +44,7 @@ def test_plot_spectrum_datasets_off_regions():
 
     assert_allclose(ax.patches[0].get_edgecolor(), (0.121569, 0.466667, 0.705882, 1.), rtol=1e-2)
     assert_allclose(ax.patches[2].get_edgecolor(), (1., 0.498039, 0.054902, 1.), rtol=1e-2)
-    assert ax.lines[0].get_color() == "green"
+    assert ax.lines[0].get_color() in ["green", "C0"]
 
 
 def test_map_panel_plotter():
