@@ -836,7 +836,7 @@ class TestNaimaModel:
         with pytest.raises(NotImplementedError):
             NaimaSpectralModel.from_parameters(model.parameters)
 
-    def test_cache_on(self):
+    def test_cache(self):
         import naima
 
         particle_distribution = naima.models.ExponentialCutoffPowerLaw(
@@ -847,21 +847,19 @@ class TestNaimaModel:
             seed_photon_fields=["CMB", ["FIR", 26.5 * u.K, 0.415 * u.eV / u.cm ** 3]],
             Eemin=100 * u.GeV,
         )
-
         model = NaimaSpectralModel(radiative_model, distance=1.5 * u.kpc)
 
         opts = {
             "energy_bounds": [10 * u.GeV, 80 * u.TeV],
             "sed_type": "e2dnde",
         }
-        # Plot the total inverse Compton emission
         model.plot(label="IC (total)", **opts)
-        # Plot the separate contributions from each seed photon field
         for seed, ls in zip(["CMB", "FIR"], ["-", "--"]):
             model = NaimaSpectralModel(radiative_model, seed=seed, distance=1.5 * u.kpc)
             model.plot(label=f"IC ({seed})", ls=ls, color="gray", **opts)
 
         skymodel = SkyModel(model)
+        # fail if cache is on :
         skymodel.spectral_model.plot(
             energy_bounds=[10 * u.GeV, 80 * u.TeV], energy_power=2
         )
