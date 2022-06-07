@@ -29,6 +29,7 @@ from gammapy.modeling.models import (
     SuperExpCutoffPowerLaw4FGLSpectralModel,
     TemplateNDSpectralModel,
     TemplateSpectralModel,
+    SkyModel,
 )
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import (
@@ -837,6 +838,35 @@ class TestNaimaModel:
             NaimaSpectralModel.from_dict(model.to_dict())
         with pytest.raises(NotImplementedError):
             NaimaSpectralModel.from_parameters(model.parameters)
+
+    def test_cache(self):
+        import naima
+
+        particle_distribution = naima.models.ExponentialCutoffPowerLaw(
+            1e30 / u.eV, 10 * u.TeV, 3.0, 30 * u.TeV
+        )
+        radiative_model = naima.radiative.InverseCompton(
+            particle_distribution,
+            seed_photon_fields=["CMB", ["FIR", 26.5 * u.K, 0.415 * u.eV / u.cm**3]],
+            Eemin=100 * u.GeV,
+        )
+        model = NaimaSpectralModel(radiative_model, distance=1.5 * u.kpc)
+
+        opts = {
+            "energy_bounds": [10 * u.GeV, 80 * u.TeV],
+            "sed_type": "e2dnde",
+        }
+        model.plot(label="IC (total)", **opts)
+        for seed, ls in zip(["CMB", "FIR"], ["-", "--"]):
+            model = NaimaSpectralModel(radiative_model, seed=seed, distance=1.5 * u.kpc)
+            model.plot(label=f"IC ({seed})", ls=ls, color="gray", **opts)
+
+        skymodel = SkyModel(model)
+        # fail if cache is on :
+        skymodel.spectral_model.plot(
+            energy_bounds=[10 * u.GeV, 80 * u.TeV], energy_power=2
+        )
+        assert radiative_model._memoize == False
 
 
 class TestSpectralModelErrorPropagation:
