@@ -54,7 +54,7 @@ def table_model():
 TEST_MODELS = [
     dict(
         name="constant",
-        model=ConstantSpectralModel(const=4 / u.cm ** 2 / u.s / u.TeV),
+        model=ConstantSpectralModel(const=4 / u.cm**2 / u.s / u.TeV),
         val_at_2TeV=u.Quantity(4, "cm-2 s-1 TeV-1"),
         integral_1_10TeV=u.Quantity(35.9999999999999, "cm-2 s-1"),
         eflux_1_10TeV=u.Quantity(198.00000000000006, "TeV cm-2 s-1"),
@@ -63,7 +63,7 @@ TEST_MODELS = [
         name="powerlaw",
         model=PowerLawSpectralModel(
             index=2.3 * u.Unit(""),
-            amplitude=4 / u.cm ** 2 / u.s / u.TeV,
+            amplitude=4 / u.cm**2 / u.s / u.TeV,
             reference=1 * u.TeV,
         ),
         val_at_2TeV=u.Quantity(4 * 2.0 ** (-2.3), "cm-2 s-1 TeV-1"),
@@ -74,7 +74,7 @@ TEST_MODELS = [
         name="powerlaw",
         model=PowerLawSpectralModel(
             index=2 * u.Unit(""),
-            amplitude=4 / u.cm ** 2 / u.s / u.TeV,
+            amplitude=4 / u.cm**2 / u.s / u.TeV,
             reference=1 * u.TeV,
         ),
         val_at_2TeV=u.Quantity(1.0, "cm-2 s-1 TeV-1"),
@@ -84,7 +84,9 @@ TEST_MODELS = [
     dict(
         name="norm-powerlaw",
         model=PowerLawNormSpectralModel(
-            tilt=2 * u.Unit(""), norm=4.0 * u.Unit(""), reference=1 * u.TeV,
+            tilt=2 * u.Unit(""),
+            norm=4.0 * u.Unit(""),
+            reference=1 * u.TeV,
         ),
         val_at_2TeV=u.Quantity(1.0, ""),
         integral_1_10TeV=u.Quantity(3.6, "TeV"),
@@ -106,7 +108,7 @@ TEST_MODELS = [
         name="ecpl",
         model=ExpCutoffPowerLawSpectralModel(
             index=1.6 * u.Unit(""),
-            amplitude=4 / u.cm ** 2 / u.s / u.TeV,
+            amplitude=4 / u.cm**2 / u.s / u.TeV,
             reference=1 * u.TeV,
             lambda_=0.1 / u.TeV,
         ),
@@ -131,7 +133,7 @@ TEST_MODELS = [
         name="ecpl_3fgl",
         model=ExpCutoffPowerLaw3FGLSpectralModel(
             index=2.3 * u.Unit(""),
-            amplitude=4 / u.cm ** 2 / u.s / u.TeV,
+            amplitude=4 / u.cm**2 / u.s / u.TeV,
             reference=1 * u.TeV,
             ecut=10 * u.TeV,
         ),
@@ -144,7 +146,7 @@ TEST_MODELS = [
         model=SuperExpCutoffPowerLaw4FGLSpectralModel(
             index_1=1.5,
             index_2=2,
-            amplitude=1 / u.cm ** 2 / u.s / u.TeV,
+            amplitude=1 / u.cm**2 / u.s / u.TeV,
             reference=1 * u.TeV,
             expfactor=1e-2,
         ),
@@ -157,7 +159,7 @@ TEST_MODELS = [
         model=SuperExpCutoffPowerLaw4FGLDR3SpectralModel(
             index_1=1.5,
             index_2=2,
-            amplitude=1 / u.cm ** 2 / u.s / u.TeV,
+            amplitude=1 / u.cm**2 / u.s / u.TeV,
             reference=1 * u.TeV,
             expfactor=1e-2,
         ),
@@ -169,7 +171,7 @@ TEST_MODELS = [
         name="logpar",
         model=LogParabolaSpectralModel(
             alpha=2.3 * u.Unit(""),
-            amplitude=4 / u.cm ** 2 / u.s / u.TeV,
+            amplitude=4 / u.cm**2 / u.s / u.TeV,
             reference=1 * u.TeV,
             beta=0.5 * u.Unit(""),
         ),
@@ -194,7 +196,7 @@ TEST_MODELS = [
         name="logpar10",
         model=LogParabolaSpectralModel.from_log10(
             alpha=2.3 * u.Unit(""),
-            amplitude=4 / u.cm ** 2 / u.s / u.TeV,
+            amplitude=4 / u.cm**2 / u.s / u.TeV,
             reference=1 * u.TeV,
             beta=1.151292546497023 * u.Unit(""),
         ),
@@ -207,7 +209,7 @@ TEST_MODELS = [
         name="powerlaw_index1",
         model=PowerLawSpectralModel(
             index=1 * u.Unit(""),
-            amplitude=2 / u.cm ** 2 / u.s / u.TeV,
+            amplitude=2 / u.cm**2 / u.s / u.TeV,
             reference=1 * u.TeV,
         ),
         val_at_2TeV=u.Quantity(1.0, "cm-2 s-1 TeV-1"),
@@ -218,7 +220,7 @@ TEST_MODELS = [
         name="ecpl_2",
         model=ExpCutoffPowerLawSpectralModel(
             index=2.0 * u.Unit(""),
-            amplitude=4 / u.cm ** 2 / u.s / u.TeV,
+            amplitude=4 / u.cm**2 / u.s / u.TeV,
             reference=1 * u.TeV,
             lambda_=0.1 / u.TeV,
         ),
@@ -230,7 +232,7 @@ TEST_MODELS = [
     dict(
         name="GaussianSpectralModel",
         model=GaussianSpectralModel(
-            amplitude=4 / u.cm ** 2 / u.s, mean=2 * u.TeV, sigma=0.2 * u.TeV
+            amplitude=4 / u.cm**2 / u.s, mean=2 * u.TeV, sigma=0.2 * u.TeV
         ),
         val_at_2TeV=u.Quantity(7.978845608028654, "cm-2 s-1 TeV-1"),
         val_at_3TeV=u.Quantity(2.973439029468601e-05, "cm-2 s-1 TeV-1"),
@@ -242,7 +244,7 @@ TEST_MODELS = [
         name="ecpl",
         model=ExpCutoffPowerLawSpectralModel(
             index=1.8 * u.Unit(""),
-            amplitude=4 / u.cm ** 2 / u.s / u.TeV,
+            amplitude=4 / u.cm**2 / u.s / u.TeV,
             reference=1 * u.TeV,
             lambda_=0.1 / u.TeV,
             alpha=0.8,
@@ -257,7 +259,7 @@ TEST_MODELS = [
         model=BrokenPowerLawSpectralModel(
             index1=1.5 * u.Unit(""),
             index2=2.5 * u.Unit(""),
-            amplitude=4 / u.cm ** 2 / u.s / u.TeV,
+            amplitude=4 / u.cm**2 / u.s / u.TeV,
             ebreak=0.5 * u.TeV,
         ),
         val_at_2TeV=u.Quantity(0.125, "cm-2 s-1 TeV-1"),
@@ -269,7 +271,7 @@ TEST_MODELS = [
         model=SmoothBrokenPowerLawSpectralModel(
             index1=1.5 * u.Unit(""),
             index2=2.5 * u.Unit(""),
-            amplitude=4 / u.cm ** 2 / u.s / u.TeV,
+            amplitude=4 / u.cm**2 / u.s / u.TeV,
             ebreak=0.5 * u.TeV,
             reference=1 * u.TeV,
             beta=1,
@@ -283,7 +285,7 @@ TEST_MODELS = [
         model=SmoothBrokenPowerLawSpectralModel(
             index1=2.5 * u.Unit(""),
             index2=1.5 * u.Unit(""),
-            amplitude=4 / u.cm ** 2 / u.s / u.TeV,
+            amplitude=4 / u.cm**2 / u.s / u.TeV,
             ebreak=0.5 * u.TeV,
             reference=1 * u.TeV,
             beta=1,
@@ -295,7 +297,8 @@ TEST_MODELS = [
     dict(
         name="pbpl",
         model=PiecewiseNormSpectralModel(
-            energy=[1, 3, 7, 10] * u.TeV, norms=[1, 5, 3, 0.5] * u.Unit(""),
+            energy=[1, 3, 7, 10] * u.TeV,
+            norms=[1, 5, 3, 0.5] * u.Unit(""),
         ),
         val_at_2TeV=u.Quantity(2.76058404, ""),
         integral_1_10TeV=u.Quantity(24.758255, "TeV"),
@@ -604,7 +607,7 @@ def test_pwl_pivot_energy():
     pwl = PowerLawSpectralModel(amplitude="5.35510540e-11 cm-2 s-1 TeV-1")
 
     pwl.covariance = [
-        [0.0318377 ** 2, 6.56889442e-14, 0],
+        [0.0318377**2, 6.56889442e-14, 0],
         [6.56889442e-14, 0, 0],
         [0, 0, 0],
     ]
@@ -680,7 +683,7 @@ class TestNaimaModel:
             amplitude=2e33 / u.eV, e_0=10 * u.TeV, alpha=2.5
         )
         radiative_model = naima.radiative.PionDecay(
-            particle_distribution, nh=1 * u.cm ** -3
+            particle_distribution, nh=1 * u.cm**-3
         )
         model = NaimaSpectralModel(radiative_model)
         for p in model.parameters:
@@ -799,8 +802,8 @@ class TestNaimaModel:
             ECBPL,
             seed_photon_fields=[
                 "CMB",
-                ["FIR", 70 * u.K, 0.5 * u.eV / u.cm ** 3],
-                ["NIR", 5000 * u.K, 1 * u.eV / u.cm ** 3],
+                ["FIR", 70 * u.K, 0.5 * u.eV / u.cm**3],
+                ["NIR", 5000 * u.K, 1 * u.eV / u.cm**3],
             ],
             Eemax=50 * u.PeV,
             Eemin=0.1 * u.GeV,
@@ -827,7 +830,7 @@ class TestNaimaModel:
             amplitude=2e33 / u.eV, e_0=10 * u.TeV, alpha=2.5
         )
         radiative_model = naima.radiative.PionDecay(
-            particle_distribution, nh=1 * u.cm ** -3
+            particle_distribution, nh=1 * u.cm**-3
         )
         model = NaimaSpectralModel(radiative_model)
 
@@ -844,7 +847,7 @@ class TestNaimaModel:
         )
         radiative_model = naima.radiative.InverseCompton(
             particle_distribution,
-            seed_photon_fields=["CMB", ["FIR", 26.5 * u.K, 0.415 * u.eV / u.cm ** 3]],
+            seed_photon_fields=["CMB", ["FIR", 26.5 * u.K, 0.415 * u.eV / u.cm**3]],
             Eemin=100 * u.GeV,
         )
         model = NaimaSpectralModel(radiative_model, distance=1.5 * u.kpc)
