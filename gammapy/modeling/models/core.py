@@ -158,7 +158,7 @@ class ModelBase:
                 for item in ["min", "max", "error", "interp", "scale_method"]:
                     default = init[item]
 
-                    if par[item] == default or np.isnan(default):
+                    if par[item] == default or np.isnan(par[item]):
                         del par[item]
 
                 if not par["frozen"]:
