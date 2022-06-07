@@ -295,7 +295,7 @@ class Background2D(BackgroundIRF):
         offset_axis.format_plot_yaxis(ax=ax)
 
         if add_cbar:
-            label = f"Background rate ({self.unit})"
+            label = f"Background rate [{self.unit}]"
             ax.figure.colorbar(caxes, ax=ax, label=label)
 
     def plot_offset_dependence(self, ax=None, energy=None, **kwargs):
