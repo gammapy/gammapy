@@ -3,6 +3,7 @@ import numpy as np
 from astropy import units as u
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mtick
 from gammapy.utils.array import array_stats_str
 from ..core import IRF
 
@@ -156,7 +157,8 @@ class PSF(IRF):
 
         energy_true.format_plot_xaxis(ax=ax)
         ax.legend(loc="best")
-        ax.set_ylabel(f"Containment radius ({ax.yaxis.units})")
+        ax.set_ylabel(f"Containment radius [{ax.yaxis.units}]")
+        ax.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.1e'))
         return ax
 
     def plot_containment_radius(self, ax=None, fraction=0.68, add_cbar=True, **kwargs):

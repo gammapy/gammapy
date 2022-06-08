@@ -250,7 +250,7 @@ class EnergyDispersion2D(IRF):
         migra.format_plot_yaxis(ax=ax)
 
         if add_cbar:
-            label = "Probability density (A.U.)"
+            label = "Probability density [A.U]."
             ax.figure.colorbar(caxes, ax=ax, label=label)
 
         return ax
