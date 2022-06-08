@@ -1039,6 +1039,7 @@ class Map(abc.ABC):
             Reprojected Map
         """
         from .region import RegionGeom
+        from .hpx import HpxGeom
 
         if isinstance(geom, RegionGeom) or isinstance(self.geom, RegionGeom):
             raise TypeError(f"Reproject from {type(self.geom)} to {type(geom)} is not supported")
@@ -1055,7 +1056,11 @@ class Map(abc.ABC):
         if base_factor >= oversampling_factor:
             input_map = self
         else:
-            factor = int(np.ceil(oversampling_factor / base_factor))
+            factor = oversampling_factor / base_factor
+            if isinstance(self.geom, HpxGeom):
+                factor = int(2**np.ceil(np.log(factor)/np.log(2)))
+            else:
+                factor = int(np.ceil(factor))
             input_map = self.upsample(factor=factor, preserve_counts=preserve_counts)
 
         output_map.resample(input_map.geom,
