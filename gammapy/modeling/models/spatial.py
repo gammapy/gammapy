@@ -1147,6 +1147,7 @@ class TemplateSpatialModel(SpatialModel):
             coord["energy_true"] = energy
 
         val = self.map.interp_by_coord(coord, **self._interp_kwargs)
+        val = np.clip(val, 0, a_max=None)
         return u.Quantity(val, self.map.unit, copy=False)
 
     @property
