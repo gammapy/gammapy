@@ -1125,6 +1125,8 @@ class TemplateSpatialModel(SpatialModel):
     def read(cls, filename, normalize=True, **kwargs):
         """Read spatial template model from FITS image.
         If unit is not given in the FITS header the default is ``sr-1``.
+        Note that, if the TemplateMap has negative values, these are
+        clipped.
 
         Parameters
         ----------
