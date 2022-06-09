@@ -205,7 +205,7 @@ class PlotMixin:
         kwargs_npred_signal = kwargs_npred_signal or {}
 
         # Determine the uncertainty on yerr
-        yerr = -self._counts_statistic.error
+        yerr = self._counts_statistic.error
 
         plot_kwargs = kwargs.copy()
         plot_kwargs.update(kwargs_excess)
