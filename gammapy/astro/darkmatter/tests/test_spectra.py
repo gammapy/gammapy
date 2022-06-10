@@ -34,3 +34,5 @@ def test_DMAnnihilation():
 
     assert_quantity_allclose(integral_flux.value, 6.19575457e-14, rtol=1e-3)
     assert_quantity_allclose(differential_flux.value, 2.97506768e-16, rtol=1e-3)
+
+    assert model.scale.is_norm
