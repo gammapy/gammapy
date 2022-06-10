@@ -170,6 +170,8 @@ class PlotMixin:
     ):
         """Plot excess and predicted signal.
 
+        The error bars are computed with a symmetric assumption on the excess.
+
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`
@@ -204,7 +206,7 @@ class PlotMixin:
         kwargs_excess = kwargs_excess or {}
         kwargs_npred_signal = kwargs_npred_signal or {}
 
-        # Determine the uncertainty on yerr
+        # Determine the uncertainty on the excess
         yerr = self._counts_statistic.error
 
         plot_kwargs = kwargs.copy()
