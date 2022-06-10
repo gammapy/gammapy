@@ -521,6 +521,7 @@ class RegionGeom(Geom):
             # TODO: remove once fix is available in regions
             if isinstance(self.region, PointSkyRegion):
                 point_region = self.region.to_pixel(self.wcs)
+                point_region.meta['include'] = False
                 pix_coord = PixCoord.from_sky(coords.skycoord, self.wcs)
                 in_region = point_region.contains(pix_coord)
             else:
