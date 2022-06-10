@@ -184,7 +184,6 @@ class Fit:
         datasets, parameters = self._parse_datasets(datasets=datasets)
         datasets.parameters.check_limits()
 
-        print(parameters.free_parameters.names)
         if len(parameters.free_parameters.names) == 0:
             raise ValueError("No free parameters for fitting")
 
