@@ -124,7 +124,7 @@ def test_run_no_free_parameters():
     for par in dataset.models.parameters.free_parameters:
         par.frozen = True
     fit = Fit()
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="No free parameters for fitting"):
         fit.run(dataset)
 
 

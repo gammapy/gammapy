@@ -374,14 +374,11 @@ def test_run_map_pwl_reoptimize(fpe_map_pwl_reoptimize):
 
 @requires_data()
 def test_reoptimize_no_free_parameters(fpe_pwl, caplog):
-    # test spectra
     datasets, fpe = fpe_pwl
     fpe.reoptimize = True
-    fp = fpe.run(datasets)
-    assert "WARNING" in [record.levelname for record in caplog.records]
-    message = "No free parameters to reoptimize. Setting reoptimize to False"
-    assert message in [record.message for record in caplog.records]
-    assert fpe.reoptimize is True
+    with pytest.raises(ValueError, match="No free parameters for fitting"):
+        fpe.run(datasets)
+    fpe.reoptimize = False
 
 
 @requires_data()
