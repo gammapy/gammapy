@@ -86,13 +86,15 @@ class MapDatasetEventSampler:
                 temporal_model = evaluator.model.temporal_model
 
             table = self._sample_coord_time(npred, temporal_model, dataset.gti)
-            if len(table) > 0:
-                table["MC_ID"] = idx + 1
-            else:
+
+            if len(table) == 0:
                 mcid = table.Column(name="MC_ID", length=0, dtype=int)
                 table.add_column(mcid)
+
+            table["MC_ID"] = idx + 1
             table.meta["MID{:05d}".format(idx + 1)] = idx + 1
             table.meta["MMN{:05d}".format(idx + 1)] = evaluator.model.name
+
             events_all.append(EventList(table))
 
         return EventList.from_stack(events_all)
