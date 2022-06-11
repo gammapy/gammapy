@@ -170,6 +170,13 @@ class SafeMaskMaker(Maker):
             position = geom.center_skydir
 
         aeff = exposure.get_spectrum(position) / exposure.meta["livetime"]
+        if np.amax(aeff.data) <= 0.1:
+            log.warning(
+                f"No safe energy band can be defined for the dataset {dataset.name}"
+            )
+            empty_data = np.zeros(geom.data_shape, dtype=bool)
+            return Map.from_geom(geom, data=empty_data, dtype='bool')
+
         model = TemplateSpectralModel.from_region_map(aeff)
 
         energy_true = model.energy
@@ -313,10 +320,10 @@ class SafeMaskMaker(Maker):
             mask_safe &= self.make_mask_energy_aeff_default(dataset, observation)
 
         if "aeff-max" in self.methods:
-            mask_safe &= self.make_mask_energy_aeff_max(dataset)
+            mask_safe &= self.make_mask_energy_aeff_max(dataset, observation)
 
         if "edisp-bias" in self.methods:
-            mask_safe &= self.make_mask_energy_edisp_bias(dataset)
+            mask_safe &= self.make_mask_energy_edisp_bias(dataset, observation)
 
         if "bkg-peak" in self.methods:
             mask_safe &= self.make_mask_energy_bkg_peak(dataset)
