@@ -21,7 +21,7 @@ Gammapy analysis workflow and package structure
     catalog
     astro/index
     stats
-    visualization
+    visualization/index
     utils
 
 
