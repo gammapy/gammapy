@@ -2,6 +2,7 @@
 
 .. _userguide:
 
+==========
 User guide
 ==========
 

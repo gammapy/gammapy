@@ -1,8 +1,8 @@
 .. _changelog:
 
-*************
+=============
 Release notes
-*************
+=============
 
 This is the list of changes to Gammapy between each release. For full details,
 see the `commit logs <https://github.com/gammapy/gammapy/commits/master>`_.
