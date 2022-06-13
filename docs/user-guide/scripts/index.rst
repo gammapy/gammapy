@@ -228,7 +228,7 @@ but if you're not sure what to use to build your own CLIs, we suggest you give
 `click`_ a try. Here is how you'd rewrite your ``significance.py`` as a click
 CLI:
 
-.. literalinclude:: ../scripts/significance.py
+.. literalinclude:: significance.py
 
 We use `click`_ in Gammapy itself. We also use `click`_ frequently for our own
 projects if we choose to add a CLI (no matter if Gammapy is used or not). Putting
