@@ -12,7 +12,7 @@ User guide
 
     package
     howto
-    ../modeling/gallery/index
+    model-gallery/index
     Gammapy recipes <https://gammapy.github.io/gammapy-recipes>
     references
 

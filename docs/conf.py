@@ -59,9 +59,9 @@ intersphinx_mapping["pandas"] = ("https://pandas.pydata.org/pandas-docs/stable/"
 exclude_patterns.append("_templates")
 exclude_patterns.append("_static")
 exclude_patterns.append("**.ipynb_checkpoints")
-exclude_patterns.append("modeling/gallery/*/*.ipynb")
-exclude_patterns.append("modeling/gallery/*/*.md5")
-exclude_patterns.append("modeling/gallery/*/*.py")
+exclude_patterns.append("user-guide/model-gallery/*/*.ipynb")
+exclude_patterns.append("user-guide/model-gallery/*/*.md5")
+exclude_patterns.append("user-guide/model-gallery/*/*.py")
 
 extensions.extend(
     [
@@ -214,7 +214,7 @@ suppress_warnings = ["ref.citation"]
 sphinx_gallery_conf = {
     "examples_dirs": ["../examples/models"],  # path to your example scripts
     "gallery_dirs": [
-        "modeling/gallery"
+        "user-guide/model-gallery"
     ],  # path to where to save gallery generated output
     "within_subsection_order": FileNameSortKey,
     "download_all_examples": False,
