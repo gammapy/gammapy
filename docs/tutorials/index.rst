@@ -22,7 +22,7 @@ handbook`_ and the `Astropy Hands-On Tutorial`_.
 .. _tutorials_notebooks:
 
 Introduction
-------------
+============
 
 The following three tutorials show different ways of how to use Gammapy to perform a complete data analysis,
 from data selection to data reduction and finally modeling and fitting.
@@ -39,7 +39,7 @@ basic data structures like event lists, source catalogs, sky maps, spectral mode
    starting/overview.ipynb
 
 Data exploration
-----------------
+================
 
 These three tutorials show how to perform data exploration with Gammapy, providing an introduction to the CTA,
 H.E.S.S. and Fermi-LAT data and instrument response functions (IRFs). You will be able to explore and filter
@@ -53,14 +53,14 @@ event lists according to different criteria, as well as to get a quick look of t
 
 
 Data analysis
--------------
+=============
 
 The following set of tutorials are devoted to data analysis, and grouped according to the specific covered use
 cases in spectral analysis and flux fitting, image and cube analysis modelling and fitting, as well as
 time-dependent analysis with light-curves.
 
 1D Spectral
-~~~~~~~~~~~
+-----------
 
 .. nbgallery::
 
@@ -72,7 +72,7 @@ time-dependent analysis with light-curves.
    analysis/1D/cta_sensitivity.ipynb
 
 2D Image
-~~~~~~~~
+--------
 
 .. nbgallery::
 
@@ -82,7 +82,7 @@ time-dependent analysis with light-curves.
 
 
 3D Cube
-~~~~~~~
+-------
 
 .. nbgallery::
 
@@ -94,7 +94,7 @@ time-dependent analysis with light-curves.
    analysis/3D/flux_profiles.ipynb
 
 Time
-~~~~
+----
 
 .. nbgallery::
 
@@ -105,7 +105,7 @@ Time
 
 
 Package / API
--------------
+=============
 
 The following tutorials demonstrate different dimensions of the Gammapy API or
 expose how to perform more specific use cases.
@@ -126,7 +126,7 @@ expose how to perform more specific use cases.
 .. _tutorials_scripts:
 
 Scripts
--------
+=======
 
 For interactive use, IPython and Jupyter are great, and most Gammapy examples use those.
 However, for long-running, non-interactive tasks like data reduction or survey maps,
