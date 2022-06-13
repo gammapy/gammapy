@@ -32,6 +32,6 @@ Sub-packages
 .. toctree::
     :maxdepth: 1
 
-    ../astro/source/index
-    ../astro/population/index
-    ../astro/darkmatter/index
+    source/index
+    population/index
+    darkmatter/index

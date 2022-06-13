@@ -11,7 +11,7 @@ Gammapy analysis workflow and package structure
 
     dl3
     irf
-    makers
+    makers/index
     maps
     dl4
     modeling
@@ -19,7 +19,7 @@ Gammapy analysis workflow and package structure
     hli
     cli
     catalog
-    astro
+    astro/index
     stats
     visualization
     utils
