@@ -16,9 +16,9 @@ Background estimation
 .. toctree::
     :maxdepth: 1
 
-    ../makers/fov
-    ../makers/reflected
-    ../makers/ring
+    fov
+    reflected
+    ring
 
 
 Safe data range definition

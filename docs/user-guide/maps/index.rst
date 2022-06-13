@@ -305,5 +305,5 @@ found in the following sub-pages:
     :maxdepth: 1
     :hidden:
 
-    ../maps/hpxmap
-    ../maps/regionmap
+    hpxmap
+    regionmap

@@ -12,7 +12,7 @@ Gammapy analysis workflow and package structure
     dl3
     irf
     makers/index
-    maps
+    maps/index
     datasets/index
     modeling
     estimators
