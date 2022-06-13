@@ -17,10 +17,10 @@ Gammapy analysis workflow and package structure
     modeling
     estimators
     hli
-    cli
+    scripts/index
     catalog
     astro/index
-    stats
+    stats/index
     visualization/index
     utils
 
