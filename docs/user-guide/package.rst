@@ -1,6 +1,6 @@
 .. include:: ../references.txt
 
-.. _package:
+.. _package_structure:
 
 Gammapy analysis workflow and package structure
 ===============================================

@@ -1,6 +1,6 @@
 .. include:: ../references.txt
 
-.. _howto:
+.. _how_to:
 
 How To
 ======
