@@ -98,7 +98,6 @@ Gammapy v0.20 is the release candidate for v1.0 and is considered feature comple
 
 
 .. toctree::
-    :maxdepth: 1
     :titlesonly:
     :hidden:
 

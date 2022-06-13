@@ -8,7 +8,6 @@ User guide
 
 .. toctree::
     :hidden:
-    :maxdepth: 1
     :titlesonly:
 
     package
