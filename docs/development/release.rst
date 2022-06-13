@@ -47,7 +47,7 @@ Steps to prepare for the release (e.g. a week before) to check that things are i
 #. Check that the GitHub actions CI build is working.
 
    Links are at https://github.com/gammapy/gammapy#status-shields
-#. Check that the changelog is complete, by going through the list of GitHub issues for the
+#. Check that the release notes are complete, by going through the list of GitHub issues for the
    release milestone.
 #. Check the author list in CITATION.cff by running the ``dev/authors.py`` script. Manually
    fi any mismatches and finally sort by commits.

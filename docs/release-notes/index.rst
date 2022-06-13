@@ -1,4 +1,4 @@
-.. _changelog:
+.. _release_notes:
 
 =============
 Release notes
