@@ -51,10 +51,10 @@ sub-pages:
 .. toctree::
     :maxdepth: 1
 
-    ../irf/theory
-    ../irf/aeff
-    ../irf/edisp
-    ../irf/psf
-    ../irf/bkg
+    theory
+    aeff
+    edisp
+    psf
+    bkg
 
 See also `cta.html <../tutorials/data/cta.html>`__ for an example how to access IACT IRFs.

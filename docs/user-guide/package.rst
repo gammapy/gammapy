@@ -10,7 +10,7 @@ Gammapy analysis workflow and package structure
     :includehidden:
 
     dl3
-    irf
+    irf/index
     makers/index
     maps/index
     datasets/index
