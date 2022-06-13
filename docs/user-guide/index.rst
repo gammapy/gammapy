@@ -1,6 +1,6 @@
 .. include:: ../references.txt
 
-.. _userguide:
+.. _user_guide:
 
 ==========
 User guide
@@ -46,7 +46,7 @@ User guide
 
     +++
 
-    .. link-button:: ../userguide/howto
+    .. link-button:: howto
             :type: ref
             :text: To the How To
             :classes: btn-block btn-secondary stretched-link

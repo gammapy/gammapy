@@ -57,7 +57,7 @@ Gammapy v0.20 is the release candidate for v1.0 and is considered feature comple
 
     +++
 
-    .. link-button:: userguide/index
+    .. link-button:: user-guide/index
             :type: ref
             :text: To the user guide
             :classes: btn-block btn-secondary stretched-link
@@ -102,7 +102,7 @@ Gammapy v0.20 is the release candidate for v1.0 and is considered feature comple
     :hidden:
 
     getting-started/index
-    userguide/index
+    user-guide/index
     tutorials/index
     api.rst
     development/index

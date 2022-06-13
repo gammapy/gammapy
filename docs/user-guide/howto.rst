@@ -10,7 +10,7 @@ Gammapy. Each entry is for a very specific task, with a short answer, and links
 to examples and documentation.
 
 If you're new to Gammapy, please check the :ref:`getting-started` section and
-the :ref:`userguide` and have a look at the list of :ref:`tutorials`.
+the :ref:`user_guide` and have a look at the list of :ref:`tutorials`.
 The information below is in addition to those pages, it's not a complete list of
 how to do everything in Gammapy.
 
@@ -222,7 +222,7 @@ warning like so:
     :id: collapseHowToSixteen
     :title: Displaying a progress bar
 
-Gammapy provides the possibility of displaying a 
+Gammapy provides the possibility of displaying a
 progress bar to monitor the advancement of time-consuming processes. To activate this
 functionality, make sure that `tqdm` is installed and add the following code snippet
 to your code:
