@@ -12,10 +12,10 @@ Its format specifications are available in :ref:`gadf:aeff_2d`.
 
 This is the format in which IACT DL3 effective areas are usually provided, as an example
 
-.. plot:: irf/plot_aeff.py
+.. plot:: user-guide/irf/plot_aeff.py
     :include-source:
 
 - using a pre-defined effective area parameterisation
 
-.. plot:: irf/plot_aeff_param.py
+.. plot:: user-guide/irf/plot_aeff_param.py
     :include-source:

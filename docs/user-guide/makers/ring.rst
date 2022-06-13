@@ -1,4 +1,4 @@
-.. include:: ../references.txt
+.. include:: ../../references.txt
 
 .. _ring_background:
 
@@ -24,7 +24,7 @@ More details on the ring background method can be found in [Berge2007]_.
 
 .. _figure_ring_background:
 
-.. figure:: ../_static/hgps_map_background_estimation.png
+.. figure:: ../../_static/hgps_map_background_estimation.png
     :width: 50%
 
     Fig.1, Illustration of the ring background estimation method, taken from [Abdalla2018]_.

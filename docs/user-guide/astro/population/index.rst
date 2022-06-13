@@ -40,7 +40,7 @@ rate. The table returned is an instance of `~astropy.table.Table` which
 can be used for further processing. The example population with spiral-arms is
 illustrated in the following plot.
 
-.. plot:: astro/population/plot_spiral_arms.py
+.. plot:: user-guide/astro/population/plot_spiral_arms.py
 
 Galactocentric spatial distributions
 ------------------------------------
@@ -48,7 +48,7 @@ Galactocentric spatial distributions
 Here is a comparison plot of all available radial distribution functions of the
 surface density of pulsars and related objects used in literature:
 
-.. plot:: astro/population/plot_radial_distributions.py
+.. plot:: user-guide/astro/population/plot_radial_distributions.py
 
 TODO: add illustration of Galactocentric z-distribution model and combined (r,
 z) distribution for the Besancon model.
@@ -60,7 +60,7 @@ Two spiral arm models of the Milky way are available:
 `~gammapy.astro.population.ValleeSpiral` and
 `gammapy.astro.population.FaucherSpiral`
 
-.. plot:: astro/population/plot_spiral_arm_models.py
+.. plot:: user-guide/astro/population/plot_spiral_arm_models.py
 
 
 Velocity distributions
@@ -68,4 +68,4 @@ Velocity distributions
 
 Here is a comparison plot of all available velocity distribution functions:
 
-.. plot:: astro/population/plot_velocity_distributions.py
+.. plot:: user-guide/astro/population/plot_velocity_distributions.py

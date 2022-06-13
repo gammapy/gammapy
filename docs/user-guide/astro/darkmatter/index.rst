@@ -109,7 +109,7 @@ Gammapy tutorial notebooks that show examples using ``gammapy.astro.darkmatter``
 
 .. nbgallery::
 
-   ../../tutorials/api/astro_dark_matter.ipynb
+   ../../../tutorials/api/astro_dark_matter.ipynb
 
 
 .. _GammaLib 1.3 release: http://cta.irap.omp.eu/gammalib-devel/admin/release_history/1.3.html

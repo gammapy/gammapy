@@ -18,9 +18,9 @@ In particular, they are suited for so-called 1D analysis (see :ref:`references`)
 RegionGeom
 ==========
 A `~RegionGeom` describes the underlying geometry of a region in the sky with any number of non-spatial axes associated to it.
-Is analogous to a  map geometry `~Geom`, but instead of a fine spatial grid on a rectangular region, 
+Is analogous to a  map geometry `~Geom`, but instead of a fine spatial grid on a rectangular region,
 the spatial dimension is reduced to a single bin with an arbitrary shape, which describes a
-region in the sky with that same shape. Besides the spatial region, a `~RegionGeom` can also have any number of non-spatial dimensions, 
+region in the sky with that same shape. Besides the spatial region, a `~RegionGeom` can also have any number of non-spatial dimensions,
 the most common case being an additional energy axis. The `~RegionGeom` object defines the structure into which the data contained in a `~RegionNDMap`
 is distributed.
 
@@ -113,7 +113,7 @@ The resulting `~RegionGeom` object has `ndim = 3`, two spatial dimensions with o
 
 RegionGeom and coordinates
 --------------------------
-A `~RegionGeom` defines a single spatial bin with arbitrary shape. The spatial coordinates are then given by the center of the region geometry. If one or more non-spatial axes are present, 
+A `~RegionGeom` defines a single spatial bin with arbitrary shape. The spatial coordinates are then given by the center of the region geometry. If one or more non-spatial axes are present,
 they can have any number of bins. There are different methods that can be used to access or modify the coordinates of a `~RegionGeom`.
 
 Bin volume and angular size
@@ -269,11 +269,11 @@ different regions by passing keyword arguments forwarded to `~regions.PixelRegio
 
 RegionNDMap
 ===========
-A `~RegionNDMap` owns a `~RegionGeom` instance as well as a data array containing the values associated 
+A `~RegionNDMap` owns a `~RegionGeom` instance as well as a data array containing the values associated
 to that region in the sky along the non-spatial axis, which is usually an energy axis.
-The spatial dimensions of a `~RegionNDMap` are reduced to a single spatial bin with an arbitrary 
-shape, and any extra dimensions are described by an arbitrary number of non-spatial axes. It is 
-to a `~RegionGeom` what a `~Map` is to a `~Geom`: it contains the data which is distributed 
+The spatial dimensions of a `~RegionNDMap` are reduced to a single spatial bin with an arbitrary
+shape, and any extra dimensions are described by an arbitrary number of non-spatial axes. It is
+to a `~RegionGeom` what a `~Map` is to a `~Geom`: it contains the data which is distributed
 in the structure defined by the `~RegionGeom` axes.
 
 Creating a RegionNDMap
@@ -303,7 +303,7 @@ A region map can be created either from a DS9 region string, an `regions.SkyRegi
     geom = region_map.geom
     region_map_2 = RegionNDMap.from_geom(geom)
 
-Higher dimensional region map objects (cubes and hypercubes) 
+Higher dimensional region map objects (cubes and hypercubes)
 can be constructed by passing a list of `~MapAxis` objects for non-spatial dimensions with the axes parameter:
 
 .. testcode::
@@ -318,7 +318,7 @@ Filling a RegionNDMap
 ---------------------
 
 All the region maps created above are empty. In order to fill or access the data contained
-in a `~RegionNDMap`, the `~RegionNDMap.data` attribute is used. In case the region map is being 
+in a `~RegionNDMap`, the `~RegionNDMap.data` attribute is used. In case the region map is being
 created from an existing `~RegionGeom`, this can be done in the same step:
 
 .. testcode::
@@ -379,7 +379,7 @@ Visualing a RegionNDMap
 -----------------------
 Visualizing a `~RegionNDMap` can be interpreted in two different ways. One is to plot a sky map that contains the region,
 indicating the area of the sky encompassed by the spatial component of the region map. This is done via `~RegionNDMap.plot_region()`.
-Another option is to plot the contents of the region map, which would be either a single value for the case of only spatial axes, 
+Another option is to plot the contents of the region map, which would be either a single value for the case of only spatial axes,
 or a function of the non-spatial axis bins. This is done by `~RegionNDMap.plot()` and `~RegionNDMap.plot_hist()`.
 
 Plotting the underlying region
@@ -489,7 +489,7 @@ Gammapy tutorial notebooks that use `~RegionNDMap` and `~RegionGeom`:
 
 .. nbgallery::
 
-   ../tutorials/analysis/1D/spectral_analysis.ipynb
-   ../tutorials/analysis/1D/extended_source_spectral_analysis.ipynb
-   ../tutorials/analysis/1D/spectrum_simulation.ipynb
-   ../tutorials/analysis/1D/cta_sensitivity.ipynb
+   ../../tutorials/analysis/1D/spectral_analysis.ipynb
+   ../../tutorials/analysis/1D/extended_source_spectral_analysis.ipynb
+   ../../tutorials/analysis/1D/spectrum_simulation.ipynb
+   ../../tutorials/analysis/1D/cta_sensitivity.ipynb

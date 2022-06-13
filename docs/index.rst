@@ -104,6 +104,6 @@ Gammapy v0.20 is the release candidate for v1.0 and is considered feature comple
     getting-started/index
     user-guide/index
     tutorials/index
-    api.rst
+    api-reference/index
     development/index
     release-notes/index

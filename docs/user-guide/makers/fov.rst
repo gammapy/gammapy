@@ -1,4 +1,4 @@
-.. include:: ../references.txt
+.. include:: ../../references.txt
 
 .. _fov_background:
 
@@ -63,5 +63,5 @@ The following notebooks shows examples using
 
 .. nbgallery::
 
-   ../tutorials/starting/analysis_2.ipynb
-   ../tutorials/analysis/3D/analysis_3d.ipynb
+   ../../tutorials/starting/analysis_2.ipynb
+   ../../tutorials/analysis/3D/analysis_3d.ipynb

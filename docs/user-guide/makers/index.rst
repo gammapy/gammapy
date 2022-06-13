@@ -1,4 +1,4 @@
-.. include:: ../references.txt
+.. include:: ../../references.txt
 
 .. _makers:
 
@@ -34,10 +34,10 @@ Gammapy tutorial notebooks that show examples using ``gammapy.makers``:
 
 .. nbgallery::
 
-   ../tutorials/api/makers.ipynb
-   ../tutorials/starting/analysis_2.ipynb
-   ../tutorials/analysis/3D/analysis_3d.ipynb
-   ../tutorials/analysis/3D/simulate_3d.ipynb
-   ../tutorials/analysis/1D/spectral_analysis.ipynb
-   ../tutorials/analysis/1D/spectrum_simulation.ipynb
+   ../../tutorials/api/makers.ipynb
+   ../../tutorials/starting/analysis_2.ipynb
+   ../../tutorials/analysis/3D/analysis_3d.ipynb
+   ../../tutorials/analysis/3D/simulate_3d.ipynb
+   ../../tutorials/analysis/1D/spectral_analysis.ipynb
+   ../../tutorials/analysis/1D/spectrum_simulation.ipynb
 

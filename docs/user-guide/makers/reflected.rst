@@ -1,4 +1,4 @@
-.. include:: ../references.txt
+.. include:: ../../references.txt
 
 .. _reflected_background:
 
@@ -26,7 +26,7 @@ be found in [Berge2007]_.
 
 .. _figure_reflected_background:
 
-.. figure:: ../_static/hgps_spectrum_background_estimation.png
+.. figure:: ../../_static/hgps_spectrum_background_estimation.png
     :width: 50%
 
     Fig.1, Illustration of the reflected regions background estimation method, taken from [Abdalla2018]_.
@@ -79,7 +79,7 @@ complex region such as a `~regions.CircleAnnulusSkyRegion` a
 
 The following example shows how to create such regions:
 
-.. plot:: makers/create_region.py
+.. plot:: user-guide/makers/create_region.py
     :include-source:
 
 The reflected region finder
@@ -93,7 +93,7 @@ This is useful to limit contamination by events leaking out the ON region. It
 also shows how to change the minimum distance between adjacent regions as well
 as the maximum number of reflected regions.
 
-.. plot:: makers/make_reflected_regions.py
+.. plot:: user-guide/makers/make_reflected_regions.py
     :include-source:
 
 Using the reflected background estimator
@@ -105,7 +105,7 @@ In practice, the user does not usually need to directly interact with the
 and OFF events for an `~gammapy.data.Observations` object. The last example
 shows how to run it on a few observations with a rectangular region.
 
-.. plot:: makers/make_rectangular_reflected_background.py
+.. plot:: user-guide/makers/make_rectangular_reflected_background.py
     :include-source:
 
 The following notebook shows an example using
@@ -114,4 +114,4 @@ extraction and fitting:
 
 .. nbgallery::
 
-   ../tutorials/analysis/1D/spectral_analysis.ipynb
+   ../../tutorials/analysis/1D/spectral_analysis.ipynb

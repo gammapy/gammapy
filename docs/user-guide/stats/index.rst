@@ -170,7 +170,7 @@ account only positive fluctuations.
 To see how the :math:`TS`, relates to the statistic function, we plot below the profile of the Cash
 statistic as a function of the expected signal events number.
 
-.. plot:: stats/plot_cash_significance.py
+.. plot:: user-guide/stats/plot_cash_significance.py
 
 Excess errors
 ~~~~~~~~~~~~~
@@ -208,7 +208,7 @@ for which the TS variation is :math:`2^2 = 4`.
 On the following plot, we show how the 1 :math:`\sigma` and 2 :math:`\sigma` confidence errors
 relate to the Cash statistic profile.
 
-.. plot:: stats/plot_cash_errors.py
+.. plot:: user-guide/stats/plot_cash_errors.py
 
 WStat counts statistic
 ----------------------
@@ -239,7 +239,7 @@ Here's how you compute the statistical significance of your detection:
     Excess  : 7.50
     sqrt(TS): 2.09
 
-.. plot:: stats/plot_wstat_significance.py
+.. plot:: user-guide/stats/plot_wstat_significance.py
 
 Conversely, if you know that the expected number of background events is :math:`\mu_{bkg}=5.5`, you can use
 the Cash statistic and obtain the :math:`\sqrt TS` or Li & Ma significance for known background:
@@ -256,7 +256,7 @@ the Cash statistic and obtain the :math:`\sqrt TS` or Li & Ma significance for k
     Excess  : 7.50
     sqrt(TS): 2.71
 
-.. plot:: stats/plot_cash_significance.py
+.. plot:: user-guide/stats/plot_cash_significance.py
 
 Excess errors
 ~~~~~~~~~~~~~
@@ -288,7 +288,7 @@ for which the TS variation is :math:`2^2 = 4`.
 On the following plot, we show how the 1 :math:`\sigma` and 2 :math:`\sigma` confidence errors
 relate to the fit statistic profile.
 
-.. plot:: stats/plot_cash_errors.py
+.. plot:: user-guide/stats/plot_cash_errors.py
 
 
 These are references describing the available methods: [LiMa1983]_, [Cash1979]_,
@@ -300,5 +300,5 @@ These are references describing the available methods: [LiMa1983]_, [Cash1979]_,
     :maxdepth: 1
     :hidden:
 
-    ../stats/fit_statistics
-    ../stats/wstat_derivation
+    fit_statistics
+    wstat_derivation

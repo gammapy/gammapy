@@ -1,4 +1,4 @@
-.. include:: ../references.txt
+.. include:: ../../references.txt
 
 .. _wstat_derivation:
 
@@ -17,7 +17,7 @@ you can write down the likelihood formula as
 
 where :math:`\mu_{\mathrm{sig}}` and :math:`\mu_{\mathrm{bkg}}` are respectively
 the number of expected signal and background counts in the ON region,
-as defined in the :ref:`stats-introduction`. By taking two
+as defined in the :ref:`stats_notation`. By taking two
 time the negative log likelihood and neglecting model independent and thus
 constant terms, we define the **WStat**.
 

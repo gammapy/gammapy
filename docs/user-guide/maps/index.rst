@@ -293,10 +293,10 @@ Gammapy tutorial notebooks that show examples using ``gammapy.maps``:
 
 .. nbgallery::
 
-   ../tutorials/api/maps.ipynb
-   ../tutorials/analysis/3D/analysis_3d.ipynb
-   ../tutorials/analysis/3D/simulate_3d.ipynb
-   ../tutorials/data/fermi_lat.ipynb
+   ../../tutorials/api/maps.ipynb
+   ../../tutorials/analysis/3D/analysis_3d.ipynb
+   ../../tutorials/analysis/3D/simulate_3d.ipynb
+   ../../tutorials/data/fermi_lat.ipynb
 
 More detailed documentation on the WCS and HPX classes in ``gammapy.maps`` can be
 found in the following sub-pages:

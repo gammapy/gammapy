@@ -1,4 +1,4 @@
-.. include:: ../references.txt
+.. include:: ../../references.txt
 
 .. _datasets:
 
@@ -179,7 +179,7 @@ dataset is the sum expected by stacking the `npred` of the individual runs,
 The following plot illustrates the stacked energy dispersion kernel and summed predicted counts for
 individual as well as stacked spectral datasets:
 
-.. plot:: datasets/plot_stack.py
+.. plot:: user-guide/datasets/plot_stack.py
 
 .. note::
     - A stacked analysis is reasonable only when adding runs taken by the same instrument.
@@ -243,8 +243,8 @@ Gammapy tutorial notebooks that show how to use this package:
 
 .. nbgallery::
 
-   ../tutorials/api/datasets.ipynb
-   ../tutorials/api/model_management.ipynb
-   ../tutorials/analysis/1D/sed_fitting.ipynb
+   ../../tutorials/api/datasets.ipynb
+   ../../tutorials/api/model_management.ipynb
+   ../../tutorials/analysis/1D/sed_fitting.ipynb
 
 

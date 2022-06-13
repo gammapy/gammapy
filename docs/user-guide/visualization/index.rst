@@ -1,4 +1,4 @@
-.. include:: ../references.txt
+.. include:: ../../references.txt
 
 .. _visualization:
 
@@ -14,7 +14,7 @@ Colormaps
 The following example shows how to plot images using colormaps that are commonly
 used in gamma-ray astronomy (`colormap_hess` and `colormap_milagro`).
 
-.. plot:: colormap_example.py
+.. plot:: user-guide/visualization/colormap_example.py
 
 Survey panel plots
 ------------------
