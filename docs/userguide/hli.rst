@@ -1,8 +1,8 @@
 .. _analysis:
 
-*****************************
+
 High Level Analysis Interface
-*****************************
+=============================
 
 The high level interface for Gammapy provides a high level Python API for the
 most common use cases identified in the analysis process. The classes and

@@ -1,10 +1,6 @@
 .. _astro:
 
-************
 Astrophysics
-************
-
-Introduction
 ============
 
 This module contains utility functions for some astrophysical scenarios:
@@ -18,7 +14,7 @@ are currently being discussed. It is likely that some functionality will
 be removed or split out into a separate package at some point.
 
 Getting started
-===============
+---------------
 
 The ``gammapy.astro`` namespace is empty. Use these import statements:
 
@@ -31,7 +27,7 @@ The ``gammapy.astro`` namespace is empty. Use these import statements:
 Please refer to the Getting Started section of each sub-package for a further introduction.
 
 Sub-packages
-============
+------------
 
 .. toctree::
     :maxdepth: 1

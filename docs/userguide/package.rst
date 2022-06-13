@@ -3,7 +3,7 @@
 .. _package:
 
 Gammapy analysis workflow and package structure
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+===============================================
 
 .. toctree::
     :hidden:
@@ -26,7 +26,7 @@ Gammapy analysis workflow and package structure
 
 
 Analysis workflow
-+++++++++++++++++
+-----------------
 
 :ref:`Fig. 1 <data_flow>` illustrates the standard analysis flow and the corresponding
 sub-package structure of Gammapy. Gammapy can be typically used with the configuration
@@ -45,7 +45,7 @@ the Gammapy API are explained in more detail in the following.
     shows the data levels as defined by `CTA`_.
 
 Analysis steps
-++++++++++++++
+--------------
 
 :ref:`data`
     The analysis of gamma-ray data with Gammapy starts at the "data level 3".
@@ -82,7 +82,7 @@ Analysis steps
 
 
 Configurable analysis
-+++++++++++++++++++++
+---------------------
 
 :ref:`analysis`
     To define and execute a full data analysis process from a YAML configuration file,
@@ -95,7 +95,7 @@ Configurable analysis
     to configure analysis tasks.
 
 Additional utilities
-++++++++++++++++++++
+--------------------
 
 :ref:`catalog`
     Access to a variety of GeV-TeV gamma-ray catalogs.

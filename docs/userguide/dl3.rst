@@ -1,11 +1,8 @@
 .. _data:
 
-*******************************
 Data access and selection (DL3)
-*******************************
+===============================
 
-DL3 data and observations
-=========================
 IACT data is typically structured in "observations", which define a given
 time interval during with the instrument response is considered stable.
 

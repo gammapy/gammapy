@@ -1,12 +1,7 @@
 .. _modeling:
 
-*********************************
 Modeling and Fitting (DL4 to DL5)
-*********************************
-
-
-Models
-======
+=================================
 
 `gammapy.modeling` contains all the functionality related to modeling and fitting
 data. This includes spectral, spatial and temporal model classes, as well as the fit

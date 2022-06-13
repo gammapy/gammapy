@@ -1,13 +1,7 @@
 .. _stats:
 
-*****************************
 Statistical utility functions
-*****************************
-
-.. _stats-introduction:
-
-Introduction
-============
+=============================
 
 `gammapy.stats` holds statistical estimators, fit statistics and algorithms
 commonly used in gamma-ray astronomy.

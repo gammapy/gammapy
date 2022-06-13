@@ -1,11 +1,7 @@
 .. _irf:
 
-***********************************
 Instrument Response Functions (DL3)
-***********************************
-
-Instrument Response Functions
-=============================
+===================================
 
 Typically the IRFs are stored in the form of multidimensional tables giving
 the response functions such as the distribution of gamma-like events or the

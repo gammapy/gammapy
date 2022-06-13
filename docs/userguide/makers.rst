@@ -2,14 +2,8 @@
 
 .. _makers:
 
-***************************
 Data reduction (DL3 to DL4)
-***************************
-
-.. currentmodule:: gammapy.makers
-
-Introduction
-============
+===========================
 
 The `gammapy.makers` sub-package contains classes to perform data reduction tasks
 from DL3 data to binned datasets. In the data reduction step the DL3 data is prepared for modeling and fitting,
@@ -27,9 +21,14 @@ Background estimation
     ../makers/ring
 
 
+Safe data range definition
+--------------------------
+
+The definition of a safe data range is done using the `SafeMaskMaker` or manually.
+
 
 Using gammapy.makers
-====================
+--------------------
 
 Gammapy tutorial notebooks that show examples using ``gammapy.makers``:
 

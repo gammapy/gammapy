@@ -2,13 +2,8 @@
 
 .. _visualization:
 
-*****************
-Plotting features
-*****************
-
-
-Getting started
-===============
+Visualization
+=============
 
 `gammapy.visualization` provides a few helper functions and classes to create
 publication-quality images.

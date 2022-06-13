@@ -1,17 +1,16 @@
 .. _estimators:
 
-********************************
 Estimators (DL4 to DL5, and DL6)
-********************************
-
-Estimators
-==========
+================================
 
 The `gammapy.estimators` submodule contains algorithms and classes
 for high level flux and significance estimation. This includes
 estimation flux points, flux maps, flux points, flux profiles and
 flux light curves. All estimators feature a common API and allow
 estimating fluxes in bands of reconstructed energy.
+
+General method
+--------------
 
 The core of any estimator algorithm is hypothesis testing: a reference
 model or counts excess is tested against a null hypothesis. From the
@@ -36,6 +35,10 @@ In general the flux can be estimated using two methods:
    analytical solution by [LiMa1983]. In this case the "best fit" flux and significance
    are given by the excess over the null hypothesis. This method is also named
    **backward folding**. This method is currently only exposed in the `ExcessMapEstimator`
+
+
+Flux quantities
+---------------
 
 In case the data is fitted to a single data bin only, e.g. one energy bin
 Uniformly for both methods most estimators compute the same basic quantities:

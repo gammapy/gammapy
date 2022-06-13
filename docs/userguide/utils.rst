@@ -2,12 +2,8 @@
 
 .. _utils:
 
-*****************
 Utility functions
-*****************
-
-Introduction
-============
+=================
 
 ``gammapy.utils`` is a collection of utility functions that are used in many
 places or don't fit in one of the other packages.
@@ -27,13 +23,12 @@ import functionality from the ``gammapy.utils`` sub-modules:
 .. _time_handling:
 
 Time handling in Gammapy
-========================
+------------------------
 
 See `gammapy.utils.time`.
 
 Time format and scale
----------------------
-
++++++++++++++++++++++
 In Gammapy, `astropy.time.Time` objects are used to represent times:
 
 .. testcode::
@@ -90,7 +85,7 @@ of the differences between the relevant time scales ``UT1``, ``UTC`` and ``TT``.
 .. _MET_definition:
 
 Mission elapsed times (MET)
----------------------------
++++++++++++++++++++++++++++
 
 :term:`MET` time references are times representing UTC seconds after a specific
 origin. Each experiment may have a different MET origin that should be included
@@ -106,7 +101,7 @@ to convert MET floats to `~astropy.time.Time` objects via the reference times
 stored in FITS headers.
 
 Time differences
-----------------
+++++++++++++++++
 
 TODO: discuss when to use `~astropy.time.TimeDelta` or `~astropy.units.Quantity`
 or :term:`MET` floats and where one needs to convert between those and what to watch

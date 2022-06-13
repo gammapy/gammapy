@@ -2,20 +2,15 @@
 
 .. _CLI:
 
-******************
+
 Command line tools
-******************
+==================
 
 .. warning::
 
     The Gammapy command line interface (CLI) described here is experimental
     and only supports a small sub-set of the functionality available via
     the Gammapy Python package.
-
-.. _CLI_intro:
-
-Introduction
-============
 
 Currently, Gammapy is first and foremost a Python package. This means that to
 use it you have to write a Python script or Jupyter notebook, where you import
@@ -29,8 +24,8 @@ That said, for some very commonly used and easy to configure analysis tasks we
 have implemented a **command line interface (CLI)**. It is automatically
 installed together with the Gammapy python package.
 
-Execute
--------
+Execution
+---------
 
 To execute the Gammapy CLI, type the command ``gammapy`` at your terminal shell
 (not in Python)::

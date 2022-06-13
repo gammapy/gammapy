@@ -2,12 +2,8 @@
 
 .. _datasets:
 
-**************
 Datasets (DL4)
-**************
-
-Datasets
-========
+==============
 
 The `gammapy.datasets` sub-package contains classes to handle reduced
 gamma-ray data for modeling and fitting.
