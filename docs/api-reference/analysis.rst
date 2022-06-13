@@ -1,5 +1,3 @@
-.. include:: ../references.txt
-
 .. _api_analysis:
 
 *******************************
