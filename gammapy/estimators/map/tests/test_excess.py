@@ -170,7 +170,6 @@ def test_significance_map_estimator_map_dataset_exposure(simple_dataset):
                                 edisp = simple_dataset.edisp)
 
     simple_dataset_no_mask.models = [model]
-    simple_dataset_no_mask.npred()
 
     result_no_mask = estimator.run(simple_dataset_no_mask)
     assert_allclose(result_no_mask["npred_excess"].data.sum(), 19733.602, rtol=1e-3)
