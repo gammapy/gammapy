@@ -104,7 +104,11 @@ etc). Any additional author can be inserted into the list for its special contri
 Coordination Committee.
 
 The order of the authors is first 'The Gammapy team', the Lead Developers, a past Lead Developer in case of
-change between two releases, followed by the list of contributors in alphabetical order.
+change between two releases, followed by the list of contributors in alphabetical order:
+
+ ::
+
+  The Gammapy team: LD1, LD2, (oldLD,) aa, bb, cc, ...
 
 This policy is applied to any release after the LTS V1.0. For the releases made before, a hand-made list is used.
 After the mention of 'The Gammapy team', the current Lead Developers will be in first, then the past Lead
@@ -168,7 +172,11 @@ the Gammapy project itself. It does not concern a technical or scientific work t
 In this case, the standard citation scheme should be used.
 
 As the length of the author list is generally a constrain, the author list can be reduced to the shortlist of authors,
-followed by 'The Gammapy team' associated with a link to the Gammapy team webpage.
+followed by 'The Gammapy team' associated with a link to the Gammapy team webpage:
+
+ ::
+
+  oo, ff, tt, for the Gammapy team
 
 If there is a corresponding author, the 'Gammapy Coordination Committee', associated with its usual mailing list, is
 used. Concerning the acknowledgement, the Astropy project should always be mentioned.
