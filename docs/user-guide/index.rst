@@ -61,7 +61,7 @@ User guide
 
     +++
 
-    .. link-button:: ../modeling/gallery/index
+    .. link-button:: model-gallery/index
             :type: ref
             :text: To the model gallery
             :classes: btn-block btn-secondary stretched-link
