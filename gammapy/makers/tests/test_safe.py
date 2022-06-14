@@ -1,8 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import logging
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
+from astropy.coordinates import SkyCoord
 from gammapy.data import DataStore
 from gammapy.datasets import MapDataset
 from gammapy.makers import MapDatasetMaker, SafeMaskMaker
@@ -48,6 +50,25 @@ def dataset(observation_cta_1dc):
     return dataset_maker.run(dataset=empty_dataset, observation=observation_cta_1dc)
 
 
+@pytest.fixture(scope="session")
+def shifted_dataset(observation_cta_1dc):
+    axis = MapAxis.from_bounds(
+        0.1, 10, nbin=16, unit="TeV", name="energy", interp="log"
+    )
+    axis_true = MapAxis.from_bounds(
+        0.1, 50, nbin=30, unit="TeV", name="energy_true", interp="log"
+    )
+    skydir = observation_cta_1dc.pointing_radec.directional_offset_by(position_angle=0. * u.deg, separation=10 * u.deg)
+    geom = WcsGeom.create(
+        npix=(11, 11), axes=[axis], skydir=skydir
+    )
+
+    empty_dataset = MapDataset.create(geom=geom, energy_axis_true=axis_true, name="shifted")
+    dataset_maker = MapDatasetMaker()
+    return dataset_maker.run(dataset=empty_dataset, observation=observation_cta_1dc)
+
+
+
 @requires_data()
 def test_safe_mask_maker_offset_max(dataset, observation_cta_1dc):
     safe_mask_maker = SafeMaskMaker(
@@ -86,6 +107,40 @@ def test_safe_mask_maker_aeff_max(dataset, observation_cta_1dc):
     mask_aeff_max = safe_mask_maker.make_mask_energy_aeff_max(dataset)
 
     assert_allclose(mask_aeff_max.data.sum(), 1210)
+
+
+@requires_data()
+def test_safe_mask_maker_aeff_max_fixed_observation(dataset, shifted_dataset, observation_cta_1dc, caplog):
+    safe_mask_maker = SafeMaskMaker(methods=["aeff-max"], aeff_percent=20)
+
+    mask_aeff_max = safe_mask_maker.make_mask_energy_aeff_max(dataset, observation=observation_cta_1dc)
+    assert_allclose(mask_aeff_max.data.sum(), 847)
+
+    with caplog.at_level(logging.WARNING):
+        mask_aeff_max_bis = safe_mask_maker.make_mask_energy_aeff_max(shifted_dataset, observation=observation_cta_1dc)
+
+    assert len(caplog.record_tuples) == 1
+    assert caplog.record_tuples[0] == (
+        "gammapy.makers.safe",
+        logging.WARNING,
+        "No safe energy band can be defined for the dataset shifted: setting mask_safe to False",
+    )
+    assert_allclose(mask_aeff_max_bis.data.sum(), 0)
+
+
+@requires_data()
+def test_safe_mask_maker_aeff_max_fixed_offset(dataset, observation_cta_1dc):
+    safe_mask_maker = SafeMaskMaker(methods=["aeff-max"], aeff_percent=20, fixed_offset=5*u.deg)
+
+    mask_aeff_max = safe_mask_maker.make_mask_energy_aeff_max(dataset, observation=observation_cta_1dc)
+    assert_allclose(mask_aeff_max.data.sum(), 726)
+
+    import copy
+    mask_aeff_max_bis = copy.copy(mask_aeff_max)
+    mask_aeff_max_bis.data = 0
+    with pytest.raises(ValueError):
+        mask_aeff_max_bis = safe_mask_maker.make_mask_energy_aeff_max(dataset)
+    assert_allclose(mask_aeff_max_bis.data.sum(), 0)
 
 
 @requires_data()
