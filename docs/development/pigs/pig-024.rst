@@ -68,13 +68,13 @@ Contributing to Gammapy can be made in different ways:
 
 - contributing to gammapy source code,
 - contributing to our documentation (rst pages, docstring, gammapy-webpage),
-- contributing to our DevOps environment (CI, docs and package deployment, GitHub configuration, etc),
+- contributing to our DevOps environment (e.g. CI, docs and package deployment, GitHub configuration),
 - contributing to our associated projects (gammapy-benchmarks, gammapy-data, gammapy-extra),
 - contributing to the maintenance of our repositories (conda-forge, PyPI, Zenodo, HAL, docker-hub, etc) or open hub (openhub, etc),
 - leading the precise tasks identified by the Lead Developers,
 - organizing and leading hands-on sessions or schools,
 - managing our social media accounts,
-- and, de-facto, the members of the Coordination Committee.
+- and, de-facto, the Lead Developers and the members of the Coordination Committee.
 
 Any contribution on these topics renders the user as an official Gammapy contributor.
 
@@ -103,11 +103,11 @@ order to account for long contributions (e.g. management of depreciated features
 etc). Any additional author can be inserted into the list for its special contribution when requested by the Gammapy
 Coordination Committee.
 
-The order of the authors is first 'The Gammapy Collaboration', the Lead Developers, a past Lead Developer in case of
+The order of the authors is first 'The Gammapy team', the Lead Developers, a past Lead Developer in case of
 change between two releases, followed by the list of contributors in alphabetical order.
 
 This policy is applied to any release after the LTS V1.0. For the releases made before, a hand-made list is used.
-After the mention of 'The Gammapy Collaboration', the current Lead Developers will be in first, then the past Lead
+After the mention of 'The Gammapy team', the current Lead Developers will be in first, then the past Lead
 Developers, followed by the list of contributors in alphabetical order.
 
 Long Term Support releases
@@ -117,11 +117,11 @@ The list of authors is composed of the union of all the contributors of the rele
 release. Any additional author can be inserted into the list for its special contribution when requested by the Gammapy
 Coordination Committee.
 
-The order of the authors is first 'The Gammapy Collaboration', the Lead Developers, a past Lead Developer in case of
+The order of the authors is first 'The Gammapy team', the Lead Developers, a past Lead Developer in case of
 change since the last LST, followed by the list of contributors in alphabetical order.
 
 For the first LST release, the V1.0, all contributors from the beginning of the project will be co-authors. After the
-mention of 'The Gammapy Collaboration', the Lead Developers will be in first, then the past Lead Developers since the
+mention of 'The Gammapy team', the Lead Developers will be in first, then the past Lead Developers since the
 beginning of the project, followed by the list of contributors in alphabetical order.
 
 General Gammapy publications
@@ -132,13 +132,13 @@ targets a wide community, the following scheme is used.
 
 A/ List of authors
 
-A.1/ By default, 'The Gammapy Collaboration' is mentioned first, then the Lead Developers, then the past Lead Developers since the
+A.1/ By default, 'The Gammapy team' is mentioned first, then the Lead Developers, then the past Lead Developers since the
 last general Gammapy publication, then the list of contributors of each release since the last Gammapy publication.
 
 A.2/ If the editorial rules of the targeted journal permit it, the scheme used by the Astropy project
 (e.g. `Astropy V2.0 <https://arxiv.org/pdf/1801.02634.pdf>`_) should be used in priority:
 
-- 'The Gammapy Collaboration', and the list of primary paper contributors in order of contribution agreed per consensus with the development team and the Coordination Committee, as '(Primary Paper Contributors)'
+- 'The Gammapy team', and the list of primary paper contributors in order of contribution agreed per consensus with the development team and the Coordination Committee, as '(Primary Paper Contributors)'
 - the members of the Coordination Committee, as '(Gammapy Coordination Committee)'
 - the list of contributors of each release since the last Gammapy publication, ordered by alphabetical order, as '(Gammapy Contributors)'
 
@@ -168,7 +168,7 @@ the Gammapy project itself. It does not concern a technical or scientific work t
 In this case, the standard citation scheme should be used.
 
 As the length of the author list is generally a constrain, the author list can be reduced to the shortlist of authors,
-followed by 'The Gammapy Collaboration' associated with a link to the Gammapy team webpage.
+followed by 'The Gammapy team' associated with a link to the Gammapy team webpage.
 
 If there is a corresponding author, the 'Gammapy Coordination Committee', associated with its usual mailing list, is
 used. Concerning the acknowledgement, the Astropy project should always be mentioned.
