@@ -80,7 +80,7 @@ you to define the x and y axis units using `astropy.units`. Here is a minimal ex
         ax = plt.subplot()
         ax.xaxis.set_units(u.eV)
         ax.yaxis.set_units(u.Unit("erg cm-2 s-1"))
-        fp.plot(sed_type="e2dnde")
+        fp.plot(ax=ax, sed_type="e2dnde")
 
 .. accordion-footer::
 
