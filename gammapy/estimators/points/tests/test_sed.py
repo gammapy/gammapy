@@ -373,6 +373,15 @@ def test_run_map_pwl_reoptimize(fpe_map_pwl_reoptimize):
 
 
 @requires_data()
+def test_reoptimize_no_free_parameters(fpe_pwl, caplog):
+    datasets, fpe = fpe_pwl
+    fpe.reoptimize = True
+    with pytest.raises(ValueError, match="No free parameters for fitting"):
+        fpe.run(datasets)
+    fpe.reoptimize = False
+
+
+@requires_data()
 def test_flux_points_estimator_no_norm_scan(fpe_pwl, tmpdir):
     datasets, fpe = fpe_pwl
     fpe.selection_optional = None
