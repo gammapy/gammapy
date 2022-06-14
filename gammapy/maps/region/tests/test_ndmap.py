@@ -31,6 +31,18 @@ def region_map():
     m.data = np.arange(m.data.size, dtype=float).reshape(m.geom.data_shape)
     return m
 
+@pytest.fixture
+def point_region_map():
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=6, name="energy")
+    m = Map.create(
+        region="icrs;point(83.63, 21.51)",
+        map_type="region",
+        axes=[axis],
+        unit="1/TeV",
+    )
+    m.data = np.arange(m.data.size, dtype=float).reshape(m.geom.data_shape)
+    return m
+
 
 @pytest.fixture
 def region_map_true():
@@ -222,6 +234,15 @@ def test_region_nd_map_fill_events(region_map):
     region_map.fill_events(events)
 
     assert_allclose(region_map.data.sum(), 665)
+
+@requires_data()
+def test_region_nd_map_fill_events_pointskyregion(point_region_map):
+    filename = "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz"
+    events = EventList.read(filename).select_offset([70.,71]*u.deg)
+    region_map = Map.from_geom(point_region_map.geom)
+    region_map.fill_events(events)
+
+    assert_allclose(region_map.data.sum(), 0)
 
 
 def test_apply_edisp(region_map_true):

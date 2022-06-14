@@ -518,7 +518,14 @@ class RegionGeom(Geom):
         if self.region is None:
             pix = (0, 0)
         else:
-            in_region = self.region.contains(coords.skycoord, wcs=self.wcs)
+            # TODO: remove once fix is available in regions
+            if isinstance(self.region, PointSkyRegion):
+                point_region = self.region.to_pixel(self.wcs)
+                point_region.meta['include'] = False
+                pix_coord = PixCoord.from_sky(coords.skycoord, self.wcs)
+                in_region = point_region.contains(pix_coord)
+            else:
+                in_region = self.region.contains(coords.skycoord, wcs=self.wcs)
 
             x = np.zeros(coords.skycoord.shape)
             x[~in_region] = np.nan
