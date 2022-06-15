@@ -172,7 +172,7 @@ class SafeMaskMaker(Maker):
         aeff = exposure.get_spectrum(position) / exposure.meta["livetime"]
         if not np.any(aeff.data > 0.):
             log.warning(
-                f"No safe energy band can be defined for the dataset {dataset.name}: setting mask_safe to False"
+                f"Effective area is all zero at [{position.to_string('dms')}]. No safe energy band can be defined for the dataset '{dataset.name}': setting `mask_safe` to all False."
             )
             return Map.from_geom(geom, data=False, dtype='bool')
 
