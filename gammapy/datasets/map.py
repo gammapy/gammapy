@@ -915,6 +915,8 @@ class MapDataset(Dataset):
         The residuals are extracted from the provided region, and the normalization
         used for its computation can be controlled using the method parameter.
 
+        The error bars are computed using the uncertainty on the excess with a symmetric assumption.
+
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`
@@ -953,25 +955,27 @@ class MapDataset(Dataset):
         npred_spec = npred.get_spectrum(region)
         residuals = self._compute_residuals(counts_spec, npred_spec, method)
 
+        if self.stat_type == "wstat":
+            counts_off = (self.counts_off * mask).get_spectrum(region)
+
+            with np.errstate(invalid="ignore"):
+                alpha = (self.background * mask).get_spectrum(region) / counts_off
+
+            mu_sig = (self.npred_signal() * mask).get_spectrum(region)
+            stat = WStatCountsStatistic(
+                n_on=counts_spec,
+                n_off=counts_off,
+                alpha=alpha,
+                mu_sig=mu_sig,
+            )
+        elif self.stat_type == "cash":
+            stat = CashCountsStatistic(counts_spec.data, npred_spec.data)
+        excess_error = stat.error
+
         if method == "diff":
-            if self.stat_type == "wstat":
-                counts_off = (self.counts_off * mask).get_spectrum(region)
-
-                with np.errstate(invalid="ignore"):
-                    alpha = (self.background * mask).get_spectrum(region) / counts_off
-
-                mu_sig = (self.npred_signal() * mask).get_spectrum(region)
-                stat = WStatCountsStatistic(
-                    n_on=counts_spec,
-                    n_off=counts_off,
-                    alpha=alpha,
-                    mu_sig=mu_sig,
-                )
-            elif self.stat_type == "cash":
-                stat = CashCountsStatistic(counts_spec.data, npred_spec.data)
-            yerr = stat.error
+            yerr = excess_error
         elif method == "diff/sqrt(model)":
-            yerr = np.ones_like(residuals.data)
+            yerr = excess_error/np.sqrt(npred_spec.data)
         else:
             raise ValueError(
                 'Invalid method, choose between "diff" and "diff/sqrt(model)"'
