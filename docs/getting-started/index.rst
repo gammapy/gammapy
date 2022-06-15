@@ -2,6 +2,7 @@
 
 .. _getting-started:
 
+===============
 Getting started
 ===============
 
@@ -195,7 +196,7 @@ Gammapy can also simulate events. Flux points can be computed using the
 
 |
 
-:link-badge:`../tutorials/analysis/3D/analysis_3D.html,"3D analysis tutorial",cls=badge-primary text-white`
+:link-badge:`../tutorials/analysis/3D/analysis_3d.html,"3D analysis tutorial",cls=badge-primary text-white`
 :link-badge:`../tutorials/analysis/3D/event_sampling.html,"3D analysis tutorial with event sampling",cls=badge-primary text-white`
 
 
@@ -216,7 +217,7 @@ You can also compute light curves in multiple energy bands. In all cases the lig
 curve is computed using the `~gammapy.estimators.LightCurveEstimator`.
 
 
-:link-badge:`../tutorials/analysis/time/light_cuve.html,"Light curve tutorial",cls=badge-primary text-white`
+:link-badge:`../tutorials/analysis/time/light_curve.html,"Light curve tutorial",cls=badge-primary text-white`
 :link-badge:`../tutorials/analysis/time/light_curve_flare.html,"Light curve tutorial for flares",cls=badge-primary text-white`
 
 

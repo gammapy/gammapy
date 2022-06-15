@@ -2,9 +2,9 @@
 
 .. _dev:
 
-***********
-Development
-***********
+===============
+Developer guide
+===============
 
 The developer documentation is a collection of notes for Gammapy developers and maintainers.
 If something is not covered here, have a look at the very extensive

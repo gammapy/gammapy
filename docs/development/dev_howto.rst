@@ -537,21 +537,21 @@ Here's to commands to check for and fix this (see `here <http://stackoverflow.co
     $ cd astropy_helpers && git checkout -- . && cd ..
 
 
-Changelog
-+++++++++
+Release notes
++++++++++++++
 
-In Gammapy we keep a :ref:`changelog` with a list of pull requests.
+In Gammapy we keep :ref:`release_notes` with a list of pull requests.
 We sort by release and within the release by PR number (the largest first).
 
 As explained in the :ref:`astropy:changelog-format` section in the Astropy docs,
-there are (at least) two approaches for adding to the changelog, each with pros
+there are (at least) two approaches for adding to the releases, each with pros
 and cons.
 
-We've had some pain due to merge conflicts in the changelog and having to wait
+We've had some pain due to merge conflicts in the releases notes and having to wait
 until the contributor rebases (and having to explain git rebase to new contributors).
 
-So our recommendation is that changelog entries are not added in pull requests,
-but that the core developer adds a changelog entry after right after having
+So our recommendation is that releases entries are not added in pull requests,
+but that the core developer adds a releases notes entry after right after having
 merged a pull request (you can add ``[skip ci]`` on this commit).
 
 Others
