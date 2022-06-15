@@ -4,7 +4,6 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
-from astropy.coordinates import SkyCoord
 from gammapy.data import DataStore
 from gammapy.datasets import MapDataset
 from gammapy.makers import MapDatasetMaker, SafeMaskMaker
@@ -53,10 +52,10 @@ def dataset(observation_cta_1dc):
 @pytest.fixture(scope="session")
 def shifted_dataset(observation_cta_1dc):
     axis = MapAxis.from_bounds(
-        0.1, 10, nbin=16, unit="TeV", name="energy", interp="log"
+        0.1, 1, nbin=5, unit="TeV", name="energy", interp="log"
     )
     axis_true = MapAxis.from_bounds(
-        0.1, 50, nbin=30, unit="TeV", name="energy_true", interp="log"
+        0.1, 2, nbin=10, unit="TeV", name="energy_true", interp="log"
     )
     skydir = observation_cta_1dc.pointing_radec.directional_offset_by(position_angle=0. * u.deg, separation=10 * u.deg)
     geom = WcsGeom.create(
