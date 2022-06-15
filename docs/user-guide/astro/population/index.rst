@@ -4,8 +4,6 @@
 Astrophysical source population models
 **************************************
 
-.. currentmodule:: gammapy.astro.population
-
 Introduction
 ============
 

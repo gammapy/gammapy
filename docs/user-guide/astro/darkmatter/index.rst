@@ -4,8 +4,6 @@
 Dark matter
 ***********
 
-.. currentmodule:: gammapy.astro.darkmatter
-
 Introduction
 ============
 

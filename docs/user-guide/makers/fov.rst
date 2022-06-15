@@ -6,8 +6,6 @@
 FoV background
 **************
 
-.. currentmodule:: gammapy.makers
-
 Overview
 --------
 
