@@ -122,7 +122,7 @@ def test_safe_mask_maker_aeff_max_fixed_observation(dataset, shifted_dataset, ob
     assert caplog.record_tuples[0] == (
         "gammapy.makers.safe",
         logging.WARNING,
-        "No safe energy band can be defined for the dataset shifted: setting mask_safe to False",
+        "Effective area is all zero at [267d40m52.368168s -19d36m27s]. No safe energy band can be defined for the dataset 'shifted': setting `mask_safe` to all False.",
     )
     assert_allclose(mask_aeff_max_bis.data.sum(), 0)
 
