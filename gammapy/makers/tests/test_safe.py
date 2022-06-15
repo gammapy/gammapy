@@ -134,12 +134,8 @@ def test_safe_mask_maker_aeff_max_fixed_offset(dataset, observation_cta_1dc):
     mask_aeff_max = safe_mask_maker.make_mask_energy_aeff_max(dataset, observation=observation_cta_1dc)
     assert_allclose(mask_aeff_max.data.sum(), 726)
 
-    import copy
-    mask_aeff_max_bis = copy.copy(mask_aeff_max)
-    mask_aeff_max_bis.data = 0
     with pytest.raises(ValueError):
-        mask_aeff_max_bis = safe_mask_maker.make_mask_energy_aeff_max(dataset)
-    assert_allclose(mask_aeff_max_bis.data.sum(), 0)
+        mask_aeff_max = safe_mask_maker.make_mask_energy_aeff_max(dataset)
 
 
 @requires_data()
