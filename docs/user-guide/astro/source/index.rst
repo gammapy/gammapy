@@ -4,8 +4,6 @@
 Astrophysical source models
 ***************************
 
-.. currentmodule:: gammapy.astro.source
-
 Introduction
 ============
 

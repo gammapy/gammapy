@@ -1,13 +1,10 @@
-.. include:: ../references.txt
+.. include:: ../../references.txt
 
 .. _regionmap:
 
 **************************
 RegionGeom and RegionNDMap
 **************************
-
-.. currentmodule:: gammapy.maps
-
 This page provides examples and documentation specific to the Region
 classes. These objects are used to bundle the energy distribution - or any other
 non-spatial axis - of quantities (counts, exposure, ...) inside of a given region in the sky while retaining

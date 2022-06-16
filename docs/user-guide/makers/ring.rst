@@ -6,8 +6,6 @@
 Ring background
 ***************
 
-.. currentmodule:: gammapy.makers
-
 Overview
 --------
 This background estimation technique is used in classical Cherenkov astronomy
