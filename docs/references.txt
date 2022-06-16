@@ -126,7 +126,7 @@
 .. _Fermi-LAT time systems in a nutshell: https://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Cicerone/Cicerone_Data/Time_in_ScienceTools.html
 .. _FTOOLS: https://heasarc.gsfc.nasa.gov/ftools/ftools_menu.html
 .. _XSpec: https://heasarc.gsfc.nasa.gov/xanadu/xspec/
-.. _XSpec manual statistics page: https://heasarc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html
+.. _XSpec manual statistics page: https://heasarc.gsfc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html
 .. _Sherpa statistics page: https://cxc.cfa.harvard.edu/sherpa/statistics
 .. _XML schema: https://en.wikipedia.org/wiki/XML_schema
 .. _setuptools console_scripts entry point: https://python-packaging.readthedocs.io/en/latest/command-line-scripts.html
