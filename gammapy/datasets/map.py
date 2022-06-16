@@ -568,6 +568,7 @@ class MapDataset(Dataset):
             "gti", GTI.create([] * u.s, [] * u.s, reference_time=reference_time)
         )
         kwargs["mask_safe"] = Map.from_geom(geom, unit="", dtype=bool)
+        kwargs["mask_fit"] = Map.from_geom(geom, unit="", dtype=bool)
         return cls(**kwargs)
 
     @classmethod
