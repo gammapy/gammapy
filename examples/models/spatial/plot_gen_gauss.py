@@ -20,7 +20,7 @@ where :math:`\Gamma` is the gamma function.
 This analytical norm is approximated so it may not integrate to unity in extreme cases
 if ellipticity tend to one and radius is large or :math:`\eta` much larger than one (outside the default range).
 
-The effective radius is given by: 
+The effective radius is given by:
 
 .. math::
     \r_{rm eff}(\text{lon}, \text{lat}) = \sqrt{

@@ -280,12 +280,12 @@ def test_datastore_from_dir_no_obs_index(caplog, tmpdir):
 @requires_data()
 def test_data_store_required_irf_pointlike_fixed_rad_max():
     """Check behavior of the "point-like" option for datastore"""
-    store = DataStore.from_dir('$GAMMAPY_DATA/joint-crab/dl3/magic')
-    obs = store.get_observations([5029748], required_irf='point-like')
+    store = DataStore.from_dir("$GAMMAPY_DATA/joint-crab/dl3/magic")
+    obs = store.get_observations([5029748], required_irf="point-like")
     assert len(obs) == 1
     assert u.allclose(obs[0].rad_max.quantity, np.sqrt(0.02) * u.deg)
 
-    obs = store.get_observations([5029748], required_irf=['aeff', 'edisp'])
+    obs = store.get_observations([5029748], required_irf=["aeff", "edisp"])
     assert len(obs) == 1
     assert u.allclose(obs[0].rad_max.quantity, np.sqrt(0.02) * u.deg)
 
@@ -293,14 +293,13 @@ def test_data_store_required_irf_pointlike_fixed_rad_max():
 @requires_data()
 def test_data_store_required_irf_pointlike_variable_rad_max():
     """Check behavior of the "point-like" option for datastore"""
-    store = DataStore.from_dir('$GAMMAPY_DATA/magic/rad_max/data/')
+    store = DataStore.from_dir("$GAMMAPY_DATA/magic/rad_max/data/")
     obs = store.get_observations(
-        [5029747, 5029748],
-        required_irf=['aeff', 'edisp', 'rad_max']
+        [5029747, 5029748], required_irf=["aeff", "edisp", "rad_max"]
     )
     assert len(obs) == 2
     assert obs[0].rad_max is not None
 
-    obs = store.get_observations([5029747, 5029748], required_irf='point-like')
+    obs = store.get_observations([5029747, 5029748], required_irf="point-like")
     assert len(obs) == 2
     assert obs[0].rad_max.quantity is not None

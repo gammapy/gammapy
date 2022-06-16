@@ -342,11 +342,11 @@ def test_link_label(models):
 
 
 def test_to_dict_not_default():
-    
+
     model = PowerLawSpectralModel()
-    model.index.min=-1
-    model.index.max=-5
-    model.index.frozen=True
+    model.index.min = -1
+    model.index.max = -5
+    model.index.frozen = True
     mdict = model.to_dict(full_output=False)
 
     index_dict = mdict["spectral"]["parameters"][0]

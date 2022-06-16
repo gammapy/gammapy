@@ -22,8 +22,10 @@ REQUIRED_IRFS = {
     "all-optional": {},
 }
 
+
 class MissingRequiredHDU(IOError):
     pass
+
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
@@ -304,13 +306,14 @@ class DataStore:
         missing_hdus = []
         for hdu in ALL_HDUS:
             hdu_location = self.hdu_table.hdu_location(
-                obs_id=obs_id, hdu_type=hdu, warn_missing=False,
+                obs_id=obs_id,
+                hdu_type=hdu,
+                warn_missing=False,
             )
             if hdu_location is not None:
                 kwargs[hdu] = hdu_location
             elif hdu in required_hdus:
                 missing_hdus.append(hdu)
-
 
         if len(missing_hdus) > 0:
             raise MissingRequiredHDU(

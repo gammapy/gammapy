@@ -176,7 +176,7 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
         unit="",
         interp="log",
         is_norm=True,
-        )
+    )
 
     def __init__(self, mass, channel, scale=scale.quantity, jfactor=1, z=0, k=2):
         self.k = k

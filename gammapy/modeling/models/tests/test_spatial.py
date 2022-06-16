@@ -475,9 +475,9 @@ def test_temlatemap_clip():
     model_map.data += 1.0
     model = TemplateSpatialModel(model_map)
     model.map.data = model.map.data * -1
-    
+
     lon = np.array([0, 0.2, 0.3]) * u.deg
     lat = np.array([0, 0.2, 0.3]) * u.deg
 
-    val = model.evaluate(lon,lat)
+    val = model.evaluate(lon, lat)
     assert_allclose(val, 0, rtol=0.0001)
