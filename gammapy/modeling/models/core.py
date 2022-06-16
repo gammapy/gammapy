@@ -155,10 +155,10 @@ class ModelBase:
         if not full_output:
             for par, par_default in zip(params, self.default_parameters):
                 init = par_default.to_dict()
-                for item in ["min", "max", "error", "interp", "scale_method"]:
+                for item in ["min", "max", "error", "interp", "scale_method", "is_norm"]:
                     default = init[item]
 
-                    if par[item] == default or np.isnan(default):
+                    if par[item] == default or (np.isnan(par[item]) and np.isnan(default)):
                         del par[item]
 
                 if not par["frozen"]:
