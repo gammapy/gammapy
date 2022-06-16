@@ -2,6 +2,7 @@
 import collections.abc
 import copy
 import logging
+from itertools import zip_longest
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
@@ -19,7 +20,6 @@ from .event_list import EventList, EventListChecker
 from .filters import ObservationFilter
 from .gti import GTI
 from .pointing import FixedPointingInfo
-from itertools import zip_longest
 
 __all__ = ["Observation", "Observations"]
 

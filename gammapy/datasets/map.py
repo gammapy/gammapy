@@ -975,7 +975,7 @@ class MapDataset(Dataset):
         if method == "diff":
             yerr = excess_error
         elif method == "diff/sqrt(model)":
-            yerr = excess_error/np.sqrt(npred_spec.data)
+            yerr = excess_error / np.sqrt(npred_spec.data)
         else:
             raise ValueError(
                 'Invalid method, choose between "diff" and "diff/sqrt(model)"'

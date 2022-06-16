@@ -91,7 +91,7 @@ def plot_spectrum_datasets_off_regions(
         plot_kwargs["facecolor"] = "None"
         plot_kwargs.setdefault("edgecolor", props.pop("color"))
         plot_kwargs.update(props)
-        
+
         dataset.counts_off.plot_region(ax, **plot_kwargs)
 
         # create proxy artist for the custom legend

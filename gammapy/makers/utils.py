@@ -151,7 +151,9 @@ def make_map_background_irf(
 
     coords = {"energy": geom.axes["energy"].edges.reshape((-1, 1, 1))}
 
-    pointing_radec = pointing.radec if isinstance(pointing, FixedPointingInfo) else pointing
+    pointing_radec = (
+        pointing.radec if isinstance(pointing, FixedPointingInfo) else pointing
+    )
 
     if not use_region_center:
         image_geom = geom.to_wcs_geom().to_image()
@@ -170,7 +172,10 @@ def make_map_background_irf(
     else:
         if bkg.fov_alignment == FoVAlignment.ALTAZ:
             if not isinstance(pointing, FixedPointingInfo):
-                raise(TypeError, "make_map_background_irf requires FixedPointingInfo if BackgroundIRF.fov_alignement is ALTAZ")
+                raise (
+                    TypeError,
+                    "make_map_background_irf requires FixedPointingInfo if BackgroundIRF.fov_alignement is ALTAZ",
+                )
             altaz_coord = sky_coord.transform_to(pointing.altaz_frame)
 
             # Compute FOV coordinates of map relative to pointing

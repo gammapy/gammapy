@@ -168,11 +168,14 @@ def bkg_3d_custom(symmetry="constant", fov_align="RADEC"):
         # allow extrapolation for symmetry tests
     )
 
+
 @requires_data()
 def test_map_background_2d(bkg_2d, fixed_pointing_info):
     axis = MapAxis.from_edges([0.1, 1, 10], name="energy", unit="TeV", interp="log")
     skydir = fixed_pointing_info.radec.galactic
-    geom = WcsGeom.create(npix=(3, 3), binsz=4, axes=[axis], skydir=skydir, frame="galactic")
+    geom = WcsGeom.create(
+        npix=(3, 3), binsz=4, axes=[axis], skydir=skydir, frame="galactic"
+    )
 
     bkg = make_map_background_irf(
         pointing=skydir,
@@ -295,6 +298,7 @@ def test_make_map_background_irf_asym(fixed_pointing_info_aligned):
         with pytest.raises(AssertionError):
             assert_allclose(d[0, 1], d[2, 1], rtol=1e-4)  # Symmetric along lat
         assert_allclose(d[0, 1] * 9, d[2, 1], rtol=1e-4)  # Asymmetric along lat
+
 
 @requires_data()
 def test_make_map_background_irf_skycoord(fixed_pointing_info_aligned):

@@ -24,12 +24,12 @@ from gammapy.modeling.models import (
     PowerLaw2SpectralModel,
     PowerLawNormSpectralModel,
     PowerLawSpectralModel,
+    SkyModel,
     SmoothBrokenPowerLawSpectralModel,
     SuperExpCutoffPowerLaw4FGLDR3SpectralModel,
     SuperExpCutoffPowerLaw4FGLSpectralModel,
     TemplateNDSpectralModel,
     TemplateSpectralModel,
-    SkyModel,
 )
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import (
