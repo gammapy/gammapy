@@ -6,9 +6,9 @@
 Summary
 ~~~~~~~
 
-- Released June 16th, 2022
+- Released June 17th, 2022
 - 10 contributors
-- 20 pull requests (not all listed below)
+- 21 pull requests (not all listed below)
 
 What's new?
 ~~~~~~~~~~~
