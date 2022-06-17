@@ -20,6 +20,7 @@ def progress_download(source, destination):
         from tqdm import tqdm
     except ImportError:
         log.error("To use gammapy download install the tqdm and requests packages")
+        raise
         return
 
     destination.parent.mkdir(parents=True, exist_ok=True)
