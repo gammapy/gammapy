@@ -28,7 +28,7 @@ class FluxPointsEstimator(FluxEstimator):
     for details.
 
     The method is also described in the Fermi-LAT catalog paper
-    https://ui.adsabs.harvard.edu/#abs/2015ApJS..218...23A
+    https://ui.adsabs.harvard.edu/abs/2015ApJS..218...23A
     or the HESS Galactic Plane Survey paper
     https://ui.adsabs.harvard.edu/#abs/2018A%26A...612A...1H
 

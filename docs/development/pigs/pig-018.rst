@@ -311,7 +311,7 @@ weeks, but also in 2020 and after.
 .. _Scipy documentation user survey:  https://forms.gle/eK3x2ohJs1sLPJEk8
 .. _Google season of docs: https://developers.google.com/season-of-docs/
 .. _documentation principles: https://www.writethedocs.org/guide/writing/docs-principles/
-.. _Gammapy changelog: https://docs.gammapy.org/dev/changelog.html
+.. _Gammapy changelog: https://docs.gammapy.org/0.19/changelog.html
 .. _maps: https://docs.gammapy.org/0.14/maps/index.html
 .. _modeling: https://docs.gammapy.org/0.14/modeling/index.html
 .. _cube: https://docs.gammapy.org/0.14/cube/index.html

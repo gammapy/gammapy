@@ -119,7 +119,7 @@ def make_map_background_irf(
         - If a `~astropy.coordinates.SkyCoord` is passed, FOV frame rotation is not taken into account.
     ontime : `~astropy.units.Quantity`
         Observation ontime. i.e. not corrected for deadtime
-        see https://gamma-astro-data-formats.readthedocs.io/en/stable/irfs/full_enclosure/bkg/index.html#notes)
+        see https://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/full_enclosure/bkg/index.html#notes)
     bkg : `~gammapy.irf.Background3D`
         Background rate model
     geom : `~gammapy.maps.WcsGeom`
