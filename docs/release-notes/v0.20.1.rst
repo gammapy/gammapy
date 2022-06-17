@@ -1,7 +1,7 @@
 .. _gammapy_0p20p1_release:
 
 0.20.1 (June 16th, 2022)
----------------------
+------------------------
 
 Summary
 ~~~~~~~
@@ -14,7 +14,7 @@ What's new?
 ~~~~~~~~~~~
 
 This release is a bug fix for v0.20. It corrects several issues that were recently reported and
-improve the documentation .
+improves the documentation .
 
 Data with `Background2D` IRFs were not handled correctly by the `MapDatasetMaker` in v0.20.
 This is now corrected.
