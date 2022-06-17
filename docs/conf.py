@@ -85,6 +85,9 @@ copybutton_prompt_is_regexp = True
 rst_epilog += """
 """
 
+# This is added to keep the links to PRs in release notes
+changelog_links_docpattern = ['.*changelog.*', 'whatsnew/.*', 'release-notes/.*']
+
 # -- Project information ------------------------------------------------------
 
 # This does not *have* to match the package name, but typically does
