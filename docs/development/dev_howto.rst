@@ -281,8 +281,7 @@ Another option is to pass an integer seed to every function that generates rando
     stuff1 = make_some_random_stuff(random_state=seed)
     stuff2 = make_more_random_stuff(random_state=seed)
 
-This pattern was inspired by the way
-`scikit-learn handles random numbers <http://scikit-learn.org/stable/developers/#random-numbers>`__.
+This pattern was inspired by the way scikit-learn handles random numbers.
 We have changed the ``None`` option of ``sklearn.utils.check_random_state`` to ``'global-rng'``,
 because we felt that this meaning for ``None`` was confusing given that `numpy.random.RandomState`
 uses a different meaning (for which we use the option ``'global-rng'``).
