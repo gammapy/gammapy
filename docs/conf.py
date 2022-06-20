@@ -98,7 +98,7 @@ copyright = "{}, {}".format(datetime.datetime.now().year, setup_cfg["author"])
 version = get_distribution(project).version
 release = version
 switch_version = version
-if len(version) > 5:
+if "dev" in version:
     switch_version = "dev"
 
 # -- Options for HTML output ---------------------------------------------------
