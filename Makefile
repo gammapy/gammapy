@@ -2,6 +2,8 @@
 
 PROJECT = gammapy
 CYTHON ?= cython
+version = dev
+release = $(version)
 
 help:
 	@echo ''
@@ -94,11 +96,13 @@ clean-nb:
 	python -m gammapy jupyter --src=docs --r strip
 
 docs-sphinx:
+	cd docs && python generate_quickstart.py $(release)
 	cd docs && python -m sphinx . _build/html -b html -j auto
 
 docs-all:
-	python -m gammapy jupyter tar --out docs/_downloads/notebooks-dev.tar
+	python -m gammapy jupyter tar --out docs/_downloads/notebooks-$(release).tar
 	python -m gammapy.utils.notebooks_process --src="$(src)"
+	cd docs && python generate_quickstart.py $(release)
 	cd docs && python -m sphinx . _build/html -b html -j auto
 	python -m gammapy.utils.notebooks_links --src="$(src)"
 
