@@ -55,9 +55,8 @@ Installation
         :text: Learn more
         :classes: btn-secondary stretched-link
 
-.. ifconfig:: not 'dev' in version
 
-    .. include:: quickstart.rst
+.. include:: quickstart.rst
 
 Tutorials Overview
 ------------------

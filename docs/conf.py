@@ -79,7 +79,6 @@ extensions.extend(
         "sphinx_click.ext",
         "IPython.sphinxext.ipython_console_highlighting",
         "sphinx.ext.mathjax",
-        "sphinx.ext.ifconfig",
         "sphinx_gallery.gen_gallery",
         "sphinx.ext.doctest",
         "sphinx_panels",
@@ -108,7 +107,7 @@ author = setup_cfg["author"]
 copyright = "{}, {}".format(datetime.datetime.now().year, setup_cfg["author"])
 
 version = get_distribution(project).version
-release = 'dev'
+release = 'X.Y.Z'
 switch_version = version
 if "dev" in version:
     switch_version = "dev"
