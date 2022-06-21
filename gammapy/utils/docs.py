@@ -204,4 +204,3 @@ def gammapy_sphinx_ext_activate():
     register_directive("gp-howto-hli", HowtoHLI)
     register_directive("accordion-header", AccordionHeader)
     register_directive("accordion-footer", AccordionFooter)
-    register_directive('substitution-code-block', SubstitutionCodeBlock)
