@@ -24,7 +24,6 @@ from docutils.parsers.rst.directives import register_directive
 from docutils.parsers.rst.directives.body import CodeBlock
 from docutils.parsers.rst.directives.images import Image
 from docutils.parsers.rst.directives.misc import Include, Raw
-from sphinx.application import Sphinx
 from sphinx.util import logging
 from gammapy.analysis import AnalysisConfig
 
