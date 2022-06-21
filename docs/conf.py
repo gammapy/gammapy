@@ -73,6 +73,7 @@ extensions.extend(
         "sphinx.ext.doctest",
         "sphinx_panels",
         "sphinx_copybutton",
+        "sphinx_utils"
     ]
 )
 nbsphinx_execute = "never"
@@ -96,11 +97,14 @@ author = setup_cfg["author"]
 copyright = "{}, {}".format(datetime.datetime.now().year, setup_cfg["author"])
 
 version = get_distribution(project).version
-release = version
+release = ''
 switch_version = version
 if "dev" in version:
     switch_version = "dev"
+else:
+    release = version
 
+substitutions = [('|release|', release)]
 # -- Options for HTML output ---------------------------------------------------
 
 # A NOTE ON HTML THEMES
