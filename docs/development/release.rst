@@ -62,14 +62,9 @@ Steps for the day of the release:
 
    * `<https://docs.astropy.org/en/stable/development/astropy-package-template.html>`__.
 
-#. In the `gammapy repo <https://github.com/gammapy/gammapy>`__:
-
-   * Edit ``docs/getting-started/index.rst`` and change the version numbers in the text.
-
 #. In the `gammapy-docs repo <https://github.com/gammapy/gammapy-docs>`__:
 
    * Copy the ``docs/dev`` folder as a new ``docs/0.14`` folder.
-   * In the ``0.14/docs/_downloads`` folder, rename ``notebooks-dev.tar`` file as ``notebooks-0.14.tar``.
    * Edit ``stable/index.html`` to point to ``0.14/index.html``.
    * Edit ``stable/switcher.json`` to add the new version.
 
