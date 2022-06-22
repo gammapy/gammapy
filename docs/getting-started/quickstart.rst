@@ -9,7 +9,7 @@ get additional useful packages together with Gammapy in a virtual isolated
 environment. First install `Miniconda <https://docs.conda.io/en/latest/miniconda.html>`__
 and then just execute the following commands in the terminal:
 
-.. |release| substitution-code-block:: bash
+.. substitution-code-block:: bash
 
     $ curl -O https://gammapy.org/download/install/gammapy-|release|-environment.yml
     $ conda env create -f gammapy-|release|-environment.yml
@@ -22,7 +22,7 @@ and then just execute the following commands in the terminal:
 
 Once the environment has been created you can activate it using:
 
-.. |release| substitution-code-block:: bash
+.. substitution-code-block:: bash
 
     $ conda activate gammapy-|release|
 
@@ -30,7 +30,7 @@ You can now proceed to download the Gammapy tutorial notebooks and the example
 datasets. The total size to download is ~180 MB. Select the location where you
 want to install the datasets and proceed with the following commands:
 
-.. |release| substitution-code-block:: bash
+.. substitution-code-block:: bash
 
     $ gammapy download notebooks --release |release|
     $ gammapy download datasets
