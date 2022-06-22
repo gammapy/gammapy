@@ -122,7 +122,7 @@ class Background3D(BackgroundIRF):
 
     tag = "bkg_3d"
     required_axes = ["energy", "fov_lon", "fov_lat"]
-    default_unit = u.s**-1 * u.MeV**-1 * u.sr**-1
+    default_unit = u.s ** -1 * u.MeV ** -1 * u.sr ** -1
 
     def to_2d(self):
         """Convert to `Background2D`.
@@ -161,12 +161,12 @@ class Background3D(BackgroundIRF):
         ----------
         energy : `~astropy.units.Quantity`
             list of Energy
-        ax: `~matplotlib.axes.Axes`, optional
-            Axis
         add_cbar : bool
             Add color bar?
         ncols : int
             Number of columns to plot
+        figsize : tuple
+            Figure size
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
         """
@@ -230,7 +230,7 @@ class Background2D(BackgroundIRF):
 
     tag = "bkg_2d"
     required_axes = ["energy", "offset"]
-    default_unit = u.s**-1 * u.MeV**-1 * u.sr**-1
+    default_unit = u.s ** -1 * u.MeV ** -1 * u.sr ** -1
     default_interp_kwargs = dict(bounds_error=False, fill_value=0.0)
     """Default Interpolation kwargs."""
 
@@ -256,24 +256,28 @@ class Background2D(BackgroundIRF):
             data=data,
         )
 
-    def plot_at_energy(self, energy=None, ax=None, add_cbar=True, ncols=3, **kwargs):
+    def plot_at_energy(
+        self, energy=None, add_cbar=True, ncols=3, figsize=None, **kwargs
+    ):
         """Plot the background rate in Field of view coordinates at a given energy.
 
         Parameters
         ----------
         energy : `~astropy.units.Quantity`
             list of Energy
-        ax: `~matplotlib.axes.Axes`, optional
-            Axis
         add_cbar : bool
             Add color bar?
         ncols : int
             Number of columns to plot
+        figsize : tuple
+            Figure size
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
         """
         bkg_3d = self.to_3d()
-        bkg_3d.plot_at_energy(energy, ax, add_cbar, ncols, **kwargs)
+        bkg_3d.plot_at_energy(
+            energy=energy, add_cbar=add_cbar, ncols=ncols, figsize=figsize, **kwargs
+        )
 
     def plot(self, ax=None, add_cbar=True, **kwargs):
         """Plot energy offset dependence of the background model."""
