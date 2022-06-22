@@ -64,7 +64,7 @@ Steps for the day of the release:
 
 #. In the `gammapy-docs repo <https://github.com/gammapy/gammapy-docs>`__:
 
-   * Copy the ``docs/dev`` folder as a new ``docs/0.14`` folder.
+   * Follow the stable documentation procedure.
    * Edit ``stable/index.html`` to point to ``0.14/index.html``.
    * Edit ``stable/switcher.json`` to add the new version.
 
