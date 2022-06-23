@@ -1139,6 +1139,10 @@ class TemplateSpatialModel(SpatialModel):
         return cls(m, normalize=normalize, filename=filename)
 
     def evaluate(self, lon, lat, energy=None):
+        """Evaluate the model at given coordinates.
+        Note that, if the map data assume negative values, these are
+        clipped to zero.
+        """
         coord = {
             "lon": lon.to_value("deg"),
             "lat": lat.to_value("deg"),
@@ -1147,6 +1151,7 @@ class TemplateSpatialModel(SpatialModel):
             coord["energy_true"] = energy
 
         val = self.map.interp_by_coord(coord, **self._interp_kwargs)
+        val = np.clip(val, 0, a_max=None)
         return u.Quantity(val, self.map.unit, copy=False)
 
     @property

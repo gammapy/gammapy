@@ -891,10 +891,20 @@ class EventList:
         m = m.smooth(width=0.5)
         return m
 
-    def plot_image(self, allsky=False):
-        """Quick look counts map sky plot."""
+    def plot_image(self, ax=None, allsky=False):
+        """Quick look counts map sky plot.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.pyplot.Axes`
+            Axes to plot on.
+        allsky :  bool,
+            Whether to plot on an all sky geom
+        """
+        if ax is None:
+            ax = plt.gca()
         m = self._counts_image(allsky=allsky)
-        m.plot(stretch="sqrt")
+        m.plot(ax=ax, stretch="sqrt")
 
 
 class EventListChecker(Checker):

@@ -37,6 +37,7 @@ __all__ = [
     "PSFKernel",
     "PSFKing",
     "PSFMap",
+    "RadMax2D",
 ]
 
 

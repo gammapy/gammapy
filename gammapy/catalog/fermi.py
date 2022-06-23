@@ -1209,7 +1209,7 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
 class SourceCatalog3FGL(SourceCatalog):
     """Fermi-LAT 3FGL source catalog.
 
-    - https://ui.adsabs.harvard.edu/#abs/2015ApJS..218...23A
+    - https://ui.adsabs.harvard.edu/abs/2015ApJS..218...23A
     - https://fermi.gsfc.nasa.gov/ssc/data/access/lat/4yr_catalog/
 
     One source is represented by `~gammapy.catalog.SourceCatalogObject3FGL`.

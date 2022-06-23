@@ -119,6 +119,15 @@ def test_run(backend):
     assert_allclose(pars["z"].error, 1, rtol=1e-7)
 
 
+def test_run_no_free_parameters():
+    dataset = MyDataset()
+    for par in dataset.models.parameters.free_parameters:
+        par.frozen = True
+    fit = Fit()
+    with pytest.raises(ValueError, match="No free parameters for fitting"):
+        fit.run(dataset)
+
+
 @pytest.mark.parametrize("backend", ["minuit"])
 def test_run_linked(backend):
     dataset = MyDataset()

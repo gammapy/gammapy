@@ -495,3 +495,60 @@ def test_MC_ID(model_alternative):
     assert meta["MID00002"] == 2
     assert meta["MID00003"] == 3
     assert meta["NMCIDS"] == 4
+
+
+@requires_data()
+def test_MC_ID_NMCID(model_alternative):
+    irfs = load_cta_irfs(
+        "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
+    )
+    livetime = 0.1 * u.hr
+    pointing = SkyCoord(0, 0, unit="deg", frame="galactic")
+    obs = Observation.create(
+        obs_id=1001,
+        pointing=pointing,
+        livetime=livetime,
+        irfs=irfs,
+        location=LOCATION,
+    )
+
+    energy_axis = MapAxis.from_energy_bounds(
+        "1.0 TeV", "10 TeV", nbin=10, per_decade=True
+    )
+    energy_axis_true = MapAxis.from_energy_bounds(
+        "0.5 TeV", "20 TeV", nbin=20, per_decade=True, name="energy_true"
+    )
+    migra_axis = MapAxis.from_bounds(0.5, 2, nbin=150, node_type="edges", name="migra")
+
+    geom = WcsGeom.create(
+        skydir=pointing,
+        width=(2, 2),
+        binsz=0.06,
+        frame="icrs",
+        axes=[energy_axis],
+    )
+
+    empty = MapDataset.create(
+        geom,
+        energy_axis_true=energy_axis_true,
+        migra_axis=migra_axis,
+        name="test",
+    )
+    maker = MapDatasetMaker(selection=["exposure", "background", "psf", "edisp"])
+    dataset = maker.run(empty, obs)
+
+    model_alternative[0].spectral_model.parameters["amplitude"].value = 1e-16
+    dataset.models = model_alternative
+    sampler = MapDatasetEventSampler(random_state=0)
+    events = sampler.run(dataset=dataset, observation=obs)
+
+    assert len(events.table) == 47
+    assert len(np.where(events.table["MC_ID"] == 0)[0]) == 47
+
+    meta = events.table.meta
+    assert meta["MID00000"] == 0
+    assert meta["MMN00000"] == "test-bkg"
+    assert meta["MID00001"] == 1
+    assert meta["MID00002"] == 2
+    assert meta["MID00003"] == 3
+    assert meta["NMCIDS"] == 4
