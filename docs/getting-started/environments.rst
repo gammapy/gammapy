@@ -49,7 +49,7 @@ conda environments you can find in the `conda documentation <https://docs.conda.
 
 
 Venv Environments
-^^^^^^^^^^^^^^^^^
+-----------------
 
 You may prefer to create your virtual environments with Python `venv` command instead of using Anaconda.
 To create a virtual environment with `venv` (Python 3.5+ required) run the command:

@@ -339,3 +339,26 @@ def test_link_label(models):
             assert "reference" in line
             n_link += 1
     assert n_link == 2
+
+
+def test_to_dict_not_default():
+
+    model = PowerLawSpectralModel()
+    model.index.min = -1
+    model.index.max = -5
+    model.index.frozen = True
+    mdict = model.to_dict(full_output=False)
+
+    index_dict = mdict["spectral"]["parameters"][0]
+    assert "min" in index_dict
+    assert "max" in index_dict
+    assert "frozen" in index_dict
+    assert "error" not in index_dict
+    assert "interp" not in index_dict
+    assert "scale_method" not in index_dict
+    assert "is_norm" not in index_dict
+
+    model_2 = model.from_dict(mdict)
+    assert model_2.index.min == model.index.min
+    assert model_2.index.max == model.index.max
+    assert model_2.index.frozen == model.index.frozen

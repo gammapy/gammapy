@@ -59,9 +59,9 @@ intersphinx_mapping["pandas"] = ("https://pandas.pydata.org/pandas-docs/stable/"
 exclude_patterns.append("_templates")
 exclude_patterns.append("_static")
 exclude_patterns.append("**.ipynb_checkpoints")
-exclude_patterns.append("modeling/gallery/*/*.ipynb")
-exclude_patterns.append("modeling/gallery/*/*.md5")
-exclude_patterns.append("modeling/gallery/*/*.py")
+exclude_patterns.append("user-guide/model-gallery/*/*.ipynb")
+exclude_patterns.append("user-guide/model-gallery/*/*.md5")
+exclude_patterns.append("user-guide/model-gallery/*/*.py")
 
 extensions.extend(
     [
@@ -85,6 +85,9 @@ copybutton_prompt_is_regexp = True
 rst_epilog += """
 """
 
+# This is added to keep the links to PRs in release notes
+changelog_links_docpattern = ['.*changelog.*', 'whatsnew/.*', 'release-notes/.*']
+
 # -- Project information ------------------------------------------------------
 
 # This does not *have* to match the package name, but typically does
@@ -95,7 +98,7 @@ copyright = "{}, {}".format(datetime.datetime.now().year, setup_cfg["author"])
 version = get_distribution(project).version
 release = version
 switch_version = version
-if len(version) > 5:
+if "dev" in version:
     switch_version = "dev"
 
 # -- Options for HTML output ---------------------------------------------------
@@ -214,7 +217,7 @@ suppress_warnings = ["ref.citation"]
 sphinx_gallery_conf = {
     "examples_dirs": ["../examples/models"],  # path to your example scripts
     "gallery_dirs": [
-        "modeling/gallery"
+        "user-guide/model-gallery"
     ],  # path to where to save gallery generated output
     "within_subsection_order": FileNameSortKey,
     "download_all_examples": False,

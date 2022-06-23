@@ -67,7 +67,7 @@ class AccordionHeader(Directive):
              <a class="reference external" href="{self.options["link"]}">Straight to tutorial…</a>
              </span>
              """
-        raw += f"""    
+        raw += f"""
 
                 </div>
             </div>
@@ -99,7 +99,7 @@ class AccordionFooter(Directive):
                     </div>
                 </div>
             </div>
-        </div>        
+        </div>
         """
         include_lines = raw.splitlines()
         c = Raw(

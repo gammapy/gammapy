@@ -8,7 +8,7 @@ abstract: 'Gammapy analyzes gamma-ray data and creates sky images, spectra and l
   from event lists and instrument response information; it can also determine the
   position, morphology and spectra of gamma-ray sources. It is used to analyze data
   from H.E.S.S., Fermi-LAT, and the Cherenkov Telescope Array (CTA).'
-doi: 10.5281/zenodo.4701500
+doi: 10.5281/zenodo.4701488
 authors:
 - given-names: Axel
   family-names: Donath
@@ -255,8 +255,8 @@ authors:
   family-names: López-Coto
 - given-names: Sam
   family-names: Carter
-version: 0.19
-date-released: 2020-11-19
+version: 0.20.1
+date-released: 2022-06-17
 repository-code: https://github.com/gammapy/gammapy
 license: BSD-3-Clause
 keywords:
@@ -264,6 +264,9 @@ keywords:
 - "Gamma-rays"
 - "Data analysis"
 identifiers:
+- type: "doi"
+  value: 10.5281/zenodo.6552377
+  description: Zenodo DOI v0.20
 - type: "doi"
   value: 10.5281/zenodo.5721467
   description: Zenodo DOI v0.19

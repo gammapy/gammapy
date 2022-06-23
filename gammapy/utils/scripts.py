@@ -17,7 +17,7 @@ __all__ = [
 ]
 
 PATH_DOCS = Path(__file__).resolve().parent / ".." / ".." / "docs"
-SKIP = ["_static", "_build", "_checkpoints", "docs/modeling/gallery/"]
+SKIP = ["_static", "_build", "_checkpoints", "docs/user-guide/model-gallery/"]
 
 
 def get_notebooks_paths(folder=PATH_DOCS):

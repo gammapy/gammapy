@@ -9,8 +9,8 @@ This model parametrises a generalized Gaussian time model.
 
 .. math::
         F(t) = exp( - 0.5 * (\frac{|t - t_{\rm{ref}}|}{t_{\rm{rise}}}) ^ {1 / \eta}) \text{ for } t < t_{\rm{ref}}
-            
-        F(t) = exp( - 0.5 * (\frac{|t - t_{\rm{ref}}|}{t_{\rm{decay}}}) ^ {1 / \eta}) \text{ for } t > t_{\rm{ref}}    
+
+        F(t) = exp( - 0.5 * (\frac{|t - t_{\rm{ref}}|}{t_{\rm{decay}}}) ^ {1 / \eta}) \text{ for } t > t_{\rm{ref}}
 """
 
 # %%

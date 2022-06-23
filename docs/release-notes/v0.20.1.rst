@@ -1,0 +1,66 @@
+.. _gammapy_0p20p1_release:
+
+0.20.1 (June 16th, 2022)
+------------------------
+
+Summary
+~~~~~~~
+
+- Released June 17th, 2022
+- 10 contributors
+- 21 pull requests (not all listed below)
+
+What's new?
+~~~~~~~~~~~
+
+This release is a bug fix for v0.20. It corrects several issues that were recently reported and
+improves the documentation .
+
+Data with `Background2D` IRFs were not handled correctly by the `MapDatasetMaker` in v0.20.
+This is now corrected.
+
+Error bars in spectral excess plots were not correctly computed which resulted in inconsistent
+displays between excess and residual panels. The correct excess error is now computed.
+
+Spectral extraction with point-like IRFs can fail is some cases where no counts are found within the
+radmax extension. This is due to an inconsistent behavior of the `PointSkyRegion.contains` method.
+A patch has been introduced to correct for that before this is fixed in the `regions` package.
+
+The new `Observation.peek()` methods no longer returns empty panels when some IRF are not available.
+
+Some issues affecting the `SafeMaskMaker` have been corrected as well as a bug of the
+`ExcessMapEstimator` appearing when the input `Dataset` had not mask defined.
+
+The folder structure of the documentation has been updated to closely follow the documentation
+structure. This corrects some inconsistencies appearing in the lateral table of contents both in
+the main documentation and the tutorial pages.
+
+Contributors
+~~~~~~~~~~~~
+
+- Mathieu de Bony
+- Axel Donath
+- Luca Giunti
+- Bruno Khelifi
+- Maximilian Nöthe
+- Laura Olivera-Nieto
+- Fabio Pintore
+- Quentin Rémy
+- Atreyee Sinha
+- Régis Terrier
+
+Pull Requests
+~~~~~~~~~~~~~
+
+This list is incomplete. Small improvements and bug fixes are not listed here.
+
+- [#3990] Restructure docs folder (Axel Donath)
+- [#3988] Fix issue [#3983] (Laura Olivera-Nieto)
+- [#3987] Fix the SafeMaskMaker (Bruno Khelifi)
+- [#3986] Fix bug in RegionNDMap.fill_events with PointSkyRegion (Régis Terrier)
+- [#3979] Fix inconsistency between NMCID and number of MID* keywords in MapDatasetEventSampler (Fabio Pintore)
+- [#3975] Fix error bars on plot_excess method os SpectrumDataset(OnOff) (Mathieu de Bony)
+- [#3966] Adapt Observation.peek according to available hdus (Atreyee Sinha)
+- [#3959] Correct make_map_background_irf bug with Background2D (Régis Terrier)
+- [#3948] Load all available HDUs in DataStore.obs, not only the required_hdus (Maximilian Nöthe)
+

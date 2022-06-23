@@ -6,6 +6,7 @@ from astropy.coordinates import Angle, SkyCoord
 from astropy.io import fits
 from astropy.table import QTable, Table
 from astropy.utils import lazyproperty
+from astropy.visualization.wcsaxes import WCSAxes
 from astropy.wcs.utils import (
     proj_plane_pixel_area,
     proj_plane_pixel_scales,
@@ -25,6 +26,7 @@ from gammapy.utils.regions import (
     compound_region_to_regions,
     regions_to_compound_region,
 )
+from gammapy.visualization.utils import ARTIST_TO_LINE_PROPERTIES
 from ..axes import MapAxes
 from ..core import Map, MapCoord
 from ..geom import Geom, pix_tuple_to_idx
@@ -516,7 +518,14 @@ class RegionGeom(Geom):
         if self.region is None:
             pix = (0, 0)
         else:
-            in_region = self.region.contains(coords.skycoord, wcs=self.wcs)
+            # TODO: remove once fix is available in regions
+            if isinstance(self.region, PointSkyRegion):
+                point_region = self.region.to_pixel(self.wcs)
+                point_region.meta["include"] = False
+                pix_coord = PixCoord.from_sky(coords.skycoord, self.wcs)
+                in_region = point_region.contains(pix_coord)
+            else:
+                in_region = self.region.contains(coords.skycoord, wcs=self.wcs)
 
             x = np.zeros(coords.skycoord.shape)
             x[~in_region] = np.nan
@@ -785,8 +794,6 @@ class RegionGeom(Geom):
         ax : `~astropy.visualization.WCSAxes`
             Axes to plot on.
         """
-        from astropy.visualization.wcsaxes import WCSAxes
-
         kwargs_point = kwargs_point or {}
 
         if ax is None:
@@ -795,13 +802,17 @@ class RegionGeom(Geom):
             if not isinstance(ax, WCSAxes):
                 ax.remove()
                 wcs_geom = self.to_wcs_geom()
-                m = Map.from_geom(wcs_geom.to_image())
-                ax = m.plot(add_cbar=False)
+                m = Map.from_geom(geom=wcs_geom.to_image())
+                ax = m.plot(add_cbar=False, vmin=-1, vmax=0)
 
-        kwargs.setdefault("fc", "None")
-        kwargs.setdefault("ec", "tab:blue")
-        kwargs_point.setdefault("color", kwargs.get("edgecolor"))
+        kwargs.setdefault("facecolor", "None")
+        kwargs.setdefault("edgecolor", "tab:blue")
         kwargs_point.setdefault("marker", "*")
+
+        for key, value in kwargs.items():
+            key_point = ARTIST_TO_LINE_PROPERTIES.get(key, None)
+            if key_point:
+                kwargs_point[key_point] = value
 
         for region in compound_region_to_regions(self.region):
             region_pix = region.to_pixel(wcs=ax.wcs)

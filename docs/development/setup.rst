@@ -7,9 +7,9 @@ Project setup
 =============
 
 This page gives an overview of the technical infrastructure we have set up to
-develop and maintain Gammapy. If you just want to make contribution to the Gammapy 
-code or documentation, you don't need to know about most of the things mentioned on 
-this page. But for Gammapy maintainers it's helpful to have a reference that explains 
+develop and maintain Gammapy. If you just want to make contribution to the Gammapy
+code or documentation, you don't need to know about most of the things mentioned on
+this page. But for Gammapy maintainers it's helpful to have a reference that explains
 what we have and how things work.
 
 gammapy repository
@@ -86,10 +86,10 @@ The ``examples`` folder contains the following:
   - Python scripts that could be used as example scripts tutorials in :ref:`tutorials_scripts`.
   - Python scripts needed by the sphinx-gallery extension to produce collections of examples use cases.
 
-The Python scripts needed by sphinx-gallery extension are placed in folders declared in the 
+The Python scripts needed by sphinx-gallery extension are placed in folders declared in the
 ``sphinx_gallery_conf`` variable in ``docs/conf.py`` script.
 
-The ``dev`` folder is a place for Gammapy developers to put stuff that is useful for maintenance, 
+The ``dev`` folder is a place for Gammapy developers to put stuff that is useful for maintenance,
 such as i.e. a helper script to produce a list of contributors.
 
 The file in ``github/workflows/ci.yml`` is the configuration file for the continuous
@@ -191,7 +191,7 @@ gammapy.org
 https://gammapy.org/ is a small landing page for the Gammapy project. The page
 shown there is a static webpage served via GitHub pages.
 
-To update it, edit the HTML and CSS files in the 
+To update it, edit the HTML and CSS files in the
 `gammapy-webpage GitHub repository <https://github.com/gammapy/gammapy-webpage>`__
 and then make a pull request against the default branch for that repo, called ``gh-pages``.
 Once it's merged, the webpage at https://gammapy.org/ usually updates within less than a minute.
@@ -201,18 +201,18 @@ docs.gammapy.org
 ----------------
 
 https://docs.gammapy.org/ contains most of the documentation for Gammapy,
-including information about Gammapy, the changelog, tutorials, ...
+including information about Gammapy, release notes, tutorials, ...
 
 The dev version of the docs is built and updated with an automated GitHub action for every
-pull request merged in the `gammapy` GitHub code repository. All the docs are versioned, 
-and each version of the docs is placed in its dedicated version-labelled folder. It is recommended 
-to build the docs locally before each release to identify and fix possible Sphinx warnings from 
+pull request merged in the `gammapy` GitHub code repository. All the docs are versioned,
+and each version of the docs is placed in its dedicated version-labelled folder. It is recommended
+to build the docs locally before each release to identify and fix possible Sphinx warnings from
 badly formatted RST files or failing Python scripts used to display figures.
 
 Gammapy Binder
 ==============
 
-We have set up https://mybinder.org/ for each released version of Gammapy, which allows users 
+We have set up https://mybinder.org/ for each released version of Gammapy, which allows users
 to execute the notebooks present in the versioned docs within the web browser, without having to install
 software or download data to their local machine. This can be useful for people
 to get started, and for tutorials. Every HTML-fixed version of the notebooks
@@ -230,7 +230,7 @@ documentation.
 Continuous integration
 ======================
 
-We are running various builds as 
+We are running various builds as
 `GitHub actions workflows for CI <https://github.com/gammapy/gammapy/actions/workflows/ci.yml>`__.
 
 Code quality

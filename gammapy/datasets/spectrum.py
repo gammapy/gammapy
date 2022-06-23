@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 from gammapy.utils.scripts import make_path
@@ -171,6 +170,8 @@ class PlotMixin:
     ):
         """Plot excess and predicted signal.
 
+        The error bars are computed with a symmetric assumption on the excess.
+
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`
@@ -205,10 +206,13 @@ class PlotMixin:
         kwargs_excess = kwargs_excess or {}
         kwargs_npred_signal = kwargs_npred_signal or {}
 
+        # Determine the uncertainty on the excess
+        yerr = self._counts_statistic.error
+
         plot_kwargs = kwargs.copy()
         plot_kwargs.update(kwargs_excess)
         plot_kwargs.setdefault("label", "Excess counts")
-        ax = self.excess.plot(ax, yerr=np.sqrt(np.abs(self.excess.data)), **plot_kwargs)
+        ax = self.excess.plot(ax, yerr=yerr, **plot_kwargs)
 
         plot_kwargs = kwargs.copy()
         plot_kwargs.update(kwargs_npred_signal)

@@ -217,7 +217,7 @@ class ExcessMapEstimator(Estimator):
         elif dataset.mask_safe:
             mask = dataset.mask_safe
         else:
-            mask = np.ones(dataset.data_shape, dtype=bool)
+            mask = Map.from_geom(geom, data=True, dtype=bool)
 
         counts_stat = convolved_map_dataset_counts_statistics(
             dataset, kernel, mask, self.correlate_off

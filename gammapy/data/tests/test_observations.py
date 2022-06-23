@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import logging
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
@@ -41,30 +40,21 @@ def test_observation(data_store):
 
 
 @requires_data()
-def test_observation_peek(data_store, caplog):
-    with caplog.at_level(logging.WARNING):
-        obs = Observation.read(
-            "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz"
-        )
+def test_observation_peek(data_store):
 
-        with mpl_plot_check():
-            obs.peek()
+    obs = Observation.read(
+        "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz"
+    )
 
-        obs.bkg = None
+    with mpl_plot_check():
+        obs.peek()
 
-        with mpl_plot_check():
-            obs.peek()
+    obs_with_radmax = Observation.read(
+        "$GAMMAPY_DATA/magic/rad_max/data/20131004_05029747_DL3_CrabNebula-W0.40+035.fits"
+    )
 
-        message = "No background model found for obs 23523."
-        assert message in [record.message for record in caplog.records]
-
-        obs.psf = None
-        with mpl_plot_check():
-            obs.peek()
-
-        assert "WARNING" in [record.levelname for record in caplog.records]
-        message = "No PSF found for obs 23523."
-        assert message in [record.message for record in caplog.records]
+    with mpl_plot_check():
+        obs_with_radmax.peek()
 
 
 @requires_data()

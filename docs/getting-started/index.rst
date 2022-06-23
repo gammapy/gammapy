@@ -2,6 +2,7 @@
 
 .. _getting-started:
 
+===============
 Getting started
 ===============
 
@@ -67,8 +68,8 @@ and then just execute the following commands in the terminal:
 
 .. code-block:: bash
 
-    $ curl -O https://gammapy.org/download/install/gammapy-0.20-environment.yml
-    $ conda env create -f gammapy-0.20-environment.yml
+    $ curl -O https://gammapy.org/download/install/gammapy-0.20.1-environment.yml
+    $ conda env create -f gammapy-0.20.1-environment.yml
 
 .. note::
 
@@ -80,7 +81,7 @@ Once the environment has been created you can activate it using:
 
 .. code-block:: bash
 
-    $ conda activate gammapy-0.20
+    $ conda activate gammapy-0.20.1
 
 You can now proceed to download the Gammapy tutorial notebooks and the example
 datasets. The total size to download is ~180 MB. Select the location where you
@@ -88,7 +89,7 @@ want to install the datasets and proceed with the following commands:
 
 .. code-block:: bash
 
-    $ gammapy download notebooks --release 0.20
+    $ gammapy download notebooks --release 0.20.1
     $ gammapy download datasets
     $ export GAMMAPY_DATA=$PWD/gammapy-datasets
 
@@ -195,7 +196,7 @@ Gammapy can also simulate events. Flux points can be computed using the
 
 |
 
-:link-badge:`../tutorials/analysis/3D/analysis_3D.html,"3D analysis tutorial",cls=badge-primary text-white`
+:link-badge:`../tutorials/analysis/3D/analysis_3d.html,"3D analysis tutorial",cls=badge-primary text-white`
 :link-badge:`../tutorials/analysis/3D/event_sampling.html,"3D analysis tutorial with event sampling",cls=badge-primary text-white`
 
 
@@ -216,7 +217,7 @@ You can also compute light curves in multiple energy bands. In all cases the lig
 curve is computed using the `~gammapy.estimators.LightCurveEstimator`.
 
 
-:link-badge:`../tutorials/analysis/time/light_cuve.html,"Light curve tutorial",cls=badge-primary text-white`
+:link-badge:`../tutorials/analysis/time/light_curve.html,"Light curve tutorial",cls=badge-primary text-white`
 :link-badge:`../tutorials/analysis/time/light_curve_flare.html,"Light curve tutorial for flares",cls=badge-primary text-white`
 
 

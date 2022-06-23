@@ -184,6 +184,9 @@ class Fit:
         datasets, parameters = self._parse_datasets(datasets=datasets)
         datasets.parameters.check_limits()
 
+        if len(parameters.free_parameters.names) == 0:
+            raise ValueError("No free parameters for fitting")
+
         parameters.autoscale()
 
         kwargs = self.optimize_opts.copy()

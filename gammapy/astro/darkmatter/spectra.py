@@ -22,7 +22,7 @@ class PrimaryFlux:
 
     References
     ----------
-    * `2011JCAP...03..051 <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051>`_
+    * `2011JCAP...03..051 <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
     * Cirelli et al (2016): http://www.marcocirelli.net/PPPC4DMID.html
     """
 
@@ -170,7 +170,13 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
     THERMAL_RELIC_CROSS_SECTION = 3e-26 * u.Unit("cm3 s-1")
     """Thermally averaged annihilation cross-section"""
 
-    scale = Parameter("scale", 1)
+    scale = Parameter(
+        "scale",
+        1,
+        unit="",
+        interp="log",
+        is_norm=True,
+    )
 
     def __init__(self, mass, channel, scale=scale.quantity, jfactor=1, z=0, k=2):
         self.k = k
