@@ -662,3 +662,95 @@ class SineTemporalModel(TemporalModel):
             - np.sin(omega * (t_min - t_ref).to_value("day"))
         )
         return value / self.time_sum(t_min, t_max)
+
+
+class TemplatePhaseCurveTemporalModel(TemporalModel):
+    """ Temporal phase curve model.
+
+    A timing solution is used to compute the phase corresponding to time and
+    a template phase curve is used to determine the associated ``norm``.
+
+    The phasecurve is given as a table with columns ``phase`` and ``norm``.
+
+    The ``norm`` is supposed to be a unit-less multiplicative factor in the model,
+    to be multiplied with a spectral model.
+
+    The model does linear interpolation for times between the given ``(phase, norm)`` values.
+
+    The implementation currently uses `scipy.interpolate. InterpolatedUnivariateSpline`,
+    using degree ``k=1`` to get linear interpolation.
+    This class also contains an ``integral`` method, making the computation of
+    mean fluxes for a given time interval a one-liner.
+
+    Parameters
+    ----------
+    table : `~astropy.table.Table`
+        A table with 'PHASE' vs 'NORM'
+    filename : str
+        The name of the file containing the phase curve
+    t_ref : `~astropy.units.Quantity`
+        The reference time in mjd
+    phi_ref : `~astropy.units.Quantity`
+        The phase at reference time
+    f0 : `~astropy.units.Quantity`
+        The frequency at t_ref in s-1
+    f1 : `~astropy.units.Quantity`
+        The frequency derivative at t_ref in s-2
+    f2 : `~astropy.units.Quantity`
+        The frequency second derivative at t_ref in s-3
+    """
+    tag = ["TemplatePhaseCurveTemporalModel", "template-phase"]
+    _t_ref_default = Time(48442.5, format="mjd")
+    t_ref = Parameter("t_ref", _t_ref_default.mjd, unit="day", frozen=True)
+    phi_ref = Parameter("phi_ref", 0, unit="", frozen=True)
+    f0 = Parameter("f0", "29.946923 s-1", frozen=True)
+    f1 = Parameter("f1", "-3.77535E-10 s-2", frozen=True)
+    f2 = Parameter("f2", "1.1147E-20 s-3", frozen=True)
+
+    def __init__(self, table, filename=None, **kwargs):
+        self.table = table
+        if filename is not None:
+            filename = str(make_path(filename))
+        self.filename = filename
+        super().__init__(**kwargs)
+
+    @classmethod
+    def read(cls, path):
+        """Read phasecurve model table from FITS file.
+        """
+        filename = str(make_path(path))
+        return cls(Table.read(filename), filename=filename)
+
+    def write(self, path=None, overwrite=False):
+        if path is None:
+            path = self.filename
+        if path is None:
+            raise ValueError(f"filename is required for {self.tag}")
+        else:
+            self.filename = str(make_path(path))
+            self.table.write(self.filename, overwrite=overwrite)
+
+    @lazyproperty
+    def _interpolator(self):
+        x = self.table["PHASE"].data
+        y = self.table["NORM"].data
+        return scipy.interpolate.InterpolatedUnivariateSpline(x, y, k=1, ext=2)
+
+    def evaluate(self, time, t_ref, phi_ref, f0, f1, f2):
+        delta_t = time - t_ref
+        phase = (phi_ref + delta_t * (f0 + delta_t / 2. * (f1 + delta_t / 3 * f2))).to_value('')
+
+        phase -= np.floor(phase)
+        return self._interpolator(phase)
+
+    @classmethod
+    def from_dict(cls, data):
+        params = data["temporal"]["parameters"]
+        return cls.read(data["temporal"]["filename"])
+
+    def to_dict(self, full_output=False):
+        """Create dict for YAML serialisation"""
+        model_dict = super().to_dict()
+        model_dict["filename"] = self.filename
+        return model_dict
+
