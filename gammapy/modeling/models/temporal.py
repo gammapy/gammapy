@@ -22,6 +22,7 @@ __all__ = [
     "LinearTemporalModel",
     "PowerLawTemporalModel",
     "SineTemporalModel",
+    "TemplatePhaseCurveTemporalModel",
     "TemporalModel",
 ]
 
