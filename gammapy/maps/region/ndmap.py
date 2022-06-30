@@ -643,7 +643,6 @@ class RegionNDMap(Map):
         # TODO: re-think stacking of regions. Is making the union reasonable?
         # self.geom.union(other.geom)
         if nan_to_num:
-            data = data.copy()
             data[~np.isfinite(data)] = 0
         if weights is not None:
             if not other.geom.to_image() == weights.geom.to_image():

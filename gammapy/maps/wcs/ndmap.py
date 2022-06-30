@@ -848,7 +848,6 @@ class WcsNDMap(WcsMap):
 
         data = other.quantity[cutout_slices].to_value(self.unit)
         if nan_to_num:
-            data = data.copy()
             data[~np.isfinite(data)] = 0
         if weights is not None:
             if not other.geom.to_image() == weights.geom.to_image():

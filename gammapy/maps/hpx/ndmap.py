@@ -422,7 +422,6 @@ class HpxNDMap(HpxMap):
         data = other.quantity.to_value(self.unit)
 
         if nan_to_num:
-            data = data.copy()
             data[~np.isfinite(data)] = 0
 
         if weights is not None:
