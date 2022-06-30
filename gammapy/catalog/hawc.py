@@ -263,9 +263,9 @@ class SourceCatalogObject3HWC(SourceCatalogObjectHWCBase):
 
         errs = {
             "index": 0.5
-            * (self.data["spec0_index_errp"] + self.data["spec0_index_errn"]),
+            * (np.abs(self.data["spec0_index_errp"]) + np.abs(self.data["spec0_index_errn"])),
             "amplitude": 0.5
-            * (self.data["spec0_dnde_errp"] + self.data["spec0_dnde_errp"]),
+            * (np.abs(self.data["spec0_dnde_errp"]) + np.abs(self.data["spec0_dnde_errp"])),
         }
 
         model = Model.create("PowerLawSpectralModel", "spectral", **pars)
