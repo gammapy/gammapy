@@ -869,6 +869,7 @@ def test_stack(sky_model):
         background=bkg1,
         exposure=exp1,
         mask_safe=mask1,
+        mask_fit=mask1,
         name="dataset-1",
         edisp=edisp,
         meta_table=Table({"OBS_ID": [0]}),
@@ -893,6 +894,7 @@ def test_stack(sky_model):
         background=bkg2,
         exposure=exp2,
         mask_safe=mask2,
+        mask_fit=mask2,
         name="dataset-2",
         edisp=edisp,
         meta_table=Table({"OBS_ID": [1]}),
@@ -915,6 +917,7 @@ def test_stack(sky_model):
     assert_allclose(stacked.npred_background().data.sum(), 1360.00, 1e-5)
     assert_allclose(stacked.counts.data.sum(), 9000, 1e-5)
     assert_allclose(stacked.mask_safe.data.sum(), 4600)
+    assert_allclose(stacked.mask_fit.data.sum(), 4600)
     assert_allclose(stacked.exposure.data.sum(), 1.6e11)
 
     assert_allclose(stacked.meta_table["OBS_ID"][0], [0, 1])
