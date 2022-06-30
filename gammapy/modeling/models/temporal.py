@@ -718,6 +718,14 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
     @classmethod
     def read(cls, path):
         """Read phasecurve model table from FITS file.
+
+        Beware : this does **not** read parameters.
+        They will be set to defaults.
+
+        Parameters
+        ----------
+        path : str or `~pathlib.Path`
+            filename with path
         """
         filename = str(make_path(path))
         return cls(Table.read(filename), filename=filename)
