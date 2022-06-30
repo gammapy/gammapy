@@ -58,6 +58,7 @@ from .temporal import (
     LinearTemporalModel,
     PowerLawTemporalModel,
     SineTemporalModel,
+    TemplatePhaseCurveTemporalModel,
     TemporalModel,
 )
 
