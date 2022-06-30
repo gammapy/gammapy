@@ -1054,7 +1054,6 @@ def test_npred_psf_after_edisp():
     dataset.background.data += 1
     dataset.exposure.data += 1e12
     dataset.mask_safe.data += True
-    dataset.mask_fit.data += True
     dataset.psf = PSFMap.from_gauss(
         energy_axis_true=energy_axis_true, sigma=0.2 * u.deg
     )
@@ -1273,8 +1272,6 @@ def test_stack_onoff_cutout(geom_image):
         [0 * u.s], [1 * u.h], reference_time="2010-01-01T00:00:00"
     )
     dataset_cutout.mask_safe.data += True
-    dataset_cutout.mask_fit.data += True
-
     dataset_cutout.counts.data += 1
     dataset_cutout.counts_off.data += 1
     dataset_cutout.exposure.data += 1
@@ -1505,7 +1502,6 @@ def test_stack_dataset_dataset_on_off():
     dataset = MapDataset.create(geom, gti=gti)
     dataset_on_off = MapDatasetOnOff.create(geom, gti=gti)
     dataset_on_off.mask_safe.data += True
-    dataset_on_off.mask_fit.data += True
 
     dataset_on_off.acceptance_off += 5
     dataset_on_off.acceptance += 1
