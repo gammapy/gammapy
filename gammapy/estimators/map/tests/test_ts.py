@@ -116,7 +116,6 @@ def test_compute_ts_map(input_dataset):
     assert_allclose(kernel.data.sum(), 1.0)
 
     result = ts_estimator.run(input_dataset)
-
     assert_allclose(result["ts"].data[0, 99, 99], 1704.23, rtol=1e-2)
     assert_allclose(result["niter"].data[0, 99, 99], 7)
     assert_allclose(result["flux"].data[0, 99, 99], 1.02e-09, rtol=1e-2)
