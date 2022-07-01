@@ -7,7 +7,7 @@ from astropy.table import Table
 from astropy.time import Time
 from astropy.utils import lazyproperty
 from gammapy.maps import RegionNDMap, TimeMapAxis
-from gammapy.modeling import Parameter
+from gammapy.modeling import Parameter, Parameters
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.scripts import make_path
 from gammapy.utils.time import time_ref_from_dict
@@ -666,7 +666,7 @@ class SineTemporalModel(TemporalModel):
 
 
 class TemplatePhaseCurveTemporalModel(TemporalModel):
-    """ Temporal phase curve model.
+    """Temporal phase curve model.
 
     A timing solution is used to compute the phase corresponding to time and
     a template phase curve is used to determine the associated ``norm``.
@@ -700,13 +700,19 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
     f2 : `~astropy.units.Quantity`
         The frequency second derivative at t_ref in s-3
     """
+
     tag = ["TemplatePhaseCurveTemporalModel", "template-phase"]
     _t_ref_default = Time(48442.5, format="mjd")
+    _phi_ref_default = 0
+    _f0_default = 29.946923 * u.s**-1
+    _f1_default = -3.77535e-10 * u.s**-2
+    _f2_default = 1.1147e-20 * u.s**-3
+
     t_ref = Parameter("t_ref", _t_ref_default.mjd, unit="day", frozen=True)
-    phi_ref = Parameter("phi_ref", 0, unit="", frozen=True)
-    f0 = Parameter("f0", "29.946923 s-1", frozen=True)
-    f1 = Parameter("f1", "-3.77535E-10 s-2", frozen=True)
-    f2 = Parameter("f2", "1.1147E-20 s-3", frozen=True)
+    phi_ref = Parameter("phi_ref", _phi_ref_default, unit="", frozen=True)
+    f0 = Parameter("f0", _f0_default, frozen=True)
+    f1 = Parameter("f1", _f1_default, frozen=True)
+    f2 = Parameter("f2", _f2_default, frozen=True)
 
     def __init__(self, table, filename=None, **kwargs):
         self.table = table
@@ -716,7 +722,15 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         super().__init__(**kwargs)
 
     @classmethod
-    def read(cls, path):
+    def read(
+        cls,
+        path,
+        t_ref=_t_ref_default.mjd * u.d,
+        phi_ref=_phi_ref_default,
+        f0=_f0_default,
+        f1=_f1_default,
+        f2=_f2_default,
+    ):
         """Read phasecurve model table from FITS file.
 
         Beware : this does **not** read parameters.
@@ -728,7 +742,15 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
             filename with path
         """
         filename = str(make_path(path))
-        return cls(Table.read(filename), filename=filename)
+        return cls(
+            Table.read(filename),
+            filename=filename,
+            t_ref=t_ref,
+            phi_ref=phi_ref,
+            f0=f0,
+            f1=f1,
+            f2=f2,
+        )
 
     def write(self, path=None, overwrite=False):
         if path is None:
@@ -747,19 +769,24 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
 
     def evaluate(self, time, t_ref, phi_ref, f0, f1, f2):
         delta_t = time - t_ref
-        phase = (phi_ref + delta_t * (f0 + delta_t / 2. * (f1 + delta_t / 3 * f2))).to_value('')
+        phase = (
+            phi_ref + delta_t * (f0 + delta_t / 2.0 * (f1 + delta_t / 3 * f2))
+        ).to_value("")
 
         phase -= np.floor(phase)
         return self._interpolator(phase)
 
     @classmethod
     def from_dict(cls, data):
-        params = data["temporal"]["parameters"]
-        return cls.read(data["temporal"]["filename"])
+        params = Parameters.from_dict(data["temporal"]["parameters"])
+        kwargs = {}
+        for param in params:
+            kwargs[param.name] = param
+        filename = data["temporal"]["filename"]
+        return cls.read(filename, **kwargs)
 
     def to_dict(self, full_output=False):
         """Create dict for YAML serialisation"""
         model_dict = super().to_dict()
-        model_dict["filename"] = self.filename
+        model_dict["temporal"]["filename"] = self.filename
         return model_dict
-

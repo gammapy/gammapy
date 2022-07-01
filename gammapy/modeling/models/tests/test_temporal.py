@@ -13,6 +13,7 @@ from gammapy.modeling.models import (
     GeneralizedGaussianTemporalModel,
     LightCurveTemplateTemporalModel,
     LinearTemporalModel,
+    Model,
     PowerLawSpectralModel,
     PowerLawTemporalModel,
     SineTemporalModel,
@@ -315,22 +316,38 @@ def test_plot_constant_model():
     with mpl_plot_check():
         constant_model.plot(time_range)
 
+
 def test_phase_curve_model(tmp_path):
-    phase = np.linspace(0., 1, 101)
+    phase = np.linspace(0.0, 1, 101)
     norm = phase * (phase < 0.5) + (1 - phase) * (phase >= 0.5)
     table = Table(data={"PHASE": phase, "NORM": norm})
 
     t_ref = Time("2022-06-01")
-    phase_model = TemplatePhaseCurveTemporalModel(table=table,
-                                                  f0="20 Hz", phi_ref=0., f1="0 s-2", f2="0 s-3",
-                                                  t_ref=t_ref.mjd * u.d)
+    phase_model = TemplatePhaseCurveTemporalModel(
+        table=table,
+        f0="20 Hz",
+        phi_ref=0.0,
+        f1="0 s-2",
+        f2="0 s-3",
+        t_ref=t_ref.mjd * u.d,
+    )
 
-    result = phase_model(t_ref+[0, 0.025, 0.05]*u.s)
+    result = phase_model(t_ref + [0, 0.025, 0.05] * u.s)
     assert_allclose(result, [0, 0.5, 0], atol=1e-5)
 
-    filename = str(make_path(tmp_path / "tmp.fits"))
-    phase_model.write(filename)
+    phase_model.filename = str(make_path(tmp_path / "tmp.fits"))
+    phase_model.write()
 
-    new_model = TemplatePhaseCurveTemporalModel.read(filename)
+    model_dict = phase_model.to_dict()
+    print(model_dict)
+    new_model = Model.from_dict(model_dict)
+
+    assert_allclose(phase_model.parameters.value, new_model.parameters.value)
+    assert phase_model.parameters.names == new_model.parameters.names
+    assert (
+        phase_model.parameters.free_parameters.names
+        == new_model.parameters.free_parameters.names
+    )
+
     assert_allclose(new_model.table["PHASE"].data, phase)
     assert_allclose(new_model.table["NORM"].data, norm)
