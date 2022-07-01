@@ -239,7 +239,13 @@ class TSMapEstimator(Estimator):
         # Creating exposure map with exposure at map center
         exposure = Map.from_geom(geom, unit="cm2 s1")
         exposure_center = dataset.exposure.to_region_nd_map(geom.center_skydir)
-        exposure.data[...] = exposure_center.data
+        if np.sum(exposure_center.data) > 0:
+            exposure.data[...] = exposure_center.data
+        else:
+            # TODO: if one applies the mask here, one supposes that energy=energy_true
+            # mean = np.mean(dataset.exposure.data[dataset.mask.data])
+            mean = np.mean(dataset.exposure.data)
+            exposure.data[...] = mean
 
         # We use global evaluation mode to not modify the geometry
         evaluator = MapEvaluator(model=model)
