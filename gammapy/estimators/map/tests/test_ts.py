@@ -113,6 +113,7 @@ def test_compute_ts_map(input_dataset):
 
     kernel = ts_estimator.estimate_kernel(dataset=input_dataset)
     assert_allclose(kernel.geom.width, 1.22 * u.deg)
+    assert_allclose(kernel.data.sum(), 1.0)
 
     result = ts_estimator.run(input_dataset)
 
@@ -253,3 +254,19 @@ def test_ts_map_with_model(fake_dataset):
     maps = estimator.run(fake_dataset)
     assert_allclose(maps["sqrt_ts"].data[:, 25, 25], 0.323203, atol=0.1)
     assert_allclose(maps["flux"].data[:, 25, 25], 1.015509e-12, atol=1e-12)
+
+
+@requires_data()
+def test_compute_ts_map_with_hole(fake_dataset):
+    """Test of compute_ts_image with a null exposure at the center of the map"""
+    i, j, ie = fake_dataset.exposure.geom.center_pix
+    fake_dataset.exposure.data[:, int(i), int(j)] = 0.
+
+    spatial_model = GaussianSpatialModel(sigma="0.1 deg")
+    spectral_model = PowerLawSpectralModel(index=2)
+    model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
+    ts_estimator = TSMapEstimator(model=model, threshold=1, selection_optional=[])
+
+    kernel = ts_estimator.estimate_kernel(dataset=fake_dataset)
+    assert_allclose(kernel.geom.width, 1.0 * u.deg)
+    assert_allclose(kernel.data.sum(), 1.0)
