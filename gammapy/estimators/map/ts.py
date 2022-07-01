@@ -215,7 +215,7 @@ class TSMapEstimator(Estimator):
     def estimate_kernel(self, dataset):
         """Get the convolution kernel for the input dataset.
 
-        Convolves the model with the PSFKernel at the center of the dataset.
+        Convolves the model with the PSFKernel using the mean non-null exposure.
 
         Parameters
         ----------
@@ -236,16 +236,9 @@ class TSMapEstimator(Estimator):
         model = self.model.copy()
         model.spatial_model.position = geom.center_skydir
 
-        # Creating exposure map with exposure at map center
+        # Creating exposure map with the mean non-null exposure
         exposure = Map.from_geom(geom, unit="cm2 s1")
-        exposure_center = dataset.exposure.to_region_nd_map(geom.center_skydir)
-        if np.sum(exposure_center.data) > 0:
-            exposure.data[...] = exposure_center.data
-        else:
-            # TODO: if one applies the mask here, one supposes that energy=energy_true
-            # mean = np.mean(dataset.exposure.data[dataset.mask.data])
-            mean = np.mean(dataset.exposure.data)
-            exposure.data[...] = mean
+        exposure.data[...] = np.mean(dataset.exposure.data[dataset.exposure.data > 0.])
 
         # We use global evaluation mode to not modify the geometry
         evaluator = MapEvaluator(model=model)
