@@ -6,7 +6,7 @@
 PIG 23 - Gammapy release cycle and version numbering
 ****************************************************
 
-* Author: Régis Terrier, Axel Donath and ?
+* Author: Régis Terrier, Axel Donath
 * Created: May 12th, 2022
 * Accepted:
 * Status:
@@ -23,17 +23,15 @@ X.Y (with Y>0). Bugfix releases are applied on both the current feature release 
 releases when needed. The development procedure to implement this scheme is detailed.
 
 
-
-
 Current status
 ==============
 
 Until v0.20, Gammapy releases have mostly been new feature releases in order to
-build complete set of functionalities with a stable API for the v1.0 release.
+build a complete set of functionalities with a stable API for the v1.0 release.
 This approach and release cycles were described in the roadmap for
 v1.0 PIG :ref:`pig-005`. Releases cycles have varied between every two months and
-once a year. The six-month timescale has been found to most practical both for users
-and developpers.
+once a year. The six-month timescale has been found to be most practical both for users
+and developers.
 
 Version 1.0 is the first one that requires "long-term-support" (LTS) to allow
 for users and facilities relying on Gammapy not to always upgrade to the
@@ -41,7 +39,8 @@ latest version while still having the guarantee that major bugs will be
 corrected. Implementing this requires to precisely define the numbering scheme
 and to specify the associated development plan in terms of calendar, workflow
 (development branches), deprecation and backward compatibility. A first discussion
-on this took place during January 2022 co-Corking week (link?).
+on this took place during January 2022 co-working
+[week](https://github.com/gammapy/gammapy-meetings/tree/master/coding-sprints/2022-01-Co-Working-Week).
 
 Release scheduling and LTS
 ==========================
@@ -51,19 +50,23 @@ More rapid releases can occur when important new features are to be distributed 
 Feature releases can introduce backwards incompatible changes w.r.t. previous versions.
 Those changes have to be mentioned in the release notes.
 
-In addition, bugfix releases can correct new feature versions.
+In addition, feature versions can be corrected by bug fix releases.
 A bugfix must neither introduce new major functionality nor break backwards compatibility in the
 public API, unless the API has an actual mistake that needs to be fixed.
 Documentation improvements can be part of a bugfix release. Bugfixes are
 applied to the current feature release.
 
 Finally, long-term support (LTS) releases will have a timescale of about 2 years (or about
-3-4 feature releases) and will continue to receive bugfixes until the next LTS release.
+3-4 feature releases) and will continue to receive bugfixes until the next LTS release
+to guarantee long term stability. Bugs affecting both the LTS and latest feature releases
+will be corrected on both branches. This will require a careful cherry picking of commits.
+*What do we do if API change require distinct fixes for both branches?*
 
 Version numbering
 =================
 
-Gammapy will follow the astropy version scheme i.e. of the form ``x.y.z``, with typically::
+Gammapy will follow the astropy version scheme i.e. a scheme following the
+[semantic versioning](https://semver.org) of the form ``x.y.z``, with typically::
 
 * 1.0.0 (LTS release)
 * 1.0.1 (bug fix release)
@@ -79,32 +82,34 @@ Gammapy will follow the astropy version scheme i.e. of the form ``x.y.z``, with 
 * 1.3.1 (bug fix release on the feature branch)
 * 2.0.0 (LTS release, six months after 1.3.0)
 
+
 Release preparation, feature freeze
 ===================================
 
-Specify the typical calendar to prepare for a feature release?
+To prepare for a new feature release. A feature freeze has to occur typically one month
+before the planned release date. From that point no new major feature is accepted for
+the coming release. Open pull requests planned for the release should be merged within
+two weeks of the feature freeze. If they are carried out in the same timescale,
+minor improvements, bug fixes, or documentation additions are still acceptable.
 
-To prepare for a new feature release. A feature freeze has to occur (when?).
-From that point no new major feature is accepted for the coming release.
-Minor improvements, bug fixes, or documentation additions are still acceptable.
+No alpha or beta release ar expected for Gammapy. For testing purposes, a release candidate
+is released on the Python Package Index two weeks before the expected release. Conda distribution
+of the release candidate is not foreseen at the moment. Release candidates will be produced
+for all LTS and feature releases. Bug fix releases won't go through the release candidate step.
 
-No alpha or beta release ar expected for Gammapy. For testing purposes, a limited
-release candidate can be distributed (is it necessary? systematic? only on Pypi?
-how long before the actual release?)
+If issues are found, they should be corrected before the actual release is made. This can lead
+to a delay in the release.
 
-A specific version branch is created with version numbering (e.g. v1.2).
+Once the version is tagged, specific branches must be created for the feature and backport
+developments. This process will require a detailed description in the developer documentation.
 
 Deprecation
 ===========
 
-At least one feature release before removing some API?
-
-Should Gammapy emit a deprecation warning?
-
-Development workflow
-====================
-
-See astropy release workflow
+API breaking changes can be introduced in feature and LTS releases. This changes must be clearly identified
+in the release notes. To avoid abruptly changing the API between consecutive version, forecoming API
+changes and deprecation should be announced in the previous release. In particular, a deprecation warning
+system should be applied to warn users of future changes affecting their code.
 
 
 Support of python Cython, numpy and astropy versions
@@ -114,15 +119,10 @@ see [APE 18](https://github.com/astropy/astropy-APEs/blob/main/APE18.rst)
 see [NEP 29](https://numpy.org/neps/nep-0029-deprecation_policy.html)
 
 
-
-Implementation
-==============
-
-
 Alternatives
 ============
 
-
+Do we discuss anything?
 
 Decision
 ========
