@@ -238,7 +238,8 @@ class TSMapEstimator(Estimator):
 
         # Creating exposure map with the mean non-null exposure
         exposure = Map.from_geom(geom, unit="cm2 s1")
-        exposure.data[...] = np.mean(dataset.exposure.data[dataset.exposure.data > 0.])
+        exposure_mask = (dataset.exposure.data > 0.) & np.isfinite(dataset.exposure.data)
+        exposure.data[...] = np.mean(dataset.exposure.quantity[exposure_mask].to_value(exposure.unit))
 
         # We use global evaluation mode to not modify the geometry
         evaluator = MapEvaluator(model=model)
