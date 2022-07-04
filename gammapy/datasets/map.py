@@ -703,7 +703,8 @@ class MapDataset(Dataset):
             Masked dataset
         """
         dataset = self.__class__.from_geoms(**self.geoms, name=name)
-        dataset.mask_fit.data = False
+        if self.mask_fit:
+            dataset.mask_fit.data = False
         dataset.stack(self, nan_to_num=nan_to_num)
         return dataset
 
