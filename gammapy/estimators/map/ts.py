@@ -239,12 +239,10 @@ class TSMapEstimator(Estimator):
         # Creating exposure map with the mean non-null exposure
         exposure = Map.from_geom(geom, unit="cm2 s1")
         exposure_mask = (dataset.exposure.data > 0.) & np.isfinite(dataset.exposure.data)
-        # Does not work as the 'energy' axis names are different for the exposure and the mask
-        # if dataset.mask:
-        #     exposure_spatial = exposure.reduce_over_axes(func=np.logical_or).data
-        #     mask_spatial = dataset.mask.reduce_over_axes(func=np.logical_or).data
-        #     exposure_mask &= mask_spatial.interp_to_geom(exposure_spatial)[np.newaxis, :, :]
-        #     # exposure_mask &= dataset.mask.interp_to_geom(dataset.exposure.geom).data
+        if dataset.mask:
+            local_mask = dataset.mask.copy()
+            local_mask.geom._axes[0]._name = "energy_true"
+            exposure_mask &= local_mask.interp_to_geom(dataset.exposure.geom).data
         if not np.any(exposure_mask):
             raise ValueError("The exposure is null. Impossible to convolve the model with the PSFKernel.")
 
