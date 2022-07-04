@@ -907,6 +907,7 @@ def test_stack(sky_model):
     dataset2.models = [background_model2, sky_model]
 
     stacked = MapDataset.from_geoms(**dataset1.geoms)
+    stacked.mask_fit.data = False
     stacked.stack(dataset1)
     stacked.stack(dataset2)
 
