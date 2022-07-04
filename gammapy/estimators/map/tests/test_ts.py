@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
-from numpy.testing import assert_allclose
+from numpy.testing import assert_allclose, assert_raises
 import astropy.units as u
 from astropy.coordinates import Angle
 from gammapy.datasets import MapDataset
@@ -242,7 +242,7 @@ def test_ts_map_with_model(fake_dataset):
     assert_allclose(maps["sqrt_ts"].data[:, 25, 25], -0.231187, atol=0.1)
     assert_allclose(maps["flux"].data[:, 25, 25], -5.899423e-12, atol=1e-12)
 
-    # Try downsmapling
+    # Try downsampling
     estimator = TSMapEstimator(
         model,
         kernel_width="0.3 deg",
@@ -258,14 +258,19 @@ def test_ts_map_with_model(fake_dataset):
 @requires_data()
 def test_compute_ts_map_with_hole(fake_dataset):
     """Test of compute_ts_image with a null exposure at the center of the map"""
-    i, j, ie = fake_dataset.exposure.geom.center_pix
-    fake_dataset.exposure.data[:, np.int_(i), np.int_(j)] = 0.
+    holes_dataset = fake_dataset.copy("holes_dataset")
+    i, j, ie = holes_dataset.exposure.geom.center_pix
+    holes_dataset.exposure.data[:, np.int_(i), np.int_(j)] = 0.
 
     spatial_model = GaussianSpatialModel(sigma="0.1 deg")
     spectral_model = PowerLawSpectralModel(index=2)
     model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
     ts_estimator = TSMapEstimator(model=model, threshold=1, selection_optional=[])
 
-    kernel = ts_estimator.estimate_kernel(dataset=fake_dataset)
+    kernel = ts_estimator.estimate_kernel(dataset=holes_dataset)
     assert_allclose(kernel.geom.width, 1.0 * u.deg)
     assert_allclose(kernel.data.sum(), 1.0)
+
+    holes_dataset.exposure.data[...] = 0.
+    with assert_raises(ValueError):
+        kernel = ts_estimator.estimate_kernel(dataset=holes_dataset)
