@@ -259,7 +259,7 @@ def test_ts_map_with_model(fake_dataset):
 def test_compute_ts_map_with_hole(fake_dataset):
     """Test of compute_ts_image with a null exposure at the center of the map"""
     i, j, ie = fake_dataset.exposure.geom.center_pix
-    fake_dataset.exposure.data[:, int(i), int(j)] = 0.
+    fake_dataset.exposure.data[:, np.int_(i), np.int_(j)] = 0.
 
     spatial_model = GaussianSpatialModel(sigma="0.1 deg")
     spectral_model = PowerLawSpectralModel(index=2)
