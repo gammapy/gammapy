@@ -349,11 +349,30 @@ class Geom(abc.ABC):
         axes = self.axes.slice_by_idx(slices)
         return self._init_copy(axes=axes)
 
+
+    def rename_axes(self, names, new_names):
+        """Rename the axes in place.
+    
+        Parameters
+        ----------
+        names : list or str
+            Names of the axes
+        new_names : list or str
+            New names of the axes (list must be of same length than `names`)
+        """
+        if isinstance(names, str):
+            names = [names]
+        if isinstance(new_names, str):
+            new_names = [new_names]
+        for name, new_name in zip(names, new_names):
+            self._axes[name].rename(new_name)
+
     @property
     def as_energy_true(self):
         """If the geom contains an energy axis rename it to energy true"""
         energy_axis = self.axes["energy"].copy(name="energy_true")
         return self.to_image().to_cube([energy_axis])
+
 
     @property
     def has_energy_axis(self):

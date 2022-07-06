@@ -579,3 +579,22 @@ def test_split_by_axis():
     )
     maps = m_4d.split_by_axis("time")
     assert len(maps) == 3
+    
+def test_rename_axes():
+    time_axis = MapAxis.from_bounds(
+        0,
+        24,
+        nbin=3,
+        unit="hour",
+        name="time",
+    )
+    energy_axis = MapAxis.from_bounds(
+        1, 100, nbin=2, unit="TeV", name="energy", interp="log"
+    )
+    m_4d = Map.create(
+        binsz=1.0, width=(10, 5), frame="galactic", axes=[energy_axis, time_axis]
+    )
+    geom = m_4d.geom
+    geom.rename_axes("energy", "energy_true")
+    assert geom.axes.names == ["energy_true", "time"]
+

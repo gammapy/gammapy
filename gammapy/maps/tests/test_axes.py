@@ -281,6 +281,22 @@ def test_map_axes_pad():
 
     assert_allclose(axes["energy"].edges, [0.1, 1, 10, 100] * u.TeV)
 
+def test_rename():
+    axis_1 = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=1)
+    axis_1.rename("energy_true")
+    assert axis_1.name == "energy_true"
+
+    axis_2 = MapAxis.from_bounds(0, 1, nbin=2, unit="deg", name="rad")
+    axis_2.rename("angle")
+    assert axis_2.name == "angle"
+
+    axes = MapAxes([axis_1, axis_2])
+    axes.rename(["energy_true", "angle"],["energy", "rad"])
+    assert axes.names == ["energy", "rad"]
+  
+    axes.rename("energy", "energy_true")
+    assert axes.names == ["energy_true", "rad"]
+
 
 @pytest.mark.parametrize(("edges", "interp"), MAP_AXIS_INTERP)
 def test_mapaxis_init_from_edges(edges, interp):

@@ -339,6 +339,16 @@ class MapAxis:
                 node_type=node_type,
                 unit=self.unit,
             )
+    
+    def rename(self, new_name):
+        """Rename the axis.
+    
+        Parameters
+        ----------
+        new_name : str
+            The new name for the column
+        """
+        self._name = new_name
 
     def format_plot_xaxis(self, ax):
         """Format plot axis
@@ -2043,6 +2053,25 @@ class MapAxes(Sequence):
 
         except ValueError:
             raise ValueError(message)
+
+
+    def rename(self, names, new_names):
+        """Rename the axes.
+    
+        Parameters
+        ----------
+        names : list or str
+            Names of the axes
+        new_names : list or str
+            New names of the axes (list must be of same length than `names`)
+        """
+        if isinstance(names, str):
+            names = [names]
+        if isinstance(new_names, str):
+            new_names = [new_names]
+        for name, new_name in zip(names, new_names):
+            self[name].rename(new_name)
+
 
     @property
     def center_coord(self):
