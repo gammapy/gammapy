@@ -340,15 +340,22 @@ class MapAxis:
                 unit=self.unit,
             )
     
-    def rename(self, new_name):
+    def rename(self, new_name, copy=True):
         """Rename the axis.
     
         Parameters
         ----------
         new_name : str
-            The new name for the column
+            The new name for the axis.
+        copy : bool
+            Copy or change in place.
         """
-        self._name = new_name
+        if copy:
+            axis = self.copy()
+        else:
+            axis=self
+        axis._name = new_name
+        return axis
 
     def format_plot_xaxis(self, ax):
         """Format plot axis
@@ -2055,7 +2062,7 @@ class MapAxes(Sequence):
             raise ValueError(message)
 
 
-    def rename(self, names, new_names):
+    def rename(self, names, new_names, copy=True):
         """Rename the axes.
     
         Parameters
@@ -2063,15 +2070,21 @@ class MapAxes(Sequence):
         names : list or str
             Names of the axes
         new_names : list or str
-            New names of the axes (list must be of same length than `names`)
+            New names of the axes (list must be of same length than `names`).
+        copy : bool
+            Copy or change in place.
         """
+        if copy:
+            axes = self.copy()
+        else:
+            axes = self
         if isinstance(names, str):
             names = [names]
         if isinstance(new_names, str):
             new_names = [new_names]
         for name, new_name in zip(names, new_names):
-            self[name].rename(new_name)
-
+            self[name].rename(new_name, copy=False)
+        return axes
 
     @property
     def center_coord(self):

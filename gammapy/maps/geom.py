@@ -350,28 +350,34 @@ class Geom(abc.ABC):
         return self._init_copy(axes=axes)
 
 
-    def rename_axes(self, names, new_names):
+    def rename_axes(self, names, new_names, copy=True):
         """Rename the axes in place.
     
         Parameters
         ----------
         names : list or str
-            Names of the axes
+            Names of the axes.
         new_names : list or str
-            New names of the axes (list must be of same length than `names`)
+            New names of the axes (list must be of same length than `names`).
+        copy : bool
+            Copy or change in place.
         """
+        if copy:
+            geom = self.copy()
+        else:
+            geom = self
         if isinstance(names, str):
             names = [names]
         if isinstance(new_names, str):
             new_names = [new_names]
         for name, new_name in zip(names, new_names):
-            self._axes[name].rename(new_name)
+            geom._axes[name].rename(new_name, copy=False)
+        return geom
 
     @property
     def as_energy_true(self):
         """If the geom contains an energy axis rename it to energy true"""
-        energy_axis = self.axes["energy"].copy(name="energy_true")
-        return self.to_image().to_cube([energy_axis])
+        return  self.rename_axes("energy", "energy_true", copy=True)
 
 
     @property

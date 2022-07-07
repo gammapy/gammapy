@@ -594,7 +594,9 @@ def test_rename_axes():
     m_4d = Map.create(
         binsz=1.0, width=(10, 5), frame="galactic", axes=[energy_axis, time_axis]
     )
-    geom = m_4d.geom
-    geom.rename_axes("energy", "energy_true")
+    geom = m_4d.geom.rename_axes("energy", "energy_true")
+    assert m_4d.geom.axes.names == ["energy", "time"]
     assert geom.axes.names == ["energy_true", "time"]
 
+    m_4d.geom.rename_axes("energy", "energy_true", copy=False)
+    assert m_4d.geom.axes.names == ["energy_true", "time"]

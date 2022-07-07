@@ -283,18 +283,23 @@ def test_map_axes_pad():
 
 def test_rename():
     axis_1 = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=1)
-    axis_1.rename("energy_true")
-    assert axis_1.name == "energy_true"
+    axis = axis_1.rename("energy_true")
+    assert axis_1.name == "energy"
+    assert axis.name == "energy_true"
 
+    axis = axis_1.rename("energy_true", copy=False)
+    assert axis_1.name == "energy_true"
+    assert axis.name == "energy_true"
+    
     axis_2 = MapAxis.from_bounds(0, 1, nbin=2, unit="deg", name="rad")
-    axis_2.rename("angle")
+    axis_2.rename("angle", copy=False)
     assert axis_2.name == "angle"
 
     axes = MapAxes([axis_1, axis_2])
-    axes.rename(["energy_true", "angle"],["energy", "rad"])
+    axes.rename(["energy_true", "angle"],["energy", "rad"], copy=False)
     assert axes.names == ["energy", "rad"]
   
-    axes.rename("energy", "energy_true")
+    axes.rename("energy", "energy_true", copy=False)
     assert axes.names == ["energy_true", "rad"]
 
 
