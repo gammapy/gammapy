@@ -18,7 +18,17 @@ from sphinx_astropy.conf import *
 from sphinx_gallery.sorting import FileNameSortKey
 
 # Load utils docs functions
-from gammapy.utils.docs import gammapy_sphinx_ext_activate
+from gammapy.utils.docs import gammapy_sphinx_ext_activate, SubstitutionCodeBlock
+
+
+# Add our custom directives to Sphinx
+def setup(app) :
+    """
+    Add the custom directives to Sphinx.
+    """
+    app.add_config_value('substitutions', [], 'html')
+    app.add_directive('substitution-code-block', SubstitutionCodeBlock)
+
 
 conf = ConfigParser()
 conf.read([os.path.join(os.path.dirname(__file__), "..", "setup.cfg")])
@@ -75,6 +85,7 @@ extensions.extend(
         "sphinx_copybutton",
     ]
 )
+
 nbsphinx_execute = "never"
 copybutton_prompt_text = r">>> |\.\.\. |\$ |In \[\d*\]: | {2,5}\.\.\.: | {5,8}: "
 copybutton_prompt_is_regexp = True
@@ -96,11 +107,14 @@ author = setup_cfg["author"]
 copyright = "{}, {}".format(datetime.datetime.now().year, setup_cfg["author"])
 
 version = get_distribution(project).version
-release = version
+release = 'X.Y.Z'
 switch_version = version
 if "dev" in version:
     switch_version = "dev"
+else:
+    release = version
 
+substitutions = [('|release|', release)]
 # -- Options for HTML output ---------------------------------------------------
 
 # A NOTE ON HTML THEMES
