@@ -286,22 +286,13 @@ def test_rename():
     axis = axis_1.rename("energy_true")
     assert axis_1.name == "energy"
     assert axis.name == "energy_true"
-
-    axis = axis_1.rename("energy_true", copy=False)
-    assert axis_1.name == "energy_true"
-    assert axis.name == "energy_true"
     
     axis_2 = MapAxis.from_bounds(0, 1, nbin=2, unit="deg", name="rad")
-    axis_2.rename("angle", copy=False)
-    assert axis_2.name == "angle"
 
     axes = MapAxes([axis_1, axis_2])
-    axes.rename(["energy_true", "angle"],["energy", "rad"], copy=False)
-    assert axes.names == ["energy", "rad"]
+    axes = axes.rename(["energy", "rad"], ["energy_true", "angle"])
+    assert axes.names == ["energy_true", "angle"]
   
-    axes.rename("energy", "energy_true", copy=False)
-    assert axes.names == ["energy_true", "rad"]
-
 
 @pytest.mark.parametrize(("edges", "interp"), MAP_AXIS_INTERP)
 def test_mapaxis_init_from_edges(edges, interp):
