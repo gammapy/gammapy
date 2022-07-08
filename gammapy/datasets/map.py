@@ -568,7 +568,6 @@ class MapDataset(Dataset):
             "gti", GTI.create([] * u.s, [] * u.s, reference_time=reference_time)
         )
         kwargs["mask_safe"] = Map.from_geom(geom, unit="", dtype=bool)
-        kwargs["mask_fit"] = Map.from_geom(geom, unit="", data=True, dtype=bool)
         return cls(**kwargs)
 
     @classmethod
@@ -703,8 +702,6 @@ class MapDataset(Dataset):
             Masked dataset
         """
         dataset = self.__class__.from_geoms(**self.geoms, name=name)
-        if self.mask_fit:
-            dataset.mask_fit.data = False
         dataset.stack(self, nan_to_num=nan_to_num)
         return dataset
 
@@ -791,6 +788,8 @@ class MapDataset(Dataset):
 
         if self.mask_fit and other.mask_fit:
             self.mask_fit.stack(other.mask_fit)
+        elif other.mask_fit:
+            self.mask_fit = other.mask_fit
 
         if self.gti and other.gti:
             self.gti.stack(other.gti)
