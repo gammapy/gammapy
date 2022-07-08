@@ -340,22 +340,20 @@ class MapAxis:
                 unit=self.unit,
             )
     
-    def rename(self, new_name, copy=True):
+    def rename(self, new_name):
         """Rename the axis.
     
         Parameters
         ----------
         new_name : str
             The new name for the axis.
-        copy : bool
-            Copy or change in place.
+
+        Returns
+        -------
+        axis : `~gammapy.maps.MapAxis`
+            Renamed MapAxis
         """
-        if copy:
-            axis = self.copy()
-        else:
-            axis=self
-        axis._name = new_name
-        return axis
+        return self.copy(name=new_name)
 
     def format_plot_xaxis(self, ax):
         """Format plot axis
@@ -2062,7 +2060,7 @@ class MapAxes(Sequence):
             raise ValueError(message)
 
 
-    def rename(self, names, new_names, copy=True):
+    def rename(self, names, new_names):
         """Rename the axes.
     
         Parameters
@@ -2071,19 +2069,19 @@ class MapAxes(Sequence):
             Names of the axes
         new_names : list or str
             New names of the axes (list must be of same length than `names`).
-        copy : bool
-            Copy or change in place.
+        
+        Returns
+        -------
+        axes : `MapAxes`
+            Renamed Map axes object
         """
-        if copy:
-            axes = self.copy()
-        else:
-            axes = self
+        axes = self.copy()
         if isinstance(names, str):
             names = [names]
         if isinstance(new_names, str):
             new_names = [new_names]
         for name, new_name in zip(names, new_names):
-            self[name].rename(new_name, copy=False)
+            axes[name]._name = new_name
         return axes
 
     @property

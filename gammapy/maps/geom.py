@@ -350,7 +350,7 @@ class Geom(abc.ABC):
         return self._init_copy(axes=axes)
 
 
-    def rename_axes(self, names, new_names, copy=True):
+    def rename_axes(self, names, new_names):
         """Rename the axes in place.
     
         Parameters
@@ -359,19 +359,14 @@ class Geom(abc.ABC):
             Names of the axes.
         new_names : list or str
             New names of the axes (list must be of same length than `names`).
-        copy : bool
-            Copy or change in place.
+
+        Returns
+        -------
+        geom : `~Geom`
+            Renamed geometry.
         """
-        if copy:
-            geom = self.copy()
-        else:
-            geom = self
-        if isinstance(names, str):
-            names = [names]
-        if isinstance(new_names, str):
-            new_names = [new_names]
-        for name, new_name in zip(names, new_names):
-            geom._axes[name].rename(new_name, copy=False)
+        geom = self.copy()
+        geom._axes = geom.axes.rename(names, new_names)
         return geom
 
     @property
