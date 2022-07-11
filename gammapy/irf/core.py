@@ -448,7 +448,13 @@ class IRF(metaclass=abc.ABCMeta):
         irf : `IRF`
             IRF class.
         """
-        axes = MapAxes.from_table(table=table, format=format)[cls.required_axes]
+        axes = MapAxes.from_table(table=table, format=format)
+        if "energy" in axes.names and "energy_true" not in axes.names:
+            try:
+                cls = cls.as_energy()
+            except AttributeError:
+                pass
+        axes = axes[cls.required_axes]
         column_name = IRF_DL3_HDU_SPECIFICATION[cls.tag]["column_name"]
         data = table[column_name].quantity[0].transpose()
 
@@ -624,6 +630,7 @@ class IRFMap:
         self._irf_map = irf_map
         self.exposure_map = exposure_map
         irf_map.geom.axes.assert_names(self.required_axes)
+
 
     @property
     @abc.abstractmethod

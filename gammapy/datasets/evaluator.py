@@ -174,21 +174,23 @@ class MapEvaluator:
         # lookup psf
         if psf and self.model.spatial_model:
             if self.apply_psf_after_edisp:
-                geom = geom.as_energy_true
+                geom_psf = geom
+                energy_name = "energy"
             else:
-                geom = exposure.geom
+                geom_psf = exposure.geom
+                energy_name = "energy_true"
 
-            if self.use_psf_containment(geom=geom):
-                energy_true = geom.axes["energy_true"].center.reshape((-1, 1, 1))
+            if self.use_psf_containment(geom=geom_psf):
+                energy_values = geom_psf.axes[energy_name].center.reshape((-1, 1, 1))
                 self.psf_containment = psf.containment(
-                    energy_true=energy_true, rad=geom.region.radius
+                    energy=energy_values, rad=geom.region.radius
                 )
             else:
-                if geom.is_region or geom.is_hpx:
-                    geom = geom.to_wcs_geom()
+                if geom_psf.is_region or geom_psf.is_hpx:
+                    geom_psf = geom_psf.to_wcs_geom()
 
                 self.psf = psf.get_psf_kernel(
-                    position=self.model.position, geom=geom, containment=PSF_CONTAINMENT
+                    position=self.model.position, geom=geom_psf, containment=PSF_CONTAINMENT
                 )
 
         if self.evaluation_mode == "local":
@@ -364,9 +366,7 @@ class MapEvaluator:
 
     @property
     def apply_psf_after_edisp(self):
-        """ """
-        if not isinstance(self.model, TemplateNPredModel):
-            return self.model.apply_irf.get("psf_after_edisp")
+        return "energy" in self.psf.axes.names
 
     def compute_npred(self):
         """Evaluate model predicted counts.
