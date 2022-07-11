@@ -71,9 +71,9 @@ class PSFMap(IRFMap):
     required_axes = ["rad", "energy_true"]
 
     @classmethod
-    def as_energy(cls):
-        cls.energy_name = "energy"
-        cls.required_axes = ["rad", "energy"]
+    def _create(cls, energy_name="energy_true"):
+        cls.energy_name = energy_name
+        cls.required_axes = ["rad", energy_name]
         return cls
 
     def __init__(self, psf_map, exposure_map=None):
