@@ -14,6 +14,28 @@ A Python Package for Gamma-ray Astronomy
 .. image:: http://mybinder.org/badge.svg
     :target: https://mybinder.org/v2/gh/gammapy/gammapy-webpage/master?urlpath=lab/tree/overview.ipynb
 
+Contributing Code, Documentation, or Feedback
++++++++++++++++++++++++++++++++++++++++++++++
+The Gammapy Project is made both by and for its users, so we welcome and encourage contributions of many kinds. Our
+goal is to keep this a positive, inclusive, successful, and growing community by abiding with the
+`Gammapy Community Code of Conduct <https://gammapy.org/contribute.html>`_.
+
+The Gammapy project uses a mechanism known as a `Developer Certificate of Origin (DCO) <https://github.com/apps/dco>`_
+to manage the legal aspect of contributions. The DCO is a legally binding statement that asserts that you are the
+creator of your contribution, and that you wish to allow Gammapy to use your work to cite you as contributor.
+Acknowledgement of this permission is described in the `Developer guide` of the official documentation.
+
+Licence
++++++++
+Gammapy is licensed under a 3-clause BSD style license - see the
+`LICENSE.rst <https://github.com/gammapy/gammapy/blob/master/LICENSE.rst>`_ file.
+
+Supporting the project
+++++++++++++++++++++++
+The Gammapy project is not sponsored and the development is made by the staff of `the institutes supporting the project
+<https://gammapy.org/team.html#support>`_ over their research time. Any contribution is then encouraged, as punctual or
+regular contributor.
+
 Status shields
 ++++++++++++++
 
