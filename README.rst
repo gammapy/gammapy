@@ -84,4 +84,5 @@ Status shields
     :target: https://anaconda.org/conda-forge/gammapy
     :alt: Latest release
 ..
+    It seems not maintained anymore!
     * https://www.openhub.net/p/gammapy
