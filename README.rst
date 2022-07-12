@@ -11,8 +11,16 @@ A Python Package for Gamma-ray Astronomy
 .. image:: http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat
     :target: http://www.astropy.org/
 
-.. image:: http://mybinder.org/badge.svg
-    :target: https://mybinder.org/v2/gh/gammapy/gammapy-webpage/master?urlpath=lab/tree/overview.ipynb
+..
+    ToDo: Add Binder in the release process
+    .. image:: http://mybinder.org/badge.svg
+        :target: https://mybinder.org/v2/gh/gammapy/gammapy-webpage/master?urlpath=lab/tree/overview.ipynb
+
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.4701488.svg?style=flat
+    :target: https://doi.org/10.5281/zenodo.4701488
+
+.. image:: https://archive.softwareheritage.org/badge/swh:1:dir:02e8a702ef6c9558a9f96d99bf6b9f41b5edcd34/
+    :target: https://archive.softwareheritage.org/swh:1:dir:02e8a702ef6c9558a9f96d99bf6b9f41b5edcd34;origin=https://github.com/gammapy/gammapy;visit=swh:1:snp:11294b68ac9dcb4aeefaa784e7fb7afba7d61402;anchor=swh:1:rev:89f67e3014c3673704ea6eeb8ad3ad0b844a3426
 
 Contributing Code, Documentation, or Feedback
 +++++++++++++++++++++++++++++++++++++++++++++
