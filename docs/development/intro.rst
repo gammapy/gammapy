@@ -37,6 +37,31 @@ So let's assume you've used Gammapy for a while, and now you'd like to fix or
 add something to the Gammapy code, tests or docs. Here are the steps and commands
 to do it ...
 
+Acceptation of the Developer Certificate of Origin (DCO)
+========================================================
+As described in the `PIG 24 <https://github.com/gammapy/gammapy/blob/master/docs/development/pigs/pig-024.rst>`_ and
+the `README.rst <https://github.com/gammapy/gammapy/blob/master/README.rst>`_ file, each contributor shall accept the
+Gammapy DCO: this is a legally binding statement that asserts that you are the creator of your contribution, and that
+you wish to allow Gammapy to use your work to cite you as contributor.
+
+**If you are willing to agree to these terms, you just add a line to every git commit message:**
+
+``Signed-off-by: Random J Developer <random@developer.example.org>``
+
+If you set your user.name and user.email as part of your git configuration (see
+`this page <https://docs.github.com/en/account-and-profile/setting-up-and-managing-your-personal-account-on-github/managing-email-preferences/setting-your-commit-email-address>`_
+to configure it), you can sign your commit automatically with
+
+``git commit -s``.
+
+You have to use your real name (i.e., pseudonyms or anonymous contributions cannot be made) when using git. This is
+because the DCO is a legally binding document, granting the Gammapy project to use your work.
+
+If you have authored a commit that is missing its ‘Signed-off-by’ line, you can amend your commits and push them to
+GitHub: "``git commit --amend --signoff``"
+
+If you’ve pushed your changes to GitHub already, you’ll need to force push your branch after this with "``git push -f``".
+
 Get in touch early
 ==================
 
