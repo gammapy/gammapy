@@ -1,15 +1,27 @@
 Gammapy
 =======
 
-A Python Package for Gamma-ray Astronomy
+A Python Package for Gamma-ray Astronomy.
+
+Gammapy is an open-source Python package for gamma-ray astronomy built on Numpy, Scipy and Astropy. It is used as core
+library for the Science Analysis tools of the Cherenkov Telescope Array (CTA), recommended by the H.E.S.S.
+collaboration to be used for Science publications, and is already widely used in the analysis of existing gamma-ray
+instruments, such as MAGIC, VERITAS and HAWC.
 
 * Webpage: https://gammapy.org
 * Documentation: https://docs.gammapy.org/
 * Code: https://github.com/gammapy/gammapy
-* License: BSD-3
+* .. image:: https://anaconda.org/conda-forge/gammapy/badges/license.svg
+    :target: https://github.com/gammapy/gammapy/blob/master/LICENSE.rst
+    :alt: Licence
+
 
 .. image:: http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat
     :target: http://www.astropy.org/
+
+.. image:: https://anaconda.org/conda-forge/gammapy/badges/installer/conda.svg
+
+.. image:: https://anaconda.org/conda-forge/gammapy/badges/downloads.svg
 
 ..
     ToDo: Add Binder in the release process
@@ -49,11 +61,11 @@ Status shields
 
 (mostly useful for developers)
 
-* .. image:: https://github.com/gammapy/gammapy/workflows/CI/badge.svg
+* .. image:: https://github.com/gammapy/gammapy/workflows/CI/badge.svg?style=flat
     :target: https://github.com/gammapy/gammapy/actions
     :alt: GitHub actions CI
 
-* .. image:: https://codecov.io/gh/gammapy/gammapy/branch/master/graph/badge.svg
+* .. image:: https://codecov.io/gh/gammapy/gammapy/branch/master/graph/badge.svg?style=flat
     :target: https://codecov.io/gh/gammapy/gammapy
 
 * .. image:: https://img.shields.io/lgtm/grade/python/g/gammapy/gammapy.svg?logo=lgtm&logoWidth=18
@@ -68,4 +80,8 @@ Status shields
     :target: https://pypi.org/project/gammapy/
     :alt: Latest release
 
-* https://www.openhub.net/p/gammapy
+* .. image:: https://anaconda.org/conda-forge/gammapy/badges/version.svg
+    :target: https://anaconda.org/conda-forge/gammapy
+    :alt: Latest release
+..
+    * https://www.openhub.net/p/gammapy
