@@ -422,8 +422,10 @@ class HpxNDMap(HpxMap):
         data = other.quantity.to_value(self.unit)
 
         if nan_to_num:
-            data = data.copy()
-            data[~np.isfinite(data)] = 0
+            not_finite = ~np.isfinite(data)
+            if np.any(not_finite):
+                data = data.copy()
+                data[not_finite] = 0
 
         if weights is not None:
             if not other.geom.to_image() == weights.geom.to_image():
