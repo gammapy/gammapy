@@ -167,6 +167,27 @@ class DocsImage(Image):
 
         return super().run()
 
+class SubstitutionCodeBlock(CodeBlock):
+    """
+    Similar to CodeBlock but replaces placeholders with variables.
+    """
+
+    def run(self):
+        """
+        Replace placeholders with given variables.
+        """
+        app = self.state.document.settings.env.app
+        new_content = []
+        self.content = self.content
+        existing_content = self.content
+        for item in existing_content:
+            for pair in app.config.substitutions:
+                original, replacement = pair
+                item = item.replace(original, replacement)
+            new_content.append(item)
+
+        self.content = new_content
+        return list(CodeBlock.run(self))
 
 def gammapy_sphinx_ext_activate():
     if HAS_GP_DATA:
