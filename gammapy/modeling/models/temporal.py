@@ -183,7 +183,8 @@ class TemporalModel(ModelBase):
         norm : float
             Integrated flux norm on the given time intervals
         """
-        times = Time(np.linspace(t_min.mjd, t_max.mjd, oversampling_factor, axis=-1), format="mjd")
+        t_values = np.linspace(t_min.mjd, t_max.mjd, oversampling_factor, axis=-1)
+        times = Time(t_values, format="mjd")
         values = self(times)
         integral = np.sum(values / oversampling_factor, axis=-1)
         return integral / self.time_sum(t_min, t_max).to_value("d")
