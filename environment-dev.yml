@@ -21,7 +21,7 @@ dependencies:
   - astropy
   - click
   - cython
-  - numpy
+  - numpy<1.23
   - pydantic
   - pyyaml
   - regions>=0.5
