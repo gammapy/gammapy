@@ -59,6 +59,7 @@ def input_dataset():
     mask2D_data[0:40, :] = False
     mask2D = Map.from_geom(geom=counts2D.geom, data=mask2D_data)
     mask = mask2D.to_cube([energy])
+
     name = "test-dataset"
     return MapDataset(
         counts=counts,
