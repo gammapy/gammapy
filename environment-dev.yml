@@ -27,7 +27,7 @@ dependencies:
   - regions>=0.5
   - matplotlib>=3.4
   - scipy
-  - iminuit>=2.8.0
+  - iminuit>=2.8.0,<2.13
   # test dependencies
   - codecov
   - pytest=6
