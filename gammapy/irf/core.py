@@ -451,7 +451,7 @@ class IRF(metaclass=abc.ABCMeta):
         axes = MapAxes.from_table(table=table, format=format)
         if "energy" in axes.names and "energy_true" not in axes.names:
             try:
-                cls = cls._create(energy_name="energy")
+                cls = cls.as_energy()
             except AttributeError:
                 pass
         axes = axes[cls.required_axes]
