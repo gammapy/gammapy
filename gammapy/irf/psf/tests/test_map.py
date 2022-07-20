@@ -3,6 +3,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
+from astropy.table import Table
 from astropy.coordinates import SkyCoord
 from astropy.units import Unit
 from gammapy.data import DataStore
@@ -502,3 +503,36 @@ def test_peek():
 
     with mpl_plot_check():
         psf_map.peek()
+
+
+@requires_data()
+def test_psf_ereco_from_table():
+    psf_fake = fake_psf3d(0.3 * u.deg)
+    aeff2d = fake_aeff2d()
+
+    table = psf_fake.to_table(format="gadf-dl3-hawc")
+    psf_reco = PSF3D.from_table(table, format="gadf-dl3-hawc")
+    assert psf_reco.energy_name == "energy"
+    assert psf_reco.required_axes == ['energy', 'offset', 'rad']
+    assert "energy" in psf_reco.axes.names    
+
+    pointing = SkyCoord(0, 0, unit="deg")
+    energy_axis = MapAxis(
+        nodes=[0.2, 0.7, 1.5, 2.0, 10.0], unit="TeV", name="energy"
+    )
+    rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="rad")
+
+    geom = WcsGeom.create(
+        skydir=pointing, binsz=0.2, width=5, axes=[rad_axis, energy_axis]
+    )
+
+    exposure_geom = geom.as_energy_true.squash(axis_name="rad")
+    exposure_map = make_map_exposure_true_energy(pointing, "1 h", aeff2d, exposure_geom)
+
+    psfmap_reco = make_psf_map(psf_reco, pointing, geom, exposure_map)
+    assert psfmap_reco.energy_name == "energy"
+    assert psfmap_reco.required_axes == ['rad', 'energy']
+    assert "energy" in psfmap_reco.psf_map.geom.axes.names    
+    
+    with mpl_plot_check():
+        psfmap_reco.peek()
