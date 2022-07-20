@@ -48,8 +48,9 @@ Here's an example for the `~gammapy.stats.cash` statistic::
     >>> model = [3.3, 6.8, 9.2]
     >>> cash(data, model)
     array([ -0.56353481,  -5.56922612, -21.54566271])
-    >>> cash(data, model).sum()
-    -27.67842364564512
+    >>> total_stat = cash(data, model).sum()
+    >>> print(f"{total_stat:.4f}")
+    -27.6784
 
 
 .. _wstat:
