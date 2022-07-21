@@ -789,7 +789,7 @@ class MapDataset(Dataset):
         if self.mask_fit and other.mask_fit:
             self.mask_fit.stack(other.mask_fit)
         elif other.mask_fit:
-            self.mask_fit = other.mask_fit
+            self.mask_fit = other.mask_fit.copy()
 
         if self.gti and other.gti:
             self.gti.stack(other.gti)
