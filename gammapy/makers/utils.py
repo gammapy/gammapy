@@ -240,20 +240,16 @@ def make_psf_map(psf, pointing, geom, exposure_map=None):
     offset = coords.skycoord.separation(pointing)
 
     # Compute PSF values
-    kwargs={psf.energy_name:coords[psf.energy_name],
-            "offset":offset,
-            "rad":coords["rad"]
-            }
-    data = psf.evaluate(**kwargs)
+    data = psf.evaluate(
+        energy_true=coords["energy_true"],
+        offset=offset,
+        rad=coords["rad"],
+    )
 
     # Create Map and fill relevant entries
     psf_map = Map.from_geom(geom, data=data.value, unit=data.unit)
     psf_map.normalize(axis_name="rad")
-    if psf.energy_name == "energy_true":
-        return PSFMap(psf_map, exposure_map)
-    else:
-        return PSFMap.as_energy()(psf_map, exposure_map)
-
+    return PSFMap(psf_map, exposure_map)
 
 
 def make_edisp_map(edisp, pointing, geom, exposure_map=None, use_region_center=True):

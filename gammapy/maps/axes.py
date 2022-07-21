@@ -1153,7 +1153,7 @@ class MapAxis:
                 table["e_ref"] = self.center
                 table["e_min"] = self.edges_min
                 table["e_max"] = self.edges_max
-        elif "gadf-dl3" in format:
+        elif format == "gadf-dl3":
             from gammapy.irf.io import IRF_DL3_AXES_SPECIFICATION
 
             if self.name == "energy":
@@ -1289,7 +1289,7 @@ class MapAxis:
 
             axis = MapAxis(nodes=nodes, node_type=node_type, interp=interp, name=name)
 
-        elif  "gadf-dl3" in format:
+        elif format == "gadf-dl3":
             from gammapy.irf.io import IRF_DL3_AXES_SPECIFICATION
 
             spec = IRF_DL3_AXES_SPECIFICATION[column_prefix]
@@ -1298,8 +1298,6 @@ class MapAxis:
             # background models are stored in reconstructed energy
             hduclass = table.meta.get("HDUCLAS2")
             if hduclass in {"BKG", "RAD_MAX"} and column_prefix == "ENERG":
-                name = "energy"
-            if format == "gadf-dl3-hawc" and hduclass == "RPSF" and column_prefix == "ENERG":
                 name = "energy"
 
             edges_lo = table[f"{column_prefix}_LO"].quantity[0]
@@ -1854,7 +1852,7 @@ class MapAxes(Sequence):
         table : `~astropy.table.Table`
             Table with axis data
         """
-        if "gadf-dl3" in format:
+        if format == "gadf-dl3":
             tables = []
 
             for ax in self:
@@ -1995,7 +1993,7 @@ class MapAxes(Sequence):
                         axis = MapAxis.from_table(table, format=format, idx=idx)
 
                 axes.append(axis)
-        elif "gadf-dl3" in format:
+        elif format == "gadf-dl3":
             for column_prefix in IRF_DL3_AXES_SPECIFICATION:
                 try:
                     axis = MapAxis.from_table(

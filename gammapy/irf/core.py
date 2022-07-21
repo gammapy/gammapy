@@ -482,7 +482,7 @@ class IRF(metaclass=abc.ABCMeta):
         """
         table = self.axes.to_table(format=format)
 
-        if "gadf-dl3" in format:
+        if format == "gadf-dl3":
             table.meta = self.meta.copy()
             spec = IRF_DL3_HDU_SPECIFICATION[self.tag]
 
@@ -728,15 +728,13 @@ class IRFMap:
         irf_map : `IRFMap`
             IRF map.
         """
-        if format == "gadf" or format == "gadf-hawc":
+        if format == "gadf":
             if hdu is None:
                 hdu = IRF_MAP_HDU_SPECIFICATION[cls.tag]
 
             irf_map = Map.from_hdulist(
                 hdulist, hdu=hdu, hdu_bands=hdu_bands, format=format
             )
-            if format == "gadf-hawc" and hdu==IRF_MAP_HDU_SPECIFICATION["psf_map"]:
-                irf_map..psf_map.geom._axes[1]._name = "energy"
 
             if exposure_hdu is None:
                 exposure_hdu = IRF_MAP_HDU_SPECIFICATION[cls.tag] + "_exposure"

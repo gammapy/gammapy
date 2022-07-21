@@ -28,12 +28,5 @@ class PSF3D(PSF):
     """
 
     tag = "psf_table"
-    energy_name = "energy_true"
     required_axes = ["energy_true", "offset", "rad"]
     default_unit = u.sr**-1
-
-    @classmethod
-    def as_energy(cls):
-        cls.energy_name = "energy"
-        cls.required_axes = ["energy", "offset", "rad"]
-        return cls
