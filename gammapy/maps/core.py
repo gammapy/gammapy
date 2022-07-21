@@ -147,9 +147,8 @@ class Map(abc.ABC):
         geom : `~Map`
             Renamed Map.
         """
-        map_copy = self.copy()
-        map_copy._geom = map_copy.geom.rename_axes(names, new_names)
-        return map_copy
+        geom = self.geom.rename_axes(names=names, new_names=new_names)
+        return self._init_copy(geom=geom)
 
     @staticmethod
     def create(**kwargs):
