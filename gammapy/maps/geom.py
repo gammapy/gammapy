@@ -365,9 +365,8 @@ class Geom(abc.ABC):
         geom : `~Geom`
             Renamed geometry.
         """
-        geom = self.copy()
-        geom._axes = geom.axes.rename(names, new_names)
-        return geom
+        axes = self.axes.rename(names=names, new_names=new_names)
+        return self._init_copy(axes=axes)
 
     @property
     def as_energy_true(self):
