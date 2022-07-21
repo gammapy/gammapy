@@ -351,7 +351,7 @@ class Geom(abc.ABC):
 
 
     def rename_axes(self, names, new_names):
-        """Rename the axes in place.
+        """Rename axes contained in the geometry
     
         Parameters
         ----------
