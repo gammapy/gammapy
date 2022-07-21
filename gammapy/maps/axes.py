@@ -102,7 +102,9 @@ class MapAxis:
 
     # TODO: Cache an interpolation object?
     def __init__(self, nodes, interp="lin", name="", node_type="edges", unit=""):
-        self._name = name
+        
+        if not isinstance(name, str):
+            raise TypeError(f"Name must be a string, got: {type(name)!r}")
 
         if len(nodes) != len(np.unique(nodes)):
             raise ValueError("MapAxis: node values must be unique")
@@ -116,6 +118,7 @@ class MapAxis:
         else:
             nodes = np.array(nodes)
 
+        self._name = name
         self._unit = u.Unit(unit)
         self._nodes = nodes.astype(float)
         self._node_type = node_type
@@ -2060,7 +2063,7 @@ class MapAxes(Sequence):
             raise ValueError(message)
 
 
-    def rename(self, names, new_names):
+    def rename_axes(self, names, new_names):
         """Rename the axes.
     
         Parameters
@@ -2082,7 +2085,7 @@ class MapAxes(Sequence):
             new_names = [new_names]
         for name, new_name in zip(names, new_names):
             axes[name]._name = new_name
-        return axes
+        return  axes
 
     @property
     def center_coord(self):

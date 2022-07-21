@@ -365,7 +365,7 @@ class Geom(abc.ABC):
         geom : `~Geom`
             Renamed geometry.
         """
-        axes = self.axes.rename(names=names, new_names=new_names)
+        axes = self.axes.rename_axes(names=names, new_names=new_names)
         return self._init_copy(axes=axes)
 
     @property

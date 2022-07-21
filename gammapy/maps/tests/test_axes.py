@@ -69,6 +69,10 @@ def test_mapaxis_repr():
     axis = MapAxis([1, 2, 3], name="test")
     assert "MapAxis" in repr(axis)
 
+def test_mapaxis_invalid_name():
+    with pytest.raises(TypeError):
+        MapAxis([1, 2, 3], name=1)
+
 
 @pytest.mark.parametrize(
     ("nodes", "interp", "node_type", "unit", "name", "result"),
@@ -290,7 +294,7 @@ def test_rename():
     axis_2 = MapAxis.from_bounds(0, 1, nbin=2, unit="deg", name="rad")
 
     axes = MapAxes([axis_1, axis_2])
-    axes = axes.rename(["energy", "rad"], ["energy_true", "angle"])
+    axes = axes.rename_axes(["energy", "rad"], ["energy_true", "angle"])
     assert axes.names == ["energy_true", "angle"]
   
 
