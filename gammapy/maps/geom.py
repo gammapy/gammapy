@@ -371,7 +371,7 @@ class Geom(abc.ABC):
     @property
     def as_energy_true(self):
         """If the geom contains an energy axis rename it to energy true"""
-        return  self.rename_axes("energy", "energy_true", copy=True)
+        return  self.rename_axes(name="energy", new_name="energy_true")
 
 
     @property
