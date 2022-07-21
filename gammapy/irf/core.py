@@ -449,11 +449,6 @@ class IRF(metaclass=abc.ABCMeta):
             IRF class.
         """
         axes = MapAxes.from_table(table=table, format=format)
-        if "energy" in axes.names and "energy_true" not in axes.names:
-            try:
-                cls = cls.as_energy()
-            except AttributeError:
-                pass
         axes = axes[cls.required_axes]
         column_name = IRF_DL3_HDU_SPECIFICATION[cls.tag]["column_name"]
         data = table[column_name].quantity[0].transpose()

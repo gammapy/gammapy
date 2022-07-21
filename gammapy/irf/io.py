@@ -132,6 +132,7 @@ IRF_MAP_HDU_SPECIFICATION = {
     "edisp_kernel_map": "edisp",
     "edisp_map": "edisp",
     "psf_map": "psf",
+    "psf_map_reco": "psf",
 }
 
 
