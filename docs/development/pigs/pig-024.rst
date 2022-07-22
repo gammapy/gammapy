@@ -45,15 +45,15 @@ releases, the Long Term Support (LTS) releases, the general Gammapy papers, and 
 ==================================
 
 When Gammapy is used for any publication, contribution to conferences or software, authors should cite properly Gammapy.
-It is asked to cite the DOI of the latest Gammapy paper as well as the paper associated to the latest LST release.
+It is asked to cite the DOI of the latest Gammapy version as well as the paper associated to the latest LTS release.
 
 .. note::
     As the Gammapy community fully supports Open Science, we strongly encourage authors using Gammapy to follow
     the FAIR4RS principles and to allow the reproducibility of their results. As consequence, we suggest always mentioning
-    the `Zenodo <https://zenodo.org/>`_ DOI or the `HAL <https://hal.archives-ouvertes.fr/>`_ identifier (associated with
+    the `Zenodo <https://zenodo.org/>`_ DOI or the `HAL <https://hal.archives-ouvertes.fr/>`_ SWHID identifier (associated with
     the `Software Heritage <https://www.softwareheritage.org/>`_ archive) of the used release of Gammapy.
 
-This scheme with these two references will be given on our web pages.
+This citation scheme with these **two references** will be given on our web pages.
 
 3. Authorship policy
 ====================
@@ -77,7 +77,7 @@ Contributing to Gammapy can be made in different ways:
 - and obviously coordinating the project by the Lead Developers.
 
 Any contribution without threshold on these topics renders an user as official Gammapy contributor. And the contributions
-can be tracked using GitHub. However, the use of personal data is regulated in Europe and one should have the
+are tracked using the GitHub contributions. However, the use of personal data is regulated in Europe and one should have the
 authorisation of users to be cited with their personal information (typically, their affiliation and their ORCID if any).
 For this reason, we propose to use the GitHub `Developer Certificate of Origin <https://github.com/apps/dco>`_ (DCO) on
 Pull Request. This lightweight way for contributors will permit to:
@@ -129,7 +129,7 @@ Gammapy Coordination Committee will be the final decision maker.
 Long Term Support releases
 --------------------------
 
-The list of authors is composed of the union of all the contributors of the releases realised since the last LST
+The list of authors is composed of the union of all the contributors of the releases realised since the last LTS
 release. As an LTS will be associated with a paper, the members of the Coordination Committee will appear in this
 peer-review product as a long-term support of the Gammapy project (see next section).
 
@@ -140,7 +140,7 @@ contributors, as well as to submit a request of co-authorship for special contri
 as for the standard releases are applied here.
 
 
-For the first LST release, the `V1.0`, all contributors from the beginning of the project will be co-authors per default.
+For the first LTS release, the `V1.0`, all contributors from the beginning of the project will be co-authors per default.
 As the DCO has not be applied for the past contributions, the best will be done to contact all contributors in order to
 exercise their right to withdraw (OptOut scheme), to update their personal information, and to add authors with special
 contributions. The order of the authors is 'The Gammapy team', followed by the list of contributors in alphabetical order.
@@ -160,7 +160,7 @@ publication of an LTS release. As it targets a wide community, the following sch
 
     - 'The Gammapy team', and the list of primary paper contributors in order of contribution agreed per consensus with the development team, as '(Primary Paper Contributors)',
     - the members of the Coordination Committee, as '(Gammapy Coordination Committee)',
-    - the list of contributors of the associated LST ordered by alphabetical order, as '(Gammapy Contributors)'
+    - the list of contributors of the associated LTS ordered by alphabetical order, as '(Gammapy Contributors)'
 
     In this case, a comment on the author list composition should be added. Extracted from the Astropy project,
     one can precise:
@@ -216,13 +216,15 @@ official scheme to handle current and past affiliations, that might be needed fo
 CFF project `Issue #268 <https://github.com/citation-file-format/citation-file-format/issues/268>`_). In the affiliation
 string, one could add a past affiliation as precised below, but with a risk that Zenodo or tools using ``CITATION.cff``
 to make the ``codemeta.json`` does not understand it.
-.. code-block::
-  authors:
-    - family-names: XXX
-      given-names: "YYYY Z."
-      affiliation: "Lab AA, XX; Past: Lab BB, YY"
-      email: yyyy.xxx@gammapy.org
-      orcid: "https://orcid.org/0000-0000-0000-0000"
+
+ ::
+
+    authors:
+      - family-names: XXX
+        given-names: "YYYY Z."
+        affiliation: "Lab AA, XX; Past: Lab BB, YY"
+        email: yyyy.xxx@gammapy.org
+        orcid: "https://orcid.org/0000-0000-0000-0000"
 
 For any release, both metadata files should be carefully updated and systematically a review should be done by the dev
 team.
