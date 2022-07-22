@@ -243,7 +243,7 @@ class TSMapEstimator(Estimator):
         exposure_position = dataset.exposure.to_region_nd_map(position)
         if not np.any(exposure_position.data):
             raise ValueError("The exposure is null. Impossible to convolve the model with the PSFKernel.")
-        exposure.data[...] = exposure_position.data
+        exposure.data[...] = exposure_position.quantity.to_value(exposure.unit)
 
         # We use global evaluation mode to not modify the geometry
         evaluator = MapEvaluator(model=model)
