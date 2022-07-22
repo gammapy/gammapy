@@ -168,11 +168,11 @@ this:
     mu_background = 4.2
 
     s = CashCountsStatistic(n_observed, mu_background).sqrt_ts
-    print(s)
+    print(f"{s:.4f}")
 
 .. testoutput::
 
-    2.397918129147546
+    2.3979
 
 We have introduced variables that hold the parameters for the analysis and put
 them before the computation. Let's say this script is in a file called
