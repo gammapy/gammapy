@@ -38,7 +38,7 @@ Contributing Code, Documentation, or Feedback
 +++++++++++++++++++++++++++++++++++++++++++++
 The Gammapy Project is made both by and for its users, so we welcome and encourage contributions of many kinds. Our
 goal is to keep this a positive, inclusive, successful, and growing community by abiding with the
-`Gammapy Community Code of Conduct <https://gammapy.org/contribute.html>`_.
+`Gammapy Community Code of Conduct <https://gammapy.org/CoC.html>`_.
 
 The Gammapy project uses a mechanism known as a `Developer Certificate of Origin (DCO) <https://github.com/apps/dco>`_
 to manage the legal aspect of contributions. The DCO is a legally binding statement that asserts that you are the
