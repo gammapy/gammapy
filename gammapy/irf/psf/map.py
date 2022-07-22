@@ -582,7 +582,7 @@ class PSFMapReco(PSFMap):
         psf_map : `PSFMap`
             Point spread function map.
         """
-        super().from_gauss(energy_axis, rad_axis, sigma, geom)
+        return super().from_gauss(energy_axis, rad_axis, sigma, geom)
 
     def containment(self, rad, energy, position=None):
         """Containment at given coords
