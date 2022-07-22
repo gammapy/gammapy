@@ -523,7 +523,7 @@ def test_psf_map_reco(tmpdir):
     assert "energy" in psf_map.psf_map.geom.axes.names
     assert psf_map.energy_name == "energy"
     assert psf_map.required_axes == ["rad", "energy"]
-        
+
     value = psf_map.containment(rad=0.1, energy=energy_axis.center)
     assert_allclose(value,[0.3938, 0.1175, 0.0540], rtol=1e-2)
 

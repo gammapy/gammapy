@@ -173,18 +173,16 @@ class MapEvaluator:
 
         # lookup psf
         if psf and self.model.spatial_model:
-            if self.apply_psf_after_edisp:
+            energy_name = psf.energy_name
+            if energy_name == "energy":
                 geom_psf = geom
-                energy_name = "energy"
             else:
                 geom_psf = exposure.geom
-                energy_name = "energy_true"
 
             if self.use_psf_containment(geom=geom_psf):
                 energy_values = geom_psf.axes[energy_name].center.reshape((-1, 1, 1))
-                self.psf_containment = psf.containment(
-                    energy=energy_values, rad=geom.region.radius
-                )
+                kwargs = {energy_name:energy_values, "rad":geom.region.radius}
+                self.psf_containment = psf.containment(**kwargs)
             else:
                 if geom_psf.is_region or geom_psf.is_hpx:
                     geom_psf = geom_psf.to_wcs_geom()
@@ -366,7 +364,7 @@ class MapEvaluator:
 
     @property
     def apply_psf_after_edisp(self):
-        return "energy" in self.psf.axes.names
+        return  self.psf is not None and "energy" in self.psf.psf_kernel_map.geom.axes.names
 
     def compute_npred(self):
         """Evaluate model predicted counts.
