@@ -153,6 +153,12 @@ class TestSourceCatalogObject3HWC:
 
     @staticmethod
     def test_spectral_model(ca_3hwc):
+        m = ca_3hwc[1].spectral_model()
+        assert_allclose(m.amplitude.value, 4.7558e-15, atol=1e-3)
+        assert_allclose(m.amplitude.error, 7.411645e-16, atol=1e-3)
+        assert_allclose(m.index.value, 2.8396, atol=1e-3)
+        assert_allclose(m.index.error, 0.1425, atol=1e-3)
+       
         m = ca_3hwc[0].spectral_model()
         dnde, dnde_err = m.evaluate_error(7 * u.TeV)
         assert dnde.unit == "cm-2 s-1 TeV-1"
@@ -175,9 +181,9 @@ class TestSourceCatalogObject3HWC:
 
         assert isinstance(m, DiskSpatialModel)
         assert m.lon_0.unit == "deg"
-        assert_allclose(m.lon_0.value, 175.444, atol=1e-10)
+        assert_allclose(m.lon_0.value, 175.444254, atol=1e-10)
         assert m.lat_0.unit == "deg"
-        assert_allclose(m.lat_0.value, 10.966, atol=1e-10)
+        assert_allclose(m.lat_0.value, 10.966142, atol=1e-10)
         assert m.frame == "galactic"
         assert m.r_0.unit == "deg"
         assert_allclose(m.r_0.value, 0.5, atol=1e-3)
@@ -185,7 +191,7 @@ class TestSourceCatalogObject3HWC:
         model = ca_3hwc["3HWC J0621+382"].spatial_model()
         pos_err = model.position_error
         scale_r95 = Gauss2DPDF().containment_radius(0.95)
-        assert_allclose(pos_err.height.value, 2 * 0.301 * scale_r95, rtol=1e-4)
-        assert_allclose(pos_err.width.value, 2 * 0.301 * scale_r95, rtol=1e-4)
+        assert_allclose(pos_err.height.value, 2 * 0.3005 * scale_r95, rtol=1e-3)
+        assert_allclose(pos_err.width.value, 2 * 0.3005 * scale_r95, rtol=1e-3)
         assert_allclose(model.position.l.value, pos_err.center.l.value)
         assert_allclose(model.position.b.value, pos_err.center.b.value)
