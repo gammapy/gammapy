@@ -5,7 +5,7 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
 from gammapy.datasets.evaluator import MapEvaluator
-from gammapy.irf import PSFKernel
+from gammapy.irf import PSFKernel, PSFMapReco
 from gammapy.maps import Map, MapAxis, RegionGeom, RegionNDMap, WcsGeom
 from gammapy.modeling.models import (
     ConstantSpectralModel,
@@ -154,3 +154,46 @@ def test_compute_npred_sign():
     assert (npred_pos.data == -npred_neg.data).all()
     assert np.all(npred_pos.data >= 0)
     assert np.all(npred_neg.data <= 0)
+    
+def test_psf_reco():
+    center = SkyCoord("0 deg", "0 deg", frame="galactic")
+    energy_axis = MapAxis.from_energy_bounds(
+        "1 TeV", "10 TeV", nbin=3, name="energy"
+    )
+    geom = WcsGeom.create(
+        skydir=center,
+        width=1 * u.deg,
+        axes=[energy_axis],
+        frame="galactic",
+        binsz=0.2 * u.deg,
+    )
+
+    spectral_model = PowerLawSpectralModel(index=2, amplitude="1e-11 TeV-1 s-1 m-2")
+
+    spatial_model = PointSpatialModel(
+        lon_0=0 * u.deg, lat_0=0 * u.deg, frame="galactic"
+    )
+    model_pos = SkyModel(spectral_model=spectral_model, spatial_model=spatial_model)
+
+    exposure = Map.from_geom(geom.as_energy_true, unit="m2 s")
+    exposure.data += 1.0
+
+    psf = PSFKernel.from_gauss(geom, sigma=0.1 * u.deg)
+
+    evaluator = MapEvaluator(model=model_pos, exposure=exposure, psf=psf)
+
+    assert evaluator.apply_psf_after_edisp == True
+    assert evaluator.methods_sequence[-1] == evaluator.apply_psf
+    npred = evaluator.compute_npred()
+    assert_allclose(npred.data.sum(), 9e-12)
+    
+    psf_map = PSFMapReco.from_gauss(
+        energy_axis=energy_axis, sigma=0.1 * u.deg, geom=geom.to_image()
+    )
+    
+    mask = Map.from_geom(geom, data=True)
+    evaluator.psf = None
+    evaluator.update(exposure, psf_map, None, geom, mask)
+    assert evaluator.apply_psf_after_edisp == True
+    assert evaluator.methods_sequence[-1] == evaluator.apply_psf
+    assert_allclose(evaluator.compute_npred().data.sum(),  9e-12)
