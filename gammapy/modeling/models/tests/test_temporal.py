@@ -237,7 +237,7 @@ def test_generalized_gaussian_temporal_model_integral():
     t_ref = Time(50000, format="mjd")
     gti = GTI.create(start, stop, reference_time=t_ref)
     val = temporal_model.integral(gti.time_start, gti.time_stop)
-    assert_allclose(val, 0.751594, rtol=1e-5)
+    assert_allclose(val, 0.751594, rtol=1e-4)
 
 
 def test_powerlaw_temporal_model_evaluate():
