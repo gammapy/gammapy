@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
-from numpy.testing import assert_allclose, assert_raises
+from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import Angle
 from gammapy.datasets import MapDataset
@@ -273,5 +273,5 @@ def test_compute_ts_map_with_hole(fake_dataset):
     assert_allclose(kernel.data.sum(), 1.0)
 
     holes_dataset.exposure.data[...] = 0.
-    with assert_raises(ValueError):
+    with pytest.raises(ValueError):
         kernel = ts_estimator.estimate_kernel(dataset=holes_dataset)
