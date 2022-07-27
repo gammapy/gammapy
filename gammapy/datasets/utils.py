@@ -1,3 +1,6 @@
+import numpy as np
+
+
 def get_figure(fig, width, height):
     import matplotlib.pyplot as plt
 
@@ -26,7 +29,6 @@ def get_axes(ax1, ax2, width, height, args1, args2, kwargs1=None, kwargs2=None):
 
 
 def get_nearest_valid_exposure_position(exposure, position=None):
-    import numpy as np
     mask_exposure = exposure > 0.0*exposure.unit
     mask_exposure = mask_exposure.reduce_over_axes(func=np.logical_or)
     if not position:
