@@ -216,7 +216,7 @@ class TSMapEstimator(Estimator):
     def estimate_kernel(self, dataset):
         """Get the convolution kernel for the input dataset.
 
-        Convolves the model with the IRFs.
+        Convolves the model with the IRFs at the center of the dataset (or at the nearest position with non-null exposure).
 
         Parameters
         ----------
