@@ -132,6 +132,24 @@ class Map(abc.ABC):
         self.data = val.value
         self._unit = val.unit
 
+    def rename_axes(self, names, new_names):
+        """Rename the Map axes.
+    
+        Parameters
+        ----------
+        names : list or str
+            Names of the axes.
+        new_names : list or str
+            New names of the axes (list must be of same length than `names`).
+
+        Returns
+        -------
+        geom : `~Map`
+            Renamed Map.
+        """
+        geom = self.geom.rename_axes(names=names, new_names=new_names)
+        return self._init_copy(geom=geom)
+
     @staticmethod
     def create(**kwargs):
         """Create an empty map object.
