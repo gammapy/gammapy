@@ -242,7 +242,7 @@ class TSMapEstimator(Estimator):
         position = get_nearest_valid_exposure_position(dataset.exposure, geom.center_skydir)
         exposure_position = dataset.exposure.to_region_nd_map(position)
         if not np.any(exposure_position.data):
-            raise ValueError("The exposure is null. Impossible to convolve the model with the PSFKernel.")
+            raise ValueError("No valid exposure. Impossible to compute kernel for TS Map.")
         exposure.data[...] = exposure_position.quantity.to_value(exposure.unit)
 
         # We use global evaluation mode to not modify the geometry
