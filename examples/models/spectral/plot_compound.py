@@ -42,7 +42,7 @@ nlp = LogParabolaNormSpectralModel(
     norm="1e-1", reference="10 TeV", alpha=2.0, beta=1.0
 )
 # Info: need to freeze the amplitude to avoid degeneracy when fitting
-nlp.amplitude.frozen = True
+nlp.norm.frozen = True
 model_mul = nlp * pwl
 model_mul.plot(energy_bounds)
 plt.grid(which="both")
