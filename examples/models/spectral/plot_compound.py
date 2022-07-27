@@ -18,6 +18,7 @@ import matplotlib.pyplot as plt
 from gammapy.modeling.models import (
     CompoundSpectralModel,
     LogParabolaSpectralModel,
+    LogParabolaNormSpectralModel,
     Models,
     PowerLawSpectralModel,
     SkyModel,
@@ -31,10 +32,19 @@ lp = LogParabolaSpectralModel(
     amplitude="1e-12 cm-2 s-1 TeV-1", reference="10 TeV", alpha=2.0, beta=1.0
 )
 
-# freeze the amplitude to avoid degeneracy when fitting
-lp.amplitude.frozen = True
-model = CompoundSpectralModel(pwl, lp, operator.add)
-model.plot(energy_bounds)
+# Sum of two spectral models
+model_add = CompoundSpectralModel(pwl, lp, operator.add)
+model_add.plot(energy_bounds)
+plt.grid(which="both")
+
+# Multiplication of two spectral models
+nlp = LogParabolaNormSpectralModel(
+    amplitude="1e-1", reference="10 TeV", alpha=2.0, beta=1.0
+)
+# Info: need to freeze the amplitude to avoid degeneracy when fitting
+nlp.amplitude.frozen = True
+model_mul = nlp * pwl
+model_mul.plot(energy_bounds)
 plt.grid(which="both")
 
 # %%
@@ -42,7 +52,7 @@ plt.grid(which="both")
 # -------------------
 # Here is an example YAML file using the model:
 
-model = SkyModel(spectral_model=model, name="compound-model")
-models = Models([model])
+sky_model = SkyModel(spectral_model=model_add, name="add-compound-model")
+models = Models([sky_model])
 
 print(models.to_yaml())
