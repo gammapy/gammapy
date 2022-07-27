@@ -571,8 +571,11 @@ class IRF(metaclass=abc.ABCMeta):
         """
         axes = self.axes.slice_by_idx(slices)
 
-        if axes.names != self.axes.names:
-            raise ValueError(f"Indexing not supported got {slice}")
+        diff = set(self.axes.names).difference(axes.names)
+
+        if diff:
+            diff_slice = {key: value for key, value in slices.items() if key in diff}
+            raise ValueError(f"Integer indexing not supported, got {diff_slice}")
 
         slices = tuple([slices.get(ax.name, slice(None)) for ax in self.axes])
         data = self.data[slices]
