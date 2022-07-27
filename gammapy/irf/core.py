@@ -554,6 +554,30 @@ class IRF(metaclass=abc.ABCMeta):
             data=data, axes=axes, meta=self.meta.copy(), unit=self.unit
         )
 
+    def slice_by_idx(self, slices):
+        """Slice sub IRF from IRF object.
+
+        Parameters
+        ----------
+        slices : dict
+            Dict of axes names and `slice` object pairs. Contains one
+            element for each non-spatial dimension. Axes not specified in the
+            dict are kept unchanged.
+
+        Returns
+        -------
+        sliced : `IRF`
+            Sliced IRF object.
+        """
+        axes = self.axes.slice_by_idx(slices)
+
+        if axes.names != self.axes.names:
+            raise ValueError(f"Indexing not supported got {slice}")
+
+        slices = tuple([slices.get(ax.name, slice(None)) for ax in self.axes])
+        data = self.data[slices]
+        return self.__class__(axes=axes, data=data, unit=self.unit, meta=self.meta)
+
     def is_allclose(self, other, rtol_axes=1e-3, atol_axes=1e-6, **kwargs):
         """Compare two data IRFs for equivalency
 
