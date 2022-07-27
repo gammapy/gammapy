@@ -39,3 +39,25 @@ def test_immutable():
 
     with pytest.raises(AttributeError):
         test_irf.fov_alignment = FoVAlignment.ALTAZ
+
+
+def test_slice_by_idx():
+    energy_axis = MapAxis.from_energy_bounds(10, 100, 10, unit="TeV", name="energy")
+    offset_axis = MapAxis.from_bounds(0, 2.5, 5, unit="deg", name="offset")
+    data = np.full((10, 5), 1)
+
+    irf = TestIRF(axes=[energy_axis, offset_axis], data=data, unit=u.deg)
+
+    irf_sliced = irf.slice_by_idx({"energy": slice(3, 7)})
+    assert irf_sliced.data.shape == (4, 5)
+    assert irf_sliced.axes["energy"].nbin == 4
+
+    irf_sliced = irf.slice_by_idx({"offset": slice(3, 5)})
+    assert irf_sliced.data.shape == (10, 2)
+    assert irf_sliced.axes["offset"].nbin == 2
+
+    irf_sliced = irf.slice_by_idx({"energy": slice(3, 7), "offset": slice(3, 5)})
+    assert irf_sliced.data.shape == (4, 2)
+    assert irf_sliced.axes["offset"].nbin == 2
+    assert irf_sliced.axes["energy"].nbin == 4
+
