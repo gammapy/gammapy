@@ -205,7 +205,7 @@ class Background3D(BackgroundIRF):
             ax.set_title(str(ee))
             if add_cbar:
                 label = f"Background [{bkg.unit}]"
-                cbar = ax.figure.colorbar(caxes, ax=ax, label=label)
+                cbar = ax.figure.colorbar(caxes, ax=ax, label=label, fraction=cfraction)
                 cbar.formatter.set_powerlimits((0, 0))
 
             row, col = np.unravel_index(i, shape=(rows, cols))
@@ -213,6 +213,7 @@ class Background3D(BackgroundIRF):
                 ax.set_ylabel("")
             if row < rows - 1:
                 ax.set_xlabel("")
+            ax.set_aspect('equal', 'box')
 
 
 class Background2D(BackgroundIRF):
