@@ -420,7 +420,7 @@ class ReflectedRegionsBackgroundMaker(Maker):
 
     Attributes
     ----------
-    regions_finder: RegionsFinder
+    region_finder: RegionsFinder
         if not given, a `ReflectedRegionsFinder` will be created and
         any of the ``**kwargs`` will be forwarded to the `ReflectedRegionsFinder`.
     exclusion_mask : `~gammapy.maps.WcsNDMap`, optional
