@@ -238,12 +238,12 @@ class TSMapEstimator(Estimator):
         model.spatial_model.position = geom.center_skydir
 
         # Creating exposure map with the mean non-null exposure
-        exposure = Map.from_geom(geom, unit="cm2 s1")
+        exposure = Map.from_geom(geom, unit=dataset.exposure.unit)
         position = get_nearest_valid_exposure_position(dataset.exposure, geom.center_skydir)
         exposure_position = dataset.exposure.to_region_nd_map(position)
         if not np.any(exposure_position.data):
             raise ValueError("No valid exposure. Impossible to compute kernel for TS Map.")
-        exposure.data[...] = exposure_position.quantity.to_value(exposure.unit)
+        exposure.data[...] = exposure_position.data
 
         # We use global evaluation mode to not modify the geometry
         evaluator = MapEvaluator(model=model)
