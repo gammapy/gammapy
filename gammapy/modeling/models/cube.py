@@ -13,7 +13,7 @@ from gammapy.utils.fits import LazyFitsData
 from gammapy.utils.scripts import make_name, make_path
 from .core import Model, ModelBase, Models
 from .spatial import ConstantSpatialModel, SpatialModel
-from .spectral import PowerLawNormSpectralModel, SpectralModel, TemplateSpectralModel, CompoundSpectralModel
+from .spectral import PowerLawNormSpectralModel, SpectralModel, TemplateSpectralModel
 from .temporal import TemporalModel
 
 __all__ = [
@@ -78,16 +78,6 @@ class SkyModel(ModelBase):
             raise ValueError(
                 "Spectral model used with SkyModel requires a norm type parameter."
             )
-
-        if isinstance(self.spectral_model, CompoundSpectralModel):
-            is_free_norm = np.array(
-                [par.is_norm for par in spectral_model.parameters.free_parameters]
-            )
-
-            if self.spectral_model.operator is operator.mul and np.sum(is_free_norm) > 1:
-                raise ValueError(
-                    "The multiplicative compound spectral model can only have a single free norm type parameter."
-                )
 
         super().__init__()
 
