@@ -90,10 +90,10 @@ class MapAxis:
         Axis name
     node_type : str
         Flag indicating whether coordinate nodes correspond to pixel
-        edges (node_type = 'edge') or pixel centers (node_type =
+        edges (node_type = 'edges') or pixel centers (node_type =
         'center').  'center' should be used where the map values are
         defined at a specific coordinate (e.g. differential
-        quantities). 'edge' should be used where map values are
+        quantities). 'edges' should be used where map values are
         defined by an integral over coordinate intervals (e.g. a
         counts histogram).
     unit : str
@@ -444,7 +444,7 @@ class MapAxis:
 
     @property
     def node_type(self):
-        """Return node type ('center' or 'edge')."""
+        """Return node type ('center' or 'edges')."""
         return self._node_type
 
     @property
@@ -456,7 +456,7 @@ class MapAxis:
     def from_bounds(cls, lo_bnd, hi_bnd, nbin, **kwargs):
         """Generate an axis object from a lower/upper bound and number of bins.
 
-        If node_type = 'edge' then bounds correspond to the
+        If node_type = 'edges' then bounds correspond to the
         lower and upper bound of the first and last bin.  If node_type
         = 'center' then bounds correspond to the centers of the first
         and last bin.
