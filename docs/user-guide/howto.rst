@@ -234,8 +234,6 @@ to your code:
 
 .. accordion-footer::
 
-.. accordion-footer::
-
 .. accordion-header::
     :id: collapseHowToSixteen
     :title: Colour blind friendly visualisations
