@@ -233,3 +233,30 @@ to your code:
     pbar.SHOW_PROGRESS_BAR = True
 
 .. accordion-footer::
+
+.. accordion-footer::
+
+.. accordion-header::
+    :id: collapseHowToSixteen
+    :title: Colour blind friendly visualisations
+
+The CTA observatory released a document describing best practices for data visualisation in a way friendly to
+color-blind people: `CTAO document <https://www.cta-observatory.org/wp-content/uploads/2020/10/CTA_ColourBlindness_BestPractices2.pdf>`_.
+As the Gammapy visualisations are using the library `matplotlib` that provides color styles, it is possible to adapt the
+colors of the Gammapy plots in order to follow these practices.
+
+To use them, you should add into your notebooks or scripts the following lines after the Gammapy imports:
+
+.. testcode::
+
+    import matplotlib.style as style
+    style.use('tableau-colorblind10')
+
+or
+
+.. testcode::
+
+    import matplotlib.style as style
+    style.use('seaborn-colorblind')
+
+.. accordion-footer::
