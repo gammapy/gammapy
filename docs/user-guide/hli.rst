@@ -21,4 +21,5 @@ Gammapy tutorial notebooks that show examples using the high level interface:
 
 .. nbgallery::
 
+   ../tutorials/starting/analysis_3.ipynb
    ../tutorials/starting/analysis_1.ipynb
