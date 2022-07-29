@@ -23,7 +23,6 @@ from gammapy.modeling.models import (
     PowerLawNormSpectralModel,
     PowerLawSpectralModel,
     LogParabolaSpectralModel,
-    LogParabolaNormSpectralModel,
     SkyModel,
     SpatialModel,
     TemplateNPredModel,
@@ -705,7 +704,6 @@ def test_compound_spectral_model(caplog):
     )
     temporal_model = ConstantTemporalModel()
 
-    # Addition of the spectral models
     spectral_model = CompoundSpectralModel(pwl, lp, operator.add)
     m = SkyModel(
         spatial_model=spatial_model,
@@ -715,25 +713,3 @@ def test_compound_spectral_model(caplog):
     )
     assert_allclose(m.spectral_model(5*u.TeV).value, 2.87e-12, rtol=1e-2)
 
-    # Multiplication of the spectral models with several free norm parameters
-    nlp = LogParabolaNormSpectralModel(
-        norm="1e-1", reference="10 TeV", alpha=2.0, beta=1.0
-    )
-    spectral_model = CompoundSpectralModel(pwl, nlp, operator.mul)
-    with pytest.raises(ValueError):
-        m = SkyModel(
-            spatial_model=spatial_model,
-            spectral_model=spectral_model,
-            temporal_model=temporal_model,
-            name="source-1",
-            )
-
-    # Multiplication of the spectral models with only one free norm parameter
-    nlp.norm.frozen = True
-    m = SkyModel(
-        spatial_model=spatial_model,
-        spectral_model=spectral_model,
-        temporal_model=temporal_model,
-        name="source-1",
-    )
-    assert_allclose(m.spectral_model(5*u.TeV).value, 9.89e-14, rtol=1e-2)
