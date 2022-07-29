@@ -18,7 +18,6 @@ import matplotlib.pyplot as plt
 from gammapy.modeling.models import (
     CompoundSpectralModel,
     LogParabolaSpectralModel,
-    LogParabolaNormSpectralModel,
     Models,
     PowerLawSpectralModel,
     SkyModel,
@@ -32,20 +31,10 @@ lp = LogParabolaSpectralModel(
     amplitude="1e-12 cm-2 s-1 TeV-1", reference="10 TeV", alpha=2.0, beta=1.0
 )
 
-# Sum of two spectral models
 model_add = CompoundSpectralModel(pwl, lp, operator.add)
 model_add.plot(energy_bounds)
 plt.grid(which="both")
 
-# Multiplication of two spectral models
-nlp = LogParabolaNormSpectralModel(
-    norm="1e-1", reference="10 TeV", alpha=2.0, beta=1.0
-)
-# Info: need to freeze the amplitude to avoid degeneracy when fitting
-nlp.norm.frozen = True
-model_mul = nlp * pwl
-model_mul.plot(energy_bounds)
-plt.grid(which="both")
 
 # %%
 # YAML representation
