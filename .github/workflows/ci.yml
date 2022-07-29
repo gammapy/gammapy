@@ -36,6 +36,8 @@ jobs:
             os: ubuntu-latest
           - name: Linux python 3.9 core-deps
             os: ubuntu-latest
+          - name: Linux python 3.10 core-deps
+            os: ubuntu-latest
           - name: Windows python 3.8 core-deps
             os: windows-latest
             python: 3.8
@@ -48,6 +50,10 @@ jobs:
         if: contains(matrix.name, '3.9')
         run: |
           sed -itmp 's/python=3.8/python=3.9/' environment-dev.yml
+      - name: install python3.10
+        if: contains(matrix.name, '3.10')
+        run: |
+          sed -itmp 's/python=3.8/python=3.10/' environment-dev.yml
       - name: add core dependencies env file
         if: contains(matrix.name, 'core-deps')
         run: |

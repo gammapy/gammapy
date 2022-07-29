@@ -166,6 +166,29 @@ class TemporalModel(ModelBase):
 
         return t_min + time
 
+    def integral(self, t_min, t_max, oversampling_factor=100, **kwargs):
+        """Evaluate the integrated flux within the given time intervals
+
+        Parameters
+        ----------
+        t_min: `~astropy.time.Time`
+            Start times of observation
+        t_max: `~astropy.time.Time`
+            Stop times of observation
+        oversampling_factor : int
+            Oversampling factor to be used for numerical integration.
+
+        Returns
+        -------
+        norm : float
+            Integrated flux norm on the given time intervals
+        """
+        t_values = np.linspace(t_min.mjd, t_max.mjd, oversampling_factor, axis=-1)
+        times = Time(t_values, format="mjd")
+        values = self(times)
+        integral = np.sum(values / oversampling_factor, axis=-1)
+        return integral / self.time_sum(t_min, t_max).to_value("d")
+
 
 class ConstantTemporalModel(TemporalModel):
     """Constant temporal model."""
@@ -372,7 +395,7 @@ class GeneralizedGaussianTemporalModel(TemporalModel):
     t_ref = Parameter("t_ref", _t_ref_default.mjd, unit="day", frozen=False)
     t_rise = Parameter("t_rise", "1d", frozen=False)
     t_decay = Parameter("t_decay", "1d", frozen=False)
-    eta = Parameter("eta", 1 / 2, unit="", frozen=False)
+    eta = Parameter("eta", 1/2, unit="", frozen=False)
 
     @staticmethod
     def evaluate(time, t_ref, t_rise, t_decay, eta):
@@ -388,33 +411,6 @@ class GeneralizedGaussianTemporalModel(TemporalModel):
         )
         val = np.where(time < t_ref, val_rise, val_decay)
         return val
-
-    def integral(self, t_min, t_max, **kwargs):
-        """Evaluate the integrated flux within the given time intervals
-
-        Parameters
-        ----------
-        t_min: `~astropy.time.Time`
-            Start times of observation
-        t_max: `~astropy.time.Time`
-            Stop times of observation
-
-        Returns
-        -------
-        norm : float
-            Integrated flux norm on the given time intervals
-        """
-
-        pars = self.parameters
-        t_rise = pars["t_rise"].quantity
-        t_decay = pars["t_decay"].quantity
-        eta = pars["eta"].quantity
-        t_ref = Time(pars["t_ref"].quantity, format="mjd")
-
-        integral = scipy.integrate.quad(
-            self.evaluate, t_min.mjd, t_max.mjd, args=(t_ref.mjd, t_rise, t_decay, eta)
-        )[0]
-        return integral / self.time_sum(t_min, t_max).to_value("d")
 
 
 class LightCurveTemplateTemporalModel(TemporalModel):
