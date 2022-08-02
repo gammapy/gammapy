@@ -3,6 +3,10 @@ from scipy.interpolate import CubicSpline
 import matplotlib.pyplot as plt
 from gammapy.maps import MapAxis
 from gammapy.maps.utils import edges_from_lo_hi
+import math
+import logging
+
+log = logging.getLogger(__name__)
 
 __all__ = [
     "plot_contour_line",
@@ -126,9 +130,15 @@ def plot_spectrum_datasets_off_regions(
 
 def plot_contour_line(ax, x, y, **kwargs):
     """Plot smooth curve from contour points"""
+    xf = x
+    yf = y
+
     # close contour
-    xf = np.append(x, x[0])
-    yf = np.append(y, y[0])
+    rel_tol = 1.e-2
+    if not (math.isclose(x[0], x[-1], rel_tol=rel_tol) and math.isclose(y[0], y[-1], rel_tol=rel_tol)):
+        xf = np.append(x, x[0])
+        yf = np.append(y, y[0])
+        log.info("Closing the contours.")
 
     # curve parametrization must be strictly increasing
     # so we use the cumulative distance of each point from the first one
