@@ -3,7 +3,6 @@ from scipy.interpolate import CubicSpline
 import matplotlib.pyplot as plt
 from gammapy.maps import MapAxis
 from gammapy.maps.utils import edges_from_lo_hi
-import math
 import logging
 
 log = logging.getLogger(__name__)
