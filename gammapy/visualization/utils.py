@@ -134,11 +134,9 @@ def plot_contour_line(ax, x, y, **kwargs):
     yf = y
 
     # close contour
-    rel_tol = 1.e-2
-    if not (math.isclose(x[0], x[-1], rel_tol=rel_tol) and math.isclose(y[0], y[-1], rel_tol=rel_tol)):
+    if not (x[0] == x[-1] and y[0] == y[-1]):
         xf = np.append(x, x[0])
         yf = np.append(y, y[0])
-        log.info("Closing the contours.")
 
     # curve parametrization must be strictly increasing
     # so we use the cumulative distance of each point from the first one
