@@ -241,23 +241,6 @@ Here's how you compute the statistical significance of your detection:
 
 .. plot:: user-guide/stats/plot_wstat_significance.py
 
-Conversely, if you know that the expected number of background events is :math:`\mu_{bkg}=5.5`, you can use
-the Cash statistic and obtain the :math:`\sqrt TS` or Li & Ma significance for known background:
-
-.. testcode::
-
-    from gammapy.stats import CashCountsStatistic
-    stat = CashCountsStatistic(n_on=13, mu_bkg=5.5)
-    print(f"Excess  : {stat.n_sig:.2f}")
-    print(f"sqrt(TS): {stat.sqrt_ts:.2f}")
-
-.. testoutput::
-
-    Excess  : 7.50
-    sqrt(TS): 2.71
-
-.. plot:: user-guide/stats/plot_cash_significance.py
-
 Excess errors
 ~~~~~~~~~~~~~
 
@@ -267,28 +250,36 @@ If you are interested in 68% (1 :math:`\sigma`) and 95% (1 :math:`\sigma`) confi
 
 .. testcode::
 
-    from gammapy.stats import CashCountsStatistic
-    stat = CashCountsStatistic(n_on=13, mu_bkg=5.5)
-    print(f"{stat.compute_errn(1.):.2f}")
-    print(f"{stat.compute_errp(1.):.2f}")
-    print(f"{stat.compute_errn(2.):.2f}")
-    print(f"{stat.compute_errp(2.):.2f}")
+    from gammapy.stats import WStatCountsStatistic
+    stat = WStatCountsStatistic(n_on=13, n_off=11, alpha=1./2)
+    excess = count_statistic.n_sig
+    errn = count_statistic.compute_errn(1.)
+    errp = count_statistic.compute_errp(1.)
+    print(f"68% confidence range: {excess + errn:.3f} < mu < {excess + errp:.3f}")
 
 .. testoutput::
 
-    -3.28
-    3.95
-    -5.94
-    8.60
+    68% confidence range: 3.750 < mu < 11.736
 
-The 68% confidence interval (1 :math:`\sigma`) is obtained by finding the expected signal values for which the TS
+.. testcode::
+
+    errn_2sigma = count_statistic.compute_errn(2.)
+    errp_2sigma = count_statistic.compute_errp(2.)
+    print(f"95% confidence range: {excess + errn_2sigma:.3f} < mu < {excess + errp_2sigma:.3f}")
+
+.. testoutput::
+
+    95% confidence range: 0.311 < mu < 16.580
+
+
+As above, the 68% confidence interval (1 :math:`\sigma`) is obtained by finding the expected signal values for which the TS
 variation is 1. The 95% confidence interval (2 :math:`\sigma`) is obtained by finding the expected signal values
 for which the TS variation is :math:`2^2 = 4`.
 
 On the following plot, we show how the 1 :math:`\sigma` and 2 :math:`\sigma` confidence errors
-relate to the fit statistic profile.
+relate to the WStat statistic profile.
 
-.. plot:: user-guide/stats/plot_cash_errors.py
+.. plot:: user-guide/stats/plot_wstat_errors.py
 
 
 These are references describing the available methods: [LiMa1983]_, [Cash1979]_,
