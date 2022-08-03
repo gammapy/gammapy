@@ -251,7 +251,7 @@ If you are interested in 68% (1 :math:`\sigma`) and 95% (1 :math:`\sigma`) confi
 .. testcode::
 
     from gammapy.stats import WStatCountsStatistic
-    stat = WStatCountsStatistic(n_on=13, n_off=11, alpha=1./2)
+    count_statistic = WStatCountsStatistic(n_on=13, n_off=11, alpha=1./2)
     excess = count_statistic.n_sig
     errn = count_statistic.compute_errn(1.)
     errp = count_statistic.compute_errp(1.)
