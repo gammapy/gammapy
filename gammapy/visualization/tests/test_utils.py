@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
-import logging
 from numpy.testing import assert_allclose
 from astropy.table import Table
 import matplotlib.pyplot as plt
@@ -44,8 +43,7 @@ def test_plot_spectrum_datasets_off_regions():
     assert ax.lines[0].get_color() in ["green", "C0"]
 
 
-def test_map_panel_plotter(caplog):
-    caplog.set_level(logging.INFO)
+def test_map_panel_plotter():
     t = np.linspace(0.0, 6.1, 10)
     x = np.cos(t)
     y = np.sin(t)
@@ -53,21 +51,11 @@ def test_map_panel_plotter(caplog):
     ax = plt.subplot(111)
     with mpl_plot_check():
         plot_contour_line(ax, x, y)
-        assert "INFO" in [_.levelname for _ in caplog.records]
-        assert caplog.record_tuples[0] == (
-            "gammapy.visualization.utils",
-            logging.INFO,
-            "Closing the contours.",
-        )
 
-    caplog.clear()
     x = np.append(x, x[0])
     y = np.append(y, y[0])
     with mpl_plot_check():
         plot_contour_line(ax, x, y)
-        assert len(caplog.record_tuples) == 0
-
-    caplog.set_level(logging.WARNING)
 
 
 def test_plot_theta2_distribution():
