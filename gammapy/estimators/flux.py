@@ -113,6 +113,15 @@ class FluxEstimator(ParameterEstimator):
         ref_model = models[self.source].spectral_model
         scale_model = ScaleSpectralModel(ref_model)
 
+        is_norm = np.array([par.is_norm for par in ref_model.parameters])
+        is_free_norm = np.array(
+            [par.is_norm for par in ref_model.parameters.free_parameters]
+        )
+        if np.sum(is_free_norm) > 1:
+            raise ValueError(
+                "Spectral model used can only have a single free norm type parameter."
+            )
+
         for scaled_parameter in ref_model.parameters:
             if scaled_parameter.is_norm:
                 break
