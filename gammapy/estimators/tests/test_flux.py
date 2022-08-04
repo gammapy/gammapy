@@ -13,6 +13,7 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
     TemplateSpatialModel,
+    ConstantSpectralModel,
 )
 from gammapy.utils.testing import requires_data, requires_dependency
 
@@ -181,9 +182,27 @@ def test_flux_estimator_compound_model():
     estimator = FluxEstimator(source="test", selection_optional=[], reoptimize=True)
 
     scale_model = estimator.get_scale_model(Models([model]))
-
     assert_allclose(scale_model.norm.min, 1e-3)
     assert_allclose(scale_model.norm.max, 1e2)
+
+    pl2 = PowerLawSpectralModel()
+    pl2.amplitude.min = 1e-15
+    pl2.amplitude.max = 1e-10
+    spectral_model2 = pl + pl2
+    model2 = SkyModel(spectral_model=spectral_model2, name="test")
+    with pytest.raises(ValueError) as e_info:
+        scale_model = estimator.get_scale_model(Models([model2]))
+    assert "Spectral model used can only have a single free norm type parameter" in str(e_info.value)
+
+    pl2.amplitude.frozen = True
+    scale_model = estimator.get_scale_model(Models([model2]))
+
+    pl.amplitude.frozen = True
+    pl2.amplitude.frozen = False
+    scale_model = estimator.get_scale_model(Models([model2]))
+
+    pl2.amplitude.frozen = True
+    scale_model = estimator.get_scale_model(Models([model2]))
 
 
 @requires_dependency("naima")
