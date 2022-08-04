@@ -113,7 +113,6 @@ class FluxEstimator(ParameterEstimator):
         ref_model = models[self.source].spectral_model
         scale_model = ScaleSpectralModel(ref_model)
 
-        is_norm = np.array([par.is_norm for par in ref_model.parameters])
         is_free_norm = np.array(
             [par.is_norm for par in ref_model.parameters.free_parameters]
         )
