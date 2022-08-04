@@ -57,31 +57,6 @@ class ObservationTable(Table):
         """Observation stop time (`~astropy.time.Time`)."""
         return self.time_ref + Quantity(self["TSTOP"], "second")
 
-    @lazyproperty
-    def _index_dict(self):
-        """Dict containing row index for all obs ids."""
-        # TODO: Switch to http://docs.astropy.org/en/latest/table/indexing.html once it is more stable
-        temp = zip(self["OBS_ID"], np.arange(len(self)))
-        return dict(temp)
-
-    def get_obs_idx(self, obs_id):
-        """Get row index for given ``obs_id``.
-
-        Raises KeyError if observation is not available.
-
-        Parameters
-        ----------
-        obs_id : int, list
-            observation ids
-
-        Returns
-        -------
-        idx : list
-            indices corresponding to obs_id
-        """
-        idx = [self._index_dict[key] for key in np.atleast_1d(obs_id)]
-        return idx
-
     def select_obs_id(self, obs_id):
         """Get `~gammapy.data.ObservationTable` containing only ``obs_id``.
 
@@ -92,7 +67,11 @@ class ObservationTable(Table):
         obs_id: int, list
             observation ids
         """
-        return self[self.get_obs_idx(obs_id)]
+        try:
+            self.indices['OBS_ID']
+        except:
+            self.add_index('OBS_ID')
+        return self.loc['OBS_ID', obs_id]
 
     def summary(self):
         """Summary info string (str)."""
