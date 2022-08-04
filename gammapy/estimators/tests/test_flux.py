@@ -13,7 +13,6 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
     TemplateSpatialModel,
-    ConstantSpectralModel,
 )
 from gammapy.utils.testing import requires_data, requires_dependency
 
