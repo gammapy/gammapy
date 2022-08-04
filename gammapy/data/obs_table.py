@@ -57,26 +57,6 @@ class ObservationTable(Table):
         """Observation stop time (`~astropy.time.Time`)."""
         return self.time_ref + Quantity(self["TSTOP"], "second")
 
-    def get_obs_idx(self, obs_id):
-        """Get row index for given ``obs_id``.
-
-        Raises KeyError if observation is not available.
-
-        Parameters
-        ----------
-        obs_id : int, list
-            observation ids
-        Returns
-        -------
-        idx : list
-            indices corresponding to obs_id
-        """
-        try:
-            self.indices['OBS_ID']
-        except:
-            self.add_index('OBS_ID')
-        return np.atleast_1d(self.loc_indices['OBS_ID', obs_id])
-
     def select_obs_id(self, obs_id):
         """Get `~gammapy.data.ObservationTable` containing only ``obs_id``.
 
@@ -92,7 +72,6 @@ class ObservationTable(Table):
         except:
             self.add_index('OBS_ID')
         return self.__class__(self.loc['OBS_ID', obs_id])
-#        return self[self.get_obs_idx(obs_id)]
 
     def summary(self):
         """Summary info string (str)."""
