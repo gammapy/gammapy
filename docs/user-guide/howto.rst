@@ -236,14 +236,27 @@ to your code:
 
 .. accordion-header::
     :id: collapseHowToSixteen
-    :title: Color-blind friendly visualisations
+    :title: Changing plotting style and color-blind friendly visualizations
 
-The CTA observatory released a document describing best practices for data visualisation in a way friendly to
-color-blind people: `CTAO document <https://www.cta-observatory.org/wp-content/uploads/2020/10/CTA_ColourBlindness_BestPractices2.pdf>`_.
-As the Gammapy visualisations are using the library `matplotlib` that provides color styles, it is possible to adapt the
-colors of the Gammapy plots in order to follow these practices.
+As the Gammapy visualisations are using the library `matplotlib` that provides color styles, it is possible to change the
+default colors map of the Gammapy plots. Using using the
+`style sheet of matplotlib <https://matplotlib.org/stable/gallery/style_sheets/style_sheets_reference.html>`_, you
+should add into your notebooks or scripts the following lines after the Gammapy imports:
 
-To use them, you should add into your notebooks or scripts the following lines after the Gammapy imports:
+.. testcode::
+
+    import matplotlib.style as style
+    style.use('XXXX')
+    # with XXXX from `print(plt.style.available)`
+
+Note that you can create your own style with matplotlib (see
+`here <https://matplotlib.org/stable/tutorials/introductory/customizing.html>`_ and
+`here <https://matplotlib.org/stable/tutorials/colors/colormaps.html>`_)
+
+The CTA observatory released a document describing best practices for **data visualisation in a way friendly to
+color-blind people**:
+`CTAO document <https://www.cta-observatory.org/wp-content/uploads/2020/10/CTA_ColourBlindness_BestPractices2.pdf>`_. To
+use them, you should add into your notebooks or scripts the following lines after the Gammapy imports:
 
 .. testcode::
 
