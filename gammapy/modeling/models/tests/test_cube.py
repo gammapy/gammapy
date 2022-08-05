@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
+import operator
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
@@ -21,6 +22,7 @@ from gammapy.modeling.models import (
     PointSpatialModel,
     PowerLawNormSpectralModel,
     PowerLawSpectralModel,
+    LogParabolaSpectralModel,
     SkyModel,
     SpatialModel,
     TemplateNPredModel,
@@ -688,3 +690,26 @@ def test_integrate_geom():
     integral = sky_model.integrate_geom(geom).data
 
     assert_allclose(integral / 1e-12, [[[5.299]], [[2.460]], [[1.142]]], rtol=1e-3)
+
+
+def test_compound_spectral_model(caplog):
+    spatial_model = GaussianSpatialModel(
+        lon_0="3 deg", lat_0="4 deg", sigma="3 deg", frame="galactic"
+    )
+    pwl = PowerLawSpectralModel(
+        index=2, amplitude="1e-11 cm-2 s-1 TeV-1", reference="1 TeV"
+    )
+    lp = LogParabolaSpectralModel(
+        amplitude="1e-12 cm-2 s-1 TeV-1", reference="10 TeV", alpha=2.0, beta=1.0
+    )
+    temporal_model = ConstantTemporalModel()
+
+    spectral_model = CompoundSpectralModel(pwl, lp, operator.add)
+    m = SkyModel(
+        spatial_model=spatial_model,
+        spectral_model=spectral_model,
+        temporal_model=temporal_model,
+        name="source-1",
+    )
+    assert_allclose(m.spectral_model(5*u.TeV).value, 2.87e-12, rtol=1e-2)
+
