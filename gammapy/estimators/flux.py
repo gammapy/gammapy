@@ -4,7 +4,7 @@ import numpy as np
 from gammapy.datasets import Datasets
 from gammapy.estimators.parameter import ParameterEstimator
 from gammapy.maps import Map, MapAxis
-from gammapy.modeling import Parameter
+from gammapy.modeling import Parameter, Parameters
 from gammapy.modeling.models import ScaleSpectralModel
 
 log = logging.getLogger(__name__)
@@ -113,24 +113,16 @@ class FluxEstimator(ParameterEstimator):
         ref_model = models[self.source].spectral_model
         scale_model = ScaleSpectralModel(ref_model)
 
-        is_free_norm = np.array(
-            [par.is_norm for par in ref_model.parameters.free_parameters]
-        )
-        if np.sum(is_free_norm) > 1:
+        norms = Parameters([p for p in ref_model.parameters if p.is_norm])
+        if len(norms) == 0 or len(norms.free_parameters)>1 :
             raise ValueError(
-                "Spectral model used can only have a single free norm type parameter."
-            )
-
-        for scaled_parameter in ref_model.parameters:
-            if scaled_parameter.is_norm:
-                break
-        else:
-            raise ValueError(
-                f"{self.tag} requires a 'norm' or 'amplitude' parameter"
+                f"{self.tag} requires one and only one free 'norm' or 'amplitude' parameter"
                 " in the model to run"
             )
+        elif len(norms.free_parameters) == 1:
+            norms = norms.free_parameters
 
-        scale_model.norm = self._set_norm_parameter(scale_model.norm, scaled_parameter)
+        scale_model.norm = self._set_norm_parameter(scale_model.norm, norms[0])
         return scale_model
 
     def estimate_npred_excess(self, datasets):
