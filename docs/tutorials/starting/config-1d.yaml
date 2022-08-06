@@ -1,0 +1,24 @@
+observations:
+    datastore: $GAMMAPY_DATA/hess-dl3-dr1
+    obs_cone: {frame: icrs, lon: 83.633 deg, lat: 22.014 deg, radius: 5 deg}
+#    obs_ids: [23592, 23559]
+
+datasets:
+    type: 1d
+    stack: true
+    geom:
+        axes:
+            energy: {min: 0.5 TeV, max: 30 TeV, nbins: 20}
+            energy_true: {min: 0.1 TeV, max: 50 TeV, nbins: 40}
+    on_region: {frame: icrs, lon: 83.633 deg, lat: 22.014 deg, radius: 0.11 deg}
+    containment_correction: true
+    safe_mask:
+       methods: ['offset-max']
+       parameters: {offset_max: 2.0 deg}
+    background:
+        method: reflected
+fit:
+    fit_range: {min: 0.5 TeV, max: 30 TeV}
+
+flux_points:
+    energy: {min: 0.5 TeV, max: 30 TeV, nbins: 10}
