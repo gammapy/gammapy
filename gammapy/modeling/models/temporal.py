@@ -193,6 +193,8 @@ class TemporalModel(ModelBase):
 class ConstantTemporalModel(TemporalModel):
     """Constant temporal model."""
 
+    For more information see :ref:`constant-temporal-model`.
+
     tag = ["ConstantTemporalModel", "const"]
 
     @staticmethod
