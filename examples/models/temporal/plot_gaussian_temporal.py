@@ -6,9 +6,9 @@ Gaussian temporal model
 
 This model parametrises a gaussian time model.
 
-
 .. math::
-    F(t) = exp(-0.5* \frac{ (t - t_{ref})^2 } { \sigma^2 })
+    F(t) = \exp \left( -0.5 \cdot \frac{ (t - t_{ref})^2 } { \sigma^2 }
+
 """
 
 # %%

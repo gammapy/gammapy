@@ -321,8 +321,7 @@ class ExpDecayTemporalModel(TemporalModel):
 class GaussianTemporalModel(TemporalModel):
     r"""A Gaussian temporal profile
 
-    .. math::
-            F(t) = exp( -0.5 * \frac{ (t - t_{ref})^2 } { \sigma^2 })
+    For more information see :ref:`gaussian-temporal-model`.
 
     Parameters
     ----------
