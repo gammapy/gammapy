@@ -7,7 +7,7 @@ ExpDecay temporal model
 This model parametrises an ExpDecay time model.
 
 .. math::
-                F(t) = exp(t - t_{ref})/t0
+                F(t) = \exp \left( \frac{t - t_{ref}}{t0} \right)
 
 
 """

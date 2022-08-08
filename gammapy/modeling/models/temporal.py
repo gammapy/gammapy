@@ -275,8 +275,7 @@ class LinearTemporalModel(TemporalModel):
 class ExpDecayTemporalModel(TemporalModel):
     r"""Temporal model with an exponential decay.
 
-    .. math::
-            F(t) = exp(-(t - t_ref)/t0)
+    For more information see :ref:`expdecay-temporal-model`.
 
     Parameters
     ----------
