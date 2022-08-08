@@ -371,10 +371,7 @@ class GaussianTemporalModel(TemporalModel):
 class GeneralizedGaussianTemporalModel(TemporalModel):
     r"""A generalized Gaussian temporal profile
 
-    .. math::
-            F(t) = exp( - 0.5 * (\frac{ \lvert t - t_{ref} \rvert}{t_rise}) ^ {1 / \eta})   for  t < t_ref
-
-            F(t) = exp( - 0.5 * (\frac{ \lvert t - t_{ref} \rvert}{t_decay}) ^ {1 / \eta})   for  t > t_ref
+    For more information see :ref:`generalized-gaussian-temporal-model`.
 
     Parameters
     ----------
