@@ -425,6 +425,8 @@ class LightCurveTemplateTemporalModel(TemporalModel):
     This class also contains an ``integral`` method, making the computation of
     mean fluxes for a given time interval a one-liner.
 
+    For more information see :ref:`LightCurve-temporal-model`.
+
     Parameters
     ----------
     table : `~astropy.table.Table`
