@@ -6,7 +6,7 @@ Linear temporal model
 
 This model parametrises a linear time model.
 
-.. math:: F(t) = \alpha + \beta \cdot (t - t_{ref})
+.. math:: F(t) = \alpha + \beta \cdot (t - t_{\rm{ref}})
 
 """
 

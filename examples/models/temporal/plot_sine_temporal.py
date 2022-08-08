@@ -6,7 +6,7 @@ Sine temporal model
 
 This model parametrises a time model of sinusoidal modulation.
 
-.. math:: F(t) = 1 + amp \cdot \sin(\omega \cdot (t-t_{ref}))
+.. math:: F(t) = 1 + amp \cdot \sin(\omega \cdot (t-t_{\rm{ref}}))
 
 """
 
