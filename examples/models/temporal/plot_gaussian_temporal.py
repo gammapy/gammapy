@@ -11,6 +11,7 @@ This model parametrises a gaussian time model.
 
 """
 
+
 # %%
 # Example plot
 # ------------
