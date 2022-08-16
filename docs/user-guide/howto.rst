@@ -243,7 +243,7 @@ default colors map of the Gammapy plots. Using using the
 `style sheet of matplotlib <https://matplotlib.org/stable/gallery/style_sheets/style_sheets_reference.html>`_, you
 should add into your notebooks or scripts the following lines after the Gammapy imports:
 
-.. testcode::
+.. code::
 
     import matplotlib.style as style
     style.use('XXXX')
@@ -258,14 +258,14 @@ color-blind people**:
 `CTAO document <https://www.cta-observatory.org/wp-content/uploads/2020/10/CTA_ColourBlindness_BestPractices2.pdf>`_. To
 use them, you should add into your notebooks or scripts the following lines after the Gammapy imports:
 
-.. testcode::
+.. code::
 
     import matplotlib.style as style
     style.use('tableau-colorblind10')
 
 or
 
-.. testcode::
+.. code::
 
     import matplotlib.style as style
     style.use('seaborn-colorblind')
