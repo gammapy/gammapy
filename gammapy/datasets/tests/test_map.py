@@ -582,6 +582,8 @@ def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
 
     dataset_new = MapDataset.read(tmp_path / "test.fits")
 
+    assert dataset_new.name == 'test'
+
     assert dataset_new.mask.data.dtype == bool
 
     assert_allclose(dataset.counts.data, dataset_new.counts.data)
@@ -1099,6 +1101,7 @@ def get_map_dataset_onoff(images, **kwargs):
         psf=psf,
         edisp=edisp,
         gti=gti,
+        name='MapDatasetOnOff-test',
         **kwargs,
     )
 
@@ -1147,8 +1150,10 @@ def test_map_dataset_on_off_fits_io(images, lazy, tmp_path):
     if lazy:
         with pytest.raises(NotImplementedError):
             dataset_new = MapDatasetOnOff.read(tmp_path / "test.fits", lazy=lazy)
+            assert dataset_new.name == 'MapDatasetOnOff-test'
     else:
         dataset_new = MapDatasetOnOff.read(tmp_path / "test.fits", lazy=lazy)
+        assert dataset_new.name == 'MapDatasetOnOff-test'
         assert dataset_new.mask.data.dtype == bool
         assert dataset_new.meta_table["livetime"] == 1.0 * u.h
         assert dataset_new.meta_table["obs_id"] == 111
@@ -1681,13 +1686,14 @@ def test_region_geom_io(tmpdir):
     axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=1)
     geom = RegionGeom.create("icrs;circle(0, 0, 0.2)", axes=[axis])
 
-    dataset = MapDataset.create(geom)
+    dataset = MapDataset.create(geom, name='geom-test')
 
     filename = tmpdir / "test.fits"
     dataset.write(filename)
 
     dataset = MapDataset.read(filename, format="gadf")
 
+    assert dataset.name == 'geom-test'
     assert isinstance(dataset.counts.geom, RegionGeom)
     assert isinstance(dataset.edisp.edisp_map.geom, RegionGeom)
     assert isinstance(dataset.psf.psf_map.geom, RegionGeom)
