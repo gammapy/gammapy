@@ -1103,6 +1103,10 @@ class MapDataset(Dataset):
         exclude_primary = slice(1, None)
 
         hdu_primary = fits.PrimaryHDU()
+
+        header = hdu_primary.header
+        header['NAME'] = self.name
+
         hdulist = fits.HDUList([hdu_primary])
         if self.counts is not None:
             hdulist += self.counts.to_hdulist(hdu="counts")[exclude_primary]
@@ -1230,7 +1234,12 @@ class MapDataset(Dataset):
 
     @classmethod
     def _read_lazy(cls, name, filename, cache, format=format):
-        kwargs = {"name": name}
+        ds_name = make_name(name)
+        hdulist = fits.open(str(make_path(filename)))
+        if 'NAME' in hdulist[0].header and name is None:
+            ds_name = hdulist[0].header['NAME']
+        hdulist.close()
+        kwargs = {"name": ds_name}
         try:
             kwargs["gti"] = GTI.read(filename)
         except KeyError:
@@ -1289,7 +1298,6 @@ class MapDataset(Dataset):
         dataset : `MapDataset`
             Map dataset.
         """
-        name = make_name(name)
 
         if lazy:
             return cls._read_lazy(
@@ -1297,7 +1305,10 @@ class MapDataset(Dataset):
             )
         else:
             with fits.open(str(make_path(filename)), memmap=False) as hdulist:
-                return cls.from_hdulist(hdulist, name=name, format=format)
+                ds_name = make_name(name)
+                if 'NAME' in hdulist[0].header and name is None:
+                    ds_name = hdulist[0].header['NAME']
+                return cls.from_hdulist(hdulist, name=ds_name, format=format)
 
     @classmethod
     def from_dict(cls, data, lazy=False, cache=True):
