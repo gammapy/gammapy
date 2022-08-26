@@ -174,8 +174,11 @@ class Background3D(BackgroundIRF):
         cols = min(ncols, n)
         rows = 1 + (n - 1) // cols
         width = 12
+        cfraction = 0.
+        if add_cbar:
+            cfraction = 0.15
         if figsize is None:
-            figsize = (width, width * rows / cols)
+            figsize = (width, rows * width // (cols * (1+cfraction)))
 
         fig, axes = plt.subplots(
             ncols=cols,
@@ -202,13 +205,15 @@ class Background3D(BackgroundIRF):
             ax.set_title(str(ee))
             if add_cbar:
                 label = f"Background [{bkg.unit}]"
-                ax.figure.colorbar(caxes, ax=ax, label=label)
+                cbar = ax.figure.colorbar(caxes, ax=ax, label=label, fraction=cfraction)
+                cbar.formatter.set_powerlimits((0, 0))
 
             row, col = np.unravel_index(i, shape=(rows, cols))
             if col > 0:
                 ax.set_ylabel("")
             if row < rows - 1:
                 ax.set_xlabel("")
+            ax.set_aspect('equal', 'box')
 
 
 class Background2D(BackgroundIRF):
