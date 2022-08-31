@@ -1,3 +1,4 @@
+
 """Utility script to work with the CITATION.cff file
    If you have defined your GitHub token as global variable, duplications are removed and affiliations are provided
           e.g. export GITHUB_TOKEN=xxxxx
