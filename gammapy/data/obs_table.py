@@ -4,7 +4,6 @@ import numpy as np
 from astropy.coordinates import Angle, SkyCoord
 from astropy.table import Table
 from astropy.units import Quantity, Unit
-from astropy.utils import lazyproperty
 from gammapy.utils.regions import SphericalCircleSkyRegion
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
