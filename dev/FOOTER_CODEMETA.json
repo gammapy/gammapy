@@ -1,0 +1,27 @@
+{
+    "Organization" : "The Gammapy project",
+    "applicationCategory": "Astronomy",
+    "applicationSubCategory": "Very-high energy gamma rays",
+    "programmingLanguage": "Python 3",
+    "operatingSystem": "Linux, Mac OS, Windows",
+     "audience": {
+        "@id": "/audience/science-research",
+        "@type": "Audience",
+        "audienceType": "Science/Research"
+    },
+    "maintainer": {
+        "@id": "https://orcid.org/0000-0003-4568-7005",
+        "@type": "Person",
+        "affiliation": {
+            "@type": "Organization",
+            "name": "Center for Astrophysics | Harvard & Smithsonian, CfA, 60 Garden St., 02138 Cambridge MA, US"
+        },
+        "familyName": "Donath",
+        "givenName": "Axel"
+    },
+    "developmentStatus": "active",
+    "issueTracker": "https://github.com/gammapy/gammapy/issues",
+    "funder": "None, apart for the permanent staff",
+    "dateCreated" : "2014-01-01",
+    "datePublished": "2014-08-25"
+}
