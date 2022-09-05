@@ -6,7 +6,7 @@ PowerLaw temporal model
 
 This model parametrises a power-law time model.
 
-.. math:: F(t) = ((t - t_{ref})/t_0)^\alpha
+.. math:: F(t) = \left( \frac{t - t_{\rm{ref}}}{t_0} \right)^\alpha
 
 """
 

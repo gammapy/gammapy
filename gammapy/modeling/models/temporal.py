@@ -191,7 +191,10 @@ class TemporalModel(ModelBase):
 
 
 class ConstantTemporalModel(TemporalModel):
-    """Constant temporal model."""
+    """Constant temporal model.
+
+    For more information see :ref:`constant-temporal-model`.
+    """
 
     tag = ["ConstantTemporalModel", "const"]
 
@@ -273,8 +276,7 @@ class LinearTemporalModel(TemporalModel):
 class ExpDecayTemporalModel(TemporalModel):
     r"""Temporal model with an exponential decay.
 
-    .. math::
-            F(t) = exp(-(t - t_ref)/t0)
+    For more information see :ref:`expdecay-temporal-model`.
 
     Parameters
     ----------
@@ -320,8 +322,7 @@ class ExpDecayTemporalModel(TemporalModel):
 class GaussianTemporalModel(TemporalModel):
     r"""A Gaussian temporal profile
 
-    .. math::
-            F(t) = exp( -0.5 * \frac{ (t - t_{ref})^2 } { \sigma^2 })
+    For more information see :ref:`gaussian-temporal-model`.
 
     Parameters
     ----------
@@ -371,10 +372,7 @@ class GaussianTemporalModel(TemporalModel):
 class GeneralizedGaussianTemporalModel(TemporalModel):
     r"""A generalized Gaussian temporal profile
 
-    .. math::
-            F(t) = exp( - 0.5 * (\frac{ \lvert t - t_{ref} \rvert}{t_rise}) ^ {1 / \eta})   for  t < t_ref
-
-            F(t) = exp( - 0.5 * (\frac{ \lvert t - t_{ref} \rvert}{t_decay}) ^ {1 / \eta})   for  t > t_ref
+    For more information see :ref:`generalized-gaussian-temporal-model`.
 
     Parameters
     ----------
@@ -427,6 +425,8 @@ class LightCurveTemplateTemporalModel(TemporalModel):
     using degree ``k=1`` to get linear interpolation.
     This class also contains an ``integral`` method, making the computation of
     mean fluxes for a given time interval a one-liner.
+
+    For more information see :ref:`LightCurve-temporal-model`.
 
     Parameters
     ----------
