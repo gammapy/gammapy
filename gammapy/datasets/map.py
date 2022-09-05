@@ -1235,10 +1235,10 @@ class MapDataset(Dataset):
     @classmethod
     def _read_lazy(cls, name, filename, cache, format=format):
         ds_name = make_name(name)
-        hdulist = fits.open(str(make_path(filename)))
-        if 'NAME' in hdulist[0].header and name is None:
-            ds_name = hdulist[0].header['NAME']
-        hdulist.close()
+        # hdulist = fits.open(str(make_path(filename)))
+        # if 'NAME' in hdulist[0].header and name is None:
+        # ds_name = hdulist[0].header['NAME']
+        # hdulist.close()
         kwargs = {"name": ds_name}
         try:
             kwargs["gti"] = GTI.read(filename)
@@ -1305,9 +1305,10 @@ class MapDataset(Dataset):
             )
         else:
             with fits.open(str(make_path(filename)), memmap=False) as hdulist:
+                if name is None:
+                    header = fits.getheader(filename)
+                    name = header.get("NAME", name)
                 ds_name = make_name(name)
-                if 'NAME' in hdulist[0].header and name is None:
-                    ds_name = hdulist[0].header['NAME']
                 return cls.from_hdulist(hdulist, name=ds_name, format=format)
 
     @classmethod
