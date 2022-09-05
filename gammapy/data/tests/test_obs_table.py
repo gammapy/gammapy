@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import pytest
 import numpy as np
 from astropy.coordinates import AltAz, Angle, SkyCoord
 from astropy.time import Time, TimeDelta
@@ -208,6 +209,12 @@ def test_basics():
     random_state = np.random.RandomState(seed=0)
     obs_table = make_test_observation_table(n_obs=10, random_state=random_state)
     assert obs_table.summary().startswith("Observation table")
+
+    filtered = obs_table.select_obs_id(1)
+    assert isinstance(filtered, ObservationTable)
+    assert len(filtered) == 1
+    with pytest.raises(KeyError):
+        obs_table.select_obs_id(21)
 
 
 def test_select_parameter_box():

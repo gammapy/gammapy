@@ -6,12 +6,13 @@ Generalized Gaussian temporal model
 
 This model parametrises a generalized Gaussian time model.
 
-
 .. math::
-        F(t) = exp( - 0.5 * (\frac{|t - t_{\rm{ref}}|}{t_{\rm{rise}}}) ^ {1 / \eta}) \text{ for } t < t_{\rm{ref}}
+        F(t) = \exp \left( - 0.5 \cdot \left( \frac{|t - t_{\rm{ref}}|}{t_{\rm{rise}}} \right) ^ {1 / \eta} \right) \text{ for } t < t_{\rm{ref}}
 
-        F(t) = exp( - 0.5 * (\frac{|t - t_{\rm{ref}}|}{t_{\rm{decay}}}) ^ {1 / \eta}) \text{ for } t > t_{\rm{ref}}
+        F(t) = \exp \left( - 0.5 \cdot \left( \frac{|t - t_{\rm{ref}}|}{t_{\rm{decay}}} \right) ^ {1 / \eta} \right) \text{ for } t > t_{\rm{ref}}
+
 """
+
 
 # %%
 # Example plot
