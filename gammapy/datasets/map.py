@@ -1296,7 +1296,7 @@ class MapDataset(Dataset):
         """
 
         if name is None:
-            header = fits.getheader(filename)
+            header = fits.getheader(str(make_path(filename)))
             name = header.get("NAME", name)
         ds_name = make_name(name)
 
