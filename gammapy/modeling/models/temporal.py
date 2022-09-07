@@ -141,28 +141,18 @@ class TemporalModel(ModelBase):
         # TODO: the separate time unit handling is unfortunate, but the quantity support for np.arange and np.interp
         #  is still incomplete, refactor once we change to recent numpy and astropy versions
         t_step = t_delta.to_value(time_unit)
-        if hasattr(self, "table"):
-            t = np.arange(0, t_stop, t_step)
+        t_step = (t_step * u.s).to("d")
 
-            pdf = self.evaluate(t)
+        t = Time(np.arange(t_min.mjd, t_max.mjd, t_step.value), format="mjd")
 
-            sampler = InverseCDFSampler(pdf=pdf, random_state=random_state)
-            time_pix = sampler.sample(n_events)[0]
-            time = np.interp(time_pix, np.arange(len(t)), t) * time_unit
+        pdf = self(t)
 
-        else:
-            t_step = (t_step * u.s).to("d")
-
-            t = Time(np.arange(t_min.mjd, t_max.mjd, t_step.value), format="mjd")
-
-            pdf = self(t)
-
-            sampler = InverseCDFSampler(pdf=pdf, random_state=random_state)
-            time_pix = sampler.sample(n_events)[0]
-            time = (
+        sampler = InverseCDFSampler(pdf=pdf, random_state=random_state)
+        time_pix = sampler.sample(n_events)[0]
+        time = (
                 np.interp(time_pix, np.arange(len(t)), t.value - min(t.value))
                 * t_step.unit
-            ).to(time_unit)
+                ).to(time_unit)
 
         return t_min + time
 

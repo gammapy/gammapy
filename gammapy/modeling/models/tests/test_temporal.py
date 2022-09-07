@@ -20,6 +20,7 @@ from gammapy.modeling.models import (
 )
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import mpl_plot_check, requires_data
+from gammapy.utils.time import time_ref_to_dict
 
 
 # TODO: add light-curve test case from scratch
@@ -47,76 +48,53 @@ def test_light_curve_evaluate(light_curve):
     assert_allclose(val, 0.01551196, rtol=1e-5)
 
 
-def rate(x, c="1e4 s"):
-    c = u.Quantity(c)
-    return np.exp(-x / c)
-
-
 def ph_curve(x, amplitude=0.5, x0=0.01):
     return 100.0 + amplitude * np.sin(2 * np.pi * (x - x0) / 1.0)
 
 
 def test_time_sampling(tmp_path):
-    time = np.arange(0, 10, 0.06) * u.hour
-
-    table = Table()
-    table["TIME"] = time
-    table["NORM"] = rate(time)
-    table.meta = dict(MJDREFI=55197.0, MJDREFF=0, TIMEUNIT="hour")
-    temporal_model = LightCurveTemplateTemporalModel(table)
-
-    filename = str(make_path(tmp_path / "tmp.fits"))
-    temporal_model.write(path=filename)
-    model_read = temporal_model.read(filename)
-    assert temporal_model.filename == filename
-    assert model_read.filename == filename
-    assert_allclose(model_read.table["TIME"].quantity.value, time.value)
-
-    t_ref = "2010-01-01T00:00:00"
+    time_ref = Time(55197.00000000, format='mjd')
+    livetime = 3.0 * u.hr
+    sigma = 0.5 * u.h
     t_min = "2010-01-01T00:00:00"
-    t_max = "2010-01-01T08:00:00"
+    t_max = "2010-01-01T03:00:00"
+    t_delta = "3 min"
 
-    sampler = temporal_model.sample_time(
-        n_events=2, t_min=t_min, t_max=t_max, random_state=0, t_delta="10 min"
+    times = time_ref + livetime * np.linspace(0, 1, 1000)
+    flare_model = GaussianTemporalModel(t_ref=(times[500].mjd) * u.d, sigma=sigma)
+
+    lc = Table()
+    meta = time_ref_to_dict(times[0])
+    lc.meta = meta
+    lc.meta["TIMEUNIT"] = 's'
+    lc["TIME"] = (times - times[0]).to("s")
+    lc["NORM"] = flare_model(times)
+
+    temporal_model = LightCurveTemplateTemporalModel(lc)
+    sampler_template = temporal_model.sample_time(
+        n_events=1000, t_min=t_min, t_max=t_max, random_state=0, t_delta=t_delta
     )
-    sampler = u.Quantity((sampler - Time(t_ref)).sec, "s")
+    assert len(sampler_template) == 1000
 
-    assert len(sampler) == 2
-    assert_allclose(sampler.value, [12661.65802564, 7826.92991], rtol=1e-5)
-
-    table = Table()
-    table["TIME"] = time
-    table["NORM"] = np.ones(len(time))
-    table.meta = dict(MJDREFI=55197.0, MJDREFF=0, TIMEUNIT="hour")
-    temporal_model_uniform = LightCurveTemplateTemporalModel(table)
-
-    sampler_uniform = temporal_model_uniform.sample_time(
-        n_events=2, t_min=t_min, t_max=t_max, random_state=0, t_delta="10 min"
+    temporal_model = GaussianTemporalModel(t_ref=(time_ref.mjd) * u.d, sigma=sigma)
+    sampler_gauss = temporal_model.sample_time(
+        n_events=1000, t_min=t_min, t_max=t_max, random_state=0, t_delta=t_delta
     )
-    sampler_uniform = u.Quantity((sampler_uniform - Time(t_ref)).sec, "s")
+    assert len(sampler_gauss) == 1000
 
-    assert len(sampler_uniform) == 2
-    assert_allclose(sampler_uniform.value, [1261.65802564, 6026.9299098], rtol=1e-5)
-
-    temporal_model = ConstantTemporalModel()
-    sampler_costant = temporal_model.sample_time(
-        n_events=2, t_min=t_min, t_max=t_max, random_state=0
-    )
-    sampler_costant = u.Quantity((sampler_costant - Time(t_ref)).sec, "s")
-
-    assert len(sampler_costant) == 2
-    assert_allclose(sampler_costant.value, [4330.10377559, 3334.04566256], rtol=1e-5)
-
-    temporal_model = ExpDecayTemporalModel(t_ref=Time(t_ref).mjd * u.d)
-    sampler_expo = temporal_model.sample_time(
-        n_events=2, t_min=t_min, t_max=t_max, random_state=0
-    )
-    sampler_expo = u.Quantity((sampler_expo.mjd - Time(t_ref).mjd), "d")
-
-    assert sampler_expo.unit == u.d
+    light = np.histogram(sampler_template.mjd, bins=30)
+    peak_time = light[1][np.argmax(light[0])]
     assert_allclose(
-        sampler_expo.to("s").value, [11824.1055276, 7273.04658336], rtol=1e-8
-    )
+            peak_time - times[500].mjd, 0.0,
+            atol=u.Quantity(t_delta).to("day").value
+            )
+
+    light = np.histogram(sampler_gauss.mjd, bins=30)
+    peak_time = light[1][np.argmax(light[0])]
+    assert_allclose(
+            peak_time - time_ref.mjd, 0.0,
+            atol=u.Quantity(t_delta).to("day").value
+            )
 
 
 def test_lightcurve_temporal_model_integral():
