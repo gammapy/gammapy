@@ -60,7 +60,6 @@ Finally, long-term support (LTS) releases will have a timescale of about 2 years
 3-4 feature releases) and will continue to receive bugfixes until the next LTS release
 to guarantee long term stability. Bugs affecting both the LTS and latest feature releases
 will be corrected on both branches. This will require a careful cherry picking of commits.
-*What do we do if API change require distinct fixes for both branches?*
 
 Version numbering
 =================
