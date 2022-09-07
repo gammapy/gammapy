@@ -1150,7 +1150,6 @@ def test_map_dataset_on_off_fits_io(images, lazy, tmp_path):
     if lazy:
         with pytest.raises(NotImplementedError):
             dataset_new = MapDatasetOnOff.read(tmp_path / "test.fits", lazy=lazy)
-            assert dataset_new.name == 'MapDatasetOnOff-test'
     else:
         dataset_new = MapDatasetOnOff.read(tmp_path / "test.fits", lazy=lazy)
         assert dataset_new.name == 'MapDatasetOnOff-test'
