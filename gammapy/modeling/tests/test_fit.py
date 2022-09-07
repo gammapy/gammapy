@@ -308,7 +308,7 @@ def test_stat_contour():
     assert result["success"]
 
     x = result["y"]
-    assert_allclose(len(x), 10)
+    assert len(x) in [10,11]       # Behavior changed after iminuit>=2.13
     assert_allclose(x[0], 299, rtol=1e-5)
     assert_allclose(x[-1], 299.133975, rtol=1e-5)
     y = result["z"]
