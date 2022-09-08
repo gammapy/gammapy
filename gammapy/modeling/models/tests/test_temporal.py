@@ -90,7 +90,6 @@ def test_time_sampling_template():
 
 def test_time_sampling_gaussian():
     time_ref = Time(55197.00000000, format='mjd')
-    livetime = 3.0 * u.hr
     sigma = 0.5 * u.h
     t_min = "2010-01-01T00:00:00"
     t_max = "2010-01-01T03:00:00"
