@@ -136,8 +136,6 @@ class TemporalModel(ModelBase):
             else ontime.unit
         )
 
-        t_stop = ontime.to_value(time_unit)
-
         # TODO: the separate time unit handling is unfortunate, but the quantity support for np.arange and np.interp
         #  is still incomplete, refactor once we change to recent numpy and astropy versions
         t_step = t_delta.to_value(time_unit)
