@@ -51,7 +51,7 @@ def ph_curve(x, amplitude=0.5, x0=0.01):
     return 100.0 + amplitude * np.sin(2 * np.pi * (x - x0) / 1.0)
 
 
-def test_time_sampling(tmp_path):
+def test_time_sampling_template():
     time_ref = Time(55197.00000000, format='mjd')
     livetime = 3.0 * u.hr
     sigma = 0.5 * u.h
@@ -75,24 +75,42 @@ def test_time_sampling(tmp_path):
     )
     assert len(sampler_template) == 1000
 
-    temporal_model = GaussianTemporalModel(t_ref=(time_ref.mjd) * u.d, sigma=sigma)
-    sampler_gauss = temporal_model.sample_time(
-        n_events=1000, t_min=t_min, t_max=t_max, random_state=0, t_delta=t_delta
-    )
-    assert len(sampler_gauss) == 1000
+    mean = np.mean(sampler_template.mjd)
+    std = np.std(sampler_template.mjd)
 
-    light = np.histogram(sampler_template.mjd, bins=30)
-    peak_time = light[1][np.argmax(light[0])]
     assert_allclose(
-            peak_time - times[500].mjd, 0.0,
-            atol=u.Quantity(t_delta).to("day").value
+            mean - times[500].mjd, 0.0,
+            atol=1e-3
+            )
+    assert_allclose(
+            std - sigma.to("d").value, 0.0,
+            atol=3e-4
             )
 
-    light = np.histogram(sampler_gauss.mjd, bins=30)
-    peak_time = light[1][np.argmax(light[0])]
+
+def test_time_sampling_gaussian():
+    time_ref = Time(55197.00000000, format='mjd')
+    livetime = 3.0 * u.hr
+    sigma = 0.5 * u.h
+    t_min = "2010-01-01T00:00:00"
+    t_max = "2010-01-01T03:00:00"
+    t_delta = "3 min"
+
+    temporal_model = GaussianTemporalModel(t_ref=(time_ref.mjd + 0.03) * u.d, sigma=sigma)
+    sampler = temporal_model.sample_time(
+        n_events=1000, t_min=t_min, t_max=t_max, random_state=0, t_delta=t_delta
+    )
+    assert len(sampler) == 1000
+
+    mean = np.mean(sampler.mjd)
+    std = np.std(sampler.mjd)
     assert_allclose(
-            peak_time - time_ref.mjd, 0.0,
-            atol=u.Quantity(t_delta).to("day").value
+            mean - (time_ref.mjd + 0.03), 0.0,
+            atol=4e-3
+            )
+    assert_allclose(
+            std - sigma.to("d").value, 0.0,
+            atol=3e-3
             )
 
 
