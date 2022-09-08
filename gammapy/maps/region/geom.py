@@ -26,6 +26,7 @@ from gammapy.utils.regions import (
     compound_region_to_regions,
     regions_to_compound_region,
 )
+from gammapy.visualization.utils import ARTIST_TO_LINE_PROPERTIES
 from ..axes import MapAxes
 from ..core import Map, MapCoord
 from ..geom import Geom, pix_tuple_to_idx
@@ -793,7 +794,6 @@ class RegionGeom(Geom):
         ax : `~astropy.visualization.WCSAxes`
             Axes to plot on.
         """
-        from gammapy.visualization.utils import ARTIST_TO_LINE_PROPERTIES
         kwargs_point = kwargs_point or {}
 
         if ax is None:
