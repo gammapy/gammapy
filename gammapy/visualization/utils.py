@@ -1,8 +1,6 @@
 import numpy as np
 from scipy.interpolate import CubicSpline
 import matplotlib.pyplot as plt
-from gammapy.maps import MapAxis
-from gammapy.maps.utils import edges_from_lo_hi
 
 
 __all__ = [
@@ -171,6 +169,9 @@ def plot_theta_squared_table(table):
     table : `~astropy.table.Table`
         Required columns: theta2_min, theta2_max, counts, counts_off and alpha
     """
+    from gammapy.maps import MapAxis
+    from gammapy.maps.utils import edges_from_lo_hi
+
     theta2_edges = edges_from_lo_hi(
         table["theta2_min"].quantity, table["theta2_max"].quantity
     )
