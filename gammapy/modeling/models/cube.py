@@ -323,7 +323,7 @@ class SkyModel(ModelBase):
                 temporal = self.temporal_model(time, energy).T
             else:
                 temporal = self.temporal_model(time)
-                value = (value * temporal).T
+            value = (value * temporal).T
 
         return value
 
@@ -365,9 +365,10 @@ class SkyModel(ModelBase):
             Predicted flux map
         """
         energy = geom.axes["energy_true"].edges
-        value = self.spectral_model.integral(energy[:-1], energy[1:],).reshape(
-            (-1, 1, 1)
-        )
+        value = self.spectral_model.integral(
+            energy[:-1],
+            energy[1:],
+        ).reshape((-1, 1, 1))
 
         if self.spatial_model:
             value = (
@@ -718,7 +719,10 @@ class FoVBackgroundModel(ModelBase):
         if len(datasets_names) > 1:
             raise ValueError("FoVBackgroundModel can only be assigned to one dataset")
 
-        return cls(spectral_model=spectral_model, dataset_name=datasets_names[0],)
+        return cls(
+            spectral_model=spectral_model,
+            dataset_name=datasets_names[0],
+        )
 
     def reset_to_default(self):
         """Reset parameter values to default"""

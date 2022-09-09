@@ -1,12 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
+import scipy
 from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.table import Table
 from astropy.time import Time
 from gammapy.data.gti import GTI
 from gammapy.modeling.models import (
+    TemporalModel,
     ConstantTemporalModel,
     ExpDecayTemporalModel,
     GaussianTemporalModel,
@@ -17,9 +19,11 @@ from gammapy.modeling.models import (
     PowerLawTemporalModel,
     SineTemporalModel,
     SkyModel,
+    ConstantSpectralModel,
 )
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import mpl_plot_check, requires_data
+from gammapy.modeling.parameter import Parameter
 
 
 # TODO: add light-curve test case from scratch
@@ -319,3 +323,86 @@ def test_plot_constant_model():
     constant_model = ConstantTemporalModel(const=1)
     with mpl_plot_check():
         constant_model.plot(time_range)
+
+
+class MyCustomTemporalModel(TemporalModel):
+    """Temporal model with spectral variability
+
+    F(t) = (E/E0)^-\alpha
+    where \alpha = (\alpha_0 t/t_ref)^-beta
+    """
+
+    tag = "MyCustomTemporalModel"
+    is_energy_dependent = True
+    beta = Parameter("beta", 0.2)
+    _t_ref_default = Time("2000-01-01")
+    t_ref = Parameter("t_ref", _t_ref_default.mjd, unit="day", frozen=True)
+    E0 = Parameter("E0", "1 TeV", frozen=True)
+
+    @staticmethod
+    def evaluate(time, energy, t_ref, beta, E0):
+        alpha = np.power((time / t_ref), -beta)
+        dim = energy / E0
+        if not np.isscalar(dim.value):
+            dim = np.expand_dims(dim, axis=1)
+        return np.power(dim, -alpha)
+
+    def integral(self, t_min, t_max, energy):
+        pars = self.parameters
+        t_ref = Time(pars["t_ref"].quantity, format="mjd")
+        beta = pars["beta"].quantity
+        E0 = pars["E0"].quantity
+        integral = []
+        for t1, t2 in zip(t_min, t_max):
+            integral_ene = []
+            for ene in energy:
+                integral_ene.append(
+                    scipy.integrate.quad(
+                        func=self.evaluate,
+                        a=t1.mjd,
+                        b=t2.mjd,
+                        args=(ene, t_ref.mjd, beta, E0),
+                    )[0]
+                )
+            integral.append(integral_ene)
+        return integral / self.time_sum(t_min, t_max).to_value("d")
+
+
+def test_energy_dependent_model():
+    t_ref = Time(55555, format="mjd")
+    start = [1, 3, 5] * u.day
+    stop = [2, 3.5, 6] * u.day
+    gti = GTI.create(start, stop, reference_time=t_ref)
+    energy = [0.3, 1, 3, 10, 30] * u.TeV
+
+    temporal_model = MyCustomTemporalModel()
+    assert temporal_model.is_energy_dependent is True
+    val = temporal_model.integral(gti.time_start, gti.time_stop, [0.3, 1.0] * u.TeV)
+    assert len(val) == 3
+    assert_allclose(np.sum(val), 4.274116, rtol=1e-5)
+
+    t = Time(55556, format="mjd")
+    val = temporal_model(t, 3 * u.TeV)
+    assert_allclose(val, 0.3388, rtol=1e-3)
+
+    model = SkyModel(
+        spectral_model=ConstantSpectralModel(), temporal_model=temporal_model
+    )
+
+    val = model.evaluate(lon=None, lat=None, energy=energy, time=t_ref + start)
+    assert_allclose(val.sum().value, 1.425e-11, rtol=1e-3)
+
+    # test evaluation on a dataset
+    from gammapy.datasets import MapDataset
+    from regions import CircleSkyRegion
+    from astropy.coordinates import SkyCoord
+
+    cta_dataset = MapDataset.read(
+        "$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz", name="cta_dataset"
+    )
+    region = CircleSkyRegion(
+        center=SkyCoord(0, 0, unit="deg", frame="galactic"), radius=1.0 * u.deg
+    )
+    ds = cta_dataset.to_spectrum_dataset(region)
+    ds.models = model
+    assert_allclose(ds.npred().data.sum(), 13172.582827, rtol=1e-3)
