@@ -32,22 +32,33 @@ class TemporalModel(ModelBase):
     evaluates on  astropy.time.Time objects"""
 
     _type = "temporal"
+    _is_energy_dependent = False
 
-    def __call__(self, time):
+    def __call__(self, time, energy=None):
         """Evaluate model
 
         Parameters
         ----------
         time : `~astropy.time.Time`
             Time object
+        energy : `~astropy.quantity`
+             Used for energy dependent models
         """
         kwargs = {par.name: par.quantity for par in self.parameters}
         time = u.Quantity(time.mjd, "day")
+        if energy is None and self.is_energy_dependent:
+            raise ValueError("Missing energy value for evaluation")
+        if energy is not None:
+            kwargs["energy"] = energy
         return self.evaluate(time, **kwargs)
 
     @property
     def type(self):
         return self._type
+
+    @property
+    def is_energy_dependent(self):
+        return self._is_energy_dependent
 
     @staticmethod
     def time_sum(t_min, t_max):
@@ -69,7 +80,7 @@ class TemporalModel(ModelBase):
         # TODO: this is a work-around for https://github.com/astropy/astropy/issues/10501
         return u.Quantity(np.sum(diff.to_value("day")), "day")
 
-    def plot(self, time_range, ax=None, **kwargs):
+    def plot(self, time_range, ax=None, energy=None, **kwargs):
         """
         Plot Temporal Model.
 
@@ -79,6 +90,8 @@ class TemporalModel(ModelBase):
             times to plot the model
         ax : `~matplotlib.axes.Axes`, optional
             Axis to plot on
+        energy: `~astropy.units.quantity`
+             Array of energies for energy dependent models
         **kwargs : dict
             Keywords forwarded to `~matplotlib.pyplot.errorbar`
 
@@ -96,7 +109,7 @@ class TemporalModel(ModelBase):
         kwargs.setdefault("marker", "None")
         kwargs.setdefault("ls", "-")
         kwargs.setdefault("xerr", None)
-        m.quantity = self(time_axis.time_mid)
+        m.quantity = self(time_axis.time_mid, energy=energy)
         ax = m.plot(ax=ax, **kwargs)
         ax.set_ylabel("Norm / A.U.")
         return ax
@@ -166,7 +179,7 @@ class TemporalModel(ModelBase):
 
         return t_min + time
 
-    def integral(self, t_min, t_max, oversampling_factor=100, **kwargs):
+    def integral(self, t_min, t_max, oversampling_factor=100, energy=None, **kwargs):
         """Evaluate the integrated flux within the given time intervals
 
         Parameters
@@ -200,7 +213,7 @@ class ConstantTemporalModel(TemporalModel):
         """Evaluate at given times."""
         return np.ones(time.shape)
 
-    def integral(self, t_min, t_max):
+    def integral(self, t_min, t_max, energy=None):
         """Evaluate the integrated flux within the given time intervals
 
         Parameters
@@ -245,7 +258,7 @@ class LinearTemporalModel(TemporalModel):
         """Evaluate at given times"""
         return alpha + beta * (time - t_ref)
 
-    def integral(self, t_min, t_max):
+    def integral(self, t_min, t_max, energy=None):
         """Evaluate the integrated flux within the given time intervals
 
         Parameters
@@ -295,7 +308,7 @@ class ExpDecayTemporalModel(TemporalModel):
         """Evaluate at given times"""
         return np.exp(-(time - t_ref) / t0)
 
-    def integral(self, t_min, t_max):
+    def integral(self, t_min, t_max, energy=None):
         """Evaluate the integrated flux within the given time intervals
 
         Parameters
@@ -339,9 +352,9 @@ class GaussianTemporalModel(TemporalModel):
 
     @staticmethod
     def evaluate(time, t_ref, sigma):
-        return np.exp(-((time - t_ref) ** 2) / (2 * sigma**2))
+        return np.exp(-((time - t_ref) ** 2) / (2 * sigma ** 2))
 
-    def integral(self, t_min, t_max, **kwargs):
+    def integral(self, t_min, t_max, energy=None, **kwargs):
         """Evaluate the integrated flux within the given time intervals
 
         Parameters
@@ -395,7 +408,7 @@ class GeneralizedGaussianTemporalModel(TemporalModel):
     t_ref = Parameter("t_ref", _t_ref_default.mjd, unit="day", frozen=False)
     t_rise = Parameter("t_rise", "1d", frozen=False)
     t_decay = Parameter("t_decay", "1d", frozen=False)
-    eta = Parameter("eta", 1/2, unit="", frozen=False)
+    eta = Parameter("eta", 1 / 2, unit="", frozen=False)
 
     @staticmethod
     def evaluate(time, t_ref, t_rise, t_decay, eta):
@@ -517,7 +530,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
             u, self.table.meta["TIMEUNIT"]
         )
 
-    def evaluate(self, time, ext=0):
+    def evaluate(self, time, ext=0, energy=None):
         """Evaluate for a given time.
 
         Parameters
@@ -540,7 +553,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         """
         return self._interpolator(time, ext=ext)
 
-    def integral(self, t_min, t_max):
+    def integral(self, t_min, t_max, energy=None):
         """Evaluate the integrated flux within the given time intervals
 
         Parameters
@@ -594,7 +607,7 @@ class PowerLawTemporalModel(TemporalModel):
         """Evaluate at given times"""
         return np.power((time - t_ref) / t0, alpha)
 
-    def integral(self, t_min, t_max):
+    def integral(self, t_min, t_max, energy=None):
         """Evaluate the integrated flux within the given time intervals
 
         Parameters
@@ -650,7 +663,7 @@ class SineTemporalModel(TemporalModel):
         """Evaluate at given times"""
         return 1.0 + amp * np.sin(omega * (time - t_ref))
 
-    def integral(self, t_min, t_max):
+    def integral(self, t_min, t_max, energy=None):
         """Evaluate the integrated flux within the given time intervals
 
         Parameters

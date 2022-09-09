@@ -303,10 +303,7 @@ class MapEvaluator:
     def compute_flux_spectral(self):
         """Compute spectral flux"""
         energy = self.geom.axes["energy_true"].edges
-        value = self.model.spectral_model.integral(
-            energy[:-1],
-            energy[1:],
-        )
+        value = self.model.spectral_model.integral(energy[:-1], energy[1:],)
         if self.geom.is_hpx:
             return value.reshape((-1, 1))
         else:
@@ -314,10 +311,11 @@ class MapEvaluator:
 
     def compute_temporal_norm(self):
         """Compute temporal norm"""
+        energy = self.geom.axes["energy_true"].center
         integral = self.model.temporal_model.integral(
-            self.gti.time_start, self.gti.time_stop
+            self.gti.time_start, self.gti.time_stop, energy
         )
-        return np.sum(integral)
+        return np.sum(integral, axis=0).reshape((-1, 1, 1))
 
     def apply_exposure(self, flux):
         """Compute npred cube
