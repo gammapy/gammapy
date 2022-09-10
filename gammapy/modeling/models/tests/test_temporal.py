@@ -368,6 +368,7 @@ class MyCustomTemporalModel(TemporalModel):
         return integral / self.time_sum(t_min, t_max).to_value("d")
 
 
+@requires_data()
 def test_energy_dependent_model():
     t_ref = Time(55555, format="mjd")
     start = [1, 3, 5] * u.day

@@ -352,7 +352,7 @@ class GaussianTemporalModel(TemporalModel):
 
     @staticmethod
     def evaluate(time, t_ref, sigma):
-        return np.exp(-((time - t_ref) ** 2) / (2 * sigma ** 2))
+        return np.exp(-((time - t_ref) ** 2) / (2 * sigma**2))
 
     def integral(self, t_min, t_max, energy=None, **kwargs):
         """Evaluate the integrated flux within the given time intervals
@@ -530,7 +530,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
             u, self.table.meta["TIMEUNIT"]
         )
 
-    def evaluate(self, time, ext=0, energy=None):
+    def evaluate(self, time, ext=0):
         """Evaluate for a given time.
 
         Parameters
