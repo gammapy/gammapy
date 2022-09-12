@@ -2,6 +2,7 @@
 import logging
 import numpy as np
 import astropy.units as u
+import matplotlib.pyplot as plt
 from astropy.coordinates.angle_utilities import angular_separation
 from astropy.utils import lazyproperty
 from regions import CircleSkyRegion
@@ -489,3 +490,54 @@ class MapEvaluator:
         if not self.model.apply_irf["edisp"]:
             methods.remove(self.apply_edisp)
         return methods
+
+    def peek(self, figsize=(12, 15)):
+        """Quick-look summary plots.
+
+        Parameters
+        ----------
+        figsize : tuple
+            Size of the figure.
+
+        """
+        if self.needs_update:
+            raise AttributeError("The evaluator needs to be updated first. Execute "
+                                 "`MapDataset.npred_signal(model_name=...)` before calling this method.")
+
+        def plot_mask(ax, mask, **kwargs):
+            if mask is not None:
+                mask.plot_mask(ax=ax, **kwargs)
+
+        fig, axes = plt.subplots(
+            ncols=2,
+            nrows=3,
+            #subplot_kw={"projection": self._geom.wcs},
+            figsize=figsize,
+            gridspec_kw={"hspace": 0.2, "wspace": 0.2},
+        )
+
+        axes = axes.flat
+
+        axes[0].set_title("Predicted counts")
+        self.compute_npred().sum_over_axes().plot(ax=axes[0], add_cbar=True)
+        plot_mask(ax=axes[0], mask=self.mask, hatches=["///"], colors="w")
+
+        axes[1].set_title("Exposure")
+        self.exposure.sum_over_axes().plot(ax=axes[1], add_cbar=True)
+        plot_mask(ax=axes[1], mask=self.mask, hatches=["///"], colors="w")
+
+        axes[2].set_title("Energy bias")
+        self.edisp.plot_bias(ax=axes[2])
+
+        axes[3].set_title("Energy dispersion matrix")
+        self.edisp.plot_matrix(ax=axes[3])
+
+        axes[4].set_title("Containment radius at center of map")
+        self.psf.plot_containment_radius_vs_energy(ax=axes[4])
+
+        axes[5].set_title("Containment radius at 1 TeV")
+        self.containment_radius_map(energy_true=1 * u.TeV).plot(
+            ax=axes[5], add_cbar=True
+        )
+
+
