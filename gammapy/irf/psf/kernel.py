@@ -249,7 +249,6 @@ class PSFKernel:
         self.plot_kernel(ax=axes[0], add_cbar=True)
 
         axes[1].set_title("PSF kernel at 1 TeV")
-        self.plot_kernel(ax=axes[1], add_cbar=True, energy=1*u.TeV)
+        self.plot_kernel(ax=axes[1], add_cbar=True, energy=1 * u.TeV)
 
         plt.tight_layout()
-

@@ -19,6 +19,7 @@ from gammapy.modeling.models import (
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.testing import mpl_plot_check
 
+
 @pytest.fixture
 def evaluator():
     center = SkyCoord("0 deg", "0 deg", frame="galactic")
@@ -45,6 +46,7 @@ def evaluator():
     psf = PSFKernel.from_gauss(geom.to_wcs_geom(), sigma="0.1 deg")
 
     return MapEvaluator(model=model[0], exposure=exposure_region, psf=psf)
+
 
 def test_compute_flux_spatial(evaluator):
     flux = evaluator.compute_flux_spatial()
@@ -137,6 +139,7 @@ def test_compute_npred_sign():
     assert (npred_pos.data == -npred_neg.data).all()
     assert np.all(npred_pos.data >= 0)
     assert np.all(npred_neg.data <= 0)
+
 
 def test_peek(evaluator):
     with mpl_plot_check():

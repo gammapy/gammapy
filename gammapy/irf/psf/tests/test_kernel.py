@@ -8,17 +8,23 @@ from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling.models import DiskSpatialModel
 from gammapy.utils.testing import mpl_plot_check
 
+
 @pytest.fixture
 def kernel_gaussian():
     sigma = 0.5 * u.deg
     binsz = 0.1 * u.deg
-    geom = WcsGeom.create(binsz=binsz, npix=150, axes=[MapAxis((0, 1, 2), unit=u.TeV, name="energy_true")])
+    geom = WcsGeom.create(
+        binsz=binsz, npix=150, axes=[MapAxis((0, 1, 2), unit=u.TeV, name="energy_true")]
+    )
 
     return PSFKernel.from_gauss(geom, sigma)
 
+
 def test_psf_kernel_from_gauss(kernel_gaussian):
     # Check that both maps are identical
-    assert_allclose(kernel_gaussian.psf_kernel_map.data[0], kernel_gaussian.psf_kernel_map.data[1])
+    assert_allclose(
+        kernel_gaussian.psf_kernel_map.data[0], kernel_gaussian.psf_kernel_map.data[1]
+    )
 
     # Is there an odd number of pixels
     assert_allclose(np.array(kernel_gaussian.psf_kernel_map.geom.npix) % 2, 1)
@@ -60,9 +66,11 @@ def test_psf_kernel_to_image():
     assert_allclose(kernel_image_2.psf_kernel_map.data[0, 22, 22], 0.007752, atol=1e-5)
     assert_allclose(kernel_image_2.psf_kernel_map.data[0, 20, 20], 0.0, atol=1e-5)
 
+
 def test_plot_kernel(kernel_gaussian):
     with mpl_plot_check():
         kernel_gaussian.plot_kernel()
+
 
 def test_peek(kernel_gaussian):
     with mpl_plot_check():

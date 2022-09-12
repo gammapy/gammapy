@@ -501,8 +501,10 @@ class MapEvaluator:
 
         """
         if self.needs_update:
-            raise AttributeError("The evaluator needs to be updated first. Execute "
-                                 "`MapDataset.npred_signal(model_name=...)` before calling this method.")
+            raise AttributeError(
+                "The evaluator needs to be updated first. Execute "
+                "`MapDataset.npred_signal(model_name=...)` before calling this method."
+            )
 
         def plot_mask(ax, mask, **kwargs):
             if mask is not None:
@@ -542,7 +544,7 @@ class MapEvaluator:
             self.psf.plot_kernel(ax=axes[2], add_cbar=True)
 
             axes[3].set_title("PSF kernel at 1 TeV")
-            self.psf.plot_kernel(ax=axes[3], add_cbar=True, energy=1*u.TeV)
+            self.psf.plot_kernel(ax=axes[3], add_cbar=True, energy=1 * u.TeV)
         else:
             axes[2].remove()
             axes[3].remove()
@@ -558,8 +560,3 @@ class MapEvaluator:
             ax5 = fig.add_subplot(3, 2, 6)
             ax5.set_title("Energy dispersion matrix")
             self.edisp.plot_matrix(ax=ax5)
-
-
-
-
-
