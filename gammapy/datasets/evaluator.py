@@ -511,9 +511,9 @@ class MapEvaluator:
         fig, axes = plt.subplots(
             ncols=2,
             nrows=3,
-            #subplot_kw={"projection": self._geom.wcs},
+            subplot_kw={"projection": self.exposure.geom.wcs},
             figsize=figsize,
-            gridspec_kw={"hspace": 0.2, "wspace": 0.2},
+            gridspec_kw={"hspace": 0.2, "wspace": 0.3},
         )
 
         axes = axes.flat
@@ -526,18 +526,20 @@ class MapEvaluator:
         self.exposure.sum_over_axes().plot(ax=axes[1], add_cbar=True)
         plot_mask(ax=axes[1], mask=self.mask, hatches=["///"], colors="w")
 
-        axes[2].set_title("Energy bias")
-        self.edisp.plot_bias(ax=axes[2])
+        axes[2].set_title("Energy-integrated PSF kernel")
+        self.psf.plot_kernel(ax=axes[2], add_cbar=True)
 
-        axes[3].set_title("Energy dispersion matrix")
-        self.edisp.plot_matrix(ax=axes[3])
+        axes[3].set_title("PSF kernel at 1 TeV")
+        self.psf.plot_kernel(ax=axes[3], add_cbar=True, energy=1*u.TeV)
 
-        axes[4].set_title("Containment radius at center of map")
-        self.psf.plot_containment_radius_vs_energy(ax=axes[4])
+        axes[4].remove()
+        ax4 = fig.add_subplot(3, 2, 5)
+        ax4.set_title("Energy bias")
+        self.edisp.plot_bias(ax=ax4)
 
-        axes[5].set_title("Containment radius at 1 TeV")
-        self.containment_radius_map(energy_true=1 * u.TeV).plot(
-            ax=axes[5], add_cbar=True
-        )
+        axes[5].remove()
+        ax5 = fig.add_subplot(3, 2, 6)
+        ax5.set_title("Energy dispersion matrix")
+        self.edisp.plot_matrix(ax=ax5)
 
 
