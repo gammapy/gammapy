@@ -514,6 +514,12 @@ class RegionGeom(Geom):
 
     def coord_to_pix(self, coords):
         # inherited docstring
+
+        if isinstance(coords, dict):
+            coords.setdefault("skycoord", self.center_skydir)
+        elif isinstance(coords, tuple) and len(coords) == len(self.axes):
+            coords = (0, 0) + coords
+
         coords = MapCoord.create(coords, frame=self.frame, axis_names=self.axes.names)
 
         if self.region is None:

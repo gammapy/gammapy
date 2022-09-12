@@ -419,12 +419,7 @@ class RegionNDMap(Map):
         vals : `~numpy.ndarray`
             Interpolated pixel values.
         """
-        if isinstance(coords, dict):
-            coords.setdefault("skycoord", self.geom.center_skydir)
-        elif isinstance(coords, tuple) and len(coords) == len(self.geom.axes):
-            coords = (0, 0) + coords
-
-        pix = self.geom.coord_to_pix(coords)
+        pix = self.geom.coord_to_pix(coords=coords)
         return self.interp_by_pix(pix, **kwargs)
 
     def interp_by_pix(self, pix, **kwargs):

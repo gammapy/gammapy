@@ -814,10 +814,7 @@ class Map(abc.ABC):
            Values of pixels in the map.  np.nan used to flag coords
            outside of map.
         """
-        coords = MapCoord.create(
-            coords, frame=self.geom.frame, axis_names=self.geom.axes.names
-        )
-        pix = self.geom.coord_to_pix(coords)
+        pix = self.geom.coord_to_pix(coords=coords)
         vals = self.get_by_pix(pix, fill_value=fill_value)
         return vals
 
