@@ -513,6 +513,7 @@ class RegionGeom(Geom):
         return tuple(idxs)
 
     def coord_to_pix(self, coords):
+        # inherited docstring
         coords = MapCoord.create(coords, frame=self.frame, axis_names=self.axes.names)
 
         if self.region is None:

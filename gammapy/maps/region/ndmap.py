@@ -395,7 +395,35 @@ class RegionNDMap(Map):
         return self.data[idxs[::-1]]
 
     def interp_by_coord(self, coords, **kwargs):
-        # inherited docstring
+        """Interpolate map values at the given map coordinates.
+
+        Parameters
+        ----------
+        coords : tuple, dict or `~gammapy.maps.MapCoord`
+            Coordinate arrays for each dimension of the map.  Tuple
+            should be ordered as (lon, lat, x_0, ..., x_n) where x_i
+            are coordinates for non-spatial dimensions of the map.
+            "lon" and "lat" are optional and will be take at the center
+            of the region by default.
+        method : {"linear", "nearest"}
+            Method to interpolate data values. By default linear
+            interpolation is performed.
+        fill_value : None or float value
+            The value to use for points outside of the interpolation domain.
+            If None, values outside the domain are extrapolated.
+        values_scale : {"lin", "log", "sqrt"}
+            Optional value scaling.
+
+        Returns
+        -------
+        vals : `~numpy.ndarray`
+            Interpolated pixel values.
+        """
+        if isinstance(coords, dict):
+            coords.setdefault("skycoord", self.geom.center_skydir)
+        elif isinstance(coords, tuple) and len(coords) == len(self.geom.axes):
+            coords = (0, 0) + coords
+
         pix = self.geom.coord_to_pix(coords)
         return self.interp_by_pix(pix, **kwargs)
 
