@@ -226,8 +226,9 @@ to make the ``codemeta.json`` does not understand it.
         email: yyyy.xxx@gammapy.org
         orcid: "https://orcid.org/0000-0000-0000-0000"
 
-For any release, both metadata files should be carefully updated and systematically a review should be done by the dev
-team.
+The ``CITATION.cff`` file will be used as the main file to be maintained, while the ``codemeta.json`` will be
+automatically created. For any release, the former should be carefully updated and systematically a review should be
+done by the dev team.
 
 5. Possible implementation
 ==========================
