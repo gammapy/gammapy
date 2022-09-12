@@ -337,7 +337,7 @@ class SkyModel(ModelBase):
 
         if self.temporal_model:
             integral = self.temporal_model.integral(
-                gti.time_start, gti.time_stop, coords["energy_true"]
+                gti.time_start, gti.time_stop, energy=coords["energy_true"]
             )
             value = value * np.sum(integral)
 
