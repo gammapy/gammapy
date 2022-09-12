@@ -6,7 +6,7 @@ from astropy import units as u
 from astropy.table import Table
 from astropy.time import Time
 from astropy.utils import lazyproperty
-from gammapy.maps import RegionNDMap, TimeMapAxis
+from gammapy.maps import RegionNDMap, TimeMapAxis, MapAxis
 from gammapy.modeling import Parameter
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.scripts import make_path
@@ -104,13 +104,18 @@ class TemporalModel(ModelBase):
         time_axis = TimeMapAxis.from_time_bounds(
             time_min=time_min, time_max=time_max, nbin=100
         )
-
         m = RegionNDMap.create(region=None, axes=[time_axis])
+        if energy:
+            if self.is_energy_dependent is False:
+                raise ValueError("Model does not take energy parameter")
+            energy_axis = MapAxis.from_nodes(nodes=energy, interp="log")
+            m = RegionNDMap.create(region=None, axes=[time_axis, energy_axis])
+
         kwargs.setdefault("marker", "None")
         kwargs.setdefault("ls", "-")
         kwargs.setdefault("xerr", None)
         m.quantity = self(time_axis.time_mid, energy=energy)
-        ax = m.plot(ax=ax, **kwargs)
+        ax = m.plot(ax=ax, **kwargs, axis_name="time")
         ax.set_ylabel("Norm / A.U.")
         return ax
 
@@ -196,6 +201,10 @@ class TemporalModel(ModelBase):
         norm : float
             Integrated flux norm on the given time intervals
         """
+        if self.is_energy_dependent:
+            raise ValueError(
+                "Inbuilt Numerical integration not supported for energy dependent models."
+            )
         t_values = np.linspace(t_min.mjd, t_max.mjd, oversampling_factor, axis=-1)
         times = Time(t_values, format="mjd")
         values = self(times)

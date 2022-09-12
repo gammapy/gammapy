@@ -407,3 +407,8 @@ def test_energy_dependent_model():
     ds = cta_dataset.to_spectrum_dataset(region)
     ds.models = model
     assert_allclose(ds.npred().data.sum(), 13172.582827, rtol=1e-3)
+
+    with mpl_plot_check():
+        temporal_model.plot(
+            time_range=Time([51544.0, 51550], format="mjd"), energy=[0.2, 1] * u.TeV
+        )
