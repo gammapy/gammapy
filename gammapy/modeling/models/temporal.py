@@ -106,7 +106,7 @@ class TemporalModel(ModelBase):
         )
         m = RegionNDMap.create(region=None, axes=[time_axis])
         if energy:
-            if self.is_energy_dependent is False:
+            if not self.is_energy_dependent:
                 raise ValueError("Model does not take energy parameter")
             energy_axis = MapAxis.from_nodes(nodes=energy, interp="log")
             m = RegionNDMap.create(region=None, axes=[time_axis, energy_axis])
@@ -231,6 +231,8 @@ class ConstantTemporalModel(TemporalModel):
             Start times of observation
         t_max : `~astropy.time.Time`
             Stop times of observation
+        energy: `~astropy.units.quantity`
+             Array of energies for energy dependent models
 
         Returns
         -------
@@ -276,6 +278,8 @@ class LinearTemporalModel(TemporalModel):
             Start times of observation
         t_max : `~astropy.time.Time`
             Stop times of observation
+        energy: `~astropy.units.quantity`
+             Array of energies for energy dependent models
 
         Returns
         -------
@@ -326,6 +330,8 @@ class ExpDecayTemporalModel(TemporalModel):
             Start times of observation
         t_max : `~astropy.time.Time`
             Stop times of observation
+        energy: `~astropy.units.quantity`
+             Array of energies for energy dependent models
 
         Returns
         -------
@@ -372,6 +378,8 @@ class GaussianTemporalModel(TemporalModel):
             Start times of observation
         t_max : `~astropy.time.Time`
             Stop times of observation
+        energy: `~astropy.units.quantity`
+             Array of energies for energy dependent models
 
         Returns
         -------
@@ -571,6 +579,9 @@ class LightCurveTemplateTemporalModel(TemporalModel):
             Start times of observation
         t_max: `~astropy.time.Time`
             Stop times of observation
+        energy: `~astropy.units.quantity`
+             Array of energies for energy dependent models
+
         Returns
         -------
         norm: The model integrated flux
@@ -625,6 +636,8 @@ class PowerLawTemporalModel(TemporalModel):
             Start times of observation
         t_max: `~astropy.time.Time`
             Stop times of observation
+        energy: `~astropy.units.quantity`
+             Array of energies for energy dependent models
 
         Returns
         -------
@@ -681,6 +694,8 @@ class SineTemporalModel(TemporalModel):
             Start times of observation
         t_max: `~astropy.time.Time`
             Stop times of observation
+        energy: `~astropy.units.quantity`
+             Array of energies for energy dependent models
 
         Returns
         -------
