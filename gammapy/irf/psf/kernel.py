@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 import astropy.units as u
+import matplotlib.pyplot as plt
 from gammapy.maps import Map
 from gammapy.modeling.models import PowerLawSpectralModel
 
@@ -202,3 +203,53 @@ class PSFKernel:
         """Slice by idx"""
         kernel = self.psf_kernel_map.slice_by_idx(slices=slices)
         return self.__class__(psf_kernel_map=kernel)
+
+    def plot_kernel(self, ax=None, energy=None, add_cbar=False, **kwargs):
+        """Plot PSF kernel.
+
+        Parameters
+        ----------
+        energy : `~astropy.units.Quantity`, optional
+            If None, the PSF kernel is summed over the energy axis. Otherwise, the kernel
+            corresponding to the energy bin including the given energy is shown.
+        ax : `~matplotlib.axes.Axes`, optional
+            Axis
+        kwargs: dict
+            Keyword arguments passed to `~matplotlib.axes.Axes.imshow`.
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`
+            Axis
+        """
+        ax = plt.gca() if ax is None else ax
+
+        if energy:
+            kernel_map = self.psf_kernel_map
+            energy_center = kernel_map.geom.axes["energy_true"].center.to(energy.unit)
+            idx = np.argmin(np.abs(energy_center.value - energy.value))
+            kernel_map.get_image_by_idx([idx]).plot(ax=ax, add_cbar=add_cbar, **kwargs)
+        else:
+            self.to_image().psf_kernel_map.plot(ax=ax, add_cbar=add_cbar, **kwargs)
+
+        return ax
+
+    def peek(self, figsize=(15, 5)):
+        """Quick-look summary plots.
+
+        Parameters
+        ----------
+        figsize : tuple
+            Size of the figure.
+
+        """
+        fig, axes = plt.subplots(nrows=1, ncols=2, figsize=figsize)
+
+        axes[0].set_title("Energy-integrated PSF kernel")
+        self.plot_kernel(ax=axes[0], add_cbar=True)
+
+        axes[1].set_title("PSF kernel at 1 TeV")
+        self.plot_kernel(ax=axes[1], add_cbar=True, energy=1*u.TeV)
+
+        plt.tight_layout()
+
