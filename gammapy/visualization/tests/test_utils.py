@@ -52,6 +52,11 @@ def test_map_panel_plotter():
     with mpl_plot_check():
         plot_contour_line(ax, x, y)
 
+    x = np.append(x, x[0])
+    y = np.append(y, y[0])
+    with mpl_plot_check():
+        plot_contour_line(ax, x, y)
+
 
 def test_plot_theta2_distribution():
     table = Table()
