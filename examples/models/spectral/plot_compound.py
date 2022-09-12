@@ -31,18 +31,17 @@ lp = LogParabolaSpectralModel(
     amplitude="1e-12 cm-2 s-1 TeV-1", reference="10 TeV", alpha=2.0, beta=1.0
 )
 
-# freeze the amplitude to avoid degeneracy when fitting
-lp.amplitude.frozen = True
-model = CompoundSpectralModel(pwl, lp, operator.add)
-model.plot(energy_bounds)
+model_add = CompoundSpectralModel(pwl, lp, operator.add)
+model_add.plot(energy_bounds)
 plt.grid(which="both")
+
 
 # %%
 # YAML representation
 # -------------------
 # Here is an example YAML file using the model:
 
-model = SkyModel(spectral_model=model, name="compound-model")
-models = Models([model])
+sky_model = SkyModel(spectral_model=model_add, name="add-compound-model")
+models = Models([sky_model])
 
 print(models.to_yaml())

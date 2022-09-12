@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Cube models (axes: lon, lat, energy)."""
+
 import numpy as np
 import astropy.units as u
 from astropy.nddata import NoOverlapError
@@ -75,15 +76,6 @@ class SkyModel(ModelBase):
         if not np.any(is_norm):
             raise ValueError(
                 "Spectral model used with SkyModel requires a norm type parameter."
-            )
-
-        is_free_norm = np.array(
-            [par.is_norm for par in spectral_model.parameters.free_parameters]
-        )
-
-        if np.sum(is_free_norm) > 1:
-            raise ValueError(
-                "Spectral model used with SkyModel can only have a single free norm type parameter."
             )
 
         super().__init__()
