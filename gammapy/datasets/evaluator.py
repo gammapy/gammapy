@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from astropy.coordinates.angle_utilities import angular_separation
 from astropy.utils import lazyproperty
 from regions import CircleSkyRegion
-from gammapy.maps import Map
+from gammapy.maps import Map, WcsNDMap, HpxNDMap, RegionNDMap
 from gammapy.modeling.models import PointSpatialModel, TemplateNPredModel
 
 PSF_CONTAINMENT = 0.999
@@ -518,28 +518,48 @@ class MapEvaluator:
 
         axes = axes.flat
 
-        axes[0].set_title("Predicted counts")
-        self.compute_npred().sum_over_axes().plot(ax=axes[0], add_cbar=True)
-        plot_mask(ax=axes[0], mask=self.mask, hatches=["///"], colors="w")
+        exposure = self.exposure
+        if isinstance(exposure, WcsNDMap) or isinstance(exposure, HpxNDMap):
+            axes[0].set_title("Predicted counts")
+            self.compute_npred().sum_over_axes().plot(ax=axes[0], add_cbar=True)
+            axes[1].set_title("Exposure")
+            self.exposure.sum_over_axes().plot(ax=axes[1], add_cbar=True)
+        elif isinstance(exposure, RegionNDMap):
+            axes[0].remove()
+            ax0 = fig.add_subplot(3, 2, 1)
+            ax0.set_title("Predicted counts")
+            self.compute_npred().plot(ax=ax0)
+            axes[1].remove()
+            ax1 = fig.add_subplot(3, 2, 2)
+            ax1.set_title("Exposure")
+            self.exposure.plot(ax=ax1)
 
-        axes[1].set_title("Exposure")
-        self.exposure.sum_over_axes().plot(ax=axes[1], add_cbar=True)
+        plot_mask(ax=axes[0], mask=self.mask, hatches=["///"], colors="w")
         plot_mask(ax=axes[1], mask=self.mask, hatches=["///"], colors="w")
 
-        axes[2].set_title("Energy-integrated PSF kernel")
-        self.psf.plot_kernel(ax=axes[2], add_cbar=True)
+        if self.psf:
+            axes[2].set_title("Energy-integrated PSF kernel")
+            self.psf.plot_kernel(ax=axes[2], add_cbar=True)
 
-        axes[3].set_title("PSF kernel at 1 TeV")
-        self.psf.plot_kernel(ax=axes[3], add_cbar=True, energy=1*u.TeV)
+            axes[3].set_title("PSF kernel at 1 TeV")
+            self.psf.plot_kernel(ax=axes[3], add_cbar=True, energy=1*u.TeV)
+        else:
+            axes[2].remove()
+            axes[3].remove()
 
         axes[4].remove()
-        ax4 = fig.add_subplot(3, 2, 5)
-        ax4.set_title("Energy bias")
-        self.edisp.plot_bias(ax=ax4)
-
         axes[5].remove()
-        ax5 = fig.add_subplot(3, 2, 6)
-        ax5.set_title("Energy dispersion matrix")
-        self.edisp.plot_matrix(ax=ax5)
+
+        if self.edisp:
+            ax4 = fig.add_subplot(3, 2, 5)
+            ax4.set_title("Energy bias")
+            self.edisp.plot_bias(ax=ax4)
+
+            ax5 = fig.add_subplot(3, 2, 6)
+            ax5.set_title("Energy dispersion matrix")
+            self.edisp.plot_matrix(ax=ax5)
+
+
+
 
 
