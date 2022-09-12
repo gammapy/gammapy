@@ -211,6 +211,13 @@ def test_region_nd_map_get(region_map):
     values = region_map.get_by_coord((83.63, 21.51, energies[[0, -1]]))
     assert_allclose(values.squeeze(), [0, 5])
 
+    values = region_map.get_by_coord((energies[[0, -1]],))
+    assert_allclose(values.squeeze(), [0, 5])
+
+    values = region_map.get_by_coord({"energy": energies[[0, -1]]})
+    assert_allclose(values.squeeze(), [0, 5])
+
+
 
 def test_region_nd_map_set(region_map):
     region_map = region_map.copy()

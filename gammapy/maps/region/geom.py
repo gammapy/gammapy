@@ -518,7 +518,8 @@ class RegionGeom(Geom):
         if isinstance(coords, dict):
             coords.setdefault("skycoord", self.center_skydir)
         elif isinstance(coords, tuple) and len(coords) == len(self.axes):
-            coords = (0, 0) + coords
+            skydir = self.center_skydir.transform_to(self.frame)
+            coords = (skydir.data.lon, skydir.data.lat) + coords
 
         coords = MapCoord.create(coords, frame=self.frame, axis_names=self.axes.names)
 
