@@ -142,7 +142,7 @@ as for the standard releases are applied here.
 
 For the first LTS release, the `V1.0`, all contributors from the beginning of the project will be co-authors per default.
 As the DCO has not be applied for the past contributions, the best will be done to contact all contributors in order to
-exercise their right to withdraw (OptOut scheme), to update their personal information, and to add authors with special
+exercise their right to withdraw ("OptOut" scheme), to update their personal information, and to add authors with special
 contributions. The order of the authors is 'The Gammapy team', followed by the list of contributors in alphabetical order.
 
 General Gammapy publications
