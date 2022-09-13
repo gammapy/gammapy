@@ -437,7 +437,8 @@ class PSFMap(IRFMap):
         ax = plt.gca() if ax is None else ax
 
         position = self.psf_map.geom.center_skydir
-        energy_true = self.psf_map.geom.axes[self.energy_name].center
+        energy_axis = self.psf_map.geom.axes[self.energy_name]
+        energy_true = energy_axis.center
 
         for frac in fraction:
             radius = self.containment_radius(frac, energy_true, position)
@@ -448,10 +449,7 @@ class PSFMap(IRFMap):
         ax.semilogx()
         ax.legend(loc="best")
         ax.yaxis.set_major_formatter(FormatStrFormatter("%.2f"))
-        tag = "Energy"
-        if "true" in self.energy_name:
-            tag+=" True"
-        ax.set_xlabel(f"{tag} ({ax.xaxis.units})")
+        energy_axis.format_plot_xaxis(ax=ax)
         ax.set_ylabel(f"Containment radius ({ax.yaxis.units})")
         return ax
 
