@@ -52,7 +52,8 @@ class HpxGeom(Geom):
         either a single nside value or a vector of nside values
         defining the pixel size for each image plane.  If nside is not
         a scalar then its dimensionality should match that of the
-        non-spatial axes. It must be a power of 2, less than 2**30.
+        non-spatial axes. If nest is True, nside must be a power of 2,
+        less than 2**30.
     nest : bool
         True -> 'NESTED', False -> 'RING' indexing scheme
     frame : str
@@ -806,7 +807,8 @@ class HpxGeom(Geom):
         ----------
         nside : int or `~numpy.ndarray`
             HEALPix NSIDE parameter.  This parameter sets the size of
-            the spatial pixels in the map. It must be a power of 2, less than 2**30.
+            the spatial pixels in the map. If nest is True, nside must be a
+            power of 2, less than 2**30.
         binsz : float or `~numpy.ndarray`
             Approximate pixel size in degrees.  An NSIDE will be
             chosen that corresponds to a pixel size closest to this
