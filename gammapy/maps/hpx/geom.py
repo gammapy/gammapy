@@ -6,7 +6,6 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.units import Quantity
-from healpy.pixelfunc import check_nside
 from gammapy.utils.array import is_power2
 from ..axes import MapAxes
 from ..coord import MapCoord, skycoord_to_lonlat
@@ -72,8 +71,9 @@ class HpxGeom(Geom):
     is_region = False
 
     def __init__(self, nside, nest=True, frame="icrs", region=None, axes=None):
-
+        from healpy.pixelfunc import check_nside
         check_nside(nside, nest=nest)
+        
         self._nside = np.array(nside, ndmin=1)
         self._axes = MapAxes.from_default(axes, n_spatial_axes=1)
 
