@@ -328,9 +328,13 @@ class MapDatasetMaker(Maker):
         meta_table = Table()
         meta_table["TELESCOP"] = [observation.aeff.meta.get("TELESCOP", "Unknown")]
         meta_table["OBS_ID"] = [observation.obs_id]
-        meta_table["RA_PNT"] = [observation.pointing_radec.icrs.ra.deg] * u.deg
-        meta_table["DEC_PNT"] = [observation.pointing_radec.icrs.dec.deg] * u.deg
-
+        meta_table["OBS_MODE"] = [str(observation.fixed_pointing_info.mode).split('.')[-1]]
+        if meta_table["OBS_MODE"] == "POINTING":
+            meta_table["RA_PNT"] = [observation.pointing_radec.icrs.ra.deg] * u.deg
+            meta_table["DEC_PNT"] = [observation.pointing_radec.icrs.dec.deg] * u.deg
+        elif meta_table["OBS_MODE"] == "DRIFT":
+            meta_table["ALT_PNT"] = [observation.fixed_pointing_info.fixed_altaz.alt.deg] * u.deg
+            meta_table["AZ_PNT"] = [observation.fixed_pointing_info.fixed_altaz.az.deg] * u.deg
         return meta_table
 
     def run(self, dataset, observation):
