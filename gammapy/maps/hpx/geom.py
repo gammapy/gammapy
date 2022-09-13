@@ -72,8 +72,7 @@ class HpxGeom(Geom):
 
     def __init__(self, nside, nest=True, frame="icrs", region=None, axes=None):
 
-        if nest:
-            check_nside(nside, nest=nest)
+        check_nside(nside, nest=nest)
         self._nside = np.array(nside, ndmin=1)
         self._axes = MapAxes.from_default(axes, n_spatial_axes=1)
 
