@@ -67,15 +67,14 @@ class PSFMap(IRFMap):
     """
 
     tag = "psf_map"
-    energy_name = "energy_true"
     required_axes = ["rad", "energy_true"]
-
-    @classmethod
-    def as_energy(cls):
-        return RecoPSFMap
 
     def __init__(self, psf_map, exposure_map=None):
         super().__init__(irf_map=psf_map, exposure_map=exposure_map)
+
+    @property
+    def energy_name(self):
+        return self.required_axes[-1]
 
     @property
     def psf_map(self):
@@ -552,9 +551,12 @@ class RecoPSFMap(PSFMap):
         Associated exposure map. Needs to have a consistent map geometry.
     """
 
-    tag = "psf_map"
-    energy_name = "energy"
+    tag = "psf_map_reco"
     required_axes = ["rad", "energy"]
+
+    @property
+    def energy_name(self):
+        return self.required_axes[-1]
 
     @classmethod
     def from_gauss(cls, energy_axis, rad_axis=None, sigma=0.1 * u.deg, geom=None):
