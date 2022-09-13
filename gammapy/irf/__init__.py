@@ -15,7 +15,7 @@ from .psf import (
     PSFKernel,
     PSFKing,
     PSFMap,
-    PSFMapReco,
+    RecoPSFMap,
 )
 from .rad_max import RadMax2D
 
@@ -38,7 +38,7 @@ __all__ = [
     "PSFKernel",
     "PSFKing",
     "PSFMap",
-    "PSFMapReco",
+    "RecoPSFMap",
     "RadMax2D",
 ]
 
@@ -53,7 +53,7 @@ IRF_REGISTRY = Registry(
         Background3D,
         Background2D,
         PSFMap,
-        PSFMapReco,
+        RecoPSFMap,
         EDispKernelMap,
         RadMax2D,
         EDispMap,

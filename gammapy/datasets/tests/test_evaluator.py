@@ -5,7 +5,7 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
 from gammapy.datasets.evaluator import MapEvaluator
-from gammapy.irf import PSFKernel, PSFMapReco
+from gammapy.irf import PSFKernel, RecoPSFMap
 from gammapy.maps import Map, MapAxis, RegionGeom, RegionNDMap, WcsGeom
 from gammapy.modeling.models import (
     ConstantSpectralModel,
@@ -187,7 +187,7 @@ def test_psf_reco():
     npred = evaluator.compute_npred()
     assert_allclose(npred.data.sum(), 9e-12)
     
-    psf_map = PSFMapReco.from_gauss(
+    psf_map = RecoPSFMap.from_gauss(
         energy_axis=energy_axis, sigma=0.1 * u.deg, geom=geom.to_image()
     )
     

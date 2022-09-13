@@ -12,7 +12,7 @@ from ..core import IRFMap
 from .core import PSF
 from .kernel import PSFKernel
 
-__all__ = ["PSFMap", "PSFMapReco"]
+__all__ = ["PSFMap", "RecoPSFMap"]
 
 
 class IRFLikePSF(PSF):
@@ -72,7 +72,7 @@ class PSFMap(IRFMap):
 
     @classmethod
     def as_energy(cls):
-        return PSFMapReco
+        return RecoPSFMap
 
     def __init__(self, psf_map, exposure_map=None):
         super().__init__(irf_map=psf_map, exposure_map=exposure_map)
@@ -540,7 +540,7 @@ class PSFMap(IRFMap):
         )
 
 
-class PSFMapReco(PSFMap):
+class RecoPSFMap(PSFMap):
     """Class containing the Map of PSFs in reconstructed energy and allowing to interact with it.
 
     Parameters

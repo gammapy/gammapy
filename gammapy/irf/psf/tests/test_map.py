@@ -6,7 +6,7 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.units import Unit
 from gammapy.data import DataStore
-from gammapy.irf import PSF3D, EffectiveAreaTable2D, PSFMap, PSFMapReco
+from gammapy.irf import PSF3D, EffectiveAreaTable2D, PSFMap, RecoPSFMap
 from gammapy.makers.utils import make_map_exposure_true_energy, make_psf_map
 from gammapy.maps import Map, MapAxis, MapCoord, RegionGeom, WcsGeom
 from gammapy.utils.testing import mpl_plot_check, requires_data
@@ -510,14 +510,14 @@ def test_psf_map_reco(tmpdir):
         "1 TeV", "10 TeV", nbin=3, name="energy"
     )
     geom = RegionGeom.create("icrs;circle(0, 0, 0.1)")
-    psf_map = PSFMapReco.from_gauss(
+    psf_map = RecoPSFMap.from_gauss(
         energy_axis=energy_axis, sigma=[0.1, 0.2, 0.3] * u.deg, geom=geom
     )
 
     filename = tmpdir / "test_psf_reco.fits"
     psf_map.write(filename, format="gadf")
 
-    psf_map = PSFMapReco.read(filename, format="gadf")
+    psf_map = RecoPSFMap.read(filename, format="gadf")
 
     assert psf_map.psf_map.unit == "sr-1"
     assert "energy" in psf_map.psf_map.geom.axes.names

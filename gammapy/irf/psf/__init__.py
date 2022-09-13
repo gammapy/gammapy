@@ -1,5 +1,5 @@
 from .kernel import PSFKernel
-from .map import PSFMap, PSFMapReco
+from .map import PSFMap, RecoPSFMap
 from .parametric import EnergyDependentMultiGaussPSF, ParametricPSF, PSFKing
 from .table import PSF3D
 
@@ -10,5 +10,5 @@ __all__ = [
     "PSFKernel",
     "PSFKing",
     "PSFMap",
-    "PSFMapReco",
+    "RecoPSFMap",
 ]
