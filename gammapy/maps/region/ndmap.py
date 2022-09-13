@@ -403,7 +403,7 @@ class RegionNDMap(Map):
             Coordinate arrays for each dimension of the map.  Tuple
             should be ordered as (lon, lat, x_0, ..., x_n) where x_i
             are coordinates for non-spatial dimensions of the map.
-            "lon" and "lat" are optional and will be take at the center
+            "lon" and "lat" are optional and will be taken at the center
             of the region by default.
         method : {"linear", "nearest"}
             Method to interpolate data values. By default linear
