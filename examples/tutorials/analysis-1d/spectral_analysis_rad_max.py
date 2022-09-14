@@ -2,105 +2,104 @@
 Spectral analysis with energy-dependent directional cuts
 ========================================================
 
+Perform a point like spectral analysis with energy dependent offset cut.
+
+
+Prerequisites
+-------------
+
+-  Understanding the basic data reduction performed in a `1D
+   analysis <spectral_analysis.ipynb>`__;
+-  understanding the difference between a
+   `point-like <https://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/point_like/index.html>`__
+   and a
+   `full-enclosure <https://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/full_enclosure/index.html>`__
+   IRF.
+
+Context
+-------
+
+As already explained in these tutorials, in a `1D spectral
+analysis <spectral_analysis.ipynb>`__ the background is estimated from
+the field of view of the observation. In particular, the source and
+background events are counted within a circular ON region enclosing the
+source. The background to be subtracted is then estimated from one or
+more OFF regions with an expected background rate similar to the one in
+the ON region (i.e. from regions with similar acceptance).
+
+*Full-containment* IRFs have no directional cut applied, when employed
+for a 1D analysis, it is required to apply a correction to the IRF
+accounting for flux leaking out of the ON region. This correction is
+typically obtained by integrating the PSF within the ON region.
+
+When computing a *point-like* IRFs, a directional cut around the assumed
+source position is applied to the simulated events. For this IRF type,
+no PSF component is provided. The size of the ON and OFF regions used
+for the spectrum extraction should then reflect this cut, since a
+response computed within a specific region around the source is being
+provided.
+
+The directional cut is typically an angular distance from the assumed
+source position, :math:`\theta`. The
+`gamma-astro-data-format <https://gamma-astro-data-formats.readthedocs.io/en/latest/>`__
+specifications offer two different ways to store this information: \* if
+the same :math:`\theta` cut is applied at all energies and offsets, `a
+``RAD_MAX``
+keyword <https://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/point_like/#rad-max>`__
+is added to the header of the data units containing IRF components. This
+should be used to define the size of the ON and OFF regions; \* in case
+an energy- (and offset-) dependent :math:`\theta` cut is applied, its
+values are stored in additional ``FITS`` data unit, named
+```RAD_MAX_2D`` <https://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/point_like/#rad-max-2d>`__.
+
+``Gammapy`` provides a class to automatically read these values,
+``~gammapy.irf.RadMax2D``, for both cases (fixed or energy-dependent
+:math:`\theta` cut). In this notebook we will focus on how to perform a
+spectral extraction with a point-like IRF with an energy-dependent
+:math:`\theta` cut. We remark that in this case a
+``~regions.PointSkyRegion`` (and not a ``~regions.CircleSkyRegion``)
+should be used to define the ON region. If a geometry based on a
+``~regions.PointSkyRegion`` is fed to the spectra and the background
+``Makers``, the latter will automatically use the values stored in the
+``RAD_MAX`` keyword / table for defining the size of the ON and OFF
+regions.
+
+Beside the definition of the ON region during the data reduction, the
+remaining steps are identical to the other `1D spectral analysis
+example <spectral_analysis.ipynb>`__, so we will not detail the data
+reduction steps already presented in the other tutorial.
+
+**Objective: perform the data reduction and analysis of 2 Crab Nebula
+observations of MAGIC and fit the resulting datasets.**
+
+Introduction
+------------
+
+We load two MAGIC observations in the
+`gammapy-data <https://github.com/gammapy/gammapy-data>`__ containing
+IRF component with a :math:`\theta` cut.
+
+We define the ON region, this time as a ``PointSkyRegion`` instead of a
+``CircleSkyRegion``, i.e. we specify only the center of our ON region.
+We create a ``RegionGeom`` adding to the region the estimated energy
+axis of the ``~gammapy.datasets.SpectrumDataset`` object we want to
+produce. The corresponding dataset maker will automatically use the
+:math:`\theta` values in ``~gammapy.irf.RadMax2D`` to set the
+appropriate ON region sizes (based on the offset on the observation and
+on the estimated energy binning).
+
+In order to define the OFF regions it is recommended to use a
+``~gammapy.makers.WobbleRegionsFinder``, that uses fixed positions for
+the OFF regions. In the different estimated energy bins we will have OFF
+regions centered at the same positions, but with changing size. As for
+the ``SpectrumDataSetMaker``, the ``BackgroundMaker`` will use the
+values in ``~gammapy.irf.RadMax2D`` to define the sizes of the OFF
+regions.
+
+Once the datasets with the ON and OFF counts are created, we can perform
+a 1D likelihood fit, exactly as illustrated in the previous example.
+
 """
-
-
-######################################################################
-# Prerequisites
-# -------------
-# 
-# -  Understanding the basic data reduction performed in a `1D
-#    analysis <spectral_analysis.ipynb>`__;
-# -  understanding the difference between a
-#    `point-like <https://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/point_like/index.html>`__
-#    and a
-#    `full-enclosure <https://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/full_enclosure/index.html>`__
-#    IRF.
-# 
-# Context
-# -------
-# 
-# As already explained in these tutorials, in a `1D spectral
-# analysis <spectral_analysis.ipynb>`__ the background is estimated from
-# the field of view of the observation. In particular, the source and
-# background events are counted within a circular ON region enclosing the
-# source. The background to be subtracted is then estimated from one or
-# more OFF regions with an expected background rate similar to the one in
-# the ON region (i.e. from regions with similar acceptance).
-# 
-# *Full-containment* IRFs have no directional cut applied, when employed
-# for a 1D analysis, it is required to apply a correction to the IRF
-# accounting for flux leaking out of the ON region. This correction is
-# typically obtained by integrating the PSF within the ON region.
-# 
-# When computing a *point-like* IRFs, a directional cut around the assumed
-# source position is applied to the simulated events. For this IRF type,
-# no PSF component is provided. The size of the ON and OFF regions used
-# for the spectrum extraction should then reflect this cut, since a
-# response computed within a specific region around the source is being
-# provided.
-# 
-# The directional cut is typically an angular distance from the assumed
-# source position, :math:`\theta`. The
-# `gamma-astro-data-format <https://gamma-astro-data-formats.readthedocs.io/en/latest/>`__
-# specifications offer two different ways to store this information: \* if
-# the same :math:`\theta` cut is applied at all energies and offsets, `a
-# ``RAD_MAX``
-# keyword <https://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/point_like/#rad-max>`__
-# is added to the header of the data units containing IRF components. This
-# should be used to define the size of the ON and OFF regions; \* in case
-# an energy- (and offset-) dependent :math:`\theta` cut is applied, its
-# values are stored in additional ``FITS`` data unit, named
-# ```RAD_MAX_2D`` <https://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/point_like/#rad-max-2d>`__.
-# 
-# ``Gammapy`` provides a class to automatically read these values,
-# ``~gammapy.irf.RadMax2D``, for both cases (fixed or energy-dependent
-# :math:`\theta` cut). In this notebook we will focus on how to perform a
-# spectral extraction with a point-like IRF with an energy-dependent
-# :math:`\theta` cut. We remark that in this case a
-# ``~regions.PointSkyRegion`` (and not a ``~regions.CircleSkyRegion``)
-# should be used to define the ON region. If a geometry based on a
-# ``~regions.PointSkyRegion`` is fed to the spectra and the background
-# ``Makers``, the latter will automatically use the values stored in the
-# ``RAD_MAX`` keyword / table for defining the size of the ON and OFF
-# regions.
-# 
-# Beside the definition of the ON region during the data reduction, the
-# remaining steps are identical to the other `1D spectral analysis
-# example <spectral_analysis.ipynb>`__, so we will not detail the data
-# reduction steps already presented in the other tutorial.
-# 
-# **Objective: perform the data reduction and analysis of 2 Crab Nebula
-# observations of MAGIC and fit the resulting datasets.**
-# 
-# Introduction
-# ------------
-# 
-# We load two MAGIC observations in the
-# `gammapy-data <https://github.com/gammapy/gammapy-data>`__ containing
-# IRF component with a :math:`\theta` cut.
-# 
-# We define the ON region, this time as a ``PointSkyRegion`` instead of a
-# ``CircleSkyRegion``, i.e. we specify only the center of our ON region.
-# We create a ``RegionGeom`` adding to the region the estimated energy
-# axis of the ``~gammapy.datasets.SpectrumDataset`` object we want to
-# produce. The corresponding dataset maker will automatically use the
-# :math:`\theta` values in ``~gammapy.irf.RadMax2D`` to set the
-# appropriate ON region sizes (based on the offset on the observation and
-# on the estimated energy binning).
-# 
-# In order to define the OFF regions it is recommended to use a
-# ``~gammapy.makers.WobbleRegionsFinder``, that uses fixed positions for
-# the OFF regions. In the different estimated energy bins we will have OFF
-# regions centered at the same positions, but with changing size. As for
-# the ``SpectrumDataSetMaker``, the ``BackgroundMaker`` will use the
-# values in ``~gammapy.irf.RadMax2D`` to define the sizes of the OFF
-# regions.
-# 
-# Once the datasets with the ON and OFF counts are created, we can perform
-# a 1D likelihood fit, exactly as illustrated in the previous example.
-# 
-
 
 ######################################################################
 # Setup

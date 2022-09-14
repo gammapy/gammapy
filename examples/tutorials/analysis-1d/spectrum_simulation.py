@@ -2,6 +2,9 @@
 1D spectrum simulation
 ======================
 
+Simulate a number of spectral on-off observations of a source with a power-law spectral
+model using the CTA 1DC response and fit them with the assumed spectral model.
+
 Prerequisites
 -------------
 

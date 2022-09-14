@@ -2,6 +2,8 @@
 Point source sensitivity
 ========================
 
+Estimate the CTA sensitivity for a point-like IRF at a fixed zenith angle and fixed offset.
+
 Introduction
 ------------
 

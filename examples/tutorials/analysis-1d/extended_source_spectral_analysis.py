@@ -2,6 +2,8 @@
 Spectral analysis of extended sources
 =====================================
 
+Perform a spectral analysis of an extended source.
+
 Prerequisites
 -------------
 

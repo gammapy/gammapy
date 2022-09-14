@@ -2,6 +2,9 @@
 Flux point fitting
 ==================
 
+Fit spectral models to combined Fermi-LAT and IACT flux points tables.
+
+
 Prerequisites
 -------------
 
