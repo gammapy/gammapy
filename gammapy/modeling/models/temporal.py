@@ -90,7 +90,7 @@ class TemporalModel(ModelBase):
             times to plot the model
         ax : `~matplotlib.axes.Axes`, optional
             Axis to plot on
-        energy: `~astropy.units.quantity`
+        energy : `~astropy.units.quantity`
              Array of energies for energy dependent models
         **kwargs : dict
             Keywords forwarded to `~matplotlib.pyplot.errorbar`
@@ -184,7 +184,7 @@ class TemporalModel(ModelBase):
 
         return t_min + time
 
-    def integral(self, t_min, t_max, oversampling_factor=100, energy=None, **kwargs):
+    def integral(self, t_min, t_max, energy=None, oversampling_factor=100, **kwargs):
         """Evaluate the integrated flux within the given time intervals, at the given energy
 
         Parameters
@@ -195,7 +195,7 @@ class TemporalModel(ModelBase):
             Stop times of observation
         oversampling_factor : int
             Oversampling factor to be used for numerical integration.
-        energy = `~astropy.units.quantity`
+        energy: `~astropy.units.quantity`
              Array of energies for energy dependent models
 
         Returns
@@ -230,7 +230,7 @@ class ConstantTemporalModel(TemporalModel):
         """Evaluate at given times."""
         return np.ones(time.shape)
 
-    def integral(self, t_min, t_max, energy=None):
+    def integral(self, t_min, t_max, **kwargs):
         """Evaluate the integrated flux within the given time intervals
 
         Parameters
@@ -239,8 +239,8 @@ class ConstantTemporalModel(TemporalModel):
             Start times of observation
         t_max : `~astropy.time.Time`
             Stop times of observation
-        energy: `~astropy.units.quantity`
-             Array of energies for energy dependent models
+        kwargs : dict
+            additional arguments for energy dependent models
 
         Returns
         -------
@@ -277,7 +277,7 @@ class LinearTemporalModel(TemporalModel):
         """Evaluate at given times"""
         return alpha + beta * (time - t_ref)
 
-    def integral(self, t_min, t_max, energy=None):
+    def integral(self, t_min, t_max, **kwargs):
         """Evaluate the integrated flux within the given time intervals
 
         Parameters
@@ -286,8 +286,8 @@ class LinearTemporalModel(TemporalModel):
             Start times of observation
         t_max : `~astropy.time.Time`
             Stop times of observation
-        energy: `~astropy.units.quantity`
-             Array of energies for energy dependent models
+        kwargs : dict
+            additional arguments for energy dependent models
 
         Returns
         -------
@@ -329,7 +329,7 @@ class ExpDecayTemporalModel(TemporalModel):
         """Evaluate at given times"""
         return np.exp(-(time - t_ref) / t0)
 
-    def integral(self, t_min, t_max, energy=None):
+    def integral(self, t_min, t_max, **kwargs):
         """Evaluate the integrated flux within the given time intervals
 
         Parameters
@@ -338,8 +338,8 @@ class ExpDecayTemporalModel(TemporalModel):
             Start times of observation
         t_max : `~astropy.time.Time`
             Stop times of observation
-        energy: `~astropy.units.quantity`
-             Array of energies for energy dependent models
+        kwargs : dict
+            additional arguments for energy dependent models
 
         Returns
         -------
@@ -377,7 +377,7 @@ class GaussianTemporalModel(TemporalModel):
     def evaluate(time, t_ref, sigma):
         return np.exp(-((time - t_ref) ** 2) / (2 * sigma**2))
 
-    def integral(self, t_min, t_max, energy=None, **kwargs):
+    def integral(self, t_min, t_max, **kwargs):
         """Evaluate the integrated flux within the given time intervals
 
         Parameters
@@ -386,8 +386,8 @@ class GaussianTemporalModel(TemporalModel):
             Start times of observation
         t_max : `~astropy.time.Time`
             Stop times of observation
-        energy: `~astropy.units.quantity`
-             Array of energies for energy dependent models
+        kwargs : dict
+            additional arguments for energy dependent models
 
         Returns
         -------
@@ -578,7 +578,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         """
         return self._interpolator(time, ext=ext)
 
-    def integral(self, t_min, t_max, energy=None):
+    def integral(self, t_min, t_max, **kwargs):
         """Evaluate the integrated flux within the given time intervals
 
         Parameters
@@ -587,8 +587,8 @@ class LightCurveTemplateTemporalModel(TemporalModel):
             Start times of observation
         t_max: `~astropy.time.Time`
             Stop times of observation
-        energy: `~astropy.units.quantity`
-             Array of energies for energy dependent models
+        kwargs : dict
+            additional arguments for energy dependent models
 
         Returns
         -------
@@ -635,7 +635,7 @@ class PowerLawTemporalModel(TemporalModel):
         """Evaluate at given times"""
         return np.power((time - t_ref) / t0, alpha)
 
-    def integral(self, t_min, t_max, energy=None):
+    def integral(self, t_min, t_max, **kwargs):
         """Evaluate the integrated flux within the given time intervals
 
         Parameters
@@ -644,8 +644,8 @@ class PowerLawTemporalModel(TemporalModel):
             Start times of observation
         t_max: `~astropy.time.Time`
             Stop times of observation
-        energy: `~astropy.units.quantity`
-             Array of energies for energy dependent models
+        kwargs : dict
+            additional arguments for energy dependent models
 
         Returns
         -------
@@ -693,7 +693,7 @@ class SineTemporalModel(TemporalModel):
         """Evaluate at given times"""
         return 1.0 + amp * np.sin(omega * (time - t_ref))
 
-    def integral(self, t_min, t_max, energy=None):
+    def integral(self, t_min, t_max, **kwargs):
         """Evaluate the integrated flux within the given time intervals
 
         Parameters
@@ -702,8 +702,8 @@ class SineTemporalModel(TemporalModel):
             Start times of observation
         t_max: `~astropy.time.Time`
             Stop times of observation
-        energy: `~astropy.units.quantity`
-             Array of energies for energy dependent models
+        kwargs : dict
+            additional arguments for energy dependent models
 
         Returns
         -------
