@@ -58,10 +58,6 @@ to 2 TeV.
 
 """
 
-# Check that you have the prepared Fermi-LAT dataset
-# We will use diffuse models from here
-!ls -1 $GAMMAPY_DATA/fermi_3fhl
-
 # %matplotlib inline
 import matplotlib.pyplot as plt
 

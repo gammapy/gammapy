@@ -111,13 +111,13 @@ from gammapy.irf import EffectiveAreaTable2D, load_cta_irfs
 # the end of this notebook.
 # 
 
-!ls -1 $GAMMAPY_DATA/cta-1dc
+# !ls -1 $GAMMAPY_DATA/cta-1dc
 
-!ls -1 $GAMMAPY_DATA/cta-1dc/data/baseline/gps
+# !ls -1 $GAMMAPY_DATA/cta-1dc/data/baseline/gps
 
-!ls -1 $GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h
+# !ls -1 $GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h
 
-!ls -1 $GAMMAPY_DATA/cta-1dc/index/gps
+# !ls -1 $GAMMAPY_DATA/cta-1dc/index/gps
 
 
 ######################################################################
