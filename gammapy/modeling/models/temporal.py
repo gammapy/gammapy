@@ -185,7 +185,7 @@ class TemporalModel(ModelBase):
         return t_min + time
 
     def integral(self, t_min, t_max, oversampling_factor=100, energy=None, **kwargs):
-        """Evaluate the integrated flux within the given time intervals
+        """Evaluate the integrated flux within the given time intervals, at the given energy
 
         Parameters
         ----------
@@ -195,20 +195,28 @@ class TemporalModel(ModelBase):
             Stop times of observation
         oversampling_factor : int
             Oversampling factor to be used for numerical integration.
+        energy = `~astropy.units.quantity`
+             Array of energies for energy dependent models
 
         Returns
         -------
         norm : float
             Integrated flux norm on the given time intervals
         """
-        if self.is_energy_dependent:
-            raise ValueError(
-                "Inbuilt Numerical integration not supported for energy dependent models."
-            )
-        t_values = np.linspace(t_min.mjd, t_max.mjd, oversampling_factor, axis=-1)
+
+        t_values, steps = np.linspace(
+            t_min.mjd, t_max.mjd, oversampling_factor, retstep=True, axis=-1
+        )
         times = Time(t_values, format="mjd")
-        values = self(times)
-        integral = np.sum(values / oversampling_factor, axis=-1)
+
+        if self.is_energy_dependent:
+            values = []
+            for ee in energy:
+                values.append((self(times, ee).T * steps).T)
+            values = np.array(values) * values[0].unit
+        else:
+            values = self(times) * steps
+        integral = np.sum(values, axis=-1)
         return integral / self.time_sum(t_min, t_max).to_value("d")
 
 

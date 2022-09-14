@@ -241,7 +241,7 @@ def test_generalized_gaussian_temporal_model_integral():
     t_ref = Time(50000, format="mjd")
     gti = GTI.create(start, stop, reference_time=t_ref)
     val = temporal_model.integral(gti.time_start, gti.time_stop)
-    assert_allclose(val, 0.751594, rtol=1e-4)
+    assert_allclose(val, 0.759115, rtol=1e-3)
 
 
 def test_powerlaw_temporal_model_evaluate():
@@ -347,26 +347,6 @@ class MyCustomTemporalModel(TemporalModel):
             dim = np.expand_dims(dim, axis=1)
         return np.power(dim, -alpha)
 
-    def integral(self, t_min, t_max, energy):
-        pars = self.parameters
-        t_ref = Time(pars["t_ref"].quantity, format="mjd")
-        beta = pars["beta"].quantity
-        E0 = pars["E0"].quantity
-        integral = []
-        for t1, t2 in zip(t_min, t_max):
-            integral_ene = []
-            for ene in energy:
-                integral_ene.append(
-                    scipy.integrate.quad(
-                        func=self.evaluate,
-                        a=t1.mjd,
-                        b=t2.mjd,
-                        args=(ene, t_ref.mjd, beta, E0),
-                    )[0]
-                )
-            integral.append(integral_ene)
-        return integral / self.time_sum(t_min, t_max).to_value("d")
-
 
 @requires_data()
 def test_energy_dependent_model():
@@ -378,12 +358,14 @@ def test_energy_dependent_model():
 
     temporal_model = MyCustomTemporalModel()
     assert temporal_model.is_energy_dependent is True
-    val = temporal_model.integral(gti.time_start, gti.time_stop, [0.3, 1.0] * u.TeV)
-    assert len(val) == 3
-    assert_allclose(np.sum(val), 4.274116, rtol=1e-5)
+    val = temporal_model.integral(
+        gti.time_start, gti.time_stop, energy=[0.3, 1.0] * u.TeV
+    )
+    assert val.shape == (2, 3)
+    assert_allclose(np.sum(val), 4.3172, rtol=1e-3)
 
     t = Time(55556, format="mjd")
-    val = temporal_model(t, 3 * u.TeV)
+    val = temporal_model(t, energy=3 * u.TeV)
     assert_allclose(val, 0.3388, rtol=1e-3)
 
     model = SkyModel(
@@ -392,6 +374,7 @@ def test_energy_dependent_model():
 
     val = model.evaluate(lon=None, lat=None, energy=energy, time=t_ref + start)
     assert_allclose(val.sum().value, 1.425e-11, rtol=1e-3)
+    assert val.shape == (5, 3)
 
     # test evaluation on a dataset
     from gammapy.datasets import MapDataset
