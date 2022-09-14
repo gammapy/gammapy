@@ -2,6 +2,8 @@
 Simulating and fitting a time varying source
 ============================================
 
+Simulate and fit a time decaying light curve of a source using the CTA 1DC response.
+
 Prerequisites
 -------------
 

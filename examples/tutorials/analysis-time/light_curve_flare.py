@@ -2,6 +2,8 @@
 Light curves for flares
 =======================
 
+Compute the light curve of a PKS 2155-304 flare on 5 minutes time intervals.
+
 Prerequisites
 -------------
 

@@ -2,6 +2,8 @@
 Light curves
 ============
 
+Compute per-observation and nightly fluxes of four Crab nebula observations.
+
 Prerequisites
 -------------
 

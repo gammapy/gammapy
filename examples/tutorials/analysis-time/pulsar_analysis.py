@@ -2,26 +2,22 @@
 Pulsar analysis
 ===============
 
+Produce a phasogram, phased-resolved maps and spectra in pulsar analysis.
+
+Introduction
+------------
+
+
+
+This notebook shows how to do a pulsar analysis with Gammapy. It’s based
+on a Vela simulation file from the CTA DC1, which already contains a
+column of phases. We will produce a phasogram, a phase-resolved map and
+a phase-resolved spectrum of the Vela pulsar using the class
+PhaseBackgroundEstimator.
+
+The phasing in itself is not done here, and it requires specific
+packages like Tempo2 or `PINT <https://nanograv-pint.readthedocs.io>`__.
 """
-
-
-######################################################################
-# Introduction
-# ------------
-# 
-
-
-######################################################################
-# This notebook shows how to do a pulsar analysis with Gammapy. It’s based
-# on a Vela simulation file from the CTA DC1, which already contains a
-# column of phases. We will produce a phasogram, a phase-resolved map and
-# a phase-resolved spectrum of the Vela pulsar using the class
-# PhaseBackgroundEstimator.
-# 
-# The phasing in itself is not done here, and it requires specific
-# packages like Tempo2 or `PINT <https://nanograv-pint.readthedocs.io>`__.
-# 
-
 
 ######################################################################
 # Opening the data
