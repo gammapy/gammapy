@@ -2,6 +2,8 @@
 Ring background map
 ===================
 
+Create an excess (gamma-ray events) and a significance map extracting a ring background.
+
 Context
 -------
 

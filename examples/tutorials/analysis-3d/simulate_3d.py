@@ -74,8 +74,6 @@ from gammapy.modeling import Fit
 from gammapy.data import Observation, observatory_locations
 from gammapy.datasets import MapDataset
 
-!gammapy info --no-envvar --no-dependencies --no-system
-
 
 ######################################################################
 # Simulation

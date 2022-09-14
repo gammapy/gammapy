@@ -2,6 +2,8 @@
 Source detection and significance maps
 ======================================
 
+Build a list of significant excesses in a Fermi-LAT map.
+
 Context
 -------
 

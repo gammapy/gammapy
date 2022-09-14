@@ -2,6 +2,8 @@
 2D map fitting
 ==============
 
+Source modelling and fitting in stacked observations using the high level interface.
+
 Prerequisites
 -------------
 
