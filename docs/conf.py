@@ -249,11 +249,12 @@ sphinx_gallery_conf = {
             "../examples/tutorials/analysis-3d",
             "../examples/tutorials/analysis-time",
             "../examples/tutorials/api",
+            "../examples/tutorials/scripts",
         ]
     ),
     'filename_pattern': '\.py',
     "within_subsection_order": FileNameSortKey,
-    "download_all_examples": False,
+    "download_all_examples": True,
     "capture_repr": (),
     "min_reported_time": 10000,
     "show_memory": False,

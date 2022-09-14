@@ -18,19 +18,3 @@ Gammapy is a Python package built on `Numpy`_ and `Astropy`_, so to use it
 effectively, you have to learn the basics. Many good free resources are
 available, e.g. `A Whirlwind tour of Python`_, the `Python data science
 handbook`_ and the `Astropy Hands-On Tutorial`_.
-
-
-.. _tutorials_scripts:
-
-Scripts
-=======
-
-For interactive use, IPython and Jupyter are great, and most Gammapy examples use those.
-However, for long-running, non-interactive tasks like data reduction or survey maps,
-you might prefer a Python script.
-
-The following example shows how to run Gammapy within a Python script.
-
-.. toctree::
-
-   survey_map

@@ -1,3 +1,6 @@
+"""Binned simulation of a 2 Gauss source model.
+"""
+
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
