@@ -2,6 +2,8 @@
 Dark matter spatial and spectral models
 =======================================
 
+Convenience methods for dark matter high level analyses.
+
 Introduction
 ------------
 

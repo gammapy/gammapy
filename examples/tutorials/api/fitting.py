@@ -2,6 +2,8 @@
 Fitting
 =======
 
+Learn how the model, dataset and fit Gammapy classes work together in a detailed modeling and fitting use-case.
+
 Prerequisites
 -------------
 

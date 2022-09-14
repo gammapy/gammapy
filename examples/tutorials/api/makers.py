@@ -2,6 +2,8 @@
 Makers - Data reduction
 =======================
 
+Data reduction: from observations to binned datasets
+
 Introduction
 ------------
 

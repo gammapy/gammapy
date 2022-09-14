@@ -2,6 +2,8 @@
 Modelling
 =========
 
+Multiple datasets and models interaction in Gammapy.
+
 Aim
 ---
 

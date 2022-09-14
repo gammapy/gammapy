@@ -2,6 +2,11 @@
 Source catalogs
 ===============
 
+Access and explore thew most common gamma-ray source catalogs.
+
+Introduction
+------------
+
 ``~gammapy.catalog`` provides convenient access to common gamma-ray
 source catalogs. This module is mostly independent from the rest of
 Gammapy. Typically you use it to compare new analyses against catalog

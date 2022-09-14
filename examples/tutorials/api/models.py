@@ -1,7 +1,6 @@
 """
 Models
 ======
-
 This is an introduction and overview on how to work with models in
 Gammapy.
 

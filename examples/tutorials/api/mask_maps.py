@@ -2,6 +2,8 @@
 Mask maps
 =========
 
+Create and apply masks maps.
+
 Prerequisites
 -------------
 

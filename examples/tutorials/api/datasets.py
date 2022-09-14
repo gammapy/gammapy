@@ -2,6 +2,8 @@
 Datasets - Reduced data, IRFs, models
 =====================================
 
+Learn how to work with datasets
+
 Introduction
 ------------
 
