@@ -366,10 +366,12 @@ class SkyModel(ModelBase):
             Predicted flux map
         """
         energy = geom.axes["energy_true"].edges
-        value = self.spectral_model.integral(
-            energy[:-1],
-            energy[1:],
-        ).reshape((-1, 1, 1))
+        value = np.ones(geom.data_shape)
+        if self.temporal_model:
+            integral = self.temporal_model.integral(
+                gti.time_start, gti.time_stop, energy=energy
+            )
+            value = value * np.sum(integral)
 
         if self.spatial_model:
             value = (
@@ -379,11 +381,10 @@ class SkyModel(ModelBase):
                 ).quantity
             )
 
-        if self.temporal_model:
-            integral = self.temporal_model.integral(
-                gti.time_start, gti.time_stop, energy=energy
-            )
-            value = value * np.sum(integral)
+        value = value * self.spectral_model.integral(
+            energy[:-1],
+            energy[1:],
+        ).reshape((-1, 1, 1))
 
         return Map.from_geom(geom=geom, data=value.value, unit=value.unit)
 
