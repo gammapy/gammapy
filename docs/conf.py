@@ -231,7 +231,7 @@ suppress_warnings = ["ref.citation"]
 sphinx_gallery_conf = {
     "examples_dirs": [
         "../examples/models",
-        "tutorials",
+        "../examples/tutorials",
     ],  # path to your example scripts
     "gallery_dirs": [
         "user-guide/model-gallery",
