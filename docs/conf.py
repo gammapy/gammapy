@@ -252,8 +252,11 @@ sphinx_gallery_conf = {
             "../examples/tutorials/scripts",
         ]
     ),
+    "backreferences_dir": "gen_modules/backreferences",
+    "doc_module": ("gammapy",),
+    "exclude_implicit_doc": {},
     "filename_pattern": "\.py",
-    "reset_modules": ('matplotlib',),
+    "reset_modules": ("matplotlib",),
     "within_subsection_order": FileNameSortKey,
     "download_all_examples": True,
     "capture_repr": (),

@@ -14,11 +14,5 @@ the functionality that is available in the sub-packages to support
 standard analysis use case in a convenient way.
 
 
-Using gammapy.analysis
-----------------------
-
-Gammapy tutorial notebooks that show examples using the high level interface:
-
-.. nbgallery::
-
-   ../tutorials/starting/analysis_1.ipynb
+.. minigallery:: gammapy.analysis.Analysis
+    :add-heading:

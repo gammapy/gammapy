@@ -160,13 +160,5 @@ the `~gammapy.data.EventList.write` method:
 
 
 
-Using gammapy.data
-------------------
-
-Gammapy tutorial notebooks that show examples using ``gammapy.data``:
-
-.. nbgallery::
-
-   ../tutorials/data/cta.ipynb
-   ../tutorials/data/hess.ipynb
-   ../tutorials/data/fermi_lat.ipynb
+.. minigallery:: gammapy.data.DataStore
+    :add-heading:

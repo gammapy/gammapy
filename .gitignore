@@ -81,6 +81,7 @@ temp
 gammapy/gammapy.cfg
 
 docs/_generated
+docs/gen_modules
 docs/api
 .coverage
 

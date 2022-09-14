@@ -189,19 +189,8 @@ This is how to compute flux points:
 
 
 
-Using gammapy.estimators
-------------------------
-
-Gammapy tutorial notebooks that show examples using ``gammapy.estimators``:
-
-.. nbgallery::
-
-   ../tutorials/analysis/time/light_curve.ipynb
-   ../tutorials/analysis/time/light_curve_flare.ipynb
-   ../tutorials/analysis/2D/detect.ipynb
-   ../tutorials/analysis/1D/spectral_analysis.ipynb
-   ../tutorials/analysis/3D/analysis_3d.ipynb
-   ../tutorials/analysis/3D/flux_profiles.ipynb
+.. minigallery:: gammapy.estimators.FluxPointsEstimator gammapy.estimators.LightCurveEstimator
+    :add-heading:
 
 
 .. _`likelihood SED type page`: https://gamma-astro-data-formats.readthedocs.io/en/latest/spectra/binned_likelihoods/index.html

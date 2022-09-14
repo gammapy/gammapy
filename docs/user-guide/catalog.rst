@@ -25,14 +25,6 @@ The main functionality provided is methods that map catalog information to
 are to compare your results against previous results in the catalogs (e.g. overplot a spectral model),
 or to create initial source models for certain energy bands and sky regions.
 
-Using gammapy.catalog
----------------------
-
-Gammapy tutorial notebooks that show examples using ``gammapy.catalog``:
-
-.. nbgallery::
-
-   ../tutorials/api/catalog.ipynb
-   ../tutorials/starting/overview.ipynb
-   ../tutorials/analysis/1D/sed_fitting.ipynb
+.. minigallery:: gammapy.catalog.SourceCatalog3FHL
+    :add-heading:
 
