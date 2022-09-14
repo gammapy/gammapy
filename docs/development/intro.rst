@@ -171,7 +171,7 @@ To *activate* your development version (branch) of Gammapy in your environment:
 
 .. code-block:: bash
 
-    pip install -e .
+    python -m pip install -e .
 
 This build is necessary to compile the few Cython code (``*.pyx``). If you skip
 this step, some imports depending on Cython code will fail. If you want to remove the generated
