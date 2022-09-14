@@ -1,8 +1,7 @@
 import numpy as np
 from scipy.interpolate import CubicSpline
 import matplotlib.pyplot as plt
-from gammapy.maps import MapAxis
-from gammapy.maps.utils import edges_from_lo_hi
+
 
 __all__ = [
     "plot_contour_line",
@@ -126,9 +125,13 @@ def plot_spectrum_datasets_off_regions(
 
 def plot_contour_line(ax, x, y, **kwargs):
     """Plot smooth curve from contour points"""
+    xf = x
+    yf = y
+
     # close contour
-    xf = np.append(x, x[0])
-    yf = np.append(y, y[0])
+    if not (x[0] == x[-1] and y[0] == y[-1]):
+        xf = np.append(x, x[0])
+        yf = np.append(y, y[0])
 
     # curve parametrization must be strictly increasing
     # so we use the cumulative distance of each point from the first one
@@ -166,6 +169,9 @@ def plot_theta_squared_table(table):
     table : `~astropy.table.Table`
         Required columns: theta2_min, theta2_max, counts, counts_off and alpha
     """
+    from gammapy.maps import MapAxis
+    from gammapy.maps.utils import edges_from_lo_hi
+
     theta2_edges = edges_from_lo_hi(
         table["theta2_min"].quantity, table["theta2_max"].quantity
     )

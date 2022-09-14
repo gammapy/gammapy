@@ -154,33 +154,21 @@ class TemporalModel(ModelBase):
             else ontime.unit
         )
 
-        t_stop = ontime.to_value(time_unit)
-
         # TODO: the separate time unit handling is unfortunate, but the quantity support for np.arange and np.interp
         #  is still incomplete, refactor once we change to recent numpy and astropy versions
         t_step = t_delta.to_value(time_unit)
-        if hasattr(self, "table"):
-            t = np.arange(0, t_stop, t_step)
+        t_step = (t_step * u.s).to("d")
 
-            pdf = self.evaluate(t)
+        t = Time(np.arange(t_min.mjd, t_max.mjd, t_step.value), format="mjd")
 
-            sampler = InverseCDFSampler(pdf=pdf, random_state=random_state)
-            time_pix = sampler.sample(n_events)[0]
-            time = np.interp(time_pix, np.arange(len(t)), t) * time_unit
+        pdf = self(t)
 
-        else:
-            t_step = (t_step * u.s).to("d")
-
-            t = Time(np.arange(t_min.mjd, t_max.mjd, t_step.value), format="mjd")
-
-            pdf = self(t)
-
-            sampler = InverseCDFSampler(pdf=pdf, random_state=random_state)
-            time_pix = sampler.sample(n_events)[0]
-            time = (
+        sampler = InverseCDFSampler(pdf=pdf, random_state=random_state)
+        time_pix = sampler.sample(n_events)[0]
+        time = (
                 np.interp(time_pix, np.arange(len(t)), t.value - min(t.value))
                 * t_step.unit
-            ).to(time_unit)
+                ).to(time_unit)
 
         return t_min + time
 
@@ -221,7 +209,10 @@ class TemporalModel(ModelBase):
 
 
 class ConstantTemporalModel(TemporalModel):
-    """Constant temporal model."""
+    """Constant temporal model.
+
+    For more information see :ref:`constant-temporal-model`.
+    """
 
     tag = ["ConstantTemporalModel", "const"]
 
@@ -307,8 +298,7 @@ class LinearTemporalModel(TemporalModel):
 class ExpDecayTemporalModel(TemporalModel):
     r"""Temporal model with an exponential decay.
 
-    .. math::
-            F(t) = exp(-(t - t_ref)/t0)
+    For more information see :ref:`expdecay-temporal-model`.
 
     Parameters
     ----------
@@ -356,8 +346,7 @@ class ExpDecayTemporalModel(TemporalModel):
 class GaussianTemporalModel(TemporalModel):
     r"""A Gaussian temporal profile
 
-    .. math::
-            F(t) = exp( -0.5 * \frac{ (t - t_{ref})^2 } { \sigma^2 })
+    For more information see :ref:`gaussian-temporal-model`.
 
     Parameters
     ----------
@@ -409,10 +398,7 @@ class GaussianTemporalModel(TemporalModel):
 class GeneralizedGaussianTemporalModel(TemporalModel):
     r"""A generalized Gaussian temporal profile
 
-    .. math::
-            F(t) = exp( - 0.5 * (\frac{ \lvert t - t_{ref} \rvert}{t_rise}) ^ {1 / \eta})   for  t < t_ref
-
-            F(t) = exp( - 0.5 * (\frac{ \lvert t - t_{ref} \rvert}{t_decay}) ^ {1 / \eta})   for  t > t_ref
+    For more information see :ref:`generalized-gaussian-temporal-model`.
 
     Parameters
     ----------
@@ -465,6 +451,8 @@ class LightCurveTemplateTemporalModel(TemporalModel):
     using degree ``k=1`` to get linear interpolation.
     This class also contains an ``integral`` method, making the computation of
     mean fluxes for a given time interval a one-liner.
+
+    For more information see :ref:`LightCurve-temporal-model`.
 
     Parameters
     ----------
