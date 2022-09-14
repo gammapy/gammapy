@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
+from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.astro.darkmatter import DarkMatterAnnihilationSpectralModel, PrimaryFlux
 from gammapy.modeling.models import SkyModel, Models
@@ -39,9 +40,13 @@ def test_DMAnnihilation():
     )
     models = Models([sky_model])
     models.write("tmp.yaml", overwrite=True)
+    new_models = Models.read("tmp.yaml")
 
     assert_quantity_allclose(integral_flux.value, 6.19575457e-14, rtol=1e-3)
     assert_quantity_allclose(differential_flux.value, 2.97506768e-16, rtol=1e-3)
 
     assert model.scale.is_norm
+    assert new_models[0].spectral_model.channel == model.channel
+    assert new_models[0].spectral_model.z == model.z
+    assert_allclose(new_models[0].spectral_model.jfactor.value, model.jfactor.value)
 
