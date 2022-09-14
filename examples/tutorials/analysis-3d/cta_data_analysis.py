@@ -2,6 +2,8 @@
 Basic image exploration and fitting
 ===================================
 
+Detect sources, produce a sky image and a spectrum using the reflected regions background estimation.
+
 Introduction
 ------------
 
@@ -25,9 +27,6 @@ first data challenge in August 2017.
 
 # %matplotlib inline
 import matplotlib.pyplot as plt
-
-!gammapy info --no-envvar --no-system
-
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord

@@ -2,6 +2,8 @@
 Multi instrument joint 3D and 1D analysis
 =========================================
 
+Joint 3D analysis using 3D Fermi datasets, a H.E.S.S. reduced spectrum and HAWC flux points.
+
 Prerequisites
 -------------
 
@@ -57,6 +59,7 @@ from gammapy.modeling.models import Models, create_crab_spectral_model
 from gammapy.datasets import Datasets, FluxPointsDataset, SpectrumDatasetOnOff
 from gammapy.estimators import FluxPoints, FluxPointsEstimator
 from gammapy.maps import MapAxis
+from gammapy.utils.scripts import make_path
 from pathlib import Path
 
 
@@ -71,7 +74,10 @@ from pathlib import Path
 # Fermi-LAT-3FHL_datasets.yaml:
 # 
 
-!cat $GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_datasets.yaml
+path = make_path("$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_datasets.yaml")
+
+with path.open("r") as f:
+    print(f.read())
 
 
 ######################################################################
@@ -84,7 +90,10 @@ from pathlib import Path
 # Fermi-LAT-3FHL_models.yaml:
 # 
 
-!cat $GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_models.yaml
+path = make_path("$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_models.yaml")
+
+with path.open("r") as f:
+    print(f.read())
 
 
 ######################################################################
@@ -178,8 +187,6 @@ path.mkdir(exist_ok=True)
 filename = path / "crab_10GeV_100TeV_datasets.yaml"
 
 datasets.write(filename, overwrite=True)
-
-!cat crab-3datasets/crab_10GeV_100TeV_datasets.yaml
 
 datasets = Datasets.read(filename)
 datasets.models = models

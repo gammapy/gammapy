@@ -2,6 +2,8 @@
 Event sampling
 ==============
 
+Check out the process of sampling events from a given sky model and obtain a simulated events list
+
 Prerequisites
 -------------
 
@@ -9,76 +11,68 @@ To understand how to generate a Model and a MapDataset, and how to fit
 the data, please refer to the ``~gammapy.modeling.models.SkyModel`` and
 `simulate_3d <simulate_3d.ipynb>`__.
 
+Context
+-------
+
+This tutorial describes how to sample events from an observation of a
+one (or more) gamma-ray source(s). The main aim of the tutorial will be
+to set the minimal configuration needed to deal with the Gammapy
+event-sampler and how to obtain an output photon event list.
+
+The core of the event sampling lies into the Gammapy
+``~gammapy.datasets.MapDatasetEventSampler`` class, which is based on
+the inverse cumulative distribution function `(Inverse
+CDF) <https://en.wikipedia.org/wiki/Cumulative_distribution_function#Inverse_distribution_function_(quantile_function)>`__.
+
+The ``~gammapy.datasets.MapDatasetEventSampler`` takes in input a
+``~gammapy.datasets.Dataset`` object containing the spectral, spatial
+and temporal properties of the source(s) of interest.
+
+The ``~gammapy.datasets.MapDatasetEventSampler`` class evaluates the map
+of predicted counts (``npred``) per bin of the given Sky model, and the
+``npred`` map is then used to sample the events. In particular, the
+output of the event-sampler will be a set of events having information
+about their true coordinates, true energies and times of arrival.
+
+To these events, IRF corrections (i.e. PSF and energy dispersion) can
+also further applied in order to obtain reconstructed coordinates and
+energies of the sampled events.
+
+At the end of this process, you will obtain an event-list in FITS
+format.
+
+
+Objective
+---------
+
+Describe the process of sampling events from a given Sky model and
+obtaining an output event-list.
+
+
+Proposed approach
+-----------------
+
+In this section, we will show how to define an observation and to create
+a Dataset object. These are both necessary for the event sampling. Then,
+we will define the Sky model from which we sample events.
+
+In this tutorial, we propose examples for sampling events of:
+
+-  `a point-like source <#sampling-the-source-and-background-events>`__
+-  `a time variable point-like
+   source <#time-variable-source-using-a-lightcurve>`__
+-  `an extended source using a template
+   map <#extended-source-using-a-template>`__
+-  `a set of observations <#simulate-mutiple-event-lists>`__
+
+We will work with the following functions and classes:
+
+-  ``~gammapy.data.Observations``
+-  ``~gammapy.datasets.Dataset``
+-  ``~gammapy.modeling.models.SkyModel``
+-  ``~gammapy.datasets.MapDatasetEventSampler``
+-  ``~gammapy.data.EventList``
 """
-
-
-######################################################################
-# Context
-# -------
-# 
-# This tutorial describes how to sample events from an observation of a
-# one (or more) gamma-ray source(s). The main aim of the tutorial will be
-# to set the minimal configuration needed to deal with the Gammapy
-# event-sampler and how to obtain an output photon event list.
-# 
-# The core of the event sampling lies into the Gammapy
-# ``~gammapy.datasets.MapDatasetEventSampler`` class, which is based on
-# the inverse cumulative distribution function `(Inverse
-# CDF) <https://en.wikipedia.org/wiki/Cumulative_distribution_function#Inverse_distribution_function_(quantile_function)>`__.
-# 
-# The ``~gammapy.datasets.MapDatasetEventSampler`` takes in input a
-# ``~gammapy.datasets.Dataset`` object containing the spectral, spatial
-# and temporal properties of the source(s) of interest.
-# 
-# The ``~gammapy.datasets.MapDatasetEventSampler`` class evaluates the map
-# of predicted counts (``npred``) per bin of the given Sky model, and the
-# ``npred`` map is then used to sample the events. In particular, the
-# output of the event-sampler will be a set of events having information
-# about their true coordinates, true energies and times of arrival.
-# 
-# To these events, IRF corrections (i.e. PSF and energy dispersion) can
-# also further applied in order to obtain reconstructed coordinates and
-# energies of the sampled events.
-# 
-# At the end of this process, you will obtain an event-list in FITS
-# format.
-# 
-
-
-######################################################################
-# Objective
-# ---------
-# 
-# Describe the process of sampling events from a given Sky model and
-# obtaining an output event-list.
-# 
-
-
-######################################################################
-# Proposed approach
-# -----------------
-# 
-# In this section, we will show how to define an observation and to create
-# a Dataset object. These are both necessary for the event sampling. Then,
-# we will define the Sky model from which we sample events.
-# 
-# In this tutorial, we propose examples for sampling events of:
-# 
-# -  `a point-like source <#sampling-the-source-and-background-events>`__
-# -  `a time variable point-like
-#    source <#time-variable-source-using-a-lightcurve>`__
-# -  `an extended source using a template
-#    map <#extended-source-using-a-template>`__
-# -  `a set of observations <#simulate-mutiple-event-lists>`__
-# 
-# We will work with the following functions and classes:
-# 
-# -  ``~gammapy.data.Observations``
-# -  ``~gammapy.datasets.Dataset``
-# -  ``~gammapy.modeling.models.SkyModel``
-# -  ``~gammapy.datasets.MapDatasetEventSampler``
-# -  ``~gammapy.data.EventList``
-# 
 
 
 ######################################################################

@@ -2,7 +2,7 @@
 Flux Profile Estimation
 =======================
 
-This tutorial shows how to estimate flux profiles.
+Learn how to estimate flux profiles on a Fermi-LAT dataset.
 
 Prerequisites
 -------------

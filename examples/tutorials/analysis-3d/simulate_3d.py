@@ -2,6 +2,8 @@
 3D map simulation
 =================
 
+Simulate a 3D observation of a source with the CTA 1DC response and fit it with the assumed source model.
+
 Prerequisites
 -------------
 

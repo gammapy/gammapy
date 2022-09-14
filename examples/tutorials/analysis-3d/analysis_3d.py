@@ -2,6 +2,8 @@
 3D detailed analysis
 ====================
 
+Perform detailed 3D stacked and joint analysis.
+
 This tutorial does a 3D map based analsis on the galactic center, using
 simulated observations from the CTA-1DC. We will use the high level
 interface for the data reduction, and then do a detailed modelling. This
