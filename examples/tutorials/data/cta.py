@@ -2,6 +2,8 @@
 CTA with Gammapy
 ================
 
+Access and inspect CTA data and instrument response functions (IRFs) using Gammapy.
+
 Introduction
 ------------
 

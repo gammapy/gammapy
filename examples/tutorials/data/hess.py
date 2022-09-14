@@ -1,6 +1,7 @@
 """
 H.E.S.S. with Gammapy
 =====================
+Explore H.E.S.S. event lists and IRFs.
 
 `H.E.S.S. <https://www.mpi-hd.mpg.de/hfm/HESS/>`__ is an array of
 gamma-ray telescopes located in Namibia. Gammapy is regularly used and

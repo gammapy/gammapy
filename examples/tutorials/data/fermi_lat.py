@@ -2,6 +2,8 @@
 Fermi-LAT with Gammapy
 ======================
 
+Data inspection and preliminary analysis with Fermi-LAT data.
+
 Introduction
 ------------
 
