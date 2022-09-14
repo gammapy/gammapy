@@ -24,18 +24,17 @@ Setup
 
 import numpy as np
 import astropy.units as u
-from astropy.time import Time
+import matplotlib.pyplot as plt
 from regions import CircleSkyRegion
 from astropy.coordinates import SkyCoord
 from gammapy.datasets import (
     MapDataset,
-    SpectrumDataset,
     SpectrumDatasetOnOff,
     Datasets,
     FluxPointsDataset,
 )
-from gammapy.data import DataStore, GTI
-from gammapy.maps import WcsGeom, RegionGeom, MapAxes, MapAxis, Map
+from gammapy.data import GTI
+from gammapy.maps import WcsGeom, MapAxis
 from gammapy.modeling.models import (
     SkyModel,
     PowerLawSpectralModel,
@@ -174,11 +173,12 @@ dataset_cta.psf
 ######################################################################
 # And use any method on the ``PSFMap`` object:
 # 
+radius = dataset_cta.psf.containment_radius(energy_true=1 * u.TeV, fraction=0.95)
+print(radius)
 
-dataset_cta.psf.plot_containment_radius_vs_energy()
-
+ax = plt.subplot()
 edisp_kernel = dataset_cta.edisp.get_edisp_kernel()
-edisp_kernel.plot_matrix()
+edisp_kernel.plot_matrix(ax=ax)
 
 
 ######################################################################

@@ -1,4 +1,8 @@
-"""Make a survey counts map.
+"""
+Survey Map Script
+=================
+
+Make a survey counts map using a script.
 
 We create an all-sky map in AIT projection
 for the HESS DL3 DR1 dataset.
@@ -20,7 +24,7 @@ def main():
         log.info(f"Processing obs_id: {obs.obs_id}")
         m.fill_events(obs.events)
 
-    m.write("survey_map.fits.gz")
+    m.write("survey_map.fits.gz", overwrite=True)
 
 
 if __name__ == "__main__":
