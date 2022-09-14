@@ -252,7 +252,8 @@ sphinx_gallery_conf = {
             "../examples/tutorials/scripts",
         ]
     ),
-    'filename_pattern': '\.py',
+    "filename_pattern": "\.py",
+    "reset_modules": ('matplotlib',),
     "within_subsection_order": FileNameSortKey,
     "download_all_examples": True,
     "capture_repr": (),

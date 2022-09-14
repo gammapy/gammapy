@@ -16,10 +16,8 @@ help:
 	@echo ''
 	@echo '     test               Run pytest'
 	@echo '     test-cov           Run pytest with coverage'
-	@echo '     test-nb            Test tutorial notebooks'
 	@echo ''
 	@echo '     docs-sphinx        Build docs (Sphinx only)'
-	@echo '     docs-all           Build docs (including Jupyter notebooks)'
 	@echo '     docs-show          Open local HTML docs in browser'
 	@echo ''
 	@echo '     trailing-spaces    Remove trailing spaces at the end of lines in *.py files'
@@ -88,21 +86,12 @@ test:
 test-cov:
 	python -m pytest -v gammapy --cov=gammapy --cov-report=html
 
-test-nb:
-	python -m gammapy.utils.notebooks_test
-
 clean-nb:
 	python -m gammapy jupyter --src=docs --r black
 	python -m gammapy jupyter --src=docs --r strip
 
 docs-sphinx:
 	cd docs && python -m sphinx . _build/html -b html -j auto
-
-docs-all:
-	python -m gammapy jupyter tar --out docs/_downloads/notebooks-$(release).tar
-	python -m gammapy.utils.notebooks_process --src="$(src)"
-	cd docs && python -m sphinx . _build/html -b html -j auto
-	python -m gammapy.utils.notebooks_links --src="$(src)"
 
 docs-show:
 	python docs/serve.py
