@@ -33,26 +33,26 @@ release 1 and perform a simple model fitting of the Crab nebula.**
 Proposed approach
 -----------------
 
-This notebook uses the high level ``Analysis`` class to orchestrate data
-reduction. In its current state, ``Analysis`` supports the standard
+This notebook uses the high level `~gammapy.analysis.Analysis` class to orchestrate data
+reduction. In its current state, `~gammapy.analysis.Analysis` supports the standard
 analysis cases of joint or stacked 3D and 1D analyses. It is
-instantiated with an ``AnalysisConfig`` object that gives access to
+instantiated with an `~gammapy.analysis.AnalysisConfig` object that gives access to
 analysis parameters either directly or via a YAML config file.
 
 To see what is happening under-the-hood and to get an idea of the
 internal API, a second notebook performs the same analysis without using
-the ``Analysis`` class.
+the `~gammapy.analysis.Analysis` class.
 
 In summary, we have to:
 
--  Create an ``~gammapy.analysis.AnalysisConfig`` object and edit it to
+-  Create an `~gammapy.analysis.AnalysisConfig` object and edit it to
    define the analysis configuration:
 
    -  Define what observations to use
    -  Define the geometry of the dataset (data and IRFs)
    -  Define the model we want to fit on the dataset.
 
--  Instantiate a ``~gammapy.analysis.Analysis`` from this configuration
+-  Instantiate a `~gammapy.analysis.Analysis` from this configuration
    and run the different analysis steps
 
    -  Observation selection
@@ -213,7 +213,7 @@ config.excess_map.correlation_radius = 0.1 * u.deg
 # Using YAML configuration files
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 
-# One can export/import the ``AnalysisConfig`` to/from a YAML file.
+# One can export/import the `~gammapy.modeling.AnalysisConfig` to/from a YAML file.
 # 
 
 config.write("config.yaml", overwrite=True)
@@ -226,7 +226,7 @@ print(config)
 # Running the analysis
 # --------------------
 # 
-# We first create an ``~gammapy.analysis.Analysis`` object from our
+# We first create an `~gammapy.analysis.Analysis` object from our
 # configuration.
 # 
 
@@ -238,14 +238,14 @@ analysis = Analysis(config)
 # ~~~~~~~~~~~~~~~~~~~~~
 # 
 # We can directly select and load the observations from disk using
-# ``~gammapy.analysis.Analysis.get_observations()``:
+# `~gammapy.analysis.Analysis.get_observations()`:
 # 
 
 analysis.get_observations()
 
 
 ######################################################################
-# The observations are now available on the ``Analysis`` object. The
+# The observations are now available on the `~gammapy.modeling.Analysis` object. The
 # selection corresponds to the following ids:
 # 
 
@@ -265,7 +265,7 @@ analysis.observations.ids
 # 
 # Now we proceed to the data reduction. In the config file we have chosen
 # a WCS map geometry, energy axis and decided to stack the maps. We can
-# run the reduction using ``.get_datasets()``:
+# run the reduction using `~gammapy.modeling.Analysis.get_datasets()`:
 # 
 
 # %%time
@@ -317,7 +317,7 @@ path.mkdir(exist_ok=True)
 
 ######################################################################
 # And then write the maps and IRFs to disk by calling the dedicated
-# ``write()`` method:
+# `~gammapy.datasets.Datasets.write` method:
 # 
 
 filename = path / "crab-stacked-dataset.fits.gz"
@@ -430,6 +430,6 @@ analysis.excess_map["sqrt_ts"].plot(
 # `analysis_2 <analysis_2.ipynb>`__
 # 
 # You can see how to perform a 1D spectral analysis of the same data in
-# `spectral analysis <../analysis/1D/spectral_analysis.ipynb>`__
+# `spectral analysis <../analysis-1d/spectral_analysis.ipynb>`__
 # 
 

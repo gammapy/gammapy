@@ -29,32 +29,40 @@ Proposed approach
 -----------------
 
 Here, we have to interact with the data archive (with the
-``~gammapy.data.DataStore``) to retrieve a list of selected observations
-(``~gammapy.data.Observations``). Then, we define the geometry of the
-``~gammapy.datasets.MapDataset`` object we want to produce and the maker
+`~gammapy.data.DataStore`) to retrieve a list of selected observations
+(`~gammapy.data.Observations`). Then, we define the geometry of the
+`~gammapy.datasets.MapDataset` object we want to produce and the maker
 object that reduce an observation to a dataset.
 
 We can then proceed with data reduction with a loop over all selected
 observations to produce datasets in the relevant geometry and stack them
 together (i.e. sum them all).
 
-In practice, we have to: - Create a ``~gammapy.data.DataStore`` poiting
-to the relevant data - Apply an observation selection to produce a list
-of observations, a ``~gammapy.data.Observations`` object. - Define a
-geometry of the Map we want to produce, with a sky projection and an
-energy range. - Create a ``~gammapy.maps.MapAxis`` for the energy -
-Create a ``~gammapy.maps.WcsGeom`` for the geometry - Create the
-necessary makers : - the map dataset maker :
-``~gammapy.makers.MapDatasetMaker`` - the background normalization
-maker, here a ``~gammapy.makers.FoVBackgroundMaker`` - and usually the
-safe range maker : ``~gammapy.makers.SafeMaskMaker`` - Perform the data
-reduction loop. And for every observation: - Apply the makers
-sequentially to produce the current ``~gammapy.datasets.MapDataset`` -
-Stack it on the target one. - Define the
-``~gammapy.modeling.models.SkyModel`` to apply to the dataset. - Create
-a ``~gammapy.modeling.Fit`` object and run it to fit the model
-parameters - Apply a ``~gammapy.estimators.FluxPointsEstimator`` to
-compute flux points for the spectral part of the fit.
+In practice, we have to:
+
+- Create a `~gammapy.data.DataStore` poiting to the relevant data
+- Apply an observation selection to produce a list of observations,
+  a `~gammapy.data.Observations` object.
+- Define a geometry of the Map we want to produce, with a sky projection
+  and an energy range.
+- Create a `~gammapy.maps.MapAxis` for the energy
+- Create a `~gammapy.maps.WcsGeom` for the geometry
+- Create the necessary makers:
+
+  - the map dataset maker `~gammapy.makers.MapDatasetMaker`
+  - the background normalization maker, here a `~gammapy.makers.FoVBackgroundMaker`
+  - and usually the safe range maker : `~gammapy.makers.SafeMaskMaker`
+
+- Perform the data reduction loop. And for every observation:
+
+  - Apply the makers sequentially to produce the current `~gammapy.datasets.MapDataset`
+  - Stack it on the target one.
+
+- Define the`~gammapy.modeling.models.SkyModel` to apply to the dataset.
+- Create a `~gammapy.modeling.Fit` object and run it to fit the model
+  parameters
+- Apply a `~gammapy.estimators.FluxPointsEstimator` to compute flux points for
+  the spectral part of the fit.
 
 Setup
 -----
@@ -89,7 +97,7 @@ from gammapy.estimators import FluxPointsEstimator
 # Defining the datastore and selecting observations
 # -------------------------------------------------
 # 
-# We first use the ``~gammapy.data.DataStore`` object to access the
+# We first use the `~gammapy.data.DataStore` object to access the
 # observations we want to analyse. Here the H.E.S.S. DL3 DR1.
 # 
 
@@ -101,8 +109,8 @@ data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
 # observations. Here we use a cone search which we define with a python
 # dict.
 # 
-# We then filter the ``ObservationTable`` with
-# ``~gammapy.data.ObservationTable.select_observations()``.
+# We then filter the `ObservationTable` with 
+# `~gammapy.data.ObservationTable.select_observations`.
 # 
 
 selection = dict(
@@ -117,7 +125,7 @@ selected_obs_table = data_store.obs_table.select_observations(selection)
 
 ######################################################################
 # We can now retrieve the relevant observations by passing their
-# ``obs_id`` to the\ ``~gammapy.data.DataStore.get_observations()``
+# ``obs_id`` to the `~gammapy.data.DataStore.get_observations`
 # method.
 # 
 
@@ -166,8 +174,8 @@ stacked = MapDataset.create(
 # Create the maker classes to be used
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 
-# The ``~gammapy.makers.MapDatasetMaker`` object is initialized as well as
-# the ``~gammapy.makers.SafeMaskMaker`` that carries here a maximum offset
+# The `~gammapy.makers.MapDatasetMaker` object is initialized as well as
+# the `~gammapy.makers.SafeMaskMaker` that carries here a maximum offset
 # selection.
 # 
 
@@ -236,7 +244,7 @@ path.mkdir(exist_ok=True)
 
 ######################################################################
 # And then write the maps and IRFs to disk by calling the dedicated
-# ``~gammapy.datasets.MapDataset.write()`` method:
+# `~gammapy.datasets.MapDataset.write` method:
 # 
 
 filename = path / "crab-stacked-dataset.fits.gz"
@@ -247,8 +255,8 @@ stacked.write(filename, overwrite=True)
 # Define the model
 # ----------------
 # 
-# We first define the model, a ``SkyModel``, as the combination of a point
-# source ``SpatialModel`` with a powerlaw ``SpectralModel``:
+# We first define the model, a `~gammapy.modeling.models.SkyModel`, as the combination of a point
+# source `~gammapy.modeling.models.SpatialModel` with a powerlaw `~gammapy.modeling.models.SpectralModel`:
 # 
 
 target_position = SkyCoord(ra=83.63308, dec=22.01450, unit="deg")
@@ -280,7 +288,7 @@ stacked.models = [sky_model, bkg_model]
 # Fit the model
 # -------------
 # 
-# The ``~gammapy.modeling.Fit`` class is orchestrating the fit, connecting
+# The `~gammapy.modeling.Fit` class is orchestrating the fit, connecting
 # the ``stats`` method of the dataset to the minimizer. By default, it
 # uses ``iminuit``.
 # 
@@ -293,7 +301,7 @@ result = fit.run([stacked])
 
 
 ######################################################################
-# The ``FitResult`` contains information about the optimization and
+# The `~gammapy.modeling.FitResult` contains information about the optimization and
 # parameter error calculation.
 # 
 
@@ -302,7 +310,7 @@ print(result)
 
 ######################################################################
 # The fitted parameters are visible from the
-# ``~astropy.modeling.models.Models`` object.
+# `~astropy.modeling.models.Models` object.
 # 
 
 stacked.models.to_parameters_table()
@@ -314,7 +322,7 @@ stacked.models.to_parameters_table()
 # 
 # For any fit it is useful to inspect the residual images. We have a few
 # options on the dataset object to handle this. First we can use
-# ``.plot_residuals_spatial()`` to plot a residual image, summed over all
+# `~gammapy.datasets.MapDataset.plot_residuals_spatial` to plot a residual image, summed over all
 # energies:
 # 
 
@@ -357,7 +365,7 @@ residuals.smooth("0.08 deg").plot_interactive(
 # Making a butterfly plot
 # ~~~~~~~~~~~~~~~~~~~~~~~
 # 
-# The ``SpectralModel`` component can be used to produce a, so-called,
+# The `~gammapy.modeling.models.SpectralModel` component can be used to produce a, so-called,
 # butterfly plot showing the envelope of the model taking into account
 # parameter uncertainties:
 # 
@@ -379,7 +387,7 @@ ax = spec.plot_error(energy_bounds=energy_bounds, energy_power=2)
 # ~~~~~~~~~~~~~~~~~~~~~
 # 
 # We can now compute some flux points using the
-# ``~gammapy.estimators.FluxPointsEstimator``.
+# `~gammapy.estimators.FluxPointsEstimator`.
 # 
 # Besides the list of datasets to use, we must provide it the energy
 # intervals on which to compute flux points as well as the model component

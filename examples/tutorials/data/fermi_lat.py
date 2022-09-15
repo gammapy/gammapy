@@ -39,8 +39,8 @@ e.g. `iminuit <http://iminuit.readthedocs.io/>`__ or
 To use Fermi-LAT data with Gammapy, you first have to use the Fermi ST
 to prepare an event list (using ``gtselect`` and ``gtmktime``, exposure
 cube (using ``gtexpcube2`` and PSF (using ``gtpsf``). You can then use
-``~gammapy.data.EventList``, ``~gammapy.maps`` and the
-``~gammapy.irf.PSFMap`` to read the Fermi-LAT maps and PSF, i.e. support
+`~gammapy.data.EventList`, `~gammapy.maps` and the
+`~gammapy.irf.PSFMap` to read the Fermi-LAT maps and PSF, i.e. support
 for these high level analysis products from the Fermi ST is built in. To
 do a 3D map analysis, you can use Fit for Fermi-LAT data in the same way
 that it’s use for IACT data. This is illustrated in this notebook. A 1D
@@ -161,7 +161,7 @@ counts.sum_over_axes().smooth(2).plot(stretch="sqrt", vmax=30);
 # 
 # The Fermi-LAT dataset contains the energy-dependent exposure for the
 # whole sky as a HEALPix map computed with ``gtexpcube2``. This format is
-# supported by ``~gammapy.maps`` directly.
+# supported by `~gammapy.maps.Map` directly.
 # 
 # Interpolating the exposure cube from the Fermi ST to get an exposure
 # cube matching the spatial geometry and energy axis defined above with
@@ -269,7 +269,7 @@ plt.ylabel("Flux (cm-2 s-1 MeV-1 sr-1)");
 # ----------------------------
 # 
 # To load the isotropic diffuse model with Gammapy, use the
-# ``~gammapy.modeling.models.TemplateSpectralModel``. We are using
+# `~gammapy.modeling.models.TemplateSpectralModel`. We are using
 # ``'fill_value': 'extrapolate'`` to extrapolate the model above 500 GeV:
 # 
 
@@ -298,7 +298,7 @@ diffuse_iso.spectral_model.plot(
 # this case for the Galactic center position. Note that generally for
 # Fermi-LAT, the PSF only varies little within a given regions of the sky,
 # especially at high energies like what we have here. We use the
-# ``~gammapy.irf.PSFMap`` class to load the PSF and use some of it’s
+# `~gammapy.irf.PSFMap` class to load the PSF and use some of it’s
 # methods to get some information about it.
 # 
 
