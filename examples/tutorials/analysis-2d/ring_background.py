@@ -28,10 +28,11 @@ significance map to determine how solid the signal is.
 Proposed approach
 -----------------
 
-The analysis workflow is roughly - Compute the sky maps keeping each
-observation separately using the ``Analysis`` class - Estimate the
-background using the ``RingBackgroundMaker`` - Compute the correlated
-excess and significance maps using the ``CorrelatedExcessMapEstimator``
+The analysis workflow is roughly:
+
+- Compute the sky maps keeping each observation separately using the `Analysis` class
+- Estimate the background using the `RingBackgroundMaker`
+- Compute the correlated excess and significance maps using the `ExcessMapEstimator`
 
 The normalised background thus obtained can be used for general
 modelling and fitting.
@@ -150,7 +151,7 @@ analysis.get_datasets()
 # 
 # Since the ring background is extracted from real off events, we need to
 # use the wstat statistics in this case. For this, we will use the
-# ``MapDatasetOnOFF`` and the ``RingBackgroundMaker`` classes.
+# `MapDatasetOnOFF` and the `RingBackgroundMaker` classes.
 # 
 
 
@@ -159,7 +160,7 @@ analysis.get_datasets()
 # ~~~~~~~~~~~~~~~~~~~~~
 # 
 # First, we need to create an exclusion mask on the known sources. In this
-# case, we need to mask only ``MSH 15-52`` but this depends on the sources
+# case, we need to mask only `MSH 15-52` but this depends on the sources
 # present in our field of view.
 # 
 
@@ -205,10 +206,10 @@ for dataset in analysis.datasets:
 
 
 ######################################################################
-# This ``stacked_on_off`` has ``on`` and ``off`` counts and acceptance
-# maps which we will use in all further analysis. The ``acceptance`` and
-# ``acceptance_off`` maps are the system acceptance of gamma-ray like
-# events in the ``on`` and ``off`` regions respectively.
+# This `stacked_on_off` has `on` and `off` counts and acceptance
+# maps which we will use in all further analysis. The `acceptance` and
+# `acceptance_off` maps are the system acceptance of gamma-ray like
+# events in the `on` and `off` regions respectively.
 # 
 
 print(stacked_on_off)

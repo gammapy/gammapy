@@ -20,7 +20,7 @@ Proposed approach
 -----------------
 
 This notebook show how to do source detection with Gammapy using the
-methods available in ``~gammapy.estimators``. We will use images from a
+methods available in `~gammapy.estimators`. We will use images from a
 Fermi-LAT 3FHL high-energy Galactic center dataset to do this:
 
 -  perform adaptive smoothing on counts image
@@ -34,10 +34,10 @@ real source catalogs use more elaborate procedures.
 
 We will work with the following functions and classes:
 
--  ``~gammapy.maps.WcsNDMap``
--  ``~gammapy.estimators.ASmoothMapEstimator``
--  ``~gammapy.estimators.TSMapEstimator``
--  ``~gammapy.estimators.utils.find_peaks``
+-  `~gammapy.maps.WcsNDMap`
+-  `~gammapy.estimators.ASmoothMapEstimator`
+-  `~gammapy.estimators.TSMapEstimator`
+-  `~gammapy.estimators.utils.find_peaks`
 
 """
 
@@ -114,7 +114,7 @@ dataset = MapDataset(
 # `Ebeling et
 # al. (2006) <https://ui.adsabs.harvard.edu/abs/2006MNRAS.368...65E/abstract>`__.
 # 
-# In the following example the ``threshold`` argument gives the minimum
+# In the following example the `ASmoothMapEstimator.threshold` argument gives the minimum
 # significance expected, values below are clipped.
 # 
 
@@ -183,10 +183,10 @@ maps["niter"].plot(add_cbar=True);
 # Source candidates
 # -----------------
 # 
-# Let’s run a peak finder on the ``sqrt_ts`` image to get a list of
-# point-sources candidates (positions and peak ``sqrt_ts`` values). The
-# ``find_peaks`` function performs a local maximum search in a sliding
-# window, the argument ``min_distance`` is the minimum pixel distance
+# Let’s run a peak finder on the `sqrt_ts` image to get a list of
+# point-sources candidates (positions and peak `sqrt_ts` values). The
+# `~gammapy.estimators.utils.find_peaks` function performs a local maximum search in a sliding
+# window, the argument `min_distance` is the minimum pixel distance
 # between peaks (smallest possible value and default is 1 pixel).
 # 
 

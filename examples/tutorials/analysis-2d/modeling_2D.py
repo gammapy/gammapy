@@ -29,7 +29,7 @@ Proposed approach
 -----------------
 
 The first step here, as in most analysis with DL3 data, is to create
-reduced datasets. For this, we will use the ``Analysis`` class to create
+reduced datasets. For this, we will use the `Analysis` class to create
 a single set of stacked maps with a single bin in energy (thus, an
 *image* which behaves as a *cube*). This, we will then model with a
 spatial model of our choice, while keeping the spectral model fixed to
@@ -120,8 +120,8 @@ print(config)
 
 
 ######################################################################
-# We now use the config file and create a single ``MapDataset`` containing
-# ``counts``, ``background``, ``exposure``, ``psf`` and ``edisp`` maps.
+# We now use the config file and create a single `MapDataset` containing
+# `counts`, `background`, `exposure`, `psf` and `edisp` maps.
 # 
 
 # %%time
