@@ -69,7 +69,7 @@ log.setLevel(logging.ERROR)
 # -------------------
 # 
 # A Gammapy analysis usually starts by creating a
-# ``~gammapy.data.DataStore`` and selecting observations.
+# `~gammapy.data.DataStore` and selecting observations.
 # 
 # This is shown in detail in the other notebook, here we just pick three
 # observations near the galactic center.
@@ -154,8 +154,8 @@ dataset_image.excess.smooth(3).plot(vmax=2);
 # Source Detection
 # ----------------
 # 
-# Use the class ``~gammapy.estimators.TSMapEstimator`` and function
-# ``gammapy.estimators.utils.find_peaks`` to detect sources on the images.
+# Use the class `~gammapy.estimators.TSMapEstimator` and function
+# `gammapy.estimators.utils.find_peaks` to detect sources on the images.
 # We search for 0.1 deg sigma gaussian sources in the dataset.
 # 
 
@@ -311,7 +311,7 @@ flux_points.to_table(sed_type="dnde", formatted=True)
 # 
 # Let’s plot the spectral model and points. You could do it directly, but
 # for convenience we bundle the model and the flux points in a
-# ``FluxPointDataset``:
+# `FluxPointDataset`:
 # 
 
 flux_points_dataset = FluxPointsDataset(data=flux_points, models=model)

@@ -35,16 +35,16 @@ Proposed approach
 -----------------
 
 Here we can’t use the regular observation objects that are connected to
-a ``DataStore``. Instead we will create a fake
-``~gammapy.data.Observation`` that contain some pointing information and
-the CTA 1DC IRFs (that are loaded with ``~gammapy.irf.load_cta_irfs``).
+a `DataStore`. Instead we will create a fake
+`~gammapy.data.Observation` that contain some pointing information and
+the CTA 1DC IRFs (that are loaded with `~gammapy.irf.load_cta_irfs`).
 
-Then we will create a ``~gammapy.datasets.MapDataset`` geometry and
-create it with the ``~gammapy.makers.MapDatasetMaker``.
+Then we will create a `~gammapy.datasets.MapDataset` geometry and
+create it with the `~gammapy.makers.MapDatasetMaker`.
 
 Then we will be able to define a model consisting of a
-``~gammapy.modeling.models.PowerLawSpectralModel`` and a
-``~gammapy.modeling.models.GaussianSpatialModel``. We will assign it to
+`~gammapy.modeling.models.PowerLawSpectralModel` and a
+`~gammapy.modeling.models.GaussianSpatialModel`. We will assign it to
 the dataset and fake the count data.
 
 """
@@ -84,7 +84,7 @@ from gammapy.datasets import MapDataset
 ######################################################################
 # We will simulate using the CTA-1DC IRFs shipped with gammapy. Note that
 # for dedictaed CTA simulations, you can simply use
-# ```Observation.from_caldb()`` <>`__ without having to externally load
+# ``Observation.from_caldb()` <>`__ without having to externally load
 # the IRFs
 # 
 
@@ -140,9 +140,9 @@ print(models)
 ######################################################################
 # Now, comes the main part of dataset simulation. We create an in-memory
 # observation and an empty dataset. We then predict the number of counts
-# for the given model, and Poission fluctuate it using ``fake()`` to make
+# for the given model, and Poission fluctuate it using `fake()` to make
 # a simulated counts maps. Keep in mind that it is important to specify
-# the ``selection`` of the maps that you want to produce
+# the `selection` of the maps that you want to produce
 # 
 
 # Create an in-memory observation

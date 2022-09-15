@@ -29,9 +29,9 @@ a set of predefined spatially connected regions. For radial flux
 profiles the shape of the regions are annuli with a common center, for
 linear profiles it’s typically a rectangular shape.
 
-We will work on a pre-computed ``MapDataset`` of Fermi-LAT data, use
-``Region`` to define the structure of the bins of the flux profile and
-run the actually profile extraction using the ``FluxProfileEstimator``
+We will work on a pre-computed `~gammapy.datasets.MapDataset` of Fermi-LAT data, use
+`~regions.SkyRegion` to define the structure of the bins of the flux profile and
+run the actually profile extraction using the `~gammapy.estimators.FluxProfileEstimator`
 
 """
 
@@ -92,10 +92,10 @@ print(dataset.counts)
 # 
 # We start by defining a list of spatially connected regions along the
 # galactic longitude axis. For this there is a helper function
-# ``make_orthogonal_rectangle_sky_regions``. The individual region bins
+# `~gammapy.utils.regions.make_orthogonal_rectangle_sky_regions`. The individual region bins
 # for the profile have a height of 3 deg and in total there are 31 bins.
 # The starts from lon = 10 deg tand goes to lon = 350 deg. In addition we
-# have to specify the ``wcs`` to take into account possible projections
+# have to specify the `wcs` to take into account possible projections
 # effects on the region definition:
 # 
 
@@ -109,7 +109,7 @@ regions = make_orthogonal_rectangle_sky_regions(
 
 
 ######################################################################
-# We can use the ``RegionGeom`` object to illustrate the regions on top of
+# We can use the `~gammapy.maps.RegionGeom` object to illustrate the regions on top of
 # the counts image:
 # 
 
@@ -119,7 +119,7 @@ geom.plot_region(ax=ax, color="w");
 
 
 ######################################################################
-# Next we create the ``FluxProfileEstimator``. For the estimation of the
+# Next we create the `~gammapy.estimators.FluxProfileEstimator`. For the estimation of the
 # flux profile we assume a spectral model with a power-law shape and an
 # index of 2.3
 # 
@@ -153,14 +153,14 @@ print(profile)
 
 
 ######################################################################
-# We can see the flux profile is represented by a ``FluxPoints`` object
-# with a ``projected-distance`` axis, which defines the main axis the flux
-# profile is measured along. The ``lon`` and ``lat`` axes can be ignored.
+# We can see the flux profile is represented by a `~gammapy.estimators.FluxPoints` object
+# with a `projected-distance` axis, which defines the main axis the flux
+# profile is measured along. The `lon` and `lat` axes can be ignored.
 # 
 # Plotting Results
 # ~~~~~~~~~~~~~~~~
 # 
-# Let us directly plot the result using ``FluxPoints.plot()``:
+# Let us directly plot the result using `~gammapy.estimators.FluxPoints.plot`:
 # 
 
 ax = profile.plot(sed_type="dnde")
@@ -181,7 +181,7 @@ ax.set_yscale("linear")
 
 ######################################################################
 # We can also plot any other quantity of interest, that is defined on the
-# ``FluxPoints`` result object. E.g. the predicted total counts,
+# `~gammapy.estimators.FluxPoints` result object. E.g. the predicted total counts,
 # background counts and excess counts:
 # 
 
@@ -197,7 +197,7 @@ plt.ylabel("Counts ")
 # Serialisation and I/O
 # ~~~~~~~~~~~~~~~~~~~~~
 # 
-# The profile can be serialised using ``FluxPoints.write()``, given a
+# The profile can be serialised using `~gammapy.estimators.FluxPoints.write`, given a
 # specific format:
 # 
 
@@ -217,7 +217,7 @@ ax.set_yscale("linear")
 
 
 ######################################################################
-# The profile can be serialised to a ``~astropy.table.Table`` object
+# The profile can be serialised to a `~astropy.table.Table` object
 # using:
 # 
 

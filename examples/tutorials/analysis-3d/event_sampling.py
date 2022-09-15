@@ -8,7 +8,7 @@ Prerequisites
 -------------
 
 To understand how to generate a Model and a MapDataset, and how to fit
-the data, please refer to the ``~gammapy.modeling.models.SkyModel`` and
+the data, please refer to the `~gammapy.modeling.models.SkyModel` and
 `simulate_3d <simulate_3d.ipynb>`__.
 
 Context
@@ -20,17 +20,17 @@ to set the minimal configuration needed to deal with the Gammapy
 event-sampler and how to obtain an output photon event list.
 
 The core of the event sampling lies into the Gammapy
-``~gammapy.datasets.MapDatasetEventSampler`` class, which is based on
+`~gammapy.datasets.MapDatasetEventSampler` class, which is based on
 the inverse cumulative distribution function `(Inverse
 CDF) <https://en.wikipedia.org/wiki/Cumulative_distribution_function#Inverse_distribution_function_(quantile_function)>`__.
 
-The ``~gammapy.datasets.MapDatasetEventSampler`` takes in input a
-``~gammapy.datasets.Dataset`` object containing the spectral, spatial
+The `~gammapy.datasets.MapDatasetEventSampler` takes in input a
+`~gammapy.datasets.Dataset` object containing the spectral, spatial
 and temporal properties of the source(s) of interest.
 
-The ``~gammapy.datasets.MapDatasetEventSampler`` class evaluates the map
-of predicted counts (``npred``) per bin of the given Sky model, and the
-``npred`` map is then used to sample the events. In particular, the
+The `~gammapy.datasets.MapDatasetEventSampler` class evaluates the map
+of predicted counts (`npred`) per bin of the given Sky model, and the
+`npred` map is then used to sample the events. In particular, the
 output of the event-sampler will be a set of events having information
 about their true coordinates, true energies and times of arrival.
 
@@ -67,11 +67,11 @@ In this tutorial, we propose examples for sampling events of:
 
 We will work with the following functions and classes:
 
--  ``~gammapy.data.Observations``
--  ``~gammapy.datasets.Dataset``
--  ``~gammapy.modeling.models.SkyModel``
--  ``~gammapy.datasets.MapDatasetEventSampler``
--  ``~gammapy.data.EventList``
+-  `~gammapy.data.Observations`
+-  `~gammapy.datasets.Dataset`
+-  `~gammapy.modeling.models.SkyModel`
+-  `~gammapy.datasets.MapDatasetEventSampler`
+-  `~gammapy.data.EventList`
 """
 
 
@@ -118,7 +118,7 @@ from gammapy.modeling.models import (
 # Define an Observation
 # ~~~~~~~~~~~~~~~~~~~~~
 # 
-# You can firstly create a ``~gammapy.data.Observations`` object that
+# You can firstly create a `~gammapy.data.Observations` object that
 # contains the pointing position, the GTIs and the IRF you want to
 # consider.
 # 
@@ -155,8 +155,8 @@ observation = Observation.create(
 # Define the MapDataset
 # ~~~~~~~~~~~~~~~~~~~~~
 # 
-# Let’s generate the ``~gammapy.datasets.Dataset`` object (for more info
-# on ``~gammapy.datasets.Dataset`` objects, please visit the
+# Let’s generate the `~gammapy.datasets.Dataset` object (for more info
+# on `~gammapy.datasets.Dataset` objects, please visit the
 # `link <../../starting/analysis_2.ipynb#Preparing-reduced-datasets-geometry>`__):
 # we define the energy axes (true and reconstruncted), the migration axis
 # and the geometry of the observation.
@@ -197,8 +197,8 @@ geom = WcsGeom.create(
 ######################################################################
 # In the following, the dataset is created by selecting the effective
 # area, background model, the PSF and the Edisp from the IRF. The dataset
-# thus produced can be saved into a FITS file just using the ``write()``
-# function. We put it into the ``evt_sampling`` sub-folder:
+# thus produced can be saved into a FITS file just using the `write()`
+# function. We put it into the `evt_sampling` sub-folder:
 # 
 
 # %%time
@@ -250,8 +250,8 @@ models.write(file_model, overwrite=True)
 # Sampling the source and background events
 # -----------------------------------------
 # 
-# Now, we can finally add the ``~gammapy.modeling.models.SkyModel`` we
-# want to event-sample to the ``~gammapy.datasets.Dataset`` container:
+# Now, we can finally add the `~gammapy.modeling.models.SkyModel` we
+# want to event-sample to the `~gammapy.datasets.Dataset` container:
 # 
 
 dataset.models = models
@@ -260,11 +260,11 @@ print(dataset.models)
 
 ######################################################################
 # The next step shows how to sample the events with the
-# ``~gammapy.datasets.MapDatasetEventSampler`` class. The class requests a
-# random number seed generator (that we set with ``random_state=0``), the
-# ``~gammapy.datasets.Dataset`` and the ``gammapy.data.Observations``
+# `~gammapy.datasets.MapDatasetEventSampler` class. The class requests a
+# random number seed generator (that we set with `random_state=0`), the
+# `~gammapy.datasets.Dataset` and the `gammapy.data.Observations`
 # object. From the latter, the
-# ``~gammapy.datasets.MapDatasetEventSampler`` class takes all the meta
+# `~gammapy.datasets.MapDatasetEventSampler` class takes all the meta
 # data information.
 # 
 
@@ -276,7 +276,7 @@ events = sampler.run(dataset, observation)
 ######################################################################
 # The output of the event-sampler is an event list with coordinates,
 # energies (true and reconstructed) and time of arrivals of the source and
-# background events. ``events`` is a ``~gammapy.data.EventList`` object
+# background events. `events` is a `~gammapy.data.EventList` object
 # (more details
 # `here <https://docs.gammapy.org/dev/tutorials/data/cta.html#Events>`__).
 # Source and background events are flagged by the MC_ID identifier (where
@@ -295,8 +295,8 @@ events.select_offset([0, 1] * u.deg).peek()
 
 
 ######################################################################
-# By default, the ``~gammapy.datasets.MapDatasetEventSampler`` fills the
-# metadata keyword ``OBJECT`` in the event list using the first model of
+# By default, the `~gammapy.datasets.MapDatasetEventSampler` fills the
+# metadata keyword `OBJECT` in the event list using the first model of
 # the SkyModel object. You can change it with the following commands:
 # 
 
@@ -305,7 +305,7 @@ events.table.meta["OBJECT"] = dataset.models[0].name
 
 ######################################################################
 # Let’s write the event list and its GTI extension to a FITS file. We make
-# use of ``fits`` library in ``astropy``:
+# use of `fits` library in `astropy`:
 # 
 
 primary_hdu = fits.PrimaryHDU()
@@ -336,10 +336,10 @@ counts.sum_over_axes().plot(add_cbar=True);
 # tutorial of source fitting is
 # `here <../../starting/analysis_2.ipynb#Fit-the-model>`__ and
 # `here <simulate_3d.ipynb>`__. We make use of the same
-# ``~gammapy.modeling.models.Models`` adopted for the simulation. Hence,
-# we firstly read the ``~gammapy.datasets.Dataset`` and the model file,
-# and we fill the ``~gammapy.datasets.Dataset`` with the sampled events.
-# We set the ``counts`` map to the ``dataset``:
+# `~gammapy.modeling.models.Models` adopted for the simulation. Hence,
+# we firstly read the `~gammapy.datasets.Dataset` and the model file,
+# and we fill the `~gammapy.datasets.Dataset` with the sampled events.
+# We set the `counts` map to the `dataset`:
 # 
 
 models_fit = Models.read("./event_sampling/point-pwl.yaml")
@@ -384,7 +384,7 @@ expdecay_model = ExpDecayTemporalModel(t_ref=t_ref.mjd * u.d, t0=t0)
 
 ######################################################################
 # where we defined the time axis starting from the reference time
-# ``t_ref`` up to the requested exposure (``livetime``). The bin size of
+# `t_ref` up to the requested exposure (`livetime`). The bin size of
 # the time-axis is quite arbitrary but, as above for spatial and energy
 # binnings, the finer the better.
 # 
@@ -435,8 +435,8 @@ print(f"Background events: {(events.table['MC_ID'] == 0).sum()}")
 
 ######################################################################
 # We can now inspect the properties of the simulated source. To do that,
-# we adopt the ``select_region`` function that extracts only the events
-# into a given ``SkyRegion`` of a ``~gammapy.data.EventList`` object:
+# we adopt the `select_region` function that extracts only the events
+# into a given `SkyRegion` of a `~gammapy.data.EventList` object:
 # 
 
 src_position = SkyCoord(0.0, 0.5, frame="galactic", unit="deg")
@@ -448,7 +448,7 @@ src_events = events.select_region(on_region)
 
 
 ######################################################################
-# Then we can have a quick look to the data with the ``peek`` function:
+# Then we can have a quick look to the data with the `peek` function:
 # 
 
 src_events.peek()
@@ -542,7 +542,7 @@ for idx, tstart in enumerate(tstarts):
 
 ######################################################################
 # You can now load the event list and the corresponding IRFs with
-# ``Datastore.from_events_files()`` :
+# `DataStore.from_events_files` :
 # 
 
 path = Path("./event_sampling/")
@@ -554,7 +554,7 @@ data_store.obs_table
 ######################################################################
 # Then you can create the obervations from the Datastore and make your own
 # analysis following the instructions in the
-# ```analysis_2`` <analysis_2.ipynb>`__ tutorial.
+# `analysis_2 <analysis_2.ipynb>`__ tutorial.
 # 
 
 observations = data_store.get_observations()
@@ -564,16 +564,15 @@ observations[0].peek()
 ######################################################################
 # .. raw:: html
 # 
-#    <!-- ## Read simulated event lists with Datastore.from_events_lists
+#    <!-- ## Read simulated event lists with `DataStore.from_events_lists`
 #    Here we show how to simulate a set of event lists of the same Sky model, but with different GTIs. We make use of the settings we applied previously.
 #    Let's define the GTI firstly, choosing a time start and a duration of the observation: -->
 # 
 
 
 ######################################################################
-# For completeness, ``data_store`` is a ``~gammapy.data.Datastore``
-# object. You can find more information about it
-# `here <https://docs.gammapy.org/dev/tutorials/data/cta.html#Datastore>`__.
+# For completeness, `data_store` is a `~gammapy.data.Datastore`
+# object.
 # 
 # Exercises
 # ---------

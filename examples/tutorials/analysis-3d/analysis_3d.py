@@ -89,7 +89,7 @@ print(config)
 # Configuration for stacked and joint analysis
 # --------------------------------------------
 # 
-# This is done just by specfiying the flag on ``config.datasets.stack``.
+# This is done just by specfiying the flag on `config.datasets.stack`.
 # Since the internal machinery will work differently for the two cases, we
 # will write it as two config files and save it to disc in YAML format for
 # future reference.
@@ -170,11 +170,11 @@ excess.smooth("0.06 deg").plot(stretch="sqrt", add_cbar=True);
 
 ######################################################################
 # To perform the fit on a restricted energy range, we can create a
-# specific *mask*. On the dataset, the ``mask_fit`` is a ``Map`` sharing
-# the same geometry as the ``MapDataset`` and containing boolean data.
+# specific *mask*. On the dataset, the `mask_fit` is a `Map` sharing
+# the same geometry as the `MapDataset` and containing boolean data.
 # 
 # To create a mask to limit the fit within a restricted energy range, one
-# can rely on the ``~gammapy.maps.Geom.energy_mask()`` method.
+# can rely on the `~gammapy.maps.Geom.energy_mask()` method.
 # 
 # For more details on masks and the techniques to create them in gammapy,
 # please refer `to the dedicated tutorial <../../api/mask_maps.ipynb>`__
@@ -213,7 +213,7 @@ result = fit.run(datasets=[dataset_stacked])
 
 
 ######################################################################
-# Fit quality assessment and model residuals for a ``MapDataset``
+# Fit quality assessment and model residuals for a `MapDataset`
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 
 
@@ -234,9 +234,9 @@ models_stacked.to_parameters_table()
 
 ######################################################################
 # A quick way to inspect the model residuals is using the function
-# ``~MapDataset.plot_residuals_spatial()``. This function computes and
-# plots a residual image (by default, the smoothing radius is ``0.1 deg``
-# and ``method=diff``, which corresponds to a simple ``data - model``
+# `~MapDataset.plot_residuals_spatial()`. This function computes and
+# plots a residual image (by default, the smoothing radius is `0.1 deg`
+# and `method=diff`, which corresponds to a simple `data - model`
 # plot):
 # 
 
@@ -246,7 +246,7 @@ dataset_stacked.plot_residuals_spatial(
 
 
 ######################################################################
-# The more general function ``~MapDataset.plot_residuals()`` can also
+# The more general function `~MapDataset.plot_residuals()` can also
 # extract and display spectral residuals in a region:
 # 
 
@@ -261,7 +261,7 @@ dataset_stacked.plot_residuals(
 ######################################################################
 # This way of accessing residuals is quick and handy, but comes with
 # limitations. For example: - In case a fitting energy range was defined
-# using a ``MapDataset.mask_fit``, it won’t be taken into account.
+# using a `MapDataset.mask_fit`, it won’t be taken into account.
 # Residuals will be summed up over the whole reconstructed energy range -
 # In order to make a proper statistic treatment, instead of simple
 # residuals a proper residuals significance map should be computed
@@ -350,7 +350,7 @@ print(analysis_joint.datasets[0])
 ######################################################################
 # After the data reduction stage, it is nice to get a quick summary info
 # on the datasets. Here, we look at the statistics in the center of Map,
-# by passing an appropriate ``region``. To get info on the entire spatial
+# by passing an appropriate `region`. To get info on the entire spatial
 # map, omit the region argument.
 # 
 
@@ -376,7 +376,7 @@ result_joint = fit_joint.run(datasets=analysis_joint.datasets)
 
 
 ######################################################################
-# Fit quality assessment and model residuals for a joint ``Datasets``
+# Fit quality assessment and model residuals for a joint `Datasets`
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 
 
@@ -399,7 +399,7 @@ print(models_joint)
 # Since the joint dataset is made of multiple datasets, we can either: -
 # Look at the residuals for each dataset separately. In this case, we can
 # directly refer to the section
-# ``Fit quality and model residuals for a MapDataset`` in this notebook -
+# `Fit quality and model residuals for a MapDataset` in this notebook -
 # Look at a stacked residual map.
 # 
 
@@ -425,7 +425,7 @@ stacked.plot_residuals_spatial(vmin=-1, vmax=1);
 
 ######################################################################
 # Then, we can access the stacked model residuals as previously shown in
-# the section ``Fit quality and model residuals for a MapDataset`` in this
+# the section `Fit quality and model residuals for a MapDataset` in this
 # notebook.
 # 
 

@@ -104,7 +104,7 @@ with path.open("r") as f:
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 
 # For now we let’s use the datasets serialization only to read the 3D
-# ``MapDataset`` associated to Fermi-LAT 3FHL data and models.
+# `MapDataset` associated to Fermi-LAT 3FHL data and models.
 # 
 
 path = Path("$GAMMAPY_DATA/fermi-3fhl-crab")
@@ -155,7 +155,7 @@ print(datasets)
 # 
 # The HAWC flux point are taken from https://arxiv.org/pdf/1905.12518.pdf
 # Then these flux points are read from a pre-made FITS file and passed to
-# a ``FluxPointsDataset`` together with the source spectral model.
+# a `FluxPointsDataset` together with the source spectral model.
 # 
 
 # read flux points from https://arxiv.org/pdf/1905.12518.pdf
@@ -175,9 +175,9 @@ print(datasets)
 # Datasets serialization
 # ----------------------
 # 
-# The ``datasets`` object contains each dataset previously defined. It can
+# The `datasets` object contains each dataset previously defined. It can
 # be saved on disk as datasets.yaml, models.yaml, and several data files
-# specific to each dataset. Then the ``datasets`` can be rebuild later
+# specific to each dataset. Then the `datasets` can be rebuild later
 # from these files.
 # 
 
@@ -198,7 +198,7 @@ print(datasets)
 # Joint analysis
 # --------------
 # 
-# We run the fit on the ``Datasets`` object that include a dataset for
+# We run the fit on the `Datasets` object that include a dataset for
 # each instrument
 # 
 
