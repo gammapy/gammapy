@@ -2,6 +2,7 @@
     "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
     "@type": "SoftwareSourceCode",
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
     "author": [
         {
@@ -680,6 +681,9 @@
 >>>>>>> 50c3264a0 (Review of CITATION.cff for the LTS release (#4077))
     "codeRepository": "https://github.com/gammapy/gammapy",
     "datePublished": "2014-08-25",
+=======
+    "codeRepository": "https://github.com/gammapy/gammapy",
+>>>>>>> 6a45129a0 (Update the codemeta)
     "description": "Gammapy analyzes gamma-ray data and creates sky images, spectra and lightcurves, from event lists and instrument response information; it can also determine the position, morphology and spectra of gamma-ray sources. It is used to analyze data from H.E.S.S., Fermi-LAT, HAWC, and the Cherenkov Telescope Array (CTA).",
     "identifier": "https://doi.org/10.5281/zenodo.4701488",
     "keywords": [
@@ -693,7 +697,14 @@
     "url": "https://gammapy.org/",
     "softwareVersion": "1.0",
 <<<<<<< HEAD
+<<<<<<< HEAD
     "Organization": "The Gammapy project",
+=======
+    "Organization": "The Gammapy project",
+    "dateCreated": "2014-01-01",
+    "datePublished": "2014-08-25",
+    "dateModified": "2022-11-09",
+>>>>>>> 6a45129a0 (Update the codemeta)
     "applicationCategory": "Astronomy",
     "applicationSubCategory": "Very-high energy gamma rays",
     "programmingLanguage": "Python 3",
@@ -703,27 +714,37 @@
         "@type": "Audience",
         "audienceType": "Science/Research"
     },
+<<<<<<< HEAD
 =======
 >>>>>>> 50c3264a0 (Review of CITATION.cff for the LTS release (#4077))
+=======
+>>>>>>> 6a45129a0 (Update the codemeta)
     "maintainer": {
-        "@id": "https://orcid.org/0000-0002-6606-2816",
+        "@id": "https://orcid.org/0000-0003-4568-7005",
         "@type": "Person",
         "affiliation": {
             "@type": "Organization",
+<<<<<<< HEAD
 <<<<<<< HEAD
             "name": "Center for Astrophysics | Harvard & Smithsonian, CfA, 60 Garden St., 02138 Cambridge MA, USA"
 =======
             "name": "Universit\u00e9 Paris-Saclay, Universit\u00e9 Paris Cit\u00e9, CEA, CNRS, AIM de Paris-Saclay, 91191 Gif sur Yvette"
 >>>>>>> 50c3264a0 (Review of CITATION.cff for the LTS release (#4077))
+=======
+            "name": "Center for Astrophysics | Harvard & Smithsonian, CfA, 60 Garden St., 02138 Cambridge MA, USA"
+>>>>>>> 6a45129a0 (Update the codemeta)
         },
-        "familyName": "Acero",
-        "givenName": "Fabio"
+        "familyName": "Donath",
+        "givenName": "Axel"
     },
     "developmentStatus": "active",
     "issueTracker": "https://github.com/gammapy/gammapy/issues",
     "funding": "None, apart for the permanent staff",
+<<<<<<< HEAD
     "dateCreated": "2014-01-01",
     "dateModified": "2022-11-09",
+=======
+>>>>>>> 6a45129a0 (Update the codemeta)
     "email": "GAMMAPY-COORDINATION-L@IN2P3.FR",
     "readme": "If you use this software, please cite it using the metadata from this file.",
     "runtimePlatform": [
@@ -1053,4 +1074,8 @@
             "affiliation": "Stanford Linear Accelerator Center, USA"
         }
     ]
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 6a45129a0 (Update the codemeta)
