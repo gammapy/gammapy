@@ -5,8 +5,6 @@ abstract: 'Gammapy analyzes gamma-ray data and creates sky images, spectra and l
   from event lists and instrument response information; it can also determine the
   position, morphology and spectra of gamma-ray sources. It is used to analyze data
   from H.E.S.S., Fermi-LAT, HAWC, and the Cherenkov Telescope Array (CTA).'
-# message: This research made use of Gammapy, a community-developed core Python package
-#   for gamma-ray astronomy. https://ui.adsabs.harvard.edu/abs/2017ICRC...35..766D/abstract
 type: software
 message: "If you use this software, please cite it using the metadata from this file."
 url: "https://gammapy.org/"
@@ -29,6 +27,7 @@ keywords:
 - Astronomy
 - "Gamma-rays"
 - "Data analysis"
+languages: "Python 3"
 version: "0.20.1"
 date-released: "2022-06-17"
 repository-code: "https://github.com/gammapy/gammapy"
@@ -36,3 +35,4 @@ license: BSD-3-Clause
 contact:
   - email: GAMMAPY-COORDINATION-L@IN2P3.FR
     name: "Coordination committee of the Gammapy project"
+status: active
