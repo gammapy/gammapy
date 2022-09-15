@@ -1,292 +1,431 @@
-# YAML 1.2
 # Metadata for citation of this software according to the CFF format (https://citation-file-format.github.io/)
 cff-version: 1.2.0
-message: This research made use of Gammapy, a community-developed core Python package
-  for gamma-ray astronomy. https://ui.adsabs.harvard.edu/abs/2017ICRC...35..766D/abstract
 title: 'Gammapy: Python toolbox for gamma-ray astronomy'
 abstract: 'Gammapy analyzes gamma-ray data and creates sky images, spectra and lightcurves,
   from event lists and instrument response information; it can also determine the
   position, morphology and spectra of gamma-ray sources. It is used to analyze data
-  from H.E.S.S., Fermi-LAT, and the Cherenkov Telescope Array (CTA).'
+  from H.E.S.S., Fermi-LAT, HAWC, and the Cherenkov Telescope Array (CTA).'
+type: software
+message: "If you use this software, please cite it using the metadata from this file."
+url: "https://gammapy.org/"
 doi: 10.5281/zenodo.4701488
-authors:
-- given-names: Axel
-  family-names: Donath
-  affiliation: Center for Astrophysics | Harvard & Smithsonian, CfA, 60 Garden St.,
-    02138 Cambridge MA, US
-  orcid: https://orcid.org/0000-0003-4568-7005
-  email: "axel.donath@cfa.havard.edu"
-- given-names: Christoph
-  family-names: Deil
-  affiliation: HeidelbergCement AG, Berliner Straße 6, 69120 Heidelberg, Germany
-- given-names: Régis
-  family-names: Terrier
-  affiliation: Astroparticule and Cosmologie, Université Paris Cité, CNRS/IN2P3, F-75013
-    Paris, France
-  orcid: https://orcid.org/0000-0002-8219-4667
-- given-names: José Enrique
-  family-names: Ruiz
-  affiliation: Instituto de Astrofísica de Andalucía - CSIC, Gta. de la Astronomía,
-    18008 Granada, Spain
-  orcid: https://orcid.org/0000-0003-3274-4445
-- given-names: Johannes
-  family-names: King
-  affiliation: Pamyra
-- given-names: Quentin
-  family-names: Remy
-  affiliation: Max Planck Institut für Kernphysik, MPIK, Saupfercheckweg 1, 69117
-    Heidelberg, Germany
-  orcid: https://orcid.org/0000-0002-8815-6530
-- given-names: Léa
-  family-names: Jouvin
-- given-names: Atreyee
-  family-names: Sinha
-  affiliation: Universidad Complutense de Madrid EMFTEL, UCM, Plaza de la Ciencias,
-    28040 Madrid, Spain
-  orcid: https://orcid.org/0000-0002-9238-7163
-- given-names: Fabio
-  family-names: Pintore
-  affiliation: INAF/IASF, via Ugo La Malfa 153,  90146 Palermo, Italy
-- given-names: Matthew
-  family-names: Wood
-  affiliation: Facebook, 1 Hacker Way, Menlo Park, CA 94025, US
-- given-names: Laura
-  family-names: Olivera
-  affiliation: Max Planck Institut für Kernphysik, MPIK, Saupfercheckweg 1, 69117
-    Heidelberg, Germany
-- given-names: Manuel
-  family-names: Paz Arribas
-- given-names: Luca
-  family-names: Giunti
-  affiliation: Astroparticule and Cosmologie, Université Paris Cité, CNRS/IN2P3, F-75013
-    Paris, France
-- given-names: Bruno
-  family-names: Khélifi
-  affiliation: Astroparticule and Cosmologie, Université Paris Cité, CNRS/IN2P3, F-75013
-    Paris, France
-  orcid: https://orcid.org/0000-0001-6876-5577
-- given-names: Fabio
-  family-names: Acero
-  affiliation: DAp/AIM, CEA-Saclay/CNRS, France
-  orcid: https://orcid.org/0000-0002-6606-2816
-- given-names: Ellis
-  family-names: Owen
-  affiliation: National Tsing Hua University Institute of Astronomy, Hsinchu, Taiwan
-  orcid: https://orcid.org/0000-0003-1052-6439
-- given-names: Maximilian
-  family-names: Nöthe
-  affiliation: TU Dortmund University, Otto-Hahn-Str. 4a 44227 Dortmund, Germany
-  orcid: https://orcid.org/0000-0001-7993-8189
-- given-names: Olga
-  family-names: Vorokh
-- given-names: Brigitta
-  family-names: Sipőcz
-  affiliation: California Institute of Technology, Pasadena CA, US
-  orcid: https://orcid.org/0000-0002-3713-6337
-- given-names: Julien
-  family-names: Lefaucheur
-- given-names: Cosimo
-  family-names: Nigro
-  affiliation: Institut de Fisica d'altes Energies, IFAE, Edifici Cn, Campus UAB,
-    08193 Bellaterra (Barcelona), Spain
-- given-names: Thomas
-  family-names: Robitaille
-  affiliation: Aperio Software, Insight House, Riverside Business Park, Stoney Common
-    Road, Stansted, Essex, CM24 8PL, UK
-- given-names: Jonathan
-  name-particle: D.
-  family-names: Harris
-- given-names: David
-  family-names: Fidalgo
-- given-names: Lars
-  family-names: Mohrmann
-  affiliation: Max Planck Institut für Kernphysik, MPIK, Saupfercheckweg 1, 69117
-    Heidelberg, Germany
-- given-names: Dirk
-  family-names: Lennarz
-  affiliation: Amazon, Atlanta GA, US
-- given-names: Jalel
-  name-particle: Eddine
-  family-names: Hajlaoui
-  affiliation: Astroparticule and Cosmologie, Université Paris Cité, CNRS/IN2P3, F-75013
-    Paris, France
-- given-names: Alexis
-  family-names: de Almeida Coutinho
-  affiliation: Universidade de São Paulo, Brazil
-- given-names: Matthias
-  family-names: Wegenmat
-- given-names: Dimitri
-  family-names: Papadopoulos
-- given-names: Nachiketa
-  family-names: Chakraborty
-- given-names: Michael
-  family-names: Droettboom
-  affiliation: Mozilla, Mountain View, CA
-- given-names: Jason
-  family-names: Watson
-  affiliation: DESY
-- given-names: Arjun
-  family-names: Voruganti
-- given-names: Helen
-  family-names: Poon
-- given-names: Erik
-  family-names: Tollerud
-  affiliation: Space Telescope Science Institute, STScI, 3700 San Martin Drive, 21218
-    Baltimore MD, US
-- given-names: Thomas
-  family-names: Armstrong
-- given-names: Vikas
-  family-names: Joshi
-  affiliation: Friedrich-Alexander-Universität Erlangen-Nürnberg, Erlangen Centre
-    for Astroparticle Physics, Erwin-Rommel-Str. 1 91058 Erlangen, Germany
-- given-names: Erik
-  name-particle: M.
-  family-names: Bray
-- given-names: Arnau
-  family-names: Aguasca Cabot
-  affiliation: Institute of cosmos sciences, ICCUB, Martí i Franquès 1, 08028 Barcelona
-- given-names: Gabriel
-  family-names: Emery
-- given-names: Domenico
-  family-names: Tiziani
-- given-names: Ignacio
-  family-names: Minaya
-- given-names: Kai
-  family-names: Brügge
-  affiliation: Point 8 GmbH, Rheinlanddamm 201, 44139 Dortmund, Germany
-- given-names: Hubert
-  family-names: Siejkowski
-- given-names: Arpit
-  family-names: Gogia
-- given-names: Luigi
-  family-names: Tibaldo
-  affiliation: Institute de Recherche en Astrophysique et Planetologie, IRAP,
-- given-names: Yves
-  family-names: Gallant
-- given-names: Marion
-  family-names: Spir-Jacob
-- given-names: Andrew
-  name-particle: W.
-  family-names: Chen
-  affiliation: Department of Physics, University of the Free State, PO Box339, Bloemfontein
-    9300, South Africa
-- given-names: Roberta
-  family-names: Zanin
-  affiliation: CTA Observatory gGmbH, Via Piero Gobetti 93/3 40129 Bologna, Italy
-  orcid: https://orcid.org/0000-0001-6320-1801
-- given-names: Larry
-  family-names: Bradley
-  affiliation: Space Telescope Science Institute, STScI, 3700 San Martin Drive, 21218
-    Baltimore MD, US
-- given-names: Jean-Philippe
-  family-names: Lenain
-- given-names: Kaori
-  family-names: Nakashima
-  affiliation: Friedrich-Alexander-Universität Erlangen-Nürnberg, Erlangen Centre for Astroparticle Physics
-  city: Erlangen, FR
-- given-names: Mathieu
-  family-names: de Bony
-  affiliation: LAPP
-  city: Annecy, FR
-- given-names: Matthew
-  family-names: Craig
-- given-names: Lab
-  family-names: Saha
-  affiliation: Center for Astrophysics | Harvard & Smithsonian, CfA, 60 Garden St.,
-    02138 Cambridge MA, US
-- given-names: Anne
-  family-names: Lemière
-  affiliation: Astroparticule and Cosmologie, Université Paris Cité, CNRS/IN2P3, F-75013
-    Paris, France
-- given-names: Zé
-  family-names: Vinicius
-- given-names: Kyle
-  family-names: Barbary
-- given-names: Thomas
-  family-names: Vuillaume
-  affiliation: Université Savoie Mont Blanc, CNRS, Laboratoire d’Annecyde Physique
-    des Particules - IN2P3, 74000 Annecy, France
-- given-names: Adam
-  family-names: Ginsburg
-- given-names: Daniel
-  family-names: Morcuende
-- given-names: José Luis
-  family-names: Contreras
-- given-names: Laura
-  family-names: Vega Garcia
-- given-names: Oscar
-  family-names: Blanch Bigas
-- given-names: Tyler
-  family-names: Cahill
-  affiliation: Iowa State University, Ames IA, US
-- given-names: Víctor
-  family-names: Zabalza
-- given-names: Wolfgang
-  family-names: Kerzendorf
-  affiliation: Michigan State University, Department of Physics and Astronomy, 428
-    S Shaw Ln East Lansing, MI 48824, US
-- given-names: Peter
-  family-names: Deiml
-- given-names: Sebastian
-  family-names: Panny
-- given-names: Silvia
-  family-names: Manconi
-- given-names: Stefan
-  family-names: Klepser
-  affiliation: Deutsches Elektronen-Synchrotron, DESY, Platanenallee 6 15738 Zeuthen,
-    Germany
-- given-names: Johannes
-  family-names: Buchner
-- given-names: Hugo
-  family-names: van Kemenade
-- given-names: Eric
-  name-particle: O.
-  family-names: Lebigot
-- given-names: Benjamin Alan
-  family-names: Weaver
-- given-names: Debanjan
-  family-names: Bose
-- given-names: Alisha
-  family-names: Chromey
-  affiliation: Iowa State University, Ames IA, US
-- given-names: Rolf
-  family-names: Buehler
-  affiliation: Deutsches Elektronen-Synchrotron, DESY, Platanenallee 6 15738 Zeuthen,
-    Germany
-- given-names: Rubén
-  family-names: López-Coto
-- given-names: Sam
-  family-names: Carter
-version: 0.20.1
-date-released: 2022-06-17
-repository-code: https://github.com/gammapy/gammapy
-license: BSD-3-Clause
+preferred-citation:
+  authors:
+  - family-names: "Deil"
+    given-names: "Christoph"
+  - family-names: "et al."
+  title: "Gammapy - A prototype for the CTA science tools"
+  doi: 10.48550/ARXIV.1709.01751
+  url: "https://arxiv.org/abs/1709.01751"
+  type: conference-paper
+  year: 2017
+  conference:
+    name: "Proc. 35th ICRC, Busan, South Korea, PoS(ICRC2017)766"
+  publisher:
+    name: "arXiv"
 keywords:
 - Astronomy
 - "Gamma-rays"
 - "Data analysis"
-identifiers:
-- type: "doi"
-  value: 10.5281/zenodo.6552377
-  description: Zenodo DOI v0.20
-- type: "doi"
-  value: 10.5281/zenodo.5721467
-  description: Zenodo DOI v0.19
-- type: "doi"
-  value: 10.5281/zenodo.4701500
-  description: Zenodo DOI v0.18.2
-- type: "doi"
-  value: 10.5281/zenodo.4701492
-  description: Zenodo DOI v0.17
-- type: "doi"
-  value: 10.5281/zenodo.4701489
-  description: Zenodo DOI v0.16
-- type: "other"
-  value: "2017ascl.soft11014D"
-  description: ASCL Bibcode
-- type: "other"
-  value: "1711.014"
-  description: ASCL identifier
-- type: "other"
-  value: "hal-03663345"
-  description: HAL v0.19
+version: "1.0"
+date-released: 2022-09-15
+repository-code: "https://github.com/gammapy/gammapy"
+license: BSD-3-Clause
+contact:
+- email: GAMMAPY-COORDINATION-L@IN2P3.FR
+  name: "Coordination committee of the Gammapy project"
+authors:
+- family-names: Acero
+  given-names: Fabio
+  email: fabio.acero@cea.fr
+  orcid: https://orcid.org/0000-0002-6606-2816
+  affiliation: AIM (DAp)
+  city: Saclay, FR
+- family-names: Armstrong
+  given-names: Thomas
+  email: thomas.armstrong@physics.ox.ac.uk
+  orcid: https://orcid.org/0000-0001-5067-2620
+  affiliation: CPPM
+  city: Marseille, FR
+- family-names: Arribas
+  given-names: Manuel Paz
+  orcid: https://orcid.org/0000-0002-4404-9899
+- family-names: Bigas
+  given-names: Oscar Blanch
+  email: blanch@ifae.es
+  orcid: https://orcid.org/0000-0002-8380-1633
+  affiliation: IFAE
+  city: Barcelona, SP
+- family-names: de Bony de Lavergne
+  given-names: Mathieu
+  email: lavergne@lapp.in2p3.fr
+  orcid: https://orcid.org/0000-0002-4650-1666
+  affiliation: Université Savoie Mont Blanc, CNRS, Laboratoire d’Annecy de Physique des Particules - IN2P3
+  city: Annecy, FR
+- family-names: Bose
+  given-names: Debanjan
+  email: debaice@hotmail.com
+  orcid: https://orcid.org/0000-0003-1071-5854
+- family-names: Brügge
+  given-names: Kai
+  email: kai.bruegge@tu-dortmund.de
+  affiliation: Technical University of Dortmund
+  city: Dortmund, DE
+- family-names: Buchner
+  given-names: Johannes
+  email: johannes.buchner.acad@gmx.com
+  orcid: https://orcid.org/0000-0003-0426-6634
+  affiliation: Max Planck Institute for extraterrestrial Physics
+  city: Garching, DE
+- family-names: Cabot
+  given-names: Arnau Aguasca
+  email: arnauaguasca@gmail.com
+  orcid: https://orcid.org/0000-0001-8816-4920
+  affiliation: ICCUB
+  city: Barcelona, SP
+- family-names: Cahill
+  given-names: Tyler
+  affiliation: Iowa State University
+  city: Ames, USA
+  email: cahill.tyler@iastate.edu
+- family-names: Carter
+  given-names: Sam
+- family-names: Chakraborty
+  given-names: Nachiketa
+  email: cnachi@mpi-hd.mpg.de
+  orcid: https://orcid.org/0000-0002-3134-1946
+  affiliation: Max Planck Institut für Kernphysik, MPIK
+  city: Heidelberg, DE
+- family-names: Chen
+  name-particle: W.
+  given-names: Andrew
+  email: andrew.w.chen@gmail.com
+  affiliation: Department of Physics, University of the Free State
+  city: Bloemfontein, South Africa
+- family-names: Chromey
+  given-names: Alisha
+  email: achrmy@iastate.edu
+  affiliation: Iowa State University
+  city: Ames, USA
+- family-names: Contreras
+  given-names: José Luis
+  email: contrera@gae.ucm.es
+  affiliation: GAE-UCM
+  city: Madrid, ES
+  orcid: https://orcid.org/0000-0001-7282-2394
+- family-names: de Almeida Coutinho
+  given-names: Alexis
+  affiliation: Universidade de São Paulo, Brazil
+  email: alexis.almeida98@usp.br
+- family-names: Deil
+  given-names: Christoph
+  email: Deil.Christoph@gmail.com
+  affiliation: HeidelbergCement
+  city: Heidelberg, Germany
+  orcid: https://orcid.org/0000-0002-4198-4005
+- family-names: Deiml
+  given-names: Peter
+  email: peter.deiml@fau.de
+  affiliation: Friedrich-Alexander-Universität Erlangen-Nürnberg
+  city: Erlangen, DE
+- family-names: Donath
+  given-names: Axel
+  email: axel.donath@cfa.harvard.edu
+  affiliation: Center for Astrophysics | Havard &Smithonian
+  orcid: https://orcid.org/0000-0003-4568-7005
+  city: Cambridge MA
+- family-names: Emery
+  given-names: Gabriel
+  email: gabriel.emery@lpnhe.in2p3.fr
+  affiliation: NECXU
+  city: Recife / PE - Brazil
+  orcid: https://orcid.org/0000-0001-6155-4742
+- family-names: Fidalgo
+  given-names: David
+  email: dfidalgo@gae.ucm.es
+  affiliation: AGE-UCM
+  city: Madrid, ES
+- family-names: Gallant
+  given-names: Yves
+  email: gallant@in2p3.fr
+  affiliation: LUPM
+  city: Montpellier, FR
+- family-names: Garcia
+  given-names: Laura Vega
+  email: lauvegar@mpifr-bonn.mpg.de
+  affiliation: Max Planck Institute for Radio Astronomy
+  city: Bonn, DE
+- family-names: Giunti
+  given-names: Luca
+  email: giunti@apc.in2p3.fr
+  affiliation: AstroParticule et Cosmologie, Université de Paris Cité, CNRS
+  city: Paris, FRANCE
+  orcid: https://orcid.org/0000-0002-3395-3647
+- family-names: Gogia
+  given-names: Arpit
+  email: aarpitgogia@gmail.com
+- family-names: Hajlaoui
+  given-names: Jalel Eddine
+  email: hajlaouijalel.ig@gmail.com
+  orcid: https://orcid.org/0000-0002-5877-9438
+  affiliation: AstroParticule et Cosmologie, Université de Paris Cité, CNRS
+  city: Paris, FRANCE
+- family-names: Harris
+  given-names: Jonathan D.
+  email: jonharris24@gmail.com
+- family-names: Joshi
+  given-names: Vikas
+  email: vikasphysics78@gmail.com
+  affiliation: Friedrich-Alexander-Universität Erlangen-Nürnberg
+  city: Erlangen, DE
+  orcid: https://orcid.org/0000-0003-4467-3621
+- family-names: Jouvin
+  given-names: Léa
+  email: lea.jouvin@gmail.com
+  affiliation: AstroParticule et Cosmologie, Université de Paris Cité, CNRS
+  city: Paris, FRANCE
+- family-names: Khélifi
+  given-names: Bruno
+  email: khelifi@in2p3.fr
+  affiliation: Université de Paris, CNRS, Astroparticule et Cosmologie
+  city: Paris, FRANCE
+  orcid: https://orcid.org/0000-0001-6876-5577
+- family-names: King
+  given-names: Johannes
+  email: johannes.king@mpi-hd.mpg.de
+  affiliation: Pamyra
+  city: Leipzig, DE
+- family-names: Klepser
+  given-names: Stefan
+  email: stefan.klepser@desy.de
+  orcid: https://orcid.org/0000-0002-8949-4275
+  affiliation: DESY
+  city: Zeuthen, DE
+- family-names: Lebigot
+  given-names: Eric O.
+  email: eric.lebigot@normalesup.org
+- family-names: Lefaucheur
+  given-names: Julien
+  email: jlefaucheur.pro@gmail.com
+  affiliation: LUTH, Observatoire de Paris
+  city: Meudon, FR
+- family-names: Lemière
+  given-names: Anne
+  email: alemiere@apc.in2p3.fr
+  orcid: https://orcid.org/0000-0002-6682-7188
+  affiliation: Université de Paris, CNRS, Astroparticule et Cosmologie
+  city: Paris, FRANCE
+- family-names: Lenain
+  given-names: Jean-Philippe
+  email: jlenain@in2p3.fr
+  orcid: https://orcid.org/0000-0001-7284-9220
+  affiliation: LPNHE
+  city: Paris, FR
+- family-names: Lennarz
+  given-names: Dirk
+  email: dirk.lennarz@pa.msu.edu
+  orcid: https://orcid.org/0000-0002-0614-7359
+  affiliation: Department of Physics and Astronomy, Michigan State University
+  city: East Lansing, MI, USA
+- family-names: López-Coto
+  given-names: Rubén
+  email: rlopezcoto@gmail.com
+  orcid: https://orcid.org/0000-0002-3882-9477
+  affiliation: IAA-CSIC
+  city: Granada, SP
+- family-names: Manconi
+  given-names: Silvia
+  email: manconi.silvia@gmail.com
+  orcid: https://orcid.org/0000-0003-0268-463X
+  affiliation: University of Turin
+  city: Turin, IT
+- family-names: Minaya
+  given-names: Ignacio
+  email: ignaciominaya@gmail.com
+  affiliation: UCM
+  city: Madrid, SP
+  orcid: https://orcid.org/0000-0002-1553-5767
+- family-names: Mohrmann
+  given-names: Lars
+  email: lars.mohrmann@mpi-hd.mpg.de
+  orcid: https://orcid.org/0000-0002-9667-8654
+  affiliation: Friedrich-Alexander-Universität Erlangen-Nürnberg, Erlangen Centre for Astroparticle Physics
+  city: Erlangen, FR
+- family-names: Morcuende
+  given-names: Daniel
+  email: dmorcuen@ucm.es
+  orcid: https://orcid.org/0000-0001-9400-0922
+  affiliation: GAE-UCM
+  city: Madrid, ES
+- family-names: Nakashima
+  given-names: Kaori
+  email: kaori.nakashima@fau.de
+  affiliation: Friedrich-Alexander-Universität Erlangen-Nürnberg, Erlangen Centre for Astroparticle Physics
+  city: Erlangen, FR
+- family-names: Nigro
+  given-names: Cosimo
+  email: cosimo.nigro@ifae.es
+  orcid: https://orcid.org/0000-0001-8375-1907
+  affiliation: IFAE
+  city: Barcelona, SP
+- family-names: Nöthe
+  given-names: Maximilian
+  email: maximilian.noethe@tu-dortmund.de
+  affiliation: TU Dortmund University
+  city: Dortmund, Germany
+- family-names: Olivera-Nieto
+  given-names: Laura
+  email: laura.olivera-nieto@mpi-hd.mpg.de
+  orcid: https://orcid.org/0000-0002-9105-0518
+  affiliation: Max Planck Institut für Kernphysik, MPIK
+  city: Heidelberg, DE
+- family-names: Owen
+  given-names: Ellis
+  email: ellis.owen@mpi-hd.mpg.de
+  affiliation: National Tsing Hua University Institute of Astronomy
+  city: Hsinchu, Taiwan
+  orcid: https://orcid.org/0000-0003-1052-6439
+- family-names: Panny
+  given-names: Sebastian
+  email: sebastian.panny@outlook.com
+  orcid: https://orcid.org/0000-0001-5770-3805
+  affiliation: Universität Innsbruck
+  city: Innsbruck, AT
+- family-names: Papadopoulos
+  given-names: Dimitri
+  email: dimitri.papadopoulos@cea.fr
+  orcid: https://orcid.org/0000-0002-1242-8990
+  affiliation: CEA
+  city: Saclay, FR
+- family-names: Pintore
+  given-names: Fabio
+  email: fabio.pintore@inaf.it
+  affiliation: INAF/IASF PALERMO
+  city: Palermo, Italy
+  orcid: https://orcid.org/0000-0002-3869-2925
+- family-names: Poon
+  given-names: Helen
+  email: china_108@yahoo.com
+  orcid: https://orcid.org/0000-0002-6004-4270
+  affiliation: Max Planck Institut für Kernphysik, MPIK
+  city: Heidelberg, DE
+- family-names: Remy
+  given-names: Quentin
+  email: quentin.remy@mpi-hd.mpg.de
+  orcid: https://orcid.org/0000-0002-8815-6530
+  affiliation: Max Planck Institut für Kernphysik, MPIK
+  city: Heidelberg, DE
+- family-names: Robitaille
+  given-names: Thomas
+  email: thomas.robitaille@gmail.com
+  orcid: https://orcid.org/0000-0002-8642-1329
+  affiliation: Max Planck Innsbruck for Astronomy
+  city: Heidelberg, DE
+- family-names: Ruiz
+  given-names: José Enrique
+  email: jer@iaa.es
+  orcid: https://orcid.org/0000-0003-3274-4445
+  affiliation: Instituto de Astrofísica de Andalucía - CSIC
+  city: Granada, Spain
+- family-names: Saha
+  given-names: Lab
+  email: labsaha@ucm.es
+  orcid: https://orcid.org/0000-0002-3171-5039
+  affiliation: GAE-UCM
+  city: Madrid, ES
+- family-names: Siejkowski
+  given-names: Hubert
+  email: hubert.siejkowski@gmail.com
+  affiliation: CYFRONET AGH
+  city: Krakow, PL
+  orcid: https://orcid.org/0000-0003-1673-2145
+- family-names: Sinha
+  given-names: Atreyee
+  email: asinha@ucm.es
+  affiliation: UCM, IPARCOS
+  city: Madrid, Spain
+  orcid: https://orcid.org/0000-0002-9238-7163
+- family-names: Sipőcz
+  given-names: Brigitta
+  email: b.sipocz@gmail.com
+  orcid: https://orcid.org/0000-0002-3713-6337
+  affiliation: California Institute of Technology
+  city: Pasadena, USA
+- family-names: Spir-Jacob
+  given-names: Marion
+  email: jacob@apc.in2p3.fr
+  orcid: https://orcid.org/0000-0002-6925-2594
+  affiliation: AstroParticule et Cosmologie, Université de Paris Cité, CNRS
+  city: Paris, FR
+- family-names: Terrier
+  given-names: Régis
+  email: rterrier@apc.in2p3.fr
+  affiliation: AstroParticule et Cosmologie, Université de Paris Cité, CNRS
+  city: Paris, FR
+  orcid: https://orcid.org/0000-0002-8219-4667
+- family-names: Tibaldo
+  given-names: Luigi
+  email: ltibaldo@slac.stanford.edu
+  affiliation: IRAP
+  city: Toulouse, FR
+  orcid: https://orcid.org/0000-0001-7523-570X
+- family-names: Tiziani
+  given-names: Domenico
+  email: domenico.tiziani@fau.de
+  affiliation: Friedrich-Alexander-Universität Erlangen-Nürnberg
+  city: Erlangen, DE
+- family-names: van Kemenade
+  given-names: Hugo
+  email: hugovk@users.noreply.github.com
+  orcid: https://orcid.org/0000-0001-5715-8632
+  affiliation: Nord Software
+  city: Helsinki, Finland
+- family-names: Vinicius
+  given-names: Zé
+  email: jvmirca@gmail.com
+  affiliation: HKUST
+  city: Clear Water Bay, Hong Kong
+- family-names: Vorokh
+  given-names: Olga
+  email: olga.vorokh@yandex.by
+  affiliation: Wargaming
+  city: Warsaw, Poland
+- family-names: Voruganti
+  given-names: Arjun
+  email: arjun.voruganti@gmail.com
+  affiliation: Max Planck Institut für Kernphysik, MPIK
+  city: Heidelberg, DE
+- family-names: Vuillaume
+  given-names: Thomas
+  email: thomas.vuillaume@lapp.in2p3.fr
+  orcid: https://orcid.org/0000-0002-5686-2078
+  affiliation: Université Savoie Mont Blanc, CNRS, Laboratoire d’Annecy de Physique des Particules - IN2P3
+  city: Annecy, FR
+- family-names: Watson
+  given-names: Jason J.
+  email: jason.jw@live.co.uk
+  affiliation: DESY
+  city: Zeuthen, DE
+  orcid: https://orcid.org/0000-0003-4282-7463
+- family-names: Wegenmat
+  given-names: Matthias
+  email: matthias.wegen@desy.de
+  affiliation: DESY
+  city: Zeuthen, DE
+- family-names: Wood
+  given-names: Matthew
+  email: mdwood137@gmail.com
+  affiliation: Facebook
+  city: San Mateo, USA
+- family-names: Zabalza
+  given-names: Víctor
+  email: vzabalza@gmail.com
+  orcid: https://orcid.org/0000-0003-2638-7648
+  affiliation: Department of Physics and Astronomy, The University of Leicester
+  city: Leicester, UK
+- family-names: Zanin
+  given-names: Roberta
+  email: roberta.zanin@cta-observatory.org
+  affiliation: Cherenkov Telescope Array Observatory
+  city: Bologna, IT
+  orcid: https://orcid.org/0000-0001-6320-1801
