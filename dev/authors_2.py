@@ -601,6 +601,8 @@ def make_cff(release_name, from_release=None):
 @click.argument('cff_file', default=PATH / 'CITATION.cff', required=False)
 @click.option('--output_file', default=PATH / 'new_codemeta.json',  help='Full name (path/name.json) of the output file')
 def make_codemeta(cff_file, output_file=None):
+    log.info(f"Reading [{cff_file}]")
+    print(f"Reading [{cff_file}]")
     command = f"cffconvert -i {cff_file} -f codemeta -o {output_file}"
     result = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True).decode()
     if len(result) > 0:
@@ -609,8 +611,8 @@ def make_codemeta(cff_file, output_file=None):
 
     update_codemeta(output_file, cff_file)
 
-    print(f"\nOutput file: [{output_file}]\n\n")
-    log.info(f"Output file: [{output_file}]\n\n")
+    print(f"Output file: [{output_file}]\n")
+    log.info(f"Output file: [{output_file}]\n")
 
 
 @cli.command("paper_authors", help="Create the list of authors for papers. Need `export GITHUB_TOKEN=xxxxx`.")
