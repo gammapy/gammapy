@@ -261,7 +261,7 @@ sphinx_gallery_conf = {
     "download_all_examples": True,
     "capture_repr": (),
     "nested_sections": False,
-    "min_reported_time": 10000,
+    "min_reported_time": 10,
     "show_memory": False,
     "line_numbers": False,
     "reference_url": {
