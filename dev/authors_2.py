@@ -476,7 +476,7 @@ def create_cff_file(authors, release_name, from_release=None):
     yaml.preserve_quotes = True
 
     if from_release is not None:
-        citation_file = PATH / f"NEW_CITATION_{release_name}.cff"
+        citation_file = PATH / f"NEW_CITATATION_{release_name}.cff"
     else:
         citation_file = PATH / "NEW_CITATION.cff"
 
