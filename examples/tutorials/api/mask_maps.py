@@ -53,8 +53,8 @@ even if the sources are masked and frozen.
 Note that a dataset contains also a `mask_safe` attribute that is
 created and filled during data reduction. It is not to be modified
 directly by users. The `mask_safe` is defined only from the options
-passed to the `~gammapy.makers.SafeMaskMaker` (More details
-`here <makers.ipynb#safe-data-range-handling>`__).
+passed to the `~gammapy.makers.SafeMaskMaker` (for more details see
+`Safe Data Range Handling`_).
 
 Exclusion masks
 ~~~~~~~~~~~~~~~

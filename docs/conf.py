@@ -83,6 +83,7 @@ extensions.extend(
         "sphinx.ext.doctest",
         "sphinx_panels",
         "sphinx_copybutton",
+        "sphinx_automodapi.smart_resolver",
     ]
 )
 
@@ -227,7 +228,6 @@ automodsumm_inherited_members = True
 suppress_warnings = ["ref.citation"]
 
 # nitpicky = True
-
 sphinx_gallery_conf = {
     "examples_dirs": [
         "../examples/models",

@@ -111,7 +111,7 @@ print(config)
 # 
 # PS: do not forget to setup your environment variable *$GAMMAPY_DATA* to
 # your local directory containing the H.E.S.S. DL3-DR1 as described in
-# `getting started <../../getting-started/index.rst#quickstart-setup>`__.
+# :ref:`quickstart-setup`.
 # 
 
 # We define the datastore containing the data

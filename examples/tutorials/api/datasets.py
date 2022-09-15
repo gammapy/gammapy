@@ -254,8 +254,7 @@ npred_background.sum_over_axes().plot()
 #    ignore some parts of a reduced dataset, e.g. to restrict the fit to a
 #    specific energy range or to ignore parts of the region of interest.
 #    This should be done by applying the `~gammapy.datasets.MapDataset.mask_fit`. To see details of
-#    applying masks, please refer to
-#    `Masks-for-fitting <mask_maps.ipynb#Masks-for-fitting>`__
+#    applying masks, please refer to :ref:`Masks for fitting`.
 # 
 # Both the `~gammapy.datasets.MapDataset.mask_fit` and `~gammapy.datasets.MapDataset.mask_safe` must
 # have the same `~gammapy.maps.Map.geom` as the `~gammapy.datasets.MapDataset.counts` and `~gammapy.datasets.MapDataset.background` maps.
