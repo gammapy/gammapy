@@ -260,6 +260,7 @@ sphinx_gallery_conf = {
     "within_subsection_order": FileNameSortKey,
     "download_all_examples": True,
     "capture_repr": (),
+    "nested_sections": False,
     "min_reported_time": 10000,
     "show_memory": False,
     "line_numbers": False,
