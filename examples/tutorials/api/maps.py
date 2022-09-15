@@ -4,7 +4,7 @@ Maps
 
 A thorough tutorial to work with WCS maps.
 
-.. figure:: ../images/gammapy_maps.png
+.. figure:: ../../_static/gammapy_maps.png
    :alt: Gammapy Maps Illustration
 
    Gammapy Maps Illustration

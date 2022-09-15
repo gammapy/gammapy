@@ -37,39 +37,39 @@ point sources, see `the corresponding
 notebook <spectral_analysis.ipynb>`__, that Gammapy uses specific
 datasets makers to first produce reduced spectral data and then to
 extract OFF measurements with reflected background techniques: the
-``~gammapy.makers.SpectrumDatasetMaker`` and the
-``~gammapy.makers.ReflectedRegionsBackgroundMaker``. However if the flag
-``use_region_center`` is not set to ``False``, the former simply
+`~gammapy.makers.SpectrumDatasetMaker` and the
+`~gammapy.makers.ReflectedRegionsBackgroundMaker`. However if the flag
+`use_region_center` is not set to `False`, the former simply
 computes the reduced IRFs at the center of the ON region (assumed to be
 circular).
 
 This is no longer valid for extended sources. To be able to compute
 average responses in the ON region, we can set
-``use_region_center=False`` with the
-``~gammapy.makers.SpectrumDatasetMaker``, in which case the values of
+`use_region_center=False` with the
+`~gammapy.makers.SpectrumDatasetMaker`, in which case the values of
 the IRFs are averaged over the entire region.
 
 In summary we have to:
 
--  Define an ON region (a ``~regions.SkyRegion``) fully enclosing the
+-  Define an ON region (a `~regions.SkyRegion`) fully enclosing the
    source we want to study.
--  Define a ``~gammapy.maps.RegionGeom`` with the ON region and the
+-  Define a `~gammapy.maps.RegionGeom` with the ON region and the
    required energy range (beware in particular, the true energy range).
 -  Create the necessary makers :
 
    -  the spectrum dataset maker :
-      ``~gammapy.makers.SpectrumDatasetMaker`` with
-      ``use_region_center=False``
+      `~gammapy.makers.SpectrumDatasetMaker` with
+      `use_region_center=False`
    -  the OFF background maker, here a
-      ``~gammapy.makers.ReflectedRegionsBackgroundMaker``
+      `~gammapy.makers.ReflectedRegionsBackgroundMaker`
    -  and usually the safe range maker :
-      ``~gammapy.makers.SafeMaskMaker``
+      `~gammapy.makers.SafeMaskMaker`
 
 -  Perform the data reduction loop. And for every observation:
 
    -  Produce a spectrum dataset
    -  Extract the OFF data to produce a
-      ``~gammapy.datasets.SpectrumDatasetOnOff`` and compute a safe
+      `~gammapy.datasets.SpectrumDatasetOnOff` and compute a safe
       range for it.
    -  Stack or store the resulting spectrum dataset.
 
@@ -132,7 +132,7 @@ observations = datastore.get_observations(obs_ids)
 # 
 # Here we take a simple 1 degree circular region because it fits well with
 # the morphology of RX J1713-3945. More complex regions could be used
-# e.g. ``~regions.EllipseSkyRegion`` or ``~regions.RectangleSkyRegion``.
+# e.g. `~regions.EllipseSkyRegion` or `~regions.RectangleSkyRegion`.
 # 
 
 target_position = SkyCoord(347.3, -0.5, unit="deg", frame="galactic")
@@ -146,7 +146,7 @@ on_region = CircleSkyRegion(target_position, radius)
 # 
 # This part is especially important. - We have to define first energy
 # axes. They define the axes of the resulting
-# ``~gammapy.datasets.SpectrumDatasetOnOff``. In particular, we have to be
+# `~gammapy.datasets.SpectrumDatasetOnOff`. In particular, we have to be
 # careful to the true energy axis: it has to cover a larger range than the
 # reconstructed energy one. - Then we define the region geometry itself
 # from the on region.
@@ -167,7 +167,7 @@ geom = RegionGeom(on_region, axes=[energy_axis])
 # Create the makers
 # ~~~~~~~~~~~~~~~~~
 # 
-# First we instantiate the target ``~gammapy.datasets.SpectrumDataset``.
+# First we instantiate the target `~gammapy.datasets.SpectrumDataset`.
 # 
 
 dataset_empty = SpectrumDataset.create(
@@ -181,8 +181,8 @@ dataset_empty = SpectrumDataset.create(
 # exposure and edisp (energy dispersion) entries. PSF and IRF background
 # are not needed, therefore we don’t compute them.
 # 
-# **IMPORTANT**: Note that ``use_region_center`` is set to ``False``. This
-# is necessary so that the ``~gammapy.makers.SpectrumDatasetMaker``
+# **IMPORTANT**: Note that `use_region_center` is set to `False`. This
+# is necessary so that the `~gammapy.makers.SpectrumDatasetMaker`
 # considers the whole region in the IRF computation and not only the
 # center.
 # 
@@ -207,10 +207,10 @@ safe_mask_maker = SafeMaskMaker(methods=["aeff-max"], aeff_percent=10)
 # --------------------------------
 # 
 # We can now run over selected observations. For each of them, we: -
-# create the ``~gammapy.datasets.SpectrumDataset`` - Compute the OFF via
+# create the `~gammapy.datasets.SpectrumDataset` - Compute the OFF via
 # the reflected background method and create a
-# ``~gammapy.datasets.SpectrumDatasetOnOff`` object - Run the safe mask
-# maker on it - Add the ``~gammapy.datasets.SpectrumDatasetOnOff`` to the
+# `~gammapy.datasets.SpectrumDatasetOnOff` object - Run the safe mask
+# maker on it - Add the `~gammapy.datasets.SpectrumDatasetOnOff` to the
 # list.
 # 
 
@@ -248,8 +248,8 @@ datasets[0].peek();
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 
 # Finally, we can look at cumulative significance and number of excesses.
-# This is done with the ``info_table`` method of
-# ``~gammapy.datasets.Datasets``.
+# This is done with the `info_table` method of
+# `~gammapy.datasets.Datasets`.
 # 
 
 info_table = datasets.info_table(cumulative=True)
@@ -287,7 +287,7 @@ plt.ylabel("Sqrt(TS)");
 # Here we perform a joint fit.
 # 
 # We first create the model, here a simple powerlaw, and assign it to
-# every dataset in the ``~gammapy.datasets.Datasets``.
+# every dataset in the `~gammapy.datasets.Datasets`.
 # 
 
 spectral_model = PowerLawSpectralModel(

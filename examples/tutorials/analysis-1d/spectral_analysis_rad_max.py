@@ -40,28 +40,28 @@ response computed within a specific region around the source is being
 provided.
 
 The directional cut is typically an angular distance from the assumed
-source position, :math:`\theta`. The
+source position, :math:`\\theta`. The
 `gamma-astro-data-format <https://gamma-astro-data-formats.readthedocs.io/en/latest/>`__
 specifications offer two different ways to store this information: \* if
-the same :math:`\theta` cut is applied at all energies and offsets, `a
-``RAD_MAX``
+the same :math:`\\theta` cut is applied at all energies and offsets, `a
+`RAD_MAX`
 keyword <https://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/point_like/#rad-max>`__
 is added to the header of the data units containing IRF components. This
 should be used to define the size of the ON and OFF regions; \* in case
 an energy- (and offset-) dependent :math:`\theta` cut is applied, its
-values are stored in additional ``FITS`` data unit, named
-```RAD_MAX_2D`` <https://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/point_like/#rad-max-2d>`__.
+values are stored in additional `FITS` data unit, named
+``RAD_MAX_2D` <https://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/point_like/#rad-max-2d>`__.
 
-``Gammapy`` provides a class to automatically read these values,
-``~gammapy.irf.RadMax2D``, for both cases (fixed or energy-dependent
+`Gammapy` provides a class to automatically read these values,
+`~gammapy.irf.RadMax2D`, for both cases (fixed or energy-dependent
 :math:`\theta` cut). In this notebook we will focus on how to perform a
 spectral extraction with a point-like IRF with an energy-dependent
 :math:`\theta` cut. We remark that in this case a
-``~regions.PointSkyRegion`` (and not a ``~regions.CircleSkyRegion``)
+`~regions.PointSkyRegion` (and not a `~regions.CircleSkyRegion`)
 should be used to define the ON region. If a geometry based on a
-``~regions.PointSkyRegion`` is fed to the spectra and the background
-``Makers``, the latter will automatically use the values stored in the
-``RAD_MAX`` keyword / table for defining the size of the ON and OFF
+`~regions.PointSkyRegion` is fed to the spectra and the background
+`Makers`, the latter will automatically use the values stored in the
+`RAD_MAX` keyword / table for defining the size of the ON and OFF
 regions.
 
 Beside the definition of the ON region during the data reduction, the
@@ -79,21 +79,21 @@ We load two MAGIC observations in the
 `gammapy-data <https://github.com/gammapy/gammapy-data>`__ containing
 IRF component with a :math:`\theta` cut.
 
-We define the ON region, this time as a ``PointSkyRegion`` instead of a
-``CircleSkyRegion``, i.e. we specify only the center of our ON region.
-We create a ``RegionGeom`` adding to the region the estimated energy
-axis of the ``~gammapy.datasets.SpectrumDataset`` object we want to
+We define the ON region, this time as a `~regions.PointSkyRegion` instead of a
+`CircleSkyRegion`, i.e. we specify only the center of our ON region.
+We create a `RegionGeom` adding to the region the estimated energy
+axis of the `~gammapy.datasets.SpectrumDataset` object we want to
 produce. The corresponding dataset maker will automatically use the
-:math:`\theta` values in ``~gammapy.irf.RadMax2D`` to set the
+:math:`\theta` values in `~gammapy.irf.RadMax2D` to set the
 appropriate ON region sizes (based on the offset on the observation and
 on the estimated energy binning).
 
 In order to define the OFF regions it is recommended to use a
-``~gammapy.makers.WobbleRegionsFinder``, that uses fixed positions for
+`~gammapy.makers.WobbleRegionsFinder`, that uses fixed positions for
 the OFF regions. In the different estimated energy bins we will have OFF
 regions centered at the same positions, but with changing size. As for
-the ``SpectrumDataSetMaker``, the ``BackgroundMaker`` will use the
-values in ``~gammapy.irf.RadMax2D`` to define the sizes of the OFF
+the `SpectrumDataSetMaker`, the `BackgroundMaker` will use the
+values in `~gammapy.irf.RadMax2D` to define the sizes of the OFF
 regions.
 
 Once the datasets with the ON and OFF counts are created, we can perform
@@ -153,7 +153,7 @@ from gammapy.visualization import plot_spectrum_datasets_off_regions
 # ---------
 # 
 # We load the two MAGIC observations of the Crab Nebula containing the
-# ``RAD_MAX_2D`` table.
+# `RAD_MAX_2D` table.
 # 
 
 data_store = DataStore.from_dir("$GAMMAPY_DATA/magic/rad_max/data")
@@ -161,7 +161,7 @@ observations = data_store.get_observations(required_irf="point-like")
 
 
 ######################################################################
-# A ``RadMax2D`` attribute, containing the ``RAD_MAX_2D`` table, is
+# A `RadMax2D` attribute, containing the `RAD_MAX_2D` table, is
 # automatically loaded in the observation. As we can see from the IRF
 # component axes, the table has a single offset value and 28 estimated
 # energy values.
@@ -182,9 +182,9 @@ rad_max.plot_rad_max_vs_energy();
 # Define the ON region
 # --------------------
 # 
-# To use the ``RAD_MAX_2D`` values to define the sizes of the ON and OFF
+# To use the `RAD_MAX_2D` values to define the sizes of the ON and OFF
 # regions **it is necessary to specify the ON region as
-# a**\ ```PointSkyRegion`` <https://astropy-regions.readthedocs.io/en/stable/api/regions.PointSkyRegion.html>`__\ **.**
+# a `~regions.PointSkyRegion`:
 # 
 
 target_position = SkyCoord(ra=83.63, dec=22.01, unit="deg", frame="icrs")
@@ -215,14 +215,14 @@ dataset_empty = SpectrumDataset.create(
 
 
 ######################################################################
-# The ``SpectrumDataset`` is now based on a geometry consisting of a
+# The `SpectrumDataset` is now based on a geometry consisting of a
 # single coordinate and an estimated energy axis. The
-# ``SpectrumDatasetMaker`` and ``ReflectedRegionsBackgroundMaker`` will
+# `SpectrumDatasetMaker` and `ReflectedRegionsBackgroundMaker` will
 # take care of producing ON and OFF with the proper sizes, automatically
-# adopting the :math:`\theta` values in ``Observation.rad_max``.
+# adopting the :math:`\theta` values in `Observation.rad_max`.
 # 
-# As explained in the introduction, we use a ``WobbleRegionsFinder``, to
-# determine the OFF positions. The parameter ``n_off_positions`` specifies
+# As explained in the introduction, we use a `WobbleRegionsFinder`, to
+# determine the OFF positions. The parameter `n_off_positions` specifies
 # the number of OFF regions to be considered.
 # 
 
@@ -317,7 +317,7 @@ datasets.models.to_parameters_table()
 
 ######################################################################
 # A simple way to inspect the model residuals is using the function
-# ``~SpectrumDataset.plot_fit()``
+# `~SpectrumDataset.plot_fit()`
 # 
 
 ax_spectrum, ax_residuals = datasets[0].plot_fit()

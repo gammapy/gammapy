@@ -31,7 +31,7 @@ where the background rate is assumed to be equal to the one in the ON
 region.
 
 This allows to use a specific fit statistics for ON-OFF measurements,
-the wstat (see ``~gammapy.stats.wstat``), where no background model is
+the wstat (see `~gammapy.stats.wstat`), where no background model is
 assumed. Background is treated as a set of nuisance parameters. This
 removes some systematic effects connected to the choice or the quality
 of the background model. But this comes at the expense of larger
@@ -44,10 +44,10 @@ datasets.**
 Introduction
 ------------
 
-Here, as usual, we use the ``~gammapy.data.DataStore`` to retrieve a
-list of selected observations (``~gammapy.data.Observations``). Then, we
+Here, as usual, we use the `~gammapy.data.DataStore` to retrieve a
+list of selected observations (`~gammapy.data.Observations`). Then, we
 define the ON region containing the source and the geometry of the
-``~gammapy.datasets.SpectrumDataset`` object we want to produce. We then
+`~gammapy.datasets.SpectrumDataset` object we want to produce. We then
 create the corresponding dataset Maker.
 
 We have to define the Maker object that will extract the OFF counts from
@@ -62,24 +62,24 @@ We can then explore the resulting datasets and look at the cumulative
 signal and significance of our source. We finally proceed with model
 fitting.
 
-In practice, we have to: - Create a ``~gammapy.data.DataStore`` poiting
+In practice, we have to: - Create a `~gammapy.data.DataStore` poiting
 to the relevant data - Apply an observation selection to produce a list
-of observations, a ``~gammapy.data.Observations`` object. - Define a
+of observations, a `~gammapy.data.Observations` object. - Define a
 geometry of the spectrum we want to produce: - Create a
-``~regions.CircleSkyRegion`` for the ON extraction region - Create a
-``~gammapy.maps.MapAxis`` for the energy binnings: one for the
+`~regions.CircleSkyRegion` for the ON extraction region - Create a
+`~gammapy.maps.MapAxis` for the energy binnings: one for the
 reconstructed (i.e. measured) energy, the other for the true energy
 (i.e. the one used by IRFs and models) - Create the necessary makers : -
-the spectrum dataset maker : ``~gammapy.makers.SpectrumDatasetMaker`` -
+the spectrum dataset maker : `~gammapy.makers.SpectrumDatasetMaker` -
 the OFF background maker, here a
-``~gammapy.makers.ReflectedRegionsBackgroundMaker`` - and the safe range
-maker : ``~gammapy.makers.SafeMaskMaker`` - Perform the data reduction
+`~gammapy.makers.ReflectedRegionsBackgroundMaker` - and the safe range
+maker : `~gammapy.makers.SafeMaskMaker` - Perform the data reduction
 loop. And for every observation: - Apply the makers sequentially to
-produce a ``~gammapy.datasets.SpectrumDatasetOnOff`` - Append it to list
-of datasets - Define the ``~gammapy.modeling.models.SkyModel`` to apply
-to the dataset. - Create a ``~gammapy.modeling.Fit`` object and run it
+produce a `~gammapy.datasets.SpectrumDatasetOnOff` - Append it to list
+of datasets - Define the `~gammapy.modeling.models.SkyModel` to apply
+to the dataset. - Create a `~gammapy.modeling.Fit` object and run it
 to fit the model parameters - Apply a
-``~gammapy.estimators.FluxPointsEstimator`` to compute flux points for
+`~gammapy.estimators.FluxPointsEstimator` to compute flux points for
 the spectral part of the fit.
 """
 
@@ -341,7 +341,7 @@ datasets.models.to_parameters_table()
 
 ######################################################################
 # A simple way to inspect the model residuals is using the function
-# ``~SpectrumDataset.plot_fit()``
+# `~SpectrumDataset.plot_fit()`
 # 
 
 ax_spectrum, ax_residuals = datasets[0].plot_fit()
@@ -370,7 +370,7 @@ energy_edges = np.geomspace(e_min, e_max, 11) * u.TeV
 
 ######################################################################
 # Now we create an instance of the
-# ``~gammapy.estimators.FluxPointsEstimator``, by passing the dataset and
+# `~gammapy.estimators.FluxPointsEstimator`, by passing the dataset and
 # the energy binning:
 # 
 
@@ -423,7 +423,7 @@ dataset_stacked = Datasets(datasets).stack_reduce()
 
 ######################################################################
 # Again we set the model on the dataset we would like to fit (in this case
-# it’s only a single one) and pass it to the ``~gammapy.modeling.Fit``
+# it’s only a single one) and pass it to the `~gammapy.modeling.Fit`
 # object:
 # 
 
@@ -444,7 +444,7 @@ model_best_stacked.parameters.to_table()
 ######################################################################
 # Finally, we compare the results of our stacked analysis to a previously
 # published Crab Nebula Spectrum for reference. This is available in
-# ``~gammapy.modeling.models.create_crab_spectral_model``.
+# `~gammapy.modeling.models.create_crab_spectral_model`.
 # 
 
 plot_kwargs = {
@@ -483,10 +483,10 @@ plt.legend()
 # practice you can continue with the following exercises:
 # 
 # -  Fit a different spectral model to the data. You could try
-#    ``~gammapy.modeling.models.ExpCutoffPowerLawSpectralModel`` or
-#    ``~gammapy.modeling.models.LogParabolaSpectralModel``.
+#    `~gammapy.modeling.models.ExpCutoffPowerLawSpectralModel` or
+#    `~gammapy.modeling.models.LogParabolaSpectralModel`.
 # -  Compute flux points for the stacked dataset.
-# -  Create a ``~gammapy.datasets.FluxPointsDataset`` with the flux points
+# -  Create a `~gammapy.datasets.FluxPointsDataset` with the flux points
 #    you have computed for the stacked dataset and fit the flux points
 #    again with obe of the spectral models. How does the result compare to
 #    the best fit model, that was directly fitted to the counts data?

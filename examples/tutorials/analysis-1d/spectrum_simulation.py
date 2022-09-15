@@ -39,10 +39,10 @@ Proposed approach
 
 We will use the following classes:
 
--  ``~gammapy.datasets.SpectrumDatasetOnOff``
--  ``~gammapy.datasets.SpectrumDataset``
--  ``~gammapy.irf.load_cta_irfs``
--  ``~gammapy.modeling.models.PowerLawSpectralModel``
+-  `~gammapy.datasets.SpectrumDatasetOnOff`
+-  `~gammapy.datasets.SpectrumDataset`
+-  `~gammapy.irf.load_cta_irfs`
+-  `~gammapy.modeling.models.PowerLawSpectralModel`
 
 """
 
@@ -80,7 +80,7 @@ from gammapy.maps import MapAxis, RegionGeom
 # range to perform the simulation for and the choice of spectral model. We
 # then use an in-memory observation which is convolved with the IRFs to
 # get the predicted number of counts. This is Poission fluctuated using
-# the ``fake()`` to get the simulated counts for each observation.
+# the `fake()` to get the simulated counts for each observation.
 # 
 
 # Define simulation parameters parameters
@@ -155,7 +155,7 @@ print(dataset)
 # ~~~~~~~~~~~~~~~
 # 
 # To do an on off spectral analysis, which is the usual science case, the
-# standard would be to use ``SpectrumDatasetOnOff``, which uses the
+# standard would be to use `SpectrumDatasetOnOff`, which uses the
 # acceptance to fake off-counts
 # 
 

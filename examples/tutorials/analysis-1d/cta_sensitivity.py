@@ -18,7 +18,7 @@ determine the 1D IRFs including a containment correction.
 
 We will be using the following Gammapy class:
 
--  ``~gammapy.estimators.SensitivityEstimator``
+-  `~gammapy.estimators.SensitivityEstimator`
 
 """
 
@@ -106,7 +106,7 @@ dataset.background *= factor.value.reshape((-1, 1, 1))
 
 
 ######################################################################
-# And finally define a ``SpectrumDatasetOnOff`` with an alpha of ``0.2``.
+# And finally define a `SpectrumDatasetOnOff` with an alpha of ``0.2``.
 # The off counts are created from the background model:
 # 
 

@@ -33,20 +33,20 @@ representation of the wide band spectrum.
 
 The central class we’re going to use for this example analysis is:
 
--  ``~gammapy.datasets.FluxPointsDataset``
+-  `~gammapy.datasets.FluxPointsDataset`
 
 In addition we will work with the following data classes:
 
--  ``~gammapy.estimators.FluxPoints``
--  ``~gammapy.catalog.SourceCatalogGammaCat``
--  ``~gammapy.catalog.SourceCatalog3FHL``
--  ``~gammapy.catalog.SourceCatalog3FGL``
+-  `~gammapy.estimators.FluxPoints`
+-  `~gammapy.catalog.SourceCatalogGammaCat`
+-  `~gammapy.catalog.SourceCatalog3FHL`
+-  `~gammapy.catalog.SourceCatalog3FGL`
 
 And the following spectral model classes:
 
--  ``~gammapy.modeling.models.PowerLawSpectralModel``
--  ``~gammapy.modeling.models.ExpCutoffPowerLawSpectralModel``
--  ``~gammapy.modeling.models.LogParabolaSpectralModel``
+-  `~gammapy.modeling.models.PowerLawSpectralModel`
+-  `~gammapy.modeling.models.ExpCutoffPowerLawSpectralModel`
+-  `~gammapy.modeling.models.LogParabolaSpectralModel`
 
 """
 
@@ -119,7 +119,7 @@ dataset_3fhl.data.to_table(sed_type="dnde", formatted=True)
 # -------------
 # 
 # First we start with fitting a simple
-# ``~gammapy.modeling.models.PowerLawSpectralModel``.
+# `~gammapy.modeling.models.PowerLawSpectralModel`.
 # 
 
 pwl = PowerLawSpectralModel(
@@ -129,8 +129,8 @@ model = SkyModel(spectral_model=pwl, name="j1507-pl")
 
 
 ######################################################################
-# After creating the model we run the fit by passing the ``'flux_points'``
-# and ``'model'`` objects:
+# After creating the model we run the fit by passing the ``flux_points``
+# and ``model`` objects:
 # 
 
 datasets = Datasets([dataset_gammacat, dataset_3fgl, dataset_3fhl])
@@ -175,7 +175,7 @@ ax.legend()
 # --------------------------------
 # 
 # Next we fit an
-# ``~gammapy.modeling.models.ExpCutoffPowerLawSpectralModel`` law to the
+# `~gammapy.modeling.models.ExpCutoffPowerLawSpectralModel` law to the
 # data.
 # 
 
@@ -223,7 +223,7 @@ ax.legend()
 # ----------------
 # 
 # Finally we try to fit a
-# ``~gammapy.modeling.models.LogParabolaSpectralModel`` model:
+# `~gammapy.modeling.models.LogParabolaSpectralModel` model:
 # 
 
 log_parabola = LogParabolaSpectralModel(
@@ -255,10 +255,10 @@ ax.legend()
 # Exercises
 # ---------
 # 
-# -  Fit a ``~gammapy.modeling.models.PowerLaw2SpectralModel`` and
-#    ``~gammapy.modeling.models.ExpCutoffPowerLaw3FGLSpectralModel`` to
+# -  Fit a `~gammapy.modeling.models.PowerLaw2SpectralModel` and
+#    `~gammapy.modeling.models.ExpCutoffPowerLaw3FGLSpectralModel` to
 #    the same data.
-# -  Fit a ``~gammapy.modeling.models.ExpCutoffPowerLawSpectralModel``
+# -  Fit a `~gammapy.modeling.models.ExpCutoffPowerLawSpectralModel`
 #    model to Vela X (‘HESS J0835-455’) only and check if the best fit
 #    values correspond to the values given in the Gammacat catalog
 # 

@@ -8,7 +8,3 @@ However, for long-running, non-interactive tasks like data reduction or survey m
 you might prefer a Python script.
 
 The following example shows how to run Gammapy within a Python script.
-
-.. toctree::
-
-   survey_map
