@@ -42,7 +42,6 @@ def cli():
 
 def get_git_tag():
     """Get the list of releases from git"""
-    tic = time.perf_counter()
     tags = {}
     command = ('git for-each-ref --format="%(refname:short) | %(creatordate:short)" "refs/tags/*"')
     # command = ("git", "tag", "-l")
@@ -56,14 +55,11 @@ def get_git_tag():
             tags[name] = date
 
     sort_dict = {item[0] : item[1] for item in sorted(tags.items(), key=lambda val: val[1])}
-    toc = time.perf_counter()
-    print(f"Get tags in {toc - tic:0.4f} seconds")
     return sort_dict
 
 
 def get_git_shortlog_authors(since=None):
     """Get dict of authors from git shortlog, formatted into the cff format"""
-    tic = time.perf_counter()
     authors = []
     # command = ["git", "shortlog", "--summary", "--numbered", "--email", "--merges"]
     command = ["git", "shortlog", "--summary", "--numbered", "--email"]
@@ -84,8 +80,6 @@ def get_git_shortlog_authors(since=None):
     sorted_authors_dict = sort_by_alphabetical_order(clean_authors_dict)
     cff_authors_dict = author_cff_formatting(sorted_authors_dict)
 
-    toc = time.perf_counter()
-    print(f"Get shortlog in {toc - tic:0.4f} seconds")
     return cff_authors_dict
 
 
@@ -123,22 +117,26 @@ def get_citation_cff_authors():
 
 def decompose_name(name):
     array = name.split(" ")
-    tmp2 = array[-2]
-    upper_case2 = bool(all(ll.isupper() for ll in tmp2))
-    # Case of two components in the last name
-    if "." not in tmp2 and upper_case2:
-        last_name = array[-2]+" "+array[-1]
-        first_name = array[0:-2]
-    # Case of two components in the first name
-    elif "." in tmp2:
-        last_name = array[-1]
-        first_name = array[0]+" "+array[1]
-    elif len(array) > 2:
-        last_name = array[-1]
-        first_name = array[0] + " " + array[1]
-    else:
+    if len(array) == 1:
+        print(f"Strange name [{name}]")
+        return "", array[0]
+    elif len(array) == 2:
         last_name = array[-1]
         first_name = array[0]
+    else:
+        tmp2 = array[-2]
+        upper_case2 = bool(all(ll.isupper() for ll in tmp2))
+        # Case of two components in the last name
+        if "." not in tmp2 and upper_case2:
+            last_name = array[-2] + " " + array[-1]
+            first_name = array[0:-2]
+        # Case of two components in the first name
+        elif "." in tmp2:
+            last_name = array[-1]
+            first_name = array[0] + " " + array[1]
+        elif len(array) > 2:
+            last_name = array[-1]
+            first_name = array[0] + " " + array[1]
 
     return first_name, last_name
 
@@ -205,12 +203,12 @@ def get_orcid(author):
     if ores and len(ores.text) > 200:
         if len(ores.text) > 500:
             # print("Too many returned answers")
-            log.warning("Too many returned answers")
+            log.warning(f"Too many returned answers to get a valid ORCID for [{author['name']}]")
         else:
             id = extract_orcid_from_xml(ores.text)
         test_url = 'https://pub.orcid.org/' + id
         tres = requests.get(test_url, timeout=5)
-        print("tres:", tres.text)
+        # print("tres:", tres.text)
     # else:
     #     print("fallback")
     #     orcid_url = 'https://pub.orcid.org/v3.0/search/?q=email:"' + author['email'] + '"'
@@ -322,12 +320,8 @@ def author_cff_formatting(authors):
 
 
 def check_cff_format(filename):
-    tic = time.perf_counter()
     command = f"cffconvert -i {filename} --validate"
     result = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True).decode()
-    # print(result)
-    toc = time.perf_counter()
-    print(f"check cff in {toc - tic:0.4f} seconds")
     if 'are valid' not in result:
         return False
     return True
@@ -335,8 +329,6 @@ def check_cff_format(filename):
 
 def update_codemeta(filename, cff_file):
     """We follow the format defined here: https://codemeta.github.io/"""
-    tic = time.perf_counter()
-
     with open(TEMPLATE_PATH / FOOTER_CODEMETA, "r") as f:
         footer_data = json.load(f)
     with open(filename, "r") as f:
@@ -370,8 +362,6 @@ def update_codemeta(filename, cff_file):
 
     with open(filename, "w") as f:
         json.dump(dict(data), f, indent=4)
-    toc = time.perf_counter()
-    print(f"Update codemeta in {toc - tic:0.4f} seconds")
 
 
 def make_author_latex(author):
@@ -477,7 +467,6 @@ def get_latest_feature_release(tags):
 
 
 def create_cff_file(authors, release_name, from_release=None):
-    tic = time.perf_counter()
     if not os.path.exists(TEMPLATE_PATH / HEADER_CITATION):
         print(f"\nHeader template of the CITATION file does NOT exist [{TEMPLATE_PATH / HEADER_CITATION}]! exit")
         log.fatal(f"Header template of the CITATION file does NOT exist [{TEMPLATE_PATH / HEADER_CITATION}]! exit")
@@ -500,16 +489,13 @@ def create_cff_file(authors, release_name, from_release=None):
 
     with open(citation_file, 'w') as file:
         yaml.dump(data, file)
-    print(f"\nOutput file: [{citation_file}]")
-    log.info(f"Output file: [{citation_file}]")
+    print(f"\nOutput file: [{citation_file}]\n\n")
+    log.info(f"Output file: [{citation_file}]\n\n")
 
     if not check_cff_format(citation_file):
         log.fatal(f"The file [{citation_file}] is not compliant with the cff format! ")
         print(f"\nThe file [{citation_file}] is not compliant with the cff format! ")
         exit(0)
-
-    toc = time.perf_counter()
-    print(f"creation cff file in {toc - tic:0.4f} seconds")
 
     return citation_file
 
@@ -623,8 +609,8 @@ def make_codemeta(cff_file, output_file=None):
 
     update_codemeta(output_file, cff_file)
 
-    print(f"\nOutput file: [{output_file}]\n")
-    log.info(f"Output file: [{output_file}]")
+    print(f"\nOutput file: [{output_file}]\n\n")
+    log.info(f"Output file: [{output_file}]\n\n")
 
 
 @cli.command("paper_authors", help="Create the list of authors for papers. Need `export GITHUB_TOKEN=xxxxx`.")
@@ -641,7 +627,7 @@ def paper_authors(lts_name, from_release=None):
     tags = get_git_tag()
     if from_release is None:
         latest_feature_release = get_latest_feature_release(tags)
-        print("toto2 ", latest_feature_release)
+        print("toto3 ", latest_feature_release)
         exit(0)
         since = tags[latest_feature_release]
         # since = list(tags.values())[-1]  # ToDo: use the latest release version (and not the last version)
