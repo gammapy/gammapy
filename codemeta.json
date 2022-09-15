@@ -410,13 +410,17 @@
             "@type": "Person",
             "affiliation": {
                 "@type": "Organization",
-                "name": "Friedrich-Alexander-Universit\u00e4t Erlangen-N\u00fcrnberg, Erlangen Centre for Astroparticle Physics, Erwin-Rommel-Str. 1 91058 Erlangen, Germany"
+                "name": "Friedrich-Alexander-Universit\u00e4t Erlangen-N\u00fcrnberg, Erlangen Centre for Astroparticle Physics"
             },
             "familyName": "Nakashima",
             "givenName": "Kaori"
         },
         {
             "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "LAPP"
+            },
             "familyName": "de Bony",
             "givenName": "Mathieu"
         },
