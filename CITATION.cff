@@ -182,10 +182,12 @@ authors:
   family-names: Lenain
 - given-names: Kaori
   family-names: Nakashima
-  affiliation: Friedrich-Alexander-Universität Erlangen-Nürnberg, Erlangen Centre
-    for Astroparticle Physics, Erwin-Rommel-Str. 1 91058 Erlangen, Germany
+  affiliation: Friedrich-Alexander-Universität Erlangen-Nürnberg, Erlangen Centre for Astroparticle Physics
+  city: Erlangen, FR
 - given-names: Mathieu
   family-names: de Bony
+  affiliation: LAPP
+  city: Annecy, FR
 - given-names: Matthew
   family-names: Craig
 - given-names: Lab
