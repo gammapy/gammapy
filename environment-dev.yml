@@ -71,6 +71,5 @@ dependencies:
   - nbformat
   - h5py
   - ruamel.yaml
-  - cffconvert
   - pip:
       - pytest-sphinx
