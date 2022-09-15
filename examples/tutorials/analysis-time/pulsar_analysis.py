@@ -95,9 +95,6 @@ phases[:10]
 # Phasogram
 # ---------
 # 
-
-
-######################################################################
 # Once we have the phases, we can make a phasogram. A phasogram is a
 # histogram of phases and it works exactly like any other histogram (you
 # can set the binning, evaluate the errors based on the counts in each
@@ -291,7 +288,7 @@ datasets[0].peek()
 
 
 ######################################################################
-# Now we’ll fit a model to the spectrum with the ``Fit`` class. First we
+# Now we’ll fit a model to the spectrum with the `Fit` class. First we
 # load a power law model with an initial value for the index and the
 # amplitude and then wo do a likelihood fit. The fit results are printed
 # below.

@@ -35,13 +35,13 @@ profile (an exponential decay, with a decay time of 6 hr ). These are
 then analysed using the light curve estimator to obtain flux points.
 
 Modelling and fitting of lightcurves can be done either - directly on
-the output of the ``LighCurveEstimator`` (at the DL5 level) - fit the
+the output of the `LighCurveEstimator` (at the DL5 level) - fit the
 simulated datasets (at the DL4 level)
 
 In summary, necessary steps are:
 
 -  Choose observation parameters including a list of
-   ``gammapy.data.GTI``
+   `gammapy.data.GTI`
 -  Define temporal and spectral models from :ref:model-gallery as per
    science case
 -  Perform the simulation (in 1D or 3D)
@@ -106,9 +106,9 @@ TimeMapAxis.time_format = "iso"
 # ------------------------
 # 
 # We will simulate 10 spectra between 300 GeV and 10 TeV using an
-# ``PowerLawSpectralModel`` and a ``ExpDecayTemporalModel``. The important
-# thing to note here is how to attach a different ``GTI`` to each dataset.
-# Since we use spectrum datasets here, we will use a ``RegionGeom``.
+# `PowerLawSpectralModel` and a `ExpDecayTemporalModel`. The important
+# thing to note here is how to attach a different `GTI` to each dataset.
+# Since we use spectrum datasets here, we will use a `RegionGeom`.
 # 
 
 # Loading IRFs
@@ -156,7 +156,7 @@ model_simu.parameters.to_table()
 
 ######################################################################
 # Now, define the start and observation livetime wrt to the reference
-# time, ``gti_t0``
+# time, `gti_t0`
 # 
 
 n_obs = 10
@@ -253,7 +253,7 @@ ax = lc_1d.plot(marker="o", axis_name="time", sed_type="flux")
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 
 # The fitting will proceed through a joint fit of the flux points. First,
-# we need to obtain a set of ``FluxPointDatasets``, one for each time bin
+# we need to obtain a set of `FluxPointDatasets`, one for each time bin
 # 
 
 ## Create the datasets by iterating over the returned lightcurve
@@ -266,8 +266,8 @@ for idx, fp in enumerate(lc_1d.iter_by_axis(axis_name="time")):
 
 ######################################################################
 # We will fit the amplitude, spectral index and the decay time scale. Note
-# that ``t_ref`` should be fixed by default for the
-# ``ExpDecayTemporalModel``.
+# that `t_ref` should be fixed by default for the
+# `ExpDecayTemporalModel`.
 # 
 
 # Define the model:
@@ -312,7 +312,7 @@ plt.legend()
 # Here, we apply the models directly to the simulated datasets.
 # 
 # For modelling and fitting more complex flares, you should attach the
-# relevant model to each group of ``datasets``. The parameters of a model
+# relevant model to each group of `datasets`. The parameters of a model
 # in a given group of dataset will be tied. For more details on joint
 # fitting in gammapy, see `here <../2D/modeling_2D.ipynb>`__.
 # 
@@ -351,10 +351,10 @@ result.parameters.to_table()
 # Exercises
 # ---------
 # 
-# 1. Re-do the analysis with ``MapDataset`` instead of ``SpectralDataset``
+# 1. Re-do the analysis with `MapDataset` instead of `SpectralDataset`
 # 2. Model the flare of PKS 2155-304 which you obtained using the `light
 #    curve flare tutorial <light_curve_flare.ipynb>`__. Use a combination
 #    of a Gaussian and Exponential flare profiles, and fit using
-#    ``scipy.optimize.curve_fit``
+#    `scipy.optimize.curve_fit`
 # 3. Do a joint fitting of the datasets.
 # 

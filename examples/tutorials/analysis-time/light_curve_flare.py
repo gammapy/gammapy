@@ -34,19 +34,19 @@ datasets in a given time interval, by default that of the parent
 observation. To be able to produce datasets on smaller time steps, it is
 necessary to split the observations into the required time intervals.
 
-This is easily performed with the ``select_time`` method of
-``~gammapy.data.Observations``. If you pass it a list of time intervals
+This is easily performed with the `~gammapy.data.Observations.select_time` method of
+`~gammapy.data.Observations`. If you pass it a list of time intervals
 it will produce a list of time filtered observations in a new
-``~gammapy.data.Observations`` object. Data reduction can then be
+`~gammapy.data.Observations` object. Data reduction can then be
 performed and will result in datasets defined on the required time
 intervals and light curve estimation can proceed directly.
 
 In summary, we have to:
 
--  Select relevant ``~gammapy.data.Observations`` from the
-   ``~gammapy.data.DataStore``
+-  Select relevant `~gammapy.data.Observations` from the
+   `~gammapy.data.DataStore`
 -  Apply the time selection in our predefined time intervals to obtain a
-   new ``~gammapy.data.Observations``
+   new `~gammapy.data.Observations`
 -  Perform the data reduction (in 1D or 3D)
 -  Define the source model
 -  Extract the light curve from the reduced dataset
@@ -125,7 +125,7 @@ print(f"Number of selected observations : {len(observations)}")
 # ---------------------
 # 
 # We create the list of time intervals. Each time interval is an
-# ``astropy.time.Time`` object, containing a start and stop time.
+# `astropy.time.Time` object, containing a start and stop time.
 # 
 
 t0 = Time("2006-07-29T20:30")
@@ -143,7 +143,7 @@ print(time_intervals[0].mjd)
 # ----------------------------------------------
 # 
 # Here we apply the list of time intervals to the observations with
-# ``~gammapy.data.Observations.select_time()``.
+# `~gammapy.data.Observations.select_time()`.
 # 
 # This will return a new list of Observations filtered by time_intervals.
 # For each time interval, a new observation is created that converts the
@@ -249,7 +249,7 @@ for obs in short_observations:
 # paper <https://ui.adsabs.harvard.edu/abs/2009A%26A...502..749A/abstract>`__.
 # 
 # Here we use only a spectral model in the
-# ``~gammapy.modeling.models.SkyModel`` object.
+# `~gammapy.modeling.models.SkyModel` object.
 # 
 
 spectral_model = PowerLawSpectralModel(
@@ -276,7 +276,7 @@ datasets.models = sky_model
 # Extract the light curve
 # -----------------------
 # 
-# We first create the ``~gammapy.estimators.LightCurveEstimator`` for the
+# We first create the `~gammapy.estimators.LightCurveEstimator` for the
 # list of datasets we just produced. We give the estimator the name of the
 # source component to be fitted.
 # 

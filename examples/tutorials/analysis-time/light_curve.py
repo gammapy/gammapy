@@ -34,12 +34,12 @@ Proposed approach
 -----------------
 
 We will demonstrate how to compute a light curve from 3D reduced
-datasets (``~gammapy.datasets.MapDataset``) as well as 1D ON-OFF
-spectral datasets (``~gammapy.datasets.SpectrumDatasetOnOff``).
+datasets (`~gammapy.datasets.MapDataset`) as well as 1D ON-OFF
+spectral datasets (`~gammapy.datasets.SpectrumDatasetOnOff`).
 
 The data reduction will be performed with the high level interface for
 the data reduction. Then we will use the
-``~gammapy.estimators.LightCurveEstimator`` class, which is able to
+`~gammapy.estimators.LightCurveEstimator` class, which is able to
 extract a light curve independently of the dataset type.
 
 """
@@ -193,7 +193,7 @@ analysis_3d.set_models(models)
 # bin.
 # 
 # If we don’t set any time interval, the
-# ``~gammapy.estimators.LightCurveEstimator`` is determines the flux of
+# `~gammapy.estimators.LightCurveEstimator` is determines the flux of
 # each dataset and places it at the corresponding time in the light curve.
 # Here one dataset equals to one observing run.
 # 
@@ -298,7 +298,7 @@ sky_model = SkyModel(spectral_model=spectral_model, name="crab")
 
 ######################################################################
 # We assign the model to be fitted to each dataset. We can use the same
-# ``~gammapy.modeling.models.SkyModel`` as before.
+# `~gammapy.modeling.models.SkyModel` as before.
 # 
 
 models = Models([sky_model])
@@ -350,7 +350,7 @@ time_intervals = [
 
 ######################################################################
 # To compute the LC on the time intervals defined above, we pass the
-# ``LightCurveEstimator`` the list of time intervals.
+# `LightCurveEstimator` the list of time intervals.
 # 
 # Internally, datasets are grouped per time interval and a flux extraction
 # is performed for each group.
