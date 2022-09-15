@@ -1,0 +1,70 @@
+cc-members:
+- family-names: Khélifi
+  given-names: Bruno
+  email: khelifi@in2p3.fr
+  affiliation: AstroParticule et Cosmologie, Université de Paris Cité, CNRS
+  orcid: https://orcid.org/0000-0001-6876-5577
+  city: Paris, FR
+- family-names: Boisson
+  given-names: Catherine
+  email: catherine.boisson@obspm.fr
+  affiliation: Observatoire de Paris
+  orcid: https://orcid.org/0000-0001-5893-1797
+  city: Meudon, FR
+- family-names: van Eldik
+  given-names: Christopher
+  email: Christopher.van.Eldik@physik.uni-erlangen.de
+  affiliation: Friedrich-Alexander-Universität Erlangen-Nürnberg
+  orcid: https://orcid.org/0000-0001-9669-645X
+  city: Erlangen, DE
+- family-names: Berge
+  given-names: David
+  email: david.berge@desy.de
+  affiliation: DESY
+  orcid: https://orcid.org/0000-0002-2918-1824
+  city: Zeuthen, DE
+- family-names: Acero
+  given-names: Fabio
+  email: fabio.acero@cea.fr
+  affiliation: AIM (DAp)
+  orcid: https://orcid.org/0000-0002-6606-2816
+  city: Saclay, FR
+- family-names: Pintore
+  given-names: Fabio
+  email: fabio.pintore@inaf.it
+  affiliation: IASF Palermo/INAF
+  orcid: https://orcid.org/0000-0002-3869-2925
+  city: Palermo, IT
+- family-names: Hinton
+  given-names: Jim
+  email: jim.hinton@mpi-hd.mpg.de
+  affiliation: MPIK
+  city: Heidelberg, DE
+- family-names: Contreras
+  given-names: Jose Luis
+  email: contrera@gae.ucm.es
+  affiliation: UCM
+  orcid: https://orcid.org/0000-0001-7282-2394
+  city: Madrid, ES
+- family-names: Fuessling
+  given-names: Matthias
+  email: matthias.fuessling@cta-observatory.org
+  affiliation: CTAO
+  city: Bologna, IT
+- family-names: Zanin
+  given-names: Roberta
+  email: roberta.zanin@cta-observatory.org
+  affiliation: CTAO
+  orcid: https://orcid.org/0000-0001-6320-1801
+  city: Bologna, IT
+- family-names: López-Coto
+  given-names: Rubén
+  affiliation: IAA/CSIC
+  orcid: https://orcid.org/0000-0002-3882-9477
+  city: Grenada, Spain
+- family-names: Funk
+  given-names: Stefan
+  email: s.funk@fau.de
+  affiliation: Friedrich-Alexander-Universität Erlangen-Nürnberg
+  orcid: https://orcid.org/0000-0002-2012-0080
+  city: Erlangen, DE
