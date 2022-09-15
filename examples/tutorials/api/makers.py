@@ -7,7 +7,7 @@ Data reduction: from observations to binned datasets
 Introduction
 ------------
 
-The ``gammapy.makers`` sub-package contains classes to perform data
+The `gammapy.makers` sub-package contains classes to perform data
 reduction tasks from DL3 data to binned datasets. In the data reduction
 step the DL3 data is prepared for modeling and fitting, by binning
 events into a counts map and interpolating the exposure, background, psf
@@ -39,12 +39,10 @@ import numpy as np
 # -------
 # 
 # The counts, exposure, background and IRF maps are bundled together in a
-# data structure named ``MapDataset``. To handle on-off observations
-# Gammapy also features a ``MapDatasetOnOff`` class, which stores in
-# addition the ``counts_off``, ``acceptance`` and ``acceptance_off`` data.
+# data structure named `~gammapy.datasets.MapDataset`.
 # 
 # The first step of the data reduction is to create an empty dataset. A
-# ``MapDataset`` can be created from any ``WcsGeom`` object. This is
+# `~gammapy.datasets.MapDataset` can be created from any `~gammapy.maps.WcsGeom` object. This is
 # illustrated in the following example:
 # 
 
@@ -85,7 +83,7 @@ help(MapDataset.create)
 
 ######################################################################
 # Once this empty “reference” dataset is defined, it can be filled with
-# observational data using the ``MapDatasetMaker``:
+# observational data using the `~gammapy.makers.MapDatasetMaker`:
 # 
 
 # get observation
@@ -100,25 +98,25 @@ dataset.counts.sum_over_axes().plot(stretch="sqrt", add_cbar=True);
 
 
 ######################################################################
-# The ``MapDatasetMaker`` fills the corresponding ``counts``,
-# ``exposure``, ``background``, ``psf`` and ``edisp`` map per observation.
-# The ``MapDatasetMaker`` has a ``selection`` parameter, in case some of
+# The `~gammapy.makers.MapDatasetMaker` fills the corresponding `counts`,
+# `exposure`, `background`, `psf` and `edisp` map per observation.
+# The `~gammapy.makers.MapDatasetMaker` has a `selection` parameter, in case some of
 # the maps should not be computed. There is also a
-# ``background_oversampling`` parameter that defines the oversampling
+# `background_oversampling` parameter that defines the oversampling
 # factor in energy used to compute the bakcground (default is None).
 # 
 # Safe data range handling
 # ------------------------
 # 
-# To exclude the data range from a ``MapDataset``, that is associated with
-# high systematics on instrument response functions, a ``mask_safe`` can
-# be defined. The ``mask_safe`` is a ``Map`` object with ``bool`` data
+# To exclude the data range from a `~gammapy.makers.MapDataset`, that is associated with
+# high systematics on instrument response functions, a `~gammapy.makers.MapDataset.mask_safe` can
+# be defined. The `~gammapy.makers.MapDataset.mask_safe` is a `~gammapy.maps.Map` object with `bool` data
 # type, which indicates for each pixel, whether it should be included in
-# the analysis. The convention is that a value of ``True`` or ``1``
-# includes the pixel, while a value of ``False`` or ``0`` excludes a
+# the analysis. The convention is that a value of `True` or `1`
+# includes the pixel, while a value of `False` or `0` excludes a
 # pixels from the analysis. To compute safe data range masks according to
-# certain criteria, Gammapy provides a ``SafeMaskMaker`` class. The
-# different criteria are given by the ``methods``\ argument, available
+# certain criteria, Gammapy provides a `~gammapy.makers.SafeMaskMaker` class. The
+# different criteria are given by the `methods`\ argument, available
 # options are :
 # 
 # -  aeff-default, uses the energy ranged specified in the DL3 data files,
@@ -148,8 +146,8 @@ dataset.mask_safe.sum_over_axes().plot();
 
 
 ######################################################################
-# The ``SafeMaskMaker`` does not modify any data, but only defines the
-# ``MapDataset.mask_safe`` attribute. This means that the safe data range
+# The `~gammapy.makers.SafeMaskMaker` does not modify any data, but only defines the
+# `~gammapy.datasets.MapDataset.mask_safe` attribute. This means that the safe data range
 # can be defined and modified in between the data reduction and stacking
 # and fitting. For a joint-likelihood analysis of multiple observations
 # the safe mask is applied to the counts and predicted number of counts
@@ -159,7 +157,7 @@ dataset.mask_safe.sum_over_axes().plot();
 # Background estimation
 # ---------------------
 # 
-# The background computed by the ``MapDatasetMaker`` gives the number of
+# The background computed by the `MapDatasetMaker` gives the number of
 # counts predicted by the background IRF of the observation. Because its
 # actual normalization, or even its spectral shape, might be poorly
 # constrained, it is necessary to correct it with the data themselves.
@@ -171,11 +169,11 @@ dataset.mask_safe.sum_over_axes().plot();
 # If the background energy dependent morphology is well reproduced by the
 # background model stored in the IRF, it might be that its normalization
 # is incorrect and that some spectral corrections are necessary. This is
-# made possible thanks to the ``~gammapy.makers.FoVBackgroundMaker``. This
+# made possible thanks to the `~gammapy.makers.FoVBackgroundMaker`. This
 # technique is recommended in most 3D data reductions. For more details
 # and usage, see `fov_background <../../user-guide/makers/fov.rst>`__.
 # 
-# Here we are going to use a ``~gammapy.makers.FoVBackgroundMaker`` that
+# Here we are going to use a `~gammapy.makers.FoVBackgroundMaker` that
 # will rescale the background model to the data excluding the region where
 # a known source is present. For more details on the way to create
 # exclusion masks see the `mask maps <mask_maps.ipynb>`__ notebook.
@@ -200,8 +198,8 @@ dataset = fov_bkg_maker.run(dataset)
 # classical approach consists in applying local corrections by smoothing
 # the data with a ring kernel. This allows to build a set of OFF counts
 # taking into account the inperfect knowledge of the background. This is
-# implemented in the ``~gammapy.makers.RingBackgroundMaker`` which
-# transforms the Dataset in a ``MapDatasetOnOff``. This technique is
+# implemented in the `~gammapy.makers.RingBackgroundMaker` which
+# transforms the Dataset in a `~gammapy.datasets.MapDatasetOnOff`. This technique is
 # mostly used for imaging, and should not be applied for 3D modeling and
 # fitting.
 # 
@@ -216,8 +214,8 @@ dataset = fov_bkg_maker.run(dataset)
 # background in a number of OFF regions. When the background can be safely
 # estimated as radially symmetric w.r.t. the pointing direction, one can
 # apply the reflected regions background technique. This is implemented in
-# the ``~gammapy.makers.ReflectedRegionsBackgroundMaker`` which transforms
-# a ``SpectrumDataset`` in a ``SpectrumDatasetOnOff``. This technique is
+# the `~gammapy.makers.ReflectedRegionsBackgroundMaker` which transforms
+# a `~gammapy.datasets.SpectrumDataset` in a `~gammapy.datasets.SpectrumDatasetOnOff`. This technique is
 # only used for 1D spectral analysis.
 # 
 # For more details and usage, see
@@ -227,7 +225,7 @@ dataset = fov_bkg_maker.run(dataset)
 # -------------------
 # 
 # The data reduction steps can be combined in a single loop to run a full
-# data reduction chain. For this the ``MapDatasetMaker`` is run first and
+# data reduction chain. For this the `MapDatasetMaker` is run first and
 # the output dataset is the passed on to the next maker step. Finally the
 # dataset per observation is stacked into a larger map.
 # 
@@ -261,21 +259,21 @@ print(stacked)
 
 ######################################################################
 # To maintain good performance it is always recommended to do a cutout of
-# the ``MapDataset`` as shown above. In case you want to increase the
+# the `MapDataset` as shown above. In case you want to increase the
 # offset-cut later, you can also choose a larger width of the cutout than
-# ``2 * offset_max``.
+# `2 * offset_max`.
 # 
-# Note that we stack the individual ``MapDataset``, which are computed per
+# Note that we stack the individual `~gammapy.datasets.MapDataset`, which are computed per
 # observation into a larger dataset. During the stacking the safe data
-# range mask (``MapDataset.mask_safe``) is applied by setting data outside
+# range mask (`~gammapy.datasets.MapDataset.mask_safe`) is applied by setting data outside
 # to zero, then data is added to the larger map dataset. To stack multiple
 # observations, the larger dataset must be created first.
 # 
 # The data reduction loop shown above can be done throught the
-# ``DatasetsMaker`` class that take as argument a list of makers. **Note
+# `~gammapy.makers.DatasetsMaker` class that take as argument a list of makers. **Note
 # that the order of the makers list is important as it determines their
-# execution order.** Moreover the ``stack_datasets`` option offers the
-# possibily to stack or not the output datasets, and the ``n_jobs`` option
+# execution order.** Moreover the `stack_datasets` option offers the
+# possibily to stack or not the output datasets, and the `n_jobs` option
 # allow to use multiple processes on run.
 # 
 
@@ -291,17 +289,17 @@ print(datasets)
 # ----------------
 # 
 # The spectrum datasets represent 1D spectra along an energy axis whitin a
-# given on region. The ``SpectrumDataset`` contains a counts spectrum, and
-# a background model. The ``SpectrumDatasetOnOff`` contains ON and OFF
+# given on region. The `~gammapy.datasets.SpectrumDataset` contains a counts spectrum, and
+# a background model. The `~gammapy.datasets.SpectrumDatasetOnOff` contains ON and OFF
 # count spectra, background is implicitly modeled via the OFF counts
 # spectrum.
 # 
-# The ``SpectrumDatasetMaker`` make spectrum dataset for a single
+# The `~gammapy.datasets.SpectrumDatasetMaker` make spectrum dataset for a single
 # observation. In that case the irfs and background are computed at a
 # single fixed offset, which is recommend only for point-sources.
 # 
 # Here is an example of data reduction loop to create
-# ``SpectrumDatasetOnOff`` datasets:
+# `~gammapy.datasets.SpectrumDatasetOnOff` datasets:
 # 
 
 # on region is given by the CircleSkyRegion previously defined

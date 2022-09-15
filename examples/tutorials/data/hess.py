@@ -168,9 +168,9 @@ for obs in observations:
 # Exercises
 # ---------
 # 
-# -  Find the ``OBS_ID`` for the runs of the Crab nebula
+# -  Find the `OBS_ID` for the runs of the Crab nebula
 # -  Compute the expected number of background events in the whole RoI for
-#    ``OBS_ID=23523`` in the 1 TeV to 3 TeV energy band, from the
+#    `OBS_ID=23523` in the 1 TeV to 3 TeV energy band, from the
 #    background IRF.
 # 
 

@@ -7,13 +7,13 @@ Learn how to work with datasets
 Introduction
 ------------
 
-``gammapy.datasets`` are a crucial part of the gammapy API. ``datasets``
-constitute ``DL4`` data - binned counts, IRFs, models and the associated
-likelihoods. ``Datasets`` from the end product of the ``makers`` stage,
-see `makers notebook <makers.ipynb>`__, and are passed on to the ``Fit``
+`~gammapy.datasets` are a crucial part of the gammapy API. `~gammapy.datasets.Dataset`
+objects constitute `DL4` data - binned counts, IRFs, models and the associated
+likelihoods. `~gammapy.datasets.Datasets` from the end product of the data reduction stage,
+see `makers notebook <makers.ipynb>`__, and are passed on to the `~gammapy.modeling.Fit`
 or estimator classes for modelling and fitting purposes.
 
-To find the different types of ``Dataset`` that are supported see
+To find the different types of `~gammapy.datasets.Dataset` objects that are supported see
 `Datasets
 home <../../user-guide/datasets/index.rst#Types-of-supported-datasets>`__
 
@@ -51,8 +51,8 @@ from gammapy.utils.scripts import make_path
 # ----------
 # 
 # The counts, exposure, background, masks, and IRF maps are bundled
-# together in a data structure named ``MapDataset``. While the ``counts``,
-# and ``background`` maps are binned in reconstructed energy and must have
+# together in a data structure named `~gammapy.datasets.MapDataset`. While the `counts`,
+# and `background` maps are binned in reconstructed energy and must have
 # the same geometry, the IRF maps can have a different spatial (coarsely
 # binned and larger) geometry and spectral range (binned in true
 # energies). It is usually recommended that the true energy bin should be
@@ -61,8 +61,8 @@ from gammapy.utils.scripts import make_path
 # Creating an empty dataset
 # ~~~~~~~~~~~~~~~~~~~~~~~~~
 # 
-# An empty ``MapDataset`` can be directly instantiated from any
-# ``WcsGeom`` object:
+# An empty `~gammapy.datasets.MapDataset` can be directly instantiated from any
+# `~gammapy.maps.WcsGeom` object:
 # 
 
 energy_axis = MapAxis.from_energy_bounds(
@@ -93,7 +93,7 @@ print(dataset_empty)
 # The printout shows the key summary information of the dataset, such as
 # total counts, fit statistics, model information etc.
 # 
-# ``MapDataset.from_geom`` has additional keywords, that can be used to
+# `~gammapy.datasetsMapDataset.from_geom` has additional keywords, that can be used to
 # define the binning of the IRF related maps:
 # 
 
@@ -125,7 +125,7 @@ dataset_empty.geoms
 
 
 ######################################################################
-# Another way to create a ``MapDataset`` is to just read an existing one
+# Another way to create a `~gammapy.datasets.MapDataset` is to just read an existing one
 # from a FITS file:
 # 
 
@@ -143,8 +143,8 @@ print(dataset_cta)
 
 
 ######################################################################
-# To further explore the contents of a ``Dataset``, you can use
-# e.g. ``.info_dict()``
+# To further explore the contents of a `Dataset`, you can use
+# e.g. `~gammay.datasets.MapDataset.info_dict()`
 # 
 
 # For a quick info, use
@@ -164,14 +164,14 @@ counts_image.smooth("0.1 deg").plot()
 
 ######################################################################
 # Of course you can also access IRF related maps, e.g. the psf as
-# ``PSFMap``:
+# `~gammapy.irf.PSFMap`:
 # 
 
 dataset_cta.psf
 
 
 ######################################################################
-# And use any method on the ``PSFMap`` object:
+# And use any method on the `~gammapy.irf.PSFMap` object:
 # 
 radius = dataset_cta.psf.containment_radius(energy_true=1 * u.TeV, fraction=0.95)
 print(radius)
@@ -182,8 +182,8 @@ edisp_kernel.plot_matrix(ax=ax)
 
 
 ######################################################################
-# The ``MapDataset`` typically also contains the information on the
-# residual hadronic background, stored in ``MapDataset.background`` as a
+# The `~gammapy.datasets.MapDataset` typically also contains the information on the
+# residual hadronic background, stored in `~gammapy.datasets.MapDataset.background` as a
 # map:
 # 
 
@@ -192,7 +192,7 @@ dataset_cta.background
 
 ######################################################################
 # As a next step we define a minimal model on the dataset using the
-# ``.models`` setter:
+# `~gammapy.datasets.MapDataset.models` setter:
 # 
 
 model = SkyModel.create("pl", "point", name="gc")
@@ -212,7 +212,7 @@ print(dataset_cta)
 
 
 ######################################################################
-# Now we can use ``.npred()`` to get a map of the total predicted counts
+# Now we can use the `~gammapy.datasets.MapDataset.npred` method to get a map of the total predicted counts
 # of the model:
 # 
 
@@ -230,10 +230,10 @@ npred_source.sum_over_axes().plot()
 
 
 ######################################################################
-# ``MapDataset.background`` contains the background map computed from the
-# IRF. Internally it will be combined with a ``FoVBackgroundModel``, to
+# `~gammapy.datasets.MapDataset.background` contains the background map computed from the
+# IRF. Internally it will be combined with a `~gammapy.modeling.models.FoVBackgroundModel`, to
 # allow for adjusting the backgroun model during a fit. To get the model
-# corrected background, one can use ``dataset.npred_background()``.
+# corrected background, one can use `~gammapy.datasets.MapDataset.npred_background`.
 # 
 
 npred_background = dataset_cta.npred_background()
@@ -244,21 +244,21 @@ npred_background.sum_over_axes().plot()
 # Using masks
 # ~~~~~~~~~~~
 # 
-# There are two masks that can be set on a ``Dataset``, ``mask_safe`` and
-# ``mask_fit``.
+# There are two masks that can be set on a `~gammapy.datasets.MapDataset`, `~gammapy.datasets.MapDataset.mask_safe` and
+# `~gammapy.datasets.MapDataset.mask_fit`.
 # 
-# -  The ``mask_safe`` is computed during the data reduction process
+# -  The `~gammapy.datasets.MapDataset.mask_safe` is computed during the data reduction process
 #    according to the specified selection cuts, and should not be changed
 #    by the user.
 # -  During modelling and fitting, the user might want to additionally
 #    ignore some parts of a reduced dataset, e.g. to restrict the fit to a
 #    specific energy range or to ignore parts of the region of interest.
-#    This should be done by applying the ``mask_fit``. To see details of
+#    This should be done by applying the `~gammapy.datasets.MapDataset.mask_fit`. To see details of
 #    applying masks, please refer to
-#    `Masks-for-fitting <mask_maps.ipynb#Masks-for-fitting:-mask_fit>`__
+#    `Masks-for-fitting <mask_maps.ipynb#Masks-for-fitting>`__
 # 
-# Both the ``mask_fit`` and ``mask_safe`` must have the safe ``geom`` as
-# the ``counts`` and ``background`` maps.
+# Both the `~gammapy.datasets.MapDataset.mask_fit` and `~gammapy.datasets.MapDataset.mask_safe` must
+# have the same `~gammapy.maps.Map.geom` as the `~gammapy.datasets.MapDataset.counts` and `~gammapy.datasets.MapDataset.background` maps.
 # 
 
 # eg: to see the safe data range
@@ -266,7 +266,7 @@ dataset_cta.mask_safe.plot_grid();
 
 
 ######################################################################
-# In addition it is possible to define a custom ``mask_fit``:
+# In addition it is possible to define a custom `~gammapy.datasets.MapDataset.mask_fit`:
 # 
 
 # To apply a mask fit - in enegy and space
@@ -281,13 +281,13 @@ dataset_cta.mask_fit.plot_grid(vmin=0, vmax=1, add_cbar=True);
 
 
 ######################################################################
-# To access the energy range defined by the mask you can use: -
-# ``dataset.energy_range_safe`` : energy range definedby the ``mask_safe``
-# - ``dataset.energy_range_fit`` : energy range defined by the
-# ``mask_fit`` - ``dataset.energy_range`` : the final energy range used in
-# likelihood computation
+# To access the energy range defined by the mask you can use: 
+#
+# -`~gammapy.datasets.MapDataset.energy_range_safe` : energy range definedby the `~gammapy.datasets.MapDataset.mask_safe`
+# - `~gammapy.datasets.MapDataset.energy_range_fit` : energy range defined by the `~gammapy.datasets.MapDataset.mask_fit` 
+# - `~gammapy.datasets.MapDataset.energy_range` : the final energy range used in likelihood computation
 # 
-# These methods return two maps, with the ``min`` and ``max`` energy
+# These methods return two maps, with the `min` and `max` energy
 # values at each spatial pixel
 # 
 
@@ -301,8 +301,8 @@ e_max.plot(add_cbar=True)
 
 
 ######################################################################
-# Just as for ``Map`` objects it is possible to cutout a whole
-# ``MapDataset``, which will perform the cutout for all maps in
+# Just as for `~gammapy.maps.Map` objects it is possible to cutout a whole
+# `~gammapy.datasets.MapDataset`, which will perform the cutout for all maps in
 # parallel.Optionally one can provide a new name to the resulting dataset:
 # 
 
@@ -316,7 +316,7 @@ cutout.counts.sum_over_axes().plot()
 
 
 ######################################################################
-# It is also possible to slice a ``MapDataset`` in energy:
+# It is also possible to slice a `~gammapy.datasets.MapDataset` in energy:
 # 
 
 sliced = dataset_cta.slice_by_energy(
@@ -327,7 +327,7 @@ sliced.counts.plot_grid();
 
 ######################################################################
 # The same operation will be applied to all other maps contained in the
-# datasets such as ``mask_fit``:
+# datasets such as `~gammapy.datasets.MapDataset.mask_fit`:
 # 
 
 sliced.mask_fit.plot_grid();
@@ -376,7 +376,7 @@ resampled.counts.plot_grid(ncols=2);
 
 ######################################################################
 # To squash the whole dataset into a single energy bin there is the
-# ``.to_image()`` convenience method:
+# `~gammapy.datasets.MapDataset.to_image()` convenience method:
 # 
 
 dataset_image = dataset_cta.to_image()
@@ -387,10 +387,10 @@ dataset_image.counts.plot()
 # SpectrumDataset
 # ---------------
 # 
-# ``SpectrumDataset`` inherits from a ``MapDataset``, and is specially
-# adapted for 1D spectral analysis, and uses a ``RegionGeom`` instead of a
-# ``WcsGeom``. A ``MapDatset`` can be converted to a ``SpectrumDataset``,
-# by summing the ``counts`` and ``background`` inside the ``on_region``,
+# `~gammapy.datasets.SpectrumDataset` inherits from a `~gammapy.datasets.MapDataset`, and is specially
+# adapted for 1D spectral analysis, and uses a `RegionGeom` instead of a
+# `WcsGeom`. A `~gammapy.datasets.MapDatset` can be converted to a `~gammapy.datasets.SpectrumDataset`,
+# by summing the `counts` and `background` inside the `on_region`,
 # which can then be used for classical spectral analysis. Containment
 # correction is feasible only for circular regions.
 # 
@@ -407,8 +407,8 @@ spectrum_dataset.peek();
 
 
 ######################################################################
-# A ``MapDataset`` can also be integrated over the ``on_region`` to create
-# a ``MapDataset`` with a ``RegionGeom``. Complex regions can be handled
+# A `~gammapy.datasets.MapDataset` can also be integrated over the `on_region` to create
+# a `~gammapy.datasets.MapDataset` with a `~gammapy.maps.RegionGeom`. Complex regions can be handled
 # and since the full IRFs are used, containment correction is not
 # required.
 # 
@@ -423,11 +423,11 @@ print(reg_dataset)
 # FluxPointsDataset
 # -----------------
 # 
-# ``FluxPointsDataset`` is a ``Dataset`` container for precomputed flux
-# points, which can be then used in fitting. ``FluxPointsDataset`` cannot
-# be read directly, but should be read through ``FluxPoints``, with an
-# additional ``SkyModel``. Similarly, ``FluxPointsDataset.write`` only
-# saves the ``data`` component to disk.
+# `~gammapy.datasets.FluxPointsDataset` is a `~gammapy.datasets.Dataset` container for precomputed flux
+# points, which can be then used in fitting. `~gammapy.datasets.FluxPointsDataset` cannot
+# be read directly, but should be read through `FluxPoints`, with an
+# additional `~gammapy.modeling.models.SkyModel`. Similarly, `~gammapy.datasets.FluxPointsDataset.write` only
+# saves the `~gammapy.datasets.FluxPointsDataset,data` attribute to disk.
 # 
 
 flux_points = FluxPoints.read(
@@ -440,8 +440,9 @@ fp_dataset.plot_spectrum()
 
 
 ######################################################################
-# The masks on ``FluxPointsDataset`` are ``np.array`` and the data is a
-# ``FluxPoints`` object. The ``mask_safe``, by default, masks the upper
+# The masks on `~gammapy.datasets.FluxPointsDataset` are `~numpy.ndarray` objects
+# and the data is a
+# `~gammapy.datasets.FluxPoints` object. The `~gammapy.datasets.FluxPointsDataset.mask_safe`, by default, masks the upper
 # limit points
 # 
 
@@ -453,7 +454,7 @@ fp_dataset.data_shape()  # number of data points
 
 
 ######################################################################
-# For an example of fitting ``FluxPoints``, see `flux point
+# For an example of fitting `~gammapy.estimators.FluxPoints`, see `flux point
 # fitting <../analysis/1D/sed_fitting.ipynb>`__, and can be used for
 # catalog objects, eg see `catalog notebook <catalog.ipynb>`__
 # 
@@ -463,25 +464,22 @@ fp_dataset.data_shape()  # number of data points
 # Datasets
 # --------
 # 
-
-
-######################################################################
-# ``Datasets`` are a collection of ``Dataset`` objects. They can be of the
-# same type, or of different types, eg: mix of ``FluxPointDataset``,
-# ``MapDataset`` and ``SpectrumDataset``.
+# `~gammapy.datasets.Datasets` are a collection of `~gammapy.datasets.Dataset` objects. They can be of the
+# same type, or of different types, eg: mix of `~gammapy.datasets.FluxPointDataset`,
+# `~gammapy.datasets.MapDataset` and `~gammapy.datasets.SpectrumDataset`.
 # 
-# For modelling and fitting of a list of ``Dataset`` objects, you can
+# For modelling and fitting of a list of `~gammapy.datasets.Dataset` objects, you can
 # either - Do a joint fitting of all the datasets together - Stack the
 # datasets together, and then fit them.
 # 
-# ``Datasets`` is a convenient tool to handle joint fitting of
+# `~gammapy.datasets.Datasets` is a convenient tool to handle joint fitting of
 # simultaneous datasets. As an example, please see the `joint fitting
 # tutorial <../analysis/3D/analysis_mwl.ipynb>`__
 # 
 # To see how stacking is performed, please see `Implementation of
 # stacking <../../user-guide/datasets/index.rst#stacking-multiple-datasets>`__
 # 
-# To create a ``Datasets`` object, pass a list of ``Dataset`` on init, eg
+# To create a `~gammapy.datasets.Datasets` object, pass a list of `~gammapy.datasets.Dataset` on init, eg
 # 
 
 datasets = Datasets([dataset_empty, dataset_cta])
@@ -491,8 +489,8 @@ print(datasets)
 
 ######################################################################
 # If all the datasets have the same type we can also print an info table,
-# collectiong all the information from the individual casll to
-# ``Dataset.info_dict()``:
+# collectiong all the information from the individual calls to
+# `~gammapy.datasets.Dataset.info_dict()`:
 # 
 
 datasets.info_table()  # quick info of all datasets
@@ -501,7 +499,7 @@ datasets.names  # unique name of each dataset
 
 
 ######################################################################
-# We can access individual datasets in ``Datasets`` object by name:
+# We can access individual datasets in `Datasets` object by name:
 # 
 
 datasets["dataset-empty"]  # extracts the first dataset
@@ -548,7 +546,7 @@ print(datasets)
 
 
 ######################################################################
-# Now we can stack all datasets using ``.stack_reduce()``:
+# Now we can stack all datasets using `~gammapy.datasets.Datasets.stack_reduce()`:
 # 
 
 stacked = datasets.stack_reduce(name="stacked")

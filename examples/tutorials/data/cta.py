@@ -33,7 +33,7 @@ using the CTA response files available here:
 
 -  https://www.cta-observatory.org/science/cta-performance/
 
-The current FITS format ``CTA-Performance-prod3b-v2-FITS.tar`` is fully
+The current FITS format `CTA-Performance-prod3b-v2-FITS.tar` is fully
 supported by Gammapy, as shown below.
 
 Tutorial overview
@@ -88,19 +88,19 @@ from gammapy.irf import EffectiveAreaTable2D, load_cta_irfs
 # and a description of the data and how to download it is
 # `here <https://forge.in2p3.fr/projects/data-challenge-1-dc-1/wiki#Data-access>`__.
 # 
-# You should download ``caldb.tar.gz`` (1.2 MB), ``models.tar.gz`` (0.9
-# GB), ``index.tar.gz`` (0.5 MB), as well as optionally the simulated
-# survey data you are interested in: Galactic plane survey ``gps.tar.gz``
-# (8.3 GB), Galactic center ``gc.tar.gz`` (4.4 MB), Extragalactic survey
-# ``egal.tar.gz`` (2.5 GB), AGN monitoring ``agn.wobble.tar.gz`` (4.7 GB).
-# After download, follow the instructions how to ``untar`` the files, and
-# set a ``CTADATA`` environment variable to point to the data.
+# You should download `caldb.tar.gz` (1.2 MB), `models.tar.gz` (0.9
+# GB), `index.tar.gz` (0.5 MB), as well as optionally the simulated
+# survey data you are interested in: Galactic plane survey `gps.tar.gz`
+# (8.3 GB), Galactic center `gc.tar.gz` (4.4 MB), Extragalactic survey
+# `egal.tar.gz` (2.5 GB), AGN monitoring `agn.wobble.tar.gz` (4.7 GB).
+# After download, follow the instructions how to `untar` the files, and
+# set a `CTADATA` environment variable to point to the data.
 # 
 # For convenience, since the 1DC data files are large, and not publicly
 # available to anyone, we have taken a tiny subset of the CTA 1DC data,
 # four observations with the southern array from the GPS survey, pointing
-# near the Galactic center, and included them at ``$GAMMAPY_DATA/cta-1dc``
-# which you get via ``gammapy download tutorials``.
+# near the Galactic center, and included them at `$GAMMAPY_DATA/cta-1dc`
+# which you get via `gammapy download tutorials`.
 # 
 # Files
 # ~~~~~
@@ -121,7 +121,7 @@ from gammapy.irf import EffectiveAreaTable2D, load_cta_irfs
 
 
 ######################################################################
-# The access to the IRFs files requires to define a ``CALDB`` environment
+# The access to the IRFs files requires to define a `CALDB` environment
 # variable. We are going to define it only for this notebook so it won’t
 # overwrite the one you may have already defined.
 # 
@@ -133,7 +133,7 @@ os.environ["CALDB"] = os.environ["GAMMAPY_DATA"] + "/cta-1dc/caldb"
 # Datastore
 # ~~~~~~~~~
 # 
-# You can use the ``~gammapy.data.DataStore`` to load via the index files
+# You can use the `~gammapy.data.DataStore` to load via the index files
 # 
 
 data_store = DataStore.from_dir("$GAMMAPY_DATA/cta-1dc/index/gps")
@@ -142,7 +142,7 @@ print(data_store)
 
 ######################################################################
 # If you can’t download the index files, or got errors related to the data
-# access using them, you can generate the ``DataStore`` directly from the
+# access using them, you can generate the `DataStore` directly from the
 # event files.
 # 
 
@@ -162,10 +162,10 @@ observation
 # ------
 # 
 # We can load events data via the data store and observation, or
-# equivalently via the ``~gammapy.data.EventList`` class by specifying the
+# equivalently via the `~gammapy.data.EventList` class by specifying the
 # EVENTS filename.
 # 
-# The quick-look ``events.peek()`` plot below shows that CTA has a field
+# The quick-look `events.peek()` plot below shows that CTA has a field
 # of view of a few degrees, and two energy thresholds, one significantly
 # below 100 GeV where the CTA large-size telescopes (LSTs) detect events,
 # and a second one near 100 GeV where the mid-sized telescopes (MSTs)
@@ -174,9 +174,9 @@ observation
 # Note that most events are “hadronic background” due to cosmic ray
 # showers in the atmosphere that pass the gamma-hadron selection cuts for
 # this analysis configuration. Since this is simulated data, column
-# ``MC_ID`` is available that gives an emission component identifier code,
-# and the EVENTS header in ``events.table.meta`` can be used to look up
-# which ``MC_ID`` corresponds to which emission component.
+# `MC_ID` is available that gives an emission component identifier code,
+# and the EVENTS header in `events.table.meta` can be used to look up
+# which `MC_ID` corresponds to which emission component.
 # 
 
 events = observation.events
@@ -197,7 +197,7 @@ events.peek()
 # ----
 # 
 # The CTA instrument response functions (IRFs) are given as FITS files in
-# the ``caldb`` folder, the following IRFs are available:
+# the `caldb` folder, the following IRFs are available:
 # 
 # -  effective area
 # -  energy dispersion
@@ -274,7 +274,7 @@ irfs["psf"].plot_containment_radius_vs_energy(
 # Background
 # ~~~~~~~~~~
 # 
-# The background is given as a rate in units ``MeV-1 s-1 sr-1``.
+# The background is given as a rate in units `MeV-1 s-1 sr-1`.
 # 
 
 irfs["bkg"].peek()
@@ -306,7 +306,7 @@ irfs["bkg"].plot_at_energy(
 # e.g. `ElementTree <https://docs.python.org/3/library/xml.etree.elementtree.html>`__
 # from the Python standard library, or
 # `xmltodict <https://github.com/martinblech/xmltodict>`__ if you
-# ``pip install xmltodict``. Here’s an example how to load the information
+# `pip install xmltodict`. Here’s an example how to load the information
 # for a given source, and to convert it into the sky model format Gammapy
 # understands.
 # 
@@ -368,21 +368,21 @@ irfs["bkg"].plot_at_energy(
 # Exercises
 # ---------
 # 
-# -  Load the EVENTS file for ``obs_id=111159`` as a
-#    ``~gammapy.data.EventList`` object.
-# -  Use ``events.table`` to find the energy, sky coordinate and time of
+# -  Load the EVENTS file for `obs_id=111159` as a
+#    `~gammapy.data.EventList` object.
+# -  Use `events.table` to find the energy, sky coordinate and time of
 #    the highest-energy envent.
-# -  Use ``events.pointing_radec`` to find the pointing position of this
-#    observation, and use ``astropy.coordinates.SkyCoord`` methods to find
+# -  Use `events.pointing_radec` to find the pointing position of this
+#    observation, and use `astropy.coordinates.SkyCoord` methods to find
 #    the field of view offset of the highest-energy event.
 # -  What is the effective area and PSF 68% containment radius of CTA at 1
-#    TeV for the ``South_z20_50h`` configuration used for the CTA 1DC
+#    TeV for the `South_z20_50h` configuration used for the CTA 1DC
 #    simulation?
 # -  Get the latest CTA FITS performance files from
 #    https://www.cta-observatory.org/science/cta-performance/ and run the
 #    code example above. Make an effective area ratio plot of 40 deg
-#    zenith versus 20 deg zenith for the ``South_z40_50h`` and
-#    ``South_z20_50h`` configurations.
+#    zenith versus 20 deg zenith for the `South_z40_50h` and
+#    `South_z20_50h` configurations.
 # 
 
 # start typing here ...

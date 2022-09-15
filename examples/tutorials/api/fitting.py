@@ -16,9 +16,9 @@ Prerequisites
 Proposed approach
 -----------------
 
-This is a hands-on tutorial to ``~gammapy.modeling``, showing how to do
+This is a hands-on tutorial to `~gammapy.modeling`, showing how to do
 perform a Fit in gammapy. The emphasis here is on interfacing the
-``Fit`` class and inspecting the errors. To see an analysis example of
+`Fit` class and inspecting the errors. To see an analysis example of
 how datasets and models interact, see the `model management
 notebook <model_management.ipynb>`__. As an example, in this notebook,
 we are going to work with HESS data of the Crab Nebula and show in
@@ -27,7 +27,7 @@ fitting backends - access covariance matrix information and parameter
 errors - compute likelihood profile - compute confidence contours
 
 See also: `Models gallery tutorial <models.ipynb>`__ and
-``docs/modeling/index.rst``.
+`docs/modeling/index.rst`.
 
 The setup
 ---------
@@ -93,7 +93,7 @@ dataset_hess.mask_fit = dataset_hess.counts.geom.energy_mask(e_min, e_max)
 # Fitting options
 # ---------------
 # 
-# First let’s create a ``Fit`` instance:
+# First let’s create a `Fit` instance:
 # 
 
 scipy_opts = {
@@ -106,8 +106,8 @@ fit_scipy = Fit(store_trace=True, optimize_opts=scipy_opts)
 
 ######################################################################
 # By default the fit is performed using MINUIT, you can select alternative
-# optimizers and set their option using the ``optimize_opts`` argument of
-# the ``Fit.run()`` method. In addition we have specified to store the
+# optimizers and set their option using the `optimize_opts` argument of
+# the `Fit.run()` method. In addition we have specified to store the
 # trace of parameter values of the fit.
 # 
 # Note that, for now, covaraince matrix and errors are computed only for
@@ -207,11 +207,11 @@ result_minuit.parameters.to_table()
 
 ######################################################################
 # Plot fit statistic profiles for all fitted parameters, using
-# ``~gammapy.modeling.Fit.stat_profile()``. For a good fit and error
+# `~gammapy.modeling.Fit.stat_profile`. For a good fit and error
 # estimate each profile should be parabolic. The specification for each
 # fit statistic profile can be changed on the
-# ``~gammapy.modeling.Parameter`` object, which has ``.scan_min``,
-# ``.scan_max``, ``.scan_n_values`` and ``.scan_n_sigma`` attributes.
+# `~gammapy.modeling.Parameter` object, which has `~gammapy.modeling.Parameter.scan_min`,
+# `~gammapy.modeling.Parameter.scan_max`, `~gammapy.modeling.Parameter.scan_n_values` and `~gammapy.modeling.Parameter.scan_n_sigma` attributes.
 # 
 
 total_stat = result_minuit.total_stat
@@ -230,13 +230,13 @@ for ax, par in zip(axes, crab_model.parameters.free_parameters):
 
 ######################################################################
 # Inspect model residuals. Those can always be accessed using
-# ``~Dataset.residuals()``, that will return an array in case a the fitted
-# ``Dataset`` is a ``SpectrumDataset`` and a full cube in case of a
-# ``MapDataset``. For more details, we refer here to the dedicated fitting
+# `~gammapy.datasets.Dataset.residuals()`, that will return an array in case a the fitted
+# `~gammapy.datasets.Dataset` is a `~gammapy.datasets.SpectrumDataset` and a full cube in case of a
+# `~gammapy.datasets.MapDataset`. For more details, we refer here to the dedicated fitting
 # tutorials: `analysis_3d.ipynb <../analysis/3D/analysis_3d.ipynb>`__ (for
-# ``MapDataset`` fitting) and
+# `~gammapy.datasets.MapDataset` fitting) and
 # `spectrum_analysis.ipynb <../analysis/1D/spectral_analysis.ipynb>`__
-# (for ``SpectrumDataset`` fitting).
+# (for `SpectrumDataset` fitting).
 # 
 
 
@@ -245,7 +245,7 @@ for ax, par in zip(axes, crab_model.parameters.free_parameters):
 # --------------------------------
 # 
 # After the fit the covariance matrix is attached to the model. You can
-# get the error on a specific parameter by accessing the ``.error``
+# get the error on a specific parameter by accessing the `~gammapy.modeling.Parameter.error`
 # attribute:
 # 
 
@@ -281,7 +281,7 @@ ax = crab_spectrum.plot_error(energy_bounds=energy_bounds, energy_power=2)
 # best-fit value.
 # 
 # Gammapy offers two ways of computing confidence contours, in the
-# dedicated methods ``Fit.minos_contour()`` and ``Fit.stat_profile()``. In
+# dedicated methods `~gammapy.modeling.Fit.minos_contour` and `~gammapy.modeling.Fit.stat_profile`. In
 # the following sections we will describe them.
 # 
 
@@ -299,15 +299,12 @@ ax = crab_spectrum.plot_error(energy_bounds=energy_bounds, energy_power=2)
 
 
 ######################################################################
-# Computing contours using ``Fit.stat_contour()``
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Computing contours using `~gammapy.modeling.Fit.stat_contour`
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 
-
-
-######################################################################
 # After the fit, MINUIT offers the possibility to compute the confidence
 # confours. gammapy provides an interface to this functionality through
-# the ``Fit`` object using the ``.stat_contour`` method. Here we defined a
+# the `~gammapy.modeling.Fit` object using the `~gammapy.modeling.Fit.stat_contour` method. Here we defined a
 # function to automate the contour production for the different
 # parameterer and confidence levels (expressed in term of sigma):
 # 
@@ -411,16 +408,13 @@ plt.tight_layout()
 
 
 ######################################################################
-# Computing contours using ``Fit.stat_surface()``
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Computing contours using `~gammapy.modeling.Fit.stat_surface`
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 
-
-
-######################################################################
 # This alternative method for the computation of confidence contours,
-# although more time consuming than ``Fit.minos_contour()``, is expected
+# although more time consuming than `~gammapy.modeling.Fit.minos_contour()`, is expected
 # to be more stable. It consists of a generalization of
-# ``Fit.stat_profile()`` to a 2-dimensional parameter space. The algorithm
+# `~gammapy.modeling.Fit.stat_profile()` to a 2-dimensional parameter space. The algorithm
 # is very simple: - First, passing two arrays of parameters values, a
 # 2-dimensional discrete parameter space is defined; - For each node of
 # the parameter space, the two parameters of interest are frozen. This
@@ -434,20 +428,12 @@ plt.tight_layout()
 # 
 # Let’s see it step by step.
 # 
-
-
-######################################################################
 # First of all, we can notice that this method is “backend-agnostic”,
 # meaning that it can be run with MINUIT, sherpa or scipy as fitting
 # tools. Here we will stick with MINUIT, which is the default choice:
 # 
-
-
-
-
-######################################################################
-# As an example, we can compute the confidence contour for the ``alpha``
-# and ``beta`` parameters of the ``dataset_hess``. Here we define the
+# As an example, we can compute the confidence contour for the `alpha`
+# and `beta` parameters of the `dataset_hess`. Here we define the
 # parameter space:
 # 
 
@@ -460,9 +446,9 @@ par_beta.scan_values = np.linspace(-0.05, 0.55, 20)
 
 
 ######################################################################
-# Then we run the algorithm, by choosing ``reoptimize=False`` for the sake
+# Then we run the algorithm, by choosing `reoptimize=False` for the sake
 # of time saving. In real life applications, we strongly recommend to use
-# ``reoptimize=True``, so that all free nuisance parameters will be fit at
+# `reoptimize=True`, so that all free nuisance parameters will be fit at
 # each grid node. This is the correct way, statistically speaking, of
 # computing confidence contours, but is expected to be time consuming.
 # 
@@ -523,9 +509,9 @@ ax.clabel(contours, fmt="%.0f$\,\sigma$", inline=3, fontsize=15);
 
 
 ######################################################################
-# Note that, if computed with ``reoptimize=True``, this plot would be
+# Note that, if computed with `reoptimize=True`, this plot would be
 # completely consistent with the third panel of the plot produced with
-# ``Fit.stat_contour`` (try!).
+# `~gammapy.modeling.Fit.stat_contour` (try!).
 # 
 
 

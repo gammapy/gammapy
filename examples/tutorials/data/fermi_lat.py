@@ -37,8 +37,8 @@ e.g. `iminuit <http://iminuit.readthedocs.io/>`__ or
 `emcee <http://dfm.io/emcee>`__.
 
 To use Fermi-LAT data with Gammapy, you first have to use the Fermi ST
-to prepare an event list (using ``gtselect`` and ``gtmktime``, exposure
-cube (using ``gtexpcube2`` and PSF (using ``gtpsf``). You can then use
+to prepare an event list (using `gtselect` and `gtmktime`, exposure
+cube (using `gtexpcube2` and PSF (using `gtpsf`). You can then use
 `~gammapy.data.EventList`, `~gammapy.maps` and the
 `~gammapy.irf.PSFMap` to read the Fermi-LAT maps and PSF, i.e. support
 for these high level analysis products from the Fermi ST is built in. To
@@ -50,10 +50,10 @@ illustrated in a future tutorial.
 Setup
 -----
 
-**IMPORTANT**: For this notebook you have to get the prepared ``3fhl``
+**IMPORTANT**: For this notebook you have to get the prepared `3fhl`
 dataset provided in your $GAMMAPY_DATA.
 
-Note that the ``3fhl`` dataset is high-energy only, ranging from 10 GeV
+Note that the `3fhl` dataset is high-energy only, ranging from 10 GeV
 to 2 TeV.
 
 """
@@ -83,7 +83,7 @@ from gammapy.modeling import Fit
 # Events
 # ------
 # 
-# To load up the Fermi-LAT event list, use the ``~gammapy.data.EventList``
+# To load up the Fermi-LAT event list, use the `~gammapy.data.EventList`
 # class:
 # 
 
@@ -129,7 +129,7 @@ for e_min in [10, 100, 1000] * u.GeV:
 # Let us start to prepare things for an 3D map analysis of the Galactic
 # center region with Gammapy. The first thing we do is to define the map
 # geometry. We chose a TAN projection centered on position
-# ``(glon, glat) = (0, 0)`` with pixel size 0.1 deg, and four energy bins.
+# `(glon, glat) = (0, 0)` with pixel size 0.1 deg, and four energy bins.
 # 
 
 gc_pos = SkyCoord(0, 0, unit="deg", frame="galactic")
@@ -147,7 +147,7 @@ counts = Map.create(
 )
 # We put this call into the same Jupyter cell as the Map.create
 # because otherwise we could accidentally fill the counts
-# multiple times when executing the ``fill_by_coord`` multiple times.
+# multiple times when executing the `fill_by_coord` multiple times.
 counts.fill_events(events)
 
 counts.geom.axes[0]
@@ -160,7 +160,7 @@ counts.sum_over_axes().smooth(2).plot(stretch="sqrt", vmax=30);
 # --------
 # 
 # The Fermi-LAT dataset contains the energy-dependent exposure for the
-# whole sky as a HEALPix map computed with ``gtexpcube2``. This format is
+# whole sky as a HEALPix map computed with `gtexpcube2`. This format is
 # supported by `~gammapy.maps.Map` directly.
 # 
 # Interpolating the exposure cube from the Fermi ST to get an exposure
@@ -172,7 +172,7 @@ counts.sum_over_axes().smooth(2).plot(stretch="sqrt", vmax=30);
 # in energy on the original exposure cube. Probably log interpolation
 # would be better, but it doesn’t matter much here, because the energy
 # binning is fine. Finally, we just copy the counts map geometry, which
-# contains an energy axis with ``node_type="edges"``. This is non-ideal
+# contains an energy axis with `node_type="edges"`. This is non-ideal
 # for exposure cubes, but again, acceptable because exposure doesn’t vary
 # much from bin to bin, so the exact way interpolation occurs in later use
 # of that exposure cube doesn’t matter a lot. Of course you could define
@@ -270,7 +270,7 @@ plt.ylabel("Flux (cm-2 s-1 MeV-1 sr-1)");
 # 
 # To load the isotropic diffuse model with Gammapy, use the
 # `~gammapy.modeling.models.TemplateSpectralModel`. We are using
-# ``'fill_value': 'extrapolate'`` to extrapolate the model above 500 GeV:
+# `'fill_value': 'extrapolate'` to extrapolate the model above 500 GeV:
 # 
 
 filename = "$GAMMAPY_DATA/fermi_3fhl/iso_P8R2_SOURCE_V6_v06.txt"
@@ -294,7 +294,7 @@ diffuse_iso.spectral_model.plot(
 # PSF
 # ---
 # 
-# Next we will tke a look at the PSF. It was computed using ``gtpsf``, in
+# Next we will tke a look at the PSF. It was computed using `gtpsf`, in
 # this case for the Galactic center position. Note that generally for
 # Fermi-LAT, the PSF only varies little within a given regions of the sky,
 # especially at high energies like what we have here. We use the

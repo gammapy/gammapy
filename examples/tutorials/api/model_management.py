@@ -15,7 +15,7 @@ handling multiple model components.
 **Note: Since gammapy v0.18, the responsibility of model management is
 left totally upon the user. All models, including background models,
 have to be explicitly defined.** To keep track of the used models, we
-define a global ``Models`` object (which is a collection of ``SkyModel``
+define a global `Models` object (which is a collection of `SkyModel`
 objects) to which we append and delete models.
 
 Prerequisites
@@ -41,7 +41,7 @@ simulated CTA (DC1) data. We demonstrate
 -  Sharing a model between multiple datasets
 
 We then load models from the Fermi 3FHL catalog to show some convenience
-handling for multiple ``Models`` together
+handling for multiple `Models` together
 
 -  accessing models from a catalog
 -  selecting models contributing to a given region
@@ -83,7 +83,7 @@ from gammapy.modeling.models import GaussianSpatialModel
 # -----------------
 # 
 # First, we read some precomputed Fermi and CTA datasets, and create a
-# ``Datasets`` object containing the two.
+# `Datasets` object containing the two.
 # 
 
 fermi_dataset = MapDataset.read(
@@ -129,22 +129,22 @@ print(datasets)
 # Assigning background models to datasets
 # ---------------------------------------
 # 
-# For any IACT dataset (in this case ``cta_dataset``) , we have to create
-# a ``FoVBackgroundModel``. Note that ``FoVBackgroundModel`` must be
+# For any IACT dataset (in this case `cta_dataset`) , we have to create
+# a `FoVBackgroundModel`. Note that `FoVBackgroundModel` must be
 # specified to one dataset only
 # 
 # For Fermi-LAT, the background contribution is taken from a diffuse
-# isotropic template. To convert this into a gammapy ``SkyModel``, use the
-# helper function ``create_fermi_isotropic_diffuse_model()``
+# isotropic template. To convert this into a gammapy `SkyModel`, use the
+# helper function `create_fermi_isotropic_diffuse_model()`
 # 
 # To attach a model on a particular dataset it is necessary to specify the
-# ``datasets_names``. Otherwise, by default, the model will be applied to
-# all the datasets in ``datasets``
+# `datasets_names`. Otherwise, by default, the model will be applied to
+# all the datasets in `datasets`
 # 
 
 
 ######################################################################
-# First, we must create a global ``Models`` object which acts as the
+# First, we must create a global `Models` object which acts as the
 # container for all models used in a particular analysis
 # 
 
@@ -176,8 +176,8 @@ print(datasets)
 # --------------------------------
 # 
 # In this section, we show how to add a model to multiple datasets. For
-# this, we specify a list of ``datasets_names`` to the model.
-# Alternatively, not specifying any ``datasets_names`` will add it to all
+# this, we specify a list of `datasets_names` to the model.
+# Alternatively, not specifying any `datasets_names` will add it to all
 # the datasets.
 # 
 # For this example, we use a template model of the galactic diffuse
@@ -212,7 +212,7 @@ print(datasets)
 
 
 ######################################################################
-# The ``diffuse-iem`` model is correctly present on both. Now, you can
+# The `diffuse-iem` model is correctly present on both. Now, you can
 # proceed with the fit. For computational purposes, we skip it in this
 # notebook
 # 
@@ -239,7 +239,7 @@ catalog = SourceCatalog3FHL()
 
 ######################################################################
 # We first choose some relevant models from the catalog and create a new
-# ``Models`` object.
+# `Models` object.
 # 
 
 gc_sep = catalog.positions.separation(
@@ -257,9 +257,9 @@ len(models_3fhl)
 # Selecting models contributing to a given region
 # -----------------------------------------------
 # 
-# We now use ``Models.select_region()`` to get a subset of models
+# We now use `Models.select_region()` to get a subset of models
 # contributing to a particular region. You can also use
-# ``Models.select_mask()`` to get models lying inside the ``True`` region
+# `Models.select_mask()` to get models lying inside the `True` region
 # of a mask map\`
 # 
 
@@ -272,10 +272,10 @@ len(models_selected)
 
 
 ######################################################################
-# We now want to assign ``models_3fhl`` to the Fermi dataset, and
-# ``models_selected`` to both the CTA and Fermi datasets. For this, we
-# explicitlty mention the ``datasets_names`` to the former, and leave it
-# ``None`` (default) for the latter.
+# We now want to assign `models_3fhl` to the Fermi dataset, and
+# `models_selected` to both the CTA and Fermi datasets. For this, we
+# explicitlty mention the `datasets_names` to the former, and leave it
+# `None` (default) for the latter.
 # 
 
 for model in models_3fhl:
@@ -295,13 +295,13 @@ print("\n CTA dataset models: ", datasets[1].models.names)
 
 
 ######################################################################
-# Combining two ``Models``
+# Combining two `Models`
 # ------------------------
 # 
 
 
 ######################################################################
-# ``Models`` can be extended simply as as python lists
+# `Models` can be extended simply as as python lists
 # 
 
 models.extend(models_selected)
@@ -312,7 +312,7 @@ print(len(models))
 # Selecting models from a list
 # ----------------------------
 # 
-# A ``Model`` can be selected from a list of ``Models`` by specifying its
+# A `Model` can be selected from a list of `Models` by specifying its
 # index or its name.
 # 
 
@@ -325,9 +325,9 @@ print(model)
 
 
 ######################################################################
-# ``Models.select`` can be used to select all models satisfying a list of
+# `Models.select` can be used to select all models satisfying a list of
 # conditions. To select all models applied on the cta_dataset with the
-# characters ``1748`` in the name
+# characters `1748` in the name
 # 
 
 models = models_3fhl.select(
@@ -337,9 +337,9 @@ print(models)
 
 
 ######################################################################
-# Note that ``Models.select()`` combines the different conditions with an
-# ``AND`` operator. If one needs to combine conditions with a ``OR``
-# operator, the ``Models.selection_mask()`` method can generate a boolean
+# Note that `Models.select()` combines the different conditions with an
+# `AND` operator. If one needs to combine conditions with a `OR`
+# operator, the `Models.selection_mask()` method can generate a boolean
 # array that can be used for selection. For ex:
 # 
 
@@ -360,7 +360,7 @@ print(models_OR)
 ######################################################################
 # Any addition or removal of a model must happen through the global models
 # object, which must then be re-applied on the dataset(s). Note that
-# operations **cannot** be directly performed on ``dataset.models()``.
+# operations **cannot** be directly performed on `dataset.models()`.
 # 
 
 # cta_dataset.models.remove()
@@ -385,8 +385,8 @@ datasets.models.names
 # Plotting models on a (counts) map
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 
-# The spatial regions of ``Models`` can be plotted on a given geom using
-# ``Models.plot_regions()``. You can also use ``Models.plot_positions()``
+# The spatial regions of `Models` can be plotted on a given geom using
+# `Models.plot_regions()`. You can also use `Models.plot_positions()`
 # to plot the centers of each model.
 # 
 
@@ -407,7 +407,7 @@ for ax, dataset in zip([ax1, ax2], datasets):
 # ----------------------------------------
 # 
 # For a given model, any parameter can be (un)frozen individually.
-# Additionally, ``model.freeze`` and ``model.unfreeze`` can be used to
+# Additionally, `model.freeze` and `model.unfreeze` can be used to
 # freeze and unfreeze all parameters in one go.
 # 
 
@@ -450,7 +450,7 @@ model.spatial_model.frozen  # all spatial components are frozen
 
 
 ######################################################################
-# The same operations can be performed on ``Models`` directly - to perform
+# The same operations can be performed on `Models` directly - to perform
 # on a list of models at once, eg
 # 
 
@@ -464,8 +464,8 @@ models_selected.parameters.free_parameters.names
 
 ######################################################################
 # There are more functionalities which you can explore. In general, using
-# ``help()`` on any function is a quick and useful way to access the
-# documentation. For ex, ``Models.unfreeze_all`` will unfreeze all
+# `help()` on any function is a quick and useful way to access the
+# documentation. For ex, `Models.unfreeze_all` will unfreeze all
 # parameters, even those which are fixed by default. To see its usage, you
 # can simply type
 # 
@@ -480,7 +480,7 @@ help(models_selected.unfreeze)
 
 
 ######################################################################
-# ``Models`` can be (independently of ``Datasets``) written to/ read from
+# `Models` can be (independently of `Datasets`) written to/ read from
 # a disk as yaml files. Datasets are always serialised along with their
 # associated models, ie, with yaml and fits files. eg:
 # 
