@@ -230,6 +230,9 @@ The ``CITATION.cff`` file will be used as the main file to be maintained, while 
 automatically created. For any release, the former should be carefully updated and systematically a review should be
 done by the dev team.
 
+In order to maintain updated data about authors for the LTS releases and LTS papers, a new file will be used with these
+data, ``LTS_AUTHORS.cff``. This file will be used to create the associated ``codemeta.json`` file.
+
 5. Possible implementation
 ==========================
 
