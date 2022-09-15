@@ -8,9 +8,9 @@ cc-members:
 - family-names: Boisson
   given-names: Catherine
   email: catherine.boisson@obspm.fr
-  affiliation: Observatoire de Paris
-  orcid: https://orcid.org/0000-0001-5893-1797
+  affiliation: LUTH, Observatoire de Paris
   city: Meudon, FR
+  orcid: https://orcid.org/0000-0001-5893-1797
 - family-names: van Eldik
   given-names: Christopher
   email: Christopher.van.Eldik@physik.uni-erlangen.de
@@ -27,8 +27,8 @@ cc-members:
   given-names: Fabio
   email: fabio.acero@cea.fr
   affiliation: AIM (DAp)
-  orcid: https://orcid.org/0000-0002-6606-2816
   city: Saclay, FR
+  orcid: https://orcid.org/0000-0002-6606-2816
 - family-names: Pintore
   given-names: Fabio
   email: fabio.pintore@inaf.it
@@ -38,25 +38,25 @@ cc-members:
 - family-names: Hinton
   given-names: Jim
   email: jim.hinton@mpi-hd.mpg.de
-  affiliation: MPIK
+  affiliation: Max Planck Institut für Kernphysik, MPIK
   city: Heidelberg, DE
 - family-names: Contreras
   given-names: Jose Luis
   email: contrera@gae.ucm.es
-  affiliation: UCM
-  orcid: https://orcid.org/0000-0001-7282-2394
+  affiliation: GAE-UCM
   city: Madrid, ES
+  orcid: https://orcid.org/0000-0001-7282-2394
 - family-names: Fuessling
   given-names: Matthias
   email: matthias.fuessling@cta-observatory.org
-  affiliation: CTAO
+  affiliation: Cherenkov Telescope Array Observatory
   city: Bologna, IT
 - family-names: Zanin
   given-names: Roberta
   email: roberta.zanin@cta-observatory.org
-  affiliation: CTAO
-  orcid: https://orcid.org/0000-0001-6320-1801
+  affiliation: Cherenkov Telescope Array Observatory
   city: Bologna, IT
+  orcid: https://orcid.org/0000-0001-6320-1801
 - family-names: López-Coto
   given-names: Rubén
   affiliation: IAA/CSIC
@@ -66,5 +66,5 @@ cc-members:
   given-names: Stefan
   email: s.funk@fau.de
   affiliation: Friedrich-Alexander-Universität Erlangen-Nürnberg
-  orcid: https://orcid.org/0000-0002-2012-0080
   city: Erlangen, DE
+  orcid: https://orcid.org/0000-0002-2012-0080
