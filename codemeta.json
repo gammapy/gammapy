@@ -3,233 +3,137 @@
     "@type": "SoftwareSourceCode",
     "author": [
         {
-            "@id": "https://orcid.org/0000-0003-4568-7005",
-            "@type": "Person",
-            "affiliation": {
-                "@type": "Organization",
-                "name": "Center for Astrophysics | Harvard & Smithsonian, CfA, 60 Garden St., 02138 Cambridge MA, US"
-            },
-            "familyName": "Donath",
-            "givenName": "Axel"
-        },
-        {
-            "@type": "Person",
-            "affiliation": {
-                "@type": "Organization",
-                "name": "HeidelbergCement AG, Berliner Stra\u00dfe 6, 69120 Heidelberg, Germany"
-            },
-            "familyName": "Deil",
-            "givenName": "Christoph"
-        },
-        {
-            "@id": "https://orcid.org/0000-0002-8219-4667",
-            "@type": "Person",
-            "affiliation": {
-                "@type": "Organization",
-                "name": "Astroparticule and Cosmologie, Universit\u00e9 Paris Cit\u00e9, CNRS/IN2P3, F-75013 Paris, France"
-            },
-            "familyName": "Terrier",
-            "givenName": "R\u00e9gis"
-        },
-        {
-            "@id": "https://orcid.org/0000-0003-3274-4445",
-            "@type": "Person",
-            "affiliation": {
-                "@type": "Organization",
-                "name": "Instituto de Astrof\u00edsica de Andaluc\u00eda - CSIC, Gta. de la Astronom\u00eda, 18008 Granada, Spain"
-            },
-            "familyName": "Ruiz",
-            "givenName": "Jos\u00e9 Enrique"
-        },
-        {
-            "@type": "Person",
-            "affiliation": {
-                "@type": "Organization",
-                "name": "Pamyra"
-            },
-            "familyName": "King",
-            "givenName": "Johannes"
-        },
-        {
-            "@id": "https://orcid.org/0000-0002-8815-6530",
-            "@type": "Person",
-            "affiliation": {
-                "@type": "Organization",
-                "name": "Max Planck Institut f\u00fcr Kernphysik, MPIK, Saupfercheckweg 1, 69117 Heidelberg, Germany"
-            },
-            "familyName": "Remy",
-            "givenName": "Quentin"
-        },
-        {
-            "@type": "Person",
-            "familyName": "Jouvin",
-            "givenName": "L\u00e9a"
-        },
-        {
-            "@id": "https://orcid.org/0000-0002-9238-7163",
-            "@type": "Person",
-            "affiliation": {
-                "@type": "Organization",
-                "name": "Universidad Complutense de Madrid EMFTEL, UCM, Plaza de la Ciencias, 28040 Madrid, Spain"
-            },
-            "familyName": "Sinha",
-            "givenName": "Atreyee"
-        },
-        {
-            "@type": "Person",
-            "affiliation": {
-                "@type": "Organization",
-                "name": "INAF/IASF, via Ugo La Malfa 153,  90146 Palermo, Italy"
-            },
-            "familyName": "Pintore",
-            "givenName": "Fabio"
-        },
-        {
-            "@type": "Person",
-            "affiliation": {
-                "@type": "Organization",
-                "name": "Facebook, 1 Hacker Way, Menlo Park, CA 94025, US"
-            },
-            "familyName": "Wood",
-            "givenName": "Matthew"
-        },
-        {
-            "@type": "Person",
-            "affiliation": {
-                "@type": "Organization",
-                "name": "Max Planck Institut f\u00fcr Kernphysik, MPIK, Saupfercheckweg 1, 69117 Heidelberg, Germany"
-            },
-            "familyName": "Olivera",
-            "givenName": "Laura"
-        },
-        {
-            "@type": "Person",
-            "familyName": "Paz Arribas",
-            "givenName": "Manuel"
-        },
-        {
-            "@type": "Person",
-            "affiliation": {
-                "@type": "Organization",
-                "name": "Astroparticule and Cosmologie, Universit\u00e9 Paris Cit\u00e9, CNRS/IN2P3, F-75013 Paris, France"
-            },
-            "familyName": "Giunti",
-            "givenName": "Luca"
-        },
-        {
-            "@id": "https://orcid.org/0000-0001-6876-5577",
-            "@type": "Person",
-            "affiliation": {
-                "@type": "Organization",
-                "name": "Astroparticule and Cosmologie, Universit\u00e9 Paris Cit\u00e9, CNRS/IN2P3, F-75013 Paris, France"
-            },
-            "familyName": "Kh\u00e9lifi",
-            "givenName": "Bruno"
-        },
-        {
             "@id": "https://orcid.org/0000-0002-6606-2816",
             "@type": "Person",
             "affiliation": {
                 "@type": "Organization",
-                "name": "DAp/AIM, CEA-Saclay/CNRS, France"
+                "name": "AIM (DAp)"
             },
             "familyName": "Acero",
             "givenName": "Fabio"
         },
         {
-            "@id": "https://orcid.org/0000-0003-1052-6439",
+            "@id": "https://orcid.org/0000-0001-5067-2620",
             "@type": "Person",
             "affiliation": {
                 "@type": "Organization",
-                "name": "National Tsing Hua University Institute of Astronomy, Hsinchu, Taiwan"
+                "name": "CPPM"
             },
-            "familyName": "Owen",
-            "givenName": "Ellis"
-        },
-        {
-            "@id": "https://orcid.org/0000-0001-7993-8189",
-            "@type": "Person",
-            "affiliation": {
-                "@type": "Organization",
-                "name": "TU Dortmund University, Otto-Hahn-Str. 4a 44227 Dortmund, Germany"
-            },
-            "familyName": "N\u00f6the",
-            "givenName": "Maximilian"
-        },
-        {
-            "@type": "Person",
-            "familyName": "Vorokh",
-            "givenName": "Olga"
-        },
-        {
-            "@id": "https://orcid.org/0000-0002-3713-6337",
-            "@type": "Person",
-            "affiliation": {
-                "@type": "Organization",
-                "name": "California Institute of Technology, Pasadena CA, US"
-            },
-            "familyName": "Sip\u0151cz",
-            "givenName": "Brigitta"
-        },
-        {
-            "@type": "Person",
-            "familyName": "Lefaucheur",
-            "givenName": "Julien"
-        },
-        {
-            "@type": "Person",
-            "affiliation": {
-                "@type": "Organization",
-                "name": "Institut de Fisica d'altes Energies, IFAE, Edifici Cn, Campus UAB, 08193 Bellaterra (Barcelona), Spain"
-            },
-            "familyName": "Nigro",
-            "givenName": "Cosimo"
-        },
-        {
-            "@type": "Person",
-            "affiliation": {
-                "@type": "Organization",
-                "name": "Aperio Software, Insight House, Riverside Business Park, Stoney Common Road, Stansted, Essex, CM24 8PL, UK"
-            },
-            "familyName": "Robitaille",
+            "familyName": "Armstrong",
             "givenName": "Thomas"
         },
         {
+            "@id": "https://orcid.org/0000-0002-4404-9899",
             "@type": "Person",
-            "familyName": "D. Harris",
-            "givenName": "Jonathan"
+            "familyName": "Arribas",
+            "givenName": "Manuel Paz"
         },
         {
+            "@id": "https://orcid.org/0000-0002-8380-1633",
             "@type": "Person",
-            "familyName": "Fidalgo",
-            "givenName": "David"
+            "affiliation": {
+                "@type": "Organization",
+                "name": "IFAE"
+            },
+            "familyName": "Bigas",
+            "givenName": "Oscar Blanch"
+        },
+        {
+            "@id": "https://orcid.org/0000-0002-4650-1666",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Universit\u00e9 Savoie Mont Blanc, CNRS, Laboratoire d\u2019Annecy de Physique des Particules - IN2P3"
+            },
+            "familyName": "de Bony de Lavergne",
+            "givenName": "Mathieu"
+        },
+        {
+            "@id": "https://orcid.org/0000-0003-1071-5854",
+            "@type": "Person",
+            "familyName": "Bose",
+            "givenName": "Debanjan"
         },
         {
             "@type": "Person",
             "affiliation": {
                 "@type": "Organization",
-                "name": "Max Planck Institut f\u00fcr Kernphysik, MPIK, Saupfercheckweg 1, 69117 Heidelberg, Germany"
+                "name": "Technical University of Dortmund"
             },
-            "familyName": "Mohrmann",
-            "givenName": "Lars"
+            "familyName": "Br\u00fcgge",
+            "givenName": "Kai"
+        },
+        {
+            "@id": "https://orcid.org/0000-0003-0426-6634",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Max Planck Institute for extraterrestrial Physics"
+            },
+            "familyName": "Buchner",
+            "givenName": "Johannes"
+        },
+        {
+            "@id": "https://orcid.org/0000-0001-8816-4920",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "ICCUB"
+            },
+            "familyName": "Cabot",
+            "givenName": "Arnau Aguasca"
         },
         {
             "@type": "Person",
             "affiliation": {
                 "@type": "Organization",
-                "name": "Amazon, Atlanta GA, US"
+                "name": "Iowa State University"
             },
-            "familyName": "Lennarz",
-            "givenName": "Dirk"
+            "familyName": "Cahill",
+            "givenName": "Tyler"
+        },
+        {
+            "@type": "Person",
+            "familyName": "Carter",
+            "givenName": "Sam"
+        },
+        {
+            "@id": "https://orcid.org/0000-0002-3134-1946",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Max Planck Institut f\u00fcr Kernphysik, MPIK"
+            },
+            "familyName": "Chakraborty",
+            "givenName": "Nachiketa"
         },
         {
             "@type": "Person",
             "affiliation": {
                 "@type": "Organization",
-                "name": "Astroparticule and Cosmologie, Universit\u00e9 Paris Cit\u00e9, CNRS/IN2P3, F-75013 Paris, France"
+                "name": "Department of Physics, University of the Free State"
             },
-            "familyName": "Eddine Hajlaoui",
-            "givenName": "Jalel"
+            "familyName": "W. Chen",
+            "givenName": "Andrew"
+        },
+        {
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Iowa State University"
+            },
+            "familyName": "Chromey",
+            "givenName": "Alisha"
+        },
+        {
+            "@id": "https://orcid.org/0000-0001-7282-2394",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "GAE-UCM"
+            },
+            "familyName": "Contreras",
+            "givenName": "Jos\u00e9 Luis"
         },
         {
             "@type": "Person",
@@ -241,113 +145,80 @@
             "givenName": "Alexis"
         },
         {
+            "@id": "https://orcid.org/0000-0002-4198-4005",
             "@type": "Person",
-            "familyName": "Wegenmat",
-            "givenName": "Matthias"
-        },
-        {
-            "@type": "Person",
-            "familyName": "Papadopoulos",
-            "givenName": "Dimitri"
-        },
-        {
-            "@type": "Person",
-            "familyName": "Chakraborty",
-            "givenName": "Nachiketa"
+            "affiliation": {
+                "@type": "Organization",
+                "name": "HeidelbergCement"
+            },
+            "familyName": "Deil",
+            "givenName": "Christoph"
         },
         {
             "@type": "Person",
             "affiliation": {
                 "@type": "Organization",
-                "name": "Mozilla, Mountain View, CA"
+                "name": "Friedrich-Alexander-Universit\u00e4t Erlangen-N\u00fcrnberg"
             },
-            "familyName": "Droettboom",
-            "givenName": "Michael"
+            "familyName": "Deiml",
+            "givenName": "Peter"
         },
         {
+            "@id": "https://orcid.org/0000-0003-4568-7005",
             "@type": "Person",
             "affiliation": {
                 "@type": "Organization",
-                "name": "DESY"
+                "name": "Center for Astrophysics | Havard &Smithonian"
             },
-            "familyName": "Watson",
-            "givenName": "Jason"
+            "familyName": "Donath",
+            "givenName": "Axel"
         },
         {
-            "@type": "Person",
-            "familyName": "Voruganti",
-            "givenName": "Arjun"
-        },
-        {
-            "@type": "Person",
-            "familyName": "Poon",
-            "givenName": "Helen"
-        },
-        {
+            "@id": "https://orcid.org/0000-0001-6155-4742",
             "@type": "Person",
             "affiliation": {
                 "@type": "Organization",
-                "name": "Space Telescope Science Institute, STScI, 3700 San Martin Drive, 21218 Baltimore MD, US"
+                "name": "NECXU"
             },
-            "familyName": "Tollerud",
-            "givenName": "Erik"
-        },
-        {
-            "@type": "Person",
-            "familyName": "Armstrong",
-            "givenName": "Thomas"
-        },
-        {
-            "@type": "Person",
-            "affiliation": {
-                "@type": "Organization",
-                "name": "Friedrich-Alexander-Universit\u00e4t Erlangen-N\u00fcrnberg, Erlangen Centre for Astroparticle Physics, Erwin-Rommel-Str. 1 91058 Erlangen, Germany"
-            },
-            "familyName": "Joshi",
-            "givenName": "Vikas"
-        },
-        {
-            "@type": "Person",
-            "familyName": "M. Bray",
-            "givenName": "Erik"
-        },
-        {
-            "@type": "Person",
-            "affiliation": {
-                "@type": "Organization",
-                "name": "Institute of cosmos sciences, ICCUB, Mart\u00ed i Franqu\u00e8s 1, 08028 Barcelona"
-            },
-            "familyName": "Aguasca Cabot",
-            "givenName": "Arnau"
-        },
-        {
-            "@type": "Person",
             "familyName": "Emery",
             "givenName": "Gabriel"
         },
         {
             "@type": "Person",
-            "familyName": "Tiziani",
-            "givenName": "Domenico"
-        },
-        {
-            "@type": "Person",
-            "familyName": "Minaya",
-            "givenName": "Ignacio"
+            "affiliation": {
+                "@type": "Organization",
+                "name": "AGE-UCM"
+            },
+            "familyName": "Fidalgo",
+            "givenName": "David"
         },
         {
             "@type": "Person",
             "affiliation": {
                 "@type": "Organization",
-                "name": "Point 8 GmbH, Rheinlanddamm 201, 44139 Dortmund, Germany"
+                "name": "LUPM"
             },
-            "familyName": "Br\u00fcgge",
-            "givenName": "Kai"
+            "familyName": "Gallant",
+            "givenName": "Yves"
         },
         {
             "@type": "Person",
-            "familyName": "Siejkowski",
-            "givenName": "Hubert"
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Max Planck Institute for Radio Astronomy"
+            },
+            "familyName": "Garcia",
+            "givenName": "Laura Vega"
+        },
+        {
+            "@id": "https://orcid.org/0000-0002-3395-3647",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "AstroParticule et Cosmologie, Universit\u00e9 de Paris Cit\u00e9, CNRS"
+            },
+            "familyName": "Giunti",
+            "givenName": "Luca"
         },
         {
             "@type": "Person",
@@ -355,56 +226,161 @@
             "givenName": "Arpit"
         },
         {
+            "@id": "https://orcid.org/0000-0002-5877-9438",
             "@type": "Person",
             "affiliation": {
                 "@type": "Organization",
-                "name": "Institute de Recherche en Astrophysique et Planetologie, IRAP,"
+                "name": "AstroParticule et Cosmologie, Universit\u00e9 de Paris Cit\u00e9, CNRS"
             },
-            "familyName": "Tibaldo",
-            "givenName": "Luigi"
+            "familyName": "Hajlaoui",
+            "givenName": "Jalel Eddine"
         },
         {
             "@type": "Person",
-            "familyName": "Gallant",
-            "givenName": "Yves"
+            "familyName": "Harris",
+            "givenName": "Jonathan D."
         },
         {
-            "@type": "Person",
-            "familyName": "Spir-Jacob",
-            "givenName": "Marion"
-        },
-        {
+            "@id": "https://orcid.org/0000-0003-4467-3621",
             "@type": "Person",
             "affiliation": {
                 "@type": "Organization",
-                "name": "Department of Physics, University of the Free State, PO Box339, Bloemfontein 9300, South Africa"
+                "name": "Friedrich-Alexander-Universit\u00e4t Erlangen-N\u00fcrnberg"
             },
-            "familyName": "W. Chen",
-            "givenName": "Andrew"
-        },
-        {
-            "@id": "https://orcid.org/0000-0001-6320-1801",
-            "@type": "Person",
-            "affiliation": {
-                "@type": "Organization",
-                "name": "CTA Observatory gGmbH, Via Piero Gobetti 93/3 40129 Bologna, Italy"
-            },
-            "familyName": "Zanin",
-            "givenName": "Roberta"
+            "familyName": "Joshi",
+            "givenName": "Vikas"
         },
         {
             "@type": "Person",
             "affiliation": {
                 "@type": "Organization",
-                "name": "Space Telescope Science Institute, STScI, 3700 San Martin Drive, 21218 Baltimore MD, US"
+                "name": "AstroParticule et Cosmologie, Universit\u00e9 de Paris Cit\u00e9, CNRS"
             },
-            "familyName": "Bradley",
-            "givenName": "Larry"
+            "familyName": "Jouvin",
+            "givenName": "L\u00e9a"
+        },
+        {
+            "@id": "https://orcid.org/0000-0001-6876-5577",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Universit\u00e9 de Paris, CNRS, Astroparticule et Cosmologie"
+            },
+            "familyName": "Kh\u00e9lifi",
+            "givenName": "Bruno"
         },
         {
             "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Pamyra"
+            },
+            "familyName": "King",
+            "givenName": "Johannes"
+        },
+        {
+            "@id": "https://orcid.org/0000-0002-8949-4275",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "DESY"
+            },
+            "familyName": "Klepser",
+            "givenName": "Stefan"
+        },
+        {
+            "@type": "Person",
+            "familyName": "Lebigot",
+            "givenName": "Eric O."
+        },
+        {
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "LUTH, Observatoire de Paris"
+            },
+            "familyName": "Lefaucheur",
+            "givenName": "Julien"
+        },
+        {
+            "@id": "https://orcid.org/0000-0002-6682-7188",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Universit\u00e9 de Paris, CNRS, Astroparticule et Cosmologie"
+            },
+            "familyName": "Lemi\u00e8re",
+            "givenName": "Anne"
+        },
+        {
+            "@id": "https://orcid.org/0000-0001-7284-9220",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "LPNHE"
+            },
             "familyName": "Lenain",
             "givenName": "Jean-Philippe"
+        },
+        {
+            "@id": "https://orcid.org/0000-0002-0614-7359",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Department of Physics and Astronomy, Michigan State University"
+            },
+            "familyName": "Lennarz",
+            "givenName": "Dirk"
+        },
+        {
+            "@id": "https://orcid.org/0000-0002-3882-9477",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "IAA-CSIC"
+            },
+            "familyName": "L\u00f3pez-Coto",
+            "givenName": "Rub\u00e9n"
+        },
+        {
+            "@id": "https://orcid.org/0000-0003-0268-463X",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "University of Turin"
+            },
+            "familyName": "Manconi",
+            "givenName": "Silvia"
+        },
+        {
+            "@id": "https://orcid.org/0000-0002-1553-5767",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "UCM"
+            },
+            "familyName": "Minaya",
+            "givenName": "Ignacio"
+        },
+        {
+            "@id": "https://orcid.org/0000-0002-9667-8654",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Friedrich-Alexander-Universit\u00e4t Erlangen-N\u00fcrnberg, Erlangen Centre for Astroparticle Physics"
+            },
+            "familyName": "Mohrmann",
+            "givenName": "Lars"
+        },
+        {
+            "@id": "https://orcid.org/0000-0001-9400-0922",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "GAE-UCM"
+            },
+            "familyName": "Morcuende",
+            "givenName": "Daniel"
         },
         {
             "@type": "Person",
@@ -416,186 +392,293 @@
             "givenName": "Kaori"
         },
         {
+            "@id": "https://orcid.org/0000-0001-8375-1907",
             "@type": "Person",
             "affiliation": {
                 "@type": "Organization",
-                "name": "LAPP"
+                "name": "IFAE"
             },
-            "familyName": "de Bony",
-            "givenName": "Mathieu"
-        },
-        {
-            "@type": "Person",
-            "familyName": "Craig",
-            "givenName": "Matthew"
+            "familyName": "Nigro",
+            "givenName": "Cosimo"
         },
         {
             "@type": "Person",
             "affiliation": {
                 "@type": "Organization",
-                "name": "Center for Astrophysics | Harvard & Smithsonian, CfA, 60 Garden St., 02138 Cambridge MA, US"
+                "name": "TU Dortmund University"
+            },
+            "familyName": "N\u00f6the",
+            "givenName": "Maximilian"
+        },
+        {
+            "@id": "https://orcid.org/0000-0002-9105-0518",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Max Planck Institut f\u00fcr Kernphysik, MPIK"
+            },
+            "familyName": "Olivera-Nieto",
+            "givenName": "Laura"
+        },
+        {
+            "@id": "https://orcid.org/0000-0003-1052-6439",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "National Tsing Hua University Institute of Astronomy"
+            },
+            "familyName": "Owen",
+            "givenName": "Ellis"
+        },
+        {
+            "@id": "https://orcid.org/0000-0001-5770-3805",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Universit\u00e4t Innsbruck"
+            },
+            "familyName": "Panny",
+            "givenName": "Sebastian"
+        },
+        {
+            "@id": "https://orcid.org/0000-0002-1242-8990",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "CEA"
+            },
+            "familyName": "Papadopoulos",
+            "givenName": "Dimitri"
+        },
+        {
+            "@id": "https://orcid.org/0000-0002-3869-2925",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "INAF/IASF PALERMO"
+            },
+            "familyName": "Pintore",
+            "givenName": "Fabio"
+        },
+        {
+            "@id": "https://orcid.org/0000-0002-6004-4270",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Max Planck Institut f\u00fcr Kernphysik, MPIK"
+            },
+            "familyName": "Poon",
+            "givenName": "Helen"
+        },
+        {
+            "@id": "https://orcid.org/0000-0002-8815-6530",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Max Planck Institut f\u00fcr Kernphysik, MPIK"
+            },
+            "familyName": "Remy",
+            "givenName": "Quentin"
+        },
+        {
+            "@id": "https://orcid.org/0000-0002-8642-1329",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Max Planck Innsbruck for Astronomy"
+            },
+            "familyName": "Robitaille",
+            "givenName": "Thomas"
+        },
+        {
+            "@id": "https://orcid.org/0000-0003-3274-4445",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Instituto de Astrof\u00edsica de Andaluc\u00eda - CSIC"
+            },
+            "familyName": "Ruiz",
+            "givenName": "Jos\u00e9 Enrique"
+        },
+        {
+            "@id": "https://orcid.org/0000-0002-3171-5039",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "GAE-UCM"
             },
             "familyName": "Saha",
             "givenName": "Lab"
         },
         {
+            "@id": "https://orcid.org/0000-0003-1673-2145",
             "@type": "Person",
             "affiliation": {
                 "@type": "Organization",
-                "name": "Astroparticule and Cosmologie, Universit\u00e9 Paris Cit\u00e9, CNRS/IN2P3, F-75013 Paris, France"
+                "name": "CYFRONET AGH"
             },
-            "familyName": "Lemi\u00e8re",
-            "givenName": "Anne"
+            "familyName": "Siejkowski",
+            "givenName": "Hubert"
         },
         {
-            "@type": "Person",
-            "familyName": "Vinicius",
-            "givenName": "Z\u00e9"
-        },
-        {
-            "@type": "Person",
-            "familyName": "Barbary",
-            "givenName": "Kyle"
-        },
-        {
+            "@id": "https://orcid.org/0000-0002-9238-7163",
             "@type": "Person",
             "affiliation": {
                 "@type": "Organization",
-                "name": "Universit\u00e9 Savoie Mont Blanc, CNRS, Laboratoire d\u2019Annecyde Physique des Particules - IN2P3, 74000 Annecy, France"
+                "name": "UCM, IPARCOS"
             },
-            "familyName": "Vuillaume",
-            "givenName": "Thomas"
+            "familyName": "Sinha",
+            "givenName": "Atreyee"
         },
         {
-            "@type": "Person",
-            "familyName": "Ginsburg",
-            "givenName": "Adam"
-        },
-        {
-            "@type": "Person",
-            "familyName": "Morcuende",
-            "givenName": "Daniel"
-        },
-        {
-            "@type": "Person",
-            "familyName": "Contreras",
-            "givenName": "Jos\u00e9 Luis"
-        },
-        {
-            "@type": "Person",
-            "familyName": "Vega Garcia",
-            "givenName": "Laura"
-        },
-        {
-            "@type": "Person",
-            "familyName": "Blanch Bigas",
-            "givenName": "Oscar"
-        },
-        {
+            "@id": "https://orcid.org/0000-0002-3713-6337",
             "@type": "Person",
             "affiliation": {
                 "@type": "Organization",
-                "name": "Iowa State University, Ames IA, US"
+                "name": "California Institute of Technology"
             },
-            "familyName": "Cahill",
-            "givenName": "Tyler"
+            "familyName": "Sip\u0151cz",
+            "givenName": "Brigitta"
         },
         {
+            "@id": "https://orcid.org/0000-0002-6925-2594",
             "@type": "Person",
-            "familyName": "Zabalza",
-            "givenName": "V\u00edctor"
+            "affiliation": {
+                "@type": "Organization",
+                "name": "AstroParticule et Cosmologie, Universit\u00e9 de Paris Cit\u00e9, CNRS"
+            },
+            "familyName": "Spir-Jacob",
+            "givenName": "Marion"
+        },
+        {
+            "@id": "https://orcid.org/0000-0002-8219-4667",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "AstroParticule et Cosmologie, Universit\u00e9 de Paris Cit\u00e9, CNRS"
+            },
+            "familyName": "Terrier",
+            "givenName": "R\u00e9gis"
+        },
+        {
+            "@id": "https://orcid.org/0000-0001-7523-570X",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "IRAP"
+            },
+            "familyName": "Tibaldo",
+            "givenName": "Luigi"
         },
         {
             "@type": "Person",
             "affiliation": {
                 "@type": "Organization",
-                "name": "Michigan State University, Department of Physics and Astronomy, 428 S Shaw Ln East Lansing, MI 48824, US"
+                "name": "Friedrich-Alexander-Universit\u00e4t Erlangen-N\u00fcrnberg"
             },
-            "familyName": "Kerzendorf",
-            "givenName": "Wolfgang"
+            "familyName": "Tiziani",
+            "givenName": "Domenico"
         },
         {
-            "@type": "Person",
-            "familyName": "Deiml",
-            "givenName": "Peter"
-        },
-        {
-            "@type": "Person",
-            "familyName": "Panny",
-            "givenName": "Sebastian"
-        },
-        {
-            "@type": "Person",
-            "familyName": "Manconi",
-            "givenName": "Silvia"
-        },
-        {
+            "@id": "https://orcid.org/0000-0001-5715-8632",
             "@type": "Person",
             "affiliation": {
                 "@type": "Organization",
-                "name": "Deutsches Elektronen-Synchrotron, DESY, Platanenallee 6 15738 Zeuthen, Germany"
+                "name": "Nord Software"
             },
-            "familyName": "Klepser",
-            "givenName": "Stefan"
-        },
-        {
-            "@type": "Person",
-            "familyName": "Buchner",
-            "givenName": "Johannes"
-        },
-        {
-            "@type": "Person",
             "familyName": "van Kemenade",
             "givenName": "Hugo"
         },
         {
             "@type": "Person",
-            "familyName": "O. Lebigot",
-            "givenName": "Eric"
-        },
-        {
-            "@type": "Person",
-            "familyName": "Weaver",
-            "givenName": "Benjamin Alan"
-        },
-        {
-            "@type": "Person",
-            "familyName": "Bose",
-            "givenName": "Debanjan"
+            "affiliation": {
+                "@type": "Organization",
+                "name": "HKUST"
+            },
+            "familyName": "Vinicius",
+            "givenName": "Z\u00e9"
         },
         {
             "@type": "Person",
             "affiliation": {
                 "@type": "Organization",
-                "name": "Iowa State University, Ames IA, US"
+                "name": "Wargaming"
             },
-            "familyName": "Chromey",
-            "givenName": "Alisha"
+            "familyName": "Vorokh",
+            "givenName": "Olga"
         },
         {
             "@type": "Person",
             "affiliation": {
                 "@type": "Organization",
-                "name": "Deutsches Elektronen-Synchrotron, DESY, Platanenallee 6 15738 Zeuthen, Germany"
+                "name": "Max Planck Institut f\u00fcr Kernphysik, MPIK"
             },
-            "familyName": "Buehler",
-            "givenName": "Rolf"
+            "familyName": "Voruganti",
+            "givenName": "Arjun"
+        },
+        {
+            "@id": "https://orcid.org/0000-0002-5686-2078",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Universit\u00e9 Savoie Mont Blanc, CNRS, Laboratoire d\u2019Annecy de Physique des Particules - IN2P3"
+            },
+            "familyName": "Vuillaume",
+            "givenName": "Thomas"
+        },
+        {
+            "@id": "https://orcid.org/0000-0003-4282-7463",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "DESY"
+            },
+            "familyName": "Watson",
+            "givenName": "Jason J."
         },
         {
             "@type": "Person",
-            "familyName": "L\u00f3pez-Coto",
-            "givenName": "Rub\u00e9n"
+            "affiliation": {
+                "@type": "Organization",
+                "name": "DESY"
+            },
+            "familyName": "Wegenmat",
+            "givenName": "Matthias"
         },
         {
             "@type": "Person",
-            "familyName": "Carter",
-            "givenName": "Sam"
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Facebook"
+            },
+            "familyName": "Wood",
+            "givenName": "Matthew"
+        },
+        {
+            "@id": "https://orcid.org/0000-0003-2638-7648",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Department of Physics and Astronomy, The University of Leicester"
+            },
+            "familyName": "Zabalza",
+            "givenName": "V\u00edctor"
+        },
+        {
+            "@id": "https://orcid.org/0000-0001-6320-1801",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Cherenkov Telescope Array Observatory"
+            },
+            "familyName": "Zanin",
+            "givenName": "Roberta"
         }
     ],
     "codeRepository": "https://github.com/gammapy/gammapy",
-    "datePublished": "2022-06-17",
-    "description": "Gammapy analyzes gamma-ray data and creates sky images, spectra and lightcurves, from event lists and instrument response information; it can also determine the position, morphology and spectra of gamma-ray sources. It is used to analyze data from H.E.S.S., Fermi-LAT, and the Cherenkov Telescope Array (CTA).",
-    "identifier": "https://doi.org/10.5281/zenodo.6552377",
+    "datePublished": "2022-09-15",
+    "description": "Gammapy analyzes gamma-ray data and creates sky images, spectra and lightcurves, from event lists and instrument response information; it can also determine the position, morphology and spectra of gamma-ray sources. It is used to analyze data from H.E.S.S., Fermi-LAT, HAWC, and the Cherenkov Telescope Array (CTA).",
+    "identifier": "https://doi.org/10.5281/zenodo.4701488",
     "keywords": [
         "Astronomy",
         "Gamma-rays",
@@ -603,17 +686,17 @@
     ],
     "license": "https://spdx.org/licenses/BSD-3-Clause",
     "name": "Gammapy: Python toolbox for gamma-ray astronomy",
-    "url": "https://github.com/gammapy/gammapy",
-    "softwareVersion": "0.20.1",
+    "url": "https://gammapy.org/",
+    "softwareVersion": "1.0",
     "maintainer": {
-        "@id": "https://orcid.org/0000-0003-4568-7005",
+        "@id": "https://orcid.org/0000-0002-6606-2816",
         "@type": "Person",
         "affiliation": {
             "@type": "Organization",
-            "name": "Center for Astrophysics | Harvard & Smithsonian, CfA, 60 Garden St., 02138 Cambridge MA, US"
+            "name": "AIM (DAp)"
         },
-        "familyName": "Donath",
-        "givenName": "Axel"
+        "familyName": "Acero",
+        "givenName": "Fabio"
     },
     "readme": "https://gammapy.org",
     "issueTracker": "https://github.com/gammapy/gammapy/issues"
