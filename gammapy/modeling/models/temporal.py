@@ -405,24 +405,15 @@ class GeneralizedGaussianTemporalModel(TemporalModel):
 class LightCurveTemplateTemporalModel(TemporalModel):
     """Temporal light curve model.
 
-    The lightcurve is given as a table with columns ``time`` and ``norm``.
+    The lightcurve is given at specfic times (and optionally energies) as a ``norm``
+    It can be serialised either as an astropy table or a `~gammapy.maps.RegionNDMap`
 
     The ``norm`` is supposed to be a unit-less multiplicative factor in the model,
     to be multiplied with a spectral model.
 
-    The model does linear interpolation for times between the given ``(time, norm)`` values.
-
-    The implementation currently uses `scipy.interpolate. InterpolatedUnivariateSpline`,
-    using degree ``k=1`` to get linear interpolation.
-    This class also contains an ``integral`` method, making the computation of
-    mean fluxes for a given time interval a one-liner.
+    The model does linear interpolation for times between the given ``(time, energy, norm)`` values.
 
     For more information see :ref:`LightCurve-temporal-model`.
-
-    Parameters
-    ----------
-    table : `~astropy.table.Table`
-        A table with 'TIME' vs 'NORM'
 
     Examples
     --------
@@ -457,11 +448,19 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
     tag = ["LightCurveTemplateTemporalModel", "template"]
 
-    def __init__(self, table, filename=None):
-        self.table = table
-        if filename is not None:
-            filename = str(make_path(filename))
-        self.filename = filename
+    _t_ref_default = Time("2000-01-01")
+    t_ref = Parameter("t_ref", _t_ref_default.mjd, unit="day", frozen=False)
+
+    def __init__(self, map, t_ref=None):
+
+        if (map.data < 0).any():
+            log.warning("Map has negative values. Check and fix this!")
+
+        self.map = map.copy()
+        if t_ref:
+            self.t_ref.value = Time(t_ref, format="MJD").mjd
+        if "ENERGY" in map.geom.axes.names:
+            self.is_energy_dependent = True
         super().__init__()
 
     def __str__(self):
@@ -475,79 +474,93 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         )
 
     @classmethod
-    def read(cls, path):
-        """Read lightcurve model table from FITS file.
+    def from_table(cls, table):
+        """Create a Template model from an astropy table"""
+        columns = [_.upper() for _ in table.colnames]
+        t_ref = table.meta["MJDREFI"]
+        if "TIME" not in columns:
+            raise ValueError("A TIME column is necessary")
 
-        TODO: This doesn't read the XML part of the model yet.
+        time_axis = MapAxis.from_nodes(nodes=table["TIME"] + table.meta["MJDREFI"],
+                                       name="time", unit=table.meta["TIMEUNIT"])
+        axes = [time_axis]
+
+        if "ENERGY" in columns:
+            energy_axis = MapAxis.from_energy_bounds(table["ENERGY"], name="energy",
+                                                     )
+            axes.append(energy_axis)
+        m = RegionNDMap.create(region=None, axes=axes, meta=table.meta)
+
+        return cls(m, filename=filename, t_ref=t_ref)
+
+    @classmethod
+    def read(cls, filename, format="table"):
+        """Read a TemplateModel from disk
+
+        Parameters:
+
+        filename : str
+            Name of file to read
+        format : str
+            Format of the input file.
+            either "table" or "map"
+
         """
-        filename = str(make_path(path))
-        return cls(Table.read(filename), filename=filename)
+        filename = str(make_path(filename))
+        if format == "table":
+            table = Table.read(filename)
+            cls.from_table(table)
 
-    def write(self, path=None, overwrite=False):
-        if path is None:
-            path = self.filename
-        if path is None:
-            raise ValueError(f"filename is required for {self.tag}")
+        elif format == "map":
+            m = RegionNDMap.read(filenames)
+            t_ref = m.meta["MJDREFI"]
+            return cls(m, filename=filename, t_ref=t_ref)
+
         else:
-            self.filename = str(make_path(path))
-            self.table.write(self.filename, overwrite=overwrite)
+            raise ValueError("Not a valid format")
 
-    @lazyproperty
-    def _interpolator(self, ext=0):
-        x = self._time.value
-        y = self.table["NORM"].data
-        return scipy.interpolate.InterpolatedUnivariateSpline(x, y, k=1, ext=ext)
+    def to_table(self):
+        """Convert model to an astropy table"""
+        columns = self.map.geom.axes
+        table = Table(data=self.map.quantity, names=columns,
+                      meta=self.map.meta)
+        return table
 
-    @lazyproperty
-    def _time_ref(self):
-        return time_ref_from_dict(self.table.meta)
+    def write(self, filename, format="table", overwrite=False):
+        """Write a model to disk as per the specified format"""
 
-    @lazyproperty
-    def _time(self):
-        return self._time_ref + self.table["TIME"].data * getattr(
-            u, self.table.meta["TIMEUNIT"]
-        )
+        if self.filename is None:
+            raise IOError("Missing filename")
 
-    def evaluate(self, time, ext=0):
-        """Evaluate for a given time.
+        if format == "table":
+            table = self.to_table()
+            table.write(filename, overwrite=overwrite)
 
-        Parameters
-        ----------
-        time : array_like
-            Time since the ``reference`` time.
-        ext : int or str, optional, default: 0
-            Parameter passed to ~scipy.interpolate.InterpolatedUnivariateSpline
-            Controls the extrapolation mode for GTIs outside the range
-            0 or "extrapolate", return the extrapolated value.
-            1 or "zeros", return 0
-            2 or "raise", raise a ValueError
-            3 or "const", return the boundary value.
+        elif format == "map":
+            self.map.write(filename, overwrite=overwrite)
 
+        else:
+            raise ValueError("Not a valid format")
 
-        Returns
-        -------
-        norm : array_like
-            Norm at the given times.
-        """
-        return self._interpolator(time, ext=ext)
+    def evaluate(self, time, energy=None):
+        """Evaluate the model at given coordinates."""
+        coord = {"time": time.mjd}
+        if energy is not None:
+            coord["energy"] = energy
 
-    def integral(self, t_min, t_max):
-        """Evaluate the integrated flux within the given time intervals
+        coords = self.create_coords(coord)
+        val = self.map.interp_by_coord(coords)
+        val = np.clip(val, 0)
+        return u.Quantity(val, self.map.unit, copy=False)
 
-        Parameters
-        ----------
-        t_min: `~astropy.time.Time`
-            Start times of observation
-        t_max: `~astropy.time.Time`
-            Stop times of observation
-        Returns
-        -------
-        norm: The model integrated flux
-        """
-
-        n1 = self._interpolator.antiderivative()(t_max.mjd)
-        n2 = self._interpolator.antiderivative()(t_min.mjd)
-        return u.Quantity(n1 - n2, "day") / self.time_sum(t_min, t_max)
+    def integral(t_min, t_max, **kwargs):
+        # for t1, t2 in zip(t_min, t_max):
+        #    map_slice = self.map.
+        map_interp = RegionNDMap.create(geom=self.map.geom,
+                                        data=val, unit=self.map.unit)
+        interp_map = map_interp.integral(axis_name="TIME")
+        return interp_map.data
+    
 
     @classmethod
     def from_dict(cls, data):
