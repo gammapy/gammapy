@@ -65,6 +65,7 @@ time-dependent analysis with light-curves.
 .. nbgallery::
 
    analysis/1D/spectral_analysis.ipynb
+   analysis/1D/spectral_analysis_hli.ipynb
    analysis/1D/spectral_analysis_rad_max.ipynb
    analysis/1D/sed_fitting.ipynb
    analysis/1D/extended_source_spectral_analysis.ipynb
