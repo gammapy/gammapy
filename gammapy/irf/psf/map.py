@@ -660,3 +660,7 @@ class RecoPSFMap(PSFMap):
 
         """
         return super().plot_psf_vs_rad(ax, energy_true=energy, **kwargs)
+
+    def stack(self, other, weights=None, nan_to_num=True):
+        """Stack IRF map with another one in place."""
+        raise NotImplementedError("Stacking is not supported for PSF in reconstructed energy.")
