@@ -28,7 +28,8 @@ from gammapy.utils.regions import (
 )
 from gammapy.visualization.utils import ARTIST_TO_LINE_PROPERTIES
 from ..axes import MapAxes
-from ..core import Map, MapCoord
+from ..core import Map
+from ..coord import MapCoord
 from ..geom import Geom, pix_tuple_to_idx
 from ..utils import _check_width
 from ..wcs import WcsGeom
@@ -514,12 +515,13 @@ class RegionGeom(Geom):
 
     def coord_to_pix(self, coords):
         # inherited docstring
-
-        if isinstance(coords, dict):
-            coords.setdefault("skycoord", self.center_skydir)
-        elif isinstance(coords, tuple) and len(coords) == len(self.axes):
+        if isinstance(coords, tuple) and len(coords) == len(self.axes):
             skydir = self.center_skydir.transform_to(self.frame)
             coords = (skydir.data.lon, skydir.data.lat) + coords
+        elif isinstance(coords, dict):
+            valid_keys = ["lon", "lat", "skycoord"]
+            if not any([_ in coords for _ in valid_keys]):
+                coords.setdefault("skycoord", self.center_skydir)
 
         coords = MapCoord.create(coords, frame=self.frame, axis_names=self.axes.names)
 
