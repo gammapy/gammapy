@@ -285,7 +285,6 @@ and you must use an external s/w like PINT or TEMPO2. For brevity,
 this code example shows the only technical implementation
 using a dummy phase column.
 
-
 .. testcode::
 
     import numpy as np
@@ -303,26 +302,8 @@ using a dummy phase column.
     table["PHASE"] = phase
     events_new = EventList(table)
 
-
     # copy the observation in memory, changing the events
     o2 = obs.copy(events=events_new, in_memory=True)
-
-    # The new observation and the new events table can be serialised independently
-    o2.write("new_obs.fits.gz")
-    events_new.write("events.fits.gz", gti=obs.gti, overwrite=True)
-
-    # create a new observation
-    o2 = Observation(obs_id=obs.obs_id,
-                obs_info=obs.obs_info,
-                gti=obs.gti,
-                aeff=obs.aeff,
-                edisp=obs.edisp,
-                psf=obs.psf,
-                bkg=obs.bkg,
-                rad_max=obs.rad_max,
-                events=events_new,
-                obs_filter=obs.obs_filter)
-
 
     # The new observation and the new events table can be serialised independently
     o2.write("new_obs.fits.gz")
