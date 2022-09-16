@@ -20,6 +20,7 @@ from gammapy.modeling.models import (
     SkyModel,
     TemplatePhaseCurveTemporalModel,
 )
+from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import mpl_plot_check, requires_data
 from gammapy.utils.time import time_ref_to_dict
 
@@ -351,3 +352,16 @@ def test_phase_curve_model(tmp_path):
 
     assert_allclose(new_model.table["PHASE"].data, phase)
     assert_allclose(new_model.table["NORM"].data, norm)
+
+def test_phasecurve_DC1():
+    filename = "$GAMMAPY_DATA/tests/phasecurve_LSI_DC.fits"
+    t_ref = 43366.275*u.d
+    P0 = 26.7*u.d
+    f0 = 1/P0
+
+    model = TemplatePhaseCurveTemporalModel.read(filename, t_ref, 0., f0)
+
+    times = Time(t_ref, format="mjd") + [0., 0.5, 0.65, 1.0]*P0
+    norm = model(times)
+
+    assert_allclose(norm, [0.05, 0.15, 1.0, 0.05])

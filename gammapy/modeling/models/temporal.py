@@ -705,8 +705,8 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
     _t_ref_default = Time(48442.5, format="mjd")
     _phi_ref_default = 0
     _f0_default = 29.946923 * u.s**-1
-    _f1_default = -3.77535e-10 * u.s**-2
-    _f2_default = 1.1147e-20 * u.s**-3
+    _f1_default = 0 * u.s**-2
+    _f2_default = 0 * u.s**-3
 
     t_ref = Parameter("t_ref", _t_ref_default.mjd, unit="day", frozen=True)
     phi_ref = Parameter("phi_ref", _phi_ref_default, unit="", frozen=True)
@@ -765,7 +765,8 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
     def _interpolator(self):
         x = self.table["PHASE"].data
         y = self.table["NORM"].data
-        return scipy.interpolate.InterpolatedUnivariateSpline(x, y, k=1, ext=2)
+
+        return scipy.interpolate.InterpolatedUnivariateSpline(x, y, k=1, ext=2, bbox=[0.,1.])
 
     def evaluate(self, time, t_ref, phi_ref, f0, f1, f2):
         delta_t = time - t_ref
