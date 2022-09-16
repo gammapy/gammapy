@@ -60,22 +60,44 @@ from gammapy.visualization import plot_theta_squared_table
 # “$GAMMAPY_DATA/hess-dl3-dr1”:
 # 
 
+######################################################################
+# Create and get info on the data store
+
 data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
 
 data_store.info()
 
+######################################################################
+# Preview an excerpt from the observtaion table
+
 data_store.obs_table[:2][["OBS_ID", "DATE-OBS", "RA_PNT", "DEC_PNT", "OBJECT"]]
+
+######################################################################
+# Get a single obervation
 
 obs = data_store.obs(23523)
 
+######################################################################
+# Select and peek events
+
 obs.events.select_offset([0, 2.5] * u.deg).peek()
+
+######################################################################
+# Peek the effective area
 
 obs.aeff.peek()
 
+######################################################################
+# Peek the energy dispersion
+
 obs.edisp.peek()
 
+######################################################################
+# Peek the psf
 obs.psf.peek()
 
+######################################################################
+# Peek the background rate
 obs.bkg.to_2d().plot()
 
 
