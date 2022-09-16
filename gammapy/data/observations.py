@@ -3,6 +3,7 @@ import collections.abc
 import copy
 import logging
 from itertools import zip_longest
+import inspect
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
@@ -503,6 +504,51 @@ class Observation:
 
         hdul.writeto(path, overwrite=overwrite)
 
+    def copy(self, in_memory=False, **kwargs):
+        """Copy observation
+        
+        Overwriting arguments requires the 'in_memory` argument to be true.
+
+        Parameters
+        ----------
+        in_memory : bool
+            Copy observation in memory.
+        **kwargs : dict
+            Keyword arguments passed to `Observation`
+        
+        Examples
+        --------
+
+        .. code::
+
+            from gammapy.data import Observation
+
+            obs = Observation.read(
+                "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz"
+            )
+
+            obs_copy = obs.copy(obs_id=1234)
+            print(obs_copy)
+
+
+        Returns
+        -------
+        obs : `Observation`
+            Copied observation    
+        """
+        if in_memory:
+            argnames = inspect.getfullargspec(self.__init__).args
+            argnames.remove("self")
+            
+            for name in argnames:
+                value = getattr(self, name)
+                kwargs.setdefault(name, copy.deepcopy(value))
+            return self.__class__(**kwargs)
+        
+        if kwargs:
+            raise ValueError("Overwriting arguments requires to set 'in_memory=True'")
+        
+        return copy.deepcopy(self)
 
 class Observations(collections.abc.MutableSequence):
     """Container class that holds a list of observations.
