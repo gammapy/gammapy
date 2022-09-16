@@ -261,7 +261,7 @@ repository under the Gammapy organisation of GitHub.
 6. Suggestions
 ==============
 
-One could ask CTAO software coordinators (e.g. DPPS, ACADA) if such rules can be used by them also, even if the
+One could ask CTAO software coordinators (ie ACADA, DPPS, SUSS) if such rules can be used by them also, even if the
 The Gammapy project is independent. In the same spirit, advice could be asked to people of the ESCAPE project via our
 corresponding person. And finally, one could mention the existence of these rules and ask for advice to the Astropy
 project.
