@@ -12,7 +12,12 @@ from gammapy.utils.fits import LazyFitsData
 from gammapy.utils.scripts import make_name, make_path
 from .core import Model, ModelBase, Models
 from .spatial import ConstantSpatialModel, SpatialModel
-from .spectral import PowerLawNormSpectralModel, SpectralModel, TemplateSpectralModel
+from .spectral import (
+    PowerLawNormSpectralModel,
+    SpectralModel,
+    TemplateSpectralModel,
+    PiecewiseNormSpectralModel,
+)
 from .temporal import TemporalModel
 
 __all__ = [
@@ -365,12 +370,18 @@ class SkyModel(ModelBase):
             Predicted flux map
         """
         energy = geom.axes["energy_true"].edges
-        value = np.ones(geom.data_shape)
+        value = u.Quantity(np.ones(geom.data_shape))
+        spectral_model = self.spectral_model
         if self.temporal_model:
             integral = self.temporal_model.integral(
                 gti.time_start, gti.time_stop, energy=energy
             )
-            value = value * np.sum(integral)
+            if self.temporal_model.is_energy_dependent:
+                norms = np.sum(integral, axis=-1).reshape((-1, 1, 1))
+                norm_model = PiecewiseNormSpectralModel(energy=energy, norms=norms)
+                spectral_model = spectral_model * norm_model
+            else:
+                value = value * np.sum(integral)
 
         if self.spatial_model:
             value = (
@@ -380,7 +391,7 @@ class SkyModel(ModelBase):
                 ).quantity
             )
 
-        value = value * self.spectral_model.integral(
+        value = value * spectral_model.integral(
             energy[:-1],
             energy[1:],
         ).reshape((-1, 1, 1))

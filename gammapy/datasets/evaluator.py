@@ -6,7 +6,11 @@ from astropy.coordinates.angle_utilities import angular_separation
 from astropy.utils import lazyproperty
 from regions import CircleSkyRegion
 from gammapy.maps import Map
-from gammapy.modeling.models import PointSpatialModel, TemplateNPredModel
+from gammapy.modeling.models import (
+    PointSpatialModel,
+    TemplateNPredModel,
+    PiecewiseNormSpectralModel,
+)
 
 PSF_CONTAINMENT = 0.999
 CUTOUT_MARGIN = 0.1 * u.deg
@@ -238,7 +242,8 @@ class MapEvaluator:
 
     def compute_flux_psf_convolved(self, *arg):
         """Compute psf convolved and temporal model corrected flux."""
-        value = self.compute_flux_spectral()
+        spectral_model = self.model.spectral_model
+        value = u.Quantity(np.ones(self.geom.data_shape))
 
         if self.model.spatial_model:
             if self.psf_containment is not None:
@@ -247,7 +252,12 @@ class MapEvaluator:
                 value = value * self.compute_flux_spatial()
 
         if self.model.temporal_model:
-            value *= self.compute_temporal_norm()
+            if self.model.temporal_model.is_energy_dependent:
+                spectral_model = spectral_model * self.temporal_to_norm_spectral()
+            else:
+                value = value * self.compute_temporal_norm()
+
+        value = value * self.compute_flux_spectral(spectral_model)
 
         return Map.from_geom(geom=self.geom, data=value.value, unit=value.unit)
 
@@ -300,10 +310,10 @@ class MapEvaluator:
 
         return value
 
-    def compute_flux_spectral(self):
+    def compute_flux_spectral(self, spectral_model):
         """Compute spectral flux"""
         energy = self.geom.axes["energy_true"].edges
-        value = self.model.spectral_model.integral(
+        value = spectral_model.integral(
             energy[:-1],
             energy[1:],
         )
@@ -314,11 +324,21 @@ class MapEvaluator:
 
     def compute_temporal_norm(self):
         """Compute temporal norm"""
+        integral = self.model.temporal_model.integral(
+            self.gti.time_start, self.gti.time_stop
+        )
+        return np.sum(integral)
+
+    def temporal_to_norm_spectral(self):
+        """Create a PiecewiseNormSpectalModel
+        by integrating energy dependent temporal models"""
         energy = self.geom.axes["energy_true"].center
         integral = self.model.temporal_model.integral(
             self.gti.time_start, self.gti.time_stop, energy=energy
         )
-        return np.sum(integral, axis=-1).reshape((-1, 1, 1))
+        norms = np.sum(integral, axis=-1).reshape((-1, 1, 1))
+        norm_model = PiecewiseNormSpectralModel(energy=energy, norms=norms)
+        return norm_model
 
     def apply_exposure(self, flux):
         """Compute npred cube
