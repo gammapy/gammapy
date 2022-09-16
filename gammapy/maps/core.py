@@ -971,17 +971,29 @@ class Map(abc.ABC):
         geom : `~gammapy.maps.Geom`
             Target Map geometry
         weights : `~numpy.ndarray`
-            Weights vector. Default is weight of one.
+            Weights vector. Default is weight of one. Must have same shape as
+            the data of the map.
         preserve_counts : bool
             Preserve the integral over each bin.  This should be true
             if the map is an integral quantity (e.g. counts) and false if
             the map is a differential quantity (e.g. intensity)
+
+        Returns
+        -------
+        resampled_map : `Map`
+            Resampled map
         """
-        coords = geom.get_coord()
-        idx = self.geom.coord_to_idx(coords)
-        return self._resample_by_idx(
-            idx, weights=weights, preserve_counts=preserve_counts
+        coords = self.geom.get_coord()
+        idx = geom.coord_to_idx(coords)
+
+        resampled = self.from_geom(geom=geom)
+
+        data = self.data * weights if weights is not None else self.data
+
+        resampled._resample_by_idx(
+            idx, weights=data, preserve_counts=preserve_counts
         )
+        return resampled
 
     @abc.abstractmethod
     def _resample_by_idx(self, idx, weights=None, preserve_counts=False):
