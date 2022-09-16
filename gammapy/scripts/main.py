@@ -107,45 +107,6 @@ def cli_download(ctx):  # noqa: D301
     """
 
 
-@cli.group("jupyter", short_help="Perform actions on notebooks")
-@click.option("--src", default=".", help="Local folder or Jupyter notebook filename.")
-@click.option(
-    "--r",
-    default=False,
-    is_flag=True,
-    help="Apply to notebooks found recursively in folder.",
-)
-@click.pass_context
-def cli_jupyter(ctx, src, r):  # noqa: D301
-    """
-    Perform a series of actions on Jupyter notebooks.
-
-    The chosen action is applied by default for every Jupyter notebook present
-    in the current working directory.
-
-    \b
-    Examples
-    --------
-    \b
-    $ gammapy jupyter strip
-    $ gammapy jupyter --src my/notebook.ipynb run
-    $ gammapy jupyter --src my/folder test
-    $ gammapy jupyter --src my/recursive/folder --r black
-    """
-    log = logging.getLogger(__name__)
-
-    path = Path(src)
-    if not path.exists():
-        log.error(f"File or folder {src} not found.")
-        sys.exit()
-
-    if path.is_dir():
-        paths = list(path.rglob("*.ipynb")) if r else list(path.glob("*.ipynb"))
-    else:
-        paths = [path]
-
-    ctx.obj = {"paths": paths, "pathsrc": path}
-
 
 def add_subcommands():
     from .info import cli_info
@@ -163,26 +124,6 @@ def add_subcommands():
     from .download import cli_download_datasets
 
     cli_download.add_command(cli_download_datasets)
-
-    from .jupyter import cli_jupyter_black
-
-    cli_jupyter.add_command(cli_jupyter_black)
-
-    from .jupyter import cli_jupyter_strip
-
-    cli_jupyter.add_command(cli_jupyter_strip)
-
-    from .jupyter import cli_jupyter_run
-
-    cli_jupyter.add_command(cli_jupyter_run)
-
-    from .jupyter import cli_jupyter_test
-
-    cli_jupyter.add_command(cli_jupyter_test)
-
-    from .jupyter import cli_jupyter_tar
-
-    cli_jupyter.add_command(cli_jupyter_tar)
 
     from .analysis import cli_make_config
 
