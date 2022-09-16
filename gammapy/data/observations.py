@@ -507,10 +507,12 @@ class Observation:
     def copy(self, in_memory=False, **kwargs):
         """Copy observation
         
+        Overwriting arguments requires the 'in_memory` argument to be true.
+
         Parameters
         ----------
         in_memory : bool
-            Copy observation in memory
+            Copy observation in memory.
         **kwargs : dict
             Keyword arguments passed to `Observation`
         
