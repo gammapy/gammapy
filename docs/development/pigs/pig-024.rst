@@ -203,7 +203,7 @@ external libraries.
 ==================================
 
 Depending on the software repository, different metadata files are used in the eco-system of Open Source research
-software.
+software and are mandatory.
 
 The file ``codemeta.json`` is used by HAL and Software Heritage, and recommended by
 `ESCAPE <https://escape2020.pages.in2p3.fr/wp3/eossr/v0.3.2/metadata.html>`_ or
