@@ -348,6 +348,7 @@ def test_observation_write(tmp_path):
     assert obs_read.rad_max is None
 
 
+@requires_data()
 def test_obervation_copy(data_store):
     obs = data_store.obs(23523)
 
