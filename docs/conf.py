@@ -15,19 +15,19 @@ from pkg_resources import get_distribution
 from sphinx_astropy.conf import *
 
 # Sphinx-gallery config
-from sphinx_gallery.sorting import FileNameSortKey
+from sphinx_gallery.sorting import FileNameSortKey, ExplicitOrder
 
 # Load utils docs functions
 from gammapy.utils.docs import gammapy_sphinx_ext_activate, SubstitutionCodeBlock
 
 
 # Add our custom directives to Sphinx
-def setup(app) :
+def setup(app):
     """
     Add the custom directives to Sphinx.
     """
-    app.add_config_value('substitutions', [], 'html')
-    app.add_directive('substitution-code-block', SubstitutionCodeBlock)
+    app.add_config_value("substitutions", [], "html")
+    app.add_directive("substitution-code-block", SubstitutionCodeBlock)
 
 
 conf = ConfigParser()
@@ -83,6 +83,7 @@ extensions.extend(
         "sphinx.ext.doctest",
         "sphinx_panels",
         "sphinx_copybutton",
+        "sphinx_automodapi.smart_resolver",
     ]
 )
 
@@ -97,7 +98,7 @@ rst_epilog += """
 """
 
 # This is added to keep the links to PRs in release notes
-changelog_links_docpattern = ['.*changelog.*', 'whatsnew/.*', 'release-notes/.*']
+changelog_links_docpattern = [".*changelog.*", "whatsnew/.*", "release-notes/.*"]
 
 # -- Project information ------------------------------------------------------
 
@@ -107,14 +108,14 @@ author = setup_cfg["author"]
 copyright = "{}, {}".format(datetime.datetime.now().year, setup_cfg["author"])
 
 version = get_distribution(project).version
-release = 'X.Y.Z'
+release = "X.Y.Z"
 switch_version = version
 if "dev" in version:
     switch_version = "dev"
 else:
     release = version
 
-substitutions = [('|release|', release)]
+substitutions = [("|release|", release)]
 # -- Options for HTML output ---------------------------------------------------
 
 # A NOTE ON HTML THEMES
@@ -227,16 +228,40 @@ automodsumm_inherited_members = True
 suppress_warnings = ["ref.citation"]
 
 # nitpicky = True
-
 sphinx_gallery_conf = {
-    "examples_dirs": ["../examples/models"],  # path to your example scripts
+    "examples_dirs": [
+        "../examples/models",
+        "../examples/tutorials",
+    ],  # path to your example scripts
     "gallery_dirs": [
-        "user-guide/model-gallery"
+        "user-guide/model-gallery",
+        "tutorials",
     ],  # path to where to save gallery generated output
+    "subsection_order": ExplicitOrder(
+        [
+            "../examples/models/spatial",
+            "../examples/models/spectral",
+            "../examples/models/temporal",
+            "../examples/tutorials/starting",
+            "../examples/tutorials/data",
+            "../examples/tutorials/analysis-1d",
+            "../examples/tutorials/analysis-2d",
+            "../examples/tutorials/analysis-3d",
+            "../examples/tutorials/analysis-time",
+            "../examples/tutorials/api",
+            "../examples/tutorials/scripts",
+        ]
+    ),
+    "backreferences_dir": "gen_modules/backreferences",
+    "doc_module": ("gammapy",),
+    "exclude_implicit_doc": {},
+    "filename_pattern": "\.py",
+    "reset_modules": ("matplotlib",),
     "within_subsection_order": FileNameSortKey,
-    "download_all_examples": False,
+    "download_all_examples": True,
     "capture_repr": (),
-    "min_reported_time": 10000,
+    "nested_sections": False,
+    "min_reported_time": 10,
     "show_memory": False,
     "line_numbers": False,
     "reference_url": {

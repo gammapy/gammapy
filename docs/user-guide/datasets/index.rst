@@ -236,15 +236,6 @@ typically errors, upper limits, etc. It also contains a reference model,
 serialised as a `~gammapy.modeling.models.TemplateSpectralModel`.
 
 
-Using gammapy.datasets
-----------------------
-
-Gammapy tutorial notebooks that show how to use this package:
-
-.. nbgallery::
-
-   ../../tutorials/api/datasets.ipynb
-   ../../tutorials/api/model_management.ipynb
-   ../../tutorials/analysis/1D/sed_fitting.ipynb
-
+.. minigallery:: gammapy.datasets.MapDataset gammapy.datasets.SpectrumDatasetOnOff
+    :add-heading:
 

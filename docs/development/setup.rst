@@ -81,10 +81,8 @@ Others
 
 There are two more folders in the ``gammapy`` repository: ``examples`` and ``dev``.
 
-The ``examples`` folder contains the following:
-
-  - Python scripts that could be used as example scripts tutorials in :ref:`tutorials_scripts`.
-  - Python scripts needed by the sphinx-gallery extension to produce collections of examples use cases.
+The ``examples`` folder contains Python scripts needed by the sphinx-gallery extension
+to produce collections of examples use cases.
 
 The Python scripts needed by sphinx-gallery extension are placed in folders declared in the
 ``sphinx_gallery_conf`` variable in ``docs/conf.py`` script.

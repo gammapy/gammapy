@@ -87,7 +87,7 @@ class HDULocation:
 
             return EventList.read(filename, hdu=hdu)
         elif hdu_class == "gti":
-            from gammapy.data import GTI
+            from gammapy.data.gti import GTI
 
             return GTI.read(filename, hdu=hdu)
         elif hdu_class == "map":

@@ -286,17 +286,8 @@ However the name of the axis must match the name of the corresponding map
 geometry axis.
 
 
-Using gammapy.maps
-------------------
-
-Gammapy tutorial notebooks that show examples using ``gammapy.maps``:
-
-.. nbgallery::
-
-   ../../tutorials/api/maps.ipynb
-   ../../tutorials/analysis/3D/analysis_3d.ipynb
-   ../../tutorials/analysis/3D/simulate_3d.ipynb
-   ../../tutorials/data/fermi_lat.ipynb
+.. minigallery:: gammapy.maps.WcsNDMap gammapy.maps.RegionNDMap
+    :add-heading:
 
 More detailed documentation on the WCS and HPX classes in ``gammapy.maps`` can be
 found in the following sub-pages:

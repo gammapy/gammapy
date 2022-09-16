@@ -63,16 +63,18 @@ MANIFEST
 docs/_static/notebooks
 docs/_downloads/notebooks-dev.tar
 docs/user-guide/model-gallery
+docs/tutorials/
 
-docs/tutorials/analysis/3D/crab-3datasets
-docs/tutorials/starting/analysis_1
-docs/tutorials/analysis/3D/analysis_3d
-docs/tutorials/analysis/3D/event_sampling
-docs/tutorials/*/*.yaml
-docs/tutorials/*.yaml
-docs/tutorials/*/*.dat
-docs/tutorials/*.dat
-docs/tutorials/*/*.reg
+examples/tutorials/analysis-3d/crab-3datasets
+examples/tutorials/starting/analysis_1
+examples/tutorials/analysis-3d/analysis_3d
+examples/tutorials/analysis-3d/event_sampling
+examples/tutorials/analysis-1d/hli_spectrum_analysis
+examples/tutorials/*/*.yaml
+examples/tutorials/*.yaml
+examples/tutorials/*/*.dat
+examples/tutorials/*.dat
+examples/tutorials/*/*.reg
 
 gammapy-datasets
 temp
@@ -80,6 +82,7 @@ temp
 gammapy/gammapy.cfg
 
 docs/_generated
+docs/gen_modules
 docs/api
 .coverage
 
@@ -99,3 +102,7 @@ dev/crab
 .shellcheckrc
 .hadolint.yaml
 .markdownlint.yaml
+
+
+# sphinx gallery
+docs/tutorials/*/*.md5
