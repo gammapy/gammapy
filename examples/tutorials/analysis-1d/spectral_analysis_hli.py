@@ -2,6 +2,8 @@
 Spectral analysis with the HLI
 ==============================
 
+Introduction to 1D analysis using the Gammapy high level interface.
+
 Prerequisites
 -------------
 
@@ -31,27 +33,27 @@ release 1 and perform a simple model fitting of the Crab nebula.**
 Proposed approach
 -----------------
 
-This notebook uses the high level ``Analysis`` class to orchestrate data
-reduction and run the data fits. In its current state, ``Analysis``
+This notebook uses the high level `~gammapy.analysis.Analysis` class to orchestrate data
+reduction and run the data fits. In its current state, `Analysis`
 supports the standard analysis cases of joint or stacked 3D and 1D
-analyses. It is instantiated with an ``AnalysisConfig`` object that
+analyses. It is instantiated with an `~gammapy.analysis.AnalysisConfig` object that
 gives access to analysis parameters either directly or via a YAML config
 file.
 
 To see what is happening under-the-hood and to get an idea of the
 internal API, a second notebook performs the same analysis without using
-the ``Analysis`` class.
+the `~gammapy.analysis.Analysis` class.
 
 In summary, we have to:
 
--  Create an ``~gammapy.analysis.AnalysisConfig`` object and the
+-  Create an `~gammapy.analysis.AnalysisConfig` object and the
    analysis configuration:
 
    -  Define what observations to use
    -  Define the geometry of the dataset (data and IRFs)
    -  Define the model we want to fit on the dataset.
 
--  Instantiate a ``~gammapy.analysis.Analysis`` from this configuration
+-  Instantiate a `~gammapy.analysis.Analysis` from this configuration
    and run the different analysis steps
 
    -  Observation selection
@@ -145,7 +147,7 @@ print(config)
 # 
 # PS: do not forget to setup your environment variable *$GAMMAPY_DATA* to
 # your local directory containing the H.E.S.S. DL3-DR1 as described in
-# `getting started <../../getting-started/index.rst#quickstart-setup>`__.
+# :ref:`quickstart-setup`.
 # 
 
 
@@ -159,7 +161,7 @@ print(config)
 # In order to properly adjust the background normalisation on regions
 # without gamma-ray signal, one needs to define an exclusion mask for the
 # background normalisation. For this tutorial, we use the following one
-# ``$GAMMAPY_DATA/joint-crab/exclusion/exclusion_mask_crab.fits.gz``
+# `$GAMMAPY_DATA/joint-crab/exclusion/exclusion_mask_crab.fits.gz`
 # 
 
 config.datasets.background.exclusion = (
@@ -169,7 +171,7 @@ config.datasets.background.exclusion = (
 
 ######################################################################
 # We’re all set. But before we go on let’s see how to save or import
-# ``AnalysisConfig`` objects though YAML files.
+# `~gammapy.analysis.AnalysisConfig` objects though YAML files.
 # 
 
 
@@ -177,7 +179,7 @@ config.datasets.background.exclusion = (
 # Using YAML configuration files for setting/writing the Data Reduction parameters
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 
-# One can export/import the ``AnalysisConfig`` to/from a YAML file.
+# One can export/import the `~gammapy.analysis.AnalysisConfig` to/from a YAML file.
 # 
 
 config.write("config.yaml", overwrite=True)
@@ -196,7 +198,7 @@ print(config)
 # Configuration of the analysis
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 
-# We first create an ``~gammapy.analysis.Analysis`` object from our
+# We first create an `~gammapy.analysis.Analysis` object from our
 # configuration.
 # 
 
@@ -208,14 +210,14 @@ analysis = Analysis(config)
 # ~~~~~~~~~~~~~~~~~~~~~
 # 
 # We can directly select and load the observations from disk using
-# ``~gammapy.analysis.Analysis.get_observations()``:
+# `~gammapy.analysis.Analysis.get_observations()`:
 # 
 
 analysis.get_observations()
 
 
 ######################################################################
-# The observations are now available on the ``Analysis`` object. The
+# The observations are now available on the `Analysis` object. The
 # selection corresponds to the following ids:
 # 
 
@@ -235,7 +237,7 @@ analysis.observations.ids
 # 
 # Now we proceed to the data reduction. In the config file we have chosen
 # a WCS map geometry, energy axis and decided to stack the maps. We can
-# run the reduction using ``.get_datasets()``:
+# run the reduction using `.get_datasets()`:
 # 
 
 # %%time
@@ -286,7 +288,7 @@ path.mkdir(exist_ok=True)
 
 ######################################################################
 # And then write the stacked dataset to disk by calling the dedicated
-# ``write()`` method:
+# `write()` method:
 # 
 
 filename = path / "crab-stacked-dataset.fits.gz"
@@ -304,7 +306,7 @@ analysis.datasets.write(filename, overwrite=True)
 # ~~~~~~~~~~~~~~~~~~~~~
 # 
 # First, let’s create a model to be adjusted. As we are performing a 1D
-# Analysis, only a spectral model is needed within the ``SkyModel``
+# Analysis, only a spectral model is needed within the `SkyModel`
 # object. Here is a pre-defined YAML configuration file created for this
 # 1D analysis:
 # 
@@ -355,7 +357,7 @@ analysis.set_models(model_1d)
 # Setting fitting parameters
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 
-# ``Analysis`` can perform a few modeling and fitting tasks besides data
+# `Analysis` can perform a few modeling and fitting tasks besides data
 # reduction. Parameters have then to be passed to the configuration
 # object.
 # 
@@ -401,7 +403,8 @@ analysis.datasets[0].plot_masks(ax=ax_spectrum);
 filename = path / "model-best-fit.yaml"
 analysis.models.write(filename, overwrite=True)
 
-!cat hli_spectrum_analysis/model-best-fit.yaml
+with filename.open("r") as f:
+    print(f.read())
 
 
 ######################################################################
@@ -459,7 +462,6 @@ analysis.flux_points.write(filename, overwrite=True)
 ax_sed, ax_residuals = analysis.flux_points.plot_fit()
 ax_sed.set_ylim(1.0e-12, 1.0e-9)
 ax_sed.set_xlim(0.5, 40)
-plt.savefig("1D-Analysis-spectrum.png")
 
 
 ######################################################################

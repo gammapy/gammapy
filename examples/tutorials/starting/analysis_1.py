@@ -2,7 +2,7 @@
 High level interface
 ====================
 
-Introduction to Gammapy analysis using the high level interface.
+Introduction to 3D analysis using the Gammapy high level interface.
 
 Prerequisites
 -------------

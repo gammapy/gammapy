@@ -69,6 +69,7 @@ examples/tutorials/analysis-3d/crab-3datasets
 examples/tutorials/starting/analysis_1
 examples/tutorials/analysis-3d/analysis_3d
 examples/tutorials/analysis-3d/event_sampling
+examples/tutorials/analysis-1d/hli_spectrum_analysis
 examples/tutorials/*/*.yaml
 examples/tutorials/*.yaml
 examples/tutorials/*/*.dat
