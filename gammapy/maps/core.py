@@ -606,6 +606,55 @@ class Map(abc.ABC):
         """
         pass
 
+    def resample(self, geom, weights=None, preserve_counts=True):
+        """Resample pixels to ``geom`` with given ``weights``.
+
+        Parameters
+        ----------
+        geom : `~gammapy.maps.Geom`
+            Target Map geometry
+        weights : `~numpy.ndarray`
+            Weights vector. Default is weight of one. Must have same shape as
+            the data of the map.
+        preserve_counts : bool
+            Preserve the integral over each bin.  This should be true
+            if the map is an integral quantity (e.g. counts) and false if
+            the map is a differential quantity (e.g. intensity)
+
+        Returns
+        -------
+        resampled_map : `Map`
+            Resampled map
+        """
+        coords = self.geom.get_coord()
+        idx = geom.coord_to_idx(coords)
+
+        resampled = self.from_geom(geom=geom)
+
+        resampled._resample_by_idx(
+            idx, weights=self.data, preserve_counts=preserve_counts
+        )
+        return resampled
+
+    @abc.abstractmethod
+    def _resample_by_idx(self, idx, weights=None, preserve_counts=False):
+        """Resample pixels at ``idx`` with given ``weights``.
+
+        Parameters
+        ----------
+        idx : tuple
+            Tuple of pixel index arrays for each dimension of the map.
+            Tuple should be ordered as (I_lon, I_lat, I_0, ..., I_n)
+            for WCS maps and (I_hpx, I_0, ..., I_n) for HEALPix maps.
+        weights : `~numpy.ndarray`
+            Weights vector. Default is weight of one.
+        preserve_counts : bool
+            Preserve the integral over each bin.  This should be true
+            if the map is an integral quantity (e.g. counts) and false if
+            the map is a differential quantity (e.g. intensity)
+        """
+        pass
+
     def resample_axis(self, axis, weights=None, ufunc=np.add):
         """Resample map to a new axis binning by grouping over smaller bins and apply ufunc to the bin contents.
 
@@ -962,57 +1011,6 @@ class Map(abc.ABC):
             data *= geom.solid_angle().to_value("deg2")
 
         return Map.from_geom(geom, data=data, unit=self.unit)
-
-    def resample(self, geom, weights=None, preserve_counts=True):
-        """Resample pixels to ``geom`` with given ``weights``.
-
-        Parameters
-        ----------
-        geom : `~gammapy.maps.Geom`
-            Target Map geometry
-        weights : `~numpy.ndarray`
-            Weights vector. Default is weight of one. Must have same shape as
-            the data of the map.
-        preserve_counts : bool
-            Preserve the integral over each bin.  This should be true
-            if the map is an integral quantity (e.g. counts) and false if
-            the map is a differential quantity (e.g. intensity)
-
-        Returns
-        -------
-        resampled_map : `Map`
-            Resampled map
-        """
-        coords = self.geom.get_coord()
-        idx = geom.coord_to_idx(coords)
-
-        resampled = self.from_geom(geom=geom)
-
-        data = self.data * weights if weights is not None else self.data
-
-        resampled._resample_by_idx(
-            idx, weights=data, preserve_counts=preserve_counts
-        )
-        return resampled
-
-    @abc.abstractmethod
-    def _resample_by_idx(self, idx, weights=None, preserve_counts=False):
-        """Resample pixels at ``idx`` with given ``weights``.
-
-        Parameters
-        ----------
-        idx : tuple
-            Tuple of pixel index arrays for each dimension of the map.
-            Tuple should be ordered as (I_lon, I_lat, I_0, ..., I_n)
-            for WCS maps and (I_hpx, I_0, ..., I_n) for HEALPix maps.
-        weights : `~numpy.ndarray`
-            Weights vector. Default is weight of one.
-        preserve_counts : bool
-            Preserve the integral over each bin.  This should be true
-            if the map is an integral quantity (e.g. counts) and false if
-            the map is a differential quantity (e.g. intensity)
-        """
-        pass
 
     def fill_events(self, events):
         """Fill event coordinates (`~gammapy.data.EventList`)."""
