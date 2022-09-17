@@ -162,7 +162,7 @@ print(profile)
 # 
 # Let us directly plot the result using `~gammapy.estimators.FluxPoints.plot`:
 # 
-
+plt.figure()
 ax = profile.plot(sed_type="dnde")
 ax.set_yscale("linear")
 
@@ -175,6 +175,7 @@ ax.set_yscale("linear")
 
 profile.sqrt_ts_threshold_ul = 2
 
+plt.figure()
 ax = profile.plot(sed_type="eflux")
 ax.set_yscale("linear")
 
@@ -187,10 +188,12 @@ ax.set_yscale("linear")
 
 quantities = ["npred", "npred_excess", "npred_background"]
 
-for quantity in quantities:
-    profile[quantity].plot(label=quantity.title())
+fig, ax = plt.subplots()
 
-plt.ylabel("Counts ")
+for quantity in quantities:
+    profile[quantity].plot(ax=ax, label=quantity.title())
+
+ax.set_ylabel("Counts ")
 
 
 ######################################################################
@@ -212,6 +215,7 @@ profile_new = FluxPoints.read(
     filename="flux_profile_fermi.fits", format="profile"
 )
 
+fig = plt.figure()
 ax = profile_new.plot()
 ax.set_yscale("linear")
 
@@ -269,7 +273,8 @@ profile = flux_profile_estimator.run(datasets=dataset)
 # We can directly plot the result:
 # 
 
-ax = profile.plot(axis_name="projected-distance", sed_type="flux")
+plt.figure()
+profile.plot(axis_name="projected-distance", sed_type="flux")
 
 
 ######################################################################
@@ -284,7 +289,7 @@ profile_high = profile.slice_by_idx({"energy": slice(1, 2)})
 # And now plot the points together with the likelihood profiles:
 # 
 
-ax = profile_high.plot(sed_type="eflux", color="tab:orange")
+fig, ax = plt.subplots()
+profile_high.plot(ax=ax, sed_type="eflux", color="tab:orange")
 profile_high.plot_ts_profiles(ax=ax, sed_type="eflux")
 ax.set_yscale("linear")
-
