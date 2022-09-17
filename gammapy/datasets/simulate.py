@@ -26,6 +26,35 @@ class MapDatasetEventSampler:
     def __init__(self, random_state="random-seed"):
         self.random_state = get_random_state(random_state)
 
+    def _sample_coord_time_energy(self, npred, temporal_model, gti):
+        data = npred.data[np.isfinite(npred.data)]
+        n_events = self.random_state.poisson(np.sum(data))
+
+        npred = npred.reduce_over_axes()
+        coords = npred.sample_coord(n_events=n_events, random_state=self.random_state)
+
+        table = Table()
+        table["RA_TRUE"] = coords.skycoord.icrs.ra.to("deg")
+        table["DEC_TRUE"] = coords.skycoord.icrs.dec.to("deg")
+
+        time_start, time_stop, time_ref = (gti.time_start, gti.time_stop, gti.time_ref)
+        time = temporal_model.sample_time_energy(
+            n_events=n_events,
+            t_min=time_start,
+            t_max=time_stop,
+            random_state=self.random_state,
+        )
+
+        try:
+            energy = coords["energy_true"]
+        except KeyError:
+            energy = coords["energy"]
+        table["ENERGY_TRUE"] = energy
+
+        table["TIME"] = u.Quantity(((time.mjd - time_ref.mjd) * u.day).to(u.s)).to("s")
+
+        return table
+
     def _sample_coord_time(self, npred, temporal_model, gti):
         data = npred.data[np.isfinite(npred.data)]
         n_events = self.random_state.poisson(np.sum(data))
@@ -85,7 +114,10 @@ class MapDatasetEventSampler:
             else:
                 temporal_model = evaluator.model.temporal_model
 
-            table = self._sample_coord_time(npred, temporal_model, dataset.gti)
+            if evaluator.model == "TemplateTemporalModel" and .....:
+                table = self._sample_coord_time_energy(npred, temporal_model, dataset.gti)
+            else:
+                table = self._sample_coord_time(npred, temporal_model, dataset.gti)
 
             if len(table) == 0:
                 mcid = table.Column(name="MC_ID", length=0, dtype=int)

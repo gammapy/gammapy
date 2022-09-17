@@ -154,6 +154,14 @@ class TemporalModel(ModelBase):
 
         return t_min + time
 
+    def sample_time_energy(self, n_events, t_min, t_max, t_delta="1 s", random_state=0):
+        pdf = self(t)
+
+        sampler = InverseCDFSampler(pdf=pdf, random_state=random_state)
+        time_pix = sampler.sample(n_events)[0]
+
+        return t_min + time
+
     def integral(self, t_min, t_max, oversampling_factor=100, **kwargs):
         """Evaluate the integrated flux within the given time intervals
 
