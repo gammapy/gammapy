@@ -353,6 +353,7 @@ def test_phase_curve_model(tmp_path):
     assert_allclose(new_model.table["PHASE"].data, phase)
     assert_allclose(new_model.table["NORM"].data, norm)
 
+@requires_data()
 def test_phasecurve_DC1():
     filename = "$GAMMAPY_DATA/tests/phasecurve_LSI_DC.fits"
     t_ref = 43366.275*u.d
