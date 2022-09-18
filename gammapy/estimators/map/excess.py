@@ -251,7 +251,7 @@ class ExcessMapEstimator(Estimator):
 
             if "errn-errp" in self.selection_optional:
                 maps["norm_errn"] = (
-                    Map.from_geom(geom, data=-counts_stat.compute_errn(self.n_sigma))
+                    Map.from_geom(geom, data=counts_stat.compute_errn(self.n_sigma))
                     / reco_exposure
                 )
                 maps["norm_errp"] = (
