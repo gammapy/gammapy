@@ -47,7 +47,7 @@ Uniformly for both methods most estimators compute the same basic quantities:
 Quantity          Definition
 ================= =================================================
 norm              Best fit norm with respect to the reference spectral model
-norm_err          Symmetric error on the norm derived from the Hessian matrix
+norm_err          Symmetric error on the norm derived from the Hessian matrix. Given as difference to the best fit norm.
 stat              Fit statistics value of the best fit hypothesis
 stat_null         Fit statistics value of the null hypothesis
 ts                Difference in fit statistics (`stat - stat_null` )
@@ -62,9 +62,9 @@ In addition, the following optional quantities can be computed:
 ================= =================================================
 Quantity          Definition
 ================= =================================================
-norm_errp         Positive error of the norm
-norm_errn         Negative error of the norm
-norm_ul           Upper limit of the norm
+norm_errp         Positive error of the norm, given as difference to the best fit norm
+norm_errn         Negative error of the norm, given as difference to the best fit norm
+norm_ul           Upper limit of the norm, fiven as abolsute value
 norm_scan         Norm scan
 stat_scan         Fit statistics scan
 ================= =================================================
