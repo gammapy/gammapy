@@ -415,8 +415,17 @@ def test_region_nd_map_interp_no_region():
 
 
 def test_region_map_sampling(region_map):
-    npred_map = region_map.copy()
+    energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=6, name="energy")
+    edges = np.linspace(0., 30., 3)*u.min
+    time_axis = MapAxis.from_edges(edges, name="time")
+
+    npred_map = Map.create(
+        region="icrs;circle(83.63, 21.51, 1)",
+        map_type="region",
+        axes=[time_axis, energy_axis],
+    )
     npred_map.data[...] = 5
+
     coords = npred_map.sample_coord(n_events=2, random_state=0)
     skycoord = coords.skycoord
 
@@ -424,12 +433,15 @@ def test_region_map_sampling(region_map):
     events["RA_TRUE"] = skycoord.icrs.ra
     events["DEC_TRUE"] = skycoord.icrs.dec
     events["ENERGY"] = coords["energy"]
+    events["TIME"] = coords["time"]
 
     assert len(events) == 2
     assert_allclose(events["RA_TRUE"].data, [83.63, 83.63], rtol=1e-5)
     assert_allclose(events["DEC_TRUE"].data, [21.51, 21.51], rtol=1e-5)
     assert_allclose(events["ENERGY"].data, [3.985296, 5.721113], rtol=1e-5)
+    assert_allclose(events["TIME"].data, [6.354822, 9.688412], rtol=1e-5)
 
     assert coords["lon"].unit == "deg"
     assert coords["lat"].unit == "deg"
     assert coords["energy"].unit == "TeV"
+    assert coords["time"].unit == "min"
