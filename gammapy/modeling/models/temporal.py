@@ -154,8 +154,26 @@ class TemporalModel(ModelBase):
 
         return t_min + time
 
-    def sample_time_energy(self, n_events, t_min, t_max, t_delta="1 s", random_state=0):
-        pdf = self(t)
+    def sample_time_energy(self, n_events, coords, t_min, t_max, t_delta="1 s", random_state=0):
+        t_min = Time(t_min)
+        t_max = Time(t_max)
+        t_delta = u.Quantity(t_delta)
+        random_state = get_random_state(random_state)
+
+        ontime = u.Quantity((t_max - t_min).sec, "s")
+
+        time_unit = (
+            u.Unit(self.table.meta["TIMEUNIT"])
+            if hasattr(self, "table")
+            else ontime.unit
+        )
+
+        t_step = t_delta.to_value(time_unit)
+        t_step = (t_step * u.s).to("d")
+
+        t = Time(np.arange(t_min.mjd, t_max.mjd, t_step.value), format="mjd")
+
+        pdf = self(t, coords[....])
 
         sampler = InverseCDFSampler(pdf=pdf, random_state=random_state)
         time_pix = sampler.sample(n_events)[0]

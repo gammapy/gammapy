@@ -30,16 +30,27 @@ class MapDatasetEventSampler:
         data = npred.data[np.isfinite(npred.data)]
         n_events = self.random_state.poisson(np.sum(data))
 
-        npred = npred.reduce_over_axes()
+        #npred = npred.reduce_over_axes()
         coords = npred.sample_coord(n_events=n_events, random_state=self.random_state)
 
         table = Table()
         table["RA_TRUE"] = coords.skycoord.icrs.ra.to("deg")
         table["DEC_TRUE"] = coords.skycoord.icrs.dec.to("deg")
 
+        coord = MapCoord(
+            {
+                "lon": table["RA_TRUE"].quantity,
+                "lat": table["DEC_TRUE"].quantity,
+                "energy_true": temporal_model.table["ENERGY_TRUE"].quantity,
+                "time": temporal_model.table["TIME"].quantity,
+            }
+            frame="icrs"
+        )
+
         time_start, time_stop, time_ref = (gti.time_start, gti.time_stop, gti.time_ref)
         time = temporal_model.sample_time_energy(
             n_events=n_events,
+            coord,
             t_min=time_start,
             t_max=time_stop,
             random_state=self.random_state,
@@ -114,7 +125,8 @@ class MapDatasetEventSampler:
             else:
                 temporal_model = evaluator.model.temporal_model
 
-            if evaluator.model == "TemplateTemporalModel" and .....:
+            if (temporal_model == "TemplateTemporalModel"
+                and ("Energy" in temporal_model.table.colnames)):
                 table = self._sample_coord_time_energy(npred, temporal_model, dataset.gti)
             else:
                 table = self._sample_coord_time(npred, temporal_model, dataset.gti)
