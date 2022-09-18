@@ -3,6 +3,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
+from astropy.table import Table
 from astropy.time import Time
 from regions import CircleSkyRegion
 import matplotlib.pyplot as plt
@@ -411,3 +412,24 @@ def test_region_nd_map_interp_no_region():
 
     value = m.interp_by_coord((energy, time))
     assert_allclose(value, reference, rtol=1e-5)
+
+
+def test_region_map_sampling(region_map):
+    npred_map = region_map.copy()
+    npred_map.data[...] = 5
+    coords = npred_map.sample_coord(n_events=2, random_state=0)
+    skycoord = coords.skycoord
+
+    events = Table()
+    events["RA_TRUE"] = skycoord.icrs.ra
+    events["DEC_TRUE"] = skycoord.icrs.dec
+    events["ENERGY"] = coords["energy"]
+
+    assert len(events) == 2
+    assert_allclose(events["RA_TRUE"].data, [83.63, 83.63], rtol=1e-5)
+    assert_allclose(events["DEC_TRUE"].data, [21.51, 21.51], rtol=1e-5)
+    assert_allclose(events["ENERGY"].data, [3.985296, 5.721113], rtol=1e-5)
+
+    assert coords["lon"].unit == "deg"
+    assert coords["lat"].unit == "deg"
+    assert coords["energy"].unit == "TeV"

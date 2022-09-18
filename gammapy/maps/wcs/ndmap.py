@@ -859,31 +859,3 @@ class WcsNDMap(WcsMap):
                 raise ValueError("Incompatible spatial geoms between map and weights")
             data = data * weights.data[cutout_slices]
         self.data[parent_slices] += data
-
-    def sample_coord(self, n_events, random_state=0):
-        """Sample position and energy of events.
-
-        Parameters
-        ----------
-        n_events : int
-            Number of events to sample.
-        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
-            Defines random number generator initialisation.
-            Passed to `~gammapy.utils.random.get_random_state`.
-
-        Returns
-        -------
-        coords : `~gammapy.maps.MapCoord` object.
-            Sequence of coordinates and energies of the sampled events.
-        """
-
-        random_state = get_random_state(random_state)
-        sampler = InverseCDFSampler(pdf=self.data, random_state=random_state)
-
-        coords_pix = sampler.sample(n_events)
-        coords = self.geom.pix_to_coord(coords_pix[::-1])
-
-        # TODO: pix_to_coord should return a MapCoord object
-        cdict = OrderedDict(zip(self.geom.axes_names, coords))
-
-        return MapCoord.create(cdict, frame=self.geom.frame)
