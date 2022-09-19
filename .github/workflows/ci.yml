@@ -28,6 +28,7 @@ jobs:
       run:
         shell: bash -l {0}
     strategy:
+      fail-fast: false # true
       matrix:
         include:
           - os: ubuntu-latest
