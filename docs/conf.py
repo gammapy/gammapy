@@ -100,9 +100,7 @@ exclude_patterns.append("user-guide/model-gallery/*/*.py")
 
 extensions.extend(
     [
-        "nbsphinx",
         "sphinx_click.ext",
-        "IPython.sphinxext.ipython_console_highlighting",
         "sphinx.ext.mathjax",
         "sphinx_gallery.gen_gallery",
         "sphinx.ext.doctest",
