@@ -39,7 +39,7 @@ def test_cli_download_notebooks(tmp_path, config):
 
 
 @requires_dependency("requests")
-@requires_dependency("requests")
+@requires_dependency("tqdm")
 @pytest.mark.remote_data
 def test_cli_download_datasets(tmp_path, config):
     option_out = f"--out={tmp_path}"
