@@ -12,6 +12,7 @@ from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.scripts import make_path
 from gammapy.utils.units import energy_unit_format
 from .axes import MapAxis
+from .coord import MapCoord
 from .geom import pix_tuple_to_idx
 from .io import JsonQuantityDecoder
 

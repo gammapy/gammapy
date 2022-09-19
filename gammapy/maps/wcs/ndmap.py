@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-from collections import OrderedDict
 import numpy as np
 import scipy.interpolate
 import scipy.ndimage as ndi
@@ -19,9 +18,7 @@ from regions import (
 )
 import matplotlib.pyplot as plt
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
-from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.units import unit_from_fits_image_hdu
-from ..coord import MapCoord
 from ..geom import pix_tuple_to_idx
 from ..utils import INVALID_INDEX
 from .core import WcsMap

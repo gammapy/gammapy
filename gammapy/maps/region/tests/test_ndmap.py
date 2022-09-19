@@ -3,7 +3,6 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
-from astropy.table import Table
 from astropy.time import Time
 from regions import CircleSkyRegion
 import matplotlib.pyplot as plt
