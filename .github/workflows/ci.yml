@@ -69,7 +69,8 @@ jobs:
           python -m pip install tox
       - name: download datasets
         if: ${{ matrix.gammapy_data }}
-        run: | 
+        run: |
+          python -m pip install tqdm requests
           python -m pip install -e .
           gammapy download datasets
       - name: Print Python, pip, setuptools, and tox versions
@@ -110,6 +111,7 @@ jobs:
           python -m pip install tox
       - name: download datasets
         run: |
+          python -m pip install tqdm requests
           python -m pip install -e .
           gammapy download datasets
       - name: test build docs
