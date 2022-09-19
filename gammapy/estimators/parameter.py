@@ -152,8 +152,8 @@ class ParameterEstimator(Estimator):
         result : dict
             Dict with the parameter asymmetric errors. Entries are:
 
-                * parameter.name_errp : positive error on parameter value
-                * parameter.name_errn : negative error on parameter value
+                * {parameter.name}_errp : positive error on parameter value
+                * {parameter.name}_errn : negative error on parameter value
         """
         if not np.any(datasets.contributes_to_stat):
             return {
