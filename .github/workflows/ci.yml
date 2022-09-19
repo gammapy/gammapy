@@ -23,7 +23,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       PYTEST_ADDOPTS: --color=yes -n auto --dist=loadscope
-      GAMMAPY_DATA: ${{ matrix.gammapy_data}}
+      GAMMAPY_DATA: ${{ matrix.gammapy_data_path}}
     strategy:
       fail-fast: false # true
       matrix:
@@ -34,7 +34,7 @@ jobs:
           - os: ubuntu-latest
             python: '3.9'
             tox_env: 'py39-test-alldeps-cov'
-            gammapy_data: ./gammapy-datasets
+            gammapy_data_path: /home/runner/work/gammapy/gammapy/gammapy-datasets
           - os: macos-latest
             python: '3.9'
             tox_env: 'py39-test-alldeps'
