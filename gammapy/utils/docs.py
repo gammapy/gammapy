@@ -17,7 +17,6 @@ Here's some good resources with working examples:
 - https://github.com/bokeh/bokeh/tree/master/bokeh/sphinxext
 """
 import os
-from configparser import ConfigParser
 from pathlib import Path
 from docutils.parsers.rst import Directive
 from docutils.parsers.rst.directives import register_directive
