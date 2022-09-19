@@ -41,9 +41,9 @@ class GTI:
     GTI info:
     - Number of GTIs: 1
     - Duration: 1687.0 s
-    - Start: 53343.92234009259 MET
+    - Start: 123890826.0 s MET
     - Start: 2004-12-04T22:08:10.184 (time standard: TT)
-    - Stop: 53343.94186555556 MET
+    - Stop: 123892513.0 s MET
     - Stop: 2004-12-04T22:36:17.184 (time standard: TT)
 
     Load GTIs for a Fermi-LAT event list:
@@ -53,9 +53,9 @@ class GTI:
     GTI info:
     - Number of GTIs: 39042
     - Duration: 183139597.9032163 s
-    - Start: 54682.65603794185 MET
+    - Start: 239557417.49417615 s MET
     - Start: 2008-08-04T15:44:41.678 (time standard: TT)
-    - Stop: 57236.96833546296 MET
+    - Stop: 460250000.0 s MET
     - Stop: 2015-08-02T23:14:24.184 (time standard: TT)
     """
 
@@ -143,9 +143,9 @@ class GTI:
             "GTI info:\n"
             f"- Number of GTIs: {len(self.table)}\n"
             f"- Duration: {self.time_sum}\n"
-            f"- Start: {self.time_start[0]} MET\n"
+            f"- Start: {Quantity(self.table['START'][0].astype('float64'), 'second')} MET\n"
             f"- Start: {self.time_start[0].fits} (time standard: {self.time_start[-1].scale.upper()})\n"
-            f"- Stop: {self.time_stop[-1]} MET\n"
+            f"- Stop: {Quantity(self.table['STOP'][-1].astype('float64'), 'second')} MET\n"
             f"- Stop: {self.time_stop[-1].fits} (time standard: {self.time_stop[-1].scale.upper()})\n"
         )
 
