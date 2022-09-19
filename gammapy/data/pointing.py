@@ -131,8 +131,6 @@ class FixedPointingInfo:
         obs_mode = self.meta.get("OBS_MODE")
         if obs_mode is None:
             return PointingMode.POINTING
-        if np.size(obs_mode)>1 and "POINTING" in [i.upper() for i in obs_mode]:
-            return PointingMode.POINTING
         return PointingMode.from_gadf_string(obs_mode)
 
     @lazyproperty
