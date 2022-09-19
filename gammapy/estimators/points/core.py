@@ -497,7 +497,6 @@ class FluxPoints(FluxMaps):
 
         # get errors and ul
         y_errn, y_errp = self._plot_get_flux_err(sed_type=sed_type)
-
         is_ul = self.is_ul.data
 
         if self.has_ul and y_errn and is_ul.any():
@@ -509,8 +508,8 @@ class FluxPoints(FluxMaps):
 
         # set flux points plotting defaults
         if y_errp and y_errn:
-            y_errp = scale_plot_flux(y_errp, energy_power=energy_power).quantity
-            y_errn = scale_plot_flux(y_errn, energy_power=energy_power).quantity
+            y_errp = np.clip(scale_plot_flux(y_errp, energy_power=energy_power).quantity, 0, np.inf)
+            y_errn = np.clip(scale_plot_flux(y_errn, energy_power=energy_power).quantity, 0, np.inf)
             kwargs.setdefault("yerr", (y_errn, y_errp))
         else:
             kwargs.setdefault("yerr", None)

@@ -23,8 +23,7 @@ help:
 	@echo '     trailing-spaces    Remove trailing spaces at the end of lines in *.py files'
 	@echo '     black              Run black code formatter'
 	@echo '     isort              Run isort code formatter to sort imports'
-	@echo '     clean-nb           Run black and clean output from tutorial notebooks'
-	@echo '     polish             Run trailing-spaces, black, isort and clean-nb'
+	@echo '     polish             Run trailing-spaces, black and isort'
 	@echo ''
 	@echo '     flake8             Run flake8 static code analysis'
 	@echo '     pylint             Run pylint static code analysis'
@@ -86,10 +85,6 @@ test:
 test-cov:
 	python -m pytest -v gammapy --cov=gammapy --cov-report=html
 
-clean-nb:
-	python -m gammapy jupyter --src=docs --r black
-	python -m gammapy jupyter --src=docs --r strip
-
 docs-sphinx:
 	cd docs && python -m sphinx . _build/html -b html -j auto
 
@@ -108,7 +103,7 @@ black:
 isort:
 	isort -rc gammapy examples docs -s docs/conf.py
 
-polish: black isort trailing-spaces clean-nb;
+polish: black isort trailing-spaces;
 
 # Note: flake8 is very fast and almost never has false positives
 flake8:
