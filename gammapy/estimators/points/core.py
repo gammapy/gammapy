@@ -517,7 +517,7 @@ class FluxPoints(FluxMaps):
 
         flux = scale_plot_flux(flux=flux.to_unit(flux_unit), energy_power=energy_power)
         ax = flux.plot(ax=ax, **kwargs)
-        ax.set_ylabel(f"{sed_type} ({ax.yaxis.units})")
+        ax.set_ylabel(f"{sed_type} [{ax.yaxis.units}]")
         ax.set_yscale("log")
         return ax
 
