@@ -427,19 +427,12 @@ def test_region_map_sampling(region_map):
     npred_map.data[...] = 5
 
     coords = npred_map.sample_coord(n_events=2, random_state=0)
-    skycoord = coords.skycoord
 
-    events = Table()
-    events["RA_TRUE"] = skycoord.icrs.ra
-    events["DEC_TRUE"] = skycoord.icrs.dec
-    events["ENERGY"] = coords["energy"]
-    events["TIME"] = coords["time"]
-
-    assert len(events) == 2
-    assert_allclose(events["RA_TRUE"].data, [83.63, 83.63], rtol=1e-5)
-    assert_allclose(events["DEC_TRUE"].data, [21.51, 21.51], rtol=1e-5)
-    assert_allclose(events["ENERGY"].data, [3.985296, 5.721113], rtol=1e-5)
-    assert_allclose(events["TIME"].data, [6.354822, 9.688412], rtol=1e-5)
+    assert len(coords["lon"]) == 2
+    assert_allclose(coords["lon"].data, [83.63, 83.63], rtol=1e-5)
+    assert_allclose(coords["lat"].data, [21.51, 21.51], rtol=1e-5)
+    assert_allclose(coords["energy"].data, [3.985296, 5.721113], rtol=1e-5)
+    assert_allclose(coords["time"].data, [6.354822, 9.688412], rtol=1e-5)
 
     assert coords["lon"].unit == "deg"
     assert coords["lat"].unit == "deg"
