@@ -10,7 +10,6 @@ import matplotlib.pyplot as plt
 from gammapy.utils.scripts import make_path
 from gammapy.utils.units import energy_unit_format
 from .axes import MapAxis
-from .coord import MapCoord
 from .geom import pix_tuple_to_idx
 from .io import JsonQuantityDecoder
 
@@ -863,10 +862,7 @@ class Map(abc.ABC):
            Values of pixels in the map.  np.nan used to flag coords
            outside of map.
         """
-        coords = MapCoord.create(
-            coords, frame=self.geom.frame, axis_names=self.geom.axes.names
-        )
-        pix = self.geom.coord_to_pix(coords)
+        pix = self.geom.coord_to_pix(coords=coords)
         vals = self.get_by_pix(pix, fill_value=fill_value)
         return vals
 
