@@ -50,6 +50,7 @@ jobs:
             python: '3.9'
             tox_env: 'py39-test'
           - os: ubuntu-latest
+            continue-on-error: true
             python: '3.9'
             tox_env: 'codestyle'
           - os: ubuntu-latest
@@ -111,6 +112,7 @@ jobs:
           python -m pip install tox
       - name: download datasets
         run: |
+          python -m pip install -e .
           gammapy download datasets
       - name: test build docs
         run: |
