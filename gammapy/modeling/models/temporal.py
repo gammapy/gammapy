@@ -553,9 +553,9 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         val = np.clip(val, 0)
         return u.Quantity(val, self.map.unit, copy=False)
 
-    def integral(t_min, t_max, **kwargs):
-        # for t1, t2 in zip(t_min, t_max):
-        #    map_slice = self.map.
+    def integral(self, t_min, t_max, **kwargs):
+        for t1, t2 in zip(t_min, t_max):
+            map_slice = self.map.slice_by_idx()
         map_interp = RegionNDMap.create(geom=self.map.geom,
                                         data=val, unit=self.map.unit)
         interp_map = map_interp.integral(axis_name="TIME")
@@ -569,6 +569,11 @@ class LightCurveTemplateTemporalModel(TemporalModel):
     def to_dict(self, full_output=False):
         """Create dict for YAML serialisation"""
         return {self._type: {"type": self.tag[0], "filename": self.filename}}
+
+    def create_coords(self, coords):
+        """ Temporary solution. Remove after merging #4073"""
+        coords = (0 * u.deg, 0 * u.deg) + coords
+        return coords
 
 
 class PowerLawTemporalModel(TemporalModel):
