@@ -489,7 +489,6 @@ class LightCurveTemplateTemporalModel(TemporalModel):
             self.filename = str(make_path(path))
             self.table.write(self.filename, overwrite=overwrite)
 
-    @lazyproperty
     def _interpolator(self, ext=0):
         x = self._time.value
         y = self.table["NORM"].data
@@ -526,7 +525,8 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         norm : array_like
             Norm at the given times.
         """
-        return self._interpolator(time, ext=ext)
+        spl = self._interpolator(ext=ext)
+        return spl(time)
 
     def integral(self, t_min, t_max):
         """Evaluate the integrated flux within the given time intervals
@@ -542,8 +542,8 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         norm: The model integrated flux
         """
 
-        n1 = self._interpolator.antiderivative()(t_max.mjd)
-        n2 = self._interpolator.antiderivative()(t_min.mjd)
+        n1 = self._interpolator().antiderivative()(t_max.mjd)
+        n2 = self._interpolator().antiderivative()(t_min.mjd)
         return u.Quantity(n1 - n2, "day") / self.time_sum(t_min, t_max)
 
     @classmethod
