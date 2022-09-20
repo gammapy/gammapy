@@ -17,8 +17,10 @@ log = logging.getLogger(__name__)
 class SafeMaskMaker(Maker):
     """Make safe data range mask for a given observation.
 
-    Note that an assumption is made when the methods "aeff*" are used: the found true energy
-    range is used to select events (in reconstructed energy).
+    
+    .. warning::
+    
+         All methods relying on the effective area (``"aeff*"`` in the method name) use the found true energy range to select events in reconstructed energy and effectively neglect the energy bias.
 
     Parameters
     ----------
