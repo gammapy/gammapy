@@ -131,7 +131,11 @@ dataset.counts.sum_over_axes().plot(stretch="sqrt", add_cbar=True);
 #    energy bin with the highest predicted background rate. This method
 #    was introduced in the HESS DL3 validation paper:
 #    https://arxiv.org/pdf/1910.08088.pdf
-# 
+#
+# Note that an assumption is made when the methods "aeff*" are used: the found true energy range is used
+# to select events( in reconstructed energy).
+#
+#
 # Multiple methods can be combined. Here is an example :
 # 
 

@@ -17,6 +17,9 @@ log = logging.getLogger(__name__)
 class SafeMaskMaker(Maker):
     """Make safe data range mask for a given observation.
 
+    Note that an assumption is made when the methods "aeff*" are used: the found true energy
+    range is used to select events (in reconstructed energy).
+
     Parameters
     ----------
     methods : {"aeff-default", "aeff-max", "edisp-bias", "offset-max", "bkg-peak"}
