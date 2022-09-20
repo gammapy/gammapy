@@ -213,15 +213,22 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
 
     @classmethod
     def from_dict(cls, data):
+        """Create spectral model from dict
+
+        Parameters
+        ----------
+        data : dict
+            Dict with model data
+
+        Returns
+        -------
+        model : `DarkMatterAnnihilationSpectralModel`
+            Dark matter annihilation spectral model
+        """
         data = data["spectral"]
-
-        channel = data["channel"]
-        mass = u.Quantity(data["mass"])
-        jfactor = u.Quantity(data["jfactor"])
-        z = data["z"]
-        k = data["k"]
-
-        scale = [p["value"] for p in data["parameters"] if p["name"] == "scale"][0]
-        return cls(mass, channel, scale=scale, jfactor=jfactor, z=z, k=k)
+        type = data.pop("type")
+        parameters = data.pop("parameters")
+        scale = [p["value"] for p in parameters if p["name"] == "scale"][0]
+        return cls(scale=scale, **data)
 
 SPECTRAL_MODEL_REGISTRY.append(DarkMatterAnnihilationSpectralModel)

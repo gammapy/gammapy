@@ -49,4 +49,6 @@ def test_DMAnnihilation():
     assert new_models[0].spectral_model.channel == model.channel
     assert new_models[0].spectral_model.z == model.z
     assert_allclose(new_models[0].spectral_model.jfactor.value, model.jfactor.value)
+    assert new_models[0].spectral_model.mass.value == 5
+    assert new_models[0].spectral_model.mass.unit == u.TeV
 
