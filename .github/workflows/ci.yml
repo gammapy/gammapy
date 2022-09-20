@@ -23,7 +23,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       PYTEST_ADDOPTS: --color=yes -n auto --dist=loadscope
-      GAMMAPY_DATA: ${{ matrix.gammapy_data_path}}
     strategy:
       fail-fast: false # true
       matrix:
@@ -37,7 +36,8 @@ jobs:
             gammapy_data_path: /home/runner/work/gammapy/gammapy/gammapy-datasets
           - os: macos-latest
             python: '3.9'
-            tox_env: 'py39-test-alldeps'
+            tox_env: 'py39-test-mac-alldeps'
+            gammapy_data_path: /Users/runner/work/gammapy/gammapy/gammapy-datasets
           - os: windows-latest
             python: '3.9'
             tox_env: 'py39-test-win-alldeps'
@@ -74,10 +74,6 @@ jobs:
           python -m pip install tqdm requests
           python -m pip install -e .
           gammapy download datasets
-      - name: unset GAMMAPY_DATA
-        if: ${{ !matrix.gammapy_data_path }}
-        run: |
-          unset GAMMAPY_DATA
       - name: Print Python, pip, setuptools, and tox versions
         run: |
           python -c "import sys; print(f'Python {sys.version}')"
@@ -85,6 +81,12 @@ jobs:
           python -c "import setuptools; print(f'setuptools {setuptools.__version__}')"
           python -c "import tox; print(f'tox {tox.__version__}')"
       - name: Run tests
+        if: ${{ !matrix.gammapy_data_path }}
+        run: tox -e ${{ matrix.tox_env }} -- ${{ matrix.toxposargs }}
+      - name: Run tests with data
+        if: ${{ matrix.gammapy_data_path }}
+        env:
+          GAMMAPY_DATA: ${{ matrix.gammapy_data_path}}
         run: tox -e ${{ matrix.tox_env }} -- ${{ matrix.toxposargs }}
       - name: Upload coverage to codecov
         if: "contains(matrix.tox_env, '-cov')"
