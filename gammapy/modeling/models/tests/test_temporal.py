@@ -38,13 +38,12 @@ def test_light_curve_str(light_curve):
 
 @requires_data()
 def test_light_curve_evaluate(light_curve):
-    t = Time(59500, format="mjd")
-    val = light_curve(t)
-    assert_allclose(val, 0.015512, rtol=1e-5)
-
     t = Time(46300, format="mjd")
     val = light_curve.evaluate(t.mjd, ext=3)
     assert_allclose(val, 0.01551196, rtol=1e-5)
+
+    val = light_curve.evaluate([59001.5, 59016.0])
+    assert_allclose(val, [0.02611184, 0.02172046], rtol=1e-5)
 
 
 def ph_curve(x, amplitude=0.5, x0=0.01):
