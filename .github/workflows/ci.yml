@@ -84,32 +84,6 @@ jobs:
         if: contains(matrix.name, 'core-deps')
         run: |
           make test
-  notebooks:
-    name: Linux python 3.8 notebooks all-deps
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash -l {0}
-    env:
-      PYTEST_ADDOPTS: --color=yes -n auto --dist=loadscope
-      GAMMAPY_DATA: /home/runner/work/gammapy/gammapy/gammapy-datasets
-    steps:
-      - name: checkout repo
-        uses: actions/checkout@v2
-      - name: create and activate env
-        uses: mamba-org/provision-with-micromamba@main
-        with:
-          environment-file: environment-dev.yml
-      - name: install gammapy
-        run: |
-          pip install -e .
-      - name: download datasets
-        run: |
-          gammapy download datasets
-      - name: test notebooks
-        run: |
-          gammapy info
-          make test-nb
   sphinx:
     name: Linux python 3.8 sphinx all-deps
     runs-on: ubuntu-latest

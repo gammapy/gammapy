@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import abc
+from collections import OrderedDict
 import copy
 import inspect
 import json
@@ -7,6 +8,7 @@ import numpy as np
 from astropy import units as u
 from astropy.io import fits
 import matplotlib.pyplot as plt
+from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.scripts import make_path
 from gammapy.utils.units import energy_unit_format
 from .axes import MapAxis
@@ -606,6 +608,55 @@ class Map(abc.ABC):
         """
         pass
 
+    def resample(self, geom, weights=None, preserve_counts=True):
+        """Resample pixels to ``geom`` with given ``weights``.
+
+        Parameters
+        ----------
+        geom : `~gammapy.maps.Geom`
+            Target Map geometry
+        weights : `~numpy.ndarray`
+            Weights vector. Default is weight of one. Must have same shape as
+            the data of the map.
+        preserve_counts : bool
+            Preserve the integral over each bin.  This should be true
+            if the map is an integral quantity (e.g. counts) and false if
+            the map is a differential quantity (e.g. intensity)
+
+        Returns
+        -------
+        resampled_map : `Map`
+            Resampled map
+        """
+        coords = self.geom.get_coord()
+        idx = geom.coord_to_idx(coords)
+
+        resampled = self.from_geom(geom=geom)
+
+        resampled._resample_by_idx(
+            idx, weights=self.data, preserve_counts=preserve_counts
+        )
+        return resampled
+
+    @abc.abstractmethod
+    def _resample_by_idx(self, idx, weights=None, preserve_counts=False):
+        """Resample pixels at ``idx`` with given ``weights``.
+
+        Parameters
+        ----------
+        idx : tuple
+            Tuple of pixel index arrays for each dimension of the map.
+            Tuple should be ordered as (I_lon, I_lat, I_0, ..., I_n)
+            for WCS maps and (I_hpx, I_0, ..., I_n) for HEALPix maps.
+        weights : `~numpy.ndarray`
+            Weights vector. Default is weight of one.
+        preserve_counts : bool
+            Preserve the integral over each bin.  This should be true
+            if the map is an integral quantity (e.g. counts) and false if
+            the map is a differential quantity (e.g. intensity)
+        """
+        pass
+
     def resample_axis(self, axis, weights=None, ufunc=np.add):
         """Resample map to a new axis binning by grouping over smaller bins and apply ufunc to the bin contents.
 
@@ -814,10 +865,7 @@ class Map(abc.ABC):
            Values of pixels in the map.  np.nan used to flag coords
            outside of map.
         """
-        coords = MapCoord.create(
-            coords, frame=self.geom.frame, axis_names=self.geom.axes.names
-        )
-        pix = self.geom.coord_to_pix(coords)
+        pix = self.geom.coord_to_pix(coords=coords)
         vals = self.get_by_pix(pix, fill_value=fill_value)
         return vals
 
@@ -962,45 +1010,6 @@ class Map(abc.ABC):
             data *= geom.solid_angle().to_value("deg2")
 
         return Map.from_geom(geom, data=data, unit=self.unit)
-
-    def resample(self, geom, weights=None, preserve_counts=True):
-        """Resample pixels to ``geom`` with given ``weights``.
-
-        Parameters
-        ----------
-        geom : `~gammapy.maps.Geom`
-            Target Map geometry
-        weights : `~numpy.ndarray`
-            Weights vector. Default is weight of one.
-        preserve_counts : bool
-            Preserve the integral over each bin.  This should be true
-            if the map is an integral quantity (e.g. counts) and false if
-            the map is a differential quantity (e.g. intensity)
-        """
-        coords = geom.get_coord()
-        idx = self.geom.coord_to_idx(coords)
-        return self._resample_by_idx(
-            idx, weights=weights, preserve_counts=preserve_counts
-        )
-
-    @abc.abstractmethod
-    def _resample_by_idx(self, idx, weights=None, preserve_counts=False):
-        """Resample pixels at ``idx`` with given ``weights``.
-
-        Parameters
-        ----------
-        idx : tuple
-            Tuple of pixel index arrays for each dimension of the map.
-            Tuple should be ordered as (I_lon, I_lat, I_0, ..., I_n)
-            for WCS maps and (I_hpx, I_0, ..., I_n) for HEALPix maps.
-        weights : `~numpy.ndarray`
-            Weights vector. Default is weight of one.
-        preserve_counts : bool
-            Preserve the integral over each bin.  This should be true
-            if the map is an integral quantity (e.g. counts) and false if
-            the map is a differential quantity (e.g. intensity)
-        """
-        pass
 
     def fill_events(self, events):
         """Fill event coordinates (`~gammapy.data.EventList`)."""
@@ -1790,3 +1799,32 @@ class Map(abc.ABC):
 
     def __array__(self):
         return self.data
+
+
+    def sample_coord(self, n_events, random_state=0):
+        """Sample position and energy of events.
+
+        Parameters
+        ----------
+        n_events : int
+            Number of events to sample.
+        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+            Defines random number generator initialisation.
+            Passed to `~gammapy.utils.random.get_random_state`.
+
+        Returns
+        -------
+        coords : `~gammapy.maps.MapCoord` object.
+            Sequence of coordinates and energies of the sampled events.
+        """
+
+        random_state = get_random_state(random_state)
+        sampler = InverseCDFSampler(pdf=self.data, random_state=random_state)
+
+        coords_pix = sampler.sample(n_events)
+        coords = self.geom.pix_to_coord(coords_pix[::-1])
+
+        # TODO: pix_to_coord should return a MapCoord object
+        cdict = OrderedDict(zip(self.geom.axes_names, coords))
+
+        return MapCoord.create(cdict, frame=self.geom.frame)
