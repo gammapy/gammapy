@@ -9,7 +9,12 @@ from astropy.io import fits
 from gammapy.data import DataStore
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import requires_data
-
+from gammapy.irf import (
+    EffectiveAreaTable2D,
+    EnergyDependentMultiGaussPSF,
+    EnergyDispersion2D,
+    Background3D,
+)
 
 @pytest.fixture()
 def data_store():
@@ -160,7 +165,7 @@ def test_data_store_from_events(data_store_dc1):
 
 
 @requires_data()
-def test_data_storemaker_obs_table(data_store_dc1):
+def test_data_store_maker_obs_table(data_store_dc1):
     table = data_store_dc1.obs_table
     assert table.__class__.__name__ == "ObservationTable"
     assert len(table) == 4
@@ -169,21 +174,25 @@ def test_data_storemaker_obs_table(data_store_dc1):
     assert table["IRF"][0] == "South_z20_50h"
 
     path = Path(table["IRF_FILENAME"][0])
-    assert path == "$CALDB/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
+    # checking str(path) would convert to windows path conventions on windows
+    assert "$CALDB/data/cta/1dc/bcf/South_z20_50h/irf_file.fits" in repr(path)
 
 
 @requires_data()
-def test_data_storemaker_hdu_table(data_store_dc1):
+def test_data_store_maker_hdu_table(data_store_dc1):
     table = data_store_dc1.hdu_table
     assert table.__class__.__name__ == "HDUIndexTable"
     assert len(table) == 24
     hdu_class = ["events", "gti", "aeff_2d", "edisp_2d", "psf_3gauss", "bkg_3d"]
     assert list(data_store_dc1.hdu_table["HDU_CLASS"]) == 4 * hdu_class
-    assert table["FILE_DIR"][2] == "$CALDB/data/cta/1dc/bcf/South_z20_50h"
+
+    path = Path(table["FILE_DIR"][2])
+    # checking str(path) would convert to windows path conventions on windows
+    assert "$CALDB/data/cta/1dc/bcf/South_z20_50h" in repr(path)
 
 
 @requires_data()
-def test_data_storemaker_observation(data_store_dc1):
+def test_data_store_maker_observation(data_store_dc1):
     """Check that one observation can be accessed OK"""
 
     obs = data_store_dc1.obs(110380)
@@ -192,10 +201,10 @@ def test_data_storemaker_observation(data_store_dc1):
     assert obs.events.time[0].iso == "2021-01-21 12:00:03.045"
     assert obs.gti.time_start[0].iso == "2021-01-21 12:00:00.000"
 
-    assert obs.aeff.__class__.__name__ == "EffectiveAreaTable2D"
-    assert obs.bkg.__class__.__name__ == "Background3D"
-    assert obs.edisp.__class__.__name__ == "EnergyDispersion2D"
-    assert obs.psf.__class__.__name__ == "EnergyDependentMultiGaussPSF"
+    assert isinstance(obs.aeff, EffectiveAreaTable2D)
+    assert isinstance(obs.bkg, Background3D)
+    assert isinstance(obs.edisp, EnergyDispersion2D)
+    assert isinstance(obs.psf, EnergyDependentMultiGaussPSF)
 
 
 @requires_data("gammapy-data")

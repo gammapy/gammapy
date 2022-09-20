@@ -148,14 +148,14 @@ class TestEventListHESS:
         assert len(stacked_list.table) == 11243 * 2
 
     def test_stack(self):
-        other = self.events
-        self.events.stack(other)
-        assert len(self.events.table) == 11243 * 2
+        events, other = self.events.copy(), self.events.copy()
+        events.stack(other)
+        assert len(events.table) == 11243 * 2
 
     def test_offset_selection(self):
         offset_range = u.Quantity([0.5, 1.0] * u.deg)
         new_list = self.events.select_offset(offset_range)
-        assert len(new_list.table) == 1820 * 2
+        assert len(new_list.table) == 1820
 
     def test_plot_time(self):
         with mpl_plot_check():
