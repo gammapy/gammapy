@@ -406,9 +406,10 @@ analysis.config.flux_points.parameters = config_dict
 
 analysis.get_flux_points()
 
-# Example showing how to change the threshold on the signal significance (points vs upper limits)
+# Example showing how to change just before plotting the threshold on the signal significance
+# (points vs upper limits), even if this has no effect with this data set.
 fp = analysis.flux_points.data
-fp.sqrt_ts_threshold_ul = 10
+fp.sqrt_ts_threshold_ul = 5
 ax_sed, ax_residuals = analysis.flux_points.plot_fit()
 
 

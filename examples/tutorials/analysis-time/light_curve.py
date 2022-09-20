@@ -211,8 +211,9 @@ lc_3d = lc_maker_3d.run(analysis_3d.datasets)
 # The LightCurve object contains a table which we can explore.
 # 
 
-# Example showing how to change just before plotting the threshold on the signal significance (points vs upper limits)
-lc_3d.sqrt_ts_threshold_ul = 16
+# Example showing how to change just before plotting the threshold on the signal significance
+# (points vs upper limits), even if this has no effect with this data set.
+lc_3d.sqrt_ts_threshold_ul = 5
 lc_3d.plot(axis_name="time")
 
 table = lc_3d.to_table(format="lightcurve", sed_type="flux")
