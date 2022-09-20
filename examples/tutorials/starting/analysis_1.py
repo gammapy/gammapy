@@ -396,8 +396,20 @@ with filename.open("r") as f:
 # 
 
 analysis.config.flux_points.source = "crab"
+# Example showing how to change the FluxPointsEstimator parameters:
+analysis.config.flux_points.energy.nbins = 5
+config_dict = {"selection_optional": "all",
+              "n_sigma": 2, #Number of sigma to use for asymmetric error computation
+              "n_sigma_ul": 3, #Number of sigma to use for upper limit computation
+              }
+analysis.config.flux_points.parameters = config_dict
+
 analysis.get_flux_points()
 
+# Example showing how to change just before plotting the threshold on the signal significance
+# (points vs upper limits), even if this has no effect with this data set.
+fp = analysis.flux_points.data
+fp.sqrt_ts_threshold_ul = 5
 ax_sed, ax_residuals = analysis.flux_points.plot_fit()
 
 
