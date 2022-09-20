@@ -66,12 +66,12 @@ jobs:
           python -c "import tox; print(f'tox {tox.__version__}')"
       - name: Run tests
         if: ${{ !matrix.gammapy_data_path }}
-        run: tox -e ${{ matrix.tox_env }} -- ${{ matrix.toxposargs }}
+        run: tox -e ${{ matrix.tox_env }} -- -n auto
       - name: Run tests with data
         if: ${{ matrix.gammapy_data_path }}
         env:
           GAMMAPY_DATA: ${{ matrix.gammapy_data_path}}
-        run: tox -e ${{ matrix.tox_env }} -- ${{ matrix.toxposargs }}
+        run: tox -e ${{ matrix.tox_env }} -- -n auto
       - name: Upload coverage to codecov
         if: "contains(matrix.tox_env, '-cov')"
         uses: codecov/codecov-action@v3
@@ -107,7 +107,7 @@ jobs:
           gammapy download datasets
       - name: test build docs
         run: |
-          tox -e build_docs
+          tox -e build_docs -- -j auto
   conda-build:
     name: Linux python 3.8 conda-build all-deps
     runs-on: ubuntu-latest
