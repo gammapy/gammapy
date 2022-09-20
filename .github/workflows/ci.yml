@@ -41,6 +41,7 @@ jobs:
           - os: windows-latest
             python: '3.9'
             tox_env: 'py39-test-win-alldeps'
+            gammapy_data_path:  D:\a\gammapy\gammapy\gammapy-datasets
           - os: ubuntu-latest
             python: '3.10'
             tox_env: 'py310-test-alldeps'
@@ -73,6 +74,10 @@ jobs:
           python -m pip install tqdm requests
           python -m pip install -e .
           gammapy download datasets
+      - name: unset GAMMAPY_DATA
+        if: ${{ !matrix.gammapy_data_path }}
+        run: |
+          unset GAMMPY_DATA
       - name: Print Python, pip, setuptools, and tox versions
         run: |
           python -c "import sys; print(f'Python {sys.version}')"
