@@ -4,9 +4,10 @@ import numpy as np
 import astropy.units as u
 from astropy.coordinates import AltAz, SkyCoord, SkyOffsetFrame
 from astropy.table import Table
+from regions import PointSkyRegion
 import gammapy
 from gammapy.data import EventList, observatory_locations
-from gammapy.maps import MapCoord
+from gammapy.maps import MapCoord, RegionGeom
 from gammapy.modeling.models import ConstantTemporalModel
 from gammapy.utils.random import get_random_state
 
@@ -25,6 +26,66 @@ class MapDatasetEventSampler:
 
     def __init__(self, random_state="random-seed"):
         self.random_state = get_random_state(random_state)
+
+    def _sample_coord_time_energy(self, dataset, temporal_model, t_delta="1 sec"):
+        energy_axis = dataset.geoms["geom"].axes["energy"]
+
+        time_start, time_stop, time_ref = (dataset.gti.time_start,
+                                           dataset.gti.time_stop,
+                                           dataset.gti.time_ref)
+        t_min = Time(time_start)
+        t_max = Time(time_stop)
+        t_delta = u.Quantity(t_delta)
+
+        ontime = u.Quantity((t_max - t_min).sec, "s")
+
+        time_unit = (
+            u.Unit(self.table.meta["TIMEUNIT"])
+            if hasattr(self, "table")
+            else ontime.unit
+        )
+
+        t_step = t_delta.to_value(time_unit)
+        t_step = (t_step * u.s).to("d")
+
+        t = Time(np.arange(t_min.mjd, t_max.mjd, t_step.value), format="mjd")
+        time_axis = MapAxis.from_edges(t.value * u.d, name="time")
+
+        target = temporal_model.geom.skycoord #change it when the TemplateTemporalModel is updated
+        on_region = PointSkyRegion(center=target)
+        region_geom = RegionGeom.create(on_region,
+                                        axes=[energy_axis, time_axis])
+    
+        flux = temporal_model.evaluate_geom(region_geom)
+        region_exposure = dataset.exposure.to_region_nd_map(region_geom.center_skydir)
+        
+        npred = flux * region_exposure #check the broadcasting
+        data = npred.data[np.isfinite(npred.data)]
+        n_events = self.random_state.poisson(np.sum(data))
+
+        coords = npred.sample_coord(n_events=n_events, random_state=self.random_state)
+
+        position = SkyCoord(coords["lon"], coords["lat"],
+                            frame=temporal_model.to_RegionNdMap.geom.frame) #check the frame
+
+        time = (
+                np.interp(coords["TIME"] + temporal_model.ref_time, np.arange(len(t)), t.value - min(t.value))
+                * t_step.unit
+                ).to(time_unit)
+
+        table = Table()
+        table["RA_TRUE"] = position.icrs.ra.to("deg")
+        table["DEC_TRUE"] = position.icrs.dec.to("deg")
+
+        try:
+            energy = coords["energy_true"]
+        except KeyError:
+            energy = coords["energy"]
+        table["ENERGY_TRUE"] = energy
+
+        table["TIME"] = u.Quantity(((time.mjd - time_ref.mjd) * u.day).to(u.s)).to("s")
+
+        return table
 
     def _sample_coord_time(self, npred, temporal_model, gti):
         data = npred.data[np.isfinite(npred.data)]
@@ -85,7 +146,11 @@ class MapDatasetEventSampler:
             else:
                 temporal_model = evaluator.model.temporal_model
 
-            table = self._sample_coord_time(npred, temporal_model, dataset.gti)
+            if (temporal_model == "TemplateTemporalModel"
+                and ...): #check the condition when the format model is defined
+                table = self._sample_coord_time_energy(dataset, temporal_model)
+            else:
+                table = self._sample_coord_time(npred, temporal_model, dataset.gti)
 
             if len(table) == 0:
                 mcid = table.Column(name="MC_ID", length=0, dtype=int)
