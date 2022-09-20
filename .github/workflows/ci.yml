@@ -77,7 +77,7 @@ jobs:
       - name: unset GAMMAPY_DATA
         if: ${{ !matrix.gammapy_data_path }}
         run: |
-          unset GAMMPY_DATA
+          unset GAMMAPY_DATA
       - name: Print Python, pip, setuptools, and tox versions
         run: |
           python -c "import sys; print(f'Python {sys.version}')"
