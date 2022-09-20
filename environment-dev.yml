@@ -66,6 +66,7 @@ dependencies:
   - sphinx-gallery
   - sphinx-panels
   - sphinx-copybutton
+  - tox
   - pydata-sphinx-theme==0.8.1
   - twine
   - yamllint
