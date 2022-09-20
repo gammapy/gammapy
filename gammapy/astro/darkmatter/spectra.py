@@ -226,7 +226,7 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
             Dark matter annihilation spectral model
         """
         data = data["spectral"]
-        type = data.pop("type")
+        data.pop("type")
         parameters = data.pop("parameters")
         scale = [p["value"] for p in parameters if p["name"] == "scale"][0]
         return cls(scale=scale, **data)
