@@ -866,7 +866,7 @@ class TestNaimaModel:
         skymodel.spectral_model.plot(
             energy_bounds=[10 * u.GeV, 80 * u.TeV], energy_power=2
         )
-        assert radiative_model._memoize == False
+        assert not radiative_model._memoize
 
 
 class TestSpectralModelErrorPropagation:

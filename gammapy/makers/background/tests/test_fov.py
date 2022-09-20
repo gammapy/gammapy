@@ -286,7 +286,7 @@ def test_fov_bkg_maker_mask_fit_handling(obs_dataset, exclusion_mask):
     test_dataset.mask_fit = mask_fit
 
     dataset = fov_bkg_maker.run(test_dataset)
-    assert np.all(test_dataset.mask_fit == mask_fit) == True
+    assert np.all(test_dataset.mask_fit == mask_fit)
 
     model = dataset.models[f"{dataset.name}-bkg"].spectral_model
     assert_allclose(model.norm.value, 0.9975, rtol=1e-3)

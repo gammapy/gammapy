@@ -278,7 +278,7 @@ def test_data_store_from_dir_no_obs_index(caplog, tmpdir):
     data_store.copy_obs([23523], test_dir)
     data_store_copy = DataStore.from_dir(test_dir)
     assert len(data_store_copy.obs_ids) == 1
-    assert data_store_copy.obs_table == None
+    assert data_store_copy.obs_table is None
 
 
 @requires_data()
