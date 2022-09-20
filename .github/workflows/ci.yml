@@ -40,7 +40,7 @@ jobs:
             tox_env: 'py39-test-alldeps'
           - os: windows-latest
             python: '3.9'
-            tox_env: 'py39-test-alldeps'
+            tox_env: 'py39-test-win-alldeps'
           - os: ubuntu-latest
             python: '3.10'
             tox_env: 'py310-test-alldeps'
