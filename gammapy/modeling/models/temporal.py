@@ -464,34 +464,47 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         super().__init__()
 
     def __str__(self):
-        norm = self.table["NORM"]
+        start_time = self.map.axes["time"].edges[0]
+        end_time = self.map.axes["time"].edges[-1]
+        energy_min = self.map.axes["energy"].edges[0]
+        energy_max = self.map.axes["energy"].edges[-1]
+        norm_min = np.min(self.data)
+        norm_max = np.max(self.data)
         return (
             f"{self.__class__.__name__} model summary:\n"
-            f"Start time: {self._time[0].mjd} MJD\n"
-            f"End time: {self._time[-1].mjd} MJD\n"
-            f"Norm min: {norm.min()}\n"
-            f"Norm max: {norm.max()}\n"
+            f"Start time: {start_time} MJD\n"
+            f"End time: {end_time} MJD\n"
+            f"Energy min: {energy_min} MJD\n"
+            f"Energy max: {energy_max} MJD\n"
+            f"Norm min: {norm_min}\n"
+            f"Norm max: {norm_max}\n"
         )
 
     @classmethod
     def from_table(cls, table):
-        """Create a Template model from an astropy table"""
-        columns = [_.upper() for _ in table.colnames]
-        t_ref = table.meta["MJDREFI"]
-        if "TIME" not in columns:
+        """Create a Template model from an astropy table
+
+        Parameters:
+        ----------
+        table : `~astropy.table.Table`
+        """
+        columns = [_.lower() for _ in table.colnames]
+        t_ref = time_ref_from_dict(table.meta)
+        if "time" not in columns:
             raise ValueError("A TIME column is necessary")
 
-        time_axis = MapAxis.from_nodes(nodes=table["TIME"] + table.meta["MJDREFI"],
+        t_ref = time_ref_from_dict(table.meta)
+        time_axis = MapAxis.from_nodes(nodes=table["time"] + t_ref,
                                        name="time", unit=table.meta["TIMEUNIT"])
         axes = [time_axis]
 
-        if "ENERGY" in columns:
-            energy_axis = MapAxis.from_energy_bounds(table["ENERGY"], name="energy",
+        if "energy" in columns:
+            energy_axis = MapAxis.from_energy_bounds(table["energy"], name="energy",
                                                      )
             axes.append(energy_axis)
         m = RegionNDMap.create(region=None, axes=axes, meta=table.meta)
 
-        return cls(m, filename=filename, t_ref=t_ref)
+        return cls(m, t_ref=t_ref)
 
     @classmethod
     def read(cls, filename, format="table"):
@@ -512,22 +525,34 @@ class LightCurveTemplateTemporalModel(TemporalModel):
             cls.from_table(table)
 
         elif format == "map":
-            m = RegionNDMap.read(filenames)
-            t_ref = m.meta["MJDREFI"]
-            return cls(m, filename=filename, t_ref=t_ref)
+            m = RegionNDMap.read(filename)
+            t_ref = time_ref_from_dict(m.meta)
+            return cls(m, t_ref=t_ref)
 
         else:
-            raise ValueError("Not a valid format")
+            raise ValueError(f"Not a valid format: '{format}', choose from: {'table', 'map'}")
 
-    def to_table(self):
+    def to_table(self, format="map"):
         """Convert model to an astropy table"""
-        columns = self.map.geom.axes
+        columns = [_.upper() for _ in table.colnames]
+        if "ENERGY" in columns:
+            raise NotImplemented("Currently not supported for Energy Dependent Models")
         table = Table(data=self.map.quantity, names=columns,
                       meta=self.map.meta)
         return table
 
     def write(self, filename, format="table", overwrite=False):
-        """Write a model to disk as per the specified format"""
+        """Write a model to disk as per the specified format
+
+        Parameters:
+            filename : str
+                name of output file
+            format : str, either "table" or "map"
+                if format is table, it is serialised as an astropy Table
+                if map, then it is serialised as a RegionNDMap
+            overwrite : bool
+                Overwrite file on disk if present
+        """
 
         if self.filename is None:
             raise IOError("Missing filename")
@@ -544,22 +569,23 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
     def evaluate(self, time, energy=None):
         """Evaluate the model at given coordinates."""
-        coord = {"time": time.mjd}
+        coords = {"time": time.mjd}
         if energy is not None:
-            coord["energy"] = energy
+            coords["energy"] = energy
 
-        coords = self.create_coords(coord)
         val = self.map.interp_by_coord(coords)
         val = np.clip(val, 0)
         return u.Quantity(val, self.map.unit, copy=False)
 
-    def integral(self, t_min, t_max, **kwargs):
+    def integral(self, t_min, t_max, energy=None):
+        integral = []
+        coords = (self.map.geom.axes["time"].center[0], energy)
         for t1, t2 in zip(t_min, t_max):
-            map_slice = self.map.slice_by_idx()
-        map_interp = RegionNDMap.create(geom=self.map.geom,
-                                        data=val, unit=self.map.unit)
-        interp_map = map_interp.integral(axis_name="TIME")
-        return interp_map.data
+            i1 = np.searchsorted(self.map.geom.axes["time"].edges, t1)
+            i2 = np.searchsorted(self.map.geom.axes["time"].edges, t2)
+            map_slice = self.map.slice_by_id({"time": slice(i1, i2)})
+            integral.append(map_slice.integral(axis_name="time", coords=coords))
+        return integral
     
 
     @classmethod
