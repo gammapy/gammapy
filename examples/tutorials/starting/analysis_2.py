@@ -91,7 +91,7 @@ from gammapy.modeling.models import (
 )
 from gammapy.modeling import Fit
 from gammapy.estimators import FluxPointsEstimator
-from gammapy.utils.checks import check_tutorials_setup
+from gammapy.utils.check import check_tutorials_setup
 
 ######################################################################
 # Check setup

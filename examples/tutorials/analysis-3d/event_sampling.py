@@ -111,7 +111,7 @@ from gammapy.modeling.models import (
 ######################################################################
 # Check setup
 # -----------
-from gammapy.utils.checks import check_tutorials_setup
+from gammapy.utils.check import check_tutorials_setup
 
 check_tutorials_setup()
 
