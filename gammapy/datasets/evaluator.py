@@ -506,13 +506,15 @@ class MapEvaluator:
                 "`MapDataset.npred_signal(model_name=...)` before calling this method."
             )
 
-        def plot_mask(ax, mask, **kwargs):
-            if mask is not None:
-                mask.plot_mask(ax=ax, **kwargs)
+        nrows = 1
+        if self.psf:
+            nrows +=1
+        if self.edisp:
+            nrows +=1
 
         fig, axes = plt.subplots(
             ncols=2,
-            nrows=3,
+            nrows=nrows,
             subplot_kw={"projection": self.exposure.geom.wcs},
             figsize=figsize,
             gridspec_kw={"hspace": 0.2, "wspace": 0.3},
@@ -524,39 +526,37 @@ class MapEvaluator:
         if isinstance(exposure, WcsNDMap) or isinstance(exposure, HpxNDMap):
             axes[0].set_title("Predicted counts")
             self.compute_npred().sum_over_axes().plot(ax=axes[0], add_cbar=True)
+
             axes[1].set_title("Exposure")
             self.exposure.sum_over_axes().plot(ax=axes[1], add_cbar=True)
         elif isinstance(exposure, RegionNDMap):
             axes[0].remove()
-            ax0 = fig.add_subplot(3, 2, 1)
+            ax0 = fig.add_subplot(nrows, 2, 1)
             ax0.set_title("Predicted counts")
             self.compute_npred().plot(ax=ax0)
+
             axes[1].remove()
-            ax1 = fig.add_subplot(3, 2, 2)
+            ax1 = fig.add_subplot(nrows, 2, 2)
             ax1.set_title("Exposure")
             self.exposure.plot(ax=ax1)
 
-        plot_mask(ax=axes[0], mask=self.mask, hatches=["///"], colors="w")
-        plot_mask(ax=axes[1], mask=self.mask, hatches=["///"], colors="w")
-
+        idx = 3
         if self.psf:
             axes[2].set_title("Energy-integrated PSF kernel")
             self.psf.plot_kernel(ax=axes[2], add_cbar=True)
 
             axes[3].set_title("PSF kernel at 1 TeV")
             self.psf.plot_kernel(ax=axes[3], add_cbar=True, energy=1 * u.TeV)
-        else:
-            axes[2].remove()
-            axes[3].remove()
 
-        axes[4].remove()
-        axes[5].remove()
+            idx += 2
 
         if self.edisp:
-            ax4 = fig.add_subplot(3, 2, 5)
-            ax4.set_title("Energy bias")
-            self.edisp.plot_bias(ax=ax4)
+            axes[idx-1].remove()
+            ax = fig.add_subplot(nrows, 2, idx)
+            ax.set_title("Energy bias")
+            self.edisp.plot_bias(ax=ax)
 
-            ax5 = fig.add_subplot(3, 2, 6)
-            ax5.set_title("Energy dispersion matrix")
-            self.edisp.plot_matrix(ax=ax5)
+            axes[idx].remove()
+            ax = fig.add_subplot(nrows, 2, idx+1)
+            ax.set_title("Energy dispersion matrix")
+            self.edisp.plot_matrix(ax=ax)
