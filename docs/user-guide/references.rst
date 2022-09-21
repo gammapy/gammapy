@@ -17,7 +17,7 @@ Glossary
     1D Analysis
       1D analysis or spectral analysis where data are reduced to a simple 1D
       geometry along the reconstructed energy axis. In Cherenkov astronomy,
-      this is classically performed with a OFF background measurement [Piron2001]_.
+      this is classically performed with an OFF background measurement [Piron2001]_.
 
     3D Analysis
       3D analysis or cube analysis, where data are reduced to a 3D cube with
