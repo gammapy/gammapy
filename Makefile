@@ -62,7 +62,7 @@ help:
 	@echo '     make clean         Remove auto-generated files'
 	@echo '     pytest             Run Gammapy tests (give folder or filename and options)'
 	@echo '     make test-cov      Run all tests and measure coverage'
-	@echo '     make docs          Build documentation locally'
+	@echo '     make docs-sphinx   Build documentation locally'
 	@echo ''
 
 clean:
