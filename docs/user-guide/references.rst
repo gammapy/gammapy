@@ -80,14 +80,14 @@ Glossary
       Background estimation method typically used for the 3D analysis. See :ref:`makers`.
 
     HLI
-      Short for "high level interface: this Python API aims to realize most of the analysis
+      Short for "high level interface: this API aims to realize most of the analysis
       types using YAML configuration files. See :ref:`analysis`
 
     GADF
       Short for "Gamma Astro Data Format".
       The `open initiative GADF <https://gamma-astro-data-formats.readthedocs.io/en/v0.2/>`_
       provides a Data Format for gamma-ray data that is currently used by many IACT experiments
-      and by HAWC. Gammapy are compliant with this format.
+      and by HAWC. Gammapy I/O functions are compliant with this format.
 
     GTI
       Short for "good time interval": it indicates a continuous time interval of data
@@ -147,7 +147,7 @@ Glossary
       functions are represented along a true energy axis.
 
     TS
-      Short for "test statistics": TS is equal to 2*log(L) with L the likelihood value of
+      Short for "test statistics": TS is equal to -2*log(L) with L the likelihood value of
       the probability for a model to be compliant with the measured data. See :ref:`ts`
       and :ref:`fit-statistics`.
 
