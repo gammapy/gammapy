@@ -8,9 +8,8 @@ PIG 24 - Authorship policy
 
 * Authors: Bruno Khélifi, Thomas Vuillaume
 * Created: May 25th, 2022
-* Accepted:
-* Status: draft
-* Discussion:
+* Accepted: Sept. 21th, 2022
+* Status: accepted
 
 Abstract
 ========
@@ -267,5 +266,5 @@ corresponding person. And finally, one could mention the existence of these rule
 project.
 
 7. Decision
-========
-
+===========
+After the addition of comments and proposals, the PIG is accepted by the dev team and the CC.
