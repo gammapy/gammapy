@@ -81,7 +81,7 @@ from gammapy.modeling import Fit
 ######################################################################
 # Check setup
 # -----------
-from gammapy.utils.docs import check_tutorials_setup
+from gammapy.utils.checks import check_tutorials_setup
 
 check_tutorials_setup()
 
