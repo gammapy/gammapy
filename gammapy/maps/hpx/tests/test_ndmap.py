@@ -612,3 +612,8 @@ def test_map_plot_mask():
 
     with mpl_plot_check():
         mask.plot_mask()
+
+def test_hpx_map_sampling():
+    hpxmap = HpxNDMap.create(nside=16)
+    with pytest.raises(NotImplementedError):
+        hpxmap.sample_coord(2)

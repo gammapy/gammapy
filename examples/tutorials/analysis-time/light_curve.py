@@ -201,6 +201,9 @@ analysis_3d.set_models(models)
 lc_maker_3d = LightCurveEstimator(
     energy_edges=[1, 10] * u.TeV, source="crab", reoptimize=False
 )
+# Example showing how to change some parameters from the object itself
+lc_maker_3d.n_sigma_ul = 3              # Number of sigma to use for upper limit computation
+lc_maker_3d.selection_optional = "all"  # Add the computation of upper limits and likelihood profile
 lc_3d = lc_maker_3d.run(analysis_3d.datasets)
 
 
@@ -208,6 +211,9 @@ lc_3d = lc_maker_3d.run(analysis_3d.datasets)
 # The LightCurve object contains a table which we can explore.
 # 
 
+# Example showing how to change just before plotting the threshold on the signal significance
+# (points vs upper limits), even if this has no effect with this data set.
+lc_3d.sqrt_ts_threshold_ul = 5
 lc_3d.plot(axis_name="time")
 
 table = lc_3d.to_table(format="lightcurve", sed_type="flux")

@@ -29,21 +29,8 @@ folder contains the documentation pages mostly in restructured text (RST) format
 Sphinx documentation generator is used to convert those RST files to the HTML
 documentation.
 
-Notebooks
----------
-
-The ``docs/tutorials`` folder contains tutorials that are part of the user
-documentation for Gammapy in the form of Jupyter notebooks. There may be also notebooks in
-other parts of the documentation. Except those specifically declared (see :ref:`skip-nb-execution`), all
-the notebooks present in the documentation are executed during the doc building process. They are all
-converted to the Sphinx-formatted HTML files, where clean output stripped ``.ipynb`` notebooks files
-and ``.py`` scripts versions are generated and placed in the ``docs/_static/notebooks`` folder.
-
-We perform automated set-up testing for all notebooks (just check that they run
-and don't raise an exception) during the CI process (see below). It is also possible to
-perform tests locally on notebooks with the ``gammapy jupyter`` command. This
-command provides functionalities for testing, code formatting, stripping output cells
-and execution. See ``gammapy jupyter -h`` for more info on this.
+Download
+--------
 
 The ``gammapy download`` command allows downloading notebooks published in the documentation
 as well as the related datasets needed to execute them. The set of notebooks is versioned

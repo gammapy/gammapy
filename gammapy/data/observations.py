@@ -187,7 +187,7 @@ class Observation:
             Stop time of observation as `~astropy.time.Time` or duration
             relative to `reference_time`
         irfs: dict
-            IRFs used for simulating the observation: `bkg`, `aeff`, `psf`, `edisp`
+            IRFs used for simulating the observation: `bkg`, `aeff`, `psf`, `edisp`, `rad_max`
         deadtime_fraction : float, optional
             Deadtime fraction, defaults to 0
         reference_time : `~astropy.time.Time`
@@ -222,6 +222,7 @@ class Observation:
             bkg=irfs.get("bkg"),
             edisp=irfs.get("edisp"),
             psf=irfs.get("psf"),
+            rad_max=irfs.get("rad_max"),
         )
 
     @property

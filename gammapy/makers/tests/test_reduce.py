@@ -277,12 +277,12 @@ def test_dataset_maker_spectrum_rad_max(observations_magic_rad_max):
     assert counts.unit == ""
     assert counts_off is not None, "Extracting off counts failed"
     assert counts_off.unit == ""
-    assert_allclose(counts.data.sum(), 950, rtol=1e-5)
-    assert_allclose(counts_off.data.sum(), 518, rtol=1e-5)
+    assert_allclose(counts.data.sum(), 964, rtol=1e-5)
+    assert_allclose(counts_off.data.sum(), 530, rtol=1e-5)
 
     exposure = dataset_on_off.exposure
     assert exposure.unit == "m2 s"
-    assert_allclose(exposure.data.mean(), 67838458.245686, rtol=1e-5)
+    assert_allclose(exposure.data.mean(), 68067647.733834, rtol=1e-5)
 
 
 @requires_data()
