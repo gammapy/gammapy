@@ -491,7 +491,7 @@ def test_map_plot_mask():
         mask.plot_mask()
 
 
-def test_resample_wcs_wcs():
+def test_resample_wcs_Wcs():
     npix1 = 3
     geom1 = WcsGeom.create(npix=npix1, frame="icrs")
     map1 = Map.from_geom(geom1, data=np.eye(npix1))
@@ -499,13 +499,36 @@ def test_resample_wcs_wcs():
     geom2 = WcsGeom.create(
         skydir=SkyCoord(0.0, 0.0, unit=u.deg), binsz=0.5, npix=7, frame="galactic"
     )
-    map2 = Map.from_geom(geom2)
-    map2.resample(geom1, weights=map1.quantity, preserve_counts=False)
+    
+    map2 = map1.resample(geom2, preserve_counts=False)
     assert_allclose(
-        np.sum(map2 * geom2.solid_angle()),
-        np.sum(map1 * geom1.solid_angle()),
-        rtol=1e-3,
-    )
+            np.sum(map2 * geom2.solid_angle()),
+            np.sum(map1 * geom1.solid_angle()),
+            rtol=1e-3,
+        )
+
+
+def test_resample_downsample_wcs():
+    geom_fine = WcsGeom.create(npix=(15, 15), frame="icrs")
+    map_fine = Map.from_geom(geom_fine)
+    map_fine.data = np.arange(225).reshape((15, 15))
+
+    map_downsampled = map_fine.downsample(3)
+    map_resampled = map_fine.resample(geom_fine.downsample(3), preserve_counts=True)
+
+    assert_allclose(map_downsampled, map_resampled, rtol=1e-5)
+
+
+def test_resample_downsample_axis():
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=12)
+    geom_fine = WcsGeom.create(npix=(3, 3), frame="icrs", axes=[axis])
+    map_fine = Map.from_geom(geom_fine)
+    map_fine.data = np.arange(108).reshape((12, 3, 3))
+
+    map_downsampled = map_fine.downsample(3, axis_name="energy", preserve_counts=False)
+    map_resampled = map_fine.resample(geom_fine.downsample(3, axis_name="energy"), preserve_counts=False)
+
+    assert_allclose(map_downsampled, map_resampled, rtol=1e-5)
 
 
 def test_resample_wcs_hpx():
@@ -514,8 +537,8 @@ def test_resample_wcs_hpx():
     geom2 = HpxGeom.create(
         skydir=SkyCoord(0.0, 0.0, unit=u.deg), nside=8, frame="galactic"
     )
-    map2 = Map.from_geom(geom2)
-    map2.resample(geom1, weights=map1.quantity, preserve_counts=False)
+    
+    map2 = map1.resample(geom2, weights=map1.quantity, preserve_counts=False)
     assert_allclose(
         np.sum(map2 * geom2.solid_angle()),
         np.sum(map1 * geom1.solid_angle()),

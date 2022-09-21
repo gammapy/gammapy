@@ -18,6 +18,7 @@ def test_cli_download_help():
     assert "Usage" in result.output
 
 
+@pytest.mark.xfail
 @pytest.mark.remote_data
 def test_cli_download_notebooks(tmp_path, config):
     args = [

@@ -185,7 +185,7 @@ If you are interested in 68% (1 :math:`\sigma`) and 95% (2 :math:`\sigma`) confi
     excess = count_statistic.n_sig
     errn = count_statistic.compute_errn(1.)
     errp = count_statistic.compute_errp(1.)
-    print(f"68% confidence range: {excess + errn:.3f} < mu < {excess + errp:.3f}")
+    print(f"68% confidence range: {excess - errn:.3f} < mu < {excess + errp:.3f}")
 
 .. testoutput::
 
@@ -195,7 +195,7 @@ If you are interested in 68% (1 :math:`\sigma`) and 95% (2 :math:`\sigma`) confi
 
     errn_2sigma = count_statistic.compute_errn(2.)
     errp_2sigma = count_statistic.compute_errp(2.)
-    print(f"95% confidence range: {excess + errn_2sigma:.3f} < mu < {excess + errp_2sigma:.3f}")
+    print(f"95% confidence range: {excess - errn_2sigma:.3f} < mu < {excess + errp_2sigma:.3f}")
 
 .. testoutput::
 
@@ -255,7 +255,7 @@ If you are interested in 68% (1 :math:`\sigma`) and 95% (1 :math:`\sigma`) confi
     excess = count_statistic.n_sig
     errn = count_statistic.compute_errn(1.)
     errp = count_statistic.compute_errp(1.)
-    print(f"68% confidence range: {excess + errn:.3f} < mu < {excess + errp:.3f}")
+    print(f"68% confidence range: {excess - errn:.3f} < mu < {excess + errp:.3f}")
 
 .. testoutput::
 
@@ -265,7 +265,7 @@ If you are interested in 68% (1 :math:`\sigma`) and 95% (1 :math:`\sigma`) confi
 
     errn_2sigma = count_statistic.compute_errn(2.)
     errp_2sigma = count_statistic.compute_errp(2.)
-    print(f"95% confidence range: {excess + errn_2sigma:.3f} < mu < {excess + errp_2sigma:.3f}")
+    print(f"95% confidence range: {excess - errn_2sigma:.3f} < mu < {excess + errp_2sigma:.3f}")
 
 .. testoutput::
 

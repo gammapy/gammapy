@@ -228,6 +228,7 @@ def test_make_meta_table(observations):
     assert_allclose(map_dataset_meta_table["RA_PNT"], 267.68121338)
     assert_allclose(map_dataset_meta_table["DEC_PNT"], -29.6075)
     assert_allclose(map_dataset_meta_table["OBS_ID"], 110380)
+    assert map_dataset_meta_table["OBS_MODE"] == "POINTING"
 
 
 @requires_data()

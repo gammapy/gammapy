@@ -205,7 +205,7 @@ def plot_theta_squared_table(table):
         x,
         table["excess"],
         xerr=xerr,
-        yerr=(-table["excess_errn"], table["excess_errp"]),
+        yerr=(table["excess_errn"], table["excess_errp"]),
         fmt="+",
         linestyle="None",
         label="Excess",

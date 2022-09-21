@@ -44,20 +44,10 @@ Custom models
 ---------------
 
 Gammapy provides an easy interface to
-`create your own custom models <../tutorials/api/models.ipynb#Implementing-a-custom-model>`__
+`create your own custom models <../tutorials/api/models.rst#Implementing-a-custom-model>`__
 
-Using gammapy.modeling
-----------------------
-
-Gammapy tutorial notebooks that show examples using ``gammapy.modeling``:
-
-.. nbgallery::
-
-   ../tutorials/api/models.ipynb
-   ../tutorials/api/fitting.ipynb
-   ../tutorials/api/model_management.ipynb
-   ../tutorials/analysis/3D/analysis_3d.ipynb
-   ../tutorials/analysis/1D/spectral_analysis.ipynb
+.. minigallery:: gammapy.modeling.Fit
+    :add-heading:
 
 .. include:: ../references.txt
 

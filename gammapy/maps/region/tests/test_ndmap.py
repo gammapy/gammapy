@@ -211,6 +211,13 @@ def test_region_nd_map_get(region_map):
     values = region_map.get_by_coord((83.63, 21.51, energies[[0, -1]]))
     assert_allclose(values.squeeze(), [0, 5])
 
+    values = region_map.get_by_coord((energies[[0, -1]],))
+    assert_allclose(values.squeeze(), [0, 5])
+
+    values = region_map.get_by_coord({"energy": energies[[0, -1]]})
+    assert_allclose(values.squeeze(), [0, 5])
+
+
 
 def test_region_nd_map_set(region_map):
     region_map = region_map.copy()
@@ -238,7 +245,7 @@ def test_region_nd_map_fill_events(region_map):
 
 
 @requires_data()
-def test_region_nd_map_fill_events_pointskyregion(point_region_map):
+def test_region_nd_map_fill_events_point_sky_region(point_region_map):
     filename = "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz"
     events = EventList.read(filename).select_offset([70.0, 71] * u.deg)
     region_map = Map.from_geom(point_region_map.geom)
@@ -264,7 +271,7 @@ def test_apply_edisp(region_map_true):
     assert_allclose(e_reco[[0, -1]].value, [1, 10])
 
 
-def test_regionndmap_resample_axis():
+def test_region_nd_map_resample_axis():
     axis_1 = MapAxis.from_edges([1, 2, 3, 4, 5], name="test-1")
     axis_2 = MapAxis.from_edges([1, 2, 3, 4], name="test-2")
 
@@ -375,3 +382,58 @@ def test_region_nd_hdulist():
     assert hdulist[1].name == "SKYMAP"
     assert hdulist[2].name == "SKYMAP_BANDS"
     assert hdulist[3].name == "SKYMAP_REGION"
+
+
+def test_region_nd_map_interp_no_region():
+    energy_axis = MapAxis.from_energy_edges([1, 3, 10] * u.TeV)
+
+    time_ref = Time("1999-01-01T00:00:00.123456789")
+
+    time_axis = TimeMapAxis(
+        edges_min=[0, 1, 3] * u.d,
+        edges_max=[0.8, 1.9, 5.4] * u.d,
+        reference_time=time_ref,
+    )
+
+    m = RegionNDMap.create(region=None, axes=[energy_axis, time_axis])
+    m.data = np.arange(6).reshape((energy_axis.nbin, time_axis.nbin)) 
+
+    energy = [2, 6] * u.TeV
+    time = time_ref + [[0.4], [1.5], [4.2]] * u.d
+
+    value = m.interp_by_coord({"energy": energy, "time": time})
+    reference = np.array([
+        [0.13093 , 1.075717],
+        [2.242041, 3.186828],
+        [4.13093 , 5.075717],
+    ])
+    assert_allclose(value, reference, rtol=1e-5)
+
+    value = m.interp_by_coord((energy, time))
+    assert_allclose(value, reference, rtol=1e-5)
+
+
+def test_region_map_sampling(region_map):
+    energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=6, name="energy")
+    edges = np.linspace(0., 30., 3)*u.min
+    time_axis = MapAxis.from_edges(edges, name="time")
+
+    npred_map = Map.create(
+        region="icrs;circle(83.63, 21.51, 1)",
+        map_type="region",
+        axes=[time_axis, energy_axis],
+    )
+    npred_map.data[...] = 5
+
+    coords = npred_map.sample_coord(n_events=2, random_state=0)
+
+    assert len(coords["lon"]) == 2
+    assert_allclose(coords["lon"].data, [83.63, 83.63], rtol=1e-5)
+    assert_allclose(coords["lat"].data, [21.51, 21.51], rtol=1e-5)
+    assert_allclose(coords["energy"].data, [3.985296, 5.721113], rtol=1e-5)
+    assert_allclose(coords["time"].data, [6.354822, 9.688412], rtol=1e-5)
+
+    assert coords["lon"].unit == "deg"
+    assert coords["lat"].unit == "deg"
+    assert coords["energy"].unit == "TeV"
+    assert coords["time"].unit == "min"
