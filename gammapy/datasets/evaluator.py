@@ -508,9 +508,9 @@ class MapEvaluator:
 
         nrows = 1
         if self.psf:
-            nrows +=1
+            nrows += 1
         if self.edisp:
-            nrows +=1
+            nrows += 1
 
         fig, axes = plt.subplots(
             ncols=2,
@@ -551,12 +551,12 @@ class MapEvaluator:
             idx += 2
 
         if self.edisp:
-            axes[idx-1].remove()
+            axes[idx - 1].remove()
             ax = fig.add_subplot(nrows, 2, idx)
             ax.set_title("Energy bias")
             self.edisp.plot_bias(ax=ax)
 
             axes[idx].remove()
-            ax = fig.add_subplot(nrows, 2, idx+1)
+            ax = fig.add_subplot(nrows, 2, idx + 1)
             ax.set_title("Energy dispersion matrix")
             self.edisp.plot_matrix(ax=ax)
