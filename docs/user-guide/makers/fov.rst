@@ -56,10 +56,6 @@ can be unfrozen.
 		dataset = fov_bkg_maker.run(dataset)
 		stacked.stack(dataset)
 
-The following notebooks shows examples using
-`~gammapy.makers.FoVBackgroundMaker` to perform 3D data extraction and fitting:
 
-.. nbgallery::
-
-   ../../tutorials/starting/analysis_2.ipynb
-   ../../tutorials/analysis/3D/analysis_3d.ipynb
+.. minigallery:: gammapy.makers.FoVBackgroundMaker
+    :add-heading:

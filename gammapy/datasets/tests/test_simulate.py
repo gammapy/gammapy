@@ -139,7 +139,7 @@ def test_mde_sample_sources(dataset, models):
     assert_allclose(events.table["DEC_TRUE"][0], -28.742429, rtol=1e-5)
     assert events.table["DEC_TRUE"].unit == "deg"
 
-    assert_allclose(events.table["TIME"][0], 461.424967, rtol=1e-5)
+    assert_allclose(events.table["TIME"][0], 123.424996, rtol=1e-5)
     assert events.table["TIME"].unit == "s"
 
     assert_allclose(events.table["MC_ID"][0], 1, rtol=1e-5)

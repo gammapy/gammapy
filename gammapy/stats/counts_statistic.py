@@ -84,9 +84,9 @@ class CountsStatistic(abc.ABC):
                 args=(self.stat_max[it.multi_index] + n_sigma**2, it.multi_index),
             )
             if np.isnan(roots[0]):
-                errn[it.multi_index] = -self.n_on[it.multi_index]
+                errn[it.multi_index] = self.n_on[it.multi_index]
             else:
-                errn[it.multi_index] = roots[0] - self.n_sig[it.multi_index]
+                errn[it.multi_index] =  self.n_sig[it.multi_index] - roots[0]
             it.iternext()
 
         return errn

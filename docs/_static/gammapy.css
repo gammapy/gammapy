@@ -309,3 +309,21 @@ table.docutils {
 .tutorial-card .badge:hover {
   background-color: grey;
 }
+
+.sphx-glr-footer {
+  text-align: left  !important;
+}
+
+.sphx-glr-download a {
+background-color: #d9edf7 !important;
+border: 1px solid #bce8f1 !important;
+background-image: none !important;
+}
+
+.sphx-glr-download code {
+color: #3a87ad !important;
+}
+
+.sphx-glr-download a:hover {
+background-color: #d9edf7 !important;
+}
