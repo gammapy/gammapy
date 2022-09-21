@@ -70,7 +70,7 @@ class TemporalModel(ModelBase):
         # TODO: this is a work-around for https://github.com/astropy/astropy/issues/10501
         return u.Quantity(np.sum(diff.to_value("day")), "day")
 
-    def plot(self, time_range, ax=None, **kwargs):
+    def plot(self, time_range, ax=None, nbin=100, **kwargs):
         """
         Plot Temporal Model.
 
@@ -80,6 +80,8 @@ class TemporalModel(ModelBase):
             times to plot the model
         ax : `~matplotlib.axes.Axes`, optional
             Axis to plot on
+        nbin : int
+            Number of bins to plot model
         **kwargs : dict
             Keywords forwarded to `~matplotlib.pyplot.errorbar`
 
@@ -90,7 +92,7 @@ class TemporalModel(ModelBase):
         """
         time_min, time_max = time_range
         time_axis = TimeMapAxis.from_time_bounds(
-            time_min=time_min, time_max=time_max, nbin=100
+            time_min=time_min, time_max=time_max, nbin=nbin
         )
 
         m = RegionNDMap.create(region=None, axes=[time_axis])
@@ -692,13 +694,13 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
     t_ref : `~astropy.units.Quantity`
         The reference time in mjd
     phi_ref : `~astropy.units.Quantity`
-        The phase at reference time
+        The phase at reference time. Default is 0.
     f0 : `~astropy.units.Quantity`
         The frequency at t_ref in s-1
     f1 : `~astropy.units.Quantity`
-        The frequency derivative at t_ref in s-2
+        The frequency derivative at t_ref in s-2. Default is 0 s-2.
     f2 : `~astropy.units.Quantity`
-        The frequency second derivative at t_ref in s-3
+        The frequency second derivative at t_ref in s-3. Default is 0 s-3.
     """
 
     tag = ["TemplatePhaseCurveTemporalModel", "template-phase"]
@@ -752,6 +754,39 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
             f2=f2,
         )
 
+    @staticmethod
+    def _time_to_phase(time, t_ref, phi_ref, f0, f1, f2):
+        """Convert time to phase given timing solution parameters.
+
+        Parameters
+        ----------
+        t_ref : `~astropy.units.Quantity`
+            The reference time in mjd
+        phi_ref : `~astropy.units.Quantity`
+            The phase at reference time. Default is 0.
+        f0 : `~astropy.units.Quantity`
+            The frequency at t_ref in s-1
+        f1 : `~astropy.units.Quantity`
+            The frequency derivative at t_ref in s-2.
+        f2 : `~astropy.units.Quantity`
+            The frequency second derivative at t_ref in s-3.
+
+        Returns
+        -------
+        phase : float
+            Phase.
+        period_number : int
+            Number of period since t_ref.
+        """
+        delta_t = time - t_ref
+        phase = (
+            phi_ref + delta_t * (f0 + delta_t / 2.0 * (f1 + delta_t / 3 * f2))
+        ).to_value("")
+
+        period_number = np.floor(phase)
+        phase -= period_number
+        return phase, period_number
+
     def write(self, path=None, overwrite=False):
         if path is None:
             path = self.filename
@@ -769,13 +804,42 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         return scipy.interpolate.InterpolatedUnivariateSpline(x, y, k=1, ext=2, bbox=[0.,1.])
 
     def evaluate(self, time, t_ref, phi_ref, f0, f1, f2):
-        delta_t = time - t_ref
-        phase = (
-            phi_ref + delta_t * (f0 + delta_t / 2.0 * (f1 + delta_t / 3 * f2))
-        ).to_value("")
-
-        phase -= np.floor(phase)
+        phase, _ = self._time_to_phase(time, t_ref.quantity, phi_ref.quantity, f0.quantity, f1.quantity, f2)
         return self._interpolator(phase)
+
+    def integral(self, t_min, t_max):
+        """Evaluate the integrated flux within the given time intervals
+
+        Parameters
+        ----------
+        t_min: `~astropy.time.Time`
+            Start times of observation
+        t_max: `~astropy.time.Time`
+            Stop times of observation
+        Returns
+        -------
+        norm: The model integrated flux
+        """
+        ph_min, n_min = self._time_to_phase(t_min,
+                                            self.t_ref.quantity,
+                                            self.phi_ref.quantity,
+                                            self.f0.quantity,
+                                            self.f1.quantity,
+                                            self.f2.quantity
+                                            )
+        ph_max, n_max = self._time_to_phase(t_max,
+                                            self.t_ref.quantity,
+                                            self.phi_ref.quantity,
+                                            self.f0.quantity,
+                                            self.f1.quantity,
+                                            self.f2.quantity
+                                            )
+
+        val1 = self._interpolator.antiderivative()(ph_max)-self._interpolator.antiderivative()(0)
+        val2 = self._interpolator.antiderivative()(1)-self._interpolator.antiderivative()(ph_min)
+        total = self._interpolator.antiderivative()(1)-self._interpolator.antiderivative()(0)
+        total *= (n_max-n_min)
+        return total + val1 + val2
 
     @classmethod
     def from_dict(cls, data):
