@@ -49,13 +49,14 @@ Glossary
 
     DL4
       Short for "data level 4": it is used to mention or describe binned-science data, ie
-      N-dim maps of the spatial, temporal and/or spectral components of the DL3 data in
-      instrumental units (e.g. counts). See :ref:`data flow <data_flow>`.
+      N-dim maps (multi-dimensional histograms) of the spatial, temporal and/or spectral
+      components of the DL3 data in instrumental units (e.g. counts). See :ref:`maps` and
+     :ref:`data flow <data_flow>`.
 
     DL5
       Short for "data level 5": it is used to mention or describe advanced-science data, ie
       N-dim maps of the spatial, temporal and/or spectral astrophysical quantities in
-      physical units (e.g. counts). See :ref:`data flow <data_flow>`.
+      physical units (e.g. cm-2 s-1). See :ref:`data flow <data_flow>`.
 
     DL6
       Short for "data level 6": it is used to mention or describe catalogs of sources,
