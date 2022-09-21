@@ -62,6 +62,13 @@ from gammapy.maps import MapAxis
 from gammapy.utils.scripts import make_path
 from pathlib import Path
 
+######################################################################
+# Check setup
+# -----------
+from gammapy.utils.docs import check_tutorials_setup
+
+check_tutorials_setup()
+
 
 ######################################################################
 # Data and models files

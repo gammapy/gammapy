@@ -60,22 +60,18 @@ Setup
 """
 
 # %matplotlib inline
-import matplotlib.pyplot as plt
-
 import os
 from pathlib import Path
-
-import numpy as np
-import astropy
-import gammapy
-
-print("numpy:", np.__version__)
-print("astropy:", astropy.__version__)
-print("gammapy:", gammapy.__version__)
-
 from astropy import units as u
 from gammapy.data import DataStore, EventList
 from gammapy.irf import EffectiveAreaTable2D, load_cta_irfs
+
+######################################################################
+# Check setup
+# -----------
+from gammapy.utils.docs import check_tutorials_setup
+
+check_tutorials_setup()
 
 
 ######################################################################

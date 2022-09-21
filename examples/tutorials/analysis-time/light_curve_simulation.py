@@ -93,6 +93,13 @@ from gammapy.makers import SpectrumDatasetMaker
 from gammapy.modeling import Fit
 from gammapy.data import observatory_locations
 
+######################################################################
+# Check setup
+# -----------
+from gammapy.utils.docs import check_tutorials_setup
+
+check_tutorials_setup()
+
 
 ######################################################################
 # We first define our preferred time format:

@@ -111,17 +111,6 @@ a 1D likelihood fit, exactly as illustrated in the previous example.
 # %matplotlib inline
 import matplotlib.pyplot as plt
 
-# Check package versions
-import gammapy
-import numpy as np
-import astropy
-import regions
-
-print("gammapy:", gammapy.__version__)
-print("numpy:", np.__version__)
-print("astropy", astropy.__version__)
-print("regions", regions.__version__)
-
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import PointSkyRegion
@@ -131,7 +120,6 @@ from gammapy.modeling import Fit
 from gammapy.datasets import (
     Datasets,
     SpectrumDataset,
-    SpectrumDatasetOnOff,
 )
 from gammapy.modeling.models import (
     create_crab_spectral_model,
@@ -144,8 +132,14 @@ from gammapy.makers import (
     ReflectedRegionsBackgroundMaker,
     SafeMaskMaker,
 )
-from gammapy.utils.scripts import make_path
 from gammapy.visualization import plot_spectrum_datasets_off_regions
+
+######################################################################
+# Check setup
+# -----------
+from gammapy.utils.docs import check_tutorials_setup
+
+check_tutorials_setup()
 
 
 ######################################################################

@@ -17,6 +17,7 @@ Here's some good resources with working examples:
 - https://github.com/bokeh/bokeh/tree/master/bokeh/sphinxext
 """
 import os
+import sys
 from configparser import ConfigParser
 from pathlib import Path
 from docutils.parsers.rst import Directive
@@ -25,6 +26,7 @@ from docutils.parsers.rst.directives.body import CodeBlock
 from docutils.parsers.rst.directives.images import Image
 from docutils.parsers.rst.directives.misc import Include, Raw
 from sphinx.util import logging
+import subprocess
 from gammapy.analysis import AnalysisConfig
 
 try:
@@ -167,6 +169,7 @@ class DocsImage(Image):
 
         return super().run()
 
+
 class SubstitutionCodeBlock(CodeBlock):
     """
     Similar to CodeBlock but replaces placeholders with variables.
@@ -189,6 +192,7 @@ class SubstitutionCodeBlock(CodeBlock):
         self.content = new_content
         return list(CodeBlock.run(self))
 
+
 def gammapy_sphinx_ext_activate():
     if HAS_GP_DATA:
         log.info(f"*** Found GAMMAPY_DATA = {gammapy_data_path}")
@@ -203,3 +207,24 @@ def gammapy_sphinx_ext_activate():
     register_directive("gp-howto-hli", HowtoHLI)
     register_directive("accordion-header", AccordionHeader)
     register_directive("accordion-footer", AccordionFooter)
+
+
+def check_tutorials_setup(download_datasets_path="./gammapy-data"):
+    """Check tutorials setup and download data if not available
+    
+    Parameters
+    ----------
+    download_datasets_path : str
+        Path to download the data, if not present.
+    """
+    from gammapy.scripts.info import cli_info
+    from gammapy.scripts.download import cli_download_datasets
+
+    if not HAS_GP_DATA:
+        log.info(
+            "Missing example datasets, downloading to {download_datasets_path} now..."
+        )
+        cli_download_datasets.callback(out=download_datasets_path)
+        os.env["GAMMAPY_DATA"] = download_datasets_path
+
+    cli_info.callback(system=True, version=True, dependencies=True, envvar=True)

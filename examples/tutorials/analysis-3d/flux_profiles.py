@@ -37,8 +37,8 @@ run the actually profile extraction using the `~gammapy.estimators.FluxProfileEs
 
 
 ######################################################################
-# Setup and Imports
-# -----------------
+# Setup 
+# -----
 # 
 
 # %matplotlib inline
@@ -55,6 +55,13 @@ from gammapy.utils.regions import (
     make_orthogonal_rectangle_sky_regions,
 )
 from gammapy.modeling.models import PowerLawSpectralModel
+
+######################################################################
+# Check setup
+# -----------
+from gammapy.utils.docs import check_tutorials_setup
+
+check_tutorials_setup()
 
 
 ######################################################################

@@ -68,11 +68,9 @@ from gammapy.modeling.models import (
     LogParabolaSpectralModel,
     SkyModel,
 )
-from gammapy.estimators import FluxPoints
 from gammapy.datasets import FluxPointsDataset, Datasets
 from gammapy.catalog import CATALOG_REGISTRY
 from gammapy.modeling import Fit
-
 
 ######################################################################
 # Load spectral points

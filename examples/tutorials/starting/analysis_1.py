@@ -71,13 +71,17 @@ Finally we will compare the results against a reference model.
 # 
 
 # %matplotlib inline
-import matplotlib.pyplot as plt
-
 from pathlib import Path
 from astropy import units as u
 from gammapy.analysis import Analysis, AnalysisConfig
-from gammapy.modeling.models import create_crab_spectral_model
 
+
+######################################################################
+# Check setup
+# -----------
+from gammapy.utils.docs import check_tutorials_setup
+
+check_tutorials_setup()
 
 ######################################################################
 # Analysis configuration

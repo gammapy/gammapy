@@ -44,6 +44,13 @@ import numpy as np
 # %matplotlib inline
 import matplotlib.pyplot as plt
 
+######################################################################
+# Check setup
+# -----------
+from gammapy.utils.docs import check_tutorials_setup
+
+check_tutorials_setup()
+
 
 ######################################################################
 # Profiles

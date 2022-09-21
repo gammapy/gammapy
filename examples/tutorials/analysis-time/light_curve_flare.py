@@ -74,11 +74,6 @@ import logging
 
 log = logging.getLogger(__name__)
 
-
-######################################################################
-# Now let’s import gammapy specific classes and functions
-# 
-
 from gammapy.data import DataStore
 from gammapy.datasets import SpectrumDataset, Datasets
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
@@ -89,6 +84,13 @@ from gammapy.makers import (
     ReflectedRegionsBackgroundMaker,
     SafeMaskMaker,
 )
+
+######################################################################
+# Check setup
+# -----------
+from gammapy.utils.docs import check_tutorials_setup
+
+check_tutorials_setup()
 
 
 ######################################################################

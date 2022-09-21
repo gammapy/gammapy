@@ -47,28 +47,24 @@ an integrated power law.
 
 # %matplotlib inline
 import astropy.units as u
-from astropy.coordinates import SkyCoord
-from astropy.time import Time
-
+from gammapy.analysis import Analysis, AnalysisConfig
 import logging
 
 log = logging.getLogger(__name__)
 
 
 ######################################################################
-# Now let’s import gammapy specific classes and functions
-# 
+# Check setup
+# -----------
+from gammapy.utils.docs import check_tutorials_setup
 
-from gammapy.analysis import Analysis, AnalysisConfig
+check_tutorials_setup()
 
 
 ######################################################################
 # Creating the config file
 # ------------------------
 # 
-
-
-######################################################################
 # Now, we create a config file for out analysis. You may load this from
 # disc if you have a pre-defined config file.
 # 
