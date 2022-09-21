@@ -82,6 +82,12 @@ Glossary
       Short for "high level interface: this Python API aims to realize most of the analysis
       types using YAML configuration files. See :ref:`analysis`
 
+    GADF
+      Short for "Gamma Astro Data Format".
+      The `open initiative GADF <https://gamma-astro-data-formats.readthedocs.io/en/v0.2/>`_
+      provides a Data Format for gamma-ray data that is currently used by many IACT experiments
+      and by HAWC. Gammapy are compliant with this format.
+
     GTI
       Short for "good time interval": it indicates a continuous time interval of data
       acquisition. In CTA, it also represents a time interval in which the IRFs are
