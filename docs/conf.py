@@ -232,7 +232,7 @@ binder_config = {
      # Required keys
      "org": "adonath",
      "repo": "gammapy-docs-preview",
-     "branch": "master", # Can be any branch, tag, or commit hash. Use a branch that hosts your docs.
+     "branch": "main", # Can be any branch, tag, or commit hash. Use a branch that hosts your docs.
      "binderhub_url": "https://mybinder.org", # Any URL of a binderhub deployment. Must be full URL (e.g. https://mybinder.org).
      "dependencies": "./binder/requirements.txt",
      "notebooks_dir": "notebooks",
