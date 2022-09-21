@@ -147,8 +147,9 @@ Glossary
       functions are represented along a true energy axis.
 
     TS
-      Short for "test statistics": likelihood value of the probability of a model compared
-      to the measured data. See :ref:`ts` and :ref:`fit-statistics`.
+      Short for "test statistics": TS is equal to 2*log(L) with L the likelihood value of
+      the probability for a model to be compliant with the measured data. See :ref:`ts`
+      and :ref:`fit-statistics`.
 
     WStat
       The WStat is a Poisson fit statistic usually used for ON-OFF analysis. It is
