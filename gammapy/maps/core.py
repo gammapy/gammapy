@@ -631,10 +631,11 @@ class Map(abc.ABC):
         coords = self.geom.get_coord()
         idx = geom.coord_to_idx(coords)
 
-        resampled = self.from_geom(geom=geom)
+        weights = 1 if weights is None else weights
 
+        resampled = self.from_geom(geom=geom)
         resampled._resample_by_idx(
-            idx, weights=self.data, preserve_counts=preserve_counts
+            idx, weights=self.data * weights, preserve_counts=preserve_counts
         )
         return resampled
 
