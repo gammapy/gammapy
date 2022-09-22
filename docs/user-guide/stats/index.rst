@@ -75,6 +75,8 @@ They are used also to estimate the excess counts significance, i.e. the probabil
 a given number of measured events :math:`n_{on}` actually contains some signal events :math:`n_{sig}`,
 as well as the errors associated to this estimated number of signal counts.
 
+.. _ts:
+
 Estimating TS
 -------------
 
