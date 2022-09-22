@@ -297,7 +297,7 @@ class WcsNDMap(WcsMap):
             ) + idx[2:]
         else:
             pix = list(idx)
-            idx_ax = self.geom.axes.index(axis_name)
+            idx_ax = 2 + self.geom.axes.index(axis_name)
             pix[idx_ax] = (pix[idx_ax] - 0.5 * (factor - 1)) / factor
 
         if preserve_counts:
