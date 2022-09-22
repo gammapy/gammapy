@@ -235,7 +235,7 @@ binder_config = {
      "branch": "main", # Can be any branch, tag, or commit hash. Use a branch that hosts your docs.
      "binderhub_url": "https://mybinder.org", # Any URL of a binderhub deployment. Must be full URL (e.g. https://mybinder.org).
      "dependencies": "./binder/requirements.txt",
-     "notebooks_dir": "notebooks",
+     "notebooks_dir": "docs/dev/notebooks",
      "use_jupyter_lab": False,
 }
 
