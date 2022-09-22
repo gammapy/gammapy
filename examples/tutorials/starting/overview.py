@@ -67,36 +67,20 @@ We will cover the following topics:
 # setup is correct you can execute the following cell:
 # 
 
-import os
-
-path = os.path.expandvars("$GAMMAPY_DATA")
-
-if not os.path.exists(path):
-    raise Exception("gammapy-data repository not found!")
-else:
-    print("Great your setup is correct!")
-
-
-######################################################################
-# In case you encounter an error, you can un-comment and execute the
-# following cell to continue. But we recommend to set up your environment
-# correctly as described in `getting
-# started <https://docs.gammapy.org/dev/getting-started/index.html#download-tutorials>`__
-# after you are done with this notebook.
-# 
-
-# os.environ['GAMMAPY_DATA'] = os.path.join(os.getcwd(), '..')
-
-
-######################################################################
-# Now we can continue with the usual IPython notebooks and Python imports:
-# 
 
 # %matplotlib inline
 import matplotlib.pyplot as plt
 
 import astropy.units as u
 from astropy.coordinates import SkyCoord
+
+
+######################################################################
+# Check setup
+# -----------
+from gammapy.utils.check import check_tutorials_setup
+
+check_tutorials_setup()
 
 
 ######################################################################

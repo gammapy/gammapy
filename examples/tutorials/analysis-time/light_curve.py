@@ -54,26 +54,24 @@ extract a light curve independently of the dataset type.
 
 # %matplotlib inline
 import matplotlib.pyplot as plt
-
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 import logging
-
 from astropy.time import Time
-
-log = logging.getLogger(__name__)
-
-
-######################################################################
-# Now let’s import gammapy specific classes and functions
-# 
-
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.modeling.models import PointSpatialModel
 from gammapy.modeling.models import SkyModel, Models
-from gammapy.modeling import Fit
 from gammapy.estimators import LightCurveEstimator
 from gammapy.analysis import Analysis, AnalysisConfig
+
+log = logging.getLogger(__name__)
+
+######################################################################
+# Check setup
+# -----------
+from gammapy.utils.check import check_tutorials_setup
+
+check_tutorials_setup()
 
 
 ######################################################################

@@ -65,7 +65,6 @@ from astropy.coordinates import SkyCoord
 from gammapy.maps import Map
 from gammapy.datasets import MapDataset, Datasets
 from gammapy.modeling.models import (
-    PointSpatialModel,
     SkyModel,
     TemplateSpatialModel,
     PowerLawNormSpectralModel,
@@ -75,7 +74,12 @@ from gammapy.modeling.models import (
 )
 from regions import CircleSkyRegion
 
-from gammapy.modeling.models import GaussianSpatialModel
+######################################################################
+# Check setup
+# -----------
+from gammapy.utils.check import check_tutorials_setup
+
+check_tutorials_setup()
 
 
 ######################################################################
