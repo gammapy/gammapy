@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Time-dependent models."""
 import numpy as np
+import logging
 import scipy.interpolate
 from astropy import units as u
 from astropy.table import Table
@@ -26,6 +27,7 @@ __all__ = [
     "TemporalModel",
 ]
 
+log = logging.getLogger(__name__)
 
 # TODO: make this a small ABC to define a uniform interface.
 class TemporalModel(ModelBase):
@@ -151,9 +153,8 @@ class TemporalModel(ModelBase):
         sampler = InverseCDFSampler(pdf=pdf, random_state=random_state)
         time_pix = sampler.sample(n_events)[0]
         time = (
-                np.interp(time_pix, np.arange(len(t)), t.value - min(t.value))
-                * t_step.unit
-                ).to(time_unit)
+            np.interp(time_pix, np.arange(len(t)), t.value - min(t.value)) * t_step.unit
+        ).to(time_unit)
 
         return t_min + time
 
@@ -384,7 +385,7 @@ class GeneralizedGaussianTemporalModel(TemporalModel):
     t_ref = Parameter("t_ref", _t_ref_default.mjd, unit="day", frozen=False)
     t_rise = Parameter("t_rise", "1d", frozen=False)
     t_decay = Parameter("t_decay", "1d", frozen=False)
-    eta = Parameter("eta", 1/2, unit="", frozen=False)
+    eta = Parameter("eta", 1 / 2, unit="", frozen=False)
 
     @staticmethod
     def evaluate(time, t_ref, t_rise, t_decay, eta):
@@ -451,60 +452,75 @@ class LightCurveTemplateTemporalModel(TemporalModel):
     _t_ref_default = Time("2000-01-01")
     t_ref = Parameter("t_ref", _t_ref_default.mjd, unit="day", frozen=False)
 
-    def __init__(self, map, t_ref=None):
+    def __init__(self, map, t_ref=None, filename=None):
 
         if (map.data < 0).any():
             log.warning("Map has negative values. Check and fix this!")
 
         self.map = map.copy()
         if t_ref:
-            self.t_ref.value = Time(t_ref, format="MJD").mjd
-        if "ENERGY" in map.geom.axes.names:
-            self.is_energy_dependent = True
+            self.parameters["t_ref"].value = Time(t_ref, format="mjd").mjd
+        self.filename = filename
         super().__init__()
+
+    @property
+    def is_energy_dependent(self):
+        return self.map.geom.has_energy_axis
 
     def __str__(self):
         start_time = self.map.axes["time"].edges[0]
         end_time = self.map.axes["time"].edges[-1]
-        energy_min = self.map.axes["energy"].edges[0]
-        energy_max = self.map.axes["energy"].edges[-1]
         norm_min = np.min(self.data)
         norm_max = np.max(self.data)
-        return (
-            f"{self.__class__.__name__} model summary:\n"
-            f"Start time: {start_time} MJD\n"
-            f"End time: {end_time} MJD\n"
-            f"Energy min: {energy_min} MJD\n"
-            f"Energy max: {energy_max} MJD\n"
-            f"Norm min: {norm_min}\n"
-            f"Norm max: {norm_max}\n"
+
+        prnt = (
+            f"{self.__class__.__name__} model summary:\n "
+            f"Start time: {start_time} MJD \n "
+            f"End time: {end_time} MJD \n "
+            f"Norm min: {norm_min} \n"
+            f"Norm max: {norm_max}"
         )
 
+        if self.is_energy_dependent:
+            energy_min = self.map.axes["energy"].edges[0]
+            energy_max = self.map.axes["energy"].edges[-1]
+            prnt = (
+                f"Energy min: {energy_min} MJD\n"
+                f"Energy max: {energy_max} MJD\n" + prnt
+            )
+
+        return prnt
+
     @classmethod
-    def from_table(cls, table):
+    def from_table(cls, table, filename=None):
         """Create a Template model from an astropy table
 
         Parameters:
         ----------
         table : `~astropy.table.Table`
+        filename : str
+            name of input file
         """
         columns = [_.lower() for _ in table.colnames]
-        t_ref = time_ref_from_dict(table.meta)
         if "time" not in columns:
             raise ValueError("A TIME column is necessary")
 
         t_ref = time_ref_from_dict(table.meta)
-        time_axis = MapAxis.from_nodes(nodes=table["time"] + t_ref,
-                                       name="time", unit=table.meta["TIMEUNIT"])
+        nodes = table["TIME"]
+        time_axis = MapAxis.from_nodes(
+            nodes=nodes, name="time", unit=table.meta["TIMEUNIT"]
+        )
         axes = [time_axis]
 
         if "energy" in columns:
-            energy_axis = MapAxis.from_energy_bounds(table["energy"], name="energy",
-                                                     )
+            energy_axis = MapAxis.from_energy_bounds(
+                table["ENERGY"],
+                name="energy",
+            )
             axes.append(energy_axis)
         m = RegionNDMap.create(region=None, axes=axes, meta=table.meta)
 
-        return cls(m, t_ref=t_ref)
+        return cls(m, t_ref=t_ref, filename=filename)
 
     @classmethod
     def read(cls, filename, format="table"):
@@ -522,23 +538,25 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         filename = str(make_path(filename))
         if format == "table":
             table = Table.read(filename)
-            cls.from_table(table)
+            cls.from_table(table, filename=filename)
 
         elif format == "map":
             m = RegionNDMap.read(filename)
             t_ref = time_ref_from_dict(m.meta)
-            return cls(m, t_ref=t_ref)
+            return cls(m, t_ref=t_ref, filename=filename)
 
         else:
-            raise ValueError(f"Not a valid format: '{format}', choose from: {'table', 'map'}")
+            raise ValueError(
+                f"Not a valid format: '{format}', choose from: {'table', 'map'}"
+            )
 
     def to_table(self, format="map"):
         """Convert model to an astropy table"""
-        columns = [_.upper() for _ in table.colnames]
-        if "ENERGY" in columns:
+        if self.is_energy_dependent:
             raise NotImplemented("Currently not supported for Energy Dependent Models")
-        table = Table(data=self.map.quantity, names=columns,
-                      meta=self.map.meta)
+        table = Table(
+            data=self.map.quantity, names=self.geom.axes.names, meta=self.map.meta
+        )
         return table
 
     def write(self, filename, format="table", overwrite=False):
@@ -569,7 +587,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
     def evaluate(self, time, energy=None):
         """Evaluate the model at given coordinates."""
-        coords = {"time": time.mjd}
+        coords = {"time": time.mjd - self.t_ref.value}
         if energy is not None:
             coords["energy"] = energy
 
@@ -586,20 +604,21 @@ class LightCurveTemplateTemporalModel(TemporalModel):
             map_slice = self.map.slice_by_id({"time": slice(i1, i2)})
             integral.append(map_slice.integral(axis_name="time", coords=coords))
         return integral
-    
 
     @classmethod
     def from_dict(cls, data):
-        return cls.read(data["temporal"]["filename"])
+        data = data["temporal"]
+        filename = data["filename"]
+        format = data.get("format", "table")
+        return cls.read(filename, format)
 
-    def to_dict(self, full_output=False):
+    def to_dict(self, full_output=False, format="table"):
         """Create dict for YAML serialisation"""
-        return {self._type: {"type": self.tag[0], "filename": self.filename}}
-
-    def create_coords(self, coords):
-        """ Temporary solution. Remove after merging #4073"""
-        coords = (0 * u.deg, 0 * u.deg) + coords
-        return coords
+        data = super().to_dict(full_output)
+        data["temporal"]["filename"] = self.filename
+        data["temporal"]["format"] = format
+        data["spatial"]["unit"] = str(self.map.unit)
+        return data
 
 
 class PowerLawTemporalModel(TemporalModel):
