@@ -27,12 +27,12 @@ class MapDatasetEventSampler:
     def __init__(self, random_state="random-seed"):
         self.random_state = get_random_state(random_state)
 
-    def _sample_coord_time_energy(self, dataset, temporal_model, t_delta="1 sec"):
-        energy_axis = dataset.geoms["geom"].axes["energy"]
+    def _sample_coord_time_energy(self, dataset_evaluator, model, t_delta="1 sec"):
+        energy_axis = dataset_evaluator.geom.axes["energy"]
 
-        time_start, time_stop, time_ref = (dataset.gti.time_start,
-                                           dataset.gti.time_stop,
-                                           dataset.gti.time_ref)
+        time_start, time_stop, time_ref = (dataset_evaluator.gti.time_start,
+                                           dataset_evaluator.gti.time_stop,
+                                           dataset_evaluator.gti.time_ref)
         t_min = Time(time_start)
         t_max = Time(time_stop)
         t_delta = u.Quantity(t_delta)
@@ -51,31 +51,28 @@ class MapDatasetEventSampler:
         t = Time(np.arange(t_min.mjd, t_max.mjd, t_step.value), format="mjd")
         time_axis = MapAxis.from_edges(t.value * u.d, name="time")
 
-        target = temporal_model.geom.skycoord #change it when the TemplateTemporalModel is updated
+        target = model.PointSpatialModel.position #change it when the TemplateTemporalModel is updated
         on_region = PointSkyRegion(center=target)
         region_geom = RegionGeom.create(on_region,
                                         axes=[energy_axis, time_axis])
     
-        flux = temporal_model.evaluate_geom(region_geom)
-        region_exposure = dataset.exposure.to_region_nd_map(region_geom.center_skydir)
+        flux = model.evaluate_geom(region_geom)
+        region_exposure = dataset_evaluator.exposure.to_region_nd_map(region_geom.center_skydir)
         
-        npred = flux * region_exposure #check the broadcasting
+        npred = flux * region_exposure * dataset_evaluator.geom.bin_volume #check the broadcasting
         data = npred.data[np.isfinite(npred.data)]
         n_events = self.random_state.poisson(np.sum(data))
 
         coords = npred.sample_coord(n_events=n_events, random_state=self.random_state)
 
-        position = SkyCoord(coords["lon"], coords["lat"],
-                            frame=temporal_model.to_RegionNdMap.geom.frame) #check the frame
-
         time = (
-                np.interp(coords["TIME"] + temporal_model.ref_time, np.arange(len(t)), t.value - min(t.value))
+                np.interp(coords["TIME"] + model.ref_time, np.arange(len(t)), t.value - min(t.value))
                 * t_step.unit
                 ).to(time_unit)
 
         table = Table()
-        table["RA_TRUE"] = position.icrs.ra.to("deg")
-        table["DEC_TRUE"] = position.icrs.dec.to("deg")
+        table["RA_TRUE"] = coords.skycoord.icrs.ra.to("deg")
+        table["DEC_TRUE"] = coords.skycoord.icrs.dec.to("deg")
 
         try:
             energy = coords["energy_true"]
@@ -148,7 +145,7 @@ class MapDatasetEventSampler:
 
             if (temporal_model == "TemplateTemporalModel"
                 and ...): #check the condition when the format model is defined
-                table = self._sample_coord_time_energy(dataset, temporal_model)
+                table = self._sample_coord_time_energy(evaluator, temporal_model)
             else:
                 table = self._sample_coord_time(npred, temporal_model, dataset.gti)
 
