@@ -70,7 +70,7 @@ class TemporalModel(ModelBase):
         # TODO: this is a work-around for https://github.com/astropy/astropy/issues/10501
         return u.Quantity(np.sum(diff.to_value("day")), "day")
 
-    def plot(self, time_range, ax=None, nbin=100, **kwargs):
+    def plot(self, time_range, ax=None, n_points=100, **kwargs):
         """
         Plot Temporal Model.
 
@@ -80,7 +80,7 @@ class TemporalModel(ModelBase):
             times to plot the model
         ax : `~matplotlib.axes.Axes`, optional
             Axis to plot on
-        nbin : int
+        n_points : int
             Number of bins to plot model
         **kwargs : dict
             Keywords forwarded to `~matplotlib.pyplot.errorbar`
@@ -92,7 +92,7 @@ class TemporalModel(ModelBase):
         """
         time_min, time_max = time_range
         time_axis = TimeMapAxis.from_time_bounds(
-            time_min=time_min, time_max=time_max, nbin=nbin
+            time_min=time_min, time_max=time_max, nbin=n_points
         )
 
         m = RegionNDMap.create(region=None, axes=[time_axis])
@@ -760,8 +760,10 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
 
         Parameters
         ----------
+        time : `~astropy.units.Quantity`
+            The time at which to compute the phase
         t_ref : `~astropy.units.Quantity`
-            The reference time in mjd
+            The reference time in mjd.
         phi_ref : `~astropy.units.Quantity`
             The phase at reference time. Default is 0.
         f0 : `~astropy.units.Quantity`
@@ -804,7 +806,7 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         return scipy.interpolate.InterpolatedUnivariateSpline(x, y, k=1, ext=2, bbox=[0.,1.])
 
     def evaluate(self, time, t_ref, phi_ref, f0, f1, f2):
-        phase, _ = self._time_to_phase(time, t_ref.quantity, phi_ref.quantity, f0.quantity, f1.quantity, f2)
+        phase, _ = self._time_to_phase(time, t_ref, phi_ref, f0, f1, f2)
         return self._interpolator(phase)
 
     def integral(self, t_min, t_max):
@@ -820,26 +822,16 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         -------
         norm: The model integrated flux
         """
-        ph_min, n_min = self._time_to_phase(t_min,
-                                            self.t_ref.quantity,
-                                            self.phi_ref.quantity,
-                                            self.f0.quantity,
-                                            self.f1.quantity,
-                                            self.f2.quantity
-                                            )
-        ph_max, n_max = self._time_to_phase(t_max,
-                                            self.t_ref.quantity,
-                                            self.phi_ref.quantity,
-                                            self.f0.quantity,
-                                            self.f1.quantity,
-                                            self.f2.quantity
-                                            )
+        kwargs = {par.name: par.quantity for par in self.parameters}
+        ph_min, n_min = self._time_to_phase(t_min.mjd*u.d, **kwargs)
+        ph_max, n_max = self._time_to_phase(t_max.mjd*u.d, **kwargs)
 
         val1 = self._interpolator.antiderivative()(ph_max)-self._interpolator.antiderivative()(0)
         val2 = self._interpolator.antiderivative()(1)-self._interpolator.antiderivative()(ph_min)
         total = self._interpolator.antiderivative()(1)-self._interpolator.antiderivative()(0)
+
         total *= (n_max-n_min)
-        return total + val1 + val2
+        return (total + val1 + val2)/self.time_sum(t_min, t_max)
 
     @classmethod
     def from_dict(cls, data):
