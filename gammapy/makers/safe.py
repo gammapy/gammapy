@@ -20,7 +20,8 @@ class SafeMaskMaker(Maker):
     
     .. warning::
     
-         All methods relying on the effective area (``"aeff*"`` in the method name) use the found true energy range to select events in reconstructed energy and effectively neglect the energy bias.
+         Currently some methods computing a safe energy range ("aeff-default", "aeff-max" and "edisp-bias") determine a
+         true energy range and apply it to reconstructed energy, effectively neglecting the energy bias.
 
     Parameters
     ----------

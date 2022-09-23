@@ -140,8 +140,8 @@ dataset.counts.sum_over_axes().plot(stretch="sqrt", add_cbar=True);
 #    was introduced in the HESS DL3 validation paper:
 #    https://arxiv.org/pdf/1910.08088.pdf
 #
-# Note that an assumption is made when the methods "aeff*" are used: the found true energy range is used
-# to select events( in reconstructed energy).
+# Note that currently some methods computing a safe energy range ("aeff-default", "aeff-max" and "edisp-bias")
+# determine a true energy range and apply it to reconstructed energy, effectively neglecting the energy bias.
 #
 #
 # Multiple methods can be combined. Here is an example :
