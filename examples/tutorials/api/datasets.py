@@ -45,6 +45,13 @@ from gammapy.utils.scripts import make_path
 
 # %matplotlib inline
 
+######################################################################
+# Check setup
+# -----------
+from gammapy.utils.check import check_tutorials_setup
+
+check_tutorials_setup()
+
 
 ######################################################################
 # MapDataset

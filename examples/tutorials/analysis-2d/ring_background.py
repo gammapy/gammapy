@@ -39,7 +39,6 @@ modelling and fitting.
 
 """
 
-
 ######################################################################
 # Setup
 # -----
@@ -55,20 +54,22 @@ import numpy as np
 from regions import CircleSkyRegion
 from scipy.stats import norm
 
+from gammapy.analysis import Analysis, AnalysisConfig
+from gammapy.makers import RingBackgroundMaker
+from gammapy.estimators import ExcessMapEstimator
+from gammapy.datasets import MapDatasetOnOff
+
 import logging
 
 log = logging.getLogger(__name__)
 
 
 ######################################################################
-# Now let’s import gammapy specific classes and functions
-# 
+# Check setup
+# -----------
+from gammapy.utils.check import check_tutorials_setup
 
-from gammapy.analysis import Analysis, AnalysisConfig
-from gammapy.makers import RingBackgroundMaker
-from gammapy.estimators import ExcessMapEstimator
-from gammapy.maps import Map
-from gammapy.datasets import MapDatasetOnOff
+check_tutorials_setup()
 
 
 ######################################################################

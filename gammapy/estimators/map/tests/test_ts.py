@@ -59,6 +59,7 @@ def input_dataset():
     mask2D_data[0:40, :] = False
     mask2D = Map.from_geom(geom=counts2D.geom, data=mask2D_data)
     mask = mask2D.to_cube([energy])
+
     name = "test-dataset"
     return MapDataset(
         counts=counts,
@@ -113,9 +114,9 @@ def test_compute_ts_map(input_dataset):
 
     kernel = ts_estimator.estimate_kernel(dataset=input_dataset)
     assert_allclose(kernel.geom.width, 1.22 * u.deg)
+    assert_allclose(kernel.data.sum(), 1.0)
 
     result = ts_estimator.run(input_dataset)
-
     assert_allclose(result["ts"].data[0, 99, 99], 1704.23, rtol=1e-2)
     assert_allclose(result["niter"].data[0, 99, 99], 7)
     assert_allclose(result["flux"].data[0, 99, 99], 1.02e-09, rtol=1e-2)
@@ -242,7 +243,7 @@ def test_ts_map_with_model(fake_dataset):
     assert_allclose(maps["sqrt_ts"].data[:, 25, 25], -0.231187, atol=0.1)
     assert_allclose(maps["flux"].data[:, 25, 25], -5.899423e-12, atol=1e-12)
 
-    # Try downsmapling
+    # Try downsampling
     estimator = TSMapEstimator(
         model,
         kernel_width="0.3 deg",
@@ -253,3 +254,24 @@ def test_ts_map_with_model(fake_dataset):
     maps = estimator.run(fake_dataset)
     assert_allclose(maps["sqrt_ts"].data[:, 25, 25], 0.323203, atol=0.1)
     assert_allclose(maps["flux"].data[:, 25, 25], 1.015509e-12, atol=1e-12)
+
+
+@requires_data()
+def test_compute_ts_map_with_hole(fake_dataset):
+    """Test of compute_ts_image with a null exposure at the center of the map"""
+    holes_dataset = fake_dataset.copy("holes_dataset")
+    i, j, ie = holes_dataset.exposure.geom.center_pix
+    holes_dataset.exposure.data[:, np.int_(i), np.int_(j)] = 0.
+
+    spatial_model = GaussianSpatialModel(sigma="0.1 deg")
+    spectral_model = PowerLawSpectralModel(index=2)
+    model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
+    ts_estimator = TSMapEstimator(model=model, threshold=1, selection_optional=[])
+
+    kernel = ts_estimator.estimate_kernel(dataset=holes_dataset)
+    assert_allclose(kernel.geom.width, 1.0 * u.deg)
+    assert_allclose(kernel.data.sum(), 1.0)
+
+    holes_dataset.exposure.data[...] = 0.
+    with pytest.raises(ValueError):
+        kernel = ts_estimator.estimate_kernel(dataset=holes_dataset)

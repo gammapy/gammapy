@@ -44,6 +44,13 @@ from gammapy.estimators import SensitivityEstimator
 from gammapy.datasets import SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.maps import MapAxis, RegionGeom
 
+######################################################################
+# Check setup
+# -----------
+from gammapy.utils.check import check_tutorials_setup
+
+check_tutorials_setup()
+
 
 ######################################################################
 # Define analysis region and energy binning

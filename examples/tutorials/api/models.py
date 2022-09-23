@@ -33,6 +33,13 @@ import matplotlib.pyplot as plt
 from astropy import units as u
 from gammapy.maps import Map, WcsGeom, MapAxis
 
+######################################################################
+# Check setup
+# -----------
+from gammapy.utils.check import check_tutorials_setup
+
+check_tutorials_setup()
+
 
 ######################################################################
 # Spectral models

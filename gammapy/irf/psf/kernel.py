@@ -186,7 +186,10 @@ class PSFKernel:
             raise ValueError("Incorrect exposure_array shape")
 
         # Compute weights vector
-        energy_edges = map.geom.axes["energy_true"].edges
+        for name in map.geom.axes.names:
+            if "energy" in name:
+                energy_name = name
+        energy_edges = map.geom.axes[energy_name].edges
         weights = spectrum.integral(
             energy_min=energy_edges[:-1], energy_max=energy_edges[1:], intervals=True
         )

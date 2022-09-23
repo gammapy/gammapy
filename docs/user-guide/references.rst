@@ -17,43 +17,85 @@ Glossary
     1D Analysis
       1D analysis or spectral analysis where data are reduced to a simple 1D
       geometry along the reconstructed energy axis. In Cherenkov astronomy,
-      this is classically performed with a OFF background measurement.
+      this is classically performed with an OFF background measurement [Piron2001]_.
 
     3D Analysis
       3D analysis or cube analysis, where data are reduced to a 3D cube with
-      spatial coordinates and energy axes. In gammapy, these cube are represented
-      by `Map` objects (see :ref:`maps`) and contained in a `MapDataset` object.
+      spatial coordinates and energy axes [Stewart2009]_. In Gammapy, these cube are
+      represented by `Map` objects (see :ref:`maps`) and contained in a `MapDataset` object.
 
     Aeff
-      Short for effective area: it is the IRF representing the detector collection
-      area. See :ref:`irf-aeff`.
+      Short for "effective area": it is the IRF representing the detector collection
+      area. See :ref:`irf-theory` and :ref:`irf-aeff`.
+
+    Bkg
+      Short for "background": it is the IRF representing the residual background rate
+      per solid angle. See :ref:`irf-theory` and :ref:`irf-bkg`.
 
     Cash
       The cash statistic is a Poisson fit statistic usually used when signal and
-      background can be modeled. It is defined as :math:`2 \times log(L)` See
+      background can be modeled [Cash1979]_. It is defined as :math:`2 \times log(L)`. See
       :ref:`cash` in :ref:`fit statistics <fit-statistics>`.
 
     Dataset
       In Gammapy a dataset bundles the data, IRFs, model and a likelihood function.
       Based on the model and IRFs the predicted number of counts are computed and
-      compared to the measured counts using the likelihood.
+      compared to the measured counts using the likelihood. See :ref:`datasets`
+
+    DL3
+      Short for "data level 3": it is used to mention or describe science-ready data, ie
+      the event list (with basically a Time, an arrival direction and an energy) and the
+      four IRFs (Aeff, EDisp, PSF, Bkg). See :ref:`data flow <data_flow>`.
+
+    DL4
+      Short for "data level 4": it is used to mention or describe binned-science data, ie
+      N-dim maps (multi-dimensional histograms) of the spatial, temporal and/or spectral
+      components of the DL3 data in instrumental units (e.g. counts). See :ref:`maps` and
+     :ref:`data flow <data_flow>`.
+
+    DL5
+      Short for "data level 5": it is used to mention or describe advanced-science data, ie
+      N-dim maps of the spatial, temporal and/or spectral astrophysical quantities in
+      physical units (e.g. cm-2 s-1). See :ref:`data flow <data_flow>`.
+
+    DL6
+      Short for "data level 6": it is used to mention or describe catalogs of sources,
+      with their spectral and spatial properties. See :ref:`data flow <data_flow>`.
 
     EDisp
-      Short for energy dispersion: it is the IRF that represents the probability
+      Short for "energy dispersion": it is the IRF that represents the probability
       of measuring a given reconstructed energy as a function of the true photon
-      energy. See :ref:`irf-edisp`
+      energy. See :ref:`irf-theory` and :ref:`irf-edisp`.
+
+    Estimator
+      Gammapy utility classes to compute astrophysical quantities based on a model.
+      They are used for the computation of DL5 products from the DL4 ones. See
+      :ref:`modeling` and the :ref:`data flow <data_flow>`.
 
     FoV
       Short for "field of view": it indicates the angular aperture (sometimes also the
       solid angle) on the sky that is visible by the instrument with a single pointing.
 
+    FoV Background
+      Background estimation method typically used for the 3D analysis. See :ref:`makers`.
+
+    HLI
+      Short for "high level interface: this API aims to realize most of the analysis
+      types using YAML configuration files. See :ref:`analysis`
+
+    GADF
+      Short for "Gamma Astro Data Format".
+      The `open initiative GADF <https://gamma-astro-data-formats.readthedocs.io/en/v0.2/>`_
+      provides a Data Format for gamma-ray data that is currently used by many IACT experiments
+      and by HAWC. Gammapy I/O functions are compliant with this format.
+
     GTI
-      Short for Good Time Interval: it indicates a continuous time interval of data
+      Short for "good time interval": it indicates a continuous time interval of data
       acquisition. In CTA, it also represents a time interval in which the IRFs are
       supposed to be constant.
 
     IRF
-      Short for Instrument Response Function. They are used to model the probability
+      Short for "instrument response function": they are used to model the probability
       to detect a photon with a number of measured characteristics. See :ref:`irf-theory`
       and :ref:`irf`.
 
@@ -64,8 +106,16 @@ Glossary
       The likelihood is computed for each dataset and summed to get
       the total fit statistic. See :ref:`joint`
 
+    Maker
+      Gammapy utility classes performing data reduction of the DL3 data to binned datasets (DL4).
+      See :ref:`makers` and the :ref:`data flow <data_flow>`.
+
     MET
-      Short for Mission Elapsed Time; see also :ref:`MET_definition` in :ref:`time_handling`.
+      Short for "mission elapsed time". see also :ref:`MET_definition` in :ref:`time_handling`.
+
+    PSF
+      Short for "point spread function": it is the IRF representing the probability density of the angular separation
+      between true and reconstructed directions. See :ref:`irf-theory` and :ref:`irf-psf`.
 
     Reco Energy
       The reconstructed (or measured) energy (often written `e_reco`) is the energy of
@@ -73,10 +123,10 @@ Glossary
       such as counts are represented along a reco energy axis.
 
     Reflected Background
-      Background estimation method typically used for spectral analysis.
+      Background estimation method typically used for spectral analysis. See :ref:`makers`.
 
     Ring Background
-      Background estimation method typically used for image analysis.
+      Background estimation method typically used for image analysis. See :ref:`makers`.
 
     RoI
       Short for "region of interest": it indicates the spatial region in which the
@@ -95,6 +145,9 @@ Glossary
       The true energy (often written `e_true`) is the energy of the incident photon
       by contrast with the energy reconstructed by the instrument. Instrument response
       functions are represented along a true energy axis.
+
+    TS
+      Short for "test statistics". See :ref:`ts` and :ref:`fit-statistics`.
 
     WStat
       The WStat is a Poisson fit statistic usually used for ON-OFF analysis. It is

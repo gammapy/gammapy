@@ -72,6 +72,14 @@ from gammapy.maps import MapAxis, RegionGeom
 
 
 ######################################################################
+# Check setup
+# -----------
+from gammapy.utils.check import check_tutorials_setup
+
+check_tutorials_setup()
+
+
+######################################################################
 # Simulation of a single spectrum
 # -------------------------------
 # 

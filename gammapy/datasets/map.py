@@ -7,7 +7,7 @@ from astropy.table import Table
 from regions import CircleSkyRegion
 import matplotlib.pyplot as plt
 from gammapy.data import GTI
-from gammapy.irf import EDispKernelMap, EDispMap, PSFKernel, PSFMap
+from gammapy.irf import EDispKernelMap, EDispMap, PSFKernel, PSFMap, RecoPSFMap
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling.models import DatasetModels, FoVBackgroundModel
 from gammapy.stats import (
@@ -562,7 +562,10 @@ class MapDataset(Dataset):
                 kwargs["edisp"] = EDispMap.from_geom(geom_edisp)
 
         if geom_psf:
-            kwargs["psf"] = PSFMap.from_geom(geom_psf)
+            if "energy_true" in geom_psf.axes.names:
+                kwargs["psf"] = PSFMap.from_geom(geom_psf)
+            elif "energy" in geom_psf.axes.names:
+                kwargs["psf"] = RecoPSFMap.from_geom(geom_psf)
 
         kwargs.setdefault(
             "gti", GTI.create([] * u.s, [] * u.s, reference_time=reference_time)

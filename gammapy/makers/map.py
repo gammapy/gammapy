@@ -3,7 +3,7 @@ import logging
 import astropy.units as u
 from astropy.table import Table
 from regions import PointSkyRegion
-from gammapy.irf import EDispKernelMap, PSFMap
+from gammapy.irf import EDispKernelMap, PSFMap, RecoPSFMap
 from gammapy.data.pointing import PointingMode
 from gammapy.maps import Map
 from .core import Maker
@@ -303,6 +303,8 @@ class MapDatasetMaker(Maker):
 
         if isinstance(psf, PSFMap):
             return PSFMap(psf.psf_map.interp_to_geom(geom))
+        elif isinstance(psf, RecoPSFMap):
+            return RecoPSFMap(psf.psf_map.interp_to_geom(geom))
 
         exposure = self.make_exposure_irf(geom.squash(axis_name="rad"), observation)
 

@@ -78,6 +78,12 @@ from gammapy.modeling.models import (
 )
 from gammapy.modeling import Fit
 
+######################################################################
+# Check setup
+# -----------
+from gammapy.utils.check import check_tutorials_setup
+
+check_tutorials_setup()
 
 ######################################################################
 # Events
