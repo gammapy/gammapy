@@ -17,8 +17,10 @@ log = logging.getLogger(__name__)
 class LightCurveEstimator(FluxPointsEstimator):
     """Estimate light curve.
 
-    The estimator will fit the norm of the source model component to datasets in
-    each of the provided time intervals.
+    The estimator will apply flux point estimation on the source model component to datasets
+    in each of the provided time intervals.  The normalization is the only
+    parameter of the source model left free to vary. Other model components
+    can be left free to vary with the reoptimize option.
 
     If no time intervals are provided, the estimator will use the time intervals
     defined by the datasets GTIs.

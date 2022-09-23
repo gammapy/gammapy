@@ -7,7 +7,7 @@ from astropy.table import Table
 from regions import CircleSkyRegion
 import matplotlib.pyplot as plt
 from gammapy.data import GTI
-from gammapy.irf import EDispKernelMap, EDispMap, PSFKernel, PSFMap
+from gammapy.irf import EDispKernelMap, EDispMap, PSFKernel, PSFMap, RecoPSFMap
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling.models import DatasetModels, FoVBackgroundModel
 from gammapy.stats import (
@@ -562,7 +562,10 @@ class MapDataset(Dataset):
                 kwargs["edisp"] = EDispMap.from_geom(geom_edisp)
 
         if geom_psf:
-            kwargs["psf"] = PSFMap.from_geom(geom_psf)
+            if "energy_true" in geom_psf.axes.names:
+                kwargs["psf"] = PSFMap.from_geom(geom_psf)
+            elif "energy" in geom_psf.axes.names:
+                kwargs["psf"] = RecoPSFMap.from_geom(geom_psf)
 
         kwargs.setdefault(
             "gti", GTI.create([] * u.s, [] * u.s, reference_time=reference_time)
@@ -1103,6 +1106,10 @@ class MapDataset(Dataset):
         exclude_primary = slice(1, None)
 
         hdu_primary = fits.PrimaryHDU()
+
+        header = hdu_primary.header
+        header['NAME'] = self.name
+
         hdulist = fits.HDUList([hdu_primary])
         if self.counts is not None:
             hdulist += self.counts.to_hdulist(hdu="counts")[exclude_primary]
@@ -1230,6 +1237,7 @@ class MapDataset(Dataset):
 
     @classmethod
     def _read_lazy(cls, name, filename, cache, format=format):
+        name = make_name(name)
         kwargs = {"name": name}
         try:
             kwargs["gti"] = GTI.read(filename)
@@ -1289,15 +1297,19 @@ class MapDataset(Dataset):
         dataset : `MapDataset`
             Map dataset.
         """
-        name = make_name(name)
+
+        if name is None:
+            header = fits.getheader(str(make_path(filename)))
+            name = header.get("NAME", name)
+        ds_name = make_name(name)
 
         if lazy:
             return cls._read_lazy(
-                name=name, filename=filename, cache=cache, format=format
+                name=ds_name, filename=filename, cache=cache, format=format
             )
         else:
             with fits.open(str(make_path(filename)), memmap=False) as hdulist:
-                return cls.from_hdulist(hdulist, name=name, format=format)
+                return cls.from_hdulist(hdulist, name=ds_name, format=format)
 
     @classmethod
     def from_dict(cls, data, lazy=False, cache=True):

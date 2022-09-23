@@ -15,6 +15,7 @@ from gammapy.stats import cash_sum_cython, f_cash_root_cython, norm_bounds_cytho
 from gammapy.utils.array import shape_2N, symmetric_crop_pad_width
 from gammapy.utils.pbar import progress_bar
 from gammapy.utils.roots import find_roots
+from gammapy.datasets.utils import get_nearest_valid_exposure_position
 from ..core import Estimator
 from ..utils import estimate_exposure_reco_energy
 from .core import FluxMaps
@@ -215,7 +216,7 @@ class TSMapEstimator(Estimator):
     def estimate_kernel(self, dataset):
         """Get the convolution kernel for the input dataset.
 
-        Convolves the model with the PSFKernel at the center of the dataset.
+        Convolves the model with the IRFs at the center of the dataset (or at the nearest position with non-null exposure).
 
         Parameters
         ----------
@@ -236,10 +237,13 @@ class TSMapEstimator(Estimator):
         model = self.model.copy()
         model.spatial_model.position = geom.center_skydir
 
-        # Creating exposure map with exposure at map center
-        exposure = Map.from_geom(geom, unit="cm2 s1")
-        exposure_center = dataset.exposure.to_region_nd_map(geom.center_skydir)
-        exposure.data[...] = exposure_center.data
+        # Creating exposure map with the mean non-null exposure
+        exposure = Map.from_geom(geom, unit=dataset.exposure.unit)
+        position = get_nearest_valid_exposure_position(dataset.exposure, geom.center_skydir)
+        exposure_position = dataset.exposure.to_region_nd_map(position)
+        if not np.any(exposure_position.data):
+            raise ValueError("No valid exposure. Impossible to compute kernel for TS Map.")
+        exposure.data[...] = exposure_position.data
 
         # We use global evaluation mode to not modify the geometry
         evaluator = MapEvaluator(model=model)

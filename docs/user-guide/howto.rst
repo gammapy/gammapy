@@ -233,3 +233,80 @@ to your code:
     pbar.SHOW_PROGRESS_BAR = True
 
 .. accordion-footer::
+
+.. accordion-header::
+    :id: collapseHowToSeventeen
+    :title: Changing plotting style and color-blind friendly visualizations
+
+As the Gammapy visualisations are using the library `matplotlib` that provides color styles, it is possible to change the
+default colors map of the Gammapy plots. Using using the
+`style sheet of matplotlib <https://matplotlib.org/stable/gallery/style_sheets/style_sheets_reference.html>`_, you
+should add into your notebooks or scripts the following lines after the Gammapy imports:
+
+.. code::
+
+    import matplotlib.style as style
+    style.use('XXXX')
+    # with XXXX from `print(plt.style.available)`
+
+Note that you can create your own style with matplotlib (see
+`here <https://matplotlib.org/stable/tutorials/introductory/customizing.html>`_ and
+`here <https://matplotlib.org/stable/tutorials/colors/colormaps.html>`_)
+
+The CTA observatory released a document describing best practices for **data visualisation in a way friendly to
+color-blind people**:
+`CTAO document <https://www.cta-observatory.org/wp-content/uploads/2020/10/CTA_ColourBlindness_BestPractices2.pdf>`_. To
+use them, you should add into your notebooks or scripts the following lines after the Gammapy imports:
+
+.. code::
+
+    import matplotlib.style as style
+    style.use('tableau-colorblind10')
+
+or
+
+.. code::
+
+    import matplotlib.style as style
+    style.use('seaborn-colorblind')
+
+.. accordion-footer::
+
+.. accordion-header::
+    :id: collapseHowToEighteen
+    :title: Add PHASE information to your data
+
+For doing pulsar analysis, you must compute the phase associated
+to each event and then create a new `EventList` and a new `Observation`.
+Modifying the `EventList` of an `Observation` in-place is prohibited because of the
+underlying lazy loading implemented in reading observations.
+Code for computing phases is NOT provided within gammapy,
+and you must use an external s/w like PINT or TEMPO2. For brevity,
+this code example shows the only technical implementation
+using a dummy phase column.
+
+.. testcode::
+
+    import numpy as np
+    from gammapy.data import DataStore, Observation, EventList
+
+    # read the observation
+    datastore = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
+    obs = datastore.obs(23523)
+
+    # use the phase information - dummy in this example
+    phase = np.random.random(len(obs.events.table))
+
+    # create a new `EventList`
+    table = obs.events.table
+    table["PHASE"] = phase
+    events_new = EventList(table)
+
+    # copy the observation in memory, changing the events
+    o2 = obs.copy(events=events_new, in_memory=True)
+
+    # The new observation and the new events table can be serialised independently
+    o2.write("new_obs.fits.gz")
+    events_new.write("events.fits.gz", gti=obs.gti, overwrite=True)
+
+.. accordion-footer::

@@ -497,27 +497,26 @@ class FluxPoints(FluxMaps):
 
         # get errors and ul
         y_errn, y_errp = self._plot_get_flux_err(sed_type=sed_type)
-
         is_ul = self.is_ul.data
 
         if self.has_ul and y_errn and is_ul.any():
             flux_ul = getattr(self, sed_type + "_ul").quantity
-            y_errn.data[is_ul] = 0.5 * flux_ul[is_ul].to_value(y_errn.unit)
+            y_errn.data[is_ul] = np.clip(0.5 * flux_ul[is_ul].to_value(y_errn.unit), 0, np.inf)
             y_errp.data[is_ul] = 0
             flux.data[is_ul] = flux_ul[is_ul].to_value(flux.unit)
             kwargs.setdefault("uplims", is_ul)
 
         # set flux points plotting defaults
         if y_errp and y_errn:
-            y_errp = scale_plot_flux(y_errp, energy_power=energy_power).quantity
-            y_errn = scale_plot_flux(y_errn, energy_power=energy_power).quantity
+            y_errp = np.clip(scale_plot_flux(y_errp, energy_power=energy_power).quantity, 0, np.inf)
+            y_errn = np.clip(scale_plot_flux(y_errn, energy_power=energy_power).quantity, 0, np.inf)
             kwargs.setdefault("yerr", (y_errn, y_errp))
         else:
             kwargs.setdefault("yerr", None)
 
         flux = scale_plot_flux(flux=flux.to_unit(flux_unit), energy_power=energy_power)
         ax = flux.plot(ax=ax, **kwargs)
-        ax.set_ylabel(f"{sed_type} ({ax.yaxis.units})")
+        ax.set_ylabel(f"{sed_type} [{ax.yaxis.units}]")
         ax.set_yscale("log")
         return ax
 

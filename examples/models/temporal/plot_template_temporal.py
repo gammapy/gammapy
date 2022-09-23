@@ -4,8 +4,7 @@ r"""
 Light curve temporal model
 ==========================
 
-This model parametrises a lightCurve time model.
-
+This model parametrises a LightCurve time model.
 
 """
 

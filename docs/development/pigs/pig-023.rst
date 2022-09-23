@@ -1,0 +1,130 @@
+. include:: ../../references.txt
+
+.. _pig-023:
+
+****************************************************
+PIG 23 - Gammapy release cycle and version numbering
+****************************************************
+
+* Author: Régis Terrier, Axel Donath
+* Created: May 12th, 2022
+* Accepted: September 2nd, 2022
+* Status: accepted
+* Discussion: `GH 3950`_
+
+Abstract
+========
+
+This PIG proposes the general plan for timing of releases and their version numbers to start
+with the release v1.0. Following the approach of astropy (described in APE 2), versions numbered
+vX.0 are designated "long-term support" (LTS) and are released on typical timescales
+of two years. New features releases have a shorter cycle of about 6 months and are numbered
+X.Y (with Y>0). Bugfix releases are applied on both the current feature release and the LTS
+releases when needed. The development procedure to implement this scheme is detailed.
+
+
+Current status
+==============
+
+Until v0.20, Gammapy releases have mostly been new feature releases in order to
+build a complete set of functionalities with a stable API for the v1.0 release.
+This approach and release cycles were described in the roadmap for
+v1.0 PIG :ref:`pig-005`. Releases cycles have varied between every two months and
+once a year. The six-month timescale has been found to be most practical both for users
+and developers.
+
+Version 1.0 is the first one that requires "long-term-support" (LTS) to allow
+for users and facilities relying on Gammapy not to always upgrade to the
+latest version while still having the guarantee that major bugs will be
+corrected. Implementing this requires to precisely define the numbering scheme
+and to specify the associated development plan in terms of calendar, workflow
+(development branches), deprecation and backward compatibility. A first discussion
+on this took place during January 2022 co-working
+[week](https://github.com/gammapy/gammapy-meetings/tree/master/coding-sprints/2022-01-Co-Working-Week).
+
+Release scheduling and LTS
+==========================
+
+Following on the current scheme, a typical timescale between new feature releases is 6 months.
+More rapid releases can occur when important new features are to be distributed to users.
+Feature releases can introduce backwards incompatible changes w.r.t. previous versions.
+Those changes have to be mentioned in the release notes.
+
+In addition, feature versions can be corrected by bug fix releases.
+A bugfix must neither introduce new major functionality nor break backwards compatibility in the
+public API, unless the API has an actual mistake that needs to be fixed.
+Documentation improvements can be part of a bugfix release. Bugfixes are
+applied to the current feature release.
+
+Finally, long-term support (LTS) releases will have a timescale of about 2 years (or about
+3-4 feature releases) and will continue to receive bugfixes until the next LTS release
+to guarantee long term stability. Bugs affecting both the LTS and latest feature releases
+will be corrected on both branches. This will require a careful cherry picking of commits.
+
+Version numbering
+=================
+
+Gammapy will follow the astropy version scheme i.e. a scheme following the
+[semantic versioning](https://semver.org) of the form ``x.y.z``, with typically::
+
+* 1.0.0 (LTS release)
+* 1.0.1 (bug fix release)
+* 1.0.2
+* 1.1.0 (six months after 1.0.0)
+* 1.1.1 (bug fix release on the feature branch)
+* 1.0.3 (bug fix release on the LTS)
+* 1.1.2
+* 1.2.0 (six months after 1.1.0)
+* 1.2.1
+* 1.3.0 (six months after 1.2.0)
+* 1.0.4 (bug fix release on the LTS)
+* 1.3.1 (bug fix release on the feature branch)
+* 2.0.0 (LTS release, six months after 1.3.0)
+
+
+Release preparation, feature freeze
+===================================
+
+To prepare for a new feature release. A feature freeze has to occur typically one month
+before the planned release date. From that point no new major feature is accepted for
+the coming release. Open pull requests planned for the release should be merged within
+two weeks of the feature freeze. If they are carried out in the same timescale,
+minor improvements, bug fixes, or documentation additions are still acceptable.
+
+No alpha or beta release ar expected for Gammapy. For testing purposes, a release candidate
+is released on the Python Package Index two weeks before the expected release. Conda distribution
+of the release candidate is not foreseen at the moment. Release candidates will be produced
+for all LTS and feature releases. Bug fix releases won't go through the release candidate step.
+
+If issues are found, they should be corrected before the actual release is made. This can lead
+to a delay in the release.
+
+Once the version is tagged, specific branches must be created for the feature and backport
+developments. This process will require a detailed description in the developer documentation.
+
+Deprecation
+===========
+
+API breaking changes can be introduced in feature and LTS releases. This changes must be clearly identified
+in the release notes. To avoid abruptly changing the API between consecutive version, forecoming API
+changes and deprecation should be announced in the previous release. In particular, a deprecation warning
+system should be applied to warn users of future changes affecting their code.
+
+
+Support of python Cython, numpy and astropy versions
+====================================================
+
+see [APE 18](https://github.com/astropy/astropy-APEs/blob/main/APE18.rst)
+see [NEP 29](https://numpy.org/neps/nep-0029-deprecation_policy.html)
+
+
+Decision
+========
+
+The PIG was discussed in `GH 3950`_ and during a coordination committee meeting. It received
+few but positive comments. Some training was organized for core developers and maintainers
+during the July 2022
+[co-working week](https://github.com/gammapy/gammapy-meetings/tree/master/coding-sprints/2022-06-Barcelona).
+The PIG was accepted on September 2nd 2022.
+
+.. _GH 3950: https://github.com/gammapy/gammapy/pull/3950

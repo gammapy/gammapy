@@ -1,17 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import pytest
 from gammapy.utils.scripts import (
     get_images_paths,
-    get_notebooks_paths,
     recursive_merge_dicts,
 )
 
 
+@pytest.mark.xfail
 def test_get_images_paths():
     assert any("images" in str(p) for p in get_images_paths())
-
-
-def test_get_notebooks_paths():
-    assert any("maps.ipynb" in str(p) for p in get_notebooks_paths())
 
 
 def test_recursive_merge_dicts():

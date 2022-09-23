@@ -108,10 +108,6 @@ shows how to run it on a few observations with a rectangular region.
 .. plot:: user-guide/makers/make_rectangular_reflected_background.py
     :include-source:
 
-The following notebook shows an example using
-`~gammapy.makers.ReflectedRegionsBackgroundMaker` to perform a spectral
-extraction and fitting:
 
-.. nbgallery::
-
-   ../../tutorials/analysis/1D/spectral_analysis.ipynb
+.. minigallery:: gammapy.makers.ReflectedRegionsBackgroundMaker
+    :add-heading:
