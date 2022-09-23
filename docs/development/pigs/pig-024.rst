@@ -59,12 +59,12 @@ This citation scheme with these **two references** will be given on our web page
 ====================
 
 The Gammapy references contain a list of authors that requires to be updated with time according to a
-general policy. This section defines what is a `contributor` to Gammapy and the policy for each type of product.
+general policy. This section defines who is a `contributor` to Gammapy and the policy for each type of product.
 
 Definition of a `Contributor`
 -----------------------------
 
-Contributing to Gammapy can be made in different ways:
+Contributions to Gammapy can be made in different ways:
 
 - contributing to gammapy source code,
 - contributing to our documentation (rst pages, docstring, gammapy-webpage),
