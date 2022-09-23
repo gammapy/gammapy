@@ -20,6 +20,8 @@ class FluxEstimator(ParameterEstimator):
     which specifies the deviation of the flux from the reference model in this
     energy range.
 
+    Note that there should be only one free norm or amplitude parameter for the estimator to run.
+
     Parameters
     ----------
     source : str or int
