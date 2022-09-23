@@ -1012,7 +1012,7 @@ class Map(abc.ABC):
 
         return Map.from_geom(geom, data=data, unit=self.unit)
 
-    def reproject_to_geom(self, geom, preserve_counts=False, precision_factor=10, axis_name=None):
+    def reproject_to_geom(self, geom, preserve_counts=False, precision_factor=10):
         """Reproject map to input geometry.
 
         Parameters
@@ -1077,8 +1077,7 @@ class Map(abc.ABC):
                                                     axis_name=base_ax.name)
             output_map = output_map.resample(geom,
                                             preserve_counts=preserve_counts
-                                            )            
-
+                                            )
         return output_map
 
 

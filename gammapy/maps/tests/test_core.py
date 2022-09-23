@@ -490,21 +490,19 @@ def test_map_plot_mask():
     with mpl_plot_check():
         mask.plot_mask()
 
-       
+
 def test_reproject_2d():
-    npix1=3 
+    npix1 = 3
     geom1 = WcsGeom.create(npix=npix1, frame="icrs")
-    geom1_large = WcsGeom.create(npix=npix1+5, frame="icrs")
+    geom1_large = WcsGeom.create(npix=npix1 + 5, frame="icrs")
     map1 = Map.from_geom(geom1, data=np.eye(npix1))
 
     factor = 10
     binsz = 0.5 / factor
-    npix2 = 7 * factor 
-    geom2 = WcsGeom.create(skydir=SkyCoord(0.1,0.1, unit=u.deg),
-                           binsz=binsz,
-                           npix=npix2,
-                           frame="galactic"
-                           )
+    npix2 = 7 * factor
+    geom2 = WcsGeom.create(
+        skydir=SkyCoord(0.1, 0.1, unit=u.deg), binsz=binsz, npix=npix2, frame="galactic"
+    )
 
     map1_repro = map1.reproject_to_geom(geom2, preserve_counts=True)
     assert_allclose(np.sum(map1_repro), np.sum(map1), rtol=1e-5)
@@ -513,20 +511,19 @@ def test_reproject_2d():
 
     map1_repro = map1.reproject_to_geom(geom2, preserve_counts=False)
     map1_new = map1_repro.reproject_to_geom(geom1_large, preserve_counts=False)
-    assert_allclose(np.sum(map1_repro*geom2.solid_angle()),
-                    np.sum(map1_new*geom1_large.solid_angle()),
-                    rtol=1e-3
-                    )
-    
+    assert_allclose(
+        np.sum(map1_repro * geom2.solid_angle()),
+        np.sum(map1_new * geom1_large.solid_angle()),
+        rtol=1e-3,
+    )
+
     factor = 0.5
     binsz = 0.5 / factor
     npix = 7
-    geom2 = WcsGeom.create(skydir=SkyCoord(0.1,0.1, unit=u.deg),
-                           binsz=binsz,
-                           npix=npix,
-                           frame="galactic"
-                           )
-    geom1_large = WcsGeom.create(npix=npix1+5, frame="icrs")
+    geom2 = WcsGeom.create(
+        skydir=SkyCoord(0.1, 0.1, unit=u.deg), binsz=binsz, npix=npix, frame="galactic"
+    )
+    geom1_large = WcsGeom.create(npix=npix1 + 5, frame="icrs")
 
     map1_repro = map1.reproject_to_geom(geom2, preserve_counts=True)
     assert_allclose(np.sum(map1_repro), np.sum(map1), rtol=1e-5)
@@ -535,10 +532,11 @@ def test_reproject_2d():
 
     map1_repro = map1.reproject_to_geom(geom2, preserve_counts=False)
     map1_new = map1_repro.reproject_to_geom(geom1_large, preserve_counts=False)
-    assert_allclose(np.sum(map1_repro*geom2.solid_angle()),
-                    np.sum(map1_new*geom1_large.solid_angle()),
-                    rtol=1e-3
-                    )
+    assert_allclose(
+        np.sum(map1_repro * geom2.solid_angle()),
+        np.sum(map1_new * geom1_large.solid_angle()),
+        rtol=1e-3,
+    )
 
 
 def test_resample_wcs_Wcs():
@@ -549,13 +547,14 @@ def test_resample_wcs_Wcs():
     geom2 = WcsGeom.create(
         skydir=SkyCoord(0.0, 0.0, unit=u.deg), binsz=0.5, npix=7, frame="galactic"
     )
-    
+
     map2 = map1.resample(geom2, preserve_counts=False)
     assert_allclose(
-            np.sum(map2 * geom2.solid_angle()),
-            np.sum(map1 * geom1.solid_angle()),
-            rtol=1e-3,
-        )
+        np.sum(map2 * geom2.solid_angle()),
+        np.sum(map1 * geom1.solid_angle()),
+        rtol=1e-3,
+    )
+
 
 def test_resample_weights():
     npix1 = 3
@@ -565,9 +564,10 @@ def test_resample_weights():
     geom2 = WcsGeom.create(
         skydir=SkyCoord(0.0, 0.0, unit=u.deg), binsz=0.5, npix=7, frame="galactic"
     )
-    
+
     map2 = map1.resample(geom2, weights=np.zeros(npix1), preserve_counts=False)
-    assert np.sum(map2.data) == 0.
+    assert np.sum(map2.data) == 0.0
+
 
 def test_resample_downsample_wcs():
     geom_fine = WcsGeom.create(npix=(15, 15), frame="icrs")
@@ -587,7 +587,9 @@ def test_resample_downsample_axis():
     map_fine.data = np.arange(108).reshape((12, 3, 3))
 
     map_downsampled = map_fine.downsample(3, axis_name="energy", preserve_counts=False)
-    map_resampled = map_fine.resample(geom_fine.downsample(3, axis_name="energy"), preserve_counts=False)
+    map_resampled = map_fine.resample(
+        geom_fine.downsample(3, axis_name="energy"), preserve_counts=False
+    )
 
     assert_allclose(map_downsampled, map_resampled, rtol=1e-5)
 
@@ -598,14 +600,15 @@ def test_resample_wcs_hpx():
     geom2 = HpxGeom.create(
         skydir=SkyCoord(0.0, 0.0, unit=u.deg), nside=8, frame="galactic"
     )
-    
+
     map2 = map1.resample(geom2, weights=map1.quantity, preserve_counts=False)
     assert_allclose(
         np.sum(map2 * geom2.solid_angle()),
         np.sum(map1 * geom1.solid_angle()),
         rtol=1e-3,
     )
-    
+
+
 def test_map_reproject_wcs_to_hpx():
     axis = MapAxis.from_bounds(
         1.0, 10.0, 3, interp="log", name="energy", node_type="center"
@@ -627,6 +630,7 @@ def test_map_reproject_wcs_to_hpx():
 
     with pytest.raises(TypeError):
         m.reproject_to_geom(geom_hpx)
+
 
 def test_map_reproject_hpx_to_wcs():
     axis = MapAxis.from_bounds(
@@ -657,9 +661,10 @@ def test_map_reproject_hpx_to_wcs():
     with pytest.raises(TypeError):
         m.reproject_to_geom(geom_wcs2)
 
+
 def test_map_reproject_wcs_to_wcs_with_axes():
-    energy_nodes = np.arange(4)-0.5
-    time_nodes = np.arange(5)-0.5
+    energy_nodes = np.arange(4) - 0.5
+    time_nodes = np.arange(5) - 0.5
 
     axis1 = MapAxis(energy_nodes, interp="lin", name="energy", node_type="edges")
     axis2 = MapAxis(time_nodes, interp="lin", name="time", node_type="edges")
@@ -670,52 +675,54 @@ def test_map_reproject_wcs_to_wcs_with_axes():
         axes=[axis1, axis2],
         frame="icrs",
     )
-    geom_wcs_2 = WcsGeom.create(skydir=(0, 0), npix=(11, 11), binsz=0.1, frame="galactic")
-    
+    geom_wcs_2 = WcsGeom.create(
+        skydir=(0, 0), npix=(11, 11), binsz=0.1, frame="galactic"
+    )
+
     spatial_data = np.zeros((11, 11))
     energy_data = axis1.center.reshape(3, 1, 1)
     time_data = axis2.center.reshape(4, 1, 1, 1)
     data = spatial_data + energy_data + 0.5 * time_data
     m = WcsNDMap(geom_wcs_1, data=data)
-    
+
     m_r = m.reproject_to_geom(geom_wcs_2)
     assert m.data.shape == m_r.data.shape
 
-    geom_wcs_3 = geom_wcs_1.copy(axes= [axis1, axis2])
+    geom_wcs_3 = geom_wcs_1.copy(axes=[axis1, axis2])
     m_r_3 = m.reproject_to_geom(geom_wcs_3, preserve_counts=False)
     for data, idx in m_r_3.iter_by_image_data():
         ref = idx[1] + 0.5 * idx[0]
-        if np.any(data>0):
-            assert_allclose(np.nanmean(data[data>0]), ref)
+        if np.any(data > 0):
+            assert_allclose(np.nanmean(data[data > 0]), ref)
 
     factor = 2
-    axis1_up =  axis1.upsample(factor=factor)
-    axis2_up =  axis2.upsample(factor=factor)
-    geom_wcs_4 = geom_wcs_1.copy(axes= [axis1_up, axis2_up])
+    axis1_up = axis1.upsample(factor=factor)
+    axis2_up = axis2.upsample(factor=factor)
+    geom_wcs_4 = geom_wcs_1.copy(axes=[axis1_up, axis2_up])
     m_r_4 = m.reproject_to_geom(geom_wcs_4, preserve_counts=False)
     for data, idx in m_r_4.iter_by_image_data():
-        ref = int(idx[1]/factor) + 0.5 * int(idx[0]/factor)
-        if np.any(data>0):
-            assert_allclose(np.nanmean(data[data>0]), ref)
+        ref = int(idx[1] / factor) + 0.5 * int(idx[0] / factor)
+        if np.any(data > 0):
+            assert_allclose(np.nanmean(data[data > 0]), ref)
+
 
 def test_wcsndmap_reproject_allsky_car():
     geom = WcsGeom.create(binsz=10.0, proj="CAR", frame="icrs")
     m = WcsNDMap(geom)
-    mask = m.geom.get_coord()[0]>180*u.deg
+    mask = m.geom.get_coord()[0] > 180 * u.deg
     m.data = mask.astype(float)
 
-    
     geom0 = WcsGeom.create(
         binsz=20, proj="CAR", frame="icrs", skydir=(180.0, 0.0), width=20
     )
-    expected =  np.mean([m.data[0,0], m.data[0,-1]]) #wrap at 180deg
+    expected = np.mean([m.data[0, 0], m.data[0, -1]])  # wrap at 180deg
 
     m0 = m.reproject_to_geom(geom0)
     assert_allclose(m0.data[0], expected)
 
     geom1 = HpxGeom.create(binsz=5.0, frame="icrs")
     m1 = m.reproject_to_geom(geom1)
-    mask = np.abs(m1.geom.get_coord()[0]-180)<=5
+    mask = np.abs(m1.geom.get_coord()[0] - 180) <= 5
     assert_allclose(np.unique(m1.data[mask])[1], expected)
 
 
@@ -775,7 +782,8 @@ def test_split_by_axis():
     )
     maps = m_4d.split_by_axis("time")
     assert len(maps) == 3
-    
+
+
 def test_rename_axes():
     time_axis = MapAxis.from_bounds(
         0,
