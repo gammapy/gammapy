@@ -44,7 +44,7 @@ releases, the Long Term Support (LTS) releases, the general Gammapy papers, and 
 ==================================
 
 When Gammapy is used for any publication, contribution to conferences or software, authors should properly cite Gammapy.
-It is asked to cite the DOI of the used Gammapy version as well as the associated paper (e.g. about the latest LTS
+It is asked to cite the DOI of the used Gammapy version as well as the associated paper (e.g. the latest LTS
 release).
 
 .. note::
