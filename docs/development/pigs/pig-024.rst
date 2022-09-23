@@ -80,7 +80,7 @@ Any contribution without threshold on these topics renders a user as official Ga
 are tracked using the GitHub contributions. However, the use of personal data is regulated in Europe and one should have the
 authorisation of users to be cited with their personal information (typically, their affiliation and their ORCID if any).
 For this reason, we propose to use the GitHub `Developer Certificate of Origin <https://github.com/apps/dco>`_ (DCO) on
-Pull Request. This lightweight way for contributors will permit to:
+Pull Request. Its acceptation by contributors will permit to:
 
 - certify that a user wrote or otherwise has the right to submit a code under our open source licence,
 - allow our project to use their personal data for the contributions' record (ie for releases).
@@ -111,7 +111,8 @@ Releases
 Each Gammapy release should be associated with an updated list of authors that will be public on repository (Zenodo and
 HAL/SW). This section is about feature or bug releases, not the LTS release. The list of authors is composed by people
 who contributed to the current release, as listed in the previous sub-section, who have accepted the GitHub DCO. If the
-DCO is not accepted during the Pull Requests, this user will not be in the list of authors per default.
+DCO is not accepted by a contributor, her/his contribution might not be usable and thus this user will not be in the
+list of authors per default.
 
 The order of the authors is first 'The Gammapy team', followed by the list of contributors in alphabetical order:
 
@@ -235,6 +236,11 @@ data, ``LTS_AUTHORS.cff``. This file will be used to create the associated ``cod
 
 5. Possible implementation
 ==========================
+
+Today, the tool offered by GitHub to sign the DCO is to add the extra parameter ``-s`` to each git commit. Users have to
+be aware of that and get used of it. For the reviewers, a github CI can be used to check quickly if a contributor has
+signed the DCO. This method will be used for the moment. If there is any other method that avoids this extra parameter,
+one will naturally consider it.
 
 In order to respect these rules, some automation is required to create the list of contributors. One could use
 the Python library `Tributors <https://con.github.io/tributors/>`_. This library uses the GitHub API to determine the
