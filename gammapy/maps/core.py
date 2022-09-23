@@ -136,7 +136,7 @@ class Map(abc.ABC):
 
     def rename_axes(self, names, new_names):
         """Rename the Map axes.
-    
+
         Parameters
         ----------
         names : list or str
@@ -1041,45 +1041,49 @@ class Map(abc.ABC):
         if not geom.is_image:
             if geom.axes.names != geom3d.axes.names:
                 raise ValueError("Axis names and order should be the same.")
-            if geom.axes != geom3d.axes and (isinstance(geom3d, HpxGeom) or isinstance(self.geom, HpxGeom)):
-                raise TypeError("Reprojection to 3d geom with non-identical axes is not supported for HpxGeom."
-                        "Reproject to 2d geom first and then use inter_to_geom method"
-                        ) 
+            if geom.axes != geom3d.axes and (
+                isinstance(geom3d, HpxGeom) or isinstance(self.geom, HpxGeom)
+            ):
+                raise TypeError(
+                    "Reprojection to 3d geom with non-identical axes is not supported for HpxGeom. "
+                    "Reproject to 2d geom first and then use inter_to_geom method."
+                )
         if isinstance(geom3d, RegionGeom):
-            base_factor = geom3d.to_wcs_geom().pixel_scales.min()/self.geom.pixel_scales.min()
+            base_factor = (
+                geom3d.to_wcs_geom().pixel_scales.min() / self.geom.pixel_scales.min()
+            )
         elif isinstance(self.geom, RegionGeom):
-            base_factor = geom3d.pixel_scales.min()/self.geom.to_wcs_geom().pixel_scales.min()
+            base_factor = (
+                geom3d.pixel_scales.min() / self.geom.to_wcs_geom().pixel_scales.min()
+            )
         else:
-            base_factor = geom3d.pixel_scales.min()/self.geom.pixel_scales.min()
+            base_factor = geom3d.pixel_scales.min() / self.geom.pixel_scales.min()
 
         if base_factor >= precision_factor:
             input_map = self
         else:
             factor = precision_factor / base_factor
             if isinstance(self.geom, HpxGeom):
-                factor = int(2**np.ceil(np.log(factor)/np.log(2)))
+                factor = int(2 ** np.ceil(np.log(factor) / np.log(2)))
             else:
                 factor = int(np.ceil(factor))
             input_map = self.upsample(factor=factor, preserve_counts=preserve_counts)
 
-        output_map = input_map.resample(geom3d,
-                            preserve_counts=preserve_counts
-                            )
+        output_map = input_map.resample(geom3d, preserve_counts=preserve_counts)
 
         if not geom.is_image and geom.axes != geom3d.axes:
             for base_ax, target_ax in zip(geom3d.axes, geom.axes):
-                base_factor = base_ax.bin_width.min()/target_ax.bin_width.min()
-                if not  base_factor >= precision_factor:
+                base_factor = base_ax.bin_width.min() / target_ax.bin_width.min()
+                if not base_factor >= precision_factor:
                     factor = precision_factor / base_factor
                     factor = int(np.ceil(factor))
-                    output_map = output_map.upsample(factor=factor,
-                                                    preserve_counts=preserve_counts,
-                                                    axis_name=base_ax.name)
-            output_map = output_map.resample(geom,
-                                            preserve_counts=preserve_counts
-                                            )
+                    output_map = output_map.upsample(
+                        factor=factor,
+                        preserve_counts=preserve_counts,
+                        axis_name=base_ax.name,
+                    )
+            output_map = output_map.resample(geom, preserve_counts=preserve_counts)
         return output_map
-
 
     def fill_events(self, events):
         """Fill event coordinates (`~gammapy.data.EventList`)."""
@@ -1869,7 +1873,6 @@ class Map(abc.ABC):
 
     def __array__(self):
         return self.data
-
 
     def sample_coord(self, n_events, random_state=0):
         """Sample position and energy of events.
