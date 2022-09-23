@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
@@ -16,9 +17,10 @@ from gammapy.modeling.models import (
     SkyModel,
 )
 from gammapy.utils.gauss import Gauss2DPDF
+from gammapy.utils.testing import mpl_plot_check
 
-
-def test_compute_flux_spatial():
+@pytest.fixture
+def evaluator():
     center = SkyCoord("0 deg", "0 deg", frame="galactic")
     region = CircleSkyRegion(center=center, radius=0.1 * u.deg)
 
@@ -42,7 +44,10 @@ def test_compute_flux_spatial():
     geom = RegionGeom(region, axes=[energy_axis_true], binsz_wcs="0.01deg")
     psf = PSFKernel.from_gauss(geom.to_wcs_geom(), sigma="0.1 deg")
 
-    evaluator = MapEvaluator(model=model[0], exposure=exposure_region, psf=psf)
+    return MapEvaluator(model=model[0], exposure=exposure_region, psf=psf)
+
+
+def test_compute_flux_spatial(evaluator):
     flux = evaluator.compute_flux_spatial()
 
     g = Gauss2DPDF(0.1)
@@ -50,33 +55,11 @@ def test_compute_flux_spatial():
     assert_allclose(flux.value, reference, rtol=0.003)
 
 
-def test_compute_flux_spatial_no_psf():
+def test_compute_flux_spatial_no_psf(evaluator):
     # check that spatial integration is not performed in the absence of a psf
-    center = SkyCoord("0 deg", "0 deg", frame="galactic")
-    region = CircleSkyRegion(center=center, radius=0.1 * u.deg)
-
-    nbin = 2
-    energy_axis_true = MapAxis.from_energy_bounds(
-        ".1 TeV", "10 TeV", nbin=nbin, name="energy_true"
-    )
-
-    spectral_model = ConstantSpectralModel()
-    spatial_model = GaussianSpatialModel(
-        lon_0=0 * u.deg, lat_0=0 * u.deg, frame="galactic", sigma="0.1 deg"
-    )
-
-    models = SkyModel(spectral_model=spectral_model, spatial_model=spatial_model)
-    model = Models(models)
-
-    exposure_region = RegionNDMap.create(
-        region, axes=[energy_axis_true], unit="m2 s", data=1.0
-    )
-
-    evaluator = MapEvaluator(model=model[0], exposure=exposure_region)
+    evaluator.psf = None
     flux = evaluator.compute_flux_spatial()
-
     assert_allclose(flux, 1.0)
-
 
 def test_large_oversampling():
     nbin = 2
@@ -197,3 +180,7 @@ def test_psf_reco():
     assert evaluator.apply_psf_after_edisp == True
     assert evaluator.methods_sequence[-1] == evaluator.apply_psf
     assert_allclose(evaluator.compute_npred().data.sum(),  9e-12)
+    
+def test_peek(evaluator):
+    with mpl_plot_check():
+        evaluator.peek()
