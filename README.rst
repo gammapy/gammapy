@@ -41,7 +41,7 @@ goal is to keep this a positive, inclusive, successful, and growing community by
 `Gammapy Community Code of Conduct <https://gammapy.org/CoC.html>`_.
 
 The Gammapy project uses a mechanism known as a `Developer Certificate of Origin (DCO) <https://github.com/apps/dco>`_
-to manage the legal aspect of contributions. The DCO is a legally binding statement that asserts that you are the
+to manage the contributions to our open source projet. The DCO is a binding statement that asserts that you are the
 creator of your contribution, and that you wish to allow Gammapy to use your work to cite you as contributor.
 Acknowledgement of this permission is described in the `Developer guide <https://docs.gammapy.org/dev/development/intro.html#Acceptation-of-the-Developer-Certificate-of-Origin-(DCO)>`_ of the official documentation.
 
