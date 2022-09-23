@@ -538,10 +538,10 @@ def test_psf_map_reco(tmpdir):
         position=SkyCoord(1, 1, unit="deg"), geom=kern_geom, max_radius=1 * u.deg
     )
     assert "energy" in kern_geom.axes.names
-    
+
     psfkernel.to_image()
     psf_map.to_image()
-    
+
     coords_in = MapCoord(
         {"lon": [0, 0] * u.deg, "lat": [0, 0.5] * u.deg, "energy": [1, 3] * u.TeV},
         frame="icrs",
@@ -549,10 +549,26 @@ def test_psf_map_reco(tmpdir):
     coords = psf_map.sample_coord(map_coord=coords_in)
     assert coords.frame == "icrs"
     assert len(coords.lon) == 2
-    
+
     with mpl_plot_check():
         psf_map.plot_containment_radius_vs_energy()
-        
+
     with mpl_plot_check():
         psf_map.plot_psf_vs_rad()
 
+@requires_data()
+def test_psf_map_reco_hawc():
+    filename = "$GAMMAPY_DATA/hawc/crab_events_pass4/irfs/PSFMap_Crab_fHitbin4NN.fits.gz"
+    reco_psf_map = RecoPSFMap.read(filename, format="gadf")
+
+    assert "energy" in reco_psf_map.psf_map.geom.axes.names
+    assert reco_psf_map.energy_name == "energy"
+    assert reco_psf_map.required_axes == ["rad", "energy"]
+
+    with mpl_plot_check():
+        reco_psf_map.plot_containment_radius_vs_energy()
+
+    with mpl_plot_check():
+        reco_psf_map.plot_psf_vs_rad()
+
+    assert_allclose(reco_psf_map.containment_radius(0.68, [1,2]*u.TeV),[2.2477739, 0.29803777]*u.deg)
