@@ -6,8 +6,8 @@ from astropy import units as u
 from astropy.table import Table
 from astropy.time import Time
 from astropy.utils import lazyproperty
-from gammapy.maps import RegionNDMap, TimeMapAxis
-from gammapy.modeling import Parameter
+from gammapy.maps import RegionNDMap, TimeMapAxis, MapAxis
+from gammapy.modeling import Parameter, Parameters
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.scripts import make_path
 from gammapy.utils.time import time_ref_from_dict
@@ -22,6 +22,7 @@ __all__ = [
     "LinearTemporalModel",
     "PowerLawTemporalModel",
     "SineTemporalModel",
+    "TemplatePhaseCurveTemporalModel",
     "TemporalModel",
 ]
 
@@ -69,7 +70,7 @@ class TemporalModel(ModelBase):
         # TODO: this is a work-around for https://github.com/astropy/astropy/issues/10501
         return u.Quantity(np.sum(diff.to_value("day")), "day")
 
-    def plot(self, time_range, ax=None, **kwargs):
+    def plot(self, time_range, ax=None, n_points=100, **kwargs):
         """
         Plot Temporal Model.
 
@@ -79,6 +80,8 @@ class TemporalModel(ModelBase):
             times to plot the model
         ax : `~matplotlib.axes.Axes`, optional
             Axis to plot on
+        n_points : int
+            Number of bins to plot model
         **kwargs : dict
             Keywords forwarded to `~matplotlib.pyplot.errorbar`
 
@@ -89,7 +92,7 @@ class TemporalModel(ModelBase):
         """
         time_min, time_max = time_range
         time_axis = TimeMapAxis.from_time_bounds(
-            time_min=time_min, time_max=time_max, nbin=100
+            time_min=time_min, time_max=time_max, nbin=n_points
         )
 
         m = RegionNDMap.create(region=None, axes=[time_axis])
@@ -662,3 +665,227 @@ class SineTemporalModel(TemporalModel):
             - np.sin(omega * (t_min - t_ref).to_value("day"))
         )
         return value / self.time_sum(t_min, t_max)
+
+
+class TemplatePhaseCurveTemporalModel(TemporalModel):
+    """Temporal phase curve model.
+
+    A timing solution is used to compute the phase corresponding to time and
+    a template phase curve is used to determine the associated ``norm``.
+
+    The phasecurve is given as a table with columns ``phase`` and ``norm``.
+
+    The ``norm`` is supposed to be a unit-less multiplicative factor in the model,
+    to be multiplied with a spectral model.
+
+    The model does linear interpolation for times between the given ``(phase, norm)`` values.
+
+    The implementation currently uses `scipy.interpolate. InterpolatedUnivariateSpline`,
+    using degree ``k=1`` to get linear interpolation.
+    This class also contains an ``integral`` method, making the computation of
+    mean fluxes for a given time interval a one-liner.
+
+    Parameters
+    ----------
+    table : `~astropy.table.Table`
+        A table with 'PHASE' vs 'NORM'
+    filename : str
+        The name of the file containing the phase curve
+    t_ref : `~astropy.units.Quantity`
+        The reference time in mjd
+    phi_ref : `~astropy.units.Quantity`
+        The phase at reference time. Default is 0.
+    f0 : `~astropy.units.Quantity`
+        The frequency at t_ref in s-1
+    f1 : `~astropy.units.Quantity`
+        The frequency derivative at t_ref in s-2. Default is 0 s-2.
+    f2 : `~astropy.units.Quantity`
+        The frequency second derivative at t_ref in s-3. Default is 0 s-3.
+    """
+
+    tag = ["TemplatePhaseCurveTemporalModel", "template-phase"]
+    _t_ref_default = Time(48442.5, format="mjd")
+    _phi_ref_default = 0
+    _f0_default = 29.946923 * u.s**-1
+    _f1_default = 0 * u.s**-2
+    _f2_default = 0 * u.s**-3
+
+    t_ref = Parameter("t_ref", _t_ref_default.mjd, unit="day", frozen=True)
+    phi_ref = Parameter("phi_ref", _phi_ref_default, unit="", frozen=True)
+    f0 = Parameter("f0", _f0_default, frozen=True)
+    f1 = Parameter("f1", _f1_default, frozen=True)
+    f2 = Parameter("f2", _f2_default, frozen=True)
+
+    def __init__(self, table, filename=None, **kwargs):
+        self.table = table
+        if filename is not None:
+            filename = str(make_path(filename))
+        self.filename = filename
+        super().__init__(**kwargs)
+
+    @classmethod
+    def read(
+        cls,
+        path,
+        t_ref=_t_ref_default.mjd * u.d,
+        phi_ref=_phi_ref_default,
+        f0=_f0_default,
+        f1=_f1_default,
+        f2=_f2_default,
+    ):
+        """Read phasecurve model table from FITS file.
+
+        Beware : this does **not** read parameters.
+        They will be set to defaults.
+
+        Parameters
+        ----------
+        path : str or `~pathlib.Path`
+            filename with path
+        """
+        filename = str(make_path(path))
+        return cls(
+            Table.read(filename),
+            filename=filename,
+            t_ref=t_ref,
+            phi_ref=phi_ref,
+            f0=f0,
+            f1=f1,
+            f2=f2,
+        )
+
+    @staticmethod
+    def _time_to_phase(time, t_ref, phi_ref, f0, f1, f2):
+        """Convert time to phase given timing solution parameters.
+
+        Parameters
+        ----------
+        time : `~astropy.units.Quantity`
+            The time at which to compute the phase
+        t_ref : `~astropy.units.Quantity`
+            The reference time in mjd.
+        phi_ref : `~astropy.units.Quantity`
+            The phase at reference time. Default is 0.
+        f0 : `~astropy.units.Quantity`
+            The frequency at t_ref in s-1
+        f1 : `~astropy.units.Quantity`
+            The frequency derivative at t_ref in s-2.
+        f2 : `~astropy.units.Quantity`
+            The frequency second derivative at t_ref in s-3.
+
+        Returns
+        -------
+        phase : float
+            Phase.
+        period_number : int
+            Number of period since t_ref.
+        """
+        delta_t = time - t_ref
+        phase = (
+            phi_ref + delta_t * (f0 + delta_t / 2.0 * (f1 + delta_t / 3 * f2))
+        ).to_value("")
+
+        period_number = np.floor(phase)
+        phase -= period_number
+        return phase, period_number
+
+    def write(self, path=None, overwrite=False):
+        if path is None:
+            path = self.filename
+        if path is None:
+            raise ValueError(f"filename is required for {self.tag}")
+        else:
+            self.filename = str(make_path(path))
+            self.table.write(self.filename, overwrite=overwrite)
+
+    @lazyproperty
+    def _interpolator(self):
+        x = self.table["PHASE"].data
+        y = self.table["NORM"].data
+
+        return scipy.interpolate.InterpolatedUnivariateSpline(x, y, k=1, ext=2, bbox=[0.,1.])
+
+    def evaluate(self, time, t_ref, phi_ref, f0, f1, f2):
+        phase, _ = self._time_to_phase(time, t_ref, phi_ref, f0, f1, f2)
+        return self._interpolator(phase)
+
+    def integral(self, t_min, t_max):
+        """Evaluate the integrated flux within the given time intervals
+
+        Parameters
+        ----------
+        t_min: `~astropy.time.Time`
+            Start times of observation
+        t_max: `~astropy.time.Time`
+            Stop times of observation
+        Returns
+        -------
+        norm: The model integrated flux
+        """
+        kwargs = {par.name: par.quantity for par in self.parameters}
+        ph_min, n_min = self._time_to_phase(t_min.mjd*u.d, **kwargs)
+        ph_max, n_max = self._time_to_phase(t_max.mjd*u.d, **kwargs)
+
+        # here we assume that the frequency does not change during the integration boundaries
+        delta_t = (t_min.mjd - self.t_ref.value)*u.d
+        frequency = self.f0.quantity + delta_t * (self.f1.quantity + delta_t  * self.f2.quantity/2)
+
+        # Compute integral of one phase
+        phase_integral = self._interpolator.antiderivative()(1)-self._interpolator.antiderivative()(0)
+        # Multiply by the total number of phases
+        phase_integral *= (n_max-n_min-1)
+
+        # Compute integrals before first full phase and after the last full phase
+        end_integral = self._interpolator.antiderivative()(ph_max)-self._interpolator.antiderivative()(0)
+        start_integral = self._interpolator.antiderivative()(1)-self._interpolator.antiderivative()(ph_min)
+
+        # Divide by Jacobian (here we neglect variations of frequency during the integration period)
+        total = (phase_integral + start_integral + end_integral)/frequency
+        # Normalize by total integration time
+        integral_norm =  total / self.time_sum(t_min, t_max)
+
+        return integral_norm.to("")
+
+    @classmethod
+    def from_dict(cls, data):
+        params = Parameters.from_dict(data["temporal"]["parameters"])
+        kwargs = {}
+        for param in params:
+            kwargs[param.name] = param
+        filename = data["temporal"]["filename"]
+        return cls.read(filename, **kwargs)
+
+    def to_dict(self, full_output=False):
+        """Create dict for YAML serialisation"""
+        model_dict = super().to_dict()
+        model_dict["temporal"]["filename"] = self.filename
+        return model_dict
+
+    def plot_phasogram(self, ax=None, n_points=100, **kwargs):
+        """
+        Plot phasogram of the phase model.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes`, optional
+            Axis to plot on
+        n_points : int
+            Number of bins to plot model
+        **kwargs : dict
+            Keywords forwarded to `~matplotlib.pyplot.errorbar`
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`, optional
+            axis
+        """
+        phase_axis = MapAxis.from_bounds(0., 1, nbin=n_points, name="Phase", unit="")
+
+        m = RegionNDMap.create(region=None, axes=[phase_axis])
+        kwargs.setdefault("marker", "None")
+        kwargs.setdefault("ls", "-")
+        kwargs.setdefault("xerr", None)
+        m.quantity = self._interpolator(phase_axis.center)
+        ax = m.plot(ax=ax, **kwargs)
+        ax.set_ylabel("Norm / A.U.")
+        return ax
