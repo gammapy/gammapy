@@ -1038,9 +1038,13 @@ class Map(abc.ABC):
         axes = [ax.copy() for ax in self.geom.axes]
         geom3d = geom.copy(axes=axes)
 
-        if not geom.is_image and geom.axes.names != geom3d.axes.names:
-            raise ValueError("Axis names and order should be the same.")
-
+        if not geom.is_image:
+            if geom.axes.names != geom3d.axes.names:
+                raise ValueError("Axis names and order should be the same.")
+            if geom.axes != geom3d.axes and (isinstance(geom3d, HpxGeom) or isinstance(self.geom, HpxGeom)):
+                raise TypeError("Reprojection to 3d geom with non-identical axes is not supported for HpxGeom."
+                        "Reproject to 2d geom first and then use inter_to_geom method"
+                        ) 
         if isinstance(geom3d, RegionGeom):
             base_factor = geom3d.to_wcs_geom().pixel_scales.min()/self.geom.pixel_scales.min()
         elif isinstance(self.geom, RegionGeom):
@@ -1063,11 +1067,7 @@ class Map(abc.ABC):
                             )
 
         if not geom.is_image and geom.axes != geom3d.axes:
-            if isinstance(geom3d, HpxGeom):
-                raise TypeError("Reprojection to 3d geom with non-identical axes is not supported for HpxGeom."
-                        "Reproject to 2d geom first and then use inter_to_geom method"
-                        ) 
-            for base_ax, target_ax in zip(geom.axes, geom3d.axes):
+            for base_ax, target_ax in zip(geom3d.axes, geom.axes):
                 base_factor = base_ax.bin_width.min()/target_ax.bin_width.min()
                 if not  base_factor >= precision_factor:
                     factor = precision_factor / base_factor

@@ -654,17 +654,15 @@ def test_map_reproject_hpx_to_wcs():
     actual = m_r.get_by_coord({"lon": 0, "lat": 0, "energy": [1.0, 3.16227766, 10.0]})
     assert_allclose(actual, [287.5, 1055.5, 1823.5], rtol=1e-3)
 
-    m_r = m.reproject_to_geom(geom_wcs2)
-    actual = m_r.get_by_coord({"lon": 0, "lat": 0, "energy": [1.0, 3.16227766, 10.0]})
-    assert_allclose(actual, [287.5, 1055.5, 1823.5], rtol=1e-3)
-
+    with pytest.raises(TypeError):
+        m.reproject_to_geom(geom_wcs2)
 
 def test_map_reproject_wcs_to_wcs_with_axes():
-    energy_nodes = np.arange(3)
-    time_nodes = np.arange(4)
+    energy_nodes = np.arange(4)-0.5
+    time_nodes = np.arange(5)-0.5
 
-    axis1 = MapAxis(energy_nodes, interp="lin", name="energy", node_type="center")
-    axis2 = MapAxis(time_nodes, interp="lin", name="time", node_type="center")
+    axis1 = MapAxis(energy_nodes, interp="lin", name="energy", node_type="edges")
+    axis2 = MapAxis(time_nodes, interp="lin", name="time", node_type="edges")
     geom_wcs_1 = WcsGeom.create(
         skydir=(266.405, -28.936),
         npix=(11, 11),
@@ -675,8 +673,8 @@ def test_map_reproject_wcs_to_wcs_with_axes():
     geom_wcs_2 = WcsGeom.create(skydir=(0, 0), npix=(11, 11), binsz=0.1, frame="galactic")
     
     spatial_data = np.zeros((11, 11))
-    energy_data = energy_nodes.reshape(3, 1, 1)
-    time_data = time_nodes.reshape(4, 1, 1, 1)
+    energy_data = axis1.center.reshape(3, 1, 1)
+    time_data = axis2.center.reshape(4, 1, 1, 1)
     data = spatial_data + energy_data + 0.5 * time_data
     m = WcsNDMap(geom_wcs_1, data=data)
     
@@ -696,10 +694,9 @@ def test_map_reproject_wcs_to_wcs_with_axes():
     geom_wcs_4 = geom_wcs_1.copy(axes= [axis1_up, axis2_up])
     m_r_4 = m.reproject_to_geom(geom_wcs_4, preserve_counts=False)
     for data, idx in m_r_4.iter_by_image_data():
-        ref = idx[1] + 0.5 * idx[0]
+        ref = int(idx[1]/factor) + 0.5 * int(idx[0]/factor)
         if np.any(data>0):
-            assert_allclose(np.nanmean(data[data>0]), ref/factor)
-
+            assert_allclose(np.nanmean(data[data>0]), ref)
 
 def test_wcsndmap_reproject_allsky_car():
     geom = WcsGeom.create(binsz=10.0, proj="CAR", frame="icrs")
