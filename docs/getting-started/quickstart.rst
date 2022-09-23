@@ -32,7 +32,7 @@ want to install the datasets and proceed with the following commands:
 
 .. substitution-code-block:: bash
 
-    $ gammapy download notebooks --release |release|
+    $ gammapy download notebooks
     $ gammapy download datasets
     $ export GAMMAPY_DATA=$PWD/gammapy-datasets
 
