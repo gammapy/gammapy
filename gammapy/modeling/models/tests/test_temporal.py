@@ -378,4 +378,3 @@ def test_phasecurve_DC1():
 
     with mpl_plot_check():
         model.plot_phasogram(n_points=200)
-        
