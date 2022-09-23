@@ -24,7 +24,7 @@ jobs:
             gammapy_data_path: /Users/runner/work/gammapy/gammapy/gammapy-datasets
           - os: windows-latest
             python: '3.9'
-            tox_env: 'py39-test-win-alldeps'
+            tox_env: 'py39-test-alldeps'
             gammapy_data_path:  D:\a\gammapy\gammapy\gammapy-datasets
           - os: ubuntu-latest
             python: '3.10'
