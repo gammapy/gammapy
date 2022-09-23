@@ -43,7 +43,7 @@ def test_cli_download_notebooks_dev(tmp_path):
         "download",
         "notebooks",
         f"--out={tmp_path}",
-        f"--release=dev",
+        "--release=dev",
     ]
     run_cli(cli, args)
     assert (tmp_path / "dev" / "gammapy-dev-environment.yml").exists()
