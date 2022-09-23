@@ -7,9 +7,9 @@ from gammapy.utils.testing import run_cli
 @pytest.fixture(scope="session")
 def config():
     return {
-        "release": "dev",
+        "release": "0.20",
         "notebook": "overview",
-        "envfilename": "gammapy-dev-environment.yml",
+        "envfilename": "gammapy-0.20-environment.yml",
     }
 
 
@@ -18,9 +18,8 @@ def test_cli_download_help():
     assert "Usage" in result.output
 
 
-@pytest.mark.xfail
 @pytest.mark.remote_data
-def test_cli_download_notebooks(tmp_path, config):
+def test_cli_download_notebooks_stable(tmp_path, config):
     args = [
         "download",
         "notebooks",
@@ -39,7 +38,26 @@ def test_cli_download_notebooks(tmp_path, config):
 
 
 @pytest.mark.remote_data
-def test_cli_download_datasets(tmp_path, config):
+def test_cli_download_notebooks_dev(tmp_path):
+    args = [
+        "download",
+        "notebooks",
+        f"--out={tmp_path}",
+        "--release=dev",
+    ]
+    run_cli(cli, args)
+    assert (tmp_path / "dev" / "gammapy-dev-environment.yml").exists()
+    assert (
+        tmp_path
+        / "dev"
+        / "starting"
+        / "analysis_1.ipynb"
+    ).exists()
+
+
+@pytest.mark.remote_data
+def test_cli_download_datasets(tmp_path):
+    # TODO: this test downloads all datasets which is really slow...
     option_out = f"--out={tmp_path}"
 
     args = ["download", "datasets", option_out]
