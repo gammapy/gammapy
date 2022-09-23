@@ -18,6 +18,8 @@ def test_cli_download_help():
     assert "Usage" in result.output
 
 
+@requires_dependency("requests")
+@requires_dependency("tqdm")
 @pytest.mark.remote_data
 def test_cli_download_notebooks_stable(tmp_path, config):
     args = [
@@ -57,6 +59,8 @@ def test_cli_download_notebooks_dev(tmp_path):
     ).exists()
 
 
+@requires_dependency("requests")
+@requires_dependency("tqdm")
 @pytest.mark.remote_data
 def test_cli_download_datasets(tmp_path):
     # TODO: this test downloads all datasets which is really slow...
