@@ -55,7 +55,7 @@ def ph_curve(x, amplitude=0.5, x0=0.01):
 
 
 def test_time_sampling_template():
-    time_ref = Time(55197.00000000, format='mjd')
+    time_ref = Time(55197.00000000, format="mjd")
     livetime = 3.0 * u.hr
     sigma = 0.5 * u.h
     t_min = "2010-01-01T00:00:00"
@@ -68,7 +68,7 @@ def test_time_sampling_template():
     lc = Table()
     meta = time_ref_to_dict(times[0])
     lc.meta = meta
-    lc.meta["TIMEUNIT"] = 's'
+    lc.meta["TIMEUNIT"] = "s"
     lc["TIME"] = (times - times[0]).to("s")
     lc["NORM"] = flare_model(times)
 
@@ -81,24 +81,20 @@ def test_time_sampling_template():
     mean = np.mean(sampler_template.mjd)
     std = np.std(sampler_template.mjd)
 
-    assert_allclose(
-            mean - times[500].mjd, 0.0,
-            atol=1e-3
-            )
-    assert_allclose(
-            std - sigma.to("d").value, 0.0,
-            atol=3e-4
-            )
+    assert_allclose(mean - times[500].mjd, 0.0, atol=1e-3)
+    assert_allclose(std - sigma.to("d").value, 0.0, atol=3e-4)
 
 
 def test_time_sampling_gaussian():
-    time_ref = Time(55197.00000000, format='mjd')
+    time_ref = Time(55197.00000000, format="mjd")
     sigma = 0.5 * u.h
     t_min = "2010-01-01T00:00:00"
     t_max = "2010-01-01T03:00:00"
     t_delta = "3 min"
 
-    temporal_model = GaussianTemporalModel(t_ref=(time_ref.mjd + 0.03) * u.d, sigma=sigma)
+    temporal_model = GaussianTemporalModel(
+        t_ref=(time_ref.mjd + 0.03) * u.d, sigma=sigma
+    )
     sampler = temporal_model.sample_time(
         n_events=1000, t_min=t_min, t_max=t_max, random_state=0, t_delta=t_delta
     )
@@ -106,14 +102,8 @@ def test_time_sampling_gaussian():
 
     mean = np.mean(sampler.mjd)
     std = np.std(sampler.mjd)
-    assert_allclose(
-            mean - (time_ref.mjd + 0.03), 0.0,
-            atol=4e-3
-            )
-    assert_allclose(
-            std - sigma.to("d").value, 0.0,
-            atol=3e-3
-            )
+    assert_allclose(mean - (time_ref.mjd + 0.03), 0.0, atol=4e-3)
+    assert_allclose(std - sigma.to("d").value, 0.0, atol=3e-3)
 
 
 def test_lightcurve_temporal_model_integral():
@@ -353,25 +343,26 @@ def test_phase_curve_model(tmp_path):
     assert_allclose(new_model.table["NORM"].data, norm)
 
     # exact number of phases
-    integral = phase_model.integral(t_ref, t_ref+10*u.s)
-    assert_allclose(integral, 0.25, rtol = 1e-5)
+    integral = phase_model.integral(t_ref, t_ref + 10 * u.s)
+    assert_allclose(integral, 0.25, rtol=1e-5)
     # long duration. Should be equal to the phase average
-    integral = phase_model.integral(t_ref+1*u.h, t_ref +3 * u.h)
+    integral = phase_model.integral(t_ref + 1 * u.h, t_ref + 3 * u.h)
     assert_allclose(integral, 0.25, rtol=1e-5)
     # 1.25 phase
-    integral = phase_model.integral(t_ref, t_ref+62.5*u.ms)
+    integral = phase_model.integral(t_ref, t_ref + 62.5 * u.ms)
     assert_allclose(integral, 0.225, rtol=1e-5)
+
 
 @requires_data()
 def test_phasecurve_DC1():
     filename = "$GAMMAPY_DATA/tests/phasecurve_LSI_DC.fits"
-    t_ref = 43366.275*u.d
-    P0 = 26.7*u.d
-    f0 = 1/P0
+    t_ref = 43366.275 * u.d
+    P0 = 26.7 * u.d
+    f0 = 1 / P0
 
-    model = TemplatePhaseCurveTemporalModel.read(filename, t_ref, 0., f0)
+    model = TemplatePhaseCurveTemporalModel.read(filename, t_ref, 0.0, f0)
 
-    times = Time(t_ref, format="mjd") + [0., 0.5, 0.65, 1.0]*P0
+    times = Time(t_ref, format="mjd") + [0.0, 0.5, 0.65, 1.0] * P0
     norm = model(times)
 
     assert_allclose(norm, [0.05, 0.15, 1.0, 0.05])
