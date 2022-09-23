@@ -95,7 +95,7 @@ class FluxPointsEstimator(FluxEstimator):
         """
         datasets = Datasets(datasets=datasets)
         
-        if "NormSpectralModel" in datasets.models[self.source].spectral_model.tag[0]:
+        if datasets.models[self.source].spectral_model.is_norm_spectral_model:
             raise TypeError("NormSpectralModel are not supported in FluxPointsEstimator.")
         
         rows = []
