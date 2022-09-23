@@ -27,6 +27,20 @@ class MapDatasetEventSampler:
     def __init__(self, random_state="random-seed"):
         self.random_state = get_random_state(random_state)
 
+    def _make_table(self, coords, time):
+        table = Table()
+        try:
+            energy = coords["energy_true"]
+        except KeyError:
+            energy = coords["energy"]
+
+        table["TIME"] = u.Quantity(((time.mjd - time_ref.mjd) * u.day).to(u.s)).to("s")
+        table["ENERGY_TRUE"] = energy
+        table["RA_TRUE"] = coords.skycoord.icrs.ra.to("deg")
+        table["DEC_TRUE"] = coords.skycoord.icrs.dec.to("deg")
+        
+        return table
+
     def _sample_coord_time_energy(self, dataset_evaluator, model, t_delta="1 sec"):
         energy_axis = dataset_evaluator.geom.axes["energy"]
 
@@ -70,17 +84,7 @@ class MapDatasetEventSampler:
                 * t_step.unit
                 ).to(time_unit)
 
-        table = Table()
-        table["RA_TRUE"] = coords.skycoord.icrs.ra.to("deg")
-        table["DEC_TRUE"] = coords.skycoord.icrs.dec.to("deg")
-
-        try:
-            energy = coords["energy_true"]
-        except KeyError:
-            energy = coords["energy"]
-        table["ENERGY_TRUE"] = energy
-
-        table["TIME"] = u.Quantity(((time.mjd - time_ref.mjd) * u.day).to(u.s)).to("s")
+        table = self._make_table(self, coords, time)
 
         return table
 
@@ -90,16 +94,6 @@ class MapDatasetEventSampler:
 
         coords = npred.sample_coord(n_events=n_events, random_state=self.random_state)
 
-        table = Table()
-        try:
-            energy = coords["energy_true"]
-        except KeyError:
-            energy = coords["energy"]
-
-        table["ENERGY_TRUE"] = energy
-        table["RA_TRUE"] = coords.skycoord.icrs.ra.to("deg")
-        table["DEC_TRUE"] = coords.skycoord.icrs.dec.to("deg")
-
         time_start, time_stop, time_ref = (gti.time_start, gti.time_stop, gti.time_ref)
         time = temporal_model.sample_time(
             n_events=n_events,
@@ -107,7 +101,9 @@ class MapDatasetEventSampler:
             t_max=time_stop,
             random_state=self.random_state,
         )
-        table["TIME"] = u.Quantity(((time.mjd - time_ref.mjd) * u.day).to(u.s)).to("s")
+
+        table = self._make_table(self, coords, time)
+
         return table
 
     def sample_sources(self, dataset):
