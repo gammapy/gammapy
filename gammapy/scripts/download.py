@@ -41,7 +41,7 @@ class DownloadIndex:
 
         if self.release not in data:
             raise ValueError(
-                f"Download not available for release {self.release}, choose from {data.keys()}"
+                f"Download not available for release {self.release}, choose from: {list(data.keys())}"
             )
 
         return data[self.release]
