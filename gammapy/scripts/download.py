@@ -5,13 +5,55 @@ import tarfile
 from pathlib import Path
 import click
 from gammapy import __version__
+from astropy.utils import lazyproperty
 
 log = logging.getLogger(__name__)
 
 BUNDLESIZE = 152  # in MB
-ENVS_BASE_URL = "https://gammapy.org/download/install"
-NBTAR_BASE_URL = "https://docs.gammapy.org"
-TAR_DATASETS = "https://github.com/gammapy/gammapy-data/tarball/master"
+GAMMAPY_BASE_URL = "https://gammapy.org/download/"
+
+
+class DownloadIndex:
+    """Download index"""
+    _notebooks_key = "notebooks"
+    _datasets_key = "datasets"
+    _environment_key = "conda-environment"
+    _index_json = "index.json"
+
+    def __init__(self, release=__version__):
+        
+        if "dev" in release:
+            release = "dev"
+        
+        self.release = release
+
+    @lazyproperty
+    def index(self):
+        """Index for a given release"""
+        import requests
+
+        response = requests.get(GAMMAPY_BASE_URL + self._index_json)
+        data = response.json()
+
+        if self.release not in data:
+            raise ValueError(f"Download not available for release {self.release}, choose from {data.keys()}")
+        
+        return data[self.release]
+
+    @property
+    def notebooks_url(self):
+        """Notebooks URL"""
+        return self.index[self._notebooks_key]
+
+    @property
+    def environment_url(self):
+        """Environment URL"""
+        return self.index[self._environment_key]
+
+    @property
+    def datasets_url(self):
+        """Datasets URL"""
+        return self.index[self._datasets_key]
 
 
 def progress_download(source, destination):
@@ -86,15 +128,15 @@ def show_info_datasets(outfolder):
 def cli_download_notebooks(release, out):
     """Download notebooks"""
     localfolder = Path(out) / release
-    url_file_env = f"{ENVS_BASE_URL}/gammapy-{release}-environment.yml"
-    if release == "dev":
-        url_file_env = "https://raw.githubusercontent.com/gammapy/gammapy/master/environment-dev.yml"
 
-    yaml_destination_file = localfolder / f"gammapy-{release}-environment.yml"
-    progress_download(url_file_env, yaml_destination_file)
-    url_tar_notebooks = f"{NBTAR_BASE_URL}/{release}/_downloads/notebooks-{release}.tar"
-    tar_destination_file = localfolder / f"notebooks_{release}.tar"
-    progress_download(url_tar_notebooks, tar_destination_file)
+    index = DownloadIndex(release=release)
+
+    filename = localfolder / f"gammapy-{index.release}-environment.yml"
+    progress_download(index.environment_url, filename)
+
+    tar_destination_file = localfolder / f"notebooks_{release}.tar"    
+    progress_download(index.notebooks_url, tar_destination_file)
+    
     my_tar = tarfile.open(tar_destination_file)
     my_tar.extractall(localfolder)
     my_tar.close()
@@ -103,18 +145,22 @@ def cli_download_notebooks(release, out):
 
 
 @click.command(name="datasets")
+@click.option("--release", required=True, help="Number of stable release - ex: 0.18.2)")
 @click.option(
     "--out",
     default="gammapy-datasets",
     help="Destination folder.",
     show_default=True,
 )
-def cli_download_datasets(out):
+def cli_download_datasets(release, out):
     """Download datasets"""
+    index = DownloadIndex(release=release)
+
     localfolder = Path(out)
-    log.info(f"Downloading datasets from {TAR_DATASETS}")
+    log.info(f"Downloading datasets from {index.datasets_url}")
     tar_destination_file = localfolder / "datasets.tar.gz"
-    progress_download(TAR_DATASETS, tar_destination_file)
+    progress_download(index.datasets_url, tar_destination_file)
+    
     log.info(f"Extracting {tar_destination_file}")
     extract_bundle(tar_destination_file, localfolder)
     Path(tar_destination_file).unlink()
