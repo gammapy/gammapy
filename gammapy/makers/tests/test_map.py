@@ -471,7 +471,7 @@ def test_dataset_hawc():
 
         # We want the last event lass for speed
         obs_table = ObservationTable.read(data_path+obs_filename)
-        hdu_table = HDUIndexTable.read(data_path+hdu_filename, hdu=8)
+        hdu_table = HDUIndexTable.read(data_path+hdu_filename, hdu=9)
         data_store = DataStore( hdu_table=hdu_table, obs_table=obs_table)
 
 
