@@ -2,6 +2,8 @@
 """Command line tool to download datasets and notebooks"""
 import logging
 import tarfile
+import zipfile
+from urllib.parse import urlparse
 from pathlib import Path
 import click
 from gammapy import __version__
@@ -127,21 +129,29 @@ def show_info_datasets(outfolder):
 )
 def cli_download_notebooks(release, out):
     """Download notebooks"""
-    localfolder = Path(out) / release
-
     index = DownloadIndex(release=release)
+    
+    path = Path(out) / index.release
 
-    filename = localfolder / f"gammapy-{index.release}-environment.yml"
+    filename = path / f"gammapy-{index.release}-environment.yml"
     progress_download(index.environment_url, filename)
 
-    tar_destination_file = localfolder / f"notebooks_{release}.tar"    
-    progress_download(index.notebooks_url, tar_destination_file)
+    url_path = urlparse(index.notebooks_url).path
+    filename_destination = path / Path(url_path).name
+    progress_download(index.notebooks_url, filename_destination)
     
-    my_tar = tarfile.open(tar_destination_file)
-    my_tar.extractall(localfolder)
-    my_tar.close()
-    Path(tar_destination_file).unlink()
-    show_info_notebooks(localfolder, release)
+    if "zip" in index.notebooks_url:
+        archive = zipfile.ZipFile(filename_destination, 'r')
+    else:
+        archive = tarfile.open(filename_destination)
+
+    with archive as ref:
+        ref.extractall(path)
+    
+    # delete file
+    filename_destination.unlink()
+    
+    show_info_notebooks(path, release)
 
 
 @click.command(name="datasets")
