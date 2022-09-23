@@ -14,19 +14,21 @@ log = logging.getLogger(__name__)
 BUNDLESIZE = 152  # in MB
 GAMMAPY_BASE_URL = "https://gammapy.org/download/"
 
+RELEASE = __version__
+
+if "dev" in __version__:
+    RELEASE = "dev"
+
 
 class DownloadIndex:
     """Download index"""
+
     _notebooks_key = "notebooks"
     _datasets_key = "datasets"
     _environment_key = "conda-environment"
     _index_json = "index.json"
 
-    def __init__(self, release=__version__):
-        
-        if "dev" in release:
-            release = "dev"
-        
+    def __init__(self, release=RELEASE):
         self.release = release
 
     @lazyproperty
@@ -38,8 +40,10 @@ class DownloadIndex:
         data = response.json()
 
         if self.release not in data:
-            raise ValueError(f"Download not available for release {self.release}, choose from {data.keys()}")
-        
+            raise ValueError(
+                f"Download not available for release {self.release}, choose from {data.keys()}"
+            )
+
         return data[self.release]
 
     @property
@@ -120,7 +124,12 @@ def show_info_datasets(outfolder):
 
 
 @click.command(name="notebooks")
-@click.option("--release", required=True, help="Number of stable release - ex: 0.18.2)")
+@click.option(
+    "--release",
+    default=RELEASE,
+    help="Number of stable release - ex: 0.18.2)",
+    show_default=True,
+)
 @click.option(
     "--out",
     default="gammapy-notebooks",
@@ -130,7 +139,7 @@ def show_info_datasets(outfolder):
 def cli_download_notebooks(release, out):
     """Download notebooks"""
     index = DownloadIndex(release=release)
-    
+
     path = Path(out) / index.release
 
     filename = path / f"gammapy-{index.release}-environment.yml"
@@ -139,23 +148,28 @@ def cli_download_notebooks(release, out):
     url_path = urlparse(index.notebooks_url).path
     filename_destination = path / Path(url_path).name
     progress_download(index.notebooks_url, filename_destination)
-    
+
     if "zip" in index.notebooks_url:
-        archive = zipfile.ZipFile(filename_destination, 'r')
+        archive = zipfile.ZipFile(filename_destination, "r")
     else:
         archive = tarfile.open(filename_destination)
 
     with archive as ref:
         ref.extractall(path)
-    
+
     # delete file
     filename_destination.unlink()
-    
+
     show_info_notebooks(path, release)
 
 
 @click.command(name="datasets")
-@click.option("--release", required=True, help="Number of stable release - ex: 0.18.2)")
+@click.option(
+    "--release",
+    default=RELEASE,
+    help="Number of stable release - ex: 0.18.2)",
+    show_default=True,
+)
 @click.option(
     "--out",
     default="gammapy-datasets",
@@ -170,7 +184,7 @@ def cli_download_datasets(release, out):
     log.info(f"Downloading datasets from {index.datasets_url}")
     tar_destination_file = localfolder / "datasets.tar.gz"
     progress_download(index.datasets_url, tar_destination_file)
-    
+
     log.info(f"Extracting {tar_destination_file}")
     extract_bundle(tar_destination_file, localfolder)
     Path(tar_destination_file).unlink()
