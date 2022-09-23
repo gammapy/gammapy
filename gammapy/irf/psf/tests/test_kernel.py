@@ -68,7 +68,6 @@ def test_plot_kernel(kernel_gaussian):
     with mpl_plot_check():
         kernel_gaussian.plot_kernel()
 
-
 def test_peek(kernel_gaussian):
     with mpl_plot_check():
         kernel_gaussian.peek()

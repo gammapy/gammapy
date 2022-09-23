@@ -184,3 +184,4 @@ def test_psf_reco():
 def test_peek(evaluator):
     with mpl_plot_check():
         evaluator.peek()
+        
