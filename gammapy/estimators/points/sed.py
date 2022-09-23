@@ -94,8 +94,11 @@ class FluxPointsEstimator(FluxEstimator):
             Estimated flux points.
         """
         datasets = Datasets(datasets=datasets)
+        
+        if datasets.models[self.source].spectral_model.is_norm_spectral_model:
+            raise TypeError("NormSpectralModel are not supported in FluxPointsEstimator.")
+        
         rows = []
-
         for energy_min, energy_max in progress_bar(
             zip(self.energy_edges[:-1], self.energy_edges[1:]), desc="Energy bins"
         ):
