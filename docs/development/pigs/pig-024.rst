@@ -61,6 +61,8 @@ This citation scheme with these **two references** will be given on our web page
 The Gammapy references contain a list of authors that requires to be updated with time according to a
 general policy. This section defines who is a `contributor` to Gammapy and the policy for each type of product.
 
+.. _contributor:
+
 Definition of a `Contributor`
 -----------------------------
 
@@ -71,13 +73,13 @@ Contributions to Gammapy can be made in different ways:
 - contributing to our DevOps environment (e.g. CI, docs and package deployment, GitHub configuration),
 - contributing to our associated projects (gammapy-benchmarks, gammapy-data, gammapy-extra),
 - contributing to the maintenance of Gammapy products on open-source repositories (conda-forge, PyPI, Zenodo, HAL, docker-hub, etc) or open hub (openhub, etc),
-- leading the precise tasks identified by the Lead Developers,
+- leading the precise tasks identified by the Lead Developers (e.g module maintainer),
 - organizing and leading hands-on sessions or schools,
 - managing our social media accounts,
 - and coordinating the project by the Lead Developers.
 
-Any contribution without threshold on these topics renders a user as official Gammapy contributor. And the contributions
-are tracked using the GitHub contributions. However, the use of personal data is regulated in Europe and one should have the
+Any contribution without threshold on these topics renders a user as official Gammapy contributor. Many of these contributions
+are tracked using GitHub. However, the use of personal data is regulated in Europe and one should have the
 authorisation of users to be cited with their personal information (typically, their affiliation and their ORCID if any).
 For this reason, we propose to use the GitHub `Developer Certificate of Origin <https://github.com/apps/dco>`_ (DCO) on
 Pull Request. Its acceptation by contributors will permit to:
@@ -90,7 +92,7 @@ as a link to this PIG.
 
 .. important::
     We strongly recommend that the contributors use always the same GitHub account with a valid full name, to
-    synchronise their git email address with their GitHub address, to have a unique `ORCID <https://orcid.org/>`_
+    synchronise their git email addresses with their GitHub addresses, to have a unique `ORCID <https://orcid.org/>`_
     identifier and store it into their GitHub user profile for commodity, and inform the developers of any change of
     affiliation.
 
@@ -98,9 +100,9 @@ as a link to this PIG.
 Definition of the `Maintainer`
 ------------------------------
 
-In the Open Source community, a maintainer is generally mentioned in the metadata associated with a release and has to be mentioned.
 Usually, a software maintainer or package maintainer is one or more people who build source code into a binary package
-for distribution, commit patches, or organize code in a source repository.
+for distribution, commit patches, or organize code in a source repository. In the Open Source community, they are
+generally mentioned in the metadata associated with a release.
 
 For Gammapy, by default, the maintainers are the Lead Developers. If in the future a task is dedicated to the creation
 of a release, the maintainer will be the person in charge of this task.
@@ -109,10 +111,12 @@ Releases
 --------
 
 Each Gammapy release should be associated with an updated list of authors that will be public on repository (Zenodo and
-HAL/SW). This section is about feature or bug releases, not the LTS release. The list of authors is composed by people
-who contributed to the current release, as listed in the previous sub-section, who have accepted the GitHub DCO. If the
-DCO is not accepted by a contributor, her/his contribution might not be usable and thus this user will not be in the
-list of authors per default.
+HAL/SW). This section is about feature releases. Bug releases will have as list of authors the one of its associated
+feature release whose rules are described here, plus the potentiel additional contributors.
+
+The list of authors is composed of people who contributed to the current release (see :ref:`_contributor`) and who have
+accepted the GitHub DCO. If the DCO is not accepted by a contributor, her/his contribution might not be usable and thus
+this user will not be in the list of authors per default.
 
 The order of the authors is first 'The Gammapy team', followed by the list of contributors in alphabetical order:
 
@@ -127,16 +131,18 @@ to add any additional author into the list for her/his special contribution. The
 will have the duty to examine such request and to update accordingly the author list data . In case of conflict, the
 Gammapy Coordination Committee will be the final decision maker.
 
+.. _LTS:
+
 Long Term Support releases
 --------------------------
 
 The list of authors is composed of the union of all the contributors of the releases realised since the last LTS
-release. As an LTS will be associated with a paper, the members of the Coordination Committee will appear in this
+release. As an LTS release will be associated with a paper, the members of the Coordination Committee will appear in this
 peer-review product as a long-term support of the Gammapy project (see next section).
 
 The order of the authors is first 'The Gammapy team', followed by the list of contributors in alphabetical order.
 
-Like for the common releases, the period of code freeze is used to make a call to update the personal information of
+Like for the common releases, a period of code freeze is used to make a call to update the personal information of
 contributors, as well as to submit a request of co-authorship for special contributions. The same rules and methods
 as for the standard releases are applied here.
 
@@ -229,7 +235,7 @@ to make the ``codemeta.json`` does not understand it.
 
 The ``CITATION.cff`` file will be used as the main file to be maintained, while the ``codemeta.json`` will be
 automatically created. For any release, the former should be carefully updated and systematically a review should be
-done by the dev team.
+organised by the dev team.
 
 In order to maintain updated data about authors for the LTS releases and LTS papers, a new file will be used with these
 data, ``LTS_AUTHORS.cff``. This file will be used to create the associated ``codemeta.json`` file.
@@ -260,9 +266,8 @@ Finally, a second script should be settled in order to create the list of contri
 inserted in the `team` section for our general web page. This script would read one of the metadata files (e.g.
 ``citation.cff``) to create such list.
 
-Concerning the contributions to conferences, their handling should be realised properly by creating a dedicated
-repository under the Gammapy organisation of GitHub.
-
+Conference contributions (Proceedings, Posters, ...) should be developed in dedicated repositories in the Gammapy Github
+organization.
 
 6. Suggestions
 ==============
