@@ -1954,8 +1954,8 @@ def test_fit_hawc():
     fit.optimize_opts = minuit_opts
     result = fit.run(datasets)
 
-    assert_allclose(model.parameters['amplitude'].value, 2.359441180e-13, rtol=1e-04)
-    assert_allclose(model.parameters['beta'].value, 0.0695109163, rtol=1e-04)
-    assert_allclose(model.parameters['alpha'].value, 2.7120430791, rtol=1e-04)
-    assert_allclose(model.parameters['lon_0'].value, 83.611375023, rtol=1e-04)
-    assert_allclose(model.parameters['lat_0'].value, 21.9920271, rtol=1e-04)
+    assert_allclose(model.parameters['amplitude'].value, 2.359441180e-13, rtol=1e-03)
+    assert_allclose(model.parameters['beta'].value, 0.0695109163, rtol=1e-03)
+    assert_allclose(model.parameters['alpha'].value, 2.7120430791, rtol=1e-03)
+    assert_allclose(model.parameters['lon_0'].value, 83.611375023, rtol=1e-03)
+    assert_allclose(model.parameters['lat_0'].value, 21.9920271, rtol=1e-03)

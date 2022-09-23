@@ -558,7 +558,7 @@ def test_psf_map_reco(tmpdir):
 
 @requires_data()
 def test_psf_map_reco_hawc():
-    filename = "$GAMMAPY_DATA/hawc/crab_events_pass4/irfs/PSFMap_Crab_fHitbin4NN.fits.gz"
+    filename = "$GAMMAPY_DATA/hawc/crab_events_pass4/irfs/PSFMap_Crab_fHitbin5NN.fits.gz"
     reco_psf_map = RecoPSFMap.read(filename, format="gadf")
 
     assert "energy" in reco_psf_map.psf_map.geom.axes.names
@@ -571,4 +571,4 @@ def test_psf_map_reco_hawc():
     with mpl_plot_check():
         reco_psf_map.plot_psf_vs_rad()
 
-    assert_allclose(reco_psf_map.containment_radius(0.68, [1,2]*u.TeV),[2.2477739, 0.29803777]*u.deg)
+    assert_allclose(reco_psf_map.containment_radius(0.68, [1,2]*u.TeV),[0.001, 0.43733357]*u.deg)
