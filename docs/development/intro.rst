@@ -44,26 +44,28 @@ the `README.rst <https://github.com/gammapy/gammapy/blob/master/README.rst>`_ fi
 Gammapy DCO based on the `GitHub DCO <https://github.com/apps/dco>`_: this is a legally binding statement that asserts that you are the creator of your contribution, and that
 you wish to allow Gammapy to use your work to cite you as contributor.
 
-**If you are willing to agree to these terms, you just add a line to every git commit message:**
+**If you are willing to agree to these terms, the following agreement line should be added to every commit message:**
 
 ``Signed-off-by: Random J Developer <random@developer.example.org>``
 
-You can sign your commit automatically with
+Three solutions exist:
 
-``git commit -s``
+1. You add this message by hand into each of your commit messages (not recommended)
 
-if:
-
-- you have created a SSH GitHub key (see `this page <https://docs.github.com/en/authentication/managing-commit-signature-verification/signing-commits>`_),
-- and you have set your `user.name` and `user.email` as part of your git configuration (see `this page <https://docs.github.com/en/account-and-profile/setting-up-and-managing-your-personal-account-on-github/managing-email-preferences/setting-your-commit-email-address>`_ to configure it).
-
-You have to use your real name (i.e., pseudonyms or anonymous contributions cannot be made) when using git. This is
-because the DCO is a legally binding document, granting the Gammapy project to use your work.
+2. You can sign each of your commits with the command: "``git commit -s``".
 
 If you have authored a commit that is missing its ‘Signed-off-by’ line, you can amend your commits and push them to
 GitHub: "``git commit --amend --noedit --signoff``"
+(see also this `How To <https://github.com/src-d/guide/blob/master/developer-community/fix-DCO.md#how-to-add-sign-offs-retroactively>`_).
 
-If you’ve pushed your changes to GitHub already, you’ll need to force push your branch after this with "``git push --force-with-lease <you_remote> <branch>``".
+3. you can create a so-called `git hooks` allowing to automatically sign all your commits (recommended option). This
+method is described in detail `here <https://github.com/src-d/guide/blob/master/developer-community/fix-DCO.md#how-to-prevent-missing-sign-offs-in-the-future>`_.
+
+For each of these solutions, it is **mandatory** to correctly set your `user.name` and `user.email` as part of your git
+configuration (see `this page <https://docs.github.com/en/account-and-profile/setting-up-and-managing-your-personal-account-on-github/managing-email-preferences/setting-your-commit-email-address>`_ to configure it).
+You have to use **your real name** (i.e., pseudonyms or anonymous contributions cannot be made) when using git. This is
+because the DCO is a binding document, granting the Gammapy project to be an open source project.
+
 
 Get in touch early
 ==================
