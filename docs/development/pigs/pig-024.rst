@@ -275,7 +275,8 @@ organization.
 One could ask CTAO software coordinators (ie ACADA, DPPS, SUSS) if such rules can be used by them also, even if the
 The Gammapy project is independent. In the same spirit, advice could be asked to people of the ESCAPE project via our
 corresponding person. And finally, one could mention the existence of these rules and ask for advice to the Astropy
-project.
+project. These requests to the Astropy community and CTAO for recommendations and preferences either remained
+un-responded or did not lead to objections at the current time.
 
 7. Decision
 ===========
