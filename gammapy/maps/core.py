@@ -1012,7 +1012,7 @@ class Map(abc.ABC):
 
         return Map.from_geom(geom, data=data, unit=self.unit)
 
-    def reproject(self, geom, preserve_counts=False, oversampling_factor=10, axis_name=None):
+    def reproject_to_geom(self, geom, preserve_counts=False, precision_factor=10, axis_name=None):
         """Reproject map to input geometry.
 
         Parameters
@@ -1023,13 +1023,7 @@ class Map(abc.ABC):
             Preserve the integral over each bin.  This should be true
             if the map is an integral quantity (e.g. counts) and false if
             the map is a differential quantity (e.g. intensity)
-        method : {'oversampling', 'polygon'}
-            Method to reproject data to a new projection
-            -oversampling: the base map is oversampled and 
-             its bins are re-distributed into a map with the target geom.
-            -polygon: flux-conserving spherical polygon intersection
-            from reproject.reproject_exact
-        oversampling_factor : int
+        precision_factor : int
            Minimal factor between the bin size of the output map and the oversampled base map.
            Used only for the oversampling method.
 
@@ -1041,32 +1035,50 @@ class Map(abc.ABC):
         from .region import RegionGeom
         from .hpx import HpxGeom
 
-        if isinstance(geom, RegionGeom) or isinstance(self.geom, RegionGeom):
-            raise TypeError(f"Reproject from {type(self.geom)} to {type(geom)} is not supported")
+        axes = [ax.copy() for ax in self.geom.axes]
+        geom3d = geom.copy(axes=axes)
 
-        
-        if geom.is_image:
-            axes = [ax.copy() for ax in self.geom.axes]
-            geom = geom.copy(axes=axes)
+        if not geom.is_image and geom.axes.names != geom3d.axes.names:
+            raise ValueError("Axis names and order should be the same.")
+
+        if isinstance(geom3d, RegionGeom):
+            base_factor = geom3d.to_wcs_geom().pixel_scales.min()/self.geom.pixel_scales.min()
+        elif isinstance(self.geom, RegionGeom):
+            base_factor = geom3d.pixel_scales.min()/self.geom.to_wcs_geom().pixel_scales.min()
         else:
-            raise TypeError("Invalid target geometry, use geom.to_image()")
+            base_factor = geom3d.pixel_scales.min()/self.geom.pixel_scales.min()
 
-        output_map = Map.from_geom(geom, unit=self.unit)
-        base_factor = geom.pixel_scales.min()/self.geom.pixel_scales.min()
-        if base_factor >= oversampling_factor:
+        if base_factor >= precision_factor:
             input_map = self
         else:
-            factor = oversampling_factor / base_factor
+            factor = precision_factor / base_factor
             if isinstance(self.geom, HpxGeom):
                 factor = int(2**np.ceil(np.log(factor)/np.log(2)))
             else:
                 factor = int(np.ceil(factor))
             input_map = self.upsample(factor=factor, preserve_counts=preserve_counts)
 
-        output_map.resample(input_map.geom,
-                            weights=input_map.quantity,
+        output_map = input_map.resample(geom3d,
                             preserve_counts=preserve_counts
                             )
+
+        if not geom.is_image and geom.axes != geom3d.axes:
+            if isinstance(geom3d, HpxGeom):
+                raise TypeError("Reprojection to 3d geom with non-identical axes is not supported for HpxGeom."
+                        "Reproject to 2d geom first and then use inter_to_geom method"
+                        ) 
+            for base_ax, target_ax in zip(geom.axes, geom3d.axes):
+                base_factor = base_ax.bin_width.min()/target_ax.bin_width.min()
+                if not  base_factor >= precision_factor:
+                    factor = precision_factor / base_factor
+                    factor = int(np.ceil(factor))
+                    output_map = output_map.upsample(factor=factor,
+                                                    preserve_counts=preserve_counts,
+                                                    axis_name=base_ax.name)
+            output_map = output_map.resample(geom,
+                                            preserve_counts=preserve_counts
+                                            )            
+
         return output_map
 
 
