@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from astropy.coordinates.angle_utilities import angular_separation
 from astropy.utils import lazyproperty
 from regions import CircleSkyRegion
-from gammapy.maps import Map
+from gammapy.maps import Map, WcsNDMap, HpxNDMap, RegionNDMap
 from gammapy.modeling.models import PointSpatialModel, TemplateNPredModel
 
 PSF_CONTAINMENT = 0.999

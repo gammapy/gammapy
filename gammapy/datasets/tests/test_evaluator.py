@@ -180,7 +180,7 @@ def test_psf_reco():
     assert evaluator.apply_psf_after_edisp == True
     assert evaluator.methods_sequence[-1] == evaluator.apply_psf
     assert_allclose(evaluator.compute_npred().data.sum(),  9e-12)
-    
+
 def test_peek(evaluator):
     with mpl_plot_check():
         evaluator.peek()
