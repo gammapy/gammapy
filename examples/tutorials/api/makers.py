@@ -139,7 +139,11 @@ dataset.counts.sum_over_axes().plot(stretch="sqrt", add_cbar=True);
 #    energy bin with the highest predicted background rate. This method
 #    was introduced in the HESS DL3 validation paper:
 #    https://arxiv.org/pdf/1910.08088.pdf
-# 
+#
+# Note that currently some methods computing a safe energy range ("aeff-default", "aeff-max" and "edisp-bias")
+# determine a true energy range and apply it to reconstructed energy, effectively neglecting the energy dispersion.
+#
+#
 # Multiple methods can be combined. Here is an example :
 # 
 
