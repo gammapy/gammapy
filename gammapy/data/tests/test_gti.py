@@ -12,7 +12,12 @@ from gammapy.utils.time import time_ref_to_dict
 @requires_data()
 def test_gti_hess():
     gti = GTI.read("$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz")
-    assert "GTI" in str(gti)
+
+    str_gti = str(gti)
+    assert "Start: 101962602.0 s MET" in str_gti
+    assert "Stop: 2004-03-26T03:25:48.184 (time standard: TT)" in str_gti
+    assert "GTI" in str_gti
+
     assert len(gti.table) == 1
 
     assert gti.time_delta[0].unit == "s"

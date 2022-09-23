@@ -7,7 +7,8 @@ from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.time import Time
 from astropy.units import Quantity
 from gammapy.data import DataStore, Observation
-from gammapy.irf import load_cta_irfs
+from gammapy.irf import load_cta_irfs, PSF3D
+from gammapy.utils.fits import HDULocation
 from gammapy.utils.testing import (
     assert_skycoord_allclose,
     assert_time_allclose,
@@ -244,6 +245,30 @@ def test_observation_cta_1dc():
 
 
 @requires_data()
+def test_observation_create_radmax():
+    pointing = SkyCoord(0, 0, unit="deg", frame="galactic")
+    obs = Observation.read("$GAMMAPY_DATA/joint-crab/dl3/magic/run_05029748_DL3.fits")
+    livetime = 5.0 * u.hr
+    deadtime = 0.5
+
+    irfs = {}
+    for _ in obs.available_irfs:
+        irfs[_] = getattr(obs, _)
+
+    obs1 = Observation.create(
+        pointing,
+        irfs=irfs,
+        deadtime_fraction=deadtime,
+        livetime=livetime,
+    )
+
+    assert_skycoord_allclose(obs1.pointing_radec, pointing.icrs)
+    assert_allclose(obs1.observation_live_time_duration, 0.5 * livetime)
+    assert obs1.rad_max is not None
+    assert obs1.psf is None
+
+
+@requires_data()
 def test_observation_read():
     """read event list and irf components from different DL3 files"""
     obs = Observation.read(
@@ -345,3 +370,20 @@ def test_observation_write(tmp_path):
     assert obs_read.edisp is None
     assert obs_read.bkg is None
     assert obs_read.rad_max is None
+
+
+@requires_data()
+def test_obervation_copy(data_store):
+    obs = data_store.obs(23523)
+
+    obs_copy = obs.copy()
+    assert obs_copy.obs_id == 23523
+    assert isinstance(obs_copy.__dict__["_psf_hdu"], HDULocation)
+
+    with pytest.raises(ValueError):
+        _ = obs.copy(obs_id=1234)
+
+    obs_copy = obs.copy(obs_id=1234, in_memory=True)
+    assert isinstance(obs_copy.__dict__["psf"], PSF3D)
+    assert obs_copy.obs_id == 1234
+

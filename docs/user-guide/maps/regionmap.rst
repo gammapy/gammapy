@@ -479,14 +479,5 @@ The "gadf" allows to serialise a region map with arbitrary extra axis as well:
     m = RegionNDMap.read("file.fits", format="gadf")
 
 
-Relevant tutorials
-------------------
-
-Gammapy tutorial notebooks that use `~RegionNDMap` and `~RegionGeom`:
-
-.. nbgallery::
-
-   ../../tutorials/analysis/1D/spectral_analysis.ipynb
-   ../../tutorials/analysis/1D/extended_source_spectral_analysis.ipynb
-   ../../tutorials/analysis/1D/spectrum_simulation.ipynb
-   ../../tutorials/analysis/1D/cta_sensitivity.ipynb
+.. minigallery:: gammapy.estimators.RegionNDMap
+    :add-heading:

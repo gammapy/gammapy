@@ -173,22 +173,22 @@ class MapEvaluator:
 
         # lookup psf
         if psf and self.model.spatial_model:
-            if self.apply_psf_after_edisp:
-                geom = geom.as_energy_true
+            energy_name = psf.energy_name
+            if energy_name == "energy":
+                geom_psf = geom
             else:
-                geom = exposure.geom
+                geom_psf = exposure.geom
 
-            if self.use_psf_containment(geom=geom):
-                energy_true = geom.axes["energy_true"].center.reshape((-1, 1, 1))
-                self.psf_containment = psf.containment(
-                    energy_true=energy_true, rad=geom.region.radius
-                )
+            if self.use_psf_containment(geom=geom_psf):
+                energy_values = geom_psf.axes[energy_name].center.reshape((-1, 1, 1))
+                kwargs = {energy_name:energy_values, "rad":geom.region.radius}
+                self.psf_containment = psf.containment(**kwargs)
             else:
-                if geom.is_region or geom.is_hpx:
-                    geom = geom.to_wcs_geom()
+                if geom_psf.is_region or geom_psf.is_hpx:
+                    geom_psf = geom_psf.to_wcs_geom()
 
                 self.psf = psf.get_psf_kernel(
-                    position=self.model.position, geom=geom, containment=PSF_CONTAINMENT
+                    position=self.model.position, geom=geom_psf, containment=PSF_CONTAINMENT
                 )
 
         if self.evaluation_mode == "local":
@@ -364,9 +364,7 @@ class MapEvaluator:
 
     @property
     def apply_psf_after_edisp(self):
-        """ """
-        if not isinstance(self.model, TemplateNPredModel):
-            return self.model.apply_irf.get("psf_after_edisp")
+        return  self.psf is not None and "energy" in self.psf.psf_kernel_map.geom.axes.names
 
     def compute_npred(self):
         """Evaluate model predicted counts.

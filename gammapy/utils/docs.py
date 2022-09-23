@@ -167,6 +167,7 @@ class DocsImage(Image):
 
         return super().run()
 
+
 class SubstitutionCodeBlock(CodeBlock):
     """
     Similar to CodeBlock but replaces placeholders with variables.
@@ -188,6 +189,7 @@ class SubstitutionCodeBlock(CodeBlock):
 
         self.content = new_content
         return list(CodeBlock.run(self))
+
 
 def gammapy_sphinx_ext_activate():
     if HAS_GP_DATA:

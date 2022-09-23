@@ -647,6 +647,7 @@ class SourceCatalogHGPS(SourceCatalog):
 
     Then you can load it up like this:
 
+    >>> import matplotlib.pyplot as plt
     >>> from gammapy.catalog import SourceCatalogHGPS
     >>> filename = '$GAMMAPY_DATA/catalogs/hgps_catalog_v1.fits.gz'
     >>> cat = SourceCatalogHGPS(filename)
@@ -767,12 +768,13 @@ class SourceCatalogHGPS(SourceCatalog):
 
     Access source spectral data and plot it:
 
-    >>> source.spectral_model().plot(source.energy_range)
-    <AxesSubplot:xlabel='Energy [TeV]', ylabel='dnde [1 / (cm2 s TeV)]'>
-    >>> source.spectral_model().plot_error(source.energy_range)
-    <AxesSubplot:xlabel='Energy [TeV]', ylabel='dnde [1 / (cm2 s TeV)]'>
-    >>> source.flux_points.plot()
-    <AxesSubplot:xlabel='Energy [TeV]', ylabel='dnde (1 / (cm2 s TeV))'>
+    >>> ax = plt.subplot()
+    >>> source.spectral_model().plot(source.energy_range, ax=ax) #doctest:+ELLIPSIS
+    <AxesSubplot:...xlabel='Energy [TeV]', ylabel='dnde [1 / (cm2 s TeV)]'>
+    >>> source.spectral_model().plot_error(source.energy_range, ax=ax) #doctest:+ELLIPSIS
+    <AxesSubplot:...xlabel='Energy [TeV]', ylabel='dnde [1 / (cm2 s TeV)]'>
+    >>> source.flux_points.plot(ax=ax) #doctest:+ELLIPSIS
+    <AxesSubplot:...xlabel='Energy [TeV]', ylabel='dnde [1 / (cm2 s TeV)]'>
 
     Gaussian component information can be accessed as well,
     either via the source, or via the catalog:
