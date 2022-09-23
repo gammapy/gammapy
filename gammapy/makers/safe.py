@@ -21,7 +21,7 @@ class SafeMaskMaker(Maker):
     .. warning::
     
          Currently some methods computing a safe energy range ("aeff-default", "aeff-max" and "edisp-bias") determine a
-         true energy range and apply it to reconstructed energy, effectively neglecting the energy bias.
+         true energy range and apply it to reconstructed energy, effectively neglecting the energy dispersion.
 
     Parameters
     ----------
