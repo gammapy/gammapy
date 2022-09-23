@@ -6,7 +6,7 @@ from astropy import units as u
 from astropy.table import Table
 from astropy.time import Time
 from astropy.utils import lazyproperty
-from gammapy.maps import RegionNDMap, TimeMapAxis
+from gammapy.maps import RegionNDMap, TimeMapAxis, MapAxis
 from gammapy.modeling import Parameter, Parameters
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.scripts import make_path
@@ -826,12 +826,25 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         ph_min, n_min = self._time_to_phase(t_min.mjd*u.d, **kwargs)
         ph_max, n_max = self._time_to_phase(t_max.mjd*u.d, **kwargs)
 
-        val1 = self._interpolator.antiderivative()(ph_max)-self._interpolator.antiderivative()(0)
-        val2 = self._interpolator.antiderivative()(1)-self._interpolator.antiderivative()(ph_min)
-        total = self._interpolator.antiderivative()(1)-self._interpolator.antiderivative()(0)
+        # here we assume that the frequency does not change during the integration boundaries
+        delta_t = (t_min.mjd - self.t_ref.value)*u.d
+        frequency = self.f0.quantity + delta_t * (self.f1.quantity + delta_t  * self.f2.quantity/2)
 
-        total *= (n_max-n_min)
-        return (total + val1 + val2)/self.time_sum(t_min, t_max)
+        # Compute integral of one phase
+        phase_integral = self._interpolator.antiderivative()(1)-self._interpolator.antiderivative()(0)
+        # Multiply by the total number of phases
+        phase_integral *= (n_max-n_min-1)
+
+        # Compute integrals before first full phase and after the last full phase
+        end_integral = self._interpolator.antiderivative()(ph_max)-self._interpolator.antiderivative()(0)
+        start_integral = self._interpolator.antiderivative()(1)-self._interpolator.antiderivative()(ph_min)
+
+        # Divide by Jacobian (here we neglect variations of frequency during the integration period)
+        total = (phase_integral + start_integral + end_integral)/frequency
+        # Normalize by total integration time
+        integral_norm =  total / self.time_sum(t_min, t_max)
+
+        return integral_norm.to("")
 
     @classmethod
     def from_dict(cls, data):
@@ -847,3 +860,32 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         model_dict = super().to_dict()
         model_dict["temporal"]["filename"] = self.filename
         return model_dict
+
+    def plot_phasogram(self, ax=None, n_points=100, **kwargs):
+        """
+        Plot phasogram of the phase model.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes`, optional
+            Axis to plot on
+        n_points : int
+            Number of bins to plot model
+        **kwargs : dict
+            Keywords forwarded to `~matplotlib.pyplot.errorbar`
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`, optional
+            axis
+        """
+        phase_axis = MapAxis.from_bounds(0., 1, nbin=n_points, name="Phase", unit="")
+
+        m = RegionNDMap.create(region=None, axes=[phase_axis])
+        kwargs.setdefault("marker", "None")
+        kwargs.setdefault("ls", "-")
+        kwargs.setdefault("xerr", None)
+        m.quantity = self._interpolator(phase_axis.center)
+        ax = m.plot(ax=ax, **kwargs)
+        ax.set_ylabel("Norm / A.U.")
+        return ax

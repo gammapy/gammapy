@@ -340,7 +340,6 @@ def test_phase_curve_model(tmp_path):
     phase_model.write()
 
     model_dict = phase_model.to_dict()
-    print(model_dict)
     new_model = Model.from_dict(model_dict)
 
     assert_allclose(phase_model.parameters.value, new_model.parameters.value)
@@ -352,6 +351,16 @@ def test_phase_curve_model(tmp_path):
 
     assert_allclose(new_model.table["PHASE"].data, phase)
     assert_allclose(new_model.table["NORM"].data, norm)
+
+    # exact number of phases
+    integral = phase_model.integral(t_ref, t_ref+10*u.s)
+    assert_allclose(integral, 0.25, rtol = 1e-5)
+    # long duration. Should be equal to the phase average
+    integral = phase_model.integral(t_ref+1*u.h, t_ref +3 * u.h)
+    assert_allclose(integral, 0.25, rtol=1e-5)
+    # 1.25 phase
+    integral = phase_model.integral(t_ref, t_ref+62.5*u.ms)
+    assert_allclose(integral, 0.225, rtol=1e-5)
 
 @requires_data()
 def test_phasecurve_DC1():
@@ -366,3 +375,7 @@ def test_phasecurve_DC1():
     norm = model(times)
 
     assert_allclose(norm, [0.05, 0.15, 1.0, 0.05])
+
+    with mpl_plot_check():
+        model.plot_phasogram(n_points=200)
+        
