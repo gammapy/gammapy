@@ -14,7 +14,7 @@ PIG 24 - Authorship policy
 Abstract
 ========
 
-While the Gammapy library is more widely used by the community, a proper citation of the project including
+Given that the Gammapy library is more widely used by the community, a proper citation of the project including
 a policy about the authorship is necessary. This PIG addresses this issue by setting an authorship policy for the
 Gammapy project for each type of product.
 
@@ -43,8 +43,9 @@ releases, the Long Term Support (LTS) releases, the general Gammapy papers, and 
 2. Citation scheme
 ==================================
 
-When Gammapy is used for any publication, contribution to conferences or software, authors should cite properly Gammapy.
-It is asked to cite the DOI of the latest Gammapy version as well as the paper associated to the latest LTS release.
+When Gammapy is used for any publication, contribution to conferences or software, authors should properly cite Gammapy.
+It is asked to cite the DOI of the used Gammapy version as well as the associated paper (e.g. about the latest LTS
+release).
 
 .. note::
     As the Gammapy community fully supports Open Science, we strongly encourage authors using Gammapy to follow
@@ -69,13 +70,13 @@ Contributing to Gammapy can be made in different ways:
 - contributing to our documentation (rst pages, docstring, gammapy-webpage),
 - contributing to our DevOps environment (e.g. CI, docs and package deployment, GitHub configuration),
 - contributing to our associated projects (gammapy-benchmarks, gammapy-data, gammapy-extra),
-- contributing to the maintenance of our repositories (conda-forge, PyPI, Zenodo, HAL, docker-hub, etc) or open hub (openhub, etc),
+- contributing to the maintenance of Gammapy products on open-source repositories (conda-forge, PyPI, Zenodo, HAL, docker-hub, etc) or open hub (openhub, etc),
 - leading the precise tasks identified by the Lead Developers,
 - organizing and leading hands-on sessions or schools,
 - managing our social media accounts,
-- and obviously coordinating the project by the Lead Developers.
+- and coordinating the project by the Lead Developers.
 
-Any contribution without threshold on these topics renders an user as official Gammapy contributor. And the contributions
+Any contribution without threshold on these topics renders a user as official Gammapy contributor. And the contributions
 are tracked using the GitHub contributions. However, the use of personal data is regulated in Europe and one should have the
 authorisation of users to be cited with their personal information (typically, their affiliation and their ORCID if any).
 For this reason, we propose to use the GitHub `Developer Certificate of Origin <https://github.com/apps/dco>`_ (DCO) on
