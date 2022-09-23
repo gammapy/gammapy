@@ -301,11 +301,11 @@ class MapDatasetMaker(Maker):
         """
         psf = observation.psf
 
-        if isinstance(psf, PSFMap):
-            return PSFMap(psf.psf_map.interp_to_geom(geom))
-        elif isinstance(psf, RecoPSFMap):
-            return RecoPSFMap(psf.psf_map.interp_to_geom(geom))
 
+        if isinstance(psf, RecoPSFMap):
+            return RecoPSFMap(psf.psf_map.interp_to_geom(geom))
+        elif isinstance(psf, PSFMap):
+            return PSFMap(psf.psf_map.interp_to_geom(geom))
         exposure = self.make_exposure_irf(geom.squash(axis_name="rad"), observation)
 
         return make_psf_map(
