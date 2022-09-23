@@ -138,25 +138,15 @@ def test_fov_bkg_maker_fit(obs_dataset, exclusion_mask):
     assert_allclose(fov_bkg_maker.default_spectral_model.norm.value, 1.0)
 
 
-@pytest.mark.xfail
 @requires_data()
-def test_fov_bkg_maker_fit_nocounts(obs_dataset, exclusion_mask, caplog):
+def test_fov_bkg_maker_fit_nocounts(obs_dataset, exclusion_mask):
     fov_bkg_maker = FoVBackgroundMaker(method="fit", exclusion_mask=exclusion_mask)
 
     test_dataset = obs_dataset.copy(name="test-fov")
-    test_dataset.counts *= 0
+    test_dataset.counts.data[...] = 0
 
     dataset = fov_bkg_maker.run(test_dataset)
-
-    # This should be solved along with issue https://github.com/gammapy/gammapy/issues/3175
-    model = dataset.models[f"{dataset.name}-bkg"].spectral_model
-    assert_allclose(model.norm.value, 1, rtol=1e-4)
-    assert_allclose(model.tilt.value, 0.0, rtol=1e-4)
-
-    assert "WARNING" in [_.levelname for _ in caplog.records]
-    assert f"Fit did not converge for {dataset.name}" in [
-        _.message for _ in caplog.records
-    ]
+    assert np.all(dataset.mask_safe.data == 0)
 
 
 @requires_data()
@@ -296,7 +286,7 @@ def test_fov_bkg_maker_mask_fit_handling(obs_dataset, exclusion_mask):
     test_dataset.mask_fit = mask_fit
 
     dataset = fov_bkg_maker.run(test_dataset)
-    assert np.all(test_dataset.mask_fit == mask_fit) == True
+    assert np.all(test_dataset.mask_fit == mask_fit)
 
     model = dataset.models[f"{dataset.name}-bkg"].spectral_model
     assert_allclose(model.norm.value, 0.9975, rtol=1e-3)

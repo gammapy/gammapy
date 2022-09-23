@@ -19,7 +19,7 @@ class TestEnergyDependentMultiGaussPSF:
         return EnergyDependentMultiGaussPSF.read(filename, hdu="POINT SPREAD FUNCTION")
 
     def test_info(self, psf):
-        info_str = open(get_pkg_data_filename("data/psf_info.txt")).read()
+        info_str = open(get_pkg_data_filename("./data/psf_info.txt")).read()
 
         print(psf.info())
         assert psf.info() == info_str

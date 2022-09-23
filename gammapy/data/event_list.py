@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import collections
+import copy
 import logging
 import numpy as np
 from astropy import units as u
@@ -905,6 +906,10 @@ class EventList:
             ax = plt.gca()
         m = self._counts_image(allsky=allsky)
         m.plot(ax=ax, stretch="sqrt")
+
+    def copy(self):
+        """Copy event list (`EventList`)"""
+        return copy.deepcopy(self)
 
 
 class EventListChecker(Checker):

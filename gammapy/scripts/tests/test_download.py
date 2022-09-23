@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 from gammapy.scripts.main import cli
-from gammapy.utils.testing import run_cli
+from gammapy.utils.testing import run_cli, requires_dependency
 
 
 @pytest.fixture(scope="session")
@@ -37,6 +37,8 @@ def test_cli_download_notebooks_stable(tmp_path, config):
     ).exists()
 
 
+@requires_dependency("requests")
+@requires_dependency("tqdm")
 @pytest.mark.remote_data
 def test_cli_download_notebooks_dev(tmp_path):
     args = [

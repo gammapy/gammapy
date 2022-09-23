@@ -29,7 +29,7 @@ from gammapy.utils.testing import requires_data
 @pytest.fixture(scope="session")
 @requires_data()
 def models():
-    filename = get_pkg_data_filename("data/examples.yaml")
+    filename = get_pkg_data_filename("./data/examples.yaml")
     models_data = read_yaml(filename)
     models = Models.from_dict(models_data)
     return models

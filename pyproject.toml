@@ -4,6 +4,7 @@ requires = [
 	"wheel",
 	"Cython",
 	'oldest-supported-numpy',
-	'setuptools_scm[toml]'
+	'setuptools_scm[toml]',
+	"extension-helpers",
 ]
 build-backend = "setuptools.build_meta"

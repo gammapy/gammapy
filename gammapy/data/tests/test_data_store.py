@@ -9,7 +9,12 @@ from astropy.io import fits
 from gammapy.data import DataStore
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import requires_data
-
+from gammapy.irf import (
+    EffectiveAreaTable2D,
+    EnergyDependentMultiGaussPSF,
+    EnergyDispersion2D,
+    Background3D,
+)
 
 @pytest.fixture()
 def data_store():
@@ -17,7 +22,7 @@ def data_store():
 
 
 @requires_data()
-def test_datastore_hd_hap(data_store):
+def test_data_store_hd_hap(data_store):
     """Test HESS HAP-HD data access."""
     obs = data_store.obs(obs_id=23523)
 
@@ -29,7 +34,7 @@ def test_datastore_hd_hap(data_store):
 
 
 @requires_data()
-def test_datastore_from_dir():
+def test_data_store_from_dir():
     """Test the `from_dir` method."""
     data_store_rel_path = DataStore.from_dir(
         "$GAMMAPY_DATA/hess-dl3-dr1/", "hdu-index.fits.gz", "obs-index.fits.gz"
@@ -46,7 +51,7 @@ def test_datastore_from_dir():
 
 
 @requires_data()
-def test_datastore_from_file(tmpdir):
+def test_data_store_from_file(tmpdir):
     filename = "$GAMMAPY_DATA/hess-dl3-dr1/hdu-index.fits.gz"
     index_hdu = fits.open(make_path(filename))["HDU_INDEX"]
 
@@ -66,7 +71,7 @@ def test_datastore_from_file(tmpdir):
 
 
 @requires_data()
-def test_datastore_get_observations(data_store, caplog):
+def test_data_store_get_observations(data_store, caplog):
     """Test loading data and IRF files via the DataStore"""
     observations = data_store.get_observations([23523, 23592])
     assert observations[0].obs_id == 23523
@@ -88,8 +93,8 @@ def test_datastore_get_observations(data_store, caplog):
 
 
 @requires_data()
-def test_broken_links_datastore(data_store):
-    # Test that datastore without complete IRFs are properly loaded
+def test_broken_links_data_store(data_store):
+    # Test that data_store without complete IRFs are properly loaded
     hdu_table = data_store.hdu_table
     index = np.where(hdu_table["OBS_ID"] == 23526)[0][0]
     hdu_table.remove_row(index)
@@ -104,7 +109,7 @@ def test_broken_links_datastore(data_store):
 
 
 @requires_data()
-def test_datastore_copy_obs(tmp_path, data_store):
+def test_data_store_copy_obs(tmp_path, data_store):
     data_store.copy_obs([23523, 23592], tmp_path, overwrite=True)
 
     substore = DataStore.from_dir(tmp_path)
@@ -119,7 +124,7 @@ def test_datastore_copy_obs(tmp_path, data_store):
 
 
 @requires_data()
-def test_datastore_copy_obs_subset(tmp_path, data_store):
+def test_data_store_copy_obs_subset(tmp_path, data_store):
     # Copy only certain HDU classes
     data_store.copy_obs([23523, 23592], tmp_path, hdu_class=["events"])
 
@@ -149,7 +154,7 @@ def data_store_dc1(monkeypatch):
 
 
 @requires_data()
-def test_datastore_from_events(data_store_dc1):
+def test_data_store_from_events(data_store_dc1):
     # data_store_dc1 fixture is needed to set CALDB
     # Test that `DataStore.from_events_files` works.
     # The real tests for `DataStoreMaker` are below.
@@ -160,35 +165,34 @@ def test_datastore_from_events(data_store_dc1):
 
 
 @requires_data()
-def test_datastoremaker_obs_table(data_store_dc1):
+def test_data_store_maker_obs_table(data_store_dc1):
     table = data_store_dc1.obs_table
     assert table.__class__.__name__ == "ObservationTable"
     assert len(table) == 4
     assert len(table.colnames) == 22
     assert table["CALDB"][0] == "1dc"
     assert table["IRF"][0] == "South_z20_50h"
-    assert (
-        table["IRF_FILENAME"][0]
-        == "$CALDB/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
-    )
 
-    # TODO: implement https://github.com/gammapy/gammapy/issues/1218 and add tests here
-    # assert table.time_start[0].iso == "spam"
-    # assert table.time_start[-1].iso == "spam"
+    path = Path(table["IRF_FILENAME"][0])
+    # checking str(path) would convert to windows path conventions on windows
+    assert "$CALDB/data/cta/1dc/bcf/South_z20_50h/irf_file.fits" in repr(path)
 
 
 @requires_data()
-def test_datastoremaker_hdu_table(data_store_dc1):
+def test_data_store_maker_hdu_table(data_store_dc1):
     table = data_store_dc1.hdu_table
     assert table.__class__.__name__ == "HDUIndexTable"
     assert len(table) == 24
     hdu_class = ["events", "gti", "aeff_2d", "edisp_2d", "psf_3gauss", "bkg_3d"]
     assert list(data_store_dc1.hdu_table["HDU_CLASS"]) == 4 * hdu_class
-    assert table["FILE_DIR"][2] == "$CALDB/data/cta/1dc/bcf/South_z20_50h"
+
+    path = Path(table["FILE_DIR"][2])
+    # checking str(path) would convert to windows path conventions on windows
+    assert "$CALDB/data/cta/1dc/bcf/South_z20_50h" in repr(path)
 
 
 @requires_data()
-def test_datastoremaker_observation(data_store_dc1):
+def test_data_store_maker_observation(data_store_dc1):
     """Check that one observation can be accessed OK"""
 
     obs = data_store_dc1.obs(110380)
@@ -197,14 +201,14 @@ def test_datastoremaker_observation(data_store_dc1):
     assert obs.events.time[0].iso == "2021-01-21 12:00:03.045"
     assert obs.gti.time_start[0].iso == "2021-01-21 12:00:00.000"
 
-    assert obs.aeff.__class__.__name__ == "EffectiveAreaTable2D"
-    assert obs.bkg.__class__.__name__ == "Background3D"
-    assert obs.edisp.__class__.__name__ == "EnergyDispersion2D"
-    assert obs.psf.__class__.__name__ == "EnergyDependentMultiGaussPSF"
+    assert isinstance(obs.aeff, EffectiveAreaTable2D)
+    assert isinstance(obs.bkg, Background3D)
+    assert isinstance(obs.edisp, EnergyDispersion2D)
+    assert isinstance(obs.psf, EnergyDependentMultiGaussPSF)
 
 
 @requires_data("gammapy-data")
-def test_datastore_fixed_rad_max():
+def test_data_store_fixed_rad_max():
     data_store = DataStore.from_dir("$GAMMAPY_DATA/joint-crab/dl3/magic")
     observations = data_store.get_observations(
         [5029748], required_irf=["aeff", "edisp"]
@@ -232,7 +236,7 @@ def test_datastore_fixed_rad_max():
 
 
 @requires_data()
-def test_datastore_header_info_in_obs_info(data_store):
+def test_data_store_header_info_in_obs_info(data_store):
     """Test information from the obs index header is propagated into obs_info"""
     obs = data_store.obs(obs_id=23523)
 
@@ -245,16 +249,16 @@ def test_datastore_header_info_in_obs_info(data_store):
 
 
 @requires_data()
-def test_datastore_bad_name():
+def test_data_store_bad_name():
     with pytest.raises(IOError):
         DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/", "hdu-index.fits.gz", "bad")
 
 
 @requires_data()
-def test_datastore_from_dir_no_obs_index(caplog, tmpdir):
+def test_data_store_from_dir_no_obs_index(caplog, tmpdir):
     """Test the `from_dir` method."""
 
-    # Create small datastore and remove obs-index table
+    # Create small data_store and remove obs-index table
     DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/").copy_obs([23523, 23592], tmpdir)
     os.remove(tmpdir / "obs-index.fits.gz")
 
@@ -274,12 +278,12 @@ def test_datastore_from_dir_no_obs_index(caplog, tmpdir):
     data_store.copy_obs([23523], test_dir)
     data_store_copy = DataStore.from_dir(test_dir)
     assert len(data_store_copy.obs_ids) == 1
-    assert data_store_copy.obs_table == None
+    assert data_store_copy.obs_table is None
 
 
 @requires_data()
 def test_data_store_required_irf_pointlike_fixed_rad_max():
-    """Check behavior of the "point-like" option for datastore"""
+    """Check behavior of the "point-like" option for data_store"""
     store = DataStore.from_dir("$GAMMAPY_DATA/joint-crab/dl3/magic")
     obs = store.get_observations([5029748], required_irf="point-like")
     assert len(obs) == 1
@@ -292,7 +296,7 @@ def test_data_store_required_irf_pointlike_fixed_rad_max():
 
 @requires_data()
 def test_data_store_required_irf_pointlike_variable_rad_max():
-    """Check behavior of the "point-like" option for datastore"""
+    """Check behavior of the "point-like" option for data_store"""
     store = DataStore.from_dir("$GAMMAPY_DATA/magic/rad_max/data/")
     obs = store.get_observations(
         [5029747, 5029748], required_irf=["aeff", "edisp", "rad_max"]

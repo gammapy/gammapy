@@ -17,7 +17,6 @@ Here's some good resources with working examples:
 - https://github.com/bokeh/bokeh/tree/master/bokeh/sphinxext
 """
 import os
-from configparser import ConfigParser
 from pathlib import Path
 from docutils.parsers.rst import Directive
 from docutils.parsers.rst.directives import register_directive
@@ -34,13 +33,6 @@ except KeyError:
     HAS_GP_DATA = False
 
 log = logging.getLogger(__name__)
-PATH_CFG = Path(__file__).resolve().parent / ".." / ".."
-
-# fetch params from setup.cfg
-conf = ConfigParser()
-conf.read(PATH_CFG / "setup.cfg")
-build_docs_cfg = dict(conf.items("build_docs"))
-PATH_NBS = build_docs_cfg["downloadable-notebooks"]
 
 
 class AccordionHeader(Directive):
