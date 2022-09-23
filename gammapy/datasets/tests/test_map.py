@@ -1733,6 +1733,14 @@ def test_dataset_mixed_geom(tmpdir):
     assert isinstance(dataset.psf.psf_map.geom.region, CircleSkyRegion)
     assert isinstance(dataset.edisp.edisp_map.geom.region, CircleSkyRegion)
 
+    geom_psf_reco = RegionGeom.create(
+        "icrs;circle(0, 0, 0.2)", axes=[rad_axis, energy_axis]
+    )
+
+    dataset = MapDataset.from_geoms(
+        geom=geom, geom_exposure=geom_exposure, geom_psf=geom_psf_reco, geom_edisp=geom_edisp
+    )
+    assert dataset.psf.tag == "psf_map_reco"
 
 @requires_data()
 def test_map_dataset_region_geom_npred():

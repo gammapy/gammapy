@@ -507,6 +507,17 @@ def test_resample_wcs_Wcs():
             rtol=1e-3,
         )
 
+def test_resample_weights():
+    npix1 = 3
+    geom1 = WcsGeom.create(npix=npix1, frame="icrs")
+    map1 = Map.from_geom(geom1, data=np.eye(npix1))
+
+    geom2 = WcsGeom.create(
+        skydir=SkyCoord(0.0, 0.0, unit=u.deg), binsz=0.5, npix=7, frame="galactic"
+    )
+    
+    map2 = map1.resample(geom2, weights=np.zeros(npix1), preserve_counts=False)
+    assert np.sum(map2.data) == 0.
 
 def test_resample_downsample_wcs():
     geom_fine = WcsGeom.create(npix=(15, 15), frame="icrs")

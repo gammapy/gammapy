@@ -51,6 +51,14 @@ from gammapy.visualization import plot_theta_squared_table
 
 
 ######################################################################
+# Check setup
+# -----------
+from gammapy.utils.check import check_tutorials_setup
+
+check_tutorials_setup()
+
+
+######################################################################
 # A useful way to organize the relevant files are the index tables. The
 # observation index table contains information on each particular run,
 # such as the pointing, or the run ID. The HDU index table has a row per

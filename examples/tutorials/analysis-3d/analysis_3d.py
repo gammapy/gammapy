@@ -35,14 +35,18 @@ from gammapy.maps import Map
 from gammapy.estimators import ExcessMapEstimator
 from gammapy.datasets import MapDataset
 
+######################################################################
+# Check setup
+# -----------
+from gammapy.utils.check import check_tutorials_setup
+
+check_tutorials_setup()
+
 
 ######################################################################
 # Analysis configuration
 # ----------------------
 # 
-
-
-######################################################################
 # In this section we select observations and define the analysis
 # geometries, irrespective of joint/stacked analysis. For configuration of
 # the analysis, we will programmatically build a config file from scratch.

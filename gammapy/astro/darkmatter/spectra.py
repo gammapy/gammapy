@@ -4,7 +4,7 @@ import numpy as np
 import astropy.units as u
 from astropy.table import Table
 from gammapy.modeling import Parameter
-from gammapy.modeling.models import SpectralModel, TemplateSpectralModel
+from gammapy.modeling.models import SpectralModel, TemplateSpectralModel, SPECTRAL_MODEL_REGISTRY
 from gammapy.utils.interpolation import LogScale
 from gammapy.utils.scripts import make_path
 
@@ -177,13 +177,14 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
         interp="log",
         is_norm=True,
     )
+    tag = ["DarkMatterAnnihilationSpectralModel", "dm-annihilation"]
 
     def __init__(self, mass, channel, scale=scale.quantity, jfactor=1, z=0, k=2):
         self.k = k
         self.z = z
-        self.mass = mass
+        self.mass = u.Quantity(mass)
         self.channel = channel
-        self.jfactor = jfactor
+        self.jfactor = u.Quantity(jfactor)
         self.primary_flux = PrimaryFlux(mass, channel=self.channel).table_model
         super().__init__(scale=scale)
 
@@ -200,3 +201,34 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
             / (4 * np.pi)
         )
         return flux
+
+    def to_dict(self, full_output=False):
+        data = super().to_dict(full_output=full_output)
+        data["spectral"]["channel"] = self.channel
+        data["spectral"]["mass"] = self.mass.to_string()
+        data["spectral"]["jfactor"] = self.jfactor.to_string()
+        data["spectral"]["z"] = self.z
+        data["spectral"]["k"] = self.k
+        return data
+
+    @classmethod
+    def from_dict(cls, data):
+        """Create spectral model from dict
+
+        Parameters
+        ----------
+        data : dict
+            Dict with model data
+
+        Returns
+        -------
+        model : `DarkMatterAnnihilationSpectralModel`
+            Dark matter annihilation spectral model
+        """
+        data = data["spectral"]
+        data.pop("type")
+        parameters = data.pop("parameters")
+        scale = [p["value"] for p in parameters if p["name"] == "scale"][0]
+        return cls(scale=scale, **data)
+
+SPECTRAL_MODEL_REGISTRY.append(DarkMatterAnnihilationSpectralModel)

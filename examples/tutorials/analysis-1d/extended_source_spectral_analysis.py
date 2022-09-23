@@ -103,6 +103,13 @@ from gammapy.makers import (
     ReflectedRegionsBackgroundMaker,
 )
 
+######################################################################
+# Check setup
+# -----------
+from gammapy.utils.check import check_tutorials_setup
+
+check_tutorials_setup()
+
 
 ######################################################################
 # Select the data

@@ -35,6 +35,14 @@ import numpy as np
 
 
 ######################################################################
+# Check setup
+# -----------
+from gammapy.utils.check import check_tutorials_setup
+
+check_tutorials_setup()
+
+
+######################################################################
 # Dataset
 # -------
 # 

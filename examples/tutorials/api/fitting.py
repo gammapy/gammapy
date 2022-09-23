@@ -37,13 +37,18 @@ The setup
 import numpy as np
 from astropy import units as u
 import matplotlib.pyplot as plt
-from matplotlib.ticker import StrMethodFormatter
-import scipy.stats as st
 from gammapy.modeling import Fit
 from gammapy.datasets import Datasets, SpectrumDatasetOnOff
 from gammapy.modeling.models import LogParabolaSpectralModel, SkyModel
 from gammapy.visualization.utils import plot_contour_line
 from itertools import combinations
+
+######################################################################
+# Check setup
+# -----------
+from gammapy.utils.check import check_tutorials_setup
+
+check_tutorials_setup()
 
 
 ######################################################################

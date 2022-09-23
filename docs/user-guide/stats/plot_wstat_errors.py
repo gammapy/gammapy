@@ -28,14 +28,14 @@ plt.ylabel(r"WStat value, TS ")
 
 plt.hlines(
     count_statistic.stat_max + 1,
-    xmin=excess + errn,
+    xmin=excess - errn,
     xmax=excess + errp,
     linestyle="dotted",
     color="r",
     label="1 sigma (68% C.L.)",
 )
 plt.vlines(
-    excess + errn,
+    excess - errn,
     ymin=ymin,
     ymax=count_statistic.stat_max + 1,
     linestyle="dotted",
@@ -51,14 +51,14 @@ plt.vlines(
 
 plt.hlines(
     count_statistic.stat_max + 4,
-    xmin=excess + errn_2sigma,
+    xmin=excess - errn_2sigma,
     xmax=excess + errp_2sigma,
     linestyle="dashed",
     color="b",
     label="2 sigma (95% C.L.)",
 )
 plt.vlines(
-    excess + errn_2sigma,
+    excess - errn_2sigma,
     ymin=ymin,
     ymax=count_statistic.stat_max + 4,
     linestyle="dashed",

@@ -66,6 +66,13 @@ from astropy.coordinates import SkyCoord
 import astropy.units as u
 import numpy as np
 
+######################################################################
+# Check setup
+# -----------
+from gammapy.utils.check import check_tutorials_setup
+
+check_tutorials_setup()
+
 
 ######################################################################
 # Read in input images

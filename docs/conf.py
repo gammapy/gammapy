@@ -43,7 +43,7 @@ plot_html_show_source_link = False
 numfig = False
 
 # If your documentation needs a minimal Sphinx version, state it here.
-# needs_sphinx = '1.1'
+# needs_sphinx = "1.1"
 
 # We currently want to link to the latest development version of the astropy docs,
 # so we override the `intersphinx_mapping` entry pointing to the stable docs version
@@ -119,7 +119,7 @@ substitutions = [("|release|", release)]
 # -- Options for HTML output ---------------------------------------------------
 
 # A NOTE ON HTML THEMES
-# The global astropy configuration uses a custom theme, 'bootstrap-astropy',
+# The global astropy configuration uses a custom theme, "bootstrap-astropy",
 # which is installed along with astropy. A different theme can be used or
 # the options for this theme can be modified by overriding some
 # variables set in the global configuration. The variables set in the
@@ -149,9 +149,9 @@ html_sidebars = {
     "navigation": "sidebar-nav-bs.html",
 }
 
-# If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
+# If not "", a "Last updated on:" timestamp is inserted at every page bottom,
 # using the given strftime format.
-# html_last_updated_fmt = ''
+# html_last_updated_fmt = ""
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
@@ -191,7 +191,7 @@ html_theme_options = {
 }
 
 # Theme style
-# html_style = ''
+# html_style = ""
 html_css_files = ["gammapy.css"]
 
 gammapy_sphinx_ext_activate()
@@ -220,12 +220,24 @@ github_issues_url = "https://github.com/gammapy/gammapy/issues/"
 automodsumm_inherited_members = True
 
 # In `about.rst` and `references.rst` we are giving lists of citations
-# (e.g. papers using Gammapy) that partly aren't referenced from anywhere
+# (e.g. papers using Gammapy) that partly aren"t referenced from anywhere
 # in the Gammapy docs. This is normal, but Sphinx emits a warning.
 # The following config option suppresses the warning.
 # http://www.sphinx-doc.org/en/stable/rest.html#citations
 # http://www.sphinx-doc.org/en/stable/config.html#confval-suppress_warnings
 suppress_warnings = ["ref.citation"]
+
+
+binder_config = {
+     # Required keys
+     "org": "gammapy",
+     "repo": "gammapy-docs",
+     "branch": "main", # Can be any branch, tag, or commit hash. Use a branch that hosts your docs.
+     "binderhub_url": "https://mybinder.org", # Any URL of a binderhub deployment. Must be full URL (e.g. https://mybinder.org).
+     "dependencies": "./binder/requirements.txt",
+     "notebooks_dir": "docs/dev/notebooks",
+     "use_jupyter_lab": False,
+}
 
 # nitpicky = True
 sphinx_gallery_conf = {
@@ -252,6 +264,7 @@ sphinx_gallery_conf = {
             "../examples/tutorials/scripts",
         ]
     ),
+    "binder": binder_config,
     "backreferences_dir": "gen_modules/backreferences",
     "doc_module": ("gammapy",),
     "exclude_implicit_doc": {},

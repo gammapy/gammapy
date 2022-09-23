@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import abc
+from collections import OrderedDict
 import copy
 import inspect
 import json
@@ -7,9 +8,11 @@ import numpy as np
 from astropy import units as u
 from astropy.io import fits
 import matplotlib.pyplot as plt
+from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.scripts import make_path
 from gammapy.utils.units import energy_unit_format
 from .axes import MapAxis
+from .coord import MapCoord
 from .geom import pix_tuple_to_idx
 from .io import JsonQuantityDecoder
 
@@ -628,10 +631,11 @@ class Map(abc.ABC):
         coords = self.geom.get_coord()
         idx = geom.coord_to_idx(coords)
 
-        resampled = self.from_geom(geom=geom)
+        weights = 1 if weights is None else weights
 
+        resampled = self.from_geom(geom=geom)
         resampled._resample_by_idx(
-            idx, weights=self.data, preserve_counts=preserve_counts
+            idx, weights=self.data * weights, preserve_counts=preserve_counts
         )
         return resampled
 
@@ -1796,3 +1800,32 @@ class Map(abc.ABC):
 
     def __array__(self):
         return self.data
+
+
+    def sample_coord(self, n_events, random_state=0):
+        """Sample position and energy of events.
+
+        Parameters
+        ----------
+        n_events : int
+            Number of events to sample.
+        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+            Defines random number generator initialisation.
+            Passed to `~gammapy.utils.random.get_random_state`.
+
+        Returns
+        -------
+        coords : `~gammapy.maps.MapCoord` object.
+            Sequence of coordinates and energies of the sampled events.
+        """
+
+        random_state = get_random_state(random_state)
+        sampler = InverseCDFSampler(pdf=self.data, random_state=random_state)
+
+        coords_pix = sampler.sample(n_events)
+        coords = self.geom.pix_to_coord(coords_pix[::-1])
+
+        # TODO: pix_to_coord should return a MapCoord object
+        cdict = OrderedDict(zip(self.geom.axes_names, coords))
+
+        return MapCoord.create(cdict, frame=self.geom.frame)

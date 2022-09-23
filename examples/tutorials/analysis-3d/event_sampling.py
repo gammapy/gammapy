@@ -84,24 +84,20 @@ We will work with the following functions and classes:
 
 # %matplotlib inline
 
-import matplotlib.pyplot as plt
 from pathlib import Path
 import numpy as np
 import astropy.units as u
 from astropy.io import fits
-from astropy.table import Table
 from astropy.time import Time
 from astropy.coordinates import SkyCoord, Angle
 from regions import CircleSkyRegion
 from gammapy.data import DataStore, Observation, observatory_locations
 from gammapy.datasets import MapDataset, MapDatasetEventSampler
-from gammapy.estimators import LightCurveEstimator
 from gammapy.maps import MapAxis, WcsGeom, Map
 from gammapy.irf import load_cta_irfs
 from gammapy.makers import MapDatasetMaker
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
-    Model,
     Models,
     SkyModel,
     PowerLawSpectralModel,
@@ -109,9 +105,15 @@ from gammapy.modeling.models import (
     PointSpatialModel,
     TemplateSpatialModel,
     ExpDecayTemporalModel,
-    LightCurveTemplateTemporalModel,
     FoVBackgroundModel,
 )
+
+######################################################################
+# Check setup
+# -----------
+from gammapy.utils.check import check_tutorials_setup
+
+check_tutorials_setup()
 
 
 ######################################################################

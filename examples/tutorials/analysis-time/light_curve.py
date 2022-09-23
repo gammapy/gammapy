@@ -54,26 +54,24 @@ extract a light curve independently of the dataset type.
 
 # %matplotlib inline
 import matplotlib.pyplot as plt
-
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 import logging
-
 from astropy.time import Time
-
-log = logging.getLogger(__name__)
-
-
-######################################################################
-# Now let’s import gammapy specific classes and functions
-# 
-
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.modeling.models import PointSpatialModel
 from gammapy.modeling.models import SkyModel, Models
-from gammapy.modeling import Fit
 from gammapy.estimators import LightCurveEstimator
 from gammapy.analysis import Analysis, AnalysisConfig
+
+log = logging.getLogger(__name__)
+
+######################################################################
+# Check setup
+# -----------
+from gammapy.utils.check import check_tutorials_setup
+
+check_tutorials_setup()
 
 
 ######################################################################
@@ -201,6 +199,9 @@ analysis_3d.set_models(models)
 lc_maker_3d = LightCurveEstimator(
     energy_edges=[1, 10] * u.TeV, source="crab", reoptimize=False
 )
+# Example showing how to change some parameters from the object itself
+lc_maker_3d.n_sigma_ul = 3              # Number of sigma to use for upper limit computation
+lc_maker_3d.selection_optional = "all"  # Add the computation of upper limits and likelihood profile
 lc_3d = lc_maker_3d.run(analysis_3d.datasets)
 
 
@@ -208,6 +209,9 @@ lc_3d = lc_maker_3d.run(analysis_3d.datasets)
 # The LightCurve object contains a table which we can explore.
 # 
 
+# Example showing how to change just before plotting the threshold on the signal significance
+# (points vs upper limits), even if this has no effect with this data set.
+lc_3d.sqrt_ts_threshold_ul = 5
 lc_3d.plot(axis_name="time")
 
 table = lc_3d.to_table(format="lightcurve", sed_type="flux")

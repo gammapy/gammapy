@@ -94,16 +94,7 @@ the spectral part of the fit.
 import matplotlib.pyplot as plt
 
 # Check package versions
-import gammapy
 import numpy as np
-import astropy
-import regions
-
-print("gammapy:", gammapy.__version__)
-print("numpy:", np.__version__)
-print("astropy", astropy.__version__)
-print("regions", regions.__version__)
-
 from pathlib import Path
 import astropy.units as u
 from astropy.coordinates import SkyCoord, Angle
@@ -129,6 +120,13 @@ from gammapy.makers import (
 )
 from gammapy.estimators import FluxPointsEstimator
 from gammapy.visualization import plot_spectrum_datasets_off_regions
+
+######################################################################
+# Check setup
+# -----------
+from gammapy.utils.check import check_tutorials_setup
+
+check_tutorials_setup()
 
 
 ######################################################################
