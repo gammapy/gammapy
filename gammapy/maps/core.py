@@ -136,7 +136,7 @@ class Map(abc.ABC):
 
     def rename_axes(self, names, new_names):
         """Rename the Map axes.
-    
+
         Parameters
         ----------
         names : list or str
@@ -1012,6 +1012,79 @@ class Map(abc.ABC):
 
         return Map.from_geom(geom, data=data, unit=self.unit)
 
+    def reproject_to_geom(self, geom, preserve_counts=False, precision_factor=10):
+        """Reproject map to input geometry.
+
+        Parameters
+        ----------
+        geom : `~gammapy.maps.Geom`
+            Target Map geometry
+        preserve_counts : bool
+            Preserve the integral over each bin.  This should be true
+            if the map is an integral quantity (e.g. counts) and false if
+            the map is a differential quantity (e.g. intensity)
+        precision_factor : int
+           Minimal factor between the bin size of the output map and the oversampled base map.
+           Used only for the oversampling method.
+
+        Returns
+        -------
+        output_map : `Map`
+            Reprojected Map
+        """
+        from .region import RegionGeom
+        from .hpx import HpxGeom
+
+        axes = [ax.copy() for ax in self.geom.axes]
+        geom3d = geom.copy(axes=axes)
+
+        if not geom.is_image:
+            if geom.axes.names != geom3d.axes.names:
+                raise ValueError("Axis names and order should be the same.")
+            if geom.axes != geom3d.axes and (
+                isinstance(geom3d, HpxGeom) or isinstance(self.geom, HpxGeom)
+            ):
+                raise TypeError(
+                    "Reprojection to 3d geom with non-identical axes is not supported for HpxGeom. "
+                    "Reproject to 2d geom first and then use inter_to_geom method."
+                )
+        if isinstance(geom3d, RegionGeom):
+            base_factor = (
+                geom3d.to_wcs_geom().pixel_scales.min() / self.geom.pixel_scales.min()
+            )
+        elif isinstance(self.geom, RegionGeom):
+            base_factor = (
+                geom3d.pixel_scales.min() / self.geom.to_wcs_geom().pixel_scales.min()
+            )
+        else:
+            base_factor = geom3d.pixel_scales.min() / self.geom.pixel_scales.min()
+
+        if base_factor >= precision_factor:
+            input_map = self
+        else:
+            factor = precision_factor / base_factor
+            if isinstance(self.geom, HpxGeom):
+                factor = int(2 ** np.ceil(np.log(factor) / np.log(2)))
+            else:
+                factor = int(np.ceil(factor))
+            input_map = self.upsample(factor=factor, preserve_counts=preserve_counts)
+
+        output_map = input_map.resample(geom3d, preserve_counts=preserve_counts)
+
+        if not geom.is_image and geom.axes != geom3d.axes:
+            for base_ax, target_ax in zip(geom3d.axes, geom.axes):
+                base_factor = base_ax.bin_width.min() / target_ax.bin_width.min()
+                if not base_factor >= precision_factor:
+                    factor = precision_factor / base_factor
+                    factor = int(np.ceil(factor))
+                    output_map = output_map.upsample(
+                        factor=factor,
+                        preserve_counts=preserve_counts,
+                        axis_name=base_ax.name,
+                    )
+            output_map = output_map.resample(geom, preserve_counts=preserve_counts)
+        return output_map
+
     def fill_events(self, events):
         """Fill event coordinates (`~gammapy.data.EventList`)."""
         self.fill_by_coord(events.map_coord(self.geom))
@@ -1029,7 +1102,7 @@ class Map(abc.ABC):
             Weights vector. Default is weight of one.
         """
         idx = self.geom.coord_to_idx(coords)
-        self.fill_by_idx(idx, weights)
+        self.fill_by_idx(idx, weights=weights)
 
     def fill_by_pix(self, pix, weights=None):
         """Fill pixels at ``pix`` with given ``weights``.
@@ -1800,7 +1873,6 @@ class Map(abc.ABC):
 
     def __array__(self):
         return self.data
-
 
     def sample_coord(self, n_events, random_state=0):
         """Sample position and energy of events.
