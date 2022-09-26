@@ -19,6 +19,7 @@ from gammapy.modeling.models import (
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.testing import mpl_plot_check
 
+
 @pytest.fixture
 def evaluator():
     center = SkyCoord("0 deg", "0 deg", frame="galactic")
@@ -138,12 +139,11 @@ def test_compute_npred_sign():
     assert (npred_pos.data == -npred_neg.data).all()
     assert np.all(npred_pos.data >= 0)
     assert np.all(npred_neg.data <= 0)
-    
+
+
 def test_psf_reco():
     center = SkyCoord("0 deg", "0 deg", frame="galactic")
-    energy_axis = MapAxis.from_energy_bounds(
-        "1 TeV", "10 TeV", nbin=3, name="energy"
-    )
+    energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3, name="energy")
     geom = WcsGeom.create(
         skydir=center,
         width=1 * u.deg,
@@ -170,21 +170,23 @@ def test_psf_reco():
     assert evaluator.methods_sequence[-1] == evaluator.apply_psf
     npred = evaluator.compute_npred()
     assert_allclose(npred.data.sum(), 9e-12)
-    
+
     psf_map = RecoPSFMap.from_gauss(
         energy_axis=energy_axis, sigma=0.1 * u.deg, geom=geom.to_image()
     )
-    
+
     mask = Map.from_geom(geom, data=True)
     evaluator.psf = None
     evaluator.update(exposure, psf_map, None, geom, mask)
     assert evaluator.apply_psf_after_edisp == True
     assert evaluator.methods_sequence[-1] == evaluator.apply_psf
-    assert_allclose(evaluator.compute_npred().data.sum(),  9e-12)
+    assert_allclose(evaluator.compute_npred().data.sum(), 9e-12)
+
 
 def test_peek_region_geom(evaluator):
     with mpl_plot_check():
         evaluator.peek()
+
 
 def test_peek_wcs_geom():
     center = SkyCoord("0 deg", "0 deg", frame="galactic")
