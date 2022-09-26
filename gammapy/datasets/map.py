@@ -118,7 +118,7 @@ class MapDataset(Dataset):
         Mask to apply to the likelihood for fitting.
     psf : `~gammapy.irf.PSFMap` or `~gammapy.utils.fits.HDULocation`
         PSF kernel
-    edisp : `~gammapy.irf.EDispKernel` or `~gammapy.irf.EDispMap` or `~gammapy.utils.fits.HDULocation`
+    edisp : `~gammapy.irf.EDispMap` or `~gammapy.utils.fits.HDULocation`
         Energy dispersion kernel
     mask_safe : `~gammapy.maps.WcsNDMap` or `~gammapy.utils.fits.HDULocation`
         Mask defining the safe data range.
@@ -136,12 +136,13 @@ class MapDataset(Dataset):
     Examples
     --------
     >>> from gammapy.datasets import MapDataset
-    >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz", name="cta_dataset")
+    >>> filename = "$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz"
+    >>> dataset = MapDataset.read(filename, name="cta-dataset")
     >>> print(dataset)
     MapDataset
     ----------
     <BLANKLINE>
-      Name                            : cta_dataset
+      Name                            : cta-dataset
     <BLANKLINE>
       Total counts                    : 104317
       Total background counts         : 91507.70
@@ -621,7 +622,9 @@ class MapDataset(Dataset):
         >>> from gammapy.maps import WcsGeom, MapAxis
 
         >>> energy_axis = MapAxis.from_energy_bounds(1.0, 10.0, 4, unit="TeV")
-        >>> energy_axis_true = MapAxis.from_energy_bounds( 0.5, 20, 10, unit="TeV", name="energy_true")
+        >>> energy_axis_true = MapAxis.from_energy_bounds(
+                    0.5, 20, 10, unit="TeV", name="energy_true"
+                )
         >>> geom = WcsGeom.create(
                     skydir=(83.633, 22.014),
                     binsz=0.02, width=(2, 2),
@@ -951,7 +954,7 @@ class MapDataset(Dataset):
         --------
         >>> from gammapy.datasets import MapDataset
         >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
-        >>> kwargs = {"markerfacecolor": "blue", "markersize":8, "marker":'s', } #plot big blue squares
+        >>> kwargs = {"markerfacecolor": "blue", "markersize":8, "marker":'s'}
         >>> dataset.plot_residuals_spectral(method="diff/sqrt(model)", **kwargs) # doctest: +SKIP
 
         """
@@ -1046,10 +1049,10 @@ class MapDataset(Dataset):
         >>> import astropy.units as u
         >>> from gammapy.datasets import MapDataset
         >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
-        >>> reg = CircleSkyRegion(SkyCoord(0,0, unit="deg", frame="galactic"), radius=1.0*u.deg)
+        >>> reg = CircleSkyRegion(SkyCoord(0,0, unit="deg", frame="galactic"), radius=1.0 * u.deg)
         >>> kwargs_spatial = {"cmap": "RdBu_r", "vmin":-5, "vmax":5, "add_cbar": True}
-        >>> kwargs_spectral = {"region":reg, "markerfacecolor": "blue", "markersize":8, "marker":'s'}
-        >>> dataset.plot_residuals(kwargs_spatial=kwargs_spatial, kwargs_spectral=kwargs_spectral) # doctest: +SKIP
+        >>> kwargs_spectral = {"region":reg, "markerfacecolor": "blue", "markersize": 8, "marker": "s"}  # noqa: E501
+        >>> dataset.plot_residuals(kwargs_spatial=kwargs_spatial, kwargs_spectral=kwargs_spectral) # doctest: +SKIP noqa: E501
         """
         ax_spatial, ax_spectral = get_axes(
             ax_spatial,
@@ -2076,7 +2079,7 @@ class MapDatasetOnOff(MapDataset):
         return alpha
 
     def npred_background(self):
-        """Predicted background counts (mu_bkg) estimated from the marginalized likelihood estimate.
+        """Predicted background counts estimated from the marginalized likelihood estimate.
 
         See :ref:`wstat`
 
@@ -2148,7 +2151,7 @@ class MapDatasetOnOff(MapDataset):
         name=None,
         **kwargs,
     ):
-        """Create a MapDatasetOnOff object  switch zero filled maps according to the specified geometries
+        """Create an empty `MapDatasetOnOff` object according to the specified geometries
 
         Parameters
         ----------
@@ -2336,8 +2339,8 @@ class MapDatasetOnOff(MapDataset):
             acceptance_off = total_off / total_alpha
             average_alpha = total_alpha.data.sum() / total_off.data.sum()
 
-        # For the bins where the stacked OFF counts equal 0, the alpha value is performed by weighting on the total
-        # OFF counts of each run
+        # For the bins where the stacked OFF counts equal 0, the alpha value is
+        # performed by weighting on the total OFF counts of each run
         is_zero = total_off.data == 0
         acceptance_off.data[is_zero] = 1 / average_alpha
 

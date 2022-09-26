@@ -83,7 +83,7 @@ class Pulsar:
         P_0="0.1 s",
         B="1e10 G",
         n=3,
-        I=DEFAULT_I,
+        I=DEFAULT_I,  # noqa: E741
         R=DEFAULT_R,
         age=None,
         L_0=None,  # noqa: E741
