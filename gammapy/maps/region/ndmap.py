@@ -707,7 +707,7 @@ class RegionNDMap(Map):
             table["CHANNEL"] = np.arange(energy_axis.nbin, dtype=np.int16)
             table["COUNTS"] = np.array(data, dtype=np.int32)
 
-            # see https://heasarc.gsfc.nasa.gov/docs/heasarc/ofwg/docs/spectra/ogip_92_007/node6.html
+            # see https://heasarc.gsfc.nasa.gov/docs/heasarc/ofwg/docs/spectra/ogip_92_007/node6.html  # noqa: E501
             table.meta = {
                 "EXTNAME": "SPECTRUM",
                 "telescop": "unknown",

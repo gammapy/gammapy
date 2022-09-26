@@ -148,7 +148,8 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
     scale : float
         Scale parameter for model fitting
     jfactor : `~astropy.units.Quantity`
-        Integrated J-Factor needed when `~gammapy.modeling.models.PointSpatialModel` spatial model is used
+        Integrated J-Factor needed when `~gammapy.modeling.models.PointSpatialModel`
+        spatial model is used
     z: float
         Redshift value
     k: int
@@ -164,7 +165,7 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
         channel = "b"
         massDM = 5000*u.Unit("GeV")
         jfactor = 3.41e19 * u.Unit("GeV2 cm-5")
-        modelDM = DarkMatterAnnihilationSpectralModel(mass=massDM, channel=channel, jfactor=jfactor)
+        modelDM = DarkMatterAnnihilationSpectralModel(mass=massDM, channel=channel, jfactor=jfactor)  # noqa: E501
 
     References
     ----------

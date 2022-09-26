@@ -105,9 +105,7 @@ def test_psf_cta_1dc():
 
 @requires_data()
 def test_get_sigmas_and_norms():
-    filename = (
-        "$GAMMAPY_DATA/cta-caldb/Prod5-South-20deg-AverageAz-14MSTs37SSTs.180000s-v0.1.fits.gz"
-    )
+    filename = "$GAMMAPY_DATA/cta-caldb/Prod5-South-20deg-AverageAz-14MSTs37SSTs.180000s-v0.1.fits.gz"  # noqa: E501
 
     psf_irf = EnergyDependentMultiGaussPSF.read(filename, hdu="POINT SPREAD FUNCTION")
 

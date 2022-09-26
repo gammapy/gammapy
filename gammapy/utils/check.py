@@ -14,7 +14,7 @@ def check_tutorials_setup(download_datasets_path="./gammapy-data"):
     download_datasets_path : str
         Path to download the data, if not present.
     """
-    if not "GAMMAPY_DATA" in os.environ:
+    if "GAMMAPY_DATA" not in os.environ:
         log.info(
             "Missing example datasets, downloading to {download_datasets_path} now..."
         )

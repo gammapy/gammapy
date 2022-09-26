@@ -192,7 +192,8 @@ def test_flux_estimator_compound_model():
     with pytest.raises(ValueError) as e_info:
         scale_model = estimator.get_scale_model(Models([model2]))
     assert (
-        "FluxEstimator requires one and only one free 'norm' or 'amplitude' parameter in the model to run"
+        "FluxEstimator requires one and only one free 'norm' or 'amplitude'"
+        " parameter in the model to run"
         in str(e_info.value)
     )
 
