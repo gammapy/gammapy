@@ -61,6 +61,7 @@ def test_compute_flux_spatial_no_psf(evaluator):
     flux = evaluator.compute_flux_spatial()
     assert_allclose(flux, 1.0)
 
+
 def test_large_oversampling():
     nbin = 2
     energy_axis_true = MapAxis.from_energy_bounds(
@@ -181,7 +182,33 @@ def test_psf_reco():
     assert evaluator.methods_sequence[-1] == evaluator.apply_psf
     assert_allclose(evaluator.compute_npred().data.sum(),  9e-12)
 
-def test_peek(evaluator):
+def test_peek_region_geom(evaluator):
     with mpl_plot_check():
         evaluator.peek()
-        
+
+def test_peek_wcs_geom():
+    center = SkyCoord("0 deg", "0 deg", frame="galactic")
+    energy_axis_true = MapAxis.from_energy_bounds(
+        ".1 TeV", "10 TeV", nbin=2, name="energy_true"
+    )
+    geom = WcsGeom.create(
+        skydir=center,
+        width=1 * u.deg,
+        axes=[energy_axis_true],
+        frame="galactic",
+        binsz=0.2 * u.deg,
+    )
+
+    spectral_model = PowerLawSpectralModel()
+    spatial_model = PointSpatialModel(
+        lon_0=0 * u.deg, lat_0=0 * u.deg, frame="galactic"
+    )
+    model = SkyModel(spectral_model=spectral_model, spatial_model=spatial_model)
+
+    exposure = Map.from_geom(geom, unit="m2 s")
+    exposure.data += 1.0
+
+    evaluator = MapEvaluator(model=model, exposure=exposure)
+
+    with mpl_plot_check():
+        evaluator.peek()
