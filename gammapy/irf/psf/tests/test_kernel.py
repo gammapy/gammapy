@@ -8,6 +8,7 @@ from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling.models import DiskSpatialModel
 from gammapy.utils.testing import mpl_plot_check
 
+
 @pytest.fixture
 def kernel_gaussian():
     sigma = 0.5 * u.deg
@@ -33,6 +34,7 @@ def test_psf_kernel_read_write(kernel_gaussian, tmp_path):
     kernel_gaussian.write(tmp_path / "tmp.fits", overwrite=True)
     kernel2 = PSFKernel.read(tmp_path / "tmp.fits")
     assert_allclose(kernel_gaussian.psf_kernel_map.data, kernel2.psf_kernel_map.data)
+
 
 def test_psf_kernel_to_image():
     sigma1 = 0.5 * u.deg
@@ -64,9 +66,11 @@ def test_psf_kernel_to_image():
     assert_allclose(kernel_image_2.psf_kernel_map.data[0, 22, 22], 0.007752, atol=1e-5)
     assert_allclose(kernel_image_2.psf_kernel_map.data[0, 20, 20], 0.0, atol=1e-5)
 
+
 def test_plot_kernel(kernel_gaussian):
     with mpl_plot_check():
         kernel_gaussian.plot_kernel()
+
 
 def test_peek(kernel_gaussian):
     with mpl_plot_check():

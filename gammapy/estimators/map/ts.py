@@ -9,13 +9,13 @@ import scipy.optimize
 from astropy.coordinates import Angle
 from astropy.utils import lazyproperty
 from gammapy.datasets.map import MapEvaluator
+from gammapy.datasets.utils import get_nearest_valid_exposure_position
 from gammapy.maps import Map, Maps
 from gammapy.modeling.models import PointSpatialModel, PowerLawSpectralModel, SkyModel
 from gammapy.stats import cash_sum_cython, f_cash_root_cython, norm_bounds_cython
 from gammapy.utils.array import shape_2N, symmetric_crop_pad_width
 from gammapy.utils.pbar import progress_bar
 from gammapy.utils.roots import find_roots
-from gammapy.datasets.utils import get_nearest_valid_exposure_position
 from ..core import Estimator
 from ..utils import estimate_exposure_reco_energy
 from .core import FluxMaps
@@ -239,10 +239,14 @@ class TSMapEstimator(Estimator):
 
         # Creating exposure map with the mean non-null exposure
         exposure = Map.from_geom(geom, unit=dataset.exposure.unit)
-        position = get_nearest_valid_exposure_position(dataset.exposure, geom.center_skydir)
+        position = get_nearest_valid_exposure_position(
+            dataset.exposure, geom.center_skydir
+        )
         exposure_position = dataset.exposure.to_region_nd_map(position)
         if not np.any(exposure_position.data):
-            raise ValueError("No valid exposure. Impossible to compute kernel for TS Map.")
+            raise ValueError(
+                "No valid exposure. Impossible to compute kernel for TS Map."
+            )
         exposure.data[...] = exposure_position.data
 
         # We use global evaluation mode to not modify the geometry

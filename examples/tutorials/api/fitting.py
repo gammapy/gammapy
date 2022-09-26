@@ -34,19 +34,18 @@ The setup
 
 """
 
+from itertools import combinations
 import numpy as np
 from astropy import units as u
 import matplotlib.pyplot as plt
-from gammapy.modeling import Fit
 from gammapy.datasets import Datasets, SpectrumDatasetOnOff
+from gammapy.modeling import Fit
 from gammapy.modeling.models import LogParabolaSpectralModel, SkyModel
-from gammapy.visualization.utils import plot_contour_line
-from itertools import combinations
-
 ######################################################################
 # Check setup
 # -----------
 from gammapy.utils.check import check_tutorials_setup
+from gammapy.visualization.utils import plot_contour_line
 
 check_tutorials_setup()
 
@@ -54,10 +53,10 @@ check_tutorials_setup()
 ######################################################################
 # Model and dataset
 # -----------------
-# 
+#
 # First we define the source model, here we need only a spectral model for
 # which we choose a log-parabola
-# 
+#
 
 crab_spectrum = LogParabolaSpectralModel(
     amplitude=1e-11 / u.cm**2 / u.s / u.TeV,
@@ -75,7 +74,7 @@ crab_model = SkyModel(spectral_model=crab_spectrum, name="crab")
 # The data and background are read from pre-computed ON/OFF datasets of
 # HESS observations, for simplicity we stack them together. Then we set
 # the model and fit range to the resulting dataset.
-# 
+#
 
 datasets = []
 for obs_id in [23523, 23526]:
@@ -97,9 +96,9 @@ dataset_hess.mask_fit = dataset_hess.counts.geom.energy_mask(e_min, e_max)
 ######################################################################
 # Fitting options
 # ---------------
-# 
+#
 # First let’s create a `Fit` instance:
-# 
+#
 
 scipy_opts = {
     "method": "L-BFGS-B",
@@ -114,16 +113,16 @@ fit_scipy = Fit(store_trace=True, optimize_opts=scipy_opts)
 # optimizers and set their option using the `optimize_opts` argument of
 # the `Fit.run()` method. In addition we have specified to store the
 # trace of parameter values of the fit.
-# 
+#
 # Note that, for now, covaraince matrix and errors are computed only for
 # the fitting with MINUIT. However depending on the problem other
 # optimizers can better perform, so sometimes it can be useful to run a
 # pre-fit with alternative optimization methods.
-# 
+#
 # | For the “scipy” backend the available options are described in detail
 #   here:
 # | https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html
-# 
+#
 
 # %%time
 result_scipy = fit_scipy.run(datasets)
@@ -136,7 +135,7 @@ result_scipy = fit_scipy.run(datasets)
 #   http://cxc.cfa.harvard.edu/sherpa/methods/index.html The available
 #   options of the optimization methods are described on the following
 #   page https://cxc.cfa.harvard.edu/sherpa/methods/opt_methods.html
-# 
+#
 
 # %%time
 sherpa_opts = {"method": "simplex", "ftol": 1e-3, "maxfev": int(1e4)}
@@ -158,7 +157,7 @@ results_simplex = fit_sherpa.run(datasets)
 # option change the speed and accuracy of the optimizer: 0 fast, 1
 # default, 2 slow but accurate. If you want more reliable error estimates,
 # you should run the final fit with strategy 2.
-# 
+#
 
 # %%time
 fit = Fit(store_trace=True)
@@ -171,12 +170,12 @@ result_minuit = fit.run(datasets)
 ######################################################################
 # Fit quality assessment
 # ----------------------
-# 
+#
 # There are various ways to check the convergence and quality of a fit.
 # Among them:
-# 
+#
 # Refer to the automatically-generated results dictionary:
-# 
+#
 
 print(result_scipy)
 
@@ -188,7 +187,7 @@ print(result_minuit)
 ######################################################################
 # If the fit is performed with minuit you can print detailed informations
 # to check the convergence
-# 
+#
 
 print(fit.minuit)
 
@@ -196,7 +195,7 @@ print(fit.minuit)
 ######################################################################
 # Check the trace of the fit e.g. in case the fit did not converge
 # properly
-# 
+#
 
 result_minuit.trace
 
@@ -205,7 +204,7 @@ result_minuit.trace
 # Check that the fitted values and errors for all parameters are
 # reasonable, and no fitted parameter value is “too close” - or even
 # outside - its allowed min-max range
-# 
+#
 
 result_minuit.parameters.to_table()
 
@@ -217,7 +216,7 @@ result_minuit.parameters.to_table()
 # fit statistic profile can be changed on the
 # `~gammapy.modeling.Parameter` object, which has `~gammapy.modeling.Parameter.scan_min`,
 # `~gammapy.modeling.Parameter.scan_max`, `~gammapy.modeling.Parameter.scan_n_values` and `~gammapy.modeling.Parameter.scan_n_sigma` attributes.
-# 
+#
 
 total_stat = result_minuit.total_stat
 
@@ -242,24 +241,24 @@ for ax, par in zip(axes, crab_model.parameters.free_parameters):
 # `~gammapy.datasets.MapDataset` fitting) and
 # `spectrum_analysis.ipynb <../analysis/1D/spectral_analysis.ipynb>`__
 # (for `SpectrumDataset` fitting).
-# 
+#
 
 
 ######################################################################
 # Covariance and parameters errors
 # --------------------------------
-# 
+#
 # After the fit the covariance matrix is attached to the model. You can
 # get the error on a specific parameter by accessing the `~gammapy.modeling.Parameter.error`
 # attribute:
-# 
+#
 
 crab_model.spectral_model.alpha.error
 
 
 ######################################################################
 # And you can plot the total parameter correlation as well:
-# 
+#
 
 crab_model.covariance.plot_correlation()
 
@@ -267,7 +266,7 @@ crab_model.covariance.plot_correlation()
 ######################################################################
 # As an example, this step is needed to produce a butterfly plot showing
 # the envelope of the model taking into account parameter uncertainties.
-# 
+#
 
 energy_bounds = [1, 10] * u.TeV
 crab_spectrum.plot(energy_bounds=energy_bounds, energy_power=2)
@@ -277,18 +276,18 @@ ax = crab_spectrum.plot_error(energy_bounds=energy_bounds, energy_power=2)
 ######################################################################
 # Confidence contours
 # -------------------
-# 
+#
 # In most studies, one wishes to estimate parameters distribution using
 # observed sample data. A 1-dimensional confidence interval gives an
 # estimated range of values which is likely to include an unknown
 # parameter. A confidence contour is a 2-dimensional generalization of a
 # confidence interval, often represented as an ellipsoid around the
 # best-fit value.
-# 
+#
 # Gammapy offers two ways of computing confidence contours, in the
 # dedicated methods `~gammapy.modeling.Fit.minos_contour` and `~gammapy.modeling.Fit.stat_profile`. In
 # the following sections we will describe them.
-# 
+#
 
 
 ######################################################################
@@ -300,19 +299,20 @@ ax = crab_spectrum.plot_error(energy_bounds=energy_bounds, energy_power=2)
 # 68%**, and similarly for all other levels. In particular, in
 # 2-dimensions the probability enclosed by the :math:`N\sigma` confidence
 # contour is :math:`P(N)=1-e^{-N^2/2}`.
-# 
+#
 
 
 ######################################################################
 # Computing contours using `~gammapy.modeling.Fit.stat_contour`
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# 
+#
 # After the fit, MINUIT offers the possibility to compute the confidence
 # confours. gammapy provides an interface to this functionality through
 # the `~gammapy.modeling.Fit` object using the `~gammapy.modeling.Fit.stat_contour` method. Here we defined a
 # function to automate the contour production for the different
 # parameterer and confidence levels (expressed in term of sigma):
-# 
+#
+
 
 def make_contours(fit, datasets, result, npoints, sigmas):
     cts_sigma = []
@@ -336,7 +336,7 @@ def make_contours(fit, datasets, result, npoints, sigmas):
 
 ######################################################################
 # Now we can compute few contours.
-# 
+#
 
 # %%time
 sigmas = [1, 2]
@@ -352,7 +352,7 @@ cts_sigma = make_contours(
 ######################################################################
 # Then we prepare some aliases and annotations in order to make the
 # plotting nicer.
-# 
+#
 
 pars = {
     "phi": r"$\phi_0 \,/\,(10^{-11}\,{\rm TeV}^{-1} \, {\rm cm}^{-2} {\rm s}^{-1})$",
@@ -365,19 +365,13 @@ panels = [
         "x": "alpha",
         "y": "phi",
         "cx": (lambda ct: ct["contour_alpha_amplitude"]["alpha"]),
-        "cy": (
-            lambda ct: np.array(1e11)
-            * ct["contour_alpha_amplitude"]["amplitude"]
-        ),
+        "cy": (lambda ct: np.array(1e11) * ct["contour_alpha_amplitude"]["amplitude"]),
     },
     {
         "x": "beta",
         "y": "phi",
         "cx": (lambda ct: ct["contour_beta_amplitude"]["beta"]),
-        "cy": (
-            lambda ct: np.array(1e11)
-            * ct["contour_beta_amplitude"]["amplitude"]
-        ),
+        "cy": (lambda ct: np.array(1e11) * ct["contour_beta_amplitude"]["amplitude"]),
     },
     {
         "x": "alpha",
@@ -390,7 +384,7 @@ panels = [
 
 ######################################################################
 # Finally we produce the confidence contours figures.
-# 
+#
 
 fig, axes = plt.subplots(1, 3, figsize=(16, 5))
 colors = ["m", "b", "c"]
@@ -415,7 +409,7 @@ plt.tight_layout()
 ######################################################################
 # Computing contours using `~gammapy.modeling.Fit.stat_surface`
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# 
+#
 # This alternative method for the computation of confidence contours,
 # although more time consuming than `~gammapy.modeling.Fit.minos_contour()`, is expected
 # to be more stable. It consists of a generalization of
@@ -430,17 +424,17 @@ plt.tight_layout()
 # surface, one can easily compute a surface of
 # :math:`TS = -2\Delta\mathrm{ln}(\mathcal{L})` and compute confidence
 # contours.
-# 
+#
 # Let’s see it step by step.
-# 
+#
 # First of all, we can notice that this method is “backend-agnostic”,
 # meaning that it can be run with MINUIT, sherpa or scipy as fitting
 # tools. Here we will stick with MINUIT, which is the default choice:
-# 
+#
 # As an example, we can compute the confidence contour for the `alpha`
 # and `beta` parameters of the `dataset_hess`. Here we define the
 # parameter space:
-# 
+#
 
 result = result_minuit
 par_alpha = datasets.parameters["alpha"]
@@ -456,7 +450,7 @@ par_beta.scan_values = np.linspace(-0.05, 0.55, 20)
 # `reoptimize=True`, so that all free nuisance parameters will be fit at
 # each grid node. This is the correct way, statistically speaking, of
 # computing confidence contours, but is expected to be time consuming.
-# 
+#
 
 fit = Fit(backend="minuit", optimize_opts={"print_level": 0})
 stat_surface = fit.stat_surface(
@@ -472,7 +466,7 @@ stat_surface = fit.stat_surface(
 # :math:`-2\mathrm{ln}(\mathcal{L})` surface to a surface of statistical
 # significance (in units of Gaussian standard deviations from the surface
 # minimum):
-# 
+#
 
 # Compute TS
 TS = stat_surface["stat_scan"] - result.total_stat
@@ -484,7 +478,7 @@ stat_surface = np.sqrt(TS.T)
 ######################################################################
 # Notice that, as explained before, :math:`1\sigma` contour obtained this
 # way will not contain 68% of the probability, but rather
-# 
+#
 
 # Compute the corresponding statistical significance surface
 # p_value = 1 - st.chi2(df=1).cdf(TS)
@@ -493,7 +487,7 @@ stat_surface = np.sqrt(TS.T)
 
 ######################################################################
 # Finally, we can plot the surface values together with contours:
-# 
+#
 
 fig, ax = plt.subplots(figsize=(8, 6))
 x_values = par_alpha.scan_values
@@ -507,17 +501,15 @@ ax.set_ylabel(f"{par_beta.name}")
 
 # We choose to plot 1 and 2 sigma confidence contours
 levels = [1, 2]
-contours = ax.contour(
-    x_values, y_values, stat_surface, levels=levels, colors="white"
-)
-ax.clabel(contours, fmt="%.0f$\,\sigma$", inline=3, fontsize=15);
+contours = ax.contour(x_values, y_values, stat_surface, levels=levels, colors="white")
+ax.clabel(contours, fmt="%.0f$\,\sigma$", inline=3, fontsize=15)
 
 
 ######################################################################
 # Note that, if computed with `reoptimize=True`, this plot would be
 # completely consistent with the third panel of the plot produced with
 # `~gammapy.modeling.Fit.stat_contour` (try!).
-# 
+#
 
 
 ######################################################################
@@ -527,5 +519,4 @@ ax.clabel(contours, fmt="%.0f$\,\sigma$", inline=3, fontsize=15);
 # of the contours is not well defined. That’s why we advise to always
 # choose a parameter space that com contain the contours you’re interested
 # in.
-# 
-
+#

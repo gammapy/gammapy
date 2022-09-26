@@ -1,14 +1,14 @@
-import os
 import logging
-from gammapy.scripts.info import cli_info
+import os
 from gammapy.scripts.download import cli_download_datasets
+from gammapy.scripts.info import cli_info
 
 log = logging.getLogger(__name__)
 
 
 def check_tutorials_setup(download_datasets_path="./gammapy-data"):
     """Check tutorials setup and download data if not available
-    
+
     Parameters
     ----------
     download_datasets_path : str

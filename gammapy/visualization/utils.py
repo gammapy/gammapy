@@ -2,7 +2,6 @@ import numpy as np
 from scipy.interpolate import CubicSpline
 import matplotlib.pyplot as plt
 
-
 __all__ = [
     "plot_contour_line",
     "plot_spectrum_datasets_off_regions",

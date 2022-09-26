@@ -3,11 +3,11 @@
 import logging
 import tarfile
 import zipfile
-from urllib.parse import urlparse
 from pathlib import Path
+from urllib.parse import urlparse
+from astropy.utils import lazyproperty
 import click
 from gammapy import __version__
-from astropy.utils import lazyproperty
 
 log = logging.getLogger(__name__)
 

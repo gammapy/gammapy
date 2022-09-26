@@ -626,7 +626,6 @@ class IRFMap:
         self.exposure_map = exposure_map
         irf_map.geom.axes.assert_names(self.required_axes)
 
-
     @property
     @abc.abstractmethod
     def tag(self):

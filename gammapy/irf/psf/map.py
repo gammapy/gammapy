@@ -4,7 +4,7 @@ import astropy.units as u
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FormatStrFormatter
-from gammapy.maps import Map, MapAxis, MapCoord, WcsGeom, MapAxes
+from gammapy.maps import Map, MapAxes, MapAxis, MapCoord, WcsGeom
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.random import InverseCDFSampler, get_random_state
@@ -114,7 +114,9 @@ class PSFMap(IRFMap):
         npix_x, npix_y = geom.npix
         axis_lon = MapAxis.from_edges(np.arange(npix_x + 1) - 0.5, name="lon_idx")
         axis_lat = MapAxis.from_edges(np.arange(npix_y + 1) - 0.5, name="lat_idx")
-        axes = MapAxes([geom.axes[self.energy_name], geom.axes["rad"], axis_lat, axis_lon])
+        axes = MapAxes(
+            [geom.axes[self.energy_name], geom.axes["rad"], axis_lat, axis_lon]
+        )
         psf = IRFLikePSF
         psf.required_axes = axes.names
         return psf(
@@ -186,7 +188,7 @@ class PSFMap(IRFMap):
         if position is None:
             position = self.psf_map.geom.center_skydir
 
-        kwargs = {self.energy_name:energy_true, "skycoord":position}
+        kwargs = {self.energy_name: energy_true, "skycoord": position}
         coords = self._get_irf_coords(**kwargs)
 
         return self._psf_irf.containment_radius(fraction, **coords)
@@ -251,10 +253,11 @@ class PSFMap(IRFMap):
 
         if max_radius is None:
             energy_axis = self.psf_map.geom.axes[self.energy_name]
-            kwargs = {"fraction":containment,
-                      "position":position,
-                      self.energy_name:energy_axis.center
-                     }
+            kwargs = {
+                "fraction": containment,
+                "position": position,
+                self.energy_name: energy_axis.center,
+            }
             radii = self.containment_radius(**kwargs)
             max_radius = np.max(radii)
 
@@ -531,10 +534,8 @@ class PSFMap(IRFMap):
         self.exposure_map.reduce_over_axes().plot(ax=axes[2], add_cbar=True)
 
         axes[3].set_title("Containment radius at 1 TeV")
-        kwargs = {self.energy_name:1 * u.TeV}
-        self.containment_radius_map(**kwargs).plot(
-            ax=axes[3], add_cbar=True
-        )
+        kwargs = {self.energy_name: 1 * u.TeV}
+        self.containment_radius_map(**kwargs).plot(ax=axes[3], add_cbar=True)
 
 
 class RecoPSFMap(PSFMap):
@@ -663,4 +664,6 @@ class RecoPSFMap(PSFMap):
 
     def stack(self, other, weights=None, nan_to_num=True):
         """Stack IRF map with another one in place."""
-        raise NotImplementedError("Stacking is not supported for PSF in reconstructed energy.")
+        raise NotImplementedError(
+            "Stacking is not supported for PSF in reconstructed energy."
+        )

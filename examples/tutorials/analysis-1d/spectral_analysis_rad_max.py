@@ -104,40 +104,35 @@ a 1D likelihood fit, exactly as illustrated in the previous example.
 ######################################################################
 # Setup
 # -----
-# 
+#
 # As usual, we’ll start with some setup …
-# 
-
-# %matplotlib inline
-import matplotlib.pyplot as plt
+#
 
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import PointSkyRegion
+# %matplotlib inline
+import matplotlib.pyplot as plt
 from gammapy.data import DataStore
-from gammapy.maps import MapAxis, RegionGeom, Map
-from gammapy.modeling import Fit
-from gammapy.datasets import (
-    Datasets,
-    SpectrumDataset,
-)
-from gammapy.modeling.models import (
-    create_crab_spectral_model,
-    SkyModel,
-    LogParabolaSpectralModel,
-)
+from gammapy.datasets import Datasets, SpectrumDataset
 from gammapy.makers import (
-    SpectrumDatasetMaker,
-    WobbleRegionsFinder,
     ReflectedRegionsBackgroundMaker,
     SafeMaskMaker,
+    SpectrumDatasetMaker,
+    WobbleRegionsFinder,
 )
-from gammapy.visualization import plot_spectrum_datasets_off_regions
-
+from gammapy.maps import Map, MapAxis, RegionGeom
+from gammapy.modeling import Fit
+from gammapy.modeling.models import (
+    LogParabolaSpectralModel,
+    SkyModel,
+    create_crab_spectral_model,
+)
 ######################################################################
 # Check setup
 # -----------
 from gammapy.utils.check import check_tutorials_setup
+from gammapy.visualization import plot_spectrum_datasets_off_regions
 
 check_tutorials_setup()
 
@@ -145,10 +140,10 @@ check_tutorials_setup()
 ######################################################################
 # Load data
 # ---------
-# 
+#
 # We load the two MAGIC observations of the Crab Nebula containing the
 # `RAD_MAX_2D` table.
-# 
+#
 
 data_store = DataStore.from_dir("$GAMMAPY_DATA/magic/rad_max/data")
 observations = data_store.get_observations(required_irf="point-like")
@@ -159,7 +154,7 @@ observations = data_store.get_observations(required_irf="point-like")
 # automatically loaded in the observation. As we can see from the IRF
 # component axes, the table has a single offset value and 28 estimated
 # energy values.
-# 
+#
 
 rad_max = observations["5029747"].rad_max
 print(rad_max)
@@ -167,19 +162,19 @@ print(rad_max)
 
 ######################################################################
 # We can also plot the rad max value against the energy:
-# 
+#
 
-rad_max.plot_rad_max_vs_energy();
+rad_max.plot_rad_max_vs_energy()
 
 
 ######################################################################
 # Define the ON region
 # --------------------
-# 
+#
 # To use the `RAD_MAX_2D` values to define the sizes of the ON and OFF
 # regions **it is necessary to specify the ON region as
 # a `~regions.PointSkyRegion`:
-# 
+#
 
 target_position = SkyCoord(ra=83.63, dec=22.01, unit="deg", frame="icrs")
 on_region = PointSkyRegion(target_position)
@@ -188,9 +183,9 @@ on_region = PointSkyRegion(target_position)
 ######################################################################
 # Run data reduction chain
 # ------------------------
-# 
+#
 # We begin with the configuration of the dataset maker classes:
-# 
+#
 
 # true and estimated energy axes
 energy_axis = MapAxis.from_energy_bounds(
@@ -203,9 +198,7 @@ energy_axis_true = MapAxis.from_energy_bounds(
 # geometry defining the ON region and SpectrumDataset based on it
 geom = RegionGeom.create(region=on_region, axes=[energy_axis])
 
-dataset_empty = SpectrumDataset.create(
-    geom=geom, energy_axis_true=energy_axis_true
-)
+dataset_empty = SpectrumDataset.create(geom=geom, energy_axis_true=energy_axis_true)
 
 
 ######################################################################
@@ -214,11 +207,11 @@ dataset_empty = SpectrumDataset.create(
 # `SpectrumDatasetMaker` and `ReflectedRegionsBackgroundMaker` will
 # take care of producing ON and OFF with the proper sizes, automatically
 # adopting the :math:`\theta` values in `Observation.rad_max`.
-# 
+#
 # As explained in the introduction, we use a `WobbleRegionsFinder`, to
 # determine the OFF positions. The parameter `n_off_positions` specifies
 # the number of OFF regions to be considered.
-# 
+#
 
 dataset_maker = SpectrumDatasetMaker(
     containment_correction=False, selection=["counts", "exposure", "edisp"]
@@ -250,7 +243,7 @@ for observation in observations:
 ######################################################################
 # No we can plot the off regions and target positions on top of the counts
 # map:
-# 
+#
 
 ax = counts.plot()
 geom.plot_region(ax=ax, kwargs_point={"color": "k", "marker": "*"})
@@ -260,11 +253,11 @@ plot_spectrum_datasets_off_regions(ax=ax, datasets=datasets)
 ######################################################################
 # Fit spectrum
 # ------------
-# 
+#
 # | We perform a joint likelihood fit of the two datasets.
 # | For this particular datasets we select a fit range between
 #   :math:`80\,{\rm GeV}` and :math:`20\,{\rm TeV}`.
-# 
+#
 
 e_min = 80 * u.GeV
 e_max = 20 * u.TeV
@@ -292,19 +285,19 @@ best_fit_model = model.copy()
 ######################################################################
 # Fit quality and model residuals
 # -------------------------------
-# 
+#
 
 
 ######################################################################
 # We can access the results dictionary to see if the fit converged:
-# 
+#
 
 print(result)
 
 
 ######################################################################
 # and check the best-fit parameters
-# 
+#
 
 datasets.models.to_parameters_table()
 
@@ -312,7 +305,7 @@ datasets.models.to_parameters_table()
 ######################################################################
 # A simple way to inspect the model residuals is using the function
 # `~SpectrumDataset.plot_fit()`
-# 
+#
 
 ax_spectrum, ax_residuals = datasets[0].plot_fit()
 ax_spectrum.set_ylim(0.1, 120)
@@ -321,17 +314,17 @@ ax_spectrum.set_ylim(0.1, 120)
 ######################################################################
 # For more ways of assessing fit quality, please refer to the dedicated
 # `modeling and fitting tutorial <../2D/modeling_2D.ipynb>`__.
-# 
+#
 
 
 ######################################################################
 # Compare against the literature
 # ------------------------------
-# 
+#
 # Let us compare the spectrum we obtained against a `previous measurement
 # by
 # MAGIC <https://ui.adsabs.harvard.edu/abs/2015JHEAp...5...30A/abstract>`__.
-# 
+#
 
 plot_kwargs = {
     "energy_bounds": [0.08, 20] * u.TeV,
@@ -345,12 +338,8 @@ crab_magic_lp = create_crab_spectral_model("magic_lp")
 best_fit_model.spectral_model.plot(
     ls="-", lw=1.5, color="crimson", label="best fit", **plot_kwargs
 )
-best_fit_model.spectral_model.plot_error(
-    facecolor="crimson", alpha=0.4, **plot_kwargs
-)
-crab_magic_lp.plot(
-    ls="--", lw=1.5, color="k", label="MAGIC reference", **plot_kwargs
-)
+best_fit_model.spectral_model.plot_error(facecolor="crimson", alpha=0.4, **plot_kwargs)
+crab_magic_lp.plot(ls="--", lw=1.5, color="k", label="MAGIC reference", **plot_kwargs)
 
 plt.legend()
 plt.ylim([1e-13, 1e-10])

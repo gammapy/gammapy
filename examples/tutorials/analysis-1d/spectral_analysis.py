@@ -86,45 +86,43 @@ the spectral part of the fit.
 ######################################################################
 # Setup
 # -----
-# 
+#
 # As usual, we’ll start with some setup …
-# 
+#
 
-# %matplotlib inline
-import matplotlib.pyplot as plt
-
+from pathlib import Path
 # Check package versions
 import numpy as np
-from pathlib import Path
 import astropy.units as u
-from astropy.coordinates import SkyCoord, Angle
+from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
-from gammapy.maps import MapAxis, RegionGeom, WcsGeom
-from gammapy.modeling import Fit
+# %matplotlib inline
+import matplotlib.pyplot as plt
 from gammapy.data import DataStore
 from gammapy.datasets import (
     Datasets,
+    FluxPointsDataset,
     SpectrumDataset,
     SpectrumDatasetOnOff,
-    FluxPointsDataset,
-)
-from gammapy.modeling.models import (
-    ExpCutoffPowerLawSpectralModel,
-    create_crab_spectral_model,
-    SkyModel,
-)
-from gammapy.makers import (
-    SafeMaskMaker,
-    SpectrumDatasetMaker,
-    ReflectedRegionsBackgroundMaker,
 )
 from gammapy.estimators import FluxPointsEstimator
-from gammapy.visualization import plot_spectrum_datasets_off_regions
-
+from gammapy.makers import (
+    ReflectedRegionsBackgroundMaker,
+    SafeMaskMaker,
+    SpectrumDatasetMaker,
+)
+from gammapy.maps import MapAxis, RegionGeom, WcsGeom
+from gammapy.modeling import Fit
+from gammapy.modeling.models import (
+    ExpCutoffPowerLawSpectralModel,
+    SkyModel,
+    create_crab_spectral_model,
+)
 ######################################################################
 # Check setup
 # -----------
 from gammapy.utils.check import check_tutorials_setup
+from gammapy.visualization import plot_spectrum_datasets_off_regions
 
 check_tutorials_setup()
 
@@ -132,13 +130,13 @@ check_tutorials_setup()
 ######################################################################
 # Load Data
 # ---------
-# 
+#
 # First, we select and load some H.E.S.S. observations of the Crab nebula
 # (simulated events for now).
-# 
+#
 # We will access the events, effective area, energy dispersion, livetime
 # and PSF for containement correction.
-# 
+#
 
 datastore = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
 obs_ids = [23523, 23526, 23559, 23592]
@@ -148,11 +146,11 @@ observations = datastore.get_observations(obs_ids)
 ######################################################################
 # Define Target Region
 # --------------------
-# 
+#
 # The next step is to define a signal extraction region, also known as on
 # region. In the simplest case this is just a
 # `CircleSkyRegion <http://astropy-regions.readthedocs.io/en/latest/api/regions.CircleSkyRegion.html>`__.
-# 
+#
 
 target_position = SkyCoord(ra=83.63, dec=22.01, unit="deg", frame="icrs")
 on_region_radius = Angle("0.11 deg")
@@ -162,16 +160,16 @@ on_region = CircleSkyRegion(center=target_position, radius=on_region_radius)
 ######################################################################
 # Create exclusion mask
 # ---------------------
-# 
+#
 # We will use the reflected regions method to place off regions to
 # estimate the background level in the on region. To make sure the off
 # regions don’t contain gamma-ray emission, we create an exclusion mask.
-# 
+#
 # Using http://gamma-sky.net/ we find that there’s only one known
 # gamma-ray source near the Crab nebula: the AGN called `RGB
 # J0521+212 <http://gamma-sky.net/#/cat/tev/23>`__ at GLON = 183.604 deg
 # and GLAT = -8.708 deg.
-# 
+#
 
 exclusion_region = CircleSkyRegion(
     center=SkyCoord(183.604, -8.708, unit="deg", frame="galactic"),
@@ -184,15 +182,15 @@ geom = WcsGeom.create(
 )
 
 exclusion_mask = ~geom.region_mask([exclusion_region])
-exclusion_mask.plot();
+exclusion_mask.plot()
 
 
 ######################################################################
 # Run data reduction chain
 # ------------------------
-# 
+#
 # We begin with the configuration of the maker classes:
-# 
+#
 
 energy_axis = MapAxis.from_energy_bounds(
     0.1, 40, nbin=10, per_decade=True, unit="TeV", name="energy"
@@ -202,9 +200,7 @@ energy_axis_true = MapAxis.from_energy_bounds(
 )
 
 geom = RegionGeom.create(region=on_region, axes=[energy_axis])
-dataset_empty = SpectrumDataset.create(
-    geom=geom, energy_axis_true=energy_axis_true
-)
+dataset_empty = SpectrumDataset.create(geom=geom, energy_axis_true=energy_axis_true)
 
 dataset_maker = SpectrumDatasetMaker(
     containment_correction=True, selection=["counts", "exposure", "edisp"]
@@ -216,9 +212,7 @@ safe_mask_masker = SafeMaskMaker(methods=["aeff-max"], aeff_percent=10)
 datasets = Datasets()
 
 for obs_id, observation in zip(obs_ids, observations):
-    dataset = dataset_maker.run(
-        dataset_empty.copy(name=str(obs_id)), observation
-    )
+    dataset = dataset_maker.run(dataset_empty.copy(name=str(obs_id)), observation)
     dataset_on_off = bkg_maker.run(dataset, observation)
     dataset_on_off = safe_mask_masker.run(dataset_on_off, observation)
     datasets.append(dataset_on_off)
@@ -227,7 +221,7 @@ for obs_id, observation in zip(obs_ids, observations):
 ######################################################################
 # Plot off regions
 # ----------------
-# 
+#
 
 plt.figure(figsize=(8, 8))
 ax = exclusion_mask.plot()
@@ -238,20 +232,18 @@ plot_spectrum_datasets_off_regions(ax=ax, datasets=datasets)
 ######################################################################
 # Source statistic
 # ----------------
-# 
+#
 # Next we’re going to look at the overall source statistics in our signal
 # region.
-# 
+#
 
 info_table = datasets.info_table(cumulative=True)
 
 info_table
 
-plt.plot(
-    info_table["livetime"].to("h"), info_table["excess"], marker="o", ls="none"
-)
+plt.plot(info_table["livetime"].to("h"), info_table["excess"], marker="o", ls="none")
 plt.xlabel("Livetime [h]")
-plt.ylabel("Excess");
+plt.ylabel("Excess")
 
 plt.plot(
     info_table["livetime"].to("h"),
@@ -260,7 +252,7 @@ plt.plot(
     ls="none",
 )
 plt.xlabel("Livetime [h]")
-plt.ylabel("Sqrt(TS)");
+plt.ylabel("Sqrt(TS)")
 
 
 ######################################################################
@@ -268,20 +260,18 @@ plt.ylabel("Sqrt(TS)");
 # format (PHA, ARF, RMF, BKG, see
 # `here <https://gamma-astro-data-formats.readthedocs.io/en/latest/spectra/ogip/index.html>`__
 # for details):
-# 
+#
 
 path = Path("spectrum_analysis")
 path.mkdir(exist_ok=True)
 
 for dataset in datasets:
-    dataset.write(
-        filename=path / f"obs_{dataset.name}.fits.gz", overwrite=True
-    )
+    dataset.write(filename=path / f"obs_{dataset.name}.fits.gz", overwrite=True)
 
 
 ######################################################################
 # If you want to read back the datasets from disk you can use:
-# 
+#
 
 datasets = Datasets()
 
@@ -293,12 +283,12 @@ for obs_id in obs_ids:
 ######################################################################
 # Fit spectrum
 # ------------
-# 
+#
 # Now we’ll fit a global model to the spectrum. First we do a joint
 # likelihood fit to all observations. If you want to stack the
 # observations see below. We will also produce a debug plot in order to
 # show how the global fit matches one of the individual observations.
-# 
+#
 
 spectral_model = ExpCutoffPowerLawSpectralModel(
     amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"),
@@ -320,19 +310,19 @@ model_best_joint = model.copy()
 ######################################################################
 # Fit quality and model residuals
 # -------------------------------
-# 
+#
 
 
 ######################################################################
 # We can access the results dictionary to see if the fit converged:
-# 
+#
 
 print(result_joint)
 
 
 ######################################################################
 # and check the best-fit parameters
-# 
+#
 
 datasets.models.to_parameters_table()
 
@@ -340,27 +330,27 @@ datasets.models.to_parameters_table()
 ######################################################################
 # A simple way to inspect the model residuals is using the function
 # `~SpectrumDataset.plot_fit()`
-# 
+#
 
 ax_spectrum, ax_residuals = datasets[0].plot_fit()
 ax_spectrum.set_ylim(0.1, 40)
-datasets[0].plot_masks(ax=ax_spectrum);
+datasets[0].plot_masks(ax=ax_spectrum)
 
 
 ######################################################################
 # For more ways of assessing fit quality, please refer to the dedicated
 # `modeling and fitting tutorial <../2D/modeling_2D.ipynb>`__.
-# 
+#
 
 
 ######################################################################
 # Compute Flux Points
 # -------------------
-# 
+#
 # To round up our analysis we can compute flux points by fitting the norm
 # of the global model in energy bands. We’ll use a fixed energy binning
 # for now:
-# 
+#
 
 e_min, e_max = 0.7, 30
 energy_edges = np.geomspace(e_min, e_max, 11) * u.TeV
@@ -370,7 +360,7 @@ energy_edges = np.geomspace(e_min, e_max, 11) * u.TeV
 # Now we create an instance of the
 # `~gammapy.estimators.FluxPointsEstimator`, by passing the dataset and
 # the energy binning:
-# 
+#
 
 fpe = FluxPointsEstimator(
     energy_edges=energy_edges, source="crab", selection_optional="all"
@@ -380,7 +370,7 @@ flux_points = fpe.run(datasets=datasets)
 
 ######################################################################
 # Here is a the table of the resulting flux points:
-# 
+#
 
 flux_points.to_table(sed_type="dnde", formatted=True)
 
@@ -388,33 +378,31 @@ flux_points.to_table(sed_type="dnde", formatted=True)
 ######################################################################
 # Now we plot the flux points and their likelihood profiles. For the
 # plotting of upper limits we choose a threshold of TS < 4.
-# 
+#
 
 plt.figure(figsize=(8, 5))
 ax = flux_points.plot(sed_type="e2dnde", color="darkorange")
-flux_points.plot_ts_profiles(ax=ax, sed_type="e2dnde");
+flux_points.plot_ts_profiles(ax=ax, sed_type="e2dnde")
 
 
 ######################################################################
 # The final plot with the best fit model, flux points and residuals can be
 # quickly made like this:
-# 
+#
 
-flux_points_dataset = FluxPointsDataset(
-    data=flux_points, models=model_best_joint
-)
+flux_points_dataset = FluxPointsDataset(data=flux_points, models=model_best_joint)
 
-flux_points_dataset.plot_fit();
+flux_points_dataset.plot_fit()
 
 
 ######################################################################
 # Stack observations
 # ------------------
-# 
+#
 # And alternative approach to fitting the spectrum is stacking all
 # observations first and the fitting a model. For this we first stack the
 # individual datasets:
-# 
+#
 
 dataset_stacked = Datasets(datasets).stack_reduce()
 
@@ -423,7 +411,7 @@ dataset_stacked = Datasets(datasets).stack_reduce()
 # Again we set the model on the dataset we would like to fit (in this case
 # it’s only a single one) and pass it to the `~gammapy.modeling.Fit`
 # object:
-# 
+#
 
 dataset_stacked.models = model
 stacked_fit = Fit()
@@ -443,7 +431,7 @@ model_best_stacked.parameters.to_table()
 # Finally, we compare the results of our stacked analysis to a previously
 # published Crab Nebula Spectrum for reference. This is available in
 # `~gammapy.modeling.models.create_crab_spectral_model`.
-# 
+#
 
 plot_kwargs = {
     "energy_bounds": [0.1, 30] * u.TeV,
@@ -452,34 +440,26 @@ plot_kwargs = {
 }
 
 # plot stacked model
-model_best_stacked.spectral_model.plot(
-    **plot_kwargs, label="Stacked analysis result"
-)
-model_best_stacked.spectral_model.plot_error(
-    facecolor="blue", alpha=0.3, **plot_kwargs
-)
+model_best_stacked.spectral_model.plot(**plot_kwargs, label="Stacked analysis result")
+model_best_stacked.spectral_model.plot_error(facecolor="blue", alpha=0.3, **plot_kwargs)
 
 # plot joint model
 model_best_joint.spectral_model.plot(
     **plot_kwargs, label="Joint analysis result", ls="--"
 )
-model_best_joint.spectral_model.plot_error(
-    facecolor="orange", alpha=0.3, **plot_kwargs
-)
+model_best_joint.spectral_model.plot_error(facecolor="orange", alpha=0.3, **plot_kwargs)
 
-create_crab_spectral_model("hess_ecpl").plot(
-    **plot_kwargs, label="Crab reference"
-)
+create_crab_spectral_model("hess_ecpl").plot(**plot_kwargs, label="Crab reference")
 plt.legend()
 
 
 ######################################################################
 # Exercises
 # ---------
-# 
+#
 # Now you have learned the basics of a spectral analysis with Gammapy. To
 # practice you can continue with the following exercises:
-# 
+#
 # -  Fit a different spectral model to the data. You could try
 #    `~gammapy.modeling.models.ExpCutoffPowerLawSpectralModel` or
 #    `~gammapy.modeling.models.LogParabolaSpectralModel`.
@@ -488,13 +468,13 @@ plt.legend()
 #    you have computed for the stacked dataset and fit the flux points
 #    again with obe of the spectral models. How does the result compare to
 #    the best fit model, that was directly fitted to the counts data?
-# 
+#
 
 
 ######################################################################
 # What next?
 # ----------
-# 
+#
 # The methods shown in this tutorial is valid for point-like or midly
 # extended sources where we can assume that the IRF taken at the region
 # center is valid over the whole region. If one wants to extract the 1D
@@ -502,4 +482,4 @@ plt.legend()
 # extraction region, one has to use a different approach explained in `the
 # extended source spectral analysis
 # tutorial <extended_source_spectral_analysis.ipynb>`__.
-# 
+#

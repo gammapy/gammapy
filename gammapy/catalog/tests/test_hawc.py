@@ -158,7 +158,7 @@ class TestSourceCatalogObject3HWC:
         assert_allclose(m.amplitude.error, 7.411645e-16, atol=1e-3)
         assert_allclose(m.index.value, 2.8396, atol=1e-3)
         assert_allclose(m.index.error, 0.1425, atol=1e-3)
-       
+
         m = ca_3hwc[0].spectral_model()
         dnde, dnde_err = m.evaluate_error(7 * u.TeV)
         assert dnde.unit == "cm-2 s-1 TeV-1"

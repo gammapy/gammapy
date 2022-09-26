@@ -1,13 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Time-dependent models."""
-import numpy as np
 import logging
+import numpy as np
 import scipy.interpolate
 from astropy import units as u
 from astropy.table import Table
 from astropy.time import Time
 from astropy.utils import lazyproperty
-from gammapy.maps import RegionNDMap, TimeMapAxis, MapAxis
+from gammapy.maps import MapAxis, RegionNDMap, TimeMapAxis
 from gammapy.modeling import Parameter, Parameters
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.scripts import make_path
@@ -850,7 +850,9 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         x = self.table["PHASE"].data
         y = self.table["NORM"].data
 
-        return scipy.interpolate.InterpolatedUnivariateSpline(x, y, k=1, ext=2, bbox=[0.,1.])
+        return scipy.interpolate.InterpolatedUnivariateSpline(
+            x, y, k=1, ext=2, bbox=[0.0, 1.0]
+        )
 
     def evaluate(self, time, t_ref, phi_ref, f0, f1, f2):
         phase, _ = self._time_to_phase(time, t_ref, phi_ref, f0, f1, f2)
@@ -870,26 +872,34 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         norm: The model integrated flux
         """
         kwargs = {par.name: par.quantity for par in self.parameters}
-        ph_min, n_min = self._time_to_phase(t_min.mjd*u.d, **kwargs)
-        ph_max, n_max = self._time_to_phase(t_max.mjd*u.d, **kwargs)
+        ph_min, n_min = self._time_to_phase(t_min.mjd * u.d, **kwargs)
+        ph_max, n_max = self._time_to_phase(t_max.mjd * u.d, **kwargs)
 
         # here we assume that the frequency does not change during the integration boundaries
-        delta_t = (t_min.mjd - self.t_ref.value)*u.d
-        frequency = self.f0.quantity + delta_t * (self.f1.quantity + delta_t  * self.f2.quantity/2)
+        delta_t = (t_min.mjd - self.t_ref.value) * u.d
+        frequency = self.f0.quantity + delta_t * (
+            self.f1.quantity + delta_t * self.f2.quantity / 2
+        )
 
         # Compute integral of one phase
-        phase_integral = self._interpolator.antiderivative()(1)-self._interpolator.antiderivative()(0)
+        phase_integral = self._interpolator.antiderivative()(
+            1
+        ) - self._interpolator.antiderivative()(0)
         # Multiply by the total number of phases
-        phase_integral *= (n_max-n_min-1)
+        phase_integral *= n_max - n_min - 1
 
         # Compute integrals before first full phase and after the last full phase
-        end_integral = self._interpolator.antiderivative()(ph_max)-self._interpolator.antiderivative()(0)
-        start_integral = self._interpolator.antiderivative()(1)-self._interpolator.antiderivative()(ph_min)
+        end_integral = self._interpolator.antiderivative()(
+            ph_max
+        ) - self._interpolator.antiderivative()(0)
+        start_integral = self._interpolator.antiderivative()(
+            1
+        ) - self._interpolator.antiderivative()(ph_min)
 
         # Divide by Jacobian (here we neglect variations of frequency during the integration period)
-        total = (phase_integral + start_integral + end_integral)/frequency
+        total = (phase_integral + start_integral + end_integral) / frequency
         # Normalize by total integration time
-        integral_norm =  total / self.time_sum(t_min, t_max)
+        integral_norm = total / self.time_sum(t_min, t_max)
 
         return integral_norm.to("")
 
@@ -926,7 +936,7 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         ax : `~matplotlib.axes.Axes`, optional
             axis
         """
-        phase_axis = MapAxis.from_bounds(0., 1, nbin=n_points, name="Phase", unit="")
+        phase_axis = MapAxis.from_bounds(0.0, 1, nbin=n_points, name="Phase", unit="")
 
         m = RegionNDMap.create(region=None, axes=[phase_axis])
         kwargs.setdefault("marker", "None")

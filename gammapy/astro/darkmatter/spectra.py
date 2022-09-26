@@ -4,7 +4,11 @@ import numpy as np
 import astropy.units as u
 from astropy.table import Table
 from gammapy.modeling import Parameter
-from gammapy.modeling.models import SpectralModel, TemplateSpectralModel, SPECTRAL_MODEL_REGISTRY
+from gammapy.modeling.models import (
+    SPECTRAL_MODEL_REGISTRY,
+    SpectralModel,
+    TemplateSpectralModel,
+)
 from gammapy.utils.interpolation import LogScale
 from gammapy.utils.scripts import make_path
 
@@ -230,5 +234,6 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
         parameters = data.pop("parameters")
         scale = [p["value"] for p in parameters if p["name"] == "scale"][0]
         return cls(scale=scale, **data)
+
 
 SPECTRAL_MODEL_REGISTRY.append(DarkMatterAnnihilationSpectralModel)

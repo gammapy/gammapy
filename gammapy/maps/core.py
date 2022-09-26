@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import abc
-from collections import OrderedDict
 import copy
 import inspect
 import json
+from collections import OrderedDict
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
@@ -1032,8 +1032,8 @@ class Map(abc.ABC):
         output_map : `Map`
             Reprojected Map
         """
-        from .region import RegionGeom
         from .hpx import HpxGeom
+        from .region import RegionGeom
 
         axes = [ax.copy() for ax in self.geom.axes]
         geom3d = geom.copy(axes=axes)

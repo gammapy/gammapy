@@ -105,7 +105,6 @@ def cli_download(ctx):  # noqa: D301
     """
 
 
-
 def add_subcommands():
     from .info import cli_info
 

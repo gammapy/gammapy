@@ -67,10 +67,10 @@ class ObservationTable(Table):
             observation ids
         """
         try:
-            self.indices['OBS_ID']
+            self.indices["OBS_ID"]
         except:
-            self.add_index('OBS_ID')
-        return self.__class__(self.loc['OBS_ID', obs_id])
+            self.add_index("OBS_ID")
+        return self.__class__(self.loc["OBS_ID", obs_id])
 
     def summary(self):
         """Summary info string (str)."""

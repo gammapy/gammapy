@@ -3,8 +3,8 @@ import logging
 import astropy.units as u
 from astropy.table import Table
 from regions import PointSkyRegion
-from gammapy.irf import EDispKernelMap, PSFMap, RecoPSFMap
 from gammapy.data.pointing import PointingMode
+from gammapy.irf import EDispKernelMap, PSFMap, RecoPSFMap
 from gammapy.maps import Map
 from .core import Maker
 from .utils import (
@@ -301,7 +301,6 @@ class MapDatasetMaker(Maker):
         """
         psf = observation.psf
 
-
         if isinstance(psf, RecoPSFMap):
             return RecoPSFMap(psf.psf_map.interp_to_geom(geom))
         elif isinstance(psf, PSFMap):
@@ -337,8 +336,12 @@ class MapDatasetMaker(Maker):
             meta_table["DEC_PNT"] = [observation.pointing_radec.icrs.dec.deg] * u.deg
         elif observation.fixed_pointing_info.mode == PointingMode.DRIFT:
             meta_table["OBS_MODE"] = "DRIFT"
-            meta_table["ALT_PNT"] = [observation.fixed_pointing_info.fixed_altaz.alt.deg] * u.deg
-            meta_table["AZ_PNT"] = [observation.fixed_pointing_info.fixed_altaz.az.deg] * u.deg
+            meta_table["ALT_PNT"] = [
+                observation.fixed_pointing_info.fixed_altaz.alt.deg
+            ] * u.deg
+            meta_table["AZ_PNT"] = [
+                observation.fixed_pointing_info.fixed_altaz.az.deg
+            ] * u.deg
         return meta_table
 
     def run(self, dataset, observation):

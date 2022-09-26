@@ -7,14 +7,15 @@ import numpy as np
 import astropy.units as u
 from astropy.io import fits
 from gammapy.data import DataStore
-from gammapy.utils.scripts import make_path
-from gammapy.utils.testing import requires_data
 from gammapy.irf import (
+    Background3D,
     EffectiveAreaTable2D,
     EnergyDependentMultiGaussPSF,
     EnergyDispersion2D,
-    Background3D,
 )
+from gammapy.utils.scripts import make_path
+from gammapy.utils.testing import requires_data
+
 
 @pytest.fixture()
 def data_store():

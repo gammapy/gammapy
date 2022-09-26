@@ -38,7 +38,7 @@ class TestEventListBase:
         dummy_events = EventList(table.copy())
         dummy_events.write("test.fits", overwrite=True)
         read_again = EventList.read("test.fits")
-        
+
         assert read_again.table.meta["EXTNAME"] == "EVENTS"
         assert read_again.table.meta["HDUCLASS"] == "GADF"
         assert read_again.table.meta["HDUCLAS1"] == "EVENTS"
@@ -63,12 +63,12 @@ class TestEventListBase:
         with pytest.raises(ValueError):
             self.events.write("test.fits", overwrite=True, format="something")
         # test that it won't work if the basic headers are wrong
-        
+
         with pytest.raises(ValueError):
             dummy_events = EventList(table.copy())
             dummy_events.table.meta["HDUCLAS1"] = "response"
             dummy_events.write("test.fits", overwrite=True)
-        
+
         with pytest.raises(ValueError):
             dummy_events = EventList(table.copy())
             dummy_events.table.meta["HDUCLASS"] = "ogip"

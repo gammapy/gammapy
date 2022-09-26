@@ -1108,7 +1108,7 @@ class MapDataset(Dataset):
         hdu_primary = fits.PrimaryHDU()
 
         header = hdu_primary.header
-        header['NAME'] = self.name
+        header["NAME"] = self.name
 
         hdulist = fits.HDUList([hdu_primary])
         if self.counts is not None:

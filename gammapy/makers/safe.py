@@ -17,9 +17,9 @@ log = logging.getLogger(__name__)
 class SafeMaskMaker(Maker):
     """Make safe data range mask for a given observation.
 
-    
+
     .. warning::
-    
+
          Currently some methods computing a safe energy range ("aeff-default", "aeff-max" and "edisp-bias") determine a
          true energy range and apply it to reconstructed energy, effectively neglecting the energy dispersion.
 

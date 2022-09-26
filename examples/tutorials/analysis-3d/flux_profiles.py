@@ -37,29 +37,27 @@ run the actually profile extraction using the `~gammapy.estimators.FluxProfileEs
 
 
 ######################################################################
-# Setup 
+# Setup
 # -----
-# 
+#
 
-# %matplotlib inline
-import matplotlib.pyplot as plt
+import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
-import numpy as np
-
+# %matplotlib inline
+import matplotlib.pyplot as plt
 from gammapy.datasets import MapDataset
-from gammapy.estimators import FluxProfileEstimator, FluxPoints
+from gammapy.estimators import FluxPoints, FluxProfileEstimator
 from gammapy.maps import RegionGeom
-from gammapy.utils.regions import (
-    make_concentric_annulus_sky_regions,
-    make_orthogonal_rectangle_sky_regions,
-)
 from gammapy.modeling.models import PowerLawSpectralModel
-
 ######################################################################
 # Check setup
 # -----------
 from gammapy.utils.check import check_tutorials_setup
+from gammapy.utils.regions import (
+    make_concentric_annulus_sky_regions,
+    make_orthogonal_rectangle_sky_regions,
+)
 
 check_tutorials_setup()
 
@@ -67,7 +65,7 @@ check_tutorials_setup()
 ######################################################################
 # Read and Introduce Data
 # -----------------------
-# 
+#
 
 dataset = MapDataset.read(
     "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc.fits.gz", name="fermi-dataset"
@@ -76,16 +74,16 @@ dataset = MapDataset.read(
 
 ######################################################################
 # This is what the counts image we will work with looks like:
-# 
+#
 
 counts_image = dataset.counts.sum_over_axes()
-counts_image.smooth("0.1 deg").plot(stretch="sqrt");
+counts_image.smooth("0.1 deg").plot(stretch="sqrt")
 
 
 ######################################################################
 # There are 400x200 pixels in the dataset and 11 energy bins between 10
 # GeV and 2 TeV:
-# 
+#
 
 print(dataset.counts)
 
@@ -93,10 +91,10 @@ print(dataset.counts)
 ######################################################################
 # Profile Estimation
 # ------------------
-# 
+#
 # Configuration
 # ~~~~~~~~~~~~~
-# 
+#
 # We start by defining a list of spatially connected regions along the
 # galactic longitude axis. For this there is a helper function
 # `~gammapy.utils.regions.make_orthogonal_rectangle_sky_regions`. The individual region bins
@@ -104,7 +102,7 @@ print(dataset.counts)
 # The starts from lon = 10 deg tand goes to lon = 350 deg. In addition we
 # have to specify the `wcs` to take into account possible projections
 # effects on the region definition:
-# 
+#
 
 regions = make_orthogonal_rectangle_sky_regions(
     start_pos=SkyCoord("10d", "0d", frame="galactic"),
@@ -118,18 +116,18 @@ regions = make_orthogonal_rectangle_sky_regions(
 ######################################################################
 # We can use the `~gammapy.maps.RegionGeom` object to illustrate the regions on top of
 # the counts image:
-# 
+#
 
 geom = RegionGeom.create(region=regions)
 ax = counts_image.smooth("0.1 deg").plot(stretch="sqrt")
-geom.plot_region(ax=ax, color="w");
+geom.plot_region(ax=ax, color="w")
 
 
 ######################################################################
 # Next we create the `~gammapy.estimators.FluxProfileEstimator`. For the estimation of the
 # flux profile we assume a spectral model with a power-law shape and an
 # index of 2.3
-# 
+#
 
 flux_profile_estimator = FluxProfileEstimator(
     regions=regions,
@@ -141,7 +139,7 @@ flux_profile_estimator = FluxProfileEstimator(
 
 ######################################################################
 # We can see the full configuration by printing the estimator object:
-# 
+#
 
 print(flux_profile_estimator)
 
@@ -149,9 +147,9 @@ print(flux_profile_estimator)
 ######################################################################
 # Run Estimation
 # ~~~~~~~~~~~~~~
-# 
+#
 # Now we can run the profile estimation and explore the results:
-# 
+#
 
 # %%time
 profile = flux_profile_estimator.run(datasets=dataset)
@@ -163,12 +161,12 @@ print(profile)
 # We can see the flux profile is represented by a `~gammapy.estimators.FluxPoints` object
 # with a `projected-distance` axis, which defines the main axis the flux
 # profile is measured along. The `lon` and `lat` axes can be ignored.
-# 
+#
 # Plotting Results
 # ~~~~~~~~~~~~~~~~
-# 
+#
 # Let us directly plot the result using `~gammapy.estimators.FluxPoints.plot`:
-# 
+#
 plt.figure()
 ax = profile.plot(sed_type="dnde")
 ax.set_yscale("linear")
@@ -178,7 +176,7 @@ ax.set_yscale("linear")
 # Based on the spectral model we specified above we can also plot in any
 # other sed type, e.g. energy flux and define a different threshold when
 # to plot upper limits:
-# 
+#
 
 profile.sqrt_ts_threshold_ul = 2
 
@@ -191,7 +189,7 @@ ax.set_yscale("linear")
 # We can also plot any other quantity of interest, that is defined on the
 # `~gammapy.estimators.FluxPoints` result object. E.g. the predicted total counts,
 # background counts and excess counts:
-# 
+#
 
 quantities = ["npred", "npred_excess", "npred_background"]
 
@@ -206,10 +204,10 @@ ax.set_ylabel("Counts ")
 ######################################################################
 # Serialisation and I/O
 # ~~~~~~~~~~~~~~~~~~~~~
-# 
+#
 # The profile can be serialised using `~gammapy.estimators.FluxPoints.write`, given a
 # specific format:
-# 
+#
 
 profile.write(
     filename="flux_profile_fermi.fits",
@@ -218,9 +216,7 @@ profile.write(
     sed_type="dnde",
 )
 
-profile_new = FluxPoints.read(
-    filename="flux_profile_fermi.fits", format="profile"
-)
+profile_new = FluxPoints.read(filename="flux_profile_fermi.fits", format="profile")
 
 fig = plt.figure()
 ax = profile_new.plot()
@@ -230,7 +226,7 @@ ax.set_yscale("linear")
 ######################################################################
 # The profile can be serialised to a `~astropy.table.Table` object
 # using:
-# 
+#
 
 table = profile.to_table(format="profile", formatted=True)
 table
@@ -239,7 +235,7 @@ table
 ######################################################################
 # No we can also estimate a radial profile starting from the Galactic
 # center:
-# 
+#
 
 regions = make_concentric_annulus_sky_regions(
     center=SkyCoord("0d", "0d", frame="galactic"),
@@ -250,20 +246,20 @@ regions = make_concentric_annulus_sky_regions(
 
 ######################################################################
 # Again we first illustrate the regions:
-# 
+#
 
 geom = RegionGeom.create(region=regions)
 gc_image = counts_image.cutout(
     position=SkyCoord("0d", "0d", frame="galactic"), width=3 * u.deg
 )
 ax = gc_image.smooth("0.1 deg").plot(stretch="sqrt")
-geom.plot_region(ax=ax, color="w");
+geom.plot_region(ax=ax, color="w")
 
 
 ######################################################################
 # This time we define two energy bins and include the fit statistic
 # profile in the computation:
-# 
+#
 
 flux_profile_estimator = FluxProfileEstimator(
     regions=regions,
@@ -278,7 +274,7 @@ profile = flux_profile_estimator.run(datasets=dataset)
 
 ######################################################################
 # We can directly plot the result:
-# 
+#
 
 plt.figure()
 profile.plot(axis_name="projected-distance", sed_type="flux")
@@ -287,14 +283,14 @@ profile.plot(axis_name="projected-distance", sed_type="flux")
 ######################################################################
 # However because of the powerlaw spectrum the flux at high energies is
 # much lower. To extract the profile at high energies only we can use:
-# 
+#
 
 profile_high = profile.slice_by_idx({"energy": slice(1, 2)})
 
 
 ######################################################################
 # And now plot the points together with the likelihood profiles:
-# 
+#
 
 fig, ax = plt.subplots()
 profile_high.plot(ax=ax, sed_type="eflux", color="tab:orange")

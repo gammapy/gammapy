@@ -2,7 +2,6 @@ from astropy import units as u
 import matplotlib.pyplot as plt
 from gammapy.irf import EffectiveAreaTable2D
 
-
 ax = plt.subplot()
 
 for instrument in ["HESS", "HESS2", "CTA"]:

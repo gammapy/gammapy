@@ -86,7 +86,7 @@ class CountsStatistic(abc.ABC):
             if np.isnan(roots[0]):
                 errn[it.multi_index] = self.n_on[it.multi_index]
             else:
-                errn[it.multi_index] =  self.n_sig[it.multi_index] - roots[0]
+                errn[it.multi_index] = self.n_sig[it.multi_index] - roots[0]
             it.iternext()
 
         return errn

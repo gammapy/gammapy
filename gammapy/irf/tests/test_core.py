@@ -64,4 +64,7 @@ def test_slice_by_idx():
     with pytest.raises(ValueError) as exc_info:
         _ = irf.slice_by_idx({"energy": 3, "offset": 7})
 
-    assert str(exc_info.value) == "Integer indexing not supported, got {'energy': 3, 'offset': 7}"
+    assert (
+        str(exc_info.value)
+        == "Integer indexing not supported, got {'energy': 3, 'offset': 7}"
+    )
