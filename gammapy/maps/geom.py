@@ -569,7 +569,7 @@ class Geom(abc.ABC):
 
     @property
     def is_flat(self):
-        """Whether the geom non spatial axes have length 1, i.e. if the geom is equivalent to an image."""
+        """Whether the geom non spatial axes have length 1, equivalent to an image."""
         if self.is_image:
             return True
         else:

@@ -211,8 +211,7 @@ class CountsStatistic(abc.ABC):
 
 
 class CashCountsStatistic(CountsStatistic):
-    """Class to compute statistics (significance, asymmetric errors , ul) for Poisson distributed variable
-    with known background.
+    """Class to compute statistics for Poisson distributed variable with known background.
 
     Parameters
     ----------
@@ -269,8 +268,7 @@ class CashCountsStatistic(CountsStatistic):
 
 
 class WStatCountsStatistic(CountsStatistic):
-    """Class to compute statistics (significance, asymmetric errors , ul) for Poisson distributed variable
-    with unknown background.
+    """Class to compute statistics for Poisson distributed variable with unknown background.
 
     Parameters
     ----------
@@ -316,7 +314,10 @@ class WStatCountsStatistic(CountsStatistic):
 
     @property
     def stat_max(self):
-        """Stat value for best fit hypothesis, i.e. expected signal mu = n_on - alpha * n_off - mu_sig"""
+        """Stat value for best fit hypothesis
+
+        i.e. expected signal mu = n_on - alpha * n_off - mu_sig
+        """
         return wstat(self.n_on, self.n_off, self.alpha, self.n_sig + self.mu_sig)
 
     def _stat_fcn(self, mu, delta=0, index=None):

@@ -75,7 +75,7 @@ class FixedPointingInfo:
     >>> print(pointing_info)
     Pointing info:
     <BLANKLINE>
-    Location:     GeodeticLocation(lon=<Longitude 16.50022222 deg>, lat=<Latitude -23.27177778 deg>, height=<Quantity 1835. m>)
+    Location:     GeodeticLocation(lon=<Longitude 16.50022222 deg>, lat=<Latitude -23.27177778 deg>, height=<Quantity 1835. m>)  # noqa: E501
     MJDREFI, MJDREFF, TIMESYS = (51910, 0.000742870370370241, 'TT')
     Time ref:     2001-01-01T00:01:04.184
     Time ref:     51910.00074287037 MJD (TT)
@@ -309,7 +309,7 @@ class PointingInfo:
     >>> print(pointing_info)
     Pointing info:
     <BLANKLINE>
-    Location:     GeodeticLocation(lon=<Longitude 16.50022222 deg>, lat=<Latitude -23.27177778 deg>, height=<Quantity 1835. m>)
+    Location:     GeodeticLocation(lon=<Longitude 16.50022222 deg>, lat=<Latitude -23.27177778 deg>, height=<Quantity 1835. m>) # noqa: E731
     MJDREFI, MJDREFF, TIMESYS = (51910, 0.000742870370370241, 'TT')
     Time ref:     2001-01-01T00:01:04.184
     Time ref:     51910.00074287037 MJD (TT)

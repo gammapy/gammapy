@@ -659,10 +659,10 @@ class Map(abc.ABC):
         pass
 
     def resample_axis(self, axis, weights=None, ufunc=np.add):
-        """Resample map to a new axis binning by grouping over smaller bins and apply ufunc to the bin contents.
+        """Resample map to a new axis by grouping and reducing smaller bins by a given ufunc
 
-        By default, the map content are summed over the smaller bins. Other numpy ufunc can be used,
-        e.g. np.logical_and, np.logical_or
+        By default, the map content are summed over the smaller bins. Other numpy ufunc can be
+        used, e.g. `numpy.logical_and` or `numpy.logical_or`.
 
         Parameters
         ----------
@@ -996,7 +996,8 @@ class Map(abc.ABC):
         if preserve_counts:
             if geom.ndim > 2 and geom.axes[0] != self.geom.axes[0]:
                 raise ValueError(
-                    f"Energy axis do not match: expected {self.geom.axes[0]}, but got {geom.axes[0]}."
+                    f"Energy axis do not match: expected {self.geom.axes[0]},"
+                    " but got {geom.axes[0]}."
                 )
             map_copy.data /= map_copy.geom.solid_angle().to_value("deg2")
 
@@ -1252,7 +1253,8 @@ class Map(abc.ABC):
                     info = f"{axis.center[idx]:.1f}"
             else:
                 if axis.name == "energy" or axis.name == "energy_true":
-                    info = f"{energy_unit_format(axis.edges[idx])} - {energy_unit_format(axis.edges[idx+1])}"
+                    info = (f"{energy_unit_format(axis.edges[idx])} - "
+                             "{energy_unit_format(axis.edges[idx+1])}")
                 else:
                     info = f"{axis.edges[idx]:.1f} - {axis.edges[idx + 1]:.1f} "
             ax.set_title(f"{axis.name.capitalize()} " + info)

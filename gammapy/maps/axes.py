@@ -1114,7 +1114,7 @@ class MapAxis:
     def to_table(self, format="ogip"):
         """Convert `~astropy.units.Quantity` to OGIP ``EBOUNDS`` extension.
 
-        See https://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/memos/cal_gen_92_002/cal_gen_92_002.html#tth_sEc3.2
+        See https://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/memos/cal_gen_92_002/cal_gen_92_002.html#tth_sEc3.2  # noqa: E501
 
         The 'ogip-sherpa' format is equivalent to 'ogip' but uses keV energy units.
 
@@ -1188,7 +1188,7 @@ class MapAxis:
     def to_table_hdu(self, format="ogip"):
         """Convert `~astropy.units.Quantity` to OGIP ``EBOUNDS`` extension.
 
-        See https://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/memos/cal_gen_92_002/cal_gen_92_002.html#tth_sEc3.2
+        See https://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/memos/cal_gen_92_002/cal_gen_92_002.html#tth_sEc3.2  # noqa: E501
 
         The 'ogip-sherpa' format is equivalent to 'ogip' but uses keV energy units.
 
@@ -1844,7 +1844,8 @@ class MapAxes(Sequence):
 
         Parameters
         ----------
-        format : {"gadf", "gadf-dl3", "fgst-ccube", "fgst-template", "ogip", "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"}
+        format : {"gadf", "gadf-dl3", "fgst-ccube", "fgst-template", "ogip",
+                  "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"}
             Format to use.
 
         Returns
