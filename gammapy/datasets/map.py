@@ -224,7 +224,8 @@ class MapDataset(Dataset):
 
         if edisp and not isinstance(edisp, (EDispMap, EDispKernelMap, HDULocation)):
             raise ValueError(
-                f"'edisp' must be a 'EDispMap', `EDispKernelMap` or 'HDULocation' object, got {type(edisp)}"
+                "'edisp' must be a 'EDispMap', `EDispKernelMap` or 'HDULocation' "
+                f"object, got `{type(edisp)}` instead."
             )
 
         self.edisp = edisp
@@ -402,7 +403,7 @@ class MapDataset(Dataset):
 
     @property
     def energy_range(self):
-        """Energy range maps defined by the full mask (mask_safe and mask_fit)."""
+        """Energy range maps defined by the mask_safe and mask_fit."""
         return self._energy_range(self.mask)
 
     @property
@@ -417,7 +418,7 @@ class MapDataset(Dataset):
 
     @property
     def energy_range_total(self):
-        """Largest energy range among all pixels, defined by the full mask (mask_safe and mask_fit)."""
+        """Largest energy range among all pixels, defined by mask_safe and mask_fit."""
         energy_min_map, energy_max_map = self.energy_range
         return np.nanmin(energy_min_map.quantity), np.nanmax(energy_max_map.quantity)
 
@@ -621,8 +622,13 @@ class MapDataset(Dataset):
 
         >>> energy_axis = MapAxis.from_energy_bounds(1.0, 10.0, 4, unit="TeV")
         >>> energy_axis_true = MapAxis.from_energy_bounds( 0.5, 20, 10, unit="TeV", name="energy_true")
-        >>> geom = WcsGeom.create(skydir=(83.633, 22.014), binsz=0.02, width=(2, 2), frame="icrs", proj="CAR", axes=[energy_axis])
-
+        >>> geom = WcsGeom.create(
+                    skydir=(83.633, 22.014),
+                    binsz=0.02, width=(2, 2),
+                    frame="icrs",
+                    proj="CAR",
+                    axes=[energy_axis]
+                )
         >>> empty = MapDataset.create(geom=geom, energy_axis_true=energy_axis_true, name="empty")
         """
 

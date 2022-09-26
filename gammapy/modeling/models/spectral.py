@@ -1868,8 +1868,6 @@ class EBLAbsorptionNormSpectralModel(SpectralModel):
     def read(cls, filename, redshift=0.1, alpha_norm=1, interp_kwargs=None):
         """Build object from an XSPEC model.
 
-        Todo: Format of XSPEC binary files should be referenced at https://gamma-astro-data-formats.readthedocs.io/en/latest/
-
         Parameters
         ----------
 
@@ -1931,9 +1929,9 @@ class EBLAbsorptionNormSpectralModel(SpectralModel):
 
         References
         ----------
-        .. [1] Franceschini et al., "Extragalactic optical-infrared background radiation, its time evolution and the cosmic photon-photon opacity",
+        .. [1] Franceschini et al., "Extragalactic optical-infrared background radiation, its time evolution and the cosmic photon-photon opacity",  # noqa: E501
             `Link <https://ui.adsabs.harvard.edu/abs/2008A%26A...487..837F>`__
-        .. [2] Dominguez et al., " Extragalactic background light inferred from AEGIS galaxy-SED-type fractions"
+        .. [2] Dominguez et al., " Extragalactic background light inferred from AEGIS galaxy-SED-type fractions"  # noqa: E501
             `Link <https://ui.adsabs.harvard.edu/abs/2011MNRAS.410.2556D>`__
         .. [3] Finke et al., "Modeling the Extragalactic Background Light from Stars and Dust"
             `Link <https://ui.adsabs.harvard.edu/abs/2010ApJ...712..238F>`__
@@ -2059,12 +2057,13 @@ class NaimaSpectralModel(SpectralModel):
         energy,
     ):
         """
-        Compute photon density spectrum from synchrotron emission for synchrotron self-compton model,
-        assuming uniform synchrotron emissivity inside a sphere of radius R
-        (see Section 4.1 of Atoyan & Aharonian 1996)
+        Compute photon density spectrum from synchrotron emission for synchrotron self-compton
+        model, assuming uniform synchrotron emissivity inside a sphere of radius R (see Section
+        4.1 of Atoyan & Aharonian 1996)
 
-        based on :
-        "https://naima.readthedocs.io/en/latest/examples.html#crab-nebula-ssc-model"
+        Based on :
+
+        https://naima.readthedocs.io/en/latest/examples.html#crab-nebula-ssc-model
 
         """
         Lsy = self.ssc_model.flux(
@@ -2176,7 +2175,7 @@ class GaussianSpectralModel(SpectralModel):
         r"""Integrate Gaussian analytically.
 
         .. math::
-            F(E_{min}, E_{max}) = \frac{N_0}{2} \left[ erf(\frac{E - \bar{E}}{\sqrt{2} \sigma})\right]_{E_{min}}^{E_{max}}
+            F(E_{min}, E_{max}) = \frac{N_0}{2} \left[ erf(\frac{E - \bar{E}}{\sqrt{2} \sigma})\right]_{E_{min}}^{E_{max}}  # noqa: E501
 
         Parameters
         ----------
@@ -2202,8 +2201,8 @@ class GaussianSpectralModel(SpectralModel):
         r"""Compute energy flux in given energy range analytically.
 
         .. math::
-            G(E_{min}, E_{max}) =  \frac{N_0 \sigma}{\sqrt{2*\pi}}* \left[ - \exp(\frac{E_{min}-\bar{E}}{\sqrt{2} \sigma})
-            \right]_{E_{min}}^{E_{max}} + \frac{N_0 * \bar{E}}{2} \left[ erf(\frac{E - \bar{E}}{\sqrt{2} \sigma})
+            G(E_{min}, E_{max}) =  \frac{N_0 \sigma}{\sqrt{2*\pi}}* \left[ - \exp(\frac{E_{min}-\bar{E}}{\sqrt{2} \sigma})   # noqa: E501
+            \right]_{E_{min}}^{E_{max}} + \frac{N_0 * \bar{E}}{2} \left[ erf(\frac{E - \bar{E}}{\sqrt{2} \sigma})   # noqa: E501
              \right]_{E_{min}}^{E_{max}}
 
 

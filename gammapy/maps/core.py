@@ -1253,8 +1253,10 @@ class Map(abc.ABC):
                     info = f"{axis.center[idx]:.1f}"
             else:
                 if axis.name == "energy" or axis.name == "energy_true":
-                    info = (f"{energy_unit_format(axis.edges[idx])} - "
-                            "{energy_unit_format(axis.edges[idx+1])}")
+                    info = (
+                        f"{energy_unit_format(axis.edges[idx])} - "
+                        "{energy_unit_format(axis.edges[idx+1])}"
+                    )
                 else:
                     info = f"{axis.edges[idx]:.1f} - {axis.edges[idx + 1]:.1f} "
             ax.set_title(f"{axis.name.capitalize()} " + info)

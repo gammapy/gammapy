@@ -32,7 +32,8 @@ log = logging.getLogger(__name__)
 # TODO: make this a small ABC to define a uniform interface.
 class TemporalModel(ModelBase):
     """Temporal model base class.
-    evaluates on  astropy.time.Time objects"""
+
+    Evaluates on  astropy.time.Time objects"""
 
     _type = "temporal"
 
@@ -141,8 +142,6 @@ class TemporalModel(ModelBase):
             else ontime.unit
         )
 
-        # TODO: the separate time unit handling is unfortunate, but the quantity support for np.arange and np.interp
-        #  is still incomplete, refactor once we change to recent numpy and astropy versions
         t_step = t_delta.to_value(time_unit)
         t_step = (t_step * u.s).to("d")
 
@@ -414,7 +413,8 @@ class LightCurveTemplateTemporalModel(TemporalModel):
     The ``norm`` is supposed to be a unit-less multiplicative factor in the model,
     to be multiplied with a spectral model.
 
-    The model does linear interpolation for times between the given ``(time, energy, norm)`` values.
+    The model does linear interpolation for times between the given ``(time, energy, norm)``
+    values.
 
     For more information see :ref:`LightCurve-temporal-model`.
 
@@ -465,12 +465,17 @@ class LightCurveTemplateTemporalModel(TemporalModel):
             log.warning("Map has negative values. Check and fix this!")
 
         if map.geom.has_energy_axis:
-            raise NotImplemented("Currently not supported for Energy Dependent Models")
+            raise NotImplementedError(
+                "LightCurveTemplateTemporalModel does not"
+                f" support energy axis, got {map.geom.axes.names}"
+            )
 
         self.map = map.copy()
         super().__init__()
+
         if t_ref:
             self.t_ref.value = Time(t_ref, format="mjd").mjd
+
         self.filename = filename
 
     def __str__(self):

@@ -27,7 +27,7 @@ def plot_spectrum_datasets_off_regions(
 
     Parameters
     ----------
-    datasets : `~gammapy.datasets.Datasets` of or sequence of `~gammapy.datasets.SpectrumDatasetOnOff`
+    datasets : `~gammapy.datasets.Datasets` or list of `~gammapy.datasets.SpectrumDatasetOnOff`
         List of spectrum on-off datasets.
     ax : `~astropy.visualization.wcsaxes.WCSAxes`
         Axes object to plot on.
@@ -61,7 +61,7 @@ def plot_spectrum_datasets_off_regions(
 
     Plot that cycles through colors (``edgecolor``) and line styles together::
 
-        plot_spectrum_datasets_off_regions(datasets, ax, prop_cycle=plt.cycler(color=list('rgb'), ls=['--', '-', ':']))
+        plot_spectrum_datasets_off_regions(datasets, ax, prop_cycle=plt.cycler(color=list('rgb'), ls=['--', '-', ':']))  # noqa: E501
 
     Plot that uses a modified `~matplotlib.rcParams`, has two legend columns, static and
     dynamic colors, but only shows labels for ``datasets1`` and ``datasets2``. Note that
@@ -158,10 +158,11 @@ def plot_contour_line(ax, x, y, **kwargs):
 
 
 def plot_theta_squared_table(table):
-    """Plot the theta2 distribution of ON, OFF counts, excess and signifiance in each theta2bin.
+    """Plot the theta2 distribution of counts, excess and signifiance.
 
-    Take the table containing the ON counts, the OFF counts, the acceptance, the off acceptance and the alpha
-    (normalisation between ON and OFF) for each theta2 bin
+    Take the table containing the ON counts, the OFF counts, the acceptance,
+    the off acceptance and the alpha (normalisation between ON and OFF)
+    for each theta2 bin.
 
     Parameters
     ----------
