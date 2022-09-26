@@ -531,7 +531,7 @@ class PSFMap(IRFMap):
         self.exposure_map.reduce_over_axes().plot(ax=axes[2], add_cbar=True)
 
         axes[3].set_title("Containment radius at 1 TeV")
-        kwargs = {self.energy_name:2 * u.TeV}
+        kwargs = {self.energy_name:1 * u.TeV}
         self.containment_radius_map(**kwargs).plot(
             ax=axes[3], add_cbar=True
         )
