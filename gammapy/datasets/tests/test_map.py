@@ -8,7 +8,7 @@ from astropy.coordinates import SkyCoord
 from astropy.table import Table
 from regions import CircleSkyRegion
 from gammapy.catalog import SourceCatalog3FHL
-from gammapy.data import GTI, DataStore, HDUIndexTable, ObservationTable
+from gammapy.data import GTI
 from gammapy.datasets import Datasets, MapDataset, MapDatasetOnOff
 from gammapy.datasets.map import RAD_AXIS_DEFAULT
 from gammapy.irf import (
@@ -19,7 +19,6 @@ from gammapy.irf import (
     EnergyDispersion2D,
     PSFMap,
 )
-from gammapy.makers import MapDatasetMaker, SafeMaskMaker
 from gammapy.makers.utils import make_map_exposure_true_energy, make_psf_map
 from gammapy.maps import HpxGeom, Map, MapAxis, RegionGeom, WcsGeom, WcsNDMap
 from gammapy.maps.io import JsonQuantityEncoder
@@ -28,7 +27,6 @@ from gammapy.modeling.models import (
     DiskSpatialModel,
     FoVBackgroundModel,
     GaussianSpatialModel,
-    LogParabolaSpectralModel,
     Models,
     PointSpatialModel,
     PowerLawSpectralModel,

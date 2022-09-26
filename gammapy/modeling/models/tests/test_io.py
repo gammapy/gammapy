@@ -3,7 +3,6 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-from astropy.table import Table
 from astropy.utils.data import get_pkg_data_filename
 from gammapy.maps import Map, MapAxis, RegionNDMap
 from gammapy.modeling.models import (

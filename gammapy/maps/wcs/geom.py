@@ -336,7 +336,7 @@ class WcsGeom(Geom):
             List of non-spatial axes.
         proj : string, optional
             Any valid WCS projection type. Default is 'CAR' (Plate-Carrée projection).
-            See `WCS supported projections <https://docs.astropy.org/en/stable/wcs/supported_projections.html>`__
+            See `WCS supported projections <https://docs.astropy.org/en/stable/wcs/supported_projections.html>`__  # noqa: E501
         refpix : tuple
             Reference pixel of the projection.  If None this will be
             set to the center of the map.
