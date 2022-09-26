@@ -147,7 +147,7 @@ class PlotMixin:
         >>> kwargs_safe = {"color":"green", "alpha":0.2} #optinonal arguments to configure
         >>> kwargs_fit = {"color":"pink", "alpha":0.2}
         >>> ax=dataset.plot_counts()  # doctest: +SKIP
-        >>> dataset.plot_masks(ax=ax, kwargs_fit=kwargs_fit, kwargs_safe=kwargs_safe)  # doctest: +SKIP
+        >>> dataset.plot_masks(ax=ax, kwargs_fit=kwargs_fit, kwargs_safe=kwargs_safe)  # doctest: +SKIP  # noqa: E501
         """
 
         kwargs_fit = kwargs_fit or {}
@@ -204,7 +204,7 @@ class PlotMixin:
         >>> #Plot the excess in blue and the npred in black dotted lines
         >>> kwargs_excess = {"color": "blue", "markersize":8, "marker":'s', }
         >>> kwargs_npred_signal = {"color": "black", "ls":"--"}
-        >>> dataset.plot_excess(kwargs_excess=kwargs_excess, kwargs_npred_signal=kwargs_npred_signal)  # doctest: +SKIP noqa: E501
+        >>> dataset.plot_excess(kwargs_excess=kwargs_excess, kwargs_npred_signal=kwargs_npred_signal)  # doctest: +SKIP  # noqa: E501
         """
         kwargs_excess = kwargs_excess or {}
         kwargs_npred_signal = kwargs_npred_signal or {}

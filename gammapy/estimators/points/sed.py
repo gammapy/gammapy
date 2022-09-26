@@ -24,7 +24,7 @@ class FluxPointsEstimator(FluxEstimator):
     fitted within the energy range defined by the energy group. This is done for
     each group independently. The amplitude is re-normalized using the "norm" parameter,
     which specifies the deviation of the flux from the reference model in this
-    energy group. See https://gamma-astro-data-formats.readthedocs.io/en/latest/spectra/binned_likelihoods/index.html
+    energy group. See https://gamma-astro-data-formats.readthedocs.io/en/latest/spectra/binned_likelihoods/index.html  # noqa: E501
     for details.
 
     The method is also described in the Fermi-LAT catalog paper

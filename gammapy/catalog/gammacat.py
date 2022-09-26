@@ -137,7 +137,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
             ss += f"e_max: {d.spec_pl2_e_max:.3}\n"
         elif spec_type == "ecpl":
             ss += f"norm: {d.spec_ecpl_norm.value:.3g} +- {d.spec_ecpl_norm_err.value:.3g} (stat) +- {d.spec_ecpl_norm_err_sys.value:.03g} (sys) cm-2 s-1 TeV-1\n"  # noqa: E501
-            ss += f"index: {d.spec_ecpl_index:.3} +- {d.spec_ecpl_index_err:.3} (stat) +- {d.spec_ecpl_index_err_sys:.3} (sys)\n"
+            ss += f"index: {d.spec_ecpl_index:.3} +- {d.spec_ecpl_index_err:.3} (stat) +- {d.spec_ecpl_index_err_sys:.3} (sys)\n"  # noqa: E501
             ss += f"e_cut: {d.spec_ecpl_e_cut.value:.3} +- {d.spec_ecpl_e_cut_err.value:.3} (stat) +- {d.spec_ecpl_e_cut_err_sys.value:.3} (sys) TeV\n"  # noqa: E501
             ss += f"reference: {d.spec_ecpl_e_ref:.3}\n"
         elif spec_type == "none":

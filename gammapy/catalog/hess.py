@@ -363,7 +363,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
         val = d["Flux_Spec_ECPL_Int_1TeV"].value
         err = d["Flux_Spec_ECPL_Int_1TeV_Err"].value
-        ss += "{:<20s} : ({:.3f} +/- {:.3f}) x 10^-12 cm^-2 s^-1  = ({:.2f} +/- {:.2f}) % Crab\n".format(
+        ss += "{:<20s} : ({:.3f} +/- {:.3f}) x 10^-12 cm^-2 s^-1  = ({:.2f} +/- {:.2f}) % Crab\n".format(  # noqa: E501
             "ECPL   Flux(> 1 TeV)",
             val / FF,
             err / FF,
