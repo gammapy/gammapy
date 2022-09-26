@@ -230,7 +230,9 @@ class EDispKernel(IRF):
                         i,
                         l.field("F_CHAN")[k] : l.field("F_CHAN")[k]  # noqa: E203
                         + l.field("N_CHAN")[k],
-                    ] = l.field("MATRIX")[m_start : m_start + l.field("N_CHAN")[k]]  # noqa: E203
+                    ] = l.field("MATRIX")[
+                        m_start : m_start + l.field("N_CHAN")[k]
+                    ]  # noqa: E203
                     m_start += l.field("N_CHAN")[k]
 
         table = Table.read(ebounds_hdu)

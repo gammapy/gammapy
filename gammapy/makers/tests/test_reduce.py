@@ -396,5 +396,6 @@ def test_dataset_maker_spectrum_rad_max_all_excluded(
     assert caplog.record_tuples[0] == (
         "gammapy.makers.background.reflected",
         logging.WARNING,
-        "ReflectedRegionsBackgroundMaker failed. No OFF region found outside exclusion mask for dataset 'spec'.",
+        "ReflectedRegionsBackgroundMaker failed. No OFF region found outside "
+        "exclusion mask for dataset 'spec'.",
     )

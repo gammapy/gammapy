@@ -60,7 +60,7 @@ class Paczynski1990(Fittable1DModel):
 
 
 class CaseBattacharya1998(Fittable1DModel):
-    r"""Radial distribution of the surface density of supernova remnants in the galaxy 
+    r"""Radial distribution of the surface density of supernova remnants in the galaxy
     - Case & Battacharya 1998.
 
     .. math::
