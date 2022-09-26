@@ -457,21 +457,20 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         if (map.data < 0).any():
             log.warning("Map has negative values. Check and fix this!")
 
-        self.map = map.copy()
-        if t_ref:
-            self.parameters["t_ref"].value = Time(t_ref, format="mjd").mjd
-        self.filename = filename
-        super().__init__()
+        if map.geom.has_energy_axis:
+            raise NotImplemented("Currently not supported for Energy Dependent Models")
 
-    @property
-    def is_energy_dependent(self):
-        return self.map.geom.has_energy_axis
+        self.map = map.copy()
+        super().__init__()
+        if t_ref:
+            self.t_ref.value = Time(t_ref, format="mjd").mjd
+        self.filename = filename
 
     def __str__(self):
-        start_time = self.map.axes["time"].edges[0]
-        end_time = self.map.axes["time"].edges[-1]
-        norm_min = np.min(self.data)
-        norm_max = np.max(self.data)
+        start_time = self.map.geom.axes["time"].edges[0] + self.t_ref
+        end_time = self.map.geom.axes["time"].edges[-1] + self.t_ref
+        norm_min = np.min(self.map.data)
+        norm_max = np.max(self.map.data)
 
         prnt = (
             f"{self.__class__.__name__} model summary:\n "
@@ -480,14 +479,6 @@ class LightCurveTemplateTemporalModel(TemporalModel):
             f"Norm min: {norm_min} \n"
             f"Norm max: {norm_max}"
         )
-
-        if self.is_energy_dependent:
-            energy_min = self.map.axes["energy"].edges[0]
-            energy_max = self.map.axes["energy"].edges[-1]
-            prnt = (
-                f"Energy min: {energy_min} MJD\n"
-                f"Energy max: {energy_max} MJD\n" + prnt
-            )
 
         return prnt
 
@@ -511,14 +502,9 @@ class LightCurveTemplateTemporalModel(TemporalModel):
             nodes=nodes, name="time", unit=table.meta["TIMEUNIT"]
         )
         axes = [time_axis]
-
-        if "energy" in columns:
-            energy_axis = MapAxis.from_energy_bounds(
-                table["ENERGY"],
-                name="energy",
-            )
-            axes.append(energy_axis)
-        m = RegionNDMap.create(region=None, axes=axes, meta=table.meta)
+        m = RegionNDMap.create(
+            region=None, axes=axes, meta=table.meta, data=table["NORM"]
+        )
 
         return cls(m, t_ref=t_ref, filename=filename)
 
@@ -538,7 +524,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         filename = str(make_path(filename))
         if format == "table":
             table = Table.read(filename)
-            cls.from_table(table, filename=filename)
+            return cls.from_table(table, filename=filename)
 
         elif format == "map":
             m = RegionNDMap.read(filename)
@@ -552,8 +538,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
     def to_table(self, format="map"):
         """Convert model to an astropy table"""
-        if self.is_energy_dependent:
-            raise NotImplemented("Currently not supported for Energy Dependent Models")
+
         table = Table(
             data=self.map.quantity, names=self.geom.axes.names, meta=self.map.meta
         )
@@ -585,19 +570,30 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         else:
             raise ValueError("Not a valid format")
 
-    def evaluate(self, time, energy=None):
+    def evaluate(self, time):
         """Evaluate the model at given coordinates."""
         coords = {"time": time.mjd - self.t_ref.value}
-        if energy is not None:
-            coords["energy"] = energy
-
         val = self.map.interp_by_coord(coords)
         val = np.clip(val, 0)
         return u.Quantity(val, self.map.unit, copy=False)
 
-    def integral(self, t_min, t_max, energy=None):
+    def integral(self, t_min, t_max):
+        """Evaluate the integrated flux within the given time intervals
+
+        Parameters
+        ----------
+        t_min: `~astropy.time.Time`
+                Start times of observation
+        t_max: `~astropy.time.Time`
+                 Stop times of observation
+
+        Returns
+        -------
+        norm : float
+            Integrated flux norm on the given time intervals
+        """
         integral = []
-        coords = (self.map.geom.axes["time"].center[0], energy)
+        coords = self.map.geom.axes["time"].center[0]
         for t1, t2 in zip(t_min, t_max):
             i1 = np.searchsorted(self.map.geom.axes["time"].edges, t1)
             i2 = np.searchsorted(self.map.geom.axes["time"].edges, t2)
