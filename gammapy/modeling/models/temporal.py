@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Time-dependent models."""
 import numpy as np
+import logging
 import scipy.interpolate
 from astropy import units as u
 from astropy.table import Table
@@ -26,6 +27,7 @@ __all__ = [
     "TemporalModel",
 ]
 
+log = logging.getLogger(__name__)
 
 # TODO: make this a small ABC to define a uniform interface.
 class TemporalModel(ModelBase):
@@ -151,9 +153,8 @@ class TemporalModel(ModelBase):
         sampler = InverseCDFSampler(pdf=pdf, random_state=random_state)
         time_pix = sampler.sample(n_events)[0]
         time = (
-                np.interp(time_pix, np.arange(len(t)), t.value - min(t.value))
-                * t_step.unit
-                ).to(time_unit)
+            np.interp(time_pix, np.arange(len(t)), t.value - min(t.value)) * t_step.unit
+        ).to(time_unit)
 
         return t_min + time
 
@@ -174,10 +175,12 @@ class TemporalModel(ModelBase):
         norm : float
             Integrated flux norm on the given time intervals
         """
-        t_values = np.linspace(t_min.mjd, t_max.mjd, oversampling_factor, axis=-1)
+        t_values, steps = np.linspace(
+            t_min.mjd, t_max.mjd, oversampling_factor, retstep=True, axis=-1
+        )
         times = Time(t_values, format="mjd")
         values = self(times)
-        integral = np.sum(values / oversampling_factor, axis=-1)
+        integral = np.sum(values, axis=-1) * steps
         return integral / self.time_sum(t_min, t_max).to_value("d")
 
 
@@ -384,7 +387,7 @@ class GeneralizedGaussianTemporalModel(TemporalModel):
     t_ref = Parameter("t_ref", _t_ref_default.mjd, unit="day", frozen=False)
     t_rise = Parameter("t_rise", "1d", frozen=False)
     t_decay = Parameter("t_decay", "1d", frozen=False)
-    eta = Parameter("eta", 1/2, unit="", frozen=False)
+    eta = Parameter("eta", 1 / 2, unit="", frozen=False)
 
     @staticmethod
     def evaluate(time, t_ref, t_rise, t_decay, eta):
@@ -405,24 +408,15 @@ class GeneralizedGaussianTemporalModel(TemporalModel):
 class LightCurveTemplateTemporalModel(TemporalModel):
     """Temporal light curve model.
 
-    The lightcurve is given as a table with columns ``time`` and ``norm``.
+    The lightcurve is given at specfic times (and optionally energies) as a ``norm``
+    It can be serialised either as an astropy table or a `~gammapy.maps.RegionNDMap`
 
     The ``norm`` is supposed to be a unit-less multiplicative factor in the model,
     to be multiplied with a spectral model.
 
-    The model does linear interpolation for times between the given ``(time, norm)`` values.
-
-    The implementation currently uses `scipy.interpolate. InterpolatedUnivariateSpline`,
-    using degree ``k=1`` to get linear interpolation.
-    This class also contains an ``integral`` method, making the computation of
-    mean fluxes for a given time interval a one-liner.
+    The model does linear interpolation for times between the given ``(time, energy, norm)`` values.
 
     For more information see :ref:`LightCurve-temporal-model`.
-
-    Parameters
-    ----------
-    table : `~astropy.table.Table`
-        A table with 'TIME' vs 'NORM'
 
     Examples
     --------
@@ -436,6 +430,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
     >>> print(light_curve)
     LightCurveTemplateTemporalModel model summary:
+    Reference time: 59000.5 MJD
     Start time: 59000.5 MJD
     End time: 61862.5 MJD
     Norm min: 0.01551196351647377
@@ -444,118 +439,170 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
     Compute ``norm`` at a given time:
 
-    >>> light_curve.evaluate(60000)
-    array(0.01551196)
+    >>> t = Time(59001.195, format="mjd")
+    >>> light_curve.evaluate(t)
+    array(0.02287888)
 
     Compute mean ``norm`` in a given time interval:
 
     >>> from astropy.time import Time
-    >>> times = Time([60000, 61000], format='mjd')
-    >>> light_curve.integral(times[0], times[1])
-    <Quantity 0.01721725>
+    >>> import astropy.units as u
+    >>> t_r = Time(59000.5, format='mjd')
+    >>> t_min = t_r + [1, 4, 8] * u.d
+    >>> t_max = t_r + [1.5, 6, 9] * u.d
+    >>> light_curve.integral(t_min, t_max)
+    array([0.0074388942, 0.0071144081, 0.0068115544])
     """
 
     tag = ["LightCurveTemplateTemporalModel", "template"]
 
-    def __init__(self, table, filename=None):
-        self.table = table
-        if filename is not None:
-            filename = str(make_path(filename))
-        self.filename = filename
+    _t_ref_default = Time("2000-01-01")
+    t_ref = Parameter("t_ref", _t_ref_default.mjd, unit="day", frozen=False)
+
+    def __init__(self, map, t_ref=None, filename=None):
+
+        if (map.data < 0).any():
+            log.warning("Map has negative values. Check and fix this!")
+
+        if map.geom.has_energy_axis:
+            raise NotImplemented("Currently not supported for Energy Dependent Models")
+
+        self.map = map.copy()
         super().__init__()
+        if t_ref:
+            self.t_ref.value = Time(t_ref, format="mjd").mjd
+        self.filename = filename
 
     def __str__(self):
-        norm = self.table["NORM"]
-        return (
-            f"{self.__class__.__name__} model summary:\n"
-            f"Start time: {self._time[0].mjd} MJD\n"
-            f"End time: {self._time[-1].mjd} MJD\n"
-            f"Norm min: {norm.min()}\n"
-            f"Norm max: {norm.max()}\n"
+        start_time = self.t_ref.quantity + self.map.geom.axes["time"].edges[0]
+        end_time = self.t_ref.quantity + self.map.geom.axes["time"].edges[-1]
+        norm_min = np.min(self.map.data)
+        norm_max = np.max(self.map.data)
+
+        prnt = (
+            f"{self.__class__.__name__} model summary:\n "
+            f"Reference time: {self.t_ref.value} MJD \n "
+            f"Start time: {start_time.value} MJD \n "
+            f"End time: {end_time.value} MJD \n "
+            f"Norm min: {norm_min} \n"
+            f"Norm max: {norm_max}"
         )
+
+        return prnt
 
     @classmethod
-    def read(cls, path):
-        """Read lightcurve model table from FITS file.
+    def from_table(cls, table, filename=None):
+        """Create a Template model from an astropy table
 
-        TODO: This doesn't read the XML part of the model yet.
+        Parameters:
+        ----------
+        table : `~astropy.table.Table`
+        filename : str
+            name of input file
         """
-        filename = str(make_path(path))
-        return cls(Table.read(filename), filename=filename)
+        columns = [_.lower() for _ in table.colnames]
+        if "time" not in columns:
+            raise ValueError("A TIME column is necessary")
 
-    def write(self, path=None, overwrite=False):
-        if path is None:
-            path = self.filename
-        if path is None:
-            raise ValueError(f"filename is required for {self.tag}")
-        else:
-            self.filename = str(make_path(path))
-            self.table.write(self.filename, overwrite=overwrite)
-
-    @lazyproperty
-    def _interpolator(self, ext=0):
-        x = self._time.value
-        y = self.table["NORM"].data
-        return scipy.interpolate.InterpolatedUnivariateSpline(x, y, k=1, ext=ext)
-
-    @lazyproperty
-    def _time_ref(self):
-        return time_ref_from_dict(self.table.meta)
-
-    @lazyproperty
-    def _time(self):
-        return self._time_ref + self.table["TIME"].data * getattr(
-            u, self.table.meta["TIMEUNIT"]
+        t_ref = time_ref_from_dict(table.meta)
+        nodes = table["TIME"]
+        time_axis = MapAxis.from_nodes(
+            nodes=nodes, name="time", unit=table.meta["TIMEUNIT"]
+        )
+        axes = [time_axis]
+        m = RegionNDMap.create(
+            region=None, axes=axes, meta=table.meta, data=table["NORM"]
         )
 
-    def evaluate(self, time, ext=0):
-        """Evaluate for a given time.
+        return cls(m, t_ref=t_ref, filename=filename)
 
-        Parameters
-        ----------
-        time : array_like
-            Time since the ``reference`` time.
-        ext : int or str, optional, default: 0
-            Parameter passed to ~scipy.interpolate.InterpolatedUnivariateSpline
-            Controls the extrapolation mode for GTIs outside the range
-            0 or "extrapolate", return the extrapolated value.
-            1 or "zeros", return 0
-            2 or "raise", raise a ValueError
-            3 or "const", return the boundary value.
+    @classmethod
+    def read(cls, filename, format="table"):
+        """Read a TemplateModel from disk
 
+        Parameters:
 
-        Returns
-        -------
-        norm : array_like
-            Norm at the given times.
+        filename : str
+            Name of file to read
+        format : str
+            Format of the input file.
+            either "table" or "map"
+
         """
-        return self._interpolator(time, ext=ext)
+        filename = str(make_path(filename))
+        if format == "table":
+            table = Table.read(filename)
+            return cls.from_table(table, filename=filename)
 
-    def integral(self, t_min, t_max):
-        """Evaluate the integrated flux within the given time intervals
+        elif format == "map":
+            m = RegionNDMap.read(filename)
+            t_ref = time_ref_from_dict(m.meta)
+            return cls(m, t_ref=t_ref, filename=filename)
 
-        Parameters
-        ----------
-        t_min: `~astropy.time.Time`
-            Start times of observation
-        t_max: `~astropy.time.Time`
-            Stop times of observation
-        Returns
-        -------
-        norm: The model integrated flux
+        else:
+            raise ValueError(
+                f"Not a valid format: '{format}', choose from: {'table', 'map'}"
+            )
+
+    def to_table(self, format="map"):
+        """Convert model to an astropy table"""
+        table = Table(
+            data=[self.map.geom.axes["time"].center, self.map.quantity],
+            names=["TIME", "NORM"],
+            meta=self.map.meta,
+        )
+        return table
+
+    def write(self, filename, format="table", overwrite=False):
+        """Write a model to disk as per the specified format
+
+        Parameters:
+            filename : str
+                name of output file
+            format : str, either "table" or "map"
+                if format is table, it is serialised as an astropy Table
+                if map, then it is serialised as a RegionNDMap
+            overwrite : bool
+                Overwrite file on disk if present
         """
 
-        n1 = self._interpolator.antiderivative()(t_max.mjd)
-        n2 = self._interpolator.antiderivative()(t_min.mjd)
-        return u.Quantity(n1 - n2, "day") / self.time_sum(t_min, t_max)
+        if self.filename is None:
+            raise IOError("Missing filename")
+
+        if format == "table":
+            table = self.to_table()
+            table.write(filename, overwrite=overwrite)
+
+        elif format == "map":
+            self.map.write(filename, overwrite=overwrite)
+
+        else:
+            raise ValueError("Not a valid format")
+
+    def evaluate(self, time, t_ref=None):
+        """Evaluate the model at given coordinates."""
+        if t_ref is None:
+            t_ref = Time(self.t_ref.value, format="mjd")
+        t = (time - t_ref).to_value(self.map.geom.axes["time"].unit)
+        coords = {"time": t}
+        val = self.map.interp_by_coord(coords)
+        val = np.clip(val, 0, a_max=None)
+        return u.Quantity(val, self.map.unit, copy=False)
 
     @classmethod
     def from_dict(cls, data):
-        return cls.read(data["temporal"]["filename"])
+        data = data["temporal"]
+        filename = data["filename"]
+        format = data.get("format", "table")
+        return cls.read(filename, format)
 
-    def to_dict(self, full_output=False):
+    def to_dict(self, full_output=False, format="table"):
         """Create dict for YAML serialisation"""
-        return {self._type: {"type": self.tag[0], "filename": self.filename}}
+        data = super().to_dict(full_output)
+        data["temporal"]["filename"] = self.filename
+        data["temporal"]["format"] = format
+        data["temporal"]["unit"] = str(self.map.unit)
+        return data
 
 
 class PowerLawTemporalModel(TemporalModel):

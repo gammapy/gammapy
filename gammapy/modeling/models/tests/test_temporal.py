@@ -45,13 +45,28 @@ def test_light_curve_evaluate(light_curve):
     val = light_curve(t)
     assert_allclose(val, 0.015512, rtol=1e-5)
 
-    t = Time(46300, format="mjd")
-    val = light_curve.evaluate(t.mjd, ext=3)
-    assert_allclose(val, 0.01551196, rtol=1e-5)
-
 
 def ph_curve(x, amplitude=0.5, x0=0.01):
     return 100.0 + amplitude * np.sin(2 * np.pi * (x - x0) / 1.0)
+
+
+@requires_data()
+def test_light_curve_to_from_table(light_curve):
+    table = light_curve.to_table()
+    lc1 = LightCurveTemplateTemporalModel.from_table((table))
+    assert lc1.map == light_curve.map
+
+
+@requires_data()
+def test_light_curve_to_dict(light_curve):
+    data = light_curve.to_dict()
+    assert data["temporal"]["format"] == "table"
+    assert data["temporal"]["unit"] == ""
+    assert data["temporal"]["type"] == "LightCurveTemplateTemporalModel"
+    assert data["temporal"]["parameters"][0]["name"] == "t_ref"
+
+    l1 = LightCurveTemplateTemporalModel.from_dict(data)
+    assert l1.map == light_curve.map
 
 
 def test_time_sampling_template():
@@ -72,7 +87,7 @@ def test_time_sampling_template():
     lc["TIME"] = (times - times[0]).to("s")
     lc["NORM"] = flare_model(times)
 
-    temporal_model = LightCurveTemplateTemporalModel(lc)
+    temporal_model = LightCurveTemplateTemporalModel.from_table(lc)
     sampler_template = temporal_model.sample_time(
         n_events=1000, t_min=t_min, t_max=t_max, random_state=0, t_delta=t_delta
     )
@@ -112,7 +127,7 @@ def test_lightcurve_temporal_model_integral():
     table["TIME"] = time
     table["NORM"] = np.ones(len(time))
     table.meta = dict(MJDREFI=55197.0, MJDREFF=0, TIMEUNIT="hour")
-    temporal_model = LightCurveTemplateTemporalModel(table)
+    temporal_model = LightCurveTemplateTemporalModel.from_table(table)
 
     start = [1, 3, 5] * u.hour
     stop = [2, 3.5, 6] * u.hour
@@ -120,7 +135,7 @@ def test_lightcurve_temporal_model_integral():
 
     val = temporal_model.integral(gti.time_start, gti.time_stop)
     assert len(val) == 3
-    assert_allclose(np.sum(val), 1.0, rtol=1e-5)
+    assert_allclose(np.sum(val), 1.0101, rtol=1e-5)
 
 
 def test_constant_temporal_model_evaluate():
@@ -224,7 +239,7 @@ def test_generalized_gaussian_temporal_model_integral():
     t_ref = Time(50000, format="mjd")
     gti = GTI.create(start, stop, reference_time=t_ref)
     val = temporal_model.integral(gti.time_start, gti.time_stop)
-    assert_allclose(val, 0.751594, rtol=1e-4)
+    assert_allclose(val, 0.759115, rtol=1e-4)
 
 
 def test_powerlaw_temporal_model_evaluate():
