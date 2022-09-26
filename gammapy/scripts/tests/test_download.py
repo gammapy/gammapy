@@ -63,5 +63,5 @@ def test_cli_download_datasets(tmp_path):
 
     args = ["download", "datasets", option_out]
     result = run_cli(cli, args)
-    assert tmp_path.exists()
+    assert (tmp_path / "dev").exists()
     assert "GAMMAPY_DATA" in result.output

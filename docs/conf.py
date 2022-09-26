@@ -250,16 +250,17 @@ automodsumm_inherited_members = True
 # http://www.sphinx-doc.org/en/stable/config.html#confval-suppress_warnings
 suppress_warnings = ["ref.citation"]
 
+branch = "master" if switch_version == "dev" else f"v{switch_version}"
 
 binder_config = {
     # Required keys
     "org": "gammapy",
-    "repo": "gammapy-docs",
-    "branch": "main",  # Can be any branch, tag, or commit hash. Use a branch that hosts your docs.
+    "repo": "gammapy-webpage",
+    "branch": branch,  # Can be any branch, tag, or commit hash. Use a branch that hosts your docs.
     "binderhub_url": "https://mybinder.org",  # Any URL of a binderhub deployment. Must be full URL (e.g. https://mybinder.org).
     "dependencies": "./binder/requirements.txt",
-    "notebooks_dir": "docs/dev/notebooks",
-    "use_jupyter_lab": False,
+    "notebooks_dir": f"notebooks/{switch_version}",
+    "use_jupyter_lab": True,
 }
 
 # nitpicky = True

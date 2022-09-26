@@ -86,7 +86,6 @@ test-cov:
 
 docs-sphinx:
 	cd docs && python -m sphinx . _build/html -b html -j auto
-	cp docs/binder/runtime.txt docs/_build/html/binder
 
 docs-show:
 	python docs/serve.py
