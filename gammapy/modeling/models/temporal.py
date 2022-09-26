@@ -175,10 +175,12 @@ class TemporalModel(ModelBase):
         norm : float
             Integrated flux norm on the given time intervals
         """
-        t_values = np.linspace(t_min.mjd, t_max.mjd, oversampling_factor, axis=-1)
+        t_values, steps = np.linspace(
+            t_min.mjd, t_max.mjd, oversampling_factor, retstep=True, axis=-1
+        )
         times = Time(t_values, format="mjd")
         values = self(times)
-        integral = np.sum(values / oversampling_factor, axis=-1)
+        integral = np.sum(values, axis=-1) * steps
         return integral / self.time_sum(t_min, t_max).to_value("d")
 
 
@@ -428,6 +430,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
     >>> print(light_curve)
     LightCurveTemplateTemporalModel model summary:
+    Reference time: 59000.5 MJD
     Start time: 59000.5 MJD
     End time: 61862.5 MJD
     Norm min: 0.01551196351647377
@@ -436,15 +439,19 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
     Compute ``norm`` at a given time:
 
-    >>> light_curve.evaluate(60000)
-    array(0.01551196)
+    >>> t = Time(59001.195, format="mjd")
+    >>> light_curve.evaluate(t)
+    array(0.02287888)
 
     Compute mean ``norm`` in a given time interval:
 
     >>> from astropy.time import Time
-    >>> times = Time([60000, 61000], format='mjd')
-    >>> light_curve.integral(times[0], times[1])
-    <Quantity 0.01721725>
+    >>> import astropy.units as u
+    >>> t_r = Time(59000.5, format='mjd')
+    >>> t_min = t_r + [1, 4, 8] * u.d
+    >>> t_max = t_r + [1.5, 6, 9] * u.d
+    >>> light_curve.integral(t_min, t_max)
+    array([0.0074388942, 0.0071144081, 0.0068115544])
     """
 
     tag = ["LightCurveTemplateTemporalModel", "template"]
@@ -467,15 +474,16 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         self.filename = filename
 
     def __str__(self):
-        start_time = self.map.geom.axes["time"].edges[0] + self.t_ref
-        end_time = self.map.geom.axes["time"].edges[-1] + self.t_ref
+        start_time = self.t_ref.quantity + self.map.geom.axes["time"].edges[0]
+        end_time = self.t_ref.quantity + self.map.geom.axes["time"].edges[-1]
         norm_min = np.min(self.map.data)
         norm_max = np.max(self.map.data)
 
         prnt = (
             f"{self.__class__.__name__} model summary:\n "
-            f"Start time: {start_time} MJD \n "
-            f"End time: {end_time} MJD \n "
+            f"Reference time: {self.t_ref.value} MJD \n "
+            f"Start time: {start_time.value} MJD \n "
+            f"End time: {end_time.value} MJD \n "
             f"Norm min: {norm_min} \n"
             f"Norm max: {norm_max}"
         )
@@ -538,9 +546,10 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
     def to_table(self, format="map"):
         """Convert model to an astropy table"""
-
         table = Table(
-            data=self.map.quantity, names=self.geom.axes.names, meta=self.map.meta
+            data=[self.map.geom.axes["time"].center, self.map.quantity],
+            names=["TIME", "NORM"],
+            meta=self.map.meta,
         )
         return table
 
@@ -570,36 +579,15 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         else:
             raise ValueError("Not a valid format")
 
-    def evaluate(self, time):
+    def evaluate(self, time, t_ref=None):
         """Evaluate the model at given coordinates."""
-        coords = {"time": time.mjd - self.t_ref.value}
+        if t_ref is None:
+            t_ref = Time(self.t_ref.value, format="mjd")
+        t = (time - t_ref).to_value(self.map.geom.axes["time"].unit)
+        coords = {"time": t}
         val = self.map.interp_by_coord(coords)
-        val = np.clip(val, 0)
+        val = np.clip(val, 0, a_max=None)
         return u.Quantity(val, self.map.unit, copy=False)
-
-    def integral(self, t_min, t_max):
-        """Evaluate the integrated flux within the given time intervals
-
-        Parameters
-        ----------
-        t_min: `~astropy.time.Time`
-                Start times of observation
-        t_max: `~astropy.time.Time`
-                 Stop times of observation
-
-        Returns
-        -------
-        norm : float
-            Integrated flux norm on the given time intervals
-        """
-        integral = []
-        coords = self.map.geom.axes["time"].center[0]
-        for t1, t2 in zip(t_min, t_max):
-            i1 = np.searchsorted(self.map.geom.axes["time"].edges, t1)
-            i2 = np.searchsorted(self.map.geom.axes["time"].edges, t2)
-            map_slice = self.map.slice_by_id({"time": slice(i1, i2)})
-            integral.append(map_slice.integral(axis_name="time", coords=coords))
-        return integral
 
     @classmethod
     def from_dict(cls, data):
@@ -613,7 +601,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         data = super().to_dict(full_output)
         data["temporal"]["filename"] = self.filename
         data["temporal"]["format"] = format
-        data["spatial"]["unit"] = str(self.map.unit)
+        data["temporal"]["unit"] = str(self.map.unit)
         return data
 
 
