@@ -56,8 +56,7 @@ class TemporalModel(ModelBase):
 
     @staticmethod
     def time_sum(t_min, t_max):
-        """
-        Total time between t_min and t_max
+        """Total time between t_min and t_max
 
         Parameters
         ----------
@@ -498,13 +497,19 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
     @classmethod
     def from_table(cls, table, filename=None):
-        """Create a Template model from an astropy table
+        """Create a template model from an astropy table
 
-        Parameters:
+        Parameters
         ----------
         table : `~astropy.table.Table`
+            Table containing the template model.
         filename : str
-            name of input file
+            Name of input file
+
+        Returns
+        -------
+        model : `LightCurveTemplateTemporalModel`
+            Light curve template model
         """
         columns = [_.lower() for _ in table.colnames]
         if "time" not in columns:
@@ -524,16 +529,19 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
     @classmethod
     def read(cls, filename, format="table"):
-        """Read a TemplateModel from disk
+        """Read a template model
 
-        Parameters:
-
+        Parameters
+        ----------
         filename : str
             Name of file to read
-        format : str
+        format : {"table", "map"}
             Format of the input file.
-            either "table" or "map"
 
+        Returns
+        -------
+        model : `LightCurveTemplateTemporalModel`
+            Light curve template model
         """
         filename = str(make_path(filename))
         if format == "table":
@@ -550,7 +558,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
                 f"Not a valid format: '{format}', choose from: {'table', 'map'}"
             )
 
-    def to_table(self, format="map"):
+    def to_table(self):
         """Convert model to an astropy table"""
         table = Table(
             data=[self.map.geom.axes["time"].center, self.map.quantity],
@@ -578,17 +586,17 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         if format == "table":
             table = self.to_table()
             table.write(filename, overwrite=overwrite)
-
         elif format == "map":
             self.map.write(filename, overwrite=overwrite)
-
         else:
-            raise ValueError("Not a valid format")
+            raise ValueError("Not a valid format, choose from ['map', 'table']")
 
     def evaluate(self, time, t_ref=None):
         """Evaluate the model at given coordinates."""
+
         if t_ref is None:
             t_ref = Time(self.t_ref.value, format="mjd")
+
         t = (time - t_ref).to_value(self.map.geom.axes["time"].unit)
         coords = {"time": t}
         val = self.map.interp_by_coord(coords)
