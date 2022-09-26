@@ -87,7 +87,7 @@ def test_time_sampling_template():
     lc["TIME"] = (times - times[0]).to("s")
     lc["NORM"] = flare_model(times)
 
-    temporal_model = LightCurveTemplateTemporalModel(lc)
+    temporal_model = LightCurveTemplateTemporalModel.from_table(lc)
     sampler_template = temporal_model.sample_time(
         n_events=1000, t_min=t_min, t_max=t_max, random_state=0, t_delta=t_delta
     )
