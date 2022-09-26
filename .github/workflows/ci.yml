@@ -8,7 +8,7 @@ jobs:
     env:
       PYTEST_ADDOPTS: --color=yes -n auto --dist=loadscope
     strategy:
-      fail-fast: false # true
+      fail-fast: true
       matrix:
         include:
           - os: ubuntu-latest
@@ -33,7 +33,6 @@ jobs:
             python: '3.9'
             tox_env: 'py39-test'
           - os: ubuntu-latest
-            continue-on-error: true
             python: '3.9'
             tox_env: 'codestyle'
           - os: ubuntu-latest
