@@ -62,8 +62,8 @@ def optimize_iminuit(parameters, function, store_trace=False, **kwargs):
     store_trace : bool
         Store trace of the fit
     **kwargs : dict
-        Options passed to `iminuit.Minuit` constructor. If there is an entry 'migrad_opts', those options
-        will be passed to `iminuit.Minuit.migrad()`.
+        Options passed to `iminuit.Minuit` constructor. If there is an entry
+        'migrad_opts', those options will be passed to `iminuit.Minuit.migrad()`.
 
     Returns
     -------

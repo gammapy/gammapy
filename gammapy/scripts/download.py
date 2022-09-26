@@ -41,7 +41,8 @@ class DownloadIndex:
 
         if self.release not in data:
             raise ValueError(
-                f"Download not available for release {self.release}, choose from: {list(data.keys())}"
+                f"Download not available for release {self.release}, "
+                f"choose from: {list(data.keys())}"
             )
 
         return data[self.release]
@@ -89,7 +90,7 @@ def members(tf):
     root_folder = list_members[0].name
     for member in list_members:
         if member.path.startswith(root_folder):
-            member.path = member.path[len(root_folder) + 1 :]  # noqa: E501
+            member.path = member.path[len(root_folder) + 1 :]  # noqa: E203
             yield member
 
 

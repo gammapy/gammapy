@@ -105,7 +105,9 @@ def test_psf_cta_1dc():
 
 @requires_data()
 def test_get_sigmas_and_norms():
-    filename = "$GAMMAPY_DATA/cta-caldb/Prod5-South-20deg-AverageAz-14MSTs37SSTs.180000s-v0.1.fits.gz"
+    filename = (
+        "$GAMMAPY_DATA/cta-caldb/Prod5-South-20deg-AverageAz-14MSTs37SSTs.180000s-v0.1.fits.gz"
+    )
 
     psf_irf = EnergyDependentMultiGaussPSF.read(filename, hdu="POINT SPREAD FUNCTION")
 
@@ -149,8 +151,9 @@ def test_psf_king_evaluate_2(psf_king):
     # offset equal 1 degre match with the bin 200 in the psf_table
     value_off1 = psf_king.evaluate(rad=rad, energy_true=1 * u.TeV, offset=theta1)
     value_off2 = psf_king.evaluate(rad=rad, energy_true=1 * u.TeV, offset=theta2)
-    # Test that the value at 1 degree in the histogram for the energy 1 Tev and theta=0 or 1 degree is equal to the one
-    # obtained from the self.evaluate_direct() method at 1 degree
+    # Test that the value at 1 degree in the histogram for the energy 1 Tev and
+    # theta=0 or 1 degree is equal to the one obtained from the self.evaluate_direct()
+    # method at 1 degree
     assert_allclose(0.005234 * u.Unit("deg-2"), value_off1, rtol=1e-4)
     assert_allclose(0.004015 * u.Unit("deg-2"), value_off2, rtol=1e-4)
 

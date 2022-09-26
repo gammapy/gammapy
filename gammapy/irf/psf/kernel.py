@@ -29,7 +29,9 @@ class PSFKernel:
         from astropy import units as u
 
         # Define energy axis
-        energy_axis_true = MapAxis.from_edges(np.logspace(-1., 1., 4), unit="TeV", name="energy_true")
+        energy_axis_true = MapAxis.from_energy_bounds(
+            "0.1 TeV", "10 TeV", nbin=4, name="energy_true
+        )
 
         # Create WcsGeom and map
         geom = WcsGeom.create(binsz=0.02 * u.deg, width=2.0 * u.deg, axes=[energy_axis_true])

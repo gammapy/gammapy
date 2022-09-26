@@ -208,8 +208,8 @@ def test_psfmap_stacking():
     assert_allclose(psfmap_stack.psf_map.data[0, 20, 20, 20], 1.768388, rtol=1e-6)
     assert_allclose(psfmap_stack.psf_map.data[0, 0, 20, 20], 17.683883, rtol=1e-6)
 
-
-# TODO: add a test comparing make_mean_psf and PSFMap.stack for a set of observations in an Observations
+    # TODO: add a test comparing make_mean_psf and PSFMap.stack for a set of
+    #  observations in an Observations
 
 
 def test_sample_coord():

@@ -65,7 +65,9 @@ def create_crab_spectral_model(reference="meyer"):
 
     Use a reference crab spectrum as unit to measure a differential flux (at 10 TeV)::
 
-        >>> pwl = PowerLawSpectralModel(index=2.3, amplitude=1e-12 * u.Unit('1 / (cm2 s TeV)'), reference=1 * u.TeV)
+        >>> pwl = PowerLawSpectralModel(
+                index=2.3, amplitude=1e-12 * u.Unit('1 / (cm2 s TeV)'), reference=1 * u.TeV
+            )
         >>> crab = create_crab_spectral_model('hess_pl')
         >>> energy = 10 * u.TeV
         >>> dnde_cu = (pwl(energy) / crab(energy)).to('%')

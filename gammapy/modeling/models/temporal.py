@@ -29,6 +29,7 @@ __all__ = [
 
 log = logging.getLogger(__name__)
 
+
 # TODO: make this a small ABC to define a uniform interface.
 class TemporalModel(ModelBase):
     """Temporal model base class.

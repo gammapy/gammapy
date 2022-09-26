@@ -226,13 +226,12 @@ class EDispKernel(IRF):
             if l.field("N_GRP"):
                 m_start = 0
                 for k in range(l.field("N_GRP")):
-                    pdf_matrix[
-                        i,
-                        l.field("F_CHAN")[k] : l.field("F_CHAN")[k]  # noqa: E203
-                        + l.field("N_CHAN")[k],
-                    ] = l.field("MATRIX")[
-                        m_start : m_start + l.field("N_CHAN")[k]
-                    ]  # noqa: E203
+                    chan_min = l.field("F_CHAN")[k]
+                    chan_max = l.field("F_CHAN")[k] + l.field("N_CHAN")[k]
+
+                    pdf_matrix[i, chan_min:chan_max] = l.field("MATRIX")[
+                        m_start : m_start + l.field("N_CHAN")[k]  # noqa: E203
+                    ]
                     m_start += l.field("N_CHAN")[k]
 
         table = Table.read(ebounds_hdu)
