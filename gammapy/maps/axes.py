@@ -316,7 +316,7 @@ class MapAxis:
         return mpl_scale[self.interp]
 
     def to_node_type(self, node_type):
-        """Return MapAxis copy chaning its node type to node_type.
+        """Return MapAxis copy changing its node type to node_type.
 
         Parameters
         ----------

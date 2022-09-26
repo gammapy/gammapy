@@ -324,7 +324,7 @@ class RegionGeom(Geom):
             raise ValueError("Region definition required.")
 
         # compound regions do not implement area()
-        # so we use the mask represenation and estimate the area
+        # so we use the mask representation and estimate the area
         # from the pixels in the mask using oversampling
         if isinstance(self.region, CompoundSkyRegion):
             # oversample by a factor of ten

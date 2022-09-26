@@ -242,7 +242,7 @@ class FixedPointingInfo:
         If the observation was performed tracking a fixed position in ICRS,
         the icrs pointing is returned with the given obstime attached.
 
-        If the observation was perfomed in drift mode, the fixed altaz coordinates
+        If the observation was performed in drift mode, the fixed altaz coordinates
         are transformed to ICRS using the observation location and the given time.
 
 

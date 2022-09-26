@@ -134,6 +134,6 @@ pydocstyle:
 
 # Note: codespell will pick its options from setup.cfg
 codespell:
-	codespell
+	codespell gammapy
 
 # TODO: add test and code quality checks for `examples`
