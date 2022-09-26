@@ -388,7 +388,8 @@ class Parameter:
                 ~np.isnan(self.max) and (self.value >= self.max)
             ):
                 log.warning(
-                    f"Value {self.value} is outside bounds [{self.min}, {self.max}] for parameter '{self.name}'"
+                    f"Value {self.value} is outside bounds [{self.min}, {self.max}]"
+                    f" for parameter '{self.name}'"
                 )
 
     def __repr__(self):

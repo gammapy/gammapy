@@ -7,7 +7,14 @@ from astropy.coordinates import SkyCoord
 from astropy.table import Table
 from astropy.time import Time
 from regions import CircleSkyRegion
-from gammapy.data import GTI, DataStore, EventList, Observation, ObservationTable, HDUIndexTable
+from gammapy.data import (
+    GTI,
+    DataStore,
+    EventList,
+    HDUIndexTable,
+    Observation,
+    ObservationTable,
+)
 from gammapy.datasets import MapDataset
 from gammapy.datasets.map import RAD_AXIS_DEFAULT
 from gammapy.irf import EDispKernelMap, EDispMap, PSFMap
@@ -435,56 +442,64 @@ def test_minimal_datastore():
     assert_allclose(stacked.counts.data.sum(), 1446)
     assert_allclose(stacked.background.data.sum(), 1445.9841)
 
+
 @requires_data()
 def test_dataset_hawc():
     # create the energy reco axis
     energy_axis = MapAxis.from_edges(
-            [1.00,1.78,3.16,5.62,10.0,17.8,31.6,56.2,100,177,316] * u.TeV,
-
-            name="energy",
-            interp="log"
-        )
+        [1.00, 1.78, 3.16, 5.62, 10.0, 17.8, 31.6, 56.2, 100, 177, 316] * u.TeV,
+        name="energy",
+        interp="log",
+    )
 
     # and energy true axis
-    energy_axis_true = MapAxis.from_energy_bounds(1e-3, 1e4, nbin=140, unit="TeV", name="energy_true")
-
+    energy_axis_true = MapAxis.from_energy_bounds(
+        1e-3, 1e4, nbin=140, unit="TeV", name="energy_true"
+    )
 
     # create a geometry around the Crab location
-    geom = WcsGeom.create(skydir=SkyCoord(ra=83.63,dec=22.01, unit='deg', frame="icrs"),
-                        width=3*u.deg,
-                        axes=[energy_axis],
-                        binsz=0.1)
+    geom = WcsGeom.create(
+        skydir=SkyCoord(ra=83.63, dec=22.01, unit="deg", frame="icrs"),
+        width=3 * u.deg,
+        axes=[energy_axis],
+        binsz=0.1,
+    )
 
-    maker = MapDatasetMaker(selection = ["counts","background", "exposure", "edisp", "psf"])
-    safemask_maker = SafeMaskMaker(methods=['aeff-max'], aeff_percent=10)
+    maker = MapDatasetMaker(
+        selection=["counts", "background", "exposure", "edisp", "psf"]
+    )
+    safemask_maker = SafeMaskMaker(methods=["aeff-max"], aeff_percent=10)
 
     results = {}
-    results['GP'] = [6.53623241669e+16, 58, 0.72202391]
-    results['NN'] = [6.57154247837e+16, 62, 0.76743538]
+    results["GP"] = [6.53623241669e16, 58, 0.72202391]
+    results["NN"] = [6.57154247837e16, 62, 0.76743538]
 
     for which in ["GP", "NN"]:
 
         # paths and file names
         data_path = "$GAMMAPY_DATA/hawc/crab_events_pass4/"
-        hdu_filename = 'hdu-index-table-' + which + "-Crab.fits.gz"
-        obs_filename = 'obs-index-table-' + which + "-Crab.fits.gz"
+        hdu_filename = "hdu-index-table-" + which + "-Crab.fits.gz"
+        obs_filename = "obs-index-table-" + which + "-Crab.fits.gz"
 
         # We want the last event lass for speed
-        obs_table = ObservationTable.read(data_path+obs_filename)
-        hdu_table = HDUIndexTable.read(data_path+hdu_filename, hdu=9)
-        data_store = DataStore( hdu_table=hdu_table, obs_table=obs_table)
-
+        obs_table = ObservationTable.read(data_path + obs_filename)
+        hdu_table = HDUIndexTable.read(data_path + hdu_filename, hdu=9)
+        data_store = DataStore(hdu_table=hdu_table, obs_table=obs_table)
 
         observations = data_store.get_observations()
 
-            # create empty dataset that will contain the data
+        # create empty dataset that will contain the data
         geom_exposure = geom.to_image().to_cube([energy_axis_true])
         geom_psf = geom.to_image().to_cube([RAD_AXIS_DEFAULT, energy_axis])
         geom_edisp = geom.to_cube([energy_axis_true])
 
-        dataset_empty = MapDataset.from_geoms(geom=geom, name="nHit-9",geom_exposure=geom_exposure,
-                            geom_psf=geom_psf,
-                            geom_edisp=geom_edisp)
+        dataset_empty = MapDataset.from_geoms(
+            geom=geom,
+            name="nHit-9",
+            geom_exposure=geom_exposure,
+            geom_psf=geom_psf,
+            geom_edisp=geom_edisp,
+        )
 
         # run the maker
         dataset = maker.run(dataset_empty, observations[0])

@@ -126,7 +126,8 @@ def test_wrong_units():
         EffectiveAreaTable2D(data=data, axes=[energy_axis_true, offset_axis])
 
         assert error.match(
-            f"Error: {wrong_unit} is not an allowed unit. {area_test.tag} requires {area_test.default_unit} data quantities."
+            f"Error: {wrong_unit} is not an allowed unit. {area_test.tag} "
+            f"requires {area_test.default_unit} data quantities."
         )
 
 

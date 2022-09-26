@@ -80,7 +80,13 @@ class Fit:
         for a detailed description of the available options. If there is an entry
         'migrad_opts', those options will be passed to `iminuit.Minuit.migrad()`.
 
-        For the `"sherpa"` backend you can from the options `method = {"simplex",  "levmar", "moncar", "gridsearch"}`
+        For the `"sherpa"` backend you can from the options:
+
+            * `"simplex"`
+            * `"levmar"`
+            * `"moncar"`
+            * `"gridsearch"`
+
         Those methods are described and compared in detail on
         http://cxc.cfa.harvard.edu/sherpa/methods/index.html. The available
         options of the optimization methods are described on the following
@@ -392,8 +398,8 @@ class Fit:
         Returns
         -------
         results : dict
-            Dictionary with keys "x_values", "y_values", "stat" and "fit_results". The latter contains an
-            empty list, if `reoptimize` is set to False
+            Dictionary with keys "x_values", "y_values", "stat" and "fit_results".
+            The latter contains an empty list, if `reoptimize` is set to False
         """
         datasets, parameters = self._parse_datasets(datasets=datasets)
 

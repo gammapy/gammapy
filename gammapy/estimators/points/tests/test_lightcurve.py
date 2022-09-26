@@ -427,7 +427,8 @@ def test_lightcurve_estimator_spectrum_datasets_with_mask_fit():
 
 @requires_data()
 def test_lightcurve_estimator_spectrum_datasets_default():
-    # Test default time interval: each time interval is equal to the gti of each dataset, here one hour
+    # Test default time interval: each time interval is equal to the gti of each
+    # dataset, here one hour
     datasets = get_spectrum_datasets()
     selection = ["scan"]
     estimator = LightCurveEstimator(
@@ -442,8 +443,8 @@ def test_lightcurve_estimator_spectrum_datasets_default():
 
 @requires_data()
 def test_lightcurve_estimator_spectrum_datasets_notordered():
-    # Test that if the time intervals given are not ordered in time, it is first ordered correctly and then
-    # compute as expected
+    # Test that if the time intervals given are not ordered in time, it is first ordered
+    # correctly and then compute as expected
     datasets = get_spectrum_datasets()
     time_intervals = [
         Time(["2010-01-01T01:00:00", "2010-01-01T02:00:00"]),

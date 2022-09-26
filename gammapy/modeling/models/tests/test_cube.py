@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import pytest
 import operator
+import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
@@ -18,11 +18,11 @@ from gammapy.modeling.models import (
     ConstantSpectralModel,
     ConstantTemporalModel,
     GaussianSpatialModel,
+    LogParabolaSpectralModel,
     Models,
     PointSpatialModel,
     PowerLawNormSpectralModel,
     PowerLawSpectralModel,
-    LogParabolaSpectralModel,
     SkyModel,
     SpatialModel,
     TemplateNPredModel,
@@ -711,5 +711,4 @@ def test_compound_spectral_model(caplog):
         temporal_model=temporal_model,
         name="source-1",
     )
-    assert_allclose(m.spectral_model(5*u.TeV).value, 2.87e-12, rtol=1e-2)
-
+    assert_allclose(m.spectral_model(5 * u.TeV).value, 2.87e-12, rtol=1e-2)

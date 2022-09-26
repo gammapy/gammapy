@@ -61,38 +61,35 @@ As usual, we’ll start with some general imports…
 ######################################################################
 # Setup
 # -----
-# 
+#
 
-# %matplotlib inline
-import matplotlib.pyplot as plt
+import logging
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
-
-import logging
+# %matplotlib inline
+import matplotlib.pyplot as plt
 
 log = logging.getLogger(__name__)
 
 
 ######################################################################
 # And some gammapy specific imports
-# 
+#
 
-from gammapy.data import Observation
+from gammapy.data import Observation, observatory_locations
+from gammapy.datasets import Datasets, FluxPointsDataset, SpectrumDataset
+from gammapy.estimators import LightCurveEstimator
 from gammapy.irf import load_cta_irfs
-from gammapy.datasets import SpectrumDataset, Datasets, FluxPointsDataset
+from gammapy.makers import SpectrumDatasetMaker
+from gammapy.maps import MapAxis, RegionGeom, TimeMapAxis
+from gammapy.modeling import Fit
 from gammapy.modeling.models import (
-    PowerLawSpectralModel,
     ExpDecayTemporalModel,
+    PowerLawSpectralModel,
     SkyModel,
 )
-from gammapy.maps import MapAxis, RegionGeom, TimeMapAxis
-from gammapy.estimators import LightCurveEstimator
-from gammapy.makers import SpectrumDatasetMaker
-from gammapy.modeling import Fit
-from gammapy.data import observatory_locations
-
 ######################################################################
 # Check setup
 # -----------
@@ -103,7 +100,7 @@ check_tutorials_setup()
 
 ######################################################################
 # We first define our preferred time format:
-# 
+#
 
 TimeMapAxis.time_format = "iso"
 
@@ -111,12 +108,12 @@ TimeMapAxis.time_format = "iso"
 ######################################################################
 # Simulating a light curve
 # ------------------------
-# 
+#
 # We will simulate 10 spectra between 300 GeV and 10 TeV using an
 # `PowerLawSpectralModel` and a `ExpDecayTemporalModel`. The important
 # thing to note here is how to attach a different `GTI` to each dataset.
 # Since we use spectrum datasets here, we will use a `RegionGeom`.
-# 
+#
 
 # Loading IRFs
 irfs = load_cta_irfs(
@@ -141,7 +138,7 @@ pointing = SkyCoord(0.5, 0.5, unit="deg", frame="galactic")
 # Note that observations are usually conducted in Wobble mode, in which
 # the source is not in the center of the camera. This allows to have a
 # symmetrical sky position from which background can be estimated.
-# 
+#
 
 # Define the source model: A combination of spectral and temporal model
 
@@ -164,7 +161,7 @@ model_simu.parameters.to_table()
 ######################################################################
 # Now, define the start and observation livetime wrt to the reference
 # time, `gti_t0`
-# 
+#
 
 n_obs = 10
 
@@ -174,7 +171,7 @@ lvtm = [55, 25, 26, 40, 40, 50, 40, 52, 43, 47] * u.min
 
 ######################################################################
 # Now perform the simulations
-# 
+#
 
 datasets = Datasets()
 
@@ -205,7 +202,7 @@ for idx in range(n_obs):
 ######################################################################
 # The reduced datasets have been successfully simulated. Let’s take a
 # quick look into our datasets.
-# 
+#
 
 datasets.info_table()
 
@@ -213,13 +210,13 @@ datasets.info_table()
 ######################################################################
 # Extract the lightcurve
 # ----------------------
-# 
+#
 # This section uses standard light curve estimation tools for a 1D
 # extraction. Only a spectral model needs to be defined in this case.
 # Since the estimator returns the integrated flux separately for each time
 # bin, the temporal model need not be accounted for at this stage. We
 # extract the lightcurve in 3 energy binsç
-# 
+#
 
 # Define the model:
 spectral_model = PowerLawSpectralModel(
@@ -244,24 +241,24 @@ ax = lc_1d.plot(marker="o", axis_name="time", sed_type="flux")
 ######################################################################
 # Fitting temporal models
 # -----------------------
-# 
+#
 # We have the reconstructed lightcurve at this point. Now we want to fit a
 # profile to the obtained light curves, using a joint fitting across the
 # different datasets, while simultaneously minimising across the temporal
 # model parameters as well. The temporal models can be applied
-# 
+#
 # -  directly on the obtained lightcurve
 # -  on the simulated datasets
-# 
+#
 
 
 ######################################################################
 # Fitting the obtained light curve
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# 
+#
 # The fitting will proceed through a joint fit of the flux points. First,
 # we need to obtain a set of `FluxPointDatasets`, one for each time bin
-# 
+#
 
 ## Create the datasets by iterating over the returned lightcurve
 datasets = Datasets()
@@ -275,7 +272,7 @@ for idx, fp in enumerate(lc_1d.iter_by_axis(axis_name="time")):
 # We will fit the amplitude, spectral index and the decay time scale. Note
 # that `t_ref` should be fixed by default for the
 # `ExpDecayTemporalModel`.
-# 
+#
 
 # Define the model:
 spectral_model1 = PowerLawSpectralModel(
@@ -300,7 +297,7 @@ result = fit.run(datasets=datasets)
 ######################################################################
 # Now let’s plot model and data. We plot only the normalisation of the
 # temporal model in relative units for one particular energy range
-# 
+#
 
 lc_1TeV_10TeV = lc_1d.slice_by_idx({"energy": slice(2, 3)})
 ax = lc_1TeV_10TeV.plot(sed_type="norm", axis_name="time")
@@ -315,14 +312,14 @@ plt.legend()
 ######################################################################
 # Fit the datasets
 # ~~~~~~~~~~~~~~~~
-# 
+#
 # Here, we apply the models directly to the simulated datasets.
-# 
+#
 # For modelling and fitting more complex flares, you should attach the
 # relevant model to each group of `datasets`. The parameters of a model
 # in a given group of dataset will be tied. For more details on joint
 # fitting in gammapy, see `here <../2D/modeling_2D.ipynb>`__.
-# 
+#
 
 # Define the model:
 spectral_model2 = PowerLawSpectralModel(
@@ -351,17 +348,17 @@ result.parameters.to_table()
 ######################################################################
 # We see that the fitted parameters are consistent between fitting flux
 # points and datasets, and match well with the simulated ones
-# 
+#
 
 
 ######################################################################
 # Exercises
 # ---------
-# 
+#
 # 1. Re-do the analysis with `MapDataset` instead of `SpectralDataset`
 # 2. Model the flare of PKS 2155-304 which you obtained using the `light
 #    curve flare tutorial <light_curve_flare.ipynb>`__. Use a combination
 #    of a Gaussian and Exponential flare profiles, and fit using
 #    `scipy.optimize.curve_fit`
 # 3. Do a joint fitting of the datasets.
-# 
+#

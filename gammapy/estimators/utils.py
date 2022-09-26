@@ -173,8 +173,8 @@ def resample_energy_edges(dataset, conditions={}):
             the input dataset
     conditions : dict
         Keyword arguments containing the per-bin conditions used to resample the axis.
-        Available options are: 'counts_min', 'background_min', 'excess_min', 'sqrt_ts_min', 'npred_min',
-        'npred_background_min', 'npred_signal_min'.
+        Available options are: 'counts_min', 'background_min', 'excess_min', 'sqrt_ts_min',
+        'npred_min', 'npred_background_min', 'npred_signal_min'.
     Returns
     -------
     energy_edges : list of `~astropy.units.Quantity`

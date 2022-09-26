@@ -84,13 +84,15 @@ class HDUIndexTable(Table):
         elif len(idx) == 0:
             if warn_missing:
                 log.warning(
-                    f"No HDU found matching: OBS_ID = {obs_id}, HDU_TYPE = {hdu_type}, HDU_CLASS = {hdu_class}"
+                    f"No HDU found matching: OBS_ID = {obs_id}, HDU_TYPE = {hdu_type},"
+                    " HDU_CLASS = {hdu_class}"
                 )
             return None
         else:
             idx = idx[0]
             log.warning(
-                f"Found multiple HDU matching: OBS_ID = {obs_id}, HDU_TYPE = {hdu_type}, HDU_CLASS = {hdu_class}."
+                f"Found multiple HDU matching: OBS_ID = {obs_id}, HDU_TYPE = {hdu_type},"
+                " HDU_CLASS = {hdu_class}."
                 f" Returning the first entry, which has "
                 f"HDU_TYPE = {self[idx]['HDU_TYPE']} and HDU_CLASS = {self[idx]['HDU_CLASS']}"
             )

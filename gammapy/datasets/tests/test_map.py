@@ -8,7 +8,7 @@ from astropy.coordinates import SkyCoord
 from astropy.table import Table
 from regions import CircleSkyRegion
 from gammapy.catalog import SourceCatalog3FHL
-from gammapy.data import GTI, HDUIndexTable, DataStore, ObservationTable
+from gammapy.data import GTI
 from gammapy.datasets import Datasets, MapDataset, MapDatasetOnOff
 from gammapy.datasets.map import RAD_AXIS_DEFAULT
 from gammapy.irf import (
@@ -19,7 +19,6 @@ from gammapy.irf import (
     EnergyDispersion2D,
     PSFMap,
 )
-from gammapy.makers import MapDatasetMaker, SafeMaskMaker
 from gammapy.makers.utils import make_map_exposure_true_energy, make_psf_map
 from gammapy.maps import HpxGeom, Map, MapAxis, RegionGeom, WcsGeom, WcsNDMap
 from gammapy.maps.io import JsonQuantityEncoder
@@ -32,7 +31,6 @@ from gammapy.modeling.models import (
     PointSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
-    LogParabolaSpectralModel
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
@@ -584,7 +582,7 @@ def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
 
     dataset_new = MapDataset.read(tmp_path / "test.fits")
 
-    assert dataset_new.name == 'test'
+    assert dataset_new.name == "test"
 
     assert dataset_new.mask.data.dtype == bool
 
@@ -1103,7 +1101,7 @@ def get_map_dataset_onoff(images, **kwargs):
         psf=psf,
         edisp=edisp,
         gti=gti,
-        name='MapDatasetOnOff-test',
+        name="MapDatasetOnOff-test",
         **kwargs,
     )
 
@@ -1154,7 +1152,7 @@ def test_map_dataset_on_off_fits_io(images, lazy, tmp_path):
             dataset_new = MapDatasetOnOff.read(tmp_path / "test.fits", lazy=lazy)
     else:
         dataset_new = MapDatasetOnOff.read(tmp_path / "test.fits", lazy=lazy)
-        assert dataset_new.name == 'MapDatasetOnOff-test'
+        assert dataset_new.name == "MapDatasetOnOff-test"
         assert dataset_new.mask.data.dtype == bool
         assert dataset_new.meta_table["livetime"] == 1.0 * u.h
         assert dataset_new.meta_table["obs_id"] == 111
@@ -1687,14 +1685,14 @@ def test_region_geom_io(tmpdir):
     axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=1)
     geom = RegionGeom.create("icrs;circle(0, 0, 0.2)", axes=[axis])
 
-    dataset = MapDataset.create(geom, name='geom-test')
+    dataset = MapDataset.create(geom, name="geom-test")
 
     filename = tmpdir / "test.fits"
     dataset.write(filename)
 
     dataset = MapDataset.read(filename, format="gadf")
 
-    assert dataset.name == 'geom-test'
+    assert dataset.name == "geom-test"
     assert isinstance(dataset.counts.geom, RegionGeom)
     assert isinstance(dataset.edisp.edisp_map.geom, RegionGeom)
     assert isinstance(dataset.psf.psf_map.geom, RegionGeom)
@@ -1740,9 +1738,13 @@ def test_dataset_mixed_geom(tmpdir):
     )
 
     dataset = MapDataset.from_geoms(
-        geom=geom, geom_exposure=geom_exposure, geom_psf=geom_psf_reco, geom_edisp=geom_edisp
+        geom=geom,
+        geom_exposure=geom_exposure,
+        geom_psf=geom_psf_reco,
+        geom_edisp=geom_edisp,
     )
     assert dataset.psf.tag == "psf_map_reco"
+
 
 @requires_data()
 def test_map_dataset_region_geom_npred():

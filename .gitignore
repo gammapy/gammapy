@@ -25,6 +25,7 @@ _build
 v
 .pytest_cache
 .tox
+.tmp
 
 # Packages/installer info
 *.egg

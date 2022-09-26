@@ -52,20 +52,19 @@ The setup
 
 """
 
+from pathlib import Path
 from astropy import units as u
 import matplotlib.pyplot as plt
-from gammapy.modeling import Fit
-from gammapy.modeling.models import Models, create_crab_spectral_model
 from gammapy.datasets import Datasets, FluxPointsDataset, SpectrumDatasetOnOff
 from gammapy.estimators import FluxPoints, FluxPointsEstimator
 from gammapy.maps import MapAxis
-from gammapy.utils.scripts import make_path
-from pathlib import Path
-
+from gammapy.modeling import Fit
+from gammapy.modeling.models import Models, create_crab_spectral_model
 ######################################################################
 # Check setup
 # -----------
 from gammapy.utils.check import check_tutorials_setup
+from gammapy.utils.scripts import make_path
 
 check_tutorials_setup()
 
@@ -73,13 +72,13 @@ check_tutorials_setup()
 ######################################################################
 # Data and models files
 # ---------------------
-# 
+#
 # The datasets serialization produce YAML files listing the datasets and
 # models. In the following cells we show an example containning only the
 # Fermi-LAT dataset and the Crab model.
-# 
+#
 # Fermi-LAT-3FHL_datasets.yaml:
-# 
+#
 
 path = make_path("$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_datasets.yaml")
 
@@ -93,9 +92,9 @@ with path.open("r") as f:
 # `4FGL <https://arxiv.org/abs/1902.10045>`__, then we have re-optimized
 # the spectral parameters for our dataset in the 10 GeV - 2 TeV energy
 # range (fixing the source position).
-# 
+#
 # Fermi-LAT-3FHL_models.yaml:
-# 
+#
 
 path = make_path("$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_models.yaml")
 
@@ -106,13 +105,13 @@ with path.open("r") as f:
 ######################################################################
 # Reading different datasets
 # --------------------------
-# 
+#
 # Fermi-LAT 3FHL: map dataset for 3D analysis
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# 
+#
 # For now we let’s use the datasets serialization only to read the 3D
 # `MapDataset` associated to Fermi-LAT 3FHL data and models.
-# 
+#
 
 path = Path("$GAMMAPY_DATA/fermi-3fhl-crab")
 filename = path / "Fermi-LAT-3FHL_datasets.yaml"
@@ -125,7 +124,7 @@ print(models)
 
 ######################################################################
 # We get the Crab model in order to share it with the other datasets
-# 
+#
 
 print(models["Crab Nebula"])
 
@@ -133,13 +132,13 @@ print(models["Crab Nebula"])
 ######################################################################
 # HESS-DL3: 1D ON/OFF dataset for spectral fitting
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# 
+#
 # The ON/OFF datasets can be read from PHA files following the `OGIP
 # standards <https://heasarc.gsfc.nasa.gov/docs/heasarc/ofwg/docs/spectra/ogip_92_007/node5.html>`__.
 # We read the PHA files from each observation, and compute a stacked
 # dataset for simplicity. Then the Crab spectral model previously defined
 # is added to the dataset.
-# 
+#
 
 datasets_hess = Datasets()
 
@@ -159,11 +158,11 @@ print(datasets)
 ######################################################################
 # HAWC: 1D dataset for flux point fitting
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# 
+#
 # The HAWC flux point are taken from https://arxiv.org/pdf/1905.12518.pdf
 # Then these flux points are read from a pre-made FITS file and passed to
 # a `FluxPointsDataset` together with the source spectral model.
-# 
+#
 
 # read flux points from https://arxiv.org/pdf/1905.12518.pdf
 filename = "$GAMMAPY_DATA/hawc_crab/HAWC19_flux_points.fits"
@@ -181,12 +180,12 @@ print(datasets)
 ######################################################################
 # Datasets serialization
 # ----------------------
-# 
+#
 # The `datasets` object contains each dataset previously defined. It can
 # be saved on disk as datasets.yaml, models.yaml, and several data files
 # specific to each dataset. Then the `datasets` can be rebuild later
 # from these files.
-# 
+#
 
 path = Path("crab-3datasets")
 path.mkdir(exist_ok=True)
@@ -204,10 +203,10 @@ print(datasets)
 ######################################################################
 # Joint analysis
 # --------------
-# 
+#
 # We run the fit on the `Datasets` object that include a dataset for
 # each instrument
-# 
+#
 
 # %%time
 fit_joint = Fit()
@@ -217,7 +216,7 @@ print(results_joint)
 
 ######################################################################
 # Let’s display only the parameters of the Crab spectral model
-# 
+#
 
 crab_spec = datasets[0].models["Crab Nebula"].spectral_model
 print(crab_spec)
@@ -226,7 +225,7 @@ print(crab_spec)
 ######################################################################
 # We can compute flux points for Fermi-LAT and HESS datasets in order plot
 # them together with the HAWC flux point.
-# 
+#
 
 # compute Fermi-LAT and HESS flux points
 energy_edges = MapAxis.from_energy_bounds("10 GeV", "2 TeV", nbin=5).edges
@@ -237,9 +236,7 @@ flux_points_fermi = FluxPointsEstimator(
 ).run([datasets["Fermi-LAT"]])
 
 
-energy_edges = MapAxis.from_bounds(
-    1, 15, nbin=6, interp="log", unit="TeV"
-).edges
+energy_edges = MapAxis.from_bounds(1, 15, nbin=6, interp="log", unit="TeV").edges
 
 flux_points_hess = FluxPointsEstimator(
     energy_edges=energy_edges, source="Crab Nebula", selection_optional=["ul"]
@@ -249,7 +246,7 @@ flux_points_hess = FluxPointsEstimator(
 ######################################################################
 # Now, Let’s plot the Crab spectrum fitted and the flux points of each
 # instrument.
-# 
+#
 
 # display spectrum and flux points
 plt.figure(figsize=(8, 6))
@@ -257,9 +254,7 @@ plt.figure(figsize=(8, 6))
 energy_bounds = [0.01, 300] * u.TeV
 sed_type = "e2dnde"
 
-ax = crab_spec.plot(
-    energy_bounds=energy_bounds, sed_type=sed_type, label="Model"
-)
+ax = crab_spec.plot(energy_bounds=energy_bounds, sed_type=sed_type, label="Model")
 crab_spec.plot_error(ax=ax, energy_bounds=energy_bounds, sed_type=sed_type)
 
 flux_points_fermi.plot(ax=ax, sed_type=sed_type, label="Fermi-LAT")
@@ -267,5 +262,4 @@ flux_points_hess.plot(ax=ax, sed_type=sed_type, label="HESS")
 flux_points_hawc.plot(ax=ax, sed_type=sed_type, label="HAWC")
 
 ax.set_xlim(energy_bounds)
-plt.legend();
-
+plt.legend()

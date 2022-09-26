@@ -1,13 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Time-dependent models."""
-import numpy as np
 import logging
+import numpy as np
 import scipy.interpolate
 from astropy import units as u
 from astropy.table import Table
 from astropy.time import Time
 from astropy.utils import lazyproperty
-from gammapy.maps import RegionNDMap, TimeMapAxis, MapAxis
+from gammapy.maps import MapAxis, RegionNDMap, TimeMapAxis
 from gammapy.modeling import Parameter, Parameters
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.scripts import make_path
@@ -29,10 +29,12 @@ __all__ = [
 
 log = logging.getLogger(__name__)
 
+
 # TODO: make this a small ABC to define a uniform interface.
 class TemporalModel(ModelBase):
     """Temporal model base class.
-    evaluates on  astropy.time.Time objects"""
+
+    Evaluates on  astropy.time.Time objects"""
 
     _type = "temporal"
 
@@ -54,8 +56,7 @@ class TemporalModel(ModelBase):
 
     @staticmethod
     def time_sum(t_min, t_max):
-        """
-        Total time between t_min and t_max
+        """Total time between t_min and t_max
 
         Parameters
         ----------
@@ -141,8 +142,6 @@ class TemporalModel(ModelBase):
             else ontime.unit
         )
 
-        # TODO: the separate time unit handling is unfortunate, but the quantity support for np.arange and np.interp
-        #  is still incomplete, refactor once we change to recent numpy and astropy versions
         t_step = t_delta.to_value(time_unit)
         t_step = (t_step * u.s).to("d")
 
@@ -414,7 +413,8 @@ class LightCurveTemplateTemporalModel(TemporalModel):
     The ``norm`` is supposed to be a unit-less multiplicative factor in the model,
     to be multiplied with a spectral model.
 
-    The model does linear interpolation for times between the given ``(time, energy, norm)`` values.
+    The model does linear interpolation for times between the given ``(time, energy, norm)``
+    values.
 
     For more information see :ref:`LightCurve-temporal-model`.
 
@@ -465,12 +465,17 @@ class LightCurveTemplateTemporalModel(TemporalModel):
             log.warning("Map has negative values. Check and fix this!")
 
         if map.geom.has_energy_axis:
-            raise NotImplemented("Currently not supported for Energy Dependent Models")
+            raise NotImplementedError(
+                "LightCurveTemplateTemporalModel does not"
+                f" support energy axis, got {map.geom.axes.names}"
+            )
 
         self.map = map.copy()
         super().__init__()
+
         if t_ref:
             self.t_ref.value = Time(t_ref, format="mjd").mjd
+
         self.filename = filename
 
     def __str__(self):
@@ -492,13 +497,19 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
     @classmethod
     def from_table(cls, table, filename=None):
-        """Create a Template model from an astropy table
+        """Create a template model from an astropy table
 
-        Parameters:
+        Parameters
         ----------
         table : `~astropy.table.Table`
+            Table containing the template model.
         filename : str
-            name of input file
+            Name of input file
+
+        Returns
+        -------
+        model : `LightCurveTemplateTemporalModel`
+            Light curve template model
         """
         columns = [_.lower() for _ in table.colnames]
         if "time" not in columns:
@@ -518,16 +529,19 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
     @classmethod
     def read(cls, filename, format="table"):
-        """Read a TemplateModel from disk
+        """Read a template model
 
-        Parameters:
-
+        Parameters
+        ----------
         filename : str
             Name of file to read
-        format : str
+        format : {"table", "map"}
             Format of the input file.
-            either "table" or "map"
 
+        Returns
+        -------
+        model : `LightCurveTemplateTemporalModel`
+            Light curve template model
         """
         filename = str(make_path(filename))
         if format == "table":
@@ -544,7 +558,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
                 f"Not a valid format: '{format}', choose from: {'table', 'map'}"
             )
 
-    def to_table(self, format="map"):
+    def to_table(self):
         """Convert model to an astropy table"""
         table = Table(
             data=[self.map.geom.axes["time"].center, self.map.quantity],
@@ -572,17 +586,17 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         if format == "table":
             table = self.to_table()
             table.write(filename, overwrite=overwrite)
-
         elif format == "map":
             self.map.write(filename, overwrite=overwrite)
-
         else:
-            raise ValueError("Not a valid format")
+            raise ValueError("Not a valid format, choose from ['map', 'table']")
 
     def evaluate(self, time, t_ref=None):
         """Evaluate the model at given coordinates."""
+
         if t_ref is None:
             t_ref = Time(self.t_ref.value, format="mjd")
+
         t = (time - t_ref).to_value(self.map.geom.axes["time"].unit)
         coords = {"time": t}
         val = self.map.interp_by_coord(coords)
@@ -850,7 +864,9 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         x = self.table["PHASE"].data
         y = self.table["NORM"].data
 
-        return scipy.interpolate.InterpolatedUnivariateSpline(x, y, k=1, ext=2, bbox=[0.,1.])
+        return scipy.interpolate.InterpolatedUnivariateSpline(
+            x, y, k=1, ext=2, bbox=[0.0, 1.0]
+        )
 
     def evaluate(self, time, t_ref, phi_ref, f0, f1, f2):
         phase, _ = self._time_to_phase(time, t_ref, phi_ref, f0, f1, f2)
@@ -870,26 +886,34 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         norm: The model integrated flux
         """
         kwargs = {par.name: par.quantity for par in self.parameters}
-        ph_min, n_min = self._time_to_phase(t_min.mjd*u.d, **kwargs)
-        ph_max, n_max = self._time_to_phase(t_max.mjd*u.d, **kwargs)
+        ph_min, n_min = self._time_to_phase(t_min.mjd * u.d, **kwargs)
+        ph_max, n_max = self._time_to_phase(t_max.mjd * u.d, **kwargs)
 
         # here we assume that the frequency does not change during the integration boundaries
-        delta_t = (t_min.mjd - self.t_ref.value)*u.d
-        frequency = self.f0.quantity + delta_t * (self.f1.quantity + delta_t  * self.f2.quantity/2)
+        delta_t = (t_min.mjd - self.t_ref.value) * u.d
+        frequency = self.f0.quantity + delta_t * (
+            self.f1.quantity + delta_t * self.f2.quantity / 2
+        )
 
         # Compute integral of one phase
-        phase_integral = self._interpolator.antiderivative()(1)-self._interpolator.antiderivative()(0)
+        phase_integral = self._interpolator.antiderivative()(
+            1
+        ) - self._interpolator.antiderivative()(0)
         # Multiply by the total number of phases
-        phase_integral *= (n_max-n_min-1)
+        phase_integral *= n_max - n_min - 1
 
         # Compute integrals before first full phase and after the last full phase
-        end_integral = self._interpolator.antiderivative()(ph_max)-self._interpolator.antiderivative()(0)
-        start_integral = self._interpolator.antiderivative()(1)-self._interpolator.antiderivative()(ph_min)
+        end_integral = self._interpolator.antiderivative()(
+            ph_max
+        ) - self._interpolator.antiderivative()(0)
+        start_integral = self._interpolator.antiderivative()(
+            1
+        ) - self._interpolator.antiderivative()(ph_min)
 
         # Divide by Jacobian (here we neglect variations of frequency during the integration period)
-        total = (phase_integral + start_integral + end_integral)/frequency
+        total = (phase_integral + start_integral + end_integral) / frequency
         # Normalize by total integration time
-        integral_norm =  total / self.time_sum(t_min, t_max)
+        integral_norm = total / self.time_sum(t_min, t_max)
 
         return integral_norm.to("")
 
@@ -926,7 +950,7 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         ax : `~matplotlib.axes.Axes`, optional
             axis
         """
-        phase_axis = MapAxis.from_bounds(0., 1, nbin=n_points, name="Phase", unit="")
+        phase_axis = MapAxis.from_bounds(0.0, 1, nbin=n_points, name="Phase", unit="")
 
         m = RegionNDMap.create(region=None, axes=[phase_axis])
         kwargs.setdefault("marker", "None")

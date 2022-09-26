@@ -102,7 +102,7 @@ class MapAxis:
 
     # TODO: Cache an interpolation object?
     def __init__(self, nodes, interp="lin", name="", node_type="edges", unit=""):
-        
+
         if not isinstance(name, str):
             raise TypeError(f"Name must be a string, got: {type(name)!r}")
 
@@ -342,10 +342,10 @@ class MapAxis:
                 node_type=node_type,
                 unit=self.unit,
             )
-    
+
     def rename(self, new_name):
         """Rename the axis.
-    
+
         Parameters
         ----------
         new_name : str
@@ -1114,7 +1114,7 @@ class MapAxis:
     def to_table(self, format="ogip"):
         """Convert `~astropy.units.Quantity` to OGIP ``EBOUNDS`` extension.
 
-        See https://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/memos/cal_gen_92_002/cal_gen_92_002.html#tth_sEc3.2
+        See https://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/memos/cal_gen_92_002/cal_gen_92_002.html#tth_sEc3.2  # noqa: E501
 
         The 'ogip-sherpa' format is equivalent to 'ogip' but uses keV energy units.
 
@@ -1188,7 +1188,7 @@ class MapAxis:
     def to_table_hdu(self, format="ogip"):
         """Convert `~astropy.units.Quantity` to OGIP ``EBOUNDS`` extension.
 
-        See https://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/memos/cal_gen_92_002/cal_gen_92_002.html#tth_sEc3.2
+        See https://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/memos/cal_gen_92_002/cal_gen_92_002.html#tth_sEc3.2  # noqa: E501
 
         The 'ogip-sherpa' format is equivalent to 'ogip' but uses keV energy units.
 
@@ -1844,7 +1844,8 @@ class MapAxes(Sequence):
 
         Parameters
         ----------
-        format : {"gadf", "gadf-dl3", "fgst-ccube", "fgst-template", "ogip", "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"}
+        format : {"gadf", "gadf-dl3", "fgst-ccube", "fgst-template", "ogip",
+                  "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"}
             Format to use.
 
         Returns
@@ -2062,17 +2063,16 @@ class MapAxes(Sequence):
         except ValueError:
             raise ValueError(message)
 
-
     def rename_axes(self, names, new_names):
         """Rename the axes.
-    
+
         Parameters
         ----------
         names : list or str
             Names of the axes
         new_names : list or str
             New names of the axes (list must be of same length than `names`).
-        
+
         Returns
         -------
         axes : `MapAxes`
@@ -2085,7 +2085,7 @@ class MapAxes(Sequence):
             new_names = [new_names]
         for name, new_name in zip(names, new_names):
             axes[name]._name = new_name
-        return  axes
+        return axes
 
     @property
     def center_coord(self):

@@ -59,7 +59,7 @@ setup_cfg = dict(conf.items("metadata"))
 # -- General configuration ----------------------------------------------------
 
 # By default, highlight as Python 3.
-highlight_language = 'python3'
+highlight_language = "python3"
 
 # Matplotlib directive sets whether to show a link to the source in HTML
 plot_html_show_source_link = False
@@ -252,14 +252,14 @@ suppress_warnings = ["ref.citation"]
 
 
 binder_config = {
-     # Required keys
-     "org": "gammapy",
-     "repo": "gammapy-docs",
-     "branch": "main", # Can be any branch, tag, or commit hash. Use a branch that hosts your docs.
-     "binderhub_url": "https://mybinder.org", # Any URL of a binderhub deployment. Must be full URL (e.g. https://mybinder.org).
-     "dependencies": "./binder/requirements.txt",
-     "notebooks_dir": "docs/dev/notebooks",
-     "use_jupyter_lab": False,
+    # Required keys
+    "org": "gammapy",
+    "repo": "gammapy-docs",
+    "branch": "main",  # Can be any branch, tag, or commit hash. Use a branch that hosts your docs.
+    "binderhub_url": "https://mybinder.org",  # Any URL of a binderhub deployment. Must be full URL (e.g. https://mybinder.org).
+    "dependencies": "./binder/requirements.txt",
+    "notebooks_dir": "docs/dev/notebooks",
+    "use_jupyter_lab": False,
 }
 
 # nitpicky = True

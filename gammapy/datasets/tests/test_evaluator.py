@@ -166,7 +166,7 @@ def test_psf_reco():
 
     evaluator = MapEvaluator(model=model_pos, exposure=exposure, psf=psf)
 
-    assert evaluator.apply_psf_after_edisp == True
+    assert evaluator.apply_psf_after_edisp
     assert evaluator.methods_sequence[-1] == evaluator.apply_psf
     npred = evaluator.compute_npred()
     assert_allclose(npred.data.sum(), 9e-12)
@@ -178,7 +178,7 @@ def test_psf_reco():
     mask = Map.from_geom(geom, data=True)
     evaluator.psf = None
     evaluator.update(exposure, psf_map, None, geom, mask)
-    assert evaluator.apply_psf_after_edisp == True
+    assert evaluator.apply_psf_after_edisp
     assert evaluator.methods_sequence[-1] == evaluator.apply_psf
     assert_allclose(evaluator.compute_npred().data.sum(), 9e-12)
 

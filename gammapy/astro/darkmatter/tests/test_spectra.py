@@ -3,7 +3,7 @@ import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.astro.darkmatter import DarkMatterAnnihilationSpectralModel, PrimaryFlux
-from gammapy.modeling.models import SkyModel, Models
+from gammapy.modeling.models import Models, SkyModel
 from gammapy.utils.testing import assert_quantity_allclose, requires_data
 
 
@@ -51,4 +51,3 @@ def test_DMAnnihilation():
     assert_allclose(new_models[0].spectral_model.jfactor.value, model.jfactor.value)
     assert new_models[0].spectral_model.mass.value == 5
     assert new_models[0].spectral_model.mass.unit == u.TeV
-

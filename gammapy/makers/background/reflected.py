@@ -501,7 +501,8 @@ class ReflectedRegionsBackgroundMaker(Maker):
             rad_max=rad_max, geom=geom
         ):
             raise ValueError(
-                "Must use `PointSkyRegion` or `CircleSkyRegion` with rad max equivalent radius in point-like analysis,"
+                "Must use `PointSkyRegion` or `CircleSkyRegion` with rad max "
+                "equivalent radius in point-like analysis,"
                 f" got {type(geom.region)} instead"
             )
 
@@ -572,6 +573,7 @@ class ReflectedRegionsBackgroundMaker(Maker):
         if dataset_onoff.counts_off is None:
             dataset_onoff.mask_safe.data[...] = False
             log.warning(
-                f"ReflectedRegionsBackgroundMaker failed. Setting {dataset_onoff.name} mask to False."
+                f"ReflectedRegionsBackgroundMaker failed. Setting {dataset_onoff.name} "
+                "mask to False."
             )
         return dataset_onoff

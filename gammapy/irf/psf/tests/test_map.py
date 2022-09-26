@@ -208,8 +208,8 @@ def test_psfmap_stacking():
     assert_allclose(psfmap_stack.psf_map.data[0, 20, 20, 20], 1.768388, rtol=1e-6)
     assert_allclose(psfmap_stack.psf_map.data[0, 0, 20, 20], 17.683883, rtol=1e-6)
 
-
-# TODO: add a test comparing make_mean_psf and PSFMap.stack for a set of observations in an Observations
+    # TODO: add a test comparing make_mean_psf and PSFMap.stack for a set of
+    #  observations in an Observations
 
 
 def test_sample_coord():
@@ -504,11 +504,8 @@ def test_peek():
         psf_map.peek()
 
 
-
 def test_psf_map_reco(tmpdir):
-    energy_axis = MapAxis.from_energy_bounds(
-        "1 TeV", "10 TeV", nbin=3, name="energy"
-    )
+    energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3, name="energy")
     geom = RegionGeom.create("icrs;circle(0, 0, 0.1)")
     psf_map = RecoPSFMap.from_gauss(
         energy_axis=energy_axis, sigma=[0.1, 0.2, 0.3] * u.deg, geom=geom
@@ -525,12 +522,12 @@ def test_psf_map_reco(tmpdir):
     assert psf_map.required_axes == ["rad", "energy"]
 
     value = psf_map.containment(rad=0.1, energy=energy_axis.center)
-    assert_allclose(value,[0.3938, 0.1175, 0.0540], rtol=1e-2)
+    assert_allclose(value, [0.3938, 0.1175, 0.0540], rtol=1e-2)
 
     value = psf_map.containment_radius(energy=energy_axis.center, fraction=0.394)
     assert_allclose(value, [0.1, 0.2, 0.3] * u.deg, rtol=1e-2)
 
-    value = psf_map.containment_radius_map(energy= 1*u.TeV, fraction=0.394)
+    value = psf_map.containment_radius_map(energy=1 * u.TeV, fraction=0.394)
     assert_allclose(value.data[0], 0.11875, rtol=1e-2)
 
     kern_geom = WcsGeom.create(binsz=0.02, width=5.0, axes=[energy_axis])
@@ -556,9 +553,12 @@ def test_psf_map_reco(tmpdir):
     with mpl_plot_check():
         psf_map.plot_psf_vs_rad()
 
+
 @requires_data()
 def test_psf_map_reco_hawc():
-    filename = "$GAMMAPY_DATA/hawc/crab_events_pass4/irfs/PSFMap_Crab_fHitbin5NN.fits.gz"
+    filename = (
+        "$GAMMAPY_DATA/hawc/crab_events_pass4/irfs/PSFMap_Crab_fHitbin5NN.fits.gz"
+    )
     reco_psf_map = RecoPSFMap.read(filename, format="gadf")
 
     assert "energy" in reco_psf_map.psf_map.geom.axes.names
@@ -571,4 +571,7 @@ def test_psf_map_reco_hawc():
     with mpl_plot_check():
         reco_psf_map.plot_psf_vs_rad()
 
-    assert_allclose(reco_psf_map.containment_radius(0.68, [1,2]*u.TeV),[0.001, 0.43733357]*u.deg)
+    assert_allclose(
+        reco_psf_map.containment_radius(0.68, [1, 2] * u.TeV),
+        [0.001, 0.43733357] * u.deg,
+    )

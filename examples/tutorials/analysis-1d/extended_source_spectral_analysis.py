@@ -86,23 +86,21 @@ As usual, we’ll start with some general imports…
 
 """
 
+import astropy.units as u
+from astropy.coordinates import Angle, SkyCoord
+from regions import CircleSkyRegion
 # %matplotlib inline
 import matplotlib.pyplot as plt
-
-import astropy.units as u
-from astropy.coordinates import SkyCoord, Angle
-from regions import CircleSkyRegion
-from gammapy.maps import MapAxis, RegionGeom
-from gammapy.modeling import Fit
 from gammapy.data import DataStore
-from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from gammapy.datasets import Datasets, SpectrumDataset
 from gammapy.makers import (
+    ReflectedRegionsBackgroundMaker,
     SafeMaskMaker,
     SpectrumDatasetMaker,
-    ReflectedRegionsBackgroundMaker,
 )
-
+from gammapy.maps import MapAxis, RegionGeom
+from gammapy.modeling import Fit
+from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 ######################################################################
 # Check setup
 # -----------
@@ -114,10 +112,10 @@ check_tutorials_setup()
 ######################################################################
 # Select the data
 # ---------------
-# 
+#
 # We first set the datastore and retrieve a few observations from our
 # source.
-# 
+#
 
 datastore = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
 obs_ids = [20326, 20327, 20349, 20350, 20396, 20397]
@@ -130,17 +128,17 @@ observations = datastore.get_observations(obs_ids)
 ######################################################################
 # Prepare the datasets creation
 # -----------------------------
-# 
+#
 
 
 ######################################################################
 # Select the ON region
 # ~~~~~~~~~~~~~~~~~~~~
-# 
+#
 # Here we take a simple 1 degree circular region because it fits well with
 # the morphology of RX J1713-3945. More complex regions could be used
 # e.g. `~regions.EllipseSkyRegion` or `~regions.RectangleSkyRegion`.
-# 
+#
 
 target_position = SkyCoord(347.3, -0.5, unit="deg", frame="galactic")
 radius = Angle("0.5 deg")
@@ -150,14 +148,14 @@ on_region = CircleSkyRegion(target_position, radius)
 ######################################################################
 # Define the geometries
 # ~~~~~~~~~~~~~~~~~~~~~
-# 
+#
 # This part is especially important. - We have to define first energy
 # axes. They define the axes of the resulting
 # `~gammapy.datasets.SpectrumDatasetOnOff`. In particular, we have to be
 # careful to the true energy axis: it has to cover a larger range than the
 # reconstructed energy one. - Then we define the region geometry itself
 # from the on region.
-# 
+#
 
 # The binning of the final spectrum is defined here.
 energy_axis = MapAxis.from_energy_bounds(0.1, 40.0, 10, unit="TeV")
@@ -173,9 +171,9 @@ geom = RegionGeom(on_region, axes=[energy_axis])
 ######################################################################
 # Create the makers
 # ~~~~~~~~~~~~~~~~~
-# 
+#
 # First we instantiate the target `~gammapy.datasets.SpectrumDataset`.
-# 
+#
 
 dataset_empty = SpectrumDataset.create(
     geom=geom,
@@ -187,12 +185,12 @@ dataset_empty = SpectrumDataset.create(
 # Now we create its associated maker. Here we need to produce, counts,
 # exposure and edisp (energy dispersion) entries. PSF and IRF background
 # are not needed, therefore we don’t compute them.
-# 
+#
 # **IMPORTANT**: Note that `use_region_center` is set to `False`. This
 # is necessary so that the `~gammapy.makers.SpectrumDatasetMaker`
 # considers the whole region in the IRF computation and not only the
 # center.
-# 
+#
 
 maker = SpectrumDatasetMaker(
     selection=["counts", "exposure", "edisp"], use_region_center=False
@@ -203,7 +201,7 @@ maker = SpectrumDatasetMaker(
 # Now we create the OFF background maker for the spectra. If we have an
 # exclusion region, we have to pass it here. We also define the safe range
 # maker.
-# 
+#
 
 bkg_maker = ReflectedRegionsBackgroundMaker()
 safe_mask_maker = SafeMaskMaker(methods=["aeff-max"], aeff_percent=10)
@@ -212,14 +210,14 @@ safe_mask_maker = SafeMaskMaker(methods=["aeff-max"], aeff_percent=10)
 ######################################################################
 # Perform the data reduction loop.
 # --------------------------------
-# 
+#
 # We can now run over selected observations. For each of them, we: -
 # create the `~gammapy.datasets.SpectrumDataset` - Compute the OFF via
 # the reflected background method and create a
 # `~gammapy.datasets.SpectrumDatasetOnOff` object - Run the safe mask
 # maker on it - Add the `~gammapy.datasets.SpectrumDatasetOnOff` to the
 # list.
-# 
+#
 
 # %%time
 datasets = Datasets()
@@ -243,21 +241,21 @@ datasets.meta_table
 ######################################################################
 # Explore the results
 # -------------------
-# 
+#
 # We can peek at the content of the spectrum datasets
-# 
+#
 
-datasets[0].peek();
+datasets[0].peek()
 
 
 ######################################################################
 # Cumulative excess and signficance
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# 
+#
 # Finally, we can look at cumulative significance and number of excesses.
 # This is done with the `info_table` method of
 # `~gammapy.datasets.Datasets`.
-# 
+#
 
 info_table = datasets.info_table(cumulative=True)
 
@@ -284,18 +282,18 @@ ax.plot(
 )
 
 plt.xlabel("Livetime [h]")
-plt.ylabel("Sqrt(TS)");
+plt.ylabel("Sqrt(TS)")
 
 
 ######################################################################
 # Perform spectral model fitting
 # ------------------------------
-# 
+#
 # Here we perform a joint fit.
-# 
+#
 # We first create the model, here a simple powerlaw, and assign it to
 # every dataset in the `~gammapy.datasets.Datasets`.
-# 
+#
 
 spectral_model = PowerLawSpectralModel(
     index=2, amplitude=2e-11 * u.Unit("cm-2 s-1 TeV-1"), reference=1 * u.TeV
@@ -307,7 +305,7 @@ datasets.models = [model]
 
 ######################################################################
 # Now we can run the fit
-# 
+#
 
 fit_joint = Fit()
 result_joint = fit_joint.run(datasets=datasets)
@@ -317,9 +315,9 @@ print(result_joint)
 ######################################################################
 # Explore the fit results
 # ~~~~~~~~~~~~~~~~~~~~~~~
-# 
+#
 # First the fitted parameters values and their errors.
-# 
+#
 
 datasets.models.to_parameters_table()
 
@@ -328,7 +326,7 @@ datasets.models.to_parameters_table()
 # Then plot the fit result to compare measured and expected counts. Rather
 # than plotting them for each individual dataset, we stack all datasets
 # and plot the fit result on the result.
-# 
+#
 
 # First stack them all
 reduced = datasets.stack_reduce()
@@ -337,5 +335,4 @@ reduced.models = model
 # Plot the result
 
 ax_spectrum, ax_residuals = reduced.plot_fit()
-reduced.plot_masks(ax=ax_spectrum);
-
+reduced.plot_masks(ax=ax_spectrum)

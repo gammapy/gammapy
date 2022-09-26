@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 from gammapy.scripts.main import cli
-from gammapy.utils.testing import run_cli, requires_dependency
+from gammapy.utils.testing import requires_dependency, run_cli
 
 
 @pytest.fixture(scope="session")
@@ -51,12 +51,7 @@ def test_cli_download_notebooks_dev(tmp_path):
     ]
     run_cli(cli, args)
     assert (tmp_path / "dev" / "gammapy-dev-environment.yml").exists()
-    assert (
-        tmp_path
-        / "dev"
-        / "starting"
-        / "analysis_1.ipynb"
-    ).exists()
+    assert (tmp_path / "dev" / "starting" / "analysis_1.ipynb").exists()
 
 
 @requires_dependency("requests")

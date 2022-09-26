@@ -38,22 +38,19 @@ release 1.
 
 """
 
+import astropy.units as u
+from astropy.coordinates import SkyCoord
 # %matplotlib inline
 import matplotlib.pyplot as plt
-from astropy.coordinates import SkyCoord
-import astropy.units as u
-
 from gammapy.data import DataStore
-from gammapy.maps import MapAxis, WcsGeom, Map
 from gammapy.makers import MapDatasetMaker
 from gammapy.makers.utils import make_theta_squared_table
-from gammapy.visualization import plot_theta_squared_table
-
-
+from gammapy.maps import Map, MapAxis, WcsGeom
 ######################################################################
 # Check setup
 # -----------
 from gammapy.utils.check import check_tutorials_setup
+from gammapy.visualization import plot_theta_squared_table
 
 check_tutorials_setup()
 
@@ -66,7 +63,7 @@ check_tutorials_setup()
 # to said file. Together they can be loaded into a Datastore by indicating
 # the directory in which they can be found, in this case
 # “$GAMMAPY_DATA/hess-dl3-dr1”:
-# 
+#
 
 ######################################################################
 # Create and get info on the data store
@@ -112,10 +109,10 @@ obs.bkg.to_2d().plot()
 ######################################################################
 # Theta squared event distribution
 # --------------------------------
-# 
+#
 # As a quick look plot it can be helpful to plot the quadratic offset
 # (theta squared) distribution of the events.
-# 
+#
 
 position = SkyCoord(ra=83.63, dec=22.01, unit="deg", frame="icrs")
 theta2_axis = MapAxis.from_bounds(0, 0.2, nbin=20, interp="lin", unit="deg2")
@@ -134,17 +131,15 @@ plot_theta_squared_table(theta2_table)
 ######################################################################
 # On-axis equivalent livetime
 # ---------------------------
-# 
+#
 # Since the acceptance of the H.E.S.S. camera varies within the field of
 # view, what is often interesting is not the simply the total number of
 # hours a source was observed, but the on-axis equivalent number of hours.
 # We calculated the same for the MSH 1552 runs here.
-# 
+#
 
 # Get the observations
-obs_id = data_store.obs_table["OBS_ID"][
-    data_store.obs_table["OBJECT"] == "MSH 15-5-02"
-]
+obs_id = data_store.obs_table["OBS_ID"][data_store.obs_table["OBJECT"] == "MSH 15-5-02"]
 observations = data_store.get_observations(obs_id)
 print(len(observations))
 
@@ -197,19 +192,19 @@ for obs in observations:
 ######################################################################
 # Exercises
 # ---------
-# 
+#
 # -  Find the `OBS_ID` for the runs of the Crab nebula
 # -  Compute the expected number of background events in the whole RoI for
 #    `OBS_ID=23523` in the 1 TeV to 3 TeV energy band, from the
 #    background IRF.
-# 
+#
 
 
 ######################################################################
 # Next steps
 # ----------
-# 
+#
 # Now you know how to access and work with H.E.S.S. data. All other
 # tutorials and documentation apply to H.E.S.S. and CTA or any other IACT
 # that provides DL3 data and IRFs in the standard format.
-# 
+#

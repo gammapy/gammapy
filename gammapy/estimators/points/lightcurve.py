@@ -69,7 +69,7 @@ class LightCurveEstimator(FluxPointsEstimator):
 
     Examples
     --------
-    For a usage example see `light_curve.html <../../../docs/tutorials/analysis/time/light_curve.html>`__
+    For a usage example see `light_curve.html <../../../docs/tutorials/analysis/time/light_curve.html>`__  # noqa: E501
 
     """
 

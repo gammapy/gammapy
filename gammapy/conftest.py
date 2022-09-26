@@ -4,10 +4,10 @@
 # no matter how it is invoked within the source tree.
 import os
 import pytest
-import matplotlib
 import numpy as np
 import astropy.units as u
 from astropy.time import Time
+import matplotlib
 from pytest_astropy_header.display import PYTEST_HEADER_MODULES, TESTED_VERSIONS
 from gammapy.data import GTI
 from gammapy.datasets import SpectrumDataset
@@ -21,6 +21,7 @@ from gammapy.modeling.models import (
 
 # TODO: activate this again and handle deprecations in the code
 # enable_deprecations_as_exceptions(warnings_to_ignore_entire_module=["iminuit", "naima"])
+
 
 def pytest_configure(config):
     """Print some info ..."""
@@ -55,6 +56,7 @@ def pytest_configure(config):
     print('Setting matplotlib backend to "agg" for the tests.')
 
     from . import __version__
+
     packagename = os.path.basename(os.path.dirname(__file__))
     TESTED_VERSIONS[packagename] = __version__
 

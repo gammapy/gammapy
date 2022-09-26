@@ -47,7 +47,9 @@ class EffectiveAreaTable2D(IRF):
 
     >>> from gammapy.irf import EffectiveAreaTable2D
     >>> from gammapy.maps import MapAxis
-    >>> energy_axis_true = MapAxis.from_energy_bounds("0.1 TeV", "100 TeV", nbin=30, name="energy_true")
+    >>> energy_axis_true = MapAxis.from_energy_bounds(
+            "0.1 TeV", "100 TeV", nbin=30, name="energy_true"
+        )
     >>> offset_axis = MapAxis.from_bounds(0, 5, nbin=4, name="offset")
     >>> aeff = EffectiveAreaTable2D(axes=[energy_axis_true, offset_axis], data=1e10, unit="cm2")
     >>> print(aeff)
@@ -197,7 +199,7 @@ class EffectiveAreaTable2D(IRF):
         https://ui.adsabs.harvard.edu/abs/2010MNRAS.402.1342A .
 
         .. math::
-            A_{eff}(E) = g_1 \left(\frac{E}{\mathrm{MeV}}\right)^{-g_2}\exp{\left(-\frac{g_3}{E}\right)}
+            A_{eff}(E) = g_1 \left(\frac{E}{\mathrm{MeV}}\right)^{-g_2}\exp{\left(-\frac{g_3}{E}\right)}  # noqa: E501
 
         This method does not model the offset dependence of the effective area,
         but just assumes that it is constant.

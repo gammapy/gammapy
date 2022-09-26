@@ -71,26 +71,24 @@ First, we setup the analysis by performing required imports.
 
 """
 
-# %matplotlib inline
-import matplotlib.pyplot as plt
-
 from pathlib import Path
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
-
+# %matplotlib inline
+import matplotlib.pyplot as plt
 from gammapy.data import DataStore
 from gammapy.datasets import MapDataset
-from gammapy.maps import WcsGeom, MapAxis
-from gammapy.makers import MapDatasetMaker, SafeMaskMaker, FoVBackgroundMaker
-from gammapy.modeling.models import (
-    SkyModel,
-    PowerLawSpectralModel,
-    PointSpatialModel,
-    FoVBackgroundModel,
-)
-from gammapy.modeling import Fit
 from gammapy.estimators import FluxPointsEstimator
+from gammapy.makers import FoVBackgroundMaker, MapDatasetMaker, SafeMaskMaker
+from gammapy.maps import MapAxis, WcsGeom
+from gammapy.modeling import Fit
+from gammapy.modeling.models import (
+    FoVBackgroundModel,
+    PointSpatialModel,
+    PowerLawSpectralModel,
+    SkyModel,
+)
 from gammapy.utils.check import check_tutorials_setup
 
 ######################################################################
@@ -103,10 +101,10 @@ check_tutorials_setup()
 ######################################################################
 # Defining the datastore and selecting observations
 # -------------------------------------------------
-# 
+#
 # We first use the `~gammapy.data.DataStore` object to access the
 # observations we want to analyse. Here the H.E.S.S. DL3 DR1.
-# 
+#
 
 data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
 
@@ -115,10 +113,10 @@ data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
 # We can now define an observation filter to select only the relevant
 # observations. Here we use a cone search which we define with a python
 # dict.
-# 
-# We then filter the `ObservationTable` with 
+#
+# We then filter the `ObservationTable` with
 # `~gammapy.data.ObservationTable.select_observations`.
-# 
+#
 
 selection = dict(
     type="sky_circle",
@@ -134,7 +132,7 @@ selected_obs_table = data_store.obs_table.select_observations(selection)
 # We can now retrieve the relevant observations by passing their
 # ``obs_id`` to the `~gammapy.data.DataStore.get_observations`
 # method.
-# 
+#
 
 observations = data_store.get_observations(selected_obs_table["OBS_ID"])
 
@@ -142,11 +140,11 @@ observations = data_store.get_observations(selected_obs_table["OBS_ID"])
 ######################################################################
 # Preparing reduced datasets geometry
 # -----------------------------------
-# 
+#
 # Now we define a reference geometry for our analysis, We choose a WCS
 # based geometry with a binsize of 0.02 deg and also define an energy
 # axis:
-# 
+#
 
 energy_axis = MapAxis.from_energy_bounds(1.0, 10.0, 4, unit="TeV")
 
@@ -167,7 +165,7 @@ energy_axis_true = MapAxis.from_energy_bounds(
 
 ######################################################################
 # Now we can define the target dataset with this geometry.
-# 
+#
 
 stacked = MapDataset.create(
     geom=geom, energy_axis_true=energy_axis_true, name="crab-stacked"
@@ -177,14 +175,14 @@ stacked = MapDataset.create(
 ######################################################################
 # Data reduction
 # --------------
-# 
+#
 # Create the maker classes to be used
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# 
+#
 # The `~gammapy.makers.MapDatasetMaker` object is initialized as well as
 # the `~gammapy.makers.SafeMaskMaker` that carries here a maximum offset
 # selection.
-# 
+#
 
 offset_max = 2.5 * u.deg
 maker = MapDatasetMaker()
@@ -192,9 +190,7 @@ maker_safe_mask = SafeMaskMaker(
     methods=["offset-max", "aeff-max"], offset_max=offset_max
 )
 
-circle = CircleSkyRegion(
-    center=SkyCoord("83.63 deg", "22.14 deg"), radius=0.2 * u.deg
-)
+circle = CircleSkyRegion(center=SkyCoord("83.63 deg", "22.14 deg"), radius=0.2 * u.deg)
 exclusion_mask = ~geom.region_mask(regions=[circle])
 maker_fov = FoVBackgroundMaker(method="fit", exclusion_mask=exclusion_mask)
 
@@ -202,7 +198,7 @@ maker_fov = FoVBackgroundMaker(method="fit", exclusion_mask=exclusion_mask)
 ######################################################################
 # Perform the data reduction loop
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# 
+#
 
 # %%time
 
@@ -229,21 +225,19 @@ print(stacked)
 ######################################################################
 # Inspect the reduced dataset
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# 
+#
 
-stacked.counts.sum_over_axes().smooth(0.05 * u.deg).plot(
-    stretch="sqrt", add_cbar=True
-);
+stacked.counts.sum_over_axes().smooth(0.05 * u.deg).plot(stretch="sqrt", add_cbar=True)
 
 
 ######################################################################
 # Save dataset to disk
 # --------------------
-# 
+#
 # It is common to run the preparation step independent of the likelihood
 # fit, because often the preparation of maps, PSF and energy dispersion is
 # slow if you have a lot of data. We first create a folder:
-# 
+#
 
 path = Path("analysis_2")
 path.mkdir(exist_ok=True)
@@ -252,7 +246,7 @@ path.mkdir(exist_ok=True)
 ######################################################################
 # And then write the maps and IRFs to disk by calling the dedicated
 # `~gammapy.datasets.MapDataset.write` method:
-# 
+#
 
 filename = path / "crab-stacked-dataset.fits.gz"
 stacked.write(filename, overwrite=True)
@@ -261,10 +255,10 @@ stacked.write(filename, overwrite=True)
 ######################################################################
 # Define the model
 # ----------------
-# 
+#
 # We first define the model, a `~gammapy.modeling.models.SkyModel`, as the combination of a point
 # source `~gammapy.modeling.models.SpatialModel` with a powerlaw `~gammapy.modeling.models.SpectralModel`:
-# 
+#
 
 target_position = SkyCoord(ra=83.63308, dec=22.01450, unit="deg")
 spatial_model = PointSpatialModel(
@@ -286,7 +280,7 @@ bkg_model = FoVBackgroundModel(dataset_name="crab-stacked")
 
 ######################################################################
 # Now we assign this model to our reduced dataset:
-# 
+#
 
 stacked.models = [sky_model, bkg_model]
 
@@ -294,13 +288,13 @@ stacked.models = [sky_model, bkg_model]
 ######################################################################
 # Fit the model
 # -------------
-# 
+#
 # The `~gammapy.modeling.Fit` class is orchestrating the fit, connecting
 # the ``stats`` method of the dataset to the minimizer. By default, it
 # uses ``iminuit``.
-# 
+#
 # Its constructor takes a list of dataset as argument.
-# 
+#
 
 # %%time
 fit = Fit(optimize_opts={"print_level": 1})
@@ -310,7 +304,7 @@ result = fit.run([stacked])
 ######################################################################
 # The `~gammapy.modeling.FitResult` contains information about the optimization and
 # parameter error calculation.
-# 
+#
 
 print(result)
 
@@ -318,7 +312,7 @@ print(result)
 ######################################################################
 # The fitted parameters are visible from the
 # `~astropy.modeling.models.Models` object.
-# 
+#
 
 stacked.models.to_parameters_table()
 
@@ -326,63 +320,61 @@ stacked.models.to_parameters_table()
 ######################################################################
 # Inspecting residuals
 # ~~~~~~~~~~~~~~~~~~~~
-# 
+#
 # For any fit it is useful to inspect the residual images. We have a few
 # options on the dataset object to handle this. First we can use
 # `~gammapy.datasets.MapDataset.plot_residuals_spatial` to plot a residual image, summed over all
 # energies:
-# 
+#
 
-stacked.plot_residuals_spatial(method="diff/sqrt(model)", vmin=-0.5, vmax=0.5);
+stacked.plot_residuals_spatial(method="diff/sqrt(model)", vmin=-0.5, vmax=0.5)
 
 
 ######################################################################
 # In addition, we can also specify a region in the map to show the
 # spectral residuals:
-# 
+#
 
-region = CircleSkyRegion(
-    center=SkyCoord("83.63 deg", "22.14 deg"), radius=0.5 * u.deg
-)
+region = CircleSkyRegion(center=SkyCoord("83.63 deg", "22.14 deg"), radius=0.5 * u.deg)
 
 stacked.plot_residuals(
     kwargs_spatial=dict(method="diff/sqrt(model)", vmin=-0.5, vmax=0.5),
     kwargs_spectral=dict(region=region),
-);
+)
 
 
 ######################################################################
 # We can also directly access the ``.residuals()`` to get a map, that we
 # can plot interactively:
-# 
+#
 
 residuals = stacked.residuals(method="diff")
 residuals.smooth("0.08 deg").plot_interactive(
     cmap="coolwarm", vmin=-0.2, vmax=0.2, stretch="linear", add_cbar=True
-);
+)
 
 
 ######################################################################
 # Plot the fitted spectrum
 # ------------------------
-# 
+#
 
 
 ######################################################################
 # Making a butterfly plot
 # ~~~~~~~~~~~~~~~~~~~~~~~
-# 
+#
 # The `~gammapy.modeling.models.SpectralModel` component can be used to produce a, so-called,
 # butterfly plot showing the envelope of the model taking into account
 # parameter uncertainties:
-# 
+#
 
 spec = sky_model.spectral_model
 
 
 ######################################################################
 # Now we can actually do the plot using the ``plot_error`` method:
-# 
+#
 
 energy_bounds = [1, 10] * u.TeV
 spec.plot(energy_bounds=energy_bounds, energy_power=2)
@@ -392,14 +384,14 @@ ax = spec.plot_error(energy_bounds=energy_bounds, energy_power=2)
 ######################################################################
 # Computing flux points
 # ~~~~~~~~~~~~~~~~~~~~~
-# 
+#
 # We can now compute some flux points using the
 # `~gammapy.estimators.FluxPointsEstimator`.
-# 
+#
 # Besides the list of datasets to use, we must provide it the energy
 # intervals on which to compute flux points as well as the model component
 # name.
-# 
+#
 
 energy_edges = [1, 2, 4, 10] * u.TeV
 fpe = FluxPointsEstimator(energy_edges=energy_edges, source="crab")
@@ -409,4 +401,3 @@ flux_points = fpe.run(datasets=[stacked])
 
 ax = spec.plot_error(energy_bounds=energy_bounds, energy_power=2)
 flux_points.plot(ax=ax, energy_power=2)
-

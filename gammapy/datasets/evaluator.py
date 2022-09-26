@@ -2,11 +2,11 @@
 import logging
 import numpy as np
 import astropy.units as u
-import matplotlib.pyplot as plt
 from astropy.coordinates.angle_utilities import angular_separation
 from astropy.utils import lazyproperty
 from regions import CircleSkyRegion
-from gammapy.maps import Map, WcsNDMap, HpxNDMap, RegionNDMap
+import matplotlib.pyplot as plt
+from gammapy.maps import HpxNDMap, Map, RegionNDMap, WcsNDMap
 from gammapy.modeling.models import PointSpatialModel, TemplateNPredModel
 
 PSF_CONTAINMENT = 0.999
@@ -182,14 +182,16 @@ class MapEvaluator:
 
             if self.use_psf_containment(geom=geom_psf):
                 energy_values = geom_psf.axes[energy_name].center.reshape((-1, 1, 1))
-                kwargs = {energy_name:energy_values, "rad":geom.region.radius}
+                kwargs = {energy_name: energy_values, "rad": geom.region.radius}
                 self.psf_containment = psf.containment(**kwargs)
             else:
                 if geom_psf.is_region or geom_psf.is_hpx:
                     geom_psf = geom_psf.to_wcs_geom()
 
                 self.psf = psf.get_psf_kernel(
-                    position=self.model.position, geom=geom_psf, containment=PSF_CONTAINMENT
+                    position=self.model.position,
+                    geom=geom_psf,
+                    containment=PSF_CONTAINMENT,
                 )
 
         if self.evaluation_mode == "local":
@@ -365,7 +367,9 @@ class MapEvaluator:
 
     @property
     def apply_psf_after_edisp(self):
-        return  self.psf is not None and "energy" in self.psf.psf_kernel_map.geom.axes.names
+        return (
+            self.psf is not None and "energy" in self.psf.psf_kernel_map.geom.axes.names
+        )
 
     def compute_npred(self):
         """Evaluate model predicted counts.

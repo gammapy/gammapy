@@ -149,7 +149,8 @@ class TestSourceCatalogObjectGammaCat:
         assert spatial_model.frame == "galactic"
 
         # TODO: put better asserts on model properties
-        # TODO: add a point and shell source -> separate list of sources for morphology test parametrization?
+        # TODO: add a point and shell source -> separate list of sources for
+        # morphology test parametrization?
         assert spatial_model.__class__.__name__ == ref["spatial_model"]
 
         model = gammacat["HESS J1634-472"].spatial_model()
