@@ -28,6 +28,7 @@ dependencies:
   - matplotlib>=3.4
   - scipy
   - iminuit>=2.8.0
+  - extension-helpers
   # test dependencies
   - codecov
   - pytest=6
@@ -65,6 +66,7 @@ dependencies:
   - sphinx-gallery
   - sphinx-panels
   - sphinx-copybutton
+  - tox
   - pydata-sphinx-theme==0.8.1
   - twine
   - yamllint

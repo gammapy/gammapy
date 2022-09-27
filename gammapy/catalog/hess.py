@@ -208,7 +208,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         ss += "{:<20s} : {:.2f}\n".format("Energy threshold", d["Energy_Threshold"])
 
         val, err = d["Flux_Map"].value, d["Flux_Map_Err"].value
-        ss += "{:<20s} : ({:.3f} +/- {:.3f}) x 10^-12 cm^-2 s^-1 = ({:.2f} +/- {:.2f}) % Crab\n".format(
+        ss += "{:<20s} : ({:.3f} +/- {:.3f}) x 10^-12 cm^-2 s^-1 = ({:.2f} +/- {:.2f}) % Crab\n".format(  # noqa: 501
             "Source flux (>1 TeV)",
             val / FF,
             err / FF,
@@ -287,7 +287,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
         val = d["Flux_Spec_Int_1TeV"].value
         err = d["Flux_Spec_Int_1TeV_Err"].value
-        ss += "{:<20s} : ({:.3f} +/- {:.3f}) x 10^-12 cm^-2 s^-1  = ({:.2f} +/- {:.2f}) % Crab\n".format(
+        ss += "{:<20s} : ({:.3f} +/- {:.3f}) x 10^-12 cm^-2 s^-1  = ({:.2f} +/- {:.2f}) % Crab\n".format(  # noqa: E501
             "Best-fit model flux(> 1 TeV)",
             val / FF,
             err / FF,
@@ -312,7 +312,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
         val = d["Flux_Spec_PL_Diff_Pivot"].value
         err = d["Flux_Spec_PL_Diff_Pivot_Err"].value
-        ss += "{:<20s} : ({:.3f} +/- {:.3f}) x 10^-12 cm^-2 s^-1 TeV^-1  = ({:.2f} +/- {:.2f}) % Crab\n".format(
+        ss += "{:<20s} : ({:.3f} +/- {:.3f}) x 10^-12 cm^-2 s^-1 TeV^-1  = ({:.2f} +/- {:.2f}) % Crab\n".format(  # noqa: E501
             "Flux at pivot energy",
             val / FF,
             err / FF,
@@ -322,7 +322,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
         val = d["Flux_Spec_PL_Int_1TeV"].value
         err = d["Flux_Spec_PL_Int_1TeV_Err"].value
-        ss += "{:<20s} : ({:.3f} +/- {:.3f}) x 10^-12 cm^-2 s^-1  = ({:.2f} +/- {:.2f}) % Crab\n".format(
+        ss += "{:<20s} : ({:.3f} +/- {:.3f}) x 10^-12 cm^-2 s^-1  = ({:.2f} +/- {:.2f}) % Crab\n".format(  # noqa: E501
             "PL   Flux(> 1 TeV)",
             val / FF,
             err / FF,
@@ -332,7 +332,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
         val = d["Flux_Spec_PL_Diff_1TeV"].value
         err = d["Flux_Spec_PL_Diff_1TeV_Err"].value
-        ss += "{:<20s} : ({:.3f} +/- {:.3f}) x 10^-12 cm^-2 s^-1 TeV^-1  = ({:.2f} +/- {:.2f}) % Crab\n".format(
+        ss += "{:<20s} : ({:.3f} +/- {:.3f}) x 10^-12 cm^-2 s^-1 TeV^-1  = ({:.2f} +/- {:.2f}) % Crab\n".format(  # noqa: E501
             "PL   Flux(@ 1 TeV)",
             val / FF,
             err / FF,
@@ -353,7 +353,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
         val = d["Flux_Spec_ECPL_Diff_1TeV"].value
         err = d["Flux_Spec_ECPL_Diff_1TeV_Err"].value
-        ss += "{:<20s} : ({:.3f} +/- {:.3f}) x 10^-12 cm^-2 s^-1 TeV^-1  = ({:.2f} +/- {:.2f}) % Crab\n".format(
+        ss += "{:<20s} : ({:.3f} +/- {:.3f}) x 10^-12 cm^-2 s^-1 TeV^-1  = ({:.2f} +/- {:.2f}) % Crab\n".format(  # noqa: E501
             "ECPL   Flux(@ 1 TeV)",
             val / FF,
             err / FF,
@@ -363,7 +363,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
         val = d["Flux_Spec_ECPL_Int_1TeV"].value
         err = d["Flux_Spec_ECPL_Int_1TeV_Err"].value
-        ss += "{:<20s} : ({:.3f} +/- {:.3f}) x 10^-12 cm^-2 s^-1  = ({:.2f} +/- {:.2f}) % Crab\n".format(
+        ss += "{:<20s} : ({:.3f} +/- {:.3f}) x 10^-12 cm^-2 s^-1  = ({:.2f} +/- {:.2f}) % Crab\n".format(  # noqa: E501
             "ECPL   Flux(> 1 TeV)",
             val / FF,
             err / FF,

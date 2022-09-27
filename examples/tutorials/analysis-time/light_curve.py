@@ -48,21 +48,24 @@ extract a light curve independently of the dataset type.
 ######################################################################
 # Setup
 # -----
-# 
+#
 # As usual, we’ll start with some general imports…
-# 
+#
 
-# %matplotlib inline
-import matplotlib.pyplot as plt
+import logging
 import astropy.units as u
 from astropy.coordinates import SkyCoord
-import logging
 from astropy.time import Time
-from gammapy.modeling.models import PowerLawSpectralModel
-from gammapy.modeling.models import PointSpatialModel
-from gammapy.modeling.models import SkyModel, Models
-from gammapy.estimators import LightCurveEstimator
+# %matplotlib inline
+import matplotlib.pyplot as plt
 from gammapy.analysis import Analysis, AnalysisConfig
+from gammapy.estimators import LightCurveEstimator
+from gammapy.modeling.models import (
+    Models,
+    PointSpatialModel,
+    PowerLawSpectralModel,
+    SkyModel,
+)
 
 log = logging.getLogger(__name__)
 
@@ -77,20 +80,20 @@ check_tutorials_setup()
 ######################################################################
 # Analysis configuration
 # ----------------------
-# 
+#
 # For the 1D and 3D extraction, we will use the same CrabNebula
 # configuration than in the notebook analysis_1.ipynb using the high level
 # interface of Gammapy.
-# 
+#
 # From the high level interface, the data reduction for those observations
 # is performed as followed
-# 
+#
 
 
 ######################################################################
 # Building the 3D analysis configuration
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# 
+#
 
 conf_3d = AnalysisConfig()
 
@@ -98,9 +101,9 @@ conf_3d = AnalysisConfig()
 ######################################################################
 # Definition of the data selection
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-# 
+#
 # Here we use the Crab runs from the HESS DL3 data release 1
-# 
+#
 
 conf_3d.observations.obs_ids = [23523, 23526, 23559, 23592]
 
@@ -108,7 +111,7 @@ conf_3d.observations.obs_ids = [23523, 23526, 23559, 23592]
 ######################################################################
 # Definition of the dataset geometry
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-# 
+#
 
 # We want a 3D analysis
 conf_3d.datasets.type = "3d"
@@ -127,18 +130,14 @@ conf_3d.datasets.geom.wcs.width = dict(width=1 * u.deg, height=1 * u.deg)
 conf_3d.datasets.geom.wcs.binsize_irf = 0.2 * u.deg
 
 # Define energy binning for the Maps
-conf_3d.datasets.geom.axes.energy = dict(
-    min=0.7 * u.TeV, max=10 * u.TeV, nbins=5
-)
-conf_3d.datasets.geom.axes.energy_true = dict(
-    min=0.3 * u.TeV, max=20 * u.TeV, nbins=20
-)
+conf_3d.datasets.geom.axes.energy = dict(min=0.7 * u.TeV, max=10 * u.TeV, nbins=5)
+conf_3d.datasets.geom.axes.energy_true = dict(min=0.3 * u.TeV, max=20 * u.TeV, nbins=20)
 
 
 ######################################################################
 # Run the 3D data reduction
 # ~~~~~~~~~~~~~~~~~~~~~~~~~
-# 
+#
 
 analysis_3d = Analysis(conf_3d)
 analysis_3d.get_observations()
@@ -148,10 +147,10 @@ analysis_3d.get_datasets()
 ######################################################################
 # Define the model to be used
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# 
+#
 # Here we don’t try to fit the model parameters to the whole dataset, but
 # we use predefined values instead.
-# 
+#
 
 target_position = SkyCoord(ra=83.63308, dec=22.01450, unit="deg")
 spatial_model = PointSpatialModel(
@@ -171,7 +170,7 @@ sky_model = SkyModel(
 
 ######################################################################
 # We assign them the model to be fitted to each dataset
-# 
+#
 
 models = Models([sky_model])
 analysis_3d.set_models(models)
@@ -180,34 +179,36 @@ analysis_3d.set_models(models)
 ######################################################################
 # Light Curve estimation by observation
 # -------------------------------------
-# 
+#
 # We can now create the light curve estimator.
-# 
+#
 # We pass it the list of datasets and the name of the model component for
 # which we want to build the light curve. In a given time bin, the only
 # free parameter of the source is its normalization. We can optionally ask
 # for parameters of other model components to be reoptimized during fit,
 # that is most of the time to fit background normalization in each time
 # bin.
-# 
+#
 # If we don’t set any time interval, the
 # `~gammapy.estimators.LightCurveEstimator` is determines the flux of
 # each dataset and places it at the corresponding time in the light curve.
 # Here one dataset equals to one observing run.
-# 
+#
 
 lc_maker_3d = LightCurveEstimator(
     energy_edges=[1, 10] * u.TeV, source="crab", reoptimize=False
 )
 # Example showing how to change some parameters from the object itself
-lc_maker_3d.n_sigma_ul = 3              # Number of sigma to use for upper limit computation
-lc_maker_3d.selection_optional = "all"  # Add the computation of upper limits and likelihood profile
+lc_maker_3d.n_sigma_ul = 3  # Number of sigma to use for upper limit computation
+lc_maker_3d.selection_optional = (
+    "all"  # Add the computation of upper limits and likelihood profile
+)
 lc_3d = lc_maker_3d.run(analysis_3d.datasets)
 
 
 ######################################################################
 # The LightCurve object contains a table which we can explore.
-# 
+#
 
 # Example showing how to change just before plotting the threshold on the signal significance
 # (points vs upper limits), even if this has no effect with this data set.
@@ -221,13 +222,13 @@ table["time_min", "time_max", "e_min", "e_max", "flux", "flux_err"]
 ######################################################################
 # Running the light curve extraction in 1D
 # ----------------------------------------
-# 
+#
 
 
 ######################################################################
 # Building the 1D analysis configuration
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# 
+#
 
 conf_1d = AnalysisConfig()
 
@@ -235,9 +236,9 @@ conf_1d = AnalysisConfig()
 ######################################################################
 # Definition of the data selection
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-# 
+#
 # Here we use the Crab runs from the HESS DL3 data release 1
-# 
+#
 
 conf_1d.observations.obs_ids = [23523, 23526, 23559, 23592]
 
@@ -245,7 +246,7 @@ conf_1d.observations.obs_ids = [23523, 23526, 23559, 23592]
 ######################################################################
 # Definition of the dataset geometry
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-# 
+#
 
 # We want a 1D analysis
 conf_1d.datasets.type = "1d"
@@ -263,18 +264,14 @@ conf_1d.datasets.on_region = dict(
 conf_1d.datasets.containment_correction = True
 
 # Finally we define the energy binning for the spectra
-conf_1d.datasets.geom.axes.energy = dict(
-    min=0.7 * u.TeV, max=10 * u.TeV, nbins=5
-)
-conf_1d.datasets.geom.axes.energy_true = dict(
-    min=0.3 * u.TeV, max=20 * u.TeV, nbins=20
-)
+conf_1d.datasets.geom.axes.energy = dict(min=0.7 * u.TeV, max=10 * u.TeV, nbins=5)
+conf_1d.datasets.geom.axes.energy_true = dict(min=0.3 * u.TeV, max=20 * u.TeV, nbins=20)
 
 
 ######################################################################
 # Run the 1D data reduction
 # ~~~~~~~~~~~~~~~~~~~~~~~~~
-# 
+#
 
 analysis_1d = Analysis(conf_1d)
 analysis_1d.get_observations()
@@ -284,10 +281,10 @@ analysis_1d.get_datasets()
 ######################################################################
 # Define the model to be used
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# 
+#
 # Here we don’t try to fit the model parameters to the whole dataset, but
 # we use predefined values instead.
-# 
+#
 
 target_position = SkyCoord(ra=83.63308, dec=22.01450, unit="deg")
 
@@ -303,7 +300,7 @@ sky_model = SkyModel(spectral_model=spectral_model, name="crab")
 ######################################################################
 # We assign the model to be fitted to each dataset. We can use the same
 # `~gammapy.modeling.models.SkyModel` as before.
-# 
+#
 
 models = Models([sky_model])
 analysis_1d.set_models(models)
@@ -312,7 +309,7 @@ analysis_1d.set_models(models)
 ######################################################################
 # Extracting the light curve
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~
-# 
+#
 
 lc_maker_1d = LightCurveEstimator(
     energy_edges=[1, 10] * u.TeV, source="crab", reoptimize=False
@@ -327,10 +324,10 @@ lc_1d.to_table(sed_type="flux", format="lightcurve")
 ######################################################################
 # Compare results
 # ~~~~~~~~~~~~~~~
-# 
+#
 # Finally we compare the result for the 1D and 3D lightcurve in a single
 # figure:
-# 
+#
 
 ax = lc_1d.plot(marker="o", label="1D")
 lc_3d.plot(ax=ax, marker="o", label="3D")
@@ -340,10 +337,10 @@ plt.legend()
 ######################################################################
 # Night-wise LC estimation
 # ------------------------
-# 
+#
 # Here we want to extract a night curve per night. We define the time
 # intervals that cover the three nights.
-# 
+#
 
 time_intervals = [
     Time([53343.5, 53344.5], format="mjd", scale="utc"),
@@ -355,10 +352,10 @@ time_intervals = [
 ######################################################################
 # To compute the LC on the time intervals defined above, we pass the
 # `LightCurveEstimator` the list of time intervals.
-# 
+#
 # Internally, datasets are grouped per time interval and a flux extraction
 # is performed for each group.
-# 
+#
 
 lc_maker_1d = LightCurveEstimator(
     energy_edges=[1, 10] * u.TeV,
@@ -372,18 +369,17 @@ nightwise_lc = lc_maker_1d.run(analysis_1d.datasets)
 
 nightwise_lc.plot(color="tab:orange")
 ax = nightwise_lc.plot_ts_profiles()
-ax.set_ylim(1e-12, 3e-12);
+ax.set_ylim(1e-12, 3e-12)
 
 
 ######################################################################
 # What next?
 # ----------
-# 
+#
 # When sources are bright enough to look for variability at small time
 # scales, the per-observation time binning is no longer relevant. One can
 # easily extend the light curve estimation approach presented above to any
 # time binning. This is demonstrated in the `following
 # tutorial <light_curve_flare.ipynb>`__ which shows the extraction of the
 # lightcurve of an AGN flare.
-# 
-
+#

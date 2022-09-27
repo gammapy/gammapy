@@ -42,24 +42,22 @@ modelling and fitting.
 ######################################################################
 # Setup
 # -----
-# 
+#
 # As usual, we’ll start with some general imports…
-# 
+#
 
+import logging
+import numpy as np
+from scipy.stats import norm
 # %matplotlib inline
 import astropy.units as u
 from astropy.coordinates import SkyCoord
-import matplotlib.pyplot as plt
-import numpy as np
 from regions import CircleSkyRegion
-from scipy.stats import norm
-
+import matplotlib.pyplot as plt
 from gammapy.analysis import Analysis, AnalysisConfig
-from gammapy.makers import RingBackgroundMaker
-from gammapy.estimators import ExcessMapEstimator
 from gammapy.datasets import MapDatasetOnOff
-
-import logging
+from gammapy.estimators import ExcessMapEstimator
+from gammapy.makers import RingBackgroundMaker
 
 log = logging.getLogger(__name__)
 
@@ -75,13 +73,13 @@ check_tutorials_setup()
 ######################################################################
 # Creating the config file
 # ------------------------
-# 
+#
 # Now, we create a config file for out analysis. You may load this from
 # disc if you have a pre-defined config file.
-# 
+#
 # In this example, we will use a few HESS runs on the pulsar wind nebula,
 # MSH 1552
-# 
+#
 
 # source_pos = SkyCoord.from_name("MSH 15-52")
 source_pos = SkyCoord(228.32, -59.08, unit="deg")
@@ -122,10 +120,10 @@ print(config)
 ######################################################################
 # Getting the reduced dataset
 # ---------------------------
-# 
+#
 # We now use the config file to do the initial data reduction which will
 # then be used for a ring extraction
-# 
+#
 
 # %%time
 # create the config
@@ -149,21 +147,21 @@ analysis.get_datasets()
 ######################################################################
 # Extracting the ring background
 # ------------------------------
-# 
+#
 # Since the ring background is extracted from real off events, we need to
 # use the wstat statistics in this case. For this, we will use the
 # `MapDatasetOnOFF` and the `RingBackgroundMaker` classes.
-# 
+#
 
 
 ######################################################################
 # Create exclusion mask
 # ~~~~~~~~~~~~~~~~~~~~~
-# 
+#
 # First, we need to create an exclusion mask on the known sources. In this
 # case, we need to mask only `MSH 15-52` but this depends on the sources
 # present in our field of view.
-# 
+#
 
 # get the geom that we use
 geom = analysis.datasets[0].counts.geom
@@ -173,13 +171,13 @@ geom_image = geom.to_image().to_cube([energy_axis.squash()])
 # Make the exclusion mask
 regions = CircleSkyRegion(center=source_pos, radius=0.3 * u.deg)
 exclusion_mask = ~geom_image.region_mask([regions])
-exclusion_mask.sum_over_axes().plot();
+exclusion_mask.sum_over_axes().plot()
 
 
 ######################################################################
 # For the present analysis, we use a ring with an inner radius of 0.5 deg
 # and width of 0.3 deg.
-# 
+#
 
 ring_maker = RingBackgroundMaker(
     r_in="0.5 deg", width="0.3 deg", exclusion_mask=exclusion_mask
@@ -189,10 +187,10 @@ ring_maker = RingBackgroundMaker(
 ######################################################################
 # Create a stacked dataset
 # ~~~~~~~~~~~~~~~~~~~~~~~~
-# 
+#
 # Now, we extract the background for each dataset and then stack the maps
 # together to create a single stacked map for further analysis
-# 
+#
 
 #%%time
 energy_axis_true = analysis.datasets[0].exposure.geom.axes["energy_true"]
@@ -211,7 +209,7 @@ for dataset in analysis.datasets:
 # maps which we will use in all further analysis. The `acceptance` and
 # `acceptance_off` maps are the system acceptance of gamma-ray like
 # events in the `on` and `off` regions respectively.
-# 
+#
 
 print(stacked_on_off)
 
@@ -219,14 +217,14 @@ print(stacked_on_off)
 ######################################################################
 # Compute correlated significance and correlated excess maps
 # ----------------------------------------------------------
-# 
+#
 # We need to convolve our maps with an appropriate smoothing kernel. The
 # significance is computed according to the Li & Ma expression for ON and
 # OFF Poisson measurements, see
 # `here <https://ui.adsabs.harvard.edu/abs/1983ApJ...272..317L/abstract>`__.
 # Since astropy convolution kernels only accept integers, we first convert
 # our required size in degrees to int depending on our pixel size.
-# 
+#
 
 # Using a convolution radius of 0.04 degrees
 estimator = ExcessMapEstimator(0.04 * u.deg, selection_optional=[])
@@ -253,14 +251,12 @@ excess_map.plot(ax=ax2, add_cbar=True)
 # contaminated by gamma-ray events. This can be the case when exclusion
 # regions are not large enough. Typically, we expect the off distribution
 # to be a standard normal distribution.
-# 
+#
 
 # create a 2D mask for the images
 significance_map_off = significance_map * exclusion_mask
 significance_all = significance_map.data[np.isfinite(significance_map.data)]
-significance_off = significance_map_off.data[
-    np.isfinite(significance_map_off.data)
-]
+significance_off = significance_map_off.data[np.isfinite(significance_map_off.data)]
 
 plt.hist(
     significance_all,
@@ -293,4 +289,3 @@ xmin, xmax = np.min(significance_all), np.max(significance_all)
 plt.xlim(xmin, xmax)
 
 print(f"Fit results: mu = {mu:.2f}, std = {std:.2f}")
-

@@ -23,27 +23,24 @@ example in https://arxiv.org/pdf/1012.4515.pdf (Chapter 1 and 5)
 ######################################################################
 # Setup
 # -----
-# 
+#
 # As always, we start with some setup for the notebook, and with imports.
-# 
+#
 
-from gammapy.astro.darkmatter import (
-    profiles,
-    JFactory,
-    PrimaryFlux,
-    DarkMatterAnnihilationSpectralModel,
-)
-
-from gammapy.maps import WcsGeom, WcsNDMap
-from astropy.coordinates import SkyCoord
-from matplotlib.colors import LogNorm
-from regions import CircleSkyRegion
-import astropy.units as u
 import numpy as np
-
+import astropy.units as u
+from astropy.coordinates import SkyCoord
+from regions import CircleSkyRegion
 # %matplotlib inline
 import matplotlib.pyplot as plt
-
+from matplotlib.colors import LogNorm
+from gammapy.astro.darkmatter import (
+    DarkMatterAnnihilationSpectralModel,
+    JFactory,
+    PrimaryFlux,
+    profiles,
+)
+from gammapy.maps import WcsGeom, WcsNDMap
 ######################################################################
 # Check setup
 # -----------
@@ -55,12 +52,12 @@ check_tutorials_setup()
 ######################################################################
 # Profiles
 # --------
-# 
+#
 # The following dark matter profiles are currently implemented. Each model
 # can be scaled to a given density at a certain distance. These parameters
 # are controlled by `~gammapy.astro.darkmatter.profiles.DMProfile.LOCAL_DENSITY` and
 # `~gammapy.astro.darkmatter.profiles.DMProfile.DISTANCE_GC`
-# 
+#
 
 profiles.DMProfile.__subclasses__()
 
@@ -81,11 +78,11 @@ print("DISTANCE_GC:", profiles.DMProfile.DISTANCE_GC)
 ######################################################################
 # J Factors
 # ---------
-# 
+#
 # There are utilities to compute J-Factor maps that can serve as a basis
 # to compute J-Factors for certain regions. In the following we compute a
 # J-Factor map for the Galactic Centre region
-# 
+#
 
 profile = profiles.NFWProfile()
 
@@ -98,9 +95,7 @@ profile.scale_to_local_density()
 position = SkyCoord(0.0, 0.0, frame="galactic", unit="deg")
 geom = WcsGeom.create(binsz=0.05, skydir=position, width=3.0, frame="galactic")
 
-jfactory = JFactory(
-    geom=geom, profile=profile, distance=profiles.DMProfile.DISTANCE_GC
-)
+jfactory = JFactory(geom=geom, profile=profile, distance=profiles.DMProfile.DISTANCE_GC)
 jfact = jfactory.compute_jfactor()
 
 jfact_map = WcsNDMap(geom=geom, data=jfact.value, unit=jfact.unit)
@@ -124,11 +119,11 @@ print(
 ######################################################################
 # Gamma-ray spectra at production
 # -------------------------------
-# 
+#
 # The gamma-ray spectrum per annihilation is a further ingredient for a
 # dark matter analysis. The following annihilation channels are supported.
 # For more info see https://arxiv.org/pdf/1012.4515.pdf
-# 
+#
 
 fluxes = PrimaryFlux(mDM="1 TeV", channel="eL")
 print(fluxes.allowed_channels)
@@ -158,9 +153,9 @@ plt.subplots_adjust(hspace=0.5)
 ######################################################################
 # Flux maps
 # ---------
-# 
+#
 # Finally flux maps can be produced like this:
-# 
+#
 
 channel = "Z"
 massDM = 10 * u.TeV
@@ -174,5 +169,4 @@ flux_map = WcsNDMap(geom=geom, data=int_flux.value, unit="cm-2 s-1")
 ax = flux_map.plot(cmap="viridis", norm=LogNorm(), add_cbar=True)
 plt.title(
     f"Flux [{int_flux.unit}]\n m$_{{DM}}$={fluxes.mDM.to('TeV')}, channel={fluxes.channel}"
-);
-
+)

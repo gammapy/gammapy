@@ -28,8 +28,8 @@ from gammapy.utils.regions import (
 )
 from gammapy.visualization.utils import ARTIST_TO_LINE_PROPERTIES
 from ..axes import MapAxes
-from ..core import Map
 from ..coord import MapCoord
+from ..core import Map
 from ..geom import Geom, pix_tuple_to_idx
 from ..utils import _check_width
 from ..wcs import WcsGeom

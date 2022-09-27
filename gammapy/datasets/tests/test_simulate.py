@@ -45,7 +45,7 @@ def models():
     table["NORM"] = norm / norm.max()
     t_ref = Time("2000-01-01")
     table.meta = dict(MJDREFI=t_ref.mjd, MJDREFF=0, TIMEUNIT="s")
-    temporal_model = LightCurveTemplateTemporalModel(table)
+    temporal_model = LightCurveTemplateTemporalModel.from_table(table)
 
     model = SkyModel(
         spatial_model=spatial_model,
@@ -129,17 +129,17 @@ def test_mde_sample_sources(dataset, models):
     sampler = MapDatasetEventSampler(random_state=0)
     events = sampler.sample_sources(dataset=dataset)
 
-    assert len(events.table["ENERGY_TRUE"]) == 88
-    assert_allclose(events.table["ENERGY_TRUE"][0], 2.751205, rtol=1e-5)
+    assert len(events.table["ENERGY_TRUE"]) == 90
+    assert_allclose(events.table["ENERGY_TRUE"][0], 2.383778805, rtol=1e-5)
     assert events.table["ENERGY_TRUE"].unit == "TeV"
 
-    assert_allclose(events.table["RA_TRUE"][0], 266.559566, rtol=1e-5)
+    assert_allclose(events.table["RA_TRUE"][0], 266.56408893, rtol=1e-5)
     assert events.table["RA_TRUE"].unit == "deg"
 
-    assert_allclose(events.table["DEC_TRUE"][0], -28.742429, rtol=1e-5)
+    assert_allclose(events.table["DEC_TRUE"][0], -28.748145, rtol=1e-5)
     assert events.table["DEC_TRUE"].unit == "deg"
 
-    assert_allclose(events.table["TIME"][0], 123.424996, rtol=1e-5)
+    assert_allclose(events.table["TIME"][0], 119.7494479, rtol=1e-5)
     assert events.table["TIME"].unit == "s"
 
     assert_allclose(events.table["MC_ID"][0], 1, rtol=1e-5)
@@ -201,14 +201,14 @@ def test_mde_sample_psf(dataset, models):
     events = sampler.sample_sources(dataset=dataset)
     events = sampler.sample_psf(dataset.psf, events)
 
-    assert len(events.table) == 88
-    assert_allclose(events.table["ENERGY_TRUE"][0], 2.751205, rtol=1e-5)
+    assert len(events.table) == 90
+    assert_allclose(events.table["ENERGY_TRUE"][0], 2.38377880, rtol=1e-5)
     assert events.table["ENERGY_TRUE"].unit == "TeV"
 
-    assert_allclose(events.table["RA"][0], 266.556053, rtol=1e-5)
+    assert_allclose(events.table["RA"][0], 266.542912, rtol=1e-5)
     assert events.table["RA"].unit == "deg"
 
-    assert_allclose(events.table["DEC"][0], -28.746459, rtol=1e-5)
+    assert_allclose(events.table["DEC"][0], -28.78829, rtol=1e-5)
     assert events.table["DEC"].unit == "deg"
 
 
@@ -219,14 +219,14 @@ def test_mde_sample_edisp(dataset, models):
     events = sampler.sample_sources(dataset=dataset)
     events = sampler.sample_edisp(dataset.edisp, events)
 
-    assert len(events.table) == 88
-    assert_allclose(events.table["ENERGY"][0], 2.751205, rtol=1e-5)
+    assert len(events.table) == 90
+    assert_allclose(events.table["ENERGY"][0], 2.383778805, rtol=1e-5)
     assert events.table["ENERGY"].unit == "TeV"
 
-    assert_allclose(events.table["RA_TRUE"][0], 266.559566, rtol=1e-5)
+    assert_allclose(events.table["RA_TRUE"][0], 266.564088, rtol=1e-5)
     assert events.table["RA_TRUE"].unit == "deg"
 
-    assert_allclose(events.table["DEC_TRUE"][0], -28.742429, rtol=1e-5)
+    assert_allclose(events.table["DEC_TRUE"][0], -28.7481450, rtol=1e-5)
     assert events.table["DEC_TRUE"].unit == "deg"
 
     assert_allclose(events.table["MC_ID"][0], 1, rtol=1e-5)
@@ -251,11 +251,11 @@ def test_event_det_coords(dataset, models):
     sampler = MapDatasetEventSampler(random_state=0)
     events = sampler.run(dataset=dataset, observation=obs)
 
-    assert len(events.table) == 102
-    assert_allclose(events.table["DETX"][0], -2.269308, rtol=1e-5)
+    assert len(events.table) == 99
+    assert_allclose(events.table["DETX"][0], -1.15531813, rtol=1e-5)
     assert events.table["DETX"].unit == "deg"
 
-    assert_allclose(events.table["DETY"][0], -1.391967, rtol=1e-5)
+    assert_allclose(events.table["DETY"][0], -1.3343611, rtol=1e-5)
     assert events.table["DETY"].unit == "deg"
 
 
@@ -283,15 +283,15 @@ def test_mde_run(dataset, models):
 
     events_bkg = sampler.run(dataset=dataset_bkg, observation=obs)
 
-    assert len(events.table) == 102
-    assert_allclose(events.table["ENERGY"][0], 5.792375, rtol=1e-5)
-    assert_allclose(events.table["RA"][0], 263.777097, rtol=1e-5)
-    assert_allclose(events.table["DEC"][0], -30.302968, rtol=1e-5)
+    assert len(events.table) == 99
+    assert_allclose(events.table["ENERGY"][0], 4.406880, rtol=1e-5)
+    assert_allclose(events.table["RA"][0], 265.0677009, rtol=1e-5)
+    assert_allclose(events.table["DEC"][0], -30.2640157, rtol=1e-5)
 
-    assert len(events_bkg.table) == 16
-    assert_allclose(events_bkg.table["ENERGY"][0], 4.014328, rtol=1e-5)
-    assert_allclose(events_bkg.table["RA"][0], 267.488623, rtol=1e-5)
-    assert_allclose(events_bkg.table["DEC"][0], -30.924333, rtol=1e-5)
+    assert len(events_bkg.table) == 21
+    assert_allclose(events_bkg.table["ENERGY"][0], 1.5462581456, rtol=1e-5)
+    assert_allclose(events_bkg.table["RA"][0], 265.77338329, rtol=1e-5)
+    assert_allclose(events_bkg.table["DEC"][0], -30.701417442, rtol=1e-5)
     assert_allclose(events_bkg.table["MC_ID"][0], 0, rtol=1e-5)
 
     meta = events.table.meta
@@ -400,10 +400,10 @@ def test_mde_run_switchoff(dataset, models):
     sampler = MapDatasetEventSampler(random_state=0)
     events = sampler.run(dataset=dataset, observation=obs)
 
-    assert len(events.table) == 88
-    assert_allclose(events.table["ENERGY"][0], 2.751205, rtol=1e-5)
-    assert_allclose(events.table["RA"][0], 266.559566, rtol=1e-5)
-    assert_allclose(events.table["DEC"][0], -28.742429, rtol=1e-5)
+    assert len(events.table) == 90
+    assert_allclose(events.table["ENERGY"][0], 2.3837788, rtol=1e-5)
+    assert_allclose(events.table["RA"][0], 266.56408893, rtol=1e-5)
+    assert_allclose(events.table["DEC"][0], -28.748145, rtol=1e-5)
 
     meta = events.table.meta
 

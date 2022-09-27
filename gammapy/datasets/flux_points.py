@@ -16,8 +16,8 @@ __all__ = ["FluxPointsDataset"]
 
 
 class FluxPointsDataset(Dataset):
-    """
-    Bundle a set of flux points with a parametric model, to compute fit statistic function using chi2 statistics.
+    """Bundle a set of flux points with a parametric model,
+    to compute fit statistic function using chi2 statistics.
 
     Parameters
     ----------
@@ -350,9 +350,9 @@ class FluxPointsDataset(Dataset):
         >>> model = SkyModel(spectral_model=PowerLawSpectralModel())
         >>> dataset = FluxPointsDataset(model, flux_points)
         >>> #configuring optional parameters
-        >>> kwargs_spectrum = {"kwargs_model": {"color":"red", "ls":"--"}, "kwargs_fp":{"color":"green", "marker":"o"}}
+        >>> kwargs_spectrum = {"kwargs_model": {"color":"red", "ls":"--"}, "kwargs_fp":{"color":"green", "marker":"o"}}  # noqa: E501
         >>> kwargs_residuals = {"color": "blue", "markersize":4, "marker":'s', }
-        >>> dataset.plot_fit(kwargs_residuals=kwargs_residuals, kwargs_spectrum=kwargs_spectrum) # doctest: +SKIP
+        >>> dataset.plot_fit(kwargs_residuals=kwargs_residuals, kwargs_spectrum=kwargs_spectrum) # doctest: +SKIP noqa: E501
         """
         fig = plt.figure(figsize=(9, 7))
 

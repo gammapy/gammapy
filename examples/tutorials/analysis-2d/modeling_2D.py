@@ -41,14 +41,14 @@ an integrated power law.
 ######################################################################
 # Setup
 # -----
-# 
+#
 # As usual, we’ll start with some general imports…
-# 
+#
 
+import logging
 # %matplotlib inline
 import astropy.units as u
 from gammapy.analysis import Analysis, AnalysisConfig
-import logging
 
 log = logging.getLogger(__name__)
 
@@ -64,12 +64,12 @@ check_tutorials_setup()
 ######################################################################
 # Creating the config file
 # ------------------------
-# 
+#
 # Now, we create a config file for out analysis. You may load this from
 # disc if you have a pre-defined config file.
-# 
+#
 # Here, we use 3 simulated CTA runs of the galactic center.
-# 
+#
 
 config = AnalysisConfig()
 # Selecting the observations
@@ -81,7 +81,7 @@ config.observations.obs_ids = [110380, 111140, 111159]
 # Technically, gammapy implements 2D analysis as a special case of 3D
 # analysis (one one bin in energy). So, we must specify the type of
 # analysis as *3D*, and define the geometry of the analysis.
-# 
+#
 
 config.datasets.type = "3d"
 config.datasets.geom.wcs.skydir = {
@@ -112,13 +112,13 @@ print(config)
 ######################################################################
 # Getting the reduced dataset
 # ---------------------------
-# 
+#
 
 
 ######################################################################
 # We now use the config file and create a single `MapDataset` containing
 # `counts`, `background`, `exposure`, `psf` and `edisp` maps.
-# 
+#
 
 # %%time
 analysis = Analysis(config)
@@ -133,7 +133,7 @@ print(analysis.datasets["stacked"])
 # energy. The exposure and IRF maps are in true energy, and hence, have a
 # different binning based upon the binning of the IRFs. We need not bother
 # about them presently.
-# 
+#
 
 analysis.datasets["stacked"].counts
 
@@ -144,7 +144,7 @@ analysis.datasets["stacked"].exposure
 
 ######################################################################
 # We can have a quick look of these maps in the following way:
-# 
+#
 
 analysis.datasets["stacked"].counts.reduce_over_axes().plot(vmax=5)
 
@@ -152,12 +152,12 @@ analysis.datasets["stacked"].counts.reduce_over_axes().plot(vmax=5)
 ######################################################################
 # Modelling
 # ---------
-# 
+#
 # Now, we define a model to be fitted to the dataset. **The important
 # thing to note here is the dummy spectral model - an integrated powerlaw
 # with only free normalisation**. Here, we use its YAML definition to load
 # it:
-# 
+#
 
 model_config = """
 components:
@@ -170,15 +170,15 @@ components:
     - name: lon_0
       value: 0.02
       unit: deg
-    - name: lat_0 
-      value: 0.01    
+    - name: lat_0
+      value: 0.01
       unit: deg
   spectral:
     type: PowerLaw2SpectralModel
     parameters:
-    - name: amplitude      
+    - name: amplitude
       value: 1.0e-12
-      unit: cm-2 s-1 
+      unit: cm-2 s-1
     - name: index
       value: 2.0
       unit: ''
@@ -190,7 +190,7 @@ components:
     - name: emax
       value: 10.0
       unit: TeV
-      frozen: true 
+      frozen: true
 """
 
 analysis.set_models(model_config)
@@ -198,7 +198,7 @@ analysis.set_models(model_config)
 
 ######################################################################
 # We will freeze the parameters of the background
-# 
+#
 
 analysis.datasets["stacked"].background_model.parameters["tilt"].frozen = True
 
@@ -207,4 +207,3 @@ analysis.run_fit()
 
 # To see the best fit values along with the errors
 analysis.models.to_parameters_table()
-

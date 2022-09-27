@@ -254,7 +254,8 @@ def test_bkg_2d_wrong_units():
     with pytest.raises(ValueError) as error:
         Background2D(axes=[energy_axis, offset_axis], data=data)
         assert error.match(
-            f"Error: {wrong_unit} is not an allowed unit. {bkg2d_test.tag} requires {bkg2d_test.default_unit} data quantities."
+            f"Error: {wrong_unit} is not an allowed unit. {bkg2d_test.tag}"
+            f" requires {bkg2d_test.default_unit} data quantities."
         )
 
 

@@ -7,7 +7,7 @@ from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.time import Time
 from astropy.units import Quantity
 from gammapy.data import DataStore, Observation
-from gammapy.irf import load_cta_irfs, PSF3D
+from gammapy.irf import PSF3D, load_cta_irfs
 from gammapy.utils.fits import HDULocation
 from gammapy.utils.testing import (
     assert_skycoord_allclose,
@@ -386,4 +386,3 @@ def test_obervation_copy(data_store):
     obs_copy = obs.copy(obs_id=1234, in_memory=True)
     assert isinstance(obs_copy.__dict__["psf"], PSF3D)
     assert obs_copy.obs_id == 1234
-

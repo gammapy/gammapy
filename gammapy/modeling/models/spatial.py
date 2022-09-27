@@ -1027,8 +1027,8 @@ class TemplateSpatialModel(SpatialModel):
     Filename : str
         Name of the map file
     copy_data : bool
-        Create a deepcopy of the map data or directly use the original. True by default, can be turned
-        to False to save memory in case of large maps.
+        Create a deepcopy of the map data or directly use the original. True by
+        default, can be turned to False to save memory in case of large maps.
     """
 
     tag = ["TemplateSpatialModel", "template"]

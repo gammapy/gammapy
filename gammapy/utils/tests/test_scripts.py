@@ -1,9 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
-from gammapy.utils.scripts import (
-    get_images_paths,
-    recursive_merge_dicts,
-)
+from gammapy.utils.scripts import get_images_paths, recursive_merge_dicts
 
 
 @pytest.mark.xfail

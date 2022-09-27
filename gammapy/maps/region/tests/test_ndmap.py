@@ -218,7 +218,6 @@ def test_region_nd_map_get(region_map):
     assert_allclose(values.squeeze(), [0, 5])
 
 
-
 def test_region_nd_map_set(region_map):
     region_map = region_map.copy()
     region_map.set_by_idx((0, 0, [2, 3]), [42, 42])
@@ -396,17 +395,19 @@ def test_region_nd_map_interp_no_region():
     )
 
     m = RegionNDMap.create(region=None, axes=[energy_axis, time_axis])
-    m.data = np.arange(6).reshape((energy_axis.nbin, time_axis.nbin)) 
+    m.data = np.arange(6).reshape((energy_axis.nbin, time_axis.nbin))
 
     energy = [2, 6] * u.TeV
     time = time_ref + [[0.4], [1.5], [4.2]] * u.d
 
     value = m.interp_by_coord({"energy": energy, "time": time})
-    reference = np.array([
-        [0.13093 , 1.075717],
-        [2.242041, 3.186828],
-        [4.13093 , 5.075717],
-    ])
+    reference = np.array(
+        [
+            [0.13093, 1.075717],
+            [2.242041, 3.186828],
+            [4.13093, 5.075717],
+        ]
+    )
     assert_allclose(value, reference, rtol=1e-5)
 
     value = m.interp_by_coord((energy, time))
@@ -415,7 +416,7 @@ def test_region_nd_map_interp_no_region():
 
 def test_region_map_sampling(region_map):
     energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=6, name="energy")
-    edges = np.linspace(0., 30., 3)*u.min
+    edges = np.linspace(0.0, 30.0, 3) * u.min
     time_axis = MapAxis.from_edges(edges, name="time")
 
     npred_map = Map.create(

@@ -15,26 +15,25 @@ will be done in two different ways:
 
 """
 
+from pathlib import Path
+import numpy as np
+from scipy.stats import norm
+import astropy.units as u
+from regions import CircleSkyRegion
 # %matplotlib inline
 import matplotlib.pyplot as plt
-import numpy as np
-import astropy.units as u
-from pathlib import Path
-from regions import CircleSkyRegion
-from scipy.stats import norm
 from gammapy.analysis import Analysis, AnalysisConfig
+from gammapy.datasets import MapDataset
+from gammapy.estimators import ExcessMapEstimator
+from gammapy.maps import Map
+from gammapy.modeling import Fit
 from gammapy.modeling.models import (
-    SkyModel,
     ExpCutoffPowerLawSpectralModel,
-    PointSpatialModel,
     FoVBackgroundModel,
     Models,
+    PointSpatialModel,
+    SkyModel,
 )
-from gammapy.modeling import Fit
-from gammapy.maps import Map
-from gammapy.estimators import ExcessMapEstimator
-from gammapy.datasets import MapDataset
-
 ######################################################################
 # Check setup
 # -----------
@@ -46,11 +45,11 @@ check_tutorials_setup()
 ######################################################################
 # Analysis configuration
 # ----------------------
-# 
+#
 # In this section we select observations and define the analysis
 # geometries, irrespective of joint/stacked analysis. For configuration of
 # the analysis, we will programmatically build a config file from scratch.
-# 
+#
 
 config = AnalysisConfig()
 # The config file is now empty, with only a few defaults specified.
@@ -92,12 +91,12 @@ print(config)
 ######################################################################
 # Configuration for stacked and joint analysis
 # --------------------------------------------
-# 
+#
 # This is done just by specfiying the flag on `config.datasets.stack`.
 # Since the internal machinery will work differently for the two cases, we
 # will write it as two config files and save it to disc in YAML format for
 # future reference.
-# 
+#
 
 config_stack = config.copy(deep=True)
 config_stack.datasets.stack = True
@@ -115,13 +114,13 @@ config_stack.write(path=path / "config_stack.yaml", overwrite=True)
 ######################################################################
 # Stacked analysis
 # ----------------
-# 
+#
 # Data reduction
 # ~~~~~~~~~~~~~~
-# 
+#
 # We first show the steps for the stacked analysis and then repeat the
 # same for the joint analysis later
-# 
+#
 
 # Reading yaml file:
 config_stacked = AnalysisConfig.read(path=path / "config_stack.yaml")
@@ -138,7 +137,7 @@ analysis_stacked.get_datasets()
 
 ######################################################################
 # We have one final dataset, which you can print and explore
-# 
+#
 
 dataset_stacked = analysis_stacked.datasets["stacked"]
 print(dataset_stacked)
@@ -157,32 +156,32 @@ dataset_stacked.edisp.peek()
 
 # You can also get an excess image with a few lines of code:
 excess = dataset_stacked.excess.sum_over_axes()
-excess.smooth("0.06 deg").plot(stretch="sqrt", add_cbar=True);
+excess.smooth("0.06 deg").plot(stretch="sqrt", add_cbar=True)
 
 
 ######################################################################
 # Modeling and fitting
 # ~~~~~~~~~~~~~~~~~~~~
-# 
+#
 # Now comes the interesting part of the analysis - choosing appropriate
 # models for our source and fitting them.
-# 
+#
 # We choose a point source model with an exponential cutoff power-law
 # spectrum.
-# 
+#
 
 
 ######################################################################
 # To perform the fit on a restricted energy range, we can create a
 # specific *mask*. On the dataset, the `mask_fit` is a `Map` sharing
 # the same geometry as the `MapDataset` and containing boolean data.
-# 
+#
 # To create a mask to limit the fit within a restricted energy range, one
 # can rely on the `~gammapy.maps.Geom.energy_mask()` method.
-# 
+#
 # For more details on masks and the techniques to create them in gammapy,
 # please refer `to the dedicated tutorial <../../api/mask_maps.ipynb>`__
-# 
+#
 
 dataset_stacked.mask_fit = dataset_stacked.counts.geom.energy_mask(
     energy_min=0.3 * u.TeV, energy_max=None
@@ -219,19 +218,19 @@ result = fit.run(datasets=[dataset_stacked])
 ######################################################################
 # Fit quality assessment and model residuals for a `MapDataset`
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# 
+#
 
 
 ######################################################################
 # We can access the results dictionary to see if the fit converged:
-# 
+#
 
 print(result)
 
 
 ######################################################################
 # Check best-fit parameters and error estimates:
-# 
+#
 
 models_stacked.to_parameters_table()
 
@@ -242,24 +241,22 @@ models_stacked.to_parameters_table()
 # plots a residual image (by default, the smoothing radius is `0.1 deg`
 # and `method=diff`, which corresponds to a simple `data - model`
 # plot):
-# 
+#
 
-dataset_stacked.plot_residuals_spatial(
-    method="diff/sqrt(model)", vmin=-1, vmax=1
-);
+dataset_stacked.plot_residuals_spatial(method="diff/sqrt(model)", vmin=-1, vmax=1)
 
 
 ######################################################################
 # The more general function `~MapDataset.plot_residuals()` can also
 # extract and display spectral residuals in a region:
-# 
+#
 
 region = CircleSkyRegion(spatial_model.position, radius=0.15 * u.deg)
 
 dataset_stacked.plot_residuals(
     kwargs_spatial=dict(method="diff/sqrt(model)", vmin=-1, vmax=1),
     kwargs_spectral=dict(region=region),
-);
+)
 
 
 ######################################################################
@@ -269,9 +266,9 @@ dataset_stacked.plot_residuals(
 # Residuals will be summed up over the whole reconstructed energy range -
 # In order to make a proper statistic treatment, instead of simple
 # residuals a proper residuals significance map should be computed
-# 
+#
 # A more accurate way to inspect spatial residuals is the following:
-# 
+#
 
 estimator = ExcessMapEstimator(
     correlation_radius="0.1 deg",
@@ -283,12 +280,12 @@ result = estimator.run(dataset_stacked)
 
 result["sqrt_ts"].plot_grid(
     figsize=(12, 4), cmap="coolwarm", add_cbar=True, vmin=-5, vmax=5, ncols=2
-);
+)
 
 
 ######################################################################
 # Distribution of residuals significance in the full map geometry:
-# 
+#
 
 # TODO: clean this up
 significance_data = result["sqrt_ts"].data
@@ -321,16 +318,16 @@ plt.xlim(-5, 5)
 ######################################################################
 # Joint analysis
 # --------------
-# 
+#
 # In this section, we perform a joint analysis of the same data. Of
 # course, joint fitting is considerably heavier than stacked one, and
 # should always be handled with care. For brevity, we only show the
 # analysis for a point source fitting without re-adding a diffuse
 # component again.
-# 
+#
 # Data reduction
 # ~~~~~~~~~~~~~~
-# 
+#
 
 # %%time
 
@@ -356,7 +353,7 @@ print(analysis_joint.datasets[0])
 # on the datasets. Here, we look at the statistics in the center of Map,
 # by passing an appropriate `region`. To get info on the entire spatial
 # map, omit the region argument.
-# 
+#
 
 analysis_joint.datasets.info_table()
 
@@ -382,19 +379,19 @@ result_joint = fit_joint.run(datasets=analysis_joint.datasets)
 ######################################################################
 # Fit quality assessment and model residuals for a joint `Datasets`
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# 
+#
 
 
 ######################################################################
 # We can access the results dictionary to see if the fit converged:
-# 
+#
 
 print(result_joint)
 
 
 ######################################################################
 # Check best-fit parameters and error estimates:
-# 
+#
 
 print(models_joint)
 
@@ -405,13 +402,13 @@ print(models_joint)
 # directly refer to the section
 # `Fit quality and model residuals for a MapDataset` in this notebook -
 # Look at a stacked residual map.
-# 
+#
 
 
 ######################################################################
 # In the latter case, we need to properly stack the joint dataset before
 # computing the residuals:
-# 
+#
 
 # TODO: clean this up
 
@@ -424,28 +421,28 @@ for dataset in analysis_joint.datasets:
 
 stacked.models = [model_joint]
 
-stacked.plot_residuals_spatial(vmin=-1, vmax=1);
+stacked.plot_residuals_spatial(vmin=-1, vmax=1)
 
 
 ######################################################################
 # Then, we can access the stacked model residuals as previously shown in
 # the section `Fit quality and model residuals for a MapDataset` in this
 # notebook.
-# 
+#
 
 
 ######################################################################
 # Finally, let us compare the spectral results from the stacked and joint
 # fit:
-# 
+#
+
 
 def plot_spectrum(model, result, label, color):
     spec = model.spectral_model
     energy_bounds = [0.3, 10] * u.TeV
-    spec.plot(
-        energy_bounds=energy_bounds, energy_power=2, label=label, color=color
-    )
+    spec.plot(energy_bounds=energy_bounds, energy_power=2, label=label, color=color)
     spec.plot_error(energy_bounds=energy_bounds, energy_power=2, color=color)
+
 
 plot_spectrum(model, result, label="stacked", color="tab:blue")
 plot_spectrum(model_joint, result_joint, label="joint", color="tab:orange")
@@ -455,18 +452,18 @@ plt.legend()
 ######################################################################
 # Summary
 # -------
-# 
+#
 # Note that this notebook aims to show you the procedure of a 3D analysis
 # using just a few observations. Results get much better for a more
 # complete analysis considering the GPS dataset from the CTA First Data
 # Challenge (DC-1) and also the CTA model for the Galactic diffuse
 # emission, as shown in the next image:
-# 
+#
 
 
 ######################################################################
 # .. image:: ../../_static/DC1_3d.png
-# 
+#
 
 
 ######################################################################
@@ -475,15 +472,15 @@ plt.legend()
 # `GAMMAPY-EXTRA <https://github.com/gammapy/gammapy-extra>`__ repository
 # at
 # https://github.com/gammapy/gammapy-extra/blob/master/analyses/cta_1dc_gc_3d.ipynb).
-# 
+#
 
 
 ######################################################################
 # Exercises
 # ---------
-# 
+#
 # -  Analyse the second source in the field of view: G0.9+0.1 and add it
 #    to the combined model.
 # -  Perform modeling in more details - Add diffuse component, get flux
 #    points.
-# 
+#

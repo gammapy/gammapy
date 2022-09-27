@@ -501,15 +501,21 @@ class FluxPoints(FluxMaps):
 
         if self.has_ul and y_errn and is_ul.any():
             flux_ul = getattr(self, sed_type + "_ul").quantity
-            y_errn.data[is_ul] = np.clip(0.5 * flux_ul[is_ul].to_value(y_errn.unit), 0, np.inf)
+            y_errn.data[is_ul] = np.clip(
+                0.5 * flux_ul[is_ul].to_value(y_errn.unit), 0, np.inf
+            )
             y_errp.data[is_ul] = 0
             flux.data[is_ul] = flux_ul[is_ul].to_value(flux.unit)
             kwargs.setdefault("uplims", is_ul)
 
         # set flux points plotting defaults
         if y_errp and y_errn:
-            y_errp = np.clip(scale_plot_flux(y_errp, energy_power=energy_power).quantity, 0, np.inf)
-            y_errn = np.clip(scale_plot_flux(y_errn, energy_power=energy_power).quantity, 0, np.inf)
+            y_errp = np.clip(
+                scale_plot_flux(y_errp, energy_power=energy_power).quantity, 0, np.inf
+            )
+            y_errn = np.clip(
+                scale_plot_flux(y_errn, energy_power=energy_power).quantity, 0, np.inf
+            )
             kwargs.setdefault("yerr", (y_errn, y_errp))
         else:
             kwargs.setdefault("yerr", None)

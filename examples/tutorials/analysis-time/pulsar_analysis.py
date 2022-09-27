@@ -22,53 +22,45 @@ packages like Tempo2 or `PINT <https://nanograv-pint.readthedocs.io>`__.
 ######################################################################
 # Opening the data
 # ----------------
-# 
+#
 
 
 ######################################################################
 # Let’s first do the imports and load the only observation containing Vela
 # in the CTA 1DC dataset shipped with Gammapy.
-# 
+#
 
 # %matplotlib inline
 import numpy as np
-import matplotlib.pyplot as plt
-
-from gammapy.utils.regions import SphericalCircleSkyRegion
-from astropy.coordinates import SkyCoord
 import astropy.units as u
-
-from gammapy.makers import (
-    SafeMaskMaker,
-    PhaseBackgroundMaker,
-    SpectrumDatasetMaker,
-)
-from gammapy.maps import Map, WcsGeom, MapAxis, RegionGeom
+from astropy.coordinates import SkyCoord
+import matplotlib.pyplot as plt
 from gammapy.data import DataStore
-from gammapy.datasets import Datasets, SpectrumDataset, FluxPointsDataset
-from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
-from gammapy.modeling import Fit
+from gammapy.datasets import Datasets, FluxPointsDataset, SpectrumDataset
 from gammapy.estimators import FluxPointsEstimator
-
-
+from gammapy.makers import PhaseBackgroundMaker, SafeMaskMaker, SpectrumDatasetMaker
+from gammapy.maps import Map, MapAxis, RegionGeom, WcsGeom
+from gammapy.modeling import Fit
+from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 ######################################################################
 # Check setup
 # -----------
 from gammapy.utils.check import check_tutorials_setup
+from gammapy.utils.regions import SphericalCircleSkyRegion
 
 check_tutorials_setup()
 
 
 ######################################################################
 # Load the data store (which is a subset of CTA-DC1 data):
-# 
+#
 
 data_store = DataStore.from_dir("$GAMMAPY_DATA/cta-1dc/index/gps")
 
 
 ######################################################################
 # Define obsevation ID and print events:
-# 
+#
 
 id_obs_vela = [111630]
 obs_list_vela = data_store.get_observations(id_obs_vela)
@@ -78,7 +70,7 @@ print(obs_list_vela[0].events)
 ######################################################################
 # Now that we have our observation, let’s select the events in 0.2° radius
 # around the pulsar position.
-# 
+#
 
 pos_target = SkyCoord(ra=128.836 * u.deg, dec=-45.176 * u.deg, frame="icrs")
 on_radius = 0.2 * u.deg
@@ -91,7 +83,7 @@ print(events_vela)
 
 ######################################################################
 # Let’s load the phases of the selected events in a dedicated array.
-# 
+#
 
 phases = events_vela.table["PHASE"]
 
@@ -102,18 +94,16 @@ phases[:10]
 ######################################################################
 # Phasogram
 # ---------
-# 
+#
 # Once we have the phases, we can make a phasogram. A phasogram is a
 # histogram of phases and it works exactly like any other histogram (you
 # can set the binning, evaluate the errors based on the counts in each
 # bin, etc).
-# 
+#
 
 nbins = 30
 phase_min, phase_max = (0, 1)
-values, bin_edges = np.histogram(
-    phases, range=(phase_min, phase_max), bins=nbins
-)
+values, bin_edges = np.histogram(phases, range=(phase_min, phase_max), bins=nbins)
 bin_width = (phase_max - phase_min) / nbins
 
 bin_center = (bin_edges[:-1] + bin_edges[1:]) / 2
@@ -134,13 +124,13 @@ plt.bar(
 plt.xlim(0, 1)
 plt.xlabel("Phase")
 plt.ylabel("Counts")
-plt.title(f"Phasogram with angular cut of {on_radius}");
+plt.title(f"Phasogram with angular cut of {on_radius}")
 
 
 ######################################################################
 # Now let’s add some fancy additions to our phasogram: a patch on the ON-
 # and OFF-phase regions and one for the background level.
-# 
+#
 
 # Evaluate background level
 off_phase_range = (0.7, 1.0)
@@ -155,9 +145,7 @@ print(f"Number of Off events: {count_bkg}")
 bkg = count_bkg / nbins / (off_phase_range[1] - off_phase_range[0])
 
 # error on the background estimation
-bkg_err = (
-    np.sqrt(count_bkg) / nbins / (off_phase_range[1] - off_phase_range[0])
-)
+bkg_err = np.sqrt(count_bkg) / nbins / (off_phase_range[1] - off_phase_range[0])
 
 # Let's redo the same plot for the basis
 plt.bar(
@@ -202,13 +190,13 @@ plt.text(0.895, 5, "OFF", color="black", fontsize=17, ha="center")
 plt.xlabel("Phase")
 plt.ylabel("Counts")
 plt.xlim(0, 1)
-plt.title(f"Phasogram with angular cut of {on_radius}");
+plt.title(f"Phasogram with angular cut of {on_radius}")
 
 
 ######################################################################
 # Phase-resolved map
 # ------------------
-# 
+#
 
 
 ######################################################################
@@ -217,14 +205,14 @@ plt.title(f"Phasogram with angular cut of {on_radius}");
 # Alpha is the ratio between the size of the ON-phase zone (here 0.1) and
 # the OFF-phase zone (0.3). It’s a map of the excess events in phase,
 # which are the pulsed events.
-# 
+#
 
 geom = WcsGeom.create(binsz=0.02 * u.deg, skydir=pos_target, width="5 deg")
 
 
 ######################################################################
 # Let’s create an ON-map and an OFF-map:
-# 
+#
 
 on_map = Map.from_geom(geom)
 off_map = Map.from_geom(geom)
@@ -245,13 +233,13 @@ alpha = (on_phase_range[1] - on_phase_range[0]) / (
 excess_map = on_map - off_map * alpha
 
 # Plot excess map
-excess_map.smooth(kernel="gauss", width=0.2 * u.deg).plot(add_cbar=True);
+excess_map.smooth(kernel="gauss", width=0.2 * u.deg).plot(add_cbar=True)
 
 
 ######################################################################
 # Phase-resolved spectrum
 # -----------------------
-# 
+#
 
 
 ######################################################################
@@ -259,11 +247,9 @@ excess_map.smooth(kernel="gauss", width=0.2 * u.deg).plot(add_cbar=True);
 # the class PhaseBackgroundMaker. In a phase-resolved analysis, the
 # background is estimated in the same sky region but in the OFF-phase
 # zone.
-# 
+#
 
-e_true = MapAxis.from_energy_bounds(
-    0.003, 10, 100, unit="TeV", name="energy_true"
-)
+e_true = MapAxis.from_energy_bounds(0.003, 10, 100, unit="TeV", name="energy_true")
 e_reco = MapAxis.from_energy_bounds(0.01, 10, 30, unit="TeV", name="energy")
 
 
@@ -275,9 +261,7 @@ dataset_maker = SpectrumDatasetMaker()
 phase_bkg_maker = PhaseBackgroundMaker(
     on_phase=on_phase_range, off_phase=off_phase_range
 )
-safe_mask_maker = SafeMaskMaker(
-    methods=["aeff-default", "edisp-bias"], bias_percent=20
-)
+safe_mask_maker = SafeMaskMaker(methods=["aeff-default", "edisp-bias"], bias_percent=20)
 
 datasets = []
 
@@ -290,7 +274,7 @@ for obs in obs_list_vela:
 
 ######################################################################
 # Now let’s a look at the datasets we just created:
-# 
+#
 
 datasets[0].peek()
 
@@ -300,7 +284,7 @@ datasets[0].peek()
 # load a power law model with an initial value for the index and the
 # amplitude and then wo do a likelihood fit. The fit results are printed
 # below.
-# 
+#
 
 spectral_model = PowerLawSpectralModel(
     index=4, amplitude="1.3e-9 cm-2 s-1 TeV-1", reference="0.02 TeV"
@@ -324,7 +308,7 @@ print(joint_result)
 # Now you might want to do the stacking here even if in our case there is
 # only one observation which makes it superfluous. We can compute flux
 # points by fitting the norm of the global model in energy bands.
-# 
+#
 
 energy_edges = np.logspace(np.log10(0.04), np.log10(0.4), 7) * u.TeV
 
@@ -349,7 +333,7 @@ flux_points_dataset = FluxPointsDataset(data=flux_points, models=model)
 
 ######################################################################
 # Now we can plot.
-# 
+#
 
 ax_spectrum, ax_residuals = flux_points_dataset.plot_fit()
 
@@ -373,5 +357,4 @@ ax_spectrum.legend(loc="best")
 # Vela observations in the CTA DC1 while there is only one here. When done
 # on the 9 observations, the spectral analysis is much better agreement
 # between the input model and the gammapy fit.
-# 
-
+#

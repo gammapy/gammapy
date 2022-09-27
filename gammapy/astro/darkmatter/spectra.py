@@ -4,7 +4,11 @@ import numpy as np
 import astropy.units as u
 from astropy.table import Table
 from gammapy.modeling import Parameter
-from gammapy.modeling.models import SpectralModel, TemplateSpectralModel, SPECTRAL_MODEL_REGISTRY
+from gammapy.modeling.models import (
+    SPECTRAL_MODEL_REGISTRY,
+    SpectralModel,
+    TemplateSpectralModel,
+)
 from gammapy.utils.interpolation import LogScale
 from gammapy.utils.scripts import make_path
 
@@ -144,7 +148,8 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
     scale : float
         Scale parameter for model fitting
     jfactor : `~astropy.units.Quantity`
-        Integrated J-Factor needed when `~gammapy.modeling.models.PointSpatialModel` spatial model is used
+        Integrated J-Factor needed when `~gammapy.modeling.models.PointSpatialModel`
+        spatial model is used
     z: float
         Redshift value
     k: int
@@ -160,7 +165,7 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
         channel = "b"
         massDM = 5000*u.Unit("GeV")
         jfactor = 3.41e19 * u.Unit("GeV2 cm-5")
-        modelDM = DarkMatterAnnihilationSpectralModel(mass=massDM, channel=channel, jfactor=jfactor)
+        modelDM = DarkMatterAnnihilationSpectralModel(mass=massDM, channel=channel, jfactor=jfactor)  # noqa: E501
 
     References
     ----------
@@ -230,5 +235,6 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
         parameters = data.pop("parameters")
         scale = [p["value"] for p in parameters if p["name"] == "scale"][0]
         return cls(scale=scale, **data)
+
 
 SPECTRAL_MODEL_REGISTRY.append(DarkMatterAnnihilationSpectralModel)

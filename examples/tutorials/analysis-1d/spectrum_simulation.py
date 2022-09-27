@@ -50,27 +50,21 @@ We will use the following classes:
 ######################################################################
 # Setup
 # -----
-# 
-
-# %matplotlib inline
-import matplotlib.pyplot as plt
+#
 
 import numpy as np
 import astropy.units as u
-from astropy.coordinates import SkyCoord, Angle
+from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
-from gammapy.datasets import SpectrumDatasetOnOff, SpectrumDataset, Datasets
-from gammapy.makers import SpectrumDatasetMaker
-from gammapy.modeling import Fit
-from gammapy.modeling.models import (
-    PowerLawSpectralModel,
-    SkyModel,
-)
-from gammapy.irf import load_cta_irfs
+# %matplotlib inline
+import matplotlib.pyplot as plt
 from gammapy.data import Observation, observatory_locations
+from gammapy.datasets import Datasets, SpectrumDataset, SpectrumDatasetOnOff
+from gammapy.irf import load_cta_irfs
+from gammapy.makers import SpectrumDatasetMaker
 from gammapy.maps import MapAxis, RegionGeom
-
-
+from gammapy.modeling import Fit
+from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 ######################################################################
 # Check setup
 # -----------
@@ -82,14 +76,14 @@ check_tutorials_setup()
 ######################################################################
 # Simulation of a single spectrum
 # -------------------------------
-# 
+#
 # To do a simulation, we need to define the observational parameters like
 # the livetime, the offset, the assumed integration radius, the energy
 # range to perform the simulation for and the choice of spectral model. We
 # then use an in-memory observation which is convolved with the IRFs to
 # get the predicted number of counts. This is Poission fluctuated using
 # the `fake()` to get the simulated counts for each observation.
-# 
+#
 
 # Define simulation parameters parameters
 livetime = 1 * u.h
@@ -107,9 +101,7 @@ energy_axis_true = MapAxis.from_edges(
 
 on_region_radius = Angle("0.11 deg")
 
-center = pointing.directional_offset_by(
-    position_angle=0 * u.deg, separation=offset
-)
+center = pointing.directional_offset_by(position_angle=0 * u.deg, separation=offset)
 on_region = CircleSkyRegion(center=center, radius=on_region_radius)
 
 # Define spectral model - a simple Power Law in this case
@@ -155,17 +147,17 @@ print(dataset)
 
 ######################################################################
 # You can see that background counts are now simulated
-# 
+#
 
 
 ######################################################################
 # On-Off analysis
 # ~~~~~~~~~~~~~~~
-# 
+#
 # To do an on off spectral analysis, which is the usual science case, the
 # standard would be to use `SpectrumDatasetOnOff`, which uses the
 # acceptance to fake off-counts
-# 
+#
 
 dataset_on_off = SpectrumDatasetOnOff.from_spectrum_dataset(
     dataset=dataset, acceptance=1, acceptance_off=5
@@ -177,7 +169,7 @@ print(dataset_on_off)
 ######################################################################
 # You can see that off counts are now simulated as well. We now simulate
 # several spectra using the same set of observation conditions.
-# 
+#
 
 # %%time
 
@@ -185,9 +177,7 @@ n_obs = 100
 datasets = Datasets()
 
 for idx in range(n_obs):
-    dataset_on_off.fake(
-        random_state=idx, npred_background=dataset.npred_background()
-    )
+    dataset_on_off.fake(random_state=idx, npred_background=dataset.npred_background())
     dataset_fake = dataset_on_off.copy(name=f"obs-{idx}")
     dataset_fake.meta_table["OBS_ID"] = [idx]
     datasets.append(dataset_fake)
@@ -199,7 +189,7 @@ table
 ######################################################################
 # Before moving on to the fit let’s have a look at the simulated
 # observations.
-# 
+#
 
 fix, axes = plt.subplots(1, 3, figsize=(12, 4))
 axes[0].hist(table["counts"])
@@ -207,12 +197,12 @@ axes[0].set_xlabel("Counts")
 axes[1].hist(table["counts_off"])
 axes[1].set_xlabel("Counts Off")
 axes[2].hist(table["excess"])
-axes[2].set_xlabel("excess");
+axes[2].set_xlabel("excess")
 
 
 ######################################################################
 # Now, we fit each simulated spectrum individually
-# 
+#
 
 # %%time
 results = []
@@ -233,7 +223,7 @@ for dataset in datasets:
 ######################################################################
 # We take a look at the distribution of the fitted indices. This matches
 # very well with the spectrum that we initially injected.
-# 
+#
 
 index = np.array([_["index"] for _ in results])
 plt.hist(index, bins=10, alpha=0.5)
@@ -244,12 +234,11 @@ print(f"index: {index.mean()} += {index.std()}")
 ######################################################################
 # Exercises
 # ---------
-# 
+#
 # -  Change the observation time to something longer or shorter. Does the
 #    observation and spectrum results change as you expected?
 # -  Change the spectral model, e.g. add a cutoff at 5 TeV, or put a
 #    steep-spectrum source with spectral index of 4.0
 # -  Simulate spectra with the spectral model we just defined. How much
 #    observation duration do you need to get back the injected parameters?
-# 
-
+#

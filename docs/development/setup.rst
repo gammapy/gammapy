@@ -12,7 +12,7 @@ code or documentation, you don't need to know about most of the things mentioned
 this page. But for Gammapy maintainers it's helpful to have a reference that explains
 what we have and how things work.
 
-gammapy repository
+Gammapy repository
 ==================
 
 This section explains the content of the main repository for Gammapy:
@@ -95,8 +95,8 @@ steps:
 * ``dist`` contains the Gammapy distribution if you run ``python setup.py sdist``
 
 
-gammapy-data repository
-=======================
+The gammapy-data repository
+===========================
 
     https://github.com/gammapy/gammapy-data
 
@@ -105,8 +105,8 @@ the documentation and check tutorials.
 
 .. _dev_gammapy-extra:
 
-gammapy-extra repository
-========================
+The gammapy-extra repository
+============================
 
 For Gammapy we have a second repository for most of the example data files and
 a few other things:

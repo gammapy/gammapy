@@ -207,13 +207,15 @@ class ModelBase:
                 par_dict.update(data["parameters"][index])
             except ValueError:
                 log.warning(
-                    f"Parameter '{par_dict['name']}' not defined in YAML file. Using default value: {par_dict['value']} {par_dict['unit']}"
+                    f"Parameter '{par_dict['name']}' not defined in YAML file."
+                    f" Using default value: {par_dict['value']} {par_dict['unit']}"
                 )
             par_data.append(par_dict)
 
         parameters = Parameters.from_dict(par_data)
 
-        # TODO: this is a special case for spatial models, maybe better move to `SpatialModel` base class
+        # TODO: this is a special case for spatial models, maybe better move to
+        #  `SpatialModel` base class
         if "frame" in data:
             kwargs["frame"] = data["frame"]
 
@@ -287,7 +289,9 @@ class Model:
         Examples
         --------
         >>> from gammapy.modeling.models import Model
-        >>> spectral_model = Model.create("pl-2", model_type="spectral", amplitude="1e-10 cm-2 s-1", index=3)
+        >>> spectral_model = Model.create(
+                    "pl-2", model_type="spectral", amplitude="1e-10 cm-2 s-1", index=3
+                )
         >>> type(spectral_model)
         <class 'gammapy.modeling.models.spectral.PowerLaw2SpectralModel'>
         """
