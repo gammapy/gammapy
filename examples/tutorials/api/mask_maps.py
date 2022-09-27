@@ -91,13 +91,13 @@ import numpy as np
 import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion, Regions
+
 # %matplotlib inline
-import matplotlib.pyplot as plt
 from gammapy.catalog import CATALOG_REGISTRY
 from gammapy.datasets import Datasets
 from gammapy.estimators import ExcessMapEstimator
-from gammapy.maps import Map, MapAxis, WcsGeom
-from gammapy.modeling.models import FoVBackgroundModel
+from gammapy.maps import Map, WcsGeom
+
 ######################################################################
 # Check setup
 # -----------

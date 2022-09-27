@@ -65,6 +65,7 @@ from pathlib import Path
 from astropy import units as u
 from gammapy.data import DataStore, EventList
 from gammapy.irf import EffectiveAreaTable2D, load_cta_irfs
+
 ######################################################################
 # Check setup
 # -----------

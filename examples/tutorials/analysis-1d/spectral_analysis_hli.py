@@ -70,11 +70,12 @@ In summary, we have to:
 #
 
 from pathlib import Path
-from astropy import units as u
+
 # %matplotlib inline
 import matplotlib.pyplot as plt
 from gammapy.analysis import Analysis, AnalysisConfig
-from gammapy.modeling.models import Models, SkyModel
+from gammapy.modeling.models import Models
+
 ######################################################################
 # Check setup
 # -----------

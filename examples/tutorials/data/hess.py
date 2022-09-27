@@ -40,12 +40,14 @@ release 1.
 
 import astropy.units as u
 from astropy.coordinates import SkyCoord
+
 # %matplotlib inline
 import matplotlib.pyplot as plt
 from gammapy.data import DataStore
 from gammapy.makers import MapDatasetMaker
 from gammapy.makers.utils import make_theta_squared_table
 from gammapy.maps import Map, MapAxis, WcsGeom
+
 ######################################################################
 # Check setup
 # -----------

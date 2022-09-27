@@ -188,7 +188,7 @@ def test_fov_bkg_maker_with_source_model(obs_dataset, exclusion_mask, caplog):
     assert_allclose(bkg_model_spec.norm.value, norm_ref, rtol=1e-4)
     assert_allclose(bkg_model_spec.tilt.value, 0.0, rtol=1e-4)
 
-    # apply fit method with pre-fitted source model and no exlusion mask
+    # apply fit method with pre-fitted source model and no exclusion mask
     bkg_model_spec.norm.value = 1
     fov_bkg_maker = FoVBackgroundMaker(method="fit", exclusion_mask=None)
     dataset = fov_bkg_maker.run(test_dataset)
@@ -206,7 +206,7 @@ def test_fov_bkg_maker_with_source_model(obs_dataset, exclusion_mask, caplog):
     assert_allclose(bkg_model_spec.norm.value, 0.830779, rtol=1e-4)
     assert_allclose(bkg_model_spec.tilt.value, 0.0, rtol=1e-4)
 
-    # apply fit method with pre-fitted source model and exlusion mask
+    # apply fit method with pre-fitted source model and exclusion mask
     bkg_model_spec.norm.value = 1
     fov_bkg_maker = FoVBackgroundMaker(method="fit", exclusion_mask=exclusion_mask)
     dataset = fov_bkg_maker.run(test_dataset)

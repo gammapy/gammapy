@@ -94,9 +94,7 @@ trailing-spaces:
 	find $(PROJECT) examples docs -name "*.py" -exec perl -pi -e 's/[ \t]*$$//' {} \;
 
 black:
-	black $(PROJECT)/ examples/ docs/ \
-	--exclude="extern/|docs/_static|docs/_build" \
-	--line-length 88
+	black $(PROJECT)
 
 isort:
 	isort -rc gammapy examples docs -s docs/conf.py
@@ -105,9 +103,7 @@ polish: black isort trailing-spaces;
 
 # Note: flake8 is very fast and almost never has false positives
 flake8:
-	flake8 $(PROJECT) \
-	--exclude=gammapy/extern,gammapy/conftest.py,__init__.py \
-	--ignore=E501,W503
+	flake8 $(PROJECT)
 
 # TODO: once the errors are fixed, remove the -E option and tackle the warnings
 # Note: pylint is very thorough, but slow, and has false positives or nitpicky stuff
@@ -133,6 +129,6 @@ pydocstyle:
 
 # Note: codespell will pick its options from setup.cfg
 codespell:
-	codespell
+	codespell gammapy
 
 # TODO: add test and code quality checks for `examples`

@@ -46,6 +46,7 @@ an integrated power law.
 #
 
 import logging
+
 # %matplotlib inline
 import astropy.units as u
 from gammapy.analysis import Analysis, AnalysisConfig

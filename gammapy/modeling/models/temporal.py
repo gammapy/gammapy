@@ -407,7 +407,7 @@ class GeneralizedGaussianTemporalModel(TemporalModel):
 class LightCurveTemplateTemporalModel(TemporalModel):
     """Temporal light curve model.
 
-    The lightcurve is given at specfic times (and optionally energies) as a ``norm``
+    The lightcurve is given at specific times (and optionally energies) as a ``norm``
     It can be serialised either as an astropy table or a `~gammapy.maps.RegionNDMap`
 
     The ``norm`` is supposed to be a unit-less multiplicative factor in the model,

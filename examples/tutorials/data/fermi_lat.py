@@ -60,6 +60,7 @@ to 2 TeV.
 
 from astropy import units as u
 from astropy.coordinates import SkyCoord
+
 # %matplotlib inline
 import matplotlib.pyplot as plt
 from gammapy.data import EventList
@@ -76,6 +77,7 @@ from gammapy.modeling.models import (
     TemplateSpatialModel,
     create_fermi_isotropic_diffuse_model,
 )
+
 ######################################################################
 # Check setup
 # -----------

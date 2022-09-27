@@ -49,6 +49,7 @@ modelling and fitting.
 import logging
 import numpy as np
 from scipy.stats import norm
+
 # %matplotlib inline
 import astropy.units as u
 from astropy.coordinates import SkyCoord

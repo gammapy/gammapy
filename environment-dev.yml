@@ -68,6 +68,7 @@ dependencies:
   - sphinx-copybutton
   - tox
   - pydata-sphinx-theme==0.8.1
+  - pre-commit
   - twine
   - yamllint
   - nbformat

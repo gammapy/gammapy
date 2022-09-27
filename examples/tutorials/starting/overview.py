@@ -24,7 +24,7 @@ We will cover the following topics:
       classes:
 
       -  ``~gammapy.maps.WcsNDMap``
-      -  `astropy.coordinates.SkyCoord <http://astropy.readthedocs.io/en/latest/coordinates/index.html>`__
+      -  `astropy.coordinates.SkyCoord <http://astropy.readthedocs.io/en/latest/coordinates/index.html>`__ 
       -  `numpy.ndarray <https://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.html>`__
 
 -  **Event lists**
@@ -70,12 +70,14 @@ We will cover the following topics:
 
 import astropy.units as u
 from astropy.coordinates import SkyCoord
-# %matplotlib inline
-import matplotlib.pyplot as plt
+
 ######################################################################
 # Check setup
 # -----------
 from gammapy.utils.check import check_tutorials_setup
+
+# %matplotlib inline
+
 
 check_tutorials_setup()
 

@@ -41,6 +41,7 @@ import matplotlib.pyplot as plt
 from gammapy.datasets import Datasets, SpectrumDatasetOnOff
 from gammapy.modeling import Fit
 from gammapy.modeling.models import LogParabolaSpectralModel, SkyModel
+
 ######################################################################
 # Check setup
 # -----------
@@ -502,7 +503,7 @@ ax.set_ylabel(f"{par_beta.name}")
 # We choose to plot 1 and 2 sigma confidence contours
 levels = [1, 2]
 contours = ax.contour(x_values, y_values, stat_surface, levels=levels, colors="white")
-ax.clabel(contours, fmt="%.0f$\,\sigma$", inline=3, fontsize=15)
+ax.clabel(contours, fmt="%.0f, $\\sigma$", inline=3, fontsize=15)
 
 
 ######################################################################

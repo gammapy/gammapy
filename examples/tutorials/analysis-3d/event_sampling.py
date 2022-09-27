@@ -2,7 +2,7 @@
 Event sampling
 ==============
 
-Check out the process of sampling events from a given sky model and obtain a simulated events list
+Learn to sampling events from a given sky model and IRFs.
 
 Prerequisites
 -------------
@@ -22,7 +22,7 @@ event-sampler and how to obtain an output photon event list.
 The core of the event sampling lies into the Gammapy
 `~gammapy.datasets.MapDatasetEventSampler` class, which is based on
 the inverse cumulative distribution function `(Inverse
-CDF) <https://en.wikipedia.org/wiki/Cumulative_distribution_function#Inverse_distribution_function_(quantile_function)>`__.
+CDF) <https://en.wikipedia.org/wiki/Cumulative_distribution_function#Inverse_distribution_function_(quantile_function)>`__.  # noqa: E501
 
 The `~gammapy.datasets.MapDatasetEventSampler` takes in input a
 `~gammapy.datasets.Dataset` object containing the spectral, spatial
@@ -107,6 +107,7 @@ from gammapy.modeling.models import (
     SkyModel,
     TemplateSpatialModel,
 )
+
 ######################################################################
 # Check setup
 # -----------
@@ -130,7 +131,8 @@ check_tutorials_setup()
 # Let’s start with some initial settings:
 #
 
-irf_filename = "$GAMMAPY_DATA/cta-caldb/Prod5-South-20deg-AverageAz-14MSTs37SSTs.180000s-v0.1.fits.gz"
+path = Path("$GAMMAPY_DATA/cta-caldb")
+irf_filename = "Prod5-South-20deg-AverageAz-14MSTs37SSTs.180000s-v0.1.fits.gz"
 
 pointing = SkyCoord(0.0, 0.0, frame="galactic", unit="deg")
 livetime = 1 * u.hr
@@ -140,7 +142,7 @@ livetime = 1 * u.hr
 # Now you can create the observation:
 #
 
-irfs = load_cta_irfs(irf_filename)
+irfs = load_cta_irfs(path / irf_filename)
 location = observatory_locations["cta_south"]
 
 observation = Observation.create(
@@ -514,7 +516,7 @@ livetimes = [1, 1, 1] * u.hr
 
 # %%time
 n_obs = len(tstarts)
-irf_paths = [Path(irf_filename)] * n_obs
+irf_paths = [path / irf_filename] * n_obs
 events_paths = []
 for idx, tstart in enumerate(tstarts):
     irfs = load_cta_irfs(irf_paths[idx])
@@ -559,18 +561,6 @@ observations[0].peek()
 
 
 ######################################################################
-# .. raw:: html
-#
-#    <!-- ## Read simulated event lists with `DataStore.from_events_lists`
-#    Here we show how to simulate a set of event lists of the same Sky model, but with different GTIs. We make use of the settings we applied previously.
-#    Let's define the GTI firstly, choosing a time start and a duration of the observation: -->
-#
-
-
-######################################################################
-# For completeness, `data_store` is a `~gammapy.data.Datastore`
-# object.
-#
 # Exercises
 # ---------
 #

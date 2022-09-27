@@ -26,7 +26,7 @@ class DatasetsMaker(Maker):
     n_jobs : int
         Number of processes to run in parallel
     cutout_mode : {'trim', 'partial', 'strict'}
-        Used only to cutout the refrence MapDataset around each processed observation.
+        Used only to cutout the reference `MapDataset` around each processed observation.
         Mode is an option for Cutout2D, for details see `~astropy.nddata.utils.Cutout2D`.
         Default is "trim".
     cutout_width : tuple of `~astropy.coordinates.Angle`

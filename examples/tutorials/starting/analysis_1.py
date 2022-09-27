@@ -74,6 +74,7 @@ Finally we will compare the results against a reference model.
 from pathlib import Path
 from astropy import units as u
 from gammapy.analysis import Analysis, AnalysisConfig
+
 ######################################################################
 # Check setup
 # -----------

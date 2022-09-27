@@ -60,6 +60,7 @@ from gammapy.estimators import FluxPoints, FluxPointsEstimator
 from gammapy.maps import MapAxis
 from gammapy.modeling import Fit
 from gammapy.modeling.models import Models, create_crab_spectral_model
+
 ######################################################################
 # Check setup
 # -----------

@@ -46,6 +46,7 @@ future!
 #
 
 import os
+
 # %matplotlib inline
 import numpy as np
 from astropy import units as u
@@ -56,6 +57,7 @@ from astropy.table import Table
 import matplotlib.pyplot as plt
 from gammapy.data import EventList
 from gammapy.maps import Map, MapAxis, WcsGeom, WcsNDMap
+
 ######################################################################
 # Check setup
 # -----------

@@ -31,6 +31,7 @@ import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
+
 # %matplotlib inline
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
@@ -41,6 +42,7 @@ from gammapy.astro.darkmatter import (
     profiles,
 )
 from gammapy.maps import WcsGeom, WcsNDMap
+
 ######################################################################
 # Check setup
 # -----------
