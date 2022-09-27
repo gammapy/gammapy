@@ -46,7 +46,8 @@ class AccordionHeader(Directive):
         raw = f"""
             <div id="accordion" class="shadow tutorial-accordion">
         <div class="card tutorial-card">
-            <div class="card-header collapsed card-link" data-toggle="collapse" data-target="#{self.options["id"]}">  # noqa: E501
+            <div class="card-header collapsed card-link" data-toggle="collapse"
+             data-target="#{self.options["id"]}">
                 <div class="d-flex flex-row tutorial-card-header-1">
                     <div class="d-flex flex-row tutorial-card-header-2">
                         <button class="btn btn-dark btn-sm"></button>

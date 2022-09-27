@@ -28,11 +28,15 @@ Execution
 ---------
 
 To execute the Gammapy CLI, type the command ``gammapy`` at your terminal shell
-(not in Python)::
+(not in Python):
+
+.. code-block:: bash
 
     $ gammapy --help
 
-or equivalently, just type this::
+or equivalently, just type this:
+
+.. code-block:: bash
 
     $ gammapy
 
@@ -95,7 +99,7 @@ command to first create a default configuration file with default values and the
 perform a simple automated data reduction process (i.e. fetching observations from
 a datastore and producing the reduced datasets.)
 
-.. code-block:: text
+.. code-block:: bash
 
     $ gammapy analysis --help
     Usage: gammapy analysis [OPTIONS] COMMAND [ARGS]...
@@ -177,7 +181,9 @@ this:
 We have introduced variables that hold the parameters for the analysis and put
 them before the computation. Let's say this script is in a file called
 ``significance.py``, then to use it you put the parameters you like and then
-execute it via::
+execute it via:
+
+.. code-block:: bash
 
     $ python significance.py
 
@@ -202,7 +208,9 @@ Writing and using such scripts is perfectly fine and a common way to run science
 analyses. However, if you use it very frequently it might become annoying to
 have to open up and edit the ``significance.py`` file every time to use it. In
 that case, you can change your script into a command line interface that allows
-you to set analysis parameters without having to edit the file, like this::
+you to set analysis parameters without having to edit the file, like this:
+
+.. code-block:: bash
 
     $ python significance.py --help
       Usage: significance.py [OPTIONS] N_OBSERVED MU_BACKGROUND
@@ -277,19 +285,25 @@ launch command line tools like ``gammapy`` (e.g. bash, csh, Windows command
 prompt, Jupyter, ...) it is not unheard of that users have trouble running
 ``gammapy`` after installing it.
 
-This usually looks like this::
+This usually looks like this:
+
+.. code-block:: bash
 
     $ gammapy
     -bash: gammapy: command not found
 
 If you just installed Gammapy, search the install log for the message
 "Installing gammapy script" to see where ``gammapy`` was installed, and check
-that this location is on your PATH::
+that this location is on your PATH:
+
+.. code-block:: bash
 
     echo $PATH
 
 If you don't manage to figure out where the ``gammapy`` command line tool is
-installed, you can try calling it like this instead::
+installed, you can try calling it like this instead:
+
+.. code-block:: bash
 
     $ python -m gammapy
 
@@ -299,13 +313,17 @@ want because it comes first on their ``PATH``. For the same reason these days
 the recommended way to use e.g. ``pip`` is via ``python -m pip``.
 
 If this still doesn't work, check if you are using the right Python and have
-Gammapy installed::
+Gammapy installed:
+
+.. code-block:: bash
 
     $ which python
     $ python -c 'import gammapy'
 
 To see more information about your shell environment, these commands might be
-helpful::
+helpful:
+
+.. code-block:: bash
 
     $ python -m site
     $ python -m gammapy info

@@ -27,5 +27,12 @@ Safe data range definition
 The definition of a safe data range is done using the `SafeMaskMaker` or manually.
 
 
-.. minigallery:: gammapy.makers.MapDatasetMaker gammapy.makers.SpectrumDatasetMaker
+Using gammapy.makers
+--------------------
+
+.. minigallery:: gammapy.makers.MapDatasetMaker
+    :add-heading:
+
+
+.. minigallery:: gammapy.makers.SpectrumDatasetMaker
     :add-heading:
