@@ -9,7 +9,6 @@ repos:
     rev: 22.6.0
     hooks:
       - id: black
-        args: ["gammapy/", "examples/", "docs/", '--exclude="extern/|docs/_static|docs/_build"', "--line-length=88"]
   # https://black.readthedocs.io/en/stable/guides/using_black_with_other_tools.html?highlight=other%20tools#flake8
   - repo: https://github.com/PyCQA/flake8
     rev: 4.0.1
