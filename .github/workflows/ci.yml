@@ -14,7 +14,7 @@ jobs:
     env:
       PYTEST_ADDOPTS: --color=yes -n auto --dist=loadscope
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
@@ -43,7 +43,7 @@ jobs:
             tox_env: 'codestyle'
           - os: ubuntu-latest
             python: '3.8'
-            tox_env: 'py38-test-alldeps-astropylts-numpy119'
+            tox_env: 'py38-test-alldeps-astropylts-numpy120'
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
