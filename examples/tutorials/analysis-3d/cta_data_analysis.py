@@ -2,7 +2,7 @@
 Basic image exploration and fitting
 ===================================
 
-Detect sources, produce a sky image and a spectrum using the reflected regions background estimation.
+Detect sources, produce a sky image and a spectrum using CTA 1DC data.
 
 Introduction
 ------------

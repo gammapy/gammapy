@@ -24,7 +24,7 @@ We will cover the following topics:
       classes:
 
       -  ``~gammapy.maps.WcsNDMap``
-      -  `astropy.coordinates.SkyCoord <http://astropy.readthedocs.io/en/latest/coordinates/index.html>`__
+      -  `astropy.coordinates.SkyCoord <http://astropy.readthedocs.io/en/latest/coordinates/index.html>`__ 
       -  `numpy.ndarray <https://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.html>`__
 
 -  **Event lists**
