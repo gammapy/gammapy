@@ -59,6 +59,7 @@ And the following spectral model classes:
 #
 
 from astropy import units as u
+
 # %matplotlib inline
 import matplotlib.pyplot as plt
 from gammapy.catalog import CATALOG_REGISTRY

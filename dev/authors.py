@@ -1,9 +1,9 @@
 """Utility script to work with the CITATION.cff file"""
 import logging
 import subprocess
+from pathlib import Path
 import click
 from ruamel.yaml import YAML
-from pathlib import Path
 
 log = logging.getLogger(__name__)
 

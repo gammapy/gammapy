@@ -51,8 +51,7 @@ We will work with the following functions and classes:
 
 import numpy as np
 import astropy.units as u
-from astropy.coordinates import SkyCoord
-import matplotlib.cm as cm
+
 # %matplotlib inline
 import matplotlib.pyplot as plt
 from gammapy.datasets import MapDataset
@@ -61,6 +60,7 @@ from gammapy.estimators.utils import find_peaks
 from gammapy.irf import EDispKernelMap, PSFMap
 from gammapy.maps import Map
 from gammapy.modeling.models import PointSpatialModel, PowerLawSpectralModel, SkyModel
+
 ######################################################################
 # Check setup
 # -----------

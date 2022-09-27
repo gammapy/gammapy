@@ -32,7 +32,8 @@ We will be using the following Gammapy class:
 
 import numpy as np
 import astropy.units as u
-from astropy.coordinates import Angle, SkyCoord
+from astropy.coordinates import SkyCoord
+
 # %matplotlib inline
 import matplotlib.pyplot as plt
 from gammapy.data import Observation, observatory_locations
@@ -41,6 +42,7 @@ from gammapy.estimators import SensitivityEstimator
 from gammapy.irf import load_cta_irfs
 from gammapy.makers import SpectrumDatasetMaker
 from gammapy.maps import MapAxis, RegionGeom
+
 ######################################################################
 # Check setup
 # -----------

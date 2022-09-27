@@ -56,6 +56,7 @@ import numpy as np
 import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
+
 # %matplotlib inline
 import matplotlib.pyplot as plt
 from gammapy.data import Observation, observatory_locations
@@ -65,6 +66,7 @@ from gammapy.makers import SpectrumDatasetMaker
 from gammapy.maps import MapAxis, RegionGeom
 from gammapy.modeling import Fit
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
+
 ######################################################################
 # Check setup
 # -----------

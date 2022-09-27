@@ -64,6 +64,7 @@ As usual, we’ll start with some general imports…
 
 import logging
 import numpy as np
+
 # %matplotlib inline
 import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
@@ -82,6 +83,7 @@ from gammapy.makers import (
 )
 from gammapy.maps import MapAxis, RegionGeom
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
+
 ######################################################################
 # Check setup
 # -----------

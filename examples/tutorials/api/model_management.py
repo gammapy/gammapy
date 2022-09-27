@@ -60,6 +60,7 @@ Setup
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
+
 # %matplotlib inline
 import matplotlib.pyplot as plt
 from gammapy.datasets import Datasets, MapDataset
@@ -72,6 +73,7 @@ from gammapy.modeling.models import (
     TemplateSpatialModel,
     create_fermi_isotropic_diffuse_model,
 )
+
 ######################################################################
 # Check setup
 # -----------
@@ -217,7 +219,7 @@ print(datasets)
 # notebook
 #
 
-#%%time
+# %%time
 # fit2 = Fit()
 # result2 = fit2.run(datasets)
 # print(result2.success)

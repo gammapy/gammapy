@@ -89,6 +89,7 @@ As usual, we’ll start with some general imports…
 import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
+
 # %matplotlib inline
 import matplotlib.pyplot as plt
 from gammapy.data import DataStore
@@ -101,6 +102,7 @@ from gammapy.makers import (
 from gammapy.maps import MapAxis, RegionGeom
 from gammapy.modeling import Fit
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
+
 ######################################################################
 # Check setup
 # -----------

@@ -42,6 +42,7 @@ from gammapy.makers import PhaseBackgroundMaker, SafeMaskMaker, SpectrumDatasetM
 from gammapy.maps import Map, MapAxis, RegionGeom, WcsGeom
 from gammapy.modeling import Fit
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
+
 ######################################################################
 # Check setup
 # -----------

@@ -107,6 +107,7 @@ from gammapy.modeling.models import (
     SkyModel,
     TemplateSpatialModel,
 )
+
 ######################################################################
 # Check setup
 # -----------

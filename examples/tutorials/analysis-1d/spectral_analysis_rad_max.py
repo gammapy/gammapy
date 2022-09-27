@@ -111,6 +111,7 @@ a 1D likelihood fit, exactly as illustrated in the previous example.
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import PointSkyRegion
+
 # %matplotlib inline
 import matplotlib.pyplot as plt
 from gammapy.data import DataStore
@@ -128,6 +129,7 @@ from gammapy.modeling.models import (
     SkyModel,
     create_crab_spectral_model,
 )
+
 ######################################################################
 # Check setup
 # -----------

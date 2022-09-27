@@ -30,18 +30,18 @@ import os
 
 # Get configuration information from setup.cfg
 from configparser import ConfigParser
-
 from pkg_resources import get_distribution
 
 # Load all the global Astropy configuration
 from sphinx_astropy.conf import *
 
 # Sphinx-gallery config
-from sphinx_gallery.sorting import FileNameSortKey, ExplicitOrder
+from sphinx_gallery.sorting import ExplicitOrder, FileNameSortKey
 
 # Load utils docs functions
-from gammapy.utils.docs import gammapy_sphinx_ext_activate, SubstitutionCodeBlock
+from gammapy.utils.docs import SubstitutionCodeBlock, gammapy_sphinx_ext_activate
 
+# flake8: noqa
 
 # Add our custom directives to Sphinx
 def setup(app):

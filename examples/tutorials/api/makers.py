@@ -32,6 +32,7 @@ from gammapy.makers import (
     SpectrumDatasetMaker,
 )
 from gammapy.maps import MapAxis, RegionGeom, WcsGeom
+
 ######################################################################
 # Check setup
 # -----------

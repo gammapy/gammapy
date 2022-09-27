@@ -68,6 +68,7 @@ import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
+
 # %matplotlib inline
 import matplotlib.pyplot as plt
 
@@ -90,6 +91,7 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
 )
+
 ######################################################################
 # Check setup
 # -----------
@@ -260,7 +262,7 @@ ax = lc_1d.plot(marker="o", axis_name="time", sed_type="flux")
 # we need to obtain a set of `FluxPointDatasets`, one for each time bin
 #
 
-## Create the datasets by iterating over the returned lightcurve
+# Create the datasets by iterating over the returned lightcurve
 datasets = Datasets()
 
 for idx, fp in enumerate(lc_1d.iter_by_axis(axis_name="time")):

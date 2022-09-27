@@ -70,12 +70,14 @@ We will cover the following topics:
 
 import astropy.units as u
 from astropy.coordinates import SkyCoord
-# %matplotlib inline
-import matplotlib.pyplot as plt
+
 ######################################################################
 # Check setup
 # -----------
 from gammapy.utils.check import check_tutorials_setup
+
+# %matplotlib inline
+
 
 check_tutorials_setup()
 

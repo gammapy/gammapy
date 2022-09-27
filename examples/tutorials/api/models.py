@@ -9,11 +9,11 @@ related to modeling and fitting data. This includes spectral, spatial
 and temporal model classes, as well as the fit and parameter API.The
 models follow a naming scheme which contains the category as a suffix to
 the class name. An overview of all the available models can be found in
-the `model gallery <../../user-guide/model-gallery/index.rst>`__\ \_.
+the `model gallery <../../user-guide/model-gallery/index.rst>`__.
 
 Note that there are separate tutorials,
-`model_management <model_management.ipynb>`__\ \_ and
-`fitting <fitting.ipynb>`__\ \_ that explains about
+`model_management <model_management.ipynb>`__ and
+`fitting <fitting.ipynb>`__ that explains about
 `~gammapy.modeling`, the Gammapy modeling and fitting framework. You
 have to read that to learn how to work with models in order to analyse
 data.
@@ -31,6 +31,7 @@ import numpy as np
 from astropy import units as u
 import matplotlib.pyplot as plt
 from gammapy.maps import Map, MapAxis, WcsGeom
+
 ######################################################################
 # Check setup
 # -----------
@@ -56,7 +57,7 @@ print(pwl)
 ######################################################################
 # To get a list of all available spectral models you can import and print
 # the spectral model registry or take a look at the `model
-# gallery <../../user-guide/model-gallery/index.rst#spectral-models>`__\ \_:
+# gallery <../../user-guide/model-gallery/index.rst#spectral-models>`__:
 #
 
 from gammapy.modeling.models import SPECTRAL_MODEL_REGISTRY

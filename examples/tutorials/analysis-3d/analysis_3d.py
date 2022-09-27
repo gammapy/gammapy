@@ -20,12 +20,12 @@ import numpy as np
 from scipy.stats import norm
 import astropy.units as u
 from regions import CircleSkyRegion
+
 # %matplotlib inline
 import matplotlib.pyplot as plt
 from gammapy.analysis import Analysis, AnalysisConfig
 from gammapy.datasets import MapDataset
 from gammapy.estimators import ExcessMapEstimator
-from gammapy.maps import Map
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
     ExpCutoffPowerLawSpectralModel,
@@ -34,6 +34,7 @@ from gammapy.modeling.models import (
     PointSpatialModel,
     SkyModel,
 )
+
 ######################################################################
 # Check setup
 # -----------

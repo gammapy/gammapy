@@ -22,7 +22,6 @@ Setup
 
 """
 
-import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
@@ -37,6 +36,7 @@ from gammapy.datasets import (
 from gammapy.estimators import FluxPoints
 from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling.models import FoVBackgroundModel, PowerLawSpectralModel, SkyModel
+
 ######################################################################
 # Check setup
 # -----------

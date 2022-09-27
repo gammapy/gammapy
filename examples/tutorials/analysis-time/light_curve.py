@@ -56,6 +56,7 @@ import logging
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
+
 # %matplotlib inline
 import matplotlib.pyplot as plt
 from gammapy.analysis import Analysis, AnalysisConfig
