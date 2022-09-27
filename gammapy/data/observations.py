@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import collections.abc
 import copy
+import inspect
 import logging
 from itertools import zip_longest
-import inspect
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
@@ -507,7 +507,7 @@ class Observation:
 
     def copy(self, in_memory=False, **kwargs):
         """Copy observation
-        
+
         Overwriting arguments requires the 'in_memory` argument to be true.
 
         Parameters
@@ -516,7 +516,7 @@ class Observation:
             Copy observation in memory.
         **kwargs : dict
             Keyword arguments passed to `Observation`
-        
+
         Examples
         --------
 
@@ -535,21 +535,22 @@ class Observation:
         Returns
         -------
         obs : `Observation`
-            Copied observation    
+            Copied observation
         """
         if in_memory:
             argnames = inspect.getfullargspec(self.__init__).args
             argnames.remove("self")
-            
+
             for name in argnames:
                 value = getattr(self, name)
                 kwargs.setdefault(name, copy.deepcopy(value))
             return self.__class__(**kwargs)
-        
+
         if kwargs:
             raise ValueError("Overwriting arguments requires to set 'in_memory=True'")
-        
+
         return copy.deepcopy(self)
+
 
 class Observations(collections.abc.MutableSequence):
     """Container class that holds a list of observations.

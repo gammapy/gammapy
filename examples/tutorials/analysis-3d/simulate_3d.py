@@ -53,32 +53,31 @@ the dataset and fake the count data.
 ######################################################################
 # Imports and versions
 # --------------------
-# 
+#
 
 # %matplotlib inline
 
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
-from gammapy.irf import load_cta_irfs
-from gammapy.maps import WcsGeom, MapAxis
-from gammapy.modeling.models import (
-    PowerLawSpectralModel,
-    GaussianSpatialModel,
-    SkyModel,
-    Models,
-    FoVBackgroundModel,
-)
-from gammapy.makers import MapDatasetMaker, SafeMaskMaker
-from gammapy.modeling import Fit
 from gammapy.data import Observation, observatory_locations
 from gammapy.datasets import MapDataset
-
+from gammapy.irf import load_cta_irfs
+from gammapy.makers import MapDatasetMaker, SafeMaskMaker
+from gammapy.maps import MapAxis, WcsGeom
+from gammapy.modeling import Fit
+from gammapy.modeling.models import (
+    FoVBackgroundModel,
+    GaussianSpatialModel,
+    Models,
+    PowerLawSpectralModel,
+    SkyModel,
+)
 
 ######################################################################
 # Simulation
 # ----------
-# 
+#
 
 
 ######################################################################
@@ -86,7 +85,7 @@ from gammapy.datasets import MapDataset
 # for dedictaed CTA simulations, you can simply use
 # ``Observation.from_caldb()` <>`__ without having to externally load
 # the IRFs
-# 
+#
 
 # Loading IRFs
 irfs = load_cta_irfs(
@@ -113,9 +112,7 @@ energy_true = MapAxis.from_edges(
     np.logspace(-1.5, 1.5, 30), unit="TeV", name="energy_true", interp="log"
 )
 
-empty = MapDataset.create(
-    geom, name="dataset-simu", energy_axis_true=energy_true
-)
+empty = MapDataset.create(geom, name="dataset-simu", energy_axis_true=energy_true)
 
 # Define sky model to used simulate the data.
 # Here we use a Gaussian spatial model and a Power Law spectral model.
@@ -143,7 +140,7 @@ print(models)
 # for the given model, and Poission fluctuate it using `fake()` to make
 # a simulated counts maps. Keep in mind that it is important to specify
 # the `selection` of the maps that you want to produce
-# 
+#
 
 # Create an in-memory observation
 location = observatory_locations["cta_south"]
@@ -172,23 +169,21 @@ print(dataset)
 # Now use this dataset as you would in all standard analysis. You can plot
 # the maps, or proceed with your custom analysis. In the next section, we
 # show the standard 3D fitting as in `analysis_3d <analysis_3d.ipynb>`__.
-# 
+#
 
 # To plot, eg, counts:
-dataset.counts.smooth(0.05 * u.deg).plot_interactive(
-    add_cbar=True, stretch="linear"
-)
+dataset.counts.smooth(0.05 * u.deg).plot_interactive(add_cbar=True, stretch="linear")
 
 
 ######################################################################
 # Fit
 # ---
-# 
+#
 # In this section, we do a usual 3D fit with the same model used to
 # simulated the data and see the stability of the simulations. Often, it
 # is useful to simulate many such datasets and look at the distribution of
 # the reconstructed parameters.
-# 
+#
 
 models_fit = models.copy()
 
@@ -208,7 +203,7 @@ dataset.plot_residuals_spatial(method="diff/sqrt(model)", vmin=-0.5, vmax=0.5)
 
 ######################################################################
 # Compare the injected and fitted models:
-# 
+#
 
 print(
     "True model: \n",
@@ -220,6 +215,6 @@ print(
 
 ######################################################################
 # Get the errors on the fitted parameters from the parameter table
-# 
+#
 
 result.parameters.to_table()

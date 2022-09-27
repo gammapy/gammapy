@@ -73,6 +73,7 @@ Steps for the day of the release:
    * Mention the release on the front page and on the news page.
    * In the ``download/install`` folder, copy ``gammapy-0.13-environment.yml`` file as ``gammapy-0.14-environment.yml``.
    * Adapt the dependency conda env name and versions as required in this file.
+   * Adapt the ``download/index.json`` file to include the new version.
 
 #. Finally:
 

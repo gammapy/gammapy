@@ -187,6 +187,68 @@ your ``$GAMMAPY_DATA`` to the local path you have chosen.
     gammapy download datasets --out GAMMAPY_DATA
     export GAMMAPY_DATA=$PWD/GAMMAPY_DATA
 
+Running tests & building Documentation
+======================================
+To run tests and build documentation we use tool `tox <https://tox.wiki/en/latest/>`__.
+It is a virtual environment management tool which allows you to test Gammapy locally
+in mutltiple test environments with different versions of Python and our dependencies.
+It is also used to build the documentation and check the codestyle in a specific environment.
+The same setup based on `tox` is used in our CI build.
+
+Once you have created and activated the `gammapy-dev` environment, made some modification
+to the code, you should run the tests:
+
+.. code-block:: bash
+
+    tox -e test
+
+This will execute the tests in the standard `test`` environment. If you would like
+to test with a different environment you can use:
+
+.. code-block:: bash
+
+    tox -e py310-test-numpy121
+
+Which will test the code with Python 3.10 and numpy 1.21. All available pre-defined
+environments can be listed using:
+
+.. code-block:: bash
+
+    tox --listenvs
+
+However for most contributions testing with the standard `tox -e test` command is sufficient.
+Additional arguments for `pytest` can be passed after `--`:
+
+.. code-block:: bash
+
+    tox -e test -- -n auto
+
+Of course you can always use `pytest <https://docs.pytest.org/en/7.1.x/>`__ directly to 
+run tests, e.g. to run tests in a specific sub-package:
+
+.. code-block:: bash
+
+    pytest gammapy/maps
+
+To build the documentation locally you can use:
+
+.. code-block:: bash
+
+    tox -e build_docs
+
+And use `make docs-show` to open a browser and preview the result.
+
+The codestyle can be checked using the command:
+
+.. code-block:: bash
+
+    tox -e codestyle
+
+Which will run the tool `flak8` to check for code style issues.
+
+
+
+
 ..
     * run tests
     * build docs

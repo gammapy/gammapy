@@ -31,9 +31,14 @@ class TestEventListBase:
         assert self.events.table.meta == read_again.table.meta
         assert (self.events.table == read_again.table).all()
 
-        dummy_events = EventList(Table())
+        table = Table()
+        table["RA"] = [1, 2, 3]
+        table["DEC"] = [3, 2, 1]
+
+        dummy_events = EventList(table.copy())
         dummy_events.write("test.fits", overwrite=True)
         read_again = EventList.read("test.fits")
+
         assert read_again.table.meta["EXTNAME"] == "EVENTS"
         assert read_again.table.meta["HDUCLASS"] == "GADF"
         assert read_again.table.meta["HDUCLAS1"] == "EVENTS"
@@ -58,18 +63,20 @@ class TestEventListBase:
         with pytest.raises(ValueError):
             self.events.write("test.fits", overwrite=True, format="something")
         # test that it won't work if the basic headers are wrong
+
         with pytest.raises(ValueError):
-            dummy_events = EventList(Table())
+            dummy_events = EventList(table.copy())
             dummy_events.table.meta["HDUCLAS1"] = "response"
             dummy_events.write("test.fits", overwrite=True)
+
         with pytest.raises(ValueError):
-            dummy_events = EventList(Table())
+            dummy_events = EventList(table.copy())
             dummy_events.table.meta["HDUCLASS"] = "ogip"
             dummy_events.write("test.fits", overwrite=True)
 
         # test that it we also get the error when the only the case is wrong
         with pytest.raises(ValueError):
-            dummy_events = EventList(Table())
+            dummy_events = EventList(table.copy())
             dummy_events.table.meta["HDUCLASS"] = "gadf"
             dummy_events.table.meta["HDUCLAS1"] = "events"
             dummy_events.write("test.fits", overwrite=True)
@@ -141,14 +148,14 @@ class TestEventListHESS:
         assert len(stacked_list.table) == 11243 * 2
 
     def test_stack(self):
-        other = self.events
-        self.events.stack(other)
-        assert len(self.events.table) == 11243 * 2
+        events, other = self.events.copy(), self.events.copy()
+        events.stack(other)
+        assert len(events.table) == 11243 * 2
 
     def test_offset_selection(self):
         offset_range = u.Quantity([0.5, 1.0] * u.deg)
         new_list = self.events.select_offset(offset_range)
-        assert len(new_list.table) == 1820 * 2
+        assert len(new_list.table) == 1820
 
     def test_plot_time(self):
         with mpl_plot_check():

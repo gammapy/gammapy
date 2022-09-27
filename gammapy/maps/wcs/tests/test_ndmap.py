@@ -420,13 +420,18 @@ def test_wcsndmap_upsample(npix, binsz, frame, proj, skydir, axes):
 
 def test_wcsndmap_upsample_axis():
     axis = MapAxis.from_edges([1, 2, 3, 4], name="test")
-    geom = WcsGeom.create(npix=(4, 4), axes=[axis])
-    m = WcsNDMap(geom, unit="m2")
-    m.data += 1
+    geom = WcsGeom.create(npix=(2, 2), axes=[axis])
+    test_nodes = np.arange(3)
+    test_data = test_nodes.reshape(3, 1, 1)
+    spatial_data = np.zeros((2, 2))
+    data = spatial_data + 0.5 * test_data
+    m = WcsNDMap(geom, unit="m2", data=data)
 
     m2 = m.upsample(2, preserve_counts=True, axis_name="test")
-    assert m2.data.shape == (6, 4, 4)
+    assert m2.data.shape == (6, 2, 2)
     assert_allclose(m.data.sum(), m2.data.sum())
+
+    assert_allclose(m2.data[:, 0, 0], [0, 0, 0.25, 0.25, 0.5, 0.5])
 
 
 def test_wcsndmap_downsample_axis():
@@ -833,7 +838,8 @@ def test_binary_erode():
     assert_allclose(mask.data.sum(), 4832)
 
     mask = mask.binary_erode(width=0.2 * u.deg, kernel="box", use_fft=True)
-    # Due to fft noise the result is not exact here. See https://github.com/gammapy/gammapy/issues/3662
+    # Due to fft noise the result is not exact here.
+    # See https://github.com/gammapy/gammapy/issues/3662
     assert_allclose(mask.data.sum(), 3372, atol=20)
 
 
@@ -845,7 +851,8 @@ def test_binary_dilate():
     assert_allclose(mask.data.sum(), 8048)
 
     mask = mask.binary_dilate(width=(10, 10), kernel="box")
-    # Due to fft noise the result is not exact here. See https://github.com/gammapy/gammapy/issues/3662
+    # Due to fft noise the result is not exact here.
+    # See https://github.com/gammapy/gammapy/issues/3662
     assert_allclose(mask.data.sum(), 9203, atol=20)
 
 

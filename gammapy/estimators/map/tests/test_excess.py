@@ -108,8 +108,9 @@ def test_compute_lima_on_off_image():
     desired = significance.crop((11, 11)).data
 
     # Set boundary to NaN in reference image
-    # The absolute tolerance is low because the method used here is slightly different from the one used in HGPS
-    # n_off is convolved as well to ensure the method applies to true ON-OFF datasets
+    # The absolute tolerance is low because the method used here is slightly
+    # different from the one used in HGPS n_off is convolved as well to ensure
+    # the method applies to true ON-OFF datasets
     assert_allclose(actual, desired, atol=0.2, rtol=1e-5)
 
     actual = np.nan_to_num(results["npred_background"].crop((11, 11)).data)
@@ -119,8 +120,9 @@ def test_compute_lima_on_off_image():
     desired = background_corr.crop((11, 11)).data
 
     # Set boundary to NaN in reference image
-    # The absolute tolerance is low because the method used here is slightly different from the one used in HGPS
-    # n_off is convolved as well to ensure the method applies to true ON-OFF datasets
+    # The absolute tolerance is low because the method used here is slightly different
+    # from the one used in HGPS n_off is convolved as well to ensure the method applies
+    # to true ON-OFF datasets
     assert_allclose(actual, desired, atol=0.2, rtol=1e-5)
 
 

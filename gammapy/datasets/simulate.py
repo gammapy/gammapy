@@ -225,7 +225,7 @@ class MapDatasetEventSampler:
         meta : dict
             Meta dictionary.
         """
-        # See: https://gamma-astro-data-formats.readthedocs.io/en/latest/events/events.html#mandatory-header-keywords
+        # See: https://gamma-astro-data-formats.readthedocs.io/en/latest/events/events.html#mandatory-header-keywords  # noqa: E501
         meta = {}
 
         meta["HDUCLAS1"] = "EVENTS"
@@ -267,13 +267,13 @@ class MapDatasetEventSampler:
         meta["DSUNI2"] = "TeV"
         meta[
             "DSVAL2"
-        ] = f'{dataset._geom.axes["energy"].edges.min().value}:{dataset._geom.axes["energy"].edges.max().value}'
+        ] = f'{dataset._geom.axes["energy"].edges.min().value}:{dataset._geom.axes["energy"].edges.max().value}'  # noqa: E501
         meta["DSTYP3"] = "POS(RA,DEC)     "
 
         offset_max = np.max(dataset._geom.width).to_value("deg")
         meta[
             "DSVAL3"
-        ] = f"CIRCLE({observation.pointing_radec.ra.deg},{observation.pointing_radec.dec.deg},{offset_max})"
+        ] = f"CIRCLE({observation.pointing_radec.ra.deg},{observation.pointing_radec.dec.deg},{offset_max})"  # noqa: E501
         meta["DSUNI3"] = "deg             "
         meta["NDSKEYS"] = " 3 "
 

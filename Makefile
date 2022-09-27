@@ -28,7 +28,6 @@ help:
 	@echo '     flake8             Run flake8 static code analysis'
 	@echo '     pylint             Run pylint static code analysis'
 	@echo '     pydocstyle         Run docstring checks'
-	@echo '     dataset-index      Create download dataset index json file'
 	@echo ''
 	@echo ' Note that most things are done via `python setup.py`, we only use'
 	@echo ' make for things that are not trivial to execute via `setup.py`.'
@@ -62,13 +61,13 @@ help:
 	@echo '     make clean         Remove auto-generated files'
 	@echo '     pytest             Run Gammapy tests (give folder or filename and options)'
 	@echo '     make test-cov      Run all tests and measure coverage'
-	@echo '     make docs          Build documentation locally'
+	@echo '     make docs-sphinx   Build documentation locally'
 	@echo ''
 
 clean:
 	rm -rf build dist docs/_build docs/api temp/ docs/_static/notebooks \
 	  htmlcov MANIFEST v gammapy.egg-info .eggs .coverage .cache .pytest_cache \
-	  docs/modeling/gallery
+	  docs/modeling/gallery docs/tutorials
 	find . -name ".ipynb_checkpoints" -prune -exec rm -rf {} \;
 	find . -name "*.pyc" -exec rm {} \;
 	find . -name "*.reg" -exec rm {} \;
@@ -87,10 +86,10 @@ test-cov:
 
 docs-sphinx:
 	cd docs && python -m sphinx . _build/html -b html -j auto
+	cp docs/binder/runtime.txt docs/_build/html/binder
 
 docs-show:
 	python docs/serve.py
-
 
 trailing-spaces:
 	find $(PROJECT) examples docs -name "*.py" -exec perl -pi -e 's/[ \t]*$$//' {} \;
@@ -132,9 +131,6 @@ pydocstyle:
 	--match-dir='^(?!extern).*' \
 	--match='(?!test_).*\.py' \
 	--add-ignore=D100,D102,D103,D104,D105,D200,D202,D205,D400,D401,D403,D410
-
-dataset-index:
-	python dev/datasets/make_dataset_index.py dataset-index
 
 # Note: codespell will pick its options from setup.cfg
 codespell:

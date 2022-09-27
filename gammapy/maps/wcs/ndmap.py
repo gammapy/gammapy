@@ -297,7 +297,7 @@ class WcsNDMap(WcsMap):
             ) + idx[2:]
         else:
             pix = list(idx)
-            idx_ax = self.geom.axes.index(axis_name)
+            idx_ax = self.geom.axes_names.index(axis_name)
             pix[idx_ax] = (pix[idx_ax] - 0.5 * (factor - 1)) / factor
 
         if preserve_counts:
@@ -716,7 +716,8 @@ class WcsNDMap(WcsMap):
         if len(shape_axes_kernel) > 0:
             if not geom.shape_axes == shape_axes_kernel:
                 raise ValueError(
-                    f"Incompatible shape between data {geom.shape_axes} and kernel {shape_axes_kernel}"
+                    f"Incompatible shape between data {geom.shape_axes}"
+                    " and kernel {shape_axes_kernel}"
                 )
 
         if self.geom.is_image and kernel.ndim == 3:

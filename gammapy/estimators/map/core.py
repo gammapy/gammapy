@@ -131,8 +131,8 @@ class FluxMaps:
         * sqrt_ts : optional, the square root of the TS, when relevant.
         * success : optional, a boolean tagging the validity of the estimation
     reference_model : `~gammapy.modeling.models.SkyModel`, optional
-        the reference model to use for conversions.
-        If None, a model consisting of a point source with a power law spectrum of index 2 is assumed.
+        The reference model to use for conversions. If None, a model consisting
+        of a point source with a power law spectrum of index 2 is assumed.
     meta : dict, optional
         Dict of metadata.
     gti : `~gammapy.data.GTI`, optional

@@ -3,9 +3,8 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-from astropy.table import Table
 from astropy.utils.data import get_pkg_data_filename
-from gammapy.maps import Map, MapAxis
+from gammapy.maps import Map, MapAxis, RegionNDMap
 from gammapy.modeling.models import (
     MODEL_REGISTRY,
     ConstantTemporalModel,
@@ -29,7 +28,7 @@ from gammapy.utils.testing import requires_data
 @pytest.fixture(scope="session")
 @requires_data()
 def models():
-    filename = get_pkg_data_filename("data/examples.yaml")
+    filename = get_pkg_data_filename("./data/examples.yaml")
     models_data = read_yaml(filename)
     models = Models.from_dict(models_data)
     return models
@@ -254,7 +253,8 @@ def make_all_models():
     yield Model.create("LinearTemporalModel", "temporal")
     yield Model.create("PowerLawTemporalModel", "temporal")
     yield Model.create("SineTemporalModel", "temporal")
-    yield Model.create("LightCurveTemplateTemporalModel", "temporal", Table())
+    m = RegionNDMap.create(region=None)
+    yield Model.create("LightCurveTemplateTemporalModel", "temporal", m)
     yield Model.create(
         "SkyModel",
         spatial_model=Model.create("ConstantSpatialModel", "spatial"),

@@ -35,8 +35,10 @@ Available observatories (alphabetical order):
 - ``milagro`` for MILAGRO, see
   `Wikipedia <https://en.wikipedia.org/wiki/Milagro_(experiment)>`__)
 - ``veritas`` for VERITAS, see
-  `Website <https://veritas.sao.arizona.edu/>`__ and `Wikipedia <https://en.wikipedia.org/wiki/VERITAS>`__
-- ``whipple`` for WHIPPLE, see `Wikipedia <https://en.wikipedia.org/wiki/Fred_Lawrence_Whipple_Observatory>`__
+  `Website <https://veritas.sao.arizona.edu/>`__ and
+  `Wikipedia <https://en.wikipedia.org/wiki/VERITAS>`__
+- ``whipple`` for WHIPPLE, see
+  `Wikipedia <https://en.wikipedia.org/wiki/Fred_Lawrence_Whipple_Observatory>`__
 
 Examples
 --------

@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import collections
+import copy
 import logging
 import numpy as np
 from astropy import units as u
@@ -302,7 +303,8 @@ class EventList:
 
         >>> from gammapy.data import EventList
         >>> import numpy as np
-        >>> events = EventList.read("$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_110380.fits")
+        >>> filename = "$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_110380.fits"
+        >>> events = EventList.read(filename)
         >>> #Use a boolean mask as ``row_specifier``:
         >>> mask = events.table['MC_ID'] == 1
         >>> events2 = events.select_row_subset(mask)
@@ -334,7 +336,8 @@ class EventList:
         --------
         >>> from astropy import units as u
         >>> from gammapy.data import EventList
-        >>> event_list = EventList.read('$GAMMAPY_DATA/fermi_3fhl/fermi_3fhl_events_selected.fits.gz')
+        >>> filename = "$GAMMAPY_DATA/fermi_3fhl/fermi_3fhl_events_selected.fits.gz"
+        >>> event_list = EventList.read(filename)
         >>> energy_range =[1, 20] * u.TeV
         >>> event_list = event_list.select_energy(energy_range=energy_range)
         """
@@ -402,7 +405,8 @@ class EventList:
         --------
         >>> from astropy import units as u
         >>> from gammapy.data import EventList
-        >>> event_list = EventList.read('$GAMMAPY_DATA/fermi_3fhl/fermi_3fhl_events_selected.fits.gz')
+        >>> filename = "$GAMMAPY_DATA/fermi_3fhl/fermi_3fhl_events_selected.fits.gz"
+        >>> event_list = EventList.read(filename)
         >>> zd = (0, 30) * u.deg
         >>> event_list = event_list.select_parameter(parameter='ZENITH_ANGLE', band=zd)
         >>> print(len(event_list.table))
@@ -523,13 +527,15 @@ class EventList:
 
         >>> from gammapy.data import EventList
         >>> from astropy import units as u
-        >>> events = EventList.read('$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz')
+        >>> filename = "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz"
+        >>> events = EventList.read(filename)
 
         >>> #Plot the offset^2 distribution wrt. the observation pointing position
         >>> #(this is a commonly used plot to check the background spatial distribution):
         >>> events.plot_offset2_distribution() # doctest: +SKIP
-        Plot the offset^2 distribution wrt. the Crab pulsar position
-        (this is commonly used to check both the gamma-ray signal and the background spatial distribution):
+        Plot the offset^2 distribution wrt. the Crab pulsar position (this is
+        commonly used to check both the gamma-ray signal and the background
+        spatial distribution):
 
         >>> import numpy as np
         >>> from astropy.coordinates import SkyCoord
@@ -537,8 +543,8 @@ class EventList:
         >>> bins = np.linspace(start=0, stop=0.3 ** 2, num=30) * u.deg ** 2
         >>> events.plot_offset2_distribution(center=center, bins=bins) # doctest: +SKIP
 
-        Note how we passed the ``bins`` option of `matplotlib.pyplot.hist` to control the histogram binning,
-        in this case 30 bins ranging from 0 to (0.3 deg)^2.
+        Note how we passed the ``bins`` option of `matplotlib.pyplot.hist` to control
+        the histogram binning, in this case 30 bins ranging from 0 to (0.3 deg)^2.
         """
         ax = plt.gca() if ax is None else ax
 
@@ -656,7 +662,8 @@ class EventList:
         >>> from gammapy.maps import WcsGeom, Map
         >>> geom = WcsGeom.create(skydir=(0,0), width=(4, 4), frame="galactic")
         >>> mask = geom.region_mask("galactic;circle(0, 0, 0.5)")
-        >>> events = EventList.read("$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_110380.fits")
+        >>> filename = "$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_110380.fits"
+        >>> events = EventList.read(filename)
         >>> masked_event = events.select_mask(mask)
         >>> len(masked_event.table)
         5594
@@ -768,7 +775,8 @@ class EventList:
         --------
         >>> from gammapy.data import EventList
         >>> import astropy.units as u
-        >>> events = EventList.read("$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_110380.fits")
+        >>> filename = "$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_110380.fits"
+        >>> events = EventList.read(filename)
         >>> selected_events = events.select_offset([0.3, 0.9]*u.deg)
         >>> len(selected_events.table)
         12688
@@ -906,6 +914,10 @@ class EventList:
         m = self._counts_image(allsky=allsky)
         m.plot(ax=ax, stretch="sqrt")
 
+    def copy(self):
+        """Copy event list (`EventList`)"""
+        return copy.deepcopy(self)
+
 
 class EventListChecker(Checker):
     """Event list checker.
@@ -928,7 +940,7 @@ class EventListChecker(Checker):
 
     accuracy = {"angle": Angle("1 arcsec"), "time": u.Quantity(1, "microsecond")}
 
-    # https://gamma-astro-data-formats.readthedocs.io/en/latest/events/events.html#mandatory-header-keywords
+    # https://gamma-astro-data-formats.readthedocs.io/en/latest/events/events.html#mandatory-header-keywords  # noqa: E501
     meta_required = [
         "HDUCLASS",
         "HDUDOC",
@@ -952,13 +964,13 @@ class EventListChecker(Checker):
         "TELESCOP",
         "INSTRUME",
         "CREATOR",
-        # https://gamma-astro-data-formats.readthedocs.io/en/latest/general/time.html#time-formats
+        # https://gamma-astro-data-formats.readthedocs.io/en/latest/general/time.html#time-formats  # noqa: E501
         "MJDREFI",
         "MJDREFF",
         "TIMEUNIT",
         "TIMESYS",
         "TIMEREF",
-        # https://gamma-astro-data-formats.readthedocs.io/en/latest/general/coordinates.html#coords-location
+        # https://gamma-astro-data-formats.readthedocs.io/en/latest/general/coordinates.html#coords-location  # noqa: E501
         "GEOLON",
         "GEOLAT",
         "ALTITUDE",
