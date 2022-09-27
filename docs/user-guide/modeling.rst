@@ -46,6 +46,10 @@ Custom models
 Gammapy provides an easy interface to
 `create your own custom models <../tutorials/api/models.rst#Implementing-a-custom-model>`__
 
+
+Using gammapy.modeling
+----------------------
+
 .. minigallery:: gammapy.modeling.Fit
     :add-heading:
 

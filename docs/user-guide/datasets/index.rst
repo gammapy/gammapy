@@ -236,6 +236,13 @@ typically errors, upper limits, etc. It also contains a reference model,
 serialised as a `~gammapy.modeling.models.TemplateSpectralModel`.
 
 
-.. minigallery:: gammapy.datasets.MapDataset gammapy.datasets.SpectrumDatasetOnOff
+Using gammapy.datasets
+----------------------
+
+.. minigallery:: gammapy.datasets.MapDataset
+    :add-heading:
+
+
+.. minigallery:: gammapy.datasets.SpectrumDatasetOnOff
     :add-heading:
 

@@ -1,7 +1,5 @@
 .. _maps:
 
-.. _maps:
-
 Sky maps (DL4)
 ==============
 
@@ -9,13 +7,17 @@ Sky maps (DL4)
 at least two spatial dimensions representing coordinates on a sphere (e.g. an
 image in celestial coordinates).  These classes support an arbitrary number of
 non-spatial dimensions and can represent images (2D), cubes (3D), or hypercubes
-(4+D).  Two pixelization schemes are supported:
+(4+D).  Multiple pixelization schemes are supported:
 
 * WCS : Projection onto a 2D cartesian grid following the conventions
   of the World Coordinate System (WCS).  Pixels are square in projected
   coordinates and as such are not equal area in spherical coordinates.
 * HEALPix : Hierarchical Equal Area Iso Latitude pixelation of the
   sphere. Pixels are equal area but have irregular shapes.
+  Documentation specific to HEALPix-based maps is provided in :doc:`../maps/hpxmap`.
+* Region : A single spatial pixel with arbitrary shape defined by a region on the sky.
+  Documentation specific to region-based maps is provided in :doc:`../maps/regionmap`.
+
 
 `gammapy.maps` is organized around two data structures: *geometry* classes
 inheriting from `~Geom` and *map* classes inheriting from `~Map`. A geometry
@@ -25,8 +27,6 @@ as well as a data array containing map values. Where possible it is recommended
 to use the abstract `~Map` interface for accessing or updating the contents of a
 map as this allows algorithms to be used interchangeably with different map
 representations. The following reviews methods of the abstract map interface.
-Documentation specific to WCS- and HEALPix-based maps is provided in :doc:`../maps/hpxmap`.
-Documentation specific to region-based maps is provided in :doc:`../maps/regionmap`.
 
 
 Getting started with maps
@@ -156,8 +156,8 @@ following demonstrates how one can set pixel values:
     m.set_by_coord(([-0.05, -0.05], [0.05, 0.05]), [0.5, 1.5])
     m.fill_by_coord( ([-0.05, -0.05], [0.05, 0.05]), weights=np.array([0.5, 1.5]))
 
-Interface with `~MapCoord` and `~astropy.coordinates.SkyCoord`
---------------------------------------------------------------
+Interface with MapCoord and SkyCoord
+------------------------------------
 
 The ``coord`` accessor methods accept `dict`, `~MapCoord`, and
 `~astropy.coordinates.SkyCoord` arguments in addition to the standard `tuple` of
@@ -288,11 +288,19 @@ However the name of the axis must match the name of the corresponding map
 geometry axis.
 
 
-.. minigallery:: gammapy.maps.WcsNDMap gammapy.maps.RegionNDMap
+Using gammapy.maps
+------------------
+
+.. minigallery:: gammapy.maps.WcsNDMap
     :add-heading:
 
-More detailed documentation on the WCS and HPX classes in ``gammapy.maps`` can be
-found in the following sub-pages:
+
+.. minigallery:: gammapy.maps.RegionNDMap
+    :add-heading:
+
+
+.. minigallery:: gammapy.maps.HpxNDMap
+    :add-heading:
 
 .. toctree::
     :maxdepth: 1
