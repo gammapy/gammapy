@@ -23,8 +23,6 @@ but can also be used to analyse data from existing imaging atmospheric Cherenkov
 (IACTs), such as `H.E.S.S.`_, `MAGIC`_ and `VERITAS`_. It also provides some support
 for `Fermi-LAT`_ and `HAWC`_ data analysis.
 
-Gammapy v0.20 is the release candidate for v1.0 and is considered feature complete.
-
 .. panels::
     :card: + intro-card text-center
     :column: col-lg-6 col-md-6 col-sm-6 col-xs-12 d-flex
