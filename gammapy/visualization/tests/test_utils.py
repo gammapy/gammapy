@@ -1,9 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
-from numpy.testing import assert_allclose
 from astropy.table import Table
 import matplotlib.pyplot as plt
-from matplotlib import colors
 from gammapy.utils.testing import mpl_plot_check
 from gammapy.visualization import (
     plot_contour_line,
@@ -35,11 +33,6 @@ def test_plot_spectrum_datasets_off_regions():
         ax=ax, datasets=[dataset_1, dataset_2, dataset_3]
     )
 
-    actual = colors.to_rgba(ax.patches[0].get_edgecolor())
-    assert_allclose(actual, (0.121569, 0.466667, 0.705882, 1.0), rtol=1e-2)
-
-    actual = colors.to_rgba(ax.patches[2].get_edgecolor())
-    assert_allclose(actual, (1.0, 0.498039, 0.054902, 1.0), rtol=1e-2)
     assert ax.lines[0].get_color() in ["green", "C0"]
 
 
