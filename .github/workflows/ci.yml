@@ -44,6 +44,9 @@ jobs:
           - os: ubuntu-latest
             python: '3.8'
             tox_env: 'py38-test-alldeps-astropylts-numpy120'
+          - os: ubuntu-latest
+            python: '3.8'
+            tox_env: 'oldestdeps'
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
