@@ -115,7 +115,7 @@ Where :math:`F_{Src}` is the integrated flux of the source model,
 :math:`\mathrm{PSF}` the PSF convolution kernel. The corresponding IRFs are extracted
 at the current position of the model component defined by :math:`(l, b)` and assumed
 to be constant across the size of the source. The detailed expressions to compute the
-predicted number of counts from a source and corresponding IRFs are given in :ref:`irf-theory`.
+predicted number of counts from a source and corresponding IRFs are given in :ref:`irf`.
 
 
 .. _stack:
@@ -236,6 +236,13 @@ typically errors, upper limits, etc. It also contains a reference model,
 serialised as a `~gammapy.modeling.models.TemplateSpectralModel`.
 
 
-.. minigallery:: gammapy.datasets.MapDataset gammapy.datasets.SpectrumDatasetOnOff
+Using gammapy.datasets
+----------------------
+
+.. minigallery:: gammapy.datasets.MapDataset
+    :add-heading:
+
+
+.. minigallery:: gammapy.datasets.SpectrumDatasetOnOff
     :add-heading:
 

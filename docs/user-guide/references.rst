@@ -26,11 +26,11 @@ Glossary
 
     Aeff
       Short for "effective area": it is the IRF representing the detector collection
-      area. See :ref:`irf-theory` and :ref:`irf-aeff`.
+      area. See :ref:`irf` and :ref:`irf-aeff`.
 
     Bkg
       Short for "background": it is the IRF representing the residual background rate
-      per solid angle. See :ref:`irf-theory` and :ref:`irf-bkg`.
+      per solid angle. See :ref:`irf` and :ref:`irf-bkg`.
 
     Cash
       The cash statistic is a Poisson fit statistic usually used when signal and
@@ -65,7 +65,7 @@ Glossary
     EDisp
       Short for "energy dispersion": it is the IRF that represents the probability
       of measuring a given reconstructed energy as a function of the true photon
-      energy. See :ref:`irf-theory` and :ref:`irf-edisp`.
+      energy. See :ref:`irf` and :ref:`irf-edisp`.
 
     Estimator
       Gammapy utility classes to compute astrophysical quantities based on a model.
@@ -96,8 +96,7 @@ Glossary
 
     IRF
       Short for "instrument response function": they are used to model the probability
-      to detect a photon with a number of measured characteristics. See :ref:`irf-theory`
-      and :ref:`irf`.
+      to detect a photon with a number of measured characteristics. See :ref:`irf`.
 
     Joint Analysis
       A joint fit across multiple datasets implies that each dataset is handled
@@ -115,7 +114,7 @@ Glossary
 
     PSF
       Short for "point spread function": it is the IRF representing the probability density of the angular separation
-      between true and reconstructed directions. See :ref:`irf-theory` and :ref:`irf-psf`.
+      between true and reconstructed directions. See :ref:`irf` and :ref:`irf-psf`.
 
     Reco Energy
       The reconstructed (or measured) energy (often written `e_reco`) is the energy of

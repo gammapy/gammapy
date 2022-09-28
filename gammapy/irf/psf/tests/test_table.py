@@ -27,7 +27,8 @@ def test_psf_3d_wrong_units():
     with pytest.raises(ValueError) as error:
         PSF3D(axes=[energy_axis, offset_axis, rad_axis], data=data)
         assert error.match(
-            f"Error: {wrong_unit} is not an allowed unit. {psf3d_test.tag} requires {psf3d_test.default_unit} data quantities."
+            f"Error: {wrong_unit} is not an allowed unit. {psf3d_test.tag} requires "
+            f"{psf3d_test.default_unit} data quantities."
         )
 
 

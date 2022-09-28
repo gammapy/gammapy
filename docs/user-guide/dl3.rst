@@ -159,6 +159,11 @@ the `~gammapy.data.EventList.write` method:
     events.write("test_events_with_GTI.fits.gz", gti=gti)
 
 
+Using gammapy.data
+------------------
+
+.. minigallery:: gammapy.data.EventList
+    :add-heading:
 
 .. minigallery:: gammapy.data.DataStore
     :add-heading:

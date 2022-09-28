@@ -253,7 +253,8 @@ class WcsMap(Map):
         # We make a copy, because below we modify `data` to handle non-finite entries
         # TODO: The code below could probably be simplified to use expressions
         # that create new arrays instead of in-place modifications
-        # But first: do we want / need the non-finite entry handling at all and always cast to 64-bit float?
+        # But first: do we want / need the non-finite entry handling at all and
+        #  always cast to 64-bit float?
         data = data.copy()
 
         if len(shape) == 2:

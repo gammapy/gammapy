@@ -5,6 +5,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.table import Table
+import matplotlib.pyplot as plt
 from gammapy.maps import MapAxis, RegionNDMap
 from gammapy.modeling.models import (
     SPECTRAL_MODEL_REGISTRY,
@@ -856,17 +857,20 @@ class TestNaimaModel:
             "energy_bounds": [10 * u.GeV, 80 * u.TeV],
             "sed_type": "e2dnde",
         }
-        model.plot(label="IC (total)", **opts)
+        _, ax = plt.subplots()
+        model.plot(label="IC (total)", ax=ax, **opts)
+
         for seed, ls in zip(["CMB", "FIR"], ["-", "--"]):
             model = NaimaSpectralModel(radiative_model, seed=seed, distance=1.5 * u.kpc)
             model.plot(label=f"IC ({seed})", ls=ls, color="gray", **opts)
 
         skymodel = SkyModel(model)
         # fail if cache is on :
+        _, ax = plt.subplots()
         skymodel.spectral_model.plot(
-            energy_bounds=[10 * u.GeV, 80 * u.TeV], energy_power=2
+            energy_bounds=[10 * u.GeV, 80 * u.TeV], energy_power=2, ax=ax
         )
-        assert radiative_model._memoize == False
+        assert not radiative_model._memoize
 
 
 class TestSpectralModelErrorPropagation:

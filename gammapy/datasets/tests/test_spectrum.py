@@ -938,7 +938,8 @@ class TestSpectrumDatasetOnOffStack:
         obs1, obs2 = make_observation_list()
         obs1.stack(obs2)
         assert_allclose(obs1.alpha.data[0], 1.25 / 4.0)
-        # When the OFF stack observation counts=0, the alpha is averaged on the total OFF counts for each run.
+        # When the OFF stack observation counts=0, the alpha is averaged on the
+        # total OFF counts for each run.
         assert_allclose(obs1.alpha.data[1], 2.5 / 8.0)
 
     def test_stack_gti(self):

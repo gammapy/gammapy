@@ -39,7 +39,8 @@ class FluxProfileEstimator(FluxPointsEstimator):
     >>> from gammapy.maps import RegionGeom
 
     >>> # load example data
-    >>> dataset = MapDataset.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc.fits.gz", name="fermi_dataset")
+    >>> filename = "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc.fits.gz"
+    >>> dataset = MapDataset.read(filename, name="fermi-dataset")
 
     >>> # configuration
     >>> dataset.gti = GTI.create("0s", "1e7s", "2010-01-01")
@@ -48,7 +49,13 @@ class FluxProfileEstimator(FluxPointsEstimator):
     >>> start_pos = SkyCoord("-1d", "0d", frame='galactic')
     >>> end_pos = SkyCoord("1d", "0d", frame='galactic')
 
-    >>> regions = make_orthogonal_rectangle_sky_regions(start_pos=start_pos, end_pos=end_pos, wcs=dataset.counts.geom.wcs, height=2.*u.deg, nbin=21)
+    >>> regions = make_orthogonal_rectangle_sky_regions(
+                start_pos=start_pos,
+                end_pos=end_pos,
+                wcs=dataset.counts.geom.wcs,
+                height=2 * u.deg,
+                nbin=21
+            )
 
     >>> # set up profile estimator and run
     >>> prof_maker = FluxProfileEstimator(regions=regions, energy_edges=[10, 2000] * u.GeV)
@@ -60,7 +67,7 @@ class FluxProfileEstimator(FluxPointsEstimator):
       geom                   : RegionGeom
       axes                   : ['lon', 'lat', 'energy', 'projected-distance']
       shape                  : (1, 1, 1, 21)
-      quantities             : ['norm', 'norm_err', 'ts', 'npred', 'npred_excess', 'stat', 'counts', 'success']
+      quantities             : ['norm', 'norm_err', 'ts', 'npred', 'npred_excess', 'stat', 'counts', 'success']  # noqa: E501
       ref. model             : pl
       n_sigma                : 1
       n_sigma_ul             : 2

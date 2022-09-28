@@ -2,88 +2,87 @@ name: CI
 on: [push, pull_request]
 
 jobs:
-  pyflakes:
-    name: pyflakes
+  lint:
+    name: Black check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-
-      - uses: actions/setup-python@v2
-        with:
-          python-version: '3.8'
-
-      - name: Install pyflakes
-        run: python -m pip install pyflakes
-
-      - name: Run pyflakes
-        run: pyflakes gammapy
-
-  basic:
-    name: ${{ matrix.name }}
+      - uses: psf/black@stable
+  ci-runs:
+    name: ${{ matrix.os }}, ${{ matrix.tox_env }}
     runs-on: ${{ matrix.os }}
     env:
       PYTEST_ADDOPTS: --color=yes -n auto --dist=loadscope
-    defaults:
-      run:
-        shell: bash -l {0}
     strategy:
-      fail-fast: false # true
+      fail-fast: true
       matrix:
         include:
-          - name: Linux python 3.8 all-deps
-            os: ubuntu-latest
-          - name: Linux python 3.8 core-deps
-            os: ubuntu-latest
-          - name: Linux python 3.9 core-deps
-            os: ubuntu-latest
-          - name: Linux python 3.10 core-deps
-            os: ubuntu-latest
-          - name: Windows python 3.8 core-deps
-            os: windows-latest
-            python: 3.8
-          - name: Mac python 3.8 core-deps
-            os: macos-latest
+          - os: ubuntu-latest
+            python: '3.8'
+            tox_env: 'py38-test-alldeps'
+          - os: ubuntu-latest
+            python: '3.9'
+            tox_env: 'py39-test-alldeps-cov'
+            gammapy_data_path: /home/runner/work/gammapy/gammapy/gammapy-datasets/dev
+          - os: macos-latest
+            python: '3.9'
+            tox_env: 'py39-test'
+            gammapy_data_path: /Users/runner/work/gammapy/gammapy/gammapy-datasets/dev
+          - os: windows-latest
+            python: '3.9'
+            tox_env: 'py39-test-alldeps'
+            gammapy_data_path:  D:\a\gammapy\gammapy\gammapy-datasets\dev
+          - os: ubuntu-latest
+            python: '3.10'
+            tox_env: 'py310-test-alldeps'
+          - os: ubuntu-latest
+            python: '3.9'
+            tox_env: 'py39-test'
+          - os: ubuntu-latest
+            python: '3.9'
+            tox_env: 'codestyle'
+          - os: ubuntu-latest
+            python: '3.8'
+            tox_env: 'py38-test-alldeps-astropylts-numpy119'
     steps:
-      - name: checkout repo
-        uses: actions/checkout@v2
-      - name: install python3.9
-        if: contains(matrix.name, '3.9')
-        run: |
-          sed -itmp 's/python=3.8/python=3.9/' environment-dev.yml
-      - name: install python3.10
-        if: contains(matrix.name, '3.10')
-        run: |
-          sed -itmp 's/python=3.8/python=3.10/' environment-dev.yml
-      - name: add core dependencies env file
-        if: contains(matrix.name, 'core-deps')
-        run: |
-          awk '{f="env" NR; print $0> f}' RS='# extra dependencies' environment-dev.yml
-          mv env1 environment-dev.yml
-          cat environment-dev.yml
-      - name: install dependencies with pip
-        if: matrix.name=='Windows python 3.8 core-deps'
-        run: |
-          pip install astropy click cython numpy pydantic pyyaml regions scipy
-          pip install pytest pytest-astropy requests tqdm pytest-xdist
-      - name: create and activate env
-        if: matrix.name!='Windows python 3.8 core-deps'
-        uses: mamba-org/provision-with-micromamba@main
+      - name: Check out repository
+        uses: actions/checkout@v3
         with:
-          environment-file: environment-dev.yml
-      - name: install gammapy
+          fetch-depth: 0
+      - name: Set up Python ${{ matrix.python }}
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install base dependencies
         run: |
-          pip install -e .
-      - name: test coverage
-        if: contains(matrix.name, 'all-deps')
+          python -m pip install --upgrade pip
+          python -m pip install tox
+      - name: download datasets
+        if: ${{ matrix.gammapy_data_path }}
         run: |
+          python -m pip install tqdm requests
+          python -m pip install -e .
           gammapy download datasets
-          export GAMMAPY_DATA=./gammapy-datasets
-          make test-cov
-          codecov -X gcov
-      - name: test simple
-        if: contains(matrix.name, 'core-deps')
+      - name: Print Python, pip, setuptools, and tox versions
         run: |
-          make test
+          python -c "import sys; print(f'Python {sys.version}')"
+          python -c "import pip; print(f'pip {pip.__version__}')"
+          python -c "import setuptools; print(f'setuptools {setuptools.__version__}')"
+          python -c "import tox; print(f'tox {tox.__version__}')"
+      - name: Run tests
+        if: ${{ !matrix.gammapy_data_path }}
+        run: tox -e ${{ matrix.tox_env }} -- -n auto
+      - name: Run tests with data
+        if: ${{ matrix.gammapy_data_path }}
+        env:
+          GAMMAPY_DATA: ${{ matrix.gammapy_data_path}}
+        run: tox -e ${{ matrix.tox_env }} -- -n auto
+      - name: Upload coverage to codecov
+        if: "contains(matrix.tox_env, '-cov')"
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          verbose: true
   sphinx:
     name: Linux python 3.8 sphinx all-deps
     runs-on: ubuntu-latest
@@ -92,31 +91,28 @@ jobs:
         shell: bash -l {0}
     env:
       PYTEST_ADDOPTS: --color=yes -n auto --dist=loadscope
-      GAMMAPY_DATA: /home/runner/work/gammapy/gammapy/gammapy-datasets
+      GAMMAPY_DATA: /home/runner/work/gammapy/gammapy/gammapy-datasets/dev
     steps:
-      - name: checkout repo
-        uses: actions/checkout@v2
-      - name: create and activate env
-        uses: mamba-org/provision-with-micromamba@main
+      - name: Check out repository
+        uses: actions/checkout@v3
         with:
-          environment-file: environment-dev.yml
-      - name: install gammapy
+          fetch-depth: 0
+      - name: Set up Python ${{ matrix.python }}
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install base dependencies
         run: |
-          pip install -e .
+          python -m pip install --upgrade pip
+          python -m pip install tox
       - name: download datasets
         run: |
+          python -m pip install tqdm requests
+          python -m pip install -e .
           gammapy download datasets
       - name: test build docs
         run: |
-          make docs-sphinx
-      - name: test code in docs and docstrings
-        run: |
-          pytest --doctest-glob="*.rst" --ignore-glob=docs/development/pigs/*.rst docs/
-          pytest --doctest-modules --ignore-glob=*/tests gammapy
-      - name: test without datasets
-        run: |
-          unset GAMMAPY_DATA
-          make test
+          tox -e build_docs -- -j auto
   conda-build:
     name: Linux python 3.8 conda-build all-deps
     runs-on: ubuntu-latest
@@ -141,35 +137,3 @@ jobs:
           conda --version
           conda build --version
           python setup.py bdist_conda
-  oldest:
-    name: Linux python 3.8 old-versions core
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash -l {0}
-    env:
-      PYTEST_ADDOPTS: --color=yes
-      GAMMAPY_DATA: /home/runner/work/gammapy/gammapy/gammapy-datasets
-    steps:
-      - name: checkout repo
-        uses: actions/checkout@v2
-      - name: create and activate env
-        uses: conda-incubator/setup-miniconda@v2
-        with:
-          python-version: 3.8
-          mamba-version: "*"
-          channels: conda-forge, defaults
-          channel-priority: true
-      - name: install dependencies
-        run: |
-            mamba install click=7.0 pydantic=1.4 pyyaml=5.1 regions=0.5 scipy=1.4 astropy=5.0 numpy=1.19 tqdm requests
-      - name: install gammapy
-        run: |
-          pip install -e .
-      - name: download datasets
-        run: |
-          gammapy download datasets
-      - name: test simple
-        run: |
-          gammapy info
-          make test

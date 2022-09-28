@@ -4,6 +4,26 @@ requires = [
 	"wheel",
 	"Cython",
 	'oldest-supported-numpy',
-	'setuptools_scm[toml]'
+	'setuptools_scm[toml]',
+	"extension-helpers",
 ]
 build-backend = "setuptools.build_meta"
+
+[tool.black]
+line-length = 88
+target-version = ['py37', 'py38', 'py39', 'py310']
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | gammapy/extern
+)/
+'''

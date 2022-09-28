@@ -91,7 +91,8 @@ class TestEnergyDispersion2D:
             wrong_unit = u.m**2
             EnergyDispersion2D(axes=axes, data=data * wrong_unit)
             assert error.match(
-                f"Error: {wrong_unit} is not an allowed unit. {edisp_test.tag} requires {edisp_test.default_unit} data quantities."
+                f"Error: {wrong_unit} is not an allowed unit. {edisp_test.tag} "
+                f"requires {edisp_test.default_unit} data quantities."
             )
 
         edisp = EnergyDispersion2D(axes=axes, data=data)

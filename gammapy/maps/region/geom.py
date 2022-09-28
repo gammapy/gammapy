@@ -28,8 +28,8 @@ from gammapy.utils.regions import (
 )
 from gammapy.visualization.utils import ARTIST_TO_LINE_PROPERTIES
 from ..axes import MapAxes
-from ..core import Map
 from ..coord import MapCoord
+from ..core import Map
 from ..geom import Geom, pix_tuple_to_idx
 from ..utils import _check_width
 from ..wcs import WcsGeom
@@ -324,7 +324,7 @@ class RegionGeom(Geom):
             raise ValueError("Region definition required.")
 
         # compound regions do not implement area()
-        # so we use the mask represenation and estimate the area
+        # so we use the mask representation and estimate the area
         # from the pixels in the mask using oversampling
         if isinstance(self.region, CompoundSkyRegion):
             # oversample by a factor of ten

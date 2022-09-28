@@ -72,8 +72,9 @@ class HpxGeom(Geom):
 
     def __init__(self, nside, nest=True, frame="icrs", region=None, axes=None):
         from healpy.pixelfunc import check_nside
+
         check_nside(nside, nest=nest)
-        
+
         self._nside = np.array(nside, ndmin=1)
         self._axes = MapAxes.from_default(axes, n_spatial_axes=1)
 
@@ -839,10 +840,10 @@ class HpxGeom(Geom):
         --------
         >>> from gammapy.maps import HpxGeom, MapAxis
         >>> axis = MapAxis.from_bounds(0,1,2)
-        >>> geom = HpxGeom.create(nside=16)
-        >>> geom = HpxGeom.create(binsz=0.1, width=10.0)
-        >>> geom = HpxGeom.create(nside=64, width=10.0, axes=[axis])
-        >>> geom = HpxGeom.create(nside=[32,64], width=10.0, axes=[axis])
+        >>> geom = HpxGeom.create(nside=16) # doctest: +SKIP
+        >>> geom = HpxGeom.create(binsz=0.1, width=10.0) # doctest: +SKIP
+        >>> geom = HpxGeom.create(nside=64, width=10.0, axes=[axis]) # doctest: +SKIP
+        >>> geom = HpxGeom.create(nside=[32,64], width=10.0, axes=[axis]) # doctest: +SKIP
         """
         if nside is None and binsz is None:
             raise ValueError("Either nside or binsz must be defined.")

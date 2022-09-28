@@ -174,11 +174,11 @@ class Background3D(BackgroundIRF):
         cols = min(ncols, n)
         rows = 1 + (n - 1) // cols
         width = 12
-        cfraction = 0.
+        cfraction = 0.0
         if add_cbar:
             cfraction = 0.15
         if figsize is None:
-            figsize = (width, rows * width // (cols * (1+cfraction)))
+            figsize = (width, rows * width // (cols * (1 + cfraction)))
 
         fig, axes = plt.subplots(
             ncols=cols,
@@ -213,7 +213,7 @@ class Background3D(BackgroundIRF):
                 ax.set_ylabel("")
             if row < rows - 1:
                 ax.set_xlabel("")
-            ax.set_aspect('equal', 'box')
+            ax.set_aspect("equal", "box")
 
 
 class Background2D(BackgroundIRF):

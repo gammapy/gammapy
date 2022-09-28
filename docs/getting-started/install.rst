@@ -70,6 +70,19 @@ using `pip`_:
 
    $ python -m pip install gammapy
 
+Thsi will install GAmmapy with the required dependencies only.
+To install Gammapy with all optional dependencies, you can specify:
+
+.. code-block:: bash
+
+   $ python -m pip install gammapy[all]
+
+Or on windows:
+
+.. code-block:: bash
+
+   $ python -m pip install gammapy[all-windows]
+
 To update an existing installation you can use:
 
 .. code-block:: bash

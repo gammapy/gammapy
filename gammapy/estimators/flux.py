@@ -116,7 +116,7 @@ class FluxEstimator(ParameterEstimator):
         scale_model = ScaleSpectralModel(ref_model)
 
         norms = Parameters([p for p in ref_model.parameters if p.is_norm])
-        if len(norms) == 0 or len(norms.free_parameters)>1 :
+        if len(norms) == 0 or len(norms.free_parameters) > 1:
             raise ValueError(
                 f"{self.tag} requires one and only one free 'norm' or 'amplitude' parameter"
                 " in the model to run"

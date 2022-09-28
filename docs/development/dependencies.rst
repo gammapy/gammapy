@@ -51,5 +51,3 @@ SED modeling).
 * healpy_ for `HEALPIX`_ data handling
 * Sherpa_ for modeling and fitting
 * naima_ for SED modeling
-* emcee_ for fitting by MCMC sampling
-* corner_ for MCMC corner plots
