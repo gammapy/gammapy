@@ -9,6 +9,3 @@ recursive-include gammapy *.pyx *.c
 recursive-include docs *
 recursive-include examples *
 recursive-include dev *
-recursive-include scripts *
-
-global-exclude *.pyc *.o
