@@ -721,7 +721,7 @@ def get_npred_map():
     )
 
     spatial_model = GaussianSpatialModel(
-        lon_0="0 deg", lat_0="0 deg", sigma="0.2 deg", frame="galactic"
+        lon_0="0.015 deg", lat_0="-0.037 deg", sigma="0.2 deg", frame="galactic"
     )
     spectral_model = PowerLawSpectralModel(amplitude="1e-11 cm-2 s-1 TeV-1")
     skymodel = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
@@ -740,9 +740,9 @@ def test_map_sampling():
     coords = nmap.sample_coord(n_events=2, random_state=0)
 
     assert len(coords["lon"]) == 2
-    assert_allclose(coords.skycoord.icrs.ra.deg, [266.307081, 266.442255], rtol=1e-5)
-    assert_allclose(coords.skycoord.icrs.dec.deg, [-28.753408, -28.742696], rtol=1e-5)
-    assert_allclose(coords["energy_true"].data, [2.755397, 1.72316], rtol=1e-5)
+    assert_allclose(coords.skycoord.icrs.ra.deg, [266.204197, 266.451241], rtol=1e-5)
+    assert_allclose(coords.skycoord.icrs.dec.deg, [-28.862369, -29.075469], rtol=1e-5)
+    assert_allclose(coords["energy_true"].data, [2.363293, 2.342388], rtol=1e-5)
 
     assert coords["lon"].unit == "deg"
     assert coords["lat"].unit == "deg"
