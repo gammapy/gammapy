@@ -6,7 +6,6 @@ import astropy.units as u
 from astropy.convolution import Box2DKernel, Gaussian2DKernel
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
-from astropy.table import Table
 from regions import CircleSkyRegion, PointSkyRegion, RectangleSkyRegion
 from gammapy.datasets.map import MapEvaluator
 from gammapy.irf import PSFKernel, PSFMap
@@ -739,17 +738,11 @@ def test_map_sampling():
 
     nmap = WcsNDMap(geom=eval.geom, data=npred.data)
     coords = nmap.sample_coord(n_events=2, random_state=0)
-    skycoord = coords.skycoord
 
-    events = Table()
-    events["RA_TRUE"] = skycoord.icrs.ra
-    events["DEC_TRUE"] = skycoord.icrs.dec
-    events["ENERGY_TRUE"] = coords["energy_true"]
-
-    assert len(events) == 2
-    assert_allclose(events["RA_TRUE"].data, [266.307081, 266.442255], rtol=1e-5)
-    assert_allclose(events["DEC_TRUE"].data, [-28.753408, -28.742696], rtol=1e-5)
-    assert_allclose(events["ENERGY_TRUE"].data, [2.755397, 1.72316], rtol=1e-5)
+    assert len(coords["lon"]) == 2
+    assert_allclose(coords.skycoord.icrs.ra.deg, [266.307081, 266.442255], rtol=1e-5)
+    assert_allclose(coords.skycoord.icrs.dec.deg, [-28.753408, -28.742696], rtol=1e-5)
+    assert_allclose(coords["energy_true"].data, [2.755397, 1.72316], rtol=1e-5)
 
     assert coords["lon"].unit == "deg"
     assert coords["lat"].unit == "deg"
