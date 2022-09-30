@@ -1255,7 +1255,7 @@ class Map(abc.ABC):
                 if axis.name == "energy" or axis.name == "energy_true":
                     info = (
                         f"{energy_unit_format(axis.edges[idx])} - "
-                        "{energy_unit_format(axis.edges[idx+1])}"
+                        f"{energy_unit_format(axis.edges[idx+1])}"
                     )
                 else:
                     info = f"{axis.edges[idx]:.1f} - {axis.edges[idx + 1]:.1f} "
