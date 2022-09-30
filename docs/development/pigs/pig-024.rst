@@ -81,7 +81,7 @@ Contributions to Gammapy can be made in different ways:
 Any contribution without threshold on these topics renders a user as official Gammapy contributor. Many of these
 contributions are tracked using the git history. However, the use of personal data is regulated in Europe and one
 should have the authorisation of users to be cited with their personal information for publications (their full name
-is mandatory, and if any their affiliation and their ORCID number). For this reason, we propose to use the
+is mandatory, and, if any, their affiliation and their ORCID number). For this reason, we propose to use the
 `Developer Certificate of Origin` (DCO, see the text in `here <https://developercertificate.org/>`_) for each commit.
 Its acceptation by contributors will permit to:
 
