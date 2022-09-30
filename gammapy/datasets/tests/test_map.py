@@ -216,6 +216,14 @@ def get_map_dataset(geom, geom_etrue, edisp="edispmap", name="test", **kwargs):
     )
 
 
+def test_map_dataset_name():
+    with pytest.raises(ValueError, match="of type '<class 'int'>"):
+        _ = MapDataset(name=6353)
+
+    with pytest.raises(ValueError, match="of type '<class 'list'>"):
+        _ = MapDataset(name=[1233, "234"])
+
+
 @requires_data()
 def test_map_dataset_str(sky_model, geom, geom_etrue):
     dataset = get_map_dataset(geom, geom_etrue)
