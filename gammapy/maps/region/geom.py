@@ -17,6 +17,7 @@ from regions import (
     PixCoord,
     PointSkyRegion,
     RectanglePixelRegion,
+    RectangleSkyRegion,
     Regions,
     SkyRegion,
 )
@@ -71,7 +72,7 @@ class RegionGeom(Geom):
     def __init__(self, region, axes=None, wcs=None, binsz_wcs="0.1 deg"):
         self._region = region
         self._axes = MapAxes.from_default(axes, n_spatial_axes=2)
-        self._binsz_wcs = binsz_wcs
+        self._binsz_wcs = u.Quantity(binsz_wcs)
 
         if wcs is None and region is not None:
             if isinstance(region, CompoundSkyRegion):
@@ -223,7 +224,18 @@ class RegionGeom(Geom):
             raise ValueError("Region definition required.")
 
         coords = MapCoord.create(coords, frame=self.frame, axis_names=self.axes.names)
-        return self.region.contains(coords.skycoord, self.wcs)
+
+        if isinstance(self.region, PointSkyRegion):
+            # the point region is approximated by 1x1 pixel here
+            region = RectangleSkyRegion(
+                center=self.center_skydir,
+                width=self.binsz_wcs[0],
+                height=self.binsz_wcs[1],
+            )
+        else:
+            region = self.region
+
+        return region.contains(coords.skycoord, self.wcs)
 
     def contains_wcs_pix(self, pix):
         """Check if a given wcs pixel coordinate is contained in the region.
