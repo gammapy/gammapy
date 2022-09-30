@@ -40,10 +40,10 @@ The Gammapy Project is made both by and for its users, so we welcome and encoura
 goal is to keep this a positive, inclusive, successful, and growing community by abiding with the
 `Gammapy Community Code of Conduct <https://gammapy.org/CoC.html>`_.
 
-The Gammapy project uses a mechanism known as a `Developer Certificate of Origin (DCO) <https://github.com/apps/dco>`_
-to manage the contributions to our open source projet. The DCO is a binding statement that asserts that you are the
-creator of your contribution, and that you wish to allow Gammapy to use your work to cite you as contributor.
-Acknowledgement of this permission is described in the `Developer guide <https://docs.gammapy.org/dev/development/intro.html#Acceptation-of-the-Developer-Certificate-of-Origin-(DCO)>`_ of the official documentation.
+The Gammapy project uses a mechanism known as a `Developer Certificate of Origin` (DCO). The DCO is a binding statement
+that asserts that you are the creator of your contribution, and that you wish to allow Gammapy to use your work to cite
+you as contributor. More detailed information on contributing to the project or submitting feedback can be found on the
+`Contributing page <https://github.com/gammapy/gammapy/blob/master/CONTRIBUTING.md>`_.
 
 Licence
 +++++++
