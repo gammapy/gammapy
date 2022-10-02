@@ -2803,12 +2803,12 @@ class LabelMapAxis:
     node_type = "label"
 
     def __init__(self, labels, name=""):
-        unique_labels = set(labels)
+        unique_labels = np.unique(labels)
 
         if not len(unique_labels) == len(labels):
             raise ValueError("Node labels must be unique")
 
-        self._labels = np.array(labels)
+        self._labels = unique_labels
         self._name = name
 
     @property
