@@ -8,8 +8,7 @@ Prerequisites
 -------------
 
 -  To understand how a generel modelling and fiiting works in gammapy,
-   please refer to the `analysis_3d
-   tutorial <../3D/analysis_3d.ipynb>`__
+   please refer to the :doc:`/tutorials/analysis-3d/analysis_3d` tutorial.
 
 Context
 -------

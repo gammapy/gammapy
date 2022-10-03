@@ -389,11 +389,11 @@ irfs["bkg"].plot_at_energy(
 # ----------
 #
 # -  Learn how to analyse data with
-#    `analysis_1.ipynb <../starting/analysis_1.ipynb>`__ and
-#    `analysis_2.ipynb <../starting/analysis_2.ipynb>`__ or any other
+#    :doc:`/tutorials/starting/analysis_1` and
+#    :doc:`/tutorials/starting/analysis_2` or any other
 #    Gammapy analysis tutorial.
 # -  Learn how to evaluate CTA observability and sensitivity with
-#    `simulate_3d.ipynb <../analysis/3D/simulate_3d.ipynb>`__,
-#    `spectrum_simulation.ipynb <../analysis/1D/spectrum_simulation.ipynb>`__
-#    or `cta_sensitivity.ipynb <../analysis/1D/cta_sensitivity.ipynb>`__
+#    :doc:`/tutorials/analysis-3d/simulate_3d`,
+#    :doc:`/tutorials/analysis-1d/spectrum_simulation`
+#    or :doc:`/tutorials/analysis-1d/cta_sensitivity`.
 #

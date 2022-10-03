@@ -181,7 +181,7 @@ excess.smooth("0.06 deg").plot(stretch="sqrt", add_cbar=True)
 # can rely on the `~gammapy.maps.Geom.energy_mask()` method.
 #
 # For more details on masks and the techniques to create them in gammapy,
-# please refer `to the dedicated tutorial <../../api/mask_maps.ipynb>`__
+# please checkou the dedicated :doc:`/tutorials/api/mask_maps` tutorial.
 #
 
 dataset_stacked.mask_fit = dataset_stacked.counts.geom.energy_mask(
