@@ -86,9 +86,7 @@ Post release
 
 Steps for the day to announce the release:
 
-#. Send release announcement to the Gammapy mailing list and on Gammapy Slack
-   (using the version you drafted in
-   https://github.com/gammapy/gammapy/tree/master/dev/notes).
+#. Send release announcement to the Gammapy mailing list and on Gammapy Slack.
 #. If it's a big release with important new features or fixes,
    also send the release announcement to the following mailing lists
    (decide on a case by case basis, if it's relevant to the group of people):

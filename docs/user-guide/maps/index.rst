@@ -38,7 +38,8 @@ a map without reference to the underlying data representation (e.g. whether a
 map uses WCS or HEALPix pixelization). For applications which do depend on the
 specific representation one can also work directly with the classes derived from
 `~Map`. In the following we review some of the basic methods for working with
-map objects, more details are given in the `maps tutorial <../tutorials/api/maps.html>`__.
+map objects, more details are given in the :doc:`/tutorials/api/maps`
+tutorial.
 
 
 .. _node_types:
