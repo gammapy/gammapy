@@ -169,7 +169,7 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
 
     References
     ----------
-    * `2011JCAP...03..051 <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051>`_
+    * `2011JCAP...03..051 <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
     """
 
     THERMAL_RELIC_CROSS_SECTION = 3e-26 * u.Unit("cm3 s-1")

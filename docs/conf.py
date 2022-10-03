@@ -67,7 +67,9 @@ linkcheck_ignore = [
     "https://groups.google.com/forum/#!forum/astropy-dev",
     "https://lists.nasa.gov/mailman/listinfo/open-gamma-ray-astro",
     "https://getbootstrap.com/css/#tables",
-    "https://www.hawc-observatory.org/",
+    "https://www.hawc-observatory.org/",  # invalid certificate
+    "https://ipython.org",  # invalid certificate
+    "https://jupyter.org",  # invalid certificate
 ]
 
 # the buttons link to html pages which are auto-generated...
