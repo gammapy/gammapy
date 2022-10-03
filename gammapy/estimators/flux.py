@@ -115,7 +115,7 @@ class FluxEstimator(ParameterEstimator):
         ref_model = models[self.source].spectral_model
 
         if ref_model.is_norm_spectral_model:
-            raise TypeError(
+            raise ValueError(
                 "Instances of `NormSpectralModel` are not supported for flux point estimation."
             )
 
