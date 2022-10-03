@@ -485,12 +485,15 @@ help(models_selected.unfreeze)
 models_3fhl.write("3fhl_models.yaml", overwrite=True)
 
 # To save datasets and models
-datasets.write(filename="datasets-gc.yaml", overwrite=True)
+datasets.write(filename="datasets-gc.yaml", 
+               filename_models="models_gc.yaml", 
+               overwrite=True)
 
 # To read only models
 models = Models.read("3fhl_models.yaml")
 print(models)
 
 # To read datasets with models
-datasets_read = Datasets.read("datasets-gc.yaml")
-print(datasets)
+datasets_read = Datasets.read("datasets-gc.yaml", 
+                              filename_models="models_gc.yaml")
+print(datasets_read)
