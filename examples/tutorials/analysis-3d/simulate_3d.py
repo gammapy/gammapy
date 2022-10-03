@@ -167,7 +167,7 @@ print(dataset)
 ######################################################################
 # Now use this dataset as you would in all standard analysis. You can plot
 # the maps, or proceed with your custom analysis. In the next section, we
-# show the standard 3D fitting as in :doc:`/tutorials/analysis-2d/analysis_3d`
+# show the standard 3D fitting as in :doc:`/tutorials/analysis-3d/analysis_3d`
 # tutorial.
 #
 

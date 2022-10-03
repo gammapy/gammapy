@@ -1844,8 +1844,7 @@ class MapAxes(Sequence):
 
         Parameters
         ----------
-        format : {"gadf", "gadf-dl3", "fgst-ccube", "fgst-template", "ogip",
-                  "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"}
+        format : {"gadf", "gadf-dl3", "fgst-ccube", "fgst-template", "ogip", "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"}  # noqa E501
             Format to use.
 
         Returns

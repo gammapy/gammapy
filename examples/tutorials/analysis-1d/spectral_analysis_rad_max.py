@@ -9,7 +9,7 @@ Prerequisites
 -------------
 
 -  Understanding the basic data reduction performed in the
-   :doc:`/tutorials/analysis-1d/spectra_analysis` tutorial.
+   :doc:`/tutorials/analysis-1d/spectral_analysis` tutorial.
 -  understanding the difference between a
    `point-like <https://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/point_like/index.html>`__
    and a
@@ -19,7 +19,7 @@ Prerequisites
 Context
 -------
 
-As already explained in the :doc:`/tutorials/analysis-1d/spectra_analysis`
+As already explained in the :doc:`/tutorials/analysis-1d/spectral_analysis`
 tutorial, the background is estimated fromthe field of view of the observation.
 In particular, the source and background events are counted within a circular 
 ON region enclosing the source. The background to be subtracted is then estimated
@@ -64,7 +64,7 @@ should be used to define the ON region. If a geometry based on a
 regions.
 
 Beside the definition of the ON region during the data reduction, the
-remaining steps are identical to the other :doc:`/tutorials/analysis-1d/spectra_analysis`
+remaining steps are identical to the other :doc:`/tutorials/analysis-1d/spectral_analysis`
 tutorial., so we will not detail the data reduction steps already
 presented in the other tutorial.
 

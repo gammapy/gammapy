@@ -21,7 +21,7 @@ class ObservationFilter:
         - **type** : str, one of the keys in `~gammapy.data.ObservationFilter.EVENT_FILTER_TYPES`
         - **opts** : dict, it is passed on to the method of the `~gammapy.data.EventListBase`
           class that corresponds to the filter type
-        (see `~gammapy.data.ObservationFilter.EVENT_FILTER_TYPES`)
+          (see `~gammapy.data.ObservationFilter.EVENT_FILTER_TYPES`)
 
         The filtered event list will be an intersection of all filters. A union
         of filters is not supported yet.

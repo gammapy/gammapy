@@ -1,4 +1,4 @@
-.. _temporal_models_gallery:
+.. _temporal-models-gallery:
 
 Temporal models
 ---------------

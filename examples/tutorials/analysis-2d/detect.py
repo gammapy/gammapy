@@ -230,7 +230,7 @@ ax.scatter(
 #    :doc:`/tutorials/starting/analysis_1` and
 #    :doc:`/tutorials/starting/analysis_2` notebooks,
 #    respectively
-# -  Learn about 2D model fitting in the :doc:`/tutorials/analysis-2d/modeling_2d` notebook
+# -  Learn about 2D model fitting in the :doc:`/tutorials/analysis-2d/modeling_2D` notebook
 # -  Find more about Fermi-LAT data analysis in the
 #    `:doc:`/tutorials/data/fermi_lat` notebook
 # -  Use source candidates to build a model and perform a 3D fitting (see

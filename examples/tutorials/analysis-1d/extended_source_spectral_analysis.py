@@ -33,7 +33,7 @@ Proposed approach
 -----------------
 
 We have seen in the general presentation of the spectrum extraction for
-point sources (see :doc:`/tutorials/analysis-1d/pectral_analysis`
+point sources (see :doc:`/tutorials/analysis-1d/spectral_analysis`
 tutorial) that Gammapy uses specific
 datasets makers to first produce reduced spectral data and then to
 extract OFF measurements with reflected background techniques: the

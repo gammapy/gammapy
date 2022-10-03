@@ -18,6 +18,9 @@ To model and fit data in Gammapy, you have to create a
 `~gammapy.datasets.Datasets` container object with one or multiple
 `~gammapy.datasets.Dataset` objects.
 
+
+.. _datasets-types:
+
 Types of supported datasets
 ---------------------------
 

@@ -12,7 +12,7 @@ the class name. An overview of all the available models can be found in
 the `model gallery <../../user-guide/model-gallery/index.rst>`__.
 
 Note that there are separate tutorials,
-:doc:`/tutorials/api/models_management` and
+:doc:`/tutorials/api/model_management` and
 :doc:`/tutorials/api/fitting` that explains about
 `~gammapy.modeling`, the Gammapy modeling and fitting framework. You
 have to read that to learn how to work with models in order to analyse
@@ -56,7 +56,7 @@ print(pwl)
 
 ######################################################################
 # To get a list of all available spectral models you can import and print
-# the spectral model registry or take a look at the :ref:`spectral_models_gallery`
+# the spectral model registry or take a look at the :ref:`spectral-models-gallery`
 #
 
 from gammapy.modeling.models import SPECTRAL_MODEL_REGISTRY
@@ -234,7 +234,7 @@ print(gauss)
 
 ######################################################################
 # Again you can check the `SPATIAL_MODELS` registry to see which models
-# are available or take a look at the :ref:`spatial_models_gallery`
+# are available or take a look at the :ref:`spatial-models-gallery`
 #
 
 from gammapy.modeling.models import SPATIAL_MODEL_REGISTRY
@@ -541,7 +541,7 @@ print(models.names)
 # latitude, and energy, but the `Models` object cannot. This `Models`
 # container object will be assigned to `Dataset` or `Datasets`
 # together with the data to be fitted. Checkout e.g. the
-# :doc:`/tutorials/api/model_managemnt` tutorial for details.
+# :doc:`/tutorials/api/model_management` tutorial for details.
 #
 # The `~gammapy.modeling.models.Models` class also has in place ``.append()`` and ``.extend()``
 # methods:

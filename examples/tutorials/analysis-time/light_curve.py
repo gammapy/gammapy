@@ -379,6 +379,6 @@ ax.set_ylim(1e-12, 3e-12)
 # When sources are bright enough to look for variability at small time
 # scales, the per-observation time binning is no longer relevant. One can
 # easily extend the light curve estimation approach presented above to any
-# time binning. This is demonstrated in the :doc:`/tutorials/anaylysis-time/light_curve_flare`
+# time binning. This is demonstrated in the :doc:`/tutorials/analysis-time/light_curve_flare`
 # tutorial. which shows the extraction of the lightcurve of an AGN flare.
 #
