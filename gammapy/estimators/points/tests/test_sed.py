@@ -4,8 +4,10 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import EarthLocation, SkyCoord
+from astropy.table import Table
 from gammapy.data import Observation
 from gammapy.datasets import MapDataset, SpectrumDatasetOnOff
+from gammapy.datasets.spectrum import SpectrumDataset
 from gammapy.estimators import FluxPoints, FluxPointsEstimator
 from gammapy.irf import EDispKernelMap, EffectiveAreaTable2D, load_cta_irfs
 from gammapy.makers import MapDatasetMaker
@@ -524,3 +526,37 @@ def test_flux_points_recompute_ul(fpe_pwl):
     # check that it returns a sensible value
     fp2 = fp.recompute_ul(n_sigma_ul=2)
     assert_allclose(fp2.flux_ul.data, fp.flux_ul.data, rtol=1e-2)
+
+
+def test_fpe_non_aligned_energy_axes():
+    energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=10)
+    geom_1 = RegionGeom.create("icrs;circle(0, 0, 0.1)", axes=[energy_axis])
+    dataset_1 = SpectrumDataset.create(geom=geom_1)
+
+    energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=7)
+    geom_2 = RegionGeom.create("icrs;circle(0, 0, 0.1)", axes=[energy_axis])
+    dataset_2 = SpectrumDataset.create(geom=geom_2)
+
+    fpe = FluxPointsEstimator(energy_edges=[1, 3, 10] * u.TeV)
+
+    with pytest.raises(ValueError, match="must have aligned energy axes"):
+        fpe.run(datasets=[dataset_1, dataset_2])
+
+
+def test_fpe_non_uniform_datasets():
+    energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=10)
+    geom_1 = RegionGeom.create("icrs;circle(0, 0, 0.1)", axes=[energy_axis])
+    dataset_1 = SpectrumDataset.create(
+        geom=geom_1, meta_table=Table({"TELESCOP": ["CTA"]})
+    )
+
+    energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=10)
+    geom_2 = RegionGeom.create("icrs;circle(0, 0, 0.1)", axes=[energy_axis])
+    dataset_2 = SpectrumDataset.create(
+        geom=geom_2, meta_table=Table({"TELESCOP": ["CTB"]})
+    )
+
+    fpe = FluxPointsEstimator(energy_edges=[1, 3, 10] * u.TeV)
+
+    with pytest.raises(ValueError, match="same value of the 'TELESCOP' meta keyword"):
+        fpe.run(datasets=[dataset_1, dataset_2])

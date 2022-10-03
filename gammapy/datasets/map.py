@@ -644,7 +644,9 @@ class MapDataset(Dataset):
         )
 
         kwargs.update(geoms)
-        return cls.from_geoms(reference_time=reference_time, name=name, **kwargs)
+        return cls.from_geoms(
+            reference_time=reference_time, name=name, meta_table=meta_table, **kwargs
+        )
 
     @property
     def mask_safe_image(self):
