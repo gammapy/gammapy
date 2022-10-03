@@ -37,8 +37,6 @@ class DataStore:
     The data selection and access happens using an observation
     and an HDU index file as described at :ref:`gadf:iact-storage`.
 
-    For a usage example see `cta.html <../tutorials/data/cta.html>`__
-
     Parameters
     ----------
     hdu_table : `~gammapy.data.HDUIndexTable`
@@ -66,6 +64,8 @@ class DataStore:
     Observatory name: 'N/A'
     Number of observations: 105
     <BLANKLINE>
+
+    For further usage example see :doc:`/tutorials/data/cta` tutorial.
     """
 
     DEFAULT_HDU_TABLE = "hdu-index.fits.gz"
