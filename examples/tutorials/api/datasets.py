@@ -14,7 +14,7 @@ see :doc:`/tutorials/api/makers` tutorial and are passed on to the `~gammapy.mod
 or estimator classes for modelling and fitting purposes.
 
 To find the different types of `~gammapy.datasets.Dataset` objects that are supported see
-:ref:`datasets_types`:
+:ref:`datasets-types`:
 
 Setup
 -----
@@ -254,7 +254,7 @@ npred_background.sum_over_axes().plot()
 #    ignore some parts of a reduced dataset, e.g. to restrict the fit to a
 #    specific energy range or to ignore parts of the region of interest.
 #    This should be done by applying the `~gammapy.datasets.MapDataset.mask_fit`. To see details of
-#    applying masks, please refer to :ref:`Masks for fitting`.
+#    applying masks, please refer to :ref:`masks-for-fitting`.
 #
 # Both the `~gammapy.datasets.MapDataset.mask_fit` and `~gammapy.datasets.MapDataset.mask_safe` must
 # have the same `~gammapy.maps.Map.geom` as the `~gammapy.datasets.MapDataset.counts` and `~gammapy.datasets.MapDataset.background` maps.
@@ -450,7 +450,7 @@ fp_dataset.data_shape()  # number of data points
 
 ######################################################################
 # For an example of fitting `~gammapy.estimators.FluxPoints`, see
-#  :doc:`/tutorials/analysis-1d/sef_fitting`, and can be used for
+#  :doc:`/tutorials/analysis-1d/sed_fitting`, and can be used for
 # catalog objects, e.g. see :doc:`/tutorials/api/catalog`
 #
 
