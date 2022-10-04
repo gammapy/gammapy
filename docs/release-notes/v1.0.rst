@@ -1,6 +1,41 @@
 .. _gammapy_1p0_release:
 
-1.0 (unreleased)
-----------------
+1.0 (October 7th, 2022)
+-----------------------
 
-- No changes yet
+Summary
+~~~~~~~
+
+- Released May 12th, 2022
+- 10 contributors
+- 72 pull requests since v0.20.1 (not all listed below)
+
+New features
+~~~~~~~~~~~~
+
+API changes
+~~~~~~~~~~~
+
+
+Bug fixes and improvements
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+Contributors
+~~~~~~~~~~~~
+
+- Arnau Aguasca
+- Axel Donath
+- Luca Giunti
+- Mireia Nievas-Rosillo
+- Laura Olivera-Nieto
+- Fabio Pintore
+- Quentin Rémy
+- Brigitta Sipőcz
+- Atreyee Sinha
+- Régis Terrier
+
+Pull Requests
+~~~~~~~~~~~~~
+
+This list is incomplete. Small improvements and bug fixes are not listed here.
