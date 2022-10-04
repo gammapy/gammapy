@@ -56,6 +56,25 @@ conf = ConfigParser()
 conf.read([os.path.join(os.path.dirname(__file__), "..", "setup.cfg")])
 setup_cfg = dict(conf.items("metadata"))
 
+linkcheck_anchors_ignore = []
+linkcheck_ignore = [
+    "http://gamma-sky.net/#",
+    "https://bitbucket.org/hess_software/hess-open-source-tools/src/master/",
+    "https://forge.in2p3.fr/projects/data-challenge-1-dc-1/wiki",
+    "https://indico.cta-observatory.org/event/2070/",
+    "https://data.hawc-observatory.org/datasets/3hwc-survey/index.php",
+    "https://github.com/gammapy/gammapy#status-shields",
+    "https://groups.google.com/forum/#!forum/astropy-dev",
+    "https://lists.nasa.gov/mailman/listinfo/open-gamma-ray-astro",
+    "https://getbootstrap.com/css/#tables",
+    "https://www.hawc-observatory.org/",  # invalid certificate
+    "https://ipython.org",  # invalid certificate
+    "https://jupyter.org",  # invalid certificate
+]
+
+# the buttons link to html pages which are auto-generated...
+linkcheck_exclude_documents = [r"getting-started/.*"]
+
 # -- General configuration ----------------------------------------------------
 
 # By default, highlight as Python 3.

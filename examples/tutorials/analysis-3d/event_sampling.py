@@ -7,9 +7,9 @@ Learn to sampling events from a given sky model and IRFs.
 Prerequisites
 -------------
 
-To understand how to generate a Model and a MapDataset, and how to fit
+To understand how to generate a model and a `MapDataset` and how to fit
 the data, please refer to the `~gammapy.modeling.models.SkyModel` and
-`simulate_3d <simulate_3d.ipynb>`__.
+:doc:`/tutorials/analysis-3d/simulate_3d` tutorial.
 
 Context
 -------
@@ -159,8 +159,8 @@ observation = Observation.create(
 # ~~~~~~~~~~~~~~~~~~~~~
 #
 # Let’s generate the `~gammapy.datasets.Dataset` object (for more info
-# on `~gammapy.datasets.Dataset` objects, please visit the
-# `link <../../starting/analysis_2.ipynb#Preparing-reduced-datasets-geometry>`__):
+# on `~gammapy.datasets.Dataset` objects, please checkout
+# :doc:`/tutorials/api/datasets` tutorial):
 # we define the energy axes (true and reconstruncted), the migration axis
 # and the geometry of the observation.
 #
@@ -218,8 +218,7 @@ dataset.write("./event_sampling/dataset.fits", overwrite=True)
 # Define the Sky model: a point-like source
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# Now let’s define a Sky model (see how to create it
-# `here <../../api/models.ipynb>`__) for a point-like source centered 0.5
+# Now let’s define a sky model for a point-like source centered 0.5
 # deg far from the Galactic Center and with a power-law spectrum. We then
 # save the model into a yaml file.
 #
@@ -276,8 +275,7 @@ events = sampler.run(dataset, observation)
 # The output of the event-sampler is an event list with coordinates,
 # energies (true and reconstructed) and time of arrivals of the source and
 # background events. `events` is a `~gammapy.data.EventList` object
-# (more details
-# `here <https://docs.gammapy.org/dev/tutorials/data/cta.html#Events>`__).
+# (for details see e.g. :doc:`/tutorials/data/cta` tutorial.).
 # Source and background events are flagged by the MC_ID identifier (where
 # 0 is the default identifier for the background).
 #
@@ -331,10 +329,8 @@ counts.sum_over_axes().plot(add_cbar=True)
 # Fit the simulated data
 # ~~~~~~~~~~~~~~~~~~~~~~
 #
-# We can now check the sake of the event sampling by fitting the data (a
-# tutorial of source fitting is
-# `here <../../starting/analysis_2.ipynb#Fit-the-model>`__ and
-# `here <simulate_3d.ipynb>`__. We make use of the same
+# We can now check the sake of the event sampling by fitting the data.
+#  We make use of the same
 # `~gammapy.modeling.models.Models` adopted for the simulation. Hence,
 # we firstly read the `~gammapy.datasets.Dataset` and the model file,
 # and we fill the `~gammapy.datasets.Dataset` with the sampled events.
@@ -551,9 +547,9 @@ data_store.obs_table
 
 
 ######################################################################
-# Then you can create the obervations from the Datastore and make your own
+# Then you can create the obervations from the data store and make your own
 # analysis following the instructions in the
-# `analysis_2 <analysis_2.ipynb>`__ tutorial.
+# :doc:`/tutorials/starting/analysis_2` tutorial.
 #
 
 observations = data_store.get_observations()

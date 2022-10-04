@@ -8,8 +8,7 @@ Prerequisites
 -------------
 
 -  Knowledge of 3D extraction and datasets used in gammapy, see for
-   instance the `first analysis
-   tutorial <../../starting/analysis_1.ipynb>`__
+   example the :doc:`/tutorials/starting/analysis_1` tutorial.
 
 Context
 -------
@@ -168,7 +167,8 @@ print(dataset)
 ######################################################################
 # Now use this dataset as you would in all standard analysis. You can plot
 # the maps, or proceed with your custom analysis. In the next section, we
-# show the standard 3D fitting as in `analysis_3d <analysis_3d.ipynb>`__.
+# show the standard 3D fitting as in :doc:`/tutorials/analysis-3d/analysis_3d`
+# tutorial.
 #
 
 # To plot, eg, counts:

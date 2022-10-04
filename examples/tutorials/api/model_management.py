@@ -21,14 +21,11 @@ objects) to which we append and delete models.
 Prerequisites
 -------------
 
--  Knowledge of 3D analysis, dataset reduction and fitting see `analysis
-   notebook <../starting/analysis_2.ipynb>`__
--  Understanding of gammapy models `see the models
-   tutorial <models.ipynb>`__
--  Analysis of the `galactic center with
-   Fermi-LAT <../data/fermi_lat.ipynb>`__
--  Analysis of the `galactic center with
-   CTA-DC1 <../analysis/3D/analysis_3d.ipynb>`__
+-  Knowledge of 3D analysis, dataset reduction and fitting see the :doc:`/tutorials/starting/analysis_2`
+   tutorial.
+-  Understanding of gammapy models, see the :doc:`/tutorials/api/models` tutorial.
+-  Analysis of the Galactic Center with Fermi-LAT, shown in the  :doc:`/tutorials/data/fermi_lat` tutorial.
+-  Analysis of the Galactic Center with CTA-DC1 , shown in the  :doc:`/tutorials/analysis-3d/analysis_3d` tutorial.
 
 Proposed approach
 -----------------
@@ -230,8 +227,8 @@ print(datasets)
 # -----------------------------
 #
 # We now load the Fermi 3FHL catalog and demonstrate some convenience
-# functions. For more details on using gammapy catalog, see
-# here[catalogs.ipynb].
+# functions. For more details on using Gammapy catalog, see the
+# :doc:`/tutorials/api/catalog` tutorial.
 #
 
 from gammapy.catalog import SourceCatalog3FHL
@@ -485,15 +482,14 @@ help(models_selected.unfreeze)
 models_3fhl.write("3fhl_models.yaml", overwrite=True)
 
 # To save datasets and models
-datasets.write(filename="datasets-gc.yaml", 
-               filename_models="models_gc.yaml", 
-               overwrite=True)
+datasets.write(
+    filename="datasets-gc.yaml", filename_models="models_gc.yaml", overwrite=True
+)
 
 # To read only models
 models = Models.read("3fhl_models.yaml")
 print(models)
 
 # To read datasets with models
-datasets_read = Datasets.read("datasets-gc.yaml", 
-                              filename_models="models_gc.yaml")
+datasets_read = Datasets.read("datasets-gc.yaml", filename_models="models_gc.yaml")
 print(datasets_read)

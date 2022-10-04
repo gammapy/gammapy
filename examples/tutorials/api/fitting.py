@@ -7,10 +7,10 @@ Learn how the model, dataset and fit Gammapy classes work together in a detailed
 Prerequisites
 -------------
 
--  Knowledge of spectral analysis to produce 1D On-Off datasets, `see
-   the following tutorial <../analysis/1D/spectral_analysis.ipynb>`__
--  Reading of pre-computed datasets `see the MWL
-   tutorial <../analysis/3D/analysis_mwl.ipynb>`__
+-  Knowledge of spectral analysis to produce 1D On-Off datasets, see
+   the :doc:`/tutorials/analysis-1d/spectral_analysis` tutorial.
+-  Reading of pre-computed datasets see e.g.
+   :doc:`/tutorials/analysis-3d/analysis_mwl` tutorial.
 -  General knowledge on statistics and optimization methods
 
 Proposed approach
@@ -19,14 +19,14 @@ Proposed approach
 This is a hands-on tutorial to `~gammapy.modeling`, showing how to do
 perform a Fit in gammapy. The emphasis here is on interfacing the
 `Fit` class and inspecting the errors. To see an analysis example of
-how datasets and models interact, see the `model management
-notebook <model_management.ipynb>`__. As an example, in this notebook,
+how datasets and models interact, see the
+:doc:`/tutorials/api/model_management` tutorial. As an example, in this notebook,
 we are going to work with HESS data of the Crab Nebula and show in
 particular how to : - perform a spectral analysis - use different
 fitting backends - access covariance matrix information and parameter
 errors - compute likelihood profile - compute confidence contours
 
-See also: `Models gallery tutorial <models.ipynb>`__ and
+See also: :doc:`/tutorials/api/models` and
 `docs/modeling/index.rst`.
 
 The setup
@@ -237,10 +237,10 @@ for ax, par in zip(axes, crab_model.parameters.free_parameters):
 # Inspect model residuals. Those can always be accessed using
 # `~gammapy.datasets.Dataset.residuals()`, that will return an array in case a the fitted
 # `~gammapy.datasets.Dataset` is a `~gammapy.datasets.SpectrumDataset` and a full cube in case of a
-# `~gammapy.datasets.MapDataset`. For more details, we refer here to the dedicated fitting
-# tutorials: `analysis_3d.ipynb <../analysis/3D/analysis_3d.ipynb>`__ (for
+# `~gammapy.datasets.MapDataset`. For more details, we refer here to the dedicated
+#  :doc:`/tutorials/analysis-3d/analysis_3d` (for
 # `~gammapy.datasets.MapDataset` fitting) and
-# `spectrum_analysis.ipynb <../analysis/1D/spectral_analysis.ipynb>`__
+# :doc:`/tutorials/analysis-1d/spectral_analysis`
 # (for `SpectrumDataset` fitting).
 #
 

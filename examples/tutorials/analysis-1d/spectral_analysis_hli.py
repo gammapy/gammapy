@@ -231,8 +231,7 @@ analysis.observations.ids
 
 ######################################################################
 # To see how to explore observations, please refer to the following
-# notebook: `CTA with Gammapy <../data/cta.ipynb>`__ or `HESS with
-# Gammapy <../data/hess.ipynb>`__
+# notebook: :doc:`/tutorials/data/cta` or :doc:`/tutorials/data/hess`
 #
 
 
@@ -474,7 +473,7 @@ ax_sed.set_xlim(0.5, 40)
 # ------------
 #
 # You can look at the same analysis without the high level interface in
-# `spectral analysis <../analysis/1D/spectral_analysis.ipynb>`__.
+# :doc:`/tutorials/analysis-1d/spectral_analysis`
 #
 # As we can store the best model fit, you can overlaid the fit results of
 # both methods on an unique plot.

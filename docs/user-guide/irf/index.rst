@@ -111,3 +111,4 @@ Using gammapy.irf
     aeff
     bkg
     edisp
+    psf

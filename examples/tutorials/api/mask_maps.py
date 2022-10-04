@@ -107,6 +107,8 @@ check_tutorials_setup()
 
 
 ######################################################################
+# .. _masks-for-fitting:
+#
 # Creating a mask for fitting
 # ---------------------------
 #

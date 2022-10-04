@@ -43,8 +43,7 @@ You may check out the whole list of built-in models in the :ref:`model-gallery`.
 Custom models
 ---------------
 
-Gammapy provides an easy interface to
-`create your own custom models <../tutorials/api/models.rst#Implementing-a-custom-model>`__
+Gammapy provides an easy interface to :ref:`custom-model`.
 
 
 Using gammapy.modeling

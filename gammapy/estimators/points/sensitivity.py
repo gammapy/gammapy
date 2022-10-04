@@ -31,7 +31,7 @@ class SensitivityEstimator(Estimator):
 
     Examples
     --------
-    For a usage example see `cta_sensitivity.html <../../../docs/tutorials/analysis/1D/cta_sensitivity.html>`__  # noqa: E501
+    For a usage example see :doc:`/tutorials/analysis-1d/cta_sensitivity` tutorial.
 
     """
 
