@@ -95,10 +95,18 @@ class FluxPointsEstimator(FluxEstimator):
         """
         datasets = Datasets(datasets=datasets)
 
-        if datasets.models[self.source].spectral_model.is_norm_spectral_model:
-            raise TypeError(
-                "NormSpectralModel are not supported in FluxPointsEstimator."
-            )
+        if not datasets.energy_axes_are_aligned:
+            raise ValueError("All datasets must have aligned energy axes.")
+
+        print(datasets.meta_table)
+
+        if "TELESCOP" in datasets.meta_table.colnames:
+            telescopes = datasets.meta_table["TELESCOP"]
+            if not len(np.unique(telescopes)) == 1:
+                raise ValueError(
+                    "All datasets must use the same value of the"
+                    " 'TELESCOP' meta keyword."
+                )
 
         rows = []
         for energy_min, energy_max in progress_bar(

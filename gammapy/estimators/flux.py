@@ -113,6 +113,12 @@ class FluxEstimator(ParameterEstimator):
             Scale spectral model
         """
         ref_model = models[self.source].spectral_model
+
+        if ref_model.is_norm_spectral_model:
+            raise ValueError(
+                "Instances of `NormSpectralModel` are not supported for flux point estimation."
+            )
+
         scale_model = ScaleSpectralModel(ref_model)
 
         norms = Parameters([p for p in ref_model.parameters if p.is_norm])
@@ -182,7 +188,6 @@ class FluxEstimator(ParameterEstimator):
         datasets.models = models
         result.update(super().run(datasets, model.norm))
 
-        # TODO: find a cleaner way of including the npred_excess info
         datasets.models[self.source].spectral_model.norm.value = result["norm"]
         result.update(self.estimate_npred_excess(datasets=datasets))
         return result
