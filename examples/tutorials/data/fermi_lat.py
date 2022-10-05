@@ -229,21 +229,15 @@ exposure.get_by_coord({"skycoord": gc_pos, "energy_true": energy})
 # we just load one that represents a small cutout for the Galactic center
 # region.
 #
-# For serialisation of TemplateSpatialModels, it is always useful to specify
-# the filename.
+# In this case, the maps are already in differential units, so we do not
+# want to normalise it again.
 #
 
-diffuse_galactic_fermi = Map.read("$GAMMAPY_DATA/fermi-3fhl-gc/gll_iem_v06_gc.fits.gz")
-
-print(diffuse_galactic_fermi)
-
-print(diffuse_galactic_fermi.geom.axes[0])
-
-template_diffuse = TemplateSpatialModel(
-    diffuse_galactic_fermi,
-    normalize=False,
-    filename="$GAMMAPY_DATA/fermi-3fhl-gc/gll_iem_v06_gc.fits.gz",
+template_diffuse = TemplateSpatialModel.read(
+    filename="$GAMMAPY_DATA/fermi-3fhl-gc/gll_iem_v06_gc.fits.gz", normalize=False
 )
+
+print(template_diffuse.map)
 
 diffuse_iem = SkyModel(
     spectral_model=PowerLawNormSpectralModel(),

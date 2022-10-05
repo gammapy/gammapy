@@ -376,6 +376,7 @@ def test_compound_models_io(tmp_path):
     Models([sk]).write(tmp_path / "test.yaml")
     sk1 = Models.read(tmp_path / "test.yaml")
     assert_allclose(sk1.covariance.data, sk.covariance.data, rtol=1e-3)
+    assert_allclose(np.sum(sk1.covariance.data), 0.0)
     assert Models([sk]).parameters_unique_names == [
         "model.spectral.index",
         "model.spectral.amplitude",
