@@ -576,7 +576,7 @@ class DatasetModels(collections.abc.Sequence):
 
         for idx, name in enumerate(names):
             values = self.covariance.data[idx]
-            table[name] = values
+            table[str(idx)] = values
 
         table.write(make_path(filename), **kwargs)
 
