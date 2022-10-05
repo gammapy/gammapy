@@ -6,20 +6,46 @@
 Summary
 ~~~~~~~
 
-- Released May 12th, 2022
+- Released Oct 7th, 2022
 - 10 contributors
 - 72 pull requests since v0.20.1 (not all listed below)
 
 New features
 ~~~~~~~~~~~~
 
+This new release is the Long Term Stable (LTS) version 1.0. Most of the changes are in the package
+infrastructure. There are no API-breaking changes introduced since 0.20.1. A number of improvements
+and bug correction have been implemented.
+
+- The tutorial gallery now relies on Sphinx gallery. The tutorials are python scripts with specific
+syntax for the description cells. This simplifies the documentation build. This will make the history
+cleaner and tutorial code reviews easier. The download button is now moved at the end of the tutorial.
+- Support for HAWC data has been improved. The current version is compatible with g.a.d.f. v0.3.
+-
+
 API changes
 ~~~~~~~~~~~
 
+*gammapy.stats*
+
+- For consistency with the definition of `errn` and `errp`, whic are always positve quantities,
+the sign of the value returned by `CountsStatistic.compute_errn` has been changed.
 
 Bug fixes and improvements
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+*gammapy.astro*
+
+- The DM annihilation spectral model `DarkMatterAnnihilationSpectralModel` can now be serialized
+to yaml.
+
+*gammapy.datasets*
+
+- The dataset name is now serialized with the Dataset as the `NAME` keyword in the primary HDU.
+
+*gammapy.estimators*
+
+-
 
 Contributors
 ~~~~~~~~~~~~
@@ -77,9 +103,7 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 - [#4015] Allow to stack mask_fit in Dataset.stack (Quentin Remy)
 - [#4014] Avoid unnecessary copy in Map.stack (Quentin Remy)
 - [#4013] Fix zeros errors in models created from 3HWC catalog (Quentin Remy)
-- [#4004] Add code block substitution and conditional quick start in doc getting-started (Régis Terrier)
 - [#4000] MNT: Raise error rather than silently proceed (Brigitta Sipőcz)
-- [#3998] MAINT: minor setup.cfg cleanup (Brigitta Sipőcz)
 - [#3956] Safe mask range on the 1D spectrum tutorial (Bruno Khélifi)
 - [#3950] PIG 23 - Gammapy Release Cycle and Version Numbering (Régis Terrier)
 - [#3925] Temporal model integration (Axel Donath)
