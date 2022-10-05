@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import logging
 import click
 from github import Github, GithubException
-import logging
 
 log = logging.getLogger(__name__)
 
