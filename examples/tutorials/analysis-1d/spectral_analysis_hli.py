@@ -112,8 +112,8 @@ datasets:
     on_region: {frame: icrs, lon: 83.633 deg, lat: 22.014 deg, radius: 0.11 deg}
     containment_correction: true
     safe_mask:
-       methods: ['offset-max']
-       parameters: {offset_max: 2.0 deg}
+       methods: ['aeff-default', 'aeff-max']
+       parameters: {aeff_percent: 0.1}
     background:
         method: reflected
 fit:
