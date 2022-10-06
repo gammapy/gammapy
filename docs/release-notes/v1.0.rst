@@ -16,12 +16,31 @@ New features
 This new release is the Long Term Stable (LTS) version 1.0. Most of the changes are in the package
 infrastructure. There are no API-breaking changes introduced since 0.20.1. A number of improvements
 and bug correction have been implemented.
+A new version of g.a.d.f. has been released (v0.3). It is expected to be compatible with this
+Gammapy version.
+
+*documentation*
 
 - The tutorial gallery now relies on Sphinx gallery. The tutorials are python scripts with specific
 syntax for the description cells. This simplifies the documentation build. This will make the history
 cleaner and tutorial code reviews easier. The download button is now moved at the end of the tutorial.
-- Support for HAWC data has been improved. The current version is compatible with g.a.d.f. v0.3.
--
+Binder is now working again for tutorials.
+
+*gammapy.data and gammapy.irf*
+
+- Support for HAWC data has been improved. In particular, a `RecoPSFMap` has been added in IRF
+to support PSF in reco energy.
+
+*gammapy.maps*
+
+- A reprojection method has been implemented on `Map` to allow for reprojection on a new `MapGeom`
+object. It supports different spatial geometries but requires identical non-spatial axes. See
+`Map.reproject_to_geom()`.
+
+*infrastructure*
+
+- The compliance with the astropy affiliated packages has been improved. In particular, tox is now
+used for testing and CI.
 
 API changes
 ~~~~~~~~~~~
@@ -39,13 +58,33 @@ Bug fixes and improvements
 - The DM annihilation spectral model `DarkMatterAnnihilationSpectralModel` can now be serialized
 to yaml.
 
+*gammapy.data*
+
+- An `Observation.copy()` method has been implemented to allow modification of existing `Observation`
+objects.
+
 *gammapy.datasets*
 
 - The dataset name is now serialized with the Dataset as the `NAME` keyword in the primary HDU.
+- A `peek` method is now available for the `MapEvaluator` to help debugging issues
+with model evaluation on a `Dataset`.
 
 *gammapy.estimators*
 
--
+*gammapy.makers*
+
+- Add support for drifting instrument on the `MapDatasetMaker`.
+
+*gammapy.maps*
+
+- `RegionNDMap.sample_coord()` has been implemented to generate events from a region map.
+
+*gammapy.modeling*
+
+- A bug has been corrected in `TemporalModel.sample_time()`.
+- `TemporalModel.integrate` now provides a generic integration method.
+- A new `TemplatePhaseCurveTemporalModel` has been added to support pulsar-like lightcurves.
+
 
 Contributors
 ~~~~~~~~~~~~
