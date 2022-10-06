@@ -174,16 +174,27 @@ observation
 # and the EVENTS header in `events.table.meta` can be used to look up
 # which `MC_ID` corresponds to which emission component.
 #
+# Events can be accessed from the observatiosn object like:
 
 events = observation.events
-events
+
+######################################################################
+# Or read directly from an event file:
+#
 
 events = EventList.read(
     "$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_110380.fits"
 )
-events
 
-events.table[:5]
+######################################################################
+# Here we print the data from the first 5 events listed in the table:
+#
+
+print(events.table[:5])
+
+######################################################################
+# And show a summary plot:
+#
 
 events.peek()
 
