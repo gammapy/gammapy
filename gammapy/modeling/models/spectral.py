@@ -1550,6 +1550,7 @@ class TemplateSpectralModel(SpectralModel):
         self,
         energy,
         values,
+        norm=1.0,
         interp_kwargs=None,
         meta=None,
     ):
@@ -1567,7 +1568,7 @@ class TemplateSpectralModel(SpectralModel):
             points=(energy,), values=values, **interp_kwargs
         )
 
-        super().__init__()
+        super().__init__(norm=norm)
 
     @classmethod
     def read_xspec_model(cls, filename, param, **kwargs):
@@ -1641,12 +1642,8 @@ class TemplateSpectralModel(SpectralModel):
         data = data["spectral"]
         energy = u.Quantity(data["energy"]["data"], data["energy"]["unit"])
         values = u.Quantity(data["values"]["data"], data["values"]["unit"])
-        model = cls(energy=energy, values=values)
-        for idx, p in enumerate(model.parameters):
-            par = p.to_dict()
-            par.update(data["parameters"][idx])
-            setattr(model, p.name, Parameter(**par))
-        return model
+        norm = [p["value"] for p in data["parameters"] if p["name"] == "norm"][0]
+        return cls(energy=energy, values=values, norm=norm)
 
     @classmethod
     def from_region_map(cls, map, **kwargs):
@@ -1814,7 +1811,6 @@ class EBLAbsorptionNormSpectralModel(SpectralModel):
         self.filename = None
         # set values log centers
         self.param = param
-        self.energy = energy
         self.energy = energy
         self.data = u.Quantity(data, copy=False)
 
