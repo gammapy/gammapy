@@ -377,9 +377,9 @@ irfs["bkg"].plot_at_energy(
 #
 # -  Load the EVENTS file for `obs_id=111159` as a
 #    `~gammapy.data.EventList` object.
-# -  Use `events.table` to find the energy, sky coordinate and time of
+# -  Use `~gammapy.data.EventList.table` to find the energy, sky coordinate and time of
 #    the highest-energy envent.
-# -  Use `events.pointing_radec` to find the pointing position of this
+# -  Use `~gammapy.data.EventList.pointing_radec` to find the pointing position of this
 #    observation, and use `astropy.coordinates.SkyCoord` methods to find
 #    the field of view offset of the highest-energy event.
 # -  What is the effective area and PSF 68% containment radius of CTA at 1
