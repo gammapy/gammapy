@@ -112,8 +112,8 @@ datasets:
     on_region: {frame: icrs, lon: 83.633 deg, lat: 22.014 deg, radius: 0.11 deg}
     containment_correction: true
     safe_mask:
-       methods: ['offset-max']
-       parameters: {offset_max: 2.0 deg}
+       methods: ['aeff-default', 'aeff-max']
+       parameters: {aeff_percent: 0.1}
     background:
         method: reflected
 fit:
@@ -394,6 +394,7 @@ model_1d.to_parameters_table()
 ax_spectrum, ax_residuals = analysis.datasets[0].plot_fit()
 ax_spectrum.set_ylim(0.1, 200)
 ax_spectrum.set_xlim(0.2, 60)
+ax_residuals.set_xlim(0.2, 60)
 analysis.datasets[0].plot_masks(ax=ax_spectrum)
 
 
