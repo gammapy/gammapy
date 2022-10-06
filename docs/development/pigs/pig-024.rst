@@ -96,17 +96,6 @@ given in a new ``CONTRIBUTING.md`` file, as well as a link to this PIG.
     `ORCID <https://orcid.org/>`_ identifier and store it into their GitHub user profile for commodity, and inform the
     developers of any change of affiliation or email address.
 
-
-Definition of the *Maintainer*
-------------------------------
-
-Usually, a software maintainer or package maintainer is one or more people who build source code into a binary package
-for distribution, commit patches, or organize code in a source repository. In the Open Source community, they are
-generally mentioned in the metadata associated with a release.
-
-For Gammapy, by default, the maintainers are the Lead Developers. If in the future a task is dedicated to the creation
-of a release, the maintainer will be the person in charge of this task.
-
 Releases
 --------
 
@@ -212,19 +201,17 @@ Metadata files
 ==============
 
 Depending on the software repository, different metadata files are used in the eco-system of
-Open Source research software and are mandatory.
+Open Source research software and **are mandatory**.
 
-The file ``codemeta.json`` is used by HAL and Software Heritage, and recommended by
-`ESCAPE <https://escape2020.pages.in2p3.fr/wp3/eossr/v0.3.2/metadata.html>`_ or
-`EOSC <https://www.eosc-pillar.eu/news/illustrating-benefits-eosc-research-communities-germany>`_.
-
+CITATION.cff
+------------
 The file ``CITATION.cff`` is used by Zenodo and GitHub. Its format should follow the rules set up by the
 `Citation File Format project <https://pythonlang.dev/repo/citation-file-format-citation-file-format/>`_. A GitHub
 Action can be used to automatically check the compliance with the latest format. At the date of this PIG, there is no
 official scheme to handle current and past affiliations, that might be needed for LTS releases for example (see the
-CFF project `Issue #268 <https://github.com/citation-file-format/citation-file-format/issues/268>`_). In the affiliation
-string, one could add a past affiliation as precised below, but with a risk that Zenodo or tools using ``CITATION.cff``
-to make the ``codemeta.json`` does not understand it.
+CFF project `Issue #268 <https://github.com/citation-file-format/citation-file-format/issues/268>`_).
+In the affiliation string, one could add a past affiliation as precised below, but with a risk that Zenodo or tools
+using ``CITATION.cff`` to make the ``codemeta.json`` does not process correctly this double affiliation.
 
  ::
 
@@ -235,15 +222,29 @@ to make the ``codemeta.json`` does not understand it.
         email: yyyy.xxx@gammapy.org
         orcid: "https://orcid.org/0000-0000-0000-0000"
 
-The ``CITATION.cff`` file will be used as the main file to be maintained, while the ``codemeta.json`` will be
-automatically created from it. For any release, the former should be carefully updated and systematically a review
-should be organised by the dev team.
+codemeta.json
+-------------
+The file ``codemeta.json`` is used by HAL and Software Heritage, and recommended by
+`ESCAPE <https://escape2020.pages.in2p3.fr/wp3/eossr/v0.3.2/metadata.html>`_ or
+`EOSC <https://www.eosc-pillar.eu/news/illustrating-benefits-eosc-research-communities-germany>`_ to be used. Its
+format is elaborated by the `CodeMeta Project <https://codemeta.github.io/index.html>`_.
 
-In order to maintain updated data about authors for the LTS releases and LTS papers, a new file will be used with these
-data, ``LTS_AUTHORS.cff``. This file will be used to create the associated ``codemeta.json`` file.
+It offers a more detailed description of a software than the one into ``CITATION.cff``, that is focused on authors.
 
-Possible implementation
-=======================
+Definition of the *Maintainer*
+------------------------------
+
+In the codemeta format, a specific field, a *Maintainer*, can be filled. Usually, a software maintainer
+or package maintainer is one or more people who build source code into a binary package
+for distribution, commit patches, or organize code in a source repository. And in case of issue,
+this person can be contacted to fix a broken deposit.
+
+For Gammapy, by default, the maintainers are the Lead Developers. If in the future a task is
+dedicated to the creation of a release, the maintainer will be the person in charge of this task.
+The name or the names of the maintainers will be made by the Lead Developers.
+
+Possible implementations
+========================
 
 DCO implementation
 ------------------
@@ -262,13 +263,20 @@ authors list in all the needed formats.
 Collection of the personal information of authors
 -------------------------------------------------
 
-The data collected from the git history are not sufficient for any publication. Most of the contributors must give their
-affiliation as stipulated by their working contract. Also, the ORCID number is a relatively new type of information,
-recommended to be used in the context of the Open Science movement, but it is not mandatory. However, one needs to
-collect this information to build the authors lists, in a safe and fair way.
+The ``CITATION.cff`` file will be used as the main file to be maintained, while the ``codemeta.json`` will be
+automatically created from it. For any release, the former should be carefully updated and systematically a review
+should be organised by the dev team.
+
+In order to maintain updated data about authors for the LTS releases and LTS papers, a new file could be used with
+these data, ``LTS_AUTHORS.cff``. The decision will be made in a dedicated PR.
+
+The data collected from the git history are not sufficient for any publication. Most of the contributors must give
+their affiliation as stipulated by their working contract. Also, the ORCID number is a relatively new type of
+information, recommended to be used in the context of the Open Science movement, but it is not mandatory.
+However, one needs to collect this information to build the authors lists, in a safe and fair way.
 
 In this purpose, one could use the public user profile of the GitHub platform. They are public
-data, but one should be aware that they are not complete and/or up-to-date. As mentioned earlier,
+data, but one should be aware that they might not be complete and/or up-to-date. As mentioned earlier,
 it is recommended to fill correctly this GitHub profile to help the dev team to pre-fill the
 metadata files.
 
