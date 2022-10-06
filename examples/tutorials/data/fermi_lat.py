@@ -64,7 +64,7 @@ from astropy.coordinates import SkyCoord
 # %matplotlib inline
 import matplotlib.pyplot as plt
 from gammapy.data import EventList
-from gammapy.datasets import MapDataset
+from gammapy.datasets import MapDataset, Datasets
 from gammapy.irf import EDispKernelMap, PSFMap
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Fit
@@ -229,14 +229,15 @@ exposure.get_by_coord({"skycoord": gc_pos, "energy_true": energy})
 # we just load one that represents a small cutout for the Galactic center
 # region.
 #
+# In this case, the maps are already in differential units, so we do not
+# want to normalise it again.
+#
 
-diffuse_galactic_fermi = Map.read("$GAMMAPY_DATA/fermi-3fhl-gc/gll_iem_v06_gc.fits.gz")
+template_diffuse = TemplateSpatialModel.read(
+    filename="$GAMMAPY_DATA/fermi-3fhl-gc/gll_iem_v06_gc.fits.gz", normalize=False
+)
 
-print(diffuse_galactic_fermi)
-
-print(diffuse_galactic_fermi.geom.axes[0])
-
-template_diffuse = TemplateSpatialModel(diffuse_galactic_fermi, normalize=False)
+print(template_diffuse.map)
 
 diffuse_iem = SkyModel(
     spectral_model=PowerLawNormSpectralModel(),
@@ -253,7 +254,7 @@ template_diffuse.map.slice_by_idx({"energy_true": 0}).plot(add_cbar=True)
 
 
 ######################################################################
-# Here is the spectrum at the Glaactic center:
+# Here is the spectrum at the Galactic center:
 #
 
 dnde = template_diffuse.map.to_region_nd_map(region=gc_pos)
@@ -375,7 +376,12 @@ source = SkyModel(
 models = Models([source, diffuse_iem, diffuse_iso])
 
 dataset = MapDataset(
-    models=models, counts=counts, exposure=exposure, psf=psf, edisp=edisp
+    models=models,
+    counts=counts,
+    exposure=exposure,
+    psf=psf,
+    edisp=edisp,
+    name="fermi-dataset",
 )
 
 # %%time
@@ -391,6 +397,21 @@ residual.sum_over_axes().smooth("0.1 deg").plot(
     cmap="coolwarm", vmin=-3, vmax=3, add_cbar=True
 )
 
+######################################################################
+# Serialisation
+# ---
+#
+# To serialise the created dataset, you must proceed through the
+# Datasets API
+#
+
+Datasets([dataset]).write(
+    filename="fermi_dataset.yaml", filename_models="fermi_models.yaml", overwrite=True
+)
+datasets_read = Datasets.read(
+    filename="fermi_dataset.yaml", filename_models="fermi_models.yaml"
+)
+print(datasets_read)
 
 ######################################################################
 # Exercises
