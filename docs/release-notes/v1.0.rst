@@ -8,7 +8,7 @@ Summary
 
 - Released Oct 7th, 2022
 - 10 contributors
-- 72 pull requests since v0.20.1 (not all listed below)
+- 78 pull requests since v0.20.1 (not all listed below)
 
 New features
 ~~~~~~~~~~~~
