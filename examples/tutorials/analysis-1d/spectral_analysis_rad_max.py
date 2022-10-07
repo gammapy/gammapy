@@ -91,7 +91,7 @@ In order to define the OFF regions it is recommended to use a
 `~gammapy.makers.WobbleRegionsFinder`, that uses fixed positions for
 the OFF regions. In the different estimated energy bins we will have OFF
 regions centered at the same positions, but with changing size. As for
-the `SpectrumDataSetMaker`, the `BackgroundMaker` will use the
+the `~gammapy.makers.SpectrumDatasetMaker`, the `~gammapy.makers.ReflectedRegionsBackgroundMaker` will use the
 values in `~gammapy.irf.RadMax2D` to define the sizes of the OFF
 regions.
 

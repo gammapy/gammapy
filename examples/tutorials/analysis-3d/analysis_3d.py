@@ -468,15 +468,6 @@ plt.legend()
 
 
 ######################################################################
-# The complete tutorial notebook of this analysis is available to be
-# downloaded in
-# `GAMMAPY-EXTRA <https://github.com/gammapy/gammapy-extra>`__ repository
-# at
-# https://github.com/gammapy/gammapy-extra/blob/master/analyses/cta_1dc_gc_3d.ipynb).
-#
-
-
-######################################################################
 # Exercises
 # ---------
 #

@@ -189,8 +189,8 @@ print(exposure_hpx.geom.axes[0])
 
 exposure_hpx.plot()
 
+######################################################################
 # For exposure, we choose a geometry with node_type='center',
-# whereas for counts it was node_type='edge'
 axis = MapAxis.from_energy_bounds(
     "10 GeV",
     "2 TeV",
@@ -202,14 +202,14 @@ geom = WcsGeom(wcs=counts.geom.wcs, npix=counts.geom.npix, axes=[axis])
 
 exposure = exposure_hpx.interp_to_geom(geom)
 
-counts.geom.axes[0]
-
 print(exposure.geom)
 print(exposure.geom.axes[0])
 
+######################################################################
 # Exposure is almost constant across the field of view
 exposure.slice_by_idx({"energy_true": 0}).plot(add_cbar=True)
 
+######################################################################
 # Exposure varies very little with energy at these high energies
 energy = [10, 100, 1000] * u.GeV
 exposure.get_by_coord({"skycoord": gc_pos, "energy_true": energy})
@@ -331,6 +331,10 @@ psf_mean.plot_psf_vs_rad(c="k", ls="--", energy_true=[500] * u.GeV)
 plt.xlim(1e-3, 0.3)
 plt.ylim(1e3, 1e6)
 plt.legend()
+
+######################################################################
+# This is whaty the corresponding PSF kernel looks like:
+#
 
 psf_kernel = psf.get_psf_kernel(
     position=geom.center_skydir, geom=geom, max_radius="1 deg"

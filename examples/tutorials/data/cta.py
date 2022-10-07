@@ -174,16 +174,27 @@ observation
 # and the EVENTS header in `events.table.meta` can be used to look up
 # which `MC_ID` corresponds to which emission component.
 #
+# Events can be accessed from the observatiosn object like:
 
 events = observation.events
-events
+
+######################################################################
+# Or read directly from an event file:
+#
 
 events = EventList.read(
     "$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_110380.fits"
 )
-events
 
-events.table[:5]
+######################################################################
+# Here we print the data from the first 5 events listed in the table:
+#
+
+print(events.table[:5])
+
+######################################################################
+# And show a summary plot:
+#
 
 events.peek()
 
@@ -366,9 +377,9 @@ irfs["bkg"].plot_at_energy(
 #
 # -  Load the EVENTS file for `obs_id=111159` as a
 #    `~gammapy.data.EventList` object.
-# -  Use `events.table` to find the energy, sky coordinate and time of
+# -  Use `~gammapy.data.EventList.table` to find the energy, sky coordinate and time of
 #    the highest-energy envent.
-# -  Use `events.pointing_radec` to find the pointing position of this
+# -  Use `~gammapy.data.EventList.pointing_radec` to find the pointing position of this
 #    observation, and use `astropy.coordinates.SkyCoord` methods to find
 #    the field of view offset of the highest-energy event.
 # -  What is the effective area and PSF 68% containment radius of CTA at 1

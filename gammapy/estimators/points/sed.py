@@ -98,8 +98,6 @@ class FluxPointsEstimator(FluxEstimator):
         if not datasets.energy_axes_are_aligned:
             raise ValueError("All datasets must have aligned energy axes.")
 
-        print(datasets.meta_table)
-
         if "TELESCOP" in datasets.meta_table.colnames:
             telescopes = datasets.meta_table["TELESCOP"]
             if not len(np.unique(telescopes)) == 1:
