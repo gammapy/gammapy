@@ -40,7 +40,9 @@ Status shields
 
 * https://www.openhub.net/p/gammapy
 
-### Note if you cloned this repository before Oct 7th 2022
+
+Note if you cloned this repository before Oct 7th 2022
+++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 The  primary branch was renamed `main`. See the following instructions:
 https://github.com/gammapy/gammapy/wiki/Changing-master-branch-to-main
