@@ -107,7 +107,7 @@ gc_3fhl = Map.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-counts.fits.gz")
 # The image is a `~gammapy.maps.WcsNDMap` object:
 #
 
-gc_3fhl
+print(gc_3fhl)
 
 
 ######################################################################
@@ -117,14 +117,14 @@ gc_3fhl
 # The ``geom`` attribute is a `~gammapy.maps.WcsGeom` object:
 #
 
-gc_3fhl.geom
+print(gc_3fhl.geom)
 
 
 ######################################################################
 # Let’s take a closer look a the ``.data`` attribute:
 #
 
-gc_3fhl.data
+print(gc_3fhl.data)
 
 
 ######################################################################
@@ -219,7 +219,7 @@ events_3fhl = EventList.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-events.f
 # object. It can be accessed with ``.table`` attribute:
 #
 
-events_3fhl.table
+print(events_3fhl.table)
 
 
 ######################################################################
@@ -227,14 +227,14 @@ events_3fhl.table
 # events.
 #
 
-len(events_3fhl.table)
+print(len(events_3fhl.table))
 
 
 ######################################################################
 # And we can access any other attribute of the ``Table`` object as well:
 #
 
-events_3fhl.table.colnames
+print(events_3fhl.table.colnames)
 
 
 ######################################################################
@@ -248,12 +248,12 @@ events_3fhl.table.colnames
 # objects:
 #
 
-events_3fhl.energy.to("GeV")
+print(events_3fhl.energy.to("GeV"))
 
-events_3fhl.galactic
+print(events_3fhl.galactic)
 # events_3fhl.radec
 
-events_3fhl.time
+print(events_3fhl.time)
 
 
 ######################################################################
@@ -272,7 +272,7 @@ events_gc_3fhl = events_3fhl.select_region(region)
 events_gc_3fhl.table.sort("ENERGY")
 
 # and show highest energy photon
-events_gc_3fhl.energy[-1].to("GeV")
+print("highest energy photon: ", events_gc_3fhl.energy[-1].to("GeV"))
 
 
 ######################################################################
@@ -309,7 +309,7 @@ from gammapy.catalog import SourceCatalog3FHL
 #
 
 fermi_3fhl = SourceCatalog3FHL()
-fermi_3fhl.table
+print(fermi_3fhl.table)
 
 
 ######################################################################
@@ -327,7 +327,7 @@ fermi_3fhl.table.sort("Signif_Avg")
 top_five_TS_3fhl = fermi_3fhl.table[::-1][:5]
 
 # print the top five significant sources with association and source class
-top_five_TS_3fhl[["Source_Name", "ASSOC1", "ASSOC2", "CLASS", "Signif_Avg"]]
+print(top_five_TS_3fhl[["Source_Name", "ASSOC1", "ASSOC2", "CLASS", "Signif_Avg"]])
 
 
 ######################################################################
@@ -400,7 +400,7 @@ ax_crab_3fhl = crab_3fhl_spec.plot(energy_bounds=[10, 2000] * u.GeV, energy_powe
 # like normal Python function and convert to the desired units:
 #
 
-crab_3fhl_spec(100 * u.GeV).to("cm-2 s-1 GeV-1")
+print(crab_3fhl_spec(100 * u.GeV).to("cm-2 s-1 GeV-1"))
 
 
 ######################################################################
@@ -408,7 +408,11 @@ crab_3fhl_spec(100 * u.GeV).to("cm-2 s-1 GeV-1")
 # 2000 GeV:
 #
 
-crab_3fhl_spec.integral(energy_min=10 * u.GeV, energy_max=2000 * u.GeV).to("cm-2 s-1")
+print(
+    crab_3fhl_spec.integral(energy_min=10 * u.GeV, energy_max=2000 * u.GeV).to(
+        "cm-2 s-1"
+    )
+)
 
 
 ######################################################################
@@ -416,15 +420,17 @@ crab_3fhl_spec.integral(energy_min=10 * u.GeV, energy_max=2000 * u.GeV).to("cm-2
 # in the Fermi-LAT 3FHL catalog:
 #
 
-crab_3fhl.data["Flux"]
+print(crab_3fhl.data["Flux"])
 
 
 ######################################################################
 # In addition we can compute the energy flux between 10 GeV and 2000 GeV:
 #
 
-crab_3fhl_spec.energy_flux(energy_min=10 * u.GeV, energy_max=2000 * u.GeV).to(
-    "erg cm-2 s-1"
+print(
+    crab_3fhl_spec.energy_flux(energy_min=10 * u.GeV, energy_max=2000 * u.GeV).to(
+        "erg cm-2 s-1"
+    )
 )
 
 
@@ -444,7 +450,7 @@ print(crab_3fhl.flux_points)
 # the ``.table`` attribute:
 #
 
-crab_3fhl.flux_points.to_table(sed_type="dnde", formatted=True)
+print(crab_3fhl.flux_points.to_table(sed_type="dnde", formatted=True))
 
 
 ######################################################################
