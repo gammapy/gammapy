@@ -212,7 +212,7 @@ exposure.slice_by_idx({"energy_true": 0}).plot(add_cbar=True)
 ######################################################################
 # Exposure varies very little with energy at these high energies
 energy = [10, 100, 1000] * u.GeV
-exposure.get_by_coord({"skycoord": gc_pos, "energy_true": energy})
+print(exposure.get_by_coord({"skycoord": gc_pos, "energy_true": energy}))
 
 
 ######################################################################

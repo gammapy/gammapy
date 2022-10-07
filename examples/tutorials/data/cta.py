@@ -237,7 +237,7 @@ irf_filename = (
     "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
 )
 irfs = load_cta_irfs(irf_filename)
-irfs
+print(irfs)
 
 
 ######################################################################
@@ -252,7 +252,7 @@ aeff
 irfs["aeff"].peek()
 
 # What is the on-axis effective area at 10 TeV?
-aeff.evaluate(energy_true="10 TeV", offset="0 deg").to("km2")
+print(aeff.evaluate(energy_true="10 TeV", offset="0 deg").to("km2"))
 
 
 ######################################################################
@@ -286,7 +286,7 @@ irfs["psf"].plot_containment_radius_vs_energy(
 
 irfs["bkg"].peek()
 
-irfs["bkg"].evaluate(energy="3 TeV", fov_lon="1 deg", fov_lat="0 deg")
+print(irfs["bkg"].evaluate(energy="3 TeV", fov_lon="1 deg", fov_lat="0 deg"))
 
 
 ######################################################################

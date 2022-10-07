@@ -315,7 +315,7 @@ print(result)
 # `~astropy.modeling.models.Models` object.
 #
 
-stacked.models.to_parameters_table()
+print(stacked.models.to_parameters_table())
 
 
 ######################################################################
