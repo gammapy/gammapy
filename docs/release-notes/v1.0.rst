@@ -45,6 +45,11 @@ used for testing and CI.
 API changes
 ~~~~~~~~~~~
 
+*gammapy.modeling*
+
+- `LightCurveTemplateTemporalModel` internally relies on a `RegionMap` and does not take a table on
+`__init__` anymore. To create one from a `Table` object, users have to go through `LightCurveTemplateTemporalModel.read()`.
+
 *gammapy.stats*
 
 - For consistency with the definition of `errn` and `errp`, whic are always positve quantities,
@@ -68,8 +73,6 @@ objects.
 - The dataset name is now serialized with the Dataset as the `NAME` keyword in the primary HDU.
 - A `peek` method is now available for the `MapEvaluator` to help debugging issues
 with model evaluation on a `Dataset`.
-
-*gammapy.estimators*
 
 *gammapy.makers*
 
