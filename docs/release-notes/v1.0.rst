@@ -14,8 +14,8 @@ New features
 ~~~~~~~~~~~~
 
 This new release is the Long Term Stable (LTS) version 1.0. Most of the changes are in the package
-infrastructure. There are no API-breaking changes introduced since 0.20.1. A number of improvements
-and bug correction have been implemented.
+infrastructure. There are no real API-breaking changes introduced since 0.20.1. A number of improvements
+and bug corrections have been implemented.
 A new version of g.a.d.f. has been released (v0.3). It is expected to be compatible with this
 Gammapy version.
 
