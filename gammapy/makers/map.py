@@ -337,6 +337,7 @@ class MapDatasetMaker(Maker):
         meta_table = Table()
         meta_table["TELESCOP"] = [observation.aeff.meta.get("TELESCOP", "Unknown")]
         meta_table["OBS_ID"] = [observation.obs_id]
+
         if observation.fixed_pointing_info.mode == PointingMode.POINTING:
             meta_table["OBS_MODE"] = "POINTING"
             meta_table["RA_PNT"] = [observation.pointing_radec.icrs.ra.deg] * u.deg
@@ -349,6 +350,7 @@ class MapDatasetMaker(Maker):
             meta_table["AZ_PNT"] = [
                 observation.fixed_pointing_info.fixed_altaz.az.deg
             ] * u.deg
+
         return meta_table
 
     def run(self, dataset, observation):

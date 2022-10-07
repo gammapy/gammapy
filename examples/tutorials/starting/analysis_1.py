@@ -252,7 +252,7 @@ analysis.get_observations()
 # selection corresponds to the following ids:
 #
 
-analysis.observations.ids
+print(analysis.observations.ids)
 
 
 ######################################################################

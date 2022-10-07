@@ -10,9 +10,8 @@ Prerequisites
 -  Understanding how spectral extraction is performed in Cherenkov
    astronomy, in particular regarding OFF background measurements.
 -  Understanding the basics data reduction and modeling/fitting process
-   with the gammapy library API as shown in the `first gammapy analysis
-   with the gammapy library API
-   tutorial <../../starting/analysis_2.ipynb>`__
+   with the gammapy library API as shown in the `doc:`/tutorials/starting/analysis_2`
+   tutorial.
 
 Context
 -------
@@ -342,7 +341,7 @@ datasets[0].plot_masks(ax=ax_spectrum)
 
 ######################################################################
 # For more ways of assessing fit quality, please refer to the dedicated
-# `modeling and fitting tutorial <../2D/modeling_2D.ipynb>`__.
+# doc:`/tutorials/api/fitting` tutorial.
 #
 
 
@@ -482,7 +481,7 @@ plt.legend()
 # extended sources where we can assume that the IRF taken at the region
 # center is valid over the whole region. If one wants to extract the 1D
 # spectrum of a large source and properly average the response over the
-# extraction region, one has to use a different approach explained in `the
-# extended source spectral analysis
-# tutorial <extended_source_spectral_analysis.ipynb>`__.
+# extraction region, one has to use a different approach explained in
+# the doc:`/tutorials/analysis-1d/extended_source_spectral_analysis`
+# tutorial.
 #

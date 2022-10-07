@@ -23,36 +23,36 @@ We will cover the following topics:
       Fermi-LAT 3FHL example image. We will work with the following
       classes:
 
-      -  ``~gammapy.maps.WcsNDMap``
-      -  `astropy.coordinates.SkyCoord <http://astropy.readthedocs.io/en/latest/coordinates/index.html>`__ 
-      -  `numpy.ndarray <https://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.html>`__
+      -  `~gammapy.maps.WcsNDMap`
+      -  `~astropy.coordinates.SkyCoord`
+      -  `~numpy.ndarray`
 
 -  **Event lists**
 
    -  We will learn how to handle event lists with Gammapy. Important
       for this are the following classes:
 
-      -  ``~gammapy.data.EventList``
-      -  `astropy.table.Table <http://docs.astropy.org/en/stable/api/astropy.table.Table.html>`__
+      -  `~gammapy.data.EventList`
+      -  `~astropy.table.Table`
 
 -  **Source catalogs**
 
    -  We will show how to load source catalogs with Gammapy and explore
       the data using the following classes:
 
-      -  ``~gammapy.catalog.SourceCatalog``, specifically
-         ``~gammapy.catalog.SourceCatalog3FHL``
-      -  `astropy.table.Table <http://docs.astropy.org/en/stable/api/astropy.table.Table.html>`__
+      -  `~gammapy.catalog.SourceCatalog`, specifically
+         `~gammapy.catalog.SourceCatalog3FHL`
+      -  `~astropy.table.Table`
 
 -  **Spectral models and flux points**
 
    -  We will pick an example source and show how to plot its spectral
       model and flux points. For this we will use the following classes:
 
-      -  ``~gammapy.modeling.models.SpectralModel``, specifically the
-         ``~gammapy.modeling.models.PowerLaw2SpectralModel``
-      -  ``~gammapy.estimators.FluxPoints``
-      -  `astropy.table.Table <http://docs.astropy.org/en/stable/api/astropy.table.Table.html>`__
+      -  `~gammapy.modeling.models.SpectralModel`, specifically the
+         `~gammapy.modeling.models.PowerLaw2SpectralModel`
+      -  `~gammapy.estimators.FluxPoints`
+      -  `~astropy.table.Table`
 
 """
 
@@ -86,7 +86,7 @@ check_tutorials_setup()
 # Maps
 # ----
 #
-# The ``~gammapy.maps`` package contains classes to work with sky images
+# The `~gammapy.maps` package contains classes to work with sky images
 # and cubes.
 #
 # In this section, we will use a simple 2D sky image and will learn how
@@ -104,27 +104,27 @@ gc_3fhl = Map.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-counts.fits.gz")
 
 
 ######################################################################
-# The image is a ``~gammapy.maps.WcsNDMap`` object:
+# The image is a `~gammapy.maps.WcsNDMap` object:
 #
 
-gc_3fhl
+print(gc_3fhl)
 
 
 ######################################################################
 # The shape of the image is 400 x 200 pixel and it is defined using a
 # cartesian projection in galactic coordinates.
 #
-# The ``geom`` attribute is a ``~gammapy.maps.WcsGeom`` object:
+# The ``geom`` attribute is a `~gammapy.maps.WcsGeom` object:
 #
 
-gc_3fhl.geom
+print(gc_3fhl.geom)
 
 
 ######################################################################
 # Let’s take a closer look a the ``.data`` attribute:
 #
 
-gc_3fhl.data
+print(gc_3fhl.data)
 
 
 ######################################################################
@@ -162,7 +162,7 @@ gc_3fhl_smoothed.plot(stretch="sqrt")
 # The smoothed plot already looks much nicer, but still the image is
 # rather large. As we are mostly interested in the inner part of the
 # image, we will cut out a quadratic region of the size 9 deg x 9 deg
-# around Vela. Therefore we use ``~gammapy.maps.Map.cutout`` to make a
+# around Vela. Therefore we use `~gammapy.maps.Map.cutout` to make a
 # cutout map:
 #
 
@@ -173,7 +173,7 @@ gc_3fhl_cutout.plot(stretch="sqrt")
 
 
 ######################################################################
-# For a more detailed introduction to ``~gammapy.maps``, take a look a the
+# For a more detailed introduction to `~gammapy.maps`, take a look a the
 # `maps.ipynb <../api/maps.ipynb>`__ notebook.
 #
 # Exercises
@@ -215,11 +215,11 @@ events_3fhl = EventList.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-events.f
 
 ######################################################################
 # This time the actual data is stored as an
-# `astropy.table.Table <http://docs.astropy.org/en/stable/api/astropy.table.Table.html>`__
+# `~astropy.table.Table `
 # object. It can be accessed with ``.table`` attribute:
 #
 
-events_3fhl.table
+print(events_3fhl.table)
 
 
 ######################################################################
@@ -227,33 +227,33 @@ events_3fhl.table
 # events.
 #
 
-len(events_3fhl.table)
+print(len(events_3fhl.table))
 
 
 ######################################################################
 # And we can access any other attribute of the ``Table`` object as well:
 #
 
-events_3fhl.table.colnames
+print(events_3fhl.table.colnames)
 
 
 ######################################################################
 # For convenience we can access the most important event parameters as
 # properties on the ``EventList`` objects. The attributes will return
 # corresponding Astropy objects to represent the data, such as
-# `astropy.units.Quantity <http://docs.astropy.org/en/stable/api/astropy.units.Quantity.html>`__,
-# `astropy.coordinates.SkyCoord <http://docs.astropy.org/en/stable/api/astropy.coordinates.SkyCoord.html>`__
+# `~astropy.units.Quantity`,
+# `~astropy.coordinates.SkyCoord`
 # or
-# `astropy.time.Time <http://docs.astropy.org/en/stable/api/astropy.time.Time.html#astropy.time.Time>`__
+# `~astropy.time.Time`
 # objects:
 #
 
-events_3fhl.energy.to("GeV")
+print(events_3fhl.energy.to("GeV"))
 
-events_3fhl.galactic
+print(events_3fhl.galactic)
 # events_3fhl.radec
 
-events_3fhl.time
+print(events_3fhl.time)
 
 
 ######################################################################
@@ -272,7 +272,7 @@ events_gc_3fhl = events_3fhl.select_region(region)
 events_gc_3fhl.table.sort("ENERGY")
 
 # and show highest energy photon
-events_gc_3fhl.energy[-1].to("GeV")
+print("highest energy photon: ", events_gc_3fhl.energy[-1].to("GeV"))
 
 
 ######################################################################
@@ -293,7 +293,7 @@ events_gc_3fhl.energy[-1].to("GeV")
 #
 # In this section we will learn how to:
 #
-# -  Load builtins catalogs from ``~gammapy.catalog``
+# -  Load builtins catalogs from `~gammapy.catalog`
 # -  Sort and index the underlying Astropy tables
 # -  Access data from individual sources
 #
@@ -309,12 +309,12 @@ from gammapy.catalog import SourceCatalog3FHL
 #
 
 fermi_3fhl = SourceCatalog3FHL()
-fermi_3fhl.table
+print(fermi_3fhl.table)
 
 
 ######################################################################
 # This looks very familiar again. The data is just stored as an
-# `astropy.table.Table <http://docs.astropy.org/en/stable/api/astropy.table.Table.html#astropy.table.Table>`__
+# `~astropy.table.Table`
 # object. We have all the methods and attributes of the ``Table`` object
 # available. E.g. we can sort the underlying table by ``Signif_Avg`` to
 # find the top 5 most significant sources:
@@ -327,7 +327,7 @@ fermi_3fhl.table.sort("Signif_Avg")
 top_five_TS_3fhl = fermi_3fhl.table[::-1][:5]
 
 # print the top five significant sources with association and source class
-top_five_TS_3fhl[["Source_Name", "ASSOC1", "ASSOC2", "CLASS", "Signif_Avg"]]
+print(top_five_TS_3fhl[["Source_Name", "ASSOC1", "ASSOC2", "CLASS", "Signif_Avg"]])
 
 
 ######################################################################
@@ -351,8 +351,8 @@ print(mkn_421_3fhl.data["Signif_Avg"])
 #    sources it contains.
 # -  Select all the sources from the 2FHL catalog which are contained in
 #    the Galactic Center region. The methods
-#    ``~gammapy.maps.WcsGeom.contains()`` and
-#    ``~gammapy.catalog.SourceCatalog.positions`` might be helpful for
+#    `~gammapy.maps.WcsGeom.contains()` and
+#    `~gammapy.catalog.SourceCatalog.positions` might be helpful for
 #    this. Add markers for all these sources and try to add labels with
 #    the source names.
 # -  Try to find the source class of the object at position ra=68.6803,
@@ -382,7 +382,7 @@ print(crab_3fhl_spec)
 
 ######################################################################
 # The ``crab_3fhl_spec`` is an instance of the
-# ``~gammapy.modeling.models.PowerLaw2SpectralModel`` model, with the
+# `~gammapy.modeling.models.PowerLaw2SpectralModel` model, with the
 # parameter values and errors taken from the 3FHL catalog.
 #
 # Let’s plot the spectral model in the energy range between 10 GeV and
@@ -400,7 +400,7 @@ ax_crab_3fhl = crab_3fhl_spec.plot(energy_bounds=[10, 2000] * u.GeV, energy_powe
 # like normal Python function and convert to the desired units:
 #
 
-crab_3fhl_spec(100 * u.GeV).to("cm-2 s-1 GeV-1")
+print(crab_3fhl_spec(100 * u.GeV).to("cm-2 s-1 GeV-1"))
 
 
 ######################################################################
@@ -408,7 +408,11 @@ crab_3fhl_spec(100 * u.GeV).to("cm-2 s-1 GeV-1")
 # 2000 GeV:
 #
 
-crab_3fhl_spec.integral(energy_min=10 * u.GeV, energy_max=2000 * u.GeV).to("cm-2 s-1")
+print(
+    crab_3fhl_spec.integral(energy_min=10 * u.GeV, energy_max=2000 * u.GeV).to(
+        "cm-2 s-1"
+    )
+)
 
 
 ######################################################################
@@ -416,15 +420,17 @@ crab_3fhl_spec.integral(energy_min=10 * u.GeV, energy_max=2000 * u.GeV).to("cm-2
 # in the Fermi-LAT 3FHL catalog:
 #
 
-crab_3fhl.data["Flux"]
+print(crab_3fhl.data["Flux"])
 
 
 ######################################################################
 # In addition we can compute the energy flux between 10 GeV and 2000 GeV:
 #
 
-crab_3fhl_spec.energy_flux(energy_min=10 * u.GeV, energy_max=2000 * u.GeV).to(
-    "erg cm-2 s-1"
+print(
+    crab_3fhl_spec.energy_flux(energy_min=10 * u.GeV, energy_max=2000 * u.GeV).to(
+        "erg cm-2 s-1"
+    )
 )
 
 
@@ -444,7 +450,7 @@ print(crab_3fhl.flux_points)
 # the ``.table`` attribute:
 #
 
-crab_3fhl.flux_points.to_table(sed_type="dnde", formatted=True)
+print(crab_3fhl.flux_points.to_table(sed_type="dnde", formatted=True))
 
 
 ######################################################################
@@ -463,10 +469,7 @@ crab_3fhl.flux_points.plot(ax=ax, sed_type="dnde", energy_power=2)
 #
 # -  Plot the spectral model and flux points for PKS 2155-304 for the 3FGL
 #    and 2FHL catalogs. Try to plot the error of the model (aka
-#    “Butterfly”) as well. Note this requires the `uncertainties
-#    package <https://pythonhosted.org/uncertainties/>`__ to be installed
-#    on your machine.
-#
+#    “Butterfly”) as well.
 
 
 ######################################################################

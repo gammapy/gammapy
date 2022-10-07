@@ -10,12 +10,11 @@ Introduction
 `~gammapy.datasets` are a crucial part of the gammapy API. `~gammapy.datasets.Dataset`
 objects constitute `DL4` data - binned counts, IRFs, models and the associated
 likelihoods. `~gammapy.datasets.Datasets` from the end product of the data reduction stage,
-see `makers notebook <makers.ipynb>`__, and are passed on to the `~gammapy.modeling.Fit`
+see :doc:`/tutorials/api/makers` tutorial and are passed on to the `~gammapy.modeling.Fit`
 or estimator classes for modelling and fitting purposes.
 
 To find the different types of `~gammapy.datasets.Dataset` objects that are supported see
-`Datasets
-home <../../user-guide/datasets/index.rst#Types-of-supported-datasets>`__
+:ref:`datasets-types`:
 
 Setup
 -----
@@ -204,8 +203,8 @@ dataset_cta.models = [model, model_bkg]
 
 
 ######################################################################
-# Assigning models to datasets is covered in more detail in the `Modeling
-# notebook <model_management.ipynb>`__. Printing the dataset will now show
+# Assigning models to datasets is covered in more detail in the
+#  :doc:`/tutorials/api/model_management`. Printing the dataset will now show
 # the mode components:
 #
 
@@ -255,7 +254,7 @@ npred_background.sum_over_axes().plot()
 #    ignore some parts of a reduced dataset, e.g. to restrict the fit to a
 #    specific energy range or to ignore parts of the region of interest.
 #    This should be done by applying the `~gammapy.datasets.MapDataset.mask_fit`. To see details of
-#    applying masks, please refer to :ref:`Masks for fitting`.
+#    applying masks, please refer to :ref:`masks-for-fitting`.
 #
 # Both the `~gammapy.datasets.MapDataset.mask_fit` and `~gammapy.datasets.MapDataset.mask_safe` must
 # have the same `~gammapy.maps.Map.geom` as the `~gammapy.datasets.MapDataset.counts` and `~gammapy.datasets.MapDataset.background` maps.
@@ -450,9 +449,9 @@ fp_dataset.data_shape()  # number of data points
 
 
 ######################################################################
-# For an example of fitting `~gammapy.estimators.FluxPoints`, see `flux point
-# fitting <../analysis/1D/sed_fitting.ipynb>`__, and can be used for
-# catalog objects, eg see `catalog notebook <catalog.ipynb>`__
+# For an example of fitting `~gammapy.estimators.FluxPoints`, see
+#  :doc:`/tutorials/analysis-1d/sed_fitting`, and can be used for
+# catalog objects, e.g. see :doc:`/tutorials/api/catalog`
 #
 
 
@@ -469,11 +468,10 @@ fp_dataset.data_shape()  # number of data points
 # datasets together, and then fit them.
 #
 # `~gammapy.datasets.Datasets` is a convenient tool to handle joint fitting of
-# simultaneous datasets. As an example, please see the `joint fitting
-# tutorial <../analysis/3D/analysis_mwl.ipynb>`__
+# simultaneous datasets. As an example, please see the
+#  :doc:`/tutorials/analysis-3d/analysis_mwl`
 #
-# To see how stacking is performed, please see `Implementation of
-# stacking <../../user-guide/datasets/index.rst#stacking-multiple-datasets>`__
+# To see how stacking is performed, please see :ref:`stack`.
 #
 # To create a `~gammapy.datasets.Datasets` object, pass a list of `~gammapy.datasets.Dataset` on init, eg
 #

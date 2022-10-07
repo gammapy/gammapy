@@ -114,7 +114,7 @@ class DatasetsMaker(Maker):
             if isinstance(self._dataset, MapDataset) and isinstance(
                 dataset, MapDatasetOnOff
             ):
-                dataset = dataset.to_map_dataset(dataset)
+                dataset = dataset.to_map_dataset(name=dataset.name)
             self._dataset.stack(dataset)
         else:
             self._datasets.append(dataset)

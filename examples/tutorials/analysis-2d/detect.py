@@ -227,14 +227,13 @@ ax.scatter(
 #
 # -  Look how background estimation is performed for IACTs with and
 #    without the high level interface in
-#    `analysis_1 <../../starting/analysis_1.ipynb>`__ and
-#    `analysis_2 <../../starting/analysis_2.ipynb>`__ notebooks,
+#    :doc:`/tutorials/starting/analysis_1` and
+#    :doc:`/tutorials/starting/analysis_2` notebooks,
 #    respectively
-# -  Learn about 2D model fitting in the `modeling
-#    2D <modeling_2D.ipynb>`__ notebook
-# -  find more about Fermi-LAT data analysis in the
-#    `fermi_lat <../../data/fermi_lat.ipynb>`__ notebook
+# -  Learn about 2D model fitting in the :doc:`/tutorials/analysis-2d/modeling_2D` notebook
+# -  Find more about Fermi-LAT data analysis in the
+#    `:doc:`/tutorials/data/fermi_lat` notebook
 # -  Use source candidates to build a model and perform a 3D fitting (see
-#    `analysis_3d <../3D/analysis_3d.ipynb>`__,
-#    `analysis_mwl <../3D/analysis_mwl.ipynb>`__ notebooks for some hints)
+#    :doc:`/tutorials/analysis-3d/analysis_3d`,
+#    :doc:`/tutorials/analysis-3d/analysis_mwl` notebooks for some hints)
 #

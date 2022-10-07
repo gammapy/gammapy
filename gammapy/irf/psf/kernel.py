@@ -211,6 +211,7 @@ class PSFKernel:
 
     def plot_kernel(self, ax=None, energy=None, add_cbar=False, **kwargs):
         """Plot PSF kernel.
+
         Parameters
         ----------
         energy : `~astropy.units.Quantity`, optional
@@ -220,6 +221,7 @@ class PSFKernel:
             Axis
         kwargs: dict
             Keyword arguments passed to `~matplotlib.axes.Axes.imshow`.
+
         Returns
         -------
         ax : `~matplotlib.axes.Axes`
@@ -239,6 +241,7 @@ class PSFKernel:
 
     def peek(self, figsize=(15, 5)):
         """Quick-look summary plots.
+
         Parameters
         ----------
         figsize : tuple

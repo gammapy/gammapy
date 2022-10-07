@@ -12,8 +12,8 @@ the class name. An overview of all the available models can be found in
 the `model gallery <../../user-guide/model-gallery/index.rst>`__.
 
 Note that there are separate tutorials,
-`model_management <model_management.ipynb>`__ and
-`fitting <fitting.ipynb>`__ that explains about
+:doc:`/tutorials/api/model_management` and
+:doc:`/tutorials/api/fitting` that explains about
 `~gammapy.modeling`, the Gammapy modeling and fitting framework. You
 have to read that to learn how to work with models in order to analyse
 data.
@@ -56,8 +56,7 @@ print(pwl)
 
 ######################################################################
 # To get a list of all available spectral models you can import and print
-# the spectral model registry or take a look at the `model
-# gallery <../../user-guide/model-gallery/index.rst#spectral-models>`__:
+# the spectral model registry or take a look at the :ref:`spectral-models-gallery`
 #
 
 from gammapy.modeling.models import SPECTRAL_MODEL_REGISTRY
@@ -235,8 +234,7 @@ print(gauss)
 
 ######################################################################
 # Again you can check the `SPATIAL_MODELS` registry to see which models
-# are available or take a look at the `model
-# gallery <../../user-guide/model-gallery/index.rst#spatial-models>`__\ \_.
+# are available or take a look at the :ref:`spatial-models-gallery`
 #
 
 from gammapy.modeling.models import SPATIAL_MODEL_REGISTRY
@@ -542,9 +540,8 @@ print(models.names)
 # Note that a `SkyModel` object can be evaluated for a given longitude,
 # latitude, and energy, but the `Models` object cannot. This `Models`
 # container object will be assigned to `Dataset` or `Datasets`
-# together with the data to be fitted as explained in other analysis
-# tutorials (see for example the
-# `modeling <../analysis/2D/modeling_2D.ipynb>`__\ \_ notebook).
+# together with the data to be fitted. Checkout e.g. the
+# :doc:`/tutorials/api/model_management` tutorial for details.
 #
 # The `~gammapy.modeling.models.Models` class also has in place ``.append()`` and ``.extend()``
 # methods:
@@ -586,7 +583,7 @@ models_read = Models.read("models.yaml")
 ######################################################################
 # Additionally the models can exported and imported togeter with the data
 # using the ``Datasets.read()`` and ``Datasets.write()`` methods as shown
-# in the `analysis_mwl <../analysis/3D/analysis_mwl.ipynb>`__\ \_
+# in the :doc:`/tutorials/analysis-3d/analysis_mwl`
 # notebook.
 #
 # Models with shared parameter
@@ -617,6 +614,8 @@ print(models_yaml)
 
 
 ######################################################################
+# .. _custom-model:
+#
 # Implementing a custom model
 # ---------------------------
 #

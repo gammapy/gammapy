@@ -79,10 +79,17 @@ def write_yaml(dictionary, filename, logger=None, sort_keys=True):
 
 
 def make_name(name=None):
+    """Make a dataset name"""
     if name is None:
-        return urlsafe_b64encode(codecs.decode(uuid4().hex, "hex")).decode()[:8]
-    else:
-        return name
+        name = urlsafe_b64encode(codecs.decode(uuid4().hex, "hex")).decode()[:8]
+
+    if not isinstance(name, str):
+        raise ValueError(
+            "Name argument must be a string, "
+            f"got '{name}', which is of type '{type(name)}'"
+        )
+
+    return name
 
 
 def make_path(path):

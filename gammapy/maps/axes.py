@@ -1844,8 +1844,7 @@ class MapAxes(Sequence):
 
         Parameters
         ----------
-        format : {"gadf", "gadf-dl3", "fgst-ccube", "fgst-template", "ogip",
-                  "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"}
+        format : {"gadf", "gadf-dl3", "fgst-ccube", "fgst-template", "ogip", "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"}  # noqa E501
             Format to use.
 
         Returns
@@ -2803,12 +2802,12 @@ class LabelMapAxis:
     node_type = "label"
 
     def __init__(self, labels, name=""):
-        unique_labels = set(labels)
+        unique_labels = np.unique(labels)
 
         if not len(unique_labels) == len(labels):
             raise ValueError("Node labels must be unique")
 
-        self._labels = np.array(labels)
+        self._labels = unique_labels
         self._name = name
 
     @property

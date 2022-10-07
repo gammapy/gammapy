@@ -8,8 +8,7 @@ Prerequisites
 -------------
 
 -  Knowledge of the high level interface to perform data reduction, see
-   `first gammapy analysis with the high level interface
-   tutorial <../../starting/analysis_1.ipynb>`__
+   :doc:`/tutorials/starting/analysis_1` tutorial.
 
 Context
 -------
@@ -83,8 +82,8 @@ check_tutorials_setup()
 # ----------------------
 #
 # For the 1D and 3D extraction, we will use the same CrabNebula
-# configuration than in the notebook analysis_1.ipynb using the high level
-# interface of Gammapy.
+# configuration than in the :doc:`/tutorials/starting/analysis_1` tutorial
+# using the high level interface of Gammapy.
 #
 # From the high level interface, the data reduction for those observations
 # is performed as followed
@@ -380,7 +379,6 @@ ax.set_ylim(1e-12, 3e-12)
 # When sources are bright enough to look for variability at small time
 # scales, the per-observation time binning is no longer relevant. One can
 # easily extend the light curve estimation approach presented above to any
-# time binning. This is demonstrated in the `following
-# tutorial <light_curve_flare.ipynb>`__ which shows the extraction of the
-# lightcurve of an AGN flare.
+# time binning. This is demonstrated in the :doc:`/tutorials/analysis-time/light_curve_flare`
+# tutorial. which shows the extraction of the lightcurve of an AGN flare.
 #

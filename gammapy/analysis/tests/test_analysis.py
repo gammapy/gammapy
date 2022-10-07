@@ -388,10 +388,10 @@ def test_analysis_3d():
     assert len(table) == 2
     dnde = table["dnde"].quantity
 
-    assert_allclose(dnde[0].value, 1.339052e-11, rtol=1e-2)
-    assert_allclose(dnde[-1].value, 2.772374e-13, rtol=1e-2)
-    assert_allclose(res["index"].value, 3.097613, rtol=1e-2)
-    assert_allclose(res["tilt"].value, -0.207792, rtol=1e-2)
+    assert_allclose(dnde[0].value, 1.2722e-11, rtol=1e-2)
+    assert_allclose(dnde[-1].value, 4.054128e-13, rtol=1e-2)
+    assert_allclose(res["index"].value, 2.772814, rtol=1e-2)
+    assert_allclose(res["tilt"].value, -0.133436, rtol=1e-2)
 
 
 @requires_data()

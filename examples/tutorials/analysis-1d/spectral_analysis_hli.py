@@ -112,8 +112,8 @@ datasets:
     on_region: {frame: icrs, lon: 83.633 deg, lat: 22.014 deg, radius: 0.11 deg}
     containment_correction: true
     safe_mask:
-       methods: ['offset-max']
-       parameters: {offset_max: 2.0 deg}
+       methods: ['aeff-default', 'aeff-max']
+       parameters: {aeff_percent: 0.1}
     background:
         method: reflected
 fit:
@@ -231,8 +231,7 @@ analysis.observations.ids
 
 ######################################################################
 # To see how to explore observations, please refer to the following
-# notebook: `CTA with Gammapy <../data/cta.ipynb>`__ or `HESS with
-# Gammapy <../data/hess.ipynb>`__
+# notebook: :doc:`/tutorials/data/cta` or :doc:`/tutorials/data/hess`
 #
 
 
@@ -395,6 +394,7 @@ model_1d.to_parameters_table()
 ax_spectrum, ax_residuals = analysis.datasets[0].plot_fit()
 ax_spectrum.set_ylim(0.1, 200)
 ax_spectrum.set_xlim(0.2, 60)
+ax_residuals.set_xlim(0.2, 60)
 analysis.datasets[0].plot_masks(ax=ax_spectrum)
 
 
@@ -474,7 +474,7 @@ ax_sed.set_xlim(0.5, 40)
 # ------------
 #
 # You can look at the same analysis without the high level interface in
-# `spectral analysis <../analysis/1D/spectral_analysis.ipynb>`__.
+# :doc:`/tutorials/analysis-1d/spectral_analysis`
 #
 # As we can store the best model fit, you can overlaid the fit results of
 # both methods on an unique plot.

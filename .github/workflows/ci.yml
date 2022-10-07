@@ -43,7 +43,13 @@ jobs:
             tox_env: 'codestyle'
           - os: ubuntu-latest
             python: '3.8'
-            tox_env: 'py38-test-alldeps-astropylts-numpy119'
+            tox_env: 'py38-test-alldeps-astropylts-numpy120'
+          - os: ubuntu-latest
+            python: '3.8'
+            tox_env: 'oldestdeps'
+          - os: ubuntu-latest
+            python: '3.8'
+            tox_env: 'devdeps'
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
@@ -113,6 +119,10 @@ jobs:
       - name: test build docs
         run: |
           tox -e build_docs -- -j auto
+      - name: check links
+        continue-on-error: true
+        run: |
+          tox -e linkcheck -- -j auto  
   conda-build:
     name: Linux python 3.8 conda-build all-deps
     runs-on: ubuntu-latest

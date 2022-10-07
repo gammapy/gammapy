@@ -30,7 +30,7 @@ class FluxPointsEstimator(FluxEstimator):
     The method is also described in the Fermi-LAT catalog paper
     https://ui.adsabs.harvard.edu/abs/2015ApJS..218...23A
     or the HESS Galactic Plane Survey paper
-    https://ui.adsabs.harvard.edu/#abs/2018A%26A...612A...1H
+    https://ui.adsabs.harvard.edu/abs/2018A%26A...612A...1H
 
     Parameters
     ----------
@@ -95,10 +95,16 @@ class FluxPointsEstimator(FluxEstimator):
         """
         datasets = Datasets(datasets=datasets)
 
-        if datasets.models[self.source].spectral_model.is_norm_spectral_model:
-            raise TypeError(
-                "NormSpectralModel are not supported in FluxPointsEstimator."
-            )
+        if not datasets.energy_axes_are_aligned:
+            raise ValueError("All datasets must have aligned energy axes.")
+
+        if "TELESCOP" in datasets.meta_table.colnames:
+            telescopes = datasets.meta_table["TELESCOP"]
+            if not len(np.unique(telescopes)) == 1:
+                raise ValueError(
+                    "All datasets must use the same value of the"
+                    " 'TELESCOP' meta keyword."
+                )
 
         rows = []
         for energy_min, energy_max in progress_bar(

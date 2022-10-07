@@ -83,6 +83,13 @@ Status shields
 * .. image:: https://anaconda.org/conda-forge/gammapy/badges/version.svg
     :target: https://anaconda.org/conda-forge/gammapy
     :alt: Latest release
-..
-    It seems not maintained anymore!
-    * https://www.openhub.net/p/gammapy
+
+* https://www.openhub.net/p/gammapy
+
+
+Note if you cloned this repository before Oct 7th 2022
+++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The  primary branch was renamed `main`. See the following instructions:
+https://github.com/gammapy/gammapy/wiki/Changing-master-branch-to-main
+

@@ -8,8 +8,8 @@ Fit spectral models to combined Fermi-LAT and IACT flux points tables.
 Prerequisites
 -------------
 
--  Some knowledge about retrieving information from catalogs, see `the
-   catalogs tutorial <../../api/catalog.ipynb>`__
+-  Some knowledge about retrieving information from catalogs,
+ see :doc:`/tutorials/api/catalog` tutorial.
 
 Context
 -------
@@ -263,9 +263,9 @@ ax.legend()
 # This was an introduction to SED fitting in Gammapy.
 #
 # -  If you would like to learn how to perform a full Poisson maximum
-#    likelihood spectral fit, please check out the `spectrum
-#    analysis <spectral_analysis.ipynb>`__ tutorial.
+#    likelihood spectral fit, please check out the
+#    :doc:`/tutorials/analysis-1d/spectral_analysis` tutorial.
 # -  To learn how to combine heterogeneous datasets to perform a
-#    multi-instrument forward-folding fit see the `MWL analysis
-#    tutorial <../3D/analysis_mwl.ipynb>`__
+#    multi-instrument forward-folding fit see the
+#    :doc:`/tutorials/analysis-3d/analysis_mwl` tutorial.
 #

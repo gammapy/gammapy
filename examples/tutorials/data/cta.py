@@ -174,16 +174,27 @@ observation
 # and the EVENTS header in `events.table.meta` can be used to look up
 # which `MC_ID` corresponds to which emission component.
 #
+# Events can be accessed from the observatiosn object like:
 
 events = observation.events
-events
+
+######################################################################
+# Or read directly from an event file:
+#
 
 events = EventList.read(
     "$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_110380.fits"
 )
-events
 
-events.table[:5]
+######################################################################
+# Here we print the data from the first 5 events listed in the table:
+#
+
+print(events.table[:5])
+
+######################################################################
+# And show a summary plot:
+#
 
 events.peek()
 
@@ -226,7 +237,7 @@ irf_filename = (
     "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
 )
 irfs = load_cta_irfs(irf_filename)
-irfs
+print(irfs)
 
 
 ######################################################################
@@ -241,7 +252,7 @@ aeff
 irfs["aeff"].peek()
 
 # What is the on-axis effective area at 10 TeV?
-aeff.evaluate(energy_true="10 TeV", offset="0 deg").to("km2")
+print(aeff.evaluate(energy_true="10 TeV", offset="0 deg").to("km2"))
 
 
 ######################################################################
@@ -275,7 +286,7 @@ irfs["psf"].plot_containment_radius_vs_energy(
 
 irfs["bkg"].peek()
 
-irfs["bkg"].evaluate(energy="3 TeV", fov_lon="1 deg", fov_lat="0 deg")
+print(irfs["bkg"].evaluate(energy="3 TeV", fov_lon="1 deg", fov_lat="0 deg"))
 
 
 ######################################################################
@@ -366,9 +377,9 @@ irfs["bkg"].plot_at_energy(
 #
 # -  Load the EVENTS file for `obs_id=111159` as a
 #    `~gammapy.data.EventList` object.
-# -  Use `events.table` to find the energy, sky coordinate and time of
+# -  Use `~gammapy.data.EventList.table` to find the energy, sky coordinate and time of
 #    the highest-energy envent.
-# -  Use `events.pointing_radec` to find the pointing position of this
+# -  Use `~gammapy.data.EventList.pointing_radec` to find the pointing position of this
 #    observation, and use `astropy.coordinates.SkyCoord` methods to find
 #    the field of view offset of the highest-energy event.
 # -  What is the effective area and PSF 68% containment radius of CTA at 1
@@ -389,11 +400,11 @@ irfs["bkg"].plot_at_energy(
 # ----------
 #
 # -  Learn how to analyse data with
-#    `analysis_1.ipynb <../starting/analysis_1.ipynb>`__ and
-#    `analysis_2.ipynb <../starting/analysis_2.ipynb>`__ or any other
+#    :doc:`/tutorials/starting/analysis_1` and
+#    :doc:`/tutorials/starting/analysis_2` or any other
 #    Gammapy analysis tutorial.
 # -  Learn how to evaluate CTA observability and sensitivity with
-#    `simulate_3d.ipynb <../analysis/3D/simulate_3d.ipynb>`__,
-#    `spectrum_simulation.ipynb <../analysis/1D/spectrum_simulation.ipynb>`__
-#    or `cta_sensitivity.ipynb <../analysis/1D/cta_sensitivity.ipynb>`__
+#    :doc:`/tutorials/analysis-3d/simulate_3d`,
+#    :doc:`/tutorials/analysis-1d/spectrum_simulation`
+#    or :doc:`/tutorials/analysis-1d/cta_sensitivity`.
 #

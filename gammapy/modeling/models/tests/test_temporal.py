@@ -266,7 +266,7 @@ def test_powerlaw_temporal_model_integral():
     stop = [2, 3.5, 6] * u.day
     gti = GTI.create(start, stop, reference_time=t_ref)
     val = temporal_model.integral(gti.time_start, gti.time_stop)
-    print(np.sum(val))
+
     assert len(val) == 3
     assert_allclose(np.sum(val), 0.411847, rtol=1e-5)
 

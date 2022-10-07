@@ -330,7 +330,7 @@ which is what most scientific Python packages use.
 
 .. _restructured text (RST): http://sphinx-doc.org/rest.html
 .. _Sphinx: http://sphinx-doc.org/
-.. _Numpy docstring standard: https://github.com/numpy/numpy/blob/main/doc/HOWTO_DOCUMENT.rst.txt
+.. _Numpy docstring standard: https://numpydoc.readthedocs.io/en/latest/format.html#docstring-standard
 
 There's a few details that are not easy to figure out by browsing the Numpy or Astropy
 documentation guidelines, or that we actually do differently in Gammapy.
