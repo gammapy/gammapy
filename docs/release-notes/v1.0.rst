@@ -87,6 +87,8 @@ with model evaluation on a `Dataset`.
 - A bug has been corrected in `TemporalModel.sample_time()`.
 - `TemporalModel.integrate` now provides a generic integration method.
 - A new `TemplatePhaseCurveTemporalModel` has been added to support pulsar-like lightcurves.
+- To allow for identical parameter names, the serialization of the covariance matrix does no longer
+export the parameter names as column headers but simply as the first entry in each row.
 
 
 Contributors
