@@ -14,17 +14,9 @@ New features
 ~~~~~~~~~~~~
 
 This new release is the Long Term Stable (LTS) version 1.0. Most of the changes are in the package
-infrastructure. There are no real API-breaking changes introduced since 0.20.1. A number of improvements
-and bug corrections have been implemented.
+infrastructure. A number of improvements and bug corrections have been implemented since v0.20.1.
 A new version of g.a.d.f. has been released (v0.3). It is expected to be compatible with this
 Gammapy version.
-
-*documentation*
-
-- The tutorial gallery now relies on Sphinx gallery. The tutorials are python scripts with specific
-syntax for the description cells. This simplifies the documentation build. This will make the history
-cleaner and tutorial code reviews easier. The download button is now moved at the end of the tutorial.
-Binder is now working again for tutorials.
 
 *gammapy.data and gammapy.irf*
 
@@ -39,6 +31,10 @@ object. It supports different spatial geometries but requires identical non-spat
 
 *infrastructure*
 
+- The tutorial gallery now relies on Sphinx gallery. The tutorials are python scripts with specific
+syntax for the description cells. This simplifies the documentation build. This will make the history
+cleaner and tutorial code reviews easier. The download button is now moved at the end of the tutorial.
+Binder is now working again for tutorials.
 - The compliance with the astropy affiliated packages has been improved. In particular, tox is now
 used for testing and CI.
 
@@ -48,7 +44,8 @@ API changes
 *gammapy.modeling*
 
 - `LightCurveTemplateTemporalModel` internally relies on a `RegionMap` and does not take a table on
-`__init__` anymore. To create one from a `Table` object, users have to go through `LightCurveTemplateTemporalModel.read()`.
+`__init__` anymore. To create one from a `Table` object, users have to go through
+`LightCurveTemplateTemporalModel.read()` or `LightCurveTemplateTemporalModel.from_table`.
 
 *gammapy.stats*
 
@@ -76,7 +73,8 @@ with model evaluation on a `Dataset`.
 
 *gammapy.makers*
 
-- Add support for drifting instrument on the `MapDatasetMaker`.
+- Adapt the `MapDatasetMaker` to handle the DL3 format introduced in g.a.d.f. v0.3 for drifting
+instruments.
 
 *gammapy.maps*
 
