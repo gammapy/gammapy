@@ -1,12 +1,14 @@
+.. include:: ../references.txt
+
 .. _gammapy_1p0_release:
 
-1.0 (October 7th, 2022)
+1.0 (October 21th, 2022)
 -----------------------
 
 Summary
 ~~~~~~~
 
-- Released Oct 7th, 2022
+- Released Oct 21th, 2022
 - 10 contributors
 - 78 pull requests since v0.20.1 (not all listed below)
 
@@ -15,79 +17,81 @@ New features
 
 This new release is the Long Term Stable (LTS) version 1.0. Most of the changes are in the package
 infrastructure. A number of improvements and bug corrections have been implemented since v0.20.1.
-A new version of g.a.d.f. has been released (v0.3). It is expected to be compatible with this
-Gammapy version.
+Gammapy v1.0 adds support for the latest version 0.3 of `gadf`_.
 
 *gammapy.data and gammapy.irf*
 
-- Support for HAWC data has been improved. In particular, a `RecoPSFMap` has been added in IRF
-to support PSF in reco energy.
+- Support for HAWC data has been improved. In particular, a `~gammapy.irf.RecoPSFMap` has been added in IRF
+  to support PSF in reco energy.
 
 *gammapy.maps*
 
-- A reprojection method has been implemented on `Map` to allow for reprojection on a new `MapGeom`
-object. It supports different spatial geometries but requires identical non-spatial axes. See
-`Map.reproject_to_geom()`.
+- A reprojection method has been implemented on `~gammapy.maps.Map` to allow for reprojection on a new `~gammapy.maps.MapGeom`
+  object. It supports different spatial geometries but requires identical non-spatial axes. See
+  `~gammapy.maps.Map.reproject_to_geom()`.
 
 *infrastructure*
 
 - The tutorial gallery now relies on Sphinx gallery. The tutorials are python scripts with specific
-syntax for the description cells. This simplifies the documentation build. This will make the history
-cleaner and tutorial code reviews easier. The download button is now moved at the end of the tutorial.
-Binder is now working again for tutorials.
+  syntax for the description cells. This simplifies the documentation build. This will make the history
+  cleaner and tutorial code reviews easier. The download button is now moved at the end of the tutorial.
+  Binder is now working again for tutorials.
 - The compliance with the astropy affiliated packages has been improved. In particular, tox is now
-used for testing and CI.
+  used for testing and CI.
 
 API changes
 ~~~~~~~~~~~
 
 *gammapy.modeling*
 
-- `LightCurveTemplateTemporalModel` internally relies on a `RegionMap` and does not take a table on
-`__init__` anymore. To create one from a `Table` object, users have to go through
-`LightCurveTemplateTemporalModel.read()` or `LightCurveTemplateTemporalModel.from_table`.
+- `~gammapy.modeling.models.LightCurveTemplateTemporalModel` internally relies on a `~gammapy.maps.RegionNDMap`
+  and does not take a table on `__init__` anymore. To create one from a `Table` object, users have to go through
+  `~gammapy.modeling.models.LightCurveTemplateTemporalModel.read()` or `~gammapy.modeling.models.LightCurveTemplateTemporalModel.from_table`.
 
-*gammapy.stats*
-
-- For consistency with the definition of `errn` and `errp`, whic are always positve quantities,
-the sign of the value returned by `CountsStatistic.compute_errn` has been changed.
 
 Bug fixes and improvements
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 *gammapy.astro*
 
-- The DM annihilation spectral model `DarkMatterAnnihilationSpectralModel` can now be serialized
-to yaml.
+- The DM annihilation spectral model `~gammapy.astro.darkmatter.DarkMatterAnnihilationSpectralModel` can now be serialized
+  to yaml.
 
 *gammapy.data*
 
-- An `Observation.copy()` method has been implemented to allow modification of existing `Observation`
-objects.
+- An `~gammapy.data.Observation.copy()` method has been implemented to allow modification of
+  existing `~gammapy.data.Observation` objects.
 
 *gammapy.datasets*
 
 - The dataset name is now serialized with the Dataset as the `NAME` keyword in the primary HDU.
-- A `peek` method is now available for the `MapEvaluator` to help debugging issues
-with model evaluation on a `Dataset`.
+- A `peek` method is now available for the `~gammapy.datasets.MapEvaluator` to help debugging issues
+  with model evaluation on a `~gammapy.datasets.Dataset`.
 
 *gammapy.makers*
 
-- Adapt the `MapDatasetMaker` to handle the DL3 format introduced in g.a.d.f. v0.3 for drifting
-instruments.
+- Adapt the `~gammapy.makers.MapDatasetMaker` to handle the DL3 format introduced in g.a.d.f. v0.3 for drifting
+  instruments.
 
 *gammapy.maps*
 
-- `RegionNDMap.sample_coord()` has been implemented to generate events from a region map.
+- `~gammapy.maps.RegionNDMap.sample_coord()` has been implemented to generate events from a region map.
 
 *gammapy.modeling*
 
-- A bug has been corrected in `TemporalModel.sample_time()`.
-- `TemporalModel.integrate` now provides a generic integration method.
-- A new `TemplatePhaseCurveTemporalModel` has been added to support pulsar-like lightcurves.
+- A bug has been corrected in the `~gammapy.modeling.models.TemporalModel`
+  `~gammapy.modeling.models.TemporalModel.sample_time()` method. An incorrect unit handling made
+  times incorrectly sampled for the `~gammapy.modeling.models.TemplateLightCurveTemporalModel`.
+- `~gammapy.modeling.models.TemporalModel.integrate()` now provides a generic integration method.
+- A new `~gammapy.modeling.models.TemplatePhaseCurveTemporalModel` has been added to support pulsar-like lightcurves.
 - To allow for identical parameter names, the serialization of the covariance matrix does no longer
-export the parameter names as column headers but simply as the first entry in each row.
+  export the parameter names as column headers but simply as the first entry in each row.
 
+*gammapy.stats*
+
+- For consistency with the convention of `errn` and `errp` in the `Estimator` classes, which are
+  always positve quantities, the sign of the value returned by `~gammapy.stats.CountsStatistic.compute_errn()`
+  has been changed.
 
 Contributors
 ~~~~~~~~~~~~
