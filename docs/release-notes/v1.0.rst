@@ -38,6 +38,7 @@ Gammapy v1.0 adds support for the latest version 0.3 of `gadf`_.
   Binder is now working again for tutorials.
 - The compliance with the astropy affiliated packages has been improved. In particular, tox is now
   used for testing and CI.
+- Numpy<=1.19 is no longer supported.
 
 API changes
 ~~~~~~~~~~~
