@@ -2,26 +2,31 @@ import logging
 from datetime import date
 from pathlib import Path
 import click
-import yaml
+from ruamel.yaml import YAML
 
 log = logging.getLogger(__name__)
 
 
+CITATION_PATH = Path(__file__).parent.parent / "CITATION.cff"
+
+
 def update_citation_cff(release):
     # TODO: update author list according to PIG 24
-    citation_path = Path(__file__).parent / "CITATION.cff"
+    yaml = YAML()
+    yaml.preserve_quotes = True
 
-    with citation_path.open("r") as f:
-        data = yaml.safe_load(f)
+    with CITATION_PATH.open("r") as stream:
+        data = yaml.load(stream=stream)
 
     data["date-released"] = date.today()
     data["version"] = release
 
-    with citation_path.open("w") as f:
-        log.info(f"Writing {f}")
-        yaml.safe_dump(data, f)
+    with CITATION_PATH.open("w") as stream:
+        log.info(f"Writing {CITATION_PATH}")
+        yaml.dump(data, stream=stream)
 
 
+@click.command()
 @click.option("--release", help="Release tag")
 def cli(release):
     update_citation_cff(release=release)

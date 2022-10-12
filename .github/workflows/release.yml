@@ -27,6 +27,7 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.PYPI_TOKEN }}
+          repository_url: https://test.pypi.org/legacy/
   release-github:
     needs: release-pypi
     runs-on: ubuntu-latest
@@ -38,7 +39,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           body: |
-            Gammapy is a Python package for gamma-ray astronomy. See [changelog for this release](https://github.com/gammapy/gammapy/blob/main/docs/release-notes/${{ github.ref_name}}.rst).
+            Gammapy is a Python package for gamma-ray astronomy. See [changelog for this release](https://github.com/gammapy/gammapy/blob/main/docs/release-notes/${{ github.ref_name }}.rst).
   dispatch-docs:
     needs: release-pypi
     runs-on: ubuntu-latest
@@ -47,7 +48,7 @@ jobs:
         uses: peter-evans/repository-dispatch@v2
         with:
           token: ${{ secrets.REMOTE_DISPATCH }}
-          repository: gammapy/gammapy-docs
+          repository: adonath/gammapy-docs
           event-type: release
           client-payload: '{"release": "${{ github.ref_name }}"}'
   dispatch-data:
@@ -58,7 +59,7 @@ jobs:
         uses: peter-evans/repository-dispatch@v2
         with:
           token: ${{ secrets.REMOTE_DISPATCH }}
-          repository: gammapy/gammapy-data
+          repository: adonath/gammapy-data
           event-type: release
           client-payload: '{"release": "${{ github.ref_name }}"}'
   dispatch-webpage:
@@ -69,6 +70,6 @@ jobs:
         uses: peter-evans/repository-dispatch@v2
         with:
           token: ${{ secrets.REMOTE_DISPATCH }}
-          repository: gammapy/gammapy-webpage
+          repository: adonath/gammapy-webpage
           event-type: release
           client-payload: '{"release": "${{ github.ref_name }}"}'
