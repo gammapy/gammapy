@@ -2365,6 +2365,8 @@ class MapDatasetOnOff(MapDataset):
 
         Parameters
         ----------
+        npred_background : `~gammapy.maps.Map`
+                Expected number of background counts in the on region
         random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
                 Defines random number generator initialisation.
                 Passed to `~gammapy.utils.random.get_random_state`.
