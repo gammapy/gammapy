@@ -1,0 +1,59 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release-pypi:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        
+      - name: Update tags
+        run: git fetch --tags
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - name: Install dependencies
+        run: |
+          python --version
+          pip install -U build
+          python -m build
+      - name: Publish package
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_TOKEN }}
+  release-github:
+    needs: release-pypi
+    runs-on: ubuntu-latest
+    if:  ${{ !contains(github.ref_name, 'rc') }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          body: |
+            Gammapy is a Python package for gamma-ray astronomy. See [changelog for this release](https://github.com/gammapy/gammapy/blob/main/docs/release-notes/${{ github.ref_name}}.rst).
+  dispatch-repos:
+    needs: release-pypi
+    strategy:
+      matrix:
+        repo: ['gammapy/gammapy-docs', 'gammapy/gammapy-webpage', 'gammapy/gammapy-data']
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repository Dispatch
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.REMOTE_DISPATCH }}
+          repository: ${{ matrix.repo }}
+          event-type: release
+          client-payload: '{"release": "${{ github.ref_name }}"}'
+          
