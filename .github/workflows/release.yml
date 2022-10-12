@@ -21,7 +21,7 @@ jobs:
         run: |
           python --version
           pip install -U build
-          python -m build
+          python -m build --sdist
       - name: Publish package
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
