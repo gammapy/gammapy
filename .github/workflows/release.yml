@@ -51,17 +51,6 @@ jobs:
           repository: adonath/gammapy-docs
           event-type: release
           client-payload: '{"release": "${{ github.ref_name }}"}'
-  dispatch-data:
-    needs: release-github
-    runs-on: ubuntu-latest
-    steps:
-      - name: Dispatch Gammapy Data
-        uses: peter-evans/repository-dispatch@v2
-        with:
-          token: ${{ secrets.REMOTE_DISPATCH }}
-          repository: adonath/gammapy-data
-          event-type: release
-          client-payload: '{"release": "${{ github.ref_name }}"}'
   dispatch-webpage:
     needs: release-github
     runs-on: ubuntu-latest
