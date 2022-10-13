@@ -385,7 +385,7 @@ class ReflectedRegionsFinder(RegionsFinder):
         """
         if isinstance(region, PointSkyRegion):
             raise TypeError(
-                "ReflectedRegionFinder does not work with PointSkyRegion. Use WobbleRegionFinder instead."
+                "ReflectedRegionsFinder does not work with PointSkyRegion. Use WobbleRegionsFinder instead."
             )
 
         regions = []
