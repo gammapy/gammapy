@@ -27,7 +27,6 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.PYPI_TOKEN }}
-          repository_url: https://test.pypi.org/legacy/
   release-github:
     needs: release-pypi
     runs-on: ubuntu-latest
@@ -48,7 +47,7 @@ jobs:
         uses: peter-evans/repository-dispatch@v2
         with:
           token: ${{ secrets.REMOTE_DISPATCH }}
-          repository: adonath/gammapy-docs
+          repository: gammapy/gammapy-docs
           event-type: release
           client-payload: '{"release": "${{ github.ref_name }}"}'
   dispatch-webpage:
@@ -59,6 +58,6 @@ jobs:
         uses: peter-evans/repository-dispatch@v2
         with:
           token: ${{ secrets.REMOTE_DISPATCH }}
-          repository: adonath/gammapy-webpage
+          repository: gammapy/gammapy-webpage
           event-type: release
           client-payload: '{"release": "${{ github.ref_name }}"}'
