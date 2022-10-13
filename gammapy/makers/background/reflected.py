@@ -383,6 +383,11 @@ class ReflectedRegionsFinder(RegionsFinder):
         wcs: `~astropy.wcs.WCS`
             WCS for the determined regions
         """
+        if isinstance(region, PointSkyRegion):
+            raise TypeError(
+                "ReflectedRegionsFinder does not work with PointSkyRegion. Use WobbleRegionsFinder instead."
+            )
+
         regions = []
 
         reference_geom = self._create_reference_geometry(region, center)
