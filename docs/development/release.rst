@@ -16,21 +16,32 @@ Feature Freeze and Branching
 
 #. Follow the `Astropy feature freeze and branching instructions <https://docs.astropy.org/en/latest/development/releasing.html#start-of-a-new-release-cycle-feature-freeze-and-branching>`__
    Instead of updating the `whatsnew/<version>.rst` update the `docs/release-notes/<version>.rst`.
+#. Update the entry for the feature freeze in the `Gammapy release calendar <https://github.com/gammapy/gammapy/wiki/Release-Calendar>`_.`
 
 
 Releasing the first major release candidate
 -------------------------------------------
 
-#. Add an entry for the release candidate like `v1.0rc1` or `v1.1rc1` in the ``download/index.json`` file in the `gammapy-web repo <https://github.com/gammapy/gammapy-webpage>`__.
-   The ``datasets`` entry should point to dev version of `gammapy-data`. This allows to fix bugs in the data during the release candidate testing.
+A few days before the planned release candidate:
 
 #. Fill the changelog ``docs/release-notes/<version>.rst`` for the version you are about to release.
 #. Update the ``CITATION.cff`` by running the ``dev/prepare-release.py`` script.
 #. Open a PR including both changes and mark it with the `backport-v<version>.x` label.
    Gather feedback from the Gammapy user and dev community and finally merge and backport to the `v<version>.x` branch.
+
+On the day of the release candidate:
+
+#. Add an entry for the release candidate like `v1.0rc1` or `v1.1rc1` in the ``download/index.json`` file in the `gammapy-web repo <https://github.com/gammapy/gammapy-webpage>`__, by
+   copying the entry for `dev` tag. As we do not handle release candidates nor bug fix releases for data, this still allows to fix bugs in the data during the release candidate testing.
 #. Locally create a new release candidate tag like `v1.0rc1` for Gammapy and push. For details see the
    `Astropy release candidate instructions <https://docs.astropy.org/en/latest/development/releasing.html#tagging-the-first-release-candidate>`.
-#. Once the tag is pushed the docs build and upload to PyPi should be triggered automnatically.
+#. Once the tag is pushed the docs build and upload to PyPi should be triggered automatically.
+#. Once the docs build has succeded find the ``tutorials_jupyter.zip`` file for the release candidate
+   in the `gammapy-docs repo <https://github.com/gammapy/gammapy-docs>`__ and adapt the ``download/index.json`` to point to it.
+#. Update the entry for the release candidate in the `Gammapy release calendar <https://github.com/gammapy/gammapy/wiki/Release-Calendar>`_.`
+#. Create a testing page like `Gammapy v1.0rc testing <https://github.com/gammapy/gammapy/wiki/Gammapy-v1.0rc-testing>`.
+#. Advertise the release candidate and motivate developers and users to report test fails and bugs and list them
+   on the page created before.
 
 
 Releasing the final version of the major release
@@ -38,7 +49,7 @@ Releasing the final version of the major release
 
 #. Create a new release tag in the `gammapy-data repo <https://github.com/gammapy/gammapy-data>`__, like `v1.0` or `v1.1`.
 
-#. Update the ``download/index.json`` file in the `gammapy-web repo <https://github.com/gammapy/gammapy-webpage>`__ to point
+#. Update the datasets entry in the ``download/index.json`` file in the `gammapy-web repo <https://github.com/gammapy/gammapy-webpage>`__ to point
    to this new release tag.
 
 #. Locally create a new release tag like `v1.0` for Gammapy and push. For details see the
@@ -53,11 +64,13 @@ Releasing the final version of the major release
 #. In the `gammapy-web repo <https://github.com/gammapy/gammapy-webpage>`__:
 
    * Mention the release on the front page and on the news page.
-   * In the ``download/install`` folder, copy ``gammapy-1.0-environment.yml`` file as ``gammapy-1.0-environment.yml``.
+   * In the ``download/install`` folder, copy a previous environment file file as ``gammapy-1.0-environment.yml``.
    * Adapt the dependency conda env name and versions as required in this file.
    * Adapt the entry in the ``download/index.json`` file to point ot the correct environment file.
    * Find the ``tutorials_jupyter.zip`` file for the new release in the `gammapy-docs repo <https://github.com/gammapy/gammapy-docs>`__
      and adapt the ``download/index.json`` to point to it.
+
+#. Update the entry for the actual release in the `Gammapy release calendar <https://github.com/gammapy/gammapy/wiki/Release-Calendar>`_.`
 
 #. Finally:
 
@@ -98,7 +111,7 @@ Make a Bugfix release
 ---------------------
 
 #. Add an entry for the bug-fix release like `v1.0.1` or `v1.1.2` in the ``download/index.json`` file in the `gammapy-web repo <https://github.com/gammapy/gammapy-webpage>`__.
-   The ``datasets`` entry should point to last stabel version, like `v1.0` or `v1.1`. We do not provide buf-fix release for data. 
+   The ``datasets`` entry should point to last stable version, like `v1.0` or `v1.1`. We do not provide bug-fix release for data. 
 
 #. Follow the  `Astropy bug fix release instructions https://docs.astropy.org/en/latest/development/releasing.html#maintaining-bug-fix-releases`__.
 
