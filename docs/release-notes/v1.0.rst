@@ -1,6 +1,157 @@
+.. include:: ../references.txt
+
 .. _gammapy_1p0_release:
 
-1.0 (unreleased)
-----------------
+1.0 (October 21th, 2022)
+-----------------------
 
-- No changes yet
+Summary
+~~~~~~~
+
+- Released Oct 21th, 2022
+- 10 contributors
+- 78 pull requests since v0.20.1 (not all listed below)
+
+New features
+~~~~~~~~~~~~
+
+This new release is the Long Term Stable (LTS) version 1.0. Most of the changes are in the package
+infrastructure. A number of improvements and bug corrections have been implemented since v0.20.1.
+Gammapy v1.0 adds support for the latest version 0.3 of `gadf`_.
+
+*gammapy.data and gammapy.irf*
+
+- Support for HAWC data has been improved. In particular, a `~gammapy.irf.RecoPSFMap` has been added in IRF
+  to support PSF in reco energy.
+
+*gammapy.maps*
+
+- A reprojection method has been implemented on `~gammapy.maps.Map` to allow for reprojection on a new `~gammapy.maps.MapGeom`
+  object. It supports different spatial geometries but requires identical non-spatial axes. See
+  `~gammapy.maps.Map.reproject_to_geom()`.
+
+*infrastructure*
+
+- The tutorial gallery now relies on Sphinx gallery. The tutorials are python scripts with specific
+  syntax for the description cells. This simplifies the documentation build. This will make the history
+  cleaner and tutorial code reviews easier. The download button is now moved at the end of the tutorial.
+  Binder is now working again for tutorials.
+- The compliance with the astropy affiliated packages has been improved. In particular, tox is now
+  used for testing and CI.
+- Numpy<=1.19 is no longer supported.
+
+API changes
+~~~~~~~~~~~
+
+*gammapy.modeling*
+
+- `~gammapy.modeling.models.LightCurveTemplateTemporalModel` internally relies on a `~gammapy.maps.RegionNDMap`
+  and does not take a table on `__init__` anymore. To create one from a `Table` object, users have to go through
+  `~gammapy.modeling.models.LightCurveTemplateTemporalModel.read()` or `~gammapy.modeling.models.LightCurveTemplateTemporalModel.from_table`.
+
+
+Bug fixes and improvements
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+*gammapy.astro*
+
+- The DM annihilation spectral model `~gammapy.astro.darkmatter.DarkMatterAnnihilationSpectralModel` can now be serialized
+  to yaml.
+
+*gammapy.data*
+
+- An `~gammapy.data.Observation.copy()` method has been implemented to allow modification of
+  existing `~gammapy.data.Observation` objects.
+
+*gammapy.datasets*
+
+- The dataset name is now serialized with the Dataset as the `NAME` keyword in the primary HDU.
+- A `peek` method is now available for the `~gammapy.datasets.MapEvaluator` to help debugging issues
+  with model evaluation on a `~gammapy.datasets.Dataset`.
+
+*gammapy.makers*
+
+- Adapt the `~gammapy.makers.MapDatasetMaker` to handle the DL3 format introduced in g.a.d.f. v0.3 for drifting
+  instruments.
+
+*gammapy.maps*
+
+- `~gammapy.maps.RegionNDMap.sample_coord()` has been implemented to generate events from a region map.
+
+*gammapy.modeling*
+
+- A bug has been corrected in the `~gammapy.modeling.models.TemporalModel`
+  `~gammapy.modeling.models.TemporalModel.sample_time()` method. An incorrect unit handling made
+  times incorrectly sampled for the `~gammapy.modeling.models.TemplateLightCurveTemporalModel`.
+- `~gammapy.modeling.models.TemporalModel.integrate()` now provides a generic integration method.
+- A new `~gammapy.modeling.models.TemplatePhaseCurveTemporalModel` has been added to support pulsar-like lightcurves.
+- To allow for identical parameter names, the serialization of the covariance matrix does no longer
+  export the parameter names as column headers but simply as the first entry in each row.
+
+*gammapy.stats*
+
+- For consistency with the convention of `errn` and `errp` in the `Estimator` classes, which are
+  always positve quantities, the sign of the value returned by `~gammapy.stats.CountsStatistic.compute_errn()`
+  has been changed.
+
+Contributors
+~~~~~~~~~~~~
+
+- Arnau Aguasca
+- Axel Donath
+- Luca Giunti
+- Mireia Nievas-Rosillo
+- Laura Olivera-Nieto
+- Fabio Pintore
+- Quentin Rémy
+- Brigitta Sipőcz
+- Atreyee Sinha
+- Régis Terrier
+
+Pull Requests
+~~~~~~~~~~~~~
+
+This list is incomplete. Small improvements and bug fixes are not listed here.
+- [#4119] simplification of np.array(set(labels)) (Mireia Nievas-Rosillo)
+- [#4115] Add code of conduct file (Axel Donath)
+- [#4113] Move binder configuration to gammapy-webpage (Axel Donath)
+- [#4112] Add pre commit hooks and black CI (Axel Donath)
+- [#4108] Add tests with HAWC data (Laura Olivera-Nieto)
+- [#4107] Implement peek methods for map evaluator and psf kernel (luca GIUNTI)
+- [#4106] Reactivate gammapy download command (Axel Donath)
+- [#4105] Fix WcsNDMap upsampling along axis (Quentin Remy)
+- [#4103] Activate binder for tutorials (Axel Donath)
+- [#4098] Fixed test failure after introducing new MAGIC RAD_MAX files (Cosimo Nigro)
+- [#4095] Filling of the glossary (Bruno Khélifi)
+- [#4093] Update Astropy package template (Axel Donath)
+- [#4089] Change sign of the value returned by CountsStatistic.compute_errn (Axel Donath)
+- [#4088] Add sample_coord for RegionNDMap (Régis Terrier)
+- [#4084] Adapt TemplateTemporalModel to use a RegionNDMap internally (Atreyee Sinha)
+- [#4083] Implement Observation.copy() and tests (Axel Donath)
+- [#4080] Use sphinx gallery for tutorials (Axel Donath)
+- [#4079] Update of the mailmap for the git push management (Bruno Khélifi)
+- [#4076] Allow for DRIFT mode observations in the MapDatasetMaker (Laura Olivera-Nieto)
+- [#4075] Validate nside parameter for HpxGeom  (luca GIUNTI)
+- [#4073] Make spatial coordinates optional in RegionNDMap.interp_by_coord() (Axel Donath)
+- [#4071] Add tag on DM Annihilation spectral model (Régis Terrier)
+- [#4067] Fix bug on TemporalModel.sample_time() (Fabio PINTORE)
+- [#4058] Serialisation in the primary HDU of the Dataset name (Bruno Khélifi)
+- [#4054] Update temporal model docs (aaguasca)
+- [#4051] Using astropy Table indices on ObservationTable (Régis Terrier)
+- [#4044] Addition of a tutorial about the 1D analysis with the HLI (Bruno Khélifi)
+- [#4043] Colour blind friendly visualisations (Bruno Khélifi)
+- [#4037] Implement IRF.slice_by_idx() (Axel Donath)
+- [#4026] Fix TemplateSpatialModel overwrite (Quentin Remy)
+- [#4025] Add support for PSF in reco energy (Quentin Remy)
+- [#4024] Add HowTo for adding phase column  (Atreyee Sinha)
+- [#4022] Introduce consistent .rename_axes and .rename API for maps (Quentin Remy)
+- [#4018] Computation of the WcsMap kernel at the nearest valid exposure (Bruno Khélifi)
+- [#4017] Introduce a phase curve model (Régis Terrier)
+- [#4015] Allow to stack mask_fit in Dataset.stack (Quentin Remy)
+- [#4014] Avoid unnecessary copy in Map.stack (Quentin Remy)
+- [#4013] Fix zeros errors in models created from 3HWC catalog (Quentin Remy)
+- [#4000] MNT: Raise error rather than silently proceed (Brigitta Sipőcz)
+- [#3956] Safe mask range on the 1D spectrum tutorial (Bruno Khélifi)
+- [#3950] PIG 23 - Gammapy Release Cycle and Version Numbering (Régis Terrier)
+- [#3925] Temporal model integration (Axel Donath)
+- [#3862] Add Map.reproject method (Quentin Remy)

@@ -1357,11 +1357,12 @@ class MapDataset(Dataset):
 
         counts = 0
         background, excess, sqrt_ts = np.nan, np.nan, np.nan
+
         if self.counts:
-            summed_stat = self._counts_statistic[mask].sum()
-            counts = summed_stat.n_on
+            counts = self.counts.data[mask].sum()
 
             if self.background:
+                summed_stat = self._counts_statistic[mask].sum()
                 background = summed_stat.n_bkg
                 excess = summed_stat.n_sig
                 sqrt_ts = summed_stat.sqrt_ts
@@ -2365,6 +2366,8 @@ class MapDatasetOnOff(MapDataset):
 
         Parameters
         ----------
+        npred_background : `~gammapy.maps.Map`
+                Expected number of background counts in the on region
         random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
                 Defines random number generator initialisation.
                 Passed to `~gammapy.utils.random.get_random_state`.
