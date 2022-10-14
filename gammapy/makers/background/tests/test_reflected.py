@@ -454,5 +454,5 @@ def test_reflected_bkg_maker_fixed_rad_max_bad(
     dataset_empty = SpectrumDataset.create(geom=geom_point_shape)
 
     dataset = maker.run(dataset_empty, obs)
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         reflected_bkg_maker.run(dataset, obs)

@@ -20,12 +20,12 @@ import numpy as np
 from scipy.stats import norm
 import astropy.units as u
 from regions import CircleSkyRegion
+
 # %matplotlib inline
 import matplotlib.pyplot as plt
 from gammapy.analysis import Analysis, AnalysisConfig
 from gammapy.datasets import MapDataset
 from gammapy.estimators import ExcessMapEstimator
-from gammapy.maps import Map
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
     ExpCutoffPowerLawSpectralModel,
@@ -34,6 +34,7 @@ from gammapy.modeling.models import (
     PointSpatialModel,
     SkyModel,
 )
+
 ######################################################################
 # Check setup
 # -----------
@@ -180,7 +181,7 @@ excess.smooth("0.06 deg").plot(stretch="sqrt", add_cbar=True)
 # can rely on the `~gammapy.maps.Geom.energy_mask()` method.
 #
 # For more details on masks and the techniques to create them in gammapy,
-# please refer `to the dedicated tutorial <../../api/mask_maps.ipynb>`__
+# please checkou the dedicated :doc:`/tutorials/api/mask_maps` tutorial.
 #
 
 dataset_stacked.mask_fit = dataset_stacked.counts.geom.energy_mask(
@@ -463,15 +464,6 @@ plt.legend()
 
 ######################################################################
 # .. image:: ../../_static/DC1_3d.png
-#
-
-
-######################################################################
-# The complete tutorial notebook of this analysis is available to be
-# downloaded in
-# `GAMMAPY-EXTRA <https://github.com/gammapy/gammapy-extra>`__ repository
-# at
-# https://github.com/gammapy/gammapy-extra/blob/master/analyses/cta_1dc_gc_3d.ipynb).
 #
 
 

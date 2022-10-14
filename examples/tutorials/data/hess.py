@@ -40,12 +40,14 @@ release 1.
 
 import astropy.units as u
 from astropy.coordinates import SkyCoord
+
 # %matplotlib inline
 import matplotlib.pyplot as plt
 from gammapy.data import DataStore
 from gammapy.makers import MapDatasetMaker
 from gammapy.makers.utils import make_theta_squared_table
 from gammapy.maps import Map, MapAxis, WcsGeom
+
 ######################################################################
 # Check setup
 # -----------
@@ -75,7 +77,7 @@ data_store.info()
 ######################################################################
 # Preview an excerpt from the observtaion table
 
-data_store.obs_table[:2][["OBS_ID", "DATE-OBS", "RA_PNT", "DEC_PNT", "OBJECT"]]
+print(data_store.obs_table[:2][["OBS_ID", "DATE-OBS", "RA_PNT", "DEC_PNT", "OBJECT"]])
 
 ######################################################################
 # Get a single obervation
@@ -141,7 +143,7 @@ plot_theta_squared_table(theta2_table)
 # Get the observations
 obs_id = data_store.obs_table["OBS_ID"][data_store.obs_table["OBJECT"] == "MSH 15-5-02"]
 observations = data_store.get_observations(obs_id)
-print(len(observations))
+print("No. of observations: ", len(observations))
 
 # Define an energy range
 energy_min = 100 * u.GeV

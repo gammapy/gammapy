@@ -71,7 +71,7 @@ class RegionGeom(Geom):
     def __init__(self, region, axes=None, wcs=None, binsz_wcs="0.1 deg"):
         self._region = region
         self._axes = MapAxes.from_default(axes, n_spatial_axes=2)
-        self._binsz_wcs = binsz_wcs
+        self._binsz_wcs = u.Quantity(binsz_wcs)
 
         if wcs is None and region is not None:
             if isinstance(region, CompoundSkyRegion):
@@ -207,6 +207,8 @@ class RegionGeom(Geom):
         """Check if a given map coordinate is contained in the region.
         Requires the `.region` attribute to be set.
 
+        For `PointSkyRegion` the method always returns true.
+
         Parameters
         ----------
         coords : tuple, dict, `MapCoord` or `~astropy.coordinates.SkyCoord`
@@ -223,10 +225,16 @@ class RegionGeom(Geom):
             raise ValueError("Region definition required.")
 
         coords = MapCoord.create(coords, frame=self.frame, axis_names=self.axes.names)
+
+        if self.is_all_point_sky_regions:
+            return np.ones(coords.skycoord.shape, dtype=bool)
+
         return self.region.contains(coords.skycoord, self.wcs)
 
     def contains_wcs_pix(self, pix):
         """Check if a given wcs pixel coordinate is contained in the region.
+
+        For `PointSkyRegion` the method always returns true.
 
         Parameters
         ----------
@@ -238,6 +246,9 @@ class RegionGeom(Geom):
         containment : `~numpy.ndarray`
             Bool array.
         """
+        if self.is_all_point_sky_regions:
+            return np.ones(pix[0].shape, dtype=bool)
+
         region_pix = self.region.to_pixel(self.wcs)
         return region_pix.contains(PixCoord(pix[0], pix[1]))
 
@@ -324,7 +335,7 @@ class RegionGeom(Geom):
             raise ValueError("Region definition required.")
 
         # compound regions do not implement area()
-        # so we use the mask represenation and estimate the area
+        # so we use the mask representation and estimate the area
         # from the pixels in the mask using oversampling
         if isinstance(self.region, CompoundSkyRegion):
             # oversample by a factor of ten
@@ -528,14 +539,7 @@ class RegionGeom(Geom):
         if self.region is None:
             pix = (0, 0)
         else:
-            # TODO: remove once fix is available in regions
-            if isinstance(self.region, PointSkyRegion):
-                point_region = self.region.to_pixel(self.wcs)
-                point_region.meta["include"] = False
-                pix_coord = PixCoord.from_sky(coords.skycoord, self.wcs)
-                in_region = point_region.contains(pix_coord)
-            else:
-                in_region = self.region.contains(coords.skycoord, wcs=self.wcs)
+            in_region = self.contains(coords.skycoord)
 
             x = np.zeros(coords.skycoord.shape)
             x[~in_region] = np.nan

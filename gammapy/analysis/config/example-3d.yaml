@@ -16,7 +16,7 @@ datasets:
             offset_max: 2.5 deg
         axes:
             energy: {min: 1 TeV, max: 10 TeV, nbins: 4}
-            energy_true: {min: 1 TeV, max: 10 TeV, nbins: 5}
+            energy_true: {min: 0.7 TeV, max: 12 TeV, nbins: 10}
     map_selection: ['counts', 'exposure', 'background', 'psf', 'edisp']
     safe_mask:
         methods: ['offset-max']
@@ -26,7 +26,7 @@ datasets:
         parameters: {method: 'scale'}
 
 fit:
-    fit_range: {min: 1 TeV, max: 10 TeV}
+    fit_range: {min: 1 TeV, max: 10.1 TeV}
 
 flux_points:
     energy: {min: 1 TeV, max: 10 TeV, nbins: 2}

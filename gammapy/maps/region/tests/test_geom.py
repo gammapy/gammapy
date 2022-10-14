@@ -390,3 +390,12 @@ def test_region_geom_to_from_hdu(region):
 
     assert new_geom == geom
     assert new_geom.region.meta["include"]
+
+
+def test_contains_point_sky_region():
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3)
+
+    geom = RegionGeom.create(
+        region="galactic;point(0, 0)", axes=[axis], binsz_wcs=0.01 * u.deg
+    )
+    assert all(geom.contains(geom.center_skydir))

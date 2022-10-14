@@ -75,6 +75,7 @@ from pathlib import Path
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
+
 # %matplotlib inline
 import matplotlib.pyplot as plt
 from gammapy.data import DataStore
@@ -314,7 +315,7 @@ print(result)
 # `~astropy.modeling.models.Models` object.
 #
 
-stacked.models.to_parameters_table()
+print(stacked.models.to_parameters_table())
 
 
 ######################################################################

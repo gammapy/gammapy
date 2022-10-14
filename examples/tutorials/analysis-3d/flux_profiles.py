@@ -44,12 +44,14 @@ run the actually profile extraction using the `~gammapy.estimators.FluxProfileEs
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
+
 # %matplotlib inline
 import matplotlib.pyplot as plt
 from gammapy.datasets import MapDataset
 from gammapy.estimators import FluxPoints, FluxProfileEstimator
 from gammapy.maps import RegionGeom
 from gammapy.modeling.models import PowerLawSpectralModel
+
 ######################################################################
 # Check setup
 # -----------

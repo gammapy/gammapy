@@ -642,6 +642,12 @@ def test_template_spectral_model_single_value():
 
     assert_allclose(result.data, 1e-12)
 
+    model.norm.value = 0.5
+    data = model.to_dict()
+    assert_allclose(data["spectral"]["parameters"][0]["value"], 0.5)
+    model2 = TemplateSpectralModel.from_dict(data)
+    assert model2.to_dict() == data
+
 
 def test_template_spectral_model_compound():
     energy = [1.00e06, 1.25e06, 1.58e06, 1.99e06] * u.MeV

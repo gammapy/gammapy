@@ -187,6 +187,14 @@ your ``$GAMMAPY_DATA`` to the local path you have chosen.
     gammapy download datasets --out GAMMAPY_DATA
     export GAMMAPY_DATA=$PWD/GAMMAPY_DATA
 
+We adhere to the PEP8 coding style. To enforce this, setup the 
+`pre-commit hook <https://pre-commit.com/>`_:
+
+.. code-block:: bash
+
+    pre-commit install
+
+
 Running tests & building Documentation
 ======================================
 To run tests and build documentation we use tool `tox <https://tox.wiki/en/latest/>`__.

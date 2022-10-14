@@ -524,7 +524,7 @@ class Datasets(collections.abc.MutableSequence):
         if np.all([table is None for table in tables]):
             meta_table = Table()
         else:
-            meta_table = vstack(tables)
+            meta_table = vstack(tables).copy()
 
         meta_table.add_column([d.tag for d in self], index=0, name="TYPE")
         meta_table.add_column(self.names, index=0, name="NAME")

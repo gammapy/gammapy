@@ -12,7 +12,7 @@ Prerequisites
 -  Understanding the basic data reduction and modeling/fitting processes
    with the gammapy library API as shown in the `first gammapy analysis
    with the gammapy library API
-   tutorial <../../starting/analysis_2.ipynb>`__
+   tutorial :doc:`/tutorials/starting/analysis_2`
 
 Context
 -------
@@ -33,8 +33,8 @@ Proposed approach
 -----------------
 
 We have seen in the general presentation of the spectrum extraction for
-point sources, see `the corresponding
-notebook <spectral_analysis.ipynb>`__, that Gammapy uses specific
+point sources (see :doc:`/tutorials/analysis-1d/spectral_analysis`
+tutorial) that Gammapy uses specific
 datasets makers to first produce reduced spectral data and then to
 extract OFF measurements with reflected background techniques: the
 `~gammapy.makers.SpectrumDatasetMaker` and the
@@ -89,6 +89,7 @@ As usual, we’ll start with some general imports…
 import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
+
 # %matplotlib inline
 import matplotlib.pyplot as plt
 from gammapy.data import DataStore
@@ -101,6 +102,7 @@ from gammapy.makers import (
 from gammapy.maps import MapAxis, RegionGeom
 from gammapy.modeling import Fit
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
+
 ######################################################################
 # Check setup
 # -----------

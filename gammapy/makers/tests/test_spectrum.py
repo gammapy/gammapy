@@ -42,8 +42,10 @@ def observations_cta_dc1():
 
 @pytest.fixture()
 def spectrum_dataset_gc():
-    e_reco = MapAxis.from_edges(np.logspace(0, 2, 5) * u.TeV, name="energy")
-    e_true = MapAxis.from_edges(np.logspace(-1, 2, 13) * u.TeV, name="energy_true")
+    e_reco = MapAxis.from_energy_edges(np.logspace(0, 2, 5) * u.TeV, name="energy")
+    e_true = MapAxis.from_energy_edges(
+        np.logspace(-1, 2, 13) * u.TeV, name="energy_true"
+    )
     geom = RegionGeom.create("galactic;circle(0, 0, 0.11)", axes=[e_reco])
     return SpectrumDataset.create(geom=geom, energy_axis_true=e_true)
 
@@ -60,8 +62,10 @@ def spectrum_dataset_magic_crab():
 
 @pytest.fixture()
 def spectrum_dataset_crab():
-    e_reco = MapAxis.from_edges(np.logspace(0, 2, 5) * u.TeV, name="energy")
-    e_true = MapAxis.from_edges(np.logspace(-0.5, 2, 11) * u.TeV, name="energy_true")
+    e_reco = MapAxis.from_energy_edges(np.logspace(0, 2, 5) * u.TeV)
+    e_true = MapAxis.from_energy_edges(
+        np.logspace(-0.5, 2, 11) * u.TeV, name="energy_true"
+    )
     geom = RegionGeom.create(
         "icrs;circle(83.63, 22.01, 0.11)", axes=[e_reco], binsz_wcs="0.01deg"
     )
@@ -70,7 +74,9 @@ def spectrum_dataset_crab():
 
 @pytest.fixture()
 def spectrum_dataset_crab_fine():
-    e_true = MapAxis.from_edges(np.logspace(-2, 2.5, 109) * u.TeV, name="energy_true")
+    e_true = MapAxis.from_energy_edges(
+        np.logspace(-2, 2.5, 109) * u.TeV, name="energy_true"
+    )
     e_reco = MapAxis.from_energy_edges(np.logspace(-2, 2, 73) * u.TeV)
     geom = RegionGeom.create("icrs;circle(83.63, 22.01, 0.11)", axes=[e_reco])
     return SpectrumDataset.create(geom=geom, energy_axis_true=e_true)
@@ -123,8 +129,8 @@ def test_spectrum_dataset_maker_hess_dl3(spectrum_dataset_crab, observations_hes
         datasets.append(dataset)
 
     # Exposure
-    assert_allclose(datasets[0].exposure.data.sum(), 7374718644.757894)
-    assert_allclose(datasets[1].exposure.data.sum(), 6691006466.659032)
+    assert_allclose(datasets[0].exposure.data.sum(), 7.3111e09)
+    assert_allclose(datasets[1].exposure.data.sum(), 6.634534e09)
 
     # Background
     assert_allclose(datasets[0].npred_background().data.sum(), 7.7429157, rtol=1e-5)
@@ -217,7 +223,7 @@ def test_safe_mask_maker_dc1(spectrum_dataset_gc, observations_cta_dc1):
     maker = SpectrumDatasetMaker()
     dataset = maker.run(spectrum_dataset_gc, obs)
     dataset = safe_mask_maker.run(dataset, obs)
-    assert_allclose(dataset.energy_range[0], 3.162278, rtol=1e-3)
+    assert_allclose(dataset.energy_range[0], 1, rtol=1e-3)
     assert dataset.energy_range[0].unit == "TeV"
 
 
@@ -279,7 +285,7 @@ class TestSpectrumMakerChain:
             (
                 dict(containment_correction=False),
                 dict(
-                    n_on=125, sigma=18.953014, aeff=580254.9 * u.m**2, edisp=0.23635
+                    n_on=125, sigma=18.953014, aeff=580254.9 * u.m**2, edisp=0.235864
                 ),
             ),
             (
@@ -288,7 +294,7 @@ class TestSpectrumMakerChain:
                     n_on=125,
                     sigma=18.953014,
                     aeff=375314.356461 * u.m**2,
-                    edisp=0.23635,
+                    edisp=0.235864,
                 ),
             ),
         ],

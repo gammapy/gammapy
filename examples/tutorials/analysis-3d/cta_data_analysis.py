@@ -2,7 +2,7 @@
 Basic image exploration and fitting
 ===================================
 
-Detect sources, produce a sky image and a spectrum using the reflected regions background estimation.
+Detect sources, produce a sky image and a spectrum using CTA 1DC data.
 
 Introduction
 ------------
@@ -32,6 +32,7 @@ import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
+
 # %matplotlib inline
 import matplotlib.pyplot as plt
 from gammapy.data import DataStore
