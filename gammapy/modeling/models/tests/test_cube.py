@@ -720,7 +720,3 @@ def test_sky_model_contributes_point_region():
     geom = RegionGeom.create("icrs;point(0.05, 0.05)", binsz_wcs="0.01 deg")
     mask = RegionNDMap.from_geom(geom)
     assert np.any(model.contributes(mask))
-
-    geom = RegionGeom.create("icrs;point(0.06, 0.06)", binsz_wcs="0.01 deg")
-    mask = RegionNDMap.from_geom(geom)
-    assert not np.any(model.contributes(mask))
