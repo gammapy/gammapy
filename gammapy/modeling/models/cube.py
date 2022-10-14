@@ -271,6 +271,9 @@ class SkyModel(ModelBase):
             mask = mask.reduce_over_axes(func=np.logical_or)
 
         if mask.geom.is_region and mask.geom.region is not None:
+            if mask.geom.is_all_point_sky_regions:
+                return True
+
             geom = mask.geom.to_wcs_geom()
             mask = geom.region_mask([mask.geom.region])
 
