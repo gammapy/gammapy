@@ -307,7 +307,7 @@ def test_dataset_maker_spectrum_global_rad_max():
     assert counts.unit == ""
     assert counts_off.unit == ""
     assert_allclose(counts.data.sum(), 438, rtol=1e-5)
-    assert_allclose(counts_off.data.sum(), 273, rtol=1e-5)
+    assert_allclose(counts_off.data.sum(), 276, rtol=1e-5)
 
 
 @requires_data()

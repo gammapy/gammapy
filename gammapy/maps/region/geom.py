@@ -17,7 +17,6 @@ from regions import (
     PixCoord,
     PointSkyRegion,
     RectanglePixelRegion,
-    RectangleSkyRegion,
     Regions,
     SkyRegion,
 )
@@ -208,6 +207,8 @@ class RegionGeom(Geom):
         """Check if a given map coordinate is contained in the region.
         Requires the `.region` attribute to be set.
 
+        For `PointSkyRegion` the method always returns true.
+
         Parameters
         ----------
         coords : tuple, dict, `MapCoord` or `~astropy.coordinates.SkyCoord`
@@ -225,20 +226,15 @@ class RegionGeom(Geom):
 
         coords = MapCoord.create(coords, frame=self.frame, axis_names=self.axes.names)
 
-        if isinstance(self.region, PointSkyRegion):
-            # the point region is approximated by 1x1 pixel here
-            region = RectangleSkyRegion(
-                center=self.center_skydir,
-                width=self.binsz_wcs[0],
-                height=self.binsz_wcs[1],
-            )
-        else:
-            region = self.region
+        if self.is_all_point_sky_regions:
+            return np.ones(coords.skycoord.shape, dtype=bool)
 
-        return region.contains(coords.skycoord, self.wcs)
+        return self.region.contains(coords.skycoord, self.wcs)
 
     def contains_wcs_pix(self, pix):
         """Check if a given wcs pixel coordinate is contained in the region.
+
+        For `PointSkyRegion` the method always returns true.
 
         Parameters
         ----------
@@ -250,6 +246,9 @@ class RegionGeom(Geom):
         containment : `~numpy.ndarray`
             Bool array.
         """
+        if self.is_all_point_sky_regions:
+            return np.ones(pix[0].shape, dtype=bool)
+
         region_pix = self.region.to_pixel(self.wcs)
         return region_pix.contains(PixCoord(pix[0], pix[1]))
 
@@ -540,14 +539,7 @@ class RegionGeom(Geom):
         if self.region is None:
             pix = (0, 0)
         else:
-            # TODO: remove once fix is available in regions
-            if isinstance(self.region, PointSkyRegion):
-                point_region = self.region.to_pixel(self.wcs)
-                point_region.meta["include"] = False
-                pix_coord = PixCoord.from_sky(coords.skycoord, self.wcs)
-                in_region = point_region.contains(pix_coord)
-            else:
-                in_region = self.region.contains(coords.skycoord, wcs=self.wcs)
+            in_region = self.contains(coords.skycoord)
 
             x = np.zeros(coords.skycoord.shape)
             x[~in_region] = np.nan
