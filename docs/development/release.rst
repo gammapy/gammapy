@@ -25,7 +25,7 @@ Releasing the first major release candidate
 A few days before the planned release candidate:
 
 #. Fill the changelog ``docs/release-notes/<version>.rst`` for the version you are about to release.
-#. Update the ``CITATION.cff`` by running the ``dev/prepare-release.py`` script.
+#. Update the author list manually in the  ``CITATION.cff``.
 #. Open a PR including both changes and mark it with the `backport-v<version>.x` label.
    Gather feedback from the Gammapy user and dev community and finally merge and backport to the `v<version>.x` branch.
 
@@ -33,8 +33,9 @@ On the day of the release candidate:
 
 #. Add an entry for the release candidate like `v1.0rc1` or `v1.1rc1` in the ``download/index.json`` file in the `gammapy-web repo <https://github.com/gammapy/gammapy-webpage>`__, by
    copying the entry for `dev` tag. As we do not handle release candidates nor bug fix releases for data, this still allows to fix bugs in the data during the release candidate testing.
-#. Locally create a new release candidate tag like `v1.0rc1` for Gammapy and push. For details see the
-   `Astropy release candidate instructions <https://docs.astropy.org/en/latest/development/releasing.html#tagging-the-first-release-candidate>`.
+#. Update the ``CITATION.cff`` date and version by running the ``dev/prepare-release.py`` script.
+#. Locally create a new release candidate tag on the v1.0.x, like `v1.0rc1` for Gammapy and push. For details see the
+   `Astropy release candidate instructions <https://docs.astropy.org/en/latest/development/releasing.html#tagging-the-first-release-candidate>`_.
 #. Once the tag is pushed the docs build and upload to PyPi should be triggered automatically.
 #. Once the docs build has succeded find the ``tutorials_jupyter.zip`` file for the release candidate
    in the `gammapy-docs repo <https://github.com/gammapy/gammapy-docs>`__ and adapt the ``download/index.json`` to point to it.
