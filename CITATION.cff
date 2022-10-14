@@ -255,8 +255,8 @@ authors:
   family-names: López-Coto
 - given-names: Sam
   family-names: Carter
-version: 0.20.1
-date-released: 2022-06-17
+version: v1.0rc1
+date-released: 2022-10-14
 repository-code: https://github.com/gammapy/gammapy
 license: BSD-3-Clause
 keywords:
