@@ -9,8 +9,8 @@ Summary
 ~~~~~~~
 
 - Released Oct 21th, 2022
-- 10 contributors
-- 78 pull requests since v0.20.1 (not all listed below)
+- 12 contributors
+- 86 pull requests since v0.20.1 (not all listed below)
 
 New features
 ~~~~~~~~~~~~
@@ -100,7 +100,9 @@ Contributors
 - Arnau Aguasca
 - Axel Donath
 - Luca Giunti
+- Bruno Khelifi
 - Mireia Nievas-Rosillo
+- Cosimo Nigro
 - Laura Olivera-Nieto
 - Fabio Pintore
 - Quentin Rémy
@@ -112,6 +114,7 @@ Pull Requests
 ~~~~~~~~~~~~~
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
+
 - [#4119] simplification of np.array(set(labels)) (Mireia Nievas-Rosillo)
 - [#4115] Add code of conduct file (Axel Donath)
 - [#4113] Move binder configuration to gammapy-webpage (Axel Donath)
