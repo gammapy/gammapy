@@ -9,7 +9,7 @@ Summary
 ~~~~~~~
 
 - Released Oct 21th, 2022
-- 11 contributors
+- 12 contributors
 - 86 pull requests since v0.20.1 (not all listed below)
 
 New features
@@ -102,6 +102,7 @@ Contributors
 - Luca Giunti
 - Bruno Khelifi
 - Mireia Nievas-Rosillo
+- Cosimo Nigro
 - Laura Olivera-Nieto
 - Fabio Pintore
 - Quentin Rémy
