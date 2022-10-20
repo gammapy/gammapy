@@ -2,6 +2,7 @@
 import logging
 import click
 from github import Github, GithubException
+from gammapy.utils.table import table_from_row_data
 
 log = logging.getLogger(__name__)
 
@@ -19,7 +20,7 @@ def cli(log_level):
 
 def login(token):
     if token:
-        g = Github(token, per_page=200)
+        g = Github(token, per_page=100)
     else:
         g = Github()
 
@@ -38,10 +39,41 @@ def check_requests_number(g):
     log.info(f"Remaining {remaining} requests over {total} requests.")
 
 
+@cli.command("dump_table", help="Dump a table of all PRs.")
+@click.option("--token", default=None, type=str)
+def dump_table(token=None):
+    g = login(token)
+    repo = g.get_repo("gammapy/gammapy")
+
+    pull_requests = repo.get_pulls(state="closed", sort="created", direction="desc")
+
+    check_requests_number(g)
+
+    results = []
+
+    for pr in pull_requests[:100]:
+        result = dict()
+        result["number"] = pr.number
+        result["title"] = pr.title
+        result["milestone"] = "" if not pr.milestone else pr.milestone.title
+        result["is_merged"] = pr.is_merged()
+        result["user_name"] = pr.user.name
+        result["user_login"] = pr.user.login
+        result["user_email"] = pr.user.email
+        results.append(result)
+
+    table = table_from_row_data(results)
+    table.write("test.ecsv", overwrite=True)
+
+    #    log.info(f"Found {total_number} of merged pull requests for milestone {milestone}.")
+
+    check_requests_number(g)
+
+
 @cli.command("merged_PR", help="Make a summary of PRs merged with a given milestone")
 @click.option("--token", default=None, type=str)
 @click.argument("milestone", type=str, default="1.0")
-def list_merged_PRs(milestone, token=None, scan_last=1000):
+def list_merged_PRs(milestone, token=None):
     g = login(token)
     repo = g.get_repo("gammapy/gammapy")
 
