@@ -179,7 +179,7 @@ following scheme is used.
     iminuit). Our web pages will contain a section with some standard sentence(s) on which one could make a reference.
 
 Contribution in conferences
------------------------------
+---------------------------
 
 The section is about any contribution in conferences (a talk, a poster and their associated proceedings) related to
 the Gammapy project itself. It does not concern a technical or scientific work that uses Gammapy as an open library.
