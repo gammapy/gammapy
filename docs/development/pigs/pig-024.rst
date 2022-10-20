@@ -241,7 +241,7 @@ this person can be contacted to fix a broken deposit.
 
 For Gammapy, by default, the maintainers are the Lead Developers. If in the future a task is
 dedicated to the creation of a release, the maintainer will be the person in charge of this task.
-The name or the names of the maintainers will be made by the Lead Developers.
+The name or the names of the maintainers will be filled by the Lead Developers.
 
 Possible implementations
 ========================
