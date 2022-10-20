@@ -10,6 +10,7 @@ PIG 24 - Authorship policy
 * Created: May 25th, 2022
 * Accepted: Oct. 20th, 2022
 * Status: accepted
+* Discussion: `GH 3970`_
 
 Abstract
 ========
