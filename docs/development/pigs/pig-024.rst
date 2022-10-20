@@ -9,7 +9,7 @@ PIG 24 - Authorship policy
 * Authors: Bruno Khélifi, Thomas Vuillaume
 * Created: May 25th, 2022
 * Accepted: Oct. 20th, 2022
-* Status:
+* Status: accepted
 
 Abstract
 ========
