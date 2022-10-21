@@ -495,7 +495,7 @@ def test_reproject_2d():
     npix1 = 3
     geom1 = WcsGeom.create(npix=npix1, frame="icrs")
     geom1_large = WcsGeom.create(npix=npix1 + 5, frame="icrs")
-    map1 = Map.from_geom(geom1, data=np.eye(npix1))
+    map1 = Map.from_geom(geom1, data=np.eye(npix1), unit="s")
 
     factor = 10
     binsz = 0.5 / factor
@@ -505,6 +505,7 @@ def test_reproject_2d():
     )
 
     map1_repro = map1.reproject_to_geom(geom2, preserve_counts=True)
+    assert map1_repro.unit == map1.unit
     assert_allclose(np.sum(map1_repro), np.sum(map1), rtol=1e-5)
     map1_new = map1_repro.reproject_to_geom(geom1_large, preserve_counts=True)
     assert_allclose(np.sum(map1_repro), np.sum(map1_new), rtol=1e-5)
