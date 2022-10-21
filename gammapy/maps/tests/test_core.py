@@ -542,7 +542,7 @@ def test_reproject_2d():
 def test_resample_wcs_Wcs():
     npix1 = 3
     geom1 = WcsGeom.create(npix=npix1, frame="icrs")
-    map1 = Map.from_geom(geom1, data=np.eye(npix1))
+    map1 = Map.from_geom(geom1, data=np.eye(npix1), unit="1 / (GeV m2 s sr)")
 
     geom2 = WcsGeom.create(
         skydir=SkyCoord(0.0, 0.0, unit=u.deg), binsz=0.5, npix=7, frame="galactic"
@@ -554,6 +554,7 @@ def test_resample_wcs_Wcs():
         np.sum(map1 * geom1.solid_angle()),
         rtol=1e-3,
     )
+    assert map2.unit == map1.unit
 
 
 def test_resample_weights():
@@ -596,7 +597,7 @@ def test_resample_downsample_axis():
 
 def test_resample_wcs_hpx():
     geom1 = HpxGeom.create(nside=32, frame="icrs")
-    map1 = Map.from_geom(geom1, data=1.0)
+    map1 = Map.from_geom(geom1, data=1.0, unit="1 / (GeV m2 s sr)")
     geom2 = HpxGeom.create(
         skydir=SkyCoord(0.0, 0.0, unit=u.deg), nside=8, frame="galactic"
     )
@@ -607,6 +608,7 @@ def test_resample_wcs_hpx():
         np.sum(map1 * geom1.solid_angle()),
         rtol=1e-3,
     )
+    assert map2.unit == map1.unit
 
 
 def test_map_reproject_wcs_to_hpx():
