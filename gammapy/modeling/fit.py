@@ -284,7 +284,7 @@ class Fit:
             method=method,
             success=info["success"],
             message=info["message"],
-            matrix=datasets.models.covariance.data.copy(),
+            matrix=matrix.data.copy(),
         )
 
     def confidence(self, datasets, parameter, sigma=1, reoptimize=True):
