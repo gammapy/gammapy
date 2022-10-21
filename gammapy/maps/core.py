@@ -633,7 +633,7 @@ class Map(abc.ABC):
 
         weights = 1 if weights is None else weights
 
-        resampled = self.from_geom(geom=geom)
+        resampled = self._init_copy(data=None, geom=geom)
         resampled._resample_by_idx(
             idx, weights=self.data * weights, preserve_counts=preserve_counts
         )
