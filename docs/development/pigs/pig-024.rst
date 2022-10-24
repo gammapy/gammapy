@@ -1,0 +1,326 @@
+.. include:: ../../references.txt
+
+.. _pig-024:
+
+**************************
+PIG 24 - Authorship policy
+**************************
+
+* Authors: Bruno Khélifi, Thomas Vuillaume
+* Created: May 25th, 2022
+* Accepted: Oct. 20th, 2022
+* Status: accepted
+* Discussion: `GH 3970`_
+
+Abstract
+========
+
+Given that the Gammapy library is more widely used by the community, a proper citation of the project including
+a policy about the authorship is necessary. This PIG addresses this issue by setting an authorship policy for the
+Gammapy project for each type of products (releases, papers and conferences).
+
+.. contents:: Table of Contents
+   :depth: 2
+
+Introduction
+============
+
+Gammapy started in 2013 and is now widely used in scientific publications. A proper citation scheme with correct authorship allows:
+
+- a proper citation of the used Gammapy release,
+- a proper recognition of the achieved work of any contributor,
+- compliance with the FAIR principles for Research Software (`FAIR4RS <https://www.rd-alliance.org/group/fair-research-software-fair4rs-wg/outcomes/fair-principles-research-software-fair4rs>`_).
+
+This PIG aims to set up the project policy about authorship for our publication and releases.
+
+Given the fact that Gammapy is licensed under a 3-clause BSD style license (see gammapy/LICENSE.rst), Gammapy can be used
+and even modified for a science project. For this modified version, the proposed authorship policy of this PIG is not
+applicable but the general citation scheme should be applied.
+
+This PIG is structured as follows: a reminder of our general citation scheme that was up-to-now only given orally and on
+our web pages; then, the authorship policy is given for each of the products associated with Gammapy, namely the intermediate
+releases, the Long Term Support (LTS) releases, the general Gammapy papers, and the contributions to the conference.
+
+Citation scheme
+===============
+
+When Gammapy is used for any publication, contribution to conferences or software, authors should properly cite Gammapy.
+It is asked to cite the DOI of the used Gammapy version as well as the associated paper (e.g. the latest LTS
+release).
+
+.. note::
+    As the Gammapy community fully supports Open Science, we strongly encourage authors using Gammapy to follow
+    the FAIR4RS principles and to allow the reproducibility of their results. As consequence, we suggest always mentioning
+    the `Zenodo <https://zenodo.org/>`_ DOI or the `HAL <https://hal.archives-ouvertes.fr/>`_ SWHID identifier (associated with
+    the `Software Heritage <https://www.softwareheritage.org/>`_ archive) of the used release of Gammapy.
+
+This citation scheme with these **two references** will be given on our web pages.
+
+Authorship policy
+=================
+
+The Gammapy references contain a list of authors that requires to be updated with time according to a
+general policy. This section defines who is a *contributor* to Gammapy and the policy for each type of product.
+
+.. _contributor:
+
+Definition of a *Contributor*
+-----------------------------
+
+Contributions to Gammapy can be made in different ways:
+
+* contributing to gammapy source code,
+* contributing to its documentation (rst pages, docstring, gammapy-webpage),
+* contributing to code reviews, maintenance, deployment and DeVops,
+* contributing to our associated projects (gammapy-benchmarks, etc),
+* organizing communication, e.g. hands-on sessions, schools, social media,
+* coordinating the project.
+
+Contributions on any of the aforementioned aspects make a user as official Gammapy contributor.
+
+Many of these contributions are tracked using the git history. However, the use of personal data is
+regulated in Europe and one should have the authorisation of users to be cited with their personal
+information for publications (their full name is mandatory, and, if any, their affiliation and
+their ORCID number). For this reason, we propose to use the *Developer Certificate of Origin*
+(DCO, see the text in `here <https://developercertificate.org/>`_) for each commit. Its
+acceptation by contributors will permit to:
+
+* certify that a user wrote or otherwise has the right to submit a code under our open source licence,
+* allow our project to use their personal data for the contributions' record (ie for releases).
+
+The file ``README.md`` will contain a *Contributing* section explaining that the project follows this DCO that will be
+given in a new ``CONTRIBUTING.md`` file, as well as a link to this PIG.
+
+.. important::
+    For practical reasons, it is strongly advised that the contributors use always the same GitHub account
+    with a valid full name, to synchronise their git email addresses with their GitHub addresses, to have a unique
+    `ORCID <https://orcid.org/>`_ identifier and store it into their GitHub user profile for commodity, and inform the
+    developers of any change of affiliation or email address.
+
+Releases
+--------
+
+Each Gammapy release should be associated with an updated list of authors that will be public on repository (Zenodo and
+HAL/SWH). This section is about feature releases. Bug releases will have as list of authors the one of its associated
+feature release whose rules are described here, plus the potentiel additional contributors.
+
+The list of authors is composed of people who contributed to the current release code
+by accepting the DCO. The history of merged pull requests will be used as starting point.
+Other type of contributions (see :ref:`_contributor`) could be added during a dedicated call
+(see below).
+
+The order of the authors is first 'The Gammapy team', followed by the list of contributors in alphabetical order:
+
+ ::
+
+  The Gammapy team: aa, bb, cc, ...
+
+As mentioned in the `PIG 23 <https://github.com/gammapy/gammapy/blob/master/docs/development/pigs/pig-023.rst>`_, the
+publication of a release is preceded by a code freeze period. With its announcement, a call will be made to contributors
+to update their personal information (e.g. their affiliation) under their sole responsibility. This call will also permit
+to add any additional author into the list for their special contribution (e.g. on communication). The Project Managers
+and Lead Developers will have the duty to examine such request and to update accordingly the author list data .
+In case of conflict, the Gammapy Coordination Committee will be the final decision maker.
+
+.. _LTS:
+
+Long Term Support releases
+--------------------------
+
+The list of authors is composed of the union of all the contributors of the releases realised since the last LTS
+release. As the Coordination Committee provides a long term support of the project, their members
+will be de-facto co-authors.
+
+The order of the authors is first 'The Gammapy team', followed by the list of contributors in alphabetical order.
+
+Like for the common releases, a period of code freeze is used to make a call to update the personal information of
+contributors, as well as to submit a request of co-authorship for special contributions. The same rules and methods
+as for the standard releases are applied here.
+
+
+For the first LTS release, the *V1.0*, all contributors from the beginning of the project will be co-authors by default.
+As the DCO has not be applied for the past contributions, the best will be done to contact all contributors in order to
+exercise their right to sign it ("OptIn" scheme), to update their personal information, and to add authors with special
+contributions. The order of the authors is 'The Gammapy team', followed by the list of contributors in alphabetical order.
+
+General Gammapy publications
+----------------------------
+
+This product aims to describe the project and/or the library as a whole and will be most of the
+time associated with the publication of an LTS release. As it targets a wide community, the
+following scheme is used.
+
+1. List of authors
+    a/ By default, 'The Gammapy team' is mentioned first, then the Lead Developers, then the past Lead Developers since
+    the last general Gammapy publication, then the list of contributors of each release since the last Gammapy publication.
+
+    b/ If the editorial rules of the targeted journal permit it, the scheme used by the Astropy project
+    (e.g. `Astropy V2.0 <https://arxiv.org/pdf/1801.02634.pdf>`_) should be used in priority:
+
+    * 'The Gammapy team', and the list of primary paper contributors in order of contribution agreed per consensus with the development team, as '(Primary Paper Contributors)',
+    * the members of the Coordination Committee, as '(Gammapy Coordination Committee)',
+    * the list of contributors of the associated LTS ordered by alphabetical order, as '(Gammapy Contributors)'
+
+    In this case, a comment on the author list composition should be added. Extracted from the Astropy project,
+    one can precise:
+
+    "The author list has three parts: the authors that made significant contributions to the writing of the paper,
+    the members of the Gammapy Project Coordination Committee, and contributors to the Gammapy Project in alphabetical
+    order. The position in the author list does not correspond to contributions to the Gammapy Project as a whole. A more
+    complete list of contributors to the core package can be found in the package repository and at the Gammapy team
+    webpage."
+
+2. Corresponding author
+    It is the 'Gammapy Coordination Committee', associated with its usual mailing list (GAMMAPY-COORDINATION-L@IN2P3.FR).
+
+3. Acknowledgement
+    One has the freedom to precisely mention acknowledgements associated with the publication. In practice, it is
+    recommended to precise the grants or fellowships given to some authors. One should in any case always acknowledge
+    the Astropy project, to which we are affiliated, and our mandatory external libraries (e.g. numpy, scipy, matplotlib,
+    iminuit). Our web pages will contain a section with some standard sentence(s) on which one could make a reference.
+
+Contribution in conferences
+---------------------------
+
+The section is about any contribution in conferences (a talk, a poster and their associated proceedings) related to
+the Gammapy project itself. It does not concern a technical or scientific work that uses Gammapy as an open library.
+In this case, the citation scheme of Gammapy should be used by these authors.
+
+As the length of the author list is generally a constrain, the author list is reduced to the short list of contributors
+for the conference, followed by 'The Gammapy team' associated with a link to the Gammapy team webpage:
+
+ ::
+
+  oo, ff, tt, for `the Gammapy team <https://gammapy.org/team.html>`_
+
+If there is a corresponding author, the 'Gammapy Coordination Committee' associated with its usual mailing list, is
+used. Concerning the acknowledgement, the Astropy project should always be mentioned, and if possible our mandatory
+external libraries.
+
+
+Metadata files
+==============
+
+Depending on the software repository, different metadata files are used in the eco-system of
+Open Source research software and **are mandatory**.
+
+CITATION.cff
+------------
+The file ``CITATION.cff`` is used by Zenodo and GitHub. Its format should follow the rules set up by the
+`Citation File Format project <https://pythonlang.dev/repo/citation-file-format-citation-file-format/>`_. A GitHub
+Action can be used to automatically check the compliance with the latest format. At the date of this PIG, there is no
+official scheme to handle current and past affiliations, that might be needed for LTS releases for example (see the
+CFF project `Issue #268 <https://github.com/citation-file-format/citation-file-format/issues/268>`_).
+In the affiliation string, one could add a past affiliation as precised below, but with a risk that Zenodo or tools
+using ``CITATION.cff`` to make the ``codemeta.json`` does not process correctly this double affiliation.
+
+ ::
+
+    authors:
+      - family-names: XXX
+        given-names: "YYYY Z."
+        affiliation: "Lab AA, XX; Past: Lab BB, YY"
+        email: yyyy.xxx@gammapy.org
+        orcid: "https://orcid.org/0000-0000-0000-0000"
+
+codemeta.json
+-------------
+The file ``codemeta.json`` is used by HAL and Software Heritage, and recommended by
+`ESCAPE <https://escape2020.pages.in2p3.fr/wp3/eossr/v0.3.2/metadata.html>`_ or
+`EOSC <https://www.eosc-pillar.eu/news/illustrating-benefits-eosc-research-communities-germany>`_ to be used. Its
+format is elaborated by the `CodeMeta Project <https://codemeta.github.io/index.html>`_.
+
+It offers a more detailed description of a software than the one into ``CITATION.cff``, that is focused on authors.
+
+Definition of the *Maintainer*
+------------------------------
+
+In the codemeta format, a specific field, a *Maintainer*, can be filled. Usually, a software maintainer
+or package maintainer is one or more people who build source code into a binary package
+for distribution, commit patches, or organize code in a source repository. And in case of issue,
+this person can be contacted to fix a broken deposit.
+
+For Gammapy, by default, the maintainers are the Lead Developers. If in the future a task is
+dedicated to the creation of a release, the maintainer will be the person in charge of this task.
+The name or the names of the maintainers will be filled by the Lead Developers.
+
+Possible implementations
+========================
+
+DCO implementation
+------------------
+
+Today, the tool offered by GitHub to sign the DCO is to add the extra parameter ``-s`` to each git commit. Users have to
+be aware of that and get used of it. For the reviewers, a github CI can be used to check quickly if a contributor has
+signed the DCO. This method will be used for the moment. If there is any other method that avoids this extra parameter,
+one will naturally consider it.
+
+In order to respect these rules, some automation is required to create the list of contributors. One could use
+the Python library `Tributors <https://con.github.io/tributors/>`_. This library uses the GitHub API to determine the
+list of contributors, which is written in the format associated with codemeta.json, citation.cff, zenodo.json. This kind
+of library allows then two requirements: retrieve automatically the list of contributors from GitHub and write the
+authors list in all the needed formats.
+
+Collection of the personal information of authors
+-------------------------------------------------
+
+The ``CITATION.cff`` file will be used as the main file to be maintained, while the ``codemeta.json`` will be
+automatically created from it. For any release, the former should be carefully updated and systematically a review
+should be organised by the dev team.
+
+In order to maintain updated data about authors for the LTS releases and LTS papers, a new file could be used with
+these data, ``LTS_AUTHORS.cff``. The decision will be made in a dedicated PR.
+
+The data collected from the git history are not sufficient for any publication. Most of the contributors must give
+their affiliation as stipulated by their working contract. Also, the ORCID number is a relatively new type of
+information, recommended to be used in the context of the Open Science movement, but it is not mandatory.
+However, one needs to collect this information to build the authors lists, in a safe and fair way.
+
+In this purpose, one could use the public user profile of the GitHub platform. They are public
+data, but one should be aware that they might not be complete and/or up-to-date. As mentioned earlier,
+it is recommended to fill correctly this GitHub profile to help the dev team to pre-fill the
+metadata files.
+
+One should note that the GitHub profile does not contain a field associated with the ORCID
+identifier. However, one could also retrieve the ORCID identifier of a contributor with the ORCID API
+(e.g. `How-To-1 <https://stackoverflow.com/questions/71052912/extracting-credentials-from-orcid-seach-with-orcid-id-using-python>`_
+or `How-To-2 <https://info.orcid.org/documentation/api-tutorials/api-tutorial-searching-the-orcid-registry/#easy-faq-2532>`_).
+
+In any case, a specific Python script located in the main Gammapy repository had to be written such
+that the authors' order follows these rules. In this case, integration within a GitHub action could be possible.
+
+In this context, one could technically use an other cff file as maintenance file to store the personal data of users
+that have signed the DCO.
+
+A second script should be settled in order to create the list of authors associated
+to the latest LTS in HTML format that could be inserted in the *team* section for our general
+web page. This script would read one of the metadata files (e.g. ``citation.cff``) to create
+such list.
+
+It is important to note that the list of personal information might change from one editor to an other. For the code
+deposits in Zenodo, SWH, etc, the data follow standards of Open Science and scripts can be settled. For publications,
+the editors have frequently their own scheme and adaptations will be made on the case by case.
+
+As mentioned here, the authors list will be reviewed for any publication, for safety and to allow OptIn/OptOut requests.
+
+Handling of conference material
+-------------------------------
+
+Conference contributions (Proceedings, Posters, ...) could be developed in dedicated repositories in the Gammapy Github
+organization, as well as the author list.
+
+Suggestions
+===========
+
+One could ask CTAO software coordinators (ie ACADA, DPPS, SUSS) if such rules can be used by them also, even if the
+The Gammapy project is independent. In the same spirit, advice could be asked to people of the ESCAPE project via our
+corresponding person. And finally, one could mention the existence of these rules and ask for advice to the Astropy
+project.
+
+These requests to the Astropy community and CTAO for recommendations and preferences either remained
+un-responded or did not lead to objections at the current time.
+
+Decision
+========
+After the addition of comments and proposals, the PIG is accepted by the dev team and the CC.
+The choice of practical implementation of such scheme will be made in dedicated pull requests.
