@@ -23,7 +23,7 @@ and then just execute the following commands in the terminal:
 .. note::
 
     For Apple silicon M1 (`arm64`) architectures you also have to open the
-    environemnt file and delete the `sherpa` entry, as currently there are
+    environment file and delete the `sherpa` entry, as currently there are
     no conda packages available. However you can later install `sherpa`
     in the environment using `python -m pip install sherpa`.
 
