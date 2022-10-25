@@ -44,7 +44,7 @@ def test_from_regions(region):
     assert geom.region.center == region.center
 
     geom = RegionGeom.from_regions([])
-    assert geom.region == None
+    assert geom.region is None
 
 
 def test_binsz(region):
