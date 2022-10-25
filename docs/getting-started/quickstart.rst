@@ -20,6 +20,13 @@ and then just execute the following commands in the terminal:
     lines with ``sherpa`` and ``healpy``. Those are optional dependencies that
     currently aren't available on Windows.
 
+.. note::
+
+    For Apple silicon M1 (`arm64`) architectures you also have to open the
+    environment file and delete the `sherpa` entry, as currently there are
+    no conda packages available. However you can later install `sherpa`
+    in the environment using `python -m pip install sherpa`.
+
 Once the environment has been created you can activate it using:
 
 .. substitution-code-block:: bash

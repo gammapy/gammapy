@@ -70,7 +70,15 @@ using `pip`_:
 
    $ python -m pip install gammapy
 
-Thsi will install GAmmapy with the required dependencies only.
+This will install Gammapy with the required dependencies only.
+
+.. note::
+
+    For Apple silicon M1 (`arm64`) architectures you also have to open the
+    environment file and delete the `sherpa` entry, as currently there are
+    no conda packages available. However you can later install `sherpa`
+    in the environment using `python -m pip install sherpa`.
+    
 To install Gammapy with all optional dependencies, you can specify:
 
 .. code-block:: bash
