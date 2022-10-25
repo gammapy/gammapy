@@ -714,6 +714,8 @@ class RegionGeom(Geom):
             regions = [regions]
         elif isinstance(regions, SkyCoord):
             regions = [PointSkyRegion(center=regions)]
+        elif isinstance(regions, list) and len(regions) == 0:
+            regions = None
 
         if regions:
             regions = regions_to_compound_region(regions)
