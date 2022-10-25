@@ -51,9 +51,10 @@ def test_get_subcovariance(covariance_diagonal, covariance):
 
 
 def test_scipy_mvn(covariance):
-    mvn = covariance.scipy_mvn
+    # Adapt test because scipy 1.9.3 does not work with semi positive matrices of rank one
+    mvn = Covariance(covariance.parameters, np.array([[1, 0.5], [0.5, 1]])).scipy_mvn
     value = mvn.pdf(2)
-    assert_allclose(value, 0.2489, rtol=1e-3)
+    assert_allclose(value, 0.094354, rtol=1e-3)
 
 
 def test_plot_correlation(covariance_diagonal):
