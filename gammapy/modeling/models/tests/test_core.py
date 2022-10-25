@@ -231,6 +231,12 @@ def test_plot_models(caplog):
     ]
 
 
+def test_plot_models_empty():
+    models = Models([])
+    with pytest.raises(ValueError):
+        models.plot_regions()
+
+
 def test_positions():
     p1 = Model.create(
         "pl",
