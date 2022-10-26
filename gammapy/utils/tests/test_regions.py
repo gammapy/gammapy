@@ -58,6 +58,20 @@ def test_compound_region_center_concentric():
     assert_allclose(center.galactic.b, 0 * u.deg, atol=1e-6)
 
 
+def test_compound_region_center_inomogeneous_frames():
+    region_icrs = Regions.parse("icrs;circle(1,1,0.1)", format="ds9")[0]
+    region_galactic = Regions.parse("galactic;circle(1,1,0.1)", format="ds9")[0]
+
+    regions = Regions([region_icrs, region_galactic])
+
+    region = regions_to_compound_region(regions)
+
+    center = compound_region_center(region)
+
+    assert_allclose(center.galactic.l.wrap_at("180d"), 28.011753 * u.deg, atol=1e-6)
+    assert_allclose(center.galactic.b, -37.463676 * u.deg, atol=1e-6)
+
+
 def test_spherical_circle_sky_region():
     region = SphericalCircleSkyRegion(
         center=SkyCoord(10 * u.deg, 20 * u.deg), radius=10 * u.deg
