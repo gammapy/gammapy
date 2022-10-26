@@ -169,6 +169,10 @@ class Fit:
 
         covariance_result = self.covariance(datasets=datasets)
 
+        optimize_result.models.covariance = Covariance(
+            optimize_result.models.parameters, covariance_result.matrix
+        )
+
         return FitResult(
             optimize_result=optimize_result,
             covariance_result=covariance_result,
@@ -269,9 +273,10 @@ class Fit:
                 parameters=unique_pars, function=datasets.stat_sum, **kwargs
             )
 
-            datasets.models.covariance = Covariance.from_factor_matrix(
+            matrix = Covariance.from_factor_matrix(
                 parameters=parameters, matrix=factor_matrix
             )
+            datasets.models.covariance = matrix
 
         # TODO: decide what to return, and fill the info correctly!
         return CovarianceResult(
@@ -279,7 +284,7 @@ class Fit:
             method=method,
             success=info["success"],
             message=info["message"],
-            matrix=datasets.models.covariance.data.copy(),
+            matrix=matrix.data.copy(),
         )
 
     def confidence(self, datasets, parameter, sigma=1, reoptimize=True):

@@ -202,12 +202,13 @@ result_minuit.trace
 
 
 ######################################################################
-# Check that the fitted values and errors for all parameters are
-# reasonable, and no fitted parameter value is “too close” - or even
-# outside - its allowed min-max range
+# The fitted models are copied on the `~gammapy.modeling.FitResult` object.
+# They can be inspected to check that the fitted values and errors
+# for all parameters are reasonable, and no fitted parameter value is “too close”
+# - or even outside - its allowed min-max range
 #
 
-result_minuit.parameters.to_table()
+result_minuit.models.to_parameters_table()
 
 
 ######################################################################
@@ -249,19 +250,24 @@ for ax, par in zip(axes, crab_model.parameters.free_parameters):
 # Covariance and parameters errors
 # --------------------------------
 #
-# After the fit the covariance matrix is attached to the model. You can
-# get the error on a specific parameter by accessing the `~gammapy.modeling.Parameter.error`
-# attribute:
-#
+# After the fit the covariance matrix is attached to the models copy
+# stored on the `~gammapy.modeling.FitResult` object.
+# You can access it directly with:
 
-crab_model.spectral_model.alpha.error
-
+print(result_minuit.models.covariance)
 
 ######################################################################
 # And you can plot the total parameter correlation as well:
 #
 
-crab_model.covariance.plot_correlation()
+result_minuit.models.covariance.plot_correlation()
+
+# The covariance information is also propagated to the individual models
+# Therefore, one can also get the error on a specific parameter by directly
+# accessing the `~gammapy.modeling.Parameter.error` attribute:
+#
+
+crab_model.spectral_model.alpha.error
 
 
 ######################################################################
