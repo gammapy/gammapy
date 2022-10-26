@@ -208,7 +208,7 @@ result_minuit.trace
 # - or even outside - its allowed min-max range
 #
 
-result_minuit.models.to_parameter_table()
+result_minuit.models.to_parameters_table()
 
 
 ######################################################################
