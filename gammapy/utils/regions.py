@@ -63,7 +63,7 @@ def compound_region_center(compound_region):
         center = SkyCoord(lon * u.deg, lat * u.deg)
         return np.sum(center.separation(coords).deg)
 
-    ra, dec = positions.icrs.ra.wrap_at("180d").deg, positions.icrs.dec.deg
+    ra, dec = positions.ra.wrap_at("180d").deg, positions.dec.deg
 
     ub = np.array([np.max(ra), np.max(dec)])
     lb = np.array([np.min(ra), np.min(dec)])
