@@ -55,7 +55,7 @@ def compound_region_center(compound_region):
     if len(regions) == 1:
         return regions[0].center
 
-    positions = SkyCoord([region.center for region in regions])
+    positions = SkyCoord([region.center.icrs for region in regions])
 
     def f(x, coords):
         """Function to minimize"""
