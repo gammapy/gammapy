@@ -68,8 +68,8 @@ def test_compound_region_center_inomogeneous_frames():
 
     center = compound_region_center(region)
 
-    assert_allclose(center.galactic.l.wrap_at("180d"), 28.011753 * u.deg, atol=1e-6)
-    assert_allclose(center.galactic.b, -37.463676 * u.deg, atol=1e-6)
+    assert_allclose(center.galactic.l.wrap_at("180d"), 28.01 * u.deg, atol=1e-2)
+    assert_allclose(center.galactic.b, -37.46 * u.deg, atol=1e-2)
 
 
 def test_spherical_circle_sky_region():
