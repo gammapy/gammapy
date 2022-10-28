@@ -306,7 +306,7 @@ def test_background_2d_evaluate(bkg_2d):
         energy=[[1, 1], [100, 100]] * u.TeV,
     )
 
-    assert_allclose(res.value, [[1, 1], [2.8284, 2]])
+    assert_allclose(res.value, [[1, 1], [2.8284, 2]], rtol=1e-4)
     assert res.shape == (2, 2)
 
     res = bkg_2d.evaluate(offset=[1, 1] * u.deg, energy=[1, 100] * u.TeV)
