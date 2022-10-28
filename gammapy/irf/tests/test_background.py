@@ -281,7 +281,7 @@ def bkg_2d():
 
     offset = [0, 1, 2, 3] * u.deg
     offset_axis = MapAxis.from_edges(offset, name="offset")
-    data = np.zeros((2, 3))
+    data = np.ones((2, 3))
     data[1, 0] = 2
     data[1, 1] = 4
     return Background2D(
@@ -295,22 +295,22 @@ def test_background_2d_evaluate(bkg_2d):
 
     # Evaluate at log center between nodes in energy
     res = bkg_2d.evaluate(offset=[1, 0.5] * u.deg, energy=[1, 1] * u.TeV)
-    assert_allclose(res.value, [0, 0])
+    assert_allclose(res.value, [1, 1])
     assert res.shape == (2,)
     assert res.unit == "s-1 MeV-1 sr-1"
 
     res = bkg_2d.evaluate(offset=[1, 0.5] * u.deg, energy=[100, 100] * u.TeV)
-    assert_allclose(res.value, [3, 2])
+    assert_allclose(res.value, [2.8284, 2], rtol=1e-4)
     res = bkg_2d.evaluate(
         offset=[[1, 0.5], [1, 0.5]] * u.deg,
         energy=[[1, 1], [100, 100]] * u.TeV,
     )
 
-    assert_allclose(res.value, [[0, 0], [3, 2]])
+    assert_allclose(res.value, [[1, 1], [2.8284, 2]])
     assert res.shape == (2, 2)
 
     res = bkg_2d.evaluate(offset=[1, 1] * u.deg, energy=[1, 100] * u.TeV)
-    assert_allclose(res.value, [0, 3])
+    assert_allclose(res.value, [1, 2.8284])
     assert res.shape == (2,)
 
 
@@ -350,24 +350,23 @@ def test_background_2d_integrate(bkg_2d):
     )
 
     assert rate.shape == (1,)
-    assert_allclose(rate.to("s-1 sr-1").value[0], [0, 0])
+    assert_allclose(rate.to("s-1 sr-1").value[0], 304211.869056)
 
     rate = bkg_2d.integrate_log_log(
         offset=[1, 0.5] * u.deg, energy=[1, 100] * u.TeV, axis_name="energy"
     )
-    assert_allclose(rate.to("s-1 sr-1").value, 0)
+    assert_allclose(rate.to("s-1 sr-1").value[0], 1.7296602e+08)
 
     rate = bkg_2d.integrate_log_log(
         offset=[[1, 0.5], [1, 0.5]] * u.deg, energy=[1, 100] * u.TeV, axis_name="energy"
     )
     assert rate.shape == (1, 2)
-    assert_allclose(rate.value, [[0, 198]])
-
+    assert_allclose(rate.value, [[99, 198]])
 
 def test_to_3d(bkg_2d):
     bkg_3d = bkg_2d.to_3d()
     assert bkg_3d.data.shape == (2, 6, 6)
-    assert_allclose(bkg_3d.data[1, 1, 1], 1.51, rtol=0.1)
+    assert_allclose(bkg_3d.data[1, 3, 3], 2.31, rtol=0.1)
 
     # assert you get back same after goint to 2d
     # need high rtol due to interpolation effects?
