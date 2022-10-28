@@ -379,7 +379,7 @@ def test_to_dict_unfreeze_parameters_frozen_by_default():
     model.reference.frozen = False
     mdict = model.to_dict(full_output=False)
     index_dict = mdict["spectral"]["parameters"][2]
-    assert index_dict["frozen"] == False
+    assert index_dict["frozen"] is False
 
 
 def test_compound_models_io(tmp_path):
