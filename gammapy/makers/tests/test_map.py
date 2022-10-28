@@ -17,7 +17,7 @@ from gammapy.data import (
 )
 from gammapy.datasets import MapDataset
 from gammapy.datasets.map import RAD_AXIS_DEFAULT
-from gammapy.irf import EDispKernelMap, EDispMap, PSFMap
+from gammapy.irf import EDispKernelMap, EDispMap, PSFMap, Background2D
 from gammapy.makers import FoVBackgroundMaker, MapDatasetMaker, SafeMaskMaker
 from gammapy.maps import HpxGeom, Map, MapAxis, WcsGeom
 from gammapy.utils.testing import requires_data, requires_dependency
@@ -509,3 +509,28 @@ def test_dataset_hawc():
         assert_allclose(dataset.exposure.data.sum(), results[which][0])
         assert_allclose(dataset.counts.data.sum(), results[which][1])
         assert_allclose(dataset.background.data.sum(), results[which][2])
+
+
+    
+@requires_data()
+def test_make_background_2d(observations):
+    filename = "$GAMMAPY_DATA/tests/irf/bkg_2d_full_example.fits"
+    bkg = Background2D.read(filename)
+    obs = observations[0]
+    
+    obs.bkg = bkg
+
+    geom_reco = geom(ebounds=[0.1, 1, 10])
+    e_true = MapAxis.from_edges(
+        [0.1, 0.5, 2.5, 10.0], name="energy_true", unit="TeV", interp="log"
+    )
+
+    reference = MapDataset.create(
+        geom=geom_reco, energy_axis_true=e_true, binsz_irf=1.0
+    )
+    maker_obs = MapDatasetMaker(selection=["background"],
+                            background_pad_offset=True)
+    
+
+    map_dataset = maker_obs.run(reference,obs)
+    assert_allclose(map_dataset.background.data.sum(), 127800)
