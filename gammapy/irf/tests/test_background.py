@@ -355,13 +355,14 @@ def test_background_2d_integrate(bkg_2d):
     rate = bkg_2d.integrate_log_log(
         offset=[1, 0.5] * u.deg, energy=[1, 100] * u.TeV, axis_name="energy"
     )
-    assert_allclose(rate.to("s-1 sr-1").value[0], 1.7296602e+08)
+    assert_allclose(rate.to("s-1 sr-1").value[0], 1.7296602e08)
 
     rate = bkg_2d.integrate_log_log(
         offset=[[1, 0.5], [1, 0.5]] * u.deg, energy=[1, 100] * u.TeV, axis_name="energy"
     )
     assert rate.shape == (1, 2)
     assert_allclose(rate.value, [[99, 198]])
+
 
 def test_to_3d(bkg_2d):
     bkg_3d = bkg_2d.to_3d()

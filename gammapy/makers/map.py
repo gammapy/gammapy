@@ -228,8 +228,8 @@ class MapDatasetMaker(Maker):
 
         if self.background_interp_missing_data:
             bkg.interp_missing_data(axis_name="energy")
-            
-        if self.background_pad_offset and  bkg.has_offset_axis:
+
+        if self.background_pad_offset and bkg.has_offset_axis:
             bkg = bkg.pad(1, mode="edge", axis_name="offset")
 
         return make_map_background_irf(
