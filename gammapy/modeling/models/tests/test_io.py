@@ -381,6 +381,7 @@ def test_to_dict_unfreeze_parameters_frozen_by_default():
     index_dict = mdict["spectral"]["parameters"][2]
     assert index_dict["frozen"] == False
 
+
 def test_compound_models_io(tmp_path):
     m1 = PowerLawSpectralModel()
     m2 = LogParabolaSpectralModel()
