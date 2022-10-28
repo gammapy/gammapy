@@ -368,6 +368,19 @@ def test_to_dict_not_default():
     assert model_2.index.frozen == model.index.frozen
 
 
+def test_to_dict_unfreeze_parameters_frozen_by_default():
+
+    model = PowerLawSpectralModel()
+
+    mdict = model.to_dict(full_output=False)
+    index_dict = mdict["spectral"]["parameters"][2]
+    assert "frozen" not in index_dict
+
+    model.reference.frozen = False
+    mdict = model.to_dict(full_output=False)
+    index_dict = mdict["spectral"]["parameters"][2]
+    assert index_dict["frozen"] == False
+
 def test_compound_models_io(tmp_path):
     m1 = PowerLawSpectralModel()
     m2 = LogParabolaSpectralModel()
