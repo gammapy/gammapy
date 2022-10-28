@@ -224,14 +224,15 @@ total_stat = result_minuit.total_stat
 
 fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(14, 4))
 
-for ax, par in zip(axes, crab_model.parameters.free_parameters):
+for ax, par in zip(axes, datasets.parameters.free_parameters):
     par.scan_n_values = 17
-
+    idx = datasets.parameters.index(par)
+    name = datasets.models.parameters_unique_names[idx]
     profile = fit.stat_profile(datasets=datasets, parameter=par)
-    ax.plot(profile[f"{par.name}_scan"], profile["stat_scan"] - total_stat)
+    ax.plot(profile[f"{name}_scan"], profile["stat_scan"] - total_stat)
     ax.set_xlabel(f"{par.unit}")
     ax.set_ylabel("Delta TS")
-    ax.set_title(f"{par.name}: {par.value:.1e} +- {par.error:.1e}")
+    ax.set_title(f"{name}: {par.value:.1e} +- {par.error:.1e}")
 
 
 ######################################################################
@@ -322,6 +323,11 @@ def make_contours(fit, datasets, result, npoints, sigmas):
     for sigma in sigmas:
         contours = dict()
         for par_1, par_2 in combinations(["alpha", "beta", "amplitude"], r=2):
+            idx1, idx2 = datasets.parameters.index(par_1), datasets.parameters.index(
+                par_2
+            )
+            name1 = datasets.models.parameters_unique_names[idx1]
+            name2 = datasets.models.parameters_unique_names[idx2]
             contour = fit.stat_contour(
                 datasets=datasets,
                 x=datasets.parameters[par_1],
@@ -330,8 +336,8 @@ def make_contours(fit, datasets, result, npoints, sigmas):
                 sigma=sigma,
             )
             contours[f"contour_{par_1}_{par_2}"] = {
-                par_1: contour[par_1].tolist(),
-                par_2: contour[par_2].tolist(),
+                par_1: contour[name1].tolist(),
+                par_2: contour[name2].tolist(),
             }
         cts_sigma.append(contours)
     return cts_sigma

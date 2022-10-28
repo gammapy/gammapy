@@ -358,6 +358,7 @@ class Fit:
             empty list, if `reoptimize` is set to False
         """
         datasets, parameters = self._parse_datasets(datasets=datasets)
+
         parameter = parameters[parameter]
         values = parameter.scan_values
 
@@ -411,7 +412,8 @@ class Fit:
         """
         datasets, parameters = self._parse_datasets(datasets=datasets)
 
-        x, y = parameters[x], parameters[y]
+        x = parameters[x]
+        y = parameters[y]
 
         stats = []
         fit_results = []
