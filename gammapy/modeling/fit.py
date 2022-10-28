@@ -354,7 +354,7 @@ class Fit:
         Returns
         -------
         results : dict
-            Dictionary with keys "values", "stat" and "fit_results". The latter contains an
+            Dictionary with keys "parameter_name_scan", "stat_scan" and "fit_results". The latter contains an
             empty list, if `reoptimize` is set to False
         """
         datasets, parameters = self._parse_datasets(datasets=datasets)
@@ -375,8 +375,11 @@ class Fit:
                     stat = datasets.stat_sum()
                 stats.append(stat)
 
+        idx = datasets.parameters.index(parameter)
+        name = datasets.models.parameters_unique_names[idx]
+
         return {
-            f"{parameter.name}_scan": values,
+            f"{name}_scan": values,
             "stat_scan": np.array(stats),
             "fit_results": fit_results,
         }
@@ -435,9 +438,13 @@ class Fit:
         if reoptimize:
             fit_results = np.array(fit_results).reshape(shape)
 
+        i1, i2 = datasets.parameters.index(x), datasets.parameters.index(y)
+        name_x = datasets.models.parameters_unique_names[i1]
+        name_y = datasets.models.parameters_unique_names[i2]
+
         return {
-            f"{x.name}_scan": x.scan_values,
-            f"{y.name}_scan": y.scan_values,
+            f"{name_x}_scan": x.scan_values,
+            f"{name_y}_scan": y.scan_values,
             "stat_scan": stats,
             "fit_results": fit_results,
         }
@@ -477,6 +484,10 @@ class Fit:
         x = parameters[x]
         y = parameters[y]
 
+        i1, i2 = datasets.parameters.index(x), datasets.parameters.index(y)
+        name_x = datasets.models.parameters_unique_names[i1]
+        name_y = datasets.models.parameters_unique_names[i2]
+
         with parameters.restore_status():
             result = contour_iminuit(
                 parameters=parameters,
@@ -487,14 +498,12 @@ class Fit:
                 sigma=sigma,
             )
 
-        x_name = x.name
-        y_name = y.name
         x = result["x"] * x.scale
         y = result["y"] * y.scale
 
         return {
-            x_name: x,
-            y_name: y,
+            name_x: x,
+            name_y: y,
             "success": result["success"],
         }
 
