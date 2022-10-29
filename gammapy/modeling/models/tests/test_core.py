@@ -231,10 +231,9 @@ def test_plot_models(caplog):
     ]
 
 
-def test_plot_models_empty():
+def test_plot_models_empty(caplog):
     models = Models([])
-    with pytest.raises(ValueError):
-        models.plot_regions()
+    models.plot_regions()
 
 
 def test_positions():

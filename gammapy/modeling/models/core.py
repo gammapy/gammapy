@@ -996,8 +996,6 @@ class DatasetModels(collections.abc.Sequence):
             WCS axes
         """
         regions = self.to_regions()
-        if isinstance(regions, list) and len(regions) == 0:
-            raise ValueError("Models don't have any associated region.")
 
         geom = RegionGeom.from_regions(regions=regions)
         return geom.plot_region(
