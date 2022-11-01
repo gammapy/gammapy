@@ -515,6 +515,11 @@ def test_dataset_hawc():
 def test_make_background_2d(observations):
     filename = "$GAMMAPY_DATA/tests/irf/bkg_2d_full_example.fits"
     bkg = Background2D.read(filename)
+    # TODO: better example file for 2d bkg
+    bkg.axes[0]._unit = "TeV"
+    bkg.axes[1]._unit = "deg"
+    bkg._unit = "s-1 TeV-1 sr-1"
+
     obs = observations[0]
 
     obs.bkg = bkg
@@ -530,4 +535,4 @@ def test_make_background_2d(observations):
     maker_obs = MapDatasetMaker(selection=["background"], background_pad_offset=True)
 
     map_dataset = maker_obs.run(reference, obs)
-    assert_allclose(map_dataset.background.data.sum(), 127800)
+    assert_allclose(map_dataset.background.data.sum(), 17636.60091226549)
