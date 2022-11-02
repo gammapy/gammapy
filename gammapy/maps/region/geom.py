@@ -1,4 +1,5 @@
 import copy
+import logging
 from functools import lru_cache
 import numpy as np
 from astropy import units as u
@@ -714,6 +715,8 @@ class RegionGeom(Geom):
             regions = [regions]
         elif isinstance(regions, SkyCoord):
             regions = [PointSkyRegion(center=regions)]
+        elif isinstance(regions, list) and len(regions) == 0:
+            regions = None
 
         if regions:
             regions = regions_to_compound_region(regions)
@@ -808,37 +811,40 @@ class RegionGeom(Geom):
         ax : `~astropy.visualization.WCSAxes`
             Axes to plot on.
         """
-        kwargs_point = kwargs_point or {}
+        if self.region:
+            kwargs_point = kwargs_point or {}
 
-        if ax is None:
-            ax = plt.gca()
+            if ax is None:
+                ax = plt.gca()
 
-            if not isinstance(ax, WCSAxes):
-                ax.remove()
-                wcs_geom = self.to_wcs_geom()
-                m = Map.from_geom(geom=wcs_geom.to_image())
-                ax = m.plot(add_cbar=False, vmin=-1, vmax=0)
+                if not isinstance(ax, WCSAxes):
+                    ax.remove()
+                    wcs_geom = self.to_wcs_geom()
+                    m = Map.from_geom(geom=wcs_geom.to_image())
+                    ax = m.plot(add_cbar=False, vmin=-1, vmax=0)
 
-        kwargs.setdefault("facecolor", "None")
-        kwargs.setdefault("edgecolor", "tab:blue")
-        kwargs_point.setdefault("marker", "*")
+            kwargs.setdefault("facecolor", "None")
+            kwargs.setdefault("edgecolor", "tab:blue")
+            kwargs_point.setdefault("marker", "*")
 
-        for key, value in kwargs.items():
-            key_point = ARTIST_TO_LINE_PROPERTIES.get(key, None)
-            if key_point:
-                kwargs_point[key_point] = value
+            for key, value in kwargs.items():
+                key_point = ARTIST_TO_LINE_PROPERTIES.get(key, None)
+                if key_point:
+                    kwargs_point[key_point] = value
 
-        for region in compound_region_to_regions(self.region):
-            region_pix = region.to_pixel(wcs=ax.wcs)
+            for region in compound_region_to_regions(self.region):
+                region_pix = region.to_pixel(wcs=ax.wcs)
 
-            if isinstance(region, PointSkyRegion):
-                artist = region_pix.as_artist(**kwargs_point)
-            else:
-                artist = region_pix.as_artist(**kwargs)
+                if isinstance(region, PointSkyRegion):
+                    artist = region_pix.as_artist(**kwargs_point)
+                else:
+                    artist = region_pix.as_artist(**kwargs)
 
-            if path_effect:
-                artist.add_path_effect(path_effect)
+                if path_effect:
+                    artist.add_path_effect(path_effect)
 
-            ax.add_artist(artist)
+                ax.add_artist(artist)
 
-        return ax
+            return ax
+        else:
+            logging.info("Region definition required.")
