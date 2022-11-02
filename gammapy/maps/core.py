@@ -1251,6 +1251,8 @@ class Map(abc.ABC):
                     info = energy_unit_format(axis.center[idx])
                 else:
                     info = f"{axis.center[idx]:.1f}"
+            elif axis.node_type == "label":
+                info = f"{axis.center[idx]}"
             else:
                 if axis.name == "energy" or axis.name == "energy_true":
                     info = (
