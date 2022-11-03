@@ -169,6 +169,10 @@ class Fit:
 
         covariance_result = self.covariance(datasets=datasets)
 
+        optimize_result.models.covariance = Covariance(
+            optimize_result.models.parameters, covariance_result.matrix
+        )
+
         return FitResult(
             optimize_result=optimize_result,
             covariance_result=covariance_result,
@@ -269,9 +273,10 @@ class Fit:
                 parameters=unique_pars, function=datasets.stat_sum, **kwargs
             )
 
-            datasets.models.covariance = Covariance.from_factor_matrix(
+            matrix = Covariance.from_factor_matrix(
                 parameters=parameters, matrix=factor_matrix
             )
+            datasets.models.covariance = matrix
 
         # TODO: decide what to return, and fill the info correctly!
         return CovarianceResult(
@@ -279,7 +284,7 @@ class Fit:
             method=method,
             success=info["success"],
             message=info["message"],
-            matrix=datasets.models.covariance.data.copy(),
+            matrix=matrix.data.copy(),
         )
 
     def confidence(self, datasets, parameter, sigma=1, reoptimize=True):
@@ -349,10 +354,11 @@ class Fit:
         Returns
         -------
         results : dict
-            Dictionary with keys "values", "stat" and "fit_results". The latter contains an
+            Dictionary with keys "parameter_name_scan", "stat_scan" and "fit_results". The latter contains an
             empty list, if `reoptimize` is set to False
         """
         datasets, parameters = self._parse_datasets(datasets=datasets)
+
         parameter = parameters[parameter]
         values = parameter.scan_values
 
@@ -370,8 +376,11 @@ class Fit:
                     stat = datasets.stat_sum()
                 stats.append(stat)
 
+        idx = datasets.parameters.index(parameter)
+        name = datasets.models.parameters_unique_names[idx]
+
         return {
-            f"{parameter.name}_scan": values,
+            f"{name}_scan": values,
             "stat_scan": np.array(stats),
             "fit_results": fit_results,
         }
@@ -403,7 +412,8 @@ class Fit:
         """
         datasets, parameters = self._parse_datasets(datasets=datasets)
 
-        x, y = parameters[x], parameters[y]
+        x = parameters[x]
+        y = parameters[y]
 
         stats = []
         fit_results = []
@@ -430,9 +440,13 @@ class Fit:
         if reoptimize:
             fit_results = np.array(fit_results).reshape(shape)
 
+        i1, i2 = datasets.parameters.index(x), datasets.parameters.index(y)
+        name_x = datasets.models.parameters_unique_names[i1]
+        name_y = datasets.models.parameters_unique_names[i2]
+
         return {
-            f"{x.name}_scan": x.scan_values,
-            f"{y.name}_scan": y.scan_values,
+            f"{name_x}_scan": x.scan_values,
+            f"{name_y}_scan": y.scan_values,
             "stat_scan": stats,
             "fit_results": fit_results,
         }
@@ -472,6 +486,10 @@ class Fit:
         x = parameters[x]
         y = parameters[y]
 
+        i1, i2 = datasets.parameters.index(x), datasets.parameters.index(y)
+        name_x = datasets.models.parameters_unique_names[i1]
+        name_y = datasets.models.parameters_unique_names[i2]
+
         with parameters.restore_status():
             result = contour_iminuit(
                 parameters=parameters,
@@ -482,14 +500,12 @@ class Fit:
                 sigma=sigma,
             )
 
-        x_name = x.name
-        y_name = y.name
         x = result["x"] * x.scale
         y = result["y"] * y.scale
 
         return {
-            x_name: x,
-            y_name: y,
+            name_x: x,
+            name_y: y,
             "success": result["success"],
         }
 

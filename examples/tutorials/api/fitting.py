@@ -194,20 +194,21 @@ print(fit.minuit)
 
 
 ######################################################################
-# Check the trace of the fit e.g. in case the fit did not converge
+# Check the trace of the fit e.g.  in case the fit did not converge
 # properly
 #
 
-result_minuit.trace
+print(result_minuit.trace)
 
 
 ######################################################################
-# Check that the fitted values and errors for all parameters are
-# reasonable, and no fitted parameter value is “too close” - or even
-# outside - its allowed min-max range
+# The fitted models are copied on the `~gammapy.modeling.FitResult` object.
+# They can be inspected to check that the fitted values and errors
+# for all parameters are reasonable, and no fitted parameter value is “too close”
+# - or even outside - its allowed min-max range
 #
 
-result_minuit.parameters.to_table()
+print(result_minuit.models.to_parameters_table())
 
 
 ######################################################################
@@ -223,25 +224,22 @@ total_stat = result_minuit.total_stat
 
 fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(14, 4))
 
-for ax, par in zip(axes, crab_model.parameters.free_parameters):
+for ax, par in zip(axes, datasets.parameters.free_parameters):
     par.scan_n_values = 17
-
+    idx = datasets.parameters.index(par)
+    name = datasets.models.parameters_unique_names[idx]
     profile = fit.stat_profile(datasets=datasets, parameter=par)
-    ax.plot(profile[f"{par.name}_scan"], profile["stat_scan"] - total_stat)
+    ax.plot(profile[f"{name}_scan"], profile["stat_scan"] - total_stat)
     ax.set_xlabel(f"{par.unit}")
     ax.set_ylabel("Delta TS")
-    ax.set_title(f"{par.name}: {par.value:.1e} +- {par.error:.1e}")
+    ax.set_title(f"{name}: {par.value:.1e} +- {par.error:.1e}")
 
 
 ######################################################################
 # Inspect model residuals. Those can always be accessed using
-# `~gammapy.datasets.Dataset.residuals()`, that will return an array in case a the fitted
-# `~gammapy.datasets.Dataset` is a `~gammapy.datasets.SpectrumDataset` and a full cube in case of a
-# `~gammapy.datasets.MapDataset`. For more details, we refer here to the dedicated
-#  :doc:`/tutorials/analysis-3d/analysis_3d` (for
-# `~gammapy.datasets.MapDataset` fitting) and
-# :doc:`/tutorials/analysis-1d/spectral_analysis`
-# (for `SpectrumDataset` fitting).
+# `~gammapy.datasets.Dataset.residuals()`. For more details, we refer here to the dedicated
+#  :doc:`/tutorials/analysis-3d/analysis_3d` (for `~gammapy.datasets.MapDataset` fitting) and
+# :doc:`/tutorials/analysis-1d/spectral_analysis` (for `SpectrumDataset` fitting).
 #
 
 
@@ -249,19 +247,24 @@ for ax, par in zip(axes, crab_model.parameters.free_parameters):
 # Covariance and parameters errors
 # --------------------------------
 #
-# After the fit the covariance matrix is attached to the model. You can
-# get the error on a specific parameter by accessing the `~gammapy.modeling.Parameter.error`
-# attribute:
-#
+# After the fit the covariance matrix is attached to the models copy
+# stored on the `~gammapy.modeling.FitResult` object.
+# You can access it directly with:
 
-crab_model.spectral_model.alpha.error
-
+print(result_minuit.models.covariance)
 
 ######################################################################
 # And you can plot the total parameter correlation as well:
 #
 
-crab_model.covariance.plot_correlation()
+result_minuit.models.covariance.plot_correlation()
+
+# The covariance information is also propagated to the individual models
+# Therefore, one can also get the error on a specific parameter by directly
+# accessing the `~gammapy.modeling.Parameter.error` attribute:
+#
+
+print(crab_model.spectral_model.alpha.error)
 
 
 ######################################################################
@@ -311,7 +314,7 @@ ax = crab_spectrum.plot_error(energy_bounds=energy_bounds, energy_power=2)
 # confours. gammapy provides an interface to this functionality through
 # the `~gammapy.modeling.Fit` object using the `~gammapy.modeling.Fit.stat_contour` method. Here we defined a
 # function to automate the contour production for the different
-# parameterer and confidence levels (expressed in term of sigma):
+# parameter and confidence levels (expressed in terms of sigma):
 #
 
 
@@ -320,6 +323,11 @@ def make_contours(fit, datasets, result, npoints, sigmas):
     for sigma in sigmas:
         contours = dict()
         for par_1, par_2 in combinations(["alpha", "beta", "amplitude"], r=2):
+            idx1, idx2 = datasets.parameters.index(par_1), datasets.parameters.index(
+                par_2
+            )
+            name1 = datasets.models.parameters_unique_names[idx1]
+            name2 = datasets.models.parameters_unique_names[idx2]
             contour = fit.stat_contour(
                 datasets=datasets,
                 x=datasets.parameters[par_1],
@@ -328,8 +336,8 @@ def make_contours(fit, datasets, result, npoints, sigmas):
                 sigma=sigma,
             )
             contours[f"contour_{par_1}_{par_2}"] = {
-                par_1: contour[par_1].tolist(),
-                par_2: contour[par_2].tolist(),
+                par_1: contour[name1].tolist(),
+                par_2: contour[name2].tolist(),
             }
         cts_sigma.append(contours)
     return cts_sigma
@@ -518,6 +526,6 @@ ax.clabel(contours, fmt="%.0f, $\\sigma$", inline=3, fontsize=15)
 # approximations. In particular, when the parameter range boundaries are
 # close to the contours lines, it is expected that the statistical meaning
 # of the contours is not well defined. That’s why we advise to always
-# choose a parameter space that com contain the contours you’re interested
+# choose a parameter space that contains the contours you’re interested
 # in.
 #
