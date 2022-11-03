@@ -135,11 +135,11 @@ print(analysis.datasets["stacked"])
 # about them presently.
 #
 
-analysis.datasets["stacked"].counts
+print(analysis.datasets["stacked"].counts)
 
-analysis.datasets["stacked"].background
+print(analysis.datasets["stacked"].background)
 
-analysis.datasets["stacked"].exposure
+print(analysis.datasets["stacked"].exposure)
 
 
 ######################################################################
@@ -206,4 +206,4 @@ analysis.datasets["stacked"].background_model.parameters["tilt"].frozen = True
 analysis.run_fit()
 
 # To see the best fit values along with the errors
-analysis.models.to_parameters_table()
+print(analysis.models.to_parameters_table())
