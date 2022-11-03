@@ -14,14 +14,6 @@ from gammapy.utils.testing import assert_time_allclose, requires_data
 from gammapy.utils.time import time_ref_to_dict, time_relative_to_ref
 
 
-def meta_gadf_hdu(version="0.3"):
-    meta = {}
-    meta["HDUCLASS"] = "GADF"
-    meta["HDUCLAS1"] = "EVENTS"
-    meta["HDUVERS"] = version
-    return meta
-
-
 @requires_data()
 class TestFixedPointingInfo:
     @classmethod
@@ -144,14 +136,14 @@ def test_altaz_without_location(caplog):
 
 
 @pytest.mark.parametrize(
-    ("gadf_version", "obs_mode"),
+    ("obs_mode"),
     [
-        ("0.2", "POINTING"),
-        ("0.2", "WOBBLE"),
-        ("0.3", "POINTING"),
+        ("POINTING"),
+        ("WOBBLE"),
+        ("SCAN"),
     ],
 )
-def test_fixed_pointing_info_fixed_icrs(gadf_version, obs_mode):
+def test_fixed_pointing_info_fixed_icrs(obs_mode):
     location = observatory_locations["cta_south"]
     start = Time("2020-11-01T03:00:00")
     stop = Time("2020-11-01T03:15:00")
@@ -162,7 +154,6 @@ def test_fixed_pointing_info_fixed_icrs(gadf_version, obs_mode):
     meta["TSTART"] = time_relative_to_ref(start, meta).to_value(u.s)
     meta["TSTOP"] = time_relative_to_ref(stop, meta).to_value(u.s)
     meta.update(earth_location_to_dict(location))
-    meta.update(meta_gadf_hdu(gadf_version))
     meta["OBS_MODE"] = obs_mode
     meta["RA_PNT"] = pointing_icrs.ra.deg
     meta["DEC_PNT"] = pointing_icrs.dec.deg
@@ -195,28 +186,6 @@ def test_fixed_pointing_info_fixed_icrs(gadf_version, obs_mode):
     assert np.all(u.isclose(pointing_icrs.ra, pointing.get_icrs(times).ra))
 
 
-def test_incorrect_fixed_pointing_info():
-    location = observatory_locations["cta_south"]
-    start = Time("2020-11-01T03:00:00")
-    stop = Time("2020-11-01T03:15:00")
-    ref = Time("2020-11-01T00:00:00")
-    pointing_icrs = SkyCoord(ra=83.28 * u.deg, dec=21.78 * u.deg)
-
-    meta = time_ref_to_dict(ref)
-    meta["TSTART"] = time_relative_to_ref(start, meta).to_value(u.s)
-    meta["TSTOP"] = time_relative_to_ref(stop, meta).to_value(u.s)
-    meta.update(earth_location_to_dict(location))
-    meta.update(meta_gadf_hdu("0.3"))
-    meta["OBS_MODE"] = "WOBBLE"
-    meta["RA_PNT"] = pointing_icrs.ra.deg
-    meta["DEC_PNT"] = pointing_icrs.dec.deg
-
-    pointing = FixedPointingInfo(meta=meta)
-
-    with pytest.raises(ValueError):
-        pointing.mode
-
-
 def test_fixed_pointing_info_fixed_altaz():
     location = observatory_locations["cta_south"]
     start = Time("2020-11-01T03:00:00")
@@ -229,7 +198,6 @@ def test_fixed_pointing_info_fixed_altaz():
     meta["TSTART"] = time_relative_to_ref(start, meta).to_value(u.s)
     meta["TSTOP"] = time_relative_to_ref(stop, meta).to_value(u.s)
     meta.update(earth_location_to_dict(location))
-    meta.update(meta_gadf_hdu("0.3"))
     meta["OBS_MODE"] = "DRIFT"
     meta["ALT_PNT"] = pointing_altaz.alt.deg
     meta["AZ_PNT"] = pointing_altaz.az.deg

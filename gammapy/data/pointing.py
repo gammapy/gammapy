@@ -46,16 +46,13 @@ class PointingMode(Enum):
     DRIFT = auto()
 
     @staticmethod
-    def from_gadf_string(val, version="0.3"):
+    def from_gadf_string(val):
         # OBS_MODE is not well-defined not mandatory in GADF 0.2
         # We always assume that they are pointing observations
-        if version == "0.3":
-            if val.upper() == "POINTING":
-                return PointingMode.POINTING
-            if val.upper() == "DRIFT":
-                return PointingMode.DRIFT
-
-            raise ValueError(f"Unsupported pointing mode: {val}")
+        if val.upper() == "POINTING":
+            return PointingMode.POINTING
+        elif val.upper() == "DRIFT":
+            return PointingMode.DRIFT
         else:
             return PointingMode.POINTING
 
@@ -132,8 +129,9 @@ class FixedPointingInfo:
     def mode(self):
         """See `PointingMode`, if not present, assume POINTING"""
         obs_mode = self.meta.get("OBS_MODE")
-        gadf_version = self.meta.get("HDUVERS")
-        return PointingMode.from_gadf_string(obs_mode, gadf_version)
+        if obs_mode is None:
+            return PointingMode.POINTING
+        return PointingMode.from_gadf_string(obs_mode)
 
     @lazyproperty
     def location(self):
