@@ -218,7 +218,7 @@ for obs_id, observation in zip(obs_ids, observations):
     dataset_on_off = bkg_maker.run(dataset, observation)
     dataset_on_off = safe_mask_masker.run(dataset_on_off, observation)
     datasets.append(dataset_on_off)
-
+print(datasets)
 
 ######################################################################
 # Plot off regions
@@ -241,20 +241,23 @@ plot_spectrum_datasets_off_regions(ax=ax, datasets=datasets)
 
 info_table = datasets.info_table(cumulative=True)
 
-info_table
+print(info_table)
 
-plt.plot(info_table["livetime"].to("h"), info_table["excess"], marker="o", ls="none")
-plt.xlabel("Livetime [h]")
-plt.ylabel("Excess")
+plt.figure(figsize=(15, 5))
+ax1 = plt.subplot(121)
+ax1.plot(info_table["livetime"].to("h"), info_table["excess"], marker="o", ls="none")
+ax1.set_xlabel("Livetime [h]")
+ax1.set_ylabel("Excess")
 
-plt.plot(
+ax2 = plt.subplot(122)
+ax2.plot(
     info_table["livetime"].to("h"),
     info_table["sqrt_ts"],
     marker="o",
     ls="none",
 )
-plt.xlabel("Livetime [h]")
-plt.ylabel("Sqrt(TS)")
+ax2.set_xlabel("Livetime [h]")
+ax2.set_ylabel("Sqrt(TS)")
 
 
 ######################################################################
@@ -326,7 +329,7 @@ print(result_joint)
 # and check the best-fit parameters
 #
 
-datasets.models.to_parameters_table()
+print(result_joint.models.to_parameters_table())
 
 
 ######################################################################
@@ -374,7 +377,7 @@ flux_points = fpe.run(datasets=datasets)
 # Here is a the table of the resulting flux points:
 #
 
-flux_points.to_table(sed_type="dnde", formatted=True)
+print(flux_points.to_table(sed_type="dnde", formatted=True))
 
 
 ######################################################################
@@ -394,7 +397,7 @@ flux_points.plot_ts_profiles(ax=ax, sed_type="e2dnde")
 
 flux_points_dataset = FluxPointsDataset(data=flux_points, models=model_best_joint)
 
-flux_points_dataset.plot_fit()
+ax = flux_points_dataset.plot_fit()
 
 
 ######################################################################
@@ -424,9 +427,9 @@ model_best_stacked = model.copy()
 
 print(result_stacked)
 
-model_best_joint.parameters.to_table()
+print(model_best_joint.parameters.to_table())
 
-model_best_stacked.parameters.to_table()
+print(model_best_stacked.parameters.to_table())
 
 
 ######################################################################
@@ -434,7 +437,7 @@ model_best_stacked.parameters.to_table()
 # published Crab Nebula Spectrum for reference. This is available in
 # `~gammapy.modeling.models.create_crab_spectral_model`.
 #
-
+plt.figure()
 plot_kwargs = {
     "energy_bounds": [0.1, 30] * u.TeV,
     "sed_type": "e2dnde",
@@ -442,16 +445,24 @@ plot_kwargs = {
 }
 
 # plot stacked model
-model_best_stacked.spectral_model.plot(**plot_kwargs, label="Stacked analysis result")
-model_best_stacked.spectral_model.plot_error(facecolor="blue", alpha=0.3, **plot_kwargs)
+ax = model_best_stacked.spectral_model.plot(
+    **plot_kwargs, label="Stacked analysis result"
+)
+model_best_stacked.spectral_model.plot_error(
+    ax=ax, facecolor="blue", alpha=0.3, **plot_kwargs
+)
 
 # plot joint model
 model_best_joint.spectral_model.plot(
-    **plot_kwargs, label="Joint analysis result", ls="--"
+    ax=ax, **plot_kwargs, label="Joint analysis result", ls="--"
 )
-model_best_joint.spectral_model.plot_error(facecolor="orange", alpha=0.3, **plot_kwargs)
+model_best_joint.spectral_model.plot_error(
+    ax=ax, facecolor="orange", alpha=0.3, **plot_kwargs
+)
 
-create_crab_spectral_model("hess_ecpl").plot(**plot_kwargs, label="Crab reference")
+create_crab_spectral_model("hess_ecpl").plot(
+    **plot_kwargs, label="Crab reference", ax=ax
+)
 plt.legend()
 
 

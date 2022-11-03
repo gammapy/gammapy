@@ -160,6 +160,7 @@ pwl.plot_error(energy_bounds=energy_bounds, **kwargs)
 ax.set_ylim(1e-13, 1e-11)
 ax.set_xlim(energy_bounds)
 ax.legend()
+plt.show()
 
 
 ######################################################################
@@ -208,7 +209,7 @@ ecpl.plot_error(energy_bounds=energy_bounds, **kwargs)
 ax.set_ylim(1e-13, 1e-11)
 ax.set_xlim(energy_bounds)
 ax.legend()
-
+plt.show()
 
 ######################################################################
 # Log-Parabola Fit
@@ -241,7 +242,7 @@ log_parabola.plot_error(energy_bounds=energy_bounds, **kwargs)
 ax.set_ylim(1e-13, 1e-11)
 ax.set_xlim(energy_bounds)
 ax.legend()
-
+plt.show()
 
 ######################################################################
 # Exercises
