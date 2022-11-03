@@ -106,7 +106,7 @@ class FixedPointingInfo:
     """
 
     def __init__(self, meta):
-        self.meta = meta.copy()
+        self.meta = meta
 
     @classmethod
     def read(cls, filename, hdu="EVENTS"):
