@@ -30,31 +30,34 @@ class PointingMode(Enum):
 
     For ground-based instruments, the most common options will be:
     * POINTING: The telescope observes a fixed position in the ICRS frame
-    * DRIFT: The telscope observes a fixed position in the AltAz frame
+    * DRIFT: The telescope observes a fixed position in the AltAz frame
 
     OGIP also defines RASTER, SLEW and SCAN. These cannot be treated using
     a fixed pointing position in either frame, so they would require the
     pointing table, which is at the moment not supported by gammapy.
 
-    The H.E.S.S. data releases uses the not-defined value "WOBBLE",
-    which we assume to be the same as "POINTING", making the assumption
-    that one observation only contains a single wobble position.
+    Data releases based on gadf v0.2 do not have consistent OBS_MODE keyword
+    e.g. the H.E.S.S. data releases uses the not-defined value "WOBBLE".
+    For all gadf v0.2 data, we assume OBS_MODE to be the same as "POINTING",
+    making the assumption that one observation only contains a single wobble position.
     """
 
     POINTING = auto()
     DRIFT = auto()
 
     @staticmethod
-    def from_gadf_string(val):
-        # OBS_MODE is not well-defined in GADF 0.2, HESS and MAGIC
-        # filled some variation of "WOBBLE" for the open crab paper
-        if val.upper() in ("POINTING", "WOBBLE"):
+    def from_gadf_string(val, version="0.3"):
+        # OBS_MODE is not well-defined not mandatory in GADF 0.2
+        # We always assume that they are pointing observations
+        if version == "0.3":
+            if val.upper() == "POINTING":
+                return PointingMode.POINTING
+            if val.upper() == "DRIFT":
+                return PointingMode.DRIFT
+
+            raise ValueError(f"Unsupported pointing mode: {val}")
+        else:
             return PointingMode.POINTING
-
-        if val.upper() == "DRIFT":
-            return PointingMode.DRIFT
-
-        raise ValueError(f"Unsupported pointing mode: {val}")
 
 
 class FixedPointingInfo:
@@ -103,7 +106,7 @@ class FixedPointingInfo:
     """
 
     def __init__(self, meta):
-        self.meta = meta
+        self.meta = meta.copy()
 
     @classmethod
     def read(cls, filename, hdu="EVENTS"):
@@ -129,9 +132,8 @@ class FixedPointingInfo:
     def mode(self):
         """See `PointingMode`, if not present, assume POINTING"""
         obs_mode = self.meta.get("OBS_MODE")
-        if obs_mode is None:
-            return PointingMode.POINTING
-        return PointingMode.from_gadf_string(obs_mode)
+        gadf_version = self.meta.get("HDUVERS")
+        return PointingMode.from_gadf_string(obs_mode, gadf_version)
 
     @lazyproperty
     def location(self):
