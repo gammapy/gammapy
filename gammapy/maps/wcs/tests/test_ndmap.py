@@ -9,7 +9,7 @@ from astropy.io import fits
 from regions import CircleSkyRegion, PointSkyRegion, RectangleSkyRegion
 from gammapy.datasets.map import MapEvaluator
 from gammapy.irf import PSFKernel, PSFMap
-from gammapy.maps import Map, MapAxis, MapCoord, WcsGeom, WcsNDMap
+from gammapy.maps import LabelMapAxis, Map, MapAxis, MapCoord, WcsGeom, WcsNDMap
 from gammapy.modeling.models import (
     GaussianSpatialModel,
     PowerLawSpectralModel,
@@ -608,6 +608,15 @@ def test_plot():
 def test_plot_grid():
     axis = MapAxis([0, 1, 2], node_type="edges")
     m = WcsNDMap.create(binsz=0.1 * u.deg, width=1 * u.deg, axes=[axis])
+    with mpl_plot_check():
+        m.plot_grid()
+
+
+def test_plot_grid_label_axis():
+    axis = LabelMapAxis(labels=["d1", "d2"], name="dataset")
+
+    m = WcsNDMap.create(width="5 deg", axes=[axis])
+
     with mpl_plot_check():
         m.plot_grid()
 
