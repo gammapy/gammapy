@@ -143,7 +143,7 @@ sensitivity_table = sensitivity_estimator.run(dataset_on_off)
 #
 
 # Show the results table
-sensitivity_table
+print(sensitivity_table)
 
 # Save it to file (could use e.g. format of CSV or ECSV or FITS)
 # sensitivity_table.write('sensitivity.ecsv', format='ascii.ecsv')

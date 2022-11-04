@@ -226,7 +226,7 @@ analysis.get_observations()
 # selection corresponds to the following ids:
 #
 
-analysis.observations.ids
+print(analysis.observations.ids)
 
 
 ######################################################################
@@ -383,7 +383,7 @@ analysis.run_fit()
 
 print(analysis.fit_result)
 
-model_1d.to_parameters_table()
+print(model_1d.to_parameters_table())
 
 
 ######################################################################

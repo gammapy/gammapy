@@ -63,6 +63,7 @@ check_tutorials_setup()
 
 profiles.DMProfile.__subclasses__()
 
+plt.figure()
 for profile in profiles.DMProfile.__subclasses__():
     p = profile()
     p.scale_to_local_density()
@@ -86,6 +87,7 @@ print("DISTANCE_GC:", profiles.DMProfile.DISTANCE_GC)
 # J-Factor map for the Galactic Centre region
 #
 
+plt.figure()
 profile = profiles.NFWProfile()
 
 # Adopt standard values used in HESS
@@ -130,6 +132,7 @@ print(
 fluxes = PrimaryFlux(mDM="1 TeV", channel="eL")
 print(fluxes.allowed_channels)
 
+plt.figure()
 fig, axes = plt.subplots(4, 1, figsize=(6, 16))
 mDMs = [0.01, 0.1, 1, 10] * u.TeV
 
@@ -167,7 +170,7 @@ int_flux = (
 ).to("cm-2 s-1")
 
 flux_map = WcsNDMap(geom=geom, data=int_flux.value, unit="cm-2 s-1")
-
+plt.figure()
 ax = flux_map.plot(cmap="viridis", norm=LogNorm(), add_cbar=True)
 plt.title(
     f"Flux [{int_flux.unit}]\n m$_{{DM}}$={fluxes.mDM.to('TeV')}, channel={fluxes.channel}"

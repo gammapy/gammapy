@@ -87,6 +87,7 @@ We will work with the following functions and classes:
 from pathlib import Path
 import numpy as np
 import astropy.units as u
+import matplotlib.pyplot as plt
 from astropy.coordinates import Angle, SkyCoord
 from astropy.io import fits
 from astropy.time import Time
@@ -288,6 +289,7 @@ print(f"Background events: {(events.table['MC_ID'] == 0).sum()}")
 # We can inspect the properties of the simulated events as follows:
 #
 
+plt.figure()
 events.select_offset([0, 1] * u.deg).peek()
 
 
@@ -320,7 +322,7 @@ hdu_all.writeto("./event_sampling/events_0001.fits", overwrite=True)
 #
 
 counts = Map.from_geom(geom)
-
+plt.figure()
 counts.fill_events(events)
 counts.sum_over_axes().plot(add_cbar=True)
 
@@ -446,6 +448,7 @@ src_events = events.select_region(on_region)
 # Then we can have a quick look to the data with the `peek` function:
 #
 
+plt.figure()
 src_events.peek()
 
 
@@ -491,6 +494,7 @@ print(dataset.models)
 sampler = MapDatasetEventSampler(random_state=0)
 events = sampler.run(dataset, observation)
 
+plt.figure()
 events.select_offset([0, 1] * u.deg).peek()
 
 
@@ -543,7 +547,7 @@ for idx, tstart in enumerate(tstarts):
 path = Path("./event_sampling/")
 events_paths = list(path.rglob("events*.fits"))
 data_store = DataStore.from_events_files(events_paths, irf_paths)
-data_store.obs_table
+print(data_store.obs_table)
 
 
 ######################################################################
@@ -553,6 +557,7 @@ data_store.obs_table
 #
 
 observations = data_store.get_observations()
+plt.figure()
 observations[0].peek()
 
 

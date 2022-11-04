@@ -121,7 +121,7 @@ dataset_empty = MapDataset.create(
 # To see the geometry of each map, we can use:
 #
 
-dataset_empty.geoms
+print(dataset_empty.geoms)
 
 
 ######################################################################
@@ -147,17 +147,24 @@ print(dataset_cta)
 # e.g. `~gammay.datasets.MapDataset.info_dict()`
 #
 
+######################################################################
 # For a quick info, use
-dataset_cta.info_dict()
+#
 
+print(dataset_cta.info_dict())
+
+######################################################################
 # For a quick view, use
+#
+
+plt.figure()
 dataset_cta.peek()
 
 
 ######################################################################
 # And access individual maps like:
 #
-
+plt.figure()
 counts_image = dataset_cta.counts.sum_over_axes()
 counts_image.smooth("0.1 deg").plot()
 
@@ -167,7 +174,7 @@ counts_image.smooth("0.1 deg").plot()
 # `~gammapy.irf.PSFMap`:
 #
 
-dataset_cta.psf
+print(dataset_cta.psf)
 
 
 ######################################################################
@@ -176,6 +183,7 @@ dataset_cta.psf
 radius = dataset_cta.psf.containment_radius(energy_true=1 * u.TeV, fraction=0.95)
 print(radius)
 
+plt.figure()
 ax = plt.subplot()
 edisp_kernel = dataset_cta.edisp.get_edisp_kernel()
 edisp_kernel.plot_matrix(ax=ax)
@@ -187,7 +195,7 @@ edisp_kernel.plot_matrix(ax=ax)
 # map:
 #
 
-dataset_cta.background
+print(dataset_cta.background)
 
 
 ######################################################################
@@ -216,6 +224,7 @@ print(dataset_cta)
 # of the model:
 #
 
+plt.figure()
 npred = dataset_cta.npred()
 npred.sum_over_axes().plot()
 
@@ -225,6 +234,7 @@ npred.sum_over_axes().plot()
 # use:
 #
 
+plt.figure()
 npred_source = dataset_cta.npred_signal(model_name="gc")
 npred_source.sum_over_axes().plot()
 
@@ -236,6 +246,7 @@ npred_source.sum_over_axes().plot()
 # corrected background, one can use `~gammapy.datasets.MapDataset.npred_background`.
 #
 
+plt.figure()
 npred_background = dataset_cta.npred_background()
 npred_background.sum_over_axes().plot()
 
@@ -261,6 +272,8 @@ npred_background.sum_over_axes().plot()
 #
 
 # eg: to see the safe data range
+
+plt.figure()
 dataset_cta.mask_safe.plot_grid()
 
 
@@ -269,6 +282,8 @@ dataset_cta.mask_safe.plot_grid()
 #
 
 # To apply a mask fit - in enegy and space
+
+plt.figure()
 region = CircleSkyRegion(SkyCoord("0d", "0d", frame="galactic"), 1.5 * u.deg)
 
 geom = dataset_cta.counts.geom
@@ -293,9 +308,13 @@ dataset_cta.mask_fit.plot_grid(vmin=0, vmax=1, add_cbar=True)
 e_min, e_max = dataset_cta.energy_range
 
 # To see the lower energy threshold at each point
+
+plt.figure()
 e_min.plot(add_cbar=True)
 
 # To see the lower energy threshold at each point
+
+plt.figure()
 e_max.plot(add_cbar=True)
 
 
@@ -311,6 +330,7 @@ cutout = dataset_cta.cutout(
     name="cta-cutout",
 )
 
+plt.figure()
 cutout.counts.sum_over_axes().plot()
 
 
@@ -318,6 +338,7 @@ cutout.counts.sum_over_axes().plot()
 # It is also possible to slice a `~gammapy.datasets.MapDataset` in energy:
 #
 
+plt.figure()
 sliced = dataset_cta.slice_by_energy(
     energy_min=1 * u.TeV, energy_max=5 * u.TeV, name="slice-energy"
 )
@@ -329,6 +350,7 @@ sliced.counts.plot_grid()
 # datasets such as `~gammapy.datasets.MapDataset.mask_fit`:
 #
 
+plt.figure()
 sliced.mask_fit.plot_grid()
 
 
@@ -341,6 +363,7 @@ sliced.mask_fit.plot_grid()
 # axes:
 #
 
+plt.figure()
 downsampled = dataset_cta.downsample(factor=8)
 downsampled.counts.sum_over_axes().plot()
 
@@ -349,6 +372,7 @@ downsampled.counts.sum_over_axes().plot()
 # And the same downsampling process is possible along the energy axis:
 #
 
+plt.figure()
 downsampled_energy = dataset_cta.downsample(
     factor=5, axis_name="energy", name="downsampled-energy"
 )
@@ -368,6 +392,7 @@ print(downsampled_energy, dataset_cta)
 # energy binning using:
 #
 
+plt.figure()
 energy_axis_new = MapAxis.from_energy_edges([0.1, 0.3, 1, 3, 10] * u.TeV)
 resampled = dataset_cta.resample_energy_axis(energy_axis=energy_axis_new)
 resampled.counts.plot_grid(ncols=2)
@@ -378,6 +403,7 @@ resampled.counts.plot_grid(ncols=2)
 # `~gammapy.datasets.MapDataset.to_image()` convenience method:
 #
 
+plt.figure()
 dataset_image = dataset_cta.to_image()
 dataset_image.counts.plot()
 
@@ -393,6 +419,7 @@ dataset_image.counts.plot()
 # which can then be used for classical spectral analysis. Containment
 # correction is feasible only for circular regions.
 #
+
 
 region = CircleSkyRegion(SkyCoord(0, 0, unit="deg", frame="galactic"), 0.5 * u.deg)
 spectrum_dataset = dataset_cta.to_spectrum_dataset(
@@ -425,6 +452,7 @@ print(reg_dataset)
 # saves the `~gammapy.datasets.FluxPointsDataset,data` attribute to disk.
 #
 
+plt.figure()
 flux_points = FluxPoints.read(
     "$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits"
 )
@@ -441,11 +469,11 @@ fp_dataset.plot_spectrum()
 # limit points
 #
 
-fp_dataset.mask_safe  # Note: the mask here is simply a numpy array
+print(fp_dataset.mask_safe)  # Note: the mask here is simply a numpy array
 
-fp_dataset.data  # is a `FluxPoints` object
+print(fp_dataset.data)  # is a `FluxPoints` object
 
-fp_dataset.data_shape()  # number of data points
+print(fp_dataset.data_shape())  # number of data points
 
 
 ######################################################################
@@ -487,23 +515,23 @@ print(datasets)
 # `~gammapy.datasets.Dataset.info_dict()`:
 #
 
-datasets.info_table()  # quick info of all datasets
+print(datasets.info_table())  # quick info of all datasets
 
-datasets.names  # unique name of each dataset
+print(datasets.names)  # unique name of each dataset
 
 
 ######################################################################
 # We can access individual datasets in `Datasets` object by name:
 #
 
-datasets["dataset-empty"]  # extracts the first dataset
+print(datasets["dataset-empty"])  # extracts the first dataset
 
 
 ######################################################################
 # Or by index:
 #
 
-datasets[0]
+print(datasets[0])
 
 
 ######################################################################
@@ -512,7 +540,7 @@ datasets[0]
 
 # Use python list convention to remove/add datasets, eg:
 datasets.remove("dataset-empty")
-datasets.names
+print(datasets.names)
 
 
 ######################################################################
@@ -520,7 +548,7 @@ datasets.names
 #
 
 datasets.append(spectrum_dataset)
-datasets.names
+print(datasets.names)
 
 
 ######################################################################
