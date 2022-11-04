@@ -77,7 +77,7 @@ dataset = MapDataset.read(
 ######################################################################
 # This is what the counts image we will work with looks like:
 #
-
+plt.figure()
 counts_image = dataset.counts.sum_over_axes()
 counts_image.smooth("0.1 deg").plot(stretch="sqrt")
 
@@ -120,6 +120,7 @@ regions = make_orthogonal_rectangle_sky_regions(
 # the counts image:
 #
 
+plt.figure()
 geom = RegionGeom.create(region=regions)
 ax = counts_image.smooth("0.1 deg").plot(stretch="sqrt")
 geom.plot_region(ax=ax, color="w")
@@ -249,7 +250,7 @@ regions = make_concentric_annulus_sky_regions(
 ######################################################################
 # Again we first illustrate the regions:
 #
-
+plt.figure()
 geom = RegionGeom.create(region=regions)
 gc_image = counts_image.cutout(
     position=SkyCoord("0d", "0d", frame="galactic"), width=3 * u.deg
