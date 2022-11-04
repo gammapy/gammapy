@@ -32,7 +32,7 @@ class PointingMode(Enum):
     * POINTING: The telescope observes a fixed position in the ICRS frame
     * DRIFT: The telescope observes a fixed position in the AltAz frame
 
-    Gammapy only supports only fixed pointing positions over the whole observation
+    Gammapy only supports fixed pointing positions over the whole observation
     (either in equatorial or horizontal coordinates).
     OGIP also defines RASTER, SLEW and SCAN. These cannot be treated using
     a fixed pointing position in either frame, so they would require the
@@ -51,7 +51,7 @@ class PointingMode(Enum):
     @staticmethod
     def from_gadf_string(val):
         # OBS_MODE is not well-defined and not mandatory in GADF 0.2
-        # We always assume that they observations are pointing observations
+        # We always assume that the observations are pointing observations
         # unless the OBS_MODE is set to DRIFT
         if val.upper() == "DRIFT":
             return PointingMode.DRIFT
