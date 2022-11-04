@@ -32,14 +32,17 @@ class PointingMode(Enum):
     * POINTING: The telescope observes a fixed position in the ICRS frame
     * DRIFT: The telescope observes a fixed position in the AltAz frame
 
+    Gammapy only supports only fixed pointing positions over the whole observation
+    (either in equatorial or horizontal coordinates).
     OGIP also defines RASTER, SLEW and SCAN. These cannot be treated using
     a fixed pointing position in either frame, so they would require the
     pointing table, which is at the moment not supported by gammapy.
 
     Data releases based on gadf v0.2 do not have consistent OBS_MODE keyword
     e.g. the H.E.S.S. data releases uses the not-defined value "WOBBLE".
-    For all gadf v0.2 data, we assume OBS_MODE to be the same as "POINTING",
-    making the assumption that one observation only contains a single wobble position.
+    For all gadf data, we assume OBS_MODE to be the same as "POINTING",
+    unless it is set to "DRIFT", making the assumption that one observation
+    only contains a single fixed position.
     """
 
     POINTING = auto()
@@ -47,11 +50,10 @@ class PointingMode(Enum):
 
     @staticmethod
     def from_gadf_string(val):
-        # OBS_MODE is not well-defined not mandatory in GADF 0.2
-        # We always assume that they are pointing observations
-        if val.upper() == "POINTING":
-            return PointingMode.POINTING
-        elif val.upper() == "DRIFT":
+        # OBS_MODE is not well-defined and not mandatory in GADF 0.2
+        # We always assume that they observations are pointing observations
+        # unless the OBS_MODE is set to DRIFT
+        if val.upper() == "DRIFT":
             return PointingMode.DRIFT
         else:
             return PointingMode.POINTING
