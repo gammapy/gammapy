@@ -58,6 +58,7 @@ the dataset and fake the count data.
 
 import numpy as np
 import astropy.units as u
+import matplotlib.pyplot as plt
 from astropy.coordinates import SkyCoord
 from gammapy.data import Observation, observatory_locations
 from gammapy.datasets import MapDataset
@@ -172,6 +173,7 @@ print(dataset)
 #
 
 # To plot, eg, counts:
+plt.figure()
 dataset.counts.smooth(0.05 * u.deg).plot_interactive(add_cbar=True, stretch="linear")
 
 
@@ -197,7 +199,7 @@ print(dataset.models)
 # %%time
 fit = Fit(optimize_opts={"print_level": 1})
 result = fit.run(datasets=[dataset])
-
+plt.figure()
 dataset.plot_residuals_spatial(method="diff/sqrt(model)", vmin=-0.5, vmax=0.5)
 
 
@@ -217,4 +219,4 @@ print(
 # Get the errors on the fitted parameters from the parameter table
 #
 
-result.parameters.to_table()
+print(result.parameters.to_table())

@@ -50,6 +50,7 @@ import os
 # %matplotlib inline
 import numpy as np
 from astropy import units as u
+import matplotlib.pyplot as plt
 from astropy.convolution import convolve
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
@@ -101,7 +102,7 @@ print(m_allsky.geom)
 # with this map:
 #
 
-m_allsky.data
+print(m_allsky.data)
 
 
 ######################################################################
@@ -181,14 +182,14 @@ wcs_geom.contains(positions)
 # Or get the image center of the map:
 #
 
-wcs_geom.center_skydir
+print(wcs_geom.center_skydir)
 
 
 ######################################################################
 # Or we can also retrieve the solid angle per pixel of the map:
 #
 
-wcs_geom.solid_angle()
+print(wcs_geom.solid_angle())
 
 
 ######################################################################
@@ -248,7 +249,7 @@ print(m_4d.geom)
 # The edges of the bins can be checked with `~gammapy.maps.MapAxis.edges` attribute:
 #
 
-energy_axis.edges
+print(energy_axis.edges)
 
 
 ######################################################################
@@ -256,7 +257,7 @@ energy_axis.edges
 # checked again with:
 #
 
-energy_axis.unit
+print(energy_axis.unit)
 
 
 ######################################################################
@@ -264,7 +265,7 @@ energy_axis.unit
 # attribute:
 #
 
-energy_axis.center
+print(energy_axis.center)
 
 
 ######################################################################
@@ -328,7 +329,7 @@ print(m_3fhl_gc)
 
 filename = os.environ["GAMMAPY_DATA"] + "/fermi-3fhl-gc/fermi-3fhl-gc-exposure.fits.gz"
 hdulist = fits.open(filename)
-hdulist.info()
+print(hdulist.info())
 
 
 ######################################################################
@@ -337,7 +338,7 @@ hdulist.info()
 #
 
 hdulist["PRIMARY"].header["BUNIT"] = "cm2 s"
-Map.from_hdulist(hdulist=hdulist)
+print(Map.from_hdulist(hdulist=hdulist))
 
 
 ######################################################################
@@ -375,7 +376,7 @@ m_cube.write("example_cube_fgst.fits", format="fgst-template", overwrite=True)
 #
 
 hdulist = m_4d.to_hdulist(format="gadf")
-hdulist.info()
+print(hdulist.info())
 
 
 ######################################################################
@@ -384,7 +385,7 @@ hdulist.info()
 # our data and the WCS information stored in the header:
 #
 
-hdulist["PRIMARY"].header
+print(hdulist["PRIMARY"].header)
 
 
 ######################################################################
@@ -394,7 +395,7 @@ hdulist["PRIMARY"].header
 # show the information:
 #
 
-Table.read(hdulist["PRIMARY_BANDS"])
+print(Table.read(hdulist["PRIMARY_BANDS"]))
 
 
 ######################################################################
@@ -428,7 +429,7 @@ m = Map.read("file.fits", hdu="IMAGE", map_type="wcs")
 # of the map:
 #
 
-m_gc.get_by_idx((50, 30))
+print(m_gc.get_by_idx((50, 30)))
 
 
 ######################################################################
@@ -437,7 +438,7 @@ m_gc.get_by_idx((50, 30))
 # the numpy array we have to call:
 #
 
-m_gc.data[([30], [50])]
+print(m_gc.data[([30], [50])])
 
 
 ######################################################################
@@ -454,7 +455,7 @@ print(m_gc.geom)
 # the axes names corresponding to the given coordinates:
 #
 
-m_gc.get_by_coord({"lon": [0, 180], "lat": [0, 0]})
+print(m_gc.get_by_coord({"lon": [0, 180], "lat": [0, 0]}))
 
 
 ######################################################################
@@ -469,7 +470,7 @@ m_gc.get_by_coord({"lon": [0, 180], "lat": [0, 0]})
 #
 
 lons = np.linspace(-4, 4, 10)
-m_gc.get_by_coord({"lon": lons, "lat": 0})
+print(m_gc.get_by_coord({"lon": lons, "lat": 0}))
 
 
 ######################################################################
@@ -479,7 +480,7 @@ m_gc.get_by_coord({"lon": lons, "lat": 0})
 
 lons = np.linspace(-4, 4, 8)
 lats = np.linspace(-4, 4, 8).reshape(-1, 1)
-m_gc.get_by_coord({"lon": lons, "lat": lats})
+print(m_gc.get_by_coord({"lon": lons, "lat": lats}))
 
 
 ######################################################################
@@ -576,7 +577,7 @@ m_cube.set_by_idx(idx=(10, 20, 3), vals=42)
 # here we check that data have been updated:
 #
 
-m_cube.get_by_idx((10, 20, 3))
+print(m_cube.get_by_idx((10, 20, 3)))
 
 
 ######################################################################
@@ -769,7 +770,7 @@ print(is_null)
 # pixels (not `NaN`):
 #
 
-np.all(is_null.data[~np.isnan(iem_minus_iem)])
+print(np.all(is_null.data[~np.isnan(iem_minus_iem)]))
 
 
 ######################################################################
@@ -820,6 +821,7 @@ m_3fhl_gc = Map.read(filename)
 # ``.plot()`` method:
 #
 
+plt.figure()
 m_3fhl_gc.plot()
 
 
@@ -830,6 +832,7 @@ m_3fhl_gc.plot()
 # `plt.imshow() <https://matplotlib.org/api/_as_gen/matplotlib.pyplot.imshow.html>`__:
 #
 
+plt.figure()
 smoothed = m_3fhl_gc.smooth(width=0.2 * u.deg, kernel="gauss")
 smoothed.plot(stretch="sqrt", add_cbar=True, vmax=4, cmap="inferno")
 
@@ -841,6 +844,7 @@ smoothed.plot(stretch="sqrt", add_cbar=True, vmax=4, cmap="inferno")
 # font size:
 #
 
+plt.figure()
 rc_params = {"figure.figsize": (12, 5.4), "font.size": 12}
 with plt.rc_context(rc=rc_params):
     smoothed = m_3fhl_gc.smooth(width=0.2 * u.deg, kernel="gauss")
@@ -858,6 +862,7 @@ with plt.rc_context(rc=rc_params):
 # the data cube by calling `~gammapy.maps.Map.plot_interactive()`:
 #
 
+plt.figure()
 rc_params = {
     "figure.figsize": (12, 5.4),
     "font.size": 12,
@@ -881,4 +886,5 @@ m_iem_gc.plot_interactive(add_cbar=True, stretch="sqrt", rc_params=rc_params)
 # `vmax` options:
 #
 
+plt.figure()
 counts_3d.plot_grid(ncols=4, figsize=(16, 12), vmin=0, vmax=100, stretch="log")

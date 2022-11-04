@@ -49,6 +49,7 @@ Further information is available at `~gammapy.catalog`.
 """
 
 # %matplotlib inline
+import matplotlib.pyplot as plt
 import numpy as np
 import astropy.units as u
 from gammapy.catalog import CATALOG_REGISTRY
@@ -70,7 +71,7 @@ check_tutorials_setup()
 # (e.g. `SourceCatalog3FHL`).
 #
 
-CATALOG_REGISTRY
+print(CATALOG_REGISTRY)
 
 
 ######################################################################
@@ -120,7 +121,7 @@ print("Number of sources :", len(catalog.table))
 
 # FITS file is loaded
 catalog = CATALOG_REGISTRY.get_cls("3fgl")()
-catalog
+print(catalog)
 
 ""
 # Let's load the source catalogs we will use throughout this tutorial
@@ -144,13 +145,13 @@ catalog_hgps = CATALOG_REGISTRY.get_cls("hgps")()
 # position or association class, or accessing special source information.
 #
 
-type(catalog_3fhl.table)
+print(type(catalog_3fhl.table))
 
 ""
-len(catalog_3fhl.table)
+print(len(catalog_3fhl.table))
 
 ""
-catalog_3fhl.table[:3][["Source_Name", "RAJ2000", "DEJ2000"]]
+print(catalog_3fhl.table[:3][["Source_Name", "RAJ2000", "DEJ2000"]])
 
 
 ######################################################################
@@ -159,7 +160,7 @@ catalog_3fhl.table[:3][["Source_Name", "RAJ2000", "DEJ2000"]]
 # usage example in the following).
 #
 
-catalog_3fhl.positions[:3]
+print(catalog_3fhl.positions[:3])
 
 
 ######################################################################
@@ -179,21 +180,21 @@ catalog_3fhl.positions[:3]
 #
 
 source = catalog_4fgl[49]
-source
+print(source)
 
 ""
-source.row_index, source.name
+print(source.row_index, source.name)
 
 ""
 source = catalog_4fgl["4FGL J0010.8-2154"]
-source.row_index, source.name
+print(source.row_index, source.name)
 
 ""
-source.data["ASSOC1"]
+print(source.data["ASSOC1"])
 
 ""
 source = catalog_4fgl["PKS 0008-222"]
-source.row_index, source.name
+print(source.row_index, source.name)
 
 
 ######################################################################
@@ -207,10 +208,10 @@ source.row_index, source.name
 # information of the catalog row corresponding to the source.
 #
 
-source.data["Npred"]
+print(source.data["Npred"])
 
 ""
-source.data["GLON"], source.data["GLAT"]
+print(source.data["GLON"], source.data["GLAT"])
 
 
 ######################################################################
@@ -218,7 +219,7 @@ source.data["GLON"], source.data["GLAT"]
 # property.
 #
 
-source.position.galactic
+print(source.position.galactic)
 
 
 ######################################################################
@@ -242,10 +243,10 @@ for k, source in enumerate(catalog_3fhl):
 
 ""
 catalog_3fhl_bright = catalog_3fhl[mask_bright]
-catalog_3fhl_bright
+print(catalog_3fhl_bright)
 
 ""
-catalog_3fhl_bright.table["Source_Name"]
+print(catalog_3fhl_bright.table["Source_Name"])
 
 
 ######################################################################
@@ -284,7 +285,7 @@ source = catalog_4fgl["PKS 2155-304"]
 
 ""
 model = source.sky_model()
-model
+print(model)
 
 ""
 print(model)
@@ -296,6 +297,7 @@ print(model.spatial_model)
 print(model.spectral_model)
 
 ""
+plt.figure()
 energy_bounds = (100 * u.MeV, 100 * u.GeV)
 opts = dict(sed_type="e2dnde", yunits=u.Unit("TeV cm-2 s-1"))
 model.spectral_model.plot(energy_bounds, **opts)
@@ -310,7 +312,7 @@ model.spectral_model.plot_error(energy_bounds, **opts)
 #
 
 models_4fgl_roi = catalog_4fgl_roi.to_models()
-models_4fgl_roi
+print(models_4fgl_roi)
 
 
 ######################################################################
@@ -350,7 +352,7 @@ discarded_spatial = [
 #
 
 # here we show the 5 first elements of the table
-catalog_hgps.table_large_scale_component[:5]
+print(catalog_hgps.table_large_scale_component[:5])
 # you can also try :
 # help(catalog_hgps.large_scale_component)
 
@@ -367,12 +369,13 @@ source = catalog_4fgl["PKS 2155-304"]
 flux_points = source.flux_points
 
 ""
-flux_points
+print(flux_points)
 
 ""
-flux_points.to_table(sed_type="flux")
+print(flux_points.to_table(sed_type="flux"))
 
 ""
+plt.figure()
 flux_points.plot(sed_type="e2dnde")
 
 
@@ -388,12 +391,13 @@ flux_points.plot(sed_type="e2dnde")
 lightcurve = catalog_4fgl["4FGL J0349.8-2103"].lightcurve()
 
 ""
-lightcurve
+print(lightcurve)
 
 ""
-lightcurve.to_table(format="lightcurve", sed_type="flux")
+print(lightcurve.to_table(format="lightcurve", sed_type="flux"))
 
 ""
+plt.figure()
 lightcurve.plot()
 
 

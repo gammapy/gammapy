@@ -206,7 +206,7 @@ for idx in range(n_obs):
 # quick look into our datasets.
 #
 
-datasets.info_table()
+print(datasets.info_table())
 
 
 ######################################################################
@@ -237,6 +237,7 @@ lc_maker_1d = LightCurveEstimator(
 )
 lc_1d = lc_maker_1d.run(datasets)
 
+plt.figure()
 ax = lc_1d.plot(marker="o", axis_name="time", sed_type="flux")
 
 
@@ -301,6 +302,7 @@ result = fit.run(datasets=datasets)
 # temporal model in relative units for one particular energy range
 #
 
+plt.figure()
 lc_1TeV_10TeV = lc_1d.slice_by_idx({"energy": slice(2, 3)})
 ax = lc_1TeV_10TeV.plot(sed_type="norm", axis_name="time")
 
@@ -335,7 +337,7 @@ model2 = SkyModel(
     name="model-test2",
 )
 
-model2.parameters.to_table()
+print(model2.parameters.to_table())
 
 datasets.models = model2
 
@@ -344,7 +346,7 @@ datasets.models = model2
 fit = Fit()
 result = fit.run(datasets=datasets)
 
-result.parameters.to_table()
+print(result.parameters.to_table())
 
 
 ######################################################################

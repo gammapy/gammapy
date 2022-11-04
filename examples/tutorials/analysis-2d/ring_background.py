@@ -235,9 +235,9 @@ significance_map = lima_maps["sqrt_ts"]
 excess_map = lima_maps["npred_excess"]
 
 # We can plot the excess and significance maps
-plt.figure(figsize=(10, 10))
-ax1 = plt.subplot(221, projection=significance_map.geom.wcs)
-ax2 = plt.subplot(222, projection=excess_map.geom.wcs)
+plt.figure(figsize=(10, 5))
+ax1 = plt.subplot(121, projection=significance_map.geom.wcs)
+ax2 = plt.subplot(122, projection=excess_map.geom.wcs)
 
 ax1.set_title("Significance map")
 significance_map.plot(ax=ax1, add_cbar=True)
@@ -259,6 +259,7 @@ significance_map_off = significance_map * exclusion_mask
 significance_all = significance_map.data[np.isfinite(significance_map.data)]
 significance_off = significance_map_off.data[np.isfinite(significance_map_off.data)]
 
+plt.figure()
 plt.hist(
     significance_all,
     density=True,

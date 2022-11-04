@@ -116,6 +116,7 @@ print(model_simu)
 # we set the sky model used in the dataset
 model = SkyModel(spectral_model=model_simu, name="source")
 
+######################################################################
 # Load the IRFs
 # In this simulation, we use the CTA-1DC irfs shipped with gammapy.
 irfs = load_cta_irfs(
@@ -130,6 +131,10 @@ obs = Observation.create(
     location=location,
 )
 print(obs)
+
+######################################################################
+# Simulate a spectra
+#
 
 # Make the SpectrumDataset
 geom = RegionGeom.create(region=on_region, axes=[energy_axis])
@@ -185,7 +190,7 @@ for idx in range(n_obs):
     datasets.append(dataset_fake)
 
 table = datasets.info_table()
-table
+print(table)
 
 
 ######################################################################
@@ -227,9 +232,11 @@ for dataset in datasets:
 # very well with the spectrum that we initially injected.
 #
 
+plt.figure()
 index = np.array([_["index"] for _ in results])
 plt.hist(index, bins=10, alpha=0.5)
 plt.axvline(x=model_simu.parameters["index"].value, color="red")
+plt.xlabel("Reconstructed spectral index")
 print(f"index: {index.mean()} += {index.std()}")
 
 
