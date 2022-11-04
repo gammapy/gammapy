@@ -6,10 +6,19 @@ import astropy.units as u
 from astropy.convolution import Box2DKernel, Gaussian2DKernel
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
+from astropy.time import Time
 from regions import CircleSkyRegion, PointSkyRegion, RectangleSkyRegion
 from gammapy.datasets.map import MapEvaluator
 from gammapy.irf import PSFKernel, PSFMap
-from gammapy.maps import Map, MapAxis, MapCoord, WcsGeom, WcsNDMap
+from gammapy.maps import (
+    LabelMapAxis,
+    Map,
+    MapAxis,
+    MapCoord,
+    TimeMapAxis,
+    WcsGeom,
+    WcsNDMap,
+)
 from gammapy.modeling.models import (
     GaussianSpatialModel,
     PowerLawSpectralModel,
@@ -608,6 +617,28 @@ def test_plot():
 def test_plot_grid():
     axis = MapAxis([0, 1, 2], node_type="edges")
     m = WcsNDMap.create(binsz=0.1 * u.deg, width=1 * u.deg, axes=[axis])
+    with mpl_plot_check():
+        m.plot_grid()
+
+
+def test_plot_grid_label_axis():
+    axis = LabelMapAxis(labels=["d1", "d2"], name="dataset")
+
+    m = WcsNDMap.create(width="5 deg", axes=[axis])
+
+    with mpl_plot_check():
+        m.plot_grid()
+
+
+def test_plot_grid_time_axis():
+    time_axis = TimeMapAxis(
+        edges_min=[1, 10] * u.day,
+        edges_max=[2, 13] * u.day,
+        reference_time=Time("2020-03-19"),
+    )
+
+    m = WcsNDMap.create(width="5 deg", axes=[time_axis])
+
     with mpl_plot_check():
         m.plot_grid()
 
