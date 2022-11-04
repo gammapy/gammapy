@@ -89,7 +89,7 @@ print(events_vela)
 phases = events_vela.table["PHASE"]
 
 # Let's take a look at the first 10 phases
-phases[:10]
+print(phases[:10])
 
 
 ######################################################################
@@ -113,6 +113,7 @@ bin_center = (bin_edges[:-1] + bin_edges[1:]) / 2
 # Poissonian uncertainty on each bin
 values_err = np.sqrt(values)
 
+plt.figure()
 plt.bar(
     x=bin_center,
     height=values,
@@ -149,6 +150,7 @@ bkg = count_bkg / nbins / (off_phase_range[1] - off_phase_range[0])
 bkg_err = np.sqrt(count_bkg) / nbins / (off_phase_range[1] - off_phase_range[0])
 
 # Let's redo the same plot for the basis
+plt.figure()
 plt.bar(
     x=bin_center,
     height=values,
@@ -234,6 +236,7 @@ alpha = (on_phase_range[1] - on_phase_range[0]) / (
 excess_map = on_map - off_map * alpha
 
 # Plot excess map
+plt.figure()
 excess_map.smooth(kernel="gauss", width=0.2 * u.deg).plot(add_cbar=True)
 
 
@@ -277,6 +280,7 @@ for obs in obs_list_vela:
 # Now let’s a look at the datasets we just created:
 #
 
+plt.figure()
 datasets[0].peek()
 
 
@@ -336,6 +340,7 @@ flux_points_dataset = FluxPointsDataset(data=flux_points, models=model)
 # Now we can plot.
 #
 
+plt.figure()
 ax_spectrum, ax_residuals = flux_points_dataset.plot_fit()
 
 ax_spectrum.set_ylim([1e-14, 3e-11])

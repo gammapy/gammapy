@@ -66,6 +66,7 @@ import logging
 import numpy as np
 
 # %matplotlib inline
+import matplotlib.pyplot as plt
 import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from astropy.time import Time
@@ -294,5 +295,5 @@ lc_1d = lc_maker_1d.run(datasets)
 ######################################################################
 # Finally we plot the result for the 1D lightcurve:
 #
-
+plt.figure()
 lc_1d.plot(marker="o")
