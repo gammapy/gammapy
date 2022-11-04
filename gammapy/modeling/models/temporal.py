@@ -8,11 +8,11 @@ from astropy.table import Table
 from astropy.time import Time
 from astropy.utils import lazyproperty
 from gammapy.maps import MapAxis, RegionNDMap, TimeMapAxis
-from gammapy.modeling import Parameter, Parameters
+from gammapy.modeling import Parameter
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.scripts import make_path
 from gammapy.utils.time import time_ref_from_dict
-from .core import ModelBase
+from .core import ModelBase, _build_parameters_from_dict
 
 __all__ = [
     "ConstantTemporalModel",
@@ -919,11 +919,11 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
 
     @classmethod
     def from_dict(cls, data):
-        params = Parameters.from_dict(data["temporal"]["parameters"])
-        kwargs = {}
-        for param in params:
-            kwargs[param.name] = param
+        params = _build_parameters_from_dict(
+            data["temporal"]["parameters"], cls.default_parameters
+        )
         filename = data["temporal"]["filename"]
+        kwargs = {par.name: par for par in params}
         return cls.read(filename, **kwargs)
 
     def to_dict(self, full_output=False):
