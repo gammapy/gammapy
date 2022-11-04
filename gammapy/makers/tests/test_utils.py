@@ -184,7 +184,7 @@ def test_map_background_2d(bkg_2d, fixed_pointing_info):
         geom=geom,
     )
 
-    assert_allclose(bkg.data[:, 1, 1], [1.80822, 0.183287], rtol=1e-5)
+    assert_allclose(bkg.data[:, 1, 1], [1.869025, 0.186903], rtol=1e-5)
 
     # Check that function works also passing the FixedPointingInfo
     bkg_fpi = make_map_background_irf(
