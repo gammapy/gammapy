@@ -237,7 +237,7 @@ for obs in observations:
     # Append dataset to the list
     datasets.append(dataset)
 
-datasets.meta_table
+print(datasets.meta_table)
 
 
 ######################################################################
@@ -261,7 +261,7 @@ datasets[0].peek()
 
 info_table = datasets.info_table(cumulative=True)
 
-info_table
+print(info_table)
 
 fig = plt.figure(figsize=(10, 6))
 ax = fig.add_subplot(121)
@@ -321,7 +321,7 @@ print(result_joint)
 # First the fitted parameters values and their errors.
 #
 
-datasets.models.to_parameters_table()
+print(datasets.models.to_parameters_table())
 
 
 ######################################################################

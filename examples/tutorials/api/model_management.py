@@ -114,7 +114,13 @@ datasets[1].counts.sum_over_axes().smooth(0.05 * u.deg).plot(
 ax1.set_title("Fermi counts")
 ax2.set_title("CTA counts")
 
-datasets.info_table(cumulative=False)
+######################################################################
+#
+
+print(datasets.info_table(cumulative=False))
+
+######################################################################
+#
 
 print(datasets)
 
@@ -245,7 +251,7 @@ gc_sep = catalog.positions.separation(SkyCoord(0, 0, unit="deg", frame="galactic
 models_3fhl = [_.sky_model() for k, _ in enumerate(catalog) if gc_sep[k].value < 8]
 models_3fhl = Models(models_3fhl)
 
-len(models_3fhl)
+print(len(models_3fhl))
 
 
 ######################################################################
@@ -263,7 +269,7 @@ region = CircleSkyRegion(
 )
 
 models_selected = models_3fhl.select_region(region)
-len(models_selected)
+print(len(models_selected))
 
 
 ######################################################################
@@ -371,7 +377,7 @@ datasets.models = models_3fhl
 # To see the models applied on a dataset, you can simply
 #
 
-datasets.models.names
+print(datasets.models.names)
 
 
 ######################################################################
@@ -437,9 +443,9 @@ print(model)
 # To check if all the parameters of a model are frozen,
 #
 
-model.frozen  # False because spectral components are not frozen
+print(model.frozen)  # False because spectral components are not frozen
 
-model.spatial_model.frozen  # all spatial components are frozen
+print(model.spatial_model.frozen)  # all spatial components are frozen
 
 
 ######################################################################
@@ -452,7 +458,7 @@ models_selected.freeze()  # freeze all parameters of all models
 models_selected.unfreeze()  # unfreeze all parameters of all models
 
 # print the free parameters in the models
-models_selected.parameters.free_parameters.names
+print(models_selected.parameters.free_parameters.names)
 
 
 ######################################################################

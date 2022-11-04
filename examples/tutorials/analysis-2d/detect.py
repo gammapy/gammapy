@@ -164,14 +164,15 @@ maps = estimator.run(dataset)
 #
 
 plt.figure(figsize=(15, 5))
-maps["sqrt_ts"].plot(add_cbar=True)
-
-plt.figure(figsize=(15, 5))
-maps["flux"].plot(add_cbar=True, stretch="sqrt", vmin=0)
-
-plt.figure(figsize=(15, 5))
-maps["niter"].plot(add_cbar=True)
-
+ax1 = plt.subplot(131, projection=counts.geom.wcs)
+ax2 = plt.subplot(132, projection=counts.geom.wcs)
+ax3 = plt.subplot(133, projection=counts.geom.wcs)
+maps["sqrt_ts"].plot(ax=ax1, add_cbar=True)
+ax1.set_title("Significance map")
+maps["flux"].plot(ax=ax2, add_cbar=True, stretch="sqrt", vmin=0)
+ax2.set_title("Flux map")
+maps["niter"].plot(ax=ax3, add_cbar=True)
+ax3.set_title("Iteration map")
 
 ######################################################################
 # Source candidates
@@ -186,7 +187,7 @@ maps["niter"].plot(add_cbar=True)
 
 sources = find_peaks(maps["sqrt_ts"], threshold=5, min_distance="0.25 deg")
 nsou = len(sources)
-sources
+print(sources)
 
 # Plot sources on top of significance sky image
 plt.figure(figsize=(15, 5))

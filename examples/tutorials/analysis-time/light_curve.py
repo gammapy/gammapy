@@ -212,11 +212,12 @@ lc_3d = lc_maker_3d.run(analysis_3d.datasets)
 
 # Example showing how to change just before plotting the threshold on the signal significance
 # (points vs upper limits), even if this has no effect with this data set.
+plt.figure()
 lc_3d.sqrt_ts_threshold_ul = 5
 lc_3d.plot(axis_name="time")
 
 table = lc_3d.to_table(format="lightcurve", sed_type="flux")
-table["time_min", "time_max", "e_min", "e_max", "flux", "flux_err"]
+print(table["time_min", "time_max", "e_min", "e_max", "flux", "flux_err"])
 
 
 ######################################################################
@@ -316,9 +317,9 @@ lc_maker_1d = LightCurveEstimator(
 )
 lc_1d = lc_maker_1d.run(analysis_1d.datasets)
 
-lc_1d.geom.axes.names
+print(lc_1d.geom.axes.names)
 
-lc_1d.to_table(sed_type="flux", format="lightcurve")
+print(lc_1d.to_table(sed_type="flux", format="lightcurve"))
 
 
 ######################################################################
@@ -329,6 +330,7 @@ lc_1d.to_table(sed_type="flux", format="lightcurve")
 # figure:
 #
 
+plt.figure()
 ax = lc_1d.plot(marker="o", label="1D")
 lc_3d.plot(ax=ax, marker="o", label="3D")
 plt.legend()
@@ -367,6 +369,7 @@ lc_maker_1d = LightCurveEstimator(
 
 nightwise_lc = lc_maker_1d.run(analysis_1d.datasets)
 
+plt.figure()
 nightwise_lc.plot(color="tab:orange")
 ax = nightwise_lc.plot_ts_profiles()
 ax.set_ylim(1e-12, 3e-12)

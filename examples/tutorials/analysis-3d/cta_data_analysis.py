@@ -93,7 +93,7 @@ obs_id = [110380, 111140, 111159]
 observations = data_store.get_observations(obs_id)
 
 obs_cols = ["OBS_ID", "GLON_PNT", "GLAT_PNT", "LIVETIME"]
-data_store.obs_table.select_obs_id(obs_id)[obs_cols]
+print(data_store.obs_table.select_obs_id(obs_id)[obs_cols])
 
 
 ######################################################################
@@ -113,7 +113,7 @@ axis = MapAxis.from_edges(
 geom = WcsGeom.create(
     skydir=(0, 0), npix=(500, 400), binsz=0.02, frame="galactic", axes=[axis]
 )
-geom
+print(geom)
 
 
 ######################################################################
@@ -133,10 +133,13 @@ for obs in observations:
     dataset = maker_safe_mask.run(dataset, obs)
     stacked.stack(dataset)
 
+#
 # The maps are cubes, with an energy axis.
 # Let's also make some images:
-dataset_image = stacked.to_image()
+#
 
+dataset_image = stacked.to_image()
+geom_image = dataset_image.geoms["geom"]
 
 ######################################################################
 # Show images
@@ -145,11 +148,19 @@ dataset_image = stacked.to_image()
 # Let’s have a quick look at the images we computed …
 #
 
-dataset_image.counts.smooth(2).plot(vmax=5)
+plt.figure(figsize=(15, 5))
+ax1 = plt.subplot(131, projection=geom_image.wcs)
+ax2 = plt.subplot(132, projection=geom_image.wcs)
+ax3 = plt.subplot(133, projection=geom_image.wcs)
 
-dataset_image.background.plot(vmax=5)
+ax1.set_title("Counts map")
+dataset_image.counts.smooth(2).plot(ax=ax1, vmax=5)
 
-dataset_image.excess.smooth(3).plot(vmax=2)
+ax2.set_title("Background map")
+dataset_image.background.plot(ax=ax2, vmax=5)
+
+ax3.set_title("Excess map")
+dataset_image.excess.smooth(3).plot(ax=ax3, vmax=2)
 
 
 ######################################################################
@@ -182,12 +193,18 @@ sources = find_peaks(
     threshold=5,
     min_distance="0.2 deg",
 )
-sources
+print(sources)
 
+######################################################################
+# To get the position of the sources, simply
+#
 source_pos = SkyCoord(sources["ra"], sources["dec"])
-source_pos
+print(source_pos)
 
+######################################################################
 # Plot sources on top of significance sky image
+#
+plt.figure()
 images_ts["sqrt_ts"].plot(add_cbar=True)
 
 plt.gca().scatter(
@@ -222,7 +239,7 @@ plt.gca().scatter(
 target_position = SkyCoord(0, 0, unit="deg", frame="galactic")
 on_radius = 0.2 * u.deg
 on_region = CircleSkyRegion(center=target_position, radius=on_radius)
-
+plt.figure()
 exclusion_mask = ~geom.to_image().region_mask([on_region])
 exclusion_mask.plot()
 
@@ -313,7 +330,7 @@ flux_points.to_table(sed_type="dnde", formatted=True)
 #
 
 flux_points_dataset = FluxPointsDataset(data=flux_points, models=model)
-
+plt.figure()
 flux_points_dataset.plot_fit()
 
 

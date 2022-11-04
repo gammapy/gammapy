@@ -257,6 +257,7 @@ print(result_minuit.models.covariance)
 # And you can plot the total parameter correlation as well:
 #
 
+plt.figure()
 result_minuit.models.covariance.plot_correlation()
 
 # The covariance information is also propagated to the individual models
@@ -272,6 +273,7 @@ print(crab_model.spectral_model.alpha.error)
 # the envelope of the model taking into account parameter uncertainties.
 #
 
+plt.figure()
 energy_bounds = [1, 10] * u.TeV
 crab_spectrum.plot(energy_bounds=energy_bounds, energy_power=2)
 ax = crab_spectrum.plot_error(energy_bounds=energy_bounds, energy_power=2)
