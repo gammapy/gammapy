@@ -38,7 +38,7 @@ class MapDatasetMaker(Maker):
     background_pad_offset: bool
         Pad one bin in offset for 2d background map.
         This avoid extrapolation at edges and use the nearest value.
-        Default is True, have to be set to True for HESS IRF.
+        Default is True.
 
     Examples
     --------
