@@ -23,19 +23,20 @@ We will be using the following Gammapy class:
 """
 
 
-######################################################################
-# Setup
-# -----
-#
-# As usual, we’ll start with some setup …
-#
-
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 
 # %matplotlib inline
 import matplotlib.pyplot as plt
+
+######################################################################
+# Setup
+# -----
+#
+# As usual, we’ll start with some setup …
+#
+from IPython.display import display
 from gammapy.data import Observation, observatory_locations
 from gammapy.datasets import SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.estimators import SensitivityEstimator
@@ -143,7 +144,7 @@ sensitivity_table = sensitivity_estimator.run(dataset_on_off)
 #
 
 # Show the results table
-print(sensitivity_table)
+display(sensitivity_table)
 
 # Save it to file (could use e.g. format of CSV or ECSV or FITS)
 # sensitivity_table.write('sensitivity.ecsv', format='ascii.ecsv')
@@ -152,7 +153,9 @@ print(sensitivity_table)
 t = sensitivity_table
 
 is_s = t["criterion"] == "significance"
-plt.plot(
+
+fig, ax = plt.subplots()
+ax.plot(
     t["energy"][is_s],
     t["e2dnde"][is_s],
     "s-",
@@ -161,9 +164,9 @@ plt.plot(
 )
 
 is_g = t["criterion"] == "gamma"
-plt.plot(t["energy"][is_g], t["e2dnde"][is_g], "*-", color="blue", label="gamma")
+ax.plot(t["energy"][is_g], t["e2dnde"][is_g], "*-", color="blue", label="gamma")
 is_bkg_syst = t["criterion"] == "bkg"
-plt.plot(
+ax.plot(
     t["energy"][is_bkg_syst],
     t["e2dnde"][is_bkg_syst],
     "v-",
@@ -171,10 +174,10 @@ plt.plot(
     label="bkg syst",
 )
 
-plt.loglog()
-plt.xlabel(f"Energy ({t['energy'].unit})")
-plt.ylabel(f"Sensitivity ({t['e2dnde'].unit})")
-plt.legend()
+ax.loglog()
+ax.set_xlabel(f"Energy ({t['energy'].unit})")
+ax.set_ylabel(f"Sensitivity ({t['e2dnde'].unit})")
+ax.legend()
 
 
 ######################################################################
@@ -197,6 +200,7 @@ ax2.set_ylabel(f"ON region radius ({on_radii.unit})", color="red")
 ax2.semilogy(t["energy"], on_radii, color="red", label="PSF68")
 ax2.tick_params(axis="y", labelcolor="red")
 ax2.set_ylim(0.01, 0.5)
+plt.show()
 
 
 ######################################################################
