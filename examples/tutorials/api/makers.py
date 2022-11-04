@@ -19,6 +19,7 @@ Setup
 """
 
 import numpy as np
+import matplotlib.pyplot as plt
 from astropy import units as u
 from regions import CircleSkyRegion
 from gammapy.data import DataStore
@@ -101,6 +102,7 @@ obs = data_store.get_observations([23592])[0]
 maker = MapDatasetMaker()
 dataset = maker.run(dataset_empty, obs)
 print(dataset)
+plt.figure()
 dataset.counts.sum_over_axes().plot(stretch="sqrt", add_cbar=True)
 
 
@@ -153,6 +155,7 @@ safe_mask_maker = SafeMaskMaker(
 dataset = maker.run(dataset_empty, obs)
 dataset = safe_mask_maker.run(dataset, obs)
 print(dataset.mask_safe)
+plt.figure()
 dataset.mask_safe.sum_over_axes().plot()
 
 
