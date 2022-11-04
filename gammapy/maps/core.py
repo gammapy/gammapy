@@ -1260,7 +1260,7 @@ class Map(abc.ABC):
                         f"{energy_unit_format(axis.edges[idx+1])}"
                     )
                 else:
-                    info = f"{axis.edges[idx]:.1f} - {axis.edges[idx + 1]:.1f} "
+                    info = f"{axis.edges_min[idx]:.1f} - {axis.edges_max[idx]:.1f} "
             ax.set_title(f"{axis.name.capitalize()} " + info)
             lon, lat = ax.coords[0], ax.coords[1]
             lon.set_ticks_position("b")
