@@ -48,10 +48,12 @@ Further information is available at `~gammapy.catalog`.
 
 """
 
-# %matplotlib inline
-import matplotlib.pyplot as plt
 import numpy as np
 import astropy.units as u
+
+# %matplotlib inline
+import matplotlib.pyplot as plt
+from IPython.display import display
 from gammapy.catalog import CATALOG_REGISTRY
 
 ######################################################################
@@ -86,7 +88,8 @@ print(CATALOG_REGISTRY)
 
 # # # !ls -1 $GAMMAPY_DATA/catalogs
 
-""
+# %%
+
 # # # !ls -1 $GAMMAPY_DATA/catalogs/fermi
 
 
@@ -123,7 +126,7 @@ print("Number of sources :", len(catalog.table))
 catalog = CATALOG_REGISTRY.get_cls("3fgl")()
 print(catalog)
 
-""
+# %%
 # Let's load the source catalogs we will use throughout this tutorial
 catalog_gammacat = CATALOG_REGISTRY.get_cls("gamma-cat")()
 catalog_3fhl = CATALOG_REGISTRY.get_cls("3fhl")()
@@ -147,11 +150,11 @@ catalog_hgps = CATALOG_REGISTRY.get_cls("hgps")()
 
 print(type(catalog_3fhl.table))
 
-""
+# %%
 print(len(catalog_3fhl.table))
 
-""
-print(catalog_3fhl.table[:3][["Source_Name", "RAJ2000", "DEJ2000"]])
+# %%
+display(catalog_3fhl.table[:3][["Source_Name", "RAJ2000", "DEJ2000"]])
 
 
 ######################################################################
@@ -182,17 +185,17 @@ print(catalog_3fhl.positions[:3])
 source = catalog_4fgl[49]
 print(source)
 
-""
+# %%
 print(source.row_index, source.name)
 
-""
+# %%
 source = catalog_4fgl["4FGL J0010.8-2154"]
 print(source.row_index, source.name)
 
-""
+# %%
 print(source.data["ASSOC1"])
 
-""
+# %%
 source = catalog_4fgl["PKS 0008-222"]
 print(source.row_index, source.name)
 
@@ -210,7 +213,7 @@ print(source.row_index, source.name)
 
 print(source.data["Npred"])
 
-""
+# %%
 print(source.data["GLON"], source.data["GLAT"])
 
 
@@ -241,11 +244,11 @@ for k, source in enumerate(catalog_3fhl):
         mask_bright[k] = True
         print(f"{source.row_index:<7d} {source.name:20s} {flux:.3g}")
 
-""
+# %%
 catalog_3fhl_bright = catalog_3fhl[mask_bright]
 print(catalog_3fhl_bright)
 
-""
+# %%
 print(catalog_3fhl_bright.table["Source_Name"])
 
 
@@ -258,7 +261,6 @@ print(catalog_3fhl_bright.table["Source_Name"])
 source = catalog_4fgl["PKS 0008-222"]
 mask_roi = source.position.separation(catalog_4fgl.positions) < 5 * u.deg
 
-""
 catalog_4fgl_roi = catalog_4fgl[mask_roi]
 print("Number of sources :", len(catalog_4fgl_roi.table))
 
@@ -283,20 +285,19 @@ print("Number of sources :", len(catalog_4fgl_roi.table))
 
 source = catalog_4fgl["PKS 2155-304"]
 
-""
 model = source.sky_model()
 print(model)
 
-""
+# %%
 print(model)
 
-""
+# %%
 print(model.spatial_model)
 
-""
+# %%
 print(model.spectral_model)
 
-""
+# %%
 plt.figure()
 energy_bounds = (100 * u.MeV, 100 * u.GeV)
 opts = dict(sed_type="e2dnde", yunits=u.Unit("TeV cm-2 s-1"))
@@ -352,7 +353,7 @@ discarded_spatial = [
 #
 
 # here we show the 5 first elements of the table
-print(catalog_hgps.table_large_scale_component[:5])
+display(catalog_hgps.table_large_scale_component[:5])
 # you can also try :
 # help(catalog_hgps.large_scale_component)
 
@@ -368,13 +369,13 @@ print(catalog_hgps.table_large_scale_component[:5])
 source = catalog_4fgl["PKS 2155-304"]
 flux_points = source.flux_points
 
-""
+
 print(flux_points)
 
-""
-print(flux_points.to_table(sed_type="flux"))
+# %%
+display(flux_points.to_table(sed_type="flux"))
 
-""
+# %%
 plt.figure()
 flux_points.plot(sed_type="e2dnde")
 
@@ -390,13 +391,12 @@ flux_points.plot(sed_type="e2dnde")
 
 lightcurve = catalog_4fgl["4FGL J0349.8-2103"].lightcurve()
 
-""
 print(lightcurve)
 
-""
-print(lightcurve.to_table(format="lightcurve", sed_type="flux"))
+# %%
+display(lightcurve.to_table(format="lightcurve", sed_type="flux"))
 
-""
+# %%
 plt.figure()
 lightcurve.plot()
 
@@ -420,7 +420,8 @@ print(source)
 
 help(source.info)
 
-""
+# %%
 print(source.info("associations"))
 
-""
+# %%
+plt.show()

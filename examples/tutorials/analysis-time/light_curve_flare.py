@@ -64,13 +64,13 @@ As usual, we’ll start with some general imports…
 
 import logging
 import numpy as np
-
-# %matplotlib inline
-import matplotlib.pyplot as plt
 import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from astropy.time import Time
 from regions import CircleSkyRegion
+
+# %matplotlib inline
+import matplotlib.pyplot as plt
 
 log = logging.getLogger(__name__)
 
@@ -295,5 +295,6 @@ lc_1d = lc_maker_1d.run(datasets)
 ######################################################################
 # Finally we plot the result for the 1D lightcurve:
 #
-plt.figure()
+plt.figure(figsize=(8, 6))
 lc_1d.plot(marker="o")
+plt.show()

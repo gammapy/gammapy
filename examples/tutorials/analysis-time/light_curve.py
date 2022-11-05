@@ -58,6 +58,7 @@ from astropy.time import Time
 
 # %matplotlib inline
 import matplotlib.pyplot as plt
+from IPython.display import display
 from gammapy.analysis import Analysis, AnalysisConfig
 from gammapy.estimators import LightCurveEstimator
 from gammapy.modeling.models import (
@@ -212,12 +213,15 @@ lc_3d = lc_maker_3d.run(analysis_3d.datasets)
 
 # Example showing how to change just before plotting the threshold on the signal significance
 # (points vs upper limits), even if this has no effect with this data set.
-plt.figure()
+fig, ax = plt.subplots(
+    figsize=(8, 6),
+    gridspec_kw={"left": 0.16, "bottom": 0.2, "top": 0.98, "right": 0.98},
+)
 lc_3d.sqrt_ts_threshold_ul = 5
-lc_3d.plot(axis_name="time")
+lc_3d.plot(ax=ax, axis_name="time")
 
 table = lc_3d.to_table(format="lightcurve", sed_type="flux")
-print(table["time_min", "time_max", "e_min", "e_max", "flux", "flux_err"])
+display(table["time_min", "time_max", "e_min", "e_max", "flux", "flux_err"])
 
 
 ######################################################################
@@ -319,7 +323,7 @@ lc_1d = lc_maker_1d.run(analysis_1d.datasets)
 
 print(lc_1d.geom.axes.names)
 
-print(lc_1d.to_table(sed_type="flux", format="lightcurve"))
+display(lc_1d.to_table(sed_type="flux", format="lightcurve"))
 
 
 ######################################################################
@@ -330,8 +334,11 @@ print(lc_1d.to_table(sed_type="flux", format="lightcurve"))
 # figure:
 #
 
-plt.figure()
-ax = lc_1d.plot(marker="o", label="1D")
+fig, ax = plt.subplots(
+    figsize=(8, 6),
+    gridspec_kw={"left": 0.16, "bottom": 0.2, "top": 0.98, "right": 0.98},
+)
+lc_1d.plot(ax=ax, marker="o", label="1D")
 lc_3d.plot(ax=ax, marker="o", label="3D")
 plt.legend()
 
@@ -369,11 +376,15 @@ lc_maker_1d = LightCurveEstimator(
 
 nightwise_lc = lc_maker_1d.run(analysis_1d.datasets)
 
-plt.figure()
-nightwise_lc.plot(color="tab:orange")
-ax = nightwise_lc.plot_ts_profiles()
+fig, ax = plt.subplots(
+    figsize=(8, 6),
+    gridspec_kw={"left": 0.16, "bottom": 0.2, "top": 0.98, "right": 0.98},
+)
+nightwise_lc.plot(ax=ax, color="tab:orange")
+nightwise_lc.plot_ts_profiles(ax=ax)
 ax.set_ylim(1e-12, 3e-12)
 
+plt.show()
 
 ######################################################################
 # What next?

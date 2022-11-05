@@ -54,6 +54,7 @@ import astropy.units as u
 
 # %matplotlib inline
 import matplotlib.pyplot as plt
+from IPython.display import display
 from gammapy.datasets import MapDataset
 from gammapy.estimators import ASmoothMapEstimator, TSMapEstimator
 from gammapy.estimators.utils import find_peaks
@@ -121,7 +122,7 @@ scales = u.Quantity(np.arange(0.05, 1, 0.05), unit="deg")
 smooth = ASmoothMapEstimator(threshold=3, scales=scales, energy_edges=[10, 500] * u.GeV)
 images = smooth.run(dataset)
 
-plt.figure(figsize=(15, 5))
+plt.figure(figsize=(9, 5))
 images["flux"].plot(add_cbar=True, stretch="asinh")
 
 
@@ -163,10 +164,13 @@ maps = estimator.run(dataset)
 # ~~~~~~~~~~~~~~~~~~~~~
 #
 
-plt.figure(figsize=(15, 5))
-ax1 = plt.subplot(131, projection=counts.geom.wcs)
-ax2 = plt.subplot(132, projection=counts.geom.wcs)
-ax3 = plt.subplot(133, projection=counts.geom.wcs)
+fig, (ax1, ax2, ax3) = plt.subplots(
+    ncols=3,
+    figsize=(15, 3),
+    subplot_kw={"projection": counts.geom.wcs},
+    gridspec_kw={"left": 0.1, "right": 0.98},
+)
+
 maps["sqrt_ts"].plot(ax=ax1, add_cbar=True)
 ax1.set_title("Significance map")
 maps["flux"].plot(ax=ax2, add_cbar=True, stretch="sqrt", vmin=0)
@@ -187,11 +191,10 @@ ax3.set_title("Iteration map")
 
 sources = find_peaks(maps["sqrt_ts"], threshold=5, min_distance="0.25 deg")
 nsou = len(sources)
-print(sources)
+display(sources)
 
 # Plot sources on top of significance sky image
-plt.figure(figsize=(15, 5))
-
+plt.figure(figsize=(9, 5))
 ax = maps["sqrt_ts"].plot(add_cbar=True)
 
 ax.scatter(
@@ -204,6 +207,7 @@ ax.scatter(
     s=600,
     lw=1.5,
 )
+plt.show()
 
 
 ######################################################################

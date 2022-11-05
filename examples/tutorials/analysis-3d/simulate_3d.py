@@ -54,12 +54,13 @@ the dataset and fake the count data.
 # --------------------
 #
 
-# %matplotlib inline
-
 import numpy as np
 import astropy.units as u
-import matplotlib.pyplot as plt
 from astropy.coordinates import SkyCoord
+import matplotlib.pyplot as plt
+
+# %matplotlib inline
+from IPython.display import display
 from gammapy.data import Observation, observatory_locations
 from gammapy.datasets import MapDataset
 from gammapy.irf import load_cta_irfs
@@ -219,4 +220,6 @@ print(
 # Get the errors on the fitted parameters from the parameter table
 #
 
-print(result.parameters.to_table())
+display(result.parameters.to_table())
+
+plt.show()

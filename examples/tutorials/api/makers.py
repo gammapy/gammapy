@@ -19,9 +19,10 @@ Setup
 """
 
 import numpy as np
-import matplotlib.pyplot as plt
 from astropy import units as u
 from regions import CircleSkyRegion
+import matplotlib.pyplot as plt
+from IPython.display import display
 from gammapy.data import DataStore
 from gammapy.datasets import Datasets, MapDataset, SpectrumDataset
 from gammapy.makers import (
@@ -337,3 +338,5 @@ for observation in observations:
     dataset_on_off = safe_mask_masker.run(dataset_on_off, observation)
     datasets.append(dataset_on_off)
 print(datasets)
+
+plt.show()

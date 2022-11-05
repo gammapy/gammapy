@@ -47,11 +47,6 @@ We will use the following classes:
 """
 
 
-######################################################################
-# Setup
-# -----
-#
-
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
@@ -59,6 +54,12 @@ from regions import CircleSkyRegion
 
 # %matplotlib inline
 import matplotlib.pyplot as plt
+
+######################################################################
+# Setup
+# -----
+#
+from IPython.display import display
 from gammapy.data import Observation, observatory_locations
 from gammapy.datasets import Datasets, SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.irf import load_cta_irfs
@@ -190,7 +191,7 @@ for idx in range(n_obs):
     datasets.append(dataset_fake)
 
 table = datasets.info_table()
-print(table)
+display(table)
 
 
 ######################################################################
@@ -232,12 +233,13 @@ for dataset in datasets:
 # very well with the spectrum that we initially injected.
 #
 
-plt.figure()
+fig, ax = plt.subplots()
 index = np.array([_["index"] for _ in results])
-plt.hist(index, bins=10, alpha=0.5)
-plt.axvline(x=model_simu.parameters["index"].value, color="red")
-plt.xlabel("Reconstructed spectral index")
+ax.hist(index, bins=10, alpha=0.5)
+ax.axvline(x=model_simu.parameters["index"].value, color="red")
+ax.set_xlabel("Reconstructed spectral index")
 print(f"index: {index.mean()} += {index.std()}")
+plt.show()
 
 
 ######################################################################

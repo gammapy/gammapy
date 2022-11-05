@@ -57,9 +57,10 @@ Setup
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
+import matplotlib.pyplot as plt
 
 # %matplotlib inline
-import matplotlib.pyplot as plt
+from IPython.display import display
 from gammapy.datasets import Datasets, MapDataset
 from gammapy.maps import Map
 from gammapy.modeling.models import (
@@ -117,7 +118,7 @@ ax2.set_title("CTA counts")
 ######################################################################
 #
 
-print(datasets.info_table(cumulative=False))
+display(datasets.info_table(cumulative=False))
 
 ######################################################################
 #
@@ -400,6 +401,7 @@ for ax, dataset in zip([ax1, ax2], datasets):
     dataset.models.plot_regions(ax=ax, color="white")
     ax.set_title(dataset.name)
 
+plt.show()
 
 ######################################################################
 # Freezing and unfreezing model parameters
