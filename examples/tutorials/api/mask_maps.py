@@ -195,7 +195,6 @@ dataset.mask_fit &= mask_map
 # Let’s check the result and plot the full mask.
 #
 
-plt.figure()
 _ = dataset.mask_fit.plot_grid(ncols=5, vmin=0, vmax=1, figsize=(14, 3))
 
 
@@ -457,6 +456,7 @@ dataset.mask_fit = mask_fit
 plt.figure()
 dataset.mask_fit.sum_over_axes().plot()
 
+plt.show()
 
 ######################################################################
 # Reading and writing masks
