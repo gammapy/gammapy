@@ -315,7 +315,7 @@ sphinx_gallery_conf = {
     "reset_modules": ("matplotlib",),
     "within_subsection_order": FileNameSortKey,
     "download_all_examples": True,
-    "capture_repr": (),
+    "capture_repr": ("_repr_html_", "__repr__"),
     "nested_sections": False,
     "min_reported_time": 10,
     "show_memory": False,

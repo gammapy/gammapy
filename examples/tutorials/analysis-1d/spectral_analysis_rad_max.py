@@ -100,19 +100,20 @@ a 1D likelihood fit, exactly as illustrated in the previous example.
 
 """
 
-######################################################################
-# Setup
-# -----
-#
-# As usual, we’ll start with some setup …
-#
-
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import PointSkyRegion
 
 # %matplotlib inline
 import matplotlib.pyplot as plt
+
+######################################################################
+# Setup
+# -----
+#
+# As usual, we’ll start with some setup …
+#
+from IPython.display import display
 from gammapy.data import DataStore
 from gammapy.datasets import Datasets, SpectrumDataset
 from gammapy.makers import (
@@ -165,8 +166,8 @@ print(rad_max)
 # We can also plot the rad max value against the energy:
 #
 
-plt.figure()
-ax = rad_max.plot_rad_max_vs_energy()
+fig, ax = plt.subplots()
+rad_max.plot_rad_max_vs_energy(ax=ax)
 
 
 ######################################################################
@@ -302,14 +303,13 @@ print(result)
 # and check the best-fit parameters
 #
 
-print(datasets.models.to_parameters_table())
+display(datasets.models.to_parameters_table())
 
 
 ######################################################################
 # A simple way to inspect the model residuals is using the function
 # `~SpectrumDataset.plot_fit()`
 #
-plt.figure()
 ax_spectrum, ax_residuals = datasets[0].plot_fit()
 ax_spectrum.set_ylim(0.1, 120)
 
@@ -328,12 +328,13 @@ ax_spectrum.set_ylim(0.1, 120)
 # by
 # MAGIC <https://ui.adsabs.harvard.edu/abs/2015JHEAp...5...30A/abstract>`__.
 #
-plt.figure()
+fig, ax = plt.subplots()
 plot_kwargs = {
     "energy_bounds": [0.08, 20] * u.TeV,
     "sed_type": "e2dnde",
     "yunits": u.Unit("TeV cm-2 s-1"),
     "xunits": u.GeV,
+    "ax": ax,
 }
 
 crab_magic_lp = create_crab_spectral_model("magic_lp")
@@ -344,5 +345,6 @@ best_fit_model.spectral_model.plot(
 best_fit_model.spectral_model.plot_error(facecolor="crimson", alpha=0.4, **plot_kwargs)
 crab_magic_lp.plot(ls="--", lw=1.5, color="k", label="MAGIC reference", **plot_kwargs)
 
-plt.legend()
-plt.ylim([1e-13, 1e-10])
+ax.legend()
+ax.set_ylim([1e-13, 1e-10])
+plt.show()

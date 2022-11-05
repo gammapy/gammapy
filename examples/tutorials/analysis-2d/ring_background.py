@@ -235,9 +235,9 @@ significance_map = lima_maps["sqrt_ts"]
 excess_map = lima_maps["npred_excess"]
 
 # We can plot the excess and significance maps
-plt.figure(figsize=(10, 5))
-ax1 = plt.subplot(121, projection=significance_map.geom.wcs)
-ax2 = plt.subplot(122, projection=excess_map.geom.wcs)
+fig, (ax1, ax2) = plt.subplots(
+    figsize=(11, 5), subplot_kw={"projection": lima_maps.geom.wcs}, ncols=2
+)
 
 ax1.set_title("Significance map")
 significance_map.plot(ax=ax1, add_cbar=True)
@@ -259,8 +259,8 @@ significance_map_off = significance_map * exclusion_mask
 significance_all = significance_map.data[np.isfinite(significance_map.data)]
 significance_off = significance_map_off.data[np.isfinite(significance_map_off.data)]
 
-plt.figure()
-plt.hist(
+fig, ax = plt.subplots()
+ax.hist(
     significance_all,
     density=True,
     alpha=0.5,
@@ -269,7 +269,7 @@ plt.hist(
     bins=21,
 )
 
-plt.hist(
+ax.hist(
     significance_off,
     density=True,
     alpha=0.5,
@@ -282,12 +282,13 @@ plt.hist(
 mu, std = norm.fit(significance_off)
 x = np.linspace(-8, 8, 50)
 p = norm.pdf(x, mu, std)
-plt.plot(x, p, lw=2, color="black")
-plt.legend()
-plt.xlabel("Significance")
-plt.yscale("log")
-plt.ylim(1e-5, 1)
+ax.plot(x, p, lw=2, color="black")
+ax.legend()
+ax.set_xlabel("Significance")
+ax.set_yscale("log")
+ax.set_ylim(1e-5, 1)
 xmin, xmax = np.min(significance_all), np.max(significance_all)
-plt.xlim(xmin, xmax)
+ax.set_xlim(xmin, xmax)
 
 print(f"Fit results: mu = {mu:.2f}, std = {std:.2f}")
+plt.show()

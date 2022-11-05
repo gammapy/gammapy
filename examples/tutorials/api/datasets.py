@@ -25,6 +25,7 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
 import matplotlib.pyplot as plt
+from IPython.display import display
 from gammapy.data import GTI
 from gammapy.datasets import (
     Datasets,
@@ -157,7 +158,6 @@ print(dataset_cta.info_dict())
 # For a quick view, use
 #
 
-plt.figure()
 dataset_cta.peek()
 
 
@@ -183,10 +183,11 @@ print(dataset_cta.psf)
 radius = dataset_cta.psf.containment_radius(energy_true=1 * u.TeV, fraction=0.95)
 print(radius)
 
+# %%
+
 plt.figure()
-ax = plt.subplot()
 edisp_kernel = dataset_cta.edisp.get_edisp_kernel()
-edisp_kernel.plot_matrix(ax=ax)
+edisp_kernel.plot_matrix()
 
 
 ######################################################################
@@ -273,7 +274,7 @@ npred_background.sum_over_axes().plot()
 
 # eg: to see the safe data range
 
-plt.figure()
+# plt.figure()
 dataset_cta.mask_safe.plot_grid()
 
 
@@ -283,7 +284,6 @@ dataset_cta.mask_safe.plot_grid()
 
 # To apply a mask fit - in enegy and space
 
-plt.figure()
 region = CircleSkyRegion(SkyCoord("0d", "0d", frame="galactic"), 1.5 * u.deg)
 
 geom = dataset_cta.counts.geom
@@ -307,12 +307,12 @@ dataset_cta.mask_fit.plot_grid(vmin=0, vmax=1, add_cbar=True)
 
 e_min, e_max = dataset_cta.energy_range
 
-# To see the lower energy threshold at each point
+# To see the low energy threshold at each point
 
 plt.figure()
 e_min.plot(add_cbar=True)
 
-# To see the lower energy threshold at each point
+# To see the high energy threshold at each point
 
 plt.figure()
 e_max.plot(add_cbar=True)
@@ -338,7 +338,6 @@ cutout.counts.sum_over_axes().plot()
 # It is also possible to slice a `~gammapy.datasets.MapDataset` in energy:
 #
 
-plt.figure()
 sliced = dataset_cta.slice_by_energy(
     energy_min=1 * u.TeV, energy_max=5 * u.TeV, name="slice-energy"
 )
@@ -350,7 +349,6 @@ sliced.counts.plot_grid()
 # datasets such as `~gammapy.datasets.MapDataset.mask_fit`:
 #
 
-plt.figure()
 sliced.mask_fit.plot_grid()
 
 
@@ -372,7 +370,6 @@ downsampled.counts.sum_over_axes().plot()
 # And the same downsampling process is possible along the energy axis:
 #
 
-plt.figure()
 downsampled_energy = dataset_cta.downsample(
     factor=5, axis_name="energy", name="downsampled-energy"
 )
@@ -392,7 +389,6 @@ print(downsampled_energy, dataset_cta)
 # energy binning using:
 #
 
-plt.figure()
 energy_axis_new = MapAxis.from_energy_edges([0.1, 0.3, 1, 3, 10] * u.TeV)
 resampled = dataset_cta.resample_energy_axis(energy_axis=energy_axis_new)
 resampled.counts.plot_grid(ncols=2)
@@ -471,7 +467,11 @@ fp_dataset.plot_spectrum()
 
 print(fp_dataset.mask_safe)  # Note: the mask here is simply a numpy array
 
+# %%
+
 print(fp_dataset.data)  # is a `FluxPoints` object
+
+# %%
 
 print(fp_dataset.data_shape())  # number of data points
 
@@ -515,7 +515,7 @@ print(datasets)
 # `~gammapy.datasets.Dataset.info_dict()`:
 #
 
-print(datasets.info_table())  # quick info of all datasets
+display(datasets.info_table())  # quick info of all datasets
 
 print(datasets.names)  # unique name of each dataset
 
@@ -581,3 +581,7 @@ print(stacked)
 
 datasets_sliced = datasets.slice_by_energy(energy_min="1 TeV", energy_max="10 TeV")
 print(datasets_sliced.energy_ranges)
+
+# %%
+
+plt.show()

@@ -38,6 +38,7 @@ from itertools import combinations
 import numpy as np
 from astropy import units as u
 import matplotlib.pyplot as plt
+from IPython.display import display
 from gammapy.datasets import Datasets, SpectrumDatasetOnOff
 from gammapy.modeling import Fit
 from gammapy.modeling.models import LogParabolaSpectralModel, SkyModel
@@ -180,7 +181,11 @@ result_minuit = fit.run(datasets)
 
 print(result_scipy)
 
+# %%
+
 print(results_simplex)
+
+# %%
 
 print(result_minuit)
 
@@ -198,7 +203,7 @@ print(fit.minuit)
 # properly
 #
 
-print(result_minuit.trace)
+display(result_minuit.trace)
 
 
 ######################################################################
@@ -208,7 +213,7 @@ print(result_minuit.trace)
 # - or even outside - its allowed min-max range
 #
 
-print(result_minuit.models.to_parameters_table())
+display(result_minuit.models.to_parameters_table())
 
 
 ######################################################################
@@ -230,9 +235,9 @@ for ax, par in zip(axes, datasets.parameters.free_parameters):
     name = datasets.models.parameters_unique_names[idx]
     profile = fit.stat_profile(datasets=datasets, parameter=par)
     ax.plot(profile[f"{name}_scan"], profile["stat_scan"] - total_stat)
-    ax.set_xlabel(f"{par.unit}")
+    ax.set_xlabel(f"{par.name} {par.unit}")
     ax.set_ylabel("Delta TS")
-    ax.set_title(f"{name}: {par.value:.1e} +- {par.error:.1e}")
+    ax.set_title(f"{name}:\n {par.value:.1e} +- {par.error:.1e}")
 
 
 ######################################################################
@@ -257,7 +262,6 @@ print(result_minuit.models.covariance)
 # And you can plot the total parameter correlation as well:
 #
 
-plt.figure()
 result_minuit.models.covariance.plot_correlation()
 
 # The covariance information is also propagated to the individual models
@@ -515,6 +519,7 @@ levels = [1, 2]
 contours = ax.contour(x_values, y_values, stat_surface, levels=levels, colors="white")
 ax.clabel(contours, fmt="%.0f, $\\sigma$", inline=3, fontsize=15)
 
+plt.show()
 
 ######################################################################
 # Note that, if computed with `reoptimize=True`, this plot would be

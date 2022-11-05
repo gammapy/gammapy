@@ -63,8 +63,9 @@ from astropy.coordinates import SkyCoord
 
 # %matplotlib inline
 import matplotlib.pyplot as plt
+from IPython.display import display
 from gammapy.data import EventList
-from gammapy.datasets import MapDataset, Datasets
+from gammapy.datasets import Datasets, MapDataset
 from gammapy.irf import EDispKernelMap, PSFMap
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Fit
@@ -105,9 +106,9 @@ print(events)
 # event class, event type etc.
 #
 
-events.table.colnames
+print(events.table.colnames)
 
-events.table[:5][["ENERGY", "RA", "DEC"]]
+display(events.table[:5][["ENERGY", "RA", "DEC"]])
 
 print(events.time[0].iso)
 print(events.time[-1].iso)
@@ -154,8 +155,9 @@ counts = Map.create(
 # multiple times when executing the `fill_by_coord` multiple times.
 counts.fill_events(events)
 
-counts.geom.axes[0]
+print(counts.geom.axes[0])
 
+plt.figure()
 counts.sum_over_axes().smooth(2).plot(stretch="sqrt", vmax=30)
 
 
@@ -187,6 +189,7 @@ exposure_hpx = Map.read("$GAMMAPY_DATA/fermi_3fhl/fermi_3fhl_exposure_cube_hpx.f
 print(exposure_hpx.geom)
 print(exposure_hpx.geom.axes[0])
 
+plt.figure()
 exposure_hpx.plot()
 
 ######################################################################
@@ -207,6 +210,7 @@ print(exposure.geom.axes[0])
 
 ######################################################################
 # Exposure is almost constant across the field of view
+plt.figure()
 exposure.slice_by_idx({"energy_true": 0}).plot(add_cbar=True)
 
 ######################################################################
@@ -249,7 +253,7 @@ diffuse_iem = SkyModel(
 ######################################################################
 # Let’s look at the map of first energy band of the cube:
 #
-
+plt.figure()
 template_diffuse.map.slice_by_idx({"energy_true": 0}).plot(add_cbar=True)
 
 
@@ -258,6 +262,7 @@ template_diffuse.map.slice_by_idx({"energy_true": 0}).plot(add_cbar=True)
 #
 
 dnde = template_diffuse.map.to_region_nd_map(region=gc_pos)
+plt.figure()
 dnde.plot()
 plt.xlabel("Energy (GeV)")
 plt.ylabel("Flux (cm-2 s-1 MeV-1 sr-1)")
@@ -282,7 +287,7 @@ diffuse_iso = create_fermi_isotropic_diffuse_model(
 ######################################################################
 # We can plot the model in the energy range between 50 GeV and 2000 GeV:
 #
-
+plt.figure()
 energy_bounds = [50, 2000] * u.GeV
 diffuse_iso.spectral_model.plot(energy_bounds, yunits=u.Unit("1 / (cm2 MeV s)"))
 
@@ -311,7 +316,6 @@ print(psf)
 
 plt.figure(figsize=(8, 5))
 psf.plot_containment_radius_vs_energy()
-plt.show()
 
 
 ######################################################################
@@ -339,6 +343,7 @@ plt.legend()
 psf_kernel = psf.get_psf_kernel(
     position=geom.center_skydir, geom=geom, max_radius="1 deg"
 )
+plt.figure()
 psf_kernel.to_image().psf_kernel_map.plot(stretch="log", add_cbar=True)
 
 
@@ -354,6 +359,7 @@ edisp = EDispKernelMap.from_diagonal_response(
     energy_axis_true=e_true, energy_axis=energy_axis
 )
 
+plt.figure()
 edisp.get_edisp_kernel().plot_matrix()
 
 
@@ -397,6 +403,8 @@ print(result)
 print(models)
 
 residual = counts - dataset.npred()
+
+plt.figure()
 residual.sum_over_axes().smooth("0.1 deg").plot(
     cmap="coolwarm", vmin=-3, vmax=3, add_cbar=True
 )
@@ -417,6 +425,7 @@ datasets_read = Datasets.read(
 )
 print(datasets_read)
 
+plt.show()
 ######################################################################
 # Exercises
 # ---------

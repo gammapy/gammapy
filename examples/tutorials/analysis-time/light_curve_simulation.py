@@ -58,11 +58,6 @@ As usual, we’ll start with some general imports…
 """
 
 
-######################################################################
-# Setup
-# -----
-#
-
 import logging
 import numpy as np
 import astropy.units as u
@@ -71,6 +66,12 @@ from astropy.time import Time
 
 # %matplotlib inline
 import matplotlib.pyplot as plt
+
+######################################################################
+# Setup
+# -----
+#
+from IPython.display import display
 
 log = logging.getLogger(__name__)
 
@@ -157,7 +158,7 @@ model_simu = SkyModel(
 )
 
 # Look at the model
-model_simu.parameters.to_table()
+display(model_simu.parameters.to_table())
 
 
 ######################################################################
@@ -206,7 +207,7 @@ for idx in range(n_obs):
 # quick look into our datasets.
 #
 
-print(datasets.info_table())
+display(datasets.info_table())
 
 
 ######################################################################
@@ -237,8 +238,11 @@ lc_maker_1d = LightCurveEstimator(
 )
 lc_1d = lc_maker_1d.run(datasets)
 
-plt.figure()
-ax = lc_1d.plot(marker="o", axis_name="time", sed_type="flux")
+fig, ax = plt.subplots(
+    figsize=(8, 6),
+    gridspec_kw={"left": 0.16, "bottom": 0.2, "top": 0.98, "right": 0.98},
+)
+lc_1d.plot(ax=ax, marker="o", axis_name="time", sed_type="flux")
 
 
 ######################################################################
@@ -302,15 +306,18 @@ result = fit.run(datasets=datasets)
 # temporal model in relative units for one particular energy range
 #
 
-plt.figure()
+fig, ax = plt.subplots(
+    figsize=(8, 6),
+    gridspec_kw={"left": 0.16, "bottom": 0.2, "top": 0.98, "right": 0.98},
+)
 lc_1TeV_10TeV = lc_1d.slice_by_idx({"energy": slice(2, 3)})
-ax = lc_1TeV_10TeV.plot(sed_type="norm", axis_name="time")
+lc_1TeV_10TeV.plot(ax=ax, sed_type="norm", axis_name="time")
 
 time_range = lc_1TeV_10TeV.geom.axes["time"].time_bounds
 temporal_model1.plot(ax=ax, time_range=time_range, label="Best fit model")
 
 ax.set_yscale("linear")
-plt.legend()
+ax.legend()
 
 
 ######################################################################
@@ -337,7 +344,7 @@ model2 = SkyModel(
     name="model-test2",
 )
 
-print(model2.parameters.to_table())
+display(model2.parameters.to_table())
 
 datasets.models = model2
 
@@ -346,9 +353,9 @@ datasets.models = model2
 fit = Fit()
 result = fit.run(datasets=datasets)
 
-print(result.parameters.to_table())
+display(result.parameters.to_table())
 
-
+plt.show()
 ######################################################################
 # We see that the fitted parameters are consistent between fitting flux
 # points and datasets, and match well with the simulated ones

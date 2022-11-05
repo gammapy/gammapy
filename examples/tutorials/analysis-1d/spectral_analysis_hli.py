@@ -64,15 +64,16 @@ In summary, we have to:
 """
 
 
-######################################################################
-# Setup
-# -----
-#
-
 from pathlib import Path
 
 # %matplotlib inline
 import matplotlib.pyplot as plt
+
+######################################################################
+# Setup
+# -----
+#
+from IPython.display import display
 from gammapy.analysis import Analysis, AnalysisConfig
 from gammapy.modeling.models import Models
 
@@ -383,7 +384,7 @@ analysis.run_fit()
 
 print(analysis.fit_result)
 
-print(model_1d.to_parameters_table())
+display(model_1d.to_parameters_table())
 
 
 ######################################################################
@@ -426,15 +427,15 @@ with filename.open("r") as f:
 analysis.get_flux_points()
 
 crab_fp = analysis.flux_points.data
-crab_fp.to_table(sed_type="dnde", formatted=True)
+crab_fp_table = crab_fp.to_table(sed_type="dnde", formatted=True)
+display(crab_fp_table)
 
 
 ######################################################################
 # Let’s plot the flux points with their likelihood profile
 #
-
-plt.figure(figsize=(10, 8))
-ax_sed = crab_fp.plot(sed_type="e2dnde", color="darkorange")
+fig, ax_sed = plt.subplots()
+crab_fp.plot(ax=ax_sed, sed_type="e2dnde", color="darkorange")
 ax_sed.set_ylim(1.0e-12, 2.0e-10)
 ax_sed.set_xlim(0.5, 40)
 crab_fp.plot_ts_profiles(ax=ax_sed, sed_type="e2dnde")
@@ -463,10 +464,10 @@ analysis.flux_points.write(filename, overwrite=True)
 # We can plot of the spectral fit with its error band overlaid with the
 # flux points:
 #
-
 ax_sed, ax_residuals = analysis.flux_points.plot_fit()
 ax_sed.set_ylim(1.0e-12, 1.0e-9)
 ax_sed.set_xlim(0.5, 40)
+plt.show()
 
 
 ######################################################################

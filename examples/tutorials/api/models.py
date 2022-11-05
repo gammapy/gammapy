@@ -30,6 +30,7 @@ data.
 import numpy as np
 from astropy import units as u
 import matplotlib.pyplot as plt
+from IPython.display import display
 from gammapy.maps import Map, MapAxis, WcsGeom
 
 ######################################################################
@@ -425,8 +426,10 @@ print(model_without_name.name)
 
 print(model.spectral_model)
 
+# %%
 print(model.spatial_model)
 
+# %%
 print(model.temporal_model)
 
 
@@ -500,7 +503,7 @@ model.spectral_model.index.min = 1.0
 model.spectral_model.index.max = 5.0
 
 # Visualise the model as a table
-model.parameters.to_table().show_in_notebook()
+display(model.parameters.to_table())
 
 
 ######################################################################
@@ -822,9 +825,9 @@ energy_axis = MapAxis.from_energy_bounds(
 )
 geom = WcsGeom.create(skydir=(0, 0), width=5.0 * u.deg, binsz=0.1, axes=[energy_axis])
 
-plt.figure()
 spatial_model.plot_grid(geom=geom, add_cbar=True, figsize=(14, 3))
 
+plt.show()
 
 ######################################################################
 # For computational purposes, it is useful to specify a

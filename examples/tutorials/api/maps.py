@@ -50,7 +50,6 @@ import os
 # %matplotlib inline
 import numpy as np
 from astropy import units as u
-import matplotlib.pyplot as plt
 from astropy.convolution import convolve
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
@@ -886,5 +885,6 @@ m_iem_gc.plot_interactive(add_cbar=True, stretch="sqrt", rc_params=rc_params)
 # `vmax` options:
 #
 
-plt.figure()
 counts_3d.plot_grid(ncols=4, figsize=(16, 12), vmin=0, vmax=100, stretch="log")
+
+plt.show()
