@@ -25,6 +25,7 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
 import matplotlib.pyplot as plt
+from IPython.display import display
 from gammapy.data import GTI
 from gammapy.datasets import (
     Datasets,

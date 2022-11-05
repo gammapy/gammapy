@@ -30,6 +30,7 @@ data.
 import numpy as np
 from astropy import units as u
 import matplotlib.pyplot as plt
+from IPython.display import display
 from gammapy.maps import Map, MapAxis, WcsGeom
 
 ######################################################################
@@ -425,11 +426,9 @@ print(model_without_name.name)
 
 print(model.spectral_model)
 
-""
 
 print(model.spatial_model)
 
-""
 
 print(model.temporal_model)
 
