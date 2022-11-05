@@ -48,10 +48,12 @@ Further information is available at `~gammapy.catalog`.
 
 """
 
-# %matplotlib inline
-import matplotlib.pyplot as plt
 import numpy as np
 import astropy.units as u
+
+# %matplotlib inline
+import matplotlib.pyplot as plt
+from IPython.display import display
 from gammapy.catalog import CATALOG_REGISTRY
 
 ######################################################################
@@ -151,7 +153,7 @@ print(type(catalog_3fhl.table))
 print(len(catalog_3fhl.table))
 
 ""
-print(catalog_3fhl.table[:3][["Source_Name", "RAJ2000", "DEJ2000"]])
+display(catalog_3fhl.table[:3][["Source_Name", "RAJ2000", "DEJ2000"]])
 
 
 ######################################################################
@@ -352,7 +354,7 @@ discarded_spatial = [
 #
 
 # here we show the 5 first elements of the table
-print(catalog_hgps.table_large_scale_component[:5])
+display(catalog_hgps.table_large_scale_component[:5])
 # you can also try :
 # help(catalog_hgps.large_scale_component)
 
@@ -372,7 +374,7 @@ flux_points = source.flux_points
 print(flux_points)
 
 ""
-print(flux_points.to_table(sed_type="flux"))
+display(flux_points.to_table(sed_type="flux"))
 
 ""
 plt.figure()
@@ -394,7 +396,7 @@ lightcurve = catalog_4fgl["4FGL J0349.8-2103"].lightcurve()
 print(lightcurve)
 
 ""
-print(lightcurve.to_table(format="lightcurve", sed_type="flux"))
+display(lightcurve.to_table(format="lightcurve", sed_type="flux"))
 
 ""
 plt.figure()
@@ -424,3 +426,4 @@ help(source.info)
 print(source.info("associations"))
 
 ""
+plt.show()
