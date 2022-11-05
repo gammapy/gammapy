@@ -40,9 +40,8 @@ release 1.
 
 import astropy.units as u
 from astropy.coordinates import SkyCoord
-
-# %matplotlib inline
 import matplotlib.pyplot as plt
+from IPython.display import display
 from gammapy.data import DataStore
 from gammapy.makers import MapDatasetMaker
 from gammapy.makers.utils import make_theta_squared_table
@@ -77,7 +76,7 @@ data_store.info()
 ######################################################################
 # Preview an excerpt from the observtaion table
 
-print(data_store.obs_table[:2][["OBS_ID", "DATE-OBS", "RA_PNT", "DEC_PNT", "OBJECT"]])
+display(data_store.obs_table[:2][["OBS_ID", "DATE-OBS", "RA_PNT", "DEC_PNT", "OBJECT"]])
 
 ######################################################################
 # Get a single obervation
@@ -105,6 +104,7 @@ obs.psf.peek()
 
 ######################################################################
 # Peek the background rate
+plt.figure()
 obs.bkg.to_2d().plot()
 
 
@@ -179,6 +179,7 @@ for obs in observations:
     livetime.stack(lv_obs)
 
 # Plot
+plt.figure()
 ax = livetime.plot(add_cbar=True)
 
 # Add the pointing position on top
@@ -190,6 +191,7 @@ for obs in observations:
         color="black",
     )
 
+plt.show()
 
 ######################################################################
 # Exercises

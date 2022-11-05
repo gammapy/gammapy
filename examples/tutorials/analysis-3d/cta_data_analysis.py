@@ -35,6 +35,7 @@ from regions import CircleSkyRegion
 
 # %matplotlib inline
 import matplotlib.pyplot as plt
+from IPython.display import display
 from gammapy.data import DataStore
 from gammapy.datasets import Datasets, FluxPointsDataset, MapDataset, SpectrumDataset
 from gammapy.estimators import FluxPointsEstimator, TSMapEstimator
@@ -93,7 +94,7 @@ obs_id = [110380, 111140, 111159]
 observations = data_store.get_observations(obs_id)
 
 obs_cols = ["OBS_ID", "GLON_PNT", "GLAT_PNT", "LIVETIME"]
-print(data_store.obs_table.select_obs_id(obs_id)[obs_cols])
+display(data_store.obs_table.select_obs_id(obs_id)[obs_cols])
 
 
 ######################################################################
@@ -148,10 +149,12 @@ geom_image = dataset_image.geoms["geom"]
 # Let’s have a quick look at the images we computed …
 #
 
-plt.figure(figsize=(15, 5))
-ax1 = plt.subplot(131, projection=geom_image.wcs)
-ax2 = plt.subplot(132, projection=geom_image.wcs)
-ax3 = plt.subplot(133, projection=geom_image.wcs)
+fig, (ax1, ax2, ax3) = plt.subplots(
+    figsize=(15, 5),
+    ncols=3,
+    subplot_kw={"projection": geom_image.wcs},
+    gridspec_kw={"left": 0.1, "right": 0.9},
+)
 
 ax1.set_title("Counts map")
 dataset_image.counts.smooth(2).plot(ax=ax1, vmax=5)
@@ -168,7 +171,7 @@ dataset_image.excess.smooth(3).plot(ax=ax3, vmax=2)
 # ----------------
 #
 # Use the class `~gammapy.estimators.TSMapEstimator` and function
-# `gammapy.estimators.utils.find_peaks` to detect sources on the images.
+# `~gammapy.estimators.utils.find_peaks` to detect sources on the images.
 # We search for 0.1 deg sigma gaussian sources in the dataset.
 #
 
@@ -193,7 +196,7 @@ sources = find_peaks(
     threshold=5,
     min_distance="0.2 deg",
 )
-print(sources)
+display(sources)
 
 ######################################################################
 # To get the position of the sources, simply
@@ -204,13 +207,13 @@ print(source_pos)
 ######################################################################
 # Plot sources on top of significance sky image
 #
-plt.figure()
-images_ts["sqrt_ts"].plot(add_cbar=True)
+fig, ax = plt.subplots(figsize=(8, 6), subplot_kw={"projection": geom_image.wcs})
+images_ts["sqrt_ts"].plot(ax=ax, add_cbar=True)
 
-plt.gca().scatter(
+ax.scatter(
     source_pos.ra.deg,
     source_pos.dec.deg,
-    transform=plt.gca().get_transform("icrs"),
+    transform=ax.get_transform("icrs"),
     color="none",
     edgecolor="white",
     marker="o",
@@ -239,9 +242,13 @@ plt.gca().scatter(
 target_position = SkyCoord(0, 0, unit="deg", frame="galactic")
 on_radius = 0.2 * u.deg
 on_region = CircleSkyRegion(center=target_position, radius=on_radius)
-plt.figure()
+
 exclusion_mask = ~geom.to_image().region_mask([on_region])
+plt.figure()
 exclusion_mask.plot()
+
+######################################################################
+# Configure spectral analysis
 
 energy_axis = MapAxis.from_energy_bounds(0.1, 40, 40, unit="TeV", name="energy")
 energy_axis_true = MapAxis.from_energy_bounds(
@@ -257,6 +264,9 @@ dataset_maker = SpectrumDatasetMaker(
 bkg_maker = ReflectedRegionsBackgroundMaker(exclusion_mask=exclusion_mask)
 safe_mask_masker = SafeMaskMaker(methods=["aeff-max"], aeff_percent=10)
 
+######################################################################
+# Run data reduction
+
 # %%time
 datasets = Datasets()
 
@@ -268,7 +278,10 @@ for observation in observations:
     dataset_on_off = safe_mask_masker.run(dataset_on_off, observation)
     datasets.append(dataset_on_off)
 
-plt.figure(figsize=(8, 8))
+######################################################################
+# Plot results
+
+plt.figure(figsize=(8, 6))
 ax = dataset_image.counts.smooth("0.03 deg").plot(vmax=8)
 
 on_region.to_pixel(ax.wcs).plot(ax=ax, edgecolor="white")
@@ -330,8 +343,8 @@ flux_points.to_table(sed_type="dnde", formatted=True)
 #
 
 flux_points_dataset = FluxPointsDataset(data=flux_points, models=model)
-plt.figure()
 flux_points_dataset.plot_fit()
+plt.show()
 
 
 ######################################################################

@@ -23,6 +23,7 @@ from regions import CircleSkyRegion
 
 # %matplotlib inline
 import matplotlib.pyplot as plt
+from IPython.display import display
 from gammapy.analysis import Analysis, AnalysisConfig
 from gammapy.estimators import ExcessMapEstimator
 from gammapy.modeling import Fit
@@ -146,35 +147,30 @@ print(dataset_stacked)
 # To plot a smooth counts map
 #
 
-plt.figure()
 dataset_stacked.counts.smooth(0.02 * u.deg).plot_interactive(add_cbar=True)
 
 ######################################################################
 # And the background map
 #
 
-plt.figure()
 dataset_stacked.background.plot_interactive(add_cbar=True)
 
 ######################################################################
 # We can quickly check the PSF
 #
 
-plt.figure()
 dataset_stacked.psf.peek()
 
 ######################################################################
 # And the energy dispersion in the center of the map
 #
 
-plt.figure()
 dataset_stacked.edisp.peek()
 
 ######################################################################
 # You can also get an excess image with a few lines of code:
 #
 
-plt.figure()
 excess = dataset_stacked.excess.sum_over_axes()
 excess.smooth("0.06 deg").plot(stretch="sqrt", add_cbar=True)
 
@@ -252,7 +248,7 @@ print(result)
 # Check best-fit parameters and error estimates:
 #
 
-print(models_stacked.to_parameters_table())
+display(models_stacked.to_parameters_table())
 
 
 ######################################################################
@@ -262,7 +258,6 @@ print(models_stacked.to_parameters_table())
 # and `method=diff`, which corresponds to a simple `data - model`
 # plot):
 #
-plt.figure()
 dataset_stacked.plot_residuals_spatial(method="diff/sqrt(model)", vmin=-1, vmax=1)
 
 
@@ -272,7 +267,6 @@ dataset_stacked.plot_residuals_spatial(method="diff/sqrt(model)", vmin=-1, vmax=
 #
 
 region = CircleSkyRegion(spatial_model.position, radius=0.15 * u.deg)
-plt.figure()
 dataset_stacked.plot_residuals(
     kwargs_spatial=dict(method="diff/sqrt(model)", vmin=-1, vmax=1),
     kwargs_spectral=dict(region=region),
@@ -297,7 +291,6 @@ estimator = ExcessMapEstimator(
 )
 
 result = estimator.run(dataset_stacked)
-plt.figure()
 result["sqrt_ts"].plot_grid(
     figsize=(12, 4), cmap="coolwarm", add_cbar=True, vmin=-5, vmax=5, ncols=2
 )
@@ -306,29 +299,29 @@ result["sqrt_ts"].plot_grid(
 ######################################################################
 # Distribution of residuals significance in the full map geometry:
 #
-
-# TODO: clean this up
 significance_data = result["sqrt_ts"].data
 
-# #Remove bins that are inside an exclusion region, that would create an artificial peak at significance=0.
+# Remove bins that are inside an exclusion region, that would create an artificial peak at significance=0.
 selection = np.isfinite(significance_data)
 significance_data = significance_data[selection]
-plt.figure()
-plt.hist(significance_data, density=True, alpha=0.9, color="red", bins=40)
+
+fig, ax = plt.subplots()
+
+ax.hist(significance_data, density=True, alpha=0.9, color="red", bins=40)
 mu, std = norm.fit(significance_data)
 
 x = np.linspace(-5, 5, 100)
 p = norm.pdf(x, mu, std)
 
-plt.plot(
+ax.plot(
     x,
     p,
     lw=2,
     color="black",
     label=r"$\mu$ = {:.2f}, $\sigma$ = {:.2f}".format(mu, std),
 )
-plt.legend(fontsize=17)
-plt.xlim(-5, 5)
+ax.legend(fontsize=17)
+ax.set_xlim(-5, 5)
 
 
 ######################################################################
@@ -375,7 +368,7 @@ print(analysis_joint.datasets[0])
 # map, omit the region argument.
 #
 
-print(analysis_joint.datasets.info_table())
+display(analysis_joint.datasets.info_table())
 
 models_joint = Models()
 
@@ -444,17 +437,20 @@ stacked.plot_residuals_spatial(vmin=-1, vmax=1)
 #
 
 
-def plot_spectrum(model, label, color):
+def plot_spectrum(model, ax, label, color):
     spec = model.spectral_model
     energy_bounds = [0.3, 10] * u.TeV
-    spec.plot(energy_bounds=energy_bounds, energy_power=2, label=label, color=color)
-    spec.plot_error(energy_bounds=energy_bounds, energy_power=2, color=color)
+    spec.plot(
+        ax=ax, energy_bounds=energy_bounds, energy_power=2, label=label, color=color
+    )
+    spec.plot_error(ax=ax, energy_bounds=energy_bounds, energy_power=2, color=color)
 
 
-plt.figure()
-plot_spectrum(model, label="stacked", color="tab:blue")
-plot_spectrum(model_joint, label="joint", color="tab:orange")
-plt.legend()
+fig, ax = plt.subplots()
+plot_spectrum(model, ax=ax, label="stacked", color="tab:blue")
+plot_spectrum(model_joint, ax=ax, label="joint", color="tab:orange")
+ax.legend()
+plt.show()
 
 
 ######################################################################

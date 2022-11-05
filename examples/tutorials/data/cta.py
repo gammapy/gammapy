@@ -59,10 +59,13 @@ Setup
 
 """
 
-# %matplotlib inline
 import os
 from pathlib import Path
 from astropy import units as u
+
+# %matplotlib inline
+import matplotlib.pyplot as plt
+from IPython.display import display
 from gammapy.data import DataStore, EventList
 from gammapy.irf import EffectiveAreaTable2D, load_cta_irfs
 
@@ -150,7 +153,7 @@ print(data_store)
 data_store.obs_table[["OBS_ID", "GLON_PNT", "GLAT_PNT", "IRF"]]
 
 observation = data_store.obs(110380)
-observation
+print(observation)
 
 
 ######################################################################
@@ -190,7 +193,7 @@ events = EventList.read(
 # Here we print the data from the first 5 events listed in the table:
 #
 
-print(events.table[:5])
+display(events.table[:5])
 
 ######################################################################
 # And show a summary plot:
@@ -231,7 +234,7 @@ events.peek()
 #    when using the DC1 IRFs for some analyses.
 #
 
-observation.aeff
+print(observation.aeff)
 
 irf_filename = (
     "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
@@ -247,7 +250,7 @@ print(irfs)
 
 # Equivalent alternative way to load IRFs directly
 aeff = EffectiveAreaTable2D.read(irf_filename, hdu="EFFECTIVE AREA")
-aeff
+print(aeff)
 
 irfs["aeff"].peek()
 
@@ -297,6 +300,7 @@ irfs["bkg"].plot_at_energy(
     ["100 GeV", "500 GeV", "1 TeV", "3 TeV", "10 TeV", "100 TeV"]
 )
 
+plt.show()
 
 ######################################################################
 # Source models

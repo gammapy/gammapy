@@ -87,7 +87,6 @@ print("DISTANCE_GC:", profiles.DMProfile.DISTANCE_GC)
 # J-Factor map for the Galactic Centre region
 #
 
-plt.figure()
 profile = profiles.NFWProfile()
 
 # Adopt standard values used in HESS
@@ -103,6 +102,7 @@ jfactory = JFactory(geom=geom, profile=profile, distance=profiles.DMProfile.DIST
 jfact = jfactory.compute_jfactor()
 
 jfact_map = WcsNDMap(geom=geom, data=jfact.value, unit=jfact.unit)
+plt.figure()
 ax = jfact_map.plot(cmap="viridis", norm=LogNorm(), add_cbar=True)
 plt.title(f"J-Factor [{jfact_map.unit}]")
 
@@ -132,8 +132,7 @@ print(
 fluxes = PrimaryFlux(mDM="1 TeV", channel="eL")
 print(fluxes.allowed_channels)
 
-plt.figure()
-fig, axes = plt.subplots(4, 1, figsize=(6, 16))
+fig, axes = plt.subplots(4, 1, figsize=(4, 16))
 mDMs = [0.01, 0.1, 1, 10] * u.TeV
 
 for mDM, ax in zip(mDMs, axes):
@@ -152,7 +151,7 @@ for mDM, ax in zip(mDMs, axes):
         )
 
 axes[0].legend()
-plt.subplots_adjust(hspace=0.5)
+plt.subplots_adjust(hspace=0.9)
 
 
 ######################################################################
@@ -175,3 +174,5 @@ ax = flux_map.plot(cmap="viridis", norm=LogNorm(), add_cbar=True)
 plt.title(
     f"Flux [{int_flux.unit}]\n m$_{{DM}}$={fluxes.mDM.to('TeV')}, channel={fluxes.channel}"
 )
+
+plt.show()
