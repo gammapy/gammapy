@@ -181,11 +181,11 @@ result_minuit = fit.run(datasets)
 
 print(result_scipy)
 
-""
+# %%
 
 print(results_simplex)
 
-""
+# %%
 
 print(result_minuit)
 

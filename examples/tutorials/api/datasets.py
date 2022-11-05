@@ -183,7 +183,7 @@ print(dataset_cta.psf)
 radius = dataset_cta.psf.containment_radius(energy_true=1 * u.TeV, fraction=0.95)
 print(radius)
 
-""
+# %%
 
 plt.figure()
 edisp_kernel = dataset_cta.edisp.get_edisp_kernel()
@@ -467,11 +467,11 @@ fp_dataset.plot_spectrum()
 
 print(fp_dataset.mask_safe)  # Note: the mask here is simply a numpy array
 
-""
+# %%
 
 print(fp_dataset.data)  # is a `FluxPoints` object
 
-""
+# %%
 
 print(fp_dataset.data_shape())  # number of data points
 
@@ -582,6 +582,6 @@ print(stacked)
 datasets_sliced = datasets.slice_by_energy(energy_min="1 TeV", energy_max="10 TeV")
 print(datasets_sliced.energy_ranges)
 
-""
+# %%
 
 plt.show()

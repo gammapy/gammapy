@@ -426,10 +426,10 @@ print(model_without_name.name)
 
 print(model.spectral_model)
 
-
+# %%
 print(model.spatial_model)
 
-
+# %%
 print(model.temporal_model)
 
 
