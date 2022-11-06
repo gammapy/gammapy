@@ -216,7 +216,7 @@ class SourceCatalog(abc.ABC):
 
         fp_energy_edges = getattr(self, "flux_points_energy_edges", None)
 
-        if fp_energy_edges:
+        if fp_energy_edges is not None:
             data["fp_energy_edges"] = fp_energy_edges
 
         hist_table = getattr(self, "hist_table", None)
