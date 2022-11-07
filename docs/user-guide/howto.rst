@@ -30,7 +30,7 @@ the english word "pie". You can listen to it `here <http://ipa-reader.xyz/?text=
 .. accordion-header::
     :id: collapseHowToTwo
     :title: Select observations
-    :link: ../tutorials/starting/analysis_2.html#Defining-the-datastore-and-selecting-observations
+    :link: ../tutorials/starting/analysis_2.html#defining-the-datastore-and-selecting-observations
 
 The `~gammapy.data.DataStore` provides access to a summary table of all observations available.
 It can be used to select observations with various criterion. You can for instance apply a cone search
@@ -41,7 +41,7 @@ or also select observations based on other information available using the `~gam
 .. accordion-header::
     :id: collapseHowToThree
     :title: Make an on-axis equivalent livetime map
-    :link: ../tutorials/data/hess.html#On-axis-equivalent-livetime
+    :link: ../tutorials/data/hess.html#on-axis-equivalent-livetime
 
 The `~gammapy.data.DataStore` provides access to a summary table of all observations available.
 It can be used to select observations with various criterion. You can for instance apply a cone search
@@ -52,7 +52,7 @@ or also select observations based on other information available using the `~gam
 .. accordion-header::
     :id: collapseHowToFour
     :title: Check IRFs
-    :link: ../tutorials/data/cta.html#IRFs
+    :link: ../tutorials/data/cta.html#irfs
 
 Gammapy offers a number of methods to explore the content of the various IRFs
 contained in an observation. This is usually done thanks to their ``peek()``
@@ -104,7 +104,7 @@ take the difference. Note that in Gammapy, the fit statistic is defined as ``S =
 .. accordion-header::
     :id: collapseHowToSeven
     :title: Compute cumulative significance
-    :link: ../tutorials/analysis/1D/spectral_analysis.html#Source-statistic
+    :link: ../tutorials/analysis-1d/spectral_analysis.html#source-statistic
 
 A classical plot in gamma-ray astronomy is the cumulative significance of a
 source as a function of observing time. In Gammapy, you can produce it with 1D
@@ -117,7 +117,7 @@ access the total statistics with the ``info_table(cumulative=True)`` method of
 .. accordion-header::
     :id: collapseHowToEight
     :title: Implement a custom model
-    :link: ../tutorials/api/models.html#Implementing-a-Custom-Model
+    :link: ../tutorials/api/models.html#implementing-a-custom-Model
 
 Gammapy allows the flexibility of using user-defined models for analysis.
 
@@ -126,7 +126,7 @@ Gammapy allows the flexibility of using user-defined models for analysis.
 .. accordion-header::
     :id: collapseHowToNine
     :title: Energy dependent spatial models
-    :link: ../tutorials/api/models.html#Models-with-energy-dependent-morphology
+    :link: ../tutorials/api/models.html#models-with-energy-dependent-morphology
 
 While Gammapy does not ship energy dependent spatial models, it is possible to define
 such models within the modeling framework.
@@ -149,7 +149,7 @@ H.E.S.S. or Fermi-LAT data).
 .. accordion-header::
     :id: collapseSHowToEleven
     :title: How to model temporal profiles
-    :link: ../tutorials/analysis/time/light_curve_simulation.html#Fitting-temporal-models
+    :link: ../tutorials/analysis-time/light_curve_simulation.html#fitting-temporal-models
 
 Temporal models can be directly fit on available lightcurves,
 or on the reduced datasets. This is done through a joint fitting of the datasets,
@@ -191,7 +191,7 @@ and build the associated observation and HDU tables.
 .. accordion-header::
     :id: collapseHowToFourteen
     :title: Interpolate onto a different geometry
-    :link: ../tutorials/api/maps.html#Filling-maps-from-interpolation
+    :link: ../tutorials/api/maps.html#filling-maps-from-interpolation
 
 To interpolate maps onto a different geometry use `~gammapy.maps.Map.interp_to_geom`.
 
