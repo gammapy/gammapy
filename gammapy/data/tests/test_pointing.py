@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
+import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
@@ -134,7 +135,15 @@ def test_altaz_without_location(caplog):
         assert np.isnan(altaz.az.value)
 
 
-def test_fixed_pointing_info_fixed_icrs():
+@pytest.mark.parametrize(
+    ("obs_mode"),
+    [
+        ("POINTING"),
+        ("WOBBLE"),
+        ("SCAN"),
+    ],
+)
+def test_fixed_pointing_info_fixed_icrs(obs_mode):
     location = observatory_locations["cta_south"]
     start = Time("2020-11-01T03:00:00")
     stop = Time("2020-11-01T03:15:00")
@@ -145,6 +154,7 @@ def test_fixed_pointing_info_fixed_icrs():
     meta["TSTART"] = time_relative_to_ref(start, meta).to_value(u.s)
     meta["TSTOP"] = time_relative_to_ref(stop, meta).to_value(u.s)
     meta.update(earth_location_to_dict(location))
+    meta["OBS_MODE"] = obs_mode
     meta["RA_PNT"] = pointing_icrs.ra.deg
     meta["DEC_PNT"] = pointing_icrs.dec.deg
 

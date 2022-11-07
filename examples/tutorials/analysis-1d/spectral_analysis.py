@@ -82,13 +82,6 @@ to fit the model parameters - Apply a
 the spectral part of the fit.
 """
 
-######################################################################
-# Setup
-# -----
-#
-# As usual, we’ll start with some setup …
-#
-
 from pathlib import Path
 
 # Check package versions
@@ -99,6 +92,14 @@ from regions import CircleSkyRegion
 
 # %matplotlib inline
 import matplotlib.pyplot as plt
+
+######################################################################
+# Setup
+# -----
+#
+# As usual, we’ll start with some setup …
+#
+from IPython.display import display
 from gammapy.data import DataStore
 from gammapy.datasets import (
     Datasets,
@@ -219,13 +220,14 @@ for obs_id, observation in zip(obs_ids, observations):
     dataset_on_off = safe_mask_masker.run(dataset_on_off, observation)
     datasets.append(dataset_on_off)
 
+print(datasets)
 
 ######################################################################
 # Plot off regions
 # ----------------
 #
 
-plt.figure(figsize=(8, 8))
+plt.figure()
 ax = exclusion_mask.plot()
 on_region.to_pixel(ax.wcs).plot(ax=ax, edgecolor="k")
 plot_spectrum_datasets_off_regions(ax=ax, datasets=datasets)
@@ -241,20 +243,33 @@ plot_spectrum_datasets_off_regions(ax=ax, datasets=datasets)
 
 info_table = datasets.info_table(cumulative=True)
 
-info_table
+display(info_table)
 
-plt.plot(info_table["livetime"].to("h"), info_table["excess"], marker="o", ls="none")
-plt.xlabel("Livetime [h]")
-plt.ylabel("Excess")
+######################################################################
+# And make the correpsonding plots
 
-plt.plot(
+fig, (ax_excess, ax_sqrt_ts) = plt.subplots(figsize=(10, 4), ncols=2, nrows=1)
+ax_excess.plot(
+    info_table["livetime"].to("h"),
+    info_table["excess"],
+    marker="o",
+    ls="none",
+)
+
+ax_excess.set_title("Excess")
+ax_excess.set_xlabel("Livetime [h]")
+ax_excess.set_ylabel("Excess events")
+
+ax_sqrt_ts.plot(
     info_table["livetime"].to("h"),
     info_table["sqrt_ts"],
     marker="o",
     ls="none",
 )
-plt.xlabel("Livetime [h]")
-plt.ylabel("Sqrt(TS)")
+
+ax_sqrt_ts.set_title("Sqrt(TS)")
+ax_sqrt_ts.set_xlabel("Livetime [h]")
+ax_sqrt_ts.set_ylabel("Sqrt(TS)")
 
 
 ######################################################################
@@ -326,7 +341,7 @@ print(result_joint)
 # and check the best-fit parameters
 #
 
-datasets.models.to_parameters_table()
+display(result_joint.models.to_parameters_table())
 
 
 ######################################################################
@@ -334,6 +349,7 @@ datasets.models.to_parameters_table()
 # `~SpectrumDataset.plot_fit()`
 #
 
+plt.figure()
 ax_spectrum, ax_residuals = datasets[0].plot_fit()
 ax_spectrum.set_ylim(0.1, 40)
 datasets[0].plot_masks(ax=ax_spectrum)
@@ -374,7 +390,7 @@ flux_points = fpe.run(datasets=datasets)
 # Here is a the table of the resulting flux points:
 #
 
-flux_points.to_table(sed_type="dnde", formatted=True)
+display(flux_points.to_table(sed_type="dnde", formatted=True))
 
 
 ######################################################################
@@ -382,8 +398,8 @@ flux_points.to_table(sed_type="dnde", formatted=True)
 # plotting of upper limits we choose a threshold of TS < 4.
 #
 
-plt.figure(figsize=(8, 5))
-ax = flux_points.plot(sed_type="e2dnde", color="darkorange")
+fig, ax = plt.subplots()
+flux_points.plot(ax=ax, sed_type="e2dnde", color="darkorange")
 flux_points.plot_ts_profiles(ax=ax, sed_type="e2dnde")
 
 
@@ -393,7 +409,6 @@ flux_points.plot_ts_profiles(ax=ax, sed_type="e2dnde")
 #
 
 flux_points_dataset = FluxPointsDataset(data=flux_points, models=model_best_joint)
-
 flux_points_dataset.plot_fit()
 
 
@@ -424,9 +439,12 @@ model_best_stacked = model.copy()
 
 print(result_stacked)
 
-model_best_joint.parameters.to_table()
+######################################################################
+# And display the parameter table
 
-model_best_stacked.parameters.to_table()
+display(model_best_joint.parameters.to_table())
+
+display(model_best_stacked.parameters.to_table())
 
 
 ######################################################################
@@ -434,11 +452,13 @@ model_best_stacked.parameters.to_table()
 # published Crab Nebula Spectrum for reference. This is available in
 # `~gammapy.modeling.models.create_crab_spectral_model`.
 #
+fig, ax = plt.subplots()
 
 plot_kwargs = {
     "energy_bounds": [0.1, 30] * u.TeV,
     "sed_type": "e2dnde",
     "yunits": u.Unit("erg cm-2 s-1"),
+    "ax": ax,
 }
 
 # plot stacked model
@@ -451,8 +471,12 @@ model_best_joint.spectral_model.plot(
 )
 model_best_joint.spectral_model.plot_error(facecolor="orange", alpha=0.3, **plot_kwargs)
 
-create_crab_spectral_model("hess_ecpl").plot(**plot_kwargs, label="Crab reference")
-plt.legend()
+create_crab_spectral_model("hess_ecpl").plot(
+    **plot_kwargs,
+    label="Crab reference",
+)
+ax.legend()
+plt.show()
 
 
 ######################################################################

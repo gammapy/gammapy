@@ -2,15 +2,15 @@
 
 .. _gammapy_1p0_release:
 
-1.0 (October 21th, 2022)
+1.0 (November 9th, 2022)
 -----------------------
 
 Summary
 ~~~~~~~
 
-- Released Oct 21th, 2022
+- Released Nov 9th, 2022
 - 12 contributors
-- 86 pull requests since v0.20.1 (not all listed below)
+- 106 pull requests since v0.20.1 (not all listed below)
 
 New features
 ~~~~~~~~~~~~
@@ -68,6 +68,11 @@ Bug fixes and improvements
 - The dataset name is now serialized with the Dataset as the `NAME` keyword in the primary HDU.
 - A `peek` method is now available for the `~gammapy.datasets.MapEvaluator` to help debugging issues
   with model evaluation on a `~gammapy.datasets.Dataset`.
+
+*gammapy.irf*
+
+- The interpolation scheme of the energy axis was incorrectly set to "linear" by default for the
+`~gammapy.irf.Background2D`. It is now set to "log".
 
 *gammapy.makers*
 

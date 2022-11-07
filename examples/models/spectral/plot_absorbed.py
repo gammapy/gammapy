@@ -41,19 +41,23 @@ franceschini = EBLAbsorptionNormSpectralModel.read_builtin(
 )
 finke = EBLAbsorptionNormSpectralModel.read_builtin("finke", redshift=redshift)
 
-plt.figure()
+fig, (ax_ebl, ax_model) = plt.subplots(
+    nrows=1, ncols=2, figsize=(10, 4), gridspec_kw={"left": 0.08, "right": 0.96}
+)
+
 energy_bounds = [0.08, 3] * u.TeV
 opts = dict(energy_bounds=energy_bounds, xunits=u.TeV)
-franceschini.plot(label="Franceschini 2008", **opts)
-finke.plot(label="Finke 2010", **opts)
-dominguez.plot(label="Dominguez 2011", **opts)
 
-plt.ylabel(r"Absorption coefficient [$\exp{(-\tau(E))}$]")
-plt.xlim(energy_bounds.value)
-plt.ylim(1e-4, 2)
-plt.title(f"EBL models (z={redshift})")
-plt.grid(which="both")
-plt.legend(loc="best")
+franceschini.plot(ax=ax_ebl, label="Franceschini 2008", **opts)
+finke.plot(ax=ax_ebl, label="Finke 2010", **opts)
+dominguez.plot(ax=ax_ebl, label="Dominguez 2011", **opts)
+
+ax_ebl.set_ylabel(r"Absorption coefficient [$\exp{(-\tau(E))}$]")
+ax_ebl.set_xlim(energy_bounds.value)
+ax_ebl.set_ylim(1e-4, 2)
+ax_ebl.set_title(f"EBL models (z={redshift})")
+ax_ebl.grid(which="both")
+ax_ebl.legend(loc="best")
 
 
 # Spectral model corresponding to PKS 2155-304 (quiescent state)
@@ -69,10 +73,12 @@ absorption = EBLAbsorptionNormSpectralModel.read_builtin("dominguez", redshift=r
 model = pwl * absorption
 
 energy_bounds = [0.1, 100] * u.TeV
-plt.figure()
-model.plot(energy_bounds)
-plt.grid(which="both")
-plt.ylim(1e-24, 1e-8)
+
+model.plot(energy_bounds, ax=ax_model)
+ax_model.grid(which="both")
+ax_model.set_ylim(1e-24, 1e-8)
+ax_model.set_title("Absorbed Power Law")
+plt.show()
 
 # %%
 # YAML representation

@@ -36,17 +36,18 @@ run the actually profile extraction using the `~gammapy.estimators.FluxProfileEs
 """
 
 
-######################################################################
-# Setup
-# -----
-#
-
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 
 # %matplotlib inline
 import matplotlib.pyplot as plt
+
+######################################################################
+# Setup
+# -----
+#
+from IPython.display import display
 from gammapy.datasets import MapDataset
 from gammapy.estimators import FluxPoints, FluxProfileEstimator
 from gammapy.maps import RegionGeom
@@ -77,7 +78,6 @@ dataset = MapDataset.read(
 ######################################################################
 # This is what the counts image we will work with looks like:
 #
-
 counts_image = dataset.counts.sum_over_axes()
 counts_image.smooth("0.1 deg").plot(stretch="sqrt")
 
@@ -120,6 +120,7 @@ regions = make_orthogonal_rectangle_sky_regions(
 # the counts image:
 #
 
+plt.figure()
 geom = RegionGeom.create(region=regions)
 ax = counts_image.smooth("0.1 deg").plot(stretch="sqrt")
 geom.plot_region(ax=ax, color="w")
@@ -231,7 +232,7 @@ ax.set_yscale("linear")
 #
 
 table = profile.to_table(format="profile", formatted=True)
-table
+display(table)
 
 
 ######################################################################
@@ -249,7 +250,7 @@ regions = make_concentric_annulus_sky_regions(
 ######################################################################
 # Again we first illustrate the regions:
 #
-
+plt.figure()
 geom = RegionGeom.create(region=regions)
 gc_image = counts_image.cutout(
     position=SkyCoord("0d", "0d", frame="galactic"), width=3 * u.deg
@@ -298,3 +299,6 @@ fig, ax = plt.subplots()
 profile_high.plot(ax=ax, sed_type="eflux", color="tab:orange")
 profile_high.plot_ts_profiles(ax=ax, sed_type="eflux")
 ax.set_yscale("linear")
+
+
+plt.show()

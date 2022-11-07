@@ -82,8 +82,6 @@ We will work with the following functions and classes:
 # As usual, let’s start with some general imports…
 #
 
-# %matplotlib inline
-
 from pathlib import Path
 import numpy as np
 import astropy.units as u
@@ -91,6 +89,10 @@ from astropy.coordinates import Angle, SkyCoord
 from astropy.io import fits
 from astropy.time import Time
 from regions import CircleSkyRegion
+import matplotlib.pyplot as plt
+
+# %matplotlib inline
+from IPython.display import display
 from gammapy.data import DataStore, Observation, observatory_locations
 from gammapy.datasets import MapDataset, MapDatasetEventSampler
 from gammapy.irf import load_cta_irfs
@@ -320,8 +322,8 @@ hdu_all.writeto("./event_sampling/events_0001.fits", overwrite=True)
 #
 
 counts = Map.from_geom(geom)
-
 counts.fill_events(events)
+plt.figure()
 counts.sum_over_axes().plot(add_cbar=True)
 
 
@@ -514,6 +516,7 @@ livetimes = [1, 1, 1] * u.hr
 n_obs = len(tstarts)
 irf_paths = [path / irf_filename] * n_obs
 events_paths = []
+
 for idx, tstart in enumerate(tstarts):
     irfs = load_cta_irfs(irf_paths[idx])
     observation = Observation.create(
@@ -543,7 +546,7 @@ for idx, tstart in enumerate(tstarts):
 path = Path("./event_sampling/")
 events_paths = list(path.rglob("events*.fits"))
 data_store = DataStore.from_events_files(events_paths, irf_paths)
-data_store.obs_table
+display(data_store.obs_table)
 
 
 ######################################################################
@@ -554,6 +557,8 @@ data_store.obs_table
 
 observations = data_store.get_observations()
 observations[0].peek()
+
+plt.show()
 
 
 ######################################################################
