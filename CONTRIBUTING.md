@@ -7,7 +7,7 @@ file of the [Astropy](https://www.astropy.org/) project.
 Reporting Issues
 ----------------
 
-When opening an issue to report a problem, please try to provide a minimal code
+When opening an issue to report a problem or request for a new feature, please try to provide a minimal code
 example that reproduces the issue along with details of the operating system and `Gammapy` version you are using.
 
 
@@ -29,7 +29,7 @@ Promoting contributions
 -----------------------
 Even in the Open Source landscape, promoting the work of any is not only *natural* but also a duty for the 
 Gammapy leading parties. We are taking care that 
-**each contribution are correctly awarded for each product of the Gammapy project**.  
+**each contribution is correctly awarded for each product of the Gammapy project**.  
 
 An [Authorship Policy](https://github.com/gammapy/gammapy/blob/master/docs/development/pigs/pig-024.rst) 
 has been settled of each type of products (releases, papers, conferences). Note that each code release
