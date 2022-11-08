@@ -174,7 +174,7 @@ gc_3fhl_cutout.plot(stretch="sqrt")
 
 ######################################################################
 # For a more detailed introduction to `~gammapy.maps`, take a look a the
-# `maps.ipynb <../api/maps.ipynb>`__ notebook.
+# :doc:`/tutorials/api/maps` notebook.
 #
 # Exercises
 # ~~~~~~~~~
