@@ -297,8 +297,8 @@ print("\n CTA dataset models: ", datasets[1].models.names)
 
 
 ######################################################################
-# Combining two `Models`
-# ------------------------
+# Combining two Models
+# --------------------
 #
 
 
