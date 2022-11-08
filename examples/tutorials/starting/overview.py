@@ -491,7 +491,7 @@ plt.show()
 #
 # -  To learn more about those classes, go to the API docs (links are in
 #    the introduction at the top).
-# -  To learn more about other parts of Gammapy (e.g.Fermi-LAT and TeV
+# -  To learn more about other parts of Gammapy (e.g. Fermi-LAT and TeV
 #    data analysis), check out the other tutorial notebooks.
 # -  To see what’s available in Gammapy, browse the Gammapy docs or use
 #    the full-text search.
