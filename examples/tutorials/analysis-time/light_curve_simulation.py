@@ -367,8 +367,8 @@ plt.show()
 # ---------
 #
 # 1. Re-do the analysis with `MapDataset` instead of `SpectralDataset`
-# 2. Model the flare of PKS 2155-304 which you obtained using the
-#   :doc:`/tutorials/analysis-time/light_curve_flare` tutorial.
-#   Use a combination of a Gaussian and Exponential flare profiles.
+# 2. Model the flare of PKS 2155-304 which you obtained using
+#    the :doc:`/tutorials/analysis-time/light_curve_flare` tutorial.
+#    Use a combination of a Gaussian and Exponential flare profiles.
 # 3. Do a joint fitting of the datasets.
 #

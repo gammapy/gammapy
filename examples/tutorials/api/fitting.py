@@ -19,15 +19,16 @@ Proposed approach
 This is a hands-on tutorial to `~gammapy.modeling`, showing how to do
 perform a Fit in gammapy. The emphasis here is on interfacing the
 `Fit` class and inspecting the errors. To see an analysis example of
-how datasets and models interact, see the
-:doc:`/tutorials/api/model_management` tutorial. As an example, in this notebook,
-we are going to work with HESS data of the Crab Nebula and show in
-particular how to : - perform a spectral analysis - use different
-fitting backends - access covariance matrix information and parameter
-errors - compute likelihood profile - compute confidence contours
+how datasets and models interact, see the :doc:`/tutorials/api/model_management` tutorial.
+As an example, in this notebook, we are going to work with HESS data of the Crab Nebula and show in
+particular how to :
 
-See also: :doc:`/tutorials/api/models` and
-`docs/modeling/index.rst`.
+- perform a spectral analysis
+- use different fitting backends
+- access covariance matrix information and parameter errors
+- compute likelihood profile - compute confidence contours
+
+See also: :doc:`/tutorials/api/models` and :ref:`modeling`.
 
 The setup
 ---------
@@ -243,7 +244,7 @@ for ax, par in zip(axes, datasets.parameters.free_parameters):
 ######################################################################
 # Inspect model residuals. Those can always be accessed using
 # `~gammapy.datasets.Dataset.residuals()`. For more details, we refer here to the dedicated
-#  :doc:`/tutorials/analysis-3d/analysis_3d` (for `~gammapy.datasets.MapDataset` fitting) and
+# :doc:`/tutorials/analysis-3d/analysis_3d` (for `~gammapy.datasets.MapDataset` fitting) and
 # :doc:`/tutorials/analysis-1d/spectral_analysis` (for `SpectrumDataset` fitting).
 #
 
@@ -517,7 +518,7 @@ ax.set_ylabel(f"{par_beta.name}")
 # We choose to plot 1 and 2 sigma confidence contours
 levels = [1, 2]
 contours = ax.contour(x_values, y_values, stat_surface, levels=levels, colors="white")
-ax.clabel(contours, fmt="%.0f, $\\sigma$", inline=3, fontsize=15)
+ax.clabel(contours, fmt="%.0f $\\sigma$", inline=3, fontsize=15)
 
 plt.show()
 

@@ -411,7 +411,7 @@ residual.sum_over_axes().smooth("0.1 deg").plot(
 
 ######################################################################
 # Serialisation
-# ---
+# -------------
 #
 # To serialise the created dataset, you must proceed through the
 # Datasets API
