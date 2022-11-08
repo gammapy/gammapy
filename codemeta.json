@@ -741,10 +741,39 @@
     "issueTracker": "https://github.com/gammapy/gammapy/issues",
     "funding": "None, apart for the permanent staff",
 <<<<<<< HEAD
+<<<<<<< HEAD
     "dateCreated": "2014-01-01",
     "dateModified": "2022-11-09",
 =======
 >>>>>>> 6a45129a0 (Update the codemeta)
+=======
+=======
+    "dateCreated": "2014-01-01",
+    "referencePublication": {
+        "authors": [
+            {
+                "familyName": "Deil",
+                "givenName": "Christoph"
+            },
+            {
+                "familyName": "et al."
+            }
+        ],
+        "title": "Gammapy - A prototype for the CTA science tools",
+        "doi": "10.48550/ARXIV.1709.01751",
+        "url": "https://arxiv.org/abs/1709.01751",
+        "type": "conference-paper",
+        "year": 2017,
+        "conference": {
+            "name": "Proc. 35th ICRC, Busan, South Korea, PoS(ICRC2017)766"
+        },
+        "publisher": {
+            "name": "arXiv"
+        }
+    },
+    "dateModified": "2022-09-15",
+>>>>>>> 43e13dcc3 (Add the authors list of the 1.0)
+>>>>>>> 1bc34e370 (Add the authors list of the 1.0)
     "email": "GAMMAPY-COORDINATION-L@IN2P3.FR",
     "readme": "If you use this software, please cite it using the metadata from this file.",
     "runtimePlatform": [
@@ -772,7 +801,47 @@
         "healpy",
         "requests",
         "tqdm",
+<<<<<<< HEAD
         "ipywidgets"
+=======
+        "healpy",
+        "ipython",
+        "jupyter",
+        "jupyterlab",
+        "naima",
+        "pandas",
+        "reproject",
+        "sherpa",
+        "black",
+        "codespell",
+        "flake8",
+        "isort",
+        "jinja2=3.0",
+        "nbsphinx",
+        "numdifftools",
+        "pandoc",
+        "pydocstyle",
+        "pylint",
+        "setuptools_scm",
+        "sphinx",
+        "sphinx-astropy",
+        "sphinx-click",
+        "sphinx-gallery",
+        "sphinx-panels",
+        "sphinx-copybutton",
+        "tox",
+        "pydata-sphinx-theme=0.8.1",
+        "twine",
+        "yamllint",
+        "nbformat",
+        "h5py",
+        "ruamel.yaml",
+        {
+            "pip": [
+                "pytest-sphinx"
+            ]
+        }
+>>>>>>> 43e13dcc3 (Add the authors list of the 1.0)
     ],
     "author": [
         {
@@ -912,7 +981,11 @@
             "@type": "Person",
             "givenName": "Lars",
             "familyName": "Mohrmann",
+<<<<<<< HEAD
             "affiliation": "Max Planck Institute for Nuclear Physics, Heidelberg, Germany",
+=======
+            "affiliation": "Max Planck Institute for Nuclear Physics, Heidelberg",
+>>>>>>> 43e13dcc3 (Add the authors list of the 1.0)
             "@id": "https://orcid.org/0000-0002-9667-8654"
         },
         {
@@ -924,6 +997,16 @@
         },
         {
             "@type": "Person",
+<<<<<<< HEAD
+=======
+            "givenName": "Daniel",
+            "familyName": "Morcuende",
+            "affiliation": "EMFTEL department and IPARCOS, Universidad Complutense de Madrid, 28040 Madrid, Spain",
+            "@id": "https://orcid.org/0000-0001-9400-0922"
+        },
+        {
+            "@type": "Person",
+>>>>>>> 43e13dcc3 (Add the authors list of the 1.0)
             "givenName": "Kaori",
             "familyName": "Nakashima",
             "affiliation": "Friedrich-Alexander-Universit\u00e4t Erlangen-N\u00fcrnberg, ECAP, Nikolaus-Fiebiger-Str. 2, 91058 Erlangen, Germany"
@@ -1009,7 +1092,11 @@
             "@type": "Person",
             "givenName": "Atreyee",
             "familyName": "Sinha",
+<<<<<<< HEAD
             "affiliation": "EMFTEL department and IPARCOS, Universidad Complutense de Madrid, 28040 Madrid, Spain",
+=======
+            "affiliation": "Departamento de EMFTEL, IPARCOS, Universidad Complutense de Madrid, 28040 Madrid, Spain",
+>>>>>>> 43e13dcc3 (Add the authors list of the 1.0)
             "@id": "https://orcid.org/0000-0002-9238-7163"
         },
         {
@@ -1063,7 +1150,11 @@
         {
             "@type": "Person",
             "givenName": "Amanda",
+<<<<<<< HEAD
             "familyName": "Weinstein",
+=======
+            "familyName": "Weinstein ",
+>>>>>>> 43e13dcc3 (Add the authors list of the 1.0)
             "affiliation": "Iowa State University, USA",
             "@id": "https://orcid.org/0000-0002-2126-2419"
         },
@@ -1071,7 +1162,11 @@
             "@type": "Person",
             "givenName": "Matthew",
             "familyName": "Wood",
+<<<<<<< HEAD
             "affiliation": "Stanford Linear Accelerator Center, USA"
+=======
+            "affiliation": "SLAC, USA"
+>>>>>>> 43e13dcc3 (Add the authors list of the 1.0)
         }
     ]
 <<<<<<< HEAD
