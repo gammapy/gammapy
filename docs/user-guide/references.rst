@@ -17,7 +17,7 @@ Glossary
     1D Analysis
       1D analysis or spectral analysis where data are reduced to a simple 1D
       geometry along the reconstructed energy axis. In Cherenkov astronomy,
-      this is classically performed with an OFF background measurement [Piron2001]_.
+      this is classically performed with an OFF background measurement, see WStat.
 
     3D Analysis
       3D analysis or cube analysis, where data are reduced to a 3D cube with
@@ -33,8 +33,8 @@ Glossary
       per solid angle. See :ref:`irf` and :ref:`irf-bkg`.
 
     Cash
-      The cash statistic is a Poisson fit statistic usually used when signal and
-      background can be modeled [Cash1979]_. It is defined as :math:`2 \times log(L)`. See
+      The Cash statistic is a Poisson fit statistic usually used when signal and
+      background can be modeled. It is defined as :math:`2 \times log(L)`. See
       :ref:`cash` in :ref:`fit statistics <fit-statistics>`.
 
     Dataset
