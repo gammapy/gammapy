@@ -322,3 +322,5 @@ Decision
 ========
 After the addition of comments and proposals, the PIG is accepted by the dev team and the CC.
 The choice of practical implementation of such scheme will be made in dedicated pull requests.
+
+.. _GH 3970: https://github.com/gammapy/gammapy/pull/3970

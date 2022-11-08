@@ -84,7 +84,7 @@ Water Cherenkov Observatories. This data can be read directly using the
 .. accordion-header::
     :id: collapseTwo
     :title: How to compute a 1D spectrum
-    :link: ../tutorials/analysis/1D/spectral_analysis.html
+    :link: ../tutorials/analysis-1d/spectral_analysis.html
 
 Gammapy lets you create a 1D spectrum by defining an analysis region in
 the sky and energy binning using  `~gammapy.maps.RegionGeom` object.
@@ -98,9 +98,9 @@ Flux points can be computed using the `~gammapy.estimators.FluxPointsEstimator`.
 
 |
 
-:link-badge:`../tutorials/analysis/1D/spectral_analysis.html,"1D analysis tutorial",cls=badge-primary text-white`
-:link-badge:`../tutorials/analysis/1D/spectral_analysis_rad_max.html,"1D analysis tutorial with point-like IRFs",cls=badge-primary text-white`
-:link-badge:`../tutorials/analysis/1D/extended_source_spectral_analysis.html,"1D analysis tutorial of extended sources",cls=badge-primary text-white`
+:link-badge:`../tutorials/analysis-1d/spectral_analysis.html,"1D analysis tutorial",cls=badge-primary text-white`
+:link-badge:`../tutorials/analysis-1d/spectral_analysis_rad_max.html,"1D analysis tutorial with point-like IRFs",cls=badge-primary text-white`
+:link-badge:`../tutorials/analysis-1d/extended_source_spectral_analysis.html,"1D analysis tutorial of extended sources",cls=badge-primary text-white`
 
 .. accordion-footer::
 
@@ -118,15 +118,15 @@ fixed spectral index, or following the classical ring background estimation.
 
 |
 
-:link-badge:`../tutorials/analysis/2D/modeling_2D.html,"2D analysis tutorial",cls=badge-primary text-white`
-:link-badge:`../tutorials/analysis/2D/ring_background.html,"2D analysis tutorial with ring background",cls=badge-primary text-white`
+:link-badge:`../tutorials/analysis-2d/modeling_2D.html,"2D analysis tutorial",cls=badge-primary text-white`
+:link-badge:`../tutorials/analysis-2d/ring_background.html,"2D analysis tutorial with ring background",cls=badge-primary text-white`
 
 .. accordion-footer::
 
 .. accordion-header::
     :id: collapseFour
     :title: How to compute a 3D cube
-    :link: ../tutorials/analysis/3D/analysis_3d.html
+    :link: ../tutorials/analysis-3d/analysis_3d.html
 
 Gammapy lets you perform a combined spectral and spatial analysis as well.
 This is sometimes called in jargon a "cube analysis". Based on the 3D data reduction
@@ -138,8 +138,8 @@ Gammapy can also simulate events. Flux points can be computed using the
 
 |
 
-:link-badge:`../tutorials/analysis/3D/analysis_3d.html,"3D analysis tutorial",cls=badge-primary text-white`
-:link-badge:`../tutorials/analysis/3D/event_sampling.html,"3D analysis tutorial with event sampling",cls=badge-primary text-white`
+:link-badge:`../tutorials/analysis-3d/analysis_3d.html,"3D analysis tutorial",cls=badge-primary text-white`
+:link-badge:`../tutorials/analysis-3d/event_sampling.html,"3D analysis tutorial with event sampling",cls=badge-primary text-white`
 
 
 .. accordion-footer::
@@ -148,7 +148,7 @@ Gammapy can also simulate events. Flux points can be computed using the
 .. accordion-header::
     :id: collapseFive
     :title: How to compute a lightcurve
-    :link: ../tutorials/analysis/time/light_curve.html
+    :link: ../tutorials/analysis-time/light_curve.html
 
 Gammapy allows you to compute light curves in various ways. Light curves
 can be computed for a **1D or 3D analysis scenario** (see above) by either
@@ -159,8 +159,8 @@ You can also compute light curves in multiple energy bands. In all cases the lig
 curve is computed using the `~gammapy.estimators.LightCurveEstimator`.
 
 
-:link-badge:`../tutorials/analysis/time/light_curve.html,"Light curve tutorial",cls=badge-primary text-white`
-:link-badge:`../tutorials/analysis/time/light_curve_flare.html,"Light curve tutorial for flares",cls=badge-primary text-white`
+:link-badge:`../tutorials/analysis-time/light_curve.html,"Light curve tutorial",cls=badge-primary text-white`
+:link-badge:`../tutorials/analysis-time/light_curve_flare.html,"Light curve tutorial for flares",cls=badge-primary text-white`
 
 
 .. accordion-footer::
@@ -169,15 +169,15 @@ curve is computed using the `~gammapy.estimators.LightCurveEstimator`.
 .. accordion-header::
     :id: collapseSix
     :title: How to combine data from multiple instruments
-    :link: ../tutorials/analysis/3D/analysis_mwl.html
+    :link: ../tutorials/analysis-3d/analysis_mwl.html
 
 Gammapy offers the possibility to **combine data from multiple instruments**
 in a "joint-likelihood" fit. This can be done at **multiple data levels** and
 independent dimensionality of the data. Gammapy can handle 1D and 3D datasets
 at the same time and can also include e.g. flux points in a combined likelihood fit.
 
-:link-badge:`../tutorials/analysis/3D/analysis_mwl.html,"Combined 1D / 3D analysis tutorial",cls=badge-primary text-white`
-:link-badge:`../tutorials/analysis/1D/sed_fitting.html,"SED fitting tutorial",cls=badge-primary text-white`
+:link-badge:`../tutorials/analysis-3d/analysis_mwl.html,"Combined 1D / 3D analysis tutorial",cls=badge-primary text-white`
+:link-badge:`../tutorials/analysis-1d/sed_fitting.html,"SED fitting tutorial",cls=badge-primary text-white`
 
 
 .. accordion-footer::
