@@ -735,7 +735,7 @@ models.write("my-custom-models.yaml", overwrite=True)
 # bands.
 #
 # `~gammapy.modeling.models.SkyModel` offers a natural framework to simultaneously model the
-# energy and morphology, e.g. spatial extent described by a parametric
+# energy and morphology, e.g. spatial extent described by a parametric
 # model expression with energy dependent parameters.
 #
 # The models shipped within gammapy use a “factorised” representation of
@@ -743,17 +743,18 @@ models.write("my-custom-models.yaml", overwrite=True)
 # and time (:math:`t`) dependence are independent model components and not
 # correlated:
 #
-# :raw-latex:`\begin{align}f(l, b, E, t) = F(l, b) \cdot G(E) \cdot H(t)\end{align}`
+# .. math::
+#     \begin{align}f(l, b, E, t) = F(l, b) \cdot G(E) \cdot H(t)\end{align}
 #
-# To use full 3D models, ie $f(l, b, E) = F(l, b, E)
-# :raw-latex:`\cdot`\ G(E) $, you have to implement your own custom
+# To use full 3D models, ie :math:`f(l, b, E) = F(l, b, E) \cdot \ G(E)`,
+# you have to implement your own custom
 # `SpatialModel`. Note that it is still necessary to multiply by a
 # `SpectralModel`, :math:`G(E)` to be dimensionally consistent.
 #
 # In this example, we create Gaussian Spatial Model with the extension
-# varying with energy. For simplicity, we assume a linear dependence on
+# varying with energy. For simplicity, we assume a linear dependency on
 # energy and parameterize this by specifying the extension at 2 energies.
-# You can add more complex dependences, probably motivated by physical
+# You can add more complex dependencies, probably motivated by physical
 # models.
 #
 
