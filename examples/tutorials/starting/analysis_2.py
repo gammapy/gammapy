@@ -36,7 +36,7 @@ object that reduce an observation to a dataset.
 
 We can then proceed with data reduction with a loop over all selected
 observations to produce datasets in the relevant geometry and stack them
-together (i.e. sum them all).
+together (i.e.sum them all).
 
 In practice, we have to:
 
