@@ -9,9 +9,9 @@ Prerequisites
 
 -  Handling of Fermi-LAT data with Gammapy see the :doc:`/tutorials/data/fermi_lat` tutorial.
 -  Knowledge of spectral analysis to produce 1D On-Off datasets, see
-   the following doc:`/tutorials/analysis-1d/spectral_analysis` tutorial.
+   the following :doc:`/tutorials/analysis-1d/spectral_analysis` tutorial.
 -  Using flux points to directly fit a model (without forward-folding) from the 
-   doc:`/tutorials/analysis-1d/sed_fitting` tutorial.
+   :doc:`/tutorials/analysis-1d/sed_fitting` tutorial.
 
 Context
 -------
