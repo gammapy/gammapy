@@ -749,28 +749,6 @@
 =======
 =======
     "dateCreated": "2014-01-01",
-    "referencePublication": {
-        "authors": [
-            {
-                "familyName": "Deil",
-                "givenName": "Christoph"
-            },
-            {
-                "familyName": "et al."
-            }
-        ],
-        "title": "Gammapy - A prototype for the CTA science tools",
-        "doi": "10.48550/ARXIV.1709.01751",
-        "url": "https://arxiv.org/abs/1709.01751",
-        "type": "conference-paper",
-        "year": 2017,
-        "conference": {
-            "name": "Proc. 35th ICRC, Busan, South Korea, PoS(ICRC2017)766"
-        },
-        "publisher": {
-            "name": "arXiv"
-        }
-    },
     "dateModified": "2022-09-15",
 >>>>>>> 43e13dcc3 (Add the authors list of the 1.0)
 >>>>>>> 1bc34e370 (Add the authors list of the 1.0)
