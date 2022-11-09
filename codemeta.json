@@ -982,10 +982,14 @@
             "givenName": "Lars",
             "familyName": "Mohrmann",
 <<<<<<< HEAD
+<<<<<<< HEAD
             "affiliation": "Max Planck Institute for Nuclear Physics, Heidelberg, Germany",
 =======
             "affiliation": "Max Planck Institute for Nuclear Physics, Heidelberg",
 >>>>>>> 43e13dcc3 (Add the authors list of the 1.0)
+=======
+            "affiliation": "Max Planck Institute for Nuclear Physics, Heidelberg, Germany",
+>>>>>>> 60d313a54 (Implement comments)
             "@id": "https://orcid.org/0000-0002-9667-8654"
         },
         {
@@ -998,6 +1002,7 @@
         {
             "@type": "Person",
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
             "givenName": "Daniel",
             "familyName": "Morcuende",
@@ -1007,6 +1012,8 @@
         {
             "@type": "Person",
 >>>>>>> 43e13dcc3 (Add the authors list of the 1.0)
+=======
+>>>>>>> 60d313a54 (Implement comments)
             "givenName": "Kaori",
             "familyName": "Nakashima",
             "affiliation": "Friedrich-Alexander-Universit\u00e4t Erlangen-N\u00fcrnberg, ECAP, Nikolaus-Fiebiger-Str. 2, 91058 Erlangen, Germany"
@@ -1093,10 +1100,14 @@
             "givenName": "Atreyee",
             "familyName": "Sinha",
 <<<<<<< HEAD
+<<<<<<< HEAD
             "affiliation": "EMFTEL department and IPARCOS, Universidad Complutense de Madrid, 28040 Madrid, Spain",
 =======
             "affiliation": "Departamento de EMFTEL, IPARCOS, Universidad Complutense de Madrid, 28040 Madrid, Spain",
 >>>>>>> 43e13dcc3 (Add the authors list of the 1.0)
+=======
+            "affiliation": "EMFTEL department and IPARCOS, Universidad Complutense de Madrid, 28040 Madrid, Spain",
+>>>>>>> 60d313a54 (Implement comments)
             "@id": "https://orcid.org/0000-0002-9238-7163"
         },
         {
@@ -1163,10 +1174,14 @@
             "givenName": "Matthew",
             "familyName": "Wood",
 <<<<<<< HEAD
+<<<<<<< HEAD
             "affiliation": "Stanford Linear Accelerator Center, USA"
 =======
             "affiliation": "SLAC, USA"
 >>>>>>> 43e13dcc3 (Add the authors list of the 1.0)
+=======
+            "affiliation": "Stanford Linear Accelerator Center, USA"
+>>>>>>> 60d313a54 (Implement comments)
         }
     ]
 <<<<<<< HEAD
