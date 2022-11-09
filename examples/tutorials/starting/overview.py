@@ -9,7 +9,7 @@ Introduction
 
 This is a getting started tutorial for Gammapy.
 
-In this tutorial we will use the `Second Fermi-LAT Catalog of
+In this tutorial we will use the `Third Fermi-LAT Catalog of
 High-Energy Sources (3FHL)
 catalog <http://fermi.gsfc.nasa.gov/ssc/data/access/lat/3FHL/>`__,
 corresponding event list and images to learn how to work with some of
