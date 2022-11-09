@@ -302,3 +302,5 @@ ax.set_yscale("linear")
 
 
 plt.show()
+
+# sphinx_gallery_thumbnail_number = 2
