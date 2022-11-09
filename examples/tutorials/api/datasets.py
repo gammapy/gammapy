@@ -212,9 +212,8 @@ dataset_cta.models = [model, model_bkg]
 
 
 ######################################################################
-# Assigning models to datasets is covered in more detail in the
-#  :doc:`/tutorials/api/model_management`. Printing the dataset will now show
-# the mode components:
+# Assigning models to datasets is covered in more detail in :doc:`/tutorials/api/model_management`.
+# Printing the dataset will now show the model components:
 #
 
 print(dataset_cta)
@@ -243,7 +242,7 @@ npred_source.sum_over_axes().plot()
 ######################################################################
 # `~gammapy.datasets.MapDataset.background` contains the background map computed from the
 # IRF. Internally it will be combined with a `~gammapy.modeling.models.FoVBackgroundModel`, to
-# allow for adjusting the backgroun model during a fit. To get the model
+# allow for adjusting the background model during a fit. To get the model
 # corrected background, one can use `~gammapy.datasets.MapDataset.npred_background`.
 #
 
@@ -442,10 +441,7 @@ print(reg_dataset)
 # -----------------
 #
 # `~gammapy.datasets.FluxPointsDataset` is a `~gammapy.datasets.Dataset` container for precomputed flux
-# points, which can be then used in fitting. `~gammapy.datasets.FluxPointsDataset` cannot
-# be read directly, but should be read through `FluxPoints`, with an
-# additional `~gammapy.modeling.models.SkyModel`. Similarly, `~gammapy.datasets.FluxPointsDataset.write` only
-# saves the `~gammapy.datasets.FluxPointsDataset,data` attribute to disk.
+# points, which can be then used in fitting.
 #
 
 plt.figure()
@@ -477,9 +473,9 @@ print(fp_dataset.data_shape())  # number of data points
 
 
 ######################################################################
-# For an example of fitting `~gammapy.estimators.FluxPoints`, see
-#  :doc:`/tutorials/analysis-1d/sed_fitting`, and can be used for
-# catalog objects, e.g. see :doc:`/tutorials/api/catalog`
+#
+# For an example of fitting `~gammapy.estimators.FluxPoints`, see :doc:`/tutorials/analysis-1d/sed_fitting`,
+# and for using source catalogs see :doc:`/tutorials/api/catalog`
 #
 
 
@@ -488,16 +484,16 @@ print(fp_dataset.data_shape())  # number of data points
 # --------
 #
 # `~gammapy.datasets.Datasets` are a collection of `~gammapy.datasets.Dataset` objects. They can be of the
-# same type, or of different types, eg: mix of `~gammapy.datasets.FluxPointDataset`,
+# same type, or of different types, eg: mix of `~gammapy.datasets.FluxPointsDataset`,
 # `~gammapy.datasets.MapDataset` and `~gammapy.datasets.SpectrumDataset`.
 #
 # For modelling and fitting of a list of `~gammapy.datasets.Dataset` objects, you can
-# either - Do a joint fitting of all the datasets together - Stack the
-# datasets together, and then fit them.
+# either:
+# (a) Do a joint fitting of all the datasets together OR
+# (b) Stack the datasets together, and then fit them.
 #
 # `~gammapy.datasets.Datasets` is a convenient tool to handle joint fitting of
-# simultaneous datasets. As an example, please see the
-#  :doc:`/tutorials/analysis-3d/analysis_mwl`
+# simultaneous datasets. As an example, please see :doc:`/tutorials/analysis-3d/analysis_mwl`
 #
 # To see how stacking is performed, please see :ref:`stack`.
 #
