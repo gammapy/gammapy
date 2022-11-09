@@ -1166,10 +1166,14 @@
             "@type": "Person",
             "givenName": "Amanda",
 <<<<<<< HEAD
+<<<<<<< HEAD
             "familyName": "Weinstein",
 =======
             "familyName": "Weinstein ",
 >>>>>>> 43e13dcc3 (Add the authors list of the 1.0)
+=======
+            "familyName": "Weinstein",
+>>>>>>> 496e903cf (Fix a typo)
             "affiliation": "Iowa State University, USA",
             "@id": "https://orcid.org/0000-0002-2126-2419"
         },
