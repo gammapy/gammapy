@@ -19,6 +19,10 @@ instruments, such as MAGIC, VERITAS and HAWC.
 .. image:: http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat
     :target: http://www.astropy.org/
 
+.. image:: http://img.shields.io/pypi/v/gammapy.svg?text=version
+    :target: https://pypi.org/project/gammapy/
+    :alt: Latest release
+
 .. image:: https://anaconda.org/conda-forge/gammapy/badges/version.svg
     :target: https://anaconda.org/conda-forge/gammapy
 
@@ -78,16 +82,6 @@ Status shields
 * .. image:: https://app.codacy.com/project/badge/Grade/9c32a21a915d4a28823f3b44a99a2810
     :target: https://www.codacy.com/gh/gammapy/gammapy/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=gammapy/gammapy&amp;utm_campaign=Badge_Grade
     :alt: Codacy
-
-* .. image:: http://img.shields.io/pypi/v/gammapy.svg?text=version
-    :target: https://pypi.org/project/gammapy/
-    :alt: Latest release
-
-* .. image:: https://anaconda.org/conda-forge/gammapy/badges/version.svg
-    :target: https://anaconda.org/conda-forge/gammapy
-    :alt: Latest release
-
-* https://www.openhub.net/p/gammapy
 
 
 Note if you cloned this repository before Oct 7th 2022
