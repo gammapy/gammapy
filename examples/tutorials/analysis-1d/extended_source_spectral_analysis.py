@@ -10,9 +10,7 @@ Prerequisites
 -  Understanding of spectral analysis techniques in classical Cherenkov
    astronomy.
 -  Understanding the basic data reduction and modeling/fitting processes
-   with the gammapy library API as shown in the `first gammapy analysis
-   with the gammapy library API
-   tutorial :doc:`/tutorials/starting/analysis_2`
+   with the gammapy library API as shown in the tutorial :doc:`/tutorials/starting/analysis_2`
 
 Context
 -------

@@ -77,7 +77,6 @@ exit:
       check     Run checks for Gammapy
       download  Download datasets and notebooks
       info      Display information about Gammapy
-      jupyter   Perform actions on notebooks
 
 All CLI functionality for Gammapy is implemented as sub-commands of the main
 ``gammapy`` command. If a command has sub-commands, they are listed in the help

@@ -99,7 +99,7 @@ check_tutorials_setup()
 # available to anyone, we have taken a tiny subset of the CTA 1DC data,
 # four observations with the southern array from the GPS survey, pointing
 # near the Galactic center, and included them at `$GAMMAPY_DATA/cta-1dc`
-# which you get via `gammapy download tutorials`.
+# which you get via `gammapy download datasets`.
 #
 # Files
 # ~~~~~
