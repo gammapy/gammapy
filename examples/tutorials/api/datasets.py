@@ -577,3 +577,7 @@ print(stacked)
 
 datasets_sliced = datasets.slice_by_energy(energy_min="1 TeV", energy_max="10 TeV")
 print(datasets_sliced.energy_ranges)
+
+# %%
+
+plt.show()
