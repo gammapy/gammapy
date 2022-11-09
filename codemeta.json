@@ -802,6 +802,7 @@
         "requests",
         "tqdm",
 <<<<<<< HEAD
+<<<<<<< HEAD
         "ipywidgets"
 =======
         "healpy",
@@ -842,6 +843,9 @@
             ]
         }
 >>>>>>> 43e13dcc3 (Add the authors list of the 1.0)
+=======
+        "ipywidgets"
+>>>>>>> d70d4d7bc (Update dependencies)
     ],
     "author": [
         {
