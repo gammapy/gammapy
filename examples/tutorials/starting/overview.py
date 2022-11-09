@@ -9,7 +9,7 @@ Introduction
 
 This is a getting started tutorial for Gammapy.
 
-In this tutorial we will use the `Second Fermi-LAT Catalog of
+In this tutorial we will use the `Third Fermi-LAT Catalog of
 High-Energy Sources (3FHL)
 catalog <http://fermi.gsfc.nasa.gov/ssc/data/access/lat/3FHL/>`__,
 corresponding event list and images to learn how to work with some of
@@ -70,6 +70,7 @@ We will cover the following topics:
 
 import astropy.units as u
 from astropy.coordinates import SkyCoord
+import matplotlib.pyplot as plt
 
 ######################################################################
 # Check setup
@@ -144,6 +145,7 @@ print(f"Total number of counts in the image: {gc_3fhl.data.sum():.0f}")
 # `astropy.visualization.wcsaxes <https://docs.astropy.org/en/stable/visualization/wcsaxes/>`__
 # and defines some defaults for nicer plots (e.g. the colormap ‘afmhot’):
 #
+plt.figure()
 
 gc_3fhl.plot(stretch="sqrt")
 
@@ -153,6 +155,7 @@ gc_3fhl.plot(stretch="sqrt")
 # using a Gaussian kernel.
 #
 
+plt.figure()
 gc_3fhl_smoothed = gc_3fhl.smooth(kernel="gauss", width=0.2 * u.deg)
 
 gc_3fhl_smoothed.plot(stretch="sqrt")
@@ -166,15 +169,17 @@ gc_3fhl_smoothed.plot(stretch="sqrt")
 # cutout map:
 #
 
+plt.figure()
 # define center and size of the cutout region
 center = SkyCoord(0, 0, unit="deg", frame="galactic")
 gc_3fhl_cutout = gc_3fhl_smoothed.cutout(center, 9 * u.deg)
+
 gc_3fhl_cutout.plot(stretch="sqrt")
 
 
 ######################################################################
 # For a more detailed introduction to `~gammapy.maps`, take a look a the
-# `maps.ipynb <../api/maps.ipynb>`__ notebook.
+# :doc:`/tutorials/api/maps` notebook.
 #
 # Exercises
 # ~~~~~~~~~
@@ -391,6 +396,7 @@ print(crab_3fhl_spec)
 # 2000 GeV:
 #
 
+plt.figure()
 ax_crab_3fhl = crab_3fhl_spec.plot(energy_bounds=[10, 2000] * u.GeV, energy_power=0)
 
 
@@ -461,9 +467,11 @@ print(crab_3fhl.flux_points.to_table(sed_type="dnde", formatted=True))
 # distribution:
 #
 
-ax = crab_3fhl_spec.plot(energy_bounds=[10, 2000] * u.GeV, energy_power=2)
-crab_3fhl.flux_points.plot(ax=ax, sed_type="dnde", energy_power=2)
+plt.figure()
+ax = crab_3fhl_spec.plot(energy_bounds=[10, 2000] * u.GeV, sed_type="e2dnde")
+crab_3fhl.flux_points.plot(ax=ax, sed_type="e2dnde")
 
+plt.show()
 
 ######################################################################
 # Exercises
@@ -483,7 +491,7 @@ crab_3fhl.flux_points.plot(ax=ax, sed_type="dnde", energy_power=2)
 #
 # -  To learn more about those classes, go to the API docs (links are in
 #    the introduction at the top).
-# -  To learn more about other parts of Gammapy (e.g.Fermi-LAT and TeV
+# -  To learn more about other parts of Gammapy (e.g. Fermi-LAT and TeV
 #    data analysis), check out the other tutorial notebooks.
 # -  To see what’s available in Gammapy, browse the Gammapy docs or use
 #    the full-text search.

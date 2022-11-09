@@ -10,8 +10,8 @@ Prerequisites
 -  Understanding the gammapy data workflow, in particular what are DL3
    events and instrument response functions (IRF).
 -  Understanding of the data reduction and modeling fitting process as
-   shown in the `analysis with the high level interface
-   tutorial <analysis_1.ipynb>`__
+   shown in the analysis with the high level interface
+   tutorial :doc:`/tutorials/starting/analysis_1`
 
 Context
 -------

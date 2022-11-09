@@ -209,6 +209,7 @@ ax.scatter(
 )
 plt.show()
 
+# sphinx_gallery_thumbnail_number = 3
 
 ######################################################################
 # Note that we used the instrument point-spread-function (PSF) as kernel,

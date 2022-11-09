@@ -488,6 +488,7 @@ create_crab_spectral_model("hess_ecpl").plot(
 ax.legend()
 plt.show()
 
+# sphinx_gallery_thumbnail_number = 5
 
 ######################################################################
 # Exercises

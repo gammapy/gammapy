@@ -27,8 +27,8 @@ with a simple 2D image. Further information is also provided on the
 
 In the following introduction we will learn all the basics of working
 with WCS based maps. HEALPix based maps will be covered in a future
-tutorial. Make sure you have worked through the `Gammapy
-overview <../starting/overview.ipynb>`__, because a solid knowledge
+tutorial. Make sure you have worked through the :doc:`Gammapy
+overview </tutorials/starting/overview>`, because a solid knowledge
 about working with `SkyCoord` and `Quantity` objects as well as
 `Numpy <http://www.numpy.org/>`__ is required for this tutorial.
 
