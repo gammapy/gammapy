@@ -30,14 +30,9 @@ The definition of a safe data range is done using the `SafeMaskMaker` or manuall
 Using gammapy.makers
 --------------------
 
-Gammapy tutorial notebooks that show examples using ``gammapy.makers``:
+.. minigallery:: gammapy.makers.MapDatasetMaker
+    :add-heading:
 
-.. nbgallery::
 
-   ../../tutorials/api/makers.ipynb
-   ../../tutorials/starting/analysis_2.ipynb
-   ../../tutorials/analysis/3D/analysis_3d.ipynb
-   ../../tutorials/analysis/3D/simulate_3d.ipynb
-   ../../tutorials/analysis/1D/spectral_analysis.ipynb
-   ../../tutorials/analysis/1D/spectrum_simulation.ipynb
-
+.. minigallery:: gammapy.makers.SpectrumDatasetMaker
+    :add-heading:

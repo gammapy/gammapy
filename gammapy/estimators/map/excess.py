@@ -117,7 +117,7 @@ class ExcessMapEstimator(Estimator):
       geom                   : WcsGeom
       axes                   : ['lon', 'lat', 'energy']
       shape                  : (320, 240, 1)
-      quantities             : ['npred', 'npred_excess', 'counts', 'ts', 'sqrt_ts', 'norm', 'norm_err']
+      quantities             : ['npred', 'npred_excess', 'counts', 'ts', 'sqrt_ts', 'norm', 'norm_err']  # noqa: E501
       ref. model             : pl
       n_sigma                : 1
       n_sigma_ul             : 2
@@ -163,8 +163,8 @@ class ExcessMapEstimator(Estimator):
     def run(self, dataset):
         """Compute correlated excess, Li & Ma significance and flux maps
 
-        If a model is set on the dataset the excess map estimator will compute the excess taking into account
-        the predicted counts of the model.
+        If a model is set on the dataset the excess map estimator will compute
+        the excess taking into account the predicted counts of the model.
 
         Parameters
         ----------
@@ -251,7 +251,7 @@ class ExcessMapEstimator(Estimator):
 
             if "errn-errp" in self.selection_optional:
                 maps["norm_errn"] = (
-                    Map.from_geom(geom, data=-counts_stat.compute_errn(self.n_sigma))
+                    Map.from_geom(geom, data=counts_stat.compute_errn(self.n_sigma))
                     / reco_exposure
                 )
                 maps["norm_errp"] = (

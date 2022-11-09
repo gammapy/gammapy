@@ -148,23 +148,17 @@ def test_flux_estimator_norm_range():
     assert scale_model.norm.interp == "log"
 
 
-def test_flux_estimator_norm_range_template():
+def test_flux_estimator_norm_spectral_model():
     energy = MapAxis.from_energy_bounds(0.1, 10, 3.0, unit="TeV", name="energy_true")
     template = WcsNDMap.create(npix=10, axes=[energy], unit="cm-2 s-1 sr-1 TeV-1")
     spatial = TemplateSpatialModel(template, normalize=False)
     spectral = PowerLawNormSpectralModel()
     model = SkyModel(spectral_model=spectral, spatial_model=spatial, name="test")
 
-    model.spectral_model.norm.max = 10
-    model.spectral_model.norm.min = 0
-
     estimator = FluxEstimator(source="test", selection_optional=[], reoptimize=True)
 
-    scale_model = estimator.get_scale_model(Models([model]))
-
-    assert_allclose(scale_model.norm.min, 0)
-    assert_allclose(scale_model.norm.max, 10)
-    assert scale_model.norm.interp == "log"
+    with pytest.raises(ValueError, match="`NormSpectralModel` are not supported"):
+        estimator.get_scale_model(Models([model]))
 
 
 def test_flux_estimator_compound_model():
@@ -181,9 +175,33 @@ def test_flux_estimator_compound_model():
     estimator = FluxEstimator(source="test", selection_optional=[], reoptimize=True)
 
     scale_model = estimator.get_scale_model(Models([model]))
-
     assert_allclose(scale_model.norm.min, 1e-3)
     assert_allclose(scale_model.norm.max, 1e2)
+
+    pl2 = PowerLawSpectralModel()
+    pl2.amplitude.min = 1e-14
+    pl2.amplitude.max = 1e-10
+    spectral_model2 = pl + pl2
+    model2 = SkyModel(spectral_model=spectral_model2, name="test")
+    with pytest.raises(ValueError) as e_info:
+        scale_model = estimator.get_scale_model(Models([model2]))
+    assert (
+        "FluxEstimator requires one and only one free 'norm' or 'amplitude'"
+        " parameter in the model to run" in str(e_info.value)
+    )
+
+    pl2.amplitude.frozen = True
+    scale_model = estimator.get_scale_model(Models([model2]))
+    assert_allclose(scale_model.norm.min, 1e-3)
+
+    pl.amplitude.frozen = True
+    pl2.amplitude.frozen = False
+    scale_model = estimator.get_scale_model(Models([model2]))
+    assert_allclose(scale_model.norm.min, 1e-2)
+
+    pl2.amplitude.frozen = True
+    scale_model = estimator.get_scale_model(Models([model2]))
+    assert_allclose(scale_model.norm.min, 1e-3)
 
 
 @requires_dependency("naima")

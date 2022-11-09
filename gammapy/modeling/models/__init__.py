@@ -58,6 +58,7 @@ from .temporal import (
     LinearTemporalModel,
     PowerLawTemporalModel,
     SineTemporalModel,
+    TemplatePhaseCurveTemporalModel,
     TemporalModel,
 )
 
@@ -115,6 +116,7 @@ __all__ = [
     "SuperExpCutoffPowerLaw3FGLSpectralModel",
     "SuperExpCutoffPowerLaw4FGLDR3SpectralModel",
     "SuperExpCutoffPowerLaw4FGLSpectralModel",
+    "TemplatePhaseCurveTemporalModel",
     "TemplateSpatialModel",
     "TemplateSpectralModel",
     "TemplateNDSpectralModel",
@@ -176,6 +178,7 @@ TEMPORAL_MODEL_REGISTRY = Registry(
         GeneralizedGaussianTemporalModel,
         PowerLawTemporalModel,
         SineTemporalModel,
+        TemplatePhaseCurveTemporalModel,
     ]
 )
 """Registry of temporal models classes."""

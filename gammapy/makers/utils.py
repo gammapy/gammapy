@@ -95,7 +95,10 @@ def _map_spectrum_weight(map, spectrum=None):
         spectrum = PowerLawSpectralModel(index=2.0)
 
     # Compute weights vector
-    energy_edges = map.geom.axes["energy_true"].edges
+    for name in map.geom.axes.names:
+        if "energy" in name:
+            energy_name = name
+    energy_edges = map.geom.axes[energy_name].edges
     weights = spectrum.integral(
         energy_min=energy_edges[:-1], energy_max=energy_edges[1:]
     )
@@ -115,11 +118,14 @@ def make_map_background_irf(
     pointing : `~gammapy.data.FixedPointingInfo` or `~astropy.coordinates.SkyCoord`
         Observation pointing
 
-        - If a `~gammapy.data.FixedPointingInfo` is passed, FOV coordinates are properly computed.
-        - If a `~astropy.coordinates.SkyCoord` is passed, FOV frame rotation is not taken into account.
+        - If a `~gammapy.data.FixedPointingInfo` is passed, FOV coordinates
+          are properly computed.
+        - If a `~astropy.coordinates.SkyCoord` is passed, FOV frame rotation
+          is not taken into account.
+
     ontime : `~astropy.units.Quantity`
         Observation ontime. i.e. not corrected for deadtime
-        see https://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/full_enclosure/bkg/index.html#notes)
+        see https://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/full_enclosure/bkg/index.html#notes)  # noqa: E501
     bkg : `~gammapy.irf.Background3D`
         Background rate model
     geom : `~gammapy.maps.WcsGeom`
@@ -174,7 +180,8 @@ def make_map_background_irf(
             if not isinstance(pointing, FixedPointingInfo):
                 raise (
                     TypeError,
-                    "make_map_background_irf requires FixedPointingInfo if BackgroundIRF.fov_alignement is ALTAZ",
+                    "make_map_background_irf requires FixedPointingInfo if "
+                    "BackgroundIRF.fov_alignement is ALTAZ",
                 )
             altaz_coord = sky_coord.transform_to(pointing.altaz_frame)
 

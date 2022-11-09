@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import pytest
 import operator
+import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
@@ -11,18 +11,18 @@ from regions import CircleSkyRegion
 from gammapy.data.gti import GTI
 from gammapy.datasets.map import MapEvaluator
 from gammapy.irf import EDispKernel, PSFKernel
-from gammapy.maps import Map, MapAxis, RegionGeom, WcsGeom
+from gammapy.maps import Map, MapAxis, RegionGeom, RegionNDMap, WcsGeom
 from gammapy.modeling import Parameter
 from gammapy.modeling.models import (
     CompoundSpectralModel,
     ConstantSpectralModel,
     ConstantTemporalModel,
     GaussianSpatialModel,
+    LogParabolaSpectralModel,
     Models,
     PointSpatialModel,
     PowerLawNormSpectralModel,
     PowerLawSpectralModel,
-    LogParabolaSpectralModel,
     SkyModel,
     SpatialModel,
     TemplateNPredModel,
@@ -711,5 +711,12 @@ def test_compound_spectral_model(caplog):
         temporal_model=temporal_model,
         name="source-1",
     )
-    assert_allclose(m.spectral_model(5*u.TeV).value, 2.87e-12, rtol=1e-2)
+    assert_allclose(m.spectral_model(5 * u.TeV).value, 2.87e-12, rtol=1e-2)
 
+
+def test_sky_model_contributes_point_region():
+    model = SkyModel.create("pl", "point")
+
+    geom = RegionGeom.create("icrs;point(0.05, 0.05)", binsz_wcs="0.01 deg")
+    mask = RegionNDMap.from_geom(geom)
+    assert np.any(model.contributes(mask))

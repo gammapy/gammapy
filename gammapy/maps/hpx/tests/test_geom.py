@@ -852,6 +852,7 @@ def test_hpx_geom_separation():
     assert separation.unit == "deg"
     assert_allclose(separation.value[0], 9.978725)
 
+
 def test_check_nside():
     with pytest.raises(ValueError):
         HpxGeom.create(nside=3)

@@ -43,21 +43,14 @@ You may check out the whole list of built-in models in the :ref:`model-gallery`.
 Custom models
 ---------------
 
-Gammapy provides an easy interface to
-`create your own custom models <../tutorials/api/models.ipynb#Implementing-a-custom-model>`__
+Gammapy provides an easy interface to :ref:`custom-model`.
+
 
 Using gammapy.modeling
 ----------------------
 
-Gammapy tutorial notebooks that show examples using ``gammapy.modeling``:
-
-.. nbgallery::
-
-   ../tutorials/api/models.ipynb
-   ../tutorials/api/fitting.ipynb
-   ../tutorials/api/model_management.ipynb
-   ../tutorials/analysis/3D/analysis_3d.ipynb
-   ../tutorials/analysis/1D/spectral_analysis.ipynb
+.. minigallery:: gammapy.modeling.Fit
+    :add-heading:
 
 .. include:: ../references.txt
 

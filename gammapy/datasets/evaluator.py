@@ -5,7 +5,8 @@ import astropy.units as u
 from astropy.coordinates.angle_utilities import angular_separation
 from astropy.utils import lazyproperty
 from regions import CircleSkyRegion
-from gammapy.maps import Map
+import matplotlib.pyplot as plt
+from gammapy.maps import HpxNDMap, Map, RegionNDMap, WcsNDMap
 from gammapy.modeling.models import PointSpatialModel, TemplateNPredModel
 
 PSF_CONTAINMENT = 0.999
@@ -173,22 +174,24 @@ class MapEvaluator:
 
         # lookup psf
         if psf and self.model.spatial_model:
-            if self.apply_psf_after_edisp:
-                geom = geom.as_energy_true
+            energy_name = psf.energy_name
+            if energy_name == "energy":
+                geom_psf = geom
             else:
-                geom = exposure.geom
+                geom_psf = exposure.geom
 
-            if self.use_psf_containment(geom=geom):
-                energy_true = geom.axes["energy_true"].center.reshape((-1, 1, 1))
-                self.psf_containment = psf.containment(
-                    energy_true=energy_true, rad=geom.region.radius
-                )
+            if self.use_psf_containment(geom=geom_psf):
+                energy_values = geom_psf.axes[energy_name].center.reshape((-1, 1, 1))
+                kwargs = {energy_name: energy_values, "rad": geom.region.radius}
+                self.psf_containment = psf.containment(**kwargs)
             else:
-                if geom.is_region or geom.is_hpx:
-                    geom = geom.to_wcs_geom()
+                if geom_psf.is_region or geom_psf.is_hpx:
+                    geom_psf = geom_psf.to_wcs_geom()
 
                 self.psf = psf.get_psf_kernel(
-                    position=self.model.position, geom=geom, containment=PSF_CONTAINMENT
+                    position=self.model.position,
+                    geom=geom_psf,
+                    containment=PSF_CONTAINMENT,
                 )
 
         if self.evaluation_mode == "local":
@@ -364,9 +367,9 @@ class MapEvaluator:
 
     @property
     def apply_psf_after_edisp(self):
-        """ """
-        if not isinstance(self.model, TemplateNPredModel):
-            return self.model.apply_irf.get("psf_after_edisp")
+        return (
+            self.psf is not None and "energy" in self.psf.psf_kernel_map.geom.axes.names
+        )
 
     def compute_npred(self):
         """Evaluate model predicted counts.
@@ -489,3 +492,71 @@ class MapEvaluator:
         if not self.model.apply_irf["edisp"]:
             methods.remove(self.apply_edisp)
         return methods
+
+    def peek(self, figsize=(12, 15)):
+        """Quick-look summary plots.
+        Parameters
+        ----------
+        figsize : tuple
+            Size of the figure.
+        """
+        if self.needs_update:
+            raise AttributeError(
+                "The evaluator needs to be updated first. Execute "
+                "`MapDataset.npred_signal(model_name=...)` before calling this method."
+            )
+
+        nrows = 1
+        if self.psf:
+            nrows += 1
+        if self.edisp:
+            nrows += 1
+
+        fig, axes = plt.subplots(
+            ncols=2,
+            nrows=nrows,
+            subplot_kw={"projection": self.exposure.geom.wcs},
+            figsize=figsize,
+            gridspec_kw={"hspace": 0.2, "wspace": 0.3},
+        )
+
+        axes = axes.flat
+
+        exposure = self.exposure
+        if isinstance(exposure, WcsNDMap) or isinstance(exposure, HpxNDMap):
+            axes[0].set_title("Predicted counts")
+            self.compute_npred().sum_over_axes().plot(ax=axes[0], add_cbar=True)
+
+            axes[1].set_title("Exposure")
+            self.exposure.sum_over_axes().plot(ax=axes[1], add_cbar=True)
+        elif isinstance(exposure, RegionNDMap):
+            axes[0].remove()
+            ax0 = fig.add_subplot(nrows, 2, 1)
+            ax0.set_title("Predicted counts")
+            self.compute_npred().plot(ax=ax0)
+
+            axes[1].remove()
+            ax1 = fig.add_subplot(nrows, 2, 2)
+            ax1.set_title("Exposure")
+            self.exposure.plot(ax=ax1)
+
+        idx = 3
+        if self.psf:
+            axes[2].set_title("Energy-integrated PSF kernel")
+            self.psf.plot_kernel(ax=axes[2], add_cbar=True)
+
+            axes[3].set_title("PSF kernel at 1 TeV")
+            self.psf.plot_kernel(ax=axes[3], add_cbar=True, energy=1 * u.TeV)
+
+            idx += 2
+
+        if self.edisp:
+            axes[idx - 1].remove()
+            ax = fig.add_subplot(nrows, 2, idx)
+            ax.set_title("Energy bias")
+            self.edisp.plot_bias(ax=ax)
+
+            axes[idx].remove()
+            ax = fig.add_subplot(nrows, 2, idx + 1)
+            ax.set_title("Energy dispersion matrix")
+            self.edisp.plot_matrix(ax=ax)

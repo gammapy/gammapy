@@ -14,8 +14,8 @@ __all__ = ["AdaptiveRingBackgroundMaker", "RingBackgroundMaker"]
 class AdaptiveRingBackgroundMaker(Maker):
     """Adaptive ring background algorithm.
 
-    This algorithm extends the `RingBackgroundMaker` method by adapting the
-    size of the ring to achieve a minimum on / off exposure ratio (alpha) in regions
+    This algorithm extends the `RingBackgroundMaker` method by adapting the size
+    of the ring to achieve a minimum on / off exposure ratio (alpha) in regions
     where the area to estimate the background from is limited.
 
     Parameters
@@ -224,7 +224,9 @@ class AdaptiveRingBackgroundMaker(Maker):
 
 class RingBackgroundMaker(Maker):
     """Perform a local renormalisation of the existing background template, using a
-    ring kernel. Expected signal regions should be removed by passing an exclusion mask
+    ring kernel.
+
+    Expected signal regions should be removed by passing an exclusion mask
 
     Parameters
     ----------
@@ -238,7 +240,7 @@ class RingBackgroundMaker(Maker):
 
     Examples
     --------
-    See: For a usage example, see `ring_background.html <../../../docs/tutorials/analysis/2D/ring_background.ipynb>`__
+    For a usage example, see :doc:`/tutorials/analysis-2d/ring_background` tutorial.
 
     See Also
     --------

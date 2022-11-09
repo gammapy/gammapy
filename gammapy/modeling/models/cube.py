@@ -271,6 +271,9 @@ class SkyModel(ModelBase):
             mask = mask.reduce_over_axes(func=np.logical_or)
 
         if mask.geom.is_region and mask.geom.region is not None:
+            if mask.geom.is_all_point_sky_regions:
+                return True
+
             geom = mask.geom.to_wcs_geom()
             mask = geom.region_mask([mask.geom.region])
 
@@ -745,8 +748,8 @@ class TemplateNPredModel(ModelBase):
         Normalized spectral model,
         default is `~gammapy.modeling.models.PowerLawNormSpectralModel`
     copy_data : bool
-        Create a deepcopy of the map data or directly use the original. True by default, can be turned
-        to False to save memory in case of large maps.
+        Create a deepcopy of the map data or directly use the original. True by
+        default, can be turned to False to save memory in case of large maps.
     """
 
     tag = "TemplateNPredModel"
@@ -991,7 +994,7 @@ class TemplateNPredModel(ModelBase):
 def create_fermi_isotropic_diffuse_model(filename, **kwargs):
     """Read Fermi isotropic diffuse model.
 
-    See `LAT Background models <https://fermi.gsfc.nasa.gov/ssc/data/access/lat/BackgroundModels.html>`_
+    See `LAT Background models <https://fermi.gsfc.nasa.gov/ssc/data/access/lat/BackgroundModels.html>`__  # noqa: E501
 
     Parameters
     ----------

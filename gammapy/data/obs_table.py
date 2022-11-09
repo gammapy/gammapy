@@ -67,10 +67,10 @@ class ObservationTable(Table):
             observation ids
         """
         try:
-            self.indices['OBS_ID']
-        except:
-            self.add_index('OBS_ID')
-        return self.__class__(self.loc['OBS_ID', obs_id])
+            self.indices["OBS_ID"]
+        except IndexError:
+            self.add_index("OBS_ID")
+        return self.__class__(self.loc["OBS_ID", obs_id])
 
     def summary(self):
         """Summary info string (str)."""
@@ -181,8 +181,8 @@ class ObservationTable(Table):
         center : `~astropy.coordinate.SkyCoord`
             Cone center coordinate.
         radius : `~astropy.coordinate.Angle`
-            Cone opening angle. The maximal separation allowed between the center and the observation
-            pointing direction.
+            Cone opening angle. The maximal separation allowed between the center
+            and the observation pointing direction.
         inverted : bool, optional
             Invert selection: keep all entries outside the cone.
 
@@ -261,10 +261,12 @@ class ObservationTable(Table):
         >>> selected_obs_table = obs_table.select_observations(selection)
 
         >>> from astropy.time import Time
-        >>> selection = dict(type='time_box', time_range=Time(['2012-01-01T01:00:00', '2012-01-01T02:00:00']))
+        >>> time_range = Time(['2012-01-01T01:00:00', '2012-01-01T02:00:00'])
+        >>> selection = dict(type='time_box', time_range=time_range)
         >>> selected_obs_table = obs_table.select_observations(selection)
 
-        >>> selection = dict(type='par_box', variable='ALT_PNT', value_range=Angle([60., 70.], 'deg'))
+        >>> value_range = Angle([60., 70.], 'deg')
+        >>> selection = dict(type='par_box', variable='ALT_PNT', value_range=value_range)
         >>> selected_obs_table = obs_table.select_observations(selection)
 
         >>> selection = dict(type='par_box', variable='OBS_ID', value_range=[2, 5])

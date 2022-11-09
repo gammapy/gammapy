@@ -1,11 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import operator
+
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-from astropy.table import Table
 from astropy.utils.data import get_pkg_data_filename
-from gammapy.maps import Map, MapAxis
+from gammapy.maps import Map, MapAxis, RegionNDMap
 from gammapy.modeling.models import (
     MODEL_REGISTRY,
     ConstantTemporalModel,
@@ -17,7 +18,9 @@ from gammapy.modeling.models import (
     Models,
     PiecewiseNormSpectralModel,
     PowerLawSpectralModel,
+    LogParabolaSpectralModel,
     PowerLawTemporalModel,
+    CompoundSpectralModel,
     SineTemporalModel,
     SkyModel,
     TemplateNPredModel,
@@ -29,7 +32,7 @@ from gammapy.utils.testing import requires_data
 @pytest.fixture(scope="session")
 @requires_data()
 def models():
-    filename = get_pkg_data_filename("data/examples.yaml")
+    filename = get_pkg_data_filename("./data/examples.yaml")
     models_data = read_yaml(filename)
     models = Models.from_dict(models_data)
     return models
@@ -254,7 +257,8 @@ def make_all_models():
     yield Model.create("LinearTemporalModel", "temporal")
     yield Model.create("PowerLawTemporalModel", "temporal")
     yield Model.create("SineTemporalModel", "temporal")
-    yield Model.create("LightCurveTemplateTemporalModel", "temporal", Table())
+    m = RegionNDMap.create(region=None)
+    yield Model.create("LightCurveTemplateTemporalModel", "temporal", m)
     yield Model.create(
         "SkyModel",
         spatial_model=Model.create("ConstantSpatialModel", "spatial"),
@@ -362,3 +366,37 @@ def test_to_dict_not_default():
     assert model_2.index.min == model.index.min
     assert model_2.index.max == model.index.max
     assert model_2.index.frozen == model.index.frozen
+
+
+def test_to_dict_unfreeze_parameters_frozen_by_default():
+
+    model = PowerLawSpectralModel()
+
+    mdict = model.to_dict(full_output=False)
+    index_dict = mdict["spectral"]["parameters"][2]
+    assert "frozen" not in index_dict
+
+    model.reference.frozen = False
+    mdict = model.to_dict(full_output=False)
+    index_dict = mdict["spectral"]["parameters"][2]
+    assert index_dict["frozen"] is False
+
+
+def test_compound_models_io(tmp_path):
+    m1 = PowerLawSpectralModel()
+    m2 = LogParabolaSpectralModel()
+    m = CompoundSpectralModel(m1, m2, operator.add)
+    sk = SkyModel(spectral_model=m, name="model")
+    Models([sk]).write(tmp_path / "test.yaml")
+    sk1 = Models.read(tmp_path / "test.yaml")
+    assert_allclose(sk1.covariance.data, sk.covariance.data, rtol=1e-3)
+    assert_allclose(np.sum(sk1.covariance.data), 0.0)
+    assert Models([sk]).parameters_unique_names == [
+        "model.spectral.index",
+        "model.spectral.amplitude",
+        "model.spectral.reference",
+        "model.spectral.amplitude",
+        "model.spectral.reference",
+        "model.spectral.alpha",
+        "model.spectral.beta",
+    ]

@@ -253,7 +253,7 @@ class RegionNDMap(Map):
             Dictionary to store meta data.
         wcs : `~astropy.wcs.WCS`
             WCS projection to use for local projections of the region
-        binsz_wcs: `~astropy.units.Quantity` ot str
+        binsz_wcs: `~astropy.units.Quantity` or str
             Bin size used for the default WCS, if wcs=None.
         data : `~numpy.ndarray`
             Data array
@@ -395,8 +395,31 @@ class RegionNDMap(Map):
         return self.data[idxs[::-1]]
 
     def interp_by_coord(self, coords, **kwargs):
-        # inherited docstring
-        pix = self.geom.coord_to_pix(coords)
+        """Interpolate map values at the given map coordinates.
+
+        Parameters
+        ----------
+        coords : tuple, dict or `~gammapy.maps.MapCoord`
+            Coordinate arrays for each dimension of the map.  Tuple
+            should be ordered as (lon, lat, x_0, ..., x_n) where x_i
+            are coordinates for non-spatial dimensions of the map.
+            "lon" and "lat" are optional and will be taken at the center
+            of the region by default.
+        method : {"linear", "nearest"}
+            Method to interpolate data values. By default linear
+            interpolation is performed.
+        fill_value : None or float value
+            The value to use for points outside of the interpolation domain.
+            If None, values outside the domain are extrapolated.
+        values_scale : {"lin", "log", "sqrt"}
+            Optional value scaling.
+
+        Returns
+        -------
+        vals : `~numpy.ndarray`
+            Interpolated pixel values.
+        """
+        pix = self.geom.coord_to_pix(coords=coords)
         return self.interp_by_pix(pix, **kwargs)
 
     def interp_by_pix(self, pix, **kwargs):
@@ -684,7 +707,7 @@ class RegionNDMap(Map):
             table["CHANNEL"] = np.arange(energy_axis.nbin, dtype=np.int16)
             table["COUNTS"] = np.array(data, dtype=np.int32)
 
-            # see https://heasarc.gsfc.nasa.gov/docs/heasarc/ofwg/docs/spectra/ogip_92_007/node6.html
+            # see https://heasarc.gsfc.nasa.gov/docs/heasarc/ofwg/docs/spectra/ogip_92_007/node6.html  # noqa: E501
             table.meta = {
                 "EXTNAME": "SPECTRUM",
                 "telescop": "unknown",

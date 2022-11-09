@@ -24,13 +24,13 @@ class FluxPointsEstimator(FluxEstimator):
     fitted within the energy range defined by the energy group. This is done for
     each group independently. The amplitude is re-normalized using the "norm" parameter,
     which specifies the deviation of the flux from the reference model in this
-    energy group. See https://gamma-astro-data-formats.readthedocs.io/en/latest/spectra/binned_likelihoods/index.html
+    energy group. See https://gamma-astro-data-formats.readthedocs.io/en/latest/spectra/binned_likelihoods/index.html  # noqa: E501
     for details.
 
     The method is also described in the Fermi-LAT catalog paper
     https://ui.adsabs.harvard.edu/abs/2015ApJS..218...23A
     or the HESS Galactic Plane Survey paper
-    https://ui.adsabs.harvard.edu/#abs/2018A%26A...612A...1H
+    https://ui.adsabs.harvard.edu/abs/2018A%26A...612A...1H
 
     Parameters
     ----------
@@ -94,8 +94,19 @@ class FluxPointsEstimator(FluxEstimator):
             Estimated flux points.
         """
         datasets = Datasets(datasets=datasets)
-        rows = []
 
+        if not datasets.energy_axes_are_aligned:
+            raise ValueError("All datasets must have aligned energy axes.")
+
+        if "TELESCOP" in datasets.meta_table.colnames:
+            telescopes = datasets.meta_table["TELESCOP"]
+            if not len(np.unique(telescopes)) == 1:
+                raise ValueError(
+                    "All datasets must use the same value of the"
+                    " 'TELESCOP' meta keyword."
+                )
+
+        rows = []
         for energy_min, energy_max in progress_bar(
             zip(self.energy_edges[:-1], self.energy_edges[1:]), desc="Energy bins"
         ):

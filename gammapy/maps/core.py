@@ -3,10 +3,12 @@ import abc
 import copy
 import inspect
 import json
+from collections import OrderedDict
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
 import matplotlib.pyplot as plt
+from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.scripts import make_path
 from gammapy.utils.units import energy_unit_format
 from .axes import MapAxis
@@ -134,7 +136,7 @@ class Map(abc.ABC):
 
     def rename_axes(self, names, new_names):
         """Rename the Map axes.
-    
+
         Parameters
         ----------
         names : list or str
@@ -606,11 +608,61 @@ class Map(abc.ABC):
         """
         pass
 
-    def resample_axis(self, axis, weights=None, ufunc=np.add):
-        """Resample map to a new axis binning by grouping over smaller bins and apply ufunc to the bin contents.
+    def resample(self, geom, weights=None, preserve_counts=True):
+        """Resample pixels to ``geom`` with given ``weights``.
 
-        By default, the map content are summed over the smaller bins. Other numpy ufunc can be used,
-        e.g. np.logical_and, np.logical_or
+        Parameters
+        ----------
+        geom : `~gammapy.maps.Geom`
+            Target Map geometry
+        weights : `~numpy.ndarray`
+            Weights vector. Default is weight of one. Must have same shape as
+            the data of the map.
+        preserve_counts : bool
+            Preserve the integral over each bin.  This should be true
+            if the map is an integral quantity (e.g. counts) and false if
+            the map is a differential quantity (e.g. intensity)
+
+        Returns
+        -------
+        resampled_map : `Map`
+            Resampled map
+        """
+        coords = self.geom.get_coord()
+        idx = geom.coord_to_idx(coords)
+
+        weights = 1 if weights is None else weights
+
+        resampled = self._init_copy(data=None, geom=geom)
+        resampled._resample_by_idx(
+            idx, weights=self.data * weights, preserve_counts=preserve_counts
+        )
+        return resampled
+
+    @abc.abstractmethod
+    def _resample_by_idx(self, idx, weights=None, preserve_counts=False):
+        """Resample pixels at ``idx`` with given ``weights``.
+
+        Parameters
+        ----------
+        idx : tuple
+            Tuple of pixel index arrays for each dimension of the map.
+            Tuple should be ordered as (I_lon, I_lat, I_0, ..., I_n)
+            for WCS maps and (I_hpx, I_0, ..., I_n) for HEALPix maps.
+        weights : `~numpy.ndarray`
+            Weights vector. Default is weight of one.
+        preserve_counts : bool
+            Preserve the integral over each bin.  This should be true
+            if the map is an integral quantity (e.g. counts) and false if
+            the map is a differential quantity (e.g. intensity)
+        """
+        pass
+
+    def resample_axis(self, axis, weights=None, ufunc=np.add):
+        """Resample map to a new axis by grouping and reducing smaller bins by a given ufunc
+
+        By default, the map content are summed over the smaller bins. Other numpy ufunc can be
+        used, e.g. `numpy.logical_and` or `numpy.logical_or`.
 
         Parameters
         ----------
@@ -814,10 +866,7 @@ class Map(abc.ABC):
            Values of pixels in the map.  np.nan used to flag coords
            outside of map.
         """
-        coords = MapCoord.create(
-            coords, frame=self.geom.frame, axis_names=self.geom.axes.names
-        )
-        pix = self.geom.coord_to_pix(coords)
+        pix = self.geom.coord_to_pix(coords=coords)
         vals = self.get_by_pix(pix, fill_value=fill_value)
         return vals
 
@@ -947,7 +996,8 @@ class Map(abc.ABC):
         if preserve_counts:
             if geom.ndim > 2 and geom.axes[0] != self.geom.axes[0]:
                 raise ValueError(
-                    f"Energy axis do not match: expected {self.geom.axes[0]}, but got {geom.axes[0]}."
+                    f"Energy axis do not match: expected {self.geom.axes[0]},"
+                    " but got {geom.axes[0]}."
                 )
             map_copy.data /= map_copy.geom.solid_angle().to_value("deg2")
 
@@ -963,44 +1013,78 @@ class Map(abc.ABC):
 
         return Map.from_geom(geom, data=data, unit=self.unit)
 
-    def resample(self, geom, weights=None, preserve_counts=True):
-        """Resample pixels to ``geom`` with given ``weights``.
+    def reproject_to_geom(self, geom, preserve_counts=False, precision_factor=10):
+        """Reproject map to input geometry.
 
         Parameters
         ----------
         geom : `~gammapy.maps.Geom`
             Target Map geometry
-        weights : `~numpy.ndarray`
-            Weights vector. Default is weight of one.
         preserve_counts : bool
             Preserve the integral over each bin.  This should be true
             if the map is an integral quantity (e.g. counts) and false if
             the map is a differential quantity (e.g. intensity)
-        """
-        coords = geom.get_coord()
-        idx = self.geom.coord_to_idx(coords)
-        return self._resample_by_idx(
-            idx, weights=weights, preserve_counts=preserve_counts
-        )
+        precision_factor : int
+           Minimal factor between the bin size of the output map and the oversampled base map.
+           Used only for the oversampling method.
 
-    @abc.abstractmethod
-    def _resample_by_idx(self, idx, weights=None, preserve_counts=False):
-        """Resample pixels at ``idx`` with given ``weights``.
-
-        Parameters
-        ----------
-        idx : tuple
-            Tuple of pixel index arrays for each dimension of the map.
-            Tuple should be ordered as (I_lon, I_lat, I_0, ..., I_n)
-            for WCS maps and (I_hpx, I_0, ..., I_n) for HEALPix maps.
-        weights : `~numpy.ndarray`
-            Weights vector. Default is weight of one.
-        preserve_counts : bool
-            Preserve the integral over each bin.  This should be true
-            if the map is an integral quantity (e.g. counts) and false if
-            the map is a differential quantity (e.g. intensity)
+        Returns
+        -------
+        output_map : `Map`
+            Reprojected Map
         """
-        pass
+        from .hpx import HpxGeom
+        from .region import RegionGeom
+
+        axes = [ax.copy() for ax in self.geom.axes]
+        geom3d = geom.copy(axes=axes)
+
+        if not geom.is_image:
+            if geom.axes.names != geom3d.axes.names:
+                raise ValueError("Axis names and order should be the same.")
+            if geom.axes != geom3d.axes and (
+                isinstance(geom3d, HpxGeom) or isinstance(self.geom, HpxGeom)
+            ):
+                raise TypeError(
+                    "Reprojection to 3d geom with non-identical axes is not supported for HpxGeom. "
+                    "Reproject to 2d geom first and then use inter_to_geom method."
+                )
+        if isinstance(geom3d, RegionGeom):
+            base_factor = (
+                geom3d.to_wcs_geom().pixel_scales.min() / self.geom.pixel_scales.min()
+            )
+        elif isinstance(self.geom, RegionGeom):
+            base_factor = (
+                geom3d.pixel_scales.min() / self.geom.to_wcs_geom().pixel_scales.min()
+            )
+        else:
+            base_factor = geom3d.pixel_scales.min() / self.geom.pixel_scales.min()
+
+        if base_factor >= precision_factor:
+            input_map = self
+        else:
+            factor = precision_factor / base_factor
+            if isinstance(self.geom, HpxGeom):
+                factor = int(2 ** np.ceil(np.log(factor) / np.log(2)))
+            else:
+                factor = int(np.ceil(factor))
+            input_map = self.upsample(factor=factor, preserve_counts=preserve_counts)
+
+        output_map = input_map.resample(geom3d, preserve_counts=preserve_counts)
+
+        if not geom.is_image and geom.axes != geom3d.axes:
+            for base_ax, target_ax in zip(geom3d.axes, geom.axes):
+                base_factor = base_ax.bin_width.min() / target_ax.bin_width.min()
+                if not base_factor >= precision_factor:
+                    factor = precision_factor / base_factor
+                    factor = int(np.ceil(factor))
+                    output_map = output_map.upsample(
+                        factor=factor,
+                        preserve_counts=preserve_counts,
+                        axis_name=base_ax.name,
+                    )
+            output_map = output_map.resample(geom, preserve_counts=preserve_counts)
+        return output_map
 
     def fill_events(self, events):
         """Fill event coordinates (`~gammapy.data.EventList`)."""
@@ -1019,7 +1103,7 @@ class Map(abc.ABC):
             Weights vector. Default is weight of one.
         """
         idx = self.geom.coord_to_idx(coords)
-        self.fill_by_idx(idx, weights)
+        self.fill_by_idx(idx, weights=weights)
 
     def fill_by_pix(self, pix, weights=None):
         """Fill pixels at ``pix`` with given ``weights``.
@@ -1167,11 +1251,16 @@ class Map(abc.ABC):
                     info = energy_unit_format(axis.center[idx])
                 else:
                     info = f"{axis.center[idx]:.1f}"
+            elif axis.node_type == "label":
+                info = f"{axis.center[idx]}"
             else:
                 if axis.name == "energy" or axis.name == "energy_true":
-                    info = f"{energy_unit_format(axis.edges[idx])} - {energy_unit_format(axis.edges[idx+1])}"
+                    info = (
+                        f"{energy_unit_format(axis.edges[idx])} - "
+                        f"{energy_unit_format(axis.edges[idx+1])}"
+                    )
                 else:
-                    info = f"{axis.edges[idx]:.1f} - {axis.edges[idx + 1]:.1f} "
+                    info = f"{axis.edges_min[idx]:.1f} - {axis.edges_max[idx]:.1f} "
             ax.set_title(f"{axis.name.capitalize()} " + info)
             lon, lat = ax.coords[0], ax.coords[1]
             lon.set_ticks_position("b")
@@ -1790,3 +1879,31 @@ class Map(abc.ABC):
 
     def __array__(self):
         return self.data
+
+    def sample_coord(self, n_events, random_state=0):
+        """Sample position and energy of events.
+
+        Parameters
+        ----------
+        n_events : int
+            Number of events to sample.
+        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+            Defines random number generator initialisation.
+            Passed to `~gammapy.utils.random.get_random_state`.
+
+        Returns
+        -------
+        coords : `~gammapy.maps.MapCoord` object.
+            Sequence of coordinates and energies of the sampled events.
+        """
+
+        random_state = get_random_state(random_state)
+        sampler = InverseCDFSampler(pdf=self.data, random_state=random_state)
+
+        coords_pix = sampler.sample(n_events)
+        coords = self.geom.pix_to_coord(coords_pix[::-1])
+
+        # TODO: pix_to_coord should return a MapCoord object
+        cdict = OrderedDict(zip(self.geom.axes_names, coords))
+
+        return MapCoord.create(cdict, frame=self.geom.frame)

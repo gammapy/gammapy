@@ -98,7 +98,10 @@ def test_fov_bkg_maker_scale_nocounts(obs_dataset, exclusion_mask, caplog):
     assert_allclose(model.norm.value, 1, rtol=1e-4)
     assert_allclose(model.tilt.value, 0.0, rtol=1e-2)
     assert "WARNING" in [_.levelname for _ in caplog.records]
-    message1 = "FoVBackgroundMaker failed. Only 0 counts outside exclusion mask for test-fov. Setting mask to False."
+    message1 = (
+        "FoVBackgroundMaker failed. Only 0 counts outside exclusion mask "
+        "for test-fov. Setting mask to False."
+    )
     assert message1 in [_.message for _ in caplog.records]
 
 
@@ -138,25 +141,15 @@ def test_fov_bkg_maker_fit(obs_dataset, exclusion_mask):
     assert_allclose(fov_bkg_maker.default_spectral_model.norm.value, 1.0)
 
 
-@pytest.mark.xfail
 @requires_data()
-def test_fov_bkg_maker_fit_nocounts(obs_dataset, exclusion_mask, caplog):
+def test_fov_bkg_maker_fit_nocounts(obs_dataset, exclusion_mask):
     fov_bkg_maker = FoVBackgroundMaker(method="fit", exclusion_mask=exclusion_mask)
 
     test_dataset = obs_dataset.copy(name="test-fov")
-    test_dataset.counts *= 0
+    test_dataset.counts.data[...] = 0
 
     dataset = fov_bkg_maker.run(test_dataset)
-
-    # This should be solved along with issue https://github.com/gammapy/gammapy/issues/3175
-    model = dataset.models[f"{dataset.name}-bkg"].spectral_model
-    assert_allclose(model.norm.value, 1, rtol=1e-4)
-    assert_allclose(model.tilt.value, 0.0, rtol=1e-4)
-
-    assert "WARNING" in [_.levelname for _ in caplog.records]
-    assert f"Fit did not converge for {dataset.name}" in [
-        _.message for _ in caplog.records
-    ]
+    assert np.all(dataset.mask_safe.data == 0)
 
 
 @requires_data()
@@ -195,7 +188,7 @@ def test_fov_bkg_maker_with_source_model(obs_dataset, exclusion_mask, caplog):
     assert_allclose(bkg_model_spec.norm.value, norm_ref, rtol=1e-4)
     assert_allclose(bkg_model_spec.tilt.value, 0.0, rtol=1e-4)
 
-    # apply fit method with pre-fitted source model and no exlusion mask
+    # apply fit method with pre-fitted source model and no exclusion mask
     bkg_model_spec.norm.value = 1
     fov_bkg_maker = FoVBackgroundMaker(method="fit", exclusion_mask=None)
     dataset = fov_bkg_maker.run(test_dataset)
@@ -213,7 +206,7 @@ def test_fov_bkg_maker_with_source_model(obs_dataset, exclusion_mask, caplog):
     assert_allclose(bkg_model_spec.norm.value, 0.830779, rtol=1e-4)
     assert_allclose(bkg_model_spec.tilt.value, 0.0, rtol=1e-4)
 
-    # apply fit method with pre-fitted source model and exlusion mask
+    # apply fit method with pre-fitted source model and exclusion mask
     bkg_model_spec.norm.value = 1
     fov_bkg_maker = FoVBackgroundMaker(method="fit", exclusion_mask=exclusion_mask)
     dataset = fov_bkg_maker.run(test_dataset)
@@ -231,7 +224,10 @@ def test_fov_bkg_maker_with_source_model(obs_dataset, exclusion_mask, caplog):
     fov_bkg_maker = FoVBackgroundMaker(method="scale")
     dataset = fov_bkg_maker.run(test_dataset)
     assert "WARNING" in [_.levelname for _ in caplog.records]
-    message1 = "FoVBackgroundMaker failed. Negative residuals counts for test-fov. Setting mask to False."
+    message1 = (
+        "FoVBackgroundMaker failed. Negative residuals counts for"
+        " test-fov. Setting mask to False."
+    )
     assert message1 in [_.message for _ in caplog.records]
 
 
@@ -267,7 +263,10 @@ def test_fov_bkg_maker_fit_fail(obs_dataset, exclusion_mask, caplog):
     model = dataset.models[f"{dataset.name}-bkg"].spectral_model
     assert_allclose(model.norm.value, 1, rtol=1e-4)
     assert "WARNING" in [_.levelname for _ in caplog.records]
-    message1 = "FoVBackgroundMaker failed. Non-finite normalisation value for test-fov. Setting mask to False."
+    message1 = (
+        "FoVBackgroundMaker failed. Non-finite normalisation value for "
+        "test-fov. Setting mask to False."
+    )
     assert message1 in [_.message for _ in caplog.records]
 
 
@@ -283,7 +282,10 @@ def test_fov_bkg_maker_scale_fail(obs_dataset, exclusion_mask, caplog):
     model = dataset.models[f"{dataset.name}-bkg"].spectral_model
     assert_allclose(model.norm.value, 1, rtol=1e-4)
     assert "WARNING" in [_.levelname for _ in caplog.records]
-    message1 = "FoVBackgroundMaker failed. Only -1940 background counts outside exclusion mask for test-fov. Setting mask to False."
+    message1 = (
+        "FoVBackgroundMaker failed. Only -1940 background counts outside"
+        " exclusion mask for test-fov. Setting mask to False."
+    )
     assert message1 in [_.message for _ in caplog.records]
 
 
@@ -296,7 +298,7 @@ def test_fov_bkg_maker_mask_fit_handling(obs_dataset, exclusion_mask):
     test_dataset.mask_fit = mask_fit
 
     dataset = fov_bkg_maker.run(test_dataset)
-    assert np.all(test_dataset.mask_fit == mask_fit) == True
+    assert np.all(test_dataset.mask_fit == mask_fit)
 
     model = dataset.models[f"{dataset.name}-bkg"].spectral_model
     assert_allclose(model.norm.value, 0.9975, rtol=1e-3)

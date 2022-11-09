@@ -131,8 +131,8 @@ class FluxMaps:
         * sqrt_ts : optional, the square root of the TS, when relevant.
         * success : optional, a boolean tagging the validity of the estimation
     reference_model : `~gammapy.modeling.models.SkyModel`, optional
-        the reference model to use for conversions.
-        If None, a model consisting of a point source with a power law spectrum of index 2 is assumed.
+        The reference model to use for conversions. If None, a model consisting
+        of a point source with a power law spectrum of index 2 is assumed.
     meta : dict, optional
         Dict of metadata.
     gti : `~gammapy.data.GTI`, optional
@@ -235,7 +235,7 @@ class FluxMaps:
 
     @property
     def is_convertible_to_flux_sed_type(self):
-        """Check whether differential sed type is convertable to integral sed type"""
+        """Check whether differential sed type is convertible to integral sed type"""
         if self.sed_type_init in ["dnde", "e2dnde"]:
             return self.energy_axis.node_type == "edges"
 

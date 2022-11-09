@@ -24,6 +24,7 @@ to sky models, for function parameters and variable names.
 
 * ``time`` - time
 * ``energy`` - energy
+* ``energy_true`` - true energy
 * ``ra``, ``dec`` - sky coordinates, ``radec`` frame (i.e. ``icrs`` to be precise)
 * ``glon``, ``glat`` - sky coordinates, ``galactic`` frame
 * ``az``, ``alt`` - sky coordinates, ``altaz`` frame

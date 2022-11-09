@@ -114,7 +114,7 @@ def confidence_scipy(parameters, parameter, function, sigma, reoptimize=True, **
             sigma=sigma,
             upper=False,
             reoptimize=reoptimize,
-            **kwargs
+            **kwargs,
         )
 
     with parameters.restore_status():
@@ -125,7 +125,7 @@ def confidence_scipy(parameters, parameter, function, sigma, reoptimize=True, **
             sigma=sigma,
             upper=True,
             reoptimize=reoptimize,
-            **kwargs
+            **kwargs,
         )
 
     result.update(result_errp)

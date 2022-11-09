@@ -1550,6 +1550,7 @@ class TemplateSpectralModel(SpectralModel):
         self,
         energy,
         values,
+        norm=1.0,
         interp_kwargs=None,
         meta=None,
     ):
@@ -1567,7 +1568,7 @@ class TemplateSpectralModel(SpectralModel):
             points=(energy,), values=values, **interp_kwargs
         )
 
-        super().__init__()
+        super().__init__(norm=norm)
 
     @classmethod
     def read_xspec_model(cls, filename, param, **kwargs):
@@ -1624,26 +1625,25 @@ class TemplateSpectralModel(SpectralModel):
         return norm * self._evaluate((energy,), clip=True)
 
     def to_dict(self, full_output=False):
-        return {
-            self._type: {
-                "type": self.tag[0],
-                "energy": {
-                    "data": self.energy.data.tolist(),
-                    "unit": str(self.energy.unit),
-                },
-                "values": {
-                    "data": self.values.data.tolist(),
-                    "unit": str(self.values.unit),
-                },
-            }
+        data = super().to_dict(full_output)
+        data["spectral"]["energy"] = {
+            "data": self.energy.data.tolist(),
+            "unit": str(self.energy.unit),
         }
+        data["spectral"]["values"] = {
+            "data": self.values.data.tolist(),
+            "unit": str(self.values.unit),
+        }
+
+        return data
 
     @classmethod
     def from_dict(cls, data):
         data = data["spectral"]
         energy = u.Quantity(data["energy"]["data"], data["energy"]["unit"])
         values = u.Quantity(data["values"]["data"], data["values"]["unit"])
-        return cls(energy=energy, values=values)
+        norm = [p["value"] for p in data["parameters"] if p["name"] == "norm"][0]
+        return cls(energy=energy, values=values, norm=norm)
 
     @classmethod
     def from_region_map(cls, map, **kwargs):
@@ -1736,18 +1736,21 @@ class TemplateNDSpectralModel(SpectralModel):
 
     @classmethod
     def from_dict(cls, data):
+        data = data["spectral"]
         filename = data["filename"]
         m = RegionNDMap.read(filename)
         model = cls(m, filename=filename)
         for idx, p in enumerate(model.parameters):
-            p.value = data["spectral"]["parameters"][idx]["value"]
+            par = p.to_dict()
+            par.update(data["parameters"][idx])
+            setattr(model, p.name, Parameter(**par))
         return model
 
     def to_dict(self, full_output=False):
         """Create dict for YAML serilisation"""
         data = super().to_dict(full_output)
-        data["filename"] = self.filename
-        data["unit"] = str(self.map.unit)
+        data["spectral"]["filename"] = self.filename
+        data["spectral"]["unit"] = str(self.map.unit)
         return data
 
 
@@ -1809,7 +1812,6 @@ class EBLAbsorptionNormSpectralModel(SpectralModel):
         # set values log centers
         self.param = param
         self.energy = energy
-        self.energy = energy
         self.data = u.Quantity(data, copy=False)
 
         interp_kwargs = interp_kwargs or {}
@@ -1867,8 +1869,6 @@ class EBLAbsorptionNormSpectralModel(SpectralModel):
     @classmethod
     def read(cls, filename, redshift=0.1, alpha_norm=1, interp_kwargs=None):
         """Build object from an XSPEC model.
-
-        Todo: Format of XSPEC binary files should be referenced at https://gamma-astro-data-formats.readthedocs.io/en/latest/
 
         Parameters
         ----------
@@ -1931,9 +1931,9 @@ class EBLAbsorptionNormSpectralModel(SpectralModel):
 
         References
         ----------
-        .. [1] Franceschini et al., "Extragalactic optical-infrared background radiation, its time evolution and the cosmic photon-photon opacity",
+        .. [1] Franceschini et al., "Extragalactic optical-infrared background radiation, its time evolution and the cosmic photon-photon opacity",  # noqa: E501
             `Link <https://ui.adsabs.harvard.edu/abs/2008A%26A...487..837F>`__
-        .. [2] Dominguez et al., " Extragalactic background light inferred from AEGIS galaxy-SED-type fractions"
+        .. [2] Dominguez et al., " Extragalactic background light inferred from AEGIS galaxy-SED-type fractions"  # noqa: E501
             `Link <https://ui.adsabs.harvard.edu/abs/2011MNRAS.410.2556D>`__
         .. [3] Finke et al., "Modeling the Extragalactic Background Light from Stars and Dust"
             `Link <https://ui.adsabs.harvard.edu/abs/2010ApJ...712..238F>`__
@@ -2059,12 +2059,13 @@ class NaimaSpectralModel(SpectralModel):
         energy,
     ):
         """
-        Compute photon density spectrum from synchrotron emission for synchrotron self-compton model,
-        assuming uniform synchrotron emissivity inside a sphere of radius R
-        (see Section 4.1 of Atoyan & Aharonian 1996)
+        Compute photon density spectrum from synchrotron emission for synchrotron self-compton
+        model, assuming uniform synchrotron emissivity inside a sphere of radius R (see Section
+        4.1 of Atoyan & Aharonian 1996)
 
-        based on :
-        "https://naima.readthedocs.io/en/latest/examples.html#crab-nebula-ssc-model"
+        Based on :
+
+        https://naima.readthedocs.io/en/latest/examples.html#crab-nebula-ssc-model
 
         """
         Lsy = self.ssc_model.flux(
@@ -2176,7 +2177,7 @@ class GaussianSpectralModel(SpectralModel):
         r"""Integrate Gaussian analytically.
 
         .. math::
-            F(E_{min}, E_{max}) = \frac{N_0}{2} \left[ erf(\frac{E - \bar{E}}{\sqrt{2} \sigma})\right]_{E_{min}}^{E_{max}}
+            F(E_{min}, E_{max}) = \frac{N_0}{2} \left[ erf(\frac{E - \bar{E}}{\sqrt{2} \sigma})\right]_{E_{min}}^{E_{max}}  # noqa: E501
 
         Parameters
         ----------
@@ -2202,8 +2203,8 @@ class GaussianSpectralModel(SpectralModel):
         r"""Compute energy flux in given energy range analytically.
 
         .. math::
-            G(E_{min}, E_{max}) =  \frac{N_0 \sigma}{\sqrt{2*\pi}}* \left[ - \exp(\frac{E_{min}-\bar{E}}{\sqrt{2} \sigma})
-            \right]_{E_{min}}^{E_{max}} + \frac{N_0 * \bar{E}}{2} \left[ erf(\frac{E - \bar{E}}{\sqrt{2} \sigma})
+            G(E_{min}, E_{max}) =  \frac{N_0 \sigma}{\sqrt{2*\pi}}* \left[ - \exp(\frac{E_{min}-\bar{E}}{\sqrt{2} \sigma})   # noqa: E501
+            \right]_{E_{min}}^{E_{max}} + \frac{N_0 * \bar{E}}{2} \left[ erf(\frac{E - \bar{E}}{\sqrt{2} \sigma})   # noqa: E501
              \right]_{E_{min}}^{E_{max}}
 
 

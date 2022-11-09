@@ -277,12 +277,12 @@ def test_dataset_maker_spectrum_rad_max(observations_magic_rad_max):
     assert counts.unit == ""
     assert counts_off is not None, "Extracting off counts failed"
     assert counts_off.unit == ""
-    assert_allclose(counts.data.sum(), 950, rtol=1e-5)
-    assert_allclose(counts_off.data.sum(), 518, rtol=1e-5)
+    assert_allclose(counts.data.sum(), 964, rtol=1e-5)
+    assert_allclose(counts_off.data.sum(), 530, rtol=1e-5)
 
     exposure = dataset_on_off.exposure
     assert exposure.unit == "m2 s"
-    assert_allclose(exposure.data.mean(), 67838458.245686, rtol=1e-5)
+    assert_allclose(exposure.data.mean(), 68067647.733834, rtol=1e-5)
 
 
 @requires_data()
@@ -307,7 +307,7 @@ def test_dataset_maker_spectrum_global_rad_max():
     assert counts.unit == ""
     assert counts_off.unit == ""
     assert_allclose(counts.data.sum(), 438, rtol=1e-5)
-    assert_allclose(counts_off.data.sum(), 273, rtol=1e-5)
+    assert_allclose(counts_off.data.sum(), 276, rtol=1e-5)
 
 
 @requires_data()
@@ -396,5 +396,6 @@ def test_dataset_maker_spectrum_rad_max_all_excluded(
     assert caplog.record_tuples[0] == (
         "gammapy.makers.background.reflected",
         logging.WARNING,
-        "ReflectedRegionsBackgroundMaker failed. No OFF region found outside exclusion mask for dataset 'spec'.",
+        "ReflectedRegionsBackgroundMaker failed. No OFF region found outside "
+        "exclusion mask for dataset 'spec'.",
     )

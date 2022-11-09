@@ -7,9 +7,17 @@ from astropy.coordinates import SkyCoord
 from astropy.table import Table
 from astropy.time import Time
 from regions import CircleSkyRegion
-from gammapy.data import GTI, DataStore, EventList, Observation
+from gammapy.data import (
+    GTI,
+    DataStore,
+    EventList,
+    HDUIndexTable,
+    Observation,
+    ObservationTable,
+)
 from gammapy.datasets import MapDataset
-from gammapy.irf import EDispKernelMap, EDispMap, PSFMap
+from gammapy.datasets.map import RAD_AXIS_DEFAULT
+from gammapy.irf import EDispKernelMap, EDispMap, PSFMap, Background2D
 from gammapy.makers import FoVBackgroundMaker, MapDatasetMaker, SafeMaskMaker
 from gammapy.maps import HpxGeom, Map, MapAxis, WcsGeom
 from gammapy.utils.testing import requires_data, requires_dependency
@@ -228,6 +236,7 @@ def test_make_meta_table(observations):
     assert_allclose(map_dataset_meta_table["RA_PNT"], 267.68121338)
     assert_allclose(map_dataset_meta_table["DEC_PNT"], -29.6075)
     assert_allclose(map_dataset_meta_table["OBS_ID"], 110380)
+    assert map_dataset_meta_table["OBS_MODE"] == "POINTING"
 
 
 @requires_data()
@@ -432,3 +441,98 @@ def test_minimal_datastore():
     assert_allclose(stacked.exposure.data.sum(), 6.01909e10)
     assert_allclose(stacked.counts.data.sum(), 1446)
     assert_allclose(stacked.background.data.sum(), 1445.9841)
+
+
+@requires_data()
+def test_dataset_hawc():
+    # create the energy reco axis
+    energy_axis = MapAxis.from_edges(
+        [1.00, 1.78, 3.16, 5.62, 10.0, 17.8, 31.6, 56.2, 100, 177, 316] * u.TeV,
+        name="energy",
+        interp="log",
+    )
+
+    # and energy true axis
+    energy_axis_true = MapAxis.from_energy_bounds(
+        1e-3, 1e4, nbin=140, unit="TeV", name="energy_true"
+    )
+
+    # create a geometry around the Crab location
+    geom = WcsGeom.create(
+        skydir=SkyCoord(ra=83.63, dec=22.01, unit="deg", frame="icrs"),
+        width=3 * u.deg,
+        axes=[energy_axis],
+        binsz=0.1,
+    )
+
+    maker = MapDatasetMaker(
+        selection=["counts", "background", "exposure", "edisp", "psf"]
+    )
+    safemask_maker = SafeMaskMaker(methods=["aeff-max"], aeff_percent=10)
+
+    results = {}
+    results["GP"] = [6.53623241669e16, 58, 0.72202391]
+    results["NN"] = [6.57154247837e16, 62, 0.76743538]
+
+    for which in ["GP", "NN"]:
+
+        # paths and file names
+        data_path = "$GAMMAPY_DATA/hawc/crab_events_pass4/"
+        hdu_filename = "hdu-index-table-" + which + "-Crab.fits.gz"
+        obs_filename = "obs-index-table-" + which + "-Crab.fits.gz"
+
+        # We want the last event lass for speed
+        obs_table = ObservationTable.read(data_path + obs_filename)
+        hdu_table = HDUIndexTable.read(data_path + hdu_filename, hdu=9)
+        data_store = DataStore(hdu_table=hdu_table, obs_table=obs_table)
+
+        observations = data_store.get_observations()
+
+        # create empty dataset that will contain the data
+        geom_exposure = geom.to_image().to_cube([energy_axis_true])
+        geom_psf = geom.to_image().to_cube([RAD_AXIS_DEFAULT, energy_axis])
+        geom_edisp = geom.to_cube([energy_axis_true])
+
+        dataset_empty = MapDataset.from_geoms(
+            geom=geom,
+            name="nHit-9",
+            geom_exposure=geom_exposure,
+            geom_psf=geom_psf,
+            geom_edisp=geom_edisp,
+        )
+
+        # run the maker
+        dataset = maker.run(dataset_empty, observations[0])
+        dataset.exposure.meta["livetime"] = "1 s"
+        dataset = safemask_maker.run(dataset)
+
+        assert_allclose(dataset.exposure.data.sum(), results[which][0])
+        assert_allclose(dataset.counts.data.sum(), results[which][1])
+        assert_allclose(dataset.background.data.sum(), results[which][2])
+
+
+@requires_data()
+def test_make_background_2d(observations):
+    filename = "$GAMMAPY_DATA/tests/irf/bkg_2d_full_example.fits"
+    bkg = Background2D.read(filename)
+    # TODO: better example file for 2d bkg
+    bkg.axes[0]._unit = "TeV"
+    bkg.axes[1]._unit = "deg"
+    bkg._unit = "s-1 TeV-1 sr-1"
+
+    obs = observations[0]
+
+    obs.bkg = bkg
+
+    geom_reco = geom(ebounds=[0.1, 1, 10])
+    e_true = MapAxis.from_edges(
+        [0.1, 0.5, 2.5, 10.0], name="energy_true", unit="TeV", interp="log"
+    )
+
+    reference = MapDataset.create(
+        geom=geom_reco, energy_axis_true=e_true, binsz_irf=1.0
+    )
+    maker_obs = MapDatasetMaker(selection=["background"], background_pad_offset=True)
+
+    map_dataset = maker_obs.run(reference, obs)
+    assert_allclose(map_dataset.background.data.sum(), 17636.60091226549)

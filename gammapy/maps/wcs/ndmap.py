@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-from collections import OrderedDict
 import numpy as np
 import scipy.interpolate
 import scipy.ndimage as ndi
@@ -19,9 +18,7 @@ from regions import (
 )
 import matplotlib.pyplot as plt
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
-from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.units import unit_from_fits_image_hdu
-from ..coord import MapCoord
 from ..geom import pix_tuple_to_idx
 from ..utils import INVALID_INDEX
 from .core import WcsMap
@@ -198,8 +195,10 @@ class WcsNDMap(WcsMap):
         idx = np.ravel_multi_index(idx, self.data.T.shape)
         idx, idx_inv = np.unique(idx, return_inverse=True)
         weights = np.bincount(idx_inv, weights=weights).astype(self.data.dtype)
+
         if not preserve_counts:
             weights /= np.bincount(idx_inv).astype(self.data.dtype)
+
         self.data.T.flat[idx] += weights
 
     def fill_by_idx(self, idx, weights=None):
@@ -298,7 +297,7 @@ class WcsNDMap(WcsMap):
             ) + idx[2:]
         else:
             pix = list(idx)
-            idx_ax = self.geom.axes.index(axis_name)
+            idx_ax = self.geom.axes_names.index(axis_name)
             pix[idx_ax] = (pix[idx_ax] - 0.5 * (factor - 1)) / factor
 
         if preserve_counts:
@@ -717,7 +716,8 @@ class WcsNDMap(WcsMap):
         if len(shape_axes_kernel) > 0:
             if not geom.shape_axes == shape_axes_kernel:
                 raise ValueError(
-                    f"Incompatible shape between data {geom.shape_axes} and kernel {shape_axes_kernel}"
+                    f"Incompatible shape between data {geom.shape_axes}"
+                    " and kernel {shape_axes_kernel}"
                 )
 
         if self.geom.is_image and kernel.ndim == 3:
@@ -857,31 +857,3 @@ class WcsNDMap(WcsMap):
                 raise ValueError("Incompatible spatial geoms between map and weights")
             data = data * weights.data[cutout_slices]
         self.data[parent_slices] += data
-
-    def sample_coord(self, n_events, random_state=0):
-        """Sample position and energy of events.
-
-        Parameters
-        ----------
-        n_events : int
-            Number of events to sample.
-        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
-            Defines random number generator initialisation.
-            Passed to `~gammapy.utils.random.get_random_state`.
-
-        Returns
-        -------
-        coords : `~gammapy.maps.MapCoord` object.
-            Sequence of coordinates and energies of the sampled events.
-        """
-
-        random_state = get_random_state(random_state)
-        sampler = InverseCDFSampler(pdf=self.data, random_state=random_state)
-
-        coords_pix = sampler.sample(n_events)
-        coords = self.geom.pix_to_coord(coords_pix[::-1])
-
-        # TODO: pix_to_coord should return a MapCoord object
-        cdict = OrderedDict(zip(self.geom.axes_names, coords))
-
-        return MapCoord.create(cdict, frame=self.geom.frame)

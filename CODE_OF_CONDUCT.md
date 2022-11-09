@@ -1,0 +1,1 @@
+All Gammapy community members are expected to abide by the [Gammapy Project Code of Conduct](https://gammapy.org/CoC.html).

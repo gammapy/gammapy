@@ -20,6 +20,13 @@ and then just execute the following commands in the terminal:
     lines with ``sherpa`` and ``healpy``. Those are optional dependencies that
     currently aren't available on Windows.
 
+.. note::
+
+    For Apple silicon M1 (`arm64`) architectures you also have to open the
+    environment file and delete the `sherpa` entry, as currently there are
+    no conda packages available. However you can later install `sherpa`
+    in the environment using `python -m pip install sherpa`.
+
 Once the environment has been created you can activate it using:
 
 .. substitution-code-block:: bash
@@ -32,9 +39,9 @@ want to install the datasets and proceed with the following commands:
 
 .. substitution-code-block:: bash
 
-    $ gammapy download notebooks --release |release|
+    $ gammapy download notebooks
     $ gammapy download datasets
-    $ export GAMMAPY_DATA=$PWD/gammapy-datasets
+    $ export GAMMAPY_DATA=$PWD/gammapy-datasets/|release|
 
 You might want to put the definition of the ``$GAMMAPY_DATA`` environment
 variable in your shell profile setup file that is executed when you open a new

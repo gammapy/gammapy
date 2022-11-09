@@ -53,6 +53,27 @@ def _get_model_class_from_dict(data):
     return cls
 
 
+def _build_parameters_from_dict(data, default_parameters):
+    """Build Parameters object from input dict and default  parameter values."""
+    par_data = []
+
+    input_names = [_["name"] for _ in data]
+
+    for par in default_parameters:
+        par_dict = par.to_dict()
+        try:
+            index = input_names.index(par_dict["name"])
+            par_dict.update(data[index])
+        except ValueError:
+            log.warning(
+                f"Parameter '{par_dict['name']}' not defined in YAML file."
+                f" Using default value: {par_dict['value']} {par_dict['unit']}"
+            )
+        par_data.append(par_dict)
+
+    return Parameters.from_dict(par_data)
+
+
 class ModelBase:
     """Model base class."""
 
@@ -170,7 +191,7 @@ class ModelBase:
                     ):
                         del par[item]
 
-                if not par["frozen"]:
+                if par["frozen"] == init["frozen"]:
                     del par["frozen"]
 
                 if init["unit"] == "":
@@ -187,7 +208,6 @@ class ModelBase:
     def from_dict(cls, data):
         kwargs = {}
 
-        par_data = []
         key0 = next(iter(data))
 
         if key0 in ["spatial", "temporal", "spectral"]:
@@ -198,22 +218,12 @@ class ModelBase:
                 f"Invalid model type {data['type']} for class {cls.__name__}"
             )
 
-        input_names = [_["name"] for _ in data["parameters"]]
+        parameters = _build_parameters_from_dict(
+            data["parameters"], cls.default_parameters
+        )
 
-        for par in cls.default_parameters:
-            par_dict = par.to_dict()
-            try:
-                index = input_names.index(par_dict["name"])
-                par_dict.update(data["parameters"][index])
-            except ValueError:
-                log.warning(
-                    f"Parameter '{par_dict['name']}' not defined in YAML file. Using default value: {par_dict['value']} {par_dict['unit']}"
-                )
-            par_data.append(par_dict)
-
-        parameters = Parameters.from_dict(par_data)
-
-        # TODO: this is a special case for spatial models, maybe better move to `SpatialModel` base class
+        # TODO: this is a special case for spatial models, maybe better move to
+        #  `SpatialModel` base class
         if "frame" in data:
             kwargs["frame"] = data["frame"]
 
@@ -287,7 +297,9 @@ class Model:
         Examples
         --------
         >>> from gammapy.modeling.models import Model
-        >>> spectral_model = Model.create("pl-2", model_type="spectral", amplitude="1e-10 cm-2 s-1", index=3)
+        >>> spectral_model = Model.create(
+                    "pl-2", model_type="spectral", amplitude="1e-10 cm-2 s-1", index=3
+                )
         >>> type(spectral_model)
         <class 'gammapy.modeling.models.spectral.PowerLaw2SpectralModel'>
         """
@@ -572,7 +584,7 @@ class DatasetModels(collections.abc.Sequence):
 
         for idx, name in enumerate(names):
             values = self.covariance.data[idx]
-            table[name] = values
+            table[str(idx)] = values
 
         table.write(make_path(filename), **kwargs)
 
@@ -992,6 +1004,7 @@ class DatasetModels(collections.abc.Sequence):
             WCS axes
         """
         regions = self.to_regions()
+
         geom = RegionGeom.from_regions(regions=regions)
         return geom.plot_region(
             ax=ax, kwargs_point=kwargs_point, path_effect=path_effect, **kwargs

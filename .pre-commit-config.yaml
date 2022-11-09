@@ -1,0 +1,18 @@
+repos:
+  # https://pycqa.github.io/isort/docs/configuration/black_compatibility.html#integration-with-pre-commit
+  - repo: https://github.com/pycqa/isort
+    rev: 5.6.4
+    hooks:
+      - id: isort
+        args: ["--profile", "black", "--filter-files"]
+  - repo: https://github.com/psf/black
+    rev: 22.6.0
+    hooks:
+      - id: black
+  # https://black.readthedocs.io/en/stable/guides/using_black_with_other_tools.html?highlight=other%20tools#flake8
+  - repo: https://github.com/PyCQA/flake8
+    rev: 4.0.1
+    hooks:
+      - id: flake8
+        exclude: examples
+        args: ["--count", "--max-line-length=100", "--extend-ignore=E203,E712,W503"]

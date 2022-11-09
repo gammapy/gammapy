@@ -76,7 +76,8 @@ class IRF(metaclass=abc.ABCMeta):
             self.data = data.value
             if not self.default_unit.is_equivalent(data.unit):
                 raise ValueError(
-                    f"Error: {data.unit} is not an allowed unit. {self.tag} requires {self.default_unit} data quantities."
+                    f"Error: {data.unit} is not an allowed unit. {self.tag} "
+                    f"requires {self.default_unit} data quantities."
                 )
             else:
                 self._unit = data.unit
@@ -448,7 +449,8 @@ class IRF(metaclass=abc.ABCMeta):
         irf : `IRF`
             IRF class.
         """
-        axes = MapAxes.from_table(table=table, format=format)[cls.required_axes]
+        axes = MapAxes.from_table(table=table, format=format)
+        axes = axes[cls.required_axes]
         column_name = IRF_DL3_HDU_SPECIFICATION[cls.tag]["column_name"]
         data = table[column_name].quantity[0].transpose()
 

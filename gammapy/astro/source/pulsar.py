@@ -30,10 +30,10 @@ class SimplePulsar:
         Radius of the pulsar (cm)
     """
 
-    def __init__(self, P, P_dot, I=DEFAULT_I, R=DEFAULT_R):
+    def __init__(self, P, P_dot, I=DEFAULT_I, R=DEFAULT_R):  # noqa: E741
         self.P = Quantity(P, "s")
         self.P_dot = P_dot
-        self.I = I
+        self.I = I  # noqa: E741
         self.R = R
 
     @property
@@ -79,12 +79,19 @@ class Pulsar:
     """
 
     def __init__(
-        self, P_0="0.1 s", B="1e10 G", n=3, I=DEFAULT_I, R=DEFAULT_R, age=None, L_0=None
+        self,
+        P_0="0.1 s",
+        B="1e10 G",
+        n=3,
+        I=DEFAULT_I,  # noqa: E741
+        R=DEFAULT_R,
+        age=None,
+        L_0=None,  # noqa: E741
     ):
         P_0 = Quantity(P_0, "s")
         B = Quantity(B, "G")
 
-        self.I = I
+        self.I = I  # noqa: E741
         self.R = R
         self.P_0 = P_0
         self.B = B

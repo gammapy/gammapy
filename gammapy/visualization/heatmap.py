@@ -78,7 +78,7 @@ def annotate_heatmap(
     valfmt="{x:.2f}",
     textcolors=("black", "white"),
     threshold=None,
-    **textkw
+    **textkw,
 ):
     """
     A function to annotate a heatmap.

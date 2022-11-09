@@ -6,7 +6,6 @@ import astropy.units as u
 from astropy.io import fits
 from astropy.table import Table, vstack
 from astropy.time import Time
-from astropy.units import Quantity
 from gammapy.utils.scripts import make_path
 from gammapy.utils.time import (
     time_ref_from_dict,
@@ -41,9 +40,9 @@ class GTI:
     GTI info:
     - Number of GTIs: 1
     - Duration: 1687.0 s
-    - Start: 53343.92234009259 MET
+    - Start: 123890826.0 s MET
     - Start: 2004-12-04T22:08:10.184 (time standard: TT)
-    - Stop: 53343.94186555556 MET
+    - Stop: 123892513.0 s MET
     - Stop: 2004-12-04T22:36:17.184 (time standard: TT)
 
     Load GTIs for a Fermi-LAT event list:
@@ -53,9 +52,9 @@ class GTI:
     GTI info:
     - Number of GTIs: 39042
     - Duration: 183139597.9032163 s
-    - Start: 54682.65603794185 MET
+    - Start: 239557417.49417615 s MET
     - Start: 2008-08-04T15:44:41.678 (time standard: TT)
-    - Stop: 57236.96833546296 MET
+    - Stop: 460250000.0 s MET
     - Stop: 2015-08-02T23:14:24.184 (time standard: TT)
     """
 
@@ -86,8 +85,8 @@ class GTI:
         if isinstance(stop, Time):
             stop = (stop - reference_time).to(u.s)
 
-        start = Quantity(start, ndmin=1)
-        stop = Quantity(stop, ndmin=1)
+        start = u.Quantity(start, ndmin=1)
+        stop = u.Quantity(stop, ndmin=1)
         meta = time_ref_to_dict(reference_time)
         table = Table({"START": start.to("s"), "STOP": stop.to("s")}, meta=meta)
         return cls(table)
@@ -139,14 +138,18 @@ class GTI:
         hdulist.writeto(make_path(filename), **kwargs)
 
     def __str__(self):
+        t_start_met = u.Quantity(self.table["START"][0].astype("float64"), "second")
+        t_stop_met = u.Quantity(self.table["STOP"][-1].astype("float64"), "second")
+        t_start = self.time_start[0].fits
+        t_stop = self.time_stop[-1].fits
         return (
             "GTI info:\n"
             f"- Number of GTIs: {len(self.table)}\n"
             f"- Duration: {self.time_sum}\n"
-            f"- Start: {self.time_start[0]} MET\n"
-            f"- Start: {self.time_start[0].fits} (time standard: {self.time_start[-1].scale.upper()})\n"
-            f"- Stop: {self.time_stop[-1]} MET\n"
-            f"- Stop: {self.time_stop[-1].fits} (time standard: {self.time_stop[-1].scale.upper()})\n"
+            f"- Start: {t_start_met} MET\n"
+            f"- Start: {t_start} (time standard: {self.time_start[-1].scale.upper()})\n"
+            f"- Stop: {t_stop_met} MET\n"
+            f"- Stop: {t_stop} (time standard: {self.time_stop[-1].scale.upper()})\n"
         )
 
     @property
@@ -154,7 +157,7 @@ class GTI:
         """GTI durations in seconds (`~astropy.units.Quantity`)."""
         start = self.table["START"].astype("float64")
         stop = self.table["STOP"].astype("float64")
-        return Quantity(stop - start, "second")
+        return u.Quantity(stop - start, "second")
 
     @property
     def time_ref(self):
@@ -169,13 +172,13 @@ class GTI:
     @property
     def time_start(self):
         """GTI start times (`~astropy.time.Time`)."""
-        met = Quantity(self.table["START"].astype("float64"), "second")
+        met = u.Quantity(self.table["START"].astype("float64"), "second")
         return self.time_ref + met
 
     @property
     def time_stop(self):
         """GTI end times (`~astropy.time.Time`)."""
-        met = Quantity(self.table["STOP"].astype("float64"), "second")
+        met = u.Quantity(self.table["STOP"].astype("float64"), "second")
         return self.time_ref + met
 
     @property
@@ -335,7 +338,7 @@ class GTI:
         group_table : `~astropy.table.Table`
             Contains the grouping info.
         """
-        atol = Quantity(atol)
+        atol = u.Quantity(atol)
 
         group_table = Table(
             names=("group_idx", "time_min", "time_max", "bin_type"),

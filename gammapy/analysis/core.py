@@ -129,7 +129,8 @@ class Analysis:
         return selected_obs_table["OBS_ID"].tolist()
 
     def get_observations(self):
-        """Fetch observations from the data store according to criteria defined in the configuration."""
+        """Fetch observations from the data store according to criteria defined
+        in the configuration."""
         observations_settings = self.config.observations
         self._set_data_store()
 

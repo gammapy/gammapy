@@ -4,7 +4,7 @@ import numpy as np
 from gammapy.datasets import Datasets
 from gammapy.estimators.parameter import ParameterEstimator
 from gammapy.maps import Map, MapAxis
-from gammapy.modeling import Parameter
+from gammapy.modeling import Parameter, Parameters
 from gammapy.modeling.models import ScaleSpectralModel
 
 log = logging.getLogger(__name__)
@@ -19,6 +19,8 @@ class FluxEstimator(ParameterEstimator):
     fitted within the energy range. The amplitude is re-normalized using the "norm" parameter,
     which specifies the deviation of the flux from the reference model in this
     energy range.
+
+    Note that there should be only one free norm or amplitude parameter for the estimator to run.
 
     Parameters
     ----------
@@ -111,18 +113,24 @@ class FluxEstimator(ParameterEstimator):
             Scale spectral model
         """
         ref_model = models[self.source].spectral_model
-        scale_model = ScaleSpectralModel(ref_model)
 
-        for scaled_parameter in ref_model.parameters:
-            if scaled_parameter.is_norm:
-                break
-        else:
+        if ref_model.is_norm_spectral_model:
             raise ValueError(
-                f"{self.tag} requires a 'norm' or 'amplitude' parameter"
-                " in the model to run"
+                "Instances of `NormSpectralModel` are not supported for flux point estimation."
             )
 
-        scale_model.norm = self._set_norm_parameter(scale_model.norm, scaled_parameter)
+        scale_model = ScaleSpectralModel(ref_model)
+
+        norms = Parameters([p for p in ref_model.parameters if p.is_norm])
+        if len(norms) == 0 or len(norms.free_parameters) > 1:
+            raise ValueError(
+                f"{self.tag} requires one and only one free 'norm' or 'amplitude' parameter"
+                " in the model to run"
+            )
+        elif len(norms.free_parameters) == 1:
+            norms = norms.free_parameters
+
+        scale_model.norm = self._set_norm_parameter(scale_model.norm, norms[0])
         return scale_model
 
     def estimate_npred_excess(self, datasets):
@@ -180,7 +188,6 @@ class FluxEstimator(ParameterEstimator):
         datasets.models = models
         result.update(super().run(datasets, model.norm))
 
-        # TODO: find a cleaner way of including the npred_excess info
         datasets.models[self.source].spectral_model.norm.value = result["norm"]
         result.update(self.estimate_npred_excess(datasets=datasets))
         return result

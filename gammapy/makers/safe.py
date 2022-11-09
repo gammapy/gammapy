@@ -17,6 +17,13 @@ log = logging.getLogger(__name__)
 class SafeMaskMaker(Maker):
     """Make safe data range mask for a given observation.
 
+
+    .. warning::
+
+         Currently some methods computing a safe energy range ("aeff-default",
+         "aeff-max" and "edisp-bias") determine a true energy range and apply
+         it to reconstructed energy, effectively neglecting the energy dispersion.
+
     Parameters
     ----------
     methods : {"aeff-default", "aeff-max", "edisp-bias", "offset-max", "bkg-peak"}
@@ -172,7 +179,9 @@ class SafeMaskMaker(Maker):
         aeff = exposure.get_spectrum(position) / exposure.meta["livetime"]
         if not np.any(aeff.data > 0.0):
             log.warning(
-                f"Effective area is all zero at [{position.to_string('dms')}]. No safe energy band can be defined for the dataset '{dataset.name}': setting `mask_safe` to all False."
+                f"Effective area is all zero at [{position.to_string('dms')}]. "
+                f"No safe energy band can be defined for the dataset '{dataset.name}': "
+                "setting `mask_safe` to all False."
             )
             return Map.from_geom(geom, data=False, dtype="bool")
 

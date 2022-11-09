@@ -1082,3 +1082,6 @@ class HpxNDMap(HpxMap):
             return m.plot_mask(ax=ax, **kwargs)
         else:
             raise ValueError(f"Invalid method: {method!r}")
+
+    def sample_coord(self, n_events, random_state=0):
+        raise NotImplementedError("HpXNDMap.sample_coord is not implemented yet.")

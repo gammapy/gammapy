@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import collections.abc
 import copy
+import inspect
 import logging
 from itertools import zip_longest
 import numpy as np
@@ -186,7 +187,7 @@ class Observation:
             Stop time of observation as `~astropy.time.Time` or duration
             relative to `reference_time`
         irfs: dict
-            IRFs used for simulating the observation: `bkg`, `aeff`, `psf`, `edisp`
+            IRFs used for simulating the observation: `bkg`, `aeff`, `psf`, `edisp`, `rad_max`
         deadtime_fraction : float, optional
             Deadtime fraction, defaults to 0
         reference_time : `~astropy.time.Time`
@@ -221,6 +222,7 @@ class Observation:
             bkg=irfs.get("bkg"),
             edisp=irfs.get("edisp"),
             psf=irfs.get("psf"),
+            rad_max=irfs.get("rad_max"),
         )
 
     @property
@@ -502,6 +504,52 @@ class Observation:
                     hdul.append(irf.to_table_hdu(format="gadf-dl3"))
 
         hdul.writeto(path, overwrite=overwrite)
+
+    def copy(self, in_memory=False, **kwargs):
+        """Copy observation
+
+        Overwriting arguments requires the 'in_memory` argument to be true.
+
+        Parameters
+        ----------
+        in_memory : bool
+            Copy observation in memory.
+        **kwargs : dict
+            Keyword arguments passed to `Observation`
+
+        Examples
+        --------
+
+        .. code::
+
+            from gammapy.data import Observation
+
+            obs = Observation.read(
+                "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz"
+            )
+
+            obs_copy = obs.copy(obs_id=1234)
+            print(obs_copy)
+
+
+        Returns
+        -------
+        obs : `Observation`
+            Copied observation
+        """
+        if in_memory:
+            argnames = inspect.getfullargspec(self.__init__).args
+            argnames.remove("self")
+
+            for name in argnames:
+                value = getattr(self, name)
+                kwargs.setdefault(name, copy.deepcopy(value))
+            return self.__class__(**kwargs)
+
+        if kwargs:
+            raise ValueError("Overwriting arguments requires to set 'in_memory=True'")
+
+        return copy.deepcopy(self)
 
 
 class Observations(collections.abc.MutableSequence):

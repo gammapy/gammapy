@@ -35,7 +35,9 @@ class EDispKernel(IRF):
     >>> from gammapy.irf import EDispKernel
     >>> energy = MapAxis.from_energy_bounds(0.1,10,10, unit='TeV')
     >>> energy_true = MapAxis.from_energy_bounds(0.1,10,10, unit='TeV', name='energy_true')
-    >>> edisp = EDispKernel.from_gauss(energy_axis_true=energy_true, energy_axis=energy, sigma=0.1, bias=0)
+    >>> edisp = EDispKernel.from_gauss(
+    >>>     energy_axis_true=energy_true, energy_axis=energy, sigma=0.1, bias=0
+    >>> )
 
     Have a quick look:
 
@@ -174,13 +176,17 @@ class EDispKernel(IRF):
             from gammapy.irf import EDispKernel
             from gammapy.maps import MapAxis
 
-            energy_true_axis = MapAxis.from_energy_edges([0.5, 1, 2, 4, 6] * u.TeV, name="energy_true")
+            energy_true_axis = MapAxis.from_energy_edges(
+                    [0.5, 1, 2, 4, 6] * u.TeV, name="energy_true"
+                )
             edisp = EDispKernel.from_diagonal_response(energy_true_axis)
             edisp.plot_matrix()
 
         Example with different energy binnings::
 
-            energy_true_axis = MapAxis.from_energy_edges([0.5, 1, 2, 4, 6] * u.TeV, name="energy_true")
+            energy_true_axis = MapAxis.from_energy_edges(
+                    [0.5, 1, 2, 4, 6] * u.TeV, name="energy_true"
+                )
             energy_axis = MapAxis.from_energy_edges([2, 4, 6] * u.TeV)
             edisp = EDispKernel.from_diagonal_response(energy_true_axis, energy_axis)
             edisp.plot_matrix()
@@ -220,11 +226,12 @@ class EDispKernel(IRF):
             if l.field("N_GRP"):
                 m_start = 0
                 for k in range(l.field("N_GRP")):
-                    pdf_matrix[
-                        i,
-                        l.field("F_CHAN")[k] : l.field("F_CHAN")[k]
-                        + l.field("N_CHAN")[k],
-                    ] = l.field("MATRIX")[m_start : m_start + l.field("N_CHAN")[k]]
+                    chan_min = l.field("F_CHAN")[k]
+                    chan_max = l.field("F_CHAN")[k] + l.field("N_CHAN")[k]
+
+                    pdf_matrix[i, chan_min:chan_max] = l.field("MATRIX")[
+                        m_start : m_start + l.field("N_CHAN")[k]  # noqa: E203
+                    ]
                     m_start += l.field("N_CHAN")[k]
 
         table = Table.read(ebounds_hdu)
@@ -304,7 +311,7 @@ class EDispKernel(IRF):
         """Convert to `~astropy.table.Table`.
 
         The output table is in the OGIP RMF format.
-        https://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/memos/cal_gen_92_002/cal_gen_92_002.html#Tab:1
+        https://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/memos/cal_gen_92_002/cal_gen_92_002.html#Tab:1  # noqa: E501
 
         Parameters
         ----------
