@@ -39,28 +39,6 @@
     "issueTracker": "https://github.com/gammapy/gammapy/issues",
     "funding": "None, apart for the permanent staff",
     "dateCreated": "2014-01-01",
-    "referencePublication": {
-        "authors": [
-            {
-                "familyName": "Deil",
-                "givenName": "Christoph"
-            },
-            {
-                "familyName": "et al."
-            }
-        ],
-        "title": "Gammapy - A prototype for the CTA science tools",
-        "doi": "10.48550/ARXIV.1709.01751",
-        "url": "https://arxiv.org/abs/1709.01751",
-        "type": "conference-paper",
-        "year": 2017,
-        "conference": {
-            "name": "Proc. 35th ICRC, Busan, South Korea, PoS(ICRC2017)766"
-        },
-        "publisher": {
-            "name": "arXiv"
-        }
-    },
     "dateModified": "2022-11-09",
     "email": "GAMMAPY-COORDINATION-L@IN2P3.FR",
     "readme": "If you use this software, please cite it using the metadata from this file.",
