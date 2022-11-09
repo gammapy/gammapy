@@ -29,7 +29,7 @@
         "@type": "Person",
         "affiliation": {
             "@type": "Organization",
-            "name": "Center for Astrophysics | Harvard & Smithsonian, CfA, 60 Garden St., 02138 Cambridge MA, US"
+            "name": "Center for Astrophysics | Harvard & Smithsonian, CfA, 60 Garden St., 02138 Cambridge MA, USA"
         },
         "familyName": "Donath",
         "givenName": "Axel"
@@ -270,15 +270,8 @@
             "@type": "Person",
             "givenName": "Lars",
             "familyName": "Mohrmann",
-            "affiliation": "Max Planck Institute for Nuclear Physics, Heidelberg",
+            "affiliation": "Max Planck Institute for Nuclear Physics, Heidelberg, Germany",
             "@id": "https://orcid.org/0000-0002-9667-8654"
-        },
-        {
-            "@type": "Person",
-            "givenName": "Daniel",
-            "familyName": "Morcuende",
-            "affiliation": "EMFTEL department and IPARCOS, Universidad Complutense de Madrid, 28040 Madrid, Spain",
-            "@id": "https://orcid.org/0000-0001-9400-0922"
         },
         {
             "@type": "Person",
@@ -374,7 +367,7 @@
             "@type": "Person",
             "givenName": "Atreyee",
             "familyName": "Sinha",
-            "affiliation": "Departamento de EMFTEL, IPARCOS, Universidad Complutense de Madrid, 28040 Madrid, Spain",
+            "affiliation": "EMFTEL department and IPARCOS, Universidad Complutense de Madrid, 28040 Madrid, Spain",
             "@id": "https://orcid.org/0000-0002-9238-7163"
         },
         {
@@ -436,7 +429,7 @@
             "@type": "Person",
             "givenName": "Matthew",
             "familyName": "Wood",
-            "affiliation": "SLAC, USA"
+            "affiliation": "Stanford Linear Accelerator Center, USA"
         }
     ]
 }
