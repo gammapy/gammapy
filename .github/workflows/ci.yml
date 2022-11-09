@@ -2,6 +2,12 @@ name: CI
 on: [push, pull_request]
 
 jobs:
+  lint:
+    name: Black check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: psf/black@stable
   ci-runs:
     name: ${{ matrix.os }}, ${{ matrix.tox_env }}
     runs-on: ${{ matrix.os }}
@@ -17,15 +23,15 @@ jobs:
           - os: ubuntu-latest
             python: '3.9'
             tox_env: 'py39-test-alldeps-cov'
-            gammapy_data_path: /home/runner/work/gammapy/gammapy/gammapy-datasets
+            gammapy_data_path: /home/runner/work/gammapy/gammapy/gammapy-datasets/dev
           - os: macos-latest
             python: '3.9'
             tox_env: 'py39-test'
-            gammapy_data_path: /Users/runner/work/gammapy/gammapy/gammapy-datasets
+            gammapy_data_path: /Users/runner/work/gammapy/gammapy/gammapy-datasets/dev
           - os: windows-latest
             python: '3.9'
             tox_env: 'py39-test-alldeps'
-            gammapy_data_path:  D:\a\gammapy\gammapy\gammapy-datasets
+            gammapy_data_path:  D:\a\gammapy\gammapy\gammapy-datasets\dev
           - os: ubuntu-latest
             python: '3.10'
             tox_env: 'py310-test-alldeps'
@@ -37,7 +43,13 @@ jobs:
             tox_env: 'codestyle'
           - os: ubuntu-latest
             python: '3.8'
-            tox_env: 'py38-test-alldeps-astropylts-numpy119'
+            tox_env: 'py38-test-alldeps-astropylts-numpy120'
+          - os: ubuntu-latest
+            python: '3.8'
+            tox_env: 'oldestdeps'
+          - os: ubuntu-latest
+            python: '3.8'
+            tox_env: 'devdeps'
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
@@ -85,7 +97,7 @@ jobs:
         shell: bash -l {0}
     env:
       PYTEST_ADDOPTS: --color=yes -n auto --dist=loadscope
-      GAMMAPY_DATA: /home/runner/work/gammapy/gammapy/gammapy-datasets
+      GAMMAPY_DATA: /home/runner/work/gammapy/gammapy/gammapy-datasets/dev
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
@@ -107,6 +119,10 @@ jobs:
       - name: test build docs
         run: |
           tox -e build_docs -- -j auto
+      - name: check links
+        continue-on-error: true
+        run: |
+          tox -e linkcheck -- -j auto  
   conda-build:
     name: Linux python 3.8 conda-build all-deps
     runs-on: ubuntu-latest

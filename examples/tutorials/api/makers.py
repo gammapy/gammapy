@@ -21,6 +21,8 @@ Setup
 import numpy as np
 from astropy import units as u
 from regions import CircleSkyRegion
+import matplotlib.pyplot as plt
+from IPython.display import display
 from gammapy.data import DataStore
 from gammapy.datasets import Datasets, MapDataset, SpectrumDataset
 from gammapy.makers import (
@@ -32,6 +34,7 @@ from gammapy.makers import (
     SpectrumDatasetMaker,
 )
 from gammapy.maps import MapAxis, RegionGeom, WcsGeom
+
 ######################################################################
 # Check setup
 # -----------
@@ -48,8 +51,8 @@ check_tutorials_setup()
 # data structure named `~gammapy.datasets.MapDataset`.
 #
 # The first step of the data reduction is to create an empty dataset. A
-# `~gammapy.datasets.MapDataset` can be created from any `~gammapy.maps.WcsGeom` object. This is
-# illustrated in the following example:
+# `~gammapy.datasets.MapDataset` can be created from any `~gammapy.maps.WcsGeom`
+# object. This is illustrated in the following example:
 #
 
 energy_axis = MapAxis.from_bounds(
@@ -100,6 +103,7 @@ obs = data_store.get_observations([23592])[0]
 maker = MapDatasetMaker()
 dataset = maker.run(dataset_empty, obs)
 print(dataset)
+plt.figure()
 dataset.counts.sum_over_axes().plot(stretch="sqrt", add_cbar=True)
 
 
@@ -115,9 +119,9 @@ dataset.counts.sum_over_axes().plot(stretch="sqrt", add_cbar=True)
 # ------------------------
 #
 # To exclude the data range from a `~gammapy.makers.MapDataset`, that is associated with
-# high systematics on instrument response functions, a `~gammapy.makers.MapDataset.mask_safe` can
-# be defined. The `~gammapy.makers.MapDataset.mask_safe` is a `~gammapy.maps.Map` object with `bool` data
-# type, which indicates for each pixel, whether it should be included in
+# high systematics on instrument response functions, a `~gammapy.makers.MapDataset.mask_safe`
+# can be defined. The `~gammapy.makers.MapDataset.mask_safe` is a `~gammapy.maps.Map` object
+# with `bool` data type, which indicates for each pixel, whether it should be included in
 # the analysis. The convention is that a value of `True` or `1`
 # includes the pixel, while a value of `False` or `0` excludes a
 # pixels from the analysis. To compute safe data range masks according to
@@ -138,9 +142,9 @@ dataset.counts.sum_over_axes().plot(stretch="sqrt", add_cbar=True)
 #    was introduced in the HESS DL3 validation paper:
 #    https://arxiv.org/pdf/1910.08088.pdf
 #
-# Note that currently some methods computing a safe energy range ("aeff-default", "aeff-max" and "edisp-bias")
-# determine a true energy range and apply it to reconstructed energy, effectively neglecting the energy dispersion.
-#
+# Note that currently some methods computing a safe energy range
+# ("aeff-default", "aeff-max" and "edisp-bias") determine a true energy range and
+#  apply it to reconstructed energy, effectively neglecting the energy dispersion.
 #
 # Multiple methods can be combined. Here is an example :
 #
@@ -152,6 +156,7 @@ safe_mask_maker = SafeMaskMaker(
 dataset = maker.run(dataset_empty, obs)
 dataset = safe_mask_maker.run(dataset, obs)
 print(dataset.mask_safe)
+plt.figure()
 dataset.mask_safe.sum_over_axes().plot()
 
 
@@ -223,8 +228,8 @@ dataset = fov_bkg_maker.run(dataset)
 # estimated as radially symmetric w.r.t. the pointing direction, one can
 # apply the reflected regions background technique. This is implemented in
 # the `~gammapy.makers.ReflectedRegionsBackgroundMaker` which transforms
-# a `~gammapy.datasets.SpectrumDataset` in a `~gammapy.datasets.SpectrumDatasetOnOff`. This technique is
-# only used for 1D spectral analysis.
+# a `~gammapy.datasets.SpectrumDataset` in a `~gammapy.datasets.SpectrumDatasetOnOff`.
+# This method is only used for 1D spectral analysis.
 #
 # For more details and usage, see
 # `reflected_background <../../user-guide/makers/reflected.rst>`__.
@@ -333,3 +338,5 @@ for observation in observations:
     dataset_on_off = safe_mask_masker.run(dataset_on_off, observation)
     datasets.append(dataset_on_off)
 print(datasets)
+
+plt.show()

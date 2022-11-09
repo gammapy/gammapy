@@ -8,8 +8,8 @@ Perform a point like spectral analysis with energy dependent offset cut.
 Prerequisites
 -------------
 
--  Understanding the basic data reduction performed in a `1D
-   analysis <spectral_analysis.ipynb>`__;
+-  Understanding the basic data reduction performed in the
+   :doc:`/tutorials/analysis-1d/spectral_analysis` tutorial.
 -  understanding the difference between a
    `point-like <https://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/point_like/index.html>`__
    and a
@@ -19,13 +19,12 @@ Prerequisites
 Context
 -------
 
-As already explained in these tutorials, in a `1D spectral
-analysis <spectral_analysis.ipynb>`__ the background is estimated from
-the field of view of the observation. In particular, the source and
-background events are counted within a circular ON region enclosing the
-source. The background to be subtracted is then estimated from one or
-more OFF regions with an expected background rate similar to the one in
-the ON region (i.e. from regions with similar acceptance).
+As already explained in the :doc:`/tutorials/analysis-1d/spectral_analysis`
+tutorial, the background is estimated fromthe field of view of the observation.
+In particular, the source and background events are counted within a circular 
+ON region enclosing the source. The background to be subtracted is then estimated
+from one or more OFF regions with an expected background rate similar to the one
+in the ON region (i.e. from regions with similar acceptance).
 
 *Full-containment* IRFs have no directional cut applied, when employed
 for a 1D analysis, it is required to apply a correction to the IRF
@@ -65,9 +64,9 @@ should be used to define the ON region. If a geometry based on a
 regions.
 
 Beside the definition of the ON region during the data reduction, the
-remaining steps are identical to the other `1D spectral analysis
-example <spectral_analysis.ipynb>`__, so we will not detail the data
-reduction steps already presented in the other tutorial.
+remaining steps are identical to the other :doc:`/tutorials/analysis-1d/spectral_analysis`
+tutorial., so we will not detail the data reduction steps already
+presented in the other tutorial.
 
 **Objective: perform the data reduction and analysis of 2 Crab Nebula
 observations of MAGIC and fit the resulting datasets.**
@@ -92,7 +91,7 @@ In order to define the OFF regions it is recommended to use a
 `~gammapy.makers.WobbleRegionsFinder`, that uses fixed positions for
 the OFF regions. In the different estimated energy bins we will have OFF
 regions centered at the same positions, but with changing size. As for
-the `SpectrumDataSetMaker`, the `BackgroundMaker` will use the
+the `~gammapy.makers.SpectrumDatasetMaker`, the `~gammapy.makers.ReflectedRegionsBackgroundMaker` will use the
 values in `~gammapy.irf.RadMax2D` to define the sizes of the OFF
 regions.
 
@@ -101,18 +100,20 @@ a 1D likelihood fit, exactly as illustrated in the previous example.
 
 """
 
+import astropy.units as u
+from astropy.coordinates import SkyCoord
+from regions import PointSkyRegion
+
+# %matplotlib inline
+import matplotlib.pyplot as plt
+
 ######################################################################
 # Setup
 # -----
 #
 # As usual, we’ll start with some setup …
 #
-
-import astropy.units as u
-from astropy.coordinates import SkyCoord
-from regions import PointSkyRegion
-# %matplotlib inline
-import matplotlib.pyplot as plt
+from IPython.display import display
 from gammapy.data import DataStore
 from gammapy.datasets import Datasets, SpectrumDataset
 from gammapy.makers import (
@@ -128,6 +129,7 @@ from gammapy.modeling.models import (
     SkyModel,
     create_crab_spectral_model,
 )
+
 ######################################################################
 # Check setup
 # -----------
@@ -164,7 +166,8 @@ print(rad_max)
 # We can also plot the rad max value against the energy:
 #
 
-rad_max.plot_rad_max_vs_energy()
+fig, ax = plt.subplots()
+rad_max.plot_rad_max_vs_energy(ax=ax)
 
 
 ######################################################################
@@ -241,11 +244,12 @@ for observation in observations:
 
 
 ######################################################################
-# No we can plot the off regions and target positions on top of the counts
+# Now we can plot the off regions and target positions on top of the counts
 # map:
 #
 
-ax = counts.plot()
+plt.figure()
+ax = counts.plot(cmap="viridis")
 geom.plot_region(ax=ax, kwargs_point={"color": "k", "marker": "*"})
 plot_spectrum_datasets_off_regions(ax=ax, datasets=datasets)
 
@@ -299,21 +303,20 @@ print(result)
 # and check the best-fit parameters
 #
 
-datasets.models.to_parameters_table()
+display(datasets.models.to_parameters_table())
 
 
 ######################################################################
 # A simple way to inspect the model residuals is using the function
 # `~SpectrumDataset.plot_fit()`
 #
-
 ax_spectrum, ax_residuals = datasets[0].plot_fit()
 ax_spectrum.set_ylim(0.1, 120)
 
 
 ######################################################################
 # For more ways of assessing fit quality, please refer to the dedicated
-# `modeling and fitting tutorial <../2D/modeling_2D.ipynb>`__.
+# `modeling and fitting tutorial :doc:`/tutorials/api/fitting` tutorial.
 #
 
 
@@ -325,12 +328,13 @@ ax_spectrum.set_ylim(0.1, 120)
 # by
 # MAGIC <https://ui.adsabs.harvard.edu/abs/2015JHEAp...5...30A/abstract>`__.
 #
-
+fig, ax = plt.subplots()
 plot_kwargs = {
     "energy_bounds": [0.08, 20] * u.TeV,
     "sed_type": "e2dnde",
     "yunits": u.Unit("TeV cm-2 s-1"),
     "xunits": u.GeV,
+    "ax": ax,
 }
 
 crab_magic_lp = create_crab_spectral_model("magic_lp")
@@ -341,5 +345,6 @@ best_fit_model.spectral_model.plot(
 best_fit_model.spectral_model.plot_error(facecolor="crimson", alpha=0.4, **plot_kwargs)
 crab_magic_lp.plot(ls="--", lw=1.5, color="k", label="MAGIC reference", **plot_kwargs)
 
-plt.legend()
-plt.ylim([1e-13, 1e-10])
+ax.legend()
+ax.set_ylim([1e-13, 1e-10])
+plt.show()

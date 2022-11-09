@@ -64,17 +64,19 @@ In summary, we have to:
 """
 
 
+from pathlib import Path
+
+# %matplotlib inline
+import matplotlib.pyplot as plt
+
 ######################################################################
 # Setup
 # -----
 #
-
-from pathlib import Path
-from astropy import units as u
-# %matplotlib inline
-import matplotlib.pyplot as plt
+from IPython.display import display
 from gammapy.analysis import Analysis, AnalysisConfig
-from gammapy.modeling.models import Models, SkyModel
+from gammapy.modeling.models import Models
+
 ######################################################################
 # Check setup
 # -----------
@@ -111,8 +113,8 @@ datasets:
     on_region: {frame: icrs, lon: 83.633 deg, lat: 22.014 deg, radius: 0.11 deg}
     containment_correction: true
     safe_mask:
-       methods: ['offset-max']
-       parameters: {offset_max: 2.0 deg}
+       methods: ['aeff-default', 'aeff-max']
+       parameters: {aeff_percent: 0.1}
     background:
         method: reflected
 fit:
@@ -225,13 +227,12 @@ analysis.get_observations()
 # selection corresponds to the following ids:
 #
 
-analysis.observations.ids
+print(analysis.observations.ids)
 
 
 ######################################################################
 # To see how to explore observations, please refer to the following
-# notebook: `CTA with Gammapy <../data/cta.ipynb>`__ or `HESS with
-# Gammapy <../data/hess.ipynb>`__
+# notebook: :doc:`/tutorials/data/cta` or :doc:`/tutorials/data/hess`
 #
 
 
@@ -383,7 +384,7 @@ analysis.run_fit()
 
 print(analysis.fit_result)
 
-model_1d.to_parameters_table()
+display(model_1d.to_parameters_table())
 
 
 ######################################################################
@@ -394,6 +395,7 @@ model_1d.to_parameters_table()
 ax_spectrum, ax_residuals = analysis.datasets[0].plot_fit()
 ax_spectrum.set_ylim(0.1, 200)
 ax_spectrum.set_xlim(0.2, 60)
+ax_residuals.set_xlim(0.2, 60)
 analysis.datasets[0].plot_masks(ax=ax_spectrum)
 
 
@@ -425,15 +427,15 @@ with filename.open("r") as f:
 analysis.get_flux_points()
 
 crab_fp = analysis.flux_points.data
-crab_fp.to_table(sed_type="dnde", formatted=True)
+crab_fp_table = crab_fp.to_table(sed_type="dnde", formatted=True)
+display(crab_fp_table)
 
 
 ######################################################################
 # Let’s plot the flux points with their likelihood profile
 #
-
-plt.figure(figsize=(10, 8))
-ax_sed = crab_fp.plot(sed_type="e2dnde", color="darkorange")
+fig, ax_sed = plt.subplots()
+crab_fp.plot(ax=ax_sed, sed_type="e2dnde", color="darkorange")
 ax_sed.set_ylim(1.0e-12, 2.0e-10)
 ax_sed.set_xlim(0.5, 40)
 crab_fp.plot_ts_profiles(ax=ax_sed, sed_type="e2dnde")
@@ -462,10 +464,10 @@ analysis.flux_points.write(filename, overwrite=True)
 # We can plot of the spectral fit with its error band overlaid with the
 # flux points:
 #
-
 ax_sed, ax_residuals = analysis.flux_points.plot_fit()
 ax_sed.set_ylim(1.0e-12, 1.0e-9)
 ax_sed.set_xlim(0.5, 40)
+plt.show()
 
 
 ######################################################################
@@ -473,7 +475,7 @@ ax_sed.set_xlim(0.5, 40)
 # ------------
 #
 # You can look at the same analysis without the high level interface in
-# `spectral analysis <../analysis/1D/spectral_analysis.ipynb>`__.
+# :doc:`/tutorials/analysis-1d/spectral_analysis`
 #
 # As we can store the best model fit, you can overlaid the fit results of
 # both methods on an unique plot.

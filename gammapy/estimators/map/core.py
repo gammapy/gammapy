@@ -235,7 +235,7 @@ class FluxMaps:
 
     @property
     def is_convertible_to_flux_sed_type(self):
-        """Check whether differential sed type is convertable to integral sed type"""
+        """Check whether differential sed type is convertible to integral sed type"""
         if self.sed_type_init in ["dnde", "e2dnde"]:
             return self.energy_axis.node_type == "edges"
 

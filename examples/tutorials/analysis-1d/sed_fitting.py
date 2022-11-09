@@ -8,8 +8,8 @@ Fit spectral models to combined Fermi-LAT and IACT flux points tables.
 Prerequisites
 -------------
 
--  Some knowledge about retrieving information from catalogs, see `the
-   catalogs tutorial <../../api/catalog.ipynb>`__
+-  Some knowledge about retrieving information from catalogs,
+ see :doc:`/tutorials/api/catalog` tutorial.
 
 Context
 -------
@@ -59,6 +59,7 @@ And the following spectral model classes:
 #
 
 from astropy import units as u
+
 # %matplotlib inline
 import matplotlib.pyplot as plt
 from gammapy.catalog import CATALOG_REGISTRY
@@ -159,6 +160,7 @@ pwl.plot_error(energy_bounds=energy_bounds, **kwargs)
 ax.set_ylim(1e-13, 1e-11)
 ax.set_xlim(energy_bounds)
 ax.legend()
+plt.show()
 
 
 ######################################################################
@@ -207,7 +209,7 @@ ecpl.plot_error(energy_bounds=energy_bounds, **kwargs)
 ax.set_ylim(1e-13, 1e-11)
 ax.set_xlim(energy_bounds)
 ax.legend()
-
+plt.show()
 
 ######################################################################
 # Log-Parabola Fit
@@ -240,7 +242,7 @@ log_parabola.plot_error(energy_bounds=energy_bounds, **kwargs)
 ax.set_ylim(1e-13, 1e-11)
 ax.set_xlim(energy_bounds)
 ax.legend()
-
+plt.show()
 
 ######################################################################
 # Exercises
@@ -262,9 +264,9 @@ ax.legend()
 # This was an introduction to SED fitting in Gammapy.
 #
 # -  If you would like to learn how to perform a full Poisson maximum
-#    likelihood spectral fit, please check out the `spectrum
-#    analysis <spectral_analysis.ipynb>`__ tutorial.
+#    likelihood spectral fit, please check out the
+#    :doc:`/tutorials/analysis-1d/spectral_analysis` tutorial.
 # -  To learn how to combine heterogeneous datasets to perform a
-#    multi-instrument forward-folding fit see the `MWL analysis
-#    tutorial <../3D/analysis_mwl.ipynb>`__
+#    multi-instrument forward-folding fit see the
+#    :doc:`/tutorials/analysis-3d/analysis_mwl` tutorial.
 #

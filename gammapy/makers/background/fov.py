@@ -136,7 +136,7 @@ class FoVBackgroundMaker(Maker):
         return mask
 
     def _make_masked_summed_counts(self, dataset):
-        """ "Compute the sums of the counts, npred, and bacground maps within the mask"""
+        """ "Compute the sums of the counts, npred, and background maps within the mask"""
 
         npred = dataset.npred()
         mask = dataset.mask & ~np.isnan(npred)

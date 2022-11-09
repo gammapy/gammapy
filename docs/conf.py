@@ -30,18 +30,18 @@ import os
 
 # Get configuration information from setup.cfg
 from configparser import ConfigParser
-
 from pkg_resources import get_distribution
 
 # Load all the global Astropy configuration
 from sphinx_astropy.conf import *
 
 # Sphinx-gallery config
-from sphinx_gallery.sorting import FileNameSortKey, ExplicitOrder
+from sphinx_gallery.sorting import ExplicitOrder, FileNameSortKey
 
 # Load utils docs functions
-from gammapy.utils.docs import gammapy_sphinx_ext_activate, SubstitutionCodeBlock
+from gammapy.utils.docs import SubstitutionCodeBlock, gammapy_sphinx_ext_activate
 
+# flake8: noqa
 
 # Add our custom directives to Sphinx
 def setup(app):
@@ -55,6 +55,25 @@ def setup(app):
 conf = ConfigParser()
 conf.read([os.path.join(os.path.dirname(__file__), "..", "setup.cfg")])
 setup_cfg = dict(conf.items("metadata"))
+
+linkcheck_anchors_ignore = []
+linkcheck_ignore = [
+    "http://gamma-sky.net/#",
+    "https://bitbucket.org/hess_software/hess-open-source-tools/src/master/",
+    "https://forge.in2p3.fr/projects/data-challenge-1-dc-1/wiki",
+    "https://indico.cta-observatory.org/event/2070/",
+    "https://data.hawc-observatory.org/datasets/3hwc-survey/index.php",
+    "https://github.com/gammapy/gammapy#status-shields",
+    "https://groups.google.com/forum/#!forum/astropy-dev",
+    "https://lists.nasa.gov/mailman/listinfo/open-gamma-ray-astro",
+    "https://getbootstrap.com/css/#tables",
+    "https://www.hawc-observatory.org/",  # invalid certificate
+    "https://ipython.org",  # invalid certificate
+    "https://jupyter.org",  # invalid certificate
+]
+
+# the buttons link to html pages which are auto-generated...
+linkcheck_exclude_documents = [r"getting-started/.*"]
 
 # -- General configuration ----------------------------------------------------
 
@@ -250,16 +269,17 @@ automodsumm_inherited_members = True
 # http://www.sphinx-doc.org/en/stable/config.html#confval-suppress_warnings
 suppress_warnings = ["ref.citation"]
 
+branch = "master" if switch_version == "dev" else f"v{switch_version}"
 
 binder_config = {
     # Required keys
     "org": "gammapy",
-    "repo": "gammapy-docs",
-    "branch": "main",  # Can be any branch, tag, or commit hash. Use a branch that hosts your docs.
+    "repo": "gammapy-webpage",
+    "branch": branch,  # Can be any branch, tag, or commit hash. Use a branch that hosts your docs.
     "binderhub_url": "https://mybinder.org",  # Any URL of a binderhub deployment. Must be full URL (e.g. https://mybinder.org).
     "dependencies": "./binder/requirements.txt",
-    "notebooks_dir": "docs/dev/notebooks",
-    "use_jupyter_lab": False,
+    "notebooks_dir": f"notebooks/{switch_version}",
+    "use_jupyter_lab": True,
 }
 
 # nitpicky = True
@@ -295,7 +315,7 @@ sphinx_gallery_conf = {
     "reset_modules": ("matplotlib",),
     "within_subsection_order": FileNameSortKey,
     "download_all_examples": True,
-    "capture_repr": (),
+    "capture_repr": ("_repr_html_", "__repr__"),
     "nested_sections": False,
     "min_reported_time": 10,
     "show_memory": False,

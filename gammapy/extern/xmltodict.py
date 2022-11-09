@@ -161,7 +161,7 @@ def parse(
     expat=expat,
     process_namespaces=False,
     namespace_separator=":",
-    **kwargs
+    **kwargs,
 ):
     """Parse the given XML input and convert it into a dictionary.
 

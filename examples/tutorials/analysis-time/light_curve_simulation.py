@@ -8,12 +8,12 @@ Prerequisites
 -------------
 
 -  To understand how a single binned simulation works, please refer to
-   `spectrum_simulation <../1D/spectrum_simulation.ipynb>`__
-   `simulate_3d <../3D/simulate_3d.ipynb>`__ for 1D and 3D simulations
+   :doc:`/tutorials/analysis-1d/spectrum_simulation` tutorial and 
+   :doc:`/tutorials/analysis-3d/simulate_3d` tutorial for 1D and 3D simulations
    respectively.
 -  For details of light curve extraction using gammapy, refer to the two
-   tutorials `light_curve <light_curve.ipynb>`__ and
-   `light_curve_flare <light_curve_flare.ipynb>`__
+   tutorials :doc:`/tutorials/analysis-time/light_curve` and
+   :doc:`/tutorials/analysis-time/light_curve_flare` tutorial.
 
 Context
 -------
@@ -45,8 +45,8 @@ In summary, necessary steps are:
 -  Define temporal and spectral models from :ref:model-gallery as per
    science case
 -  Perform the simulation (in 1D or 3D)
--  Extract the light curve from the reduced dataset as shown in `light
-   curve notebook <light_curve.ipynb>`__
+-  Extract the light curve from the reduced dataset as shown
+   in :doc:`/tutorials/analysis-time/light_curve` tutorial.
 -  Optionally, we show here how to fit the simulated datasets using a
    source model
 
@@ -58,18 +58,20 @@ As usual, we’ll start with some general imports…
 """
 
 
-######################################################################
-# Setup
-# -----
-#
-
 import logging
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
+
 # %matplotlib inline
 import matplotlib.pyplot as plt
+
+######################################################################
+# Setup
+# -----
+#
+from IPython.display import display
 
 log = logging.getLogger(__name__)
 
@@ -90,6 +92,7 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
 )
+
 ######################################################################
 # Check setup
 # -----------
@@ -155,7 +158,7 @@ model_simu = SkyModel(
 )
 
 # Look at the model
-model_simu.parameters.to_table()
+display(model_simu.parameters.to_table())
 
 
 ######################################################################
@@ -204,7 +207,7 @@ for idx in range(n_obs):
 # quick look into our datasets.
 #
 
-datasets.info_table()
+display(datasets.info_table())
 
 
 ######################################################################
@@ -235,7 +238,11 @@ lc_maker_1d = LightCurveEstimator(
 )
 lc_1d = lc_maker_1d.run(datasets)
 
-ax = lc_1d.plot(marker="o", axis_name="time", sed_type="flux")
+fig, ax = plt.subplots(
+    figsize=(8, 6),
+    gridspec_kw={"left": 0.16, "bottom": 0.2, "top": 0.98, "right": 0.98},
+)
+lc_1d.plot(ax=ax, marker="o", axis_name="time", sed_type="flux")
 
 
 ######################################################################
@@ -260,7 +267,7 @@ ax = lc_1d.plot(marker="o", axis_name="time", sed_type="flux")
 # we need to obtain a set of `FluxPointDatasets`, one for each time bin
 #
 
-## Create the datasets by iterating over the returned lightcurve
+# Create the datasets by iterating over the returned lightcurve
 datasets = Datasets()
 
 for idx, fp in enumerate(lc_1d.iter_by_axis(axis_name="time")):
@@ -299,14 +306,18 @@ result = fit.run(datasets=datasets)
 # temporal model in relative units for one particular energy range
 #
 
+fig, ax = plt.subplots(
+    figsize=(8, 6),
+    gridspec_kw={"left": 0.16, "bottom": 0.2, "top": 0.98, "right": 0.98},
+)
 lc_1TeV_10TeV = lc_1d.slice_by_idx({"energy": slice(2, 3)})
-ax = lc_1TeV_10TeV.plot(sed_type="norm", axis_name="time")
+lc_1TeV_10TeV.plot(ax=ax, sed_type="norm", axis_name="time")
 
 time_range = lc_1TeV_10TeV.geom.axes["time"].time_bounds
 temporal_model1.plot(ax=ax, time_range=time_range, label="Best fit model")
 
 ax.set_yscale("linear")
-plt.legend()
+ax.legend()
 
 
 ######################################################################
@@ -318,7 +329,7 @@ plt.legend()
 # For modelling and fitting more complex flares, you should attach the
 # relevant model to each group of `datasets`. The parameters of a model
 # in a given group of dataset will be tied. For more details on joint
-# fitting in gammapy, see `here <../2D/modeling_2D.ipynb>`__.
+# fitting in Gammapy, see :doc:`/tutorials/analysis-3d/analysis_3d`
 #
 
 # Define the model:
@@ -333,7 +344,7 @@ model2 = SkyModel(
     name="model-test2",
 )
 
-model2.parameters.to_table()
+display(model2.parameters.to_table())
 
 datasets.models = model2
 
@@ -342,9 +353,9 @@ datasets.models = model2
 fit = Fit()
 result = fit.run(datasets=datasets)
 
-result.parameters.to_table()
+display(result.parameters.to_table())
 
-
+plt.show()
 ######################################################################
 # We see that the fitted parameters are consistent between fitting flux
 # points and datasets, and match well with the simulated ones
@@ -356,9 +367,8 @@ result.parameters.to_table()
 # ---------
 #
 # 1. Re-do the analysis with `MapDataset` instead of `SpectralDataset`
-# 2. Model the flare of PKS 2155-304 which you obtained using the `light
-#    curve flare tutorial <light_curve_flare.ipynb>`__. Use a combination
-#    of a Gaussian and Exponential flare profiles, and fit using
-#    `scipy.optimize.curve_fit`
+# 2. Model the flare of PKS 2155-304 which you obtained using
+#    the :doc:`/tutorials/analysis-time/light_curve_flare` tutorial.
+#    Use a combination of a Gaussian and Exponential flare profiles.
 # 3. Do a joint fitting of the datasets.
 #

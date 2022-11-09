@@ -33,6 +33,19 @@ def region_map():
 
 
 @pytest.fixture
+def region_map_no_region():
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=6, name="energy")
+    m = Map.create(
+        region=None,
+        map_type="region",
+        axes=[axis],
+        unit="1/TeV",
+    )
+    m.data = np.arange(m.data.size, dtype=float).reshape(m.geom.data_shape)
+    return m
+
+
+@pytest.fixture
 def point_region_map():
     axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=6, name="energy")
     m = Map.create(
@@ -211,10 +224,13 @@ def test_region_nd_map_get(region_map):
     values = region_map.get_by_coord((83.63, 21.51, energies[[0, -1]]))
     assert_allclose(values.squeeze(), [0, 5])
 
-    values = region_map.get_by_coord((energies[[0, -1]],))
+
+def test_region_nd_map_get_no_region(region_map_no_region):
+    energies = region_map_no_region.geom.axes[0].center
+    values = region_map_no_region.get_by_coord((energies[[0, -1]],))
     assert_allclose(values.squeeze(), [0, 5])
 
-    values = region_map.get_by_coord({"energy": energies[[0, -1]]})
+    values = region_map_no_region.get_by_coord({"energy": energies[[0, -1]]})
     assert_allclose(values.squeeze(), [0, 5])
 
 

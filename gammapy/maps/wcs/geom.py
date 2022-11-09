@@ -882,7 +882,7 @@ class WcsGeom(Geom):
         if odd_npix:
             width = round_up_to_odd(width_npix)
 
-        dummy_data = np.empty(self.to_image().data_shape)
+        dummy_data = np.empty(self.to_image().data_shape, dtype=bool)
         c2d = Cutout2D(
             data=dummy_data,
             wcs=self.wcs,

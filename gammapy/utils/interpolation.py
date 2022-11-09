@@ -75,7 +75,7 @@ class ScaledRegularGridInterpolator:
             if method != "nearest":
                 raise ValueError(
                     "Interpolating scalar values requires using "
-                    "method='nearest' explicitely."
+                    "method='nearest' explicitly."
                 )
 
         if np.any(self._include_dimensions):

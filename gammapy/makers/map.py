@@ -35,6 +35,10 @@ class MapDatasetMaker(Maker):
     background_interp_missing_data: bool
         Interpolate missing values in background 3d map.
         Default is True, have to be set to True for CTA IRF.
+    background_pad_offset: bool
+        Pad one bin in offset for 2d background map.
+        This avoid extrapolation at edges and use the nearest value.
+        Default is True.
 
     Examples
     --------
@@ -102,9 +106,11 @@ class MapDatasetMaker(Maker):
         selection=None,
         background_oversampling=None,
         background_interp_missing_data=True,
+        background_pad_offset=True,
     ):
         self.background_oversampling = background_oversampling
         self.background_interp_missing_data = background_interp_missing_data
+        self.background_pad_offset = background_pad_offset
         if selection is None:
             selection = self.available_selection
 
@@ -223,6 +229,9 @@ class MapDatasetMaker(Maker):
         if self.background_interp_missing_data:
             bkg.interp_missing_data(axis_name="energy")
 
+        if self.background_pad_offset and bkg.has_offset_axis:
+            bkg = bkg.pad(1, mode="edge", axis_name="offset")
+
         return make_map_background_irf(
             pointing=observation.fixed_pointing_info,
             ontime=observation.observation_time_duration,
@@ -337,6 +346,7 @@ class MapDatasetMaker(Maker):
         meta_table = Table()
         meta_table["TELESCOP"] = [observation.aeff.meta.get("TELESCOP", "Unknown")]
         meta_table["OBS_ID"] = [observation.obs_id]
+
         if observation.fixed_pointing_info.mode == PointingMode.POINTING:
             meta_table["OBS_MODE"] = "POINTING"
             meta_table["RA_PNT"] = [observation.pointing_radec.icrs.ra.deg] * u.deg
@@ -349,6 +359,7 @@ class MapDatasetMaker(Maker):
             meta_table["AZ_PNT"] = [
                 observation.fixed_pointing_info.fixed_altaz.az.deg
             ] * u.deg
+
         return meta_table
 
     def run(self, dataset, observation):

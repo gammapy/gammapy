@@ -188,8 +188,13 @@ This is how to compute flux points:
     # print(table[["e_ref", "dnde", "dnde_err"]])
 
 
+Using gammapy.estimators
+------------------------
 
-.. minigallery:: gammapy.estimators.FluxPointsEstimator gammapy.estimators.LightCurveEstimator
+.. minigallery:: gammapy.estimators.FluxPointsEstimator
+    :add-heading:
+
+.. minigallery:: gammapy.estimators.LightCurveEstimator
     :add-heading:
 
 

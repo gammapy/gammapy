@@ -1,4 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import operator
+
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
@@ -16,7 +18,9 @@ from gammapy.modeling.models import (
     Models,
     PiecewiseNormSpectralModel,
     PowerLawSpectralModel,
+    LogParabolaSpectralModel,
     PowerLawTemporalModel,
+    CompoundSpectralModel,
     SineTemporalModel,
     SkyModel,
     TemplateNPredModel,
@@ -362,3 +366,37 @@ def test_to_dict_not_default():
     assert model_2.index.min == model.index.min
     assert model_2.index.max == model.index.max
     assert model_2.index.frozen == model.index.frozen
+
+
+def test_to_dict_unfreeze_parameters_frozen_by_default():
+
+    model = PowerLawSpectralModel()
+
+    mdict = model.to_dict(full_output=False)
+    index_dict = mdict["spectral"]["parameters"][2]
+    assert "frozen" not in index_dict
+
+    model.reference.frozen = False
+    mdict = model.to_dict(full_output=False)
+    index_dict = mdict["spectral"]["parameters"][2]
+    assert index_dict["frozen"] is False
+
+
+def test_compound_models_io(tmp_path):
+    m1 = PowerLawSpectralModel()
+    m2 = LogParabolaSpectralModel()
+    m = CompoundSpectralModel(m1, m2, operator.add)
+    sk = SkyModel(spectral_model=m, name="model")
+    Models([sk]).write(tmp_path / "test.yaml")
+    sk1 = Models.read(tmp_path / "test.yaml")
+    assert_allclose(sk1.covariance.data, sk.covariance.data, rtol=1e-3)
+    assert_allclose(np.sum(sk1.covariance.data), 0.0)
+    assert Models([sk]).parameters_unique_names == [
+        "model.spectral.index",
+        "model.spectral.amplitude",
+        "model.spectral.reference",
+        "model.spectral.amplitude",
+        "model.spectral.reference",
+        "model.spectral.alpha",
+        "model.spectral.beta",
+    ]

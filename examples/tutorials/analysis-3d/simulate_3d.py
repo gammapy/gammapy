@@ -8,8 +8,7 @@ Prerequisites
 -------------
 
 -  Knowledge of 3D extraction and datasets used in gammapy, see for
-   instance the `first analysis
-   tutorial <../../starting/analysis_1.ipynb>`__
+   example the :doc:`/tutorials/starting/analysis_1` tutorial.
 
 Context
 -------
@@ -55,11 +54,13 @@ the dataset and fake the count data.
 # --------------------
 #
 
-# %matplotlib inline
-
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
+import matplotlib.pyplot as plt
+
+# %matplotlib inline
+from IPython.display import display
 from gammapy.data import Observation, observatory_locations
 from gammapy.datasets import MapDataset
 from gammapy.irf import load_cta_irfs
@@ -168,10 +169,12 @@ print(dataset)
 ######################################################################
 # Now use this dataset as you would in all standard analysis. You can plot
 # the maps, or proceed with your custom analysis. In the next section, we
-# show the standard 3D fitting as in `analysis_3d <analysis_3d.ipynb>`__.
+# show the standard 3D fitting as in :doc:`/tutorials/analysis-3d/analysis_3d`
+# tutorial.
 #
 
 # To plot, eg, counts:
+plt.figure()
 dataset.counts.smooth(0.05 * u.deg).plot_interactive(add_cbar=True, stretch="linear")
 
 
@@ -197,7 +200,7 @@ print(dataset.models)
 # %%time
 fit = Fit(optimize_opts={"print_level": 1})
 result = fit.run(datasets=[dataset])
-
+plt.figure()
 dataset.plot_residuals_spatial(method="diff/sqrt(model)", vmin=-0.5, vmax=0.5)
 
 
@@ -217,4 +220,6 @@ print(
 # Get the errors on the fitted parameters from the parameter table
 #
 
-result.parameters.to_table()
+display(result.parameters.to_table())
+
+plt.show()

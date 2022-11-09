@@ -31,6 +31,7 @@ import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
+
 # %matplotlib inline
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
@@ -41,6 +42,7 @@ from gammapy.astro.darkmatter import (
     profiles,
 )
 from gammapy.maps import WcsGeom, WcsNDMap
+
 ######################################################################
 # Check setup
 # -----------
@@ -61,6 +63,7 @@ check_tutorials_setup()
 
 profiles.DMProfile.__subclasses__()
 
+plt.figure()
 for profile in profiles.DMProfile.__subclasses__():
     p = profile()
     p.scale_to_local_density()
@@ -99,6 +102,7 @@ jfactory = JFactory(geom=geom, profile=profile, distance=profiles.DMProfile.DIST
 jfact = jfactory.compute_jfactor()
 
 jfact_map = WcsNDMap(geom=geom, data=jfact.value, unit=jfact.unit)
+plt.figure()
 ax = jfact_map.plot(cmap="viridis", norm=LogNorm(), add_cbar=True)
 plt.title(f"J-Factor [{jfact_map.unit}]")
 
@@ -128,7 +132,7 @@ print(
 fluxes = PrimaryFlux(mDM="1 TeV", channel="eL")
 print(fluxes.allowed_channels)
 
-fig, axes = plt.subplots(4, 1, figsize=(6, 16))
+fig, axes = plt.subplots(4, 1, figsize=(4, 16))
 mDMs = [0.01, 0.1, 1, 10] * u.TeV
 
 for mDM, ax in zip(mDMs, axes):
@@ -147,7 +151,7 @@ for mDM, ax in zip(mDMs, axes):
         )
 
 axes[0].legend()
-plt.subplots_adjust(hspace=0.5)
+plt.subplots_adjust(hspace=0.9)
 
 
 ######################################################################
@@ -165,8 +169,10 @@ int_flux = (
 ).to("cm-2 s-1")
 
 flux_map = WcsNDMap(geom=geom, data=int_flux.value, unit="cm-2 s-1")
-
+plt.figure()
 ax = flux_map.plot(cmap="viridis", norm=LogNorm(), add_cbar=True)
 plt.title(
     f"Flux [{int_flux.unit}]\n m$_{{DM}}$={fluxes.mDM.to('TeV')}, channel={fluxes.channel}"
 )
+
+plt.show()

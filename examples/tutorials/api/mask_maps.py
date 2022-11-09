@@ -91,13 +91,14 @@ import numpy as np
 import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion, Regions
+
 # %matplotlib inline
 import matplotlib.pyplot as plt
 from gammapy.catalog import CATALOG_REGISTRY
 from gammapy.datasets import Datasets
 from gammapy.estimators import ExcessMapEstimator
-from gammapy.maps import Map, MapAxis, WcsGeom
-from gammapy.modeling.models import FoVBackgroundModel
+from gammapy.maps import Map, WcsGeom
+
 ######################################################################
 # Check setup
 # -----------
@@ -107,6 +108,8 @@ check_tutorials_setup()
 
 
 ######################################################################
+# .. _masks-for-fitting:
+#
 # Creating a mask for fitting
 # ---------------------------
 #
@@ -278,7 +281,7 @@ print(regions)
 
 # to define the exclusion mask we take the inverse
 mask_map = ~geom.region_mask(regions)
-
+plt.figure()
 mask_map.plot()
 
 
@@ -318,7 +321,7 @@ regions = [CircleSkyRegion(position, exclusion_radius) for position in positions
 #
 
 mask_map_catalog = ~geom.region_mask(regions)
-
+plt.figure()
 mask_map_catalog.plot()
 
 
@@ -360,7 +363,7 @@ significance_mask = result["sqrt_ts"] < 5.0
 
 invalid_pixels = np.isnan(result["sqrt_ts"].data)
 significance_mask.data[invalid_pixels] = True
-
+plt.figure()
 significance_mask.plot()
 
 
@@ -391,6 +394,7 @@ significance_mask.plot()
 #
 
 mask = mask_map | mask_map_catalog
+plt.figure()
 mask.plot()
 
 
@@ -399,6 +403,7 @@ mask.plot()
 #
 
 mask_map &= mask_map_catalog
+plt.figure()
 mask_map.plot()
 
 
@@ -407,6 +412,7 @@ mask_map.plot()
 #
 
 significance_mask_inv = ~significance_mask
+plt.figure()
 significance_mask_inv.plot()
 
 
@@ -421,9 +427,11 @@ significance_mask_inv.plot()
 # `binary_dilate` methods, respectively.
 #
 
+plt.figure()
 mask = significance_mask_inv.binary_erode(width=0.2 * u.deg, kernel="disk")
 mask.plot()
 
+plt.figure()
 mask = significance_mask_inv.binary_dilate(width=0.2 * u.deg)
 mask.plot()
 
@@ -445,8 +453,10 @@ psf_r95 = dataset.psf.containment_radius(fraction=0.95, energy_true=energy_true)
 # create mask_fit with margin based on PSF
 mask_fit = dataset.counts.geom.boundary_mask(psf_r95.max())
 dataset.mask_fit = mask_fit
+plt.figure()
 dataset.mask_fit.sum_over_axes().plot()
 
+plt.show()
 
 ######################################################################
 # Reading and writing masks

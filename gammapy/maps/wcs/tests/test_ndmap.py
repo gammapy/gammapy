@@ -6,11 +6,19 @@ import astropy.units as u
 from astropy.convolution import Box2DKernel, Gaussian2DKernel
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
-from astropy.table import Table
+from astropy.time import Time
 from regions import CircleSkyRegion, PointSkyRegion, RectangleSkyRegion
 from gammapy.datasets.map import MapEvaluator
 from gammapy.irf import PSFKernel, PSFMap
-from gammapy.maps import Map, MapAxis, MapCoord, WcsGeom, WcsNDMap
+from gammapy.maps import (
+    LabelMapAxis,
+    Map,
+    MapAxis,
+    MapCoord,
+    TimeMapAxis,
+    WcsGeom,
+    WcsNDMap,
+)
 from gammapy.modeling.models import (
     GaussianSpatialModel,
     PowerLawSpectralModel,
@@ -613,6 +621,28 @@ def test_plot_grid():
         m.plot_grid()
 
 
+def test_plot_grid_label_axis():
+    axis = LabelMapAxis(labels=["d1", "d2"], name="dataset")
+
+    m = WcsNDMap.create(width="5 deg", axes=[axis])
+
+    with mpl_plot_check():
+        m.plot_grid()
+
+
+def test_plot_grid_time_axis():
+    time_axis = TimeMapAxis(
+        edges_min=[1, 10] * u.day,
+        edges_max=[2, 13] * u.day,
+        reference_time=Time("2020-03-19"),
+    )
+
+    m = WcsNDMap.create(width="5 deg", axes=[time_axis])
+
+    with mpl_plot_check():
+        m.plot_grid()
+
+
 def test_plot_allsky():
     axis = MapAxis([0, 1], node_type="edges")
     m = WcsNDMap.create(binsz=10 * u.deg, axes=[axis])
@@ -722,7 +752,7 @@ def get_npred_map():
     )
 
     spatial_model = GaussianSpatialModel(
-        lon_0="0 deg", lat_0="0 deg", sigma="0.2 deg", frame="galactic"
+        lon_0="0.015 deg", lat_0="-0.037 deg", sigma="0.2 deg", frame="galactic"
     )
     spectral_model = PowerLawSpectralModel(amplitude="1e-11 cm-2 s-1 TeV-1")
     skymodel = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
@@ -739,17 +769,11 @@ def test_map_sampling():
 
     nmap = WcsNDMap(geom=eval.geom, data=npred.data)
     coords = nmap.sample_coord(n_events=2, random_state=0)
-    skycoord = coords.skycoord
 
-    events = Table()
-    events["RA_TRUE"] = skycoord.icrs.ra
-    events["DEC_TRUE"] = skycoord.icrs.dec
-    events["ENERGY_TRUE"] = coords["energy_true"]
-
-    assert len(events) == 2
-    assert_allclose(events["RA_TRUE"].data, [266.307081, 266.442255], rtol=1e-5)
-    assert_allclose(events["DEC_TRUE"].data, [-28.753408, -28.742696], rtol=1e-5)
-    assert_allclose(events["ENERGY_TRUE"].data, [2.755397, 1.72316], rtol=1e-5)
+    assert len(coords["lon"]) == 2
+    assert_allclose(coords.skycoord.icrs.ra.deg, [266.204197, 266.451241], rtol=1e-5)
+    assert_allclose(coords.skycoord.icrs.dec.deg, [-28.862369, -29.075469], rtol=1e-5)
+    assert_allclose(coords["energy_true"].data, [2.363293, 2.342388], rtol=1e-5)
 
     assert coords["lon"].unit == "deg"
     assert coords["lat"].unit == "deg"

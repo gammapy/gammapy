@@ -59,7 +59,7 @@ class ImageProfileEstimator(Estimator):
             raise ValueError("Not a valid method, choose either 'sum' or 'mean'")
 
         if axis not in ["lon", "lat", "radial"]:
-            raise ValueError("Not a valid axis, choose either 'lon' or 'lat'")
+            raise ValueError("Not a valid axis, choose either 'lon', 'lat' or 'radial'")
 
         if axis == "radial" and center is None:
             raise ValueError("Please provide center coordinate for radial profiles")

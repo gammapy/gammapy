@@ -176,7 +176,7 @@ def cli_download_datasets(release, out):
     """Download datasets"""
     index = DownloadIndex(release=release)
 
-    localfolder = Path(out)
+    localfolder = Path(out) / index.release
     log.info(f"Downloading datasets from {index.datasets_url}")
     tar_destination_file = localfolder / "datasets.tar.gz"
     progress_download(index.datasets_url, tar_destination_file)

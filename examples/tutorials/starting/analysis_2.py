@@ -36,7 +36,7 @@ object that reduce an observation to a dataset.
 
 We can then proceed with data reduction with a loop over all selected
 observations to produce datasets in the relevant geometry and stack them
-together (i.e. sum them all).
+together (i.e.sum them all).
 
 In practice, we have to:
 
@@ -75,6 +75,7 @@ from pathlib import Path
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
+
 # %matplotlib inline
 import matplotlib.pyplot as plt
 from gammapy.data import DataStore
@@ -314,7 +315,7 @@ print(result)
 # `~astropy.modeling.models.Models` object.
 #
 
-stacked.models.to_parameters_table()
+print(stacked.models.to_parameters_table())
 
 
 ######################################################################

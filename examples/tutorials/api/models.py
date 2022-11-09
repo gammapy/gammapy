@@ -9,11 +9,11 @@ related to modeling and fitting data. This includes spectral, spatial
 and temporal model classes, as well as the fit and parameter API.The
 models follow a naming scheme which contains the category as a suffix to
 the class name. An overview of all the available models can be found in
-the `model gallery <../../user-guide/model-gallery/index.rst>`__\ \_.
+the `model gallery <../../user-guide/model-gallery/index.rst>`__.
 
 Note that there are separate tutorials,
-`model_management <model_management.ipynb>`__\ \_ and
-`fitting <fitting.ipynb>`__\ \_ that explains about
+:doc:`/tutorials/api/model_management` and
+:doc:`/tutorials/api/fitting` that explains about
 `~gammapy.modeling`, the Gammapy modeling and fitting framework. You
 have to read that to learn how to work with models in order to analyse
 data.
@@ -30,7 +30,9 @@ data.
 import numpy as np
 from astropy import units as u
 import matplotlib.pyplot as plt
+from IPython.display import display
 from gammapy.maps import Map, MapAxis, WcsGeom
+
 ######################################################################
 # Check setup
 # -----------
@@ -55,8 +57,7 @@ print(pwl)
 
 ######################################################################
 # To get a list of all available spectral models you can import and print
-# the spectral model registry or take a look at the `model
-# gallery <../../user-guide/model-gallery/index.rst#spectral-models>`__\ \_:
+# the spectral model registry or take a look at the :ref:`spectral-models-gallery`
 #
 
 from gammapy.modeling.models import SPECTRAL_MODEL_REGISTRY
@@ -132,6 +133,7 @@ print(energy)
 # range:
 #
 
+plt.figure()
 pwl.plot(energy_bounds=[1, 100] * u.TeV)
 
 
@@ -175,7 +177,7 @@ print(pwl_norm)
 #
 
 energy = [0.3, 1, 3, 10, 30] * u.TeV
-pwl_norm(energy)
+print(pwl_norm(energy))
 
 
 ######################################################################
@@ -186,6 +188,7 @@ pwl_norm(energy)
 
 from gammapy.modeling.models import TemplateSpectralModel
 
+plt.figure()
 energy = [0.3, 1, 3, 10, 30] * u.TeV
 values = [40, 30, 20, 10, 1] * u.Unit("TeV-1 s-1 cm-2")
 template = TemplateSpectralModel(energy, values)
@@ -234,8 +237,7 @@ print(gauss)
 
 ######################################################################
 # Again you can check the `SPATIAL_MODELS` registry to see which models
-# are available or take a look at the `model
-# gallery <../../user-guide/model-gallery/index.rst#spatial-models>`__\ \_.
+# are available or take a look at the :ref:`spatial-models-gallery`
 #
 
 from gammapy.modeling.models import SPATIAL_MODEL_REGISTRY
@@ -281,13 +283,14 @@ print(flux_per_omega)
 
 m = Map.create(skydir=(0, 0), width=(1, 1), binsz=0.02, frame="galactic")
 m.quantity = gauss.evaluate_geom(m.geom)
+plt.figure()
 m.plot(add_cbar=True)
 
 
 ######################################################################
 # Again for convenience the model can be plotted directly:
 #
-
+plt.figure()
 gauss.plot(add_cbar=True)
 
 
@@ -305,6 +308,7 @@ print(gauss.to_region())
 #
 
 # create and plot the model
+plt.figure()
 gauss_elongated = GaussianSpatialModel(
     lon_0="0 deg", lat_0="0 deg", sigma="0.2 deg", e=0.7, phi="45 deg"
 )
@@ -407,7 +411,7 @@ print(model)
 ######################################################################
 # It is good practice to specify a name for your sky model, so that you
 # can access it later by name and have meaningful identifier you
-# serilisation. If you don’t define a name, a unique random name is
+# serialisation. If you don’t define a name, a unique random name is
 # generated:
 #
 
@@ -420,17 +424,20 @@ print(model_without_name.name)
 # ``.spectral_model``, ``.spatial_model`` and ``.temporal_model``:
 #
 
-model.spectral_model
+print(model.spectral_model)
 
-model.spatial_model
+# %%
+print(model.spatial_model)
 
-model.temporal_model
+# %%
+print(model.temporal_model)
 
 
 ######################################################################
 # And can be used as you have seen already seen above:
 #
 
+plt.figure()
 model.spectral_model.plot(energy_bounds=[1, 10] * u.TeV)
 
 
@@ -496,7 +503,7 @@ model.spectral_model.index.min = 1.0
 model.spectral_model.index.max = 5.0
 
 # Visualise the model as a table
-model.parameters.to_table().show_in_notebook()
+display(model.parameters.to_table())
 
 
 ######################################################################
@@ -541,9 +548,8 @@ print(models.names)
 # Note that a `SkyModel` object can be evaluated for a given longitude,
 # latitude, and energy, but the `Models` object cannot. This `Models`
 # container object will be assigned to `Dataset` or `Datasets`
-# together with the data to be fitted as explained in other analysis
-# tutorials (see for example the
-# `modeling <../analysis/2D/modeling_2D.ipynb>`__\ \_ notebook).
+# together with the data to be fitted. Checkout e.g. the
+# :doc:`/tutorials/api/model_management` tutorial for details.
 #
 # The `~gammapy.modeling.models.Models` class also has in place ``.append()`` and ``.extend()``
 # methods:
@@ -585,7 +591,7 @@ models_read = Models.read("models.yaml")
 ######################################################################
 # Additionally the models can exported and imported togeter with the data
 # using the ``Datasets.read()`` and ``Datasets.write()`` methods as shown
-# in the `analysis_mwl <../analysis/3D/analysis_mwl.ipynb>`__\ \_
+# in the :doc:`/tutorials/analysis-3d/analysis_mwl`
 # notebook.
 #
 # Models with shared parameter
@@ -616,6 +622,8 @@ print(models_yaml)
 
 
 ######################################################################
+# .. _custom-model:
+#
 # Implementing a custom model
 # ---------------------------
 #
@@ -687,8 +695,9 @@ class MyCustomSpectralModel(SpectralModel):
 my_custom_model = MyCustomSpectralModel(mean="3 TeV")
 print(my_custom_model)
 
-my_custom_model.integral(1 * u.TeV, 10 * u.TeV)
+print(my_custom_model.integral(1 * u.TeV, 10 * u.TeV))
 
+plt.figure()
 my_custom_model.plot(energy_bounds=[1, 10] * u.TeV)
 
 
@@ -726,7 +735,7 @@ models.write("my-custom-models.yaml", overwrite=True)
 # bands.
 #
 # `~gammapy.modeling.models.SkyModel` offers a natural framework to simultaneously model the
-# energy and morphology, e.g. spatial extent described by a parametric
+# energy and morphology, e.g. spatial extent described by a parametric
 # model expression with energy dependent parameters.
 #
 # The models shipped within gammapy use a “factorised” representation of
@@ -734,17 +743,18 @@ models.write("my-custom-models.yaml", overwrite=True)
 # and time (:math:`t`) dependence are independent model components and not
 # correlated:
 #
-# :raw-latex:`\begin{align}f(l, b, E, t) = F(l, b) \cdot G(E) \cdot H(t)\end{align}`
+# .. math::
+#     \begin{align}f(l, b, E, t) = F(l, b) \cdot G(E) \cdot H(t)\end{align}
 #
-# To use full 3D models, ie $f(l, b, E) = F(l, b, E)
-# :raw-latex:`\cdot`\ G(E) $, you have to implement your own custom
+# To use full 3D models, ie :math:`f(l, b, E) = F(l, b, E) \cdot \ G(E)`,
+# you have to implement your own custom
 # `SpatialModel`. Note that it is still necessary to multiply by a
 # `SpectralModel`, :math:`G(E)` to be dimensionally consistent.
 #
 # In this example, we create Gaussian Spatial Model with the extension
-# varying with energy. For simplicity, we assume a linear dependence on
+# varying with energy. For simplicity, we assume a linear dependency on
 # energy and parameterize this by specifying the extension at 2 energies.
-# You can add more complex dependences, probably motivated by physical
+# You can add more complex dependencies, probably motivated by physical
 # models.
 #
 
@@ -804,7 +814,7 @@ spatial_model = MyCustomGaussianModel()
 spectral_model = PowerLawSpectralModel()
 sky_model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
 
-spatial_model.evaluation_radius
+print(spatial_model.evaluation_radius)
 
 
 ######################################################################
@@ -818,6 +828,7 @@ geom = WcsGeom.create(skydir=(0, 0), width=5.0 * u.deg, binsz=0.1, axes=[energy_
 
 spatial_model.plot_grid(geom=geom, add_cbar=True, figsize=(14, 3))
 
+plt.show()
 
 ######################################################################
 # For computational purposes, it is useful to specify a
