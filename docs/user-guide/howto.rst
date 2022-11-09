@@ -117,7 +117,7 @@ access the total statistics with the ``info_table(cumulative=True)`` method of
 .. accordion-header::
     :id: collapseHowToEight
     :title: Implement a custom model
-    :link: ../tutorials/api/models.html#implementing-a-custom-Model
+    :link: ../tutorials/api/models.html#implementing-a-custom-model
 
 Gammapy allows the flexibility of using user-defined models for analysis.
 

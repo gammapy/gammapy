@@ -9,8 +9,8 @@ Prerequisites
 -------------
 
 -  Knowledge of spectral extraction and datasets used in gammapy, see
-   for instance the `spectral analysis
-   tutorial <spectral_analysis.ipynb>`__
+   for instance the :doc:`spectral analysis
+   tutorial </tutorials/analysis-1d/spectral_analysis`
 
 Context
 -------

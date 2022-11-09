@@ -257,8 +257,8 @@ print(analysis.observations.ids)
 
 ######################################################################
 # To see how to explore observations, please refer to the following
-# notebook: `CTA with Gammapy <../data/cta.ipynb>`__ or `HESS with
-# Gammapy <../data/hess.ipynb>`__
+# notebook: :doc:`CTA with Gammapy </tutorials/data/cta>` or :doc:`HESS with
+# Gammapy </tutorials/data/hess>`
 #
 
 
@@ -441,8 +441,8 @@ analysis.excess_map["sqrt_ts"].plot(add_cbar=True, cmap="RdBu", vmin=-5, vmax=5)
 # -----------
 #
 # You can look at the same analysis without the high level interface in
-# `analysis_2 <analysis_2.ipynb>`__
+# :doc:`/tutorials/starting/analysis_2`
 #
 # You can see how to perform a 1D spectral analysis of the same data in
-# `spectral analysis <../analysis-1d/spectral_analysis.ipynb>`__
+# :doc:`/tutorials/analysis-1d/spectral_analysis`
 #
