@@ -8,18 +8,18 @@ Prerequisites
 -------------
 
 -  Understanding of basic analyses in 1D or 3D.
--  Usage of `~regions` and catalogs, see the `catalog
-   notebook <catalog.ipynb>`__.
+-  Usage of `~regions` and catalogs, see the :doc:`catalog
+   notebook </tutorials/api/catalog>`.
 
 Context
 -------
 
 There are two main categories of masks in Gammapy for different use
 cases. - Fitting often requires to ignore some parts of a reduced
-dataset, e.g. to restrict the fit to a specific energy range or to
+dataset, e.g. to restrict the fit to a specific energy range or to
 ignore parts of the region of interest that the user does not want to
 model, or both. Gammapy’s `Datasets` therefore contain a `mask_fit`
-sharing the same geometry as the data (i.e. `counts`). - During data
+sharing the same geometry as the data (i.e. `counts`). - During data
 reduction, some background makers will normalize the background model
 template on the data themselves. To limit contamination by real photons,
 one has to exclude parts of the field-of-view where signal is expected
@@ -37,7 +37,7 @@ The region of interest used for the fit can defined through the dataset
 values where pixels used in the fit are stored as True.
 
 A spectral fit (1D or 3D) can be restricted to a specific energy range
-where e.g. the background is well estimated or where the number of
+where e.g. the background is well estimated or where the number of
 counts is large enough. Similarly, 2D and 3D analyses usually require to
 work with a wider map than the region of interest so sources laying
 outside but reconstructed inside because of the PSF are correctly taken

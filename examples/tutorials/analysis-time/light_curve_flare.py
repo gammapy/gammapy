@@ -8,7 +8,7 @@ Prerequisites
 -------------
 
 -  Understanding of how the light curve estimator works, please refer to
-   the `light curve notebook <light_curve.ipynb>`__.
+   the :doc:`light curve notebook </tutorials/analysis-time/light_curve`.
 
 Context
 -------
@@ -29,7 +29,7 @@ Proposed approach
 -----------------
 
 We have seen in the general presentation of the light curve estimator,
-see `light curve notebook <light_curve.ipynb>`__, Gammapy produces
+see the :doc:`light curve notebook </tutorials/analysis-time/light_curve>`, Gammapy produces
 datasets in a given time interval, by default that of the parent
 observation. To be able to produce datasets on smaller time steps, it is
 necessary to split the observations into the required time intervals.
