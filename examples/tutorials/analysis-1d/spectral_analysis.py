@@ -10,7 +10,7 @@ Prerequisites
 -  Understanding how spectral extraction is performed in Cherenkov
    astronomy, in particular regarding OFF background measurements.
 -  Understanding the basics data reduction and modeling/fitting process
-   with the gammapy library API as shown in the `doc:`/tutorials/starting/analysis_2`
+   with the gammapy library API as shown in the :doc:`/tutorials/starting/analysis_2`
    tutorial.
 
 Context
@@ -61,25 +61,35 @@ We can then explore the resulting datasets and look at the cumulative
 signal and significance of our source. We finally proceed with model
 fitting.
 
-In practice, we have to: - Create a `~gammapy.data.DataStore` poiting
-to the relevant data - Apply an observation selection to produce a list
-of observations, a `~gammapy.data.Observations` object. - Define a
-geometry of the spectrum we want to produce: - Create a
-`~regions.CircleSkyRegion` for the ON extraction region - Create a
-`~gammapy.maps.MapAxis` for the energy binnings: one for the
-reconstructed (i.e. measured) energy, the other for the true energy
-(i.e. the one used by IRFs and models) - Create the necessary makers : -
-the spectrum dataset maker : `~gammapy.makers.SpectrumDatasetMaker` -
-the OFF background maker, here a
-`~gammapy.makers.ReflectedRegionsBackgroundMaker` - and the safe range
-maker : `~gammapy.makers.SafeMaskMaker` - Perform the data reduction
-loop. And for every observation: - Apply the makers sequentially to
-produce a `~gammapy.datasets.SpectrumDatasetOnOff` - Append it to list
-of datasets - Define the `~gammapy.modeling.models.SkyModel` to apply
-to the dataset. - Create a `~gammapy.modeling.Fit` object and run it
-to fit the model parameters - Apply a
-`~gammapy.estimators.FluxPointsEstimator` to compute flux points for
-the spectral part of the fit.
+In practice, we have to:
+
+- Create a `~gammapy.data.DataStore` pointing to the relevant data
+- Apply an observation selection to produce a list of observations,
+  a `~gammapy.data.Observations` object.
+- Define a geometry of the spectrum we want to produce:
+
+  - Create a `~regions.CircleSkyRegion` for the ON extraction region
+  - Create a `~gammapy.maps.MapAxis` for the energy binnings: one for the
+    reconstructed (i.e.measured) energy, the other for the true energy
+    (i.e.the one used by IRFs and models)
+
+- Create the necessary makers :
+
+  - the spectrum dataset maker : `~gammapy.makers.SpectrumDatasetMaker` -
+    the OFF background maker, here a `~gammapy.makers.ReflectedRegionsBackgroundMaker`
+  - and the safe range maker : `~gammapy.makers.SafeMaskMaker`
+
+- Perform the data reduction loop. And for every observation:
+
+  - Apply the makers sequentially to produce a `~gammapy.datasets.SpectrumDatasetOnOff`
+  - Append it to list of datasets
+
+- Define the `~gammapy.modeling.models.SkyModel` to apply to the dataset.
+- Create a `~gammapy.modeling.Fit` object and run it to fit the model parameters
+- Apply a `~gammapy.estimators.FluxPointsEstimator` to compute flux points for
+  the spectral part of the fit.
+
+
 """
 
 from pathlib import Path
@@ -357,7 +367,7 @@ datasets[0].plot_masks(ax=ax_spectrum)
 
 ######################################################################
 # For more ways of assessing fit quality, please refer to the dedicated
-# doc:`/tutorials/api/fitting` tutorial.
+# :doc:`/tutorials/api/fitting` tutorial.
 #
 
 
@@ -506,6 +516,6 @@ plt.show()
 # center is valid over the whole region. If one wants to extract the 1D
 # spectrum of a large source and properly average the response over the
 # extraction region, one has to use a different approach explained in
-# the doc:`/tutorials/analysis-1d/extended_source_spectral_analysis`
+# the :doc:`/tutorials/analysis-1d/extended_source_spectral_analysis`
 # tutorial.
 #

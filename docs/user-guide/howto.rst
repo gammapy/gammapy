@@ -125,7 +125,7 @@ Gammapy allows the flexibility of using user-defined models for analysis.
 
 .. accordion-header::
     :id: collapseHowToNine
-    :title: Energy dependent spatial models
+    :title: Implement energy dependent spatial models
     :link: ../tutorials/api/models.html#models-with-energy-dependent-morphology
 
 While Gammapy does not ship energy dependent spatial models, it is possible to define
@@ -135,7 +135,7 @@ such models within the modeling framework.
 
 .. accordion-header::
     :id: collapseHowToTen
-    :title: How to model astrophysical source spectra
+    :title: Model astrophysical source spectra
 
 It is possible to combine Gammapy with astrophysical modeling codes, if they
 provide a Python interface. Usually this requires some glue code to be written,
@@ -148,7 +148,7 @@ H.E.S.S. or Fermi-LAT data).
 
 .. accordion-header::
     :id: collapseSHowToEleven
-    :title: How to model temporal profiles
+    :title: Model temporal profiles
     :link: ../tutorials/analysis-time/light_curve_simulation.html#fitting-temporal-models
 
 Temporal models can be directly fit on available lightcurves,
@@ -220,7 +220,7 @@ warning like so:
 
 .. accordion-header::
     :id: collapseHowToSixteen
-    :title: Displaying a progress bar
+    :title: Display a progress bar
 
 Gammapy provides the possibility of displaying a
 progress bar to monitor the advancement of time-consuming processes. To activate this
@@ -236,7 +236,7 @@ to your code:
 
 .. accordion-header::
     :id: collapseHowToSeventeen
-    :title: Changing plotting style and color-blind friendly visualizations
+    :title: Change plotting style and color-blind friendly visualizations
 
 As the Gammapy visualisations are using the library `matplotlib` that provides color styles, it is possible to change the
 default colors map of the Gammapy plots. Using using the

@@ -19,8 +19,6 @@ Given that the Gammapy library is more widely used by the community, a proper ci
 a policy about the authorship is necessary. This PIG addresses this issue by setting an authorship policy for the
 Gammapy project for each type of products (releases, papers and conferences).
 
-.. contents:: Table of Contents
-   :depth: 2
 
 Introduction
 ============

@@ -179,7 +179,7 @@ gc_3fhl_cutout.plot(stretch="sqrt")
 # Exercises
 # ~~~~~~~~~
 #
-# -  Add a marker and circle at the position of ``Sag A*`` (you can find
+# -  Add a marker and circle at the position of ``Sgr A*`` (you can find
 #    examples in
 #    `astropy.visualization.wcsaxes <https://docs.astropy.org/en/stable/visualization/wcsaxes/>`__).
 #
@@ -191,7 +191,7 @@ gc_3fhl_cutout.plot(stretch="sqrt")
 #
 # Almost any high level gamma-ray data analysis starts with the raw
 # measured counts data, which is stored in event lists. In Gammapy event
-# lists are represented by the ``~gammapy.data.EventList`` class.
+# lists are represented by the `~gammapy.data.EventList` class.
 #
 # In this section we will learn how to:
 #
@@ -200,14 +200,14 @@ gc_3fhl_cutout.plot(stretch="sqrt")
 #    and ``.energy``
 # -  Filter events lists using convenience methods
 #
-# Let’s start with the import from the ``~gammapy.data`` submodule:
+# Let’s start with the import from the `~gammapy.data` submodule:
 #
 
 from gammapy.data import EventList
 
 ######################################################################
 # Very similar to the sky map class an event list can be created, by
-# passing a filename to the ``~gammapy.data.EventList.read()`` method:
+# passing a filename to the `~gammapy.data.EventList.read()` method:
 #
 
 events_3fhl = EventList.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-events.fits.gz")
@@ -250,9 +250,11 @@ print(events_3fhl.table.colnames)
 
 print(events_3fhl.energy.to("GeV"))
 
+# %%
 print(events_3fhl.galactic)
 # events_3fhl.radec
 
+# %%
 print(events_3fhl.time)
 
 
@@ -298,7 +300,7 @@ print("highest energy photon: ", events_gc_3fhl.energy[-1].to("GeV"))
 # -  Access data from individual sources
 #
 # Let’s start with importing the 3FHL catalog object from the
-# ``~gammapy.catalog`` submodule:
+# `~gammapy.catalog` submodule:
 #
 
 from gammapy.catalog import SourceCatalog3FHL
@@ -481,7 +483,7 @@ crab_3fhl.flux_points.plot(ax=ax, sed_type="dnde", energy_power=2)
 #
 # -  To learn more about those classes, go to the API docs (links are in
 #    the introduction at the top).
-# -  To learn more about other parts of Gammapy (e.g. Fermi-LAT and TeV
+# -  To learn more about other parts of Gammapy (e.g.Fermi-LAT and TeV
 #    data analysis), check out the other tutorial notebooks.
 # -  To see what’s available in Gammapy, browse the Gammapy docs or use
 #    the full-text search.
