@@ -475,7 +475,7 @@ print(fp_dataset.data_shape())  # number of data points
 ######################################################################
 # 
 # For an example of fitting `~gammapy.estimators.FluxPoints`, see :doc:`/tutorials/analysis-1d/sed_fitting`,
-# and for using source calalogs see :doc:`/tutorials/api/catalog`
+# and for using source catalogs see :doc:`/tutorials/api/catalog`
 #
 
 
