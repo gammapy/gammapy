@@ -214,7 +214,7 @@ dataset_cta.models = [model, model_bkg]
 ######################################################################
 # Assigning models to datasets is covered in more detail in :doc:`/tutorials/api/model_management`.
 # Printing the dataset will now show the model components:
-# 
+#
 
 print(dataset_cta)
 
@@ -441,7 +441,7 @@ print(reg_dataset)
 # -----------------
 #
 # `~gammapy.datasets.FluxPointsDataset` is a `~gammapy.datasets.Dataset` container for precomputed flux
-# points, which can be then used in fitting. 
+# points, which can be then used in fitting.
 #
 
 plt.figure()
@@ -473,7 +473,7 @@ print(fp_dataset.data_shape())  # number of data points
 
 
 ######################################################################
-# 
+#
 # For an example of fitting `~gammapy.estimators.FluxPoints`, see :doc:`/tutorials/analysis-1d/sed_fitting`,
 # and for using source catalogs see :doc:`/tutorials/api/catalog`
 #
@@ -488,10 +488,10 @@ print(fp_dataset.data_shape())  # number of data points
 # `~gammapy.datasets.MapDataset` and `~gammapy.datasets.SpectrumDataset`.
 #
 # For modelling and fitting of a list of `~gammapy.datasets.Dataset` objects, you can
-# either: 
+# either:
 # (a) Do a joint fitting of all the datasets together OR
 # (b) Stack the datasets together, and then fit them.
-# 
+#
 # `~gammapy.datasets.Datasets` is a convenient tool to handle joint fitting of
 # simultaneous datasets. As an example, please see :doc:`/tutorials/analysis-3d/analysis_mwl`
 #
