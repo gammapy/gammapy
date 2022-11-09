@@ -7,7 +7,7 @@ Learn to sampling events from a given sky model and IRFs.
 Prerequisites
 -------------
 
-To understand how to generate a model and a `MapDataset` and how to fit
+To understand how to generate a model and a `~gammapy.datasets.MapDataset` and how to fit
 the data, please refer to the `~gammapy.modeling.models.SkyModel` and
 :doc:`/tutorials/analysis-3d/simulate_3d` tutorial.
 
@@ -22,7 +22,7 @@ event-sampler and how to obtain an output photon event list.
 The core of the event sampling lies into the Gammapy
 `~gammapy.datasets.MapDatasetEventSampler` class, which is based on
 the inverse cumulative distribution function `(Inverse
-CDF) <https://en.wikipedia.org/wiki/Cumulative_distribution_function#Inverse_distribution_function_(quantile_function)>`__.  # noqa: E501
+CDF) <https://en.wikipedia.org/wiki/Cumulative_distribution_function#Inverse_distribution_function_(quantile_function)>`__. 
 
 The `~gammapy.datasets.MapDatasetEventSampler` takes in input a
 `~gammapy.datasets.Dataset` object containing the spectral, spatial
@@ -46,13 +46,13 @@ Objective
 ---------
 
 Describe the process of sampling events from a given Sky model and
-obtaining an output event-list.
+obtain an output event-list.
 
 
 Proposed approach
 -----------------
 
-In this section, we will show how to define an observation and to create
+In this section, we will show how to define an observation and create
 a Dataset object. These are both necessary for the event sampling. Then,
 we will define the Sky model from which we sample events.
 
@@ -63,7 +63,7 @@ In this tutorial, we propose examples for sampling events of:
    source <#time-variable-source-using-a-lightcurve>`__
 -  `an extended source using a template
    map <#extended-source-using-a-template>`__
--  `a set of observations <#simulate-mutiple-event-lists>`__
+-  `a set of observations <#simulate-multiple-event-lists>`__
 
 We will work with the following functions and classes:
 
@@ -262,7 +262,7 @@ print(dataset.models)
 # The next step shows how to sample the events with the
 # `~gammapy.datasets.MapDatasetEventSampler` class. The class requests a
 # random number seed generator (that we set with `random_state=0`), the
-# `~gammapy.datasets.Dataset` and the `gammapy.data.Observations`
+# `~gammapy.datasets.Dataset` and the `~gammapy.data.Observations`
 # object. From the latter, the
 # `~gammapy.datasets.MapDatasetEventSampler` class takes all the meta
 # data information.
