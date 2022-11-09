@@ -110,12 +110,8 @@ authors:
     orcid: "https://orcid.org/0000-0002-3882-9477"
   - given-names: Lars
     family-names: Mohrmann
-    affiliation: "Max Planck Institute for Nuclear Physics, Heidelberg"
+    affiliation: "Max Planck Institute for Nuclear Physics, Heidelberg, Germany"
     orcid: "https://orcid.org/0000-0002-9667-8654"
-  - given-names: Daniel
-    family-names: Morcuende
-    affiliation: "EMFTEL department and IPARCOS, Universidad Complutense de Madrid, 28040 Madrid, Spain"
-    orcid: "https://orcid.org/0000-0001-9400-0922"
   - given-names: Daniel
     family-names: Morcuende
     affiliation: "EMFTEL department and IPARCOS, Universidad Complutense de Madrid, 28040 Madrid, Spain"
@@ -169,7 +165,7 @@ authors:
     orcid: "https://orcid.org/0000-0003-1673-2145"
   - given-names: Atreyee
     family-names: Sinha
-    affiliation: "Departamento de EMFTEL, IPARCOS, Universidad Complutense de Madrid, 28040 Madrid, Spain"
+    affiliation: "EMFTEL department and IPARCOS, Universidad Complutense de Madrid, 28040 Madrid, Spain"
     orcid: "https://orcid.org/0000-0002-9238-7163"
   - given-names: "Brigitta M"
     family-names: Sipőcz
@@ -204,4 +200,4 @@ authors:
     orcid: "https://orcid.org/0000-0002-2126-2419"
   - given-names: Matthew
     family-names: Wood
-    affiliation: "SLAC, USA"
+    affiliation: "Stanford Linear Accelerator Center, USA"
