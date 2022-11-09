@@ -9,20 +9,6 @@ type: software
 message: "If you use this software, please cite it using the metadata from this file."
 url: "https://gammapy.org/"
 doi: 10.5281/zenodo.4701488
-preferred-citation:
-  authors:
-  - family-names: "Deil"
-    given-names: "Christoph"
-  - family-names: "et al."
-  title: "Gammapy - A prototype for the CTA science tools"
-  doi: 10.48550/ARXIV.1709.01751
-  url: "https://arxiv.org/abs/1709.01751"
-  type: conference-paper
-  year: 2017
-  conference:
-    name: "Proc. 35th ICRC, Busan, South Korea, PoS(ICRC2017)766"
-  publisher:
-    name: "arXiv"
 keywords:
 - Astronomy
 - "Gamma-rays"
