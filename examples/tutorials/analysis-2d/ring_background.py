@@ -292,3 +292,5 @@ ax.set_xlim(xmin, xmax)
 
 print(f"Fit results: mu = {mu:.2f}, std = {std:.2f}")
 plt.show()
+
+# sphinx_gallery_thumbnail_number = 2

@@ -348,3 +348,5 @@ crab_magic_lp.plot(ls="--", lw=1.5, color="k", label="MAGIC reference", **plot_k
 ax.legend()
 ax.set_ylim([1e-13, 1e-10])
 plt.show()
+
+# sphinx_gallery_thumbnail_number = 4
