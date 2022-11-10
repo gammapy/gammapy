@@ -74,14 +74,14 @@
             "@type": "Person",
             "givenName": "Fabio",
             "familyName": "Acero",
-            "affiliation": "Universit\u00e9 Paris-Saclay, Universit\u00e9 Paris Cit\u00e9, CEA, CNRS, AIM, F-91191 Gif-sur-Yvette, France",
+            "affiliation": "Université Paris-Saclay, Université Paris Cité, CEA, CNRS, AIM, F-91191 Gif-sur-Yvette, France",
             "@id": "https://orcid.org/0000-0002-6606-2816"
         },
         {
             "@type": "Person",
             "givenName": "Arnau",
             "familyName": "Aguasca-Cabot",
-            "affiliation": "Departament de F\u00edsica Qu\u00e0ntica i Astrof\u00edsica, Institut de Ci\u00e8ncies del Cosmos (ICCUB), Universitat de Barcelona (IEEC-UB), Spain",
+            "affiliation": "Departament de Física Quàntica i Astrofísica, Institut de Ciències del Cosmos (ICCUB), Universitat de Barcelona (IEEC-UB), Spain",
             "@id": "https://orcid.org/188164920"
         },
         {
@@ -95,7 +95,7 @@
             "@type": "Person",
             "givenName": "David",
             "familyName": "Carreto Fidalgo",
-            "affiliation": "Max Planck Computing and Data Facility, Gie\u00dfenbachstra\u00dfe 2, 85748 Garching, Germany",
+            "affiliation": "Max Planck Computing and Data Facility, Gießenbachstraße 2, 85748 Garching, Germany",
             "@id": "https://orcid.org/0000-0002-7480-2730"
         },
         {
@@ -126,7 +126,7 @@
         },
         {
             "@type": "Person",
-            "givenName": "Jos\u00e9 Vin\u00edcius",
+            "givenName": "José Vinícius",
             "familyName": "de Miranda Cardoso",
             "affiliation": "Federal University of Campina Grande, Department of Electrical Engineering, Brazil"
         },
@@ -147,7 +147,7 @@
             "@type": "Person",
             "givenName": "Luca",
             "familyName": "Giunti",
-            "affiliation": "Universit\u00e9 Paris Cit\u00e9, CNRS, Astroparticule et Cosmologie, F-75013 Paris, France",
+            "affiliation": "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013 Paris, France",
             "@id": "https://orcid.org/0000-0002-3395-3647"
         },
         {
@@ -159,15 +159,15 @@
         },
         {
             "@type": "Person",
-            "givenName": "L\u00e9a ",
+            "givenName": "Léa ",
             "familyName": "Jouvin ",
-            "affiliation": "Universit\u00e9 Paris Cit\u00e9, CNRS, Astroparticule et Cosmologie, F-75013 Paris, France"
+            "affiliation": "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013 Paris, France"
         },
         {
             "@type": "Person",
             "givenName": "Bruno",
-            "familyName": "Kh\u00e9lifi",
-            "affiliation": "Universit\u00e9 Paris Cit\u00e9, CNRS, Astroparticule et Cosmologie, F-75013 Paris, France",
+            "familyName": "Khélifi",
+            "affiliation": "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013 Paris, France",
             "@id": "https://orcid.org/0000-0001-6876-5577"
         },
         {
@@ -186,7 +186,7 @@
             "@type": "Person",
             "givenName": "Jean-Philippe",
             "familyName": "Lenain",
-            "affiliation": "Sorbonne Universit\u00e9, CNRS/IN2P3, Laboratoire de Physique Nucl\u00e9aire et de Hautes Energies, LPNHE, France",
+            "affiliation": "Sorbonne Université, CNRS/IN2P3, Laboratoire de Physique Nucléaire et de Hautes Energies, LPNHE, France",
             "@id": "https://orcid.org/0000-0001-7284-9220"
         },
         {
@@ -221,13 +221,13 @@
             "@type": "Person",
             "givenName": "Kaori",
             "familyName": "Nakashima",
-            "affiliation": "Friedrich-Alexander-Universit\u00e4t Erlangen-N\u00fcrnberg, ECAP, Nikolaus-Fiebiger-Str. 2, 91058 Erlangen, Germany"
+            "affiliation": "Friedrich-Alexander-Universität Erlangen-Nürnberg, ECAP, Nikolaus-Fiebiger-Str. 2, 91058 Erlangen, Germany"
         },
         {
             "@type": "Person",
             "givenName": "Cosimo",
             "familyName": "Nigro",
-            "affiliation": "Institut de F\u00edsica d'Altes Energies (IFAE), The Barcelona Institute of Science and Technology, Campus UAB, 08193 Bellaterra (Barcelona), Spain",
+            "affiliation": "Institut de Física d'Altes Energies (IFAE), The Barcelona Institute of Science and Technology, Campus UAB, 08193 Bellaterra (Barcelona), Spain",
             "@id": "https://orcid.org/https://orcid.org/0000-0001-8375-1907"
         },
         {
@@ -248,7 +248,7 @@
             "@type": "Person",
             "givenName": "Sebastian",
             "familyName": "Panny",
-            "affiliation": "Institut f\u00fcr Astro- und Teilchenphysik, Leopold-Franzens-Universit\u00e4t Innsbruck, A-6020 Innsbruck, Austria",
+            "affiliation": "Institut für Astro- und Teilchenphysik, Leopold-Franzens-Universität Innsbruck, A-6020 Innsbruck, Austria",
             "@id": "https://orcid.org/0000-0001-5770-3805"
         },
         {
@@ -262,7 +262,7 @@
             "@type": "Person",
             "givenName": "Manuel",
             "familyName": "Paz Arribas",
-            "affiliation": "Institut f\u00fcr Physik, Humboldt-Universit\u00e4t zu Berlin, Newtonstr. 15, 12489 Berlin, Germany",
+            "affiliation": "Institut für Physik, Humboldt-Universität zu Berlin, Newtonstr. 15, 12489 Berlin, Germany",
             "@id": "https://orcid.org/0000-0002-4404-9899"
         },
         {
@@ -290,7 +290,7 @@
             "@type": "Person",
             "givenName": "Jose Enrique",
             "familyName": "Ruiz",
-            "affiliation": "Instituto de Astrof\u00edsica de Andaluc\u00eda \u2013 CSIC, Spain",
+            "affiliation": "Instituto de Astrofísica de Andalucía – CSIC, Spain",
             "@id": "https://orcid.org/0000-0003-3274-4445"
         },
         {
@@ -310,7 +310,7 @@
         {
             "@type": "Person",
             "givenName": "Brigitta M",
-            "familyName": "Sip\u0151cz",
+            "familyName": "Sipőcz",
             "affiliation": "Caltech/IPAC, USA",
             "@id": "https://orcid.org/0000-0002-3713-6337"
         },
@@ -318,34 +318,34 @@
             "@type": "Person",
             "givenName": "Marion",
             "familyName": "Spir-Jacob",
-            "affiliation": "Universit\u00e9 Paris Cit\u00e9, CNRS, Astroparticule et Cosmologie, F-75013 Paris, France"
+            "affiliation": "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013 Paris, France"
         },
         {
             "@type": "Person",
-            "givenName": "R\u00e9gis",
+            "givenName": "Régis",
             "familyName": "Terrier",
-            "affiliation": "Universit\u00e9 Paris Cit\u00e9, CNRS, Astroparticule et Cosmologie, F-75013 Paris, France",
+            "affiliation": "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013 Paris, France",
             "@id": "https://orcid.org/0000-0002-8219-4667"
         },
         {
             "@type": "Person",
             "givenName": "Luigi",
             "familyName": "Tibaldo",
-            "affiliation": "IRAP, Universit\u00e9 de Toulouse, CNRS, UPS, CNES, F-31028 Toulouse, France",
+            "affiliation": "IRAP, Université de Toulouse, CNRS, UPS, CNES, F-31028 Toulouse, France",
             "@id": "https://orcid.org/0000-0001-7523-570X"
         },
         {
             "@type": "Person",
             "givenName": "Tim",
             "familyName": "Unbehaun",
-            "affiliation": "Friedrich-Alexander-Universit\u00e4t Erlangen-N\u00fcrnberg, ECAP, Nikolaus-Fiebiger-Str. 2, 91058 Erlangen, Germany",
+            "affiliation": "Friedrich-Alexander-Universität Erlangen-Nürnberg, ECAP, Nikolaus-Fiebiger-Str. 2, 91058 Erlangen, Germany",
             "@id": "https://orcid.org/0000-0002-7378-4024"
         },
         {
             "@type": "Person",
             "givenName": "Christopher",
             "familyName": "van Eldik",
-            "affiliation": "Friedrich-Alexander-Universit\u00e4t Erlangen-N\u00fcrnberg, ECAP, Nikolaus-Fiebiger-Str. 2, 91058 Erlangen, Germany",
+            "affiliation": "Friedrich-Alexander-Universität Erlangen-Nürnberg, ECAP, Nikolaus-Fiebiger-Str. 2, 91058 Erlangen, Germany",
             "@id": "https://orcid.org/0000-0001-9669-645X"
         },
         {
