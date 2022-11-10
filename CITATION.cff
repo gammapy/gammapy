@@ -14,7 +14,7 @@ keywords:
 - "Gamma-rays"
 - "Data analysis"
 version: "1.0"
-date-released: 2022-11-09
+date-released: 2022-11-10
 repository-code: "https://github.com/gammapy/gammapy"
 license: BSD-3-Clause
 contact:
@@ -44,7 +44,7 @@ authors:
   - given-names: Alisha
     family-names: Chromey
     affiliation: "Iowa State University, USA"
-  - given-names: "Jose Luis"
+  - given-names: "José Luis"
     family-names: "Contreras Gonzalez"
     affiliation: "IPARCOS Institute and EMFTEL Department, Universidad Complutense de Madrid, Spain"
     orcid: "https://orcid.org/0000-0001-7282-2394"
@@ -90,8 +90,8 @@ authors:
     family-names: Linhoff
     affiliation: "Astroparticle Physics Group, TU Dortmund University, Germany"
     orcid: "https://orcid.org/0000-0001-7993-8189"
-  - given-names: Ruben
-    family-names: Lopez-Coto
+  - given-names: Rubén
+    family-names: López-Coto
     affiliation: "IAA-CSIC, Spain"
     orcid: "https://orcid.org/0000-0002-3882-9477"
   - given-names: Lars
@@ -141,7 +141,7 @@ authors:
     family-names: Remy
     affiliation: "Max Planck Institute for Nuclear Physics, Heidelberg, Germany"
     orcid: "https://orcid.org/0000-0002-8815-6530"
-  - given-names: "Jose Enrique"
+  - given-names: "José Enrique"
     family-names: Ruiz
     affiliation: "Instituto de Astrofísica de Andalucía – CSIC, Spain"
     orcid: "https://orcid.org/0000-0003-3274-4445"

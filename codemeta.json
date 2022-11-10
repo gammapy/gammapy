@@ -17,7 +17,7 @@
     "Organization": "The Gammapy project",
     "dateCreated": "2014-01-01",
     "datePublished": "2014-08-25",
-    "dateModified": "2022-11-09",
+    "dateModified": "2022-11-10",
     "applicationCategory": "Astronomy",
     "applicationSubCategory": "Very-high energy gamma rays",
     "programmingLanguage": "Python 3",
@@ -108,7 +108,7 @@
         },
         {
             "@type": "Person",
-            "givenName": "Jose Luis",
+            "givenName": "José Luis",
             "familyName": "Contreras Gonzalez",
             "affiliation": "IPARCOS Institute and EMFTEL Department, Universidad Complutense de Madrid, Spain",
             "@id": "https://orcid.org/0000-0001-7282-2394"
@@ -193,8 +193,8 @@
         },
         {
             "@type": "Person",
-            "givenName": "Ruben",
-            "familyName": "Lopez-Coto",
+            "givenName": "Rubén",
+            "familyName": "López-Coto",
             "affiliation": "IAA-CSIC, Spain",
             "@id": "https://orcid.org/0000-0002-3882-9477"
         },
@@ -283,7 +283,7 @@
         },
         {
             "@type": "Person",
-            "givenName": "Jose Enrique",
+            "givenName": "José Enrique",
             "familyName": "Ruiz",
             "affiliation": "Instituto de Astrofísica de Andalucía – CSIC, Spain",
             "@id": "https://orcid.org/0000-0003-3274-4445"
