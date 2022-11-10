@@ -2,6 +2,10 @@ name: CI
 on: [push, pull_request]
 
 jobs:
+  dco-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: tisonkun/actions-dco@v1.1
   lint:
     name: Black check
     runs-on: ubuntu-latest
