@@ -2,15 +2,15 @@
 
 .. _gammapy_1p0_release:
 
-1.0 (November 9th, 2022)
+1.0 (November 10th, 2022)
 -----------------------
 
 Summary
 ~~~~~~~
 
-- Released Nov 9th, 2022
+- Released Nov 10th, 2022
 - 12 contributors
-- 106 pull requests since v0.20.1 (not all listed below)
+- 103 pull requests since v0.20.1 (not all listed below)
 
 New features
 ~~~~~~~~~~~~
