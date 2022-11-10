@@ -62,7 +62,7 @@
         "iminuit>=2.8.0",
         "matplotlib>=3.4",
         "requests",
-        "tqdm",
+        "tqdm"
     ],
     "author": [
         {
