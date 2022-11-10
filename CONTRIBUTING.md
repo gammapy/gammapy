@@ -1,7 +1,7 @@
 Contributing to Gammapy
 =======================
 
-Note: This text is freely inspired by the `Contribution.md <https://raw.githubusercontent.com/astropy/astropy/main/CONTRIBUTING.md>`
+Note: This text is freely inspired by the [CONTRIBUTING.md](https://raw.githubusercontent.com/astropy/astropy/main/CONTRIBUTING.md)
 file of the [Astropy](https://www.astropy.org/) project.
 
 Reporting Issues
@@ -84,3 +84,4 @@ Gammapy Developer Certification of Origin
 >     this project or the open source license(s) involved.
 > 
  
+Repeated from https://developercertificate.org
