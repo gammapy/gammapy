@@ -64,7 +64,6 @@
         "matplotlib>=3.4",
         "requests",
         "tqdm",
-        "ipywidgets"
     ],
     "author": [
         {
