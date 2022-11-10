@@ -62,9 +62,6 @@
         "pydantic>=1.4",
         "iminuit>=2.8.0",
         "matplotlib>=3.4",
-        "naima",
-        "sherpa",
-        "healpy",
         "requests",
         "tqdm",
         "ipywidgets"
