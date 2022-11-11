@@ -232,6 +232,8 @@ We adhere to the PEP8 coding style. To enforce this, setup the
 
     pre-commit install
 
+By installing the pre commits you accetp the DCO.
+
 
 Running tests & building Documentation
 ======================================
