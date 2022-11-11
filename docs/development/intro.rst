@@ -232,7 +232,13 @@ We adhere to the PEP8 coding style. To enforce this, setup the
 
     pre-commit install
 
-By installing the pre commits you accetp the DCO.
+You can also install the hook to add the commit sign-off:
+
+.. code-block:: bash
+
+    pre-commit install --hook-type prepare-commit-msg
+
+By installing the hook you agree to the DCO.
 
 
 Running tests & building Documentation
