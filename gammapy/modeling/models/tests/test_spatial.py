@@ -558,7 +558,7 @@ def test_piecewise_spatial_model():
 
     model = PiecewiseNormSpatialModel(coords, norms, frame="galactic")
 
-    assert model.is_energy_dependent == False
+    assert not model.is_energy_dependent
 
     assert_allclose(model(*geom.to_image().center_coord), 1.339778, rtol=1e-5)
     expected = np.array([[0, 3], [1, 2]])
