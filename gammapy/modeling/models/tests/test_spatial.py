@@ -12,7 +12,7 @@ from regions import (
     PointSkyRegion,
     RectangleSkyRegion,
 )
-from gammapy.maps import Map, MapAxis, RegionGeom, WcsGeom
+from gammapy.maps import Map, MapAxis, RegionGeom, WcsGeom, MapCoord
 from gammapy.modeling.models import (
     ConstantSpatialModel,
     DiskSpatialModel,
@@ -24,6 +24,7 @@ from gammapy.modeling.models import (
     ShellSpatialModel,
     SkyModel,
     TemplateSpatialModel,
+    PiecewiseNormSpatialModel,
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data
 
@@ -541,3 +542,56 @@ def test_temlatemap_clip():
 
     val = model.evaluate(lon, lat)
     assert_allclose(val, 0, rtol=0.0001)
+
+def test_piecewise_spatial_model():
+    geom  = WcsGeom.create(skydir=(2.4, 2.3), npix=(2, 2), binsz=0.3, frame="galactic")
+    coords = MapCoord.create(geom.footprint)
+    coords["lon"]*=u.deg
+    coords["lat"]*=u.deg
+    
+    model = PiecewiseNormSpatialModel(coords, frame="galactic")
+    
+    assert_allclose(model(*geom.to_image().center_coord), 1.)
+
+    norms = np.arange(coords.shape[0])
+    
+    model = PiecewiseNormSpatialModel(coords,norms, frame="galactic")
+    
+    assert model.is_energy_dependent == False
+    
+    assert_allclose(model(*geom.to_image().center_coord), 1.339778, rtol=1e-5)
+    expected = np.array([[0,3],[1,2]])
+    assert_allclose(model(*geom.to_image().get_coord()), expected, atol=1e-5)
+    
+    assert_allclose(model.evaluate_geom(geom.to_image()), expected, atol=1e-5)
+    
+    assert_allclose(model.evaluate_geom(geom), expected, atol=1e-5)
+    
+    model_dict = model.to_dict()
+    new_model = PiecewiseNormSpatialModel.from_dict(model_dict)
+
+    assert_allclose(new_model.evaluate_geom(geom.to_image()), expected, atol=1e-5)
+
+
+        
+def test_piecewise_spatial_model_3d():
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3)
+    geom  = WcsGeom.create(skydir=(2.4, 2.3),
+                           npix=(2, 2),
+                           binsz=0.3,
+                           frame="galactic",
+                           axes=[axis])
+    coords = geom.get_coord().flat
+
+    model = PiecewiseNormSpatialModel(coords, frame="galactic")
+    
+    assert model.is_energy_dependent
+
+    with pytest.raises(ValueError):
+        assert_allclose(model(*geom.to_image().center_coord), 1.)
+    assert_allclose(model(*geom.center_coord), 1.)
+
+   #coords=bkg.geom.downsample(factor=19).get_coord().flat
+#norms = rng.random(coords.shape[0]) - 0.5
+#model = PiecewiseNormSpatialModel(coords,norms, frame="galactic")
+ 
