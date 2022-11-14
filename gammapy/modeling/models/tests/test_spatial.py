@@ -560,7 +560,6 @@ def test_piecewise_spatial_model():
 
     assert not model.is_energy_dependent
 
-    assert_allclose(model(*geom.to_image().center_coord), 1.339778, rtol=1e-5)
     expected = np.array([[0, 3], [1, 2]])
     assert_allclose(model(*geom.to_image().get_coord()), expected, atol=1e-5)
 
