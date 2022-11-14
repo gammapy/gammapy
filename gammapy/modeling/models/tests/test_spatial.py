@@ -588,8 +588,3 @@ def test_piecewise_spatial_model_3d():
     with pytest.raises(ValueError):
         assert_allclose(model(*geom.to_image().center_coord), 1.0)
     assert_allclose(model(*geom.center_coord), 1.0)
-
-
-# coords=bkg.geom.downsample(factor=19).get_coord().flat
-# norms = rng.random(coords.shape[0]) - 0.5
-# model = PiecewiseNormSpatialModel(coords,norms, frame="galactic")

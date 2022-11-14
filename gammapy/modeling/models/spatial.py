@@ -1356,9 +1356,10 @@ class PiecewiseNormSpatialModel(SpatialModel):
         if self.is_energy_dependent:
             if energy is None:
                 raise ValueError("Missing nergy value for  energy-dependent model")
-            scaled_norms = griddata(
+            interpolated = griddata(
                 coords, v_nodes, (lon, lat, energy), method="linear"
             )
+            scaled_norms = scale.inverse(interpolated)
         else:
             interp = CloughTocher2DInterpolator(coords, v_nodes)
             scaled_norms = scale.inverse(interp(lon, lat))
