@@ -6,7 +6,6 @@ import astropy.units as u
 from gammapy.modeling import Parameter, Parameters
 from gammapy.utils.integrate import trapz_loglog
 
-
 __all__ = [
     "BurkertProfile",
     "DMProfile",
@@ -37,7 +36,11 @@ class DMProfile(abc.ABC):
 
     def _eval_squared(self, radius, separation):
         """Squared density at given radius together with the substitution part"""
-        return self(radius) ** 2 * radius / np.sqrt(radius **2 - (self.DISTANCE_GC * np.sin(separation))**2)
+        return (
+            self(radius) ** 2
+            * radius
+            / np.sqrt(radius**2 - (self.DISTANCE_GC * np.sin(separation)) ** 2)
+        )
 
     def integral(self, rmin, rmax, separation, ndecade):
         r"""Integrate squared dark matter profile numerically.
@@ -54,9 +57,10 @@ class DMProfile(abc.ABC):
         ndecade    : int, optional
             Number of grid points per decade used for the integration.
             Default : 10000
-       
         """
-        integral = self.integrate_spectrum_separation(self._eval_squared, rmin, rmax, separation, ndecade)
+        integral = self.integrate_spectrum_separation(
+            self._eval_squared, rmin, rmax, separation, ndecade
+        )
         return integral.to("GeV2 / cm5")
 
     def integrate_spectrum_separation(self, func, xmin, xmax, separation, ndecade):
@@ -70,7 +74,6 @@ class DMProfile(abc.ABC):
             Separation angle in rad
         ndecade    : int
             Number of grid points per decade used for the integration.
-                   
         """
         unit = xmin.unit
         xmin = xmin.value
@@ -82,8 +85,7 @@ class DMProfile(abc.ABC):
         y = func(x, separation)
         val = trapz_loglog(y, x)
         return val.sum()
-        
-        
+
 
 class NFWProfile(DMProfile):
     r"""NFW Profile.

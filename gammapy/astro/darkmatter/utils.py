@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities to compute J-factor maps."""
-import astropy.units as u
 import numpy as np
+import astropy.units as u
 
 __all__ = ["JFactory"]
 
@@ -27,7 +27,7 @@ class JFactory:
         self.profile = profile
         self.distance = distance
 
-    def compute_differential_jfactor(self , ndecade = 1e4):
+    def compute_differential_jfactor(self, ndecade=1e4):
         r"""Compute differential J-Factor.
 
         .. math::
@@ -35,13 +35,28 @@ class JFactory:
             \int_{\mathrm{LoS}} \mathrm d r \rho(r)
         """
         separation = self.geom.separation(self.geom.center_skydir).rad
-        rmin = u.Quantity (value = np.tan(separation)* self.distance, unit = self.distance.unit)
+        rmin = u.Quantity(
+            value=np.tan(separation) * self.distance, unit=self.distance.unit
+        )
         rmax = self.distance
-        val = [ (2* self.profile.integral(
-            _.value *u.kpc, rmax, np.arctan(_.value/self.distance.value), ndecade
-                                         )  + self.profile.integral(
-            self.distance, 4* self.distance, np.arctan(_.value/self.distance.value), ndecade)) for _ in rmin.flatten()]
-        jfact = u.Quantity(val).to("GeV2 cm-5").reshape(rmin.shape)
+        jfact = [
+            (
+                2
+                * self.profile.integral(
+                    _.value * u.kpc,
+                    rmax,
+                    np.arctan(_.value / self.distance.value),
+                    ndecade,
+                )
+                + self.profile.integral(
+                    self.distance,
+                    4 * rmax,
+                    np.arctan(_.value / self.distance.value),
+                    ndecade,
+                )
+            )
+            for _ in rmin.flatten()
+        ]
         return jfact / u.steradian
 
     def compute_jfactor(self):

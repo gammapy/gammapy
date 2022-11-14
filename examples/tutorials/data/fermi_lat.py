@@ -64,7 +64,7 @@ from astropy.coordinates import SkyCoord
 # %matplotlib inline
 import matplotlib.pyplot as plt
 from gammapy.data import EventList
-from gammapy.datasets import MapDataset, Datasets
+from gammapy.datasets import Datasets, MapDataset
 from gammapy.irf import EDispKernelMap, PSFMap
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Fit

@@ -86,7 +86,7 @@ print("DISTANCE_GC:", profiles.DMProfile.DISTANCE_GC)
 # J-Factor map for the Galactic Centre region
 #
 
-profile = profiles.NFWProfile(r_s = 20 *u.kpc)
+profile = profiles.NFWProfile(r_s=20 * u.kpc)
 
 # Adopt standard values used in HESS
 profiles.DMProfile.DISTANCE_GC = 8.5 * u.kpc
@@ -109,14 +109,21 @@ sky_reg = CircleSkyRegion(center=position, radius=1 * u.deg)
 pix_reg = sky_reg.to_pixel(wcs=geom.wcs)
 pix_reg.plot(ax=ax, facecolor="none", edgecolor="red", label="1 deg circle")
 
-sky_reg_rec = RectangleSkyRegion(center=position, height=0.6 * u.deg, width = 2*u.deg)
+sky_reg_rec = RectangleSkyRegion(center=position, height=0.6 * u.deg, width=2 * u.deg)
 pix_reg_rec = sky_reg_rec.to_pixel(wcs=geom.wcs)
 pix_reg_rec.plot(ax=ax, facecolor="none", edgecolor="orange", label="+/- 0.3 deg band")
 
 plt.legend()
 
 # NOTE: https://arxiv.org/abs/1607.08142 quote 2.67e21
-total_jfact = pix_reg.to_mask().multiply(jfact).sum() - pix_reg_rec.to_mask().multiply(jfact).sum()
+total_jfact = (
+    pix_reg.to_mask().multiply(jfact).sum()
+    - pix_reg_rec.to_mask().multiply(jfact).sum()
+)
+total_jfact = (
+    pix_reg.to_mask().multiply(jfact).sum()
+    - pix_reg_rec.to_mask().multiply(jfact).sum()
+)
 print(
     "J-factor in 1 deg circle without the +/- 0.3 deg band around GC assuming a "
     f"{profile.__class__.__name__} is {total_jfact:.3g}"
