@@ -5,6 +5,7 @@ import os
 import numpy as np
 import scipy.integrate
 import scipy.special
+from scipy.interpolate import griddata, CloughTocher2DInterpolator
 import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from astropy.coordinates.angle_utilities import angular_separation, position_angle
@@ -17,13 +18,15 @@ from regions import (
     RectangleSkyRegion,
 )
 import matplotlib.pyplot as plt
-from gammapy.maps import Map, WcsGeom
-from gammapy.modeling import Parameter
+from gammapy.maps import Map, WcsGeom, MapCoord
+from gammapy.modeling import Parameter, Parameters
 from gammapy.modeling.covariance import copy_covariance
 from gammapy.utils.deprecation import deprecated
+from gammapy.utils.interpolation import interpolation_scale
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.regions import region_circle_to_ellipse, region_to_frame
 from gammapy.utils.scripts import make_path
+
 from .core import ModelBase
 
 __all__ = [
@@ -37,6 +40,7 @@ __all__ = [
     "ShellSpatialModel",
     "SpatialModel",
     "TemplateSpatialModel",
+    "PiecewiseNormSpatialModel",
 ]
 
 
@@ -1282,3 +1286,127 @@ class TemplateSpatialModel(SpatialModel):
         if geom is None:
             geom = self.map.geom
         super().plot_interactive(ax=ax, geom=geom, **kwargs)
+
+class PiecewiseNormSpatialModel(SpatialModel):
+    """Piecewise spatial correction
+       with a free normalization at each fixed nodes.
+
+       For more information see :ref:`piecewise-norm-spectral`.
+
+    Parameters
+    ----------
+    coord : `gammapy.maps.MapCoord`
+        Flat coordinates list at which the model values are given (nodes).
+    norms : `~numpy.ndarray` or list of `Parameter`
+        Array with the initial norms of the model at energies ``energy``.
+        A normalisation parameters is created for each value.
+        Default is one at each node.
+    interp : str
+        Interpolation scaling in {"log", "lin"}. Default is "lin"
+    """
+    tag = ["PiecewiseNormSpatialModel", "piecewise-norm"]
+
+    def __init__(self, coords, norms=None, interp="lin", **kwargs):
+            
+        self._coords = coords
+        self._interp = interp
+    
+        if norms is None:
+            norms = np.ones(coords.shape)
+    
+        if len(norms) != coords.shape[0]:
+            raise ValueError("dimension mismatch")
+    
+        if len(norms) < 4:
+            raise ValueError("Input arrays must contain at least 4 elements")
+    
+        if not isinstance(norms[0], Parameter):
+            parameters = Parameters(
+                [Parameter(f"norm_{k}", norm) for k, norm in enumerate(norms)]
+            )
+        else:
+            parameters = Parameters(norms)
+        self.default_parameters = parameters
+        super().__init__(**kwargs)
+       
+    @property
+    def coords(self):
+        """Energy nodes"""
+        return self._coords
+
+    @property
+    def norms(self):
+        """Norm values"""
+        return u.Quantity(self.parameters.value)
+    
+    @property
+    def is_energy_dependent(self):
+        keys = self.coords._data.keys()
+        return "energy" in keys or "energy_true" in keys
+    
+    def evaluate(self, lon, lat, energy=None, **norms):
+        """Evaluate the model at given coordinates."""
+        scale = interpolation_scale(scale=self._interp)
+        v_nodes = scale(self.norms)
+        coords = [value.value for value in self.coords._data.values()]
+        #TODO: apply axes scaling in this loop
+        coords = list(zip(*coords))
+        if self.is_energy_dependent:
+            if energy is None:
+                raise ValueError("Missing nergy value for  energy-dependent model")
+            scaled_norms = griddata(coords, v_nodes, (lon, lat, energy), method="linear")
+        else:   
+            interp = CloughTocher2DInterpolator(coords, v_nodes)
+            scaled_norms = scale.inverse(interp(lon, lat))
+        return scaled_norms
+
+    def evaluate_geom(self, geom):
+        """Evaluate model on `~gammapy.maps.Geom`
+
+        Parameters
+        ----------
+        geom : `~gammapy.maps.WcsGeom`
+
+        Returns
+        -------
+        `~gammapy.maps.Map`
+
+        """
+        coords = geom.get_coord(frame=self.frame, sparse=True)
+
+        if self.is_energy_dependent:
+            return self(*coords)
+        else:
+            return self(coords.lon, coords.lat)
+        
+    def to_dict(self, full_output=False):
+        data = super().to_dict(full_output=full_output)
+        for key, value in self.coords._data.items():
+            data["spatial"][key] = {
+                "data": value.data.tolist(),
+                "unit": str(value.unit),
+            }
+        return data
+
+
+    @classmethod
+    def from_dict(cls, data):
+        """Create model from dict"""
+        data = data["spatial"]
+        lon = u.Quantity(data["lon"]["data"], data["lon"]["unit"])
+        lat = u.Quantity(data["lat"]["data"], data["lat"]["unit"])
+        if "energy" in data:
+            energy = u.Quantity(data["energy"]["data"], data["energy"]["unit"])
+            coords = MapCoord.create((lon, lat, energy))
+        else:
+            coords = MapCoord.create((lon, lat))
+
+        parameters = Parameters.from_dict(data["parameters"])
+        return cls.from_parameters(parameters, coords=coords, frame=data["frame"])
+
+
+    @classmethod
+    def from_parameters(cls, parameters, **kwargs):
+        """Create model from parameters"""
+        return cls(norms=parameters, **kwargs)
+
