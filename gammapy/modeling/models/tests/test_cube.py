@@ -754,3 +754,24 @@ def test_spatial_model_background(background):
         spatial_model=spatial_model2, dataset_name="test"
     ).evaluate_geom(geom)
     assert_allclose(twice, reference)
+
+
+def test_spatial_model_io_background(background):
+
+    spatial_model = ConstantSpatialModel(frame="galactic")
+    model = TemplateNPredModel(background, spatial_model=None)
+    model_dict = model.to_dict()
+    assert "spatial" not in model_dict
+
+    model = TemplateNPredModel(background, spatial_model=spatial_model)
+    model_dict = model.to_dict()
+    assert "spatial" in model_dict
+
+    model = FoVBackgroundModel(spatial_model=None, dataset_name="test")
+    model_dict = model.to_dict()
+    assert "spatial" not in model_dict
+
+    model = FoVBackgroundModel(spatial_model=spatial_model, dataset_name="test")
+    model = TemplateNPredModel(background, spatial_model=spatial_model)
+    model_dict = model.to_dict()
+    assert "spatial" in model_dict
