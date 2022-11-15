@@ -607,7 +607,7 @@ class FoVBackgroundModel(ModelBase):
         if not spectral_model.is_norm_spectral_model:
             raise ValueError("A norm spectral model is required.")
 
-        self._spatial_model = None
+        self._spatial_model = spatial_model
         self._spectral_model = spectral_model
         super().__init__()
 
@@ -663,7 +663,11 @@ class FoVBackgroundModel(ModelBase):
         """Evaluate model"""
         value = self.spectral_model(energy)
         if self.spatial_model is not None and lon is not None and lat is not None:
-            return self.spatial_model(lon, lat, energy).value * value
+            if self.spatial_model.is_energy_dependent:
+                return self.spatial_model(lon, lat, energy).value * value
+            else:
+                return self.spatial_model(lon, lat).value * value
+
         else:
             return value
 
@@ -693,9 +697,9 @@ class FoVBackgroundModel(ModelBase):
         data = {}
         data["type"] = self.tag[0]
         data["datasets_names"] = self.datasets_names
-        data["spectral"] = self.spectral_model.to_dict(full_output=full_output)[
-            "spectral"
-        ]
+        data.update(self.spectral_model.to_dict(full_output=full_output))
+        if self.spatial_model is not None:
+            data.update(self.spatial_model.to_dict(full_output))
         return data
 
     @classmethod
