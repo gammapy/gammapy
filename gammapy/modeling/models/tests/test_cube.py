@@ -763,15 +763,23 @@ def test_spatial_model_io_background(background):
     model = TemplateNPredModel(background, spatial_model=None)
     model_dict = model.to_dict()
     assert "spatial" not in model_dict
+    new_model = TemplateNPredModel.from_dict(model_dict)
+    assert new_model.spatial_model is None
 
     model = TemplateNPredModel(background, spatial_model=spatial_model)
     model_dict = model.to_dict()
     assert "spatial" in model_dict
+    new_model = TemplateNPredModel.from_dict(model_dict)
+    assert isinstance(new_model.spatial_model, ConstantSpatialModel)
 
     model = FoVBackgroundModel(spatial_model=None, dataset_name="test")
     model_dict = model.to_dict()
     assert "spatial" not in model_dict
+    new_model = FoVBackgroundModel.from_dict(model_dict)
+    assert new_model.spatial_model is None
 
     model = FoVBackgroundModel(spatial_model=spatial_model, dataset_name="test")
     model_dict = model.to_dict()
     assert "spatial" in model_dict
+    new_model = FoVBackgroundModel.from_dict(model_dict)
+    assert isinstance(new_model.spatial_model, ConstantSpatialModel)
