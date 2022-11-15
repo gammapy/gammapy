@@ -15,6 +15,7 @@ from gammapy.maps import Map, MapAxis, RegionGeom, RegionNDMap, WcsGeom
 from gammapy.modeling import Parameter
 from gammapy.modeling.models import (
     CompoundSpectralModel,
+    ConstantSpatialModel,
     ConstantSpectralModel,
     ConstantTemporalModel,
     GaussianSpatialModel,
@@ -28,6 +29,7 @@ from gammapy.modeling.models import (
     TemplateNPredModel,
     TemplateSpatialModel,
     create_fermi_isotropic_diffuse_model,
+    FoVBackgroundModel,
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data
 
@@ -720,3 +722,35 @@ def test_sky_model_contributes_point_region():
     geom = RegionGeom.create("icrs;point(0.05, 0.05)", binsz_wcs="0.01 deg")
     mask = RegionNDMap.from_geom(geom)
     assert np.any(model.contributes(mask))
+
+
+def test_spatial_model_background(background):
+
+    geom = background.geom
+
+    spatial_model = ConstantSpatialModel(frame="galactic")
+    reference_npred = TemplateNPredModel(background, spatial_model=None).evaluate()
+    identical_npred = TemplateNPredModel(
+        background, spatial_model=spatial_model
+    ).evaluate()
+    assert_allclose(identical_npred, reference_npred)
+
+    reference = FoVBackgroundModel(
+        spatial_model=None, dataset_name="test"
+    ).evaluate_geom(geom)
+    identical = FoVBackgroundModel(
+        spatial_model=spatial_model, dataset_name="test"
+    ).evaluate_geom(geom)
+    assert_allclose(identical, reference)
+
+    spatial_model2 = ConstantSpatialModel(frame="galactic")
+    spatial_model2.value.value = 2
+    twice_npred = TemplateNPredModel(
+        background, spatial_model=spatial_model2
+    ).evaluate()
+    assert_allclose(twice_npred, reference_npred * 2)
+
+    twice = FoVBackgroundModel(
+        spatial_model=spatial_model2, dataset_name="test"
+    ).evaluate_geom(geom)
+    assert_allclose(twice, reference)

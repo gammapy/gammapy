@@ -607,7 +607,7 @@ class FoVBackgroundModel(ModelBase):
         if not spectral_model.is_norm_spectral_model:
             raise ValueError("A norm spectral model is required.")
 
-        self._spectral_model = None
+        self._spatial_model = None
         self._spectral_model = spectral_model
         super().__init__()
 
@@ -657,14 +657,13 @@ class FoVBackgroundModel(ModelBase):
     def evaluate_geom(self, geom):
         """Evaluate map"""
         coords = geom.get_coord(sparse=True)
-        return self.evaluate(**coords._data) 
-
+        return self.evaluate(**coords._data)
 
     def evaluate(self, energy, lon=None, lat=None):
         """Evaluate model"""
-        value = self.spectral_model(energy) 
+        value = self.spectral_model(energy)
         if self.spatial_model is not None and lon is not None and lat is not None:
-            return self.spatial_model(lon,lat,energy).value * value
+            return self.spatial_model(lon, lat, energy).value * value
         else:
             return value
 
@@ -708,7 +707,10 @@ class FoVBackgroundModel(ModelBase):
         data : dict
             Data dictionary
         """
-        from gammapy.modeling.models import SPECTRAL_MODEL_REGISTRY, SPATIAL_MODEL_REGISTRY
+        from gammapy.modeling.models import (
+            SPECTRAL_MODEL_REGISTRY,
+            SPATIAL_MODEL_REGISTRY,
+        )
 
         spectral_data = data.get("spectral")
         if spectral_data is not None:
@@ -716,7 +718,7 @@ class FoVBackgroundModel(ModelBase):
             spectral_model = model_class.from_dict(spectral_data)
         else:
             spectral_model = None
-            
+
         spatial_data = data.get("spatial")
         if spatial_data is not None:
             model_class = SPATIAL_MODEL_REGISTRY.get_cls(spatial_data["type"])
@@ -906,7 +908,10 @@ class TemplateNPredModel(ModelBase):
 
     @classmethod
     def from_dict(cls, data):
-        from gammapy.modeling.models import SPECTRAL_MODEL_REGISTRY, SPATIAL_MODEL_REGISTRY
+        from gammapy.modeling.models import (
+            SPECTRAL_MODEL_REGISTRY,
+            SPATIAL_MODEL_REGISTRY,
+        )
 
         spectral_data = data.get("spectral")
         if spectral_data is not None:
@@ -914,7 +919,7 @@ class TemplateNPredModel(ModelBase):
             spectral_model = model_class.from_dict(spectral_data)
         else:
             spectral_model = None
-            
+
         spatial_data = data.get("spatial")
         if spatial_data is not None:
             model_class = SPATIAL_MODEL_REGISTRY.get_cls(spatial_data["type"])
