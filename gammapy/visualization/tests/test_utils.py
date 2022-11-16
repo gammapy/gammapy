@@ -96,4 +96,7 @@ def test_plot_rgb():
         plot_rgb(map_, [0.1, 0.2, 0.5, 10] * u.TeV, **kwargs)
 
     with pytest.raises(ValueError):
+        plot_rgb(map_, **kwargs)
+
+    with pytest.raises(ValueError):
         plot_rgb(map_, [0.1, 0.2, 10] * u.TeV, **kwargs)
