@@ -1,9 +1,12 @@
 import numpy as np
 from scipy.interpolate import CubicSpline
 import matplotlib.pyplot as plt
+from astropy.visualization import make_lupton_rgb
+from gammapy.maps import MapAxis
 
 __all__ = [
     "plot_contour_line",
+    "plot_rgb",
     "plot_spectrum_datasets_off_regions",
     "plot_theta_squared_table",
 ]
@@ -18,6 +21,63 @@ ARTIST_TO_LINE_PROPERTIES = {
     "linewidth": "markerwidth",
     "lw": "markerwidth",
 }
+
+
+def plot_rgb(map_, energy_edges=None, ax=None, **kwargs):
+    """
+    Plot RGB image on matplotlib WCS axes.
+
+    Based on the `~astropy.visualization.make_lupton_rgb` function.
+
+    Parameters
+    ----------
+    map_ : `~gammapy.maps.WcsNDMap`
+        WCS map. If energy edges are not provided, the map should contain exactly 3 energy bins.
+    energy_edges : `~astropy.units.Quantity`, float
+        Energy edges (an iterable of length 4) defining exactly 3 energy bins.
+    ax : `~astropy.visualization.wcsaxes.WCSAxes`, optional
+        WCS axis object to plot on.
+    **kwargs : dict
+        Keyword arguments passed to `~astropy.visualization.make_lupton_rgb`.
+
+    Returns
+    -------
+    ax : `~astropy.visualization.wcsaxes.WCSAxes`
+        WCS axis object
+    """
+    axis = map_.geom.axes["energy"]
+    if not energy_edges:
+        if len(axis.center) != 3:
+            raise ValueError("Exactly 3 energy bins are needed to plot an RGB image")
+        else:
+            energy_edges = axis.edges
+
+    if len(energy_edges) != 4:
+        raise ValueError("Exactly 3 energy bins are needed to plot an RGB image")
+
+    axis_rgb = MapAxis.from_energy_edges(
+        energy_edges.value,
+        unit=energy_edges.unit,
+        name="energy",
+        interp=axis.interp
+    )
+    map_rgb = map_.resample_axis(axis_rgb)
+
+    data = [data_slice / np.nanmax(data_slice.flatten()) for data_slice in map_rgb.data]
+    data = make_lupton_rgb(*data, **kwargs)
+
+    ax = map_rgb._plot_default_axes(ax=ax)
+
+    ax.imshow(data)
+
+    if map_rgb.geom.is_allsky:
+        ax = map_rgb._plot_format_allsky(ax)
+    else:
+        ax = map_rgb._plot_format(ax)
+
+    ax.autoscale(enable=False)
+
+    return ax
 
 
 def plot_spectrum_datasets_off_regions(
