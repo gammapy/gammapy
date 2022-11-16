@@ -1,18 +1,20 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
+import astropy.units as u
 from numpy.testing import assert_allclose
 from astropy.table import Table
 import matplotlib
 import matplotlib.pyplot as plt
 from packaging import version
-from gammapy.utils.testing import mpl_plot_check
+from gammapy.utils.testing import mpl_plot_check, requires_data
+from gammapy.maps import Map
 from gammapy.visualization import (
     plot_contour_line,
+    plot_rgb,
     plot_spectrum_datasets_off_regions,
     plot_theta_squared_table,
 )
-
 
 @pytest.mark.skipif(
     version.parse(matplotlib.__version__) < version.parse("3.5"),
@@ -83,3 +85,13 @@ def test_plot_theta2_distribution():
     # open a new figure to avoid
     plt.figure()
     plot_theta_squared_table(table=table)
+
+@requires_data()
+def test_plot_rgb():
+    map_ = Map.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
+    kwargs = {"stretch": 0.5, "Q": 1, "minimum": 0.15}
+    with mpl_plot_check():
+        plot_rgb(map_, [0.1, 0.2, 0.5, 10] * u.TeV, **kwargs)
+
+    with pytest.raises(ValueError):
+        plot_rgb(map_, [0.1, 0.2, 10] * u.TeV, **kwargs)
