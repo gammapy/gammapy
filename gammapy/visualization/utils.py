@@ -44,6 +44,14 @@ def plot_rgb(map_, energy_edges=None, ax=None, **kwargs):
     -------
     ax : `~astropy.visualization.wcsaxes.WCSAxes`
         WCS axis object
+
+    Examples
+    --------
+    >>> from gammapy.maps import Map
+    >>> import astropy.units as u
+    >>> map_ = Map.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
+    >>> kwargs = {"stretch": 0.5, "Q": 1, "minimum": 0.15}
+    >>> plot_rgb(map_.smooth(0.08*u.deg), [0.1, 0.2, 0.5, 10] * u.TeV, **kwargs)
     """
     axis = map_.geom.axes["energy"]
     if not energy_edges:
