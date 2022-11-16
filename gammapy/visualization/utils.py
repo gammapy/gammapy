@@ -56,10 +56,7 @@ def plot_rgb(map_, energy_edges=None, ax=None, **kwargs):
         raise ValueError("Exactly 3 energy bins are needed to plot an RGB image")
 
     axis_rgb = MapAxis.from_energy_edges(
-        energy_edges.value,
-        unit=energy_edges.unit,
-        name="energy",
-        interp=axis.interp
+        energy_edges.value, unit=energy_edges.unit, name="energy", interp=axis.interp
     )
     map_rgb = map_.resample_axis(axis_rgb)
 

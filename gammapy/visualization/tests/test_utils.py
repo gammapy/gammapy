@@ -16,6 +16,7 @@ from gammapy.visualization import (
     plot_theta_squared_table,
 )
 
+
 @pytest.mark.skipif(
     version.parse(matplotlib.__version__) < version.parse("3.5"),
     reason="Requires matplotlib 3.5 or higher",
@@ -85,6 +86,7 @@ def test_plot_theta2_distribution():
     # open a new figure to avoid
     plt.figure()
     plot_theta_squared_table(table=table)
+
 
 @requires_data()
 def test_plot_rgb():
