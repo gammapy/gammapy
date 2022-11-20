@@ -2,11 +2,11 @@
 import logging
 import numpy as np
 from astropy import units as u
+from astropy.table import Table
 from gammapy.datasets import Datasets
 from gammapy.maps import MapAxis
 from gammapy.modeling import Fit
 from gammapy.utils.pbar import progress_bar
-from gammapy.utils.table import table_from_row_data
 from ..flux import FluxEstimator
 from .core import FluxPoints
 
@@ -123,7 +123,7 @@ class FluxPointsEstimator(FluxEstimator):
             "sed_type_init": "likelihood",
         }
 
-        table = table_from_row_data(rows=rows, meta=meta)
+        table = Table(rows, meta=meta)
         model = datasets.models[self.source]
         return FluxPoints.from_table(
             table=table,

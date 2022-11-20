@@ -4,6 +4,7 @@ import numpy as np
 from astropy.table import Table
 from astropy.units import Quantity
 from .units import standardise_unit
+from .deprecation import deprecated
 
 __all__ = [
     "hstack_columns",
@@ -91,6 +92,7 @@ def table_row_to_dict(row, make_quantity=True):
     return data
 
 
+@deprecated("v1.1", alternative="astropy.table.Table")
 def table_from_row_data(rows, **kwargs):
     """Helper function to create table objects from row data.
 

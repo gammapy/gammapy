@@ -6,8 +6,8 @@ import itertools
 import logging
 import numpy as np
 from astropy import units as u
+from astropy.table import Table
 from gammapy.utils.interpolation import interpolation_scale
-from gammapy.utils.table import table_from_row_data
 
 __all__ = ["Parameter", "Parameters"]
 
@@ -615,7 +615,7 @@ class Parameters(collections.abc.Sequence):
                 if key in d:
                     del d[key]
             rows.append({**dict(type=p.type), **d})
-        table = table_from_row_data(rows)
+        table = Table(rows)
 
         table["value"].format = ".4e"
         for name in ["error", "min", "max"]:
