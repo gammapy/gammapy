@@ -580,7 +580,7 @@ following the change:
 
     from gammapy.utils.deprecation import deprecated
 
-    @deprecated("v1.1")
+    @deprecated("1.1")
     def deprecated_function(a, b):
         return a + b
 
@@ -590,7 +590,7 @@ If you want to indicate a new implementation to use instead, use the `alternativ
 
     from gammapy.utils.deprecation import deprecated
 
-    @deprecated("v1.1", alternative="new_function")
+    @deprecated("1.1", alternative="new_function")
     def deprecated_function(a, b):
         return a + b
 
@@ -600,17 +600,17 @@ Renaming an argument
 
 If you change the name of an argument, you can use the ``deprecated_renamed_argument`` decorator.
 It will replace the old argument with the new one in a call to the function and will raise the
-``GammapyDeprecationWarning``.
+``GammapyDeprecationWarning``. You can change several arguments at once.
 
 .. testcode::
 
     from gammapy.utils.deprecation import deprecated_renamed_argument
 
-    @deprecated_renamed_argument(["a", "b", ["x", "y"], "v1.1")
+    @deprecated_renamed_argument(["a", "b", ["x", "y"], ["1.1", "1.1"])
     def deprecated_argument_function(x, y):
         return x + y
 
-    deprecated_argument_function(a=1, b=2)
+    print(deprecated_argument_function(a=1, b=2))
 
 If you rename a `kwarg` you simply need to set the `arg_in_kwargs` argument to `True`:
 
@@ -618,10 +618,11 @@ If you rename a `kwarg` you simply need to set the `arg_in_kwargs` argument to `
 
     from gammapy.utils.deprecation import deprecated_renamed_argument
 
-    @deprecated_renamed_argument("old", "new", "v1.1", arg_in_kwargs=True)
+    @deprecated_renamed_argument("old", "new", "1.1", arg_in_kwargs=True)
     def deprecated_argument_function_kwarg(new=1):
         return new
 
+    print(deprecated_argument_function_kwarg(old=3))
 
 Removing an attribute
 +++++++++++++++++++++
@@ -631,11 +632,11 @@ If you have a alternative attribute to use instead, pass its name in the `altern
 
 .. testcode::
 
-    from gammapy.utils.deprecation import deprecated_renamed_argument
+    from gammapy.utils.deprecation import deprecated_attribute
 
     class some_class:
         old_attribute = deprecated_attribute(
-            "old_attribute", "v1.1", alternative="new_attribute"
+            "old_attribute", "1.1", alternative="new_attribute"
         )
 
         def __init__(self, value):
