@@ -1,10 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from astropy.utils import deprecated, deprecated_renamed_argument
 
 __all__ = [
     "GammapyDeprecationWarning",
-    "gammapy_deprecated",
-    "gammapy_deprecated_renamed_argument",
+    "deprecated",
+    "deprecated_renamed_argument",
+    "deprecated_attribute",
 ]
 
 
@@ -14,7 +14,7 @@ class GammapyDeprecationWarning(Warning):
     """
 
 
-def gammapy_deprecated(since, **kwargs):
+def deprecated(since, **kwargs):
     """
     Used to mark a function or class as deprecated.
 
@@ -26,14 +26,29 @@ def gammapy_deprecated(since, **kwargs):
     since : str
         The release at which this API became deprecated.  This is required.
     """
+    from astropy.utils import deprecated
+
     kwargs["warning_type"] = GammapyDeprecationWarning
     return deprecated(since, **kwargs)
 
 
-def gammapy_deprecated_renamed_argument(old_name, new_name, since, **kwargs):
+def deprecated_renamed_argument(old_name, new_name, since, **kwargs):
     """Deprecate a _renamed_ or _removed_ function argument.
 
     Check arguments and usage in `~astropy.utils.decorator.deprecated_renamed_argument`
     """
+    from astropy.utils import deprecated_renamed_argument
+
     kwargs["warning_type"] = GammapyDeprecationWarning
     return deprecated_renamed_argument(old_name, new_name, since, **kwargs)
+
+
+def deprecated_attribute(name, since, **kwargs):
+    """
+    Used to mark a public attribute as deprecated.  This creates a
+    property that will warn when the given attribute name is accessed.
+    """
+    from astropy.utils import deprecated_attribute
+
+    kwargs["warning_type"] = GammapyDeprecationWarning
+    return deprecated_attribute(name, since, **kwargs)
