@@ -1826,17 +1826,18 @@ class EBLAbsorptionNormSpectralModel(SpectralModel):
 
     def to_dict(self, full_output=False):
         data = super().to_dict(full_output=full_output)
+        param = u.Quantity(self.param)
         if self.filename is None:
             data["spectral"]["energy"] = {
                 "data": self.energy.data.tolist(),
                 "unit": str(self.energy.unit),
             }
             data["spectral"]["param"] = {
-                "data": self.param.data.tolist(),
-                "unit": str(self.param.unit),
+                "data": param.data.tolist(),
+                "unit": str(param.unit),
             }
             data["spectral"]["values"] = {
-                "data": self.data.data.tolist(),
+                "data": self.data.value.tolist(),
                 "unit": str(self.data.unit),
             }
         else:
@@ -1853,7 +1854,17 @@ class EBLAbsorptionNormSpectralModel(SpectralModel):
             p["value"] for p in data["parameters"] if p["name"] == "alpha_norm"
         ][0]
         if "filename" in data:
-            return cls.read(data["filename"], redshift=redshift, alpha_norm=alpha_norm)
+            if os.exists(data["filename"]):
+                return cls.read(
+                    data["filename"], redshift=redshift, alpha_norm=alpha_norm
+                )
+            else:
+                for reference in ["franceschini", "dominguez", "finke"]:
+                    if reference in data["filename"]:
+                        return cls.read_builtin(
+                            reference, redshift=redshift, alpha_norm=alpha_norm
+                        )
+                raise IOError('File {data["filename"} not found')
         else:
             energy = u.Quantity(data["energy"]["data"], data["energy"]["unit"])
             param = u.Quantity(data["param"]["data"], data["param"]["unit"])
