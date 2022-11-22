@@ -165,6 +165,51 @@ def test_piecewise_norm_spectral_model_io():
 
 
 @requires_data()
+def test_absorption_io_invalid_path(tmp_path):
+    dominguez = EBLAbsorptionNormSpectralModel.read_builtin("dominguez", redshift=0.5)
+    dominguez.filename = "/not/a/valid/path/dominguez.fits"
+    assert len(dominguez.parameters) == 2
+
+    model_dict = dominguez.to_dict()
+    parnames = [_["name"] for _ in model_dict["spectral"]["parameters"]]
+    assert parnames == [
+        "alpha_norm",
+        "redshift",
+    ]
+    new_model = EBLAbsorptionNormSpectralModel.from_dict(model_dict)
+
+    assert new_model.redshift.value == 0.5
+    assert new_model.alpha_norm.name == "alpha_norm"
+    assert new_model.alpha_norm.value == 1
+    assert_allclose(new_model.energy, dominguez.energy)
+    assert_allclose(new_model.param, dominguez.param)
+    assert len(new_model.parameters) == 2
+
+
+@requires_data()
+def test_absorption_io_no_filename(tmp_path):
+    dominguez = EBLAbsorptionNormSpectralModel.read_builtin("dominguez", redshift=0.5)
+    dominguez.filename = None
+    assert len(dominguez.parameters) == 2
+
+    model_dict = dominguez.to_dict()
+    parnames = [_["name"] for _ in model_dict["spectral"]["parameters"]]
+    assert parnames == [
+        "alpha_norm",
+        "redshift",
+    ]
+
+    new_model = EBLAbsorptionNormSpectralModel.from_dict(model_dict)
+
+    assert new_model.redshift.value == 0.5
+    assert new_model.alpha_norm.name == "alpha_norm"
+    assert new_model.alpha_norm.value == 1
+    assert_allclose(new_model.energy, dominguez.energy)
+    assert_allclose(new_model.param, dominguez.param)
+    assert len(new_model.parameters) == 2
+
+
+@requires_data()
 def test_absorption_io(tmp_path):
     dominguez = EBLAbsorptionNormSpectralModel.read_builtin("dominguez", redshift=0.5)
     assert len(dominguez.parameters) == 2
