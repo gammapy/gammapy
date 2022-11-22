@@ -1854,7 +1854,7 @@ class EBLAbsorptionNormSpectralModel(SpectralModel):
             p["value"] for p in data["parameters"] if p["name"] == "alpha_norm"
         ][0]
         if "filename" in data:
-            if os.exists(data["filename"]):
+            if os.path.exists(data["filename"]):
                 return cls.read(
                     data["filename"], redshift=redshift, alpha_norm=alpha_norm
                 )
