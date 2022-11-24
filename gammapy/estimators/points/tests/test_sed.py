@@ -622,6 +622,7 @@ def test_fpe_non_uniform_datasets():
         fpe.run(datasets=[dataset_1, dataset_2])
 
 
+@requires_data()
 def test_flux_points_estimator_norm_spectral_model(fermi_datasets):
 
     energy_edges = [10, 30, 100, 300, 1000] * u.GeV
