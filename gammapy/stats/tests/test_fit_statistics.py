@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from gammapy import stats
-
+from gammapy.utils.testing import requires_data
 
 @pytest.fixture(scope="session")
 def fermi_datasets():
@@ -195,6 +195,7 @@ def test_sigma_ts_conversion():
     assert_allclose(sigma, sigma_ref)
 
 
+@requires_data()
 def test_test_statistic(fermi_datasets):
 
     model = fermi_datasets.models["Crab Nebula"]
