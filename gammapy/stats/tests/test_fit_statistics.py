@@ -203,4 +203,4 @@ def test_test_statistic(fermi_datasets):
     ts_eval = stats.TestStatisticNested([model.spectral_model.amplitude], [0])
     ts = ts_eval.run(fermi_datasets)
 
-    assert_allclose(ts, 20905.667798)
+    assert_allclose(ts, 20905.667798, rtol=1e-5)
