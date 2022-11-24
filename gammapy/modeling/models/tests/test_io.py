@@ -167,7 +167,7 @@ def test_piecewise_norm_spectral_model_io():
 @requires_data()
 def test_absorption_io_invalid_path(tmp_path):
     dominguez = EBLAbsorptionNormSpectralModel.read_builtin("dominguez", redshift=0.5)
-    dominguez.filename = "/not/a/valid/path/dominguez.fits"
+    dominguez.filename = "/not/a/valid/path/ebl_dominguez11.fits.gz"
     assert len(dominguez.parameters) == 2
 
     model_dict = dominguez.to_dict()
@@ -184,6 +184,11 @@ def test_absorption_io_invalid_path(tmp_path):
     assert_allclose(new_model.energy, dominguez.energy)
     assert_allclose(new_model.param, dominguez.param)
     assert len(new_model.parameters) == 2
+
+    dominguez.filename = "/not/a/valid/path/dominguez.fits.gz"
+    model_dict = dominguez.to_dict()
+    with pytest.raises(IOError):
+        EBLAbsorptionNormSpectralModel.from_dict(model_dict)
 
 
 @requires_data()

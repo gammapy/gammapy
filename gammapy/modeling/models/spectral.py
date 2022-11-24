@@ -12,6 +12,7 @@ from astropy.table import Table
 from astropy.utils.decorators import classproperty
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
+from pathlib import Path
 from gammapy.maps import MapAxis, RegionNDMap
 from gammapy.modeling import Parameter, Parameters
 from gammapy.utils.integrate import trapz_loglog
@@ -52,6 +53,11 @@ __all__ = [
     "SuperExpCutoffPowerLaw4FGLSpectralModel",
     "TemplateSpectralModel",
 ]
+
+EBL_DATA_BUILTIN = {}
+EBL_DATA_BUILTIN["franceschini"] = "$GAMMAPY_DATA/ebl/ebl_franceschini.fits.gz"
+EBL_DATA_BUILTIN["dominguez"] = "$GAMMAPY_DATA/ebl/ebl_dominguez11.fits.gz"
+EBL_DATA_BUILTIN["finke"] = "$GAMMAPY_DATA/ebl/frd_abs.fits.gz"
 
 
 def scale_plot_flux(flux, energy_power=0):
@@ -1859,12 +1865,12 @@ class EBLAbsorptionNormSpectralModel(SpectralModel):
                     data["filename"], redshift=redshift, alpha_norm=alpha_norm
                 )
             else:
-                for reference in ["franceschini", "dominguez", "finke"]:
-                    if reference in data["filename"]:
+                for reference, filename in EBL_DATA_BUILTIN.items():
+                    if Path(filename).stem in data["filename"]:
                         return cls.read_builtin(
                             reference, redshift=redshift, alpha_norm=alpha_norm
                         )
-                raise IOError('File {data["filename"} not found')
+                raise IOError(f'File {data["filename"]} not found')
         else:
             energy = u.Quantity(data["energy"]["data"], data["energy"]["unit"])
             param = u.Quantity(data["param"]["data"], data["param"]["unit"])
@@ -1929,7 +1935,7 @@ class EBLAbsorptionNormSpectralModel(SpectralModel):
     def read_builtin(
         cls, reference="dominguez", redshift=0.1, alpha_norm=1, interp_kwargs=None
     ):
-        """Read  from one of the built-in absorption models.
+        """Read from one of the built-in absorption models.
 
         Parameters
         ----------
@@ -1950,13 +1956,12 @@ class EBLAbsorptionNormSpectralModel(SpectralModel):
             `Link <https://ui.adsabs.harvard.edu/abs/2010ApJ...712..238F>`__
 
         """
-        models = {}
-        models["franceschini"] = "$GAMMAPY_DATA/ebl/ebl_franceschini.fits.gz"
-        models["dominguez"] = "$GAMMAPY_DATA/ebl/ebl_dominguez11.fits.gz"
-        models["finke"] = "$GAMMAPY_DATA/ebl/frd_abs.fits.gz"
 
         return cls.read(
-            models[reference], redshift, alpha_norm, interp_kwargs=interp_kwargs
+            EBL_DATA_BUILTIN[reference],
+            redshift,
+            alpha_norm,
+            interp_kwargs=interp_kwargs,
         )
 
     def evaluate(self, energy, redshift, alpha_norm):
