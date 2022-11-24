@@ -21,9 +21,19 @@ from gammapy.modeling.models import (
     GaussianSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
+    Models,
+    TemplateSpatialModel,
 )
 from gammapy.utils import parallel
 from gammapy.utils.testing import requires_data, requires_dependency
+
+
+@pytest.fixture(scope="session")
+def fermi_datasets():
+    filename = "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_datasets.yaml"
+    filename_models = "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_models.yaml"
+
+    return Datasets.read(filename=filename, filename_models=filename_models)
 
 
 # TODO: use pre-generated data instead
@@ -609,3 +619,31 @@ def test_fpe_non_uniform_datasets():
 
     with pytest.raises(ValueError, match="same value of the 'TELESCOP' meta keyword"):
         fpe.run(datasets=[dataset_1, dataset_2])
+
+
+def test_flux_points_estimator_norm_spectral_model(fermi_datasets):
+
+    energy_edges = [10, 30, 100, 300, 1000] * u.GeV
+
+    model_ref = fermi_datasets.models["Crab Nebula"]
+    estimator = FluxPointsEstimator(
+        energy_edges=energy_edges,
+        source="Crab Nebula",
+        selection_optional=[],
+        reoptimize=True,
+    )
+    flux_points = estimator.run(fermi_datasets[0])
+    flux_points_dataset = FluxPointsDataset(data=flux_points, models=model_ref)
+    flux_pred_ref = flux_points_dataset.flux_pred()
+
+    models = Models([model_ref])
+    model = models.to_template_sky_model(fermi_datasets[0].exposure.geom, name="test")
+    fermi_datasets.models = [fermi_datasets[0].background_model, model]
+    estimator = FluxPointsEstimator(
+        energy_edges=energy_edges, source="test", selection_optional=[], reoptimize=True
+    )
+    flux_points = estimator.run(fermi_datasets[0])
+
+    flux_points_dataset = FluxPointsDataset(data=flux_points, models=model)
+    flux_pred = flux_points_dataset.flux_pred()
+    assert_allclose(flux_pred, flux_pred_ref, rtol=1e-5)
