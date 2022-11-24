@@ -17,6 +17,7 @@ from gammapy.maps import MapAxis, RegionGeom, RegionNDMap, WcsGeom
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
     ExpCutoffPowerLawSpectralModel,
+    PiecewiseNormSpectralModel,
     FoVBackgroundModel,
     GaussianSpatialModel,
     PowerLawSpectralModel,
@@ -637,13 +638,27 @@ def test_flux_points_estimator_norm_spectral_model(fermi_datasets):
     flux_pred_ref = flux_points_dataset.flux_pred()
 
     models = Models([model_ref])
-    model = models.to_template_sky_model(fermi_datasets[0].exposure.geom, name="test")
+    geom = fermi_datasets[0].exposure.geom
+    model = models.to_template_sky_model(geom, name="test")
     fermi_datasets.models = [fermi_datasets[0].background_model, model]
     estimator = FluxPointsEstimator(
         energy_edges=energy_edges, source="test", selection_optional=[], reoptimize=True
     )
     flux_points = estimator.run(fermi_datasets[0])
 
+    flux_points_dataset = FluxPointsDataset(data=flux_points, models=model)
+    flux_pred = flux_points_dataset.flux_pred()
+    assert_allclose(flux_pred, flux_pred_ref, rtol=1e-5)
+
+    # test model 2d
+    norms = (
+        model.spatial_model.map.data.sum(axis=(1, 2))
+        / model.spatial_model.map.data.sum()
+    )
+    model.spatial_model = TemplateSpatialModel(
+        model.spatial_model.map.reduce_over_axes(), normalize=False
+    )
+    model.spectral_model = PiecewiseNormSpectralModel(geom.axes[0].center, norms)
     flux_points_dataset = FluxPointsDataset(data=flux_points, models=model)
     flux_pred = flux_points_dataset.flux_pred()
     assert_allclose(flux_pred, flux_pred_ref, rtol=1e-5)
