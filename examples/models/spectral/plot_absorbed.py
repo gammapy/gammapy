@@ -40,6 +40,12 @@ franceschini = EBLAbsorptionNormSpectralModel.read_builtin(
     "franceschini", redshift=redshift
 )
 finke = EBLAbsorptionNormSpectralModel.read_builtin("finke", redshift=redshift)
+franceschini17 = EBLAbsorptionNormSpectralModel.read_builtin(
+    "franceschini17", redshift=redshift
+)
+saldana21 = EBLAbsorptionNormSpectralModel.read_builtin(
+    "saldana-lopez21", redshift=redshift
+)
 
 fig, (ax_ebl, ax_model) = plt.subplots(
     nrows=1, ncols=2, figsize=(10, 4), gridspec_kw={"left": 0.08, "right": 0.96}
@@ -51,6 +57,8 @@ opts = dict(energy_bounds=energy_bounds, xunits=u.TeV)
 franceschini.plot(ax=ax_ebl, label="Franceschini 2008", **opts)
 finke.plot(ax=ax_ebl, label="Finke 2010", **opts)
 dominguez.plot(ax=ax_ebl, label="Dominguez 2011", **opts)
+franceschini17.plot(ax=ax_ebl, label="Franceschni 2017", **opts)
+saldana21.plot(ax=ax_ebl, label="Saldana-Lopez 2021", **opts)
 
 ax_ebl.set_ylabel(r"Absorption coefficient [$\exp{(-\tau(E))}$]")
 ax_ebl.set_xlim(energy_bounds.value)

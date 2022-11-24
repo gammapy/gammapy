@@ -1957,9 +1957,9 @@ class EBLAbsorptionNormSpectralModel(SpectralModel):
         ----------
         .. [1] Franceschini et al. (2008), "Extragalactic optical-infrared background radiation, its time evolution and the cosmic photon-photon opacity",  # noqa: E501
             `Link <https://ui.adsabs.harvard.edu/abs/2008A%26A...487..837F>`__
-        .. [2] Dominguez et al., " Extragalactic background light inferred from AEGIS galaxy-SED-type fractions"  # noqa: E501
+        .. [2] Dominguez et al. (2011), " Extragalactic background light inferred from AEGIS galaxy-SED-type fractions"  # noqa: E501
             `Link <https://ui.adsabs.harvard.edu/abs/2011MNRAS.410.2556D>`__
-        .. [3] Finke et al., "Modeling the Extragalactic Background Light from Stars and Dust"
+        .. [3] Finke et al. (2010), "Modeling the Extragalactic Background Light from Stars and Dust"
             `Link <https://ui.adsabs.harvard.edu/abs/2010ApJ...712..238F>`__
         .. [4] Franceschini et al. (2017), "The extragalactic background light revisited and the cosmic photon-photon opacity"
             `Link <https://ui.adsabs.harvard.edu/abs/2017A%26A...603A..34F/abstract>`__
