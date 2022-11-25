@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+from copy import copy
 import logging
 import subprocess
 from pathlib import Path
@@ -313,6 +314,11 @@ class DataStore:
             )
             if hdu_location is not None:
                 kwargs[hdu] = hdu_location
+                # for now, read pointing info from events
+                if hdu == "events":
+                    pointing_location = copy(hdu_location)
+                    pointing_location.hdu_class = "pointing"
+                    kwargs["pointing"] = pointing_location
             elif hdu in required_hdus:
                 missing_hdus.append(hdu)
 

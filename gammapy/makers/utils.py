@@ -157,7 +157,7 @@ def make_map_background_irf(
 
     coords = {"energy": geom.axes["energy"].edges.reshape((-1, 1, 1))}
 
-    pointing_radec = (
+    pointing_icrs = (
         pointing.radec if isinstance(pointing, FixedPointingInfo) else pointing
     )
 
@@ -174,12 +174,11 @@ def make_map_background_irf(
         d_omega = image_geom.solid_angle()
 
     if bkg.has_offset_axis:
-        coords["offset"] = sky_coord.separation(pointing_radec)
+        coords["offset"] = sky_coord.separation(pointing_icrs)
     else:
         if bkg.fov_alignment == FoVAlignment.ALTAZ:
             if not isinstance(pointing, FixedPointingInfo):
-                raise (
-                    TypeError,
+                raise TypeError(
                     "make_map_background_irf requires FixedPointingInfo if "
                     "BackgroundIRF.fov_alignement is ALTAZ",
                 )
@@ -191,7 +190,7 @@ def make_map_background_irf(
             )
         elif bkg.fov_alignment == FoVAlignment.RADEC:
             # Create OffsetFrame
-            frame = SkyOffsetFrame(origin=pointing_radec)
+            frame = SkyOffsetFrame(origin=pointing_icrs)
             pseudo_fov_coord = sky_coord.transform_to(frame)
             fov_lon = pseudo_fov_coord.lon
             fov_lat = pseudo_fov_coord.lat

@@ -3,6 +3,7 @@ import collections.abc
 import copy
 import inspect
 import logging
+import warnings
 from itertools import zip_longest
 import numpy as np
 import astropy.units as u
@@ -62,6 +63,7 @@ class Observation:
     _rad_max = LazyFitsData(cache=False)
     _events = LazyFitsData(cache=False)
     _gti = LazyFitsData(cache=False)
+    _pointing = LazyFitsData(cache=True)
 
     def __init__(
         self,
@@ -75,6 +77,7 @@ class Observation:
         rad_max=None,
         events=None,
         obs_filter=None,
+        pointing=None,
     ):
         self.obs_id = obs_id
         self._obs_info = obs_info
@@ -85,6 +88,7 @@ class Observation:
         self._rad_max = rad_max
         self._gti = gti
         self._events = events
+        self._pointing = pointing
         self.obs_filter = obs_filter or ObservationFilter()
 
     @property
@@ -142,10 +146,12 @@ class Observation:
     ):
         """Create obs info dict from in memory data"""
         obs_info = {
-            "RA_PNT": pointing.icrs.ra.deg,
-            "DEC_PNT": pointing.icrs.dec.deg,
             "DEADC": 1 - deadtime_fraction,
         }
+        if isinstance(pointing, SkyCoord):
+            obs_info["RA_PNT"] = pointing.icrs.ra.deg
+            obs_info["DEC_PNT"] = pointing.icrs.dec.deg
+
         obs_info.update(time_ref_to_dict(reference_time))
         obs_info["TSTART"] = time_relative_to_ref(time_start, obs_info).to_value(u.s)
         obs_info["TSTOP"] = time_relative_to_ref(time_stop, obs_info).to_value(u.s)
@@ -174,8 +180,8 @@ class Observation:
 
         Parameters
         ----------
-        pointing : `~astropy.coordinates.SkyCoord`
-            Pointing position
+        pointing : `~gammapy.data.FixedPointingInfo` or `~astropy.coordinates.SkyCoord`
+            Pointing information
         obs_id : int
             Observation ID as identifier
         livetime : ~astropy.units.Quantity`
@@ -204,7 +210,6 @@ class Observation:
             tstop = tstart + Quantity(livetime)
 
         gti = GTI.create(tstart, tstop, reference_time=reference_time)
-
         obs_info = cls._get_obs_info(
             pointing=pointing,
             deadtime_fraction=deadtime_fraction,
@@ -213,6 +218,11 @@ class Observation:
             reference_time=reference_time,
             location=location,
         )
+
+        if not isinstance(pointing, FixedPointingInfo):
+            warnings.warn("Pointing will be required to be provided as FixedPointingInfo", DeprecationWarning)
+            pointing = FixedPointingInfo.from_gadf_header(obs_info)
+
 
         return cls(
             obs_id=obs_id,
@@ -223,6 +233,7 @@ class Observation:
             edisp=irfs.get("edisp"),
             psf=irfs.get("psf"),
             rad_max=irfs.get("rad_max"),
+            pointing=pointing,
         )
 
     @property
@@ -289,7 +300,11 @@ class Observation:
     @lazyproperty
     def fixed_pointing_info(self):
         """Fixed pointing info for this observation (`FixedPointingInfo`)."""
-        return FixedPointingInfo(self.obs_info)
+        return self._pointing
+
+    @property
+    def pointing(self):
+        return self._pointing
 
     @property
     def pointing_radec(self):
@@ -460,6 +475,7 @@ class Observation:
             gti=gti,
             obs_info=obs_info,
             obs_id=obs_info.get("OBS_ID"),
+            pointing=FixedPointingInfo.from_gadf_header(obs_info),
             **irf_dict,
         )
 

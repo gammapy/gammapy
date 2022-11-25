@@ -3,6 +3,7 @@ import logging
 from enum import Enum, auto
 import numpy as np
 import scipy.interpolate
+from astropy.io import fits
 import astropy.units as u
 from astropy.coordinates import (
     AltAz,
@@ -16,6 +17,8 @@ from astropy.utils import lazyproperty
 from gammapy.utils.fits import earth_location_from_dict
 from gammapy.utils.scripts import make_path
 from gammapy.utils.time import time_ref_from_dict
+import warnings
+
 
 log = logging.getLogger(__name__)
 
@@ -104,8 +107,116 @@ class FixedPointingInfo:
     ``gammapy download datasets --tests --out $GAMMAPY_DATA``
     """
 
-    def __init__(self, meta):
-        self.meta = meta
+    def __init__(
+        self,
+        meta=None,
+        mode=None,
+        pointing_icrs=None,
+        pointing_altaz=None,
+        location=None,
+        time_start=None,
+        time_stop=None,
+        time_ref=None,
+    ):
+        self._meta = None
+
+        # TODO: for backwards compatibility, remove in 2.0
+        # and make other keywards required
+        if meta is not None:
+            warnings.warn("Initializing a FixedPointingInfo using a `meta` dict is deprecated")
+            self._meta = meta
+            self.__dict__.update(self.from_gadf_header(meta).__dict__)
+            return
+
+        if not isinstance(mode, PointingMode):
+            raise TypeError(f'mode must be an instance of PointingMode, got {mode!r}')
+
+        self._mode = mode
+        self._location = location
+        self._time_start = time_start
+        self._time_stop = time_stop
+        self._time_ref = time_ref
+
+        if mode is PointingMode.POINTING:
+            if pointing_icrs is None:
+                raise ValueError("pointing_icrs is mandatory for PointingMode.POINTING")
+
+            if np.isnan(pointing_icrs.ra.value) or np.isnan(pointing_icrs.dec.value):
+                warnings.warn("In future, pointing_icrs must have non-nan values", DeprecationWarning)
+
+            if pointing_altaz is not None:
+                warnings.warn("In future, pointing_altaz will be mutually exclusive with mode=POINTING", DeprecationWarning)
+
+            self._pointing_icrs = pointing_icrs
+            self._pointing_altaz = pointing_altaz
+
+        elif mode is PointingMode.DRIFT:
+            if pointing_altaz is None:
+                raise ValueError("pointing_altaz is required for PointingMode.DRIFT")
+
+            if pointing_icrs is not None:
+                raise ValueError("pointing_icrs is excluded for PointingMode.DRIFT")
+
+            self._pointing_altaz = pointing_altaz
+            self._pointing_icrs = None
+        else:
+            raise ValueError(f"Unsupported pointing mode for FixedPointingInfo: {mode}")
+
+    @classmethod
+    def from_gadf_header(cls, header):
+        obs_mode = header.get("OBS_MODE", "POINTING")
+        mode = PointingMode.from_gadf_string(obs_mode)
+        try:
+            location = earth_location_from_dict(header)
+        except KeyError:
+            location = None
+
+        # we allow missing RA_PNT / DEC_PNT in POINTING for some reason...
+        # FIXME: actually enforce this to be present instead of using nan
+        ra = header.get("RA_PNT", np.nan)
+        dec = header.get("DEC_PNT", np.nan)
+
+        # we can be more strict with DRIFT, as support was only added recently
+        if mode is PointingMode.DRIFT:
+            pointing_icrs = None
+        else:
+            pointing_icrs = SkyCoord(ra, dec, unit=u.deg, frame="icrs")
+
+        alt = header.get("ALT_PNT")
+        az = header.get("AZ_PNT")
+        if alt is not None and az is not None:
+            pointing_altaz = SkyCoord(alt=alt, az=az, unit=u.deg, frame=AltAz(location=location))
+        else:
+            pointing_altaz = None
+
+        time_start = header.get("TSTART")
+        time_stop = header.get("TSTOP")
+        time_ref = None
+
+        if time_start is not None or time_stop is not None:
+            time_ref = time_ref_from_dict(header)
+            time_unit = u.Unit(header.get("TIMEUNIT", "s"), format="fits")
+
+            if time_start is not None:
+                time_start = time_ref + u.Quantity(time_start, time_unit)
+
+            if time_stop is not None:
+                time_stop = time_ref + u.Quantity(time_stop, time_unit)
+
+        return cls(
+            mode=mode,
+            location=location,
+            pointing_icrs=pointing_icrs,
+            pointing_altaz=pointing_altaz,
+            time_start=time_start,
+            time_stop=time_stop,
+            time_ref=time_ref,
+        )
+
+    @property
+    def meta(self):
+        if self._meta is not None:
+            return self.meta
 
     @classmethod
     def read(cls, filename, hdu="EVENTS"):
@@ -124,42 +235,44 @@ class FixedPointingInfo:
             Pointing info object
         """
         filename = make_path(filename)
-        table = Table.read(filename, hdu=hdu)
-        return cls(meta=table.meta)
+        header = fits.getheader(filename, extname=hdu)
+        return cls.from_gadf_header(header)
 
-    @lazyproperty
+    @property
     def mode(self):
         """See `PointingMode`, if not present, assume POINTING"""
-        obs_mode = self.meta.get("OBS_MODE")
-        if obs_mode is None:
-            return PointingMode.POINTING
-        return PointingMode.from_gadf_string(obs_mode)
+        return self._mode
 
-    @lazyproperty
+    @property
     def location(self):
         """Observatory location (`~astropy.coordinates.EarthLocation`)."""
-        return earth_location_from_dict(self.meta)
+        warnings.warn("Accessing observatory location through pointing is deprecated", DeprecationWarning)
+        return self._location
 
-    @lazyproperty
-    def time_ref(self):
-        """Time reference (`~astropy.time.Time`)."""
-        return time_ref_from_dict(self.meta)
-
-    @lazyproperty
+    @property
     def time_start(self):
         """Start time (`~astropy.time.Time`)."""
-        t_start = Quantity(self.meta["TSTART"], "second")
-        return self.time_ref + t_start
+        warnings.warn("Accessing time information through pointing is deprecated", DeprecationWarning)
+        return self._time_start
 
-    @lazyproperty
+    @property
     def time_stop(self):
         """Stop time (`~astropy.time.Time`)."""
-        t_stop = Quantity(self.meta["TSTOP"], "second")
-        return self.time_ref + t_stop
+        warnings.warn("Accessing time information through pointing is deprecated", DeprecationWarning)
+        return self._time_stop
+
+    @property
+    def time_ref(self):
+        """Reference time (`~astropy.time.Time`)."""
+        warnings.warn("Accessing time information through pointing is deprecated", DeprecationWarning)
+        return self._time_ref
 
     @lazyproperty
     def obstime(self):
         """Average observation time for the observation (`~astropy.time.Time`)."""
+        warnings.warn("Accessing time information through pointing is deprecated", DeprecationWarning)
+        if self.time_start is None or self.duration is None:
+            return None
         return self.time_start + self.duration / 2
 
     @lazyproperty
@@ -168,6 +281,9 @@ class FixedPointingInfo:
 
         The time difference between the TSTART and TSTOP.
         """
+        warnings.warn("Accessing time information through pointing is deprecated", DeprecationWarning)
+        if self.time_start is None or self.time_stop is None:
+            return None
         return self.time_stop - self.time_start
 
     @lazyproperty
@@ -178,13 +294,13 @@ class FixedPointingInfo:
         Use `get_icrs` to get the pointing at a specific time, correctly
         handling different pointing modes.
         """
-        ra = self.meta["RA_PNT"]
-        dec = self.meta["DEC_PNT"]
-        return SkyCoord(ra, dec, unit="deg", frame="icrs")
+        warnings.warn("The radec property is deprecated, use `get_icrs(time, location)` to obtain pointing in ICRS", DeprecationWarning)
+        return self._pointing_icrs
 
     @lazyproperty
     def altaz_frame(self):
         """ALT / AZ frame (`~astropy.coordinates.AltAz`)."""
+        warnings.warn("The altaz_frame property is deprecated, use `get_alt(time, location)` to obtain pointing in AltAz", DeprecationWarning)
         return AltAz(obstime=self.obstime, location=self.location)
 
     @lazyproperty
@@ -196,34 +312,29 @@ class FixedPointingInfo:
         Use `get_altaz` to get the pointing at a specific time, correctly
         handling different pointing modes.
         """
-        try:
-            frame = self.altaz_frame
-        except KeyError:
+        warnings.warn("The altaz property is deprecated, use `get_altaz(time, location)` to obtain pointing in AltAz", DeprecationWarning)
+        frame = AltAz(location=self.location, obstime=self.obstime)
+        if frame.location is None or frame.obstime is None:
             log.warning(
                 "Location or time information missing,"
                 " using ALT_PNT/AZ_PNT and incomplete frame"
             )
-            return SkyCoord(
-                alt=self.meta.get("ALT_PNT", np.nan),
-                az=self.meta.get("AZ_PNT", np.nan),
-                unit=u.deg,
-                frame=AltAz(),
-            )
+            if self._pointing_altaz is None:
+                return SkyCoord(np.nan, np.nan, unit=u.deg, frame=frame)
+
+            return self._pointing_altaz.copy()
 
         return self.radec.transform_to(frame)
 
-    @lazyproperty
+    @property
     def fixed_altaz(self):
         """The fixed coordinates in AltAz of the observation.
 
         None if not a DRIFT observation
         """
-        if self.mode != PointingMode.DRIFT:
+        if self.mode is PointingMode.POINTING:
             return None
-
-        alt = u.Quantity(self.meta["ALT_PNT"], u.deg)
-        az = u.Quantity(self.meta["AZ_PNT"], u.deg)
-        return SkyCoord(alt=alt, az=az, frame=self.altaz_frame)
+        return self._pointing_altaz
 
     @lazyproperty
     def fixed_icrs(self):
@@ -232,12 +343,9 @@ class FixedPointingInfo:
 
         None if not a POINTING observation
         """
-        if self.mode != PointingMode.POINTING:
-            return None
+        return self._pointing_icrs
 
-        return self.radec
-
-    def get_icrs(self, obstime):
+    def get_icrs(self, obstime, location=None) -> SkyCoord:
         """
         Get the pointing position in ICRS frame for a given time.
 
@@ -252,17 +360,20 @@ class FixedPointingInfo:
         ----------
         obstime: `astropy.time.Time`
             Time for which to get the pointing position in ICRS frame
+        location: `astropy.coordinates.EarthLocation`
+            Observatory location, only needed for drift observations to transform
+            from horizontal coordinates to ICRS.
         """
         if self.mode == PointingMode.POINTING:
-            icrs = self.fixed_icrs
-            return SkyCoord(ra=icrs.ra, dec=icrs.dec, obstime=obstime, frame="icrs")
+            location = location if location is not None else self.location
+            return SkyCoord(self._pointing_icrs, location=location, obstime=obstime)
 
         if self.mode == PointingMode.DRIFT:
-            return self.get_altaz(obstime).icrs
+            return self.get_altaz(obstime, location=location).icrs
 
         raise ValueError(f"Unsupported pointing mode: {self.mode}.")
 
-    def get_altaz(self, obstime):
+    def get_altaz(self, obstime, location=None) -> SkyCoord:
         """
         Get the pointing position in AltAz frame for a given time.
 
@@ -277,17 +388,23 @@ class FixedPointingInfo:
         ----------
         obstime: `astropy.time.Time`
             Time for which to get the pointing position in AltAz frame
+        location: `astropy.coordinates.EarthLocation`
+            Observatory location, only needed for pointing observations to transform
+            from ICRS to horizontal coordinates.
         """
-        frame = AltAz(location=self.location, obstime=obstime)
+        location = location if location is not None else self.location
+        frame = AltAz(location=location, obstime=obstime)
 
         if self.mode == PointingMode.POINTING:
             return self.fixed_icrs.transform_to(frame)
 
         if self.mode == PointingMode.DRIFT:
             # see https://github.com/astropy/astropy/issues/12965
+            alt = self.fixed_altaz.alt
+            az = self.fixed_altaz.az
             return SkyCoord(
-                alt=np.full(obstime.shape, self.fixed_altaz.alt.deg) * u.deg,
-                az=np.full(obstime.shape, self.fixed_altaz.az.deg) * u.deg,
+                alt=u.Quantity(np.full(obstime.shape, alt.deg), u.deg, copy=False),
+                az=u.Quantity(np.full(obstime.shape, az.deg), u.deg, copy=False),
                 frame=frame,
             )
 

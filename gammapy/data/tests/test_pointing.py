@@ -230,3 +230,42 @@ def test_fixed_pointing_info_fixed_altaz():
 
     assert np.all(u.isclose(pointing_altaz.alt, pointing.get_altaz(times).alt))
     assert np.all(u.isclose(pointing_altaz.az, pointing.get_altaz(times).az))
+
+
+def test_fixed_pointing_no_meta():
+    location = observatory_locations["cta_south"]
+    start = Time("2020-11-01T03:00:00")
+    stop = Time("2020-11-01T03:15:00")
+    pointing_icrs = SkyCoord(ra=83.28 * u.deg, dec=21.78 * u.deg)
+
+    pointing = FixedPointingInfo(
+        mode=PointingMode.POINTING,
+        pointing_icrs=pointing_icrs,
+        location=location,
+        time_start=start,
+        time_stop=stop,
+    )
+
+    assert pointing.mode == PointingMode.POINTING
+    assert pointing.fixed_icrs == pointing_icrs
+    assert pointing.fixed_altaz is None
+
+    altaz = pointing.get_altaz(start)
+    assert altaz.obstime == start
+    assert isinstance(altaz.frame, AltAz)
+    assert np.all(u.isclose(pointing_icrs.ra, pointing.get_icrs(start).ra))
+
+    back_trafo = altaz.transform_to("icrs")
+    assert u.isclose(back_trafo.ra, pointing_icrs.ra)
+    assert u.isclose(back_trafo.dec, pointing_icrs.dec)
+
+    times = start + np.linspace(0, 1, 50) * (stop - start)
+    altaz = pointing.get_altaz(times)
+    assert len(altaz) == len(times)
+    assert np.all(altaz.obstime == times)
+    assert isinstance(altaz.frame, AltAz)
+
+    back_trafo = altaz.transform_to("icrs")
+    assert u.isclose(back_trafo.ra, pointing_icrs.ra).all()
+    assert u.isclose(back_trafo.dec, pointing_icrs.dec).all()
+    assert np.all(u.isclose(pointing_icrs.ra, pointing.get_icrs(times).ra))
