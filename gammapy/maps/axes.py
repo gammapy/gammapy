@@ -1300,8 +1300,12 @@ class MapAxis:
             if hduclass in {"BKG", "RAD_MAX"} and column_prefix == "ENERG":
                 name = "energy"
 
-            edges_lo = table[f"{column_prefix}_LO"].quantity[0]
-            edges_hi = table[f"{column_prefix}_HI"].quantity[0]
+            edges_lo = table[f"{column_prefix}_LO"].quantity
+            edges_hi = table[f"{column_prefix}_HI"].quantity
+            # usually the axes arrays are stored with one extra (single-column) dimension
+            if edges_lo.ndim > 1:
+                edges_lo = edges_lo[0]
+                edges_hi = edges_hi[0]
 
             if np.allclose(edges_hi, edges_lo):
                 axis = MapAxis.from_nodes(edges_hi, interp=interp, name=name)
