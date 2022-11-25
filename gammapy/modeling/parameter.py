@@ -128,6 +128,7 @@ class Parameter:
 
         self._name = name
         self._link_label_io = None
+        self.interp = interp
         self.scale = scale
         self.min = min
         self.max = max
@@ -151,7 +152,6 @@ class Parameter:
         self.scan_values = scan_values
         self.scan_n_values = scan_n_values
         self.scan_n_sigma = scan_n_sigma
-        self.interp = interp
         self.scale_method = scale_method
         self.prior = prior
 
@@ -262,7 +262,7 @@ class Parameter:
 
         This ``factor_min = min / scale`` is for the optimizer interface.
         """
-        return self.min / self.scale
+        return self.transform(self.min)
 
     @property
     def max(self):
@@ -283,7 +283,7 @@ class Parameter:
 
         This ``factor_max = max / scale`` is for the optimizer interface.
         """
-        return self.max / self.scale
+        return self.transform(self.max)
 
     @property
     def scale_method(self):
@@ -312,11 +312,11 @@ class Parameter:
     @property
     def value(self):
         """Value = factor x scale (float)."""
-        return self._factor * self._scale
+        return self.inverse_transform(self._factor)
 
     @value.setter
     def value(self, val):
-        self.factor = float(val) / self._scale
+        self.factor = self.transform(val)
 
     @property
     def quantity(self):
@@ -468,8 +468,8 @@ class Parameter:
             output["prior"] = self.prior.to_dict()["prior"]
         return output
 
-    def autoscale(self):
-        """Autoscale the parameters.
+    def update_scale(self, value):
+        """update the parameter scale.
 
         Set ``factor`` and ``scale`` according to ``scale_method`` attribute.
 
@@ -485,15 +485,30 @@ class Parameter:
 
         """
         if self.scale_method == "scale10":
-            value = self.value
             if value != 0:
                 exponent = np.floor(np.log10(np.abs(value)))
-                scale = np.power(10.0, exponent)
-                self.factor = value / scale
-                self.scale = scale
+                self.scale = np.power(10.0, exponent)
 
         elif self.scale_method == "factor1":
-            self.factor, self.scale = 1, self.value
+            self.scale = value
+
+    def transform(self, value, update_scale=False):
+        interp_scale = interpolation_scale(self.interp)
+        factor = interp_scale(value)
+        if update_scale:
+            self.update_scale(factor)
+        factor = factor / self.scale
+        return factor
+
+    def inverse_transform(self, factor):
+        factor = self.scale * factor
+        interp_scale = interpolation_scale(self.interp)
+        value = interp_scale.inverse(factor)
+        return value
+
+    def autoscale(self):
+        "apply interpolation_scale and scale_method to the parameter"
+        self.factor = self.transform(self.value, update_scale=True)
 
 
 class Parameters(collections.abc.Sequence):
