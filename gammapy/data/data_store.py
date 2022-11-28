@@ -302,7 +302,7 @@ class DataStore:
                 f"{difference} is not a valid hdu key. Choose from: {ALL_IRFS}"
             )
 
-        required_hdus = {"event", "gti"}.union(required_irf)
+        required_hdus = {"events", "gti"}.union(required_irf)
 
         missing_hdus = []
         for hdu in ALL_HDUS:
