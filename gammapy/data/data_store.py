@@ -16,7 +16,7 @@ from .observations import Observation, ObservationChecker, Observations
 __all__ = ["DataStore"]
 
 ALL_IRFS = ["aeff", "edisp", "psf", "bkg", "rad_max"]
-ALL_HDUS = ["events", "gti"] + ALL_IRFS
+ALL_HDUS = ["events", "gti", "pointing"] + ALL_IRFS
 REQUIRED_IRFS = {
     "full-enclosure": {"aeff", "edisp", "psf", "bkg"},
     "point-like": {"aeff", "edisp"},
