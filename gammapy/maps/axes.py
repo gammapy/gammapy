@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import copy
 import inspect
+import logging
 from collections.abc import Sequence
 import numpy as np
 import scipy
@@ -15,6 +16,8 @@ from gammapy.utils.time import time_ref_from_dict, time_ref_to_dict
 from .utils import INVALID_INDEX, edges_from_lo_hi
 
 __all__ = ["MapAxes", "MapAxis", "TimeMapAxis", "LabelMapAxis"]
+
+log = logging.getLogger(__name__)
 
 
 def flat_if_equal(array):
@@ -1300,12 +1303,15 @@ class MapAxis:
             if hduclass in {"BKG", "RAD_MAX"} and column_prefix == "ENERG":
                 name = "energy"
 
-            edges_lo = table[f"{column_prefix}_LO"].quantity
-            edges_hi = table[f"{column_prefix}_HI"].quantity
-            # usually the axes arrays are stored with one extra (single-column) dimension
-            if edges_lo.ndim > 1:
-                edges_lo = edges_lo[0]
-                edges_hi = edges_hi[0]
+            edges_lo = table[f"{column_prefix}_LO"].quantity[0]
+            edges_hi = table[f"{column_prefix}_HI"].quantity[0]
+            # for a single-valued array, it can happen that the value is stored/extracted as a scalar
+            if edges_lo.isscalar:
+                log.warning(
+                    f"'{column_prefix}' axis is stored as a scalar -- converting to 1D array."
+                )
+                edges_lo = edges_lo[np.newaxis]
+                edges_hi = edges_hi[np.newaxis]
 
             if np.allclose(edges_hi, edges_lo):
                 axis = MapAxis.from_nodes(edges_hi, interp=interp, name=name)
