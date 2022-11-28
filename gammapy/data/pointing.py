@@ -52,11 +52,6 @@ class PointingMode(Enum):
 
     @staticmethod
     def from_gadf_string(val):
-        # FIXME, we should just error here, this is a fix for the MAGIC test
-        # file that contains the keyword twice
-        if isinstance(val, list):
-            val = val[-1]
-
         # OBS_MODE is not well-defined and not mandatory in GADF 0.2
         # We always assume that the observations are pointing observations
         # unless the OBS_MODE is set to DRIFT
@@ -158,14 +153,8 @@ class FixedPointingInfo:
                     DeprecationWarning,
                 )
 
-            if pointing_altaz is not None:
-                warnings.warn(
-                    "In future, pointing_altaz will be mutually exclusive with mode=POINTING",
-                    DeprecationWarning,
-                )
-
             self._pointing_icrs = pointing_icrs
-            self._pointing_altaz = pointing_altaz
+            self._pointing_altaz = None
 
         elif mode is PointingMode.DRIFT:
             if pointing_altaz is None:
@@ -196,7 +185,7 @@ class FixedPointingInfo:
         """
         return self._pointing_icrs
 
-    def get_icrs(self, obstime, location=None) -> SkyCoord:
+    def get_icrs(self, obstime=None, location=None) -> SkyCoord:
         """
         Get the pointing position in ICRS frame for a given time.
 
@@ -217,14 +206,19 @@ class FixedPointingInfo:
         """
         if self.mode == PointingMode.POINTING:
             location = location if location is not None else self.location
-            return SkyCoord(self._pointing_icrs, location=location, obstime=obstime)
+            return SkyCoord(
+                self._pointing_icrs.data, location=location, obstime=obstime
+            )
 
         if self.mode == PointingMode.DRIFT:
+            if obstime is None:
+                obstime = self.obstime
+
             return self.get_altaz(obstime, location=location).icrs
 
         raise ValueError(f"Unsupported pointing mode: {self.mode}.")
 
-    def get_altaz(self, obstime, location=None) -> SkyCoord:
+    def get_altaz(self, obstime=None, location=None) -> SkyCoord:
         """
         Get the pointing position in AltAz frame for a given time.
 
