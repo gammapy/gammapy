@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from copy import copy
 import logging
 import subprocess
+from copy import copy
 from pathlib import Path
 import numpy as np
 from astropy import units as u
@@ -314,11 +314,6 @@ class DataStore:
             )
             if hdu_location is not None:
                 kwargs[hdu] = hdu_location
-                # for now, read pointing info from events
-                if hdu == "events":
-                    pointing_location = copy(hdu_location)
-                    pointing_location.hdu_class = "pointing"
-                    kwargs["pointing"] = pointing_location
             elif hdu in required_hdus:
                 missing_hdus.append(hdu)
 
@@ -326,6 +321,12 @@ class DataStore:
             raise MissingRequiredHDU(
                 f"Required HDUs {missing_hdus} not found in observation {obs_id}"
             )
+
+        # if we didn't find the pointing hdu, extract FixedPointingInfo from events
+        if "pointing" not in kwargs:
+            pointing_location = copy(kwargs["events"])
+            pointing_location.hdu_class = "pointing"
+            kwargs["pointing"] = pointing_location
 
         return Observation(**kwargs)
 

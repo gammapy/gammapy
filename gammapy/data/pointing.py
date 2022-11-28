@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
+import warnings
 from enum import Enum, auto
 import numpy as np
 import scipy.interpolate
-from astropy.io import fits
 import astropy.units as u
 from astropy.coordinates import (
     AltAz,
@@ -11,14 +11,13 @@ from astropy.coordinates import (
     SkyCoord,
     UnitSphericalRepresentation,
 )
+from astropy.io import fits
 from astropy.table import Table
 from astropy.units import Quantity
 from astropy.utils import lazyproperty
 from gammapy.utils.fits import earth_location_from_dict
 from gammapy.utils.scripts import make_path
 from gammapy.utils.time import time_ref_from_dict
-import warnings
-
 
 log = logging.getLogger(__name__)
 
@@ -53,6 +52,11 @@ class PointingMode(Enum):
 
     @staticmethod
     def from_gadf_string(val):
+        # FIXME, we should just error here, this is a fix for the MAGIC test
+        # file that contains the keyword twice
+        if isinstance(val, list):
+            val = val[-1]
+
         # OBS_MODE is not well-defined and not mandatory in GADF 0.2
         # We always assume that the observations are pointing observations
         # unless the OBS_MODE is set to DRIFT
@@ -123,13 +127,15 @@ class FixedPointingInfo:
         # TODO: for backwards compatibility, remove in 2.0
         # and make other keywards required
         if meta is not None:
-            warnings.warn("Initializing a FixedPointingInfo using a `meta` dict is deprecated")
+            warnings.warn(
+                "Initializing a FixedPointingInfo using a `meta` dict is deprecated"
+            )
             self._meta = meta
             self.__dict__.update(self.from_gadf_header(meta).__dict__)
             return
 
         if not isinstance(mode, PointingMode):
-            raise TypeError(f'mode must be an instance of PointingMode, got {mode!r}')
+            raise TypeError(f"mode must be an instance of PointingMode, got {mode!r}")
 
         self._mode = mode
         self._location = location
@@ -142,10 +148,16 @@ class FixedPointingInfo:
                 raise ValueError("pointing_icrs is mandatory for PointingMode.POINTING")
 
             if np.isnan(pointing_icrs.ra.value) or np.isnan(pointing_icrs.dec.value):
-                warnings.warn("In future, pointing_icrs must have non-nan values", DeprecationWarning)
+                warnings.warn(
+                    "In future, pointing_icrs must have non-nan values",
+                    DeprecationWarning,
+                )
 
             if pointing_altaz is not None:
-                warnings.warn("In future, pointing_altaz will be mutually exclusive with mode=POINTING", DeprecationWarning)
+                warnings.warn(
+                    "In future, pointing_altaz will be mutually exclusive with mode=POINTING",
+                    DeprecationWarning,
+                )
 
             self._pointing_icrs = pointing_icrs
             self._pointing_altaz = pointing_altaz
@@ -185,7 +197,9 @@ class FixedPointingInfo:
         alt = header.get("ALT_PNT")
         az = header.get("AZ_PNT")
         if alt is not None and az is not None:
-            pointing_altaz = SkyCoord(alt=alt, az=az, unit=u.deg, frame=AltAz(location=location))
+            pointing_altaz = SkyCoord(
+                alt=alt, az=az, unit=u.deg, frame=AltAz(location=location)
+            )
         else:
             pointing_altaz = None
 
@@ -246,31 +260,46 @@ class FixedPointingInfo:
     @property
     def location(self):
         """Observatory location (`~astropy.coordinates.EarthLocation`)."""
-        warnings.warn("Accessing observatory location through pointing is deprecated", DeprecationWarning)
+        warnings.warn(
+            "Accessing observatory location through pointing is deprecated",
+            DeprecationWarning,
+        )
         return self._location
 
     @property
     def time_start(self):
         """Start time (`~astropy.time.Time`)."""
-        warnings.warn("Accessing time information through pointing is deprecated", DeprecationWarning)
+        warnings.warn(
+            "Accessing time information through pointing is deprecated",
+            DeprecationWarning,
+        )
         return self._time_start
 
     @property
     def time_stop(self):
         """Stop time (`~astropy.time.Time`)."""
-        warnings.warn("Accessing time information through pointing is deprecated", DeprecationWarning)
+        warnings.warn(
+            "Accessing time information through pointing is deprecated",
+            DeprecationWarning,
+        )
         return self._time_stop
 
     @property
     def time_ref(self):
         """Reference time (`~astropy.time.Time`)."""
-        warnings.warn("Accessing time information through pointing is deprecated", DeprecationWarning)
+        warnings.warn(
+            "Accessing time information through pointing is deprecated",
+            DeprecationWarning,
+        )
         return self._time_ref
 
     @lazyproperty
     def obstime(self):
         """Average observation time for the observation (`~astropy.time.Time`)."""
-        warnings.warn("Accessing time information through pointing is deprecated", DeprecationWarning)
+        warnings.warn(
+            "Accessing time information through pointing is deprecated",
+            DeprecationWarning,
+        )
         if self.time_start is None or self.duration is None:
             return None
         return self.time_start + self.duration / 2
@@ -281,7 +310,10 @@ class FixedPointingInfo:
 
         The time difference between the TSTART and TSTOP.
         """
-        warnings.warn("Accessing time information through pointing is deprecated", DeprecationWarning)
+        warnings.warn(
+            "Accessing time information through pointing is deprecated",
+            DeprecationWarning,
+        )
         if self.time_start is None or self.time_stop is None:
             return None
         return self.time_stop - self.time_start
@@ -294,13 +326,19 @@ class FixedPointingInfo:
         Use `get_icrs` to get the pointing at a specific time, correctly
         handling different pointing modes.
         """
-        warnings.warn("The radec property is deprecated, use `get_icrs(time, location)` to obtain pointing in ICRS", DeprecationWarning)
+        warnings.warn(
+            "The radec property is deprecated, use `get_icrs(time, location)` to obtain pointing in ICRS",
+            DeprecationWarning,
+        )
         return self._pointing_icrs
 
     @lazyproperty
     def altaz_frame(self):
         """ALT / AZ frame (`~astropy.coordinates.AltAz`)."""
-        warnings.warn("The altaz_frame property is deprecated, use `get_alt(time, location)` to obtain pointing in AltAz", DeprecationWarning)
+        warnings.warn(
+            "The altaz_frame property is deprecated, use `get_alt(time, location)` to obtain pointing in AltAz",
+            DeprecationWarning,
+        )
         return AltAz(obstime=self.obstime, location=self.location)
 
     @lazyproperty
@@ -312,7 +350,10 @@ class FixedPointingInfo:
         Use `get_altaz` to get the pointing at a specific time, correctly
         handling different pointing modes.
         """
-        warnings.warn("The altaz property is deprecated, use `get_altaz(time, location)` to obtain pointing in AltAz", DeprecationWarning)
+        warnings.warn(
+            "The altaz property is deprecated, use `get_altaz(time, location)` to obtain pointing in AltAz",
+            DeprecationWarning,
+        )
         frame = AltAz(location=self.location, obstime=self.obstime)
         if frame.location is None or frame.obstime is None:
             log.warning(
