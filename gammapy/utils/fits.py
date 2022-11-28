@@ -97,6 +97,7 @@ class HDULocation:
         elif hdu_class == "pointing":
             # FIXME: support loading the pointing table
             from gammapy.data import FixedPointingInfo
+
             return FixedPointingInfo.read(filename, hdu=hdu)
         else:
             cls = IRF_REGISTRY.get_cls(hdu_class)

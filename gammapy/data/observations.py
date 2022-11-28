@@ -220,9 +220,11 @@ class Observation:
         )
 
         if not isinstance(pointing, FixedPointingInfo):
-            warnings.warn("Pointing will be required to be provided as FixedPointingInfo", DeprecationWarning)
+            warnings.warn(
+                "Pointing will be required to be provided as FixedPointingInfo",
+                DeprecationWarning,
+            )
             pointing = FixedPointingInfo.from_gadf_header(obs_info)
-
 
         return cls(
             obs_id=obs_id,
