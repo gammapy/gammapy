@@ -302,6 +302,8 @@ class Observation:
     @lazyproperty
     def fixed_pointing_info(self):
         """Fixed pointing info for this observation (`FixedPointingInfo`)."""
+        if self._pointing is None:
+            self._pointing = FixedPointingInfo.from_gadf_header(self.obs_info)
         return self._pointing
 
     @property
