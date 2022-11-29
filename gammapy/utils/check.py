@@ -19,6 +19,6 @@ def check_tutorials_setup(download_datasets_path="./gammapy-data"):
             "Missing example datasets, downloading to {download_datasets_path} now..."
         )
         cli_download_datasets.callback(out=download_datasets_path, release=RELEASE)
-        os.env["GAMMAPY_DATA"] = download_datasets_path
+        os.environ["GAMMAPY_DATA"] = download_datasets_path
 
     cli_info.callback(system=True, version=True, dependencies=True, envvar=True)
