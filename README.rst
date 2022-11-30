@@ -20,7 +20,7 @@
 
 .. image:: https://anaconda.org/conda-forge/gammapy/badges/platforms.svg
     :target: https://anaconda.org/conda-forge/gammapy
-    
+
 .. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.4701488.svg?style=flat
     :target: https://doi.org/10.5281/zenodo.4701488
 
