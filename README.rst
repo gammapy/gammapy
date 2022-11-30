@@ -1,20 +1,6 @@
-Gammapy
-=======
-
-A Python Package for Gamma-ray Astronomy.
-
-Gammapy is an open-source Python package for gamma-ray astronomy built on Numpy, Scipy and Astropy. It is used as core
-library for the Science Analysis tools of the Cherenkov Telescope Array (CTA), recommended by the H.E.S.S.
-collaboration to be used for Science publications, and is already widely used in the analysis of existing gamma-ray
-instruments, such as MAGIC, VERITAS and HAWC.
-
-* Webpage: https://gammapy.org
-* Documentation: https://docs.gammapy.org/
-* Code: https://github.com/gammapy/gammapy
-* .. image:: https://anaconda.org/conda-forge/gammapy/badges/license.svg
+.. image:: https://anaconda.org/conda-forge/gammapy/badges/license.svg
     :target: https://github.com/gammapy/gammapy/blob/master/LICENSE.rst
     :alt: Licence
-
 
 .. image:: http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat
     :target: http://www.astropy.org/
@@ -40,6 +26,22 @@ instruments, such as MAGIC, VERITAS and HAWC.
 
 .. image:: https://archive.softwareheritage.org/badge/swh:1:dir:02e8a702ef6c9558a9f96d99bf6b9f41b5edcd34/
     :target: https://archive.softwareheritage.org/swh:1:dir:02e8a702ef6c9558a9f96d99bf6b9f41b5edcd34;origin=https://github.com/gammapy/gammapy;visit=swh:1:snp:11294b68ac9dcb4aeefaa784e7fb7afba7d61402;anchor=swh:1:rev:89f67e3014c3673704ea6eeb8ad3ad0b844a3426
+
+
+
+Gammapy
+=======
+
+A Python Package for Gamma-ray Astronomy.
+
+Gammapy is an open-source Python package for gamma-ray astronomy built on Numpy, Scipy and Astropy. It is used as core
+library for the Science Analysis tools of the Cherenkov Telescope Array (CTA), recommended by the H.E.S.S.
+collaboration to be used for Science publications, and is already widely used in the analysis of existing gamma-ray
+instruments, such as MAGIC, VERITAS and HAWC.
+
+* Webpage: https://gammapy.org
+* Documentation: https://docs.gammapy.org/
+* Code: https://github.com/gammapy/gammapy
 
 Contributing Code, Documentation, or Feedback
 +++++++++++++++++++++++++++++++++++++++++++++
