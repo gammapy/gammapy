@@ -184,7 +184,7 @@ class SpectralModel(ModelBase):
 
         f_cov = df_dp.T @ self.covariance @ df_dp
         f_err = np.sqrt(np.diagonal(f_cov))
-        return u.Quantity([f_0.value, f_err], unit=f_0.unit)
+        return u.Quantity([np.atleast_1d(f_0.value), f_err], unit=f_0.unit)
 
     def evaluate_error(self, energy, epsilon=1e-4):
         """Evaluate spectral model with error propagation.
