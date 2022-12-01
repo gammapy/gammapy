@@ -554,6 +554,102 @@ So our recommendation is that releases entries are not added in pull requests,
 but that the core developer adds a releases notes entry after right after having
 merged a pull request (you can add ``[skip ci]`` on this commit).
 
+How to handle API breaking changes?
+-----------------------------------
+
+As stated in PIG 23, API breaking changes can be introduced in feature and LTS releases.
+This changes must be clearly identified in the release notes. To avoid abruptly changing
+the API between consecutive version, forecoming API changes and deprecation must be announced
+in the previous release, in particular, in the form of a deprecation warning to warn users of
+future changes affecting their code.
+
+The deprecation warning must be present in the next feature or LTS release after the change was
+made. The feature can be removed in the following release.
+
+We use a deprecation warning system based on decorators derived from the one implemented in Astropy.
+Adding a decorator will raise a warning if the deprecated feature is called and it will also add a
+message to its docstring.
+
+Deprecating a function or a class
++++++++++++++++++++++++++++++++++
+
+To deprecate a function or a class, use the ``@deprecate`` decorator, indicating the first release
+following the change:
+
+.. testcode::
+
+    from gammapy.utils.deprecation import deprecated
+
+    @deprecated("1.1")
+    def deprecated_function(a, b):
+        return a + b
+
+If you want to indicate a new implementation to use instead, use the `alternative` argument:
+
+.. testcode::
+
+    from gammapy.utils.deprecation import deprecated
+
+    @deprecated("1.1", alternative="new_function")
+    def deprecated_function(a, b):
+        return a + b
+
+
+Renaming an argument
+++++++++++++++++++++
+
+If you change the name of an argument, you can use the ``deprecated_renamed_argument`` decorator.
+It will replace the old argument with the new one in a call to the function and will raise the
+``GammapyDeprecationWarning``. You can change several arguments at once.
+
+.. testcode::
+
+    from gammapy.utils.deprecation import deprecated_renamed_argument
+
+    @deprecated_renamed_argument(["a", "b", ["x", "y"], ["1.1", "1.1"])
+    def deprecated_argument_function(x, y):
+        return x + y
+
+    print(deprecated_argument_function(a=1, b=2))
+
+If you rename a `kwarg` you simply need to set the `arg_in_kwargs` argument to `True`:
+
+.. testcode::
+
+    from gammapy.utils.deprecation import deprecated_renamed_argument
+
+    @deprecated_renamed_argument("old", "new", "1.1", arg_in_kwargs=True)
+    def deprecated_argument_function_kwarg(new=1):
+        return new
+
+    print(deprecated_argument_function_kwarg(old=3))
+
+Removing an attribute
++++++++++++++++++++++
+
+You can also remove an attribute from a class using the ``deprecated_attribute`` decorator.
+If you have a alternative attribute to use instead, pass its name in the `alternative` argument.
+
+.. testcode::
+
+    from gammapy.utils.deprecation import deprecated_attribute
+
+    class some_class:
+        old_attribute = deprecated_attribute(
+            "old_attribute", "1.1", alternative="new_attribute"
+        )
+
+        def __init__(self, value):
+            self._old_attribute = value
+            self._new_attribute = value
+
+        @property
+        def new_attribute(self):
+            return self._new_attribute
+
+    print(some_class(10).old_attribute)
+
+
 Others
 ------
 
