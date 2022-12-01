@@ -175,7 +175,7 @@ def test_region_nd_map_misc(region_map):
     assert_allclose(stacked.data.sum(), 30)
 
     stacked = region_map.copy()
-    weights = Map.from_geom(region_map.geom, dtype=np.int)
+    weights = Map.from_geom(region_map.geom, dtype=np.int_)
     stacked.stack(region_map, weights=weights)
     assert_allclose(stacked.data.sum(), 15)
 

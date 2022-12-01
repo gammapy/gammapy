@@ -328,9 +328,9 @@ class EDispKernel(IRF):
 
         rows = self.pdf_matrix.shape[0]
         n_grp = []
-        f_chan = np.ndarray(dtype=np.object, shape=rows)
-        n_chan = np.ndarray(dtype=np.object, shape=rows)
-        matrix = np.ndarray(dtype=np.object, shape=rows)
+        f_chan = np.ndarray(dtype=object, shape=rows)
+        n_chan = np.ndarray(dtype=object, shape=rows)
+        matrix = np.ndarray(dtype=object, shape=rows)
 
         # Make RMF type matrix
         for idx, row in enumerate(self.data):
