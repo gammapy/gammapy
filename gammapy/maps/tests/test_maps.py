@@ -84,5 +84,5 @@ def test_maps_from_geom():
     assert len(maps_kwargs) == 3
     assert maps_kwargs["map1"].unit == "cm2s"
     assert maps_kwargs["map1"].data.dtype == np.float64
-    assert maps_kwargs["map2"].data.dtype == np.bool
+    assert maps_kwargs["map2"].data.dtype == bool
     assert maps_kwargs["map3"].data[2, 2] == 12
