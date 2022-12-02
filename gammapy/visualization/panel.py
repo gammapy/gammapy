@@ -44,12 +44,12 @@ class MapPanelPlotter:
         aspect = ax.bbox.width / ax.bbox.height
 
         # compute width and height in world coordinates
-        height = np.abs(p["ylim"].diff())
+        height = np.abs(p["ylim"].diff()[0])
         width = aspect * height
 
         left, bottom = p["xlim"][0].wrap_at("180d"), p["ylim"][0]
 
-        width_all = np.abs(p["xlim"].wrap_at("180d").diff())
+        width_all = np.abs(p["xlim"].wrap_at("180d").diff()[0])
         xoverlap = ((p["npanels"] * width) - width_all) / (p["npanels"] - 1.0)
         if xoverlap < 0:
             raise ValueError(
@@ -58,7 +58,7 @@ class MapPanelPlotter:
             )
 
         left = left - panel * (width - xoverlap)
-        return left[0], bottom, width, height
+        return left, bottom, width, height
 
     def _set_ax_fov(self, ax, panel):
         left, bottom, width, height = self._get_ax_extend(ax, panel)
