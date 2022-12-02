@@ -247,10 +247,10 @@ def test_update_from_dict():
     }
     par.update_from_dict(data)
     assert par.name == "test"
-    assert par.factor == 3
-    assert par.value == 3e-10
+    assert_allclose(par.factor, 3)
+    assert_allclose(par.value, 3e-10)
     assert par.unit == "GeV"
-    assert par.min == 0
+    assert_allclose(par.min, 0)
     assert par.max is np.nan
     assert par.frozen
     data = {

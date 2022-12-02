@@ -408,7 +408,7 @@ def test_get_flux_point_missing_map(wcs_flux_map, reference_model):
     assert_allclose(table["norm_err"], [0.1, 0.1])
     assert_allclose(table["norm_ul"], [2, 2])
     assert "norm_errn" not in table.columns
-    assert table["success"].data.dtype == np.dtype(np.bool)
+    assert table["success"].data.dtype == np.dtype(bool)
 
 
 def test_flux_map_from_dict_inconsistent_units(wcs_flux_map, reference_model):
