@@ -4,10 +4,11 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
+from regions import CircleSkyRegion
 from gammapy.data import DataStore
-from gammapy.datasets import MapDataset
+from gammapy.datasets import MapDataset, SpectrumDatasetOnOff
 from gammapy.makers import MapDatasetMaker, SafeMaskMaker
-from gammapy.maps import MapAxis, WcsGeom
+from gammapy.maps import MapAxis, RegionGeom, WcsGeom
 from gammapy.utils.testing import requires_data
 
 
@@ -65,6 +66,24 @@ def shifted_dataset(observation_cta_1dc):
     )
     dataset_maker = MapDatasetMaker()
     return dataset_maker.run(dataset=empty_dataset, observation=observation_cta_1dc)
+
+
+@pytest.fixture(scope="session")
+def spectrum_dataset_on_off(observation_cta_1dc):
+    axis = MapAxis.from_bounds(
+        0.1, 10, nbin=16, unit="TeV", name="energy", interp="log"
+    )
+    axis_true = MapAxis.from_bounds(
+        0.1, 50, nbin=30, unit="TeV", name="energy_true", interp="log"
+    )
+    axis_migra = MapAxis.from_bounds(0.2, 5.0, nbin=48, name="migra")
+
+    region = CircleSkyRegion(observation_cta_1dc.pointing_radec, radius=0.3 * u.deg)
+    geom = RegionGeom.create(region, axes=[axis])
+
+    return SpectrumDatasetOnOff.create(
+        geom, energy_axis_true=axis_true, migra_axis=axis_migra
+    )
 
 
 @requires_data()
@@ -167,6 +186,18 @@ def test_safe_mask_maker_edisp_bias(dataset, observation_cta_1dc):
 
     mask_edisp_bias = safe_mask_maker.make_mask_energy_edisp_bias(dataset=dataset)
     assert_allclose(mask_edisp_bias.data.sum(), 1815)
+
+
+@requires_data()
+def test_safe_mask_maker_spectrum_dataset_edisp_bias_no_position(
+    spectrum_dataset_on_off,
+):
+    safe_mask_maker = SafeMaskMaker(methods=["edisp-bias"], bias_percent=0.02)
+    safe_mask_maker.run(spectrum_dataset_on_off)
+    mask_edisp_bias = safe_mask_maker.make_mask_energy_edisp_bias(
+        dataset=spectrum_dataset_on_off
+    )
+    assert_allclose(mask_edisp_bias.data.sum(), 14)
 
 
 @requires_data()
