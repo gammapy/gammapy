@@ -757,3 +757,16 @@ def test_time_map_axis_format_plot_xaxis(time_intervals):
 
     ax1 = axis.format_plot_xaxis(ax=ax)
     assert ax1.xaxis.label.properties()["text"] == "Time [iso]"
+
+
+def test_single_valued_axis():
+    # this will be interpreted as a scalar value
+    # that is against the specifications, but we allow it nevertheless
+    theta_values = np.array([0.5]) * u.deg
+    table = Table(data=[theta_values, theta_values], names=["THETA_LO", "THETA_HI"])
+    _ = MapAxis.from_table(table, format="gadf-dl3", column_prefix="THETA")
+
+    # this is a proper array-like axis with just a single value
+    theta_values = np.array([[0.5]]) * u.deg
+    table = Table(data=[theta_values, theta_values], names=["THETA_LO", "THETA_HI"])
+    _ = MapAxis.from_table(table, format="gadf-dl3", column_prefix="THETA")
