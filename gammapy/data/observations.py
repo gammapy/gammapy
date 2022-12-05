@@ -249,6 +249,10 @@ class Observation:
         return self.gti.time_stop[0]
 
     @property
+    def obstime(self):
+        return self.tstart + 0.5 * (self.tstart - self.tstop)
+
+    @property
     def observation_time_duration(self):
         """Observation time duration in seconds (`~astropy.units.Quantity`).
 

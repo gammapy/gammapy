@@ -165,7 +165,9 @@ def bkg_3d_custom(symmetry="constant", fov_align="RADEC"):
 @requires_data()
 def test_map_background_2d(bkg_2d, fixed_pointing_info):
     axis = MapAxis.from_edges([0.1, 1, 10], name="energy", unit="TeV", interp="log")
-    skydir = fixed_pointing_info.radec.galactic
+
+    obstime = Time("2020-01-01T20:00:00")
+    skydir = fixed_pointing_info.get_icrs(obstime).galactic
     geom = WcsGeom.create(
         npix=(3, 3), binsz=4, axes=[axis], skydir=skydir, frame="galactic"
     )
@@ -185,6 +187,7 @@ def test_map_background_2d(bkg_2d, fixed_pointing_info):
         ontime="42 s",
         bkg=bkg_2d,
         geom=geom,
+        obstime=obstime,
     )
     assert_allclose(bkg.data, bkg_fpi.data, rtol=1e-5)
 

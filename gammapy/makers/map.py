@@ -239,6 +239,7 @@ class MapDatasetMaker(Maker):
             geom=geom,
             oversampling=self.background_oversampling,
             use_region_center=use_region_center,
+            obstime=observation.obstime,
         )
 
     def make_edisp(self, geom, observation):

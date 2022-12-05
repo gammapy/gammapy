@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
+import warnings
 import numpy as np
 from astropy.coordinates import Angle, SkyOffsetFrame
 from astropy.table import Table
@@ -109,7 +110,13 @@ def _map_spectrum_weight(map, spectrum=None):
 
 
 def make_map_background_irf(
-    pointing, ontime, bkg, geom, oversampling=None, use_region_center=True
+    pointing,
+    ontime,
+    bkg,
+    geom,
+    oversampling=None,
+    use_region_center=True,
+    obstime=None,
 ):
     """Compute background map from background IRFs.
 
@@ -130,12 +137,14 @@ def make_map_background_irf(
         Background rate model
     geom : `~gammapy.maps.WcsGeom`
         Reference geometry
-    oversampling: int
+    oversampling : int
         Oversampling factor in energy, used for the background model evaluation.
-    use_region_center: bool
+    use_region_center : bool
         If geom is a RegionGeom, whether to just
         consider the values at the region center
         or the instead the sum over the whole region
+    obstime : `~astropy.time.Time`
+        Observation time to use
 
     Returns
     -------
@@ -157,9 +166,18 @@ def make_map_background_irf(
 
     coords = {"energy": geom.axes["energy"].edges.reshape((-1, 1, 1))}
 
-    pointing_icrs = (
-        pointing.radec if isinstance(pointing, FixedPointingInfo) else pointing
-    )
+    if isinstance(pointing, FixedPointingInfo):
+        # for backwards compatibility, obstime should be required
+        if obstime is None:
+            warnings.warn(
+                "Future versions of gammapy will require the obstime keyword for this function",
+                DeprecationWarning,
+            )
+            obstime = pointing.obstime
+
+        pointing_icrs = pointing.get_icrs(obstime)
+    else:
+        pointing_icrs = pointing
 
     if not use_region_center:
         image_geom = geom.to_wcs_geom().to_image()
@@ -182,11 +200,21 @@ def make_map_background_irf(
                     "make_map_background_irf requires FixedPointingInfo if "
                     "BackgroundIRF.fov_alignement is ALTAZ",
                 )
-            altaz_coord = sky_coord.transform_to(pointing.altaz_frame)
+
+            # for backwards compatibility, obstime should be required
+            if obstime is None:
+                warnings.warn(
+                    "Future versions of gammapy will require the obstime keyword for this function",
+                    DeprecationWarning,
+                )
+                obstime = pointing.obstime
+
+            pointing_altaz = pointing.get_altaz(obstime)
+            altaz_coord = sky_coord.transform_to(pointing_altaz.frame)
 
             # Compute FOV coordinates of map relative to pointing
             fov_lon, fov_lat = sky_to_fov(
-                altaz_coord.az, altaz_coord.alt, pointing.altaz.az, pointing.altaz.alt
+                altaz_coord.az, altaz_coord.alt, pointing_altaz.az, pointing_altaz.alt
             )
         elif bkg.fov_alignment == FoVAlignment.RADEC:
             # Create OffsetFrame
