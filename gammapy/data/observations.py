@@ -14,11 +14,11 @@ from astropy.units import Quantity
 from astropy.utils import lazyproperty
 import matplotlib.pyplot as plt
 from gammapy import __version__
+from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.utils.fits import LazyFitsData, earth_location_to_dict
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_to_dict, time_relative_to_ref
-from gammapy.utils.deprecation import GammapyDeprecationWarning
 from .event_list import EventList, EventListChecker
 from .filters import ObservationFilter
 from .gti import GTI
@@ -308,7 +308,7 @@ class Observation:
     def fixed_pointing_info(self):
         """Fixed pointing info for this observation (`FixedPointingInfo`)."""
         if self._pointing is None:
-            self._pointing = FixedPointingInfo.from_gadf_header(self.obs_info)
+            self._pointing = FixedPointingInfo.from_fits_header(self.obs_info)
         return self._pointing
 
     @property
