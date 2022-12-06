@@ -18,6 +18,7 @@ from gammapy.utils.fits import LazyFitsData, earth_location_to_dict
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_to_dict, time_relative_to_ref
+from gammapy.utils.deprecation import GammapyDeprecationWarning
 from .event_list import EventList, EventListChecker
 from .filters import ObservationFilter
 from .gti import GTI
@@ -222,9 +223,9 @@ class Observation:
         if not isinstance(pointing, FixedPointingInfo):
             warnings.warn(
                 "Pointing will be required to be provided as FixedPointingInfo",
-                DeprecationWarning,
+                GammapyDeprecationWarning,
             )
-            pointing = FixedPointingInfo.from_gadf_header(obs_info)
+            pointing = FixedPointingInfo.from_fits_header(obs_info)
 
         return cls(
             obs_id=obs_id,
@@ -483,7 +484,7 @@ class Observation:
             gti=gti,
             obs_info=obs_info,
             obs_id=obs_info.get("OBS_ID"),
-            pointing=FixedPointingInfo.from_gadf_header(obs_info),
+            pointing=FixedPointingInfo.from_fits_header(obs_info),
             **irf_dict,
         )
 
@@ -515,7 +516,9 @@ class Observation:
 
         events = self.events
         if events is not None:
-            hdul.append(events.to_table_hdu(format=format))
+            events_hdu = events.to_table_hdu(format=format)
+            events_hdu.header.update(self.pointing.to_fits_header())
+            hdul.append(events_hdu)
 
         gti = self.gti
         if gti is not None:

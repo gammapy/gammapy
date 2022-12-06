@@ -5,6 +5,7 @@ from enum import Enum, auto
 import numpy as np
 import scipy.interpolate
 import astropy.units as u
+from astropy.io import fits
 from astropy.coordinates import (
     AltAz,
     CartesianRepresentation,
@@ -13,12 +14,13 @@ from astropy.coordinates import (
 )
 from astropy.io import fits
 from astropy.table import Table
+from astropy.time import Time
 from astropy.units import Quantity
 from astropy.utils import lazyproperty
 from gammapy.utils.deprecation import GammapyDeprecationWarning, deprecated
-from gammapy.utils.fits import earth_location_from_dict
+from gammapy.utils.fits import earth_location_from_dict, earth_location_to_dict
 from gammapy.utils.scripts import make_path
-from gammapy.utils.time import time_ref_from_dict
+from gammapy.utils.time import DEFAULT_EPOCH, time_ref_from_dict, time_ref_to_dict, time_to_fits_header
 
 log = logging.getLogger(__name__)
 
@@ -128,10 +130,11 @@ class FixedPointingInfo:
         # and make other keywards required
         if meta is not None:
             warnings.warn(
-                "Initializing a FixedPointingInfo using a `meta` dict is deprecated"
+                "Initializing a FixedPointingInfo using a `meta` dict is deprecated",
+                GammapyDeprecationWarning,
             )
             self._meta = meta
-            self.__dict__.update(self.from_gadf_header(meta).__dict__)
+            self.__dict__.update(self.from_fits_header(meta).__dict__)
             return
 
         if not isinstance(mode, PointingMode):
@@ -168,6 +171,126 @@ class FixedPointingInfo:
             self._pointing_icrs = None
         else:
             raise ValueError(f"Unsupported pointing mode for FixedPointingInfo: {mode}")
+
+    @classmethod
+    def from_fits_header(cls, header):
+        obs_mode = header.get("OBS_MODE", "POINTING")
+        mode = PointingMode.from_gadf_string(obs_mode)
+        try:
+            location = earth_location_from_dict(header)
+        except KeyError:
+            location = None
+
+        # we allow missing RA_PNT / DEC_PNT in POINTING for some reason...
+        # FIXME: actually enforce this to be present instead of using nan
+        ra = u.Quantity(header.get("RA_PNT", np.nan), u.deg)
+        dec = u.Quantity(header.get("DEC_PNT", np.nan), u.deg)
+        alt = header.get("ALT_PNT")
+        az = header.get("AZ_PNT")
+        legacy_altaz = None
+
+        pointing_icrs = None
+        pointing_altaz = None
+
+        # we can be more strict with DRIFT, as support was only added recently
+        if mode is PointingMode.DRIFT:
+            if alt is None or az is None:
+                raise IOError(
+                    "Keywords ALT_PNT and AZ_PNT are required for OBSMODE=DRIFT"
+                )
+            pointing_altaz = AltAz(alt=alt * u.deg, az=az * u.deg)
+        else:
+            pointing_icrs = SkyCoord(ra, dec)
+            # store given altaz also for POINTING for backwards compatibility,
+            # FIXME: remove in 2.0
+            if alt is not None and az is not None:
+                legacy_altaz = AltAz(alt=alt * u.deg, az=az * u.deg)
+
+        time_start = header.get("TSTART")
+        time_stop = header.get("TSTOP")
+        time_ref = None
+
+        if time_start is not None or time_stop is not None:
+            time_ref = time_ref_from_dict(header)
+            time_unit = u.Unit(header.get("TIMEUNIT", "s"), format="fits")
+
+            if time_start is not None:
+                time_start = time_ref + u.Quantity(time_start, time_unit)
+
+            if time_stop is not None:
+                time_stop = time_ref + u.Quantity(time_stop, time_unit)
+
+        return cls(
+            mode=mode,
+            location=location,
+            pointing_icrs=pointing_icrs,
+            pointing_altaz=pointing_altaz,
+            time_start=time_start,
+            time_stop=time_stop,
+            time_ref=time_ref,
+            legacy_altaz=legacy_altaz,
+        )
+
+
+    def to_fits_header(self, format="gadf", version="0.3", time_ref=None):
+        if format != "gadf":
+            raise ValueError(f'Only the "gadf" format supported, got {format}')
+
+        if version not in {"0.2", "0.3"}:
+            raise ValueError(f"Unsupported version {version} for format {format}")
+
+        if self.mode == PointingMode.DRIFT and version == "0.2":
+            raise ValueError("mode=DRIFT is only supported by GADF 0.3")
+
+        header = fits.Header()
+        if self.mode == PointingMode.POINTING:
+            header["OBS_MODE"] = "POINTING"
+            header["RA_PNT"] = self.fixed_icrs.ra.deg, u.deg.to_string("fits")
+            header["DEC_PNT"] = self.fixed_icrs.dec.deg, u.deg.to_string("fits")
+        elif self.mode == PointingMode.POINTING:
+            header["OBS_MODE"] = "DRIFT"
+            header["AZ_PNT"] = self.fixed_altaz.az.deg, u.deg.to_string("fits")
+            header["ALT_PNT"] = self.fixed_altaz.alt.deg, u.deg.to_string("fits")
+
+        # FIXME: remove in 2.0
+        if self._legacy_altaz is not None and not np.isnan(self._legacy_altaz.alt.value):
+            header["AZ_PNT"] = self._legacy_altaz.az.deg, u.deg.to_string("fits")
+            header["ALT_PNT"] = self._legacy_altaz.alt.deg, u.deg.to_string("fits")
+
+        if self._time_start is not None:
+            header["TSTART"] = time_to_fits_header(self._time_start, epoch=time_ref)
+        if self._time_stop is not None:
+            header["TSTOP"] = time_to_fits_header(self._time_start, epoch=time_ref)
+
+        if self._time_start is not None or self._time_stop is not None:
+            header.update(time_ref_to_dict(time_ref))
+
+        if self._location is not None:
+            header.update(earth_location_to_dict(self._location))
+
+        return header
+
+
+
+    @classmethod
+    def read(cls, filename, hdu="EVENTS"):
+        """Read pointing information table from file to obtain the metadata.
+
+        Parameters
+        ----------
+        filename : str
+            File name
+        hdu : int or str
+            HDU number or name
+
+        Returns
+        -------
+        pointing_info : `PointingInfo`
+            Pointing info object
+        """
+        filename = make_path(filename)
+        header = fits.getheader(filename, extname=hdu)
+        return cls.from_fits_header(header)
 
     @property
     def mode(self):
@@ -261,91 +384,13 @@ class FixedPointingInfo:
 
         raise ValueError(f"Unsupported pointing mode: {self.mode}.")
 
-    @classmethod
-    def from_gadf_header(cls, header):
-        obs_mode = header.get("OBS_MODE", "POINTING")
-        mode = PointingMode.from_gadf_string(obs_mode)
-        try:
-            location = earth_location_from_dict(header)
-        except KeyError:
-            location = None
-
-        # we allow missing RA_PNT / DEC_PNT in POINTING for some reason...
-        # FIXME: actually enforce this to be present instead of using nan
-        ra = u.Quantity(header.get("RA_PNT", np.nan), u.deg)
-        dec = u.Quantity(header.get("DEC_PNT", np.nan), u.deg)
-        alt = header.get("ALT_PNT")
-        az = header.get("AZ_PNT")
-        legacy_altaz = None
-
-        pointing_icrs = None
-        pointing_altaz = None
-
-        # we can be more strict with DRIFT, as support was only added recently
-        if mode is PointingMode.DRIFT:
-            if alt is None or az is None:
-                raise IOError(
-                    "Keywords ALT_PNT and AZ_PNT are required for OBSMODE=DRIFT"
-                )
-            pointing_altaz = AltAz(alt=alt * u.deg, az=az * u.deg)
-        else:
-            pointing_icrs = SkyCoord(ra, dec)
-            # store given altaz also for POINTING for backwards compatibility,
-            # FIXME: remove in 2.0
-            if alt is not None and az is not None:
-                legacy_altaz = AltAz(alt=alt * u.deg, az=az * u.deg)
-
-        time_start = header.get("TSTART")
-        time_stop = header.get("TSTOP")
-        time_ref = None
-
-        if time_start is not None or time_stop is not None:
-            time_ref = time_ref_from_dict(header)
-            time_unit = u.Unit(header.get("TIMEUNIT", "s"), format="fits")
-
-            if time_start is not None:
-                time_start = time_ref + u.Quantity(time_start, time_unit)
-
-            if time_stop is not None:
-                time_stop = time_ref + u.Quantity(time_stop, time_unit)
-
-        return cls(
-            mode=mode,
-            location=location,
-            pointing_icrs=pointing_icrs,
-            pointing_altaz=pointing_altaz,
-            time_start=time_start,
-            time_stop=time_stop,
-            time_ref=time_ref,
-            legacy_altaz=legacy_altaz,
-        )
-
-    @classmethod
-    def read(cls, filename, hdu="EVENTS"):
-        """Read pointing information table from file to obtain the metadata.
-
-        Parameters
-        ----------
-        filename : str
-            File name
-        hdu : int or str
-            HDU number or name
-
-        Returns
-        -------
-        pointing_info : `PointingInfo`
-            Pointing info object
-        """
-        filename = make_path(filename)
-        header = fits.getheader(filename, extname=hdu)
-        return cls.from_gadf_header(header)
-
     # the rest is deprecated...
     @property
     @deprecated("1.1")
     def meta(self):
         if self._meta is not None:
             return self._meta
+        return dict(self.to_fits_header(time_ref=self._time_ref))
 
     @property
     @deprecated("1.1")
