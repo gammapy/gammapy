@@ -70,49 +70,39 @@ class FixedPointingInfo:
     Parameters
     ----------
     meta : `~astropy.table.Table.meta`
-        Meta header info from Table on pointing
+        Meta header info from Table on pointing.
+        Passing this is deprecated, provide ``mode`` and ``fixed_icrs`` or ``fixed_altaz``
+        instead or use `FixedPointingInfo.from_fits_header` instead.
+    mode : `PointingMode`
+        How the telescope was pointing during the observation
+    fixed_icrs : SkyCoord in ICRS frame
+        Mandatory if mode is `PointingMode.POINTING`, the ICRS coordinates that are fixed
+        for the duration of the observation.
+    fixed_altaz : SkyCoord in AltAz frame
+        Mandatory if mode is `PointingMode.DRIFT`, the AltAz coordinates that are fixed
+        for the duration of the observation.
 
     Examples
     --------
-    >>> from gammapy.data import PointingInfo
-    >>> path = '$GAMMAPY_DATA/tests/pointing_table.fits.gz'
-    >>> pointing_info = PointingInfo.read(path)
+    >>> from gammapy.data import FixedPointingInfo, PointingMode
+    >>> from astropy.coordinates import SkyCoord
+    >>> import astropy.units as u
+    >>> fixed_icrs = SkyCoord(83.633 * u.deg, 22.014 * u.deg, frame="icrs")
+    >>> pointing_info = FixedPointingInfo(mode=PointingMode.POINTING, fixed_icrs=fixed_icrs)
     >>> print(pointing_info)
-    Pointing info:
+    FixedPointingInfo:
     <BLANKLINE>
-    Location:     GeodeticLocation(lon=<Longitude 16.50022222 deg>, lat=<Latitude -23.27177778 deg>, height=<Quantity 1835. m>)  # noqa: E501
-    MJDREFI, MJDREFF, TIMESYS = (51910, 0.000742870370370241, 'TT')
-    Time ref:     2001-01-01T00:01:04.184
-    Time ref:     51910.00074287037 MJD (TT)
-    Duration:     1586.0000000000018 sec = 0.44055555555555603 hours
-    Table length: 100
-    <BLANKLINE>
-    START:
-    Time:  2004-01-21T19:50:02.184
-    Time:  53025.826414166666 MJD (TT)
-    RADEC: 83.6333 24.5144 deg
-    ALTAZ: 11.4575 41.3409 deg
-    <BLANKLINE>
-    <BLANKLINE>
-    END:
-    Time:  2004-01-21T20:16:28.184
-    Time:  53025.844770648146 MJD (TT)
-    RADEC: 83.6333 24.5144 deg
-    ALTAZ: 3.44573 42.1319 deg
-    <BLANKLINE>
-    <BLANKLINE>
-
-    Note: In order to reproduce the example you need the tests datasets folder.
-    You may download it with the command
-    ``gammapy download datasets --tests --out $GAMMAPY_DATA``
+    mode:        PointingMode.POINTING
+    coordinates: <SkyCoord (ICRS): (ra, dec) in deg
+        (83.633, 22.014)>
     """
 
     def __init__(
         self,
         meta=None,
         mode=None,
-        pointing_icrs=None,
-        pointing_altaz=None,
+        fixed_icrs=None,
+        fixed_altaz=None,
         # these have nothing really to do with pointing_info
         # needed for backwards compatibility but should be removed and accessed
         # from the observation, not the pointing info.
@@ -146,27 +136,27 @@ class FixedPointingInfo:
         self._legacy_altaz = legacy_altaz or AltAz(np.nan * u.deg, np.nan * u.deg)
 
         if mode is PointingMode.POINTING:
-            if pointing_icrs is None:
-                raise ValueError("pointing_icrs is mandatory for PointingMode.POINTING")
+            if fixed_icrs is None:
+                raise ValueError("fixed_icrs is mandatory for PointingMode.POINTING")
 
-            if np.isnan(pointing_icrs.ra.value) or np.isnan(pointing_icrs.dec.value):
+            if np.isnan(fixed_icrs.ra.value) or np.isnan(fixed_icrs.dec.value):
                 warnings.warn(
-                    "In future, pointing_icrs must have non-nan values",
+                    "In future, fixed_icrs must have non-nan values",
                     GammapyDeprecationWarning,
                 )
 
-            self._pointing_icrs = pointing_icrs
-            self._pointing_altaz = None
+            self._fixed_icrs = fixed_icrs
+            self._fixed_altaz = None
 
         elif mode is PointingMode.DRIFT:
-            if pointing_altaz is None:
+            if fixed_altaz is None:
                 raise ValueError("pointing_altaz is required for PointingMode.DRIFT")
 
-            if pointing_icrs is not None:
-                raise ValueError("pointing_icrs is excluded for PointingMode.DRIFT")
+            if fixed_icrs is not None:
+                raise ValueError("fixed_icrs is excluded for PointingMode.DRIFT")
 
-            self._pointing_altaz = pointing_altaz
-            self._pointing_icrs = None
+            self._fixed_altaz = fixed_altaz
+            self._fixed_icrs = None
         else:
             raise ValueError(f"Unsupported pointing mode for FixedPointingInfo: {mode}")
 
@@ -187,7 +177,7 @@ class FixedPointingInfo:
         az = header.get("AZ_PNT")
         legacy_altaz = None
 
-        pointing_icrs = None
+        fixed_icrs = None
         pointing_altaz = None
 
         # we can be more strict with DRIFT, as support was only added recently
@@ -198,7 +188,7 @@ class FixedPointingInfo:
                 )
             pointing_altaz = AltAz(alt=alt * u.deg, az=az * u.deg)
         else:
-            pointing_icrs = SkyCoord(ra, dec)
+            fixed_icrs = SkyCoord(ra, dec)
             # store given altaz also for POINTING for backwards compatibility,
             # FIXME: remove in 2.0
             if alt is not None and az is not None:
@@ -221,8 +211,8 @@ class FixedPointingInfo:
         return cls(
             mode=mode,
             location=location,
-            pointing_icrs=pointing_icrs,
-            pointing_altaz=pointing_altaz,
+            fixed_icrs=fixed_icrs,
+            fixed_altaz=pointing_altaz,
             time_start=time_start,
             time_stop=time_stop,
             time_ref=time_ref,
@@ -300,7 +290,7 @@ class FixedPointingInfo:
 
         None if not a DRIFT observation
         """
-        return self._pointing_altaz
+        return self._fixed_altaz
 
     @property
     def fixed_icrs(self):
@@ -309,7 +299,7 @@ class FixedPointingInfo:
 
         None if not a POINTING observation
         """
-        return self._pointing_icrs
+        return self._fixed_icrs
 
     def get_icrs(self, obstime=None, location=None) -> SkyCoord:
         """
@@ -332,9 +322,7 @@ class FixedPointingInfo:
         """
         if self.mode == PointingMode.POINTING:
             location = location if location is not None else self.location
-            return SkyCoord(
-                self._pointing_icrs.data, location=location, obstime=obstime
-            )
+            return SkyCoord(self._fixed_icrs.data, location=location, obstime=obstime)
 
         if self.mode == PointingMode.DRIFT:
             if obstime is None:
@@ -445,7 +433,7 @@ class FixedPointingInfo:
         Use `get_icrs` to get the pointing at a specific time, correctly
         handling different pointing modes.
         """
-        return self._pointing_icrs
+        return self._fixed_icrs
 
     @lazyproperty
     @deprecated("1.1")
@@ -473,6 +461,16 @@ class FixedPointingInfo:
 
         return self.radec.transform_to(frame)
 
+    def __str__(self):
+        coordinates = (
+            self.fixed_icrs if self.mode == PointingMode.POINTING else self.fixed_altaz
+        )
+        return (
+            "FixedPointingInfo:\n\n"
+            f"mode:        {self.mode}\n"
+            f"coordinates: {coordinates}"
+        )
+
 
 class PointingInfo:
     """IACT array pointing info.
@@ -491,7 +489,7 @@ class PointingInfo:
     >>> print(pointing_info)
     Pointing info:
     <BLANKLINE>
-    Location:     GeodeticLocation(lon=<Longitude 16.50022222 deg>, lat=<Latitude -23.27177778 deg>, height=<Quantity 1835. m>) # noqa: E501
+    Location:     GeodeticLocation(lon=<Longitude 16.50022222 deg>, lat=<Latitude -23.27177778 deg>, height=<Quantity 1835. m>)
     MJDREFI, MJDREFF, TIMESYS = (51910, 0.000742870370370241, 'TT')
     Time ref:     2001-01-01T00:01:04.184
     Time ref:     51910.00074287037 MJD (TT)

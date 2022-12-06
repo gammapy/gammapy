@@ -106,11 +106,11 @@ def fixed_pointing_info_aligned():
     time_start = Time("2000-09-21 11:55:00")
     time_stop = Time("2000-09-12 12:05:00")
     location = EarthLocation(lat=90 * u.deg, lon=0 * u.deg)
-    pointing_icrs = SkyCoord(0 * u.deg, 0 * u.deg, frame="icrs")
+    fixed_icrs = SkyCoord(0 * u.deg, 0 * u.deg, frame="icrs")
 
     return FixedPointingInfo(
         mode=PointingMode.POINTING,
-        pointing_icrs=pointing_icrs,
+        fixed_icrs=fixed_icrs,
         location=location,
         time_start=time_start,
         time_stop=time_stop,

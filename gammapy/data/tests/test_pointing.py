@@ -135,6 +135,89 @@ def test_altaz_without_location(caplog):
         assert np.isnan(altaz.az.value)
 
 
+def test_fixed_pointing_info_fixed_icrs():
+    location = observatory_locations["cta_north"]
+    pointing_icrs = SkyCoord(ra=83.28 * u.deg, dec=21.78 * u.deg)
+    pointing = FixedPointingInfo(
+        mode=PointingMode.POINTING,
+        fixed_icrs=pointing_icrs,
+    )
+
+    # not given, but assumed if missing
+    assert pointing.mode == PointingMode.POINTING
+    assert pointing.fixed_icrs == pointing_icrs
+    assert pointing.fixed_altaz is None
+
+    obstime = Time("2020-10-10T03:00:00")
+    altaz = pointing.get_altaz(obstime=obstime, location=location)
+    icrs = pointing.get_icrs(obstime=obstime, location=location)
+    back_trafo = altaz.transform_to("icrs")
+
+    assert isinstance(altaz.frame, AltAz)
+    assert altaz.obstime == obstime
+    assert altaz.location == location
+    assert u.isclose(back_trafo.ra, pointing_icrs.ra)
+    assert u.isclose(back_trafo.dec, pointing_icrs.dec)
+
+    assert isinstance(icrs.frame, ICRS)
+    assert icrs.obstime == obstime
+    assert icrs.location == location
+    assert u.isclose(pointing_icrs.ra, icrs.ra)
+    assert u.isclose(pointing_icrs.dec, icrs.dec)
+
+    # test multiple times at once
+    obstimes = obstime + np.linspace(0, 0.25, 50) * u.hour
+    altaz = pointing.get_altaz(obstime=obstimes, location=location)
+    icrs = pointing.get_icrs(obstime=obstimes, location=location)
+    assert isinstance(altaz.frame, AltAz)
+    assert len(altaz) == len(obstimes)
+    assert np.all(altaz.obstime == obstimes)
+
+    back_trafo = altaz.transform_to("icrs")
+    assert u.isclose(back_trafo.ra, pointing_icrs.ra).all()
+    assert u.isclose(back_trafo.dec, pointing_icrs.dec).all()
+    assert np.all(u.isclose(pointing_icrs.ra, icrs.ra))
+
+
+def test_fixed_pointing_info_fixed_altaz():
+    location = observatory_locations["cta_south"]
+    pointing_altaz = SkyCoord(alt=70 * u.deg, az=0 * u.deg, frame=AltAz())
+    pointing = FixedPointingInfo(
+        mode=PointingMode.DRIFT,
+        fixed_altaz=pointing_altaz,
+    )
+
+    # not given, but assumed if missing
+    assert pointing.mode == PointingMode.DRIFT
+    assert pointing.fixed_icrs is None
+    assert pointing.fixed_altaz == pointing_altaz
+
+    obstime = Time("2020-10-10T03:00:00")
+    altaz = pointing.get_altaz(obstime=obstime, location=location)
+    icrs = pointing.get_icrs(obstime=obstime, location=location)
+    back_trafo = icrs.transform_to(AltAz(location=icrs.location, obstime=icrs.obstime))
+
+    assert isinstance(altaz.frame, AltAz)
+    assert altaz.obstime == obstime
+    assert altaz.location == location
+    assert u.isclose(pointing_altaz.alt, altaz.alt)
+    assert u.isclose(pointing_altaz.az, altaz.az, atol=1e-10 * u.deg)
+
+    assert isinstance(icrs.frame, ICRS)
+    assert icrs.obstime == obstime
+    assert icrs.location == location
+    assert u.isclose(back_trafo.alt, pointing_altaz.alt)
+    assert u.isclose(back_trafo.az, pointing_altaz.az, atol=1e-10 * u.deg)
+
+    # test multiple times at once
+    obstimes = obstime + np.linspace(0, 0.25, 50) * u.hour
+    altaz = pointing.get_altaz(obstime=obstimes, location=location)
+    icrs = pointing.get_icrs(obstime=obstimes, location=location)
+    assert isinstance(altaz.frame, AltAz)
+    assert len(altaz) == len(obstimes)
+    assert np.all(altaz.obstime == obstimes)
+
+
 @pytest.mark.parametrize(
     ("obs_mode"),
     [
@@ -143,7 +226,7 @@ def test_altaz_without_location(caplog):
         ("SCAN"),
     ],
 )
-def test_fixed_pointing_info_fixed_icrs(obs_mode):
+def test_fixed_pointing_info_fixed_icrs_from_meta(obs_mode):
     location = observatory_locations["cta_south"]
     start = Time("2020-11-01T03:00:00")
     stop = Time("2020-11-01T03:15:00")
@@ -186,7 +269,7 @@ def test_fixed_pointing_info_fixed_icrs(obs_mode):
     assert np.all(u.isclose(pointing_icrs.ra, pointing.get_icrs(times).ra))
 
 
-def test_fixed_pointing_info_fixed_altaz():
+def test_fixed_pointing_info_fixed_altaz_from_meta():
     location = observatory_locations["cta_south"]
     start = Time("2020-11-01T03:00:00")
     stop = Time("2020-11-01T03:15:00")
@@ -240,7 +323,7 @@ def test_fixed_pointing_no_meta():
 
     pointing = FixedPointingInfo(
         mode=PointingMode.POINTING,
-        pointing_icrs=pointing_icrs,
+        fixed_icrs=pointing_icrs,
         location=location,
         time_start=start,
         time_stop=stop,
