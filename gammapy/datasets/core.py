@@ -221,6 +221,8 @@ class Datasets(collections.abc.MutableSequence):
         # TODO: add parallel evaluation of likelihoods
         for dataset in self:
             stat_sum += dataset.stat_sum()
+        for model in self.models:
+            stat_sum += model.stat_sum()  # would evaluate priors?
         return stat_sum
 
     def select_time(self, time_min, time_max, atol="1e-6 s"):

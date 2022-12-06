@@ -113,6 +113,7 @@ class Parameter:
         scale_method="scale10",
         interp="lin",
         is_norm=False,
+        prior=None,
     ):
         if not isinstance(name, str):
             raise TypeError(f"Name must be string, got '{type(name)}' instead")
@@ -126,6 +127,7 @@ class Parameter:
         self._error = error
         self._is_norm = is_norm
         self._type = None
+        self.prior = prior
 
         # TODO: move this to a setter method that can be called from `__set__` also!
         # Having it here is bad: behaviour not clear if Quantity and `unit` is passed.
@@ -144,6 +146,12 @@ class Parameter:
         self.scan_n_sigma = scan_n_sigma
         self.interp = interp
         self.scale_method = scale_method
+
+    def stat_sum(self):
+        if self.prior is not None:
+            self.prior.stat_sum()
+        else:
+            return 0.0
 
     def __get__(self, instance, owner):
         if instance is None:

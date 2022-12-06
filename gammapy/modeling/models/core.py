@@ -163,6 +163,9 @@ class ModelBase:
             [getattr(self, name) for name in self.default_parameters.names]
         )
 
+    def stat_sum(self):
+        return self.parameters.stat_sum()
+
     @copy_covariance
     def copy(self, **kwargs):
         """A deep copy."""

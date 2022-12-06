@@ -45,6 +45,26 @@ EVALUATION_MODE = "local"
 USE_NPRED_CACHE = True
 
 
+class FitStatistic:
+    """Calculate -2 * log(L)."""
+
+    def stat_sum(self, dataset):
+        return np.sum(self.stat_array)
+
+    def stat_array(self, dataset):
+        raise NotImplementedError
+
+
+class CashFitStatistic(FitStatistic):
+    def stat_sum(self, dataset):
+        counts, npred = dataset.counts.data.astype(float), dataset.npred().data
+
+        if dataset.mask is not None:
+            return cash_sum_cython(counts[dataset.mask.data], npred[dataset.mask.data])
+        else:
+            return cash_sum_cython(counts.ravel(), npred.ravel())
+
+
 def create_map_dataset_geoms(
     geom,
     energy_axis_true=None,
@@ -180,6 +200,7 @@ class MapDataset(Dataset):
     psf = LazyFitsData(cache=True)
     mask_fit = LazyFitsData(cache=True)
     mask_safe = LazyFitsData(cache=True)
+    fit_statistic = CashFitStatistic()
 
     _lazy_data_members = [
         "counts",
@@ -1080,13 +1101,8 @@ class MapDataset(Dataset):
         return ax_spatial, ax_spectral
 
     def stat_sum(self):
-        """Total statistic function value given the current model parameters."""
-        counts, npred = self.counts.data.astype(float), self.npred().data
-
-        if self.mask is not None:
-            return cash_sum_cython(counts[self.mask.data], npred[self.mask.data])
-        else:
-            return cash_sum_cython(counts.ravel(), npred.ravel())
+        """Total likelihood given the current model parameters."""
+        return self.fit_statistic.stat_sum(self)
 
     def fake(self, random_state="random-seed"):
         """Simulate fake counts for the current model and reduced IRFs.
