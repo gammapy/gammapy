@@ -135,6 +135,30 @@ def test_altaz_without_location(caplog):
         assert np.isnan(altaz.az.value)
 
 
+def test_read_gadf_drift():
+    """Test for reading FixedPointingInfo from GADF drift eventlist"""
+    pointing = FixedPointingInfo.read(
+        "$GAMMAPY_DATA/hawc/crab_events_pass4/events/EventList_Crab_fHitbin5GP.fits.gz"
+    )
+    assert pointing.mode is PointingMode.DRIFT
+    assert pointing.fixed_icrs is None
+    assert isinstance(pointing.fixed_altaz, AltAz)
+    assert pointing.fixed_altaz.alt == 0 * u.deg
+    assert pointing.fixed_altaz.az == 0 * u.deg
+
+
+def test_read_gadf_pointing():
+    """Test for reading FixedPointingInfo from GADF pointing eventlist"""
+    pointing = FixedPointingInfo.read(
+        "$GAMMAPY_DATA/magic/rad_max/data/20131004_05029747_DL3_CrabNebula-W0.40+035.fits"
+    )
+    assert pointing.mode is PointingMode.POINTING
+    assert pointing.fixed_altaz is None
+    assert isinstance(pointing.fixed_icrs.frame, ICRS)
+    assert u.isclose(pointing.fixed_icrs.ra, 83.98333 * u.deg)
+    assert u.isclose(pointing.fixed_icrs.dec, 22.24389 * u.deg)
+
+
 def test_fixed_pointing_info_fixed_icrs():
     location = observatory_locations["cta_north"]
     pointing_icrs = SkyCoord(ra=83.28 * u.deg, dec=21.78 * u.deg)
