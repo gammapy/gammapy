@@ -721,11 +721,12 @@ class SineTemporalModel(TemporalModel):
         omega = pars["omega"].quantity.to_value("rad/day")
         amp = pars["amp"].value
         t_ref = Time(pars["t_ref"].quantity, format="mjd")
-        value = (t_max - t_min) - amp / omega * (
-            np.sin(omega * (t_max - t_ref).to_value("day"))
-            - np.sin(omega * (t_min - t_ref).to_value("day"))
+
+        value = (t_max - t_min).to_value(u.day) - amp / omega * (
+            np.sin(omega * (t_max - t_ref).to_value(u.day))
+            - np.sin(omega * (t_min - t_ref).to_value(u.day))
         )
-        return value / self.time_sum(t_min, t_max)
+        return value / self.time_sum(t_min, t_max).to_value(u.day)
 
 
 class TemplatePhaseCurveTemporalModel(TemporalModel):
