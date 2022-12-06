@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Time related utility functions."""
 import numpy as np
-from astropy.time import Time, TimeDelta
 import astropy.units as u
+from astropy.time import Time, TimeDelta
 
 __all__ = [
     "absolute_time",
@@ -18,6 +18,7 @@ TIME_REF_FERMI = Time("2001-01-01T00:00:00")
 #: Default epoch gammapy uses for FITS files (MJDREF)
 #: 0 MJD, TT
 DEFAULT_EPOCH = Time(0, format="mjd", scale="tt")
+
 
 def time_to_fits(time, epoch=None, unit=u.s):
     """Convert time to fits format.
@@ -45,6 +46,7 @@ def time_to_fits(time, epoch=None, unit=u.s):
     if epoch is None:
         epoch = DEFAULT_EPOCH
     return (time - epoch).to(unit)
+
 
 def time_to_fits_header(time, epoch=None, unit=u.s):
     """Convert time to fits header format.

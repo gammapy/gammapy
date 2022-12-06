@@ -5,7 +5,6 @@ from enum import Enum, auto
 import numpy as np
 import scipy.interpolate
 import astropy.units as u
-from astropy.io import fits
 from astropy.coordinates import (
     AltAz,
     CartesianRepresentation,
@@ -14,13 +13,12 @@ from astropy.coordinates import (
 )
 from astropy.io import fits
 from astropy.table import Table
-from astropy.time import Time
 from astropy.units import Quantity
 from astropy.utils import lazyproperty
 from gammapy.utils.deprecation import GammapyDeprecationWarning, deprecated
 from gammapy.utils.fits import earth_location_from_dict, earth_location_to_dict
 from gammapy.utils.scripts import make_path
-from gammapy.utils.time import DEFAULT_EPOCH, time_ref_from_dict, time_ref_to_dict, time_to_fits_header
+from gammapy.utils.time import time_ref_from_dict, time_ref_to_dict, time_to_fits_header
 
 log = logging.getLogger(__name__)
 
@@ -231,7 +229,6 @@ class FixedPointingInfo:
             legacy_altaz=legacy_altaz,
         )
 
-
     def to_fits_header(self, format="gadf", version="0.3", time_ref=None):
         if format != "gadf":
             raise ValueError(f'Only the "gadf" format supported, got {format}')
@@ -253,7 +250,9 @@ class FixedPointingInfo:
             header["ALT_PNT"] = self.fixed_altaz.alt.deg, u.deg.to_string("fits")
 
         # FIXME: remove in 2.0
-        if self._legacy_altaz is not None and not np.isnan(self._legacy_altaz.alt.value):
+        if self._legacy_altaz is not None and not np.isnan(
+            self._legacy_altaz.alt.value
+        ):
             header["AZ_PNT"] = self._legacy_altaz.az.deg, u.deg.to_string("fits")
             header["ALT_PNT"] = self._legacy_altaz.alt.deg, u.deg.to_string("fits")
 
@@ -269,8 +268,6 @@ class FixedPointingInfo:
             header.update(earth_location_to_dict(self._location))
 
         return header
-
-
 
     @classmethod
     def read(cls, filename, hdu="EVENTS"):
