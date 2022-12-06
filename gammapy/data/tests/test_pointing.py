@@ -135,6 +135,7 @@ def test_altaz_without_location(caplog):
         assert np.isnan(altaz.az.value)
 
 
+@requires_data()
 def test_read_gadf_drift():
     """Test for reading FixedPointingInfo from GADF drift eventlist"""
     pointing = FixedPointingInfo.read(
@@ -147,6 +148,7 @@ def test_read_gadf_drift():
     assert pointing.fixed_altaz.az == 0 * u.deg
 
 
+@requires_data()
 def test_read_gadf_pointing():
     """Test for reading FixedPointingInfo from GADF pointing eventlist"""
     pointing = FixedPointingInfo.read(
