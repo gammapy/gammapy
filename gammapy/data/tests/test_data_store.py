@@ -135,7 +135,7 @@ def test_data_store_copy_obs_subset(tmp_path, data_store):
 
 @requires_data()
 class TestDataStoreChecker:
-    def setup(self):
+    def setup_method(self):
         self.data_store = DataStore.from_dir("$GAMMAPY_DATA/cta-1dc/index/gps")
 
     def test_check_all(self):

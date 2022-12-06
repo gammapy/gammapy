@@ -349,7 +349,7 @@ def test_peek(spectrum_dataset):
 class TestSpectrumOnOff:
     """Test ON OFF SpectrumDataset"""
 
-    def setup(self):
+    def setup_method(self):
         etrue = np.logspace(-1, 1, 10) * u.TeV
         self.e_true = MapAxis.from_energy_edges(etrue, name="energy_true")
         ereco = np.logspace(-1, 1, 5) * u.TeV
@@ -670,7 +670,7 @@ class TestSpectrumOnOff:
 class TestSpectralFit:
     """Test fit in astrophysical scenario"""
 
-    def setup(self):
+    def setup_method(self):
         path = "$GAMMAPY_DATA/joint-crab/spectra/hess/"
         self.datasets = Datasets(
             [
@@ -870,7 +870,7 @@ def make_observation_list():
 
 @requires_data("gammapy-data")
 class TestSpectrumDatasetOnOffStack:
-    def setup(self):
+    def setup_method(self):
         self.datasets = _read_hess_obs()
         # Change threshold to make stuff more interesting
 
@@ -1040,7 +1040,7 @@ def test_spectrum_dataset_on_off_to_yaml(tmpdir):
 class TestFit:
     """Test fit on counts spectra without any IRFs"""
 
-    def setup(self):
+    def setup_method(self):
         self.nbins = 30
         energy = np.logspace(-1, 1, self.nbins + 1) * u.TeV
         self.source_model = SkyModel(

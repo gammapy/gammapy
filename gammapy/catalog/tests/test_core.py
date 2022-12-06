@@ -25,7 +25,7 @@ def make_test_catalog():
 
 
 class TestSourceCatalog:
-    def setup(self):
+    def setup_method(self):
         self.cat = make_test_catalog()
 
     def test_str(self):
@@ -81,7 +81,7 @@ class TestSourceCatalog:
 
 
 class TestSourceCatalogObject:
-    def setup(self):
+    def setup_method(self):
         self.cat = make_test_catalog()
         self.source = self.cat["bb"]
 
