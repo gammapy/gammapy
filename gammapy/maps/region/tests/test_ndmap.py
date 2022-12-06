@@ -102,7 +102,8 @@ def test_region_nd_map_plot(region_map):
     with mpl_plot_check():
         region_map.plot()
 
-    ax = plt.subplot(projection=region_map.geom.wcs)
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1, projection=region_map.geom.wcs)
     with mpl_plot_check():
         region_map.plot_region(ax=ax)
 
