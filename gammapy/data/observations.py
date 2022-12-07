@@ -6,6 +6,7 @@ import logging
 import warnings
 from itertools import zip_longest
 import numpy as np
+import scipy.cluster.hierarchy as sch
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
@@ -691,6 +692,102 @@ class Observations(collections.abc.MutableSequence):
 
     def _ipython_key_completions_(self):
         return self.ids
+
+    def get_features(self, coord, names=["edisp-bias", "edisp-res", "psf-radius"], containment_faction=0.68):
+        """ Get features from irfs properties at a given position.
+            Used for observations clustering.
+            
+            Parameters
+            ----------
+            coord : `~gammapy.maps.MapCoord`
+                Coordinates in lon, lat, energy_true
+            names : list of str
+                IRFs properties to be considered.
+                Available options are ["edisp-bias", "edisp-res", "psf-radius"]
+                (all used by default).
+                
+            containment_faction : float
+                Containment_faction to compute the `psf-radius`.
+                Default is 68%.               
+
+            Returns
+            -------
+            features : array
+                Features
+                
+        """
+
+        n_obs = len(self)
+        n_features = len(names)
+        features = np.zeros((n_obs, n_features))
+        for ko, obs, in enumerate(self):
+            offset_max = np.minimum(obs.psf.axes["offset"].center[-1],
+                                    obs.edisp.axes["offset"].center[-1])
+            for kf, name in enumerate(names):
+                offset = np.minimum(coord.skycoord.separation(obs.pointing_radec)[0],
+                                    offset_max)
+                energy_true = coord["energy_true"][0]
+                edisp_kernel = obs.edisp.to_edisp_kernel(offset)
+                if name == "edisp-res":
+                    features[ko,kf] = edisp_kernel.get_bias(energy_true)
+                if name == "edisp-bias":
+                    features[ko,kf] = edisp_kernel.get_resolution(energy_true)
+                if name == "psf-radius":
+                    psf_radius = obs.psf.containment_radius(fraction=containment_faction,
+                                                         offset=offset,
+                                                         energy_true=energy_true)
+                    features[ko,kf] = psf_radius.value
+        return features
+
+    def hierarchical_clustering(self, features, linkage_kwargs=None, fcluster_kwargs=None, standard_scaler=False):
+        """ Hierarchical clustering of obsevrations using given features.
+            
+            Parameters
+            ----------
+            features : array
+                (N x M) array with N observations and M features,
+            linkage_kwargs : dict
+                Arguments forwarded to `scipy.cluster.hierarchy.linkage`
+            fcluster_kwargs : dict
+                Arguments forwarded to `scipy.cluster.hierarchy.fcluster`
+            standard_scaler : bool
+                Standardize features by removing the mean and scaling to unit variance.
+                Default is False.                
+
+            Returns
+            -------
+            obs_clusters : list of `~gammapy.data.Observations`
+                A new Observations instance for each cluster identified
+            ind_clusters : array
+                Array of cluster ID
+            features : array
+                Scaled features
+        """
+        
+        default_linkage_kwargs=dict(method='ward', metric='euclidean')
+        if linkage_kwargs is not None:
+            default_linkage_kwargs.update(linkage_kwargs)
+        
+        pairwise_distances = sch.distance.pdist(features)
+        linkage = sch.linkage(pairwise_distances, method='ward')
+        
+        default_fcluster_kwargs=dict(criterion="maxclust", t=3)
+        if fcluster_kwargs is not None:
+            default_fcluster_kwargs.update(fcluster_kwargs)
+        ind_clusters = sch.fcluster(linkage, **default_fcluster_kwargs)
+
+        if standard_scaler:
+            features=features.copy()
+            for kf in range(features.shape[1]):
+                features[:,kf] = (features[:,kf]-features[:,kf].mean())/features[:,kf].std()
+
+        obs_clusters = []
+        for ind in np.unique(ind_clusters):
+            observations = self.__class__([obs for k, obs in enumerate(self) if ind_clusters[k]==ind])
+            obs_clusters.append(observations)
+            
+        return obs_clusters, ind_clusters, features
+            
 
 
 class ObservationChecker(Checker):
