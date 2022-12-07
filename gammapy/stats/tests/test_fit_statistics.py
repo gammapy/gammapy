@@ -179,28 +179,3 @@ def test_wstat_corner_cases():
 
     actual = stats.get_wstat_mu_bkg(n_on=n_on, mu_sig=mu_sig, n_off=n_off, alpha=alpha)
     assert_allclose(actual, 0)
-
-
-def test_sigma_ts_conversion():
-
-    sigma_ref = 3
-    df = 1
-    ts = stats.sigma_to_ts(3, df=df)
-    assert_allclose(ts, sigma_ref**2.0)
-    sigma = stats.ts_to_sigma(ts, df=df)
-    assert_allclose(sigma, sigma_ref)
-
-    df = 2
-    ts = stats.sigma_to_ts(3, df=df)
-    sigma = stats.ts_to_sigma(ts, df=df)
-    assert_allclose(sigma, sigma_ref)
-
-
-@requires_data()
-def test_test_statistic(fermi_datasets):
-
-    model = fermi_datasets.models["Crab Nebula"]
-    ts_eval = stats.TestStatisticNested([model.spectral_model.amplitude], [0])
-    ts = ts_eval.run(fermi_datasets)
-
-    assert_allclose(ts, 20905.667798, rtol=1e-5)

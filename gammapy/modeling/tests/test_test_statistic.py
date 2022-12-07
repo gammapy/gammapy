@@ -15,10 +15,28 @@ def fermi_datasets():
 
 
 @requires_data()
-def test_test_statistic(fermi_datasets):
+def test_test_statistic_detection(fermi_datasets):
 
     model = fermi_datasets.models["Crab Nebula"]
     ts_eval = TestStatisticNested([model.spectral_model.amplitude], [0])
     ts = ts_eval.run(fermi_datasets)
 
     assert_allclose(ts, 20905.667798, rtol=1e-5)
+
+
+@requires_data()
+def test_test_statistic_link(fermi_datasets):
+
+    # TODO: better test with simuated data ?
+    model = fermi_datasets.models["Crab Nebula"]
+    model2 = model.copy(name="other")
+    model2.spectral_model.alpha.value = 2.4
+    fermi_datasets.models = fermi_datasets.models + [model2]
+
+    ts_eval = TestStatisticNested(
+        [model.spectral_model.alpha], [model2.spectral_model.alpha]
+    )
+    ts = ts_eval.run(fermi_datasets)
+
+    assert_allclose(ts, -3.602895, rtol=1e-5)
+    assert_allclose(model2.spectral_model.alpha.value, model.spectral_model.alpha.value)

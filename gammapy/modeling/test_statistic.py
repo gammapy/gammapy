@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from gammapy.stats.utils import sigma_to_ts
+from gammapy.modeling import Parameter, Fit
 
 
 class TestStatisticNested:
@@ -11,8 +12,12 @@ class TestStatisticNested:
     ----------
     parameters : `~gammapy.modeling.Parameters` or list of `~gammapy.modeling.Parameter`
         List of parameters frozen for the null hypothesis.
-    null_values : list of float
+    null_values : list of float or `~gammapy.modeling.Parameters`
         Values of the parameters frozen for the null hypothesis.
+        If a `Parameters` object or a list of `Parameters` is given
+        the null hypothesis is the value of this parameter,
+        so this tests link parameters versus unliked.
+
     n_sigma : float
         Threshold in number of sigma to switch from the null hypothesis
         to the alternative one. Default is 2.
@@ -35,8 +40,6 @@ class TestStatisticNested:
         self.n_free_parameters = n_free_parameters
 
         if fit is None:
-            from gammapy.modeling import Fit
-
             fit = Fit()
             minuit_opts = {"tol": 0.1, "strategy": 1}
             fit.backend = "minuit"
@@ -68,12 +71,16 @@ class TestStatisticNested:
         for p in self.parameters:
             p.frozen = False
         self.fit.run(datasets)
+        object_cache = [p.__dict__ for p in datasets.models.parameters]
         prev_pars = [p.value for p in datasets.models.parameters]
         stat = datasets.stat_sum()
 
         for p, val in zip(self.parameters, self.null_values):
-            p.value = val
-            p.frozen = True
+            if isinstance(val, Parameter):
+                p.__dict__ = val.__dict__
+            else:
+                p.value = val
+                p.frozen = True
         self.fit.run(datasets)
         stat_null = datasets.stat_sum()
 
@@ -83,5 +90,6 @@ class TestStatisticNested:
             for p in self.parameters:
                 p.frozen = False
             for kp, p in enumerate(datasets.models.parameters):
+                p.__dict__ = object_cache[kp]
                 p.value = prev_pars[kp]
         return ts
