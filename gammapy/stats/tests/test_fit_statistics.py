@@ -3,7 +3,6 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from gammapy import stats
-from gammapy.utils.testing import requires_data
 
 
 @pytest.fixture(scope="session")
