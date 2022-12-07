@@ -782,7 +782,7 @@ class Observations(collections.abc.MutableSequence):
             default_linkage_kwargs.update(linkage_kwargs)
 
         pairwise_distances = sch.distance.pdist(features)
-        linkage = sch.linkage(pairwise_distances, method="ward")
+        linkage = sch.linkage(pairwise_distances, **default_linkage_kwargs)
 
         default_fcluster_kwargs = dict(criterion="maxclust", t=3)
         if fcluster_kwargs is not None:
