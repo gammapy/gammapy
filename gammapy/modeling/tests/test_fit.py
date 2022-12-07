@@ -13,9 +13,12 @@ class MyModel(ModelBase):
     x = Parameter("x", 2)
     y = Parameter("y", 3e2)
     z = Parameter("z", 4e-2)
-    name = "test"
     datasets_names = ["test"]
     type = "model"
+
+    def __init__(self, name="test", *args, **kwargs):
+        self.name = name
+        super().__init__(*args, **kwargs)
 
 
 class MyDataset(Dataset):
@@ -23,7 +26,7 @@ class MyDataset(Dataset):
 
     def __init__(self, name="test"):
         self._name = name
-        self._models = Models([MyModel(x=1.99, y=2.99e3, z=3.99e-2)])
+        self._models = Models([MyModel(x=1.99, y=2.99e3, z=3.99e-2, name=name)])
         self.data_shape = (1,)
         self.meta_table = Table()
 
