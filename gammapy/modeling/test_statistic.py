@@ -15,9 +15,8 @@ class TestStatisticNested:
     null_values : list of float or `~gammapy.modeling.Parameters`
         Values of the parameters frozen for the null hypothesis.
         If a `Parameters` object or a list of `Parameters` is given
-        the null hypothesis is the value of this parameter,
-        so this tests link parameters versus unliked.
-
+        the null hypothesis follows the values of these parameters,
+        so this tests linked parameters versus unliked.
     n_sigma : float
         Threshold in number of sigma to switch from the null hypothesis
         to the alternative one. Default is 2.
