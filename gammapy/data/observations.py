@@ -777,6 +777,13 @@ class Observations(collections.abc.MutableSequence):
             Scaled features
         """
 
+        if standard_scaler:
+            features = features.copy()
+            for kf in range(features.shape[1]):
+                features[:, kf] = (features[:, kf] - features[:, kf].mean()) / features[
+                    :, kf
+                ].std()
+
         default_linkage_kwargs = dict(method="ward", metric="euclidean")
         if linkage_kwargs is not None:
             default_linkage_kwargs.update(linkage_kwargs)
@@ -788,13 +795,6 @@ class Observations(collections.abc.MutableSequence):
         if fcluster_kwargs is not None:
             default_fcluster_kwargs.update(fcluster_kwargs)
         ind_clusters = sch.fcluster(linkage, **default_fcluster_kwargs)
-
-        if standard_scaler:
-            features = features.copy()
-            for kf in range(features.shape[1]):
-                features[:, kf] = (features[:, kf] - features[:, kf].mean()) / features[
-                    :, kf
-                ].std()
 
         obs_clusters = []
         for ind in np.unique(ind_clusters):
