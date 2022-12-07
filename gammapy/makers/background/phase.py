@@ -19,27 +19,31 @@ class PhaseBackgroundMaker(Maker):
         on-phase defined by the two edges of each interval (edges are excluded)
     off_phase : `tuple` or list of tuples
         off-phase defined by the two edges of each interval (edges are excluded)
+    column_name : `str`
+        The name of the column in the event file from which the phase informations are extracted
     """
 
     tag = "PhaseBackgroundMaker"
 
-    def __init__(self, on_phase, off_phase):
+    def __init__(self, on_phase, off_phase, column_name='PHASE'):
         self.on_phase = self._check_intervals(on_phase)
         self.off_phase = self._check_intervals(off_phase)
+        self.column_name = column_name
 
     def __str__(self):
         s = self.__class__.__name__
         s += f"\n{self.on_phase}"
         s += f"\n{self.off_phase}"
+        '''What to do here with column_name'''
         return s
 
     @staticmethod
-    def _make_counts(dataset, observation, phases):
+    def _make_counts(self, dataset, observation, phases):
 
         event_lists = []
         for interval in phases:
             events = observation.events.select_parameter(
-                parameter="PHASE", band=interval
+                parameter=self.column_name, band=interval
             )
             event_lists.append(events)
 
@@ -106,14 +110,25 @@ class PhaseBackgroundMaker(Maker):
         acceptance_off = RegionNDMap.from_geom(geom=dataset.counts.geom)
         acceptance_off.data = np.sum([_[1] - _[0] for _ in self.off_phase])
 
-        dataset_on_off = SpectrumDatasetOnOff.from_spectrum_dataset(
-            dataset=dataset,
-            counts_off=counts_off,
-            acceptance=acceptance,
-            acceptance_off=acceptance_off,
-        )
-        dataset_on_off.counts = counts
-        return dataset_on_off
+        if isinstance(dataset, SpectrumDataset):
+            dataset_on_off = SpectrumDatasetOnOff.from_spectrum_dataset(
+                dataset=dataset,
+                counts_off=counts_off,
+                acceptance=acceptance,
+                acceptance_off=acceptance_off,
+            )
+            dataset_on_off.counts = counts
+            return dataset_on_off
+
+        elif isinstance(dataset, MapDataset):
+            dataset_on_off = MapDatasetOnOff.from_map_dataset(
+                dataset=dataset,
+                counts_off=counts_off,
+                acceptance=acceptance,
+                acceptance_off=acceptance_off,
+            )
+            dataset_on_off.counts = counts
+            return dataset_on_off
 
     @staticmethod
     def _check_intervals(intervals):
