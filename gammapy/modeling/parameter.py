@@ -147,12 +147,6 @@ class Parameter:
         self.interp = interp
         self.scale_method = scale_method
 
-    def stat_sum(self):
-        if self.prior is not None:
-            self.prior.stat_sum()
-        else:
-            return 0.0
-
     def __get__(self, instance, owner):
         if instance is None:
             return self
@@ -485,6 +479,13 @@ class Parameters(collections.abc.Sequence):
             parameters = list(parameters)
 
         self._parameters = parameters
+
+    def stat_sum(self):
+        s = 0
+        for par in self:
+            if par.prior is not None:
+                s += par.prior.stat_sum()
+        return s
 
     def check_limits(self):
         """Check parameter limits and emit a warning"""
