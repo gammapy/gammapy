@@ -4,6 +4,7 @@ import collections.abc
 import copy
 import itertools
 import logging
+from inspect import signature
 import numpy as np
 from astropy import units as u
 from astropy.table import Table
@@ -481,10 +482,22 @@ class Parameters(collections.abc.Sequence):
         self._parameters = parameters
 
     def stat_sum(self):
+        """Evaluate the Priors of all Parameters."""
         s = 0
         for par in self:
             if par.prior is not None:
-                s += par.prior.stat_sum()
+                args = {}
+                # this is almost duplicated code from gammapy.dataset.map
+                for key in signature(par.prior.stat_sum).parameters.keys():
+                    method = getattr(par, key)
+                    is_callable = hasattr(method, "__call__")
+                    if is_callable:
+                        value = method()
+                    else:
+                        value = method
+                    args[key] = value
+
+                s += par.prior.stat_sum(**args)
         return s
 
     def check_limits(self):

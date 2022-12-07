@@ -322,3 +322,41 @@ def test_stat_contour():
 
     # Check that original value state wasn't changed
     assert_allclose(dataset.models.parameters["y"].value, 300)
+
+
+def test_with_prior():
+    """Test fitting with priors on some of the parameters.
+
+    Using a GaussianPrior with a mean value substantially different
+    from the best value, the parameter will also substantially differ
+    from the best value.
+
+    In a second test, the Gaussian mean is set to the expected value,
+    which results in a very small contribution of the prior.
+    """
+    dataset = MyDataset()
+
+    class GaussianPrior:
+        def __init__(self, mu=0, sigma=1):
+            self.mu = mu
+            self.sigma = sigma
+
+        def stat_sum(self, value):
+            return ((value - self.mu) / self.sigma) ** 2
+
+    dataset.models.parameters["x"].prior = GaussianPrior()
+    fit = Fit(backend="minuit")
+    result = fit.run([dataset])
+    assert result.success
+
+    # because of the  prior, x is substantially different
+    assert_allclose(dataset.models.parameters["y"].value, 300.0)
+    assert_allclose(dataset.models.parameters["z"].value, 0.04)
+
+    # run the fit again, with the prior at the 'true' value
+    dataset.models.parameters["x"].prior = GaussianPrior(mu=2)
+    fit = Fit(backend="minuit")
+    result = fit.run([dataset])
+    assert result.success
+    # Priors should have a small value
+    assert_allclose(dataset.models.parameters.stat_sum(), 0.0, atol=1e-7)
