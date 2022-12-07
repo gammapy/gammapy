@@ -1,20 +1,24 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Simulate observations."""
 import html
+from copy import deepcopy
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord, SkyOffsetFrame
 from astropy.table import Table
 from astropy.time import Time
-import gammapy
-from gammapy.data import EventList, observatory_locations
-from gammapy.maps import MapAxis, MapCoord, RegionNDMap, TimeMapAxis
+from gammapy import __version__
+from gammapy.data import EventList, Observation, PointingMode, observatory_locations
+from gammapy.maps import MapAxis, MapCoord, RegionNDMap, TimeMapAxis, WcsGeom
 from gammapy.modeling.models import (
     ConstantSpectralModel,
     ConstantTemporalModel,
+    FoVBackgroundModel,
+    Models,
     PointSpatialModel,
 )
 from gammapy.utils.random import get_random_state
+from .map import MapDataset
 
 __all__ = ["MapDatasetEventSampler"]
 
@@ -442,7 +446,7 @@ class MapDatasetEventSampler:
         meta["EQUINOX"] = "J2000"
         meta["RADECSYS"] = "icrs"
 
-        meta["CREATOR"] = "Gammapy {}".format(gammapy.__version__)
+        meta["CREATOR"] = "Gammapy {}".format(__version__)
         meta["EUNIT"] = "TeV"
         meta["EVTVER"] = ""
 
@@ -574,3 +578,107 @@ class MapDatasetEventSampler:
         geom = dataset._geom
         selection = geom.contains(events.map_coord(geom))
         return events.select_row_subset(selection)
+
+
+class SimulatedObservationMaker(MapDatasetEventSampler):
+    """
+    Sample event lists for a given observation.
+    """
+
+    def __init__(
+        self,
+        energy_axis_true,
+        energy_axis,
+        map_width,
+        map_bin_size=0.02 * u.deg,
+        random_state="random-seed",
+    ):
+        self.random_state = get_random_state(random_state)
+        self.energy_axis_true = energy_axis_true
+        self.energy_axis = energy_axis
+        self.map_width = map_width
+        self.bin_size = map_bin_size
+
+    def run(self, observation: Observation, models=None):
+        """Run the event sampler, applying IRF corrections.
+
+        Parameters
+        ----------
+        observation : `~gammapy.data.Observation`
+            Observation to be simulated.
+        models : `~gammapy.modeling.Models`
+
+        Returns
+        -------
+        events : `~gammapy.data.EventList`
+            Event list.
+        """
+        # import here to prevent circular import
+        from gammapy.makers import MapDatasetMaker
+
+        if models is None:
+            models = Models()
+
+        if observation.pointing.pointing_mode is not PointingMode.POINTING:
+            raise NotImplementedError(
+                "Only observations with fixed pointing in ICRS are supported"
+            )
+        pointing_icrs = observation.pointing.fixed_icrs
+        geom = WcsGeom.create(
+            skydir=pointing_icrs,
+            width=(self.map_width.to_value(u.deg), self.map_width.to_value(u.deg)),
+            binsz=self.bin_size.to_value(u.deg),
+            frame="icrs",
+            axes=[self.energy_axis],
+        )
+
+        components = ["exposure"]
+        axes = dict(
+            energy_axis_true=self.energy_axis_true,
+        )
+        if observation.edisp is not None:
+            components.append("edisp")
+            axes["mira_axis"] = observation.edisp.axes["migra"]
+        if observation.bkg is not None:
+            components.append("background")
+        if observation.psf is not None:
+            components.append("psf")
+
+        dataset = MapDataset.create(
+            geom,
+            name="simulated-dataset",
+            **axes,
+        )
+
+        maker = MapDatasetMaker(selection=components)
+        dataset = maker.run(dataset, observation)
+        models.append(FoVBackgroundModel(dataset_name="simulated-dataset"))
+        dataset.models = models
+
+        events = None
+        if len(models) > 1:
+            events = self.sample_sources(dataset)
+
+            if len(events.table) > 0:
+                if dataset.psf is not None:
+                    events = self.sample_psf(dataset.psf, events)
+
+                if dataset.edisp is not None:
+                    events = self.sample_edisp(dataset.edisp, events)
+
+        if dataset.background is not None:
+            events_bkg = self.sample_background(dataset)
+            if events is not None:
+                events = EventList.from_stack([events_bkg, events])
+            else:
+                events = events_bkg
+
+        geom = dataset._geom
+        selection = geom.contains(events.map_coord(geom))
+        events = events.select_row_subset(selection)
+        events.table.sort("TIME")
+        events.table["EVENT_ID"] = np.arange(len(events.table))
+
+        observation = deepcopy(observation)
+        observation._events = events
+        return observation
