@@ -14,7 +14,6 @@ from gammapy.modeling.models import DatasetModels, FoVBackgroundModel
 from gammapy.stats import (
     CashCountsStatistic,
     WStatCountsStatistic,
-    cash,
     cash_sum_cython,
     get_wstat_mu_bkg,
     wstat,
