@@ -120,7 +120,7 @@ class PhaseBackgroundMaker(Maker):
 
     @staticmethod
     def _check_intervals(intervals):
-        
+       """Split phase intervals that go below phase 0 and above phase 1""" 
         if isinstance(intervals, tuple):
             intervals = [intervals]
 
