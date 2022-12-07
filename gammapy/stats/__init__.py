@@ -7,9 +7,6 @@ from .fit_statistics import (
     get_wstat_gof_terms,
     get_wstat_mu_bkg,
     wstat,
-    sigma_to_ts,
-    ts_to_sigma,
-    TestStatisticNested,
 )
 from .fit_statistics_cython import (
     cash_sum_cython,
@@ -28,7 +25,4 @@ __all__ = [
     "norm_bounds_cython",
     "wstat",
     "WStatCountsStatistic",
-    "sigma_to_ts",
-    "ts_to_sigma",
-    "TestStatisticNested",
 ]
