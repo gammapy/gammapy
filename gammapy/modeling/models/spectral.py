@@ -3,6 +3,7 @@
 import logging
 import operator
 import os
+from pathlib import Path
 import numpy as np
 import scipy.optimize
 import scipy.special
@@ -12,7 +13,6 @@ from astropy.table import Table
 from astropy.utils.decorators import classproperty
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
-from pathlib import Path
 from gammapy.maps import MapAxis, RegionNDMap
 from gammapy.modeling import Parameter, Parameters
 from gammapy.utils.integrate import trapz_loglog
@@ -656,6 +656,13 @@ class CompoundSpectralModel(SpectralModel):
                 "operator": self.operator.__name__,
             }
         }
+
+    def evaluate(self, energy, *args):
+        args1 = args[: len(self.model1.parameters)]
+        args2 = args[len(self.model1.parameters) :]
+        val1 = self.model1.evaluate(energy, *args1)
+        val2 = self.model2.evaluate(energy, *args2)
+        return self.operator(val1, val2)
 
     @classmethod
     def from_dict(cls, data):

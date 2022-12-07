@@ -670,6 +670,27 @@ def test_template_spectral_model_compound():
     assert np.allclose(new_model(energy), 2 * values)
 
 
+def test_evaluate_spectral_model_compound():
+    energy = [1.00e06, 1.25e06, 1.58e06, 1.99e06] * u.MeV
+    model = TEST_MODELS[-2]["model"]
+    values = model.evaluate(energy, *[p.quantity for p in model.parameters])
+    assert_allclose(values, model(energy))
+
+    model = TEST_MODELS[-3]["model"]
+    values = model.evaluate(energy, *[p.quantity for p in model.parameters])
+    assert_allclose(values, model(energy))
+
+
+def test_evaluate_nested_spectral_model_compound():
+    energy = [1.00e06, 1.25e06, 1.58e06, 1.99e06] * u.MeV
+    model1 = TEST_MODELS[-2]["model"]
+    model2 = TEST_MODELS[-3]["model"]
+
+    model = model1 + model2
+    values = model.evaluate(energy, *[p.quantity for p in model.parameters])
+    assert_allclose(values, model(energy))
+
+
 @requires_dependency("naima")
 class TestNaimaModel:
     # Used to test model value at 2 TeV
