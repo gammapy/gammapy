@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
+from inspect import signature
 import numpy as np
 import astropy.units as u
 from astropy.io import fits
@@ -48,21 +49,20 @@ USE_NPRED_CACHE = True
 class FitStatistic:
     """Calculate -2 * log(L)."""
 
-    def stat_sum(self, dataset):
-        return np.sum(self.stat_array)
+    def stat_sum(self, *args, **kwargs):
+        return np.sum(self.stat_array(*args, **kwargs))
 
-    def stat_array(self, dataset):
+    def stat_array(self, *args, **kwargs):
         raise NotImplementedError
 
 
 class CashFitStatistic(FitStatistic):
-    def stat_sum(self, dataset):
-        counts, npred = dataset.counts.data.astype(float), dataset.npred().data
+    def stat_sum(self, counts, npred, mask=None):
+        counts, npred = counts.data.astype(float), npred.data
 
-        if dataset.mask is not None:
-            return cash_sum_cython(counts[dataset.mask.data], npred[dataset.mask.data])
-        else:
-            return cash_sum_cython(counts.ravel(), npred.ravel())
+        if mask is not None:
+            return cash_sum_cython(counts[mask.data], npred[mask.data])
+        return cash_sum_cython(counts.ravel(), npred.ravel())
 
 
 def create_map_dataset_geoms(
@@ -1102,7 +1102,17 @@ class MapDataset(Dataset):
 
     def stat_sum(self):
         """Total likelihood given the current model parameters."""
-        return self.fit_statistic.stat_sum(self)
+        args = {}
+        for key in signature(self.fit_statistic.stat_sum).parameters.keys():
+            method = getattr(self, key)
+            is_callable = hasattr(method, "__call__")
+            if is_callable:
+                value = method()
+            else:
+                value = method
+            args[key] = value
+
+        return self.fit_statistic.stat_sum(**args)
 
     def fake(self, random_state="random-seed"):
         """Simulate fake counts for the current model and reduced IRFs.
