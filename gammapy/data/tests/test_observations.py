@@ -12,6 +12,7 @@ from gammapy.irf import PSF3D, load_irf_dict_from_file
 from gammapy.data.pointing import FixedPointingInfo, PointingMode
 from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.utils.fits import HDULocation
+from gammapy.estimators.utils import hierarchical_clustering
 from gammapy.utils.testing import (
     assert_skycoord_allclose,
     assert_time_allclose,
@@ -436,10 +437,9 @@ def test_observations_clustering(data_store):
     n_features = len(names)
     assert features.shape == (len(observations), n_features)
 
-    obs_clusters, ind_clusters, features = observations.hierarchical_clustering(
-        features, standard_scaler=True
-    )
+    ind_clusters, features = hierarchical_clustering(features, standard_scaler=True)
 
+    obs_clusters = observations.split(ind_clusters)
     for k in range(n_features):
         assert_allclose(features[:, k].mean(), 0, atol=1e-7)
         assert_allclose(features[:, k].std(), 1, atol=1e-7)
