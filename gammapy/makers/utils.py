@@ -430,20 +430,25 @@ def make_theta_squared_table(
 
     create_off = position_off is None
     for observation in observations:
-        separation = position.separation(observation.events.radec)
+        event_position = observation.events.radec
+        event_time = observation.events.time
+
+        pointing = observation.get_pointing_icrs(event_time)
+
+        separation = position.separation(event_position)
         counts, _ = np.histogram(separation**2, theta_squared_axis.edges)
         table["counts"] += counts
 
         if create_off:
             # Estimate the position of the mirror position
-            pos_angle = observation.pointing_radec.position_angle(position)
-            sep_angle = observation.pointing_radec.separation(position)
-            position_off = observation.pointing_radec.directional_offset_by(
+            pos_angle = pointing.position_angle(position)
+            sep_angle = pointing.separation(position)
+            position_off = pointing.directional_offset_by(
                 pos_angle + Angle(np.pi, "rad"), sep_angle
             )
 
         # Angular distance of the events from the mirror position
-        separation_off = position_off.separation(observation.events.radec)
+        separation_off = position_off.separation(event_position)
 
         # Extract the ON and OFF theta2 distribution from the two positions.
         counts_off, _ = np.histogram(separation_off**2, theta_squared_axis.edges)

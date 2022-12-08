@@ -321,7 +321,6 @@ class FixedPointingInfo:
             from horizontal coordinates to ICRS.
         """
         if self.mode == PointingMode.POINTING:
-            location = location if location is not None else self.location
             return SkyCoord(self._fixed_icrs.data, location=location, obstime=obstime)
 
         if self.mode == PointingMode.DRIFT:

@@ -3,7 +3,6 @@ import logging
 import astropy.units as u
 from astropy.table import Table
 from regions import PointSkyRegion
-from gammapy.data.pointing import PointingMode
 from gammapy.irf import EDispKernelMap, PSFMap, RecoPSFMap
 from gammapy.maps import Map
 from .core import Maker
@@ -233,7 +232,7 @@ class MapDatasetMaker(Maker):
             bkg = bkg.pad(1, mode="edge", axis_name="offset")
 
         return make_map_background_irf(
-            pointing=observation.fixed_pointing_info,
+            pointing=observation.pointing,
             ontime=observation.observation_time_duration,
             bkg=bkg,
             geom=geom,
@@ -344,22 +343,20 @@ class MapDatasetMaker(Maker):
         -------
         meta_table: `~astropy.table.Table`
         """
-        meta_table = Table()
-        meta_table["TELESCOP"] = [observation.aeff.meta.get("TELESCOP", "Unknown")]
-        meta_table["OBS_ID"] = [observation.obs_id]
 
-        if observation.fixed_pointing_info.mode == PointingMode.POINTING:
-            meta_table["OBS_MODE"] = "POINTING"
-            meta_table["RA_PNT"] = [observation.pointing_radec.icrs.ra.deg] * u.deg
-            meta_table["DEC_PNT"] = [observation.pointing_radec.icrs.dec.deg] * u.deg
-        elif observation.fixed_pointing_info.mode == PointingMode.DRIFT:
-            meta_table["OBS_MODE"] = "DRIFT"
-            meta_table["ALT_PNT"] = [
-                observation.fixed_pointing_info.fixed_altaz.alt.deg
-            ] * u.deg
-            meta_table["AZ_PNT"] = [
-                observation.fixed_pointing_info.fixed_altaz.az.deg
-            ] * u.deg
+        row = {}
+        row["TELESCOP"] = observation.aeff.meta.get("TELESCOP", "Unknown")
+        row["OBS_ID"] = observation.obs_id
+
+        row.update(observation.pointing.to_fits_header())
+
+        meta_table = Table([row])
+        if "ALT_PNT" in meta_table.colnames:
+            meta_table["ALT_PNT"].unit = u.deg
+            meta_table["AZ_PNT"].unit = u.deg
+        if "RA_PNT" in meta_table.colnames:
+            meta_table["RA_PNT"].unit = u.deg
+            meta_table["DEC_PNT"].unit = u.deg
 
         return meta_table
 

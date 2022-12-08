@@ -14,7 +14,7 @@ from astropy.units import Quantity
 from astropy.utils import lazyproperty
 import matplotlib.pyplot as plt
 from gammapy import __version__
-from gammapy.utils.deprecation import GammapyDeprecationWarning
+from gammapy.utils.deprecation import GammapyDeprecationWarning, deprecated
 from gammapy.utils.fits import LazyFitsData, earth_location_to_dict
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
@@ -304,7 +304,27 @@ class Observation:
             )
         return meta
 
+    @property
+    def pointing(self):
+        return self._pointing
+
+    def get_pointing_altaz(self, time=None):
+        """Get the pointing in altaz for given time"""
+        if time is None:
+            time = self.obstime
+        return self.pointing.get_altaz(time, self.observatory_earth_location)
+
+    def get_pointing_icrs(self, time=None):
+        """Get the pointing in icrs for given time"""
+        if time is None:
+            time = self.obstime
+        return self.pointing.get_icrs(time, self.observatory_earth_location)
+
     @lazyproperty
+    @deprecated(
+        "v1.1",
+        message="Use observation.pointing or observation.get_pointing_{{altaz,icrs}} instead",
+    )
     def fixed_pointing_info(self):
         """Fixed pointing info for this observation (`FixedPointingInfo`)."""
         if self._pointing is None:
@@ -312,19 +332,18 @@ class Observation:
         return self._pointing
 
     @property
-    def pointing(self):
-        return self._pointing
-
-    @property
+    @deprecated("v1.1", message="Use observation.get_pointing_icrs(time) instead")
     def pointing_radec(self):
         """Pointing RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)."""
         return self.fixed_pointing_info.radec
 
     @property
+    @deprecated("v1.1", message="Use observation.get_pointing_altaz(time) instead")
     def pointing_altaz(self):
         return self.fixed_pointing_info.altaz
 
     @property
+    @deprecated("v1.1", message="Use observation.get_pointing_altaz(time).zen instead")
     def pointing_zen(self):
         """Pointing zenith angle sky (`~astropy.units.Quantity`)."""
         return self.fixed_pointing_info.altaz.zen
@@ -332,7 +351,10 @@ class Observation:
     @property
     def observatory_earth_location(self):
         """Observatory location (`~astropy.coordinates.EarthLocation`)."""
-        return self.fixed_pointing_info.location
+        # for now we catch the deprecation warning until we store location on the observation properly
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=GammapyDeprecationWarning)
+            return self.fixed_pointing_info.location
 
     @lazyproperty
     def target_radec(self):
