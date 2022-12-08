@@ -54,7 +54,8 @@ def test_map_panel_plotter():
     x = np.cos(t)
     y = np.sin(t)
 
-    ax = plt.subplot(111)
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1)
     with mpl_plot_check():
         plot_contour_line(ax, x, y)
 
@@ -79,4 +80,6 @@ def test_plot_theta2_distribution():
     ]:
         table[column] = [1, 1]
 
+    # open a new figure to avoid
+    plt.figure()
     plot_theta_squared_table(table=table)

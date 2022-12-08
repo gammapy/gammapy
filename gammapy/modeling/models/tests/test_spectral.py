@@ -907,7 +907,7 @@ class TestSpectralModelErrorPropagation:
     https://nbviewer.jupyter.org/github/gammapy/gammapy-extra/blob/master/experiments/uncertainty_estimation_prototype.ipynb
     """
 
-    def setup(self):
+    def setup_method(self):
         self.model = LogParabolaSpectralModel(
             amplitude=3.76e-11 * u.Unit("cm-2 s-1 TeV-1"),
             reference=1 * u.TeV,

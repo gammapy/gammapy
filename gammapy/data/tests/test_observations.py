@@ -318,7 +318,7 @@ def test_observation_read_single_file_fixed_rad_max():
 
 @requires_data()
 class TestObservationChecker:
-    def setup(self):
+    def setup_method(self):
         self.data_store = DataStore.from_dir("$GAMMAPY_DATA/cta-1dc/index/gps")
 
     def test_check_all(self):

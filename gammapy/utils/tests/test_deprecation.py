@@ -64,8 +64,10 @@ def test_deprecated_argument():
         res = deprecated_argument_function(a=1, y=2)
         assert res == 3
 
-    with pytest.raises(TypeError):
-        deprecated_argument_function(a=1, x=2, y=2)
+    # this warns first and then raises
+    with pytest.warns(GammapyDeprecationWarning):
+        with pytest.raises(TypeError):
+            deprecated_argument_function(a=1, x=2, y=2)
 
     with pytest.warns(GammapyDeprecationWarning):
         res = deprecated_argument_function_kwarg(old=2)

@@ -304,28 +304,28 @@ class TestSourceCatalogObjectHGPSComponent:
 
 
 class TestSourceCatalogLargeScaleHGPS:
-    def setup(self):
+    @pytest.fixture(scope="class")
+    def model(self):
         table = Table()
         table["GLON"] = [-30, -10, 10, 20] * u.deg
         table["Surface_Brightness"] = [0, 1, 10, 0] * u.Unit("cm-2 s-1 sr-1")
         table["GLAT"] = [-1, 0, 1, 0] * u.deg
         table["Width"] = [0.4, 0.5, 0.3, 1.0] * u.deg
-        self.table = table
-        self.model = SourceCatalogLargeScaleHGPS(table)
+        return SourceCatalogLargeScaleHGPS(table)
 
-    def test_evaluate(self):
+    def test_evaluate(self, model):
         x = np.linspace(-100, 20, 5)
         y = np.linspace(-2, 2, 7)
         x, y = np.meshgrid(x, y)
         coords = SkyCoord(x, y, unit="deg", frame="galactic")
-        image = self.model.evaluate(coords)
+        image = model.evaluate(coords)
         desired = 1.223962643740966 * u.Unit("cm-2 s-1 sr-1")
         assert_quantity_allclose(image.sum(), desired)
 
-    def test_parvals(self):
+    def test_parvals(self, model):
         glon = Angle(10, unit="deg")
         assert_quantity_allclose(
-            self.model.peak_brightness(glon), 10 * u.Unit("cm-2 s-1 sr-1")
+            model.peak_brightness(glon), 10 * u.Unit("cm-2 s-1 sr-1")
         )
-        assert_quantity_allclose(self.model.peak_latitude(glon), 1 * u.deg)
-        assert_quantity_allclose(self.model.width(glon), 0.3 * u.deg)
+        assert_quantity_allclose(model.peak_latitude(glon), 1 * u.deg)
+        assert_quantity_allclose(model.width(glon), 0.3 * u.deg)

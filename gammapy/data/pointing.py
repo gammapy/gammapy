@@ -199,7 +199,7 @@ class FixedPointingInfo:
         try:
             frame = self.altaz_frame
         except KeyError:
-            log.warn(
+            log.warning(
                 "Location or time information missing,"
                 " using ALT_PNT/AZ_PNT and incomplete frame"
             )

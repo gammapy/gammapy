@@ -1,6 +1,6 @@
 from itertools import product
 import numpy as np
-from scipy.ndimage.measurements import label as ndi_label
+from scipy.ndimage import label as ndi_label
 from astropy import units as u
 from astropy.io import fits
 from astropy.nddata import block_reduce

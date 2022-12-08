@@ -27,3 +27,10 @@ exclude = '''
   | gammapy/extern
 )/
 '''
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "error::astropy.utils.exceptions.AstropyDeprecationWarning",
+    "error::gammapy.utils.deprecation.GammapyDeprecationWarning",
+    "error::matplotlib.MatplotlibDeprecationWarning",
+]
