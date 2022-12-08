@@ -67,5 +67,4 @@ def test_run(observations, phase_bkg_maker):
     ],
 )
 def test_check_phase_intervals(pars):
-    #assert PhaseBackgroundMaker._check_intervals(pars["p_in"]) == pars["p_out"]
     assert_allclose(PhaseBackgroundMaker._check_intervals(pars["p_in"]), pars["p_out"], rtol = 1e-5)
