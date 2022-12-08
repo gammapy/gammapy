@@ -105,13 +105,13 @@ class PhaseBackgroundMaker(Maker):
 
         acceptance_off = RegionNDMap.from_geom(geom=dataset.counts.geom)
         acceptance_off.data = np.sum([_[1] - _[0] for _ in self.off_phase])
-        
+
         dataset_on_off = SpectrumDatasetOnOff.from_spectrum_dataset(
-            dataset=dataset,                
+            dataset=dataset,
             counts_off=counts_off,
             acceptance=acceptance,
             acceptance_off=acceptance_off,
-            )
+        )
         dataset_on_off.counts = counts
         return dataset_on_off
 
