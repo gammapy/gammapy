@@ -250,7 +250,8 @@ class Observation:
         return self.gti.time_stop[0]
 
     @property
-    def obstime(self):
+    def tmid(self):
+        """Midpoint between start and stop time"""
         return self.tstart + 0.5 * (self.tstart - self.tstop)
 
     @property
@@ -311,13 +312,13 @@ class Observation:
     def get_pointing_altaz(self, time=None):
         """Get the pointing in altaz for given time"""
         if time is None:
-            time = self.obstime
+            time = self.tmid
         return self.pointing.get_altaz(time, self.observatory_earth_location)
 
     def get_pointing_icrs(self, time=None):
         """Get the pointing in icrs for given time"""
         if time is None:
-            time = self.obstime
+            time = self.tmid
         return self.pointing.get_icrs(time, self.observatory_earth_location)
 
     @lazyproperty

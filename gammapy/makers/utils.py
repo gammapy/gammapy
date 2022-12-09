@@ -431,7 +431,7 @@ def make_theta_squared_table(
     create_off = position_off is None
     for observation in observations:
         event_position = observation.events.radec
-        pointing = observation.get_pointing_icrs(observation.obstime)
+        pointing = observation.get_pointing_icrs(observation.tmid)
 
         separation = position.separation(event_position)
         counts, _ = np.histogram(separation**2, theta_squared_axis.edges)
