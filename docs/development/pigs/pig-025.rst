@@ -2,6 +2,7 @@
 
 .. _pig-xxx:
 
+
 **********************************
 PIG xxx - Unbinned Dataset
 **********************************
@@ -60,6 +61,8 @@ EventDataset:
 * We need a maker class
 * Models
 * unbinned likelihood (stat_sum)
+`$-2 \\log \\mathcal{L} =  2 N_{pred} - 2 \\sum_{i} \\log \\phi( E_i, \\vec{r}_i )$`
+    
 * Binned Dataset functionality: create, downsample (the IRFs), pad, plotting, .to and .from methods, ...
 * No need for slices
 
