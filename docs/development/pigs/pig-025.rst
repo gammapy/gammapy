@@ -4,7 +4,7 @@
 
 
 **********************************
-PIG xxx - Unbinned Dataset
+PIG 025 - Unbinned Dataset
 **********************************
 
 * Author: Giacomo D'Amico, Julia Djuvsland, Tim Unbehaun (in alphabetical order)
