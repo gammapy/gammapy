@@ -60,6 +60,7 @@ class GTI:
 
     def __init__(self, table):
         self.table = table
+        self._time_ref = time_ref_from_dict(self.table.meta)
 
     def copy(self):
         return copy.deepcopy(self)
@@ -162,7 +163,7 @@ class GTI:
     @property
     def time_ref(self):
         """Time reference (`~astropy.time.Time`)."""
-        return time_ref_from_dict(self.table.meta)
+        return self._time_ref
 
     @property
     def time_sum(self):
