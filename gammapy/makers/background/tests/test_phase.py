@@ -63,8 +63,10 @@ def test_run(observations, phase_bkg_maker):
         {"p_in": [[0.9, 0.1]], "p_out": [[0.9, 1], [0, 0.1]]},
         {"p_in": [[-0.2, 0.1]], "p_out": [[0.8, 1], [0, 0.1]]},
         {"p_in": [[0.8, 1.2]], "p_out": [[0.8, 1], [0, 0.2]]},
-        {"p_in": [[0.2, 0.4], [0.8, 0.9]], "p_out":[[0.2, 0.4], [0.8, 0.9]]}, 
+        {"p_in": [[0.2, 0.4], [0.8, 0.9]], "p_out": [[0.2, 0.4], [0.8, 0.9]]},
     ],
 )
 def test_check_phase_intervals(pars):
-    assert_allclose(PhaseBackgroundMaker._check_intervals(pars["p_in"]), pars["p_out"], rtol = 1e-5)
+    assert_allclose(
+        PhaseBackgroundMaker._check_intervals(pars["p_in"]), pars["p_out"], rtol=1e-5
+    )
