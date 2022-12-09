@@ -44,5 +44,5 @@ def test_test_statistic_link(fermi_datasets):
     )
     ts = ts_eval.run(fermi_datasets)
 
-    assert_allclose(ts, 0.003118, rtol=1e-4)
+    assert ts < ts_eval.ts_threshold
     assert_allclose(model2.spectral_model.alpha.value, model.spectral_model.alpha.value)
