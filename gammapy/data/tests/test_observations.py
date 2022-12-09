@@ -6,13 +6,11 @@ import astropy.units as u
 from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.time import Time
 from astropy.units import Quantity
-from gammapy.maps import MapCoord
 from gammapy.data import DataStore, Observation
 from gammapy.irf import PSF3D, load_irf_dict_from_file
 from gammapy.data.pointing import FixedPointingInfo, PointingMode
 from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.utils.fits import HDULocation
-from gammapy.estimators.utils import hierarchical_clustering
 from gammapy.utils.testing import (
     assert_skycoord_allclose,
     assert_time_allclose,
@@ -436,6 +434,22 @@ def test_observations_clustering(data_store):
 
     n_features = len(names)
     assert features.shape == (len(observations), n_features)
+
+    ind_clusters, features = hierarchical_clustering(
+        features, linkage_kwargs={"method": "complete"}, fcluster_kwargs={"t": 2}
+    )
+
+    assert np.all(
+        ind_clusters
+        == np.array(
+            [
+                1,
+                1,
+                2,
+                2,
+            ]
+        )
+    )
 
     ind_clusters, features = hierarchical_clustering(features, standard_scaler=True)
 
