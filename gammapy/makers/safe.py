@@ -102,7 +102,9 @@ class SafeMaskMaker(Maker):
         if observation is None:
             raise ValueError("Method 'offset-max' requires an observation object.")
 
-        separation = dataset._geom.separation(observation.pointing_radec)
+        separation = dataset._geom.separation(
+            observation.get_pointing_icrs(observation.tmid)
+        )
         return separation < self.offset_max
 
     @staticmethod
@@ -163,7 +165,9 @@ class SafeMaskMaker(Maker):
 
         if self.fixed_offset is not None:
             if observation:
-                position = observation.pointing_radec.directional_offset_by(
+                position = observation.get_pointing_icrs(
+                    observation.tmid
+                ).directional_offset_by(
                     position_angle=0.0 * u.deg, separation=self.fixed_offset
                 )
             else:
@@ -221,7 +225,8 @@ class SafeMaskMaker(Maker):
 
         if self.fixed_offset is not None:
             if observation:
-                position = observation.pointing_radec.directional_offset_by(
+                pointing = observation.get_pointing_icrs(observation.tmid)
+                position = pointing.directional_offset_by(
                     position_angle=0 * u.deg, separation=self.fixed_offset
                 )
             else:

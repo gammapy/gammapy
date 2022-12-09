@@ -60,7 +60,7 @@ def obs_dataset(geom, observation):
 
     reference = MapDataset.create(geom)
     cutout = reference.cutout(
-        observation.pointing_radec, width="4 deg", name="test-fov"
+        observation.get_pointing_icrs(observation.tmid), width="4 deg", name="test-fov"
     )
 
     dataset = map_dataset_maker.run(cutout, observation)

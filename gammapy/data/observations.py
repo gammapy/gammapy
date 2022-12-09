@@ -79,6 +79,7 @@ class Observation:
         events=None,
         obs_filter=None,
         pointing=None,
+        location=None,
     ):
         self.obs_id = obs_id
         self._obs_info = obs_info
@@ -90,6 +91,7 @@ class Observation:
         self._gti = gti
         self._events = events
         self._pointing = pointing
+        self._location = location
         self.obs_filter = obs_filter or ObservationFilter()
 
     @property
@@ -237,6 +239,7 @@ class Observation:
             psf=irfs.get("psf"),
             rad_max=irfs.get("rad_max"),
             pointing=pointing,
+            location=location,
         )
 
     @property
@@ -307,6 +310,8 @@ class Observation:
 
     @property
     def pointing(self):
+        if self._pointing is None:
+            self._pointing = FixedPointingInfo.from_fits_header(self.obs_info)
         return self._pointing
 
     def get_pointing_altaz(self, time=None):
@@ -328,8 +333,6 @@ class Observation:
     )
     def fixed_pointing_info(self):
         """Fixed pointing info for this observation (`FixedPointingInfo`)."""
-        if self._pointing is None:
-            self._pointing = FixedPointingInfo.from_fits_header(self.obs_info)
         return self._pointing
 
     @property
@@ -347,11 +350,14 @@ class Observation:
     @deprecated("v1.1", message="Use observation.get_pointing_altaz(time).zen instead")
     def pointing_zen(self):
         """Pointing zenith angle sky (`~astropy.units.Quantity`)."""
-        return self.fixed_pointing_info.altaz.zen
+        return self.get_pointing_altaz(self.tmid).zen
 
     @property
     def observatory_earth_location(self):
         """Observatory location (`~astropy.coordinates.EarthLocation`)."""
+        if self._location is not None:
+            return self._location
+
         # for now we catch the deprecation warning until we store location on the observation properly
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=GammapyDeprecationWarning)
@@ -372,8 +378,9 @@ class Observation:
         return self.obs_info.get("MUONEFF", 1)
 
     def __str__(self):
-        ra = self.pointing_radec.ra.deg
-        dec = self.pointing_radec.dec.deg
+        pointing = self.get_pointing_icrs(self.tmid)
+        ra = pointing.ra.deg
+        dec = pointing.dec.deg
 
         pointing = f"{ra:.1f} deg, {dec:.1f} deg\n"
         # TODO: Which target was observed?
@@ -592,7 +599,11 @@ class Observation:
             argnames.remove("self")
 
             for name in argnames:
-                value = getattr(self, name)
+                if name == "location":
+                    attr = "observatory_earth_location"
+                else:
+                    attr = name
+                value = getattr(self, attr)
                 kwargs.setdefault(name, copy.deepcopy(value))
             return self.__class__(**kwargs)
 

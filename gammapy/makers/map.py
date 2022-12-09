@@ -171,7 +171,7 @@ class MapDatasetMaker(Maker):
                 geom=geom,
             )
         return make_map_exposure_true_energy(
-            pointing=observation.pointing_radec,
+            pointing=observation.get_pointing_icrs(observation.tmid),
             livetime=observation.observation_live_time_duration,
             aeff=observation.aeff,
             geom=geom,
@@ -195,7 +195,7 @@ class MapDatasetMaker(Maker):
             Exposure map.
         """
         return make_map_exposure_true_energy(
-            pointing=observation.pointing_radec,
+            pointing=observation.get_pointing_icrs(observation.tmid),
             livetime=observation.observation_live_time_duration,
             aeff=observation.aeff,
             geom=geom,
@@ -238,7 +238,7 @@ class MapDatasetMaker(Maker):
             geom=geom,
             oversampling=self.background_oversampling,
             use_region_center=use_region_center,
-            obstime=observation.obstime,
+            obstime=observation.tmid,
         )
 
     def make_edisp(self, geom, observation):
@@ -262,7 +262,7 @@ class MapDatasetMaker(Maker):
 
         return make_edisp_map(
             edisp=observation.edisp,
-            pointing=observation.pointing_radec,
+            pointing=observation.get_pointing_icrs(observation.tmid),
             geom=geom,
             exposure_map=exposure,
             use_region_center=use_region_center,
@@ -294,7 +294,7 @@ class MapDatasetMaker(Maker):
 
         return make_edisp_kernel_map(
             edisp=observation.edisp,
-            pointing=observation.pointing_radec,
+            pointing=observation.get_pointing_icrs(observation.tmid),
             geom=geom,
             exposure_map=exposure,
             use_region_center=use_region_center,
@@ -325,7 +325,7 @@ class MapDatasetMaker(Maker):
 
         return make_psf_map(
             psf=psf,
-            pointing=observation.pointing_radec,
+            pointing=observation.get_pointing_icrs(observation.tmid),
             geom=geom,
             exposure_map=exposure,
         )

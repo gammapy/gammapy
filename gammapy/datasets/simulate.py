@@ -2,7 +2,7 @@
 """Simulate observations"""
 import numpy as np
 import astropy.units as u
-from astropy.coordinates import AltAz, SkyCoord, SkyOffsetFrame
+from astropy.coordinates import SkyCoord, SkyOffsetFrame
 from astropy.table import Table
 import gammapy
 from gammapy.data import EventList, observatory_locations
@@ -202,7 +202,7 @@ class MapDatasetEventSampler:
             Event list with columns of event detector coordinates.
         """
         sky_coord = SkyCoord(events.table["RA"], events.table["DEC"], frame="icrs")
-        frame = SkyOffsetFrame(origin=observation.pointing_radec.icrs)
+        frame = SkyOffsetFrame(origin=observation.get_pointing_icrs(observation.tmid))
         pseudo_fov_coord = sky_coord.transform_to(frame)
 
         events.table["DETX"] = pseudo_fov_coord.lon
@@ -248,8 +248,9 @@ class MapDatasetEventSampler:
         meta["LIVETIME"] = observation.observation_live_time_duration.to("s").value
         meta["DEADC"] = 1 - observation.observation_dead_time_fraction
 
-        meta["RA_PNT"] = observation.pointing_radec.icrs.ra.deg
-        meta["DEC_PNT"] = observation.pointing_radec.icrs.dec.deg
+        fixed_icrs = observation.pointing.fixed_icrs
+        meta["RA_PNT"] = fixed_icrs.ra.deg
+        meta["DEC_PNT"] = fixed_icrs.dec.deg
 
         meta["EQUINOX"] = "J2000"
         meta["RADECSYS"] = "icrs"
@@ -273,7 +274,7 @@ class MapDatasetEventSampler:
         offset_max = np.max(dataset._geom.width).to_value("deg")
         meta[
             "DSVAL3"
-        ] = f"CIRCLE({observation.pointing_radec.ra.deg},{observation.pointing_radec.dec.deg},{offset_max})"  # noqa: E501
+        ] = f"CIRCLE({fixed_icrs.ra.deg},{fixed_icrs.dec.deg},{offset_max})"  # noqa: E501
         meta["DSUNI3"] = "deg             "
         meta["NDSKEYS"] = " 3 "
 
@@ -318,8 +319,7 @@ class MapDatasetEventSampler:
             loc = observatory_locations[telescope.lower()]
 
         # this is not really correct but maybe OK for now
-        altaz_frame = AltAz(obstime=dataset.gti.time_start, location=loc)
-        coord_altaz = observation.pointing_radec.transform_to(altaz_frame)
+        coord_altaz = observation.pointing.get_altaz(dataset.gti.time_start, loc)
 
         meta["ALT_PNT"] = str(coord_altaz.alt.deg[0])
         meta["AZ_PNT"] = str(coord_altaz.az.deg[0])
