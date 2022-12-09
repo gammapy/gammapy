@@ -252,7 +252,7 @@ class Observation:
     @property
     def tmid(self):
         """Midpoint between start and stop time"""
-        return self.tstart + 0.5 * (self.tstart - self.tstop)
+        return self.tstart + 0.5 * (self.tstop - self.tstart)
 
     @property
     def observation_time_duration(self):

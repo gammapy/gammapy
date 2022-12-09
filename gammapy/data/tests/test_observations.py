@@ -386,3 +386,16 @@ def test_obervation_copy(data_store):
     obs_copy = obs.copy(obs_id=1234, in_memory=True)
     assert isinstance(obs_copy.__dict__["psf"], PSF3D)
     assert obs_copy.obs_id == 1234
+
+
+def test_observation_tmid():
+    from gammapy.data import GTI
+
+    start = Time("2020-01-01T20:00:00")
+    stop = Time("2020-01-01T20:10:00")
+    expected = Time("2020-01-01T20:05:00")
+    epoch = Time("2020-01-01T00:00:00")
+
+    gti = GTI.create([(start - epoch).to(u.s)], [(stop - epoch).to(u.s)], epoch)
+    obs = Observation(gti=gti)
+    assert abs(obs.tmid - expected).to(u.ns) < 1 * u.us
