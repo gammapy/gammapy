@@ -314,16 +314,12 @@ class Observation:
             self._pointing = FixedPointingInfo.from_fits_header(self.obs_info)
         return self._pointing
 
-    def get_pointing_altaz(self, time=None):
+    def get_pointing_altaz(self, time):
         """Get the pointing in altaz for given time"""
-        if time is None:
-            time = self.tmid
         return self.pointing.get_altaz(time, self.observatory_earth_location)
 
-    def get_pointing_icrs(self, time=None):
+    def get_pointing_icrs(self, time):
         """Get the pointing in icrs for given time"""
-        if time is None:
-            time = self.tmid
         return self.pointing.get_icrs(time, self.observatory_earth_location)
 
     @lazyproperty
