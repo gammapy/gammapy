@@ -7,7 +7,7 @@ from gammapy.datasets import (
     SpectrumDataset,
     SpectrumDatasetOnOff,
 )
-from gammapy.maps import RegionNDMap, WcsNDMap
+from gammapy.maps import Map
 from ..core import Maker
 
 __all__ = ["PhaseBackgroundMaker"]
@@ -43,20 +43,17 @@ class PhaseBackgroundMaker(Maker):
         return s
 
     @staticmethod
-    def _make_counts(self, dataset, observation, phases):
+    def _make_counts(dataset, observation, phases, column_name):
 
         event_lists = []
         for interval in phases:
             events = observation.events.select_parameter(
-                parameter=self.column_name, band=interval
+                parameter=column_name, band=interval
             )
             event_lists.append(events)
 
         events = EventList.from_stack(event_lists)
-        if isinstance(dataset, SpectrumDataset):
-            counts = RegionNDMap.from_geom(dataset.counts.geom)
-        elif isinstance(dataset, MapDataset):
-            counts = WcsNDMap.from_geom(dataset.counts.geom)
+        counts = Map.from_geom(dataset.counts.geom)
         counts.fill_events(events)
         return counts
 
@@ -75,7 +72,7 @@ class PhaseBackgroundMaker(Maker):
         counts_off : `RegionNDMap`
             Off counts.
         """
-        return self._make_counts(self, dataset, observation, self.off_phase)
+        return self._make_counts(dataset, observation, self.off_phase, self.column_name)
 
     def make_counts(self, dataset, observation):
         """Make on counts.
@@ -92,7 +89,7 @@ class PhaseBackgroundMaker(Maker):
         counts : `RegionNDMap`
             On counts.
         """
-        return self._make_counts(self, dataset, observation, self.on_phase)
+        return self._make_counts(dataset, observation, self.on_phase, self.column_name)
 
     def run(self, dataset, observation):
         """Run all steps.
@@ -112,13 +109,13 @@ class PhaseBackgroundMaker(Maker):
         counts_off = self.make_counts_off(dataset, observation)
         counts = self.make_counts(dataset, observation)
 
+        acceptance = Map.from_geom(geom=dataset.counts.geom)
+        acceptance.data = np.sum([_[1] - _[0] for _ in self.on_phase])
+
+        acceptance_off = Map.from_geom(geom=dataset.counts.geom)
+        acceptance_off.data = np.sum([_[1] - _[0] for _ in self.off_phase])
+
         if isinstance(dataset, SpectrumDataset):
-            acceptance = RegionNDMap.from_geom(geom=dataset.counts.geom)
-            acceptance.data = np.sum([_[1] - _[0] for _ in self.on_phase])
-
-            acceptance_off = RegionNDMap.from_geom(geom=dataset.counts.geom)
-            acceptance_off.data = np.sum([_[1] - _[0] for _ in self.off_phase])
-
             dataset_on_off = SpectrumDatasetOnOff.from_spectrum_dataset(
                 dataset=dataset,
                 counts_off=counts_off,
@@ -129,12 +126,6 @@ class PhaseBackgroundMaker(Maker):
             return dataset_on_off
 
         elif isinstance(dataset, MapDataset):
-            acceptance = WcsNDMap.from_geom(geom=dataset.counts.geom)
-            acceptance.data = np.sum([_[1] - _[0] for _ in self.on_phase])
-
-            acceptance_off = WcsNDMap.from_geom(geom=dataset.counts.geom)
-            acceptance_off.data = np.sum([_[1] - _[0] for _ in self.off_phase])
-
             dataset_on_off = MapDatasetOnOff.from_map_dataset(
                 dataset=dataset,
                 counts_off=counts_off,
