@@ -1,11 +1,11 @@
 .. include:: ../../references.txt
 
-.. _pig-xxx:
+.. _pig-025:
 
 
-**********************************
+**************************
 PIG 025 - Unbinned Dataset
-**********************************
+**************************
 
 * Author: Giacomo D'Amico, Julia Djuvsland, Tim Unbehaun (in alphabetical order)
 * Created: May 9, 2022
@@ -18,10 +18,10 @@ Abstract
 
 Our goal is to be able to perform an unbinned analysis using gammapy.
 To this end we like to propose to add a new EventDataset class with a dedicated fit
-statistic and an EventDatasetEvaluator to compute the differential model flux at each event's position.
+statistic and an EventDatasetEvaluator to compute the differential model prediction (flux) at each event's reconstructed coordinates.
 
 Motivation
-==============
+==========
 Unbinned data analyses can provide several advantages compared to binned analyses. Firstly, 
 they can be useful when very narrow features of a spectrum are expected. Then an unbinned 
 fit can provide more information than a binned one, as the latter one can't be more precise 
@@ -36,12 +36,12 @@ currently existing gammapy datasets (as we propose here) therefore gives the use
 choose the appropriate data structure according to their needs with the potential to save computing costs.
 
 Use cases
-==============
+=========
 
 The EventDataset still contains all the reconstructed properties of the events (energy, position, time) and can therefore be used for
 
-**********************************
-**********************************
+****************************************
+****************************************
 
 * Spectral analysis with narrow features
 * Pulsar analysis
@@ -84,13 +84,13 @@ the fit statistics (stat_sum) as the likelihood for the unbinned fit is differen
 the binned version.
 
 Status
-==============
+======
 We are working on it :)
 
 
 Outlook
-==============
+=======
 
 
 Decision
-==============
+========
