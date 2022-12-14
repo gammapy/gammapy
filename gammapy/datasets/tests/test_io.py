@@ -103,5 +103,6 @@ def test_spectrum_datasets_to_io(tmp_path):
     assert len(datasets_read) == 2
 
     assert datasets_read[0].counts.data.sum() == 18429
-    assert_allclose(datasets_read[0].exposure.data.sum(), 2.034089e10, atol=0.1)
+    print(datasets_read[0].exposure.data.sum())
+    assert_allclose(datasets_read[0].exposure.data.sum(), 2.0340896e10, atol=0.1)
     assert isinstance(datasets_read[0], SpectrumDataset)
