@@ -335,6 +335,16 @@ def test_to_spectrum_dataset(sky_model, geom, geom_etrue, edisp_mode):
     assert_allclose(spectrum_dataset.exposure.data[1], 3.070884e09, rtol=1e-5)
     assert_allclose(spectrum_dataset_corrected.exposure.data[1], 2.05201e09, rtol=1e-5)
 
+    # Test with a region that is half contained in the geom
+    skydir = SkyCoord(
+        geom.center_skydir.ra + geom.width[0][0] / 2,
+        geom.center_skydir.dec,
+        frame="icrs",
+    )
+    on_region = CircleSkyRegion(center=skydir, radius=0.5 * u.deg)
+    spectrum_dataset = dataset_ref.to_spectrum_dataset(on_region)
+    assert_allclose(spectrum_dataset.exposure.data[1], 3.025143e09, rtol=1e-5)
+
 
 @requires_data()
 def test_energy_range(sky_model, geom1, geom_etrue):
