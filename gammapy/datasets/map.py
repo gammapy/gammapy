@@ -1471,6 +1471,14 @@ class MapDataset(Dataset):
         """
         from .spectrum import SpectrumDataset
 
+        if self.geoms["geom"].is_region and on_region is not None:
+            raise TypeError(
+                " `on_region` "
+                "argument is not supported for datasets with "
+                " `RegionGeom` "
+                "geometry."
+            )
+
         dataset = self.to_region_map_dataset(region=on_region, name=name)
 
         if containment_correction:
@@ -1548,7 +1556,22 @@ class MapDataset(Dataset):
             )
 
         if self.exposure:
-            kwargs["exposure"] = self.exposure.to_region_nd_map(region, func=np.mean)
+            geom = self.geoms["geom_exposure"]
+            if geom.is_region:
+                weights = None
+            else:
+                solid_angle_per_bin = geom.solid_angle()
+                if region is None:
+                    solid_angle_region = solid_angle_per_bin[0].sum()
+                else:
+                    region_mask = geom.region_mask(region).data
+                    solid_angle_region = (solid_angle_per_bin * region_mask)[0].sum()
+                weights = Map.from_geom(
+                    geom, data=solid_angle_per_bin / solid_angle_region, unit=""
+                )
+            kwargs["exposure"] = self.exposure.to_region_nd_map(
+                region, func=np.sum, weights=weights
+            )
 
         region = region.center if region else None
 
