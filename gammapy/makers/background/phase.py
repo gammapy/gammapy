@@ -19,31 +19,31 @@ class PhaseBackgroundMaker(Maker):
         on-phase defined by the two edges of each interval (edges are excluded).
     off_phase : `tuple` or list of tuples
         off-phase defined by the two edges of each interval (edges are excluded).
-    column_name : `str`
+    phase_column_name : `str`
         The name of the column in the event file from which the phase informations are extracted. Default is 'PHASE'.
     """
 
     tag = "PhaseBackgroundMaker"
 
-    def __init__(self, on_phase, off_phase, column_name="PHASE"):
+    def __init__(self, on_phase, off_phase, phase_column_name="PHASE"):
         self.on_phase = self._check_intervals(on_phase)
         self.off_phase = self._check_intervals(off_phase)
-        self.column_name = column_name
+        self.phase_column_name = phase_column_name
 
     def __str__(self):
         s = self.__class__.__name__
         s += f"\nOn phase interval : {self.on_phase}"
         s += f"\nOff phase interval : {self.off_phase}"
-        s += f"\nPhase column name : {self.column_name}"
+        s += f"\nPhase column name : {self.phase_column_name}"
         return s
 
     @staticmethod
-    def _make_counts(dataset, observation, phases, column_name):
+    def _make_counts(dataset, observation, phases, phase_column_name):
 
         event_lists = []
         for interval in phases:
             events = observation.events.select_parameter(
-                parameter=column_name, band=interval
+                parameter=phase_column_name, band=interval
             )
             event_lists.append(events)
 
@@ -67,7 +67,9 @@ class PhaseBackgroundMaker(Maker):
         counts_off : `RegionNDMap`
             Off counts.
         """
-        return self._make_counts(dataset, observation, self.off_phase, self.column_name)
+        return self._make_counts(
+            dataset, observation, self.off_phase, self.phase_column_name
+        )
 
     def make_counts(self, dataset, observation):
         """Make on counts.
@@ -84,7 +86,9 @@ class PhaseBackgroundMaker(Maker):
         counts : `RegionNDMap`
             On counts.
         """
-        return self._make_counts(dataset, observation, self.on_phase, self.column_name)
+        return self._make_counts(
+            dataset, observation, self.on_phase, self.phase_column_name
+        )
 
     def run(self, dataset, observation):
         """Run all steps.
