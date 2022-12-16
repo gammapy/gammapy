@@ -1,12 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from gammapy.data import EventList
-from gammapy.datasets import (
-    MapDataset,
-    MapDatasetOnOff,
-    SpectrumDataset,
-    SpectrumDatasetOnOff,
-)
+from gammapy.datasets import MapDatasetOnOff, SpectrumDataset
 from gammapy.maps import Map
 from ..core import Maker
 
@@ -115,25 +110,18 @@ class PhaseBackgroundMaker(Maker):
         acceptance_off = Map.from_geom(geom=dataset.counts.geom)
         acceptance_off.data = np.sum([_[1] - _[0] for _ in self.off_phase])
 
-        if isinstance(dataset, SpectrumDataset):
-            dataset_on_off = SpectrumDatasetOnOff.from_spectrum_dataset(
-                dataset=dataset,
-                counts_off=counts_off,
-                acceptance=acceptance,
-                acceptance_off=acceptance_off,
-            )
-            dataset_on_off.counts = counts
-            return dataset_on_off
+        dataset_on_off = MapDatasetOnOff.from_map_dataset(
+            dataset=dataset,
+            counts_off=counts_off,
+            acceptance=acceptance,
+            acceptance_off=acceptance_off,
+        )
+        dataset_on_off.counts = counts
 
-        elif isinstance(dataset, MapDataset):
-            dataset_on_off = MapDatasetOnOff.from_map_dataset(
-                dataset=dataset,
-                counts_off=counts_off,
-                acceptance=acceptance,
-                acceptance_off=acceptance_off,
-            )
-            dataset_on_off.counts = counts
-            return dataset_on_off
+        if isinstance(dataset, SpectrumDataset):
+            dataset_on_off = dataset_on_off.to_spectrum_dataset(dataset._geom.region)
+
+        return dataset_on_off
 
     @staticmethod
     def _check_intervals(intervals):
