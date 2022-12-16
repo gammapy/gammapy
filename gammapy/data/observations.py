@@ -736,9 +736,9 @@ class Observations(collections.abc.MutableSequence):
                 )
                 energy_true = coord["energy_true"][0]
                 edisp_kernel = obs.edisp.to_edisp_kernel(offset)
-                if name == "edisp-res":
-                    features[ko, kf] = edisp_kernel.get_bias(energy_true)
                 if name == "edisp-bias":
+                    features[ko, kf] = edisp_kernel.get_bias(energy_true)
+                if name == "edisp-res":
                     features[ko, kf] = edisp_kernel.get_resolution(energy_true)
                 if name == "psf-radius":
                     psf_radius = obs.psf.containment_radius(
