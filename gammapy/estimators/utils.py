@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
-import scipy.ndimage
 import scipy.cluster.hierarchy as sch
+import scipy.ndimage
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
@@ -14,7 +14,12 @@ from gammapy.modeling.models import (
     SkyModel,
 )
 
-__all__ = ["estimate_exposure_reco_energy", "find_peaks", "resample_energy_edges"]
+__all__ = [
+    "estimate_exposure_reco_energy",
+    "find_peaks",
+    "hierarchical_clustering",
+    "resample_energy_edges",
+]
 
 
 def find_peaks(image, threshold, min_distance=1):

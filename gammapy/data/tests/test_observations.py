@@ -10,6 +10,7 @@ from gammapy.data import DataStore, Observation
 from gammapy.irf import PSF3D, load_irf_dict_from_file
 from gammapy.data.pointing import FixedPointingInfo, PointingMode
 from gammapy.utils.deprecation import GammapyDeprecationWarning
+from gammapy.data.utils import get_irfs_features
 from gammapy.utils.fits import HDULocation
 from gammapy.utils.testing import (
     assert_skycoord_allclose,
@@ -430,7 +431,7 @@ def test_observations_clustering(data_store):
     coord_dict = dict(lon=83.63308, lat=22.01450, energy_true="1 TeV")
     coord = MapCoord(coord_dict, frame="icrs")
     names = ["edisp-bias", "edisp-res", "psf-radius"]
-    features = observations.get_features(coord, names)
+    features = get_irfs_features(observations, coord, names)
 
     n_features = len(names)
     assert features.shape == (len(observations), n_features)
