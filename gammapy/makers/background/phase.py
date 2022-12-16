@@ -16,11 +16,11 @@ class PhaseBackgroundMaker(Maker):
     Parameters
     ----------
     on_phase : `tuple` or list of tuples
-        on-phase defined by the two edges of each interval (edges are excluded)
+        on-phase defined by the two edges of each interval (edges are excluded).
     off_phase : `tuple` or list of tuples
-        off-phase defined by the two edges of each interval (edges are excluded)
+        off-phase defined by the two edges of each interval (edges are excluded).
     column_name : `str`
-        The name of the column in the event file from which the phase informations are extracted
+        The name of the column in the event file from which the phase informations are extracted. Default is 'PHASE'.
     """
 
     tag = "PhaseBackgroundMaker"
@@ -32,9 +32,9 @@ class PhaseBackgroundMaker(Maker):
 
     def __str__(self):
         s = self.__class__.__name__
-        s += f"\n{self.on_phase}"
-        s += f"\n{self.off_phase}"
-        s += f"\n{self.column_name}"
+        s += f"\nOn phase interval : {self.on_phase}"
+        s += f"\nOff phase interval : {self.off_phase}"
+        s += f"\nPhase column name : {self.column_name}"
         return s
 
     @staticmethod
