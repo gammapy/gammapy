@@ -32,7 +32,7 @@ class JFactory:
 
         .. math::
             \frac{\mathrm d J}{\mathrm d \Omega} =
-            \int_{\mathrm{LoS}} \mathrm d r \rho(r)^2
+            \int_{\mathrm{LoS}} \mathrm d l \rho(l)^2
         """
         separation = self.geom.separation(self.geom.center_skydir).rad
         rmin = u.Quantity(
