@@ -32,14 +32,14 @@ class JFactory:
 
         .. math::
             \frac{\mathrm d J}{\mathrm d \Omega} =
-            \int_{\mathrm{LoS}} \mathrm d r \rho(r)
+            \int_{\mathrm{LoS}} \mathrm d r \rho(r)^2
         """
         separation = self.geom.separation(self.geom.center_skydir).rad
         rmin = u.Quantity(
             value=np.tan(separation) * self.distance, unit=self.distance.unit
         )
         rmax = self.distance
-        jfact = [
+        val = [
             (
                 2
                 * self.profile.integral(
@@ -55,11 +55,13 @@ class JFactory:
                     ndecade,
                 )
             )
-            for _ in rmin.flatten()
+            for _ in rmin.ravel()
         ]
+        jfact = u.Quantity(val).to("GeV2 cm-5").reshape(rmin.shape)
+        print(type(jfact))
         return jfact / u.steradian
 
-    def compute_jfactor(self):
+    def compute_jfactor(self, ndecade=1e4):
         r"""Compute astrophysical J-Factor.
 
         .. math::
@@ -67,5 +69,5 @@ class JFactory:
            \int_{\Delta\Omega} \mathrm d \Omega^{\prime}
            \frac{\mathrm d J}{\mathrm d \Omega^{\prime}}
         """
-        diff_jfact = self.compute_differential_jfactor()
+        diff_jfact = self.compute_differential_jfactor(ndecade)
         return diff_jfact * self.geom.to_image().solid_angle()
