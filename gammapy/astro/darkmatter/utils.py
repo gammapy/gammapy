@@ -58,7 +58,6 @@ class JFactory:
             for _ in rmin.ravel()
         ]
         jfact = u.Quantity(val).to("GeV2 cm-5").reshape(rmin.shape)
-        print(type(jfact))
         return jfact / u.steradian
 
     def compute_jfactor(self, ndecade=1e4):
