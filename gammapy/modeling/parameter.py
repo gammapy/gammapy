@@ -473,19 +473,30 @@ class Parameters(collections.abc.Sequence):
         List of parameters
     """
 
-    def __init__(self, parameters=None):
+    def __init__(self, parameters=None, prior=None):
         if parameters is None:
             parameters = []
         else:
             parameters = list(parameters)
 
         self._parameters = parameters
+        self._prior = prior
+
+    @property
+    def prior(self):
+        return self._prior
+
+    @prior.setter
+    def prior(self, prior):
+        self._prior = prior
 
     def stat_sum(self):
         """Evaluate the Priors of all Parameters."""
+        print("Evaluation priors ...")
         s = 0
         for par in self:
             if par.prior is not None:
+                print(f"Evaluating prior of {par}")
                 args = {}
                 # this is almost duplicated code from gammapy.dataset.map
                 for key in signature(par.prior.stat_sum).parameters.keys():
@@ -498,6 +509,18 @@ class Parameters(collections.abc.Sequence):
                     args[key] = value
 
                 s += par.prior.stat_sum(**args)
+        if self._prior is not None:
+            print(f"Evaluating prior of {self}")
+            args = {}
+            # this is almost duplicated code from gammapy.dataset.map
+            for key in signature(self.prior.stat_sum).parameters.keys():
+                method = getattr(self, key)
+                is_callable = hasattr(method, "__call__")
+                if is_callable:
+                    value = method()
+                else:
+                    value = method
+                args[key] = value
         return s
 
     def check_limits(self):
