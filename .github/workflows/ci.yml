@@ -13,7 +13,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.allowed_fail }}
     env:
-      PYTEST_ADDOPTS: --color=yes -n auto --dist=loadscopegit commit
+      PYTEST_ADDOPTS: --color=yes -n auto --dist=loadscope
     strategy:
       fail-fast: true
       matrix:
