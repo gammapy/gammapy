@@ -15,7 +15,6 @@ jobs:
     env:
       PYTEST_ADDOPTS: --color=yes -n auto --dist=loadscope
     strategy:
-      fail-fast: true
       matrix:
         include:
           - os: ubuntu-latest
