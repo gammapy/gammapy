@@ -17,6 +17,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
+        allowed_fail = [false]
         include:
           - os: ubuntu-latest
             python: '3.8'
