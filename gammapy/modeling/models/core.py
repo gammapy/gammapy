@@ -2,6 +2,7 @@
 import collections.abc
 import copy
 import logging
+from inspect import signature
 from os.path import split
 import numpy as np
 import astropy.units as u
@@ -164,7 +165,21 @@ class ModelBase:
         )
 
     def stat_sum(self):
-        return self.parameters.stat_sum()
+        s = self.parameters.stat_sum()
+
+        if hasattr(self, "prior") and self.prior is not None:
+            args = {}
+            func = self.prior.stat_sum
+            for key in signature(func).parameters.keys():
+                attr = getattr(self, key)
+                if callable(attr):
+                    value = attr()
+                else:
+                    value = attr
+                args[key] = value
+            s += func(**args)
+
+        return s
 
     @copy_covariance
     def copy(self, **kwargs):

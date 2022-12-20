@@ -492,11 +492,9 @@ class Parameters(collections.abc.Sequence):
 
     def stat_sum(self):
         """Evaluate the Priors of all Parameters."""
-        print("Evaluation priors ...")
         s = 0
         for par in self:
             if par.prior is not None:
-                print(f"Evaluating prior of {par}")
                 args = {}
                 # this is almost duplicated code from gammapy.dataset.map
                 for key in signature(par.prior.stat_sum).parameters.keys():
@@ -510,7 +508,6 @@ class Parameters(collections.abc.Sequence):
 
                 s += par.prior.stat_sum(**args)
         if self._prior is not None:
-            print(f"Evaluating prior of {self}")
             args = {}
             # this is almost duplicated code from gammapy.dataset.map
             for key in signature(self.prior.stat_sum).parameters.keys():
