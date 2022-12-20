@@ -11,10 +11,10 @@ jobs:
   ci-runs:
     name: ${{ matrix.os }}, ${{ matrix.tox_env }}
     runs-on: ${{ matrix.os }}
-    continue-on-error: ${{ matrix.experimental }}$
     env:
       PYTEST_ADDOPTS: --color=yes -n auto --dist=loadscope
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
@@ -60,6 +60,7 @@ jobs:
             python: '3.8'
             tox_env: 'devdeps'
             experimental: true
+    continue-on-error: ${{ matrix.experimental }}$
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
