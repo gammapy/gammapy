@@ -3,6 +3,7 @@
 import logging
 import operator
 import os
+from pathlib import Path
 import numpy as np
 import scipy.optimize
 import scipy.special
@@ -52,6 +53,13 @@ __all__ = [
     "SuperExpCutoffPowerLaw4FGLSpectralModel",
     "TemplateSpectralModel",
 ]
+
+EBL_DATA_BUILTIN = {}
+EBL_DATA_BUILTIN["franceschini"] = "$GAMMAPY_DATA/ebl/ebl_franceschini.fits.gz"
+EBL_DATA_BUILTIN["dominguez"] = "$GAMMAPY_DATA/ebl/ebl_dominguez11.fits.gz"
+EBL_DATA_BUILTIN["finke"] = "$GAMMAPY_DATA/ebl/frd_abs.fits.gz"
+EBL_DATA_BUILTIN["franceschini17"] = "$GAMMAPY_DATA/ebl/ebl_franceschini_2017.fits.gz"
+EBL_DATA_BUILTIN["saldana-lopez21"] = "$GAMMAPY_DATA/ebl/ebl_saldana-lopez_2021.fits.gz"
 
 
 def scale_plot_flux(flux, energy_power=0):
@@ -184,7 +192,7 @@ class SpectralModel(ModelBase):
 
         f_cov = df_dp.T @ self.covariance @ df_dp
         f_err = np.sqrt(np.diagonal(f_cov))
-        return u.Quantity([f_0.value, f_err], unit=f_0.unit)
+        return u.Quantity([np.atleast_1d(f_0.value), f_err], unit=f_0.unit).squeeze()
 
     def evaluate_error(self, energy, epsilon=1e-4):
         """Evaluate spectral model with error propagation.
@@ -650,6 +658,13 @@ class CompoundSpectralModel(SpectralModel):
                 "operator": self.operator.__name__,
             }
         }
+
+    def evaluate(self, energy, *args):
+        args1 = args[: len(self.model1.parameters)]
+        args2 = args[len(self.model1.parameters) :]
+        val1 = self.model1.evaluate(energy, *args1)
+        val2 = self.model2.evaluate(energy, *args2)
+        return self.operator(val1, val2)
 
     @classmethod
     def from_dict(cls, data):
@@ -1826,17 +1841,18 @@ class EBLAbsorptionNormSpectralModel(SpectralModel):
 
     def to_dict(self, full_output=False):
         data = super().to_dict(full_output=full_output)
+        param = u.Quantity(self.param)
         if self.filename is None:
             data["spectral"]["energy"] = {
                 "data": self.energy.data.tolist(),
                 "unit": str(self.energy.unit),
             }
             data["spectral"]["param"] = {
-                "data": self.param.data.tolist(),
-                "unit": str(self.param.unit),
+                "data": param.data.tolist(),
+                "unit": str(param.unit),
             }
             data["spectral"]["values"] = {
-                "data": self.data.data.tolist(),
+                "data": self.data.value.tolist(),
                 "unit": str(self.data.unit),
             }
         else:
@@ -1853,7 +1869,17 @@ class EBLAbsorptionNormSpectralModel(SpectralModel):
             p["value"] for p in data["parameters"] if p["name"] == "alpha_norm"
         ][0]
         if "filename" in data:
-            return cls.read(data["filename"], redshift=redshift, alpha_norm=alpha_norm)
+            if os.path.exists(data["filename"]):
+                return cls.read(
+                    data["filename"], redshift=redshift, alpha_norm=alpha_norm
+                )
+            else:
+                for reference, filename in EBL_DATA_BUILTIN.items():
+                    if Path(filename).stem in data["filename"]:
+                        return cls.read_builtin(
+                            reference, redshift=redshift, alpha_norm=alpha_norm
+                        )
+                raise IOError(f'File {data["filename"]} not found')
         else:
             energy = u.Quantity(data["energy"]["data"], data["energy"]["unit"])
             param = u.Quantity(data["param"]["data"], data["param"]["unit"])
@@ -1918,7 +1944,7 @@ class EBLAbsorptionNormSpectralModel(SpectralModel):
     def read_builtin(
         cls, reference="dominguez", redshift=0.1, alpha_norm=1, interp_kwargs=None
     ):
-        """Read  from one of the built-in absorption models.
+        """Read from one of the built-in absorption models.
 
         Parameters
         ----------
@@ -1931,21 +1957,23 @@ class EBLAbsorptionNormSpectralModel(SpectralModel):
 
         References
         ----------
-        .. [1] Franceschini et al., "Extragalactic optical-infrared background radiation, its time evolution and the cosmic photon-photon opacity",  # noqa: E501
+        .. [1] Franceschini et al. (2008), "Extragalactic optical-infrared background radiation, its time evolution and the cosmic photon-photon opacity",  # noqa: E501
             `Link <https://ui.adsabs.harvard.edu/abs/2008A%26A...487..837F>`__
-        .. [2] Dominguez et al., " Extragalactic background light inferred from AEGIS galaxy-SED-type fractions"  # noqa: E501
+        .. [2] Dominguez et al. (2011), " Extragalactic background light inferred from AEGIS galaxy-SED-type fractions"  # noqa: E501
             `Link <https://ui.adsabs.harvard.edu/abs/2011MNRAS.410.2556D>`__
-        .. [3] Finke et al., "Modeling the Extragalactic Background Light from Stars and Dust"
+        .. [3] Finke et al. (2010), "Modeling the Extragalactic Background Light from Stars and Dust"
             `Link <https://ui.adsabs.harvard.edu/abs/2010ApJ...712..238F>`__
-
+        .. [4] Franceschini et al. (2017), "The extragalactic background light revisited and the cosmic photon-photon opacity"
+            `Link <https://ui.adsabs.harvard.edu/abs/2017A%26A...603A..34F/abstract>`__
+        .. [5] Saldana-Lopez et al. (2021) "An observational determination of the evolving extragalactic background light from the multiwavelength HST/CANDELS survey in the Fermi and CTA era"
+            `Link <https://ui.adsabs.harvard.edu/abs/2021MNRAS.507.5144S/abstract>`__
         """
-        models = {}
-        models["franceschini"] = "$GAMMAPY_DATA/ebl/ebl_franceschini.fits.gz"
-        models["dominguez"] = "$GAMMAPY_DATA/ebl/ebl_dominguez11.fits.gz"
-        models["finke"] = "$GAMMAPY_DATA/ebl/frd_abs.fits.gz"
 
         return cls.read(
-            models[reference], redshift, alpha_norm, interp_kwargs=interp_kwargs
+            EBL_DATA_BUILTIN[reference],
+            redshift,
+            alpha_norm,
+            interp_kwargs=interp_kwargs,
         )
 
     def evaluate(self, energy, redshift, alpha_norm):

@@ -8,11 +8,11 @@ from astropy.table import Table
 from astropy.time import Time
 from astropy.utils import lazyproperty
 from gammapy.maps import MapAxis, RegionNDMap, TimeMapAxis
-from gammapy.modeling import Parameter, Parameters
+from gammapy.modeling import Parameter
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.scripts import make_path
 from gammapy.utils.time import time_ref_from_dict
-from .core import ModelBase
+from .core import ModelBase, _build_parameters_from_dict
 
 __all__ = [
     "ConstantTemporalModel",
@@ -721,11 +721,12 @@ class SineTemporalModel(TemporalModel):
         omega = pars["omega"].quantity.to_value("rad/day")
         amp = pars["amp"].value
         t_ref = Time(pars["t_ref"].quantity, format="mjd")
-        value = (t_max - t_min) - amp / omega * (
-            np.sin(omega * (t_max - t_ref).to_value("day"))
-            - np.sin(omega * (t_min - t_ref).to_value("day"))
+
+        value = (t_max - t_min).to_value(u.day) - amp / omega * (
+            np.sin(omega * (t_max - t_ref).to_value(u.day))
+            - np.sin(omega * (t_min - t_ref).to_value(u.day))
         )
-        return value / self.time_sum(t_min, t_max)
+        return value / self.time_sum(t_min, t_max).to_value(u.day)
 
 
 class TemplatePhaseCurveTemporalModel(TemporalModel):
@@ -919,11 +920,11 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
 
     @classmethod
     def from_dict(cls, data):
-        params = Parameters.from_dict(data["temporal"]["parameters"])
-        kwargs = {}
-        for param in params:
-            kwargs[param.name] = param
+        params = _build_parameters_from_dict(
+            data["temporal"]["parameters"], cls.default_parameters
+        )
         filename = data["temporal"]["filename"]
+        kwargs = {par.name: par for par in params}
         return cls.read(filename, **kwargs)
 
     def to_dict(self, full_output=False):

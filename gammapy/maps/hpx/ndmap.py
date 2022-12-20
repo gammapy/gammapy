@@ -498,9 +498,7 @@ class HpxNDMap(HpxMap):
                 img = hp.pixelfunc.reorder(img, n2r=True)
 
             if kernel == "gauss":
-                data = hp.sphtfunc.smoothing(
-                    img, sigma=width, pol=False, verbose=False, lmax=lmax
-                )
+                data = hp.sphtfunc.smoothing(img, sigma=width, pol=False, lmax=lmax)
             elif kernel == "disk":
                 # create the step function in angular space
                 theta = np.linspace(0, width)
@@ -511,7 +509,7 @@ class HpxNDMap(HpxMap):
                 # normalize the window beam
                 window_beam = window_beam / window_beam.max()
                 data = hp.sphtfunc.smoothing(
-                    img, beam_window=window_beam, pol=False, verbose=False, lmax=lmax
+                    img, beam_window=window_beam, pol=False, lmax=lmax
                 )
             else:
                 raise ValueError(f"Invalid kernel: {kernel!r}")
@@ -704,7 +702,7 @@ class HpxNDMap(HpxMap):
             )
             window_beam = window_beam / window_beam.max()
             data = hp.sphtfunc.smoothing(
-                img, beam_window=window_beam, pol=False, verbose=False, lmax=lmax
+                img, beam_window=window_beam, pol=False, lmax=lmax
             )
             if nest:
                 # reorder back to nest after the convolution
@@ -1009,12 +1007,12 @@ class HpxNDMap(HpxMap):
                 pix0 = (pix0[0][idx0][:3], pix0[1][idx0][:3])
                 pix1 = (pix1[0][idx1][1:], pix1[1][idx1][1:])
 
-                patches.append(Polygon(np.vstack((pix0[0], pix0[1])).T, True))
-                patches.append(Polygon(np.vstack((pix1[0], pix1[1])).T, True))
+                patches.append(Polygon(np.vstack((pix0[0], pix0[1])).T, closed=True))
+                patches.append(Polygon(np.vstack((pix1[0], pix1[1])).T, closed=True))
                 data.append(self.data[i])
                 data.append(self.data[i])
             else:
-                polygon = Polygon(np.vstack((idx[0], idx[1])).T, True)
+                polygon = Polygon(np.vstack((idx[0], idx[1])).T, closed=True)
                 patches.append(polygon)
                 data.append(self.data[i])
 

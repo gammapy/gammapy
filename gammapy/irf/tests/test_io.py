@@ -170,7 +170,7 @@ def test_irf_dict_from_file_fixed_rad_max():
 
 
 class TestIRFWrite:
-    def setup(self):
+    def setup_method(self):
         self.energy_lo = np.logspace(0, 1, 10)[:-1] * u.TeV
         self.energy_hi = np.logspace(0, 1, 10)[1:] * u.TeV
         self.energy_axis_true = MapAxis.from_energy_bounds(

@@ -80,7 +80,7 @@ def create_map_dataset_geoms(
     else:
         energy_axis_true = geom.axes["energy"].copy(name="energy_true")
 
-    binsz_irf = binsz_irf or BINSZ_IRF_DEFAULT
+    binsz_irf = binsz_irf if binsz_irf is not None else BINSZ_IRF_DEFAULT
     geom_image = geom.to_image()
     geom_exposure = geom_image.to_cube([energy_axis_true])
     geom_irf = geom_image.to_binsz(binsz=binsz_irf)

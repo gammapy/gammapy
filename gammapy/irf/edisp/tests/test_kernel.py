@@ -8,7 +8,7 @@ from gammapy.utils.testing import mpl_plot_check, requires_data
 
 
 class TestEDispKernel:
-    def setup(self):
+    def setup_method(self):
         energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=100)
         energy_axis_true = energy_axis.copy(name="energy_true")
 

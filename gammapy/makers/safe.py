@@ -161,7 +161,7 @@ class SafeMaskMaker(Maker):
         """
         geom, exposure = dataset._geom, dataset.exposure
 
-        if self.fixed_offset:
+        if self.fixed_offset is not None:
             if observation:
                 position = observation.pointing_radec.directional_offset_by(
                     position_angle=0.0 * u.deg, separation=self.fixed_offset
@@ -219,7 +219,7 @@ class SafeMaskMaker(Maker):
         edisp, geom = dataset.edisp, dataset._geom
         position = None
 
-        if self.fixed_offset:
+        if self.fixed_offset is not None:
             if observation:
                 position = observation.pointing_radec.directional_offset_by(
                     position_angle=0 * u.deg, separation=self.fixed_offset
@@ -235,11 +235,10 @@ class SafeMaskMaker(Maker):
             else:
                 edisp = edisp.get_edisp_kernel(position=self.position)
         else:
+            e_reco = dataset._geom.axes["energy"]
             if position:
-                e_reco = dataset._geom.axes["energy"].edges
                 edisp = edisp.get_edisp_kernel(position=position, energy_axis=e_reco)
             else:
-                e_reco = dataset._geom.axes["energy"].edges
                 edisp = edisp.get_edisp_kernel(
                     position=self.position, energy_axis=e_reco
                 )

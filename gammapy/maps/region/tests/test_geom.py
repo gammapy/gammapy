@@ -390,7 +390,8 @@ def test_get_wcs_coord_and_weights(region):
 def test_region_nd_map_plot(region):
     geom = RegionGeom(region)
 
-    ax = plt.subplot(projection=geom.wcs)
+    fig = plt.figure()
+    ax = fig.add_subplot(projection=geom.wcs)
     with mpl_plot_check():
         geom.plot_region(ax=ax)
 

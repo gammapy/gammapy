@@ -236,8 +236,6 @@ class Background2D(BackgroundIRF):
     tag = "bkg_2d"
     required_axes = ["energy", "offset"]
     default_unit = u.s**-1 * u.MeV**-1 * u.sr**-1
-    default_interp_kwargs = dict(bounds_error=False, fill_value=0.0)
-    """Default Interpolation kwargs."""
 
     def to_3d(self):
         """ "Convert to Background3D"""

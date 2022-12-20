@@ -230,6 +230,7 @@ class TestFluxPoints:
             flux_points.plot(ax=ax)
 
     def test_plot_likelihood(self, flux_points_likelihood):
+        plt.figure()
         with mpl_plot_check():
             flux_points_likelihood.plot_ts_profiles()
 
@@ -237,7 +238,8 @@ class TestFluxPoints:
         del flux_points_likelihood._data["stat_scan"]
 
         with pytest.raises(AttributeError):
-            ax = plt.subplot()
+            fig = plt.figure()
+            ax = fig.add_subplot()
             flux_points_likelihood.plot_ts_profiles(ax=ax)
 
 

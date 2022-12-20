@@ -229,7 +229,7 @@ class PSFKernel:
         """
         ax = plt.gca() if ax is None else ax
 
-        if energy:
+        if energy is not None:
             kernel_map = self.psf_kernel_map
             energy_center = kernel_map.geom.axes["energy_true"].center.to(energy.unit)
             idx = np.argmin(np.abs(energy_center.value - energy.value))

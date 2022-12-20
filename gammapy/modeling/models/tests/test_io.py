@@ -164,6 +164,56 @@ def test_piecewise_norm_spectral_model_io():
 
 
 @requires_data()
+def test_absorption_io_invalid_path(tmp_path):
+    dominguez = EBLAbsorptionNormSpectralModel.read_builtin("dominguez", redshift=0.5)
+    dominguez.filename = "/not/a/valid/path/ebl_dominguez11.fits.gz"
+    assert len(dominguez.parameters) == 2
+
+    model_dict = dominguez.to_dict()
+    parnames = [_["name"] for _ in model_dict["spectral"]["parameters"]]
+    assert parnames == [
+        "alpha_norm",
+        "redshift",
+    ]
+    new_model = EBLAbsorptionNormSpectralModel.from_dict(model_dict)
+
+    assert new_model.redshift.value == 0.5
+    assert new_model.alpha_norm.name == "alpha_norm"
+    assert new_model.alpha_norm.value == 1
+    assert_allclose(new_model.energy, dominguez.energy)
+    assert_allclose(new_model.param, dominguez.param)
+    assert len(new_model.parameters) == 2
+
+    dominguez.filename = "/not/a/valid/path/dominguez.fits.gz"
+    model_dict = dominguez.to_dict()
+    with pytest.raises(IOError):
+        EBLAbsorptionNormSpectralModel.from_dict(model_dict)
+
+
+@requires_data()
+def test_absorption_io_no_filename(tmp_path):
+    dominguez = EBLAbsorptionNormSpectralModel.read_builtin("dominguez", redshift=0.5)
+    dominguez.filename = None
+    assert len(dominguez.parameters) == 2
+
+    model_dict = dominguez.to_dict()
+    parnames = [_["name"] for _ in model_dict["spectral"]["parameters"]]
+    assert parnames == [
+        "alpha_norm",
+        "redshift",
+    ]
+
+    new_model = EBLAbsorptionNormSpectralModel.from_dict(model_dict)
+
+    assert new_model.redshift.value == 0.5
+    assert new_model.alpha_norm.name == "alpha_norm"
+    assert new_model.alpha_norm.value == 1
+    assert_allclose(new_model.energy, dominguez.energy)
+    assert_allclose(new_model.param, dominguez.param)
+    assert len(new_model.parameters) == 2
+
+
+@requires_data()
 def test_absorption_io(tmp_path):
     dominguez = EBLAbsorptionNormSpectralModel.read_builtin("dominguez", redshift=0.5)
     assert len(dominguez.parameters) == 2
@@ -365,6 +415,20 @@ def test_to_dict_not_default():
     assert model_2.index.min == model.index.min
     assert model_2.index.max == model.index.max
     assert model_2.index.frozen == model.index.frozen
+
+
+def test_to_dict_unfreeze_parameters_frozen_by_default():
+
+    model = PowerLawSpectralModel()
+
+    mdict = model.to_dict(full_output=False)
+    index_dict = mdict["spectral"]["parameters"][2]
+    assert "frozen" not in index_dict
+
+    model.reference.frozen = False
+    mdict = model.to_dict(full_output=False)
+    index_dict = mdict["spectral"]["parameters"][2]
+    assert index_dict["frozen"] is False
 
 
 def test_compound_models_io(tmp_path):

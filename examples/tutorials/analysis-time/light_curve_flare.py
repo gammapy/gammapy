@@ -2,13 +2,13 @@
 Light curves for flares
 =======================
 
-Compute the light curve of a PKS 2155-304 flare on 5 minutes time intervals.
+Compute the light curve of a PKS 2155-304 flare on 10 minutes time intervals.
 
 Prerequisites
 -------------
 
 -  Understanding of how the light curve estimator works, please refer to
-   the `light curve notebook <light_curve.ipynb>`__.
+   the :doc:`light curve notebook </tutorials/analysis-time/light_curve`.
 
 Context
 -------
@@ -22,14 +22,14 @@ from July 29 to 30 2006. See the `following
 article <https://ui.adsabs.harvard.edu/abs/2009A%26A...502..749A/abstract>`__.
 
 **Objective: Compute the light curve of a PKS 2155-304 flare on 5
-minutes time intervals, i.e. smaller than the duration of individual
+minutes time intervals, i.e. smaller than the duration of individual
 observations.**
 
 Proposed approach
 -----------------
 
 We have seen in the general presentation of the light curve estimator,
-see `light curve notebook <light_curve.ipynb>`__, Gammapy produces
+see the :doc:`light curve notebook </tutorials/analysis-time/light_curve>`, Gammapy produces
 datasets in a given time interval, by default that of the parent
 observation. To be able to produce datasets on smaller time steps, it is
 necessary to split the observations into the required time intervals.
@@ -64,12 +64,13 @@ As usual, we’ll start with some general imports…
 
 import logging
 import numpy as np
-
-# %matplotlib inline
 import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from astropy.time import Time
 from regions import CircleSkyRegion
+
+# %matplotlib inline
+import matplotlib.pyplot as plt
 
 log = logging.getLogger(__name__)
 
@@ -294,5 +295,6 @@ lc_1d = lc_maker_1d.run(datasets)
 ######################################################################
 # Finally we plot the result for the 1D lightcurve:
 #
-
+plt.figure(figsize=(8, 6))
 lc_1d.plot(marker="o")
+plt.show()

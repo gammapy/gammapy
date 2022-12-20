@@ -10,9 +10,7 @@ Prerequisites
 -  Understanding of spectral analysis techniques in classical Cherenkov
    astronomy.
 -  Understanding the basic data reduction and modeling/fitting processes
-   with the gammapy library API as shown in the `first gammapy analysis
-   with the gammapy library API
-   tutorial :doc:`/tutorials/starting/analysis_2`
+   with the gammapy library API as shown in the tutorial :doc:`/tutorials/starting/analysis_2`
 
 Context
 -------
@@ -85,13 +83,13 @@ Setup
 As usual, we’ll start with some general imports…
 
 """
-
 import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
 
 # %matplotlib inline
 import matplotlib.pyplot as plt
+from IPython.display import display
 from gammapy.data import DataStore
 from gammapy.datasets import Datasets, SpectrumDataset
 from gammapy.makers import (
@@ -237,7 +235,7 @@ for obs in observations:
     # Append dataset to the list
     datasets.append(dataset)
 
-datasets.meta_table
+display(datasets.meta_table)
 
 
 ######################################################################
@@ -261,30 +259,32 @@ datasets[0].peek()
 
 info_table = datasets.info_table(cumulative=True)
 
-info_table
+display(info_table)
 
-fig = plt.figure(figsize=(10, 6))
-ax = fig.add_subplot(121)
-ax.plot(
+######################################################################
+# And make the correponding plots
+
+fig, (ax_excess, ax_sqrt_ts) = plt.subplots(figsize=(10, 4), ncols=2, nrows=1)
+ax_excess.plot(
     info_table["livetime"].to("h"),
     info_table["excess"],
     marker="o",
     ls="none",
 )
+ax_excess.set_title("Excess")
+ax_excess.set_xlabel("Livetime [h]")
+ax_excess.set_ylabel("Excess events")
 
-plt.xlabel("Livetime [h]")
-plt.ylabel("Excess events")
-
-ax = fig.add_subplot(122)
-ax.plot(
+ax_sqrt_ts.plot(
     info_table["livetime"].to("h"),
     info_table["sqrt_ts"],
     marker="o",
     ls="none",
 )
 
-plt.xlabel("Livetime [h]")
-plt.ylabel("Sqrt(TS)")
+ax_sqrt_ts.set_title("Sqrt(TS)")
+ax_sqrt_ts.set_xlabel("Livetime [h]")
+ax_sqrt_ts.set_ylabel("Sqrt(TS)")
 
 
 ######################################################################
@@ -321,7 +321,7 @@ print(result_joint)
 # First the fitted parameters values and their errors.
 #
 
-datasets.models.to_parameters_table()
+display(datasets.models.to_parameters_table())
 
 
 ######################################################################
@@ -336,5 +336,7 @@ reduced = datasets.stack_reduce()
 reduced.models = model
 # Plot the result
 
+plt.figure()
 ax_spectrum, ax_residuals = reduced.plot_fit()
 reduced.plot_masks(ax=ax_spectrum)
+plt.show()

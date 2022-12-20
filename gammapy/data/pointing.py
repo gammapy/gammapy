@@ -30,15 +30,19 @@ class PointingMode(Enum):
 
     For ground-based instruments, the most common options will be:
     * POINTING: The telescope observes a fixed position in the ICRS frame
-    * DRIFT: The telscope observes a fixed position in the AltAz frame
+    * DRIFT: The telescope observes a fixed position in the AltAz frame
 
+    Gammapy only supports fixed pointing positions over the whole observation
+    (either in equatorial or horizontal coordinates).
     OGIP also defines RASTER, SLEW and SCAN. These cannot be treated using
     a fixed pointing position in either frame, so they would require the
     pointing table, which is at the moment not supported by gammapy.
 
-    The H.E.S.S. data releases uses the not-defined value "WOBBLE",
-    which we assume to be the same as "POINTING", making the assumption
-    that one observation only contains a single wobble position.
+    Data releases based on gadf v0.2 do not have consistent OBS_MODE keyword
+    e.g. the H.E.S.S. data releases uses the not-defined value "WOBBLE".
+    For all gadf data, we assume OBS_MODE to be the same as "POINTING",
+    unless it is set to "DRIFT", making the assumption that one observation
+    only contains a single fixed position.
     """
 
     POINTING = auto()
@@ -46,15 +50,13 @@ class PointingMode(Enum):
 
     @staticmethod
     def from_gadf_string(val):
-        # OBS_MODE is not well-defined in GADF 0.2, HESS and MAGIC
-        # filled some variation of "WOBBLE" for the open crab paper
-        if val.upper() in ("POINTING", "WOBBLE"):
-            return PointingMode.POINTING
-
+        # OBS_MODE is not well-defined and not mandatory in GADF 0.2
+        # We always assume that the observations are pointing observations
+        # unless the OBS_MODE is set to DRIFT
         if val.upper() == "DRIFT":
             return PointingMode.DRIFT
-
-        raise ValueError(f"Unsupported pointing mode: {val}")
+        else:
+            return PointingMode.POINTING
 
 
 class FixedPointingInfo:
@@ -197,7 +199,7 @@ class FixedPointingInfo:
         try:
             frame = self.altaz_frame
         except KeyError:
-            log.warn(
+            log.warning(
                 "Location or time information missing,"
                 " using ALT_PNT/AZ_PNT and incomplete frame"
             )

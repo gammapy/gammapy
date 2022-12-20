@@ -30,11 +30,13 @@ packages like Tempo2 or `PINT <https://nanograv-pint.readthedocs.io>`__.
 # in the CTA 1DC dataset shipped with Gammapy.
 #
 
-# %matplotlib inline
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 import matplotlib.pyplot as plt
+
+# %matplotlib inline
+from IPython.display import display
 from gammapy.data import DataStore
 from gammapy.datasets import Datasets, FluxPointsDataset, SpectrumDataset
 from gammapy.estimators import FluxPointsEstimator
@@ -89,7 +91,7 @@ print(events_vela)
 phases = events_vela.table["PHASE"]
 
 # Let's take a look at the first 10 phases
-phases[:10]
+display(phases[:10])
 
 
 ######################################################################
@@ -113,7 +115,8 @@ bin_center = (bin_edges[:-1] + bin_edges[1:]) / 2
 # Poissonian uncertainty on each bin
 values_err = np.sqrt(values)
 
-plt.bar(
+fig, ax = plt.subplots()
+ax.bar(
     x=bin_center,
     height=values,
     width=bin_width,
@@ -122,10 +125,10 @@ plt.bar(
     edgecolor="black",
     yerr=values_err,
 )
-plt.xlim(0, 1)
-plt.xlabel("Phase")
-plt.ylabel("Counts")
-plt.title(f"Phasogram with angular cut of {on_radius}")
+ax.set_xlim(0, 1)
+ax.set_xlabel("Phase")
+ax.set_ylabel("Counts")
+ax.set_title(f"Phasogram with angular cut of {on_radius}")
 
 
 ######################################################################
@@ -149,7 +152,8 @@ bkg = count_bkg / nbins / (off_phase_range[1] - off_phase_range[0])
 bkg_err = np.sqrt(count_bkg) / nbins / (off_phase_range[1] - off_phase_range[0])
 
 # Let's redo the same plot for the basis
-plt.bar(
+fig, ax = plt.subplots()
+ax.bar(
     x=bin_center,
     height=values,
     width=bin_width,
@@ -164,19 +168,19 @@ x_bkg = np.linspace(0, 1, 50)
 
 kwargs = {"color": "black", "alpha": 0.5, "ls": "--", "lw": 2}
 
-plt.plot(x_bkg, (bkg - bkg_err) * np.ones_like(x_bkg), **kwargs)
-plt.plot(x_bkg, (bkg + bkg_err) * np.ones_like(x_bkg), **kwargs)
+ax.plot(x_bkg, (bkg - bkg_err) * np.ones_like(x_bkg), **kwargs)
+ax.plot(x_bkg, (bkg + bkg_err) * np.ones_like(x_bkg), **kwargs)
 
-plt.fill_between(
+ax.fill_between(
     x_bkg, bkg - bkg_err, bkg + bkg_err, facecolor="grey", alpha=0.5
 )  # grey area for the background level
 
 # Let's make patches for the on and off phase zones
-on_patch = plt.axvspan(
+on_patch = ax.axvspan(
     on_phase_range[0], on_phase_range[1], alpha=0.3, color="gray", ec="black"
 )
 
-off_patch = plt.axvspan(
+off_patch = ax.axvspan(
     off_phase_range[0],
     off_phase_range[1],
     alpha=0.4,
@@ -186,12 +190,12 @@ off_patch = plt.axvspan(
 )
 
 # Legends "ON" and "OFF"
-plt.text(0.55, 5, "ON", color="black", fontsize=17, ha="center")
-plt.text(0.895, 5, "OFF", color="black", fontsize=17, ha="center")
-plt.xlabel("Phase")
-plt.ylabel("Counts")
-plt.xlim(0, 1)
-plt.title(f"Phasogram with angular cut of {on_radius}")
+ax.text(0.55, 5, "ON", color="black", fontsize=17, ha="center")
+ax.text(0.895, 5, "OFF", color="black", fontsize=17, ha="center")
+ax.set_xlabel("Phase")
+ax.set_ylabel("Counts")
+ax.set_xlim(0, 1)
+ax.set_title(f"Phasogram with angular cut of {on_radius}")
 
 
 ######################################################################
@@ -234,6 +238,7 @@ alpha = (on_phase_range[1] - on_phase_range[0]) / (
 excess_map = on_map - off_map * alpha
 
 # Plot excess map
+plt.figure()
 excess_map.smooth(kernel="gauss", width=0.2 * u.deg).plot(add_cbar=True)
 
 
@@ -352,6 +357,7 @@ spec_model_true.plot(
 
 ax_spectrum.legend(loc="best")
 
+plt.show()
 
 ######################################################################
 # This tutorial suffers a bit from the lack of statistics: there were 9

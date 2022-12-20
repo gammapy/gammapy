@@ -9,9 +9,9 @@ Prerequisites
 
 -  Handling of Fermi-LAT data with Gammapy see the :doc:`/tutorials/data/fermi_lat` tutorial.
 -  Knowledge of spectral analysis to produce 1D On-Off datasets, see
-   the following doc:`/tutorials/analysis-1d/spectral_analysis` tutorial.
+   the following :doc:`/tutorials/analysis-1d/spectral_analysis` tutorial.
 -  Using flux points to directly fit a model (without forward-folding) from the 
-   doc:`/tutorials/analysis-1d/sed_fitting` tutorial.
+   :doc:`/tutorials/analysis-1d/sed_fitting` tutorial.
 
 Context
 -------
@@ -249,12 +249,12 @@ flux_points_hess = FluxPointsEstimator(
 #
 
 # display spectrum and flux points
-plt.figure(figsize=(8, 6))
+fig, ax = plt.subplots(figsize=(8, 6))
 
 energy_bounds = [0.01, 300] * u.TeV
 sed_type = "e2dnde"
 
-ax = crab_spec.plot(energy_bounds=energy_bounds, sed_type=sed_type, label="Model")
+crab_spec.plot(ax=ax, energy_bounds=energy_bounds, sed_type=sed_type, label="Model")
 crab_spec.plot_error(ax=ax, energy_bounds=energy_bounds, sed_type=sed_type)
 
 flux_points_fermi.plot(ax=ax, sed_type=sed_type, label="Fermi-LAT")
@@ -262,4 +262,5 @@ flux_points_hess.plot(ax=ax, sed_type=sed_type, label="HESS")
 flux_points_hawc.plot(ax=ax, sed_type=sed_type, label="HAWC")
 
 ax.set_xlim(energy_bounds)
-plt.legend()
+ax.legend()
+plt.show()

@@ -13,9 +13,6 @@ class PhaseBackgroundMaker(Maker):
 
     TODO: For a usage example see future notebook.
 
-    TODO: The phase interval has to be between 0 and 1.
-    Cases like [-0.1, 0.1], for example, are still not supported.
-
     Parameters
     ----------
     on_phase : `tuple` or list of tuples
@@ -69,7 +66,7 @@ class PhaseBackgroundMaker(Maker):
         return self._make_counts(dataset, observation, self.off_phase)
 
     def make_counts(self, dataset, observation):
-        """Make off counts.
+        """Make on counts.
 
         Parameters
         ----------
@@ -80,8 +77,8 @@ class PhaseBackgroundMaker(Maker):
 
         Returns
         -------
-        counts_off : `RegionNDMap`
-            Off counts.
+        counts : `RegionNDMap`
+            On counts.
         """
         return self._make_counts(dataset, observation, self.on_phase)
 
@@ -120,13 +117,13 @@ class PhaseBackgroundMaker(Maker):
 
     @staticmethod
     def _check_intervals(intervals):
-        """Split phase intervals that go beyond phase 1"""
+        """Split phase intervals that go below phase 0 and above phase 1"""
         if isinstance(intervals, tuple):
             intervals = [intervals]
 
         for phase_interval in intervals:
-            if phase_interval[0] > phase_interval[1]:
+            if phase_interval[0] % 1 > phase_interval[1] % 1:
                 intervals.remove(phase_interval)
-                intervals.append([phase_interval[0], 1])
-                intervals.append([0, phase_interval[1]])
+                intervals.append([phase_interval[0] % 1, 1])
+                intervals.append([0, phase_interval[1] % 1])
         return intervals

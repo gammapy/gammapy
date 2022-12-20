@@ -21,6 +21,8 @@ Setup
 import numpy as np
 from astropy import units as u
 from regions import CircleSkyRegion
+import matplotlib.pyplot as plt
+from IPython.display import display
 from gammapy.data import DataStore
 from gammapy.datasets import Datasets, MapDataset, SpectrumDataset
 from gammapy.makers import (
@@ -101,6 +103,7 @@ obs = data_store.get_observations([23592])[0]
 maker = MapDatasetMaker()
 dataset = maker.run(dataset_empty, obs)
 print(dataset)
+plt.figure()
 dataset.counts.sum_over_axes().plot(stretch="sqrt", add_cbar=True)
 
 
@@ -153,6 +156,7 @@ safe_mask_maker = SafeMaskMaker(
 dataset = maker.run(dataset_empty, obs)
 dataset = safe_mask_maker.run(dataset, obs)
 print(dataset.mask_safe)
+plt.figure()
 dataset.mask_safe.sum_over_axes().plot()
 
 
@@ -187,7 +191,7 @@ dataset.mask_safe.sum_over_axes().plot()
 # Here we are going to use a `~gammapy.makers.FoVBackgroundMaker` that
 # will rescale the background model to the data excluding the region where
 # a known source is present. For more details on the way to create
-# exclusion masks see the `mask maps <mask_maps.ipynb>`__ notebook.
+# exclusion masks see the :doc:`mask maps </tutorials/api/mask_maps>` notebook.
 #
 
 circle = CircleSkyRegion(center=geom.center_skydir, radius=0.2 * u.deg)
@@ -334,3 +338,5 @@ for observation in observations:
     dataset_on_off = safe_mask_masker.run(dataset_on_off, observation)
     datasets.append(dataset_on_off)
 print(datasets)
+
+plt.show()

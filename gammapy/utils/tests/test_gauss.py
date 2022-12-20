@@ -9,7 +9,7 @@ class TestGauss2DPDF:
     """Note that we test __call__ and dpdtheta2 by
     checking that their integrals as advertised are 1."""
 
-    def setup(self):
+    def setup_method(self):
         self.gs = [
             Gauss2DPDF(0.1 * u.deg),
             Gauss2DPDF(1 * u.deg),

@@ -1,13 +1,13 @@
-name: build docs
+name: Build dev docs
 on: push
 jobs:
-  dispatch:
-    runs-on: ubuntu-latest
-    steps:
-      - name: dispatch validation
-        run: |
-          run: |
-          curl -XPOST -u "${{ secrets.REMOTE_DISPATCH }}" \
-          -H "Accept: application/vnd.github.everest-preview+json" \
-          -H "Content-Type: application/json" https://api.github.com/repos/gammapy/gammapy-docs/dispatches \
-          --data '{"event_type": "validate"}'
+  dispatch-docs:
+      runs-on: ubuntu-latest
+      steps:
+        - name: Dispatch Gammapy Docs
+          uses: peter-evans/repository-dispatch@v2
+          with:
+            token: ${{ secrets.REMOTE_DISPATCH }}
+            repository: gammapy/gammapy-docs
+            event-type: dev-docs
+            

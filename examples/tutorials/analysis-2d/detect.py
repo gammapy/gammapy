@@ -54,6 +54,7 @@ import astropy.units as u
 
 # %matplotlib inline
 import matplotlib.pyplot as plt
+from IPython.display import display
 from gammapy.datasets import MapDataset
 from gammapy.estimators import ASmoothMapEstimator, TSMapEstimator
 from gammapy.estimators.utils import find_peaks
@@ -121,7 +122,7 @@ scales = u.Quantity(np.arange(0.05, 1, 0.05), unit="deg")
 smooth = ASmoothMapEstimator(threshold=3, scales=scales, energy_edges=[10, 500] * u.GeV)
 images = smooth.run(dataset)
 
-plt.figure(figsize=(15, 5))
+plt.figure(figsize=(9, 5))
 images["flux"].plot(add_cbar=True, stretch="asinh")
 
 
@@ -163,15 +164,19 @@ maps = estimator.run(dataset)
 # ~~~~~~~~~~~~~~~~~~~~~
 #
 
-plt.figure(figsize=(15, 5))
-maps["sqrt_ts"].plot(add_cbar=True)
+fig, (ax1, ax2, ax3) = plt.subplots(
+    ncols=3,
+    figsize=(15, 3),
+    subplot_kw={"projection": counts.geom.wcs},
+    gridspec_kw={"left": 0.1, "right": 0.98},
+)
 
-plt.figure(figsize=(15, 5))
-maps["flux"].plot(add_cbar=True, stretch="sqrt", vmin=0)
-
-plt.figure(figsize=(15, 5))
-maps["niter"].plot(add_cbar=True)
-
+maps["sqrt_ts"].plot(ax=ax1, add_cbar=True)
+ax1.set_title("Significance map")
+maps["flux"].plot(ax=ax2, add_cbar=True, stretch="sqrt", vmin=0)
+ax2.set_title("Flux map")
+maps["niter"].plot(ax=ax3, add_cbar=True)
+ax3.set_title("Iteration map")
 
 ######################################################################
 # Source candidates
@@ -186,11 +191,10 @@ maps["niter"].plot(add_cbar=True)
 
 sources = find_peaks(maps["sqrt_ts"], threshold=5, min_distance="0.25 deg")
 nsou = len(sources)
-sources
+display(sources)
 
 # Plot sources on top of significance sky image
-plt.figure(figsize=(15, 5))
-
+plt.figure(figsize=(9, 5))
 ax = maps["sqrt_ts"].plot(add_cbar=True)
 
 ax.scatter(
@@ -203,7 +207,9 @@ ax.scatter(
     s=600,
     lw=1.5,
 )
+plt.show()
 
+# sphinx_gallery_thumbnail_number = 3
 
 ######################################################################
 # Note that we used the instrument point-spread-function (PSF) as kernel,
@@ -232,7 +238,7 @@ ax.scatter(
 #    respectively
 # -  Learn about 2D model fitting in the :doc:`/tutorials/analysis-2d/modeling_2D` notebook
 # -  Find more about Fermi-LAT data analysis in the
-#    `:doc:`/tutorials/data/fermi_lat` notebook
+#    :doc:`/tutorials/data/fermi_lat` notebook
 # -  Use source candidates to build a model and perform a 3D fitting (see
 #    :doc:`/tutorials/analysis-3d/analysis_3d`,
 #    :doc:`/tutorials/analysis-3d/analysis_mwl` notebooks for some hints)

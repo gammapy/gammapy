@@ -30,6 +30,7 @@ data.
 import numpy as np
 from astropy import units as u
 import matplotlib.pyplot as plt
+from IPython.display import display
 from gammapy.maps import Map, MapAxis, WcsGeom
 
 ######################################################################
@@ -132,6 +133,7 @@ print(energy)
 # range:
 #
 
+plt.figure()
 pwl.plot(energy_bounds=[1, 100] * u.TeV)
 
 
@@ -175,7 +177,7 @@ print(pwl_norm)
 #
 
 energy = [0.3, 1, 3, 10, 30] * u.TeV
-pwl_norm(energy)
+print(pwl_norm(energy))
 
 
 ######################################################################
@@ -186,6 +188,7 @@ pwl_norm(energy)
 
 from gammapy.modeling.models import TemplateSpectralModel
 
+plt.figure()
 energy = [0.3, 1, 3, 10, 30] * u.TeV
 values = [40, 30, 20, 10, 1] * u.Unit("TeV-1 s-1 cm-2")
 template = TemplateSpectralModel(energy, values)
@@ -280,13 +283,14 @@ print(flux_per_omega)
 
 m = Map.create(skydir=(0, 0), width=(1, 1), binsz=0.02, frame="galactic")
 m.quantity = gauss.evaluate_geom(m.geom)
+plt.figure()
 m.plot(add_cbar=True)
 
 
 ######################################################################
 # Again for convenience the model can be plotted directly:
 #
-
+plt.figure()
 gauss.plot(add_cbar=True)
 
 
@@ -304,6 +308,7 @@ print(gauss.to_region())
 #
 
 # create and plot the model
+plt.figure()
 gauss_elongated = GaussianSpatialModel(
     lon_0="0 deg", lat_0="0 deg", sigma="0.2 deg", e=0.7, phi="45 deg"
 )
@@ -406,7 +411,7 @@ print(model)
 ######################################################################
 # It is good practice to specify a name for your sky model, so that you
 # can access it later by name and have meaningful identifier you
-# serilisation. If you don’t define a name, a unique random name is
+# serialisation. If you don’t define a name, a unique random name is
 # generated:
 #
 
@@ -419,17 +424,20 @@ print(model_without_name.name)
 # ``.spectral_model``, ``.spatial_model`` and ``.temporal_model``:
 #
 
-model.spectral_model
+print(model.spectral_model)
 
-model.spatial_model
+# %%
+print(model.spatial_model)
 
-model.temporal_model
+# %%
+print(model.temporal_model)
 
 
 ######################################################################
 # And can be used as you have seen already seen above:
 #
 
+plt.figure()
 model.spectral_model.plot(energy_bounds=[1, 10] * u.TeV)
 
 
@@ -495,7 +503,7 @@ model.spectral_model.index.min = 1.0
 model.spectral_model.index.max = 5.0
 
 # Visualise the model as a table
-model.parameters.to_table().show_in_notebook()
+display(model.parameters.to_table())
 
 
 ######################################################################
@@ -687,8 +695,9 @@ class MyCustomSpectralModel(SpectralModel):
 my_custom_model = MyCustomSpectralModel(mean="3 TeV")
 print(my_custom_model)
 
-my_custom_model.integral(1 * u.TeV, 10 * u.TeV)
+print(my_custom_model.integral(1 * u.TeV, 10 * u.TeV))
 
+plt.figure()
 my_custom_model.plot(energy_bounds=[1, 10] * u.TeV)
 
 
@@ -726,7 +735,7 @@ models.write("my-custom-models.yaml", overwrite=True)
 # bands.
 #
 # `~gammapy.modeling.models.SkyModel` offers a natural framework to simultaneously model the
-# energy and morphology, e.g. spatial extent described by a parametric
+# energy and morphology, e.g. spatial extent described by a parametric
 # model expression with energy dependent parameters.
 #
 # The models shipped within gammapy use a “factorised” representation of
@@ -734,17 +743,18 @@ models.write("my-custom-models.yaml", overwrite=True)
 # and time (:math:`t`) dependence are independent model components and not
 # correlated:
 #
-# :raw-latex:`\begin{align}f(l, b, E, t) = F(l, b) \cdot G(E) \cdot H(t)\end{align}`
+# .. math::
+#     \begin{align}f(l, b, E, t) = F(l, b) \cdot G(E) \cdot H(t)\end{align}
 #
-# To use full 3D models, ie $f(l, b, E) = F(l, b, E)
-# :raw-latex:`\cdot`\ G(E) $, you have to implement your own custom
+# To use full 3D models, ie :math:`f(l, b, E) = F(l, b, E) \cdot \ G(E)`,
+# you have to implement your own custom
 # `SpatialModel`. Note that it is still necessary to multiply by a
 # `SpectralModel`, :math:`G(E)` to be dimensionally consistent.
 #
 # In this example, we create Gaussian Spatial Model with the extension
-# varying with energy. For simplicity, we assume a linear dependence on
+# varying with energy. For simplicity, we assume a linear dependency on
 # energy and parameterize this by specifying the extension at 2 energies.
-# You can add more complex dependences, probably motivated by physical
+# You can add more complex dependencies, probably motivated by physical
 # models.
 #
 
@@ -804,7 +814,7 @@ spatial_model = MyCustomGaussianModel()
 spectral_model = PowerLawSpectralModel()
 sky_model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
 
-spatial_model.evaluation_radius
+print(spatial_model.evaluation_radius)
 
 
 ######################################################################
@@ -818,6 +828,7 @@ geom = WcsGeom.create(skydir=(0, 0), width=5.0 * u.deg, binsz=0.1, axes=[energy_
 
 spatial_model.plot_grid(geom=geom, add_cbar=True, figsize=(14, 3))
 
+plt.show()
 
 ######################################################################
 # For computational purposes, it is useful to specify a
