@@ -11,13 +11,11 @@ jobs:
   ci-runs:
     name: ${{ matrix.os }}, ${{ matrix.tox_env }}
     runs-on: ${{ matrix.os }}
-    continue-on-error: ${{ matrix.allowed_fail }}
     env:
       PYTEST_ADDOPTS: --color=yes -n auto --dist=loadscope
     strategy:
       fail-fast: true
       matrix:
-        allowed_fail = [false]
         include:
           - os: ubuntu-latest
             python: '3.8'
