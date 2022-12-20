@@ -21,36 +21,46 @@ jobs:
           - os: ubuntu-latest
             python: '3.8'
             tox_env: 'py38-test-alldeps'
+            experimental: false
           - os: ubuntu-latest
             python: '3.9'
             tox_env: 'py39-test-alldeps-cov'
             gammapy_data_path: /home/runner/work/gammapy/gammapy/gammapy-datasets/dev
+            experimental: false
           - os: macos-latest
             python: '3.9'
             tox_env: 'py39-test'
             gammapy_data_path: /Users/runner/work/gammapy/gammapy/gammapy-datasets/dev
+            experimental: false
           - os: windows-latest
             python: '3.9'
             tox_env: 'py39-test-alldeps'
             gammapy_data_path:  D:\a\gammapy\gammapy\gammapy-datasets\dev
+            experimental: false
           - os: ubuntu-latest
             python: '3.10'
             tox_env: 'py310-test-alldeps'
+            experimental: false
           - os: ubuntu-latest
             python: '3.9'
             tox_env: 'py39-test'
+            experimental: false
           - os: ubuntu-latest
             python: '3.9'
             tox_env: 'codestyle'
+            experimental: false
           - os: ubuntu-latest
             python: '3.8'
             tox_env: 'py38-test-alldeps-astropylts-numpy120'
+            experimental: false
           - os: ubuntu-latest
             python: '3.8'
             tox_env: 'oldestdeps'
+            experimental: false
           - os: ubuntu-latest
             python: '3.8'
             tox_env: 'devdeps'
+            experimental: true
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
