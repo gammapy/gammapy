@@ -11,6 +11,7 @@ jobs:
   ci-runs:
     name: ${{ matrix.os }}, ${{ matrix.tox_env }}
     runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.experimental }}$
     env:
       PYTEST_ADDOPTS: --color=yes -n auto --dist=loadscope
     strategy:
