@@ -37,6 +37,5 @@ def test_dmfluxmap(jfact):
         jfact * diff_flux.integral(energy_min=energy_min, energy_max=energy_max)
     ).to("cm-2 s-1")
     actual = int_flux[5, 5]
-    print(actual)
     desired = 5.94207e-12 / u.cm**2 / u.s
     assert_quantity_allclose(actual, desired, rtol=1e-3)
