@@ -235,11 +235,10 @@ class SafeMaskMaker(Maker):
             else:
                 edisp = edisp.get_edisp_kernel(position=self.position)
         else:
+            e_reco = dataset._geom.axes["energy"]
             if position:
-                e_reco = dataset._geom.axes["energy"].edges
                 edisp = edisp.get_edisp_kernel(position=position, energy_axis=e_reco)
             else:
-                e_reco = dataset._geom.axes["energy"].edges
                 edisp = edisp.get_edisp_kernel(
                     position=self.position, energy_axis=e_reco
                 )
