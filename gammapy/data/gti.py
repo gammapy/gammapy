@@ -62,6 +62,23 @@ class GTI:
         self.table = table
         self._time_ref = time_ref_from_dict(self.table.meta)
 
+    @staticmethod
+    def _validate_table(table):
+        """Checks that the input GTI fits the gammapy internal model."""
+        if not isinstance(table, Table):
+            raise TypeError("GTI table is not an astropy Table.")
+
+        colnames = ["tstart", "tstop"]
+
+        if not set(colnames).issubset(table.colnames):
+            raise ValueError("GTI table not correctly defined.")
+
+        for name in colnames:
+            if not isinstance(table[name], Time):
+                raise TypeError(f"Column {name} is not a Time object.")
+
+        return table
+
     def copy(self):
         return copy.deepcopy(self)
 

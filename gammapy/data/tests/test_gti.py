@@ -2,11 +2,31 @@
 import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
-from astropy.table import Table
+from astropy.table import QTable, Table
 from astropy.time import Time
 from gammapy.data import GTI
 from gammapy.utils.testing import assert_time_allclose, requires_data
 from gammapy.utils.time import time_ref_to_dict
+
+
+def test_gti_table_validation():
+    start = Time([53090.123451203704], format="mjd", scale="tt")
+    stop = Time([53090.14291879629], format="mjd", scale="tt")
+
+    table = QTable([start, stop], names=["tstart", "tstop"])
+    validated = GTI._validate_table(table)
+    assert validated == table
+
+    bad_table = QTable([start, stop], names=["tst", "tstop"])
+    with pytest.raises(ValueError):
+        GTI._validate_table(bad_table)
+
+    with pytest.raises(TypeError):
+        GTI._validate_table([start, stop])
+
+    bad_table = QTable([[1], [2]], names=["tstart", "tstop"])
+    with pytest.raises(TypeError):
+        GTI._validate_table(bad_table)
 
 
 @requires_data()
