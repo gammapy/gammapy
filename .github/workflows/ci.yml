@@ -17,6 +17,7 @@ jobs:
   ci-runs:
     name: ${{ matrix.os }}, ${{ matrix.tox_env }}
     runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.allowed_fail }}
     env:
       PYTEST_ADDOPTS: --color=yes -n auto --dist=loadscope
     strategy:
@@ -26,36 +27,46 @@ jobs:
           - os: ubuntu-latest
             python: '3.8'
             tox_env: 'py38-test-alldeps'
+            allowed_fail: false
           - os: ubuntu-latest
             python: '3.9'
             tox_env: 'py39-test-alldeps-cov'
             gammapy_data_path: /home/runner/work/gammapy/gammapy/gammapy-datasets/dev
+            allowed_fail: false
           - os: macos-latest
             python: '3.9'
             tox_env: 'py39-test'
             gammapy_data_path: /Users/runner/work/gammapy/gammapy/gammapy-datasets/dev
+            allowed_fail: false
           - os: windows-latest
             python: '3.9'
             tox_env: 'py39-test-alldeps'
             gammapy_data_path:  D:\a\gammapy\gammapy\gammapy-datasets\dev
+            allowed_fail: false
           - os: ubuntu-latest
             python: '3.10'
             tox_env: 'py310-test-alldeps'
+            allowed_fail: false
           - os: ubuntu-latest
             python: '3.9'
             tox_env: 'py39-test'
+            allowed_fail: false
           - os: ubuntu-latest
             python: '3.9'
             tox_env: 'codestyle'
+            allowed_fail: false
           - os: ubuntu-latest
             python: '3.8'
             tox_env: 'py38-test-alldeps-astropylts-numpy120'
+            allowed_fail: false
           - os: ubuntu-latest
             python: '3.8'
             tox_env: 'oldestdeps'
+            allowed_fail: false
           - os: ubuntu-latest
             python: '3.8'
             tox_env: 'devdeps'
+            allowed_fail: true
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
