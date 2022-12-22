@@ -7,11 +7,7 @@ from astropy.io import fits
 from astropy.table import Table, vstack
 from astropy.time import Time
 from gammapy.utils.scripts import make_path
-from gammapy.utils.time import (
-    time_ref_from_dict,
-    time_ref_to_dict,
-    time_relative_to_ref,
-)
+from gammapy.utils.time import time_ref_from_dict, time_ref_to_dict
 
 __all__ = ["GTI"]
 
@@ -73,6 +69,9 @@ class GTI:
 
         if not set(colnames).issubset(table.colnames):
             raise ValueError("GTI table not correctly defined.")
+
+        if len(table) == 0:
+            return table
 
         for name in colnames:
             if not isinstance(table[name], Time):
@@ -249,23 +248,21 @@ class GTI:
         gti : `GTI`
             Copy of the GTI table with selection applied.
         """
+        interval_start, interval_stop = time_interval
+        interval_start.format = self.time_start.format
+        interval_stop.format = self.time_stop.format
+
         # get GTIs that fall within the time_interval
-        mask = self.time_start < time_interval[1]
-        mask &= self.time_stop > time_interval[0]
+        mask = self.time_start < interval_stop
+        mask &= self.time_stop > interval_start
         gti_within = self.table[mask]
 
         # crop the GTIs
-        start_met = time_relative_to_ref(time_interval[0], self.table.meta)
-        stop_met = time_relative_to_ref(time_interval[1], self.table.meta)
-        np.clip(
-            gti_within["START"],
-            start_met.value,
-            stop_met.value,
-            out=gti_within["START"],
+        gti_within["START"] = np.clip(
+            gti_within["START"], interval_start, interval_stop
         )
-        np.clip(
-            gti_within["STOP"], start_met.value, stop_met.value, out=gti_within["STOP"]
-        )
+
+        gti_within["STOP"] = np.clip(gti_within["STOP"], interval_start, interval_stop)
 
         return self.__class__(gti_within)
 
@@ -288,7 +285,7 @@ class GTI:
 
     @classmethod
     def from_stack(cls, gtis, **kwargs):
-        """Stack (concatenate) list of event lists.
+        """Stack (concatenate) list of GTIs.
 
         Calls `~astropy.table.vstack`.
 
