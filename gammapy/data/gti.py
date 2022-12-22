@@ -58,9 +58,13 @@ class GTI:
     - Stop: 2015-08-02T23:14:24.184 (time standard: TT)
     """
 
-    def __init__(self, table):
-        self.table = table
-        self._time_ref = time_ref_from_dict(self.table.meta)
+    def __init__(self, table, meta=None):
+        self.table = self._validate_table(table)
+        if meta is None:
+            meta = table.meta
+
+        if "MJDREFFI" in meta:
+            self._time_ref = time_ref_from_dict(meta)
 
     @staticmethod
     def _validate_table(table):
@@ -173,9 +177,8 @@ class GTI:
     @property
     def time_delta(self):
         """GTI durations in seconds (`~astropy.units.Quantity`)."""
-        start = self.table["START"].astype("float64")
-        stop = self.table["STOP"].astype("float64")
-        return u.Quantity(stop - start, "second")
+        delta = self.time_stop - self.time_start
+        return delta.to("s")
 
     @property
     def time_ref(self):
@@ -190,14 +193,12 @@ class GTI:
     @property
     def time_start(self):
         """GTI start times (`~astropy.time.Time`)."""
-        met = u.Quantity(self.table["START"].astype("float64"), "second")
-        return self.time_ref + met
+        return self.table["START"]
 
     @property
     def time_stop(self):
         """GTI end times (`~astropy.time.Time`)."""
-        met = u.Quantity(self.table["STOP"].astype("float64"), "second")
-        return self.time_ref + met
+        return self.table["STOP"]
 
     @property
     def time_intervals(self):

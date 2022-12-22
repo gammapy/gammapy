@@ -6,7 +6,13 @@ from astropy.table import QTable, Table
 from astropy.time import Time
 from gammapy.data import GTI
 from gammapy.utils.testing import assert_time_allclose, requires_data
-from gammapy.utils.time import time_ref_to_dict
+
+
+def make_gti(mets, time_ref="2010-01-01"):
+    """Create GTI from a dict of MET (assumed to be in seconds) and a reference time."""
+    times = {name: Time(time_ref) + met for name, met in mets.items()}
+    table = Table(times)
+    return GTI(table)
 
 
 def test_gti_table_validation():
@@ -27,6 +33,18 @@ def test_gti_table_validation():
     bad_table = QTable([[1], [2]], names=["START", "STOP"])
     with pytest.raises(TypeError):
         GTI._validate_table(bad_table)
+
+
+def test_simple_gti():
+    time_ref = Time("2010-01-01")
+    gti = make_gti({"START": [0, 2] * u.s, "STOP": [1, 3] * u.s}, time_ref=time_ref)
+
+    assert_allclose(gti.time_start.mjd - time_ref.mjd, [0, 2.3148146e-5])
+    assert_allclose(
+        (gti.time_stop - time_ref).to_value("d"), [1.15740741e-05, 3.4722222e-05]
+    )
+    assert_allclose(gti.time_delta.to_value("s"), [1, 1])
+    assert_allclose(gti.time_sum.to_value("s"), 2.0)
 
 
 @requires_data()
@@ -111,17 +129,13 @@ def test_select_time(time_interval, expected_length, expected_times):
         assert_time_allclose(gti_selected.time_stop[-1], expected_times[1])
 
 
-def make_gti(times, time_ref="2010-01-01"):
-    meta = time_ref_to_dict(time_ref)
-    table = Table(times, meta=meta)
-    return GTI(table)
-
-
 def test_gti_stack():
     time_ref = Time("2010-01-01")
-    gti1 = make_gti({"START": [0, 2], "STOP": [1, 3]}, time_ref=time_ref)
+    gti1 = make_gti({"START": [0, 2] * u.s, "STOP": [1, 3] * u.s}, time_ref=time_ref)
     gt1_pre_stack = gti1.copy()
-    gti2 = make_gti({"START": [4], "STOP": [5]}, time_ref=time_ref + 10 * u.s)
+    gti2 = make_gti(
+        {"START": [4] * u.s, "STOP": [5] * u.s}, time_ref=time_ref + 10 * u.s
+    )
 
     gti1.stack(gti2)
 
@@ -132,7 +146,7 @@ def test_gti_stack():
 
 
 def test_gti_union():
-    gti = make_gti({"START": [5, 6, 1, 2], "STOP": [8, 7, 3, 4]})
+    gti = make_gti({"START": [5, 6, 1, 2] * u.s, "STOP": [8, 7, 3, 4] * u.s})
 
     gti = gti.union()
 
@@ -153,7 +167,7 @@ def test_gti_create():
 
 
 def test_gti_write(tmp_path):
-    gti = make_gti({"START": [5, 6, 1, 2], "STOP": [8, 7, 3, 4]})
+    gti = make_gti({"START": [5, 6, 1, 2] * u.s, "STOP": [8, 7, 3, 4] * u.s})
 
     gti.write(tmp_path / "tmp.fits")
     new_gti = GTI.read(tmp_path / "tmp.fits")
