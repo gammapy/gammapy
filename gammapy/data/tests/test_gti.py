@@ -10,9 +10,10 @@ from gammapy.utils.testing import assert_time_allclose, requires_data
 
 def make_gti(mets, time_ref="2010-01-01"):
     """Create GTI from a dict of MET (assumed to be in seconds) and a reference time."""
-    times = {name: Time(time_ref) + met for name, met in mets.items()}
+    time_ref = Time(time_ref)
+    times = {name: time_ref + met for name, met in mets.items()}
     table = Table(times)
-    return GTI(table)
+    return GTI(table, reference_time=time_ref)
 
 
 def test_gti_table_validation():
@@ -167,14 +168,16 @@ def test_gti_create():
 
 
 def test_gti_write(tmp_path):
-    gti = make_gti({"START": [5, 6, 1, 2] * u.s, "STOP": [8, 7, 3, 4] * u.s})
+    time_ref = Time("2010-01-01", scale="tt")
+    time_ref.format = "mjd"
+    gti = make_gti({"START": [5, 6, 1, 2] * u.s, "STOP": [8, 7, 3, 4] * u.s}, time_ref)
 
     gti.write(tmp_path / "tmp.fits")
     new_gti = GTI.read(tmp_path / "tmp.fits")
 
     assert_time_allclose(new_gti.time_start, gti.time_start)
     assert_time_allclose(new_gti.time_stop, gti.time_stop)
-    assert new_gti.table.meta["MJDREFF"] == gti.table.meta["MJDREFF"]
+    assert_time_allclose(new_gti.time_ref, gti.time_ref)
 
 
 def test_gti_from_time():

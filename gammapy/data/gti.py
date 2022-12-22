@@ -58,13 +58,10 @@ class GTI:
     - Stop: 2015-08-02T23:14:24.184 (time standard: TT)
     """
 
-    def __init__(self, table, meta=None):
+    def __init__(self, table, reference_time="2000-01-01"):
         self.table = self._validate_table(table)
-        if meta is None:
-            meta = table.meta
 
-        if "MJDREFFI" in meta:
-            self._time_ref = time_ref_from_dict(meta)
+        self._time_ref = Time(reference_time)
 
     @staticmethod
     def _validate_table(table):
@@ -101,20 +98,17 @@ class GTI:
         """
         reference_time = Time(reference_time)
 
-        if isinstance(start, Time):
-            start = (start - reference_time).to(u.s)
+        if isinstance(start, u.Quantity):
+            start = reference_time + start
 
-        if isinstance(stop, Time):
-            stop = (stop - reference_time).to(u.s)
+        if isinstance(stop, u.Quantity):
+            stop = reference_time + stop
 
-        start = u.Quantity(start, ndmin=1)
-        stop = u.Quantity(stop, ndmin=1)
-        meta = time_ref_to_dict(reference_time)
-        table = Table({"START": start.to("s"), "STOP": stop.to("s")}, meta=meta)
-        return cls(table)
+        table = Table({"START": start, "STOP": stop})
+        return cls(table, reference_time=reference_time)
 
     @classmethod
-    def read(cls, filename, hdu="GTI"):
+    def read(cls, filename, hdu="GTI", format="gadf"):
         """Read from FITS file.
 
         Parameters
@@ -123,10 +117,16 @@ class GTI:
             Filename
         hdu : str
             hdu name. Default GTI.
+        format: str
+            Input format, currently only "gadf" is supported
         """
+        if format != "gadf":
+            raise ValueError(f'Only the "gadf" format supported, got {format}')
+
         filename = make_path(filename)
         table = Table.read(filename, hdu=hdu)
-        return cls(table)
+        time_ref = time_ref_from_dict(table.meta, format="mjd", scale="tt")
+        return cls.create(table["START"].quantity, table["STOP"].quantity, time_ref)
 
     def to_table_hdu(self, format="gadf"):
         """
@@ -145,7 +145,12 @@ class GTI:
         if format != "gadf":
             raise ValueError(f'Only the "gadf" format supported, got {format}')
 
-        return fits.BinTableHDU(self.table, name="GTI")
+        meta = time_ref_to_dict(self.time_ref, scale="tt")
+        start = self.time_start - self.time_ref
+        stop = self.time_stop - self.time_ref
+        table = Table({"START": start.to("s"), "STOP": stop.to("s")}, meta=meta)
+
+        return fits.BinTableHDU(table, name="GTI")
 
     def write(self, filename, **kwargs):
         """Write to file.
@@ -160,8 +165,8 @@ class GTI:
         hdulist.writeto(make_path(filename), **kwargs)
 
     def __str__(self):
-        t_start_met = u.Quantity(self.table["START"][0].astype("float64"), "second")
-        t_stop_met = u.Quantity(self.table["STOP"][-1].astype("float64"), "second")
+        t_start_met = (self.time_start[0] - self.time_ref).to("s")
+        t_stop_met = (self.time_stop[-1] - self.time_ref).to("s")
         t_start = self.time_start[0].fits
         t_stop = self.time_stop[-1].fits
         return (
