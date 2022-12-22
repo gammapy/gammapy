@@ -68,7 +68,7 @@ class GTI:
         if not isinstance(table, Table):
             raise TypeError("GTI table is not an astropy Table.")
 
-        colnames = ["tstart", "tstop"]
+        colnames = ["START", "STOP"]
 
         if not set(colnames).issubset(table.colnames):
             raise ValueError("GTI table not correctly defined.")

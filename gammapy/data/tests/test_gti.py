@@ -13,18 +13,18 @@ def test_gti_table_validation():
     start = Time([53090.123451203704], format="mjd", scale="tt")
     stop = Time([53090.14291879629], format="mjd", scale="tt")
 
-    table = QTable([start, stop], names=["tstart", "tstop"])
+    table = QTable([start, stop], names=["START", "STOP"])
     validated = GTI._validate_table(table)
     assert validated == table
 
-    bad_table = QTable([start, stop], names=["tst", "tstop"])
+    bad_table = QTable([start, stop], names=["bad", "STOP"])
     with pytest.raises(ValueError):
         GTI._validate_table(bad_table)
 
     with pytest.raises(TypeError):
         GTI._validate_table([start, stop])
 
-    bad_table = QTable([[1], [2]], names=["tstart", "tstop"])
+    bad_table = QTable([[1], [2]], names=["START", "STOP"])
     with pytest.raises(TypeError):
         GTI._validate_table(bad_table)
 
