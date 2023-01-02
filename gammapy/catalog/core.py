@@ -6,9 +6,10 @@ from copy import deepcopy
 import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.utils import lazyproperty
+from astropy.table import Table
 from gammapy.maps import TimeMapAxis
 from gammapy.modeling.models import Models
-from gammapy.utils.table import table_from_row_data, table_row_to_dict
+from gammapy.utils.table import table_row_to_dict
 
 __all__ = ["SourceCatalog", "SourceCatalogObject"]
 
@@ -69,7 +70,7 @@ class SourceCatalogObject:
     @property
     def position(self):
         """Source position (`~astropy.coordinates.SkyCoord`)."""
-        table = table_from_row_data([self.data])
+        table = Table([self.data])
         return _skycoord_from_table(table)[0]
 
 
