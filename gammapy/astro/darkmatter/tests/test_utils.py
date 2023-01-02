@@ -17,7 +17,11 @@ def geom():
 
 @pytest.fixture(scope="session")
 def jfact(geom):
-    jfactory = JFactory(geom=geom, profile=profiles.NFWProfile(), distance=8 * u.kpc)
+    jfactory = JFactory(
+        geom=geom,
+        profile=profiles.NFWProfile(),
+        distance=profiles.DMProfile.DISTANCE_GC,
+    )
     return jfactory.compute_jfactor()
 
 
@@ -33,5 +37,5 @@ def test_dmfluxmap(jfact):
         jfact * diff_flux.integral(energy_min=energy_min, energy_max=energy_max)
     ).to("cm-2 s-1")
     actual = int_flux[5, 5]
-    desired = 1.9483e-12 / u.cm**2 / u.s
+    desired = 5.94207e-12 / u.cm**2 / u.s
     assert_quantity_allclose(actual, desired, rtol=1e-3)

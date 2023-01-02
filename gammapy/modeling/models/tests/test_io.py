@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import operator
-
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
@@ -9,18 +8,18 @@ from astropy.utils.data import get_pkg_data_filename
 from gammapy.maps import Map, MapAxis, RegionNDMap
 from gammapy.modeling.models import (
     MODEL_REGISTRY,
+    CompoundSpectralModel,
     ConstantTemporalModel,
     EBLAbsorptionNormSpectralModel,
     ExpDecayTemporalModel,
     GaussianTemporalModel,
     LinearTemporalModel,
+    LogParabolaSpectralModel,
     Model,
     Models,
     PiecewiseNormSpectralModel,
     PowerLawSpectralModel,
-    LogParabolaSpectralModel,
     PowerLawTemporalModel,
-    CompoundSpectralModel,
     SineTemporalModel,
     SkyModel,
     TemplateNPredModel,
