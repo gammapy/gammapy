@@ -40,7 +40,7 @@ from IPython.display import display
 from gammapy.data import Observation, observatory_locations
 from gammapy.datasets import SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.estimators import SensitivityEstimator
-from gammapy.irf import load_cta_irfs
+from gammapy.irf import load_irf_dict_from_file
 from gammapy.makers import SpectrumDatasetMaker
 from gammapy.maps import MapAxis, RegionGeom
 
@@ -78,7 +78,7 @@ empty_dataset = SpectrumDataset.create(geom=geom, energy_axis_true=energy_axis_t
 # We extract the 1D IRFs from the full 3D IRFs provided by CTA.
 #
 
-irfs = load_cta_irfs(
+irfs = load_irf_dict_from_file(
     "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
 )
 location = observatory_locations["cta_south"]

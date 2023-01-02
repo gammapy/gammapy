@@ -36,7 +36,7 @@ Proposed approach
 Here we can’t use the regular observation objects that are connected to
 a `DataStore`. Instead we will create a fake
 `~gammapy.data.Observation` that contain some pointing information and
-the CTA 1DC IRFs (that are loaded with `~gammapy.irf.load_cta_irfs`).
+the CTA 1DC IRFs (that are loaded with `~gammapy.irf.load_irf_dict_from_file`).
 
 Then we will create a `~gammapy.datasets.MapDataset` geometry and
 create it with the `~gammapy.makers.MapDatasetMaker`.
@@ -63,7 +63,7 @@ import matplotlib.pyplot as plt
 from IPython.display import display
 from gammapy.data import Observation, observatory_locations
 from gammapy.datasets import MapDataset
-from gammapy.irf import load_cta_irfs
+from gammapy.irf import load_irf_dict_from_file
 from gammapy.makers import MapDatasetMaker, SafeMaskMaker
 from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling import Fit
@@ -89,7 +89,7 @@ from gammapy.modeling.models import (
 #
 
 # Loading IRFs
-irfs = load_cta_irfs(
+irfs = load_irf_dict_from_file(
     "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
 )
 

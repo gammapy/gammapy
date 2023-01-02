@@ -4,6 +4,7 @@ from astropy.io import fits
 from gammapy.data.hdu_index_table import HDUIndexTable
 from gammapy.utils.fits import HDULocation
 from gammapy.utils.scripts import make_path
+from gammapy.utils.deprecation import deprecated
 
 __all__ = ["load_cta_irfs", "load_irf_dict_from_file"]
 
@@ -141,8 +142,14 @@ def gadf_is_pointlike(header):
     return header.get("HDUCLAS3") == "POINT-LIKE"
 
 
+@deprecated("v1.1", alternative="load_irf_dict_from_file")
 def load_cta_irfs(filename):
-    """load CTA instrument response function and return a dictionary container.
+    """Load IRFs from file as written by the CTA DC1 into a dict
+
+    This function has a hardcoded list of IRF types and HDU names
+    and does not check what types of IRFs are actually present in the file.
+
+    Please use `load_irf_dict_from_file` instead..
 
     The IRF format should be compliant with the one discussed
     at http://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/.
@@ -196,8 +203,9 @@ def load_cta_irfs(filename):
 
 
 def load_irf_dict_from_file(filename):
-    """Open a fits file and generate a dictionary containing the Gammapy objects
-    corresponding to the IRF components stored
+    """Load all available IRF components from given file into a dict.
+
+    If multiple IRFs of the same type are present, the first encountered is returned.
 
     Parameters
     ----------

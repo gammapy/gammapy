@@ -38,13 +38,13 @@ class PSFMap(IRFMap):
         from astropy.coordinates import SkyCoord
         from gammapy.maps import WcsGeom, MapAxis
         from gammapy.data import Observation
-        from gammapy.irf import load_cta_irfs
+        from gammapy.irf import load_irf_dict_from_file
         from gammapy.makers import MapDatasetMaker
 
         # Define observation
         pointing = SkyCoord("0d", "0d")
         filename = "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
-        irfs = load_cta_irfs(filename)
+        irfs = load_irf_dict_from_file(filename)
         obs = Observation.create(pointing=pointing, irfs=irfs, livetime="1h")
 
         # Create WcsGeom

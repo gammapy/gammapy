@@ -7,7 +7,7 @@ from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.time import Time
 from astropy.units import Quantity
 from gammapy.data import DataStore, Observation
-from gammapy.irf import PSF3D, load_cta_irfs
+from gammapy.irf import PSF3D, load_irf_dict_from_file
 from gammapy.utils.fits import HDULocation
 from gammapy.utils.testing import (
     assert_skycoord_allclose,
@@ -219,7 +219,7 @@ def test_observations_select_time_time_intervals_list(data_store):
 def test_observation_cta_1dc():
     ontime = 5.0 * u.hr
     pointing = SkyCoord(0, 0, unit="deg", frame="galactic")
-    irfs = load_cta_irfs(
+    irfs = load_irf_dict_from_file(
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     )
 
