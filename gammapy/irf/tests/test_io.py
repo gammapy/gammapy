@@ -9,6 +9,7 @@ from gammapy.irf import (
     Background3D,
     EffectiveAreaTable2D,
     EnergyDispersion2D,
+    EnergyDependentMultiGaussPSF,
     RadMax2D,
     load_cta_irfs,
     load_irf_dict_from_file,
@@ -291,3 +292,16 @@ class TestIRFWrite:
 
         read_bkg = Background3D.read(path, hdu="BACKGROUND")
         assert_allclose(read_bkg.quantity, self.bkg_data)
+
+
+@requires_data()
+def test_load_irf_dict_from_file_cta():
+    """Test that CTA IRFs can be loaded and evaluated."""
+    irf = load_irf_dict_from_file(
+        "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
+    )
+    assert set(irf.keys()) == {"aeff", "edisp", "psf", "bkg"}
+    assert isinstance(irf["aeff"], EffectiveAreaTable2D)
+    assert isinstance(irf["edisp"], EnergyDispersion2D)
+    assert isinstance(irf["psf"], EnergyDependentMultiGaussPSF)
+    assert isinstance(irf["bkg"], Background3D)
