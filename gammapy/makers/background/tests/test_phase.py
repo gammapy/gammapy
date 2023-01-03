@@ -5,9 +5,9 @@ from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord
 from gammapy.data import DataStore
-from gammapy.datasets import SpectrumDataset
-from gammapy.makers import PhaseBackgroundMaker, SpectrumDatasetMaker
-from gammapy.maps import MapAxis, RegionGeom
+from gammapy.datasets import MapDataset, SpectrumDataset
+from gammapy.makers import MapDatasetMaker, PhaseBackgroundMaker, SpectrumDatasetMaker
+from gammapy.maps import MapAxis, RegionGeom, WcsGeom
 from gammapy.utils.regions import SphericalCircleSkyRegion
 from gammapy.utils.testing import requires_data
 
@@ -31,7 +31,7 @@ def test_basic(phase_bkg_maker):
 
 
 @requires_data()
-def test_run(observations, phase_bkg_maker):
+def test_run_spectrum(observations, phase_bkg_maker):
 
     maker = SpectrumDatasetMaker()
 
@@ -54,6 +54,31 @@ def test_run(observations, phase_bkg_maker):
 
     assert_allclose(dataset_on_off.counts.data.sum(), 28)
     assert_allclose(dataset_on_off.counts_off.data.sum(), 57)
+
+
+@requires_data()
+def test_run_map(observations, phase_bkg_maker):
+
+    maker = MapDatasetMaker()
+
+    e_reco = MapAxis.from_edges(np.logspace(0, 2, 5) * u.TeV, name="energy")
+    e_true = MapAxis.from_edges(np.logspace(-0.5, 2, 11) * u.TeV, name="energy_true")
+
+    pos = SkyCoord("08h35m20.65525s", "-45d10m35.1545s", frame="icrs")
+
+    binsz = Angle(0.02, "deg")
+    geom = WcsGeom.create(binsz=binsz, skydir=pos, width="2 deg", axes=[e_reco])
+    dataset_empty = MapDataset.create(geom=geom, energy_axis_true=e_true)
+
+    obs = observations["111630"]
+    dataset = maker.run(dataset_empty, obs)
+    dataset_on_off = phase_bkg_maker.run(dataset, obs)
+
+    assert_allclose(dataset_on_off.acceptance, 0.1)
+    assert_allclose(dataset_on_off.acceptance_off, 0.3)
+
+    assert_allclose(dataset_on_off.counts.data.sum(), 78)
+    assert_allclose(dataset_on_off.counts_off.data.sum(), 263)
 
 
 @pytest.mark.parametrize(
