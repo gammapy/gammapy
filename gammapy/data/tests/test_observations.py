@@ -11,6 +11,7 @@ from gammapy.irf import PSF3D, load_irf_dict_from_file
 from gammapy.data.pointing import FixedPointingInfo, PointingMode
 from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.data.utils import get_irfs_features
+from gammapy.utils.cluster import hierarchical_clustering
 from gammapy.utils.fits import HDULocation
 from gammapy.utils.testing import (
     assert_skycoord_allclose,
