@@ -24,7 +24,7 @@ jobs:
             allowed_fail: false
           - os: ubuntu-latest
             python: '3.9'
-            tox_env: 'py39-test-alldeps'
+            tox_env: 'py39-test-alldeps-cov'
             gammapy_data_path: /home/runner/work/gammapy/gammapy/gammapy-datasets/dev
             allowed_fail: false
           - os: macos-latest
