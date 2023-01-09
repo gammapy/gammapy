@@ -158,6 +158,20 @@ one for each time bin.
 .. accordion-footer::
 
 .. accordion-header::
+    :id: collapseHowToOne
+    :title: Non-convergence of a fit because of IRFs validity range
+
+It happens that a 3D analysis does not converge with warning messages indicating that the
+scanned positions of the model is outside valid IRF map range. This issue might happen when
+the position of a model has no defined range. The minimizer might scan positions outside the
+spatial range in which the IRFs are computed and then it gets lost.
+
+The simple solution is to add a physically-motivated range on the model's position, which
+solves the issue in most of the times.
+
+.. accordion-footer::
+
+.. accordion-header::
     :id: collapseHowToTwelve
     :title: Reduce memory budget for large datasets
 
