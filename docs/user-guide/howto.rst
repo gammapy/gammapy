@@ -171,8 +171,9 @@ scanned positions of the model is outside valid IRF map range. The type of warni
 This issue might happen when the position of a model has no defined range. The minimizer
 might scan positions outside the spatial range in which the IRFs are computed and then it gets lost.
 
-The simple solution is to add a physically-motivated range on the model's position, which
-solves the issue in most of the times. The documentation of the
+The simple solution is to add a physically-motivated range on the model's position, e.g. within
+the field of view or around an excess position. Most of the time, this tip solves the issue.
+The documentation of the
 `models sub-package <https://docs.gammapy.org/1.0/tutorials/api/models.html#modifying-model-parameters>`_
 explains how to add a validity range of a model parameter.
 
