@@ -96,6 +96,9 @@ def test_plot_map_rgb():
     with pytest.raises(ValueError):
         plot_map_rgb(map_, **kwargs)
 
+    with pytest.raises(ValueError):
+        plot_map_rgb(map_.sum_over_axes(keepdims=False), **kwargs)
+
     axis_rgb = MapAxis.from_energy_edges(
         [0.1, 0.2, 0.5, 10], unit=u.TeV, name="energy", interp="log"
     )

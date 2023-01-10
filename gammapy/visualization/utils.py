@@ -26,16 +26,14 @@ def plot_map_rgb(map_, ax=None, **kwargs):
     """
     Plot RGB image on matplotlib WCS axes.
 
-    This function is based on the `~astropy.visualization.make_lupton_rgb` function, and it
-    assumes that the input map has exactly three z-axis bins. If that were not the case, you
-    can resample the z-axis of your map as shown in the code example below.
+    This function is based on the `~astropy.visualization.make_lupton_rgb` function. The input map must
+    contain 1 non-spatial axis with exactly 3 bins. If this is not the case, the map has to be resampled
+    before using the `plot_map_rgb` function (e.g. as shown in the code example below).
 
     Parameters
     ----------
     map_ : `~gammapy.maps.WcsNDMap`
-        WCS map. If energy edges are not provided, the map should contain exactly 3 energy bins.
-    energy_edges : `~astropy.units.Quantity`, float
-        Energy edges (an iterable of length 4) defining exactly 3 energy bins.
+        WCS map. The map must contain 1 non-spatial axis with exactly 3 bins.
     ax : `~astropy.visualization.wcsaxes.WCSAxes`, optional
         WCS axis object to plot on.
     **kwargs : dict
@@ -48,7 +46,7 @@ def plot_map_rgb(map_, ax=None, **kwargs):
 
     Examples
     --------
-    >>> from gammapy.visualization.utils import plot_rgb
+    >>> from gammapy.visualization.utils import plot_map_rgb
     >>> from gammapy.maps import Map, MapAxis
     >>> import astropy.units as u
     >>> map_ = Map.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
@@ -60,7 +58,8 @@ def plot_map_rgb(map_, ax=None, **kwargs):
     >>> plot_rgb(map_.smooth(0.08*u.deg), **kwargs)
     """
     geom = map_.geom
-    if geom.axes[0].nbin != 3:
+    axes = geom.axes
+    if len(axes) != 1 or axes[0].nbin != 3:
         raise ValueError(
             "One non-spatial axis with exactly 3 bins is needed to plot an RGB image"
         )
