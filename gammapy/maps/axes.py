@@ -2640,7 +2640,7 @@ class TimeMapAxis:
             The unit to convert the edges to. Default is 'd' (day).
         interp : str
             Interpolation method used to transform between axis and pixel
-            coordinates.  Valid options are 'log', 'lin', and 'sqrt'.
+            coordinates.  Currently, only 'lin' is supported.
         name : str
             Axis name
 
