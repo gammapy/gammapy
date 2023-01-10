@@ -1,12 +1,11 @@
 import numpy as np
 from scipy.interpolate import CubicSpline
-import matplotlib.pyplot as plt
 from astropy.visualization import make_lupton_rgb
-from gammapy.maps import MapAxis
+import matplotlib.pyplot as plt
 
 __all__ = [
     "plot_contour_line",
-    "plot_rgb",
+    "plot_map_rgb",
     "plot_spectrum_datasets_off_regions",
     "plot_theta_squared_table",
 ]
@@ -23,11 +22,13 @@ ARTIST_TO_LINE_PROPERTIES = {
 }
 
 
-def plot_rgb(map_, energy_edges=None, ax=None, **kwargs):
+def plot_map_rgb(map_, ax=None, **kwargs):
     """
     Plot RGB image on matplotlib WCS axes.
 
-    Based on the `~astropy.visualization.make_lupton_rgb` function.
+    This function is based on the `~astropy.visualization.make_lupton_rgb` function, and it
+    assumes that the input map has exactly three z-axis bins. If that were not the case, you
+    can resample the z-axis of your map as shown in the code example below.
 
     Parameters
     ----------
@@ -48,38 +49,32 @@ def plot_rgb(map_, energy_edges=None, ax=None, **kwargs):
     Examples
     --------
     >>> from gammapy.visualization.utils import plot_rgb
-    >>> from gammapy.maps import Map
+    >>> from gammapy.maps import Map, MapAxis
     >>> import astropy.units as u
     >>> map_ = Map.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
+    >>> axis_rgb = MapAxis.from_energy_edges(
+    >>>     [0.1, 0.2, 0.5, 10], unit=u.TeV, name="energy", interp="log"
+    >>> )
+    >>> map_ = map_.resample_axis(axis_rgb)
     >>> kwargs = {"stretch": 0.5, "Q": 1, "minimum": 0.15}
-    >>> plot_rgb(map_.smooth(0.08*u.deg), [0.1, 0.2, 0.5, 10] * u.TeV, **kwargs)
+    >>> plot_rgb(map_.smooth(0.08*u.deg), **kwargs)
     """
-    axis = map_.geom.axes["energy"]
-    if not energy_edges:
-        if len(axis.center) != 3:
-            raise ValueError("Exactly 3 energy bins are needed to plot an RGB image")
-        else:
-            energy_edges = axis.edges
+    geom = map_.geom
+    if geom.axes[0].nbin != 3:
+        raise ValueError(
+            "One non-spatial axis with exactly 3 bins is needed to plot an RGB image"
+        )
 
-    if len(energy_edges) != 4:
-        raise ValueError("Exactly 3 energy bins are needed to plot an RGB image")
-
-    axis_rgb = MapAxis.from_energy_edges(
-        energy_edges.value, unit=energy_edges.unit, name="energy", interp=axis.interp
-    )
-    map_rgb = map_.resample_axis(axis_rgb)
-
-    data = [data_slice / np.nanmax(data_slice.flatten()) for data_slice in map_rgb.data]
+    data = [data_slice / np.nanmax(data_slice.flatten()) for data_slice in map_.data]
     data = make_lupton_rgb(*data, **kwargs)
 
-    ax = map_rgb._plot_default_axes(ax=ax)
-
+    ax = map_._plot_default_axes(ax=ax)
     ax.imshow(data)
 
-    if map_rgb.geom.is_allsky:
-        ax = map_rgb._plot_format_allsky(ax)
+    if geom.is_allsky:
+        ax = map_._plot_format_allsky(ax)
     else:
-        ax = map_rgb._plot_format(ax)
+        ax = map_._plot_format(ax)
 
     ax.autoscale(enable=False)
 

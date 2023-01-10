@@ -3,7 +3,7 @@ from .heatmap import annotate_heatmap, plot_heatmap
 from .panel import MapPanelPlotter
 from .utils import (
     plot_contour_line,
-    plot_rgb,
+    plot_map_rgb,
     plot_spectrum_datasets_off_regions,
     plot_theta_squared_table,
 )
@@ -15,7 +15,7 @@ __all__ = [
     "MapPanelPlotter",
     "plot_contour_line",
     "plot_heatmap",
-    "plot_rgb",
+    "plot_map_rgb",
     "plot_spectrum_datasets_off_regions",
     "plot_theta_squared_table",
 ]
