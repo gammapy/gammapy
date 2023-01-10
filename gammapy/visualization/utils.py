@@ -58,8 +58,7 @@ def plot_map_rgb(map_, ax=None, **kwargs):
     >>> plot_rgb(map_.smooth(0.08*u.deg), **kwargs)
     """
     geom = map_.geom
-    axes = geom.axes
-    if len(axes) != 1 or axes[0].nbin != 3:
+    if len(geom.axes) != 1 or geom.axes[0].nbin != 3:
         raise ValueError(
             "One non-spatial axis with exactly 3 bins is needed to plot an RGB image"
         )
