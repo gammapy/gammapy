@@ -159,7 +159,7 @@ one for each time bin.
 
 .. accordion-header::
     :id: collapseHowToOne
-    :title: Non-convergence of a fit because of IRFs validity range
+    :title: Improve fit convergence with constrains on the source position
 
 It happens that a 3D fit does not converge with warning messages indicating that the
 scanned positions of the model is outside valid IRF map range. The type of warning message is:
