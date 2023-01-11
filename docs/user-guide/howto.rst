@@ -161,7 +161,7 @@ one for each time bin.
     :id: collapseHowToOne
     :title: Non-convergence of a fit because of IRFs validity range
 
-It happens that a 3D analysis does not converge with warning messages indicating that the
+It happens that a 3D fit does not converge with warning messages indicating that the
 scanned positions of the model is outside valid IRF map range. The type of warning message is:
 ::
 
