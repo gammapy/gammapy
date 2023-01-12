@@ -13,6 +13,7 @@ from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.scripts import make_path
 from gammapy.utils.time import time_ref_from_dict
 from .core import ModelBase, _build_parameters_from_dict
+from .utils import _read_cta_sdc
 
 __all__ = [
     "ConstantTemporalModel",
@@ -464,12 +465,6 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         if (map.data < 0).any():
             log.warning("Map has negative values. Check and fix this!")
 
-        if map.geom.has_energy_axis:
-            raise NotImplementedError(
-                "LightCurveTemplateTemporalModel does not"
-                f" support energy axis, got {map.geom.axes.names}"
-            )
-
         self.map = map.copy()
         super().__init__()
 
@@ -481,19 +476,29 @@ class LightCurveTemplateTemporalModel(TemporalModel):
     def __str__(self):
         start_time = self.t_ref.quantity + self.map.geom.axes["time"].edges[0]
         end_time = self.t_ref.quantity + self.map.geom.axes["time"].edges[-1]
-        norm_min = np.min(self.map.data)
-        norm_max = np.max(self.map.data)
+        norm_min = np.nanmin(self.map.data)
+        norm_max = np.nanmax(self.map.data)
 
         prnt = (
-            f"{self.__class__.__name__} model summary:\n "
+            f"{self.__class__.__name__} model summary:\n\n "
             f"Reference time: {self.t_ref.value} MJD \n "
             f"Start time: {start_time.value} MJD \n "
             f"End time: {end_time.value} MJD \n "
             f"Norm min: {norm_min} \n"
-            f"Norm max: {norm_max}"
+            f"Norm max: {norm_max} \n"
         )
 
+        if self.is_energy_dependent:
+            energy_min = self.map.geom.axes["energy"].edges[0]
+            energy_max = self.map.geom.axes["energy"].edges[-1]
+            prnt1 = f"Energy min: {energy_min} \n" f"Energy max: {energy_max} \n"
+            prnt = prnt + prnt1
+
         return prnt
+
+    @property
+    def is_energy_dependent(self):
+        return self.map.geom.has_energy_axis
 
     @classmethod
     def from_table(cls, table, filename=None):
@@ -524,7 +529,6 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         m = RegionNDMap.create(
             region=None, axes=axes, meta=table.meta, data=table["NORM"]
         )
-
         return cls(m, t_ref=t_ref, filename=filename)
 
     @classmethod
@@ -535,8 +539,9 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         ----------
         filename : str
             Name of file to read
-        format : {"table", "map"}
+        format : {"table", "map", "cta-sdc"}
             Format of the input file.
+            The cta-sdc model is only supported for the CTA Science Data Challenge
 
         Returns
         -------
@@ -553,13 +558,26 @@ class LightCurveTemplateTemporalModel(TemporalModel):
             t_ref = time_ref_from_dict(m.meta)
             return cls(m, t_ref=t_ref, filename=filename)
 
+        elif format == "cta-sdc":
+            m, t_ref = _read_cta_sdc(filename)
+            return cls(m, t_ref=t_ref, filename=filename)
+
         else:
             raise ValueError(
-                f"Not a valid format: '{format}', choose from: {'table', 'map'}"
+                f"Not a valid format: '{format}', choose from: {'table', 'map', 'cta-sdc'}"
             )
+
+    def integral(self, t_min, t_max, oversampling_factor=100, **kwargs):
+        if self.is_energy_dependent:
+            raise NotImplementedError("Not supported for energy dependent models")
+        return super().integral(t_min, t_max, oversampling_factor, **kwargs)
 
     def to_table(self):
         """Convert model to an astropy table"""
+
+        if self.is_energy_dependent:
+            raise NotImplementedError("Not supported for energy dependent models")
+
         table = Table(
             data=[self.map.geom.axes["time"].center, self.map.quantity],
             names=["TIME", "NORM"],
@@ -582,7 +600,6 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
         if self.filename is None:
             raise IOError("Missing filename")
-
         if format == "table":
             table = self.to_table()
             table.write(filename, overwrite=overwrite)
@@ -591,14 +608,17 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         else:
             raise ValueError("Not a valid format, choose from ['map', 'table']")
 
-    def evaluate(self, time, t_ref=None):
+    def evaluate(self, time, t_ref=None, energy=None):
         """Evaluate the model at given coordinates."""
-
         if t_ref is None:
             t_ref = Time(self.t_ref.value, format="mjd")
-
         t = (time - t_ref).to_value(self.map.geom.axes["time"].unit)
         coords = {"time": t}
+        if self.is_energy_dependent:
+            if energy is None:
+                coords["energy"] = self.map.geom.axes["energy"].center.reshape(-1, 1)
+            else:
+                coords["energy"] = energy.reshape(-1, 1)
         val = self.map.interp_by_coord(coords)
         val = np.clip(val, 0, a_max=None)
         return u.Quantity(val, self.map.unit, copy=False)
@@ -617,6 +637,53 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         data["temporal"]["format"] = format
         data["temporal"]["unit"] = str(self.map.unit)
         return data
+
+    def plot(self, time_range, energy=None, ax=None, n_points=100, **kwargs):
+        """
+        Plot Temporal Model.
+
+        Parameters
+        ----------
+        time_range : `~astropy.time.Time`
+            times to plot the model
+        energy : `~astropy.units.quantity`
+            energies to compute the model at for energy dependent models, optional
+        ax : `~matplotlib.axes.Axes`, optional
+            Axis to plot on
+        n_points : int
+            Number of bins to plot model
+        **kwargs : dict
+            Keywords forwarded to `~matplotlib.pyplot.errorbar`
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`, optional
+            axis
+        """
+        if not self.is_energy_dependent:
+            super().plot(time_range=time_range, ax=ax, n_points=n_points, **kwargs)
+        else:
+            time_min, time_max = time_range
+            time_axis = TimeMapAxis.from_time_bounds(
+                time_min=time_min, time_max=time_max, nbin=n_points
+            )
+            if energy is None:
+                energy_axis = self.map.geom.axes["energy"]
+            else:
+                energy_axis = MapAxis.from_nodes(
+                    nodes=energy, name="energy", interp="log"
+                )
+
+            m = RegionNDMap.create(region=None, axes=[time_axis, energy_axis])
+            # kwargs.setdefault("marker", "None")
+            # kwargs.setdefault("ls", "-")
+            # kwargs.setdefault("xerr", None)
+            m.quantity = self.evaluate(
+                time=time_axis.time_mid, energy=energy_axis.center
+            )
+            ax = m.plot(axis_name="time", ax=ax, **kwargs)
+            ax.set_ylabel("Norm / A.U.")
+            return ax, m
 
 
 class PowerLawTemporalModel(TemporalModel):
