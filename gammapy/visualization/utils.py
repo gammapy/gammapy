@@ -55,7 +55,7 @@ def plot_map_rgb(map_, ax=None, **kwargs):
     >>> )
     >>> map_ = map_.resample_axis(axis_rgb)
     >>> kwargs = {"stretch": 0.5, "Q": 1, "minimum": 0.15}
-    >>> plot_rgb(map_.smooth(0.08*u.deg), **kwargs)
+    >>> plot_map_rgb(map_.smooth(0.08*u.deg), **kwargs)
     """
     geom = map_.geom
     if len(geom.axes) != 1 or geom.axes[0].nbin != 3:
