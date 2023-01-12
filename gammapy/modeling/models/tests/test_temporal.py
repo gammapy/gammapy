@@ -46,6 +46,24 @@ def test_light_curve_evaluate(light_curve):
     assert_allclose(val, 0.015512, rtol=1e-5)
 
 
+@requires_data()
+def test_energy_dependent_lightcurve():
+    filename = "$GAMMAPY_DATA/gravitational_waves/GW_example_DC_file.fits.gz"
+    mod = LightCurveTemplateTemporalModel.read(filename, format="cta-sdc")
+
+    assert mod.is_energy_dependent == True
+
+    t = Time(55555.6157407407, format="mjd")
+    val = mod.evaluate(t, energy=[0.3, 2] * u.TeV)
+    assert_allclose(val, [[2.36248483e-21, 4.34347110e-23]], rtol=1e-5)
+
+    with mpl_plot_check():
+        mod.plot(
+            time_range=(Time(55555.50, format="mjd"), Time(55563.0, format="mjd")),
+            energy=[0.3, 2] * u.TeV,
+        )
+
+
 def ph_curve(x, amplitude=0.5, x0=0.01):
     return 100.0 + amplitude * np.sin(2 * np.pi * (x - x0) / 1.0)
 
