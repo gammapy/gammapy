@@ -25,7 +25,7 @@ def _read_cta_sdc(filename):
         time_max = time_hdu.data["Final Time"]
         edges = np.append(time_min, time_max[-1]) * u.Unit(time_header["TUNIT1"])
         time_ref = time_ref_from_dict(time_header)
-        time_axis = MapAxis.from_edges(edges=edges, name="time")
+        time_axis = MapAxis.from_edges(edges=edges, name="time", interp="log")
         data = hdul["SPECTRA"]
         return (
             RegionNDMap.create(

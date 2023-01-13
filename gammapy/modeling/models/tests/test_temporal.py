@@ -51,7 +51,7 @@ def test_energy_dependent_lightcurve():
     filename = "$GAMMAPY_DATA/gravitational_waves/GW_example_DC_file.fits.gz"
     mod = LightCurveTemplateTemporalModel.read(filename, format="cta-sdc")
 
-    assert mod.is_energy_dependent == True
+    assert mod.is_energy_dependent is True
 
     t = Time(55555.6157407407, format="mjd")
     val = mod.evaluate(t, energy=[0.3, 2] * u.TeV)
