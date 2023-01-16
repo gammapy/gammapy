@@ -1209,7 +1209,10 @@ class MapDataset(Dataset):
                 )
             except KeyError:
                 exposure_map = None
-            kwargs["psf"] = PSFMap(psf_map, exposure_map)
+            if "energy" in psf_map.geom.axes.names:
+                kwargs["psf"] = RecoPSFMap(psf_map, exposure_map)
+            elif "energy_true" in psf_map.geom.axes.names:
+                kwargs["psf"] = PSFMap(psf_map, exposure_map)
 
         if "MASK_SAFE" in hdulist:
             mask_safe = Map.from_hdulist(hdulist, hdu="mask_safe", format=format)
