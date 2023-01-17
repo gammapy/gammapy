@@ -1278,14 +1278,27 @@ class MapDataset(Dataset):
             format=format,
         )
 
-        kwargs["psf"] = HDULocation(
-            hdu_class="psf_map",
-            file_dir=path.parent,
-            file_name=path.name,
-            hdu_name="PSF",
-            cache=cache,
-            format=format,
-        )
+        try:
+            kwargs["psf"] = HDULocation(
+                hdu_class="psf_map_reco",
+                file_dir=path.parent,
+                file_name=path.name,
+                hdu_name="PSF",
+                cache=cache,
+                format=format,
+            )
+            dataset = cls(**kwargs)
+            dataset.psf
+        except ValueError:
+            kwargs["psf"] = HDULocation(
+                hdu_class="psf_map",
+                file_dir=path.parent,
+                file_name=path.name,
+                hdu_name="PSF",
+                cache=cache,
+                format=format,
+            )
+            dataset = cls(**kwargs)
 
         return cls(**kwargs)
 
