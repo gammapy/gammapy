@@ -19,8 +19,8 @@ def _read_cta_sdc(filename):
         )
         time_hdu = hdul["TIMES"]
         time_header = time_hdu.header
-        time_header.setdefault("MJDREFI", 0.5)
-        time_header.setdefault("MJDREFF", 55555)
+        time_header.setdefault("MJDREFF", 0.5)
+        time_header.setdefault("MJDREFI", 55555)
         time_min = time_hdu.data["Initial Time"]
         time_max = time_hdu.data["Final Time"]
         edges = np.append(time_min, time_max[-1]) * u.Unit(time_header["TUNIT1"])
