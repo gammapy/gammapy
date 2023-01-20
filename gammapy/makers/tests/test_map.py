@@ -17,7 +17,7 @@ from gammapy.data import (
 )
 from gammapy.datasets import MapDataset
 from gammapy.datasets.map import RAD_AXIS_DEFAULT
-from gammapy.irf import EDispKernelMap, EDispMap, PSFMap, Background2D
+from gammapy.irf import Background2D, EDispKernelMap, EDispMap, PSFMap
 from gammapy.makers import FoVBackgroundMaker, MapDatasetMaker, SafeMaskMaker
 from gammapy.maps import HpxGeom, Map, MapAxis, WcsGeom
 from gammapy.utils.testing import requires_data, requires_dependency
@@ -237,6 +237,18 @@ def test_make_meta_table(observations):
     assert_allclose(map_dataset_meta_table["DEC_PNT"], -29.6075)
     assert_allclose(map_dataset_meta_table["OBS_ID"], 110380)
     assert map_dataset_meta_table["OBS_MODE"] == "POINTING"
+
+
+@requires_data()
+def test_make_map_meta(observations):
+    dataset = MapDataset.create(geom((0.1, 1, 10)))
+    maker_obs = MapDatasetMaker(selection=["meta_table"])
+    map_dataset = maker_obs.run(dataset, observation=observations[0])
+
+    assert_allclose(map_dataset.meta_table["RA_PNT"], 267.68121338)
+    assert_allclose(map_dataset.meta_table["DEC_PNT"], -29.6075)
+    assert_allclose(map_dataset.meta_table["OBS_ID"], 110380)
+    assert map_dataset.meta_table["OBS_MODE"] == "POINTING"
 
 
 @requires_data()

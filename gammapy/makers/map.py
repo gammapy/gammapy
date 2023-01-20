@@ -99,7 +99,14 @@ class MapDatasetMaker(Maker):
     """
 
     tag = "MapDatasetMaker"
-    available_selection = ["counts", "exposure", "background", "psf", "edisp"]
+    available_selection = [
+        "counts",
+        "exposure",
+        "background",
+        "psf",
+        "edisp",
+        "meta_table",
+    ]
 
     def __init__(
         self,
@@ -378,7 +385,8 @@ class MapDatasetMaker(Maker):
             Map dataset.
         """
         kwargs = {"gti": observation.gti}
-        kwargs["meta_table"] = self.make_meta_table(observation)
+        if "meta_table" in self.selection:
+            kwargs["meta_table"] = self.make_meta_table(observation)
 
         mask_safe = Map.from_geom(dataset.counts.geom, dtype=bool)
         mask_safe.data[...] = True
