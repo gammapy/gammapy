@@ -223,6 +223,21 @@ def test_sky_disk_edge():
     assert_allclose((value_edge_nwidth / value_center).to_value(""), 0.95)
 
 
+def test_disk_from_region():
+    region = EllipseSkyRegion(
+        center=SkyCoord(20, 17, unit="deg"),
+        height=0.3 * u.deg,
+        width=1.0 * u.deg,
+        angle=30 * u.deg,
+    )
+    disk = DiskSpatialModel.from_region(region, frame="galactic")
+    assert_allclose(disk.parameters["lon_0"].value, 2.315473, rtol=1e-2)
+    assert_allclose(disk.parameters["lat_0"].value, -0.791178, rtol=1e-2)
+    assert_allclose(disk.parameters["r_0"].value, 0.5, rtol=1e-2)
+    assert_allclose(disk.parameters["e"].value, 0.9539, rtol=1e-2)
+    assert_allclose(disk.parameters["phi"].quantity, 120 * u.deg)
+
+
 def test_sky_shell():
     width = 2 * u.deg
     rad = 2 * u.deg

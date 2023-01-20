@@ -775,6 +775,28 @@ class DiskSpatialModel(SpatialModel):
             **kwargs,
         )
 
+    @classmethod
+    def from_region(cls, region, **kwargs):
+        """Create a `DiskSpatialModel from a ~regions.EllipseSkyRegion`
+
+        Parameters
+        ----------
+        region : `~regions.EllipseSkyRegion`
+            region to create model from
+
+        Returns
+        -------
+        spatial_model : `~gammapy.modeling.models.DiskSpatialModel`
+        """
+        frame = kwargs.pop("frame", region.center.frame)
+        model = cls.from_position(getattr(region.center, frame))
+        r0 = max(region.width, region.height)
+        model.r_0.quantity = r0 / 2.0
+        r1 = min(region.width, region.height)
+        model.e.value = np.sqrt(1.0 - np.power(r1 / r0, 2))
+        model.phi.quantity = 90 * u.deg + region.angle
+        return model
+
 
 class ShellSpatialModel(SpatialModel):
     r"""Shell model.
