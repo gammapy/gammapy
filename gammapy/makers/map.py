@@ -362,7 +362,7 @@ class MapDatasetMaker(Maker):
 
         return meta_table
 
-    def run(self, dataset, observation):
+    def run(self, dataset, observation, ignore_meta=False):
         """Make map dataset.
 
         Parameters
@@ -378,7 +378,8 @@ class MapDatasetMaker(Maker):
             Map dataset.
         """
         kwargs = {"gti": observation.gti}
-        kwargs["meta_table"] = self.make_meta_table(observation)
+        if not ignore_meta:
+            kwargs["meta_table"] = self.make_meta_table(observation)
 
         mask_safe = Map.from_geom(dataset.counts.geom, dtype=bool)
         mask_safe.data[...] = True
