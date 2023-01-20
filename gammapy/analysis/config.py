@@ -95,6 +95,7 @@ class MapSelectionEnum(str, Enum):
     background = "background"
     psf = "psf"
     edisp = "edisp"
+    meta_table = "meta_table"
 
 
 class GammapyBaseConfig(BaseModel):
