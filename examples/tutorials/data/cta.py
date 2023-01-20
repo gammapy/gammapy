@@ -67,7 +67,7 @@ from astropy import units as u
 import matplotlib.pyplot as plt
 from IPython.display import display
 from gammapy.data import DataStore, EventList
-from gammapy.irf import EffectiveAreaTable2D, load_cta_irfs
+from gammapy.irf import EffectiveAreaTable2D, load_irf_dict_from_file
 
 ######################################################################
 # Check setup
@@ -239,7 +239,7 @@ print(observation.aeff)
 irf_filename = (
     "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
 )
-irfs = load_cta_irfs(irf_filename)
+irfs = load_irf_dict_from_file(irf_filename)
 print(irfs)
 
 
@@ -368,10 +368,10 @@ plt.show()
 
 # !ls caldb/data/cta/prod3b-v2/bcf
 
-# irfs1 = load_cta_irfs("caldb/data/cta/prod3b-v2/bcf/South_z20_50h/irf_file.fits")
+# irfs1 = load_irf_dict_from_file("caldb/data/cta/prod3b-v2/bcf/South_z20_50h/irf_file.fits")
 # irfs1["aeff"].plot_energy_dependence()
 
-# irfs2 = load_cta_irfs("caldb/data/cta/prod3b-v2/bcf/South_z40_50h/irf_file.fits")
+# irfs2 = load_irf_dict_from_file("caldb/data/cta/prod3b-v2/bcf/South_z40_50h/irf_file.fits")
 # irfs2["aeff"].plot_energy_dependence()
 
 

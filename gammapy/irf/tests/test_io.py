@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
@@ -8,6 +9,7 @@ from gammapy.irf import (
     Background3D,
     EffectiveAreaTable2D,
     EnergyDispersion2D,
+    EnergyDependentMultiGaussPSF,
     RadMax2D,
     load_cta_irfs,
     load_irf_dict_from_file,
@@ -15,14 +17,16 @@ from gammapy.irf import (
 from gammapy.maps import MapAxis
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import requires_data
+from gammapy.utils.deprecation import GammapyDeprecationWarning
 
 
 @requires_data()
 def test_cta_irf():
     """Test that CTA IRFs can be loaded and evaluated."""
-    irf = load_cta_irfs(
-        "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
-    )
+    with pytest.warns(GammapyDeprecationWarning):
+        irf = load_cta_irfs(
+            "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
+        )
 
     energy = Quantity(1, "TeV")
     offset = Quantity(3, "deg")
@@ -48,9 +52,10 @@ def test_cta_irf():
 @requires_data()
 def test_cta_irf_alpha_config_south():
     """Test that CTA IRFs can be loaded and evaluated."""
-    irf = load_cta_irfs(
-        "$GAMMAPY_DATA/cta-caldb/Prod5-South-20deg-AverageAz-14MSTs37SSTs.180000s-v0.1.fits.gz"
-    )
+    with pytest.warns(GammapyDeprecationWarning):
+        irf = load_cta_irfs(
+            "$GAMMAPY_DATA/cta-caldb/Prod5-South-20deg-AverageAz-14MSTs37SSTs.180000s-v0.1.fits.gz"
+        )
 
     energy = Quantity(1, "TeV")
     offset = Quantity(3, "deg")
@@ -76,9 +81,10 @@ def test_cta_irf_alpha_config_south():
 @requires_data()
 def test_cta_irf_alpha_config_north():
     """Test that CTA IRFs can be loaded and evaluated."""
-    irf = load_cta_irfs(
-        "$GAMMAPY_DATA/cta-caldb/Prod5-North-20deg-AverageAz-4LSTs09MSTs.180000s-v0.1.fits.gz"
-    )
+    with pytest.warns(GammapyDeprecationWarning):
+        irf = load_cta_irfs(
+            "$GAMMAPY_DATA/cta-caldb/Prod5-North-20deg-AverageAz-4LSTs09MSTs.180000s-v0.1.fits.gz"
+        )
 
     energy = Quantity(1, "TeV")
     offset = Quantity(3, "deg")
@@ -286,3 +292,16 @@ class TestIRFWrite:
 
         read_bkg = Background3D.read(path, hdu="BACKGROUND")
         assert_allclose(read_bkg.quantity, self.bkg_data)
+
+
+@requires_data()
+def test_load_irf_dict_from_file_cta():
+    """Test that CTA IRFs can be loaded and evaluated."""
+    irf = load_irf_dict_from_file(
+        "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
+    )
+    assert set(irf.keys()) == {"aeff", "edisp", "psf", "bkg"}
+    assert isinstance(irf["aeff"], EffectiveAreaTable2D)
+    assert isinstance(irf["edisp"], EnergyDispersion2D)
+    assert isinstance(irf["psf"], EnergyDependentMultiGaussPSF)
+    assert isinstance(irf["bkg"], Background3D)

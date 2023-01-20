@@ -37,11 +37,11 @@ distribution of fitted parameters is consistent with the input values.**
 Proposed approach
 -----------------
 
-We will use the following classes:
+We will use the following classes and functions:
 
 -  `~gammapy.datasets.SpectrumDatasetOnOff`
 -  `~gammapy.datasets.SpectrumDataset`
--  `~gammapy.irf.load_cta_irfs`
+-  `~gammapy.irf.load_irf_dict_from_file`
 -  `~gammapy.modeling.models.PowerLawSpectralModel`
 
 """
@@ -62,7 +62,7 @@ import matplotlib.pyplot as plt
 from IPython.display import display
 from gammapy.data import Observation, observatory_locations
 from gammapy.datasets import Datasets, SpectrumDataset, SpectrumDatasetOnOff
-from gammapy.irf import load_cta_irfs
+from gammapy.irf import load_irf_dict_from_file
 from gammapy.makers import SpectrumDatasetMaker
 from gammapy.maps import MapAxis, RegionGeom
 from gammapy.modeling import Fit
@@ -120,7 +120,7 @@ model = SkyModel(spectral_model=model_simu, name="source")
 ######################################################################
 # Load the IRFs
 # In this simulation, we use the CTA-1DC irfs shipped with gammapy.
-irfs = load_cta_irfs(
+irfs = load_irf_dict_from_file(
     "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
 )
 
