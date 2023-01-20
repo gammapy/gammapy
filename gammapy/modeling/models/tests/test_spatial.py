@@ -237,6 +237,15 @@ def test_disk_from_region():
     assert_allclose(disk.parameters["e"].value, 0.9539, rtol=1e-2)
     assert_allclose(disk.parameters["phi"].quantity, 120 * u.deg)
 
+    region = CircleSkyRegion(center=region.center, radius=1.0 * u.deg)
+    disk = DiskSpatialModel.from_region(region)
+    assert_allclose(disk.parameters["e"].value, 0.0, rtol=1e-2)
+    assert_allclose(disk.parameters["lon_0"].value, 20, rtol=1e-2)
+
+    region = PointSkyRegion(center=region.center)
+    with pytest.raises(TypeError):
+        DiskSpatialModel.from_region(region)
+
 
 def test_sky_shell():
     width = 2 * u.deg

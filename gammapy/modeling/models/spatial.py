@@ -781,14 +781,20 @@ class DiskSpatialModel(SpatialModel):
 
         Parameters
         ----------
-        region : `~regions.EllipseSkyRegion`
+        region : `~regions.EllipseSkyRegion` or ~regions.CircleSkyRegion`
             region to create model from
 
         Returns
         -------
         spatial_model : `~gammapy.modeling.models.DiskSpatialModel`
         """
-        frame = kwargs.pop("frame", region.center.frame)
+        if isinstance(region, CircleSkyRegion):
+            region = EllipseSkyRegion(
+                center=region.center, width=region.radius, height=region.radius
+            )
+        if not isinstance(region, EllipseSkyRegion):
+            raise TypeError("Please provide a Circular or Elliptic region")
+        frame = kwargs.pop("frame", region.center.frame.name)
         model = cls.from_position(getattr(region.center, frame))
         r0 = max(region.width, region.height)
         model.r_0.quantity = r0 / 2.0
