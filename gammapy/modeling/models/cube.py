@@ -702,7 +702,7 @@ class FoVBackgroundModel(ModelBase):
         spectral_data = data.get("spectral")
         if spectral_data is not None:
             model_class = SPECTRAL_MODEL_REGISTRY.get_cls(spectral_data["type"])
-            spectral_model = model_class.from_dict(spectral_data)
+            spectral_model = model_class.from_dict({"spectral": spectral_data})
         else:
             spectral_model = None
 
@@ -883,7 +883,7 @@ class TemplateNPredModel(ModelBase):
 
         if spectral_data is not None:
             model_class = SPECTRAL_MODEL_REGISTRY.get_cls(spectral_data["type"])
-            spectral_model = model_class.from_dict(spectral_data)
+            spectral_model = model_class.from_dict({"spectral": spectral_data})
         else:
             spectral_model = None
 
