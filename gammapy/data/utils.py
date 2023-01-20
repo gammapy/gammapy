@@ -6,7 +6,7 @@ def get_irfs_features(
     observations,
     coord,
     names=["edisp-bias", "edisp-res", "psf-radius"],
-    containment_faction=0.68,
+    containment_fraction=0.68,
 ):
     """Get features from irfs properties at a given position.
     Used for observations clustering.
@@ -19,8 +19,8 @@ def get_irfs_features(
         IRFs properties to be considered.
         Available options are ["edisp-bias", "edisp-res", "psf-radius"]
         (all used by default).
-    containment_faction : float
-        Containment_faction to compute the `psf-radius`.
+    containment_fraction : float
+        Containment_fraction to compute the `psf-radius`.
         Default is 68%.
 
     Returns
@@ -52,7 +52,7 @@ def get_irfs_features(
                 features[ko, kf] = edisp_kernel.get_resolution(energy_true)
             if name == "psf-radius":
                 psf_radius = obs.psf.containment_radius(
-                    fraction=containment_faction,
+                    fraction=containment_fraction,
                     offset=offset,
                     energy_true=energy_true,
                 )
