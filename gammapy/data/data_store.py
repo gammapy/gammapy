@@ -259,7 +259,7 @@ class DataStore:
         else:
             return s
 
-    def obs(self, obs_id, required_irf="full-enclosure"):
+    def obs(self, obs_id, required_irf="full-enclosure", has_only_irf=False):
         """Access a given `~gammapy.data.Observation`.
 
         Parameters
@@ -303,7 +303,10 @@ class DataStore:
                 f"{difference} is not a valid hdu key. Choose from: {ALL_IRFS}"
             )
 
-        required_hdus = {"events", "gti"}.union(required_irf)
+        if has_only_irf:
+            required_hdus = required_irf
+        else:
+            required_hdus = {"events", "gti"}.union(required_irf)
 
         missing_hdus = []
         for hdu in ALL_HDUS:
@@ -331,7 +334,11 @@ class DataStore:
         return Observation(**kwargs)
 
     def get_observations(
-        self, obs_id=None, skip_missing=False, required_irf="full-enclosure"
+        self,
+        obs_id=None,
+        skip_missing=False,
+        required_irf="full-enclosure",
+        has_only_irf=False,
     ):
         """Generate a `~gammapy.data.Observations`.
 
@@ -376,7 +383,7 @@ class DataStore:
 
         for _ in obs_id:
             try:
-                obs = self.obs(_, required_irf)
+                obs = self.obs(_, required_irf, has_only_irf)
             except ValueError as err:
                 if skip_missing:
                     log.warning(f"Skipping missing obs_id: {_!r}")
