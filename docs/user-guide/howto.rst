@@ -162,7 +162,7 @@ one for each time bin.
     :title: Improve fit convergence with constraints on the source position
 
 It happens that a 3D fit does not converge with warning messages indicating that the
-scanned positions of the model is outside valid IRF map range. The type of warning message is:
+scanned positions of the model are outside the valid IRF map range. The type of warning message is:
 ::
 
     Position <SkyCoord (ICRS): (ra, dec) in deg
