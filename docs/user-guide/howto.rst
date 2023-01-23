@@ -158,6 +158,28 @@ one for each time bin.
 .. accordion-footer::
 
 .. accordion-header::
+    :id: collapseHowToOne
+    :title: Improve fit convergence with constraints on the source position
+
+It happens that a 3D fit does not converge with warning messages indicating that the
+scanned positions of the model are outside the valid IRF map range. The type of warning message is:
+::
+
+    Position <SkyCoord (ICRS): (ra, dec) in deg
+      (329.71693826, -33.18392464)> is outside valid IRF map range, using nearest IRF defined within
+
+This issue might happen when the position of a model has no defined range. The minimizer
+might scan positions outside the spatial range in which the IRFs are computed and then it gets lost.
+
+The simple solution is to add a physically-motivated range on the model's position, e.g. within
+the field of view or around an excess position. Most of the time, this tip solves the issue.
+The documentation of the
+`models sub-package <https://docs.gammapy.org/1.0/tutorials/api/models.html#modifying-model-parameters>`_
+explains how to add a validity range of a model parameter.
+
+.. accordion-footer::
+
+.. accordion-header::
     :id: collapseHowToTwelve
     :title: Reduce memory budget for large datasets
 
