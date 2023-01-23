@@ -393,7 +393,7 @@ class SpatialModel(ModelBase):
             Spatial model
         """
         lon_0, lat_0 = position.data.lon, position.data.lat
-        return cls(lon_0=lon_0, lat_0=lat_0, frame=position.frame, **kwargs)
+        return cls(lon_0=lon_0, lat_0=lat_0, frame=position.frame.name, **kwargs)
 
     @property
     def evaluation_radius(self):
@@ -796,11 +796,15 @@ class DiskSpatialModel(SpatialModel):
             raise TypeError("Please provide a Circular or Elliptic region")
         frame = kwargs.pop("frame", region.center.frame.name)
         model = cls.from_position(getattr(region.center, frame))
-        r0 = max(region.width, region.height)
+        if region.height > region.width:
+            r0, r1 = region.height, region.width
+            phi = region.angle
+        else:
+            r1, r0 = region.height, region.width
+            phi = 90 * u.deg + region.angle
         model.r_0.quantity = r0 / 2.0
-        r1 = min(region.width, region.height)
         model.e.value = np.sqrt(1.0 - np.power(r1 / r0, 2))
-        model.phi.quantity = 90 * u.deg + region.angle
+        model.phi.quantity = phi
         return model
 
 

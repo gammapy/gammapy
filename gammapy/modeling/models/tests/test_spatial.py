@@ -237,10 +237,26 @@ def test_disk_from_region():
     assert_allclose(disk.parameters["e"].value, 0.9539, rtol=1e-2)
     assert_allclose(disk.parameters["phi"].quantity, 120 * u.deg)
 
+    reg1 = disk.to_region()
+    assert_allclose(reg1.height, region.width, rtol=1e-2)
+
+    region = EllipseSkyRegion(
+        center=SkyCoord(20, 17, unit="deg", frame="galactic"),
+        height=1 * u.deg,
+        width=0.3 * u.deg,
+        angle=30 * u.deg,
+    )
+    disk = DiskSpatialModel.from_region(region, frame="icrs")
+    reg1 = disk.to_region()
+    assert_allclose(reg1.angle, region.angle, rtol=1e-2)
+    assert_allclose(reg1.height, region.height, rtol=1e-3)
+    assert_allclose(disk.parameters["phi"].quantity, 30 * u.deg)
+
     region = CircleSkyRegion(center=region.center, radius=1.0 * u.deg)
     disk = DiskSpatialModel.from_region(region)
     assert_allclose(disk.parameters["e"].value, 0.0, rtol=1e-2)
     assert_allclose(disk.parameters["lon_0"].value, 20, rtol=1e-2)
+    assert disk.frame == "galactic"
 
     region = PointSkyRegion(center=region.center)
     with pytest.raises(TypeError):
