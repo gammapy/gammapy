@@ -59,7 +59,7 @@ class MapDatasetEventSampler:
         return table
 
     def __evaluate_timevar_source(self, dataset, evaluator, time_axis=None):
-        """Calculate Npred for a given dataset.model by evaluating
+        """Calculate Npred for a given `dataset.model` by evaluating
         it in region geometry.
 
         Parameters
