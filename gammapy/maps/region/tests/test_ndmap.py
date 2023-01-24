@@ -259,8 +259,8 @@ def test_region_nd_map_fill_events_point_sky_region(point_region_map):
 
 
 def test_apply_edisp(point_region_map):
-    e_true = point_region_map.geom.axes[0]
-    e_reco = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3)
+    e_true = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3, name="energy_true")
+    e_reco = point_region_map.geom.axes[0]
 
     edisp = EDispKernel.from_diagonal_response(
         energy_axis_true=e_true, energy_axis=e_reco

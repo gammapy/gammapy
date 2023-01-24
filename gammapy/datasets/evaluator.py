@@ -8,6 +8,7 @@ from regions import CircleSkyRegion
 import matplotlib.pyplot as plt
 from gammapy.maps import HpxNDMap, Map, RegionNDMap, WcsNDMap
 from gammapy.modeling.models import PointSpatialModel, TemplateNPredModel
+from .utils import apply_edisp
 
 PSF_CONTAINMENT = 0.999
 CUTOUT_MARGIN = 0.1 * u.deg
@@ -348,7 +349,7 @@ class MapEvaluator:
         npred_reco : `~gammapy.maps.Map`
             Predicted counts in reco energy bins
         """
-        return npred.apply_edisp(self.edisp)
+        return apply_edisp(npred, self.edisp)
 
     @lazyproperty
     def _compute_npred(self):

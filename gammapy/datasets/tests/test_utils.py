@@ -4,6 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from gammapy.irf import EDispKernel
 from gammapy.maps import Map, MapAxis
+from ..utils import apply_edisp
 
 
 @pytest.fixture
@@ -27,7 +28,7 @@ def test_apply_edisp(region_map_true):
         energy_axis_true=e_true, energy_axis=e_reco
     )
 
-    m = region_map_true.apply_edisp(edisp)
+    m = apply_edisp(region_map_true, edisp)
     assert m.geom.data_shape == (3, 1, 1)
 
     e_reco = m.geom.axes[0].edges
