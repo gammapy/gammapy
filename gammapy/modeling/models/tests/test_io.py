@@ -12,6 +12,7 @@ from gammapy.modeling.models import (
     ConstantTemporalModel,
     EBLAbsorptionNormSpectralModel,
     ExpDecayTemporalModel,
+    FoVBackgroundModel,
     GaussianTemporalModel,
     LinearTemporalModel,
     LogParabolaSpectralModel,
@@ -161,6 +162,14 @@ def test_piecewise_norm_spectral_model_io():
     assert_allclose(new_model.parameters[0].value, 2)
     assert_allclose(new_model.energy, energy)
     assert_allclose(new_model.norms, [2, 5, 3, 0.5])
+
+    bkg = FoVBackgroundModel(spectral_model=model, dataset_name="")
+    bkg_dict = bkg.to_dict()
+    new_bkg = FoVBackgroundModel.from_dict(bkg_dict)
+
+    assert_allclose(new_bkg.spectral_model.parameters[0].value, 2)
+    assert_allclose(new_bkg.spectral_model.energy, energy)
+    assert_allclose(new_bkg.spectral_model.norms, [2, 5, 3, 0.5])
 
 
 @requires_data()
