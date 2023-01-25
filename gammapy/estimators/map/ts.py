@@ -8,7 +8,6 @@ import numpy as np
 import scipy.optimize
 from astropy.coordinates import Angle
 from astropy.utils import lazyproperty
-from gammapy.datasets import MapDatasetOnOff
 from gammapy.datasets.map import MapEvaluator
 from gammapy.datasets.utils import get_nearest_valid_exposure_position
 from gammapy.maps import Map, Maps
@@ -469,7 +468,7 @@ class TSMapEstimator(Estimator):
                 * flux_ul : upper limit map
 
         """
-        if isinstance(dataset, MapDatasetOnOff):
+        if dataset.stat_type != "cash":
             raise TypeError(f"{type(dataset)} is not a valid type for {self.__class__}")
         dataset_models = dataset.models
 
