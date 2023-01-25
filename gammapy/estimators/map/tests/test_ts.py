@@ -4,7 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import Angle
-from gammapy.datasets import MapDataset
+from gammapy.datasets import MapDataset, MapDatasetOnOff
 from gammapy.estimators import TSMapEstimator
 from gammapy.irf import EDispKernelMap, PSFMap
 from gammapy.maps import Map, MapAxis, WcsGeom
@@ -275,3 +275,14 @@ def test_compute_ts_map_with_hole(fake_dataset):
     holes_dataset.exposure.data[...] = 0.0
     with pytest.raises(ValueError):
         kernel = ts_estimator.estimate_kernel(dataset=holes_dataset)
+
+
+def test_MapDatasetOnOff_error():
+    """Test raise error when applying TSMapEStimator to MapDatasetOnOff"""
+    axis = MapAxis.from_edges([1, 10] * u.TeV, name="energy")
+    geom = WcsGeom.create(width=1, axes=[axis])
+    dataset_on_off = MapDatasetOnOff.create(geom)
+
+    ts_estimator = TSMapEstimator()
+    with pytest.raises(TypeError):
+        ts_estimator.run(dataset=dataset_on_off)
