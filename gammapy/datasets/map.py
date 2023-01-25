@@ -783,7 +783,7 @@ class MapDataset(Dataset):
 
         if self.stat_type == "cash":
             if self.background and other.background:
-                background = self.npred_background() * self.mask_safe
+                background = self.npred_background()
                 background.stack(
                     other.npred_background(),
                     weights=other.mask_safe,
