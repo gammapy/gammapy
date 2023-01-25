@@ -1946,3 +1946,62 @@ class Map(abc.ABC):
         data = np.moveaxis(self.data, old_indices, new_indices)
 
         return Map.from_geom(new_geom, data=data)
+
+    def dot(self, other):
+        """Apply dot product with the input map.
+
+        The input Map has to share a single MapAxis with the current Map.
+        Because it has no spatial dimension, it must be a `~gammapy.maps.RegionNDMap`.
+
+        Parameters
+        ----------
+        other : `~gammapy.maps.RegionNDMap`
+            Map to apply the dot product to.
+            It must share a unique non-spatial MapAxis with the current Map.
+
+        Returns
+        -------
+        map : `~gammapy.maps.Map`
+            Map with dot product applied.
+        """
+        from .region import RegionNDMap
+
+        if not isinstance(other, RegionNDMap):
+            raise TypeError(
+                f"Dot product can be applied to a RegionNDMap. Got {type(other)} instead."
+            )
+
+        common_names = set(other.geom.axes.names).intersection(self.geom.axes.names)
+
+        if len(common_names) == 0:
+            raise ValueError(
+                "Map geometries have no axis in common. Cannot apply dot product."
+            )
+        elif len(common_names) > 1:
+            raise ValueError(
+                f"Map geometries have more than one axis in common: {common_names}."
+                "Cannot apply dot product."
+            )
+
+        axis_name = common_names[0]
+
+        if self.geom.axes[axis_name] != other.geom.axes[axis_name]:
+            raise ValueError(
+                f"Axes {axis_name} are not equal. Cannot apply dot product."
+            )
+
+        # TODO: either use sparse matrix mutiplication or something like edisp.is_diagonal
+
+
+#        if edisp is not None:
+#            loc = self.geom.axes.index("energy_true")
+#            data = np.rollaxis(self.data, loc, len(self.data.shape))
+#            data = np.dot(data, edisp.pdf_matrix)
+#            data = np.rollaxis(data, -1, loc)
+#            energy_axis = edisp.axes["energy"].copy(name="energy")
+#        else:
+#            data = self.data
+#            energy_axis = self.geom.axes["energy_true"].copy(name="energy")
+#
+#        geom = self.geom.to_image().to_cube(axes=[energy_axis])
+#        return self._init_copy(geom=geom, data=data)
