@@ -8,6 +8,7 @@ import numpy as np
 from astropy import units as u
 from astropy.io import fits
 import matplotlib.pyplot as plt
+from gammapy.utils.deprecation import deprecated
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.scripts import make_path
 from gammapy.utils.units import energy_unit_format
@@ -1382,6 +1383,7 @@ class Map(abc.ABC):
 
         return self._init_copy(**kwargs)
 
+    @deprecated("v1.1", alternative="gammapy.datasets.apply_edisp")
     def apply_edisp(self, edisp):
         """Apply energy dispersion to map. Requires energy axis.
 
