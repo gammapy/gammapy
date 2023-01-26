@@ -162,6 +162,20 @@ class FixedPointingInfo:
 
     @classmethod
     def from_fits_header(cls, header):
+        """
+        Parse FixedPointingInfo from the given fits header
+
+        Parameters
+        ----------
+        header : astropy.fits.Header
+            Header to parse, e.g. from a GADF EVENTS HDU.
+            Currently, only GADF is supported.
+
+        Returns
+        -------
+        pointing: FixedPointingInfo
+            The FixedPointingInfo instance filled from the given header
+        """
         obs_mode = header.get("OBS_MODE", "POINTING")
         mode = PointingMode.from_gadf_string(obs_mode)
         try:
@@ -193,7 +207,7 @@ class FixedPointingInfo:
                 warnings.warn(
                     "RA_PNT / DEC_PNT will be required in a future version of"
                     " gammapy for pointing-mode POINTING",
-                    GammapyDeprecationWarning
+                    GammapyDeprecationWarning,
                 )
             # store given altaz also for POINTING for backwards compatibility,
             # FIXME: remove in 2.0
@@ -226,6 +240,24 @@ class FixedPointingInfo:
         )
 
     def to_fits_header(self, format="gadf", version="0.3", time_ref=None):
+        """
+        Convert this FixedPointingInfo object into a fits header for the given format
+
+        Parameters
+        ----------
+        format : str
+            Format, currently only "gadf" is supported
+        version : str
+            Version of the ``format``, this function currently supports
+            gadf versions 0.2 and 0.3.
+        time_ref : astropy.time.Time or None
+            Reference time for storing the time related information in fits format
+
+        Returns
+        -------
+        header : astropy.fits.Header
+            Header with fixed pointing information filled for the requested format
+        """
         if format != "gadf":
             raise ValueError(f'Only the "gadf" format supported, got {format}')
 
@@ -236,11 +268,11 @@ class FixedPointingInfo:
             raise ValueError("mode=DRIFT is only supported by GADF 0.3")
 
         header = fits.Header()
-        if self.mode == PointingMode.POINTING:
+        if self.mode is PointingMode.POINTING:
             header["OBS_MODE"] = "POINTING"
             header["RA_PNT"] = self.fixed_icrs.ra.deg, u.deg.to_string("fits")
             header["DEC_PNT"] = self.fixed_icrs.dec.deg, u.deg.to_string("fits")
-        elif self.mode == PointingMode.POINTING:
+        elif self.mode is PointingMode.POINTING:
             header["OBS_MODE"] = "DRIFT"
             header["AZ_PNT"] = self.fixed_altaz.az.deg, u.deg.to_string("fits")
             header["ALT_PNT"] = self.fixed_altaz.alt.deg, u.deg.to_string("fits")
