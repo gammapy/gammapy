@@ -10,6 +10,7 @@ from gammapy.maps import HpxNDMap, Map, RegionNDMap, WcsNDMap
 from gammapy.modeling.models import PointSpatialModel, TemplateNPredModel
 from .utils import apply_edisp
 
+PSF_MAX_RADIUS = None
 PSF_CONTAINMENT = 0.999
 CUTOUT_MARGIN = 0.1 * u.deg
 
@@ -193,6 +194,7 @@ class MapEvaluator:
                     position=self.model.position,
                     geom=geom_psf,
                     containment=PSF_CONTAINMENT,
+                    max_radius=PSF_MAX_RADIUS,
                 )
 
         if self.evaluation_mode == "local":
