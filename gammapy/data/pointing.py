@@ -189,6 +189,12 @@ class FixedPointingInfo:
             pointing_altaz = AltAz(alt=alt * u.deg, az=az * u.deg)
         else:
             fixed_icrs = SkyCoord(ra, dec)
+            if np.isnan(ra.value) or np.isnan(dec.value):
+                warnings.warn(
+                    "RA_PNT / DEC_PNT will be required in a future version of"
+                    " gammapy for pointing-mode POINTING",
+                    GammapyDeprecationWarning
+                )
             # store given altaz also for POINTING for backwards compatibility,
             # FIXME: remove in 2.0
             if alt is not None and az is not None:
