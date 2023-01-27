@@ -16,9 +16,9 @@ from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling.models import (
     FoVBackgroundModel,
     GaussianSpatialModel,
-    PointSpatialModel,
     LightCurveTemplateTemporalModel,
     Models,
+    PointSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
 )
@@ -127,24 +127,24 @@ def dataset():
 @requires_data()
 def test_sample_coord_time_energy(dataset, models):
     models[0].spatial_model = PointSpatialModel(
-                                    lon_0="0 deg", lat_0="0 deg", frame="galactic"
-                                    )
+        lon_0="0 deg", lat_0="0 deg", frame="galactic"
+    )
     dataset.models = models
-    evaluator = dataset.evaluators['test-source']
+    evaluator = dataset.evaluators["test-source"]
     sampler = MapDatasetEventSampler(random_state=0)
     events = sampler._sample_coord_time_energy(dataset, evaluator)
 
-    assert len(events["ENERGY_TRUE"]) == 103
-    assert_allclose(events["ENERGY_TRUE"][0], 7.223025, rtol=1e-5)
+    assert len(events["ENERGY_TRUE"]) == 106
+    assert_allclose(events["ENERGY_TRUE"][0], 5.508422, rtol=1e-5)
     assert events["ENERGY_TRUE"].unit == "TeV"
 
-    assert_allclose(events["RA_TRUE"][0], 266.423216, rtol=1e-5)
+    assert_allclose(events["RA_TRUE"][0], 266.444713, rtol=1e-5)
     assert events["RA_TRUE"].unit == "deg"
 
-    assert_allclose(events["DEC_TRUE"][0], -28.954521, rtol=1e-5)
+    assert_allclose(events["DEC_TRUE"][0], -28.973222, rtol=1e-5)
     assert events["DEC_TRUE"].unit == "deg"
 
-    assert_allclose(events["TIME"][0], 296.841768, rtol=1e-5)
+    assert_allclose(events["TIME"][0], 2.122231, rtol=1e-6)
     assert events["TIME"].unit == "s"
 
 

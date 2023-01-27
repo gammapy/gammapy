@@ -8,7 +8,7 @@ from astropy.time import Time
 from regions import PointSkyRegion
 import gammapy
 from gammapy.data import EventList, observatory_locations
-from gammapy.maps import MapCoord, RegionGeom, MapAxis
+from gammapy.maps import MapAxis, MapCoord, RegionGeom
 from gammapy.modeling.models import ConstantTemporalModel
 from gammapy.utils.random import get_random_state
 
@@ -55,7 +55,7 @@ class MapDatasetEventSampler:
         table["ENERGY_TRUE"] = energy
         table["RA_TRUE"] = coords.skycoord.icrs.ra.to("deg")
         table["DEC_TRUE"] = coords.skycoord.icrs.dec.to("deg")
-        
+
         return table
 
     def __evaluate_timevar_source(self, dataset, evaluator, time_axis=None):
@@ -74,15 +74,15 @@ class MapDatasetEventSampler:
         dataset.npred() : `~gammapy.dataset.MapDataset`
             Npred map.
         """
-        energy_axis = MapAxis.from_edges(dataset.geoms["geom"].axes["energy"].edges, name="energy_true")
+        energy_axis = MapAxis.from_edges(
+            dataset.geoms["geom"].axes["energy"].edges, name="energy_true"
+        )
 
         target = evaluator.model.spatial_model.position
         on_region = PointSkyRegion(center=target)
-        region_geom = RegionGeom.create(on_region,
-                                        axes=[energy_axis])
+        region_geom = RegionGeom.create(on_region, axes=[energy_axis])
 
-        flux = evaluator.model.evaluate_geom(region_geom.to_wcs_geom(),
-                                           gti=dataset.gti)
+        flux = evaluator.model.evaluate_geom(region_geom.to_wcs_geom(), gti=dataset.gti)
         region_exposure = dataset.exposure.to_region_nd_map(region_geom.center_skydir)
 
         npred = flux * region_exposure * dataset.geoms["geom"].bin_volume()
@@ -91,8 +91,7 @@ class MapDatasetEventSampler:
         return dataset.npred()
 
     def _sample_coord_time_energy(self, dataset, evaluator, t_delta="1 s"):
-        """Sample model components of a spectrally time-varying
-        source.
+        """Sample model components of a time-varying source.
 
         Parameters
         ----------
@@ -107,11 +106,15 @@ class MapDatasetEventSampler:
             Table of sampled events.
         """
         if evaluator.model.spatial_model.tag[0] != "PointSpatialModel":
-            raise ValueError("Event sampler cannot work for time-varying extended sources.")
+            raise ValueError(
+                "Event sampler cannot work for time-varying extended sources."
+            )
 
-        time_start, time_stop, time_ref = (evaluator.gti.time_start,
-                                           evaluator.gti.time_stop,
-                                           evaluator.gti.time_ref)
+        time_start, time_stop, time_ref = (
+            evaluator.gti.time_start,
+            evaluator.gti.time_stop,
+            evaluator.gti.time_ref,
+        )
         t_min = Time(time_start)
         t_max = Time(time_stop)
         t_delta = u.Quantity(t_delta)
@@ -127,8 +130,8 @@ class MapDatasetEventSampler:
         t_step = t_delta.to_value(time_unit)
         t_step = (t_step * u.s).to("d")
 
-        t = Time(np.arange(t_min.mjd, t_max.mjd, t_step.value), format="mjd")
-        time_axis = MapAxis.from_edges(t.value * u.d, name="Time")
+        #        t = Time(np.arange(t_min.mjd, t_max.mjd, t_step.value), format="mjd")
+        #        time_axis = MapAxis.from_edges(t.value * u.d, name="Time")
 
         npred = self.__evaluate_timevar_source(dataset, evaluator)
         data = npred.data[np.isfinite(npred.data)]
@@ -136,10 +139,10 @@ class MapDatasetEventSampler:
 
         coords = npred.sample_coord(n_events=n_events, random_state=self.random_state)
 
-#        time = (
-#                np.interp(coords["TIME"] + model.ref_time, np.arange(len(t)), t.value - min(t.value))
-#                * t_step.unit
-#                ).to(time_unit)
+        #        time = (
+        #                np.interp(coords["TIME"] + model.ref_time, np.arange(len(t)), t.value - min(t.value))
+        #                * t_step.unit
+        #                ).to(time_unit)
         time = evaluator.model.temporal_model.sample_time(
             n_events=n_events,
             t_min=time_start,
@@ -218,7 +221,9 @@ class MapDatasetEventSampler:
             else:
                 temporal_model = evaluator.model.temporal_model
 
-            if (temporal_model == "TemplateTemporalModel"): #check the condition when the format model is defined
+            if (
+                temporal_model == "TemplateTemporalModel"
+            ):  # check the condition when the format model is defined
                 table = self._sample_coord_time_energy(dataset, evaluator)
             else:
                 table = self._sample_coord_time(npred, temporal_model, dataset.gti)
