@@ -793,17 +793,28 @@ class DiskSpatialModel(SpatialModel):
                 center=region.center, width=region.radius, height=region.radius
             )
         if not isinstance(region, EllipseSkyRegion):
-            raise TypeError("Please provide a Circular or Elliptic region")
-        frame = kwargs.pop("frame", region.center.frame.name)
-        model = cls.from_position(getattr(region.center, frame))
+            raise ValueError(
+                f"Please provide a `CircleSkyRegion` "
+                f"or `EllipseSkyRegion`, got {type(region)} instead."
+            )
+        if "frame" in kwargs:
+            frame = kwargs.pop("frame")
+            width = np.max(
+                [region.height.to("deg").value, region.width.to("deg").value]
+            )
+            wcs = WcsGeom.create(
+                skydir=region.center, binsz=0.02, frame=frame, width=width * u.deg
+            ).wcs
+            region = region.to_pixel(wcs).to_sky(wcs)
+        model = cls.from_position(region.center)
         if region.height > region.width:
-            r0, r1 = region.height, region.width
+            major_axis, minor_axis = region.height, region.width
             phi = region.angle
         else:
-            r1, r0 = region.height, region.width
+            minor_axis, major_axis = region.height, region.width
             phi = 90 * u.deg + region.angle
-        model.r_0.quantity = r0 / 2.0
-        model.e.value = np.sqrt(1.0 - np.power(r1 / r0, 2))
+        model.r_0.quantity = major_axis / 2.0
+        model.e.value = np.sqrt(1.0 - np.power(minor_axis / major_axis, 2))
         model.phi.quantity = phi
         return model
 

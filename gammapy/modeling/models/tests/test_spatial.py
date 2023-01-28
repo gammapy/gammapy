@@ -231,11 +231,11 @@ def test_disk_from_region():
         angle=30 * u.deg,
     )
     disk = DiskSpatialModel.from_region(region, frame="galactic")
-    assert_allclose(disk.parameters["lon_0"].value, 2.315473, rtol=1e-2)
-    assert_allclose(disk.parameters["lat_0"].value, -0.791178, rtol=1e-2)
-    assert_allclose(disk.parameters["r_0"].value, 0.5, rtol=1e-2)
+    assert_allclose(disk.parameters["lon_0"].value, 132.666, rtol=1e-2)
+    assert_allclose(disk.parameters["lat_0"].value, -45.33118067, rtol=1e-2)
+    assert_allclose(disk.parameters["r_0"].quantity, 0.5 * u.deg, rtol=1e-2)
     assert_allclose(disk.parameters["e"].value, 0.9539, rtol=1e-2)
-    assert_allclose(disk.parameters["phi"].quantity, 120 * u.deg)
+    assert_allclose(disk.parameters["phi"].quantity, 110.946048 * u.deg)
 
     reg1 = disk.to_region()
     assert_allclose(reg1.height, region.width, rtol=1e-2)
@@ -248,9 +248,8 @@ def test_disk_from_region():
     )
     disk = DiskSpatialModel.from_region(region, frame="icrs")
     reg1 = disk.to_region()
-    assert_allclose(reg1.angle, region.angle, rtol=1e-2)
+    assert_allclose(reg1.angle, -30.323 * u.deg, rtol=1e-2)
     assert_allclose(reg1.height, region.height, rtol=1e-3)
-    assert_allclose(disk.parameters["phi"].quantity, 30 * u.deg)
 
     region = CircleSkyRegion(center=region.center, radius=1.0 * u.deg)
     disk = DiskSpatialModel.from_region(region)
@@ -259,7 +258,7 @@ def test_disk_from_region():
     assert disk.frame == "galactic"
 
     region = PointSkyRegion(center=region.center)
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         DiskSpatialModel.from_region(region)
 
 
