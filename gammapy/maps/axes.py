@@ -2699,7 +2699,7 @@ class TimeMapAxis:
             scale = table.meta.get("TIMESYS", "utc")
             time_min = Time(table["time_min"].data, format="mjd", scale=scale)
             time_max = Time(table["time_max"].data, format="mjd", scale=scale)
-            reference_time = Time("2001-01-01T00:00:00")
+            reference_time = Time("2001-01-01T00:00:00", scale=scale)
             reference_time.format = "mjd"
             edges_min = (time_min - reference_time).to("s")
             edges_max = (time_max - reference_time).to("s")

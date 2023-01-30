@@ -387,6 +387,8 @@ class FluxPoints(FluxMaps):
                 tables.append(table_flat)
 
             table = vstack(tables)
+            table.meta["TIMESYS"] = time_axis.reference_time.scale
+
         elif format == "binned-time-series":
             message = (
                 "Format 'binned-time-series' support a single time axis "
