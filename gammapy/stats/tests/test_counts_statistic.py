@@ -249,3 +249,16 @@ def test_wstat_sum():
     assert stat_sum.n_on.shape == (3,)
     assert_allclose(stat_sum.n_on, (20, 40, 60))
     assert_allclose(stat_sum.n_bkg, (10, 14, 26))
+
+
+def test_CountStatistic_str():
+    cash = CashCountsStatistic(n_on=4, mu_bkg=2)
+    assert "Predicted background counts" in str(cash)
+    assert "CashCountsStatistic" in str(cash)
+    assert "Significance" in str(cash)
+
+    wstat = WStatCountsStatistic(n_on=5, n_off=4, alpha=0.2, mu_sig=2)
+    assert "Off counts" in str(wstat)
+    assert "alpha " in str(wstat)
+    assert "On counts " in str(wstat)
+    assert "WStatCountsStatistic" in str(wstat)

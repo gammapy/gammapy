@@ -61,6 +61,15 @@ class CountsStatistic(abc.ABC):
         """
         return 0.5 * chi2.sf(self.ts, 1)
 
+    def __str__(self):
+
+        str_ = "\t{:32}: {:.2f} \n".format("On counts", self.n_on)
+        str_ += "\t{:32}: {:.2f} \n".format("Background counts", self.n_bkg)
+        str_ += "\t{:32}: {:.2f} \n".format("Excess counts", self.n_sig)
+        str_ += "\t{:32}: {:.2f} \n".format("Significance", self.sqrt_ts)
+
+        return str_.expandtabs(tabsize=2)
+
     def compute_errn(self, n_sigma=1.0):
         """Compute downward excess uncertainties.
 
@@ -250,6 +259,12 @@ class CashCountsStatistic(CountsStatistic):
         """Stat value for best fit hypothesis, i.e. expected signal mu = n_on - mu_bkg"""
         return cash(self.n_on, self.n_on)
 
+    def __str__(self):
+        str_ = f"{self.__class__.__name__}\n"
+        str_ += "\t{:32}: {:.2f} \n".format("Predicted background counts", self.mu_bkg)
+        str_ += super().__str__()
+        return str_.expandtabs(tabsize=2)
+
     def _stat_fcn(self, mu, delta=0, index=None):
         return cash(self.n_on[index], self.mu_bkg[index] + mu) - delta
 
@@ -319,6 +334,14 @@ class WStatCountsStatistic(CountsStatistic):
         i.e. expected signal mu = n_on - alpha * n_off - mu_sig
         """
         return wstat(self.n_on, self.n_off, self.alpha, self.n_sig + self.mu_sig)
+
+    def __str__(self):
+        str_ = f"{self.__class__.__name__}\n"
+        str_ += "\t{:32}: {:.2f} \n".format("Off counts", self.n_off)
+        str_ += "\t{:32}: {:.2f} \n".format("alpha ", self.alpha)
+        str_ += "\t{:32}: {:.2f} \n".format("Predicted signal counts", self.mu_sig)
+        str_ += super().__str__()
+        return str_.expandtabs(tabsize=2)
 
     def _stat_fcn(self, mu, delta=0, index=None):
         return (
