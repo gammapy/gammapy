@@ -82,7 +82,7 @@ class SpectrumDatasetMaker(MapDatasetMaker):
                 raise TypeError(
                     "Containment correction only supported for circular regions."
                 )
-            offset = geom.separation(observation.pointing_radec)
+            offset = geom.separation(observation.get_pointing_icrs(observation.tmid))
             containment = observation.psf.containment(
                 rad=geom.region.radius,
                 offset=offset,

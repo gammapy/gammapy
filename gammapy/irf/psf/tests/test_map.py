@@ -244,13 +244,16 @@ def test_sample_coord_gauss():
 def make_psf_map_obs(geom, obs):
     exposure_map = make_map_exposure_true_energy(
         geom=geom.squash(axis_name="rad"),
-        pointing=obs.pointing_radec,
+        pointing=obs.get_pointing_icrs(obs.tmid),
         aeff=obs.aeff,
         livetime=obs.observation_live_time_duration,
     )
 
     psf_map = make_psf_map(
-        geom=geom, psf=obs.psf, pointing=obs.pointing_radec, exposure_map=exposure_map
+        geom=geom,
+        psf=obs.psf,
+        pointing=obs.get_pointing_icrs(obs.tmid),
+        exposure_map=exposure_map,
     )
     return psf_map
 

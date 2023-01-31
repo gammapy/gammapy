@@ -512,7 +512,7 @@ class ReflectedRegionsBackgroundMaker(Maker):
             )
 
         regions_off, wcs = self.region_finder.run(
-            center=observation.pointing_radec,
+            center=observation.get_pointing_icrs(observation.tmid),
             region=geom.region,
             exclusion_mask=self.exclusion_mask,
         )

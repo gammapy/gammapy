@@ -9,9 +9,123 @@ from astropy.time import Time
 from gammapy.data import FixedPointingInfo, PointingInfo
 from gammapy.data.observers import observatory_locations
 from gammapy.data.pointing import PointingMode
+from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.utils.fits import earth_location_to_dict
 from gammapy.utils.testing import assert_time_allclose, requires_data
 from gammapy.utils.time import time_ref_to_dict, time_relative_to_ref
+
+
+def test_fixed_pointing_icrs():
+    """Test new api of FixedPointingInfo in ICRS (POINTING)"""
+    location = observatory_locations["cta_south"]
+    fixed_icrs = SkyCoord(ra=83.28 * u.deg, dec=21.78 * u.deg)
+
+    pointing = FixedPointingInfo(
+        mode=PointingMode.POINTING,
+        fixed_icrs=fixed_icrs,
+        location=location,
+    )
+
+    assert pointing.mode == PointingMode.POINTING
+    assert pointing.fixed_icrs == fixed_icrs
+    assert pointing.fixed_altaz is None
+
+    obstime = Time("2020-11-01T03:00:00")
+    altaz = pointing.get_altaz(obstime, location)
+    icrs = pointing.get_icrs(obstime)
+    back_trafo = altaz.transform_to("icrs")
+
+    assert altaz.obstime == obstime
+    assert isinstance(altaz.frame, AltAz)
+    assert np.all(u.isclose(fixed_icrs.ra, icrs.ra))
+
+    assert u.isclose(back_trafo.ra, fixed_icrs.ra)
+    assert u.isclose(back_trafo.dec, fixed_icrs.dec)
+
+    obstimes = obstime + np.linspace(0, 0.25, 50) * u.hour
+    altaz = pointing.get_altaz(obstimes, location)
+    icrs = pointing.get_icrs(obstimes)
+    back_trafo = altaz.transform_to("icrs")
+
+    assert len(altaz) == len(obstimes)
+    assert np.all(altaz.obstime == obstimes)
+    assert isinstance(altaz.frame, AltAz)
+
+    assert u.isclose(back_trafo.ra, fixed_icrs.ra).all()
+    assert u.isclose(back_trafo.dec, fixed_icrs.dec).all()
+    assert np.all(u.isclose(fixed_icrs.ra, icrs.ra))
+
+
+def test_fixed_pointing_info_altaz():
+    """Test new api of FixedPointingInfo in AltAz (DRIFT)"""
+    location = observatory_locations["cta_south"]
+    fixed_altaz = SkyCoord(alt=70 * u.deg, az=0 * u.deg, frame=AltAz())
+    pointing = FixedPointingInfo(
+        mode=PointingMode.DRIFT,
+        fixed_altaz=fixed_altaz,
+    )
+
+    assert pointing.mode == PointingMode.DRIFT
+    assert pointing.fixed_icrs is None
+    assert pointing.fixed_altaz == fixed_altaz
+
+    obstime = Time("2020-10-10T03:00:00")
+    altaz = pointing.get_altaz(obstime=obstime, location=location)
+    icrs = pointing.get_icrs(obstime=obstime, location=location)
+    back_trafo = icrs.transform_to(AltAz(location=icrs.location, obstime=icrs.obstime))
+
+    assert isinstance(altaz.frame, AltAz)
+    assert altaz.obstime == obstime
+    assert altaz.location == location
+    assert u.isclose(fixed_altaz.alt, altaz.alt)
+    assert u.isclose(fixed_altaz.az, altaz.az, atol=1e-10 * u.deg)
+
+    assert isinstance(icrs.frame, ICRS)
+    assert icrs.obstime == obstime
+    assert icrs.location == location
+    assert u.isclose(back_trafo.alt, fixed_altaz.alt)
+    assert u.isclose(back_trafo.az, fixed_altaz.az, atol=1e-10 * u.deg)
+
+    # test multiple times at once
+    obstimes = obstime + np.linspace(0, 0.25, 50) * u.hour
+    altaz = pointing.get_altaz(obstime=obstimes, location=location)
+    icrs = pointing.get_icrs(obstime=obstimes, location=location)
+    back_trafo = icrs.transform_to(AltAz(location=icrs.location, obstime=icrs.obstime))
+
+    assert isinstance(altaz.frame, AltAz)
+    assert np.all(altaz.obstime == obstimes)
+    assert u.isclose(altaz.alt, fixed_altaz.alt).all()
+    assert u.isclose(altaz.az, fixed_altaz.az).all()
+
+    assert isinstance(icrs.frame, ICRS)
+    assert u.isclose(back_trafo.alt, fixed_altaz.alt).all()
+    assert u.isclose(back_trafo.az, fixed_altaz.az, atol=1e-10 * u.deg).all()
+
+
+@requires_data()
+def test_read_gadf_drift():
+    """Test for reading FixedPointingInfo from GADF drift eventlist"""
+    pointing = FixedPointingInfo.read(
+        "$GAMMAPY_DATA/hawc/crab_events_pass4/events/EventList_Crab_fHitbin5GP.fits.gz"
+    )
+    assert pointing.mode is PointingMode.DRIFT
+    assert pointing.fixed_icrs is None
+    assert isinstance(pointing.fixed_altaz, AltAz)
+    assert pointing.fixed_altaz.alt == 0 * u.deg
+    assert pointing.fixed_altaz.az == 0 * u.deg
+
+
+@requires_data()
+def test_read_gadf_pointing():
+    """Test for reading FixedPointingInfo from GADF pointing eventlist"""
+    pointing = FixedPointingInfo.read(
+        "$GAMMAPY_DATA/magic/rad_max/data/20131004_05029747_DL3_CrabNebula-W0.40+035.fits"
+    )
+    assert pointing.mode is PointingMode.POINTING
+    assert pointing.fixed_altaz is None
+    assert isinstance(pointing.fixed_icrs.frame, ICRS)
+    assert u.isclose(pointing.fixed_icrs.ra, 83.98333 * u.deg)
+    assert u.isclose(pointing.fixed_icrs.dec, 22.24389 * u.deg)
 
 
 @requires_data()
@@ -22,37 +136,47 @@ class TestFixedPointingInfo:
         cls.fpi = FixedPointingInfo.read(filename)
 
     def test_location(self):
-        lon, lat, height = self.fpi.location.geodetic
+        with pytest.warns(GammapyDeprecationWarning):
+            lon, lat, height = self.fpi.location.geodetic
+
         assert_allclose(lon.deg, 16.5002222222222)
         assert_allclose(lat.deg, -23.2717777777778)
         assert_allclose(height.value, 1834.999999999783)
 
     def test_time_ref(self):
         expected = Time(51910.00074287037, format="mjd", scale="tt")
-        assert_time_allclose(self.fpi.time_ref, expected)
+
+        with pytest.warns(GammapyDeprecationWarning):
+            assert_time_allclose(self.fpi.time_ref, expected)
 
     def test_time_start(self):
-        time = self.fpi.time_start
+        with pytest.warns(GammapyDeprecationWarning):
+            time = self.fpi.time_start
         expected = Time(53025.826414166666, format="mjd", scale="tt")
         assert_time_allclose(time, expected)
 
     def test_time_stop(self):
-        time = self.fpi.time_stop
+        with pytest.warns(GammapyDeprecationWarning):
+            time = self.fpi.time_stop
         expected = Time(53025.844770648146, format="mjd", scale="tt")
         assert_time_allclose(time, expected)
 
     def test_duration(self):
-        duration = self.fpi.duration
+        with pytest.warns(GammapyDeprecationWarning):
+            duration = self.fpi.duration
         assert_allclose(duration.sec, 1586.0000000044238)
 
     def test_radec(self):
-        pos = self.fpi.radec
+        with pytest.warns(GammapyDeprecationWarning):
+            pos = self.fpi.radec
+
         assert_allclose(pos.ra.deg, 83.633333333333)
         assert_allclose(pos.dec.deg, 24.51444444)
         assert pos.name == "icrs"
 
     def test_altaz(self):
-        pos = self.fpi.altaz
+        with pytest.warns(GammapyDeprecationWarning):
+            pos = self.fpi.altaz
         assert_allclose(pos.az.deg, 7.48272)
         assert_allclose(pos.alt.deg, 41.84191)
         assert pos.name == "altaz"
@@ -120,17 +244,21 @@ class TestPointingInfo:
 
 def test_altaz_without_location(caplog):
     meta = {"ALT_PNT": 20.0, "AZ_PNT": 170.0}
-    pointing = FixedPointingInfo(meta)
+    with pytest.warns(GammapyDeprecationWarning):
+        pointing = FixedPointingInfo(meta)
 
     with caplog.at_level(logging.WARNING):
-        altaz = pointing.altaz
+        with pytest.warns(GammapyDeprecationWarning):
+            altaz = pointing.altaz
         assert altaz.alt.deg == 20.0
         assert altaz.az.deg == 170.0
 
-    pointing = FixedPointingInfo({})
+    with pytest.warns(GammapyDeprecationWarning):
+        pointing = FixedPointingInfo({})
 
     with caplog.at_level(logging.WARNING):
-        altaz = pointing.altaz
+        with pytest.warns(GammapyDeprecationWarning):
+            altaz = pointing.altaz
         assert np.isnan(altaz.alt.value)
         assert np.isnan(altaz.az.value)
 
@@ -143,90 +271,102 @@ def test_altaz_without_location(caplog):
         ("SCAN"),
     ],
 )
-def test_fixed_pointing_info_fixed_icrs(obs_mode):
+def test_fixed_pointing_info_fixed_icrs_from_meta(obs_mode):
     location = observatory_locations["cta_south"]
     start = Time("2020-11-01T03:00:00")
     stop = Time("2020-11-01T03:15:00")
     ref = Time("2020-11-01T00:00:00")
-    pointing_icrs = SkyCoord(ra=83.28 * u.deg, dec=21.78 * u.deg)
+    fixed_icrs = SkyCoord(ra=83.28 * u.deg, dec=21.78 * u.deg)
 
     meta = time_ref_to_dict(ref)
     meta["TSTART"] = time_relative_to_ref(start, meta).to_value(u.s)
     meta["TSTOP"] = time_relative_to_ref(stop, meta).to_value(u.s)
     meta.update(earth_location_to_dict(location))
     meta["OBS_MODE"] = obs_mode
-    meta["RA_PNT"] = pointing_icrs.ra.deg
-    meta["DEC_PNT"] = pointing_icrs.dec.deg
+    meta["RA_PNT"] = fixed_icrs.ra.deg
+    meta["DEC_PNT"] = fixed_icrs.dec.deg
 
-    pointing = FixedPointingInfo(meta=meta)
+    with pytest.warns(GammapyDeprecationWarning):
+        pointing = FixedPointingInfo(meta=meta)
 
     # not given, but assumed if missing
     assert pointing.mode == PointingMode.POINTING
-    assert pointing.fixed_icrs == pointing_icrs
+    assert pointing.fixed_icrs == fixed_icrs
     assert pointing.fixed_altaz is None
 
-    altaz = pointing.get_altaz(start)
+    with pytest.warns(GammapyDeprecationWarning):
+        altaz = pointing.get_altaz(start)
+        icrs = pointing.get_icrs(start)
+
     assert altaz.obstime == start
     assert isinstance(altaz.frame, AltAz)
-    assert np.all(u.isclose(pointing_icrs.ra, pointing.get_icrs(start).ra))
+    assert np.all(u.isclose(fixed_icrs.ra, icrs.ra))
 
     back_trafo = altaz.transform_to("icrs")
-    assert u.isclose(back_trafo.ra, pointing_icrs.ra)
-    assert u.isclose(back_trafo.dec, pointing_icrs.dec)
+    assert u.isclose(back_trafo.ra, fixed_icrs.ra)
+    assert u.isclose(back_trafo.dec, fixed_icrs.dec)
 
     times = start + np.linspace(0, 1, 50) * (stop - start)
-    altaz = pointing.get_altaz(times)
+    with pytest.warns(GammapyDeprecationWarning):
+        altaz = pointing.get_altaz(times)
+        icrs = pointing.get_icrs(times)
+
     assert len(altaz) == len(times)
     assert np.all(altaz.obstime == times)
     assert isinstance(altaz.frame, AltAz)
 
     back_trafo = altaz.transform_to("icrs")
-    assert u.isclose(back_trafo.ra, pointing_icrs.ra).all()
-    assert u.isclose(back_trafo.dec, pointing_icrs.dec).all()
-    assert np.all(u.isclose(pointing_icrs.ra, pointing.get_icrs(times).ra))
+    assert u.isclose(back_trafo.ra, fixed_icrs.ra).all()
+    assert u.isclose(back_trafo.dec, fixed_icrs.dec).all()
+    assert np.all(u.isclose(fixed_icrs.ra, icrs.ra))
 
 
-def test_fixed_pointing_info_fixed_altaz():
+def test_fixed_pointing_info_fixed_altaz_from_meta():
     location = observatory_locations["cta_south"]
     start = Time("2020-11-01T03:00:00")
     stop = Time("2020-11-01T03:15:00")
     ref = Time("2020-11-01T00:00:00")
     pointing_icrs = SkyCoord(ra=83.28 * u.deg, dec=21.78 * u.deg)
-    pointing_altaz = pointing_icrs.transform_to(AltAz(obstime=start, location=location))
+    fixed_altaz = pointing_icrs.transform_to(AltAz(obstime=start, location=location))
 
     meta = time_ref_to_dict(ref)
     meta["TSTART"] = time_relative_to_ref(start, meta).to_value(u.s)
     meta["TSTOP"] = time_relative_to_ref(stop, meta).to_value(u.s)
     meta.update(earth_location_to_dict(location))
     meta["OBS_MODE"] = "DRIFT"
-    meta["ALT_PNT"] = pointing_altaz.alt.deg
-    meta["AZ_PNT"] = pointing_altaz.az.deg
+    meta["ALT_PNT"] = fixed_altaz.alt.deg
+    meta["AZ_PNT"] = fixed_altaz.az.deg
 
-    pointing = FixedPointingInfo(meta=meta)
+    with pytest.warns(GammapyDeprecationWarning):
+        pointing = FixedPointingInfo(meta=meta)
 
     # not given, but assumed if missing
     assert pointing.mode == PointingMode.DRIFT
     assert pointing.fixed_icrs is None
-    assert u.isclose(pointing.fixed_altaz.alt, pointing_altaz.alt)
-    assert u.isclose(pointing.fixed_altaz.az, pointing_altaz.az)
+    assert u.isclose(pointing.fixed_altaz.alt, fixed_altaz.alt)
+    assert u.isclose(pointing.fixed_altaz.az, fixed_altaz.az)
 
-    icrs = pointing.get_icrs(start)
+    with pytest.warns(GammapyDeprecationWarning):
+        icrs = pointing.get_icrs(start)
     assert icrs.obstime == start
     assert isinstance(icrs.frame, ICRS)
 
-    back_trafo = icrs.transform_to(pointing_altaz.frame)
-    assert u.isclose(back_trafo.alt, pointing_altaz.alt)
-    assert u.isclose(back_trafo.az, pointing_altaz.az)
+    back_trafo = icrs.transform_to(fixed_altaz.frame)
+    assert u.isclose(back_trafo.alt, fixed_altaz.alt)
+    assert u.isclose(back_trafo.az, fixed_altaz.az)
 
     times = start + np.linspace(0, 1, 50) * (stop - start)
-    icrs = pointing.get_icrs(times)
+    with pytest.warns(GammapyDeprecationWarning):
+        icrs = pointing.get_icrs(times)
+        altaz = pointing.get_altaz(times)
+
     assert len(icrs) == len(times)
     assert np.all(icrs.obstime == times)
     assert isinstance(icrs.frame, ICRS)
 
     back_trafo = icrs.transform_to(AltAz(location=location, obstime=times))
-    assert u.isclose(back_trafo.alt, pointing_altaz.alt).all()
-    assert u.isclose(back_trafo.az, pointing_altaz.az).all()
+    assert u.isclose(back_trafo.alt, fixed_altaz.alt).all()
+    assert u.isclose(back_trafo.az, fixed_altaz.az).all()
 
-    assert np.all(u.isclose(pointing_altaz.alt, pointing.get_altaz(times).alt))
-    assert np.all(u.isclose(pointing_altaz.az, pointing.get_altaz(times).az))
+    assert np.all(u.isclose(fixed_altaz.alt, altaz.alt))
+    assert np.all(u.isclose(fixed_altaz.az, altaz.az))

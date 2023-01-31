@@ -8,7 +8,7 @@ from .hdu_index_table import HDUIndexTable
 from .obs_table import ObservationTable
 from .observations import Observation, Observations
 from .observers import observatory_locations
-from .pointing import FixedPointingInfo, PointingInfo
+from .pointing import FixedPointingInfo, PointingInfo, PointingMode
 
 __all__ = [
     "DataStore",
@@ -22,4 +22,5 @@ __all__ = [
     "ObservationTable",
     "observatory_locations",
     "PointingInfo",
+    "PointingMode",
 ]

@@ -6,7 +6,7 @@ from astropy import units as u
 from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.table import Table
 from astropy.time import Time
-from gammapy.data import GTI, EventList, FixedPointingInfo, Observation
+from gammapy.data import GTI, EventList, FixedPointingInfo, Observation, PointingMode
 from gammapy.irf import (
     Background2D,
     Background3D,
@@ -100,28 +100,21 @@ def fixed_pointing_info():
 
 
 @pytest.fixture(scope="session")
-def fixed_pointing_info_aligned(fixed_pointing_info):
+def fixed_pointing_info_aligned():
     # Create Fixed Pointing Info aligned between sky and horizon coordinates
     # (removes rotation in FoV and results in predictable solid angles)
-    origin = SkyCoord(
-        0,
-        0,
-        unit="deg",
-        frame="icrs",
-        location=EarthLocation(lat=90 * u.deg, lon=0 * u.deg),
-        obstime=Time("2000-9-21 12:00:00"),
+    time_start = Time("2000-09-21 11:55:00")
+    time_stop = Time("2000-09-12 12:05:00")
+    location = EarthLocation(lat=90 * u.deg, lon=0 * u.deg)
+    fixed_icrs = SkyCoord(0 * u.deg, 0 * u.deg, frame="icrs")
+
+    return FixedPointingInfo(
+        mode=PointingMode.POINTING,
+        fixed_icrs=fixed_icrs,
+        location=location,
+        time_start=time_start,
+        time_stop=time_stop,
     )
-    fpi = fixed_pointing_info
-    meta = fpi.meta.copy()
-    meta["RA_PNT"] = origin.icrs.ra
-    meta["DEC_PNT"] = origin.icrs.dec
-    meta["GEOLON"] = origin.location.lon
-    meta["GEOLAT"] = origin.location.lat
-    meta["ALTITUDE"] = origin.location.height
-    time_start = origin.obstime.datetime - fpi.time_ref.datetime
-    meta["TSTART"] = time_start.total_seconds()
-    meta["TSTOP"] = meta["TSTART"] + 60
-    return FixedPointingInfo(meta)
 
 
 @pytest.fixture(scope="session")
@@ -172,7 +165,9 @@ def bkg_3d_custom(symmetry="constant", fov_align="RADEC"):
 @requires_data()
 def test_map_background_2d(bkg_2d, fixed_pointing_info):
     axis = MapAxis.from_edges([0.1, 1, 10], name="energy", unit="TeV", interp="log")
-    skydir = fixed_pointing_info.radec.galactic
+
+    obstime = Time("2020-01-01T20:00:00")
+    skydir = fixed_pointing_info.get_icrs(obstime).galactic
     geom = WcsGeom.create(
         npix=(3, 3), binsz=4, axes=[axis], skydir=skydir, frame="galactic"
     )
@@ -192,17 +187,20 @@ def test_map_background_2d(bkg_2d, fixed_pointing_info):
         ontime="42 s",
         bkg=bkg_2d,
         geom=geom,
+        obstime=obstime,
     )
     assert_allclose(bkg.data, bkg_fpi.data, rtol=1e-5)
 
 
 def make_map_background_irf_with_symmetry(fpi, symmetry="constant"):
     axis = MapAxis.from_edges([0.1, 1, 10], name="energy", unit="TeV", interp="log")
+    obstime = Time("2020-01-01T20:00:00")
     return make_map_background_irf(
         pointing=fpi,
         ontime="42 s",
         bkg=bkg_3d_custom(symmetry),
-        geom=WcsGeom.create(npix=(3, 3), binsz=4, axes=[axis], skydir=fpi.radec),
+        geom=WcsGeom.create(npix=(3, 3), binsz=4, axes=[axis], skydir=fpi.fixed_icrs),
+        obstime=obstime,
     )
 
 
@@ -249,9 +247,10 @@ def test_make_map_background_irf(bkg_3d, pars, fixed_pointing_info):
         geom=geom(
             map_type=pars["map_type"],
             ebounds=pars["ebounds"],
-            skydir=fixed_pointing_info.radec,
+            skydir=fixed_pointing_info.fixed_icrs,
         ),
         oversampling=10,
+        obstime=Time("2020-01-01T20:00"),
     )
 
     assert m.data.shape == pars["shape"]
@@ -303,7 +302,7 @@ def test_make_map_background_irf_asym(fixed_pointing_info_aligned):
 @requires_data()
 def test_make_map_background_irf_skycoord(fixed_pointing_info_aligned):
     axis = MapAxis.from_edges([0.1, 1, 10], name="energy", unit="TeV", interp="log")
-    position = fixed_pointing_info_aligned.radec
+    position = fixed_pointing_info_aligned.fixed_icrs
     with pytest.raises(TypeError):
         make_map_background_irf(
             pointing=position,
@@ -342,19 +341,28 @@ class TestTheta2Table:
             events["DEC"] = sign * ([0.0, 0.05, 0.9, 10.0, 10.0] * u.deg)
             events["ENERGY"] = [1.0, 1.0, 1.5, 1.5, 10.0] * u.TeV
             events["OFFSET"] = [0.1, 0.1, 0.5, 1.0, 1.5] * u.deg
+            events["TIME"] = [0.1, 0.2, 0.3, 0.4, 0.5] * u.s
 
             obs_info = dict(
-                RA_PNT=0 * u.deg,
-                DEC_PNT=sign * 0.5 * u.deg,
                 DEADC=1,
             )
-            events.meta.update(obs_info)
             meta = time_ref_to_dict("2010-01-01")
+            obs_info.update(meta)
+            events.meta.update(obs_info)
             gti_table = Table({"START": [1], "STOP": [3]}, meta=meta)
             gti = GTI(gti_table)
+            pointing = FixedPointingInfo(
+                mode=PointingMode.POINTING,
+                fixed_icrs=SkyCoord(0 * u.deg, sign * 0.5 * u.deg),
+            )
 
             self.observations.append(
-                Observation(events=EventList(events), obs_info=obs_info, gti=gti)
+                Observation(
+                    events=EventList(events),
+                    obs_info=obs_info,
+                    gti=gti,
+                    pointing=pointing,
+                )
             )
 
     def test_make_theta_squared_table(self):

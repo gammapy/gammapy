@@ -89,7 +89,7 @@ class DatasetsMaker(Maker):
 
         if self._apply_cutout:
             cutouts_kwargs = {
-                "position": observation.pointing_radec.galactic,
+                "position": observation.get_pointing_icrs(observation.tmid).galactic,
                 "width": self.cutout_width,
                 "mode": self.cutout_mode,
             }

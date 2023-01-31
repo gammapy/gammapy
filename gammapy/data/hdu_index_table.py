@@ -17,7 +17,16 @@ class HDUIndexTable(Table):
     See :ref:`gadf:hdu-index`.
     """
 
-    VALID_HDU_TYPE = ["events", "gti", "aeff", "edisp", "psf", "bkg", "rad_max"]
+    VALID_HDU_TYPE = [
+        "events",
+        "gti",
+        "aeff",
+        "edisp",
+        "psf",
+        "bkg",
+        "rad_max",
+        "pointing",
+    ]
     """Valid values for `HDU_TYPE`."""
 
     VALID_HDU_CLASS = [
@@ -31,6 +40,7 @@ class HDUIndexTable(Table):
         "bkg_2d",
         "bkg_3d",
         "rad_max_2d",
+        "pointing",
     ]
     """Valid values for `HDU_CLASS`."""
 
