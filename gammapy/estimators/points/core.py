@@ -387,7 +387,11 @@ class FluxPoints(FluxMaps):
                 tables.append(table_flat)
 
             table = vstack(tables)
+
             table.meta["TIMESYS"] = time_axis.reference_time.scale
+            table.meta["TIMEUNIT"] = "d"
+            table.meta["MJDREFF"] = 0
+            table.meta["MJDREFI"] = 0
 
         elif format == "binned-time-series":
             message = (

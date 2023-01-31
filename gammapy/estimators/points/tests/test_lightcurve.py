@@ -265,6 +265,10 @@ def test_lightcurve_estimator_spectrum_datasets():
         [[224.058304, 19.074405, 2063.75636]],
         rtol=1e-5,
     )
+    assert table.meta["TIMESYS"] == "tt"
+    assert table.meta["TIMEUNIT"] == "d"
+    assert table.meta["MJDREFF"] == 0
+    assert table.meta["MJDREFI"] == 0
 
     # TODO: fix reference model I/O
     fp = FluxPoints.from_table(

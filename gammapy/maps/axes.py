@@ -2696,11 +2696,27 @@ class TimeMapAxis:
         elif format == "lightcurve":
             # TODO: is this a good format? It just supports mjd...
             name = "time"
-            scale = table.meta.get("TIMESYS", "utc")
-            time_min = Time(table["time_min"].data, format="mjd", scale=scale)
-            time_max = Time(table["time_max"].data, format="mjd", scale=scale)
-            reference_time = Time("2001-01-01T00:00:00", scale=scale)
-            reference_time.format = "mjd"
+            time_ref_dict = dict(
+                MJDREFF=table.meta.get("MJDREFF", 0),
+                MJDREFI=table.meta.get("MJDREFI", 0),
+                TIMESYS=table.meta.get("TIMESYS", "utc"),
+                TIMEUNIT=table.meta.get("TIMEUNIT", "d"),
+            )
+            reference_time = time_ref_from_dict(time_ref_dict, format="mjd")
+            time_min = reference_time + table["time_min"].data * u.Unit(
+                time_ref_dict["TIMEUNIT"]
+            )
+            time_max = reference_time + table["time_max"].data * u.Unit(
+                time_ref_dict["TIMEUNIT"]
+            )
+
+            if reference_time.mjd == 0:
+                # change to a more recent reference time
+                reference_time = Time(
+                    "2001-01-01T00:00:00", scale=time_ref_dict["TIMESYS"]
+                )
+                reference_time.format = "mjd"
+
             edges_min = (time_min - reference_time).to("s")
             edges_max = (time_max - reference_time).to("s")
         else:
