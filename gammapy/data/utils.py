@@ -37,24 +37,24 @@ def get_irfs_features(
         ko,
         obs,
     ) in enumerate(observations):
-        offset_max = np.minimum(
-            obs.psf.axes["offset"].center[-1], obs.edisp.axes["offset"].center[-1]
-        )
-        for kf, name in enumerate(names):
+        psf_kwargs = dict(fraction=containment_fraction, energy_true=energy_true)
+        if isinstance(obs.psf, PSFMap) and isinstance(obs.edisp, EDispKernelMap):
+            edisp_kernel = obs.edisp.get_edisp_kernel(position=coord.skycoord[0])
+            psf_kwargs["position"] = coord.skycoord[0]
+        else:
+            offset_max = np.minimum(
+                obs.psf.axes["offset"].center[-1], obs.edisp.axes["offset"].center[-1]
+            )
             offset = np.minimum(
                 coord.skycoord.separation(obs.pointing_radec)[0], offset_max
             )
-            energy_true = coord["energy_true"][0]
             edisp_kernel = obs.edisp.to_edisp_kernel(offset)
+            psf_kwargs["offset"] = offset
+        for kf, name in enumerate(names):
             if name == "edisp-bias":
                 features[ko, kf] = edisp_kernel.get_bias(energy_true)
             if name == "edisp-res":
                 features[ko, kf] = edisp_kernel.get_resolution(energy_true)
             if name == "psf-radius":
-                psf_radius = obs.psf.containment_radius(
-                    fraction=containment_fraction,
-                    offset=offset,
-                    energy_true=energy_true,
-                )
-                features[ko, kf] = psf_radius.value
+                features[ko, kf] = obs.psf.containment_radius(**psf_kwargs).value
     return features
