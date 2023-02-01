@@ -747,9 +747,13 @@ class IRFMap:
                 exposure_map = None
 
             if cls.tag == "psf_map" and "energy" in irf_map.geom.axes.names:
-                import RecoPSFMap
+                from .psf import RecoPSFMap
 
                 output_class = RecoPSFMap
+            if cls.tag == "edisp_map" and irf_map.geom.axes[0].name == "energy":
+                from .edisp import EDispKernelMap
+
+                output_class = EDispKernelMap
 
         elif format == "gtpsf":
             rad_axis = MapAxis.from_table_hdu(hdulist["THETA"], format=format)
