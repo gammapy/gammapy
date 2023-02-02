@@ -622,7 +622,7 @@ def test_wcs_geom_to_even_npix():
     assert geom_even.data_shape == (4, 4)
 
 
-def test_wcs_geom_1pix_cut(skydit):
+def test_wcs_geom_no_zero_shape_cut(skydir):
     geom = WcsGeom.create(skydir=(0, 2.5), binsz=(360, 5), width=(360, 180))
 
     geom_cut = geom.cutout(skydir, width=5)
