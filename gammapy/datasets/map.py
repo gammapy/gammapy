@@ -1268,8 +1268,6 @@ class MapDataset(Dataset):
             cache=cache,
             format=format,
         )
-        dataset = cls(**kwargs)
-        dataset.psf
 
         return cls(**kwargs)
 
