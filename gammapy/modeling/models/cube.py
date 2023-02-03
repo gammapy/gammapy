@@ -595,7 +595,7 @@ class FoVBackgroundModel(ModelBase):
 
     tag = ["FoVBackgroundModel", "fov-bkg"]
 
-    def __init__(self, spatial_model=None, spectral_model=None, dataset_name=None):
+    def __init__(self, spectral_model=None, dataset_name=None, spatial_model=None):
         if dataset_name is None:
             raise ValueError("Dataset name a is required argument")
 
