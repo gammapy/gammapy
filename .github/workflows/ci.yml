@@ -14,6 +14,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: psf/black@stable
+        with:
+          version: "22.6.0"
   ci-runs:
     name: ${{ matrix.os }}, ${{ matrix.tox_env }}
     runs-on: ${{ matrix.os }}
