@@ -1110,7 +1110,10 @@ class PiecewiseNormSpectralModel(SpectralModel):
 
         if not isinstance(norms[0], Parameter):
             parameters = Parameters(
-                [Parameter(f"norm_{k}", norm) for k, norm in enumerate(norms)]
+                [
+                    Parameter(f"norm_{k}", norm, is_norm=True)
+                    for k, norm in enumerate(norms)
+                ]
             )
         else:
             parameters = Parameters(norms)
