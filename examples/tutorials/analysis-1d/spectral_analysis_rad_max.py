@@ -53,7 +53,7 @@ values are stored in additional `FITS` data unit, named
 
 `Gammapy` provides a class to automatically read these values,
 `~gammapy.irf.RadMax2D`, for both cases (fixed or energy-dependent
-:math:`:math:`\\theta` cut). In this notebook we will focus on how to perform a
+:math:`\\theta` cut). In this notebook we will focus on how to perform a
 spectral extraction with a point-like IRF with an energy-dependent
 :math:`\\theta` cut. We remark that in this case a
 `~regions.PointSkyRegion` (and not a `~regions.CircleSkyRegion`)
