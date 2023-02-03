@@ -953,6 +953,25 @@ class TestSpectralModelErrorPropagation:
         assert_allclose(out.data, [4.119e-11, 8.157e-12], rtol=1e-3)
 
 
+def test_logpar_index_error():
+    model = LogParabolaSpectralModel(
+        amplitude=3.81e-11 / u.cm**2 / u.s / u.TeV,
+        reference=1 * u.TeV,
+        alpha=2.19,
+        beta=0.226,
+    )
+
+    model.covariance = [
+        [1.25682098e-23, 0.00000000e00, 4.54479026e-13, -1.16956188e-13],
+        [0.00000000e00, 0.00000000e00, 0.00000000e00, 0.00000000e00],
+        [4.54479026e-13, 0.00000000e00, 6.89373848e-02, -3.31016543e-02],
+        [-1.16956188e-13, 0.00000000e00, -3.31016543e-02, 1.94907439e-02],
+    ]
+
+    out = model.spectral_index_error(energy=3 * u.TeV)
+    assert_allclose(out, [2.6865, 0.132558], rtol=1e-3)
+
+
 def test_dnde_error_ecpl_model():
     # Regression test for ECPL model
     # https://github.com/gammapy/gammapy/issues/2007
