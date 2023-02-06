@@ -1155,5 +1155,4 @@ def test_template_ND_EBL(tmpdir):
 def test_is_norm_spectral_models():
     for test_model in TEST_MODELS:
         m = test_model["model"]
-        if m.is_norm_spectral_model:
-            assert np.any([p.is_norm for p in m.parameters])
+        assert np.any([p.is_norm for p in m.parameters])

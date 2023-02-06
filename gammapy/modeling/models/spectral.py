@@ -1098,6 +1098,9 @@ class PiecewiseNormSpectralModel(SpectralModel):
     def __init__(self, energy, norms=None, interp="log"):
         self._energy = energy
         self._interp = interp
+        self._norm = Parameter(
+            "_norm", 1, unit="", interp="log", is_norm=True, frozen=True
+        )
 
         if norms is None:
             norms = np.ones(len(energy))
@@ -1108,17 +1111,15 @@ class PiecewiseNormSpectralModel(SpectralModel):
         if len(norms) < 2:
             raise ValueError("Input arrays must contain at least 2 elements")
 
+        parameters_list = [self._norm]
         if not isinstance(norms[0], Parameter):
-            parameters = Parameters(
-                [
-                    Parameter(f"norm_{k}", norm, is_norm=True)
-                    for k, norm in enumerate(norms)
-                ]
-            )
+            parameters_list += [
+                Parameter(f"norm_{k}", norm) for k, norm in enumerate(norms)
+            ]
         else:
-            parameters = Parameters(norms)
+            parameters_list += norms
 
-        self.default_parameters = parameters
+        self.default_parameters = Parameters(parameters_list)
         super().__init__()
 
     @property
@@ -1129,7 +1130,7 @@ class PiecewiseNormSpectralModel(SpectralModel):
     @property
     def norms(self):
         """Norm values"""
-        return u.Quantity(self.parameters.value)
+        return u.Quantity([p.value for p in self.parameters if p.name != "_norm"])
 
     def evaluate(self, energy, **norms):
         scale = interpolation_scale(scale=self._interp)
@@ -1137,10 +1138,12 @@ class PiecewiseNormSpectralModel(SpectralModel):
         e_nodes = scale(self.energy.to(energy.unit).value)
         v_nodes = scale(self.norms)
         log_interp = scale.inverse(np.interp(e_eval, e_nodes, v_nodes))
-        return log_interp
+        return self._norm.quantity * log_interp
 
     def to_dict(self, full_output=False):
         data = super().to_dict(full_output=full_output)
+        if data["spectral"]["parameters"][0]["name"] == "_norm":
+            data["spectral"]["parameters"].pop(0)
         data["spectral"]["energy"] = {
             "data": self.energy.data.tolist(),
             "unit": str(self.energy.unit),
