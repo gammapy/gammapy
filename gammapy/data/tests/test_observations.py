@@ -7,6 +7,7 @@ from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.time import Time
 from astropy.units import Quantity
 from gammapy.data import DataStore, Observation
+from gammapy.data.utils import get_irfs_features
 from gammapy.irf import PSF3D, load_irf_dict_from_file
 from gammapy.data.pointing import FixedPointingInfo, PointingMode
 from gammapy.utils.deprecation import GammapyDeprecationWarning
@@ -429,20 +430,22 @@ def test_observations_clustering(data_store):
     obs_table = data_store.obs_table.select_observations(selection)
     observations = data_store.get_observations(obs_table["OBS_ID"])
 
-    coord_dict = dict(lon=83.63308, lat=22.01450, energy_true="1 TeV")
-    coord = MapCoord(coord_dict, frame="icrs")
+    coord = SkyCoord(83.63308, 22.01450, unit="deg", frame="icrs")
     names = ["edisp-bias", "edisp-res", "psf-radius"]
-    features = get_irfs_features(observations, coord, names)
+    features = get_irfs_features(
+        observations, energy_true="1 TeV", position=coord, names=names
+    )
 
     n_features = len(names)
-    assert features.shape == (len(observations), n_features)
+    features_array = np.array([features[col].data for col in features.columns]).T
+    assert features_array.shape == (len(observations), n_features)
 
-    ind_clusters, features = hierarchical_clustering(
+    features = hierarchical_clustering(
         features, linkage_kwargs={"method": "complete"}, fcluster_kwargs={"t": 2}
     )
 
     assert np.all(
-        ind_clusters
+        features["labels"].data
         == np.array(
             [
                 1,
@@ -453,15 +456,23 @@ def test_observations_clustering(data_store):
         )
     )
 
-    ind_clusters, features = hierarchical_clustering(features, standard_scaler=True)
+    features = get_irfs_features(
+        observations,
+        energy_true="1 TeV",
+        position=coord,
+        names=names,
+        apply_standard_scaler=True,
+    )
+    features = hierarchical_clustering(features)
+    features_array = np.array([features[col].data for col in features.columns]).T
 
-    obs_clusters = observations.split(ind_clusters)
+    obs_clusters = observations.group_by_label(features["labels"])
     for k in range(n_features):
-        assert_allclose(features[:, k].mean(), 0, atol=1e-7)
-        assert_allclose(features[:, k].std(), 1, atol=1e-7)
+        assert_allclose(features_array[:, k].mean(), 0, atol=1e-7)
+        assert_allclose(features_array[:, k].std(), 1, atol=1e-7)
 
-    assert np.all(ind_clusters == np.array([2, 1, 1, 1]))
+    assert np.all(features["labels"].data == np.array([2, 1, 1, 1]))
 
-    assert len(obs_clusters[0]) == 3
-    assert len(obs_clusters[1]) == 1
-    assert obs_clusters[1][0].obs_id == 23523
+    assert len(obs_clusters["group_1"]) == 3
+    assert len(obs_clusters["group_2"]) == 1
+    assert obs_clusters["group_2"][0].obs_id == 23523

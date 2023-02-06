@@ -1,7 +1,29 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utils for hierarchical/agglomerative clustering."""
 
+import numpy as np
 import scipy.cluster.hierarchy as sch
+
+
+def standard_scaler(features):
+    """Compute standardize features by removing the mean and scaling to unit variance.
+
+    Parameters
+    ----------
+    features : `~astropy.table.Table`
+        Table containing the features
+
+    Returns
+    -------
+    scaled_features : `~astropy.table.Table`
+        Table containing the scaled features.
+
+    """
+    scaled_features = features.copy()
+    for col in scaled_features.columns:
+        data = scaled_features[col].data
+        scaled_features[col] = (data - data.mean()) / data.std()
+    return scaled_features
 
 
 def hierarchical_clustering(
@@ -11,41 +33,35 @@ def hierarchical_clustering(
 
     Parameters
     ----------
-    features : array
-        (N x M) array with N observations and M features.
+    features : `~astropy.table.Table`
+        Table containing the features
     linkage_kwargs : dict
         Arguments forwarded to `scipy.cluster.hierarchy.linkage`
     fcluster_kwargs : dict
         Arguments forwarded to `scipy.cluster.hierarchy.fcluster`
-    standard_scaler : bool
-        Standardize features by removing the mean and scaling to unit variance.
-        Default is False.
+
 
     Returns
     -------
-    ind_clusters : array
-        Array of cluster ID
-    features : array
-        Scaled features
+    features : `~astropy.table.Table`
+        Table containing the features and an extra column for the groups labels.
+
     """
 
-    if standard_scaler:
-        features = features.copy()
-        for kf in range(features.shape[1]):
-            features[:, kf] = (features[:, kf] - features[:, kf].mean()) / features[
-                :, kf
-            ].std()
+    features = features.copy()
+    features_array = np.array([features[col].data for col in features.columns]).T
 
     default_linkage_kwargs = dict(method="ward", metric="euclidean")
     if linkage_kwargs is not None:
         default_linkage_kwargs.update(linkage_kwargs)
 
-    pairwise_distances = sch.distance.pdist(features)
+    pairwise_distances = sch.distance.pdist(features_array)
     linkage = sch.linkage(pairwise_distances, **default_linkage_kwargs)
 
     default_fcluster_kwargs = dict(criterion="maxclust", t=3)
     if fcluster_kwargs is not None:
         default_fcluster_kwargs.update(fcluster_kwargs)
-    ind_clusters = sch.fcluster(linkage, **default_fcluster_kwargs)
+    labels = sch.fcluster(linkage, **default_fcluster_kwargs)
 
-    return ind_clusters, features
+    features["labels"] = labels
+    return features

@@ -692,26 +692,26 @@ class Observations(collections.abc.MutableSequence):
     def _ipython_key_completions_(self):
         return self.ids
 
-    def split(self, groups_id):
+    def group_by_label(self, labels):
         """Split obsevations in multiple groups of observations
 
         Parameters
         ----------
-        cluster_id : array
-            Array of cluster ID
+        labels : array
+            Array of group labels
 
         Returns
         -------
-        obs_clusters : list of `~gammapy.data.Observations`
-            List of Observations instance, one instance for each group.
+        obs_clusters : dict of `~gammapy.data.Observations`
+            dict of Observations instance, one instance for each group.
         """
-        obs_clusters = []
-        for ind in np.unique(groups_id):
+        obs_groups = {}
+        for label in np.unique(labels):
             observations = self.__class__(
-                [obs for k, obs in enumerate(self) if groups_id[k] == ind]
+                [obs for k, obs in enumerate(self) if labels[k] == label]
             )
-            obs_clusters.append(observations)
-        return obs_clusters
+            obs_groups[f"group_{label}"] = observations
+        return obs_groups
 
 
 class ObservationChecker(Checker):
