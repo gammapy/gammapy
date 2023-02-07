@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 import astropy.units as u
-from astropy.table import Table
+from astropy.table import Column, Table
 from gammapy.irf import EDispKernelMap, PSFMap
 from gammapy.utils.cluster import standard_scaler
 
@@ -11,7 +11,7 @@ def get_irfs_features(
     energy_true,
     position=None,
     fixed_offset=None,
-    names=["edisp-bias", "edisp-res", "psf-radius"],
+    names=None,
     containment_fraction=0.68,
     apply_standard_scaler=False,
 ):
@@ -20,6 +20,8 @@ def get_irfs_features(
 
     Parameters
     ----------
+    observations : `~gammapy.data.Observations`
+        Container holding a list of `~gammapy.data.Observation`
     energy_true : `~astropy.units.Quantity`
         Energy true at which to compute the containment radius
     position : `~astropy.coordinates.SkyCoord`
@@ -45,6 +47,9 @@ def get_irfs_features(
         Features table
 
     """
+
+    if names is None:
+        names = ["edisp-bias", "edisp-res", "psf-radius"]
 
     if position and fixed_offset:
         raise ValueError(
@@ -91,16 +96,13 @@ def get_irfs_features(
                 data[ko, kf] = containment_radius.value
                 units[kf] = u.deg
 
-    features = Table()
-    for kf, name in enumerate(names):
-        features[name] = data[:, kf]
+    features = Table(data, names=names, units=units)
+    features.add_column(Column(observations.ids, name="obs_id"), index=0)
 
     if apply_standard_scaler:
         features = standard_scaler(features)
 
     features.meta = dict(
-        obs_ids=observations.ids,
-        names=names,
         energy_true=energy_true,
         fixed_offset=fixed_offset,
         containment_fraction=containment_fraction,
@@ -109,7 +111,7 @@ def get_irfs_features(
 
     if position:
         features.meta["lon"] = position.galactic.l
-        features.meta["lat"] = position.galactic.l
+        features.meta["lat"] = position.galactic.b
         features.meta["frame"] = "galactic"
 
     return features

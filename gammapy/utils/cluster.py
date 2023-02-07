@@ -6,7 +6,9 @@ import scipy.cluster.hierarchy as sch
 
 
 def standard_scaler(features):
-    """Compute standardize features by removing the mean and scaling to unit variance.
+    """Compute standardized features by removing the mean and scaling to unit variance:
+       .. math::
+           f_\text{scaled} = \frac{f-\text{mean}(f)}{\text{std}(f)} .
 
     Parameters
     ----------
@@ -16,13 +18,14 @@ def standard_scaler(features):
     Returns
     -------
     scaled_features : `~astropy.table.Table`
-        Table containing the scaled features.
+        Table containing the scaled features (dimensionless).
 
     """
     scaled_features = features.copy()
     for col in scaled_features.columns:
-        data = scaled_features[col].data
-        scaled_features[col] = (data - data.mean()) / data.std()
+        if col not in ["obs_id", "dataset_name"]:
+            data = scaled_features[col].data
+            scaled_features[col] = (data - data.mean()) / data.std()
     return scaled_features
 
 
@@ -49,7 +52,13 @@ def hierarchical_clustering(
     """
 
     features = features.copy()
-    features_array = np.array([features[col].data for col in features.columns]).T
+    features_array = np.array(
+        [
+            features[col].data
+            for col in features.columns
+            if col not in ["obs_id", "dataset_name"]
+        ]
+    ).T
 
     default_linkage_kwargs = dict(method="ward", metric="euclidean")
     if linkage_kwargs is not None:

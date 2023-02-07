@@ -7,12 +7,11 @@ from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.time import Time
 from astropy.units import Quantity
 from gammapy.data import DataStore, Observation
+from gammapy.data.pointing import FixedPointingInfo, PointingMode
 from gammapy.data.utils import get_irfs_features
 from gammapy.irf import PSF3D, load_irf_dict_from_file
-from gammapy.data.pointing import FixedPointingInfo, PointingMode
-from gammapy.utils.deprecation import GammapyDeprecationWarning
-from gammapy.data.utils import get_irfs_features
 from gammapy.utils.cluster import hierarchical_clustering
+from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.utils.fits import HDULocation
 from gammapy.utils.testing import (
     assert_skycoord_allclose,
@@ -437,7 +436,13 @@ def test_observations_clustering(data_store):
     )
 
     n_features = len(names)
-    features_array = np.array([features[col].data for col in features.columns]).T
+    features_array = np.array(
+        [
+            features[col].data
+            for col in features.columns
+            if col not in ["obs_id", "dataset_name"]
+        ]
+    ).T
     assert features_array.shape == (len(observations), n_features)
 
     features = hierarchical_clustering(
@@ -464,7 +469,13 @@ def test_observations_clustering(data_store):
         apply_standard_scaler=True,
     )
     features = hierarchical_clustering(features)
-    features_array = np.array([features[col].data for col in features.columns]).T
+    features_array = np.array(
+        [
+            features[col].data
+            for col in features.columns
+            if col not in ["obs_id", "dataset_name"]
+        ]
+    ).T
 
     obs_clusters = observations.group_by_label(features["labels"])
     for k in range(n_features):
