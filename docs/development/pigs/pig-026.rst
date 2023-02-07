@@ -1,0 +1,217 @@
+. include:: ../../references.txt
+
+.. _pig-026:
+
+************************************
+PIG 26 - Gammapy version 2.0 Roadmap
+************************************
+
+* Author: Axel Donath, Bruno Khélifi, Régis Terrier
+* Created: Feb 6th, 2023
+* Accepted:
+* Status:
+* Discussion:
+
+Abstract
+========
+
+
+Use cases to support
+====================
+
+This section describes new use cases that we would like to be supported in future
+versions of Gammapy.
+
+Event type handling
++++++++++++++++++++
+
+Starting from a datastore containing events lists and IRFs with types and classes of events,
+the user produces of a list of datasets per event type or class. Meta information of
+the datasets allow for complex types handling at modeling/fitting step (e.g. joint fit
+of A & B type, stack all type together etc)
+
+Unbinned spectral or 3D analysis
+++++++++++++++++++++++++++++++++
+
+The user produces a dataset with reprojected IRFs and a list of events and performs model
+fitting and parameter estimation computing likelihoods of individual events.
+
+Pulsed signal search
+++++++++++++++++++++
+
+Using a specific timing solution for a given pulsar, the user builds a phasogram of the data
+and can evaluate the significance of a pulsed signal vs flat background. A map per phase bin
+can be produced. Blind pulsation search ? Do we want to support this?
+
+Transient source detection
+++++++++++++++++++++++++++
+
+The user wants to search for transient source or rapid source variability in a given observation.
+
+Spectral unfolding
+++++++++++++++++++
+
+The user wants to extract the intrinsic source spectrum with minimal hypothesis on the shape
+(mostly with a regularity criterion).
+Spatial unfolding?
+
+Morphology estimation
++++++++++++++++++++++
+
+An estimator API allows the user to test the model morphology parameters: extension profile
+and associated significance, position error contours. Applying it per energy bands allows
+testing for energy dependent morphology.
+
+Source detection
+++++++++++++++++
+
+After creating a MapDataset, a user extracts a list of source candidate positions and fluxes
+with associated errors and estimated significance. The list can be used as input for model
+fitting at later steps.
+
+Manipulation and selection of Datasets
+++++++++++++++++++++++++++++++++++++++
+
+After data reduction in a list of spectrum datasets, the user wants to stack spectra obtained in observation
+in given bands of zenith angle. The metadata information stored on the datasets allows complex manipulation
+at modeling/fitting step.
+
+Nuisance parameters and priors
+++++++++++++++++++++++++++++++
+
+The user wants to add a systematic effect of unknown amplitude (e.g. a bias in the absolute energy scale) and wants to estimate the impact of this effect on the parameter estimation assuming a prior distribution of the nuisance parameter. (mixed likelihood, check terminology).
+Generic background model using a KernelBackgroundEstimator? Or parametrised background models?
+
+
+Specific Projects
+=================
+
+Here we list specific projects
+
+Configurable API
+++++++++++++++++
+
+To provide safety w.r.t. class instantiations and to allow for an easily configurable API,
+the main Gammapy API classes should be directly configurable.
+
+This is a generic problem that could be tackled using a similar approach as ctapipe
+Pydantic and its ``BaseModel`` class seems to be a widely used solution. This is already
+used in the v1.0 ``AnalysisConfig``.
+
+Gammapy Maps
+++++++++++++
+
+``gammapy.maps`` is one of the biggest element in gammapy which requires expertise and dedication
+to properly maintain. It is also one the subpackage that has potentially the largest impact outside
+the gamma-ray community. If we find a few contributors from outside, it might be worth splitting out
+``gammapy.maps`` as an independent package.
+
+Possible changes
+~~~~~~~~~~~~~~~~
+
+- RegionGeom should support sizes changing with axis. This would handle energy dependent region
+   sizes as well as https://github.com/gammapy/gammapy/issues/3863
+- Make maps fully re-usable for IRFs. This might be a sommon use case with pyirf.
+- Allow ``Maps`` and ``MapCoord`` without spatial axes
+- Change to design without Geom, Introduce `WcsMapAxis`, `RegionMapAxis`, `HpxMapAxis` instead
+ - Migrate from healpy to https://github.com/astropy/astropy-healpix or https://github.com/cds-astro/cds-healpix-python
+Interface multi resolution HPX maps: https://mhealpy.readthedocs.io ?
+What about sparse maps?
+
+
+Data model and data formats
++++++++++++++++++++++++++++
+
+Define internal model and introduce validation mechanism on input
+Define data model more precisely: what is data, what is meta data? Where to define this?
+
+Version Support for I/O
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Use ASDF (https://asdf.readthedocs.io/) as default serialization format?
+Add I/O registry system for IRFs, Datasets and Maps
+Supporting versions of formats
+Get rid of code like: https://github.com/gammapy/gammapy/blob/main/gammapy/maps/axes.py#L1220
+Change to something like consistently: https://github.com/gammapy/gammapy/blob/main/gammapy/datasets/io.py
+
+Meta Data Handling
+~~~~~~~~~~~~~~~~~~
+
+What is meta data / and what is data? Where to draw the line? Where to define this?
+Improve meta data handling for IRFs, Maps and Datasets
+Introduce specific `IRFMetaData`, `MapMetaData` and `DatasetMetaData`, `ObservationMetaData` classes, with separate serialization and validation?
+Handling `MetaData` with pydantic has the advantage of defining hierarchical structures and being able to validate those…
+Have convenience access to meta attributes
+Introduce the provenance generation and serialization
+
+
+Documentation
++++++++++++++
+
+Update pydata-sphinx-theme
+More detailed and nicer?
+Tutorial videos? Coding sprints?
+Needs a to be more detailed?
+Infrastructure / Maintenance
+Deprecation system
+Use type hints in Gammapy everywhere, no type hints for now?
+
+
+Infrastructure
+++++++++++++++
+
+Improve test coverage and quality
+Deployment
+Improve our tools helping to the creation of releases
+Creation of Docker images with an automatized tool
+Re-use docker image for Binder, this config here: https://github.com/gammapy/gammapy-webpage/tree/v1.0rc1 already creates docker image in Binder.
+
+Distributed Computing and Performance
++++++++++++++++++++++++++++++++++++++
+
+Evaluate Jax for GPU acceleration and autograd (https://jax.readthedocs.io/en/latest/ )
+Ray for distributed computing (https://www.ray.io )
+Make Dataset distributable with same API
+Probably rework Dataset API, split off model handling…
+Split off statistic handling from datasets
+
+Flexible Statistics API
++++++++++++++++++++++++
+
+Support for priors in likelihood
+Support for systematics terms in likelihood
+Needs to be serialised, i.e. keep information on which statistics and priors haven been used (meta data / providence)
+Split of statistics definition from datasets…
+Support for statistical test associated with periodic signals, in the frequency domain
+Add more tests on model hypothesis? E.g. AIC, PS (https://arxiv.org/abs/2109.07443)
+What about prior and likelihood weights?
+I think this should be 3 PIGS:
+One adding prior support
+One proposing an UnfoldingFluxPointsEstimator (?)
+One proposing splitting the models from dataset, which relates to distributed computing
+
+
+Models and Modeling
++++++++++++++++++++
+
+Evaluate joint development with https://astromodels.readthedocs.io/en/latest/
+Deprecate Gammapy models and re-bulld based on Astropy or astromodels?
+Move amplitude parameter to `SkyModel`
+Rely more on the `SkyModel` then the submodel…!
+What about `NPredModel`, deprecate or introduce consistently as concept?
+Adjustment of theory-based abaques as spatial/spectral model ? (random axis as parameters, interpolation features during evaluation, definition of a ‘format’)
+Formats for energy dependent temporal models?
+How to handle the handle the FitResult object? Make this more important? Make it serialisable? Rely on it in later API, such as Estimators?
+
+
+Features / Algorithm
+Spectral unfolding
+TS cubes
+Creation of an ‘EventDataset’
+Multi-instrument support e.g. SherpaDataset See Luca’s prototype
+Support for Event classes/types
+Support for unbinned likelihood analysis
+Handling of pulsar analysis
+Development of Time Series algorithms: e.g. Bayesian Block, Power Spectral Density (and simulation of PSD folded with the observations mask) (Axel: clarify the interface to Astropy time series, which has support for Baysian blocks etc. see https://docs.gammapy.org/0.20.1/api/gammapy.estimators.FluxPoints.html#gammapy.estimators.FluxPoints.to_table )
+Clarify relation to stingray…
+
