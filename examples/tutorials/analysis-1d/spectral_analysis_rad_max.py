@@ -47,15 +47,15 @@ the same :math:`\\theta` cut is applied at all energies and offsets, `a
 keyword <https://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/point_like/#rad-max>`__
 is added to the header of the data units containing IRF components. This
 should be used to define the size of the ON and OFF regions; \* in case
-an energy- (and offset-) dependent :math:`\theta` cut is applied, its
+an energy- (and offset-) dependent :math:`\\theta` cut is applied, its
 values are stored in additional `FITS` data unit, named
 ``RAD_MAX_2D` <https://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/point_like/#rad-max-2d>`__.
 
 `Gammapy` provides a class to automatically read these values,
 `~gammapy.irf.RadMax2D`, for both cases (fixed or energy-dependent
-:math:`\theta` cut). In this notebook we will focus on how to perform a
+:math:`\\theta` cut). In this notebook we will focus on how to perform a
 spectral extraction with a point-like IRF with an energy-dependent
-:math:`\theta` cut. We remark that in this case a
+:math:`\\theta` cut. We remark that in this case a
 `~regions.PointSkyRegion` (and not a `~regions.CircleSkyRegion`)
 should be used to define the ON region. If a geometry based on a
 `~regions.PointSkyRegion` is fed to the spectra and the background
@@ -76,14 +76,14 @@ Introduction
 
 We load two MAGIC observations in the
 `gammapy-data <https://github.com/gammapy/gammapy-data>`__ containing
-IRF component with a :math:`\theta` cut.
+IRF component with a :math:`\\theta` cut.
 
 We define the ON region, this time as a `~regions.PointSkyRegion` instead of a
 `CircleSkyRegion`, i.e. we specify only the center of our ON region.
 We create a `RegionGeom` adding to the region the estimated energy
 axis of the `~gammapy.datasets.SpectrumDataset` object we want to
 produce. The corresponding dataset maker will automatically use the
-:math:`\theta` values in `~gammapy.irf.RadMax2D` to set the
+:math:`\\theta` values in `~gammapy.irf.RadMax2D` to set the
 appropriate ON region sizes (based on the offset on the observation and
 on the estimated energy binning).
 
