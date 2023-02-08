@@ -119,6 +119,7 @@ class Parameter:
         scan_n_sigma=2,
         scan_values=None,
         scale_method="scale10",
+        scale_interp="lin",
         interp="lin",
         is_norm=False,
         prior=None,
@@ -129,6 +130,7 @@ class Parameter:
         self._name = name
         self._link_label_io = None
         self.interp = interp
+        self.scale_interp = scale_interp
         self.scale = scale
         self.min = min
         self.max = max
@@ -493,7 +495,7 @@ class Parameter:
             self.scale = value
 
     def transform(self, value, update_scale=False):
-        interp_scale = interpolation_scale(self.interp)
+        interp_scale = interpolation_scale(self.scale_interp)
         factor = interp_scale(value)
         if update_scale:
             self.update_scale(factor)
@@ -501,7 +503,7 @@ class Parameter:
 
     def inverse_transform(self, factor):
         factor = self.scale * factor
-        interp_scale = interpolation_scale(self.interp)
+        interp_scale = interpolation_scale(self.scale_interp)
         value = interp_scale.inverse(factor)
         return value
 
