@@ -528,8 +528,7 @@ class Parameter:
         factor = interp_scale(value)
         if update_scale:
             self.update_scale(factor)
-        factor = factor / self.scale
-        return factor
+        return factor / self.scale
 
     def inverse_transform(self, factor):
         factor = self.scale * factor
