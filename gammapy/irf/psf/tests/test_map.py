@@ -567,6 +567,7 @@ def test_psf_map_reco_hawc():
     assert "energy" in reco_psf_map.psf_map.geom.axes.names
     assert reco_psf_map.energy_name == "energy"
     assert reco_psf_map.required_axes == ["rad", "energy"]
+    assert reco_psf_map.exposure_map is None
 
     with mpl_plot_check():
         reco_psf_map.plot_containment_radius_vs_energy()
@@ -584,6 +585,7 @@ def test_psf_map_reco_hawc():
     assert "energy" in reco_psf_map.psf_map.geom.axes.names
     assert reco_psf_map.energy_name == "energy"
     assert reco_psf_map.required_axes == ["rad", "energy"]
+    assert reco_psf_map.exposure_map is None
 
     with mpl_plot_check():
         reco_psf_map.plot_containment_radius_vs_energy()
