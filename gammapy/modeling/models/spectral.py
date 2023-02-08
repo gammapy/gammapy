@@ -524,8 +524,9 @@ class SpectralModel(ModelBase):
         ----------
         energy : `~astropy.units.Quantity`
             Energy at which to estimate the index
-        epsilon : float
+        epsilon : float, optional
             Fractional energy increment to use for determining the spectral index.
+            default = 1e-5
 
         Returns
         -------
@@ -543,8 +544,9 @@ class SpectralModel(ModelBase):
         ----------
         energy : `~astropy.units.Quantity`
             Energy at which to estimate the index
-        epsilon : float
-            Fractional energy increment to use for determining the spectral index.
+        epsilon : float, optional
+            Fractional energy increment to use for determining the spectral index
+            default = 1e-5
 
         Returns
         -------
