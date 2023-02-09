@@ -9,7 +9,7 @@ This model parametrises a broken power law spectrum.
 It is defined by the following equation:
 
 .. math::
-    \phi(E) = phi_0 \cdot \begin{cases}
+    \phi(E) = \phi_0 \cdot \begin{cases}
                           \left( \frac{E}{E_{break}} \right)^{-\Gamma1} & \text{if } E < E_{break} \\
                           \left( \frac{E}{E_{break}} \right)^{-\Gamma2} & \text{otherwise}
                          \end{cases}
