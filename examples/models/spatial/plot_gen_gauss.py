@@ -23,7 +23,7 @@ if ellipticity tend to one and radius is large or :math:`\eta` much larger than 
 The effective radius is given by:
 
 .. math::
-    \r_{rm eff}(\text{lon}, \text{lat}) = \sqrt{
+    r_{rm eff}(\text{lon}, \text{lat}) = \sqrt{
         (r_M \sin(\Delta \phi))^2 +
         (r_m \cos(\Delta \phi))^2
     }.
