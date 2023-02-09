@@ -11,7 +11,7 @@ Documentation building
 
 Generating the HTML docs for Gammapy is straight-forward::
 
-    tox -e build_docs
+    make docs-sphinx
     make docs-show
 
 Generating the PDF docs is more complex.
