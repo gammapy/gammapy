@@ -164,8 +164,8 @@ class GTI:
         hdulist.writeto(make_path(filename), **kwargs)
 
     def __str__(self):
-        t_start_met = (self.time_start[0] - self.time_ref).to("s")
-        t_stop_met = (self.time_stop[-1] - self.time_ref).to("s")
+        t_start_met = self.met_start[0]
+        t_stop_met = self.met_stop[-1]
         t_start = self.time_start[0].fits
         t_stop = self.time_stop[-1].fits
         return (
@@ -203,6 +203,16 @@ class GTI:
     def time_stop(self):
         """GTI end times (`~astropy.time.Time`)."""
         return self.table["STOP"]
+
+    @property
+    def met_start(self):
+        """GTI start time difference with reference time in sec, MET (`~astropy.units.Quantity`)."""
+        return (self.time_start - self.time_ref).to("s")
+
+    @property
+    def met_stop(self):
+        """GTI start time difference with reference time in sec, MET (`~astropy.units.Quantity`)."""
+        return (self.time_stop - self.time_ref).to("s")
 
     @property
     def time_intervals(self):
@@ -340,7 +350,7 @@ class GTI:
                 merged[-1]["STOP"] = max(interval["STOP"], merged[-1]["STOP"])
 
         merged = Table(rows=merged, names=["START", "STOP"], meta=self.table.meta)
-        return self.__class__(merged)
+        return self.__class__(merged, reference_time=self.time_ref)
 
     def group_table(self, time_intervals, atol="1e-6 s"):
         """Compute the table with the info on the group to which belong each time interval.

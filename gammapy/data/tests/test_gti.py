@@ -143,11 +143,8 @@ def test_gti_stack():
     assert len(gti1.table) == 3
     assert_time_allclose(gt1_pre_stack.time_ref, gti1.time_ref)
 
-    t_start_met = (gti1.time_start - gti1.time_ref).to_value("s")
-    t_stop_met = (gti1.time_stop - gti1.time_ref).to_value("s")
-
-    assert_allclose(t_start_met, [0, 2, 14])
-    assert_allclose(t_stop_met, [1, 3, 15])
+    assert_allclose(gti1.met_start.value, [0, 2, 14])
+    assert_allclose(gti1.met_stop.value, [1, 3, 15])
 
 
 def test_gti_union():
@@ -155,8 +152,8 @@ def test_gti_union():
 
     gti = gti.union()
 
-    assert_allclose(gti.table["START"], [1, 5])
-    assert_allclose(gti.table["STOP"], [4, 8])
+    assert_allclose(gti.met_start.value, [1, 5])
+    assert_allclose(gti.met_stop.value, [4, 8])
 
 
 def test_gti_create():
@@ -168,7 +165,8 @@ def test_gti_create():
 
     assert len(gti.table) == 2
     assert_allclose(gti.time_ref.mjd, time_ref.tt.mjd)
-    assert_allclose(gti.table["START"], start.to_value("s"))
+    start_met = (gti.time_start - gti.time_ref).to_value("s")
+    assert_allclose(start_met, start.to_value("s"))
 
 
 def test_gti_write(tmp_path):
