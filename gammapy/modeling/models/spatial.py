@@ -21,6 +21,7 @@ from gammapy.maps import Map, WcsGeom
 from gammapy.modeling import Parameter
 from gammapy.modeling.covariance import copy_covariance
 from gammapy.utils.gauss import Gauss2DPDF
+from gammapy.utils.regions import region_circle_to_ellipse, region_to_frame
 from gammapy.utils.scripts import make_path
 from .core import ModelBase
 
@@ -393,7 +394,7 @@ class SpatialModel(ModelBase):
             Spatial model
         """
         lon_0, lat_0 = position.data.lon, position.data.lat
-        return cls(lon_0=lon_0, lat_0=lat_0, frame=position.frame, **kwargs)
+        return cls(lon_0=lon_0, lat_0=lat_0, frame=position.frame.name, **kwargs)
 
     @property
     def evaluation_radius(self):
@@ -774,6 +775,43 @@ class DiskSpatialModel(SpatialModel):
             angle=self.phi.quantity,
             **kwargs,
         )
+
+    @classmethod
+    def from_region(cls, region, **kwargs):
+        """Create a `DiskSpatialModel from a ~regions.EllipseSkyRegion`
+
+        Parameters
+        ----------
+        region : `~regions.EllipseSkyRegion` or ~regions.CircleSkyRegion`
+            region to create model from
+        kwargs : keywords passed to `~gammapy.modeling.models.DiskSpatialModel`
+
+        Returns
+        -------
+        spatial_model : `~gammapy.modeling.models.DiskSpatialModel`
+        """
+        if isinstance(region, CircleSkyRegion):
+            region = region_circle_to_ellipse(region)
+        if not isinstance(region, EllipseSkyRegion):
+            raise ValueError(
+                f"Please provide a `CircleSkyRegion` "
+                f"or `EllipseSkyRegion`, got {type(region)} instead."
+            )
+        frame = kwargs.pop("frame", region.center.frame)
+        region = region_to_frame(region, frame=frame)
+
+        if region.height > region.width:
+            major_axis, minor_axis = region.height, region.width
+            phi = region.angle
+        else:
+            minor_axis, major_axis = region.height, region.width
+            phi = 90 * u.deg + region.angle
+
+        kwargs.setdefault("phi", phi)
+        kwargs.setdefault("e", np.sqrt(1.0 - np.power(minor_axis / major_axis, 2)))
+        kwargs.setdefault("r_0", major_axis / 2.0)
+
+        return cls.from_position(region.center, **kwargs)
 
 
 class ShellSpatialModel(SpatialModel):
