@@ -142,8 +142,12 @@ def test_gti_stack():
 
     assert len(gti1.table) == 3
     assert_time_allclose(gt1_pre_stack.time_ref, gti1.time_ref)
-    assert_allclose(gti1.table["START"], [0, 2, 14])
-    assert_allclose(gti1.table["STOP"], [1, 3, 15])
+
+    t_start_met = (gti1.time_start - gti1.time_ref).to_value("s")
+    t_stop_met = (gti1.time_stop - gti1.time_ref).to_value("s")
+
+    assert_allclose(t_start_met, [0, 2, 14])
+    assert_allclose(t_stop_met, [1, 3, 15])
 
 
 def test_gti_union():

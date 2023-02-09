@@ -278,10 +278,10 @@ class GTI:
             GTI to stack to self
 
         """
-        start = (other.time_start - self.time_ref).sec
-        end = (other.time_stop - self.time_ref).sec
-        table = Table({"START": start, "STOP": end}, names=["START", "STOP"])
-        self.table = vstack([self.table, table])
+        #        start = (other.time_start - self.time_ref).sec
+        #        end = (other.time_stop - self.time_ref).sec
+        #        table = Table({"START": start, "STOP": end}, names=["START", "STOP"])
+        self.table = vstack([self.table, other.table])
 
     @classmethod
     def from_stack(cls, gtis, **kwargs):
