@@ -191,5 +191,5 @@ def test_gti_from_time():
     ref = Time("2020-01-01T00:00:00")
     gti = GTI.create(start, stop, ref)
 
-    assert u.isclose(gti.table["START"], 20 * u.hour)
-    assert u.isclose(gti.table["STOP"], 20 * u.hour + 15 * u.min)
+    assert_time_allclose(gti.table["START"], start)
+    assert_time_allclose(gti.table["STOP"], stop)

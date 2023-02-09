@@ -103,7 +103,7 @@ class GTI:
         if isinstance(stop, u.Quantity):
             stop = reference_time + stop
 
-        table = Table({"START": start, "STOP": stop})
+        table = Table({"START": np.atleast_1d(start), "STOP": np.atleast_1d(stop)})
         return cls(table, reference_time=reference_time)
 
     @classmethod
