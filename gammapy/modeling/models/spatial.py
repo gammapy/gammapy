@@ -21,6 +21,7 @@ from gammapy.maps import Map, WcsGeom
 from gammapy.modeling import Parameter
 from gammapy.modeling.covariance import copy_covariance
 from gammapy.utils.gauss import Gauss2DPDF
+from gammapy.utils.regions import region_circle_to_ellipse, region_to_frame
 from gammapy.utils.scripts import make_path
 from .core import ModelBase
 
@@ -783,40 +784,34 @@ class DiskSpatialModel(SpatialModel):
         ----------
         region : `~regions.EllipseSkyRegion` or ~regions.CircleSkyRegion`
             region to create model from
+        kwargs : keywords passed to `~gammapy.modeling.models.DiskSpatialModel`
 
         Returns
         -------
         spatial_model : `~gammapy.modeling.models.DiskSpatialModel`
         """
         if isinstance(region, CircleSkyRegion):
-            region = EllipseSkyRegion(
-                center=region.center, width=region.radius, height=region.radius
-            )
+            region = region_circle_to_ellipse(region)
         if not isinstance(region, EllipseSkyRegion):
             raise ValueError(
                 f"Please provide a `CircleSkyRegion` "
                 f"or `EllipseSkyRegion`, got {type(region)} instead."
             )
-        if "frame" in kwargs:
-            frame = kwargs.pop("frame")
-            width = np.max(
-                [region.height.to("deg").value, region.width.to("deg").value]
-            )
-            wcs = WcsGeom.create(
-                skydir=region.center, binsz=0.02, frame=frame, width=width * u.deg
-            ).wcs
-            region = region.to_pixel(wcs).to_sky(wcs)
-        model = cls.from_position(region.center)
+        frame = kwargs.pop("frame", region.center.frame)
+        region = region_to_frame(region, frame=frame)
+
         if region.height > region.width:
             major_axis, minor_axis = region.height, region.width
             phi = region.angle
         else:
             minor_axis, major_axis = region.height, region.width
             phi = 90 * u.deg + region.angle
-        model.r_0.quantity = major_axis / 2.0
-        model.e.value = np.sqrt(1.0 - np.power(minor_axis / major_axis, 2))
-        model.phi.quantity = phi
-        return model
+
+        kwargs.setdefault("phi", phi)
+        kwargs.setdefault("e", np.sqrt(1.0 - np.power(minor_axis / major_axis, 2)))
+        kwargs.setdefault("r_0", major_axis / 2.0)
+
+        return cls.from_position(region.center, **kwargs)
 
 
 class ShellSpatialModel(SpatialModel):
