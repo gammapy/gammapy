@@ -10,16 +10,7 @@ It is defined by the following equation:
 
 .. math::
 
-
-    \phi(e) =
-            \begin{cases}
-                \phi_0 \cdot \left(\frac{E}{E_0}\right)^{\frac{\a}{\Gamma_2} -\Gamma_1} \cdot \exp \left(
-                  \frac{\a}{\Gamma_2^2} \left( 1 - \left(\frac{E}{E_0}\right)^{\frac{\a}{\Gamma_2} \right)
-              \right)&
-                              \\
-                \phi_0 \cdot \left(\frac{E}{E_0}\right)^{ -\Gamma_1 - \frac{\a}{2} \ln \frac{E}{E_0} - \frac{\a \Gamma_2}{6} \ln^2 \frac{E}{E_0} - \frac{\a \Gamma_2^2}{24} \ln^3 \frac{E}{E_0}}\\
-                0 & \text{for } \left| \Gamma_2 \ln \frac{E}{E_0}  \right|
-            \end{cases}
+\phi(E) = \begin{cases} \phi_0 \cdot \left(\frac{E}{E_0}\right)^{\frac{a}{\Gamma_2} -\Gamma_1} \cdot \exp \left( \frac{a}{\Gamma_2^2}\left( 1 - \left(\frac{E}{E_0}\right)^{\Gamma_2} \right) \right) \\ \phi_0 \cdot \left(\frac{E}{E_0}\right)^{ -\Gamma_1 - \frac{a}{2} \ln \frac{E}{E_0} - \frac{a \Gamma_2}{6} \ln^2 \frac{E}{E_0} - \frac{a \Gamma_2^2}{24} \ln^3 \frac{E}{E_0}} & \text{for } \left| \Gamma_2 \ln \frac{E}{E_0} \right| < 10^{-2} \end{cases}
 
 See Equation (2) and (3) in https://arxiv.org/pdf/2201.11184.pdf
 """
