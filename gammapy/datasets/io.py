@@ -232,7 +232,7 @@ class OGIPDatasetWriter(DatasetWriter):
         hdulist = self.to_counts_hdulist(dataset)
 
         if dataset.gti:
-            hdu = fits.BinTableHDU(dataset.gti.table, name="GTI")
+            hdu = dataset.gti.to_table_hdu()
             hdulist.append(hdu)
 
         hdulist.writeto(filename, overwrite=self.overwrite)
@@ -345,7 +345,7 @@ class OGIPDatasetReader(DatasetReader):
             )
 
             if "GTI" in hdulist:
-                data["gti"] = GTI(Table.read(hdulist["GTI"]))
+                data["gti"] = GTI.from_table_hdu(hdulist["GTI"])
 
             data["mask_safe"] = RegionNDMap.from_hdulist(
                 hdulist, format="ogip", ogip_column="QUALITY"

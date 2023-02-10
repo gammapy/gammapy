@@ -96,6 +96,7 @@ class GTI:
             the reference time to use in GTI definition
         """
         reference_time = Time(reference_time)
+        reference_time.format = "mjd"
 
         if not isinstance(start, Time):
             start = reference_time + u.Quantity(start)
@@ -165,7 +166,8 @@ class GTI:
         if format != "gadf":
             raise ValueError(f'Only the "gadf" format supported, got {format}')
 
-        meta = time_ref_to_dict(self.time_ref, scale="tt")
+        # Don't impose the scale. GADF does not require it to be TT
+        meta = time_ref_to_dict(self.time_ref, scale=self.time_ref.scale)
         start = self.time_start - self.time_ref
         stop = self.time_stop - self.time_ref
         table = Table({"START": start.to("s"), "STOP": stop.to("s")}, meta=meta)
