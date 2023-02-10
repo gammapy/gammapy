@@ -7,8 +7,10 @@ from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.time import Time
 from astropy.units import Quantity
 from gammapy.data import DataStore, Observation
-from gammapy.irf import PSF3D, load_irf_dict_from_file
 from gammapy.data.pointing import FixedPointingInfo, PointingMode
+from gammapy.data.utils import get_irfs_features
+from gammapy.irf import PSF3D, load_irf_dict_from_file
+from gammapy.utils.cluster import hierarchical_clustering
 from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.utils.fits import HDULocation
 from gammapy.utils.testing import (
@@ -412,3 +414,76 @@ def test_observation_tmid():
     gti = GTI.create([(start - epoch).to(u.s)], [(stop - epoch).to(u.s)], epoch)
     obs = Observation(gti=gti)
     assert abs(obs.tmid - expected).to(u.ns) < 1 * u.us
+
+
+@requires_data()
+def test_observations_clustering(data_store):
+
+    selection = dict(
+        type="sky_circle",
+        frame="icrs",
+        lon="83.633 deg",
+        lat="22.014 deg",
+        radius="2 deg",
+    )
+    obs_table = data_store.obs_table.select_observations(selection)
+    observations = data_store.get_observations(obs_table["OBS_ID"])
+
+    coord = SkyCoord(83.63308, 22.01450, unit="deg", frame="icrs")
+    names = ["edisp-bias", "edisp-res", "psf-radius"]
+    features = get_irfs_features(
+        observations, energy_true="1 TeV", position=coord, names=names
+    )
+
+    n_features = len(names)
+    features_array = np.array(
+        [
+            features[col].data
+            for col in features.columns
+            if col not in ["obs_id", "dataset_name"]
+        ]
+    ).T
+    assert features_array.shape == (len(observations), n_features)
+
+    features = hierarchical_clustering(
+        features, linkage_kwargs={"method": "complete"}, fcluster_kwargs={"t": 2}
+    )
+
+    assert np.all(
+        features["labels"].data
+        == np.array(
+            [
+                1,
+                1,
+                2,
+                2,
+            ]
+        )
+    )
+
+    features = get_irfs_features(
+        observations,
+        energy_true="1 TeV",
+        position=coord,
+        names=names,
+        apply_standard_scaler=True,
+    )
+    features = hierarchical_clustering(features)
+    features_array = np.array(
+        [
+            features[col].data
+            for col in features.columns
+            if col not in ["obs_id", "dataset_name"]
+        ]
+    ).T
+
+    obs_clusters = observations.group_by_label(features["labels"])
+    for k in range(n_features):
+        assert_allclose(features_array[:, k].mean(), 0, atol=1e-7)
+        assert_allclose(features_array[:, k].std(), 1, atol=1e-7)
+
+    assert np.all(features["labels"].data == np.array([2, 1, 1, 1]))
+
+    assert len(obs_clusters["group_1"]) == 3
+    assert len(obs_clusters["group_2"]) == 1
+    assert obs_clusters["group_2"][0].obs_id == 23523
