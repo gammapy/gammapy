@@ -356,7 +356,7 @@ class Parameter:
 
     @value.setter
     def value(self, val):
-        self._value = val
+        self._value = float(val)
         self._factor = self.transform(val)
 
     @property
