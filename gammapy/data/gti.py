@@ -97,13 +97,14 @@ class GTI:
         """
         reference_time = Time(reference_time)
 
-        if isinstance(start, u.Quantity):
-            start = reference_time + start
+        if not isinstance(start, Time):
+            start = reference_time + u.Quantity(start)
 
-        if isinstance(stop, u.Quantity):
-            stop = reference_time + stop
+        if not isinstance(stop, Time):
+            stop = reference_time + u.Quantity(stop)
 
         table = Table({"START": np.atleast_1d(start), "STOP": np.atleast_1d(stop)})
+
         return cls(table, reference_time=reference_time)
 
     @classmethod
@@ -119,13 +120,33 @@ class GTI:
         format: str
             Input format, currently only "gadf" is supported
         """
+        filename = make_path(filename)
+        with fits.open(str(make_path(filename)), memmap=False) as hdulist:
+            return cls.from_table_hdu(hdulist[hdu], format=format)
+
+    @classmethod
+    def from_table_hdu(cls, table_hdu, format="gadf"):
+        """Read from table HDU.
+
+        Parameters
+        ----------
+        table : `~astropy.io.fits.BinTableHDU`
+            table hdu
+        format: str
+            Input format, currently only "gadf" is supported
+        """
         if format != "gadf":
             raise ValueError(f'Only the "gadf" format supported, got {format}')
 
-        filename = make_path(filename)
-        table = Table.read(filename, hdu=hdu)
+        table = Table.read(table_hdu)
         time_ref = time_ref_from_dict(table.meta, format="mjd", scale="tt")
-        return cls.create(table["START"].quantity, table["STOP"].quantity, time_ref)
+
+        # Check if TIMEUNIT keyword is present, otherwise assume seconds
+        unit = table.meta.pop("TIMEUNIT", "s")
+        start = u.Quantity(table["START"], unit)
+        stop = u.Quantity(table["STOP"], unit)
+
+        return cls.create(start, stop, time_ref)
 
     def to_table_hdu(self, format="gadf"):
         """
@@ -239,11 +260,9 @@ class GTI:
             GTI table.
         """
         reference_time = Time(reference_time)
-        start = Time([_[0] for _ in time_intervals]) - reference_time
-        stop = Time([_[1] for _ in time_intervals]) - reference_time
-        meta = time_ref_to_dict(reference_time)
-        table = Table({"START": start.to("s"), "STOP": stop.to("s")}, meta=meta)
-        return cls(table=table)
+        start = Time([_[0] for _ in time_intervals])
+        stop = Time([_[1] for _ in time_intervals])
+        return cls.create(start, stop, reference_time)
 
     def select_time(self, time_interval):
         """Select and crop GTIs in time interval.

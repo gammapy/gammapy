@@ -1157,7 +1157,7 @@ class MapDataset(Dataset):
             hdulist += self.mask_fit.to_hdulist(hdu="mask_fit")[exclude_primary]
 
         if self.gti is not None:
-            hdulist.append(fits.BinTableHDU(self.gti.table, name="GTI"))
+            hdulist.append(self.gti.to_table_hdu())
 
         if self.meta_table is not None:
             hdulist.append(fits.BinTableHDU(self.meta_table, name="META_TABLE"))
@@ -1220,7 +1220,7 @@ class MapDataset(Dataset):
             kwargs["mask_fit"] = mask_fit
 
         if "GTI" in hdulist:
-            gti = GTI(Table.read(hdulist, hdu="GTI"))
+            gti = GTI.from_table_hdu(hdulist["GTI"])
             kwargs["gti"] = gti
 
         if "META_TABLE" in hdulist:
@@ -2499,7 +2499,7 @@ class MapDatasetOnOff(MapDataset):
             kwargs["mask_fit"] = mask_fit
 
         if "GTI" in hdulist:
-            gti = GTI(Table.read(hdulist, hdu="GTI"))
+            gti = GTI.from_table_hdu(hdulist["GTI"])
             kwargs["gti"] = gti
 
         if "META_TABLE" in hdulist:
