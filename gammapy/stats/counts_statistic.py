@@ -62,13 +62,46 @@ class CountsStatistic(abc.ABC):
         return 0.5 * chi2.sf(self.ts, 1)
 
     def __str__(self):
-
-        str_ = "\t{:32}: {:.2f} \n".format("On counts", self.n_on)
-        str_ += "\t{:32}: {:.2f} \n".format("Background counts", self.n_bkg)
-        str_ += "\t{:32}: {:.2f} \n".format("Excess counts", self.n_sig)
-        str_ += "\t{:32}: {:.2f} \n".format("Significance", self.sqrt_ts)
+        str_ = "\t{:32}: {{n_on:.2f}} \n".format("Total counts")
+        str_ += "\t{:32}: {{background:.2f}}\n".format("Total background counts")
+        str_ += "\t{:32}: {{excess:.2f}}\n".format("Total excess counts")
+        str_ += "\t{:32}: {{significance:.2f}}\n".format("Total significance")
+        str_ += "\t{:32}: {{p_value:.3f}}\n".format("p - value")
+        str_ += "\t{:32}: {{n_bins:.0f}}\n".format("Total number of bins")
+        info = self.info_dict()
+        info["n_bins"] = np.array(self.n_on).size
+        str_ = str_.format(**info)
 
         return str_.expandtabs(tabsize=2)
+
+    def info_dict(self, summed=True, axis=None):
+        """A dictionary of the relevant quantities
+
+        Parameters
+        ----------
+        summed : bool,
+            Whether the info dict is to computed by summing
+            over an axis.
+        axis : None or int or tuple of ints, optional
+            Axis to sum over if summed is True.
+            Default None, sums over the full array
+
+        Returns
+        -------
+        info_dict : dict
+            Dictionary with summary info
+        """
+        info_dict = {}
+        if summed is False:
+            info_dict["n_on"] = self.n_on
+            info_dict["background"] = self.n_bkg
+            info_dict["excess"] = self.n_sig
+            info_dict["significance"] = self.sqrt_ts
+            info_dict["p_value"] = self.p_value
+            return info_dict
+
+        elif summed is True:
+            return self.sum(axis=axis).info_dict(summed=False)
 
     def compute_errn(self, n_sigma=1.0):
         """Compute downward excess uncertainties.
@@ -259,10 +292,34 @@ class CashCountsStatistic(CountsStatistic):
         """Stat value for best fit hypothesis, i.e. expected signal mu = n_on - mu_bkg"""
         return cash(self.n_on, self.n_on)
 
+    def info_dict(self, summed=True, axis=None):
+        """A dictionary of the relevant quantities
+
+        Parameters
+        ----------
+        summed : bool,
+            Whether the info dict is to computed by summing
+            over an axis.
+        axis : None or int or tuple of ints, optional
+            Axis to sum over if summed is True.
+            Default None, sums over the full array
+
+        Returns
+        -------
+        info_dict : dict
+            Dictionary with summary info
+        """
+        info_dict = super().info_dict(summed=summed, axis=axis)
+        if summed is False:
+            info_dict["mu_bkg"] = self.mu_bkg
+        return info_dict
+
     def __str__(self):
         str_ = f"{self.__class__.__name__}\n"
-        str_ += "\t{:32}: {:.2f} \n".format("Predicted background counts", self.mu_bkg)
         str_ += super().__str__()
+        str_ += "\t{:32}: {:.2f} \n".format(
+            "Predicted background counts", self.info_dict()["mu_bkg"]
+        )
         return str_.expandtabs(tabsize=2)
 
     def _stat_fcn(self, mu, delta=0, index=None):
@@ -335,12 +392,39 @@ class WStatCountsStatistic(CountsStatistic):
         """
         return wstat(self.n_on, self.n_off, self.alpha, self.n_sig + self.mu_sig)
 
+    def info_dict(self, summed=True, axis=None):
+        """A dictionary of the relevant quantities
+
+        Parameters
+        ----------
+        summed : bool,
+            Whether the info dict is to computed by summing
+            over an axis.
+        axis : None or int or tuple of ints, optional
+            Axis to sum over if summed is True.
+            Default None, sums over the full array
+
+        Returns
+        -------
+        info_dict : dict
+            Dictionary with summary info
+        """
+        info_dict = super().info_dict(summed=summed, axis=axis)
+        if summed is False:
+            info_dict["n_off"] = self.n_off
+            info_dict["alpha"] = self.alpha
+            info_dict["mu_sig"] = self.mu_sig
+        return info_dict
+
     def __str__(self):
         str_ = f"{self.__class__.__name__}\n"
-        str_ += "\t{:32}: {:.2f} \n".format("Off counts", self.n_off)
-        str_ += "\t{:32}: {:.2f} \n".format("alpha ", self.alpha)
-        str_ += "\t{:32}: {:.2f} \n".format("Predicted signal counts", self.mu_sig)
         str_ += super().__str__()
+        info_dict = self.info_dict()
+        str_ += "\t{:32}: {:.2f} \n".format("Off counts", info_dict["n_off"])
+        str_ += "\t{:32}: {:.2f} \n".format("alpha ", info_dict["alpha"])
+        str_ += "\t{:32}: {:.2f} \n".format(
+            "Predicted signal counts", info_dict["mu_sig"]
+        )
         return str_.expandtabs(tabsize=2)
 
     def _stat_fcn(self, mu, delta=0, index=None):
