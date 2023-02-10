@@ -331,7 +331,7 @@ class Parameter:
 
     @value.setter
     def value(self, val):
-        self._value = val
+        self._value = float(val)
         self._factor = self.transform(val)
 
     @property
@@ -705,7 +705,7 @@ class Parameters(collections.abc.Sequence):
             d = p.to_dict()
             if "link" not in d:
                 d["link"] = ""
-            for key in ["scale_method", "interp"]:
+            for key in ["scale_method", "interp", "scale_interp"]:
                 if key in d:
                     del d[key]
             if "prior" in d:
