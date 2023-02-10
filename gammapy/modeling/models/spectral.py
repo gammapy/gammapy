@@ -524,8 +524,9 @@ class SpectralModel(ModelBase):
         ----------
         energy : `~astropy.units.Quantity`
             Energy at which to estimate the index
-        epsilon : float
+        epsilon : float, optional
             Fractional energy increment to use for determining the spectral index.
+            default = 1e-5
 
         Returns
         -------
@@ -535,6 +536,26 @@ class SpectralModel(ModelBase):
         f1 = self(energy)
         f2 = self(energy * (1 + epsilon))
         return np.log(f1 / f2) / np.log(1 + epsilon)
+
+    def spectral_index_error(self, energy, epsilon=1e-5):
+        """Evaluate the error on spectral index at the given energy
+
+        Parameters
+        ----------
+        energy : `~astropy.units.Quantity`
+            Energy at which to estimate the index
+        epsilon : float, optional
+            Fractional energy increment to use for determining the spectral index
+            default = 1e-5
+
+        Returns
+        -------
+        index, index_error : tuple of float
+            Estimated spectral index and its error
+        """
+        return self._propagate_error(
+            epsilon=epsilon, fct=self.spectral_index, energy=energy
+        )
 
     def inverse(self, value, energy_min=0.1 * u.TeV, energy_max=100 * u.TeV):
         """Return energy for a given function value of the spectral model.
