@@ -297,6 +297,7 @@ class ModelBase:
                     "error",
                     "interp",
                     "scale_method",
+                    "scale_interp",
                 ]:
                     default = init[item]
 
