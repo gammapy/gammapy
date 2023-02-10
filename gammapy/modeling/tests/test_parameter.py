@@ -105,6 +105,8 @@ def test_parameter_to_dict():
         # Checks for the simpler method="factor1"
         ("factor1", 2e10, 1, 2e10),
         ("factor1", -2e10, 1, -2e10),
+        # Check no scaling
+        (None, 2e10, 2e10, 1),
     ],
 )
 def test_parameter_autoscale(method, value, factor, scale):
@@ -113,6 +115,36 @@ def test_parameter_autoscale(method, value, factor, scale):
     assert_allclose(par.factor, factor)
     assert_allclose(par.scale, scale)
     assert isinstance(par.scale, float)
+
+
+def test_parameter_scale_method_change():
+    value = 2e10
+    par = Parameter("", value, scale_method="scale10")
+    par.autoscale()
+    assert_allclose(par.factor, 2)
+    assert_allclose(par.scale, 1e10)
+    par.scale_method = "factor1"
+    assert par.scale_method == "factor1"
+    assert_allclose(par.factor, value)
+    assert_allclose(par.scale, 1)
+    par.autoscale()
+    assert_allclose(par.factor, 1)
+    assert_allclose(par.scale, value)
+
+
+def test_parameter_scale_interp_change():
+    value = 100
+    par = Parameter("", value, scale_method=None, scale_interp="log")
+    par.autoscale()
+    assert_allclose(par.factor, np.log(value))
+    assert_allclose(par.scale, 1)
+    par.scale_interp = "sqrt"
+    assert par.scale_interp == "sqrt"
+    assert_allclose(par.factor, value)
+    assert_allclose(par.scale, 1)
+    par.autoscale()
+    assert_allclose(par.factor, 10)
+    assert_allclose(par.scale, 1)
 
 
 @pytest.fixture()
