@@ -95,6 +95,8 @@ class Parameter:
          Parameter scaling to use for the scan.
      prior : `~gammapy.modeling.models.Prior`
          Prior set on the parameter.
+    scale_interp : {"lin", "sqrt", "log"}
+        Parameter scaling.
     """
 
     def __init__(
@@ -113,18 +115,21 @@ class Parameter:
         scan_n_sigma=2,
         scan_values=None,
         scale_method="scale10",
-        scale_interp="lin",
         interp="lin",
         prior=None,
+        scale_interp="lin",
     ):
         if not isinstance(name, str):
             raise TypeError(f"Name must be string, got '{type(name)}' instead")
 
         self._name = name
         self._link_label_io = None
+        self._scale_method = scale_method
+        self._scale_interp = scale_interp
         self.interp = interp
-        self.scale_interp = scale_interp
-        self.scale = scale
+        self._scale = float(scale)
+        self.min = min
+        self.max = max
         self.frozen = frozen
         self._error = error
         self._type = None
@@ -218,15 +223,12 @@ class Parameter:
     @factor.setter
     def factor(self, val):
         self._factor = float(val)
+        self._value = self.inverse_transform(self._factor)
 
     @property
     def scale(self):
         """Scale as a float."""
         return self._scale
-
-    @scale.setter
-    def scale(self, val):
-        self._scale = float(val)
 
     @property
     def unit(self):
@@ -319,7 +321,20 @@ class Parameter:
     def scale_method(self, val):
         if val not in ["scale10", "factor1"] and val is not None:
             raise ValueError(f"Invalid method: {val}")
+        self.reset_autoscale()
         self._scale_method = val
+
+    @property
+    def scale_interp(self):
+        """scale interp : {"lin", "sqrt", "log"}"""
+        return self._scale_interp
+
+    @scale_interp.setter
+    def scale_interp(self, val):
+        if val not in ["lin", "log", "sqrt"]:
+            raise ValueError(f"Invalid interp: {val}")
+        self.reset_autoscale()
+        self._scale_interp = val
 
     @property
     def frozen(self):
@@ -337,11 +352,12 @@ class Parameter:
     @property
     def value(self):
         """Value = factor x scale (float)."""
-        return self.inverse_transform(self._factor)
+        return self._value
 
     @value.setter
     def value(self, val):
-        self.factor = self.transform(val)
+        self._value = val
+        self._factor = self.transform(val)
 
     @property
     def quantity(self):
@@ -493,6 +509,7 @@ class Parameter:
             "frozen": self.frozen,
             "interp": self.interp,
             "scale_method": self.scale_method,
+            "scale_interp": self.scale_interp,
         }
 
         if self._link_label_io is not None:
@@ -520,10 +537,10 @@ class Parameter:
         if self.scale_method == "scale10":
             if value != 0:
                 exponent = np.floor(np.log10(np.abs(value)))
-                self.scale = np.power(10.0, exponent)
+                self._scale = np.power(10.0, exponent)
 
         elif self.scale_method == "factor1":
-            self.scale = value
+            self._scale = value
 
     def transform(self, value, update_scale=False):
         interp_scale = interpolation_scale(self.scale_interp)
@@ -541,6 +558,11 @@ class Parameter:
     def autoscale(self):
         "apply interpolation_scale and scale_method to the parameter"
         self.factor = self.transform(self.value, update_scale=True)
+
+    def reset_autoscale(self):
+        "reset sacling such as factor=value, scale=1"
+        self._factor = self._value
+        self._scale = 1.0
 
 
 class Parameters(collections.abc.Sequence):
