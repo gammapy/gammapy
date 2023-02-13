@@ -91,7 +91,7 @@ class MapDatasetEventSampler:
         return dataset.npred()
 
     def _sample_coord_time_energy(self, dataset, evaluator, t_delta="1 s"):
-        """Sample model components of a time-varying source.
+        """Sample model components of a source with time-dependent spectrum.
 
         Parameters
         ----------
