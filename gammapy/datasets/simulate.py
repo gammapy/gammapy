@@ -9,7 +9,7 @@ from regions import PointSkyRegion
 import gammapy
 from gammapy.data import EventList, observatory_locations
 from gammapy.maps import MapAxis, MapCoord, RegionGeom
-from gammapy.modeling.models import ConstantTemporalModel
+from gammapy.modeling.models import ConstantTemporalModel, PointSpatialModel
 from gammapy.utils.random import get_random_state
 
 __all__ = ["MapDatasetEventSampler"]
@@ -105,8 +105,8 @@ class MapDatasetEventSampler:
         table : `~astropy.table.Table`
             Table of sampled events.
         """
-        if evaluator.model.spatial_model.tag[0] != "PointSpatialModel":
-            raise ValueError(
+        if not isinstance(evaluator.model.spatial_model, PointSpatialModel):
+            raise NotImplementedError(
                 f"Event sampler expects PointSpatialModel for a time varying source. Got {evaluator.model.spatial_model.tag} instead."
             )
 
