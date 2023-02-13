@@ -97,7 +97,7 @@ class MapDatasetEventSampler:
         ----------
         dataset : `~gammapy.datasets.MapDataset`
             Map dataset.
-        t_delta : ~str
+        t_delta : `~astropy.units.Quantity`
             Minimum step time.
 
         Returns
