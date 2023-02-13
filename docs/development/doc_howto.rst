@@ -14,6 +14,10 @@ Generating the HTML docs for Gammapy is straight-forward::
     make docs-sphinx
     make docs-show
 
+Or one can equivalently use tox::
+
+     tox -e build_docs
+
 Generating the PDF docs is more complex.
 This should work::
 
