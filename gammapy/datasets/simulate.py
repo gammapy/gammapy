@@ -66,6 +66,8 @@ class MapDatasetEventSampler:
         ----------
         dataset : `~gammapy.datasets.MapDataset`
             Map dataset.
+        evaluator : `~gammapy.datasets.evaluators.MapEvaluator`
+            Map evaluator.
         time_axis : `~gammapy.Maps.MapAxis`
             Axis of the time.
 
@@ -97,6 +99,8 @@ class MapDatasetEventSampler:
         ----------
         dataset : `~gammapy.datasets.MapDataset`
             Map dataset.
+        evaluator : `~gammapy.datasets.evaluators.MapEvaluator`
+            Map evaluator.
         t_delta : `~astropy.units.Quantity`
             Minimum step time.
 
