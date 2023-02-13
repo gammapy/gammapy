@@ -58,7 +58,7 @@ class MapDatasetEventSampler:
 
         return table
 
-    def __evaluate_timevar_source(self, dataset, evaluator, time_axis=None):
+    def _evaluate_timevar_source(self, dataset, evaluator, time_axis=None):
         """Calculate Npred for a given `dataset.model` by evaluating
         it in region geometry.
 
@@ -107,7 +107,7 @@ class MapDatasetEventSampler:
         """
         if not isinstance(evaluator.model.spatial_model, PointSpatialModel):
             raise NotImplementedError(
-                f"Event sampler expects PointSpatialModel for a time varying source. Got {evaluator.model.spatial_model.tag} instead."
+                f"Event sampler expects PointSpatialModel for a time varying source. Got {evaluator.model.spatial_model} instead."
             )
 
         time_start, time_stop, time_ref = (
