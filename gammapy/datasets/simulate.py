@@ -130,7 +130,7 @@ class MapDatasetEventSampler:
         t_step = t_delta.to_value(time_unit)
         t_step = (t_step * u.s).to("d")
 
-        npred = self.__evaluate_timevar_source(dataset, evaluator)
+        npred = self._evaluate_timevar_source(dataset, evaluator)
         data = npred.data[np.isfinite(npred.data)]
         n_events = self.random_state.poisson(np.sum(data))
 
