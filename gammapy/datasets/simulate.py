@@ -155,8 +155,7 @@ class MapDatasetEventSampler:
         return table
 
     def _sample_coord_time(self, npred, temporal_model, gti):
-        """Sample model components of a time-varying
-        source.
+        """Sample model components of a time-varying source.
 
         Parameters
         ----------
