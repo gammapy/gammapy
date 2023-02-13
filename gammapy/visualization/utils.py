@@ -74,6 +74,7 @@ def plot_map_rgb(map_, ax=None, **kwargs):
     else:
         ax = map_._plot_format(ax)
 
+    # without this the axis limits are changed when calling scatter
     ax.autoscale(enable=False)
 
     return ax
