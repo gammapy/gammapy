@@ -38,7 +38,7 @@ class MapDatasetEventSampler:
         time : `~gammapy.Maps.MapAxis`
             Axis of the time.
         time_ref : `astropy.Time`
-            reference time of the datset
+            reference time of the event list
 
         Returns
         -------
