@@ -28,17 +28,15 @@ class MapDatasetEventSampler:
     def __init__(self, random_state="random-seed"):
         self.random_state = get_random_state(random_state)
 
-    def _make_table(self, coords, time, time_ref):
+    def _make_table(self, coords, time_ref):
         """Create a table for sampled events.
 
         Parameters
         ----------
         coords : `~gammapy.maps.MapCoord`
             Coordinates of the sampled events.
-        time : `~gammapy.Maps.MapAxis`
-            Axis of the time.
-        time_ref : `astropy.Time`
-            reference time of the event list
+        time_ref : `~astropy.time.Time`
+            reference time of the event list.
 
         Returns
         -------
@@ -51,7 +49,9 @@ class MapDatasetEventSampler:
         except KeyError:
             energy = coords["energy"]
 
-        table["TIME"] = u.Quantity(((time.mjd - time_ref.mjd) * u.day).to(u.s)).to("s")
+        table["TIME"] = u.Quantity(
+            ((coords["time"].mjd - time_ref.mjd) * u.day).to(u.s)
+        ).to("s")
         table["ENERGY_TRUE"] = energy
         table["RA_TRUE"] = coords.skycoord.icrs.ra.to("deg")
         table["DEC_TRUE"] = coords.skycoord.icrs.dec.to("deg")
@@ -136,18 +136,14 @@ class MapDatasetEventSampler:
 
         coords = npred.sample_coord(n_events=n_events, random_state=self.random_state)
 
-        #        time = (
-        #                np.interp(coords["TIME"] + model.ref_time, np.arange(len(t)), t.value - min(t.value))
-        #                * t_step.unit
-        #                ).to(time_unit)
-        time = evaluator.model.temporal_model.sample_time(
+        coords["time"] = evaluator.model.temporal_model.sample_time(
             n_events=n_events,
             t_min=time_start,
             t_max=time_stop,
             random_state=self.random_state,
         )
 
-        table = self._make_table(coords, time, time_ref)
+        table = self._make_table(coords, time_ref)
 
         return table
 
@@ -173,14 +169,14 @@ class MapDatasetEventSampler:
         coords = npred.sample_coord(n_events=n_events, random_state=self.random_state)
 
         time_start, time_stop, time_ref = (gti.time_start, gti.time_stop, gti.time_ref)
-        time = temporal_model.sample_time(
+        coords["time"] = temporal_model.sample_time(
             n_events=n_events,
             t_min=time_start,
             t_max=time_stop,
             random_state=self.random_state,
         )
 
-        table = self._make_table(coords, time, time_ref)
+        table = self._make_table(coords, time_ref)
 
         return table
 
