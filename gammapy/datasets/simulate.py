@@ -107,7 +107,7 @@ class MapDatasetEventSampler:
         """
         if evaluator.model.spatial_model.tag[0] != "PointSpatialModel":
             raise ValueError(
-                "Event sampler cannot work for time-varying extended sources."
+                f"Event sampler expects PointSpatialModel for a time varying source. Got {evaluator.model.spatial_model.tag} instead."
             )
 
         time_start, time_stop, time_ref = (
