@@ -34,7 +34,7 @@ class MapDatasetEventSampler:
         Parameters
         ----------
         coords : `~gammapy.maps.MapCoord`
-            Map of coordinates of the sampled events.
+            Coordinates of the sampled events.
         time : `~gammapy.Maps.MapAxis`
             Axis of the time.
         time_ref : `astropy.Time`
