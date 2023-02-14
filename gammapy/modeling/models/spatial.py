@@ -302,7 +302,7 @@ class SpatialModel(ModelBase):
             )
         return m.plot(ax=ax, **kwargs)
 
-    @deprecated("v1.1", alternative="plot_interactive")
+    @deprecated("v1.0.1", alternative="plot_interactive")
     def plot_interative(self, ax=None, geom=None, **kwargs):
         """Plot spatial model.
 
@@ -1271,7 +1271,7 @@ class TemplateSpatialModel(SpatialModel):
             geom = self.map.geom
         super().plot(ax=ax, geom=geom, **kwargs)
 
-    @deprecated("v1.1", alternative="plot_interactive")
+    @deprecated("v1.0.1", alternative="plot_interactive")
     def plot_interative(self, ax=None, geom=None, **kwargs):
         if geom is None:
             geom = self.map.geom
