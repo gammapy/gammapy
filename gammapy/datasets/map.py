@@ -815,7 +815,7 @@ class MapDataset(Dataset):
             self.meta_table = other.meta_table.copy()
 
     def stat_array(self):
-        """Likelihood per bin given the current model parameters"""
+        """Statistic function value per bin given the current model parameters"""
         return cash(n_on=self.counts.data, mu_on=self.npred().data)
 
     def residuals(self, method="diff", **kwargs):
@@ -1080,7 +1080,7 @@ class MapDataset(Dataset):
         return ax_spatial, ax_spectral
 
     def stat_sum(self):
-        """Total likelihood given the current model parameters."""
+        """Total statistic function value given the current model parameters."""
         counts, npred = self.counts.data.astype(float), self.npred().data
 
         if self.mask is not None:
@@ -2128,7 +2128,7 @@ class MapDatasetOnOff(MapDataset):
         return self.alpha * self.counts_off
 
     def stat_array(self):
-        """Likelihood per bin given the current model parameters"""
+        """Statistic function value per bin given the current model parameters"""
         mu_sig = self.npred_signal().data
         on_stat_ = wstat(
             n_on=self.counts.data,
@@ -2356,7 +2356,7 @@ class MapDatasetOnOff(MapDataset):
         super().stack(other, nan_to_num=nan_to_num)
 
     def stat_sum(self):
-        """Total likelihood given the current model parameters."""
+        """Total statistic function value given the current model parameters."""
         return Dataset.stat_sum(self)
 
     def fake(self, npred_background, random_state="random-seed"):
