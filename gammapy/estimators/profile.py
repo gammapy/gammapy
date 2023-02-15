@@ -325,7 +325,7 @@ class ImageProfile:
         kwargs.setdefault("alpha", 0.5)
 
         ax.fill_between(x, ymin, ymax, **kwargs)
-        ax.set_xlabel("x (deg)")
+        ax.set_xlabel("x [deg]")
         ax.set_ylabel("profile")
         return ax
 
