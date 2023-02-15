@@ -82,10 +82,7 @@ from gammapy.modeling.models import (
 
 
 ######################################################################
-# We will simulate using the CTA-1DC IRFs shipped with gammapy. Note that
-# for dedictaed CTA simulations, you can simply use
-# ``Observation.from_caldb()` <>`__ without having to externally load
-# the IRFs
+# We will simulate using the CTA-1DC IRFs shipped with gammapy
 #
 
 # Loading IRFs
