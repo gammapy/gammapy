@@ -206,7 +206,7 @@ maker_fov = FoVBackgroundMaker(method="fit", exclusion_mask=exclusion_mask)
 for obs in observations:
     # First a cutout of the target map is produced
     cutout = stacked.cutout(
-        obs.pointing_radec, width=2 * offset_max, name=f"obs-{obs.obs_id}"
+        obs.get_pointing_icrs(obs.tmid), width=2 * offset_max, name=f"obs-{obs.obs_id}"
     )
     # A MapDataset is filled in this cutout geometry
     dataset = maker.run(cutout, obs)

@@ -169,7 +169,9 @@ geom = WcsGeom.create(
 # compute
 livetime = Map.from_geom(geom, unit=u.hr)
 for obs in observations:
-    geom_obs = geom.cutout(position=obs.pointing_radec, width=2.0 * offset_max)
+    geom_obs = geom.cutout(
+        position=obs.get_pointing_icrs(obs.tmid), width=2.0 * offset_max
+    )
     exposure = MapDatasetMaker.make_exposure(geom=geom_obs, observation=obs)
     on_axis = obs.aeff.evaluate(
         offset=0.0 * u.deg, energy_true=geom.axes["energy_true"].center
@@ -185,8 +187,8 @@ ax = livetime.plot(add_cbar=True)
 # Add the pointing position on top
 for obs in observations:
     ax.plot(
-        obs.pointing_radec.to_pixel(wcs=ax.wcs)[0],
-        obs.pointing_radec.to_pixel(wcs=ax.wcs)[1],
+        obs.get_pointing_icrs(obs.tmid).to_pixel(wcs=ax.wcs)[0],
+        obs.get_pointing_icrs(obs.tmid).to_pixel(wcs=ax.wcs)[1],
         "+",
         color="black",
     )
