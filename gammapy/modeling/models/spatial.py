@@ -20,6 +20,7 @@ import matplotlib.pyplot as plt
 from gammapy.maps import Map, WcsGeom
 from gammapy.modeling import Parameter
 from gammapy.modeling.covariance import copy_covariance
+from gammapy.utils.deprecation import deprecated
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.scripts import make_path
 from .core import ModelBase
@@ -300,7 +301,31 @@ class SpatialModel(ModelBase):
             )
         return m.plot(ax=ax, **kwargs)
 
+    @deprecated("v1.0.1", alternative="plot_interactive")
     def plot_interative(self, ax=None, geom=None, **kwargs):
+        """Plot spatial model.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes`, optional
+            Axis
+        geom : `~gammapy.maps.WcsGeom`, optional
+            Geom to use for plotting.
+        **kwargs : dict
+            Keyword arguments passed to `~gammapy.maps.WcsMap.plot()`
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`, optional
+            Axis
+        """
+
+        m = self._get_plot_map(geom)
+        if m.geom.is_image:
+            raise TypeError("Use .plot() for 2D Maps")
+        m.plot_interactive(ax=ax, **kwargs)
+
+    def plot_interactive(self, ax=None, geom=None, **kwargs):
         """Plot spatial model.
 
         Parameters
@@ -1208,7 +1233,13 @@ class TemplateSpatialModel(SpatialModel):
             geom = self.map.geom
         super().plot(ax=ax, geom=geom, **kwargs)
 
+    @deprecated("v1.0.1", alternative="plot_interactive")
     def plot_interative(self, ax=None, geom=None, **kwargs):
         if geom is None:
             geom = self.map.geom
-        super().plot_interative(ax=ax, geom=geom, **kwargs)
+        super().plot_interactive(ax=ax, geom=geom, **kwargs)
+
+    def plot_interactive(self, ax=None, geom=None, **kwargs):
+        if geom is None:
+            geom = self.map.geom
+        super().plot_interactive(ax=ax, geom=geom, **kwargs)
