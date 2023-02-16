@@ -2019,3 +2019,11 @@ class Map(abc.ABC):
 
         geom = self.geom.to_image().to_cube(new_axes)
         return self._init_copy(geom=geom, data=data)
+
+    def __matmul__(self, other):
+        """Apply dot product with the input map.
+
+        The input Map has to share a single MapAxis with the current Map.
+        Because it has no spatial dimension, it must be a `~gammapy.maps.RegionNDMap`.
+        """
+        return self.dot(other)

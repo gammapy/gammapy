@@ -880,7 +880,7 @@ def test_map_dot_product():
     map2.data[0, 0, ...] = 1
     map2.data[1, 1, ...] = 2
 
-    dot_map = map1.dot(map2)
+    dot_map = map1 @ map2
 
     assert dot_map.geom.axes.names == ["axis2"]
     assert_allclose(dot_map.data[:, 0, 0], [1, 4, 0, 0])
