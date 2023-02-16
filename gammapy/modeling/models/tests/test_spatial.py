@@ -336,7 +336,7 @@ def test_sky_diffuse_map(caplog):
     assert isinstance(model.to_region(), RectangleSkyRegion)
 
     with pytest.raises(TypeError):
-        model.plot_interative()
+        model.plot_interactive()
 
     with pytest.raises(TypeError):
         model.plot_grid()
