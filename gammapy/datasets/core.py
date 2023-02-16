@@ -216,7 +216,7 @@ class Datasets(collections.abc.MutableSequence):
         return np.array(contributions)
 
     def stat_sum(self):
-        """Compute joint likelihood"""
+        """Compute joint statistic function value"""
         stat_sum = 0
         # TODO: add parallel evaluation of likelihoods
         for dataset in self:
