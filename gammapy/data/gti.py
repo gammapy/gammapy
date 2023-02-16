@@ -131,7 +131,7 @@ class GTI:
 
         Parameters
         ----------
-        table : `~astropy.io.fits.BinTableHDU`
+        table_hdu : `~astropy.io.fits.BinTableHDU`
             table hdu
         format: str
             Input format, currently only "gadf" is supported
