@@ -53,7 +53,7 @@ jobs:
             allowed_fail: false
           - os: ubuntu-latest
             python: '3.8'
-            tox_env: 'py38-test-alldeps-astropylts-numpy120'
+            tox_env: 'py38-test-alldeps-astropylts-numpy121'
             allowed_fail: false
           - os: ubuntu-latest
             python: '3.8'
