@@ -264,21 +264,17 @@ def test_CountStatistic_str():
     assert "WStatCountsStatistic" in str(wstat)
 
 
-def test_CountStatistic_infodict():
+def test_counts_statistic_infodict():
     c1 = CashCountsStatistic(n_on=[3, 6], mu_bkg=[2, 1])
-    info_dict = c1.info_dict(summed=False)
-    assert_allclose(info_dict["n_on"], [3, 6])
-    assert_allclose(info_dict["significance"], [0.6578, 3.391], rtol=1e-3)
-
-    info_dict = c1.info_dict(summed=True)
+    info_dict = c1.sum().info_dict()
     assert_allclose(info_dict["n_on"], 9)
     assert_allclose(info_dict["significance"], 2.788, rtol=1e-3)
 
     w1 = WStatCountsStatistic(n_on=[3, 6], n_off=[2, 1], alpha=[1, 2])
-    info_dict = w1.info_dict(summed=False)
+    info_dict = w1.info_dict()
     assert_allclose(info_dict["n_off"], [2, 1])
     assert_allclose(info_dict["significance"], [0.44872, 1.14942], rtol=1e-3)
 
-    info_dict = w1.info_dict(summed=True)
+    info_dict = w1.sum().info_dict()
     assert_allclose(info_dict["excess"], 5.0)
     assert_allclose(info_dict["significance"], 1.288731, rtol=1e-3)

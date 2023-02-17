@@ -74,17 +74,8 @@ class CountsStatistic(abc.ABC):
 
         return str_.expandtabs(tabsize=2)
 
-    def info_dict(self, summed=True, axis=None):
+    def info_dict(self):
         """A dictionary of the relevant quantities
-
-        Parameters
-        ----------
-        summed : bool,
-            Whether the info dict is to computed by summing
-            over an axis.
-        axis : None or int or tuple of ints, optional
-            Axis to sum over if summed is True.
-            Default None, sums over the full array
 
         Returns
         -------
@@ -92,16 +83,12 @@ class CountsStatistic(abc.ABC):
             Dictionary with summary info
         """
         info_dict = {}
-        if summed is False:
-            info_dict["n_on"] = self.n_on
-            info_dict["background"] = self.n_bkg
-            info_dict["excess"] = self.n_sig
-            info_dict["significance"] = self.sqrt_ts
-            info_dict["p_value"] = self.p_value
-            return info_dict
-
-        elif summed is True:
-            return self.sum(axis=axis).info_dict(summed=False)
+        info_dict["n_on"] = self.n_on
+        info_dict["background"] = self.n_bkg
+        info_dict["excess"] = self.n_sig
+        info_dict["significance"] = self.sqrt_ts
+        info_dict["p_value"] = self.p_value
+        return info_dict
 
     def compute_errn(self, n_sigma=1.0):
         """Compute downward excess uncertainties.
@@ -292,26 +279,16 @@ class CashCountsStatistic(CountsStatistic):
         """Stat value for best fit hypothesis, i.e. expected signal mu = n_on - mu_bkg"""
         return cash(self.n_on, self.n_on)
 
-    def info_dict(self, summed=True, axis=None):
+    def info_dict(self):
         """A dictionary of the relevant quantities
-
-        Parameters
-        ----------
-        summed : bool,
-            Whether the info dict is to computed by summing
-            over an axis.
-        axis : None or int or tuple of ints, optional
-            Axis to sum over if summed is True.
-            Default None, sums over the full array
 
         Returns
         -------
         info_dict : dict
             Dictionary with summary info
         """
-        info_dict = super().info_dict(summed=summed, axis=axis)
-        if summed is False:
-            info_dict["mu_bkg"] = self.mu_bkg
+        info_dict = super().info_dict()
+        info_dict["mu_bkg"] = self.mu_bkg
         return info_dict
 
     def __str__(self):
@@ -392,28 +369,18 @@ class WStatCountsStatistic(CountsStatistic):
         """
         return wstat(self.n_on, self.n_off, self.alpha, self.n_sig + self.mu_sig)
 
-    def info_dict(self, summed=True, axis=None):
+    def info_dict(self):
         """A dictionary of the relevant quantities
-
-        Parameters
-        ----------
-        summed : bool,
-            Whether the info dict is to computed by summing
-            over an axis.
-        axis : None or int or tuple of ints, optional
-            Axis to sum over if summed is True.
-            Default None, sums over the full array
 
         Returns
         -------
         info_dict : dict
             Dictionary with summary info
         """
-        info_dict = super().info_dict(summed=summed, axis=axis)
-        if summed is False:
-            info_dict["n_off"] = self.n_off
-            info_dict["alpha"] = self.alpha
-            info_dict["mu_sig"] = self.mu_sig
+        info_dict = super().info_dict()
+        info_dict["n_off"] = self.n_off
+        info_dict["alpha"] = self.alpha
+        info_dict["mu_sig"] = self.mu_sig
         return info_dict
 
     def __str__(self):
