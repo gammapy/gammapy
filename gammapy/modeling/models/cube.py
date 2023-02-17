@@ -662,12 +662,16 @@ class FoVBackgroundModel(ModelBase):
     def evaluate(self, energy, lon=None, lat=None):
         """Evaluate model"""
         value = self.spectral_model(energy)
-        if self.spatial_model is not None and lon is not None and lat is not None:
-            if self.spatial_model.is_energy_dependent:
-                return self.spatial_model(lon, lat, energy).value * value
+        if self.spatial_model is not None:
+            if lon is not None and lat is not None:
+                if self.spatial_model.is_energy_dependent:
+                    return self.spatial_model(lon, lat, energy).value * value
+                else:
+                    return self.spatial_model(lon, lat).value * value
             else:
-                return self.spatial_model(lon, lat).value * value
-
+                raise ValueError(
+                    "lon and lat are required if a spatial model is defined"
+                )
         else:
             return value
 
@@ -712,8 +716,8 @@ class FoVBackgroundModel(ModelBase):
             Data dictionary
         """
         from gammapy.modeling.models import (
-            SPECTRAL_MODEL_REGISTRY,
             SPATIAL_MODEL_REGISTRY,
+            SPECTRAL_MODEL_REGISTRY,
         )
 
         spectral_data = data.get("spectral")
@@ -913,8 +917,8 @@ class TemplateNPredModel(ModelBase):
     @classmethod
     def from_dict(cls, data):
         from gammapy.modeling.models import (
-            SPECTRAL_MODEL_REGISTRY,
             SPATIAL_MODEL_REGISTRY,
+            SPECTRAL_MODEL_REGISTRY,
         )
 
         spectral_data = data.get("spectral")
