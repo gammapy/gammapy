@@ -723,6 +723,8 @@ class IRFMap:
         irf_map : `IRFMap`
             IRF map.
         """
+
+        output_class = cls
         if format == "gadf":
             if hdu is None:
                 hdu = IRF_MAP_HDU_SPECIFICATION[cls.tag]
@@ -743,6 +745,16 @@ class IRFMap:
                 )
             else:
                 exposure_map = None
+
+            if cls.tag == "psf_map" and "energy" in irf_map.geom.axes.names:
+                from .psf import RecoPSFMap
+
+                output_class = RecoPSFMap
+            if cls.tag == "edisp_map" and irf_map.geom.axes[0].name == "energy":
+                from .edisp import EDispKernelMap
+
+                output_class = EDispKernelMap
+
         elif format == "gtpsf":
             rad_axis = MapAxis.from_table_hdu(hdulist["THETA"], format=format)
 
@@ -761,7 +773,7 @@ class IRFMap:
         else:
             raise ValueError(f"Format {format} not supported")
 
-        return cls(irf_map, exposure_map)
+        return output_class(irf_map, exposure_map)
 
     @classmethod
     def read(cls, filename, format="gadf", hdu=None):
