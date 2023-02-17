@@ -1,9 +1,11 @@
 import numpy as np
 from scipy.interpolate import CubicSpline
+from astropy.visualization import make_lupton_rgb
 import matplotlib.pyplot as plt
 
 __all__ = [
     "plot_contour_line",
+    "plot_map_rgb",
     "plot_spectrum_datasets_off_regions",
     "plot_theta_squared_table",
 ]
@@ -18,6 +20,64 @@ ARTIST_TO_LINE_PROPERTIES = {
     "linewidth": "markerwidth",
     "lw": "markerwidth",
 }
+
+
+def plot_map_rgb(map_, ax=None, **kwargs):
+    """
+    Plot RGB image on matplotlib WCS axes.
+
+    This function is based on the `~astropy.visualization.make_lupton_rgb` function. The input map must
+    contain 1 non-spatial axis with exactly 3 bins. If this is not the case, the map has to be resampled
+    before using the `plot_map_rgb` function (e.g. as shown in the code example below).
+
+    Parameters
+    ----------
+    map_ : `~gammapy.maps.WcsNDMap`
+        WCS map. The map must contain 1 non-spatial axis with exactly 3 bins.
+    ax : `~astropy.visualization.wcsaxes.WCSAxes`, optional
+        WCS axis object to plot on.
+    **kwargs : dict
+        Keyword arguments passed to `~astropy.visualization.make_lupton_rgb`.
+
+    Returns
+    -------
+    ax : `~astropy.visualization.wcsaxes.WCSAxes`
+        WCS axis object
+
+    Examples
+    --------
+    >>> from gammapy.visualization.utils import plot_map_rgb
+    >>> from gammapy.maps import Map, MapAxis
+    >>> import astropy.units as u
+    >>> map_ = Map.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
+    >>> axis_rgb = MapAxis.from_energy_edges(
+    >>>     [0.1, 0.2, 0.5, 10], unit=u.TeV, name="energy", interp="log"
+    >>> )
+    >>> map_ = map_.resample_axis(axis_rgb)
+    >>> kwargs = {"stretch": 0.5, "Q": 1, "minimum": 0.15}
+    >>> plot_map_rgb(map_.smooth(0.08*u.deg), **kwargs)
+    """
+    geom = map_.geom
+    if len(geom.axes) != 1 or geom.axes[0].nbin != 3:
+        raise ValueError(
+            "One non-spatial axis with exactly 3 bins is needed to plot an RGB image"
+        )
+
+    data = [data_slice / np.nanmax(data_slice.flatten()) for data_slice in map_.data]
+    data = make_lupton_rgb(*data, **kwargs)
+
+    ax = map_._plot_default_axes(ax=ax)
+    ax.imshow(data)
+
+    if geom.is_allsky:
+        ax = map_._plot_format_allsky(ax)
+    else:
+        ax = map_._plot_format(ax)
+
+    # without this the axis limits are changed when calling scatter
+    ax.autoscale(enable=False)
+
+    return ax
 
 
 def plot_spectrum_datasets_off_regions(
