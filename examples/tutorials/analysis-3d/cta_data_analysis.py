@@ -129,7 +129,7 @@ maker = MapDatasetMaker(selection=["counts", "background", "exposure", "psf"])
 maker_safe_mask = SafeMaskMaker(methods=["offset-max"], offset_max=2.5 * u.deg)
 
 for obs in observations:
-    cutout = stacked.cutout(obs.pointing_radec, width="5 deg")
+    cutout = stacked.cutout(obs.get_pointing_icrs(obs.tmid), width="5 deg")
     dataset = maker.run(cutout, obs)
     dataset = maker_safe_mask.run(dataset, obs)
     stacked.stack(dataset)
@@ -292,7 +292,7 @@ plot_spectrum_datasets_off_regions(datasets, ax=ax)
 # Model fit
 # ~~~~~~~~~
 #
-# The next step is to fit a spectral model, using all data (i.e. a
+# The next step is to fit a spectral model, using all data (i.e. a
 # “global” fit, using all energies).
 #
 

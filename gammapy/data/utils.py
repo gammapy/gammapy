@@ -80,7 +80,7 @@ def get_irfs_features(
                         obs.edisp.axes["offset"].center[-1],
                     )
                     offset = np.minimum(
-                        position.separation(obs.pointing_radec), offset_max
+                        position.separation(obs.get_pointing_icrs(obs.tmid)), offset_max
                     )
             else:
                 offset = fixed_offset
