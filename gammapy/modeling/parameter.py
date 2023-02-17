@@ -134,7 +134,7 @@ class Parameter:
             self.value = val.value
             self.unit = val.unit
         else:
-            self.factor = value
+            self.value = float(value)
             self.unit = unit
 
         self.scan_min = scan_min

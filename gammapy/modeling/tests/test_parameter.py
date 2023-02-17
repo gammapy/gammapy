@@ -38,7 +38,7 @@ def test_parameter_outside_limit(caplog):
 
 def test_parameter_scale():
     # Basic check how scale is used for value, min, max
-    par = Parameter("spam", 42, "deg", 10, 400, 500)
+    par = Parameter("spam", 420, "deg", 10, 400, 500)
 
     assert par.value == 420
     assert par.min == 400
@@ -52,7 +52,7 @@ def test_parameter_scale():
 
 
 def test_parameter_quantity():
-    par = Parameter("spam", 42, "deg", 10)
+    par = Parameter("spam", 420, "deg", 10)
 
     quantity = par.quantity
     assert quantity.unit == "deg"
