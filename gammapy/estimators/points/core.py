@@ -5,6 +5,7 @@ import numpy as np
 from scipy import stats
 from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
+from astropy.time import Time
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from gammapy.maps import MapAxis, Maps, RegionNDMap, TimeMapAxis
@@ -14,6 +15,7 @@ from gammapy.modeling.models.spectral import scale_plot_flux
 from gammapy.modeling.scipy import stat_profile_ul_scipy
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_standardise_units_copy
+from gammapy.utils.time import time_ref_to_dict
 from ..map.core import DEFAULT_UNIT, FluxMaps
 
 __all__ = ["FluxPoints"]
@@ -388,10 +390,10 @@ class FluxPoints(FluxMaps):
 
             table = vstack(tables)
 
-            table.meta["TIMESYS"] = time_axis.reference_time.scale
+            # serialize with reference time set to mjd=0.0
+            ref_time = Time(0.0, format="mjd", scale=time_axis.reference_time.scale)
+            table.meta.update(time_ref_to_dict(ref_time, scale=ref_time.scale))
             table.meta["TIMEUNIT"] = "d"
-            table.meta["MJDREFF"] = 0
-            table.meta["MJDREFI"] = 0
 
         elif format == "binned-time-series":
             message = (
