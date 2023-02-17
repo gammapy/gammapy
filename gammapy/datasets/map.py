@@ -1187,29 +1187,14 @@ class MapDataset(Dataset):
             )
 
         if "EDISP" in hdulist:
-            edisp_map = Map.from_hdulist(hdulist, hdu="edisp", format=format)
-
-            try:
-                exposure_map = Map.from_hdulist(
-                    hdulist, hdu="edisp_exposure", format=format
-                )
-            except KeyError:
-                exposure_map = None
-
-            if edisp_map.geom.axes[0].name == "energy":
-                kwargs["edisp"] = EDispKernelMap(edisp_map, exposure_map)
-            else:
-                kwargs["edisp"] = EDispMap(edisp_map, exposure_map)
+            kwargs["edisp"] = EDispMap.from_hdulist(
+                hdulist, hdu="edisp", exposure_hdu="edisp_exposure", format=format
+            )
 
         if "PSF" in hdulist:
-            psf_map = Map.from_hdulist(hdulist, hdu="psf", format=format)
-            try:
-                exposure_map = Map.from_hdulist(
-                    hdulist, hdu="psf_exposure", format=format
-                )
-            except KeyError:
-                exposure_map = None
-            kwargs["psf"] = PSFMap(psf_map, exposure_map)
+            kwargs["psf"] = PSFMap.from_hdulist(
+                hdulist, hdu="psf", exposure_hdu="psf_exposure", format=format
+            )
 
         if "MASK_SAFE" in hdulist:
             mask_safe = Map.from_hdulist(hdulist, hdu="mask_safe", format=format)
@@ -1267,7 +1252,7 @@ class MapDataset(Dataset):
             )
 
         kwargs["edisp"] = HDULocation(
-            hdu_class="edisp_kernel_map",
+            hdu_class="edisp_map",
             file_dir=path.parent,
             file_name=path.name,
             hdu_name="EDISP",
