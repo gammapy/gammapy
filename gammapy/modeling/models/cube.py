@@ -588,9 +588,12 @@ class FoVBackgroundModel(ModelBase):
     ----------
     spectral_model : `~gammapy.modeling.models.SpectralModel`
         Normalized spectral model.
+        Default is `~gammapy.modeling.models.PowerLawNormSpectralModel`
     dataset_name : str
         Dataset name
-
+    spatial_model : `~gammapy.modeling.models.SpatialModel`
+        Unitless Spatial model (unit is dropped on evaluation if defined).
+        Default is None.
     """
 
     tag = ["FoVBackgroundModel", "fov-bkg"]
@@ -773,15 +776,15 @@ class TemplateNPredModel(ModelBase):
     ----------
     map : `~gammapy.maps.Map`
         Background model map
-    spatial_model : `~gammapy.modeling.models.SpatialModel`
-        Norm spatial model,
-        default is None.
     spectral_model : `~gammapy.modeling.models.SpectralModel`
         Normalized spectral model,
         default is `~gammapy.modeling.models.PowerLawNormSpectralModel`
     copy_data : bool
         Create a deepcopy of the map data or directly use the original. True by
         default, can be turned to False to save memory in case of large maps.
+    spatial_model : `~gammapy.modeling.models.SpatialModel`
+        Unitless Spatial model (unit is dropped on evaluation if defined).
+        Default is None.
     """
 
     tag = "TemplateNPredModel"
