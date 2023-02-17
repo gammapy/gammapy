@@ -10,8 +10,8 @@ pytest.importorskip("iminuit")
 
 class MyModel(ModelBase):
     x = Parameter("x", 2.1, error=0.2)
-    y = Parameter("y", 3.1, scale=1e5, error=3e4)
-    z = Parameter("z", 4.1, scale=1e-5, error=4e-6)
+    y = Parameter("y", 3.1e5, scale=1e5, error=3e4)
+    z = Parameter("z", 4.1e-5, scale=1e-5, error=4e-6)
     name = "test"
     datasets_names = ["test"]
 

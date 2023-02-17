@@ -30,14 +30,14 @@ components:
     type: PointSpatialModel
     parameters:
     - name: lon_0
-      value: -50.
+      value: -0.5
       scale: 0.01
       unit: deg
       min: -180.0
       max: 180.0
       frozen: true
     - name: lat_0
-      value: -0.05
+      value: -0.0005
       scale: 0.01
       unit: deg
       min: -90.0
@@ -68,7 +68,7 @@ components:
       max: .nan
       frozen: true
     - name: lambda_
-      value: 0.06
+      value: 0.006
       scale: 0.1
       unit: TeV-1
       min: .nan
