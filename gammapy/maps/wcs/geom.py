@@ -877,10 +877,9 @@ class WcsGeom(Geom):
 
         binsz = self.pixel_scales
         width_npix = np.clip((width / binsz).to_value(""), 1, None)
-        width = width_npix * binsz
 
         if odd_npix:
-            width = round_up_to_odd(width_npix)
+            width_npix = round_up_to_odd(width_npix)
 
         dummy_data = np.empty(self.to_image().data_shape, dtype=bool)
         c2d = Cutout2D(
@@ -888,7 +887,7 @@ class WcsGeom(Geom):
             wcs=self.wcs,
             position=position,
             # Cutout2D takes size with order (lat, lon)
-            size=width[::-1],
+            size=width_npix[::-1],
             mode=mode,
         )
         return self._init_copy(wcs=c2d.wcs, npix=c2d.shape[::-1])
