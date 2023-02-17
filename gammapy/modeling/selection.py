@@ -11,7 +11,7 @@ class TestStatisticNested:
     Parameters
     ----------
     parameters : `~gammapy.modeling.Parameters` or list of `~gammapy.modeling.Parameter`
-        List of parameters frozen for the null hypothesis.
+        List of parameters frozen for the null hypothesis but free for the test hypothesis.
     null_values : list of float or `~gammapy.modeling.Parameters`
         Values of the parameters frozen for the null hypothesis.
         If a `Parameters` object or a list of `Parameters` is given
