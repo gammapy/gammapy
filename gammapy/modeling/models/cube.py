@@ -793,12 +793,12 @@ class TemplateNPredModel(ModelBase):
     def __init__(
         self,
         map,
-        spatial_model=None,
         spectral_model=None,
         name=None,
         filename=None,
         datasets_names=None,
         copy_data=True,
+        spatial_model=None,
     ):
         if isinstance(map, Map):
             axis = map.geom.axes["energy"]
