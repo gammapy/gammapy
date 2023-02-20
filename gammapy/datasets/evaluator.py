@@ -406,8 +406,8 @@ class MapEvaluator:
         norm_only_changed = False
         idx = self._norm_idx
         values = self.model.parameters.value
-        if idx and self._computation_cache is not None:
-            changed = self._cached_parameter_values_previous == values
+        if idx is not None and self._computation_cache is not None:
+            changed = self._cached_parameter_values_previous != values
             norm_only_changed = sum(changed) == 1 and changed[idx]
 
         if not norm_only_changed:
