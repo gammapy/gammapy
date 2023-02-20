@@ -408,7 +408,7 @@ class MapEvaluator:
         values = self.model.parameters.value
         if idx is not None and self._computation_cache is not None:
             changed = self._cached_parameter_values_previous != values
-            norm_only_changed = sum(changed) == 1 and changed[idx]
+            norm_only_changed = np.count_nonzero(changed) == 1 and changed[idx]
 
         if not norm_only_changed:
             self._cached_parameter_values_previous = values
