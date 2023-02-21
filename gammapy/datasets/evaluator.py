@@ -357,7 +357,7 @@ class MapEvaluator:
         if isinstance(self.model, TemplateNPredModel):
             npred = self.model.evaluate()
         else:
-            if not self.parameter_norm_only_changed:
+            if not self.parameter_norm_only_changed or not self.use_cache:
                 for method in self.methods_sequence:
                     values = method(self._computation_cache)
                     self._computation_cache = values
