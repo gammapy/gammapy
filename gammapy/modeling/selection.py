@@ -49,9 +49,9 @@ class TestStatisticNested:
     def ts_threshold(self):
         """Threshold value in TS corresponding to `n_sigma`.
         This assumes that the TS follows a chi squared distribution
-        with a number of degree of freedom equal to `len(parameters)`.
+        with a number of degree of freedom equal to `n_free_parameters`.
         """
-        return sigma_to_ts(self.n_sigma, len(self.parameters))
+        return sigma_to_ts(self.n_sigma, self.n_free_parameters)
 
     def run(self, datasets):
         """Perform the alternative hypothesis testing
