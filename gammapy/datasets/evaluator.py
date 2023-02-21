@@ -89,8 +89,6 @@ class MapEvaluator:
         self._cached_parameter_values_spatial = None
         self._cached_position = (0, 0)
         self._computation_cache = None
-        self._neval = 0  # for debugging
-        self._renorm = 1
         self._spatial_oversampling_factor = 1
         if self.exposure is not None:
             if not self.geom.is_region or self.geom.region is not None:
