@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
+from functools import lru_cache
 from inspect import signature
 import numpy as np
 import astropy.units as u
@@ -62,6 +63,84 @@ class CashFitStatistic(FitStatistic):
         if mask is not None:
             return cash_sum_cython(counts[mask.data], npred[mask.data])
         return cash_sum_cython(counts.ravel(), npred.ravel())
+
+
+@lru_cache()
+def create_c(n_dim: int) -> np.ndarray:
+    """Create the Tikhonov matrix.
+
+    math ::
+
+        C_4 = \\left(
+            \\begin{matrix}
+                -1 &  1 &  0 &  0 \\
+                1  & -2 &  1 &  0 \\
+                0  &  1 & -2 &  1 \\
+                0  &  0 &  1 & -1 \\
+            \\end{matrix}
+        \\right)
+
+    """
+    c = -2.0 * np.eye(n_dim) + np.eye(n_dim, k=1) + np.eye(n_dim, k=-1)
+    c[0, 0] = c[-1, -1] = -1.0
+    return -c
+
+
+@lru_cache()
+def create_l(n_dim: int) -> np.ndarray:
+    """Create the Tikhonov matrix.
+
+    math ::
+
+        L_4 = \\left(
+            \\begin{matrix}
+                1  & -2 &  1 &  0 \\
+                0  &  1 & -2 &  1 \\
+            \\end{matrix}
+        \\right)
+
+    """
+    return create_c(n_dim)[1:-1, :]
+
+
+def tikhonov(f: np.ndarray, tau: float) -> float:
+    """Tikhonov regularization.
+
+    math ::
+
+        \\frac{1}{2}
+        {\\left(\\mathbf{C}f\\right)}^\\top
+        {\\left(\\tau1\\right)}
+        \\left(\\mathbf{C}f\\right)
+
+    """
+    n_dim = len(f)
+    C = create_l(n_dim)
+    Cf = C @ f
+    return (tau / 2) * (Cf.T @ Cf)
+
+
+class Tikhonov(FitStatistic):
+    tag = "Tikhonov"
+
+    def __init__(self, tau, mask_safe=None):
+        self.tau = tau
+        self.mask_safe = mask_safe
+
+    def stat_sum(self, parameters):
+        p = parameters.to_table()
+        norms = p[:-1]
+        const = p[-1]
+        f = u.Quantity(norms["value"], norms["unit"][0]) * u.Quantity(
+            const["value"], const["unit"]
+        )
+        f = np.log10(f.value)
+        if self.mask_safe is not None:
+            f = f[self.mask_safe]
+        return tikhonov(f, self.tau)
+
+    def __str__(self):
+        return f"Tikhonov({self.tau:e})"
 
 
 def create_map_dataset_geoms(
