@@ -5,15 +5,6 @@ from numpy.testing import assert_allclose
 from gammapy import stats
 
 
-@pytest.fixture(scope="session")
-def fermi_datasets():
-    from gammapy.datasets import Datasets
-
-    filename = "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_datasets.yaml"
-    filename_models = "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_models.yaml"
-    return Datasets.read(filename=filename, filename_models=filename_models)
-
-
 @pytest.fixture
 def test_data():
     """Test data for fit statistics tests"""

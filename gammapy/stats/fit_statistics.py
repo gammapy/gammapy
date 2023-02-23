@@ -6,13 +6,7 @@ see :ref:`fit-statistics`
 import numpy as np
 from gammapy.stats.fit_statistics_cython import TRUNCATION_VALUE
 
-__all__ = [
-    "cash",
-    "cstat",
-    "wstat",
-    "get_wstat_mu_bkg",
-    "get_wstat_gof_terms",
-]
+__all__ = ["cash", "cstat", "wstat", "get_wstat_mu_bkg", "get_wstat_gof_terms"]
 
 
 def cash(n_on, mu_on, truncation_value=TRUNCATION_VALUE):
