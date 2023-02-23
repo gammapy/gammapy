@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+from gammapy.modeling import Fit, Parameter
 from gammapy.stats.utils import sigma_to_ts
-from gammapy.modeling import Parameter, Fit
 
 
 class TestStatisticNested:
@@ -44,6 +44,8 @@ class TestStatisticNested:
             fit.backend = "minuit"
             fit.optimize_opts = minuit_opts
         self.fit = fit
+        self.fit_results = None
+        self.fit_results_null = None
 
     @property
     def ts_threshold(self):
@@ -69,7 +71,7 @@ class TestStatisticNested:
 
         for p in self.parameters:
             p.frozen = False
-        self.fit.run(datasets)
+        self.fit_results = self.fit.run(datasets)
         object_cache = [p.__dict__ for p in datasets.models.parameters]
         prev_pars = [p.value for p in datasets.models.parameters]
         stat = datasets.stat_sum()
@@ -80,7 +82,7 @@ class TestStatisticNested:
             else:
                 p.value = val
                 p.frozen = True
-        self.fit.run(datasets)
+        self.fit_results_null = self.fit.run(datasets)
         stat_null = datasets.stat_sum()
 
         ts = stat_null - stat
