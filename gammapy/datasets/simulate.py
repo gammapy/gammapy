@@ -4,7 +4,6 @@ import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord, SkyOffsetFrame
 from astropy.table import Table
-from astropy.time import Time
 from regions import PointSkyRegion
 import gammapy
 from gammapy.data import EventList, observatory_locations
@@ -49,9 +48,7 @@ class MapDatasetEventSampler:
         except KeyError:
             energy = coords["energy"]
 
-        table["TIME"] = u.Quantity(
-            ((coords["time"].mjd - time_ref.mjd) * u.day).to(u.s)
-        ).to("s")
+        table["TIME"] = (coords["time"] - time_ref).to("s")
         table["ENERGY_TRUE"] = energy
         table["RA_TRUE"] = coords.skycoord.icrs.ra.to("deg")
         table["DEC_TRUE"] = coords.skycoord.icrs.dec.to("deg")
@@ -73,7 +70,7 @@ class MapDatasetEventSampler:
 
         Returns
         -------
-        dataset.npred() : `~gammapy.dataset.MapDataset`
+        npred : `~gammapy.maps.Map`
             Npred map.
         """
         energy_axis = MapAxis.from_edges(
@@ -88,9 +85,8 @@ class MapDatasetEventSampler:
         region_exposure = dataset.exposure.to_region_nd_map(region_geom.center_skydir)
 
         npred = flux * region_exposure * dataset.geoms["geom"].bin_volume()
-        dataset.npred().data = npred.value
 
-        return dataset.npred()
+        return npred
 
     def _sample_coord_time_energy(self, dataset, evaluator, t_delta="1 s"):
         """Sample model components of a source with time-dependent spectrum.
@@ -110,46 +106,14 @@ class MapDatasetEventSampler:
             Table of sampled events.
         """
         if not isinstance(evaluator.model.spatial_model, PointSpatialModel):
-            raise NotImplementedError(
+            raise TypeError(
                 f"Event sampler expects PointSpatialModel for a time varying source. Got {evaluator.model.spatial_model} instead."
             )
 
-        time_start, time_stop, time_ref = (
-            evaluator.gti.time_start,
-            evaluator.gti.time_stop,
-            evaluator.gti.time_ref,
-        )
-        t_min = Time(time_start)
-        t_max = Time(time_stop)
-        t_delta = u.Quantity(t_delta)
+        else:
+            raise NotImplementedError("The functionality is not yet implemented")
 
-        ontime = u.Quantity((t_max - t_min).sec, "s")
-
-        time_unit = (
-            u.Unit(evaluator.model.temporal_model.table.meta["TIMEUNIT"])
-            if hasattr(evaluator.model.temporal_model, "table")
-            else ontime.unit
-        )
-
-        t_step = t_delta.to_value(time_unit)
-        t_step = (t_step * u.s).to("d")
-
-        npred = self._evaluate_timevar_source(dataset, evaluator)
-        data = npred.data[np.isfinite(npred.data)]
-        n_events = self.random_state.poisson(np.sum(data))
-
-        coords = npred.sample_coord(n_events=n_events, random_state=self.random_state)
-
-        coords["time"] = evaluator.model.temporal_model.sample_time(
-            n_events=n_events,
-            t_min=time_start,
-            t_max=time_stop,
-            random_state=self.random_state,
-        )
-
-        table = self._make_table(coords, time_ref)
-
-        return table
+        return
 
     def _sample_coord_time(self, npred, temporal_model, gti):
         """Sample model components of a time-varying source.
@@ -160,7 +124,8 @@ class MapDatasetEventSampler:
             Npred map.
         temporal_model : `~gammapy.modeling.models\
             temporal model of the source.
-        gti : GTI of the dataset
+        gti : `~gammapy.data.GTI`
+             GTI of the dataset
 
         Returns
         -------
