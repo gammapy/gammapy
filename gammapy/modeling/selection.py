@@ -4,9 +4,10 @@ from gammapy.stats.utils import sigma_to_ts
 
 
 class TestStatisticNested:
-    """Compute the test statistic (TS) between two nested hypothesis.
+    """Compute the test statistic (TS) between two nested hypothesis .
     The null hypothesis is the minimal one, for which a set of parameters
-    are frozen to given values.
+    are frozen to given values. The model is updated to the alternative hypothesis
+    if there is a significant improvement (larger than the given threshold).
 
     Parameters
     ----------
@@ -22,7 +23,8 @@ class TestStatisticNested:
         to the alternative one. Default is 2.
     n_free_parameters : int
         Number of free parameters to consider between the two hypothesis
-        in order to estimate the `ts_threshold`. Default is len(parameters).
+        in order to estimate the `ts_threshold` from the `n_sigma` threshold.
+        Default is len(parameters).
     fit : `Fit`
         Fit instance specifying the backend and fit options.
     """
