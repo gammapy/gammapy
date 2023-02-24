@@ -449,8 +449,12 @@ class DataStore:
 
     def check(self, checks="all"):
         """Check index tables and data files.
-
         This is a generator that yields a list of dicts.
+
+        Parameters
+        ----------
+        checks: list of str
+            Available options: obs_table, hdu_table, observations, consistency, all
         """
         checker = DataStoreChecker(self)
         return checker.run(checks=checks)
@@ -521,6 +525,24 @@ class DataStoreChecker(Checker):
         for obs_id in self.data_store.obs_table["OBS_ID"]:
             obs = self.data_store.obs(obs_id)
             yield from ObservationChecker(obs).run()
+
+    def run(self, checks="all"):
+        """Run the checks"""
+        if "all" in checks:
+            yield from self.check_consistency()
+            yield from self.check_observations()
+            yield from self.check_obs_table()
+            yield from self.check_hdu_table()
+        elif "consistency" in checks:
+            yield from self.check_consistency()
+        elif "observations" in checks:
+            yield from self.check_observations()
+        elif "hdu_table" in checks:
+            yield from self.check_hdu_table()
+        elif "obs_table" in checks:
+            yield from self.check_obs_table()
+        else:
+            raise ValueError(f" Invalid argument. Choose from: {self.CHECKS.keys()}")
 
 
 class DataStoreMaker:
