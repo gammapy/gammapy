@@ -2063,7 +2063,8 @@ class MapDatasetOnOff(MapDataset):
         with np.errstate(invalid="ignore", divide="ignore"):
             data = self.acceptance.quantity / self.acceptance_off.quantity
         data = np.nan_to_num(data)
-        return Map.from_geom(self._geom, data=data.value, unit=data.unit)
+
+        return Map.from_geom(self._geom, data=data.to_value(""), unit="")
 
     def npred_background(self):
         """Predicted background counts estimated from the marginalized likelihood estimate.
