@@ -585,7 +585,8 @@ class Geom(abc.ABC):
 
         for arg in argnames:
             value = getattr(self, "_" + arg)
-            kwargs.setdefault(arg, copy.deepcopy(value))
+            if arg not in kwargs:
+                kwargs[arg] = copy.deepcopy(value)
 
         return self.__class__(**kwargs)
 
