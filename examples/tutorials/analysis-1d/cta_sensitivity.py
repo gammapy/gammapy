@@ -175,8 +175,8 @@ ax.plot(
 )
 
 ax.loglog()
-ax.set_xlabel(f"Energy ({t['energy'].unit})")
-ax.set_ylabel(f"Sensitivity ({t['e2dnde'].unit})")
+ax.set_xlabel(f"Energy [{t['energy'].unit}]")
+ax.set_ylabel(f"Sensitivity [{t['e2dnde'].unit}]")
 ax.legend()
 
 
@@ -192,11 +192,11 @@ fig, ax1 = plt.subplots()
 ax1.plot(t["energy"], t["background"], "o-", color="black", label="blackground")
 
 ax1.loglog()
-ax1.set_xlabel(f"Energy ({t['energy'].unit})")
+ax1.set_xlabel(f"Energy [{t['energy'].unit}]")
 ax1.set_ylabel("Expected number of bkg counts")
 
 ax2 = ax1.twinx()
-ax2.set_ylabel(f"ON region radius ({on_radii.unit})", color="red")
+ax2.set_ylabel(f"ON region radius [{on_radii.unit}]", color="red")
 ax2.semilogy(t["energy"], on_radii, color="red", label="PSF68")
 ax2.tick_params(axis="y", labelcolor="red")
 ax2.set_ylim(0.01, 0.5)
