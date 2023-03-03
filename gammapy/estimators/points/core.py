@@ -614,7 +614,7 @@ class FluxPoints(FluxMaps):
 
         axis.format_plot_xaxis(ax=ax)
 
-        ax.set_ylabel(f"{sed_type} ({ax.yaxis.units})")
+        ax.set_ylabel(f"{sed_type} [{ax.yaxis.units}]")
         ax.set_yscale("log")
 
         if add_cbar:

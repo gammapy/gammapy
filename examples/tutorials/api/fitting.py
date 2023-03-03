@@ -236,7 +236,7 @@ for ax, par in zip(axes, datasets.parameters.free_parameters):
     name = datasets.models.parameters_unique_names[idx]
     profile = fit.stat_profile(datasets=datasets, parameter=par)
     ax.plot(profile[f"{name}_scan"], profile["stat_scan"] - total_stat)
-    ax.set_xlabel(f"{par.name} {par.unit}")
+    ax.set_xlabel(f"{par.name} [{par.unit}]")
     ax.set_ylabel("Delta TS")
     ax.set_title(f"{name}:\n {par.value:.1e} +- {par.error:.1e}")
 
