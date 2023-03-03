@@ -562,6 +562,26 @@ def test_from_table_time_axis():
     assert_allclose(axis.time_mid[0].mjd, 53778.25)
 
 
+def test_from_table_time_axis_lightcurve_format():
+    t0 = Time("2006-02-12", scale="tt")
+    t_min = np.linspace(0, 10, 10) * u.d
+    t_max = t_min + 12 * u.h
+
+    table = Table()
+    table["time_min"] = t_min.to_value("h")
+    table["time_max"] = t_max.to_value("h")
+    table.meta.update(time_ref_to_dict(t0))
+    table.meta["TIMEUNIT"] = "h"
+
+    axis = TimeMapAxis.from_table(table, format="lightcurve")
+
+    assert axis.nbin == 10
+    assert_allclose(axis.time_mid[0].mjd, 53778.25)
+    assert axis.time_mid.scale == "tt"
+    t0.format = "mjd"
+    assert_time_allclose(axis.reference_time, t0)
+
+
 @requires_data()
 def test_from_gti_time_axis():
     filename = "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz"

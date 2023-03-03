@@ -14,7 +14,7 @@ from gammapy.estimators.points.tests.test_sed import (
 )
 from gammapy.modeling import Fit
 from gammapy.modeling.models import FoVBackgroundModel, PowerLawSpectralModel, SkyModel
-from gammapy.utils.testing import mpl_plot_check, requires_data
+from gammapy.utils.testing import assert_time_allclose, mpl_plot_check, requires_data
 
 
 @pytest.fixture(scope="session")
@@ -229,8 +229,8 @@ def test_lightcurve_estimator_spectrum_datasets():
     # Doing a LC on one hour bin
     datasets = get_spectrum_datasets()
     time_intervals = [
-        Time(["2010-01-01T00:00:00", "2010-01-01T01:00:00"]),
-        Time(["2010-01-01T01:00:00", "2010-01-01T02:00:00"]),
+        Time(["2010-01-01T00:00:00", "2010-01-01T01:00:00"]).tt,
+        Time(["2010-01-01T01:00:00", "2010-01-01T02:00:00"]).tt,
     ]
 
     estimator = LightCurveEstimator(
@@ -265,6 +265,10 @@ def test_lightcurve_estimator_spectrum_datasets():
         [[224.058304, 19.074405, 2063.75636]],
         rtol=1e-5,
     )
+    assert table.meta["TIMESYS"] == "tt"
+    assert table.meta["TIMEUNIT"] == "d"
+    assert table.meta["MJDREFF"] == 0
+    assert table.meta["MJDREFI"] == 0
 
     # TODO: fix reference model I/O
     fp = FluxPoints.from_table(
@@ -273,6 +277,12 @@ def test_lightcurve_estimator_spectrum_datasets():
     assert fp.norm.geom.axes.names == ["energy", "time"]
     assert fp.counts.geom.axes.names == ["dataset", "energy", "time"]
     assert fp.stat_scan.geom.axes.names == ["norm", "energy", "time"]
+    assert_time_allclose(
+        fp.geom.axes["time"].time_min, lightcurve.geom.axes["time"].time_min
+    )
+    assert_time_allclose(
+        fp.geom.axes["time"].time_max, lightcurve.geom.axes["time"].time_max
+    )
 
 
 @requires_data()
