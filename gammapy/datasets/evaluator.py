@@ -357,7 +357,12 @@ class MapEvaluator:
         if isinstance(self.model, TemplateNPredModel):
             npred = self.model.evaluate()
         else:
-            if not self.parameter_norm_only_changed or not self.use_cache:
+            if (
+                self._norm_idx is not None
+                and self.model.parameters.value[self._norm_idx] == 0
+            ):
+                npred = Map.from_geom(self.geom, data=0)
+            elif not self.parameter_norm_only_changed or not self.use_cache:
                 for method in self.methods_sequence:
                     values = method(self._computation_cache)
                     self._computation_cache = values
