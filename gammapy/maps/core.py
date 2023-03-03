@@ -1410,7 +1410,7 @@ class Map(abc.ABC):
             energy_axis = self.geom.axes["energy_true"].copy(name="energy")
 
         geom = self.geom.to_image().to_cube(axes=[energy_axis])
-        return Map.from_geom(geom=geom, data=data, unit=self.unit)
+        return self.__class__(geom=geom, data=data, unit=self.unit)
 
     def mask_nearest_position(self, position):
         """Given a sky coordinate return nearest valid position in the mask
