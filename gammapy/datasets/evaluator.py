@@ -105,6 +105,15 @@ class MapEvaluator:
         return self.exposure.geom
 
     @property
+    def _geom_reco(self):
+        if self.edisp is not None:
+            energy_axis = self.edisp.axes["energy"].copy(name="energy")
+        else:
+            energy_axis = self.geom.axes["energy_true"].copy(name="energy")
+        geom = self.geom.to_image().to_cube(axes=[energy_axis])
+        return geom
+
+    @property
     def needs_update(self):
         """Check whether the model component has drifted away from its support."""
         # TODO: simplify and clean up
@@ -361,7 +370,7 @@ class MapEvaluator:
                 self._norm_idx is not None
                 and self.model.parameters.value[self._norm_idx] == 0
             ):
-                npred = Map.from_geom(self.geom, data=0)
+                npred = Map.from_geom(self._geom_reco, data=0)
             elif not self.parameter_norm_only_changed or not self.use_cache:
                 for method in self.methods_sequence:
                     values = method(self._computation_cache)
