@@ -475,7 +475,7 @@ class EventList:
         time = self.table["TIME"]
         time = time - np.min(time)
 
-        ax.set_xlabel("Time (sec)")
+        ax.set_xlabel("Time [sec]")
         ax.set_ylabel("Counts")
         y, x_edges = np.histogram(time, bins=20)
 
@@ -559,7 +559,7 @@ class EventList:
         with quantity_support():
             ax.hist(offset2, **kwargs)
 
-        ax.set_xlabel(f"Offset^2 ({ax.xaxis.units})")
+        ax.set_xlabel(f"Offset^2 [{ax.xaxis.units}]")
         ax.set_ylabel("Counts")
         return ax
 

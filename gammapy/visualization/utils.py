@@ -218,5 +218,5 @@ def plot_theta_squared_table(table):
 
     ax1 = plt.subplot(2, 1, 2)
     ax1.errorbar(x, table["sqrt_ts"], xerr=xerr, linestyle="None")
-    ax1.set_xlabel(f"Theta  [{theta2_axis.unit}]")
+    ax1.set_xlabel(f"Theta [{theta2_axis.unit}]")
     ax1.set_ylabel("Significance")

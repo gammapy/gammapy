@@ -248,7 +248,7 @@ class PSF(IRF):
         rad.format_plot_xaxis(ax=ax)
 
         ax.set_yscale("log")
-        ax.set_ylabel(f"PSF ({ax.yaxis.units})")
+        ax.set_ylabel(f"PSF [{ax.yaxis.units}]")
         plt.legend()
         return ax
 

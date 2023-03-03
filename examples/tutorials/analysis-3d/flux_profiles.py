@@ -201,7 +201,7 @@ fig, ax = plt.subplots()
 for quantity in quantities:
     profile[quantity].plot(ax=ax, label=quantity.title())
 
-ax.set_ylabel("Counts ")
+ax.set_ylabel("Counts")
 
 
 ######################################################################

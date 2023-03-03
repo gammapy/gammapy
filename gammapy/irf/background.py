@@ -338,7 +338,7 @@ class Background2D(BackgroundIRF):
                 ax.plot(offset_axis.center, bkg, label=label, **kwargs)
 
         offset_axis.format_plot_xaxis(ax=ax)
-        ax.set_ylabel(f"Background rate ({ax.yaxis.units})")
+        ax.set_ylabel(f"Background rate [{ax.yaxis.units}]")
         ax.set_yscale("log")
         ax.legend(loc="upper right")
         return ax
@@ -377,7 +377,7 @@ class Background2D(BackgroundIRF):
 
         energy_axis.format_plot_xaxis(ax=ax)
         ax.set_yscale("log")
-        ax.set_ylabel(f"Background rate ({ax.yaxis.units})")
+        ax.set_ylabel(f"Background rate [{ax.yaxis.units}]")
         ax.legend(loc="best")
         return ax
 
@@ -408,7 +408,7 @@ class Background2D(BackgroundIRF):
 
         energy_axis.format_plot_xaxis(ax=ax)
         ax.set_yscale("log")
-        ax.set_ylabel(f"Background rate ({ax.yaxis.units})")
+        ax.set_ylabel(f"Background rate [{ax.yaxis.units}]")
         ax.legend(loc="best")
         return ax
 

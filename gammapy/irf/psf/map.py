@@ -454,7 +454,7 @@ class PSFMap(IRFMap):
         ax.legend(loc="best")
         ax.yaxis.set_major_formatter(FormatStrFormatter("%.2f"))
         energy_axis.format_plot_xaxis(ax=ax)
-        ax.set_ylabel(f"Containment radius ({ax.yaxis.units})")
+        ax.set_ylabel(f"Containment radius [{ax.yaxis.units}]")
         return ax
 
     def plot_psf_vs_rad(self, ax=None, energy_true=[0.1, 1, 10] * u.TeV, **kwargs):
@@ -494,8 +494,8 @@ class PSFMap(IRFMap):
                 ax.plot(rad, psf_value, label=label, **kwargs)
 
         ax.set_yscale("log")
-        ax.set_xlabel(f"Rad ({ax.xaxis.units})")
-        ax.set_ylabel(f"PSF ({ax.yaxis.units})")
+        ax.set_xlabel(f"Rad [{ax.xaxis.units}]")
+        ax.set_ylabel(f"PSF [{ax.yaxis.units}]")
         ax.xaxis.set_major_formatter(FormatStrFormatter("%.2f"))
         plt.legend()
         return ax
