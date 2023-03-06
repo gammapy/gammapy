@@ -427,7 +427,7 @@ class Test_Template_with_cube:
         val = model.evaluate(0 * u.deg, 0 * u.deg, 100 * u.GeV)
         assert val.unit == "cm-2 s-1 MeV-1 sr-1"
         assert val.shape == (1,)
-        assert_allclose(val.value, 1.396424e-12, rtol=1e-5)
+        assert_allclose(val.value, 1.395156e-12, rtol=1e-5)
 
     @staticmethod
     def test_evaluation_radius(diffuse_model):
