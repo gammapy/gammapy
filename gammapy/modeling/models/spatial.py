@@ -22,7 +22,6 @@ from gammapy.modeling import Parameter
 from gammapy.modeling.covariance import copy_covariance
 from gammapy.utils.deprecation import deprecated
 from gammapy.utils.gauss import Gauss2DPDF
-from gammapy.utils.interpolation import interpolation_scale
 from gammapy.utils.regions import region_circle_to_ellipse, region_to_frame
 from gammapy.utils.scripts import make_path
 from .core import ModelBase
@@ -1215,20 +1214,7 @@ class TemplateSpatialModel(SpatialModel):
         if energy is not None:
             coord["energy_true"] = energy
 
-        # TODO: ideally all `interp_by_coord` should accept `values_scale` argument,
-        # remove this once done but for now we use this non api-breaking fix.
-        interp_kwargs = self._interp_kwargs.copy()
-
-        if "values_scale" in interp_kwargs:
-            values_scale = interp_kwargs.pop("values_scale")
-            scale = interpolation_scale(values_scale)
-            scaled_map = self.map.copy()
-            scaled_map.data = scale(scaled_map.data)
-            val = scaled_map.interp_by_coord(coord, **interp_kwargs)
-            val = scale.inverse(val)
-        else:
-            val = self.map.interp_by_coord(coord, **interp_kwargs)
-
+        val = self.map.interp_by_coord(coord, **self._interp_kwargs)
         val = np.clip(val, 0, a_max=None)
         return u.Quantity(val, self.map.unit, copy=False)
 
