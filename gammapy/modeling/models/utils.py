@@ -1,6 +1,8 @@
 import numpy as np
 from astropy import units as u
+from astropy.coordinates import SkyCoord
 from astropy.io import fits
+from regions import PointSkyRegion
 from gammapy.maps import MapAxis, RegionNDMap
 from gammapy.utils.time import time_ref_from_dict
 
@@ -9,6 +11,11 @@ def _read_cta_sdc(filename):
     """To create a `LightCurveTemplateTemporalModel`
     from the cta-sdc files. This format is subject to change"""
     with fits.open(filename) as hdul:
+        position = SkyCoord(
+            ra=hdul[0].header["LONG"] * u.deg,
+            dec=hdul[0].header["LAT"] * u.deg,
+            frame="icrs",
+        )
 
         energy_hdu = hdul["ENERGIES"]
         energy_axis = MapAxis.from_nodes(
@@ -29,7 +36,7 @@ def _read_cta_sdc(filename):
         data = hdul["SPECTRA"]
         return (
             RegionNDMap.create(
-                region=None,
+                region=PointSkyRegion(center=position),
                 axes=[energy_axis, time_axis],
                 data=np.array(list(data.data) * u.Unit(data.header["UNITS"])),
             ),
