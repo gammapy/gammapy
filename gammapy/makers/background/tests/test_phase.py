@@ -85,143 +85,6 @@ def test_run_map(observations, phase_bkg_maker):
     assert_allclose(dataset_on_off.counts_off.data.sum(), 263)
 
 
-@requires_data()
-def test_counts_with_point_like_and_point_sky_region(observations, phase_bkg_maker):
-
-    maker = SpectrumDatasetMaker(
-        containment_correction=False, selection=["counts", "exposure", "edisp"]
-    )
-
-    e_reco = MapAxis.from_energy_bounds(
-        0.05, 100, nbin=5, per_decade=True, unit="TeV", name="energy"
-    )
-    e_true = MapAxis.from_energy_bounds(
-        0.01, 300, nbin=10, per_decade=True, unit="TeV", name="energy_true"
-    )
-
-    pos = SkyCoord(083.6331144560900, +22.0144871383400, frame="icrs", unit="deg")
-    on_region = PointSkyRegion(pos)
-
-    geom = RegionGeom.create(region=on_region, axes=[e_reco])
-    dataset_empty = SpectrumDataset.create(geom=geom, energy_axis_true=e_true)
-
-    obs = observations["5029747"]
-    table = obs.events.table
-    table["PHASE"] = np.linspace(0, 1, len(table["TIME"]))
-    obs._events = EventList(table)
-
-    dataset = maker.run(dataset_empty, obs)
-    dataset_on_off = phase_bkg_maker.run(dataset, obs)
-
-    counts_on = np.reshape(
-        np.array([30, 16, 14, 5, 10, 4, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0]), (17, 1, 1)
-    )
-    counts_off = np.reshape(
-        np.array(
-            [
-                73,
-                61,
-                32,
-                19,
-                20,
-                9,
-                9,
-                0,
-                2,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-            ]
-        ),
-        (17, 1, 1),
-    )
-
-    assert_allclose(dataset_on_off.counts.data, counts_on)
-    assert_allclose(dataset_on_off.counts_off.data, counts_off)
-
-
-@requires_data()
-def test_counts_with_point_like_and_not_point_sky_region(observations, phase_bkg_maker):
-
-    maker = SpectrumDatasetMaker(
-        containment_correction=False, selection=["counts", "exposure", "edisp"]
-    )
-
-    e_reco = MapAxis.from_energy_bounds(
-        0.05, 100, nbin=5, per_decade=True, unit="TeV", name="energy"
-    )
-    e_true = MapAxis.from_energy_bounds(
-        0.01, 300, nbin=10, per_decade=True, unit="TeV", name="energy_true"
-    )
-
-    pos = SkyCoord(083.6331144560900, +22.0144871383400, frame="icrs", unit="deg")
-    on_region = SphericalCircleSkyRegion(pos, radius=0.1 * u.deg)
-
-    geom = RegionGeom.create(region=on_region, axes=[e_reco])
-    dataset_empty = SpectrumDataset.create(geom=geom, energy_axis_true=e_true)
-
-    obs = observations["5029747"]
-    table = obs.events.table
-    table["PHASE"] = np.linspace(0, 1, len(table["TIME"]))
-    obs._events = EventList(table)
-
-    dataset = maker.run(dataset_empty, obs)
-    dataset_on_off = phase_bkg_maker.run(dataset, obs)
-
-    counts_on = np.reshape(
-        np.array([10, 7, 8, 5, 9, 4, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0]), (17, 1, 1)
-    )
-    counts_off = np.reshape(
-        np.array([11, 27, 14, 15, 15, 9, 9, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0]), (17, 1, 1)
-    )
-
-    assert_allclose(dataset_on_off.counts.data, counts_on)
-    assert_allclose(dataset_on_off.counts_off.data, counts_off)
-
-
-@requires_data()
-def test_counts_with_not_point_like_and_not_point_sky_region(
-    observations, phase_bkg_maker
-):
-
-    maker = SpectrumDatasetMaker(
-        containment_correction=False, selection=["counts", "exposure", "edisp"]
-    )
-
-    e_reco = MapAxis.from_energy_bounds(
-        0.05, 100, nbin=5, per_decade=True, unit="TeV", name="energy"
-    )
-    e_true = MapAxis.from_energy_bounds(
-        0.01, 300, nbin=10, per_decade=True, unit="TeV", name="energy_true"
-    )
-
-    pos = SkyCoord(128.83606354, -45.17643181, frame="icrs", unit="deg")
-    on_region = SphericalCircleSkyRegion(pos, radius=0.1 * u.deg)
-
-    geom = RegionGeom.create(region=on_region, axes=[e_reco])
-    dataset_empty = SpectrumDataset.create(geom=geom, energy_axis_true=e_true)
-
-    obs = observations["111630"]
-
-    dataset = maker.run(dataset_empty, obs)
-    dataset_on_off = phase_bkg_maker.run(dataset, obs)
-
-    counts_on = np.reshape(
-        np.array([4, 6, 5, 4, 0, 2, 0, 2, 3, 2, 2, 3, 2, 0, 1, 0, 0]), (17, 1, 1)
-    )
-    counts_off = np.reshape(
-        np.array([4, 10, 12, 4, 4, 7, 5, 5, 3, 3, 6, 2, 1, 0, 0, 0, 0]), (17, 1, 1)
-    )
-
-    assert_allclose(dataset_on_off.counts.data, counts_on)
-    assert_allclose(dataset_on_off.counts_off.data, counts_off)
-
-
 @pytest.mark.parametrize(
     "pars",
     [
@@ -235,4 +98,128 @@ def test_counts_with_not_point_like_and_not_point_sky_region(
 def test_check_phase_intervals(pars):
     assert_allclose(
         PhaseBackgroundMaker._check_intervals(pars["p_in"]), pars["p_out"], rtol=1e-5
+    )
+
+
+@pytest.mark.parametrize(
+    "pars",
+    [
+        {
+            "p_in": ["5029747", "point-like"],
+            "p_out": [
+                np.reshape(
+                    np.array(
+                        [
+                            58,
+                            19,
+                            2,
+                            2,
+                            0,
+                            0,
+                        ]
+                    ),
+                    (6, 1, 1),
+                ),
+                np.reshape(np.array([163, 46, 15, 1, 0, 0]), (6, 1, 1)),
+            ],
+        },
+        {
+            "p_in": ["5029747", "not-point-like"],
+            "p_out": [
+                np.reshape(
+                    np.array(
+                        [
+                            23,
+                            18,
+                            2,
+                            2,
+                            0,
+                            0,
+                        ]
+                    ),
+                    (6, 1, 1),
+                ),
+                np.reshape(
+                    np.array(
+                        [
+                            51,
+                            35,
+                            15,
+                            1,
+                            0,
+                            0,
+                        ]
+                    ),
+                    (6, 1, 1),
+                ),
+            ],
+        },
+        {
+            "p_in": ["111630", "not-point-like"],
+            "p_out": [
+                np.reshape(
+                    np.array(
+                        [
+                            15,
+                            5,
+                            5,
+                            8,
+                            2,
+                            1,
+                        ]
+                    ),
+                    (6, 1, 1),
+                ),
+                np.reshape(
+                    np.array(
+                        [
+                            24,
+                            13,
+                            15,
+                            12,
+                            2,
+                            0,
+                        ]
+                    ),
+                    (6, 1, 1),
+                ),
+            ],
+        },
+    ],
+)
+@requires_data()
+def test_make_counts(observations, phase_bkg_maker, pars):
+
+    maker = SpectrumDatasetMaker(
+        containment_correction=False, selection=["counts", "exposure", "edisp"]
+    )
+
+    e_reco = MapAxis.from_energy_bounds(0.05, 100, nbin=6, unit="TeV", name="energy")
+    e_true = MapAxis.from_energy_bounds(
+        0.01, 300, nbin=15, unit="TeV", name="energy_true"
+    )
+
+    if pars["p_in"][0] == "111630":
+        pos = SkyCoord(128.83606354, -45.17643181, frame="icrs", unit="deg")
+        obs = observations[pars["p_in"][0]]
+    elif pars["p_in"][0] == "5029747":
+        pos = SkyCoord(083.6331144560900, +22.0144871383400, frame="icrs", unit="deg")
+        obs = observations[pars["p_in"][0]]
+        table = obs.events.table
+        table["PHASE"] = np.linspace(0, 1, len(table["TIME"]))
+        obs._events = EventList(table)
+
+    if pars["p_in"][1] == "point-like":
+        on_region = PointSkyRegion(pos)
+    elif pars["p_in"][1] == "not-point-like":
+        on_region = SphericalCircleSkyRegion(pos, radius=0.1 * u.deg)
+
+    geom = RegionGeom.create(region=on_region, axes=[e_reco])
+    dataset_empty = SpectrumDataset.create(geom=geom, energy_axis_true=e_true)
+
+    dataset = maker.run(dataset_empty, obs)
+    dataset_on_off = phase_bkg_maker.run(dataset, obs)
+
+    assert_allclose(
+        [dataset_on_off.counts.data, dataset_on_off.counts_off.data], pars["p_out"]
     )
