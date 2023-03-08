@@ -105,7 +105,7 @@ def test_check_phase_intervals(pars):
     "pars",
     [
         {
-            "p_in": ["5029747", "point-like"],
+            "p_in": ["5029747", PointSkyRegion],
             "p_out": [
                 np.reshape(
                     np.array(
@@ -124,7 +124,7 @@ def test_check_phase_intervals(pars):
             ],
         },
         {
-            "p_in": ["5029747", "not-point-like"],
+            "p_in": ["5029747", SphericalCircleSkyRegion],
             "p_out": [
                 np.reshape(
                     np.array(
@@ -155,7 +155,7 @@ def test_check_phase_intervals(pars):
             ],
         },
         {
-            "p_in": ["111630", "not-point-like"],
+            "p_in": ["111630", SphericalCircleSkyRegion],
             "p_out": [
                 np.reshape(
                     np.array(
@@ -209,10 +209,9 @@ def test_make_counts(observations, phase_bkg_maker, pars):
         table["PHASE"] = np.linspace(0, 1, len(table["TIME"]))
         obs._events = EventList(table)
 
-    if pars["p_in"][1] == "point-like":
-        on_region = PointSkyRegion(pos)
-    elif pars["p_in"][1] == "not-point-like":
-        on_region = SphericalCircleSkyRegion(pos, radius=0.1 * u.deg)
+    on_region = SphericalCircleSkyRegion(pos, radius=0.1 * u.deg)
+    if pars["p_in"][1] is PointSkyRegion:
+        on_region = PointSkyRegion(on_region.center)
 
     geom = RegionGeom.create(region=on_region, axes=[e_reco])
     dataset_empty = SpectrumDataset.create(geom=geom, energy_axis_true=e_true)
