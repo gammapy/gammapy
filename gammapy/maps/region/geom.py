@@ -462,7 +462,7 @@ class RegionGeom(Geom):
             RegionGeom with the added axes.
         """
         axes = copy.deepcopy(self.axes) + axes
-        return self._init_copy(axes=axes)
+        return self._init_copy(region=self.region, wcs=self.wcs, axes=axes)
 
     def to_image(self):
         """Remove non-spatial axes to create a 2D region.
@@ -472,7 +472,7 @@ class RegionGeom(Geom):
         region : `~RegionGeom`
             RegionGeom without any non-spatial axes.
         """
-        return self._init_copy(axes=None)
+        return self._init_copy(region=self.region, wcs=self.wcs, axes=None)
 
     def upsample(self, factor, axis_name=None):
         """Upsample a non-spatial dimension of the region by a given factor.
@@ -483,7 +483,7 @@ class RegionGeom(Geom):
             RegionGeom with the upsampled axis.
         """
         axes = self.axes.upsample(factor=factor, axis_name=axis_name)
-        return self._init_copy(axes=axes)
+        return self._init_copy(region=self.region, wcs=self.wcs, axes=axes)
 
     def downsample(self, factor, axis_name):
         """Downsample a non-spatial dimension of the region by a given factor.
@@ -494,7 +494,7 @@ class RegionGeom(Geom):
             RegionGeom with the downsampled axis.
         """
         axes = self.axes.downsample(factor=factor, axis_name=axis_name)
-        return self._init_copy(axes=axes)
+        return self._init_copy(region=self.region, wcs=self.wcs, axes=axes)
 
     def pix_to_coord(self, pix):
         lon = np.where(
