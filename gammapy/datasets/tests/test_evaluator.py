@@ -214,3 +214,43 @@ def test_peek_wcs_geom():
 
     with mpl_plot_check():
         evaluator.peek()
+
+
+def test_norm_only_changed():
+    center = SkyCoord("0 deg", "0 deg", frame="galactic")
+    energy_axis_true = MapAxis.from_energy_bounds(
+        ".1 TeV", "10 TeV", nbin=2, name="energy_true"
+    )
+    geom = WcsGeom.create(
+        skydir=center,
+        width=1 * u.deg,
+        axes=[energy_axis_true],
+        frame="galactic",
+        binsz=0.2 * u.deg,
+    )
+
+    spectral_model = PowerLawSpectralModel(index=2, amplitude="1e-11 TeV-1 s-1 m-2")
+
+    spatial_model = PointSpatialModel(
+        lon_0=0 * u.deg, lat_0=0 * u.deg, frame="galactic"
+    )
+    model = SkyModel(spectral_model=spectral_model, spatial_model=spatial_model)
+
+    exposure = Map.from_geom(geom, unit="m2 s")
+    exposure.data += 1.0
+
+    psf = PSFKernel.from_gauss(geom, sigma="0.1 deg")
+
+    evaluator = MapEvaluator(model=model, exposure=exposure, psf=psf)
+
+    _ = evaluator.compute_npred()
+
+    spectral_model.amplitude.value *= 2
+    assert evaluator.parameter_norm_only_changed
+
+    spectral_model.index.value *= 2
+    assert not evaluator.parameter_norm_only_changed
+
+    spectral_model.amplitude.value *= 2
+    spectral_model.index.value *= 2
+    assert not evaluator.parameter_norm_only_changed
