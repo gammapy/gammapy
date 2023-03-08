@@ -2061,10 +2061,10 @@ class MapDatasetOnOff(MapDataset):
             Alpha map
         """
         with np.errstate(invalid="ignore", divide="ignore"):
-            alpha = self.acceptance / self.acceptance_off
+            data = self.acceptance.quantity / self.acceptance_off.quantity
+        data = np.nan_to_num(data)
 
-        alpha.data = np.nan_to_num(alpha.data)
-        return alpha
+        return Map.from_geom(self._geom, data=data.to_value(""), unit="")
 
     def npred_background(self):
         """Predicted background counts estimated from the marginalized likelihood estimate.

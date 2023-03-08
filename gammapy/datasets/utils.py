@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
+from gammapy.maps import Map
 
 
 def apply_edisp(input_map, edisp):
@@ -30,7 +31,7 @@ def apply_edisp(input_map, edisp):
         energy_axis = input_map.geom.axes["energy_true"].copy(name="energy")
 
     geom = input_map.geom.to_image().to_cube(axes=[energy_axis])
-    return input_map._init_copy(geom=geom, data=data)
+    return Map.from_geom(geom=geom, data=data, unit=input_map.unit)
 
 
 def get_figure(fig, width, height):
