@@ -220,7 +220,7 @@ dataset_maker = SpectrumDatasetMaker(
     containment_correction=False, selection=["counts", "exposure", "edisp"]
 )
 
-# tell the background maker to use the WobbleRegionsFinder, let us use 1 off
+# tell the background maker to use the WobbleRegionsFinder, let us use 3 off
 region_finder = WobbleRegionsFinder(n_off_regions=3)
 bkg_maker = ReflectedRegionsBackgroundMaker(region_finder=region_finder)
 
