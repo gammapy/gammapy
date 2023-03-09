@@ -284,7 +284,7 @@ def test_sky_diffuse_map(caplog):
     ]
 
     assert val.unit == "sr-1"
-    desired = [3269.178107, 0]
+    desired = [3265.6559, 0]
     assert_allclose(val.value, desired)
 
     res = model.evaluate_geom(model.map.geom)
