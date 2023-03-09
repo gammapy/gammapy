@@ -126,15 +126,43 @@ class WcsNDMap(WcsMap):
         idx = pix_tuple_to_idx(idx)
         return self.data.T[idx]
 
-    def interp_by_coord(self, coords, method="linear", fill_value=None):
+    def interp_by_coord(
+        self, coords, method="linear", fill_value=None, values_scale="lin"
+    ):
+        """Interpolate map values at the given map coordinates.
+
+        Parameters
+        ----------
+        coords : tuple, dict or `~gammapy.maps.MapCoord`
+            Coordinate arrays for each dimension of the map.  Tuple
+            should be ordered as (lon, lat, x_0, ..., x_n) where x_i
+            are coordinates for non-spatial dimensions of the map.
+            "lon" and "lat" are optional and will be taken at the center
+            of the region by default.
+        method : {"linear", "nearest"}
+            Method to interpolate data values. By default linear
+            interpolation is performed.
+        fill_value : None or float value
+            The value to use for points outside of the interpolation domain.
+            If None, values outside the domain are extrapolated.
+        values_scale : {"lin", "log", "sqrt"}
+            Optional value scaling. Default is "lin".
+
+        Returns
+        -------
+        vals : `~numpy.ndarray`
+            Interpolated pixel values.
+        """
 
         if self.geom.is_regular:
             pix = self.geom.coord_to_pix(coords)
-            return self.interp_by_pix(pix, method=method, fill_value=fill_value)
+            return self.interp_by_pix(
+                pix, method=method, fill_value=fill_value, values_scale=values_scale
+            )
         else:
             return self._interp_by_coord_griddata(coords, method=method)
 
-    def interp_by_pix(self, pix, method="linear", fill_value=None):
+    def interp_by_pix(self, pix, method="linear", fill_value=None, values_scale="lin"):
         if not self.geom.is_regular:
             raise ValueError("interp_by_pix only supported for regular geom.")
 
@@ -147,7 +175,12 @@ class WcsNDMap(WcsMap):
             data = self.data.T
 
         fn = ScaledRegularGridInterpolator(
-            grid_pix, data, fill_value=None, bounds_error=False, method=method
+            grid_pix,
+            data,
+            fill_value=None,
+            bounds_error=False,
+            method=method,
+            values_scale=values_scale,
         )
         interp_data = fn(tuple(pix), clip=False)
 
