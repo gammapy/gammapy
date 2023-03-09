@@ -21,8 +21,10 @@ from gammapy.irf import (
     EffectiveAreaTable2D,
     EnergyDispersion2D,
 )
+from gammapy.makers import WobbleRegionsFinder
 from gammapy.makers.utils import (
     _map_spectrum_weight,
+    make_counts_off_rad_max,
     make_counts_rad_max,
     make_edisp_kernel_map,
     make_map_background_irf,
@@ -348,6 +350,7 @@ def test_make_edisp_kernel_map():
     assert_allclose(kernel.pdf_matrix[:, 2], (0.0, 0.0, 0.0, 0.0, 1.0, 1.0), atol=1e-14)
 
 
+@requires_data()
 def test_make_counts_rad_max(observations):
 
     pos = SkyCoord(083.6331144560900, +22.0144871383400, unit="deg", frame="icrs")
@@ -372,6 +375,45 @@ def test_make_counts_rad_max(observations):
                 ]
             ),
             (6, 1, 1),
+        ),
+    )
+
+
+@requires_data()
+def test_make_counts_off_rad_max(observations):
+
+    pos = SkyCoord(083.6331144560900, +22.0144871383400, unit="deg", frame="icrs")
+    on_region = PointSkyRegion(pos)
+    energy_axis = MapAxis.from_energy_bounds(
+        0.05, 100, nbin=6, unit="TeV", name="energy"
+    )
+
+    region_finder = WobbleRegionsFinder(n_off_regions=3)
+    region_off, wcs = region_finder.run(on_region, pos)
+    geom_off = RegionGeom.from_regions(regions=region_off, axes=[energy_axis], wcs=wcs)
+
+    counts_off = make_counts_off_rad_max(
+        geom_off=geom_off, rad_max=observations.rad_max, events=observations.events
+    )
+
+    assert_allclose(
+        counts_off.data,
+        np.reshape(
+            np.array(
+                [
+                    1641,
+                    564,
+                    156,
+                    24,
+                    0,
+                    0,
+                ]
+            ),
+            (
+                6,
+                1,
+                1,
+            ),
         ),
     )
 
