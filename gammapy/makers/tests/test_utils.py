@@ -362,20 +362,7 @@ def test_make_counts_rad_max(observations):
     counts = make_counts_rad_max(geome, observations.rad_max, observations.events)
 
     assert_allclose(
-        counts.data,
-        np.reshape(
-            np.array(
-                [
-                    547,
-                    188,
-                    52,
-                    8,
-                    0,
-                    0,
-                ]
-            ),
-            (6, 1, 1),
-        ),
+        counts.data, np.reshape(np.array([547, 188, 52, 8, 0, 0]), (6, 1, 1))
     )
 
 
