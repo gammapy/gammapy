@@ -107,82 +107,22 @@ def test_check_phase_intervals(pars):
         {
             "p_in": ["5029747", PointSkyRegion],
             "p_out": [
-                np.reshape(
-                    np.array(
-                        [
-                            58,
-                            19,
-                            2,
-                            2,
-                            0,
-                            0,
-                        ]
-                    ),
-                    (6, 1, 1),
-                ),
+                np.reshape(np.array([58, 19, 2, 2, 0, 0]), (6, 1, 1)),
                 np.reshape(np.array([163, 46, 15, 1, 0, 0]), (6, 1, 1)),
             ],
         },
         {
             "p_in": ["5029747", SphericalCircleSkyRegion],
             "p_out": [
-                np.reshape(
-                    np.array(
-                        [
-                            23,
-                            18,
-                            2,
-                            2,
-                            0,
-                            0,
-                        ]
-                    ),
-                    (6, 1, 1),
-                ),
-                np.reshape(
-                    np.array(
-                        [
-                            51,
-                            35,
-                            15,
-                            1,
-                            0,
-                            0,
-                        ]
-                    ),
-                    (6, 1, 1),
-                ),
+                np.reshape(np.array([23, 18, 2, 2, 0, 0]), (6, 1, 1)),
+                np.reshape(np.array([51, 35, 15, 1, 0, 0]), (6, 1, 1)),
             ],
         },
         {
             "p_in": ["111630", SphericalCircleSkyRegion],
             "p_out": [
-                np.reshape(
-                    np.array(
-                        [
-                            15,
-                            5,
-                            5,
-                            8,
-                            2,
-                            1,
-                        ]
-                    ),
-                    (6, 1, 1),
-                ),
-                np.reshape(
-                    np.array(
-                        [
-                            24,
-                            13,
-                            15,
-                            12,
-                            2,
-                            0,
-                        ]
-                    ),
-                    (6, 1, 1),
-                ),
+                np.reshape(np.array([15, 5, 5, 8, 2, 1]), (6, 1, 1)),
+                np.reshape(np.array([24, 13, 15, 12, 2, 0]), (6, 1, 1)),
             ],
         },
     ],
