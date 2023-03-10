@@ -19,6 +19,7 @@ from gammapy.modeling.models import (
     GaussianSpatialModel,
     LightCurveTemplateTemporalModel,
     Models,
+    PointSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
 )
@@ -122,6 +123,25 @@ def dataset():
     )
 
     return dataset
+
+
+@requires_data()
+def test_sample_coord_time_energy(dataset, models):
+    models[0].spatial_model = None
+    dataset.models = models
+    evaluator = dataset.evaluators["test-source"]
+    sampler = MapDatasetEventSampler(random_state=0)
+    with pytest.raises(TypeError):
+        sampler._sample_coord_time_energy(dataset, evaluator)
+
+    models[0].spatial_model = PointSpatialModel(
+        lon_0="0 deg", lat_0="0 deg", frame="galactic"
+    )
+    dataset.models = models
+    evaluator = dataset.evaluators["test-source"]
+    sampler = MapDatasetEventSampler(random_state=0)
+    with pytest.raises(NotImplementedError):
+        sampler._sample_coord_time_energy(dataset, evaluator)
 
 
 @requires_data()
