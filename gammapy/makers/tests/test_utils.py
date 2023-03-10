@@ -384,24 +384,7 @@ def test_make_counts_off_rad_max(observations):
     )
 
     assert_allclose(
-        counts_off.data,
-        np.reshape(
-            np.array(
-                [
-                    1641,
-                    564,
-                    156,
-                    24,
-                    0,
-                    0,
-                ]
-            ),
-            (
-                6,
-                1,
-                1,
-            ),
-        ),
+        counts_off.data, np.reshape(np.array([1641, 564, 156, 24, 0, 0]), (6, 1, 1))
     )
 
 
