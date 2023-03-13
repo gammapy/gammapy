@@ -2,9 +2,9 @@
 import logging
 from astropy.io import fits
 from gammapy.data.hdu_index_table import HDUIndexTable
+from gammapy.utils.deprecation import deprecated
 from gammapy.utils.fits import HDULocation
 from gammapy.utils.scripts import make_path
-from gammapy.utils.deprecation import deprecated
 
 __all__ = ["load_cta_irfs", "load_irf_dict_from_file"]
 
@@ -44,6 +44,7 @@ IRF_DL3_HDU_SPECIFICATION = {
             "HDUCLAS2": "BKG",
             "HDUCLAS3": "FULL-ENCLOSURE",  # added here to have HDUCLASN in order
             "HDUCLAS4": "BKG_3D",
+            "FOVALIGN": "RADEC",
         },
     },
     "bkg_2d": {
