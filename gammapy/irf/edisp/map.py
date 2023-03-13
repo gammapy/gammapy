@@ -33,7 +33,7 @@ class EDispMap(IRFMap):
 
     Examples
     --------
-    ::
+    .. doctest::
 
         import numpy as np
         from astropy import units as u
@@ -43,15 +43,14 @@ class EDispMap(IRFMap):
         from gammapy.makers.utils import make_edisp_map, make_map_exposure_true_energy
 
         # Define energy dispersion map geometry
-        energy_axis = MapAxis.from_edges(np.logspace(-1, 1, 4), unit="TeV", name="energy")
+        energy_axis_true = MapAxis.from_edges(np.logspace(-1, 1, 10), unit="TeV", name="energy_true")
         migra_axis = MapAxis.from_edges(np.linspace(0, 3, 100), name="migra")
         pointing = SkyCoord(0, 0, unit="deg")
-        max_offset = 4 * u.deg
         geom = WcsGeom.create(
-            binsz=0.25 * u.deg,
-            width=10 * u.deg,
-            skydir=pointing,
-            axes=[migra_axis, energy_axis],
+                binsz=0.25 * u.deg,
+                width=10 * u.deg,
+                skydir=pointing,
+                axes=[migra_axis, energy_axis_true],
         )
 
         # Extract EnergyDispersion2D from CTA 1DC IRF
@@ -60,19 +59,20 @@ class EDispMap(IRFMap):
         aeff2d = EffectiveAreaTable2D.read(filename, hdu="EFFECTIVE AREA")
 
         # Create the exposure map
-        exposure_geom = geom.to_image().to_cube([energy_axis])
+        exposure_geom = geom.squash(axis_name="migra")
         exposure_map = make_map_exposure_true_energy(pointing, "1 h", aeff2d, exposure_geom)
 
         # create the EDispMap for the specified pointing
-        edisp_map = make_edisp_map(edisp2D, pointing, geom, max_offset, exposure_map)
+        edisp_map = make_edisp_map(edisp2D, pointing, geom, exposure_map)
 
         # Get an Energy Dispersion (1D) at any position in the image
         pos = SkyCoord(2.0, 2.5, unit="deg")
-        energy = np.logspace(-1.0, 1.0, 10) * u.TeV
-        edisp = edisp_map.get_edisp_kernel(pos=pos, energy=energy)
+        energy_axis = MapAxis.from_energy_bounds(0.1, 10, 5, unit="TeV", name="energy")
+        edisp = edisp_map.get_edisp_kernel(energy_axis, position=pos)
 
         # Write map to disk
         edisp_map.write("edisp_map.fits")
+
     """
 
     tag = "edisp_map"
