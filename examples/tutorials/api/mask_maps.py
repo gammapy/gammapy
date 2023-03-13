@@ -47,7 +47,7 @@ sub-section.
 
 The `mask_fit` also can be used to exclude sources or complex regions
 for which we don’t have good enough models. In that case the masking is
-an extra security, it is prefereable to include the available models
+an extra security, it is preferable to include the available models
 even if the sources are masked and frozen.
 
 Note that a dataset contains also a `mask_safe` attribute that is

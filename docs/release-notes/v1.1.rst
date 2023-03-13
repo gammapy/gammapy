@@ -1,4 +1,4 @@
-.. _gammapy_1p0_release:
+.. _gammapy_1p1_release:
 
 1.0 (unreleased)
 ----------------
