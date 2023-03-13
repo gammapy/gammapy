@@ -2,24 +2,24 @@
 
 .. _gammapy_1p0p1_release:
 
-1.0.1 (March 15th, 2023)
+1.0.1 (March 14th, 2023)
 ------------------------
 
 Summary
 ~~~~~~~
 
-- Released Mar 15th, 2023
+- Released Mar 14th, 2023
 - 9 contributors
 - 30 pull requests since v1.0 (not all listed below)
 
 This is the first bug-fix after v1.0. Several minor bugs and typos in the documentation are corrected.
 
 - A bug in the `~gammapy.dataset.MapEvaluator` was slowing down the model evaluation leading to degraded
- performance on fitting or flux points estimation. The performances of benchmarks have significantly
- improved.
+  performance on fitting or flux points estimation. The performances of benchmarks have significantly
+  improved.
 - The "TIMESYS" keyword was not properly exported to the lightcurve table format. This is now corrected.
 - An issue with interpolation in scipy 1.10 is causing problems in gammapy. This specific version is
- excluded from dependencies.
+  excluded from dependencies.
 
 Contributors
 ~~~~~~~~~~~~
@@ -38,6 +38,7 @@ Pull Requests
 ~~~~~~~~~~~~~
 
 This list is incomplete.
+
 - [#4359] Fix interpolation values_scale in TemplateSpatialModel (Quentin Remy)
 - [#4344] Fix norm_only_changed in MapEvaluator (Quentin Remy)
 - [#4336] Change label units within parentheses to brackets (Arnau Aguasca)
