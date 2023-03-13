@@ -1,0 +1,91 @@
+.. include:: ../../references.txt
+
+.. _pig-026:
+
+********************************
+PIG 26 - Priors and FitStatistic
+********************************
+
+* Author: Noah Biederbeck
+* Created: ``2023-03-13``
+* Accepted:
+* Status: draft
+* Discussion: `#4381`_
+
+Abstract
+========
+
+This PIG is intended to introduce priors on models that are evaluated during fitting.
+
+Motivation
+==========
+
+Using priors on models and on parameters is the next step in full-fledged statistical analyses.
+A prior can incorporate the analysers' knowledge of the topic at hand, and yield more realistically and trustworthy results.
+The proposed formalism also includes application of nuisance parameters and regularization.
+
+Use cases
+=========
+
+In the past priors were a regularly requested feature or the solution to a problem.
+See the following issues and PRs of Gammapy:
+
+- Add sigma v estimator functionality for dark matter use case `#2075`_
+- Background systematics as a nuisance parameter `#3955`_
+- Support unfolding methods for spectral flux points `#4122`_
+- Add PiecewiseNormSpatialModel `#4208`_
+
+Implementation
+==============
+
+See `#4237`_ for an implementing PR draft.
+
+Priors on parameters:
+
+.. code:: python
+
+    class GaussianPrior():
+        def __init__(self, mu=0, sigma=1):
+            self.mu = mu
+            self.sigma = sigma
+
+        def stat_sum(self, value):
+            return ((value - self.mu) / self.sigma) ** 2
+
+    dataset.models.parameters["x"].prior = GaussianPrior()
+
+
+Priors on models:
+
+.. code:: python
+
+    class L2Regularization():
+        def __init__(self, k=1.0):
+            self.k = k
+
+        def stat_sum(self, parameters):
+            return self.k * np.sum(parameters.to_table()["value"] ** 2)
+
+    dataset.models.prior = L2Regularization()
+
+
+Additional Information
+======================
+
+It is possible to implement priors as well as FitStatistics simultaneously.
+There will be two (default) FitStatistics: ``CashFitStatistic`` and ``WStatFitStatistic``,
+on the ``SpectrumDataset`` and ``SpectrumDatasetOnOff``, resp.
+This way priors and FitStatistics can share functionality, e.g. serialization, implementation.
+(User defined) FitStatistics allow for fine-grained fitting of models.
+
+
+Decision
+========
+
+
+.. _#2075: https://github.com/gammapy/gammapy/issues/2075
+.. _#3955: https://github.com/gammapy/gammapy/issues/3955
+.. _#4122: https://github.com/gammapy/gammapy/issues/4122
+.. _#4208: https://github.com/gammapy/gammapy/issues/4208
+.. _#4237: https://github.com/gammapy/gammapy/issues/4237
+.. _#4381: https://github.com/gammapy/gammapy/issues/4381
