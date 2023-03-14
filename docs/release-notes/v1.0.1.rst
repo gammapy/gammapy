@@ -21,6 +21,8 @@ This is the first bug-fix after v1.0. Several minor bugs and typos in the docume
   excluded from dependencies.
 - Models created from files with a parameter scale different than one were incorrect and this will be fixed by this patch. 
    Note that by default gammapy always serializes the parameters with a scale of one, so this bug affected only files written by hand with a scale different from one.
+- Datasets serialization now supports PSF in reconstructed energies used in HAWC analyses.
+
 Contributors
 ~~~~~~~~~~~~
 
