@@ -215,7 +215,7 @@ def test_safe_mask_maker_dl3(spectrum_dataset_crab, observations_hess_dl3):
     assert mask_safe.data.sum() == 4
 
 
-# This breaks some CI runs but not locally. xfail for now. 
+# This breaks some CI runs but not locally. xfail for now.
 @pytest.mark.xfail
 @requires_data()
 def test_safe_mask_maker_dc1(spectrum_dataset_gc, observations_cta_dc1):
