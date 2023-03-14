@@ -126,7 +126,7 @@ class SafeMaskMaker(Maker):
 
         energy_max = observation.aeff.meta.get("HI_THRES", None)
 
-        if energy_max:
+        if energy_max is not None:
             energy_max = energy_max * u.TeV
         else:
             log.warning(
@@ -161,7 +161,7 @@ class SafeMaskMaker(Maker):
         """
         geom, exposure = dataset._geom, dataset.exposure
 
-        if self.fixed_offset:
+        if self.fixed_offset is not None:
             if observation:
                 position = observation.pointing_radec.directional_offset_by(
                     position_angle=0.0 * u.deg, separation=self.fixed_offset
@@ -219,7 +219,7 @@ class SafeMaskMaker(Maker):
         edisp, geom = dataset.edisp, dataset._geom
         position = None
 
-        if self.fixed_offset:
+        if self.fixed_offset is not None:
             if observation:
                 position = observation.pointing_radec.directional_offset_by(
                     position_angle=0 * u.deg, separation=self.fixed_offset
