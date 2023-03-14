@@ -322,11 +322,11 @@ class DataStore:
                 f"Required HDUs {missing_hdus} not found in observation {obs_id}"
             )
 
-        # if we didn't find the pointing hdu, extract FixedPointingInfo from events
-        if "pointing" not in kwargs:
-            pointing_location = copy(kwargs["events"])
-            pointing_location.hdu_class = "pointing"
-            kwargs["pointing"] = pointing_location
+        # TODO: right now, gammapy doesn't support using the pointing table of GADF
+        # so we always pass the events location here to be read into a FixedPointingInfo
+        pointing_location = copy(kwargs["events"])
+        pointing_location.hdu_class = "pointing"
+        kwargs["pointing"] = pointing_location
 
         return Observation(**kwargs)
 
