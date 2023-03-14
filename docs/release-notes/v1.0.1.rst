@@ -20,7 +20,8 @@ This is the first bug-fix after v1.0. Several minor bugs and typos in the docume
 - The "TIMESYS" keyword was not properly exported to the lightcurve table format. This is now corrected.
 - An issue with interpolation in scipy 1.10 is causing problems in gammapy. This specific version is
   excluded from dependencies.
-
+- Models created from files with a parameter scale different than one were incorrect and this will be fixed by this patch. 
+   Note that by default gammapy always serializes the parameters with a scale of one, so this bug affected only files written by hand with a scale different from one.
 Contributors
 ~~~~~~~~~~~~
 
