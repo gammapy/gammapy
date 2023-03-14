@@ -174,9 +174,6 @@ class MapDatasetEventSampler:
                     dataset.mask,
                 )
 
-            flux = evaluator.compute_flux()
-            npred = evaluator.apply_exposure(flux)
-
             if evaluator.model.temporal_model is None:
                 temporal_model = ConstantTemporalModel()
             else:
@@ -187,6 +184,8 @@ class MapDatasetEventSampler:
             ):  # check the condition when the format model is defined
                 table = self._sample_coord_time_energy(dataset, evaluator)
             else:
+                flux = evaluator.compute_flux()
+                npred = evaluator.apply_exposure(flux)
                 table = self._sample_coord_time(npred, temporal_model, dataset.gti)
 
             if len(table) == 0:
