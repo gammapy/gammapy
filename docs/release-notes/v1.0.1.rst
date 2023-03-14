@@ -15,7 +15,7 @@ Summary
 This is the first bug-fix after v1.0. Several minor bugs and typos in the documentation are corrected.
 
 - Few corrections have been made to improve the performance of the models evaluation in particular for 1d 
-  spectral analyses. The performances of benchmarks have significantly improved.
+  spectral analyses.
 - The "TIMESYS" keyword was not properly exported to the lightcurve table format. This is now corrected.
 - An issue with interpolation in scipy 1.10 is causing problems in Gammapy. This specific version is
   excluded from dependencies. The minimal numpy version is now 1.21.
