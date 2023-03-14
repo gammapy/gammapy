@@ -484,6 +484,9 @@ class IRF(metaclass=abc.ABCMeta):
 
             table.meta.update(spec["mandatory_keywords"])
 
+            if "FOVALIGN" in table.meta:
+                table.meta["FOVALIGN"] = self.fov_alignment.value
+
             if self.is_pointlike:
                 table.meta["HDUCLAS3"] = "POINT-LIKE"
             else:

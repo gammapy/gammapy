@@ -43,6 +43,7 @@ IRF_DL3_HDU_SPECIFICATION = {
             "HDUCLAS2": "BKG",
             "HDUCLAS3": "FULL-ENCLOSURE",  # added here to have HDUCLASN in order
             "HDUCLAS4": "BKG_3D",
+            "FOVALIGN": "RADEC",
         },
     },
     "bkg_2d": {
