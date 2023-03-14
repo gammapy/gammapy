@@ -30,7 +30,7 @@ Contributors
 - Maximilian Linhoff
 - Lars Mohrmann
 - Maxime Régeard
-- Quentin Rémy
+- Quentin Remy
 - Atreyee Sinha
 - Régis Terrier
 
