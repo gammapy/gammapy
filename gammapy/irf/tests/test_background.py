@@ -4,7 +4,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-from gammapy.irf import Background2D, Background3D
+from gammapy.irf import Background2D, Background3D, FoVAlignment
 from gammapy.maps import MapAxis
 from gammapy.utils.testing import mpl_plot_check, requires_data
 
@@ -402,3 +402,24 @@ def test_eq(bkg_2d):
 
     bkg1.data[0][0] = 10
     assert not bkg1 == bkg_2d
+
+
+def test_write_bkg_3d():
+    e_reco = MapAxis.from_energy_bounds(0.1, 10, 6, unit="TeV", name="energy")
+    lon_axis = MapAxis.from_bounds(
+        -2.3, 2.3, 10, interp="lin", unit="deg", name="fov_lon"
+    )
+    lat_axis = MapAxis.from_bounds(
+        -2.3, 2.3, 10, interp="lin", unit="deg", name="fov_lat"
+    )
+    bg_3d = Background3D(
+        axes=[e_reco, lon_axis, lat_axis],
+        data=np.ones((6, 10, 10)),
+        unit=u.Unit("s-1 MeV-1 sr-1"),
+        fov_alignment=FoVAlignment.ALTAZ,
+    )
+    hduBackground = bg_3d.to_table_hdu()
+    hduBackground.writeto("background.fits", overwrite=True)
+    bg = Background3D.read("background.fits", hdu="BACKGROUND")
+
+    assert bg.fov_alignment.value == "ALTAZ"

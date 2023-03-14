@@ -80,6 +80,7 @@ def test_to_table():
     hdu = aeff.to_table_hdu()
     assert_equal(hdu.data["ENERG_LO"][0], aeff.axes["energy_true"].edges[:-1].value)
     assert hdu.header["TUNIT1"] == aeff.axes["energy_true"].unit
+    assert "FOVALIGN" not in hdu.header
 
 
 def test_to_table_is_pointlike():

@@ -97,6 +97,8 @@ class Background3D(BackgroundIRF):
         Data array.
     unit : str or `~astropy.units.Unit`
         Data unit usually ``s^-1 MeV^-1 sr^-1``
+    fov_alignment: `~gammapy.irf.FoVAlignment`
+        The orientation of the field of view coordinate system.
     meta : dict
         Meta data
 
