@@ -10,7 +10,7 @@ Summary
 
 - Released Mar 14th, 2023
 - 9 contributors
-- 30 pull requests since v1.0 (not all listed below)
+- 31 pull requests since v1.0 (not all listed below)
 
 This is the first bug-fix after v1.0. Several minor bugs and typos in the documentation are corrected.
 
