@@ -14,9 +14,8 @@ Summary
 
 This is the first bug-fix after v1.0. Several minor bugs and typos in the documentation are corrected.
 
-- A bug in the `~gammapy.dataset.MapEvaluator` was slowing down the model evaluation leading to degraded
-  performance on fitting or flux points estimation. The performances of benchmarks have significantly
-  improved.
+- Few corrections have been made to improve the performance of the models evaluation in particular for 1d 
+   spectral analyses. The performances of benchmarks have significantly improved.
 - The "TIMESYS" keyword was not properly exported to the lightcurve table format. This is now corrected.
 - An issue with interpolation in scipy 1.10 is causing problems in gammapy. This specific version is
   excluded from dependencies.
