@@ -4,10 +4,11 @@ import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord, SkyOffsetFrame
 from astropy.table import Table
+from regions import PointSkyRegion
 import gammapy
 from gammapy.data import EventList, observatory_locations
-from gammapy.maps import MapCoord
-from gammapy.modeling.models import ConstantTemporalModel
+from gammapy.maps import MapAxis, MapCoord, RegionGeom
+from gammapy.modeling.models import ConstantTemporalModel, PointSpatialModel
 from gammapy.utils.random import get_random_state
 
 __all__ = ["MapDatasetEventSampler"]
@@ -26,30 +27,126 @@ class MapDatasetEventSampler:
     def __init__(self, random_state="random-seed"):
         self.random_state = get_random_state(random_state)
 
-    def _sample_coord_time(self, npred, temporal_model, gti):
-        data = npred.data[np.isfinite(npred.data)]
-        n_events = self.random_state.poisson(np.sum(data))
+    def _make_table(self, coords, time_ref):
+        """Create a table for sampled events.
 
-        coords = npred.sample_coord(n_events=n_events, random_state=self.random_state)
+        Parameters
+        ----------
+        coords : `~gammapy.maps.MapCoord`
+            Coordinates of the sampled events.
+        time_ref : `~astropy.time.Time`
+            reference time of the event list.
 
+        Returns
+        -------
+        table : `~astropy.table.Table`
+            Table of the sampled events.
+        """
         table = Table()
         try:
             energy = coords["energy_true"]
         except KeyError:
             energy = coords["energy"]
 
+        table["TIME"] = (coords["time"] - time_ref).to("s")
         table["ENERGY_TRUE"] = energy
         table["RA_TRUE"] = coords.skycoord.icrs.ra.to("deg")
         table["DEC_TRUE"] = coords.skycoord.icrs.dec.to("deg")
 
+        return table
+
+    def _evaluate_timevar_source(self, dataset, evaluator, time_axis=None):
+        """Calculate Npred for a given `dataset.model` by evaluating
+        it in region geometry.
+
+        Parameters
+        ----------
+        dataset : `~gammapy.datasets.MapDataset`
+            Map dataset.
+        evaluator : `~gammapy.datasets.evaluators.MapEvaluator`
+            Map evaluator.
+        time_axis : `~gammapy.Maps.MapAxis`
+            Axis of the time.
+
+        Returns
+        -------
+        npred : `~gammapy.maps.Map`
+            Npred map.
+        """
+        energy_axis = MapAxis.from_edges(
+            dataset.geoms["geom"].axes["energy"].edges, name="energy_true"
+        )
+
+        target = evaluator.model.spatial_model.position
+        on_region = PointSkyRegion(center=target)
+        region_geom = RegionGeom.create(on_region, axes=[energy_axis])
+
+        flux = evaluator.model.evaluate_geom(region_geom.to_wcs_geom(), gti=dataset.gti)
+        region_exposure = dataset.exposure.to_region_nd_map(region_geom.center_skydir)
+
+        npred = flux * region_exposure * dataset.geoms["geom"].bin_volume()
+
+        return npred
+
+    def _sample_coord_time_energy(self, dataset, evaluator, t_delta="1 s"):
+        """Sample model components of a source with time-dependent spectrum.
+
+        Parameters
+        ----------
+        dataset : `~gammapy.datasets.MapDataset`
+            Map dataset.
+        evaluator : `~gammapy.datasets.evaluators.MapEvaluator`
+            Map evaluator.
+        t_delta : `~astropy.units.Quantity`
+            Minimum step time.
+
+        Returns
+        -------
+        table : `~astropy.table.Table`
+            Table of sampled events.
+        """
+        if not isinstance(evaluator.model.spatial_model, PointSpatialModel):
+            raise TypeError(
+                f"Event sampler expects PointSpatialModel for a time varying source. Got {evaluator.model.spatial_model} instead."
+            )
+
+        else:
+            raise NotImplementedError("The functionality is not yet implemented")
+
+        return
+
+    def _sample_coord_time(self, npred, temporal_model, gti):
+        """Sample model components of a time-varying source.
+
+        Parameters
+        ----------
+        npred : `~gammapy.dataset.MapDataset`
+            Npred map.
+        temporal_model : `~gammapy.modeling.models\
+            temporal model of the source.
+        gti : `~gammapy.data.GTI`
+             GTI of the dataset
+
+        Returns
+        -------
+        table : `~astropy.table.Table`
+            Table of sampled events.
+        """
+        data = npred.data[np.isfinite(npred.data)]
+        n_events = self.random_state.poisson(np.sum(data))
+
+        coords = npred.sample_coord(n_events=n_events, random_state=self.random_state)
+
         time_start, time_stop, time_ref = (gti.time_start, gti.time_stop, gti.time_ref)
-        time = temporal_model.sample_time(
+        coords["time"] = temporal_model.sample_time(
             n_events=n_events,
             t_min=time_start,
             t_max=time_stop,
             random_state=self.random_state,
         )
-        table["TIME"] = u.Quantity(((time.mjd - time_ref.mjd) * u.day).to(u.s)).to("s")
+
+        table = self._make_table(coords, time_ref)
+
         return table
 
     def sample_sources(self, dataset):
@@ -77,15 +174,19 @@ class MapDatasetEventSampler:
                     dataset.mask,
                 )
 
-            flux = evaluator.compute_flux()
-            npred = evaluator.apply_exposure(flux)
-
             if evaluator.model.temporal_model is None:
                 temporal_model = ConstantTemporalModel()
             else:
                 temporal_model = evaluator.model.temporal_model
 
-            table = self._sample_coord_time(npred, temporal_model, dataset.gti)
+            if (
+                temporal_model == "TemplateTemporalModel"
+            ):  # check the condition when the format model is defined
+                table = self._sample_coord_time_energy(dataset, evaluator)
+            else:
+                flux = evaluator.compute_flux()
+                npred = evaluator.apply_exposure(flux)
+                table = self._sample_coord_time(npred, temporal_model, dataset.gti)
 
             if len(table) == 0:
                 mcid = table.Column(name="MC_ID", length=0, dtype=int)
