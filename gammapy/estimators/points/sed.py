@@ -62,7 +62,7 @@ class FluxPointsEstimator(FluxEstimator):
     fit : `Fit`
         Fit instance specifying the backend and fit options.
     reoptimize : bool
-        Re-optimize other free model parameters. Default is True.
+        Re-optimize other free model parameters. Default is False.
     sum_over_energy_groups : bool
         Whether to sum over the energy groups or fit the norm on the full energy
         grid.
