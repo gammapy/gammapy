@@ -7,10 +7,10 @@ PIG 26 - Gammapy version 2.0 Roadmap
 ************************************
 
 * Author: Axel Donath, Bruno Khélifi, Régis Terrier and others
-* Created: Feb 6th, 2023
+* Created: March 20th, 2023
 * Accepted:
-* Status:
-* Discussion:
+* Status: Draft
+* Discussion: `GH 4388`_
 
 Abstract
 ========
@@ -24,6 +24,8 @@ This document first describes a number of general use cases that should be made
 possible with Gammapy. It then describes specific projects and changes to be made
 to the library to support such use cases and further improvements.
 
+Several specific aspects and projects are discussed in their specific PIGs (e.g.
+unbinned analysis in `GH 4253`_ or priors and likelihood in `GH 4381`_).
 
 Use cases to support
 ====================
@@ -226,3 +228,6 @@ Handling of pulsar analysis
 Development of Time Series algorithms: e.g. Bayesian Block, Power Spectral Density (and simulation of PSD folded with the observations mask) (Axel: clarify the interface to Astropy time series, which has support for Baysian blocks etc. see https://docs.gammapy.org/0.20.1/api/gammapy.estimators.FluxPoints.html#gammapy.estimators.FluxPoints.to_table )
 Clarify relation to stingray…
 
+.. _GH 4388: https://github.com/gammapy/gammapy/pull/4388
+.. _GH 4381: https://github.com/gammapy/gammapy/pull/4381
+.. _GH 4253: https://github.com/gammapy/gammapy/pull/4253
