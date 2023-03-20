@@ -6,7 +6,7 @@
 PIG 26 - Gammapy version 2.0 Roadmap
 ************************************
 
-* Author: Axel Donath, Bruno Khélifi, Régis Terrier
+* Author: Axel Donath, Bruno Khélifi, Régis Terrier and others
 * Created: Feb 6th, 2023
 * Accepted:
 * Status:
@@ -15,18 +15,27 @@ PIG 26 - Gammapy version 2.0 Roadmap
 Abstract
 ========
 
+The second Long Term Stable (LTS) release of Gammapy will take place at the end of
+fall 2024. This PIG discusses the main are of development that are foreseen for
+the v2.0 and proposes some prioritization of the effort and plausible milestones
+for the intermediate feature releases expected (v1.x).
+
+This document first describes a number of general use cases that should be made
+possible with Gammapy. It then describes specific projects and changes to be made
+to the library to support such use cases and further improvements.
+
 
 Use cases to support
 ====================
 
-This section describes new use cases that we would like to be supported in future
+This section describes new use cases that we would like to see supported in future
 versions of Gammapy.
 
 Event type handling
 +++++++++++++++++++
 
 Starting from a datastore containing events lists and IRFs with types and classes of events,
-the user produces of a list of datasets per event type or class. Meta information of
+the user produces of a list of datasets per event type or class. Meta informations of
 the datasets allow for complex types handling at modeling/fitting step (e.g. joint fit
 of A & B type, stack all type together etc)
 
@@ -41,7 +50,7 @@ Pulsed signal search
 
 Using a specific timing solution for a given pulsar, the user builds a phasogram of the data
 and can evaluate the significance of a pulsed signal vs flat background. A map per phase bin
-can be produced. Blind pulsation search ? Do we want to support this?
+can be produced. Other aspects? Blind pulsation search ? Do we want to support this?
 
 Transient source detection
 ++++++++++++++++++++++++++
@@ -72,14 +81,16 @@ fitting at later steps.
 Manipulation and selection of Datasets
 ++++++++++++++++++++++++++++++++++++++
 
-After data reduction in a list of spectrum datasets, the user wants to stack spectra obtained in observation
-in given bands of zenith angle. The metadata information stored on the datasets allows complex manipulation
-at modeling/fitting step.
+After data reduction in a list of spectrum datasets, the user wants to stack spectra obtained
+in observation in given bands of zenith angle. The metadata information stored on the datasets
+allows complex manipulation at modeling/fitting step.
 
 Nuisance parameters and priors
 ++++++++++++++++++++++++++++++
 
-The user wants to add a systematic effect of unknown amplitude (e.g. a bias in the absolute energy scale) and wants to estimate the impact of this effect on the parameter estimation assuming a prior distribution of the nuisance parameter. (mixed likelihood, check terminology).
+The user wants to add a systematic effect of unknown amplitude (e.g. a bias in the absolute
+energy scale) and wants to estimate the impact of this effect on the parameter estimation
+assuming a prior distribution of the nuisance parameter. (mixed likelihood, check terminology).
 Generic background model using a KernelBackgroundEstimator? Or parametrised background models?
 
 
