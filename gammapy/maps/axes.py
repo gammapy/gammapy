@@ -2355,7 +2355,6 @@ class TimeMapAxis:
             center = self.time_mid.datetime
         elif self.time_format == "mjd":
             center = self.time_mid.mjd * u.day
-
         return center
 
     def format_plot_xaxis(self, ax):
@@ -2371,7 +2370,7 @@ class TimeMapAxis:
         ax : `~matplotlib.pyplot.Axis`
             Formatted plot axis
         """
-        from matplotlib.dates import DateFormatter
+        from matplotlib.dates import DateFormatter, ticker
 
         xlabel = DEFAULT_LABEL_TEMPLATE.format(
             quantity=PLOT_AXIS_LABEL.get(self.name, self.name.capitalize()),
@@ -2381,12 +2380,16 @@ class TimeMapAxis:
 
         if self.time_format == "iso":
             ax.xaxis.set_major_formatter(DateFormatter("%Y-%m-%d %H:%M:%S"))
-            plt.setp(
-                ax.xaxis.get_majorticklabels(),
-                rotation=30,
-                ha="right",
-                rotation_mode="anchor",
-            )
+        elif self.time_format == "mjd":
+            ax.xaxis.set_major_formatter(ticker.StrMethodFormatter("{x:,.5f}"))
+        else:
+            raise ValueError(f"Not a supported format: {self.time_format}")
+        plt.setp(
+            ax.xaxis.get_majorticklabels(),
+            rotation=30,
+            ha="right",
+            rotation_mode="anchor",
+        )
 
         return ax
 
