@@ -501,3 +501,33 @@ def test_filter_live_time_phase(data_store):
     live_time_filter = observation.observation_live_time_duration
 
     assert_allclose(live_time_filter, default_obs_live_time * (0.8 - 0.2))
+
+
+@pytest.mark.parametrize(
+    "pars",
+    [
+        {
+            "p_in": ObservationFilter(
+                event_filters=[
+                    {"type": "custom", "opts": dict(parameter="PHASE", band=(0.2, 0.8))}
+                ]
+            ),
+            "p_out": 0.6,
+        },
+        {
+            "p_in": ObservationFilter(
+                event_filters=[
+                    {
+                        "type": "custom",
+                        "opts": dict(parameter="ENERGY", band=(0.1, 1) * u.TeV),
+                    }
+                ]
+            ),
+            "p_out": 1,
+        },
+        {"p_in": ObservationFilter(), "p_out": 1},
+        {"p_in": None, "p_out": 1},
+    ],
+)
+def test_check_obs_filter_phase(pars):
+    assert_allclose(Observation._check_obs_filter_phase(pars["p_in"]), pars["p_out"])
