@@ -18,8 +18,10 @@ def observations():
     """Example observation list for testing."""
     datastore_cta = DataStore.from_dir("$GAMMAPY_DATA/cta-1dc/index/gps")
     datastore_magic = DataStore.from_dir("$GAMMAPY_DATA/magic/rad_max/data")
+    datastore_hess = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
     observations = datastore_cta.get_observations([111630])
     observations.append(datastore_magic.get_observations(required_irf="point-like")[0])
+    observations.append(datastore_hess.obs(23523))
     return observations
 
 
@@ -119,10 +121,10 @@ def test_check_phase_intervals(pars):
             ],
         },
         {
-            "p_in": ["111630", SphericalCircleSkyRegion],
+            "p_in": ["23523", SphericalCircleSkyRegion],
             "p_out": [
-                np.reshape(np.array([15, 5, 5, 8, 2, 1]), (6, 1, 1)),
-                np.reshape(np.array([24, 13, 15, 12, 2, 0]), (6, 1, 1)),
+                np.reshape(np.array([0, 1, 7, 4, 0, 0]), (6, 1, 1)),
+                np.reshape(np.array([0, 9, 32, 12, 1, 0]), (6, 1, 1)),
             ],
         },
     ],
@@ -139,15 +141,11 @@ def test_make_counts(observations, phase_bkg_maker, pars):
         0.01, 300, nbin=15, unit="TeV", name="energy_true"
     )
 
-    if pars["p_in"][0] == "111630":
-        pos = SkyCoord(128.83606354, -45.17643181, frame="icrs", unit="deg")
-        obs = observations[pars["p_in"][0]]
-    elif pars["p_in"][0] == "5029747":
-        pos = SkyCoord(083.6331144560900, +22.0144871383400, frame="icrs", unit="deg")
-        obs = observations[pars["p_in"][0]]
-        table = obs.events.table
-        table["PHASE"] = np.linspace(0, 1, len(table["TIME"]))
-        obs._events = EventList(table)
+    obs = observations[pars["p_in"][0]]
+    pos = SkyCoord(083.6331144560900, +22.0144871383400, frame="icrs", unit="deg")
+    table = obs.events.table
+    table["PHASE"] = np.linspace(0, 1, len(table["TIME"]))
+    obs._events = EventList(table)
 
     on_region = SphericalCircleSkyRegion(pos, radius=0.1 * u.deg)
     if pars["p_in"][1] is PointSkyRegion:
