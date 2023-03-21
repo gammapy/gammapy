@@ -305,6 +305,8 @@ class Observation:
                     if f.get("opts").get("parameter") == "PHASE":
                         band = f.get("opts").get("band")
                         return band[1] - band[0]
+                    else:
+                        return 1
             else:
                 return 1
         else:
