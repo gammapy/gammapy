@@ -471,7 +471,7 @@ class FluxPoints(FluxMaps):
 
         return y_errn, y_errp
 
-    def plot(self, ax=None, sed_type=None, energy_power=0, **kwargs):
+    def plot(self, ax=None, sed_type=None, energy_power=0, time_format="iso", **kwargs):
         """Plot flux points.
 
         Parameters
@@ -482,6 +482,8 @@ class FluxPoints(FluxMaps):
             Sed type
         energy_power : float
             Power of energy to multiply flux axis with
+        time_format : {"iso", "mjd"}
+            Default: "iso"
         **kwargs : dict
             Keyword arguments passed to `~RegionNDMap.plot`
 
@@ -529,7 +531,7 @@ class FluxPoints(FluxMaps):
             kwargs.setdefault("yerr", None)
 
         flux = scale_plot_flux(flux=flux.to_unit(flux_unit), energy_power=energy_power)
-        ax = flux.plot(ax=ax, **kwargs)
+        ax = flux.plot(ax=ax, time_format=time_format, **kwargs)
         ax.set_ylabel(f"{sed_type} [{ax.yaxis.units}]")
         ax.set_yscale("log")
         return ax
