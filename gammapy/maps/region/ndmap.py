@@ -9,7 +9,7 @@ from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator, StatProfileScale
 from gammapy.utils.scripts import make_path
-from ..axes import MapAxes
+from ..axes import MapAxes, TimeMapAxis
 from ..core import Map
 from ..geom import pix_tuple_to_idx
 from ..region import RegionGeom
@@ -52,7 +52,7 @@ class RegionNDMap(Map):
         self.meta = meta
         self._unit = u.Unit(unit)
 
-    def plot(self, ax=None, axis_name=None, **kwargs):
+    def plot(self, ax=None, axis_name=None, time_format="iso", **kwargs):
         """Plot the data contained in region map along the non-spatial axis.
 
         Parameters
@@ -62,6 +62,8 @@ class RegionNDMap(Map):
         axis_name : str
             Which axis to plot on the x axis. Extra axes will be plotted as
             additional lines.
+        time_format : {"iso", "mjd"}
+            Default: "iso"
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.pyplot.errorbar`
 
@@ -82,6 +84,8 @@ class RegionNDMap(Map):
                 )
 
         axis = self.geom.axes[axis_name]
+        if isinstance(axis, TimeMapAxis):
+            axis.time_format = time_format
 
         kwargs.setdefault("marker", "o")
         kwargs.setdefault("markersize", 4)
@@ -118,7 +122,6 @@ class RegionNDMap(Map):
                     label=label,
                     **kwargs,
                 )
-
         axis.format_plot_xaxis(ax=ax)
 
         if "energy" in axis_name:
