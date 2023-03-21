@@ -818,9 +818,7 @@ def test_piecewise_spatial_model_background(background):
     ).evaluate()
     assert_allclose(identical_npred, reference_npred)
 
-    reference = FoVBackgroundModel(
-        spatial_model=None, dataset_name="test"
-    ).evaluate_geom(geom)
+    reference = Map.from_geom(geom, data=1)
     identical = FoVBackgroundModel(
         spatial_model=spatial_model, dataset_name="test"
     ).evaluate_geom(geom)
@@ -837,4 +835,4 @@ def test_piecewise_spatial_model_background(background):
     twice = FoVBackgroundModel(
         spatial_model=spatial_model2, dataset_name="test"
     ).evaluate_geom(geom)
-    assert_allclose(twice, reference)
+    assert_allclose(twice, reference * 2.)
