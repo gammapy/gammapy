@@ -178,24 +178,21 @@ def contour_iminuit(parameters, function, x, y, numpoints, sigma, **kwargs):
 # This code is a mix from https://github.com/iminuit/iminuit/blob/master/iminuit/_minimize.py#L95
 # and https://github.com/scikit-hep/iminuit/blob/v2.21.0/src/iminuit/minimize.py#L124-L136
 def _get_message(m, parameters):
-    success = m.accurate
+    success = m.valid
     success &= np.all(np.isfinite([par.value for par in parameters]))
-    if not success:
+    if success:
+        message = "Optimization terminated successfully."
+        if m.accurate:
+            message += "."
+        else:
+            message += ", but uncertainties are unreliable."
+    else:
         message = "Optimization failed."
         fmin = m.fmin
         if fmin.has_reached_call_limit:
             message += " Call limit was reached."
         if fmin.is_above_max_edm:
             message += " Estimated distance to minimum too large."
-    elif m.valid:
-        message = "Optimization terminated successfully"
-        if m.accurate:
-            message += "."
-        else:
-            message += ", but uncertainties are unreliable."
-    else:
-        message = "Optimization failed for an unforeseen reason."
-
     return message
 
 
