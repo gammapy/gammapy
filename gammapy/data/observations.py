@@ -274,8 +274,10 @@ class Observation:
         Computed as ``t_live = t_observation * (1 - f_dead)``
         where ``f_dead`` is the dead-time fraction.
         """
-        return self.observation_time_duration * (
-            1 - self.observation_dead_time_fraction
+        return (
+            self.observation_time_duration
+            * (1 - self.observation_dead_time_fraction)
+            * self._check_obs_filter_phase(self.obs_filter)
         )
 
     @property
@@ -293,6 +295,20 @@ class Observation:
         which in turn is used in the exposure and flux computation.
         """
         return 1 - self.obs_info["DEADC"]
+
+    @staticmethod
+    def _check_obs_filter_phase(obs_filter):
+        """Static method that check for phase filter in the obs_filter in order to correct the live time duration."""
+        if obs_filter is not None:
+            if len(obs_filter.event_filters) != 0:
+                for f in obs_filter.event_filters:
+                    if f.get("opts").get("parameter") == "PHASE":
+                        band = f.get("opts").get("band")
+                        return band[1] - band[0]
+            else:
+                return 1
+        else:
+            return 1
 
     @lazyproperty
     def obs_info(self):
