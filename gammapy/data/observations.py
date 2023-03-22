@@ -299,18 +299,18 @@ class Observation:
     @staticmethod
     def _check_obs_filter_phase(obs_filter):
         """Static method that check for phase filter in the obs_filter in order to correct the live time duration."""
-        if obs_filter is not None:
-            if len(obs_filter.event_filters) != 0:
+        if obs_filter is None:
+            return 1
+        else:
+            if len(obs_filter.event_filters) == 0:
+                return 1
+            else:
                 for f in obs_filter.event_filters:
                     if f.get("opts").get("parameter") == "PHASE":
                         band = f.get("opts").get("band")
                         return band[1] - band[0]
                     else:
                         return 1
-            else:
-                return 1
-        else:
-            return 1
 
     @lazyproperty
     def obs_info(self):
