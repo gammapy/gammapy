@@ -39,6 +39,7 @@ def _read_cta_sdc(filename):
                 region=PointSkyRegion(center=position),
                 axes=[energy_axis, time_axis],
                 data=np.array(list(data.data) * u.Unit(data.header["UNITS"])),
+                meta=time_header,
             ),
             time_ref,
         )
