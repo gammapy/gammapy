@@ -143,7 +143,6 @@ class FluxPointsEstimator(FluxEstimator):
                     energy_max=energy_max,
                 )
                 rows.append(row)
-        return self.fp_results
 
         table = Table(rows, meta=meta)
         model = datasets.models[self.source]
