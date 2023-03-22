@@ -1,5 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
+from itertools import repeat
+from multiprocessing import Pool
 import numpy as np
 import astropy.units as u
 from gammapy.data import GTI
@@ -66,6 +68,8 @@ class LightCurveEstimator(FluxPointsEstimator):
         Fit instance specifying the backend and fit options.
     reoptimize : bool
         Re-optimize other free model parameters. Default is True.
+    n_jobs : int
+        Number of processes used in parallel for the computation.
 
     Examples
     --------
@@ -75,10 +79,20 @@ class LightCurveEstimator(FluxPointsEstimator):
 
     tag = "LightCurveEstimator"
 
-    def __init__(self, time_intervals=None, atol="1e-6 s", **kwargs):
+    def __init__(self, time_intervals=None, atol="1e-6 s", n_jobs=1, **kwargs):
         self.time_intervals = time_intervals
         self.atol = u.Quantity(atol)
+        self.n_jobs = n_jobs
         super().__init__(**kwargs)
+
+    def _estimate_time_bin_flux(self, datasets_to_fit, dataset_names):
+        fp = self.estimate_time_bin_flux(datasets=datasets_to_fit)
+
+        for name in ["counts", "npred", "npred_excess"]:
+            fp._data[name] = self.expand_map(
+                fp._data[name], dataset_names=dataset_names
+            )
+        return fp
 
     def run(self, datasets):
         """Run light curve extraction.
@@ -106,6 +120,7 @@ class LightCurveEstimator(FluxPointsEstimator):
 
         rows = []
         valid_intervals = []
+        dataset_names = datasets.names
         for t_min, t_max in progress_bar(gti.time_intervals, desc="Time intervals"):
             datasets_to_fit = datasets.select_time(
                 time_min=t_min, time_max=t_max, atol=self.atol
@@ -118,13 +133,23 @@ class LightCurveEstimator(FluxPointsEstimator):
                 continue
 
             valid_intervals.append([t_min, t_max])
-            fp = self.estimate_time_bin_flux(datasets=datasets_to_fit)
 
-            for name in ["counts", "npred", "npred_excess"]:
-                fp._data[name] = self.expand_map(
-                    fp._data[name], dataset_names=datasets.names
+            parallel_datasets = []
+            if self.n_jobs == 1:
+                fp = self._estimate_time_bin_flux(datasets_to_fit, dataset_names)
+                rows.append(fp)
+            else:
+                parallel_datasets.append(parallel_datasets)
+
+        if self.n_jobs > 1:
+            with Pool(processes=self.n_jobs) as pool:
+                rows = pool.starmap(
+                    self._estimate_time_bin_flux,
+                    zip(
+                        parallel_datasets,
+                        repeat(dataset_names),
+                    ),
                 )
-            rows.append(fp)
 
         if len(rows) == 0:
             raise ValueError("LightCurveEstimator: No datasets in time intervals")
