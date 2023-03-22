@@ -9,6 +9,7 @@ from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator, StatProfileScale
 from gammapy.utils.scripts import make_path
+from gammapy.utils.time import time_ref_from_dict, time_ref_to_dict
 from ..axes import MapAxes
 from ..core import Map
 from ..geom import pix_tuple_to_idx
@@ -516,6 +517,10 @@ class RegionNDMap(Map):
         if format in ["ogip", "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"]:
             hdulist.append(fits.BinTableHDU(table))
         elif format == "gadf":
+            if self.meta.setdefault("MJDREFI"):
+                t_ref = time_ref_from_dict(self.meta)
+                time_ref_dict = time_ref_to_dict(t_ref)
+                table.meta.update(time_ref_dict)
             table.meta.update(self.geom.axes.to_header())
             hdulist.append(fits.BinTableHDU(table, name=hdu))
         else:
