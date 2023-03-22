@@ -163,6 +163,11 @@ def test_data_store_from_events(data_store_dc1):
     data_store = DataStore.from_events_files([path])
     assert len(data_store.obs_table) == 1
     assert len(data_store.hdu_table) == 6
+    assert data_store.obs_table.meta["MJDREFI"] == 51544
+
+    path2 = "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_025511.fits.gz"
+    with pytest.raises(RuntimeError):
+        _ = DataStore.from_events_files([path, path2])
 
 
 @requires_data()
