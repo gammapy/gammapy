@@ -149,7 +149,7 @@ def test_piecewise_norm_spectral_model_io():
     norms = [1, 5, 3, 0.5] * u.Unit("")
 
     model = PiecewiseNormSpectralModel(energy=energy, norms=norms)
-    model.parameters[0].value = 2
+    model.parameters["norm_0"].value = 2
 
     model_dict = model.to_dict()
 
@@ -159,7 +159,7 @@ def test_piecewise_norm_spectral_model_io():
 
     new_model = PiecewiseNormSpectralModel.from_dict(model_dict)
 
-    assert_allclose(new_model.parameters[0].value, 2)
+    assert_allclose(new_model.parameters["norm_0"].value, 2)
     assert_allclose(new_model.energy, energy)
     assert_allclose(new_model.norms, [2, 5, 3, 0.5])
 
@@ -167,7 +167,7 @@ def test_piecewise_norm_spectral_model_io():
     bkg_dict = bkg.to_dict()
     new_bkg = FoVBackgroundModel.from_dict(bkg_dict)
 
-    assert_allclose(new_bkg.spectral_model.parameters[0].value, 2)
+    assert_allclose(new_bkg.spectral_model.parameters["norm_0"].value, 2)
     assert_allclose(new_bkg.spectral_model.energy, energy)
     assert_allclose(new_bkg.spectral_model.norms, [2, 5, 3, 0.5])
 
