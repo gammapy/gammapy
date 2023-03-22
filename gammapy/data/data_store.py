@@ -22,6 +22,7 @@ REQUIRED_IRFS = {
     "point-like": {"aeff", "edisp"},
     "all-optional": {},
 }
+TIME_KEYWORDS = ["MJDREFI", "MJDREFF", "TIMEUNIT", "TIMESYS", "TIMEREF"]
 
 
 class MissingRequiredHDU(IOError):
@@ -615,27 +616,51 @@ class DataStoreMaker:
             info["IRF_FILENAME"] = str(caldb_irf.file_path)
         else:
             info["IRF_FILENAME"] = info["EVENTS_FILENAME"]
+
+        # Mandatory fields defining the time data
+        for name in TIME_KEYWORDS:
+            info[name] = header.get(name, None)
+
         return info
+
+    def extract_time_info(self, row):
+        time_row = {}
+        for name in TIME_KEYWORDS:
+            time_row[name] = row[name]
+            del row[name]
+        return row, time_row
+
+    def check_time_info(self, rows):
+        if len(rows) <= 1:
+            return True
+
+        first_obs = rows[0]
+        for row in rows[1:]:
+            for name in TIME_KEYWORDS:
+                if first_obs[name] != row[name] or row[name] is None:
+                    return False
+        return True
 
     def make_obs_table(self):
         rows = []
+        time_rows = []
         for events_path, irf_path in zip(self.events_paths, self.irfs_paths):
             row = self.get_obs_info(events_path, irf_path)
+            row, time_row = self.extract_time_info(row)
             rows.append(row)
+            time_rows.append(time_row)
 
         names = list(rows[0].keys())
         table = ObservationTable(rows=rows, names=names)
 
-        # TODO: Values copied from one of the EVENTS headers
-        # TODO: check consistency for all EVENTS files and handle inconsistent case
-        # Transform times to first ref time? Or raise error for now?
         # Test by combining some HESS & CTA runs?
         m = table.meta
-        m["MJDREFI"] = 51544
-        m["MJDREFF"] = 5.0000000000e-01
-        m["TIMEUNIT"] = "s"
-        m["TIMESYS"] = "TT"
-        m["TIMEREF"] = "LOCAL"
+        if not self.check_time_info(time_rows):
+            raise RuntimeError(
+                "The time information in the EVENT header are not consistant between observation"
+            )
+        for name in TIME_KEYWORDS:
+            m[name] = time_rows[0][name]
 
         m["HDUCLASS"] = "GADF"
         m["HDUDOC"] = "https://github.com/open-gamma-ray-astro/gamma-astro-data-formats"
