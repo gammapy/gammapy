@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.interpolate import CubicSpline
+from scipy.stats import norm
 from astropy.visualization import make_lupton_rgb
 import matplotlib.pyplot as plt
 from gammapy.maps.axes import UNIT_STRING_FORMAT
@@ -178,3 +179,52 @@ def plot_theta_squared_table(table):
     ax1.errorbar(x, table["sqrt_ts"], xerr=xerr, linestyle="None")
     ax1.set_xlabel(f"Theta [{theta2_axis.unit.to_string(UNIT_STRING_FORMAT)}]")
     ax1.set_ylabel("Significance")
+
+
+def plot_distribution(nd_map, ax=None, fit=True, **kwargs):
+
+    data = nd_map.data
+    if data.ndim == 1:
+        data = np.reshape(
+            data,
+            (
+                1,
+                1,
+            )
+            + data.shape,
+        )
+    elif data.ndim == 2:
+        data = np.reshape(data, (1,) + data.shape)
+
+    n_plot = len(data)
+    cols = min(3, n_plot)
+    rows = 1 + (n_plot - 1) // cols
+
+    width = 12
+    figsize = (width, width * rows / cols)
+
+    fig, axes = plt.subplots(
+        nrows=rows,
+        ncols=cols,
+        figsize=figsize,
+    )
+
+    if not isinstance(axes, np.ndarray):
+        axes = np.array([axes])
+
+    for idx in range(rows * cols):
+
+        ax = axes.flat[idx]
+        d = data[idx]
+        ax.hist(d.flatten(), **kwargs)
+
+        if fit:
+            mu, std = norm.fit(d)
+            x = np.linspace(np.min(d), np.max(d), 100)
+            p = norm.pdf(x, mu, std)
+
+            ax.plot(x, p, lw=2, color="k", label=f"mu = {mu:.2f},\n std = {std:.2f}")
+
+        ax.legend()
+
+    return axes
