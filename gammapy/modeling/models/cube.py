@@ -4,6 +4,7 @@
 import numpy as np
 import astropy.units as u
 from astropy.nddata import NoOverlapError
+from astropy.time import Time
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Covariance, Parameters
 from gammapy.modeling.covariance import copy_covariance
@@ -92,30 +93,29 @@ class SkyModel(ModelBase):
             )
 
     def _check_unit(self):
-        from gammapy.data.gti import GTI
 
-        # evaluate over a test geom to check output unit
-        # TODO simpler way to test this ?
         axis = MapAxis.from_energy_bounds(
             "0.1 TeV", "10 TeV", nbin=1, name="energy_true"
         )
 
         geom = WcsGeom.create(skydir=self.position, npix=(2, 2), axes=[axis])
 
-        gti = GTI.create(1 * u.day, 2 * u.day)
-        value = self.evaluate_geom(geom, gti)
+        time = Time(55555, format="mjd")
 
-        if self.apply_irf["exposure"]:
-            ref_unit = u.Unit("cm-2 s-1 MeV-1 sr-1")
-        else:
-            ref_unit = u.Unit("sr-1")
+        ref_unit = u.Unit("cm-2 s-1 MeV-1")
 
-        if self.spatial_model is None:
-            ref_unit = ref_unit / u.Unit("sr-1")
+        obt_unit = self.spectral_model(axis.center).unit
 
-        if not value.unit.is_equivalent(ref_unit):
+        if self.spatial_model:
+            obt_unit = obt_unit * self.spatial_model.evaluate_geom(geom).unit
+            ref_unit = ref_unit / u.sr
+
+        if self.temporal_model:
+            obt_unit = obt_unit * u.Quantity(self.temporal_model(time)).unit
+
+        if not obt_unit.is_equivalent(ref_unit):
             raise ValueError(
-                f"SkyModel unit {value.unit} is not equivalent to {ref_unit}"
+                f"SkyModel unit {obt_unit} is not equivalent to {ref_unit}"
             )
 
     @property
