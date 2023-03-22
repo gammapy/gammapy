@@ -653,7 +653,6 @@ class DataStoreMaker:
         names = list(rows[0].keys())
         table = ObservationTable(rows=rows, names=names)
 
-        # Test by combining some HESS & CTA runs?
         m = table.meta
         if not self.check_time_info(time_rows):
             raise RuntimeError(
