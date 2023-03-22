@@ -143,6 +143,15 @@ def plot_spectrum_datasets_off_regions(
     handles, labels = [], []
 
     prop_cycle = kwargs.pop("prop_cycle", plt.rcParams["axes.prop_cycle"])
+    if len(datasets) > len(plt.rcParams["axes.prop_cycle"]):
+        import matplotlib.colors as colors
+        from cycler import cycler
+
+        c_map = plt.cm.get_cmap("hsv")
+        lcolors = [
+            colors.rgb2hex(c_map(xx)) for xx in np.linspace(0.0, 1.0, len(datasets))
+        ]
+        prop_cycle = cycler(color=lcolors)
 
     for props, dataset in zip(prop_cycle(), datasets):
         plot_kwargs = kwargs.copy()
