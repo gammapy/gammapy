@@ -47,6 +47,7 @@ dependencies:
   - pandas
   - reproject
   - sherpa
+  - ray
   # dev dependencies
   - black
   - codespell
