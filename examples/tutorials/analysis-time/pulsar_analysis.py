@@ -10,10 +10,13 @@ Introduction
 This notebook shows how to do a pulsar analysis with Gammapy. It is based
 on a Vela simulated run from the CTA DC1, which already contains a
 column for the pulsar phases. We will produce a phasogram, a phase-resolved map and
-a phase-resolved spectrum of the Vela pulsar. In order to produce these last two poducts, we will use the `PhaseBackgroundMaker`which takes into account the on and off phase to compute a `MapDatasetOnOff`and a `SpectrumDatasetOnOff`in the phase space.
+a phase-resolved spectrum of the Vela pulsar. In order to produce these last two poducts, we will use the
+`~PhaseBackgroundMaker` which takes into account the on and off phase to compute a
+`~MapDatasetOnOff` and a `~SpectrumDatasetOnOff` in the phase space.
  
 The phasing in itself is not done here, and it requires specific
-packages like Tempo2 or [PINT](https://nanograv-pint.readthedocs.io). A Gammapy recipe is available here (put link) to show how to compute phases with PINT in the framework of Gammapy.
+packages like Tempo2 or [PINT](https://nanograv-pint.readthedocs.io). A Gammapy recipe is available here (put link)
+to show how to compute phases with PINT in the framework of Gammapy.
 
 
 
