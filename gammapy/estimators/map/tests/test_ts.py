@@ -15,7 +15,7 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
 )
-from gammapy.utils.testing import requires_data
+from gammapy.utils.testing import requires_data, requires_dependency
 
 
 @pytest.fixture(scope="session")
@@ -137,6 +137,7 @@ def test_compute_ts_map(input_dataset):
 
 
 @requires_data()
+@requires_dependency("ray")
 def test_compute_ts_map_parallel(input_dataset):
     """Minimal test of compute_ts_image"""
     spatial_model = GaussianSpatialModel(sigma="0.1 deg")
