@@ -15,7 +15,7 @@ a phase-resolved spectrum of the Vela pulsar. In order to produce these last two
 `~MapDatasetOnOff` and a `~SpectrumDatasetOnOff` in the phase space.
  
 The phasing in itself is not done here, and it requires specific
-packages like Tempo2 or [PINT](https://nanograv-pint.readthedocs.io). A Gammapy recipe is available here (put link)
+packages like Tempo2 or [PINT](https://nanograv-pint.readthedocs.io). A Gammapy recipe will be available soon
 to show how to compute phases with PINT in the framework of Gammapy.
 
 
