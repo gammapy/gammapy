@@ -8,7 +8,6 @@ from astropy.table import Table
 from astropy.time import Time
 from regions import CircleSkyRegion
 from gammapy.data import (
-    GTI,
     DataStore,
     EventList,
     FixedPointingInfo,
@@ -68,6 +67,7 @@ def geom_config_hpx():
             "background": 27989.05,
             "binsz_irf": 0.5,
             "migra": None,
+            "livetime": 141120.002746,
         },
         {
             # Test single energy bin
@@ -79,6 +79,7 @@ def geom_config_hpx():
             "background": 30424.451,
             "binsz_irf": 0.5,
             "migra": None,
+            "livetime": 141120.002746,
         },
         {
             # Test single energy bin with exclusion mask
@@ -91,6 +92,7 @@ def geom_config_hpx():
             "background": 30424.451,
             "binsz_irf": 0.5,
             "migra": None,
+            "livetime": 141120.002746,
         },
         {
             # Test for different e_true and e_reco bins
@@ -105,6 +107,7 @@ def geom_config_hpx():
             "background_oversampling": 2,
             "binsz_irf": 0.5,
             "migra": None,
+            "livetime": 141120.002746,
         },
         {
             # Test for different e_true and e_reco and spatial bins
@@ -119,6 +122,7 @@ def geom_config_hpx():
             "background_oversampling": 2,
             "binsz_irf": 1.0,
             "migra": None,
+            "livetime": 141120.002746,
         },
         {
             # Test for different e_true and e_reco and use edispmap
@@ -135,6 +139,7 @@ def geom_config_hpx():
             "migra": MapAxis.from_edges(
                 np.linspace(0.0, 3.0, 100), name="migra", unit=""
             ),
+            "livetime": 141120.002746,
         },
     ],
 )
@@ -166,6 +171,9 @@ def test_map_maker(pars, observations):
     background = stacked.npred_background()
     assert background.unit == ""
     assert_allclose(background.data.sum(), pars["background"], rtol=1e-4)
+
+    assert stacked.livetime_map.unit == "s"
+    assert_allclose(stacked.livetime_map.data.sum(), pars["livetime"], rtol=1e-4)
 
     image_dataset = stacked.to_image()
 
@@ -323,7 +331,6 @@ def test_interpolate_map_dataset():
     # events and gti
     nr_ev = 10
     ev_t = Table()
-    gti_t = Table()
 
     ev_t["EVENT_ID"] = np.arange(nr_ev)
     ev_t["TIME"] = nr_ev * [Time("2011-01-01 00:00:00", scale="utc", format="iso")]
@@ -331,26 +338,22 @@ def test_interpolate_map_dataset():
     ev_t["DEC"] = np.linspace(-1, 1, nr_ev) * u.deg
     ev_t["ENERGY"] = np.logspace(0, 2, nr_ev) * u.TeV
 
-    gti_t["START"] = [Time("2010-12-31 00:00:00", scale="utc", format="iso")]
-    gti_t["STOP"] = [Time("2011-01-02 00:00:00", scale="utc", format="iso")]
+    irfs = {"aeff": aeff_map, "edisp": edispmap, "psf": psfMap, "bkg": bkg_map}
 
     events = EventList(ev_t)
-    gti = GTI(gti_t)
 
     # define observation
-    obs = Observation(
+    obs = Observation.create(
         obs_id=0,
-        gti=gti,
-        aeff=aeff_map,
-        edisp=edispmap,
-        psf=psfMap,
-        bkg=bkg_map,
-        events=events,
-        obs_filter=None,
+        tstart=0.0 * u.d,
+        tstop=2.0 * u.d,
+        reference_time=Time("2010-12-31 00:00:00"),
+        irfs=irfs,
         pointing=FixedPointingInfo(
             mode=PointingMode.POINTING, fixed_icrs=SkyCoord(0 * u.deg, 0 * u.deg)
         ),
     )
+    obs._events = events
 
     # define analysis geometry
     geom_target = WcsGeom.create(

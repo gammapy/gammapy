@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
+import numpy as np
 import astropy.units as u
 from astropy.table import Table
 from regions import PointSkyRegion
@@ -347,6 +348,7 @@ class MapDatasetMaker(Maker):
         row = {}
         row["TELESCOP"] = observation.aeff.meta.get("TELESCOP", "Unknown")
         row["OBS_ID"] = observation.obs_id
+        row["LIVETIME"] = observation.observation_live_time_duration
 
         row.update(observation.pointing.to_fits_header())
 
@@ -411,5 +413,10 @@ class MapDatasetMaker(Maker):
                 )
 
             kwargs["edisp"] = edisp
+
+        kwargs["livetime_map"] = (
+            kwargs["mask_safe"].reduce_over_axes(func=np.logical_or)
+            * observation.observation_live_time_duration
+        )
 
         return dataset.__class__(name=dataset.name, **kwargs)

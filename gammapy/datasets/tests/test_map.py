@@ -874,6 +874,7 @@ def test_stack(sky_model):
     mask1 = Map.from_geom(geom)
     mask1.data = np.ones(mask1.data.shape, dtype=bool)
     mask1.data[0][:][5:10] = False
+    lv1 = mask1.reduce_over_axes(func=np.logical_or) * (100 * u.s)
     dataset1 = MapDataset(
         counts=cnt1,
         background=bkg1,
@@ -883,6 +884,7 @@ def test_stack(sky_model):
         name="dataset-1",
         edisp=edisp,
         meta_table=Table({"OBS_ID": [0]}),
+        livetime_map=lv1,
     )
 
     bkg2 = Map.from_geom(geom)
@@ -898,6 +900,7 @@ def test_stack(sky_model):
     mask2.data = np.ones(mask2.data.shape, dtype=bool)
     mask2.data[0][:][5:10] = False
     mask2.data[1][:][10:15] = False
+    lv2 = mask2.reduce_over_axes(func=np.logical_or) * (50 * u.s)
 
     dataset2 = MapDataset(
         counts=cnt2,
@@ -908,6 +911,7 @@ def test_stack(sky_model):
         name="dataset-2",
         edisp=edisp,
         meta_table=Table({"OBS_ID": [1]}),
+        livetime_map=lv2,
     )
 
     background_model2 = FoVBackgroundModel(dataset_name="dataset-2")
@@ -930,6 +934,7 @@ def test_stack(sky_model):
     assert_allclose(stacked.mask_safe.data.sum(), 4600)
     assert_allclose(stacked.mask_fit.data.sum(), 4600)
     assert_allclose(stacked.exposure.data.sum(), 1.6e11)
+    assert_allclose(stacked.livetime_map.data.sum(), 240000.0)
 
     assert_allclose(stacked.meta_table["OBS_ID"][0], [0, 1])
 
