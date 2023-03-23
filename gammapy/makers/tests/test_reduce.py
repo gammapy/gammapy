@@ -18,6 +18,7 @@ from gammapy.makers import (
 )
 from gammapy.maps import MapAxis, RegionGeom, WcsGeom
 from gammapy.utils.testing import requires_data
+import gammapy.utils.parallel as parallel
 
 
 @pytest.fixture(scope="session")
@@ -138,23 +139,28 @@ def makers_spectrum(exclusion_mask):
             "stack_datasets": True,
             "cutout_width": None,
             "n_jobs": 1,
+            "backend": None
         },
         {
             "dataset": get_mapdataset(name="parallel"),
             "stack_datasets": False,
             "cutout_width": None,
             "n_jobs": 2,
+            "backend": "multiprocessing"
         },
         {
             "dataset": get_mapdataset(name="parallel_staking"),
             "stack_datasets": True,
             "cutout_width": None,
             "n_jobs": 2,
+            "backend": "ray"
         },
     ],
 )
 @requires_data()
 def test_datasets_maker_map(pars, observations_cta, makers_map):
+    if pars["backend"]:
+        parallel.MULTIPROCESSING_BACKEND = pars["backend"]
     makers = DatasetsMaker(
         makers_map,
         stack_datasets=pars["stack_datasets"],
