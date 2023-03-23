@@ -252,6 +252,10 @@ class PlotMixin:
 
 
 class SpectrumDataset(PlotMixin, MapDataset):
+    """
+    For more information see the :ref:`datasets`.
+    """
+
     stat_type = "cash"
     tag = "SpectrumDataset"
 
@@ -266,6 +270,10 @@ class SpectrumDataset(PlotMixin, MapDataset):
 
 
 class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
+    """
+    For more information see the :ref:`datasets`.
+    """
+
     stat_type = "wstat"
     tag = "SpectrumDatasetOnOff"
 

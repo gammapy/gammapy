@@ -18,6 +18,7 @@ __all__ = ["Dataset", "Datasets"]
 
 class Dataset(abc.ABC):
     """Dataset abstract base class.
+    For more information see the :ref:`datasets`.
 
     TODO: add tutorial how to create your own dataset types.
 
@@ -109,7 +110,7 @@ class Dataset(abc.ABC):
 
 
 class Datasets(collections.abc.MutableSequence):
-    """Dataset collection.
+    """Container class that holds a list of datasets.
 
     Parameters
     ----------

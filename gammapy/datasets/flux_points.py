@@ -18,6 +18,7 @@ __all__ = ["FluxPointsDataset"]
 class FluxPointsDataset(Dataset):
     """Bundle a set of flux points with a parametric model,
     to compute fit statistic function using chi2 statistics.
+    For more information see the :ref:`datasets`.
 
     Parameters
     ----------
