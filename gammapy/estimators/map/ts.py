@@ -3,7 +3,6 @@
 import functools
 import logging
 import warnings
-from multiprocessing import Pool
 import numpy as np
 import scipy.optimize
 from astropy.coordinates import Angle
@@ -14,6 +13,7 @@ from gammapy.maps import Map, Maps
 from gammapy.modeling.models import PointSpatialModel, PowerLawSpectralModel, SkyModel
 from gammapy.stats import cash_sum_cython, f_cash_root_cython, norm_bounds_cython
 from gammapy.utils.array import shape_2N, symmetric_crop_pad_width
+import gammapy.utils.parallel as parallel
 from gammapy.utils.pbar import progress_bar
 from gammapy.utils.roots import find_roots
 from ..core import Estimator
@@ -23,7 +23,6 @@ from .core import FluxMaps
 __all__ = ["TSMapEstimator"]
 
 log = logging.getLogger(__name__)
-
 
 def _extract_array(array, shape, position):
     """Helper function to extract parts of a larger array.
@@ -179,7 +178,9 @@ class TSMapEstimator(Estimator):
         self.n_sigma_ul = n_sigma_ul
         self.threshold = threshold
         self.rtol = rtol
-        self.n_jobs = n_jobs
+        
+
+        self._n_jobs = n_jobs
         self.sum_over_energy_groups = sum_over_energy_groups
 
         self.selection_optional = selection_optional
@@ -191,6 +192,17 @@ class TSMapEstimator(Estimator):
             selection_optional=selection_optional,
             ts_threshold=threshold,
         )
+        
+    @property
+    def n_jobs(self):
+        if self._n_jobs is None:
+           return parallel.N_PROCESSES
+        else:
+            return self._n_jobs
+        
+    @n_jobs.setter
+    def n_jobs(self, value):
+        self._n_jobs = value
 
     @property
     def selection_all(self):
@@ -424,10 +436,11 @@ class TSMapEstimator(Estimator):
         x, y = np.where(np.squeeze(maps["mask"].data))
         positions = list(zip(x, y))
 
-        if self.n_jobs is None:
+        if self.n_jobs == 1:
             results = list(map(wrap, positions))
         else:
-            with Pool(processes=self.n_jobs) as pool:
+            multiprocessing = parallel.get_multiprocessing()
+            with multiprocessing.Pool(processes=self.n_jobs) as pool:
                 log.info("Using {} jobs to compute TS map.".format(self.n_jobs))
                 results = pool.map(wrap, positions)
 

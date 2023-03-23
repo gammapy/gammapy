@@ -1,8 +1,8 @@
 import logging
-from multiprocessing import Pool
 import numpy as np
 from astropy.coordinates import Angle
 from gammapy.datasets import Datasets, MapDataset, MapDatasetOnOff, SpectrumDataset
+import gammapy.utils.parallel as parallel
 from .core import Maker
 from .safe import SafeMaskMaker
 
@@ -58,11 +58,22 @@ class DatasetsMaker(Maker):
                 self._apply_cutout = False
             else:
                 self.cutout_width = 2 * self.offset_max
-        self.n_jobs = n_jobs
+        self._n_jobs = n_jobs
         self.stack_datasets = stack_datasets
 
         self._datasets = []
         self._error = False
+
+    @property
+    def n_jobs(self):
+        if self._n_jobs is None:
+           return parallel.N_PROCESSES
+        else:
+            return self._n_jobs
+        
+    @n_jobs.setter
+    def n_jobs(self, value):
+        self._n_jobs = value
 
     @property
     def offset_max(self):
@@ -156,9 +167,10 @@ class DatasetsMaker(Maker):
         else:
             datasets = len(observations) * [dataset]
 
-        if self.n_jobs is not None and self.n_jobs > 1:
+        if self.n_jobs > 1:
             n_jobs = min(self.n_jobs, len(observations))
-            with Pool(processes=n_jobs) as pool:
+            multiprocessing = parallel.get_multiprocessing()
+            with multiprocessing.Pool(processes=n_jobs) as pool:
                 log.info("Using {} jobs.".format(n_jobs))
                 results = []
                 for base, obs in zip(datasets, observations):
