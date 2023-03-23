@@ -120,6 +120,7 @@ class LightCurveEstimator(FluxPointsEstimator):
 
         rows = []
         valid_intervals = []
+        parallel_datasets = []
         dataset_names = datasets.names
         for t_min, t_max in progress_bar(gti.time_intervals, desc="Time intervals"):
             datasets_to_fit = datasets.select_time(
@@ -134,12 +135,11 @@ class LightCurveEstimator(FluxPointsEstimator):
 
             valid_intervals.append([t_min, t_max])
 
-            parallel_datasets = []
             if self.n_jobs == 1:
                 fp = self._estimate_time_bin_flux(datasets_to_fit, dataset_names)
                 rows.append(fp)
             else:
-                parallel_datasets.append(parallel_datasets)
+                parallel_datasets.append(datasets_to_fit)
 
         if self.n_jobs > 1:
             with Pool(processes=self.n_jobs) as pool:
