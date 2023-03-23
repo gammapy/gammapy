@@ -293,6 +293,34 @@ def plot_npred_signal(
     plot_background=True,
     num_model_to_plot=5,
 ):
+    """
+    Plot the npred_signal of the models of a dataset.
+
+    Parameters
+    ----------
+    dataset : an instance of `~gammapy.datasets.dataset`
+        The dataset from which to plot the npred_signal
+    ax : `~matplotlib.axes.Axes`
+        Axis object to plot on.
+    model_name : list of str
+        The list of model for which the npres_signal is plotted. If set to None, it will take all the models
+        of th dataset and return the ones that contributes the most according to `num_model_to_plot``
+    sum_models : bool
+        Whether to sum the npred_signal of all the model.
+    region: `~regions.Region` or `~astropy.coordinates.SkyCoord`
+        Region.
+    plot_background : bool
+        Whether to plot the background along with the other models.
+    num_model_to_plot : int
+        The number of model to plot. Default is 5. If there are more models, only the ones that contributes the most
+        will be plotted.
+
+    Returns
+    -------
+
+    axes : `~matplotlib.axes.Axes`
+        Axis object
+    """
 
     if model_name is None:
         model_name = dataset.models.names
