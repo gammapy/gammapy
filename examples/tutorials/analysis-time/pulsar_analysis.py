@@ -111,7 +111,7 @@ display(phases[:10])
 # ---------
 #
 # Once we have the phases, we can make a phasogram. A phasogram is a
-# histogram of phases and it works exactly like any other histogram (you
+# histogram of phases. It works exactly like any other histogram (you
 # can set the binning, evaluate the errors based on the counts in each
 # bin, etc).
 
@@ -246,8 +246,7 @@ print(f"Significance: {pulse_stat.sqrt_ts}")
 # Now that we have an overview of the phasogram of the pulsar, we can do a phase-resolved sky map
 # : a map of the ON-phase events minus alpha times the OFF-phase events.
 # Alpha is the ratio between the size of the ON-phase zone (here 0.1) and
-# the OFF-phase zone (0.3). It’s a map of the excess events in phase,
-# which are the pulsed events.
+# the OFF-phase zone (0.3).
 
 e_true = MapAxis.from_energy_bounds(
     0.003, 10, 6, per_decade=True, unit="TeV", name="energy_true"
@@ -305,21 +304,9 @@ ax1.set_title("Counts")
 background.plot(ax=ax2, add_cbar=True)
 ax2.set_title("Background")
 
-######################################################################
-# We can also plot the excess map, which is the map of the counts minus the map of the background.
-# Here we show how this can be done by summing over all energy bins.
-# But this can also be done in each energy bins by not calling `~sum_over_axes()`
-# and calling `~plot_grid()` instead of `~plot()` in the following cell.
-
-excess_map = map_datasets[0].excess
-
-excess_map.sum_over_axes(axes_names=["energy"]).smooth(
-    kernel="gauss", width=0.1 * u.deg
-).plot(add_cbar=True)
-
 
 ######################################################################
-# Finally, we can run an `~gammapy.estimators.ExcessMapEstimator` .
+# Finally, we can run an `~gammapy.estimators.ExcessMapEstimator` to compute the excess and significance maps.
 
 excess_map_estimator = ExcessMapEstimator(
     correlation_radius="0.2 deg", energy_edges=[50 * u.GeV, 10 * u.TeV]
@@ -342,7 +329,6 @@ ax2.set_title("sqrt_ts")
 
 ######################################################################
 # Note that here we are lacking statistic because we only use one run of CTA.
-# This explain the "bad look" of our significance map.
 #
 # Phase-resolved spectrum
 # -----------------------
@@ -383,7 +369,7 @@ for obs in obs_list_vela:
 
 
 ######################################################################
-# Now let’s a look at the datasets we just created:
+# Now let’s take a look at the datasets we just created:
 
 spectrum_datasets[0].peek()
 
