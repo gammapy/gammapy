@@ -18,7 +18,8 @@ __all__ = ["Dataset", "Datasets"]
 
 class Dataset(abc.ABC):
     """Dataset abstract base class.
-    For more information see the :ref:`datasets`.
+
+    For more information see :ref:`datasets`.
 
     TODO: add tutorial how to create your own dataset types.
 
