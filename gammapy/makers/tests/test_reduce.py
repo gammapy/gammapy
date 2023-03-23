@@ -5,6 +5,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion, PointSkyRegion
+import gammapy.utils.parallel as parallel
 from gammapy.data import DataStore, Observation
 from gammapy.datasets import MapDataset, SpectrumDataset
 from gammapy.makers import (
@@ -18,7 +19,6 @@ from gammapy.makers import (
 )
 from gammapy.maps import MapAxis, RegionGeom, WcsGeom
 from gammapy.utils.testing import requires_data
-import gammapy.utils.parallel as parallel
 
 
 @pytest.fixture(scope="session")
@@ -139,21 +139,21 @@ def makers_spectrum(exclusion_mask):
             "stack_datasets": True,
             "cutout_width": None,
             "n_jobs": 1,
-            "backend": None
+            "backend": None,
         },
         {
             "dataset": get_mapdataset(name="parallel"),
             "stack_datasets": False,
             "cutout_width": None,
             "n_jobs": 2,
-            "backend": "multiprocessing"
+            "backend": "multiprocessing",
         },
         {
             "dataset": get_mapdataset(name="parallel_staking"),
             "stack_datasets": True,
             "cutout_width": None,
             "n_jobs": 2,
-            "backend": "ray"
+            "backend": "ray",
         },
     ],
 )

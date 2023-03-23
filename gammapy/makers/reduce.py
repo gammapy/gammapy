@@ -1,8 +1,8 @@
 import logging
 import numpy as np
 from astropy.coordinates import Angle
-from gammapy.datasets import Datasets, MapDataset, MapDatasetOnOff, SpectrumDataset
 import gammapy.utils.parallel as parallel
+from gammapy.datasets import Datasets, MapDataset, MapDatasetOnOff, SpectrumDataset
 from .core import Maker
 from .safe import SafeMaskMaker
 
@@ -67,10 +67,10 @@ class DatasetsMaker(Maker):
     @property
     def n_jobs(self):
         if self._n_jobs is None:
-           return parallel.N_PROCESSES
+            return parallel.N_PROCESSES
         else:
             return self._n_jobs
-        
+
     @n_jobs.setter
     def n_jobs(self, value):
         self._n_jobs = value
