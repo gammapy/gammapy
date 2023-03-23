@@ -9,6 +9,7 @@ __all__ = [
     "plot_map_rgb",
     "plot_spectrum_datasets_off_regions",
     "plot_theta_squared_table",
+    "plot_npred_signal",
 ]
 
 
@@ -281,3 +282,50 @@ def plot_theta_squared_table(table):
     ax1.errorbar(x, table["sqrt_ts"], xerr=xerr, linestyle="None")
     ax1.set_xlabel(f"Theta [{theta2_axis.unit.to_string(UNIT_STRING_FORMAT)}]")
     ax1.set_ylabel("Significance")
+
+
+def plot_npred_signal(
+    dataset,
+    ax=None,
+    model_name=None,
+    sum_models=False,
+    region=None,
+    plot_background=True,
+    num_model_to_plot=5,
+):
+
+    if model_name is None:
+        model_name = dataset.models.names
+
+    npred_array = []
+    for name in model_name:
+        npred = dataset.npred_signal(name).to_region_nd_map(region)
+        if np.any(npred):
+            npred_array.append(npred)
+
+    if sum_models:
+        npred_array = np.sum(npred_array, axis=0)
+        names = ["Sum of npred_signal"]
+    else:
+        if len(npred_array) < num_model_to_plot:
+            num_model_to_plot = len(npred_array)
+        sum_npred = np.sum(npred_array, axis=1)
+        names = [n for _, n in sorted(zip(sum_npred, model_name))][:num_model_to_plot]
+        npred_array = [n_a for _, n_a in sorted(zip(sum_npred, npred_array))][
+            :num_model_to_plot
+        ]
+
+    if ax is not None:
+        fig = plt.figure()
+        axes = fig.add_subplot(111)
+    else:
+        axes = ax
+
+    for (npred, name) in zip(npred_array, names):
+        npred.plot(ax=axes, label=name)
+    if plot_background:
+        dataset.npred_background().to_region_nd_map(region).plot(
+            ax=axes, label="background"
+        )
+
+    return axes

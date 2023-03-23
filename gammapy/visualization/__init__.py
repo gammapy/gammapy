@@ -4,6 +4,7 @@ from .panel import MapPanelPlotter
 from .utils import (
     plot_contour_line,
     plot_map_rgb,
+    plot_npred_signal,
     plot_spectrum_datasets_off_regions,
     plot_theta_squared_table,
 )
@@ -18,4 +19,5 @@ __all__ = [
     "plot_map_rgb",
     "plot_spectrum_datasets_off_regions",
     "plot_theta_squared_table",
+    "plot_npred_signal",
 ]
