@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Functions to compute TS images."""
-import functools
 import logging
 import warnings
+from itertools import repeat, starmap
 import numpy as np
 import scipy.optimize
 from astropy.coordinates import Angle
@@ -423,28 +423,27 @@ class TSMapEstimator(Estimator):
         """
         maps = self.estimate_fit_input_maps(dataset=dataset)
 
-        wrap = functools.partial(
-            _ts_value,
-            counts=maps["counts"].data.astype(float),
-            exposure=maps["exposure"].data.astype(float),
-            background=maps["background"].data.astype(float),
-            kernel=maps["kernel"].data,
-            norm=maps["norm"].data,
-            flux_estimator=self._flux_estimator,
-        )
-
         x, y = np.where(np.squeeze(maps["mask"].data))
         positions = list(zip(x, y))
 
+        inputs = zip(
+            positions,
+            repeat(maps["counts"].data.astype(float)),
+            repeat(maps["exposure"].data.astype(float)),
+            repeat(maps["background"].data.astype(float)),
+            repeat(maps["kernel"].data),
+            repeat(maps["norm"].data),
+            repeat(self._flux_estimator),
+        )
+
         if self.n_jobs == 1:
-            results = list(map(wrap, positions))
+            results = list(starmap(_ts_value, inputs))
         else:
-            multiprocessing = parallel.get_multiprocessing()
-            with multiprocessing.Pool(
-                processes=self.n_jobs, ray_address="auto"
-            ) as pool:
-                log.info("Using {} jobs to compute TS map.".format(self.n_jobs))
-                results = pool.map(wrap, positions)
+            log.info("Using {} jobs to compute TS map.".format(self.n_jobs))
+            n_tasks = len(positions)
+            results = parallel.run_starmap(
+                _ts_value, inputs, n_tasks, pool_kwargs=dict(processes=self.n_jobs)
+            )
 
         result = {}
 
