@@ -440,7 +440,9 @@ class TSMapEstimator(Estimator):
             results = list(map(wrap, positions))
         else:
             multiprocessing = parallel.get_multiprocessing()
-            with multiprocessing.Pool(processes=self.n_jobs) as pool:
+            with multiprocessing.Pool(
+                processes=self.n_jobs, ray_address="auto"
+            ) as pool:
                 log.info("Using {} jobs to compute TS map.".format(self.n_jobs))
                 results = pool.map(wrap, positions)
 
