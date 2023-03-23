@@ -440,9 +440,8 @@ class TSMapEstimator(Estimator):
             results = list(starmap(_ts_value, inputs))
         else:
             log.info("Using {} jobs to compute TS map.".format(self.n_jobs))
-            n_tasks = len(positions)
             results = parallel.run_starmap(
-                _ts_value, inputs, n_tasks, pool_kwargs=dict(processes=self.n_jobs)
+                _ts_value, inputs, pool_kwargs=dict(processes=self.n_jobs)
             )
 
         result = {}

@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Multiprocessing and multithreading setup"""
-import tqdm
+from gammapy.utils.pbar import progress_bar
 
 MULTIPROCESSING_BACKEND = "multiprocessing"
 N_PROCESSES = 1
@@ -22,9 +22,7 @@ def get_multiprocessing(backend=None):
         raise ValueError("Invalid multiprocessing backend")
 
 
-def run_starmap(
-    func, inputs, n_tasks, backend=None, pool_kwargs=None, starmap_kwargs=None
-):
+def run_starmap(func, inputs, backend=None, pool_kwargs=None, starmap_kwargs=None):
     multiprocessing = get_multiprocessing(backend)
     if starmap_kwargs is None:
         starmap_kwargs = {}
@@ -36,4 +34,4 @@ def run_starmap(
         pool_kwargs.setdefault("ray_adress", "auto")
 
     with multiprocessing.Pool(**pool_kwargs) as pool:
-        return pool.starmap(func, tqdm.tqdm(inputs, total=n_tasks), **starmap_kwargs)
+        return pool.starmap(func, progress_bar(inputs), **starmap_kwargs)
