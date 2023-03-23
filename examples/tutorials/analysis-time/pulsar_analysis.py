@@ -36,14 +36,14 @@ import matplotlib.pyplot as plt
 from IPython.display import display
 from gammapy.data import DataStore
 from gammapy.datasets import Datasets, FluxPointsDataset, MapDataset, SpectrumDataset
-from gammapy.estimators import ExcessMapEstimator, FluxPointsEstimator, TSMapEstimator
+from gammapy.estimators import ExcessMapEstimator, FluxPointsEstimator
 from gammapy.makers import (
     MapDatasetMaker,
     PhaseBackgroundMaker,
     SafeMaskMaker,
     SpectrumDatasetMaker,
 )
-from gammapy.maps import Map, MapAxis, RegionGeom, WcsGeom
+from gammapy.maps import MapAxis, RegionGeom, WcsGeom
 from gammapy.modeling import Fit
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from gammapy.stats import WStatCountsStatistic
