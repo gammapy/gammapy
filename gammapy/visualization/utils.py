@@ -1,14 +1,22 @@
+import inspect
 import numpy as np
+import scipy.stats
 from scipy.interpolate import CubicSpline
-from scipy.stats import norm
 from astropy.visualization import make_lupton_rgb
+import matplotlib
+import matplotlib.axes
 import matplotlib.pyplot as plt
+<<<<<<< HEAD
 from gammapy.maps.axes import UNIT_STRING_FORMAT
+=======
+from gammapy.maps import Map
+>>>>>>> e8f74054b (add plot_distribution function)
 
 __all__ = [
     "plot_contour_line",
     "plot_map_rgb",
     "plot_theta_squared_table",
+    "plot_distribution",
 ]
 
 
@@ -181,9 +189,49 @@ def plot_theta_squared_table(table):
     ax1.set_ylabel("Significance")
 
 
-def plot_distribution(nd_map, ax=None, fit=True, **kwargs):
+def plot_distribution(map_, ax=None, ncols=3, fit=True, fit_function="norm", **kwargs):
+    """
+    Plot the 1D distribution of data inside a map as a histogram. If the dimension of the map is smaller than 2,
+    a unique plot will be displayed. Otherwise, if the dimension is 3 or greater, a grid of plot will be displayed.
 
-    data = nd_map.data
+    Parameters
+    ----------
+    map_ : an instance of `~gammapy.maps.Map`
+        A map that contains data to be plotted.
+    ax : `~matplotlib.axes.Axes` or list of `~matplotlib.axes.Axes`
+        Axis object to plot on. If a list of Axis is provided it has to be the same length as the length of _map.data.
+    ncols : int
+        Number of columns to plot if a "plot grid" was to be done.
+    fit : bool
+        Whether to perform a fit of the distribution of data. If True, the fit is performed by `scipy.stats`.
+    fit_function : str
+        A string of a name of a scipy continuous distribution from `scipy.stats._continuous_distns`.
+    **kwargs : dict
+        Keyword arguments to pass to `matplotlib.pyplot.hist` and `matplotlib.axes.Axes`.
+
+    Returns
+    -------
+    fit_parameters : list of tuple
+        List of tuple of the fitted parameters corresponding to the chosen `fit_function`. If `fit` is set to False,
+        returns an empty list.
+    axes : `~numpy.ndarray` of `~matplotlib.pyplot.Axes`
+        Array of Axes.
+    """
+
+    if not isinstance(map_, Map):
+        raise TypeError(
+            f"map_ must be an instance of gammapy.maps.Map, given {type(map_)}"
+        )
+
+    hist_args = list(inspect.signature(plt.hist).parameters)
+    patches_args = list(inspect.signature(matplotlib.patches.Patch).parameters)
+    all_hist_args = np.unique(hist_args + patches_args)
+
+    hist_dict = {k: kwargs.pop(k) for k in dict(kwargs) if k in all_hist_args}
+
+    axes_dict = {k: kwargs.pop(k) for k in dict(kwargs) if k not in hist_args}
+
+    data = map_.data
     if data.ndim == 1:
         data = np.reshape(
             data,
@@ -196,35 +244,54 @@ def plot_distribution(nd_map, ax=None, fit=True, **kwargs):
     elif data.ndim == 2:
         data = np.reshape(data, (1,) + data.shape)
 
-    n_plot = len(data)
-    cols = min(3, n_plot)
-    rows = 1 + (n_plot - 1) // cols
+    if ax is None:
+        n_plot = len(data)
+        cols = min(ncols, n_plot)
+        rows = 1 + (n_plot - 1) // cols
 
-    width = 12
-    figsize = (width, width * rows / cols)
+        width = 12
+        figsize = (width, width * rows / cols)
 
-    fig, axes = plt.subplots(
-        nrows=rows,
-        ncols=cols,
-        figsize=figsize,
-    )
+        fig, axes = plt.subplots(
+            nrows=rows,
+            ncols=cols,
+            figsize=figsize,
+        )
+        cells_in_grid = rows * cols
+    else:
+        axes = ax
+        cells_in_grid = len(ax.flatten())
 
     if not isinstance(axes, np.ndarray):
         axes = np.array([axes])
 
-    for idx in range(rows * cols):
+    for idx in range(cells_in_grid):
 
-        ax = axes.flat[idx]
+        axe = axes.flat[idx]
+        if idx > len(data) - 1:
+            axe.set_visible(False)
+            continue
         d = data[idx]
-        ax.hist(d.flatten(), **kwargs)
+        axe.hist(d.flatten(), **hist_dict)
 
+        fit_parameters = []
         if fit:
-            mu, std = norm.fit(d)
+
+            function = getattr(scipy.stats._continuous_distns, fit_function)
+            param = function.fit(d)
+            fit_parameters.append(param)
             x = np.linspace(np.min(d), np.max(d), 100)
-            p = norm.pdf(x, mu, std)
+            y = function.pdf(x, *param)
 
-            ax.plot(x, p, lw=2, color="k", label=f"mu = {mu:.2f},\n std = {std:.2f}")
+            axe.plot(
+                x,
+                y,
+                lw=2,
+                color="k",
+                label=f"mu = {function.mean(*param):.2f},\n std = {function.std(*param):.2f}",
+            )
 
-        ax.legend()
+        axe.set(**axes_dict)
+        axe.legend()
 
-    return axes
+    return fit_parameters, axes
