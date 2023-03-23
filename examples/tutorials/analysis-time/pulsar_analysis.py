@@ -28,6 +28,7 @@ in the CTA 1DC dataset shipped with Gammapy.
 
 """
 
+
 # Remove warnings
 import warnings
 import numpy as np
@@ -283,7 +284,9 @@ for obs in obs_list_vela:
 
 
 ######################################################################
-# Once the data reduction is done, we can plot the map of the counts-ON (i.e. in the ON-phase) and the map of the background (i.e. the counts-OFF, selected in the OFF-phase, multiplied by alpha). If one wants to plot the counts-OFF instead, `background`should be replaced by `counts_off`in the following cell.
+# Once the data reduction is done, we can plot the map of the counts-ON (i.e. in the ON-phase)
+# and the map of the background (i.e. the counts-OFF, selected in the OFF-phase, multiplied by alpha).
+# If one wants to plot the counts-OFF instead, `~background` should be replaced by `~counts_off` in the following cell.
 
 counts = (
     map_datasets[0].counts.smooth(kernel="gauss", width=0.1 * u.deg).sum_over_axes()
@@ -303,7 +306,10 @@ background.plot(ax=ax2, add_cbar=True)
 ax2.set_title("Background")
 
 ######################################################################
-# We can also plot the excess map, which is the map of the counts minus the map of the background. Here we show how this can be done by summing over all energy bins. But this can also be done in each energy bins by not calling `sum_over_axes()`and calling `plot_grid()`instead of `plot()`in the following cell.
+# We can also plot the excess map, which is the map of the counts minus the map of the background.
+# Here we show how this can be done by summing over all energy bins.
+# But this can also be done in each energy bins by not calling `~sum_over_axes()`
+# and calling `~plot_grid()` instead of `~plot()` in the following cell.
 
 excess_map = map_datasets[0].excess
 
@@ -313,7 +319,7 @@ excess_map.sum_over_axes(axes_names=["energy"]).smooth(
 
 
 ######################################################################
-# Finally, we can run an `ExcessMapEstimator`.
+# Finally, we can run an `~gammapy.estimators.ExcessMapEstimator` .
 
 excess_map_estimator = ExcessMapEstimator(
     correlation_radius="0.2 deg", energy_edges=[50 * u.GeV, 10 * u.TeV]
@@ -335,14 +341,21 @@ ax2.set_title("sqrt_ts")
 
 
 ######################################################################
-# Note that here we are lacking statistic because we only use one run of CTA. This explain the "bad look" of our significance map.
+# Note that here we are lacking statistic because we only use one run of CTA.
+# This explain the "bad look" of our significance map.
 #
 # Phase-resolved spectrum
 # -----------------------
 #
-# We can also do a phase-resolved spectrum. In order to do that, we are going to use the `PhaseBackgroundMake` to create a `SpectrumDatasetOnOff`with the ON and OFF taken in the phase space. Note that this maker take the ON and OFF in the same spatial region.
+# We can also do a phase-resolved spectrum.
+# In order to do that, we are going to use the `~gammapy.makers.PhaseBackgroundMake` to create a
+# `~gammapy.makers.SpectrumDatasetOnOff` with the ON and OFF taken in the phase space.
+# Note that this maker take the ON and OFF in the same spatial region.
 #
-# Here to create the `SpectrumDatasetOnOff`, we are going to redo the whole data reduction. However, note that one can use the `to_spectrum_dataset()`method of `MapDatasetOnOff` (with the `containement_correction` parameter set to `True`) if such a `MapDatasetOnOff`has been created as shown above.
+# Here to create the `~gammapy.datasets.SpectrumDatasetOnOff`, we are going to redo the whole data reduction.
+# However, note that one can use the `to_spectrum_dataset()` method of `~gammapy.datasets.MapDatasetOnOff`
+# (with the `containement_correction` parameter set to True) if such a `~gammapy.datasets.MapDatasetOnOff`
+# has been created as shown above.
 
 e_true = MapAxis.from_energy_bounds(0.003, 10, 100, unit="TeV", name="energy_true")
 e_reco = MapAxis.from_energy_bounds(0.01, 10, 30, unit="TeV", name="energy")
@@ -376,7 +389,7 @@ spectrum_datasets[0].peek()
 
 
 ######################################################################
-# Now we’ll fit a model to the spectrum with the `Fit` class. First we
+# Now we’ll fit a model to the spectrum with the `~gammapy.modeling.Fit` class. First we
 # load a power law model with an initial value for the index and the
 # amplitude and then wo do a likelihood fit. The fit results are printed
 # below.
