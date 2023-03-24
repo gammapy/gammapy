@@ -4,10 +4,9 @@ import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord, SkyOffsetFrame
 from astropy.table import Table
-from regions import PointSkyRegion
 import gammapy
 from gammapy.data import EventList, observatory_locations
-from gammapy.maps import MapAxis, MapCoord, RegionGeom
+from gammapy.maps import MapAxis, MapCoord, TimeMapAxis
 from gammapy.modeling.models import ConstantTemporalModel, PointSpatialModel
 from gammapy.utils.random import get_random_state
 
@@ -57,7 +56,7 @@ class MapDatasetEventSampler:
 
     def _evaluate_timevar_source(self, dataset, evaluator, time_axis=None):
         """Calculate Npred for a given `dataset.model` by evaluating
-        it in region geometry.
+        it on a region geometry.
 
         Parameters
         ----------
@@ -70,21 +69,35 @@ class MapDatasetEventSampler:
 
         Returns
         -------
-        npred : `~gammapy.maps.Map`
+        npred : `~np.NDarray`
             Npred map.
         """
-        energy_axis = MapAxis.from_edges(
+        energy = MapAxis.from_edges(
             dataset.geoms["geom"].axes["energy"].edges, name="energy_true"
         )
-
         target = evaluator.model.spatial_model.position
-        on_region = PointSkyRegion(center=target)
-        region_geom = RegionGeom.create(on_region, axes=[energy_axis])
+        region_exposure = dataset.exposure.to_region_nd_map(target)
+        region_exposure = region_exposure.resample_axis(energy)
 
-        flux = evaluator.model.evaluate_geom(region_geom.to_wcs_geom(), gti=dataset.gti)
-        region_exposure = dataset.exposure.to_region_nd_map(region_geom.center_skydir)
+        if not time_axis:
+            tstart = dataset.gti.time_start
+            tstop = dataset.gti.time_stop
+            # how do we choose the number of bins?
+            time_axis = TimeMapAxis.from_time_bounds(
+                time_min=tstart, time_max=tstop, nbin=10
+            )
 
-        npred = flux * region_exposure * dataset.geoms["geom"].bin_volume()
+        flux = (
+            evaluator.model.temporal_model.evaluate(
+                time_axis.time_mid, energy=energy.center
+            )
+            * evaluator.model.spectral_model.parameters[0].unit
+        )
+
+        npred = (
+            (region_exposure.data[:, 0, 0, None] * dataset.exposure.unit * flux)
+            * np.diff(energy.edges)[:, None]
+        ).to("")
 
         return npred
 
