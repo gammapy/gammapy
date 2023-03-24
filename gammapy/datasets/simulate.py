@@ -7,7 +7,11 @@ from astropy.table import Table
 import gammapy
 from gammapy.data import EventList, observatory_locations
 from gammapy.maps import MapAxis, MapCoord, TimeMapAxis
-from gammapy.modeling.models import ConstantTemporalModel, PointSpatialModel
+from gammapy.modeling.models import (
+    ConstantSpectralModel,
+    ConstantTemporalModel,
+    PointSpatialModel,
+)
 from gammapy.utils.random import get_random_state
 
 __all__ = ["MapDatasetEventSampler"]
@@ -124,6 +128,10 @@ class MapDatasetEventSampler:
             )
 
         else:
+            if not isinstance(evaluator.model.spectral_model, ConstantSpectralModel):
+                raise TypeError(
+                    f"Event sampler expects ConstantSpectralModel for a time varying source. Got {evaluator.model.spectral_model} instead."
+                )
             raise NotImplementedError("The functionality is not yet implemented")
 
         return
@@ -192,9 +200,7 @@ class MapDatasetEventSampler:
             else:
                 temporal_model = evaluator.model.temporal_model
 
-            if (
-                temporal_model == "TemplateTemporalModel"
-            ):  # check the condition when the format model is defined
+            if temporal_model.is_energy_dependent is True:
                 table = self._sample_coord_time_energy(dataset, evaluator)
             else:
                 flux = evaluator.compute_flux()
