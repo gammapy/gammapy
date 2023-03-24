@@ -169,23 +169,17 @@ class DatasetsMaker(Maker):
 
         if self.n_jobs > 1:
             n_jobs = min(self.n_jobs, len(observations))
-            multiprocessing = parallel.get_multiprocessing()
-            with multiprocessing.Pool(processes=n_jobs) as pool:
-                log.info("Using {} jobs.".format(n_jobs))
-                results = []
-                for base, obs in zip(datasets, observations):
-                    result = pool.apply_async(
-                        self.make_dataset,
-                        (
-                            base,
-                            obs,
-                        ),
-                        callback=self.callback,
-                        error_callback=self.error_callback,
-                    )
-                    results.append(result)
-                # wait async run is done
-                [result.wait() for result in results]
+            log.info("Using {} jobs.".format(n_jobs))
+            parallel.run_multiprocessing(
+                self.make_dataset,
+                zip(datasets, observations),
+                pool_kwargs=dict(processes=self.n_jobs),
+                method="apply_async",
+                method_kwargs=dict(
+                    callback=self.callback,
+                    error_callback=self.error_callback,
+                ),
+            )
             if self._error:
                 raise RuntimeError("Execution of a sub-process failed")
         else:

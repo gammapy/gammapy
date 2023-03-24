@@ -22,11 +22,12 @@ def get_multiprocessing(backend=None):
         raise ValueError("Invalid multiprocessing backend")
 
 
-def run_starmap(func, inputs, backend=None, pool_kwargs=None, starmap_kwargs=None):
+def run_multiprocessing(
+    func, inputs, backend=None, pool_kwargs=None, method="starmap", method_kwargs=None
+):
     multiprocessing = get_multiprocessing(backend)
-    if starmap_kwargs is None:
-        starmap_kwargs = {}
-
+    if method_kwargs is None:
+        method_kwargs = {}
     if pool_kwargs is None:
         pool_kwargs = {}
     pool_kwargs.setdefault("processes", N_PROCESSES)
@@ -34,4 +35,13 @@ def run_starmap(func, inputs, backend=None, pool_kwargs=None, starmap_kwargs=Non
         pool_kwargs.setdefault("ray_adress", "auto")
 
     with multiprocessing.Pool(**pool_kwargs) as pool:
-        return pool.starmap(func, progress_bar(inputs), **starmap_kwargs)
+        if method == "starmap":
+            return pool.starmap(func, progress_bar(inputs), **method_kwargs)
+        elif method == "apply_async":
+            results = []
+            for arguments in progress_bar(inputs):
+                result = pool.apply_async(func, arguments, **method_kwargs)
+                results.append(result)
+            # wait async run is done
+            [result.wait() for result in results]
+            return results
