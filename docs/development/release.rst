@@ -116,4 +116,4 @@ Make a Bugfix release
 
 #. Follow the  `Astropy bug fix release instructions https://docs.astropy.org/en/latest/development/releasing.html#maintaining-bug-fix-releases`__.
 
-#. Follow the instructions for a major release for the modifications in the `gammapy-docs` and `gammapy-webpage` repo as well as the conda builds.
+#. Follow the instructions for a major release for the updates of CITATION.cff, the modifications in the `gammapy-docs` and `gammapy-webpage` repo as well as the conda builds.

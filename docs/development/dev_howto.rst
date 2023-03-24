@@ -341,10 +341,6 @@ log messages like this from any function or method:
 You should never log messages from the module level (i.e. on import) or configure the log
 level or format in Gammapy, that should be left to callers ... except from command line tools ...
 
-There is also the rare case of functions or classes with the main job to check
-and log things. For these you can optionally let the caller pass a logger when
-constructing the class to make it easier to configure the logging.
-See the `~gammapy.data.EventListDatasetChecker` as an example.
 
 Interpolation and extrapolation
 -------------------------------
