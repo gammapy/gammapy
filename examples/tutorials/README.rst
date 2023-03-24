@@ -6,6 +6,10 @@
 Tutorials
 =========
 
+**Notice :** it is
+advised to first read :ref:`package_structure` of the User Guide before using the
+tutorials.
+
 This page lists the Gammapy tutorials that are available as `Jupyter`_ notebooks.
 You can read them here, or execute them using a temporary cloud server in Binder.
 
