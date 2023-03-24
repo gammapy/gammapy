@@ -195,6 +195,61 @@ class ExcessMapEstimator(Estimator):
         result = self.estimate_excess_map(resampled_dataset)
         return result
 
+    def estimate_kernel(self, dataset):
+        """Get the convolution kernel for the input dataset.
+
+        Parameters
+        ----------
+        dataset : `~gammapy.datasets.MapDataset`
+            Input dataset.
+
+        Returns
+        -------
+        kernel : `~astropy.convolution.Tophat2DKernel`
+            Kernel
+        """
+        pixel_size = np.mean(np.abs(dataset.counts.geom.wcs.wcs.cdelt))
+        size = self.correlation_radius.deg / pixel_size
+        kernel = Tophat2DKernel(size)
+        return kernel
+
+    def get_mask(self, dataset):
+        """Get mask used by the estimator.
+
+        Parameters
+        ----------
+        dataset : `~gammapy.datasets.MapDataset`
+            Input dataset.
+
+        """
+        if dataset.mask_fit:
+            mask = dataset.mask
+        elif dataset.mask_safe:
+            mask = dataset.mask_safe
+        else:
+            mask = Map.from_geom(dataset.counts.geom, data=True, dtype=bool)
+        return mask
+
+    def estimate_reco_exposure(self, dataset, kernel, mask):
+        """Estimate reco exposure map for single dataset.
+
+        Parameters
+        ----------
+        dataset : `MapDataset`
+            Map dataset
+        """
+        if dataset.exposure:
+            reco_exposure = estimate_exposure_reco_energy(
+                dataset, self.spectral_model, normalize=False
+            )
+            with np.errstate(invalid="ignore", divide="ignore"):
+                reco_exposure = reco_exposure.convolve(kernel.array) / mask.convolve(
+                    kernel.array
+                )
+        else:
+            reco_exposure = 1
+        return reco_exposure
+
     def estimate_excess_map(self, dataset):
         """Estimate excess and ts maps for single dataset.
 
@@ -206,18 +261,11 @@ class ExcessMapEstimator(Estimator):
             Map dataset
         """
 
-        pixel_size = np.mean(np.abs(dataset.counts.geom.wcs.wcs.cdelt))
-        size = self.correlation_radius.deg / pixel_size
-        kernel = Tophat2DKernel(size)
+        kernel = self.estimate_excess_map(dataset)
 
         geom = dataset.counts.geom
 
-        if dataset.mask_fit:
-            mask = dataset.mask
-        elif dataset.mask_safe:
-            mask = dataset.mask_safe
-        else:
-            mask = Map.from_geom(geom, data=True, dtype=bool)
+        mask = self.get_mask(dataset)
 
         counts_stat = convolved_map_dataset_counts_statistics(
             dataset, kernel, mask, self.correlate_off
@@ -231,16 +279,7 @@ class ExcessMapEstimator(Estimator):
         maps["ts"] = Map.from_geom(geom, data=counts_stat.ts)
         maps["sqrt_ts"] = Map.from_geom(geom, data=counts_stat.sqrt_ts)
 
-        if dataset.exposure:
-            reco_exposure = estimate_exposure_reco_energy(
-                dataset, self.spectral_model, normalize=False
-            )
-            with np.errstate(invalid="ignore", divide="ignore"):
-                reco_exposure = reco_exposure.convolve(kernel.array) / mask.convolve(
-                    kernel.array
-                )
-        else:
-            reco_exposure = 1
+        reco_exposure = self.estimate_reco_exposure(dataset, kernel, mask)
 
         with np.errstate(invalid="ignore", divide="ignore"):
             maps["norm"] = maps["npred_excess"] / reco_exposure
