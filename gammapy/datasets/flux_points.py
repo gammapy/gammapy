@@ -19,6 +19,8 @@ class FluxPointsDataset(Dataset):
     """Bundle a set of flux points with a parametric model,
     to compute fit statistic function using chi2 statistics.
 
+    For more information see :ref:`datasets`.
+
     Parameters
     ----------
     models : `~gammapy.modeling.models.Models`
