@@ -7,7 +7,7 @@ Tutorials
 =========
 
 **Notice for people not familiar with the TeV analysis technics:** it is
-adviced to read first :ref:`package_structure` of the User Guide before using the
+advised to first read :ref:`package_structure` of the User Guide before using the
 tutorials.
 
 This page lists the Gammapy tutorials that are available as `Jupyter`_ notebooks.
