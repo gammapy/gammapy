@@ -277,7 +277,7 @@ class Observation:
         return (
             self.observation_time_duration
             * (1 - self.observation_dead_time_fraction)
-            * self.obs_filter.phase_range
+            * self.obs_filter.livetime_fraction
         )
 
     @property

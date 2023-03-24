@@ -47,7 +47,11 @@ class ObservationFilter:
     def __init__(self, time_filter=None, event_filters=None):
         self.time_filter = time_filter
         self.event_filters = event_filters or []
-        self.phase_range = self._check_filter_phase(event_filters)
+
+    @property
+    def livetime_fraction(self):
+        """Fraction of the livetime resulting from event_filters."""
+        return self._check_filter_phase(self.event_filters)
 
     def filter_events(self, events):
         """Apply filters to an event list.
