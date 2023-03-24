@@ -6,7 +6,7 @@
 Tutorials
 =========
 
-**Notice for people not familiar with the TeV analysis technics:** it is
+**Notice :** it is
 advised to first read :ref:`package_structure` of the User Guide before using the
 tutorials.
 
