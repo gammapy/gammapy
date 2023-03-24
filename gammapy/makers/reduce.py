@@ -179,6 +179,7 @@ class DatasetsMaker(Maker):
                     callback=self.callback,
                     error_callback=self.error_callback,
                 ),
+                task_name="Data reduction",
             )
             if self._error:
                 raise RuntimeError("Execution of a sub-process failed")

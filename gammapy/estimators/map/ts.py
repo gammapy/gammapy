@@ -1,8 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Functions to compute TS images."""
-import logging
 import warnings
-from itertools import repeat, starmap
+from itertools import repeat
 import numpy as np
 import scipy.optimize
 from astropy.coordinates import Angle
@@ -21,8 +20,6 @@ from ..utils import estimate_exposure_reco_energy
 from .core import FluxMaps
 
 __all__ = ["TSMapEstimator"]
-
-log = logging.getLogger(__name__)
 
 
 def _extract_array(array, shape, position):
@@ -436,13 +433,12 @@ class TSMapEstimator(Estimator):
             repeat(self._flux_estimator),
         )
 
-        if self.n_jobs == 1:
-            results = list(starmap(_ts_value, inputs))
-        else:
-            log.info("Using {} jobs to compute TS map.".format(self.n_jobs))
-            results = parallel.run_multiprocessing(
-                _ts_value, inputs, pool_kwargs=dict(processes=self.n_jobs)
-            )
+        results = parallel.run_multiprocessing(
+            _ts_value,
+            inputs,
+            pool_kwargs=dict(processes=self.n_jobs),
+            task_name="TS map",
+        )
 
         result = {}
 
