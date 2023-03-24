@@ -175,7 +175,7 @@ def contour_iminuit(parameters, function, x, y, numpoints, sigma, **kwargs):
     }
 
 
-# This code is a copied from https://github.com/scikit-hep/iminuit/blob/v2.21.0/src/iminuit/minimize.py#L124-L136
+# This code is copied from https://github.com/scikit-hep/iminuit/blob/v2.21.0/src/iminuit/minimize.py#L124-L136
 def _get_message(m, parameters):
     success = m.valid
     success &= np.all(np.isfinite([par.value for par in parameters]))
