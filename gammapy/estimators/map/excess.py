@@ -221,6 +221,10 @@ class ExcessMapEstimator(Estimator):
         dataset : `~gammapy.datasets.MapDataset`
             Input dataset.
 
+        Returns
+        -------
+        mask : `Map`
+            Mask map
         """
         if dataset.mask_fit:
             mask = dataset.mask
@@ -237,6 +241,15 @@ class ExcessMapEstimator(Estimator):
         ----------
         dataset : `MapDataset`
             Map dataset
+        kernel : `~astropy.convolution.Tophat2DKernel`
+            Kernel
+        mask : `Map`
+            Mask map
+
+        Returns
+        -------
+        reco_exposure : `Map`
+            Reconstructed exposure map
         """
         if dataset.exposure:
             reco_exposure = estimate_exposure_reco_energy(
