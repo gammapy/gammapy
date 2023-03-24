@@ -7,14 +7,16 @@ from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.io import fits
 from astropy.table import Table
 from astropy.time import Time
+from regions import PointSkyRegion
 from gammapy.data import GTI, DataStore, Observation
 from gammapy.data.pointing import FixedPointingInfo, PointingMode
 from gammapy.datasets import MapDataset, MapDatasetEventSampler
 from gammapy.datasets.tests.test_map import get_map_dataset
 from gammapy.irf import load_irf_dict_from_file
 from gammapy.makers import MapDatasetMaker
-from gammapy.maps import MapAxis, WcsGeom
+from gammapy.maps import MapAxis, RegionNDMap, WcsGeom
 from gammapy.modeling.models import (
+    ConstantSpectralModel,
     FoVBackgroundModel,
     GaussianSpatialModel,
     LightCurveTemplateTemporalModel,
@@ -123,6 +125,87 @@ def dataset():
     )
 
     return dataset
+
+
+@requires_data()
+def test_evaluate_timevar_source(dataset, models):
+    models[0].spatial_model = PointSpatialModel(
+        lon_0="0 deg", lat_0="0 deg", frame="galactic"
+    )
+    models[0].spectral_model = ConstantSpectralModel(amplitude="1 cm-2 s-1 TeV-1")
+
+    nbin = 10
+    energy_axis = MapAxis.from_energy_bounds(
+        energy_min=1 * u.TeV, energy_max=10 * u.TeV, nbin=nbin, name="energy"
+    )
+
+    time_min = np.arange(0, 1000, 10) * u.s
+    time_max = np.arange(10, 1010, 10) * u.s
+    edges = np.append(time_min, time_max[-1])
+    time_axis = MapAxis.from_edges(edges=edges, name="time", interp="log")
+
+    data = np.ones((nbin, len(time_min))) * 1e-12 * u.cm**-2 * u.s**-1 * u.TeV**-1
+    m = RegionNDMap.create(
+        region=PointSkyRegion(center=models[0].spatial_model.position),
+        axes=[energy_axis, time_axis],
+        data=np.array(data),
+    )
+    t_ref = Time(55555.5, format="mjd")
+    temporal_model = LightCurveTemplateTemporalModel(m, t_ref=t_ref)
+    models[0].temporal_model = temporal_model
+
+    dataset.models = models
+
+    evaluator = dataset.evaluators["test-source"]
+
+    sampler = MapDatasetEventSampler(random_state=0)
+    npred = sampler._evaluate_timevar_source(dataset, evaluator)
+
+    assert_allclose(
+        npred[0],
+        [
+            50.806123,
+            50.806123,
+            50.806123,
+            50.806123,
+            50.806123,
+            50.806123,
+            50.806123,
+            50.806123,
+            50.806123,
+            50.806123,
+        ],
+    )
+    assert_allclose(
+        npred[1],
+        [
+            225.97405,
+            225.97405,
+            225.97405,
+            225.97405,
+            225.97405,
+            225.97405,
+            225.97405,
+            225.97405,
+            225.97405,
+            225.97405,
+        ],
+    )
+    assert_allclose(
+        npred[2],
+        [
+            658.63078,
+            658.63078,
+            658.63078,
+            658.63078,
+            658.63078,
+            658.63078,
+            658.63078,
+            658.63078,
+            658.63078,
+            658.63078,
+        ],
+    )
 
 
 @requires_data()
