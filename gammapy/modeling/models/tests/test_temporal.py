@@ -53,8 +53,12 @@ def ph_curve(x, amplitude=0.5, x0=0.01):
 @requires_data()
 def test_light_curve_to_from_table(light_curve):
     table = light_curve.to_table()
-    lc1 = LightCurveTemplateTemporalModel.from_table((table))
+    assert_allclose(table.meta["MJDREFI"], 59000)
+    assert_allclose(table.meta["MJDREFF"], 0.5, rtol=1e-2)
+    assert table.meta["TIMESYS"] == "tt"
+    lc1 = LightCurveTemplateTemporalModel.from_table(table)
     assert lc1.map == light_curve.map
+    assert_allclose(lc1.tref_mjd.value, Time(59000.5, format="mjd").value, rtol=1e-2)
 
 
 @requires_data()
@@ -65,8 +69,18 @@ def test_light_curve_to_dict(light_curve):
     assert data["temporal"]["type"] == "LightCurveTemplateTemporalModel"
     assert data["temporal"]["parameters"][0]["name"] == "t_ref"
 
-    l1 = LightCurveTemplateTemporalModel.from_dict(data)
-    assert l1.map == light_curve.map
+    lc1 = LightCurveTemplateTemporalModel.from_dict(data)
+    assert lc1.map == light_curve.map
+    assert_allclose(lc1.tref_mjd.value, light_curve.tref_mjd.value, rtol=1e-3)
+
+
+@requires_data()
+def test_light_curve_map_serialisation(light_curve, tmp_path):
+    filename = str(make_path(tmp_path / "tmp.fits"))
+    light_curve.write(filename, format="map")
+    lc1 = LightCurveTemplateTemporalModel.read(filename, format="map")
+    assert_allclose(lc1.tref_mjd.value, light_curve.tref_mjd.value, rtol=1e-3)
+    assert lc1.map == light_curve.map
 
 
 def test_time_sampling_template():

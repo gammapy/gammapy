@@ -4,6 +4,7 @@ import logging
 import numpy as np
 import scipy.interpolate
 from astropy import units as u
+from astropy.io import fits
 from astropy.table import Table
 from astropy.time import Time
 from astropy.utils import lazyproperty
@@ -11,7 +12,7 @@ from gammapy.maps import MapAxis, RegionNDMap, TimeMapAxis
 from gammapy.modeling import Parameter
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.scripts import make_path
-from gammapy.utils.time import time_ref_from_dict
+from gammapy.utils.time import time_ref_from_dict, time_ref_to_dict
 from .core import ModelBase, _build_parameters_from_dict
 
 __all__ = [
@@ -495,6 +496,11 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
         return prnt
 
+    @property
+    def tref_mjd(self):
+        """Reference time in mjd"""
+        return Time(self.t_ref.value, format="mjd")
+
     @classmethod
     def from_table(cls, table, filename=None):
         """Create a template model from an astropy table
@@ -517,13 +523,15 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
         t_ref = time_ref_from_dict(table.meta)
         nodes = table["TIME"]
-        time_axis = MapAxis.from_nodes(
-            nodes=nodes, name="time", unit=table.meta["TIMEUNIT"]
-        )
+        if table["TIME"].unit:
+            ax_unit = table["TIME"].unit
+        elif table.meta["TIMEUNIT"]:
+            ax_unit = table.meta["TIMEUNIT"]
+        else:
+            raise ValueError("Time unit not found in the table")
+        time_axis = MapAxis.from_nodes(nodes=nodes, name="time", unit=ax_unit)
         axes = [time_axis]
-        m = RegionNDMap.create(
-            region=None, axes=axes, meta=table.meta, data=table["NORM"]
-        )
+        m = RegionNDMap.create(region=None, axes=axes, data=table["NORM"])
 
         return cls(m, t_ref=t_ref, filename=filename)
 
@@ -550,7 +558,8 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
         elif format == "map":
             m = RegionNDMap.read(filename)
-            t_ref = time_ref_from_dict(m.meta)
+            header = fits.getheader(filename, 0)
+            t_ref = time_ref_from_dict(header)
             return cls(m, t_ref=t_ref, filename=filename)
 
         else:
@@ -563,7 +572,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         table = Table(
             data=[self.map.geom.axes["time"].center, self.map.quantity],
             names=["TIME", "NORM"],
-            meta=self.map.meta,
+            meta=time_ref_to_dict(self.tref_mjd),
         )
         return table
 
@@ -587,7 +596,10 @@ class LightCurveTemplateTemporalModel(TemporalModel):
             table = self.to_table()
             table.write(filename, overwrite=overwrite)
         elif format == "map":
-            self.map.write(filename, overwrite=overwrite)
+            # RegionNDMap.from_hdulist does not update the header
+            hdulist = self.map.to_hdulist()
+            hdulist[0].header.update(time_ref_to_dict(self.tref_mjd))
+            hdulist.writeto(filename, overwrite=overwrite)
         else:
             raise ValueError("Not a valid format, choose from ['map', 'table']")
 
