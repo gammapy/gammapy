@@ -790,3 +790,31 @@ def test_single_valued_axis():
     theta_values = np.array([[0.5]]) * u.deg
     table = Table(data=[theta_values, theta_values], names=["THETA_LO", "THETA_HI"])
     _ = MapAxis.from_table(table, format="gadf-dl3", column_prefix="THETA")
+
+
+def test_label_map_axis_append():
+
+    label1 = LabelMapAxis(["aa", "bb"], name="letters")
+    label2 = LabelMapAxis(["cc", "dd"], name="letters")
+    label3 = LabelMapAxis(["ee", "ff"], name="other_letters")
+
+    label_append12 = label1.append(label2)
+
+    assert_equal(label_append12.center, np.array(["aa", "bb", "cc", "dd"], dtype="<U2"))
+    assert label_append12.name == "letters"
+    with pytest.raises(ValueError):
+        label2.append(label3)
+
+
+def test_label_map_axis_from_stack():
+
+    label1 = LabelMapAxis(["a", "b", "c"], name="letters")
+    label2 = LabelMapAxis(["d", "e"], name="letters")
+    label3 = LabelMapAxis(["f"], name="letters")
+
+    label_stack = LabelMapAxis.from_stack([label1, label2, label3])
+
+    assert_equal(
+        label_stack.center, np.array(["a", "b", "c", "d", "e", "f"], dtype="<U2")
+    )
+    assert label_stack.name == "letters"
