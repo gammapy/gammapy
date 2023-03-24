@@ -3147,3 +3147,50 @@ class LabelMapAxis:
             labels=self._labels[idx],
             name=self.name,
         )
+
+    @classmethod
+    def from_stack(cls, axes):
+        """Create a label map axis by merging a list of axis.
+
+        Parameter
+        ---------
+        axes : list of `LabelMapAxis`
+            A list of map axis to be merged.
+
+        Returns
+        -------
+        axis : `LabelMapAxis`
+            Merged axis.
+        """
+
+        axis_stacked = axes[0]
+
+        for ax in axes[1:]:
+            axis_stacked = axis_stacked.append(ax)
+
+        return axis_stacked
+
+    def append(self, axis):
+        """Append another label map axis to this label map axis.
+        Name and node_type must agree between the axes. labels must be unique.
+
+        Parameters
+        ----------
+        axis : `LabelMapAxis`
+            Axis to append.
+
+        Returns
+        -------
+        axis : `LabelMapAxis`
+            Appended axis
+        """
+        if self.node_type != axis.node_type:
+            raise ValueError(
+                f"Node type must agree, got {self.node_type} and {axis.node_type}"
+            )
+        if self.name != axis.name:
+            raise ValueError(f"Names must agree, got {self.name} and {axis.name} ")
+
+        merged_labels = np.append(self.center, axis.center)
+
+        return LabelMapAxis(merged_labels, self.name)
