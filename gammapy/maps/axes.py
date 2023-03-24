@@ -2355,7 +2355,6 @@ class TimeMapAxis:
             center = self.time_mid.datetime
         elif self.time_format == "mjd":
             center = self.time_mid.mjd * u.day
-
         return center
 
     def format_plot_xaxis(self, ax):

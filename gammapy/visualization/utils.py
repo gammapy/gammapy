@@ -87,7 +87,7 @@ def plot_spectrum_datasets_off_regions(
     for props, dataset in zip(prop_cycle(), datasets):
         plot_kwargs = kwargs.copy()
         plot_kwargs["facecolor"] = "None"
-        plot_kwargs.setdefault("edgecolor", props.pop("color"))
+        plot_kwargs.setdefault("edgecolor")
         plot_kwargs.update(props)
 
         dataset.counts_off.plot_region(ax, **plot_kwargs)

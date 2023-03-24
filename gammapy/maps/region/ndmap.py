@@ -118,7 +118,6 @@ class RegionNDMap(Map):
                     label=label,
                     **kwargs,
                 )
-
         axis.format_plot_xaxis(ax=ax)
 
         if "energy" in axis_name:
