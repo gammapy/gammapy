@@ -211,6 +211,7 @@ def test_evaluate_timevar_source(dataset, models):
 @requires_data()
 def test_sample_coord_time_energy(dataset, models):
     models[0].spatial_model = None
+    models[0].spectral_model = ConstantSpectralModel(amplitude="1 cm-2 s-1 TeV-1")
     dataset.models = models
     evaluator = dataset.evaluators["test-source"]
     sampler = MapDatasetEventSampler(random_state=0)

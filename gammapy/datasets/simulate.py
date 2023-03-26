@@ -4,9 +4,10 @@ import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord, SkyOffsetFrame
 from astropy.table import Table
+from regions import PointSkyRegion
 import gammapy
 from gammapy.data import EventList, observatory_locations
-from gammapy.maps import MapAxis, MapCoord, TimeMapAxis
+from gammapy.maps import MapAxis, MapCoord, RegionNDMap, TimeMapAxis
 from gammapy.modeling.models import (
     ConstantSpectralModel,
     ConstantTemporalModel,
@@ -73,7 +74,7 @@ class MapDatasetEventSampler:
 
         Returns
         -------
-        npred : `~np.NDarray`
+        npred : `~RegionNDMap`
             Npred map.
         """
         energy = MapAxis.from_edges(
@@ -98,10 +99,16 @@ class MapDatasetEventSampler:
             * evaluator.model.spectral_model.parameters[0].unit
         )
 
-        npred = (
+        pred = (
             (region_exposure.data[:, 0, 0, None] * dataset.exposure.unit * flux)
             * np.diff(energy.edges)[:, None]
         ).to("")
+
+        npred = RegionNDMap.create(
+            region=PointSkyRegion(center=target),
+            axes=[energy, time_axis],
+            data=np.array(pred),
+        )
 
         return npred
 
@@ -200,7 +207,8 @@ class MapDatasetEventSampler:
             else:
                 temporal_model = evaluator.model.temporal_model
 
-            if temporal_model.is_energy_dependent is True:
+            #            if hasattr(temporal_model, "is_energy_dependent"):
+            if temporal_model == "TemplateTemporalModel":
                 table = self._sample_coord_time_energy(dataset, evaluator)
             else:
                 flux = evaluator.compute_flux()
