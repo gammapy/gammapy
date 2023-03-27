@@ -60,6 +60,13 @@ def test_light_curve_to_from_table(light_curve):
     assert lc1.map == light_curve.map
     assert_allclose(lc1.tref_mjd.value, Time(59000.5, format="mjd").value, rtol=1e-2)
 
+    # test failing cases
+    table1 = table.copy()
+    table1["TIME"].unit = None
+    table.meta = None
+    with pytest.raises(ValueError, match="Time unit not found in the table"):
+        LightCurveTemplateTemporalModel.from_table(table1)
+
 
 @requires_data()
 def test_light_curve_to_dict(light_curve):
