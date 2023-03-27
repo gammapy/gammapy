@@ -499,7 +499,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
     @property
     def tref_mjd(self):
         """Reference time in mjd"""
-        return Time(self.t_ref.value, format="mjd")
+        return Time(self.t_ref.value, format="mjd", scale="utc")
 
     @classmethod
     def from_table(cls, table, filename=None):
@@ -521,7 +521,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         if "time" not in columns:
             raise ValueError("A TIME column is necessary")
 
-        t_ref = time_ref_from_dict(table.meta)
+        t_ref = time_ref_from_dict(table.meta, scale="utc")
         nodes = table["TIME"]
         if table["TIME"].unit:
             ax_unit = table["TIME"].unit
@@ -558,7 +558,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
         elif format == "map":
             m = RegionNDMap.read(filename)
-            header = fits.getheader(filename, 0)
+            header = fits.getheader(filename, "SKYMAP_BANDS")
             t_ref = time_ref_from_dict(header)
             return cls(m, t_ref=t_ref, filename=filename)
 
@@ -572,7 +572,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         table = Table(
             data=[self.map.geom.axes["time"].center, self.map.quantity],
             names=["TIME", "NORM"],
-            meta=time_ref_to_dict(self.tref_mjd),
+            meta=time_ref_to_dict(self.tref_mjd, scale="utc"),
         )
         return table
 
@@ -598,7 +598,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         elif format == "map":
             # RegionNDMap.from_hdulist does not update the header
             hdulist = self.map.to_hdulist()
-            hdulist[0].header.update(time_ref_to_dict(self.tref_mjd))
+            hdulist["SKYMAP_BANDS"].header.update(time_ref_to_dict(self.tref_mjd))
             hdulist.writeto(filename, overwrite=overwrite)
         else:
             raise ValueError("Not a valid format, choose from ['map', 'table']")
@@ -607,7 +607,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         """Evaluate the model at given coordinates."""
 
         if t_ref is None:
-            t_ref = Time(self.t_ref.value, format="mjd")
+            t_ref = Time(self.t_ref.value, format="mjd", scale="utc")
 
         t = (time - t_ref).to_value(self.map.geom.axes["time"].unit)
         coords = {"time": t}

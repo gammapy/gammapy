@@ -54,8 +54,8 @@ def ph_curve(x, amplitude=0.5, x0=0.01):
 def test_light_curve_to_from_table(light_curve):
     table = light_curve.to_table()
     assert_allclose(table.meta["MJDREFI"], 59000)
-    assert_allclose(table.meta["MJDREFF"], 0.5, rtol=1e-2)
-    assert table.meta["TIMESYS"] == "tt"
+    assert_allclose(table.meta["MJDREFF"], 0.5, rtol=1e-6)
+    assert table.meta["TIMESYS"] == "utc"
     lc1 = LightCurveTemplateTemporalModel.from_table(table)
     assert lc1.map == light_curve.map
     assert_allclose(lc1.tref_mjd.value, Time(59000.5, format="mjd").value, rtol=1e-2)
