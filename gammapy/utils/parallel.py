@@ -12,6 +12,8 @@ N_THREADS = 1
 
 
 def get_multiprocessing(backend=None):
+    """import multiprocessing module for a given backend"""
+
     if backend is None:
         backend = MULTIPROCESSING_BACKEND
     if backend == "multiprocessing":
@@ -35,6 +37,8 @@ def run_multiprocessing(
     method_kwargs=None,
     task_name="",
 ):
+    """Run function in a loop or in parralel"""
+
     if method not in ["starmap", "apply_async"]:
         raise ValueError("Invalid multiprocessing method")
 
@@ -51,25 +55,35 @@ def run_multiprocessing(
     log.info(f"Using {processes} processes to compute {task_name}")
 
     if processes == 1:
-        results = []
-        for arguments in progress_bar(inputs, desc=task_name):
-            output = func(*arguments)
-            if method == "apply_async" and "callback" in method_kwargs:
-                results.append(method_kwargs["callback"](output))
-            else:
-                results.append(output)
-        return results
+        return run_loop(func, inputs, method_kwargs, task_name)
     else:
         with multiprocessing.Pool(**pool_kwargs) as pool:
-            if method == "starmap":
-                return pool.starmap(
-                    func, progress_bar(inputs, desc=task_name), **method_kwargs
-                )
-            elif method == "apply_async":
-                results = []
-                for arguments in progress_bar(inputs, desc=task_name):
-                    result = pool.apply_async(func, arguments, **method_kwargs)
-                    results.append(result)
-                # wait async run is done
-                [result.wait() for result in results]
-                return results
+            return run_pool(pool, func, inputs, method, method_kwargs, task_name)
+
+
+def run_loop(func, inputs, method_kwargs=None, task_name=""):
+    """Loop over inputs an run function"""
+
+    results = []
+    for arguments in progress_bar(inputs, desc=task_name):
+        output = func(*arguments)
+        if "callback" in method_kwargs:
+            results.append(method_kwargs["callback"](output))
+        else:
+            results.append(output)
+    return results
+
+
+def run_pool(pool, func, inputs, method="starmap", method_kwargs=None, task_name=""):
+    """Run function in parralel"""
+
+    if method == "starmap":
+        return pool.starmap(func, progress_bar(inputs, desc=task_name), **method_kwargs)
+    elif method == "apply_async":
+        results = []
+        for arguments in progress_bar(inputs, desc=task_name):
+            result = pool.apply_async(func, arguments, **method_kwargs)
+            results.append(result)
+        # wait async run is done
+        [result.wait() for result in results]
+        return results
