@@ -3187,7 +3187,7 @@ class LabelMapAxis:
         """
         if not isinstance(axis, LabelMapAxis):
             raise TypeError(
-                f"axis must be an instance of {self.__name__}, got {axis.__name__}"
+                f"axis must be an instance of LabelMapAxis, got {axis.__class__.__name__} instead."
             )
 
         if self.name != axis.name:
