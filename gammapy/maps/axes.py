@@ -3172,7 +3172,8 @@ class LabelMapAxis:
 
     def append(self, axis):
         """Append another label map axis to this label map axis.
-        Name and node_type must agree between the axes. labels must be unique.
+
+        Names must agree between the axes. labels must be unique.
 
         Parameters
         ----------
@@ -3184,10 +3185,11 @@ class LabelMapAxis:
         axis : `LabelMapAxis`
             Appended axis
         """
-        if self.node_type != axis.node_type:
-            raise ValueError(
-                f"Node type must agree, got {self.node_type} and {axis.node_type}"
+        if not isinstance(axis, LabelMapAxis):
+            raise TypeError(
+                f"axis must be an instance of {self.__name__}, got {axis.__name__}"
             )
+
         if self.name != axis.name:
             raise ValueError(f"Names must agree, got {self.name} and {axis.name} ")
 
