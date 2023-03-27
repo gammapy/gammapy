@@ -46,8 +46,6 @@ class TestStatisticNested:
             fit.backend = "minuit"
             fit.optimize_opts = minuit_opts
         self.fit = fit
-        self.fit_results = None
-        self.fit_results_null = None
 
     @property
     def ts_threshold(self):
@@ -67,13 +65,18 @@ class TestStatisticNested:
 
         Returns
         -------
-        ts : float
-            Test Statistic against the null positive.
+        result : dict
+            Dict with the TS of the best fit value compared to the null hypothesis
+            and fit results for the two hypotheses. Entries are:
+
+                * "ts" : fit statistic difference with null hypothesis
+                * "fit_results" : results for the best fit
+                * "fit_results_null" : fit results for the null hypothesis
         """
 
         for p in self.parameters:
             p.frozen = False
-        self.fit_results = self.fit.run(datasets)
+        fit_results = self.fit.run(datasets)
         object_cache = [p.__dict__ for p in datasets.models.parameters]
         prev_pars = [p.value for p in datasets.models.parameters]
         stat = datasets.stat_sum()
@@ -84,7 +87,7 @@ class TestStatisticNested:
             else:
                 p.value = val
                 p.frozen = True
-        self.fit_results_null = self.fit.run(datasets)
+        fit_results_null = self.fit.run(datasets)
         stat_null = datasets.stat_sum()
 
         ts = stat_null - stat
@@ -95,4 +98,8 @@ class TestStatisticNested:
             for kp, p in enumerate(datasets.models.parameters):
                 p.__dict__ = object_cache[kp]
                 p.value = prev_pars[kp]
-        return ts
+        return dict(
+            ts=ts,
+            fit_results=fit_results,
+            fit_results_null=fit_results_null,
+        )
