@@ -371,6 +371,7 @@ plt.show()
 
 # The important thing to note here is that while this samples the on-counts, the off counts are
 # not sampled. If you have multiple measurements of the off counts, they should be used.
+# Alternatively, you can try to create a parametric model of the background.
 
 result = fit.run(datasets=[dataset_simulated])
 print(result.models.to_parameters_table())
