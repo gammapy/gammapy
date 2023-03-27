@@ -184,10 +184,12 @@ class EffectiveAreaTable2D(IRF):
             Size of the figure.
 
         """
-        fig, axes = plt.subplots(nrows=1, ncols=3, figsize=figsize)
-        self.plot(ax=axes[2])
+        ncols = 2 if self.is_pointlike else 3
+        fig, axes = plt.subplots(nrows=1, ncols=ncols, figsize=figsize)
+        self.plot(ax=axes[ncols - 1])
         self.plot_energy_dependence(ax=axes[0])
-        self.plot_offset_dependence(ax=axes[1])
+        if self.is_pointlike is False:
+            self.plot_offset_dependence(ax=axes[1])
         plt.tight_layout()
 
     @classmethod
