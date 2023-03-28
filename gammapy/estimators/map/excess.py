@@ -274,7 +274,7 @@ class ExcessMapEstimator(Estimator):
             Map dataset
         """
 
-        kernel = self.estimate_excess_map(dataset)
+        kernel = self.estimate_kernel(dataset)
 
         geom = dataset.counts.geom
 
