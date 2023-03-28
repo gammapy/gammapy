@@ -235,7 +235,8 @@ class ExcessMapEstimator(Estimator):
         return mask
 
     def estimate_reco_exposure(self, dataset, kernel, mask):
-        """Estimate reco exposure map for single dataset.
+        """Estimate exposure map in reconstructed energy for a single dataset
+           assuming the given spectral_model shape.
 
         Parameters
         ----------
@@ -264,7 +265,7 @@ class ExcessMapEstimator(Estimator):
         return reco_exposure
 
     def estimate_excess_map(self, dataset):
-        """Estimate excess and ts maps for single dataset.
+        """Estimate excess and ts maps for a single dataset.
 
         If exposure is defined, a flux map is also computed.
 
