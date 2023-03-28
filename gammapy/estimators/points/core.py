@@ -3,11 +3,13 @@ import logging
 from copy import deepcopy
 import numpy as np
 from scipy import stats
+from astropy.io import fits
 from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
 from astropy.time import Time
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
+from gammapy.data import GTI
 from gammapy.maps import MapAxis, Maps, RegionNDMap, TimeMapAxis
 from gammapy.maps.axes import flat_if_equal
 from gammapy.modeling.models import TemplateSpectralModel
@@ -139,14 +141,20 @@ class FluxPoints(FluxMaps):
             kwargs.setdefault("format", "ascii.ecsv")
             table = Table.read(filename, **kwargs)
 
+        try:
+            gti = GTI.read(filename)
+        except TypeError:
+            gti = None
+
         return cls.from_table(
             table=table,
             sed_type=sed_type,
             reference_model=reference_model,
             format=format,
+            gti=gti,
         )
 
-    def write(self, filename, sed_type=None, format="gadf-sed", **kwargs):
+    def write(self, filename, sed_type=None, format="gadf-sed", overwrite=False):
         """Write flux points.
 
         Parameters
@@ -168,15 +176,21 @@ class FluxPoints(FluxMaps):
             * "profile": Gammapy internal format to store energy dependent
                 flux profiles. Basically a generalisation of the "gadf" format, but
                 currently there is no detailed documentation available.
-        **kwargs : dict
-            Keyword arguments passed to `astropy.table.Table.write`.
+        overwrite : bool
+            Overwrite existing file`.
         """
         if sed_type is None:
             sed_type = self.sed_type_init
 
         filename = make_path(filename)
+        primary_hdu = fits.PrimaryHDU()
         table = self.to_table(sed_type=sed_type, format=format)
-        table.write(filename, **kwargs)
+        hdu_evt = fits.BinTableHDU(table, name="FLUXPOINT")
+        hdu_all = fits.HDUList([primary_hdu, hdu_evt])
+        if self.gti:
+            hdu_all.append(self.gti.to_table_hdu())
+
+        hdu_all.writeto(filename, overwrite=overwrite)
 
     @staticmethod
     def _convert_loglike_columns(table):
