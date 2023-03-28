@@ -293,11 +293,11 @@ def test_observation_read():
 
     energy = Quantity(1, "TeV")
     offset = Quantity(0.5, "deg")
-    val = obs.aeff.evaluate(energy_true=energy, offset=offset)
 
     assert obs.obs_id == 20136
     assert len(obs.events.energy) == 11243
     assert obs.available_hdus == ["events", "gti", "aeff", "edisp", "psf", "bkg"]
+    val = obs.aeff.evaluate(energy_true=energy, offset=offset)
     assert_allclose(val.value, 278000.54120855, rtol=1e-5)
     assert val.unit == "m2"
 

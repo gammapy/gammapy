@@ -19,7 +19,7 @@ from gammapy.utils.fits import LazyFitsData, earth_location_to_dict
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_to_dict, time_relative_to_ref
-from .event_list import EventList, EventListChecker
+from .event_list import EventListChecker
 from .filters import ObservationFilter
 from .gti import GTI
 from .pointing import FixedPointingInfo
@@ -479,7 +479,9 @@ class Observation:
         return obs
 
     @classmethod
-    def read(cls, event_file, irf_file=None):
+    def read(
+        cls, event_file, irf_file=None, skip_missing=False, required_irf="all-optional"
+    ):
         """Create an Observation from a Event List and an (optional) IRF file.
 
         Parameters
@@ -495,24 +497,16 @@ class Observation:
         observation : `~gammapy.data.Observation`
             observation with the events and the irf read from the file
         """
-        from gammapy.irf.io import load_irf_dict_from_file
+        from gammapy.data.data_store import DataStoreMaker
 
-        events = EventList.read(event_file)
+        if irf_file:
+            irf_file = [irf_file]
+        data_store = DataStoreMaker([event_file], irfs_paths=irf_file).run()
 
-        gti = GTI.read(event_file)
-
-        irf_file = irf_file if irf_file is not None else event_file
-        irf_dict = load_irf_dict_from_file(irf_file)
-
-        obs_info = events.table.meta
-        return cls(
-            events=events,
-            gti=gti,
-            obs_info=obs_info,
-            obs_id=obs_info.get("OBS_ID"),
-            pointing=FixedPointingInfo.from_fits_header(obs_info),
-            **irf_dict,
-        )
+        obs = data_store.get_observations(
+            skip_missing=skip_missing, required_irf=required_irf
+        )[0]
+        return obs
 
     def write(self, path, overwrite=False, format="gadf", include_irfs=True):
         """
