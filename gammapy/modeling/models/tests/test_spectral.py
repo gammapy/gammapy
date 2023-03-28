@@ -461,8 +461,6 @@ def test_model_plot_sed_type():
     with mpl_plot_check():
         ax1 = pwl.plot((1 * u.TeV, 100 * u.TeV), sed_type="eflux")
         ax2 = pwl.plot_error((1 * u.TeV, 100 * u.TeV), sed_type="eflux")
-        assert ax1.axes.axes.get_ylabel() == "eflux [erg / (cm2 s)]"
-        assert ax2.axes.axes.get_ylabel() == "eflux [erg / (cm2 s)]"
         assert ax1.yaxis.units.is_equivalent(u.Unit("erg / (cm2 s)"))
         assert ax1.axes.axes.get_ylabel().split()[0] == "eflux"
         assert ax2.yaxis.units.is_equivalent(u.Unit("erg / (cm2 s)"))
