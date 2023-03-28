@@ -176,7 +176,7 @@ ax.plot(
 
 ax.loglog()
 ax.set_xlabel(f"Energy [{t['energy'].unit}]")
-ax.set_ylabel(f"Sensitivity [{t['e2dnde'].unit}]")
+ax.set_ylabel(f"Sensitivity [{t['e2dnde'].unit.to_string('latex_inline')}]")
 ax.legend()
 
 
