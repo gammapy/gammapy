@@ -7,6 +7,7 @@ from astropy.io import fits
 from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
 from astropy.time import Time
+from astropy.utils.exceptions import AstropyDeprecationWarning
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from gammapy.data import GTI
@@ -143,7 +144,7 @@ class FluxPoints(FluxMaps):
 
         try:
             gti = GTI.read(filename)
-        except TypeError:
+        except (TypeError, AstropyDeprecationWarning):
             gti = None
 
         return cls.from_table(

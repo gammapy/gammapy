@@ -4,8 +4,10 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.table import Table
+from astropy.time import Time
 import matplotlib.pyplot as plt
 from gammapy.catalog.fermi import SourceCatalog3FGL, SourceCatalog4FGL
+from gammapy.data import GTI
 from gammapy.estimators import FluxPoints
 from gammapy.estimators.map.core import DEFAULT_UNIT
 from gammapy.modeling.models import PowerLawSpectralModel, SpectralModel
@@ -195,10 +197,16 @@ class TestFluxPoints:
         assert_quantity_allclose(actual.sum(), desired)
 
     def test_write_fits(self, tmp_path, flux_points):
+        start = u.Quantity([1, 2], "min")
+        stop = u.Quantity([1.5, 2.5], "min")
+        time_ref = Time("2010-01-01 00:00:00.0")
+        gti = GTI.create(start, stop, time_ref)
+        flux_points.gti = gti
         flux_points.write(tmp_path / "tmp.fits", sed_type=flux_points.sed_type_init)
         actual = FluxPoints.read(tmp_path / "tmp.fits")
         actual._data.pop("is_ul", None)
         flux_points._data.pop("is_ul", None)
+        assert actual.gti.time_start[0] == gti.time_start[0]
         assert str(flux_points) == str(actual)
 
     def test_write_ecsv(self, tmp_path, flux_points):
