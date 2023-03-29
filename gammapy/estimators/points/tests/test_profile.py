@@ -172,6 +172,7 @@ def test_serialisation(tmpdir):
     assert_allclose(result.norm_err, profile.norm_err, rtol=1e-4)
     assert_allclose(result.npred, profile.npred)
     assert_allclose(result.ts, profile.ts)
+    assert_allclose(profile.gti.time_start[0].mjd, 55197.000766, rtol=1e-5)
 
     assert np.all(result.is_ul == profile.is_ul)
 

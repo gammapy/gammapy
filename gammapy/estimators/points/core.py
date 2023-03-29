@@ -7,7 +7,6 @@ from astropy.io import fits
 from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
 from astropy.time import Time
-from astropy.utils.exceptions import AstropyDeprecationWarning
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from gammapy.data import GTI
@@ -135,17 +134,20 @@ class FluxPoints(FluxMaps):
             Flux points
         """
         filename = make_path(filename)
-
+        gti = None
+        kwargs.setdefault("format", "ascii.ecsv")
         try:
             table = Table.read(filename, **kwargs)
-        except IORegistryError:
-            kwargs.setdefault("format", "ascii.ecsv")
-            table = Table.read(filename, **kwargs)
-
-        try:
-            gti = GTI.read(filename)
-        except (TypeError, AstropyDeprecationWarning):
-            gti = None
+        except (IORegistryError, UnicodeDecodeError):
+            with fits.open(filename) as hdulist:
+                hdu_names = [_.name for _ in hdulist]
+                if "FLUXPOINTS" in hdu_names:
+                    fp = hdulist["FLUXPOINTS"]
+                else:
+                    fp = hdulist[""]  # to handle older files
+                table = Table.read(fp)
+                if "GTI" in hdu_names:
+                    gti = GTI.read(filename)
 
         return cls.from_table(
             table=table,
@@ -180,13 +182,18 @@ class FluxPoints(FluxMaps):
         overwrite : bool
             Overwrite existing file`.
         """
+        filename = make_path(filename)
         if sed_type is None:
             sed_type = self.sed_type_init
-
-        filename = make_path(filename)
-        primary_hdu = fits.PrimaryHDU()
         table = self.to_table(sed_type=sed_type, format=format)
-        hdu_evt = fits.BinTableHDU(table, name="FLUXPOINT")
+
+        # TODO: rather ugly - better method?
+        if str(filename).split(".")[-1] != "fits":
+            table.write(filename)
+            return
+
+        primary_hdu = fits.PrimaryHDU()
+        hdu_evt = fits.BinTableHDU(table, name="FLUXPOINTS")
         hdu_all = fits.HDUList([primary_hdu, hdu_evt])
         if self.gti:
             hdu_all.append(self.gti.to_table_hdu())

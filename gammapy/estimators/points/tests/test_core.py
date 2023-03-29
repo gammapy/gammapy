@@ -211,7 +211,9 @@ class TestFluxPoints:
 
     def test_write_ecsv(self, tmp_path, flux_points):
         flux_points.write(
-            tmp_path / "flux_points.ecsv", sed_type=flux_points.sed_type_init
+            tmp_path / "flux_points.ecsv",
+            sed_type=flux_points.sed_type_init,
+            overwrite=True,
         )
         actual = FluxPoints.read(tmp_path / "flux_points.ecsv")
         actual._data.pop("is_ul", None)
