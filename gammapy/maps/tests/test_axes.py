@@ -822,8 +822,6 @@ def test_label_map_axis_squash():
 
     label = LabelMapAxis(["a", "b", "c"], name="Letters")
     squash_label = label.squash()
-    squash_label_2 = label.squash(label=["my_label"])
 
     assert squash_label.nbin == 1
     assert_equal(squash_label.center, np.array(["a...c"]))
-    assert_equal(squash_label_2.center, np.array(["my_label"]))

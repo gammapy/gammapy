@@ -3196,20 +3196,16 @@ class LabelMapAxis:
 
         return LabelMapAxis(merged_labels, self.name)
 
-    def squash(self, label=[""]):
+    def squash(self):
         """Create a new axis object by squashing the axis into one bin.
 
-        Parameters
-        ----------
-        label : list of str
-            The label of the new axis. If label is not given, the label will be set to "first_label...last_label"
-            of the axis.
+        The label of the new axis is given as "first-label...last-label".
 
         Returns
         -------
         axis : `~MapAxis`
             Sliced axis object.
         """
-        if label == [""]:
-            label = [self.center[0] + "..." + self.center[-1]]
-        return LabelMapAxis(labels=label, name=self._name)
+        return LabelMapAxis(
+            labels=[self.center[0] + "..." + self.center[-1]], name=self._name
+        )
