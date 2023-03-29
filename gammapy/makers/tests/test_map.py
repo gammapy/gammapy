@@ -172,8 +172,9 @@ def test_map_maker(pars, observations):
     assert background.unit == ""
     assert_allclose(background.data.sum(), pars["background"], rtol=1e-4)
 
-    assert stacked.livetime_map.unit == "s"
-    assert_allclose(stacked.livetime_map.data.sum(), pars["livetime"], rtol=1e-4)
+    assert_allclose(
+        stacked._livetime_map.quantity.sum(), pars["livetime"] * u.s, rtol=1e-4
+    )
 
     image_dataset = stacked.to_image()
 

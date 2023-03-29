@@ -414,7 +414,7 @@ class MapDatasetMaker(Maker):
 
             kwargs["edisp"] = edisp
 
-        kwargs["livetime_map"] = (
+        kwargs["_livetime_map"] = (
             kwargs["mask_safe"].reduce_over_axes(func=np.logical_or)
             * observation.observation_live_time_duration
         )

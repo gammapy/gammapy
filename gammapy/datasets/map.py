@@ -208,7 +208,7 @@ class MapDataset(Dataset):
         gti=None,
         meta_table=None,
         name=None,
-        livetime_map=None,
+        _livetime_map=None,
     ):
         self._name = make_name(name)
         self._evaluators = {}
@@ -239,7 +239,7 @@ class MapDataset(Dataset):
         self.gti = gti
         self.models = models
         self.meta_table = meta_table
-        self.livetime_map = livetime_map
+        self._livetime_map = _livetime_map
 
     # TODO: keep or remove?
     @property
@@ -579,9 +579,7 @@ class MapDataset(Dataset):
             "gti", GTI.create([] * u.s, [] * u.s, reference_time=reference_time)
         )
         kwargs["mask_safe"] = Map.from_geom(geom, unit="", dtype=bool)
-        kwargs["livetime_map"] = kwargs["mask_safe"].reduce_over_axes(
-            func=np.logical_or
-        ) * (0.0 * u.s)
+        kwargs["_livetime_map"] = Map.from_geom(geom.to_image(), unit="s")
         return cls(**kwargs)
 
     @classmethod
@@ -823,8 +821,8 @@ class MapDataset(Dataset):
         elif other.meta_table:
             self.meta_table = other.meta_table.copy()
 
-        if self.livetime_map and other.livetime_map:
-            self.livetime_map.stack(other.livetime_map, weights=other.mask_safe_image)
+        if self._livetime_map and other._livetime_map:
+            self._livetime_map.stack(other._livetime_map, weights=other.mask_safe_image)
 
     def stat_array(self):
         """Statistic function value per bin given the current model parameters"""
@@ -1889,7 +1887,7 @@ class MapDataset(Dataset):
         else:  # None or EDispMap
             kwargs["edisp"] = self.edisp
 
-        kwargs["livetime_map"] = self.livetime_map
+        kwargs["_livetime_map"] = self._livetime_map
         return self.__class__(**kwargs)
 
     def to_image(self, name=None):
@@ -1981,7 +1979,7 @@ class MapDatasetOnOff(MapDataset):
     meta_table : `~astropy.table.Table`
         Table listing information on observations used to create the dataset.
         One line per observation for stacked datasets.
-    livetime_map : `~gammapy.maps.WcsNDMap`
+    _livetime_map : `~gammapy.maps.WcsNDMap`
         The (non-acceptance corrected) livetime at each position of the map
     name : str
         Name of the dataset.
@@ -2011,7 +2009,7 @@ class MapDatasetOnOff(MapDataset):
         mask_safe=None,
         gti=None,
         meta_table=None,
-        livetime_map=None,
+        _livetime_map=None,
     ):
         self._name = make_name(name)
         self._evaluators = {}
@@ -2028,7 +2026,7 @@ class MapDatasetOnOff(MapDataset):
         self.models = models
         self.mask_safe = mask_safe
         self.meta_table = meta_table
-        self.livetime_map = livetime_map
+        self._livetime_map = _livetime_map
 
     def __str__(self):
         str_ = super().__str__()
@@ -2248,7 +2246,7 @@ class MapDatasetOnOff(MapDataset):
             gti=dataset.gti,
             name=name,
             meta_table=dataset.meta_table,
-            livetime_map=dataset.livetime_map,
+            _livetime_map=dataset._livetime_map,
         )
 
     def to_map_dataset(self, name=None):

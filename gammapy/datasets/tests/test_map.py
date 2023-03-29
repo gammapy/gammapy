@@ -884,7 +884,7 @@ def test_stack(sky_model):
         name="dataset-1",
         edisp=edisp,
         meta_table=Table({"OBS_ID": [0]}),
-        livetime_map=lv1,
+        _livetime_map=lv1,
     )
 
     bkg2 = Map.from_geom(geom)
@@ -911,7 +911,7 @@ def test_stack(sky_model):
         name="dataset-2",
         edisp=edisp,
         meta_table=Table({"OBS_ID": [1]}),
-        livetime_map=lv2,
+        _livetime_map=lv2,
     )
 
     background_model2 = FoVBackgroundModel(dataset_name="dataset-2")
@@ -934,7 +934,7 @@ def test_stack(sky_model):
     assert_allclose(stacked.mask_safe.data.sum(), 4600)
     assert_allclose(stacked.mask_fit.data.sum(), 4600)
     assert_allclose(stacked.exposure.data.sum(), 1.6e11)
-    assert_allclose(stacked.livetime_map.data.sum(), 240000.0)
+    assert_allclose(stacked._livetime_map.data.sum(), 240000.0)
 
     assert_allclose(stacked.meta_table["OBS_ID"][0], [0, 1])
 
