@@ -3198,6 +3198,7 @@ class LabelMapAxis:
 
     def squash(self):
         """Create a new axis object by squashing the axis into one bin.
+
         The label of the new axis is given as "squash_" + the name of the axis.
 
         Returns
