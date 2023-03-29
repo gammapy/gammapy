@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-import numpy as np
 import astropy.units as u
 from astropy.table import Table
 from regions import PointSkyRegion
@@ -414,9 +413,10 @@ class MapDatasetMaker(Maker):
 
             kwargs["edisp"] = edisp
 
-        kwargs["_livetime_map"] = (
-            kwargs["mask_safe"].reduce_over_axes(func=np.logical_or)
-            * observation.observation_live_time_duration
+        kwargs["_livetime_map"] = Map.from_geom(
+            geom=kwargs["mask_safe"].geom.to_image(),
+            data=observation.observation_live_time_duration.value,
+            unit=observation.observation_live_time_duration.unit,
         )
 
         return dataset.__class__(name=dataset.name, **kwargs)

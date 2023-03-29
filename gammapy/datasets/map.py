@@ -2255,7 +2255,7 @@ class MapDatasetOnOff(MapDataset):
         The background model template is taken as alpha * counts_off
 
         Parameters
-        ----------
+        ----------c
         name: str
             Name of the new dataset
 
