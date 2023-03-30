@@ -3195,3 +3195,17 @@ class LabelMapAxis:
         merged_labels = np.append(self.center, axis.center)
 
         return LabelMapAxis(merged_labels, self.name)
+
+    def squash(self):
+        """Create a new axis object by squashing the axis into one bin.
+
+        The label of the new axis is given as "first-label...last-label".
+
+        Returns
+        -------
+        axis : `~MapAxis`
+            Sliced axis object.
+        """
+        return LabelMapAxis(
+            labels=[self.center[0] + "..." + self.center[-1]], name=self._name
+        )
