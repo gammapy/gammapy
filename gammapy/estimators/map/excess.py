@@ -23,12 +23,12 @@ def convolved_map_dataset_counts_statistics(dataset, kernel, mask, correlate_off
     """Return CountsDataset objects containing smoothed maps from the MapDataset"""
     # Kernel is modified later make a copy here
     kernel = copy.deepcopy(kernel)
-    kernel.normalize("peak")
+    kernel_data = kernel.data / kernel.data.max()
 
     # fft convolution adds numerical noise, to ensure integer results we call
     # np.rint
     n_on = dataset.counts * mask
-    n_on_conv = np.rint(n_on.convolve(kernel.array).data)
+    n_on_conv = np.rint(n_on.convolve(kernel_data).data)
 
     if isinstance(dataset, MapDatasetOnOff):
         n_off = dataset.counts_off * mask
@@ -36,18 +36,18 @@ def convolved_map_dataset_counts_statistics(dataset, kernel, mask, correlate_off
         acceptance_on = dataset.acceptance * mask
         acceptance_off = dataset.acceptance_off * mask
 
-        npred_sig_convolve = npred_sig.convolve(kernel.array)
+        npred_sig_convolve = npred_sig.convolve(kernel_data)
         if correlate_off:
             background = dataset.background * mask
             background.data[dataset.acceptance_off == 0] = 0.0
-            background_conv = background.convolve(kernel.array)
+            background_conv = background.convolve(kernel_data)
 
-            n_off = n_off.convolve(kernel.array)
+            n_off = n_off.convolve(kernel_data)
             with np.errstate(invalid="ignore", divide="ignore"):
                 alpha = background_conv / n_off
 
         else:
-            acceptance_on_convolve = acceptance_on.convolve(kernel.array)
+            acceptance_on_convolve = acceptance_on.convolve(kernel_data)
 
             with np.errstate(invalid="ignore", divide="ignore"):
                 alpha = acceptance_on_convolve / acceptance_off
@@ -58,7 +58,7 @@ def convolved_map_dataset_counts_statistics(dataset, kernel, mask, correlate_off
     else:
 
         npred = dataset.npred() * mask
-        background_conv = npred.convolve(kernel.array)
+        background_conv = npred.convolve(kernel_data)
         return CashCountsStatistic(n_on_conv.data, background_conv.data)
 
 
@@ -208,12 +208,17 @@ class ExcessMapEstimator(Estimator):
         kernel : `~astropy.convolution.Tophat2DKernel`
             Kernel
         """
+
         pixel_size = np.mean(np.abs(dataset.counts.geom.wcs.wcs.cdelt))
         size = self.correlation_radius.deg / pixel_size
         kernel = Tophat2DKernel(size)
-        return kernel
 
-    def get_mask(self, dataset):
+        geom = dataset.counts.geom.to_image()
+        geom = geom.to_odd_npix(max_radius=self.correlation_radius)
+        return Map.from_geom(geom, data=kernel.array)
+
+    @staticmethod
+    def estimate_mask_default(dataset):
         """Get mask used by the estimator.
 
         Parameters
@@ -234,7 +239,7 @@ class ExcessMapEstimator(Estimator):
             mask = Map.from_geom(dataset.counts.geom, data=True, dtype=bool)
         return mask
 
-    def estimate_reco_exposure(self, dataset, kernel, mask):
+    def estimate_exposure_reco_energy(self, dataset, kernel, mask):
         """Estimate exposure map in reconstructed energy for a single dataset
            assuming the given spectral_model shape.
 
@@ -257,8 +262,8 @@ class ExcessMapEstimator(Estimator):
                 dataset, self.spectral_model, normalize=False
             )
             with np.errstate(invalid="ignore", divide="ignore"):
-                reco_exposure = reco_exposure.convolve(kernel.array) / mask.convolve(
-                    kernel.array
+                reco_exposure = reco_exposure.convolve(kernel.data) / mask.convolve(
+                    kernel.data
                 )
         else:
             reco_exposure = 1
@@ -279,7 +284,7 @@ class ExcessMapEstimator(Estimator):
 
         geom = dataset.counts.geom
 
-        mask = self.get_mask(dataset)
+        mask = self.estimate_mask_default(dataset)
 
         counts_stat = convolved_map_dataset_counts_statistics(
             dataset, kernel, mask, self.correlate_off
@@ -293,7 +298,7 @@ class ExcessMapEstimator(Estimator):
         maps["ts"] = Map.from_geom(geom, data=counts_stat.ts)
         maps["sqrt_ts"] = Map.from_geom(geom, data=counts_stat.sqrt_ts)
 
-        reco_exposure = self.estimate_reco_exposure(dataset, kernel, mask)
+        reco_exposure = self.estimate_exposure_reco_energy(dataset, kernel, mask)
 
         with np.errstate(invalid="ignore", divide="ignore"):
             maps["norm"] = maps["npred_excess"] / reco_exposure
