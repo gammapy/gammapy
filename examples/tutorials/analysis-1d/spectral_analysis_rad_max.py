@@ -356,7 +356,7 @@ plt.show()
 #
 # A common way to check if a fit is biased is to simulate multiple datasets with
 # the obtained best fit model, and check the distribution of the fitted parameters.
-# Here, we show how to perform one such simulation
+# Here, we show how to perform one such simulation assuming the measured off counts provide a good distribution of the background.
 #
 
 dataset_simulated = datasets.stack_reduce().copy(name="simulated_ds")
