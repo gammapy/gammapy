@@ -354,7 +354,7 @@ plt.show()
 # Dataset simulations
 # -------------------
 #
-# A common way to check is a fit is biased is to simulate multiple datasets with
+# A common way to check if a fit is biased is to simulate multiple datasets with
 # the obtained best fit model, and check the distribution of the fitted parameters.
 # Here, we show how to perform one such simulation
 #
