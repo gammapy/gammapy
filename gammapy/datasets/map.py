@@ -8,7 +8,7 @@ from regions import CircleSkyRegion
 import matplotlib.pyplot as plt
 from gammapy.data import GTI
 from gammapy.irf import EDispKernelMap, EDispMap, PSFKernel, PSFMap, RecoPSFMap
-from gammapy.maps import Map, MapAxis
+from gammapy.maps import LabelMapAxis, Map, MapAxis
 from gammapy.modeling.models import DatasetModels, FoVBackgroundModel
 from gammapy.stats import (
     CashCountsStatistic,
@@ -475,7 +475,7 @@ class MapDataset(Dataset):
             self._background_parameters_cached = values
         return changed
 
-    def npred_signal(self, model_name=None):
+    def npred_signal(self, model_name=None, stack=True):
         """Model predicted signal counts.
 
         If a model name is passed, predicted counts from that component are returned.
@@ -483,7 +483,7 @@ class MapDataset(Dataset):
 
         Parameters
         ----------
-        model_name: str
+        model_name: list of str
             Name of  SkyModel for which to compute the npred for.
             If none, the sum of all components (minus the background model)
             is returned
@@ -493,12 +493,12 @@ class MapDataset(Dataset):
         npred_sig: `gammapy.maps.Map`
             Map of the predicted signal counts
         """
-        npred_total = Map.from_geom(self._geom, dtype=float)
 
         evaluators = self.evaluators
         if model_name is not None:
-            evaluators = {model_name: self.evaluators[model_name]}
+            evaluators = {name: self.evaluators[name] for name in model_name}
 
+        npred_list = []
         for evaluator in evaluators.values():
             if evaluator.needs_update:
                 evaluator.update(
@@ -511,7 +511,13 @@ class MapDataset(Dataset):
 
             if evaluator.contributes:
                 npred = evaluator.compute_npred()
-                npred_total.stack(npred)
+                label = LabelMapAxis(labels=[evaluator.keys()[0]], name="models")
+                npred = npred.to_cube([label])
+                npred_list.append(npred)
+
+        npred_total = Map.from_stack(npred_list, axis_name="models")
+        if stack:
+            npred_total = npred_total.sum_over_axes(axes_names=["models"])
 
         return npred_total
 
