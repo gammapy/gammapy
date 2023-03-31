@@ -10,7 +10,7 @@ __all__ = ["SensitivityEstimator"]
 
 
 class SensitivityEstimator(Estimator):
-    """Estimate differential sensitivity.
+    """Estimate sensitivity.
 
     This class allows to determine for each reconstructed energy bin the flux
     associated to the number of gamma-ray events for which the significance is
@@ -38,7 +38,12 @@ class SensitivityEstimator(Estimator):
     tag = "SensitivityEstimator"
 
     def __init__(
-        self, spectrum=None, n_sigma=5.0, gamma_min=10, bkg_syst_fraction=0.05
+        self,
+        spectrum=None,
+        n_sigma=5.0,
+        gamma_min=10,
+        bkg_syst_fraction=0.05,
+        integral=False,
     ):
 
         if spectrum is None:
@@ -140,7 +145,19 @@ class SensitivityEstimator(Estimator):
             [
                 Column(
                     data=energy,
-                    name="energy",
+                    name="e_ref",
+                    format="5g",
+                    description="Reconstructed Energy",
+                ),
+                Column(
+                    data=dataset._geom.axes["energy"].edges_min,
+                    name="e_min",
+                    format="5g",
+                    description="Reconstructed Energy",
+                ),
+                Column(
+                    data=dataset._geom.axes["energy"].edges_max,
+                    name="e_max",
                     format="5g",
                     description="Reconstructed Energy",
                 ),
@@ -151,19 +168,19 @@ class SensitivityEstimator(Estimator):
                     description="Energy squared times differential flux",
                 ),
                 Column(
-                    data=excess.data.squeeze(),
+                    data=np.atleast_1d(excess.data.squeeze()),
                     name="excess",
                     format="5g",
                     description="Number of excess counts in the bin",
                 ),
                 Column(
-                    data=dataset.background.data.squeeze(),
+                    data=np.atleast_1d(dataset.background.data.squeeze()),
                     name="background",
                     format="5g",
                     description="Number of background counts in the bin",
                 ),
                 Column(
-                    data=criterion,
+                    data=np.atleast_1d(criterion),
                     name="criterion",
                     description="Sensitivity-limiting criterion",
                 ),
