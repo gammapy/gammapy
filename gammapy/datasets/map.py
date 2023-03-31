@@ -478,15 +478,17 @@ class MapDataset(Dataset):
     def npred_signal(self, model_name=None, stack=True):
         """Model predicted signal counts.
 
-        If a model name is passed, predicted counts from that component are returned.
-        Else, the total signal counts are returned.
+        If a list of model name is passed, predicted counts from these components are returned.
+        If stack is set to True, a map of the sum of all the predicted counts is returned.
+        If stack is set to False, a map with an additional axis representing the models is returned.
 
         Parameters
         ----------
         model_name: list of str
-            Name of  SkyModel for which to compute the npred for.
-            If none, the sum of all components (minus the background model)
-            is returned
+            List of name of  SkyModel for which to compute the npred.
+            If none, all the SkyModel predicted counts are computed
+        stack: bool
+            Whether to stack the npred maps upon each other.
 
         Returns
         -------
