@@ -515,11 +515,12 @@ class MapDataset(Dataset):
                 npred = npred.to_cube([label])
                 npred_list.append(npred)
 
-        npred_total = Map.from_stack(npred_list, axis_name="models")
-        if stack:
-            npred_total = npred_total.sum_over_axes(axes_names=["models"])
+        if npred_list != []:
+            npred_total = Map.from_stack(npred_list, axis_name="models")
+            if stack:
+                npred_total = npred_total.sum_over_axes(axes_names=["models"])
 
-        return npred_total
+            return npred_total
 
     @classmethod
     def from_geoms(
