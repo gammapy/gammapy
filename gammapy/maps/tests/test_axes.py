@@ -814,7 +814,14 @@ def test_label_map_axis_from_stack():
 
     label_stack = LabelMapAxis.from_stack([label1, label2, label3])
 
-    assert_equal(
-        label_stack.center, np.array(["a", "b", "c", "d", "e", "f"], dtype="<U2")
-    )
+    assert_equal(label_stack.center, np.array(["a", "b", "c", "d", "e", "f"]))
     assert label_stack.name == "letters"
+
+
+def test_label_map_axis_squash():
+
+    label = LabelMapAxis(["a", "b", "c"], name="Letters")
+    squash_label = label.squash()
+
+    assert squash_label.nbin == 1
+    assert_equal(squash_label.center, np.array(["a...c"]))

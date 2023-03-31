@@ -112,8 +112,11 @@ class RadMax2D(IRF):
         energy_axis.format_plot_xaxis(ax=ax)
         ax.set_ylim(0 * u.deg, None)
         ax.legend(loc="best")
+<<<<<<< HEAD
         ax.set_ylabel(f"Rad max. [{ax.yaxis.units}.to_string(UNIT_STRING_FORMAT)]")
-        ax.yaxis.set_major_formatter("{x:.1f}")
+=======
+        ax.set_ylabel(f"Rad max. [{ax.yaxis.units}]")
+>>>>>>> master
         return ax
 
     @property
