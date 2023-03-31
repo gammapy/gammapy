@@ -493,13 +493,14 @@ class MapDataset(Dataset):
         npred_sig: `gammapy.maps.Map`
             Map of the predicted signal counts
         """
+        npred_total = Map.from_geom(self._geom, dtype=float)
 
         evaluators = self.evaluators
         if model_name is not None:
             evaluators = {name: self.evaluators[name] for name in model_name}
 
         npred_list = []
-        for evaluator in evaluators.values():
+        for evaluator_name, evaluator in zip(evaluators.keys(), evaluators.values()):
             if evaluator.needs_update:
                 evaluator.update(
                     self.exposure,
@@ -511,7 +512,7 @@ class MapDataset(Dataset):
 
             if evaluator.contributes:
                 npred = evaluator.compute_npred()
-                label = LabelMapAxis(labels=[evaluator.keys()[0]], name="models")
+                label = LabelMapAxis(labels=[evaluator_name], name="models")
                 npred = npred.to_cube([label])
                 npred_list.append(npred)
 
@@ -520,7 +521,7 @@ class MapDataset(Dataset):
             if stack:
                 npred_total = npred_total.sum_over_axes(axes_names=["models"])
 
-            return npred_total
+        return npred_total
 
     @classmethod
     def from_geoms(
