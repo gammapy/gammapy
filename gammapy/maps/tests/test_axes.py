@@ -777,8 +777,8 @@ def test_time_map_axis_format_plot_xaxis(time_intervals):
             ax.plot(axis.center, np.ones_like(axis.center))
 
     ax1 = axis.format_plot_xaxis(ax=ax)
-    assert ax1.axes.axes.get_xlabel().split()[0]=="Time"
-    assert ax1.axes.axes.get_xlabel().split()[1]=="[iso]"
+    assert ax1.axes.axes.get_xlabel().split()[0] == "Time"
+    assert ax1.axes.axes.get_xlabel().split()[1] == "[iso]"
 
 
 def test_single_valued_axis():
