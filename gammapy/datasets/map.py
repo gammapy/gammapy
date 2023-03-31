@@ -512,14 +512,17 @@ class MapDataset(Dataset):
 
             if evaluator.contributes:
                 npred = evaluator.compute_npred()
-                label = LabelMapAxis(labels=[evaluator_name], name="models")
-                npred = npred.to_cube([label])
-                npred_list.append(npred)
+                if stack:
+                    npred_total.stack(npred)
+                else:
+                    npred_geom = Map.from_geom(self._geom, dtype=float)
+                    npred_geom.stack(npred)
+                    label = LabelMapAxis(labels=[evaluator_name], name="models")
+                    npred_geom = npred_geom.to_cube([label])
+                    npred_list.append(npred_geom)
 
         if npred_list != []:
             npred_total = Map.from_stack(npred_list, axis_name="models")
-            if stack:
-                npred_total = npred_total.sum_over_axes(axes_names=["models"])
 
         return npred_total
 
