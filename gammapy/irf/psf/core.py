@@ -4,6 +4,7 @@ from astropy import units as u
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
+from gammapy.maps.axes import UNIT_STRING_FORMAT
 from gammapy.utils.array import array_stats_str
 from ..core import IRF
 
@@ -157,7 +158,7 @@ class PSF(IRF):
 
         energy_true.format_plot_xaxis(ax=ax)
         ax.legend(loc="best")
-        ax.set_ylabel(f"Containment radius [{ax.yaxis.units}]")
+        ax.set_ylabel(f"Containment radius [{ax.yaxis.units}.to_string(UNIT_STRING_FORMAT)]")
         ax.yaxis.set_major_formatter(mtick.FormatStrFormatter("%.1e"))
         return ax
 
@@ -248,7 +249,7 @@ class PSF(IRF):
         rad.format_plot_xaxis(ax=ax)
 
         ax.set_yscale("log")
-        ax.set_ylabel(f"PSF [{ax.yaxis.units}]")
+        ax.set_ylabel(f"PSF [{ax.yaxis.units}.to_string(UNIT_STRING_FORMAT)]")
         plt.legend()
         return ax
 

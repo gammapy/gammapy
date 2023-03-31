@@ -7,6 +7,7 @@ from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from matplotlib.colors import PowerNorm
 from gammapy.maps import MapAxis
+from gammapy.maps.axes import UNIT_STRING_FORMAT
 from gammapy.utils.scripts import make_path
 from ..core import IRF
 
@@ -574,7 +575,7 @@ class EDispKernel(IRF):
         with quantity_support():
             ax.plot(energy, bias, **kwargs)
 
-        ax.set_xlabel(f"$E_\\mathrm{{True}}$ [{ax.yaxis.units}]")
+        ax.set_xlabel(f"$E_\\mathrm{{True}}$ [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]")
         ax.set_ylabel(
             "($E_\\mathrm{{Reco}} - E_\\mathrm{{True}}) / E_\\mathrm{{True}}$"
         )

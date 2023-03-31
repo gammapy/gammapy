@@ -3,6 +3,7 @@ import numpy as np
 from astropy.units import Quantity
 import matplotlib.pyplot as plt
 from gammapy.astro.population.spatial import FaucherSpiral, ValleeSpiral
+from gammapy.maps.axes import UNIT_STRING_FORMAT
 
 fig = plt.figure(figsize=(7, 8))
 rect = [0.12, 0.12, 0.85, 0.85]
@@ -32,8 +33,8 @@ for spiralarm_index in range(4):
 
 ax_cartesian.plot(vallee_spiral.bar["x"], vallee_spiral.bar["y"])
 
-ax_cartesian.set_xlabel("x [kpc]")
-ax_cartesian.set_ylabel("y [kpc]")
+ax_cartesian.set_xlabel(f"x [{radius.unit.to_string(UNIT_STRING_FORMAT)}]")
+ax_cartesian.set_ylabel(f"y [{radius.unit.to_string(UNIT_STRING_FORMAT)}]")
 ax_cartesian.set_xlim(-12, 12)
 ax_cartesian.set_ylim(-15, 12)
 ax_cartesian.legend(ncol=2, loc="lower right")

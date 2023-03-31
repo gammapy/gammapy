@@ -9,7 +9,7 @@ from astropy.time import Time
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from gammapy.maps import MapAxis, Maps, RegionNDMap, TimeMapAxis
-from gammapy.maps.axes import flat_if_equal
+from gammapy.maps.axes import flat_if_equal, UNIT_STRING_FORMAT
 from gammapy.modeling.models import TemplateSpectralModel
 from gammapy.modeling.models.spectral import scale_plot_flux
 from gammapy.modeling.scipy import stat_profile_ul_scipy
@@ -530,7 +530,7 @@ class FluxPoints(FluxMaps):
 
         flux = scale_plot_flux(flux=flux.to_unit(flux_unit), energy_power=energy_power)
         ax = flux.plot(ax=ax, **kwargs)
-        ax.set_ylabel(f"{sed_type} [{ax.yaxis.units.to_string('latex_inline')}]")
+        ax.set_ylabel(f"{sed_type} [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]")
         ax.set_yscale("log")
         return ax
 
@@ -622,7 +622,7 @@ class FluxPoints(FluxMaps):
 
         axis.format_plot_xaxis(ax=ax)
 
-        ax.set_ylabel(f"{sed_type} [{ax.yaxis.units.to_string('latex_inline')}]")
+        ax.set_ylabel(f"{sed_type} [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]")
         ax.set_yscale("log")
 
         if add_cbar:

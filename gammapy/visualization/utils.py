@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.interpolate import CubicSpline
+from gammapy.maps.axes import UNIT_STRING_FORMAT
 from astropy.visualization import make_lupton_rgb
 import matplotlib.pyplot as plt
 
@@ -278,5 +279,5 @@ def plot_theta_squared_table(table):
 
     ax1 = plt.subplot(2, 1, 2)
     ax1.errorbar(x, table["sqrt_ts"], xerr=xerr, linestyle="None")
-    ax1.set_xlabel(f"Theta [{theta2_axis.unit.to_string('latex_inline')}]")
+    ax1.set_xlabel(f"Theta [{theta2_axis.unit.to_string(UNIT_STRING_FORMAT)}]")
     ax1.set_ylabel("Significance")

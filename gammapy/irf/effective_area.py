@@ -4,6 +4,7 @@ import astropy.units as u
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from gammapy.maps import MapAxes, MapAxis
+from gammapy.maps.axes import UNIT_STRING_FORMAT
 from .core import IRF
 
 __all__ = ["EffectiveAreaTable2D"]
@@ -101,7 +102,7 @@ class EffectiveAreaTable2D(IRF):
                 ax.plot(energy_axis.center, area, label=label, **kwargs)
 
         energy_axis.format_plot_xaxis(ax=ax)
-        ax.set_ylabel(f"Effective Area [{ax.yaxis.units.to_string('latex_inline')}]")
+        ax.set_ylabel(f"Effective Area [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]")
         ax.legend()
         return ax
 
@@ -170,7 +171,7 @@ class EffectiveAreaTable2D(IRF):
         offset.format_plot_yaxis(ax=ax)
 
         if add_cbar:
-            label = f"Effective Area [{aeff.unit}]"
+            label = f"Effective Area [{aeff.unit.to_string(UNIT_STRING_FORMAT)}]"
             ax.figure.colorbar(caxes, ax=ax, label=label)
 
         return ax

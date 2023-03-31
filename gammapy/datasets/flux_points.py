@@ -6,6 +6,7 @@ from astropy.table import Table
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
+from gammapy.maps.axes import UNIT_STRING_FORMAT
 from gammapy.modeling.models import DatasetModels
 from gammapy.utils.scripts import make_name, make_path
 from .core import Dataset
@@ -431,7 +432,7 @@ class FluxPointsDataset(Dataset):
         ax.axhline(0, color=kwargs["color"], lw=0.5)
 
         # format axes
-        ax.set_xlabel(f"Energy [{self._energy_unit}]")
+        ax.set_xlabel(f"Energy [{self._energy_unit.to_string(UNIT_STRING_FORMAT)}]")
         ax.set_xscale("log")
         label = self._residuals_labels[method]
         ax.set_ylabel(f"Residuals\n {label}")
