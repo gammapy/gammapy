@@ -207,8 +207,7 @@ class MapDatasetEventSampler:
             else:
                 temporal_model = evaluator.model.temporal_model
 
-            #            if hasattr(temporal_model, "is_energy_dependent"):
-            if temporal_model == "TemplateTemporalModel":
+            if hasattr(temporal_model, "is_energy_dependent"):
                 table = self._sample_coord_time_energy(dataset, evaluator)
             else:
                 flux = evaluator.compute_flux()
