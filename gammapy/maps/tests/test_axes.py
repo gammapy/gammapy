@@ -759,7 +759,8 @@ def test_map_axis_format_plot_xaxis():
             ax.plot(axis.center, np.ones_like(axis.center))
 
     ax1 = axis.format_plot_xaxis(ax=ax)
-    assert ax1.xaxis.label.properties()["text"] == "True Energy [TeV]"
+    assert ax1.xaxis.units == u.Unit("TeV")
+    assert " ".join(ax1.axes.axes.get_xlabel().split()[:2]) == "True Energy"
 
 
 def test_time_map_axis_format_plot_xaxis(time_intervals):
@@ -776,7 +777,8 @@ def test_time_map_axis_format_plot_xaxis(time_intervals):
             ax.plot(axis.center, np.ones_like(axis.center))
 
     ax1 = axis.format_plot_xaxis(ax=ax)
-    assert ax1.xaxis.label.properties()["text"] == "Time [iso]"
+    assert ax1.axes.axes.get_xlabel().split()[0]=="Time"
+    assert ax1.axes.axes.get_xlabel().split()[1]=="[iso]"
 
 
 def test_single_valued_axis():
