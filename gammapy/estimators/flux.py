@@ -151,7 +151,7 @@ class FluxEstimator(ParameterEstimator):
 
         for dataset in datasets:
             name = datasets.models[self.source].name
-            npred_signal = dataset.npred_signal(model_name=name)
+            npred_signal = dataset.npred_signal(model_name=[name])
             npred = Map.from_geom(dataset.counts.geom)
             npred.stack(npred_signal)
             npred_excess.append(npred.data[dataset.mask].sum())
