@@ -524,8 +524,8 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         t_ref = time_ref_from_dict(table.meta, scale="utc")
         nodes = table["TIME"]
      ax_unit = nodes.quantity
-        elif table.meta.get("TIMEUNIT", None):
-            ax_unit = table.meta.get("TIMEUNIT", None)
+    if not ax_unit.is_equivalent("d"):
+        ax_unit = table.meta.get("TIMEUNIT", None)
         else:
             raise ValueError("Time unit not found in the table")
         time_axis = MapAxis.from_nodes(nodes=nodes, name="time", unit=ax_unit)
