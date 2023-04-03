@@ -18,6 +18,7 @@ from gammapy.stats import (
     get_wstat_mu_bkg,
     wstat,
 )
+from gammapy.utils.deprecation import deprecated_renamed_argument
 from gammapy.utils.fits import HDULocation, LazyFitsData
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
@@ -475,7 +476,8 @@ class MapDataset(Dataset):
             self._background_parameters_cached = values
         return changed
 
-    def npred_signal(self, model_name=None, stack=True):
+    @deprecated_renamed_argument("model_name", "model_names", "1.1")
+    def npred_signal(self, model_names=None, stack=True):
         """Model predicted signal counts.
 
         If a list of model name is passed, predicted counts from these components are returned.
@@ -498,8 +500,8 @@ class MapDataset(Dataset):
         npred_total = Map.from_geom(self._geom, dtype=float)
 
         evaluators = self.evaluators
-        if model_name is not None:
-            evaluators = {name: self.evaluators[name] for name in model_name}
+        if model_names is not None:
+            evaluators = {name: self.evaluators[name] for name in model_names}
 
         npred_list = []
         labels = []
