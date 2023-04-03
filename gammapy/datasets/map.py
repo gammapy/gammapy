@@ -501,6 +501,8 @@ class MapDataset(Dataset):
 
         evaluators = self.evaluators
         if model_names is not None:
+            if isinstance(model_names, str):
+                model_names = [model_names]
             evaluators = {name: self.evaluators[name] for name in model_names}
 
         npred_list = []
