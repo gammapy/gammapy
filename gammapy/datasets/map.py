@@ -502,7 +502,8 @@ class MapDataset(Dataset):
             evaluators = {name: self.evaluators[name] for name in model_name}
 
         npred_list = []
-        for evaluator_name, evaluator in zip(evaluators.keys(), evaluators.values()):
+        labels = []
+        for evaluator_name, evaluator in evaluators.items():
             if evaluator.needs_update:
                 evaluator.update(
                     self.exposure,
@@ -519,12 +520,12 @@ class MapDataset(Dataset):
                 else:
                     npred_geom = Map.from_geom(self._geom, dtype=float)
                     npred_geom.stack(npred)
-                    label = LabelMapAxis(labels=[evaluator_name], name="models")
-                    npred_geom = npred_geom.to_cube([label])
+                    labels.append(evaluator_name)
                     npred_list.append(npred_geom)
 
         if npred_list != []:
-            npred_total = Map.from_stack(npred_list, axis_name="models")
+            label_axis = LabelMapAxis(labels=labels, name="models")
+            npred_total = Map.from_stack(npred_list, axis=label_axis)
 
         return npred_total
 
