@@ -85,15 +85,6 @@ class LightCurveEstimator(FluxPointsEstimator):
         self.n_jobs = n_jobs
         super().__init__(**kwargs)
 
-    def _estimate_time_bin_flux(self, datasets_to_fit, dataset_names):
-        fp = self.estimate_time_bin_flux(datasets=datasets_to_fit)
-
-        for name in ["counts", "npred", "npred_excess"]:
-            fp._data[name] = self.expand_map(
-                fp._data[name], dataset_names=dataset_names
-            )
-        return fp
-
     def run(self, datasets):
         """Run light curve extraction.
 
@@ -136,7 +127,7 @@ class LightCurveEstimator(FluxPointsEstimator):
             valid_intervals.append([t_min, t_max])
 
             if self.n_jobs == 1:
-                fp = self._estimate_time_bin_flux(datasets_to_fit, dataset_names)
+                fp = self.estimate_time_bin_flux(datasets_to_fit, dataset_names)
                 rows.append(fp)
             else:
                 parallel_datasets.append(datasets_to_fit)
@@ -144,7 +135,7 @@ class LightCurveEstimator(FluxPointsEstimator):
         if self.n_jobs > 1:
             with Pool(processes=self.n_jobs) as pool:
                 rows = pool.starmap(
-                    self._estimate_time_bin_flux,
+                    self.estimate_time_bin_flux,
                     zip(
                         parallel_datasets,
                         repeat(dataset_names),
@@ -185,7 +176,7 @@ class LightCurveEstimator(FluxPointsEstimator):
         result.set_by_coord(coords, vals=m.data)
         return result
 
-    def estimate_time_bin_flux(self, datasets):
+    def estimate_time_bin_flux(self, datasets, dataset_names=None):
         """Estimate flux point for a single energy group.
 
         Parameters
@@ -198,4 +189,11 @@ class LightCurveEstimator(FluxPointsEstimator):
         result : `FluxPoints`
             Resulting flux points.
         """
-        return super().run(datasets)
+        fp = super().run(datasets)
+
+        if dataset_names:
+            for name in ["counts", "npred", "npred_excess"]:
+                fp._data[name] = self.expand_map(
+                    fp._data[name], dataset_names=dataset_names
+                )
+        return fp
