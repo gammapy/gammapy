@@ -486,7 +486,7 @@ class MapDataset(Dataset):
 
         Parameters
         ----------
-        model_name: list of str
+        model_names: list of str
             List of name of  SkyModel for which to compute the npred.
             If none, all the SkyModel predicted counts are computed
         stack: bool
