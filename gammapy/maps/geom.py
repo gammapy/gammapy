@@ -47,8 +47,8 @@ def pix_tuple_to_idx(pix):
         else:
             with np.errstate(invalid="ignore"):
                 p_idx = np.rint(p).astype(int)
-                p_idx[~np.isfinite(p)] = INVALID_INDEX.int
-                idx += [p_idx]
+            p_idx[~np.isfinite(p)] = INVALID_INDEX.int
+            idx += [p_idx]
 
     return tuple(idx)
 
