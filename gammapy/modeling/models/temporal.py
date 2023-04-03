@@ -523,8 +523,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
         t_ref = time_ref_from_dict(table.meta, scale="utc")
         nodes = table["TIME"]
-        if table["TIME"].unit:
-            ax_unit = table["TIME"].unit
+     ax_unit = nodes.quantity
         elif table.meta.get("TIMEUNIT", None):
             ax_unit = table.meta.get("TIMEUNIT", None)
         else:
