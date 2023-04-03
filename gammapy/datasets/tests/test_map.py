@@ -956,7 +956,7 @@ def test_npred(sky_model, geom, geom_etrue):
     dataset.models = [bkg, sky_model, model1]
 
     assert_allclose(
-        dataset.npred_signal(model_name=[model1.name]).data.sum(), 150.7487, rtol=1e-3
+        dataset.npred_signal(model_names=[model1.name]).data.sum(), 150.7487, rtol=1e-3
     )
     assert dataset._background_cached is None
     assert_allclose(dataset.npred_background().data.sum(), 4000.0, rtol=1e-3)
@@ -973,7 +973,7 @@ def test_npred(sky_model, geom, geom_etrue):
         KeyError,
         match="m2",
     ):
-        dataset.npred_signal(model_name=["m2"])
+        dataset.npred_signal(model_names=["m2"])
 
 
 def test_stack_npred():
