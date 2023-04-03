@@ -523,9 +523,12 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
         t_ref = time_ref_from_dict(table.meta, scale="utc")
         nodes = table["TIME"]
-     ax_unit = nodes.quantity
-    if not ax_unit.is_equivalent("d"):
-        ax_unit = table.meta.get("TIMEUNIT", None)
+        ax_unit = nodes.quantity.unit
+        if not ax_unit.is_equivalent("d"):
+            try:
+                ax_unit = u.Unit(table.meta["TIMEUNIT"])
+            except KeyError:
+                ax_unit = None
         if ax_unit is None:
             raise ValueError("Time unit not found in the table")
         time_axis = MapAxis.from_nodes(nodes=nodes, name="time", unit=ax_unit)
@@ -556,8 +559,9 @@ class LightCurveTemplateTemporalModel(TemporalModel):
             return cls.from_table(table, filename=filename)
 
         elif format == "map":
-            m = RegionNDMap.read(filename)
-            header = fits.getheader(filename, "SKYMAP_BANDS")
+            with fits.open(filename) as hdulist:
+                m = RegionNDMap.from_hdulist(hdulist)
+                header = hdulist["SKYMAP_BANDS"].header
             t_ref = time_ref_from_dict(header)
             return cls(m, t_ref=t_ref, filename=filename)
 
