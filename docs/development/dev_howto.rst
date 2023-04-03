@@ -602,7 +602,7 @@ It will replace the old argument with the new one in a call to the function and 
 
     from gammapy.utils.deprecation import deprecated_renamed_argument
 
-    @deprecated_renamed_argument(["a", "b", ["x", "y"], ["1.1", "1.1"])
+    @deprecated_renamed_argument(["a", "b"], ["x", "y"], ["1.1", "1.1"])
     def deprecated_argument_function(x, y):
         return x + y
 
