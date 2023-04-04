@@ -5,18 +5,18 @@ Pulsar analysis
 Produce a phasogram, phased-resolved maps and spectra for pulsar analysis.
  
 Introduction
------------ 
+------------
 
-This notebook shows how to do a pulsar analysis with Gammapy. It is based
-on a Vela simulated run from the CTA DC1, which already contains a
-column for the pulsar phases. We will produce a phasogram, a phase-resolved map and
-a phase-resolved spectrum of the Vela pulsar. In order to produce these last two poducts, we will use the
+This notebook shows how to do a simple pulsar analysis with Gammapy. We will produce a
+phasogram, a phase-resolved map and a phase-resolved spectrum of the Vela pulsar. In
+order to build these products, we will use the
 `~PhaseBackgroundMaker` which takes into account the on and off phase to compute a
 `~MapDatasetOnOff` and a `~SpectrumDatasetOnOff` in the phase space.
- 
-The phasing in itself is not done here, and it requires specific
-packages like Tempo2 or [PINT](https://nanograv-pint.readthedocs.io). A Gammapy recipe will be available soon
-to show how to compute phases with PINT in the framework of Gammapy.
+
+This tutorial uses a simulated run of vel observation from the CTA DC1, which already contains a
+column for the pulsar phases. The phasing in itself is therefore not show here. It
+requires specific packages like Tempo2 or [PINT]((https://nanograv-pint.readthedocs.io). A gammapy
+recipe shows how to compute phases with PINT in the framework of Gammapy.
 
 
 
@@ -277,8 +277,8 @@ map_datasets = Datasets()
 
 for obs in obs_list_vela:
     map_dataset = map_dataset_maker.run(map_dataset_empty, obs)
+    map_dataset = safe_mask_maker.run(map_dataset, obs)
     map_dataset_on_off = phase_bkg_maker.run(map_dataset, obs)
-    map_dataset_on_off = safe_mask_maker.run(map_dataset_on_off, obs)
     map_datasets.append(map_dataset_on_off)
 
 
@@ -321,10 +321,10 @@ fig, (ax1, ax2) = plt.subplots(
 )
 
 npred_excess.plot(ax=ax1, add_cbar=True)
-ax1.set_title("npred_excess")
+ax1.set_title("Excess counts")
 
 sqrt_ts.plot(ax=ax2, add_cbar=True)
-ax2.set_title("sqrt_ts")
+ax2.set_title("Significance")
 
 
 ######################################################################
@@ -333,8 +333,8 @@ ax2.set_title("sqrt_ts")
 # Phase-resolved spectrum
 # -----------------------
 #
-# We can also do a phase-resolved spectrum.
-# In order to do that, we are going to use the `~gammapy.makers.PhaseBackgroundMake` to create a
+# We can also make a phase-resolved spectrum.
+# In order to do that, we are going to use the `~gammapy.makers.PhaseBackgroundMaker` to create a
 # `~gammapy.makers.SpectrumDatasetOnOff` with the ON and OFF taken in the phase space.
 # Note that this maker take the ON and OFF in the same spatial region.
 #
@@ -363,8 +363,8 @@ spectrum_datasets = Datasets()
 
 for obs in obs_list_vela:
     spectrum_dataset = spectrum_dataset_maker.run(spectrum_dataset_empty, obs)
+    spectrum_dataset = safe_mask_maker.run(spectrum_dataset, obs)
     spectrum_dataset_on_off = phase_bkg_maker.run(spectrum_dataset, obs)
-    spectrum_dataset_on_off = safe_mask_maker.run(spectrum_dataset_on_off, obs)
     spectrum_datasets.append(spectrum_dataset_on_off)
 
 
