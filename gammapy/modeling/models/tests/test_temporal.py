@@ -405,3 +405,16 @@ def test_phasecurve_DC1():
 
     with mpl_plot_check():
         model.plot_phasogram(n_points=200)
+
+
+def test_model_scale():
+    model = GaussianTemporalModel(t_ref=50003 * u.d, sigma="2.0 day")
+    assert model.scale == "utc"
+
+    model = LinearTemporalModel(alpha=1.76, beta=0.1 / u.day, scale="tt")
+    assert model.scale == "tt"
+
+    dict = model.to_dict()
+    model1 = LinearTemporalModel.from_dict(dict)
+    assert model1.scale == "tt"
+    assert_allclose(model1.alpha.quantity, 1.76)

@@ -39,6 +39,12 @@ class TemporalModel(ModelBase):
 
     _type = "temporal"
 
+    def __init__(self, **kwargs):
+        scale = kwargs.pop("scale", "utc")
+        super().__init__(**kwargs)
+        if not hasattr(self, "scale"):
+            self.scale = scale
+
     def __call__(self, time):
         """Evaluate model
 
@@ -54,6 +60,27 @@ class TemporalModel(ModelBase):
     @property
     def type(self):
         return self._type
+
+    @property
+    def t_ref_mjd(self):
+        """Reference time in mjd"""
+        return Time(self.t_ref.value, format="mjd", scale=self.scale)
+
+    @t_ref_mjd.setter
+    def t_ref_mjd(self, t_ref):
+        """Reference time"""
+        self.t_ref_mjd = getattr(t_ref, self.scale, "mjd")
+
+    def to_dict(self, full_output=False):
+        """Create dict for YAML serilisation"""
+        data = super().to_dict(full_output)
+        data["temporal"]["scale"] = self.scale
+        data["temporal"]["parameters"] = data["temporal"].pop("parameters")
+        return data
+
+    def from_dict(cls, data):
+        data = data["temporal"]
+        return super().from_dict(data)
 
     @staticmethod
     def time_sum(t_min, t_max):
