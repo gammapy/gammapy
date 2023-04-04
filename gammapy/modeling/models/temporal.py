@@ -528,9 +528,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
             try:
                 ax_unit = u.Unit(table.meta["TIMEUNIT"])
             except KeyError:
-                ax_unit = None
-        if ax_unit is None:
-            raise ValueError("Time unit not found in the table")
+                raise ValueError("Time unit not found in the table")
         time_axis = MapAxis.from_nodes(nodes=nodes, name="time", unit=ax_unit)
         axes = [time_axis]
         m = RegionNDMap.create(region=None, axes=axes, data=table["NORM"])
