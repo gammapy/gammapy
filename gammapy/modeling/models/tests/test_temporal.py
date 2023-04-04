@@ -427,3 +427,10 @@ def test_model_scale():
     gti = GTI.create(start, stop, reference_time=model.reference_time)
     val = model.integral(gti.time_start, gti.time_stop)
     assert_allclose(np.sum(val), 0.442885, rtol=1e-5)
+
+    model1.reference_time = Time(52398.23456, format="mjd", scale="utc")
+    assert model1.scale == "tai"
+    assert_allclose(model1.t_ref.value, 52398.23493, rtol=1e-9)
+
+    with pytest.raises(TypeError):
+        model1.reference_time = 23456

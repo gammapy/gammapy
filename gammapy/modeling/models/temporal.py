@@ -69,7 +69,10 @@ class TemporalModel(ModelBase):
     @reference_time.setter
     def reference_time(self, t_ref):
         """Reference time"""
-        self.reference_time = getattr(t_ref, self.scale, "mjd")
+        if not isinstance(t_ref, Time):
+            raise TypeError(f"{t_ref} is not a {Time} object")
+        time = getattr(t_ref, self.scale)
+        self.t_ref.value = time.mjd
 
     def to_dict(self, full_output=False):
         """Create dict for YAML serilisation"""
