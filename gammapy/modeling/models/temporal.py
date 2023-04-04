@@ -62,25 +62,20 @@ class TemporalModel(ModelBase):
         return self._type
 
     @property
-    def t_ref_mjd(self):
+    def reference_time(self):
         """Reference time in mjd"""
         return Time(self.t_ref.value, format="mjd", scale=self.scale)
 
-    @t_ref_mjd.setter
-    def t_ref_mjd(self, t_ref):
+    @reference_time.setter
+    def reference_time(self, t_ref):
         """Reference time"""
-        self.t_ref_mjd = getattr(t_ref, self.scale, "mjd")
+        self.reference_time = getattr(t_ref, self.scale, "mjd")
 
     def to_dict(self, full_output=False):
         """Create dict for YAML serilisation"""
         data = super().to_dict(full_output)
         data["temporal"]["scale"] = self.scale
-        data["temporal"]["parameters"] = data["temporal"].pop("parameters")
         return data
-
-    def from_dict(cls, data):
-        data = data["temporal"]
-        return super().from_dict(data)
 
     @staticmethod
     def time_sum(t_min, t_max):
@@ -523,11 +518,6 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
         return prnt
 
-    @property
-    def tref_mjd(self):
-        """Reference time in mjd"""
-        return Time(self.t_ref.value, format="mjd", scale="utc")
-
     @classmethod
     def from_table(cls, table, filename=None):
         """Create a template model from an astropy table
@@ -600,7 +590,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         table = Table(
             data=[self.map.geom.axes["time"].center, self.map.quantity],
             names=["TIME", "NORM"],
-            meta=time_ref_to_dict(self.tref_mjd, scale="utc"),
+            meta=time_ref_to_dict(self.reference_time, scale=self.scale),
         )
         return table
 
@@ -626,7 +616,9 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         elif format == "map":
             # RegionNDMap.from_hdulist does not update the header
             hdulist = self.map.to_hdulist()
-            hdulist["SKYMAP_BANDS"].header.update(time_ref_to_dict(self.tref_mjd))
+            hdulist["SKYMAP_BANDS"].header.update(
+                time_ref_to_dict(self.reference_time, scale=self.scale)
+            )
             hdulist.writeto(filename, overwrite=overwrite)
         else:
             raise ValueError("Not a valid format, choose from ['map', 'table']")

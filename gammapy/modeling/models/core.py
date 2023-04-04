@@ -226,6 +226,9 @@ class ModelBase:
         #  `SpatialModel` base class
         if "frame" in data:
             kwargs["frame"] = data["frame"]
+        # TODO: same as above for temporal models
+        if "scale" in data:
+            kwargs["scale"] = data["scale"]
 
         return cls.from_parameters(parameters, **kwargs)
 
