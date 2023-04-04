@@ -900,10 +900,18 @@ def test_map_dot_product():
 
     dot_map = map4.dot(map2)
 
-    assert dot_map.geom.axes.names == ["axis3", "axis4", "axis1"]
-    assert dot_map.data.shape == (2, 4, 3, 1, 1)
+    assert dot_map.geom.axes.names == ["axis1", "axis3", "axis4"]
+    assert dot_map.data.shape == (4, 3, 2, 1, 1)
 
     dot_map = map2.dot(map4)
 
-    assert dot_map.geom.axes.names == ["axis3", "axis4", "axis1"]
-    assert dot_map.data.shape == (2, 4, 3, 1, 1)
+    assert dot_map.geom.axes.names == ["axis1", "axis3", "axis4"]
+    assert dot_map.data.shape == (4, 3, 2, 1, 1)
+
+    map5 = RegionNDMap.create(region=None, axes=[axis3, axis2, axis4])
+    map5.data[...] = 1
+
+    dot_map = map5.dot(map2)
+
+    assert dot_map.geom.axes.names == ["axis3", "axis1", "axis4"]
+    assert dot_map.data.shape == (3, 2, 4, 1, 1)
