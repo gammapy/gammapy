@@ -74,7 +74,7 @@ class MapDatasetEventSampler:
 
         Returns
         -------
-        npred : `~RegionNDMap`
+        npred : `~gammapy.maps.RegionNDMap`
             Npred map.
         """
         energy = MapAxis.from_edges(
@@ -87,20 +87,25 @@ class MapDatasetEventSampler:
         if not time_axis:
             tstart = dataset.gti.time_start
             tstop = dataset.gti.time_stop
+            min_timebin = np.min(
+                evaluator.model.temporal_model.map.geom.axes["time"].bin_width
+            )
             # how do we choose the number of bins?
             time_axis = TimeMapAxis.from_time_bounds(
-                time_min=tstart, time_max=tstop, nbin=10
+                time_min=tstart,
+                time_max=tstop,
+                nbin=((tstop - tstart) / min_timebin).to(""),
             )
 
         flux = (
             evaluator.model.temporal_model.evaluate(
                 time_axis.time_mid, energy=energy.center
             )
-            * evaluator.model.spectral_model.parameters[0].unit
+            * evaluator.model.spectral_model.parameters[0].quantity
         )
 
         pred = (
-            (region_exposure.data[:, 0, 0, None] * dataset.exposure.unit * flux)
+            (region_exposure.data[:, 0, 0, None] * flux)
             * np.diff(energy.edges)[:, None]
         ).to("")
 
