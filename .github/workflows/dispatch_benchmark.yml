@@ -2,7 +2,7 @@ name: Run profiler on benchmarks
 on: merge
 
 jobs:
-  dispatch-docs:
+  dispatch-benchmarks:
     if: github.repository_owner == 'gammapy'
     runs-on: ubuntu-latest
     steps:
