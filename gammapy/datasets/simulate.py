@@ -7,7 +7,7 @@ from astropy.table import Table
 from regions import PointSkyRegion
 import gammapy
 from gammapy.data import EventList, observatory_locations
-from gammapy.maps import MapAxis, MapCoord, RegionNDMap, TimeMapAxis
+from gammapy.maps import MapCoord, RegionNDMap, TimeMapAxis
 from gammapy.modeling.models import (
     ConstantSpectralModel,
     ConstantTemporalModel,
@@ -77,12 +77,12 @@ class MapDatasetEventSampler:
         npred : `~gammapy.maps.RegionNDMap`
             Npred map.
         """
-        energy = MapAxis.from_edges(
-            dataset.geoms["geom"].axes["energy"].edges, name="energy_true"
-        )
+        energy_true = dataset.edisp.edisp_map.geom.axes["energy_true"]
         target = evaluator.model.spatial_model.position
+        edisp = dataset.edisp.get_edisp_kernel(
+            dataset.geoms["geom"].axes["energy"], position=target
+        )
         region_exposure = dataset.exposure.to_region_nd_map(target)
-        region_exposure = region_exposure.resample_axis(energy)
 
         if not time_axis:
             tstart = dataset.gti.time_start
@@ -90,29 +90,30 @@ class MapDatasetEventSampler:
             min_timebin = np.min(
                 evaluator.model.temporal_model.map.geom.axes["time"].bin_width
             )
-            # how do we choose the number of bins?
             time_axis = TimeMapAxis.from_time_bounds(
                 time_min=tstart,
                 time_max=tstop,
-                nbin=((tstop - tstart) / min_timebin).to(""),
+                nbin=int(((tstop - tstart) / min_timebin).to("")),
             )
 
         flux = (
             evaluator.model.temporal_model.evaluate(
-                time_axis.time_mid, energy=energy.center
+                time_axis.time_mid, energy=energy_true.center
             )
             * evaluator.model.spectral_model.parameters[0].quantity
         )
 
         pred = (
-            (region_exposure.data[:, 0, 0, None] * flux)
-            * np.diff(energy.edges)[:, None]
+            (region_exposure.quantity[:, 0, 0, None] * flux)
+            * np.diff(energy_true.edges)[:, None]
         ).to("")
+
+        pred_eres = pred.T @ edisp.quantity
 
         npred = RegionNDMap.create(
             region=PointSkyRegion(center=target),
-            axes=[energy, time_axis],
-            data=np.array(pred),
+            axes=[time_axis, dataset.geoms["geom"].axes["energy"]],
+            data=np.array(pred_eres),
         )
 
         return npred
