@@ -1,9 +1,11 @@
 name: Run profiler on benchmarks
-on: merge
-
+on:
+  pull_request:
+    types:
+      - closed
 jobs:
   dispatch-benchmarks:
-    if: github.repository_owner == 'gammapy'
+    if: ${{ (github.repository_owner == 'gammapy') && (github.event.pull_request.merged == true) && (contains(github.event.pull_request.labels.*.name, 'trigger-benchmarks')) }}
     runs-on: ubuntu-latest
     steps:
       - name: Dispatch Gammapy Benchmarks
