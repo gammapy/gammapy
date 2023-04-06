@@ -434,3 +434,8 @@ def test_model_scale():
 
     with pytest.raises(TypeError):
         model1.reference_time = 23456
+
+    with pytest.raises(ValueError):
+        model = GaussianTemporalModel(
+            t_ref=50003.2503033 * u.d, sigma="2.43 day", scale="ms"
+        )
