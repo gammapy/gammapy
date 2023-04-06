@@ -1089,7 +1089,15 @@ class Map(abc.ABC):
         return output_map
 
     def fill_events(self, events, weights=None):
-        """Fill event coordinates (`~gammapy.data.EventList`)."""
+        """Fill event coordinates (`~gammapy.data.EventList`).
+
+        Parameters
+        ----------
+        events : `~gammapy.data.EventList`
+            Events to be fill in the map.
+        weights : `~numpy.ndarray`
+            Weights vector. Default is weight of one.
+        """
         self.fill_by_coord(events.map_coord(self.geom), weights=weights)
 
     def fill_by_coord(self, coords, weights=None):
