@@ -212,7 +212,7 @@ def test_evaluate_timevar_source(enedip_temporal_model, dataset):
         ],
     )
 
-    filename = "$GAMMAPY_DATA/..."
+    filename = "$GAMMAPY_DATA/gravitational_waves/GW_example_DC_map_file.fits.gz"
     temporal_model = LightCurveTemplateTemporalModel.read(filename, format="map")
     dataset.models[0].temporal_model = temporal_model
     evaluator = dataset.evaluators["test-source"]
