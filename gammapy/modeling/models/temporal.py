@@ -491,7 +491,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
     tag = ["LightCurveTemplateTemporalModel", "template"]
 
     _t_ref_default = Time("2000-01-01")
-    t_ref = Parameter("t_ref", _t_ref_default.mjd, unit="day", frozen=False)
+    t_ref = Parameter("t_ref", _t_ref_default.mjd, unit="day", frozen=True)
 
     def __init__(self, map, t_ref=None, filename=None):
 
@@ -502,7 +502,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         super().__init__()
 
         if t_ref:
-            self.t_ref.value = Time(t_ref, format="mjd").mjd
+            self.t_ref.value = Time(t_ref, format="mjd", scale=self.scale).mjd
 
         self.filename = filename
 
