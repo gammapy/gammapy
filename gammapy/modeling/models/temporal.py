@@ -43,7 +43,7 @@ class TemporalModel(ModelBase):
         scale = kwargs.pop("scale", "utc")
         if scale not in Time.SCALES:
             raise ValueError(
-                f"{scale} is not a valid time scale. Choose" f"from {Time.SCALES}"
+                f"{scale} is not a valid time scale. Choose from {Time.SCALES}"
             )
         super().__init__(**kwargs)
         if not hasattr(self, "scale"):
