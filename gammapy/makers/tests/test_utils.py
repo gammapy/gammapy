@@ -361,15 +361,13 @@ def test_make_counts_rad_max(observations):
     geome = RegionGeom.create(region=on_region, axes=[energy_axis])
     counts = make_counts_rad_max(geome, observations.rad_max, observations.events)
 
-    assert_allclose(
-        counts.data, np.reshape(np.array([547, 188, 52, 8, 0, 0]), (6, 1, 1))
-    )
+    assert_allclose(np.squeeze(counts.data), np.array([547, 188, 52, 8, 0, 0]))
 
 
 @requires_data()
 def test_make_counts_off_rad_max(observations):
 
-    pos = SkyCoord(083.6331144560900, +22.0144871383400, unit="deg", frame="icrs")
+    pos = SkyCoord(83.6331, +22.0145, unit="deg", frame="icrs")
     on_region = PointSkyRegion(pos)
     energy_axis = MapAxis.from_energy_bounds(
         0.05, 100, nbin=6, unit="TeV", name="energy"
@@ -383,9 +381,7 @@ def test_make_counts_off_rad_max(observations):
         geom_off=geom_off, rad_max=observations.rad_max, events=observations.events
     )
 
-    assert_allclose(
-        counts_off.data, np.reshape(np.array([1641, 564, 156, 24, 0, 0]), (6, 1, 1))
-    )
+    assert_allclose(np.squeeze(counts_off.data), np.array([1641, 564, 156, 24, 0, 0]))
 
 
 class TestTheta2Table:
