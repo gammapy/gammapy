@@ -45,4 +45,4 @@ def _template_model_from_cta_sdc(filename):
             data=np.array(list(data.data) * u.Unit(data.header["UNITS"])),
             meta=time_header,
         )
-    return LightCurveTemplateTemporalModel(reg_map, t_ref=time_ref)
+    return LightCurveTemplateTemporalModel(reg_map, t_ref=time_ref, filename=filename)

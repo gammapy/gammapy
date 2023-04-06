@@ -23,7 +23,6 @@ from gammapy.modeling.models import (
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import mpl_plot_check, requires_data
 from gammapy.utils.time import time_ref_to_dict
-from ..utils import _template_model_from_cta_sdc
 
 
 # TODO: add light-curve test case from scratch
@@ -48,9 +47,9 @@ def test_light_curve_evaluate(light_curve):
 
 
 @requires_data()
-def test_energy_dependent_lightcurve():
-    filename = "$GAMMAPY_DATA/gravitational_waves/GW_example_DC_file.fits.gz"
-    mod = _template_model_from_cta_sdc(filename)
+def test_energy_dependent_lightcurve(tmp_path):
+    filename = "$GAMMAPY_DATA/gravitational_waves/GW_example_DC_map_file.fits.gz"
+    mod = LightCurveTemplateTemporalModel.read(filename, format="map")
 
     assert mod.is_energy_dependent is True
 
@@ -67,6 +66,11 @@ def test_energy_dependent_lightcurve():
             time_range=(Time(55555.50, format="mjd"), Time(55563.0, format="mjd")),
             energy=[0.3, 2, 10.0] * u.TeV,
         )
+    filename = make_path(tmp_path / "test.fits")
+    with pytest.raises(
+        NotImplementedError, "Not supported for energy dependent models"
+    ):
+        mod.write(filename=filename, format="table", overwrite=True)
 
 
 def ph_curve(x, amplitude=0.5, x0=0.01):
