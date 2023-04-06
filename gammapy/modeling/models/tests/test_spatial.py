@@ -19,8 +19,10 @@ from gammapy.modeling.models import (
     GaussianSpatialModel,
     GeneralizedGaussianSpatialModel,
     PointSpatialModel,
+    PowerLawSpectralModel,
     Shell2SpatialModel,
     ShellSpatialModel,
+    SkyModel,
     TemplateSpatialModel,
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data
@@ -221,6 +223,20 @@ def test_sky_disk_edge():
 
     value_edge_nwidth = model(0 * u.deg, r_0 - edge / 2)
     assert_allclose((value_edge_nwidth / value_center).to_value(""), 0.95)
+
+
+def test_from_position():
+    center = SkyCoord(20, 17, unit="deg")
+    spatial_model = GaussianSpatialModel.from_position(
+        position=center, sigma=0.5 * u.deg
+    )
+    geom = WcsGeom.create(skydir=center, npix=(10, 10), binsz=0.3)
+    res = spatial_model.evaluate_geom(geom)
+    assert_allclose(np.sum(res.value), 36307.440813)
+    model = SkyModel(
+        spectral_model=PowerLawSpectralModel(), spatial_model=spatial_model
+    )
+    assert_allclose(model.position.ra.value, center.ra.value, rtol=1e-3)
 
 
 def test_sky_shell():
