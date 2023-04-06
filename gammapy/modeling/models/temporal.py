@@ -722,7 +722,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
             ax = m.plot(axis_name="time", ax=ax, **kwargs)
             ax.set_ylabel("Norm / A.U.")
 
-        return ax, m
+            return ax, m
 
 
 class PowerLawTemporalModel(TemporalModel):
