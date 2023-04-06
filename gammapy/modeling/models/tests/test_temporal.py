@@ -58,7 +58,9 @@ def test_light_curve_to_from_table(light_curve):
     assert table.meta["TIMESYS"] == "utc"
     lc1 = LightCurveTemplateTemporalModel.from_table(table)
     assert lc1.map == light_curve.map
-    assert_allclose(lc1.tref_mjd.value, Time(59000.5, format="mjd").value, rtol=1e-2)
+    assert_allclose(
+        lc1.reference_time.value, Time(59000.5, format="mjd").value, rtol=1e-2
+    )
 
     # test failing cases
     table1 = table.copy()
@@ -78,7 +80,9 @@ def test_light_curve_to_dict(light_curve):
 
     lc1 = LightCurveTemplateTemporalModel.from_dict(data)
     assert lc1.map == light_curve.map
-    assert_allclose(lc1.tref_mjd.value, light_curve.tref_mjd.value, rtol=1e-3)
+    assert_allclose(
+        lc1.reference_time.value, light_curve.reference_time.value, rtol=1e-9
+    )
 
 
 @requires_data()
@@ -86,7 +90,9 @@ def test_light_curve_map_serialisation(light_curve, tmp_path):
     filename = str(make_path(tmp_path / "tmp.fits"))
     light_curve.write(filename, format="map")
     lc1 = LightCurveTemplateTemporalModel.read(filename, format="map")
-    assert_allclose(lc1.tref_mjd.value, light_curve.tref_mjd.value, rtol=1e-3)
+    assert_allclose(
+        lc1.reference_time.value, light_curve.reference_time.value, rtol=1e-9
+    )
     assert lc1.map == light_curve.map
 
 
@@ -405,3 +411,31 @@ def test_phasecurve_DC1():
 
     with mpl_plot_check():
         model.plot_phasogram(n_points=200)
+
+
+def test_model_scale():
+    model = GaussianTemporalModel(t_ref=50003.2503033 * u.d, sigma="2.43 day")
+    assert model.scale == "utc"
+    model.scale = "tai"
+    assert_allclose(model.reference_time.mjd, 50003.2503033, rtol=1e-9)
+    dict1 = model.to_dict()
+    model1 = GaussianTemporalModel.from_dict(dict1)
+    assert model1.scale == "tai"
+    assert_allclose(model1.sigma.quantity, 2.43 * u.d, rtol=1e-3)
+    start = [1, 3, 5] * u.day
+    stop = [2, 3.5, 6] * u.day
+    gti = GTI.create(start, stop, reference_time=model.reference_time)
+    val = model.integral(gti.time_start, gti.time_stop)
+    assert_allclose(np.sum(val), 0.442885, rtol=1e-5)
+
+    model1.reference_time = Time(52398.23456, format="mjd", scale="utc")
+    assert model1.scale == "tai"
+    assert_allclose(model1.t_ref.value, 52398.23493, rtol=1e-9)
+
+    with pytest.raises(TypeError):
+        model1.reference_time = 23456
+
+    with pytest.raises(ValueError):
+        model = GaussianTemporalModel(
+            t_ref=50003.2503033 * u.d, sigma="2.43 day", scale="ms"
+        )
