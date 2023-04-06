@@ -1088,9 +1088,9 @@ class Map(abc.ABC):
             output_map = output_map.resample(geom, preserve_counts=preserve_counts)
         return output_map
 
-    def fill_events(self, events):
+    def fill_events(self, events, weights=None):
         """Fill event coordinates (`~gammapy.data.EventList`)."""
-        self.fill_by_coord(events.map_coord(self.geom))
+        self.fill_by_coord(events.map_coord(self.geom), weights=weights)
 
     def fill_by_coord(self, coords, weights=None):
         """Fill pixels at ``coords`` with given ``weights``.
