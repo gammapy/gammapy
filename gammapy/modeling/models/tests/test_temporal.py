@@ -23,6 +23,7 @@ from gammapy.modeling.models import (
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import mpl_plot_check, requires_data
 from gammapy.utils.time import time_ref_to_dict
+from ..utils import _template_model_from_cta_sdc
 
 
 # TODO: add light-curve test case from scratch
@@ -44,6 +45,28 @@ def test_light_curve_evaluate(light_curve):
     t = Time(59500, format="mjd")
     val = light_curve(t)
     assert_allclose(val, 0.015512, rtol=1e-5)
+
+
+@requires_data()
+def test_energy_dependent_lightcurve():
+    filename = "$GAMMAPY_DATA/gravitational_waves/GW_example_DC_file.fits.gz"
+    mod = _template_model_from_cta_sdc(filename)
+
+    assert mod.is_energy_dependent is True
+
+    t = Time(55555.6157407407, format="mjd")
+    val = mod.evaluate(t, energy=[0.3, 2] * u.TeV)
+    assert_allclose(val.data, [[2.36248483e-21], [4.34347110e-23]], rtol=1e-5)
+
+    t = Time([55555, 55556, 55557], format="mjd")
+    val = mod.evaluate(t)
+    assert val.data.shape == (41, 3)
+
+    with mpl_plot_check():
+        mod.plot(
+            time_range=(Time(55555.50, format="mjd"), Time(55563.0, format="mjd")),
+            energy=[0.3, 2, 10.0] * u.TeV,
+        )
 
 
 def ph_curve(x, amplitude=0.5, x0=0.01):
