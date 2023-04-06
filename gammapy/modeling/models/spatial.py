@@ -393,7 +393,7 @@ class SpatialModel(ModelBase):
             Spatial model
         """
         lon_0, lat_0 = position.data.lon, position.data.lat
-        return cls(lon_0=lon_0, lat_0=lat_0, frame=position.frame, **kwargs)
+        return cls(lon_0=lon_0, lat_0=lat_0, frame=position.frame.name, **kwargs)
 
     @property
     def evaluation_radius(self):
