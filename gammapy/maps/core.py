@@ -1995,11 +1995,6 @@ class Map(abc.ABC):
         loc = self.geom.axes.index_data(axis_name)
         other_loc = other.geom.axes.index_data(axis_name)
 
-        # prepare new axes with expected shape (i.e. common axis replaced by other's axes)
-        axes1 = self.geom.axes.drop(axis_name)
-        inserted_axes = other.geom.axes.drop(axis_name)
-        new_axes = axes1[loc:] + inserted_axes + axes1[:loc]
-
         # move axes because numpy dot product is performed on last axis of a and second-to-last axis of b
         data = np.moveaxis(self.data, loc, -1)
 
@@ -2009,6 +2004,12 @@ class Map(abc.ABC):
             other_data = other.data[..., 0, 0]
 
         data = np.dot(data, other_data)
+
+        # prepare new axes with expected shape (i.e. common axis replaced by other's axes)
+        index = self.geom.axes.index(axis_name)
+        axes1 = self.geom.axes.drop(axis_name)
+        inserted_axes = other.geom.axes.drop(axis_name)
+        new_axes = axes1[:index] + inserted_axes + axes1[index:]
 
         # reorder axes to get the expected shape
         remaining_axes = np.arange(len(inserted_axes))
