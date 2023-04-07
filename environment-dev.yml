@@ -16,17 +16,17 @@ variables:
 
 dependencies:
   # core dependencies
-  - python=3.8
+  - python=3.9
   - pip
   - astropy
   - click
   - cython
-  - numpy<1.23
+  - numpy>1.20
   - pydantic
   - pyyaml
   - regions>=0.5
   - matplotlib>=3.4
-  - scipy<1.10
+  - scipy>1.10
   - iminuit>=2.8.0
   - extension-helpers
   # test dependencies
