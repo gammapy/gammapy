@@ -909,9 +909,38 @@ def test_map_dot_product():
     assert dot_map.data.shape == (4, 3, 2, 1, 1)
 
     map5 = RegionNDMap.create(region=None, axes=[axis3, axis2, axis4])
-    map5.data[...] = 1
+    map5.data[:, 0, :, :, :] = 1
 
     dot_map = map5.dot(map2)
 
     assert dot_map.geom.axes.names == ["axis3", "axis1", "axis4"]
-    assert dot_map.data.shape == (3, 2, 4, 1, 1)
+    assert dot_map.data.shape == (4, 2, 3, 1, 1)
+
+    assert_allclose(dot_map.data[0, :, 0, 0, 0], 1)
+
+
+def test_moveaxis_fail():
+    axis1 = MapAxis.from_edges((0, 1, 3), name="axis1")
+    axis2 = MapAxis.from_edges((0, 1, 2, 3, 4), name="axis2")
+
+    some_map = RegionNDMap.create(region=None, axes=[axis1, axis2])
+
+    with pytest.raises(ValueError):
+        some_map.moveaxis(["axis3", "axis1"])
+
+
+def test_moveaxis():
+    axis1 = MapAxis.from_edges((0, 1, 3), name="axis1")
+    axis2 = MapAxis.from_edges((0, 1, 2, 3, 4), name="axis2")
+    axis3 = MapAxis.from_edges((0, 1, 2, 3), name="axis3")
+
+    some_map = RegionNDMap.create(region=None, axes=[axis1, axis2, axis3])
+
+    some_map.data[:, 1, :] = 1
+
+    new_map = some_map.moveaxis(["axis2", "axis1", "axis3"])
+
+    assert new_map.geom.axes.names == ["axis2", "axis1", "axis3"]
+    assert new_map.geom.data_shape == (3, 2, 4, 1, 1)
+
+    assert_allclose(new_map.data[:, :, 1], 1)
