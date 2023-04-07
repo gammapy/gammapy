@@ -217,7 +217,7 @@ class EffectiveAreaTable2D(IRF):
         -------
         aeff : `EffectiveAreaTable2D`
             Effective area table
-        """ # noqa: E501
+        """  # noqa: E501
         # Put the parameters g in a dictionary.
         # Units: g1 (cm^2), g2 (), g3 (MeV)
         pars = {

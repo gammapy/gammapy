@@ -2238,7 +2238,7 @@ class GaussianSpectralModel(SpectralModel):
         ----------
         energy_min, energy_max : `~astropy.units.Quantity`
             Lower and upper bound of integration range
-        """ # noqa: E501
+        """  # noqa: E501
         # kwargs are passed to this function but not used
         # this is to get a consistent API with SpectralModel.integral()
         u_min = (
@@ -2267,7 +2267,7 @@ class GaussianSpectralModel(SpectralModel):
         ----------
         energy_min, energy_max : `~astropy.units.Quantity`
             Lower and upper bound of integration range.
-        """ # noqa: E501
+        """  # noqa: E501
         u_min = (
             (energy_min - self.mean.quantity) / (np.sqrt(2) * self.sigma.quantity)
         ).to_value("")
