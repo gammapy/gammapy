@@ -1096,8 +1096,8 @@ class Map(abc.ABC):
         events : `~gammapy.data.EventList`
             Events to be fill in the map.
         weights : `~numpy.ndarray`
-            Weights vector. Default is weight of one. The weights vector must be of the length
-            of the events column length.
+            Weights vector. Default is weight of one. The weights vector must be of the same length
+            as the events column length.
         """
         self.fill_by_coord(events.map_coord(self.geom), weights=weights)
 
