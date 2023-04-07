@@ -30,7 +30,7 @@ def _template_model_from_cta_sdc(filename):
         time_header = time_hdu.header
         time_header.setdefault("MJDREFF", 0.5)
         time_header.setdefault("MJDREFI", 55555)
-        time_header.setdefault("scale", "utc")
+        time_header.setdefault("scale", "tt")
         time_min = time_hdu.data["Initial Time"]
         time_max = time_hdu.data["Final Time"]
         edges = np.append(time_min, time_max[-1]) * u.Unit(time_header["TUNIT1"])
@@ -43,6 +43,5 @@ def _template_model_from_cta_sdc(filename):
             region=PointSkyRegion(center=position),
             axes=[energy_axis, time_axis],
             data=np.array(list(data.data) * u.Unit(data.header["UNITS"])),
-            meta=time_header,
         )
     return LightCurveTemplateTemporalModel(reg_map, t_ref=time_ref, filename=filename)

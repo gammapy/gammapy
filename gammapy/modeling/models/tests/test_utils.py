@@ -15,7 +15,7 @@ def test__template_model_from_cta_sdc(tmp_path):
     assert isinstance(mod, LightCurveTemplateTemporalModel)
     t = Time(55555.6157407407, format="mjd")
     val = mod.evaluate(t, energy=[0.3, 2] * u.TeV)
-    assert_allclose(val.data, [[2.36248483e-21], [4.34347110e-23]], rtol=1e-5)
+    assert_allclose(val.data, [[2.39329809e-21], [4.40027593e-23]], rtol=1e-5)
 
     filename = make_path(tmp_path / "test.fits")
     mod.write(filename=filename, format="map", overwrite=True)

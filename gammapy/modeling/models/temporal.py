@@ -553,7 +553,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         if "time" not in columns:
             raise ValueError("A TIME column is necessary")
 
-        t_ref = time_ref_from_dict(table.meta, scale="utc")
+        t_ref = time_ref_from_dict(table.meta)
         nodes = table["TIME"]
         ax_unit = nodes.quantity.unit
         if not ax_unit.is_equivalent("d"):
@@ -590,9 +590,11 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
         elif format == "map":
             with fits.open(filename) as hdulist:
-                m = RegionNDMap.from_hdulist(hdulist)
                 header = hdulist["SKYMAP_BANDS"].header
-            t_ref = time_ref_from_dict(header)
+                t_ref = time_ref_from_dict(header)
+                # TODO : Ugly hack to prevent creating a TimeMapAxis
+                hdulist["SKYMAP_BANDS"].header.pop("MJDREFI")
+                m = RegionNDMap.from_hdulist(hdulist)
             return cls(m, t_ref=t_ref, filename=filename)
 
         else:
@@ -644,7 +646,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         """Evaluate the model at given coordinates."""
 
         if t_ref is None:
-            t_ref = Time(self.t_ref.value, format="mjd", scale="utc")
+            t_ref = Time(self.t_ref.value, format="mjd", scale=self.scale)
         t = (time - t_ref).to_value(self.map.geom.axes["time"].unit)
         coords = {"time": t}
         if self.is_energy_dependent:

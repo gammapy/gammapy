@@ -55,7 +55,7 @@ def test_energy_dependent_lightcurve(tmp_path):
 
     t = Time(55555.6157407407, format="mjd")
     val = mod.evaluate(t, energy=[0.3, 2] * u.TeV)
-    assert_allclose(val.data, [[2.36248483e-21], [4.34347110e-23]], rtol=1e-5)
+    assert_allclose(val.data, [[2.389591e-21], [4.399548e-23]], rtol=1e-5)
 
     t = Time([55555, 55556, 55557], format="mjd")
     val = mod.evaluate(t)
@@ -67,9 +67,7 @@ def test_energy_dependent_lightcurve(tmp_path):
             energy=[0.3, 2, 10.0] * u.TeV,
         )
     filename = make_path(tmp_path / "test.fits")
-    with pytest.raises(
-        NotImplementedError, "Not supported for energy dependent models"
-    ):
+    with pytest.raises(NotImplementedError):
         mod.write(filename=filename, format="table", overwrite=True)
 
 
@@ -81,7 +79,7 @@ def ph_curve(x, amplitude=0.5, x0=0.01):
 def test_light_curve_to_from_table(light_curve):
     table = light_curve.to_table()
     assert_allclose(table.meta["MJDREFI"], 59000)
-    assert_allclose(table.meta["MJDREFF"], 0.5, rtol=1e-6)
+    assert_allclose(table.meta["MJDREFF"], 0.4991992, rtol=1e-6)
     assert table.meta["TIMESYS"] == "utc"
     lc1 = LightCurveTemplateTemporalModel.from_table(table)
     assert lc1.map == light_curve.map
