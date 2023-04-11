@@ -593,6 +593,10 @@ class LightCurveTemplateTemporalModel(TemporalModel):
                 header = hdulist["SKYMAP_BANDS"].header
                 t_ref = time_ref_from_dict(header)
                 # TODO : Ugly hack to prevent creating a TimeMapAxis
+                # By default, MapAxis.from_table tries to create a
+                # TimeMapAxis, failing which, it creates a normal MapAxis.
+                # This ugly hack forces the fail. We need a normal Axis to
+                # have the evaluate method work
                 hdulist["SKYMAP_BANDS"].header.pop("MJDREFI")
                 m = RegionNDMap.from_hdulist(hdulist)
             return cls(m, t_ref=t_ref, filename=filename)

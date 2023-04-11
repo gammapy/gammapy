@@ -69,6 +69,11 @@ def test_energy_dependent_lightcurve(tmp_path):
     filename = make_path(tmp_path / "test.fits")
     with pytest.raises(NotImplementedError):
         mod.write(filename=filename, format="table", overwrite=True)
+    with pytest.raises(NotImplementedError):
+        start = [1, 3, 5] * u.hour
+        stop = [2, 3.5, 6] * u.hour
+        gti = GTI.create(start, stop, reference_time=Time("2010-01-01T00:00:00"))
+        mod.integral(gti.time_start, gti.time_stop)
 
 
 def ph_curve(x, amplitude=0.5, x0=0.01):
@@ -180,6 +185,7 @@ def test_lightcurve_temporal_model_integral():
     table["NORM"] = np.ones(len(time))
     table.meta = dict(MJDREFI=55197.0, MJDREFF=0, TIMEUNIT="hour")
     temporal_model = LightCurveTemplateTemporalModel.from_table(table)
+    assert temporal_model.is_energy_dependent == False
 
     start = [1, 3, 5] * u.hour
     stop = [2, 3.5, 6] * u.hour
@@ -188,6 +194,11 @@ def test_lightcurve_temporal_model_integral():
     val = temporal_model.integral(gti.time_start, gti.time_stop)
     assert len(val) == 3
     assert_allclose(np.sum(val), 1.0101, rtol=1e-5)
+
+    with mpl_plot_check():
+        temporal_model.plot(
+            time_range=(Time(55555.50, format="mjd"), Time(55563.0, format="mjd"))
+        )
 
 
 def test_constant_temporal_model_evaluate():
