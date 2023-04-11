@@ -553,7 +553,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         if "time" not in columns:
             raise ValueError("A TIME column is necessary")
 
-        t_ref = time_ref_from_dict(table.meta)
+        t_ref = time_ref_from_dict(table.meta, scale="utc")
         nodes = table["TIME"]
         ax_unit = nodes.quantity.unit
         if not ax_unit.is_equivalent("d"):
