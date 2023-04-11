@@ -1355,7 +1355,7 @@ class PiecewiseNormSpatialModel(SpatialModel):
         coords = list(zip(*coords))
         if self.is_energy_dependent:
             if energy is None:
-                raise ValueError("Missing nergy value for  energy-dependent model")
+                raise ValueError("Missing energy values for  energy-dependent model")
             interpolated = griddata(
                 coords, v_nodes, (lon, lat, energy), method="linear"
             )
