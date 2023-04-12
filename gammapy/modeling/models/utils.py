@@ -11,7 +11,8 @@ from . import LightCurveTemplateTemporalModel
 
 def _template_model_from_cta_sdc(filename):
     """To create a `LightCurveTemplateTemporalModel`
-    from the cta-sdc files. This format is subject to change"""
+    from the energy-dependent temporal model files of the cta-sdc1.
+     This format is subject to change"""
     filename = str(make_path(filename))
     with fits.open(filename) as hdul:
         frame = hdul[0].header.get("frame", "icrs")
