@@ -23,6 +23,7 @@ from gammapy.modeling.models import (
     LightCurveTemplateTemporalModel,
     LogParabolaSpectralModel,
     Models,
+    PiecewiseNormSpatialModel,
     PointSpatialModel,
     PowerLawNormSpectralModel,
     PowerLawSpectralModel,
@@ -31,8 +32,6 @@ from gammapy.modeling.models import (
     TemplateNPredModel,
     TemplateSpatialModel,
     create_fermi_isotropic_diffuse_model,
-    PiecewiseNormSpatialModel,
-    FoVBackgroundModel,
 )
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import mpl_plot_check, requires_data
@@ -750,11 +749,10 @@ def test_spatial_model_background(background):
     geom = background.geom
 
     spatial_model = ConstantSpatialModel(frame="galactic")
-    reference_npred = TemplateNPredModel(background, spatial_model=None).evaluate()
     identical_npred = TemplateNPredModel(
         background, spatial_model=spatial_model
     ).evaluate()
-    assert_allclose(identical_npred, reference_npred)
+    assert_allclose(identical_npred, background.data)
 
     reference = FoVBackgroundModel(
         spatial_model=None, dataset_name="test"
@@ -769,7 +767,7 @@ def test_spatial_model_background(background):
     twice_npred = TemplateNPredModel(
         background, spatial_model=spatial_model2
     ).evaluate()
-    assert_allclose(twice_npred, reference_npred * 2)
+    assert_allclose(twice_npred, background.data * 2)
 
     twice = FoVBackgroundModel(
         spatial_model=spatial_model2, dataset_name="test"
@@ -812,11 +810,10 @@ def test_piecewise_spatial_model_background(background):
     coords = geom.get_coord().flat
 
     spatial_model = PiecewiseNormSpatialModel(coords, frame="galactic")
-    reference_npred = TemplateNPredModel(background, spatial_model=None).evaluate()
     identical_npred = TemplateNPredModel(
         background, spatial_model=spatial_model
     ).evaluate()
-    assert_allclose(identical_npred, reference_npred)
+    assert_allclose(identical_npred, background.data)
 
     reference = Map.from_geom(geom, data=1)
     identical = FoVBackgroundModel(
@@ -830,7 +827,7 @@ def test_piecewise_spatial_model_background(background):
     twice_npred = TemplateNPredModel(
         background, spatial_model=spatial_model2
     ).evaluate()
-    assert_allclose(twice_npred, reference_npred * 2)
+    assert_allclose(twice_npred, background.data * 2)
 
     twice = FoVBackgroundModel(
         spatial_model=spatial_model2, dataset_name="test"
