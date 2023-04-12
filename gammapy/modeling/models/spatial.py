@@ -1292,7 +1292,7 @@ class PiecewiseNormSpatialModel(SpatialModel):
     """Piecewise spatial correction
        with a free normalization at each fixed nodes.
 
-       For more information see :ref:`piecewise-norm-spectral`.
+       For more information see :ref:`piecewise-norm-spatial`.
 
     Parameters
     ----------
