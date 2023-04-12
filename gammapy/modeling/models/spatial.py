@@ -1339,7 +1339,7 @@ class PiecewiseNormSpatialModel(SpatialModel):
     @property
     def norms(self):
         """Norm values"""
-        return u.Quantity(self.parameters.value)
+        return u.Quantity([p.quantity for p in self.parameters])
 
     @property
     def is_energy_dependent(self):
@@ -1349,7 +1349,7 @@ class PiecewiseNormSpatialModel(SpatialModel):
     def evaluate(self, lon, lat, energy=None, **norms):
         """Evaluate the model at given coordinates."""
         scale = interpolation_scale(scale=self._interp)
-        v_nodes = scale(self.norms)
+        v_nodes = scale(self.norms.value)
         coords = [value.value for value in self.coords._data.values()]
         # TODO: apply axes scaling in this loop
         coords = list(zip(*coords))
@@ -1364,7 +1364,7 @@ class PiecewiseNormSpatialModel(SpatialModel):
             method = "cubic"
             points = (lon, lat)
         interpolated = griddata(coords, v_nodes, points, method=method)
-        return scale.inverse(interpolated)
+        return scale.inverse(interpolated) * self.norms.unit
 
     def evaluate_geom(self, geom):
         """Evaluate model on `~gammapy.maps.Geom`
