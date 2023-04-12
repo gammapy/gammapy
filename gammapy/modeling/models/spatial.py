@@ -5,7 +5,7 @@ import os
 import numpy as np
 import scipy.integrate
 import scipy.special
-from scipy.interpolate import griddata, CloughTocher2DInterpolator
+from scipy.interpolate import griddata
 import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from astropy.coordinates.angle_utilities import angular_separation, position_angle
@@ -18,15 +18,14 @@ from regions import (
     RectangleSkyRegion,
 )
 import matplotlib.pyplot as plt
-from gammapy.maps import Map, WcsGeom, MapCoord
+from gammapy.maps import Map, MapCoord, WcsGeom
 from gammapy.modeling import Parameter, Parameters
 from gammapy.modeling.covariance import copy_covariance
 from gammapy.utils.deprecation import deprecated
-from gammapy.utils.interpolation import interpolation_scale
 from gammapy.utils.gauss import Gauss2DPDF
+from gammapy.utils.interpolation import interpolation_scale
 from gammapy.utils.regions import region_circle_to_ellipse, region_to_frame
 from gammapy.utils.scripts import make_path
-
 from .core import ModelBase
 
 __all__ = [
@@ -164,11 +163,12 @@ class SpatialModel(ModelBase):
         Parameters
         ----------
         geom : `~gammapy.maps.WcsGeom`
+            Map geometry
 
         Returns
         -------
-        `~gammapy.maps.Map`
-
+        map : `~gammapy.maps.Map`
+            Map containing the value in each spatial bin.
         """
         coords = geom.get_coord(frame=self.frame, sparse=True)
 
@@ -198,8 +198,8 @@ class SpatialModel(ModelBase):
 
         Returns
         -------
-        `~gammapy.maps.Map` or `gammapy.maps.RegionNDMap`, containing
-                the integral value in each spatial bin.
+        map : `~gammapy.maps.Map` or `gammapy.maps.RegionNDMap`
+            Map containing the integral value in each spatial bin.
         """
         wcs_geom = geom
         mask = None
@@ -1356,14 +1356,15 @@ class PiecewiseNormSpatialModel(SpatialModel):
         if self.is_energy_dependent:
             if energy is None:
                 raise ValueError("Missing energy values for  energy-dependent model")
-            interpolated = griddata(
-                coords, v_nodes, (lon, lat, energy), method="linear"
-            )
-            scaled_norms = scale.inverse(interpolated)
+            method = "linear"
+            points = (lon, lat, energy)
         else:
-            interp = CloughTocher2DInterpolator(coords, v_nodes)
-            scaled_norms = scale.inverse(interp(lon, lat))
-        return scaled_norms
+            # by default rely on CloughTocher2DInterpolator
+            # (Piecewise cubic, C1 smooth, curvature-minimizing interpolant)
+            method = "cubic"
+            points = (lon, lat)
+        interpolated = griddata(coords, v_nodes, points, method=method)
+        return scale.inverse(interpolated)
 
     def evaluate_geom(self, geom):
         """Evaluate model on `~gammapy.maps.Geom`
@@ -1371,16 +1372,21 @@ class PiecewiseNormSpatialModel(SpatialModel):
         Parameters
         ----------
         geom : `~gammapy.maps.WcsGeom`
+            Map geometry
 
         Returns
         -------
-        `~gammapy.maps.Map`
+        map : `~gammapy.maps.Map`
+            Map containing the value in each spatial bin.
 
         """
         coords = geom.get_coord(frame=self.frame, sparse=True)
 
         if self.is_energy_dependent:
-            return self(*coords)
+            for name in geom.axes.names:
+                if "energy" in name:
+                    energy_name = name
+            return self(coords.lon, coords.lat, coords[energy_name])
         else:
             return self(coords.lon, coords.lat)
 
