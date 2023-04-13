@@ -1998,8 +1998,8 @@ class MapAxes(Sequence):
 
                 node_type = table.meta.get("AXNODE{}".format(idx + 1))
                 if node_type is None:
-                    log.info(
-                        "Node type information not present in axis {idx+1}. Guessing axis type"
+                    log.warning(
+                        f"Node type information not present in axis {str(idx + 1)}. Guessing axis type"
                     )
                     axis = guess_axis(table, format=format, idx=idx)
                 elif node_type == "label":
@@ -2009,7 +2009,7 @@ class MapAxes(Sequence):
                 elif node_type == "edges" or node_type == "center":
                     axis = MapAxis.from_table(table, format=format, idx=idx)
                 else:
-                    raise ValueError(f"Invalid node type for axis {idx + 1}")
+                    raise ValueError(f"Invalid node type for axis {str(idx + 1)}")
                 axes.append(axis)
         elif format == "gadf-dl3":
             for column_prefix in IRF_DL3_AXES_SPECIFICATION:

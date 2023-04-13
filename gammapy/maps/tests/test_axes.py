@@ -3,6 +3,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
+from astropy.io import fits
 from astropy.table import Table
 from astropy.time import Time
 from astropy.visualization import quantity_support
@@ -827,7 +828,8 @@ def test_label_map_axis_squash():
     assert_equal(squash_label.center, np.array(["a...c"]))
 
 
-def test_axis_from_table():
+@requires_data()
+def test_axis_from_table(caplog):
     ax1 = LabelMapAxis(["a", "b", "c"], name="Letters")
     ax2 = TimeMapAxis(
         edges_min=[1, 10] * u.day,
@@ -843,4 +845,17 @@ def test_axis_from_table():
     assert table_hdu.header["AXNODE2"] == "intervals"
     assert table_hdu.header["AXNODE4"] == "edges"
 
+    axes_new = MapAxes.from_table_hdu(table_hdu)
+    assert axes_new == axes
+
     # without node type info present
+    filename = make_path("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
+    with fits.open(filename) as hdul:
+        assert hdul["COUNTS_BANDS"].header.get("AXNODE1") is None
+        axes_new = MapAxes.from_table_hdu(hdul["COUNTS_BANDS"])
+        assert "WARNING" in [_.levelname for _ in caplog.records]
+        assert "Node type information not present in axis 1. Guessing axis type" in [
+            _.message for _ in caplog.records
+        ]
+    assert axes_new["energy"].nbin == 10
+    assert axes_new["energy"].node_type == "edges"
