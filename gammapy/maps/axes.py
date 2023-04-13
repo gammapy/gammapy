@@ -13,7 +13,7 @@ from astropy.utils import lazyproperty
 import matplotlib.pyplot as plt
 from gammapy.utils.interpolation import interpolation_scale
 from gammapy.utils.time import time_ref_from_dict, time_ref_to_dict
-from .utils import INVALID_INDEX, edges_from_lo_hi
+from .utils import INVALID_INDEX, edges_from_lo_hi, guess_axis
 
 __all__ = ["MapAxes", "MapAxis", "TimeMapAxis", "LabelMapAxis"]
 
@@ -1960,17 +1960,6 @@ class MapAxes(Sequence):
         table = Table.read(hdu)
         return cls.from_table(table, format=format)
 
-    @staticmethod
-    def _guess_axis(table, format="gadf", idx=0):
-        try:
-            axis = LabelMapAxis.from_table(table, format=format, idx=idx)
-        except (KeyError, TypeError):
-            try:
-                axis = TimeMapAxis.from_table(table, format=format, idx=idx)
-            except (KeyError, ValueError, IndexError):
-                axis = MapAxis.from_table(table, format=format, idx=idx)
-        return axis
-
     @classmethod
     def from_table(cls, table, format="gadf"):
         """Create MapAxes from table
@@ -2012,7 +2001,7 @@ class MapAxes(Sequence):
                     log.info(
                         "Node type information not present in axis {idx+1}. Guessing axis type"
                     )
-                    axis = cls._guess_axis(table, format=format, idx=idx)
+                    axis = guess_axis(table, format=format, idx=idx)
                 elif node_type == "label":
                     axis = LabelMapAxis.from_table(table, format=format, idx=idx)
                 elif node_type == "intervals":

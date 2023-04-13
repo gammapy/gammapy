@@ -825,3 +825,15 @@ def test_label_map_axis_squash():
 
     assert squash_label.nbin == 1
     assert_equal(squash_label.center, np.array(["a...c"]))
+
+
+def test_axis_from_table():
+    ax1 = LabelMapAxis(["a", "b", "c"], name="Letters")
+    ax2 = TimeMapAxis
+    ax3 = MapAxis
+    ax4 = MapAxis
+
+    axes = MapAxes([ax1, ax2, ax3, ax4])
+    table = axes.to_table()
+    table.meta
+    # without node type info present

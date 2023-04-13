@@ -96,3 +96,17 @@ def edges_from_lo_hi(edges_lo, edges_hi):
     except AttributeError:
         edges = np.insert(edges, len(edges), edges_hi[-1])
     return edges
+
+
+def guess_axis(table, format="gadf", idx=0):
+    """Create Axis from a table"""
+    from gammapy.maps import LabelMapAxis, MapAxis, TimeMapAxis
+
+    try:
+        axis = LabelMapAxis.from_table(table, format=format, idx=idx)
+    except (KeyError, TypeError):
+        try:
+            axis = TimeMapAxis.from_table(table, format=format, idx=idx)
+        except (KeyError, ValueError, IndexError):
+            axis = MapAxis.from_table(table, format=format, idx=idx)
+    return axis
