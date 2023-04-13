@@ -618,6 +618,8 @@ class MapDataset(Dataset):
         meta_table : `~astropy.table.Table`
             Table listing information on observations used to create the dataset.
             One line per observation for stacked datasets.
+        reco_psf : bool
+            Use reconstructed energy for the PSF geometry. Default is False
 
         Returns
         -------
