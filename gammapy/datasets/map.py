@@ -68,6 +68,8 @@ def create_map_dataset_geoms(
         Rad axis for the psf map
     binsz_irf : float
         IRF Map pixel size in degrees.
+    reco_psf : bool
+        Use reconstructed energy for the PSF geometry. Default is False
 
     Returns
     -------
