@@ -89,7 +89,7 @@ def create_map_dataset_geoms(
     geom_irf = geom_image.to_binsz(binsz=binsz_irf)
 
     if reco_psf:
-        geom_psf = geom_irf.to_cube([rad_axis,geom.axes["energy"]])
+        geom_psf = geom_irf.to_cube([rad_axis, geom.axes["energy"]])
     else:
         geom_psf = geom_irf.to_cube([rad_axis, energy_axis_true])
 

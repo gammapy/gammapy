@@ -60,7 +60,7 @@ check_tutorials_setup()
 ######################################################################
 # Chose which estimator we will use
 
-which = 'NN'
+energy_estimator = 'NN'
 
 
 ######################################################################
@@ -85,8 +85,8 @@ which = 'NN'
 # Load the tables
 
 data_path = "$GAMMAPY_DATA/hawc/crab_events_pass4/"
-hdu_filename = 'hdu-index-table-' + which + "-Crab.fits.gz"
-obs_filename = 'obs-index-table-' + which + "-Crab.fits.gz"
+hdu_filename = f'hdu-index-table-{energy_estimator}-Crab.fits.gz'
+obs_filename = f'obs-index-table-{energy_estimator}-Crab.fits.gz'
 
 # there is only one observation table
 obs_table = ObservationTable.read(data_path+obs_filename)
