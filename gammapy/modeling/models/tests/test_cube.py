@@ -32,6 +32,7 @@ from gammapy.modeling.models import (
     TemplateSpatialModel,
     create_fermi_isotropic_diffuse_model,
 )
+from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import mpl_plot_check, requires_data
 
 
@@ -154,7 +155,9 @@ def test_sky_model_init():
         SkyModel(spectral_model=PowerLawSpectralModel(), spatial_model=1234)
 
     # test init of energy dependent temporal models
-    filename = "$GAMMAPY_DATA/gravitational_waves/GW_example_DC_map_file.fits.gz"
+    filename = make_path(
+        "$GAMMAPY_DATA/gravitational_waves/GW_example_DC_map_file.fits.gz"
+    )
     temporal_model = LightCurveTemplateTemporalModel.read(filename, format="map")
     spatial_model = PointSpatialModel()
     spectral_model_fake = ConstantSpectralModel()
