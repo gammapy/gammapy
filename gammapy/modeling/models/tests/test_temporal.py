@@ -46,6 +46,36 @@ def test_light_curve_evaluate(light_curve):
     assert_allclose(val, 0.015512, rtol=1e-5)
 
 
+@requires_data()
+def test_energy_dependent_lightcurve(tmp_path):
+    filename = "$GAMMAPY_DATA/gravitational_waves/GW_example_DC_map_file.fits.gz"
+    mod = LightCurveTemplateTemporalModel.read(filename, format="map")
+
+    assert mod.is_energy_dependent is True
+
+    t = Time(55555.6157407407, format="mjd")
+    val = mod.evaluate(t, energy=[0.3, 2] * u.TeV)
+    assert_allclose(val.data, [[2.389591e-21], [4.399548e-23]], rtol=1e-5)
+
+    t = Time([55555, 55556, 55557], format="mjd")
+    val = mod.evaluate(t)
+    assert val.data.shape == (41, 3)
+
+    with mpl_plot_check():
+        mod.plot(
+            time_range=(Time(55555.50, format="mjd"), Time(55563.0, format="mjd")),
+            energy=[0.3, 2, 10.0] * u.TeV,
+        )
+    filename = make_path(tmp_path / "test.fits")
+    with pytest.raises(NotImplementedError):
+        mod.write(filename=filename, format="table", overwrite=True)
+    with pytest.raises(NotImplementedError):
+        start = [1, 3, 5] * u.hour
+        stop = [2, 3.5, 6] * u.hour
+        gti = GTI.create(start, stop, reference_time=Time("2010-01-01T00:00:00"))
+        mod.integral(gti.time_start, gti.time_stop)
+
+
 def ph_curve(x, amplitude=0.5, x0=0.01):
     return 100.0 + amplitude * np.sin(2 * np.pi * (x - x0) / 1.0)
 
@@ -54,7 +84,7 @@ def ph_curve(x, amplitude=0.5, x0=0.01):
 def test_light_curve_to_from_table(light_curve):
     table = light_curve.to_table()
     assert_allclose(table.meta["MJDREFI"], 59000)
-    assert_allclose(table.meta["MJDREFF"], 0.5, rtol=1e-6)
+    assert_allclose(table.meta["MJDREFF"], 0.4991992, rtol=1e-6)
     assert table.meta["TIMESYS"] == "utc"
     lc1 = LightCurveTemplateTemporalModel.from_table(table)
     assert lc1.map == light_curve.map
@@ -155,6 +185,7 @@ def test_lightcurve_temporal_model_integral():
     table["NORM"] = np.ones(len(time))
     table.meta = dict(MJDREFI=55197.0, MJDREFF=0, TIMEUNIT="hour")
     temporal_model = LightCurveTemplateTemporalModel.from_table(table)
+    assert not temporal_model.is_energy_dependent
 
     start = [1, 3, 5] * u.hour
     stop = [2, 3.5, 6] * u.hour
@@ -163,6 +194,11 @@ def test_lightcurve_temporal_model_integral():
     val = temporal_model.integral(gti.time_start, gti.time_stop)
     assert len(val) == 3
     assert_allclose(np.sum(val), 1.0101, rtol=1e-5)
+
+    with mpl_plot_check():
+        temporal_model.plot(
+            time_range=(Time(55555.50, format="mjd"), Time(55563.0, format="mjd"))
+        )
 
 
 def test_constant_temporal_model_evaluate():
