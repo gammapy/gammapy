@@ -829,11 +829,18 @@ def test_label_map_axis_squash():
 
 def test_axis_from_table():
     ax1 = LabelMapAxis(["a", "b", "c"], name="Letters")
-    ax2 = TimeMapAxis
-    ax3 = MapAxis
-    ax4 = MapAxis
+    ax2 = TimeMapAxis(
+        edges_min=[1, 10] * u.day,
+        edges_max=[2, 13] * u.day,
+        reference_time=Time("2020-03-19"),
+    )
+    ax3 = MapAxis.from_nodes([0, 1, 3, 7], name="ax3", interp="lin")
+    ax4 = MapAxis.from_edges([0, 1, 3, 7], name="ax4", interp="log")
 
     axes = MapAxes([ax1, ax2, ax3, ax4])
-    table = axes.to_table()
-    table.meta
+    table_hdu = axes.to_table_hdu()
+
+    assert table_hdu.header["AXNODE2"] == "intervals"
+    assert table_hdu.header["AXNODE4"] == "edges"
+
     # without node type info present

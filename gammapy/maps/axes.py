@@ -1109,7 +1109,7 @@ class MapAxis:
 
             key_interp = f"INTERP{idx}"
             header[key_interp] = self.interp
-            key_node = f"NODE{idx}"
+            key_node = f"AXNODE{idx}"
             header[key_node] = self.node_type
 
         else:
@@ -1996,7 +1996,7 @@ class MapAxes(Sequence):
                 if axcols is None:
                     break
 
-                node_type = table.meta.get("NODE{}".format(idx + 1))
+                node_type = table.meta.get("AXNODE{}".format(idx + 1))
                 if node_type is None:
                     log.info(
                         "Node type information not present in axis {idx+1}. Guessing axis type"
@@ -2007,7 +2007,7 @@ class MapAxes(Sequence):
                 elif node_type == "intervals":
                     axis = TimeMapAxis.from_table(table, format=format, idx=idx)
                 elif node_type == "edges" or node_type == "center":
-                    axis = LabelMapAxis.from_table(table, format=format, idx=idx)
+                    axis = MapAxis.from_table(table, format=format, idx=idx)
                 else:
                     raise ValueError(f"Invalid node type for axis {idx + 1}")
                 axes.append(axis)
@@ -2812,7 +2812,7 @@ class TimeMapAxis:
             header[key] = f"{name}_MIN,{name}_MAX"
             key_interp = f"INTERP{idx}"
             header[key_interp] = self.interp
-            key_node = f"NODE{idx}"
+            key_node = f"AXNODE{idx}"
             header[key_node] = self.node_type
 
             ref_dict = time_ref_to_dict(self.reference_time)
@@ -3042,7 +3042,7 @@ class LabelMapAxis:
         if format == "gadf":
             key = f"AXCOLS{idx}"
             header[key] = self.name.upper()
-            key_node = f"NODE{idx}"
+            key_node = f"AXNODE{idx}"
             header[key_node] = self.node_type
         else:
             raise ValueError(f"Unknown format {format}")
