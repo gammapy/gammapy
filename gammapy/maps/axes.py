@@ -1109,6 +1109,8 @@ class MapAxis:
 
             key_interp = f"INTERP{idx}"
             header[key_interp] = self.interp
+            key_node = f"NODE{idx}"
+            header[key_node] = self.node_type
 
         else:
             raise ValueError(f"Unknown format {format}")
@@ -1958,6 +1960,17 @@ class MapAxes(Sequence):
         table = Table.read(hdu)
         return cls.from_table(table, format=format)
 
+    @staticmethod
+    def _guess_axis(table, format="gadf", idx=0):
+        try:
+            axis = LabelMapAxis.from_table(table, format=format, idx=idx)
+        except (KeyError, TypeError):
+            try:
+                axis = TimeMapAxis.from_table(table, format=format, idx=idx)
+            except (KeyError, ValueError, IndexError):
+                axis = MapAxis.from_table(table, format=format, idx=idx)
+        return axis
+
     @classmethod
     def from_table(cls, table, format="gadf"):
         """Create MapAxes from table
@@ -1994,15 +2007,20 @@ class MapAxes(Sequence):
                 if axcols is None:
                     break
 
-                # TODO: what is good way to check whether it is a given axis type?
-                try:
+                node_type = table.meta.get("NODE{}".format(idx + 1))
+                if node_type is None:
+                    log.info(
+                        "Node type information not present in axis {idx+1}. Guessing axis type"
+                    )
+                    axis = cls._guess_axis(table, format=format, idx=idx)
+                elif node_type == "label":
                     axis = LabelMapAxis.from_table(table, format=format, idx=idx)
-                except (KeyError, TypeError):
-                    try:
-                        axis = TimeMapAxis.from_table(table, format=format, idx=idx)
-                    except (KeyError, ValueError, IndexError):
-                        axis = MapAxis.from_table(table, format=format, idx=idx)
-
+                elif node_type == "intervals":
+                    axis = TimeMapAxis.from_table(table, format=format, idx=idx)
+                elif node_type == "edges" or node_type == "center":
+                    axis = LabelMapAxis.from_table(table, format=format, idx=idx)
+                else:
+                    raise ValueError(f"Invalid node type for axis {idx + 1}")
                 axes.append(axis)
         elif format == "gadf-dl3":
             for column_prefix in IRF_DL3_AXES_SPECIFICATION:
@@ -2805,6 +2823,8 @@ class TimeMapAxis:
             header[key] = f"{name}_MIN,{name}_MAX"
             key_interp = f"INTERP{idx}"
             header[key_interp] = self.interp
+            key_node = f"NODE{idx}"
+            header[key_node] = self.node_type
 
             ref_dict = time_ref_to_dict(self.reference_time)
             header.update(ref_dict)
@@ -3033,6 +3053,8 @@ class LabelMapAxis:
         if format == "gadf":
             key = f"AXCOLS{idx}"
             header[key] = self.name.upper()
+            key_node = f"NODE{idx}"
+            header[key_node] = self.node_type
         else:
             raise ValueError(f"Unknown format {format}")
 
