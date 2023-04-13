@@ -51,7 +51,7 @@ def create_map_dataset_geoms(
     migra_axis=None,
     rad_axis=None,
     binsz_irf=None,
-    reco_psf=False
+    reco_psf=False,
 ):
     """Create map geometries for a `MapDataset`
 
@@ -653,7 +653,7 @@ class MapDataset(Dataset):
             rad_axis=rad_axis,
             migra_axis=migra_axis,
             binsz_irf=binsz_irf,
-            reco_psf=reco_psf
+            reco_psf=reco_psf,
         )
 
         kwargs.update(geoms)

@@ -38,16 +38,16 @@ This is how to access data and IRFs from the HAWC Crab event data release.
 
 """
 
+import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 import matplotlib.pyplot as plt
-import numpy as np
 from IPython.display import display
-from gammapy.datasets import MapDataset
-from gammapy.makers import MapDatasetMaker, SafeMaskMaker
 from gammapy.data import DataStore, HDUIndexTable, ObservationTable
-from gammapy.maps import Map, MapAxis, WcsGeom
+from gammapy.datasets import MapDataset
 from gammapy.estimators import ExcessMapEstimator
+from gammapy.makers import MapDatasetMaker, SafeMaskMaker
+from gammapy.maps import Map, MapAxis, WcsGeom
 
 ######################################################################
 # Check setup
@@ -60,7 +60,7 @@ check_tutorials_setup()
 ######################################################################
 # Chose which estimator we will use
 
-energy_estimator = 'NN'
+energy_estimator = "NN"
 
 
 ######################################################################
@@ -85,21 +85,21 @@ energy_estimator = 'NN'
 # Load the tables
 
 data_path = "$GAMMAPY_DATA/hawc/crab_events_pass4/"
-hdu_filename = f'hdu-index-table-{energy_estimator}-Crab.fits.gz'
-obs_filename = f'obs-index-table-{energy_estimator}-Crab.fits.gz'
+hdu_filename = f"hdu-index-table-{energy_estimator}-Crab.fits.gz"
+obs_filename = f"obs-index-table-{energy_estimator}-Crab.fits.gz"
 
 # there is only one observation table
-obs_table = ObservationTable.read(data_path+obs_filename)
+obs_table = ObservationTable.read(data_path + obs_filename)
 
 # we read the hdu index table of fHit bin number 6
 fHit = 6
-hdu_table = HDUIndexTable.read(data_path+hdu_filename, hdu=fHit)
+hdu_table = HDUIndexTable.read(data_path + hdu_filename, hdu=fHit)
 
 
 ######################################################################
 # From the tables, we can create a Datastore
 
-data_store = DataStore( hdu_table=hdu_table, obs_table=obs_table)
+data_store = DataStore(hdu_table=hdu_table, obs_table=obs_table)
 
 data_store.info()
 
@@ -148,35 +148,40 @@ obs.aeff.reduce_over_axes().plot(add_cbar=True)
 # First we define the geometry and axes
 
 # create the energy reco axis
-energy_axis = MapAxis.from_edges([1.00,1.78,3.16,5.62,10.0,17.8,31.6,56.2,100,177,316] * u.TeV,
-        name="energy",
-        interp="log")
+energy_axis = MapAxis.from_edges(
+    [1.00, 1.78, 3.16, 5.62, 10.0, 17.8, 31.6, 56.2, 100, 177, 316] * u.TeV,
+    name="energy",
+    interp="log",
+)
 
 
 # and energy true axis
-energy_axis_true = MapAxis.from_energy_bounds(1e-3, 1e4, nbin=140, unit="TeV", name="energy_true")
+energy_axis_true = MapAxis.from_energy_bounds(
+    1e-3, 1e4, nbin=140, unit="TeV", name="energy_true"
+)
 
 
 # create a geometry around the Crab location
-geom = WcsGeom.create(skydir=SkyCoord(ra=83.63,dec=22.01, unit='deg', frame="icrs"),
-                     width=6*u.deg,
-                     axes=[energy_axis],
-                     binsz=0.05)
+geom = WcsGeom.create(
+    skydir=SkyCoord(ra=83.63, dec=22.01, unit="deg", frame="icrs"),
+    width=6 * u.deg,
+    axes=[energy_axis],
+    binsz=0.05,
+)
 
 
 ######################################################################
 # Define the makers we will use
 
-maker = MapDatasetMaker(selection = ["counts", "background", "exposure", "edisp", "psf"])
-safemask_maker = SafeMaskMaker(methods=['aeff-max'], aeff_percent=10)
+maker = MapDatasetMaker(selection=["counts", "background", "exposure", "edisp", "psf"])
+safemask_maker = SafeMaskMaker(methods=["aeff-max"], aeff_percent=10)
 
 
 ######################################################################
 # Create empty Mapdataset
-dataset_empty = MapDataset.create(geom,
-                                  energy_axis_true= energy_axis_true,
-                                  name ='fHit ' + str(fHit),
-                                  reco_psf=True )
+dataset_empty = MapDataset.create(
+    geom, energy_axis_true=energy_axis_true, name="fHit " + str(fHit), reco_psf=True
+)
 # run the map dataset maker
 dataset = maker.run(dataset_empty, obs)
 
@@ -196,14 +201,12 @@ dataset = safemask_maker.run(dataset)
 # with the event list. For convenience, the HAWC data release already
 # included this quantity as a map
 
-transit_map = Map.read(data_path + 'irfs/TransitsMap_Crab.fits.gz')
+transit_map = Map.read(data_path + "irfs/TransitsMap_Crab.fits.gz")
 transit_number = transit_map.get_by_coord(geom.center_skydir)
 
 # Correct the quantities
-dataset.background.data*=transit_number
-dataset.exposure.data*=transit_number
-
-
+dataset.background.data *= transit_number
+dataset.exposure.data *= transit_number
 
 
 ######################################################################
@@ -218,22 +221,27 @@ dataset.exposure.data*=transit_number
 dataset.peek()
 
 
-
 ######################################################################
 # And make significance maps to check that the Crab is visible
 
-excess_estimator = ExcessMapEstimator(correlation_radius='0.2 deg', selection_optional = [], energy_edges=energy_axis.edges)
+excess_estimator = ExcessMapEstimator(
+    correlation_radius="0.2 deg", selection_optional=[], energy_edges=energy_axis.edges
+)
 excess = excess_estimator.run(dataset)
 
-(dataset.mask*excess['sqrt_ts']).plot_grid(add_cbar=True, cmap='coolwarm', vmin=-5, vmax=5)
+(dataset.mask * excess["sqrt_ts"]).plot_grid(
+    add_cbar=True, cmap="coolwarm", vmin=-5, vmax=5
+)
 plt.show()
 
 ######################################################################
 # Combining all energies
-excess_estimator_integrated = ExcessMapEstimator(correlation_radius='0.2 deg', selection_optional = [])
+excess_estimator_integrated = ExcessMapEstimator(
+    correlation_radius="0.2 deg", selection_optional=[]
+)
 excess_integrated = excess_estimator_integrated.run(dataset)
 
-excess_integrated['sqrt_ts'].plot(add_cbar=True)
+excess_integrated["sqrt_ts"].plot(add_cbar=True)
 plt.show()
 
 
