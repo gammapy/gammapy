@@ -502,7 +502,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         super().__init__()
 
         if t_ref:
-            self.t_ref.value = Time(t_ref, format="mjd", scale=self.scale).mjd
+            self.reference_time = t_ref
 
         self.filename = filename
 
@@ -522,8 +522,8 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         )
 
         if self.is_energy_dependent:
-            energy_min = self.map.geom.axes["energy"].edges[0]
-            energy_max = self.map.geom.axes["energy"].edges[-1]
+            energy_min = self.map.geom.axes["energy"].center[0]
+            energy_max = self.map.geom.axes["energy"].center[-1]
             prnt1 = f"Energy min: {energy_min} \n" f"Energy max: {energy_max} \n"
             prnt = prnt + prnt1
 
@@ -683,7 +683,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         data["temporal"]["unit"] = str(self.map.unit)
         return data
 
-    def plot(self, time_range, energy=None, ax=None, n_points=100, **kwargs):
+    def plot(self, time_range, ax=None, n_points=100, energy=None, **kwargs):
         """
         Plot Temporal Model.
 
@@ -691,15 +691,14 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         ----------
         time_range : `~astropy.time.Time`
             times to plot the model
-        energy : `~astropy.units.quantity`
-            energies to compute the model at for energy dependent models, optional
         ax : `~matplotlib.axes.Axes`, optional
             Axis to plot on
         n_points : int
             Number of bins to plot model
+        energy : `~astropy.units.quantity`
+            energies to compute the model at for energy dependent models, optional
         **kwargs : dict
             Keywords forwarded to `~matplotlib.pyplot.errorbar`
-
         Returns
         -------
         ax : `~matplotlib.axes.Axes`, optional

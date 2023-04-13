@@ -185,7 +185,7 @@ def test_lightcurve_temporal_model_integral():
     table["NORM"] = np.ones(len(time))
     table.meta = dict(MJDREFI=55197.0, MJDREFF=0, TIMEUNIT="hour")
     temporal_model = LightCurveTemplateTemporalModel.from_table(table)
-    assert temporal_model.is_energy_dependent == False
+    assert not temporal_model.is_energy_dependent
 
     start = [1, 3, 5] * u.hour
     stop = [2, 3.5, 6] * u.hour
