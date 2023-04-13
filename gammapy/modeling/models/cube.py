@@ -99,7 +99,10 @@ class SkyModel(ModelBase):
 
         geom = WcsGeom.create(skydir=self.position, npix=(2, 2), axes=[axis])
         time = Time(55555, format="mjd")
-        ref_unit = u.Unit("cm-2 s-1 MeV-1")
+        if self.apply_irf["exposure"]:
+            ref_unit = u.Unit("cm-2 s-1 MeV-1")
+        else:
+            ref_unit = u.Unit("")
         obt_unit = self.spectral_model(axis.center).unit
 
         if self.spatial_model:

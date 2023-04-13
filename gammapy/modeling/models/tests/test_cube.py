@@ -146,6 +146,7 @@ def sky_models_2(sky_model):
     return Models([sky_model_4, sky_model_5])
 
 
+@requires_data()
 def test_sky_model_init():
     with pytest.raises(TypeError):
         spatial_model = GaussianSpatialModel()
