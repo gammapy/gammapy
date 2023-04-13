@@ -18,7 +18,7 @@ from gammapy.irf import (
     EnergyDependentMultiGaussPSF,
     EnergyDispersion2D,
     PSFMap,
-    RecoPSFMap
+    RecoPSFMap,
 )
 from gammapy.makers.utils import make_map_exposure_true_energy, make_psf_map
 from gammapy.maps import HpxGeom, Map, MapAxis, RegionGeom, WcsGeom, WcsNDMap
@@ -1874,6 +1874,7 @@ def test_peek(images):
 
     with mpl_plot_check():
         dataset.peek()
+
 
 def test_create_psf_reco(geom):
     dat = MapDataset.create(geom, reco_psf=True)
