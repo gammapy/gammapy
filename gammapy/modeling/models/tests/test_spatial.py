@@ -19,8 +19,10 @@ from gammapy.modeling.models import (
     GaussianSpatialModel,
     GeneralizedGaussianSpatialModel,
     PointSpatialModel,
+    PowerLawSpectralModel,
     Shell2SpatialModel,
     ShellSpatialModel,
+    SkyModel,
     TemplateSpatialModel,
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data
@@ -240,8 +242,9 @@ def test_disk_from_region():
     reg1 = disk.to_region()
     assert_allclose(reg1.height, region.width, rtol=1e-2)
 
+    center = SkyCoord(20, 17, unit="deg", frame="galactic")
     region = EllipseSkyRegion(
-        center=SkyCoord(20, 17, unit="deg", frame="galactic"),
+        center=center,
         height=1 * u.deg,
         width=0.3 * u.deg,
         angle=30 * u.deg,
@@ -257,9 +260,27 @@ def test_disk_from_region():
     assert_allclose(disk.parameters["lon_0"].value, 20, rtol=1e-2)
     assert disk.frame == "galactic"
 
+    geom = WcsGeom.create(skydir=center, npix=(10, 10), binsz=0.3)
+    res = disk.evaluate_geom(geom)
+    assert_allclose(np.sum(res.value), 50157.904662)
+
     region = PointSkyRegion(center=region.center)
     with pytest.raises(ValueError):
         DiskSpatialModel.from_region(region)
+
+
+def test_from_position():
+    center = SkyCoord(20, 17, unit="deg")
+    spatial_model = GaussianSpatialModel.from_position(
+        position=center, sigma=0.5 * u.deg
+    )
+    geom = WcsGeom.create(skydir=center, npix=(10, 10), binsz=0.3)
+    res = spatial_model.evaluate_geom(geom)
+    assert_allclose(np.sum(res.value), 36307.440813)
+    model = SkyModel(
+        spectral_model=PowerLawSpectralModel(), spatial_model=spatial_model
+    )
+    assert_allclose(model.position.ra.value, center.ra.value, rtol=1e-3)
 
 
 def test_sky_shell():

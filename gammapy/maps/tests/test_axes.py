@@ -759,7 +759,8 @@ def test_map_axis_format_plot_xaxis():
             ax.plot(axis.center, np.ones_like(axis.center))
 
     ax1 = axis.format_plot_xaxis(ax=ax)
-    assert ax1.xaxis.label.properties()["text"] == "True Energy [TeV]"
+    assert ax1.xaxis.units == u.Unit("TeV")
+    assert " ".join(ax1.axes.axes.get_xlabel().split()[:2]) == "True Energy"
 
 
 def test_time_map_axis_format_plot_xaxis(time_intervals):
@@ -776,7 +777,8 @@ def test_time_map_axis_format_plot_xaxis(time_intervals):
             ax.plot(axis.center, np.ones_like(axis.center))
 
     ax1 = axis.format_plot_xaxis(ax=ax)
-    assert ax1.xaxis.label.properties()["text"] == "Time [iso]"
+    assert ax1.axes.axes.get_xlabel().split()[0] == "Time"
+    assert ax1.axes.axes.get_xlabel().split()[1] == "[iso]"
 
 
 def test_single_valued_axis():
@@ -790,3 +792,38 @@ def test_single_valued_axis():
     theta_values = np.array([[0.5]]) * u.deg
     table = Table(data=[theta_values, theta_values], names=["THETA_LO", "THETA_HI"])
     _ = MapAxis.from_table(table, format="gadf-dl3", column_prefix="THETA")
+
+
+def test_label_map_axis_append():
+
+    label1 = LabelMapAxis(["aa", "bb"], name="letters")
+    label2 = LabelMapAxis(["cc", "dd"], name="letters")
+    label3 = LabelMapAxis(["ee", "ff"], name="other_letters")
+
+    label_append12 = label1.append(label2)
+
+    assert_equal(label_append12.center, np.array(["aa", "bb", "cc", "dd"], dtype="<U2"))
+    assert label_append12.name == "letters"
+    with pytest.raises(ValueError):
+        label2.append(label3)
+
+
+def test_label_map_axis_from_stack():
+
+    label1 = LabelMapAxis(["a", "b", "c"], name="letters")
+    label2 = LabelMapAxis(["d", "e"], name="letters")
+    label3 = LabelMapAxis(["f"], name="letters")
+
+    label_stack = LabelMapAxis.from_stack([label1, label2, label3])
+
+    assert_equal(label_stack.center, np.array(["a", "b", "c", "d", "e", "f"]))
+    assert label_stack.name == "letters"
+
+
+def test_label_map_axis_squash():
+
+    label = LabelMapAxis(["a", "b", "c"], name="Letters")
+    squash_label = label.squash()
+
+    assert squash_label.nbin == 1
+    assert_equal(squash_label.center, np.array(["a...c"]))

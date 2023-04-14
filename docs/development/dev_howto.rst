@@ -341,10 +341,6 @@ log messages like this from any function or method:
 You should never log messages from the module level (i.e. on import) or configure the log
 level or format in Gammapy, that should be left to callers ... except from command line tools ...
 
-There is also the rare case of functions or classes with the main job to check
-and log things. For these you can optionally let the caller pass a logger when
-constructing the class to make it easier to configure the logging.
-See the `~gammapy.data.EventListDatasetChecker` as an example.
 
 Interpolation and extrapolation
 -------------------------------
@@ -606,7 +602,7 @@ It will replace the old argument with the new one in a call to the function and 
 
     from gammapy.utils.deprecation import deprecated_renamed_argument
 
-    @deprecated_renamed_argument(["a", "b", ["x", "y"], ["1.1", "1.1"])
+    @deprecated_renamed_argument(["a", "b"], ["x", "y"], ["1.1", "1.1"])
     def deprecated_argument_function(x, y):
         return x + y
 

@@ -102,7 +102,9 @@ def create_map_dataset_geoms(
 class MapDataset(Dataset):
     """
     Bundle together binned counts, background, IRFs, models and compute a likelihood.
-     Uses Cash statistics by default.
+    It uses the Cash statistics by default.
+
+    For more information see :ref:`datasets`.
 
     Parameters
     ----------
@@ -1939,7 +1941,9 @@ class MapDataset(Dataset):
 
 
 class MapDatasetOnOff(MapDataset):
-    """Map dataset for on-off likelihood fitting. Uses wstat statistics.
+    """Map dataset for on-off likelihood fitting. It uses wstat statistics by default.
+
+    For more information see :ref:`datasets`.
 
     Parameters
     ----------

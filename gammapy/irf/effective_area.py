@@ -184,10 +184,12 @@ class EffectiveAreaTable2D(IRF):
             Size of the figure.
 
         """
-        fig, axes = plt.subplots(nrows=1, ncols=3, figsize=figsize)
-        self.plot(ax=axes[2])
+        ncols = 2 if self.is_pointlike else 3
+        fig, axes = plt.subplots(nrows=1, ncols=ncols, figsize=figsize)
+        self.plot(ax=axes[ncols - 1])
         self.plot_energy_dependence(ax=axes[0])
-        self.plot_offset_dependence(ax=axes[1])
+        if self.is_pointlike is False:
+            self.plot_offset_dependence(ax=axes[1])
         plt.tight_layout()
 
     @classmethod
@@ -199,7 +201,7 @@ class EffectiveAreaTable2D(IRF):
         https://ui.adsabs.harvard.edu/abs/2010MNRAS.402.1342A .
 
         .. math::
-            A_{eff}(E) = g_1 \left(\frac{E}{\mathrm{MeV}}\right)^{-g_2}\exp{\left(-\frac{g_3}{E}\right)}  # noqa: E501
+            A_{eff}(E) = g_1 \left(\frac{E}{\mathrm{MeV}}\right)^{-g_2}\exp{\left(-\frac{g_3}{E}\right)}
 
         This method does not model the offset dependence of the effective area,
         but just assumes that it is constant.
@@ -215,7 +217,7 @@ class EffectiveAreaTable2D(IRF):
         -------
         aeff : `EffectiveAreaTable2D`
             Effective area table
-        """
+        """  # noqa: E501
         # Put the parameters g in a dictionary.
         # Units: g1 (cm^2), g2 (), g3 (MeV)
         pars = {

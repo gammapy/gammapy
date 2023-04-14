@@ -46,6 +46,36 @@ def test_light_curve_evaluate(light_curve):
     assert_allclose(val, 0.015512, rtol=1e-5)
 
 
+@requires_data()
+def test_energy_dependent_lightcurve(tmp_path):
+    filename = "$GAMMAPY_DATA/gravitational_waves/GW_example_DC_map_file.fits.gz"
+    mod = LightCurveTemplateTemporalModel.read(filename, format="map")
+
+    assert mod.is_energy_dependent is True
+
+    t = Time(55555.6157407407, format="mjd")
+    val = mod.evaluate(t, energy=[0.3, 2] * u.TeV)
+    assert_allclose(val.data, [[2.389591e-21], [4.399548e-23]], rtol=1e-5)
+
+    t = Time([55555, 55556, 55557], format="mjd")
+    val = mod.evaluate(t)
+    assert val.data.shape == (41, 3)
+
+    with mpl_plot_check():
+        mod.plot(
+            time_range=(Time(55555.50, format="mjd"), Time(55563.0, format="mjd")),
+            energy=[0.3, 2, 10.0] * u.TeV,
+        )
+    filename = make_path(tmp_path / "test.fits")
+    with pytest.raises(NotImplementedError):
+        mod.write(filename=filename, format="table", overwrite=True)
+    with pytest.raises(NotImplementedError):
+        start = [1, 3, 5] * u.hour
+        stop = [2, 3.5, 6] * u.hour
+        gti = GTI.create(start, stop, reference_time=Time("2010-01-01T00:00:00"))
+        mod.integral(gti.time_start, gti.time_stop)
+
+
 def ph_curve(x, amplitude=0.5, x0=0.01):
     return 100.0 + amplitude * np.sin(2 * np.pi * (x - x0) / 1.0)
 
@@ -53,8 +83,21 @@ def ph_curve(x, amplitude=0.5, x0=0.01):
 @requires_data()
 def test_light_curve_to_from_table(light_curve):
     table = light_curve.to_table()
-    lc1 = LightCurveTemplateTemporalModel.from_table((table))
+    assert_allclose(table.meta["MJDREFI"], 59000)
+    assert_allclose(table.meta["MJDREFF"], 0.4991992, rtol=1e-6)
+    assert table.meta["TIMESYS"] == "utc"
+    lc1 = LightCurveTemplateTemporalModel.from_table(table)
     assert lc1.map == light_curve.map
+    assert_allclose(
+        lc1.reference_time.value, Time(59000.5, format="mjd").value, rtol=1e-2
+    )
+
+    # test failing cases
+    table1 = table.copy()
+    table1["TIME"].unit = None
+    table.meta = None
+    with pytest.raises(ValueError, match="Time unit not found in the table"):
+        LightCurveTemplateTemporalModel.from_table(table1)
 
 
 @requires_data()
@@ -65,8 +108,22 @@ def test_light_curve_to_dict(light_curve):
     assert data["temporal"]["type"] == "LightCurveTemplateTemporalModel"
     assert data["temporal"]["parameters"][0]["name"] == "t_ref"
 
-    l1 = LightCurveTemplateTemporalModel.from_dict(data)
-    assert l1.map == light_curve.map
+    lc1 = LightCurveTemplateTemporalModel.from_dict(data)
+    assert lc1.map == light_curve.map
+    assert_allclose(
+        lc1.reference_time.value, light_curve.reference_time.value, rtol=1e-9
+    )
+
+
+@requires_data()
+def test_light_curve_map_serialisation(light_curve, tmp_path):
+    filename = str(make_path(tmp_path / "tmp.fits"))
+    light_curve.write(filename, format="map")
+    lc1 = LightCurveTemplateTemporalModel.read(filename, format="map")
+    assert_allclose(
+        lc1.reference_time.value, light_curve.reference_time.value, rtol=1e-9
+    )
+    assert lc1.map == light_curve.map
 
 
 def test_time_sampling_template():
@@ -128,6 +185,7 @@ def test_lightcurve_temporal_model_integral():
     table["NORM"] = np.ones(len(time))
     table.meta = dict(MJDREFI=55197.0, MJDREFF=0, TIMEUNIT="hour")
     temporal_model = LightCurveTemplateTemporalModel.from_table(table)
+    assert not temporal_model.is_energy_dependent
 
     start = [1, 3, 5] * u.hour
     stop = [2, 3.5, 6] * u.hour
@@ -136,6 +194,11 @@ def test_lightcurve_temporal_model_integral():
     val = temporal_model.integral(gti.time_start, gti.time_stop)
     assert len(val) == 3
     assert_allclose(np.sum(val), 1.0101, rtol=1e-5)
+
+    with mpl_plot_check():
+        temporal_model.plot(
+            time_range=(Time(55555.50, format="mjd"), Time(55563.0, format="mjd"))
+        )
 
 
 def test_constant_temporal_model_evaluate():
@@ -384,3 +447,31 @@ def test_phasecurve_DC1():
 
     with mpl_plot_check():
         model.plot_phasogram(n_points=200)
+
+
+def test_model_scale():
+    model = GaussianTemporalModel(t_ref=50003.2503033 * u.d, sigma="2.43 day")
+    assert model.scale == "utc"
+    model.scale = "tai"
+    assert_allclose(model.reference_time.mjd, 50003.2503033, rtol=1e-9)
+    dict1 = model.to_dict()
+    model1 = GaussianTemporalModel.from_dict(dict1)
+    assert model1.scale == "tai"
+    assert_allclose(model1.sigma.quantity, 2.43 * u.d, rtol=1e-3)
+    start = [1, 3, 5] * u.day
+    stop = [2, 3.5, 6] * u.day
+    gti = GTI.create(start, stop, reference_time=model.reference_time)
+    val = model.integral(gti.time_start, gti.time_stop)
+    assert_allclose(np.sum(val), 0.442885, rtol=1e-5)
+
+    model1.reference_time = Time(52398.23456, format="mjd", scale="utc")
+    assert model1.scale == "tai"
+    assert_allclose(model1.t_ref.value, 52398.23493, rtol=1e-9)
+
+    with pytest.raises(TypeError):
+        model1.reference_time = 23456
+
+    with pytest.raises(ValueError):
+        model = GaussianTemporalModel(
+            t_ref=50003.2503033 * u.d, sigma="2.43 day", scale="ms"
+        )

@@ -349,4 +349,32 @@ ax.legend()
 ax.set_ylim([1e-13, 1e-10])
 plt.show()
 
+
+######################################################################
+# Dataset simulations
+# -------------------
+#
+# A common way to check if a fit is biased is to simulate multiple datasets with
+# the obtained best fit model, and check the distribution of the fitted parameters.
+# Here, we show how to perform one such simulation assuming the measured off counts provide a good distribution of the background.
+#
+
+dataset_simulated = datasets.stack_reduce().copy(name="simulated_ds")
+simulated_model = best_fit_model.copy(name="simulated")
+dataset_simulated.models = simulated_model
+dataset_simulated.fake(
+    npred_background=dataset_simulated.counts_off * dataset_simulated.alpha
+)
+plt.figure()
+dataset_simulated.peek()
+plt.show()
+
+# The important thing to note here is that while this samples the on-counts, the off counts are
+# not sampled. If you have multiple measurements of the off counts, they should be used.
+# Alternatively, you can try to create a parametric model of the background.
+
+result = fit.run(datasets=[dataset_simulated])
+print(result.models.to_parameters_table())
+
+
 # sphinx_gallery_thumbnail_number = 4

@@ -52,6 +52,14 @@ class EnergyDispersion2D(IRF):
     required_axes = ["energy_true", "migra", "offset"]
     default_unit = u.one
 
+    @property
+    def _default_offset(self):
+        if self.axes["offset"].nbin == 1:
+            default_offset = self.axes["offset"].center
+        else:
+            default_offset = [1.0] * u.deg
+        return default_offset
+
     def _mask_out_bounds(self, invalid):
         return (
             invalid[self.axes.index("energy_true")] & invalid[self.axes.index("migra")]
@@ -182,7 +190,7 @@ class EnergyDispersion2D(IRF):
         ax = plt.gca() if ax is None else ax
 
         if offset is None:
-            offset = Angle([1], "deg")
+            offset = self._default_offset
         else:
             offset = np.atleast_1d(Angle(offset))
 
@@ -232,7 +240,7 @@ class EnergyDispersion2D(IRF):
         ax = plt.gca() if ax is None else ax
 
         if offset is None:
-            offset = Angle(1, "deg")
+            offset = self._default_offset
 
         energy_true = self.axes["energy_true"]
         migra = self.axes["migra"]
@@ -266,7 +274,7 @@ class EnergyDispersion2D(IRF):
         fig, axes = plt.subplots(nrows=1, ncols=3, figsize=figsize)
         self.plot_bias(ax=axes[0])
         self.plot_migration(ax=axes[1])
-        edisp = self.to_edisp_kernel(offset="1 deg")
+        edisp = self.to_edisp_kernel(offset=self._default_offset[0])
         edisp.plot_matrix(ax=axes[2])
 
         plt.tight_layout()

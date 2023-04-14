@@ -252,6 +252,13 @@ class PlotMixin:
 
 
 class SpectrumDataset(PlotMixin, MapDataset):
+    """
+    Bundle together binned counts, background, IRFs, models and compute a likelihood into 1D spectrum.
+    It uses the Cash statistics by default.
+
+    For more information see :ref:`datasets`.
+    """
+
     stat_type = "cash"
     tag = "SpectrumDataset"
 
@@ -266,6 +273,12 @@ class SpectrumDataset(PlotMixin, MapDataset):
 
 
 class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
+    """
+    Spectrum dataset for on-off likelihood fitting. It uses the wstat statistics by default.
+
+    For more information see :ref:`datasets`.
+    """
+
     stat_type = "wstat"
     tag = "SpectrumDatasetOnOff"
 
