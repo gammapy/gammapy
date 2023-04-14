@@ -7,6 +7,7 @@ import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
+import gammapy.utils.time as tu
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
 from .hdu_index_table import HDUIndexTable
@@ -22,7 +23,6 @@ REQUIRED_IRFS = {
     "point-like": {"aeff", "edisp"},
     "all-optional": {},
 }
-TIME_KEYWORDS = ["MJDREFI", "MJDREFF", "TIMEUNIT", "TIMESYS", "TIMEREF"]
 
 
 class MissingRequiredHDU(IOError):
@@ -618,35 +618,17 @@ class DataStoreMaker:
             info["IRF_FILENAME"] = info["EVENTS_FILENAME"]
 
         # Mandatory fields defining the time data
-        for name in TIME_KEYWORDS:
+        for name in tu.TIME_KEYWORDS:
             info[name] = header.get(name, None)
 
         return info
-
-    def extract_time_info(self, row):
-        time_row = {}
-        for name in TIME_KEYWORDS:
-            time_row[name] = row[name]
-            del row[name]
-        return row, time_row
-
-    def check_time_info(self, rows):
-        if len(rows) <= 1:
-            return True
-
-        first_obs = rows[0]
-        for row in rows[1:]:
-            for name in TIME_KEYWORDS:
-                if first_obs[name] != row[name] or row[name] is None:
-                    return False
-        return True
 
     def make_obs_table(self):
         rows = []
         time_rows = []
         for events_path, irf_path in zip(self.events_paths, self.irfs_paths):
             row = self.get_obs_info(events_path, irf_path)
-            row, time_row = self.extract_time_info(row)
+            row, time_row = tu.extract_time_info(row)
             rows.append(row)
             time_rows.append(time_row)
 
@@ -654,11 +636,11 @@ class DataStoreMaker:
         table = ObservationTable(rows=rows, names=names)
 
         m = table.meta
-        if not self.check_time_info(time_rows):
+        if not tu.check_time_info(time_rows):
             raise RuntimeError(
-                "The time information in the EVENT header are not consistant between observation"
+                "The time information in the EVENT header are not consistant between observations"
             )
-        for name in TIME_KEYWORDS:
+        for name in tu.TIME_KEYWORDS:
             m[name] = time_rows[0][name]
 
         m["HDUCLASS"] = "GADF"
