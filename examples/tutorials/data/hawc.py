@@ -182,6 +182,9 @@ safemask_maker = SafeMaskMaker(methods=["aeff-max"], aeff_percent=10)
 
 ######################################################################
 # Create empty Mapdataset
+# The keyword reco_psf=True is needed because the HAWC PSF is
+# derived in reconstructed energy.
+
 dataset_empty = MapDataset.create(
     geom, energy_axis_true=energy_axis_true, name="fHit " + str(fHit), reco_psf=True
 )
