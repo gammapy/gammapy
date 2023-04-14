@@ -9,7 +9,11 @@ __all__ = [
     "time_ref_from_dict",
     "time_ref_to_dict",
     "time_relative_to_ref",
+    "extract_time_info",
+    "check_time_info",
 ]
+
+TIME_KEYWORDS = ["MJDREFI", "MJDREFF", "TIMEUNIT", "TIMESYS", "TIMEREF"]
 
 # TODO: implement and document this properly.
 # see https://github.com/gammapy/gammapy/issues/284
@@ -156,3 +160,48 @@ def absolute_time(time_delta, meta):
     """
     time = time_ref_from_dict(meta) + time_delta
     return Time(time.utc.isot)
+
+
+def extract_time_info(row):
+    """Separate the timing metadata from the others inside the event file header
+
+    Parameters
+    ----------
+    row : dict
+        dictionary with all the metadata of an event file
+
+    Returns
+    -------
+    row : dict
+        dictionary with the metadata without the time information
+    time_row : dict
+        dictionary with the time metadata
+    """
+    time_row = {}
+    for name in TIME_KEYWORDS:
+        time_row[name] = row[name]
+        del row[name]
+    return row, time_row
+
+
+def check_time_info(rows):
+    """
+    Parameters
+    ----------
+    rows : list
+        list of dictionaries with a list of time metadata from different observations
+
+    Returns
+    -------
+    status : bool
+        True if the time metadata are identical between observations
+    """
+    if len(rows) <= 1:
+        return True
+
+    first_obs = rows[0]
+    for row in rows[1:]:
+        for name in TIME_KEYWORDS:
+            if first_obs[name] != row[name] or row[name] is None:
+                return False
+    return True
