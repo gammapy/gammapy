@@ -1,0 +1,65 @@
+. include:: ../../references.txt
+
+.. _pig-028:
+
+***************************************
+PIG 28 - Metadata container for Gammapy
+***************************************
+
+* Author: Régis Terrier
+* Created: April 14th, 2023
+* Accepted: -
+* Status: -
+* Discussion:
+
+Abstract
+========
+
+Metadata handling is crucial to correctly store information that are not directly data
+but are still required for processing, post-processing and serialization. They are
+fundamental for reproducibility.
+
+Introduction
+============
+
+As of version 1.0, Gammapy has very little support for metadata. Existing features are
+heterogeneous, hardly configurable and appear sporadically in the code, mostly in
+containers. At the DL3 level, ``EventList`` metadata is carried by its `Table.meta` dictionary.
+It is extracted from the  file FITS header which follows the GADF specifications.
+Similarly, ``Observation`` contains an `obs_info` dictionary that is build from the header as well.
+After data reduction, ``Dataset`` contains a `meta_table` which
+consists in a selection of `Observation.obs_info` entries (one table row per observation).
+During `Dataset` stacking the `meta_table` are stacked. The ``Datasets`` collection also
+agregates the `meta_table` of its members. After estimation, the ``FluxPoints`` don't
+contain any specific meta information.
+
+The algorithm classes (`Makers` and `Estimators`) don't contain any meta information so far.
+This might be an issue since some information  could be transfered on their various products
+as well.
+
+A minimal information that needs to be present on every Gammapy product and serialized
+in various formats is the `CREATOR` which is the software and software version used,
+as well as the `DATE` when the object was created, and possibly the `ORIGIN` (the user,
+the consortium that has produced the object). The Gammapy version number is important to ensure
+reproducibility and compatibility.
+
+An `Observation` also needs some information to ensure correct handling of data. For instance,
+the telescope name, the sub-array used, the observation mode, the telescope location etc.
+
+A practical and systematic solution must be implemented in Gammapy. This PIG discusses
+the approach and proposes a solution for this. It does not discuss the metadata model, i.e.
+what information has to be stored on which data product. It proposes a basic concept and
+a possible implementation of a metadata container object that fulfill the requirements.
+
+Requirements
+============
+
+Proposed solution
+=================
+
+Alternatives
+============
+
+Decision
+========
+
