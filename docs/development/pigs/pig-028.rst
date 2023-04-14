@@ -57,6 +57,42 @@ Requirements
 Proposed solution
 =================
 
+.. code::
+
+    class MetaDataBaseModel(BaseModel):
+        class Config:
+            arbitrary_types_allowed = True
+            validate_all = True
+            validate_assignment = True
+            extra = "allow"
+            
+            json_encoders = {
+                Angle: lambda v: f"{v.value} {v.unit}",
+                Quantity: lambda v: f"{v.value} {v.unit}",
+                Time: lambda v: f"{v.iso}",
+                EarthLocation: lambda v: f"lon : {v.lon.value} {v.lon.unit}, "\
+                                         f"lat : {v.lat.value} {v.lat.unit}, "\
+                                         f"height : {v.height.value} {v.height.unit}",
+            }
+
+        def to_header(self):
+            hdr_dict = {}
+            for key, item in self.dict().items():
+                hdr_dict[key.upper()] = item.__str__()
+            return hdr_dict
+
+        @classmethod
+        def from_header(cls, hdr):
+            kwargs = {}
+            for key in cls.__fields__.keys():
+                kwargs[key] = hdr.get(key.upper(), None)
+            return cls(**kwargs)
+
+        def to_yaml(self):
+            meta = json.loads(self.json())
+            return yaml.dump(meta, sort_keys=False, indent=4, width=80, default_flow_style=False)
+
+
 Alternatives
 ============
 
