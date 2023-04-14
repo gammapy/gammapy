@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import logging
 import numpy as np
 from astropy.table import Column, Table
 from gammapy.maps import Map
@@ -43,7 +44,6 @@ class SensitivityEstimator(Estimator):
         n_sigma=5.0,
         gamma_min=10,
         bkg_syst_fraction=0.05,
-        integral=False,
     ):
 
         if spectrum is None:
@@ -140,26 +140,35 @@ class SensitivityEstimator(Estimator):
         criterion = self._get_criterion(
             excess.data.squeeze(), dataset.background.data.squeeze()
         )
+        logging.warning(
+            "Table column name energy will be deprecated by e_ref since v1.2"
+        )
 
         return Table(
             [
                 Column(
                     data=energy,
-                    name="e_ref",
+                    name="energy",
                     format="5g",
                     description="Reconstructed Energy",
+                ),
+                Column(
+                    data=energy,
+                    name="e_ref",
+                    format="5g",
+                    description="Energy center",
                 ),
                 Column(
                     data=dataset._geom.axes["energy"].edges_min,
                     name="e_min",
                     format="5g",
-                    description="Reconstructed Energy",
+                    description="Energy edge low",
                 ),
                 Column(
                     data=dataset._geom.axes["energy"].edges_max,
                     name="e_max",
                     format="5g",
-                    description="Reconstructed Energy",
+                    description="Energy edge high",
                 ),
                 Column(
                     data=e2dnde,

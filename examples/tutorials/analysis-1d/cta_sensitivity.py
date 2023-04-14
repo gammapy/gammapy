@@ -209,16 +209,12 @@ plt.show()
 #
 # It is often useful to obtain the integral sensitivity above a certain
 # threshold. In this case, it is simplest to use a dataset with one energy bin
-# while setting the high energy edge to a very large value
+# while setting the high energy edge to a very large value.
+# Here, we simply squash the previously created dataset into one with a single
+# energy
 #
 
-energy_axis1 = MapAxis.from_energy_bounds("0.03 TeV", "300 TeV", nbin=1)
-geom = RegionGeom.create("icrs;circle(0, 0.5, 0.1)", axes=[energy_axis1])
-empty_dataset1 = SpectrumDataset.create(geom=geom, energy_axis_true=energy_axis_true)
-dataset1 = spectrum_maker.run(empty_dataset1, obs)
-dataset_on_off1 = SpectrumDatasetOnOff.from_spectrum_dataset(
-    dataset=dataset1, acceptance=1, acceptance_off=5
-)
+dataset_on_off1 = dataset_on_off.to_image()
 sensitivity_estimator = SensitivityEstimator(
     gamma_min=5, n_sigma=3, bkg_syst_fraction=0.10
 )
@@ -232,7 +228,7 @@ flux_points = FluxPoints.from_table(
     sensitivity_table, sed_type="e2dnde", reference_model=sensitivity_estimator.spectrum
 )
 print(
-    f"Integral sensitivity in {livetime:.2f} above {energy_axis1.edges[0]:.2e} "
+    f"Integral sensitivity in {livetime:.2f} above {energy_axis.edges[0]:.2e} "
     f"is {np.squeeze(flux_points.flux.quantity):.2e}"
 )
 
