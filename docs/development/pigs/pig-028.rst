@@ -6,7 +6,7 @@
 PIG 28 - Metadata container for Gammapy
 ***************************************
 
-* Author: Régis Terrier
+* Author: Régis Terrier and ?
 * Created: April 14th, 2023
 * Accepted: -
 * Status: -
