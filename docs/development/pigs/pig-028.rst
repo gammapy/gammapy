@@ -54,10 +54,90 @@ a possible implementation of a metadata container object that fulfill the requir
 Requirements
 ============
 
+The Gammapy metadata solution should:
+
+- offer flexibility regarding the content of the data model, e.g.:
+    - it should allow optional entries
+    - it should be configurable to allow for specific data models
+- have a systematic validation of its content
+- allow for serialization to various formats, e.g.:
+    - export specific keywords to fits headers depending on the data format
+    - export content to yaml
+- allow hierarchical content to allow easy propagation of metadata content along the
+  analysis flow
+- be easily subscriptable to allow for specialized metadata containers for the various
+  objects in Gammapy.
+
+In the following, we propose a plausible solution fulfilling these requirements based on the
+the `pydantic` package ``BaseModel`` class.
+
+
+Metadata API
+============
+
+Type validation
+---------------
+
+The API should support simple validation on input, even for non standard types such as
+astropy or Gammapy objects.
+
+.. code ::
+
+    # direct assignment
+    >>> meta.zenith_angle = Angle(30, "deg")
+    # or via a string representation
+    >>> meta.zenith_angle = "30 deg"
+    # input validation
+    >>> meta.zenith_angle = 2*u.TeV
+    ValidationError: 1 validation error for MetaData zenith_angle
+    # attribute type is astropy Angle
+    >>> print(meta.zenith_angle)
+    30d00m00s
+
+
+Serialization
+-------------
+
+The metadata classes should have a `to_dict()` or `dict()` method to convert their content
+to a dictionary.
+
+Conversion to various output formats should be supported with specific methods such as `to_yaml()`
+of `to_header()` to export the content in the form of a FITS header, when possible.
+
+Because we expect the number of data formats will increase over the years, specific `Reader`
+and `Writer` functions or classes could be defined to support e.g. reading and writing
+to gadf DL3 format.
+
+
 Proposed solution
 =================
 
-.. code::
+pydantic
+--------
+
+The pydantic package has been built to perform data validation and settings management
+using Python type annotations. It enforces type hints at runtime, and provides user friendly
+errors when data is invalid.
+
+It offers nice features such as:
+- it can be extended to custom data types (e.g. a `Quantity` or a `Map`) with a simple
+  decorator based scheme to define validators.
+- it supports recursive models
+
+The package now extremely widely used in the python ecosystem with more than 50 millions
+monthly Pypi downloads. Its long-term viability does not appear problematic.
+
+Gammapy already uses pydantic for its high level analysis configuration class.
+
+There are several other options available such as `traitlets`. The latter also allows the
+addition of user-defined `TraitType`.
+
+the base class
+--------------
+
+A typical base class for all Gammapy metadata could structured following the structure below:
+
+.. code ::
 
     class MetaDataBaseModel(BaseModel):
         class Config:
@@ -65,15 +145,6 @@ Proposed solution
             validate_all = True
             validate_assignment = True
             extra = "allow"
-            
-            json_encoders = {
-                Angle: lambda v: f"{v.value} {v.unit}",
-                Quantity: lambda v: f"{v.value} {v.unit}",
-                Time: lambda v: f"{v.iso}",
-                EarthLocation: lambda v: f"lon : {v.lon.value} {v.lon.unit}, "\
-                                         f"lat : {v.lat.value} {v.lat.unit}, "\
-                                         f"height : {v.height.value} {v.height.unit}",
-            }
 
         def to_header(self):
             hdr_dict = {}
@@ -88,9 +159,40 @@ Proposed solution
                 kwargs[key] = hdr.get(key.upper(), None)
             return cls(**kwargs)
 
-        def to_yaml(self):
-            meta = json.loads(self.json())
-            return yaml.dump(meta, sort_keys=False, indent=4, width=80, default_flow_style=False)
+The model `Config` defined allows:
+- using any type input and not only simple `Annotation` types (`arbitrary_types_allowed = True`)
+- Setting the `validate_assignment` to `True` ensures that validation is performed when a value
+  is assigned to the attribute.
+- `extra = "allow"` accepts additional attibutes not defined in the metadata class.
+
+
+
+
+arbitrary type input and validation
+-----------------------------------
+
+.. code ::
+
+    class ArbitraryTypeMetaData(MetaDataBaseModel):
+        # allow string defining angle or Angle object
+        zenith_angle : Optional[Union[str, Angle]]
+        pointing_altaz : Union[]
+
+        # allow observatory name or astropy EarthLocation object
+        location : Optional[Union[str, EarthLocation]]
+
+        @validator('location')
+        def validate_location(cls, v):
+            if isinstance(v, str) and v in observatory_locations.keys():
+                return observatory_locations[v]
+            elif isinstance(v, EarthLocation):
+                return v
+            else:
+                raise ValueError("Incorrect location value")
+
+        @validator('zenith_angle')
+        def validate_zenith_angle(cls, v):
+            return Angle(v)
 
 
 Alternatives
