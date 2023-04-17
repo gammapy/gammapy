@@ -51,9 +51,9 @@ class Map(abc.ABC):
             self._unit = u.Unit(unit)
 
         if meta is None:
-            self.meta = {}
+            self._meta = {}
         else:
-            self.meta = meta
+            self._meta = meta
 
     def _init_copy(self, **kwargs):
         """Init map instance by copying missing init arguments from self."""
