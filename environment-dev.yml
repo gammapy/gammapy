@@ -75,5 +75,7 @@ dependencies:
   - h5py
   - ruamel.yaml
   - cffconvert
+  - pyinstrument
+  - memray
   - pip:
       - pytest-sphinx
