@@ -763,16 +763,15 @@ def test_map_axis_format_plot_xaxis():
     assert " ".join(ax1.axes.axes.get_xlabel().split()[:2]) == "True Energy"
 
 
-def test_time_map_axis_plot_center(time_intervals):
+def test_time_format(time_intervals):
     axis = TimeMapAxis(
         time_intervals["t_min"],
         time_intervals["t_max"],
         time_intervals["t_ref"],
         name="time",
     )
-    axis.time_format = "null"
     with pytest.raises(ValueError):
-        axis.as_plot_center
+        axis.time_format = "null"
 
 
 def test_time_map_axis_format_plot_xaxis(time_intervals):
@@ -799,14 +798,6 @@ def test_time_map_axis_format_plot_xaxis(time_intervals):
             ax.plot(axis.as_plot_center, np.ones_like(axis.center))
     ax2 = axis.format_plot_xaxis(ax=ax)
     assert ax2.axes.axes.get_xlabel().split()[1] == "[mjd]"
-
-    axis.time_format = "null"
-    with mpl_plot_check():
-        ax = plt.gca()
-        with quantity_support():
-            ax.plot(axis.center, np.ones_like(axis.center))
-    with pytest.raises(ValueError):
-        ax2 = axis.format_plot_xaxis(ax=ax)
 
 
 def test_single_valued_axis():
