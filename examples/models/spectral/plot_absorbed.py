@@ -32,6 +32,10 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
 )
+from gammapy.modeling.models.spectral import EBL_DATA_BUILTIN
+
+# Print the available EBL models
+print(EBL_DATA_BUILTIN.keys())
 
 # Here we illustrate how to create and plot EBL absorption models for a redshift of 0.5
 # sphinx_gallery_thumbnail_number = 1
