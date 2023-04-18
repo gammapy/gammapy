@@ -16,7 +16,7 @@ where :math:`\tau(E, z)` is the optical depth predicted by the model
 redshift z of the source, and :math:`\alpha` is a scale factor
 (default: 1) for the optical depth.
 
-The list of available EBL models can be found by printing `~gammapy.modeling.models.spectral.EBL_DATA_BUILTIN`.
+The available EBL models are defined in `~gammapy.modeling.models.spectral.EBL_DATA_BUILTIN`.
 """
 
 # %%
