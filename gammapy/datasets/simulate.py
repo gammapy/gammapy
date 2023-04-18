@@ -7,7 +7,7 @@ from astropy.table import Table
 from regions import PointSkyRegion
 import gammapy
 from gammapy.data import EventList, observatory_locations
-from gammapy.maps import MapCoord, RegionNDMap, TimeMapAxis
+from gammapy.maps import MapAxis, MapCoord, RegionNDMap, TimeMapAxis
 from gammapy.modeling.models import (
     ConstantSpectralModel,
     ConstantTemporalModel,
@@ -54,8 +54,9 @@ class MapDatasetEventSampler:
 
         table["TIME"] = (coords["time"] - time_ref).to("s")
         table["ENERGY_TRUE"] = energy
-        table["RA_TRUE"] = coords.skycoord.icrs.ra.to("deg")
-        table["DEC_TRUE"] = coords.skycoord.icrs.dec.to("deg")
+
+        table["RA_TRUE"] = coords.skycoord.icrs.ra.deg
+        table["DEC_TRUE"] = coords.skycoord.icrs.dec.deg
 
         return table
 
@@ -90,15 +91,21 @@ class MapDatasetEventSampler:
             min_timebin = np.min(
                 evaluator.model.temporal_model.map.geom.axes["time"].bin_width
             )
-            time_axis = TimeMapAxis.from_time_bounds(
+            time_axis_eval = TimeMapAxis.from_time_bounds(
                 time_min=tstart,
                 time_max=tstop,
                 nbin=int(((tstop - tstart) / min_timebin).to("")),
             )
+            time_axis = MapAxis.from_bounds(
+                (tstart[0].mjd - dataset.gti.time_ref.mjd) * u.d,
+                (tstop[0].mjd - dataset.gti.time_ref.mjd) * u.d,
+                nbin=int(((tstop.mjd - tstart.mjd) * u.d / min_timebin.to("d")).to("")),
+                name="time",
+            )
 
         flux = (
             evaluator.model.temporal_model.evaluate(
-                time_axis.time_mid, energy=energy_true.center
+                time_axis_eval.time_mid, energy=energy_true.center
             )
             * evaluator.model.spectral_model.parameters[0].quantity
         )
@@ -145,7 +152,22 @@ class MapDatasetEventSampler:
                 raise TypeError(
                     f"Event sampler expects ConstantSpectralModel for a time varying source. Got {evaluator.model.spectral_model} instead."
                 )
-            raise NotImplementedError("The functionality is not yet implemented")
+
+            npred = self._evaluate_timevar_source(dataset, evaluator)
+            data = npred.data[np.isfinite(npred.data)]
+            n_events = self.random_state.poisson(np.sum(data))
+
+            coords = npred.sample_coord(
+                n_events=n_events, random_state=self.random_state
+            )
+
+            coords["time"] = (
+                (coords["time"].value - dataset.gti.time_ref.mjd) * u.d
+            ).to("s")
+
+            table = self._make_table(coords, dataset.gti.time_ref)
+
+        return table
 
         return
 
