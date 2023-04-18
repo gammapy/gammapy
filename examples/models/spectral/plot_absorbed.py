@@ -15,6 +15,8 @@ where :math:`\tau(E, z)` is the optical depth predicted by the model
 (`~gammapy.modeling.models.EBLAbsorptionNormSpectralModel`), which depends on the energy of the gamma-rays and the
 redshift z of the source, and :math:`\alpha` is a scale factor
 (default: 1) for the optical depth.
+
+The list of available EBL models can be found by printing `~gammapy.modeling.models.spectral.EBL_DATA_BUILTIN`.
 """
 
 # %%
