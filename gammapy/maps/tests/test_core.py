@@ -184,7 +184,7 @@ def test_map_time_axis_read_write(map_type):
     time_axis_new = m2.geom.axes["time"]
     assert time_axis_new == time_axis
     assert time_axis.reference_time.scale == "utc"
-    assert time_axis_new.reference_time.scale == "tt"
+    assert time_axis_new.reference_time.scale == "utc"
 
 
 unit_args = [("wcs", "s"), ("wcs", ""), ("wcs", Unit("sr")), ("hpx", "m^2")]

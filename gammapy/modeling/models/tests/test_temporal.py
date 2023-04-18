@@ -52,10 +52,12 @@ def test_energy_dependent_lightcurve(tmp_path):
     mod = LightCurveTemplateTemporalModel.read(filename, format="map")
 
     assert mod.is_energy_dependent is True
+    assert mod.reference_time.scale == "utc"
+    assert_allclose(mod.t_ref.value, 55555.49923398147, rtol=1e-6)
 
-    t = Time(55555.6157407407, format="mjd")
+    t = Time(55555.6157407407, format="mjd", scale="utc")
     val = mod.evaluate(t, energy=[0.3, 2] * u.TeV)
-    assert_allclose(val.data, [[2.389591e-21], [4.399548e-23]], rtol=1e-5)
+    assert_allclose(val.data, [[2.386276e-21], [4.393427e-23]], rtol=1e-5)
 
     t = Time([55555, 55556, 55557], format="mjd")
     val = mod.evaluate(t)

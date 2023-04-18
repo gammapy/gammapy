@@ -1894,7 +1894,9 @@ class MapAxes(Sequence):
                     table[colname] = np.ravel(v[idx])
 
                 if isinstance(ax, TimeMapAxis):
-                    ref_dict = time_ref_to_dict(ax.reference_time)
+                    ref_dict = time_ref_to_dict(
+                        ax.reference_time, ax.reference_time.scale
+                    )
                     table.meta.update(ref_dict)
 
         elif format in ["ogip", "ogip-sherpa", "ogip", "ogip-arf"]:
@@ -2806,7 +2808,9 @@ class TimeMapAxis:
             key_interp = f"INTERP{idx}"
             header[key_interp] = self.interp
 
-            ref_dict = time_ref_to_dict(self.reference_time)
+            ref_dict = time_ref_to_dict(
+                self.reference_time, scale=self.reference_time.scale
+            )
             header.update(ref_dict)
         else:
             raise ValueError(f"Unknown format {format}")
