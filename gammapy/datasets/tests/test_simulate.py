@@ -167,49 +167,10 @@ def test_evaluate_timevar_source(enedip_temporal_model, dataset):
     npred = sampler._evaluate_timevar_source(dataset, evaluator)
 
     assert_allclose(
-        npred.data[0],
-        [
-            50.806123,
-            50.806123,
-            50.806123,
-            50.806123,
-            50.806123,
-            50.806123,
-            50.806123,
-            50.806123,
-            50.806123,
-            50.806123,
-        ],
+        npred.data[:, 10, 0, 0], [2.25974055e-10, 6.58630784e-10, 5.08061231e-11]
     )
     assert_allclose(
-        npred.data[1],
-        [
-            225.97405,
-            225.97405,
-            225.97405,
-            225.97405,
-            225.97405,
-            225.97405,
-            225.97405,
-            225.97405,
-            225.97405,
-            225.97405,
-        ],
-    )
-    assert_allclose(
-        npred.data[2],
-        [
-            658.63078,
-            658.63078,
-            658.63078,
-            658.63078,
-            658.63078,
-            658.63078,
-            658.63078,
-            658.63078,
-            658.63078,
-            658.63078,
-        ],
+        npred.data[:, 50, 0, 0], [6.58630784e-10, 5.08061231e-11, 2.25974055e-10]
     )
 
     filename = "$GAMMAPY_DATA/gravitational_waves/GW_example_DC_map_file.fits.gz"
@@ -221,54 +182,13 @@ def test_evaluate_timevar_source(enedip_temporal_model, dataset):
     npred = sampler._evaluate_timevar_source(dataset, evaluator)
 
     assert_allclose(
-        npred.data[0],
-        [
-            50.806123,
-            50.806123,
-            50.806123,
-            50.806123,
-            50.806123,
-            50.806123,
-            50.806123,
-            50.806123,
-            50.806123,
-            50.806123,
-        ],
-    )
-    assert_allclose(
-        npred.data[1],
-        [
-            225.97405,
-            225.97405,
-            225.97405,
-            225.97405,
-            225.97405,
-            225.97405,
-            225.97405,
-            225.97405,
-            225.97405,
-            225.97405,
-        ],
-    )
-    assert_allclose(
-        npred.data[2],
-        [
-            658.63078,
-            658.63078,
-            658.63078,
-            658.63078,
-            658.63078,
-            658.63078,
-            658.63078,
-            658.63078,
-            658.63078,
-            658.63078,
-        ],
+        npred.data[:, 10, 0, 0],
+        [0.0, 0.0, 0.0],
     )
 
 
 @requires_data()
-def test_sample_coord_time_energy(dataset, models):
+def test_sample_coord_time_energy(dataset, models, enedip_temporal_model):
     models[0].spatial_model = None
     models[0].spectral_model = ConstantSpectralModel(amplitude="1 cm-2 s-1 TeV-1")
     dataset.models = models
@@ -280,11 +200,10 @@ def test_sample_coord_time_energy(dataset, models):
     models[0].spatial_model = PointSpatialModel(
         lon_0="0 deg", lat_0="0 deg", frame="galactic"
     )
-    dataset.models = models
+    dataset.models = enedip_temporal_model
     evaluator = dataset.evaluators["test-source"]
     sampler = MapDatasetEventSampler(random_state=0)
-    with pytest.raises(NotImplementedError):
-        sampler._sample_coord_time_energy(dataset, evaluator)
+    sampler._sample_coord_time_energy(dataset, evaluator)
 
 
 @requires_data()

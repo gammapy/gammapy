@@ -4,6 +4,7 @@ import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord, SkyOffsetFrame
 from astropy.table import Table
+from astropy.time import Time
 from regions import PointSkyRegion
 import gammapy
 from gammapy.data import EventList, observatory_locations
@@ -55,8 +56,8 @@ class MapDatasetEventSampler:
         table["TIME"] = (coords["time"] - time_ref).to("s")
         table["ENERGY_TRUE"] = energy
 
-        table["RA_TRUE"] = coords.skycoord.icrs.ra.deg
-        table["DEC_TRUE"] = coords.skycoord.icrs.dec.deg
+        table["RA_TRUE"] = coords.skycoord.icrs.ra.to("deg")
+        table["DEC_TRUE"] = coords.skycoord.icrs.dec.to("deg")
 
         return table
 
@@ -91,15 +92,16 @@ class MapDatasetEventSampler:
             min_timebin = np.min(
                 evaluator.model.temporal_model.map.geom.axes["time"].bin_width
             )
+            nbin = int(((tstop - tstart) / min_timebin).to(""))
             time_axis_eval = TimeMapAxis.from_time_bounds(
                 time_min=tstart,
                 time_max=tstop,
-                nbin=int(((tstop - tstart) / min_timebin).to("")),
+                nbin=nbin,
             )
             time_axis = MapAxis.from_bounds(
-                (tstart[0].mjd - dataset.gti.time_ref.mjd) * u.d,
-                (tstop[0].mjd - dataset.gti.time_ref.mjd) * u.d,
-                nbin=int(((tstop.mjd - tstart.mjd) * u.d / min_timebin.to("d")).to("")),
+                tstart[0].mjd * u.d,
+                tstop[0].mjd * u.d,
+                nbin=nbin,
                 name="time",
             )
 
@@ -125,7 +127,7 @@ class MapDatasetEventSampler:
 
         return npred
 
-    def _sample_coord_time_energy(self, dataset, evaluator, t_delta="1 s"):
+    def _sample_coord_time_energy(self, dataset, evaluator):
         """Sample model components of a source with time-dependent spectrum.
 
         Parameters
@@ -134,8 +136,6 @@ class MapDatasetEventSampler:
             Map dataset.
         evaluator : `~gammapy.datasets.evaluators.MapEvaluator`
             Map evaluator.
-        t_delta : `~astropy.units.Quantity`
-            Minimum step time.
 
         Returns
         -------
@@ -161,9 +161,7 @@ class MapDatasetEventSampler:
                 n_events=n_events, random_state=self.random_state
             )
 
-            coords["time"] = (
-                (coords["time"].value - dataset.gti.time_ref.mjd) * u.d
-            ).to("s")
+            coords["time"] = Time(coords["time"], format="mjd", scale="tt")
 
             table = self._make_table(coords, dataset.gti.time_ref)
 
@@ -235,7 +233,7 @@ class MapDatasetEventSampler:
             else:
                 temporal_model = evaluator.model.temporal_model
 
-            if hasattr(temporal_model, "is_energy_dependent"):
+            if temporal_model.is_energy_dependent == True:
                 table = self._sample_coord_time_energy(dataset, evaluator)
             else:
                 flux = evaluator.compute_flux()
