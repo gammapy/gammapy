@@ -552,9 +552,11 @@ class EventList:
             center = self._plot_center
 
         offset2 = center.separation(self.radec) ** 2
+        max2 = np.percentile(offset2, q=98)
 
         kwargs.setdefault("histtype", "step")
         kwargs.setdefault("bins", 30)
+        kwargs.setdefault("range", (0.0, max2.value))
 
         with quantity_support():
             ax.hist(offset2, **kwargs)
