@@ -99,7 +99,7 @@ jobs:
           file: ./coverage.xml
           verbose: true
   sphinx:
-    name: Linux python 3.8 sphinx all-deps
+    name: Linux python 3.9 sphinx all-deps
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -133,7 +133,7 @@ jobs:
         run: |
           tox -e linkcheck -- -j auto  
   conda-build:
-    name: Linux python 3.8 conda-build all-deps
+    name: Linux python 3.9 conda-build all-deps
     runs-on: ubuntu-latest
     defaults:
       run:
