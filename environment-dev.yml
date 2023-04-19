@@ -35,7 +35,7 @@ dependencies:
   - pytest-astropy
   - pytest-cov
   - pytest-xdist
-  - coverage=6.2
+  - coverage
   - requests
   - tqdm
   # extra dependencies
@@ -52,7 +52,7 @@ dependencies:
   - codespell
   - flake8
   - isort
-  - jinja2=3.0
+  - jinja2
   - nbsphinx
   - numdifftools
   - pandoc
