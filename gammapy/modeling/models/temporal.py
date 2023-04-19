@@ -4,6 +4,7 @@ import logging
 import numpy as np
 import scipy.interpolate
 from astropy import units as u
+from astropy.io import fits
 from astropy.table import Table
 from astropy.time import Time
 from astropy.utils import lazyproperty
@@ -11,7 +12,7 @@ from gammapy.maps import MapAxis, RegionNDMap, TimeMapAxis
 from gammapy.modeling import Parameter
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.scripts import make_path
-from gammapy.utils.time import time_ref_from_dict
+from gammapy.utils.time import time_ref_from_dict, time_ref_to_dict
 from .core import ModelBase, _build_parameters_from_dict
 
 __all__ = [
@@ -38,6 +39,16 @@ class TemporalModel(ModelBase):
 
     _type = "temporal"
 
+    def __init__(self, **kwargs):
+        scale = kwargs.pop("scale", "utc")
+        if scale not in Time.SCALES:
+            raise ValueError(
+                f"{scale} is not a valid time scale. Choose from {Time.SCALES}"
+            )
+        super().__init__(**kwargs)
+        if not hasattr(self, "scale"):
+            self.scale = scale
+
     def __call__(self, time):
         """Evaluate model
 
@@ -53,6 +64,29 @@ class TemporalModel(ModelBase):
     @property
     def type(self):
         return self._type
+
+    @property
+    def is_energy_dependent(self):
+        return False
+
+    @property
+    def reference_time(self):
+        """Reference time in mjd"""
+        return Time(self.t_ref.value, format="mjd", scale=self.scale)
+
+    @reference_time.setter
+    def reference_time(self, t_ref):
+        """Reference time"""
+        if not isinstance(t_ref, Time):
+            raise TypeError(f"{t_ref} is not a {Time} object")
+        time = getattr(t_ref, self.scale)
+        self.t_ref.value = time.mjd
+
+    def to_dict(self, full_output=False):
+        """Create dict for YAML serilisation"""
+        data = super().to_dict(full_output)
+        data["temporal"]["scale"] = self.scale
+        return data
 
     @staticmethod
     def time_sum(t_min, t_max):
@@ -457,32 +491,26 @@ class LightCurveTemplateTemporalModel(TemporalModel):
     tag = ["LightCurveTemplateTemporalModel", "template"]
 
     _t_ref_default = Time("2000-01-01")
-    t_ref = Parameter("t_ref", _t_ref_default.mjd, unit="day", frozen=False)
+    t_ref = Parameter("t_ref", _t_ref_default.mjd, unit="day", frozen=True)
 
     def __init__(self, map, t_ref=None, filename=None):
 
         if (map.data < 0).any():
             log.warning("Map has negative values. Check and fix this!")
 
-        if map.geom.has_energy_axis:
-            raise NotImplementedError(
-                "LightCurveTemplateTemporalModel does not"
-                f" support energy axis, got {map.geom.axes.names}"
-            )
-
         self.map = map.copy()
         super().__init__()
 
         if t_ref:
-            self.t_ref.value = Time(t_ref, format="mjd").mjd
+            self.reference_time = t_ref
 
         self.filename = filename
 
     def __str__(self):
         start_time = self.t_ref.quantity + self.map.geom.axes["time"].edges[0]
         end_time = self.t_ref.quantity + self.map.geom.axes["time"].edges[-1]
-        norm_min = np.min(self.map.data)
-        norm_max = np.max(self.map.data)
+        norm_min = np.nanmin(self.map.data)
+        norm_max = np.nanmax(self.map.data)
 
         prnt = (
             f"{self.__class__.__name__} model summary:\n "
@@ -493,7 +521,17 @@ class LightCurveTemplateTemporalModel(TemporalModel):
             f"Norm max: {norm_max}"
         )
 
+        if self.is_energy_dependent:
+            energy_min = self.map.geom.axes["energy"].center[0]
+            energy_max = self.map.geom.axes["energy"].center[-1]
+            prnt1 = f"Energy min: {energy_min} \n" f"Energy max: {energy_max} \n"
+            prnt = prnt + prnt1
+
         return prnt
+
+    @property
+    def is_energy_dependent(self):
+        return self.map.geom.has_energy_axis
 
     @classmethod
     def from_table(cls, table, filename=None):
@@ -515,15 +553,17 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         if "time" not in columns:
             raise ValueError("A TIME column is necessary")
 
-        t_ref = time_ref_from_dict(table.meta)
+        t_ref = time_ref_from_dict(table.meta, scale="utc")
         nodes = table["TIME"]
-        time_axis = MapAxis.from_nodes(
-            nodes=nodes, name="time", unit=table.meta["TIMEUNIT"]
-        )
+        ax_unit = nodes.quantity.unit
+        if not ax_unit.is_equivalent("d"):
+            try:
+                ax_unit = u.Unit(table.meta["TIMEUNIT"])
+            except KeyError:
+                raise ValueError("Time unit not found in the table")
+        time_axis = MapAxis.from_nodes(nodes=nodes, name="time", unit=ax_unit)
         axes = [time_axis]
-        m = RegionNDMap.create(
-            region=None, axes=axes, meta=table.meta, data=table["NORM"]
-        )
+        m = RegionNDMap.create(region=None, axes=axes, data=table["NORM"])
 
         return cls(m, t_ref=t_ref, filename=filename)
 
@@ -549,8 +589,16 @@ class LightCurveTemplateTemporalModel(TemporalModel):
             return cls.from_table(table, filename=filename)
 
         elif format == "map":
-            m = RegionNDMap.read(filename)
-            t_ref = time_ref_from_dict(m.meta)
+            with fits.open(filename) as hdulist:
+                header = hdulist["SKYMAP_BANDS"].header
+                t_ref = time_ref_from_dict(header)
+                # TODO : Ugly hack to prevent creating a TimeMapAxis
+                # By default, MapAxis.from_table tries to create a
+                # TimeMapAxis, failing which, it creates a normal MapAxis.
+                # This ugly hack forces the fail. We need a normal Axis to
+                # have the evaluate method work
+                hdulist["SKYMAP_BANDS"].header.pop("MJDREFI")
+                m = RegionNDMap.from_hdulist(hdulist)
             return cls(m, t_ref=t_ref, filename=filename)
 
         else:
@@ -560,10 +608,12 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
     def to_table(self):
         """Convert model to an astropy table"""
+        if self.is_energy_dependent:
+            raise NotImplementedError("Not supported for energy dependent models")
         table = Table(
             data=[self.map.geom.axes["time"].center, self.map.quantity],
             names=["TIME", "NORM"],
-            meta=self.map.meta,
+            meta=time_ref_to_dict(self.reference_time, scale=self.scale),
         )
         return table
 
@@ -587,21 +637,36 @@ class LightCurveTemplateTemporalModel(TemporalModel):
             table = self.to_table()
             table.write(filename, overwrite=overwrite)
         elif format == "map":
-            self.map.write(filename, overwrite=overwrite)
+            # RegionNDMap.from_hdulist does not update the header
+            hdulist = self.map.to_hdulist()
+            hdulist["SKYMAP_BANDS"].header.update(
+                time_ref_to_dict(self.reference_time, scale=self.scale)
+            )
+            hdulist.writeto(filename, overwrite=overwrite)
         else:
             raise ValueError("Not a valid format, choose from ['map', 'table']")
 
-    def evaluate(self, time, t_ref=None):
+    def evaluate(self, time, t_ref=None, energy=None):
         """Evaluate the model at given coordinates."""
 
         if t_ref is None:
-            t_ref = Time(self.t_ref.value, format="mjd")
-
+            t_ref = Time(self.t_ref.value, format="mjd", scale=self.scale)
         t = (time - t_ref).to_value(self.map.geom.axes["time"].unit)
         coords = {"time": t}
+        if self.is_energy_dependent:
+            if energy is None:
+                energy = self.map.geom.axes["energy"].center
+            coords["energy"] = energy.reshape(-1, 1)
         val = self.map.interp_by_coord(coords)
         val = np.clip(val, 0, a_max=None)
         return u.Quantity(val, self.map.unit, copy=False)
+
+    def integral(self, t_min, t_max, oversampling_factor=100, **kwargs):
+        if self.is_energy_dependent:
+            raise NotImplementedError(
+                "Integral not supported for energy dependent models"
+            )
+        return super().integral(t_min, t_max, oversampling_factor, **kwargs)
 
     @classmethod
     def from_dict(cls, data):
@@ -617,6 +682,52 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         data["temporal"]["format"] = format
         data["temporal"]["unit"] = str(self.map.unit)
         return data
+
+    def plot(self, time_range, ax=None, n_points=100, energy=None, **kwargs):
+        """
+        Plot Temporal Model.
+
+        Parameters
+        ----------
+        time_range : `~astropy.time.Time`
+            times to plot the model
+        ax : `~matplotlib.axes.Axes`, optional
+            Axis to plot on
+        n_points : int
+            Number of bins to plot model
+        energy : `~astropy.units.quantity`
+            energies to compute the model at for energy dependent models, optional
+        **kwargs : dict
+            Keywords forwarded to `~matplotlib.pyplot.errorbar`
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`, optional
+            axis
+        """
+        if not self.is_energy_dependent:
+            super().plot(time_range=time_range, ax=ax, n_points=n_points, **kwargs)
+        else:
+            time_min, time_max = time_range
+            time_axis = TimeMapAxis.from_time_bounds(
+                time_min=time_min, time_max=time_max, nbin=n_points
+            )
+            if energy is None:
+                energy_axis = self.map.geom.axes["energy"]
+            else:
+                energy_axis = MapAxis.from_nodes(
+                    nodes=energy, name="energy", interp="log"
+                )
+
+            m = RegionNDMap.create(region=None, axes=[time_axis, energy_axis])
+            kwargs.setdefault("marker", "None")
+            kwargs.setdefault("ls", "-")
+            m.quantity = self.evaluate(
+                time=time_axis.time_mid, energy=energy_axis.center
+            )
+            ax = m.plot(axis_name="time", ax=ax, **kwargs)
+            ax.set_ylabel("Norm / A.U.")
+
+            return ax, m
 
 
 class PowerLawTemporalModel(TemporalModel):

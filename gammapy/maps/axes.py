@@ -2001,7 +2001,7 @@ class MapAxes(Sequence):
                 except (KeyError, TypeError):
                     try:
                         axis = TimeMapAxis.from_table(table, format=format, idx=idx)
-                    except (KeyError, ValueError):
+                    except (KeyError, ValueError, IndexError):
                         axis = MapAxis.from_table(table, format=format, idx=idx)
 
                 axes.append(axis)

@@ -18,7 +18,9 @@ from gammapy.modeling.models import (
     ConstantSpatialModel,
     ConstantSpectralModel,
     ConstantTemporalModel,
+    FoVBackgroundModel,
     GaussianSpatialModel,
+    LightCurveTemplateTemporalModel,
     LogParabolaSpectralModel,
     Models,
     PointSpatialModel,
@@ -29,8 +31,8 @@ from gammapy.modeling.models import (
     TemplateNPredModel,
     TemplateSpatialModel,
     create_fermi_isotropic_diffuse_model,
-    FoVBackgroundModel,
 )
+from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import mpl_plot_check, requires_data
 
 
@@ -144,6 +146,7 @@ def sky_models_2(sky_model):
     return Models([sky_model_4, sky_model_5])
 
 
+@requires_data()
 def test_sky_model_init():
     with pytest.raises(TypeError):
         spatial_model = GaussianSpatialModel()
@@ -151,6 +154,22 @@ def test_sky_model_init():
 
     with pytest.raises(TypeError):
         SkyModel(spectral_model=PowerLawSpectralModel(), spatial_model=1234)
+
+    # test init of energy dependent temporal models
+    filename = make_path(
+        "$GAMMAPY_DATA/gravitational_waves/GW_example_DC_map_file.fits.gz"
+    )
+    temporal_model = LightCurveTemplateTemporalModel.read(filename, format="map")
+    spatial_model = PointSpatialModel()
+    spectral_model_fake = ConstantSpectralModel()
+
+    model = SkyModel(
+        spatial_model=spatial_model,
+        spectral_model=spectral_model_fake,
+        temporal_model=temporal_model,
+        name="test-source",
+    )
+    assert model.name == "test-source"
 
 
 def test_sky_model_spatial_none_io(tmpdir):

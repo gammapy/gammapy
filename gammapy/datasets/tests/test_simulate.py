@@ -46,7 +46,7 @@ def models():
     table["TIME"] = time
     table["NORM"] = norm / norm.max()
     t_ref = Time("2000-01-01")
-    table.meta = dict(MJDREFI=t_ref.mjd, MJDREFF=0, TIMEUNIT="s")
+    table.meta = dict(MJDREFI=t_ref.mjd, MJDREFF=0, TIMEUNIT="s", TIMESYS="utc")
     temporal_model = LightCurveTemplateTemporalModel.from_table(table)
 
     model = SkyModel(
