@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Simulate observations"""
 import numpy as np
+from scipy import interpolate
 import astropy.units as u
 from astropy.coordinates import SkyCoord, SkyOffsetFrame
 from astropy.table import Table
@@ -80,6 +81,7 @@ class MapDatasetEventSampler:
             Npred map.
         """
         energy_true = dataset.edisp.edisp_map.geom.axes["energy_true"]
+        energy_new = energy_true.upsample(10)
         target = evaluator.model.spatial_model.position
         edisp = dataset.edisp.get_edisp_kernel(
             dataset.geoms["geom"].axes["energy"], position=target
@@ -107,10 +109,17 @@ class MapDatasetEventSampler:
 
         flux = (
             evaluator.model.temporal_model.evaluate(
-                time_axis_eval.time_mid, energy=energy_true.center
+                time_axis_eval.time_mid, energy=energy_new.center
             )
             * evaluator.model.spectral_model.parameters[0].quantity
         )
+
+        flux = flux * np.diff(energy_new.edges)[:, None]
+
+        f = interpolate.interp1d(energy_new.center, flux, axis=0)
+        flux_oversampled = f(energy_new.center) * energy_new.bin_width
+        f = interpolate.interp1d(energy_new, flux_oversampled)
+        flux = f(energy_true.center)
 
         pred = (
             (region_exposure.quantity[:, 0, 0, None] * flux)
