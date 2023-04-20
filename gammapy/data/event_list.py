@@ -560,7 +560,7 @@ class EventList:
         with quantity_support():
             ax.hist(offset2, **kwargs)
 
-        ax.set_xlabel(fr"Offset$^2$ [{ax.xaxis.units.to_string(UNIT_STRING_FORMAT)}]")
+        ax.set_xlabel(rf"Offset$^2$ [{ax.xaxis.units.to_string(UNIT_STRING_FORMAT)}]")
         ax.set_ylabel("Counts")
         return ax
 

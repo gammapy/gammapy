@@ -575,7 +575,9 @@ class EDispKernel(IRF):
         with quantity_support():
             ax.plot(energy, bias, **kwargs)
 
-        ax.set_xlabel(f"$E_\\mathrm{{True}}$ [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]")
+        ax.set_xlabel(
+            f"$E_\\mathrm{{True}}$ [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]"
+        )
         ax.set_ylabel(
             "($E_\\mathrm{{Reco}} - E_\\mathrm{{True}}) / E_\\mathrm{{True}}$"
         )

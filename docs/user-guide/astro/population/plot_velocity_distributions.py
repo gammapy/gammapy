@@ -20,7 +20,9 @@ for key in velocity_distributions:
 ax.set_xlim(velocity[0].value, velocity[-1].value)
 ax.set_ylim(0, 0.005)
 ax.set_xlabel(f"Velocity [{velocity.unit.to_string(UNIT_STRING_FORMAT)}]")
-ax.set_ylabel(f"Probability Density [{((velocity.unit)**(-1)).to_string(UNIT_STRING_FORMAT)}]")
+ax.set_ylabel(
+    f"Probability Density [{((velocity.unit)**(-1)).to_string(UNIT_STRING_FORMAT)}]"
+)
 ax.semilogx()
 plt.legend(prop={"size": 10})
 plt.show()

@@ -158,7 +158,9 @@ class PSF(IRF):
 
         energy_true.format_plot_xaxis(ax=ax)
         ax.legend(loc="best")
-        ax.set_ylabel(f"Containment radius [{ax.yaxis.units}.to_string(UNIT_STRING_FORMAT)]")
+        ax.set_ylabel(
+            f"Containment radius [{ax.yaxis.units}.to_string(UNIT_STRING_FORMAT)]"
+        )
         ax.yaxis.set_major_formatter(mtick.FormatStrFormatter("%.1e"))
         return ax
 

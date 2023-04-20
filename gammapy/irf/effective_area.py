@@ -102,7 +102,9 @@ class EffectiveAreaTable2D(IRF):
                 ax.plot(energy_axis.center, area, label=label, **kwargs)
 
         energy_axis.format_plot_xaxis(ax=ax)
-        ax.set_ylabel(f"Effective Area [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]")
+        ax.set_ylabel(
+            f"Effective Area [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]"
+        )
         ax.legend()
         return ax
 
