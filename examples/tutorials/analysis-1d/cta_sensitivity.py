@@ -43,6 +43,7 @@ from gammapy.estimators import SensitivityEstimator
 from gammapy.irf import load_irf_dict_from_file
 from gammapy.makers import SpectrumDatasetMaker
 from gammapy.maps import MapAxis, RegionGeom
+from gammapy.maps.axes import UNIT_STRING_FORMAT
 
 ######################################################################
 # Check setup
@@ -175,8 +176,8 @@ ax.plot(
 )
 
 ax.loglog()
-ax.set_xlabel(f"Energy [{t['energy'].unit}]")
-ax.set_ylabel(f"Sensitivity [{t['e2dnde'].unit.to_string('latex_inline')}]")
+ax.set_xlabel(f"Energy [{t['energy'].unit.to_string(UNIT_STRING_FORMAT)}]")
+ax.set_ylabel(f"Sensitivity [{t['e2dnde'].unit.to_string(UNIT_STRING_FORMAT)}]")
 ax.legend()
 
 
@@ -192,11 +193,14 @@ fig, ax1 = plt.subplots()
 ax1.plot(t["energy"], t["background"], "o-", color="black", label="blackground")
 
 ax1.loglog()
-ax1.set_xlabel(f"Energy [{t['energy'].unit}]")
+ax1.set_xlabel(f"Energy [{t['energy'].unit.to_string(UNIT_STRING_FORMAT)}]")
 ax1.set_ylabel("Expected number of bkg counts")
 
 ax2 = ax1.twinx()
-ax2.set_ylabel(f"ON region radius [{on_radii.unit}]", color="red")
+ax2.set_ylabel(
+    f"ON region radius [{on_radii.unit.to_string(UNIT_STRING_FORMAT)}]", 
+    color="red"
+)
 ax2.semilogy(t["energy"], on_radii, color="red", label="PSF68")
 ax2.tick_params(axis="y", labelcolor="red")
 ax2.set_ylim(0.01, 0.5)
