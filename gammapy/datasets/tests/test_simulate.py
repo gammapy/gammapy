@@ -108,7 +108,7 @@ def enedip_temporal_model(models):
     models[0].spatial_model = PointSpatialModel(
         lon_0="0 deg", lat_0="0 deg", frame="galactic"
     )
-    models[0].spectral_model = ConstantSpectralModel(amplitude="1 cm-2 s-1 TeV-1")
+    models[0].spectral_model = ConstantSpectralModel(const="1 cm-2 s-1 TeV-1")
 
     nbin = 10
     energy_axis = MapAxis.from_energy_bounds(
@@ -126,7 +126,7 @@ def enedip_temporal_model(models):
         axes=[energy_axis, time_axis],
         data=np.array(data),
     )
-    t_ref = Time(55555.5, format="mjd")
+    t_ref = Time(51544.00074287037, format="mjd", scale="tt")
     temporal_model = LightCurveTemplateTemporalModel(m, t_ref=t_ref)
     models[0].temporal_model = temporal_model
 
@@ -166,15 +166,14 @@ def test_evaluate_timevar_source(enedip_temporal_model, dataset):
     sampler = MapDatasetEventSampler(random_state=0)
     npred = sampler._evaluate_timevar_source(dataset, evaluator)
 
-    assert_allclose(
-        npred.data[:, 10, 0, 0], [2.25974055e-10, 6.58630784e-10, 5.08061231e-11]
-    )
-    assert_allclose(
-        npred.data[:, 50, 0, 0], [6.58630784e-10, 5.08061231e-11, 2.25974055e-10]
-    )
+    assert_allclose(np.shape(npred.data), (3, 1999, 1, 1))
+
+    assert_allclose(npred.data[:, 10, 0, 0], [4.95923152, 22.05753141, 64.28954516])
+    assert_allclose(npred.data[:, 50, 0, 0], [4.95923152, 22.05753141, 64.28954516])
 
     filename = "$GAMMAPY_DATA/gravitational_waves/GW_example_DC_map_file.fits.gz"
     temporal_model = LightCurveTemplateTemporalModel.read(filename, format="map")
+    temporal_model.t_ref.value = 51544.00074287037
     dataset.models[0].temporal_model = temporal_model
     evaluator = dataset.evaluators["test-source"]
 
@@ -182,28 +181,39 @@ def test_evaluate_timevar_source(enedip_temporal_model, dataset):
     npred = sampler._evaluate_timevar_source(dataset, evaluator)
 
     assert_allclose(
-        npred.data[:, 10, 0, 0],
-        [0.0, 0.0, 0.0],
+        npred.data[:, 1000, 0, 0] / 1e-13,
+        [7.87070535, 6.97078021, 2.38271383],
+        rtol=1e-6,
     )
 
 
 @requires_data()
-def test_sample_coord_time_energy(dataset, models, enedip_temporal_model):
-    models[0].spatial_model = None
-    models[0].spectral_model = ConstantSpectralModel(amplitude="1 cm-2 s-1 TeV-1")
-    dataset.models = models
+def test_sample_coord_time_energy(dataset, enedip_temporal_model):
+    enedip_temporal_model.spatial_model = None
+    enedip_temporal_model.spectral_model = ConstantSpectralModel(
+        const="1 cm-2 s-1 TeV-1"
+    )
+    dataset.models = enedip_temporal_model
     evaluator = dataset.evaluators["test-source"]
     sampler = MapDatasetEventSampler(random_state=0)
     with pytest.raises(TypeError):
         sampler._sample_coord_time_energy(dataset, evaluator)
 
-    models[0].spatial_model = PointSpatialModel(
+    enedip_temporal_model.spatial_model = PointSpatialModel(
         lon_0="0 deg", lat_0="0 deg", frame="galactic"
     )
     dataset.models = enedip_temporal_model
     evaluator = dataset.evaluators["test-source"]
     sampler = MapDatasetEventSampler(random_state=0)
-    sampler._sample_coord_time_energy(dataset, evaluator)
+    events = sampler._sample_coord_time_energy(dataset, evaluator)
+
+    assert_allclose(len(events), 182580)
+
+    assert_allclose(
+        [events[0][0], events[0][1], events[0][2], events[0][3]],
+        [846.8268346739933, 5.350864113060689, 266.4049882865447, -28.936177761791473],
+        rtol=1e-6,
+    )
 
 
 @requires_data()

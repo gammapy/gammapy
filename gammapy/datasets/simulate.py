@@ -62,7 +62,9 @@ class MapDatasetEventSampler:
 
         return table
 
-    def _evaluate_timevar_source(self, dataset, evaluator, time_axis=None):
+    def _evaluate_timevar_source(
+        self, dataset, evaluator, time_axis=None, t_delta=0.5 * u.s
+    ):
         """Calculate Npred for a given `dataset.model` by evaluating
         it on a region geometry.
 
@@ -91,10 +93,7 @@ class MapDatasetEventSampler:
         if not time_axis:
             tstart = dataset.gti.time_start
             tstop = dataset.gti.time_stop
-            min_timebin = np.min(
-                evaluator.model.temporal_model.map.geom.axes["time"].bin_width
-            )
-            nbin = int(((tstop - tstart) / min_timebin).to(""))
+            nbin = int(((tstop - tstart) / t_delta).to(""))
             time_axis_eval = TimeMapAxis.from_time_bounds(
                 time_min=tstart,
                 time_max=tstop,
@@ -107,31 +106,26 @@ class MapDatasetEventSampler:
                 name="time",
             )
 
-        flux = (
+        flux_diff = (
             evaluator.model.temporal_model.evaluate(
                 time_axis_eval.time_mid, energy=energy_new.center
             )
             * evaluator.model.spectral_model.parameters[0].quantity
         )
 
-        flux = flux * np.diff(energy_new.edges)[:, None]
+        flux_inte = flux_diff * energy_new.bin_width[:, None]
 
-        f = interpolate.interp1d(energy_new.center, flux, axis=0)
-        flux_oversampled = f(energy_new.center) * energy_new.bin_width
-        f = interpolate.interp1d(energy_new, flux_oversampled)
-        flux = f(energy_true.center)
+        f = interpolate.interp1d(energy_new.center, flux_inte, axis=0)
+        flux = f(energy_true.center) * flux_inte.unit
 
-        pred = (
-            (region_exposure.quantity[:, 0, 0, None] * flux)
-            * np.diff(energy_true.edges)[:, None]
-        ).to("")
+        pred = ((region_exposure.quantity[:, 0, 0, None] * flux)).to("")
 
         pred_eres = pred.T @ edisp.quantity
 
         npred = RegionNDMap.create(
             region=PointSkyRegion(center=target),
             axes=[time_axis, dataset.geoms["geom"].axes["energy"]],
-            data=np.array(pred_eres),
+            data=np.array(pred_eres.T),
         )
 
         return npred
@@ -175,8 +169,6 @@ class MapDatasetEventSampler:
             table = self._make_table(coords, dataset.gti.time_ref)
 
         return table
-
-        return
 
     def _sample_coord_time(self, npred, temporal_model, gti):
         """Sample model components of a time-varying source.
