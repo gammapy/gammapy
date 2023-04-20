@@ -159,7 +159,7 @@ class PSF(IRF):
         energy_true.format_plot_xaxis(ax=ax)
         ax.legend(loc="best")
         ax.set_ylabel(
-            f"Containment radius [{ax.yaxis.units}.to_string(UNIT_STRING_FORMAT)]"
+            f"Containment radius [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]"
         )
         ax.yaxis.set_major_formatter(mtick.FormatStrFormatter("%.1e"))
         return ax
@@ -251,7 +251,7 @@ class PSF(IRF):
         rad.format_plot_xaxis(ax=ax)
 
         ax.set_yscale("log")
-        ax.set_ylabel(f"PSF [{ax.yaxis.units}.to_string(UNIT_STRING_FORMAT)]")
+        ax.set_ylabel(f"PSF [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]")
         plt.legend()
         return ax
 
