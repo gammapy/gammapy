@@ -198,8 +198,7 @@ ax1.set_ylabel("Expected number of bkg counts")
 
 ax2 = ax1.twinx()
 ax2.set_ylabel(
-    f"ON region radius [{on_radii.unit.to_string(UNIT_STRING_FORMAT)}]", 
-    color="red"
+    f"ON region radius [{on_radii.unit.to_string(UNIT_STRING_FORMAT)}]", color="red"
 )
 ax2.semilogy(t["energy"], on_radii, color="red", label="PSF68")
 ax2.tick_params(axis="y", labelcolor="red")
