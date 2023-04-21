@@ -278,7 +278,7 @@ irfs["psf"].peek()
 irfs["psf"].plot_containment_radius_vs_energy(
     offset=[1] * u.deg, fraction=[0.68, 0.8, 0.95]
 )
-
+plt.show()
 
 ######################################################################
 # Background
@@ -299,7 +299,6 @@ print(irfs["bkg"].evaluate(energy="3 TeV", fov_lon="1 deg", fov_lat="0 deg"))
 irfs["bkg"].plot_at_energy(
     ["100 GeV", "500 GeV", "1 TeV", "3 TeV", "10 TeV", "100 TeV"]
 )
-
 plt.show()
 
 ######################################################################
