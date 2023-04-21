@@ -242,7 +242,7 @@ fig, ax = plt.subplots(
     figsize=(8, 6),
     gridspec_kw={"left": 0.16, "bottom": 0.2, "top": 0.98, "right": 0.98},
 )
-lc_1d.plot(ax=ax, marker="o", axis_name="time", sed_type="flux")
+lc_1d.plot(ax=ax, marker="o", axis_name="time", sed_type="flux");
 
 
 ######################################################################
@@ -317,7 +317,7 @@ time_range = lc_1TeV_10TeV.geom.axes["time"].time_bounds
 temporal_model1.plot(ax=ax, time_range=time_range, label="Best fit model")
 
 ax.set_yscale("linear")
-ax.legend()
+ax.legend();
 
 
 ######################################################################

@@ -206,7 +206,7 @@ ax.text(0.895, 5, "OFF", color="black", fontsize=17, ha="center")
 ax.set_xlabel("Phase")
 ax.set_ylabel("Counts")
 ax.set_xlim(0, 1)
-ax.set_title(f"Phasogram with angular cut of {on_radius}")
+ax.set_title(f"Phasogram with angular cut of {on_radius}");
 
 
 ######################################################################
@@ -302,7 +302,7 @@ counts.plot(ax=ax1, add_cbar=True)
 ax1.set_title("Counts")
 
 background.plot(ax=ax2, add_cbar=True)
-ax2.set_title("Background")
+ax2.set_title("Background");
 
 
 ######################################################################
@@ -324,7 +324,7 @@ npred_excess.plot(ax=ax1, add_cbar=True)
 ax1.set_title("Excess counts")
 
 sqrt_ts.plot(ax=ax2, add_cbar=True)
-ax2.set_title("Significance")
+ax2.set_title("Significance");
 
 
 ######################################################################

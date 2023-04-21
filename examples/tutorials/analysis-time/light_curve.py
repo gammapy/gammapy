@@ -340,7 +340,7 @@ fig, ax = plt.subplots(
 )
 lc_1d.plot(ax=ax, marker="o", label="1D")
 lc_3d.plot(ax=ax, marker="o", label="3D")
-plt.legend()
+plt.legend();
 
 
 ######################################################################
