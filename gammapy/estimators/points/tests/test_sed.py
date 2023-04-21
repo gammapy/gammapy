@@ -530,6 +530,18 @@ def test_flux_points_recompute_ul(fpe_pwl):
     assert_allclose(fp2.flux_ul.data, fp.flux_ul.data, rtol=1e-2)
 
 
+def test_flux_points_parallel(fpe_pwl):
+    datasets, fpe = fpe_pwl
+    fpe.selection_optional = ["all"]
+    fpe.n_jobs = 2
+    fp = fpe.run(datasets)
+    assert_allclose(
+        fp.flux_ul.data,
+        [[[2.629819e-12]], [[9.319243e-13]], [[9.004449e-14]]],
+        rtol=1e-3,
+    )
+
+
 def test_fpe_non_aligned_energy_axes():
     energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=10)
     geom_1 = RegionGeom.create("icrs;circle(0, 0, 0.1)", axes=[energy_axis])
