@@ -179,7 +179,8 @@ ax.plot(
 ax.loglog()
 ax.set_xlabel(f"Energy [{t['e_ref'].unit.to_string(UNIT_STRING_FORMAT)}]")
 ax.set_ylabel(f"Sensitivity [{t['e2dnde'].unit.to_string(UNIT_STRING_FORMAT)}]")
-ax.legend();
+ax.legend()
+plt.show()
 
 
 ######################################################################

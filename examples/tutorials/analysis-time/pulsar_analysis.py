@@ -74,7 +74,7 @@ data_store = DataStore.from_dir("$GAMMAPY_DATA/cta-1dc/index/gps")
 
 
 ######################################################################
-# Define obsevation ID and print events:
+# Define observation ID and print events:
 
 
 id_obs_vela = [111630]
@@ -139,6 +139,7 @@ ax.set_xlim(0, 1)
 ax.set_xlabel("Phase")
 ax.set_ylabel("Counts")
 ax.set_title(f"Phasogram with angular cut of {on_radius}")
+plt.show()
 
 on_phase_range = (0.5, 0.6)
 off_phase_range = (0.7, 1)
@@ -206,7 +207,8 @@ ax.text(0.895, 5, "OFF", color="black", fontsize=17, ha="center")
 ax.set_xlabel("Phase")
 ax.set_ylabel("Counts")
 ax.set_xlim(0, 1)
-ax.set_title(f"Phasogram with angular cut of {on_radius}");
+ax.set_title(f"Phasogram with angular cut of {on_radius}")
+plt.show()
 
 
 ######################################################################
@@ -302,7 +304,9 @@ counts.plot(ax=ax1, add_cbar=True)
 ax1.set_title("Counts")
 
 background.plot(ax=ax2, add_cbar=True)
-ax2.set_title("Background");
+ax2.set_title("Background")
+
+plt.show()
 
 
 ######################################################################
@@ -324,7 +328,9 @@ npred_excess.plot(ax=ax1, add_cbar=True)
 ax1.set_title("Excess counts")
 
 sqrt_ts.plot(ax=ax2, add_cbar=True)
-ax2.set_title("Significance");
+ax2.set_title("Significance")
+
+plt.show()
 
 
 ######################################################################
@@ -340,7 +346,7 @@ ax2.set_title("Significance");
 #
 # Here to create the `~gammapy.datasets.SpectrumDatasetOnOff`, we are going to redo the whole data reduction.
 # However, note that one can use the `to_spectrum_dataset()` method of `~gammapy.datasets.MapDatasetOnOff`
-# (with the `containement_correction` parameter set to True) if such a `~gammapy.datasets.MapDatasetOnOff`
+# (with the `containment_correction` parameter set to True) if such a `~gammapy.datasets.MapDatasetOnOff`
 # has been created as shown above.
 
 e_true = MapAxis.from_energy_bounds(0.003, 10, 100, unit="TeV", name="energy_true")
@@ -372,6 +378,7 @@ for obs in obs_list_vela:
 # Now let’s take a look at the datasets we just created:
 
 spectrum_datasets[0].peek()
+plt.show()
 
 
 ######################################################################

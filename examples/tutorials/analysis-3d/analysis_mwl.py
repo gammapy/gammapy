@@ -74,7 +74,7 @@ check_tutorials_setup()
 # ---------------------
 #
 # The datasets serialization produce YAML files listing the datasets and
-# models. In the following cells we show an example containning only the
+# models. In the following cells we show an example containing only the
 # Fermi-LAT dataset and the Crab model.
 #
 # Fermi-LAT-3FHL_datasets.yaml:
