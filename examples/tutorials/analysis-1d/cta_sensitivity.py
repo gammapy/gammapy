@@ -39,7 +39,7 @@ import matplotlib.pyplot as plt
 from IPython.display import display
 from gammapy.data import Observation, observatory_locations
 from gammapy.datasets import SpectrumDataset, SpectrumDatasetOnOff
-from gammapy.estimators import SensitivityEstimator
+from gammapy.estimators import FluxPoints, SensitivityEstimator
 from gammapy.irf import load_irf_dict_from_file
 from gammapy.makers import SpectrumDatasetMaker
 from gammapy.maps import MapAxis, RegionGeom
@@ -83,8 +83,9 @@ irfs = load_irf_dict_from_file(
 )
 location = observatory_locations["cta_south"]
 pointing = SkyCoord("0 deg", "0 deg")
+livetime = 5.0 * u.h
 obs = Observation.create(
-    pointing=pointing, irfs=irfs, livetime="5 h", location=location
+    pointing=pointing, irfs=irfs, livetime=livetime, location=location
 )
 
 spectrum_maker = SpectrumDatasetMaker(selection=["exposure", "edisp", "background"])
@@ -156,7 +157,7 @@ is_s = t["criterion"] == "significance"
 
 fig, ax = plt.subplots()
 ax.plot(
-    t["energy"][is_s],
+    t["e_ref"][is_s],
     t["e2dnde"][is_s],
     "s-",
     color="red",
@@ -164,10 +165,10 @@ ax.plot(
 )
 
 is_g = t["criterion"] == "gamma"
-ax.plot(t["energy"][is_g], t["e2dnde"][is_g], "*-", color="blue", label="gamma")
+ax.plot(t["e_ref"][is_g], t["e2dnde"][is_g], "*-", color="blue", label="gamma")
 is_bkg_syst = t["criterion"] == "bkg"
 ax.plot(
-    t["energy"][is_bkg_syst],
+    t["e_ref"][is_bkg_syst],
     t["e2dnde"][is_bkg_syst],
     "v-",
     color="green",
@@ -175,7 +176,7 @@ ax.plot(
 )
 
 ax.loglog()
-ax.set_xlabel(f"Energy [{t['energy'].unit}]")
+ax.set_xlabel(f"Energy [{t['e_ref'].unit}]")
 ax.set_ylabel(f"Sensitivity [{t['e2dnde'].unit}]")
 ax.legend()
 
@@ -188,20 +189,48 @@ ax.legend()
 
 # Plot expected number of counts for signal and background
 fig, ax1 = plt.subplots()
-# ax1.plot( t["energy"], t["excess"],"o-", color="red", label="signal")
-ax1.plot(t["energy"], t["background"], "o-", color="black", label="blackground")
+# ax1.plot( t["e_ref"], t["excess"],"o-", color="red", label="signal")
+ax1.plot(t["e_ref"], t["background"], "o-", color="black", label="blackground")
 
 ax1.loglog()
-ax1.set_xlabel(f"Energy [{t['energy'].unit}]")
+ax1.set_xlabel(f"Energy [{t['e_ref'].unit}]")
 ax1.set_ylabel("Expected number of bkg counts")
 
 ax2 = ax1.twinx()
 ax2.set_ylabel(f"ON region radius [{on_radii.unit}]", color="red")
-ax2.semilogy(t["energy"], on_radii, color="red", label="PSF68")
+ax2.semilogy(t["e_ref"], on_radii, color="red", label="PSF68")
 ax2.tick_params(axis="y", labelcolor="red")
 ax2.set_ylim(0.01, 0.5)
 plt.show()
 
+######################################################################
+# Obtaining an integral flux sensitivity
+# --------------------------------------
+#
+# It is often useful to obtain the integral sensitivity above a certain
+# threshold. In this case, it is simplest to use a dataset with one energy bin
+# while setting the high energy edge to a very large value.
+# Here, we simply squash the previously created dataset into one with a single
+# energy
+#
+
+dataset_on_off1 = dataset_on_off.to_image()
+sensitivity_estimator = SensitivityEstimator(
+    gamma_min=5, n_sigma=3, bkg_syst_fraction=0.10
+)
+sensitivity_table = sensitivity_estimator.run(dataset_on_off1)
+print(sensitivity_table)
+
+# To get the integral flux, we convert to a `FluxPoints` object that does the conversion
+# internally
+
+flux_points = FluxPoints.from_table(
+    sensitivity_table, sed_type="e2dnde", reference_model=sensitivity_estimator.spectrum
+)
+print(
+    f"Integral sensitivity in {livetime:.2f} above {energy_axis.edges[0]:.2e} "
+    f"is {np.squeeze(flux_points.flux.quantity):.2e}"
+)
 
 ######################################################################
 # Exercises
