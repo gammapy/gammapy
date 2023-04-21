@@ -87,7 +87,7 @@ class GTI:
 
         start = u.Quantity(start, ndmin=1)
         stop = u.Quantity(stop, ndmin=1)
-        meta = time_ref_to_dict(reference_time)
+        meta = time_ref_to_dict(reference_time, scale=reference_time.scale)
         table = Table({"START": start.to("s"), "STOP": stop.to("s")}, meta=meta)
         return cls(table)
 
@@ -208,7 +208,7 @@ class GTI:
         reference_time = Time(reference_time)
         start = Time([_[0] for _ in time_intervals]) - reference_time
         stop = Time([_[1] for _ in time_intervals]) - reference_time
-        meta = time_ref_to_dict(reference_time)
+        meta = time_ref_to_dict(reference_time, scale=reference_time.scale)
         table = Table({"START": start.to("s"), "STOP": stop.to("s")}, meta=meta)
         return cls(table=table)
 

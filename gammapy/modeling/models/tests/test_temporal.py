@@ -299,10 +299,11 @@ def test_generalized_gaussian_temporal_model_integral():
     )
     start = 1 * u.day
     stop = 2 * u.day
-    t_ref = Time(50000, format="mjd")
+    t_ref = Time(50000, format="mjd", scale="utc")
     gti = GTI.create(start, stop, reference_time=t_ref)
+    assert gti.time_start.scale == t_ref.scale
     val = temporal_model.integral(gti.time_start, gti.time_stop)
-    assert_allclose(val, 0.759115, rtol=1e-4)
+    assert_allclose(val, 0.758918, rtol=1e-4)
 
 
 def test_powerlaw_temporal_model_evaluate():
@@ -462,7 +463,7 @@ def test_model_scale():
     stop = [2, 3.5, 6] * u.day
     gti = GTI.create(start, stop, reference_time=model.reference_time)
     val = model.integral(gti.time_start, gti.time_stop)
-    assert_allclose(np.sum(val), 0.442885, rtol=1e-5)
+    assert_allclose(np.sum(val), 0.442833, rtol=1e-5)
 
     model1.reference_time = Time(52398.23456, format="mjd", scale="utc")
     assert model1.scale == "tai"
