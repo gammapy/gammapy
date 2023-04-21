@@ -228,7 +228,7 @@ print(stacked)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 
-stacked.counts.sum_over_axes().smooth(0.05 * u.deg).plot(stretch="sqrt", add_cbar=True)
+stacked.counts.sum_over_axes().smooth(0.05 * u.deg).plot(stretch="sqrt", add_cbar=True);
 
 
 ######################################################################
@@ -328,7 +328,7 @@ print(stacked.models.to_parameters_table())
 # energies:
 #
 
-stacked.plot_residuals_spatial(method="diff/sqrt(model)", vmin=-0.5, vmax=0.5)
+stacked.plot_residuals_spatial(method="diff/sqrt(model)", vmin=-0.5, vmax=0.5);
 
 
 ######################################################################
@@ -341,7 +341,7 @@ region = CircleSkyRegion(center=SkyCoord("83.63 deg", "22.14 deg"), radius=0.5 *
 stacked.plot_residuals(
     kwargs_spatial=dict(method="diff/sqrt(model)", vmin=-0.5, vmax=0.5),
     kwargs_spectral=dict(region=region),
-)
+);
 
 
 ######################################################################
@@ -401,4 +401,4 @@ fpe = FluxPointsEstimator(energy_edges=energy_edges, source="crab")
 flux_points = fpe.run(datasets=[stacked])
 
 ax = spec.plot_error(energy_bounds=energy_bounds, energy_power=2)
-flux_points.plot(ax=ax, energy_power=2)
+flux_points.plot(ax=ax, energy_power=2);

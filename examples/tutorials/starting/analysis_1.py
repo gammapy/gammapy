@@ -302,7 +302,7 @@ counts.smooth("0.05 deg").plot_interactive()
 #
 
 analysis.get_excess_map()
-analysis.excess_map["sqrt_ts"].plot(add_cbar=True)
+analysis.excess_map["sqrt_ts"].plot(add_cbar=True);
 
 
 ######################################################################
@@ -433,7 +433,7 @@ analysis.flux_points.write(filename, overwrite=True)
 #
 
 analysis.get_excess_map()
-analysis.excess_map["sqrt_ts"].plot(add_cbar=True, cmap="RdBu", vmin=-5, vmax=5)
+analysis.excess_map["sqrt_ts"].plot(add_cbar=True, cmap="RdBu", vmin=-5, vmax=5);
 
 
 ######################################################################

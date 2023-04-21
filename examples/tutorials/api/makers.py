@@ -104,7 +104,7 @@ maker = MapDatasetMaker()
 dataset = maker.run(dataset_empty, obs)
 print(dataset)
 plt.figure()
-dataset.counts.sum_over_axes().plot(stretch="sqrt", add_cbar=True)
+dataset.counts.sum_over_axes().plot(stretch="sqrt", add_cbar=True);
 
 
 ######################################################################
@@ -157,7 +157,7 @@ dataset = maker.run(dataset_empty, obs)
 dataset = safe_mask_maker.run(dataset, obs)
 print(dataset.mask_safe)
 plt.figure()
-dataset.mask_safe.sum_over_axes().plot()
+dataset.mask_safe.sum_over_axes().plot();
 
 
 ######################################################################

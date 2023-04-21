@@ -821,7 +821,7 @@ m_3fhl_gc = Map.read(filename)
 #
 
 plt.figure()
-m_3fhl_gc.plot()
+m_3fhl_gc.plot();
 
 
 ######################################################################
@@ -833,7 +833,7 @@ m_3fhl_gc.plot()
 
 plt.figure()
 smoothed = m_3fhl_gc.smooth(width=0.2 * u.deg, kernel="gauss")
-smoothed.plot(stretch="sqrt", add_cbar=True, vmax=4, cmap="inferno")
+smoothed.plot(stretch="sqrt", add_cbar=True, vmax=4, cmap="inferno");
 
 
 ######################################################################
@@ -847,7 +847,7 @@ plt.figure()
 rc_params = {"figure.figsize": (12, 5.4), "font.size": 12}
 with plt.rc_context(rc=rc_params):
     smoothed = m_3fhl_gc.smooth(width=0.2 * u.deg, kernel="gauss")
-    smoothed.plot(stretch="sqrt", add_cbar=True, vmax=4)
+    smoothed.plot(stretch="sqrt", add_cbar=True, vmax=4);
 
 
 ######################################################################

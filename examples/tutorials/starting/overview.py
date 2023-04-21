@@ -146,8 +146,7 @@ print(f"Total number of counts in the image: {gc_3fhl.data.sum():.0f}")
 # and defines some defaults for nicer plots (e.g. the colormap ‘afmhot’):
 #
 plt.figure()
-
-gc_3fhl.plot(stretch="sqrt")
+gc_3fhl.plot(stretch="sqrt");
 
 
 ######################################################################
@@ -157,8 +156,7 @@ gc_3fhl.plot(stretch="sqrt")
 
 plt.figure()
 gc_3fhl_smoothed = gc_3fhl.smooth(kernel="gauss", width=0.2 * u.deg)
-
-gc_3fhl_smoothed.plot(stretch="sqrt")
+gc_3fhl_smoothed.plot(stretch="sqrt");
 
 
 ######################################################################
@@ -173,8 +171,7 @@ plt.figure()
 # define center and size of the cutout region
 center = SkyCoord(0, 0, unit="deg", frame="galactic")
 gc_3fhl_cutout = gc_3fhl_smoothed.cutout(center, 9 * u.deg)
-
-gc_3fhl_cutout.plot(stretch="sqrt")
+gc_3fhl_cutout.plot(stretch="sqrt");
 
 
 ######################################################################

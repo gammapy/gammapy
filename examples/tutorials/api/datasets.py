@@ -166,7 +166,7 @@ dataset_cta.peek()
 #
 plt.figure()
 counts_image = dataset_cta.counts.sum_over_axes()
-counts_image.smooth("0.1 deg").plot()
+counts_image.smooth("0.1 deg").plot();
 
 
 ######################################################################
@@ -187,7 +187,7 @@ print(radius)
 
 plt.figure()
 edisp_kernel = dataset_cta.edisp.get_edisp_kernel()
-edisp_kernel.plot_matrix()
+edisp_kernel.plot_matrix();
 
 
 ######################################################################
@@ -226,7 +226,7 @@ print(dataset_cta)
 
 plt.figure()
 npred = dataset_cta.npred()
-npred.sum_over_axes().plot()
+npred.sum_over_axes().plot();
 
 
 ######################################################################
@@ -236,7 +236,7 @@ npred.sum_over_axes().plot()
 
 plt.figure()
 npred_source = dataset_cta.npred_signal(model_name="gc")
-npred_source.sum_over_axes().plot()
+npred_source.sum_over_axes().plot();
 
 
 ######################################################################
@@ -248,7 +248,7 @@ npred_source.sum_over_axes().plot()
 
 plt.figure()
 npred_background = dataset_cta.npred_background()
-npred_background.sum_over_axes().plot()
+npred_background.sum_over_axes().plot();
 
 
 ######################################################################
@@ -274,7 +274,7 @@ npred_background.sum_over_axes().plot()
 # eg: to see the safe data range
 
 # plt.figure()
-dataset_cta.mask_safe.plot_grid()
+dataset_cta.mask_safe.plot_grid();
 
 
 ######################################################################
@@ -290,7 +290,7 @@ geom = dataset_cta.counts.geom
 mask_space = geom.region_mask([region])
 mask_energy = geom.energy_mask(0.3 * u.TeV, 8 * u.TeV)
 dataset_cta.mask_fit = mask_space & mask_energy
-dataset_cta.mask_fit.plot_grid(vmin=0, vmax=1, add_cbar=True)
+dataset_cta.mask_fit.plot_grid(vmin=0, vmax=1, add_cbar=True);
 
 
 ######################################################################
@@ -314,7 +314,7 @@ e_min.plot(add_cbar=True)
 # To see the high energy threshold at each point
 
 plt.figure()
-e_max.plot(add_cbar=True)
+e_max.plot(add_cbar=True);
 
 
 ######################################################################
@@ -330,7 +330,7 @@ cutout = dataset_cta.cutout(
 )
 
 plt.figure()
-cutout.counts.sum_over_axes().plot()
+cutout.counts.sum_over_axes().plot();
 
 
 ######################################################################
@@ -340,7 +340,7 @@ cutout.counts.sum_over_axes().plot()
 sliced = dataset_cta.slice_by_energy(
     energy_min=1 * u.TeV, energy_max=5 * u.TeV, name="slice-energy"
 )
-sliced.counts.plot_grid()
+sliced.counts.plot_grid();
 
 
 ######################################################################
@@ -348,7 +348,7 @@ sliced.counts.plot_grid()
 # datasets such as `~gammapy.datasets.MapDataset.mask_fit`:
 #
 
-sliced.mask_fit.plot_grid()
+sliced.mask_fit.plot_grid();
 
 
 ######################################################################
@@ -362,7 +362,7 @@ sliced.mask_fit.plot_grid()
 
 plt.figure()
 downsampled = dataset_cta.downsample(factor=8)
-downsampled.counts.sum_over_axes().plot()
+downsampled.counts.sum_over_axes().plot();
 
 
 ######################################################################
@@ -372,7 +372,7 @@ downsampled.counts.sum_over_axes().plot()
 downsampled_energy = dataset_cta.downsample(
     factor=5, axis_name="energy", name="downsampled-energy"
 )
-downsampled_energy.counts.plot_grid()
+downsampled_energy.counts.plot_grid();
 
 
 ######################################################################
@@ -390,7 +390,7 @@ print(downsampled_energy, dataset_cta)
 
 energy_axis_new = MapAxis.from_energy_edges([0.1, 0.3, 1, 3, 10] * u.TeV)
 resampled = dataset_cta.resample_energy_axis(energy_axis=energy_axis_new)
-resampled.counts.plot_grid(ncols=2)
+resampled.counts.plot_grid(ncols=2);
 
 
 ######################################################################
@@ -400,7 +400,7 @@ resampled.counts.plot_grid(ncols=2)
 
 plt.figure()
 dataset_image = dataset_cta.to_image()
-dataset_image.counts.plot()
+dataset_image.counts.plot();
 
 
 ######################################################################
@@ -451,7 +451,7 @@ flux_points = FluxPoints.read(
 model = SkyModel(spectral_model=PowerLawSpectralModel(index=2.3))
 fp_dataset = FluxPointsDataset(data=flux_points, models=model)
 
-fp_dataset.plot_spectrum()
+fp_dataset.plot_spectrum();
 
 
 ######################################################################

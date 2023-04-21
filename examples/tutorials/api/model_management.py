@@ -113,7 +113,7 @@ datasets[1].counts.sum_over_axes().smooth(0.05 * u.deg).plot(
     ax=ax2, stretch="sqrt", add_cbar=True
 )
 ax1.set_title("Fermi counts")
-ax2.set_title("CTA counts")
+ax2.set_title("CTA counts");
 
 ######################################################################
 #

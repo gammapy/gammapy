@@ -134,7 +134,7 @@ print(energy)
 #
 
 plt.figure()
-pwl.plot(energy_bounds=[1, 100] * u.TeV)
+pwl.plot(energy_bounds=[1, 100] * u.TeV);
 
 
 ######################################################################
@@ -195,7 +195,7 @@ template = TemplateSpectralModel(energy, values)
 template.plot(energy_bounds=[0.2, 50] * u.TeV, label="template model")
 normed_template = template * pwl_norm
 normed_template.plot(energy_bounds=[0.2, 50] * u.TeV, label="normed_template model")
-plt.legend()
+plt.legend();
 
 
 ######################################################################
@@ -284,14 +284,14 @@ print(flux_per_omega)
 m = Map.create(skydir=(0, 0), width=(1, 1), binsz=0.02, frame="galactic")
 m.quantity = gauss.evaluate_geom(m.geom)
 plt.figure()
-m.plot(add_cbar=True)
+m.plot(add_cbar=True);
 
 
 ######################################################################
 # Again for convenience the model can be plotted directly:
 #
 plt.figure()
-gauss.plot(add_cbar=True)
+gauss.plot(add_cbar=True);
 
 
 ######################################################################
@@ -317,7 +317,7 @@ ax = gauss_elongated.plot(add_cbar=True)
 # add region illustration
 region = gauss_elongated.to_region()
 region_pix = region.to_pixel(ax.wcs)
-ax.add_artist(region_pix.as_artist(ec="w", fc="None"))
+ax.add_artist(region_pix.as_artist(ec="w", fc="None"));
 
 
 ######################################################################
@@ -382,7 +382,7 @@ gauss_temp(time)
 #
 
 time = Time([59233.0, 59250], format="mjd")
-gauss_temp.plot(time)
+gauss_temp.plot(time);
 
 
 ######################################################################
@@ -438,7 +438,7 @@ print(model.temporal_model)
 #
 
 plt.figure()
-model.spectral_model.plot(energy_bounds=[1, 10] * u.TeV)
+model.spectral_model.plot(energy_bounds=[1, 10] * u.TeV);
 
 
 ######################################################################
@@ -698,7 +698,7 @@ print(my_custom_model)
 print(my_custom_model.integral(1 * u.TeV, 10 * u.TeV))
 
 plt.figure()
-my_custom_model.plot(energy_bounds=[1, 10] * u.TeV)
+my_custom_model.plot(energy_bounds=[1, 10] * u.TeV);
 
 
 ######################################################################

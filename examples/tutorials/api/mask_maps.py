@@ -195,7 +195,7 @@ dataset.mask_fit &= mask_map
 # Let’s check the result and plot the full mask.
 #
 
-_ = dataset.mask_fit.plot_grid(ncols=5, vmin=0, vmax=1, figsize=(14, 3))
+dataset.mask_fit.plot_grid(ncols=5, vmin=0, vmax=1, figsize=(14, 3));
 
 
 ######################################################################
@@ -282,7 +282,7 @@ print(regions)
 # to define the exclusion mask we take the inverse
 mask_map = ~geom.region_mask(regions)
 plt.figure()
-mask_map.plot()
+mask_map.plot();
 
 
 ######################################################################
@@ -322,7 +322,7 @@ regions = [CircleSkyRegion(position, exclusion_radius) for position in positions
 
 mask_map_catalog = ~geom.region_mask(regions)
 plt.figure()
-mask_map_catalog.plot()
+mask_map_catalog.plot();
 
 
 ######################################################################
@@ -364,7 +364,7 @@ significance_mask = result["sqrt_ts"] < 5.0
 invalid_pixels = np.isnan(result["sqrt_ts"].data)
 significance_mask.data[invalid_pixels] = True
 plt.figure()
-significance_mask.plot()
+significance_mask.plot();
 
 
 ######################################################################
@@ -395,7 +395,7 @@ significance_mask.plot()
 
 mask = mask_map | mask_map_catalog
 plt.figure()
-mask.plot()
+mask.plot();
 
 
 ######################################################################
@@ -404,7 +404,7 @@ mask.plot()
 
 mask_map &= mask_map_catalog
 plt.figure()
-mask_map.plot()
+mask_map.plot();
 
 
 ######################################################################
@@ -413,7 +413,7 @@ mask_map.plot()
 
 significance_mask_inv = ~significance_mask
 plt.figure()
-significance_mask_inv.plot()
+significance_mask_inv.plot();
 
 
 ######################################################################
@@ -433,7 +433,7 @@ mask.plot()
 
 plt.figure()
 mask = significance_mask_inv.binary_dilate(width=0.2 * u.deg)
-mask.plot()
+mask.plot();
 
 
 ######################################################################

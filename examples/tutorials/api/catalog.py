@@ -302,7 +302,7 @@ plt.figure()
 energy_bounds = (100 * u.MeV, 100 * u.GeV)
 opts = dict(sed_type="e2dnde", yunits=u.Unit("TeV cm-2 s-1"))
 model.spectral_model.plot(energy_bounds, **opts)
-model.spectral_model.plot_error(energy_bounds, **opts)
+model.spectral_model.plot_error(energy_bounds, **opts);
 
 
 ######################################################################
@@ -377,7 +377,7 @@ display(flux_points.to_table(sed_type="flux"))
 
 # %%
 plt.figure()
-flux_points.plot(sed_type="e2dnde")
+flux_points.plot(sed_type="e2dnde");
 
 
 ######################################################################
@@ -398,7 +398,7 @@ display(lightcurve.to_table(format="lightcurve", sed_type="flux"))
 
 # %%
 plt.figure()
-lightcurve.plot()
+lightcurve.plot();
 
 
 ######################################################################
