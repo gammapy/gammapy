@@ -167,7 +167,7 @@ print(rad_max)
 #
 
 fig, ax = plt.subplots()
-rad_max.plot_rad_max_vs_energy(ax=ax)
+rad_max.plot_rad_max_vs_energy(ax=ax);
 
 
 ######################################################################
@@ -251,7 +251,7 @@ for observation in observations:
 plt.figure()
 ax = counts.plot(cmap="viridis")
 geom.plot_region(ax=ax, kwargs_point={"color": "k", "marker": "*"})
-plot_spectrum_datasets_off_regions(ax=ax, datasets=datasets)
+plot_spectrum_datasets_off_regions(ax=ax, datasets=datasets);
 
 
 ######################################################################
@@ -311,7 +311,7 @@ display(datasets.models.to_parameters_table())
 # `~SpectrumDataset.plot_fit()`
 #
 ax_spectrum, ax_residuals = datasets[0].plot_fit()
-ax_spectrum.set_ylim(0.1, 120)
+ax_spectrum.set_ylim(0.1, 120);
 
 
 ######################################################################

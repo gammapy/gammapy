@@ -123,7 +123,7 @@ smooth = ASmoothMapEstimator(threshold=3, scales=scales, energy_edges=[10, 500] 
 images = smooth.run(dataset)
 
 plt.figure(figsize=(9, 5))
-images["flux"].plot(add_cbar=True, stretch="asinh")
+images["flux"].plot(add_cbar=True, stretch="asinh");
 
 
 ######################################################################
@@ -176,7 +176,7 @@ ax1.set_title("Significance map")
 maps["flux"].plot(ax=ax2, add_cbar=True, stretch="sqrt", vmin=0)
 ax2.set_title("Flux map")
 maps["niter"].plot(ax=ax3, add_cbar=True)
-ax3.set_title("Iteration map")
+ax3.set_title("Iteration map");
 
 ######################################################################
 # Source candidates

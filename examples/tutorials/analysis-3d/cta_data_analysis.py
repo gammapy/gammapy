@@ -163,7 +163,7 @@ ax2.set_title("Background map")
 dataset_image.background.plot(ax=ax2, vmax=5)
 
 ax3.set_title("Excess map")
-dataset_image.excess.smooth(3).plot(ax=ax3, vmax=2)
+dataset_image.excess.smooth(3).plot(ax=ax3, vmax=2);
 
 
 ######################################################################
@@ -219,7 +219,7 @@ ax.scatter(
     marker="o",
     s=200,
     lw=1.5,
-)
+);
 
 
 ######################################################################
@@ -245,7 +245,7 @@ on_region = CircleSkyRegion(center=target_position, radius=on_radius)
 
 exclusion_mask = ~geom.to_image().region_mask([on_region])
 plt.figure()
-exclusion_mask.plot()
+exclusion_mask.plot();
 
 ######################################################################
 # Configure spectral analysis
@@ -285,7 +285,7 @@ plt.figure(figsize=(8, 6))
 ax = dataset_image.counts.smooth("0.03 deg").plot(vmax=8)
 
 on_region.to_pixel(ax.wcs).plot(ax=ax, edgecolor="white")
-plot_spectrum_datasets_off_regions(datasets, ax=ax)
+plot_spectrum_datasets_off_regions(datasets, ax=ax);
 
 
 ######################################################################

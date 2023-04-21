@@ -198,7 +198,7 @@ print(dataset.models)
 fit = Fit(optimize_opts={"print_level": 1})
 result = fit.run(datasets=[dataset])
 plt.figure()
-dataset.plot_residuals_spatial(method="diff/sqrt(model)", vmin=-0.5, vmax=0.5)
+dataset.plot_residuals_spatial(method="diff/sqrt(model)", vmin=-0.5, vmax=0.5);
 
 
 ######################################################################

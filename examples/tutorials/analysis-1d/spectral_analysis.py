@@ -195,7 +195,7 @@ geom = WcsGeom.create(
 )
 
 exclusion_mask = ~geom.region_mask([exclusion_region])
-exclusion_mask.plot()
+exclusion_mask.plot();
 
 
 ######################################################################
@@ -240,7 +240,7 @@ print(datasets)
 plt.figure()
 ax = exclusion_mask.plot()
 on_region.to_pixel(ax.wcs).plot(ax=ax, edgecolor="k")
-plot_spectrum_datasets_off_regions(ax=ax, datasets=datasets)
+plot_spectrum_datasets_off_regions(ax=ax, datasets=datasets);
 
 
 ######################################################################
@@ -279,7 +279,7 @@ ax_sqrt_ts.plot(
 
 ax_sqrt_ts.set_title("Sqrt(TS)")
 ax_sqrt_ts.set_xlabel("Livetime [h]")
-ax_sqrt_ts.set_ylabel("Sqrt(TS)")
+ax_sqrt_ts.set_ylabel("Sqrt(TS)");
 
 
 ######################################################################
@@ -362,7 +362,7 @@ display(result_joint.models.to_parameters_table())
 plt.figure()
 ax_spectrum, ax_residuals = datasets[0].plot_fit()
 ax_spectrum.set_ylim(0.1, 40)
-datasets[0].plot_masks(ax=ax_spectrum)
+datasets[0].plot_masks(ax=ax_spectrum);
 
 
 ######################################################################
@@ -410,7 +410,7 @@ display(flux_points.to_table(sed_type="dnde", formatted=True))
 
 fig, ax = plt.subplots()
 flux_points.plot(ax=ax, sed_type="e2dnde", color="darkorange")
-flux_points.plot_ts_profiles(ax=ax, sed_type="e2dnde")
+flux_points.plot_ts_profiles(ax=ax, sed_type="e2dnde");
 
 
 ######################################################################
@@ -419,7 +419,7 @@ flux_points.plot_ts_profiles(ax=ax, sed_type="e2dnde")
 #
 
 flux_points_dataset = FluxPointsDataset(data=flux_points, models=model_best_joint)
-flux_points_dataset.plot_fit()
+flux_points_dataset.plot_fit();
 
 
 ######################################################################

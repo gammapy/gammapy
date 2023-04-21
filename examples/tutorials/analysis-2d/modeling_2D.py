@@ -143,7 +143,7 @@ print(analysis.datasets["stacked"].exposure)
 # We can have a quick look of these maps in the following way:
 #
 
-analysis.datasets["stacked"].counts.reduce_over_axes().plot(vmax=10, add_cbar=True)
+analysis.datasets["stacked"].counts.reduce_over_axes().plot(vmax=10, add_cbar=True);
 
 
 ######################################################################

@@ -172,7 +172,7 @@ geom_image = geom.to_image().to_cube([energy_axis.squash()])
 # Make the exclusion mask
 regions = CircleSkyRegion(center=source_pos, radius=0.3 * u.deg)
 exclusion_mask = ~geom_image.region_mask([regions])
-exclusion_mask.sum_over_axes().plot()
+exclusion_mask.sum_over_axes().plot();
 
 
 ######################################################################
@@ -243,7 +243,7 @@ ax1.set_title("Significance map")
 significance_map.plot(ax=ax1, add_cbar=True)
 
 ax2.set_title("Excess map")
-excess_map.plot(ax=ax2, add_cbar=True)
+excess_map.plot(ax=ax2, add_cbar=True);
 
 
 ######################################################################

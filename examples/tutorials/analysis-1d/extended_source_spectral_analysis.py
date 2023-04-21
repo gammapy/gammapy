@@ -284,7 +284,7 @@ ax_sqrt_ts.plot(
 
 ax_sqrt_ts.set_title("Sqrt(TS)")
 ax_sqrt_ts.set_xlabel("Livetime [h]")
-ax_sqrt_ts.set_ylabel("Sqrt(TS)")
+ax_sqrt_ts.set_ylabel("Sqrt(TS)");
 
 
 ######################################################################

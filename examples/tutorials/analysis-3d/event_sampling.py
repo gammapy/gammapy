@@ -324,7 +324,7 @@ hdu_all.writeto("./event_sampling/events_0001.fits", overwrite=True)
 counts = Map.from_geom(geom)
 counts.fill_events(events)
 plt.figure()
-counts.sum_over_axes().plot(add_cbar=True)
+counts.sum_over_axes().plot(add_cbar=True);
 
 
 ######################################################################

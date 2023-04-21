@@ -79,7 +79,7 @@ dataset = MapDataset.read(
 # This is what the counts image we will work with looks like:
 #
 counts_image = dataset.counts.sum_over_axes()
-counts_image.smooth("0.1 deg").plot(stretch="sqrt")
+counts_image.smooth("0.1 deg").plot(stretch="sqrt");
 
 
 ######################################################################
@@ -123,7 +123,7 @@ regions = make_orthogonal_rectangle_sky_regions(
 plt.figure()
 geom = RegionGeom.create(region=regions)
 ax = counts_image.smooth("0.1 deg").plot(stretch="sqrt")
-geom.plot_region(ax=ax, color="w")
+geom.plot_region(ax=ax, color="w");
 
 
 ######################################################################
@@ -201,7 +201,7 @@ fig, ax = plt.subplots()
 for quantity in quantities:
     profile[quantity].plot(ax=ax, label=quantity.title())
 
-ax.set_ylabel("Counts")
+ax.set_ylabel("Counts");
 
 
 ######################################################################
@@ -256,7 +256,7 @@ gc_image = counts_image.cutout(
     position=SkyCoord("0d", "0d", frame="galactic"), width=3 * u.deg
 )
 ax = gc_image.smooth("0.1 deg").plot(stretch="sqrt")
-geom.plot_region(ax=ax, color="w")
+geom.plot_region(ax=ax, color="w");
 
 
 ######################################################################
@@ -280,7 +280,7 @@ profile = flux_profile_estimator.run(datasets=dataset)
 #
 
 plt.figure()
-profile.plot(axis_name="projected-distance", sed_type="flux")
+profile.plot(axis_name="projected-distance", sed_type="flux");
 
 
 ######################################################################

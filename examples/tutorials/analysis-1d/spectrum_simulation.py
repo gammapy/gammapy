@@ -208,7 +208,7 @@ axes[0].set_xlabel("Counts")
 axes[1].hist(table["counts_off"])
 axes[1].set_xlabel("Counts Off")
 axes[2].hist(table["excess"])
-axes[2].set_xlabel("excess")
+axes[2].set_xlabel("excess");
 
 
 ######################################################################

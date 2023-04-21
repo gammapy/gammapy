@@ -396,7 +396,7 @@ ax_spectrum, ax_residuals = analysis.datasets[0].plot_fit()
 ax_spectrum.set_ylim(0.1, 200)
 ax_spectrum.set_xlim(0.2, 60)
 ax_residuals.set_xlim(0.2, 60)
-analysis.datasets[0].plot_masks(ax=ax_spectrum)
+analysis.datasets[0].plot_masks(ax=ax_spectrum);
 
 
 ######################################################################
@@ -438,7 +438,7 @@ fig, ax_sed = plt.subplots()
 crab_fp.plot(ax=ax_sed, sed_type="e2dnde", color="darkorange")
 ax_sed.set_ylim(1.0e-12, 2.0e-10)
 ax_sed.set_xlim(0.5, 40)
-crab_fp.plot_ts_profiles(ax=ax_sed, sed_type="e2dnde")
+crab_fp.plot_ts_profiles(ax=ax_sed, sed_type="e2dnde");
 
 
 ######################################################################
