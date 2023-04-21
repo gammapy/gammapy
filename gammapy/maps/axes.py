@@ -2485,6 +2485,34 @@ class TimeMapAxis:
         idx[~np.any(mask, axis=-1)] = INVALID_INDEX.int
         return idx
 
+    def pix_to_coord(self, pix):
+        """Transform from pixel position to time coordinate
+
+        Works only for contiguous time bins?
+
+        Parameters
+        ----------
+        pix : `~numpy.ndarray`
+            Array of pixel positions.
+
+        Returns
+        -------
+        coord : `~astropy.time.Time`
+            Array of axis coordinate values.
+        """
+        coords = []
+        interp_scale = interpolation_scale(self.interp)
+        for p in np.atleast_1d(pix):
+            if p < 0.0 or p > self.nbin:
+                raise ValueError("Pixel is outside range")
+            ipix = int(np.floor(p))
+            x = [ipix, ipix + 1]
+            y = [self.time_min[ipix].mjd, self.time_max[ipix].mjd]
+            interp_fn = scipy.interpolate.interp1d(x=x, y=y, kind=1)
+            val = interp_scale.inverse(interp_fn(p))
+            coords.append(Time(val, scale=self.reference_time.scale, format="mjd"))
+        return Time(coords)
+
     def coord_to_pix(self, coord, **kwargs):
         """Transform from time to coordinate to pixel position.
 

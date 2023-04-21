@@ -522,6 +522,15 @@ def test_coord_to_idx_time_axis(time_intervals):
     assert_allclose(pix, 0, atol=1e-10)
     assert_allclose(pixels[1::2], [np.nan, 1, 3, 5, 7, 9, 11, 13, 15, 17, 19])
 
+    coords = axis.pix_to_coord(pix)
+    assert_allclose(coords[0].mjd, time.mjd, rtol=1e-5)
+    pixels_valid = pixels[~np.isnan(pixels)]
+    times_valid = times[~np.isnan(pixels)]
+    coords = axis.pix_to_coord(pixels_valid)
+    assert_allclose(coords.mjd, times_valid.mjd, rtol=1e-5)
+    with pytest.raises(ValueError):
+        axis.pix_to_coord(-3)
+
 
 def test_slice_time_axis(time_intervals):
     axis = TimeMapAxis(
