@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Simulate observations"""
 import numpy as np
-from scipy import interpolate
 import astropy.units as u
 from astropy.coordinates import SkyCoord, SkyOffsetFrame
 from astropy.table import Table
@@ -85,9 +84,6 @@ class MapDatasetEventSampler:
         energy_true = dataset.edisp.edisp_map.geom.axes["energy_true"]
         energy_new = energy_true.upsample(10)
         target = evaluator.model.spatial_model.position
-        edisp = dataset.edisp.get_edisp_kernel(
-            dataset.geoms["geom"].axes["energy"], position=target
-        )
         region_exposure = dataset.exposure.to_region_nd_map(target)
 
         if not time_axis:
@@ -115,17 +111,28 @@ class MapDatasetEventSampler:
 
         flux_inte = flux_diff * energy_new.bin_width[:, None]
 
-        f = interpolate.interp1d(energy_new.center, flux_inte, axis=0)
-        flux = f(energy_true.center) * flux_inte.unit
+        flux_pred = RegionNDMap.create(
+            region=PointSkyRegion(center=target),
+            axes=[time_axis, energy_new],
+            data=np.array(flux_inte),
+            unit=flux_inte.unit,
+        )
 
-        pred = ((region_exposure.quantity[:, 0, 0, None] * flux)).to("")
+        mapcoord = flux_pred.geom.get_coord()
+        mapcoord["energy_true"] = energy_true.center[:, None, None, None]
 
-        pred_eres = pred.T @ edisp.quantity
+        pred = (
+            (
+                region_exposure.quantity[:, None, :, :]
+                * flux_pred.interp_by_coord(mapcoord)
+                * flux_pred.unit
+            )
+        ).to("")
 
         npred = RegionNDMap.create(
             region=PointSkyRegion(center=target),
-            axes=[time_axis, dataset.geoms["geom"].axes["energy"]],
-            data=np.array(pred_eres.T),
+            axes=[time_axis, energy_true],
+            data=np.array(pred),
         )
 
         return npred
@@ -234,7 +241,7 @@ class MapDatasetEventSampler:
             else:
                 temporal_model = evaluator.model.temporal_model
 
-            if temporal_model.is_energy_dependent == True:
+            if temporal_model.is_energy_dependent:
                 table = self._sample_coord_time_energy(dataset, evaluator)
             else:
                 flux = evaluator.compute_flux()
