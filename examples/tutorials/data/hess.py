@@ -74,7 +74,7 @@ data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
 data_store.info()
 
 ######################################################################
-# Preview an excerpt from the observtaion table
+# Preview an excerpt from the observation table
 
 display(data_store.obs_table[:2][["OBS_ID", "DATE-OBS", "RA_PNT", "DEC_PNT", "OBJECT"]])
 
