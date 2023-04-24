@@ -528,8 +528,8 @@ def test_coord_to_idx_time_axis(time_intervals):
     times_valid = times[~np.isnan(pixels)]
     coords = axis.pix_to_coord(pixels_valid)
     assert_allclose(coords.mjd, times_valid.mjd, rtol=1e-5)
-    with pytest.raises(ValueError):
-        axis.pix_to_coord(-3)
+    coords = axis.pix_to_coord([-1.2, 0.6, 24.7])
+    assert_allclose(coords.mask, [True, False, True], rtol=1e-5)
 
 
 def test_slice_time_axis(time_intervals):

@@ -2500,18 +2500,23 @@ class TimeMapAxis:
         coord : `~astropy.time.Time`
             Array of axis coordinate values.
         """
-        coords = []
         interp_scale = interpolation_scale(self.interp)
-        for p in np.atleast_1d(pix):
-            if p < 0.0 or p > self.nbin:
-                raise ValueError("Pixel is outside range")
-            ipix = int(np.floor(p))
-            x = [ipix, ipix + 1]
-            y = [self.time_min[ipix].mjd, self.time_max[ipix].mjd]
-            interp_fn = scipy.interpolate.interp1d(x=x, y=y, kind=1)
-            val = interp_scale.inverse(interp_fn(p))
-            coords.append(Time(val, scale=self.reference_time.scale, format="mjd"))
-        return Time(coords)
+        pix = np.atleast_1d(pix)
+        ipix = np.int0(np.floor(pix))
+        lpix = len(pix)
+        ipix[pix < 0] = np.ma.masked
+        ipix[pix >= lpix] = np.ma.masked
+        y = np.array([self.edges_min[ipix], self.edges_max[ipix]]).T
+        x = np.array([ipix, ipix + 1]).T
+        interp_fn = [
+            scipy.interpolate.interp1d(x=x[_], y=y[_], kind=1, fill_value="extrapolate")
+            for _ in range(lpix)
+        ]
+        coords = interp_scale.inverse([interp_fn[_](pix[_]) for _ in range(lpix)])
+        coords = (np.array(coords).T * self.unit) + self.reference_time
+        coords[pix < 0] = np.ma.masked
+        coords[pix >= lpix] = np.ma.masked
+        return coords
 
     def coord_to_pix(self, coord, **kwargs):
         """Transform from time to coordinate to pixel position.
