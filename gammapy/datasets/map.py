@@ -51,6 +51,7 @@ def create_map_dataset_geoms(
     migra_axis=None,
     rad_axis=None,
     binsz_irf=None,
+    reco_psf=False,
 ):
     """Create map geometries for a `MapDataset`
 
@@ -67,6 +68,8 @@ def create_map_dataset_geoms(
         Rad axis for the psf map
     binsz_irf : float
         IRF Map pixel size in degrees.
+    reco_psf : bool
+        Use reconstructed energy for the PSF geometry. Default is False
 
     Returns
     -------
@@ -84,7 +87,11 @@ def create_map_dataset_geoms(
     geom_image = geom.to_image()
     geom_exposure = geom_image.to_cube([energy_axis_true])
     geom_irf = geom_image.to_binsz(binsz=binsz_irf)
-    geom_psf = geom_irf.to_cube([rad_axis, energy_axis_true])
+
+    if reco_psf:
+        geom_psf = geom_irf.to_cube([rad_axis, geom.axes["energy"]])
+    else:
+        geom_psf = geom_irf.to_cube([rad_axis, energy_axis_true])
 
     if migra_axis:
         geom_edisp = geom_irf.to_cube([migra_axis, energy_axis_true])
@@ -588,6 +595,7 @@ class MapDataset(Dataset):
         reference_time="2000-01-01",
         name=None,
         meta_table=None,
+        reco_psf=False,
         **kwargs,
     ):
         """Create a MapDataset object with zero filled maps.
@@ -612,6 +620,8 @@ class MapDataset(Dataset):
         meta_table : `~astropy.table.Table`
             Table listing information on observations used to create the dataset.
             One line per observation for stacked datasets.
+        reco_psf : bool
+            Use reconstructed energy for the PSF geometry. Default is False
 
         Returns
         -------
@@ -643,6 +653,7 @@ class MapDataset(Dataset):
             rad_axis=rad_axis,
             migra_axis=migra_axis,
             binsz_irf=binsz_irf,
+            reco_psf=reco_psf,
         )
 
         kwargs.update(geoms)
