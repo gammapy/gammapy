@@ -113,26 +113,31 @@ obs = data_store.get_observations()[0]
 # Select and peek events
 
 obs.events.peek()
+plt.show()
 
 
 ######################################################################
 # Peek the energy dispersion
 
 obs.edisp.peek()
+plt.show()
 
 ######################################################################
 # Peek the psf
 obs.psf.peek()
+plt.show()
 
 ######################################################################
 # Peek the background for one transit
 plt.figure()
 obs.bkg.reduce_over_axes().plot(add_cbar=True)
+plt.show()
 
 ######################################################################
 # Peek the effective exposure for one transit
 plt.figure()
 obs.aeff.reduce_over_axes().plot(add_cbar=True)
+plt.show()
 
 
 ######################################################################
@@ -225,6 +230,7 @@ dataset.exposure.data *= transit_number
 ######################################################################
 # We can use the .peek() method to quickly get a glimpse of the contents
 dataset.peek()
+plt.show()
 
 
 ######################################################################
