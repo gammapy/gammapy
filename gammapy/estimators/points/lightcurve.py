@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 from itertools import repeat
-from multiprocessing import Pool
 import numpy as np
 import astropy.units as u
+import gammapy.utils.parallel as parallel
 from gammapy.data import GTI
 from gammapy.datasets import Datasets
 from gammapy.maps import LabelMapAxis, Map, TimeMapAxis
@@ -113,7 +113,9 @@ class LightCurveEstimator(FluxPointsEstimator):
         valid_intervals = []
         parallel_datasets = []
         dataset_names = datasets.names
-        for t_min, t_max in progress_bar(gti.time_intervals, desc="Time intervals"):
+        for t_min, t_max in progress_bar(
+            gti.time_intervals, desc="Time intervals selection"
+        ):
             datasets_to_fit = datasets.select_time(
                 time_min=t_min, time_max=t_max, atol=self.atol
             )
@@ -133,14 +135,15 @@ class LightCurveEstimator(FluxPointsEstimator):
                 parallel_datasets.append(datasets_to_fit)
 
         if self.n_jobs > 1:
-            with Pool(processes=self.n_jobs) as pool:
-                rows = pool.starmap(
-                    self.estimate_time_bin_flux,
-                    zip(
-                        parallel_datasets,
-                        repeat(dataset_names),
-                    ),
-                )
+            rows = parallel.run_multiprocessing(
+                self.estimate_time_bin_flux,
+                zip(
+                    parallel_datasets,
+                    repeat(dataset_names),
+                ),
+                pool_kwargs=dict(processes=self.n_jobs),
+                task_name="Time intervals",
+            )
 
         if len(rows) == 0:
             raise ValueError("LightCurveEstimator: No datasets in time intervals")
