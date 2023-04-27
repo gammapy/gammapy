@@ -87,6 +87,15 @@ After data reduction in a list of spectrum datasets, the user wants to stack spe
 in observation in given bands of zenith angle. The metadata information stored on the datasets
 allows complex manipulation at modeling/fitting step.
 
+Handling systematic effects
++++++++++++++++++++++++++++
+
+The user wants to add a systematic effect of given amplitude on a reduced dataset
+IRFs (e.g. a bias in the absolute energy scale, or a possible broadening of the PSF)
+to allow quantifying its impact on a measurement. Specific models for such IRFs
+uncertainties could be defined on any dataset.
+
+
 Nuisance parameters and priors
 ++++++++++++++++++++++++++++++
 
@@ -135,8 +144,31 @@ What about sparse maps?
 Data model and data formats
 +++++++++++++++++++++++++++
 
-Define internal model and introduce validation mechanism on input
-Define data model more precisely: what is data, what is meta data? Where to define this?
+As of v1.0, Gammapy's internal DL3 data structures are very deeply intertwined with
+the GADF specification. Astropy table are read from GADF compliant FITS files and stored as is.
+Part of the information being stored in the `table.meta`.
+
+This is problematic for the following reasons:
+- This prevents the support of multiple formats, since the internal data structure
+is tied to one specific format.
+- Data is not in the optimal in-memory representation. For instance, times should be
+stored as astropy.time.Time instances, and coodinates as `SkyCoord`.
+- Data is not validated on input. Errors can happen deep into the code for something
+that could have been caught on input file reading or object creation.
+- Writing data out is harder
+
+We should:
+- define the internal data model, via the corresponding data classes (EventList, IRFs, etc. )
+  and introduce a validation mechanism on input.
+- build a clear IO boundary between internal and external data representations that supports
+  various versions of various formats.
+- define a metadata structure
+
+
+Clarify internal Gammapy DL3 data model
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+See also the general discussion in `GH 3767`_
 
 Version Support for I/O
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -150,25 +182,45 @@ Change to something like consistently: https://github.com/gammapy/gammapy/blob/m
 Meta Data Handling
 ~~~~~~~~~~~~~~~~~~
 
-What is meta data / and what is data? Where to draw the line? Where to define this?
-Improve meta data handling for IRFs, Maps and Datasets
-Introduce specific `IRFMetaData`, `MapMetaData` and `DatasetMetaData`, `ObservationMetaData` classes, with separate serialization and validation?
-Handling `MetaData` with pydantic has the advantage of defining hierarchical structures and being able to validate those…
-Have convenience access to meta attributes
-Introduce the provenance generation and serialization
+A metadata class structure specific for Gammapy should be designed and implemented.
+It should allow complex types (e.g. `SkyCoord` or even `Map`), it should validate
+its content, allow hierarchical structure (i.e. a metadata object should be able
+to contain another one). Once defined, specific classes such as `IRFMetaData`,
+`DatasetMetaData`, or `ObservationMetaData` classes can be introduced with
+their separate serialization and validation. This is discussed in PIG 28 which
+proposes to handle `MetaData` with pydantic which allows defining hierarchical
+structures and being able to validate those. See `GH 4491`_
 
+Once this is defined a second question must be tackled: the metadata model:
+what is meta data / and what is data and where to draw the line.
+*How to proceed here?*
 
 Documentation
 +++++++++++++
 
-Update pydata-sphinx-theme
-More detailed and nicer?
-Tutorial videos? Coding sprints?
-Needs a to be more detailed?
-Infrastructure / Maintenance
-Deprecation system
-Use type hints in Gammapy everywhere, no type hints for now?
+Main documentation
+~~~~~~~~~~~~~~~~~~
 
+- Introduce a deprecation system
+- Update pydata-sphinx-theme?
+- More detailed and nicer?
+- Use type hints in Gammapy everywhere, no type hints for now?
+
+Gammapy-recipes and additional ressources
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The Gammapy-recipes gallery offers a nice additional source of tutorials for advanced or non
+standard use cases.
+
+Several questions should be solved for the long term viability of such a repository:
+
+- Should the recipes be updated to e.g. the latest LTS? Currently, none of the existing recipes
+  work with v1.0.
+
+How to keep track and refer to material designed for hands-on sessions, schools etc?
+Currently we have one GitHub repository.
+
+We could also develop tutorial videos.
 
 Infrastructure
 ++++++++++++++
@@ -228,6 +280,11 @@ Handling of pulsar analysis
 Development of Time Series algorithms: e.g. Bayesian Block, Power Spectral Density (and simulation of PSD folded with the observations mask) (Axel: clarify the interface to Astropy time series, which has support for Baysian blocks etc. see https://docs.gammapy.org/0.20.1/api/gammapy.estimators.FluxPoints.html#gammapy.estimators.FluxPoints.to_table )
 Clarify relation to stingray…
 
+.. _GH 3767: https://github.com/gammapy/gammapy/issues/3767
+.. _GH 4238: https://github.com/gammapy/gammapy/issues/4238
+.. _GH 4239: https://github.com/gammapy/gammapy/issues/423
+
 .. _GH 4388: https://github.com/gammapy/gammapy/pull/4388
 .. _GH 4381: https://github.com/gammapy/gammapy/pull/4381
 .. _GH 4253: https://github.com/gammapy/gammapy/pull/4253
+.. _GH 4491: https://github.com/gammapy/gammapy/pull/4491
