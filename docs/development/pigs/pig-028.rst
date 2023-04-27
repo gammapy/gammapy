@@ -95,6 +95,24 @@ astropy or Gammapy objects.
     30d00m00s
 
 
+Hierarchy
+---------
+
+The API should allow hierarchical structure with metadata classes having other metadata
+objects as attributes. See the following example:
+
+.. code ::
+
+    class CreatorMedadata:
+        cretor : str
+        date : datetime
+        origin : str
+
+    class ObservationMetadata:
+        obs_id : str
+        creator : CreatorMetadata
+
+
 Serialization
 -------------
 
