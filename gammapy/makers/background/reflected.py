@@ -280,9 +280,9 @@ class ReflectedRegionsFinder(RegionsFinder):
     angle_increment : `~astropy.coordinates.Angle`, optional
         Rotation angle applied when a region falls in an excluded region.
     min_distance : `~astropy.coordinates.Angle`, optional
-        Minimal distance between two consecutive reflected regions
+        Minimum rotation angle between two consecutive reflected regions
     min_distance_input : `~astropy.coordinates.Angle`, optional
-        Minimal distance from input region
+        Minimum rotation angle between the input region and the reflected regions
     max_region_number : int, optional
         Maximum number of regions to use
     binsz : `~astropy.coordinates.Angle`
