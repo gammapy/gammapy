@@ -128,11 +128,12 @@ to properly maintain. It is also one the subpackage that has potentially the lar
 the gamma-ray community. If we find a few contributors from outside, it might be worth splitting out
 ``gammapy.maps`` as an independent package.
 
-Possible changes
+Proposed changes
 ~~~~~~~~~~~~~~~~
 
-- RegionGeom should support sizes changing with axis. This would handle energy dependent region
-   sizes as well as https://github.com/gammapy/gammapy/issues/3863
+- RegionGeom should support sizes changing with axis.
+  This would handle energy dependent region sizes as well as (See `GH 3863`_).
+
 - Make maps fully re-usable for IRFs. This might be a sommon use case with pyirf.
 - Allow ``Maps`` and ``MapCoord`` without spatial axes
 - Change to design without Geom, Introduce `WcsMapAxis`, `RegionMapAxis`, `HpxMapAxis` instead
@@ -168,7 +169,10 @@ We should:
 Clarify internal Gammapy DL3 data model
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-See also the general discussion in `GH 3767`_
+Each DL3 object should have its `validate()` method called on init.
+
+See also the general discussion in `GH 3767`_ . The specific subparts are discussed in
+`GH 4238`_, `GH 4239`_, `GH 4240`_ and `GH 4241`_.
 
 Version Support for I/O
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -194,6 +198,10 @@ structures and being able to validate those. See `GH 4491`_
 Once this is defined a second question must be tackled: the metadata model:
 what is meta data / and what is data and where to draw the line.
 *How to proceed here?*
+
+Estimators
+++++++++++
+
 
 Documentation
 +++++++++++++
@@ -281,9 +289,11 @@ Development of Time Series algorithms: e.g. Bayesian Block, Power Spectral Densi
 Clarify relation to stingray…
 
 .. _GH 3767: https://github.com/gammapy/gammapy/issues/3767
+.. _GH 3863: https://github.com/gammapy/gammapy/issues/3863
 .. _GH 4238: https://github.com/gammapy/gammapy/issues/4238
-.. _GH 4239: https://github.com/gammapy/gammapy/issues/423
-
+.. _GH 4239: https://github.com/gammapy/gammapy/issues/4239
+.. _GH 4240: https://github.com/gammapy/gammapy/issues/4240
+.. _GH 4241: https://github.com/gammapy/gammapy/issues/4241
 .. _GH 4388: https://github.com/gammapy/gammapy/pull/4388
 .. _GH 4381: https://github.com/gammapy/gammapy/pull/4381
 .. _GH 4253: https://github.com/gammapy/gammapy/pull/4253
