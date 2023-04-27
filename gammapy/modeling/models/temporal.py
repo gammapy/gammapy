@@ -58,7 +58,7 @@ class TemporalModel(ModelBase):
             Time object
         """
         kwargs = {par.name: par.quantity for par in self.parameters}
-        time = getattr(time, self.scale).mjd * u.d
+        time = Time(time, scale=self.scale).mjd * u.d
         return self.evaluate(time, **kwargs)
 
     @property
@@ -79,8 +79,7 @@ class TemporalModel(ModelBase):
         """Reference time"""
         if not isinstance(t_ref, Time):
             raise TypeError(f"{t_ref} is not a {Time} object")
-        time = getattr(t_ref, self.scale)
-        self.t_ref.value = time.mjd
+        self.t_ref.value = Time(t_ref, scale=self.scale).mjd
 
     def to_dict(self, full_output=False):
         """Create dict for YAML serilisation"""
@@ -1002,7 +1001,7 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         ph_max, n_max = self._time_to_phase(t_max.mjd * u.d, **kwargs)
 
         # here we assume that the frequency does not change during the integration boundaries
-        delta_t = (getattr(t_min, self.scale).mjd - self.t_ref.value) * u.d
+        delta_t = (t_min - self.reference_time).to(u.d)
         frequency = self.f0.quantity + delta_t * (
             self.f1.quantity + delta_t * self.f2.quantity / 2
         )
