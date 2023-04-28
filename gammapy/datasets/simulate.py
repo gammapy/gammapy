@@ -27,10 +27,14 @@ class MapDatasetEventSampler:
     random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
         Defines random number generator initialisation.
         Passed to `~gammapy.utils.random.get_random_state`.
+    oversample_energy_factor: {int}
+        Defines an oversampling factor for the energies; it is used only when sampling
+        an energy-dependent time-varying source.
     """
 
-    def __init__(self, random_state="random-seed"):
+    def __init__(self, random_state="random-seed", oversample_energy_factor=10):
         self.random_state = get_random_state(random_state)
+        self.oversample_energy_factor = oversample_energy_factor
 
     def _make_table(self, coords, time_ref):
         """Create a table for sampled events.
@@ -82,7 +86,7 @@ class MapDatasetEventSampler:
             Npred map.
         """
         energy_true = dataset.edisp.edisp_map.geom.axes["energy_true"]
-        energy_new = energy_true.upsample(10)
+        energy_new = energy_true.upsample(self.oversample_energy_factor)
         target = evaluator.model.spatial_model.position
         region_exposure = dataset.exposure.to_region_nd_map(target)
 
