@@ -128,6 +128,7 @@ class MapDatasetEventSampler:
         pred = (
             (
                 region_exposure.quantity[:, None, :, :]
+                / time_axis.nbin
                 * flux_pred.interp_by_coord(mapcoord)
                 * flux_pred.unit
             )
