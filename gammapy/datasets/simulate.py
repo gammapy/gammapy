@@ -131,6 +131,7 @@ class MapDatasetEventSampler:
                 / time_axis.nbin
                 * flux_pred.interp_by_coord(mapcoord)
                 * flux_pred.unit
+                * self.oversample_energy_factor
             )
         ).to("")
 

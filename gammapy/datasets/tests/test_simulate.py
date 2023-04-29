@@ -168,8 +168,8 @@ def test_evaluate_timevar_source(enedip_temporal_model, dataset):
 
     assert_allclose(np.shape(npred.data), (3, 1999, 1, 1))
 
-    assert_allclose(npred.data[:, 10, 0, 0], [0.002483, 0.011042, 0.032185], rtol=2e-4)
-    assert_allclose(npred.data[:, 50, 0, 0], [0.002483, 0.011042, 0.032185], rtol=2e-4)
+    assert_allclose(npred.data[:, 10, 0, 0], [0.024827, 0.110424, 0.321845], rtol=2e-4)
+    assert_allclose(npred.data[:, 50, 0, 0], [0.024827, 0.110424, 0.321845], rtol=2e-4)
 
     filename = "$GAMMAPY_DATA/gravitational_waves/GW_example_DC_map_file.fits.gz"
     temporal_model = LightCurveTemplateTemporalModel.read(filename, format="map")
@@ -182,7 +182,7 @@ def test_evaluate_timevar_source(enedip_temporal_model, dataset):
 
     assert_allclose(
         npred.data[:, 1000, 0, 0] / 1e-13,
-        [0.003934, 0.003484, 0.00119],
+        [0.039339, 0.034838, 0.011899],
         rtol=2e-4,
     )
 
@@ -207,11 +207,11 @@ def test_sample_coord_time_energy(dataset, enedip_temporal_model):
     sampler = MapDatasetEventSampler(random_state=0)
     events = sampler._sample_coord_time_energy(dataset, evaluator)
 
-    assert_allclose(len(events), 93)
+    assert_allclose(len(events), 918)
 
     assert_allclose(
         [events[0][0], events[0][1], events[0][2], events[0][3]],
-        [929.329725, 5.342327, 266.404988, -28.936178],
+        [11.460277, 7.687285, 266.404988, -28.936178],
         rtol=1e-6,
     )
 
