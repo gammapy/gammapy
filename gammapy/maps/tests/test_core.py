@@ -5,7 +5,16 @@ from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.units import Quantity, Unit
-from gammapy.maps import HpxGeom, HpxNDMap, Map, MapAxis, TimeMapAxis, WcsGeom, WcsNDMap
+from gammapy.maps import (
+    HpxGeom,
+    HpxNDMap,
+    Map,
+    MapAxis,
+    RegionNDMap,
+    TimeMapAxis,
+    WcsGeom,
+    WcsNDMap,
+)
 from gammapy.utils.testing import mpl_plot_check
 
 pytest.importorskip("healpy")
@@ -808,3 +817,33 @@ def test_rename_axes():
     new_map = m_4d.rename_axes("energy", "energy_true")
     assert m_4d.geom.axes.names == ["energy", "time"]
     assert new_map.geom.axes.names == ["energy_true", "time"]
+
+
+def test_move_axis_fail():
+    axis1 = MapAxis.from_edges((0, 1, 3), name="axis1")
+    axis2 = MapAxis.from_edges((0, 1, 2, 3, 4), name="axis2")
+
+    some_map = RegionNDMap.create(region=None, axes=[axis1, axis2])
+
+    with pytest.raises(ValueError):
+        some_map.moveaxis(["axis3", "axis1"])
+
+    with pytest.raises(ValueError):
+        some_map.moveaxis("axis3")
+
+
+def test_move_axis():
+    axis1 = MapAxis.from_edges((0, 1, 3), name="axis1")
+    axis2 = MapAxis.from_edges((0, 1, 2, 3, 4), name="axis2")
+    axis3 = MapAxis.from_edges((0, 1, 2, 3), name="axis3")
+
+    some_map = RegionNDMap.create(region=None, axes=[axis1, axis2, axis3])
+
+    some_map.data[:, 1, :] = 1
+
+    new_map = some_map.moveaxis(["axis2", "axis1", "axis3"])
+
+    assert new_map.geom.axes.names == ["axis2", "axis1", "axis3"]
+    assert new_map.geom.data_shape == (3, 2, 4, 1, 1)
+
+    assert_allclose(new_map.data[:, :, 1], 1)
