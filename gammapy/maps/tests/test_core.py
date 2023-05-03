@@ -826,10 +826,10 @@ def test_move_axis_fail():
     some_map = RegionNDMap.create(region=None, axes=[axis1, axis2])
 
     with pytest.raises(ValueError):
-        some_map.moveaxis(["axis3", "axis1"])
+        some_map.move_axis(["axis3", "axis1"])
 
     with pytest.raises(ValueError):
-        some_map.moveaxis("axis3")
+        some_map.move_axis("axis3")
 
 
 def test_move_axis():
@@ -841,7 +841,7 @@ def test_move_axis():
 
     some_map.data[:, 1, :] = 1
 
-    new_map = some_map.moveaxis(["axis2", "axis1", "axis3"])
+    new_map = some_map.move_axis(["axis2", "axis1", "axis3"])
 
     assert new_map.geom.axes.names == ["axis2", "axis1", "axis3"]
     assert new_map.geom.data_shape == (3, 2, 4, 1, 1)
