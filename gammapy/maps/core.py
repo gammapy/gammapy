@@ -1910,3 +1910,16 @@ class Map(abc.ABC):
         cdict = OrderedDict(zip(self.geom.axes_names, coords))
 
         return MapCoord.create(cdict, frame=self.geom.frame)
+
+    def move_axis(self, axis):
+        """
+
+        Parameters
+        ----------
+        axis
+
+        Returns
+        -------
+
+        """
+        return None
