@@ -1911,15 +1911,29 @@ class Map(abc.ABC):
 
         return MapCoord.create(cdict, frame=self.geom.frame)
 
-    def move_axis(self, axis):
-        """
+    def move_axis(self, axes_names):
+        """Return a new map re-ordering the non-spatial axes order.
 
         Parameters
         ----------
-        axis
+        axes_names : list of str
+            the list of axes names in the required order
 
         Returns
         -------
-
+        map : `~gammapy.maps.Map`
+            the map with axes re-ordered
         """
-        return None
+        old_axes = self.geom.axes
+        if not set(old_axes.names) == set(axes_names):
+            raise ValueError(f"{old_axes.names} is not compatible with {axes_names}")
+
+        new_axes = [old_axes[_] for _ in axes_names]
+        new_geom = self.geom.to_image().to_cube(new_axes)
+
+        old_indices = [old_axes.index_data(ax) for ax in axes_names]
+        new_indices = [new_geom.axes.index_data(ax) for ax in axes_names]
+
+        data = np.moveaxis(self.data, old_indices, new_indices)
+
+        return Map.from_geom(new_geom, data=data)
