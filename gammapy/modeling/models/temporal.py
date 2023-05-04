@@ -764,7 +764,7 @@ class SineTemporalModel(TemporalModel):
             np.sin(omega * (t_max - t_ref).to_value(u.day))
             - np.sin(omega * (t_min - t_ref).to_value(u.day))
         )
-        return value / self.time_sum(t_min, t_max)
+        return value / self.time_sum(t_min, t_max).to_value(u.day)
 
 
 class TemplatePhaseCurveTemporalModel(TemporalModel):
