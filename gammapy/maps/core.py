@@ -1088,9 +1088,18 @@ class Map(abc.ABC):
             output_map = output_map.resample(geom, preserve_counts=preserve_counts)
         return output_map
 
-    def fill_events(self, events):
-        """Fill event coordinates (`~gammapy.data.EventList`)."""
-        self.fill_by_coord(events.map_coord(self.geom))
+    def fill_events(self, events, weights=None):
+        """Fill event coordinates (`~gammapy.data.EventList`).
+
+        Parameters
+        ----------
+        events : `~gammapy.data.EventList`
+            Events to be fill in the map.
+        weights : `~numpy.ndarray`
+            Weights vector. Default is weight of one. The weights vector must be of the same length
+            as the events column length.
+        """
+        self.fill_by_coord(events.map_coord(self.geom), weights=weights)
 
     def fill_by_coord(self, coords, weights=None):
         """Fill pixels at ``coords`` with given ``weights``.
