@@ -2028,19 +2028,3 @@ class Map(abc.ABC):
         Because it has no spatial dimension, it must be a `~gammapy.maps.RegionNDMap`.
         """
         return self.dot(other)
-
-    def moveaxis(self, axes_names):
-        """Change the map non-spatial axes order."""
-        old_axes = self.geom.axes
-        if not set(old_axes.names) == set(axes_names):
-            raise ValueError(f"{old_axes.names} is not compatible with {axes_names}")
-
-        new_axes = [old_axes[_] for _ in axes_names]
-        new_geom = self.geom.to_image().to_cube(new_axes)
-
-        old_indices = [old_axes.index_data(ax) for ax in axes_names]
-        new_indices = [new_geom.axes.index_data(ax) for ax in axes_names]
-
-        data = np.moveaxis(self.data, old_indices, new_indices)
-
-        return Map.from_geom(new_geom, data=data)
