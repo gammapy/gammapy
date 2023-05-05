@@ -83,7 +83,7 @@ Class requirements
        * "-" Cannot inherit from MapDataset (might complicate stacking)
        
 * Want to store and evaluate models using an UnbinnedEvaluator. 
-* Which "convenience fucntions" similar to the ``MapDataset``: 
+* Which "convenience functions" similar to the ``MapDataset``: 
 
   * copy: Can be inherited?
   * create: Modification needed wrt ``MapDataset``
