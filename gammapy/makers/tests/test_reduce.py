@@ -366,13 +366,13 @@ def test_dataset_maker_spectrum_rad_max_all_excluded(
 
     # excludes all possible off regions
     exclusion_region = CircleSkyRegion(
-        center=observation.pointing_radec,
+        center=observation.get_pointing_icrs(observation.tmid),
         radius=1 * u.deg,
     )
     geom = WcsGeom.create(
         npix=(150, 150),
         binsz=0.05,
-        skydir=observation.pointing_radec,
+        skydir=observation.get_pointing_icrs(observation.tmid),
         proj="TAN",
         frame="icrs",
     )

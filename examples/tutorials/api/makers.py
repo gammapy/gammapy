@@ -144,7 +144,7 @@ dataset.counts.sum_over_axes().plot(stretch="sqrt", add_cbar=True)
 #
 # Note that currently some methods computing a safe energy range
 # ("aeff-default", "aeff-max" and "edisp-bias") determine a true energy range and
-#  apply it to reconstructed energy, effectively neglecting the energy dispersion.
+# apply it to reconstructed energy, effectively neglecting the energy dispersion.
 #
 # Multiple methods can be combined. Here is an example :
 #
@@ -259,7 +259,7 @@ safe_mask_maker = SafeMaskMaker(
 stacked = MapDataset.create(geom)
 
 for obs in observations:
-    local_dataset = stacked.cutout(obs.pointing_radec, width="6 deg")
+    local_dataset = stacked.cutout(obs.get_pointing_icrs(obs.tmid), width="6 deg")
     dataset = dataset_maker.run(local_dataset, obs)
     dataset = safe_mask_maker.run(dataset, obs)
     dataset = fov_bkg_maker.run(dataset)

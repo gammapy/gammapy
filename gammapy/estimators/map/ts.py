@@ -468,6 +468,8 @@ class TSMapEstimator(Estimator):
                 * flux_ul : upper limit map
 
         """
+        if dataset.stat_type != "cash":
+            raise TypeError(f"{type(dataset)} is not a valid type for {self.__class__}")
         dataset_models = dataset.models
 
         pad_width = self.estimate_pad_width(dataset=dataset)

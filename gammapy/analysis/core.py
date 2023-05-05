@@ -309,6 +309,7 @@ class Analysis:
             energy_edges=energy_edges,
             source=fp_settings.source,
             fit=self.fit,
+            n_jobs=self.config.general.n_jobs,
             **fp_settings.parameters,
         )
 
@@ -372,6 +373,7 @@ class Analysis:
             energy_edges=energy_edges,
             source=lc_settings.source,
             fit=self.fit,
+            n_jobs=self.config.general.n_jobs,
             **lc_settings.parameters,
         )
         lc = light_curve_estimator.run(datasets=self.datasets)

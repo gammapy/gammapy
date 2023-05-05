@@ -249,3 +249,32 @@ def test_wstat_sum():
     assert stat_sum.n_on.shape == (3,)
     assert_allclose(stat_sum.n_on, (20, 40, 60))
     assert_allclose(stat_sum.n_bkg, (10, 14, 26))
+
+
+def test_CountStatistic_str():
+    cash = CashCountsStatistic(n_on=4, mu_bkg=2)
+    assert "Predicted background counts" in str(cash)
+    assert "CashCountsStatistic" in str(cash)
+    assert "Total significance" in str(cash)
+
+    wstat = WStatCountsStatistic(n_on=5, n_off=4, alpha=0.2, mu_sig=2)
+    assert "Off counts" in str(wstat)
+    assert "alpha " in str(wstat)
+    assert "Total counts " in str(wstat)
+    assert "WStatCountsStatistic" in str(wstat)
+
+
+def test_counts_statistic_infodict():
+    c1 = CashCountsStatistic(n_on=[3, 6], mu_bkg=[2, 1])
+    info_dict = c1.sum().info_dict()
+    assert_allclose(info_dict["n_on"], 9)
+    assert_allclose(info_dict["significance"], 2.788, rtol=1e-3)
+
+    w1 = WStatCountsStatistic(n_on=[3, 6], n_off=[2, 1], alpha=[1, 2])
+    info_dict = w1.info_dict()
+    assert_allclose(info_dict["n_off"], [2, 1])
+    assert_allclose(info_dict["significance"], [0.44872, 1.14942], rtol=1e-3)
+
+    info_dict = w1.sum().info_dict()
+    assert_allclose(info_dict["excess"], 5.0)
+    assert_allclose(info_dict["significance"], 1.288731, rtol=1e-3)

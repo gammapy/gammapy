@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import operator
-
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
@@ -9,18 +8,19 @@ from astropy.utils.data import get_pkg_data_filename
 from gammapy.maps import Map, MapAxis, RegionNDMap
 from gammapy.modeling.models import (
     MODEL_REGISTRY,
+    CompoundSpectralModel,
     ConstantTemporalModel,
     EBLAbsorptionNormSpectralModel,
     ExpDecayTemporalModel,
+    FoVBackgroundModel,
     GaussianTemporalModel,
     LinearTemporalModel,
+    LogParabolaSpectralModel,
     Model,
     Models,
     PiecewiseNormSpectralModel,
     PowerLawSpectralModel,
-    LogParabolaSpectralModel,
     PowerLawTemporalModel,
-    CompoundSpectralModel,
     SineTemporalModel,
     SkyModel,
     TemplateNPredModel,
@@ -149,7 +149,7 @@ def test_piecewise_norm_spectral_model_io():
     norms = [1, 5, 3, 0.5] * u.Unit("")
 
     model = PiecewiseNormSpectralModel(energy=energy, norms=norms)
-    model.parameters[0].value = 2
+    model.parameters["norm_0"].value = 2
 
     model_dict = model.to_dict()
 
@@ -159,9 +159,17 @@ def test_piecewise_norm_spectral_model_io():
 
     new_model = PiecewiseNormSpectralModel.from_dict(model_dict)
 
-    assert_allclose(new_model.parameters[0].value, 2)
+    assert_allclose(new_model.parameters["norm_0"].value, 2)
     assert_allclose(new_model.energy, energy)
     assert_allclose(new_model.norms, [2, 5, 3, 0.5])
+
+    bkg = FoVBackgroundModel(spectral_model=model, dataset_name="")
+    bkg_dict = bkg.to_dict()
+    new_bkg = FoVBackgroundModel.from_dict(bkg_dict)
+
+    assert_allclose(new_bkg.spectral_model.parameters["norm_0"].value, 2)
+    assert_allclose(new_bkg.spectral_model.energy, energy)
+    assert_allclose(new_bkg.spectral_model.norms, [2, 5, 3, 0.5])
 
 
 @requires_data()

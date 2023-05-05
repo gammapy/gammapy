@@ -100,7 +100,7 @@ Using gammapy.irf
     :add-heading:
 
 
-.. minigallery:: gammapy.irf.load_cta_irfs
+.. minigallery:: gammapy.irf.load_irf_dict_from_file
     :add-heading:
 
 

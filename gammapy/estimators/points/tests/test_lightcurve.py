@@ -14,7 +14,7 @@ from gammapy.estimators.points.tests.test_sed import (
 )
 from gammapy.modeling import Fit
 from gammapy.modeling.models import FoVBackgroundModel, PowerLawSpectralModel, SkyModel
-from gammapy.utils.testing import mpl_plot_check, requires_data
+from gammapy.utils.testing import assert_time_allclose, mpl_plot_check, requires_data
 
 
 @pytest.fixture(scope="session")
@@ -115,6 +115,9 @@ def test_lightcurve_read_write(tmp_path, lc, sed_type):
 def test_lightcurve_plot(lc, lc_2d):
     with mpl_plot_check():
         lc.plot()
+
+    with mpl_plot_check():
+        lc.plot(marker="o", time_format="mjd")
 
     with mpl_plot_check():
         lc_2d.plot(axis_name="time")
@@ -229,8 +232,8 @@ def test_lightcurve_estimator_spectrum_datasets():
     # Doing a LC on one hour bin
     datasets = get_spectrum_datasets()
     time_intervals = [
-        Time(["2010-01-01T00:00:00", "2010-01-01T01:00:00"]),
-        Time(["2010-01-01T01:00:00", "2010-01-01T02:00:00"]),
+        Time(["2010-01-01T00:00:00", "2010-01-01T01:00:00"]).tt,
+        Time(["2010-01-01T01:00:00", "2010-01-01T02:00:00"]).tt,
     ]
 
     estimator = LightCurveEstimator(
@@ -265,6 +268,10 @@ def test_lightcurve_estimator_spectrum_datasets():
         [[224.058304, 19.074405, 2063.75636]],
         rtol=1e-5,
     )
+    assert table.meta["TIMESYS"] == "tt"
+    assert table.meta["TIMEUNIT"] == "d"
+    assert table.meta["MJDREFF"] == 0
+    assert table.meta["MJDREFI"] == 0
 
     # TODO: fix reference model I/O
     fp = FluxPoints.from_table(
@@ -273,6 +280,12 @@ def test_lightcurve_estimator_spectrum_datasets():
     assert fp.norm.geom.axes.names == ["energy", "time"]
     assert fp.counts.geom.axes.names == ["dataset", "energy", "time"]
     assert fp.stat_scan.geom.axes.names == ["norm", "energy", "time"]
+    assert_time_allclose(
+        fp.geom.axes["time"].time_min, lightcurve.geom.axes["time"].time_min
+    )
+    assert_time_allclose(
+        fp.geom.axes["time"].time_max, lightcurve.geom.axes["time"].time_max
+    )
 
 
 @requires_data()
@@ -649,3 +662,19 @@ def test_recompute_ul():
     lightcurve = estimator.run(datasets)
     with pytest.raises(ValueError):
         lightcurve.recompute_ul(n_sigma_ul=4)
+
+
+@requires_data()
+def test_lightcurve_parallel():
+    datasets = get_spectrum_datasets()
+    selection = ["all"]
+    estimator = LightCurveEstimator(
+        energy_edges=[1, 3, 30] * u.TeV,
+        selection_optional=selection,
+        n_sigma_ul=2,
+        n_jobs=2,
+    )
+    lightcurve = estimator.run(datasets)
+    assert_allclose(
+        lightcurve.dnde_ul.data[0], [[[3.260703e-13]], [[1.159354e-14]]], rtol=1e-3
+    )

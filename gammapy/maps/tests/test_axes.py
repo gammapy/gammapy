@@ -562,6 +562,26 @@ def test_from_table_time_axis():
     assert_allclose(axis.time_mid[0].mjd, 53778.25)
 
 
+def test_from_table_time_axis_lightcurve_format():
+    t0 = Time("2006-02-12", scale="tt")
+    t_min = np.linspace(0, 10, 10) * u.d
+    t_max = t_min + 12 * u.h
+
+    table = Table()
+    table["time_min"] = t_min.to_value("h")
+    table["time_max"] = t_max.to_value("h")
+    table.meta.update(time_ref_to_dict(t0))
+    table.meta["TIMEUNIT"] = "h"
+
+    axis = TimeMapAxis.from_table(table, format="lightcurve")
+
+    assert axis.nbin == 10
+    assert_allclose(axis.time_mid[0].mjd, 53778.25)
+    assert axis.time_mid.scale == "tt"
+    t0.format = "mjd"
+    assert_time_allclose(axis.reference_time, t0)
+
+
 @requires_data()
 def test_from_gti_time_axis():
     filename = "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz"
@@ -739,7 +759,19 @@ def test_map_axis_format_plot_xaxis():
             ax.plot(axis.center, np.ones_like(axis.center))
 
     ax1 = axis.format_plot_xaxis(ax=ax)
-    assert ax1.xaxis.label.properties()["text"] == "True Energy [TeV]"
+    assert ax1.xaxis.units == u.Unit("TeV")
+    assert " ".join(ax1.axes.axes.get_xlabel().split()[:2]) == "True Energy"
+
+
+def test_time_format(time_intervals):
+    axis = TimeMapAxis(
+        time_intervals["t_min"],
+        time_intervals["t_max"],
+        time_intervals["t_ref"],
+        name="time",
+    )
+    with pytest.raises(ValueError):
+        axis.time_format = "null"
 
 
 def test_time_map_axis_format_plot_xaxis(time_intervals):
@@ -753,10 +785,19 @@ def test_time_map_axis_format_plot_xaxis(time_intervals):
     with mpl_plot_check():
         ax = plt.gca()
         with quantity_support():
-            ax.plot(axis.center, np.ones_like(axis.center))
+            ax.plot(axis.as_plot_center, np.ones_like(axis.center))
 
     ax1 = axis.format_plot_xaxis(ax=ax)
-    assert ax1.xaxis.label.properties()["text"] == "Time [iso]"
+    assert ax1.axes.axes.get_xlabel().split()[0] == "Time"
+    assert ax1.axes.axes.get_xlabel().split()[1] == "[iso]"
+
+    axis.time_format = "mjd"
+    with mpl_plot_check():
+        ax = plt.gca()
+        with quantity_support():
+            ax.plot(axis.as_plot_center, np.ones_like(axis.center))
+    ax2 = axis.format_plot_xaxis(ax=ax)
+    assert ax2.axes.axes.get_xlabel().split()[1] == "[mjd]"
 
 
 def test_single_valued_axis():
@@ -770,3 +811,38 @@ def test_single_valued_axis():
     theta_values = np.array([[0.5]]) * u.deg
     table = Table(data=[theta_values, theta_values], names=["THETA_LO", "THETA_HI"])
     _ = MapAxis.from_table(table, format="gadf-dl3", column_prefix="THETA")
+
+
+def test_label_map_axis_append():
+
+    label1 = LabelMapAxis(["aa", "bb"], name="letters")
+    label2 = LabelMapAxis(["cc", "dd"], name="letters")
+    label3 = LabelMapAxis(["ee", "ff"], name="other_letters")
+
+    label_append12 = label1.append(label2)
+
+    assert_equal(label_append12.center, np.array(["aa", "bb", "cc", "dd"], dtype="<U2"))
+    assert label_append12.name == "letters"
+    with pytest.raises(ValueError):
+        label2.append(label3)
+
+
+def test_label_map_axis_from_stack():
+
+    label1 = LabelMapAxis(["a", "b", "c"], name="letters")
+    label2 = LabelMapAxis(["d", "e"], name="letters")
+    label3 = LabelMapAxis(["f"], name="letters")
+
+    label_stack = LabelMapAxis.from_stack([label1, label2, label3])
+
+    assert_equal(label_stack.center, np.array(["a", "b", "c", "d", "e", "f"]))
+    assert label_stack.name == "letters"
+
+
+def test_label_map_axis_squash():
+
+    label = LabelMapAxis(["a", "b", "c"], name="Letters")
+    squash_label = label.squash()
+
+    assert squash_label.nbin == 1
+    assert_equal(squash_label.center, np.array(["a...c"]))

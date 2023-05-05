@@ -6,6 +6,16 @@ Light curve temporal model
 
 This model parametrises a LightCurve time model.
 
+The gammapy internal lightcurve model format is a `~gammapy.maps.RegionNDMap`
+with `time`, and optionally `energy` axes. The times are defined wrt to a reference time.
+
+For serialisation, a `table` and a `map` format are supported.
+A `table` format is a `~astropy.table.Table` with the reference_time`
+serialised as a dictionary in the table meta. Only maps without an energy axis can
+be serialised to this format.
+
+In `map` format, a `~gammapy.maps.RegionNDMap` is serialised, with the `reference_time`
+in the SKYMAP_BANDS HDU.
 """
 
 

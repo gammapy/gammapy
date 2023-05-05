@@ -21,6 +21,7 @@ from regions import (
     CircleAnnulusSkyRegion,
     CircleSkyRegion,
     CompoundSkyRegion,
+    EllipseSkyRegion,
     RectangleSkyRegion,
     Regions,
 )
@@ -30,6 +31,7 @@ __all__ = [
     "make_concentric_annulus_sky_regions",
     "make_orthogonal_rectangle_sky_regions",
     "regions_to_compound_region",
+    "region_to_frame",
 ]
 
 
@@ -231,3 +233,45 @@ def make_concentric_annulus_sky_regions(
         regions.append(region)
 
     return regions
+
+
+def region_to_frame(region, frame):
+    """Convert a region to a different frame
+
+    Parameters
+    ----------
+    region : `~regions.SkyRegion`
+        region to transform
+    frame : "icrs" or "galactic"
+        frame to tranform the region into
+
+    Returns
+    -------
+    region_new : `~regions.SkyRegion`
+        region in the given frame
+    """
+    from gammapy.maps import WcsGeom
+
+    wcs = WcsGeom.create(skydir=region.center, binsz=0.01, frame=frame).wcs
+    region_new = region.to_pixel(wcs).to_sky(wcs)
+    return region_new
+
+
+def region_circle_to_ellipse(region):
+    """Convert a CircleSkyRegion to an EllipseSkyRegion
+
+    Parameters
+    ----------
+    region : `~regions.CircleSkyRegion`
+        region to transform
+
+    Returns
+    -------
+    region_new : `~regions.EllipseSkyRegion`
+        Elliptical region with same major and minor axis
+    """
+
+    region_new = EllipseSkyRegion(
+        center=region.center, width=region.radius, height=region.radius
+    )
+    return region_new

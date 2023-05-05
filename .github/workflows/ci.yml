@@ -6,11 +6,14 @@ jobs:
     name: Black check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: psf/black@stable
+        with:
+          version: "22.6.0"
   ci-runs:
     name: ${{ matrix.os }}, ${{ matrix.tox_env }}
     runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.allowed_fail }}
     env:
       PYTEST_ADDOPTS: --color=yes -n auto --dist=loadscope
     strategy:
@@ -18,51 +21,57 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            python: '3.8'
-            tox_env: 'py38-test-alldeps'
-          - os: ubuntu-latest
-            python: '3.9'
-            tox_env: 'py39-test-alldeps-cov'
-            gammapy_data_path: /home/runner/work/gammapy/gammapy/gammapy-datasets/dev
-          - os: macos-latest
-            python: '3.9'
-            tox_env: 'py39-test'
-            gammapy_data_path: /Users/runner/work/gammapy/gammapy/gammapy-datasets/dev
-          - os: windows-latest
             python: '3.9'
             tox_env: 'py39-test-alldeps'
-            gammapy_data_path:  D:\a\gammapy\gammapy\gammapy-datasets\dev
+            allowed_fail: false
           - os: ubuntu-latest
             python: '3.10'
+            tox_env: 'py310-test-alldeps-cov'
+            gammapy_data_path: /home/runner/work/gammapy/gammapy/gammapy-datasets/dev
+            allowed_fail: false
+          - os: macos-latest
+            python: '3.10'
+            tox_env: 'py310-test'
+            gammapy_data_path: /Users/runner/work/gammapy/gammapy/gammapy-datasets/dev
+            allowed_fail: false
+          - os: windows-latest
+            python: '3.10'
             tox_env: 'py310-test-alldeps'
+            gammapy_data_path:  D:\a\gammapy\gammapy\gammapy-datasets\dev
+            allowed_fail: false
           - os: ubuntu-latest
-            python: '3.9'
-            tox_env: 'py39-test'
+            python: '3.10'
+            tox_env: 'py310-test'
+            allowed_fail: false
           - os: ubuntu-latest
-            python: '3.9'
+            python: '3.10'
             tox_env: 'codestyle'
+            allowed_fail: false
           - os: ubuntu-latest
-            python: '3.8'
-            tox_env: 'py38-test-alldeps-astropylts-numpy120'
+            python: '3.9'
+            tox_env: 'py39-test-alldeps-astropylts-numpy121'
+            allowed_fail: false
           - os: ubuntu-latest
-            python: '3.8'
+            python: '3.9'
             tox_env: 'oldestdeps'
+            allowed_fail: false
           - os: ubuntu-latest
-            python: '3.8'
+            python: '3.9'
             tox_env: 'devdeps'
+            allowed_fail: true
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
       - name: Set up Python ${{ matrix.python }}
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python }}
       - name: Install base dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install 'tox<4'
+          python -m pip install tox
       - name: download datasets
         if: ${{ matrix.gammapy_data_path }}
         run: |
@@ -90,7 +99,7 @@ jobs:
           file: ./coverage.xml
           verbose: true
   sphinx:
-    name: Linux python 3.8 sphinx all-deps
+    name: Linux python 3.9 sphinx all-deps
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -104,13 +113,13 @@ jobs:
         with:
           fetch-depth: 0
       - name: Set up Python ${{ matrix.python }}
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python }}
       - name: Install base dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install 'tox<4'
+          python -m pip install tox
       - name: download datasets
         run: |
           python -m pip install tqdm requests
@@ -124,14 +133,14 @@ jobs:
         run: |
           tox -e linkcheck -- -j auto  
   conda-build:
-    name: Linux python 3.8 conda-build all-deps
+    name: Linux python 3.9 conda-build all-deps
     runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash -l {0}
     steps:
       - name: checkout repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: create and activate env
         uses: mamba-org/provision-with-micromamba@main
         with:

@@ -19,8 +19,10 @@ from gammapy.modeling.models import (
     GaussianSpatialModel,
     GeneralizedGaussianSpatialModel,
     PointSpatialModel,
+    PowerLawSpectralModel,
     Shell2SpatialModel,
     ShellSpatialModel,
+    SkyModel,
     TemplateSpatialModel,
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data
@@ -223,6 +225,64 @@ def test_sky_disk_edge():
     assert_allclose((value_edge_nwidth / value_center).to_value(""), 0.95)
 
 
+def test_disk_from_region():
+    region = EllipseSkyRegion(
+        center=SkyCoord(20, 17, unit="deg"),
+        height=0.3 * u.deg,
+        width=1.0 * u.deg,
+        angle=30 * u.deg,
+    )
+    disk = DiskSpatialModel.from_region(region, frame="galactic")
+    assert_allclose(disk.parameters["lon_0"].value, 132.666, rtol=1e-2)
+    assert_allclose(disk.parameters["lat_0"].value, -45.33118067, rtol=1e-2)
+    assert_allclose(disk.parameters["r_0"].quantity, 0.5 * u.deg, rtol=1e-2)
+    assert_allclose(disk.parameters["e"].value, 0.9539, rtol=1e-2)
+    assert_allclose(disk.parameters["phi"].quantity, 110.946048 * u.deg)
+
+    reg1 = disk.to_region()
+    assert_allclose(reg1.height, region.width, rtol=1e-2)
+
+    center = SkyCoord(20, 17, unit="deg", frame="galactic")
+    region = EllipseSkyRegion(
+        center=center,
+        height=1 * u.deg,
+        width=0.3 * u.deg,
+        angle=30 * u.deg,
+    )
+    disk = DiskSpatialModel.from_region(region, frame="icrs")
+    reg1 = disk.to_region()
+    assert_allclose(reg1.angle, -30.323 * u.deg, rtol=1e-2)
+    assert_allclose(reg1.height, region.height, rtol=1e-3)
+
+    region = CircleSkyRegion(center=region.center, radius=1.0 * u.deg)
+    disk = DiskSpatialModel.from_region(region)
+    assert_allclose(disk.parameters["e"].value, 0.0, rtol=1e-2)
+    assert_allclose(disk.parameters["lon_0"].value, 20, rtol=1e-2)
+    assert disk.frame == "galactic"
+
+    geom = WcsGeom.create(skydir=center, npix=(10, 10), binsz=0.3)
+    res = disk.evaluate_geom(geom)
+    assert_allclose(np.sum(res.value), 50157.904662)
+
+    region = PointSkyRegion(center=region.center)
+    with pytest.raises(ValueError):
+        DiskSpatialModel.from_region(region)
+
+
+def test_from_position():
+    center = SkyCoord(20, 17, unit="deg")
+    spatial_model = GaussianSpatialModel.from_position(
+        position=center, sigma=0.5 * u.deg
+    )
+    geom = WcsGeom.create(skydir=center, npix=(10, 10), binsz=0.3)
+    res = spatial_model.evaluate_geom(geom)
+    assert_allclose(np.sum(res.value), 36307.440813)
+    model = SkyModel(
+        spectral_model=PowerLawSpectralModel(), spatial_model=spatial_model
+    )
+    assert_allclose(model.position.ra.value, center.ra.value, rtol=1e-3)
+
+
 def test_sky_shell():
     width = 2 * u.deg
     rad = 2 * u.deg
@@ -284,7 +344,7 @@ def test_sky_diffuse_map(caplog):
     ]
 
     assert val.unit == "sr-1"
-    desired = [3269.178107, 0]
+    desired = [3265.6559, 0]
     assert_allclose(val.value, desired)
 
     res = model.evaluate_geom(model.map.geom)
@@ -297,7 +357,7 @@ def test_sky_diffuse_map(caplog):
     assert isinstance(model.to_region(), RectangleSkyRegion)
 
     with pytest.raises(TypeError):
-        model.plot_interative()
+        model.plot_interactive()
 
     with pytest.raises(TypeError):
         model.plot_grid()

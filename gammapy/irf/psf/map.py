@@ -38,13 +38,13 @@ class PSFMap(IRFMap):
         from astropy.coordinates import SkyCoord
         from gammapy.maps import WcsGeom, MapAxis
         from gammapy.data import Observation
-        from gammapy.irf import load_cta_irfs
+        from gammapy.irf import load_irf_dict_from_file
         from gammapy.makers import MapDatasetMaker
 
         # Define observation
         pointing = SkyCoord("0d", "0d")
         filename = "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
-        irfs = load_cta_irfs(filename)
+        irfs = load_irf_dict_from_file(filename)
         obs = Observation.create(pointing=pointing, irfs=irfs, livetime="1h")
 
         # Create WcsGeom
@@ -454,7 +454,7 @@ class PSFMap(IRFMap):
         ax.legend(loc="best")
         ax.yaxis.set_major_formatter(FormatStrFormatter("%.2f"))
         energy_axis.format_plot_xaxis(ax=ax)
-        ax.set_ylabel(f"Containment radius ({ax.yaxis.units})")
+        ax.set_ylabel(f"Containment radius [{ax.yaxis.units}]")
         return ax
 
     def plot_psf_vs_rad(self, ax=None, energy_true=[0.1, 1, 10] * u.TeV, **kwargs):
@@ -494,8 +494,8 @@ class PSFMap(IRFMap):
                 ax.plot(rad, psf_value, label=label, **kwargs)
 
         ax.set_yscale("log")
-        ax.set_xlabel(f"Rad ({ax.xaxis.units})")
-        ax.set_ylabel(f"PSF ({ax.yaxis.units})")
+        ax.set_xlabel(f"Rad [{ax.xaxis.units}]")
+        ax.set_ylabel(f"PSF [{ax.yaxis.units}]")
         ax.xaxis.set_major_formatter(FormatStrFormatter("%.2f"))
         plt.legend()
         return ax
@@ -532,7 +532,8 @@ class PSFMap(IRFMap):
         self.plot_psf_vs_rad(ax=ax1)
 
         axes[2].set_title("Exposure")
-        self.exposure_map.reduce_over_axes().plot(ax=axes[2], add_cbar=True)
+        if self.exposure_map is not None:
+            self.exposure_map.reduce_over_axes().plot(ax=axes[2], add_cbar=True)
 
         axes[3].set_title("Containment radius at 1 TeV")
         kwargs = {self.energy_name: 1 * u.TeV}

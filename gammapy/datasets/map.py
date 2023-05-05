@@ -51,6 +51,7 @@ def create_map_dataset_geoms(
     migra_axis=None,
     rad_axis=None,
     binsz_irf=None,
+    reco_psf=False,
 ):
     """Create map geometries for a `MapDataset`
 
@@ -67,6 +68,8 @@ def create_map_dataset_geoms(
         Rad axis for the psf map
     binsz_irf : float
         IRF Map pixel size in degrees.
+    reco_psf : bool
+        Use reconstructed energy for the PSF geometry. Default is False
 
     Returns
     -------
@@ -84,7 +87,11 @@ def create_map_dataset_geoms(
     geom_image = geom.to_image()
     geom_exposure = geom_image.to_cube([energy_axis_true])
     geom_irf = geom_image.to_binsz(binsz=binsz_irf)
-    geom_psf = geom_irf.to_cube([rad_axis, energy_axis_true])
+
+    if reco_psf:
+        geom_psf = geom_irf.to_cube([rad_axis, geom.axes["energy"]])
+    else:
+        geom_psf = geom_irf.to_cube([rad_axis, energy_axis_true])
 
     if migra_axis:
         geom_edisp = geom_irf.to_cube([migra_axis, energy_axis_true])
@@ -102,7 +109,9 @@ def create_map_dataset_geoms(
 class MapDataset(Dataset):
     """
     Bundle together binned counts, background, IRFs, models and compute a likelihood.
-     Uses Cash statistics by default.
+    It uses the Cash statistics by default.
+
+    For more information see :ref:`datasets`.
 
     Parameters
     ----------
@@ -586,6 +595,7 @@ class MapDataset(Dataset):
         reference_time="2000-01-01",
         name=None,
         meta_table=None,
+        reco_psf=False,
         **kwargs,
     ):
         """Create a MapDataset object with zero filled maps.
@@ -610,6 +620,8 @@ class MapDataset(Dataset):
         meta_table : `~astropy.table.Table`
             Table listing information on observations used to create the dataset.
             One line per observation for stacked datasets.
+        reco_psf : bool
+            Use reconstructed energy for the PSF geometry. Default is False
 
         Returns
         -------
@@ -641,6 +653,7 @@ class MapDataset(Dataset):
             rad_axis=rad_axis,
             migra_axis=migra_axis,
             binsz_irf=binsz_irf,
+            reco_psf=reco_psf,
         )
 
         kwargs.update(geoms)
@@ -783,7 +796,7 @@ class MapDataset(Dataset):
 
         if self.stat_type == "cash":
             if self.background and other.background:
-                background = self.npred_background() * self.mask_safe
+                background = self.npred_background()
                 background.stack(
                     other.npred_background(),
                     weights=other.mask_safe,
@@ -815,7 +828,7 @@ class MapDataset(Dataset):
             self.meta_table = other.meta_table.copy()
 
     def stat_array(self):
-        """Likelihood per bin given the current model parameters"""
+        """Statistic function value per bin given the current model parameters"""
         return cash(n_on=self.counts.data, mu_on=self.npred().data)
 
     def residuals(self, method="diff", **kwargs):
@@ -1080,7 +1093,7 @@ class MapDataset(Dataset):
         return ax_spatial, ax_spectral
 
     def stat_sum(self):
-        """Total likelihood given the current model parameters."""
+        """Total statistic function value given the current model parameters."""
         counts, npred = self.counts.data.astype(float), self.npred().data
 
         if self.mask is not None:
@@ -1187,29 +1200,14 @@ class MapDataset(Dataset):
             )
 
         if "EDISP" in hdulist:
-            edisp_map = Map.from_hdulist(hdulist, hdu="edisp", format=format)
-
-            try:
-                exposure_map = Map.from_hdulist(
-                    hdulist, hdu="edisp_exposure", format=format
-                )
-            except KeyError:
-                exposure_map = None
-
-            if edisp_map.geom.axes[0].name == "energy":
-                kwargs["edisp"] = EDispKernelMap(edisp_map, exposure_map)
-            else:
-                kwargs["edisp"] = EDispMap(edisp_map, exposure_map)
+            kwargs["edisp"] = EDispMap.from_hdulist(
+                hdulist, hdu="edisp", exposure_hdu="edisp_exposure", format=format
+            )
 
         if "PSF" in hdulist:
-            psf_map = Map.from_hdulist(hdulist, hdu="psf", format=format)
-            try:
-                exposure_map = Map.from_hdulist(
-                    hdulist, hdu="psf_exposure", format=format
-                )
-            except KeyError:
-                exposure_map = None
-            kwargs["psf"] = PSFMap(psf_map, exposure_map)
+            kwargs["psf"] = PSFMap.from_hdulist(
+                hdulist, hdu="psf", exposure_hdu="psf_exposure", format=format
+            )
 
         if "MASK_SAFE" in hdulist:
             mask_safe = Map.from_hdulist(hdulist, hdu="mask_safe", format=format)
@@ -1267,7 +1265,7 @@ class MapDataset(Dataset):
             )
 
         kwargs["edisp"] = HDULocation(
-            hdu_class="edisp_kernel_map",
+            hdu_class="edisp_map",
             file_dir=path.parent,
             file_name=path.name,
             hdu_name="EDISP",
@@ -1954,7 +1952,9 @@ class MapDataset(Dataset):
 
 
 class MapDatasetOnOff(MapDataset):
-    """Map dataset for on-off likelihood fitting. Uses wstat statistics.
+    """Map dataset for on-off likelihood fitting. It uses wstat statistics by default.
+
+    For more information see :ref:`datasets`.
 
     Parameters
     ----------
@@ -2076,10 +2076,10 @@ class MapDatasetOnOff(MapDataset):
             Alpha map
         """
         with np.errstate(invalid="ignore", divide="ignore"):
-            alpha = self.acceptance / self.acceptance_off
+            data = self.acceptance.quantity / self.acceptance_off.quantity
+        data = np.nan_to_num(data)
 
-        alpha.data = np.nan_to_num(alpha.data)
-        return alpha
+        return Map.from_geom(self._geom, data=data.to_value(""), unit="")
 
     def npred_background(self):
         """Predicted background counts estimated from the marginalized likelihood estimate.
@@ -2128,7 +2128,7 @@ class MapDatasetOnOff(MapDataset):
         return self.alpha * self.counts_off
 
     def stat_array(self):
-        """Likelihood per bin given the current model parameters"""
+        """Statistic function value per bin given the current model parameters"""
         mu_sig = self.npred_signal().data
         on_stat_ = wstat(
             n_on=self.counts.data,
@@ -2356,7 +2356,7 @@ class MapDatasetOnOff(MapDataset):
         super().stack(other, nan_to_num=nan_to_num)
 
     def stat_sum(self):
-        """Total likelihood given the current model parameters."""
+        """Total statistic function value given the current model parameters."""
         return Dataset.stat_sum(self)
 
     def fake(self, npred_background, random_state="random-seed"):

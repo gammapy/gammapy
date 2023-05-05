@@ -95,7 +95,7 @@ import matplotlib.pyplot as plt
 from IPython.display import display
 from gammapy.data import DataStore, Observation, observatory_locations
 from gammapy.datasets import MapDataset, MapDatasetEventSampler
-from gammapy.irf import load_cta_irfs
+from gammapy.irf import load_irf_dict_from_file
 from gammapy.makers import MapDatasetMaker
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Fit
@@ -144,7 +144,7 @@ livetime = 1 * u.hr
 # Now you can create the observation:
 #
 
-irfs = load_cta_irfs(path / irf_filename)
+irfs = load_irf_dict_from_file(path / irf_filename)
 location = observatory_locations["cta_south"]
 
 observation = Observation.create(
@@ -518,7 +518,7 @@ irf_paths = [path / irf_filename] * n_obs
 events_paths = []
 
 for idx, tstart in enumerate(tstarts):
-    irfs = load_cta_irfs(irf_paths[idx])
+    irfs = load_irf_dict_from_file(irf_paths[idx])
     observation = Observation.create(
         obs_id=idx,
         pointing=pointing,

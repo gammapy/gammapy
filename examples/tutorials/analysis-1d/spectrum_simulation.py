@@ -10,7 +10,7 @@ Prerequisites
 
 -  Knowledge of spectral extraction and datasets used in gammapy, see
    for instance the :doc:`spectral analysis
-   tutorial </tutorials/analysis-1d/spectral_analysis`
+   tutorial </tutorials/analysis-1d/spectral_analysis>`
 
 Context
 -------
@@ -37,11 +37,11 @@ distribution of fitted parameters is consistent with the input values.**
 Proposed approach
 -----------------
 
-We will use the following classes:
+We will use the following classes and functions:
 
 -  `~gammapy.datasets.SpectrumDatasetOnOff`
 -  `~gammapy.datasets.SpectrumDataset`
--  `~gammapy.irf.load_cta_irfs`
+-  `~gammapy.irf.load_irf_dict_from_file`
 -  `~gammapy.modeling.models.PowerLawSpectralModel`
 
 """
@@ -62,7 +62,7 @@ import matplotlib.pyplot as plt
 from IPython.display import display
 from gammapy.data import Observation, observatory_locations
 from gammapy.datasets import Datasets, SpectrumDataset, SpectrumDatasetOnOff
-from gammapy.irf import load_cta_irfs
+from gammapy.irf import load_irf_dict_from_file
 from gammapy.makers import SpectrumDatasetMaker
 from gammapy.maps import MapAxis, RegionGeom
 from gammapy.modeling import Fit
@@ -120,7 +120,7 @@ model = SkyModel(spectral_model=model_simu, name="source")
 ######################################################################
 # Load the IRFs
 # In this simulation, we use the CTA-1DC irfs shipped with gammapy.
-irfs = load_cta_irfs(
+irfs = load_irf_dict_from_file(
     "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
 )
 
@@ -164,7 +164,10 @@ print(dataset)
 #
 # To do an on off spectral analysis, which is the usual science case, the
 # standard would be to use `SpectrumDatasetOnOff`, which uses the
-# acceptance to fake off-counts
+# acceptance to fake off-counts. Please also refer to :doc:`simulations in
+# the absence of a background model
+# <spectral_analysis_rad_max.html#dataset-simulations>`
+# for simulations based on observations of real off counts.
 #
 
 dataset_on_off = SpectrumDatasetOnOff.from_spectrum_dataset(

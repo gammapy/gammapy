@@ -8,6 +8,7 @@ import numpy as np
 from astropy import units as u
 from astropy.io import fits
 import matplotlib.pyplot as plt
+from gammapy.utils.deprecation import deprecated
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.scripts import make_path
 from gammapy.utils.units import energy_unit_format
@@ -62,7 +63,8 @@ class Map(abc.ABC):
 
         for arg in argnames:
             value = getattr(self, "_" + arg)
-            kwargs.setdefault(arg, copy.deepcopy(value))
+            if arg not in kwargs:
+                kwargs[arg] = copy.deepcopy(value)
 
         return self.from_geom(**kwargs)
 
@@ -996,8 +998,8 @@ class Map(abc.ABC):
         if preserve_counts:
             if geom.ndim > 2 and geom.axes[0] != self.geom.axes[0]:
                 raise ValueError(
-                    f"Energy axis do not match: expected {self.geom.axes[0]},"
-                    " but got {geom.axes[0]}."
+                    f"Energy axes do not match, expected: \n {self.geom.axes[0]},"
+                    f" but got: \n {geom.axes[0]}."
                 )
             map_copy.data /= map_copy.geom.solid_angle().to_value("deg2")
 
@@ -1086,9 +1088,18 @@ class Map(abc.ABC):
             output_map = output_map.resample(geom, preserve_counts=preserve_counts)
         return output_map
 
-    def fill_events(self, events):
-        """Fill event coordinates (`~gammapy.data.EventList`)."""
-        self.fill_by_coord(events.map_coord(self.geom))
+    def fill_events(self, events, weights=None):
+        """Fill event coordinates (`~gammapy.data.EventList`).
+
+        Parameters
+        ----------
+        events : `~gammapy.data.EventList`
+            Events to be fill in the map.
+        weights : `~numpy.ndarray`
+            Weights vector. Default is weight of one. The weights vector must be of the same length
+            as the events column length.
+        """
+        self.fill_by_coord(events.map_coord(self.geom), weights=weights)
 
     def fill_by_coord(self, coords, weights=None):
         """Fill pixels at ``coords`` with given ``weights``.
@@ -1382,6 +1393,7 @@ class Map(abc.ABC):
 
         return self._init_copy(**kwargs)
 
+    @deprecated("v1.1", alternative="gammapy.datasets.apply_edisp")
     def apply_edisp(self, edisp):
         """Apply energy dispersion to map. Requires energy axis.
 
@@ -1407,7 +1419,7 @@ class Map(abc.ABC):
             energy_axis = self.geom.axes["energy_true"].copy(name="energy")
 
         geom = self.geom.to_image().to_cube(axes=[energy_axis])
-        return self._init_copy(geom=geom, data=data)
+        return self.__class__(geom=geom, data=data, unit=self.unit)
 
     def mask_nearest_position(self, position):
         """Given a sky coordinate return nearest valid position in the mask

@@ -2,6 +2,7 @@
 import logging
 from astropy.io import fits
 from gammapy.data.hdu_index_table import HDUIndexTable
+from gammapy.utils.deprecation import deprecated
 from gammapy.utils.fits import HDULocation
 from gammapy.utils.scripts import make_path
 
@@ -43,6 +44,7 @@ IRF_DL3_HDU_SPECIFICATION = {
             "HDUCLAS2": "BKG",
             "HDUCLAS3": "FULL-ENCLOSURE",  # added here to have HDUCLASN in order
             "HDUCLAS4": "BKG_3D",
+            "FOVALIGN": "RADEC",
         },
     },
     "bkg_2d": {
@@ -141,8 +143,14 @@ def gadf_is_pointlike(header):
     return header.get("HDUCLAS3") == "POINT-LIKE"
 
 
+@deprecated("v1.1", alternative="load_irf_dict_from_file")
 def load_cta_irfs(filename):
-    """load CTA instrument response function and return a dictionary container.
+    """Load IRFs from file as written by the CTA DC1 into a dict
+
+    This function has a hardcoded list of IRF types and HDU names
+    and does not check what types of IRFs are actually present in the file.
+
+    Please use `load_irf_dict_from_file` instead..
 
     The IRF format should be compliant with the one discussed
     at http://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/.
@@ -195,9 +203,39 @@ def load_cta_irfs(filename):
     return dict(aeff=aeff, bkg=bkg, edisp=edisp, psf=psf)
 
 
+class UnknownHDUClass(IOError):
+    """Raised when a file contains an unknown HDUCLASS"""
+
+
+def _get_hdu_type_and_class(header):
+    """Get gammapy hdu_type and class from FITS header
+
+    Contains a workaround to support CTA 1DC irf file.
+    """
+    hdu_clas2 = header.get("HDUCLAS2", "")
+    hdu_clas4 = header.get("HDUCLAS4", "")
+
+    clas2_to_type = {"rpsf": "psf", "eff_area": "aeff"}
+    hdu_type = clas2_to_type.get(hdu_clas2.lower(), hdu_clas2.lower())
+    hdu_class = hdu_clas4.lower()
+
+    if hdu_type not in HDUIndexTable.VALID_HDU_TYPE:
+        raise UnknownHDUClass(f"HDUCLAS2={hdu_clas2}, HDUCLAS4={hdu_clas4}")
+
+    # workaround for CTA 1DC files with non-compliant HDUCLAS4 names
+    if hdu_class not in HDUIndexTable.VALID_HDU_CLASS:
+        hdu_class = f"{hdu_type}_{hdu_class}"
+
+    if hdu_class not in HDUIndexTable.VALID_HDU_CLASS:
+        raise UnknownHDUClass(f"HDUCLAS2={hdu_clas2}, HDUCLAS4={hdu_clas4}")
+
+    return hdu_type, hdu_class
+
+
 def load_irf_dict_from_file(filename):
-    """Open a fits file and generate a dictionary containing the Gammapy objects
-    corresponding to the IRF components stored
+    """Load all available IRF components from given file into a dict.
+
+    If multiple IRFs of the same type are present, the first encountered is returned.
 
     Parameters
     ----------
@@ -214,41 +252,41 @@ def load_irf_dict_from_file(filename):
     from .rad_max import RadMax2D
 
     filename = make_path(filename)
-
-    hdulist = fits.open(make_path(filename))
-
+    hdulist = fits.open(filename)
     irf_dict = {}
-
     is_pointlike = False
 
     for hdu in hdulist:
-        hdu_class = hdu.header.get("HDUCLAS1", "").lower()
+        hdu_clas1 = hdu.header.get("HDUCLAS1", "").lower()
 
-        if hdu_class == "response":
-            hdu_class = hdu.header.get("HDUCLAS4", "").lower()
-
-            is_pointlike |= hdu.header["HDUCLAS3"] == "POINT-LIKE"
-
-            loc = HDULocation(
-                hdu_class=hdu_class,
-                hdu_name=hdu.name,
-                file_dir=filename.parent,
-                file_name=filename.name,
-            )
-
-            for name in HDUIndexTable.VALID_HDU_TYPE:
-                if name in hdu_class:
-                    if name in irf_dict.keys():
-                        log.warning(f"more than one HDU of {name} type found")
-                        log.warning(
-                            f"loaded the {irf_dict[name].meta['EXTNAME']} HDU in the dictionary"
-                        )
-                        continue
-                    data = loc.load()
-                    # TODO: maybe introduce IRF.type attribute...
-                    irf_dict[name] = data
-        else:  # not an IRF component
+        # not an IRF component
+        if hdu_clas1 != "response":
             continue
+
+        is_pointlike |= hdu.header.get("HDUCLAS3") == "POINT-LIKE"
+
+        try:
+            hdu_type, hdu_class = _get_hdu_type_and_class(hdu.header)
+        except UnknownHDUClass as e:
+            log.warning("File has unknown class %s", e)
+            continue
+
+        loc = HDULocation(
+            hdu_class=hdu_class,
+            hdu_name=hdu.name,
+            file_dir=filename.parent,
+            file_name=filename.name,
+        )
+
+        if hdu_type in irf_dict.keys():
+            log.warning(f"more than one HDU of {hdu_type} type found")
+            log.warning(
+                f"loaded the {irf_dict[hdu_type].meta['EXTNAME']} HDU in the dictionary"
+            )
+            continue
+
+        data = loc.load()
+        irf_dict[hdu_type] = data
 
     if is_pointlike and "rad_max" not in irf_dict:
         irf_dict["rad_max"] = RadMax2D.from_irf(irf_dict["aeff"])

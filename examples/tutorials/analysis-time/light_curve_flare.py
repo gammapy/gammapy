@@ -8,7 +8,7 @@ Prerequisites
 -------------
 
 -  Understanding of how the light curve estimator works, please refer to
-   the :doc:`light curve notebook </tutorials/analysis-time/light_curve`.
+   the :doc:`light curve notebook </tutorials/analysis-time/light_curve>`.
 
 Context
 -------

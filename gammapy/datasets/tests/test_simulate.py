@@ -8,9 +8,10 @@ from astropy.io import fits
 from astropy.table import Table
 from astropy.time import Time
 from gammapy.data import GTI, DataStore, Observation
+from gammapy.data.pointing import FixedPointingInfo, PointingMode
 from gammapy.datasets import MapDataset, MapDatasetEventSampler
 from gammapy.datasets.tests.test_map import get_map_dataset
-from gammapy.irf import load_cta_irfs
+from gammapy.irf import load_irf_dict_from_file
 from gammapy.makers import MapDatasetMaker
 from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling.models import (
@@ -18,6 +19,7 @@ from gammapy.modeling.models import (
     GaussianSpatialModel,
     LightCurveTemplateTemporalModel,
     Models,
+    PointSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
 )
@@ -44,7 +46,7 @@ def models():
     table["TIME"] = time
     table["NORM"] = norm / norm.max()
     t_ref = Time("2000-01-01")
-    table.meta = dict(MJDREFI=t_ref.mjd, MJDREFF=0, TIMEUNIT="s")
+    table.meta = dict(MJDREFI=t_ref.mjd, MJDREFF=0, TIMEUNIT="s", TIMESYS="utc")
     temporal_model = LightCurveTemplateTemporalModel.from_table(table)
 
     model = SkyModel(
@@ -124,6 +126,25 @@ def dataset():
 
 
 @requires_data()
+def test_sample_coord_time_energy(dataset, models):
+    models[0].spatial_model = None
+    dataset.models = models
+    evaluator = dataset.evaluators["test-source"]
+    sampler = MapDatasetEventSampler(random_state=0)
+    with pytest.raises(TypeError):
+        sampler._sample_coord_time_energy(dataset, evaluator)
+
+    models[0].spatial_model = PointSpatialModel(
+        lon_0="0 deg", lat_0="0 deg", frame="galactic"
+    )
+    dataset.models = models
+    evaluator = dataset.evaluators["test-source"]
+    sampler = MapDatasetEventSampler(random_state=0)
+    with pytest.raises(NotImplementedError):
+        sampler._sample_coord_time_energy(dataset, evaluator)
+
+
+@requires_data()
 def test_mde_sample_sources(dataset, models):
     dataset.models = models
     sampler = MapDatasetEventSampler(random_state=0)
@@ -147,11 +168,14 @@ def test_mde_sample_sources(dataset, models):
 
 @requires_data()
 def test_mde_sample_weak_src(dataset, models):
-    irfs = load_cta_irfs(
+    irfs = load_irf_dict_from_file(
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     )
     livetime = 10.0 * u.hr
-    pointing = SkyCoord(0, 0, unit="deg", frame="galactic")
+    pointing = FixedPointingInfo(
+        mode=PointingMode.POINTING,
+        fixed_icrs=SkyCoord(0, 0, unit="deg", frame="galactic").icrs,
+    )
     obs = Observation.create(
         obs_id=1001,
         pointing=pointing,
@@ -234,11 +258,14 @@ def test_mde_sample_edisp(dataset, models):
 
 @requires_data()
 def test_event_det_coords(dataset, models):
-    irfs = load_cta_irfs(
+    irfs = load_irf_dict_from_file(
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     )
     livetime = 1.0 * u.hr
-    pointing = SkyCoord(0, 0, unit="deg", frame="galactic")
+    pointing = FixedPointingInfo(
+        mode=PointingMode.POINTING,
+        fixed_icrs=SkyCoord(0, 0, unit="deg", frame="galactic").icrs,
+    )
     obs = Observation.create(
         obs_id=1001,
         pointing=pointing,
@@ -261,11 +288,14 @@ def test_event_det_coords(dataset, models):
 
 @requires_data()
 def test_mde_run(dataset, models):
-    irfs = load_cta_irfs(
+    irfs = load_irf_dict_from_file(
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     )
     livetime = 1.0 * u.hr
-    pointing = SkyCoord(0, 0, unit="deg", frame="galactic")
+    pointing = FixedPointingInfo(
+        mode=PointingMode.POINTING,
+        fixed_icrs=SkyCoord(0, 0, unit="deg", frame="galactic").icrs,
+    )
     obs = Observation.create(
         obs_id=1001,
         pointing=pointing,
@@ -357,11 +387,14 @@ def test_mde_run(dataset, models):
 
 @requires_data()
 def test_irf_alpha_config(dataset, models):
-    irfs = load_cta_irfs(
+    irfs = load_irf_dict_from_file(
         "$GAMMAPY_DATA/cta-caldb/Prod5-South-20deg-AverageAz-14MSTs37SSTs.180000s-v0.1.fits.gz"
     )
     livetime = 1.0 * u.hr
-    pointing = SkyCoord(0, 0, unit="deg", frame="galactic")
+    pointing = FixedPointingInfo(
+        mode=PointingMode.POINTING,
+        fixed_icrs=SkyCoord(0, 0, unit="deg", frame="galactic").icrs,
+    )
     obs = Observation.create(
         obs_id=1001,
         pointing=pointing,
@@ -378,11 +411,14 @@ def test_irf_alpha_config(dataset, models):
 
 @requires_data()
 def test_mde_run_switchoff(dataset, models):
-    irfs = load_cta_irfs(
+    irfs = load_irf_dict_from_file(
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     )
     livetime = 1.0 * u.hr
-    pointing = SkyCoord(0, 0, unit="deg", frame="galactic")
+    pointing = FixedPointingInfo(
+        mode=PointingMode.POINTING,
+        fixed_icrs=SkyCoord(0, 0, unit="deg", frame="galactic").icrs,
+    )
     obs = Observation.create(
         obs_id=1001,
         pointing=pointing,
@@ -415,11 +451,14 @@ def test_mde_run_switchoff(dataset, models):
 
 @requires_data()
 def test_events_datastore(tmp_path, dataset, models):
-    irfs = load_cta_irfs(
+    irfs = load_irf_dict_from_file(
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     )
     livetime = 10.0 * u.hr
-    pointing = SkyCoord(0, 0, unit="deg", frame="galactic")
+    pointing = FixedPointingInfo(
+        mode=PointingMode.POINTING,
+        fixed_icrs=SkyCoord(0, 0, unit="deg", frame="galactic").icrs,
+    )
     obs = Observation.create(
         obs_id=1001,
         pointing=pointing,
@@ -443,11 +482,12 @@ def test_events_datastore(tmp_path, dataset, models):
 
 @requires_data()
 def test_MC_ID(model_alternative):
-    irfs = load_cta_irfs(
+    irfs = load_irf_dict_from_file(
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     )
     livetime = 0.1 * u.hr
-    pointing = SkyCoord(0, 0, unit="deg", frame="galactic")
+    skydir = SkyCoord(0, 0, unit="deg", frame="galactic")
+    pointing = FixedPointingInfo(mode=PointingMode.POINTING, fixed_icrs=skydir.icrs)
     obs = Observation.create(
         obs_id=1001,
         pointing=pointing,
@@ -465,7 +505,7 @@ def test_MC_ID(model_alternative):
     migra_axis = MapAxis.from_bounds(0.5, 2, nbin=150, node_type="edges", name="migra")
 
     geom = WcsGeom.create(
-        skydir=pointing,
+        skydir=skydir,
         width=(2, 2),
         binsz=0.06,
         frame="icrs",
@@ -499,11 +539,12 @@ def test_MC_ID(model_alternative):
 
 @requires_data()
 def test_MC_ID_NMCID(model_alternative):
-    irfs = load_cta_irfs(
+    irfs = load_irf_dict_from_file(
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     )
     livetime = 0.1 * u.hr
-    pointing = SkyCoord(0, 0, unit="deg", frame="galactic")
+    skydir = SkyCoord(0, 0, unit="deg", frame="galactic")
+    pointing = FixedPointingInfo(mode=PointingMode.POINTING, fixed_icrs=skydir.icrs)
     obs = Observation.create(
         obs_id=1001,
         pointing=pointing,
@@ -521,7 +562,7 @@ def test_MC_ID_NMCID(model_alternative):
     migra_axis = MapAxis.from_bounds(0.5, 2, nbin=150, node_type="edges", name="migra")
 
     geom = WcsGeom.create(
-        skydir=pointing,
+        skydir=skydir,
         width=(2, 2),
         binsz=0.06,
         frame="icrs",

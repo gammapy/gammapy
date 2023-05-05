@@ -24,9 +24,8 @@
 .. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.4701488.svg?style=flat
     :target: https://doi.org/10.5281/zenodo.4701488
 
-.. image:: https://archive.softwareheritage.org/badge/swh:1:dir:02e8a702ef6c9558a9f96d99bf6b9f41b5edcd34/
-    :target: https://archive.softwareheritage.org/swh:1:dir:02e8a702ef6c9558a9f96d99bf6b9f41b5edcd34;origin=https://github.com/gammapy/gammapy;visit=swh:1:snp:11294b68ac9dcb4aeefaa784e7fb7afba7d61402;anchor=swh:1:rev:89f67e3014c3673704ea6eeb8ad3ad0b844a3426
-
+.. image:: https://archive.softwareheritage.org/badge/swh:1:dir:27e81770f5e2e977017789ef5aa4a35978137fa6/
+    :target: https://archive.softwareheritage.org/swh:1:dir:27e81770f5e2e977017789ef5aa4a35978137fa6;origin=https://github.com/gammapy/gammapy;visit=swh:1:snp:6017d488cdb0faaa2373663b86f751eafdf2a1d5;anchor=swh:1:rev:e2591a43bc04db8e51e693d0711c21ac0738203c
 
 
 Gammapy
@@ -70,21 +69,16 @@ Status shields
 
 (mostly useful for developers)
 
+* .. image:: https://app.codacy.com/project/badge/Grade/9c32a21a915d4a28823f3b44a99a2810
+    :target: https://www.codacy.com/gh/gammapy/gammapy/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=gammapy/gammapy&amp;utm_campaign=Badge_Grade
+    :alt: Codacy
+
 * .. image:: https://github.com/gammapy/gammapy/workflows/CI/badge.svg?style=flat
     :target: https://github.com/gammapy/gammapy/actions
     :alt: GitHub actions CI
 
 * .. image:: https://codecov.io/gh/gammapy/gammapy/branch/master/graph/badge.svg?style=flat
     :target: https://codecov.io/gh/gammapy/gammapy
-
-* .. image:: https://img.shields.io/lgtm/grade/python/g/gammapy/gammapy.svg?logo=lgtm&logoWidth=18
-    :target: https://lgtm.com/projects/g/gammapy/gammapy/context:python
-    :alt: LGTM
-
-* .. image:: https://app.codacy.com/project/badge/Grade/9c32a21a915d4a28823f3b44a99a2810
-    :target: https://www.codacy.com/gh/gammapy/gammapy/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=gammapy/gammapy&amp;utm_campaign=Badge_Grade
-    :alt: Codacy
-
 
 Note if you cloned this repository before Oct 7th 2022
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++

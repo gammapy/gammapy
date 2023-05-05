@@ -32,8 +32,8 @@ for spiralarm_index in range(4):
 
 ax_cartesian.plot(vallee_spiral.bar["x"], vallee_spiral.bar["y"])
 
-ax_cartesian.set_xlabel("x (kpc)")
-ax_cartesian.set_ylabel("y (kpc)")
+ax_cartesian.set_xlabel("x [kpc]")
+ax_cartesian.set_ylabel("y [kpc]")
 ax_cartesian.set_xlim(-12, 12)
 ax_cartesian.set_ylim(-15, 12)
 ax_cartesian.legend(ncol=2, loc="lower right")

@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import subprocess
+from copy import copy
 from pathlib import Path
 import numpy as np
 from astropy import units as u
@@ -15,7 +16,7 @@ from .observations import Observation, ObservationChecker, Observations
 __all__ = ["DataStore"]
 
 ALL_IRFS = ["aeff", "edisp", "psf", "bkg", "rad_max"]
-ALL_HDUS = ["events", "gti"] + ALL_IRFS
+ALL_HDUS = ["events", "gti", "pointing"] + ALL_IRFS
 REQUIRED_IRFS = {
     "full-enclosure": {"aeff", "edisp", "psf", "bkg"},
     "point-like": {"aeff", "edisp"},
@@ -320,6 +321,12 @@ class DataStore:
             raise MissingRequiredHDU(
                 f"Required HDUs {missing_hdus} not found in observation {obs_id}"
             )
+
+        # TODO: right now, gammapy doesn't support using the pointing table of GADF
+        # so we always pass the events location here to be read into a FixedPointingInfo
+        pointing_location = copy(kwargs["events"])
+        pointing_location.hdu_class = "pointing"
+        kwargs["pointing"] = pointing_location
 
         return Observation(**kwargs)
 

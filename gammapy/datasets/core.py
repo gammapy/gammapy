@@ -9,7 +9,6 @@ from astropy.table import Table, vstack
 from gammapy.data import GTI
 from gammapy.modeling.models import DatasetModels, Models
 from gammapy.utils.scripts import make_name, make_path, read_yaml, write_yaml
-from gammapy.utils.table import table_from_row_data
 
 log = logging.getLogger(__name__)
 
@@ -19,6 +18,8 @@ __all__ = ["Dataset", "Datasets"]
 
 class Dataset(abc.ABC):
     """Dataset abstract base class.
+
+    For more information see :ref:`datasets`.
 
     TODO: add tutorial how to create your own dataset types.
 
@@ -110,7 +111,7 @@ class Dataset(abc.ABC):
 
 
 class Datasets(collections.abc.MutableSequence):
-    """Dataset collection.
+    """Container class that holds a list of datasets.
 
     Parameters
     ----------
@@ -217,7 +218,7 @@ class Datasets(collections.abc.MutableSequence):
         return np.array(contributions)
 
     def stat_sum(self):
-        """Compute joint likelihood"""
+        """Compute joint statistic function value"""
         stat_sum = 0
         # TODO: add parallel evaluation of likelihoods
         for dataset in self:
@@ -498,7 +499,7 @@ class Datasets(collections.abc.MutableSequence):
 
             rows.append(row)
 
-        return table_from_row_data(rows=rows)
+        return Table(rows)
 
     # TODO: merge with meta table?
     @property

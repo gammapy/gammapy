@@ -887,7 +887,8 @@ class MapAxis:
 
         for arg in argnames:
             value = getattr(self, "_" + arg)
-            kwargs.setdefault(arg, copy.deepcopy(value))
+            if arg not in kwargs:
+                kwargs[arg] = copy.deepcopy(value)
 
         return self.__class__(**kwargs)
 
@@ -1999,7 +2000,7 @@ class MapAxes(Sequence):
                 except (KeyError, TypeError):
                     try:
                         axis = TimeMapAxis.from_table(table, format=format, idx=idx)
-                    except (KeyError, ValueError):
+                    except (KeyError, ValueError, IndexError):
                         axis = MapAxis.from_table(table, format=format, idx=idx)
 
                 axes.append(axis)
@@ -2159,10 +2160,10 @@ class TimeMapAxis:
     """
 
     node_type = "intervals"
-    time_format = "iso"
 
     def __init__(self, edges_min, edges_max, reference_time, name="time", interp="lin"):
         self._name = name
+        self._time_format = "iso"
 
         edges_min = u.Quantity(edges_min, ndmin=1)
         edges_max = u.Quantity(edges_max, ndmin=1)
@@ -2309,6 +2310,16 @@ class TimeMapAxis:
         return self.reference_time + self.edges
 
     @property
+    def time_format(self):
+        return self._time_format
+
+    @time_format.setter
+    def time_format(self, val):
+        if val not in ["iso", "mjd"]:
+            raise ValueError(f"Invalid time_format: {self.time_format}")
+        self._time_format = val
+
+    @property
     def as_plot_xerr(self):
         """Plot x error"""
         xn, xp = self.time_mid - self.time_min, self.time_max - self.time_mid
@@ -2316,11 +2327,9 @@ class TimeMapAxis:
         if self.time_format == "iso":
             x_errn = xn.to_datetime()
             x_errp = xp.to_datetime()
-        elif self.time_format == "mjd":
+        else:
             x_errn = xn.to("day")
             x_errp = xp.to("day")
-        else:
-            raise ValueError(f"Invalid time_format: {self.time_format}")
 
         return x_errn, x_errp
 
@@ -2340,10 +2349,8 @@ class TimeMapAxis:
         """Plot edges"""
         if self.time_format == "iso":
             edges = self.time_edges.to_datetime()
-        elif self.time_format == "mjd":
-            edges = self.time_edges.mjd * u.day
         else:
-            raise ValueError(f"Invalid time_format: {self.time_format}")
+            edges = self.time_edges.mjd * u.day
 
         return edges
 
@@ -2352,9 +2359,8 @@ class TimeMapAxis:
         """Plot center"""
         if self.time_format == "iso":
             center = self.time_mid.datetime
-        elif self.time_format == "mjd":
+        else:
             center = self.time_mid.mjd * u.day
-
         return center
 
     def format_plot_xaxis(self, ax):
@@ -2380,13 +2386,14 @@ class TimeMapAxis:
 
         if self.time_format == "iso":
             ax.xaxis.set_major_formatter(DateFormatter("%Y-%m-%d %H:%M:%S"))
-            plt.setp(
-                ax.xaxis.get_majorticklabels(),
-                rotation=30,
-                ha="right",
-                rotation_mode="anchor",
-            )
-
+        else:
+            ax.xaxis.set_major_formatter("{x:,.5f}")
+        plt.setp(
+            ax.xaxis.get_majorticklabels(),
+            rotation=30,
+            ha="right",
+            rotation_mode="anchor",
+        )
         return ax
 
     def assert_name(self, required_name):
@@ -2565,7 +2572,8 @@ class TimeMapAxis:
 
         for arg in argnames:
             value = getattr(self, "_" + arg)
-            kwargs.setdefault(arg, copy.deepcopy(value))
+            if arg not in kwargs:
+                kwargs[arg] = copy.deepcopy(value)
 
         return self.__class__(**kwargs)
 
@@ -2640,7 +2648,7 @@ class TimeMapAxis:
             The unit to convert the edges to. Default is 'd' (day).
         interp : str
             Interpolation method used to transform between axis and pixel
-            coordinates.  Valid options are 'log', 'lin', and 'sqrt'.
+            coordinates.  Currently, only 'lin' is supported.
         name : str
             Axis name
 
@@ -2696,11 +2704,27 @@ class TimeMapAxis:
         elif format == "lightcurve":
             # TODO: is this a good format? It just supports mjd...
             name = "time"
-            scale = table.meta.get("TIMESYS", "utc")
-            time_min = Time(table["time_min"].data, format="mjd", scale=scale)
-            time_max = Time(table["time_max"].data, format="mjd", scale=scale)
-            reference_time = Time("2001-01-01T00:00:00")
-            reference_time.format = "mjd"
+            time_ref_dict = dict(
+                MJDREFF=table.meta.get("MJDREFF", 0),
+                MJDREFI=table.meta.get("MJDREFI", 0),
+                TIMESYS=table.meta.get("TIMESYS", "utc"),
+                TIMEUNIT=table.meta.get("TIMEUNIT", "d"),
+            )
+            reference_time = time_ref_from_dict(time_ref_dict, format="mjd")
+            time_min = reference_time + table["time_min"].data * u.Unit(
+                time_ref_dict["TIMEUNIT"]
+            )
+            time_max = reference_time + table["time_max"].data * u.Unit(
+                time_ref_dict["TIMEUNIT"]
+            )
+
+            if reference_time.mjd == 0:
+                # change to a more recent reference time
+                reference_time = Time(
+                    "2001-01-01T00:00:00", scale=time_ref_dict["TIMESYS"]
+                )
+                reference_time.format = "mjd"
+
             edges_min = (time_min - reference_time).to("s")
             edges_max = (time_max - reference_time).to("s")
         else:
@@ -3128,4 +3152,67 @@ class LabelMapAxis:
         return self.__class__(
             labels=self._labels[idx],
             name=self.name,
+        )
+
+    @classmethod
+    def from_stack(cls, axes):
+        """Create a label map axis by merging a list of axis.
+
+        Parameter
+        ---------
+        axes : list of `LabelMapAxis`
+            A list of map axis to be merged.
+
+        Returns
+        -------
+        axis : `LabelMapAxis`
+            Merged axis.
+        """
+
+        axis_stacked = axes[0]
+
+        for ax in axes[1:]:
+            axis_stacked = axis_stacked.append(ax)
+
+        return axis_stacked
+
+    def append(self, axis):
+        """Append another label map axis to this label map axis.
+
+        Names must agree between the axes. labels must be unique.
+
+        Parameters
+        ----------
+        axis : `LabelMapAxis`
+            Axis to append.
+
+        Returns
+        -------
+        axis : `LabelMapAxis`
+            Appended axis
+        """
+        if not isinstance(axis, LabelMapAxis):
+            raise TypeError(
+                f"axis must be an instance of LabelMapAxis, got {axis.__class__.__name__} instead."
+            )
+
+        if self.name != axis.name:
+            raise ValueError(f"Names must agree, got {self.name} and {axis.name} ")
+
+        merged_labels = np.append(self.center, axis.center)
+
+        return LabelMapAxis(merged_labels, self.name)
+
+    def squash(self):
+        """Create a new axis object by squashing the axis into one bin.
+
+        The label of the new axis is given as "first-label...last-label".
+
+        Returns
+        -------
+        axis : `~MapAxis`
+            Sliced axis object.
+        """
+        return LabelMapAxis(
+            labels=[self.center[0] + "..." + self.center[-1]], name=self._name
         )

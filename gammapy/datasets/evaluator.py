@@ -8,7 +8,9 @@ from regions import CircleSkyRegion
 import matplotlib.pyplot as plt
 from gammapy.maps import HpxNDMap, Map, RegionNDMap, WcsNDMap
 from gammapy.modeling.models import PointSpatialModel, TemplateNPredModel
+from .utils import apply_edisp
 
+PSF_MAX_RADIUS = None
 PSF_CONTAINMENT = 0.999
 CUTOUT_MARGIN = 0.1 * u.deg
 
@@ -87,8 +89,6 @@ class MapEvaluator:
         self._cached_parameter_values_spatial = None
         self._cached_position = (0, 0)
         self._computation_cache = None
-        self._neval = 0  # for debugging
-        self._renorm = 1
         self._spatial_oversampling_factor = 1
         if self.exposure is not None:
             if not self.geom.is_region or self.geom.region is not None:
@@ -103,6 +103,15 @@ class MapEvaluator:
     def geom(self):
         """True energy map geometry (`~gammapy.maps.Geom`)"""
         return self.exposure.geom
+
+    @property
+    def _geom_reco(self):
+        if self.edisp is not None:
+            energy_axis = self.edisp.axes["energy"].copy(name="energy")
+        else:
+            energy_axis = self.geom.axes["energy_true"].copy(name="energy")
+        geom = self.geom.to_image().to_cube(axes=[energy_axis])
+        return geom
 
     @property
     def needs_update(self):
@@ -192,6 +201,7 @@ class MapEvaluator:
                     position=self.model.position,
                     geom=geom_psf,
                     containment=PSF_CONTAINMENT,
+                    max_radius=PSF_MAX_RADIUS,
                 )
 
         if self.evaluation_mode == "local":
@@ -348,7 +358,7 @@ class MapEvaluator:
         npred_reco : `~gammapy.maps.Map`
             Predicted counts in reco energy bins
         """
-        return npred.apply_edisp(self.edisp)
+        return apply_edisp(npred, self.edisp)
 
     @lazyproperty
     def _compute_npred(self):
@@ -356,7 +366,12 @@ class MapEvaluator:
         if isinstance(self.model, TemplateNPredModel):
             npred = self.model.evaluate()
         else:
-            if not self.parameter_norm_only_changed:
+            if (
+                self._norm_idx is not None
+                and self.model.parameters.value[self._norm_idx] == 0
+            ):
+                npred = Map.from_geom(self._geom_reco, data=0)
+            elif not self.parameter_norm_only_changed or not self.use_cache:
                 for method in self.methods_sequence:
                     values = method(self._computation_cache)
                     self._computation_cache = values
@@ -403,9 +418,9 @@ class MapEvaluator:
         norm_only_changed = False
         idx = self._norm_idx
         values = self.model.parameters.value
-        if idx and self._computation_cache is not None:
-            changed = self._cached_parameter_values_previous == values
-            norm_only_changed = sum(changed) == 1 and changed[idx]
+        if idx is not None and self._computation_cache is not None:
+            changed = self._cached_parameter_values_previous != values
+            norm_only_changed = np.count_nonzero(changed) == 1 and changed[idx]
 
         if not norm_only_changed:
             self._cached_parameter_values_previous = values

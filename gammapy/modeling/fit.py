@@ -2,8 +2,8 @@
 import itertools
 import logging
 import numpy as np
+from astropy.table import Table
 from gammapy.utils.pbar import progress_bar
-from gammapy.utils.table import table_from_row_data
 from .covariance import Covariance
 from .iminuit import (
     confidence_iminuit,
@@ -217,7 +217,7 @@ class Fit:
             self._minuit = optimizer
             kwargs["method"] = "migrad"
 
-        trace = table_from_row_data(info.pop("trace"))
+        trace = Table(info.pop("trace"))
 
         if self.store_trace:
             idx = [

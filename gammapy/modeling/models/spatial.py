@@ -20,7 +20,9 @@ import matplotlib.pyplot as plt
 from gammapy.maps import Map, WcsGeom
 from gammapy.modeling import Parameter
 from gammapy.modeling.covariance import copy_covariance
+from gammapy.utils.deprecation import deprecated
 from gammapy.utils.gauss import Gauss2DPDF
+from gammapy.utils.regions import region_circle_to_ellipse, region_to_frame
 from gammapy.utils.scripts import make_path
 from .core import ModelBase
 
@@ -300,7 +302,31 @@ class SpatialModel(ModelBase):
             )
         return m.plot(ax=ax, **kwargs)
 
+    @deprecated("v1.0.1", alternative="plot_interactive")
     def plot_interative(self, ax=None, geom=None, **kwargs):
+        """Plot spatial model.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes`, optional
+            Axis
+        geom : `~gammapy.maps.WcsGeom`, optional
+            Geom to use for plotting.
+        **kwargs : dict
+            Keyword arguments passed to `~gammapy.maps.WcsMap.plot()`
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`, optional
+            Axis
+        """
+
+        m = self._get_plot_map(geom)
+        if m.geom.is_image:
+            raise TypeError("Use .plot() for 2D Maps")
+        m.plot_interactive(ax=ax, **kwargs)
+
+    def plot_interactive(self, ax=None, geom=None, **kwargs):
         """Plot spatial model.
 
         Parameters
@@ -381,7 +407,7 @@ class SpatialModel(ModelBase):
     @classmethod
     def from_position(cls, position, **kwargs):
         """Define the position of the model using a sky coord
-
+           The model will be created in the frame of the sky coord
         Parameters
         ----------
         position : `~astropy.coordinates.SkyCoord`
@@ -393,7 +419,7 @@ class SpatialModel(ModelBase):
             Spatial model
         """
         lon_0, lat_0 = position.data.lon, position.data.lat
-        return cls(lon_0=lon_0, lat_0=lat_0, frame=position.frame, **kwargs)
+        return cls(lon_0=lon_0, lat_0=lat_0, frame=position.frame.name, **kwargs)
 
     @property
     def evaluation_radius(self):
@@ -775,6 +801,43 @@ class DiskSpatialModel(SpatialModel):
             **kwargs,
         )
 
+    @classmethod
+    def from_region(cls, region, **kwargs):
+        """Create a `DiskSpatialModel from a ~regions.EllipseSkyRegion`
+
+        Parameters
+        ----------
+        region : `~regions.EllipseSkyRegion` or ~regions.CircleSkyRegion`
+            region to create model from
+        kwargs : keywords passed to `~gammapy.modeling.models.DiskSpatialModel`
+
+        Returns
+        -------
+        spatial_model : `~gammapy.modeling.models.DiskSpatialModel`
+        """
+        if isinstance(region, CircleSkyRegion):
+            region = region_circle_to_ellipse(region)
+        if not isinstance(region, EllipseSkyRegion):
+            raise ValueError(
+                f"Please provide a `CircleSkyRegion` "
+                f"or `EllipseSkyRegion`, got {type(region)} instead."
+            )
+        frame = kwargs.pop("frame", region.center.frame)
+        region = region_to_frame(region, frame=frame)
+
+        if region.height > region.width:
+            major_axis, minor_axis = region.height, region.width
+            phi = region.angle
+        else:
+            minor_axis, major_axis = region.height, region.width
+            phi = 90 * u.deg + region.angle
+
+        kwargs.setdefault("phi", phi)
+        kwargs.setdefault("e", np.sqrt(1.0 - np.power(minor_axis / major_axis, 2)))
+        kwargs.setdefault("r_0", major_axis / 2.0)
+
+        return cls.from_position(region.center, **kwargs)
+
 
 class ShellSpatialModel(SpatialModel):
     r"""Shell model.
@@ -1023,7 +1086,7 @@ class TemplateSpatialModel(SpatialModel):
         Normalize the input map so that it integrates to unity.
     interp_kwargs : dict
         Interpolation keyword arguments passed to `gammapy.maps.Map.interp_by_coord`.
-        Default arguments are {'method': 'linear', 'fill_value': 0}.
+        Default arguments are {'method': 'linear', 'fill_value': 0, "values_scale": "log"}.
     Filename : str
         Name of the map file
     copy_data : bool
@@ -1076,6 +1139,7 @@ class TemplateSpatialModel(SpatialModel):
         interp_kwargs = {} if interp_kwargs is None else interp_kwargs
         interp_kwargs.setdefault("method", "linear")
         interp_kwargs.setdefault("fill_value", 0)
+        interp_kwargs.setdefault("values_scale", "log")
 
         self._interp_kwargs = interp_kwargs
         self.filename = filename
@@ -1208,7 +1272,13 @@ class TemplateSpatialModel(SpatialModel):
             geom = self.map.geom
         super().plot(ax=ax, geom=geom, **kwargs)
 
+    @deprecated("v1.0.1", alternative="plot_interactive")
     def plot_interative(self, ax=None, geom=None, **kwargs):
         if geom is None:
             geom = self.map.geom
-        super().plot_interative(ax=ax, geom=geom, **kwargs)
+        super().plot_interactive(ax=ax, geom=geom, **kwargs)
+
+    def plot_interactive(self, ax=None, geom=None, **kwargs):
+        if geom is None:
+            geom = self.map.geom
+        super().plot_interactive(ax=ax, geom=geom, **kwargs)

@@ -3,6 +3,7 @@ import collections.abc
 import copy
 import inspect
 import logging
+import warnings
 from itertools import zip_longest
 import numpy as np
 import astropy.units as u
@@ -13,6 +14,7 @@ from astropy.units import Quantity
 from astropy.utils import lazyproperty
 import matplotlib.pyplot as plt
 from gammapy import __version__
+from gammapy.utils.deprecation import GammapyDeprecationWarning, deprecated
 from gammapy.utils.fits import LazyFitsData, earth_location_to_dict
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
@@ -62,6 +64,7 @@ class Observation:
     _rad_max = LazyFitsData(cache=False)
     _events = LazyFitsData(cache=False)
     _gti = LazyFitsData(cache=False)
+    _pointing = LazyFitsData(cache=True)
 
     def __init__(
         self,
@@ -75,6 +78,8 @@ class Observation:
         rad_max=None,
         events=None,
         obs_filter=None,
+        pointing=None,
+        location=None,
     ):
         self.obs_id = obs_id
         self._obs_info = obs_info
@@ -85,6 +90,8 @@ class Observation:
         self._rad_max = rad_max
         self._gti = gti
         self._events = events
+        self._pointing = pointing
+        self._location = location
         self.obs_filter = obs_filter or ObservationFilter()
 
     @property
@@ -142,10 +149,12 @@ class Observation:
     ):
         """Create obs info dict from in memory data"""
         obs_info = {
-            "RA_PNT": pointing.icrs.ra.deg,
-            "DEC_PNT": pointing.icrs.dec.deg,
             "DEADC": 1 - deadtime_fraction,
         }
+        if isinstance(pointing, SkyCoord):
+            obs_info["RA_PNT"] = pointing.icrs.ra.deg
+            obs_info["DEC_PNT"] = pointing.icrs.dec.deg
+
         obs_info.update(time_ref_to_dict(reference_time))
         obs_info["TSTART"] = time_relative_to_ref(time_start, obs_info).to_value(u.s)
         obs_info["TSTOP"] = time_relative_to_ref(time_stop, obs_info).to_value(u.s)
@@ -174,8 +183,8 @@ class Observation:
 
         Parameters
         ----------
-        pointing : `~astropy.coordinates.SkyCoord`
-            Pointing position
+        pointing : `~gammapy.data.FixedPointingInfo` or `~astropy.coordinates.SkyCoord`
+            Pointing information
         obs_id : int
             Observation ID as identifier
         livetime : ~astropy.units.Quantity`
@@ -204,7 +213,6 @@ class Observation:
             tstop = tstart + Quantity(livetime)
 
         gti = GTI.create(tstart, tstop, reference_time=reference_time)
-
         obs_info = cls._get_obs_info(
             pointing=pointing,
             deadtime_fraction=deadtime_fraction,
@@ -213,6 +221,13 @@ class Observation:
             reference_time=reference_time,
             location=location,
         )
+
+        if not isinstance(pointing, FixedPointingInfo):
+            warnings.warn(
+                "Pointing will be required to be provided as FixedPointingInfo",
+                GammapyDeprecationWarning,
+            )
+            pointing = FixedPointingInfo.from_fits_header(obs_info)
 
         return cls(
             obs_id=obs_id,
@@ -223,6 +238,8 @@ class Observation:
             edisp=irfs.get("edisp"),
             psf=irfs.get("psf"),
             rad_max=irfs.get("rad_max"),
+            pointing=pointing,
+            location=location,
         )
 
     @property
@@ -234,6 +251,11 @@ class Observation:
     def tstop(self):
         """Observation stop time (`~astropy.time.Time`)."""
         return self.gti.time_stop[0]
+
+    @property
+    def tmid(self):
+        """Midpoint between start and stop time"""
+        return self.tstart + 0.5 * (self.tstop - self.tstart)
 
     @property
     def observation_time_duration(self):
@@ -286,29 +308,56 @@ class Observation:
             )
         return meta
 
+    @property
+    def pointing(self):
+        if self._pointing is None:
+            self._pointing = FixedPointingInfo.from_fits_header(self.obs_info)
+        return self._pointing
+
+    def get_pointing_altaz(self, time):
+        """Get the pointing in altaz for given time"""
+        return self.pointing.get_altaz(time, self.observatory_earth_location)
+
+    def get_pointing_icrs(self, time):
+        """Get the pointing in icrs for given time"""
+        return self.pointing.get_icrs(time, self.observatory_earth_location)
+
     @lazyproperty
+    @deprecated(
+        "v1.1",
+        message="Use observation.pointing or observation.get_pointing_{{altaz,icrs}} instead",
+    )
     def fixed_pointing_info(self):
         """Fixed pointing info for this observation (`FixedPointingInfo`)."""
-        return FixedPointingInfo(self.obs_info)
+        return self._pointing
 
     @property
+    @deprecated("v1.1", message="Use observation.get_pointing_icrs(time) instead")
     def pointing_radec(self):
         """Pointing RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)."""
         return self.fixed_pointing_info.radec
 
     @property
+    @deprecated("v1.1", message="Use observation.get_pointing_altaz(time) instead")
     def pointing_altaz(self):
         return self.fixed_pointing_info.altaz
 
     @property
+    @deprecated("v1.1", message="Use observation.get_pointing_altaz(time).zen instead")
     def pointing_zen(self):
         """Pointing zenith angle sky (`~astropy.units.Quantity`)."""
-        return self.fixed_pointing_info.altaz.zen
+        return self.get_pointing_altaz(self.tmid).zen
 
     @property
     def observatory_earth_location(self):
         """Observatory location (`~astropy.coordinates.EarthLocation`)."""
-        return self.fixed_pointing_info.location
+        if self._location is not None:
+            return self._location
+
+        # for now we catch the deprecation warning until we store location on the observation properly
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=GammapyDeprecationWarning)
+            return self.fixed_pointing_info.location
 
     @lazyproperty
     def target_radec(self):
@@ -325,8 +374,9 @@ class Observation:
         return self.obs_info.get("MUONEFF", 1)
 
     def __str__(self):
-        ra = self.pointing_radec.ra.deg
-        dec = self.pointing_radec.dec.deg
+        pointing = self.get_pointing_icrs(self.tmid)
+        ra = pointing.ra.deg
+        dec = pointing.dec.deg
 
         pointing = f"{ra:.1f} deg, {dec:.1f} deg\n"
         # TODO: Which target was observed?
@@ -460,6 +510,7 @@ class Observation:
             gti=gti,
             obs_info=obs_info,
             obs_id=obs_info.get("OBS_ID"),
+            pointing=FixedPointingInfo.from_fits_header(obs_info),
             **irf_dict,
         )
 
@@ -491,7 +542,9 @@ class Observation:
 
         events = self.events
         if events is not None:
-            hdul.append(events.to_table_hdu(format=format))
+            events_hdu = events.to_table_hdu(format=format)
+            events_hdu.header.update(self.pointing.to_fits_header())
+            hdul.append(events_hdu)
 
         gti = self.gti
         if gti is not None:
@@ -542,7 +595,11 @@ class Observation:
             argnames.remove("self")
 
             for name in argnames:
-                value = getattr(self, name)
+                if name == "location":
+                    attr = "observatory_earth_location"
+                else:
+                    attr = name
+                value = getattr(self, attr)
                 kwargs.setdefault(name, copy.deepcopy(value))
             return self.__class__(**kwargs)
 
@@ -634,6 +691,27 @@ class Observations(collections.abc.MutableSequence):
 
     def _ipython_key_completions_(self):
         return self.ids
+
+    def group_by_label(self, labels):
+        """Split obsevations in multiple groups of observations
+
+        Parameters
+        ----------
+        labels : array
+            Array of group labels
+
+        Returns
+        -------
+        obs_clusters : dict of `~gammapy.data.Observations`
+            dict of Observations instance, one instance for each group.
+        """
+        obs_groups = {}
+        for label in np.unique(labels):
+            observations = self.__class__(
+                [obs for k, obs in enumerate(self) if labels[k] == label]
+            )
+            obs_groups[f"group_{label}"] = observations
+        return obs_groups
 
 
 class ObservationChecker(Checker):

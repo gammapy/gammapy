@@ -1,12 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
+from itertools import repeat
+from multiprocessing import Pool
 import numpy as np
 from astropy import units as u
+from astropy.table import Table
 from gammapy.datasets import Datasets
 from gammapy.maps import MapAxis
 from gammapy.modeling import Fit
 from gammapy.utils.pbar import progress_bar
-from gammapy.utils.table import table_from_row_data
 from ..flux import FluxEstimator
 from .core import FluxPoints
 
@@ -62,19 +64,26 @@ class FluxPointsEstimator(FluxEstimator):
     fit : `Fit`
         Fit instance specifying the backend and fit options.
     reoptimize : bool
-        Re-optimize other free model parameters. Default is True.
+        Re-optimize other free model parameters. Default is False.
     sum_over_energy_groups : bool
         Whether to sum over the energy groups or fit the norm on the full energy
         grid.
+    n_jobs : int
+        Number of processes used in parallel for the computation.
     """
 
     tag = "FluxPointsEstimator"
 
     def __init__(
-        self, energy_edges=[1, 10] * u.TeV, sum_over_energy_groups=False, **kwargs
+        self,
+        energy_edges=[1, 10] * u.TeV,
+        sum_over_energy_groups=False,
+        n_jobs=1,
+        **kwargs,
     ):
         self.energy_edges = energy_edges
         self.sum_over_energy_groups = sum_over_energy_groups
+        self.n_jobs = n_jobs
 
         fit = Fit(confidence_opts={"backend": "scipy"})
         kwargs.setdefault("fit", fit)
@@ -107,15 +116,6 @@ class FluxPointsEstimator(FluxEstimator):
                 )
 
         rows = []
-        for energy_min, energy_max in progress_bar(
-            zip(self.energy_edges[:-1], self.energy_edges[1:]), desc="Energy bins"
-        ):
-            row = self.estimate_flux_point(
-                datasets,
-                energy_min=energy_min,
-                energy_max=energy_max,
-            )
-            rows.append(row)
 
         meta = {
             "n_sigma": self.n_sigma,
@@ -123,7 +123,28 @@ class FluxPointsEstimator(FluxEstimator):
             "sed_type_init": "likelihood",
         }
 
-        table = table_from_row_data(rows=rows, meta=meta)
+        if self.n_jobs > 1:
+            with Pool(processes=self.n_jobs) as pool:
+                rows = pool.starmap(
+                    self.estimate_flux_point,
+                    zip(
+                        repeat(datasets),
+                        self.energy_edges[:-1],
+                        self.energy_edges[1:],
+                    ),
+                )
+        else:
+            for energy_min, energy_max in progress_bar(
+                zip(self.energy_edges[:-1], self.energy_edges[1:]), desc="Energy bins"
+            ):
+                row = self.estimate_flux_point(
+                    datasets,
+                    energy_min=energy_min,
+                    energy_max=energy_max,
+                )
+                rows.append(row)
+
+        table = Table(rows, meta=meta)
         model = datasets.models[self.source]
         return FluxPoints.from_table(
             table=table,

@@ -18,6 +18,7 @@ from gammapy.irf import (
     EnergyDependentMultiGaussPSF,
     EnergyDispersion2D,
     PSFMap,
+    RecoPSFMap,
 )
 from gammapy.makers.utils import make_map_exposure_true_energy, make_psf_map
 from gammapy.maps import HpxGeom, Map, MapAxis, RegionGeom, WcsGeom, WcsNDMap
@@ -925,12 +926,21 @@ def test_stack(sky_model):
 
     assert_allclose(npred_b.data.sum(), 1459.985035, 1e-5)
     assert_allclose(stacked.npred_background().data.sum(), 1360.00, 1e-5)
+    assert_allclose(stacked.background.data.sum(), 1360, 1e-5)
     assert_allclose(stacked.counts.data.sum(), 9000, 1e-5)
     assert_allclose(stacked.mask_safe.data.sum(), 4600)
     assert_allclose(stacked.mask_fit.data.sum(), 4600)
     assert_allclose(stacked.exposure.data.sum(), 1.6e11)
 
     assert_allclose(stacked.meta_table["OBS_ID"][0], [0, 1])
+
+    # stacking when no safe masks are defined
+    dataset1 = MapDataset(counts=cnt1, background=bkg1)
+    stacked = MapDataset.from_geoms(**dataset1.geoms)
+    for i in range(3):
+        stacked.stack(dataset1)
+    assert_allclose(stacked.background.data.sum(), 2880.0, 1e-5)
+    assert_allclose(stacked.counts.data.sum(), 14400.0, 1e-5)
 
 
 @requires_data()
@@ -1864,3 +1874,8 @@ def test_peek(images):
 
     with mpl_plot_check():
         dataset.peek()
+
+
+def test_create_psf_reco(geom):
+    dat = MapDataset.create(geom, reco_psf=True)
+    assert isinstance(dat.psf, RecoPSFMap)

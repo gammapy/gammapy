@@ -4,6 +4,7 @@
 import numpy as np
 import astropy.units as u
 from astropy.nddata import NoOverlapError
+from astropy.time import Time
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Covariance, Parameters
 from gammapy.modeling.covariance import copy_covariance
@@ -92,30 +93,28 @@ class SkyModel(ModelBase):
             )
 
     def _check_unit(self):
-        from gammapy.data.gti import GTI
-
-        # evaluate over a test geom to check output unit
-        # TODO simpler way to test this ?
         axis = MapAxis.from_energy_bounds(
             "0.1 TeV", "10 TeV", nbin=1, name="energy_true"
         )
 
         geom = WcsGeom.create(skydir=self.position, npix=(2, 2), axes=[axis])
-
-        gti = GTI.create(1 * u.day, 2 * u.day)
-        value = self.evaluate_geom(geom, gti)
-
+        time = Time(55555, format="mjd")
         if self.apply_irf["exposure"]:
-            ref_unit = u.Unit("cm-2 s-1 MeV-1 sr-1")
+            ref_unit = u.Unit("cm-2 s-1 MeV-1")
         else:
-            ref_unit = u.Unit("sr-1")
+            ref_unit = u.Unit("")
+        obt_unit = self.spectral_model(axis.center).unit
 
-        if self.spatial_model is None:
-            ref_unit = ref_unit / u.Unit("sr-1")
+        if self.spatial_model:
+            obt_unit = obt_unit * self.spatial_model.evaluate_geom(geom).unit
+            ref_unit = ref_unit / u.sr
 
-        if not value.unit.is_equivalent(ref_unit):
+        if self.temporal_model:
+            obt_unit = obt_unit * u.Quantity(self.temporal_model(time)).unit
+
+        if not obt_unit.is_equivalent(ref_unit):
             raise ValueError(
-                f"SkyModel unit {value.unit} is not equivalent to {ref_unit}"
+                f"SkyModel unit {obt_unit} is not equivalent to {ref_unit}"
             )
 
     @property
@@ -588,14 +587,17 @@ class FoVBackgroundModel(ModelBase):
     ----------
     spectral_model : `~gammapy.modeling.models.SpectralModel`
         Normalized spectral model.
+        Default is `~gammapy.modeling.models.PowerLawNormSpectralModel`
     dataset_name : str
         Dataset name
-
+    spatial_model : `~gammapy.modeling.models.SpatialModel`
+        Unitless Spatial model (unit is dropped on evaluation if defined).
+        Default is None.
     """
 
     tag = ["FoVBackgroundModel", "fov-bkg"]
 
-    def __init__(self, spectral_model=None, dataset_name=None):
+    def __init__(self, spectral_model=None, dataset_name=None, spatial_model=None):
         if dataset_name is None:
             raise ValueError("Dataset name a is required argument")
 
@@ -607,6 +609,7 @@ class FoVBackgroundModel(ModelBase):
         if not spectral_model.is_norm_spectral_model:
             raise ValueError("A norm spectral model is required.")
 
+        self._spatial_model = spatial_model
         self._spectral_model = spectral_model
         super().__init__()
 
@@ -619,6 +622,11 @@ class FoVBackgroundModel(ModelBase):
     def spectral_model(self):
         """Spectral norm model"""
         return self._spectral_model
+
+    @property
+    def spatial_model(self):
+        """Spatial norm model"""
+        return self._spatial_model
 
     @property
     def name(self):
@@ -651,11 +659,23 @@ class FoVBackgroundModel(ModelBase):
     def evaluate_geom(self, geom):
         """Evaluate map"""
         coords = geom.get_coord(sparse=True)
-        return self.evaluate(energy=coords["energy"])
+        return self.evaluate(**coords._data)
 
-    def evaluate(self, energy):
+    def evaluate(self, energy, lon=None, lat=None):
         """Evaluate model"""
-        return self.spectral_model(energy)
+        value = self.spectral_model(energy)
+        if self.spatial_model is not None:
+            if lon is not None and lat is not None:
+                if self.spatial_model.is_energy_dependent:
+                    return self.spatial_model(lon, lat, energy).value * value
+                else:
+                    return self.spatial_model(lon, lat).value * value
+            else:
+                raise ValueError(
+                    "lon and lat are required if a spatial model is defined"
+                )
+        else:
+            return value
 
     @copy_covariance
     def copy(self, name=None, copy_data=False, **kwargs):
@@ -683,9 +703,9 @@ class FoVBackgroundModel(ModelBase):
         data = {}
         data["type"] = self.tag[0]
         data["datasets_names"] = self.datasets_names
-        data["spectral"] = self.spectral_model.to_dict(full_output=full_output)[
-            "spectral"
-        ]
+        data.update(self.spectral_model.to_dict(full_output=full_output))
+        if self.spatial_model is not None:
+            data.update(self.spatial_model.to_dict(full_output))
         return data
 
     @classmethod
@@ -697,14 +717,24 @@ class FoVBackgroundModel(ModelBase):
         data : dict
             Data dictionary
         """
-        from gammapy.modeling.models import SPECTRAL_MODEL_REGISTRY
+        from gammapy.modeling.models import (
+            SPATIAL_MODEL_REGISTRY,
+            SPECTRAL_MODEL_REGISTRY,
+        )
 
         spectral_data = data.get("spectral")
         if spectral_data is not None:
             model_class = SPECTRAL_MODEL_REGISTRY.get_cls(spectral_data["type"])
-            spectral_model = model_class.from_dict(spectral_data)
+            spectral_model = model_class.from_dict({"spectral": spectral_data})
         else:
             spectral_model = None
+
+        spatial_data = data.get("spatial")
+        if spatial_data is not None:
+            model_class = SPATIAL_MODEL_REGISTRY.get_cls(spatial_data["type"])
+            spatial_model = model_class.from_dict(spatial_data)
+        else:
+            spatial_model = None
 
         datasets_names = data.get("datasets_names")
 
@@ -715,6 +745,7 @@ class FoVBackgroundModel(ModelBase):
             raise ValueError("FoVBackgroundModel can only be assigned to one dataset")
 
         return cls(
+            spatial_model=spatial_model,
             spectral_model=spectral_model,
             dataset_name=datasets_names[0],
         )
@@ -750,6 +781,9 @@ class TemplateNPredModel(ModelBase):
     copy_data : bool
         Create a deepcopy of the map data or directly use the original. True by
         default, can be turned to False to save memory in case of large maps.
+    spatial_model : `~gammapy.modeling.models.SpatialModel`
+        Unitless Spatial model (unit is dropped on evaluation if defined).
+        Default is None.
     """
 
     tag = "TemplateNPredModel"
@@ -763,6 +797,7 @@ class TemplateNPredModel(ModelBase):
         filename=None,
         datasets_names=None,
         copy_data=True,
+        spatial_model=None,
     ):
         if isinstance(map, Map):
             axis = map.geom.axes["energy"]
@@ -783,6 +818,7 @@ class TemplateNPredModel(ModelBase):
             spectral_model = PowerLawNormSpectralModel()
             spectral_model.tilt.frozen = True
 
+        self.spatial_model = spatial_model
         self.spectral_model = spectral_model
 
         if isinstance(datasets_names, str):
@@ -859,12 +895,17 @@ class TemplateNPredModel(ModelBase):
         """
         value = self.spectral_model(self.energy_center).value
         back_values = self.map.data * value
+        if self.spatial_model is not None:
+            value = self.spatial_model.evaluate_geom(self.map.geom).value
+            back_values *= value
         return self.map.copy(data=back_values)
 
     def to_dict(self, full_output=False):
         data = {}
         data["name"] = self.name
         data["type"] = self.tag
+        if self.spatial_model is not None:
+            data["spatial"] = self.spatial_model.to_dict(full_output)["spatial"]
         data["spectral"] = self.spectral_model.to_dict(full_output)["spectral"]
 
         if self.filename is not None:
@@ -877,15 +918,24 @@ class TemplateNPredModel(ModelBase):
 
     @classmethod
     def from_dict(cls, data):
-        from gammapy.modeling.models import SPECTRAL_MODEL_REGISTRY
+        from gammapy.modeling.models import (
+            SPATIAL_MODEL_REGISTRY,
+            SPECTRAL_MODEL_REGISTRY,
+        )
 
         spectral_data = data.get("spectral")
-
         if spectral_data is not None:
             model_class = SPECTRAL_MODEL_REGISTRY.get_cls(spectral_data["type"])
-            spectral_model = model_class.from_dict(spectral_data)
+            spectral_model = model_class.from_dict({"spectral": spectral_data})
         else:
             spectral_model = None
+
+        spatial_data = data.get("spatial")
+        if spatial_data is not None:
+            model_class = SPATIAL_MODEL_REGISTRY.get_cls(spatial_data["type"])
+            spatial_model = model_class.from_dict(spatial_data)
+        else:
+            spatial_model = None
 
         if "filename" in data:
             bkg_map = Map.read(data["filename"])
@@ -902,6 +952,7 @@ class TemplateNPredModel(ModelBase):
 
         return cls(
             map=bkg_map,
+            spatial_model=spatial_model,
             spectral_model=spectral_model,
             name=data["name"],
             datasets_names=data.get("datasets_names"),

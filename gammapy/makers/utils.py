@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
+import warnings
 import numpy as np
 from astropy.coordinates import Angle, SkyOffsetFrame
 from astropy.table import Table
@@ -109,7 +110,13 @@ def _map_spectrum_weight(map, spectrum=None):
 
 
 def make_map_background_irf(
-    pointing, ontime, bkg, geom, oversampling=None, use_region_center=True
+    pointing,
+    ontime,
+    bkg,
+    geom,
+    oversampling=None,
+    use_region_center=True,
+    obstime=None,
 ):
     """Compute background map from background IRFs.
 
@@ -130,12 +137,14 @@ def make_map_background_irf(
         Background rate model
     geom : `~gammapy.maps.WcsGeom`
         Reference geometry
-    oversampling: int
+    oversampling : int
         Oversampling factor in energy, used for the background model evaluation.
-    use_region_center: bool
+    use_region_center : bool
         If geom is a RegionGeom, whether to just
         consider the values at the region center
         or the instead the sum over the whole region
+    obstime : `~astropy.time.Time`
+        Observation time to use
 
     Returns
     -------
@@ -157,9 +166,18 @@ def make_map_background_irf(
 
     coords = {"energy": geom.axes["energy"].edges.reshape((-1, 1, 1))}
 
-    pointing_radec = (
-        pointing.radec if isinstance(pointing, FixedPointingInfo) else pointing
-    )
+    if isinstance(pointing, FixedPointingInfo):
+        # for backwards compatibility, obstime should be required
+        if obstime is None:
+            warnings.warn(
+                "Future versions of gammapy will require the obstime keyword for this function",
+                DeprecationWarning,
+            )
+            obstime = pointing.obstime
+
+        pointing_icrs = pointing.get_icrs(obstime)
+    else:
+        pointing_icrs = pointing
 
     if not use_region_center:
         image_geom = geom.to_wcs_geom().to_image()
@@ -174,24 +192,33 @@ def make_map_background_irf(
         d_omega = image_geom.solid_angle()
 
     if bkg.has_offset_axis:
-        coords["offset"] = sky_coord.separation(pointing_radec)
+        coords["offset"] = sky_coord.separation(pointing_icrs)
     else:
         if bkg.fov_alignment == FoVAlignment.ALTAZ:
             if not isinstance(pointing, FixedPointingInfo):
-                raise (
-                    TypeError,
+                raise TypeError(
                     "make_map_background_irf requires FixedPointingInfo if "
                     "BackgroundIRF.fov_alignement is ALTAZ",
                 )
-            altaz_coord = sky_coord.transform_to(pointing.altaz_frame)
+
+            # for backwards compatibility, obstime should be required
+            if obstime is None:
+                warnings.warn(
+                    "Future versions of gammapy will require the obstime keyword for this function",
+                    DeprecationWarning,
+                )
+                obstime = pointing.obstime
+
+            pointing_altaz = pointing.get_altaz(obstime)
+            altaz_coord = sky_coord.transform_to(pointing_altaz.frame)
 
             # Compute FOV coordinates of map relative to pointing
             fov_lon, fov_lat = sky_to_fov(
-                altaz_coord.az, altaz_coord.alt, pointing.altaz.az, pointing.altaz.alt
+                altaz_coord.az, altaz_coord.alt, pointing_altaz.az, pointing_altaz.alt
             )
         elif bkg.fov_alignment == FoVAlignment.RADEC:
             # Create OffsetFrame
-            frame = SkyOffsetFrame(origin=pointing_radec)
+            frame = SkyOffsetFrame(origin=pointing_icrs)
             pseudo_fov_coord = sky_coord.transform_to(frame)
             fov_lon = pseudo_fov_coord.lon
             fov_lat = pseudo_fov_coord.lat
@@ -403,20 +430,23 @@ def make_theta_squared_table(
 
     create_off = position_off is None
     for observation in observations:
-        separation = position.separation(observation.events.radec)
+        event_position = observation.events.radec
+        pointing = observation.get_pointing_icrs(observation.tmid)
+
+        separation = position.separation(event_position)
         counts, _ = np.histogram(separation**2, theta_squared_axis.edges)
         table["counts"] += counts
 
         if create_off:
             # Estimate the position of the mirror position
-            pos_angle = observation.pointing_radec.position_angle(position)
-            sep_angle = observation.pointing_radec.separation(position)
-            position_off = observation.pointing_radec.directional_offset_by(
+            pos_angle = pointing.position_angle(position)
+            sep_angle = pointing.separation(position)
+            position_off = pointing.directional_offset_by(
                 pos_angle + Angle(np.pi, "rad"), sep_angle
             )
 
         # Angular distance of the events from the mirror position
-        separation_off = position_off.separation(observation.events.radec)
+        separation_off = position_off.separation(event_position)
 
         # Extract the ON and OFF theta2 distribution from the two positions.
         counts_off, _ = np.histogram(separation_off**2, theta_squared_axis.edges)

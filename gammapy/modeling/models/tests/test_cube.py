@@ -15,9 +15,12 @@ from gammapy.maps import Map, MapAxis, RegionGeom, RegionNDMap, WcsGeom
 from gammapy.modeling import Parameter
 from gammapy.modeling.models import (
     CompoundSpectralModel,
+    ConstantSpatialModel,
     ConstantSpectralModel,
     ConstantTemporalModel,
+    FoVBackgroundModel,
     GaussianSpatialModel,
+    LightCurveTemplateTemporalModel,
     LogParabolaSpectralModel,
     Models,
     PointSpatialModel,
@@ -29,6 +32,7 @@ from gammapy.modeling.models import (
     TemplateSpatialModel,
     create_fermi_isotropic_diffuse_model,
 )
+from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import mpl_plot_check, requires_data
 
 
@@ -142,6 +146,7 @@ def sky_models_2(sky_model):
     return Models([sky_model_4, sky_model_5])
 
 
+@requires_data()
 def test_sky_model_init():
     with pytest.raises(TypeError):
         spatial_model = GaussianSpatialModel()
@@ -149,6 +154,22 @@ def test_sky_model_init():
 
     with pytest.raises(TypeError):
         SkyModel(spectral_model=PowerLawSpectralModel(), spatial_model=1234)
+
+    # test init of energy dependent temporal models
+    filename = make_path(
+        "$GAMMAPY_DATA/gravitational_waves/GW_example_DC_map_file.fits.gz"
+    )
+    temporal_model = LightCurveTemplateTemporalModel.read(filename, format="map")
+    spatial_model = PointSpatialModel()
+    spectral_model_fake = ConstantSpectralModel()
+
+    model = SkyModel(
+        spatial_model=spatial_model,
+        spectral_model=spectral_model_fake,
+        temporal_model=temporal_model,
+        name="test-source",
+    )
+    assert model.name == "test-source"
 
 
 def test_sky_model_spatial_none_io(tmpdir):
@@ -427,7 +448,7 @@ class Test_Template_with_cube:
         val = model.evaluate(0 * u.deg, 0 * u.deg, 100 * u.GeV)
         assert val.unit == "cm-2 s-1 MeV-1 sr-1"
         assert val.shape == (1,)
-        assert_allclose(val.value, 1.396424e-12, rtol=1e-5)
+        assert_allclose(val.value, 1.395156e-12, rtol=1e-5)
 
     @staticmethod
     def test_evaluation_radius(diffuse_model):
@@ -720,3 +741,64 @@ def test_sky_model_contributes_point_region():
     geom = RegionGeom.create("icrs;point(0.05, 0.05)", binsz_wcs="0.01 deg")
     mask = RegionNDMap.from_geom(geom)
     assert np.any(model.contributes(mask))
+
+
+def test_spatial_model_background(background):
+
+    geom = background.geom
+
+    spatial_model = ConstantSpatialModel(frame="galactic")
+    reference_npred = TemplateNPredModel(background, spatial_model=None).evaluate()
+    identical_npred = TemplateNPredModel(
+        background, spatial_model=spatial_model
+    ).evaluate()
+    assert_allclose(identical_npred, reference_npred)
+
+    reference = FoVBackgroundModel(
+        spatial_model=None, dataset_name="test"
+    ).evaluate_geom(geom)
+    identical = FoVBackgroundModel(
+        spatial_model=spatial_model, dataset_name="test"
+    ).evaluate_geom(geom)
+    assert_allclose(identical, reference)
+
+    spatial_model2 = ConstantSpatialModel(frame="galactic")
+    spatial_model2.value.value = 2
+    twice_npred = TemplateNPredModel(
+        background, spatial_model=spatial_model2
+    ).evaluate()
+    assert_allclose(twice_npred, reference_npred * 2)
+
+    twice = FoVBackgroundModel(
+        spatial_model=spatial_model2, dataset_name="test"
+    ).evaluate_geom(geom)
+    assert_allclose(twice, reference * 2)
+
+
+def test_spatial_model_io_background(background):
+
+    spatial_model = ConstantSpatialModel(frame="galactic")
+
+    model = TemplateNPredModel(background, spatial_model=None)
+    model_dict = model.to_dict()
+    assert "spatial" not in model_dict
+    new_model = TemplateNPredModel.from_dict(model_dict)
+    assert new_model.spatial_model is None
+
+    model = TemplateNPredModel(background, spatial_model=spatial_model)
+    model_dict = model.to_dict()
+    assert "spatial" in model_dict
+    new_model = TemplateNPredModel.from_dict(model_dict)
+    assert isinstance(new_model.spatial_model, ConstantSpatialModel)
+
+    model = FoVBackgroundModel(spatial_model=None, dataset_name="test")
+    model_dict = model.to_dict()
+    assert "spatial" not in model_dict
+    new_model = FoVBackgroundModel.from_dict(model_dict)
+    assert new_model.spatial_model is None
+
+    model = FoVBackgroundModel(spatial_model=spatial_model, dataset_name="test")
+    model_dict = model.to_dict()
+    assert "spatial" in model_dict
+    new_model = FoVBackgroundModel.from_dict(model_dict)
+    assert isinstance(new_model.spatial_model, ConstantSpatialModel)

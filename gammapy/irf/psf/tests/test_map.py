@@ -244,13 +244,16 @@ def test_sample_coord_gauss():
 def make_psf_map_obs(geom, obs):
     exposure_map = make_map_exposure_true_energy(
         geom=geom.squash(axis_name="rad"),
-        pointing=obs.pointing_radec,
+        pointing=obs.get_pointing_icrs(obs.tmid),
         aeff=obs.aeff,
         livetime=obs.observation_live_time_duration,
     )
 
     psf_map = make_psf_map(
-        geom=geom, psf=obs.psf, pointing=obs.pointing_radec, exposure_map=exposure_map
+        geom=geom,
+        psf=obs.psf,
+        pointing=obs.get_pointing_icrs(obs.tmid),
+        exposure_map=exposure_map,
     )
     return psf_map
 
@@ -564,6 +567,25 @@ def test_psf_map_reco_hawc():
     assert "energy" in reco_psf_map.psf_map.geom.axes.names
     assert reco_psf_map.energy_name == "energy"
     assert reco_psf_map.required_axes == ["rad", "energy"]
+    assert reco_psf_map.exposure_map is None
+
+    with mpl_plot_check():
+        reco_psf_map.plot_containment_radius_vs_energy()
+
+    with mpl_plot_check():
+        reco_psf_map.plot_psf_vs_rad()
+
+    assert_allclose(
+        reco_psf_map.containment_radius(0.68, [1, 2] * u.TeV),
+        [0.001, 0.43733357] * u.deg,
+    )
+
+    reco_psf_map = PSFMap.read(filename, format="gadf")
+    assert isinstance(reco_psf_map, RecoPSFMap)
+    assert "energy" in reco_psf_map.psf_map.geom.axes.names
+    assert reco_psf_map.energy_name == "energy"
+    assert reco_psf_map.required_axes == ["rad", "energy"]
+    assert reco_psf_map.exposure_map is None
 
     with mpl_plot_check():
         reco_psf_map.plot_containment_radius_vs_energy()

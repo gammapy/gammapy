@@ -47,15 +47,15 @@ the same :math:`\\theta` cut is applied at all energies and offsets, `a
 keyword <https://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/point_like/#rad-max>`__
 is added to the header of the data units containing IRF components. This
 should be used to define the size of the ON and OFF regions; \* in case
-an energy- (and offset-) dependent :math:`\theta` cut is applied, its
+an energy- (and offset-) dependent :math:`\\theta` cut is applied, its
 values are stored in additional `FITS` data unit, named
 ``RAD_MAX_2D` <https://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/point_like/#rad-max-2d>`__.
 
 `Gammapy` provides a class to automatically read these values,
 `~gammapy.irf.RadMax2D`, for both cases (fixed or energy-dependent
-:math:`\theta` cut). In this notebook we will focus on how to perform a
+:math:`\\theta` cut). In this notebook we will focus on how to perform a
 spectral extraction with a point-like IRF with an energy-dependent
-:math:`\theta` cut. We remark that in this case a
+:math:`\\theta` cut. We remark that in this case a
 `~regions.PointSkyRegion` (and not a `~regions.CircleSkyRegion`)
 should be used to define the ON region. If a geometry based on a
 `~regions.PointSkyRegion` is fed to the spectra and the background
@@ -76,14 +76,14 @@ Introduction
 
 We load two MAGIC observations in the
 `gammapy-data <https://github.com/gammapy/gammapy-data>`__ containing
-IRF component with a :math:`\theta` cut.
+IRF component with a :math:`\\theta` cut.
 
 We define the ON region, this time as a `~regions.PointSkyRegion` instead of a
 `CircleSkyRegion`, i.e. we specify only the center of our ON region.
 We create a `RegionGeom` adding to the region the estimated energy
 axis of the `~gammapy.datasets.SpectrumDataset` object we want to
 produce. The corresponding dataset maker will automatically use the
-:math:`\theta` values in `~gammapy.irf.RadMax2D` to set the
+:math:`\\theta` values in `~gammapy.irf.RadMax2D` to set the
 appropriate ON region sizes (based on the offset on the observation and
 on the estimated energy binning).
 
@@ -220,7 +220,7 @@ dataset_maker = SpectrumDatasetMaker(
     containment_correction=False, selection=["counts", "exposure", "edisp"]
 )
 
-# tell the background maker to use the WobbleRegionsFinder, let us use 1 off
+# tell the background maker to use the WobbleRegionsFinder, let us use 3 off
 region_finder = WobbleRegionsFinder(n_off_regions=3)
 bkg_maker = ReflectedRegionsBackgroundMaker(region_finder=region_finder)
 
@@ -348,5 +348,33 @@ crab_magic_lp.plot(ls="--", lw=1.5, color="k", label="MAGIC reference", **plot_k
 ax.legend()
 ax.set_ylim([1e-13, 1e-10])
 plt.show()
+
+
+######################################################################
+# Dataset simulations
+# -------------------
+#
+# A common way to check if a fit is biased is to simulate multiple datasets with
+# the obtained best fit model, and check the distribution of the fitted parameters.
+# Here, we show how to perform one such simulation assuming the measured off counts provide a good distribution of the background.
+#
+
+dataset_simulated = datasets.stack_reduce().copy(name="simulated_ds")
+simulated_model = best_fit_model.copy(name="simulated")
+dataset_simulated.models = simulated_model
+dataset_simulated.fake(
+    npred_background=dataset_simulated.counts_off * dataset_simulated.alpha
+)
+plt.figure()
+dataset_simulated.peek()
+plt.show()
+
+# The important thing to note here is that while this samples the on-counts, the off counts are
+# not sampled. If you have multiple measurements of the off counts, they should be used.
+# Alternatively, you can try to create a parametric model of the background.
+
+result = fit.run(datasets=[dataset_simulated])
+print(result.models.to_parameters_table())
+
 
 # sphinx_gallery_thumbnail_number = 4

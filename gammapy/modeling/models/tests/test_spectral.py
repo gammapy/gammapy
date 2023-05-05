@@ -437,26 +437,34 @@ def test_model_plot_sed_type():
     with mpl_plot_check():
         ax1 = pwl.plot((1 * u.TeV, 100 * u.TeV), sed_type="dnde")
         ax2 = pwl.plot_error((1 * u.TeV, 100 * u.TeV), sed_type="dnde")
-        assert ax1.axes.axes.get_ylabel() == "dnde [1 / (cm2 s TeV)]"
-        assert ax2.axes.axes.get_ylabel() == "dnde [1 / (cm2 s TeV)]"
+        assert ax1.yaxis.units == u.Unit("1 / (s cm2 TeV)")
+        assert ax1.axes.axes.get_ylabel().split()[0] == "dnde"
+        assert ax2.yaxis.units == u.Unit("1 / (s cm2 TeV)")
+        assert ax2.axes.axes.get_ylabel().split()[0] == "dnde"
 
     with mpl_plot_check():
         ax1 = pwl.plot((1 * u.TeV, 100 * u.TeV), sed_type="e2dnde")
         ax2 = pwl.plot_error((1 * u.TeV, 100 * u.TeV), sed_type="e2dnde")
-        assert ax1.axes.axes.get_ylabel() == "e2dnde [erg / (cm2 s)]"
-        assert ax2.axes.axes.get_ylabel() == "e2dnde [erg / (cm2 s)]"
+        assert ax1.yaxis.units == u.Unit("erg / (cm2 s)")
+        assert ax1.axes.axes.get_ylabel().split()[0] == "e2dnde"
+        assert ax2.yaxis.units == u.Unit("erg / (cm2 s)")
+        assert ax2.axes.axes.get_ylabel().split()[0] == "e2dnde"
 
     with mpl_plot_check():
         ax1 = pwl.plot((1 * u.TeV, 100 * u.TeV), sed_type="flux")
         ax2 = pwl.plot_error((1 * u.TeV, 100 * u.TeV), sed_type="flux")
-        assert ax1.axes.axes.get_ylabel() == "flux [1 / (cm2 s)]"
-        assert ax2.axes.axes.get_ylabel() == "flux [1 / (cm2 s)]"
+        assert ax1.yaxis.units == u.Unit("1 / (s cm2)")
+        assert ax1.axes.axes.get_ylabel().split()[0] == "flux"
+        assert ax2.yaxis.units == u.Unit("1 / (s cm2)")
+        assert ax2.axes.axes.get_ylabel().split()[0] == "flux"
 
     with mpl_plot_check():
         ax1 = pwl.plot((1 * u.TeV, 100 * u.TeV), sed_type="eflux")
         ax2 = pwl.plot_error((1 * u.TeV, 100 * u.TeV), sed_type="eflux")
-        assert ax1.axes.axes.get_ylabel() == "eflux [erg / (cm2 s)]"
-        assert ax2.axes.axes.get_ylabel() == "eflux [erg / (cm2 s)]"
+        assert ax1.yaxis.units == u.Unit("erg / (cm2 s)")
+        assert ax1.axes.axes.get_ylabel().split()[0] == "eflux"
+        assert ax2.yaxis.units == u.Unit("erg / (cm2 s)")
+        assert ax2.axes.axes.get_ylabel().split()[0] == "eflux"
 
 
 def test_to_from_dict():
@@ -953,6 +961,18 @@ class TestSpectralModelErrorPropagation:
         assert_allclose(out.data, [4.119e-11, 8.157e-12], rtol=1e-3)
 
 
+def test_logpar_index_error():
+    model = LogParabolaSpectralModel(
+        amplitude=3.81e-11 / u.cm**2 / u.s / u.TeV,
+        reference=1 * u.TeV,
+        alpha=2.19,
+        beta=0.226,
+    )
+    model.alpha.error = 0.4
+    out = model.spectral_index_error(energy=1.0 * u.TeV)
+    assert_allclose(out, [2.19, 0.4], rtol=1e-3)
+
+
 def test_dnde_error_ecpl_model():
     # Regression test for ECPL model
     # https://github.com/gammapy/gammapy/issues/2007
@@ -1150,3 +1170,9 @@ def test_template_ND_EBL(tmpdir):
     assert_allclose(template_new.map.data, region_map.data)
     assert len(template.parameters) == 1
     assert_allclose(template.parameters["redshift"].value, 0.1)
+
+
+def test_is_norm_spectral_models():
+    for test_model in TEST_MODELS:
+        m = test_model["model"]
+        assert np.any([p.is_norm for p in m.parameters])

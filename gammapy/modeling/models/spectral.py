@@ -524,8 +524,9 @@ class SpectralModel(ModelBase):
         ----------
         energy : `~astropy.units.Quantity`
             Energy at which to estimate the index
-        epsilon : float
+        epsilon : float, optional
             Fractional energy increment to use for determining the spectral index.
+            default = 1e-5
 
         Returns
         -------
@@ -535,6 +536,26 @@ class SpectralModel(ModelBase):
         f1 = self(energy)
         f2 = self(energy * (1 + epsilon))
         return np.log(f1 / f2) / np.log(1 + epsilon)
+
+    def spectral_index_error(self, energy, epsilon=1e-5):
+        """Evaluate the error on spectral index at the given energy
+
+        Parameters
+        ----------
+        energy : `~astropy.units.Quantity`
+            Energy at which to estimate the index
+        epsilon : float, optional
+            Fractional energy increment to use for determining the spectral index
+            default = 1e-5
+
+        Returns
+        -------
+        index, index_error : tuple of float
+            Estimated spectral index and its error
+        """
+        return self._propagate_error(
+            epsilon=epsilon, fct=self.spectral_index, energy=energy
+        )
 
     def inverse(self, value, energy_min=0.1 * u.TeV, energy_max=100 * u.TeV):
         """Return energy for a given function value of the spectral model.
@@ -1098,6 +1119,9 @@ class PiecewiseNormSpectralModel(SpectralModel):
     def __init__(self, energy, norms=None, interp="log"):
         self._energy = energy
         self._interp = interp
+        self._norm = Parameter(
+            "_norm", 1, unit="", interp="log", is_norm=True, frozen=True
+        )
 
         if norms is None:
             norms = np.ones(len(energy))
@@ -1108,14 +1132,15 @@ class PiecewiseNormSpectralModel(SpectralModel):
         if len(norms) < 2:
             raise ValueError("Input arrays must contain at least 2 elements")
 
+        parameters_list = [self._norm]
         if not isinstance(norms[0], Parameter):
-            parameters = Parameters(
-                [Parameter(f"norm_{k}", norm) for k, norm in enumerate(norms)]
-            )
+            parameters_list += [
+                Parameter(f"norm_{k}", norm) for k, norm in enumerate(norms)
+            ]
         else:
-            parameters = Parameters(norms)
+            parameters_list += norms
 
-        self.default_parameters = parameters
+        self.default_parameters = Parameters(parameters_list)
         super().__init__()
 
     @property
@@ -1126,7 +1151,7 @@ class PiecewiseNormSpectralModel(SpectralModel):
     @property
     def norms(self):
         """Norm values"""
-        return u.Quantity(self.parameters.value)
+        return u.Quantity([p.value for p in self.parameters if p.name != "_norm"])
 
     def evaluate(self, energy, **norms):
         scale = interpolation_scale(scale=self._interp)
@@ -1134,10 +1159,12 @@ class PiecewiseNormSpectralModel(SpectralModel):
         e_nodes = scale(self.energy.to(energy.unit).value)
         v_nodes = scale(self.norms)
         log_interp = scale.inverse(np.interp(e_eval, e_nodes, v_nodes))
-        return log_interp
+        return self._norm.quantity * log_interp
 
     def to_dict(self, full_output=False):
         data = super().to_dict(full_output=full_output)
+        if data["spectral"]["parameters"][0]["name"] == "_norm":
+            data["spectral"]["parameters"].pop(0)
         data["spectral"]["energy"] = {
             "data": self.energy.data.tolist(),
             "unit": str(self.energy.unit),
@@ -2205,13 +2232,13 @@ class GaussianSpectralModel(SpectralModel):
         r"""Integrate Gaussian analytically.
 
         .. math::
-            F(E_{min}, E_{max}) = \frac{N_0}{2} \left[ erf(\frac{E - \bar{E}}{\sqrt{2} \sigma})\right]_{E_{min}}^{E_{max}}  # noqa: E501
+            F(E_{min}, E_{max}) = \frac{N_0}{2} \left[ erf(\frac{E - \bar{E}}{\sqrt{2} \sigma})\right]_{E_{min}}^{E_{max}}
 
         Parameters
         ----------
         energy_min, energy_max : `~astropy.units.Quantity`
             Lower and upper bound of integration range
-        """
+        """  # noqa: E501
         # kwargs are passed to this function but not used
         # this is to get a consistent API with SpectralModel.integral()
         u_min = (
@@ -2231,8 +2258,8 @@ class GaussianSpectralModel(SpectralModel):
         r"""Compute energy flux in given energy range analytically.
 
         .. math::
-            G(E_{min}, E_{max}) =  \frac{N_0 \sigma}{\sqrt{2*\pi}}* \left[ - \exp(\frac{E_{min}-\bar{E}}{\sqrt{2} \sigma})   # noqa: E501
-            \right]_{E_{min}}^{E_{max}} + \frac{N_0 * \bar{E}}{2} \left[ erf(\frac{E - \bar{E}}{\sqrt{2} \sigma})   # noqa: E501
+            G(E_{min}, E_{max}) =  \frac{N_0 \sigma}{\sqrt{2*\pi}}* \left[ - \exp(\frac{E_{min}-\bar{E}}{\sqrt{2} \sigma})
+            \right]_{E_{min}}^{E_{max}} + \frac{N_0 * \bar{E}}{2} \left[ erf(\frac{E - \bar{E}}{\sqrt{2} \sigma})
              \right]_{E_{min}}^{E_{max}}
 
 
@@ -2240,7 +2267,7 @@ class GaussianSpectralModel(SpectralModel):
         ----------
         energy_min, energy_max : `~astropy.units.Quantity`
             Lower and upper bound of integration range.
-        """
+        """  # noqa: E501
         u_min = (
             (energy_min - self.mean.quantity) / (np.sqrt(2) * self.sigma.quantity)
         ).to_value("")

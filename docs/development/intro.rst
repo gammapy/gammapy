@@ -56,7 +56,7 @@ Four solutions exist:
 2. You can sign each of your commits with the command: "``git commit -s``".
 
 If you have authored a commit that is missing its ‘Signed-off-by’ line, you can amend your commits and push them to
-GitHub: "``git commit --amend --noedit --signoff``"
+GitHub: "``git commit --amend --no-edit --signoff``"
 (see also this `How To <https://github.com/src-d/guide/blob/master/developer-community/fix-DCO.md#how-to-add-sign-offs-retroactively>`_).
 
 3. You can make an alias of the command "``git commit -s``", e.g.
@@ -191,7 +191,7 @@ environment with the content present in `environment-dev.yml` see below:
 
 .. code-block:: bash
 
-    $ conda env update environment-dev.yml --prune
+    $ conda env update --file environment-dev.yml --prune
 
 
 When developing Gammapy you never want to work on the ``master`` branch, but
