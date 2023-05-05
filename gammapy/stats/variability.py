@@ -2,9 +2,17 @@
 import numpy as np
 import scipy.stats as stats
 
-__all__ = ["compute_fvar", "weighted_fvar", "compute_fpp", "compute_2time", "compute_etime",
-           'compute_chisq', 'lc_fvar',
-           "lc_fpp", "eval_lc_timing"]
+__all__ = [
+    "compute_fvar",
+    "weighted_fvar",
+    "compute_fpp",
+    "compute_2time",
+    "compute_etime",
+    'compute_chisq',
+    'lc_fvar',
+    "lc_fpp",
+    "eval_lc_timing",
+]
 
 
 def compute_fvar(flux, flux_err):
@@ -47,13 +55,13 @@ def compute_fvar(flux, flux_err):
     flux_mean = np.mean(flux)
     n_points = len(flux)
 
-    s_square = np.sum((flux - flux_mean) ** 2) / (n_points - 1)
-    sig_square = np.nansum(flux_err ** 2) / n_points
+    s_square = np.sum((flux - flux_mean)**2) / (n_points - 1)
+    sig_square = np.nansum(flux_err**2) / n_points
     fvar = np.sqrt(np.abs(s_square - sig_square)) / flux_mean
 
-    sigxserr_a = np.sqrt(2 / n_points) * sig_square / flux_mean ** 2
+    sigxserr_a = np.sqrt(2 / n_points) * sig_square / flux_mean**2
     sigxserr_b = np.sqrt(sig_square / n_points) * (2 * fvar / flux_mean)
-    sigxserr = np.sqrt(sigxserr_a ** 2 + sigxserr_b ** 2)
+    sigxserr = np.sqrt(sigxserr_a**2 + sigxserr_b**2)
     fvar_err = sigxserr / (2 * fvar)
 
     return fvar, fvar_err
@@ -103,13 +111,13 @@ def weighted_fvar(flux, flux_err, time):
     flux_mean = np.average(flux, weights=time.jd)
     interval = np.sum(time.jd)
 
-    s_square = (interval / (interval ** 2 - np.sum(time.jd ** 2))) * np.sum(time.jd * (flux - flux_mean) ** 2)
-    sig_square = np.nansum(time.jd * flux_err ** 2) / interval
+    s_square = (interval / (interval**2 - np.sum(time.jd**2))) * np.sum(time.jd * (flux - flux_mean)**2)
+    sig_square = np.nansum(time.jd * flux_err**2) / interval
     fvar = np.sqrt(np.abs(s_square - sig_square)) / flux_mean
 
-    sigxserr_a = np.sqrt(2 / interval) * sig_square / flux_mean ** 2
+    sigxserr_a = np.sqrt(2 / interval) * sig_square / flux_mean**2
     sigxserr_b = np.sqrt(sig_square / interval) * (2 * fvar / flux_mean)
-    sigxserr = np.sqrt(sigxserr_a ** 2 + sigxserr_b ** 2)
+    sigxserr = np.sqrt(sigxserr_a**2 + sigxserr_b**2)
     fvar_err = sigxserr / (2 * fvar)
 
     return fvar, fvar_err
@@ -153,8 +161,8 @@ def compute_fpp(flux, flux_err):
     flux_mean = np.mean(flux)
     n_points = len(flux)
 
-    s_square = np.sum((flux[1:] - flux[:-1]) ** 2) / (2 * (n_points - 1))
-    sig_square = np.nansum(flux_err ** 2) / n_points
+    s_square = np.sum((flux[1:] - flux[:-1])**2) / (2 * (n_points - 1))
+    sig_square = np.nansum(flux_err**2) / n_points
     fpp = np.sqrt(np.abs(s_square - sig_square)) / flux_mean
 
     return fpp
