@@ -11,7 +11,8 @@ from .variability import (
     compute_chisq,
     lc_fpp,
     lc_fvar,
-    eval_lc_timing)
+    eval_lc_timing,
+)
 
 from .fit_statistics_cython import (
     cash_sum_cython,
