@@ -50,21 +50,77 @@ The EventDataset still contains all the reconstructed properties of the events (
 * Energy-temporal analysis
 * ..
 
-Implementation
-==============
-EventDataset:
 
-**********************************
-**********************************
+Class requirements 
+==================
+* Individual event information (position, energy, time); therefore the ``EventList`` seems to be a good choice
+* IRF information (should support time dependence) 
+  General requirement: Memory usage of the IRFs should not be too big, e.g. we only want to store the IRFs at the resolution of the instrument. Also, building of the kernel should be fast for many events and fine integration grids. 
+  Open question: Do we want projected IRFs?
+  Pros/Cons: 
+  
+  * "+" Could use existing classes
+  * "+" Memory consumption is under control
+  * "-" Would require binning
+  * "-" Implementation of time dependence is not straightforward
+  * "-" Information loss due to interpolations
+        
+  In case we use projected IRFs we should only support the ``EDispMap`` and ``PSFMap`` and not the "kernel" version of those for simplicity and precision
+  
+  Alternatives:
+  
+  1. Event-wise IRFs: Interpolate unprojected IRFs to the event coordinates
+       * "+" Processing for the UnbinnedEvaluator would be fast
+       * "+" No information loss 
+       * "-" Classes would need to be implemented
+       * "-" Might be too memory intensive esp. in cases of many events that are close to each other (that could use the same binned IRF)
+        
+  2. Unprojected IRFs: Information of the observation
+       * "+" No information loss
+       * "+" Classes exist
+       * "+" Fast to build the Dataset
+       * "-" Slow to build the kernels for each event
+       * "-" Cannot inherit from MapDataset (might complicate stacking)
+       
+* Want to store and evaluate models using an UnbinnedEvaluator. 
+* Which "convenience fucntions" similar to the ``MapDataset``: 
 
-* DL4 (Eventlist + projected IRFs)
-* We need a maker class
-* Models
-* unbinned likelihood (stat_sum)
-`$-2 \\log \\mathcal{L} =  2 N_{pred} - 2 \\sum_{i} \\log \\phi( E_i, \\vec{r}_i )$`
+  * copy: Can be inherited?
+  * create: Modification needed wrt ``MapDataset``
+  * cutout: Modification needed wrt ``MapDataset``
+  * downsample: Only meaningful in case we use projected IRFs; then modifications needed
+  * fake: Yes, but use EventSampler
+  * I/O operations: Yes, if we support stacking and projected IRFs. If the production of the datasets is fast writing only makes sense for the models which can be done separately
+  * from_geoms: Only meaningful in case we use projected IRFs)
+  * npred (npred_*): Need to return a list with event response (npred at event's coordinates) and integrated npred inside the mask. Right now this is simply an array/quantity. A masks allows mapping to the whole event list as the model is only evaluated for contributing events. One might also think about returning a ``MapCoord`` with the response as a coordinate but right now I don't really see the advantage compared to a simple array.
+  * pad: not needed 
+  * residuals/visualisation: Want to have "on the fly" binning of the events and inherit the functions
+  * resample_energyAxis: Can be inherited. Mostly relevant for the mask as we don't use reco binning otherwise.
+  * slice_by_energy: Needs slight modifications. We could slice the mask and group the events according to the slices. Or build a new mask based on the slices. Maybe usefull for the computation of flux points.
+  * slice_by_index: Could be done based on the binning of the mask
+  * stack: Makes sense in case of many observations under similar IRFs with few events (e.g. high energy). Note: Stacking is not expected to increase the speed of the analysis. Thus it mostly makes sense if you want to serialise. 
+  * stat_array + stat_sum: Modification needed wrt ``MapDataset``. Use the unbinned likelihood (see below). ``stat_array`` might not make sense because of the 0-dimensional Npred term.
+  * to_image: only for visualisation
+  * to_masked: Modification needed wrt ``MapDataset`` and would require stack to be implemented. 
+  * to_region_map_dataset/ to_spectrum_dataset: Want to have links to binned datasets as well as 1D datasets. 
     
+  All in all, many methods are useful but need adaptation. Need to discuss how to avoid code duplication while maintaining transparency. 
+  
+
+(Current) Implementation
+==============
+EventDataset:  Inherits from gammapy.Datasets.Dataset 
+
+**********************************
+**********************************
+
+* DL4: ``EventList`` + projected IRFs (``PSFMap``, ``EDispMap``) + exposure and background map
+* We need a maker class (which basically uses the ``MapDatasetMaker`` + adding the Eventlist instead of building the counts cube)
+* Models: ``SkyModel`` for the background, ``FoVBackgroundModel`` 
+* unbinned likelihood (stat_sum): `$-2 \\log \\mathcal{L} =  2 N_{pred} - 2 \\sum_{i} \\log \\phi( E_i, \\vec{r}_i )$` 
 * Binned Dataset functionality: create, downsample (the IRFs), pad, plotting, .to and .from methods, ...
 * No need for slices
+* Mask in reconstructed coordinates ``WcsNDMap``
 
 EventDatasetEvaluator:
 
@@ -72,7 +128,7 @@ EventDatasetEvaluator:
 **********************************
 
 * Takes: One model + IRFs + Events
-* Returns differential model flux at event's position, the total model flux inside the mask
+* Returns differential model flux at event's position, the total model flux inside the mask. Returns [``numpy.array``, float] where the array shape corresonds to (N_event,) and N_event is the number of events contributing to that model.
 * Uses Event kernels for the integration grid which are computed (ideally) once and stored
 
 (Alternatives)
@@ -85,8 +141,15 @@ the binned version.
 
 Status
 ======
-We are working on it :)
+We implemented a first prototype of the EventDataset class (which does not inherit from the ``MapDataset``) including a maker (EventDatasetMaker) and evaluator (UnbinnedEvaluator) class. The code can be found here: https://github.com/gammapy/gammapy-unbinned-analysis/tree/main/EventDataset.
 
+
+Things that would need implementing:
+
+* Time-dependent evaluator
+* 1-D evaluator
+* Unit tests
+* Benchmarks
 
 Outlook
 =======
