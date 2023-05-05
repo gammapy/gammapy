@@ -819,20 +819,20 @@ def test_rename_axes():
     assert new_map.geom.axes.names == ["energy_true", "time"]
 
 
-def test_move_axis_fail():
+def test_reorder_axes_fail():
     axis1 = MapAxis.from_edges((0, 1, 3), name="axis1")
     axis2 = MapAxis.from_edges((0, 1, 2, 3, 4), name="axis2")
 
     some_map = RegionNDMap.create(region=None, axes=[axis1, axis2])
 
     with pytest.raises(ValueError):
-        some_map.move_axis(["axis3", "axis1"])
+        some_map.reorder_axes(["axis3", "axis1"])
 
     with pytest.raises(ValueError):
-        some_map.move_axis("axis3")
+        some_map.reorder_axes("axis3")
 
 
-def test_move_axis():
+def test_reorder_axes():
     axis1 = MapAxis.from_edges((0, 1, 3), name="axis1")
     axis2 = MapAxis.from_edges((0, 1, 2, 3, 4), name="axis2")
     axis3 = MapAxis.from_edges((0, 1, 2, 3), name="axis3")
@@ -841,7 +841,7 @@ def test_move_axis():
 
     some_map.data[:, 1, :] = 1
 
-    new_map = some_map.move_axis(["axis2", "axis1", "axis3"])
+    new_map = some_map.reorder_axes(["axis2", "axis1", "axis3"])
 
     assert new_map.geom.axes.names == ["axis2", "axis1", "axis3"]
     assert new_map.geom.data_shape == (3, 2, 4, 1, 1)

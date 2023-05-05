@@ -1911,7 +1911,7 @@ class Map(abc.ABC):
 
         return MapCoord.create(cdict, frame=self.geom.frame)
 
-    def move_axis(self, axes_names):
+    def reorder_axes(self, axes_names):
         """Return a new map re-ordering the non-spatial axes order.
 
         Parameters
