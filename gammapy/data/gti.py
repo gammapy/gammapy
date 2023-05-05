@@ -11,6 +11,8 @@ from gammapy.utils.time import time_ref_from_dict, time_ref_to_dict
 
 __all__ = ["GTI"]
 
+TIME_REF_DEFAULT = Time("2000-01-01", scale="tt")
+
 
 class GTI:
     """Good time intervals (GTI) `~astropy.table.Table`.
@@ -25,6 +27,10 @@ class GTI:
     ----------
     table : `~astropy.table.Table`
         GTI table
+    reference_time : `~astropy.time.Time`
+        the reference time
+        If None, use TIME_REF_DEFAULT.
+        Default is None
 
     Examples
     --------
@@ -54,9 +60,11 @@ class GTI:
     - Stop: 2015-08-02T23:14:24.184 (time standard: TT)
     """
 
-    def __init__(self, table, reference_time="2000-01-01"):
+    def __init__(self, table, reference_time=None):
         self.table = self._validate_table(table)
 
+        if reference_time is None:
+            reference_time = TIME_REF_DEFAULT
         self._time_ref = Time(reference_time)
 
     @staticmethod
@@ -83,7 +91,7 @@ class GTI:
         return copy.deepcopy(self)
 
     @classmethod
-    def create(cls, start, stop, reference_time="2000-01-01"):
+    def create(cls, start, stop, reference_time=None):
         """Creates a GTI table from start and stop times.
 
         Parameters
@@ -93,8 +101,12 @@ class GTI:
         stop : `~astropy.time.Time` or `~astropy.units.Quantity`
             Stop times, if a quantity then w.r.t. reference time
         reference_time : `~astropy.time.Time`
-            the reference time to use in GTI definition
+            the reference time to use in GTI definition.
+            If None, use TIME_REF_DEFAULT.
+            Default is None
         """
+        if reference_time is None:
+            reference_time = TIME_REF_DEFAULT
         reference_time = Time(reference_time)
         reference_time.format = "mjd"
 
