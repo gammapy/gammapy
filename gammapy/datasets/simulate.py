@@ -339,12 +339,9 @@ class MapDatasetEventSampler:
 
         meta["OBS_ID"] = observation.obs_id
 
-        meta["TSTART"] = (
-            ((observation.tstart.mjd - dataset.gti.time_ref.mjd) * u.day).to(u.s).value
-        )
-        meta["TSTOP"] = (
-            ((observation.tstop.mjd - dataset.gti.time_ref.mjd) * u.day).to(u.s).value
-        )
+        meta["TSTART"] = (observation.tstart - dataset.gti.time_ref).to_value("s")
+        meta["TSTOP"] = (observation.tstop - dataset.gti.time_ref).to_value("s")
+
         meta["ONTIME"] = observation.observation_time_duration.to("s").value
         meta["LIVETIME"] = observation.observation_live_time_duration.to("s").value
         meta["DEADC"] = 1 - observation.observation_dead_time_fraction

@@ -119,7 +119,7 @@ def dataset():
     dataset.background /= 400
 
     dataset.gti = GTI.create(
-        start=0 * u.s, stop=1000 * u.s, reference_time="2000-01-01"
+        start=0 * u.s, stop=1000 * u.s, reference_time=Time("2000-01-01").tt
     )
 
     return dataset
@@ -473,7 +473,7 @@ def test_events_datastore(tmp_path, dataset, models):
 
     primary_hdu = fits.PrimaryHDU()
     hdu_evt = fits.BinTableHDU(events.table)
-    hdu_gti = fits.BinTableHDU(dataset.gti.table, name="GTI")
+    hdu_gti = dataset.gti.to_table_hdu(format="gadf")
     hdu_all = fits.HDUList([primary_hdu, hdu_evt, hdu_gti])
     hdu_all.writeto(str(tmp_path / "events.fits"))
 
