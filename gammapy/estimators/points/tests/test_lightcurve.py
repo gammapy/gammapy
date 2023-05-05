@@ -154,12 +154,12 @@ def get_spectrum_datasets():
     model = SkyModel(spectral_model=PowerLawSpectralModel())
     dataset_1 = simulate_spectrum_dataset(model=model, random_state=0)
     dataset_1._name = "dataset_1"
-    gti1 = GTI.create("0h", "1h", "2010-01-01T00:00:00")
+    gti1 = GTI.create("0h", "1h", Time("2010-01-01T00:00:00").tt)
     dataset_1.gti = gti1
 
     dataset_2 = simulate_spectrum_dataset(model=model, random_state=1)
     dataset_2._name = "dataset_2"
-    gti2 = GTI.create("1h", "2h", "2010-01-01T00:00:00")
+    gti2 = GTI.create("1h", "2h", Time("2010-01-01T00:00:00").tt)
     dataset_2.gti = gti2
 
     return [dataset_1, dataset_2]

@@ -246,7 +246,7 @@ class GTI:
         ]
 
     @classmethod
-    def from_time_intervals(cls, time_intervals, reference_time="2000-01-01"):
+    def from_time_intervals(cls, time_intervals, reference_time=None):  # "2000-01-01"):
         """From list of time intervals
 
         Parameters
@@ -254,16 +254,20 @@ class GTI:
         time_intervals : list of `~astropy.time.Time` objects
             Time intervals
         reference_time : `~astropy.time.Time`
-            Reference time to use in GTI definition
+            Reference time to use in GTI definition. Default is None.
+            If None, use minimum start time.
 
         Returns
         -------
         gti : `GTI`
             GTI table.
         """
-        reference_time = Time(reference_time)
         start = Time([_[0] for _ in time_intervals])
         stop = Time([_[1] for _ in time_intervals])
+
+        if reference_time is None:
+            reference_time = start.min()
+
         return cls.create(start, stop, reference_time)
 
     def select_time(self, time_interval):
