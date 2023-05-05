@@ -39,5 +39,5 @@ __all__ = [
     "compute_chisq",
     "lc_fvar",
     "lc_fpp",
-    "eval_lc_time",
+    "eval_lc_timing",
 ]
