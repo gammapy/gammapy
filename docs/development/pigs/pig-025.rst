@@ -108,7 +108,7 @@ Class requirements
   
 
 (Current) Implementation
-==============
+=====================
 EventDataset:  Inherits from gammapy.Datasets.Dataset 
 
 **********************************
