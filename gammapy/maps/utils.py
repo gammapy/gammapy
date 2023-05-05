@@ -47,13 +47,6 @@ def coordsys_to_frame(coordsys):
         raise ValueError(f"Unknown coordinate system: '{coordsys}'")
 
 
-def format_NoneType_axes_units(ax):
-    if ax.yaxis.units is None:
-        ax.yaxis.units = u.Unit("")
-    if ax.xaxis.units is None:
-        ax.xaxis.units = u.Unit("")
-
-
 def frame_to_coordsys(frame):
     if frame in ["icrs", "fk5", "fk4"]:
         return "CEL"

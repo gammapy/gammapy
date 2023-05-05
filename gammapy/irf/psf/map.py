@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import FormatStrFormatter
 from gammapy.maps import Map, MapAxes, MapAxis, MapCoord, WcsGeom
 from gammapy.maps.axes import UNIT_STRING_FORMAT
-from gammapy.maps.utils import format_NoneType_axes_units
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.random import InverseCDFSampler, get_random_state
@@ -494,10 +493,10 @@ class PSFMap(IRFMap):
                 }
             )
             label = f"{value:.0f}"
+            psf_value *= self.psf_map.unit
             with quantity_support():
                 ax.plot(rad, psf_value, label=label, **kwargs)
 
-        format_NoneType_axes_units(ax)
         ax.set_yscale("log")
         ax.set_xlabel(f"Rad [{ax.xaxis.units.to_string(UNIT_STRING_FORMAT)}]")
         ax.set_ylabel(f"PSF [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]")
