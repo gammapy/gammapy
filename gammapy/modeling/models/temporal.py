@@ -58,7 +58,7 @@ class TemporalModel(ModelBase):
             Time object
         """
         kwargs = {par.name: par.quantity for par in self.parameters}
-        time = u.Quantity(time.mjd, "day")
+        time = Time(time, scale=self.scale).mjd * u.d
         return self.evaluate(time, **kwargs)
 
     @property
@@ -79,8 +79,7 @@ class TemporalModel(ModelBase):
         """Reference time"""
         if not isinstance(t_ref, Time):
             raise TypeError(f"{t_ref} is not a {Time} object")
-        time = getattr(t_ref, self.scale)
-        self.t_ref.value = time.mjd
+        self.t_ref.value = Time(t_ref, scale=self.scale).mjd
 
     def to_dict(self, full_output=False):
         """Create dict for YAML serilisation"""
@@ -163,32 +162,24 @@ class TemporalModel(ModelBase):
         time : `~astropy.units.Quantity`
             Array with times of the sampled events.
         """
-        t_min = Time(t_min)
-        t_max = Time(t_max)
+        t_min = Time(t_min, scale=self.scale)
+        t_max = Time(t_max, scale=self.scale)
         t_delta = u.Quantity(t_delta)
         random_state = get_random_state(random_state)
 
-        ontime = u.Quantity((t_max - t_min).sec, "s")
+        ontime = u.Quantity((t_max - t_min).sec, t_delta.unit)
+        n_step = (ontime / t_delta).to_value("")
+        t_step = ontime / n_step
 
-        time_unit = (
-            u.Unit(self.table.meta["TIMEUNIT"])
-            if hasattr(self, "table")
-            else ontime.unit
-        )
-
-        t_step = t_delta.to_value(time_unit)
-        t_step = (t_step * u.s).to("d")
-
-        t = Time(np.arange(t_min.mjd, t_max.mjd, t_step.value), format="mjd")
+        indices = np.arange(n_step + 1)
+        steps = indices * t_step
+        t = Time(t_min + steps, format="mjd")
 
         pdf = self(t)
 
         sampler = InverseCDFSampler(pdf=pdf, random_state=random_state)
         time_pix = sampler.sample(n_events)[0]
-        time = (
-            np.interp(time_pix, np.arange(len(t)), t.value - min(t.value)) * t_step.unit
-        ).to(time_unit)
-
+        time = np.interp(time_pix, indices, steps)
         return t_min + time
 
     def integral(self, t_min, t_max, oversampling_factor=100, **kwargs):
@@ -211,7 +202,7 @@ class TemporalModel(ModelBase):
         t_values, steps = np.linspace(
             t_min.mjd, t_max.mjd, oversampling_factor, retstep=True, axis=-1
         )
-        times = Time(t_values, format="mjd")
+        times = Time(t_values, format="mjd", scale=self.scale)
         values = self(times)
         integral = np.sum(values, axis=-1) * steps
         return integral / self.time_sum(t_min, t_max).to_value("d")
@@ -293,7 +284,7 @@ class LinearTemporalModel(TemporalModel):
         pars = self.parameters
         alpha = pars["alpha"]
         beta = pars["beta"].quantity
-        t_ref = Time(pars["t_ref"].quantity, format="mjd")
+        t_ref = self.reference_time
         value = alpha * (t_max - t_min) + beta / 2.0 * (
             (t_max - t_ref) * (t_max - t_ref) - (t_min - t_ref) * (t_min - t_ref)
         )
@@ -341,7 +332,7 @@ class ExpDecayTemporalModel(TemporalModel):
         """
         pars = self.parameters
         t0 = pars["t0"].quantity
-        t_ref = Time(pars["t_ref"].quantity, format="mjd")
+        t_ref = self.reference_time
         value = self.evaluate(t_max, t0, t_ref) - self.evaluate(t_min, t0, t_ref)
         return -t0 * value / self.time_sum(t_min, t_max)
 
@@ -386,7 +377,7 @@ class GaussianTemporalModel(TemporalModel):
         """
         pars = self.parameters
         sigma = pars["sigma"].quantity
-        t_ref = Time(pars["t_ref"].quantity, format="mjd")
+        t_ref = self.reference_time
         norm = np.sqrt(np.pi / 2) * sigma
 
         u_min = (t_min - t_ref) / (np.sqrt(2) * sigma)
@@ -650,7 +641,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         """Evaluate the model at given coordinates."""
 
         if t_ref is None:
-            t_ref = Time(self.t_ref.value, format="mjd", scale=self.scale)
+            t_ref = self.reference_time
         t = (time - t_ref).to_value(self.map.geom.axes["time"].unit)
         coords = {"time": t}
         if self.is_energy_dependent:
@@ -707,7 +698,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         if not self.is_energy_dependent:
             super().plot(time_range=time_range, ax=ax, n_points=n_points, **kwargs)
         else:
-            time_min, time_max = time_range
+            time_min, time_max = Time(time_range, scale=self.scale)
             time_axis = TimeMapAxis.from_time_bounds(
                 time_min=time_min, time_max=time_max, nbin=n_points
             )
@@ -775,7 +766,7 @@ class PowerLawTemporalModel(TemporalModel):
         pars = self.parameters
         alpha = pars["alpha"].quantity
         t0 = pars["t0"].quantity
-        t_ref = Time(pars["t_ref"].quantity, format="mjd")
+        t_ref = self.reference_time
         if alpha != -1:
             value = self.evaluate(t_max, alpha + 1.0, t_ref, t0) - self.evaluate(
                 t_min, alpha + 1.0, t_ref, t0
@@ -831,7 +822,7 @@ class SineTemporalModel(TemporalModel):
         pars = self.parameters
         omega = pars["omega"].quantity.to_value("rad/day")
         amp = pars["amp"].value
-        t_ref = Time(pars["t_ref"].quantity, format="mjd")
+        t_ref = self.reference_time
 
         value = (t_max - t_min).to_value(u.day) - amp / omega * (
             np.sin(omega * (t_max - t_ref).to_value(u.day))
@@ -1002,7 +993,7 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         ph_max, n_max = self._time_to_phase(t_max.mjd * u.d, **kwargs)
 
         # here we assume that the frequency does not change during the integration boundaries
-        delta_t = (t_min.mjd - self.t_ref.value) * u.d
+        delta_t = (t_min - self.reference_time).to(u.d)
         frequency = self.f0.quantity + delta_t * (
             self.f1.quantity + delta_t * self.f2.quantity / 2
         )

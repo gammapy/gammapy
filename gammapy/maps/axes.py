@@ -2161,10 +2161,10 @@ class TimeMapAxis:
     """
 
     node_type = "intervals"
-    time_format = "iso"
 
     def __init__(self, edges_min, edges_max, reference_time, name="time", interp="lin"):
         self._name = name
+        self._time_format = "iso"
 
         edges_min = u.Quantity(edges_min, ndmin=1)
         edges_max = u.Quantity(edges_max, ndmin=1)
@@ -2311,6 +2311,16 @@ class TimeMapAxis:
         return self.reference_time + self.edges
 
     @property
+    def time_format(self):
+        return self._time_format
+
+    @time_format.setter
+    def time_format(self, val):
+        if val not in ["iso", "mjd"]:
+            raise ValueError(f"Invalid time_format: {self.time_format}")
+        self._time_format = val
+
+    @property
     def as_plot_xerr(self):
         """Plot x error"""
         xn, xp = self.time_mid - self.time_min, self.time_max - self.time_mid
@@ -2318,11 +2328,9 @@ class TimeMapAxis:
         if self.time_format == "iso":
             x_errn = xn.to_datetime()
             x_errp = xp.to_datetime()
-        elif self.time_format == "mjd":
+        else:
             x_errn = xn.to("day")
             x_errp = xp.to("day")
-        else:
-            raise ValueError(f"Invalid time_format: {self.time_format}")
 
         return x_errn, x_errp
 
@@ -2342,10 +2350,8 @@ class TimeMapAxis:
         """Plot edges"""
         if self.time_format == "iso":
             edges = self.time_edges.to_datetime()
-        elif self.time_format == "mjd":
-            edges = self.time_edges.mjd * u.day
         else:
-            raise ValueError(f"Invalid time_format: {self.time_format}")
+            edges = self.time_edges.mjd * u.day
 
         return edges
 
@@ -2354,7 +2360,7 @@ class TimeMapAxis:
         """Plot center"""
         if self.time_format == "iso":
             center = self.time_mid.datetime
-        elif self.time_format == "mjd":
+        else:
             center = self.time_mid.mjd * u.day
         return center
 
@@ -2381,13 +2387,14 @@ class TimeMapAxis:
 
         if self.time_format == "iso":
             ax.xaxis.set_major_formatter(DateFormatter("%Y-%m-%d %H:%M:%S"))
-            plt.setp(
-                ax.xaxis.get_majorticklabels(),
-                rotation=30,
-                ha="right",
-                rotation_mode="anchor",
-            )
-
+        else:
+            ax.xaxis.set_major_formatter("{x:,.5f}")
+        plt.setp(
+            ax.xaxis.get_majorticklabels(),
+            rotation=30,
+            ha="right",
+            rotation_mode="anchor",
+        )
         return ax
 
     def assert_name(self, required_name):
