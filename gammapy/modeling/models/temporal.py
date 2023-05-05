@@ -167,27 +167,19 @@ class TemporalModel(ModelBase):
         t_delta = u.Quantity(t_delta)
         random_state = get_random_state(random_state)
 
-        ontime = u.Quantity((t_max - t_min).sec, "s")
+        ontime = u.Quantity((t_max - t_min).sec, t_delta.unit)
+        n_step = (ontime / t_delta).to_value("")
+        t_step = ontime / n_step
 
-        time_unit = (
-            u.Unit(self.table.meta["TIMEUNIT"])
-            if hasattr(self, "table")
-            else ontime.unit
-        )
-
-        t_step = t_delta.to_value(time_unit)
-        t_step = (t_step * u.s).to("d")
-
-        t = Time(np.arange(t_min.mjd, t_max.mjd, t_step.value), format="mjd")
+        indices = np.arange(n_step + 1)
+        steps = indices * t_step
+        t = Time(t_min + steps, format="mjd")
 
         pdf = self(t)
 
         sampler = InverseCDFSampler(pdf=pdf, random_state=random_state)
         time_pix = sampler.sample(n_events)[0]
-        time = (
-            np.interp(time_pix, np.arange(len(t)), t.value - min(t.value)) * t_step.unit
-        ).to(time_unit)
-
+        time = np.interp(time_pix, indices, steps)
         return t_min + time
 
     def integral(self, t_min, t_max, oversampling_factor=100, **kwargs):
