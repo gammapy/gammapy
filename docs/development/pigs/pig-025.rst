@@ -32,7 +32,7 @@ So all features of the light curve can be fully taken into account with the unbi
 Thirdly, using an unbinned data set can save computing time in case of low event numbers.
 While the computing time is dependent on the number of bins of the binned dataset, 
 it is dependent on the number of events in the unbinned case. Introducing unbinned versions of the 
-currently existing gammapy datasets (as we propose here) therefore gives the user the freedom to 
+currently existing Gammapy datasets (as we propose here) therefore gives the user the freedom to 
 choose the appropriate data structure according to their needs with the potential to save computing costs.
 
 Use cases
