@@ -68,6 +68,7 @@ PLOT_AXIS_LABEL = {
 }
 
 DEFAULT_LABEL_TEMPLATE = "{quantity} [{unit}]"
+UNIT_STRING_FORMAT = "latex_inline"
 
 
 class MapAxis:
@@ -378,7 +379,7 @@ class MapAxis:
 
         xlabel = DEFAULT_LABEL_TEMPLATE.format(
             quantity=PLOT_AXIS_LABEL.get(self.name, self.name.capitalize()),
-            unit=ax.xaxis.units,
+            unit=ax.xaxis.units.to_string(UNIT_STRING_FORMAT),
         )
         ax.set_xlabel(xlabel)
         xmin, xmax = self.bounds
@@ -403,7 +404,7 @@ class MapAxis:
 
         ylabel = DEFAULT_LABEL_TEMPLATE.format(
             quantity=PLOT_AXIS_LABEL.get(self.name, self.name.capitalize()),
-            unit=ax.yaxis.units,
+            unit=ax.yaxis.units.to_string(UNIT_STRING_FORMAT),
         )
         ax.set_ylabel(ylabel)
         ax.set_ylim(self.bounds)

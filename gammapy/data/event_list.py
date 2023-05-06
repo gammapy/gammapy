@@ -12,6 +12,7 @@ from astropy.table import vstack as vstack_tables
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from gammapy.maps import MapAxis, MapCoord, RegionGeom, WcsNDMap
+from gammapy.maps.axes import UNIT_STRING_FORMAT
 from gammapy.utils.fits import earth_location_from_dict
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
@@ -475,7 +476,7 @@ class EventList:
         time = self.table["TIME"]
         time = time - np.min(time)
 
-        ax.set_xlabel("Time [sec]")
+        ax.set_xlabel(f"Time [{u.s.to_string(UNIT_STRING_FORMAT)}]")
         ax.set_ylabel("Counts")
         y, x_edges = np.histogram(time, bins=20)
 
@@ -565,7 +566,7 @@ class EventList:
         with quantity_support():
             ax.hist(offset2, **kwargs)
 
-        ax.set_xlabel(f"Offset^2 [{ax.xaxis.units}]")
+        ax.set_xlabel(rf"Offset$^2$ [{ax.xaxis.units.to_string(UNIT_STRING_FORMAT)}]")
         ax.set_ylabel("Counts")
         return ax
 
