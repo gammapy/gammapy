@@ -807,7 +807,7 @@ def test_spatial_model_io_background(background):
 def test_piecewise_spatial_model_background(background):
 
     geom = background.geom
-    coords = geom.get_coord().flat
+    coords = geom.to_image().get_coord().flat
 
     spatial_model = PiecewiseNormSpatialModel(coords, frame="galactic")
     identical_npred = TemplateNPredModel(
