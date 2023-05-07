@@ -528,7 +528,6 @@ class DatasetModels(collections.abc.Sequence):
             if model.tag == "TemplateNPredModel":
                 model.write(overwrite=overwrite_templates)
 
-
         if self._covar_file is not None:
             return {
                 "components": models_data,
