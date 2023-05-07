@@ -2,7 +2,7 @@
 import pytest
 from numpy.testing import assert_allclose
 from gammapy.modeling.fit import Fit
-from gammapy.modeling.selection import TestStatisticNested
+from gammapy.modeling.selection import TestStatisticNested, select_nested_models
 from gammapy.utils.testing import requires_data
 
 
@@ -19,10 +19,10 @@ def fermi_datasets():
 def test_test_statistic_detection(fermi_datasets):
 
     model = fermi_datasets.models["Crab Nebula"]
-    ts_eval = TestStatisticNested([model.spectral_model.amplitude], [0])
-    ts = ts_eval.run(fermi_datasets)
-
-    assert_allclose(ts, 20905.667798, rtol=1e-5)
+    results = select_nested_models(
+        fermi_datasets, [model.spectral_model.amplitude], [0]
+    )
+    assert_allclose(results["ts"], 20905.667798, rtol=1e-5)
 
 
 @requires_data()
@@ -42,7 +42,7 @@ def test_test_statistic_link(fermi_datasets):
     ts_eval = TestStatisticNested(
         [model.spectral_model.alpha], [model2.spectral_model.alpha], fit=fit
     )
-    ts = ts_eval.run(fermi_datasets)
+    results = ts_eval.run(fermi_datasets)
 
-    assert ts < ts_eval.ts_threshold
+    assert results["ts"] < ts_eval.ts_threshold
     assert_allclose(model2.spectral_model.alpha.value, model.spectral_model.alpha.value)

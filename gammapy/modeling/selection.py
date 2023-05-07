@@ -2,9 +2,11 @@
 from gammapy.modeling import Fit, Parameter
 from gammapy.stats.utils import sigma_to_ts
 
+__all__ = ["select_nested_models"]
+
 
 class TestStatisticNested:
-    """Compute the test statistic (TS) between two nested hypothesis .
+    """Compute the test statistic (TS) between two nested hypothesis.
     The null hypothesis is the minimal one, for which a set of parameters
     are frozen to given values. The model is updated to the alternative hypothesis
     if there is a significant improvement (larger than the given threshold).
@@ -21,6 +23,7 @@ class TestStatisticNested:
     n_sigma : float
         Threshold in number of sigma to switch from the null hypothesis
         to the alternative one. Default is 2.
+        The TS is converted to sigma assuming that the Wilk's theorem is verified.
     n_free_parameters : int
         Number of free parameters to consider between the two hypothesis
         in order to estimate the `ts_threshold` from the `n_sigma` threshold.
@@ -28,6 +31,8 @@ class TestStatisticNested:
     fit : `Fit`
         Fit instance specifying the backend and fit options.
     """
+
+    __test__ = False
 
     def __init__(
         self, parameters, null_values, n_sigma=2, n_free_parameters=None, fit=None
@@ -103,3 +108,47 @@ class TestStatisticNested:
             fit_results=fit_results,
             fit_results_null=fit_results_null,
         )
+
+
+def select_nested_models(
+    datasets, parameters, null_values, n_sigma=2, n_free_parameters=None, fit=None
+):
+    """Compute the test statistic (TS) between two nested hypothesis .
+    The null hypothesis is the minimal one, for which a set of parameters
+    are frozen to given values. The model is updated to the alternative hypothesis
+    if there is a significant improvement (larger than the given threshold).
+
+    Parameters
+    ----------
+    datasets : `~gammapy.datasets.Datasets`
+        Datasets
+    parameters : `~gammapy.modeling.Parameters` or list of `~gammapy.modeling.Parameter`
+        List of parameters frozen for the null hypothesis but free for the test hypothesis.
+    null_values : list of float or `~gammapy.modeling.Parameters`
+        Values of the parameters frozen for the null hypothesis.
+        If a `Parameters` object or a list of `Parameters` is given
+        the null hypothesis follows the values of these parameters,
+        so this tests linked parameters versus unliked.
+    n_sigma : float
+        Threshold in number of sigma to switch from the null hypothesis
+        to the alternative one. Default is 2.
+        The TS is converted to sigma assuming that the Wilk's theorem is verified.
+    n_free_parameters : int
+        Number of free parameters to consider between the two hypothesis
+        in order to estimate the `ts_threshold` from the `n_sigma` threshold.
+        Default is len(parameters).
+    fit : `Fit`
+        Fit instance specifying the backend and fit options.
+
+    Returns
+    -------
+    result : dict
+        Dict with the TS of the best fit value compared to the null hypothesis
+        and fit results for the two hypotheses. Entries are:
+
+            * "ts" : fit statistic difference with null hypothesis
+            * "fit_results" : results for the best fit
+            * "fit_results_null" : fit results for the null hypothesis
+    """
+    test = TestStatisticNested(parameters, null_values, n_sigma, n_free_parameters, fit)
+    return test.run(datasets)
