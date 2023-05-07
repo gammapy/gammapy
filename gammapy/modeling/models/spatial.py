@@ -1322,6 +1322,9 @@ class PiecewiseNormSpatialModel(SpatialModel):
         if len(norms) < 4:
             raise ValueError("Input arrays must contain at least 4 elements")
 
+        if self.is_energy_dependent:
+            raise ValueError("Energy dependent nodes are not supported")
+
         if not isinstance(norms[0], Parameter):
             parameters = Parameters(
                 [Parameter(f"norm_{k}", norm) for k, norm in enumerate(norms)]
@@ -1353,17 +1356,9 @@ class PiecewiseNormSpatialModel(SpatialModel):
         coords = [value.value for value in self.coords._data.values()]
         # TODO: apply axes scaling in this loop
         coords = list(zip(*coords))
-        if self.is_energy_dependent:
-            if energy is None:
-                raise ValueError("Missing energy values for  energy-dependent model")
-            method = "linear"
-            points = (lon, lat, energy)
-        else:
-            # by default rely on CloughTocher2DInterpolator
-            # (Piecewise cubic, C1 smooth, curvature-minimizing interpolant)
-            method = "cubic"
-            points = (lon, lat)
-        interpolated = griddata(coords, v_nodes, points, method=method)
+        # by default rely on CloughTocher2DInterpolator
+        # (Piecewise cubic, C1 smooth, curvature-minimizing interpolant)
+        interpolated = griddata(coords, v_nodes, (lon, lat), method="cubic")
         return scale.inverse(interpolated) * self.norms.unit
 
     def evaluate_geom(self, geom):
@@ -1381,14 +1376,7 @@ class PiecewiseNormSpatialModel(SpatialModel):
 
         """
         coords = geom.get_coord(frame=self.frame, sparse=True)
-
-        if self.is_energy_dependent:
-            for name in geom.axes.names:
-                if "energy" in name:
-                    energy_name = name
-            return self(coords.lon, coords.lat, coords[energy_name])
-        else:
-            return self(coords.lon, coords.lat)
+        return self(coords.lon, coords.lat)
 
     def to_dict(self, full_output=False):
         data = super().to_dict(full_output=full_output)
@@ -1405,11 +1393,7 @@ class PiecewiseNormSpatialModel(SpatialModel):
         data = data["spatial"]
         lon = u.Quantity(data["lon"]["data"], data["lon"]["unit"])
         lat = u.Quantity(data["lat"]["data"], data["lat"]["unit"])
-        if "energy" in data:
-            energy = u.Quantity(data["energy"]["data"], data["energy"]["unit"])
-            coords = MapCoord.create((lon, lat, energy))
-        else:
-            coords = MapCoord.create((lon, lat))
+        coords = MapCoord.create((lon, lat))
 
         parameters = Parameters.from_dict(data["parameters"])
         return cls.from_parameters(parameters, coords=coords, frame=data["frame"])
