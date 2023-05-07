@@ -322,7 +322,7 @@ def test_data_store_no_events():
     )
 
     observations = data_store.get_observations(
-        required_irfs=["aeff", "psf", "edisp"], require_events=False
+        required_irf=["aeff", "psf", "edisp"], require_events=False
     )
     assert len(observations) == 3
     for obs in observations:
