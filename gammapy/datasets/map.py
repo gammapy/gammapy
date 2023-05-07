@@ -8,7 +8,7 @@ from regions import CircleSkyRegion
 import matplotlib.pyplot as plt
 from gammapy.data import GTI
 from gammapy.irf import EDispKernelMap, EDispMap, PSFKernel, PSFMap, RecoPSFMap
-from gammapy.maps import Map, MapAxis
+from gammapy.maps import LabelMapAxis, Map, MapAxis
 from gammapy.modeling.models import DatasetModels, FoVBackgroundModel
 from gammapy.stats import (
     CashCountsStatistic,
@@ -18,6 +18,7 @@ from gammapy.stats import (
     get_wstat_mu_bkg,
     wstat,
 )
+from gammapy.utils.deprecation import deprecated_renamed_argument
 from gammapy.utils.fits import HDULocation, LazyFitsData
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
@@ -482,18 +483,21 @@ class MapDataset(Dataset):
             self._background_parameters_cached = values
         return changed
 
-    def npred_signal(self, model_name=None):
+    @deprecated_renamed_argument("model_name", "model_names", "1.1")
+    def npred_signal(self, model_names=None, stack=True):
         """Model predicted signal counts.
 
-        If a model name is passed, predicted counts from that component are returned.
-        Else, the total signal counts are returned.
+        If a list of model name is passed, predicted counts from these components are returned.
+        If stack is set to True, a map of the sum of all the predicted counts is returned.
+        If stack is set to False, a map with an additional axis representing the models is returned.
 
         Parameters
         ----------
-        model_name: str
-            Name of  SkyModel for which to compute the npred for.
-            If none, the sum of all components (minus the background model)
-            is returned
+        model_names: list of str
+            List of name of  SkyModel for which to compute the npred.
+            If none, all the SkyModel predicted counts are computed
+        stack: bool
+            Whether to stack the npred maps upon each other.
 
         Returns
         -------
@@ -503,10 +507,14 @@ class MapDataset(Dataset):
         npred_total = Map.from_geom(self._geom, dtype=float)
 
         evaluators = self.evaluators
-        if model_name is not None:
-            evaluators = {model_name: self.evaluators[model_name]}
+        if model_names is not None:
+            if isinstance(model_names, str):
+                model_names = [model_names]
+            evaluators = {name: self.evaluators[name] for name in model_names}
 
-        for evaluator in evaluators.values():
+        npred_list = []
+        labels = []
+        for evaluator_name, evaluator in evaluators.items():
             if evaluator.needs_update:
                 evaluator.update(
                     self.exposure,
@@ -518,7 +526,17 @@ class MapDataset(Dataset):
 
             if evaluator.contributes:
                 npred = evaluator.compute_npred()
-                npred_total.stack(npred)
+                if stack:
+                    npred_total.stack(npred)
+                else:
+                    npred_geom = Map.from_geom(self._geom, dtype=float)
+                    npred_geom.stack(npred)
+                    labels.append(evaluator_name)
+                    npred_list.append(npred_geom)
+
+        if npred_list != []:
+            label_axis = LabelMapAxis(labels=labels, name="models")
+            npred_total = Map.from_stack(npred_list, axis=label_axis)
 
         return npred_total
 

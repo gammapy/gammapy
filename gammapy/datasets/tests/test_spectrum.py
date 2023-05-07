@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
-from numpy.testing import assert_allclose
+from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
 from astropy.table import Table
 from astropy.time import Time
@@ -9,7 +9,7 @@ from gammapy.data import GTI
 from gammapy.datasets import Datasets, SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.irf import EDispKernelMap, EffectiveAreaTable2D
 from gammapy.makers.utils import make_map_exposure_true_energy
-from gammapy.maps import MapAxis, RegionGeom, RegionNDMap, WcsGeom
+from gammapy.maps import LabelMapAxis, MapAxis, RegionGeom, RegionNDMap, WcsGeom
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
     ConstantSpectralModel,
@@ -126,8 +126,32 @@ def test_npred_models():
     npred_sig = spectrum_dataset.npred_signal()
     assert_allclose(npred_sig.data.sum(), 64.8)
 
-    npred_sig_model1 = spectrum_dataset.npred_signal(model_name=model_1.name)
+    npred_sig_model1 = spectrum_dataset.npred_signal(model_names=[model_1.name])
     assert_allclose(npred_sig_model1.data.sum(), 32.4)
+
+    assert_allclose(
+        spectrum_dataset.npred_signal(
+            model_names=[model_1.name, model_2.name]
+        ).data.sum(),
+        64.8,
+    )
+
+    npred_model1_not_stack = spectrum_dataset.npred_signal(
+        model_names=[model_1.name], stack=False
+    )
+    assert_allclose(npred_model1_not_stack.geom.data_shape, (1, 3, 1, 1))
+    assert_allclose(npred_model1_not_stack.data.sum(), 32.4)
+    assert isinstance(npred_model1_not_stack.geom.axes[-1], LabelMapAxis)
+    assert npred_model1_not_stack.geom.axes[-1].name == "models"
+    assert_equal(npred_model1_not_stack.geom.axes[-1].center, [model_1.name])
+
+    npred_all_models_not_stack = spectrum_dataset.npred_signal(
+        model_names=[model_1.name, model_2.name], stack=False
+    )
+    assert_allclose(npred_all_models_not_stack.geom.data_shape, (2, 3, 1, 1))
+    assert_allclose(
+        npred_all_models_not_stack.sum_over_axes(["models"]).data.sum(), 64.8
+    )
 
 
 def test_npred_spatial_model(spectrum_dataset):
