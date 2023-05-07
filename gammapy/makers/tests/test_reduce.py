@@ -18,7 +18,7 @@ from gammapy.makers import (
     WobbleRegionsFinder,
 )
 from gammapy.maps import MapAxis, RegionGeom, WcsGeom
-from gammapy.utils.testing import requires_data, requires_dependency
+from gammapy.utils.testing import requires_data
 
 
 @pytest.fixture(scope="session")
@@ -153,12 +153,11 @@ def makers_spectrum(exclusion_mask):
             "stack_datasets": True,
             "cutout_width": None,
             "n_jobs": 2,
-            "backend": "ray",
+            "backend": "multiprocessing",
         },
     ],
 )
 @requires_data()
-@requires_dependency("ray")
 def test_datasets_maker_map(pars, observations_cta, makers_map):
     if pars["backend"]:
         parallel.MULTIPROCESSING_BACKEND = pars["backend"]
