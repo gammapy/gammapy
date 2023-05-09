@@ -4,14 +4,10 @@ import scipy.stats as stats
 
 __all__ = [
     "compute_fvar",
-    "weighted_fvar",
     "compute_fpp",
     "compute_2time",
     "compute_etime",
     "compute_chisq",
-    "lc_fvar",
-    "lc_fpp",
-    "eval_lc_timing",
 ]
 
 
