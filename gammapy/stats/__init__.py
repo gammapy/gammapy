@@ -9,9 +9,6 @@ from .variability import (
     compute_etime,
     compute_2time,
     compute_chisq,
-    lc_fpp,
-    lc_fvar,
-    eval_lc_timing,
 )
 
 from .fit_statistics_cython import (
@@ -37,7 +34,4 @@ __all__ = [
     "compute_2time",
     "compute_etime",
     "compute_chisq",
-    "lc_fvar",
-    "lc_fpp",
-    "eval_lc_timing",
 ]
