@@ -819,7 +819,6 @@ def test_rename_axes():
     assert new_map.geom.axes.names == ["energy_true", "time"]
 
 
-<<<<<<< HEAD
 def test_reorder_axes_fail():
     axis1 = MapAxis.from_edges((0, 1, 3), name="axis1")
     axis2 = MapAxis.from_edges((0, 1, 2, 3, 4), name="axis2")
@@ -848,6 +847,7 @@ def test_reorder_axes():
     assert new_map.geom.data_shape == (3, 2, 4, 1, 1)
 
     assert_allclose(new_map.data[:, :, 1], 1)
+
 
 def test_map_dot_product_fail():
     axis1 = MapAxis.from_edges((0, 1, 2, 3), name="axis1")
