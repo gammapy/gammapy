@@ -1,8 +1,8 @@
 import numpy as np
 from scipy.interpolate import CubicSpline
-from gammapy.maps.axes import UNIT_STRING_FORMAT
 from astropy.visualization import make_lupton_rgb
 import matplotlib.pyplot as plt
+from gammapy.maps.axes import UNIT_STRING_FORMAT
 
 __all__ = [
     "plot_contour_line",
@@ -287,11 +287,10 @@ def plot_theta_squared_table(table):
 def plot_npred_signal(
     dataset,
     ax=None,
-    model_name=None,
-    sum_models=False,
+    model_names=None,
+    stack=False,
     region=None,
     plot_background=True,
-    num_model_to_plot=5,
 ):
     """
     Plot the npred_signal of the models of a dataset.
@@ -302,18 +301,16 @@ def plot_npred_signal(
         The dataset from which to plot the npred_signal
     ax : `~matplotlib.axes.Axes`
         Axis object to plot on.
-    model_name : list of str
+    model_names : list of str
         The list of model for which the npres_signal is plotted. If set to None, it will take all the models
-        of th dataset and return the ones that contributes the most according to `num_model_to_plot``
-    sum_models : bool
+        of the dataset and return the ones that contributes the most according to `num_model_to_plot``
+    stack : bool
         Whether to sum the npred_signal of all the model.
     region: `~regions.Region` or `~astropy.coordinates.SkyCoord`
         Region.
     plot_background : bool
         Whether to plot the background along with the other models.
-    num_model_to_plot : int
-        The number of model to plot. Default is 5. If there are more models, only the ones that contributes the most
-        will be plotted.
+
 
     Returns
     -------
@@ -322,38 +319,39 @@ def plot_npred_signal(
         Axis object
     """
 
-    if model_name is None:
-        model_name = dataset.models.names
+    npred_region = dataset.npred_signal(
+        model_names=model_names, stack=stack
+    ).to_region_nd_map(region)
 
-    npred_array = []
-    for name in model_name:
-        npred = dataset.npred_signal(name).to_region_nd_map(region)
-        if np.any(npred):
-            npred_array.append(npred)
-
-    if sum_models:
-        npred_array = np.sum(npred_array, axis=0)
-        names = ["Sum of npred_signal"]
+    if not stack:
+        npred_iter = npred_region.iter_by_axis("models")
+        names = npred_region.geom.axes["models"].center
     else:
-        if len(npred_array) < num_model_to_plot:
-            num_model_to_plot = len(npred_array)
-        sum_npred = np.sum(npred_array, axis=1)
-        names = [n for _, n in sorted(zip(sum_npred, model_name))][:num_model_to_plot]
-        npred_array = [n_a for _, n_a in sorted(zip(sum_npred, npred_array))][
-            :num_model_to_plot
-        ]
+        npred_iter = [npred_region]
+        names = ["stacked models"]
 
-    if ax is not None:
+    cmap = plt.get_cmap("jet")
+    if plot_background:
+        num_color = len(names) + 1
+    else:
+        num_color = len(names)
+
+    colors = cmap(np.linspace(0, 1, num_color))
+
+    if ax is None:
         fig = plt.figure()
         axes = fig.add_subplot(111)
     else:
         axes = ax
 
-    for (npred, name) in zip(npred_array, names):
-        npred.plot(ax=axes, label=name)
+    axes.set_prop_cycle(color=colors)
+
+    for (npred, name) in zip(npred_iter, names):
+        npred.plot(axes, label=name)
     if plot_background:
         dataset.npred_background().to_region_nd_map(region).plot(
             ax=axes, label="background"
         )
+    plt.legend(bbox_to_anchor=(1.04, 1), borderaxespad=0)
 
     return axes
