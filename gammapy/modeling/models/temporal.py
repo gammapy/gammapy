@@ -637,8 +637,17 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         else:
             raise ValueError("Not a valid format, choose from ['map', 'table']")
 
-    def evaluate(self, time, t_ref=None, energy=None):
-        """Evaluate the model at given coordinates."""
+    def evaluate(self, time, t_ref=None, energy=None, method="linear"):
+        """Evaluate the model at given coordinates.
+        time: ~astropy.Time; array of times where the model is
+            evaluate;
+        t_ref: ~astropy.Time; reference time. Default is None;
+        energy: ~astropy.Quantity; array of energies where the
+            model is evaluate;
+        method : {"linear", "nearest"}
+            Method to interpolate data values. By default linear
+            interpolation is performed.
+        """
 
         if t_ref is None:
             t_ref = self.reference_time
@@ -648,7 +657,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
             if energy is None:
                 energy = self.map.geom.axes["energy"].center
             coords["energy"] = energy.reshape(-1, 1)
-        val = self.map.interp_by_coord(coords)
+        val = self.map.interp_by_coord(coords, method=method)
         val = np.clip(val, 0, a_max=None)
         return u.Quantity(val, self.map.unit, copy=False)
 

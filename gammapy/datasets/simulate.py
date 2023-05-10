@@ -30,11 +30,17 @@ class MapDatasetEventSampler:
     oversample_energy_factor: {int}
         Defines an oversampling factor for the energies; it is used only when sampling
         an energy-dependent time-varying source.
+    method : {"linear", "nearest"}
+        Method to interpolate data values. By default linear interpolation is
+        performed. It is used only when sampling an energy-dependent time-varying source.
     """
 
-    def __init__(self, random_state="random-seed", oversample_energy_factor=10):
+    def __init__(
+        self, random_state="random-seed", oversample_energy_factor=10, method="linear"
+    ):
         self.random_state = get_random_state(random_state)
         self.oversample_energy_factor = oversample_energy_factor
+        self.method = method
 
     def _make_table(self, coords, time_ref):
         """Create a table for sampled events.
@@ -66,7 +72,11 @@ class MapDatasetEventSampler:
         return table
 
     def _evaluate_timevar_source(
-        self, dataset, evaluator, time_axis=None, t_delta=0.5 * u.s
+        self,
+        dataset,
+        evaluator,
+        time_axis=None,
+        t_delta=0.5 * u.s,
     ):
         """Calculate Npred for a given `dataset.model` by evaluating
         it on a region geometry.
@@ -108,7 +118,7 @@ class MapDatasetEventSampler:
 
         flux_diff = (
             evaluator.model.temporal_model.evaluate(
-                time_axis_eval.time_mid, energy=energy_new.center
+                time_axis_eval.time_mid, energy=energy_new.center, method=self.method
             )
             * evaluator.model.spectral_model.parameters[0].quantity
         )
