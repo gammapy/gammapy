@@ -28,7 +28,6 @@ __all__ = [
     "wstat",
     "WStatCountsStatistic",
     "compute_fvar",
-    "weighted_fvar",
     "compute_fpp",
     "compute_2time",
     "compute_etime",
