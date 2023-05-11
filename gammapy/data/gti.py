@@ -7,11 +7,9 @@ from astropy.io import fits
 from astropy.table import Table, vstack
 from astropy.time import Time
 from gammapy.utils.scripts import make_path
-from gammapy.utils.time import time_ref_from_dict, time_ref_to_dict
+from gammapy.utils.time import TIME_REF_DEFAULT, time_ref_from_dict, time_ref_to_dict
 
 __all__ = ["GTI"]
-
-TIME_REF_DEFAULT = Time("2000-01-01", scale="tt")
 
 
 class GTI:
@@ -258,7 +256,7 @@ class GTI:
         ]
 
     @classmethod
-    def from_time_intervals(cls, time_intervals, reference_time=None):  # "2000-01-01"):
+    def from_time_intervals(cls, time_intervals, reference_time=None):
         """From list of time intervals
 
         Parameters
@@ -267,7 +265,7 @@ class GTI:
             Time intervals
         reference_time : `~astropy.time.Time`
             Reference time to use in GTI definition. Default is None.
-            If None, use minimum start time.
+            If None, use TIME_REF_DEFAULT.
 
         Returns
         -------
@@ -278,7 +276,7 @@ class GTI:
         stop = Time([_[1] for _ in time_intervals])
 
         if reference_time is None:
-            reference_time = start.min()
+            reference_time = TIME_REF_DEFAULT
 
         return cls.create(start, stop, reference_time)
 
@@ -325,7 +323,7 @@ class GTI:
             GTI to stack to self
 
         """
-        self.table = vstack([self.table, other.table])
+        self.table = self._validate_table(vstack([self.table, other.table]))
 
     @classmethod
     def from_stack(cls, gtis, **kwargs):
