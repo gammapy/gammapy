@@ -847,3 +847,74 @@ def test_reorder_axes():
     assert new_map.geom.data_shape == (3, 2, 4, 1, 1)
 
     assert_allclose(new_map.data[:, :, 1], 1)
+
+
+def test_map_dot_product_fail():
+    axis1 = MapAxis.from_edges((0, 1, 2, 3), name="axis1")
+    axis2 = MapAxis.from_edges((0, 1, 2, 3, 4), name="axis2")
+    axis3 = MapAxis.from_edges((0, 1, 2), name="axis1")
+
+    map1 = WcsNDMap.create(npix=5, axes=[axis1])
+    map2 = RegionNDMap.create(region=None, axes=[axis2, axis3])
+    map3 = RegionNDMap.create(region=None, axes=[axis2, axis3])
+
+    with pytest.raises(TypeError):
+        map1.dot(map1)
+
+    with pytest.raises(ValueError):
+        map1.dot(map2)
+
+    with pytest.raises(ValueError):
+        map1.dot(map3)
+
+
+def test_map_dot_product():
+    axis1 = MapAxis.from_edges((0, 1, 3), name="axis1")
+    axis2 = MapAxis.from_edges((0, 1, 2, 3, 4), name="axis2")
+
+    map1 = WcsNDMap.create(npix=(5, 6), axes=[axis1])
+    map2 = RegionNDMap.create(region=None, axes=[axis1, axis2])
+
+    map1.data[0, ...] = 1
+    map1.data[1, ...] = 2
+    map2.data[0, 0, ...] = 1
+    map2.data[1, 1, ...] = 2
+
+    dot_map = map1 @ map2
+
+    assert dot_map.geom.axes.names == ["axis2"]
+    assert_allclose(dot_map.data[:, 0, 0], [1, 4, 0, 0])
+
+    map3 = RegionNDMap.create(region=None, axes=[axis1])
+    map3.data[1, 0, 0] = 1
+
+    dot_map = map1.dot(map3)
+    assert dot_map.geom.axes.names == []
+    assert_allclose(dot_map.data[0, 0], 2)
+
+    axis3 = MapAxis.from_edges((0, 1, 2, 3), name="axis3")
+    axis4 = MapAxis.from_edges((1, 2, 3, 4, 5), name="axis4")
+
+    map4 = RegionNDMap.create(region=None, axes=[axis2, axis3, axis4])
+    map4.data[...] = 1
+
+    dot_map = map4.dot(map2)
+
+    assert dot_map.geom.axes.names == ["axis1", "axis3", "axis4"]
+    assert dot_map.data.shape == (4, 3, 2, 1, 1)
+
+    dot_map = map2.dot(map4)
+
+    assert dot_map.geom.axes.names == ["axis1", "axis3", "axis4"]
+    assert dot_map.data.shape == (4, 3, 2, 1, 1)
+    assert_allclose(dot_map.data[0, 0, :, 0, 0], [1, 2])
+
+    map5 = RegionNDMap.create(region=None, axes=[axis3, axis2, axis4])
+    map5.data[:, 0, :, :, :] = 1
+
+    dot_map = map5.dot(map2)
+
+    assert dot_map.geom.axes.names == ["axis3", "axis1", "axis4"]
+    assert dot_map.data.shape == (4, 2, 3, 1, 1)
+
+    assert_allclose(dot_map.data[0, :, 0, 0, 0], [1, 0])

@@ -1946,3 +1946,85 @@ class Map(abc.ABC):
         data = np.moveaxis(self.data, old_indices, new_indices)
 
         return Map.from_geom(new_geom, data=data)
+
+    def dot(self, other):
+        """Apply dot product with the input map.
+
+        The input Map has to share a single MapAxis with the current Map.
+        Because it has no spatial dimension, it must be a `~gammapy.maps.RegionNDMap`.
+
+        Parameters
+        ----------
+        other : `~gammapy.maps.RegionNDMap`
+            Map to apply the dot product to.
+            It must share a unique non-spatial MapAxis with the current Map.
+
+        Returns
+        -------
+        map : `~gammapy.maps.Map`
+            Map with dot product applied.
+        """
+        from .region import RegionNDMap
+
+        if not isinstance(other, RegionNDMap):
+            raise TypeError(
+                f"Dot product can be applied to a RegionNDMap. Got {type(other)} instead."
+            )
+
+        common_names = list(
+            set(other.geom.axes.names).intersection(self.geom.axes.names)
+        )
+
+        if len(common_names) == 0:
+            raise ValueError(
+                "Map geometries have no axis in common. Cannot apply dot product."
+            )
+        elif len(common_names) > 1:
+            raise ValueError(
+                f"Map geometries have more than one axis in common: {common_names}."
+                "Cannot apply dot product."
+            )
+
+        axis_name = common_names[0]
+
+        if self.geom.axes[axis_name] != other.geom.axes[axis_name]:
+            raise ValueError(
+                f"Axes {axis_name} are not equal. Cannot apply dot product."
+            )
+
+        loc = self.geom.axes.index_data(axis_name)
+        other_loc = other.geom.axes.index_data(axis_name)
+
+        # move axes because numpy dot product is performed on last axis of a and second-to-last axis of b
+        data = np.moveaxis(self.data, loc, -1)
+
+        if len(other.geom.axes) > 1:
+            other_data = np.moveaxis(other.data[..., 0, 0], other_loc, -2)
+        else:
+            other_data = other.data[..., 0, 0]
+
+        data = np.dot(data, other_data)
+
+        # prepare new axes with expected shape (i.e. common axis replaced by other's axes)
+        index = self.geom.axes.index(axis_name)
+        axes1 = self.geom.axes.drop(axis_name)
+        inserted_axes = other.geom.axes.drop(axis_name)
+        new_axes = axes1[:index] + inserted_axes + axes1[index:]
+
+        # reorder axes to get the expected shape
+        remaining_axes = np.arange(len(inserted_axes))
+        old_axes_pos = -1 - remaining_axes
+        new_axes_pos = loc + remaining_axes[::-1]
+
+        data = np.moveaxis(data, old_axes_pos, new_axes_pos)
+
+        geom = self.geom.to_image().to_cube(new_axes)
+        return self._init_copy(geom=geom, data=data)
+
+    def __matmul__(self, other):
+        """Apply dot product with the input map.
+
+        The input Map has to share a single MapAxis with the current Map.
+        Because it has no spatial dimension, it must be a `~gammapy.maps.RegionNDMap`.
+        """
+        return self.dot(other)
