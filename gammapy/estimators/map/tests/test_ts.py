@@ -138,7 +138,7 @@ def test_compute_ts_map(input_dataset):
 
 @requires_data()
 @requires_dependency("ray")
-def test_compute_ts_map_parallel(input_dataset):
+def test_compute_ts_map_parallel_ray(input_dataset):
     """Minimal test of compute_ts_image"""
     spatial_model = GaussianSpatialModel(sigma="0.1 deg")
     spectral_model = PowerLawSpectralModel(index=2)
@@ -157,6 +157,15 @@ def test_compute_ts_map_parallel(input_dataset):
     assert_allclose(result["npred"].data[0, 99, 99], 4744.020361, rtol=1e-2)
     assert_allclose(result["npred_excess"].data[0, 99, 99], 1026.874063, rtol=1e-2)
     assert_allclose(result["npred_excess_err"].data[0, 99, 99], 38.470995, rtol=1e-2)
+    parallel.MULTIPROCESSING_BACKEND = "multiprocessing"
+
+
+@requires_data()
+def test_compute_ts_map_parallel_multiprocessing(input_dataset):
+    """Minimal test of compute_ts_image"""
+    spatial_model = GaussianSpatialModel(sigma="0.1 deg")
+    spectral_model = PowerLawSpectralModel(index=2)
+    model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
 
     parallel.MULTIPROCESSING_BACKEND = "multiprocessing"
     ts_estimator = TSMapEstimator(

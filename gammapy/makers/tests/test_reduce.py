@@ -188,6 +188,7 @@ def test_datasets_maker_map(pars, observations_cta, makers_map):
         exposure = datasets[0].exposure
         assert exposure.unit == "m2 s"
         assert_allclose(exposure.data.mean(), 2.436063e09, rtol=3e-3)
+    parallel.MULTIPROCESSING_BACKEND = "multiprocessing"
 
 
 @requires_data()
