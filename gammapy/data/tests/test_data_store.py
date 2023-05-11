@@ -308,3 +308,23 @@ def test_data_store_required_irf_pointlike_variable_rad_max():
     obs = store.get_observations([5029747, 5029748], required_irf="point-like")
     assert len(obs) == 2
     assert obs[0].rad_max.quantity is not None
+
+
+@requires_data()
+def test_data_store_no_events():
+    """Check behavior of the "point-like" option for data_store"""
+
+    data_path = "$GAMMAPY_DATA/hawc/crab_events_pass4/"
+    hdu_filename = "hdu-index-table-GP-no-events.fits.gz"
+    obs_filename = "obs-index-table-GP-no-events.fits.gz"
+    data_store = DataStore.from_dir(
+        data_path, hdu_table_filename=hdu_filename, obs_table_filename=obs_filename
+    )
+
+    observations = data_store.get_observations(
+        required_irf=["aeff", "psf", "edisp"], require_events=False
+    )
+    assert len(observations) == 3
+    for obs in observations:
+        assert not obs.events
+        assert not obs.gti
