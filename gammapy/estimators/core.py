@@ -4,6 +4,7 @@ import inspect
 from copy import deepcopy
 import numpy as np
 from astropy import units as u
+import gammapy.utils.parallel as parallel
 from gammapy.maps import MapAxis
 from gammapy.modeling.models import ModelBase
 
@@ -23,6 +24,17 @@ class Estimator(abc.ABC):
     @abc.abstractmethod
     def run(self, datasets):
         pass
+
+    @property
+    def n_jobs(self):
+        if self._n_jobs is None:
+            return parallel.N_PROCESSES
+        else:
+            return self._n_jobs
+
+    @n_jobs.setter
+    def n_jobs(self, value):
+        self._n_jobs = value
 
     @property
     def selection_optional(self):

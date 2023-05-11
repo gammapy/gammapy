@@ -177,7 +177,7 @@ class TSMapEstimator(Estimator):
         self.threshold = threshold
         self.rtol = rtol
 
-        self._n_jobs = n_jobs
+        self.n_jobs = n_jobs
         self.sum_over_energy_groups = sum_over_energy_groups
 
         self.selection_optional = selection_optional
@@ -189,17 +189,6 @@ class TSMapEstimator(Estimator):
             selection_optional=selection_optional,
             ts_threshold=threshold,
         )
-
-    @property
-    def n_jobs(self):
-        if self._n_jobs is None:
-            return parallel.N_PROCESSES
-        else:
-            return self._n_jobs
-
-    @n_jobs.setter
-    def n_jobs(self, value):
-        self._n_jobs = value
 
     @property
     def selection_all(self):
