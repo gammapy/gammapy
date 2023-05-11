@@ -118,7 +118,7 @@ def enedip_temporal_model(models):
     time_min = np.arange(0, 1000, 10) * u.s
     time_max = np.arange(10, 1010, 10) * u.s
     edges = np.append(time_min, time_max[-1])
-    time_axis = MapAxis.from_edges(edges=edges, name="time", interp="log")
+    time_axis = MapAxis.from_edges(edges=edges, name="time", interp="lin")
 
     data = np.ones((nbin, len(time_min))) * 1e-12 * u.cm**-2 * u.s**-1 * u.TeV**-1
     m = RegionNDMap.create(
@@ -182,7 +182,7 @@ def test_evaluate_timevar_source(enedip_temporal_model, dataset):
 
     assert_allclose(
         npred.data[:, 1000, 0, 0] / 1e-13,
-        [0.039339, 0.034838, 0.011899],
+        [0.038113, 0.033879, 0.010938],
         rtol=2e-4,
     )
 
@@ -211,7 +211,7 @@ def test_sample_coord_time_energy(dataset, enedip_temporal_model):
 
     assert_allclose(
         [events[0][0], events[0][1], events[0][2], events[0][3]],
-        [11.460277, 7.687285, 266.404988, -28.936178],
+        [568.238666, 7.687285, 266.404988, -28.936178],
         rtol=1e-6,
     )
 

@@ -118,7 +118,7 @@ class MapDatasetEventSampler:
 
         flux_diff = (
             evaluator.model.temporal_model.evaluate(
-                time_axis_eval.time_mid, energy=energy_new.center, method=self.method
+                time_axis_eval.time_mid, energy=energy_new.center
             )
             * evaluator.model.spectral_model.parameters[0].quantity
         )

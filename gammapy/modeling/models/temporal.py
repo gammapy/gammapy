@@ -484,7 +484,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
     _t_ref_default = Time("2000-01-01")
     t_ref = Parameter("t_ref", _t_ref_default.mjd, unit="day", frozen=True)
 
-    def __init__(self, map, t_ref=None, filename=None):
+    def __init__(self, map, t_ref=None, filename=None, method=None, values_scale=None):
 
         if (map.data < 0).any():
             log.warning("Map has negative values. Check and fix this!")
@@ -496,6 +496,17 @@ class LightCurveTemplateTemporalModel(TemporalModel):
             self.reference_time = t_ref
 
         self.filename = filename
+
+        if method is None:
+            method = "linear"
+        if values_scale is None:
+            if self.is_energy_dependent:
+                values_scale = "log"
+            else:
+                values_scale = "lin"
+
+        self.method = method
+        self.values_scale = values_scale
 
     def __str__(self):
         start_time = self.t_ref.quantity + self.map.geom.axes["time"].edges[0]
@@ -637,16 +648,13 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         else:
             raise ValueError("Not a valid format, choose from ['map', 'table']")
 
-    def evaluate(self, time, t_ref=None, energy=None, method="linear"):
+    def evaluate(self, time, t_ref=None, energy=None):
         """Evaluate the model at given coordinates.
         time: ~astropy.Time; array of times where the model is
             evaluate;
         t_ref: ~astropy.Time; reference time. Default is None;
         energy: ~astropy.Quantity; array of energies where the
             model is evaluate;
-        method : {"linear", "nearest"}
-            Method to interpolate data values. By default linear
-            interpolation is performed.
         """
 
         if t_ref is None:
@@ -657,7 +665,9 @@ class LightCurveTemplateTemporalModel(TemporalModel):
             if energy is None:
                 energy = self.map.geom.axes["energy"].center
             coords["energy"] = energy.reshape(-1, 1)
-        val = self.map.interp_by_coord(coords, method=method)
+        val = self.map.interp_by_coord(
+            coords, method=self.method, values_scale=self.values_scale
+        )
         val = np.clip(val, 0, a_max=None)
         return u.Quantity(val, self.map.unit, copy=False)
 
