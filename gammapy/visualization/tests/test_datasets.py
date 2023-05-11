@@ -3,7 +3,53 @@ import pytest
 from numpy.testing import assert_allclose
 import matplotlib
 from packaging import version
-from gammapy.visualization import plot_spectrum_datasets_off_regions
+from gammapy.datasets.tests.test_map import get_map_dataset
+from gammapy.maps import MapAxis, WcsGeom
+from gammapy.modeling.models import (
+    FoVBackgroundModel,
+    GaussianSpatialModel,
+    PowerLawSpectralModel,
+    SkyModel,
+)
+from gammapy.utils.testing import mpl_plot_check
+from gammapy.visualization import plot_npred_signal, plot_spectrum_datasets_off_regions
+
+
+@pytest.fixture
+def sky_model():
+    spatial_model = GaussianSpatialModel(
+        lon_0="0.2 deg", lat_0="0.1 deg", sigma="0.2 deg", frame="galactic"
+    )
+    spectral_model = PowerLawSpectralModel(
+        index=3, amplitude="1e-11 cm-2 s-1 TeV-1", reference="1 TeV"
+    )
+    return SkyModel(
+        spatial_model=spatial_model, spectral_model=spectral_model, name="test-model"
+    )
+
+
+@pytest.fixture
+def geom():
+    axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=2)
+    return WcsGeom.create(
+        skydir=(266.40498829, -28.93617776),
+        binsz=0.02,
+        width=(2, 2),
+        frame="icrs",
+        axes=[axis],
+    )
+
+
+@pytest.fixture
+def geom_etrue():
+    axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=3, name="energy_true")
+    return WcsGeom.create(
+        skydir=(266.40498829, -28.93617776),
+        binsz=0.02,
+        width=(2, 2),
+        frame="icrs",
+        axes=[axis],
+    )
 
 
 @pytest.mark.skipif(
@@ -39,3 +85,28 @@ def test_plot_spectrum_datasets_off_regions():
     actual = ax.patches[2].get_edgecolor()
     assert_allclose(actual, (1.0, 0.498039, 0.054902, 1.0), rtol=1e-2)
     assert ax.lines[0].get_color() in ["green", "C0"]
+
+
+def test_plot_npred_signal(geom, geom_etrue, sky_model):
+    dataset = get_map_dataset(geom, geom_etrue)
+
+    pwl = PowerLawSpectralModel()
+    gauss = GaussianSpatialModel(
+        lon_0="0.0 deg", lat_0="0.0 deg", sigma="0.5 deg", frame="galactic"
+    )
+    model1 = SkyModel(pwl, gauss, name="m1")
+
+    bkg = FoVBackgroundModel(dataset_name=dataset.name)
+    dataset.models = [bkg, sky_model, model1]
+
+    with mpl_plot_check():
+        plot_npred_signal(dataset)
+
+    with mpl_plot_check():
+        plot_npred_signal(dataset, model_names=[sky_model.name, model1.name])
+
+    with mpl_plot_check():
+        plot_npred_signal(dataset, plot_background=False)
+
+    with mpl_plot_check():
+        plot_npred_signal(dataset, stack=True)
