@@ -58,7 +58,7 @@ class DatasetsMaker(Maker):
                 self._apply_cutout = False
             else:
                 self.cutout_width = 2 * self.offset_max
-        self._n_jobs = n_jobs
+        self.n_jobs = n_jobs
         self.stack_datasets = stack_datasets
 
         self._datasets = []
@@ -167,26 +167,20 @@ class DatasetsMaker(Maker):
         else:
             datasets = len(observations) * [dataset]
 
-        if self.n_jobs > 1:
-            n_jobs = min(self.n_jobs, len(observations))
-            log.info("Using {} jobs.".format(n_jobs))
-            parallel.run_multiprocessing(
-                self.make_dataset,
-                zip(datasets, observations),
-                pool_kwargs=dict(processes=self.n_jobs),
-                method="apply_async",
-                method_kwargs=dict(
-                    callback=self.callback,
-                    error_callback=self.error_callback,
-                ),
-                task_name="Data reduction",
-            )
-            if self._error:
-                raise RuntimeError("Execution of a sub-process failed")
-        else:
-            for base, obs in zip(datasets, observations):
-                dataset = self.make_dataset(base, obs)
-                self.callback(dataset)
+        n_jobs = min(self.n_jobs, len(observations))
+        parallel.run_multiprocessing(
+            self.make_dataset,
+            zip(datasets, observations),
+            pool_kwargs=dict(processes=n_jobs),
+            method="apply_async",
+            method_kwargs=dict(
+                callback=self.callback,
+                error_callback=self.error_callback,
+            ),
+            task_name="Data reduction",
+        )
+        if self._error:
+            raise RuntimeError("Execution of a sub-process failed")
 
         if self.stack_datasets:
             return Datasets([self._dataset])
