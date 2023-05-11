@@ -1,3 +1,4 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 import matplotlib.pyplot as plt
 
 __all__ = [
@@ -112,31 +113,32 @@ def plot_npred_signal(
     dataset,
     ax=None,
     model_names=None,
-    stack=False,
     region=None,
     plot_background=True,
+    stack=False,
     **kwargs,
 ):
     """
-    Plot the npred_signal of the models of a dataset.
+    Plot the energy distribution of predicted counts of a selection of models assigned to a dataset.
 
     Parameters
     ----------
     dataset : an instance of `~gammapy.datasets.dataset`
-        The dataset from which to plot the npred_signal
+        The dataset from which to plot the npred_signal.
     ax : `~matplotlib.axes.Axes`
         Axis object to plot on.
     model_names : list of str
-        The list of model for which the npres_signal is plotted. If set to None, it will take all the models
-        of the `dataset
-    stack : bool
-        Whether to sum the npred_signal of all the model.
+        The list of models for which the npred_signal is plotted. Default is None.
+        If None, all models are considered.
     region: `~regions.Region` or `~astropy.coordinates.SkyCoord`
-        Region.
+        Region used to reproject predicted counts. Default is None.
+        If None, use the full dataset geometry.
     plot_background : bool
         Whether to plot the background along with the other models.
+    stack : bool
+        Whether to sum the npred_signal of all the model.
     **kwargs : dict
-        Keyword arguments to pass to `~gammapy.maps.RegionNDMap.plot`
+        Keyword arguments to pass to `~gammapy.maps.RegionNDMap.plot`.
 
 
     Returns
