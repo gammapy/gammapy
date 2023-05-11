@@ -157,7 +157,9 @@ def test_compute_ts_map_parallel_ray(input_dataset):
     assert_allclose(result["npred"].data[0, 99, 99], 4744.020361, rtol=1e-2)
     assert_allclose(result["npred_excess"].data[0, 99, 99], 1026.874063, rtol=1e-2)
     assert_allclose(result["npred_excess_err"].data[0, 99, 99], 38.470995, rtol=1e-2)
+
     parallel.MULTIPROCESSING_BACKEND = "multiprocessing"
+    parallel.N_PROCESSES = 1
 
 
 @requires_data()

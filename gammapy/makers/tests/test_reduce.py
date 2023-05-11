@@ -179,7 +179,7 @@ def test_datasets_maker_map(pars, observations_cta, makers_map):
         assert exposure.unit == "m2 s"
         assert_allclose(exposure.data.mean(), 1.350841e09, rtol=3e-3)
     else:
-        assert len(datasets) == 3
+        assert len(datasets) == 2
         # get by name because of async
         counts = datasets[0].counts
         assert counts.unit == ""

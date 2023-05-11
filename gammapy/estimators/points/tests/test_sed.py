@@ -549,9 +549,9 @@ def test_flux_points_parallel_ray(fpe_pwl):
     datasets, fpe = fpe_pwl
     fpe.selection_optional = ["all"]
     fpe.n_jobs = None
-    parallel.N_PROCESSES = 3
+    parallel.N_PROCESSES = 2
     parallel.MULTIPROCESSING_BACKEND = "ray"
-    assert fpe.n_jobs == 3
+    assert fpe.n_jobs == 2
     fp = fpe.run(datasets)
     assert_allclose(
         fp.flux_ul.data,
@@ -559,6 +559,7 @@ def test_flux_points_parallel_ray(fpe_pwl):
         rtol=1e-3,
     )
     parallel.MULTIPROCESSING_BACKEND = "multiprocessing"
+    parallel.N_PROCESSES = 1
 
 
 def test_fpe_non_aligned_energy_axes():
