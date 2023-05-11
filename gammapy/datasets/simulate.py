@@ -35,12 +35,9 @@ class MapDatasetEventSampler:
         performed. It is used only when sampling an energy-dependent time-varying source.
     """
 
-    def __init__(
-        self, random_state="random-seed", oversample_energy_factor=10, method="linear"
-    ):
+    def __init__(self, random_state="random-seed", oversample_energy_factor=10):
         self.random_state = get_random_state(random_state)
         self.oversample_energy_factor = oversample_energy_factor
-        self.method = method
 
     def _make_table(self, coords, time_ref):
         """Create a table for sampled events.
