@@ -49,7 +49,7 @@ def run_multiprocessing(
         pool_kwargs = {}
     pool_kwargs.setdefault("processes", N_PROCESSES)
     if backend == "ray":
-        pool_kwargs.setdefault("ray_adress", "auto")
+        pool_kwargs.setdefault("ray_address", "auto")
 
     processes = pool_kwargs["processes"]
     log.info(f"Using {processes} processes to compute {task_name}")
