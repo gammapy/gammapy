@@ -23,6 +23,7 @@ from gammapy.modeling.models import (
     LightCurveTemplateTemporalModel,
     LogParabolaSpectralModel,
     Models,
+    PiecewiseNormSpatialModel,
     PointSpatialModel,
     PowerLawNormSpectralModel,
     PowerLawSpectralModel,
@@ -748,11 +749,10 @@ def test_spatial_model_background(background):
     geom = background.geom
 
     spatial_model = ConstantSpatialModel(frame="galactic")
-    reference_npred = TemplateNPredModel(background, spatial_model=None).evaluate()
     identical_npred = TemplateNPredModel(
         background, spatial_model=spatial_model
     ).evaluate()
-    assert_allclose(identical_npred, reference_npred)
+    assert_allclose(identical_npred, background.data)
 
     reference = FoVBackgroundModel(
         spatial_model=None, dataset_name="test"
@@ -767,7 +767,7 @@ def test_spatial_model_background(background):
     twice_npred = TemplateNPredModel(
         background, spatial_model=spatial_model2
     ).evaluate()
-    assert_allclose(twice_npred, reference_npred * 2)
+    assert_allclose(twice_npred, background.data * 2)
 
     twice = FoVBackgroundModel(
         spatial_model=spatial_model2, dataset_name="test"
@@ -802,3 +802,34 @@ def test_spatial_model_io_background(background):
     assert "spatial" in model_dict
     new_model = FoVBackgroundModel.from_dict(model_dict)
     assert isinstance(new_model.spatial_model, ConstantSpatialModel)
+
+
+def test_piecewise_spatial_model_background(background):
+
+    geom = background.geom
+    coords = geom.to_image().get_coord().flat
+
+    spatial_model = PiecewiseNormSpatialModel(coords, frame="galactic")
+    identical_npred = TemplateNPredModel(
+        background, spatial_model=spatial_model
+    ).evaluate()
+    assert_allclose(identical_npred, background.data)
+
+    reference = Map.from_geom(geom, data=1)
+    identical = FoVBackgroundModel(
+        spatial_model=spatial_model, dataset_name="test"
+    ).evaluate_geom(geom)
+    assert_allclose(identical, reference)
+
+    spatial_model2 = PiecewiseNormSpatialModel(
+        coords, norms=2 * np.ones(coords.shape[0]), frame="galactic"
+    )
+    twice_npred = TemplateNPredModel(
+        background, spatial_model=spatial_model2
+    ).evaluate()
+    assert_allclose(twice_npred, background.data * 2)
+
+    twice = FoVBackgroundModel(
+        spatial_model=spatial_model2, dataset_name="test"
+    ).evaluate_geom(geom)
+    assert_allclose(twice, reference * 2.0)
