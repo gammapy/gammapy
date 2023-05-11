@@ -21,7 +21,6 @@ from gammapy.modeling.models import (
 from gammapy.utils.random import get_random_state
 from gammapy.utils.regions import compound_region_to_regions
 from gammapy.utils.testing import assert_time_allclose, mpl_plot_check, requires_data
-from gammapy.utils.time import time_ref_to_dict
 
 
 def test_data_shape(spectrum_dataset):
@@ -820,9 +819,7 @@ def _read_hess_obs():
 
 
 def make_gti(times, time_ref="2010-01-01"):
-    meta = time_ref_to_dict(time_ref)
-    table = Table(times, meta=meta)
-    return GTI(table)
+    return GTI.create(times["START"], times["STOP"], time_ref)
 
 
 @requires_data("gammapy-data")
@@ -859,8 +856,10 @@ def make_observation_list():
     )
 
     time_ref = Time("2010-01-01")
-    gti1 = make_gti({"START": [5, 6, 1, 2], "STOP": [8, 7, 3, 4]}, time_ref=time_ref)
-    gti2 = make_gti({"START": [14], "STOP": [15]}, time_ref=time_ref)
+    gti1 = make_gti(
+        {"START": [5, 6, 1, 2] * u.s, "STOP": [8, 7, 3, 4] * u.s}, time_ref=time_ref
+    )
+    gti2 = make_gti({"START": [14] * u.s, "STOP": [15] * u.s}, time_ref=time_ref)
 
     exposure = aeff * livetime
     exposure.meta["livetime"] = livetime
@@ -969,10 +968,9 @@ class TestSpectrumDatasetOnOffStack:
     def test_stack_gti(self):
         obs1, obs2 = make_observation_list()
         obs1.stack(obs2)
-        table_gti = Table({"START": [1.0, 5.0, 14.0], "STOP": [4.0, 8.0, 15.0]})
-        table_gti_stacked_obs = obs1.gti.table
-        assert_allclose(table_gti_stacked_obs["START"], table_gti["START"])
-        assert_allclose(table_gti_stacked_obs["STOP"], table_gti["STOP"])
+
+        assert_allclose(obs1.gti.met_start.value, [1.0, 5.0, 14.0])
+        assert_allclose(obs1.gti.met_stop.value, [4.0, 8.0, 15.0])
 
 
 @requires_data("gammapy-data")

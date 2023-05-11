@@ -333,7 +333,7 @@ def test_flux_map_read_write_gti(tmp_path, partial_wcs_flux_map, reference_model
     new_fluxmap = FluxMaps.read(tmp_path / "tmp.fits")
 
     assert len(new_fluxmap.gti.table) == 2
-    assert_allclose(gti.table["START"], start.to_value("s"))
+    assert_allclose(gti.met_start.to_value("s"), start.to_value("s"))
 
 
 @pytest.mark.xfail
