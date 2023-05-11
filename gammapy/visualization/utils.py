@@ -291,6 +291,7 @@ def plot_npred_signal(
     stack=False,
     region=None,
     plot_background=True,
+    **kwargs,
 ):
     """
     Plot the npred_signal of the models of a dataset.
@@ -310,6 +311,8 @@ def plot_npred_signal(
         Region.
     plot_background : bool
         Whether to plot the background along with the other models.
+    **kwargs : dict
+        Keyword arguments to pass to `gammapy.maps.RegionNDMap.plot
 
 
     Returns
@@ -330,28 +333,19 @@ def plot_npred_signal(
         npred_iter = [npred_region]
         names = ["stacked models"]
 
-    cmap = plt.get_cmap("jet")
-    if plot_background:
-        num_color = len(names) + 1
-    else:
-        num_color = len(names)
-
-    colors = cmap(np.linspace(0, 1, num_color))
-
     if ax is None:
         fig = plt.figure()
         axes = fig.add_subplot(111)
     else:
         axes = ax
 
-    axes.set_prop_cycle(color=colors)
-
     for (npred, name) in zip(npred_iter, names):
-        npred.plot(axes, label=name)
+        npred.plot(axes, label=name, **kwargs)
     if plot_background:
         dataset.npred_background().to_region_nd_map(region).plot(
-            ax=axes, label="background"
+            ax=axes, label="background", **kwargs
         )
+    axes.set_ylabel("Predicted counts")
     plt.legend(bbox_to_anchor=(1.04, 1), borderaxespad=0)
 
     return axes
