@@ -170,6 +170,6 @@ def plot_npred_signal(
             ax=axes, label="background", **kwargs
         )
     axes.set_ylabel("Predicted counts")
-    plt.legend(bbox_to_anchor=(1.04, 1), borderaxespad=0)
+    axes.legend(loc="upper left", bbox_to_anchor=(1.04, 1), borderaxespad=0)
 
     return axes
