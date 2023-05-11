@@ -77,7 +77,7 @@ class FluxPointsEstimator(FluxEstimator):
         self,
         energy_edges=[1, 10] * u.TeV,
         sum_over_energy_groups=False,
-        n_jobs=1,
+        n_jobs=None,
         **kwargs,
     ):
         self.energy_edges = energy_edges

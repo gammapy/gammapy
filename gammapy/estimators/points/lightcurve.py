@@ -79,10 +79,10 @@ class LightCurveEstimator(FluxPointsEstimator):
 
     tag = "LightCurveEstimator"
 
-    def __init__(self, time_intervals=None, atol="1e-6 s", n_jobs=1, **kwargs):
+    def __init__(self, time_intervals=None, atol="1e-6 s", **kwargs):
         self.time_intervals = time_intervals
         self.atol = u.Quantity(atol)
-        self.n_jobs = n_jobs
+
         super().__init__(**kwargs)
 
     def run(self, datasets):
@@ -128,13 +128,13 @@ class LightCurveEstimator(FluxPointsEstimator):
 
             valid_intervals.append([t_min, t_max])
 
-            if self.n_jobs == 1:
+            if self.n_jobs is None or self.n_jobs == 1:
                 fp = self.estimate_time_bin_flux(datasets_to_fit, dataset_names)
                 rows.append(fp)
             else:
                 parallel_datasets.append(datasets_to_fit)
 
-        if self.n_jobs > 1:
+        if self.n_jobs is not None and self.n_jobs > 1:
             rows = parallel.run_multiprocessing(
                 self.estimate_time_bin_flux,
                 zip(
@@ -192,7 +192,11 @@ class LightCurveEstimator(FluxPointsEstimator):
         result : `FluxPoints`
             Resulting flux points.
         """
+        n_jobs = self.n_jobs
+        self.n_jobs = 1
         fp = super().run(datasets)
+        self.n_jobs = n_jobs
+        # n_jobs = 1 because we can't create more child processes from inside another Pool
 
         if dataset_names:
             for name in ["counts", "npred", "npred_excess"]:
