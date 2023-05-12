@@ -80,4 +80,3 @@ def compute_chisq(flux):
     yobs = flux.data
     chi2, pval = stats.chisquare(yobs, yexp)
     return chi2, pval
-
