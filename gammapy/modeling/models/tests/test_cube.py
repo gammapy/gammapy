@@ -781,17 +781,23 @@ def test_spatial_model_background(background):
     assert_allclose(twice, reference * 2)
 
 
-def test_spatial_model_io_background(background):
+def test_spatial_model_io_background(tmp_path, background):
 
     spatial_model = ConstantSpatialModel(frame="galactic")
 
-    model = TemplateNPredModel(background, spatial_model=None)
+    fbkg_irf = str(tmp_path / "background_irf_test.fits")
+
+    model = TemplateNPredModel(background, spatial_model=None, filename=fbkg_irf)
+    model.write()
+
     model_dict = model.to_dict()
     assert "spatial" not in model_dict
     new_model = TemplateNPredModel.from_dict(model_dict)
     assert new_model.spatial_model is None
 
-    model = TemplateNPredModel(background, spatial_model=spatial_model)
+    model = TemplateNPredModel(
+        background, spatial_model=spatial_model, filename=fbkg_irf
+    )
     model_dict = model.to_dict()
     assert "spatial" in model_dict
     new_model = TemplateNPredModel.from_dict(model_dict)
