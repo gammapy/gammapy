@@ -642,6 +642,11 @@ class FitResult:
 
         self._covariance_result = covariance_result
 
+    @property
+    def minuit(self):
+        """Minuit object"""
+        return self.optimize_result.minuit
+
     # TODO: is the convenience access needed?
     @property
     def parameters(self):

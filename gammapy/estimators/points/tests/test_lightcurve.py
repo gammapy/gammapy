@@ -223,8 +223,8 @@ def test_lightcurve_estimator_fit_options():
 
     assert_allclose(estimator.fit.optimize_opts["tol"], 0.2)
 
-    estimator.fit.run(datasets=datasets)
-    assert_allclose(estimator.fit.minuit.tol, 0.2)
+    result = estimator.fit.run(datasets=datasets)
+    assert_allclose(result.minuit.tol, 0.2)
 
 
 @requires_data()
