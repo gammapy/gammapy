@@ -2375,6 +2375,8 @@ class MapDatasetOnOff(MapDataset):
 
     def stat_sum(self):
         """Total statistic function value given the current model parameters."""
+        if self.counts_off is None and not np.any(self.mask_safe.data) is False:
+            return 0
         return Dataset.stat_sum(self)
 
     def fake(self, npred_background, random_state="random-seed"):

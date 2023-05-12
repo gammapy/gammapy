@@ -9,7 +9,7 @@ from astropy.table import Table
 from regions import CircleSkyRegion
 from gammapy.catalog import SourceCatalog3FHL
 from gammapy.data import GTI
-from gammapy.datasets import Datasets, MapDataset, MapDatasetOnOff
+from gammapy.datasets import Datasets, MapDataset, MapDatasetOnOff, SpectrumDatasetOnOff
 from gammapy.datasets.map import RAD_AXIS_DEFAULT
 from gammapy.irf import (
     EDispKernelMap,
@@ -1909,3 +1909,11 @@ def test_peek(images):
 def test_create_psf_reco(geom):
     dat = MapDataset.create(geom, reco_psf=True)
     assert isinstance(dat.psf, RecoPSFMap)
+
+
+def test_stat_sum():
+    axis = MapAxis.from_energy_bounds(0.1, 10, 5, unit="TeV")
+    geom = RegionGeom.create(None, axes=[axis])
+    dataset = SpectrumDatasetOnOff.create(geom)
+    dataset.counts_off = None
+    return dataset.stat_sum()

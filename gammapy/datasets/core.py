@@ -63,10 +63,6 @@ class Dataset(abc.ABC):
 
     def stat_sum(self):
         """Total statistic given the current model parameters."""
-
-        if self.counts_off is None and not np.any(self.mask_safe.data) is False:
-            return 0
-
         stat = self.stat_array()
 
         if self.mask is not None:
