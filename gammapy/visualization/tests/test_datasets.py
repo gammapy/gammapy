@@ -10,7 +10,7 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
 )
-from gammapy.utils.testing import mpl_plot_check
+from gammapy.utils.testing import mpl_plot_check, requires_data
 from gammapy.visualization import plot_npred_signal, plot_spectrum_datasets_off_regions
 
 
@@ -62,6 +62,7 @@ def test_plot_spectrum_datasets_off_regions():
     assert ax.lines[0].get_color() in ["green", "C0"]
 
 
+@requires_data()
 def test_plot_npred_signal(sky_model):
     dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
 
