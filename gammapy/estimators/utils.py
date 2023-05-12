@@ -24,8 +24,6 @@ __all__ = [
     "find_peaks",
     "resample_energy_edges",
     "lc_fvar",
-    "lc_fpp",
-    "eval_lc_timing",
 ]
 
 
@@ -257,51 +255,3 @@ def lc_fvar(lightcurve):
     flux_err = lightcurve.flux_err.data.flatten()
 
     return compute_fvar(flux, flux_err)
-
-
-def lc_fpp(lightcurve):
-    r"""Wrapper to utilize the '~gammapy.stats.compute_fpp' function
-    directly from the lightcurve FluxPoints object
-
-    Parameters
-    ----------
-    lightcurve : '~gammapy.estimators.FluxPoints'
-        the lightcurve object
-
-    Returns
-    -------
-    fpp: `~numpy.ndarray`
-        Point-to-point fractional variation
-
-    """
-
-    flux = lightcurve.flux.data.flatten()
-    flux_err = lightcurve.flux_err.data.flatten()
-
-    return compute_fpp(flux, flux_err)
-
-
-def eval_lc_timing(lightcurve, efolding=True):
-    r"""Wrapper to utilize the '~gammapy.stats.compute_etime'
-    and '~gammapy.stats.compute_2time' functions
-    directly from the lightcurve FluxPoints object
-
-    Parameters
-    ----------
-    lightcurve : '~gammapy.estimators.FluxPoints'
-        the lightcurve object
-    efolding : 'bool'
-        flag to compute e-folding time or doubling time
-
-    Returns
-    -------
-    t:  float
-        Doubling time or e-folding time
-    """
-    flux = lightcurve.flux.data.flatten()
-    time = lightcurve.geom.axes["time"].time_mid
-
-    if efolding:
-        return compute_etime(flux, time)
-    else:
-        return compute_2time(flux, time)
