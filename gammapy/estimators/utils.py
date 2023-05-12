@@ -7,12 +7,7 @@ from astropy.table import Table
 from gammapy.datasets import SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.datasets.map import MapEvaluator
 from gammapy.maps import WcsNDMap
-from gammapy.stats import (
-    compute_fvar,
-    compute_fpp,
-    compute_etime,
-    compute_2time,
-)
+from gammapy.stats import compute_fvar
 from gammapy.modeling.models import (
     ConstantFluxSpatialModel,
     PowerLawSpectralModel,
