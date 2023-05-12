@@ -7,7 +7,9 @@ import warnings
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import AltAz, Angle, SkyCoord, angular_separation
+from astropy.table import QTable
 from astropy.table import vstack as vstack_tables
+from astropy.time import Time
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from gammapy.maps import MapAxis, MapCoord, RegionGeom, WcsNDMap
@@ -22,36 +24,24 @@ __all__ = ["EventList"]
 
 log = logging.getLogger(__name__)
 
+REQUIRED_COLUMNS = {"position": SkyCoord, "energy": u.Quantity, "time": Time}
+
 
 class EventList:
     """Event list.
 
     Event list data is stored as ``table`` (`~astropy.table.Table`) data member.
 
-    The most important reconstructed event parameters
-    are available as the following columns:
+    The required columns are:
 
-    - ``TIME`` - Mission elapsed time (sec)
-    - ``RA``, ``DEC`` - ICRS system position (deg)
-    - ``ENERGY`` - Energy (usually MeV for Fermi and TeV for IACTs)
-
-    Note that ``TIME`` is usually sorted, but sometimes it is not.
-    E.g. when simulating data, or processing it in certain ways.
-    So generally any analysis code should assume ``TIME`` is not sorted.
+    - ``time`` - event time
+    - ``position`` - ICRS system reconstructed position
+    - ``energy`` - Reconstructed energy (usually MeV for Fermi and TeV for IACTs)
 
     Other optional (columns) that are sometimes useful for high level analysis:
 
     - ``GLON``, ``GLAT`` - Galactic coordinates (deg)
     - ``DETX``, ``DETY`` - Field of view coordinates (deg)
-
-    Note that when reading data for analysis you shouldn't use those
-    values directly, but access them via properties which create objects
-    of the appropriate class:
-
-    - `time` for ``TIME``
-    - `radec` for ``RA``, ``DEC``
-    - `energy` for ``ENERGY``
-    - `galactic` for ``GLON``, ``GLAT``
 
     Parameters
     ----------
@@ -88,10 +78,30 @@ class EventList:
     """
 
     def __init__(self, table, meta=None):
-        self.table = table
+        self.table = self._validate_table(table)
         self.meta = meta or EventListMetaData()
 
-    def _repr_html_(self):
+    @staticmethod
+    def _validate_table(table):
+        """Checks that the input GTI fits the gammapy internal model."""
+        if not isinstance(table, QTable):
+            raise TypeError(
+                f"EventList expects astropy QTable, got {type(table)} instead."
+            )
+
+        missing_columns = set(REQUIRED_COLUMNS.keys()).difference(table.colnames)
+        if len(missing_columns) > 0:
+            raise ValueError(
+                f"EventList table invalid: columns {missing_columns} are missing."
+            )
+
+        for name, check in REQUIRED_COLUMNS.items():
+            if not isinstance(table[name], check):
+                raise TypeError(f"Column {name} is not a {check} object.")
+
+        return table
+
+   def _repr_html_(self):
         try:
             return self.to_html()
         except AttributeError:

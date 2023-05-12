@@ -4,7 +4,8 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import SkyCoord
-from astropy.table import Table
+from astropy.table import QTable, Table
+from astropy.time import Time
 from regions import CircleSkyRegion, RectangleSkyRegion
 from gammapy.data import GTI, EventList, Observation, FixedPointingInfo
 from gammapy.maps import MapAxis, WcsGeom
@@ -23,6 +24,32 @@ class TestEventListBasic:
 
     def test_eventlist_printin(self):
         print(self.events)
+
+@pytest.fixture()
+def simple_event_table():
+    zeros = np.zeros(5)
+    energy = zeros * u.TeV
+    position = SkyCoord(zeros, zeros, unit="deg", frame="icrs")
+    time = Time(zeros, format="mjd", scale="tt")
+    return QTable({"energy": energy, "position": position, "time": time})
+
+
+def test_validation(simple_event_table):
+    events = EventList(simple_event_table)
+    assert len(events.table) == 5
+
+    with pytest.raises(TypeError):
+        EventList(simple_event_table.to_pandas())
+
+    bad = simple_event_table.copy()
+
+    bad["energy"] *= 1 * u.s
+    with pytest.raises(TypeError):
+        EventList(bad)
+
+    del bad["energy"]
+    with pytest.raises(TypeError):
+        EventList(bad)
 
 
 @requires_data()
