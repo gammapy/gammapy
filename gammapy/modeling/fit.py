@@ -258,7 +258,7 @@ class Fit:
             Datasets to optimize.
         optimize_result : `OptimizeResult`
             Optimization result. Can be optionally used to pass the state of the IMinuit object
-            to the convariance estimatiomn. This might save computation time in certain cases.
+            to the covariance estimation. This might save computation time in certain cases.
 
         Returns
         -------
