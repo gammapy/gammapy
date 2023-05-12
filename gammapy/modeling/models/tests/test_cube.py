@@ -252,6 +252,7 @@ def test_background_model_io(tmpdir, background):
     )
     assert bkg_read.filename == filename
 
+
 def test_background_model_io_missing_file(tmpdir, background):
     bkg = TemplateNPredModel(background, filename=None)
     with pytest.raises(IOError):

@@ -121,6 +121,7 @@ def test_sky_models_io(tmp_path, models):
     # check YAML file content (e.g. against a ref file in the repo)
     # or check serialised dict content
 
+
 @requires_data()
 def test_sky_models_io_auto_write(tmp_path, models):
 
@@ -140,14 +141,16 @@ def test_sky_models_io_auto_write(tmp_path, models):
     assert models["cube_iem"].spatial_model.filename == fbkg_iem
     assert models["background_irf"].filename == fbkg_irf
 
-    assert_allclose(models_new["source2"].spatial_model.map.data,
-                    models["source2"].spatial_model.map.data
+    assert_allclose(
+        models_new["source2"].spatial_model.map.data,
+        models["source2"].spatial_model.map.data,
     )
-    assert_allclose(models_new["cube_iem"].spatial_model.map.data,
-                    models["cube_iem"].spatial_model.map.data
+    assert_allclose(
+        models_new["cube_iem"].spatial_model.map.data,
+        models["cube_iem"].spatial_model.map.data,
     )
-    assert_allclose(models_new["background_irf"].map.data,
-                    models["background_irf"].map.data
+    assert_allclose(
+        models_new["background_irf"].map.data, models["background_irf"].map.data
     )
 
 

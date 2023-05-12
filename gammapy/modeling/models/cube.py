@@ -1,6 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Cube models (axes: lon, lat, energy)."""
 
+import logging
+import os
 import numpy as np
 import astropy.units as u
 from astropy.nddata import NoOverlapError
@@ -15,8 +17,6 @@ from .core import Model, ModelBase, Models
 from .spatial import ConstantSpatialModel, SpatialModel
 from .spectral import PowerLawNormSpectralModel, SpectralModel, TemplateSpectralModel
 from .temporal import TemporalModel
-import logging
-import os
 
 log = logging.getLogger(__name__)
 
