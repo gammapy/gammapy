@@ -193,11 +193,8 @@ class LightCurveEstimator(FluxPointsEstimator):
         result : `FluxPoints`
             Resulting flux points.
         """
-        n_jobs = self.n_jobs
-        self.n_jobs = 1
+
         fp = super().run(datasets)
-        self.n_jobs = n_jobs
-        # n_jobs = 1 because we can't create more child processes from inside another Pool
 
         if dataset_names:
             for name in ["counts", "npred", "npred_excess"]:

@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Multiprocessing and multithreading setup"""
 import logging
+import os
 from gammapy.utils.pbar import progress_bar
 
 log = logging.getLogger(__name__)
@@ -76,6 +77,13 @@ def run_multiprocessing(
         pool_kwargs.setdefault("ray_address", "auto")
 
     processes = pool_kwargs["processes"]
+    if backend == "multiprocessing":
+        processes = max(processes, os.cpu_count())
+        if multiprocessing.current_process().name != "MainProcess":
+            # subprocesses cannot have childs
+            processes = 1
+    # TODO: check for ray
+
     log.info(f"Using {processes} processes to compute {task_name}")
 
     if processes == 1:
