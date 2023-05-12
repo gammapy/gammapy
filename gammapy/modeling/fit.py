@@ -270,7 +270,7 @@ class Fit:
 
         kwargs = self.covariance_opts.copy()
 
-        if optimize_result is not None:
+        if optimize_result is not None and optimize_result.backend == "minuit":
             kwargs["minuit"] = optimize_result.minuit
 
         backend = kwargs.pop("backend", self.backend)

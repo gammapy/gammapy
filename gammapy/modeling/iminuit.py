@@ -91,7 +91,7 @@ def optimize_iminuit(parameters, function, store_trace=False, **kwargs):
 
 
 def covariance_iminuit(parameters, function, **kwargs):
-    minuit = kwargs["minuit"]
+    minuit = kwargs.get("minuit")
 
     if minuit is None:
         minuit, _ = setup_iminuit(
