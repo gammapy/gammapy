@@ -196,7 +196,7 @@ print(result_minuit)
 # to check the convergence
 #
 
-print(fit.minuit)
+print(result_minuit.minuit)
 
 
 ######################################################################
