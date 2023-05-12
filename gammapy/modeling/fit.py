@@ -3,6 +3,7 @@ import itertools
 import logging
 import numpy as np
 from astropy.table import Table
+from gammapy.utils.deprecation import deprecated
 from gammapy.utils.pbar import progress_bar
 from .covariance import Covariance
 from .iminuit import (
@@ -137,6 +138,10 @@ class Fit:
         self._minuit = None
 
     @property
+    @deprecated(
+        "v1.1",
+        message="The IMinuit object is attached to the OptimizeResult object instead.",
+    )
     def minuit(self):
         """Iminuit object"""
         return self._minuit
@@ -167,7 +172,9 @@ class Fit:
             log.warning("No covariance estimate - not supported by this backend.")
             return FitResult(optimize_result=optimize_result)
 
-        covariance_result = self.covariance(datasets=datasets)
+        covariance_result = self.covariance(
+            datasets=datasets, optimize_result=optimize_result
+        )
 
         optimize_result.models.covariance = Covariance(
             optimize_result.models.parameters, covariance_result.matrix
@@ -214,7 +221,6 @@ class Fit:
         )
 
         if backend == "minuit":
-            self._minuit = optimizer
             kwargs["method"] = "migrad"
 
         trace = Table(info.pop("trace"))
@@ -237,10 +243,11 @@ class Fit:
             backend=backend,
             method=kwargs.get("method", backend),
             trace=trace,
+            minuit=optimizer,
             **info,
         )
 
-    def covariance(self, datasets):
+    def covariance(self, datasets, optimize_result=None):
         """Estimate the covariance matrix.
 
         Assumes that the model parameters are already optimised.
@@ -249,6 +256,9 @@ class Fit:
         ----------
         datasets : `Datasets` or list of `Dataset`
             Datasets to optimize.
+        optimize_result : `OptimizeResult`
+            Optimization result. Can be optionally used to pass the state of the IMinuit object
+            to the convariance estimatiomn. This might save computation time in certain cases.
 
         Returns
         -------
@@ -259,7 +269,10 @@ class Fit:
         parameters = datasets.models.parameters
 
         kwargs = self.covariance_opts.copy()
-        kwargs["minuit"] = self.minuit
+
+        if optimize_result is not None:
+            kwargs["minuit"] = optimize_result.minuit
+
         backend = kwargs.pop("backend", self.backend)
         compute = registry.get("covariance", backend)
 
@@ -565,12 +578,18 @@ class CovarianceResult(FitStepResult):
 class OptimizeResult(FitStepResult):
     """Optimize result object."""
 
-    def __init__(self, models, nfev, total_stat, trace, **kwargs):
+    def __init__(self, models, nfev, total_stat, trace, minuit=None, **kwargs):
         self._models = models
         self._nfev = nfev
         self._total_stat = total_stat
         self._trace = trace
+        self._minuit = minuit
         super().__init__(**kwargs)
+
+    @property
+    def minuit(self):
+        """Minuit object"""
+        return self._minuit
 
     @property
     def parameters(self):
