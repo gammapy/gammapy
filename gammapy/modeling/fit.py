@@ -221,6 +221,7 @@ class Fit:
         )
 
         if backend == "minuit":
+            self._minuit = optimizer
             kwargs["method"] = "migrad"
 
         trace = Table(info.pop("trace"))
