@@ -24,7 +24,6 @@ def compute_fvar(flux, flux_err):
     on the light curve :math:`\sigma`. :math:`S` is the variance.
 
     It is important to note that the errors on the flux must be gaussian.
-    If temporal bins are non-uniform in size, the simple fractional excess variance is
 
     Parameters
     ----------
