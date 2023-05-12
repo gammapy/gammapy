@@ -14,7 +14,7 @@ __all__ = [
 ]
 
 
-class DatasetsMaker(Maker):
+class DatasetsMaker(Maker, parallel.ParralelMixin):
     """Run makers in a chain
 
     Parameters
@@ -45,6 +45,7 @@ class DatasetsMaker(Maker):
         n_jobs=None,
         cutout_mode="trim",
         cutout_width=None,
+        parallel_backend=None,
     ):
         self.log = logging.getLogger(__name__)
         self.makers = makers
@@ -59,21 +60,11 @@ class DatasetsMaker(Maker):
             else:
                 self.cutout_width = 2 * self.offset_max
         self.n_jobs = n_jobs
+        self.parallel_backend = parallel_backend
         self.stack_datasets = stack_datasets
 
         self._datasets = []
         self._error = False
-
-    @property
-    def n_jobs(self):
-        if self._n_jobs is None:
-            return parallel.N_PROCESSES
-        else:
-            return self._n_jobs
-
-    @n_jobs.setter
-    def n_jobs(self, value):
-        self._n_jobs = value
 
     @property
     def offset_max(self):
@@ -171,6 +162,7 @@ class DatasetsMaker(Maker):
         parallel.run_multiprocessing(
             self.make_dataset,
             zip(datasets, observations),
+            backend=self.parallel_backend,
             pool_kwargs=dict(processes=n_jobs),
             method="apply_async",
             method_kwargs=dict(

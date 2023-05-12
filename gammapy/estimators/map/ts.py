@@ -47,7 +47,7 @@ def _extract_array(array, shape, position):
     return array[:, y_lo:y_hi, x_lo:x_hi]
 
 
-class TSMapEstimator(Estimator):
+class TSMapEstimator(Estimator, parallel.ParralelMixin):
     r"""Compute TS map from a MapDataset using different optimization methods.
 
     The map is computed fitting by a single parameter norm fit. The fit is
@@ -157,6 +157,7 @@ class TSMapEstimator(Estimator):
         energy_edges=None,
         sum_over_energy_groups=True,
         n_jobs=None,
+        parallel_backend=None,
     ):
         if kernel_width is not None:
             kernel_width = Angle(kernel_width)
@@ -178,6 +179,7 @@ class TSMapEstimator(Estimator):
         self.rtol = rtol
 
         self.n_jobs = n_jobs
+        self.parallel_backend = parallel_backend
         self.sum_over_energy_groups = sum_over_energy_groups
 
         self.selection_optional = selection_optional

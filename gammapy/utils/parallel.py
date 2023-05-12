@@ -11,6 +11,30 @@ N_PROCESSES = 1
 N_THREADS = 1
 
 
+class ParralelMixin:
+    @property
+    def n_jobs(self):
+        if self._n_jobs is None:
+            return N_PROCESSES
+        else:
+            return self._n_jobs
+
+    @n_jobs.setter
+    def n_jobs(self, value):
+        self._n_jobs = value
+
+    @property
+    def parallel_backend(self):
+        if self._parallel_backend is None:
+            return MULTIPROCESSING_BACKEND
+        else:
+            return self._parallel_backend
+
+    @parallel_backend.setter
+    def parallel_backend(self, value):
+        self._parallel_backend = value
+
+
 def get_multiprocessing(backend=None):
     """import multiprocessing module for a given backend"""
 

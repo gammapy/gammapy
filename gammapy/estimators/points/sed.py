@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 __all__ = ["FluxPointsEstimator"]
 
 
-class FluxPointsEstimator(FluxEstimator):
+class FluxPointsEstimator(FluxEstimator, parallel.ParralelMixin):
     """Flux points estimator.
 
     Estimates flux points for a given list of datasets, energies and spectral model.
@@ -78,11 +78,13 @@ class FluxPointsEstimator(FluxEstimator):
         energy_edges=[1, 10] * u.TeV,
         sum_over_energy_groups=False,
         n_jobs=None,
+        parallel_backend=None,
         **kwargs,
     ):
         self.energy_edges = energy_edges
         self.sum_over_energy_groups = sum_over_energy_groups
         self.n_jobs = n_jobs
+        self.parallel_backend = parallel_backend
 
         fit = Fit(confidence_opts={"backend": "scipy"})
         kwargs.setdefault("fit", fit)
@@ -129,6 +131,7 @@ class FluxPointsEstimator(FluxEstimator):
                 self.energy_edges[:-1],
                 self.energy_edges[1:],
             ),
+            backend=self.parallel_backend,
             pool_kwargs=dict(processes=self.n_jobs),
             task_name="Energy bins",
         )

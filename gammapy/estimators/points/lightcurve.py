@@ -128,19 +128,20 @@ class LightCurveEstimator(FluxPointsEstimator):
 
             valid_intervals.append([t_min, t_max])
 
-            if self.n_jobs is None or self.n_jobs == 1:
+            if self.n_jobs == 1:
                 fp = self.estimate_time_bin_flux(datasets_to_fit, dataset_names)
                 rows.append(fp)
             else:
                 parallel_datasets.append(datasets_to_fit)
 
-        if self.n_jobs is not None and self.n_jobs > 1:
+        if self.n_jobs > 1:
             rows = parallel.run_multiprocessing(
                 self.estimate_time_bin_flux,
                 zip(
                     parallel_datasets,
                     repeat(dataset_names),
                 ),
+                backend=self.parallel_backend,
                 pool_kwargs=dict(processes=self.n_jobs),
                 task_name="Time intervals",
             )
