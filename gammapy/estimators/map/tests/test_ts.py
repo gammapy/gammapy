@@ -147,6 +147,17 @@ def test_compute_ts_map_parallel_ray(input_dataset):
     parallel.MULTIPROCESSING_BACKEND = "ray"
     parallel.N_PROCESSES = 2
     ts_estimator = TSMapEstimator(model=model, threshold=1, selection_optional=[])
+    assert ts_estimator.parallel_backend == "ray"
+    assert ts_estimator.n_jobs == 2
+
+    parallel.MULTIPROCESSING_BACKEND = "multiprocessing"
+    parallel.N_PROCESSES = 1
+    assert ts_estimator.parallel_backend == "multiprocessing"
+    assert ts_estimator.n_jobs == 1
+
+    ts_estimator.parallel_backend = "ray"
+    ts_estimator.n_jobs = 2
+    assert ts_estimator.parallel_backend == "ray"
     assert ts_estimator.n_jobs == 2
 
     result = ts_estimator.run(input_dataset)

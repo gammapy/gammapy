@@ -542,14 +542,18 @@ def test_flux_points_parallel_multiprocessing(fpe_pwl):
         rtol=1e-3,
     )
 
+    fpe.n_jobs = None
+    parallel.N_PROCESSES = 2
+    assert fpe.n_jobs == 2
+    parallel.N_PROCESSES = 1
+
 
 @pytest.mark.skip
 @requires_dependency("ray")
 def test_flux_points_parallel_ray(fpe_pwl):
     datasets, fpe = fpe_pwl
     fpe.selection_optional = ["all"]
-    fpe.n_jobs = None
-    parallel.N_PROCESSES = 2
+    fpe.n_jobs = 2
     parallel.MULTIPROCESSING_BACKEND = "ray"
     assert fpe.n_jobs == 2
     fp = fpe.run(datasets)
@@ -558,8 +562,6 @@ def test_flux_points_parallel_ray(fpe_pwl):
         [[[2.629819e-12]], [[9.319243e-13]], [[9.004449e-14]]],
         rtol=1e-3,
     )
-    parallel.MULTIPROCESSING_BACKEND = "multiprocessing"
-    parallel.N_PROCESSES = 1
 
 
 def test_fpe_non_aligned_energy_axes():
