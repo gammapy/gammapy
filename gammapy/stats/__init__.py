@@ -4,9 +4,6 @@ from .counts_statistic import CashCountsStatistic, WStatCountsStatistic
 from .fit_statistics import cash, cstat, get_wstat_gof_terms, get_wstat_mu_bkg, wstat
 from .variability import (
     compute_fvar,
-    compute_fpp,
-    compute_etime,
-    compute_2time,
     compute_chisq,
 )
 
@@ -28,8 +25,5 @@ __all__ = [
     "wstat",
     "WStatCountsStatistic",
     "compute_fvar",
-    "compute_fpp",
-    "compute_2time",
-    "compute_etime",
     "compute_chisq",
 ]
