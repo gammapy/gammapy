@@ -70,6 +70,7 @@ class LightCurveEstimator(FluxPointsEstimator):
         Re-optimize other free model parameters. Default is True.
     n_jobs : int
         Number of processes used in parallel for the computation.
+        Default is one, unless `~gammapy.utils.parallel.N_PROCESSES` was modified.
 
     Examples
     --------

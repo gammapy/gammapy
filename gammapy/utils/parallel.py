@@ -12,7 +12,7 @@ N_PROCESSES = 1
 N_THREADS = 1
 
 
-class ParralelMixin:
+class ParallelMixin:
     @property
     def n_jobs(self):
         if self._n_jobs is None:
@@ -62,7 +62,7 @@ def run_multiprocessing(
     method_kwargs=None,
     task_name="",
 ):
-    """Run function in a loop or in parralel"""
+    """Run function in a loop or in Parallel"""
 
     if method not in ["starmap", "apply_async"]:
         raise ValueError("Invalid multiprocessing method")
@@ -107,7 +107,7 @@ def run_loop(func, inputs, method_kwargs=None, task_name=""):
 
 
 def run_pool(pool, func, inputs, method="starmap", method_kwargs=None, task_name=""):
-    """Run function in parralel"""
+    """Run function in Parallel"""
 
     if method == "starmap":
         return pool.starmap(func, progress_bar(inputs, desc=task_name), **method_kwargs)

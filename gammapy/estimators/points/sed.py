@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 __all__ = ["FluxPointsEstimator"]
 
 
-class FluxPointsEstimator(FluxEstimator, parallel.ParralelMixin):
+class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
     """Flux points estimator.
 
     Estimates flux points for a given list of datasets, energies and spectral model.
@@ -69,6 +69,7 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParralelMixin):
         grid.
     n_jobs : int
         Number of processes used in parallel for the computation.
+        Default is one, unless `~gammapy.utils.parallel.N_PROCESSES` was modified.
     """
 
     tag = "FluxPointsEstimator"

@@ -47,7 +47,7 @@ def _extract_array(array, shape, position):
     return array[:, y_lo:y_hi, x_lo:x_hi]
 
 
-class TSMapEstimator(Estimator, parallel.ParralelMixin):
+class TSMapEstimator(Estimator, parallel.ParallelMixin):
     r"""Compute TS map from a MapDataset using different optimization methods.
 
     The map is computed fitting by a single parameter norm fit. The fit is
@@ -93,6 +93,7 @@ class TSMapEstimator(Estimator, parallel.ParralelMixin):
         cube.
     n_jobs : int
         Number of processes used in parallel for the computation.
+        Default is one, unless `~gammapy.utils.parallel.N_PROCESSES` was modified.
 
     Notes
     -----
