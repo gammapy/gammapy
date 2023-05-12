@@ -2,7 +2,7 @@
 import pytest
 from numpy.testing import assert_allclose
 from gammapy.datasets import Datasets, SpectrumDatasetOnOff
-from gammapy.maps import RegionGeom, MapAxis
+from gammapy.maps import MapAxis, RegionGeom
 from gammapy.modeling.tests.test_fit import MyDataset
 from gammapy.utils.testing import requires_data
 
@@ -91,7 +91,7 @@ def test_datasets_info_table():
 
 
 def test_stat_sum():
-    axis = MapAxis.from_energy_bounds(0.1, 10, 5, unit='TeV')
+    axis = MapAxis.from_energy_bounds(0.1, 10, 5, unit="TeV")
     geom = RegionGeom.create(None, axes=[axis])
     dataset = SpectrumDatasetOnOff.create(geom)
     dataset.counts_off = None
