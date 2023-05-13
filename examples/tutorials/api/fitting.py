@@ -239,6 +239,7 @@ for ax, par in zip(axes, datasets.parameters.free_parameters):
     ax.set_xlabel(f"{par.name} [{par.unit}]")
     ax.set_ylabel("Delta TS")
     ax.set_title(f"{name}:\n {par.value:.1e} +- {par.error:.1e}")
+plt.show()
 
 
 ######################################################################
@@ -264,6 +265,7 @@ print(result_minuit.models.covariance)
 #
 
 result_minuit.models.covariance.plot_correlation()
+plt.show()
 
 # The covariance information is also propagated to the individual models
 # Therefore, one can also get the error on a specific parameter by directly
@@ -278,10 +280,10 @@ print(crab_model.spectral_model.alpha.error)
 # the envelope of the model taking into account parameter uncertainties.
 #
 
-plt.figure()
 energy_bounds = [1, 10] * u.TeV
 crab_spectrum.plot(energy_bounds=energy_bounds, energy_power=2)
 ax = crab_spectrum.plot_error(energy_bounds=energy_bounds, energy_power=2)
+plt.show()
 
 
 ######################################################################

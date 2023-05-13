@@ -60,7 +60,7 @@ In summary, we have to:
    -  Model fitting
    -  Estimating flux points
 
-Finally we will compare the results against a reference model.
+Finally, we will compare the results against a reference model.
 
 """
 
@@ -70,9 +70,11 @@ Finally we will compare the results against a reference model.
 # -----
 #
 
-# %matplotlib inline
 from pathlib import Path
 from astropy import units as u
+
+# %matplotlib inline
+import matplotlib.pyplot as plt
 from gammapy.analysis import Analysis, AnalysisConfig
 
 ######################################################################
@@ -303,7 +305,7 @@ counts.smooth("0.05 deg").plot_interactive()
 
 analysis.get_excess_map()
 analysis.excess_map["sqrt_ts"].plot(add_cbar=True)
-
+plt.show()
 
 ######################################################################
 # Save dataset to disk
@@ -415,12 +417,12 @@ analysis.get_flux_points()
 fp = analysis.flux_points.data
 fp.sqrt_ts_threshold_ul = 5
 ax_sed, ax_residuals = analysis.flux_points.plot_fit()
-
+plt.show()
 
 ######################################################################
 # The flux points can be exported to a fits table following the format
 # defined
-# `here <https://gamma-astro-data-formats.readthedocs.io/en/latest/spectra/flux_points/index.html>`__
+# `here <https://gamma-astro-data-formats.readthedocs.io/en/latest/spectra/flux_points/index.html>`_
 #
 
 filename = path / "flux-points.fits"
@@ -434,6 +436,7 @@ analysis.flux_points.write(filename, overwrite=True)
 
 analysis.get_excess_map()
 analysis.excess_map["sqrt_ts"].plot(add_cbar=True, cmap="RdBu", vmin=-5, vmax=5)
+plt.show()
 
 
 ######################################################################

@@ -4,7 +4,7 @@
 
 Perform detailed 3D stacked and joint analysis.
 
-This tutorial does a 3D map based analsis on the galactic center, using
+This tutorial does a 3D map based analysis on the galactic center, using
 simulated observations from the CTA-1DC. We will use the high level
 interface for the data reduction, and then do a detailed modelling. This
 will be done in two different ways:
@@ -148,24 +148,28 @@ print(dataset_stacked)
 #
 
 dataset_stacked.counts.smooth(0.02 * u.deg).plot_interactive(add_cbar=True)
+plt.show()
 
 ######################################################################
 # And the background map
 #
 
 dataset_stacked.background.plot_interactive(add_cbar=True)
+plt.show()
 
 ######################################################################
 # We can quickly check the PSF
 #
 
 dataset_stacked.psf.peek()
+plt.show()
 
 ######################################################################
 # And the energy dispersion in the center of the map
 #
 
 dataset_stacked.edisp.peek()
+plt.show()
 
 ######################################################################
 # You can also get an excess image with a few lines of code:
@@ -173,7 +177,7 @@ dataset_stacked.edisp.peek()
 
 excess = dataset_stacked.excess.sum_over_axes()
 excess.smooth("0.06 deg").plot(stretch="sqrt", add_cbar=True)
-
+plt.show()
 
 ######################################################################
 # Modeling and fitting
@@ -259,6 +263,7 @@ display(models_stacked.to_parameters_table())
 # plot):
 #
 dataset_stacked.plot_residuals_spatial(method="diff/sqrt(model)", vmin=-1, vmax=1)
+plt.show()
 
 
 ######################################################################
@@ -271,6 +276,7 @@ dataset_stacked.plot_residuals(
     kwargs_spatial=dict(method="diff/sqrt(model)", vmin=-1, vmax=1),
     kwargs_spectral=dict(region=region),
 )
+plt.show()
 
 
 ######################################################################
@@ -294,6 +300,7 @@ result = estimator.run(dataset_stacked)
 result["sqrt_ts"].plot_grid(
     figsize=(12, 4), cmap="coolwarm", add_cbar=True, vmin=-5, vmax=5, ncols=2
 )
+plt.show()
 
 
 ######################################################################
@@ -322,6 +329,7 @@ ax.plot(
 )
 ax.legend(fontsize=17)
 ax.set_xlim(-5, 5)
+plt.show()
 
 
 ######################################################################

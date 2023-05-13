@@ -133,8 +133,8 @@ print(energy)
 # range:
 #
 
-plt.figure()
 pwl.plot(energy_bounds=[1, 100] * u.TeV)
+plt.show()
 
 
 ######################################################################
@@ -188,7 +188,6 @@ print(pwl_norm(energy))
 
 from gammapy.modeling.models import TemplateSpectralModel
 
-plt.figure()
 energy = [0.3, 1, 3, 10, 30] * u.TeV
 values = [40, 30, 20, 10, 1] * u.Unit("TeV-1 s-1 cm-2")
 template = TemplateSpectralModel(energy, values)
@@ -196,6 +195,7 @@ template.plot(energy_bounds=[0.2, 50] * u.TeV, label="template model")
 normed_template = template * pwl_norm
 normed_template.plot(energy_bounds=[0.2, 50] * u.TeV, label="normed_template model")
 plt.legend()
+plt.show()
 
 
 ######################################################################
@@ -283,20 +283,20 @@ print(flux_per_omega)
 
 m = Map.create(skydir=(0, 0), width=(1, 1), binsz=0.02, frame="galactic")
 m.quantity = gauss.evaluate_geom(m.geom)
-plt.figure()
 m.plot(add_cbar=True)
+plt.show()
 
 
 ######################################################################
 # Again for convenience the model can be plotted directly:
 #
-plt.figure()
 gauss.plot(add_cbar=True)
+plt.show()
 
 
 ######################################################################
 # All spatial models have an associated sky region to it e.g. to
-# illustrate the extend of the model on a sky image. The returned object
+# illustrate the extension of the model on a sky image. The returned object
 # is an `~regions.SkyRegion` object:
 #
 
@@ -318,6 +318,7 @@ ax = gauss_elongated.plot(add_cbar=True)
 region = gauss_elongated.to_region()
 region_pix = region.to_pixel(ax.wcs)
 ax.add_artist(region_pix.as_artist(ec="w", fc="None"))
+plt.show()
 
 
 ######################################################################
@@ -383,6 +384,7 @@ gauss_temp(time)
 
 time = Time([59233.0, 59250], format="mjd")
 gauss_temp.plot(time)
+plt.show()
 
 
 ######################################################################
@@ -437,8 +439,8 @@ print(model.temporal_model)
 # And can be used as you have seen already seen above:
 #
 
-plt.figure()
 model.spectral_model.plot(energy_bounds=[1, 10] * u.TeV)
+plt.show()
 
 
 ######################################################################
@@ -508,7 +510,7 @@ display(model.parameters.to_table())
 
 ######################################################################
 # You can use the interactive boxes to choose model parameters by name,
-# type or other attrributes mentioned in the column names.
+# type or other attributes mentioned in the column names.
 #
 
 
@@ -576,7 +578,7 @@ print(models_yaml)
 # tag attribute) and sub-mobels (i.e ``spectral`` model and eventually
 # ``spatial`` model). Then the spatial and spectral models are defined by
 # their type and parameters. The ``parameters`` keys name/value/unit are
-# mandatory, while the keys min/max/frozen are optionnals (so you can
+# mandatory, while the keys min/max/frozen are optional (so you can
 # prepare shorter files).
 #
 # If you want to write this list of models to disk and read it back later
@@ -589,7 +591,7 @@ models_read = Models.read("models.yaml")
 
 
 ######################################################################
-# Additionally the models can exported and imported togeter with the data
+# Additionally the models can be exported and imported together with the data
 # using the ``Datasets.read()`` and ``Datasets.write()`` methods as shown
 # in the :doc:`/tutorials/analysis-3d/analysis_mwl`
 # notebook.
@@ -646,7 +648,7 @@ from gammapy.modeling.models import SpectralModel
 
 
 class MyCustomSpectralModel(SpectralModel):
-    """My custom spectral model, parametrising a power law plus a Gaussian spectral line.
+    """My custom spectral model, parametrizing a power law plus a Gaussian spectral line.
 
     Parameters
     ----------
@@ -684,7 +686,7 @@ class MyCustomSpectralModel(SpectralModel):
 
 ######################################################################
 # It is good practice to also implement a docstring for the model,
-# defining the parameters and also definig a ``.tag``, which specifies the
+# defining the parameters and also defining a ``.tag``, which specifies the
 # name of the model for serialisation. Also note that gammapy assumes that
 # all SpectralModel evaluate functions return a flux in unit of
 # `"cm-2 s-1 TeV-1"` (or equivalent dimensions).
@@ -697,14 +699,14 @@ print(my_custom_model)
 
 print(my_custom_model.integral(1 * u.TeV, 10 * u.TeV))
 
-plt.figure()
 my_custom_model.plot(energy_bounds=[1, 10] * u.TeV)
+plt.show()
 
 
 ######################################################################
 # As a next step we can also register the custom model in the
 # ``SPECTRAL_MODELS`` registry, so that it becomes available for
-# serilisation:
+# serialization:
 #
 
 SPECTRAL_MODEL_REGISTRY.append(MyCustomSpectralModel)

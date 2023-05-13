@@ -78,6 +78,7 @@ from regions import CircleSkyRegion
 
 # %matplotlib inline
 import matplotlib.pyplot as plt
+from IPython.display import display
 from gammapy.data import DataStore
 from gammapy.datasets import MapDataset
 from gammapy.estimators import FluxPointsEstimator
@@ -229,6 +230,7 @@ print(stacked)
 #
 
 stacked.counts.sum_over_axes().smooth(0.05 * u.deg).plot(stretch="sqrt", add_cbar=True)
+plt.show()
 
 
 ######################################################################
@@ -329,6 +331,7 @@ print(stacked.models.to_parameters_table())
 #
 
 stacked.plot_residuals_spatial(method="diff/sqrt(model)", vmin=-0.5, vmax=0.5)
+plt.show()
 
 
 ######################################################################
@@ -342,6 +345,7 @@ stacked.plot_residuals(
     kwargs_spatial=dict(method="diff/sqrt(model)", vmin=-0.5, vmax=0.5),
     kwargs_spectral=dict(region=region),
 )
+plt.show()
 
 
 ######################################################################
@@ -353,7 +357,7 @@ residuals = stacked.residuals(method="diff")
 residuals.smooth("0.08 deg").plot_interactive(
     cmap="coolwarm", vmin=-0.2, vmax=0.2, stretch="linear", add_cbar=True
 )
-
+plt.show()
 
 ######################################################################
 # Plot the fitted spectrum
@@ -380,6 +384,7 @@ spec = sky_model.spectral_model
 energy_bounds = [1, 10] * u.TeV
 spec.plot(energy_bounds=energy_bounds, energy_power=2)
 ax = spec.plot_error(energy_bounds=energy_bounds, energy_power=2)
+plt.show()
 
 
 ######################################################################
@@ -402,3 +407,4 @@ flux_points = fpe.run(datasets=[stacked])
 
 ax = spec.plot_error(energy_bounds=energy_bounds, energy_power=2)
 flux_points.plot(ax=ax, energy_power=2)
+plt.show()

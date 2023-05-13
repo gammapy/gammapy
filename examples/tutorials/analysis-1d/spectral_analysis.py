@@ -148,7 +148,7 @@ check_tutorials_setup()
 # (simulated events for now).
 #
 # We will access the events, effective area, energy dispersion, livetime
-# and PSF for containement correction.
+# and PSF for containment correction.
 #
 
 datastore = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
@@ -196,6 +196,7 @@ geom = WcsGeom.create(
 
 exclusion_mask = ~geom.region_mask([exclusion_region])
 exclusion_mask.plot()
+plt.show()
 
 
 ######################################################################
@@ -241,6 +242,7 @@ plt.figure()
 ax = exclusion_mask.plot()
 on_region.to_pixel(ax.wcs).plot(ax=ax, edgecolor="k")
 plot_spectrum_datasets_off_regions(ax=ax, datasets=datasets)
+plt.show()
 
 
 ######################################################################
@@ -256,7 +258,7 @@ info_table = datasets.info_table(cumulative=True)
 display(info_table)
 
 ######################################################################
-# And make the correpsonding plots
+# And make the corresponding plots
 
 fig, (ax_excess, ax_sqrt_ts) = plt.subplots(figsize=(10, 4), ncols=2, nrows=1)
 ax_excess.plot(
@@ -280,6 +282,7 @@ ax_sqrt_ts.plot(
 ax_sqrt_ts.set_title("Sqrt(TS)")
 ax_sqrt_ts.set_xlabel("Livetime [h]")
 ax_sqrt_ts.set_ylabel("Sqrt(TS)")
+plt.show()
 
 
 ######################################################################
@@ -359,10 +362,10 @@ display(result_joint.models.to_parameters_table())
 # `~SpectrumDataset.plot_fit()`
 #
 
-plt.figure()
 ax_spectrum, ax_residuals = datasets[0].plot_fit()
 ax_spectrum.set_ylim(0.1, 40)
 datasets[0].plot_masks(ax=ax_spectrum)
+plt.show()
 
 
 ######################################################################
@@ -411,6 +414,7 @@ display(flux_points.to_table(sed_type="dnde", formatted=True))
 fig, ax = plt.subplots()
 flux_points.plot(ax=ax, sed_type="e2dnde", color="darkorange")
 flux_points.plot_ts_profiles(ax=ax, sed_type="e2dnde")
+plt.show()
 
 
 ######################################################################
@@ -420,6 +424,7 @@ flux_points.plot_ts_profiles(ax=ax, sed_type="e2dnde")
 
 flux_points_dataset = FluxPointsDataset(data=flux_points, models=model_best_joint)
 flux_points_dataset.plot_fit()
+plt.show()
 
 
 ######################################################################

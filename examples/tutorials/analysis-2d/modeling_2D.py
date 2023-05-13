@@ -7,7 +7,7 @@ Source modelling and fitting in stacked observations using the high level interf
 Prerequisites
 -------------
 
--  To understand how a generel modelling and fiiting works in gammapy,
+-  To understand how a general modelling and fitting works in gammapy,
    please refer to the :doc:`/tutorials/analysis-3d/analysis_3d` tutorial.
 
 Context
@@ -144,6 +144,7 @@ print(analysis.datasets["stacked"].exposure)
 #
 
 analysis.datasets["stacked"].counts.reduce_over_axes().plot(vmax=10, add_cbar=True)
+plt.show()
 
 
 ######################################################################
@@ -204,4 +205,3 @@ analysis.run_fit()
 
 # To see the best fit values along with the errors
 display(analysis.models.to_parameters_table())
-plt.show()
