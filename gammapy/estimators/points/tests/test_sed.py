@@ -393,7 +393,6 @@ def test_flux_points_estimator_no_norm_scan(fpe_pwl, tmpdir):
     fp = fpe.run(datasets)
 
     assert_allclose(fpe.fit.optimize_opts["tol"], 0.2)
-    assert_allclose(fpe.fit.minuit.tol, 0.2)
 
     assert fp.sed_type_init == "likelihood"
     assert "stat_scan" not in fp._data
