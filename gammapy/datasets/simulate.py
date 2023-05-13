@@ -30,9 +30,6 @@ class MapDatasetEventSampler:
     oversample_energy_factor: {int}
         Defines an oversampling factor for the energies; it is used only when sampling
         an energy-dependent time-varying source.
-    method : {"linear", "nearest"}
-        Method to interpolate data values. By default linear interpolation is
-        performed. It is used only when sampling an energy-dependent time-varying source.
     """
 
     def __init__(self, random_state="random-seed", oversample_energy_factor=10):
