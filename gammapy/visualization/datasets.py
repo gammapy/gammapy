@@ -38,11 +38,11 @@ def plot_spectrum_datasets_off_regions(
 
     Examples
     --------
-    Plot forcibly without legend and with thick circles::
+    Plot without legend and with thick circles::
 
         plot_spectrum_datasets_off_regions(datasets, ax, legend=False, linewidth=2.5)
 
-    Plot that quantifies the overlap of off regions::
+    Plot to visualise the overlap of off regions::
 
         plot_spectrum_datasets_off_regions(datasets, ax, alpha=0.3, facecolor='black')
 
