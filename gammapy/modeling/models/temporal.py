@@ -441,6 +441,10 @@ class LightCurveTemplateTemporalModel(TemporalModel):
     The model does linear interpolation for times between the given ``(time, energy, norm)``
     values.
 
+    When the temporal model is energy-dependent, the default interpolation scheme is
+    linear with a log scale for the values. The interpolation method and scale values
+    can be changed with the ``method`` and ``values_scale`` arguments.
+
     For more information see :ref:`LightCurve-temporal-model`.
 
     Examples
@@ -650,11 +654,11 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
     def evaluate(self, time, t_ref=None, energy=None):
         """Evaluate the model at given coordinates.
-        time: ~astropy.Time; array of times where the model is
-            evaluate;
-        t_ref: ~astropy.Time; reference time. Default is None;
-        energy: ~astropy.Quantity; array of energies where the
-            model is evaluate;
+        time: ~astropy.time.Time;
+            array of times where the model is evaluated;
+        t_ref: ~astropy.time.Time; reference time. Default is None;
+        energy: ~astropy.units.Quantity; array of energies where the
+            model is evaluated;
         """
 
         if t_ref is None:

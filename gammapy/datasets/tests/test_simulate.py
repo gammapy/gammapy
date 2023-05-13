@@ -199,6 +199,16 @@ def test_sample_coord_time_energy(dataset, enedip_temporal_model):
     with pytest.raises(TypeError):
         sampler._sample_coord_time_energy(dataset, evaluator)
 
+    enedip_temporal_model.spatial_model = GaussianSpatialModel()
+    enedip_temporal_model.spectral_model = ConstantSpectralModel(
+        const="1 cm-2 s-1 TeV-1"
+    )
+    dataset.models = enedip_temporal_model
+    evaluator = dataset.evaluators["test-source"]
+    sampler = MapDatasetEventSampler(random_state=0)
+    with pytest.raises(TypeError):
+        sampler._sample_coord_time_energy(dataset, evaluator)
+
     enedip_temporal_model.spatial_model = PointSpatialModel(
         lon_0="0 deg", lat_0="0 deg", frame="galactic"
     )
