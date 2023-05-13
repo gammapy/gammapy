@@ -1,5 +1,5 @@
 """
-Sample a source with energy-dependent evolution
+Sample a source with energy-dependent temporal evolution
 ==============
 This notebook shows how to sample events of sources whose model evolves in energy and time.
 
@@ -7,7 +7,7 @@ Prerequisites
 -------------
 
 To understand how to generate a model and a MapDataset and how to fit the data, please refer to the `~gammapy.modeling.models.SkyModel` and
-:doc:`/tutorials/analysis-3d/simulate_3d` tutorial. To know how to sampling events for more standards sources, we suggest to visit the event sampler :doc:`/tutorials/analysis-3d/event_sampling` tutorial.
+:doc:`/tutorials/analysis-3d/simulate_3d` tutorial. To know how to sample events for standards sources, we suggest to visit the event sampler :doc:`/tutorials/analysis-3d/event_sampling` tutorial.
 
 Objective
 -------------
@@ -93,13 +93,15 @@ for i in np.arange(len(ampl_model)):
     )
     spec.plot([0.2, 100] * u.TeV, label=f"Time bin {i+1}")
 plt.legend()
+plt.show()
 
 ######################################################################
-# Let's now create the temporal model that will be defined as a
-# `LightCurveTemplateTemporalModel`. The latter can take in input a
-# `RegionNDMap` where the temporal and energy source information are
-# stored. To create the map, we firstly need to define the time axis
-# with `MapAxis`: here we consider 5 time bins of 720 s (i.e. 1 hr
+# Let's now create the temporal model (if you already have this model,
+# please go directly to the `Read the energy-dependent model` section),
+# that will be defined as a `LightCurveTemplateTemporalModel`. The latter
+# can take in input a `RegionNDMap` where the temporal and energy source
+# information are stored. To create the map, we firstly need to define the
+# time axis with `MapAxis`: here we consider 5 time bins of 720 s (i.e. 1 hr
 # in total).
 # As a second step, we create an energy axis with 10 bins where the
 # powerlaw spectral models will be evaluated.
@@ -128,7 +130,9 @@ energy_axis = MapAxis.from_energy_bounds(
 #
 
 # make an array with the time and energy shape
-data = np.ones((len(time_min), energy_axis.nbin)) * u.cm**-2 * u.s**-1 * u.TeV**-1
+data = (
+    np.ones((time_axis.nbin, energy_axis.nbin)) * u.cm**-2 * u.s**-1 * u.TeV**-1
+)
 
 # create the RegionNDMap
 m = RegionNDMap.create(
@@ -145,28 +149,52 @@ for i in np.arange(len(time_min)):
 
 m.data = np.array(data)
 
-
 ######################################################################
-# Now, we define `LightCurveTemplateTemporalModel` passing it the
-# map we created before. We write it on disk and then we read it
-# again with `LightCurveTemplateTemporalModel.read`. When the model
-# is from a map, the arguments `format="map"` is mandatory.
-#
+# Now, we define the `LightCurveTemplateTemporalModel` passing it the
+# map we created above. We set the reference time of the model, and
+# this is crucial otherwise the model would be wrongly evaluated.
+# We show also how to write the model on disk, noting that we explicitely
+# set the `format` to `map`.
 
 t_ref = Time(51544.00074287037, format="mjd", scale="tt")
 filename = "./temporal_model_map.fits"
 temp = LightCurveTemplateTemporalModel(m, t_ref=t_ref, filename=filename)
 temp.write(filename, format="map", overwrite=True)
 
+
+######################################################################
+# Read the energy-dependent model
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# We read the map written on disc again with `LightCurveTemplateTemporalModel.read`.
+# When the model is from a map, the arguments `format="map"` is mandatory.
+# The map is `fits` file, with 3 extensions:
+#
+# 1) `SKYMAP`: a table with a `CHANNEL` and `DATA` column; the number of rows is given
+# by the product of the energy and time bins. The `DATA` represent the values of the model
+# at each energy;
+#
+# 2) `SKYMAP_BANDS`: a table with `CHANNEL`, `ENERGY`, `E_MIN`, `E_MAX`, `TIME`,
+# `TIME_MIN` and `TIME_MAX`. `ENERGY` is the mean of `E_MIN` and `E_MAX`, as well as
+# `TIME` is the mean of `TIME_MIN` and `TIME_MAX`; this extension should contain the
+# reference time in the header, through the keywords `MJDREFI` and `MJDREFF`.
+#
+# 3) `SKYMAP_REGION`: it gives information on the spatial morphology, i.e. `SHAPE`
+# (only `point` is accepted), `X` and `Y` (source position), `R` (the radius if
+# extended; not used in our case) and `ROTANG` (the angular rotation of the spatial
+# model, if extended; not used in our case).
+#
+
 temporal_model = LightCurveTemplateTemporalModel.read(filename, format="map")
 
 ######################################################################
 # We note that an interpolation scheme is also provided when loading
-# an map: for a an energy-dependent temporal model, the `method` and
+# a map: for a an energy-dependent temporal model, the `method` and
 # `values_scale` arguments by default are set to `linear` and `log`.
 # We warn the reader to carefully check the interpolation method used
-# for the time axis, as different methods provide different results.
-# In general, we suggest `linear` interpolation for the time, `log`
+# for the time axis while creating the template model, as different
+# methods provide different results.
+# By default, we assume `linear` interpolation for the time, `log`
 # for the energies and values.
 # Users can modify the `method` and `values_scale` arguments but we
 # warn that this should be done only when the users knows the consequences
@@ -177,14 +205,14 @@ temporal_model.method = "linear"  # default
 temporal_model.values_scale = "log"  # default
 
 ######################################################################
-# We can have a visual inspection of the temporal model at 1 TeV:
+# We can have a visual inspection of the temporal model at different energies:
 #
 
-t = temporal_model.reference_time + np.linspace(-100, 3600, 10000) * u.s
-t = Time(t, format="mjd")
-f = temporal_model.evaluate(t, energy=1 * u.TeV)
+t = Time(temporal_model.reference_time + [-100, 3600] * u.s)
+
 temporal_model.plot(time_range=(t[0], t[-1]), energy=[0.1, 0.5, 1, 5] * u.TeV)
 plt.semilogy()
+plt.show()
 
 ######################################################################
 # Now that the temporal model is complete, we create the whole source
@@ -293,13 +321,17 @@ on_region = CircleSkyRegion(center=src_position, radius=on_region_radius)
 src_events = events.select_region(on_region)
 
 src_events.peek()
+plt.show()
 
 
 ######################################################################
 # Fit the simulated data
 # ~~~~~~~~~~~~~~~~~~~~~~
 #
-# We fit the events in one time bin, adopting a model given by a
+# The energy-dependent temporal model that we used for the simulation
+# cannot be used to fit the data, because such a functionality is not
+# yet implemented in Gammapy. Therefore, we need to adopt the approach
+# of fitting events in a given time range, using a model defined as a
 # powerlaw spectral model, with no temporal information and point-like
 # morphology. We fix the source coordinates during the fit for simplicity:
 #
@@ -370,9 +402,10 @@ print(result)
 result.parameters.to_table()
 
 ######################################################################
-# The best-fit spectral parameters are similar but not exactly equal
-# to the simulated ones. This is due to interpolation method applied
-# to the temporal model!
+# Please, note that the fitted parameters reflect the time averaged spectra of
+# a time varying source. The flux/spectra is not constant within the fitted
+# time bin, and depends upon the interpolation scheme of the model within the
+# supplied bins
 #
 
 ######################################################################
@@ -381,4 +414,5 @@ result.parameters.to_table()
 #
 # -  Try to create a temporal model with a more complex energy-dependent
 #    evolution;
+# -  Read your temporal model in Gammapy and simulate it;
 #
