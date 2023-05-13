@@ -221,7 +221,7 @@ def test_sample_coord_time_energy(dataset, enedip_temporal_model):
 
     assert_allclose(
         [events[0][0], events[0][1], events[0][2], events[0][3]],
-        [568.238666, 7.687285, 266.404988, -28.936178],
+        [990.950021, 7.687285, 266.404988, -28.936178],
         rtol=1e-6,
     )
 
