@@ -30,11 +30,11 @@ Similarly, ``Observation`` contains an `obs_info` dictionary that is build from 
 After data reduction, ``Dataset`` contains a `meta_table` which
 consists in a selection of `Observation.obs_info` entries (one table row per observation).
 During `Dataset` stacking the `meta_table` are stacked. The ``Datasets`` collection also
-agregates the `meta_table` of its members. After estimation, the ``FluxPoints`` don't
+aggregates the `meta_table` of its members. After estimation, the ``FluxPoints`` don't
 contain any specific meta information.
 
 The algorithm classes (`Makers` and `Estimators`) don't contain any meta information so far.
-This might be an issue since some information  could be transfered on their various products
+This might be an issue since some information  could be transferred on their various products
 as well.
 
 A minimal information that needs to be present on every Gammapy product and serialized
@@ -65,7 +65,7 @@ The Gammapy metadata solution should:
     - export content to yaml
 - allow hierarchical content to allow easy propagation of metadata content along the
   analysis flow
-- be easily subscriptable to allow for specialized metadata containers for the various
+- be easily sub-scriptable to allow for specialized metadata containers for the various
   objects in Gammapy.
 
 In the following, we propose a plausible solution fulfilling these requirements based on the
@@ -74,6 +74,8 @@ the `pydantic` package ``BaseModel`` class.
 
 Metadata API
 ============
+
+All Gammapy classes containing metadata should store them in a `meta` attribute.
 
 Type validation
 ---------------
@@ -104,7 +106,7 @@ objects as attributes. See the following example:
 .. code ::
 
     class CreatorMedadata:
-        cretor : str
+        creator : str
         date : datetime
         origin : str
 
@@ -181,13 +183,16 @@ The model `Config` defined allows:
 - using any type input and not only simple `Annotation` types (`arbitrary_types_allowed = True`)
 - Setting the `validate_assignment` to `True` ensures that validation is performed when a value
   is assigned to the attribute.
-- `extra = "allow"` accepts additional attibutes not defined in the metadata class.
+- `extra = "allow"` accepts additional attributes not defined in the metadata class.
 
 
 
 
 arbitrary type input and validation
 -----------------------------------
+
+By providing a validation method, it is possible to validate non-standard objects. The
+`validator` decorator provided by pydantic makes it easy. As shown below:
 
 .. code ::
 
@@ -215,6 +220,78 @@ arbitrary type input and validation
 
 Alternatives
 ============
+
+Proposed metadata classes
+=========================
+
+Here we list the expected metadata classes that we expect. All classes will inherit from a
+parent ``MetaDataBase`` that will provide most base properties to the daughter classes.
+
+We provide the list of classes by subpackage
+
+data
+----
+
+- ``EventListMetaData``
+- ``ObservationMetaData``
+- ``DataStoreMetaData``
+- ``PointingMetaData``
+- ``GTIMetaData``
+
+IRF
+---
+
+Here we should distinguish between actual IRFs and reduced modeling-ready IRFs such as kernels
+and IRF maps.
+
+- ``IRFMetaData``
+  A single generic class could be used for all actual IRFs.
+
+Makers
+------
+
+It is unclear whether stateless algorithm classes such as ``Maker`` actually need meta
+information beyond their actual attributes. They will have to create or update `meta`
+information of the ``Dataset`` they create or modify. For now, we don't propose
+any metadata for ``Maker`` objects.
+
+Datasets
+--------
+
+The ``Dataset`` already contains some meta information with the `meta_table` which contains
+a small subset of information from the observations that where used to build the object.
+
+The new metadata might replace the current `meta_table`. The metadata should support
+stacking, in particular some of the fields might be lists of entries which require
+validation.
+
+- ``MapDatasetMetaData``
+- ``FluxPointsDatasetMetaData``
+  the metadata class for the ``FluxPointsDataset``.
+- ``DatasetsMetaData``
+
+
+Modeling
+--------
+
+Similarly to ``Makers``,  it is unclear the ``Fit`` class needs specific metadata as it is not
+serialized.
+
+Because they are serialized, ``Model`` and ``Models`` objects should have a minimal `meta`.
+
+- ``ModelsMetadata``
+- ``ModelMetaData``
+
+Estimators
+----------
+
+Again, the stateless ``Estimator`` algorithms do not need a `meta` attribute. They need to
+build the `meta` information of the products they create, transferring some metadata from
+the parent ``Datasets``.
+
+- ``FluxMapsMetaData``
+- ``FluxPointsMetaData``
+
 
 Decision
 ========
