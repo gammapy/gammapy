@@ -115,17 +115,16 @@ def enedip_temporal_model(models):
         energy_min=1 * u.TeV, energy_max=10 * u.TeV, nbin=nbin, name="energy"
     )
 
-    time_min = np.arange(0, 1000, 10) * u.s
-    time_max = np.arange(10, 1010, 10) * u.s
-    edges = np.append(time_min, time_max[-1])
+    edges = np.linspace(0, 1000, 101) * u.s
     time_axis = MapAxis.from_edges(edges=edges, name="time", interp="lin")
 
-    data = np.ones((nbin, len(time_min))) * 1e-12 * u.cm**-2 * u.s**-1 * u.TeV**-1
     m = RegionNDMap.create(
         region=PointSkyRegion(center=models[0].spatial_model.position),
         axes=[energy_axis, time_axis],
-        data=np.array(data),
+        data=1e-12,
+        unit="cm-2 s-1 TeV-1",
     )
+
     t_ref = Time(51544.00074287037, format="mjd", scale="tt")
     temporal_model = LightCurveTemplateTemporalModel(m, t_ref=t_ref)
     models[0].temporal_model = temporal_model
@@ -221,7 +220,7 @@ def test_sample_coord_time_energy(dataset, enedip_temporal_model):
 
     assert_allclose(
         [events[0][0], events[0][1], events[0][2], events[0][3]],
-        [990.950021, 7.687285, 266.404988, -28.936178],
+        [760.334713, 7.687285, 266.404988, -28.936178],
         rtol=1e-6,
     )
 

@@ -654,11 +654,12 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
     def evaluate(self, time, t_ref=None, energy=None):
         """Evaluate the model at given coordinates.
-        time: ~astropy.time.Time;
+        time: `~astropy.time.Time`
             array of times where the model is evaluated;
-        t_ref: ~astropy.time.Time; reference time. Default is None;
-        energy: ~astropy.units.Quantity; array of energies where the
-            model is evaluated;
+        t_ref: `~astropy.time.Time`
+            reference time. Default is None;
+        energy: `~astropy.units.Quantity`
+            array of energies where the model is evaluated;
         """
 
         if t_ref is None:

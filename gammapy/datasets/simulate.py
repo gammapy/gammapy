@@ -110,12 +110,20 @@ class MapDatasetEventSampler:
                 name="time",
             )
 
-        flux_diff = (
-            evaluator.model.temporal_model.evaluate(
-                time_axis_eval.time_mid, energy=energy_new.center
-            )
-            * evaluator.model.spectral_model.parameters[0].quantity
+        temp_eval = evaluator.model.temporal_model.evaluate(
+            time_axis_eval.time_mid, energy=energy_new.center
         )
+
+        if temp_eval.unit.is_equivalent(
+            evaluator.model.spectral_model.parameters[0].quantity
+        ):
+            flux_diff = temp_eval.to(
+                evaluator.model.spectral_model.parameters[0].quantity
+            )
+        else:
+            flux_diff = (
+                temp_eval * evaluator.model.spectral_model.parameters[0].quantity
+            )
 
         flux_inte = flux_diff * energy_new.bin_width[:, None]
 
@@ -129,15 +137,11 @@ class MapDatasetEventSampler:
         mapcoord = flux_pred.geom.get_coord()
         mapcoord["energy_true"] = energy_true.center[:, None, None, None]
 
-        pred = (
-            (
-                region_exposure.quantity[:, None, :, :]
-                / time_axis.nbin
-                * flux_pred.interp_by_coord(mapcoord)
-                * flux_pred.unit
-                * self.oversample_energy_factor
-            )
-        ).to("")
+        flux_values = flux_pred.interp_by_coord(mapcoord) * flux_pred.unit
+        data = flux_values * region_exposure.quantity[:, None, :, :]
+        data /= time_axis.nbin / self.oversample_energy_factor
+
+        pred = data.to("")
 
         npred = RegionNDMap.create(
             region=PointSkyRegion(center=target),
