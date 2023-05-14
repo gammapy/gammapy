@@ -111,11 +111,7 @@ plt.show()
 position = SkyCoord("100 deg", "30 deg", frame="icrs")
 
 # time axis
-time_bins = 720
-time_min = np.arange(0, 3600, time_bins) * u.s
-time_max = np.arange(720, 4320, time_bins) * u.s
-edges = np.append(time_min, time_max[-1])
-time_axis = MapAxis.from_edges(edges=edges, name="time", interp="lin")
+time_axis = MapAxis.from_bounds(0 * u.s, 3600 * u.s, nbin=5, name="time", interp="lin")
 
 # energy axis
 nbin = 10
@@ -141,7 +137,7 @@ m = RegionNDMap.create(
 )
 
 # evaluate the spectrum and fill the RegionNDMap
-for i in np.arange(len(time_min)):
+for i in np.arange(time_axis.nbin):
     spec = PowerLawSpectralModel(
         index=index_model[i], amplitude=ampl_model[i], reference="1 TeV"
     )
@@ -364,8 +360,7 @@ model_fit = [model, bkg_model]
 
 livetime = 100 * u.s
 
-i = 0
-tstart = t_ref + (time_min[i] + 360 * u.s).to("d")
+tstart = t_ref + (360 * u.s).to("d")
 observation = Observation.create(
     obs_id=1001,
     pointing=pointing,
