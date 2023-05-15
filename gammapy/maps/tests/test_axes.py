@@ -388,6 +388,19 @@ def test_map_axis_plot_helpers():
     assert_allclose(axis.edges, axis.as_plot_edges)
 
 
+def test_map_axis_concatenate():
+    axis_1 = MapAxis.from_bounds(0, 10, 10, name="axis")
+    axis_2 = MapAxis.from_bounds(10, 20, 10, name="axis")
+    axis_2_other_name = MapAxis.from_bounds(10, 20, 10, name="other_axis")
+
+    axis_12 = axis_1.concatenate(axis_2)
+
+    assert_equal(axis_12.edges, np.linspace(0, 20, 20))
+
+    with pytest.raises(ValueError):
+        axis_1.concatenate(axis_2_other_name)
+
+
 def test_time_axis(time_intervals):
     axis = TimeMapAxis(
         time_intervals["t_min"], time_intervals["t_max"], time_intervals["t_ref"]
