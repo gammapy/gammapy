@@ -105,6 +105,8 @@ class MapAxis:
         String specifying the data units.
     """
 
+    append = deprecated_attribute("append", "1.1", alternative="concatenate")
+
     # TODO: Cache an interpolation object?
     def __init__(self, nodes, interp="lin", name="", node_type="edges", unit=""):
 
@@ -643,8 +645,8 @@ class MapAxis:
 
         return cls(edges, node_type="edges", **kwargs)
 
-    def append(self, axis):
-        """Append another map axis to this axis
+    def concatenate(self, axis):
+        """Concatenate another `MapAxis` to this `MapAxis` into a new `MapAxis` object.
 
         Name, interp type and node type must agree between the axes. If the node
         type is "edges", the edges must be contiguous and non-overlapping.
@@ -652,12 +654,12 @@ class MapAxis:
         Parameters
         ----------
         axis : `MapAxis`
-            Axis to append.
+            Axis to concatenate with.
 
         Returns
         -------
         axis : `MapAxis`
-            Appended axis
+            Concatenation of the two axis.
         """
         if self.node_type != axis.node_type:
             raise ValueError(
@@ -727,7 +729,7 @@ class MapAxis:
         ax_stacked = axes[0]
 
         for ax in axes[1:]:
-            ax_stacked = ax_stacked.append(ax)
+            ax_stacked = ax_stacked.concatenate(ax)
 
         return ax_stacked
 
