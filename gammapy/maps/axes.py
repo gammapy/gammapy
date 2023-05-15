@@ -3183,7 +3183,7 @@ class LabelMapAxis:
         return axis_stacked
 
     def concatenate(self, axis):
-        """Concatenate this `LabelMapAxis` with another one into a new one.
+        """Concatenate another `LabelMapAxis` to this `LabelMapAxis` into a new `LabelMapAxis` object.
 
         Names must agree between the axes. labels must be unique.
 
