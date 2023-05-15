@@ -26,6 +26,10 @@ def test_gadf_header_read():
     with pytest.raises(ValidationError):
         GADFEventsHeader.from_header(header_bad)
 
+    del header_bad["HDUCLAS1"]
+    with pytest.raises(ValidationError):
+        GADFEventsHeader.from_header(header_bad)
+
     header["OBS_ID"] = "test"
     with pytest.raises(ValidationError):
         GADFEventsHeader.from_header(header)
@@ -44,4 +48,5 @@ def test_gadf_event_reader():
 
 @requires_data()
 def test_gadf_event_writer():
+
     return False

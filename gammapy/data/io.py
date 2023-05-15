@@ -18,7 +18,10 @@ class ColumnType(BaseModel):
         elif column.unit.is_equivalent(self.unit):
             return column
         else:
-            raise ValidationError
+            print(column.unit, self.unit)
+            raise ValidationError(
+                f"Column unit incorrect expected {self.unit}, got {column.unit} instead."
+            )
 
 
 class GADFTableValidator(BaseModel):
@@ -44,8 +47,8 @@ class GADFTableValidator(BaseModel):
     COREX: ColumnType = ColumnType(dtype="float", unit="m")
     COREY: ColumnType = ColumnType(dtype="float", unit="m")
     CORE_ERR: ColumnType = ColumnType(dtype="float", unit="m")
-    XMAX: ColumnType = ColumnType(dtype="float", unit="")
-    XMAX_ERR: ColumnType = ColumnType(dtype="float", unit="")
+    XMAX: ColumnType = ColumnType(dtype="float", unit="m")
+    XMAX_ERR: ColumnType = ColumnType(dtype="float", unit="m")
     HIL_MSW: ColumnType = ColumnType(dtype="float", unit="")
     HIL_MSW_ERR: ColumnType = ColumnType(dtype="float", unit="")
     HIL_MSL: ColumnType = ColumnType(dtype="float", unit="")
@@ -100,10 +103,10 @@ class GADFEventsHeader(BaseModel):
     TELESCOP: str
     INSTRUME: str
     CREATOR: str
-    HDUCLASS: str
-    HDUDOC: str
-    HDUVERS: str
-    HDUCLAS1: str
+    HDUCLASS: str = "GADF"
+    HDUDOC: str = "https://gamma-astro-data-formats.readthedocs.io/en/v0.3/index.html"
+    HDUVERS: str = "v0.3"
+    HDUCLAS1: str = "EVENTS"
 
     OBSERVER: Optional[str]
     CREATED: Optional[str]
@@ -187,3 +190,9 @@ class GADFEvents(BaseModel):
         table_hdu = fits.BinTableHDU(self.table, name="EVENTS")
         table_hdu.header.update(self.header.to_header())
         return table_hdu
+
+    @classmethod
+    def from_eventlist(cls, eventlist):
+        header = eventlist.table.meta
+        table = eventlist.table
+        return cls(header=header, table=table)
