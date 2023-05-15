@@ -11,6 +11,7 @@ from astropy.table import Column, Table, hstack
 from astropy.time import Time
 from astropy.utils import lazyproperty
 import matplotlib.pyplot as plt
+from gammapy.utils.deprecation import deprecated_attribute
 from gammapy.utils.interpolation import interpolation_scale
 from gammapy.utils.time import time_ref_from_dict, time_ref_to_dict
 from .utils import INVALID_INDEX, edges_from_lo_hi
@@ -103,6 +104,8 @@ class MapAxis:
     unit : str
         String specifying the data units.
     """
+
+    append = deprecated_attribute("append", "1.1", alternative="concatenate")
 
     # TODO: Cache an interpolation object?
     def __init__(self, nodes, interp="lin", name="", node_type="edges", unit=""):
@@ -642,8 +645,8 @@ class MapAxis:
 
         return cls(edges, node_type="edges", **kwargs)
 
-    def append(self, axis):
-        """Append another map axis to this axis
+    def concatenate(self, axis):
+        """Concatenate another `MapAxis` to this `MapAxis` into a new `MapAxis` object.
 
         Name, interp type and node type must agree between the axes. If the node
         type is "edges", the edges must be contiguous and non-overlapping.
@@ -651,12 +654,12 @@ class MapAxis:
         Parameters
         ----------
         axis : `MapAxis`
-            Axis to append.
+            Axis to concatenate with.
 
         Returns
         -------
         axis : `MapAxis`
-            Appended axis
+            Concatenation of the two axis.
         """
         if self.node_type != axis.node_type:
             raise ValueError(
@@ -726,7 +729,7 @@ class MapAxis:
         ax_stacked = axes[0]
 
         for ax in axes[1:]:
-            ax_stacked = ax_stacked.append(ax)
+            ax_stacked = ax_stacked.concatenate(ax)
 
         return ax_stacked
 
@@ -2834,6 +2837,8 @@ class LabelMapAxis:
 
     """
 
+    append = deprecated_attribute("append", "1.1", alternative="concatenate")
+
     node_type = "label"
 
     def __init__(self, labels, name=""):
@@ -3173,24 +3178,24 @@ class LabelMapAxis:
         axis_stacked = axes[0]
 
         for ax in axes[1:]:
-            axis_stacked = axis_stacked.append(ax)
+            axis_stacked = axis_stacked.concatenate(ax)
 
         return axis_stacked
 
-    def append(self, axis):
-        """Append another label map axis to this label map axis.
+    def concatenate(self, axis):
+        """Concatenate another `LabelMapAxis` to this `LabelMapAxis` into a new `LabelMapAxis` object.
 
         Names must agree between the axes. labels must be unique.
 
         Parameters
         ----------
         axis : `LabelMapAxis`
-            Axis to append.
+            Axis to concatenate with.
 
         Returns
         -------
         axis : `LabelMapAxis`
-            Appended axis
+            Concatenation of the two axis.
         """
         if not isinstance(axis, LabelMapAxis):
             raise TypeError(
