@@ -68,13 +68,13 @@ check_tutorials_setup()
 
 
 ######################################################################
-# Create the energy-dependent model
+# Create the energy-dependent temporal model
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # The source to simulate has a spectrum that varies as a function of
 # the time.
 # We define its spatial morphology as `point-like`: we note that this
-# is a mandatory condition to simulate energy-dependent sources! Other,
+# is a mandatory condition to simulate energy-dependent temporal model. Other,
 # extended morphologies will raise an error!
 # In the following example, the source model will vary in 5 time bins,
 # and in each bin the source spectrum is represented as a powerlaw with
