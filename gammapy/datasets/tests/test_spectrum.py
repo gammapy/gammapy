@@ -1179,3 +1179,17 @@ class TestFit:
         profile = fit.stat_profile(datasets=[dataset], parameter="index")
         actual = values[np.argmin(profile["stat_scan"])]
         assert_allclose(actual, true_idx, rtol=0.01)
+
+
+def test_stat_sum():
+    axis = MapAxis.from_energy_bounds(0.1, 10, 5, unit="TeV")
+    geom = RegionGeom.create(None, axes=[axis])
+    dataset = SpectrumDatasetOnOff.create(geom)
+    dataset.counts_off = None
+
+    stat = dataset.stat_sum()
+    assert stat == 0
+
+    dataset.mask_safe.data[0] = True
+    with pytest.raises(AttributeError):
+        dataset.stat_sum()
