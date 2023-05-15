@@ -678,7 +678,7 @@ class WcsNDMap(WcsMap):
         )
 
         if density:
-            unit = 1 / bins_axis.unit
+            unit = 1.0 / bins_axis.unit
             data = data.value
         else:
             unit = ""
