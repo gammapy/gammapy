@@ -395,7 +395,7 @@ def test_map_axis_concatenate():
 
     axis_12 = axis_1.concatenate(axis_2)
 
-    assert_equal(axis_12.edges, np.linspace(0, 20, 20))
+    assert_equal(axis_12.edges, np.linspace(0, 20, 21))
 
     with pytest.raises(ValueError):
         axis_1.concatenate(axis_2_other_name)
