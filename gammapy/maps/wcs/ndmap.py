@@ -627,6 +627,29 @@ class WcsNDMap(WcsMap):
         density : bool
             Normalize integral of the histogram to 1.
 
+
+        Examples
+        --------
+        This is how to use the method to create energy dependent histograms:
+
+        ::
+
+            from gammapy.maps import MapAxis, Map
+            import numpy as np
+
+            random_state = np.random.RandomState(seed=0)
+
+            energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3)
+
+            data = Map.create(axes=[energy_axis], width=10, unit="cm2 s-1", binsz=0.02)
+            data.data = random_state.normal(
+                size=data.data.shape, loc=0, scale=np.array([1.0, 2.0, 3.0]).reshape((-1, 1, 1))
+            )
+
+            hist = data.to_region_nd_map_histogram()
+            hist.plot(axis_name="bins")
+
+
         Returns
         -------
         region_map : `RegionNDMap`
