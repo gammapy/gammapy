@@ -826,7 +826,7 @@ def test_single_valued_axis():
     _ = MapAxis.from_table(table, format="gadf-dl3", column_prefix="THETA")
 
 
-def test_label_map_axis_append():
+def test_label_map_axis_concatenate():
 
     label1 = LabelMapAxis(["aa", "bb"], name="letters")
     label2 = LabelMapAxis(["cc", "dd"], name="letters")
