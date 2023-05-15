@@ -819,12 +819,12 @@ def test_label_map_axis_append():
     label2 = LabelMapAxis(["cc", "dd"], name="letters")
     label3 = LabelMapAxis(["ee", "ff"], name="other_letters")
 
-    label_append12 = label1.append(label2)
+    label_append12 = label1.concatenate(label2)
 
     assert_equal(label_append12.center, np.array(["aa", "bb", "cc", "dd"], dtype="<U2"))
     assert label_append12.name == "letters"
     with pytest.raises(ValueError):
-        label2.append(label3)
+        label2.concatenate(label3)
 
 
 def test_label_map_axis_from_stack():

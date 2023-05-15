@@ -11,6 +11,7 @@ from astropy.table import Column, Table, hstack
 from astropy.time import Time
 from astropy.utils import lazyproperty
 import matplotlib.pyplot as plt
+from gammapy.utils.deprecation import deprecated_attribute
 from gammapy.utils.interpolation import interpolation_scale
 from gammapy.utils.time import time_ref_from_dict, time_ref_to_dict
 from .utils import INVALID_INDEX, edges_from_lo_hi
@@ -2834,6 +2835,8 @@ class LabelMapAxis:
 
     """
 
+    append = deprecated_attribute("append", "1.1", alternative="concatenate")
+
     node_type = "label"
 
     def __init__(self, labels, name=""):
@@ -3173,11 +3176,11 @@ class LabelMapAxis:
         axis_stacked = axes[0]
 
         for ax in axes[1:]:
-            axis_stacked = axis_stacked.append(ax)
+            axis_stacked = axis_stacked.concatenate(ax)
 
         return axis_stacked
 
-    def append(self, axis):
+    def concatenate(self, axis):
         """Append another label map axis to this label map axis.
 
         Names must agree between the axes. labels must be unique.
