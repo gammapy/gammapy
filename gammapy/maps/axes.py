@@ -3181,19 +3181,19 @@ class LabelMapAxis:
         return axis_stacked
 
     def concatenate(self, axis):
-        """Append another label map axis to this label map axis.
+        """Concatenate this `LabelMapAxis` with another one into a new one.
 
         Names must agree between the axes. labels must be unique.
 
         Parameters
         ----------
         axis : `LabelMapAxis`
-            Axis to append.
+            Axis to concatenate with.
 
         Returns
         -------
         axis : `LabelMapAxis`
-            Appended axis
+            Concatenation of the two axis.
         """
         if not isinstance(axis, LabelMapAxis):
             raise TypeError(
