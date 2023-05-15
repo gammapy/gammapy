@@ -608,6 +608,83 @@ class WcsNDMap(WcsMap):
 
         return RegionNDMap(geom=geom, data=data, unit=self.unit, meta=self.meta.copy())
 
+    def to_region_nd_map_histogram(
+        self, region=None, bins_axis=None, nbin=100, density=False
+    ):
+        """Convert map into region map by histogramming.
+
+        By default it creates a linearly spaced axis with 100 bins between
+        (-max(abs(data)), max(abs(data))) within the given region.
+
+        Parameters
+        ----------
+        region: `~regions.Region`
+            Region to histogram over.
+        bins_axis : `MapAxis`
+            Binning of the histogram.
+        nbin : int
+            Number of bins to use if no bins_axis is given.
+        density : bool
+            Normalize integral of the histogram to 1.
+
+        Returns
+        -------
+        region_map : `RegionNDMap`
+            Region map with histogram.
+
+        """
+        from gammapy.maps import MapAxis, RegionGeom, RegionNDMap
+
+        if isinstance(region, (PointSkyRegion, SkyCoord)):
+            raise ValueError("Histogram method not supported for point regions")
+
+        if region is None:
+            width, height = self.geom.width
+            region = RectangleSkyRegion(
+                center=self.geom.center_skydir, width=width[0], height=height[0]
+            )
+
+        geom = RegionGeom(region=region, axes=self.geom.axes, wcs=self.geom.wcs)
+
+        cutout = self.cutout(position=geom.center_skydir, width=geom.width)
+
+        mask = cutout.geom.to_image().region_mask([region])
+        idx_y, idx_x = np.where(mask)
+        quantity = cutout.quantity[..., idx_y, idx_x]
+
+        value = np.abs(quantity).max()
+
+        if bins_axis is None:
+            bins_axis = MapAxis.from_bounds(
+                -value,
+                value,
+                nbin=nbin,
+                interp="lin",
+                unit=self.unit,
+                name="bins",
+            )
+
+        if not bins_axis.unit.is_equivalent(self.unit):
+            raise ValueError("Unit of bins_axis must be equivalent to unit of map.")
+
+        axes = [bins_axis] + list(self.geom.axes)
+        geom_hist = RegionGeom(region=region, axes=axes, wcs=self.geom.wcs)
+
+        # This is likely not the most efficient way to do this
+        data = np.apply_along_axis(
+            lambda a: np.histogram(a, bins=bins_axis.edges, density=density)[0],
+            axis=-1,
+            arr=quantity,
+        )
+
+        if density:
+            unit = 1 / bins_axis.unit
+            data = data.value
+        else:
+            unit = ""
+
+        return RegionNDMap.from_geom(geom=geom_hist, data=data, unit=unit)
+
     def mask_contains_region(self, region):
         """Check if input region is contained in a boolean mask map.
 
