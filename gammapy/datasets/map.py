@@ -2374,8 +2374,15 @@ class MapDatasetOnOff(MapDataset):
         super().stack(other, nan_to_num=nan_to_num)
 
     def stat_sum(self):
-        """Total statistic function value given the current model parameters."""
-        return Dataset.stat_sum(self)
+        """Total statistic function value given the current model parameters.
+
+        If the off counts are passed as None and the elements of the safe mask are False, zero will be returned.
+        Otherwise the stat sum will be calculated and returned.
+        """
+        if self.counts_off is None and not np.any(self.mask_safe.data):
+            return 0
+        else:
+            return Dataset.stat_sum(self)
 
     def fake(self, npred_background, random_state="random-seed"):
         """Simulate fake counts (on and off) for the current model and reduced IRFs.
