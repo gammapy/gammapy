@@ -3,7 +3,7 @@ import pytest
 from numpy.testing import assert_allclose
 from astropy.io import fits
 from pydantic import ValidationError
-from gammapy.data.io import GADFEvents, GADFEventsHeader
+from gammapy.data.io import GADFEventsHeader, GADFEventsReaderWriter
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import requires_data
 
@@ -40,7 +40,7 @@ def test_gadf_event_reader():
     filename = make_path(
         "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz"
     )
-    events = GADFEvents.read(filename)
+    events = GADFEventsReaderWriter.read(filename)
 
     assert len(events.table) == 11243
     assert_allclose(events.table["ENERGY"][0], 0.55890286)

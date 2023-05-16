@@ -4,84 +4,7 @@ from astropy.io import fits
 from astropy.table import Table
 from pydantic import BaseModel, ValidationError, validator
 from gammapy.utils.scripts import make_path
-
-
-class ColumnType(BaseModel):
-    dtype: str
-    unit: Optional[str]
-    required: bool = False
-
-    def validate_column(self, column):
-        if column.unit is None:
-            if self.unit is None or self.unit == "":
-                return column
-        elif column.unit.is_equivalent(self.unit):
-            return column
-        else:
-            raise ValidationError(
-                f"Column unit incorrect expected {self.unit}, got {column.unit} instead."
-            )
-
-
-class GADFTableValidator(BaseModel):
-    EVENT_ID: ColumnType = ColumnType(dtype="int", required=True)
-    TIME: ColumnType = ColumnType(dtype="float64", unit="s", required=True)
-    RA: ColumnType = ColumnType(dtype="float64", unit="deg", required=True)
-    DEC: ColumnType = ColumnType(dtype="float64", unit="deg", required=True)
-    ENERGY: ColumnType = ColumnType(dtype="float64", unit="TeV", required=True)
-
-    EVENT_TYPE: ColumnType = ColumnType(dtype="int8")
-    MULTIP: ColumnType = ColumnType(dtype="int")
-    GLON: ColumnType = ColumnType(dtype="float", unit="deg")
-    GLAT: ColumnType = ColumnType(dtype="float", unit="deg")
-    ALT: ColumnType = ColumnType(dtype="float", unit="deg")
-    AZ: ColumnType = ColumnType(dtype="float", unit="deg")
-    DETX: ColumnType = ColumnType(dtype="float", unit="deg")
-    DETY: ColumnType = ColumnType(dtype="float", unit="deg")
-    THETA: ColumnType = ColumnType(dtype="float", unit="deg")
-    PHI: ColumnType = ColumnType(dtype="float", unit="deg")
-    GAMMANESS: ColumnType = ColumnType(dtype="float")
-    DIR_ERR: ColumnType = ColumnType(dtype="float", unit="deg")
-    ENERGY_ERR: ColumnType = ColumnType(dtype="float", unit="TeV")
-    COREX: ColumnType = ColumnType(dtype="float", unit="m")
-    COREY: ColumnType = ColumnType(dtype="float", unit="m")
-    CORE_ERR: ColumnType = ColumnType(dtype="float", unit="m")
-    XMAX: ColumnType = ColumnType(dtype="float", unit="m")
-    XMAX_ERR: ColumnType = ColumnType(dtype="float", unit="m")
-    HIL_MSW: ColumnType = ColumnType(dtype="float", unit="")
-    HIL_MSW_ERR: ColumnType = ColumnType(dtype="float", unit="")
-    HIL_MSL: ColumnType = ColumnType(dtype="float", unit="")
-    HIL_MSL_ERR: ColumnType = ColumnType(dtype="float", unit="")
-
-    def __getitem__(self, name):
-        if hasattr(self, name):
-            return self.__getattribute__(name)
-        else:
-            raise KeyError
-
-    @property
-    def required_columns(self):
-        req = []
-        for field in self.__fields__:
-            if getattr(self, field).required:
-                req.append(field)
-        return req
-
-    @property
-    def optional_columns(self):
-        req = []
-        for field in self.__fields__:
-            if not getattr(self, field).required:
-                req.append(field)
-        return req
-
-    def run(self, table):
-        for key in self.required_columns:
-            self[key].validate_column(table[key])
-        for key in self.optional_columns:
-            if key in table.colnames:
-                self[key].validate_column(table[key])
-        return table
+from gammapy.utils.table_validator import GADF_EVENT_TABLE_DEFINITION, TableValidator
 
 
 class GADFEventsHeader(BaseModel):
@@ -161,28 +84,20 @@ class GADFEventsHeader(BaseModel):
         return cls(**kwargs)
 
 
-class GADFEvents(BaseModel):
-    header: GADFEventsHeader
-    table: Table
+class GADFEventsReaderWriter:
+    """IO class for GADF events."""
 
-    class Config:
-        arbitrary_types_allowed = True
-        validate_all = True
-        validate_assignment = True
-        extra = "forbid"
-
-    @validator("table")
-    def validate_gadf_events_table(cls, v):
-        return GADFTableValidator().run(v)
+    table_validator = TableValidator.from_builtin(GADF_EVENT_TABLE_DEFINITION)
+    meta_validator = GADFEventsHeader
 
     @classmethod
     def read(cls, filename, hdu="EVENTS"):
         filename = make_path(filename)
         table = Table.read(filename, hdu)
 
-        hdr = GADFEventsHeader.from_header(table.meta)
-        table.meta = None
-        return cls(header=hdr, table=table)
+        hdr = cls.meta_validator.from_header(table.meta)
+        table = cls.table_validator.run(table)
+        return table, hdr
 
     def to_table_hdu(self):
         """Export to table HDU."""
