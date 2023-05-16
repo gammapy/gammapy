@@ -18,7 +18,6 @@ class ColumnType(BaseModel):
         elif column.unit.is_equivalent(self.unit):
             return column
         else:
-            print(column.unit, self.unit)
             raise ValidationError(
                 f"Column unit incorrect expected {self.unit}, got {column.unit} instead."
             )
