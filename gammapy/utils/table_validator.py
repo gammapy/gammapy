@@ -5,7 +5,7 @@ from astropy.table import Column, Table
 from astropy.units import UnitTypeError
 import yaml
 
-GADF_yaml = """
+GADF_EVENT_TABLE_DEFINITION = """
 EVENT_ID: { dtype: int, required: true, unit: null}
 TIME:     { dtype: float, required: true, unit: s}
 RA:       { dtype: float, required: true, unit: deg}
@@ -138,7 +138,7 @@ class TableValidator(MutableMapping):
         coldefs = yaml.safe_load(yaml_str)
         res = cls()
         for key, item in coldefs.items():
-            res[key] = ColumnDefinition(**item)
+            res[key] = ColumnValidator(**item)
         return res
 
     @property
@@ -165,9 +165,32 @@ class TableValidator(MutableMapping):
                 self[key].validate_column(table[key])
         return table
 
-    def to_table(self):
-        """Build empty table from columns definition."""
+    def to_table(self, include_optional=None):
+        """Build empty table from columns definition.
+
+        Parameters
+        ----------
+        include_optional : str or list
+            List of optional columns to include.
+            If 'all', include all columns. Default is None.
+
+        Returns
+        -------
+        table : `~astropy.table.Table`
+            the empty table
+        """
         data = {}
+        if include_optional is None:
+            include_optional = []
+        elif include_optional == "all":
+            include_optional = self.optional_columns
+
         for key in self._data:
-            data[key] = self[key].to_column(name=key)
+            if key in include_optional or self[key].required:
+                data[key] = self[key].to_column(name=key)
         return Table(data)
+
+    @classmethod
+    def from_builtin(cls, format=GADF_EVENT_TABLE_DEFINITION):
+        """Create validator from pre-defined format definition"""
+        return cls.from_yaml(format)

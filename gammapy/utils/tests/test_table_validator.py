@@ -73,10 +73,26 @@ def test_validate_table(simple_table):
 
 
 def test_validate_table_fail(simple_table):
-    misnamed_column = TableValidator(
+    validator = TableValidator(
         COL3=ColumnValidator(dtype="str", unit=""),
         COL2=ColumnValidator(dtype="float", unit="s", shape="(5,)"),
         COL1=ColumnValidator(dtype="float64", unit="GeV"),
     )
     with pytest.raises(TypeError):
-        misnamed_column.run(simple_table)
+        validator.run(simple_table)
+
+
+def test_table_from_definition():
+    validator = TableValidator.from_builtin()
+
+    table = validator.to_table()
+
+    assert len(table.columns) == 5
+    assert "EVENT_ID" in table.colnames
+    assert "ENERGY" in table.colnames
+
+    table = validator.to_table(include_optional=["MULTIP", "COREX"])
+
+    assert len(table.columns) == 7
+    assert "MULTIP" in table.colnames
+    assert "COREX" in table.colnames
