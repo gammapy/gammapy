@@ -6,16 +6,9 @@ import scipy.ndimage as ndi
 import scipy.signal
 import astropy.units as u
 from astropy.convolution import Tophat2DKernel
-from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.nddata import block_reduce
-from regions import (
-    PixCoord,
-    PointPixelRegion,
-    PointSkyRegion,
-    RectangleSkyRegion,
-    SkyRegion,
-)
+from regions import PixCoord, PointPixelRegion, PointSkyRegion, SkyRegion
 import matplotlib.pyplot as plt
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.units import unit_from_fits_image_hdu
@@ -529,6 +522,33 @@ class WcsNDMap(WcsMap):
         lat.grid(alpha=0.2, linestyle="solid", color="w")
         return ax
 
+    def cutout_and_mask_region(self, region):
+        """Compute cutout and mask for a given region of the map.
+
+        The function will estimate the minimal size of the cutout, which encloses
+        the region.
+
+        Parameters
+        ----------
+        region: `~regions.Region`
+             Extended region
+
+        Returns
+        -------
+        cutout, mask : tuple of `WcsNDMap`
+            Cutout and mask map
+        """
+        from gammapy.maps import RegionGeom
+
+        if region is None:
+            region = self.geom.footprint_rectangle_sky_region
+
+        geom = RegionGeom(region=region, wcs=self.geom.wcs)
+        cutout = self.cutout(position=geom.center_skydir, width=geom.width)
+
+        mask = cutout.geom.to_image().region_mask([region])
+        return self.__class__(data=cutout.data, geom=cutout.geom, unit=self.unit), mask
+
     def to_region_nd_map(
         self, region=None, func=np.nansum, weights=None, method="nearest"
     ):
@@ -555,29 +575,27 @@ class WcsNDMap(WcsMap):
         """
         from gammapy.maps import RegionGeom, RegionNDMap
 
-        if isinstance(region, SkyCoord):
-            region = PointSkyRegion(region)
-        elif region is None:
-            width, height = self.geom.width
-            region = RectangleSkyRegion(
-                center=self.geom.center_skydir, width=width[0], height=height[0]
-            )
+        if region is None:
+            region = self.geom.footprint_rectangle_sky_region
 
         if weights is not None:
             if not self.geom == weights.geom:
                 raise ValueError("Incompatible spatial geoms between map and weights")
 
-        geom = RegionGeom(region=region, axes=self.geom.axes, wcs=self.geom.wcs)
+        geom = RegionGeom.from_regions(
+            regions=region, axes=self.geom.axes, wcs=self.geom.wcs
+        )
 
         if isinstance(region, PointSkyRegion):
             coords = geom.get_coord()
             data = self.interp_by_coord(coords=coords, method=method)
+
             if weights is not None:
                 data *= weights.interp_by_coord(coords=coords, method=method)
             # Casting needed as interp_by_coord transforms boolean
             data = data.astype(self.data.dtype)
         else:
-            cutout = self.cutout(position=geom.center_skydir, width=geom.width)
+            cutout, mask = self.cutout_and_mask_region(region=region, weights=weights)
 
             if weights is not None:
                 weights_cutout = weights.cutout(
@@ -585,7 +603,6 @@ class WcsNDMap(WcsMap):
                 )
                 cutout.data *= weights_cutout.data
 
-            mask = cutout.geom.to_image().region_mask([region]).data
             idx_y, idx_x = np.where(mask)
             data = func(cutout.data[..., idx_y, idx_x], axis=-1)
 
