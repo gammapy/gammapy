@@ -142,18 +142,13 @@ def plot_npred_signal(
         Axis object
     """
 
-    from gammapy.maps import RegionNDMap
-
-    npred_stack = dataset.npred_signal(model_names=model_names, stack=True)
-    npred_not_stack = dataset.npred_signal(model_names=model_names, stack=False)
-    npred_background = dataset.npred_background()
-
-    if not isinstance(npred_stack, RegionNDMap):
-        npred_stack = npred_stack.to_region_nd_map(region)
-    if not isinstance(npred_not_stack, RegionNDMap):
-        npred_not_stack = npred_not_stack.to_region_nd_map(region)
-    if not isinstance(npred_background, RegionNDMap):
-        npred_background = npred_background.to_region_nd_map(region)
+    npred_stack = dataset.npred_signal(
+        model_names=model_names, stack=True
+    ).to_region_nd_map(region)
+    npred_not_stack = dataset.npred_signal(
+        model_names=model_names, stack=False
+    ).to_region_nd_map(region)
+    npred_background = dataset.npred_background().to_region_nd_map(region)
 
     if ax is None:
 
