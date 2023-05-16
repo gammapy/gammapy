@@ -595,7 +595,7 @@ class WcsNDMap(WcsMap):
             # Casting needed as interp_by_coord transforms boolean
             data = data.astype(self.data.dtype)
         else:
-            cutout, mask = self.cutout_and_mask_region(region=region, weights=weights)
+            cutout, mask = self.cutout_and_mask_region(region=region)
 
             if weights is not None:
                 weights_cutout = weights.cutout(
