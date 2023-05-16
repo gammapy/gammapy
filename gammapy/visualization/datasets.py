@@ -118,6 +118,8 @@ def plot_npred_signal(
 ):
     """
     Plot the energy distribution of predicted counts of a selection of models assigned to a dataset.
+    Plot the energy distribution of predicted counts of the background and of the sum of all the considered models
+    on the same axis.
 
     Parameters
     ----------
