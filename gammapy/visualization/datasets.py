@@ -114,8 +114,6 @@ def plot_npred_signal(
     ax=None,
     model_names=None,
     region=None,
-    plot_background=True,
-    stack=False,
     **kwargs,
 ):
     """
@@ -133,10 +131,6 @@ def plot_npred_signal(
     region: `~regions.Region` or `~astropy.coordinates.SkyCoord`
         Region used to reproject predicted counts. Default is None.
         If None, use the full dataset geometry.
-    plot_background : bool
-        Whether to plot the background along with the other models.
-    stack : bool
-        Whether to sum the npred_signal of all the model.
     **kwargs : dict
         Keyword arguments to pass to `~gammapy.maps.RegionNDMap.plot`.
 
@@ -148,30 +142,29 @@ def plot_npred_signal(
         Axis object
     """
 
-    npred_region = dataset.npred_signal(
-        model_names=model_names, stack=stack
-    ).to_region_nd_map(region)
+    from gammapy.maps import RegionNDMap
 
-    if not stack:
-        npred_iter = npred_region.iter_by_axis("models")
-        names = npred_region.geom.axes["models"].center
-    else:
-        npred_iter = [npred_region]
-        names = ["stacked models"]
+    npred_stack = dataset.npred_signal(model_names=model_names, stack=True)
+    npred_not_stack = dataset.npred_signal(model_names=model_names, stack=False)
+    npred_background = dataset.npred_background()
+
+    if not isinstance(npred_stack, RegionNDMap):
+        npred_stack = npred_stack.to_region_nd_map(region)
+    if not isinstance(npred_not_stack, RegionNDMap):
+        npred_not_stack = npred_not_stack.to_region_nd_map(region)
+    if not isinstance(npred_background, RegionNDMap):
+        npred_background = npred_background.to_region_nd_map(region)
 
     if ax is None:
-        fig = plt.figure()
-        axes = fig.add_subplot(111)
-    else:
-        axes = ax
 
-    for (npred, name) in zip(npred_iter, names):
-        npred.plot(axes, label=name, **kwargs)
-    if plot_background:
-        dataset.npred_background().to_region_nd_map(region).plot(
-            ax=axes, label="background", **kwargs
-        )
-    axes.set_ylabel("Predicted counts")
-    axes.legend(loc="upper left", bbox_to_anchor=(1.04, 1), borderaxespad=0)
+        ax = plt.gca()
 
-    return axes
+    npred_not_stack.plot(ax=ax, axis_name="energy", **kwargs)
+    if len(dataset.models) > 1:
+        npred_stack.plot(ax=ax, label="stacked models")
+    npred_background.plot(ax=ax, label="background", **kwargs)
+
+    ax.set_ylabel("Predicted counts")
+    ax.legend()
+
+    return ax

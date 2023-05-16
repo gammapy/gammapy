@@ -80,9 +80,3 @@ def test_plot_npred_signal(sky_model):
 
     with mpl_plot_check():
         plot_npred_signal(dataset, model_names=[sky_model.name, model1.name])
-
-    with mpl_plot_check():
-        plot_npred_signal(dataset, plot_background=False)
-
-    with mpl_plot_check():
-        plot_npred_signal(dataset, stack=True)
