@@ -118,12 +118,13 @@ def plot_npred_signal(
 ):
     """
     Plot the energy distribution of predicted counts of a selection of models assigned to a dataset.
-    Plot the energy distribution of predicted counts of the background and of the sum of all the considered models
-    on the same axis.
+
+    The background and the sum af all the considered models predicted counts are plotted on top of individual
+    contributions of the considered models.
 
     Parameters
     ----------
-    dataset : an instance of `~gammapy.datasets.dataset`
+    dataset : an instance of `~gammapy.datasets.MapDataset`
         The dataset from which to plot the npred_signal.
     ax : `~matplotlib.axes.Axes`
         Axis object to plot on.
@@ -136,24 +137,19 @@ def plot_npred_signal(
     **kwargs : dict
         Keyword arguments to pass to `~gammapy.maps.RegionNDMap.plot`.
 
-
     Returns
     -------
-
     axes : `~matplotlib.axes.Axes`
         Axis object
     """
 
-    npred_stack = dataset.npred_signal(
-        model_names=model_names, stack=True
-    ).to_region_nd_map(region)
     npred_not_stack = dataset.npred_signal(
         model_names=model_names, stack=False
     ).to_region_nd_map(region)
+    npred_stack = npred_not_stack.sum_over_axes(["models"])
     npred_background = dataset.npred_background().to_region_nd_map(region)
 
     if ax is None:
-
         ax = plt.gca()
 
     npred_not_stack.plot(ax=ax, axis_name="energy", **kwargs)
