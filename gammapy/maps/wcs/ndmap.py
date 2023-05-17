@@ -6,9 +6,10 @@ import scipy.ndimage as ndi
 import scipy.signal
 import astropy.units as u
 from astropy.convolution import Tophat2DKernel
+from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.nddata import block_reduce
-from regions import PixCoord, PointPixelRegion, SkyRegion
+from regions import PixCoord, PointPixelRegion, PointSkyRegion, SkyRegion
 import matplotlib.pyplot as plt
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.units import unit_from_fits_image_hdu
@@ -661,17 +662,7 @@ class WcsNDMap(WcsMap):
         if isinstance(region, (PointSkyRegion, SkyCoord)):
             raise ValueError("Histogram method not supported for point regions")
 
-        if region is None:
-            width, height = self.geom.width
-            region = RectangleSkyRegion(
-                center=self.geom.center_skydir, width=width[0], height=height[0]
-            )
-
-        geom = RegionGeom(region=region, axes=self.geom.axes, wcs=self.geom.wcs)
-
-        cutout = self.cutout(position=geom.center_skydir, width=geom.width)
-
-        mask = cutout.geom.to_image().region_mask([region])
+        cutout, mask = self.cutout_and_mask_region(region=region)
         idx_y, idx_x = np.where(mask)
         quantity = cutout.quantity[..., idx_y, idx_x]
 
