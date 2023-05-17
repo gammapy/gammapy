@@ -553,9 +553,8 @@ def test_flux_points_parallel_multiprocessing(fpe_pwl):
 def test_flux_points_parallel_ray(fpe_pwl):
     datasets, fpe = fpe_pwl
     fpe.selection_optional = ["all"]
+    fpe.parallel_backend = "ray"
     fpe.n_jobs = 2
-    parallel.MULTIPROCESSING_BACKEND = "ray"
-    assert fpe.n_jobs == 2
     fp = fpe.run(datasets)
     assert_allclose(
         fp.flux_ul.data,

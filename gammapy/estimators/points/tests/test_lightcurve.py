@@ -5,7 +5,6 @@ import astropy.units as u
 from astropy.table import Column, Table
 from astropy.time import Time
 from astropy.timeseries import BinnedTimeSeries, BoxLeastSquares
-import gammapy.utils.parallel as parallel
 from gammapy.data import GTI
 from gammapy.datasets import Datasets
 from gammapy.estimators import FluxPoints, LightCurveEstimator
@@ -701,12 +700,9 @@ def test_lightcurve_parallel_ray():
     )
 
     estimator.n_jobs = None
-    parallel.N_PROCESSES = 2
-    parallel.MULTIPROCESSING_BACKEND = "ray"
-    assert estimator.n_jobs == 2
+    estimator.parallel_backend = "ray"
+    estimator.n_jobs = 2
     lightcurve = estimator.run(datasets)
     assert_allclose(
         lightcurve.dnde_ul.data[0], [[[3.260703e-13]], [[1.159354e-14]]], rtol=1e-3
     )
-    parallel.MULTIPROCESSING_BACKEND = "multiprocessing"
-    parallel.N_PROCESSES = 1

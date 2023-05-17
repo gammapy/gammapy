@@ -5,7 +5,6 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion, PointSkyRegion
-import gammapy.utils.parallel as parallel
 from gammapy.data import DataStore, Observation
 from gammapy.datasets import MapDataset, SpectrumDataset
 from gammapy.makers import (
@@ -159,14 +158,13 @@ def makers_spectrum(exclusion_mask):
 )
 @requires_data()
 def test_datasets_maker_map(pars, observations_cta, makers_map):
-    if pars["backend"]:
-        parallel.MULTIPROCESSING_BACKEND = pars["backend"]
     makers = DatasetsMaker(
         makers_map,
         stack_datasets=pars["stack_datasets"],
         cutout_mode="partial",
         cutout_width=pars["cutout_width"],
         n_jobs=pars["n_jobs"],
+        parallel_backend=pars["backend"],
     )
 
     datasets = makers.run(pars["dataset"], observations_cta)
@@ -188,7 +186,6 @@ def test_datasets_maker_map(pars, observations_cta, makers_map):
         exposure = datasets[0].exposure
         assert exposure.unit == "m2 s"
         assert_allclose(exposure.data.mean(), 2.436063e09, rtol=3e-3)
-    parallel.MULTIPROCESSING_BACKEND = "multiprocessing"
 
 
 @requires_data()
