@@ -522,7 +522,7 @@ class WcsNDMap(WcsMap):
         lat.grid(alpha=0.2, linestyle="solid", color="w")
         return ax
 
-    def cutout_and_mask_region(self, region):
+    def cutout_and_mask_region(self, region=None):
         """Compute cutout and mask for a given region of the map.
 
         The function will estimate the minimal size of the cutout, which encloses
