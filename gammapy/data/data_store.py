@@ -628,15 +628,15 @@ class DataStoreMaker:
         time_rows = []
         for events_path, irf_path in zip(self.events_paths, self.irfs_paths):
             row = self.get_obs_info(events_path, irf_path)
-            row, time_row = tu.extract_time_info(row)
             rows.append(row)
+            time_row = tu.extract_time_info(row)
             time_rows.append(time_row)
 
         names = list(rows[0].keys())
         table = ObservationTable(rows=rows, names=names)
 
         m = table.meta
-        if not tu.check_time_info(time_rows):
+        if not tu.unique_time_info(time_rows):
             raise RuntimeError(
                 "The time information in the EVENT header are not consistant between observations"
             )
