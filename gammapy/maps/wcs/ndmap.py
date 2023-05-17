@@ -8,7 +8,7 @@ import astropy.units as u
 from astropy.convolution import Tophat2DKernel
 from astropy.io import fits
 from astropy.nddata import block_reduce
-from regions import PixCoord, PointPixelRegion, PointSkyRegion, SkyRegion
+from regions import PixCoord, PointPixelRegion, SkyRegion
 import matplotlib.pyplot as plt
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.units import unit_from_fits_image_hdu
@@ -543,7 +543,7 @@ class WcsNDMap(WcsMap):
         if region is None:
             region = self.geom.footprint_rectangle_sky_region
 
-        geom = RegionGeom(region=region, wcs=self.geom.wcs)
+        geom = RegionGeom.from_regions(regions=region, wcs=self.geom.wcs)
         cutout = self.cutout(position=geom.center_skydir, width=geom.width)
 
         mask = cutout.geom.to_image().region_mask([region])
@@ -586,7 +586,7 @@ class WcsNDMap(WcsMap):
             regions=region, axes=self.geom.axes, wcs=self.geom.wcs
         )
 
-        if isinstance(region, PointSkyRegion):
+        if geom.is_all_point_sky_regions:
             coords = geom.get_coord()
             data = self.interp_by_coord(coords=coords, method=method)
 
