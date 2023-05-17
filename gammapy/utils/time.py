@@ -10,7 +10,7 @@ __all__ = [
     "time_ref_to_dict",
     "time_relative_to_ref",
     "extract_time_info",
-    "check_time_info",
+    "unique_time_info",
 ]
 
 TIME_KEYWORDS = ["MJDREFI", "MJDREFF", "TIMEUNIT", "TIMESYS", "TIMEREF"]
@@ -172,20 +172,19 @@ def extract_time_info(row):
 
     Returns
     -------
-    row : dict
-        dictionary with the metadata without the time information
     time_row : dict
-        dictionary with the time metadata
+        dictionary with only the time metadata
     """
     time_row = {}
     for name in TIME_KEYWORDS:
         time_row[name] = row[name]
-        del row[name]
-    return row, time_row
+    return time_row
 
 
-def check_time_info(rows):
+def unique_time_info(rows):
     """
+    Check if the time information are identical between all observations
+
     Parameters
     ----------
     rows : list
