@@ -1,6 +1,6 @@
 import inspect
 import numpy as np
-import scipy.stats
+from scipy import stats
 from scipy.interpolate import CubicSpline
 from astropy.visualization import make_lupton_rgb
 import matplotlib
@@ -189,7 +189,7 @@ def plot_theta_squared_table(table):
     ax1.set_ylabel("Significance")
 
 
-def plot_distribution(map_, ax=None, ncols=3, fit=True, fit_function="norm", **kwargs):
+def plot_distribution(map_, ax=None, ncols=3, fit=True, dist=stats.norm, **kwargs):
     """
     Plot the 1D distribution of data inside a map as a histogram. If the dimension of the map is smaller than 2,
     a unique plot will be displayed. Otherwise, if the dimension is 3 or greater, a grid of plot will be displayed.
@@ -204,16 +204,16 @@ def plot_distribution(map_, ax=None, ncols=3, fit=True, fit_function="norm", **k
         Number of columns to plot if a "plot grid" was to be done.
     fit : bool
         Whether to perform a fit of the distribution of data. If True, the fit is performed by `scipy.stats`.
-    fit_function : str
-        A string of a name of a scipy continuous distribution from `scipy.stats._continuous_distns`.
+    dist : `scipy.stats.rv_continuous` or `scipy.stats.rv_discrete`
+        The distribution to use for the fit.
     **kwargs : dict
         Keyword arguments to pass to `matplotlib.pyplot.hist` and `matplotlib.axes.Axes`.
 
     Returns
     -------
-    fit_parameters : list of tuple
-        List of tuple of the fitted parameters corresponding to the chosen `fit_function`. If `fit` is set to False,
-        returns an empty list.
+    result : `scipy.stats._result_class.FitResult`
+        The fit result for the distribution. If `fit` is set to False,
+        returns None.
     axes : `~numpy.ndarray` of `~matplotlib.pyplot.Axes`
         Array of Axes.
     """
@@ -274,24 +274,19 @@ def plot_distribution(map_, ax=None, ncols=3, fit=True, fit_function="norm", **k
         d = data[idx]
         axe.hist(d.flatten(), **hist_dict)
 
-        fit_parameters = []
+        result = None
         if fit:
 
-            function = getattr(scipy.stats._continuous_distns, fit_function)
-            param = function.fit(d)
-            fit_parameters.append(param)
-            x = np.linspace(np.min(d), np.max(d), 100)
-            y = function.pdf(x, *param)
+            result = stats.fit(dist, d.flatten())
 
-            axe.plot(
-                x,
-                y,
-                lw=2,
-                color="k",
-                label=f"mu = {function.mean(*param):.2f},\n std = {function.std(*param):.2f}",
-            )
+            x = np.linspace(np.min(d), np.max(d), 100)
+            y = dist.pdf(x, *result.params)
+
+            axe.plot(x, y)
 
         axe.set(**axes_dict)
         axe.legend()
 
-    return fit_parameters, axes
+        print(result)
+
+    return result, axes
