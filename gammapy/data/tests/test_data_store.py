@@ -175,7 +175,7 @@ def test_data_store_maker_obs_table(data_store_dc1):
     table = data_store_dc1.obs_table
     assert table.__class__.__name__ == "ObservationTable"
     assert len(table) == 4
-    assert len(table.colnames) == 22
+    assert len(table.colnames) == 27
     assert table["CALDB"][0] == "1dc"
     assert table["IRF"][0] == "South_z20_50h"
 
