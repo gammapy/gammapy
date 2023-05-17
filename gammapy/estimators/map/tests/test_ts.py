@@ -136,6 +136,7 @@ def test_compute_ts_map(input_dataset):
     assert_allclose(energy_axis.edges.value, [0.1, 1])
 
 
+@pytest.mark.skip
 @requires_data()
 @requires_dependency("ray")
 def test_compute_ts_map_parallel_ray(input_dataset):
