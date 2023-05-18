@@ -7,18 +7,18 @@ from astropy.table import Table
 from gammapy.datasets import SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.datasets.map import MapEvaluator
 from gammapy.maps import WcsNDMap
-from gammapy.stats import compute_fvar
 from gammapy.modeling.models import (
     ConstantFluxSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
 )
+from gammapy.stats import compute_fvar
 
 __all__ = [
     "estimate_exposure_reco_energy",
     "find_peaks",
     "resample_energy_edges",
-    "lc_fvar",
+    "compute_lightcurve_fvar",
 ]
 
 
@@ -230,15 +230,19 @@ def resample_energy_edges(dataset, conditions={}):
     return u.Quantity(energy_edges[::-1])
 
 
-def lc_fvar(lightcurve):
-    r"""Wrapper to utilize the '~gammapy.stats.compute_fvar' function
-    directly from the lightcurve FluxPoints object
+def compute_lightcurve_fvar(lightcurve, quantity="flux"):
+    r"""Compute the fractional excess variance of the input lightcurve.
+
+    Internally calls the `~gammapy.stats.compute_fvar` function
+
 
     Parameters
     ----------
     lightcurve : '~gammapy.estimators.FluxPoints'
         the lightcurve object
-
+    quantity : `string`
+        specific quantity contained in the FluxPoints object used for calculation.
+        Useful in case of incomplete lightcurves computed outside gammapy
 
     Returns
     -------
@@ -246,7 +250,22 @@ def lc_fvar(lightcurve):
         Fractional excess variance.
     """
 
-    flux = lightcurve.flux.data.flatten()
-    flux_err = lightcurve.flux_err.data.flatten()
+    if quantity == "flux":
+        flux = lightcurve.flux.data.flatten()
+        flux_err = lightcurve.flux_err.data.flatten()
+    if quantity == "norm":
+        flux = lightcurve.norm.data.flatten()
+        flux_err = lightcurve.norm_err.data.flatten()
+    elif quantity == "dnde":
+        flux = lightcurve.dnde.data.flatten()
+        flux_err = lightcurve.dnde_err.data.flatten()
+    elif quantity == "e2dnde":
+        flux = lightcurve.e2dnde.data.flatten()
+        flux_err = lightcurve.e2dnde_err.data.flatten()
+    else:
+        raise ValueError(
+            "The chosen value for the quantity keyword is not supported by this function. "
+            "Supported quantities: flux, norm, dnde, e2dnde"
+        )
 
     return compute_fvar(flux, flux_err)
