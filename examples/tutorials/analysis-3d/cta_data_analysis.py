@@ -314,6 +314,32 @@ print(result)
 
 
 ######################################################################
+# Here we can plot the predicted number of counts for each model and
+# for the background in the dataset. This is especially useful when
+# studying complex field with a lot a sources. There is a function
+# in the visualization sub-package of gammapy that does this automatically.
+#
+# First we need to stack our datasets.
+
+
+stacked_dataset = datasets.stack_reduce(name="stacked")
+stacked_dataset.models = model
+
+print(stacked_dataset)
+
+
+######################################################################
+# Import the function from `~gammapy.visualization`
+#
+
+
+from gammapy.visualization import plot_npred_signal
+
+plot_npred_signal(stacked_dataset)
+plt.show()
+
+
+######################################################################
 # Spectral points
 # ~~~~~~~~~~~~~~~
 #
@@ -322,14 +348,9 @@ print(result)
 # profile to compute the flux and flux error.
 #
 
-# Flux points are computed on stacked observation
-stacked_dataset = datasets.stack_reduce(name="stacked")
 
-print(stacked_dataset)
-
+# Flux points are computed on stacked datasets
 energy_edges = MapAxis.from_energy_bounds("1 TeV", "30 TeV", nbin=5).edges
-
-stacked_dataset.models = model
 
 fpe = FluxPointsEstimator(energy_edges=energy_edges, source="source-gc")
 flux_points = fpe.run(datasets=[stacked_dataset])
