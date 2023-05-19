@@ -86,6 +86,10 @@ def time_ref_from_dict(meta, format="mjd", scale="tt"):
     ----------
     meta : dict
         FITS time standard header info
+    format: str
+        Format of the `~astropy.time.Time` information
+    scale: str
+        Scale of the `~astropy.time.Time` information
 
     Returns
     -------
@@ -105,6 +109,8 @@ def time_ref_to_dict(time=None, scale="tt"):
     ----------
     time : `~astropy.time.Time`
         The reference epoch for storing time in FITS.
+    scale: str
+        Scale of the `~astropy.time.Time` information
 
     Returns
     -------
@@ -180,7 +186,7 @@ def extract_time_info(row):
 
 
 def unique_time_info(rows):
-    """Check if the time information are identical between all metadata dictionaries 
+    """Check if the time information are identical between all metadata dictionaries
 
     Parameters
     ----------
