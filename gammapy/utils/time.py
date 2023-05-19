@@ -9,8 +9,6 @@ __all__ = [
     "time_ref_from_dict",
     "time_ref_to_dict",
     "time_relative_to_ref",
-    "extract_time_info",
-    "unique_time_info",
 ]
 
 TIME_KEYWORDS = ["MJDREFI", "MJDREFF", "TIMEUNIT", "TIMESYS", "TIMEREF"]
