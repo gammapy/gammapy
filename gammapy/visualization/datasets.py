@@ -146,7 +146,6 @@ def plot_npred_signal(
     npred_not_stack = dataset.npred_signal(
         model_names=model_names, stack=False
     ).to_region_nd_map(region)
-    npred_stack = npred_not_stack.sum_over_axes(["models"])
     npred_background = dataset.npred_background().to_region_nd_map(region)
 
     if ax is None:
@@ -154,6 +153,7 @@ def plot_npred_signal(
 
     npred_not_stack.plot(ax=ax, axis_name="energy", **kwargs)
     if npred_not_stack.geom.axes["models"].bins > 1:
+        npred_stack = npred_not_stack.sum_over_axes(["models"])
         npred_stack.plot(ax=ax, label="stacked models")
     npred_background.plot(ax=ax, label="background", **kwargs)
 
