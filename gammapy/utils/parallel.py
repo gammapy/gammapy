@@ -12,6 +12,12 @@ N_PROCESSES = 1
 N_THREADS = 1
 
 
+def warning_prototype(module="ray"):
+    log.warning(
+        "gammapy supports for parallelisation with {module} is still a prototype and is not fully functionnal."
+    )
+
+
 class ParallelMixin:
     @property
     def n_jobs(self):
@@ -48,6 +54,7 @@ def get_multiprocessing(backend=None):
     elif backend == "ray":
         import ray.util.multiprocessing as multiprocessing
 
+        warning_prototype(module=backend)
         return multiprocessing
     else:
         raise ValueError("Invalid multiprocessing backend")
