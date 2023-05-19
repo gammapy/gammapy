@@ -86,7 +86,7 @@ def run_multiprocessing(
             address= "auto"
         else:
             address = None
-        pool_kwargs.setdefault("ray_address", "auto")
+        pool_kwargs.setdefault("ray_address", address)
 
     processes = pool_kwargs["processes"]
     if backend == "multiprocessing":
