@@ -152,7 +152,7 @@ def plot_npred_signal(
         ax = plt.gca()
 
     npred_not_stack.plot(ax=ax, axis_name="energy", **kwargs)
-    if npred_not_stack.geom.axes["models"].bins > 1:
+    if npred_not_stack.geom.axes["models"].nbin > 1:
         npred_stack = npred_not_stack.sum_over_axes(["models"])
         npred_stack.plot(ax=ax, label="stacked models")
     npred_background.plot(ax=ax, label="background", **kwargs)
