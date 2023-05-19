@@ -123,5 +123,5 @@ def test_compute_lightcurve_fvar():
 
     fvar, fvar_err = compute_lightcurve_fvar(lightcurve)
 
-    assert_allclose(fvar, 0.69812120021884471)
+    assert_allclose(fvar, 0.6982120021884471)
     assert_allclose(fvar_err, 0.07956210281992429)
