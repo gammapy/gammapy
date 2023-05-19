@@ -213,14 +213,43 @@ def test_sample_coord_time_energy(dataset, enedip_temporal_model):
     )
     dataset.models = enedip_temporal_model
     evaluator = dataset.evaluators["test-source"]
-    sampler = MapDatasetEventSampler(random_state=0)
+    sampler = MapDatasetEventSampler(random_state=1)
     events = sampler._sample_coord_time_energy(dataset, evaluator)
 
-    assert_allclose(len(events), 918)
+    assert_allclose(len(events), 907)
 
     assert_allclose(
         [events[0][0], events[0][1], events[0][2], events[0][3]],
-        [760.334713, 7.687285, 266.404988, -28.936178],
+        [870.710645, 1.024155, 266.404988, -28.936178],
+        rtol=1e-6,
+    )
+
+    enedip_temporal_model.temporal_model.map._unit == ""
+    dataset.models = enedip_temporal_model
+    evaluator = dataset.evaluators["test-source"]
+    sampler = MapDatasetEventSampler(random_state=2)
+    events = sampler._sample_coord_time_energy(dataset, evaluator)
+
+    assert_allclose(len(events), 908)
+
+    assert_allclose(
+        [events[0][0], events[0][1], events[0][2], events[0][3]],
+        [252.864558, 5.251921, 266.404988, -28.936178],
+        rtol=1e-6,
+    )
+
+    enedip_temporal_model.temporal_model.map._unit == "cm-2 s-1 TeV-1"
+    enedip_temporal_model.spectral_model.parameters[0].unit = ""
+    dataset.models = enedip_temporal_model
+    evaluator = dataset.evaluators["test-source"]
+    sampler = MapDatasetEventSampler(random_state=1)
+    events = sampler._sample_coord_time_energy(dataset, evaluator)
+
+    assert_allclose(len(events), 907)
+
+    assert_allclose(
+        [events[0][0], events[0][1], events[0][2], events[0][3]],
+        [870.710645, 1.024155, 266.404988, -28.936178],
         rtol=1e-6,
     )
 
