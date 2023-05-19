@@ -243,7 +243,7 @@ def test_background_model_io(tmpdir, background):
     filename = str(tmpdir / "test-bkg-file.fits")
     bkg = TemplateNPredModel(background, filename=filename)
     bkg.spectral_model.norm.value = 2.0
-    bkg.map.write(filename, overwrite=True)
+    bkg.write(overwrite=True)
     bkg_dict = bkg.to_dict()
     bkg_read = bkg.from_dict(bkg_dict)
 
@@ -251,6 +251,12 @@ def test_background_model_io(tmpdir, background):
         bkg_read.evaluate().data.sum(), background.data.sum() * 2.0, rtol=1e-3
     )
     assert bkg_read.filename == filename
+
+
+def test_background_model_io_missing_file(tmpdir, background):
+    bkg = TemplateNPredModel(background, filename=None)
+    with pytest.raises(IOError):
+        bkg.write(overwrite=True)
 
 
 def test_background_model_copy(background):
@@ -775,17 +781,23 @@ def test_spatial_model_background(background):
     assert_allclose(twice, reference * 2)
 
 
-def test_spatial_model_io_background(background):
+def test_spatial_model_io_background(tmp_path, background):
 
     spatial_model = ConstantSpatialModel(frame="galactic")
 
-    model = TemplateNPredModel(background, spatial_model=None)
+    fbkg_irf = str(tmp_path / "background_irf_test.fits")
+
+    model = TemplateNPredModel(background, spatial_model=None, filename=fbkg_irf)
+    model.write()
+
     model_dict = model.to_dict()
     assert "spatial" not in model_dict
     new_model = TemplateNPredModel.from_dict(model_dict)
     assert new_model.spatial_model is None
 
-    model = TemplateNPredModel(background, spatial_model=spatial_model)
+    model = TemplateNPredModel(
+        background, spatial_model=spatial_model, filename=fbkg_irf
+    )
     model_dict = model.to_dict()
     assert "spatial" in model_dict
     new_model = TemplateNPredModel.from_dict(model_dict)

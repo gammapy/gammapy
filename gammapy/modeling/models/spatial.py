@@ -1257,7 +1257,7 @@ class TemplateSpatialModel(SpatialModel):
     def write(self, overwrite=False):
         if self.filename is None:
             raise IOError("Missing filename")
-        elif os.path.isfile(self.filename) and not overwrite:
+        elif os.path.isfile(make_path(self.filename)) and not overwrite:
             log.warning("Template file already exits, and overwrite is False")
         else:
             self.map.write(self.filename, overwrite=overwrite)

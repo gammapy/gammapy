@@ -111,7 +111,7 @@ def test_dict_to_skymodels(models):
 def test_sky_models_io(tmp_path, models):
     # TODO: maybe change to a test case where we create a model programmatically?
     models.covariance = np.eye(len(models.parameters))
-    models.write(tmp_path / "tmp.yaml", full_output=True)
+    models.write(tmp_path / "tmp.yaml", full_output=True, overwrite_templates=False)
     models = Models.read(tmp_path / "tmp.yaml")
     assert models._covar_file == "tmp_covariance.dat"
     assert_allclose(models.covariance.data, np.eye(len(models.parameters)))
@@ -120,6 +120,38 @@ def test_sky_models_io(tmp_path, models):
     # TODO: not sure if we should just round-trip, or if we should
     # check YAML file content (e.g. against a ref file in the repo)
     # or check serialised dict content
+
+
+@requires_data()
+def test_sky_models_io_auto_write(tmp_path, models):
+
+    models_new = models.copy()
+    fsource2 = str(tmp_path / "source2_test.fits")
+    fbkg_iem = str(tmp_path / "cube_iem_test.fits")
+    fbkg_irf = str(tmp_path / "background_irf_test.fits")
+
+    models_new["source2"].spatial_model.filename = fsource2
+    models_new["cube_iem"].spatial_model.filename = fbkg_iem
+    models_new["background_irf"].filename = fbkg_irf
+    models_new.write(tmp_path / "tmp.yaml", full_output=True)
+
+    models = Models.read(tmp_path / "tmp.yaml")
+    assert models._covar_file == "tmp_covariance.dat"
+    assert models["source2"].spatial_model.filename == fsource2
+    assert models["cube_iem"].spatial_model.filename == fbkg_iem
+    assert models["background_irf"].filename == fbkg_irf
+
+    assert_allclose(
+        models_new["source2"].spatial_model.map.data,
+        models["source2"].spatial_model.map.data,
+    )
+    assert_allclose(
+        models_new["cube_iem"].spatial_model.map.data,
+        models["cube_iem"].spatial_model.map.data,
+    )
+    assert_allclose(
+        models_new["background_irf"].map.data, models["background_irf"].map.data
+    )
 
 
 def test_piecewise_norm_spectral_model_init():
