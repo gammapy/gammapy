@@ -6,11 +6,8 @@ from astropy.visualization import make_lupton_rgb
 import matplotlib
 import matplotlib.axes
 import matplotlib.pyplot as plt
-<<<<<<< HEAD
-from gammapy.maps.axes import UNIT_STRING_FORMAT
-=======
 from gammapy.maps import Map
->>>>>>> e8f74054b (add plot_distribution function)
+from gammapy.maps.axes import UNIT_STRING_FORMAT
 
 __all__ = [
     "plot_contour_line",
