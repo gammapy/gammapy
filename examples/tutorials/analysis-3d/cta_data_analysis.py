@@ -53,7 +53,7 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
 )
-from gammapy.visualization import plot_spectrum_datasets_off_regions
+from gammapy.visualization import plot_npred_signal, plot_spectrum_datasets_off_regions
 
 logging.basicConfig()
 log = logging.getLogger("gammapy.spectrum")
@@ -329,11 +329,9 @@ print(stacked_dataset)
 
 
 ######################################################################
-# Import the function from `~gammapy.visualization`
+# Call `plot_npred_signal` to plot the predicted counts.
 #
 
-
-from gammapy.visualization import plot_npred_signal
 
 plot_npred_signal(stacked_dataset)
 plt.show()
