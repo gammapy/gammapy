@@ -180,8 +180,7 @@ def extract_time_info(row):
 
 
 def unique_time_info(rows):
-    """
-    Check if the time information are identical between all observations
+    """Check if the time information are identical between all metadata dictionaries 
 
     Parameters
     ----------
