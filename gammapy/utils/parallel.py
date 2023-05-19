@@ -81,6 +81,11 @@ def run_multiprocessing(
         pool_kwargs = {}
     pool_kwargs.setdefault("processes", N_PROCESSES)
     if backend == "ray":
+        from ray import is_initialized
+        if is_initialized():
+            address= "auto"
+        else:
+            address = None
         pool_kwargs.setdefault("ray_address", "auto")
 
     processes = pool_kwargs["processes"]
