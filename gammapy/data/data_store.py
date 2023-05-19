@@ -638,7 +638,7 @@ class DataStoreMaker:
         m = table.meta
         if not tu.unique_time_info(time_rows):
             raise RuntimeError(
-                "The time information in the EVENT header are not consistant between observations"
+                "The time information in the EVENT header are not consistent between observations"
             )
         for name in tu.TIME_KEYWORDS:
             m[name] = time_rows[0][name]
