@@ -253,7 +253,7 @@ def compute_lightcurve_fvar(lightcurve, quantity="flux"):
     if quantity == "flux":
         flux = lightcurve.flux.data.flatten()
         flux_err = lightcurve.flux_err.data.flatten()
-    if quantity == "norm":
+    elif quantity == "norm":
         flux = lightcurve.norm.data.flatten()
         flux_err = lightcurve.norm_err.data.flatten()
     elif quantity == "dnde":
