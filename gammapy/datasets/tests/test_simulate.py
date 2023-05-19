@@ -121,7 +121,7 @@ def enedip_temporal_model(models):
     m = RegionNDMap.create(
         region=PointSkyRegion(center=models[0].spatial_model.position),
         axes=[energy_axis, time_axis],
-        data=1e-12,
+        data=1.2e-12,
         unit="cm-2 s-1 TeV-1",
     )
 
@@ -167,8 +167,8 @@ def test_evaluate_timevar_source(enedip_temporal_model, dataset):
 
     assert_allclose(np.shape(npred.data), (3, 1999, 1, 1))
 
-    assert_allclose(npred.data[:, 10, 0, 0], [0.024827, 0.110424, 0.321845], rtol=2e-4)
-    assert_allclose(npred.data[:, 50, 0, 0], [0.024827, 0.110424, 0.321845], rtol=2e-4)
+    assert_allclose(npred.data[:, 10, 0, 0], [0.029792, 0.132509, 0.386214], rtol=2e-4)
+    assert_allclose(npred.data[:, 50, 0, 0], [0.029792, 0.132509, 0.386214], rtol=2e-4)
 
     filename = "$GAMMAPY_DATA/gravitational_waves/GW_example_DC_map_file.fits.gz"
     temporal_model = LightCurveTemplateTemporalModel.read(filename, format="map")
@@ -216,11 +216,11 @@ def test_sample_coord_time_energy(dataset, enedip_temporal_model):
     sampler = MapDatasetEventSampler(random_state=1)
     events = sampler._sample_coord_time_energy(dataset, evaluator)
 
-    assert_allclose(len(events), 907)
+    assert_allclose(len(events), 1089)
 
     assert_allclose(
         [events[0][0], events[0][1], events[0][2], events[0][3]],
-        [870.710645, 1.024155, 266.404988, -28.936178],
+        [938.237406, 2.095024, 266.404988, -28.936178],
         rtol=1e-6,
     )
 
@@ -230,11 +230,11 @@ def test_sample_coord_time_energy(dataset, enedip_temporal_model):
     sampler = MapDatasetEventSampler(random_state=2)
     events = sampler._sample_coord_time_energy(dataset, evaluator)
 
-    assert_allclose(len(events), 908)
+    assert_allclose(len(events), 1090)
 
     assert_allclose(
         [events[0][0], events[0][1], events[0][2], events[0][3]],
-        [252.864558, 5.251921, 266.404988, -28.936178],
+        [970.98951, 8.334667, 266.404988, -28.936178],
         rtol=1e-6,
     )
 
@@ -245,11 +245,11 @@ def test_sample_coord_time_energy(dataset, enedip_temporal_model):
     sampler = MapDatasetEventSampler(random_state=1)
     events = sampler._sample_coord_time_energy(dataset, evaluator)
 
-    assert_allclose(len(events), 907)
+    assert_allclose(len(events), 1089)
 
     assert_allclose(
         [events[0][0], events[0][1], events[0][2], events[0][3]],
-        [870.710645, 1.024155, 266.404988, -28.936178],
+        [938.237406, 2.095024, 266.404988, -28.936178],
         rtol=1e-6,
     )
 
