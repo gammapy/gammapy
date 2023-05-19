@@ -161,7 +161,7 @@ def absolute_time(time_delta, meta):
 
 
 def extract_time_info(row):
-    """Separate the timing metadata from the others inside the event file header
+    """Extract the timing metadata from an event file header
 
     Parameters
     ----------
