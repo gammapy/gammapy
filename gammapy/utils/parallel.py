@@ -14,7 +14,7 @@ N_THREADS = 1
 
 def warning_prototype(module="ray"):
     log.warning(
-        "gammapy supports for parallelisation with {module} is still a prototype and is not fully functional."
+        f"gammapy supports for parallelisation with {module} is still a prototype and is not fully functional."
     )
 
 
