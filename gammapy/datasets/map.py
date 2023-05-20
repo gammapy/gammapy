@@ -1,5 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
+from functools import lru_cache
+from inspect import signature
 import numpy as np
 import astropy.units as u
 from astropy.io import fits
@@ -44,6 +46,103 @@ BINSZ_IRF_DEFAULT = 0.2
 
 EVALUATION_MODE = "local"
 USE_NPRED_CACHE = True
+
+
+class FitStatistic:
+    """Calculate -2 * log(L)."""
+
+    def stat_sum(self, *args, **kwargs):
+        return np.sum(self.stat_array(*args, **kwargs))
+
+    def stat_array(self, *args, **kwargs):
+        raise NotImplementedError
+
+
+class CashFitStatistic(FitStatistic):
+    def stat_sum(self, counts, npred, mask=None):
+        counts, npred = counts.data.astype(float), npred.data
+
+        if mask is not None:
+            return cash_sum_cython(counts[mask.data], npred[mask.data])
+        return cash_sum_cython(counts.ravel(), npred.ravel())
+
+
+@lru_cache()
+def create_c(n_dim: int) -> np.ndarray:
+    """Create the Tikhonov matrix.
+
+    math ::
+
+        C_4 = \\left(
+            \\begin{matrix}
+                -1 &  1 &  0 &  0 \\
+                1  & -2 &  1 &  0 \\
+                0  &  1 & -2 &  1 \\
+                0  &  0 &  1 & -1 \\
+            \\end{matrix}
+        \\right)
+
+    """
+    c = -2.0 * np.eye(n_dim) + np.eye(n_dim, k=1) + np.eye(n_dim, k=-1)
+    c[0, 0] = c[-1, -1] = -1.0
+    return -c
+
+
+@lru_cache()
+def create_l(n_dim: int) -> np.ndarray:
+    """Create the Tikhonov matrix.
+
+    math ::
+
+        L_4 = \\left(
+            \\begin{matrix}
+                1  & -2 &  1 &  0 \\
+                0  &  1 & -2 &  1 \\
+            \\end{matrix}
+        \\right)
+
+    """
+    return create_c(n_dim)[1:-1, :]
+
+
+def tikhonov(f: np.ndarray, tau: float) -> float:
+    """Tikhonov regularization.
+
+    math ::
+
+        \\frac{1}{2}
+        {\\left(\\mathbf{C}f\\right)}^\\top
+        {\\left(\\tau1\\right)}
+        \\left(\\mathbf{C}f\\right)
+
+    """
+    n_dim = len(f)
+    C = create_l(n_dim)
+    Cf = C @ f
+    return (tau / 2) * (Cf.T @ Cf)
+
+
+class Tikhonov(FitStatistic):
+    tag = "Tikhonov"
+
+    def __init__(self, tau, mask_safe=None):
+        self.tau = tau
+        self.mask_safe = mask_safe
+
+    def stat_sum(self, parameters):
+        p = parameters.to_table()
+        norms = p[:-1]
+        const = p[-1]
+        f = u.Quantity(norms["value"], norms["unit"][0]) * u.Quantity(
+            const["value"], const["unit"]
+        )
+        f = np.log10(f.value)
+        if self.mask_safe is not None:
+            f = f[self.mask_safe]
+        return tikhonov(f, self.tau)
+
+    def __str__(self):
+        return f"Tikhonov({self.tau:e})"
 
 
 def create_map_dataset_geoms(
@@ -190,6 +289,7 @@ class MapDataset(Dataset):
     psf = LazyFitsData(cache=True)
     mask_fit = LazyFitsData(cache=True)
     mask_safe = LazyFitsData(cache=True)
+    fit_statistic = CashFitStatistic()
 
     _lazy_data_members = [
         "counts",
@@ -1111,13 +1211,18 @@ class MapDataset(Dataset):
         return ax_spatial, ax_spectral
 
     def stat_sum(self):
-        """Total statistic function value given the current model parameters."""
-        counts, npred = self.counts.data.astype(float), self.npred().data
+        """Total likelihood given the current model parameters."""
+        args = {}
+        for key in signature(self.fit_statistic.stat_sum).parameters.keys():
+            method = getattr(self, key)
+            is_callable = hasattr(method, "__call__")
+            if is_callable:
+                value = method()
+            else:
+                value = method
+            args[key] = value
 
-        if self.mask is not None:
-            return cash_sum_cython(counts[self.mask.data], npred[self.mask.data])
-        else:
-            return cash_sum_cython(counts.ravel(), npred.ravel())
+        return self.fit_statistic.stat_sum(**args)
 
     def fake(self, random_state="random-seed"):
         """Simulate fake counts for the current model and reduced IRFs.

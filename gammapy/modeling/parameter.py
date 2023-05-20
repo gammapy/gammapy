@@ -4,6 +4,7 @@ import collections.abc
 import copy
 import itertools
 import logging
+from inspect import signature
 import numpy as np
 from astropy import units as u
 from astropy.table import Table
@@ -113,6 +114,7 @@ class Parameter:
         scale_method="scale10",
         interp="lin",
         is_norm=False,
+        prior=None,
     ):
         if not isinstance(name, str):
             raise TypeError(f"Name must be string, got '{type(name)}' instead")
@@ -126,6 +128,7 @@ class Parameter:
         self._error = error
         self._is_norm = is_norm
         self._type = None
+        self.prior = prior
 
         # TODO: move this to a setter method that can be called from `__set__` also!
         # Having it here is bad: behaviour not clear if Quantity and `unit` is passed.
@@ -470,13 +473,52 @@ class Parameters(collections.abc.Sequence):
         List of parameters
     """
 
-    def __init__(self, parameters=None):
+    def __init__(self, parameters=None, prior=None):
         if parameters is None:
             parameters = []
         else:
             parameters = list(parameters)
 
         self._parameters = parameters
+        self._prior = prior
+
+    @property
+    def prior(self):
+        return self._prior
+
+    @prior.setter
+    def prior(self, prior):
+        self._prior = prior
+
+    def stat_sum(self):
+        """Evaluate the Priors of all Parameters."""
+        s = 0
+        for par in self:
+            if par.prior is not None:
+                args = {}
+                # this is almost duplicated code from gammapy.dataset.map
+                for key in signature(par.prior.stat_sum).parameters.keys():
+                    method = getattr(par, key)
+                    is_callable = hasattr(method, "__call__")
+                    if is_callable:
+                        value = method()
+                    else:
+                        value = method
+                    args[key] = value
+
+                s += par.prior.stat_sum(**args)
+        if self._prior is not None:
+            args = {}
+            # this is almost duplicated code from gammapy.dataset.map
+            for key in signature(self.prior.stat_sum).parameters.keys():
+                method = getattr(self, key)
+                is_callable = hasattr(method, "__call__")
+                if is_callable:
+                    value = method()
+                else:
+                    value = method
+                args[key] = value
+        return s
 
     def check_limits(self):
         """Check parameter limits and emit a warning"""
