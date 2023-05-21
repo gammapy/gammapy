@@ -548,7 +548,6 @@ def test_flux_points_parallel_multiprocessing(fpe_pwl):
     parallel.N_PROCESSES = 1
 
 
-@pytest.mark.skip
 @requires_dependency("ray")
 def test_flux_points_parallel_ray(fpe_pwl):
     datasets, fpe = fpe_pwl

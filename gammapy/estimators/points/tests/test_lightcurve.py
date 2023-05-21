@@ -686,7 +686,6 @@ def test_lightcurve_parallel_multiprocessing():
     )
 
 
-@pytest.mark.skip
 @requires_data()
 @requires_dependency("ray")
 def test_lightcurve_parallel_ray():
