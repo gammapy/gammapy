@@ -17,7 +17,7 @@ from gammapy.makers import (
     WobbleRegionsFinder,
 )
 from gammapy.maps import MapAxis, RegionGeom, WcsGeom
-from gammapy.utils.testing import requires_data
+from gammapy.utils.testing import requires_data, requires_dependency
 
 
 @pytest.fixture(scope="session")
@@ -164,6 +164,7 @@ def makers_spectrum(exclusion_mask):
     ],
 )
 @requires_data()
+@requires_dependency("ray")
 def test_datasets_maker_map(pars, observations_cta, makers_map):
     makers = DatasetsMaker(
         makers_map,
