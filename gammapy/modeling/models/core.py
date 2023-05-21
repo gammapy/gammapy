@@ -92,10 +92,8 @@ class ModelBase:
 
             setattr(self, par.name, par)
 
-        self._covariance = Covariance(self.parameters)
         covariance_data = kwargs.get("covariance_data", None)
-        if covariance_data is not None:
-            self.covariance = covariance_data
+        self._covariance = Covariance(self.parameters, data=covariance_data)
 
     def __getattribute__(self, name):
         value = object.__getattribute__(self, name)
@@ -133,30 +131,24 @@ class ModelBase:
             kwargs[par.name] = par
         return cls(**kwargs)
 
-    def _check_covariance(self):
-        if not self.parameters == self._covariance.parameters:
-            self._covariance = Covariance(self.parameters)
-
     @property
     def covariance(self):
-        self._check_covariance()
-        for par in self.parameters:
-            pars = Parameters([par])
-            error = np.nan_to_num(par.error**2, nan=1)
-            covar = Covariance(pars, data=[[error]])
-            self._covariance.set_subcovariance(covar)
-
-        return self._covariance
+        return Covariance.from_model(self)
 
     @covariance.setter
     def covariance(self, covariance):
-        self._check_covariance()
-        self._covariance.data = covariance
+        from gammapy.modeling.covariance import _check_models_covariance
+
+        parameters, covar_data = _check_models_covariance(self)
+        if isinstance(covariance, Covariance):
+            covariance = covariance.data
+        _covariance = Covariance(parameters, covariance)
 
         for par in self.parameters:
             pars = Parameters([par])
-            variance = self._covariance.get_subcovariance(pars)
+            variance = _covariance.get_subcovariance(pars)
             par.error = np.sqrt(variance)
+        self._covariance = _covariance
 
     @property
     def parameters(self):
@@ -353,29 +345,22 @@ class DatasetModels(collections.abc.Sequence):
         self._covar_file = None
         self._covariance = Covariance(self.parameters)
 
-    def _check_covariance(self):
-        if not self.parameters == self._covariance.parameters:
-            self._covariance = Covariance.from_stack(
-                [model.covariance for model in self._models]
-            )
-
     @property
     def covariance(self):
-        self._check_covariance()
-
-        for model in self._models:
-            self._covariance.set_subcovariance(model.covariance)
-
-        return self._covariance
+        return Covariance.from_models(self)
 
     @covariance.setter
     def covariance(self, covariance):
-        self._check_covariance()
-        self._covariance.data = covariance
+        from gammapy.modeling.covariance import _check_models_covariance
 
+        parameters, covar_data = _check_models_covariance(self)
+        if isinstance(covariance, Covariance):
+            covariance = covariance.data
+        _covariance = Covariance(parameters, covariance)
         for model in self._models:
-            subcovar = self._covariance.get_subcovariance(model.covariance.parameters)
+            subcovar = _covariance.get_subcovariance(model.covariance.parameters)
             model.covariance = subcovar
+        self._covariance = _covariance
 
     @property
     def parameters(self):

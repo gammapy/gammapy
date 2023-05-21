@@ -91,12 +91,6 @@ class SkyModel(ModelBase):
         models = self.spectral_model, self.spatial_model, self.temporal_model
         return [model for model in models if model is not None]
 
-    def _check_covariance(self):
-        if not self.parameters == self._covariance.parameters:
-            self._covariance = Covariance.from_stack(
-                [model.covariance for model in self._models],
-            )
-
     def _check_unit(self):
         axis = MapAxis.from_energy_bounds(
             "0.1 TeV", "10 TeV", nbin=1, name="energy_true"
@@ -124,21 +118,21 @@ class SkyModel(ModelBase):
 
     @property
     def covariance(self):
-        self._check_covariance()
-
-        for model in self._models:
-            self._covariance.set_subcovariance(model.covariance)
-
-        return self._covariance
+        return Covariance.from_models(self)
 
     @covariance.setter
     def covariance(self, covariance):
-        self._check_covariance()
-        self._covariance.data = covariance
+        from gammapy.modeling.covariance import _check_models_covariance
+
+        parameters, covar_data = _check_models_covariance(self)
+        if isinstance(covariance, Covariance):
+            covariance = covariance.data
+        _covariance = Covariance(parameters, covariance)
 
         for model in self._models:
-            subcovar = self._covariance.get_subcovariance(model.covariance.parameters)
+            subcovar = _covariance.get_subcovariance(model.covariance.parameters)
             model.covariance = subcovar
+        self._covariance = _covariance
 
     @property
     def name(self):
@@ -419,7 +413,6 @@ class SkyModel(ModelBase):
         kwargs.setdefault("apply_irf", self.apply_irf.copy())
         kwargs.setdefault("datasets_names", self.datasets_names)
         kwargs.setdefault("covariance_data", self.covariance.data.copy())
-
         return self.__class__(**kwargs)
 
     def to_dict(self, full_output=False):

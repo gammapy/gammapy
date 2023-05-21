@@ -8,6 +8,31 @@ from .parameter import Parameters
 __all__ = ["Covariance"]
 
 
+def _check_models_covariance(models):
+    if not models.parameters == models._covariance.parameters:
+        parameters = models.parameters
+        if isinstance(models, list):
+            covar_data = Covariance.from_stack(
+                [model.covariance for model in models._models]
+            ).data.copy()
+        else:
+            covar_data = Covariance(parameters).data.copy()
+    else:
+        parameters = models._covariance.parameters
+        covar_data = models._covariance.data.copy()
+    return parameters, covar_data
+
+
+def _check_subcovariance(parameters, covar_data, covariance):
+    idx = [parameters.index(par) for par in covariance.parameters]
+    if not np.allclose(covar_data[np.ix_(idx, idx)], covariance.data):
+        covar_data[idx, :] = 0
+        covar_data[:, idx] = 0
+
+    covar_data[np.ix_(idx, idx)] = covariance.data.copy()
+    return covar_data
+
+
 class Covariance:
     """Parameter covariance class
 
@@ -103,6 +128,48 @@ class Covariance:
             covar.set_subcovariance(subcovar)
 
         return covar
+
+    @classmethod
+    def from_models(cls, models):
+        """Create covariance matrices from models
+
+        Parameters
+        ----------
+        models : `Models`
+            List of model
+        Returns
+        -------
+        covar : `Covariance`
+            Covariance
+        """
+
+        parameters, covar_data = _check_models_covariance(models)
+        for model in models._models:
+            model_covar = model.covariance
+            covar_data = _check_subcovariance(parameters, covar_data, model_covar)
+        return cls(parameters, covar_data)
+
+    @classmethod
+    def from_model(cls, model):
+        """Create covariance matrices from model
+
+        Parameters
+        ----------
+        model : `Model`
+            Model
+        Returns
+        -------
+        covar : `Covariance`
+            Covariance
+        """
+
+        parameters, covar_data = _check_models_covariance(model)
+        for par in model.parameters:
+            pars = Parameters([par])
+            error = np.nan_to_num(par.error**2, nan=1)
+            model_covar = Covariance(pars, data=[[error]])
+            covar_data = _check_subcovariance(parameters, covar_data, model_covar)
+        return cls(parameters, covar_data)
 
     def get_subcovariance(self, parameters):
         """Get sub-covariance matrix
