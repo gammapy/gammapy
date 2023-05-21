@@ -154,6 +154,13 @@ def makers_spectrum(exclusion_mask):
             "n_jobs": 2,
             "backend": "multiprocessing",
         },
+        {
+            "dataset": get_mapdataset(name="parallel_staking"),
+            "stack_datasets": True,
+            "cutout_width": None,
+            "n_jobs": 2,
+            "backend": "ray",
+        },
     ],
 )
 @requires_data()
