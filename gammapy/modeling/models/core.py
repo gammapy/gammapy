@@ -11,7 +11,6 @@ import matplotlib.pyplot as plt
 import yaml
 from gammapy.maps import Map, RegionGeom
 from gammapy.modeling import Covariance, Parameter, Parameters
-from gammapy.modeling.covariance import copy_covariance
 from gammapy.utils.scripts import make_name, make_path
 
 __all__ = ["Model", "Models", "DatasetModels", "ModelBase"]
@@ -94,6 +93,9 @@ class ModelBase:
             setattr(self, par.name, par)
 
         self._covariance = Covariance(self.parameters)
+        covariance_data = kwargs.get("covariance_data", None)
+        if covariance_data is not None:
+            self.covariance = covariance_data
 
     def __getattribute__(self, name):
         value = object.__getattribute__(self, name)
@@ -163,7 +165,6 @@ class ModelBase:
             [getattr(self, name) for name in self.default_parameters.names]
         )
 
-    @copy_covariance
     def copy(self, **kwargs):
         """A deep copy."""
         return copy.deepcopy(self)
@@ -637,7 +638,6 @@ class DatasetModels(collections.abc.Sequence):
     def _ipython_key_completions_(self):
         return self.names
 
-    @copy_covariance
     def copy(self, copy_data=False):
         """A deep copy.
 
