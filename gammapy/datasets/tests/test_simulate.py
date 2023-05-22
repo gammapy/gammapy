@@ -226,7 +226,7 @@ def test_sample_coord_time_energy(dataset, energy_dependent_temporal_model):
     sampler = MapDatasetEventSampler(random_state=1)
     events = sampler._sample_coord_time_energy(dataset, evaluator)
 
-    assert_allclose(len(events), 1089)
+    assert len(events) == 1089
 
     assert_allclose(
         [events[0][0], events[0][1], events[0][2], events[0][3]],
@@ -243,7 +243,7 @@ def test_sample_coord_time_energy_random_seed(dataset, energy_dependent_temporal
     sampler = MapDatasetEventSampler(random_state=2)
     events = sampler._sample_coord_time_energy(dataset, evaluator)
 
-    assert_allclose(len(events), 1090)
+    assert len(events) == 1090
 
     assert_allclose(
         [events[0][0], events[0][1], events[0][2], events[0][3]],
@@ -261,7 +261,7 @@ def test_sample_coord_time_energy_unit(dataset, energy_dependent_temporal_model)
     sampler = MapDatasetEventSampler(random_state=1)
     events = sampler._sample_coord_time_energy(dataset, evaluator)
 
-    assert_allclose(len(events), 1089)
+    assert len(events) == 1089
     assert_allclose(
         [events[0][0], events[0][1], events[0][2], events[0][3]],
         [404.470523, 2.095024, 266.404988, -28.936178],
