@@ -164,7 +164,7 @@ def test_evaluate_timevar_source(energy_dependent_temporal_sky_model, dataset):
     evaluator = dataset.evaluators["test-source"]
 
     sampler = MapDatasetEventSampler(random_state=0)
-    npred = sampler._evaluate_timevar_source(dataset, evaluator)
+    npred = sampler._evaluate_timevar_source(dataset, evaluator.model)
 
     assert_allclose(np.shape(npred.data), (3, 1999, 1, 1))
 
@@ -178,7 +178,7 @@ def test_evaluate_timevar_source(energy_dependent_temporal_sky_model, dataset):
     evaluator = dataset.evaluators["test-source"]
 
     sampler = MapDatasetEventSampler(random_state=0)
-    npred = sampler._evaluate_timevar_source(dataset, evaluator)
+    npred = sampler._evaluate_timevar_source(dataset, evaluator.model)
 
     assert_allclose(
         npred.data[:, 1000, 0, 0] / 1e-13,
@@ -201,7 +201,7 @@ def test_sample_coord_time_energy_no_spatial(
     evaluator = dataset.evaluators["test-source"]
 
     with pytest.raises(TypeError):
-        sampler._sample_coord_time_energy(dataset, evaluator)
+        sampler._sample_coord_time_energy(dataset, evaluator.model)
 
 
 @requires_data()
@@ -218,7 +218,7 @@ def test_sample_coord_time_energy_gaussian(
     evaluator = dataset.evaluators["test-source"]
 
     with pytest.raises(TypeError):
-        sampler._sample_coord_time_energy(dataset, evaluator)
+        sampler._sample_coord_time_energy(dataset, evaluator.model)
 
 
 @requires_data()
@@ -231,7 +231,7 @@ def test_sample_coord_time_energy(dataset, energy_dependent_temporal_sky_model):
     dataset.models = energy_dependent_temporal_sky_model
     evaluator = dataset.evaluators["test-source"]
 
-    events = sampler._sample_coord_time_energy(dataset, evaluator)
+    events = sampler._sample_coord_time_energy(dataset, evaluator.model)
 
     assert len(events) == 1089
 
@@ -252,7 +252,7 @@ def test_sample_coord_time_energy_random_seed(
     dataset.models = energy_dependent_temporal_sky_model
     evaluator = dataset.evaluators["test-source"]
 
-    events = sampler._sample_coord_time_energy(dataset, evaluator)
+    events = sampler._sample_coord_time_energy(dataset, evaluator.model)
 
     assert len(events) == 1090
 
@@ -272,7 +272,7 @@ def test_sample_coord_time_energy_unit(dataset, energy_dependent_temporal_sky_mo
     dataset.models = energy_dependent_temporal_sky_model
     evaluator = dataset.evaluators["test-source"]
 
-    events = sampler._sample_coord_time_energy(dataset, evaluator)
+    events = sampler._sample_coord_time_energy(dataset, evaluator.model)
 
     assert len(events) == 1089
     assert_allclose(

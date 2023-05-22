@@ -68,8 +68,7 @@ class MapDatasetEventSampler:
     def _evaluate_timevar_source(
         self,
         dataset,
-        evaluator,
-        time_axis=None,
+        model,
         t_delta=0.5 * u.s,
     ):
         """Calculate Npred for a given `dataset.model` by evaluating
@@ -79,10 +78,8 @@ class MapDatasetEventSampler:
         ----------
         dataset : `~gammapy.datasets.MapDataset`
             Map dataset.
-        evaluator : `~gammapy.datasets.evaluators.MapEvaluator`
-            Map evaluator.
-        time_axis : `~gammapy.Maps.MapAxis`
-            Axis of the time.
+        model : `~gammapy.modeling.models.SkyModel`
+            Sky model intance.
 
         Returns
         -------
@@ -91,39 +88,34 @@ class MapDatasetEventSampler:
         """
         energy_true = dataset.edisp.edisp_map.geom.axes["energy_true"]
         energy_new = energy_true.upsample(self.oversample_energy_factor)
-        target = evaluator.model.spatial_model.position
+
+        target = model.spatial_model.position
         region_exposure = dataset.exposure.to_region_nd_map(target)
 
-        if not time_axis:
-            tstart = dataset.gti.time_start
-            tstop = dataset.gti.time_stop
-            nbin = int(((tstop - tstart) / t_delta).to(""))
-            time_axis_eval = TimeMapAxis.from_time_bounds(
-                time_min=tstart,
-                time_max=tstop,
-                nbin=nbin,
-            )
-            time_axis = MapAxis.from_bounds(
-                tstart[0].mjd * u.d,
-                tstop[0].mjd * u.d,
-                nbin=nbin,
-                name="time",
-            )
+        tstart = dataset.gti.time_start
+        tstop = dataset.gti.time_stop
+        nbin = int(((tstop - tstart) / t_delta).to(""))
+        time_axis_eval = TimeMapAxis.from_time_bounds(
+            time_min=tstart,
+            time_max=tstop,
+            nbin=nbin,
+        )
 
-        temp_eval = evaluator.model.temporal_model.evaluate(
+        time_axis = MapAxis.from_bounds(
+            tstart[0].mjd * u.d,
+            tstop[0].mjd * u.d,
+            nbin=nbin,
+            name="time",
+        )
+
+        temp_eval = model.temporal_model(
             time_axis_eval.time_mid, energy=energy_new.center
         )
 
-        if temp_eval.unit.is_equivalent(
-            evaluator.model.spectral_model.parameters[0].quantity
-        ):
-            flux_diff = temp_eval.to(
-                evaluator.model.spectral_model.parameters[0].quantity
-            )
+        if temp_eval.unit.is_equivalent(model.spectral_model.parameters[0].quantity):
+            flux_diff = temp_eval.to(model.spectral_model.parameters[0].quantity)
         else:
-            flux_diff = (
-                temp_eval * evaluator.model.spectral_model.parameters[0].quantity
-            )
+            flux_diff = temp_eval * model.spectral_model.parameters[0].quantity
 
         flux_inte = flux_diff * energy_new.bin_width[:, None]
 
@@ -151,43 +143,40 @@ class MapDatasetEventSampler:
 
         return npred
 
-    def _sample_coord_time_energy(self, dataset, evaluator):
+    def _sample_coord_time_energy(self, dataset, model):
         """Sample model components of a source with time-dependent spectrum.
 
         Parameters
         ----------
         dataset : `~gammapy.datasets.MapDataset`
             Map dataset.
-        evaluator : `~gammapy.datasets.evaluators.MapEvaluator`
-            Map evaluator.
+        model : `~gammapy.modeling.models.SkyModel`
+            Sky model instance.
 
         Returns
         -------
         table : `~astropy.table.Table`
             Table of sampled events.
         """
-        if not isinstance(evaluator.model.spatial_model, PointSpatialModel):
+        if not isinstance(model.spatial_model, PointSpatialModel):
             raise TypeError(
-                f"Event sampler expects PointSpatialModel for a time varying source. Got {evaluator.model.spatial_model} instead."
+                f"Event sampler expects PointSpatialModel for a time varying source. Got {model.spatial_model} instead."
             )
 
-        else:
-            if not isinstance(evaluator.model.spectral_model, ConstantSpectralModel):
-                raise TypeError(
-                    f"Event sampler expects ConstantSpectralModel for a time varying source. Got {evaluator.model.spectral_model} instead."
-                )
-
-            npred = self._evaluate_timevar_source(dataset, evaluator)
-            data = npred.data[np.isfinite(npred.data)]
-            n_events = self.random_state.poisson(np.sum(data))
-
-            coords = npred.sample_coord(
-                n_events=n_events, random_state=self.random_state
+        if not isinstance(model.spectral_model, ConstantSpectralModel):
+            raise TypeError(
+                f"Event sampler expects ConstantSpectralModel for a time varying source. Got {model.spectral_model} instead."
             )
 
-            coords["time"] = Time(coords["time"], format="mjd", scale="tt")
+        npred = self._evaluate_timevar_source(dataset, model=model)
+        data = npred.data[np.isfinite(npred.data)]
+        n_events = self.random_state.poisson(np.sum(data))
 
-            table = self._make_table(coords, dataset.gti.time_ref)
+        coords = npred.sample_coord(n_events=n_events, random_state=self.random_state)
+
+        coords["time"] = Time(coords["time"], format="mjd", scale="tt")
+
+        table = self._make_table(coords, dataset.gti.time_ref)
 
         return table
 
