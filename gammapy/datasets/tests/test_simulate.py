@@ -218,9 +218,11 @@ def test_sample_coord_time_energy(dataset, enedip_temporal_model):
 
     assert_allclose(len(events), 1089)
 
+    sort_by_time = np.argsort(events["TIME"])
+    events = events[sort_by_time]
     assert_allclose(
         [events[0][0], events[0][1], events[0][2], events[0][3]],
-        [938.237406, 2.095024, 266.404988, -28.936178],
+        [0.277014, 7.509978, 266.404988, -28.936178],
         rtol=1e-6,
     )
 
@@ -232,9 +234,11 @@ def test_sample_coord_time_energy(dataset, enedip_temporal_model):
 
     assert_allclose(len(events), 1090)
 
+    sort_by_time = np.argsort(events["TIME"])
+    events = events[sort_by_time]
     assert_allclose(
         [events[0][0], events[0][1], events[0][2], events[0][3]],
-        [970.98951, 8.334667, 266.404988, -28.936178],
+        [2.421369, 1.121694, 266.404988, -28.936178],
         rtol=1e-6,
     )
 
@@ -247,9 +251,11 @@ def test_sample_coord_time_energy(dataset, enedip_temporal_model):
 
     assert_allclose(len(events), 1089)
 
+    sort_by_time = np.argsort(events["TIME"])
+    events = events[sort_by_time]
     assert_allclose(
         [events[0][0], events[0][1], events[0][2], events[0][3]],
-        [938.237406, 2.095024, 266.404988, -28.936178],
+        [0.277014, 7.509978, 266.404988, -28.936178],
         rtol=1e-6,
     )
 
