@@ -7,7 +7,6 @@ from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.io import fits
 from astropy.table import Table
 from astropy.time import Time
-from regions import PointSkyRegion
 from gammapy.data import GTI, DataStore, Observation
 from gammapy.data.pointing import FixedPointingInfo, PointingMode
 from gammapy.datasets import MapDataset, MapDatasetEventSampler
@@ -102,32 +101,34 @@ def model_alternative():
     return model2
 
 
-@pytest.fixture()
-@requires_data()
-def energy_dependent_temporal_model(models):
-    models[0].spatial_model = PointSpatialModel(
-        lon_0="0 deg", lat_0="0 deg", frame="galactic"
-    )
-    models[0].spectral_model = ConstantSpectralModel(const="1 cm-2 s-1 TeV-1")
-
-    nbin = 10
+def get_energy_dependent_temporal_model():
     energy_axis = MapAxis.from_energy_bounds(
-        energy_min=1 * u.TeV, energy_max=10 * u.TeV, nbin=nbin, name="energy"
+        energy_min=1 * u.TeV, energy_max=10 * u.TeV, nbin=10, name="energy"
     )
 
     edges = np.linspace(0, 1000, 101) * u.s
     time_axis = MapAxis.from_edges(edges=edges, name="time", interp="lin")
 
     m = RegionNDMap.create(
-        region=PointSkyRegion(center=models[0].spatial_model.position),
+        region=SkyCoord("0.5 deg", "0.5 deg", frame="galactic"),
         axes=[energy_axis, time_axis],
         data=1.2e-12,
         unit="cm-2 s-1 TeV-1",
     )
 
     t_ref = Time(51544.00074287037, format="mjd", scale="tt")
-    temporal_model = LightCurveTemplateTemporalModel(m, t_ref=t_ref)
-    models[0].temporal_model = temporal_model
+    return LightCurveTemplateTemporalModel(m, t_ref=t_ref)
+
+
+@pytest.fixture()
+@requires_data()
+def energy_dependent_temporal_sky_model(models):
+    models[0].spatial_model = PointSpatialModel(
+        lon_0="0 deg", lat_0="0 deg", frame="galactic"
+    )
+    models[0].spectral_model = ConstantSpectralModel(const="1 cm-2 s-1 TeV-1")
+
+    models[0].temporal_model = get_energy_dependent_temporal_model()
 
     return models[0]
 
@@ -158,8 +159,8 @@ def dataset():
 
 
 @requires_data()
-def test_evaluate_timevar_source(energy_dependent_temporal_model, dataset):
-    dataset.models = energy_dependent_temporal_model
+def test_evaluate_timevar_source(energy_dependent_temporal_sky_model, dataset):
+    dataset.models = energy_dependent_temporal_sky_model
     evaluator = dataset.evaluators["test-source"]
 
     sampler = MapDatasetEventSampler(random_state=0)
@@ -187,14 +188,16 @@ def test_evaluate_timevar_source(energy_dependent_temporal_model, dataset):
 
 
 @requires_data()
-def test_sample_coord_time_energy_no_spatial(dataset, energy_dependent_temporal_model):
+def test_sample_coord_time_energy_no_spatial(
+    dataset, energy_dependent_temporal_sky_model
+):
     sampler = MapDatasetEventSampler(random_state=0)
 
-    energy_dependent_temporal_model.spatial_model = None
-    energy_dependent_temporal_model.spectral_model = ConstantSpectralModel(
+    energy_dependent_temporal_sky_model.spatial_model = None
+    energy_dependent_temporal_sky_model.spectral_model = ConstantSpectralModel(
         const="1 cm-2 s-1 TeV-1"
     )
-    dataset.models = energy_dependent_temporal_model
+    dataset.models = energy_dependent_temporal_sky_model
     evaluator = dataset.evaluators["test-source"]
 
     with pytest.raises(TypeError):
@@ -202,14 +205,16 @@ def test_sample_coord_time_energy_no_spatial(dataset, energy_dependent_temporal_
 
 
 @requires_data()
-def test_sample_coord_time_energy_gaussian(dataset, energy_dependent_temporal_model):
+def test_sample_coord_time_energy_gaussian(
+    dataset, energy_dependent_temporal_sky_model
+):
     sampler = MapDatasetEventSampler(random_state=0)
 
-    energy_dependent_temporal_model.spatial_model = GaussianSpatialModel()
-    energy_dependent_temporal_model.spectral_model = ConstantSpectralModel(
+    energy_dependent_temporal_sky_model.spatial_model = GaussianSpatialModel()
+    energy_dependent_temporal_sky_model.spectral_model = ConstantSpectralModel(
         const="1 cm-2 s-1 TeV-1"
     )
-    dataset.models = energy_dependent_temporal_model
+    dataset.models = energy_dependent_temporal_sky_model
     evaluator = dataset.evaluators["test-source"]
 
     with pytest.raises(TypeError):
@@ -217,13 +222,13 @@ def test_sample_coord_time_energy_gaussian(dataset, energy_dependent_temporal_mo
 
 
 @requires_data()
-def test_sample_coord_time_energy(dataset, energy_dependent_temporal_model):
+def test_sample_coord_time_energy(dataset, energy_dependent_temporal_sky_model):
     sampler = MapDatasetEventSampler(random_state=1)
 
-    energy_dependent_temporal_model.spatial_model = PointSpatialModel(
+    energy_dependent_temporal_sky_model.spatial_model = PointSpatialModel(
         lon_0="0 deg", lat_0="0 deg", frame="galactic"
     )
-    dataset.models = energy_dependent_temporal_model
+    dataset.models = energy_dependent_temporal_sky_model
     evaluator = dataset.evaluators["test-source"]
 
     events = sampler._sample_coord_time_energy(dataset, evaluator)
@@ -238,11 +243,13 @@ def test_sample_coord_time_energy(dataset, energy_dependent_temporal_model):
 
 
 @requires_data()
-def test_sample_coord_time_energy_random_seed(dataset, energy_dependent_temporal_model):
+def test_sample_coord_time_energy_random_seed(
+    dataset, energy_dependent_temporal_sky_model
+):
     sampler = MapDatasetEventSampler(random_state=2)
 
-    energy_dependent_temporal_model.temporal_model.map._unit == ""
-    dataset.models = energy_dependent_temporal_model
+    energy_dependent_temporal_sky_model.temporal_model.map._unit == ""
+    dataset.models = energy_dependent_temporal_sky_model
     evaluator = dataset.evaluators["test-source"]
 
     events = sampler._sample_coord_time_energy(dataset, evaluator)
@@ -257,12 +264,12 @@ def test_sample_coord_time_energy_random_seed(dataset, energy_dependent_temporal
 
 
 @requires_data()
-def test_sample_coord_time_energy_unit(dataset, energy_dependent_temporal_model):
+def test_sample_coord_time_energy_unit(dataset, energy_dependent_temporal_sky_model):
     sampler = MapDatasetEventSampler(random_state=1)
 
-    energy_dependent_temporal_model.temporal_model.map._unit == "cm-2 s-1 TeV-1"
-    energy_dependent_temporal_model.spectral_model.parameters[0].unit = ""
-    dataset.models = energy_dependent_temporal_model
+    energy_dependent_temporal_sky_model.temporal_model.map._unit == "cm-2 s-1 TeV-1"
+    energy_dependent_temporal_sky_model.spectral_model.parameters[0].unit = ""
+    dataset.models = energy_dependent_temporal_sky_model
     evaluator = dataset.evaluators["test-source"]
 
     events = sampler._sample_coord_time_energy(dataset, evaluator)
