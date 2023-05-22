@@ -273,7 +273,7 @@ def plot_distribution(map_, ax=None, ncols=3, fit=True, dist=stats.norm, **kwarg
             x = np.linspace(np.min(d), np.max(d), 100)
             y = dist.pdf(x, *result.params)
 
-            axe.plot(x, y)
+            axe.plot(x, y, label="Fit")
 
         axe.set(**axes_dict)
         axe.legend()
