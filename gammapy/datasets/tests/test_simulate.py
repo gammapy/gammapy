@@ -218,12 +218,14 @@ def test_sample_coord_time_energy_gaussian(dataset, energy_dependent_temporal_mo
 
 @requires_data()
 def test_sample_coord_time_energy(dataset, energy_dependent_temporal_model):
+    sampler = MapDatasetEventSampler(random_state=1)
+
     energy_dependent_temporal_model.spatial_model = PointSpatialModel(
         lon_0="0 deg", lat_0="0 deg", frame="galactic"
     )
     dataset.models = energy_dependent_temporal_model
     evaluator = dataset.evaluators["test-source"]
-    sampler = MapDatasetEventSampler(random_state=1)
+
     events = sampler._sample_coord_time_energy(dataset, evaluator)
 
     assert len(events) == 1089
@@ -237,10 +239,12 @@ def test_sample_coord_time_energy(dataset, energy_dependent_temporal_model):
 
 @requires_data()
 def test_sample_coord_time_energy_random_seed(dataset, energy_dependent_temporal_model):
+    sampler = MapDatasetEventSampler(random_state=2)
+
     energy_dependent_temporal_model.temporal_model.map._unit == ""
     dataset.models = energy_dependent_temporal_model
     evaluator = dataset.evaluators["test-source"]
-    sampler = MapDatasetEventSampler(random_state=2)
+
     events = sampler._sample_coord_time_energy(dataset, evaluator)
 
     assert len(events) == 1090
@@ -254,11 +258,13 @@ def test_sample_coord_time_energy_random_seed(dataset, energy_dependent_temporal
 
 @requires_data()
 def test_sample_coord_time_energy_unit(dataset, energy_dependent_temporal_model):
+    sampler = MapDatasetEventSampler(random_state=1)
+
     energy_dependent_temporal_model.temporal_model.map._unit == "cm-2 s-1 TeV-1"
     energy_dependent_temporal_model.spectral_model.parameters[0].unit = ""
     dataset.models = energy_dependent_temporal_model
     evaluator = dataset.evaluators["test-source"]
-    sampler = MapDatasetEventSampler(random_state=1)
+
     events = sampler._sample_coord_time_energy(dataset, evaluator)
 
     assert len(events) == 1089
