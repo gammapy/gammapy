@@ -4,10 +4,12 @@ import numpy as np
 import astropy.units as u
 from astropy.table import Table
 import matplotlib.pyplot as plt
+from gammapy.datasets import MapDataset
 from gammapy.maps import Map, MapAxis, WcsNDMap
 from gammapy.utils.testing import mpl_plot_check, requires_data
 from gammapy.visualization import (
     plot_contour_line,
+    plot_distribution,
     plot_map_rgb,
     plot_theta_squared_table,
 )
@@ -71,3 +73,17 @@ def test_plot_map_rgb():
     kwargs = {"stretch": 0.5, "Q": 1, "minimum": 0.15}
     with mpl_plot_check():
         plot_map_rgb(map_, **kwargs)
+
+
+@requires_data()
+def test_plot_distribution():
+    dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
+
+    with mpl_plot_check():
+        res, ax = plot_distribution(dataset.counts)
+
+        assert len(res) == 10
+        assert ax.shape == (4, 3)
+
+        assert res[0].success == True
+        assert res[0].message == "Optimization terminated successfully."
