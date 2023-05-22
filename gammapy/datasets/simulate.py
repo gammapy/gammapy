@@ -30,11 +30,16 @@ class MapDatasetEventSampler:
     oversample_energy_factor: {int}
         Defines an oversampling factor for the energies; it is used only when sampling
         an energy-dependent time-varying source.
+    t_delta : `~astropy.units.Quantity`
+        Time interval used to sample the time-dependent source.
     """
 
-    def __init__(self, random_state="random-seed", oversample_energy_factor=10):
+    def __init__(
+        self, random_state="random-seed", oversample_energy_factor=10, t_delta=0.5 * u.s
+    ):
         self.random_state = get_random_state(random_state)
         self.oversample_energy_factor = oversample_energy_factor
+        self.t_delta = t_delta
 
     def _make_table(self, coords, time_ref):
         """Create a table for sampled events.
@@ -69,7 +74,6 @@ class MapDatasetEventSampler:
         self,
         dataset,
         model,
-        t_delta=0.5 * u.s,
     ):
         """Calculate Npred for a given `dataset.model` by evaluating
         it on a region geometry.
@@ -94,7 +98,7 @@ class MapDatasetEventSampler:
 
         tstart = dataset.gti.time_start
         tstop = dataset.gti.time_stop
-        nbin = int(((tstop - tstart) / t_delta).to(""))
+        nbin = int(((tstop - tstart) / self.t_delta).to(""))
         time_axis_eval = TimeMapAxis.from_time_bounds(
             time_min=tstart,
             time_max=tstop,
@@ -208,6 +212,7 @@ class MapDatasetEventSampler:
             t_min=time_start,
             t_max=time_stop,
             random_state=self.random_state,
+            t_delta=self.t_delta,
         )
 
         table = self._make_table(coords, time_ref)
