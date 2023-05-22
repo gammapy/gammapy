@@ -4,14 +4,39 @@
 -------------------
 
 - Released May XXth, 2023
-- N contributors
+- 13 contributors
 - 69 pull requests since v1.0.1 (not all listed below)
 
 Summary
 ~~~~~~~
 
+
+
 New features
 ~~~~~~~~~~~~
+
+*gammapy.data*
+
+*gammapy.maps*
+
+- A `Map.reorder_axes` helper method has been introduced.
+- Dot product is now supported with the `Map.dot()` function. It applies the dot product on
+  the axes sharing the same name. It can also be called via the `@` operator.
+
+*gammapy.modeling*
+
+*gammapy.estimators*
+
+- Multiprocessing is now supported for `FluxPointsEstimator` and `LightCurveEstimator` via the
+  `n_jobs` argument in the constructor.
+
+*infrastructure*
+
+Deprecation warnings can now be raised by Gammapy deprecated code. The warnings will appear
+in the documentation and docstrings as well. Deprecated features will usually be removed
+in the following feature release.
+
+Minimal python version is 3.9. Python 3.10 is supported as well.
 
 API changes
 ~~~~~~~~~~~
