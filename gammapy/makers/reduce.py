@@ -1,7 +1,7 @@
 import logging
-from multiprocessing import Pool
 import numpy as np
 from astropy.coordinates import Angle
+import gammapy.utils.parallel as parallel
 from gammapy.datasets import Datasets, MapDataset, MapDatasetOnOff, SpectrumDataset
 from .core import Maker
 from .safe import SafeMaskMaker
@@ -14,7 +14,7 @@ __all__ = [
 ]
 
 
-class DatasetsMaker(Maker):
+class DatasetsMaker(Maker, parallel.ParallelMixin):
     """Run makers in a chain
 
     Parameters
@@ -24,7 +24,8 @@ class DatasetsMaker(Maker):
     stack_datasets : bool
         If True stack into the reference dataset (see `run` method arguments).
     n_jobs : int
-        Number of processes to run in parallel
+        Number of processes to run in parallel.
+        Default is one, unless `~gammapy.utils.parallel.N_PROCESSES` was modified.
     cutout_mode : {'trim', 'partial', 'strict'}
         Used only to cutout the reference `MapDataset` around each processed observation.
         Mode is an option for Cutout2D, for details see `~astropy.nddata.utils.Cutout2D`.
@@ -45,6 +46,7 @@ class DatasetsMaker(Maker):
         n_jobs=None,
         cutout_mode="trim",
         cutout_width=None,
+        parallel_backend=None,
     ):
         self.log = logging.getLogger(__name__)
         self.makers = makers
@@ -59,6 +61,7 @@ class DatasetsMaker(Maker):
             else:
                 self.cutout_width = 2 * self.offset_max
         self.n_jobs = n_jobs
+        self.parallel_backend = parallel_backend
         self.stack_datasets = stack_datasets
 
         self._datasets = []
@@ -156,30 +159,21 @@ class DatasetsMaker(Maker):
         else:
             datasets = len(observations) * [dataset]
 
-        if self.n_jobs is not None and self.n_jobs > 1:
-            n_jobs = min(self.n_jobs, len(observations))
-            with Pool(processes=n_jobs) as pool:
-                log.info("Using {} jobs.".format(n_jobs))
-                results = []
-                for base, obs in zip(datasets, observations):
-                    result = pool.apply_async(
-                        self.make_dataset,
-                        (
-                            base,
-                            obs,
-                        ),
-                        callback=self.callback,
-                        error_callback=self.error_callback,
-                    )
-                    results.append(result)
-                # wait async run is done
-                [result.wait() for result in results]
-            if self._error:
-                raise RuntimeError("Execution of a sub-process failed")
-        else:
-            for base, obs in zip(datasets, observations):
-                dataset = self.make_dataset(base, obs)
-                self.callback(dataset)
+        n_jobs = min(self.n_jobs, len(observations))
+        parallel.run_multiprocessing(
+            self.make_dataset,
+            zip(datasets, observations),
+            backend=self.parallel_backend,
+            pool_kwargs=dict(processes=n_jobs),
+            method="apply_async",
+            method_kwargs=dict(
+                callback=self.callback,
+                error_callback=self.error_callback,
+            ),
+            task_name="Data reduction",
+        )
+        if self._error:
+            raise RuntimeError("Execution of a sub-process failed")
 
         if self.stack_datasets:
             return Datasets([self._dataset])

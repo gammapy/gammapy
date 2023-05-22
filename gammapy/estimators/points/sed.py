@@ -1,14 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 from itertools import repeat
-from multiprocessing import Pool
 import numpy as np
 from astropy import units as u
 from astropy.table import Table
+import gammapy.utils.parallel as parallel
 from gammapy.datasets import Datasets
 from gammapy.maps import MapAxis
 from gammapy.modeling import Fit
-from gammapy.utils.pbar import progress_bar
 from ..flux import FluxEstimator
 from .core import FluxPoints
 
@@ -17,7 +16,7 @@ log = logging.getLogger(__name__)
 __all__ = ["FluxPointsEstimator"]
 
 
-class FluxPointsEstimator(FluxEstimator):
+class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
     """Flux points estimator.
 
     Estimates flux points for a given list of datasets, energies and spectral model.
@@ -70,6 +69,7 @@ class FluxPointsEstimator(FluxEstimator):
         grid.
     n_jobs : int
         Number of processes used in parallel for the computation.
+        Default is one, unless `~gammapy.utils.parallel.N_PROCESSES` was modified.
     """
 
     tag = "FluxPointsEstimator"
@@ -78,12 +78,14 @@ class FluxPointsEstimator(FluxEstimator):
         self,
         energy_edges=[1, 10] * u.TeV,
         sum_over_energy_groups=False,
-        n_jobs=1,
+        n_jobs=None,
+        parallel_backend=None,
         **kwargs,
     ):
         self.energy_edges = energy_edges
         self.sum_over_energy_groups = sum_over_energy_groups
         self.n_jobs = n_jobs
+        self.parallel_backend = parallel_backend
 
         fit = Fit(confidence_opts={"backend": "scipy"})
         kwargs.setdefault("fit", fit)
@@ -123,26 +125,17 @@ class FluxPointsEstimator(FluxEstimator):
             "sed_type_init": "likelihood",
         }
 
-        if self.n_jobs > 1:
-            with Pool(processes=self.n_jobs) as pool:
-                rows = pool.starmap(
-                    self.estimate_flux_point,
-                    zip(
-                        repeat(datasets),
-                        self.energy_edges[:-1],
-                        self.energy_edges[1:],
-                    ),
-                )
-        else:
-            for energy_min, energy_max in progress_bar(
-                zip(self.energy_edges[:-1], self.energy_edges[1:]), desc="Energy bins"
-            ):
-                row = self.estimate_flux_point(
-                    datasets,
-                    energy_min=energy_min,
-                    energy_max=energy_max,
-                )
-                rows.append(row)
+        rows = parallel.run_multiprocessing(
+            self.estimate_flux_point,
+            zip(
+                repeat(datasets),
+                self.energy_edges[:-1],
+                self.energy_edges[1:],
+            ),
+            backend=self.parallel_backend,
+            pool_kwargs=dict(processes=self.n_jobs),
+            task_name="Energy bins",
+        )
 
         table = Table(rows, meta=meta)
         model = datasets.models[self.source]

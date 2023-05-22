@@ -5,6 +5,7 @@ from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.table import Table
+import gammapy.utils.parallel as parallel
 from gammapy.data import Observation
 from gammapy.data.pointing import FixedPointingInfo, PointingMode
 from gammapy.datasets import MapDataset, SpectrumDatasetOnOff
@@ -22,7 +23,7 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
 )
-from gammapy.utils.testing import requires_data
+from gammapy.utils.testing import requires_data, requires_dependency
 
 
 # TODO: use pre-generated data instead
@@ -529,9 +530,30 @@ def test_flux_points_recompute_ul(fpe_pwl):
     assert_allclose(fp2.flux_ul.data, fp.flux_ul.data, rtol=1e-2)
 
 
-def test_flux_points_parallel(fpe_pwl):
+def test_flux_points_parallel_multiprocessing(fpe_pwl):
     datasets, fpe = fpe_pwl
     fpe.selection_optional = ["all"]
+    fpe.n_jobs = 2
+    assert fpe.n_jobs == 2
+    fp = fpe.run(datasets)
+    assert_allclose(
+        fp.flux_ul.data,
+        [[[2.629819e-12]], [[9.319243e-13]], [[9.004449e-14]]],
+        rtol=1e-3,
+    )
+
+    fpe.n_jobs = None
+    parallel.N_PROCESSES = 2
+    assert fpe.n_jobs == 2
+    parallel.N_PROCESSES = 1
+
+
+@pytest.mark.skip
+@requires_dependency("ray")
+def test_flux_points_parallel_ray(fpe_pwl):
+    datasets, fpe = fpe_pwl
+    fpe.selection_optional = ["all"]
+    fpe.parallel_backend = "ray"
     fpe.n_jobs = 2
     fp = fpe.run(datasets)
     assert_allclose(

@@ -138,18 +138,21 @@ def makers_spectrum(exclusion_mask):
             "stack_datasets": True,
             "cutout_width": None,
             "n_jobs": 1,
+            "backend": None,
         },
         {
             "dataset": get_mapdataset(name="parallel"),
             "stack_datasets": False,
             "cutout_width": None,
             "n_jobs": 2,
+            "backend": "multiprocessing",
         },
         {
             "dataset": get_mapdataset(name="parallel_staking"),
             "stack_datasets": True,
             "cutout_width": None,
             "n_jobs": 2,
+            "backend": "multiprocessing",
         },
     ],
 )
@@ -161,6 +164,7 @@ def test_datasets_maker_map(pars, observations_cta, makers_map):
         cutout_mode="partial",
         cutout_width=pars["cutout_width"],
         n_jobs=pars["n_jobs"],
+        parallel_backend=pars["backend"],
     )
 
     datasets = makers.run(pars["dataset"], observations_cta)

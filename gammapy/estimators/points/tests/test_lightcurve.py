@@ -14,7 +14,12 @@ from gammapy.estimators.points.tests.test_sed import (
 )
 from gammapy.modeling import Fit
 from gammapy.modeling.models import FoVBackgroundModel, PowerLawSpectralModel, SkyModel
-from gammapy.utils.testing import assert_time_allclose, mpl_plot_check, requires_data
+from gammapy.utils.testing import (
+    assert_time_allclose,
+    mpl_plot_check,
+    requires_data,
+    requires_dependency,
+)
 
 
 @pytest.fixture(scope="session")
@@ -665,7 +670,7 @@ def test_recompute_ul():
 
 
 @requires_data()
-def test_lightcurve_parallel():
+def test_lightcurve_parallel_multiprocessing():
     datasets = get_spectrum_datasets()
     selection = ["all"]
     estimator = LightCurveEstimator(
@@ -674,6 +679,29 @@ def test_lightcurve_parallel():
         n_sigma_ul=2,
         n_jobs=2,
     )
+    assert estimator.n_jobs == 2
+    lightcurve = estimator.run(datasets)
+    assert_allclose(
+        lightcurve.dnde_ul.data[0], [[[3.260703e-13]], [[1.159354e-14]]], rtol=1e-3
+    )
+
+
+@pytest.mark.skip
+@requires_data()
+@requires_dependency("ray")
+def test_lightcurve_parallel_ray():
+    datasets = get_spectrum_datasets()
+    selection = ["all"]
+    estimator = LightCurveEstimator(
+        energy_edges=[1, 3, 30] * u.TeV,
+        selection_optional=selection,
+        n_sigma_ul=2,
+        n_jobs=2,
+    )
+
+    estimator.n_jobs = None
+    estimator.parallel_backend = "ray"
+    estimator.n_jobs = 2
     lightcurve = estimator.run(datasets)
     assert_allclose(
         lightcurve.dnde_ul.data[0], [[[3.260703e-13]], [[1.159354e-14]]], rtol=1e-3
