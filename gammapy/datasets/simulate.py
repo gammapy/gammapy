@@ -95,20 +95,15 @@ class MapDatasetEventSampler:
         position = model.spatial_model.position
         region_exposure = dataset.exposure.to_region_nd_map(position)
 
-        time_min = dataset.gti.time_start[0]
-        time_max = dataset.gti.time_stop[-1]
-
-        nbin = int(((time_max - time_min) / self.t_delta).to(""))
-        time_axis_eval = TimeMapAxis.from_time_bounds(
-            time_min=time_min,
-            time_max=time_max,
-            nbin=nbin,
+        time_axis_eval = TimeMapAxis.from_gti_bounds(
+            gti=dataset.gti, t_delta=self.t_delta
         )
 
+        time_min, time_max = time_axis_eval.time_bounds
         time_axis = MapAxis.from_bounds(
             time_min.mjd * u.d,
             time_max.mjd * u.d,
-            nbin=nbin,
+            nbin=time_axis_eval.nbin,
             name="time",
         )
 

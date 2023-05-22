@@ -109,7 +109,6 @@ class MapAxis:
 
     # TODO: Cache an interpolation object?
     def __init__(self, nodes, interp="lin", name="", node_type="edges", unit=""):
-
         if not isinstance(name, str):
             raise TypeError(f"Name must be a string, got: {type(name)!r}")
 
@@ -2766,6 +2765,35 @@ class TimeMapAxis:
             edges_max=tmax.to("s"),
             reference_time=gti.time_ref,
             name=name,
+        )
+
+    @classmethod
+    def from_gti_bounds(cls, gti, t_delta, name="time"):
+        """Create a time axis from an input GTI.
+
+        Parameters
+        ----------
+        gti : `GTI`
+            GTI table
+        t_delta : `~astropy.units.Quantity`
+            Time binning
+        name : str
+            Axis name
+
+        Returns
+        -------
+        axis : `TimeMapAxis`
+            Time map axis.
+
+        """
+        time_min = gti.time_start[0]
+        time_max = gti.time_stop[-1]
+
+        nbin = int(((time_max - time_min) / t_delta).to(""))
+        return TimeMapAxis.from_time_bounds(
+            time_min=time_min,
+            time_max=time_max,
+            nbin=nbin,
         )
 
     @classmethod
