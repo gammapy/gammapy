@@ -13,7 +13,7 @@ from gammapy.datasets import MapDataset, MapDatasetEventSampler
 from gammapy.datasets.tests.test_map import get_map_dataset
 from gammapy.irf import load_irf_dict_from_file
 from gammapy.makers import MapDatasetMaker
-from gammapy.maps import MapAxis, RegionNDMap, WcsGeom
+from gammapy.maps import MapAxis, RegionGeom, RegionNDMap, WcsGeom
 from gammapy.modeling.models import (
     ConstantSpectralModel,
     FoVBackgroundModel,
@@ -109,13 +109,24 @@ def get_energy_dependent_temporal_model():
     edges = np.linspace(0, 1000, 101) * u.s
     time_axis = MapAxis.from_edges(edges=edges, name="time", interp="lin")
 
-    m = RegionNDMap.create(
+    geom = RegionGeom.create(
         region=SkyCoord("0.5 deg", "0.5 deg", frame="galactic"),
         axes=[energy_axis, time_axis],
-        data=1.2e-12,
-        unit="cm-2 s-1 TeV-1",
     )
 
+    coords = geom.get_coord(sparse=True)
+
+    def f(time, energy):
+        """Toy model for testing"""
+        amplitude = u.Quantity("5e-11 cm-2 s-1 TeV-1") * np.exp(-(time / (200 * u.s)))
+        index = 1 + 2.2 * time.to_value("s") / 1000
+        return PowerLawSpectralModel.evaluate(
+            amplitude=amplitude, index=index, energy=energy, reference=1 * u.TeV
+        )
+
+    data = f(time=coords["time"], energy=coords["energy"])
+
+    m = RegionNDMap.from_geom(data=data.value, geom=geom, unit=data.unit)
     t_ref = Time(51544.00074287037, format="mjd", scale="tt")
     return LightCurveTemplateTemporalModel(m, t_ref=t_ref)
 
@@ -127,9 +138,7 @@ def energy_dependent_temporal_sky_model(models):
         lon_0="0 deg", lat_0="0 deg", frame="galactic"
     )
     models[0].spectral_model = ConstantSpectralModel(const="1 cm-2 s-1 TeV-1")
-
     models[0].temporal_model = get_energy_dependent_temporal_model()
-
     return models[0]
 
 
@@ -168,8 +177,8 @@ def test_evaluate_timevar_source(energy_dependent_temporal_sky_model, dataset):
 
     assert_allclose(np.shape(npred.data), (3, 1999, 1, 1))
 
-    assert_allclose(npred.data[:, 10, 0, 0], [0.029792, 0.132509, 0.386214], rtol=2e-4)
-    assert_allclose(npred.data[:, 50, 0, 0], [0.029792, 0.132509, 0.386214], rtol=2e-4)
+    assert_allclose(npred.data[:, 10, 0, 0], [0.819546, 1.676989, 2.248684], rtol=2e-4)
+    assert_allclose(npred.data[:, 50, 0, 0], [0.729098, 1.442345, 1.869792], rtol=2e-4)
 
     filename = "$GAMMAPY_DATA/gravitational_waves/GW_example_DC_map_file.fits.gz"
     temporal_model = LightCurveTemplateTemporalModel.read(filename, format="map")
@@ -233,11 +242,11 @@ def test_sample_coord_time_energy(dataset, energy_dependent_temporal_sky_model):
 
     events = sampler._sample_coord_time_energy(dataset, evaluator.model)
 
-    assert len(events) == 1089
+    assert len(events) == 1254
 
     assert_allclose(
         [events[0][0], events[0][1], events[0][2], events[0][3]],
-        [798.667621, 2.095024, 266.404988, -28.936178],
+        [854.108591, 6.22904, 266.404988, -28.936178],
         rtol=1e-6,
     )
 
@@ -254,12 +263,12 @@ def test_sample_coord_time_energy_random_seed(
 
     events = sampler._sample_coord_time_energy(dataset, evaluator.model)
 
-    assert len(events) == 1090
+    assert len(events) == 1256
 
     assert_allclose(
         [events[0][0], events[0][1], events[0][2], events[0][3]],
-        [725.866948, 8.334667, 266.404988, -28.936178],
-        rtol=1e-6,
+        [0.2998, 1.932196, 266.404988, -28.936178],
+        rtol=1e-3,
     )
 
 
@@ -274,10 +283,10 @@ def test_sample_coord_time_energy_unit(dataset, energy_dependent_temporal_sky_mo
 
     events = sampler._sample_coord_time_energy(dataset, evaluator.model)
 
-    assert len(events) == 1089
+    assert len(events) == 1254
     assert_allclose(
         [events[0][0], events[0][1], events[0][2], events[0][3]],
-        [798.667621, 2.095024, 266.404988, -28.936178],
+        [854.108591, 6.22904, 266.404988, -28.936178],
         rtol=1e-6,
     )
 
