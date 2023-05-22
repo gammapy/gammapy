@@ -5,7 +5,6 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord, SkyOffsetFrame
 from astropy.table import Table
 from astropy.time import Time
-from regions import PointSkyRegion
 import gammapy
 from gammapy.data import EventList, observatory_locations
 from gammapy.maps import MapAxis, MapCoord, RegionNDMap, TimeMapAxis
@@ -93,21 +92,22 @@ class MapDatasetEventSampler:
         energy_true = dataset.edisp.edisp_map.geom.axes["energy_true"]
         energy_new = energy_true.upsample(self.oversample_energy_factor)
 
-        target = model.spatial_model.position
-        region_exposure = dataset.exposure.to_region_nd_map(target)
+        position = model.spatial_model.position
+        region_exposure = dataset.exposure.to_region_nd_map(position)
 
-        tstart = dataset.gti.time_start
-        tstop = dataset.gti.time_stop
-        nbin = int(((tstop - tstart) / self.t_delta).to(""))
+        time_min = dataset.gti.time_start[0]
+        time_max = dataset.gti.time_stop[-1]
+
+        nbin = int(((time_max - time_min) / self.t_delta).to(""))
         time_axis_eval = TimeMapAxis.from_time_bounds(
-            time_min=tstart,
-            time_max=tstop,
+            time_min=time_min,
+            time_max=time_max,
             nbin=nbin,
         )
 
         time_axis = MapAxis.from_bounds(
-            tstart[0].mjd * u.d,
-            tstop[0].mjd * u.d,
+            time_min.mjd * u.d,
+            time_max.mjd * u.d,
             nbin=nbin,
             name="time",
         )
@@ -116,15 +116,18 @@ class MapDatasetEventSampler:
             time_axis_eval.time_mid, energy=energy_new.center
         )
 
-        if temp_eval.unit.is_equivalent(model.spectral_model.parameters[0].quantity):
-            flux_diff = temp_eval.to(model.spectral_model.parameters[0].quantity)
+        norm_parameters = model.spectral_model.parameters.norm_parameters
+        norm = norm_parameters[0].quantity
+
+        if temp_eval.unit.is_equivalent(norm.unit):
+            flux_diff = temp_eval.to(norm.unit)
         else:
-            flux_diff = temp_eval * model.spectral_model.parameters[0].quantity
+            flux_diff = temp_eval * norm
 
         flux_inte = flux_diff * energy_new.bin_width[:, None]
 
         flux_pred = RegionNDMap.create(
-            region=PointSkyRegion(center=target),
+            region=position,
             axes=[time_axis, energy_new],
             data=np.array(flux_inte),
             unit=flux_inte.unit,
@@ -137,12 +140,10 @@ class MapDatasetEventSampler:
         data = flux_values * region_exposure.quantity[:, None, :, :]
         data /= time_axis.nbin / self.oversample_energy_factor
 
-        pred = data.to("")
-
         npred = RegionNDMap.create(
-            region=PointSkyRegion(center=target),
+            region=position,
             axes=[time_axis, energy_true],
-            data=np.array(pred),
+            data=data.to_value(""),
         )
 
         return npred
