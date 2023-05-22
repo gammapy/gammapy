@@ -40,7 +40,6 @@ def models():
 
 @requires_data()
 def test_dict_to_skymodels(models):
-
     assert len(models) == 5
 
     model0 = models[0]
@@ -108,12 +107,14 @@ def test_dict_to_skymodels(models):
 
 
 @requires_data()
-def test_sky_models_io(tmp_path, models):
+def test_sky_models_io(tmpdir, models):
     # TODO: maybe change to a test case where we create a model programmatically?
     models.covariance = np.eye(len(models.parameters))
-    models.write(tmp_path / "tmp.yaml", full_output=True, overwrite_templates=False)
-    models = Models.read(tmp_path / "tmp.yaml")
+    models.write(tmpdir / "tmp.yaml", full_output=True, overwrite_templates=False)
+    models = Models.read(tmpdir / "tmp.yaml")
+
     assert models._covar_file == "tmp_covariance.dat"
+
     assert_allclose(models.covariance.data, np.eye(len(models.parameters)))
     assert_allclose(models.parameters["lat_0"].min, -90.0)
 
@@ -124,7 +125,6 @@ def test_sky_models_io(tmp_path, models):
 
 @requires_data()
 def test_sky_models_io_auto_write(tmp_path, models):
-
     models_new = models.copy()
     fsource2 = str(tmp_path / "source2_test.fits")
     fbkg_iem = str(tmp_path / "cube_iem_test.fits")
@@ -157,22 +157,14 @@ def test_sky_models_io_auto_write(tmp_path, models):
 def test_piecewise_norm_spectral_model_init():
     with pytest.raises(ValueError):
         PiecewiseNormSpectralModel(
-            energy=[
-                1,
-            ]
-            * u.TeV,
+            energy=[1] * u.TeV,
             norms=[1, 5],
         )
 
     with pytest.raises(ValueError):
         PiecewiseNormSpectralModel(
-            energy=[
-                1,
-            ]
-            * u.TeV,
-            norms=[
-                1,
-            ],
+            energy=[1] * u.TeV,
+            norms=[1],
         )
 
 
@@ -436,7 +428,6 @@ def test_link_label(models):
 
 
 def test_to_dict_not_default():
-
     model = PowerLawSpectralModel()
     model.index.min = -1
     model.index.max = -5
@@ -459,7 +450,6 @@ def test_to_dict_not_default():
 
 
 def test_to_dict_unfreeze_parameters_frozen_by_default():
-
     model = PowerLawSpectralModel()
 
     mdict = model.to_dict(full_output=False)
