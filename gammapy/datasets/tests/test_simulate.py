@@ -104,7 +104,7 @@ def model_alternative():
 
 @pytest.fixture()
 @requires_data()
-def enedip_temporal_model(models):
+def energy_dependent_temporal_model(models):
     models[0].spatial_model = PointSpatialModel(
         lon_0="0 deg", lat_0="0 deg", frame="galactic"
     )
@@ -158,8 +158,8 @@ def dataset():
 
 
 @requires_data()
-def test_evaluate_timevar_source(enedip_temporal_model, dataset):
-    dataset.models = enedip_temporal_model
+def test_evaluate_timevar_source(energy_dependent_temporal_model, dataset):
+    dataset.models = energy_dependent_temporal_model
     evaluator = dataset.evaluators["test-source"]
 
     sampler = MapDatasetEventSampler(random_state=0)
@@ -187,31 +187,39 @@ def test_evaluate_timevar_source(enedip_temporal_model, dataset):
 
 
 @requires_data()
-def test_sample_coord_time_energy(dataset, enedip_temporal_model):
-    enedip_temporal_model.spatial_model = None
-    enedip_temporal_model.spectral_model = ConstantSpectralModel(
+def test_sample_coord_time_energy_no_spatial(dataset, energy_dependent_temporal_model):
+    sampler = MapDatasetEventSampler(random_state=0)
+
+    energy_dependent_temporal_model.spatial_model = None
+    energy_dependent_temporal_model.spectral_model = ConstantSpectralModel(
         const="1 cm-2 s-1 TeV-1"
     )
-    dataset.models = enedip_temporal_model
+    dataset.models = energy_dependent_temporal_model
+    evaluator = dataset.evaluators["test-source"]
+
+    with pytest.raises(TypeError):
+        sampler._sample_coord_time_energy(dataset, evaluator)
+
+
+@requires_data()
+def test_sample_coord_time_energy_gaussian(dataset, energy_dependent_temporal_model):
+    energy_dependent_temporal_model.spatial_model = GaussianSpatialModel()
+    energy_dependent_temporal_model.spectral_model = ConstantSpectralModel(
+        const="1 cm-2 s-1 TeV-1"
+    )
+    dataset.models = energy_dependent_temporal_model
     evaluator = dataset.evaluators["test-source"]
     sampler = MapDatasetEventSampler(random_state=0)
     with pytest.raises(TypeError):
         sampler._sample_coord_time_energy(dataset, evaluator)
 
-    enedip_temporal_model.spatial_model = GaussianSpatialModel()
-    enedip_temporal_model.spectral_model = ConstantSpectralModel(
-        const="1 cm-2 s-1 TeV-1"
-    )
-    dataset.models = enedip_temporal_model
-    evaluator = dataset.evaluators["test-source"]
-    sampler = MapDatasetEventSampler(random_state=0)
-    with pytest.raises(TypeError):
-        sampler._sample_coord_time_energy(dataset, evaluator)
 
-    enedip_temporal_model.spatial_model = PointSpatialModel(
+@requires_data()
+def test_sample_coord_time_energy(dataset, energy_dependent_temporal_model):
+    energy_dependent_temporal_model.spatial_model = PointSpatialModel(
         lon_0="0 deg", lat_0="0 deg", frame="galactic"
     )
-    dataset.models = enedip_temporal_model
+    dataset.models = energy_dependent_temporal_model
     evaluator = dataset.evaluators["test-source"]
     sampler = MapDatasetEventSampler(random_state=1)
     events = sampler._sample_coord_time_energy(dataset, evaluator)
@@ -220,12 +228,12 @@ def test_sample_coord_time_energy(dataset, enedip_temporal_model):
 
     assert_allclose(
         [events[0][0], events[0][1], events[0][2], events[0][3]],
-        [0.277014, 7.509978, 266.404988, -28.936178],
+        [404.470523, 2.095024, 266.404988, -28.936178],
         rtol=1e-6,
     )
 
-    enedip_temporal_model.temporal_model.map._unit == ""
-    dataset.models = enedip_temporal_model
+    energy_dependent_temporal_model.temporal_model.map._unit == ""
+    dataset.models = energy_dependent_temporal_model
     evaluator = dataset.evaluators["test-source"]
     sampler = MapDatasetEventSampler(random_state=2)
     events = sampler._sample_coord_time_energy(dataset, evaluator)
@@ -234,13 +242,13 @@ def test_sample_coord_time_energy(dataset, enedip_temporal_model):
 
     assert_allclose(
         [events[0][0], events[0][1], events[0][2], events[0][3]],
-        [2.421369, 1.121694, 266.404988, -28.936178],
+        [767.387708, 8.334667, 266.404988, -28.936178],
         rtol=1e-6,
     )
 
-    enedip_temporal_model.temporal_model.map._unit == "cm-2 s-1 TeV-1"
-    enedip_temporal_model.spectral_model.parameters[0].unit = ""
-    dataset.models = enedip_temporal_model
+    energy_dependent_temporal_model.temporal_model.map._unit == "cm-2 s-1 TeV-1"
+    energy_dependent_temporal_model.spectral_model.parameters[0].unit = ""
+    dataset.models = energy_dependent_temporal_model
     evaluator = dataset.evaluators["test-source"]
     sampler = MapDatasetEventSampler(random_state=1)
     events = sampler._sample_coord_time_energy(dataset, evaluator)
@@ -248,7 +256,7 @@ def test_sample_coord_time_energy(dataset, enedip_temporal_model):
     assert_allclose(len(events), 1089)
     assert_allclose(
         [events[0][0], events[0][1], events[0][2], events[0][3]],
-        [0.277014, 7.509978, 266.404988, -28.936178],
+        [404.470523, 2.095024, 266.404988, -28.936178],
         rtol=1e-6,
     )
 
