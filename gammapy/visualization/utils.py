@@ -6,7 +6,6 @@ from astropy.visualization import make_lupton_rgb
 import matplotlib
 import matplotlib.axes
 import matplotlib.pyplot as plt
-from gammapy.maps import Map
 from gammapy.maps.axes import UNIT_STRING_FORMAT
 
 __all__ = [
@@ -208,14 +207,16 @@ def plot_distribution(map_, ax=None, ncols=3, fit=True, dist=stats.norm, **kwarg
 
     Returns
     -------
-    result : `scipy.stats._result_class.FitResult`
+    result : list of `scipy.stats._result_class.FitResult`
         The fit result for the distribution. If `fit` is set to False,
         returns None.
     axes : `~numpy.ndarray` of `~matplotlib.pyplot.Axes`
         Array of Axes.
     """
 
-    if not isinstance(map_, Map):
+    from gammapy.maps import WcsNDMap  # import here because of circular import
+
+    if not isinstance(map_, WcsNDMap):
         raise TypeError(
             f"map_ must be an instance of gammapy.maps.Map, given {type(map_)}"
         )
@@ -228,18 +229,10 @@ def plot_distribution(map_, ax=None, ncols=3, fit=True, dist=stats.norm, **kwarg
 
     axes_dict = {k: kwargs.pop(k) for k in dict(kwargs) if k not in hist_args}
 
-    data = map_.data
-    if data.ndim == 1:
-        data = np.reshape(
-            data,
-            (
-                1,
-                1,
-            )
-            + data.shape,
-        )
-    elif data.ndim == 2:
-        data = np.reshape(data, (1,) + data.shape)
+    cutout, mask = map_.cutout_and_mask_region()
+    idx_x, idx_y = np.where(mask)
+
+    data = cutout.data[..., idx_x, idx_y]
 
     if ax is None:
         n_plot = len(data)
@@ -262,19 +255,20 @@ def plot_distribution(map_, ax=None, ncols=3, fit=True, dist=stats.norm, **kwarg
     if not isinstance(axes, np.ndarray):
         axes = np.array([axes])
 
+    result_list = []
+
     for idx in range(cells_in_grid):
 
         axe = axes.flat[idx]
         if idx > len(data) - 1:
             axe.set_visible(False)
             continue
-        d = data[idx]
-        axe.hist(d.flatten(), **hist_dict)
+        d = data[idx][np.isfinite(data[idx])]
+        axe.hist(d, **hist_dict)
 
-        result = None
         if fit:
 
-            result = stats.fit(dist, d.flatten())
+            result = stats.fit(dist, d)
 
             x = np.linspace(np.min(d), np.max(d), 100)
             y = dist.pdf(x, *result.params)
@@ -285,5 +279,6 @@ def plot_distribution(map_, ax=None, ncols=3, fit=True, dist=stats.norm, **kwarg
         axe.legend()
 
         print(result)
+        result_list.append(result)
 
-    return result, axes
+    return result_list, axes
