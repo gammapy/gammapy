@@ -192,7 +192,7 @@ def plot_distribution(wcs_map, ax=None, ncols=3, fit=True, dist=stats.norm, **kw
 
     Parameters
     ----------
-    wcs_map : an instance of `~gammapy.maps.WcsMap`
+    wcs_map : an instance of `~gammapy.maps.WcsNDMap`
         A map that contains data to be plotted.
     ax : `~matplotlib.axes.Axes` or list of `~matplotlib.axes.Axes`
         Axis object to plot on. If a list of Axis is provided it has to be the same length as the length of _map.data.
@@ -218,7 +218,7 @@ def plot_distribution(wcs_map, ax=None, ncols=3, fit=True, dist=stats.norm, **kw
 
     if not isinstance(wcs_map, WcsNDMap):
         raise TypeError(
-            f"map_ must be an instance of gammapy.maps.Map, given {type(wcs_map)}"
+            f"map_ must be an instance of gammapy.maps.WcsNDMap, given {type(wcs_map)}"
         )
 
     hist_args = list(inspect.signature(plt.hist).parameters)
