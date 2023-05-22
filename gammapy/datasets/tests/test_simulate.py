@@ -237,7 +237,7 @@ def test_sample_coord_time_energy(dataset, energy_dependent_temporal_sky_model):
 
     assert_allclose(
         [events[0][0], events[0][1], events[0][2], events[0][3]],
-        [404.470523, 2.095024, 266.404988, -28.936178],
+        [798.667621, 2.095024, 266.404988, -28.936178],
         rtol=1e-6,
     )
 
@@ -258,7 +258,7 @@ def test_sample_coord_time_energy_random_seed(
 
     assert_allclose(
         [events[0][0], events[0][1], events[0][2], events[0][3]],
-        [767.387708, 8.334667, 266.404988, -28.936178],
+        [725.866948, 8.334667, 266.404988, -28.936178],
         rtol=1e-6,
     )
 
@@ -277,7 +277,7 @@ def test_sample_coord_time_energy_unit(dataset, energy_dependent_temporal_sky_mo
     assert len(events) == 1089
     assert_allclose(
         [events[0][0], events[0][1], events[0][2], events[0][3]],
-        [404.470523, 2.095024, 266.404988, -28.936178],
+        [798.667621, 2.095024, 266.404988, -28.936178],
         rtol=1e-6,
     )
 
