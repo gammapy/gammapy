@@ -185,14 +185,14 @@ def plot_theta_squared_table(table):
     ax1.set_ylabel("Significance")
 
 
-def plot_distribution(map_, ax=None, ncols=3, fit=True, dist=stats.norm, **kwargs):
+def plot_distribution(wcs_map, ax=None, ncols=3, fit=True, dist=stats.norm, **kwargs):
     """
     Plot the 1D distribution of data inside a map as a histogram. If the dimension of the map is smaller than 2,
     a unique plot will be displayed. Otherwise, if the dimension is 3 or greater, a grid of plot will be displayed.
 
     Parameters
     ----------
-    map_ : an instance of `~gammapy.maps.Map`
+    wcs_map : an instance of `~gammapy.maps.WcsMap`
         A map that contains data to be plotted.
     ax : `~matplotlib.axes.Axes` or list of `~matplotlib.axes.Axes`
         Axis object to plot on. If a list of Axis is provided it has to be the same length as the length of _map.data.
@@ -216,9 +216,9 @@ def plot_distribution(map_, ax=None, ncols=3, fit=True, dist=stats.norm, **kwarg
 
     from gammapy.maps import WcsNDMap  # import here because of circular import
 
-    if not isinstance(map_, WcsNDMap):
+    if not isinstance(wcs_map, WcsNDMap):
         raise TypeError(
-            f"map_ must be an instance of gammapy.maps.Map, given {type(map_)}"
+            f"map_ must be an instance of gammapy.maps.Map, given {type(wcs_map)}"
         )
 
     hist_args = list(inspect.signature(plt.hist).parameters)
@@ -229,7 +229,7 @@ def plot_distribution(map_, ax=None, ncols=3, fit=True, dist=stats.norm, **kwarg
 
     axes_dict = {k: kwargs.pop(k) for k in dict(kwargs) if k not in hist_args}
 
-    cutout, mask = map_.cutout_and_mask_region()
+    cutout, mask = wcs_map.cutout_and_mask_region()
     idx_x, idx_y = np.where(mask)
 
     data = cutout.data[..., idx_x, idx_y]
@@ -267,7 +267,6 @@ def plot_distribution(map_, ax=None, ncols=3, fit=True, dist=stats.norm, **kwarg
         axe.hist(d, **hist_dict)
 
         if fit:
-
             result = stats.fit(dist, d)
 
             x = np.linspace(np.min(d), np.max(d), 100)
