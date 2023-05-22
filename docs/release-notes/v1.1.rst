@@ -1,6 +1,30 @@
 .. _gammapy_1p1_release:
 
-1.0 (unreleased)
-----------------
+1.1 (May XXth 2023)
+-------------------
 
-- No changes yet
+- Released May XXth, 2023
+- N contributors
+- Y pull requests since v1.0 (not all listed below)
+
+Summary
+~~~~~~~
+
+New features
+~~~~~~~~~~~~
+
+API changes
+~~~~~~~~~~~
+
+Bug fixes and improvements
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Contributors
+~~~~~~~~~~~~
+
+Pull Requests
+~~~~~~~~~~~~~
+
+This list is incomplete. Small improvements and bug fixes are not listed here.
+
+
