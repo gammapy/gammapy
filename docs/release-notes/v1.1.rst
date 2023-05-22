@@ -5,7 +5,7 @@
 
 - Released May XXth, 2023
 - N contributors
-- Y pull requests since v1.0 (not all listed below)
+- 69 pull requests since v1.0.1 (not all listed below)
 
 Summary
 ~~~~~~~
@@ -21,6 +21,20 @@ Bug fixes and improvements
 
 Contributors
 ~~~~~~~~~~~~
+
+- Arnau Aguasca
+- Axel Donath
+- Lucas Gréaux
+- Bruno Khélifi
+- Maximilian Linhof
+- Cosimo Nigro
+- Laura Olivera-Nieto
+- Fabio Pintore
+- Maxime Regeard
+- Quentin Rémy
+- Atreyee Sinha
+- Katrin Streil
+- Régis Terrier
 
 Pull Requests
 ~~~~~~~~~~~~~
