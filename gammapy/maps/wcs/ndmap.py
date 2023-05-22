@@ -6,9 +6,10 @@ import scipy.ndimage as ndi
 import scipy.signal
 import astropy.units as u
 from astropy.convolution import Tophat2DKernel
+from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.nddata import block_reduce
-from regions import PixCoord, PointPixelRegion, SkyRegion
+from regions import PixCoord, PointPixelRegion, PointSkyRegion, SkyRegion
 import matplotlib.pyplot as plt
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.units import unit_from_fits_image_hdu
@@ -607,6 +608,96 @@ class WcsNDMap(WcsMap):
             data = func(cutout.data[..., idx_y, idx_x], axis=-1)
 
         return RegionNDMap(geom=geom, data=data, unit=self.unit, meta=self.meta.copy())
+
+    def to_region_nd_map_histogram(
+        self, region=None, bins_axis=None, nbin=100, density=False
+    ):
+        """Convert map into region map by histogramming.
+
+        By default it creates a linearly spaced axis with 100 bins between
+        (-max(abs(data)), max(abs(data))) within the given region.
+
+        Parameters
+        ----------
+        region: `~regions.Region`
+            Region to histogram over.
+        bins_axis : `MapAxis`
+            Binning of the histogram.
+        nbin : int
+            Number of bins to use if no bins_axis is given.
+        density : bool
+            Normalize integral of the histogram to 1.
+
+
+        Examples
+        --------
+        This is how to use the method to create energy dependent histograms:
+
+        ::
+
+            from gammapy.maps import MapAxis, Map
+            import numpy as np
+
+            random_state = np.random.RandomState(seed=0)
+
+            energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3)
+
+            data = Map.create(axes=[energy_axis], width=10, unit="cm2 s-1", binsz=0.02)
+            data.data = random_state.normal(
+                size=data.data.shape, loc=0, scale=np.array([1.0, 2.0, 3.0]).reshape((-1, 1, 1))
+            )
+
+            hist = data.to_region_nd_map_histogram()
+            hist.plot(axis_name="bins")
+
+
+        Returns
+        -------
+        region_map : `RegionNDMap`
+            Region map with histogram.
+
+        """
+        from gammapy.maps import MapAxis, RegionGeom, RegionNDMap
+
+        if isinstance(region, (PointSkyRegion, SkyCoord)):
+            raise ValueError("Histogram method not supported for point regions")
+
+        cutout, mask = self.cutout_and_mask_region(region=region)
+        idx_y, idx_x = np.where(mask)
+        quantity = cutout.quantity[..., idx_y, idx_x]
+
+        value = np.abs(quantity).max()
+
+        if bins_axis is None:
+            bins_axis = MapAxis.from_bounds(
+                -value,
+                value,
+                nbin=nbin,
+                interp="lin",
+                unit=self.unit,
+                name="bins",
+            )
+
+        if not bins_axis.unit.is_equivalent(self.unit):
+            raise ValueError("Unit of bins_axis must be equivalent to unit of map.")
+
+        axes = [bins_axis] + list(self.geom.axes)
+        geom_hist = RegionGeom(region=region, axes=axes, wcs=self.geom.wcs)
+
+        # This is likely not the most efficient way to do this
+        data = np.apply_along_axis(
+            lambda a: np.histogram(a, bins=bins_axis.edges, density=density)[0],
+            axis=-1,
+            arr=quantity,
+        )
+
+        if density:
+            unit = 1.0 / bins_axis.unit
+            data = data.value
+        else:
+            unit = ""
+
+        return RegionNDMap.from_geom(geom=geom_hist, data=data, unit=unit)
 
     def mask_contains_region(self, region):
         """Check if input region is contained in a boolean mask map.
