@@ -51,7 +51,7 @@ Contributors
 - Axel Donath
 - Lucas Gréaux
 - Bruno Khélifi
-- Maximilian Linhof
+- Maximilian Linhoff
 - Cosimo Nigro
 - Laura Olivera-Nieto
 - Fabio Pintore
