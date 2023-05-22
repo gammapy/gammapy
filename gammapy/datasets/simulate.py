@@ -4,11 +4,15 @@ import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord, SkyOffsetFrame
 from astropy.table import Table
-from regions import PointSkyRegion
+from astropy.time import Time
 import gammapy
 from gammapy.data import EventList, observatory_locations
-from gammapy.maps import MapAxis, MapCoord, RegionGeom
-from gammapy.modeling.models import ConstantTemporalModel, PointSpatialModel
+from gammapy.maps import MapAxis, MapCoord, RegionNDMap, TimeMapAxis
+from gammapy.modeling.models import (
+    ConstantSpectralModel,
+    ConstantTemporalModel,
+    PointSpatialModel,
+)
 from gammapy.utils.random import get_random_state
 
 __all__ = ["MapDatasetEventSampler"]
@@ -22,10 +26,19 @@ class MapDatasetEventSampler:
     random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
         Defines random number generator initialisation.
         Passed to `~gammapy.utils.random.get_random_state`.
+    oversample_energy_factor: {int}
+        Defines an oversampling factor for the energies; it is used only when sampling
+        an energy-dependent time-varying source.
+    t_delta : `~astropy.units.Quantity`
+        Time interval used to sample the time-dependent source.
     """
 
-    def __init__(self, random_state="random-seed"):
+    def __init__(
+        self, random_state="random-seed", oversample_energy_factor=10, t_delta=0.5 * u.s
+    ):
         self.random_state = get_random_state(random_state)
+        self.oversample_energy_factor = oversample_energy_factor
+        self.t_delta = t_delta
 
     def _make_table(self, coords, time_ref):
         """Create a table for sampled events.
@@ -50,70 +63,122 @@ class MapDatasetEventSampler:
 
         table["TIME"] = (coords["time"] - time_ref).to("s")
         table["ENERGY_TRUE"] = energy
+
         table["RA_TRUE"] = coords.skycoord.icrs.ra.to("deg")
         table["DEC_TRUE"] = coords.skycoord.icrs.dec.to("deg")
 
         return table
 
-    def _evaluate_timevar_source(self, dataset, evaluator, time_axis=None):
+    def _evaluate_timevar_source(
+        self,
+        dataset,
+        model,
+    ):
         """Calculate Npred for a given `dataset.model` by evaluating
-        it in region geometry.
+        it on a region geometry.
 
         Parameters
         ----------
         dataset : `~gammapy.datasets.MapDataset`
             Map dataset.
-        evaluator : `~gammapy.datasets.evaluators.MapEvaluator`
-            Map evaluator.
-        time_axis : `~gammapy.Maps.MapAxis`
-            Axis of the time.
+        model : `~gammapy.modeling.models.SkyModel`
+            Sky model intance.
 
         Returns
         -------
-        npred : `~gammapy.maps.Map`
+        npred : `~gammapy.maps.RegionNDMap`
             Npred map.
         """
-        energy_axis = MapAxis.from_edges(
-            dataset.geoms["geom"].axes["energy"].edges, name="energy_true"
+        energy_true = dataset.edisp.edisp_map.geom.axes["energy_true"]
+        energy_new = energy_true.upsample(self.oversample_energy_factor)
+
+        position = model.spatial_model.position
+        region_exposure = dataset.exposure.to_region_nd_map(position)
+
+        time_axis_eval = TimeMapAxis.from_gti_bounds(
+            gti=dataset.gti, t_delta=self.t_delta
         )
 
-        target = evaluator.model.spatial_model.position
-        on_region = PointSkyRegion(center=target)
-        region_geom = RegionGeom.create(on_region, axes=[energy_axis])
+        time_min, time_max = time_axis_eval.time_bounds
+        time_axis = MapAxis.from_bounds(
+            time_min.mjd * u.d,
+            time_max.mjd * u.d,
+            nbin=time_axis_eval.nbin,
+            name="time",
+        )
 
-        flux = evaluator.model.evaluate_geom(region_geom.to_wcs_geom(), gti=dataset.gti)
-        region_exposure = dataset.exposure.to_region_nd_map(region_geom.center_skydir)
+        temp_eval = model.temporal_model(
+            time_axis_eval.time_mid, energy=energy_new.center
+        )
 
-        npred = flux * region_exposure * dataset.geoms["geom"].bin_volume()
+        norm_parameters = model.spectral_model.parameters.norm_parameters
+        norm = norm_parameters[0].quantity
+
+        if temp_eval.unit.is_equivalent(norm.unit):
+            flux_diff = temp_eval.to(norm.unit)
+        else:
+            flux_diff = temp_eval * norm
+
+        flux_inte = flux_diff * energy_new.bin_width[:, None]
+
+        flux_pred = RegionNDMap.create(
+            region=position,
+            axes=[time_axis, energy_new],
+            data=np.array(flux_inte),
+            unit=flux_inte.unit,
+        )
+
+        mapcoord = flux_pred.geom.get_coord()
+        mapcoord["energy_true"] = energy_true.center[:, None, None, None]
+
+        flux_values = flux_pred.interp_by_coord(mapcoord) * flux_pred.unit
+        data = flux_values * region_exposure.quantity[:, None, :, :]
+        data /= time_axis.nbin / self.oversample_energy_factor
+
+        npred = RegionNDMap.create(
+            region=position,
+            axes=[time_axis, energy_true],
+            data=data.to_value(""),
+        )
 
         return npred
 
-    def _sample_coord_time_energy(self, dataset, evaluator, t_delta="1 s"):
+    def _sample_coord_time_energy(self, dataset, model):
         """Sample model components of a source with time-dependent spectrum.
 
         Parameters
         ----------
         dataset : `~gammapy.datasets.MapDataset`
             Map dataset.
-        evaluator : `~gammapy.datasets.evaluators.MapEvaluator`
-            Map evaluator.
-        t_delta : `~astropy.units.Quantity`
-            Minimum step time.
+        model : `~gammapy.modeling.models.SkyModel`
+            Sky model instance.
 
         Returns
         -------
         table : `~astropy.table.Table`
             Table of sampled events.
         """
-        if not isinstance(evaluator.model.spatial_model, PointSpatialModel):
+        if not isinstance(model.spatial_model, PointSpatialModel):
             raise TypeError(
-                f"Event sampler expects PointSpatialModel for a time varying source. Got {evaluator.model.spatial_model} instead."
+                f"Event sampler expects PointSpatialModel for a time varying source. Got {model.spatial_model} instead."
             )
 
-        else:
-            raise NotImplementedError("The functionality is not yet implemented")
+        if not isinstance(model.spectral_model, ConstantSpectralModel):
+            raise TypeError(
+                f"Event sampler expects ConstantSpectralModel for a time varying source. Got {model.spectral_model} instead."
+            )
 
-        return
+        npred = self._evaluate_timevar_source(dataset, model=model)
+        data = npred.data[np.isfinite(npred.data)]
+        n_events = self.random_state.poisson(np.sum(data))
+
+        coords = npred.sample_coord(n_events=n_events, random_state=self.random_state)
+
+        coords["time"] = Time(coords["time"], format="mjd", scale="tt")
+
+        table = self._make_table(coords, dataset.gti.time_ref)
+
+        return table
 
     def _sample_coord_time(self, npred, temporal_model, gti):
         """Sample model components of a time-varying source.
@@ -143,6 +208,7 @@ class MapDatasetEventSampler:
             t_min=time_start,
             t_max=time_stop,
             random_state=self.random_state,
+            t_delta=self.t_delta,
         )
 
         table = self._make_table(coords, time_ref)
@@ -179,9 +245,7 @@ class MapDatasetEventSampler:
             else:
                 temporal_model = evaluator.model.temporal_model
 
-            if (
-                temporal_model == "TemplateTemporalModel"
-            ):  # check the condition when the format model is defined
+            if temporal_model.is_energy_dependent:
                 table = self._sample_coord_time_energy(dataset, evaluator)
             else:
                 flux = evaluator.compute_flux()

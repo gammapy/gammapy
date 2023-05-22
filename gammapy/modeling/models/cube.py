@@ -115,7 +115,19 @@ class SkyModel(ModelBase):
             ref_unit = ref_unit / u.sr
 
         if self.temporal_model:
-            obt_unit = obt_unit * u.Quantity(self.temporal_model(time)).unit
+            if u.Quantity(self.temporal_model(time)).unit.is_equivalent(
+                self.spectral_model(axis.center).unit
+            ):
+                obt_unit = (
+                    (
+                        self.temporal_model(time)
+                        * self.spatial_model.evaluate_geom(geom).unit
+                    )
+                    .to(obt_unit.to_string())
+                    .unit
+                )
+            else:
+                obt_unit = obt_unit * u.Quantity(self.temporal_model(time)).unit
 
         if not obt_unit.is_equivalent(ref_unit):
             raise ValueError(

@@ -54,7 +54,7 @@ def test_energy_dependent_lightcurve(tmp_path):
 
     t = Time(55555.6157407407, format="mjd")
     val = mod.evaluate(t, energy=[0.3, 2] * u.TeV)
-    assert_allclose(val.data, [[2.389591e-21], [4.399548e-23]], rtol=1e-5)
+    assert_allclose(val.data, [[2.278068e-21], [4.280503e-23]], rtol=1e-5)
 
     t = Time([55555, 55556, 55557], format="mjd")
     val = mod.evaluate(t)

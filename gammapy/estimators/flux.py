@@ -4,7 +4,7 @@ import numpy as np
 from gammapy.datasets import Datasets
 from gammapy.estimators.parameter import ParameterEstimator
 from gammapy.maps import Map, MapAxis
-from gammapy.modeling import Parameter, Parameters
+from gammapy.modeling import Parameter
 from gammapy.modeling.models import ScaleSpectralModel
 
 log = logging.getLogger(__name__)
@@ -121,7 +121,8 @@ class FluxEstimator(ParameterEstimator):
 
         scale_model = ScaleSpectralModel(ref_model)
 
-        norms = Parameters([p for p in ref_model.parameters if p.is_norm])
+        norms = ref_model.parameters.norm_parameters
+
         if len(norms) == 0 or len(norms.free_parameters) > 1:
             raise ValueError(
                 f"{self.tag} requires one and only one free 'norm' or 'amplitude' parameter"

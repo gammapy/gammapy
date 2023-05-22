@@ -41,23 +41,35 @@ class TemporalModel(ModelBase):
 
     def __init__(self, **kwargs):
         scale = kwargs.pop("scale", "utc")
+
         if scale not in Time.SCALES:
             raise ValueError(
                 f"{scale} is not a valid time scale. Choose from {Time.SCALES}"
             )
-        super().__init__(**kwargs)
-        if not hasattr(self, "scale"):
-            self.scale = scale
 
-    def __call__(self, time):
+        self.scale = scale
+        super().__init__(**kwargs)
+
+    def __call__(self, time, energy=None):
         """Evaluate model
 
         Parameters
         ----------
         time : `~astropy.time.Time`
             Time object
+        energy : `~astropy.units.Quantity`
+            Energy (optional)
+
+        Returns
+        -------
+        values : `~astropy.units.Quantity`
+            Model values
         """
         kwargs = {par.name: par.quantity for par in self.parameters}
+
+        if energy is not None:
+            kwargs["energy"] = energy
+
         time = Time(time, scale=self.scale).mjd * u.d
         return self.evaluate(time, **kwargs)
 
@@ -441,6 +453,10 @@ class LightCurveTemplateTemporalModel(TemporalModel):
     The model does linear interpolation for times between the given ``(time, energy, norm)``
     values.
 
+    When the temporal model is energy-dependent, the default interpolation scheme is
+    linear with a log scale for the values. The interpolation method and scale values
+    can be changed with the ``method`` and ``values_scale`` arguments.
+
     For more information see :ref:`LightCurve-temporal-model`.
 
     Examples
@@ -484,8 +500,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
     _t_ref_default = Time("2000-01-01")
     t_ref = Parameter("t_ref", _t_ref_default.mjd, unit="day", frozen=True)
 
-    def __init__(self, map, t_ref=None, filename=None):
-
+    def __init__(self, map, t_ref=None, filename=None, method=None, values_scale=None):
         if (map.data < 0).any():
             log.warning("Map has negative values. Check and fix this!")
 
@@ -496,6 +511,18 @@ class LightCurveTemplateTemporalModel(TemporalModel):
             self.reference_time = t_ref
 
         self.filename = filename
+
+        if method is None:
+            method = "linear"
+
+        if values_scale is None:
+            if self.is_energy_dependent:
+                values_scale = "log"
+            else:
+                values_scale = "lin"
+
+        self.method = method
+        self.values_scale = values_scale
 
     def __str__(self):
         start_time = self.t_ref.quantity + self.map.geom.axes["time"].edges[0]
@@ -522,6 +549,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
     @property
     def is_energy_dependent(self):
+        """Whether the model is energy dependent"""
         return self.map.geom.has_energy_axis
 
     @classmethod
@@ -546,12 +574,15 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
         t_ref = time_ref_from_dict(table.meta, scale="utc")
         nodes = table["TIME"]
+
         ax_unit = nodes.quantity.unit
+
         if not ax_unit.is_equivalent("d"):
             try:
                 ax_unit = u.Unit(table.meta["TIMEUNIT"])
             except KeyError:
                 raise ValueError("Time unit not found in the table")
+
         time_axis = MapAxis.from_nodes(nodes=nodes, name="time", unit=ax_unit)
         axes = [time_axis]
         m = RegionNDMap.create(region=None, axes=axes, data=table["NORM"])
@@ -638,25 +669,46 @@ class LightCurveTemplateTemporalModel(TemporalModel):
             raise ValueError("Not a valid format, choose from ['map', 'table']")
 
     def evaluate(self, time, t_ref=None, energy=None):
-        """Evaluate the model at given coordinates."""
+        """Evaluate the model at given coordinates.
 
+        Parameters
+        ----------
+        time: `~astropy.time.Time`
+            array of times where the model is evaluated;
+        t_ref: `~gammapy.modeling.Parameter`
+            Reference time for the model;
+        energy: `~astropy.units.Quantity`
+            array of energies where the model is evaluated;
+
+        Returns
+        -------
+        values : `~astropy.units.Quantity`
+            Model values
+        """
         if t_ref is None:
             t_ref = self.reference_time
+
         t = (time - t_ref).to_value(self.map.geom.axes["time"].unit)
         coords = {"time": t}
+
         if self.is_energy_dependent:
             if energy is None:
                 energy = self.map.geom.axes["energy"].center
+
             coords["energy"] = energy.reshape(-1, 1)
-        val = self.map.interp_by_coord(coords)
+
+        val = self.map.interp_by_coord(
+            coords, method=self.method, values_scale=self.values_scale
+        )
         val = np.clip(val, 0, a_max=None)
-        return u.Quantity(val, self.map.unit, copy=False)
+        return u.Quantity(val, unit=self.map.unit, copy=False)
 
     def integral(self, t_min, t_max, oversampling_factor=100, **kwargs):
         if self.is_energy_dependent:
             raise NotImplementedError(
                 "Integral not supported for energy dependent models"
             )
+
         return super().integral(t_min, t_max, oversampling_factor, **kwargs)
 
     @classmethod
