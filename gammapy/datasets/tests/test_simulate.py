@@ -203,13 +203,15 @@ def test_sample_coord_time_energy_no_spatial(dataset, energy_dependent_temporal_
 
 @requires_data()
 def test_sample_coord_time_energy_gaussian(dataset, energy_dependent_temporal_model):
+    sampler = MapDatasetEventSampler(random_state=0)
+
     energy_dependent_temporal_model.spatial_model = GaussianSpatialModel()
     energy_dependent_temporal_model.spectral_model = ConstantSpectralModel(
         const="1 cm-2 s-1 TeV-1"
     )
     dataset.models = energy_dependent_temporal_model
     evaluator = dataset.evaluators["test-source"]
-    sampler = MapDatasetEventSampler(random_state=0)
+
     with pytest.raises(TypeError):
         sampler._sample_coord_time_energy(dataset, evaluator)
 
@@ -232,6 +234,9 @@ def test_sample_coord_time_energy(dataset, energy_dependent_temporal_model):
         rtol=1e-6,
     )
 
+
+@requires_data()
+def test_sample_coord_time_energy_random_seed(dataset, energy_dependent_temporal_model):
     energy_dependent_temporal_model.temporal_model.map._unit == ""
     dataset.models = energy_dependent_temporal_model
     evaluator = dataset.evaluators["test-source"]
@@ -246,6 +251,9 @@ def test_sample_coord_time_energy(dataset, energy_dependent_temporal_model):
         rtol=1e-6,
     )
 
+
+@requires_data()
+def test_sample_coord_time_energy_unit(dataset, energy_dependent_temporal_model):
     energy_dependent_temporal_model.temporal_model.map._unit == "cm-2 s-1 TeV-1"
     energy_dependent_temporal_model.spectral_model.parameters[0].unit = ""
     dataset.models = energy_dependent_temporal_model
