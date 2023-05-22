@@ -41,7 +41,8 @@ def check_requests_number(g):
 
 @cli.command("dump_table", help="Dump a table of all PRs.")
 @click.option("--token", default=None, type=str)
-def dump_table(token=None):
+@click.option("--number_min", default=4000, type=int)
+def dump_table(token=None, number_min=4000):
     g = login(token)
     repo = g.get_repo("gammapy/gammapy")
 
@@ -51,7 +52,10 @@ def dump_table(token=None):
 
     results = []
 
-    for pr in pull_requests[:100]:
+    for pr in pull_requests:
+        if pr.number <= number_min:
+            break
+
         result = dict()
         result["number"] = pr.number
         result["title"] = pr.title
@@ -65,15 +69,14 @@ def dump_table(token=None):
     table = table_from_row_data(results)
     table.write("test.ecsv", overwrite=True)
 
-    #    log.info(f"Found {total_number} of merged pull requests for milestone {milestone}.")
-
     check_requests_number(g)
 
 
 @cli.command("merged_PR", help="Make a summary of PRs merged with a given milestone")
 @click.option("--token", default=None, type=str)
+@click.option("--number_min", default=4000, type=int)
 @click.argument("milestone", type=str, default="1.0")
-def list_merged_PRs(milestone, token=None):
+def list_merged_PRs(milestone, token=None, number_min=4000):
     g = login(token)
     repo = g.get_repo("gammapy/gammapy")
 
@@ -82,8 +85,11 @@ def list_merged_PRs(milestone, token=None):
     check_requests_number(g)
 
     total_number = 0
+    names = set()
 
     for pr in pull_requests:
+        if pr.number < number_min:
+            break
         if pr.milestone and pr.milestone.title == milestone:
             if pr.is_merged():
                 if pr.user.name:
@@ -91,9 +97,15 @@ def list_merged_PRs(milestone, token=None):
                 else:
                     name = pr.user.login
                 total_number += 1
+                names.add(name)
                 print(f"- [#{pr.number}] {pr.title} ({name})")
 
+    print("--------------")
+    print("Contributors:")
+    for name in names:
+        print(f"- {name}")
     log.info(f"Found {total_number} of merged pull requests for milestone {milestone}.")
+    log.info(f"Found {len(names)} contributors for milestone {milestone}.")
 
     check_requests_number(g)
 
@@ -103,8 +115,9 @@ def list_merged_PRs(milestone, token=None):
 )
 @click.option("--token", default=None, type=str)
 @click.option("--print_issue", default=False, type=bool)
+@click.option("--number_min", default=4000, type=int)
 @click.argument("milestone", type=str, default="1.0")
-def list_closed_issues(milestone, token=None, print_issue=False):
+def list_closed_issues(milestone, token=None, print_issue=False, number_min=4000):
     g = login(token)
     repo = g.get_repo("gammapy/gammapy")
 
@@ -115,6 +128,8 @@ def list_closed_issues(milestone, token=None, print_issue=False):
     total_number = 0
 
     for issue in issues:
+        if issue.number < number_min:
+            break
         if issue.milestone and issue.milestone.title == milestone:
             total_number += 1
             if print_issue:
