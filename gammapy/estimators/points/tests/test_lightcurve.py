@@ -691,16 +691,15 @@ def test_lightcurve_parallel_multiprocessing():
 def test_lightcurve_parallel_ray():
     datasets = get_spectrum_datasets()
     selection = ["all"]
+
     estimator = LightCurveEstimator(
         energy_edges=[1, 3, 30] * u.TeV,
         selection_optional=selection,
         n_sigma_ul=2,
         n_jobs=2,
+        parallel_backend="ray",
     )
 
-    estimator.n_jobs = None
-    estimator.parallel_backend = "ray"
-    estimator.n_jobs = 2
     lightcurve = estimator.run(datasets)
     assert_allclose(
         lightcurve.dnde_ul.data[0], [[[3.260703e-13]], [[1.159354e-14]]], rtol=1e-3
