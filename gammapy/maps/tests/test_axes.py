@@ -607,6 +607,30 @@ def test_from_gti_time_axis():
     assert axis.nbin == 1
 
 
+def test_from_gti_bounds():
+    start = u.Quantity([1, 2], "min")
+    stop = u.Quantity([1.5, 2.5], "min")
+    time_ref = Time("2010-01-01 00:00:00.0")
+
+    gti = GTI.create(start, stop, time_ref)
+
+    axis = TimeMapAxis.from_gti_bounds(
+        gti=gti,
+        t_delta=10 * u.s,
+    )
+
+    assert axis.nbin == 8
+    expected = Time("2010-01-01 00:01:00.0")
+    # GTI.create() changes the reference time format
+    expected.format = "mjd"
+
+    assert_time_allclose(axis.time_min[0], expected)
+
+    expected = Time("2010-01-01 00:02:30.0")
+    expected.format = "mjd"
+    assert_time_allclose(axis.time_max[-1], expected)
+
+
 def test_map_with_time_axis(time_intervals):
     time_axis = TimeMapAxis(
         time_intervals["t_min"], time_intervals["t_max"], time_intervals["t_ref"]
@@ -827,7 +851,6 @@ def test_single_valued_axis():
 
 
 def test_label_map_axis_concatenate():
-
     label1 = LabelMapAxis(["aa", "bb"], name="letters")
     label2 = LabelMapAxis(["cc", "dd"], name="letters")
     label3 = LabelMapAxis(["ee", "ff"], name="other_letters")
@@ -841,7 +864,6 @@ def test_label_map_axis_concatenate():
 
 
 def test_label_map_axis_from_stack():
-
     label1 = LabelMapAxis(["a", "b", "c"], name="letters")
     label2 = LabelMapAxis(["d", "e"], name="letters")
     label3 = LabelMapAxis(["f"], name="letters")
@@ -853,7 +875,6 @@ def test_label_map_axis_from_stack():
 
 
 def test_label_map_axis_squash():
-
     label = LabelMapAxis(["a", "b", "c"], name="Letters")
     squash_label = label.squash()
 
