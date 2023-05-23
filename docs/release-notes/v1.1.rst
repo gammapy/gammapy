@@ -58,7 +58,7 @@ New features
   the covariance matrix elements.
 - The Franceschini (2018) and Saldana-Lopez (2021) EBL are now part of the built-ins
   EBL models.
-- A spatial correction model can now added to `FoVBackgroundModel`.
+- A spatial correction model can now be added to `FoVBackgroundModel`.
 
 *gammapy.estimators*
 
