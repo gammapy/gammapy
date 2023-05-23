@@ -130,6 +130,8 @@ class Covariance:
             Sub list of parameters.
 
         """
+        # This copy is required to make the covariance setting work with ray
+        self._data = self._data.copy()
 
         idx = [self.parameters.index(par) for par in covar.parameters]
 
