@@ -74,7 +74,7 @@ New features
 
 *documentation*
 
-- A new tutorial demonstrate how to use Gammapy with HAWC data.
+- A new tutorial to demonstrate how to use Gammapy with HAWC data.
 - The pulsar analysis tutorial now shows how to perform 3D analyses in phase.
 - A new tutorial demonstrating event sampling with energy dependent temporal models has
   been added.
