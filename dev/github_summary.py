@@ -7,7 +7,7 @@ from gammapy.utils.table import table_from_row_data
 log = logging.getLogger(__name__)
 
 
-@click.group
+@click.group()
 @click.option(
     "--log-level",
     default="INFO",
