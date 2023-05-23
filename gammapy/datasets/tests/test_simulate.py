@@ -314,6 +314,23 @@ def test_mde_sample_sources(dataset, models):
 
 
 @requires_data()
+def test_sample_sources_energy_dependent(dataset, energy_dependent_temporal_sky_model):
+    dataset.models = energy_dependent_temporal_sky_model
+
+    sampler = MapDatasetEventSampler(random_state=0)
+    events = sampler.sample_sources(dataset=dataset)
+
+    assert len(events.table["ENERGY_TRUE"]) == 1268
+    assert_allclose(events.table["ENERGY_TRUE"][0], 6.456526, rtol=1e-5)
+
+    assert_allclose(events.table["RA_TRUE"][0], 266.404988, rtol=1e-5)
+
+    assert_allclose(events.table["DEC_TRUE"][0], -28.936178, rtol=1e-5)
+
+    assert_allclose(events.table["TIME"][0], 95.464699, rtol=1e-5)
+
+
+@requires_data()
 def test_mde_sample_weak_src(dataset, models):
     irfs = load_irf_dict_from_file(
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"

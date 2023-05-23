@@ -107,7 +107,7 @@ class MapDatasetEventSampler:
             name="time",
         )
 
-        temp_eval = model.temporal_model(
+        temp_eval = model.temporal_model.evaluate(
             time_axis_eval.time_mid, energy=energy_new.center
         )
 
@@ -246,7 +246,7 @@ class MapDatasetEventSampler:
                 temporal_model = evaluator.model.temporal_model
 
             if temporal_model.is_energy_dependent:
-                table = self._sample_coord_time_energy(dataset, evaluator)
+                table = self._sample_coord_time_energy(dataset, evaluator.model)
             else:
                 flux = evaluator.compute_flux()
                 npred = evaluator.apply_exposure(flux)
