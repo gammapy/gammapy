@@ -189,8 +189,8 @@ def plot_distribution(
     ncols=3,
     fit=True,
     dist=stats.norm,
-    kwargs_hist={},
-    kwargs_axes={},
+    kwargs_hist=None,
+    kwargs_axes=None,
 ):
     """
     Plot the 1D distribution of data inside a map as a histogram. If the dimension of the map is smaller than 2,
@@ -228,6 +228,9 @@ def plot_distribution(
         raise TypeError(
             f"map_ must be an instance of gammapy.maps.WcsNDMap, given {type(wcs_map)}"
         )
+
+    kwargs_hist = {} or kwargs_hist
+    kwargs_axes = {} or kwargs_axes
 
     cutout, mask = wcs_map.cutout_and_mask_region()
     idx_x, idx_y = np.where(mask)
