@@ -21,7 +21,7 @@ __all__ = [
 ]
 
 
-ASTROPY_LT_5_3 = not minversion(astropy, "5.3.dev")
+ASTROPY_LT_5_3 = minversion(astropy, "5.3.dev")
 
 # Cache for `requires_dependency`
 _requires_dependency_cache = {}
@@ -253,7 +253,7 @@ UNIT_REPLACEMENTS_ASTROPY_5_3 = {
 
 def modify_unit_order_astropy_5_3(expected_str):
     """Modify unit order for tests with astropy >= 5.3"""
-    if not ASTROPY_LT_5_3:
+    if ASTROPY_LT_5_3:
         for old, new in UNIT_REPLACEMENTS_ASTROPY_5_3.items():
             expected_str = expected_str.replace(old, new)
 
