@@ -93,7 +93,9 @@ class ModelBase:
             setattr(self, par.name, par)
 
         self._covariance = Covariance(self.parameters)
+
         covariance_data = kwargs.get("covariance_data", None)
+
         if covariance_data is not None:
             self.covariance = covariance_data
 
@@ -330,9 +332,11 @@ class DatasetModels(collections.abc.Sequence):
     ----------
     models : `SkyModel`, list of `SkyModel` or `Models`
         Sky models
+    covariance_data : `~numpy.ndarray`
+        Covariance data
     """
 
-    def __init__(self, models=None):
+    def __init__(self, models=None, covariance_data=None):
         if models is None:
             models = []
 
@@ -344,6 +348,7 @@ class DatasetModels(collections.abc.Sequence):
             raise TypeError(f"Invalid type: {models!r}")
 
         unique_names = []
+
         for model in models:
             if model.name in unique_names:
                 raise (ValueError("Model names must be unique"))
@@ -351,7 +356,12 @@ class DatasetModels(collections.abc.Sequence):
 
         self._models = models
         self._covar_file = None
+
         self._covariance = Covariance(self.parameters)
+
+        # Set separataly because this trigggers the update mechanism on the sub-models
+        if covariance_data is not None:
+            self.covariance = covariance_data
 
     def _check_covariance(self):
         if not self.parameters == self._covariance.parameters:
@@ -361,6 +371,7 @@ class DatasetModels(collections.abc.Sequence):
 
     @property
     def covariance(self):
+        """Covariance (`~gammapy.modeling.Covariance`)"""
         self._check_covariance()
 
         for model in self._models:
@@ -379,6 +390,7 @@ class DatasetModels(collections.abc.Sequence):
 
     @property
     def parameters(self):
+        """Parameters (`~gammapy.modeling.Parameters`)"""
         return Parameters.from_stack([_.parameters for _ in self._models])
 
     @property
@@ -395,6 +407,7 @@ class DatasetModels(collections.abc.Sequence):
 
     @property
     def names(self):
+        """List of model names"""
         return [m.name for m in self._models]
 
     @classmethod
@@ -595,7 +608,6 @@ class DatasetModels(collections.abc.Sequence):
         table.write(make_path(filename), **kwargs)
 
     def __str__(self):
-
         self.update_link_label()
 
         str_ = f"{self.__class__.__name__}\n\n"
@@ -657,7 +669,9 @@ class DatasetModels(collections.abc.Sequence):
             model_copy = model.copy(name=model.name, copy_data=copy_data)
             models.append(model_copy)
 
-        return self.__class__(models=models)
+        return self.__class__(
+            models=models, covariance_data=self.covariance.data.copy()
+        )
 
     def select(
         self,
