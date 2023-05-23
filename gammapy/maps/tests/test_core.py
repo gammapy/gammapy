@@ -6,7 +6,7 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.units import Quantity, Unit
 from gammapy.maps import HpxGeom, HpxNDMap, Map, MapAxis, TimeMapAxis, WcsGeom, WcsNDMap
-from gammapy.utils.testing import mpl_plot_check
+from gammapy.utils.testing import modify_unit_order_astropy_5_3, mpl_plot_check
 
 pytest.importorskip("healpy")
 
@@ -235,7 +235,7 @@ def test_map_properties():
     assert isinstance(m.unit, u.CompositeUnit)
     assert m._unit == u.one
     m._unit = u.Unit("cm-2 s-1")
-    assert m.unit.to_string() == "1 / (cm2 s)"
+    assert m.unit.to_string() == modify_unit_order_astropy_5_3("1 / (cm2 s)")
 
     assert isinstance(m.meta, dict)
     m.meta = {"spam": 42}
@@ -276,7 +276,6 @@ map_arithmetics_args = [("wcs"), ("hpx")]
 
 @pytest.mark.parametrize(("map_type"), map_arithmetics_args)
 def test_map_arithmetics(map_type):
-
     m1 = Map.create(binsz=0.1, width=1.0, map_type=map_type, skydir=(0, 0), unit="m2")
 
     m2 = Map.create(binsz=0.1, width=1.0, map_type=map_type, skydir=(0, 0), unit="m2")
