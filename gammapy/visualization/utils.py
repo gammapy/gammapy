@@ -189,8 +189,8 @@ def plot_distribution(
     ncols=3,
     fit=True,
     dist=stats.norm,
-    hist_kwargs=None,
-    axes_kwargs=None,
+    kwargs_hist={},
+    kwargs_axes={},
 ):
     """
     Plot the 1D distribution of data inside a map as a histogram. If the dimension of the map is smaller than 2,
@@ -208,9 +208,9 @@ def plot_distribution(
         Whether to perform a fit of the distribution of data. If True, the fit is performed by `scipy.stats`.
     dist : `scipy.stats.rv_continuous` or `scipy.stats.rv_discrete`
         The distribution to use for the fit.
-    hist_kwargs : dict
+    kwargs_hist : dict
         Keyword arguments to pass to `matplotlib.pyplot.hist`.
-    axes_kwargs : dict
+    kwargs_axes : dict
         Keyword arguments to pass to `matplotlib.axes.Axes`.
 
     Returns
@@ -264,7 +264,7 @@ def plot_distribution(
             axe.set_visible(False)
             continue
         d = data[idx][np.isfinite(data[idx])]
-        axe.hist(d, **hist_kwargs)
+        axe.hist(d, **kwargs_hist)
 
         if fit:
             result = stats.fit(dist, d)
@@ -274,7 +274,7 @@ def plot_distribution(
 
             axe.plot(x, y, label="Fit")
 
-        axe.set(**axes_kwargs)
+        axe.set(**kwargs_axes)
         axe.legend()
 
         log.info(result)
