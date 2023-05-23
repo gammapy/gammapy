@@ -1,10 +1,8 @@
-import inspect
+import logging as log
 import numpy as np
 from scipy import stats
 from scipy.interpolate import CubicSpline
 from astropy.visualization import make_lupton_rgb
-import matplotlib
-import matplotlib.axes
 import matplotlib.pyplot as plt
 from gammapy.maps.axes import UNIT_STRING_FORMAT
 
@@ -185,7 +183,15 @@ def plot_theta_squared_table(table):
     ax1.set_ylabel("Significance")
 
 
-def plot_distribution(wcs_map, ax=None, ncols=3, fit=True, dist=stats.norm, **kwargs):
+def plot_distribution(
+    wcs_map,
+    ax=None,
+    ncols=3,
+    fit=True,
+    dist=stats.norm,
+    hist_kwargs=None,
+    axes_kwargs=None,
+):
     """
     Plot the 1D distribution of data inside a map as a histogram. If the dimension of the map is smaller than 2,
     a unique plot will be displayed. Otherwise, if the dimension is 3 or greater, a grid of plot will be displayed.
@@ -202,8 +208,10 @@ def plot_distribution(wcs_map, ax=None, ncols=3, fit=True, dist=stats.norm, **kw
         Whether to perform a fit of the distribution of data. If True, the fit is performed by `scipy.stats`.
     dist : `scipy.stats.rv_continuous` or `scipy.stats.rv_discrete`
         The distribution to use for the fit.
-    **kwargs : dict
-        Keyword arguments to pass to `matplotlib.pyplot.hist` and `matplotlib.axes.Axes`.
+    hist_kwargs : dict
+        Keyword arguments to pass to `matplotlib.pyplot.hist`.
+    axes_kwargs : dict
+        Keyword arguments to pass to `matplotlib.axes.Axes`.
 
     Returns
     -------
@@ -220,14 +228,6 @@ def plot_distribution(wcs_map, ax=None, ncols=3, fit=True, dist=stats.norm, **kw
         raise TypeError(
             f"map_ must be an instance of gammapy.maps.WcsNDMap, given {type(wcs_map)}"
         )
-
-    hist_args = list(inspect.signature(plt.hist).parameters)
-    patches_args = list(inspect.signature(matplotlib.patches.Patch).parameters)
-    all_hist_args = np.unique(hist_args + patches_args)
-
-    hist_dict = {k: kwargs.pop(k) for k in dict(kwargs) if k in all_hist_args}
-
-    axes_dict = {k: kwargs.pop(k) for k in dict(kwargs) if k not in hist_args}
 
     cutout, mask = wcs_map.cutout_and_mask_region()
     idx_x, idx_y = np.where(mask)
@@ -264,7 +264,7 @@ def plot_distribution(wcs_map, ax=None, ncols=3, fit=True, dist=stats.norm, **kw
             axe.set_visible(False)
             continue
         d = data[idx][np.isfinite(data[idx])]
-        axe.hist(d, **hist_dict)
+        axe.hist(d, **hist_kwargs)
 
         if fit:
             result = stats.fit(dist, d)
@@ -274,10 +274,10 @@ def plot_distribution(wcs_map, ax=None, ncols=3, fit=True, dist=stats.norm, **kw
 
             axe.plot(x, y, label="Fit")
 
-        axe.set(**axes_dict)
+        axe.set(**axes_kwargs)
         axe.legend()
 
-        print(result)
+        log.info(result)
         result_list.append(result)
 
     return result_list, axes
