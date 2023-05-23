@@ -2771,6 +2771,8 @@ class TimeMapAxis:
     def from_gti_bounds(cls, gti, t_delta, name="time"):
         """Create a time axis from an input GTI.
 
+        The unit for the axis is taken from the t_delta quantity.
+
         Parameters
         ----------
         gti : `GTI`
@@ -2794,6 +2796,8 @@ class TimeMapAxis:
             time_min=time_min,
             time_max=time_max,
             nbin=nbin,
+            name=name,
+            unit=t_delta.unit,
         )
 
     @classmethod
