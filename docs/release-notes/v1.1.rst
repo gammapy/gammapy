@@ -19,46 +19,104 @@ are meant for event simulation cannot be used for modeling and fitting
 
 A tutorial demonstrating how to simulate events using this type of models has been added.
 
+Support for multiprocessing is improved. `FluxPointsEstimator` and `LightCurveEstimator`
+can now run on several cores. This is defined with the `n_jobs` parameter that can be set on
+init. The backend used by default is the python multiprocessing. Support for the ray
+multiprocessing is proposed as a prototype as well. This feature requires installing
+the `ray` library and can be defined with tjhe `parallel_backend` property.
+This interface is also used by the `DatasetsMaker` that performs the data reduction
+loop.
+
 A first step in the separation of the internal data model and the GADF format is introduced
-in this release in the handling of the pointing.
+in this release in the handling of the pointing. This is part of a larger that will be
+implemented in the coming feature releases to allow I/O with multiple data formats.
 
 New features
 ~~~~~~~~~~~~
 
 *gammapy.data*
 
+- A new function `~gammapy.data.get_irfs_features()` can extract the features of IRFs (such as energy
+  resolution bias or PSF radius) of a list of `Observation`. The output list can then be passed
+  to the function `~gammapy.utils.cluster.hierarchical_clustering()` which will find clusters
+  of IRF features allowing to combine `Observation` with similar IRF characteristics during
+  analysis.
+
 *gammapy.maps*
 
 - A `Map.reorder_axes` helper method has been introduced.
 - Dot product is now supported with the `Map.dot()` function. It applies the dot product on
   the axes sharing the same name. It can also be called via the `@` operator.
+- A `WcsNDMap.to_region_nd_map_histogram()` helper method is introduced to compute
+  the histogram of the map values along the spatial dimensions for each non spatial axes
+  bins.
 
 *gammapy.modeling*
 
+- A new method has been added on `SpectralModel.spectral_index_error()` to compute
+  the spectral index at a given energy as well as its error by error propagation of
+  the covariance matrix elements.
+- The Franceschini (2018) and Saldana-Lopez (2021) EBL are now part of the built-ins
+  EBL models.
+- A spatial correction model can now added to `FoVBackgroundModel`.
+
 *gammapy.estimators*
 
-- Multiprocessing is now supported for `FluxPointsEstimator` and `LightCurveEstimator` via the
-  `n_jobs` argument in the constructor.
+- Multiprocessing is now supported for `FluxPointsEstimator` and `LightCurveEstimator`. Setting
+  the number of cores used is done with the `n_jobs` property that is available on these
+  classes.
+
+*gammapy.visualization*
+
+- A function to plot `Map` as RGB is now proposed: `~gammapy.visualization.plot_map_rgb()`.
+- A function to plot the spectral distributions of predicted counts of models defined
+  on a `Dataset` is now available : `~gammapy.visualization.plot_npred_signal()`
+
+*documentation*
+
+- A new tutorial demonstrate how to use Gammapy with HAWC data.
+- The pulsar analysis tutorial now shows how to perform 3D analyses in phase.
+- A new tutorial demonstrating event sampling with energy dependent temporal models has
+  been added.
 
 *infrastructure*
 
-Deprecation warnings can now be raised by Gammapy deprecated code. The warnings will appear
-in the documentation and docstrings as well. Deprecated features will usually be removed
-in the following feature release.
-
-Minimal python version is 3.9. Python 3.10 is supported as well.
+- Deprecation warnings can now be raised by Gammapy deprecated code. The warnings will appear
+  in the documentation and docstrings as well. Deprecated features will usually be removed
+  in the following feature release.
+- Minimal python version is now 3.9. Python 3.10 is supported as well.
 
 API changes
 ~~~~~~~~~~~
 
+*gammapy.data*
+
+- the `GTI` now consists in a simple `Table` with `START` and `STOP` as `~astropy.time.Time`
+  object. `GTI.table` no longer contains a GADF formatted table with columns representing
+  start and stop time as METs (Mission Elpased Time). All methods should behave equivalently
+  with the same interface.
+- `~gammapy.irf.load_cta_irfs` is now deprecated. Use instead the more general
+  `~gammapy.irf.load_irf_dict_from_file`
+
+*gammapy.utils*
+
+- The `~gammapy.utils.table.table_from_row_data()` is now deprecated. It can be simply replaced
+  by the regular constructor : `Table(rows)`.
+
 Bug fixes and improvements
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- The energy dependent RADMAX cut is now supported by the `~gammapy.makers.PhaseBackgroundMaker`.
+- The `~gammapy.estimators.TSMapEstimator` now accepts `MapDatasetOnOff` as well
+  as regular `MapDataset`.
+
 
 Contributors
 ~~~~~~~~~~~~
 
 - Arnau Aguasca
 - Axel Donath
+- Luca Giunti
 - Lucas Gréaux
 - Bruno Khélifi
 - Maximilian Linhoff
