@@ -292,13 +292,16 @@ class Fit:
             )
             datasets.models.covariance = matrix
 
+        if optimize_result:
+            optimize_result.models.covariance = matrix.data.copy()
+
         # TODO: decide what to return, and fill the info correctly!
         return CovarianceResult(
             backend=backend,
             method=method,
             success=info["success"],
             message=info["message"],
-            matrix=matrix.data.copy(),
+            matrix=optimize_result.models.covariance.data,
         )
 
     def confidence(self, datasets, parameter, sigma=1, reoptimize=True):
@@ -637,10 +640,6 @@ class FitResult:
 
     def __init__(self, optimize_result=None, covariance_result=None):
         self._optimize_result = optimize_result
-
-        if covariance_result:
-            self.optimize_result.models.covariance = covariance_result.matrix
-
         self._covariance_result = covariance_result
 
     @property

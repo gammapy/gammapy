@@ -20,7 +20,6 @@ from regions import (
 import matplotlib.pyplot as plt
 from gammapy.maps import Map, MapCoord, WcsGeom
 from gammapy.modeling import Parameter, Parameters
-from gammapy.modeling.covariance import copy_covariance
 from gammapy.utils.deprecation import deprecated
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.interpolation import interpolation_scale
@@ -1108,6 +1107,7 @@ class TemplateSpatialModel(SpatialModel):
         interp_kwargs=None,
         filename=None,
         copy_data=True,
+        covariance_data=None,
     ):
         if (map.data < 0).any():
             log.warning("Map has negative values. Check and fix this!")
@@ -1147,9 +1147,8 @@ class TemplateSpatialModel(SpatialModel):
 
         self._interp_kwargs = interp_kwargs
         self.filename = filename
-        super().__init__()
+        super().__init__(covariance_data=covariance_data)
 
-    @copy_covariance
     def copy(self, copy_data=False, **kwargs):
         """Copy model
 
@@ -1170,6 +1169,7 @@ class TemplateSpatialModel(SpatialModel):
         kwargs.setdefault("normalize", self.normalize)
         kwargs.setdefault("interp_kwargs", self._interp_kwargs)
         kwargs.setdefault("filename", self.filename)
+        kwargs.setdefault("covariance_data", self.covariance.data.copy())
         return self.__class__(copy_data=copy_data, **kwargs)
 
     @property
