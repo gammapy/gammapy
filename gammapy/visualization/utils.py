@@ -273,17 +273,19 @@ def plot_distribution(
         axe.hist(d, **kwargs_hist)
 
         if fit:
-            result = stats.fit(dist, d)
-
+            params = dist.fit(d)
             x = np.linspace(np.min(d), np.max(d), 100)
-            y = dist.pdf(x, *result.params)
+            if isinstance(dist, stats.rv_continuous):
+                y = dist.pdf(x, *params)
+            elif isinstance(dist, stats.rv_discrete):
+                y = dist.pmf(x, *params)
 
             axe.plot(x, y, label="Fit")
 
         axe.set(**kwargs_axes)
         axe.legend()
 
-        log.info(result)
-        result_list.append(result)
+        log.info(params)
+        result_list.append(params)
 
     return result_list, axes
