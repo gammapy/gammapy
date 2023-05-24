@@ -3,6 +3,7 @@
 import numpy as np
 import scipy
 import matplotlib.pyplot as plt
+from gammapy.utils.parallel import is_ray_initialized
 from .parameter import Parameters
 
 __all__ = ["Covariance"]
@@ -130,8 +131,9 @@ class Covariance:
             Sub list of parameters.
 
         """
-        # This copy is required to make the covariance setting work with ray
-        self._data = self._data.copy()
+        if is_ray_initialized():
+            # This copy is required to make the covariance setting work with ray
+            self._data = self._data.copy()
 
         idx = [self.parameters.index(par) for par in covar.parameters]
 

@@ -18,6 +18,15 @@ def warning_prototype(module="ray"):
     )
 
 
+def is_ray_initialized():
+    try:
+        from ray import is_initialized
+
+        return is_initialized()
+    except (ModuleNotFoundError):
+        return False
+
+
 class ParallelMixin:
     @property
     def n_jobs(self):
