@@ -529,7 +529,7 @@ def test_pix_to_coord_time_axis(time_intervals):
     tref = time_intervals["t_ref"]
     axis = TimeMapAxis(tmin, tmax, tref, name="time")
 
-    pixels = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19]
+    pixels = [1.3, 3.2, 5.4, 7, 15.33, 17.21, 19.11]
     coords = axis.pix_to_coord(pixels)
     assert_allclose(
         coords[0:3].mjd, [58927.52631579, 58928.57894737, 58929.63157895], rtol=1e-5
