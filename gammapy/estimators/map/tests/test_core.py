@@ -354,8 +354,8 @@ def test_flux_map_read_write_missing_reference_model(
     fluxmap = FluxMaps(wcs_flux_map, reference_model)
     fluxmap.write(tmp_path / "tmp.fits")
 
-    hdulist = fits.open(tmp_path / "tmp.fits")
-    hdulist[0].header["MODEL"] = "non_existent"
+    with fits.open(tmp_path / "tmp.fits") as hdulist:
+        hdulist[0].header["MODEL"] = "non_existent"
 
     with pytest.raises(FileNotFoundError):
         _ = FluxMaps.from_hdulist(hdulist)
