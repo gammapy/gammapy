@@ -93,7 +93,10 @@ class TestSourceCatalogObjectGammaCat:
     @pytest.mark.parametrize("ref", SOURCES, ids=lambda _: _["name"])
     def test_str(self, gammacat, ref):
         actual = str(gammacat[ref["name"]])
-        expected = open(get_pkg_data_filename(ref["str_ref_file"])).read()
+
+        with open(get_pkg_data_filename(ref["str_ref_file"])) as fh:
+            expected = fh.read()
+
         assert actual == modify_unit_order_astropy_5_3(expected)
 
     @pytest.mark.parametrize("ref", SOURCES, ids=lambda _: _["name"])
