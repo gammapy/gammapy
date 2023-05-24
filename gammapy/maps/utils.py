@@ -2,6 +2,7 @@
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import Angle
+from astropy.time import Time
 
 
 def _check_width(width):
@@ -62,6 +63,7 @@ class InvalidValue:
     float = np.nan
     int = np.nan
     bool = np.nan
+    time = Time(0.0, format="mjd", scale="tt")
 
     def __getitem__(self, dtype):
         if np.issubdtype(dtype, np.integer):
@@ -70,6 +72,8 @@ class InvalidValue:
             return self.float
         elif np.issubdtype(dtype, np.dtype(bool).type):
             return self.bool
+        elif np.issubdtype(dtype, Time):
+            return self.time
         else:
             raise ValueError(f"No invalid value placeholder defined for {dtype}")
 

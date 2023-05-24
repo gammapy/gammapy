@@ -13,7 +13,7 @@ from astropy.utils import lazyproperty
 import matplotlib.pyplot as plt
 from gammapy.utils.interpolation import interpolation_scale
 from gammapy.utils.time import time_ref_from_dict, time_ref_to_dict
-from .utils import INVALID_INDEX, edges_from_lo_hi
+from .utils import INVALID_INDEX, INVALID_VALUE, edges_from_lo_hi
 
 __all__ = ["MapAxes", "MapAxis", "TimeMapAxis", "LabelMapAxis"]
 
@@ -2488,8 +2488,6 @@ class TimeMapAxis:
     def pix_to_coord(self, pix):
         """Transform from pixel position to time coordinate
 
-        Works only for contiguous time bins?
-
         Parameters
         ----------
         pix : `~numpy.ndarray`
@@ -2503,19 +2501,16 @@ class TimeMapAxis:
         interp_scale = interpolation_scale(self.interp)
         pix = np.atleast_1d(pix)
         ipix = np.int0(np.floor(pix))
-        lpix = len(pix)
-        ipix[pix < 0] = np.ma.masked
-        ipix[pix >= lpix] = np.ma.masked
-        y = np.array([self.edges_min[ipix], self.edges_max[ipix]]).T
-        x = np.array([ipix, ipix + 1]).T
-        interp_fn = [
-            scipy.interpolate.interp1d(x=x[_], y=y[_], kind=1, fill_value="extrapolate")
-            for _ in range(lpix)
-        ]
-        coords = interp_scale.inverse([interp_fn[_](pix[_]) for _ in range(lpix)])
-        coords = (np.array(coords).T * self.unit) + self.reference_time
-        coords[pix < 0] = np.ma.masked
-        coords[pix >= lpix] = np.ma.masked
+        coords = np.zeros(len(pix))
+        for i, ip in enumerate(ipix):
+            if ip < 0 or ip > self.nbin:
+                coords[i] = INVALID_VALUE.time.mjd
+                continue
+            x = [ip, ip + 1]
+            y = [self.time_min[ip].mjd, self.time_max[ip].mjd]
+            interp_fn = scipy.interpolate.interp1d(x=x, y=y, kind="nearest")
+            coords[i] = interp_scale.inverse(interp_fn(pix[i]))
+        coords = Time(coords, format="mjd", scale=self.reference_time.scale)
         return coords
 
     def coord_to_pix(self, coord, **kwargs):
