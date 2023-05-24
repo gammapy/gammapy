@@ -229,8 +229,11 @@ def plot_distribution(
             f"map_ must be an instance of gammapy.maps.WcsNDMap, given {type(wcs_map)}"
         )
 
-    kwargs_hist = {} or kwargs_hist
-    kwargs_axes = {} or kwargs_axes
+    kwargs_hist = kwargs_hist or {}
+    kwargs_axes = kwargs_axes or {}
+
+    if fit:
+        kwargs_hist.setdefault("density", True)
 
     cutout, mask = wcs_map.cutout_and_mask_region()
     idx_x, idx_y = np.where(mask)
