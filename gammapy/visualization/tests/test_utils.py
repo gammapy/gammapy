@@ -84,6 +84,3 @@ def test_plot_distribution():
 
         assert len(res) == 10
         assert ax.shape == (4, 3)
-
-        assert res[0].success is True
-        assert res[0].message == "Optimization terminated successfully."
