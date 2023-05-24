@@ -1,8 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
+from astropy.table import Table
+from astropy.time import Time
 import click
 from github import Github, GithubException
-from gammapy.utils.table import table_from_row_data
 
 log = logging.getLogger(__name__)
 
@@ -42,7 +43,9 @@ def check_requests_number(g):
 @cli.command("dump_table", help="Dump a table of all PRs.")
 @click.option("--token", default=None, type=str)
 @click.option("--number_min", default=4000, type=int)
-def dump_table(token=None, number_min=4000):
+@click.option("--filename", default="table_pr.ecsv", type=str)
+@click.option("--overwrite", default=False, type=bool)
+def dump_table(token, number_min, filename, overwrite):
     g = login(token)
     repo = g.get_repo("gammapy/gammapy")
 
@@ -53,21 +56,40 @@ def dump_table(token=None, number_min=4000):
     results = []
 
     for pr in pull_requests:
-        if pr.number <= number_min:
+        number = pr.number
+        if number <= number_min:
             break
 
+        title = pr.title
+        if "Backport" in title:
+            continue
+
         result = dict()
-        result["number"] = pr.number
-        result["title"] = pr.title
+        result["number"] = number
+        result["title"] = title
         result["milestone"] = "" if not pr.milestone else pr.milestone.title
         result["is_merged"] = pr.is_merged()
+        result["date_creation"] = Time(pr.created_at)
+        result["date_closed"] = Time(pr.closed_at)
         result["user_name"] = pr.user.name
         result["user_login"] = pr.user.login
         result["user_email"] = pr.user.email
+        result["labels"] = [label.name for label in pr.labels]
+        result["changed_files"] = pr.changed_files
+        result["commits_number"] = pr.get_commits().totalCount
+        result["unique_committers"] = list(
+            set([commit.committer.login for commit in pr.get_commits()])
+        )
+        result["review_number"] = pr.get_reviews().totalCount
+        result["unique_reviewers"] = list(
+            set([review.user.login for review in pr.get_reviews()])
+        )
+
+        log.info(result)
         results.append(result)
 
-    table = table_from_row_data(results)
-    table.write("test.ecsv", overwrite=True)
+    table = Table(results)
+    table.write(filename, overwrite=overwrite)
 
     check_requests_number(g)
 
