@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
+import numpy as np
 from astropy.table import Table
 from astropy.time import Time
 import click
@@ -150,29 +151,6 @@ class GitHubInfoExtractor:
         return table
         self.check_requests_number()
 
-    def extract_issue_table(self, state="closed", number_min=0):
-        """Extract list of Issues and build info table.
-
-        Parameters
-        ----------
-        state : str ("closed", "open", "all")
-            state of issues to extract.
-        number_min : int
-            minimum PR number to include. Default is 0.
-        """
-        issues = self.repo.get_pulls(state=state, sort="created", direction="desc")
-
-        self.check_requests_number()
-        total_number = 0
-
-        for issue in issues:
-            if issue.number < number_min:
-                break
-            if issue.milestone:
-                total_number += 1
-
-        self.check_requests_number()
-
 
 @click.group()
 @click.option(
@@ -185,14 +163,14 @@ def cli(log_level):
     log.setLevel(level=log_level)
 
 
-@cli.command("dump_pull_request_table", help="Dump a table of all PRs.")
+@cli.command("create_pull_request_table", help="Dump a table of all PRs.")
 @click.option("--token", default=None, type=str)
 @click.option("--repo", default="gammapy/gammapy", type=str)
 @click.option("--state", default="closed", type=str)
 @click.option("--number_min", default=4000, type=int)
 @click.option("--filename", default="table_pr.ecsv", type=str)
 @click.option("--overwrite", default=False, type=bool)
-def dump_table(repo, token, state, number_min, filename, overwrite):
+def create_pull_request_table(repo, token, state, number_min, filename, overwrite):
     """Extract PR table and write it to dosk."""
     extractor = GitHubInfoExtractor(repo=repo, token=token)
     table = extractor.extract_pull_requests_table(
@@ -201,53 +179,50 @@ def dump_table(repo, token, state, number_min, filename, overwrite):
     table.write(filename, overwrite=overwrite)
 
 
-@cli.command(
-    "closed_issues", help="Make a summary of closed issues with a given milestone"
-)
-@click.option("--token", default=None, type=str)
-@click.option("--repo", default="gammapy/gammapy", type=str)
-@click.option("--state", default="closed", type=str)
-@click.option("--number_min", default=4000, type=int)
-@click.option("--filename", default="table_issues.ecsv", type=str)
-@click.option("--overwrite", default=False, type=bool)
-def list_closed_issues(repo, token, state, number_min, filename, overwrite):
-    extractor = GitHubInfoExtractor(repo=repo, token=token)
-    table = extractor.extract_issues_table(state=state, number_min=number_min)
-    table.write(filename, overwrite=overwrite)
-
-
 @cli.command("merged_PR", help="Make a summary of PRs merged with a given milestone")
-@click.option("--token", default=None, type=str)
-@click.option("--number_min", default=4000, type=int)
-@click.argument("milestone", type=str, default="1.0")
-def list_merged_PRs(milestone, token=None, number_min=4000):
-    g = token
-    repo = g.get_repo("gammapy/gammapy")
+@click.argument("filename", type=str, default="table_pr.ecsv")
+@click.argument("milestones", type=str, nargs=-1)
+def list_merged_PRs(filename, milestones):
+    """Make a list of merged PRs."""
+    log.info(
+        f"Make list of merged PRs from milestones {milestones} from file {filename}."
+    )
+    table = Table.read(filename)
 
-    pull_requests = repo.get_pulls(state="closed", sort="created", direction="desc")
+    # Keep only merged PRs
+    table = table[table["is_merged"] == True]
 
-    total_number = 0
-    names = set()
+    # Keep the requested milestones
+    valid = np.zeros((len(table)), dtype="bool")
+    for milestone in milestones:
+        valid = np.logical_or(valid, table["milestone"] == milestone)
 
-    for pr in pull_requests:
-        if pr.number < number_min:
-            break
-        if pr.milestone and pr.milestone.title == milestone:
-            if pr.is_merged():
-                if pr.user.name:
-                    name = pr.user.name
-                else:
-                    name = pr.user.login
-                total_number += 1
-                names.add(name)
-                print(f"- [#{pr.number}] {pr.title} ({name})")
+    # filter the table and print info
+    table = table[valid]
+    log.info(f"Found {len(table)} merged PRs in the table.")
 
-    print("--------------")
-    print("Contributors:")
-    for name in names:
-        print(f"- {name}")
-    log.info(f"Found {total_number} of merged pull requests for milestone {milestone}.")
-    log.info(f"Found {len(names)} contributors for milestone {milestone}.")
+    name = table["user_name"]
+    invalid = np.where(name)
+    name[invalid] = table["user_login"][invalid]
+    contributor_names = np.unique(name)
+    log.info(f"Found {len(contributor_names)} contributors in the table.")
+
+    result = "Contributors\n"
+    result += "~~~~~~~~~~~~\n"
+    for name in contributor_names:
+        result += f"- {name}\n"
+
+    result += "\n\nPull Requests\n"
+    result += "~~~~~~~~~~~~~\n\n"
+    result += "This list is incomplete. Small improvements and bug fixes are not listed here.\n"
+
+    for pr in table:
+        number = pr["number"]
+        title = pr["title"]
+        user = pr["user_name"] if pr["user_name"] is not None else pr["user_login"]
+        result += f"- [#{number}] {title} ({user})\n"
+
+    print(result)
 
 
 if __name__ == "__main__":
