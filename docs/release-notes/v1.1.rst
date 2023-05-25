@@ -36,11 +36,11 @@ New features
 
 *gammapy.data*
 
-- A new function `~gammapy.data.get_irfs_features()` can extract the features of IRFs (such as energy
-  resolution bias or PSF radius) of a list of `Observation`. The output list can then be passed
-  to the function `~gammapy.utils.cluster.hierarchical_clustering()` which will find clusters
-  of IRF features allowing to combine `Observation` with similar IRF characteristics during
-  analysis.
+- A new function `~gammapy.data.get_irfs_features()` can extract the features of IRFs
+  (such as energy resolution bias or PSF radius) of a list of `Observation`. The output
+  list can then be passed to the function `~gammapy.utils.cluster.hierarchical_clustering()`
+  which will find clusters of IRF features allowing to combine `Observation` with similar
+  IRF characteristics during analysis.
 
 *gammapy.maps*
 
