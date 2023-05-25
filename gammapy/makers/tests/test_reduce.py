@@ -187,6 +187,7 @@ def test_datasets_maker_map(pars, observations_cta, makers_map, map_dataset):
         assert_allclose(exposure.data.mean(), 2.436063e09, rtol=3e-3)
 
 
+@requires_data()
 @requires_dependency("ray")
 def test_datasets_maker_map_ray(observations_cta, makers_map, map_dataset):
     makers = DatasetsMaker(
