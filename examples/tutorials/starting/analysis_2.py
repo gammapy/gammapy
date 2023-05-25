@@ -92,6 +92,7 @@ from gammapy.modeling.models import (
     SkyModel,
 )
 from gammapy.utils.check import check_tutorials_setup
+from gammapy.visualization import plot_npred_signal
 
 ######################################################################
 # Check setup
@@ -318,6 +319,16 @@ print(result)
 #
 
 print(stacked.models.to_parameters_table())
+
+
+######################################################################
+# Here we can plot the number of predicted counts for each model and
+# for the background in our dataset. In order to do this, we can use
+# the `~gammapy.visualization.plot_npred_signal` function.
+#
+
+plot_npred_signal(stacked)
+plt.show()
 
 
 ######################################################################
