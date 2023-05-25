@@ -333,6 +333,13 @@ plt.show()
 
 
 ######################################################################
+# Here we can plot the number of predicted counts for each model and
+# for the background in our dataset by using the
+# `~gammapy.visualization.plot_npred_signal` function.
+#
+
+
+######################################################################
 # Joint analysis
 # --------------
 #
