@@ -147,7 +147,8 @@ class Fit:
     def _parse_datasets(datasets):
         from gammapy.datasets import Datasets
 
-        datasets = Datasets(datasets)
+        if isinstance(datasets, list):
+            datasets = Datasets(datasets)
         return datasets, datasets.parameters
 
     def run(self, datasets):
@@ -168,7 +169,7 @@ class Fit:
         optimize_result = self.optimize(datasets=datasets)
 
         if isinstance(datasets, DatasetsActor):
-            self.datasets._update_remote_models()
+            datasets._update_remote_models()
         if self.backend not in registry.register["covariance"]:
             log.warning("No covariance estimate - not supported by this backend.")
             return FitResult(optimize_result=optimize_result)

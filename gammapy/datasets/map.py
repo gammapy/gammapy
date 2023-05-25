@@ -2005,6 +2005,8 @@ class MapDatasetActor(MapDataset):
 
     def __init__(self, dataset):
         self.__dict__.update(dataset.__dict__)
+        if self.models is None:
+            self.models = DatasetModels()
 
     def set_parameter_values(self, values):
         self.models.parameters.set_parameter_values(values)

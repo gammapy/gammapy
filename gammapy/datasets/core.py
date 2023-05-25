@@ -632,7 +632,7 @@ class DatasetsActor(Datasets):
             self._datasets.insert(
                 idx, MapDataset(name=dataset.name, models=dataset.models)
             )
-            self.models  # update global model
+
             self._actors.insert(idx, MapDatasetActor.remote(dataset))
         else:
             raise TypeError(f"Invalid type: {type(dataset)!r}")
