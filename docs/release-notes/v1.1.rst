@@ -95,6 +95,9 @@ API changes
   object. `GTI.table` no longer contains a GADF formatted table with columns representing
   start and stop time as METs (Mission Elpased Time). All methods should behave equivalently
   with the same interface.
+- 
+
+*gammapy.irf*
 - `~gammapy.irf.load_cta_irfs` is now deprecated. Use instead the more general
   `~gammapy.irf.load_irf_dict_from_file`
 
@@ -106,6 +109,10 @@ API changes
 Bug fixes and improvements
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+- A `scale` attribute was added to `TemporalModel` classes. It is used to treat the `t_ref`
+  parameter in a consistent manner via a `TemporalModel.reference_time` that converts the
+  parameter (defined in mjd) in a proper `~astropy.time.Time`. It avoids comparing
+  inconsistent scales when evaluating temporal models.
 - The energy dependent RADMAX cut is now supported by the `~gammapy.makers.PhaseBackgroundMaker`.
 - The `~gammapy.estimators.TSMapEstimator` now accepts `MapDatasetOnOff` as well
   as regular `MapDataset`.
