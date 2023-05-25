@@ -49,7 +49,7 @@ class MapDatasetEventSampler:
             t_max=time_stop,
             random_state=self.random_state,
         )
-        table["TIME"] = u.Quantity(((time.mjd - time_ref.mjd) * u.day).to(u.s)).to("s")
+        table["TIME"] = (time - time_ref).to("s")
         return table
 
     def sample_sources(self, dataset):
