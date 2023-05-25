@@ -201,10 +201,13 @@ def list_merged_PRs(filename, milestones):
     table = table[valid]
     log.info(f"Found {len(table)} merged PRs in the table.")
 
-    name = table["user_name"]
-    invalid = np.where(name)
-    name[invalid] = table["user_login"][invalid]
-    contributor_names = np.unique(name)
+    unique_names = set()
+    names = table["user_name"]
+    logins = table["user_login"]
+    for name, login in zip(names, logins):
+        unique_names.add(name if name else login)
+
+    contributor_names = list(unique_names)
     log.info(f"Found {len(contributor_names)} contributors in the table.")
 
     result = "Contributors\n"
