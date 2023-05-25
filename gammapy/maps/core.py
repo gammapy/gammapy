@@ -1195,7 +1195,7 @@ class Map(abc.ABC):
         ncols : int
             Number of columns to plot
         **kwargs : dict
-            Keyword arguments passed to `Map.plot`.
+            Keyword arguments passed to `WcsNDMap.plot`.
 
         Returns
         -------
