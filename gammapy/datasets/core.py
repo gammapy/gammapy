@@ -1,13 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import abc
-import ray
 import collections.abc
 import copy
 import html
+import inspect
 import logging
 import numpy as np
 from astropy import units as u
 from astropy.table import Table, vstack
+import ray
 from gammapy.data import GTI
 from gammapy.modeling.models import DatasetModels, Models
 from gammapy.utils.scripts import make_name, make_path, read_yaml, write_yaml
@@ -598,7 +599,6 @@ class Datasets(collections.abc.MutableSequence):
         return len(self._datasets)
 
 
-
 class DatasetsActor(Datasets):
     """A modified Dataset collection for parallel evaluation using ray actors.
     Fore now only available if composed only of MapDataset.
@@ -610,7 +610,7 @@ class DatasetsActor(Datasets):
     """
 
     def __init__(self, datasets=None):
-        from .map import MapDatasetActor, MapDataset
+        from .map import MapDataset, MapDatasetActor
 
         if datasets is not None:
             actors = []
@@ -622,39 +622,34 @@ class DatasetsActor(Datasets):
                 datasets.remove(d0)
             self._datasets = datasets_list
             self._actors = actors
-            self._copy_cavariance_data()
-
 
     def insert(self, idx, dataset):
-        from .map import MapDatasetActor, MapDataset
+        from .map import MapDataset, MapDatasetActor
+
         if isinstance(dataset, Dataset):
             if dataset.name in self.names:
                 raise (ValueError("Dataset names must be unique"))
-            self._datasets.insert(idx, MapDataset(name=dataset.name, models=dataset.models))
-            self.models #update global model
+            self._datasets.insert(
+                idx, MapDataset(name=dataset.name, models=dataset.models)
+            )
+            self.models  # update global model
             self._actors.insert(idx, MapDatasetActor.remote(dataset))
         else:
             raise TypeError(f"Invalid type: {type(dataset)!r}")
 
     def __getattr__(self, attr):
         """get attribute from remote each dataset"""
+
         def wrapper(update_remote=False, **kwargs):
             if update_remote:
                 self._update_remote_models()
             results = ray.get([a.get_attr.remote(attr) for a in self._actors])
             for res in results:
                 if inspect.ismethod(res):
-                    res = res(**kwargs) #no longer parallel but works with plots
+                    res = res(**kwargs)  # no longer parallel but works with plots
             return results
-        return wrapper
 
-    def _copy_cavariance_data(self):
-        # TODO: this avoid  ValueError in remote:
-        # assignment destination is read-only in set_subcovariance
-        # self._data[np.ix_(idx, idx)] = covar.data.copy()
-        # better way/place to do that ?
-        for m in self.models:
-            m._covariance.data = m._covariance._data.copy()
+        return wrapper
 
     def _update_remote_models(self):
         args = [list(d.models) for d in self._datasets]
@@ -669,4 +664,3 @@ class DatasetsActor(Datasets):
         # blocked until set_parameters_factors on actors complete
         res = ray.get([a.stat_sum.remote() for a in self._actors])
         return np.sum(res)
-

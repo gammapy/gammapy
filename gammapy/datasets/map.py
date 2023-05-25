@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import ray
 import logging
 import numpy as np
 import astropy.units as u
@@ -7,6 +6,7 @@ from astropy.io import fits
 from astropy.table import Table
 from regions import CircleSkyRegion
 import matplotlib.pyplot as plt
+import ray
 from gammapy.data import GTI
 from gammapy.irf import EDispKernelMap, EDispMap, PSFKernel, PSFMap, RecoPSFMap
 from gammapy.maps import LabelMapAxis, Map, MapAxis
@@ -2007,11 +2007,7 @@ class MapDatasetActor(MapDataset):
         self.__dict__.update(dataset.__dict__)
 
     def set_parameter_values(self, values):
-        idx = 0
-        for parameter in self.models.parameters:
-            if not parameter.frozen:
-                parameter.value = values[idx]
-                idx += 1
+        self.models.parameters.set_parameter_values(values)
 
     def get_models(self):
         return list(self.models)
