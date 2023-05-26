@@ -69,7 +69,7 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
         grid.
     n_jobs : int
         Number of processes used in parallel for the computation.
-        Default is one, unless `~gammapy.utils.parallel.N_PROCESSES_DEFAULT` was modified.
+        Default is one, unless `~gammapy.utils.parallel.N_JOBS_DEFAULT` was modified.
     parallel_backend : {"multiprocessing", "ray"}
         Which backend to use for multiprocessing.
     """
@@ -80,8 +80,8 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
         self,
         energy_edges=[1, 10] * u.TeV,
         sum_over_energy_groups=False,
-        n_jobs=parallel.N_JOBS_DEFAULT,
-        parallel_backend=parallel.BACKEND_DEFAULT,
+        n_jobs=None,
+        parallel_backend=None,
         **kwargs,
     ):
         self.energy_edges = energy_edges

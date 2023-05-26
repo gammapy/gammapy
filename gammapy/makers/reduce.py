@@ -24,7 +24,7 @@ class DatasetsMaker(Maker, parallel.ParallelMixin):
         If True stack into the reference dataset (see `run` method arguments).
     n_jobs : int
         Number of processes to run in parallel.
-        Default is one, unless `~gammapy.utils.parallel.N_PROCESSES_DEFAULT` was modified.
+        Default is one, unless `~gammapy.utils.parallel.N_JOBS_DEFAULT` was modified.
     cutout_mode : {'trim', 'partial', 'strict'}
         Used only to cutout the reference `MapDataset` around each processed observation.
         Mode is an option for Cutout2D, for details see `~astropy.nddata.utils.Cutout2D`.
@@ -44,10 +44,10 @@ class DatasetsMaker(Maker, parallel.ParallelMixin):
         self,
         makers,
         stack_datasets=True,
-        n_jobs=parallel.N_JOBS_DEFAULT,
+        n_jobs=None,
         cutout_mode="trim",
         cutout_width=None,
-        parallel_backend=parallel.BACKEND_DEFAULT,
+        parallel_backend=None,
     ):
         self.log = logging.getLogger(__name__)
         self.makers = makers
@@ -64,10 +64,6 @@ class DatasetsMaker(Maker, parallel.ParallelMixin):
                 self._apply_cutout = False
             else:
                 self.cutout_width = 2 * self.offset_max
-
-        # backwards compatibility
-        if n_jobs is None:
-            n_jobs = parallel.N_JOBS_DEFAULT
 
         self.n_jobs = n_jobs
         self.parallel_backend = parallel_backend

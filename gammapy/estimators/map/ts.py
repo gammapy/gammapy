@@ -93,7 +93,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         cube.
     n_jobs : int
         Number of processes used in parallel for the computation.
-        Default is one, unless `~gammapy.utils.parallel.N_PROCESSES_DEFAULT` was modified.
+        Default is one, unless `~gammapy.utils.parallel.N_JOBS_DEFAULT` was modified.
     parallel_backend : {"multiprocessing", "ray"}
         Which backend to use for multiprocessing.
 
@@ -159,8 +159,8 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         selection_optional=None,
         energy_edges=None,
         sum_over_energy_groups=True,
-        n_jobs=parallel.N_JOBS_DEFAULT,
-        parallel_backend=parallel.BACKEND_DEFAULT,
+        n_jobs=None,
+        parallel_backend=None,
     ):
         if kernel_width is not None:
             kernel_width = Angle(kernel_width)
@@ -180,10 +180,6 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         self.n_sigma_ul = n_sigma_ul
         self.threshold = threshold
         self.rtol = rtol
-
-        if n_jobs is None:
-            n_jobs = parallel.N_JOBS_DEFAULT
-
         self.n_jobs = n_jobs
         self.parallel_backend = parallel_backend
         self.sum_over_energy_groups = sum_over_energy_groups

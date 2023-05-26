@@ -79,6 +79,9 @@ class ParallelMixin:
     @n_jobs.setter
     def n_jobs(self, value):
         """Number of jobs setter (int)"""
+        if value is None:
+            value = N_JOBS_DEFAULT
+
         self._n_jobs = int(value)
 
     @property
@@ -89,7 +92,7 @@ class ParallelMixin:
     @parallel_backend.setter
     def parallel_backend(self, value):
         """Parallel backend setter (str)"""
-        self._parallel_backend = ParallelBackendEnum.from_str(value)
+        self._parallel_backend = ParallelBackendEnum.from_str(value).value
 
 
 def run_multiprocessing(
