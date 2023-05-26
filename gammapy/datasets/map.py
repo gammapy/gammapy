@@ -40,7 +40,7 @@ MIGRA_AXIS_DEFAULT = MapAxis.from_bounds(
     0.2, 5, nbin=48, node_type="edges", name="migra"
 )
 
-BINSZ_IRF_DEFAULT = 0.2
+BINSZ_IRF_DEFAULT = 0.2 * u.deg
 
 EVALUATION_MODE = "local"
 USE_NPRED_CACHE = True
@@ -51,7 +51,7 @@ def create_map_dataset_geoms(
     energy_axis_true=None,
     migra_axis=None,
     rad_axis=None,
-    binsz_irf=None,
+    binsz_irf=BINSZ_IRF_DEFAULT,
     reco_psf=False,
 ):
     """Create map geometries for a `MapDataset`
@@ -84,7 +84,6 @@ def create_map_dataset_geoms(
     else:
         energy_axis_true = geom.axes["energy"].copy(name="energy_true")
 
-    binsz_irf = binsz_irf if binsz_irf is not None else BINSZ_IRF_DEFAULT
     geom_image = geom.to_image()
     geom_exposure = geom_image.to_cube([energy_axis_true])
     geom_irf = geom_image.to_binsz(binsz=binsz_irf)
@@ -609,7 +608,7 @@ class MapDataset(Dataset):
         energy_axis_true=None,
         migra_axis=None,
         rad_axis=None,
-        binsz_irf=None,
+        binsz_irf=BINSZ_IRF_DEFAULT,
         reference_time="2000-01-01",
         name=None,
         meta_table=None,
