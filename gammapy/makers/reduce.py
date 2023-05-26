@@ -193,6 +193,6 @@ class DatasetsMaker(Maker, parallel.ParallelMixin):
             return Datasets([self._dataset])
 
         lookup = {
-            d.meta_table["OBS_ID"][0]: idx for d, idx in enumerate(self._datasets)
+            d.meta_table["OBS_ID"][0]: idx for idx, d in enumerate(self._datasets)
         }
         return Datasets([self._datasets[lookup[obs.obs_id]] for obs in observations])
