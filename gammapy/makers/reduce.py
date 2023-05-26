@@ -66,6 +66,10 @@ class DatasetsMaker(Maker, parallel.ParallelMixin):
             else:
                 self.cutout_width = 2 * self.offset_max
 
+        # backwards compatibility
+        if n_jobs is None:
+            n_jobs = parallel.N_JOBS_DEFAULT
+
         self.n_jobs = n_jobs
         self.parallel_backend = parallel_backend
         self.stack_datasets = stack_datasets

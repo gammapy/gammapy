@@ -7,23 +7,26 @@ from gammapy.utils.testing import requires_dependency
 def test_parallel_mixin():
     p = parallel.ParallelMixin()
 
-    with pytest.raises():
+    with pytest.raises(ValueError):
         p.parallel_backend = "wrong_name"
 
-    with pytest.raises():
+    with pytest.raises(ValueError):
         p.n_jobs = "5 jobs"
 
 
-def test_get_multiprocessing():
-    parallel.BACKEND_DEFAULT = "multiprocessing"
+def test_change_n_process_default():
+    parallel.N_JOBS_DEFAULT = 5
+
     multiprocessing = parallel.get_multiprocessing()
     assert multiprocessing.__name__ == "multiprocessing"
 
 
 @requires_dependency("ray")
 def test_get_multiprocessing_ray():
-    parallel.BACKEND_DEFAULT = "ray"
-    multiprocessing = parallel.get_multiprocessing()
+    assert parallel.is_ray_available()
+    assert not parallel.is_ray_initialized()
+
+    multiprocessing = parallel.get_multiprocessing_ray()
     assert multiprocessing.__name__ == "ray.util.multiprocessing"
 
 
