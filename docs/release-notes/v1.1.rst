@@ -21,11 +21,8 @@ A tutorial demonstrating how to simulate events using this type of models has be
 
 Support for multiprocessing is improved. `FluxPointsEstimator` and `LightCurveEstimator`
 can now run on several cores. This is defined with the `n_jobs` parameter that can be set on
-init. The backend used by default is the python multiprocessing. Support for the ray
-multiprocessing is proposed as a prototype as well. This feature requires installing
-the `ray` library and can be defined with tjhe `parallel_backend` property.
-This interface is also used by the `DatasetsMaker` that performs the data reduction
-loop.
+init. The backend used by default is the python multiprocessing. This interface is also used
+by the `DatasetsMaker` that performs the data reduction loop.
 
 A first step in the separation of the internal data model and the GADF format is introduced
 in this release in the handling of the pointing. This is part of a larger that will be
