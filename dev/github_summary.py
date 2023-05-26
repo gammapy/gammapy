@@ -107,7 +107,7 @@ class GitHubInfoExtractor:
         return result
 
     def extract_pull_requests_table(
-        self, state="closed", number_min=0, include_backports=False
+        self, state="closed", number_min=1, include_backports=False
     ):
         """Extract list of Pull Requests and build info table.
 
