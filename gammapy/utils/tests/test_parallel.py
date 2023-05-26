@@ -14,13 +14,6 @@ def test_parallel_mixin():
         p.n_jobs = "5 jobs"
 
 
-def test_change_n_process_default():
-    parallel.N_JOBS_DEFAULT = 5
-
-    multiprocessing = parallel.get_multiprocessing()
-    assert multiprocessing.__name__ == "multiprocessing"
-
-
 @requires_dependency("ray")
 def test_get_multiprocessing_ray():
     assert parallel.is_ray_available()

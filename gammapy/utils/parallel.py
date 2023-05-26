@@ -15,6 +15,18 @@ class ParallelBackendEnum(Enum):
     multiprocessing = "multiprocessing"
     ray = "ray"
 
+    @classmethod
+    def from_str(cls, value):
+        """Get enum from string"""
+        if value is None:
+            value = BACKEND_DEFAULT
+
+        if value == "ray" and not is_ray_available():
+            log.warning("Ray is not installed, falling back to multiprocessing backend")
+            value = "multiprocessing"
+
+        return cls(value)
+
 
 class PoolMethodEnum(Enum):
     """Enum for pool method"""
@@ -77,13 +89,7 @@ class ParallelMixin:
     @parallel_backend.setter
     def parallel_backend(self, value):
         """Parallel backend setter (str)"""
-        value = ParallelBackendEnum(value)
-
-        if value == ParallelBackendEnum.ray and not is_ray_available():
-            log.warning("Ray is not installed, falling back to multiprocessing backend")
-            value = ParallelBackendEnum.multiprocessing
-
-        self._parallel_backend = value
+        self._parallel_backend = ParallelBackendEnum.from_str(value)
 
 
 def run_multiprocessing(
@@ -114,6 +120,8 @@ def run_multiprocessing(
     task_name : str
         Name of the task to display in the progress bar
     """
+    backend = ParallelBackendEnum.from_str(backend)
+
     if method_kwargs is None:
         method_kwargs = {}
 
