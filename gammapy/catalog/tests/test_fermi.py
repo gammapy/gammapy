@@ -23,6 +23,7 @@ from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.testing import (
     assert_quantity_allclose,
     assert_time_allclose,
+    modify_unit_order_astropy_5_3,
     requires_data,
 )
 
@@ -163,7 +164,7 @@ class TestFermi4FGLObject:
     def test_str(self, ref):
         actual = str(self.cat[ref["idx"]])
         expected = open(get_pkg_data_filename(ref["str_ref_file"])).read()
-        assert actual == expected
+        assert actual == modify_unit_order_astropy_5_3(expected)
 
     @pytest.mark.parametrize("ref", SOURCES_4FGL, ids=lambda _: _["name"])
     def test_spectral_model(self, ref):
@@ -350,7 +351,7 @@ class TestFermi3FGLObject:
     def test_str(self, ref):
         actual = str(self.cat[ref["idx"]])
         expected = open(get_pkg_data_filename(ref["str_ref_file"])).read()
-        assert actual == expected
+        assert actual == modify_unit_order_astropy_5_3(expected)
 
     @pytest.mark.parametrize("ref", SOURCES_3FGL, ids=lambda _: _["name"])
     def test_spectral_model(self, ref):
@@ -484,7 +485,7 @@ class TestFermi2FHLObject:
     def test_str(self, ref):
         actual = str(self.cat[ref["idx"]])
         expected = open(get_pkg_data_filename(ref["str_ref_file"])).read()
-        assert actual == expected
+        assert actual == modify_unit_order_astropy_5_3(expected)
 
     def test_spectral_model(self):
         model = self.source.spectral_model()
@@ -568,7 +569,7 @@ class TestFermi3FHLObject:
     def test_str(self):
         actual = str(self.cat["3FHL J2301.9+5855e"])  # an extended source
         expected = open(get_pkg_data_filename("data/3fhl_j2301.9+5855e.txt")).read()
-        assert actual == expected
+        assert actual == modify_unit_order_astropy_5_3(expected)
 
     def test_position(self):
         position = self.source.position
