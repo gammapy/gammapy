@@ -644,10 +644,7 @@ class DatasetsActor(Datasets):
             if update_remote:
                 self._update_remote_models()
             results = ray.get([a.get_attr.remote(attr) for a in self._actors])
-            for res in results:
-                if inspect.ismethod(res):
-                    res = res(**kwargs)  # no longer parallel but works with plots
-            return results
+            return [res(**kwargs) if inspect.ismethod(res) else res for res in results]
 
         return wrapper
 
