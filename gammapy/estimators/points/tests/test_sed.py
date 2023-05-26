@@ -5,7 +5,6 @@ from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.table import Table
-import gammapy.utils.parallel as parallel
 from gammapy.data import Observation
 from gammapy.data.pointing import FixedPointingInfo, PointingMode
 from gammapy.datasets import MapDataset, SpectrumDatasetOnOff
@@ -535,17 +534,13 @@ def test_flux_points_parallel_multiprocessing(fpe_pwl):
     fpe.selection_optional = ["all"]
     fpe.n_jobs = 2
     assert fpe.n_jobs == 2
+
     fp = fpe.run(datasets)
     assert_allclose(
         fp.flux_ul.data,
         [[[2.629819e-12]], [[9.319243e-13]], [[9.004449e-14]]],
         rtol=1e-3,
     )
-
-    fpe.n_jobs = None
-    parallel.N_PROCESSES = 2
-    assert fpe.n_jobs == 2
-    parallel.N_PROCESSES = 1
 
 
 @requires_dependency("ray")

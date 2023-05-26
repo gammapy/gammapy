@@ -144,14 +144,14 @@ def test_compute_ts_map_parallel_ray(input_dataset):
     spectral_model = PowerLawSpectralModel(index=2)
     model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
 
-    parallel.MULTIPROCESSING_BACKEND = "ray"
-    parallel.N_PROCESSES = 2
+    parallel.BACKEND_DEFAULT = "ray"
+    parallel.N_JOBS_DEFAULT = 2
     ts_estimator = TSMapEstimator(model=model, threshold=1, selection_optional=[])
     assert ts_estimator.parallel_backend == "ray"
     assert ts_estimator.n_jobs == 2
 
-    parallel.MULTIPROCESSING_BACKEND = "multiprocessing"
-    parallel.N_PROCESSES = 1
+    parallel.BACKEND_DEFAULT = "multiprocessing"
+    parallel.N_JOBS_DEFAULT = 1
     assert ts_estimator.parallel_backend == "multiprocessing"
     assert ts_estimator.n_jobs == 1
 
@@ -169,8 +169,8 @@ def test_compute_ts_map_parallel_ray(input_dataset):
     assert_allclose(result["npred_excess"].data[0, 99, 99], 1026.874063, rtol=1e-2)
     assert_allclose(result["npred_excess_err"].data[0, 99, 99], 38.470995, rtol=1e-2)
 
-    parallel.MULTIPROCESSING_BACKEND = "multiprocessing"
-    parallel.N_PROCESSES = 1
+    parallel.BACKEND_DEFAULT = "multiprocessing"
+    parallel.N_JOBS_DEFAULT = 1
 
 
 @requires_data()
@@ -180,7 +180,7 @@ def test_compute_ts_map_parallel_multiprocessing(input_dataset):
     spectral_model = PowerLawSpectralModel(index=2)
     model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
 
-    parallel.MULTIPROCESSING_BACKEND = "multiprocessing"
+    parallel.BACKEND_DEFAULT = "multiprocessing"
     ts_estimator = TSMapEstimator(
         model=model, threshold=1, selection_optional=[], n_jobs=4
     )
