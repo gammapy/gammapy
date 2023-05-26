@@ -1,5 +1,4 @@
 import logging
-import numpy as np
 from astropy.coordinates import Angle
 import gammapy.utils.parallel as parallel
 from gammapy.datasets import Datasets, MapDataset, MapDatasetOnOff, SpectrumDataset
@@ -192,12 +191,8 @@ class DatasetsMaker(Maker, parallel.ParallelMixin):
 
         if self.stack_datasets:
             return Datasets([self._dataset])
-        else:
-            # have to sort datasets because of async
-            obs_ids = [d.meta_table["OBS_ID"][0] for d in self._datasets]
-            ordered = []
-            for obs in observations:
-                ind = np.where(np.array(obs_ids) == obs.obs_id)[0][0]
-                ordered.append(self._datasets[ind])
-            self._datasets = ordered
-            return Datasets(self._datasets)
+
+        lookup = {
+            d.meta_table["OBS_ID"][0]: idx for d, idx in enumerate(self._datasets)
+        }
+        return Datasets([self._datasets[lookup[obs.obs_id]] for obs in observations])
