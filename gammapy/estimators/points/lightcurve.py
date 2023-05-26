@@ -67,7 +67,7 @@ class LightCurveEstimator(FluxPointsEstimator):
     fit : `Fit`
         Fit instance specifying the backend and fit options.
     reoptimize : bool
-        Re-optimize other free model parameters. Default is True.
+        Re-optimize other free model parameters. Default is False.
     n_jobs : int
         Number of processes used in parallel for the computation.
         Default is one, unless `~gammapy.utils.parallel.N_PROCESSES` was modified.
