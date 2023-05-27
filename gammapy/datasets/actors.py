@@ -15,7 +15,7 @@ __all__ = ["DatasetsActor", "MapDatasetActor"]
 
 class DatasetsActor(Datasets):
     """A modified Dataset collection for parallel evaluation using ray actors.
-    Fore now only available if composed only of MapDataset.
+    Support only datasets composed of MapDataset.
 
     Parameters
     ----------
@@ -24,30 +24,24 @@ class DatasetsActor(Datasets):
     """
 
     def __init__(self, datasets=None):
-        from .map import MapDataset
-
         if datasets is not None:
             actors = []
             datasets_list = []
             while datasets:
                 d0 = datasets[0]
-                actors.append(MapDatasetActor.remote(d0))
-                datasets_list.append(MapDataset(name=d0.name, models=d0.models))
-                datasets.remove(d0)
+                datasets_list.append(MapDatasetActor(d0))
+                datasets.remove(d0)  # moved to remote so removed from main process
             self._datasets = datasets_list
             self._actors = actors
 
     def insert(self, idx, dataset):
-        from .map import MapDataset, MapDatasetActor
-
         if isinstance(dataset, Dataset):
             if dataset.name in self.names:
                 raise (ValueError("Dataset names must be unique"))
-            self._datasets.insert(
-                idx, MapDataset(name=dataset.name, models=dataset.models)
+            self._datasets.insert(idx, MapDatasetActor(dataset))
+            self._actors.insert(
+                idx,
             )
-
-            self._actors.insert(idx, MapDatasetActor.remote(dataset))
         else:
             raise TypeError(f"Invalid type: {type(dataset)!r}")
 
@@ -57,29 +51,57 @@ class DatasetsActor(Datasets):
         def wrapper(update_remote=False, **kwargs):
             if update_remote:
                 self._update_remote_models()
-            results = ray.get([a.get_attr.remote(attr) for a in self._actors])
+            results = ray.get([d.actor.get_attr.remote(attr) for d in self._datasets])
             return [res(**kwargs) if inspect.ismethod(res) else res for res in results]
 
         return wrapper
 
     def _update_remote_models(self):
         args = [list(d.models) for d in self._datasets]
-        ray.get([a.set_models.remote(arg) for a, arg in zip(self._actors, args)])
+        ray.get(
+            [d.actor.set_models.remote(arg) for d, arg in zip(self._datasets, args)]
+        )
 
     def stat_sum(self):
         """Compute joint likelihood"""
         args = [d.models.parameters.get_parameter_values() for d in self._datasets]
-        ray.get(
-            [a.set_parameter_values.remote(arg) for a, arg in zip(self._actors, args)]
+        results = ray.get(
+            [
+                d.actor._update_stat_sum.remote(arg)
+                for d, arg in zip(self._datasets, args)
+            ]
         )
-        # blocked until set_parameters_factors on actors complete
-        res = ray.get([a.stat_sum.remote() for a in self._actors])
-        return np.sum(res)
+        return np.sum(results)
+
+
+class MapDatasetActor(MapDataset):
+    """MapDataset for parallel evaluation as a ray actor.
+
+    Parameters
+    ----------
+    dataset : `MapDataset`
+        MapDataset
+    """
+
+    def __init__(self, dataset):
+        empty = MapDataset(name=dataset.name, models=dataset.models)
+        self.__dict__.update(empty.__dict__)
+        self.actor = _MapDatasetActorBackend.remote(dataset)
+
+    def _update_remote_models(self):
+        ray.get(self.actor.set_models.remote(self.models))
+
+    def get(self, attr, update_remote=False, **kwargs):
+        """get attribute from remote dataset"""
+        if update_remote:
+            self._update_remote_models()
+        result = ray.get(self.actor.get_attr.remote(attr))
+        return result(**kwargs) if inspect.ismethod(result) else result
 
 
 @ray.remote
-class MapDatasetActor(MapDataset):
-    """A modified MapDataset for parallel evaluation as a ray actor.
+class _MapDatasetActorBackend(MapDataset):
+    """MapDataset backend for parallel evaluation as a ray actor.
 
     Parameters
     ----------
@@ -92,14 +114,12 @@ class MapDatasetActor(MapDataset):
         if self.models is None:
             self.models = DatasetModels()
 
-    def set_parameter_values(self, values):
+    def _update_stat_sum(self, values):
         self.models.parameters.set_parameter_values(values)
-
-    def get_models(self):
-        return list(self.models)
-
-    def set_models(self, models):
-        self.models = models
+        return self.stat_sum()
 
     def get_attr(self, attr):
         return getattr(self, attr)
+
+    def set_models(self, models):
+        self.models = models
