@@ -2,7 +2,6 @@
 import inspect
 import logging
 import numpy as np
-import ray
 from gammapy.modeling.models import DatasetModels
 from .core import Dataset, Datasets
 from .map import MapDataset
@@ -24,6 +23,8 @@ class DatasetsActor(Datasets):
     """
 
     def __init__(self, datasets=None):
+        from ray import get
+
         if datasets is not None:
             actors = []
             datasets_list = []
@@ -33,6 +34,7 @@ class DatasetsActor(Datasets):
                 datasets.remove(d0)  # moved to remote so removed from main process
             self._datasets = datasets_list
             self._actors = actors
+            self._ray_get = get
 
     def insert(self, idx, dataset):
         if isinstance(dataset, Dataset):
@@ -51,21 +53,23 @@ class DatasetsActor(Datasets):
         def wrapper(update_remote=False, **kwargs):
             if update_remote:
                 self._update_remote_models()
-            results = ray.get([d.actor.get_attr.remote(attr) for d in self._datasets])
+            results = self._ray_get(
+                [d.actor.get_attr.remote(attr) for d in self._datasets]
+            )
             return [res(**kwargs) if inspect.ismethod(res) else res for res in results]
 
         return wrapper
 
     def _update_remote_models(self):
         args = [list(d.models) for d in self._datasets]
-        ray.get(
+        self._ray_get(
             [d.actor.set_models.remote(arg) for d, arg in zip(self._datasets, args)]
         )
 
     def stat_sum(self):
         """Compute joint likelihood"""
         args = [d.models.parameters.get_parameter_values() for d in self._datasets]
-        results = ray.get(
+        results = self._ray_get(
             [
                 d.actor._update_stat_sum.remote(arg)
                 for d, arg in zip(self._datasets, args)
@@ -84,20 +88,21 @@ class MapDatasetActor(MapDataset):
     """
 
     def __init__(self, dataset):
-        from ray import remote
+        from ray import get, remote
 
         empty = MapDataset(name=dataset.name, models=dataset.models)
         self.__dict__.update(empty.__dict__)
         self.actor = remote(_MapDatasetActorBackend).remote(dataset)
+        self._ray_get = get
 
     def _update_remote_models(self):
-        ray.get(self.actor.set_models.remote(self.models))
+        self._ray_get(self.actor.set_models.remote(self.models))
 
     def get(self, attr, update_remote=False, **kwargs):
         """get attribute from remote dataset"""
         if update_remote:
             self._update_remote_models()
-        result = ray.get(self.actor.get_attr.remote(attr))
+        result = self._ray_get(self.actor.get_attr.remote(attr))
         return result(**kwargs) if inspect.ismethod(result) else result
 
 
