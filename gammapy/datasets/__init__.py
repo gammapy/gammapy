@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from gammapy.utils.registry import Registry
+from .actors import DatasetsActor, MapDatasetActor
 from .core import Dataset, Datasets
 from .flux_points import FluxPointsDataset
 from .io import OGIPDatasetReader, OGIPDatasetWriter
@@ -24,6 +25,8 @@ __all__ = [
     "Dataset",
     "DATASET_REGISTRY",
     "Datasets",
+    "DatasetsActor",
+    "MapDatasetActor",
     "FluxPointsDataset",
     "MapDataset",
     "MapDatasetEventSampler",
@@ -33,12 +36,3 @@ __all__ = [
     "SpectrumDataset",
     "SpectrumDatasetOnOff",
 ]
-
-
-try:
-    from .actors import DatasetsActor, MapDatasetActor
-
-    __all__.extend(["MapDatasetActor", "DatasetsActor"])
-
-except ModuleNotFoundError:
-    pass

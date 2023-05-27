@@ -84,9 +84,11 @@ class MapDatasetActor(MapDataset):
     """
 
     def __init__(self, dataset):
+        from ray import remote
+
         empty = MapDataset(name=dataset.name, models=dataset.models)
         self.__dict__.update(empty.__dict__)
-        self.actor = _MapDatasetActorBackend.remote(dataset)
+        self.actor = remote(_MapDatasetActorBackend).remote(dataset)
 
     def _update_remote_models(self):
         ray.get(self.actor.set_models.remote(self.models))
@@ -99,7 +101,6 @@ class MapDatasetActor(MapDataset):
         return result(**kwargs) if inspect.ismethod(result) else result
 
 
-@ray.remote
 class _MapDatasetActorBackend(MapDataset):
     """MapDataset backend for parallel evaluation as a ray actor.
 
