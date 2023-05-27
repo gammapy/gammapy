@@ -10,7 +10,7 @@ from astropy.table import Table
 from regions import CircleSkyRegion
 from gammapy.catalog import SourceCatalog3FHL
 from gammapy.data import GTI
-from gammapy.datasets import Datasets, DatasetsActor, MapDataset, MapDatasetOnOff
+from gammapy.datasets import Datasets, MapDataset, MapDatasetOnOff
 from gammapy.datasets.map import RAD_AXIS_DEFAULT
 from gammapy.irf import (
     EDispKernelMap,
@@ -735,6 +735,8 @@ def test_prior_stat_sum(sky_model, geom, geom_etrue):
 @requires_data()
 @requires_dependency("ray")
 def test_map_fit_ray(sky_model, geom, geom_etrue):
+    from gammapy.datasets import DatasetsActor
+
     dataset_1 = get_map_dataset(geom, geom_etrue, name="test-1")
     dataset_2 = get_map_dataset(geom, geom_etrue, name="test-2")
     datasets = Datasets([dataset_1, dataset_2])

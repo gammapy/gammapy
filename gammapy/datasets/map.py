@@ -6,7 +6,6 @@ from astropy.io import fits
 from astropy.table import Table
 from regions import CircleSkyRegion
 import matplotlib.pyplot as plt
-import ray
 from gammapy.data import GTI
 from gammapy.irf import EDispKernelMap, EDispMap, PSFKernel, PSFMap, RecoPSFMap
 from gammapy.maps import LabelMapAxis, Map, MapAxis
@@ -29,7 +28,6 @@ from .utils import get_axes
 
 __all__ = [
     "MapDataset",
-    "MapDatasetActor",
     "MapDatasetOnOff",
     "create_map_dataset_geoms",
 ]
@@ -1997,28 +1995,6 @@ class MapDataset(Dataset):
         self.background.sum_over_axes().plot(ax=axes[3], add_cbar=True)
         plot_mask(ax=axes[3], mask=self.mask_fit_image, alpha=0.2)
         plot_mask(ax=axes[3], mask=self.mask_safe_image, hatches=["///"], colors="w")
-
-
-@ray.remote
-class MapDatasetActor(MapDataset):
-    "A modified map MapDataset for parallel evaluation with ray"
-
-    def __init__(self, dataset):
-        self.__dict__.update(dataset.__dict__)
-        if self.models is None:
-            self.models = DatasetModels()
-
-    def set_parameter_values(self, values):
-        self.models.parameters.set_parameter_values(values)
-
-    def get_models(self):
-        return list(self.models)
-
-    def set_models(self, models):
-        self.models = models
-
-    def get_attr(self, attr):
-        return getattr(self, attr)
 
 
 class MapDatasetOnOff(MapDataset):
