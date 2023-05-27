@@ -4,7 +4,6 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import Angle
-import gammapy.utils.parallel as parallel
 from gammapy.datasets import MapDataset, MapDatasetOnOff
 from gammapy.estimators import TSMapEstimator
 from gammapy.irf import EDispKernelMap, PSFMap
@@ -144,19 +143,13 @@ def test_compute_ts_map_parallel_ray(input_dataset):
     spectral_model = PowerLawSpectralModel(index=2)
     model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
 
-    parallel.BACKEND_DEFAULT = "ray"
-    parallel.N_JOBS_DEFAULT = 2
-    ts_estimator = TSMapEstimator(model=model, threshold=1, selection_optional=[])
-    assert ts_estimator.parallel_backend == "ray"
-    assert ts_estimator.n_jobs == 2
-
-    parallel.BACKEND_DEFAULT = "multiprocessing"
-    parallel.N_JOBS_DEFAULT = 1
-    assert ts_estimator.parallel_backend == "multiprocessing"
-    assert ts_estimator.n_jobs == 1
-
-    ts_estimator.parallel_backend = "ray"
-    ts_estimator.n_jobs = 2
+    ts_estimator = TSMapEstimator(
+        model=model,
+        threshold=1,
+        selection_optional=[],
+        parallel_backend="ray",
+        n_jobs=2,
+    )
     assert ts_estimator.parallel_backend == "ray"
     assert ts_estimator.n_jobs == 2
 
@@ -169,9 +162,6 @@ def test_compute_ts_map_parallel_ray(input_dataset):
     assert_allclose(result["npred_excess"].data[0, 99, 99], 1026.874063, rtol=1e-2)
     assert_allclose(result["npred_excess_err"].data[0, 99, 99], 38.470995, rtol=1e-2)
 
-    parallel.BACKEND_DEFAULT = "multiprocessing"
-    parallel.N_JOBS_DEFAULT = 1
-
 
 @requires_data()
 def test_compute_ts_map_parallel_multiprocessing(input_dataset):
@@ -180,15 +170,17 @@ def test_compute_ts_map_parallel_multiprocessing(input_dataset):
     spectral_model = PowerLawSpectralModel(index=2)
     model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
 
-    parallel.BACKEND_DEFAULT = "multiprocessing"
     ts_estimator = TSMapEstimator(
-        model=model, threshold=1, selection_optional=[], n_jobs=4
+        model=model,
+        threshold=1,
+        selection_optional=[],
+        n_jobs=3,
+        parallel_backend="multiprocessing",
     )
-    assert ts_estimator.n_jobs == 4
-    ts_estimator.n_jobs = 3
-    assert ts_estimator.n_jobs == 3
 
     result = ts_estimator.run(input_dataset)
+
+    assert ts_estimator.n_jobs == 3
     assert_allclose(result["ts"].data[0, 99, 99], 1704.23, rtol=1e-2)
     assert_allclose(result["niter"].data[0, 99, 99], 7)
     assert_allclose(result["flux"].data[0, 99, 99], 1.02e-09, rtol=1e-2)
