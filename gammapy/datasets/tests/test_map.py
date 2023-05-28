@@ -761,7 +761,7 @@ def test_map_fit_ray(sky_model, geom, geom_etrue):
     assert result.success
     assert "minuit" in repr(result)
 
-    npred = actors.npred()[0].data.sum()
+    npred = actors.npred[0].data.sum()
     assert_allclose(npred, 7525.790688, rtol=1e-3)
     assert_allclose(result.total_stat, 21625.845714, rtol=1e-3)
 
@@ -784,8 +784,7 @@ def test_map_fit_ray(sky_model, geom, geom_etrue):
     assert_allclose(pars[11].error, 0.02147, rtol=1e-2)
 
     with mpl_plot_check():
-        actors.plot_residuals(update_remote=False)
-        actors.plot_residuals(update_remote=True)
+        actors.plot_residuals()
 
 
 @requires_data()
