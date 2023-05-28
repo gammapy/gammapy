@@ -164,12 +164,9 @@ class Fit:
         fit_result : `FitResult`
             Fit result.
         """
-        from gammapy.datasets import DatasetsActor
 
         optimize_result = self.optimize(datasets=datasets)
 
-        if isinstance(datasets, DatasetsActor):
-            datasets._update_remote_models()
         if self.backend not in registry.register["covariance"]:
             log.warning("No covariance estimate - not supported by this backend.")
             return FitResult(optimize_result=optimize_result)

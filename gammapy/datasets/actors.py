@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import copy
 import inspect
 import logging
 import numpy as np
@@ -47,38 +48,79 @@ class DatasetsActor(Datasets):
         else:
             raise TypeError(f"Invalid type: {type(dataset)!r}")
 
-    def __getattr__(self, attr):
+    def __getattr__(self, name):
         """get attribute from remote each dataset"""
 
-        def wrapper(update_remote=False, **kwargs):
-            if update_remote:
-                self._update_remote_models()
+        def wrapper(**kwargs):
             results = self._ray_get(
-                [d.actor.get_attr.remote(attr) for d in self._datasets]
+                [d._get_remote(name, **kwargs) for d in self._datasets]
             )
-            return [res(**kwargs) if inspect.ismethod(res) else res for res in results]
+            if "plot" in name:
+                results = [res(**kwargs) for res in results]
+            for d in self._datasets:
+                d._to_update = {}
+            return results
 
-        return wrapper
-
-    def _update_remote_models(self):
-        args = [list(d.models) for d in self._datasets]
-        self._ray_get(
-            [d.actor.set_models.remote(arg) for d, arg in zip(self._datasets, args)]
-        )
+        if inspect.ismethod(getattr(self._datasets[0], name)):
+            return wrapper
+        else:
+            return wrapper()
 
     def stat_sum(self):
         """Compute joint likelihood"""
-        args = [d.models.parameters.get_parameter_values() for d in self._datasets]
-        results = self._ray_get(
-            [
-                d.actor._update_stat_sum.remote(arg)
-                for d, arg in zip(self._datasets, args)
-            ]
-        )
+        results = self._ray_get([d._update_stat_sum() for d in self._datasets])
         return np.sum(results)
 
 
-class MapDatasetActor(MapDataset):
+class RayFrontendMixin(object):
+    """Ray mixin for a local class that interact with a remote instance"""
+
+    # TODO: abstract class ?
+
+    @property
+    def _remote_attr(self):
+        return [
+            key
+            for key in self._public_attr
+            if key not in self._mutable_attr + self._local_attr
+        ]
+
+    def __getattr__(self, name, **kwargs):
+        """get attribute from remote"""
+        if name in self._remote_attr:
+            results = self._ray_get(self._get_remote(name, **kwargs))
+            self._to_update = {}
+            return results
+        else:
+            return super().__getattr__(name)
+
+    def __setattr__(self, name, value):
+        if name in self._remote_attr:
+            raise AttributeError("can't set attribute")
+        else:
+            super().__setattr__(name, value)
+            if name in self._mutable_attr:
+                self._to_update[name] = value
+                self._cache[name] = copy.deepcopy(value)
+
+    def _get_remote(self, attr, **kwargs):
+        return self._actor._get.remote(attr, self._to_update, **kwargs)
+
+
+class RayBackendMixin:
+    """Ray mixin for the remote class"""
+
+    def _get(self, name, to_update={}, **kwargs):
+        for key, value in to_update.items():
+            setattr(self, key, value)
+        res = getattr(self, name)
+        if inspect.ismethod(res) and "plot" not in name:
+            return res(**kwargs)
+        else:
+            return res
+
+
+class MapDatasetActor(RayFrontendMixin):
     """MapDataset for parallel evaluation as a ray actor.
 
     Parameters
@@ -87,26 +129,45 @@ class MapDatasetActor(MapDataset):
         MapDataset
     """
 
+    _mutable_attr = ["models", "mask_fit"]
+    _local_attr = ["name"]  # immutable small enough to keep and acces locally
+    _public_attr = [key for key in dir(MapDataset) if not key.startswith("_")]
+
     def __init__(self, dataset):
         from ray import get, remote
 
-        empty = MapDataset(name=dataset.name, models=dataset.models)
-        self.__dict__.update(empty.__dict__)
-        self.actor = remote(_MapDatasetActorBackend).remote(dataset)
         self._ray_get = get
+        self._actor = remote(_MapDatasetActorBackend).remote(dataset)
+        self._name = dataset.name
+        self._to_update = {}
+        self._cache = {}
+        if dataset.models is None:
+            self.models = DatasetModels()
+        else:
+            self.models = dataset.models
+        self.mask_fit = dataset.mask_fit
+        self._to_update = {}  # models and mask_fit are already ok from actor init
 
-    def _update_remote_models(self):
-        self._ray_get(self.actor.set_models.remote(self.models))
+    @property
+    def name(self):
+        return self._name
 
-    def get(self, attr, update_remote=False, **kwargs):
-        """get attribute from remote dataset"""
-        if update_remote:
-            self._update_remote_models()
-        result = self._ray_get(self.actor.get_attr.remote(attr))
-        return result(**kwargs) if inspect.ismethod(result) else result
+    def _update_stat_sum(self):
+        values = self.models.parameters.get_parameter_values()
+        output = self._actor._update_stat_sum.remote(values, self._to_update)
+        self._to_update = {}
+        return output
+
+    def _get_remote(self, attr, **kwargs):
+        if ~np.all(
+            self.models.parameters.value == self._cache["models"].parameters.value
+        ):
+            self._to_update["models"] = self.models
+            self._cache["models"] = self.models.copy()
+        return self._actor._get.remote(attr, self._to_update, **kwargs)
 
 
-class _MapDatasetActorBackend(MapDataset):
+class _MapDatasetActorBackend(MapDataset, RayBackendMixin):
     """MapDataset backend for parallel evaluation as a ray actor.
 
     Parameters
@@ -120,12 +181,8 @@ class _MapDatasetActorBackend(MapDataset):
         if self.models is None:
             self.models = DatasetModels()
 
-    def _update_stat_sum(self, values):
+    def _update_stat_sum(self, values, to_update={}):
+        for key, value in to_update.items():
+            setattr(self, key, value)
         self.models.parameters.set_parameter_values(values)
         return self.stat_sum()
-
-    def get_attr(self, attr):
-        return getattr(self, attr)
-
-    def set_models(self, models):
-        self.models = models
