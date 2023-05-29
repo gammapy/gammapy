@@ -22,6 +22,7 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
 )
+from gammapy.utils import parallel
 from gammapy.utils.testing import requires_data, requires_dependency
 
 
@@ -541,6 +542,25 @@ def test_flux_points_parallel_multiprocessing(fpe_pwl):
         [[[2.629819e-12]], [[9.319243e-13]], [[9.004449e-14]]],
         rtol=1e-3,
     )
+
+
+def test_global_n_jobs_default_handling():
+    fpe = FluxPointsEstimator(energy_edges=[1, 3, 10] * u.TeV)
+
+    assert fpe.n_jobs == 1
+
+    parallel.N_JOBS_DEFAULT = 2
+    assert fpe.n_jobs == 2
+
+    fpe.n_jobs = 5
+    assert fpe.n_jobs == 5
+
+    fpe.n_jobs = None
+    assert fpe.n_jobs == 2
+    assert fpe._n_jobs is None
+
+    parallel.N_JOBS_DEFAULT = 1
+    assert fpe.n_jobs == 1
 
 
 @requires_dependency("ray")

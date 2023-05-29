@@ -83,6 +83,11 @@ class ParallelMixin:
     @n_jobs.setter
     def n_jobs(self, value):
         """Number of jobs setter (int)"""
+        if not isinstance(value, (int, type(None))):
+            raise ValueError(
+                f"Invalid type: {value!r}, and integer or None is expected."
+            )
+
         self._n_jobs = value
 
     @property
