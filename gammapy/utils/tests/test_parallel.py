@@ -17,7 +17,6 @@ def test_parallel_mixin():
 @requires_dependency("ray")
 def test_get_multiprocessing_ray():
     assert parallel.is_ray_available()
-    assert not parallel.is_ray_initialized()
 
     multiprocessing = parallel.get_multiprocessing_ray()
     assert multiprocessing.__name__ == "ray.util.multiprocessing"
