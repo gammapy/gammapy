@@ -74,19 +74,23 @@ class ParallelMixin:
     @property
     def n_jobs(self):
         """Number of jobs (int)"""
+        # TODO: this is somewhat unusual behaviour. It deviates from a normal default value handling
+        if self._n_jobs is None:
+            return N_JOBS_DEFAULT
+
         return self._n_jobs
 
     @n_jobs.setter
     def n_jobs(self, value):
         """Number of jobs setter (int)"""
-        if value is None:
-            value = N_JOBS_DEFAULT
-
-        self._n_jobs = int(value)
+        self._n_jobs = value
 
     @property
     def parallel_backend(self):
         """Parallel backend (str)"""
+        if self._parallel_backend is None:
+            return BACKEND_DEFAULT
+
         return self._parallel_backend
 
     @parallel_backend.setter
@@ -98,7 +102,7 @@ class ParallelMixin:
 def run_multiprocessing(
     func,
     inputs,
-    backend=BACKEND_DEFAULT,
+    backend=None,
     pool_kwargs=None,
     method="starmap",
     method_kwargs=None,
@@ -115,7 +119,8 @@ def run_multiprocessing(
     backend : {'multiprocessing', 'ray'}
         Backend to use.
     pool_kwargs : dict
-        Keyword arguments passed to the pool
+        Keyword arguments passed to the pool. The number of processes is limited
+        to the number of physical CPUs.
     method : {'starmap', 'apply_async'}
         Pool method to use.
     method_kwargs : dict
@@ -131,11 +136,12 @@ def run_multiprocessing(
     if pool_kwargs is None:
         pool_kwargs = {}
 
-    processes = pool_kwargs.get("processes", N_JOBS_DEFAULT)
+    processes = pool_kwargs.get("processes", None)
 
     multiprocessing = PARALLEL_BACKEND_MODULES[backend]
 
     if backend == ParallelBackendEnum.multiprocessing:
+        processes = min(processes, multiprocessing.cpu_count())
         if multiprocessing.current_process().name != "MainProcess":
             # subprocesses cannot have childs
             processes = 1
