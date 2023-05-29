@@ -1095,6 +1095,8 @@ class TemplateSpatialModel(SpatialModel):
     copy_data : bool
         Create a deepcopy of the map data or directly use the original. True by
         default, can be turned to False to save memory in case of large maps.
+    **kwargs : dict
+        Keyword arguments forwarded to `SpatialModel.__init__`.
     """
 
     tag = ["TemplateSpatialModel", "template"]
@@ -1107,7 +1109,7 @@ class TemplateSpatialModel(SpatialModel):
         interp_kwargs=None,
         filename=None,
         copy_data=True,
-        covariance_data=None,
+        **kwargs,
     ):
         if (map.data < 0).any():
             log.warning("Map has negative values. Check and fix this!")
@@ -1147,7 +1149,7 @@ class TemplateSpatialModel(SpatialModel):
 
         self._interp_kwargs = interp_kwargs
         self.filename = filename
-        super().__init__(covariance_data=covariance_data)
+        super().__init__(**kwargs)
 
     def copy(self, copy_data=False, **kwargs):
         """Copy model
@@ -1169,7 +1171,6 @@ class TemplateSpatialModel(SpatialModel):
         kwargs.setdefault("normalize", self.normalize)
         kwargs.setdefault("interp_kwargs", self._interp_kwargs)
         kwargs.setdefault("filename", self.filename)
-        kwargs.setdefault("covariance_data", self.covariance.data.copy())
         return self.__class__(copy_data=copy_data, **kwargs)
 
     @property
@@ -1309,7 +1310,6 @@ class PiecewiseNormSpatialModel(SpatialModel):
     tag = ["PiecewiseNormSpatialModel", "piecewise-norm"]
 
     def __init__(self, coords, norms=None, interp="lin", **kwargs):
-
         self._coords = coords
         self._interp = interp
 

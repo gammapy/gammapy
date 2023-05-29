@@ -103,7 +103,10 @@ class TestSourceCatalogObjectHGPS:
     @pytest.mark.parametrize("ref", SOURCES)
     def test_str(cat, ref):
         actual = str(cat[ref["idx"]])
-        expected = open(get_pkg_data_filename(ref["str_ref_file"])).read()
+
+        with open(get_pkg_data_filename(ref["str_ref_file"])) as fh:
+            expected = fh.read()
+
         assert actual == modify_unit_order_astropy_5_3(expected)
 
     @staticmethod
