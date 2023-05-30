@@ -44,10 +44,10 @@ def compute_fvar(flux, flux_err):
        https://ui.adsabs.harvard.edu/abs/2003MNRAS.345.1271V
     """
 
-    flux_mean = np.mean(flux)
+    flux_mean = np.nanmean(flux)
     n_points = len(flux)
 
-    s_square = np.sum((flux - flux_mean) ** 2) / (n_points - 1)
+    s_square = np.nansum((flux - flux_mean) ** 2) / (n_points - 1)
     sig_square = np.nansum(flux_err**2) / n_points
     fvar = np.sqrt(np.abs(s_square - sig_square)) / flux_mean
 
