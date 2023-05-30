@@ -92,8 +92,11 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         Whether to sum over the energy groups or fit the norm on the full energy
         cube.
     n_jobs : int
-        Number of processes used in parallel for the computation.
-        Default is one, unless `~gammapy.utils.parallel.N_PROCESSES` was modified.
+        Number of processes used in parallel for the computation. Default is one,
+        unless `~gammapy.utils.parallel.N_JOBS_DEFAULT` was modified. The number
+        of jobs limited to the number of physical CPUs.
+    parallel_backend : {"multiprocessing", "ray"}
+        Which backend to use for multiprocessing. Defaults to `~gammapy.utils.parallel.BACKEND_DEFAULT`.
 
     Notes
     -----
@@ -178,7 +181,6 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         self.n_sigma_ul = n_sigma_ul
         self.threshold = threshold
         self.rtol = rtol
-
         self.n_jobs = n_jobs
         self.parallel_backend = parallel_backend
         self.sum_over_energy_groups = sum_over_energy_groups
