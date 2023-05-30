@@ -246,26 +246,36 @@ def compute_lightcurve_fvar(lightcurve, quantity="flux"):
 
     Returns
     -------
-    fvar, fvar_err : `~numpy.ndarray`
-        Fractional excess variance.
+    fvar : `~numpy.ndarray`
+        Array of fractional excess variance and associated error for each energy bin of the lightcurve.
     """
 
     if quantity == "flux":
-        flux = lightcurve.flux.data.flatten()
-        flux_err = lightcurve.flux_err.data.flatten()
+        flux = lightcurve.flux.data.T.reshape(-1, *lightcurve.flux.data.shape[:-3])
+        flux_err = lightcurve.flux_err.data.T.reshape(
+            -1, *lightcurve.flux_err.data.shape[:-3]
+        )
     elif quantity == "norm":
-        flux = lightcurve.norm.data.flatten()
-        flux_err = lightcurve.norm_err.data.flatten()
+        flux = lightcurve.norm.data.T.reshape(-1, *lightcurve.norm.data.shape[:-3])
+        flux_err = lightcurve.norm_err.data.T.reshape(
+            -1, *lightcurve.norm_err.data.shape[:-3]
+        )
     elif quantity == "dnde":
-        flux = lightcurve.dnde.data.flatten()
-        flux_err = lightcurve.dnde_err.data.flatten()
+        flux = lightcurve.dnde.data.T.reshape(-1, *lightcurve.dnde.data.shape[:-3])
+        flux_err = lightcurve.dnde_err.data.T.reshape(
+            -1, *lightcurve.dnde_err.data.shape[:-3]
+        )
     elif quantity == "e2dnde":
-        flux = lightcurve.e2dnde.data.flatten()
-        flux_err = lightcurve.e2dnde_err.data.flatten()
+        flux = lightcurve.e2dnde.data.T.reshape(-1, *lightcurve.e2dnde.data.shape[:-3])
+        flux_err = lightcurve.e2dnde_err.data.T.reshape(
+            -1, *lightcurve.e2dnde_err.data.shape[:-3]
+        )
     else:
         raise ValueError(
             "The chosen value for the quantity keyword is not supported by this function. "
             "Supported quantities: flux, norm, dnde, e2dnde"
         )
 
-    return compute_fvar(flux, flux_err)
+    return np.asarray(
+        [compute_fvar(fflux, fflux_err) for fflux, fflux_err in zip(flux, flux_err)]
+    )
