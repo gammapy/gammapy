@@ -12,11 +12,13 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
 )
+from .map.core import FluxMaps
 
 __all__ = [
     "estimate_exposure_reco_energy",
     "find_peaks",
     "resample_energy_edges",
+    "find_peaks_in_flux_map",
 ]
 
 
@@ -111,6 +113,99 @@ def find_peaks(image, threshold, min_distance=1):
     table["value"].format = ".5g"
 
     table.sort("value")
+    table.reverse()
+
+    return table
+
+
+def find_peaks_in_flux_map(maps, threshold, min_distance=1):
+    """Find local TS peaks for a given Map.
+
+    Simple peak finder, that finds local TS maximums using a sliding window
+    in a given map, above a given ``threshold`` within a given ``min_distance``
+    around each given pixel.
+
+    Parameters
+    ----------
+    maps : `~gammapy.estimators.map.FluxMaps`
+    threshold : float or array-like
+        The data value or pixel-wise data values to be used for the
+        detection threshold.  A 2D ``threshold`` must have the same
+        shape as the map ``data``.
+    min_distance : int or `~astropy.units.Quantity`
+        Minimum distance between peaks. An integer value is interpreted
+        as pixels.
+
+    Returns
+    -------
+    output : `~astropy.table.Table`
+        Table with parameters of detected peaks
+    """
+
+    image = maps["sqrt_ts"]
+
+    if not isinstance(maps, FluxMaps):
+        raise TypeError("find_peaks_in_flux_map only supports FluxMaps")
+
+    if not image.geom.is_flat:
+        raise ValueError(
+            "find_peaks_in_flux_map only supports flat Maps, with no spatial axes of length 1."
+        )
+
+    if isinstance(min_distance, (str, u.Quantity)):
+        min_distance = np.mean(u.Quantity(min_distance) / image.geom.pixel_scales)
+        min_distance = np.round(min_distance).to_value("")
+
+    size = 2 * min_distance + 1
+
+    # Remove non-finite values to avoid warnings or spurious detection
+    data = image.sum_over_axes(keepdims=False).data
+    data[~np.isfinite(data)] = np.nanmin(data)
+
+    # Handle edge case of constant data; treat as no peak
+    if np.all(data == data.flat[0]):
+        return Table()
+
+    # Run peak finder
+    data_max = scipy.ndimage.maximum_filter(data, size=size, mode="constant")
+    mask = (data == data_max) & (data > threshold)
+    y, x = mask.nonzero()
+    sqrt_ts_values = data[y, x]
+    coord = SkyCoord.from_pixel(x, y, wcs=image.geom.wcs).icrs
+
+    # Make and return results table
+    if len(sqrt_ts_values) == 0:
+        return Table()
+
+    npred_excess_data = maps["npred_excess"].data
+    npred_excess_peaks = npred_excess_data[0, y, x]
+    npred_excess_err = maps["npred_excess_err"].data
+    npred_excess_err_peaks = npred_excess_err[0, y, x]
+    flux_data = maps["flux"].data
+    flux_peaks = flux_data[0, y, x]
+    flux_err_data = maps["flux_err"].data
+    flux_err_peaks = flux_err_data[0, y, x]
+
+    table = Table()
+    table["x"] = x
+    table["y"] = y
+    table["ra"] = coord.ra
+    table["dec"] = coord.dec
+    table["sqrt_ts"] = sqrt_ts_values * image.unit
+    table["flux"] = flux_peaks * maps["flux"].unit
+    table["flux_err"] = flux_err_peaks * maps["flux_err"].unit
+    table["npred_excess"] = npred_excess_peaks * maps["npred_excess"].unit
+    table["npred_excess_err"] = npred_excess_err_peaks * maps["npred_excess_err"].unit
+
+    table["ra"].format = ".5f"
+    table["dec"].format = ".5f"
+    table["sqrt_ts"].format = ".5g"
+    table["flux"].format = ".5e"
+    table["flux_err"].format = ".5e"
+    table["npred_excess"].format = ".5g"
+    table["npred_excess_err"].format = ".5g"
+
+    table.sort("sqrt_ts")
     table.reverse()
 
     return table
