@@ -12,6 +12,7 @@ from gammapy.estimators.utils import (
     resample_energy_edges,
 )
 from gammapy.maps import Map, MapAxis
+from gammapy.utils.testing import requires_data
 
 
 class TestFindPeaks:
@@ -77,6 +78,7 @@ class TestFindPeaks:
 class TestFindFluxPeaks:
     """Tests for find_peaks_in_flux_map"""
 
+    @requires_data()
     def test_find_peaks_in_flux_map(self):
         """Test a simple example"""
         dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
@@ -89,6 +91,7 @@ class TestFindFluxPeaks:
         assert table["ra"].unit == "deg"
         assert table["dec"].unit == "deg"
 
+    @requires_data()
     def test_no_peak(self):
         dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
         position = SkyCoord(1.2, 1, frame="galactic", unit="deg")
