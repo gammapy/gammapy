@@ -25,8 +25,8 @@ init. The backend used by default is the python multiprocessing. This interface 
 by the `DatasetsMaker` that performs the data reduction loop.
 
 A first step in the separation of the internal data model and the GADF format is introduced
-in this release in the handling of the pointing. This is part of a larger that will be
-implemented in the coming feature releases to allow I/O with multiple data formats.
+in this release in the handling of the pointing and the GTI. This is part of a larger project
+that will be implemented in the coming feature releases to allow I/O with multiple data formats.
 
 New features
 ~~~~~~~~~~~~
@@ -50,12 +50,23 @@ New features
 
 *gammapy.modeling*
 
-- A new method has been added on `SpectralModel.spectral_index_error()` to compute
+- The `~gammapy.modeling.models.LightCurveTemplateTemporalModel` now supports energy dependent
+  light curve templates. These models are now created from a `Map` object with a `time` axis
+  and optionally with an `energy_true` axis. They can be read from an `~astropy.table.Table`
+  (only regular light curve models) or from a serialized `Map`. For now, the energy dependent
+  models cannot be used for analysis.
+- A new function `~gammapy.modeling.select_nested_models` has been introduced to perform
+  nested model fits and compute the resulting test statistic (TS) between two nested hypotheses.
+  It can be used to determine whether the addition of a source to the model is significant or
+  to test for specific features in a model (e.g. test the existence of a spectral cutoff).
+ - A new method has been added on `SpectralModel.spectral_index_error()` to compute
   the spectral index at a given energy as well as its error by error propagation of
   the covariance matrix elements.
 - The Franceschini (2018) and Saldana-Lopez (2021) EBL are now part of the built-ins
   EBL models.
-- A spatial correction model can now be added to `FoVBackgroundModel`.
+- A spatial correction model can now be added to the `~gammapy.modeling.models.FoVBackgroundModel`.
+  It can be used with a new spatial model, the `~gammapy.modeling.models.PiecewiseNormSpatialModel`.
+
 
 *gammapy.estimators*
 
@@ -92,11 +103,15 @@ API changes
   object. `GTI.table` no longer contains a GADF formatted table with columns representing
   start and stop time as METs (Mission Elpased Time). All methods should behave equivalently
   with the same interface.
--
 
 *gammapy.irf*
 - `~gammapy.irf.load_cta_irfs` is now deprecated. Use instead the more general
   `~gammapy.irf.load_irf_dict_from_file`
+
+*gammapy.modeling*
+
+- The `FitResult.iminuit` attribute is now deprecated. It should be accessed from `optimize_result`
+  property instead, via: `FitResult.optimize_result.iminuit`.
 
 *gammapy.utils*
 
@@ -106,13 +121,17 @@ API changes
 Bug fixes and improvements
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+- The `Map.fill_events()` method now supports adding weights to the input events.
+- The output of the `FitResult` has been clarified in some failure cases.
+- The energy dependent RADMAX cut is now supported by the `~gammapy.makers.PhaseBackgroundMaker`.
 - A `scale` attribute was added to `TemporalModel` classes. It is used to treat the `t_ref`
   parameter in a consistent manner via a `TemporalModel.reference_time` that converts the
   parameter (defined in mjd) in a proper `~astropy.time.Time`. It avoids comparing
   inconsistent scales when evaluating temporal models.
-- The energy dependent RADMAX cut is now supported by the `~gammapy.makers.PhaseBackgroundMaker`.
 - The `~gammapy.estimators.TSMapEstimator` now accepts `MapDatasetOnOff` as well
   as regular `MapDataset`.
+- `FluxPoints.plot()` now includes a `time_format` argument to adapt the time display in the
+  resulting plot (can be either `iso` or `mjd`).
 - Units representation in plot labels is improved using `to_sting(latex_inline)`. The default
   behavior can be changed adapting the global variable `UNIT_STRING_FORMAT` defined in
   `~gammapy.maps.axes`.
