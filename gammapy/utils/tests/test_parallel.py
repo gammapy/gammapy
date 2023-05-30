@@ -30,3 +30,41 @@ def test_run_multiprocessing_wrong_method():
         parallel.run_multiprocessing(
             func, [True, True], method="wrong_name", pool_kwargs=dict(processes=2)
         )
+
+
+@pytest.mark.parametrize("method", ["starmap", "apply_async"])
+def test_run_multiprocessing_simple(method):
+    1 / 0
+
+    def square(x):
+        return x**2
+
+    N = 10
+    inputs = range(N + 1)
+
+    result = parallel.run_multiprocessing(
+        func=square,
+        inputs=inputs,
+        methode=method,
+        pool_kwargs=dict(processes=2),
+    )
+    assert sum(result) == N * (N + 1) * (2 * N + 1) / 6
+
+
+@requires_dependency("ray")
+@pytest.mark.parametrize("method", ["starmap", "apply_async"])
+def test_run_multiprocessing_simple_ray(method):
+    def square(x):
+        return x**2
+
+    N = 10
+    inputs = range(N + 1)
+
+    result = parallel.run_multiprocessing(
+        func=square,
+        inputs=inputs,
+        methode=method,
+        pool_kwargs=dict(processes=2),
+        parallel_backend="ray",
+    )
+    assert sum(result) == N * (N + 1) * (2 * N + 1) / 6
