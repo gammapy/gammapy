@@ -141,12 +141,17 @@ def run_multiprocessing(
     if pool_kwargs is None:
         pool_kwargs = {}
 
-    processes = pool_kwargs.get("processes", None)
+    processes = pool_kwargs.get("processes", N_JOBS_DEFAULT)
 
     multiprocessing = PARALLEL_BACKEND_MODULES[backend]
 
     if backend == ParallelBackendEnum.multiprocessing:
-        processes = min(processes, multiprocessing.cpu_count())
+        cpu_count = multiprocessing.cpu_count()
+
+        if processes > cpu_count:
+            log.info(f"Limiting number of processes from {processes} to {cpu_count}")
+            processes = cpu_count
+
         if multiprocessing.current_process().name != "MainProcess":
             # subprocesses cannot have childs
             processes = 1
