@@ -32,39 +32,78 @@ def test_run_multiprocessing_wrong_method():
         )
 
 
-@pytest.mark.parametrize("method", ["starmap", "apply_async"])
-def test_run_multiprocessing_simple(method):
-    1 / 0
+def square(x):
+    return x**2
 
-    def square(x):
+
+class MyTask:
+    def __init__(self):
+        self.sum_squared = 0
+
+    def __call__(self, x):
         return x**2
 
+    def callback(self, result):
+        self.sum_squared += result
+
+
+def test_run_multiprocessing_simple_starmap():
     N = 10
-    inputs = range(N + 1)
+    inputs = [(_,) for _ in range(N + 1)]
 
     result = parallel.run_multiprocessing(
         func=square,
         inputs=inputs,
-        methode=method,
+        method="starmap",
         pool_kwargs=dict(processes=2),
+    )
+    assert sum(result) == N * (N + 1) * (2 * N + 1) / 6
+
+
+def test_run_multiprocessing_simple_apply_async():
+    N = 10
+    inputs = [(_,) for _ in range(N + 1)]
+
+    task = MyTask()
+
+    _ = parallel.run_multiprocessing(
+        func=task,
+        inputs=inputs,
+        method="apply_async",
+        pool_kwargs=dict(processes=2),
+        method_kwargs=dict(callback=task.callback),
+    )
+    assert task.sum_squared == N * (N + 1) * (2 * N + 1) / 6
+
+
+@requires_dependency("ray")
+def test_run_multiprocessing_simple_ray_starmap():
+    N = 10
+    inputs = [(_,) for _ in range(N + 1)]
+
+    result = parallel.run_multiprocessing(
+        func=square,
+        inputs=inputs,
+        method="starmap",
+        pool_kwargs=dict(processes=2),
+        backend="ray",
     )
     assert sum(result) == N * (N + 1) * (2 * N + 1) / 6
 
 
 @requires_dependency("ray")
-@pytest.mark.parametrize("method", ["starmap", "apply_async"])
-def test_run_multiprocessing_simple_ray(method):
-    def square(x):
-        return x**2
-
+def test_run_multiprocessing_simple_ray_apply_async():
     N = 10
-    inputs = range(N + 1)
+    inputs = [(_,) for _ in range(N + 1)]
 
-    result = parallel.run_multiprocessing(
-        func=square,
+    task = MyTask()
+
+    _ = parallel.run_multiprocessing(
+        func=task,
         inputs=inputs,
-        methode=method,
+        method="apply_async",
         pool_kwargs=dict(processes=2),
-        parallel_backend="ray",
+        method_kwargs=dict(callback=task.callback),
+        backend="ray",
     )
-    assert sum(result) == N * (N + 1) * (2 * N + 1) / 6
+    assert task.sum_squared == N * (N + 1) * (2 * N + 1) / 6
