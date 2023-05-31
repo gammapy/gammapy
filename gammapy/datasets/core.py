@@ -18,7 +18,7 @@ __all__ = ["Dataset", "Datasets"]
 
 class Dataset(abc.ABC):
     """Dataset abstract base class.
-    For now, see existing examples of type of datasets
+    For now, see existing examples of type of datasets:
 
     - `gammapy.datasets.MapDataset`
     - `gammapy.datasets.SpectrumDataset`
@@ -52,7 +52,7 @@ class Dataset(abc.ABC):
 
     @property
     def mask(self):
-        """Combined fit and safe mask"""
+        """Combined fit and safe mask."""
         if self.mask_safe is not None and self.mask_fit is not None:
             return self.mask_safe & self.mask_fit
         elif self.mask_fit is not None:
@@ -178,28 +178,28 @@ class Datasets(collections.abc.MutableSequence):
 
     @property
     def is_all_same_type(self):
-        """Whether all contained datasets are of the same type"""
+        """Whether all contained datasets are of the same type."""
         return len(set(_.__class__ for _ in self)) == 1
 
     @property
     def is_all_same_shape(self):
-        """Whether all contained datasets have the same data shape"""
+        """Whether all contained datasets have the same data shape."""
         return len(set(_.data_shape for _ in self)) == 1
 
     @property
     def is_all_same_energy_shape(self):
-        """Whether all contained datasets have the same data shape"""
+        """Whether all contained datasets have the same data shape."""
         return len(set(_.data_shape[0] for _ in self)) == 1
 
     @property
     def energy_axes_are_aligned(self):
-        """Whether all contained datasets have aligned energy axis"""
+        """Whether all contained datasets have aligned energy axis."""
         axes = [d.counts.geom.axes["energy"] for d in self]
         return np.all([axes[0].is_aligned(ax) for ax in axes])
 
     @property
     def contributes_to_stat(self):
-        """Stat contributions
+        """Stat contributions.
 
         Returns
         -------
@@ -217,7 +217,7 @@ class Datasets(collections.abc.MutableSequence):
         return np.array(contributions)
 
     def stat_sum(self):
-        """Compute joint statistic function value"""
+        """Compute joint statistic function value."""
         stat_sum = 0
         # TODO: add parallel evaluation of likelihoods
         for dataset in self:
@@ -254,15 +254,15 @@ class Datasets(collections.abc.MutableSequence):
         return self.__class__(datasets)
 
     def slice_by_energy(self, energy_min, energy_max):
-        """Select and slice datasets in energy range
+        """Select and slice datasets in energy range.
 
-        The method keeps the current dataset names. Datasets, that do not
+        The method keeps the current dataset names. Datasets that do not
         contribute to the selected energy range are dismissed.
 
         Parameters
         ----------
         energy_min, energy_max : `~astropy.units.Quantity`
-            Energy bounds to compute the flux point for.
+            Energy bounds to compute the flux point for
 
         Returns
         -------
@@ -295,7 +295,7 @@ class Datasets(collections.abc.MutableSequence):
         Parameters
         ----------
         region : `~regions.SkyRegion`
-            Region definition.
+            Region definition
 
         Returns
         -------
@@ -323,7 +323,7 @@ class Datasets(collections.abc.MutableSequence):
         Returns
         -------
         energy_min, energy_max : `~astropy.units.Quantity`
-            Energy range.
+            Energy range
         """
 
         energy_mins, energy_maxs = [], []
@@ -369,11 +369,11 @@ class Datasets(collections.abc.MutableSequence):
         filename : str or `Path`
             File path or name of datasets yaml file
         filename_models : str or `Path`
-            File path or name of models fyaml ile
+            File path or name of models yaml file
         lazy : bool
             Whether to lazy load data into memory
         cache : bool
-            Whether to cache the data after loading.
+            Whether to cache the data after loading
 
         Returns
         -------
@@ -441,15 +441,15 @@ class Datasets(collections.abc.MutableSequence):
     def stack_reduce(self, name=None, nan_to_num=True):
         """Reduce the Datasets to a unique Dataset by stacking them together.
 
-        This works only if all Dataset are of the same type and if a proper
+        This works only if all datasets are of the same type and if a proper
         in-place stack method exists for the Dataset type.
 
         Parameters
         ----------
         name : str
-            Name of the stacked dataset.
+            Name of the stacked dataset
         nan_to_num: bool
-            Non-finite values are replaced by zero if True (default).
+            Non-finite values are replaced by zero if True (default)
 
         Returns
         -------
@@ -503,7 +503,7 @@ class Datasets(collections.abc.MutableSequence):
     # TODO: merge with meta table?
     @property
     def gti(self):
-        """GTI table"""
+        """GTI table."""
         time_intervals = []
 
         for dataset in self:
