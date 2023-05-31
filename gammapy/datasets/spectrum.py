@@ -374,7 +374,7 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
 
     @classmethod
     def from_spectrum_dataset(cls, **kwargs):
-        """Create a SpectrumDatasetOnOff from another dataset.
+        """Create a SpectrumDatasetOnOff from a `SpectrumDataset` dataset.
 
         Parameters
         ----------
