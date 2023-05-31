@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 
 
 class PlotMixin:
-    """Plot mixin for the spectral datasets"""
+    """Plot mixin for the spectral datasets."""
 
     def plot_fit(
         self,
@@ -119,7 +119,7 @@ class PlotMixin:
         return ax
 
     def plot_masks(self, ax=None, kwargs_fit=None, kwargs_safe=None):
-        """Plot mask safe and mask fit
+        """Plot mask safe and mask fit.
 
         Parameters
         ----------
@@ -252,9 +252,11 @@ class PlotMixin:
 
 
 class SpectrumDataset(PlotMixin, MapDataset):
-    """
-    Bundle together binned counts, background, IRFs, models and compute a likelihood into 1D spectrum.
-    It uses the Cash statistics by default.
+    """Main dataset for spectrum fitting (1D analysis).
+    It bundles together binned counts, background, IRFs into `~gammapy.maps.WcsNDMap` with only one spatial bin.
+    A safe mask and a fit mask can be added to exclude bins during the analysis.
+    It can contain source sky models, and in this case it can compute a likelihood for a spectral analysis.
+    It uses the Cash statistics by default (see `~gammapy.stats.cash`).
 
     For more information see :ref:`datasets`.
     """
@@ -273,8 +275,11 @@ class SpectrumDataset(PlotMixin, MapDataset):
 
 
 class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
-    """
-    Spectrum dataset for on-off likelihood fitting. It uses the wstat statistics by default.
+    """Spectrum dataset for on-off likelihood fitting.
+    It bundles together binned counts, background counts, IRFs into `~gammapy.maps.WcsNDMap` with one spatial bin. It
+    contains also the acceptance for the on and off counts bins. A safe mask and a fit mask can be added to exclude bins
+    during the analysis. It uses Wstat statistics by default (see `~gammapy.stats.wstat`), and thus no sky model
+    is needed by default.
 
     For more information see :ref:`datasets`.
     """
@@ -290,14 +295,12 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
 
     @classmethod
     def read(cls, filename, format="ogip", **kwargs):
-        """Read from file
+        """Read from file.
 
-        For OGIP formats, filename is assumed to the name of a PHA file where
-        BKG file, ARF, and RMF names
-        must be set in the PHA header and be present in the same folder.
-        For details, see `OGIPDatasetReader.read`
+        For OGIP formats, filename is assumed to the name of a PHA file where BKG file, ARF, and RMF names must be
+        set in the PHA header and be present in the same folder. For details, see `OGIPDatasetReader.read`.
 
-        For the GADF format, a MapDataset serialisation is used
+        For the GADF format, a MapDataset serialisation is used.
 
         Parameters
         ----------
@@ -320,7 +323,7 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
 
         Can be serialised either as a `MapDataset` with a `RegionGeom`
         following the GADF specifications, or as per the OGIP format.
-        For OGIP formats specs see `OGIPDatasetWriter`
+        For OGIP formats specs, see `OGIPDatasetWriter`.
 
         Parameters
         ----------
@@ -346,7 +349,7 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
     @classmethod
     def from_dict(cls, data, **kwargs):
         """Create spectrum dataset from dict.
-        Reads file from the disk as specified in the dict
+        Reads file from the disk as specified in the dict.
 
         Parameters
         ----------
@@ -371,7 +374,7 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
 
     @classmethod
     def from_spectrum_dataset(cls, **kwargs):
-        """Create spectrum dataseton off from another dataset.
+        """Create a SpectrumDatasetOnOff from another dataset.
 
         Parameters
         ----------
@@ -382,7 +385,7 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         acceptance_off : `~numpy.array` or float
             Relative background efficiency in the off region.
         counts_off : `~gammapy.maps.RegionNDMap`
-            Off counts spectrum . If the dataset provides a background model,
+            Off counts spectrum. If the dataset provides a background model,
             and no off counts are defined. The off counts are deferred from
             counts_off / alpha.
 
@@ -394,8 +397,8 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         return cls.from_map_dataset(**kwargs)
 
     def to_spectrum_dataset(self, name=None):
-        """Convert a SpectrumDatasetOnOff to a SpectrumDataset
-        The background model template is taken as alpha*counts_off
+        """Convert a SpectrumDatasetOnOff to a SpectrumDataset.
+        The background model template is taken as alpha*counts_off.
 
         Parameters
         ----------
@@ -405,6 +408,6 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         Returns
         -------
         dataset: `SpectrumDataset`
-            SpectrumDatset with cash statistics
+            SpectrumDataset with cash statistics
         """
         return self.to_map_dataset(name=name).to_spectrum_dataset(on_region=None)
