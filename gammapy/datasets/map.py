@@ -108,8 +108,10 @@ def create_map_dataset_geoms(
 
 class MapDataset(Dataset):
     """
-    Bundle together binned counts, background, IRFs, models and compute a likelihood.
-    It uses the Cash statistics by default.
+    Bundle together binned counts, background, IRFs into `~gammapy.maps.WcsNDMap` for a given geometry.
+    A safe mask and a fit mask can be added to exclude bins during the analysis.
+    It can contain source sky models, and in this case it can compute a likelihood.
+    It uses the Cash statistics by default (see `~gammapy.stats.cash`).
 
     For more information see :ref:`datasets`.
 
@@ -136,6 +138,7 @@ class MapDataset(Dataset):
     meta_table : `~astropy.table.Table`
         Table listing information on observations used to create the dataset.
         One line per observation for stacked datasets.
+
 
     If an `HDULocation` is passed the map is loaded lazily. This means the
     map data is only loaded in memory as the corresponding data attribute
@@ -1969,7 +1972,8 @@ class MapDataset(Dataset):
 
 
 class MapDatasetOnOff(MapDataset):
-    """Map dataset for on-off likelihood fitting. It uses wstat statistics by default.
+    """Map dataset for on-off likelihood fitting. It uses Wstat statistics by default
+    (see `~gammapy.stats.wstat`).
 
     For more information see :ref:`datasets`.
 
