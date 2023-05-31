@@ -451,10 +451,10 @@ class FluxPointsDataset(Dataset):
         ax : `~matplotlib.axes.Axes`
             Axes to plot on
         kwargs_fp : dict
-            Keyword arguments passed to `gammapy.estimators.FluxPoints.plot`
+            Keyword arguments passed to `gammapy.estimators.FluxPoints.plot` to configure the plot style
         kwargs_model : dict
             Keyword arguments passed to `gammapy.modeling.models.SpectralModel.plot` and
-            `gammapy.modeling.models.SpectralModel.plot_error`
+            `gammapy.modeling.models.SpectralModel.plot_error` to configure the plot style
 
         Returns
         -------
