@@ -15,7 +15,8 @@ This release introduces a number of new features as well as some performance imp
 
 Support for energy dependent temporal models is introduced. Only template models are supported.
 They use a `RegionNDMap` object with an energy and a time axis. Note that these models
-are meant for event simulation cannot be used for modeling and fitting
+are meant for event simulation with the `MapDatasetEventSampler` and cannot be used
+for modeling and fitting.
 
 A tutorial demonstrating how to simulate events using this type of models has been added.
 
@@ -83,7 +84,8 @@ New features
 *documentation*
 
 - A new tutorial to demonstrate how to use Gammapy with HAWC data.
-- The pulsar analysis tutorial now shows how to perform 3D analyses in phase.
+- The pulsar analysis tutorial now shows how to create a `MapDatasetOnOff` using phase
+  information.
 - A new tutorial demonstrating event sampling with energy dependent temporal models has
   been added.
 
@@ -99,12 +101,21 @@ API changes
 
 *gammapy.data*
 
+- The `Observation.pointing_radec` and `Observation.pointing_altaz` `Observation.pointing_zen`
+  are now deprecated. One should use `Observation.get_pointing_icrs(time)` instead. This approach
+  will support different pointing strategies. In most cases, taking the pointing at the mid
+  time of an observation is sufficient. This is provided by the property `Observation.tmid`.
+- To separate data format and data model and to support observations with fixed pointing,
+  the `~gammapy.data.FixedPointingInfo` has been restructured. Most of its properties
+  have been deprecated. The main functions are `FixedPointingInfo.get_icrs(time, location)` and
+  `FixedPointingInfo.get_altaz(time, location)`
 - the `GTI` now consists in a simple `Table` with `START` and `STOP` as `~astropy.time.Time`
   object. `GTI.table` no longer contains a GADF formatted table with columns representing
   start and stop time as METs (Mission Elpased Time). All methods should behave equivalently
   with the same interface.
 
 *gammapy.irf*
+
 - `~gammapy.irf.load_cta_irfs` is now deprecated. Use instead the more general
   `~gammapy.irf.load_irf_dict_from_file`
 
@@ -153,7 +164,7 @@ Contributors
 - Laura Olivera-Nieto
 - Fabio Pintore
 - Maxime Regeard
-- Quentin Rémy
+- Quentin Remy
 - Atreyee Sinha
 - Katrin Streil
 - Régis Terrier
