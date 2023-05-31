@@ -303,7 +303,7 @@ class MapDataset(Dataset):
 
     @property
     def geoms(self):
-        """Map geometries
+        """Map geometries.
 
         Returns
         -------
@@ -332,7 +332,7 @@ class MapDataset(Dataset):
 
     @property
     def excess(self):
-        """Observed excess: counts-background"""
+        """Observed excess: counts-background."""
         return self.counts - self.background
 
     @models.setter
@@ -358,12 +358,12 @@ class MapDataset(Dataset):
 
     @property
     def evaluators(self):
-        """Model evaluators"""
+        """Model evaluators."""
         return self._evaluators
 
     @property
     def _geom(self):
-        """Main analysis geometry"""
+        """Main analysis geometry."""
         if self.counts is not None:
             return self.counts.geom
         elif self.background is not None:
@@ -380,7 +380,7 @@ class MapDataset(Dataset):
 
     @property
     def data_shape(self):
-        """Shape of the counts or background data (tuple)"""
+        """Shape of the counts or background data (tuple)."""
         return self._geom.data_shape
 
     def _energy_range(self, mask_map=None):
@@ -436,7 +436,7 @@ class MapDataset(Dataset):
         return np.nanmin(energy_min_map.quantity), np.nanmax(energy_max_map.quantity)
 
     def npred(self):
-        """Total predicted source and background counts
+        """Total predicted source and background counts.
 
         Returns
         -------
@@ -451,7 +451,7 @@ class MapDataset(Dataset):
         return npred_total
 
     def npred_background(self):
-        """Predicted background counts
+        """Predicted background counts.
 
         The predicted background counts depend on the parameters
         of the `FoVBackgroundModel` defined in the dataset.
@@ -554,7 +554,7 @@ class MapDataset(Dataset):
         **kwargs,
     ):
         """
-        Create a MapDataset object with zero filled maps according to the specified geometries
+        Create a MapDataset object with zero filled maps according to the specified geometries.
 
         Parameters
         ----------
@@ -683,21 +683,21 @@ class MapDataset(Dataset):
 
     @property
     def mask_safe_image(self):
-        """Reduced mask safe"""
+        """Reduced mask safe."""
         if self.mask_safe is None:
             return None
         return self.mask_safe.reduce_over_axes(func=np.logical_or)
 
     @property
     def mask_fit_image(self):
-        """Reduced mask fit"""
+        """Reduced mask fit."""
         if self.mask_fit is None:
             return None
         return self.mask_fit.reduce_over_axes(func=np.logical_or)
 
     @property
     def mask_image(self):
-        """Reduced mask"""
+        """Reduced mask."""
         if self.mask is None:
             mask = Map.from_geom(self._geom.to_image(), dtype=bool)
             mask.data |= True
@@ -707,7 +707,7 @@ class MapDataset(Dataset):
 
     @property
     def mask_safe_psf(self):
-        """Mask safe for psf maps"""
+        """Mask safe for psf maps."""
         if self.mask_safe is None or self.psf is None:
             return None
 
@@ -717,7 +717,7 @@ class MapDataset(Dataset):
 
     @property
     def mask_safe_edisp(self):
-        """Mask safe for edisp maps"""
+        """Mask safe for edisp maps."""
         if self.mask_safe is None or self.edisp is None:
             return None
 
@@ -734,7 +734,7 @@ class MapDataset(Dataset):
         return self.mask_safe.interp_to_geom(geom)
 
     def to_masked(self, name=None, nan_to_num=True):
-        """Return masked dataset
+        """Return masked dataset.
 
         Parameters
         ----------
@@ -755,7 +755,7 @@ class MapDataset(Dataset):
     def stack(self, other, nan_to_num=True):
         r"""Stack another dataset in place. The original dataset is modified.
 
-        Safe mask is applied to compute the stacked counts data. Counts outside
+        Safe mask is applied to compute the stacked counts' data. Counts outside
         each dataset safe mask are lost.
 
         The stacking of 2 datasets is implemented as follows. Here, :math:`k`
@@ -848,7 +848,7 @@ class MapDataset(Dataset):
             self.meta_table = other.meta_table.copy()
 
     def stat_array(self):
-        """Statistic function value per bin given the current model parameters"""
+        """Statistic function value per bin given the current model parameters."""
         return cash(n_on=self.counts.data, mu_on=self.npred().data)
 
     def residuals(self, method="diff", **kwargs):
@@ -1353,7 +1353,7 @@ class MapDataset(Dataset):
         return CashCountsStatistic(self.counts, self.background)
 
     def info_dict(self, in_safe_data_range=True):
-        """Info dict with summary statistics, summed over energy
+        """Info dict with summary statistics, summed over energy.
 
         Parameters
         ----------
@@ -2178,7 +2178,7 @@ class MapDatasetOnOff(MapDataset):
         name=None,
         **kwargs,
     ):
-        """Create an empty `MapDatasetOnOff` object according to the specified geometries
+        """Create an empty `MapDatasetOnOff` object according to the specified geometries.
 
         Parameters
         ----------
@@ -2273,9 +2273,9 @@ class MapDatasetOnOff(MapDataset):
         )
 
     def to_map_dataset(self, name=None):
-        """Convert a MapDatasetOnOff to  MapDataset
+        """Convert a MapDatasetOnOff to a MapDataset.
 
-        The background model template is taken as alpha * counts_off
+        The background model template is taken as alpha * counts_off.
 
         Parameters
         ----------
@@ -2338,7 +2338,7 @@ class MapDatasetOnOff(MapDataset):
             raise TypeError("Incompatible types for MapDatasetOnOff stacking")
 
         if not self._is_stackable or not other._is_stackable:
-            raise ValueError("Cannot stack incomplete MapDatsetOnOff.")
+            raise ValueError("Cannot stack incomplete MapDatasetOnOff.")
 
         geom = self.counts.geom
         total_off = Map.from_geom(geom)
@@ -2383,7 +2383,7 @@ class MapDatasetOnOff(MapDataset):
         """Total statistic function value given the current model parameters.
 
         If the off counts are passed as None and the elements of the safe mask are False, zero will be returned.
-        Otherwise the stat sum will be calculated and returned.
+        Otherwise, the stat sum will be calculated and returned.
         """
         if self.counts_off is None and not np.any(self.mask_safe.data):
             return 0
@@ -2539,7 +2539,7 @@ class MapDatasetOnOff(MapDataset):
         return cls(**kwargs)
 
     def info_dict(self, in_safe_data_range=True):
-        """Basic info dict with summary statistics
+        """Basic info dict with summary statistics.
 
         If a region is passed, then a spectrum dataset is
         extracted, and the corresponding info returned.
@@ -2700,7 +2700,7 @@ class MapDatasetOnOff(MapDataset):
         factor : int
             Downsampling factor.
         axis_name : str
-            Which non-spatial axis to downsample. By default only spatial axes are downsampled.
+            Which non-spatial axis to downsample. By default, only spatial axes are downsampled.
         name : str
             Name of the downsampled dataset.
 
