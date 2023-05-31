@@ -292,6 +292,9 @@ class Datasets(collections.abc.MutableSequence):
     def to_spectrum_datasets(self, region):
         """Extract spectrum datasets for the given region.
 
+        To get more detailed information, see the corresponding function associated to each dataset type:
+        `~gammapy.datasets.MapDataset.to_spectrum_dataset` or `~gammapy.datasets.MapDatasetOnOff.to_spectrum_dataset`.
+
         Parameters
         ----------
         region : `~regions.SkyRegion`
@@ -441,7 +444,7 @@ class Datasets(collections.abc.MutableSequence):
     def stack_reduce(self, name=None, nan_to_num=True):
         """Reduce the Datasets to a unique Dataset by stacking them together.
 
-        This works only if all datasets are of the same type and if a proper
+        This works only if all datasets are of the same type and with aligned geometries, and if a proper
         in-place stack method exists for the Dataset type.
 
         Parameters

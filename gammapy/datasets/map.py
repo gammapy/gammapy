@@ -1530,7 +1530,7 @@ class MapDataset(Dataset):
         """Integrate the map dataset in a given region.
 
         Counts and background of the dataset are integrated in the given region,
-        taking the safe mask into accounts. The exposure is averaged in the
+        taking the safe mask into account. The exposure is averaged in the
         region again taking the safe mask into account. The PSF and energy
         dispersion kernel are taken at the center of the region.
 

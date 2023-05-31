@@ -21,7 +21,8 @@ class MapEvaluator:
     """Sky model evaluation on maps.
 
     Evaluates a sky model on a 3D map and returns a map of the predicted counts.
-    Convolution with IRFs will be performed as defined in the sky_model.
+    The convolution with IRFs will be performed as defined in the sky_model and the used IRFs
+    correspond to the ones at the position of the model.
 
     Parameters
     ----------
