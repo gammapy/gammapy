@@ -717,7 +717,7 @@ class MapDataset(Dataset):
 
     @property
     def mask_safe_edisp(self):
-        """Mask safe for edisp maps."""
+        """Safe mask for edisp maps."""
         if self.mask_safe is None or self.edisp is None:
             return None
 
