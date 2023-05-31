@@ -471,7 +471,7 @@ class MapEvaluator:
 
     @lazyproperty
     def _norm_idx(self):
-        """norm index."""
+        """Norm index."""
         names = self.model.parameters.names
         ind = [idx for idx, name in enumerate(names) if name in ["norm", "amplitude"]]
         if len(ind) == 1:
