@@ -18,16 +18,15 @@ __all__ = ["Dataset", "Datasets"]
 
 class Dataset(abc.ABC):
     """Dataset abstract base class.
-
-    For more information see :ref:`datasets`.
-
-    TODO: add tutorial how to create your own dataset types.
-
-    For now, see existing examples in Gammapy how this works:
+    For now, see existing examples of type of datasets
 
     - `gammapy.datasets.MapDataset`
     - `gammapy.datasets.SpectrumDataset`
     - `gammapy.datasets.FluxPointsDataset`
+
+    For more information see :ref:`datasets`.
+
+    TODO: add tutorial how to create your own dataset types.
     """
 
     _residuals_labels = {
