@@ -707,7 +707,7 @@ class MapDataset(Dataset):
 
     @property
     def mask_safe_psf(self):
-        """Mask safe for psf maps."""
+        """Safe mask for psf maps."""
         if self.mask_safe is None or self.psf is None:
             return None
 
