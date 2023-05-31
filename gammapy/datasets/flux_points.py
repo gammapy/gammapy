@@ -77,7 +77,7 @@ class FluxPointsDataset(Dataset):
     spectral amplitude 2.1619e-13 cm-2 s-1 TeV-1 ... nan  False    True
     spectral reference 1.0000e+00            TeV ... nan   True   False
 
-    Note: In order to reproduce the example you need the tests datasets folder.
+    Note: In order to reproduce the example, you need the tests datasets folder.
     You may download it with the command
     ``gammapy download datasets --tests --out $GAMMAPY_DATA``
     """
@@ -113,7 +113,7 @@ class FluxPointsDataset(Dataset):
 
     @property
     def gti(self):
-        """Good time interval info (`GTI`)"""
+        """Good time interval info (`GTI`)."""
         return self.data.gti
 
     @property
@@ -134,11 +134,11 @@ class FluxPointsDataset(Dataset):
         Parameters
         ----------
         filename : str
-            Filename to write to.
+            Filename to write to
         overwrite : bool
-            Overwrite existing file.
+            Overwrite existing file
         **kwargs : dict
-             Keyword arguments passed to `~astropy.table.Table.write`.
+             Keyword arguments passed to `~astropy.table.Table.write`
         """
         table = self.data.to_table()
 
@@ -153,16 +153,16 @@ class FluxPointsDataset(Dataset):
 
     @classmethod
     def read(cls, filename, name=None, format="gadf-sed"):
-        """Read pre-computed flux points and create a dataset
+        """Read pre-computed flux points and create a dataset.
 
         Parameters
         ----------
         filename : str
-            Filename to read from.
+            Filename to read from
         name : str
-            Name of the new dataset.
+            Name of the new dataset
         format : {"gadf-sed"}
-            Format of the dataset file.
+            Format of the dataset file
 
         Returns
         -------
@@ -196,7 +196,7 @@ class FluxPointsDataset(Dataset):
         Parameters
         ----------
         data : dict
-            Dict containing data to create dataset from.
+            Dict containing data to create dataset from
 
         Returns
         -------
@@ -291,7 +291,7 @@ class FluxPointsDataset(Dataset):
         return ((data - model) / sigma.quantity[:, 0, 0]).to_value("") ** 2
 
     def residuals(self, method="diff"):
-        """Compute flux point residuals
+        """Compute flux point residuals.
 
         Parameters
         ----------
@@ -303,7 +303,7 @@ class FluxPointsDataset(Dataset):
         Returns
         -------
         residuals : `~numpy.ndarray`
-            Residuals array.
+            Residuals array
         """
         fp = self.data
 
@@ -328,18 +328,18 @@ class FluxPointsDataset(Dataset):
         Parameters
         ----------
         ax_spectrum : `~matplotlib.axes.Axes`
-            Axes to plot flux points and best fit model on.
+            Axes to plot flux points and best fit model on
         ax_residuals : `~matplotlib.axes.Axes`
-            Axes to plot residuals on.
+            Axes to plot residuals on
         kwargs_spectrum : dict
-            Keyword arguments passed to `~FluxPointsDataset.plot_spectrum`.
+            Keyword arguments passed to `~FluxPointsDataset.plot_spectrum`
         kwargs_residuals : dict
-            Keyword arguments passed to `~FluxPointsDataset.plot_residuals`.
+            Keyword arguments passed to `~FluxPointsDataset.plot_residuals`
 
         Returns
         -------
         ax_spectrum, ax_residuals : `~matplotlib.axes.Axes`
-            Flux points, best fit model and residuals plots.
+            Flux points, best fit model and residuals plots
 
         Examples
         --------
@@ -391,16 +391,16 @@ class FluxPointsDataset(Dataset):
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`
-            Axes to plot on.
+            Axes to plot on
         method : {"diff", "diff/model"}
-            Normalization used to compute the residuals, see `FluxPointsDataset.residuals`.
+            Normalization used to compute the residuals, see `FluxPointsDataset.residuals`
         **kwargs : dict
-            Keyword arguments passed to `~matplotlib.axes.Axes.errorbar`.
+            Keyword arguments passed to `~matplotlib.axes.Axes.errorbar`
 
         Returns
         -------
         ax : `~matplotlib.axes.Axes`
-            Axes object.
+            Axes object
 
         """
         ax = ax or plt.gca()
@@ -448,17 +448,17 @@ class FluxPointsDataset(Dataset):
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`
-            Axes to plot on.
+            Axes to plot on
         kwargs_fp : dict
-            Keyword arguments passed to `gammapy.estimators.FluxPoints.plot`.
+            Keyword arguments passed to `gammapy.estimators.FluxPoints.plot`
         kwargs_model : dict
             Keyword arguments passed to `gammapy.modeling.models.SpectralModel.plot` and
-            `gammapy.modeling.models.SpectralModel.plot_error`.
+            `gammapy.modeling.models.SpectralModel.plot_error`
 
         Returns
         -------
         ax : `~matplotlib.axes.Axes`
-            Axes object.
+            Axes object
 
         Examples
         --------
