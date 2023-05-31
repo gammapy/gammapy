@@ -47,7 +47,7 @@ class MapDatasetEventSampler:
         coords : `~gammapy.maps.MapCoord`
             Coordinates of the sampled events
         time_ref : `~astropy.time.Time`
-            reference time of the event list
+            Reference time of the event list
 
         Returns
         -------
