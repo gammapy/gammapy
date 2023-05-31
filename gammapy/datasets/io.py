@@ -133,7 +133,7 @@ class OGIPDatasetWriter(DatasetWriter):
         return meta
 
     def write(self, dataset):
-        """Write dataset to files.
+        """Write dataset to file.
 
         Parameters
         ----------
