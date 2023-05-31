@@ -690,7 +690,7 @@ class MapDataset(Dataset):
 
     @property
     def mask_fit_image(self):
-        """Reduced mask fit."""
+        """Reduced fit mask."""
         if self.mask_fit is None:
             return None
         return self.mask_fit.reduce_over_axes(func=np.logical_or)
