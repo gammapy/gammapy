@@ -187,7 +187,7 @@ class MapDatasetEventSampler:
         npred : `~gammapy.dataset.MapDataset`
             Npred map
         temporal_model : `~gammapy.modeling.models\
-            temporal model of the source
+            Temporal model of the source
         gti : `~gammapy.data.GTI`
              GTI of the dataset
 
