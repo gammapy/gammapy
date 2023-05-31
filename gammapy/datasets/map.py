@@ -683,7 +683,7 @@ class MapDataset(Dataset):
 
     @property
     def mask_safe_image(self):
-        """Reduced mask safe."""
+        """Reduced safe mask."""
         if self.mask_safe is None:
             return None
         return self.mask_safe.reduce_over_axes(func=np.logical_or)
