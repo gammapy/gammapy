@@ -19,6 +19,7 @@ __all__ = ["FluxPointsDataset"]
 class FluxPointsDataset(Dataset):
     """Bundle a set of flux points with a parametric model,
     to compute fit statistic function using chi2 statistics.
+    A safe mask and a fit mask can be added to exclude bins during the analysis.
 
     For more information see :ref:`datasets`.
 
@@ -34,7 +35,7 @@ class FluxPointsDataset(Dataset):
         Mask defining the safe data range. By default upper limit values are excluded.
     meta_table : `~astropy.table.Table`
         Table listing information on observations used to create the dataset.
-        One line per observation for stacked datasets.
+        One line per observation for stacked datasets
 
     Examples
     --------
