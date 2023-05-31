@@ -119,7 +119,7 @@ class PlotMixin:
         return ax
 
     def plot_masks(self, ax=None, kwargs_fit=None, kwargs_safe=None):
-        """Plot mask safe and mask fit.
+        """Plot safe mask and fit mask.
 
         Parameters
         ----------
