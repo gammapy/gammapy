@@ -508,7 +508,7 @@ class MapDatasetEventSampler:
         observation : `~gammapy.data.Observation`
             In memory observation
         edisp : Bool
-            It allows to include or exclude the Edisp in the simulation
+            Whether to include or exclude the Edisp in the simulation
 
         Returns
         -------
