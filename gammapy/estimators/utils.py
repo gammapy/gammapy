@@ -157,6 +157,8 @@ def find_peaks_in_flux_map(maps, threshold, min_distance=1):
     x = np.array(table["x"])
     y = np.array(table["y"])
 
+    table.remove_column("value")
+
     for name in maps.available_quantities:
         values = maps[name].quantity
         peaks = values[0, y, x]
@@ -168,10 +170,20 @@ def find_peaks_in_flux_map(maps, threshold, min_distance=1):
     table["flux_err"] = flux_err_data[0, y, x]
 
     for column in table.colnames:
-        if column.startswith(("dnde", "eflux", "flux", "flux_err", "e2dnde", "ref")):
+        if column.startswith(("flux", "flux_err")):
             table[column].format = ".3e"
         elif column.startswith(
-            ("e_min", "e_max", "e_ref", "sqrt_ts", "norm", "ts", "stat")
+            (
+                "npred",
+                "npred_excess",
+                "counts",
+                "sqrt_ts",
+                "norm",
+                "ts",
+                "norm_err",
+                "stat",
+                "stat_null",
+            )
         ):
             table[column].format = ".5f"
 
