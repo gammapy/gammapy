@@ -1,6 +1,235 @@
 .. _gammapy_1p1_release:
 
-1.0 (unreleased)
-----------------
+1.1 (May XXth 2023)
+-------------------
 
-- No changes yet
+- Released June 8th, 2023
+- 17 contributors
+- 129 pull requests since v1.0 (not all listed below)
+- 85 closed issues
+
+Summary
+~~~~~~~
+
+This release introduces a number of new features as well as some performance improvements.
+
+Support for energy dependent temporal models is introduced. Only template models are supported.
+They use a `RegionNDMap` object with an energy and a time axis. Note that these models
+are meant for event simulation with the `MapDatasetEventSampler` and cannot be used
+for modeling and fitting.
+
+A tutorial demonstrating how to simulate events using this type of models has been added.
+
+Support for multiprocessing is improved. `FluxPointsEstimator` and `LightCurveEstimator`
+can now run on several cores. This is defined with the `n_jobs` parameter that can be set on
+init. The backend used by default is the python multiprocessing. This interface is also used
+by the `DatasetsMaker` that performs the data reduction loop.
+
+A first step in the separation of the internal data model and the GADF format is introduced
+in this release in the handling of the pointing and the GTI. This is part of a larger project
+that will be implemented in the coming feature releases to allow I/O with multiple data formats.
+
+New features
+~~~~~~~~~~~~
+
+*gammapy.data*
+
+- A new function `~gammapy.data.get_irfs_features()` can extract the features of IRFs
+  (such as energy resolution bias or PSF radius) of a list of `Observation`. The output
+  list can then be passed to the function `~gammapy.utils.cluster.hierarchical_clustering()`
+  which will find clusters of IRF features allowing to combine `Observation` with similar
+  IRF characteristics during analysis.
+
+*gammapy.maps*
+
+- A `Map.reorder_axes` helper method has been introduced.
+- Dot product is now supported with the `Map.dot()` function. It applies the dot product on
+  the axes sharing the same name. It can also be called via the `@` operator.
+- A `WcsNDMap.to_region_nd_map_histogram()` helper method is introduced to compute
+  the histogram of the map values along the spatial dimensions for each non spatial axes
+  bins.
+
+*gammapy.modeling*
+
+- The `~gammapy.modeling.models.LightCurveTemplateTemporalModel` now supports energy dependent
+  light curve templates. These models are now created from a `Map` object with a `time` axis
+  and optionally with an `energy_true` axis. They can be read from an `~astropy.table.Table`
+  (only regular light curve models) or from a serialized `Map`. For now, the energy dependent
+  models cannot be used for analysis.
+- A new function `~gammapy.modeling.select_nested_models` has been introduced to perform
+  nested model fits and compute the resulting test statistic (TS) between two nested hypotheses.
+  It can be used to determine whether the addition of a source to the model is significant or
+  to test for specific features in a model (e.g. test the existence of a spectral cutoff).
+ - A new method has been added on `SpectralModel.spectral_index_error()` to compute
+  the spectral index at a given energy as well as its error by error propagation of
+  the covariance matrix elements.
+- The Franceschini (2018) and Saldana-Lopez (2021) EBL are now part of the built-ins
+  EBL models.
+- A spatial correction model can now be added to the `~gammapy.modeling.models.FoVBackgroundModel`.
+  It can be used with a new spatial model, the `~gammapy.modeling.models.PiecewiseNormSpatialModel`.
+
+
+*gammapy.estimators*
+
+- Multiprocessing is now supported for `FluxPointsEstimator` and `LightCurveEstimator`. Setting
+  the number of cores used is done with the `n_jobs` property that is available on these
+  classes.
+
+*gammapy.visualization*
+
+- A function to plot `Map` as RGB is now proposed: `~gammapy.visualization.plot_map_rgb()`.
+- A function to plot the spectral distributions of predicted counts of models defined
+  on a `Dataset` is now available : `~gammapy.visualization.plot_npred_signal()`
+
+*documentation*
+
+- A new tutorial to demonstrate how to use Gammapy with HAWC data.
+- The pulsar analysis tutorial now shows how to create a `MapDatasetOnOff` using phase
+  information.
+- A new tutorial demonstrating event sampling with energy dependent temporal models has
+  been added.
+
+*infrastructure*
+
+- Deprecation warnings can now be raised by Gammapy deprecated code. The warnings will appear
+  in the documentation and docstrings as well. Deprecated features will usually be removed
+  in the following feature release.
+- Minimal python version is now 3.9. Python 3.10 is supported as well.
+
+API changes
+~~~~~~~~~~~
+
+*gammapy.data*
+
+- The `Observation.pointing_radec` and `Observation.pointing_altaz` `Observation.pointing_zen`
+  are now deprecated. One should use `Observation.get_pointing_icrs(time)` instead. This approach
+  will support different pointing strategies. In most cases, taking the pointing at the mid
+  time of an observation is sufficient. This is provided by the property `Observation.tmid`.
+- To separate data format and data model and to support observations with fixed pointing,
+  the `~gammapy.data.FixedPointingInfo` has been restructured. Most of its properties
+  have been deprecated. The main functions are `FixedPointingInfo.get_icrs(time, location)` and
+  `FixedPointingInfo.get_altaz(time, location)`
+- the `GTI` now consists in a simple `Table` with `START` and `STOP` as `~astropy.time.Time`
+  object. `GTI.table` no longer contains a GADF formatted table with columns representing
+  start and stop time as METs (Mission Elpased Time). All methods should behave equivalently
+  with the same interface.
+
+*gammapy.irf*
+
+- `~gammapy.irf.load_cta_irfs` is now deprecated. Use instead the more general
+  `~gammapy.irf.load_irf_dict_from_file`
+
+*gammapy.modeling*
+
+- The `FitResult.iminuit` attribute is now deprecated. It should be accessed from `optimize_result`
+  property instead, via: `FitResult.optimize_result.iminuit`.
+
+*gammapy.utils*
+
+- The `~gammapy.utils.table.table_from_row_data()` is now deprecated. It can be simply replaced
+  by the regular constructor : `Table(rows)`.
+
+Bug fixes and improvements
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- The `Map.fill_events()` method now supports adding weights to the input events.
+- The output of the `FitResult` has been clarified in some failure cases.
+- The energy dependent RADMAX cut is now supported by the `~gammapy.makers.PhaseBackgroundMaker`.
+- A `scale` attribute was added to `TemporalModel` classes. It is used to treat the `t_ref`
+  parameter in a consistent manner via a `TemporalModel.reference_time` that converts the
+  parameter (defined in mjd) in a proper `~astropy.time.Time`. It avoids comparing
+  inconsistent scales when evaluating temporal models.
+- The `~gammapy.estimators.TSMapEstimator` now accepts `MapDatasetOnOff` as well
+  as regular `MapDataset`.
+- `FluxPoints.plot()` now includes a `time_format` argument to adapt the time display in the
+  resulting plot (can be either `iso` or `mjd`).
+- Units representation in plot labels is improved using `to_sting(latex_inline)`. The default
+  behavior can be changed adapting the global variable `UNIT_STRING_FORMAT` defined in
+  `~gammapy.maps.axes`.
+
+
+Contributors
+~~~~~~~~~~~~
+
+- Arnau Aguasca
+- Axel Donath
+- Kirsty Feijen
+- Luca Giunti
+- Lucas Gréaux
+- Bruno Khélifi
+- Maximilian Linhoff
+- Simone Mender
+- Lars Mohrmann
+- Cosimo Nigro
+- Laura Olivera-Nieto
+- Fabio Pintore
+- Maxime Regeard
+- Quentin Remy
+- Atreyee Sinha
+- Katrin Streil
+- Régis Terrier
+
+Pull Requests
+~~~~~~~~~~~~~
+
+This list is incomplete. Small improvements and bug fixes are not listed here.
+
+- [#4545] Tutorial on event sampling for energy dependent temporal models (Fabio Pintore)
+- [#4521] Add covariance copy to support ray (Axel Donath)
+- [#4510] Introduce WcsNDMap.cutout_and_mask_region (Axel Donath)
+- [#4508] Implement WcsNDMap.to_region_nd_map_histogram (Axel Donath)
+- [#4506] Rename append method of MapAxis and LabelMapAxis to concatenate (REGEARD Maxime)
+- [#4504] Deprecate Fit.minuit member (Axel Donath)
+- [#4500] Fix SpectrumDatasetOnOff.stat_sum to support when counts_off is None (Kirsty Feijen)
+- [#4495] Introduce move_axis method on Map (Régis Terrier)
+- [#4486] Scale handling in temporal models (Atreyee Sinha)
+- [#4466] Add tutorial for the use of HAWC data (Laura Olivera-Nieto)
+- [#4459] Evaluation of energy dep temporal model (Atreyee Sinha)
+- [#4458] adding weights option to fill_events (REGEARD Maxime)
+- [#4453] Add scale in temporal model (Atreyee Sinha)
+- [#4444] Integral sensitivity in FluxPointsEstimator (Atreyee Sinha)
+- [#4435] Fix wrong ticks in rad_max plot (Simone Mender)
+- [#4430] Add squash method to LabelMapAxis (REGEARD Maxime)
+- [#4428] Add .to_string() to axis y/xlabel (Arnau Aguasca)
+- [#4418] Update the _evaluate_timevar_source function in MapDatasetEventSampler (Fabio PINTORE)
+- [#4417] adding from_stack and append to LabelMapAxis (REGEARD Maxime)
+- [#4412] LightCurveTemplateModel serialisation (Atreyee Sinha)
+- [#4409] Add a function that plot the npred_signal of models of a dataset (REGEARD Maxime)
+- [#4406] Add configuration and helper function to run multiprocessing or ray (Quentin Remy)
+- [#4402] Support for parallel evaluation in FluxPointsEstimator (Quentin Remy)
+- [#4397] Fix plot_spectrum_datasets_off_regions with too many regions (Bruno Khélifi)
+- [#4395] Add the possibility to plot in MJD the light curves (Bruno Khélifi)
+- [#4393] Iminuit output (Bruno Khélifi)
+- [#4380] Adapt default offset for plotting point like IRFs (Atreyee Sinha)
+- [#4370] Implement the _sample_coord_time_energy function in MapDatasetEventSampler (Fabio PINTORE)
+- [#4369] Pulsar analysis tutorial (REGEARD Maxime)
+- [#4359] Fix interpolation values_scale in TemplateSpatialModel (Quentin Remy)
+- [#4352] Adding rad max cut in PhaseBackgroundMaker (REGEARD Maxime)
+- [#4350] Always use FixedPointingInfo from events header in DataStore (Maximilian Linhoff)
+- [#4346] Add helper functions for delta TS to significance conversion (Quentin Remy)
+- [#4336] Change label units within parentheses to brackets (Arnau Aguasca)
+- [#4326] Introduce internal data model for GTI (Régis Terrier)
+- [#4324] Fix Parameter init if scale is not one (Quentin Remy)
+- [#4305] Add SpectralModel.spectral_index_error (Atreyee Sinha)
+- [#4301] Add TIMESYS to lightcurve table meta (Régis Terrier)
+- [#4294] Addition of a Map.dot operator (Régis Terrier)
+- [#4288] Add MapDatasetOnOff type test and associated error for TSMapEstimator (REGEARD Maxime)
+- [#4282] Add from_region() to DiskSpatialModel (Atreyee Sinha)
+- [#4280] Allow to load observations with only IRFs defined (Quentin Remy)
+- [#4277] Fix datasets io with RecoPSFMap (Quentin Remy)
+- [#4275] Remove safe mask in background stacking (Atreyee Sinha)
+- [#4264] Deprecate load_cta_irfs, replace usage with load_irf_dict_from_file (Maximilian Linhoff)
+- [#4252] Map dataset on off in phase maker (REGEARD Maxime)
+- [#4245] Added an evaluate method for CompoundSpectralModel (Lucas Gréaux)
+- [#4243] Change _check_intervals from PhaseBackgroundMaker (REGEARD Maxime)
+- [#4242] Add Observations clustering by IRFs quality (Quentin Remy)
+- [#4231] Fix bug in safe mask computation for SpectrumDatasetOnOff (Lars Mohrmann)
+- [#4219] Allow reading of IRF files with single-value axes (Lars Mohrmann)
+- [#4216] Add TestStatisticNested class (Quentin Remy)
+- [#4215] Adds built-in Franceschini (2018) and Saldana-Lopez (2021) EBL models (Cosimo Nigro)
+- [#4213] Add deprecation warning system (Régis Terrier)
+- [#4212] Remove unneeded table util function (Maximilian Linhoff)
+- [#4210] Add plot_rgb() function in gammapy.visualization (luca GIUNTI)
+- [#4209] Add support for spatial model correction on background models (Quentin Remy)
+- [#4208] Add PiecewiseNormSpatialModel (Quentin Remy)
+- [#4191] Modified Dark Matter Jfactor Computation and Dark Matter Tutorial (Katrin Streil)
