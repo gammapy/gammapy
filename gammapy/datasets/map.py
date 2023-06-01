@@ -54,7 +54,7 @@ def create_map_dataset_geoms(
     binsz_irf=BINSZ_IRF_DEFAULT,
     reco_psf=False,
 ):
-    """Create map geometries for a `MapDataset`
+    """Create map geometries for a `MapDataset`.
 
     Parameters
     ----------
@@ -75,7 +75,7 @@ def create_map_dataset_geoms(
     Returns
     -------
     geoms : dict
-        Dict with map geometries.
+        Dict with map geometries
     """
     rad_axis = rad_axis or RAD_AXIS_DEFAULT
 
@@ -108,6 +108,7 @@ def create_map_dataset_geoms(
 
 class MapDataset(Dataset):
     """Main map dataset for likelihood fitting.
+
     It bundles together binned counts, background, IRFs in the form of `~gammapy.maps.Map`.
     A safe mask and a fit mask can be added to exclude bins during the analysis.
     If models are assigned to it, it can compute predicted counts in each bin of the  counts `Map` and compute
@@ -1973,11 +1974,11 @@ class MapDataset(Dataset):
 
 class MapDatasetOnOff(MapDataset):
     """Map dataset for on-off likelihood fitting.
-    
+
     It bundles together the binned on and off counts, the binned IRFs as well as the on and off acceptances.
-    
-    A safe mask and a fit mask can be added to exclude bins during the analysis. 
-    
+
+    A safe mask and a fit mask can be added to exclude bins during the analysis.
+
     It uses the Wstat statistic (see `~gammapy.stats.wstat`), therefore no background model is needed.
 
     For more information see :ref:`datasets`.

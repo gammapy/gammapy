@@ -28,18 +28,18 @@ class PlotMixin:
         Parameters
         ----------
         ax_spectrum : `~matplotlib.axes.Axes`
-            Axes to plot spectrum on.
+            Axes to plot spectrum on
         ax_residuals : `~matplotlib.axes.Axes`
-            Axes to plot residuals on.
+            Axes to plot residuals on
         kwargs_spectrum : dict
-            Keyword arguments passed to `~SpectrumDataset.plot_excess`.
+            Keyword arguments passed to `~SpectrumDataset.plot_excess`
         kwargs_residuals : dict
-            Keyword arguments passed to `~SpectrumDataset.plot_residuals_spectral`.
+            Keyword arguments passed to `~SpectrumDataset.plot_residuals_spectral`
 
         Returns
         -------
         ax_spectrum, ax_residuals : `~matplotlib.axes.Axes`
-            Spectrum and residuals plots.
+            Spectrum and residuals plots
 
         Examples
         --------
@@ -88,18 +88,18 @@ class PlotMixin:
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`
-            Axes to plot on.
+            Axes to plot on
         kwargs_counts: dict
-            Keyword arguments passed to `~matplotlib.axes.Axes.hist` for the counts.
+            Keyword arguments passed to `~matplotlib.axes.Axes.hist` for the counts
         kwargs_background: dict
-            Keyword arguments passed to `~matplotlib.axes.Axes.hist` for the background.
+            Keyword arguments passed to `~matplotlib.axes.Axes.hist` for the background
         **kwargs: dict
-            Keyword arguments passed to both `~matplotlib.axes.Axes.hist`.
+            Keyword arguments passed to both `~matplotlib.axes.Axes.hist`
 
         Returns
         -------
         ax : `~matplotlib.axes.Axes`
-            Axes object.
+            Axes object
         """
         kwargs_counts = kwargs_counts or {}
         kwargs_background = kwargs_background or {}
@@ -124,11 +124,11 @@ class PlotMixin:
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`
-            Axes to plot on.
+            Axes to plot on
         kwargs_fit: dict
-            Keyword arguments passed to `~RegionNDMap.plot_mask()` for mask fit.
+            Keyword arguments passed to `~RegionNDMap.plot_mask()` for mask fit
         kwargs_safe: dict
-            Keyword arguments passed to `~RegionNDMap.plot_mask()` for mask safe.
+            Keyword arguments passed to `~RegionNDMap.plot_mask()` for mask safe
 
         Returns
         -------
@@ -255,7 +255,7 @@ class SpectrumDataset(PlotMixin, MapDataset):
     """Main dataset for spectrum fitting (1D analysis).
     It bundles together binned counts, background, IRFs into `~gammapy.maps.RegionNDMap` (a Map with only one spatial bin).
     A safe mask and a fit mask can be added to exclude bins during the analysis.
-    If models are assigned to it, it can compute the predicted number of counts and the statistic function, 
+    If models are assigned to it, it can compute the predicted number of counts and the statistic function,
     here the Cash statistic (see `~gammapy.stats.cash`).
 
     For more information see :ref:`datasets`.
@@ -276,10 +276,10 @@ class SpectrumDataset(PlotMixin, MapDataset):
 
 class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
     """Spectrum dataset for 1D on-off likelihood fitting.
-    It bundles together the binned on and off counts, the binned IRFs as well as the on and off acceptances. 
-    
-    A fit mask can be added to exclude bins during the analysis. 
-    
+    It bundles together the binned on and off counts, the binned IRFs as well as the on and off acceptances.
+
+    A fit mask can be added to exclude bins during the analysis.
+
     It uses the Wstat statistic (see `~gammapy.stats.wstat`).
 
     For more information see :ref:`datasets`.
