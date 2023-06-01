@@ -14,7 +14,6 @@ keywords:
 - "Gamma-rays"
 - "Data analysis"
 version: "1.1"
-date-released: 2023-06-08
 repository-code: "https://github.com/gammapy/gammapy"
 license: BSD-3-Clause
 contact:
