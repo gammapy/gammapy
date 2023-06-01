@@ -24,7 +24,7 @@ class MapDatasetEventSampler:
     Parameters
     ----------
     random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
-        Defines random number generator initialisation, that is passed to `~gammapy.utils.random.get_random_state`
+        Defines random number generator initialisation via the `~gammapy.utils.random.get_random_state` function
     oversample_energy_factor: {int}
         Defines an oversampling factor for the energies; it is used only when sampling
         an energy-dependent time-varying source

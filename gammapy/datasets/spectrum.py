@@ -253,10 +253,10 @@ class PlotMixin:
 
 class SpectrumDataset(PlotMixin, MapDataset):
     """Main dataset for spectrum fitting (1D analysis).
-    It bundles together binned counts, background, IRFs into `~gammapy.maps.RegionNDMap` with only one spatial bin.
+    It bundles together binned counts, background, IRFs into `~gammapy.maps.RegionNDMap` (a Map with only one spatial bin).
     A safe mask and a fit mask can be added to exclude bins during the analysis.
-    It can contain source sky models, and in this case it can compute a likelihood for a spectral analysis.
-    It uses the Cash statistics by default (see `~gammapy.stats.cash`).
+    If models are assigned to it, it can compute the predicted number of counts and the statistic function values. 
+    It uses the Cash statistic (see `~gammapy.stats.cash`).
 
     For more information see :ref:`datasets`.
     """
@@ -275,10 +275,10 @@ class SpectrumDataset(PlotMixin, MapDataset):
 
 
 class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
-    """Spectrum dataset for on-off likelihood fitting.
-    It bundles together binned counts, background counts, IRFs into `~gammapy.maps.WcsNDMap` with one spatial bin. It
-    contains also the acceptance for the on and off counts bins. A fit mask can be added to exclude bins
-    during the analysis. It uses Wstat statistics by default (see `~gammapy.stats.wstat`).
+    """Spectrum dataset for 1D on-off likelihood fitting.
+    It bundles together the binned on and off counts, the binned IRFs as well as the on and off acceptances. 
+    
+    A fit mask can be added to exclude bins during the analysis. It uses the Wstat statistic (see `~gammapy.stats.wstat`).
 
     For more information see :ref:`datasets`.
     """
@@ -296,8 +296,8 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
     def read(cls, filename, format="ogip", **kwargs):
         """Read from file.
 
-        For OGIP formats, filename is assumed to the name of a PHA file where BKG file, ARF, and RMF names must be
-        set in the PHA header and be present in the same folder. For details, see `OGIPDatasetReader.read`.
+        For OGIP formats, filename is the name of a PHA file. The BKG, ARF, and RMF file names must be
+        set in the PHA header and the files must be present in the same folder. For details, see `OGIPDatasetReader.read`.
 
         For the GADF format, a MapDataset serialisation is used.
 
@@ -407,6 +407,6 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         Returns
         -------
         dataset: `SpectrumDataset`
-            SpectrumDataset with cash statistics
+            SpectrumDataset with Cash statistic
         """
         return self.to_map_dataset(name=name).to_spectrum_dataset(on_region=None)

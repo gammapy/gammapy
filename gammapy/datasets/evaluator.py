@@ -21,8 +21,8 @@ class MapEvaluator:
     """Sky model evaluation on maps.
 
     Evaluates a sky model on a 3D map and returns a map of the predicted counts.
-    The convolution with IRFs will be performed as defined in the sky_model and the used IRFs
-    correspond to the ones at the position of the model.
+    The convolution with IRFs will be performed as defined in the sky_model. To do so, IRF kernels  
+    are extracted at the position closest to the position of the model.
 
     Parameters
     ----------
@@ -278,7 +278,7 @@ class MapEvaluator:
         Returns
         ----------
         value: `~astropy.units.Quantity`
-            Psf-corrected, integrated flux over a given region
+            PSF-corrected, integrated flux over a given region
         """
         if self.geom.is_region:
             # We don't estimate spatial contributions if no psf are defined

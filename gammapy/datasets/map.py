@@ -108,10 +108,11 @@ def create_map_dataset_geoms(
 
 class MapDataset(Dataset):
     """Main map dataset for likelihood fitting.
-    It bundles together binned counts, background, IRFs into `~gammapy.maps.WcsNDMap`.
+    It bundles together binned counts, background, IRFs in the form of `~gammapy.maps.Map`.
     A safe mask and a fit mask can be added to exclude bins during the analysis.
-    It can contain source sky models, and in this case it can compute a likelihood.
-    It uses the Cash statistics by default (see `~gammapy.stats.cash`).
+    If models are assigned to it, it can compute predicted counts in each bin of the  counts `Map` and compute
+    the associated statistic function, here the Cash statistic (see `~gammapy.stats.cash`).
+    It uses the Cash statistic by default (see `~gammapy.stats.cash`).
 
     For more information see :ref:`datasets`.
 
@@ -755,7 +756,7 @@ class MapDataset(Dataset):
     def stack(self, other, nan_to_num=True):
         r"""Stack another dataset in place. The original dataset is modified.
 
-        Safe mask is applied to compute the stacked counts' data. Counts outside
+        Safe mask is applied to compute the stacked counts data. Counts outside
         each dataset safe mask are lost.
 
         The stacking of 2 datasets is implemented as follows. Here, :math:`k`
@@ -1973,10 +1974,12 @@ class MapDataset(Dataset):
 
 class MapDatasetOnOff(MapDataset):
     """Map dataset for on-off likelihood fitting.
-    It bundles together binned counts, background counts, IRFs into `~gammapy.maps.WcsNDMap` with
-    the acceptance maps for the on and off counts maps. A safe mask and a fit mask can be added to exclude bins
-    during the analysis. It uses Wstat statistics by default (see `~gammapy.stats.wstat`), and thus no sky model
-    is needed by default.
+    
+    It bundles together the binned on and off counts, the binned IRFs as well as the on and off acceptances.
+    
+    A safe mask and a fit mask can be added to exclude bins
+    during the analysis. It uses the Wstat statistic (see `~gammapy.stats.wstat`), therefore no background model
+    is needed.
 
     For more information see :ref:`datasets`.
 
