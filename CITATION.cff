@@ -70,6 +70,7 @@ authors:
   - given-names: Maxime
     family-names: Regeard
     affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013 Paris, France"
+    orcid: "https://orcid.org/0000-0002-3844-6003"
   - given-names: Quentin
     family-names: Remy
     affiliation: "Max Planck Institute for Nuclear Physics, Heidelberg, Germany"
@@ -81,6 +82,7 @@ authors:
   - given-names: "Katrin"
     family-names: Streil
     affiliation: "Friedrich-Alexander-Universität Erlangen-Nürnberg, ECAP, Nikolaus-Fiebiger-Str. 2, 91058 Erlangen, Germany"
+    orcid: "https://orcid.org/0009-0005-7886-1825"
   - given-names: Régis
     family-names: Terrier
     affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013 Paris, France"
