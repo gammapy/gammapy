@@ -21,7 +21,7 @@ class MapEvaluator:
     """Sky model evaluation on maps.
 
     Evaluates a sky model on a 3D map and returns a map of the predicted counts.
-    The convolution with IRFs will be performed as defined in the sky_model. To do so, IRF kernels  
+    The convolution with IRFs will be performed as defined in the sky_model. To do so, IRF kernels
     are extracted at the position closest to the position of the model.
 
     Parameters
@@ -241,7 +241,7 @@ class MapEvaluator:
         Returns
         -------
         model_map : `~gammapy.maps.Map`
-            Sky cube with data filled with evaluated model values.
+            Sky cube with data filled with evaluated model values
             Units: ``cm-2 s-1 TeV-1 deg-2``
         """
         return self.model.evaluate_geom(self.geom, self.gti)
