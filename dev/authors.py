@@ -137,7 +137,7 @@ def check_author_lists(since_last_lts):
     diff = authors.difference(authors_cff)
     print(message + "\n  ".join(sorted(diff)) + "\n")
 
-    message = "****Authors not in shortlog****\n\n"
+    message = "****Authors not in shortlog****\n\n  "
     diff = authors_cff.difference(authors)
     print(message + "\n  ".join(sorted(diff)) + "\n")
 
