@@ -255,8 +255,8 @@ class SpectrumDataset(PlotMixin, MapDataset):
     """Main dataset for spectrum fitting (1D analysis).
     It bundles together binned counts, background, IRFs into `~gammapy.maps.RegionNDMap` (a Map with only one spatial bin).
     A safe mask and a fit mask can be added to exclude bins during the analysis.
-    If models are assigned to it, it can compute the predicted number of counts and the statistic function values. 
-    It uses the Cash statistic (see `~gammapy.stats.cash`).
+    If models are assigned to it, it can compute the predicted number of counts and the statistic function, 
+    here the Cash statistic (see `~gammapy.stats.cash`).
 
     For more information see :ref:`datasets`.
     """
@@ -278,7 +278,9 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
     """Spectrum dataset for 1D on-off likelihood fitting.
     It bundles together the binned on and off counts, the binned IRFs as well as the on and off acceptances. 
     
-    A fit mask can be added to exclude bins during the analysis. It uses the Wstat statistic (see `~gammapy.stats.wstat`).
+    A fit mask can be added to exclude bins during the analysis. 
+    
+    It uses the Wstat statistic (see `~gammapy.stats.wstat`).
 
     For more information see :ref:`datasets`.
     """

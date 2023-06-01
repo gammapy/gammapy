@@ -112,7 +112,6 @@ class MapDataset(Dataset):
     A safe mask and a fit mask can be added to exclude bins during the analysis.
     If models are assigned to it, it can compute predicted counts in each bin of the  counts `Map` and compute
     the associated statistic function, here the Cash statistic (see `~gammapy.stats.cash`).
-    It uses the Cash statistic by default (see `~gammapy.stats.cash`).
 
     For more information see :ref:`datasets`.
 
@@ -1977,9 +1976,9 @@ class MapDatasetOnOff(MapDataset):
     
     It bundles together the binned on and off counts, the binned IRFs as well as the on and off acceptances.
     
-    A safe mask and a fit mask can be added to exclude bins
-    during the analysis. It uses the Wstat statistic (see `~gammapy.stats.wstat`), therefore no background model
-    is needed.
+    A safe mask and a fit mask can be added to exclude bins during the analysis. 
+    
+    It uses the Wstat statistic (see `~gammapy.stats.wstat`), therefore no background model is needed.
 
     For more information see :ref:`datasets`.
 
