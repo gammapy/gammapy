@@ -15,12 +15,14 @@ To know how to sample events for standards sources, we suggest to visit the even
 Objective
 ---------
 
-Describe the process of sampling events of a source having an energy-dependent temporal model, and obtain an output event-list.
+Describe the process of sampling events of a source having an energy-dependent temporal model,
+and obtain an output event-list.
 
 Proposed approach
 -----------------
 
-Here we will show how to create an energy dependent temporal model; then we also create an observation and define a Dataset object. Finally we describe how to sample events from the given model.
+Here we will show how to create an energy dependent temporal model; then we also create an observation
+and define a Dataset object. Finally we describe how to sample events from the given model.
 
 We will work with the following functions and classes:
 
@@ -49,8 +51,7 @@ from gammapy.data import Observation, observatory_locations
 from gammapy.datasets import MapDataset, MapDatasetEventSampler
 from gammapy.irf import load_irf_dict_from_file
 from gammapy.makers import MapDatasetMaker
-from gammapy.maps import Map, MapAxis, RegionNDMap, WcsGeom
-from gammapy.modeling import Fit
+from gammapy.maps import MapAxis, RegionNDMap, WcsGeom
 from gammapy.modeling.models import (
     ConstantSpectralModel,
     FoVBackgroundModel,
@@ -345,88 +346,6 @@ src_events.select_time(time_interval).plot_energy(label="1800 s")
 plt.legend()
 plt.show()
 
-######################################################################
-# Fit the simulated data
-# ----------------------
-#
-# The energy-dependent temporal model that we used for the simulation
-# cannot be used to fit the data, because such a functionality is not
-# yet implemented in Gammapy. Therefore, we need to adopt the approach
-# of fitting events in a given time range, using a model defined as a
-# powerlaw spectral model, with no temporal information and point-like
-# morphology. We fix the source coordinates during the fit for simplicity:
-#
-
-spec = PowerLawSpectralModel(
-    index=2, amplitude=5e-11 * u.cm**-2 * u.s**-1 * u.TeV**-1, reference="1 TeV"
-)
-
-spatial_model = PointSpatialModel(lon_0="100 deg", lat_0="30 deg", frame="icrs")
-
-model = SkyModel(
-    spatial_model=spatial_model,
-    spectral_model=spec,
-    name="fit_source",
-)
-
-model.spatial_model.parameters[0].frozen = True
-model.spatial_model.parameters[1].frozen = True
-
-bkg_model = FoVBackgroundModel(dataset_name="my-dataset")
-
-model_fit = [model, bkg_model]
-
-
-######################################################################
-# Let's create a new observation, with the time bin starting
-# at 360s and with a duration of 100s, and a new dataset for
-# the fit:
-#
-
-livetime = 100 * u.s
-
-tstart = t_ref + (360 * u.s).to("d")
-observation = Observation.create(
-    obs_id=1001,
-    pointing=pointing,
-    livetime=livetime,
-    irfs=irfs,
-    location=location,
-    tstart=tstart,
-)
-
-dataset_fit = maker.run(empty, observation)
-
-######################################################################
-# We select only the events in the time bin of reference, and we
-# fill the dataset with them.
-#
-
-filt_evt = events.select_time([observation.gti.time_start, observation.gti.time_stop])
-counts = Map.from_geom(geom)
-counts.fill_events(filt_evt)
-dataset_fit.counts = counts
-
-dataset_fit.models = model_fit
-print(dataset_fit.models)
-
-
-######################################################################
-# Let's fit the dataset
-#
-
-fit = Fit()
-result = fit.run(dataset_fit)
-print(result)
-
-result.parameters.to_table()
-
-######################################################################
-# Please, note that the fitted parameters reflect the time averaged spectra of
-# a time varying source. The flux/spectra is not constant within the fitted
-# time bin, and depends upon the interpolation scheme of the model within the
-# supplied bins
-#
 
 ######################################################################
 # Exercises
