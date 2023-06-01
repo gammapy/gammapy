@@ -68,8 +68,11 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
         Whether to sum over the energy groups or fit the norm on the full energy
         grid.
     n_jobs : int
-        Number of processes used in parallel for the computation.
-        Default is one, unless `~gammapy.utils.parallel.N_PROCESSES` was modified.
+        Number of processes used in parallel for the computation. Default is one, unless
+        `~gammapy.utils.parallel.N_JOBS_DEFAULT` was modified. The number of jobs is
+        limited to the number of physical CPUs.
+    parallel_backend : {"multiprocessing", "ray"}
+        Which backend to use for multiprocessing.
     """
 
     tag = "FluxPointsEstimator"

@@ -5,7 +5,6 @@ from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.table import Table
-import gammapy.utils.parallel as parallel
 from gammapy.data import Observation
 from gammapy.data.pointing import FixedPointingInfo, PointingMode
 from gammapy.datasets import MapDataset, SpectrumDatasetOnOff
@@ -23,6 +22,7 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
 )
+from gammapy.utils import parallel
 from gammapy.utils.testing import requires_data, requires_dependency
 
 
@@ -535,6 +535,7 @@ def test_flux_points_parallel_multiprocessing(fpe_pwl):
     fpe.selection_optional = ["all"]
     fpe.n_jobs = 2
     assert fpe.n_jobs == 2
+
     fp = fpe.run(datasets)
     assert_allclose(
         fp.flux_ul.data,
@@ -542,10 +543,24 @@ def test_flux_points_parallel_multiprocessing(fpe_pwl):
         rtol=1e-3,
     )
 
-    fpe.n_jobs = None
-    parallel.N_PROCESSES = 2
+
+def test_global_n_jobs_default_handling():
+    fpe = FluxPointsEstimator(energy_edges=[1, 3, 10] * u.TeV)
+
+    assert fpe.n_jobs == 1
+
+    parallel.N_JOBS_DEFAULT = 2
     assert fpe.n_jobs == 2
-    parallel.N_PROCESSES = 1
+
+    fpe.n_jobs = 5
+    assert fpe.n_jobs == 5
+
+    fpe.n_jobs = None
+    assert fpe.n_jobs == 2
+    assert fpe._n_jobs is None
+
+    parallel.N_JOBS_DEFAULT = 1
+    assert fpe.n_jobs == 1
 
 
 @requires_dependency("ray")
