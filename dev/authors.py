@@ -10,7 +10,7 @@ log = logging.getLogger(__name__)
 EXCLUDE_AUTHORS = ["azure-pipelines[bot]", "GitHub Actions"]
 
 # Authors that are in the shortlog but did not opt in for v1.0
-EXCLUDE_AUTHORS_NOT_OPT_IN_V1_0 = [
+AUTHORS_NOT_OPT_IN_V1_0 = [
     "Adam Ginsburg",
     "Alexis de Almeida Coutinho",
     "Anne Lemière",
@@ -179,11 +179,36 @@ def check_author_lists(since_last_lts):
 
     message = "****Authors not in CITATION.cff****\n\n  "
     diff = authors.difference(authors_cff)
-    print(message + "\n  ".join(sorted(diff)) + "\n")
+
+    authors_annotated = []
+
+    for author in sorted(diff):
+        if author in AUTHORS_NOT_OPT_IN_V1_0:
+            author = "(OO) " + author
+        else:
+            author = 5 * " " + author
+        authors_annotated.append(author)
+
+    print(message + "\n  ".join(authors_annotated) + "\n")
 
     message = "****Authors not in shortlog****\n\n  "
     diff = authors_cff.difference(authors)
-    print(message + "\n  ".join(sorted(diff)) + "\n")
+
+    authors_annotated = []
+
+    for author in sorted(diff):
+        if author in ADDITIONAL_AUTHORS:
+            author = "(AA) " + author
+        elif author in GAMMAPY_CC:
+            author = "(CC) " + author
+        else:
+            author = 5 * " " + author
+
+        authors_annotated.append(author)
+
+    print(message + "\n  ".join(authors_annotated) + "\n")
+
+    print("(CC) = Coordination Committe, (AA) = Additional Authors, (OO) = Opted out\n")
 
 
 if __name__ == "__main__":
