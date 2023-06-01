@@ -9,55 +9,6 @@ log = logging.getLogger(__name__)
 
 EXCLUDE_AUTHORS = ["azure-pipelines[bot]", "GitHub Actions"]
 
-# Authors that are in the shortlog but did not opt in for v1.0
-AUTHORS_NOT_OPT_IN_V1_0 = [
-    "Adam Ginsburg",
-    "Alexis de Almeida Coutinho",
-    "Anne Lemière",
-    "Arjun Voruganti",
-    "Arpit Gogia",
-    "Benjamin Alan Weaver",
-    "Brigitta Sipőcz",
-    "David Fidalgo",
-    "Debanjan Bose",
-    "Dirk Lennarz",
-    "Domenico Tiziani",
-    "Eric O. Lebigot",
-    "Erik M. Bray",
-    "Erik Tollerud",
-    "Gabriel Emery",
-    "Hugo van Kemenade",
-    "Ignacio Minaya",
-    "Jalel Eddine Hajlaoui",
-    "Jason Watson",
-    "Jonathan D. Harris",
-    "Kai Brügge",
-    "Kyle Barbary",
-    "Lab Saha",
-    "Larry Bradley",
-    "Laura Vega Garcia",
-    "Matthew Craig",
-    "Matthias Wegenmat",
-    "Michael Droettboom",
-    "Mireia Nievas-Rosillo",
-    "Nachiketa Chakraborty",
-    "Olga Vorokh",
-    "Oscar Blanch Bigas",
-    "Peter Deiml",
-    "Roberta Zanin",
-    "Rolf Buehler",
-    "Sam Carter",
-    "Silvia Manconi",
-    "Stefan Klepser",
-    "Thomas Armstrong",
-    "Thomas Robitaille",
-    "Tyler Cahill",
-    "Vikas Joshi",
-    "Víctor Zabalza",
-    "Wolfgang Kerzendorf",
-    "Yves Gallant",
-]
-
 GAMMAPY_CC = [
     "Axel Donath",
     "Bruno Khelifi",
@@ -179,17 +130,7 @@ def check_author_lists(since_last_lts):
 
     message = "****Authors not in CITATION.cff****\n\n  "
     diff = authors.difference(authors_cff)
-
-    authors_annotated = []
-
-    for author in sorted(diff):
-        if author in AUTHORS_NOT_OPT_IN_V1_0:
-            author = "(OO) " + author
-        else:
-            author = 5 * " " + author
-        authors_annotated.append(author)
-
-    print(message + "\n  ".join(authors_annotated) + "\n")
+    print(message + "\n  ".join(sorted(diff)) + "\n")
 
     message = "****Authors not in shortlog****\n\n  "
     diff = authors_cff.difference(authors)
