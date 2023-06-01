@@ -9,18 +9,38 @@ log = logging.getLogger(__name__)
 
 EXCLUDE_AUTHORS = ["azure-pipelines[bot]", "GitHub Actions"]
 
-# Authors that did not opt in for v1.0
-EXCLUDE_AUTHORS_NOT_OPT_IN = [
+# Authors that are in the shortlog but did not opt in for v1.0
+EXCLUDE_AUTHORS_NOT_OPT_IN_V1_0 = [
     "",
 ]
 
-GAMMAPY_CC = []
+GAMMAPY_CC = [
+    "Axel Donath",
+    "Bruno Khelifi",
+    "Catherine Boisson",
+    "Christopher van Eldik",
+    "David Berge",
+    "Fabio Acero",
+    "Fabio Pintore",
+    "James Hinton",
+    "José Luis Contreras Gonzalez",
+    "Matthias Fuessling",
+    "Régis Terrier",
+    "Roberta Zanin",
+    "Rubén López-Coto",
+    "Stefan Funk",
+]
 
-ADDITIONAL_AUTHORS = []
+# Approved authors that requested to be added to CITATION.cff
+ADDITIONAL_AUTHORS = [
+    "Amanda Weinstein",
+    "Tim Unbehaun",
+]
 
 PATH = Path(__file__).parent.parent
 
 LAST_LTS = "v1.0"
+NOW = "HEAD"
 
 
 @click.group()
@@ -34,7 +54,7 @@ def get_git_shortlog_authors(since_last_lts=False):
     command = ("git", "shortlog", "--summary", "--numbered")
 
     if since_last_lts:
-        command += (f"{LAST_LTS}..HEAD",)
+        command += (f"{LAST_LTS}..{NOW}",)
 
     result = subprocess.check_output(command, stderr=subprocess.STDOUT).decode()
     data = result.split("\n")
