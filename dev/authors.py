@@ -9,7 +9,18 @@ log = logging.getLogger(__name__)
 
 EXCLUDE_AUTHORS = ["azure-pipelines[bot]", "GitHub Actions"]
 
+# Authors that did not opt in for v1.0
+EXCLUDE_AUTHORS_NOT_OPT_IN = [
+    "",
+]
+
+GAMMAPY_CC = []
+
+ADDITIONAL_AUTHORS = []
+
 PATH = Path(__file__).parent.parent
+
+LAST_LTS = "v1.0"
 
 
 @click.group()
@@ -17,10 +28,14 @@ def cli():
     pass
 
 
-def get_git_shortlog_authors():
+def get_git_shortlog_authors(since_last_lts=False):
     """Get list of authors from git shortlog"""
     authors = []
     command = ("git", "shortlog", "--summary", "--numbered")
+
+    if since_last_lts:
+        command += (f"{LAST_LTS}..HEAD",)
+
     result = subprocess.check_output(command, stderr=subprocess.STDOUT).decode()
     data = result.split("\n")
     for row in data:
@@ -92,9 +107,10 @@ def sort_citation_cff():
 
 
 @cli.command("check", help="Check git shortlog vs CITATION.cff authors")
-def check_author_lists():
+@click.option("--since-last-lts", is_flag=True, help="Show authors since last LTS")
+def check_author_lists(since_last_lts):
     """Check CITATION.cff with git shortlog"""
-    authors = set(get_git_shortlog_authors())
+    authors = set(get_git_shortlog_authors(since_last_lts))
     authors_cff = set(get_citation_cff_authors())
 
     message = "****Authors not in CITATION.cff****\n\n  "
