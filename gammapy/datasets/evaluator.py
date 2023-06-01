@@ -21,7 +21,8 @@ class MapEvaluator:
     """Sky model evaluation on maps.
 
     Evaluates a sky model on a 3D map and returns a map of the predicted counts.
-    Convolution with IRFs will be performed as defined in the sky_model
+    The convolution with IRFs will be performed as defined in the sky_model. To do so, IRF kernels
+    are extracted at the position closest to the position of the model.
 
     Parameters
     ----------
@@ -44,7 +45,7 @@ class MapEvaluator:
         The "global" evaluation mode evaluates the model components on the full map.
         This mode is recommended for global optimization algorithms.
     use_cache : bool
-        Use npred caching.
+        Use npred caching
     """
 
     def __init__(
@@ -101,7 +102,7 @@ class MapEvaluator:
 
     @property
     def geom(self):
-        """True energy map geometry (`~gammapy.maps.Geom`)"""
+        """True energy map geometry (`~gammapy.maps.Geom`)."""
         return self.exposure.geom
 
     @property
@@ -134,7 +135,7 @@ class MapEvaluator:
 
     @property
     def psf_width(self):
-        """Width of the PSF"""
+        """Width of the PSF."""
         if self.psf is not None:
             psf_width = np.max(self.psf.psf_kernel_map.geom.width)
         else:
@@ -142,7 +143,7 @@ class MapEvaluator:
         return psf_width
 
     def use_psf_containment(self, geom):
-        """Use psf containment for point sources and circular regions"""
+        """Use psf containment for point sources and circular regions."""
         if not geom.is_region:
             return False
 
@@ -152,7 +153,7 @@ class MapEvaluator:
 
     @property
     def cutout_width(self):
-        """Cutout width for the model component"""
+        """Cutout width for the model component."""
         return self.psf_width + 2 * (self.model.evaluation_radius + CUTOUT_MARGIN)
 
     def update(self, exposure, psf, edisp, geom, mask):
@@ -161,15 +162,15 @@ class MapEvaluator:
         Parameters
         ----------
         exposure : `~gammapy.maps.Map`
-            Exposure map.
+            Exposure map
         psf : `gammapy.irf.PSFMap`
-            PSF map.
+            PSF map
         edisp : `gammapy.irf.EDispMap`
-            Edisp map.
+            Edisp map
         geom : `WcsGeom`
             Counts geom
         mask : `~gammapy.maps.Map`
-            Mask to apply to the likelihood for fitting.
+            Mask to apply to the likelihood for fitting
         """
         # TODO: simplify and clean up
         log.debug("Updating model evaluator")
@@ -223,7 +224,7 @@ class MapEvaluator:
         self._cached_parameter_previous = None
 
     def update_spatial_oversampling_factor(self, geom):
-        """Update spatial oversampling_factor for model evaluation"""
+        """Update spatial oversampling_factor for model evaluation."""
         res_scale = self.model.evaluation_bin_size_min
 
         res_scale = res_scale.to_value("deg") if res_scale is not None else 0
@@ -240,13 +241,13 @@ class MapEvaluator:
         Returns
         -------
         model_map : `~gammapy.maps.Map`
-            Sky cube with data filled with evaluated model values.
+            Sky cube with data filled with evaluated model values
             Units: ``cm-2 s-1 TeV-1 deg-2``
         """
         return self.model.evaluate_geom(self.geom, self.gti)
 
     def compute_flux(self, *arg):
-        """Compute flux"""
+        """Compute flux."""
         return self.model.integrate_geom(self.geom, self.gti)
 
     def compute_flux_psf_convolved(self, *arg):
@@ -265,19 +266,19 @@ class MapEvaluator:
         return Map.from_geom(geom=self.geom, data=value.value, unit=value.unit)
 
     def compute_flux_spatial(self):
-        """Compute spatial flux using caching"""
+        """Compute spatial flux using caching."""
         if self.parameters_spatial_changed() or not self.use_cache:
             del self._compute_flux_spatial
         return self._compute_flux_spatial
 
     @lazyproperty
     def _compute_flux_spatial(self):
-        """Compute spatial flux
+        """Compute spatial flux.
 
         Returns
         ----------
         value: `~astropy.units.Quantity`
-            Psf-corrected, integrated flux over a given region.
+            PSF-corrected, integrated flux over a given region
         """
         if self.geom.is_region:
             # We don't estimate spatial contributions if no psf are defined
@@ -303,7 +304,7 @@ class MapEvaluator:
         return value
 
     def _compute_flux_spatial_geom(self, geom):
-        """Compute spatial flux oversampling geom if necessary"""
+        """Compute spatial flux oversampling geom if necessary."""
         if not self.model.spatial_model.is_energy_dependent:
             geom = geom.to_image()
         value = self.model.spatial_model.integrate_geom(geom)
@@ -314,7 +315,7 @@ class MapEvaluator:
         return value
 
     def compute_flux_spectral(self):
-        """Compute spectral flux"""
+        """Compute spectral flux."""
         energy = self.geom.axes["energy_true"].edges
         value = self.model.spectral_model.integral(
             energy[:-1],
@@ -326,22 +327,22 @@ class MapEvaluator:
             return value.reshape((-1, 1, 1))
 
     def compute_temporal_norm(self):
-        """Compute temporal norm"""
+        """Compute temporal norm."""
         integral = self.model.temporal_model.integral(
             self.gti.time_start, self.gti.time_stop
         )
         return np.sum(integral)
 
     def apply_exposure(self, flux):
-        """Compute npred cube
+        """Compute npred cube.
 
-        For now just divide flux cube by exposure
+        For now just divide flux cube by exposure.
         """
         npred = (flux.quantity * self.exposure.quantity).to_value("")
         return Map.from_geom(self.geom, data=npred, unit="")
 
     def apply_psf(self, npred):
-        """Convolve npred cube with PSF"""
+        """Convolve npred cube with PSF."""
         tmp = npred.convolve(self.psf)
         return tmp
 
@@ -362,7 +363,7 @@ class MapEvaluator:
 
     @lazyproperty
     def _compute_npred(self):
-        """Compute npred"""
+        """Compute npred."""
         if isinstance(self.model, TemplateNPredModel):
             npred = self.model.evaluate()
         else:
@@ -401,7 +402,7 @@ class MapEvaluator:
 
     @property
     def parameters_changed(self):
-        """Parameters changed"""
+        """Parameters changed."""
         values = self.model.parameters.value
 
         # TODO: possibly allow for a tolerance here?
@@ -414,7 +415,7 @@ class MapEvaluator:
 
     @property
     def parameter_norm_only_changed(self):
-        """Only norm parameter changed"""
+        """Only norm parameter changed."""
         norm_only_changed = False
         idx = self._norm_idx
         values = self.model.parameters.value
@@ -427,7 +428,7 @@ class MapEvaluator:
         return norm_only_changed
 
     def parameters_spatial_changed(self, reset=True):
-        """Parameters changed
+        """Parameters changed.
 
         Parameters
         ----------
@@ -437,7 +438,7 @@ class MapEvaluator:
         Returns
         -------
         changed : bool
-            Whether spatial parameters changed.
+            Whether spatial parameters changed
         """
         values = self.model.spatial_model.parameters.value
 
@@ -451,7 +452,7 @@ class MapEvaluator:
 
     @property
     def irf_position_changed(self):
-        """Position for IRF changed"""
+        """Position for IRF changed."""
 
         # Here we do not use SkyCoord.separation to improve performance
         # (it avoids equivalence comparisons for frame and units)
@@ -470,7 +471,7 @@ class MapEvaluator:
 
     @lazyproperty
     def _norm_idx(self):
-        """norm index"""
+        """Norm index."""
         names = self.model.parameters.names
         ind = [idx for idx, name in enumerate(names) if name in ["norm", "amplitude"]]
         if len(ind) == 1:
@@ -485,7 +486,7 @@ class MapEvaluator:
 
     @lazyproperty
     def methods_sequence(self):
-        """order to apply irf"""
+        """Order to apply the IRFs."""
 
         if self.apply_psf_after_edisp:
             methods = [
@@ -513,7 +514,7 @@ class MapEvaluator:
         Parameters
         ----------
         figsize : tuple
-            Size of the figure.
+            Size of the figure
         """
         if self.needs_update:
             raise AttributeError(
