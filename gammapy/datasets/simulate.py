@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Simulate observations"""
+"""Simulate observations."""
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import AltAz, SkyCoord, SkyOffsetFrame
@@ -14,13 +14,12 @@ __all__ = ["MapDatasetEventSampler"]
 
 
 class MapDatasetEventSampler:
-    """Sample events from a map dataset
+    """Sample events from a map dataset.
 
     Parameters
     ----------
     random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
-        Defines random number generator initialisation.
-        Passed to `~gammapy.utils.random.get_random_state`.
+        Defines random number generator initialisation via the `~gammapy.utils.random.get_random_state` function
     """
 
     def __init__(self, random_state="random-seed"):
@@ -58,7 +57,7 @@ class MapDatasetEventSampler:
         Parameters
         ----------
         dataset : `~gammapy.datasets.MapDataset`
-            Map dataset.
+            Map dataset
 
         Returns
         -------
@@ -100,7 +99,7 @@ class MapDatasetEventSampler:
         return EventList.from_stack(events_all)
 
     def sample_background(self, dataset):
-        """Sample background
+        """Sample background.
 
         Parameters
         ----------
@@ -141,7 +140,7 @@ class MapDatasetEventSampler:
         Returns
         -------
         events : `~gammapy.data.EventList`
-            Event list with reconstructed energy column.
+            Event list with reconstructed energy column
         """
         coord = MapCoord(
             {
@@ -162,14 +161,14 @@ class MapDatasetEventSampler:
         Parameters
         ----------
         psf_map : `~gammapy.irf.PSFMap`
-            PSF map.
+            PSF map
         events : `~gammapy.data.EventList`
-            Event list.
+            Event list
 
         Returns
         -------
         events : `~gammapy.data.EventList`
-            Event list with reconstructed position columns.
+            Event list with reconstructed position columns
         """
         coord = MapCoord(
             {
@@ -192,14 +191,14 @@ class MapDatasetEventSampler:
         Parameters
         ----------
         observation : `~gammapy.data.Observation`
-            In memory observation.
+            In memory observation
         events : `~gammapy.data.EventList`
-            Event list.
+            Event list
 
         Returns
         -------
         events : `~gammapy.data.EventList`
-            Event list with columns of event detector coordinates.
+            Event list with columns of event detector coordinates
         """
         sky_coord = SkyCoord(events.table["RA"], events.table["DEC"], frame="icrs")
         frame = SkyOffsetFrame(origin=observation.pointing_radec.icrs)
@@ -216,14 +215,14 @@ class MapDatasetEventSampler:
         Parameters
         ----------
         dataset : `~gammapy.datasets.MapDataset`
-            Map dataset.
+            Map dataset
         observation : `~gammapy.data.Observation`
-            In memory observation.
+            In memory observation
 
         Returns
         -------
         meta : dict
-            Meta dictionary.
+            Meta dictionary
         """
         # See: https://gamma-astro-data-formats.readthedocs.io/en/latest/events/events.html#mandatory-header-keywords  # noqa: E501
         meta = {}
@@ -345,14 +344,14 @@ class MapDatasetEventSampler:
         dataset : `~gammapy.datasets.MapDataset`
             Map dataset
         observation : `~gammapy.data.Observation`
-            In memory observation.
+            In memory observation
         edisp : Bool
-            It allows to include or exclude the Edisp in the simulation.
+            Whether to include or exclude the Edisp in the simulation
 
         Returns
         -------
         events : `~gammapy.data.EventList`
-            Event list.
+            Event list
         """
         if len(dataset.models) > 1:
             events_src = self.sample_sources(dataset)

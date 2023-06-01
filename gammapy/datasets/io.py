@@ -19,7 +19,7 @@ __all__ = [
 
 
 class DatasetReader(abc.ABC):
-    """Dataset reader base class"""
+    """Dataset reader base class."""
 
     @property
     @abc.abstractmethod
@@ -32,7 +32,7 @@ class DatasetReader(abc.ABC):
 
 
 class DatasetWriter(abc.ABC):
-    """Dataset writer base class"""
+    """Dataset writer base class."""
 
     @property
     @abc.abstractmethod
@@ -47,7 +47,7 @@ class DatasetWriter(abc.ABC):
 class OGIPDatasetWriter(DatasetWriter):
     """Write OGIP files.
 
-    If you want to use the written files with Sherpa you have to use the
+    If you want to use the written files with Sherpa, you have to use the
     ``ogip-sherpa`` format. Then all files will be written in units of 'keV' and
     'cm2'.
 
@@ -61,9 +61,9 @@ class OGIPDatasetWriter(DatasetWriter):
     Parameters
     ----------
     filename : `pathlib.Path` or str
-        Filename.
+        Filename
     format : {"ogip", "ogip-sherpa"}
-        Which format to use.
+        Which format to use
     overwrite : bool
         Overwrite existing files?
     """
@@ -80,7 +80,7 @@ class OGIPDatasetWriter(DatasetWriter):
 
     @staticmethod
     def get_filenames(filename):
-        """Get filenames
+        """Get filenames.
 
         Parameters
         ----------
@@ -90,7 +90,7 @@ class OGIPDatasetWriter(DatasetWriter):
         Returns
         -------
         filenames : dict
-            Dict of filenames.
+            Dict of filenames
         """
         suffix = "".join(filename.suffixes)
         name = filename.name.replace(suffix, "")
@@ -102,7 +102,7 @@ class OGIPDatasetWriter(DatasetWriter):
         }
 
     def get_ogip_meta(self, dataset, is_bkg=False):
-        """Meta info for the OGIP data format"""
+        """Meta info for the OGIP data format."""
         try:
             livetime = dataset.exposure.meta["livetime"]
         except KeyError:
@@ -133,7 +133,7 @@ class OGIPDatasetWriter(DatasetWriter):
         return meta
 
     def write(self, dataset):
-        """Write dataset to files
+        """Write dataset to file.
 
         Parameters
         ----------
@@ -161,20 +161,20 @@ class OGIPDatasetWriter(DatasetWriter):
         dataset : `SpectrumDatasetOnOff`
             Dataset to write
         filename : str or `Path`
-            Filename to use.
+            Filename to use
         """
         kernel = dataset.edisp.get_edisp_kernel()
         kernel.write(filename=filename, overwrite=self.overwrite, format=self.format)
 
     def write_arf(self, dataset, filename):
-        """Write effective area
+        """Write effective area.
 
         Parameters
         ----------
         dataset : `SpectrumDatasetOnOff`
             Dataset to write
         filename : str or `Path`
-            Filename to use.
+            Filename to use
 
         """
         aeff = dataset.exposure / dataset.exposure.meta["livetime"]
@@ -185,14 +185,14 @@ class OGIPDatasetWriter(DatasetWriter):
         )
 
     def to_counts_hdulist(self, dataset, is_bkg=False):
-        """Convert counts region map to hdulist
+        """Convert counts region map to hdulist.
 
         Parameters
         ----------
         dataset : `SpectrumDatasetOnOff`
             Dataset to write
         is_bkg : bool
-            Whether to use counts off.
+            Whether to use counts off
         """
         counts = dataset.counts_off if is_bkg else dataset.counts
         acceptance = dataset.acceptance_off if is_bkg else dataset.acceptance
@@ -219,14 +219,14 @@ class OGIPDatasetWriter(DatasetWriter):
         return hdulist
 
     def write_pha(self, dataset, filename):
-        """Write counts file
+        """Write counts file.
 
         Parameters
         ----------
         dataset : `SpectrumDatasetOnOff`
             Dataset to write
         filename : str or `Path`
-            Filename to use.
+            Filename to use
 
         """
         hdulist = self.to_counts_hdulist(dataset)
@@ -238,14 +238,14 @@ class OGIPDatasetWriter(DatasetWriter):
         hdulist.writeto(filename, overwrite=self.overwrite)
 
     def write_bkg(self, dataset, filename):
-        """Write off counts file
+        """Write off counts file.
 
         Parameters
         ----------
         dataset : `SpectrumDatasetOnOff`
             Dataset to write
         filename : str or `Path`
-            Filename to use.
+            Filename to use
         """
         hdulist = self.to_counts_hdulist(dataset, is_bkg=True)
         hdulist.writeto(filename, overwrite=self.overwrite)
@@ -277,7 +277,7 @@ class OGIPDatasetReader(DatasetReader):
         self.filename = make_path(filename)
 
     def get_valid_path(self, filename):
-        """Get absolute or relative path
+        """Get absolute or relative path.
 
         The relative path is with respect to the name of the reference file.
 
@@ -299,7 +299,7 @@ class OGIPDatasetReader(DatasetReader):
             return filename
 
     def get_filenames(self, pha_meta):
-        """Get filenames
+        """Get filenames.
 
         Parameters
         ----------
@@ -324,7 +324,7 @@ class OGIPDatasetReader(DatasetReader):
 
     @staticmethod
     def read_pha(filename):
-        """Read PHA file
+        """Read PHA file.
 
         Parameters
         ----------
@@ -355,7 +355,7 @@ class OGIPDatasetReader(DatasetReader):
 
     @staticmethod
     def read_bkg(filename):
-        """Read PHA background file
+        """Read PHA background file.
 
         Parameters
         ----------
@@ -376,7 +376,7 @@ class OGIPDatasetReader(DatasetReader):
 
     @staticmethod
     def read_rmf(filename, exposure):
-        """Read RMF file
+        """Read RMF file.
 
         Parameters
         ----------
@@ -399,7 +399,7 @@ class OGIPDatasetReader(DatasetReader):
 
     @staticmethod
     def read_arf(filename, livetime):
-        """Read ARF file
+        """Read ARF file.
 
         Parameters
         ----------
@@ -419,7 +419,7 @@ class OGIPDatasetReader(DatasetReader):
         return exposure
 
     def read(self):
-        """Read dataset
+        """Read dataset.
 
         Returns
         -------
