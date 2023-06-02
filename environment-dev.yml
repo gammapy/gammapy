@@ -47,7 +47,6 @@ dependencies:
   - pandas
   - reproject
   - sherpa
-  - ray-default
   # dev dependencies
   - black
   - codespell
@@ -79,4 +78,5 @@ dependencies:
   - memray
   - pip:
       - pytest-sphinx
+      - ray
       - PyGithub
