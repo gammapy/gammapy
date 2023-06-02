@@ -431,7 +431,7 @@ plt.show()
 # Stack observations
 # ------------------
 #
-# And alternative approach to fitting the spectrum is stacking all
+# An alternative approach to fitting the spectrum is stacking all
 # observations first and the fitting a model. For this we first stack the
 # individual datasets:
 #

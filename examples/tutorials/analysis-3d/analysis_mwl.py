@@ -244,7 +244,7 @@ flux_points_hess = FluxPointsEstimator(
 
 
 ######################################################################
-# Now, Let’s plot the Crab spectrum fitted and the flux points of each
+# Now, let’s plot the Crab spectrum fitted and the flux points of each
 # instrument.
 #
 
