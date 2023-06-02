@@ -6,8 +6,9 @@ import astropy.units as u
 from astropy.table import Table
 import matplotlib.pyplot as plt
 from gammapy.catalog.fermi import SourceCatalog3FGL, SourceCatalog4FGL
-from gammapy.estimators import FluxPoints
+from gammapy.estimators import FluxPoints, FluxPointsEstimator
 from gammapy.estimators.map.core import DEFAULT_UNIT
+from gammapy.estimators.points.tests.test_sed import simulate_map_dataset
 from gammapy.modeling.models import PowerLawSpectralModel, SpectralModel
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import (
@@ -336,3 +337,22 @@ def test_flux_points_plot_no_error_bar():
     flux_points = FluxPoints.from_table(table)
     with mpl_plot_check():
         _ = flux_points.plot(sed_type="dnde")
+
+
+def test_fp_no_is_ul():
+    dataset_1 = simulate_map_dataset(random_state=0, name="dataset_1")
+
+    energy_edges = [0.1, 1, 10, 100] * u.TeV
+
+    fpe = FluxPointsEstimator(
+        energy_edges=energy_edges,
+        norm_n_values=3,
+        source="source",
+    )
+
+    FluxPoints = fpe.run(datasets=dataset_1)
+    table = FluxPoints.to_table()
+
+    if not FluxPoints.has_ul:
+        with pytest.raises(AttributeError):
+            table.is_ul
