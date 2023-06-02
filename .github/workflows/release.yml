@@ -13,7 +13,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Update tags
-        run: git fetch --tags
+        run: git fetch --tags --force
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
