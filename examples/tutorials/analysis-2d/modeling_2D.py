@@ -76,7 +76,7 @@ config.observations.obs_ids = [110380, 111140, 111159]
 
 ######################################################################
 # Technically, gammapy implements 2D analysis as a special case of 3D
-# analysis (one one bin in energy). So, we must specify the type of
+# analysis (one bin in energy). So, we must specify the type of
 # analysis as *3D*, and define the geometry of the analysis.
 #
 

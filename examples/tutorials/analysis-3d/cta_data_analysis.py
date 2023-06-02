@@ -397,5 +397,5 @@ plt.show()
 #
 # -  This notebook showed an example of a first CTA analysis with Gammapy,
 #    using simulated 1DC data.
-# -  Let us know if you have any question or issues!
+# -  Let us know if you have any questions or issues!
 #

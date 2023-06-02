@@ -430,7 +430,7 @@ class FluxMaps:
 
     @property
     def npred_excess(self):
-        """Predicted excess count  rom best fit hypothesis"""
+        """Predicted excess count from best fit hypothesis"""
         self._check_quantity("npred_excess")
         return self._data["npred_excess"]
 

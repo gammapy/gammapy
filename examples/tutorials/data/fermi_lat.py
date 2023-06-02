@@ -338,7 +338,7 @@ plt.legend()
 plt.show()
 
 ######################################################################
-# This is whaty the corresponding PSF kernel looks like:
+# This is what the corresponding PSF kernel looks like:
 #
 
 psf_kernel = psf.get_psf_kernel(
