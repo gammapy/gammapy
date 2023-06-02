@@ -682,12 +682,13 @@ class DataStore:
         tab = self._obscore_def()
         tab.add_row()
 
-        obs_pos = make_path(
-            "$GAMMAPY_DATA_data/agn_baseline_%6s.fits" % (str(single_obsID))
-        )
-
-        size = int(os.path.getsize(obs_pos) / 1000.0)
         observation = self.obs(single_obsID)
+
+        obs_mask = self.obs_table["OBS_ID"] == observation.obs_id
+        obs_pos = self.obs_table[obs_mask]["EVENTS_FILENAME"]
+        path = make_path(os.environ["GAMMAPY_DATA"] + "/" + obs_pos[0])
+        size = int(os.path.getsize(path) / 1000.0)
+
         tab["dataproduct_type"] = observation.obs_info["EXTNAME"]
 
         tab["calib_level"] = 2  # Look into the data
