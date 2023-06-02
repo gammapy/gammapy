@@ -385,7 +385,7 @@ plt.show()
 # -  Load the EVENTS file for `obs_id=111159` as a
 #    `~gammapy.data.EventList` object.
 # -  Use `~gammapy.data.EventList.table` to find the energy, sky coordinate and time of
-#    the highest-energy envent.
+#    the highest-energy event.
 # -  Use `~gammapy.data.EventList.pointing_radec` to find the pointing position of this
 #    observation, and use `astropy.coordinates.SkyCoord` methods to find
 #    the field of view offset of the highest-energy event.
