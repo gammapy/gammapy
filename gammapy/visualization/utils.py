@@ -1,7 +1,7 @@
 import logging as log
 import numpy as np
-from scipy import stats
 from scipy.interpolate import CubicSpline
+from scipy.optimize import curve_fit
 from astropy.visualization import make_lupton_rgb
 import matplotlib.pyplot as plt
 from gammapy.maps.axes import UNIT_STRING_FORMAT
@@ -188,12 +188,13 @@ def plot_distribution(
     ax=None,
     ncols=3,
     fit=True,
-    dist=stats.norm,
+    func=None,
     kwargs_hist=None,
     kwargs_axes=None,
+    kwargs_fit=None,
 ):
     """
-    Plot the 1D distribution of data inside a map as a histogram. If the dimension of the map is smaller than 2,
+    Plot the 1D distribution of data inside a map as an histogram. If the dimension of the map is smaller than 2,
     a unique plot will be displayed. Otherwise, if the dimension is 3 or greater, a grid of plot will be displayed.
 
     Parameters
@@ -206,23 +207,37 @@ def plot_distribution(
         Number of columns to plot if a "plot grid" was to be done.
     fit : bool
         Whether to perform a fit of the distribution of data. If True, the fit is performed by `scipy.stats`.
-    dist : `scipy.stats.rv_continuous` or `scipy.stats.rv_discrete`
-        The distribution to use for the fit.
+    func : function object
+        The function to pass to `scipy.optimize.curve_fit`
     kwargs_hist : dict
         Keyword arguments to pass to `matplotlib.pyplot.hist`.
     kwargs_axes : dict
         Keyword arguments to pass to `matplotlib.axes.Axes`.
+    kwargs_fit : dict
+        Keyword arguments to pass to `scipy.optimize.curve_fit`
 
     Returns
     -------
-    result : list of `scipy.stats._result_class.FitResult`
-        The fit result for the distribution. If `fit` is set to False,
-        returns None.
+    result_list : list of dict
+        List of the results of `scipy.optimize.curve_fit` as a  dictionary, where `param` is the best-fit
+        parameters of `func`, `covar` is the covariance matrix for these parameters, and `info_dict` is the return of
+        the same name of `scipy.optimize.curve_fit`.
     axes : `~numpy.ndarray` of `~matplotlib.pyplot.Axes`
         Array of Axes.
+
+    Examples
+    --------
+    >>> from gammapy.datasets import MapDataset
+    >>> from gammapy.estimators import TSMapEstimator
+    >>> from scipy.stats import norm
+    >>> from gammapy.visualization import plot_distribution
+    >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
+    >>> tsmap_est = TSMapEstimator().run(dataset)
+    >>> func = lambda x, mu, sig : norm.pdf(x, loc=mu, scale=sig)
+    >>> res, ax = plot_distribution(tsmap_est.sqrt_ts, func=func, kwargs_hist={'bins': 75, 'range': (-10, 10), 'density': True})
     """
 
-    from gammapy.maps import WcsNDMap  # import here because of circular import
+    from gammapy.maps import WcsNDMap  # import here to avoid circular import
 
     if not isinstance(wcs_map, WcsNDMap):
         raise TypeError(
@@ -231,9 +246,13 @@ def plot_distribution(
 
     kwargs_hist = kwargs_hist or {}
     kwargs_axes = kwargs_axes or {}
+    kwargs_fit = kwargs_fit or {}
+    kwargs_fit.setdefault("full_output", True)
 
-    if fit:
-        kwargs_hist.setdefault("density", True)
+    if fit and func is None:
+        raise ValueError(
+            "Must provide a function to fit with parameter fit set to True."
+        )
 
     cutout, mask = wcs_map.cutout_and_mask_region()
     idx_x, idx_y = np.where(mask)
@@ -270,22 +289,25 @@ def plot_distribution(
             axe.set_visible(False)
             continue
         d = data[idx][np.isfinite(data[idx])]
-        axe.hist(d, **kwargs_hist)
+        n, bins, _ = axe.hist(d, **kwargs_hist)
 
         if fit:
-            params = dist.fit(d)
-            x = np.linspace(np.min(d), np.max(d), 100)
-            if isinstance(dist, stats.rv_continuous):
-                y = dist.pdf(x, *params)
-            elif isinstance(dist, stats.rv_discrete):
-                y = dist.pmf(x, *params)
+            centers = 0.5 * (bins[1:] + bins[:-1])
 
-            axe.plot(x, y, label="Fit")
+            pars, cov, infodict, message, _ = curve_fit(func, centers, n, **kwargs_fit)
+
+            result_dict = {"param": pars, "covar": cov, "info_dict": infodict}
+            result_list.append(result_dict)
+            log.info(message)
+
+            if "range" in kwargs_hist.keys():
+                x = np.linspace(*kwargs_hist.get("range"), 1000)
+            else:
+                x = np.linspace(np.min(d), np.max(d), 1000)
+
+            axe.plot(x, func(x, *pars), label="Fit")
 
         axe.set(**kwargs_axes)
         axe.legend()
-
-        log.info(params)
-        result_list.append(params)
 
     return result_list, axes
