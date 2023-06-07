@@ -1,10 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
+from numpy.testing import assert_allclose
+from scipy.stats import norm
 import astropy.units as u
 from astropy.table import Table
 import matplotlib.pyplot as plt
 from gammapy.datasets import MapDataset
+from gammapy.estimators import TSMapEstimator
 from gammapy.maps import Map, MapAxis, WcsNDMap
 from gammapy.utils.testing import mpl_plot_check, requires_data
 from gammapy.visualization import (
@@ -79,8 +82,35 @@ def test_plot_map_rgb():
 def test_plot_distribution():
     dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
 
-    with mpl_plot_check():
-        res, ax = plot_distribution(dataset.counts)
+    tsme = TSMapEstimator().run(dataset)
 
-        assert len(res) == 10
+    with pytest.raises(ValueError):
+        plot_distribution(tsme.sqrt_ts, fit=True)
+
+    with mpl_plot_check():
+        res, ax = plot_distribution(dataset.counts, fit=False)
+
         assert ax.shape == (4, 3)
+
+        def func(x, mu, sig):
+            return norm.pdf(x, mu, sig)
+
+        res, ax = plot_distribution(
+            tsme.sqrt_ts,
+            fit=True,
+            func=func,
+            kwargs_hist={"bins": 40, "range": (-5, 10)},
+        )
+
+        assert len(ax) == 1
+        assert len(res[0]) == 3
+        assert len(res[0].get("info_dict")) == 5
+
+        assert_allclose(res[0].get("param"), np.array([0.38355733, 1.21281365]))
+        assert_allclose(
+            res[0].get("covar"),
+            np.array(
+                [[6.04570694e-04, -1.68336683e-11], [-1.68336683e-11, 4.03047159e-04]]
+            ),
+        )
+        assert_allclose(res[0].get("info_dict").get("nfev"), 22)
