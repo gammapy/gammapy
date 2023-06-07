@@ -247,6 +247,8 @@ def plot_distribution(
     kwargs_hist = kwargs_hist or {}
     kwargs_axes = kwargs_axes or {}
     kwargs_fit = kwargs_fit or {}
+
+    kwargs_hist.setdefault("density", True)
     kwargs_fit.setdefault("full_output", True)
 
     if fit and func is None:
