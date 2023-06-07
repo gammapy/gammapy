@@ -181,6 +181,9 @@ class FluxEstimator(ParameterEstimator):
             # convert to scalar values
             result = {key: value.item() for key, value in result.items()}
 
+        # freeze all source model parameters
+        models[self.source].parameters.freeze_all()
+
         models[self.source].spectral_model = model
         datasets.models = models
         result.update(super().run(datasets, model.norm))
