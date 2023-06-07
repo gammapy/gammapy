@@ -428,7 +428,7 @@ def test_phase_curve_model(tmp_path):
     assert_allclose(integral, 0.225, rtol=1e-5)
 
 
-def test_phase_curve_model_spale_time():
+def test_phase_curve_model_sample_time():
     phase = np.linspace(0.0, 1, 51)
     norm = 1 * (phase < 0.5)
     table = Table(data={"PHASE": phase, "NORM": norm})

@@ -1115,3 +1115,43 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         ax = m.plot(ax=ax, **kwargs)
         ax.set_ylabel("Norm / A.U.")
         return ax
+
+    def sample_time(self, n_events, t_min, t_max, t_delta="1 s", random_state=0):
+        """Sample arrival times of events.
+
+        To fully cover the phase range, t_delta is the minimum between the input
+        and 5 percent of the period at 0.5*(t_min + t_max).
+
+        Parameters
+        ----------
+        n_events : int
+            Number of events to sample.
+        t_min : `~astropy.time.Time`
+            Start time of the sampling.
+        t_max : `~astropy.time.Time`
+            Stop time of the sampling.
+        t_delta : `~astropy.units.Quantity`
+            Time step used for sampling of the temporal model.
+        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+            Defines random number generator initialisation.
+            Passed to `~gammapy.utils.random.get_random_state`.
+
+        Returns
+        -------
+        time : `~astropy.units.Quantity`
+            Array with times of the sampled events.
+        """
+        t_delta = u.Quantity(t_delta)
+
+        # Determine period at the mid time
+        t_mid = Time(t_min, scale=self.scale) + 0.5 * (t_max - t_min)
+        delta_t = (t_mid - self.reference_time).to(u.d)
+        frequency = self.f0.quantity + delta_t * (
+            self.f1.quantity + delta_t * self.f2.quantity / 2
+        )
+        period = 1 / frequency
+
+        # Take minimum time delta between user input and 5% of the period
+        t_delta = np.minimum(0.05 * period, t_delta)
+
+        return super().sample_time(n_events, t_min, t_max, t_delta, random_state)
