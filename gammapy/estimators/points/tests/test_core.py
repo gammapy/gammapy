@@ -338,6 +338,7 @@ def test_flux_points_plot_no_error_bar():
         _ = flux_points.plot(sed_type="dnde")
 
 
+@requires_data()
 def test_fp_no_is_ul():
     path = make_path("$GAMMAPY_DATA/tests/spectrum/flux_points/flux_points.fits")
     table = Table.read(path)
@@ -347,5 +348,4 @@ def test_fp_no_is_ul():
     fp = FluxPoints.from_table(table)
 
     if not fp.has_ul:
-        with pytest.raises(AttributeError):
-            table.is_ul
+        assert "is_ul" not in table.colnames
