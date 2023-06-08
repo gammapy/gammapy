@@ -8,7 +8,7 @@ __all__ = [
 ]
 
 
-def compute_fvar(flux, flux_err):
+def compute_fvar(flux, flux_err, axis= 0):
     r"""Calculate the fractional excess variance.
 
     This method accesses the ``FLUX`` and ``FLUX_ERR`` columns
@@ -31,6 +31,9 @@ def compute_fvar(flux, flux_err):
         the measured fluxes
     flux_err : `~astropy.units.Quantity`
         the error on measured fluxes
+    axis : int, optional
+        Axis along which the excess variance is computed.
+        The default is to compute the value on axis 0, the default time axis in gammapy.
 
     Returns
     -------
@@ -44,11 +47,11 @@ def compute_fvar(flux, flux_err):
        https://ui.adsabs.harvard.edu/abs/2003MNRAS.345.1271V
     """
 
-    flux_mean = np.nanmean(flux)
+    flux_mean = np.nanmean(flux, axis=axis)
     n_points = len(flux)
 
-    s_square = np.nansum((flux - flux_mean) ** 2) / (n_points - 1)
-    sig_square = np.nansum(flux_err**2) / n_points
+    s_square = np.nansum((flux - flux_mean) ** 2, axis=axis) / (n_points - 1)
+    sig_square = np.nansum(flux_err**2, axis=axis) / n_points
     fvar = np.sqrt(np.abs(s_square - sig_square)) / flux_mean
 
     sigxserr_a = np.sqrt(2 / n_points) * sig_square / flux_mean**2
