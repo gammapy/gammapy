@@ -104,13 +104,15 @@ def lc():
         data=[
             Column(Time(["2010-01-01", "2010-01-03"]).mjd, "time_min"),
             Column(Time(["2010-01-03", "2010-01-10"]).mjd, "time_max"),
-            Column([[1.0], [1.0]], "e_min", unit="TeV"),
-            Column([[2.0], [2.0]], "e_max", unit="TeV"),
-            Column([1e-11, 3e-11], "flux", unit="cm-2 s-1"),
-            Column([0.1e-11, 0.3e-11], "flux_err", unit="cm-2 s-1"),
-            Column([np.nan, 3.6e-11], "flux_ul", unit="cm-2 s-1"),
-            Column([False, True], "is_ul"),
-            Column([True, True], "success"),
+            Column([[1.0, 2.0], [1.0, 2.0]], "e_min", unit="TeV"),
+            Column([[2.0, 5.0], [2.0, 5.0]], "e_max", unit="TeV"),
+            Column([[1e-11, 4e-12], [3e-11, 7e-12]], "flux", unit="cm-2 s-1"),
+            Column(
+                [[0.1e-11, 0.4e-12], [0.3e-11, 0.7e-12]], "flux_err", unit="cm-2 s-1"
+            ),
+            Column([[np.nan, np.nan], [3.6e-11, 1e-11]], "flux_ul", unit="cm-2 s-1"),
+            Column([[False, False], [True, True]], "is_ul"),
+            Column([[True, True], [True, True]], "success"),
         ],
     )
 
@@ -122,5 +124,8 @@ def test_compute_lightcurve_fvar():
     lightcurve = lc()
 
     fvar = compute_lightcurve_fvar(lightcurve)
+    ffvar = np.array(fvar["fvar"])
+    ffvar_err = np.array(fvar["fvar_err"])
 
-    assert_allclose(fvar, [(0.69812120021884471, 0.07956210281992429)])
+    assert_allclose(ffvar, np.asarray([[[0.698212]], [[0.37150576]]]))
+    assert_allclose(ffvar_err, np.asarray([[[0.0795621]],[[0.074706 ]]]))

@@ -242,7 +242,7 @@ def compute_lightcurve_fvar(lightcurve, quantity="flux"):
         the lightcurve object
     quantity : `string`
         specific quantity contained in the FluxPoints object used for calculation.
-        Useful in case of incomplete lightcurves computed outside gammapy
+        Useful in case of custom lightcurves computed outside gammapy
 
     Returns
     -------
@@ -250,32 +250,16 @@ def compute_lightcurve_fvar(lightcurve, quantity="flux"):
         Array of fractional excess variance and associated error for each energy bin of the lightcurve.
     """
 
-    if quantity == "flux":
-        flux = lightcurve.flux.data.T.reshape(-1, *lightcurve.flux.data.shape[:-3])
-        flux_err = lightcurve.flux_err.data.T.reshape(
-            -1, *lightcurve.flux_err.data.shape[:-3]
-        )
-    elif quantity == "norm":
-        flux = lightcurve.norm.data.T.reshape(-1, *lightcurve.norm.data.shape[:-3])
-        flux_err = lightcurve.norm_err.data.T.reshape(
-            -1, *lightcurve.norm_err.data.shape[:-3]
-        )
-    elif quantity == "dnde":
-        flux = lightcurve.dnde.data.T.reshape(-1, *lightcurve.dnde.data.shape[:-3])
-        flux_err = lightcurve.dnde_err.data.T.reshape(
-            -1, *lightcurve.dnde_err.data.shape[:-3]
-        )
-    elif quantity == "e2dnde":
-        flux = lightcurve.e2dnde.data.T.reshape(-1, *lightcurve.e2dnde.data.shape[:-3])
-        flux_err = lightcurve.e2dnde_err.data.T.reshape(
-            -1, *lightcurve.e2dnde_err.data.shape[:-3]
-        )
-    else:
-        raise ValueError(
-            "The chosen value for the quantity keyword is not supported by this function. "
-            "Supported quantities: flux, norm, dnde, e2dnde"
-        )
+    flux = getattr(lightcurve, quantity)
+    flux_err = getattr(lightcurve, quantity+"_err")
 
-    return np.asarray(
-        [compute_fvar(fflux, fflux_err) for fflux, fflux_err in zip(flux, flux_err)]
-    )
+    time_id = flux.geom.axes.index_data("time")
+
+    fvar, fvar_err = compute_fvar(flux.data, flux_err.data, axis=time_id)
+
+    energies = lightcurve.geom.axes["energy"].edges
+    table = Table([energies[:-1], energies[1:], fvar, fvar_err],
+             names = ("min_energy","max_energy", "fvar", "fvar_err"),
+             meta= lightcurve.meta)
+
+    return table
