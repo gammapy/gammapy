@@ -251,15 +251,17 @@ def compute_lightcurve_fvar(lightcurve, quantity="flux"):
     """
 
     flux = getattr(lightcurve, quantity)
-    flux_err = getattr(lightcurve, quantity+"_err")
+    flux_err = getattr(lightcurve, quantity + "_err")
 
     time_id = flux.geom.axes.index_data("time")
 
     fvar, fvar_err = compute_fvar(flux.data, flux_err.data, axis=time_id)
 
     energies = lightcurve.geom.axes["energy"].edges
-    table = Table([energies[:-1], energies[1:], fvar, fvar_err],
-             names = ("min_energy","max_energy", "fvar", "fvar_err"),
-             meta= lightcurve.meta)
+    table = Table(
+        [energies[:-1], energies[1:], fvar, fvar_err],
+        names=("min_energy", "max_energy", "fvar", "fvar_err"),
+        meta=lightcurve.meta,
+    )
 
     return table
