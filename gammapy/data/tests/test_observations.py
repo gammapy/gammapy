@@ -6,7 +6,7 @@ import astropy.units as u
 from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.time import Time
 from astropy.units import Quantity
-from gammapy.data import DataStore, Observation
+from gammapy.data import DataStore, Observation, ObservationFilter
 from gammapy.data.pointing import FixedPointingInfo, PointingMode
 from gammapy.data.utils import get_irfs_features
 from gammapy.irf import PSF3D, load_irf_dict_from_file
@@ -487,3 +487,17 @@ def test_observations_clustering(data_store):
     assert len(obs_clusters["group_1"]) == 3
     assert len(obs_clusters["group_2"]) == 1
     assert obs_clusters["group_2"][0].obs_id == 23523
+
+
+@requires_data()
+def test_filter_live_time_phase(data_store):
+    observation = data_store.obs(20136)
+    phase_filter = {"type": "custom", "opts": dict(parameter="PHASE", band=(0.2, 0.8))}
+
+    default_obs_live_time = observation.observation_live_time_duration
+
+    obs_filter = ObservationFilter(event_filters=[phase_filter])
+    observation.obs_filter = obs_filter
+    live_time_filter = observation.observation_live_time_duration
+
+    assert_allclose(live_time_filter, default_obs_live_time * (0.8 - 0.2))
