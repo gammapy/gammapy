@@ -33,7 +33,7 @@ def compute_fvar(flux, flux_err, axis= 0):
         the error on measured fluxes
     axis : int, optional
         Axis along which the excess variance is computed.
-        The default is to compute the value on axis 0, the default time axis in gammapy.
+        The default is to compute the value on axis 0.
 
     Returns
     -------
