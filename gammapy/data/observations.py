@@ -252,8 +252,10 @@ class Observation:
         Computed as ``t_live = t_observation * (1 - f_dead)``
         where ``f_dead`` is the dead-time fraction.
         """
-        return self.observation_time_duration * (
-            1 - self.observation_dead_time_fraction
+        return (
+            self.observation_time_duration
+            * (1 - self.observation_dead_time_fraction)
+            * self.obs_filter.livetime_fraction
         )
 
     @property

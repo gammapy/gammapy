@@ -6,7 +6,7 @@ import astropy.units as u
 from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.time import Time
 from astropy.units import Quantity
-from gammapy.data import DataStore, Observation
+from gammapy.data import DataStore, Observation, ObservationFilter
 from gammapy.irf import PSF3D, load_cta_irfs
 from gammapy.utils.fits import HDULocation
 from gammapy.utils.testing import (
@@ -386,3 +386,17 @@ def test_obervation_copy(data_store):
     obs_copy = obs.copy(obs_id=1234, in_memory=True)
     assert isinstance(obs_copy.__dict__["psf"], PSF3D)
     assert obs_copy.obs_id == 1234
+
+
+@requires_data()
+def test_filter_live_time_phase(data_store):
+    observation = data_store.obs(20136)
+    phase_filter = {"type": "custom", "opts": dict(parameter="PHASE", band=(0.2, 0.8))}
+
+    default_obs_live_time = observation.observation_live_time_duration
+
+    obs_filter = ObservationFilter(event_filters=[phase_filter])
+    observation.obs_filter = obs_filter
+    live_time_filter = observation.observation_live_time_duration
+
+    assert_allclose(live_time_filter, default_obs_live_time * (0.8 - 0.2))
