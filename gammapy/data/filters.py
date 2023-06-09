@@ -50,7 +50,7 @@ class ObservationFilter:
 
     @property
     def livetime_fraction(self):
-        """Fraction of the livetime resulting from event_filters."""
+        """Fraction of the livetime kept when applying the event_filters."""
         return self._check_filter_phase(self.event_filters)
 
     def filter_events(self, events):
