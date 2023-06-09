@@ -346,6 +346,5 @@ def test_fp_no_is_ul():
     table.remove_column("flux_ul")
 
     fp = FluxPoints.from_table(table)
-
-    if not fp.has_ul:
-        assert "is_ul" not in table.colnames
+    fp_table = fp.to_table()
+    assert "is_ul" not in fp_table.colnames
