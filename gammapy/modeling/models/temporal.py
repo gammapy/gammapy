@@ -1120,7 +1120,7 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         """Sample arrival times of events.
 
         To fully cover the phase range, t_delta is the minimum between the input
-        and 5 percent of the period at 0.5*(t_min + t_max).
+        and product of the period at 0.5*(t_min + t_max) and the table bin size.
 
         Parameters
         ----------
@@ -1151,7 +1151,8 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         )
         period = 1 / frequency
 
-        # Take minimum time delta between user input and 5% of the period
-        t_delta = np.minimum(0.05 * period, t_delta)
+        # Take minimum time delta between user input and the period divied by the number of raows in the model table
+        # this assumes that phase values are evenly spaced.
+        t_delta = np.minimum(period / len(self.table), t_delta)
 
         return super().sample_time(n_events, t_min, t_max, t_delta, random_state)
