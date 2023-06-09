@@ -22,7 +22,7 @@ Proposed approach
 -----------------
 
 Here we will show how to create an energy dependent temporal model; then we also create an observation
-and define a Dataset object. Finally we describe how to sample events from the given model.
+and define a Dataset object. Finally, we describe how to sample events from the given model.
 
 We will work with the following functions and classes:
 
@@ -76,7 +76,7 @@ check_tutorials_setup()
 # The source we want to simulate has a spectrum that varies as a function of
 # the time.
 # Here we show how to create an energy dependent temporal model. If you already
-# have such a model, go directly to the `Read the energy-dependent model` section.
+# have such a model, go directly to the :ref:`corresponding<read-the-energy-dependent-model>` section.
 #
 #
 # In the following example, the source spectrum will vary continuously
@@ -164,6 +164,8 @@ temp.write(filename, format="map", overwrite=True)
 
 
 ######################################################################
+# .. _read-the-energy-dependent-model:
+#
 # Read the energy-dependent model
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
