@@ -8,7 +8,7 @@ __all__ = [
 ]
 
 
-def compute_fvar(flux, flux_err, axis= 0):
+def compute_fvar(flux, flux_err, axis=0):
     r"""Calculate the fractional excess variance.
 
     This method accesses the ``FLUX`` and ``FLUX_ERR`` columns
@@ -48,7 +48,7 @@ def compute_fvar(flux, flux_err, axis= 0):
     """
 
     flux_mean = np.nanmean(flux, axis=axis)
-    n_points = len(flux)
+    n_points = np.count_nonzero(~np.isnan(flux), axis=axis)
 
     s_square = np.nansum((flux - flux_mean) ** 2, axis=axis) / (n_points - 1)
     sig_square = np.nansum(flux_err**2, axis=axis) / n_points
