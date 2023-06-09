@@ -32,6 +32,13 @@ def light_curve():
     return LightCurveTemplateTemporalModel.read(path)
 
 
+@pytest.fixture()
+def phase_curve_table():
+    phase = np.linspace(0.0, 1, 101)
+    norm = phase * (phase < 0.5) + (1 - phase) * (phase >= 0.5)
+    return Table(data={"PHASE": phase, "NORM": norm})
+
+
 @requires_data()
 def test_light_curve_str(light_curve):
     ss = str(light_curve)
@@ -419,6 +426,38 @@ def test_phase_curve_model(tmp_path):
     # 1.25 phase
     integral = phase_model.integral(t_ref, t_ref + 62.5 * u.ms)
     assert_allclose(integral, 0.225, rtol=1e-5)
+
+
+def test_phase_curve_model_sample_time():
+    phase = np.linspace(0.0, 1, 51)
+    norm = 1 * (phase < 0.5)
+    table = Table(data={"PHASE": phase, "NORM": norm})
+
+    t_ref = Time("2020-06-01", scale="utc")
+    phase_model = TemplatePhaseCurveTemporalModel(
+        table=table,
+        f0="50 Hz",
+        phi_ref=0.0,
+        f1="0 s-2",
+        f2="0 s-3",
+        t_ref=t_ref.mjd * u.d,
+        scale="utc",
+    )
+
+    tmin = Time("2023-06-01", scale="tt")
+    tmax = tmin + 0.5 * u.h
+
+    times = phase_model.sample_time(10, tmin, tmax)
+    phases, _ = phase_model._time_to_phase(
+        times,
+        phase_model.reference_time,
+        phase_model.phi_ref.quantity,
+        phase_model.f0.quantity,
+        phase_model.f1.quantity,
+        phase_model.f2.quantity,
+    )
+
+    assert np.all(phases <= 0.5)
 
 
 @requires_data()
