@@ -1,10 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
+from regions import PointSkyRegion
 from gammapy.data import EventList
 from gammapy.datasets import MapDatasetOnOff, SpectrumDataset
-from gammapy.maps import Map
 from gammapy.makers.utils import make_counts_rad_max
-from regions import PointSkyRegion
+from gammapy.maps import Map
 from ..core import Maker
 
 __all__ = ["PhaseBackgroundMaker"]
