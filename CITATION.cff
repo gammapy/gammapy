@@ -13,7 +13,7 @@ keywords:
 - Astronomy
 - "Gamma-rays"
 - "Data analysis"
-version: v1.1rc1
+version: v1.1
 repository-code: "https://github.com/gammapy/gammapy"
 license: BSD-3-Clause
 contact:
@@ -96,4 +96,4 @@ authors:
   affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013\
     \ Paris, France"
   orcid: "https://orcid.org/0000-0002-8219-4667"
-date-released: 2023-06-02
+date-released: 2023-06-13

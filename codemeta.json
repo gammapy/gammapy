@@ -173,7 +173,7 @@
         }
     ],
     "codeRepository": "https://github.com/gammapy/gammapy",
-    "datePublished": "2023-06-02",
+    "datePublished": "2023-06-13",
     "description": "Gammapy analyzes gamma-ray data and creates sky images, spectra and lightcurves, from event lists and instrument response information; it can also determine the position, morphology and spectra of gamma-ray sources. It is used to analyze data from H.E.S.S., Fermi-LAT, HAWC, and the Cherenkov Telescope Array (CTA).",
     "identifier": "https://doi.org/10.5281/zenodo.4701488",
     "keywords": [
@@ -184,16 +184,16 @@
     "license": "https://spdx.org/licenses/BSD-3-Clause",
     "name": "Gammapy: Python toolbox for gamma-ray astronomy",
     "url": "https://gammapy.org/",
-    "softwareVersion": "v1.1rc1",
+    "softwareVersion": "v1.1",
     "maintainer": {
         "@id": "https://orcid.org/0000-0003-4568-7005",
-        "@type": "Person",
-        "affiliation": {
-            "@type": "Organization",
-            "name": "Center for Astrophysics | Harvard & Smithsonian, USA"
-        },
-        "familyName": "Donath",
-        "givenName": "Axel"
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Center for Astrophysics | Harvard & Smithsonian, USA"
+            },
+            "familyName": "Donath",
+            "givenName": "Axel"
     },
     "readme": "https://gammapy.org",
     "issueTracker": "https://github.com/gammapy/gammapy/issues"
