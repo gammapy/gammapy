@@ -60,7 +60,7 @@ New features
   nested model fits and compute the resulting test statistic (TS) between two nested hypotheses.
   It can be used to determine whether the addition of a source to the model is significant or
   to test for specific features in a model (e.g. test the existence of a spectral cutoff).
- - A new method has been added on `SpectralModel.spectral_index_error()` to compute
+- A new method has been added on `SpectralModel.spectral_index_error()` to compute
   the spectral index at a given energy as well as its error by error propagation of
   the covariance matrix elements.
 - The Franceschini (2018) and Saldana-Lopez (2021) EBL are now part of the built-ins
