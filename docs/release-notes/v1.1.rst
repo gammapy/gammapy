@@ -1,9 +1,9 @@
 .. _gammapy_1p1_release:
 
-1.1 (May XXth 2023)
+1.1 (June 13th 2023)
 -------------------
 
-- Released June 8th, 2023
+- Released June 13th, 2023
 - 17 contributors
 - 129 pull requests since v1.0 (not all listed below)
 - 85 closed issues
