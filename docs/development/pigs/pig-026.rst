@@ -16,7 +16,7 @@ Abstract
 ========
 
 The second Long Term Stable (LTS) release of Gammapy will take place at the end of
-fall 2024. This PIG discusses the main are of development that are foreseen for
+2024. This PIG discusses the main area of development that are foreseen for
 the v2.0 and proposes some prioritization of the effort and plausible milestones
 for the intermediate feature releases expected (v1.x).
 
@@ -51,20 +51,22 @@ Pulsed signal search
 ++++++++++++++++++++
 
 Using a specific timing solution for a given pulsar, the user builds a phasogram of the data
-and can evaluate the significance of a pulsed signal vs flat background. A map per phase bin
-can be produced. Other aspects? Blind pulsation search ? Do we want to support this?
+and can evaluate the significance of a pulsed signal vs flat background. PSF weighted
+phasograms could also be produced to increase the sensitivity. A map per phase bin
+can be produced. Spectral analysis per phase bin should be easy to perform, with either
+background model or off counts measurements.
 
 Transient source detection
 ++++++++++++++++++++++++++
 
 The user wants to search for transient source or rapid source variability in a given observation.
+The user want to find flares in the long term light curve of a variable source.
 
 Spectral unfolding
 ++++++++++++++++++
 
 The user wants to extract the intrinsic source spectrum with minimal hypothesis on the shape
 (mostly with a regularity criterion).
-Spatial unfolding?
 
 Morphology estimation
 +++++++++++++++++++++
@@ -123,23 +125,39 @@ used in the v1.0 ``AnalysisConfig``.
 Gammapy Maps
 ++++++++++++
 
-``gammapy.maps`` is one of the biggest element in gammapy which requires expertise and dedication
-to properly maintain. It is also one the subpackage that has potentially the largest impact outside
-the gamma-ray community. If we find a few contributors from outside, it might be worth splitting out
-``gammapy.maps`` as an independent package.
+``gammapy.maps`` is one of the biggest element in gammapy which requires expertise
+and dedication to properly maintain. It is also one the subpackage that has potentially
+the largest impact outside the gamma-ray community. If we find a few contributors from
+outside, it might be worth splitting out ``gammapy.maps`` as an independent package. This
+is of course a very long term perspective, beyond v2.0.
 
-Proposed changes
-~~~~~~~~~~~~~~~~
+Proposed minor changes
+~~~~~~~~~~~~~~~~~~~~~~
 
 - RegionGeom should support sizes changing with axis.
   This would handle energy dependent region sizes as well as (See `GH 3863`_).
+- Improve the user interface to ``Map``
+- Clean-up serialization code, e.g. for ``MapAxis``
 
-- Make maps fully re-usable for IRFs. This might be a sommon use case with pyirf.
-- Allow ``Maps`` and ``MapCoord`` without spatial axes
-- Change to design without Geom, Introduce `WcsMapAxis`, `RegionMapAxis`, `HpxMapAxis` instead
- - Migrate from healpy to https://github.com/astropy/astropy-healpix or https://github.com/cds-astro/cds-healpix-python
-Interface multi resolution HPX maps: https://mhealpy.readthedocs.io ?
-What about sparse maps?
+Possible major changes
+~~~~~~~~~~~~~~~~~~~~~~
+
+We discuss here some aspects that should be explored. The evaluation of the feasibility
+will require some detailed prototyping. Such a major change would probably be possible
+only when releasing v2.0.
+
+- ``IRF`` and ``Map`` share a similar data model. A N-dimensional ``Quantity`` with a
+  ``MapAxes`` and an interpolator. In addition, ``Maps`` use the ``Geom`` object to
+  represent the spherical coordinates.
+    - Having a common data structure could help make maps fully re-usable for IRFs.
+      This might be a common use case with pyirf.
+    - One could allow ``Maps`` and ``MapCoord`` objects without spatial axes.
+      Introducing specialized spatial axes such as `WcsMapAxis`, `RegionMapAxis` or
+      `HpxMapAxis` could allow avoiding using ``Geom`` objects.
+- Migrate from the healpy dependency to using https://github.com/astropy/astropy-healpix
+  or https://github.com/cds-astro/cds-healpix-python. Another option could be to interface
+  multi resolution HPX maps: https://mhealpy.readthedocs.io ?
+
 
 
 Data model and data formats
