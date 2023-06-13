@@ -9,7 +9,7 @@ from astropy.time import Time
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from gammapy.maps import MapAxis, Maps, RegionNDMap, TimeMapAxis
-from gammapy.maps.axes import flat_if_equal, UNIT_STRING_FORMAT
+from gammapy.maps.axes import UNIT_STRING_FORMAT, flat_if_equal
 from gammapy.modeling.models import TemplateSpectralModel
 from gammapy.modeling.models.spectral import scale_plot_flux
 from gammapy.modeling.scipy import stat_profile_ul_scipy
@@ -370,6 +370,8 @@ class FluxPoints(FluxMaps):
                 table["stat_scan"] = self.stat_scan.data[idx]
 
             table["is_ul"] = self.is_ul.data[idx]
+            if not self.has_ul:
+                table.remove_columns("is_ul")
 
         elif format == "lightcurve":
             time_axis = self.geom.axes["time"]
