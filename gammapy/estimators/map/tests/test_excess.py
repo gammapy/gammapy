@@ -36,6 +36,18 @@ def simple_dataset():
 
 
 @pytest.fixture
+def simple_dataset_mask_safe():
+    axis = MapAxis.from_energy_bounds(0.1, 10, 3, unit="TeV")
+    geom = WcsGeom.create(npix=20, binsz=0.02, axes=[axis])
+    dataset = MapDataset.create(geom)
+    dataset.mask_safe += np.ones(dataset.data_shape, dtype=bool)
+    dataset.mask_safe.data[0, :, :] = False
+    dataset.counts += 2
+    dataset.background += 1
+    return dataset
+
+
+@pytest.fixture
 def simple_dataset_on_off():
     axis = MapAxis.from_energy_bounds(0.1, 10, 2, unit="TeV")
     geom = WcsGeom.create(npix=20, binsz=0.02, axes=[axis])
@@ -140,6 +152,27 @@ def test_significance_map_estimator_map_dataset(simple_dataset):
     assert_allclose(result["npred_excess_errp"].data[0, 10, 10], 13.063328, atol=1e-3)
     assert_allclose(result["npred_excess_errn"].data[0, 10, 10], 12.396716, atol=1e-3)
     assert_allclose(result["npred_excess_ul"].data[0, 10, 10], 107.806275, atol=1e-3)
+
+
+def test_significance_map_estimator_map_dataset_mask_safe(simple_dataset_mask_safe):
+    simple_dataset_mask_safe.exposure = None
+    energy_edges = simple_dataset_mask_safe.counts.geom.axes[0].edges
+    energy_edges = [energy_edges[0], energy_edges[-1]]
+    estimator = ExcessMapEstimator(
+        0.1 * u.deg, selection_optional=["all"], energy_edges=energy_edges
+    )
+
+    result = estimator.run(simple_dataset_mask_safe)
+
+    assert_allclose(result["npred"].data[0, 10, 10], 324)
+    assert_allclose(result["npred_excess"].data[0, 10, 10], 162)
+    assert_allclose(result["npred_background"].data[0, 10, 10], 162)
+    assert_allclose(result["sqrt_ts"].data[0, 10, 10], 11.187468, atol=1e-5)
+
+    assert_allclose(result["npred_excess_err"].data[0, 10, 10], 18.0, atol=1e-3)
+    assert_allclose(result["npred_excess_errp"].data[0, 10, 10], 18.334, atol=1e-3)
+    assert_allclose(result["npred_excess_errn"].data[0, 10, 10], 17.668, atol=1e-3)
+    assert_allclose(result["npred_excess_ul"].data[0, 10, 10], 199.345, atol=1e-3)
 
 
 def test_significance_map_estimator_map_dataset_exposure(simple_dataset):
