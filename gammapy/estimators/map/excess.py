@@ -86,6 +86,8 @@ class ExcessMapEstimator(Estimator):
         Confidence level for the asymmetric errors expressed in number of sigma.
     n_sigma_ul : float
         Confidence level for the upper limits expressed in number of sigma.
+    n_sigma_sensitivity : float
+        Confidence level for the sensitivity expressed in number of sigma.
     selection_optional : list of str
         Which additional maps to estimate besides delta TS, significance and symmetric error.
         Available options are:
@@ -93,6 +95,7 @@ class ExcessMapEstimator(Estimator):
             * "all": all the optional steps are executed
             * "errn-errp": estimate asymmetric errors.
             * "ul": estimate upper limits.
+            * "sensitivity": estimate sensitivity for a given significance
 
         Default is None so the optional steps are not executed.
     energy_edges : list of `~astropy.units.Quantity`
@@ -130,13 +133,14 @@ class ExcessMapEstimator(Estimator):
     """
 
     tag = "ExcessMapEstimator"
-    _available_selection_optional = ["errn-errp", "ul"]
+    _available_selection_optional = ["errn-errp", "ul", "sensitivity"]
 
     def __init__(
         self,
         correlation_radius="0.1 deg",
         n_sigma=1,
         n_sigma_ul=2,
+        n_sigma_sensitivity=4,
         selection_optional=None,
         energy_edges=None,
         correlate_off=True,
@@ -145,6 +149,7 @@ class ExcessMapEstimator(Estimator):
         self.correlation_radius = correlation_radius
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
+        self.n_sigma_sensitivity = n_sigma_sensitivity
         self.selection_optional = selection_optional
         self.energy_edges = energy_edges
         self.correlate_off = correlate_off
@@ -329,7 +334,16 @@ class ExcessMapEstimator(Estimator):
                     )
                     / reco_exposure
                 )
-
+            if "sensitivity" in self.selection_optional:
+                maps["norm_sensitivity"] = (
+                    Map.from_geom(
+                        geom, data=counts_stat.n_sig_matching_significance(
+                            self.n_sigma_sensitivity
+                            )
+                    )
+                    / reco_exposure
+                )
+                
         # return nan values outside mask
         for name in maps:
             maps[name].data[~mask] = np.nan
@@ -337,6 +351,7 @@ class ExcessMapEstimator(Estimator):
         meta = {
             "n_sigma": self.n_sigma,
             "n_sigma_ul": self.n_sigma_ul,
+            "n_sigma_sensitivity": self.n_sigma_sensitivity,
             "sed_type_init": "likelihood",
         }
 

@@ -58,7 +58,7 @@ REQUIRED_QUANTITIES_SCAN = ["stat_scan", "stat"]
 OPTIONAL_QUANTITIES = {
     "dnde": ["dnde_err", "dnde_errp", "dnde_errn", "dnde_ul"],
     "e2dnde": ["e2dnde_err", "e2dnde_errp", "e2dnde_errn", "e2dnde_ul"],
-    "flux": ["flux_err", "flux_errp", "flux_errn", "flux_ul"],
+    "flux": ["flux_err", "flux_errp", "flux_errn", "flux_ul", "sensitivity"],
     "eflux": ["eflux_err", "eflux_errp", "eflux_errn", "eflux_ul"],
     "likelihood": ["norm_err", "norm_errn", "norm_errp", "norm_ul"],
 }
@@ -69,6 +69,7 @@ VALID_QUANTITIES = [
     "norm_errn",
     "norm_errp",
     "norm_ul",
+    "norm_sensitivity",
     "ts",
     "sqrt_ts",
     "npred",
@@ -434,6 +435,7 @@ class FluxMaps:
         self._check_quantity("npred_excess")
         return self._data["npred_excess"]
 
+    
     def _expand_dims(self, data):
         # TODO: instead make map support broadcasting
         axes = self.npred.geom.axes
@@ -561,6 +563,12 @@ class FluxMaps:
         return self._data["norm_ul"]
 
     @property
+    def norm_sensitivity(self):
+        """Norm sensitivity"""
+        self._check_quantity("norm_sensitivity")
+        return self._data["norm_sensitivity"]
+
+    @property
     def dnde_ref(self):
         """Reference differential flux"""
         result = self.reference_spectral_model(self.energy_axis.center)
@@ -673,6 +681,11 @@ class FluxMaps:
     def flux_ul(self):
         """Return integral flux (flux) SED upper limits."""
         return self.norm_ul * self.flux_ref
+
+    @property
+    def sensitivity(self):
+        """Sensitivity above a given significance"""
+        return self.norm_sensitivity * self.flux_ref
 
     @property
     def eflux(self):
