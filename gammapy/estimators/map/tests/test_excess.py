@@ -156,11 +156,7 @@ def test_significance_map_estimator_map_dataset(simple_dataset):
 
 def test_significance_map_estimator_map_dataset_mask_safe(simple_dataset_mask_safe):
     simple_dataset_mask_safe.exposure = None
-    energy_edges = simple_dataset_mask_safe.counts.geom.axes[0].edges
-    energy_edges = [energy_edges[0], energy_edges[-1]]
-    estimator = ExcessMapEstimator(
-        0.1 * u.deg, selection_optional=["all"], energy_edges=energy_edges
-    )
+    estimator = ExcessMapEstimator(0.1 * u.deg, selection_optional=["all"])
 
     result = estimator.run(simple_dataset_mask_safe)
 
