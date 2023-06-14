@@ -2,7 +2,6 @@ import numpy as np
 from scipy.interpolate import CubicSpline
 from astropy.visualization import make_lupton_rgb
 import matplotlib.pyplot as plt
-from gammapy.maps.axes import UNIT_STRING_FORMAT
 
 __all__ = [
     "plot_contour_line",
@@ -128,6 +127,7 @@ def plot_theta_squared_table(table):
         Required columns: theta2_min, theta2_max, counts, counts_off and alpha
     """
     from gammapy.maps import MapAxis
+    from gammapy.maps.axes import UNIT_STRING_FORMAT
     from gammapy.maps.utils import edges_from_lo_hi
 
     theta2_edges = edges_from_lo_hi(
