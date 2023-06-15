@@ -189,7 +189,9 @@ class ExcessMapEstimator(Estimator):
         if isinstance(dataset, MapDatasetOnOff):
             resampled_dataset.models = dataset.models
         else:
-            resampled_dataset.background = dataset.npred().resample_axis(axis=axis)
+            resampled_dataset.background = dataset.npred().resample_axis(
+                axis=axis, weights=dataset.mask_safe
+            )
             resampled_dataset.models = None
 
         result = self.estimate_excess_map(resampled_dataset)
