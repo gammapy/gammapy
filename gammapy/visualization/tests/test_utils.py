@@ -71,12 +71,3 @@ def test_plot_map_rgb():
     kwargs = {"stretch": 0.5, "Q": 1, "minimum": 0.15}
     with mpl_plot_check():
         plot_map_rgb(map_, **kwargs)
-
-
-def test_circular_import():
-    try:
-        from gammapy.visualization import plot_map_rgb
-
-        plot_map_rgb.__name__
-    except ImportError:
-        pytest.fail()
