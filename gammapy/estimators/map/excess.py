@@ -337,13 +337,14 @@ class ExcessMapEstimator(Estimator):
             if "sensitivity" in self.selection_optional:
                 maps["norm_sensitivity"] = (
                     Map.from_geom(
-                        geom, data=counts_stat.n_sig_matching_significance(
+                        geom,
+                        data=counts_stat.n_sig_matching_significance(
                             self.n_sigma_sensitivity
-                            )
+                        ),
                     )
                     / reco_exposure
                 )
-                
+
         # return nan values outside mask
         for name in maps:
             maps[name].data[~mask] = np.nan

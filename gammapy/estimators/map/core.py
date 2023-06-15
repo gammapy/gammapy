@@ -435,7 +435,6 @@ class FluxMaps:
         self._check_quantity("npred_excess")
         return self._data["npred_excess"]
 
-    
     def _expand_dims(self, data):
         # TODO: instead make map support broadcasting
         axes = self.npred.geom.axes
