@@ -186,24 +186,15 @@
     "url": "https://gammapy.org/",
     "softwareVersion": "v1.1",
     "maintainer": {
-        "@id": "https://orcid.org/0000-0003-4568-7005",
+        "@id": "https://orcid.org/0000-0001-8816-4920",
         "@type": "Person",
         "affiliation": {
             "@type": "Organization",
-            "name": "Center for Astrophysics | Harvard & Smithsonian, CfA, 60 Garden St., 02138 Cambridge MA, USA"
+            "name": "Departament de F\u00edsica Qu\u00e0ntica i Astrof\u00edsica, Institut de Ci\u00e8ncies del Cosmos (ICCUB), Universitat de Barcelona (IEEC-UB), Spain"
         },
-        "familyName": "Donath",
-        "givenName": "Axel"
+        "familyName": "Aguasca-Cabot",
+        "givenName": "Arnau"
     },
     "readme": "https://gammapy.org",
-    "issueTracker": "https://github.com/gammapy/gammapy/issues",
-    "applicationCategory": "Astronomy",
-    "applicationSubCategory": "Very-high energy gamma rays",
-    "programmingLanguage": "Python 3",
-    "operatingSystem": "Linux, Mac OS, Windows",
-    "audience": {
-        "@id": "/audience/science-research",
-        "@type": "Audience",
-        "audienceType": "Science/Research"
-    },
+    "issueTracker": "https://github.com/gammapy/gammapy/issues"
 }
