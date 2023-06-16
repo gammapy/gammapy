@@ -257,10 +257,12 @@ def compute_lightcurve_fvar(lightcurve, quantity="flux"):
 
     fvar, fvar_err = compute_fvar(flux.data, flux_err.data, axis=time_id)
 
+    significance = fvar / fvar_err
+
     energies = lightcurve.geom.axes["energy"].edges
     table = Table(
-        [energies[:-1], energies[1:], fvar, fvar_err],
-        names=("min_energy", "max_energy", "fvar", "fvar_err"),
+        [energies[:-1], energies[1:], fvar, fvar_err, significance],
+        names=("min_energy", "max_energy", "fvar", "fvar_err", "significance"),
         meta=lightcurve.meta,
     )
 
