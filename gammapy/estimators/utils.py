@@ -127,7 +127,7 @@ def find_peaks_in_flux_map(maps, threshold, min_distance=1):
     ----------
     maps : `~gammapy.estimators.map.FluxMaps`
     threshold : float or array-like
-        The data value or pixel-wise data values to be used for the
+        The TS data value or pixel-wise TS data values to be used for the
         detection threshold.  A 2D ``threshold`` must have the same
         shape as the map ``data``.
     min_distance : int or `~astropy.units.Quantity`
