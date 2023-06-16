@@ -196,5 +196,14 @@
         "givenName": "Axel"
     },
     "readme": "https://gammapy.org",
+    "applicationCategory": "Astronomy",
+    "applicationSubCategory": "Very-high energy gamma rays",
+    "programmingLanguage": "Python 3",
+    "operatingSystem": "Linux, Mac OS, Windows",
+    "audience": {
+        "@id": "/audience/science-research",
+        "@type": "Audience",
+        "audienceType": "Science/Research"
+    },
     "issueTracker": "https://github.com/gammapy/gammapy/issues"
 }
