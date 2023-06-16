@@ -89,6 +89,9 @@ class LightCurveEstimator(FluxPointsEstimator):
         self.time_intervals = time_intervals
         self.atol = u.Quantity(atol)
 
+        if "reoptimize" not in kwargs:
+            kwargs["reoptimize"] = False
+
         super().__init__(**kwargs)
 
     def run(self, datasets):
