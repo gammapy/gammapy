@@ -1909,3 +1909,28 @@ def test_peek(images):
 def test_create_psf_reco(geom):
     dat = MapDataset.create(geom, reco_psf=True)
     assert isinstance(dat.psf, RecoPSFMap)
+
+
+def test_to_masked():
+    axis = MapAxis.from_energy_bounds(1, 10, 2, unit="TeV")
+    geom = WcsGeom.create(npix=(10, 10), binsz=0.05, axes=[axis])
+    counts = Map.from_geom(geom, data=np.ones((2, 10, 10)))
+    mask_data = np.ones((2, 10, 10), dtype=bool)
+    mask_data[0][5:8] = 0
+    mask = Map.from_geom(geom, data=mask_data, dtype=bool)
+    dataset = MapDataset(counts=counts, mask_safe=mask)
+    d1 = dataset.to_masked()
+    assert_allclose(d1.counts.data.sum(), 170)
+
+    acceptance = Map.from_geom(geom, np.ones((2, 10, 10)))
+    acceptance_off = Map.from_geom(geom, np.ones((2, 10, 10)) * 0.1)
+    counts_off = counts
+    datasetonoff = MapDatasetOnOff(
+        counts=counts,
+        acceptance=acceptance,
+        mask_safe=mask,
+        acceptance_off=acceptance_off,
+        counts_off=counts_off,
+    )
+    d1 = datasetonoff.to_masked()
+    assert_allclose(d1.counts.data.sum(), 170)
