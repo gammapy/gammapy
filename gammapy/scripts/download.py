@@ -112,10 +112,14 @@ def show_info_notebooks(outfolder, release):
     print("")
 
 
-def show_info_datasets(outfolder):
+def show_info_datasets(outfolder, release):
     print("")
-    print("*** You might want to declare GAMMAPY_DATA env variable")
+    print("*** You might want to declare GAMMAPY_DATA as a global env variable")
     print(f"export GAMMAPY_DATA={outfolder}")
+    print("")
+    print("Or as part of your conda environment:")
+    print(f"conda env config vars set GAMMAPY_DATA={outfolder}")
+    print(f"conda conda activate gammapy-{release}")
     print("")
 
 
@@ -184,4 +188,4 @@ def cli_download_datasets(release, out):
     log.info(f"Extracting {tar_destination_file}")
     extract_bundle(tar_destination_file, localfolder)
     Path(tar_destination_file).unlink()
-    show_info_datasets(localfolder)
+    show_info_datasets(localfolder, release)
