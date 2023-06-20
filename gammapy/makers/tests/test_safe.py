@@ -7,7 +7,7 @@ from astropy import units as u
 from regions import CircleSkyRegion
 from gammapy.data import DataStore
 from gammapy.datasets import MapDataset, SpectrumDatasetOnOff
-from gammapy.makers import MapDatasetMaker, SafeMaskMaker
+from gammapy.makers import MapDatasetMaker, SafeMakerDL3, SafeMaskMaker
 from gammapy.maps import MapAxis, RegionGeom, WcsGeom
 from gammapy.utils.testing import requires_data
 
@@ -282,3 +282,29 @@ def test_safe_mask_maker_bkg_invalid(observations_hess_dl3):
 
     dataset = safe_mask_maker_nonan.run(dataset, obs)
     assert_allclose(dataset.mask_safe, mask_nonan)
+
+
+@requires_data()
+def test_safe_maker_dl3(observations_hess_dl3):
+    obs = observations_hess_dl3[0]
+    maker = SafeMakerDL3(
+        methods=["offset-max", "aeff-max", "aeff-default", "bkg-peak", "edisp-bias"]
+    )
+
+    evt = maker.make_energy_aeff_default(obs)
+    assert_allclose(len(evt.table), 4132)
+
+    evt = maker.make_energy_aeff_max(obs)
+    assert_allclose(len(evt.table), 6903)
+
+    evt = maker.make_energy_bkg_peak(obs)
+    assert_allclose(len(evt.table), 5633)
+
+    evt = maker.make_offset_max(obs)
+    assert_allclose(len(evt.table), 6920)
+
+    evt = maker.make_energy_edisp_bias(obs)
+    assert_allclose(len(evt.table), 3966)
+
+    obs6 = maker.run(obs)
+    assert_allclose(len(obs6.events.table), 3327)
