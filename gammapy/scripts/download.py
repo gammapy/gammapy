@@ -115,10 +115,10 @@ def show_info_notebooks(outfolder, release):
 def show_info_datasets(outfolder, release):
     print("")
     print("*** You might want to declare GAMMAPY_DATA as a global env variable")
-    print(f"export GAMMAPY_DATA={outfolder}")
+    print(f"export GAMMAPY_DATA=$PWD/{outfolder}")
     print("")
     print("Or as part of your conda environment:")
-    print(f"conda env config vars set GAMMAPY_DATA={outfolder}")
+    print(f"conda env config vars set GAMMAPY_DATA=$PWD/{outfolder}")
     print(f"conda conda activate gammapy-{release}")
     print("")
 
