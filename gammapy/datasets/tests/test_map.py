@@ -1921,8 +1921,8 @@ def test_to_masked():
     d1 = dataset.to_masked()
     assert_allclose(d1.counts.data.sum(), 170)
 
-    acceptance = Map.from_geom(geom, np.ones((2, 10, 10)))
-    acceptance_off = Map.from_geom(geom, np.ones((2, 10, 10)) * 0.1)
+    acceptance = Map.from_geom(geom, data=1)
+    acceptance_off = Map.from_geom(geom, data=0.1)
     counts_off = counts
     datasetonoff = MapDatasetOnOff(
         counts=counts,
