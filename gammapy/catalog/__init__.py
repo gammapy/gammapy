@@ -25,7 +25,7 @@ from .hess import (
     SourceCatalogObjectHGPS,
     SourceCatalogObjectHGPSComponent,
 )
-from .lhaaso import SourceCatalogObject1LHAASO, SourceCatalogt1LHAASO
+from .lhaaso import SourceCatalog1LHAASO, SourceCatalogObject1LHAASO
 
 CATALOG_REGISTRY = Registry(
     [
@@ -37,7 +37,7 @@ CATALOG_REGISTRY = Registry(
         SourceCatalog2FHL,
         SourceCatalog3FHL,
         SourceCatalog3HWC,
-        SourceCatalogt1LHAASO,
+        SourceCatalog1LHAASO,
     ]
 )
 """Registry of source catalogs in Gammapy."""
