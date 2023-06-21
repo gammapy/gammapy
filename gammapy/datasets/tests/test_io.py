@@ -2,7 +2,7 @@
 from numpy.testing import assert_allclose
 import astropy.units as u
 from regions import CircleSkyRegion
-from gammapy.datasets import Datasets, SpectrumDataset
+from gammapy.datasets import Datasets, SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.modeling.models import DatasetModels
 from gammapy.utils.testing import requires_data
 
@@ -105,3 +105,17 @@ def test_spectrum_datasets_to_io(tmp_path):
     assert datasets_read[0].counts.data.sum() == 18429
     assert_allclose(datasets_read[0].exposure.data.sum(), 2.034089e10, atol=0.1)
     assert isinstance(datasets_read[0], SpectrumDataset)
+
+
+@requires_data()
+def test_ogip_writer(tmp_path):
+
+    dataset = SpectrumDatasetOnOff.read(
+        "$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits"
+    )
+    dataset.counts_off = None
+    datasets = Datasets(dataset)
+
+    datasets.write(tmp_path / "written_datasets.yaml")
+
+    datasets.read(tmp_path / "written_datasets.yaml")
