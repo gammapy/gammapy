@@ -118,8 +118,12 @@ def test_get_coord(region, energy_axis, test_axis):
     assert_allclose(
         coords["energy"].value[0, :, 0, 0], [1.467799, 3.162278, 6.812921], rtol=1e-5
     )
-
     assert_allclose(coords["test"].value[:, 0, 0, 0].squeeze(), [1, 2], rtol=1e-5)
+
+    coords = geom.get_coord(sparse=False)
+    assert coords["lon"].shape == (2, 3, 1, 1)
+    assert coords["test"].shape == (2, 3, 1, 1)
+    assert coords["energy"].shape == (2, 3, 1, 1)
 
 
 def test_get_idx(region, energy_axis, test_axis):
