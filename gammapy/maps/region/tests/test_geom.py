@@ -124,6 +124,7 @@ def test_get_coord(region, energy_axis, test_axis):
     assert coords["lon"].shape == (2, 3, 1, 1)
     assert coords["test"].shape == (2, 3, 1, 1)
     assert coords["energy"].shape == (2, 3, 1, 1)
+    assert_allclose(coords["test"].value[:, 2, 0, 0].squeeze(), [1, 2], rtol=1e-5)
 
 
 def test_get_idx(region, energy_axis, test_axis):
