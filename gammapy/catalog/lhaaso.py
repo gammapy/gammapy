@@ -170,7 +170,7 @@ class SourceCatalog1LHAASO(SourceCatalog):
 
     source_object_class = SourceCatalogObject1LHAASO
 
-    def __init__(self, filename="$GAMMAPY_DATA/catalogs/1LHAASO.fits"):
+    def __init__(self, filename="$GAMMAPY_DATA/catalogs/1LHAASO_catalog.fits"):
         table = Table.read(make_path(filename))
 
         source_name_key = "Source_Name"
