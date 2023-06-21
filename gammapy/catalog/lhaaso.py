@@ -1,7 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
+import astropy.units as u
 from astropy.table import Table
-from gammapy.modeling.models import Model, SkyModel
+from gammapy.maps import MapAxis, RegionGeom
+from gammapy.modeling.models import Model, Models, SkyModel
 from gammapy.utils.scripts import make_path
 from .core import SourceCatalog, SourceCatalogObject
 
@@ -20,27 +22,27 @@ class SourceCatalogObject1LHAASO(SourceCatalogObject):
     _source_name_key = "Source_Name"
 
     def _parse(self, name, which):
-        if which == "all" or self.data["Model_a"] == which:
+        if which in self.data["Model_a"]:
             tag = ""
         else:
             tag = "_b"
         is_ul = False
-        value = self.data[f"{name}{tag}"]
-        if (np.isnan(value) or value == 0) and f"{name}{tag}_ul" in self.data:
-            value = self.data[f"{name}{tag}_ul"]
+        value = u.Quantity(self.data[f"{name}{tag}"])
+        if (
+            np.isnan(value) or value == 0 * value.unit
+        ) and f"{name}_ul{tag}" in self.data:
+            value = self.data[f"{name}_ul{tag}"]
             is_ul = True
-        if np.isnan(value) or value == 0:
-            value = self.data[f"{name}"]
         return value, is_ul
 
     def _get(self, name, which):
         value, _ = self._parse(name, which)
         return value
 
-    def spectral_model(self, which="all"):
+    def spectral_model(self, which="both"):
         """Spectral model (`~gammapy.modeling.models.PowerLawSpectralModel`).
 
-        * ``which="all"`` - First sky model listed for the source.
+        * ``which="both"`` - Use first model or create a composite template if both models are availble
         * ``which="KM2A"`` - Sky model for KM2A analysis only.
         * ``which="WCDA"`` - Sky model for WCDA analysis only.
 
@@ -66,10 +68,10 @@ class SourceCatalogObject1LHAASO(SourceCatalogObject):
 
         return model
 
-    def spatial_model(self, which="all"):
+    def spatial_model(self, which="both"):
         """Spatial model (`~gammapy.modeling.models.SpatialModel`).
 
-        * ``which="all"`` - First sky model listed for the source.
+        * ``which="both"`` - Use first model or create a composite template if both models are availble
         * ``which="KM2A"`` - Sky model for KM2A analysis only.
         * ``which="WCDA"`` - Sky model for WCDA analysis only.
 
@@ -98,21 +100,51 @@ class SourceCatalogObject1LHAASO(SourceCatalogObject):
 
         return model
 
-    def sky_model(self, which="all"):
+    @staticmethod
+    def _get_components_geom(models):
+        energy_axis = MapAxis.from_energy_bounds(
+            "0.1 TeV", "2000 TeV", nbin=10, per_decade=True, name="energy"
+        )
+        regions = [m.spatial_model.evaluation_region for m in models]
+        geom = RegionGeom.from_regions(
+            regions, binsz_wcs="0.05 deg", axes=[energy_axis]
+        )
+        return geom.to_wcs_geom()
+
+    def sky_model(self, which="both"):
         """Sky model (`~gammapy.modeling.models.SkyModel`).
 
-        * ``which="all"`` - First sky model listed for the source.
-        * ``which="KM2A"`` - Sky model for KM2A analysis only.
-        * ``which="WCDA"`` - Sky model for WCDA analysis only.
+        * ``which="both"`` - Use first model or create a composite template if both models are availble
+        * ``which="KM2A"`` - Sky model for KM2A analysis if available.
+        * ``which="WCDA"`` - Sky model for WCDA analysis if available.
 
-        If only a limit is given for a parameter it is used as value.
-        Entries not repeated for the second analysis are taken from the first one.
         """
-        return SkyModel(
-            spatial_model=self.spatial_model(which),
-            spectral_model=self.spectral_model(which),
-            name=self.name,
-        )
+
+        if which == "both":
+            wcda = self.sky_model(which="WCDA")
+            km2a = self.sky_model(which="KM2A")
+            models = [m for m in [wcda, km2a] if m is not None]
+            if len(models) == 2:
+                geom = self._get_components_geom(models)
+                mask = geom.energy_mask(energy_max=25 * u.TeV)
+                geom = geom.as_energy_true
+                wcda_map = Models(wcda).to_template_sky_model(geom).spatial_model.map
+                model = Models(km2a).to_template_sky_model(geom, name=km2a.name)
+                model.spatial_model.map.data[mask] = wcda_map.data[mask]
+                model.spatial_model.filename = f"{model.name}.fits"
+                return model
+            else:
+                return models[0]
+        else:
+            _, is_ul = self._parse("N0", which)
+            if is_ul:
+                return None
+            else:
+                return SkyModel(
+                    spatial_model=self.spatial_model(which),
+                    spectral_model=self.spectral_model(which),
+                    name=self.name,
+                )
 
 
 class SourceCatalog1LHAASO(SourceCatalog):
@@ -144,3 +176,12 @@ class SourceCatalog1LHAASO(SourceCatalog):
         source_name_key = "Source_Name"
 
         super().__init__(table=table, source_name_key=source_name_key)
+
+    def to_models(self, **kwargs):
+        """Create Models object from catalogue"""
+        models = Models()
+        for _ in self:
+            model = _.sky_model(**kwargs)
+            if model:
+                models.append(model)
+        return models
