@@ -42,7 +42,7 @@ class SourceCatalogObject1LHAASO(SourceCatalogObject):
     def spectral_model(self, which="both"):
         """Spectral model (`~gammapy.modeling.models.PowerLawSpectralModel`).
 
-        * ``which="both"`` - Use first model or create a composite template if both models are availble
+        * ``which="both"`` - Use first model or create a composite template if both models are available.
         * ``which="KM2A"`` - Sky model for KM2A analysis only.
         * ``which="WCDA"`` - Sky model for WCDA analysis only.
 
@@ -71,7 +71,7 @@ class SourceCatalogObject1LHAASO(SourceCatalogObject):
     def spatial_model(self, which="both"):
         """Spatial model (`~gammapy.modeling.models.SpatialModel`).
 
-        * ``which="both"`` - Use first model or create a composite template if both models are availble
+        * ``which="both"`` - Use first model or create a composite template if both models are available.
         * ``which="KM2A"`` - Sky model for KM2A analysis only.
         * ``which="WCDA"`` - Sky model for WCDA analysis only.
 
