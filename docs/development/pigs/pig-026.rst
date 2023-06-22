@@ -231,6 +231,55 @@ The priors are serialised and read and writeable to a yaml file. They are also s
                      'parameters': [{'name': 'uni', 'value': 5.0}]}}}
 
 
+
+
+Addressing Use Cases
+======================
+
+Case 1: Background systematics as a nuisance parameter `#3955`_
+--------------
+The goal is to fit energy-dependent systematics in the FoVBackground with nuisance parameters. The correlation between the energy bins and the magnitude of the expected systematic uncertainty has to be accurately estimated and serves as an input to the covariance matrix. Combining the ``PieceWiseNormSpectralModel`` with a prior set and the ``PowerLawNormSpectralModel`` the FoVBackgrounds ``norm`` and ``tilt`` and in addition, the systematics can be fitted. 
+The first step consists of defining the energy bins in which the systematics is fitted and setting up the ``PieceWiseNormSpectralModel``:
+
+
+.. code:: python
+
+  energy = dataset.geoms['geom'].axes[0].center
+  sys_model = PiecewiseNormSpectralModel(
+      energy= energy,
+      norms=[0]*len(energy),
+  )
+
+For the combination of the ``sys_model`` and the classical used ``PowerLawNormSpectralModel``, a ``NormCompoundSpectralModel`` is used and set as the ``spectral_model`` of the ``PriorFoVBackgroundModel``:
+
+
+.. code:: python
+  
+  bkg_spectral = NormCompoundSpectralModel(PowerLawNormSpectralModel(),
+                                      sys_model,
+                                      operator=operator.add)
+  bkg = PriorFoVBackgroundModel(spectral_model = bkg_spectral,
+                          dataset_name = dataset.name)
+
+Now the prior is defined and set. Since there is a correlation of the systematics between the energy bins, the ``CovarianceGaussianPrior`` is used with a Gaussian covariance matrix.
+
+.. code:: python
+
+  from scipy.stats import norm
+  cov = np.identity(l)
+  
+  # note: values set arbitrarily 
+  for i in range(l):
+      if i > 3:  # no correlation between the PowerLawNormSpectralModel parameters
+          cov[i,:] = norm.pdf(range(l) , loc = i , scale = 1 ) /0.4 * 0.1 
+  
+  prior = CovarianceGaussianPrior(cov = cov)
+  bkg.prior = prior
+
+A preliminary version was set up like this and tests on simulated datasets were successful.
+
+
+
 (See `#4237`_ for an implementing PR draft.)
 
 
