@@ -278,6 +278,12 @@ Now the prior is defined and set. Since there is a correlation of the systematic
 
 A preliminary version was set up like this and tests on simulated datasets were successful.
 
+Case 2: Support unfolding methods for spectral flux points `#4122`_
+--------------
+
+The proposed prior class allows the probability to unfold spectral flux points with Tikonov regularisation. The Tikonov matrix can be defined and set as the covariance matrix in the  ``CovarianceGaussianPrior``. The weight of the ``PriorFitStatistic`` can be interpreted as the regularisation strength tau.
+
+
 
 
 (See `#4237`_ for an implementing PR draft.)
