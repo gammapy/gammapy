@@ -2174,7 +2174,7 @@ class MapDatasetOnOff(MapDataset):
     def from_geoms(
         cls,
         geom,
-        geom_exposure,
+        geom_exposure=None,
         geom_psf=None,
         geom_edisp=None,
         reference_time="2000-01-01",
