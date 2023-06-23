@@ -221,6 +221,11 @@ By providing a validation method, it is possible to validate non-standard object
 Alternatives
 ============
 
+Another option could be to use `traitlets`, but this would require creating dedicated types
+for non-supported types (e.g. `SkyCoord`). Additional functionalities such as `observer`
+would not be very useful here.
+
+
 Proposed metadata classes
 =========================
 
@@ -282,6 +287,7 @@ Because they are serialized, ``Model`` and ``Models`` objects should have a mini
 - ``ModelsMetadata``
 - ``ModelMetaData``
 
+
 Estimators
 ----------
 
@@ -291,6 +297,7 @@ the parent ``Datasets``.
 
 - ``FluxMapsMetaData``
 - ``FluxPointsMetaData``
+
 
 Metadata generation and propagation along the dataflow
 ------------------------------------------------------
