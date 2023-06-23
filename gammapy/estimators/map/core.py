@@ -1072,6 +1072,7 @@ class FluxMaps:
         flux_maps : `FluxMaps`
             Sliced flux maps object.
         """
+
         data = {}
 
         for key, item in self._data.items():
@@ -1083,6 +1084,30 @@ class FluxMaps:
             meta=self.meta.copy(),
             gti=self.gti,
         )
+
+    def slice_by_coord(self, axis, coord_min, coord_max):
+        """Slice flux maps by coordinate values
+
+        Parameters
+        ----------
+        axis: str
+            name of the axis containing the coordinates along which the map is to be sliced
+
+        coord_min, coord_max: float or `~astropy.Quantity` or `~astropy.Time`
+            coordinate bounds delimiting the slice
+
+        Returns
+        -------
+        flux_maps : `FluxMaps`
+            Sliced flux maps object.
+        """
+
+        imin = self.geom.axes[axis].coord_to_idx(coord_min)
+        imax = self.geom.axes[axis].coord_to_idx(coord_max)
+
+        interval = slice(imin, imax)
+
+        return self.slice_by_idx({axis: interval})
 
     # TODO: should we allow this?
     def __getitem__(self, item):
