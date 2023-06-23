@@ -126,6 +126,7 @@ def find_peaks_in_flux_map(maps, threshold, min_distance=1):
     Parameters
     ----------
     maps : `~gammapy.estimators.map.FluxMaps`
+        Input flux map object
     threshold : float or array-like
         The TS data value or pixel-wise TS data values to be used for the
         detection threshold.  A 2D ``threshold`` must have the same
@@ -142,11 +143,13 @@ def find_peaks_in_flux_map(maps, threshold, min_distance=1):
     quantity_for_peaks = maps["sqrt_ts"]
 
     if not isinstance(maps, FluxMaps):
-        raise TypeError("find_peaks_in_flux_map only supports FluxMaps")
+        raise TypeError(
+            f"find_peaks_in_flux_map expects FluxMaps input. Got {type(maps)} instead."
+        )
 
     if not quantity_for_peaks.geom.is_flat:
         raise ValueError(
-            "find_peaks_in_flux_map only supports flat Maps, with no spatial axes of length 1."
+            "find_peaks_in_flux_map only supports flat Maps, with energy axis of length 1."
         )
 
     table = find_peaks(quantity_for_peaks, threshold, min_distance)
