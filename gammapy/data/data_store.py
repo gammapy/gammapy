@@ -457,8 +457,6 @@ class DataStore:
         checker = DataStoreChecker(self)
         return checker.run(checks=checks)
 
-    ##########################################################################################
-    # My contribution:
 
     def _obscore_def(self):
         """Generate the Obscore default table
@@ -785,7 +783,6 @@ class DataStore:
         return
 
 
-##########################################################################################
 
 
 class DataStoreChecker(Checker):
