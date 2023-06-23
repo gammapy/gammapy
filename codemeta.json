@@ -1,11 +1,182 @@
 {
     "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
     "@type": "SoftwareSourceCode",
+    "author": [
+        {
+            "@id": "https://orcid.org/0000-0001-8816-4920",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Departament de F\u00edsica Qu\u00e0ntica i Astrof\u00edsica, Institut de Ci\u00e8ncies del Cosmos (ICCUB), Universitat de Barcelona (IEEC-UB), Spain"
+            },
+            "familyName": "Aguasca-Cabot",
+            "givenName": "Arnau"
+        },
+        {
+            "@id": "https://orcid.org/0000-0003-4568-7005",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Center for Astrophysics | Harvard & Smithsonian, USA"
+            },
+            "familyName": "Donath",
+            "givenName": "Axel"
+        },
+        {
+            "@id": "https://orcid.org/0000-0003-1476-3714",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Universit\u00e9 Paris Cit\u00e9, CNRS, Astroparticule et Cosmologie, F-75013 Paris, France"
+            },
+            "familyName": "Feijen",
+            "givenName": "Kirsty"
+        },
+        {
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Universit\u00e9 Paris-Saclay, CNRS/IN2P3, IJCLab, 91405 Orsay, France"
+            },
+            "familyName": "Gr\u00e9aux",
+            "givenName": "Lucas"
+        },
+        {
+            "@id": "https://orcid.org/0000-0002-3395-3647",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Universit\u00e9 Paris Cit\u00e9, CNRS, Astroparticule et Cosmologie, F-75013 Paris, France"
+            },
+            "familyName": "Giunti",
+            "givenName": "Luca"
+        },
+        {
+            "@id": "https://orcid.org/0000-0001-6876-5577",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Universit\u00e9 Paris Cit\u00e9, CNRS, Astroparticule et Cosmologie, F-75013 Paris, France"
+            },
+            "familyName": "Kh\u00e9lifi",
+            "givenName": "Bruno"
+        },
+        {
+            "@id": "https://orcid.org/0000-0001-7993-8189",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Astroparticle Physics Group, TU Dortmund University, Germany"
+            },
+            "familyName": "Linhoff",
+            "givenName": "Maximilian"
+        },
+        {
+            "@id": "https://orcid.org/0000-0002-0755-0609",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Astroparticle Physics Group, TU Dortmund University, Germany"
+            },
+            "familyName": "Mender",
+            "givenName": "Simone"
+        },
+        {
+            "@id": "https://orcid.org/0000-0002-9667-8654",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Max Planck Institute for Nuclear Physics, Heidelberg, Germany"
+            },
+            "familyName": "Mohrmann",
+            "givenName": "Lars"
+        },
+        {
+            "@id": "https://orcid.org/0000-0001-8375-1907",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Institut de F\u00edsica d'Altes Energies (IFAE), The Barcelona Institute of Science and Technology, Campus UAB, 08193 Bellaterra (Barcelona), Spain"
+            },
+            "familyName": "Nigro",
+            "givenName": "Cosimo"
+        },
+        {
+            "@id": "https://orcid.org/0000-0002-9105-0518",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Max Planck Institute for Nuclear Physics, Heidelberg, Germany"
+            },
+            "familyName": "Olivera-Nieto",
+            "givenName": "Laura"
+        },
+        {
+            "@id": "https://orcid.org/0000-0002-3869-2925",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "INAF/IASF PALERMO, Italy"
+            },
+            "familyName": "Pintore",
+            "givenName": "Fabio"
+        },
+        {
+            "@id": "https://orcid.org/0000-0002-3844-6003",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Universit\u00e9 Paris Cit\u00e9, CNRS, Astroparticule et Cosmologie, F-75013 Paris, France"
+            },
+            "familyName": "Regeard",
+            "givenName": "Maxime"
+        },
+        {
+            "@id": "https://orcid.org/0000-0002-8815-6530",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Max Planck Institute for Nuclear Physics, Heidelberg, Germany"
+            },
+            "familyName": "Remy",
+            "givenName": "Quentin"
+        },
+        {
+            "@id": "https://orcid.org/0000-0002-9238-7163",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "EMFTEL department and IPARCOS, Universidad Complutense de Madrid, 28040 Madrid, Spain"
+            },
+            "familyName": "Sinha",
+            "givenName": "Atreyee"
+        },
+        {
+            "@id": "https://orcid.org/0009-0005-7886-1825",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Friedrich-Alexander-Universit\u00e4t Erlangen-N\u00fcrnberg, ECAP, Nikolaus-Fiebiger-Str. 2, 91058 Erlangen, Germany"
+            },
+            "familyName": "Streil",
+            "givenName": "Katrin"
+        },
+        {
+            "@id": "https://orcid.org/0000-0002-8219-4667",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Universit\u00e9 Paris Cit\u00e9, CNRS, Astroparticule et Cosmologie, F-75013 Paris, France"
+            },
+            "familyName": "Terrier",
+            "givenName": "R\u00e9gis"
+        }
+    ],
     "codeRepository": "https://github.com/gammapy/gammapy",
+    "datePublished": "2023-06-13",
     "description": "Gammapy analyzes gamma-ray data and creates sky images, spectra and lightcurves, from event lists and instrument response information; it can also determine the position, morphology and spectra of gamma-ray sources. It is used to analyze data from H.E.S.S., Fermi-LAT, HAWC, and the Cherenkov Telescope Array (CTA).",
     "identifier": "https://doi.org/10.5281/zenodo.4701488",
     "keywords": [
-        "Scientific/Engineering",
         "Astronomy",
         "Gamma-rays",
         "Data analysis"
@@ -13,355 +184,17 @@
     "license": "https://spdx.org/licenses/BSD-3-Clause",
     "name": "Gammapy: Python toolbox for gamma-ray astronomy",
     "url": "https://gammapy.org/",
-    "softwareVersion": "1.0",
-    "Organization": "The Gammapy project",
-    "dateCreated": "2014-01-01",
-    "datePublished": "2014-08-25",
-    "dateModified": "2022-11-10",
-    "applicationCategory": "Astronomy",
-    "applicationSubCategory": "Very-high energy gamma rays",
-    "programmingLanguage": "Python 3",
-    "operatingSystem": "Linux, Mac OS, Windows",
-    "audience": {
-        "@id": "/audience/science-research",
-        "@type": "Audience",
-        "audienceType": "Science/Research"
-    },
+    "softwareVersion": "v1.1",
     "maintainer": {
         "@id": "https://orcid.org/0000-0003-4568-7005",
-        "@type": "Person",
-        "affiliation": {
-            "@type": "Organization",
-            "name": "Center for Astrophysics | Harvard & Smithsonian, CfA, 60 Garden St., 02138 Cambridge MA, USA"
-        },
-        "familyName": "Donath",
-        "givenName": "Axel"
-    },
-    "developmentStatus": "active",
-    "issueTracker": "https://github.com/gammapy/gammapy/issues",
-    "email": "GAMMAPY-COORDINATION-L@IN2P3.FR",
-    "readme": "If you use this software, please cite it using the metadata from this file.",
-    "runtimePlatform": [
-        "C",
-        "Cython",
-        "Python 3",
-        "Python 3.8",
-        "Python 3.9",
-        "Python 3.10",
-        "Python Implementation CPython"
-    ],
-    "softwareRequirements": [
-        "python>=3.8",
-        "numpy>=1.20",
-        "scipy>=1.4",
-        "astropy>=5.0",
-        "regions>=0.5.0",
-        "pyyaml>=5.1",
-        "click>=7.0",
-        "pydantic>=1.4",
-        "iminuit>=2.8.0",
-        "matplotlib>=3.4",
-        "requests",
-        "tqdm"
-    ],
-    "author": [
-        {
             "@type": "Person",
-            "givenName": "Fabio",
-            "familyName": "Acero",
-            "affiliation": "Université Paris-Saclay, Université Paris Cité, CEA, CNRS, AIM, F-91191 Gif-sur-Yvette, France",
-            "@id": "https://orcid.org/0000-0002-6606-2816"
-        },
-        {
-            "@type": "Person",
-            "givenName": "Arnau",
-            "familyName": "Aguasca-Cabot",
-            "affiliation": "Departament de Física Quàntica i Astrofísica, Institut de Ciències del Cosmos (ICCUB), Universitat de Barcelona (IEEC-UB), Spain",
-            "@id": "https://orcid.org/188164920"
-        },
-        {
-            "@type": "Person",
-            "givenName": "Johannes",
-            "familyName": "Buchner",
-            "affiliation": "Max Planck Institute for Extraterrestrial Physics, Giessenbachstrasse, 85741 Garching, Germany",
-            "@id": "https://orcid.org/0000-0003-0426-6634"
-        },
-        {
-            "@type": "Person",
-            "givenName": "David",
-            "familyName": "Carreto Fidalgo",
-            "affiliation": "Max Planck Computing and Data Facility, Gießenbachstraße 2, 85748 Garching, Germany",
-            "@id": "https://orcid.org/0000-0002-7480-2730"
-        },
-        {
-            "@type": "Person",
-            "givenName": "Andrew",
-            "familyName": "Chen",
-            "affiliation": "University of the Witwatersrand, South Africa",
-            "@id": "https://orcid.org/0000-0001-6425-5692"
-        },
-        {
-            "@type": "Person",
-            "givenName": "Alisha",
-            "familyName": "Chromey",
-            "affiliation": "Iowa State University, USA"
-        },
-        {
-            "@type": "Person",
-            "givenName": "José Luis",
-            "familyName": "Contreras Gonzalez",
-            "affiliation": "IPARCOS Institute and EMFTEL Department, Universidad Complutense de Madrid, Spain",
-            "@id": "https://orcid.org/0000-0001-7282-2394"
-        },
-        {
-            "@type": "Person",
-            "givenName": "Mathieu",
-            "familyName": "de Bony de Lavergne",
-            "affiliation": "Laboratoire d'Annecy de Physique des Particules, France"
-        },
-        {
-            "@type": "Person",
-            "givenName": "José Vinícius",
-            "familyName": "de Miranda Cardoso",
-            "affiliation": "Federal University of Campina Grande, Department of Electrical Engineering, Brazil"
-        },
-        {
-            "@type": "Person",
-            "givenName": "Christoph",
-            "familyName": "Deil",
-            "affiliation": "Max Planck Institute for Nuclear Physics, Heidelberg, Germany"
-        },
-        {
-            "@type": "Person",
-            "givenName": "Axel",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Center for Astrophysics | Harvard & Smithsonian, USA"
+            },
             "familyName": "Donath",
-            "affiliation": "Center for Astrophysics | Harvard & Smithsonian, USA",
-            "@id": "https://orcid.org/0000-0003-4568-7005"
-        },
-        {
-            "@type": "Person",
-            "givenName": "Luca",
-            "familyName": "Giunti",
-            "affiliation": "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013 Paris, France",
-            "@id": "https://orcid.org/0000-0002-3395-3647"
-        },
-        {
-            "@type": "Person",
-            "givenName": "James",
-            "familyName": "Hinton",
-            "affiliation": "Max Planck Institute for Nuclear Physics, Heidelberg, Germany",
-            "@id": "https://orcid.org/0000-0002-1031-7760"
-        },
-        {
-            "@type": "Person",
-            "givenName": "Léa ",
-            "familyName": "Jouvin ",
-            "affiliation": "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013 Paris, France"
-        },
-        {
-            "@type": "Person",
-            "givenName": "Bruno",
-            "familyName": "Khélifi",
-            "affiliation": "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013 Paris, France",
-            "@id": "https://orcid.org/0000-0001-6876-5577"
-        },
-        {
-            "@type": "Person",
-            "givenName": "Johannes",
-            "familyName": "King",
-            "affiliation": "Max Planck Institute for Nuclear Physics, Heidelberg, Germany"
-        },
-        {
-            "@type": "Person",
-            "givenName": "Julien",
-            "familyName": "Lefaucheur",
-            "affiliation": "Meteo France International, France"
-        },
-        {
-            "@type": "Person",
-            "givenName": "Jean-Philippe",
-            "familyName": "Lenain",
-            "affiliation": "Sorbonne Université, CNRS/IN2P3, Laboratoire de Physique Nucléaire et de Hautes Energies, LPNHE, France",
-            "@id": "https://orcid.org/0000-0001-7284-9220"
-        },
-        {
-            "@type": "Person",
-            "givenName": "Maximilian",
-            "familyName": "Linhoff",
-            "affiliation": "Astroparticle Physics Group, TU Dortmund University, Germany",
-            "@id": "https://orcid.org/0000-0001-7993-8189"
-        },
-        {
-            "@type": "Person",
-            "givenName": "Rubén",
-            "familyName": "López-Coto",
-            "affiliation": "IAA-CSIC, Spain",
-            "@id": "https://orcid.org/0000-0002-3882-9477"
-        },
-        {
-            "@type": "Person",
-            "givenName": "Lars",
-            "familyName": "Mohrmann",
-            "affiliation": "Max Planck Institute for Nuclear Physics, Heidelberg, Germany",
-            "@id": "https://orcid.org/0000-0002-9667-8654"
-        },
-        {
-            "@type": "Person",
-            "givenName": "Daniel",
-            "familyName": "Morcuende",
-            "affiliation": "EMFTEL department and IPARCOS, Universidad Complutense de Madrid, 28040 Madrid, Spain",
-            "@id": "https://orcid.org/0000-0001-9400-0922"
-        },
-        {
-            "@type": "Person",
-            "givenName": "Kaori",
-            "familyName": "Nakashima",
-            "affiliation": "Friedrich-Alexander-Universität Erlangen-Nürnberg, ECAP, Nikolaus-Fiebiger-Str. 2, 91058 Erlangen, Germany"
-        },
-        {
-            "@type": "Person",
-            "givenName": "Cosimo",
-            "familyName": "Nigro",
-            "affiliation": "Institut de Física d'Altes Energies (IFAE), The Barcelona Institute of Science and Technology, Campus UAB, 08193 Bellaterra (Barcelona), Spain",
-            "@id": "https://orcid.org/https://orcid.org/0000-0001-8375-1907"
-        },
-        {
-            "@type": "Person",
-            "givenName": "Laura",
-            "familyName": "Olivera-Nieto",
-            "affiliation": "Max Planck Institute for Nuclear Physics, Heidelberg, Germany",
-            "@id": "https://orcid.org/0000-0002-9105-0518"
-        },
-        {
-            "@type": "Person",
-            "givenName": "Ellis",
-            "familyName": "Owen",
-            "affiliation": "Department of Earth and Space Science, Graduate School of Science, Osaka University, Toyonaka, Osaka 560-0043, Japan",
-            "@id": "https://orcid.org/0000-0003-1052-6439"
-        },
-        {
-            "@type": "Person",
-            "givenName": "Sebastian",
-            "familyName": "Panny",
-            "affiliation": "Institut für Astro- und Teilchenphysik, Leopold-Franzens-Universität Innsbruck, A-6020 Innsbruck, Austria",
-            "@id": "https://orcid.org/0000-0001-5770-3805"
-        },
-        {
-            "@type": "Person",
-            "givenName": "Dimitri",
-            "familyName": "Papadopoulos Orfanos",
-            "affiliation": "CEA, Saclay, France",
-            "@id": "https://orcid.org/0000-0002-1242-8990"
-        },
-        {
-            "@type": "Person",
-            "givenName": "Manuel",
-            "familyName": "Paz Arribas",
-            "affiliation": "Institut für Physik, Humboldt-Universität zu Berlin, Newtonstr. 15, 12489 Berlin, Germany",
-            "@id": "https://orcid.org/0000-0002-4404-9899"
-        },
-        {
-            "@type": "Person",
-            "givenName": "Fabio",
-            "familyName": "Pintore",
-            "affiliation": "INAF/IASF PALERMO, Italy",
-            "@id": "https://orcid.org/0000-0002-3869-2925"
-        },
-        {
-            "@type": "Person",
-            "givenName": "Helen",
-            "familyName": "Poon",
-            "affiliation": "Max Planck Institute for Nuclear Physics, Heidelberg, Germany",
-            "@id": "https://orcid.org/0000-0002-6004-4270"
-        },
-        {
-            "@type": "Person",
-            "givenName": "Quentin",
-            "familyName": "Remy",
-            "affiliation": "Max Planck Institute for Nuclear Physics, Heidelberg, Germany",
-            "@id": "https://orcid.org/0000-0002-8815-6530"
-        },
-        {
-            "@type": "Person",
-            "givenName": "José Enrique",
-            "familyName": "Ruiz",
-            "affiliation": "Instituto de Astrofísica de Andalucía – CSIC, Spain",
-            "@id": "https://orcid.org/0000-0003-3274-4445"
-        },
-        {
-            "@type": "Person",
-            "givenName": "Hubert",
-            "familyName": "Siejkowski",
-            "affiliation": "ACC Cyfronet AGH, Poland",
-            "@id": "https://orcid.org/0000-0003-1673-2145"
-        },
-        {
-            "@type": "Person",
-            "givenName": "Atreyee",
-            "familyName": "Sinha",
-            "affiliation": "EMFTEL department and IPARCOS, Universidad Complutense de Madrid, 28040 Madrid, Spain",
-            "@id": "https://orcid.org/0000-0002-9238-7163"
-        },
-        {
-            "@type": "Person",
-            "givenName": "Brigitta M",
-            "familyName": "Sipőcz",
-            "affiliation": "Caltech/IPAC, USA",
-            "@id": "https://orcid.org/0000-0002-3713-6337"
-        },
-        {
-            "@type": "Person",
-            "givenName": "Marion",
-            "familyName": "Spir-Jacob",
-            "affiliation": "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013 Paris, France"
-        },
-        {
-            "@type": "Person",
-            "givenName": "Régis",
-            "familyName": "Terrier",
-            "affiliation": "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013 Paris, France",
-            "@id": "https://orcid.org/0000-0002-8219-4667"
-        },
-        {
-            "@type": "Person",
-            "givenName": "Luigi",
-            "familyName": "Tibaldo",
-            "affiliation": "IRAP, Université de Toulouse, CNRS, UPS, CNES, F-31028 Toulouse, France",
-            "@id": "https://orcid.org/0000-0001-7523-570X"
-        },
-        {
-            "@type": "Person",
-            "givenName": "Tim",
-            "familyName": "Unbehaun",
-            "affiliation": "Friedrich-Alexander-Universität Erlangen-Nürnberg, ECAP, Nikolaus-Fiebiger-Str. 2, 91058 Erlangen, Germany",
-            "@id": "https://orcid.org/0000-0002-7378-4024"
-        },
-        {
-            "@type": "Person",
-            "givenName": "Christopher",
-            "familyName": "van Eldik",
-            "affiliation": "Friedrich-Alexander-Universität Erlangen-Nürnberg, ECAP, Nikolaus-Fiebiger-Str. 2, 91058 Erlangen, Germany",
-            "@id": "https://orcid.org/0000-0001-9669-645X"
-        },
-        {
-            "@type": "Person",
-            "givenName": "Thomas",
-            "familyName": "Vuillaume",
-            "affiliation": "Univ. Savoie Mont-Blanc, LAPP, CNRS, Annecy, France",
-            "@id": "https://orcid.org/0000-0002-5686-2078"
-        },
-        {
-            "@type": "Person",
-            "givenName": "Amanda",
-            "familyName": "Weinstein",
-            "affiliation": "Iowa State University, USA",
-            "@id": "https://orcid.org/0000-0002-2126-2419"
-        },
-        {
-            "@type": "Person",
-            "givenName": "Matthew",
-            "familyName": "Wood",
-            "affiliation": "Stanford Linear Accelerator Center, USA"
-        }
-    ]
+            "givenName": "Axel"
+    },
+    "readme": "https://gammapy.org",
+    "issueTracker": "https://github.com/gammapy/gammapy/issues"
 }

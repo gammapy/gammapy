@@ -547,6 +547,11 @@ class Parameters(collections.abc.Sequence):
         return copy.deepcopy(self)
 
     @property
+    def norm_parameters(self):
+        """List of norm parameters"""
+        return self.__class__([par for par in self._parameters if par.is_norm])
+
+    @property
     def free_parameters(self):
         """List of free parameters"""
         return self.__class__([par for par in self._parameters if not par.frozen])

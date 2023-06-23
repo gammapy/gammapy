@@ -9,7 +9,7 @@ from astropy.time import Time
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from gammapy.maps import MapAxis, Maps, RegionNDMap, TimeMapAxis
-from gammapy.maps.axes import flat_if_equal
+from gammapy.maps.axes import UNIT_STRING_FORMAT, flat_if_equal
 from gammapy.modeling.models import TemplateSpectralModel
 from gammapy.modeling.models.spectral import scale_plot_flux
 from gammapy.modeling.scipy import stat_profile_ul_scipy
@@ -370,6 +370,8 @@ class FluxPoints(FluxMaps):
                 table["stat_scan"] = self.stat_scan.data[idx]
 
             table["is_ul"] = self.is_ul.data[idx]
+            if not self.has_ul:
+                table.remove_columns("is_ul")
 
         elif format == "lightcurve":
             time_axis = self.geom.axes["time"]
@@ -534,7 +536,7 @@ class FluxPoints(FluxMaps):
         if "time" in flux.geom.axes_names:
             flux.geom.axes["time"].time_format = time_format
         ax = flux.plot(ax=ax, **kwargs)
-        ax.set_ylabel(f"{sed_type} [{ax.yaxis.units}]")
+        ax.set_ylabel(f"{sed_type} [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]")
         ax.set_yscale("log")
         return ax
 
@@ -626,7 +628,7 @@ class FluxPoints(FluxMaps):
 
         axis.format_plot_xaxis(ax=ax)
 
-        ax.set_ylabel(f"{sed_type} [{ax.yaxis.units}]")
+        ax.set_ylabel(f"{sed_type} [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]")
         ax.set_yscale("log")
 
         if add_cbar:

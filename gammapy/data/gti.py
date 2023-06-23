@@ -7,11 +7,7 @@ from astropy.io import fits
 from astropy.table import Table, vstack
 from astropy.time import Time
 from gammapy.utils.scripts import make_path
-from gammapy.utils.time import (
-    time_ref_from_dict,
-    time_ref_to_dict,
-    time_relative_to_ref,
-)
+from gammapy.utils.time import TIME_REF_DEFAULT, time_ref_from_dict, time_ref_to_dict
 
 __all__ = ["GTI"]
 
@@ -29,6 +25,10 @@ class GTI:
     ----------
     table : `~astropy.table.Table`
         GTI table
+    reference_time : `~astropy.time.Time`
+        the reference time
+        If None, use TIME_REF_DEFAULT.
+        Default is None
 
     Examples
     --------
@@ -58,14 +58,38 @@ class GTI:
     - Stop: 2015-08-02T23:14:24.184 (time standard: TT)
     """
 
-    def __init__(self, table):
-        self.table = table
+    def __init__(self, table, reference_time=None):
+        self.table = self._validate_table(table)
+
+        if reference_time is None:
+            reference_time = TIME_REF_DEFAULT
+        self._time_ref = Time(reference_time)
+
+    @staticmethod
+    def _validate_table(table):
+        """Checks that the input GTI fits the gammapy internal model."""
+        if not isinstance(table, Table):
+            raise TypeError("GTI table is not an astropy Table.")
+
+        colnames = ["START", "STOP"]
+
+        if not set(colnames).issubset(table.colnames):
+            raise ValueError("GTI table not correctly defined.")
+
+        if len(table) == 0:
+            return table
+
+        for name in colnames:
+            if not isinstance(table[name], Time):
+                raise TypeError(f"Column {name} is not a Time object.")
+
+        return table
 
     def copy(self):
         return copy.deepcopy(self)
 
     @classmethod
-    def create(cls, start, stop, reference_time="2000-01-01"):
+    def create(cls, start, stop, reference_time=None):
         """Creates a GTI table from start and stop times.
 
         Parameters
@@ -75,24 +99,27 @@ class GTI:
         stop : `~astropy.time.Time` or `~astropy.units.Quantity`
             Stop times, if a quantity then w.r.t. reference time
         reference_time : `~astropy.time.Time`
-            the reference time to use in GTI definition
+            the reference time to use in GTI definition.
+            If None, use TIME_REF_DEFAULT.
+            Default is None
         """
+        if reference_time is None:
+            reference_time = TIME_REF_DEFAULT
         reference_time = Time(reference_time)
+        reference_time.format = "mjd"
 
-        if isinstance(start, Time):
-            start = (start - reference_time).to(u.s)
+        if not isinstance(start, Time):
+            start = reference_time + u.Quantity(start)
 
-        if isinstance(stop, Time):
-            stop = (stop - reference_time).to(u.s)
+        if not isinstance(stop, Time):
+            stop = reference_time + u.Quantity(stop)
 
-        start = u.Quantity(start, ndmin=1)
-        stop = u.Quantity(stop, ndmin=1)
-        meta = time_ref_to_dict(reference_time)
-        table = Table({"START": start.to("s"), "STOP": stop.to("s")}, meta=meta)
-        return cls(table)
+        table = Table({"START": np.atleast_1d(start), "STOP": np.atleast_1d(stop)})
+
+        return cls(table, reference_time=reference_time)
 
     @classmethod
-    def read(cls, filename, hdu="GTI"):
+    def read(cls, filename, hdu="GTI", format="gadf"):
         """Read from FITS file.
 
         Parameters
@@ -101,10 +128,36 @@ class GTI:
             Filename
         hdu : str
             hdu name. Default GTI.
+        format: str
+            Input format, currently only "gadf" is supported
         """
         filename = make_path(filename)
-        table = Table.read(filename, hdu=hdu)
-        return cls(table)
+        with fits.open(str(make_path(filename)), memmap=False) as hdulist:
+            return cls.from_table_hdu(hdulist[hdu], format=format)
+
+    @classmethod
+    def from_table_hdu(cls, table_hdu, format="gadf"):
+        """Read from table HDU.
+
+        Parameters
+        ----------
+        table_hdu : `~astropy.io.fits.BinTableHDU`
+            table hdu
+        format: str
+            Input format, currently only "gadf" is supported
+        """
+        if format != "gadf":
+            raise ValueError(f'Only the "gadf" format supported, got {format}')
+
+        table = Table.read(table_hdu)
+        time_ref = time_ref_from_dict(table.meta, format="mjd", scale="tt")
+
+        # Check if TIMEUNIT keyword is present, otherwise assume seconds
+        unit = table.meta.pop("TIMEUNIT", "s")
+        start = u.Quantity(table["START"], unit)
+        stop = u.Quantity(table["STOP"], unit)
+
+        return cls.create(start, stop, time_ref)
 
     def to_table_hdu(self, format="gadf"):
         """
@@ -123,7 +176,13 @@ class GTI:
         if format != "gadf":
             raise ValueError(f'Only the "gadf" format supported, got {format}')
 
-        return fits.BinTableHDU(self.table, name="GTI")
+        # Don't impose the scale. GADF does not require it to be TT
+        meta = time_ref_to_dict(self.time_ref, scale=self.time_ref.scale)
+        start = self.time_start - self.time_ref
+        stop = self.time_stop - self.time_ref
+        table = Table({"START": start.to("s"), "STOP": stop.to("s")}, meta=meta)
+
+        return fits.BinTableHDU(table, name="GTI")
 
     def write(self, filename, **kwargs):
         """Write to file.
@@ -138,8 +197,8 @@ class GTI:
         hdulist.writeto(make_path(filename), **kwargs)
 
     def __str__(self):
-        t_start_met = u.Quantity(self.table["START"][0].astype("float64"), "second")
-        t_stop_met = u.Quantity(self.table["STOP"][-1].astype("float64"), "second")
+        t_start_met = self.met_start[0]
+        t_stop_met = self.met_stop[-1]
         t_start = self.time_start[0].fits
         t_stop = self.time_stop[-1].fits
         return (
@@ -155,14 +214,13 @@ class GTI:
     @property
     def time_delta(self):
         """GTI durations in seconds (`~astropy.units.Quantity`)."""
-        start = self.table["START"].astype("float64")
-        stop = self.table["STOP"].astype("float64")
-        return u.Quantity(stop - start, "second")
+        delta = self.time_stop - self.time_start
+        return delta.to("s")
 
     @property
     def time_ref(self):
         """Time reference (`~astropy.time.Time`)."""
-        return time_ref_from_dict(self.table.meta)
+        return self._time_ref
 
     @property
     def time_sum(self):
@@ -172,14 +230,22 @@ class GTI:
     @property
     def time_start(self):
         """GTI start times (`~astropy.time.Time`)."""
-        met = u.Quantity(self.table["START"].astype("float64"), "second")
-        return self.time_ref + met
+        return self.table["START"]
 
     @property
     def time_stop(self):
         """GTI end times (`~astropy.time.Time`)."""
-        met = u.Quantity(self.table["STOP"].astype("float64"), "second")
-        return self.time_ref + met
+        return self.table["STOP"]
+
+    @property
+    def met_start(self):
+        """GTI start time difference with reference time in sec, MET (`~astropy.units.Quantity`)."""
+        return (self.time_start - self.time_ref).to("s")
+
+    @property
+    def met_stop(self):
+        """GTI start time difference with reference time in sec, MET (`~astropy.units.Quantity`)."""
+        return (self.time_stop - self.time_ref).to("s")
 
     @property
     def time_intervals(self):
@@ -190,7 +256,7 @@ class GTI:
         ]
 
     @classmethod
-    def from_time_intervals(cls, time_intervals, reference_time="2000-01-01"):
+    def from_time_intervals(cls, time_intervals, reference_time=None):
         """From list of time intervals
 
         Parameters
@@ -198,19 +264,21 @@ class GTI:
         time_intervals : list of `~astropy.time.Time` objects
             Time intervals
         reference_time : `~astropy.time.Time`
-            Reference time to use in GTI definition
+            Reference time to use in GTI definition. Default is None.
+            If None, use TIME_REF_DEFAULT.
 
         Returns
         -------
         gti : `GTI`
             GTI table.
         """
-        reference_time = Time(reference_time)
-        start = Time([_[0] for _ in time_intervals]) - reference_time
-        stop = Time([_[1] for _ in time_intervals]) - reference_time
-        meta = time_ref_to_dict(reference_time)
-        table = Table({"START": start.to("s"), "STOP": stop.to("s")}, meta=meta)
-        return cls(table=table)
+        start = Time([_[0] for _ in time_intervals])
+        stop = Time([_[1] for _ in time_intervals])
+
+        if reference_time is None:
+            reference_time = TIME_REF_DEFAULT
+
+        return cls.create(start, stop, reference_time)
 
     def select_time(self, time_interval):
         """Select and crop GTIs in time interval.
@@ -225,23 +293,21 @@ class GTI:
         gti : `GTI`
             Copy of the GTI table with selection applied.
         """
+        interval_start, interval_stop = time_interval
+        interval_start.format = self.time_start.format
+        interval_stop.format = self.time_stop.format
+
         # get GTIs that fall within the time_interval
-        mask = self.time_start < time_interval[1]
-        mask &= self.time_stop > time_interval[0]
+        mask = self.time_start < interval_stop
+        mask &= self.time_stop > interval_start
         gti_within = self.table[mask]
 
         # crop the GTIs
-        start_met = time_relative_to_ref(time_interval[0], self.table.meta)
-        stop_met = time_relative_to_ref(time_interval[1], self.table.meta)
-        np.clip(
-            gti_within["START"],
-            start_met.value,
-            stop_met.value,
-            out=gti_within["START"],
+        gti_within["START"] = np.clip(
+            gti_within["START"], interval_start, interval_stop
         )
-        np.clip(
-            gti_within["STOP"], start_met.value, stop_met.value, out=gti_within["STOP"]
-        )
+
+        gti_within["STOP"] = np.clip(gti_within["STOP"], interval_start, interval_stop)
 
         return self.__class__(gti_within)
 
@@ -257,14 +323,11 @@ class GTI:
             GTI to stack to self
 
         """
-        start = (other.time_start - self.time_ref).sec
-        end = (other.time_stop - self.time_ref).sec
-        table = Table({"START": start, "STOP": end}, names=["START", "STOP"])
-        self.table = vstack([self.table, table])
+        self.table = self._validate_table(vstack([self.table, other.table]))
 
     @classmethod
     def from_stack(cls, gtis, **kwargs):
-        """Stack (concatenate) list of event lists.
+        """Stack (concatenate) list of GTIs.
 
         Calls `~astropy.table.vstack`.
 
@@ -319,7 +382,7 @@ class GTI:
                 merged[-1]["STOP"] = max(interval["STOP"], merged[-1]["STOP"])
 
         merged = Table(rows=merged, names=["START", "STOP"], meta=self.table.meta)
-        return self.__class__(merged)
+        return self.__class__(merged, reference_time=self.time_ref)
 
     def group_table(self, time_intervals, atol="1e-6 s"):
         """Compute the table with the info on the group to which belong each time interval.

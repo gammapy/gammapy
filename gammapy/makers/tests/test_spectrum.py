@@ -341,10 +341,8 @@ class TestSpectrumMakerChain:
         assert info["counts"] == results["n_on"]
         assert_allclose(info["sqrt_ts"], results["sigma"], rtol=1e-2)
 
-        gti_obs = obs.gti.table
-        gti_dataset = dataset.gti.table
-        assert_allclose(gti_dataset["START"], gti_obs["START"])
-        assert_allclose(gti_dataset["STOP"], gti_obs["STOP"])
+        assert_allclose(dataset.gti.met_start, obs.gti.met_start)
+        assert_allclose(dataset.gti.met_stop, obs.gti.met_stop)
 
     def test_compute_energy_threshold(
         self, spectrum_dataset_crab_fine, observations_hess_dl3

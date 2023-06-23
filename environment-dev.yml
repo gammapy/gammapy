@@ -78,3 +78,5 @@ dependencies:
   - memray
   - pip:
       - pytest-sphinx
+      - ray
+      - PyGithub

@@ -401,8 +401,11 @@ class TestTheta2Table:
             meta = time_ref_to_dict("2010-01-01")
             obs_info.update(meta)
             events.meta.update(obs_info)
-            gti_table = Table({"START": [1], "STOP": [3]}, meta=meta)
-            gti = GTI(gti_table)
+            gti = GTI.create(
+                start=[1] * u.s,
+                stop=[3] * u.s,
+                reference_time=Time("2010-01-01", scale="tt"),
+            )
             pointing = FixedPointingInfo(
                 mode=PointingMode.POINTING,
                 fixed_icrs=SkyCoord(0 * u.deg, sign * 0.5 * u.deg),

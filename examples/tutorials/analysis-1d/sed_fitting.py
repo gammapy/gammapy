@@ -29,7 +29,7 @@ Proposed approach
 
 Here we will load, the spectral points from Fermi-LAT and TeV catalogs
 and fit them with various spectral models to find the best
-representation of the wide band spectrum.
+representation of the wide-band spectrum.
 
 The central class we’re going to use for this example analysis is:
 

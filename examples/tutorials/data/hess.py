@@ -40,6 +40,8 @@ release 1.
 
 import astropy.units as u
 from astropy.coordinates import SkyCoord
+
+# %matplotlib inline
 import matplotlib.pyplot as plt
 from IPython.display import display
 from gammapy.data import DataStore
@@ -104,9 +106,8 @@ obs.psf.peek()
 
 ######################################################################
 # Peek the background rate
-plt.figure()
 obs.bkg.to_2d().plot()
-
+plt.show()
 
 ######################################################################
 # Theta squared event distribution
@@ -128,7 +129,7 @@ theta2_table = make_theta_squared_table(
 
 plt.figure(figsize=(10, 5))
 plot_theta_squared_table(theta2_table)
-
+plt.show()
 
 ######################################################################
 # On-axis equivalent livetime
@@ -181,8 +182,8 @@ for obs in observations:
     livetime.stack(lv_obs)
 
 # Plot
-plt.figure()
 ax = livetime.plot(add_cbar=True)
+plt.show()
 
 # Add the pointing position on top
 for obs in observations:
@@ -192,7 +193,6 @@ for obs in observations:
         "+",
         color="black",
     )
-
 plt.show()
 
 ######################################################################

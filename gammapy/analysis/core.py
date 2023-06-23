@@ -546,7 +546,6 @@ class Analysis:
             cutout_width=2 * offset_max,
         )
         self.datasets = datasets_maker.run(stacked, self.observations)
-        # TODO: move progress bar to DatasetsMaker but how with multiprocessing ?
 
     def _spectrum_extraction(self):
         """Run all steps for the spectrum extraction."""

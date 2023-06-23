@@ -5,6 +5,7 @@ from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FormatStrFormatter
 from gammapy.maps import Map, MapAxes, MapAxis, MapCoord, WcsGeom
+from gammapy.maps.axes import UNIT_STRING_FORMAT
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.random import InverseCDFSampler, get_random_state
@@ -454,7 +455,9 @@ class PSFMap(IRFMap):
         ax.legend(loc="best")
         ax.yaxis.set_major_formatter(FormatStrFormatter("%.2f"))
         energy_axis.format_plot_xaxis(ax=ax)
-        ax.set_ylabel(f"Containment radius [{ax.yaxis.units}]")
+        ax.set_ylabel(
+            f"Containment radius [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]"
+        )
         return ax
 
     def plot_psf_vs_rad(self, ax=None, energy_true=[0.1, 1, 10] * u.TeV, **kwargs):
@@ -490,12 +493,13 @@ class PSFMap(IRFMap):
                 }
             )
             label = f"{value:.0f}"
+            psf_value *= self.psf_map.unit
             with quantity_support():
                 ax.plot(rad, psf_value, label=label, **kwargs)
 
         ax.set_yscale("log")
-        ax.set_xlabel(f"Rad [{ax.xaxis.units}]")
-        ax.set_ylabel(f"PSF [{ax.yaxis.units}]")
+        ax.set_xlabel(f"Rad [{ax.xaxis.units.to_string(UNIT_STRING_FORMAT)}]")
+        ax.set_ylabel(f"PSF [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]")
         ax.xaxis.set_major_formatter(FormatStrFormatter("%.2f"))
         plt.legend()
         return ax
