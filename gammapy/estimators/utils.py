@@ -230,7 +230,7 @@ def resample_energy_edges(dataset, conditions={}):
     return u.Quantity(energy_edges[::-1])
 
 
-def compute_lightcurve_fvar(lightcurve, quantity="flux"):
+def compute_lightcurve_fvar(lightcurve, flux_quantity="flux"):
     r"""Compute the fractional excess variance of the input lightcurve.
 
     Internally calls the `~gammapy.stats.compute_fvar` function
@@ -240,14 +240,14 @@ def compute_lightcurve_fvar(lightcurve, quantity="flux"):
     ----------
     lightcurve : '~gammapy.estimators.FluxPoints'
         the lightcurve object
-    quantity : `string`
-        specific quantity contained in the FluxPoints object used for calculation.
+    flux_quantity : `string`
+        flux quantity to use for calculation. Should be 'dnde', 'flux', 'e2dnde' or 'eflux'. Defualt is 'flux'.
         Useful in case of custom lightcurves computed outside gammapy
 
     Returns
     -------
-    fvar : `~numpy.ndarray`
-        Array of fractional excess variance and associated error for each energy bin of the lightcurve.
+    fvar : `~astropy.table.Table`
+        Table of fractional excess variance and associated error for each energy bin of the lightcurve.
     """
 
     flux = getattr(lightcurve, quantity)
