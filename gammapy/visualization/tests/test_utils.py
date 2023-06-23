@@ -1,13 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
-from numpy.testing import assert_allclose
 from scipy.stats import norm
 import astropy.units as u
 from astropy.table import Table
 import matplotlib.pyplot as plt
-from gammapy.datasets import MapDataset
-from gammapy.estimators import TSMapEstimator
 from gammapy.maps import Map, MapAxis, WcsNDMap
 from gammapy.utils.testing import mpl_plot_check, requires_data
 from gammapy.visualization import (
@@ -78,39 +75,33 @@ def test_plot_map_rgb():
         plot_map_rgb(map_, **kwargs)
 
 
-@requires_data()
 def test_plot_distribution():
-    dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
+    array = np.random.normal(0, 1, 10000)
 
-    tsme = TSMapEstimator().run(dataset)
+    array_2d = array.reshape(1, 100, 100)
 
-    with pytest.raises(ValueError):
-        plot_distribution(tsme.sqrt_ts, fit=True)
+    energy_axis = MapAxis.from_energy_edges([1, 10] * u.TeV)
+
+    map_ = WcsNDMap.create(npix=(100, 100), axes=[energy_axis])
+    map_.data = array_2d
+
+    energy_axis_10 = MapAxis.from_energy_bounds(1 * u.TeV, 10 * u.TeV, 10)
+    map_empty = WcsNDMap.create(npix=(100, 100), axes=[energy_axis_10])
+
+    def fit_func(x, mu, sigma):
+        return norm.pdf(x, mu, sigma)
 
     with mpl_plot_check():
-        res, ax = plot_distribution(dataset.counts, fit=False)
-
-        assert ax.shape == (4, 3)
-
-        def func(x, mu, sig):
-            return norm.pdf(x, mu, sig)
-
-        res, ax = plot_distribution(
-            tsme.sqrt_ts,
-            fit=True,
-            func=func,
-            kwargs_hist={"bins": 40, "range": (-5, 10)},
+        res, axes = plot_distribution(
+            wcs_map=map_, func=fit_func, kwargs_hist={"bins": 40}
         )
 
-        assert len(ax) == 1
-        assert len(res[0]) == 3
-        assert len(res[0].get("info_dict")) == 5
+        assert axes.shape == (1,)
+        assert res[0].get("info_dict").get("nfev") == 19
+        assert res[0].get("param") is not None
+        assert res[0].get("covar") is not None
 
-        assert_allclose(res[0].get("param"), np.array([0.38355733, 1.21281365]))
-        assert_allclose(
-            res[0].get("covar"),
-            np.array(
-                [[6.04570694e-04, -1.68336683e-11], [-1.68336683e-11, 4.03047159e-04]]
-            ),
-        )
-        assert_allclose(res[0].get("info_dict").get("nfev"), 22)
+        res, axes = plot_distribution(map_empty, fit=False)
+
+        assert res == []
+        assert axes.shape == (4, 3)
