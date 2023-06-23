@@ -240,7 +240,7 @@ def compute_lightcurve_fvar(lightcurve, flux_quantity="flux"):
     ----------
     lightcurve : '~gammapy.estimators.FluxPoints'
         the lightcurve object
-    flux_quantity : `string`
+    flux_quantity : str
         flux quantity to use for calculation. Should be 'dnde', 'flux', 'e2dnde' or 'eflux'. Defualt is 'flux'.
         Useful in case of custom lightcurves computed outside gammapy
 
