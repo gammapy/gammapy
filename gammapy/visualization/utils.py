@@ -45,7 +45,7 @@ def plot_map_rgb(map_, ax=None, **kwargs):
 
     Examples
     --------
-    >>> from gammapy.visualization.utils import plot_map_rgb
+    >>> from gammapy.visualization import plot_map_rgb
     >>> from gammapy.maps import Map, MapAxis
     >>> import astropy.units as u
     >>> map_ = Map.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
