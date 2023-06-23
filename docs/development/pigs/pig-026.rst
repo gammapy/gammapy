@@ -231,6 +231,16 @@ The priors are serialised and read and writeable to a yaml file. They are also s
                      'parameters': [{'name': 'uni', 'value': 5.0}]}}}
 
 
+Implementation Outline
+--------------
+
+The PIG implementation will be piece-wise within individual issues in the following order:
+
+1. ``Prior`` base class and subclasses
+2. ``.prior`` attribute in the ``Parameter`` and ``Model`` classes
+3.  ``PriorFitStatistic`` class 
+4.  Evaluation of the prior in the ``Datasets`` class
+
 
 
 Addressing Use Cases
@@ -286,7 +296,11 @@ The proposed prior class allows the probability to unfold spectral flux points w
 
 
 
+
+
 (See `#4237`_ for an implementing PR draft.)
+
+
 
 
 
