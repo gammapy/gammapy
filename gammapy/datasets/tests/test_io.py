@@ -118,4 +118,6 @@ def test_ogip_writer(tmp_path):
 
     datasets.write(tmp_path / "written_datasets.yaml")
 
-    datasets.read(tmp_path / "written_datasets.yaml")
+    new_datasets = datasets.read(tmp_path / "written_datasets.yaml")
+
+    assert new_datasets[0].counts_off is None
