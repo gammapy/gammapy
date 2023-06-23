@@ -127,7 +127,7 @@ def confidence_iminuit(parameters, function, parameter, reoptimize, sigma, **kwa
     idx = parameters.free_parameters.index(parameter)
     var = _make_parname(idx, parameter)
 
-    message = "Minos terminated successfully"
+    message = "Minos terminated"
     cl = 2 * norm.cdf(sigma) - 1
 
     try:
@@ -143,7 +143,7 @@ def confidence_iminuit(parameters, function, parameter, reoptimize, sigma, **kwa
         }
 
     if info.is_valid:
-        message += "."
+        message += " successfully."
     else:
         message += ", but result is invalid."
 
