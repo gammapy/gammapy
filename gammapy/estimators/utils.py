@@ -250,8 +250,8 @@ def compute_lightcurve_fvar(lightcurve, flux_quantity="flux"):
         Table of fractional excess variance and associated error for each energy bin of the lightcurve.
     """
 
-    flux = getattr(lightcurve, quantity)
-    flux_err = getattr(lightcurve, quantity + "_err")
+    flux = getattr(lightcurve, flux_quantity)
+    flux_err = getattr(lightcurve, flux_quantity + "_err")
 
     time_id = flux.geom.axes.index_data("time")
 
