@@ -4,6 +4,7 @@ import astropy.units as u
 from astropy.table import Table
 from gammapy.maps import MapAxis, RegionGeom
 from gammapy.modeling.models import Model, Models, SkyModel
+from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.scripts import make_path
 from .core import SourceCatalog, SourceCatalogObject
 
@@ -24,8 +25,10 @@ class SourceCatalogObject1LHAASO(SourceCatalogObject):
     def _parse(self, name, which):
         if which in self.data["Model_a"]:
             tag = ""
-        else:
+        elif which in self.data["Model_b"]:
             tag = "_b"
+        else:
+            raise ValueError("Invalid model component name")
         is_ul = False
         value = u.Quantity(self.data[f"{name}{tag}"])
         if (
@@ -39,10 +42,9 @@ class SourceCatalogObject1LHAASO(SourceCatalogObject):
         value, _ = self._parse(name, which)
         return value
 
-    def spectral_model(self, which="both"):
+    def spectral_model(self, which):
         """Spectral model (`~gammapy.modeling.models.PowerLawSpectralModel`).
 
-        * ``which="both"`` - Use first model or create a composite template if both models are available.
         * ``which="KM2A"`` - Sky model for KM2A analysis only.
         * ``which="WCDA"`` - Sky model for WCDA analysis only.
 
@@ -68,10 +70,9 @@ class SourceCatalogObject1LHAASO(SourceCatalogObject):
 
         return model
 
-    def spatial_model(self, which="both"):
+    def spatial_model(self, which):
         """Spatial model (`~gammapy.modeling.models.SpatialModel`).
 
-        * ``which="both"`` - Use first model or create a composite template if both models are available.
         * ``which="KM2A"`` - Sky model for KM2A analysis only.
         * ``which="WCDA"`` - Sky model for WCDA analysis only.
 
@@ -83,9 +84,11 @@ class SourceCatalogObject1LHAASO(SourceCatalogObject):
         pars = {"lon_0": self._get("RAJ2000", which), "lat_0": lat_0, "frame": "fk5"}
 
         pos_err = self._get("pos_err", which)
+        scale_r95 = Gauss2DPDF().containment_radius(0.95)
+
         errs = {
-            "lat_0": pos_err,
-            "lon_0": pos_err / np.cos(lat_0),
+            "lat_0": pos_err / scale_r95,
+            "lon_0": pos_err / scale_r95 / np.cos(lat_0),
         }
 
         r39, is_ul = self._parse("r39", which)
