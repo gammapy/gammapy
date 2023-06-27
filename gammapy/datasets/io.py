@@ -124,10 +124,10 @@ class OGIPDatasetWriter(DatasetWriter):
         filenames = OGIPDatasetWriter.get_filenames(self.filename)
         meta["ANCRFILE"] = filenames["ancrfile"]
 
-        if dataset.edisp:
+        if dataset.counts_off:
             meta["BACKFILE"] = filenames["backfile"]
 
-        if dataset.counts_off:
+        if dataset.edisp:
             meta["RESPFILE"] = filenames["respfile"]
 
         return meta
