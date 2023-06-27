@@ -583,7 +583,7 @@ class MapAxis:
             )
 
         if per_decade:
-            nbin = np.ceil(np.log10(energy_max / energy_min).value * nbin)
+            nbin = np.floor(np.log10(energy_max / energy_min).value * nbin)
 
         if name is None:
             name = "energy"
