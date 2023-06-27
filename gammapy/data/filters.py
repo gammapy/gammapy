@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import copy
 import logging
+from astropy.table import unique, vstack
 
 __all__ = ["ObservationFilter"]
 
@@ -44,9 +45,10 @@ class ObservationFilter:
 
     EVENT_FILTER_TYPES = dict(sky_region="select_region", custom="select_parameter")
 
-    def __init__(self, time_filter=None, event_filters=None):
+    def __init__(self, time_filter=None, event_filters=None, event_logic="and"):
         self.time_filter = time_filter
         self.event_filters = event_filters or []
+        self.event_logic = event_logic
 
     @property
     def livetime_fraction(self):
@@ -66,13 +68,30 @@ class ObservationFilter:
         filtered_events : `~gammapy.data.EventListBase`
             The filtered event list
         """
+        from gammapy.data import EventList
+
         filtered_events = self._filter_by_time(events)
 
-        for f in self.event_filters:
-            method_str = self.EVENT_FILTER_TYPES[f["type"]]
-            filtered_events = getattr(filtered_events, method_str)(**f["opts"])
+        if self.event_logic == "and":
 
-        return filtered_events
+            for f in self.event_filters:
+                method_str = self.EVENT_FILTER_TYPES[f["type"]]
+                filtered_events = getattr(filtered_events, method_str)(**f["opts"])
+
+            return filtered_events
+
+        elif self.event_logic == "or":
+
+            filtered_events = []
+            for f in self.event_filters:
+                method_str = self.EVENT_FILTER_TYPES[f["type"]]
+                filtered_events.append(getattr(events, method_str)(**f["opts"]).table)
+
+            table = unique(
+                vstack(filtered_events, join_type="exact").sort("TIME"), keys="TIME"
+            )
+            tot_filtered_events = EventList(table)
+            return tot_filtered_events
 
     def filter_gti(self, gti):
         """Apply filters to a GTI table.
@@ -105,11 +124,10 @@ class ObservationFilter:
 
     @staticmethod
     def _check_filter_phase(event_filter):
-        if not event_filter:
-            return 1
+        fraction = 0
         for f in event_filter:
             if f.get("opts").get("parameter") == "PHASE":
                 band = f.get("opts").get("band")
-                return band[1] - band[0]
-            else:
-                return 1
+                fraction += band[1] - band[0]
+
+        return 1 if fraction == 0 else fraction
