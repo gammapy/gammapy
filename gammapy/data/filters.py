@@ -53,7 +53,8 @@ class ObservationFilter:
         self, time_filter=None, event_filters=None, event_filter_method="intersect"
     ):
         self.time_filter = time_filter
-        self.event_filters = self._check_overlap_phase(event_filters) or []
+        self.event_filters = event_filters or []
+        self._check_overlap_phase(self.event_filters)
         self.event_filter_method = event_filter_method
 
     @property
@@ -150,14 +151,17 @@ class ObservationFilter:
             if f.get("opts").get("parameter") == "PHASE":
                 bands.append(f.get("opts").get("band"))
 
-        intervals = pd.arrays.IntervalArray.from_tuples(bands)
-        interval_matrix = []
-        for b in bands:
-            interval_matrix.append(intervals.overlaps(pd.Interval(b[0], b[1])))
+        if len(bands) > 1:
+            intervals = pd.arrays.IntervalArray.from_tuples(bands)
+            interval_matrix = []
+            for b in bands:
+                interval_matrix.append(intervals.overlaps(pd.Interval(b[0], b[1])))
 
-        interval_matrix = np.array(interval_matrix)
-        overlap_array = interval_matrix[~np.eye(interval_matrix.shape[0], dtype=bool)]
-        if True in overlap_array:
-            raise ValueError(
-                "Overlapping bands in event_filters that apply to pulsar phase are not allowed."
-            )
+            interval_matrix = np.array(interval_matrix)
+            overlap_array = interval_matrix[
+                ~np.eye(interval_matrix.shape[0], dtype=bool)
+            ]
+            if True in overlap_array:
+                raise ValueError(
+                    "Overlapping bands in event_filters that apply to pulsar phase are not allowed."
+                )
