@@ -147,7 +147,7 @@ class TemporalModel(ModelBase):
         kwargs.setdefault("marker", "None")
         kwargs.setdefault("ls", "-")
         kwargs.setdefault("xerr", None)
-        m.quantity = self(time_axis.time_mid)
+        m.quantity = self(time_axis.time_mid).to("")
         ax = m.plot(ax=ax, **kwargs)
         ax.set_ylabel("Norm / A.U.")
         return ax
