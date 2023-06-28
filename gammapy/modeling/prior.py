@@ -22,10 +22,10 @@ class Prior:
         return output
 
     def __str__(self):
-        string = f"{self.__class__.__name__}\n"
-        string += "-" * 10
+        string = f"{self.__class__.__name__} ("
         for p in self.prior_parameters:
-            string += f"\n{p[0]:10}: {p[1]}"
+            string += f"{p[0]}: {p[1]}"
+        string += ")"
         return string
 
 
