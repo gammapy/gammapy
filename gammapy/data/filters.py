@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import copy
 import logging
+from itertools import groupby
 import numpy as np
 from astropy.table import unique, vstack
-import pandas as pd
 
 __all__ = ["ObservationFilter"]
 
@@ -53,8 +53,8 @@ class ObservationFilter:
         self, time_filter=None, event_filters=None, event_filter_method="intersect"
     ):
         self.time_filter = time_filter
-        self.event_filters = event_filters or []
-        self._check_overlap_phase(self.event_filters)
+        event_filters = event_filters or []
+        self.event_filters = self._merge_overlapping(event_filters)
         self.event_filter_method = event_filter_method
 
     @property
@@ -89,13 +89,16 @@ class ObservationFilter:
 
         elif self.event_filter_method == "union":
 
-            filtered_events = []
+            filtered_events_list = []
             for f in self.event_filters:
                 method_str = self.EVENT_FILTER_TYPES[f["type"]]
-                filtered_events.append(getattr(events, method_str)(**f["opts"]).table)
+                filtered_events_list.append(
+                    getattr(filtered_events, method_str)(**f["opts"]).table
+                )
 
             table = unique(
-                vstack(filtered_events, join_type="exact").sort("TIME"), keys="TIME"
+                vstack(filtered_events_list, join_type="exact").sort("TIME"),
+                keys="TIME",
             )
             tot_filtered_events = EventList(table)
             return tot_filtered_events
@@ -145,23 +148,34 @@ class ObservationFilter:
         return 1 if fraction == 0 else fraction
 
     @staticmethod
-    def _check_overlap_phase(event_filter):
-        bands = []
-        for f in event_filter:
-            if f.get("opts").get("parameter") == "PHASE":
-                bands.append(f.get("opts").get("band"))
+    def _merge_overlapping(event_filter):
 
-        if len(bands) > 1:
-            intervals = pd.arrays.IntervalArray.from_tuples(bands)
-            interval_matrix = []
-            for b in bands:
-                interval_matrix.append(intervals.overlaps(pd.Interval(b[0], b[1])))
+        group_list = []
+        not_custom_list = []
 
-            interval_matrix = np.array(interval_matrix)
-            overlap_array = interval_matrix[
-                ~np.eye(interval_matrix.shape[0], dtype=bool)
-            ]
-            if True in overlap_array:
-                raise ValueError(
-                    "Overlapping bands in event_filters that apply to pulsar phase are not allowed."
-                )
+        sky_region_indices = [
+            idx for idx, f in enumerate(event_filter) if f["type"] == "sky_region"
+        ]
+        for idx in reversed(sky_region_indices):
+            not_custom_list.append(event_filter.pop(idx))
+
+        for _, value in groupby(event_filter, lambda k: k["opts"]["parameter"]):
+            group_list.append(list(value))
+
+        new_event_filter = []
+        for group in group_list:
+            group.sort(key=lambda interval: interval["opts"]["band"][0])
+            merged = [group[0]]
+            for dictio in group:
+                previous = merged[-1]
+                if dictio["opts"]["band"][0] <= previous["opts"]["band"][1]:
+                    band_max = max(
+                        previous["opts"]["band"][1], dictio["opts"]["band"][1]
+                    )
+                    previous["opts"]["band"] = (previous["opts"]["band"][0], band_max)
+                else:
+                    merged.append(dictio)
+            new_event_filter.append(merged)
+
+        new_event_filter.append(not_custom_list)
+        return np.concatenate(new_event_filter)
