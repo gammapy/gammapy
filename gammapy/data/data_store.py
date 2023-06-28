@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-import os
 import subprocess
 from copy import copy
 from pathlib import Path
@@ -469,6 +468,7 @@ class DataStore:
         checker = DataStoreChecker(self)
         return checker.run(checks=checks)
 
+<<<<<<< HEAD
 
     def _obscore_def(self):
         """Generate the Obscore default table
@@ -796,6 +796,8 @@ class DataStore:
 
 
 
+=======
+>>>>>>> d32f8ffac (I moved the functions that were in datastore to a new script in gammapy/data/ivoa.py. Now they all work as independent functions but the only one accessible to the user is to_obscore_table. This function returns an astropy obscore table)
 
 class DataStoreChecker(Checker):
     """Check data store.
