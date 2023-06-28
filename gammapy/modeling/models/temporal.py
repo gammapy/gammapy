@@ -1019,8 +1019,11 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         x = self.table["PHASE"].data
         y = self.table["NORM"].data
 
-        return scipy.interpolate.InterpolatedUnivariateSpline(
-            x, y, k=1, ext=2, bbox=[0.0, 1.0]
+        return (
+            scipy.interpolate.InterpolatedUnivariateSpline(
+                x, y, k=1, ext=2, bbox=[0.0, 1.0]
+            )
+            * u.one
         )
 
     def evaluate(self, time, t_ref, phi_ref, f0, f1, f2):
