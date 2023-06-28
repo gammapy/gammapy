@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 import astropy.units as u
-from astropy.table import Column, Table
+from astropy.table import Table
 from gammapy.irf import EDispKernelMap, PSFMap
 from gammapy.utils.cluster import standard_scaler
 
@@ -57,9 +57,11 @@ def get_irfs_features(
         )
 
     n_obs = len(observations)
-    n_features = len(names)
-    data = np.zeros((n_obs, n_features))
-    units = [u.Unit("")] * n_features
+
+    data = {}
+    for name in names:
+        data[name] = u.Quantity(np.zeros(n_obs))
+
     for (
         ko,
         obs,
@@ -86,18 +88,17 @@ def get_irfs_features(
                 offset = fixed_offset
             edisp_kernel = obs.edisp.to_edisp_kernel(offset)
             psf_kwargs["offset"] = offset
-        for kf, name in enumerate(names):
+        for name in names:
             if name == "edisp-bias":
-                data[ko, kf] = edisp_kernel.get_bias(energy_true)
+                data[name][ko] = edisp_kernel.get_bias(energy_true)
             if name == "edisp-res":
-                data[ko, kf] = edisp_kernel.get_resolution(energy_true)
+                data[name][ko] = edisp_kernel.get_resolution(energy_true)
             if name == "psf-radius":
                 containment_radius = obs.psf.containment_radius(**psf_kwargs).to("deg")
-                data[ko, kf] = containment_radius.value
-                units[kf] = u.deg
+                data[name][ko] = containment_radius
 
-    features = Table(data, names=names, units=units)
-    features.add_column(Column(observations.ids, name="obs_id"), index=0)
+    data["obs_id"] = observations.ids
+    features = Table(data)
 
     if apply_standard_scaler:
         features = standard_scaler(features)
