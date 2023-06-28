@@ -7,6 +7,7 @@ from .fit_statistics_cython import (
     f_cash_root_cython,
     norm_bounds_cython,
 )
+from .prior_statistic import PriorFitStatistic
 
 __all__ = [
     "cash",
@@ -17,6 +18,7 @@ __all__ = [
     "get_wstat_gof_terms",
     "get_wstat_mu_bkg",
     "norm_bounds_cython",
+    "PriorFitStatistic",
     "wstat",
     "WStatCountsStatistic",
 ]
