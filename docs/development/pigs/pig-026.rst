@@ -198,7 +198,7 @@ Where the ``PriorFitStatistic`` iterates the models and parameters, evaluates an
 
          
 Serialisation 
---------------
+------------
 
 The priors are serialised and read and writeable to a yaml file. They are also saved if the associated ``Parameter`` or ``Model`` is transformed to a dictionary. For this the prior subclasses are tagged. The following two examples show the resulting yaml file for a ``Parameter`` and a ``PowerLawSpectralModel``, respectively.
 
