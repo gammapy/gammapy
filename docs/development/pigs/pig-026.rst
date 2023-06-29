@@ -65,7 +65,7 @@ Future additional properties of the ``Prior`` classes:
 - Prior subclass use cases (i.e. for correlated nuisance parameters with correlation matrix as a parameter)
 
 Exemplary additional prior subclasses:
---------------
+---------------------------------------
 .. code:: python
 
   class GaussianPrior(Prior):
