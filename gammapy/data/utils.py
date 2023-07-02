@@ -85,12 +85,11 @@ def get_irfs_features(
         data = {}
         for name in names:
             if name == "edisp-bias":
-                data[name] = edisp_kernel.get_bias(energy_true)
+                data[name] = edisp_kernel.get_bias(energy_true)[0]
             if name == "edisp-res":
-                data[name] = edisp_kernel.get_resolution(energy_true)
+                data[name] = edisp_kernel.get_resolution(energy_true)[0]
             if name == "psf-radius":
-                containment_radius = obs.psf.containment_radius(**psf_kwargs).to("deg")
-                data[name] = containment_radius
+                data[name] = obs.psf.containment_radius(**psf_kwargs).to("deg")
             data["obs_id"] = obs.obs_id
 
         rows.append(data)
