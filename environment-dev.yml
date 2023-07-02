@@ -22,7 +22,7 @@ dependencies:
   - click
   - cython
   - numpy<1.23
-  - pydantic
+  - pydantic<2.0
   - pyyaml
   - regions>=0.5
   - matplotlib>=3.4
