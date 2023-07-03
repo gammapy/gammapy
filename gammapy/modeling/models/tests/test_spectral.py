@@ -624,6 +624,22 @@ def test_pwl_pivot_energy():
     assert_quantity_allclose(pwl.pivot_energy, 3.3540034240210987 * u.TeV)
 
 
+def test_num_pivot_energy():
+    lp = LogParabolaSpectralModel(
+        amplitude="5.82442e-11 cm-2 s-1 GeV-1",
+        reference="17.337 GeV",
+        alpha="1.9134",
+        beta="0.2217",
+    )
+    lp.amplitude.error = "2.8804e-12 cm-2 s-1 GeV-1"
+    lp.alpha.error = "0.1126"
+    lp.beta.error = "0.0670"
+
+    energy = np.geomspace(0.1, 1000, 1000) * u.GeV
+
+    assert_quantity_allclose(lp.pivot_energy(energy), 17.307655 * u.GeV)
+
+
 def test_template_spectral_model_evaluate_tiny():
     energy = np.array([1.00000000e06, 1.25892541e06, 1.58489319e06, 1.99526231e06])
     values = np.array([4.39150790e-38, 1.96639562e-38, 8.80497507e-39, 3.94262401e-39])
