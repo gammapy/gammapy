@@ -34,17 +34,27 @@ def lc():
     table = Table(
         meta=meta,
         data=[
-            Column(Time(["2010-01-01", "2010-01-03"]).mjd, "time_min"),
-            Column(Time(["2010-01-03", "2010-01-10"]).mjd, "time_max"),
-            Column([[1.0, 2.0], [1.0, 2.0]], "e_min", unit="TeV"),
-            Column([[2.0, 5.0], [2.0, 5.0]], "e_max", unit="TeV"),
-            Column([[1e-11, 4e-12], [3e-11, np.nan]], "flux", unit="cm-2 s-1"),
+            Column(Time(["2010-01-01", "2010-01-03", "2010-01-07"]).mjd, "time_min"),
+            Column(Time(["2010-01-03", "2010-01-07", "2010-01-10"]).mjd, "time_max"),
+            Column([[1.0, 2.0], [1.0, 2.0], [1.0, 2.0]], "e_min", unit="TeV"),
+            Column([[2.0, 5.0], [2.0, 5.0], [2.0, 5.0]], "e_max", unit="TeV"),
             Column(
-                [[0.1e-11, 0.4e-12], [0.3e-11, np.nan]], "flux_err", unit="cm-2 s-1"
+                [[1e-11, 4e-12], [3e-11, np.nan], [1e-11, 1e-12]],
+                "flux",
+                unit="cm-2 s-1",
             ),
-            Column([[np.nan, np.nan], [3.6e-11, 1e-11]], "flux_ul", unit="cm-2 s-1"),
-            Column([[False, False], [True, True]], "is_ul"),
-            Column([[True, True], [True, True]], "success"),
+            Column(
+                [[0.1e-11, 0.4e-12], [0.3e-11, np.nan], [0.1e-11, 0.1e-12]],
+                "flux_err",
+                unit="cm-2 s-1",
+            ),
+            Column(
+                [[np.nan, np.nan], [3.6e-11, 1e-11], [1e-11, 1e-12]],
+                "flux_ul",
+                unit="cm-2 s-1",
+            ),
+            Column([[False, False], [True, True], [True, True]], "is_ul"),
+            Column([[True, True], [True, True], [True, True]], "success"),
         ],
     )
 
@@ -63,8 +73,8 @@ def test_lightcurve_fvar(lc_table):
 
     fvar, fvar_err = compute_fvar(flux.data, flux_err.data, axis=time_id)
 
-    assert_allclose(fvar, np.asarray([[[0.68322763]], [[0.45946829]]]))
-    assert_allclose(fvar_err, np.asarray([[[0.06679978]], [[0.07550996]]]))
+    assert_allclose(fvar, np.asarray([[[0.68322763]], [[0.84047606]]]))
+    assert_allclose(fvar_err, np.asarray([[[0.06679978]], [[0.08285806]]]))
 
 
 def test_lightcurve_chisq(lc_table):
