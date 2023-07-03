@@ -64,6 +64,8 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
         Fit instance specifying the backend and fit options.
     reoptimize : bool
         Re-optimize other free model parameters. Default is False.
+        If False, all the parameters are kept frozen at their best fit value,
+        and the norm is fitted in each bin. If True, the available free parameters are fit.
     sum_over_energy_groups : bool
         Whether to sum over the energy groups or fit the norm on the full energy
         grid.
@@ -89,6 +91,9 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
         self.sum_over_energy_groups = sum_over_energy_groups
         self.n_jobs = n_jobs
         self.parallel_backend = parallel_backend
+
+        if "reoptimize" not in kwargs:
+            kwargs["reoptimize"] = False
 
         fit = Fit(confidence_opts={"backend": "scipy"})
         kwargs.setdefault("fit", fit)
