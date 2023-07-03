@@ -213,6 +213,29 @@ class SpectralModel(ModelBase):
         """
         return self._propagate_error(epsilon=epsilon, fct=self, energy=energy)
 
+    def pivot_energy(self, energy):
+        """Return the pivot energy for a given spectral model.
+        The pivot energy is the narrowest point of the butterfly.
+
+        Parameters
+        ----------
+        energy : `~astropy.units.Quantity`
+            The energy to evaluate the spectral model and error.
+
+        """
+        dnde, dnde_error = self.evaluate_error(energy)
+
+        y_lo = dnde - dnde_error
+        y_hi = dnde + dnde_error
+
+        # Add here to get rid of any negative fluxes
+        log_y_lo = np.log10(y_lo[y_lo > 0].value)
+        log_y_hi = np.log10(y_hi[y_lo > 0].value)
+
+        energy = energy[y_lo > 0]
+
+        return energy[np.argmin(log_y_hi - log_y_lo)]
+
     def integral(self, energy_min, energy_max, **kwargs):
         r"""Integrate spectral model numerically if no analytical solution defined.
 
