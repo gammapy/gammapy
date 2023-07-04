@@ -715,6 +715,22 @@ class Observations(collections.abc.MutableSequence):
             obs_groups[f"group_{label}"] = observations
         return obs_groups
 
+    @classmethod
+    def concatenate(cls, observations_list):
+        """Create a new `Observations` instance by concatenating a list of `Observations` objects.
+
+        Parameters
+        ----------
+        observations_list : list of `~gammapy.data.Observations`
+            The list of `Observations` to concatenate.
+
+        Returns
+        -------
+        observations : `~gammapy.data.Observations`
+            The `Observations` object resulting from the concatenation of all the `Observations` in `observation_list`.
+        """
+        return cls(list(np.concatenate(observations_list)))
+
 
 class ObservationChecker(Checker):
     """Check an observation.
