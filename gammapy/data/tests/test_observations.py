@@ -6,7 +6,13 @@ import astropy.units as u
 from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.time import Time
 from astropy.units import Quantity
-from gammapy.data import DataStore, Observation, ObservationFilter
+from gammapy.data import (
+    DataStore,
+    EventList,
+    Observation,
+    ObservationFilter,
+    Observations,
+)
 from gammapy.data.pointing import FixedPointingInfo, PointingMode
 from gammapy.data.utils import get_irfs_features
 from gammapy.irf import PSF3D, load_irf_dict_from_file
@@ -501,3 +507,15 @@ def test_filter_live_time_phase(data_store):
     live_time_filter = observation.observation_live_time_duration
 
     assert_allclose(live_time_filter, default_obs_live_time * (0.8 - 0.2))
+
+
+@requires_data()
+def test_observations_concatenate(data_store):
+    obs_1 = data_store.get_observations([20136, 20137, 20151])
+    obs_2 = data_store.get_observations([20275, 20282])
+
+    concatenate_obs = Observations.concatenate([obs_1, obs_2])
+
+    assert len(concatenate_obs) == 5
+    assert isinstance(concatenate_obs[0], Observation)
+    assert isinstance(concatenate_obs[0].events, EventList)
