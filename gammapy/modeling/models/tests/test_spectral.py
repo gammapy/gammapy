@@ -635,9 +635,9 @@ def test_num_pivot_energy():
     lp.alpha.error = "0.1126"
     lp.beta.error = "0.0670"
 
-    energy = np.geomspace(0.1, 1000, 1000) * u.GeV
+    energy_bounds = [0.1, 1000] * u.GeV
 
-    assert_quantity_allclose(lp.pivot_energy(energy), 17.307655 * u.GeV)
+    assert_quantity_allclose(lp.pivot_energy(energy_bounds), 17.307655 * u.GeV)
 
 
 def test_template_spectral_model_evaluate_tiny():
