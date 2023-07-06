@@ -91,9 +91,6 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
         self.n_jobs = n_jobs
         self.parallel_backend = parallel_backend
 
-        if "reoptimize" not in kwargs:
-            kwargs["reoptimize"] = False
-
         fit = Fit(confidence_opts={"backend": "scipy"})
         kwargs.setdefault("fit", fit)
         super().__init__(**kwargs)
