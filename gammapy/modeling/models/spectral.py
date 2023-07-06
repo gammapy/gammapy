@@ -218,8 +218,8 @@ class SpectralModel(ModelBase):
 
         Parameters
         ----------
-        energy : `~astropy.units.Quantity`
-            Array of energies to evaluate the spectral model and error.
+        energy_bounds : `~astropy.units.Quantity`
+            Energy bounds to evaluate the spectral model and error.
 
         Returns
         -------
