@@ -13,7 +13,7 @@ from .background import (
 from .core import Maker
 from .map import MapDatasetMaker
 from .reduce import DatasetsMaker
-from .safe import SafeMakerDL3, SafeMaskMaker
+from .safe import SafeMaskMaker
 from .spectrum import SpectrumDatasetMaker
 
 MAKER_REGISTRY = Registry(
@@ -44,7 +44,6 @@ __all__ = [
     "RegionsFinder",
     "RingBackgroundMaker",
     "SafeMaskMaker",
-    "SafeMakerDL3",
     "SpectrumDatasetMaker",
     "WobbleRegionsFinder",
 ]

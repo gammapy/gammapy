@@ -7,7 +7,7 @@ from astropy import units as u
 from regions import CircleSkyRegion
 from gammapy.data import DataStore
 from gammapy.datasets import MapDataset, SpectrumDatasetOnOff
-from gammapy.makers import MapDatasetMaker, SafeMakerDL3, SafeMaskMaker
+from gammapy.makers import MapDatasetMaker, SafeMaskMaker
 from gammapy.maps import MapAxis, RegionGeom, WcsGeom
 from gammapy.utils.testing import requires_data
 
@@ -157,6 +157,10 @@ def test_safe_mask_maker_aeff_max_fixed_observation(
     )
     assert_allclose(mask_aeff_max_bis.data.sum(), 0)
 
+    maker = SafeMaskMaker(irfs="DL3")
+    with pytest.raises(ValueError):
+        maker.run(dataset)
+
 
 @requires_data()
 def test_safe_mask_maker_aeff_max_fixed_offset(dataset, observation_cta_1dc):
@@ -171,6 +175,13 @@ def test_safe_mask_maker_aeff_max_fixed_offset(dataset, observation_cta_1dc):
 
     with pytest.raises(ValueError):
         mask_aeff_max = safe_mask_maker.make_mask_energy_aeff_max(dataset)
+
+    safe_mask_maker1 = SafeMaskMaker(
+        methods=["aeff-max"], aeff_percent=20, fixed_offset=None, irfs="DL3"
+    )
+
+    mask1 = safe_mask_maker1.make_mask_energy_aeff_max(dataset, observation_cta_1dc)
+    assert_allclose(mask1.data.sum(), 847)
 
 
 @requires_data()
@@ -215,6 +226,15 @@ def test_safe_mask_maker_edisp_bias_fixed_offset(dataset, observation_cta_1dc):
     )
     assert_allclose(mask_edisp_bias_offset.data.sum(), 1694)
 
+    safe_mask_maker1 = SafeMaskMaker(
+        irfs="DL3", bias_percent=0.02, fixed_offset=1.5 * u.deg
+    )
+
+    mask_edisp_bias_offset = safe_mask_maker1.make_mask_energy_edisp_bias(
+        dataset, observation_cta_1dc
+    )
+    assert_allclose(mask_edisp_bias_offset.data.sum(), 242)
+
 
 @requires_data()
 def test_safe_mask_maker_bkg_peak(dataset, observation_cta_1dc):
@@ -222,6 +242,12 @@ def test_safe_mask_maker_bkg_peak(dataset, observation_cta_1dc):
     safe_mask_maker = SafeMaskMaker(position=pointing)
 
     mask_bkg_peak = safe_mask_maker.make_mask_energy_bkg_peak(dataset)
+    assert_allclose(mask_bkg_peak.data.sum(), 1936)
+
+    safe_mask_maker1 = SafeMaskMaker(fixed_offset=1.0 * u.deg, irfs="DL3")
+    mask_bkg_peak = safe_mask_maker1.make_mask_energy_bkg_peak(
+        dataset, observation_cta_1dc
+    )
     assert_allclose(mask_bkg_peak.data.sum(), 1936)
 
 
@@ -282,29 +308,3 @@ def test_safe_mask_maker_bkg_invalid(observations_hess_dl3):
 
     dataset = safe_mask_maker_nonan.run(dataset, obs)
     assert_allclose(dataset.mask_safe, mask_nonan)
-
-
-@requires_data()
-def test_safe_maker_dl3(observations_hess_dl3):
-    obs = observations_hess_dl3[0]
-    maker = SafeMakerDL3(
-        methods=["offset-max", "aeff-max", "aeff-default", "bkg-peak", "edisp-bias"]
-    )
-
-    evt = maker.make_energy_aeff_default(obs)
-    assert_allclose(len(evt.table), 4132)
-
-    evt = maker.make_energy_aeff_max(obs)
-    assert_allclose(len(evt.table), 6903)
-
-    evt = maker.make_energy_bkg_peak(obs)
-    assert_allclose(len(evt.table), 5633)
-
-    evt = maker.make_offset_max(obs)
-    assert_allclose(len(evt.table), 6920)
-
-    evt = maker.make_energy_edisp_bias(obs)
-    assert_allclose(len(evt.table), 3966)
-
-    obs6 = maker.run(obs)
-    assert_allclose(len(obs6.events.table), 3327)

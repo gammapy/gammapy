@@ -48,7 +48,7 @@ class SafeMaskMaker(Maker):
         Maximum offset cut.
     irfs : str, "DL3" or "DL4"
         Whether to use reprojected ("DL4") or raw ("DL3") irfs
-        Default is "DL3"
+        Default is "DL4"
     """
 
     tag = "SafeMaskMaker"
@@ -68,6 +68,7 @@ class SafeMaskMaker(Maker):
         position=None,
         fixed_offset=None,
         offset_max="3 deg",
+        irfs="DL4",
     ):
         methods = set(methods)
 
@@ -85,6 +86,10 @@ class SafeMaskMaker(Maker):
             raise ValueError(
                 "`position` and `fixed_offset` attributes are mutually exclusive"
             )
+
+        if irfs not in ["DL3", "DL4"]:
+            raise IOError("Invalid option fro irfs. Choose 'DL3' or 'DL4'.")
+        self.irfs = irfs
 
     def make_mask_offset_max(self, dataset, observation):
         """Make maximum offset mask.
@@ -126,7 +131,7 @@ class SafeMaskMaker(Maker):
             Safe data range mask.
         """
         if observation is None:
-            raise ValueError("Method 'offset-max' requires an observation object.")
+            raise ValueError("Method 'aeff-default' requires an observation object.")
 
         energy_max = observation.aeff.meta.get("HI_THRES", None)
 
@@ -165,45 +170,64 @@ class SafeMaskMaker(Maker):
         """
         geom, exposure = dataset._geom, dataset.exposure
 
-        if self.fixed_offset is not None:
-            if observation:
-                position = observation.get_pointing_icrs(
-                    observation.tmid
-                ).directional_offset_by(
-                    position_angle=0.0 * u.deg, separation=self.fixed_offset
-                )
-            else:
-                raise ValueError(
-                    f"observation argument is mandatory with {self.fixed_offset}"
-                )
+        if self.irfs == "DL3":
+            offset = self.fixed_offset
+            if offset is None:
+                if self.position:
+                    offset = observation.get_pointing_icrs(observation.tmid).separation(
+                        self.position
+                    )
+                else:
+                    offset = 0.0 * u.deg
 
-        elif self.position:
-            position = self.position
-        else:
-            position = geom.center_skydir
-
-        aeff = exposure.get_spectrum(position) / exposure.meta["livetime"]
-        if not np.any(aeff.data > 0.0):
-            log.warning(
-                f"Effective area is all zero at [{position.to_string('dms')}]. "
-                f"No safe energy band can be defined for the dataset '{dataset.name}': "
-                "setting `mask_safe` to all False."
+            values = observation.aeff.evaluate(
+                offset=offset, energy_true=observation.aeff.axes["energy_true"].edges
             )
-            return Map.from_geom(geom, data=False, dtype="bool")
+            valid = observation.aeff.axes["energy_true"].edges[
+                values > self.aeff_percent * np.max(values) / 100
+            ]
+            energy_min = np.min(valid)
 
-        model = TemplateSpectralModel.from_region_map(aeff)
+        else:
+            if self.fixed_offset is not None:
+                if observation:
+                    position = observation.get_pointing_icrs(
+                        observation.tmid
+                    ).directional_offset_by(
+                        position_angle=0.0 * u.deg, separation=self.fixed_offset
+                    )
+                else:
+                    raise ValueError(
+                        f"observation argument is mandatory with {self.fixed_offset}"
+                    )
 
-        energy_true = model.energy
-        energy_min = energy_true[np.where(model.values > 0)[0][0]]
-        energy_max = energy_true[-1]
+            elif self.position:
+                position = self.position
+            else:
+                position = geom.center_skydir
 
-        aeff_thres = (self.aeff_percent / 100) * aeff.quantity.max()
-        inversion = model.inverse(
-            aeff_thres, energy_min=energy_min, energy_max=energy_max
-        )
+            aeff = exposure.get_spectrum(position) / exposure.meta["livetime"]
+            if not np.any(aeff.data > 0.0):
+                log.warning(
+                    f"Effective area is all zero at [{position.to_string('dms')}]. "
+                    f"No safe energy band can be defined for the dataset '{dataset.name}': "
+                    "setting `mask_safe` to all False."
+                )
+                return Map.from_geom(geom, data=False, dtype="bool")
 
-        if not np.isnan(inversion[0]):
-            energy_min = inversion[0]
+            model = TemplateSpectralModel.from_region_map(aeff)
+
+            energy_true = model.energy
+            energy_min = energy_true[np.where(model.values > 0)[0][0]]
+            energy_max = energy_true[-1]
+
+            aeff_thres = (self.aeff_percent / 100) * aeff.quantity.max()
+            inversion = model.inverse(
+                aeff_thres, energy_min=energy_min, energy_max=energy_max
+            )
+
+            if not np.isnan(inversion[0]):
+                energy_min = inversion[0]
 
         return geom.energy_mask(energy_min=energy_min)
 
@@ -223,38 +247,54 @@ class SafeMaskMaker(Maker):
             Safe data range mask.
         """
         edisp, geom = dataset.edisp, dataset._geom
-        position = None
 
-        if self.fixed_offset is not None:
-            if observation:
-                pointing = observation.get_pointing_icrs(observation.tmid)
-                position = pointing.directional_offset_by(
-                    position_angle=0 * u.deg, separation=self.fixed_offset
-                )
-            else:
-                raise ValueError(
-                    f"{observation} argument is mandatory with {self.fixed_offset}"
-                )
+        if self.irfs == "DL3":
+            offset = self.fixed_offset
+            if offset is None:
+                if self.position:
+                    offset = observation.get_pointing_icrs(observation.tmid).separation(
+                        self.position
+                    )
+                else:
+                    offset = 0.0 * u.deg
 
-        if isinstance(edisp, EDispKernelMap):
-            if position:
-                edisp = edisp.get_edisp_kernel(position=position)
-            else:
-                edisp = edisp.get_edisp_kernel(position=self.position)
+            edisp = observation.edisp.to_edisp_kernel(offset=offset)
+            energy_min = edisp.get_bias_energy(self.bias_percent / 100)[-1]
+
         else:
-            e_reco = dataset._geom.axes["energy"]
-            if position:
-                edisp = edisp.get_edisp_kernel(position=position, energy_axis=e_reco)
+            position = None
+
+            if self.fixed_offset is not None:
+                if observation:
+                    pointing = observation.get_pointing_icrs(observation.tmid)
+                    position = pointing.directional_offset_by(
+                        position_angle=0 * u.deg, separation=self.fixed_offset
+                    )
+                else:
+                    raise ValueError(
+                        f"{observation} argument is mandatory with {self.fixed_offset}"
+                    )
+
+            if isinstance(edisp, EDispKernelMap):
+                if position:
+                    edisp = edisp.get_edisp_kernel(position=position)
+                else:
+                    edisp = edisp.get_edisp_kernel(position=self.position)
             else:
-                edisp = edisp.get_edisp_kernel(
-                    position=self.position, energy_axis=e_reco
-                )
+                e_reco = dataset._geom.axes["energy"]
+                if position:
+                    edisp = edisp.get_edisp_kernel(
+                        position=position, energy_axis=e_reco
+                    )
+                else:
+                    edisp = edisp.get_edisp_kernel(
+                        position=self.position, energy_axis=e_reco
+                    )
 
-        energy_min = edisp.get_bias_energy(self.bias_percent / 100)
-        return geom.energy_mask(energy_min=energy_min[0])
+            energy_min = edisp.get_bias_energy(self.bias_percent / 100)[0]
+        return geom.energy_mask(energy_min=energy_min)
 
-    @staticmethod
-    def make_mask_energy_bkg_peak(dataset):
+    def make_mask_energy_bkg_peak(self, dataset, observation=None):
         """Make safe energy mask based on the binned background.
 
         The energy threshold is defined as the lower edge of the energy
@@ -267,6 +307,9 @@ class SafeMaskMaker(Maker):
         ----------
         dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.SpectrumDataset`
             Dataset to compute mask for.
+        observation: `~gammapy.data.Observation`
+            Observation to compute mask for. It is a mandatory argument when DL3 irfs are used.
+
 
         Returns
         -------
@@ -274,10 +317,19 @@ class SafeMaskMaker(Maker):
             Safe data range mask.
         """
         geom = dataset._geom
-        background_spectrum = dataset.npred_background().get_spectrum()
-        idx = np.argmax(background_spectrum.data, axis=0)
-        energy_axis = geom.axes["energy"]
-        energy_min = energy_axis.edges[idx]
+        if self.irfs == "DL3":
+            bkg = observation.bkg.to_2d()
+            background_spectrum = np.ravel(
+                bkg.integral(axis_name="offset", offset=bkg.axes["offset"].bounds[1])
+            )
+            energy_min = bkg.axes["energy"].center[np.argmax(background_spectrum)]
+
+        else:
+            background_spectrum = dataset.npred_background().get_spectrum()
+            idx = np.argmax(background_spectrum.data, axis=0)
+            energy_axis = geom.axes["energy"]
+            energy_min = energy_axis.edges[idx]
+
         return geom.energy_mask(energy_min=energy_min)
 
     @staticmethod
@@ -317,6 +369,11 @@ class SafeMaskMaker(Maker):
         dataset : `Dataset`
             Dataset with defined safe range mask.
         """
+
+        if self.irfs == "DL3":
+            if observation is None:
+                raise ValueError("observation argument is mandatory with DL3 irfs")
+
         if dataset.mask_safe:
             mask_safe = dataset.mask_safe.data
         else:
@@ -339,250 +396,7 @@ class SafeMaskMaker(Maker):
             mask_safe &= self.make_mask_energy_edisp_bias(dataset, observation)
 
         if "bkg-peak" in self.methods:
-            mask_safe &= self.make_mask_energy_bkg_peak(dataset)
+            mask_safe &= self.make_mask_energy_bkg_peak(dataset, observation)
 
         dataset.mask_safe = Map.from_geom(dataset._geom, data=mask_safe, dtype=bool)
         return dataset
-
-
-class SafeMakerDL3(Maker):
-    """Make safe data range mask for a given observation, directly from the DL3
-    IRFs
-
-
-    .. warning::
-
-         Currently some methods computing a safe energy range ("aeff-default",
-         "aeff-max" and "edisp-bias") determine a true energy range and apply
-         it to reconstructed energy, effectively neglecting the energy dispersion.
-
-    Parameters
-    ----------
-    methods : {"aeff-default", "aeff-max", "offset-max", "bkg-peak"}
-        Method to use for the safe energy range. Can be a
-        list with a combination of those. Resulting masks
-        are combined with logical `and`. "aeff-default"
-        uses the energy ranged specified in the DL3 data
-        files, if available.
-    aeff_percent : float
-        Percentage of the maximal effective area to be used
-        as lower energy threshold for method "aeff-max".
-    bias_percent : float
-        Percentage of the energy bias to be used as lower
-        energy threshold for method "edisp-bias"
-    position : `~astropy.coordinates.SkyCoord`
-        Position at which the `aeff_percent` or `bias_percent` are computed.
-    fixed_offset : `~astropy.coordinates.Angle`
-        offset, calculated from the pointing position, at which
-        the `aeff_percent` or `bias_percent` are computed.
-        If neither the position nor fixed_offset is specified,
-        it uses the position of the center of the map by default.
-    offset_max : str or `~astropy.units.Quantity`
-        Maximum offset cut.
-    """
-
-    tag = "SafeMakerDL3"
-    available_methods = {
-        "aeff-default",
-        "aeff-max",
-        "edisp-bias",
-        "offset-max",
-        "bkg-peak",
-    }
-
-    def __init__(
-        self,
-        methods=("aeff-default",),
-        aeff_percent=10,
-        bias_percent=10,
-        position=None,
-        fixed_offset=None,
-        offset_max="3 deg",
-    ):
-        methods = set(methods)
-
-        if not methods.issubset(self.available_methods):
-            difference = methods.difference(self.available_methods)
-            raise ValueError(f"{difference} is not a valid method.")
-
-        self.methods = methods
-        self.aeff_percent = aeff_percent / 100.0
-        self.bias_percent = bias_percent / 100.0
-        self.position = position
-        self.fixed_offset = fixed_offset
-        self.offset_max = Angle(offset_max)
-        if self.position and self.fixed_offset:
-            raise ValueError(
-                "`position` and `fixed_offset` attributes are mutually exclusive"
-            )
-
-    @staticmethod
-    def make_energy_aeff_default(observation):
-        """Select events based on from aeff default energies.
-
-        Parameters
-        ----------
-        observation: `~gammapy.data.Observation`
-            Observation to apply cuts on.
-
-        Returns
-        -------
-        events: `~gammapy.data.EventList`
-            Event list with applied cuts.
-        """
-
-        energy_max = observation.aeff.meta.get("HI_THRES", None)
-
-        if energy_max:
-            energy_max = energy_max * u.TeV
-        else:
-            log.warning(
-                f"No default upper safe energy threshold defined for obs {observation.obs_id}"
-            )
-            energy_max = observation.aeff.axes["energy_true"].edges[-1]
-
-        energy_min = observation.aeff.meta.get("LO_THRES", None)
-
-        if energy_min:
-            energy_min = energy_min * u.TeV
-        else:
-            log.warning(
-                f"No default lower safe energy threshold defined for obs {observation.obs_id}"
-            )
-            energy_min = observation.aeff.axes["energy_true"].edges[0]
-        # TODO: Apply edisp
-        return observation.events.select_energy([energy_min, energy_max])
-
-    def make_energy_aeff_max(self, observation):
-        """Apply selection based on a minimal effective area
-
-        TODO: Should this be offset dependent?
-
-        Parameters
-        ----------
-        observation: `~gammapy.data.Observation`
-            Observation to apply cuts on.
-
-        Returns
-        -------
-        events: `~gammapy.data.EventList`
-            Event list with applied cuts.
-        """
-
-        offset = self.fixed_offset
-        if offset is None:
-            if self.position:
-                offset = observation.get_pointing_icrs(observation.tmid).separation(
-                    self.position
-                )
-            else:
-                offset = 0.0 * u.deg
-
-        values = observation.aeff.evaluate(
-            offset=offset, energy_true=observation.aeff.axes["energy_true"].edges
-        )
-        valid = observation.aeff.axes["energy_true"].edges[
-            values > self.aeff_percent * np.max(values)
-        ]
-        energy_min = np.min(valid)
-        energy_max = observation.aeff.axes["energy_true"].edges[-1]
-        # TODO: Apply edisp
-        return observation.events.select_energy([energy_min, energy_max])
-
-    def make_energy_bkg_peak(self, observation):
-        """Apply selection based the peak of the background IRF
-
-        Parameters
-        ----------
-        observation: `~gammapy.data.Observation`
-            Observation to apply cuts on.
-
-        Returns
-        -------
-        events: `~gammapy.data.EventList`
-            Event list with applied cuts.
-        """
-        bkg = observation.bkg.to_2d()
-
-        values = np.ravel(
-            bkg.integral(axis_name="offset", offset=bkg.axes["offset"].bounds[1])
-        )
-        energy_min = bkg.axes["energy"].center[values == np.max(values)]
-        energy_max = bkg.axes["energy"].center[-1]
-        return observation.events.select_energy([energy_min, energy_max])
-
-    def make_offset_max(self, observation):
-        """Apply selection based on maximum offset cut
-
-        Parameters
-        ----------
-        observation: `~gammapy.data.Observation`
-            Observation to apply cuts on.
-
-        Returns
-        -------
-        events: `~gammapy.data.EventList`
-            Event list with applied cuts.
-        """
-        return observation.events.select_offset([0 * u.deg, self.offset_max])
-
-    def make_energy_edisp_bias(self, observation=None):
-        """Apply selection based on energy dispersion bias
-
-        Parameters
-        ----------
-        observation: `~gammapy.data.Observation`
-            Observation to apply cuts on.
-
-        Returns
-        -------
-        events: `~gammapy.data.EventList`
-            Event list with applied cuts.
-        """
-        offset = self.fixed_offset
-        if offset is None:
-            if self.position:
-                offset = observation.get_pointing_icrs(observation.tmid).separation(
-                    self.position
-                )
-            else:
-                offset = 0.0 * u.deg
-
-        edisp = observation.edisp.to_edisp_kernel(offset=offset)
-        energy_min = edisp.get_bias_energy(self.bias_percent)[0]
-        energy_max = observation.edisp.axes["energy_true"].center[-1]
-        return observation.events.select_energy([energy_min, energy_max])
-
-    def run(self, observation=None):
-        """Make safe data range mask.
-
-        Parameters
-        ----------
-        dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.SpectrumDataset`
-            Dataset to compute mask for.
-        observation: `~gammapy.data.Observation`
-            Observation to compute mask for.
-
-        Returns
-        -------
-        observation : `~gammapy.data.Observation
-            Observation with selected events
-        """
-
-        if "offset-max" in self.methods:
-            event_list = self.make_offset_max(observation)
-            observation = observation.copy(in_memory=True, events=event_list)
-        if "aeff-default" in self.methods:
-            event_list = self.make_energy_aeff_default(observation)
-            observation = observation.copy(in_memory=True, events=event_list)
-        if "aeff-max" in self.methods:
-            event_list = self.make_energy_aeff_max(observation)
-            observation = observation.copy(in_memory=True, events=event_list)
-        if "bkg-peak" in self.methods:
-            event_list = self.make_energy_bkg_peak(observation)
-            observation = observation.copy(in_memory=True, events=event_list)
-        if "edisp-bias" in self.methods:
-            event_list = self.make_energy_edisp_bias(observation)
-            observation = observation.copy(in_memory=True, events=event_list)
-
-        return observation
