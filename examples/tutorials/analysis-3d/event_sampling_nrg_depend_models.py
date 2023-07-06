@@ -136,7 +136,7 @@ m = RegionNDMap.create(
 )
 
 # to compute the spectra as a function of time we extract the coordinates of the geometry
-coords = m.geom.get_coord()
+coords = m.geom.get_coord(sparse=True)
 
 # We reshape the indices and amplitudes array to perform broadcasting
 indices = indices.reshape(coords["time"].shape)

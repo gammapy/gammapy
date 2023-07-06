@@ -185,7 +185,7 @@ def _get_message(m, parameters):
     success = m.valid
     success &= np.all(np.isfinite([par.value for par in parameters]))
     if success:
-        message = "Optimization terminated successfully."
+        message = "Optimization terminated successfully"
         if m.accurate:
             message += "."
         else:
