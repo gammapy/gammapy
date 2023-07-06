@@ -228,15 +228,7 @@ class SpectralModel(ModelBase):
         """
         dnde, dnde_error = self.evaluate_error(energy)
 
-        y_lo = dnde - dnde_error
-        y_hi = dnde + dnde_error
-
-        log_y_lo = np.log10(y_lo[y_lo > 0].value)
-        log_y_hi = np.log10(y_hi[y_lo > 0].value)
-
-        energy = energy[y_lo > 0]
-
-        return energy[np.argmin(log_y_hi - log_y_lo)]
+        return energy[np.argmin(dnde_error / dnde)]
 
     def integral(self, energy_min, energy_max, **kwargs):
         r"""Integrate spectral model numerically if no analytical solution defined.
