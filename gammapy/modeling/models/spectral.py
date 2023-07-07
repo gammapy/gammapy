@@ -213,25 +213,24 @@ class SpectralModel(ModelBase):
         """
         return self._propagate_error(epsilon=epsilon, fct=self, energy=energy)
 
-    def pivot_energy(self, energy_bounds, nbins=1000):
+    @property
+    def pivot_energy(self):
         """The decorrelation energy for a given spectral model calculated numerically.
-
-        Parameters
-        ----------
-        energy_bounds : `~astropy.units.Quantity`
-            Energy bounds to evaluate the spectral model and error.
 
         Returns
         -------
         pivot energy : `~astropy.units.Quantity`
             The energy at which the statistical error is smallest.
         """
-        energy_min, energy_max = energy_bounds
-        energy = np.geomspace(energy_min, energy_max, nbins)
 
-        dnde, dnde_error = self.evaluate_error(energy)
+        def min_energy(x):
+            x = np.exp(x)
+            x = u.Quantity(x, "GeV")
+            dnde, dnde_error = self.evaluate_error(x)
+            energy_minimum = dnde_error / dnde
+            return energy_minimum
 
-        return energy[np.argmin(dnde_error / dnde)]
+        return u.Quantity(np.exp(scipy.optimize.fsolve(min_energy, x0=1e-4)), "GeV")[0]
 
     def integral(self, energy_min, energy_max, **kwargs):
         r"""Integrate spectral model numerically if no analytical solution defined.
