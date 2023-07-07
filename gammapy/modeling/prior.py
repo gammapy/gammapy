@@ -1,111 +1,188 @@
-from . import Parameter
+import numpy as np
+import astropy.units as u
+from gammapy.modeling.models import ModelBase
+from gammapy.utils.table import table_from_row_data
+from . import Parameter, Parameters
 
 
-class Prior:
-    """
-    Base prior class containing methods to serialise.
-    """
+class PriorParameter(Parameter):
+    def __init__(
+        self,
+        name,
+        value,
+        unit="",
+        scale=1,
+        min=np.nan,
+        max=np.nan,
+    ):
+        if not isinstance(name, str):
+            raise TypeError(f"Name must be string, got '{type(name)}' instead")
 
-    def __call__(self, base):
-        if isinstance(base, Parameter):
-            return self.evaluate(base.value)
-        else:  # model-like instance
-            return self.evaluate(base.parameters.value)
+        self._name = name
+        self.scale = scale
+        self.min = min
+        self.max = max
+        self._error = np.nan
+        if isinstance(value, u.Quantity) or isinstance(value, str):
+            val = u.Quantity(value)
+            self.value = val.value
+            self.unit = val.unit
+        else:
+            self.factor = value
+            self.unit = unit
+        self._type = "prior"
 
     def to_dict(self):
+        """Convert to dict."""
         output = {
-            "tag": self.tag[0],
+            "name": self.name,
+            "value": self.value,
+            "unit": self.unit.to_string("fits"),
+            "min": self.min,
+            "max": self.max,
         }
-        output["parameters"] = [
-            {"name": p[0], "value": p[1]} for p in self.prior_parameters
-        ]
         return output
 
+    def __repr__(self):
+        return (
+            f"{self.__class__.__name__}(name={self.name!r}, value={self.value!r}, "
+            f"factor={self.factor!r}, scale={self.scale!r}, unit={self.unit!r}, "
+            f"min={self.min!r}, max={self.max!r})"
+        )
+
+
+class PriorParameters(Parameters):
+    def __init__(self, parameters=None):
+        if parameters is None:
+            parameters = []
+        else:
+            parameters = list(parameters)
+
+        self._parameters = parameters
+
+    def to_table(self):
+        """Convert parameter attributes to `~astropy.table.Table`."""
+        rows = []
+        for p in self._parameters:
+            d = p.to_dict()
+            rows.append({**dict(type=p.type), **d})
+        table = table_from_row_data(rows)
+
+        table["value"].format = ".4e"
+        for name in ["min", "max"]:
+            table[name].format = ".3e"
+
+        return table
+
+
+class PriorModel(ModelBase):
+    """
+    Base prior class.
+    """
+
+    _weight = 1
+
+    @property
+    def parameters(self):
+        """PriorParameters (`~gammapy.modeling.PriorParameters`)"""
+        return PriorParameters(
+            [getattr(self, name) for name in self.default_parameters.names]
+        )
+
+    def __init_subclass__(cls, **kwargs):
+        # Add parameters list on the model sub-class (not instances)
+        cls.default_parameters = PriorParameters(
+            [_ for _ in cls.__dict__.values() if isinstance(_, PriorParameter)]
+        )
+
+    # for now only one unit which has to be set
+    @property
+    def unit(self):
+        return self._unit
+
+    @unit.setter
+    def unit(self, value):
+        self._unit = value
+        for p in self.parameters:
+            p.unit = self._unit
+
+    @property
+    def weight(self):
+        return self._weight
+
+    @weight.setter
+    def weight(self, value):
+        self._weight = value
+
+    def __call__(self, value):
+        """Call evaluate method"""
+        kwargs = {par.name: par.quantity.to(self.unit) for par in self.parameters}
+        if isinstance(value, Parameter):
+            return self.evaluate(value.quantity.to(self.unit), **kwargs)
+        elif isinstance(value, Parameters):
+            return self.evaluate(
+                [v.quantity.to(self.unit).value for v in value], **kwargs
+            )
+        else:
+            raise TypeError(f"Invalid type: {value}, {type(value)}")
+
     def __str__(self):
-        string = f"{self.__class__.__name__} ("
-        for p in self.prior_parameters:
-            string += f"{p[0]}: {p[1]}"
-        string += ")"
+        string = f"{self.__class__.__name__}\n"
+        string += f"unit: {self.unit}\n"
+        string += f"weight: {self.weight}\n"
+
+        if len(self.parameters) > 0:
+            string += f"\n{self.parameters.to_table()}"
         return string
 
+    def __repr__(self):
+        return self.__class__.__name__
 
-class GaussianPrior(Prior):
+
+class GaussianPrior(PriorModel):
     """Gaussian Prior with mu and sigma."""
 
     tag = ["GaussianPrior"]
+    _type = "prior"
+    mu = PriorParameter(name="mu", value=0, unit="")
+    sigma = PriorParameter(name="sigma", value=1, unit="")
 
-    def __init__(self, mu=0, sigma=1):
-        self.mu = mu
-        self.sigma = sigma
-
-    def evaluate(self, value):
-        return ((value - self.mu) / self.sigma) ** 2
-
-    @property
-    def prior_parameters(self):
-        return [("mu", self.mu), ("simga", self.sigma)]
+    @staticmethod
+    def evaluate(value, mu, sigma):
+        return ((value - mu) / sigma) ** 2
 
 
-class UniformPrior(Prior):
+class UniformPrior(PriorModel):
     """Uniform Prior"""
 
     tag = ["UniformPrior"]
+    uni = PriorParameter(name="uni", value=0, min=0, max=10, unit="")
 
-    def __init__(self, uni=0):
-        self.uni = uni
-
-    def evaluate(self, value):
-        return self.uni
-
-    @property
-    def prior_parameters(self):
-        return [("uni", self.uni)]
+    @staticmethod
+    def evaluate(value, uni):
+        return uni
 
 
-class MultivariateGaussianPrior(Prior):
+class CovarianceGaussianPrior(PriorModel):
     """Gaussian Priors on mulitple parameters with different mu and sigma. Set on a model.
 
     Parameters
     ----------
-    mus : `~numpy.ndarray`
-        Array with the expected mean of the parameters in the same order as the to be evaluated parameters.
-    sigmas : `~numpy.ndarray`
-        Array with the expected standard deviation of the parameters in the same order as the to be evaluated parameters.
-    """
-
-    tag = ["MultivariateGaussianPrior"]
-
-    def __init__(self, mus, sigmas):
-        self.mus = mus
-        self.sigmas = sigmas
-
-    def evaluate(self, values):
-        return ((values - self.mus) / self.sigmas) ** 2
-
-    @property
-    def prior_parameters(self):
-        return [("mus", self.mus), ("sigmas", self.sigmas)]
-
-
-class CovarianceGaussianPrior(Prior):
-    """Gaussian Priors on mulitple parameters with different mu and sigma. Set on a model.
-
-    Parameters
-    ----------
-    cov : `~numpy.ndarray`
-        Covariance matrix in the same order as the to be evaluated parameters.
+    priorparameters : PriorParameters (`~gammapy.modeling.PriorParameters`)
+        Parameters with the covariance matrix set.
     """
 
     tag = ["CovarianceGaussianPrior"]
 
-    def __init__(self, cov):
-        self.cov = cov
-
-    def evaluate(self, values):
-        from numpy import linalg
-
-        return values @ linalg.inv(self.cov) @ values
+    def __init__(self, priorparameters):
+        self.default_parameters = priorparameters
+        super().__init__()
 
     @property
-    def prior_parameters(self):
-        return [("cov", self.cov)]
+    def cov(self):
+        return self.default_parameters.covariance
+
+    def evaluate(self, values, **pars):
+        from numpy import linalg
+
+        return values @ linalg.inv(self.cov.data) @ values
