@@ -1,13 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Cube models (axes: lon, lat, energy)."""
 
+import logging
+import os
 import numpy as np
 import astropy.units as u
 from astropy.nddata import NoOverlapError
 from astropy.time import Time
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Covariance, Parameters
-from gammapy.modeling.covariance import copy_covariance
 from gammapy.modeling.parameter import _get_parameters_str
 from gammapy.utils.fits import LazyFitsData
 from gammapy.utils.scripts import make_name, make_path
@@ -15,6 +16,9 @@ from .core import Model, ModelBase, Models
 from .spatial import ConstantSpatialModel, SpatialModel
 from .spectral import PowerLawNormSpectralModel, SpectralModel, TemplateSpectralModel
 from .temporal import TemporalModel
+
+log = logging.getLogger(__name__)
+
 
 __all__ = [
     "create_fermi_isotropic_diffuse_model",
@@ -59,6 +63,7 @@ class SkyModel(ModelBase):
         name=None,
         apply_irf=None,
         datasets_names=None,
+        covariance_data=None,
     ):
         self.spatial_model = spatial_model
         self.spectral_model = spectral_model
@@ -79,7 +84,7 @@ class SkyModel(ModelBase):
                 "Spectral model used with SkyModel requires a norm type parameter."
             )
 
-        super().__init__()
+        super().__init__(covariance_data=covariance_data)
 
     @property
     def _models(self):
@@ -110,7 +115,19 @@ class SkyModel(ModelBase):
             ref_unit = ref_unit / u.sr
 
         if self.temporal_model:
-            obt_unit = obt_unit * u.Quantity(self.temporal_model(time)).unit
+            if u.Quantity(self.temporal_model(time)).unit.is_equivalent(
+                self.spectral_model(axis.center).unit
+            ):
+                obt_unit = (
+                    (
+                        self.temporal_model(time)
+                        * self.spatial_model.evaluate_geom(geom).unit
+                    )
+                    .to(obt_unit.to_string())
+                    .unit
+                )
+            else:
+                obt_unit = obt_unit * u.Quantity(self.temporal_model(time)).unit
 
         if not obt_unit.is_equivalent(ref_unit):
             raise ValueError(
@@ -380,7 +397,6 @@ class SkyModel(ModelBase):
 
         return Map.from_geom(geom=geom, data=value.value, unit=value.unit)
 
-    @copy_covariance
     def copy(self, name=None, copy_data=False, **kwargs):
         """Copy sky model
 
@@ -414,6 +430,7 @@ class SkyModel(ModelBase):
         kwargs.setdefault("temporal_model", temporal_model)
         kwargs.setdefault("apply_irf", self.apply_irf.copy())
         kwargs.setdefault("datasets_names", self.datasets_names)
+        kwargs.setdefault("covariance_data", self.covariance.data.copy())
 
         return self.__class__(**kwargs)
 
@@ -597,7 +614,13 @@ class FoVBackgroundModel(ModelBase):
 
     tag = ["FoVBackgroundModel", "fov-bkg"]
 
-    def __init__(self, spectral_model=None, dataset_name=None, spatial_model=None):
+    def __init__(
+        self,
+        spectral_model=None,
+        dataset_name=None,
+        spatial_model=None,
+        covariance_data=None,
+    ):
         if dataset_name is None:
             raise ValueError("Dataset name a is required argument")
 
@@ -611,7 +634,7 @@ class FoVBackgroundModel(ModelBase):
 
         self._spatial_model = spatial_model
         self._spectral_model = spectral_model
-        super().__init__()
+        super().__init__(covariance_data=covariance_data)
 
     @staticmethod
     def contributes(*args, **kwargs):
@@ -677,7 +700,6 @@ class FoVBackgroundModel(ModelBase):
         else:
             return value
 
-    @copy_covariance
     def copy(self, name=None, copy_data=False, **kwargs):
         """Copy FoVBackgroundModel
 
@@ -697,6 +719,7 @@ class FoVBackgroundModel(ModelBase):
         """
         kwargs.setdefault("spectral_model", self.spectral_model.copy())
         kwargs.setdefault("dataset_name", self.datasets_names[0])
+        kwargs.setdefault("covariance_data", self.covariance.data.copy())
         return self.__class__(**kwargs)
 
     def to_dict(self, full_output=False):
@@ -798,6 +821,7 @@ class TemplateNPredModel(ModelBase):
         datasets_names=None,
         copy_data=True,
         spatial_model=None,
+        covariance_data=None,
     ):
         if isinstance(map, Map):
             axis = map.geom.axes["energy"]
@@ -830,9 +854,8 @@ class TemplateNPredModel(ModelBase):
                     "Currently background models can only be assigned to one dataset."
                 )
         self.datasets_names = datasets_names
-        super().__init__()
+        super().__init__(covariance_data=covariance_data)
 
-    @copy_covariance
     def copy(self, name=None, copy_data=False, **kwargs):
         """Copy template npred model.
 
@@ -855,6 +878,7 @@ class TemplateNPredModel(ModelBase):
         kwargs.setdefault("spectral_model", self.spectral_model.copy())
         kwargs.setdefault("filename", self.filename)
         kwargs.setdefault("datasets_names", self.datasets_names)
+        kwargs.setdefault("covariance_data", self.covariance.data.copy())
         return self.__class__(name=name, copy_data=copy_data, **kwargs)
 
     @property
@@ -916,6 +940,14 @@ class TemplateNPredModel(ModelBase):
 
         return data
 
+    def write(self, overwrite=False):
+        if self.filename is None:
+            raise IOError("Missing filename")
+        elif os.path.isfile(make_path(self.filename)) and not overwrite:
+            log.warning("Template file already exits, and overwrite is False")
+        else:
+            self.map.write(self.filename)
+
     @classmethod
     def from_dict(cls, data):
         from gammapy.modeling.models import (
@@ -939,16 +971,8 @@ class TemplateNPredModel(ModelBase):
 
         if "filename" in data:
             bkg_map = Map.read(data["filename"])
-        elif "map" in data:
-            bkg_map = data["map"]
         else:
-            # TODO: for now create a fake map for serialization,
-            # uptdated in MapDataset.from_dict()
-            axis = MapAxis.from_edges(np.logspace(-1, 1, 2), unit=u.TeV, name="energy")
-            geom = WcsGeom.create(
-                skydir=(0, 0), npix=(1, 1), frame="galactic", axes=[axis]
-            )
-            bkg_map = Map.from_geom(geom)
+            raise IOError("Missing filename")
 
         return cls(
             map=bkg_map,

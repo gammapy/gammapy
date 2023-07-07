@@ -19,7 +19,7 @@ bins.
 
 Cherenkov telescopes usually work with observing runs and distribute
 data according to this basic time interval. A typical use case is to
-look for variability of a source on various time binnings: observation
+look for variability of a source on various time bins: observation
 run-wise binning, nightly, weekly etc.
 
 **Objective: The Crab nebula is not known to be variable at TeV
@@ -219,6 +219,7 @@ fig, ax = plt.subplots(
 )
 lc_3d.sqrt_ts_threshold_ul = 5
 lc_3d.plot(ax=ax, axis_name="time")
+plt.show()
 
 table = lc_3d.to_table(format="lightcurve", sed_type="flux")
 display(table["time_min", "time_max", "e_min", "e_max", "flux", "flux_err"])
@@ -341,6 +342,7 @@ fig, ax = plt.subplots(
 lc_1d.plot(ax=ax, marker="o", label="1D")
 lc_3d.plot(ax=ax, marker="o", label="3D")
 plt.legend()
+plt.show()
 
 
 ######################################################################

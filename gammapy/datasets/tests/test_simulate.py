@@ -13,8 +13,9 @@ from gammapy.datasets import MapDataset, MapDatasetEventSampler
 from gammapy.datasets.tests.test_map import get_map_dataset
 from gammapy.irf import load_irf_dict_from_file
 from gammapy.makers import MapDatasetMaker
-from gammapy.maps import MapAxis, WcsGeom
+from gammapy.maps import MapAxis, RegionGeom, RegionNDMap, WcsGeom
 from gammapy.modeling.models import (
+    ConstantSpectralModel,
     FoVBackgroundModel,
     GaussianSpatialModel,
     LightCurveTemplateTemporalModel,
@@ -100,6 +101,47 @@ def model_alternative():
     return model2
 
 
+def get_energy_dependent_temporal_model():
+    energy_axis = MapAxis.from_energy_bounds(
+        energy_min=1 * u.TeV, energy_max=10 * u.TeV, nbin=10, name="energy"
+    )
+
+    edges = np.linspace(0, 1000, 101) * u.s
+    time_axis = MapAxis.from_edges(edges=edges, name="time", interp="lin")
+
+    geom = RegionGeom.create(
+        region=SkyCoord("0.5 deg", "0.5 deg", frame="galactic"),
+        axes=[energy_axis, time_axis],
+    )
+
+    coords = geom.get_coord(sparse=True)
+
+    def f(time, energy):
+        """Toy model for testing"""
+        amplitude = u.Quantity("5e-11 cm-2 s-1 TeV-1") * np.exp(-(time / (200 * u.s)))
+        index = 1 + 2.2 * time.to_value("s") / 1000
+        return PowerLawSpectralModel.evaluate(
+            amplitude=amplitude, index=index, energy=energy, reference=1 * u.TeV
+        )
+
+    data = f(time=coords["time"], energy=coords["energy"])
+
+    m = RegionNDMap.from_geom(data=data.value, geom=geom, unit=data.unit)
+    t_ref = Time(51544.00074287037, format="mjd", scale="tt")
+    return LightCurveTemplateTemporalModel(m, t_ref=t_ref)
+
+
+@pytest.fixture()
+@requires_data()
+def energy_dependent_temporal_sky_model(models):
+    models[0].spatial_model = PointSpatialModel(
+        lon_0="0 deg", lat_0="0 deg", frame="galactic"
+    )
+    models[0].spectral_model = ConstantSpectralModel(const="1 cm-2 s-1 TeV-1")
+    models[0].temporal_model = get_energy_dependent_temporal_model()
+    return models[0]
+
+
 @pytest.fixture(scope="session")
 def dataset():
     energy_axis = MapAxis.from_bounds(
@@ -119,29 +161,134 @@ def dataset():
     dataset.background /= 400
 
     dataset.gti = GTI.create(
-        start=0 * u.s, stop=1000 * u.s, reference_time="2000-01-01"
+        start=0 * u.s, stop=1000 * u.s, reference_time=Time("2000-01-01").tt
     )
 
     return dataset
 
 
 @requires_data()
-def test_sample_coord_time_energy(dataset, models):
-    models[0].spatial_model = None
-    dataset.models = models
+def test_evaluate_timevar_source(energy_dependent_temporal_sky_model, dataset):
+    dataset.models = energy_dependent_temporal_sky_model
     evaluator = dataset.evaluators["test-source"]
-    sampler = MapDatasetEventSampler(random_state=0)
-    with pytest.raises(TypeError):
-        sampler._sample_coord_time_energy(dataset, evaluator)
 
-    models[0].spatial_model = PointSpatialModel(
+    sampler = MapDatasetEventSampler(random_state=0)
+    npred = sampler._evaluate_timevar_source(dataset, evaluator.model)
+
+    assert_allclose(np.shape(npred.data), (3, 1999, 1, 1))
+
+    assert_allclose(npred.data[:, 10, 0, 0], [0.819546, 1.676989, 2.248684], rtol=2e-4)
+    assert_allclose(npred.data[:, 50, 0, 0], [0.729098, 1.442345, 1.869792], rtol=2e-4)
+
+    filename = "$GAMMAPY_DATA/gravitational_waves/GW_example_DC_map_file.fits.gz"
+    temporal_model = LightCurveTemplateTemporalModel.read(filename, format="map")
+    temporal_model.t_ref.value = 51544.00074287037
+    dataset.models[0].temporal_model = temporal_model
+    evaluator = dataset.evaluators["test-source"]
+
+    sampler = MapDatasetEventSampler(random_state=0)
+    npred = sampler._evaluate_timevar_source(dataset, evaluator.model)
+
+    assert_allclose(
+        npred.data[:, 1000, 0, 0] / 1e-13,
+        [0.038113, 0.033879, 0.010938],
+        rtol=2e-4,
+    )
+
+
+@requires_data()
+def test_sample_coord_time_energy_no_spatial(
+    dataset, energy_dependent_temporal_sky_model
+):
+    sampler = MapDatasetEventSampler(random_state=0)
+
+    energy_dependent_temporal_sky_model.spatial_model = None
+    energy_dependent_temporal_sky_model.spectral_model = ConstantSpectralModel(
+        const="1 cm-2 s-1 TeV-1"
+    )
+    dataset.models = energy_dependent_temporal_sky_model
+    evaluator = dataset.evaluators["test-source"]
+
+    with pytest.raises(TypeError):
+        sampler._sample_coord_time_energy(dataset, evaluator.model)
+
+
+@requires_data()
+def test_sample_coord_time_energy_gaussian(
+    dataset, energy_dependent_temporal_sky_model
+):
+    sampler = MapDatasetEventSampler(random_state=0)
+
+    energy_dependent_temporal_sky_model.spatial_model = GaussianSpatialModel()
+    energy_dependent_temporal_sky_model.spectral_model = ConstantSpectralModel(
+        const="1 cm-2 s-1 TeV-1"
+    )
+    dataset.models = energy_dependent_temporal_sky_model
+    evaluator = dataset.evaluators["test-source"]
+
+    with pytest.raises(TypeError):
+        sampler._sample_coord_time_energy(dataset, evaluator.model)
+
+
+@requires_data()
+def test_sample_coord_time_energy(dataset, energy_dependent_temporal_sky_model):
+    sampler = MapDatasetEventSampler(random_state=1)
+
+    energy_dependent_temporal_sky_model.spatial_model = PointSpatialModel(
         lon_0="0 deg", lat_0="0 deg", frame="galactic"
     )
-    dataset.models = models
+    dataset.models = energy_dependent_temporal_sky_model
     evaluator = dataset.evaluators["test-source"]
-    sampler = MapDatasetEventSampler(random_state=0)
-    with pytest.raises(NotImplementedError):
-        sampler._sample_coord_time_energy(dataset, evaluator)
+
+    events = sampler._sample_coord_time_energy(dataset, evaluator.model)
+
+    assert len(events) == 1254
+
+    assert_allclose(
+        [events[0][0], events[0][1], events[0][2], events[0][3]],
+        [854.108591, 6.22904, 266.404988, -28.936178],
+        rtol=1e-6,
+    )
+
+
+@requires_data()
+def test_sample_coord_time_energy_random_seed(
+    dataset, energy_dependent_temporal_sky_model
+):
+    sampler = MapDatasetEventSampler(random_state=2)
+
+    energy_dependent_temporal_sky_model.temporal_model.map._unit == ""
+    dataset.models = energy_dependent_temporal_sky_model
+    evaluator = dataset.evaluators["test-source"]
+
+    events = sampler._sample_coord_time_energy(dataset, evaluator.model)
+
+    assert len(events) == 1256
+
+    assert_allclose(
+        [events[0][0], events[0][1], events[0][2], events[0][3]],
+        [0.2998, 1.932196, 266.404988, -28.936178],
+        rtol=1e-3,
+    )
+
+
+@requires_data()
+def test_sample_coord_time_energy_unit(dataset, energy_dependent_temporal_sky_model):
+    sampler = MapDatasetEventSampler(random_state=1)
+
+    energy_dependent_temporal_sky_model.temporal_model.map._unit == "cm-2 s-1 TeV-1"
+    energy_dependent_temporal_sky_model.spectral_model.parameters[0].unit = ""
+    dataset.models = energy_dependent_temporal_sky_model
+    evaluator = dataset.evaluators["test-source"]
+
+    events = sampler._sample_coord_time_energy(dataset, evaluator.model)
+
+    assert len(events) == 1254
+    assert_allclose(
+        [events[0][0], events[0][1], events[0][2], events[0][3]],
+        [854.108591, 6.22904, 266.404988, -28.936178],
+        rtol=1e-6,
+    )
 
 
 @requires_data()
@@ -160,10 +307,27 @@ def test_mde_sample_sources(dataset, models):
     assert_allclose(events.table["DEC_TRUE"][0], -28.748145, rtol=1e-5)
     assert events.table["DEC_TRUE"].unit == "deg"
 
-    assert_allclose(events.table["TIME"][0], 119.7494479, rtol=1e-5)
+    assert_allclose(events.table["TIME"][0], 120.37471, rtol=1e-5)
     assert events.table["TIME"].unit == "s"
 
     assert_allclose(events.table["MC_ID"][0], 1, rtol=1e-5)
+
+
+@requires_data()
+def test_sample_sources_energy_dependent(dataset, energy_dependent_temporal_sky_model):
+    dataset.models = energy_dependent_temporal_sky_model
+
+    sampler = MapDatasetEventSampler(random_state=0)
+    events = sampler.sample_sources(dataset=dataset)
+
+    assert len(events.table["ENERGY_TRUE"]) == 1268
+    assert_allclose(events.table["ENERGY_TRUE"][0], 6.456526, rtol=1e-5)
+
+    assert_allclose(events.table["RA_TRUE"][0], 266.404988, rtol=1e-5)
+
+    assert_allclose(events.table["DEC_TRUE"][0], -28.936178, rtol=1e-5)
+
+    assert_allclose(events.table["TIME"][0], 95.464699, rtol=1e-5)
 
 
 @requires_data()
@@ -473,7 +637,7 @@ def test_events_datastore(tmp_path, dataset, models):
 
     primary_hdu = fits.PrimaryHDU()
     hdu_evt = fits.BinTableHDU(events.table)
-    hdu_gti = fits.BinTableHDU(dataset.gti.table, name="GTI")
+    hdu_gti = dataset.gti.to_table_hdu(format="gadf")
     hdu_all = fits.HDUList([primary_hdu, hdu_evt, hdu_gti])
     hdu_all.writeto(str(tmp_path / "events.fits"))
 

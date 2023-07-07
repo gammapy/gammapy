@@ -14,6 +14,7 @@ from astropy.utils.decorators import classproperty
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from gammapy.maps import MapAxis, RegionNDMap
+from gammapy.maps.axes import UNIT_STRING_FORMAT
 from gammapy.modeling import Parameter, Parameters
 from gammapy.utils.integrate import trapz_loglog
 from gammapy.utils.interpolation import (
@@ -508,11 +509,15 @@ class SpectralModel(ModelBase):
 
     @staticmethod
     def _plot_format_ax(ax, energy_power, sed_type):
-        ax.set_xlabel(f"Energy [{ax.xaxis.units}]")
+        ax.set_xlabel(f"Energy [{ax.xaxis.units.to_string(UNIT_STRING_FORMAT)}]")
         if energy_power > 0:
-            ax.set_ylabel(f"e{energy_power} * {sed_type} [{ax.yaxis.units}]")
+            ax.set_ylabel(
+                f"e{energy_power} * {sed_type} [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]"
+            )
         else:
-            ax.set_ylabel(f"{sed_type} [{ax.yaxis.units}]")
+            ax.set_ylabel(
+                f"{sed_type} [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]"
+            )
 
         ax.set_xscale("log", nonpositive="clip")
         ax.set_yscale("log", nonpositive="clip")

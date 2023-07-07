@@ -12,12 +12,13 @@ from regions import (
     PointSkyRegion,
     RectangleSkyRegion,
 )
-from gammapy.maps import Map, MapAxis, RegionGeom, WcsGeom
+from gammapy.maps import Map, MapAxis, MapCoord, RegionGeom, WcsGeom
 from gammapy.modeling.models import (
     ConstantSpatialModel,
     DiskSpatialModel,
     GaussianSpatialModel,
     GeneralizedGaussianSpatialModel,
+    PiecewiseNormSpatialModel,
     PointSpatialModel,
     PowerLawSpectralModel,
     Shell2SpatialModel,
@@ -530,7 +531,7 @@ def test_integrate_geom_energy_axis():
     assert_allclose(integral, 1, rtol=0.0001)
 
 
-def test_temlatemap_clip():
+def test_templatemap_clip():
     model_map = Map.create(map_type="wcs", width=(2, 2), binsz=0.5, unit="sr-1")
     model_map.data += 1.0
     model = TemplateSpatialModel(model_map)
@@ -541,3 +542,43 @@ def test_temlatemap_clip():
 
     val = model.evaluate(lon, lat)
     assert_allclose(val, 0, rtol=0.0001)
+
+
+def test_piecewise_spatial_model():
+    geom = WcsGeom.create(skydir=(2.4, 2.3), npix=(2, 2), binsz=0.3, frame="galactic")
+    coords = MapCoord.create(geom.footprint)
+    coords["lon"] *= u.deg
+    coords["lat"] *= u.deg
+
+    model = PiecewiseNormSpatialModel(coords, frame="galactic")
+
+    assert_allclose(model(*geom.to_image().center_coord), 1.0)
+
+    norms = np.arange(coords.shape[0])
+
+    model = PiecewiseNormSpatialModel(coords, norms, frame="galactic")
+
+    assert not model.is_energy_dependent
+
+    expected = np.array([[0, 3], [1, 2]])
+    assert_allclose(model(*geom.to_image().get_coord()), expected, atol=1e-5)
+
+    assert_allclose(model.evaluate_geom(geom.to_image()), expected, atol=1e-5)
+
+    assert_allclose(model.evaluate_geom(geom), expected, atol=1e-5)
+
+    model_dict = model.to_dict()
+    new_model = PiecewiseNormSpatialModel.from_dict(model_dict)
+
+    assert_allclose(new_model.evaluate_geom(geom.to_image()), expected, atol=1e-5)
+
+
+def test_piecewise_spatial_model_3d():
+    axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3)
+    geom = WcsGeom.create(
+        skydir=(2.4, 2.3), npix=(2, 2), binsz=0.3, frame="galactic", axes=[axis]
+    )
+    coords = geom.get_coord().flat
+
+    with pytest.raises(ValueError):
+        PiecewiseNormSpatialModel(coords, frame="galactic")

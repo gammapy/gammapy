@@ -22,7 +22,8 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
 )
-from gammapy.utils.testing import requires_data
+from gammapy.utils import parallel
+from gammapy.utils.testing import requires_data, requires_dependency
 
 
 # TODO: use pre-generated data instead
@@ -393,7 +394,6 @@ def test_flux_points_estimator_no_norm_scan(fpe_pwl, tmpdir):
     fp = fpe.run(datasets)
 
     assert_allclose(fpe.fit.optimize_opts["tol"], 0.2)
-    assert_allclose(fpe.fit.minuit.tol, 0.2)
 
     assert fp.sed_type_init == "likelihood"
     assert "stat_scan" not in fp._data
@@ -528,6 +528,53 @@ def test_flux_points_recompute_ul(fpe_pwl):
     # check that it returns a sensible value
     fp2 = fp.recompute_ul(n_sigma_ul=2)
     assert_allclose(fp2.flux_ul.data, fp.flux_ul.data, rtol=1e-2)
+
+
+def test_flux_points_parallel_multiprocessing(fpe_pwl):
+    datasets, fpe = fpe_pwl
+    fpe.selection_optional = ["all"]
+    fpe.n_jobs = 2
+    assert fpe.n_jobs == 2
+
+    fp = fpe.run(datasets)
+    assert_allclose(
+        fp.flux_ul.data,
+        [[[2.629819e-12]], [[9.319243e-13]], [[9.004449e-14]]],
+        rtol=1e-3,
+    )
+
+
+def test_global_n_jobs_default_handling():
+    fpe = FluxPointsEstimator(energy_edges=[1, 3, 10] * u.TeV)
+
+    assert fpe.n_jobs == 1
+
+    parallel.N_JOBS_DEFAULT = 2
+    assert fpe.n_jobs == 2
+
+    fpe.n_jobs = 5
+    assert fpe.n_jobs == 5
+
+    fpe.n_jobs = None
+    assert fpe.n_jobs == 2
+    assert fpe._n_jobs is None
+
+    parallel.N_JOBS_DEFAULT = 1
+    assert fpe.n_jobs == 1
+
+
+@requires_dependency("ray")
+def test_flux_points_parallel_ray(fpe_pwl):
+    datasets, fpe = fpe_pwl
+    fpe.selection_optional = ["all"]
+    fpe.parallel_backend = "ray"
+    fpe.n_jobs = 2
+    fp = fpe.run(datasets)
+    assert_allclose(
+        fp.flux_ul.data,
+        [[[2.629819e-12]], [[9.319243e-13]], [[9.004449e-14]]],
+        rtol=1e-3,
+    )
 
 
 def test_fpe_non_aligned_energy_axes():

@@ -6,6 +6,7 @@ from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 from gammapy.maps import MapAxes, MapAxis
+from gammapy.maps.axes import UNIT_STRING_FORMAT
 from .core import IRF
 from .io import gadf_is_pointlike
 
@@ -206,7 +207,7 @@ class Background3D(BackgroundIRF):
             self.axes["fov_lon"].format_plot_yaxis(ax)
             ax.set_title(str(ee))
             if add_cbar:
-                label = f"Background [{bkg.unit}]"
+                label = f"Background [{bkg.unit.to_string(UNIT_STRING_FORMAT)}]"
                 cbar = ax.figure.colorbar(caxes, ax=ax, label=label, fraction=cfraction)
                 cbar.formatter.set_powerlimits((0, 0))
 
@@ -304,7 +305,9 @@ class Background2D(BackgroundIRF):
         offset_axis.format_plot_yaxis(ax=ax)
 
         if add_cbar:
-            label = f"Background rate [{self.unit}]"
+            label = (
+                f"Background rate [{self.quantity.unit.to_string(UNIT_STRING_FORMAT)}]"
+            )
             ax.figure.colorbar(caxes, ax=ax, label=label)
 
     def plot_offset_dependence(self, ax=None, energy=None, **kwargs):
@@ -340,7 +343,9 @@ class Background2D(BackgroundIRF):
                 ax.plot(offset_axis.center, bkg, label=label, **kwargs)
 
         offset_axis.format_plot_xaxis(ax=ax)
-        ax.set_ylabel(f"Background rate [{ax.yaxis.units}]")
+        ax.set_ylabel(
+            f"Background rate [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]"
+        )
         ax.set_yscale("log")
         ax.legend(loc="upper right")
         return ax
@@ -379,7 +384,9 @@ class Background2D(BackgroundIRF):
 
         energy_axis.format_plot_xaxis(ax=ax)
         ax.set_yscale("log")
-        ax.set_ylabel(f"Background rate [{ax.yaxis.units}]")
+        ax.set_ylabel(
+            f"Background rate [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]"
+        )
         ax.legend(loc="best")
         return ax
 
@@ -410,7 +417,9 @@ class Background2D(BackgroundIRF):
 
         energy_axis.format_plot_xaxis(ax=ax)
         ax.set_yscale("log")
-        ax.set_ylabel(f"Background rate [{ax.yaxis.units}]")
+        ax.set_ylabel(
+            f"Background rate [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]"
+        )
         ax.legend(loc="best")
         return ax
 

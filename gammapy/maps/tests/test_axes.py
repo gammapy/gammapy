@@ -388,6 +388,19 @@ def test_map_axis_plot_helpers():
     assert_allclose(axis.edges, axis.as_plot_edges)
 
 
+def test_map_axis_concatenate():
+    axis_1 = MapAxis.from_bounds(0, 10, 10, name="axis")
+    axis_2 = MapAxis.from_bounds(10, 20, 10, name="axis")
+    axis_2_other_name = MapAxis.from_bounds(10, 20, 10, name="other_axis")
+
+    axis_12 = axis_1.concatenate(axis_2)
+
+    assert_equal(axis_12.edges, np.linspace(0, 20, 21))
+
+    with pytest.raises(ValueError):
+        axis_1.concatenate(axis_2_other_name)
+
+
 def test_time_axis(time_intervals):
     axis = TimeMapAxis(
         time_intervals["t_min"], time_intervals["t_max"], time_intervals["t_ref"]
@@ -622,6 +635,30 @@ def test_from_gti_time_axis():
     assert axis.nbin == 1
 
 
+def test_from_gti_bounds():
+    start = u.Quantity([1, 2], "min")
+    stop = u.Quantity([1.5, 2.5], "min")
+    time_ref = Time("2010-01-01 00:00:00.0")
+
+    gti = GTI.create(start, stop, time_ref)
+
+    axis = TimeMapAxis.from_gti_bounds(
+        gti=gti,
+        t_delta=10 * u.s,
+    )
+
+    assert axis.nbin == 8
+    expected = Time("2010-01-01 00:01:00.0")
+    # GTI.create() changes the reference time format
+    expected.format = "mjd"
+
+    assert_time_allclose(axis.time_min[0], expected)
+
+    expected = Time("2010-01-01 00:02:30.0")
+    expected.format = "mjd"
+    assert_time_allclose(axis.time_max[-1], expected)
+
+
 def test_map_with_time_axis(time_intervals):
     time_axis = TimeMapAxis(
         time_intervals["t_min"], time_intervals["t_max"], time_intervals["t_ref"]
@@ -791,6 +828,17 @@ def test_map_axis_format_plot_xaxis():
     assert " ".join(ax1.axes.axes.get_xlabel().split()[:2]) == "True Energy"
 
 
+def test_time_format(time_intervals):
+    axis = TimeMapAxis(
+        time_intervals["t_min"],
+        time_intervals["t_max"],
+        time_intervals["t_ref"],
+        name="time",
+    )
+    with pytest.raises(ValueError):
+        axis.time_format = "null"
+
+
 def test_time_map_axis_format_plot_xaxis(time_intervals):
     axis = TimeMapAxis(
         time_intervals["t_min"],
@@ -802,11 +850,19 @@ def test_time_map_axis_format_plot_xaxis(time_intervals):
     with mpl_plot_check():
         ax = plt.gca()
         with quantity_support():
-            ax.plot(axis.center, np.ones_like(axis.center))
+            ax.plot(axis.as_plot_center, np.ones_like(axis.center))
 
     ax1 = axis.format_plot_xaxis(ax=ax)
     assert ax1.axes.axes.get_xlabel().split()[0] == "Time"
     assert ax1.axes.axes.get_xlabel().split()[1] == "[iso]"
+
+    axis.time_format = "mjd"
+    with mpl_plot_check():
+        ax = plt.gca()
+        with quantity_support():
+            ax.plot(axis.as_plot_center, np.ones_like(axis.center))
+    ax2 = axis.format_plot_xaxis(ax=ax)
+    assert ax2.axes.axes.get_xlabel().split()[1] == "[mjd]"
 
 
 def test_single_valued_axis():
@@ -822,17 +878,18 @@ def test_single_valued_axis():
     _ = MapAxis.from_table(table, format="gadf-dl3", column_prefix="THETA")
 
 
-def test_label_map_axis_append():
+    
+def test_label_map_axis_concatenate():
     label1 = LabelMapAxis(["aa", "bb"], name="letters")
     label2 = LabelMapAxis(["cc", "dd"], name="letters")
     label3 = LabelMapAxis(["ee", "ff"], name="other_letters")
 
-    label_append12 = label1.append(label2)
+    label_append12 = label1.concatenate(label2)
 
     assert_equal(label_append12.center, np.array(["aa", "bb", "cc", "dd"], dtype="<U2"))
     assert label_append12.name == "letters"
     with pytest.raises(ValueError):
-        label2.append(label3)
+        label2.concatenate(label3)
 
 
 def test_label_map_axis_from_stack():

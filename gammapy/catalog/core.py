@@ -5,8 +5,8 @@ import numbers
 from copy import deepcopy
 import numpy as np
 from astropy.coordinates import SkyCoord
-from astropy.utils import lazyproperty
 from astropy.table import Table
+from astropy.utils import lazyproperty
 from gammapy.maps import TimeMapAxis
 from gammapy.modeling.models import Models
 from gammapy.utils.table import table_row_to_dict

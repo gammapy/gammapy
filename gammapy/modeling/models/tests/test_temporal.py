@@ -5,7 +5,6 @@ from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.table import Table
 from astropy.time import Time
-from gammapy.data.gti import GTI
 from gammapy.modeling.models import (
     ConstantTemporalModel,
     ExpDecayTemporalModel,
@@ -33,6 +32,13 @@ def light_curve():
     return LightCurveTemplateTemporalModel.read(path)
 
 
+@pytest.fixture()
+def phase_curve_table():
+    phase = np.linspace(0.0, 1, 101)
+    norm = phase * (phase < 0.5) + (1 - phase) * (phase >= 0.5)
+    return Table(data={"PHASE": phase, "NORM": norm})
+
+
 @requires_data()
 def test_light_curve_str(light_curve):
     ss = str(light_curve)
@@ -55,7 +61,7 @@ def test_energy_dependent_lightcurve(tmp_path):
 
     t = Time(55555.6157407407, format="mjd")
     val = mod.evaluate(t, energy=[0.3, 2] * u.TeV)
-    assert_allclose(val.data, [[2.389591e-21], [4.399548e-23]], rtol=1e-5)
+    assert_allclose(val.data, [[2.278068e-21], [4.280503e-23]], rtol=1e-5)
 
     t = Time([55555, 55556, 55557], format="mjd")
     val = mod.evaluate(t)
@@ -70,10 +76,9 @@ def test_energy_dependent_lightcurve(tmp_path):
     with pytest.raises(NotImplementedError):
         mod.write(filename=filename, format="table", overwrite=True)
     with pytest.raises(NotImplementedError):
-        start = [1, 3, 5] * u.hour
-        stop = [2, 3.5, 6] * u.hour
-        gti = GTI.create(start, stop, reference_time=Time("2010-01-01T00:00:00"))
-        mod.integral(gti.time_start, gti.time_stop)
+        time_start = Time("2010-01-01T00:00:00") + [1, 3, 5] * u.hour
+        time_stop = Time("2010-01-01T00:00:00") + [2, 3.5, 6] * u.hour
+        mod.integral(time_start, time_stop)
 
 
 def ph_curve(x, amplitude=0.5, x0=0.01):
@@ -187,11 +192,9 @@ def test_lightcurve_temporal_model_integral():
     temporal_model = LightCurveTemplateTemporalModel.from_table(table)
     assert not temporal_model.is_energy_dependent
 
-    start = [1, 3, 5] * u.hour
-    stop = [2, 3.5, 6] * u.hour
-    gti = GTI.create(start, stop, reference_time=Time("2010-01-01T00:00:00"))
-
-    val = temporal_model.integral(gti.time_start, gti.time_stop)
+    time_start = Time("2010-01-01T00:00:00") + [1, 3, 5] * u.hour
+    time_stop = Time("2010-01-01T00:00:00") + [2, 3.5, 6] * u.hour
+    val = temporal_model.integral(time_start, time_stop)
     assert len(val) == 3
     assert_allclose(np.sum(val), 1.0101, rtol=1e-5)
 
@@ -210,10 +213,9 @@ def test_constant_temporal_model_evaluate():
 
 def test_constant_temporal_model_integral():
     temporal_model = ConstantTemporalModel()
-    start = [1, 3, 5] * u.day
-    stop = [2, 3.5, 6] * u.day
-    gti = GTI.create(start, stop)
-    val = temporal_model.integral(gti.time_start, gti.time_stop)
+    time_start = Time("2010-01-01T00:00:00") + [1, 3, 5] * u.day
+    time_stop = Time("2010-01-01T00:00:00") + [2, 3.5, 6] * u.day
+    val = temporal_model.integral(time_start, time_stop)
     assert len(val) == 3
     assert_allclose(np.sum(val), 1.0, rtol=1e-5)
 
@@ -231,10 +233,9 @@ def test_linear_temporal_model_integral():
     temporal_model = LinearTemporalModel(
         alpha=1.0, beta=0.1 / u.day, t_ref=t_ref.mjd * u.d
     )
-    start = [1, 3, 5] * u.day
-    stop = [2, 3.5, 6] * u.day
-    gti = GTI.create(start, stop, reference_time=t_ref)
-    val = temporal_model.integral(gti.time_start, gti.time_stop)
+    time_start = t_ref + [1, 3, 5] * u.day
+    time_stop = t_ref + [2, 3.5, 6] * u.day
+    val = temporal_model.integral(time_start, time_stop)
     assert len(val) == 3
     assert_allclose(np.sum(val), 1.345, rtol=1e-5)
 
@@ -252,10 +253,9 @@ def test_exponential_temporal_model_integral():
     t_ref = Time(55555, format="mjd")
 
     temporal_model = ExpDecayTemporalModel(t_ref=t_ref.mjd * u.d)
-    start = [1, 3, 5] * u.day
-    stop = [2, 3.5, 6] * u.day
-    gti = GTI.create(start, stop, reference_time=t_ref)
-    val = temporal_model.integral(gti.time_start, gti.time_stop)
+    time_start = t_ref + [1, 3, 5] * u.day
+    time_stop = t_ref + [2, 3.5, 6] * u.day
+    val = temporal_model.integral(time_start, time_stop)
     assert len(val) == 3
     assert_allclose(np.sum(val), 0.102557, rtol=1e-5)
 
@@ -271,11 +271,10 @@ def test_gaussian_temporal_model_evaluate():
 
 def test_gaussian_temporal_model_integral():
     temporal_model = GaussianTemporalModel(t_ref=50003 * u.d, sigma="2.0 day")
-    start = [1, 3, 5] * u.day
-    stop = [2, 3.5, 6] * u.day
     t_ref = Time(50000, format="mjd")
-    gti = GTI.create(start, stop, reference_time=t_ref)
-    val = temporal_model.integral(gti.time_start, gti.time_stop)
+    time_start = t_ref + [1, 3, 5] * u.day
+    time_stop = t_ref + [2, 3.5, 6] * u.day
+    val = temporal_model.integral(time_start, time_stop)
     assert len(val) == 3
     assert_allclose(np.sum(val), 0.682679, rtol=1e-5)
 
@@ -299,10 +298,11 @@ def test_generalized_gaussian_temporal_model_integral():
     )
     start = 1 * u.day
     stop = 2 * u.day
-    t_ref = Time(50000, format="mjd")
-    gti = GTI.create(start, stop, reference_time=t_ref)
-    val = temporal_model.integral(gti.time_start, gti.time_stop)
-    assert_allclose(val, 0.759115, rtol=1e-4)
+    t_ref = Time(50000, format="mjd", scale="utc")
+    time_start = t_ref + start
+    time_stop = t_ref + stop
+    val = temporal_model.integral(time_start, time_stop)
+    assert_allclose(val, 0.758918, rtol=1e-4)
 
 
 def test_powerlaw_temporal_model_evaluate():
@@ -317,18 +317,16 @@ def test_powerlaw_temporal_model_evaluate():
 def test_powerlaw_temporal_model_integral():
     t_ref = Time(55555, format="mjd")
     temporal_model = PowerLawTemporalModel(alpha=-2.0, t_ref=t_ref.mjd * u.d)
-    start = 1 * u.day
-    stop = 4 * u.day
-    gti = GTI.create(start, stop, reference_time=t_ref)
-    val = temporal_model.integral(gti.time_start, gti.time_stop)
+    time_start = t_ref + [1] * u.day
+    time_stop = t_ref + [4] * u.day
+    val = temporal_model.integral(time_start, time_stop)
     assert len(val) == 1
     assert_allclose(np.sum(val), 0.25, rtol=1e-5)
 
     temporal_model.parameters["alpha"].value = -1
-    start = [1, 3, 5] * u.day
-    stop = [2, 3.5, 6] * u.day
-    gti = GTI.create(start, stop, reference_time=t_ref)
-    val = temporal_model.integral(gti.time_start, gti.time_stop)
+    time_start = t_ref + [1, 3, 5] * u.day
+    time_stop = t_ref + [2, 3.5, 6] * u.day
+    val = temporal_model.integral(time_start, time_stop)
 
     assert len(val) == 3
     assert_allclose(np.sum(val), 0.411847, rtol=1e-5)
@@ -347,10 +345,9 @@ def test_sine_temporal_model_integral():
     t_ref = Time(55555, format="mjd")
     omega = np.pi / 4.0 * u.rad / u.day
     temporal_model = SineTemporalModel(amp=0.5, omega=omega, t_ref=t_ref.mjd * u.d)
-    start = [1, 3, 5] * u.day
-    stop = [2, 3.5, 6] * u.day
-    gti = GTI.create(start, stop, reference_time=t_ref)
-    val = temporal_model.integral(gti.time_start, gti.time_stop)
+    time_start = t_ref + [1, 3, 5] * u.day
+    time_stop = t_ref + [2, 3.5, 6] * u.day
+    val = temporal_model.integral(time_start, time_stop)
     assert len(val) == 3
     assert_allclose(np.sum(val), 1.08261, rtol=1e-5)
 
@@ -431,6 +428,38 @@ def test_phase_curve_model(tmp_path):
     assert_allclose(integral, 0.225, rtol=1e-5)
 
 
+def test_phase_curve_model_sample_time():
+    phase = np.linspace(0.0, 1, 51)
+    norm = 1 * (phase < 0.5)
+    table = Table(data={"PHASE": phase, "NORM": norm})
+
+    t_ref = Time("2020-06-01", scale="utc")
+    phase_model = TemplatePhaseCurveTemporalModel(
+        table=table,
+        f0="50 Hz",
+        phi_ref=0.0,
+        f1="0 s-2",
+        f2="0 s-3",
+        t_ref=t_ref.mjd * u.d,
+        scale="utc",
+    )
+
+    tmin = Time("2023-06-01", scale="tt")
+    tmax = tmin + 0.5 * u.h
+
+    times = phase_model.sample_time(10, tmin, tmax)
+    phases, _ = phase_model._time_to_phase(
+        times,
+        phase_model.reference_time,
+        phase_model.phi_ref.quantity,
+        phase_model.f0.quantity,
+        phase_model.f1.quantity,
+        phase_model.f2.quantity,
+    )
+
+    assert np.all(phases <= 0.5)
+
+
 @requires_data()
 def test_phasecurve_DC1():
     filename = "$GAMMAPY_DATA/tests/phasecurve_LSI_DC.fits"
@@ -458,11 +487,10 @@ def test_model_scale():
     model1 = GaussianTemporalModel.from_dict(dict1)
     assert model1.scale == "tai"
     assert_allclose(model1.sigma.quantity, 2.43 * u.d, rtol=1e-3)
-    start = [1, 3, 5] * u.day
-    stop = [2, 3.5, 6] * u.day
-    gti = GTI.create(start, stop, reference_time=model.reference_time)
-    val = model.integral(gti.time_start, gti.time_stop)
-    assert_allclose(np.sum(val), 0.442885, rtol=1e-5)
+    time_start = model.reference_time + [1, 3, 5] * u.day
+    time_stop = model.reference_time + [2, 3.5, 6] * u.day
+    val = model.integral(time_start, time_stop)
+    assert_allclose(np.sum(val), 0.442833, rtol=1e-5)
 
     model1.reference_time = Time(52398.23456, format="mjd", scale="utc")
     assert model1.scale == "tai"

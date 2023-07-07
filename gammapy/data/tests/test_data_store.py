@@ -163,6 +163,11 @@ def test_data_store_from_events(data_store_dc1):
     data_store = DataStore.from_events_files([path])
     assert len(data_store.obs_table) == 1
     assert len(data_store.hdu_table) == 6
+    assert data_store.obs_table.meta["MJDREFI"] == 51544
+
+    path2 = "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_025511.fits.gz"
+    with pytest.raises(RuntimeError):
+        _ = DataStore.from_events_files([path, path2])
 
 
 @requires_data()
@@ -170,7 +175,7 @@ def test_data_store_maker_obs_table(data_store_dc1):
     table = data_store_dc1.obs_table
     assert table.__class__.__name__ == "ObservationTable"
     assert len(table) == 4
-    assert len(table.colnames) == 22
+    assert len(table.colnames) == 27
     assert table["CALDB"][0] == "1dc"
     assert table["IRF"][0] == "South_z20_50h"
 
@@ -308,3 +313,23 @@ def test_data_store_required_irf_pointlike_variable_rad_max():
     obs = store.get_observations([5029747, 5029748], required_irf="point-like")
     assert len(obs) == 2
     assert obs[0].rad_max.quantity is not None
+
+
+@requires_data()
+def test_data_store_no_events():
+    """Check behavior of the "point-like" option for data_store"""
+
+    data_path = "$GAMMAPY_DATA/hawc/crab_events_pass4/"
+    hdu_filename = "hdu-index-table-GP-no-events.fits.gz"
+    obs_filename = "obs-index-table-GP-no-events.fits.gz"
+    data_store = DataStore.from_dir(
+        data_path, hdu_table_filename=hdu_filename, obs_table_filename=obs_filename
+    )
+
+    observations = data_store.get_observations(
+        required_irf=["aeff", "psf", "edisp"], require_events=False
+    )
+    assert len(observations) == 3
+    for obs in observations:
+        assert not obs.events
+        assert not obs.gti

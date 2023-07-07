@@ -11,6 +11,7 @@ from astropy.table import Column, Table, hstack
 from astropy.time import Time
 from astropy.utils import lazyproperty
 import matplotlib.pyplot as plt
+from gammapy.utils.deprecation import deprecated_attribute
 from gammapy.utils.interpolation import interpolation_scale
 from gammapy.utils.time import time_ref_from_dict, time_ref_to_dict
 from .utils import INVALID_INDEX, INVALID_VALUE, edges_from_lo_hi
@@ -68,6 +69,7 @@ PLOT_AXIS_LABEL = {
 }
 
 DEFAULT_LABEL_TEMPLATE = "{quantity} [{unit}]"
+UNIT_STRING_FORMAT = "latex_inline"
 
 
 class MapAxis:
@@ -102,6 +104,8 @@ class MapAxis:
     unit : str
         String specifying the data units.
     """
+
+    append = deprecated_attribute("append", "1.1", alternative="concatenate")
 
     # TODO: Cache an interpolation object?
     def __init__(self, nodes, interp="lin", name="", node_type="edges", unit=""):
@@ -377,7 +381,7 @@ class MapAxis:
 
         xlabel = DEFAULT_LABEL_TEMPLATE.format(
             quantity=PLOT_AXIS_LABEL.get(self.name, self.name.capitalize()),
-            unit=ax.xaxis.units,
+            unit=ax.xaxis.units.to_string(UNIT_STRING_FORMAT),
         )
         ax.set_xlabel(xlabel)
         xmin, xmax = self.bounds
@@ -402,7 +406,7 @@ class MapAxis:
 
         ylabel = DEFAULT_LABEL_TEMPLATE.format(
             quantity=PLOT_AXIS_LABEL.get(self.name, self.name.capitalize()),
-            unit=ax.yaxis.units,
+            unit=ax.yaxis.units.to_string(UNIT_STRING_FORMAT),
         )
         ax.set_ylabel(ylabel)
         ax.set_ylim(self.bounds)
@@ -640,8 +644,8 @@ class MapAxis:
 
         return cls(edges, node_type="edges", **kwargs)
 
-    def append(self, axis):
-        """Append another map axis to this axis
+    def concatenate(self, axis):
+        """Concatenate another `MapAxis` to this `MapAxis` into a new `MapAxis` object.
 
         Name, interp type and node type must agree between the axes. If the node
         type is "edges", the edges must be contiguous and non-overlapping.
@@ -649,12 +653,12 @@ class MapAxis:
         Parameters
         ----------
         axis : `MapAxis`
-            Axis to append.
+            Axis to concatenate with.
 
         Returns
         -------
         axis : `MapAxis`
-            Appended axis
+            Concatenation of the two axis.
         """
         if self.node_type != axis.node_type:
             raise ValueError(
@@ -724,7 +728,7 @@ class MapAxis:
         ax_stacked = axes[0]
 
         for ax in axes[1:]:
-            ax_stacked = ax_stacked.append(ax)
+            ax_stacked = ax_stacked.concatenate(ax)
 
         return ax_stacked
 
@@ -2159,10 +2163,10 @@ class TimeMapAxis:
     """
 
     node_type = "intervals"
-    time_format = "iso"
 
     def __init__(self, edges_min, edges_max, reference_time, name="time", interp="lin"):
         self._name = name
+        self._time_format = "iso"
 
         edges_min = u.Quantity(edges_min, ndmin=1)
         edges_max = u.Quantity(edges_max, ndmin=1)
@@ -2309,6 +2313,16 @@ class TimeMapAxis:
         return self.reference_time + self.edges
 
     @property
+    def time_format(self):
+        return self._time_format
+
+    @time_format.setter
+    def time_format(self, val):
+        if val not in ["iso", "mjd"]:
+            raise ValueError(f"Invalid time_format: {self.time_format}")
+        self._time_format = val
+
+    @property
     def as_plot_xerr(self):
         """Plot x error"""
         xn, xp = self.time_mid - self.time_min, self.time_max - self.time_mid
@@ -2316,11 +2330,9 @@ class TimeMapAxis:
         if self.time_format == "iso":
             x_errn = xn.to_datetime()
             x_errp = xp.to_datetime()
-        elif self.time_format == "mjd":
+        else:
             x_errn = xn.to("day")
             x_errp = xp.to("day")
-        else:
-            raise ValueError(f"Invalid time_format: {self.time_format}")
 
         return x_errn, x_errp
 
@@ -2340,10 +2352,8 @@ class TimeMapAxis:
         """Plot edges"""
         if self.time_format == "iso":
             edges = self.time_edges.to_datetime()
-        elif self.time_format == "mjd":
-            edges = self.time_edges.mjd * u.day
         else:
-            raise ValueError(f"Invalid time_format: {self.time_format}")
+            edges = self.time_edges.mjd * u.day
 
         return edges
 
@@ -2352,7 +2362,7 @@ class TimeMapAxis:
         """Plot center"""
         if self.time_format == "iso":
             center = self.time_mid.datetime
-        elif self.time_format == "mjd":
+        else:
             center = self.time_mid.mjd * u.day
         return center
 
@@ -2379,13 +2389,14 @@ class TimeMapAxis:
 
         if self.time_format == "iso":
             ax.xaxis.set_major_formatter(DateFormatter("%Y-%m-%d %H:%M:%S"))
-            plt.setp(
-                ax.xaxis.get_majorticklabels(),
-                rotation=30,
-                ha="right",
-                rotation_mode="anchor",
-            )
-
+        else:
+            ax.xaxis.set_major_formatter("{x:,.5f}")
+        plt.setp(
+            ax.xaxis.get_majorticklabels(),
+            rotation=30,
+            ha="right",
+            rotation_mode="anchor",
+        )
         return ax
 
     def assert_name(self, required_name):
@@ -2785,6 +2796,39 @@ class TimeMapAxis:
         )
 
     @classmethod
+    def from_gti_bounds(cls, gti, t_delta, name="time"):
+        """Create a time axis from an input GTI.
+
+        The unit for the axis is taken from the t_delta quantity.
+
+        Parameters
+        ----------
+        gti : `GTI`
+            GTI table
+        t_delta : `~astropy.units.Quantity`
+            Time binning
+        name : str
+            Axis name
+
+        Returns
+        -------
+        axis : `TimeMapAxis`
+            Time map axis.
+
+        """
+        time_min = gti.time_start[0]
+        time_max = gti.time_stop[-1]
+
+        nbin = int(((time_max - time_min) / t_delta).to(""))
+        return TimeMapAxis.from_time_bounds(
+            time_min=time_min,
+            time_max=time_max,
+            nbin=nbin,
+            name=name,
+            unit=t_delta.unit,
+        )
+
+    @classmethod
     def from_time_bounds(cls, time_min, time_max, nbin, unit="d", name="time"):
         """Create linearly spaced time axis from bounds
 
@@ -2852,6 +2896,8 @@ class LabelMapAxis:
         Name of the axis.
 
     """
+
+    append = deprecated_attribute("append", "1.1", alternative="concatenate")
 
     node_type = "label"
 
@@ -3192,24 +3238,24 @@ class LabelMapAxis:
         axis_stacked = axes[0]
 
         for ax in axes[1:]:
-            axis_stacked = axis_stacked.append(ax)
+            axis_stacked = axis_stacked.concatenate(ax)
 
         return axis_stacked
 
-    def append(self, axis):
-        """Append another label map axis to this label map axis.
+    def concatenate(self, axis):
+        """Concatenate another `LabelMapAxis` to this `LabelMapAxis` into a new `LabelMapAxis` object.
 
         Names must agree between the axes. labels must be unique.
 
         Parameters
         ----------
         axis : `LabelMapAxis`
-            Axis to append.
+            Axis to concatenate with.
 
         Returns
         -------
         axis : `LabelMapAxis`
-            Appended axis
+            Concatenation of the two axis.
         """
         if not isinstance(axis, LabelMapAxis):
             raise TypeError(
