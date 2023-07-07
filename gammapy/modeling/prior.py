@@ -81,6 +81,7 @@ class PriorModel(ModelBase):
     """
 
     _weight = 1
+_type = "prior"
 
     @property
     def parameters(self):
@@ -143,7 +144,6 @@ class GaussianPrior(PriorModel):
     """Gaussian Prior with mu and sigma."""
 
     tag = ["GaussianPrior"]
-    _type = "prior"
     mu = PriorParameter(name="mu", value=0, unit="")
     sigma = PriorParameter(name="sigma", value=1, unit="")
 
