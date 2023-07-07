@@ -1085,29 +1085,33 @@ class FluxMaps:
             gti=self.gti,
         )
 
-    def slice_by_coord(self, axis, coord_min, coord_max):
+    def slice_by_coord(self, slices):
         """Slice flux maps by coordinate values
-
+        
         Parameters
         ----------
-        axis: str
-            name of the axis containing the coordinates along which the map is to be sliced
-
-        coord_min, coord_max: float or `~astropy.Quantity` or `~astropy.Time`
-            coordinate bounds delimiting the slice
-
+        slices : dict
+            Dict of axes names and `qstropy.Quantity` or `qstropy.Time` or `slice` object pairs.
+            Contains one element for each non-spatial dimension. For integer indexing the
+            corresponding axes is dropped from the map. Axes not specified in the
+            dict are kept unchanged.
+        
+        
         Returns
         -------
         flux_maps : `FluxMaps`
             Sliced flux maps object.
         """
-
-        imin = self.geom.axes[axis].coord_to_idx(coord_min)
-        imax = self.geom.axes[axis].coord_to_idx(coord_max)
-
-        interval = slice(imin, imax)
-
-        return self.slice_by_idx({axis: interval})
+        
+        idx_intervals = []
+        
+        for key, interval in zip(slices.keys(), slices.values()):
+            imin = self.geom.axes[key].coord_to_idx(interval.start)
+            imax = self.geom.axes[key].coord_to_idx(interval.stop)
+        
+            idx_intervals.append(slice(imin, imax))
+        
+        return self.slice_by_idx(dict(zip(slices.keys(), idx_intervals)))
 
     # TODO: should we allow this?
     def __getitem__(self, item):
