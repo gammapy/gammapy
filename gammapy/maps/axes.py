@@ -2498,7 +2498,7 @@ class TimeMapAxis:
     def pix_to_coord(self, pix):
         """Transform from pixel position to time coordinate
         Currently works only for linear interpolation scheme.
-        
+
         Parameters
         ----------
         pix : `~numpy.ndarray`
