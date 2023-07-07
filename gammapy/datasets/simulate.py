@@ -127,7 +127,7 @@ class MapDatasetEventSampler:
             unit=flux_inte.unit,
         )
 
-        mapcoord = flux_pred.geom.get_coord()
+        mapcoord = flux_pred.geom.get_coord(sparse=True)
         mapcoord["energy_true"] = energy_true.center[:, None, None, None]
 
         flux_values = flux_pred.interp_by_coord(mapcoord) * flux_pred.unit
