@@ -81,7 +81,7 @@ class PriorModel(ModelBase):
     """
 
     _weight = 1
-_type = "prior"
+    _type = "prior"
 
     @property
     def parameters(self):
