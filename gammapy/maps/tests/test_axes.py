@@ -532,17 +532,23 @@ def test_pix_to_coord_time_axis(time_intervals):
     pixels = [1.3, 3.2, 5.4, 7, 15.33, 17.21, 19.11]
     coords = axis.pix_to_coord(pixels)
     assert_allclose(
-        coords[0:3].mjd, [58927.52631579, 58928.57894737, 58929.63157895], rtol=1e-5
+        coords[0:3].mjd, [58927.0125, 58927.534649, 58928.069298], rtol=1e-5
     )
 
     # test with nan indices
     pixels.append(np.nan)
     coords = axis.pix_to_coord(pixels)
-    assert_allclose(coords[-3:].mjd, [58935.94736842, 58937.0, 0.0], rtol=1e-5)
+    assert_allclose(
+        coords[-3:].mjd,
+        [58929.64032894737, 58930.162478070175, -3.725000e-04],
+        rtol=1e-5,
+    )
 
     # assert with invalid pixels
     coords = axis.pix_to_coord([-1.2, 0.6, 24.7])
-    assert_allclose(coords.mjd, [0.0, 58927.041667, 0.0], rtol=1e-5)
+    assert_allclose(
+        coords.mjd, [-3.725000e-04, 58927.551315789475, -3.725000e-04], rtol=1e-5
+    )
 
 
 def test_slice_time_axis(time_intervals):
@@ -817,7 +823,6 @@ def test_single_valued_axis():
 
 
 def test_label_map_axis_append():
-
     label1 = LabelMapAxis(["aa", "bb"], name="letters")
     label2 = LabelMapAxis(["cc", "dd"], name="letters")
     label3 = LabelMapAxis(["ee", "ff"], name="other_letters")
@@ -831,7 +836,6 @@ def test_label_map_axis_append():
 
 
 def test_label_map_axis_from_stack():
-
     label1 = LabelMapAxis(["a", "b", "c"], name="letters")
     label2 = LabelMapAxis(["d", "e"], name="letters")
     label3 = LabelMapAxis(["f"], name="letters")
@@ -843,7 +847,6 @@ def test_label_map_axis_from_stack():
 
 
 def test_label_map_axis_squash():
-
     label = LabelMapAxis(["a", "b", "c"], name="Letters")
     squash_label = label.squash()
 

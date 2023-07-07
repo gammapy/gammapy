@@ -105,7 +105,6 @@ class MapAxis:
 
     # TODO: Cache an interpolation object?
     def __init__(self, nodes, interp="lin", name="", node_type="edges", unit=""):
-
         if not isinstance(name, str):
             raise TypeError(f"Name must be a string, got: {type(name)!r}")
 
@@ -2487,7 +2486,7 @@ class TimeMapAxis:
 
     def pix_to_coord(self, pix):
         """Transform from pixel position to time coordinate
-
+        Currently works only for lin inperp
         Parameters
         ----------
         pix : `~numpy.ndarray`
@@ -2498,19 +2497,18 @@ class TimeMapAxis:
         coord : `~astropy.time.Time`
             Array of axis coordinate values.
         """
-        interp_scale = interpolation_scale(self.interp)
-        pix = np.atleast_1d(pix)
-        ipix = np.int0(np.floor(pix))
         coords = np.zeros(len(pix))
-        for i, ip in enumerate(ipix):
-            if ip < 0 or ip > self.nbin:
-                coords[i] = INVALID_VALUE.time.mjd
-                continue
-            x = [ip, ip + 1]
-            y = [self.time_min[ip].mjd, self.time_max[ip].mjd]
-            interp_fn = scipy.interpolate.interp1d(x=x, y=y, kind="nearest")
-            coords[i] = interp_scale.inverse(interp_fn(pix[i]))
-        coords = Time(coords, format="mjd", scale=self.reference_time.scale)
+        pix = np.atleast_1d(pix)
+        frac, idx = np.modf(pix)
+        valid = np.logical_and(idx >= 0, idx < self.nbin, np.isfinite(idx))
+        idx_valid = np.where(valid)
+        idx_invalid = np.where(~valid)
+
+        coords[idx_valid] = (
+            frac[idx_valid] * self.time_delta[idx_valid] + self.edges_min[idx_valid]
+        ).jd
+        coords = coords * self.unit + self.reference_time
+        coords[idx_invalid] = Time(INVALID_VALUE.time, scale=self.reference_time.scale)
         return coords
 
     def coord_to_pix(self, coord, **kwargs):
