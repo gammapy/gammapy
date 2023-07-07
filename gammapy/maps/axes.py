@@ -546,6 +546,7 @@ class MapAxis:
         per_decade=False,
         name=None,
         node_type="edges",
+        strict_bounds=True,
     ):
         """Make an energy axis.
 
@@ -564,6 +565,10 @@ class MapAxis:
             Whether `nbin` is given per decade.
         name : str
             Name of the energy axis, either 'energy' or 'energy_true'
+        strict_bounds : bool
+            Whether to strictly end the binning at the max energy when
+            `per_decade=True`. If True, the number of bins per decade
+            might be slightly adjusted.
 
         Returns
         -------
@@ -583,10 +588,13 @@ class MapAxis:
             )
 
         if per_decade:
-            bin_per_decade = nbin
-            nbin = np.floor(np.log10(energy_max / energy_min).value * bin_per_decade)
-            if np.log10(energy_max / energy_min).value % (1 / bin_per_decade) != 0:
-                energy_max = energy_min * 10 ** (nbin / bin_per_decade)
+            if strict_bounds:
+                nbin = np.ceil(np.log10(energy_max / energy_min).value * nbin)
+            else:
+                bin_per_decade = nbin
+                nbin = np.floor(np.log10(energy_max / energy_min).value * bin_per_decade)
+                if np.log10(energy_max / energy_min).value % (1 / bin_per_decade) != 0:
+                    energy_max = energy_min * 10 ** (nbin / bin_per_decade)
 
         if name is None:
             name = "energy"
