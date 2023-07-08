@@ -1,0 +1,300 @@
+. include:: ../../references.txt
+
+.. _pig-026:
+
+************************************
+PIG 26 - Gammapy version 2.0 Roadmap
+************************************
+
+* Author: Axel Donath, Bruno Khélifi, Régis Terrier and others
+* Created: March 20th, 2023
+* Accepted:
+* Status: Draft
+* Discussion: `GH 4388`_
+
+Abstract
+========
+
+The second Long Term Stable (LTS) release of Gammapy will take place at the end of
+fall 2024. This PIG discusses the main are of development that are foreseen for
+the v2.0 and proposes some prioritization of the effort and plausible milestones
+for the intermediate feature releases expected (v1.x).
+
+This document first describes a number of general use cases that should be made
+possible with Gammapy. It then describes specific projects and changes to be made
+to the library to support such use cases and further improvements.
+
+Several specific aspects and projects are discussed in their specific PIGs (e.g.
+unbinned analysis in `GH 4253`_ or priors and likelihood in `GH 4381`_).
+
+Use cases to support
+====================
+
+This section describes new use cases that we would like to see supported in future
+versions of Gammapy.
+
+Event type handling
++++++++++++++++++++
+
+Starting from a datastore containing events lists and IRFs with types and classes of events,
+the user produces of a list of datasets per event type or class. Meta informations of
+the datasets allow for complex types handling at modeling/fitting step (e.g. joint fit
+of A & B type, stack all type together etc)
+
+Unbinned spectral or 3D analysis
+++++++++++++++++++++++++++++++++
+
+The user produces a dataset with reprojected IRFs and a list of events and performs model
+fitting and parameter estimation computing likelihoods of individual events.
+
+Pulsed signal search
+++++++++++++++++++++
+
+Using a specific timing solution for a given pulsar, the user builds a phasogram of the data
+and can evaluate the significance of a pulsed signal vs flat background. A map per phase bin
+can be produced. Other aspects? Blind pulsation search ? Do we want to support this?
+
+Transient source detection
+++++++++++++++++++++++++++
+
+The user wants to search for transient source or rapid source variability in a given observation.
+
+Spectral unfolding
+++++++++++++++++++
+
+The user wants to extract the intrinsic source spectrum with minimal hypothesis on the shape
+(mostly with a regularity criterion).
+Spatial unfolding?
+
+Morphology estimation
++++++++++++++++++++++
+
+An estimator API allows the user to test the model morphology parameters: extension profile
+and associated significance, position error contours. Applying it per energy bands allows
+testing for energy dependent morphology.
+
+Source detection
+++++++++++++++++
+
+After creating a MapDataset, a user extracts a list of source candidate positions and fluxes
+with associated errors and estimated significance. The list can be used as input for model
+fitting at later steps.
+
+Manipulation and selection of Datasets
+++++++++++++++++++++++++++++++++++++++
+
+After data reduction in a list of spectrum datasets, the user wants to stack spectra obtained
+in observation in given bands of zenith angle. The metadata information stored on the datasets
+allows complex manipulation at modeling/fitting step.
+
+Handling systematic effects
++++++++++++++++++++++++++++
+
+The user wants to add a systematic effect of given amplitude on a reduced dataset
+IRFs (e.g. a bias in the absolute energy scale, or a possible broadening of the PSF)
+to allow quantifying its impact on a measurement. Specific models for such IRFs
+uncertainties could be defined on any dataset.
+
+
+Nuisance parameters and priors
+++++++++++++++++++++++++++++++
+
+The user wants to add a systematic effect of unknown amplitude (e.g. a bias in the absolute
+energy scale) and wants to estimate the impact of this effect on the parameter estimation
+assuming a prior distribution of the nuisance parameter. (mixed likelihood, check terminology).
+Generic background model using a KernelBackgroundEstimator? Or parametrised background models?
+
+
+Specific Projects
+=================
+
+Here we list specific projects
+
+Configurable API
+++++++++++++++++
+
+To provide safety w.r.t. class instantiations and to allow for an easily configurable API,
+the main Gammapy API classes should be directly configurable.
+
+This is a generic problem that could be tackled using a similar approach as ctapipe
+Pydantic and its ``BaseModel`` class seems to be a widely used solution. This is already
+used in the v1.0 ``AnalysisConfig``.
+
+Gammapy Maps
+++++++++++++
+
+``gammapy.maps`` is one of the biggest element in gammapy which requires expertise and dedication
+to properly maintain. It is also one the subpackage that has potentially the largest impact outside
+the gamma-ray community. If we find a few contributors from outside, it might be worth splitting out
+``gammapy.maps`` as an independent package.
+
+Proposed changes
+~~~~~~~~~~~~~~~~
+
+- RegionGeom should support sizes changing with axis.
+  This would handle energy dependent region sizes as well as (See `GH 3863`_).
+
+- Make maps fully re-usable for IRFs. This might be a sommon use case with pyirf.
+- Allow ``Maps`` and ``MapCoord`` without spatial axes
+- Change to design without Geom, Introduce `WcsMapAxis`, `RegionMapAxis`, `HpxMapAxis` instead
+ - Migrate from healpy to https://github.com/astropy/astropy-healpix or https://github.com/cds-astro/cds-healpix-python
+Interface multi resolution HPX maps: https://mhealpy.readthedocs.io ?
+What about sparse maps?
+
+
+Data model and data formats
++++++++++++++++++++++++++++
+
+As of v1.0, Gammapy's internal DL3 data structures are very deeply intertwined with
+the GADF specification. Astropy table are read from GADF compliant FITS files and stored as is.
+Part of the information being stored in the `table.meta`.
+
+This is problematic for the following reasons:
+- This prevents the support of multiple formats, since the internal data structure
+is tied to one specific format.
+- Data is not in the optimal in-memory representation. For instance, times should be
+stored as astropy.time.Time instances, and coodinates as `SkyCoord`.
+- Data is not validated on input. Errors can happen deep into the code for something
+that could have been caught on input file reading or object creation.
+- Writing data out is harder
+
+We should:
+- define the internal data model, via the corresponding data classes (EventList, IRFs, etc. )
+  and introduce a validation mechanism on input.
+- build a clear IO boundary between internal and external data representations that supports
+  various versions of various formats.
+- define a metadata structure
+
+
+Clarify internal Gammapy DL3 data model
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Each DL3 object should have its `validate()` method called on init.
+
+See also the general discussion in `GH 3767`_ . The specific subparts are discussed in
+`GH 4238`_, `GH 4239`_, `GH 4240`_ and `GH 4241`_.
+
+Version Support for I/O
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Use ASDF (https://asdf.readthedocs.io/) as default serialization format?
+Add I/O registry system for IRFs, Datasets and Maps
+Supporting versions of formats
+Get rid of code like: https://github.com/gammapy/gammapy/blob/main/gammapy/maps/axes.py#L1220
+Change to something like consistently: https://github.com/gammapy/gammapy/blob/main/gammapy/datasets/io.py
+
+Meta Data Handling
+~~~~~~~~~~~~~~~~~~
+
+A metadata class structure specific for Gammapy should be designed and implemented.
+It should allow complex types (e.g. `SkyCoord` or even `Map`), it should validate
+its content, allow hierarchical structure (i.e. a metadata object should be able
+to contain another one). Once defined, specific classes such as `IRFMetaData`,
+`DatasetMetaData`, or `ObservationMetaData` classes can be introduced with
+their separate serialization and validation. This is discussed in PIG 28 which
+proposes to handle `MetaData` with pydantic which allows defining hierarchical
+structures and being able to validate those. See `GH 4491`_
+
+Once this is defined a second question must be tackled: the metadata model:
+what is meta data / and what is data and where to draw the line.
+*How to proceed here?*
+
+Estimators
+++++++++++
+
+
+Documentation
++++++++++++++
+
+Main documentation
+~~~~~~~~~~~~~~~~~~
+
+- Introduce a deprecation system
+- Update pydata-sphinx-theme?
+- More detailed and nicer?
+- Use type hints in Gammapy everywhere, no type hints for now?
+
+Gammapy-recipes and additional ressources
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The Gammapy-recipes gallery offers a nice additional source of tutorials for advanced or non
+standard use cases.
+
+Several questions should be solved for the long term viability of such a repository:
+
+- Should the recipes be updated to e.g. the latest LTS? Currently, none of the existing recipes
+  work with v1.0.
+
+How to keep track and refer to material designed for hands-on sessions, schools etc?
+Currently we have one GitHub repository.
+
+We could also develop tutorial videos.
+
+Infrastructure
+++++++++++++++
+
+Improve test coverage and quality
+Deployment
+Improve our tools helping to the creation of releases
+Creation of Docker images with an automatized tool
+Re-use docker image for Binder, this config here: https://github.com/gammapy/gammapy-webpage/tree/v1.0rc1 already creates docker image in Binder.
+
+Distributed Computing and Performance
++++++++++++++++++++++++++++++++++++++
+
+Evaluate Jax for GPU acceleration and autograd (https://jax.readthedocs.io/en/latest/ )
+Ray for distributed computing (https://www.ray.io )
+Make Dataset distributable with same API
+Probably rework Dataset API, split off model handling…
+Split off statistic handling from datasets
+
+Flexible Statistics API
++++++++++++++++++++++++
+
+Support for priors in likelihood
+Support for systematics terms in likelihood
+Needs to be serialised, i.e. keep information on which statistics and priors haven been used (meta data / providence)
+Split of statistics definition from datasets…
+Support for statistical test associated with periodic signals, in the frequency domain
+Add more tests on model hypothesis? E.g. AIC, PS (https://arxiv.org/abs/2109.07443)
+What about prior and likelihood weights?
+I think this should be 3 PIGS:
+One adding prior support
+One proposing an UnfoldingFluxPointsEstimator (?)
+One proposing splitting the models from dataset, which relates to distributed computing
+
+
+Models and Modeling
++++++++++++++++++++
+
+Evaluate joint development with https://astromodels.readthedocs.io/en/latest/
+Deprecate Gammapy models and re-bulld based on Astropy or astromodels?
+Move amplitude parameter to `SkyModel`
+Rely more on the `SkyModel` then the submodel…!
+What about `NPredModel`, deprecate or introduce consistently as concept?
+Adjustment of theory-based abaques as spatial/spectral model ? (random axis as parameters, interpolation features during evaluation, definition of a ‘format’)
+Formats for energy dependent temporal models?
+How to handle the handle the FitResult object? Make this more important? Make it serialisable? Rely on it in later API, such as Estimators?
+
+
+Features / Algorithm
+Spectral unfolding
+TS cubes
+Creation of an ‘EventDataset’
+Multi-instrument support e.g. SherpaDataset See Luca’s prototype
+Support for Event classes/types
+Support for unbinned likelihood analysis
+Handling of pulsar analysis
+Development of Time Series algorithms: e.g. Bayesian Block, Power Spectral Density (and simulation of PSD folded with the observations mask) (Axel: clarify the interface to Astropy time series, which has support for Baysian blocks etc. see https://docs.gammapy.org/0.20.1/api/gammapy.estimators.FluxPoints.html#gammapy.estimators.FluxPoints.to_table )
+Clarify relation to stingray…
+
+.. _GH 3767: https://github.com/gammapy/gammapy/issues/3767
+.. _GH 3863: https://github.com/gammapy/gammapy/issues/3863
+.. _GH 4238: https://github.com/gammapy/gammapy/issues/4238
+.. _GH 4239: https://github.com/gammapy/gammapy/issues/4239
+.. _GH 4240: https://github.com/gammapy/gammapy/issues/4240
+.. _GH 4241: https://github.com/gammapy/gammapy/issues/4241
+.. _GH 4388: https://github.com/gammapy/gammapy/pull/4388
+.. _GH 4381: https://github.com/gammapy/gammapy/pull/4381
+.. _GH 4253: https://github.com/gammapy/gammapy/pull/4253
+.. _GH 4491: https://github.com/gammapy/gammapy/pull/4491
