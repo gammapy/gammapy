@@ -557,11 +557,17 @@ def test_pix_to_coord_time_axis(time_intervals):
         rtol=1e-5,
     )
 
-    # assert with invalid pixels
-    coords = axis.pix_to_coord([-1.2, 0.6, 24.7])
+    # assert with invalid pixels & multidim array
+    coords = axis.pix_to_coord([[-1.2, 0.6], [1.5, 24.7]])
     assert_allclose(
-        coords.mjd, [-3.725000e-04, 58927.551315789475, -3.725000e-04], rtol=1e-5
+        coords.mjd,
+        [[-3.725000e-04, 58927.551315789475], [58928.07346491228, -3.725000e-04]],
+        rtol=1e-5,
     )
+
+    # test with one value
+    coords = axis.pix_to_coord(3)
+    assert_allclose(coords.mjd, 58927.0, rtol=1e-5)
 
 
 def test_slice_time_axis(time_intervals):
@@ -878,7 +884,6 @@ def test_single_valued_axis():
     _ = MapAxis.from_table(table, format="gadf-dl3", column_prefix="THETA")
 
 
-    
 def test_label_map_axis_concatenate():
     label1 = LabelMapAxis(["aa", "bb"], name="letters")
     label2 = LabelMapAxis(["cc", "dd"], name="letters")

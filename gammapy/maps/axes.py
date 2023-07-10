@@ -2509,8 +2509,9 @@ class TimeMapAxis:
         coord : `~astropy.time.Time`
             Array of axis coordinate values.
         """
+        shape = np.shape(pix)
+        pix = np.atleast_1d(pix).ravel()
         coords = np.zeros(len(pix))
-        pix = np.atleast_1d(pix)
         frac, idx = np.modf(pix)
         valid = np.logical_and(idx >= 0, idx < self.nbin, np.isfinite(idx))
         idx_valid = np.where(valid)
@@ -2521,7 +2522,7 @@ class TimeMapAxis:
         ).jd
         coords = coords * self.unit + self.reference_time
         coords[idx_invalid] = Time(INVALID_VALUE.time, scale=self.reference_time.scale)
-        return coords
+        return coords.reshape(shape)
 
     def coord_to_pix(self, coord, **kwargs):
         """Transform from time to coordinate to pixel position.
