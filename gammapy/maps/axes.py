@@ -566,9 +566,11 @@ class MapAxis:
         name : str
             Name of the energy axis, either 'energy' or 'energy_true'
         strict_bounds : bool
-            Whether to strictly end the binning at the max energy when
+            Whether to strictly end the binning at 'energy_max' when
             `per_decade=True`. If True, the number of bins per decade
-            might be slightly adjusted.
+            might be slightly increased to match the bounds. If False,
+            'energy_max' might be reduced so the number of bins per
+            decade is exactly the given input.
 
         Returns
         -------
