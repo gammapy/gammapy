@@ -48,7 +48,6 @@ class SourceCatalogObject1LHAASO(SourceCatalogObject):
         * ``which="KM2A"`` - Sky model for KM2A analysis only.
         * ``which="WCDA"`` - Sky model for WCDA analysis only.
 
-        If only a limit is given for a parameter it is used as value.
         Entries not repeated for the second analysis are taken from the first one.
         """
 
@@ -76,7 +75,6 @@ class SourceCatalogObject1LHAASO(SourceCatalogObject):
         * ``which="KM2A"`` - Sky model for KM2A analysis only.
         * ``which="WCDA"`` - Sky model for WCDA analysis only.
 
-        If only a limit is given for a parameter it is used as value.
         Entries not repeated for the second analysis are taken from the first one.
         """
 
@@ -117,7 +115,7 @@ class SourceCatalogObject1LHAASO(SourceCatalogObject):
     def sky_model(self, which="both"):
         """Sky model (`~gammapy.modeling.models.SkyModel`).
 
-        * ``which="both"`` - Use first model or create a composite template if both models are available.
+        * ``which="both"`` -  Create a composite template if both models are available, or, use the available one if only one is present
         * ``which="KM2A"`` - Sky model for KM2A analysis if available.
         * ``which="WCDA"`` - Sky model for WCDA analysis if available.
 
@@ -180,8 +178,11 @@ class SourceCatalog1LHAASO(SourceCatalog):
 
         super().__init__(table=table, source_name_key=source_name_key)
 
-    def to_models(self, **kwargs):
+    def to_models(self,  which="both"):
         """Create Models object from catalogue"""
+                * ``which="both"`` - Use first model or create a composite template if both models are available.
+                * ``which="KM2A"`` - Sky model for KM2A analysis if available.
+                * ``which="WCDA"`` - Sky model for WCDA analysis if available.
         models = Models()
         for _ in self:
             model = _.sky_model(**kwargs)
