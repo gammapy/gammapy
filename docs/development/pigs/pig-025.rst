@@ -1,16 +1,16 @@
 . include:: ../../references.txt
 
-.. _pig-028:
+.. _pig-025:
 
 ***************************************
-PIG 28 - Metadata container for Gammapy
+PIG 25 - Metadata container for Gammapy
 ***************************************
 
-* Author: Régis Terrier and ?
+* Author: Régis Terrier
 * Created: April 14th, 2023
-* Accepted: -
-* Status: -
-* Discussion:
+* Accepted: July 10th, 2023
+* Status: Accepted
+* Discussion: `GH 4491`_
 
 Abstract
 ========
@@ -318,3 +318,7 @@ class will have to support the stacking mechanism.
 Decision
 ========
 
+The PIG is accepted. Some of the proposed API will have to evolve a bit after the
+release of pydantic v2.
+
+.. _GH 4491: https://github.com/gammapy/gammapy/pull/4491
