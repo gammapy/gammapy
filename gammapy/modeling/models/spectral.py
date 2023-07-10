@@ -213,7 +213,6 @@ class SpectralModel(ModelBase):
         """
         return self._propagate_error(epsilon=epsilon, fct=self, energy=energy)
 
-    @property
     def pivot_energy(self):
         """The decorrelation energy for a given spectral model calculated numerically.
 
@@ -223,14 +222,21 @@ class SpectralModel(ModelBase):
             The energy at which the statistical error is smallest.
         """
 
+        x_unit = u.GeV
+
         def min_energy(x):
             x = np.exp(x)
-            x = u.Quantity(x, "GeV")
-            dnde, dnde_error = self.evaluate_error(x)
+            dnde, dnde_error = self.evaluate_error(x * x_unit)
             energy_minimum = dnde_error / dnde
             return energy_minimum
 
-        return u.Quantity(np.exp(scipy.optimize.fsolve(min_energy, x0=1e-4)), "GeV")[0]
+        bounds = np.log([self.reference.value - 5, self.reference.value + 5])
+        minimizer = scipy.optimize.minimize_scalar(min_energy, bounds=bounds)
+
+        if not minimizer.success:
+            return print("Minimizer terminated unsuccessfully.")
+        else:
+            return np.exp(minimizer.x) * x_unit
 
     def integral(self, energy_min, energy_max, **kwargs):
         r"""Integrate spectral model numerically if no analytical solution defined.
@@ -832,7 +838,6 @@ class PowerLawSpectralModel(SpectralModel):
         base = value / self.amplitude.quantity
         return self.reference.quantity * np.power(base, -1.0 / self.index.value)
 
-    @property
     def pivot_energy(self):
         r"""The decorrelation energy is defined as:
 
@@ -925,7 +930,6 @@ class PowerLawNormSpectralModel(SpectralModel):
         base = value / self.norm.quantity
         return self.reference.quantity * np.power(base, -1.0 / self.tilt.value)
 
-    @property
     def pivot_energy(self):
         r"""The decorrelation energy is defined as:
 
