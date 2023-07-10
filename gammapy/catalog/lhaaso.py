@@ -178,14 +178,15 @@ class SourceCatalog1LHAASO(SourceCatalog):
 
         super().__init__(table=table, source_name_key=source_name_key)
 
-    def to_models(self,  which="both"):
-        """Create Models object from catalogue"""
-                * ``which="both"`` - Use first model or create a composite template if both models are available.
-                * ``which="KM2A"`` - Sky model for KM2A analysis if available.
-                * ``which="WCDA"`` - Sky model for WCDA analysis if available.
+    def to_models(self, which="both"):
+        """Create Models object from catalogue
+        * ``which="both"`` - Use first model or create a composite template if both models are available.
+        * ``which="KM2A"`` - Sky model for KM2A analysis if available.
+        * ``which="WCDA"`` - Sky model for WCDA analysis if available.
+        """
         models = Models()
         for _ in self:
-            model = _.sky_model(**kwargs)
+            model = _.sky_model(which)
             if model:
                 models.append(model)
         return models
