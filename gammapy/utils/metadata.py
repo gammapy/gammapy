@@ -6,8 +6,10 @@ from astropy.coordinates import Angle, EarthLocation, SkyCoord
 from astropy.time import Time
 from astropy.units import Quantity
 import yaml
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 from gammapy.version import version
+
+__all__ = ["MetaData", "CreatorMetaData"]
 
 
 class MetaData(BaseModel):
@@ -19,8 +21,6 @@ class MetaData(BaseModel):
         arbitrary_types_allowed = True
         validate_all = True
         validate_assignment = True
-        # allow additional entries
-        extra = "allow"
 
         # provides a recipe to export arbitrary types to json
         json_encoders = {
@@ -62,6 +62,10 @@ class CreatorMetaData(MetaData):
     creator: Optional[str]
     date: Optional[Union[str, Time]]
     origin: Optional[str]
+
+    @validator("date")
+    def validate_time(cls, v):
+        return Time(v)
 
     @classmethod
     def from_default(cls):
