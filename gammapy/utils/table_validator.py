@@ -1,9 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from collections import namedtuple
 from collections.abc import MutableMapping
+from typing import Tuple
+import numpy as np
 from astropy.table import Column, Table
 from astropy.units import UnitTypeError
 import yaml
+from pydantic import BaseModel
 
 GADF_EVENT_TABLE_DEFINITION = """
 EVENT_ID: { dtype: int, required: true, unit: null}
@@ -35,24 +37,24 @@ HIL_MSL : { dtype: float, unit: ''}
 HIL_MSL_ERR : { dtype: float, unit: ''}
 """
 
-ColumnDefinition = namedtuple(
-    "ColumnDefinition",
-    ["dtype", "unit", "shape", "description", "required"],
-    defaults=[None, None, (), str, False],
-)
 
+class ColumnDefinition(BaseModel):
+    dtype: str = None
+    unit: str = None
+    shape: Tuple = ()
+    description: str = None
+    required: bool = False
 
-class ColumnValidator(ColumnDefinition):
     def validate_column(self, column):
         """Check that input Column satisfies the column definition."""
-        self.check_column_type(self.dtype, column)
+        #       self.check_column_type(self.dtype, column)
         self.check_column_shape(self.shape, column)
         self.check_column_unit(self.unit, column)
         return column
 
     @staticmethod
     def check_column_type(dtype, column):
-        if column.dtype.name == dtype:
+        if column.dtype == np.dtype(dtype):
             return True
         else:
             raise TypeError(
@@ -138,7 +140,7 @@ class TableValidator(MutableMapping):
         coldefs = yaml.safe_load(yaml_str)
         res = cls()
         for key, item in coldefs.items():
-            res[key] = ColumnValidator(**item)
+            res[key] = ColumnDefinition(**item)
         return res
 
     @property

@@ -5,7 +5,8 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Column, Table
 from astropy.units import UnitTypeError
-from gammapy.utils.table_validator import ColumnValidator, TableValidator
+from pydantic import ValidationError
+from gammapy.utils.table_validator import ColumnDefinition, TableValidator
 
 
 @pytest.fixture
@@ -28,28 +29,30 @@ def test_column_validator():
         description="Some test column",
     )
 
-    validator = ColumnValidator(dtype="float", unit="km", shape=(10,))
+    validator = ColumnDefinition(dtype="float", unit="km", shape=(10,))
     res = validator.validate_column(column)
 
     assert res.name == column.name
 
-    validator = ColumnValidator(dtype="float", unit="s", shape=(10,))
+    validator = ColumnDefinition(dtype="float", unit="s", shape=(10,))
     with pytest.raises(UnitTypeError):
         validator.validate_column(column)
 
 
 @pytest.mark.xfail
 def test_column_validator_complex_types():
-    column = Column(name="test", data=SkyCoord(0, 0, unit="deg", frame="icrs"))
+    column = Column(
+        name="test", data=SkyCoord(np.zeros(10), np.zeros(10), unit="deg", frame="icrs")
+    )
 
-    validator = ColumnValidator(dtype="SkyCoord", unit="deg")
+    validator = ColumnDefinition(dtype="SkyCoord", unit="deg")
     res = validator.validate_column(column)
 
     assert res.data.ra == 0
 
 
 def test_column_from_definition():
-    definition = ColumnValidator(dtype="float32", unit="m", description="test")
+    definition = ColumnDefinition(dtype="float32", unit="m", description="test")
 
     column = definition.to_column("column")
 
@@ -62,10 +65,10 @@ def test_column_from_definition():
 
 def test_validate_table(simple_table):
     validator = TableValidator(
-        COL1=ColumnValidator(dtype="str", unit="", required=True),
-        COL2=ColumnValidator(dtype="float", unit="s", shape=(5,), required=True),
-        COL3=ColumnValidator(dtype="float", unit="GeV", required=True),
-        COL4=ColumnValidator(dtype="float", unit="GeV"),
+        COL1=ColumnDefinition(dtype="str", unit="", required=True),
+        COL2=ColumnDefinition(dtype="float", unit="s", shape=(5,), required=True),
+        COL3=ColumnDefinition(dtype="float", unit="GeV", required=True),
+        COL4=ColumnDefinition(dtype="float", unit="GeV"),
     )
 
     res = validator.run(simple_table)
@@ -73,13 +76,12 @@ def test_validate_table(simple_table):
 
 
 def test_validate_table_fail(simple_table):
-    validator = TableValidator(
-        COL3=ColumnValidator(dtype="str", unit=""),
-        COL2=ColumnValidator(dtype="float", unit="s", shape="(5,)"),
-        COL1=ColumnValidator(dtype="float64", unit="GeV"),
-    )
-    with pytest.raises(TypeError):
-        validator.run(simple_table)
+    with pytest.raises(ValidationError):
+        TableValidator(
+            COL3=ColumnDefinition(dtype="str", unit=""),
+            COL2=ColumnDefinition(dtype="float", unit="s", shape="(5,)"),
+            COL1=ColumnDefinition(dtype="float64", unit="GeV"),
+        )
 
 
 def test_table_from_definition():
