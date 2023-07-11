@@ -187,14 +187,29 @@
     "softwareVersion": "v1.1",
     "maintainer": {
         "@id": "https://orcid.org/0000-0003-4568-7005",
-            "@type": "Person",
-            "affiliation": {
-                "@type": "Organization",
-                "name": "Center for Astrophysics | Harvard & Smithsonian, USA"
-            },
-            "familyName": "Donath",
-            "givenName": "Axel"
+        "@type": "Person",
+        "affiliation": {
+            "@type": "Organization",
+            "name": "Center for Astrophysics | Harvard & Smithsonian, USA"
+        },
+        "familyName": "Donath",
+        "givenName": "Axel"
     },
     "readme": "https://gammapy.org",
-    "issueTracker": "https://github.com/gammapy/gammapy/issues"
+    "issueTracker": "https://github.com/gammapy/gammapy/issues",
+    "developmentStatus": [
+        "active"
+    ],
+    "email": "GAMMAPY-COORDINATION-L@IN2P3.FR",
+    "softwareRequirements": [
+        "numpy>=1.21",
+        "scipy>=1.5,!=1.10",
+        "astropy>=5.0",
+        "regions>=0.5.0",
+        "pyyaml>=5.3",
+        "click>=7.0",
+        "pydantic>=1.4",
+        "iminuit>=2.8.0",
+        "matplotlib>=3.4"
+    ]
 }

@@ -9,7 +9,7 @@ related to modeling and fitting data. This includes spectral, spatial
 and temporal model classes, as well as the fit and parameter API.The
 models follow a naming scheme which contains the category as a suffix to
 the class name. An overview of all the available models can be found in
-the `model gallery <../../user-guide/model-gallery/index.rst>`__.
+the `model gallery <../../../docs/user-guide/model-gallery/index.rst>`__.
 
 Note that there are separate tutorials,
 :doc:`/tutorials/api/model_management` and
