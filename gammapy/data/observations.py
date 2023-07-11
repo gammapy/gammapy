@@ -2,6 +2,7 @@
 import collections.abc
 import copy
 import inspect
+import itertools
 import logging
 import warnings
 from itertools import zip_longest
@@ -716,7 +717,7 @@ class Observations(collections.abc.MutableSequence):
         return obs_groups
 
     @classmethod
-    def concatenate(cls, observations_list):
+    def from_stack(cls, observations_list):
         """Create a new `Observations` instance by concatenating a list of `Observations` objects.
 
         Parameters
@@ -729,7 +730,8 @@ class Observations(collections.abc.MutableSequence):
         observations : `~gammapy.data.Observations`
             The `Observations` object resulting from the concatenation of all the `Observations` in `observation_list`.
         """
-        return cls(list(np.concatenate(observations_list)))
+        obs = itertools.chain(*observations_list)
+        return cls(list(obs))
 
 
 class ObservationChecker(Checker):
