@@ -42,6 +42,8 @@ class ASmoothMapEstimator(Estimator):
         Significance estimation method.
     threshold : float
         Significance threshold.
+    energy_edges : `~astropy.units.Quantity`
+        Energy edges of the target maps bins.
 
     Examples
     --------
