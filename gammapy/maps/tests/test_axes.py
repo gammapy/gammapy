@@ -28,7 +28,6 @@ MAP_AXIS_NODE_TYPES = [
     ([0.25, 0.75, 1.0, 2.0], "sqrt", "center"),
 ]
 
-
 nodes_array = np.array([0.25, 0.75, 1.0, 2.0])
 
 MAP_AXIS_NODE_TYPE_UNIT = [
@@ -880,3 +879,12 @@ def test_label_map_axis_squash():
 
     assert squash_label.nbin == 1
     assert_equal(squash_label.center, np.array(["a...c"]))
+
+
+def test_energy_bin_per_decade_not_strict_bounds():
+    nbin = 5
+    axis = MapAxis.from_energy_bounds(
+        "0.03 TeV", "333 TeV", nbin=nbin, per_decade=True, strict_bounds=False
+    )
+
+    assert_allclose(axis.edges[0:-nbin] * 10.0, axis.edges[nbin:], rtol=1e-5, atol=0)
