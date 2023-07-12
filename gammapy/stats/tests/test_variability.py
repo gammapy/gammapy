@@ -61,20 +61,17 @@ def lc():
     return FluxPoints.from_table(table=table, format="lightcurve")
 
 
-def test_lightcurve_fvar(lc_table):
-    lightcurve = lc()
+def test_lightcurve_fvar():
 
-    quantity = "flux"
+    flux = np.array([[1e-11, 4e-12], [3e-11, np.nan], [1e-11, 1e-12]])
+    flux_err = np.array([[0.1e-11, 0.4e-12], [0.3e-11, np.nan], [0.1e-11, 0.1e-12]])
 
-    flux = getattr(lightcurve, quantity)
-    flux_err = getattr(lightcurve, quantity + "_err")
+    time_id = 0
 
-    time_id = flux.geom.axes.index_data("time")
+    fvar, fvar_err = compute_fvar(flux, flux_err, axis=time_id)
 
-    fvar, fvar_err = compute_fvar(flux.data, flux_err.data, axis=time_id)
-
-    assert_allclose(fvar, [[[0.68322763]], [[0.84047606]]])
-    assert_allclose(fvar_err, [[[0.06679978]], [[0.08285806]]])
+    assert_allclose(fvar, [0.68322763, 0.84047606])
+    assert_allclose(fvar_err, [0.06679978, 0.08285806])
 
 
 def test_lightcurve_chisq(lc_table):
