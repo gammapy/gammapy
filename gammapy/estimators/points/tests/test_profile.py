@@ -5,6 +5,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
+from test_sed import simulate_map_dataset
 from gammapy.data import GTI
 from gammapy.datasets import MapDatasetOnOff
 from gammapy.estimators import FluxPoints, FluxProfileEstimator
@@ -184,3 +185,29 @@ def test_regions_init():
 
     with pytest.raises(ValueError):
         FluxProfileEstimator(regions=[region])
+
+
+def test_profile_with_model():
+    dataset = simulate_map_dataset(name="test-map-pwl")
+
+    geom = dataset.counts.geom
+    regions = make_concentric_annulus_sky_regions(
+        center=geom.center_skydir,
+        radius_max=0.2 * u.deg,
+    )
+
+    prof_maker = FluxProfileEstimator(
+        regions,
+        selection_optional="all",
+        energy_edges=[0.1, 10] * u.TeV,
+        n_sigma_ul=3,
+        sum_over_energy_groups=True,
+    )
+    result = prof_maker.run(dataset)
+    imp_prof = result.to_table(sed_type="flux", format="profile")
+    assert_allclose(imp_prof[7]["npred_excess"], [[-1.115967]], rtol=1e-3)
+
+    dataset.models = None
+    result = prof_maker.run(dataset)
+    imp_prof = result.to_table(sed_type="flux", format="profile")
+    assert_allclose(imp_prof[7]["npred_excess"], [[112.95312]], rtol=1e-3)
