@@ -44,6 +44,8 @@ class ASmoothMapEstimator(Estimator):
         Significance threshold.
     energy_edges : `~astropy.units.Quantity`
         Energy edges of the target maps bins.
+        The final energy edges will be the closest to the input ones as possible
+        from the original binning of the dataset
 
     Examples
     --------
