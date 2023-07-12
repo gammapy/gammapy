@@ -585,6 +585,7 @@ def test_piecewise_spatial_model_3d():
         PiecewiseNormSpatialModel(coords, frame="galactic")
 
 
+@requires_data()
 def test_template_ND(tmpdir):
     filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits"  # noqa: E501
     map_ = Map.read(filename)
