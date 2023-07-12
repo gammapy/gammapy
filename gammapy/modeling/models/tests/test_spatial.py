@@ -12,7 +12,7 @@ from regions import (
     PointSkyRegion,
     RectangleSkyRegion,
 )
-from gammapy.maps import Map, MapAxis, MapCoord, RegionGeom, WcsGeom
+from gammapy.maps import Map, MapAxis, MapCoord, RegionGeom, WcsGeom, WcsNDMap
 from gammapy.modeling.models import (
     ConstantSpatialModel,
     DiskSpatialModel,
@@ -24,6 +24,7 @@ from gammapy.modeling.models import (
     Shell2SpatialModel,
     ShellSpatialModel,
     SkyModel,
+    TemplateNDSpatialModel,
     TemplateSpatialModel,
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data
@@ -582,3 +583,44 @@ def test_piecewise_spatial_model_3d():
 
     with pytest.raises(ValueError):
         PiecewiseNormSpatialModel(coords, frame="galactic")
+
+
+def test_template_ND(tmpdir):
+    filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits"  # noqa: E501
+    map_ = Map.read(filename)
+    map_.data[map_.data < 0] = 0
+    geom2d = map_.geom
+    norm = MapAxis.from_nodes(range(0, 11, 2), interp="lin", name="norm", unit="")
+    cste = MapAxis.from_bounds(-1, 1, 3, interp="lin", name="cste", unit="")
+    geom = geom2d.to_cube([norm, cste])
+
+    nd_map = WcsNDMap(geom)
+
+    for kn, norm_value in enumerate(norm.center):
+        for kp, cste_value in enumerate(cste.center):
+            nd_map.data[kp, kn, :, :] = norm_value * map_.data + cste_value
+
+    template = TemplateNDSpatialModel(nd_map)
+    assert len(template.parameters) == 2
+    assert_allclose(template.parameters["norm"].value, 5)
+    assert_allclose(template.parameters["cste"].value, 0)
+    assert_allclose(
+        template.evaluate(
+            geom2d.center_skydir.ra, geom2d.center_skydir.dec, norm=0, cste=0
+        ),
+        [0],
+    )
+    assert_allclose(template.evaluate_geom(geom2d), 5 * map_.data, rtol=0.2)
+
+    template.parameters["norm"].value = 2
+    template.parameters["cste"].value = 0
+    assert_allclose(template.evaluate_geom(geom2d), 2 * map_.data, rtol=0.2)
+
+    template.filename = str(tmpdir / "template_ND.fits")
+    template.write()
+    dict_ = template.to_dict()
+    template_new = TemplateNDSpatialModel.from_dict(dict_)
+    assert_allclose(template_new.map.data, nd_map.data)
+    assert len(template_new.parameters) == 2
+    assert template_new.parameters["norm"].value == 2
+    assert template_new.parameters["power"].value == 0
