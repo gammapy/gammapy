@@ -133,12 +133,15 @@ class FluxProfileEstimator(FluxPointsEstimator):
         profile : `~gammapy.estimators.FluxPoints`
             Profile flux points.
         """
-        datasets = Datasets(datasets=datasets)
+
+        datasets_copy = Datasets(datasets=datasets)
+        datasets_copy = datasets.copy()
+        for dataset in datasets_copy:
+            dataset.background = dataset.npred()
 
         maps = []
-
         for region in self.regions:
-            datasets_to_fit = datasets.to_spectrum_datasets(region=region)
+            datasets_to_fit = datasets_copy.to_spectrum_datasets(region=region)
             datasets_to_fit.models = SkyModel(self.spectrum, name="test-source")
             fp = super().run(datasets_to_fit)
             maps.append(fp)
