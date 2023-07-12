@@ -1311,6 +1311,7 @@ class PiecewiseNormSpatialModel(SpatialModel):
 
     def __init__(self, coords, norms=None, interp="lin", **kwargs):
         self._coords = coords
+        self._coords["lon"] = Angle(self._coords.lon).wrap_at(180 * u.deg)
         self._interp = interp
 
         if norms is None:
@@ -1376,7 +1377,7 @@ class PiecewiseNormSpatialModel(SpatialModel):
 
         """
         coords = geom.get_coord(frame=self.frame, sparse=True)
-        return self(coords.lon, coords.lat)
+        return self(Angle(coords.lon).wrap_at(180 * u.deg), coords.lat)
 
     def to_dict(self, full_output=False):
         data = super().to_dict(full_output=full_output)
