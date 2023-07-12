@@ -140,6 +140,7 @@ using Python type annotations. It enforces type hints at runtime, and provides u
 errors when data is invalid.
 
 It offers nice features such as:
+
 - it can be extended to custom data types (e.g. a `Quantity` or a `Map`) with a simple
   decorator based scheme to define validators.
 - it supports recursive models
@@ -180,6 +181,7 @@ A typical base class for all Gammapy metadata could structured following the str
             return cls(**kwargs)
 
 The model `Config` defined allows:
+
 - using any type input and not only simple `Annotation` types (`arbitrary_types_allowed = True`)
 - Setting the `validate_assignment` to `True` ensures that validation is performed when a value
   is assigned to the attribute.
@@ -249,8 +251,7 @@ IRF
 Here we should distinguish between actual IRFs and reduced modeling-ready IRFs such as kernels
 and IRF maps.
 
-- ``IRFMetaData``
-  A single generic class could be used for all actual IRFs.
+- ``IRFMetaData`` : A single generic class could be used for all actual IRFs.
 
 Makers
 ------
@@ -271,8 +272,7 @@ stacking, in particular some of the fields might be lists of entries which requi
 validation.
 
 - ``MapDatasetMetaData``
-- ``FluxPointsDatasetMetaData``
-  the metadata class for the ``FluxPointsDataset``.
+- ``FluxPointsDatasetMetaData`` : the metadata class for the ``FluxPointsDataset``.
 - ``DatasetsMetaData``
 
 
