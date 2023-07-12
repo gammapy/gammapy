@@ -73,8 +73,8 @@ def test_lightcurve_fvar(lc_table):
 
     fvar, fvar_err = compute_fvar(flux.data, flux_err.data, axis=time_id)
 
-    assert_allclose(fvar, np.asarray([[[0.68322763]], [[0.84047606]]]))
-    assert_allclose(fvar_err, np.asarray([[[0.06679978]], [[0.08285806]]]))
+    assert_allclose(fvar, [[[0.68322763]], [[0.84047606]]])
+    assert_allclose(fvar_err, [[[0.06679978]], [[0.08285806]]])
 
 
 def test_lightcurve_chisq(lc_table):
