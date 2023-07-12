@@ -42,10 +42,10 @@ class ASmoothMapEstimator(Estimator):
         Significance estimation method.
     threshold : float
         Significance threshold.
-    energy_edges : `~astropy.units.Quantity`
-        Energy edges of the target maps bins.
-        The final energy edges will be the closest to the input ones as possible
-        from the original binning of the dataset
+    energy_edges : list of `~astropy.units.Quantity`
+        Edges of the target maps energy bins. The resulting bin edges will be the energy bins closest to those of the parent dataset.
+        Default is None: obtain the edges directly from the parent dataset energy binning.
+        For further explanation see :ref:`estimators`.
 
     Examples
     --------
