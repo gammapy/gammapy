@@ -187,7 +187,7 @@ def test_regions_init():
         FluxProfileEstimator(regions=[region])
 
 
-def test_profile_with_model():
+def test_profile_with_model_or_mask():
     dataset = simulate_map_dataset(name="test-map-pwl")
 
     geom = dataset.counts.geom
@@ -211,3 +211,8 @@ def test_profile_with_model():
     result = prof_maker.run(dataset)
     imp_prof = result.to_table(sed_type="flux", format="profile")
     assert_allclose(imp_prof[7]["npred_excess"], [[112.95312]], rtol=1e-3)
+
+    dataset.mask_fit = ~geom.region_mask([regions[7]])
+    result = prof_maker.run(dataset)
+    imp_prof = result.to_table(sed_type="flux", format="profile")
+    assert_allclose(imp_prof[7]["npred_excess"], [[0]], rtol=1e-3)

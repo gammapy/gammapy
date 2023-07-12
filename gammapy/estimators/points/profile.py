@@ -134,7 +134,7 @@ class FluxProfileEstimator(FluxPointsEstimator):
             Profile flux points.
         """
 
-        datasets_copy = Datasets(datasets=datasets)
+        datasets = Datasets(datasets=datasets)
         datasets_copy = datasets.copy()
         for dataset in datasets_copy:
             dataset.background = dataset.npred()
