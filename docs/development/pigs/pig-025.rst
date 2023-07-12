@@ -1,0 +1,324 @@
+. include:: ../../references.txt
+
+.. _pig-025:
+
+***************************************
+PIG 25 - Metadata container for Gammapy
+***************************************
+
+* Author: Régis Terrier
+* Created: April 14th, 2023
+* Accepted: July 10th, 2023
+* Status: Accepted
+* Discussion: `GH 4491`_
+
+Abstract
+========
+
+Metadata handling is crucial to correctly store information that are not directly data
+but are still required for processing, post-processing and serialization. They are
+fundamental for reproducibility.
+
+Introduction
+============
+
+As of version 1.0, Gammapy has very little support for metadata. Existing features are
+heterogeneous, hardly configurable and appear sporadically in the code, mostly in
+containers. At the DL3 level, ``EventList`` metadata is carried by its `Table.meta` dictionary.
+It is extracted from the  file FITS header which follows the GADF specifications.
+Similarly, ``Observation`` contains an `obs_info` dictionary that is build from the header as well.
+After data reduction, ``Dataset`` contains a `meta_table` which
+consists in a selection of `Observation.obs_info` entries (one table row per observation).
+During `Dataset` stacking the `meta_table` are stacked. The ``Datasets`` collection also
+aggregates the `meta_table` of its members. After estimation, the ``FluxPoints`` don't
+contain any specific meta information.
+
+The algorithm classes (`Makers` and `Estimators`) don't contain any meta information so far.
+This might be an issue since some information  could be transferred on their various products
+as well.
+
+A minimal information that needs to be present on every Gammapy product and serialized
+in various formats is the `CREATOR` which is the software and software version used,
+as well as the `DATE` when the object was created, and possibly the `ORIGIN` (the user,
+the consortium that has produced the object). The Gammapy version number is important to ensure
+reproducibility and compatibility.
+
+An `Observation` also needs some information to ensure correct handling of data. For instance,
+the telescope name, the sub-array used, the observation mode, the telescope location etc.
+
+A practical and systematic solution must be implemented in Gammapy. This PIG discusses
+the approach and proposes a solution for this. It does not discuss the metadata model, i.e.
+what information has to be stored on which data product. It proposes a basic concept and
+a possible implementation of a metadata container object that fulfill the requirements.
+
+Requirements
+============
+
+The Gammapy metadata solution should:
+
+- offer flexibility regarding the content of the data model, e.g.:
+    - it should allow optional entries
+    - it should be configurable to allow for specific data models
+- have a systematic validation of its content
+- allow for serialization to various formats, e.g.:
+    - export specific keywords to fits headers depending on the data format
+    - export content to yaml
+- allow hierarchical content to allow easy propagation of metadata content along the
+  analysis flow
+- be easily sub-scriptable to allow for specialized metadata containers for the various
+  objects in Gammapy.
+
+In the following, we propose a plausible solution fulfilling these requirements based on the
+the `pydantic` package ``BaseModel`` class.
+
+
+Metadata API
+============
+
+All Gammapy classes containing metadata should store them in a `meta` attribute.
+
+Type validation
+---------------
+
+The API should support simple validation on input, even for non standard types such as
+astropy or Gammapy objects.
+
+.. code ::
+
+    # direct assignment
+    >>> meta.zenith_angle = Angle(30, "deg")
+    # or via a string representation
+    >>> meta.zenith_angle = "30 deg"
+    # input validation
+    >>> meta.zenith_angle = 2*u.TeV
+    ValidationError: 1 validation error for MetaData zenith_angle
+    # attribute type is astropy Angle
+    >>> print(meta.zenith_angle)
+    30d00m00s
+
+
+Hierarchy
+---------
+
+The API should allow hierarchical structure with metadata classes having other metadata
+objects as attributes. See the following example:
+
+.. code ::
+
+    class CreatorMedadata:
+        creator : str
+        date : datetime
+        origin : str
+
+    class ObservationMetadata:
+        obs_id : str
+        creator : CreatorMetadata
+
+
+Serialization
+-------------
+
+The metadata classes should have a `to_dict()` or `dict()` method to convert their content
+to a dictionary.
+
+Conversion to various output formats should be supported with specific methods such as `to_yaml()`
+of `to_header()` to export the content in the form of a FITS header, when possible.
+
+Because we expect the number of data formats will increase over the years, specific `Reader`
+and `Writer` functions or classes could be defined to support e.g. reading and writing
+to gadf DL3 format.
+
+
+Proposed solution
+=================
+
+pydantic
+--------
+
+The pydantic package has been built to perform data validation and settings management
+using Python type annotations. It enforces type hints at runtime, and provides user friendly
+errors when data is invalid.
+
+It offers nice features such as:
+- it can be extended to custom data types (e.g. a `Quantity` or a `Map`) with a simple
+  decorator based scheme to define validators.
+- it supports recursive models
+
+The package now extremely widely used in the python ecosystem with more than 50 millions
+monthly Pypi downloads. Its long-term viability does not appear problematic.
+
+Gammapy already uses pydantic for its high level analysis configuration class.
+
+There are several other options available such as `traitlets`. The latter also allows the
+addition of user-defined `TraitType`.
+
+the base class
+--------------
+
+A typical base class for all Gammapy metadata could structured following the structure below:
+
+.. code ::
+
+    class MetaDataBaseModel(BaseModel):
+        class Config:
+            arbitrary_types_allowed = True
+            validate_all = True
+            validate_assignment = True
+            extra = "allow"
+
+        def to_header(self):
+            hdr_dict = {}
+            for key, item in self.dict().items():
+                hdr_dict[key.upper()] = item.__str__()
+            return hdr_dict
+
+        @classmethod
+        def from_header(cls, hdr):
+            kwargs = {}
+            for key in cls.__fields__.keys():
+                kwargs[key] = hdr.get(key.upper(), None)
+            return cls(**kwargs)
+
+The model `Config` defined allows:
+- using any type input and not only simple `Annotation` types (`arbitrary_types_allowed = True`)
+- Setting the `validate_assignment` to `True` ensures that validation is performed when a value
+  is assigned to the attribute.
+- `extra = "allow"` accepts additional attributes not defined in the metadata class.
+
+
+
+
+arbitrary type input and validation
+-----------------------------------
+
+By providing a validation method, it is possible to validate non-standard objects. The
+`validator` decorator provided by pydantic makes it easy. As shown below:
+
+.. code ::
+
+    class ArbitraryTypeMetaData(MetaDataBaseModel):
+        # allow string defining angle or Angle object
+        zenith_angle : Optional[Union[str, Angle]]
+        pointing_altaz : Union[]
+
+        # allow observatory name or astropy EarthLocation object
+        location : Optional[Union[str, EarthLocation]]
+
+        @validator('location')
+        def validate_location(cls, v):
+            if isinstance(v, str) and v in observatory_locations.keys():
+                return observatory_locations[v]
+            elif isinstance(v, EarthLocation):
+                return v
+            else:
+                raise ValueError("Incorrect location value")
+
+        @validator('zenith_angle')
+        def validate_zenith_angle(cls, v):
+            return Angle(v)
+
+
+Alternatives
+============
+
+Another option could be to use `traitlets`, but this would require creating dedicated types
+for non-supported types (e.g. `SkyCoord`). Additional functionalities such as `observer`
+would not be very useful here.
+
+
+Proposed metadata classes
+=========================
+
+Here we list the expected metadata classes that we expect. All classes will inherit from a
+parent ``MetaDataBase`` that will provide most base properties to the daughter classes.
+
+We provide the list of classes by subpackage
+
+data
+----
+
+- ``EventListMetaData``
+- ``ObservationMetaData``
+- ``DataStoreMetaData``
+- ``PointingMetaData``
+- ``GTIMetaData``
+
+IRF
+---
+
+Here we should distinguish between actual IRFs and reduced modeling-ready IRFs such as kernels
+and IRF maps.
+
+- ``IRFMetaData``
+  A single generic class could be used for all actual IRFs.
+
+Makers
+------
+
+It is unclear whether stateless algorithm classes such as ``Maker`` actually need meta
+information beyond their actual attributes. They will have to create or update `meta`
+information of the ``Dataset`` they create or modify. For now, we don't propose
+any metadata for ``Maker`` objects.
+
+Datasets
+--------
+
+The ``Dataset`` already contains some meta information with the `meta_table` which contains
+a small subset of information from the observations that where used to build the object.
+
+The new metadata might replace the current `meta_table`. The metadata should support
+stacking, in particular some of the fields might be lists of entries which require
+validation.
+
+- ``MapDatasetMetaData``
+- ``FluxPointsDatasetMetaData``
+  the metadata class for the ``FluxPointsDataset``.
+- ``DatasetsMetaData``
+
+
+Modeling
+--------
+
+Similarly to ``Makers``,  it is unclear the ``Fit`` class needs specific metadata as it is not
+serialized.
+
+Because they are serialized, ``Model`` and ``Models`` objects should have a minimal `meta`.
+
+- ``ModelsMetadata``
+- ``ModelMetaData``
+
+
+Estimators
+----------
+
+Again, the stateless ``Estimator`` algorithms do not need a `meta` attribute. They need to
+build the `meta` information of the products they create, transferring some metadata from
+the parent ``Datasets``.
+
+- ``FluxMapsMetaData``
+- ``FluxPointsMetaData``
+
+
+Metadata generation and propagation along the dataflow
+------------------------------------------------------
+
+DL3 products should come with their pre-defined metadata (unless generated by Gammapy
+for instance during event simulations). But all all other data levels will have metadata
+generated by Gammapy. Algorithm classes (Makers, Estimators) produce new data containers
+(DL4 and DL5), they will generate new metadata to be stored on the container and
+will propagate some of the metadata from the lower level products they manipulate.
+What metadata will be passed or discarded, how metadata will be restructured in this process
+(i.e. how propagation and reduction will be performed) is beyond the scope of this PIG.
+For now, the important point is that metadata handling becomes a task of algorithm classes.
+The actual definition of the metadata classes will have to support the propagation and
+reduction process. An obvious case is `Dataset` stacking. The associated `meta`
+class will have to support the stacking mechanism.
+
+
+Decision
+========
+
+The PIG is accepted. Some of the proposed API will have to evolve a bit after the
+release of pydantic v2.
+
+.. _GH 4491: https://github.com/gammapy/gammapy/pull/4491
