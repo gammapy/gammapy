@@ -514,8 +514,8 @@ def test_observations_concatenate(data_store):
     obs_1 = data_store.get_observations([20136, 20137, 20151])
     obs_2 = data_store.get_observations([20275, 20282])
 
-    concatenate_obs = Observations.concatenate([obs_1, obs_2])
+    obs12 = Observations.from_stack([obs_1, obs_2])
 
-    assert len(concatenate_obs) == 5
-    assert isinstance(concatenate_obs[0], Observation)
-    assert isinstance(concatenate_obs[0].events, EventList)
+    assert len(obs12) == 5
+    assert isinstance(obs12[0], Observation)
+    assert isinstance(obs12[0].events, EventList)
