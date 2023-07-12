@@ -164,8 +164,8 @@ def test_compute_lightcurve_fvar():
     lightcurve = lc()
 
     fvar = compute_lightcurve_fvar(lightcurve)
-    ffvar = np.array(fvar["fvar"])
-    ffvar_err = np.array(fvar["fvar_err"])
+    ffvar = fvar["fvar"].quantity
+    ffvar_err = fvar["fvar_err"].quantity
 
     assert_allclose(ffvar, np.asarray([[[0.698212]], [[0.37150576]]]))
     assert_allclose(ffvar_err, np.asarray([[[0.0795621]], [[0.074706]]]))
