@@ -187,7 +187,6 @@ def plot_distribution(
     wcs_map,
     ax=None,
     ncols=3,
-    fit=True,
     func=None,
     kwargs_hist=None,
     kwargs_axes=None,
@@ -205,10 +204,9 @@ def plot_distribution(
         Axis object to plot on. If a list of Axis is provided it has to be the same length as the length of _map.data.
     ncols : int
         Number of columns to plot if a "plot grid" was to be done.
-    fit : bool
-        Whether to perform a fit of the distribution of data. If True, the fit is performed by `scipy.stats`.
     func : function object
-        The function to pass to `scipy.optimize.curve_fit`
+        The function to pass to `scipy.optimize.curve_fit`. Default is None.
+        If None, no fit will be done.
     kwargs_hist : dict
         Keyword arguments to pass to `matplotlib.pyplot.hist`.
     kwargs_axes : dict
@@ -219,9 +217,13 @@ def plot_distribution(
     Returns
     -------
     result_list : list of dict
-        List of the results of `scipy.optimize.curve_fit` as a  dictionary, where `param` is the best-fit
-        parameters of `func`, `covar` is the covariance matrix for these parameters, and `info_dict` is the return of
-        the same name of `scipy.optimize.curve_fit`.
+        List of dictionnary that contains the results of `scipy.optimize.curve_fit`. The number of elements in the list
+        correspond to the dimension of the non-spatial axis of the map.
+        The dictionnary contains:
+        - `axis_edges` : the edges of the non-spatial axis bin used
+        - `param` : the best-fit parameters of the input function `func`
+        - `covar` : the covariance matrix for the fitted parameters `param`
+        - `info_dict` : the `infodict` return of `scipy.optimize.curve_fit`
     axes : `~numpy.ndarray` of `~matplotlib.pyplot.Axes`
         Array of Axes.
 
@@ -250,11 +252,6 @@ def plot_distribution(
 
     kwargs_hist.setdefault("density", True)
     kwargs_fit.setdefault("full_output", True)
-
-    if fit and func is None:
-        raise ValueError(
-            "Must provide a function to fit with parameter fit set to True."
-        )
 
     cutout, mask = wcs_map.cutout_and_mask_region()
     idx_x, idx_y = np.where(mask)
@@ -293,19 +290,26 @@ def plot_distribution(
         d = data[idx][np.isfinite(data[idx])]
         n, bins, _ = axe.hist(d, **kwargs_hist)
 
-        if fit:
+        if func is not None:
             centers = 0.5 * (bins[1:] + bins[:-1])
 
             pars, cov, infodict, message, _ = curve_fit(func, centers, n, **kwargs_fit)
 
-            result_dict = {"param": pars, "covar": cov, "info_dict": infodict}
+            axis_edges = (
+                wcs_map.geom.axes[-1].edges[idx],
+                wcs_map.geom.axes[-1].edges[idx + 1],
+            )
+            result_dict = {
+                "axis_edges": axis_edges,
+                "param": pars,
+                "covar": cov,
+                "info_dict": infodict,
+            }
             result_list.append(result_dict)
             log.info(message)
 
-            if "range" in kwargs_hist.keys():
-                x = np.linspace(*kwargs_hist.get("range"), 1000)
-            else:
-                x = np.linspace(np.min(d), np.max(d), 1000)
+            xmin, xmax = kwargs_hist.get("range", (np.min(d), np.max(d)))
+            x = np.linspace(xmin, xmax, 1000)
 
             axe.plot(x, func(x, *pars), label="Fit")
 

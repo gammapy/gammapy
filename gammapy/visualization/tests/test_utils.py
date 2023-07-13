@@ -101,7 +101,7 @@ def test_plot_distribution():
         assert res[0].get("param") is not None
         assert res[0].get("covar") is not None
 
-        res, axes = plot_distribution(map_empty, fit=False)
+        res, axes = plot_distribution(map_empty)
 
         assert res == []
         assert axes.shape == (4, 3)
