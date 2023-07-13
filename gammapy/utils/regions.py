@@ -280,7 +280,7 @@ def region_circle_to_ellipse(region):
 
 
 def containment_region(integral_map, fraction=0.68, n_levels=100, apply_union=True):
-    """Find the iso-contours region corresponding to a given containement
+    """Find the iso-contours region corresponding to a given containment
         for a map of integral quantities.
 
     Parameters
@@ -290,7 +290,7 @@ def containment_region(integral_map, fraction=0.68, n_levels=100, apply_union=Tr
     fraction : float
         Containment fraction
     n_levels : int
-        Numbers of contours levels used to find the required containement region.
+        Numbers of contours levels used to find the required containment region.
 
     Returns
     -------
@@ -333,7 +333,7 @@ def containment_region(integral_map, fraction=0.68, n_levels=100, apply_union=Tr
 
 
 def containment_radius(integral_map, fraction=0.68, n_levels=100):
-    """Compute containement radius from the center of a map with integral quantities
+    """Compute containment radius from the center of a map with integral quantities
 
     Parameters
     ----------
@@ -342,7 +342,7 @@ def containment_radius(integral_map, fraction=0.68, n_levels=100):
     fraction : float
         Containment fraction
     n_levels : int
-        Numbers of contours levels used to find the required containement radius.
+        Numbers of contours levels used to find the required containment radius.
 
     Returns
     -------
