@@ -220,10 +220,12 @@ def plot_distribution(
         List of dictionnary that contains the results of `scipy.optimize.curve_fit`. The number of elements in the list
         correspond to the dimension of the non-spatial axis of the map.
         The dictionnary contains:
-        - `axis_edges` : the edges of the non-spatial axis bin used
-        - `param` : the best-fit parameters of the input function `func`
-        - `covar` : the covariance matrix for the fitted parameters `param`
-        - `info_dict` : the `infodict` return of `scipy.optimize.curve_fit`
+
+            * `axis_edges` : the edges of the non-spatial axis bin used
+            * `param` : the best-fit parameters of the input function `func`
+            * `covar` : the covariance matrix for the fitted parameters `param`
+            * `info_dict` : the `infodict` return of `scipy.optimize.curve_fit`
+
     axes : `~numpy.ndarray` of `~matplotlib.pyplot.Axes`
         Array of Axes.
 
