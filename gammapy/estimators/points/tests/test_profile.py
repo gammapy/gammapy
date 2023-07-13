@@ -5,10 +5,10 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
-from test_sed import simulate_map_dataset
 from gammapy.data import GTI
 from gammapy.datasets import MapDatasetOnOff
 from gammapy.estimators import FluxPoints, FluxProfileEstimator
+from gammapy.estimators.points.tests.test_sed import simulate_map_dataset
 from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.utils.regions import (

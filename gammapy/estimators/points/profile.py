@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Tools to create profiles (i.e. 1D "slices" from 2D images)."""
+import numpy as np
 from astropy import units as u
 from regions import CircleAnnulusSkyRegion
 from gammapy.datasets import Datasets
@@ -135,13 +136,18 @@ class FluxProfileEstimator(FluxPointsEstimator):
         """
 
         datasets = Datasets(datasets=datasets)
-        datasets_copy = datasets.copy()
-        for dataset in datasets_copy:
-            dataset.background = dataset.npred()
 
         maps = []
         for region in self.regions:
-            datasets_to_fit = datasets_copy.to_spectrum_datasets(region=region)
+            datasets_to_fit = datasets.to_spectrum_datasets(region=region)
+            for dataset_spec, dataset_map in zip(datasets_to_fit, datasets):
+                dataset_spec.background.data = (
+                    dataset_map.npred()
+                    .to_region_nd_map(
+                        region, func=np.sum, weights=dataset_map.mask_safe
+                    )
+                    .data
+                )
             datasets_to_fit.models = SkyModel(self.spectrum, name="test-source")
             fp = super().run(datasets_to_fit)
             maps.append(fp)
