@@ -624,4 +624,4 @@ def test_template_ND(tmpdir):
     assert_allclose(template_new.map.data, nd_map.data)
     assert len(template_new.parameters) == 2
     assert template_new.parameters["norm"].value == 2
-    assert template_new.parameters["power"].value == 0
+    assert template_new.parameters["cste"].value == 0
