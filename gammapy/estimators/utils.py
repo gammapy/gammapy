@@ -12,12 +12,14 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
 )
+from gammapy.stats import compute_fvar
 from .map.core import FluxMaps
 
 __all__ = [
     "estimate_exposure_reco_energy",
     "find_peaks",
     "resample_energy_edges",
+    "compute_lightcurve_fvar",
     "find_peaks_in_flux_map",
 ]
 
@@ -305,3 +307,42 @@ def resample_energy_edges(dataset, conditions={}):
                 energy_edges.append(energy_min)
                 break
     return u.Quantity(energy_edges[::-1])
+
+
+def compute_lightcurve_fvar(lightcurve, flux_quantity="flux"):
+    r"""Compute the fractional excess variance of the input lightcurve.
+
+    Internally calls the `~gammapy.stats.compute_fvar` function
+
+
+    Parameters
+    ----------
+    lightcurve : '~gammapy.estimators.FluxPoints'
+        the lightcurve object
+    flux_quantity : str
+        flux quantity to use for calculation. Should be 'dnde', 'flux', 'e2dnde' or 'eflux'. Default is 'flux'.
+        Useful in case of custom lightcurves computed outside gammapy
+
+    Returns
+    -------
+    fvar : `~astropy.table.Table`
+        Table of fractional excess variance and associated error for each energy bin of the lightcurve.
+    """
+
+    flux = getattr(lightcurve, flux_quantity)
+    flux_err = getattr(lightcurve, flux_quantity + "_err")
+
+    time_id = flux.geom.axes.index_data("time")
+
+    fvar, fvar_err = compute_fvar(flux.data, flux_err.data, axis=time_id)
+
+    significance = fvar / fvar_err
+
+    energies = lightcurve.geom.axes["energy"].edges
+    table = Table(
+        [energies[:-1], energies[1:], fvar, fvar_err, significance],
+        names=("min_energy", "max_energy", "fvar", "fvar_err", "significance"),
+        meta=lightcurve.meta,
+    )
+
+    return table
