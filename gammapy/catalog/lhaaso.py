@@ -151,7 +151,7 @@ class SourceCatalogObject1LHAASO(SourceCatalogObject):
 class SourceCatalog1LHAASO(SourceCatalog):
     """First LHAASO catalog.
 
-    One source is represented by `~gammapy.catalog.SourceCatalogObject3HWC`.
+    One source is represented by `~gammapy.catalog.SourceCatalogObject1LHAASO`.
 
     The data is from table 1 in the paper [1]_.
 
