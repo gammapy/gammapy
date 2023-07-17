@@ -59,6 +59,7 @@ from gammapy.analysis import Analysis, AnalysisConfig
 from gammapy.datasets import MapDatasetOnOff
 from gammapy.estimators import ExcessMapEstimator
 from gammapy.makers import RingBackgroundMaker
+from gammapy.visualization import plot_distribution
 
 log = logging.getLogger(__name__)
 
@@ -258,41 +259,42 @@ plt.show()
 
 # create a 2D mask for the images
 significance_map_off = significance_map * exclusion_mask
-significance_all = significance_map.data[np.isfinite(significance_map.data)]
-significance_off = significance_map_off.data[np.isfinite(significance_map_off.data)]
 
-fig, ax = plt.subplots()
-ax.hist(
-    significance_all,
-    density=True,
-    alpha=0.5,
-    color="red",
-    label="all bins",
-    bins=21,
+kwargs_axes = {"xlabel": "Significance", "yscale": "log", "ylim": (1e-5, 1)}
+
+_, ax = plot_distribution(
+    significance_map,
+    kwargs_hist={
+        "density": True,
+        "alpha": 0.5,
+        "color": "red",
+        "label": "all bins",
+        "bins": 21,
+    },
+    kwargs_axes=kwargs_axes,
 )
 
-ax.hist(
-    significance_off,
-    density=True,
-    alpha=0.5,
-    color="blue",
-    label="off bins",
-    bins=21,
+func = lambda x, mu, sig: norm.pdf(x, loc=mu, scale=sig)
+
+res, ax = plot_distribution(
+    significance_map_off,
+    ax=ax,
+    func=func,
+    kwargs_hist={
+        "density": True,
+        "alpha": 0.5,
+        "color": "blue",
+        "label": "off bins",
+        "bins": 21,
+    },
+    kwargs_axes=kwargs_axes,
 )
 
-# Now, fit the off distribution with a Gaussian
-mu, std = norm.fit(significance_off)
-x = np.linspace(-8, 8, 50)
-p = norm.pdf(x, mu, std)
-ax.plot(x, p, lw=2, color="black")
-ax.legend()
-ax.set_xlabel("Significance")
-ax.set_yscale("log")
-ax.set_ylim(1e-5, 1)
-xmin, xmax = np.min(significance_all), np.max(significance_all)
-ax.set_xlim(xmin, xmax)
-
-print(f"Fit results: mu = {mu:.2f}, std = {std:.2f}")
 plt.show()
+
+param = res[0].get("param")
+covar = res[0].get("covar")
+
+print(f"mu = {param[0]} ± {covar[0][0]**2}, sig = {param[1]} ± {covar[1][1]**2}")
 
 # sphinx_gallery_thumbnail_number = 2
