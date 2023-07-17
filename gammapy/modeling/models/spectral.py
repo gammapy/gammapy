@@ -213,6 +213,7 @@ class SpectralModel(ModelBase):
         """
         return self._propagate_error(epsilon=epsilon, fct=self, energy=energy)
 
+    @property
     def pivot_energy(self):
         """The decorrelation energy for a given spectral model calculated numerically.
 
@@ -220,21 +221,27 @@ class SpectralModel(ModelBase):
         -------
         pivot energy : `~astropy.units.Quantity`
             The energy at which the statistical error is smallest.
+            If no minimum is found, NaN will be returned.
         """
 
-        x_unit = u.GeV
+        x_unit = self.reference.unit
 
-        def min_energy(x):
+        def min_func(x):
+            """Function to minimize"""
             x = np.exp(x)
             dnde, dnde_error = self.evaluate_error(x * x_unit)
-            energy_minimum = dnde_error / dnde
-            return energy_minimum
+            return dnde_error / dnde
 
-        bounds = np.log([self.reference.value - 5, self.reference.value + 5])
-        minimizer = scipy.optimize.minimize_scalar(min_energy, bounds=bounds)
+        bounds = [np.log(self.reference.value) - 3, np.log(self.reference.value) + 3]
+
+        std = np.std(min_func(x=np.linspace(bounds[0], bounds[1], 100)))
+        if std < 1e-5:
+            return np.nan * x_unit
+
+        minimizer = scipy.optimize.minimize_scalar(min_func, bounds=bounds)
 
         if not minimizer.success:
-            return print("Minimizer terminated unsuccessfully.")
+            return np.nan * x_unit
         else:
             return np.exp(minimizer.x) * x_unit
 
@@ -838,6 +845,7 @@ class PowerLawSpectralModel(SpectralModel):
         base = value / self.amplitude.quantity
         return self.reference.quantity * np.power(base, -1.0 / self.index.value)
 
+    @property
     def pivot_energy(self):
         r"""The decorrelation energy is defined as:
 
@@ -846,6 +854,11 @@ class PowerLawSpectralModel(SpectralModel):
             E_D = E_0 * \exp{cov(\phi_0, \Gamma) / (\phi_0 \Delta \Gamma^2)}
 
         Formula (1) in https://arxiv.org/pdf/0910.4881.pdf
+
+        Returns
+        -------
+        pivot energy : `~astropy.units.Quantity`
+            If no minimum is found, NaN will be returned.
         """
         index_err = self.index.error
         reference = self.reference.quantity
@@ -930,6 +943,7 @@ class PowerLawNormSpectralModel(SpectralModel):
         base = value / self.norm.quantity
         return self.reference.quantity * np.power(base, -1.0 / self.tilt.value)
 
+    @property
     def pivot_energy(self):
         r"""The decorrelation energy is defined as:
 
@@ -938,6 +952,11 @@ class PowerLawNormSpectralModel(SpectralModel):
             E_D = E_0 * \exp{cov(\phi_0, \Gamma) / (\phi_0 \Delta \Gamma^2)}
 
         Formula (1) in https://arxiv.org/pdf/0910.4881.pdf
+
+        Returns
+        -------
+        pivot energy : `~astropy.units.Quantity`
+            If no minimum is found, NaN will be returned.
         """
         tilt_err = self.tilt.error
         reference = self.reference.quantity
