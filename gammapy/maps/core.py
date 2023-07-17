@@ -5,6 +5,7 @@ import html
 import inspect
 import json
 from collections import OrderedDict
+from itertools import repeat
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
@@ -1094,6 +1095,63 @@ class Map(abc.ABC):
                     )
             output_map = output_map.resample(geom, preserve_counts=preserve_counts)
         return output_map
+
+    def reproject_by_slice(
+        self,
+        geom,
+        preserve_counts=False,
+        precision_factor=10,
+    ):
+        """Reproject each slice of a 3d map to input 2d geometry.
+
+        Parameters
+        ----------
+        geom : `~gammapy.maps.Geom`
+            Target slice geometry (2d)
+        preserve_counts : bool
+            Preserve the integral over each bin.  This should be true
+            if the map is an integral quantity (e.g. counts) and false if
+            the map is a differential quantity (e.g. intensity)
+        precision_factor : int
+           Minimal factor between the bin size of the output map and the oversampled base map.
+           Used only for the oversampling method.
+
+        Returns
+        -------
+        output_map : `Map`
+            Reprojected Map
+        """
+        if not geom.is_image:
+            raise TypeError("This method is only valid for 2d geom")
+        if len(self.geom.axes) != 1:
+            raise TypeError("This method is only valid for 3d map")
+            # TODO: could this work with more axes ? with iter_by_image maybe
+
+        axis = self.geom.axes[0]
+        slices = (
+            self.slice_by_idx({axis.name: slice(idx, idx + 1)})
+            for idx in range(len(axis.center))
+        )
+        maps = parallel.run_multiprocessing(
+            self._reproject_slice,
+            zip(
+                slices,
+                repeat(geom),
+                repeat(preserve_counts),
+                repeat(precision_factor),
+            ),
+            backend=self.parallel_backend,
+            pool_kwargs=dict(processes=self.n_jobs),
+            task_name="Reprojection",
+        )
+        return Map.from_stack(maps, axis=axis)
+
+    @staticmethod
+    def _reproject_slice(slice_, geom, preserve_counts, precision_factor):
+        slice_ = slice_.reduce_over_axes()
+        return slice_.reproject_to_geom(
+            geom, precision_factor=precision_factor, preserve_counts=preserve_counts
+        )
 
     def fill_events(self, events, weights=None):
         """Fill event coordinates (`~gammapy.data.EventList`).
