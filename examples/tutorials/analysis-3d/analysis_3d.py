@@ -39,6 +39,7 @@ from gammapy.modeling.models import (
 # Check setup
 # -----------
 from gammapy.utils.check import check_tutorials_setup
+from gammapy.visualization import plot_distribution
 
 check_tutorials_setup()
 
@@ -306,30 +307,28 @@ plt.show()
 ######################################################################
 # Distribution of residuals significance in the full map geometry:
 #
-significance_data = result["sqrt_ts"].data
+significance_map = result["sqrt_ts"]
 
-# Remove bins that are inside an exclusion region, that would create an artificial peak at significance=0.
-selection = np.isfinite(significance_data)
-significance_data = significance_data[selection]
+func = lambda x, mu, sig: norm.pdf(x, loc=mu, scale=sig)
+kwargs_hist = {"density": True, "alpha": 0.9, "color": "red", "bins": 40}
 
-fig, ax = plt.subplots()
-
-ax.hist(significance_data, density=True, alpha=0.9, color="red", bins=40)
-mu, std = norm.fit(significance_data)
-
-x = np.linspace(-5, 5, 100)
-p = norm.pdf(x, mu, std)
-
-ax.plot(
-    x,
-    p,
-    lw=2,
-    color="black",
-    label=r"$\mu$ = {:.2f}, $\sigma$ = {:.2f}".format(mu, std),
+res, ax = plot_distribution(
+    significance_map, func=func, kwargs_hist=kwargs_hist, kwargs_axes={"xlim": (-5, 5)}
 )
-ax.legend(fontsize=17)
-ax.set_xlim(-5, 5)
+
 plt.show()
+
+param_1 = res[0].get("param")
+param_2 = res[1].get("param")
+covar_1 = res[0].get("covar")
+covar_2 = res[1].get("covar")
+
+print(
+    f"1st bin : mu = {param_1[0]} ± {covar_1[0][0]**2}, sig = {param_1[1]} ± {covar_1[1][1]**2}"
+)
+print(
+    f"2nd bin : mu = {param_2[0]} ± {covar_2[0][0]**2}, sig = {param_2[1]} ± {covar_2[1][1]**2}"
+)
 
 
 ######################################################################
