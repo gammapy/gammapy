@@ -48,7 +48,6 @@ class SourceCatalogObject1LHAASO(SourceCatalogObject):
         * ``which="KM2A"`` - Sky model for KM2A analysis only.
         * ``which="WCDA"`` - Sky model for WCDA analysis only.
 
-        Entries not repeated for the second analysis are taken from the first one.
         """
 
         pars = {
@@ -75,7 +74,6 @@ class SourceCatalogObject1LHAASO(SourceCatalogObject):
         * ``which="KM2A"`` - Sky model for KM2A analysis only.
         * ``which="WCDA"`` - Sky model for WCDA analysis only.
 
-        Entries not repeated for the second analysis are taken from the first one.
         """
 
         lat_0 = self._get("DECJ2000", which)
