@@ -96,7 +96,8 @@ class ExcessMapEstimator(Estimator):
 
         Default is None so the optional steps are not executed.
     energy_edges : list of `~astropy.units.Quantity`
-        Edges of the target excess maps energy bins. The resulting bin edges will be the energy bins closest to those of the parent dataset.
+        Edges of the target excess maps energy bins. The resulting bin edges will be the energy bins closest
+        to those of the parent dataset.
         Default is None: obtain the edges directly from the parent dataset energy binning.
         For further explanation see :ref:`estimators`.
     correlate_off : bool

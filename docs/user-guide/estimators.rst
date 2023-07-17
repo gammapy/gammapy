@@ -37,6 +37,16 @@ In general the flux can be estimated using two methods:
    **backward folding**. This method is currently only exposed in the `ExcessMapEstimator`
 
 
+Energy edges
+---------------
+
+The input energy edges by the user are converted to the nearest parent dataset energy bin
+values. The estimators select the energy bins from the parent dataset which are closest to the
+requested energy edges. Therefore, the input energy edges are not always the same as the output
+energy bins provided in the final product. If a specific energy binning is required at the estimator
+level, it should be implemented in true_energy during the dataset computation.
+
+
 Flux quantities
 ---------------
 
