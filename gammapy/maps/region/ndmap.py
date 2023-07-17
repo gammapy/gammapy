@@ -41,13 +41,24 @@ class RegionNDMap(Map):
         The map unit
     """
 
-    def __init__(self, geom, data=None, dtype="float32", meta=None, unit=""):
+    def __init__(
+        self,
+        geom,
+        data=None,
+        dtype="float32",
+        meta=None,
+        unit="",
+        parallel_backend=None,
+        n_jobs=None,
+    ):
         if data is None:
             data = np.zeros(geom.data_shape, dtype=dtype)
 
         if meta is None:
             meta = {}
 
+        self.parallel_backend = parallel_backend
+        self.n_jobs = n_jobs
         self._geom = geom
         self.data = data
         self.meta = meta
