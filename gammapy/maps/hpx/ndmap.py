@@ -41,13 +41,22 @@ class HpxNDMap(HpxMap):
         The map unit
     """
 
-    def __init__(self, geom, data=None, dtype="float32", meta=None, unit=""):
+    def __init__(
+        self,
+        geom,
+        data=None,
+        dtype="float32",
+        meta=None,
+        unit="",
+        parallel_backend=None,
+        n_jobs=None,
+    ):
         data_shape = geom.data_shape
 
         if data is None:
             data = self._make_default_data(geom, data_shape, dtype)
 
-        super().__init__(geom, data, meta, unit)
+        super().__init__(geom, data, meta, unit, parallel_backend, n_jobs)
 
     @staticmethod
     def _make_default_data(geom, shape_np, dtype):

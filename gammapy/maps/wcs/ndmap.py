@@ -44,7 +44,16 @@ class WcsNDMap(WcsMap):
         The map unit
     """
 
-    def __init__(self, geom, data=None, dtype="float32", meta=None, unit=""):
+    def __init__(
+        self,
+        geom,
+        data=None,
+        dtype="float32",
+        meta=None,
+        unit="",
+        parallel_backend=None,
+        n_jobs=None,
+    ):
         # TODO: Figure out how to mask pixels for integer data types
 
         data_shape = geom.data_shape
@@ -52,7 +61,7 @@ class WcsNDMap(WcsMap):
         if data is None:
             data = self._make_default_data(geom, data_shape, dtype)
 
-        super().__init__(geom, data, meta, unit)
+        super().__init__(geom, data, meta, unit, parallel_backend, n_jobs)
 
     @staticmethod
     def _make_default_data(geom, shape_np, dtype):

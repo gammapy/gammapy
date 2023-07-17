@@ -8,6 +8,7 @@ import numpy as np
 from astropy import units as u
 from astropy.io import fits
 import matplotlib.pyplot as plt
+from gammapy.utils import parallel
 from gammapy.utils.deprecation import deprecated
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.scripts import make_path
@@ -20,7 +21,7 @@ from .io import JsonQuantityDecoder
 __all__ = ["Map"]
 
 
-class Map(abc.ABC):
+class Map(abc.ABC, parallel.ParallelMixin):
     """Abstract map class.
 
     This can represent WCS- or HEALPIX-based maps
@@ -36,12 +37,22 @@ class Map(abc.ABC):
         Dictionary to store meta data
     unit : str or `~astropy.units.Unit`
         Data unit, ignored if data is a Quantity.
+    n_jobs : int
+        Number of processes used in parallel for the computation. Default is one, unless
+        `~gammapy.utils.parallel.N_JOBS_DEFAULT` was modified. The number of jobs is
+        limited to the number of physical CPUs.
+    parallel_backend : {"multiprocessing", "ray"}
+        Which backend to use for multiprocessing.
     """
 
     tag = "map"
 
-    def __init__(self, geom, data, meta=None, unit=""):
+    def __init__(
+        self, geom, data, meta=None, unit="", parallel_backend=None, n_jobs=None
+    ):
         self._geom = geom
+        self.parallel_backend = parallel_backend
+        self.n_jobs = n_jobs
 
         if isinstance(data, u.Quantity):
             self._unit = u.Unit(unit)
@@ -242,7 +253,15 @@ class Map(abc.ABC):
             )
 
     @staticmethod
-    def from_geom(geom, meta=None, data=None, unit="", dtype="float32"):
+    def from_geom(
+        geom,
+        meta=None,
+        data=None,
+        unit="",
+        dtype="float32",
+        parallel_backend=None,
+        n_jobs=None,
+    ):
         """Generate an empty map from a `Geom` instance.
 
         Parameters
@@ -276,7 +295,15 @@ class Map(abc.ABC):
             raise ValueError("Unrecognized geom type.")
 
         cls_out = Map._get_map_cls(map_type)
-        return cls_out(geom, data=data, meta=meta, unit=unit, dtype=dtype)
+        return cls_out(
+            geom,
+            data=data,
+            meta=meta,
+            unit=unit,
+            dtype=dtype,
+            parallel_backend=parallel_backend,
+            n_jobs=n_jobs,
+        )
 
     @staticmethod
     def from_hdulist(
