@@ -22,7 +22,7 @@ class SensitivityEstimator(Estimator):
     Parameters
     ----------
     spectrum : `SpectralModel`
-        Spectral model assumption
+        Spectral model assumption. Default is Power Law with index 2.
     n_sigma : float, optional
         Minimum significance. Default is 5.
     gamma_min : float, optional
