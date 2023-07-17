@@ -717,6 +717,37 @@ def test_map_reproject_wcs_to_wcs_with_axes():
             assert_allclose(np.nanmean(data[data > 0]), ref)
 
 
+def test_map_reproject_by_slice():
+    axis = MapAxis.from_bounds(
+        1.0, 10.0, 3, interp="log", name="energy_true", node_type="center"
+    )
+    axis2 = MapAxis.from_bounds(
+        1.0, 10.0, 8, interp="log", name="energy", node_type="center"
+    )
+    geom_wcs = WcsGeom.create(skydir=(0, 0), npix=(11, 11), binsz=10, frame="galactic")
+
+    geom_hpx = HpxGeom.create(binsz=10, frame="galactic", axes=[axis])
+    geom_hpx_wrong = HpxGeom.create(binsz=10, frame="galactic", axes=[axis, axis2])
+
+    m = HpxNDMap(geom_hpx_wrong)
+    with pytest.raises(TypeError):
+        m.reproject_by_slice(geom_wcs)
+
+    data = np.arange(3 * 768).reshape(geom_hpx.data_shape)
+    m = HpxNDMap(geom_hpx, data=data)
+    geom_wcs_wrong = WcsGeom.create(
+        skydir=(0, 0), npix=(11, 11), binsz=10, axes=[axis], frame="galactic"
+    )
+    with pytest.raises(TypeError):
+        m.reproject_by_slice(geom_wcs_wrong)
+
+    m_r = m.reproject_by_slice(geom_wcs)
+    actual = m_r.get_by_coord(
+        {"lon": 0, "lat": 0, "energy_true": [1.0, 3.16227766, 10.0]}
+    )
+    assert_allclose(actual, [287.5, 1055.5, 1823.5], rtol=1e-3)
+
+
 def test_wcsndmap_reproject_allsky_car():
     geom = WcsGeom.create(binsz=10.0, proj="CAR", frame="icrs")
     m = WcsNDMap(geom)
