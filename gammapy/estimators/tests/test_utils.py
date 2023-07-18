@@ -2,6 +2,9 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
+from astropy.table import Column, Table
+from astropy.time import Time
+from gammapy.estimators import FluxPoints
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from gammapy.datasets import MapDataset
@@ -10,6 +13,7 @@ from gammapy.estimators.utils import (
     find_peaks,
     find_peaks_in_flux_map,
     resample_energy_edges,
+    compute_lightcurve_fvar,
 )
 from gammapy.maps import Map, MapAxis
 from gammapy.utils.testing import requires_data
@@ -130,3 +134,38 @@ def test_resample_energy_edges(spectrum_dataset):
     assert grouped.counts.data.shape == (29, 1, 1)
     assert_allclose(np.squeeze(grouped.counts)[-1], 2518.0)
     assert_allclose(np.squeeze(grouped.background)[-1], 200)
+
+
+def lc():
+    meta = dict(TIMESYS="utc", SED_TYPE="flux")
+
+    table = Table(
+        meta=meta,
+        data=[
+            Column(Time(["2010-01-01", "2010-01-03"]).mjd, "time_min"),
+            Column(Time(["2010-01-03", "2010-01-10"]).mjd, "time_max"),
+            Column([[1.0, 2.0], [1.0, 2.0]], "e_min", unit="TeV"),
+            Column([[2.0, 5.0], [2.0, 5.0]], "e_max", unit="TeV"),
+            Column([[1e-11, 4e-12], [3e-11, 7e-12]], "flux", unit="cm-2 s-1"),
+            Column(
+                [[0.1e-11, 0.4e-12], [0.3e-11, 0.7e-12]], "flux_err", unit="cm-2 s-1"
+            ),
+            Column([[np.nan, np.nan], [3.6e-11, 1e-11]], "flux_ul", unit="cm-2 s-1"),
+            Column([[False, False], [True, True]], "is_ul"),
+            Column([[True, True], [True, True]], "success"),
+        ],
+    )
+
+    return FluxPoints.from_table(table=table, format="lightcurve")
+
+
+def test_compute_lightcurve_fvar():
+
+    lightcurve = lc()
+
+    fvar = compute_lightcurve_fvar(lightcurve)
+    ffvar = fvar["fvar"].quantity
+    ffvar_err = fvar["fvar_err"].quantity
+
+    assert_allclose(ffvar, [[[0.698212]], [[0.37150576]]])
+    assert_allclose(ffvar_err, [[[0.0795621]], [[0.074706]]])
