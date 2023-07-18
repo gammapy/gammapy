@@ -378,10 +378,14 @@ class SkyModel(ModelBase):
             Predicted flux map
         """
         energy = geom.axes["energy_true"].edges
+        shape = len(geom.data_shape) * [
+            1,
+        ]
+        shape[geom.axes.index_data("energy_true")] = -1
         value = self.spectral_model.integral(
             energy[:-1],
             energy[1:],
-        ).reshape((-1, 1, 1))
+        ).reshape(shape)
 
         if self.spatial_model:
             value = (
