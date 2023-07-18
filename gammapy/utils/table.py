@@ -3,8 +3,8 @@
 import numpy as np
 from astropy.table import Table
 from astropy.units import Quantity
-from .units import standardise_unit
 from .deprecation import deprecated
+from .units import standardise_unit
 
 __all__ = [
     "hstack_columns",
@@ -86,6 +86,7 @@ def table_row_to_dict(row, make_quantity=True):
     data = {}
     for name, col in row.columns.items():
         val = row[name]
+
         if make_quantity and col.unit:
             val = Quantity(val, unit=col.unit)
         data[name] = val

@@ -3,9 +3,11 @@ from numpy.testing import assert_allclose
 from astropy.time import Time, TimeDelta
 from gammapy.utils.time import (
     absolute_time,
+    extract_time_info,
     time_ref_from_dict,
     time_ref_to_dict,
     time_relative_to_ref,
+    unique_time_info,
 )
 
 
@@ -50,3 +52,19 @@ def test_absolute_time():
     abs_time = absolute_time(delta_time_1sec, time_ref_dict)
 
     assert abs_time.value == time.utc.isot
+
+
+def test_extract_time_info():
+    dd = dict(MJDREFI=1, MJDREFF=2, TIMEUNIT=3, TIMESYS=4, TIMEREF=5, TELESCOPE="IACT")
+    time_row = extract_time_info(dd)
+
+    assert time_row["TIMESYS"] == 4
+
+
+def test_check_time_info():
+    rows = [
+        dict(MJDREFI=1, MJDREFF=2, TIMEUNIT=3, TIMESYS=4, TIMEREF=5),
+        dict(MJDREFI=1, MJDREFF=2, TIMEUNIT=5, TIMESYS=4, TIMEREF=5),
+    ]
+
+    assert unique_time_info(rows) is False

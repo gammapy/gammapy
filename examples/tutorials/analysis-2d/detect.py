@@ -124,6 +124,7 @@ images = smooth.run(dataset)
 
 plt.figure(figsize=(9, 5))
 images["flux"].plot(add_cbar=True, stretch="asinh")
+plt.show()
 
 
 ######################################################################
@@ -177,6 +178,7 @@ maps["flux"].plot(ax=ax2, add_cbar=True, stretch="sqrt", vmin=0)
 ax2.set_title("Flux map")
 maps["niter"].plot(ax=ax3, add_cbar=True)
 ax3.set_title("Iteration map")
+plt.show()
 
 ######################################################################
 # Source candidates

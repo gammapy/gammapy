@@ -14,6 +14,7 @@ from astropy.utils.decorators import classproperty
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from gammapy.maps import MapAxis, RegionNDMap
+from gammapy.maps.axes import UNIT_STRING_FORMAT
 from gammapy.modeling import Parameter, Parameters
 from gammapy.utils.integrate import trapz_loglog
 from gammapy.utils.interpolation import (
@@ -508,11 +509,15 @@ class SpectralModel(ModelBase):
 
     @staticmethod
     def _plot_format_ax(ax, energy_power, sed_type):
-        ax.set_xlabel(f"Energy [{ax.xaxis.units}]")
+        ax.set_xlabel(f"Energy [{ax.xaxis.units.to_string(UNIT_STRING_FORMAT)}]")
         if energy_power > 0:
-            ax.set_ylabel(f"e{energy_power} * {sed_type} [{ax.yaxis.units}]")
+            ax.set_ylabel(
+                f"e{energy_power} * {sed_type} [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]"
+            )
         else:
-            ax.set_ylabel(f"{sed_type} [{ax.yaxis.units}]")
+            ax.set_ylabel(
+                f"{sed_type} [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]"
+            )
 
         ax.set_xscale("log", nonpositive="clip")
         ax.set_yscale("log", nonpositive="clip")
@@ -2232,13 +2237,13 @@ class GaussianSpectralModel(SpectralModel):
         r"""Integrate Gaussian analytically.
 
         .. math::
-            F(E_{min}, E_{max}) = \frac{N_0}{2} \left[ erf(\frac{E - \bar{E}}{\sqrt{2} \sigma})\right]_{E_{min}}^{E_{max}}  # noqa: E501
+            F(E_{min}, E_{max}) = \frac{N_0}{2} \left[ erf(\frac{E - \bar{E}}{\sqrt{2} \sigma})\right]_{E_{min}}^{E_{max}}
 
         Parameters
         ----------
         energy_min, energy_max : `~astropy.units.Quantity`
             Lower and upper bound of integration range
-        """
+        """  # noqa: E501
         # kwargs are passed to this function but not used
         # this is to get a consistent API with SpectralModel.integral()
         u_min = (
@@ -2258,8 +2263,8 @@ class GaussianSpectralModel(SpectralModel):
         r"""Compute energy flux in given energy range analytically.
 
         .. math::
-            G(E_{min}, E_{max}) =  \frac{N_0 \sigma}{\sqrt{2*\pi}}* \left[ - \exp(\frac{E_{min}-\bar{E}}{\sqrt{2} \sigma})   # noqa: E501
-            \right]_{E_{min}}^{E_{max}} + \frac{N_0 * \bar{E}}{2} \left[ erf(\frac{E - \bar{E}}{\sqrt{2} \sigma})   # noqa: E501
+            G(E_{min}, E_{max}) =  \frac{N_0 \sigma}{\sqrt{2*\pi}}* \left[ - \exp(\frac{E_{min}-\bar{E}}{\sqrt{2} \sigma})
+            \right]_{E_{min}}^{E_{max}} + \frac{N_0 * \bar{E}}{2} \left[ erf(\frac{E - \bar{E}}{\sqrt{2} \sigma})
              \right]_{E_{min}}^{E_{max}}
 
 
@@ -2267,7 +2272,7 @@ class GaussianSpectralModel(SpectralModel):
         ----------
         energy_min, energy_max : `~astropy.units.Quantity`
             Lower and upper bound of integration range.
-        """
+        """  # noqa: E501
         u_min = (
             (energy_min - self.mean.quantity) / (np.sqrt(2) * self.sigma.quantity)
         ).to_value("")

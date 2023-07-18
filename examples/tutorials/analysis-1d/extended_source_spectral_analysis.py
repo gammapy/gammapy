@@ -17,9 +17,9 @@ Context
 
 Many VHE sources in the Galaxy are extended. Studying them with a 1D
 spectral analysis is more complex than studying point sources. One often
-has to use complex (i.e. non circular) regions and more importantly, one
-has to take into account the fact that the instrument response is non
-uniform over the selectred region. A typical example is given by the
+has to use complex (i.e. non-circular) regions and more importantly, one
+has to take into account the fact that the instrument response is non-uniform
+over the selected region. A typical example is given by the
 supernova remnant RX J1713-3935 which is nearly 1 degree in diameter.
 See the `following
 article <https://ui.adsabs.harvard.edu/abs/2018A%26A...612A...6H/abstract>`__.
@@ -36,7 +36,7 @@ tutorial) that Gammapy uses specific
 datasets makers to first produce reduced spectral data and then to
 extract OFF measurements with reflected background techniques: the
 `~gammapy.makers.SpectrumDatasetMaker` and the
-`~gammapy.makers.ReflectedRegionsBackgroundMaker`. However if the flag
+`~gammapy.makers.ReflectedRegionsBackgroundMaker`. However, if the flag
 `use_region_center` is not set to `False`, the former simply
 computes the reduced IRFs at the center of the ON region (assumed to be
 circular).
@@ -47,12 +47,12 @@ average responses in the ON region, we can set
 `~gammapy.makers.SpectrumDatasetMaker`, in which case the values of
 the IRFs are averaged over the entire region.
 
-In summary we have to:
+In summary, we have to:
 
 -  Define an ON region (a `~regions.SkyRegion`) fully enclosing the
    source we want to study.
 -  Define a `~gammapy.maps.RegionGeom` with the ON region and the
-   required energy range (beware in particular, the true energy range).
+   required energy range (in particular, beware of the true energy range).
 -  Create the necessary makers :
 
    -  the spectrum dataset maker :
@@ -246,6 +246,7 @@ display(datasets.meta_table)
 #
 
 datasets[0].peek()
+plt.show()
 
 
 ######################################################################
@@ -285,6 +286,7 @@ ax_sqrt_ts.plot(
 ax_sqrt_ts.set_title("Sqrt(TS)")
 ax_sqrt_ts.set_xlabel("Livetime [h]")
 ax_sqrt_ts.set_ylabel("Sqrt(TS)")
+plt.show()
 
 
 ######################################################################
@@ -332,11 +334,11 @@ display(datasets.models.to_parameters_table())
 
 # First stack them all
 reduced = datasets.stack_reduce()
+
 # Assign the fitted model
 reduced.models = model
-# Plot the result
 
-plt.figure()
+# Plot the result
 ax_spectrum, ax_residuals = reduced.plot_fit()
 reduced.plot_masks(ax=ax_spectrum)
 plt.show()

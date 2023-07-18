@@ -33,7 +33,7 @@ Contributors
 - Bruno Khelifi
 - Maximilian Linhoff
 - Lars Mohrmann
-- Maxime Régeard
+- Maxime Regeard
 - Quentin Remy
 - Atreyee Sinha
 - Régis Terrier

@@ -252,41 +252,41 @@ def load_irf_dict_from_file(filename):
     from .rad_max import RadMax2D
 
     filename = make_path(filename)
-    hdulist = fits.open(filename)
     irf_dict = {}
     is_pointlike = False
 
-    for hdu in hdulist:
-        hdu_clas1 = hdu.header.get("HDUCLAS1", "").lower()
+    with fits.open(filename) as hdulist:
+        for hdu in hdulist:
+            hdu_clas1 = hdu.header.get("HDUCLAS1", "").lower()
 
-        # not an IRF component
-        if hdu_clas1 != "response":
-            continue
+            # not an IRF component
+            if hdu_clas1 != "response":
+                continue
 
-        is_pointlike |= hdu.header.get("HDUCLAS3") == "POINT-LIKE"
+            is_pointlike |= hdu.header.get("HDUCLAS3") == "POINT-LIKE"
 
-        try:
-            hdu_type, hdu_class = _get_hdu_type_and_class(hdu.header)
-        except UnknownHDUClass as e:
-            log.warning("File has unknown class %s", e)
-            continue
+            try:
+                hdu_type, hdu_class = _get_hdu_type_and_class(hdu.header)
+            except UnknownHDUClass as e:
+                log.warning("File has unknown class %s", e)
+                continue
 
-        loc = HDULocation(
-            hdu_class=hdu_class,
-            hdu_name=hdu.name,
-            file_dir=filename.parent,
-            file_name=filename.name,
-        )
-
-        if hdu_type in irf_dict.keys():
-            log.warning(f"more than one HDU of {hdu_type} type found")
-            log.warning(
-                f"loaded the {irf_dict[hdu_type].meta['EXTNAME']} HDU in the dictionary"
+            loc = HDULocation(
+                hdu_class=hdu_class,
+                hdu_name=hdu.name,
+                file_dir=filename.parent,
+                file_name=filename.name,
             )
-            continue
 
-        data = loc.load()
-        irf_dict[hdu_type] = data
+            if hdu_type in irf_dict.keys():
+                log.warning(f"more than one HDU of {hdu_type} type found")
+                log.warning(
+                    f"loaded the {irf_dict[hdu_type].meta['EXTNAME']} HDU in the dictionary"
+                )
+                continue
+
+            data = loc.load()
+            irf_dict[hdu_type] = data
 
     if is_pointlike and "rad_max" not in irf_dict:
         irf_dict["rad_max"] = RadMax2D.from_irf(irf_dict["aeff"])

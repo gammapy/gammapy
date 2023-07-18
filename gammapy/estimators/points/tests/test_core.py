@@ -336,3 +336,15 @@ def test_flux_points_plot_no_error_bar():
     flux_points = FluxPoints.from_table(table)
     with mpl_plot_check():
         _ = flux_points.plot(sed_type="dnde")
+
+
+@requires_data()
+def test_fp_no_is_ul():
+    path = make_path("$GAMMAPY_DATA/tests/spectrum/flux_points/flux_points.fits")
+    table = Table.read(path)
+    table.remove_column("is_ul")
+    table.remove_column("flux_ul")
+
+    fp = FluxPoints.from_table(table)
+    fp_table = fp.to_table()
+    assert "is_ul" not in fp_table.colnames

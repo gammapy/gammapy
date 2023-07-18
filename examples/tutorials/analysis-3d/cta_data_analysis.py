@@ -53,7 +53,7 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
 )
-from gammapy.visualization import plot_spectrum_datasets_off_regions
+from gammapy.visualization import plot_npred_signal, plot_spectrum_datasets_off_regions
 
 logging.basicConfig()
 log = logging.getLogger("gammapy.spectrum")
@@ -164,6 +164,7 @@ dataset_image.background.plot(ax=ax2, vmax=5)
 
 ax3.set_title("Excess map")
 dataset_image.excess.smooth(3).plot(ax=ax3, vmax=2)
+plt.show()
 
 
 ######################################################################
@@ -220,6 +221,7 @@ ax.scatter(
     s=200,
     lw=1.5,
 )
+plt.show()
 
 
 ######################################################################
@@ -244,8 +246,8 @@ on_radius = 0.2 * u.deg
 on_region = CircleSkyRegion(center=target_position, radius=on_radius)
 
 exclusion_mask = ~geom.to_image().region_mask([on_region])
-plt.figure()
 exclusion_mask.plot()
+plt.show()
 
 ######################################################################
 # Configure spectral analysis
@@ -286,6 +288,7 @@ ax = dataset_image.counts.smooth("0.03 deg").plot(vmax=8)
 
 on_region.to_pixel(ax.wcs).plot(ax=ax, edgecolor="white")
 plot_spectrum_datasets_off_regions(datasets, ax=ax)
+plt.show()
 
 
 ######################################################################
@@ -311,6 +314,30 @@ print(result)
 
 
 ######################################################################
+# Here we can plot the predicted number of counts for each model and
+# for the background in the dataset. This is especially useful when
+# studying complex field with a lot a sources. There is a function
+# in the visualization sub-package of gammapy that does this automatically.
+#
+# First we need to stack our datasets.
+
+
+stacked_dataset = datasets.stack_reduce(name="stacked")
+stacked_dataset.models = model
+
+print(stacked_dataset)
+
+
+######################################################################
+# Call `plot_npred_signal` to plot the predicted counts.
+#
+
+
+plot_npred_signal(stacked_dataset)
+plt.show()
+
+
+######################################################################
 # Spectral points
 # ~~~~~~~~~~~~~~~
 #
@@ -319,14 +346,9 @@ print(result)
 # profile to compute the flux and flux error.
 #
 
-# Flux points are computed on stacked observation
-stacked_dataset = datasets.stack_reduce(name="stacked")
 
-print(stacked_dataset)
-
+# Flux points are computed on stacked datasets
 energy_edges = MapAxis.from_energy_bounds("1 TeV", "30 TeV", nbin=5).edges
-
-stacked_dataset.models = model
 
 fpe = FluxPointsEstimator(energy_edges=energy_edges, source="source-gc")
 flux_points = fpe.run(datasets=[stacked_dataset])
@@ -375,5 +397,5 @@ plt.show()
 #
 # -  This notebook showed an example of a first CTA analysis with Gammapy,
 #    using simulated 1DC data.
-# -  Let us know if you have any question or issues!
+# -  Let us know if you have any questions or issues!
 #

@@ -322,8 +322,11 @@ def test_peek():
         "0.08 TeV", "20 TeV", nbin=5, name="energy_true"
     )
     edisp = EDispKernelMap.from_diagonal_response(e_reco, e_true)
+
     with mpl_plot_check():
         edisp.peek()
+
     edisp = EDispMap.from_diagonal_response(e_true)
+
     with mpl_plot_check():
         edisp.peek()

@@ -63,7 +63,6 @@ check_tutorials_setup()
 
 profiles.DMProfile.__subclasses__()
 
-plt.figure()
 for profile in profiles.DMProfile.__subclasses__():
     p = profile()
     p.scale_to_local_density()
@@ -73,6 +72,7 @@ for profile in profiles.DMProfile.__subclasses__():
 plt.loglog()
 plt.axvline(8.5, linestyle="dashed", color="black", label="local density")
 plt.legend()
+plt.show()
 
 print("LOCAL_DENSITY:", profiles.DMProfile.LOCAL_DENSITY)
 print("DISTANCE_GC:", profiles.DMProfile.DISTANCE_GC)
@@ -116,6 +116,7 @@ pix_reg_rec = sky_reg_rec.to_pixel(wcs=geom.wcs)
 pix_reg_rec.plot(ax=ax, facecolor="none", edgecolor="orange", label="+/- 0.3 deg band")
 
 plt.legend()
+plt.show()
 
 # NOTE: https://arxiv.org/abs/1607.08142 quote 2.67e21
 total_jfact = (
@@ -163,6 +164,7 @@ for mDM, ax in zip(mDMs, axes):
 
 axes[0].legend()
 plt.subplots_adjust(hspace=0.9)
+plt.show()
 
 
 ######################################################################

@@ -7,6 +7,7 @@ from astropy.nddata import block_reduce
 from astropy.table import Table
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
+from gammapy.maps.axes import UNIT_STRING_FORMAT
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator, StatProfileScale
 from gammapy.utils.scripts import make_path
 from ..axes import MapAxes
@@ -162,7 +163,7 @@ class RegionNDMap(Map):
             )
 
         if not self.unit.is_unity():
-            ax.set_ylabel(f"Data [{self.unit}]")
+            ax.set_ylabel(f"Data [{self.unit.to_string(UNIT_STRING_FORMAT)}]")
 
         axis.format_plot_xaxis(ax=ax)
         ax.set_yscale("log")

@@ -35,7 +35,7 @@ output of the event-sampler will be a set of events having information
 about their true coordinates, true energies and times of arrival.
 
 To these events, IRF corrections (i.e. PSF and energy dispersion) can
-also further applied in order to obtain reconstructed coordinates and
+also further be applied in order to obtain reconstructed coordinates and
 energies of the sampled events.
 
 At the end of this process, you will obtain an event-list in FITS
@@ -163,11 +163,11 @@ observation = Observation.create(
 # Let’s generate the `~gammapy.datasets.Dataset` object (for more info
 # on `~gammapy.datasets.Dataset` objects, please checkout
 # :doc:`/tutorials/api/datasets` tutorial):
-# we define the energy axes (true and reconstruncted), the migration axis
+# we define the energy axes (true and reconstructed), the migration axis
 # and the geometry of the observation.
 #
 # *This is a crucial point for the correct configuration of the event
-# sampler. Indeed the spatial and energetic binning should be treaten
+# sampler. Indeed, the spatial and energetic binning should be treated
 # carefully and… the finer the better. For this reason, we suggest to
 # define the energy axes (true and reconstructed) by setting a minimum
 # binning of least 10-20 bins per decade for all the sources of interest.
@@ -291,6 +291,7 @@ print(f"Background events: {(events.table['MC_ID'] == 0).sum()}")
 #
 
 events.select_offset([0, 1] * u.deg).peek()
+plt.show()
 
 
 ######################################################################
@@ -323,8 +324,8 @@ hdu_all.writeto("./event_sampling/events_0001.fits", overwrite=True)
 
 counts = Map.from_geom(geom)
 counts.fill_events(events)
-plt.figure()
 counts.sum_over_axes().plot(add_cbar=True)
+plt.show()
 
 
 ######################################################################
@@ -383,7 +384,7 @@ expdecay_model = ExpDecayTemporalModel(t_ref=t_ref.mjd * u.d, t0=t0)
 # where we defined the time axis starting from the reference time
 # `t_ref` up to the requested exposure (`livetime`). The bin size of
 # the time-axis is quite arbitrary but, as above for spatial and energy
-# binnings, the finer the better.
+# binning, the finer the better.
 #
 
 
@@ -449,6 +450,7 @@ src_events = events.select_region(on_region)
 #
 
 src_events.peek()
+plt.show()
 
 
 ######################################################################
@@ -494,6 +496,7 @@ sampler = MapDatasetEventSampler(random_state=0)
 events = sampler.run(dataset, observation)
 
 events.select_offset([0, 1] * u.deg).peek()
+plt.show()
 
 
 ######################################################################
@@ -502,7 +505,7 @@ events.select_offset([0, 1] * u.deg).peek()
 #
 # In some user case, you may want to sample events from a number of
 # observations. In this section, we show how to simulate a set of event
-# lists. For simplicity we consider only one point-like source, observed
+# lists. For simplicity, we consider only one point-like source, observed
 # three times for 1 hr and assuming the same pointing position.
 #
 # Let’s firstly define the time start and the livetime of each
@@ -550,14 +553,13 @@ display(data_store.obs_table)
 
 
 ######################################################################
-# Then you can create the obervations from the data store and make your own
+# Then you can create the observations from the data store and make your own
 # analysis following the instructions in the
 # :doc:`/tutorials/starting/analysis_2` tutorial.
 #
 
 observations = data_store.get_observations()
 observations[0].peek()
-
 plt.show()
 
 

@@ -33,6 +33,11 @@ def test_map_fill_events_wcs(events):
     assert m.data.sum() == 1
     assert_allclose(m.data[0, 0, 0], 1)
 
+    weights = np.array([0.5, 1])
+    m = Map.create(npix=(2, 1), binsz=10, axes=[axis])
+    m.fill_events(events, weights=weights)
+    assert_allclose(m.data.sum(), 0.5)
+
 
 @requires_dependency("healpy")
 def test_map_fill_events_hpx(events):
@@ -47,6 +52,11 @@ def test_map_fill_events_hpx(events):
     m.fill_events(events)
     assert m.data[0, 4] == 1
     assert m.data[1, 4] == 1
+
+    weights = np.array([0.5, 1])
+    m = Map.from_geom(HpxGeom(1, axes=[axis]))
+    m.fill_events(events, weights=weights)
+    assert_allclose(m.data.sum(), 1.5)
 
 
 def test_map_fill_events_keyerror(events):

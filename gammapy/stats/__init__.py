@@ -2,6 +2,11 @@
 """Statistics."""
 from .counts_statistic import CashCountsStatistic, WStatCountsStatistic
 from .fit_statistics import cash, cstat, get_wstat_gof_terms, get_wstat_mu_bkg, wstat
+from .variability import (
+    compute_fvar,
+    compute_chisq,
+)
+
 from .fit_statistics_cython import (
     cash_sum_cython,
     f_cash_root_cython,
@@ -19,4 +24,6 @@ __all__ = [
     "norm_bounds_cython",
     "wstat",
     "WStatCountsStatistic",
+    "compute_fvar",
+    "compute_chisq",
 ]

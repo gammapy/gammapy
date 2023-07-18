@@ -54,7 +54,8 @@ class TestEventListBase:
         assert self.events.table.meta == read_again_ev.table.meta
         assert (self.events.table == read_again_ev.table).all()
         assert gti.table.meta == read_again_gti.table.meta
-        assert (gti.table == read_again_gti.table).all()
+        assert_allclose(gti.table["START"].mjd, read_again_gti.table["START"].mjd)
+        assert_allclose(gti.table["STOP"].mjd, read_again_gti.table["STOP"].mjd)
 
         # test that it won't work if gti is not a GTI
         with pytest.raises(TypeError):

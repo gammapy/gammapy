@@ -45,7 +45,8 @@ def pix_tuple_to_idx(pix):
         if np.issubdtype(p.dtype, np.integer):
             idx += [p]
         else:
-            p_idx = np.rint(p).astype(int)
+            with np.errstate(invalid="ignore"):
+                p_idx = np.rint(p).astype(int)
             p_idx[~np.isfinite(p)] = INVALID_INDEX.int
             idx += [p_idx]
 

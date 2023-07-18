@@ -18,9 +18,12 @@ from gammapy.modeling.models import (
     ConstantSpatialModel,
     ConstantSpectralModel,
     ConstantTemporalModel,
+    FoVBackgroundModel,
     GaussianSpatialModel,
+    LightCurveTemplateTemporalModel,
     LogParabolaSpectralModel,
     Models,
+    PiecewiseNormSpatialModel,
     PointSpatialModel,
     PowerLawNormSpectralModel,
     PowerLawSpectralModel,
@@ -29,8 +32,8 @@ from gammapy.modeling.models import (
     TemplateNPredModel,
     TemplateSpatialModel,
     create_fermi_isotropic_diffuse_model,
-    FoVBackgroundModel,
 )
+from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import mpl_plot_check, requires_data
 
 
@@ -144,6 +147,7 @@ def sky_models_2(sky_model):
     return Models([sky_model_4, sky_model_5])
 
 
+@requires_data()
 def test_sky_model_init():
     with pytest.raises(TypeError):
         spatial_model = GaussianSpatialModel()
@@ -151,6 +155,22 @@ def test_sky_model_init():
 
     with pytest.raises(TypeError):
         SkyModel(spectral_model=PowerLawSpectralModel(), spatial_model=1234)
+
+    # test init of energy dependent temporal models
+    filename = make_path(
+        "$GAMMAPY_DATA/gravitational_waves/GW_example_DC_map_file.fits.gz"
+    )
+    temporal_model = LightCurveTemplateTemporalModel.read(filename, format="map")
+    spatial_model = PointSpatialModel()
+    spectral_model_fake = ConstantSpectralModel()
+
+    model = SkyModel(
+        spatial_model=spatial_model,
+        spectral_model=spectral_model_fake,
+        temporal_model=temporal_model,
+        name="test-source",
+    )
+    assert model.name == "test-source"
 
 
 def test_sky_model_spatial_none_io(tmpdir):
@@ -223,7 +243,7 @@ def test_background_model_io(tmpdir, background):
     filename = str(tmpdir / "test-bkg-file.fits")
     bkg = TemplateNPredModel(background, filename=filename)
     bkg.spectral_model.norm.value = 2.0
-    bkg.map.write(filename, overwrite=True)
+    bkg.write(overwrite=True)
     bkg_dict = bkg.to_dict()
     bkg_read = bkg.from_dict(bkg_dict)
 
@@ -231,6 +251,12 @@ def test_background_model_io(tmpdir, background):
         bkg_read.evaluate().data.sum(), background.data.sum() * 2.0, rtol=1e-3
     )
     assert bkg_read.filename == filename
+
+
+def test_background_model_io_missing_file(tmpdir, background):
+    bkg = TemplateNPredModel(background, filename=None)
+    with pytest.raises(IOError):
+        bkg.write(overwrite=True)
 
 
 def test_background_model_copy(background):
@@ -729,11 +755,10 @@ def test_spatial_model_background(background):
     geom = background.geom
 
     spatial_model = ConstantSpatialModel(frame="galactic")
-    reference_npred = TemplateNPredModel(background, spatial_model=None).evaluate()
     identical_npred = TemplateNPredModel(
         background, spatial_model=spatial_model
     ).evaluate()
-    assert_allclose(identical_npred, reference_npred)
+    assert_allclose(identical_npred, background.data)
 
     reference = FoVBackgroundModel(
         spatial_model=None, dataset_name="test"
@@ -748,7 +773,7 @@ def test_spatial_model_background(background):
     twice_npred = TemplateNPredModel(
         background, spatial_model=spatial_model2
     ).evaluate()
-    assert_allclose(twice_npred, reference_npred * 2)
+    assert_allclose(twice_npred, background.data * 2)
 
     twice = FoVBackgroundModel(
         spatial_model=spatial_model2, dataset_name="test"
@@ -756,17 +781,23 @@ def test_spatial_model_background(background):
     assert_allclose(twice, reference * 2)
 
 
-def test_spatial_model_io_background(background):
+def test_spatial_model_io_background(tmp_path, background):
 
     spatial_model = ConstantSpatialModel(frame="galactic")
 
-    model = TemplateNPredModel(background, spatial_model=None)
+    fbkg_irf = str(tmp_path / "background_irf_test.fits")
+
+    model = TemplateNPredModel(background, spatial_model=None, filename=fbkg_irf)
+    model.write()
+
     model_dict = model.to_dict()
     assert "spatial" not in model_dict
     new_model = TemplateNPredModel.from_dict(model_dict)
     assert new_model.spatial_model is None
 
-    model = TemplateNPredModel(background, spatial_model=spatial_model)
+    model = TemplateNPredModel(
+        background, spatial_model=spatial_model, filename=fbkg_irf
+    )
     model_dict = model.to_dict()
     assert "spatial" in model_dict
     new_model = TemplateNPredModel.from_dict(model_dict)
@@ -783,3 +814,34 @@ def test_spatial_model_io_background(background):
     assert "spatial" in model_dict
     new_model = FoVBackgroundModel.from_dict(model_dict)
     assert isinstance(new_model.spatial_model, ConstantSpatialModel)
+
+
+def test_piecewise_spatial_model_background(background):
+
+    geom = background.geom
+    coords = geom.to_image().get_coord().flat
+
+    spatial_model = PiecewiseNormSpatialModel(coords, frame="galactic")
+    identical_npred = TemplateNPredModel(
+        background, spatial_model=spatial_model
+    ).evaluate()
+    assert_allclose(identical_npred, background.data)
+
+    reference = Map.from_geom(geom, data=1)
+    identical = FoVBackgroundModel(
+        spatial_model=spatial_model, dataset_name="test"
+    ).evaluate_geom(geom)
+    assert_allclose(identical, reference)
+
+    spatial_model2 = PiecewiseNormSpatialModel(
+        coords, norms=2 * np.ones(coords.shape[0]), frame="galactic"
+    )
+    twice_npred = TemplateNPredModel(
+        background, spatial_model=spatial_model2
+    ).evaluate()
+    assert_allclose(twice_npred, background.data * 2)
+
+    twice = FoVBackgroundModel(
+        spatial_model=spatial_model2, dataset_name="test"
+    ).evaluate_geom(geom)
+    assert_allclose(twice, reference * 2.0)

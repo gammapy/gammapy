@@ -11,9 +11,14 @@ __all__ = [
     "time_relative_to_ref",
 ]
 
+TIME_KEYWORDS = ["MJDREFI", "MJDREFF", "TIMEUNIT", "TIMESYS", "TIMEREF"]
+
 # TODO: implement and document this properly.
 # see https://github.com/gammapy/gammapy/issues/284
 TIME_REF_FERMI = Time("2001-01-01T00:00:00")
+
+# Default time ref used for GTIs
+TIME_REF_DEFAULT = Time("2000-01-01T00:00:00", scale="tt")
 
 #: Default epoch gammapy uses for FITS files (MJDREF)
 #: 0 MJD, TT
@@ -73,7 +78,7 @@ def time_to_fits_header(time, epoch=None, unit=u.s):
     """
     if epoch is None:
         epoch = DEFAULT_EPOCH
-    time = time_to_fits(time)
+    time = time_to_fits(time, epoch)
     return time.to_value(unit), unit.to_string("fits")
 
 
@@ -84,6 +89,10 @@ def time_ref_from_dict(meta, format="mjd", scale="tt"):
     ----------
     meta : dict
         FITS time standard header info
+    format: str
+        Format of the `~astropy.time.Time` information
+    scale: str
+        Scale of the `~astropy.time.Time` information
 
     Returns
     -------
@@ -103,6 +112,8 @@ def time_ref_to_dict(time=None, scale="tt"):
     ----------
     time : `~astropy.time.Time`
         The reference epoch for storing time in FITS.
+    scale: str
+        Scale of the `~astropy.time.Time` information
 
     Returns
     -------
@@ -156,3 +167,46 @@ def absolute_time(time_delta, meta):
     """
     time = time_ref_from_dict(meta) + time_delta
     return Time(time.utc.isot)
+
+
+def extract_time_info(row):
+    """Extract the timing metadata from an event file header
+
+    Parameters
+    ----------
+    row : dict
+        dictionary with all the metadata of an event file
+
+    Returns
+    -------
+    time_row : dict
+        dictionary with only the time metadata
+    """
+    time_row = {}
+    for name in TIME_KEYWORDS:
+        time_row[name] = row[name]
+    return time_row
+
+
+def unique_time_info(rows):
+    """Check if the time information are identical between all metadata dictionaries
+
+    Parameters
+    ----------
+    rows : list
+        list of dictionaries with a list of time metadata from different observations
+
+    Returns
+    -------
+    status : bool
+        True if the time metadata are identical between observations
+    """
+    if len(rows) <= 1:
+        return True
+
+    first_obs = rows[0]
+    for row in rows[1:]:
+        for name in TIME_KEYWORDS:
+            if first_obs[name] != row[name] or row[name] is None:
+                return False
+    return True

@@ -5,8 +5,8 @@ import numbers
 from copy import deepcopy
 import numpy as np
 from astropy.coordinates import SkyCoord
-from astropy.utils import lazyproperty
 from astropy.table import Table
+from astropy.utils import lazyproperty
 from gammapy.maps import TimeMapAxis
 from gammapy.modeling.models import Models
 from gammapy.utils.table import table_row_to_dict
@@ -274,6 +274,8 @@ def _skycoord_from_table(table):
 
     if {"RAJ2000", "DEJ2000"}.issubset(keys):
         lon, lat, frame = "RAJ2000", "DEJ2000", "icrs"
+    elif {"RAJ2000", "DECJ2000"}.issubset(keys):
+        lon, lat, frame = "RAJ2000", "DECJ2000", "fk5"
     elif {"RA", "DEC"}.issubset(keys):
         lon, lat, frame = "RA", "DEC", "icrs"
     elif {"ra", "dec"}.issubset(keys):

@@ -41,11 +41,17 @@ want to install the datasets and proceed with the following commands:
 
     $ gammapy download notebooks
     $ gammapy download datasets
-    $ export GAMMAPY_DATA=$PWD/gammapy-datasets/|release|
+    $ conda env config vars set GAMMAPY_DATA=$PWD/gammapy-datasets/|release|
+    $ conda activate gammapy-|release|
 
-You might want to put the definition of the ``$GAMMAPY_DATA`` environment
-variable in your shell profile setup file that is executed when you open a new
-terminal (for example ``$HOME/.bash_profile``).
+
+The last conda commands will define the environment variable within the conda environment.
+Conversely, you might want to define the ``$GAMMAPY_DATA`` environment
+variable directly in your shell with:
+
+.. substitution-code-block:: bash
+
+    $ export GAMMAPY_DATA=$PWD/gammapy-datasets/|release|
 
 .. note::
 

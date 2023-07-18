@@ -3,7 +3,6 @@ import logging
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
-from astropy.table import Table
 from astropy.utils import classproperty
 from gammapy.data import GTI
 from gammapy.maps import Map, Maps, TimeMapAxis
@@ -431,7 +430,7 @@ class FluxMaps:
 
     @property
     def npred_excess(self):
-        """Predicted excess count  rom best fit hypothesis"""
+        """Predicted excess count from best fit hypothesis"""
         self._check_quantity("npred_excess")
         return self._data["npred_excess"]
 
@@ -959,7 +958,7 @@ class FluxMaps:
         hdulist.extend(maps.to_hdulist(hdu_bands=hdu_bands)[exclude_primary])
 
         if self.gti:
-            hdu = fits.BinTableHDU(self.gti.table, name="GTI")
+            hdu = self.gti.to_table_hdu(format="gadf")
             hdulist.append(hdu)
 
         return hdulist
@@ -996,7 +995,7 @@ class FluxMaps:
             reference_model = None
 
         if "GTI" in hdulist:
-            gti = GTI(Table.read(hdulist["GTI"]))
+            gti = GTI.from_table_hdu(hdulist["GTI"])
         else:
             gti = None
 

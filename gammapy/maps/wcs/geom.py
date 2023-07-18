@@ -15,6 +15,7 @@ from astropy.wcs.utils import (
     proj_plane_pixel_scales,
     wcs_to_celestial_frame,
 )
+from regions import RectangleSkyRegion
 from gammapy.utils.array import round_up_to_even, round_up_to_odd
 from ..axes import MapAxes
 from ..coord import MapCoord, skycoord_to_lonlat
@@ -35,7 +36,6 @@ def cast_to_shape(param, shape, dtype):
         param = [param[0].copy(), param[0].copy()]
 
     for i, p in enumerate(param):
-
         if p.size > 1 and p.shape != shape:
             raise ValueError
 
@@ -409,9 +409,17 @@ class WcsGeom(Geom):
 
     @property
     def footprint(self):
-        """Footprint of the geometry"""
+        """Footprint of the geometry as (`SkyCoord`)"""
         coords = self.wcs.calc_footprint()
         return SkyCoord(coords, frame=self.frame, unit="deg")
+
+    @property
+    def footprint_rectangle_sky_region(self):
+        """Footprint of the geometry as (`RectangleSkyRegion`)"""
+        width, height = self.width
+        return RectangleSkyRegion(
+            center=self.center_skydir, width=width[0], height=height[0]
+        )
 
     @classmethod
     def from_aligned(cls, geom, skydir, width):
@@ -494,7 +502,6 @@ class WcsGeom(Geom):
         return cls(wcs, npix, cdelt=cdelt, axes=axes)
 
     def _make_bands_cols(self):
-
         cols = []
         if not self.is_regular:
             cols += [

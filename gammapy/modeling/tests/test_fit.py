@@ -90,6 +90,7 @@ def test_run(backend):
     result = fit.run([dataset])
     pars = dataset.models.parameters
 
+    assert fit._minuit is not None
     assert result.success
     assert result.optimize_result.method == "migrad"
     assert result.covariance_result.method == "hesse"

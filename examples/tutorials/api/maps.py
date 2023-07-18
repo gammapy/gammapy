@@ -149,8 +149,8 @@ print(m_gc.geom)
 # `~gammapy.maps.~Geom` object can be seen as a generalization of an
 # `astropy.wcs.WCS` object, providing the information on how the data
 # maps to physical coordinate systems. In some cases e.g. when creating
-# many maps with the same WCS geometry it can be advantegeous to first
-# create the map geometry independent of the map object itsself:
+# many maps with the same WCS geometry it can be advantageous to first
+# create the map geometry independent of the map object it-self:
 #
 
 wcs_geom = WcsGeom.create(binsz=0.02, width=(10, 5), skydir=(0, 0), frame="galactic")
@@ -272,9 +272,9 @@ print(energy_axis.center)
 # -------------------
 #
 # Gammapy `~gammapy.maps.Map` objects are serialized using the Flexible Image
-# Transport Format (FITS). Depending on the pixelisation scheme (HEALPix
+# Transport Format (FITS). Depending on the pixelization scheme (HEALPix
 # or WCS) and presence of non-spatial dimensions the actual convention to
-# write the FITS file is different. By default Gammpy uses a generic
+# write the FITS file is different. By default Gammapy uses a generic
 # convention named ``"gadf"``, which will support WCS and HEALPix formats as
 # well as an arbitrary number of non-spatial axes. The convention is
 # documented in detail on the `Gamma Astro Data
@@ -344,7 +344,7 @@ print(Map.from_hdulist(hdulist=hdulist))
 # Writing Maps
 # ~~~~~~~~~~~~
 #
-# Writing FITS files is mainoy exposure via the `Map.write()` method.
+# Writing FITS files on disk via the `Map.write()` method.
 # Here is a first example:
 #
 
@@ -657,7 +657,7 @@ counts.fill_events(events)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # Maps support interpolation via the `~~gammapy.maps.Map.interp_by_coord` and
-# `~~gammapy.maps.Map.interp_by_pix` methods. Currently the following interpolation
+# `~~gammapy.maps.Map.interp_by_pix` methods. Currently, the following interpolation
 # methods are supported:
 #
 # -  ``"nearest"`` : Return value of nearest pixel (no interpolation).
@@ -756,7 +756,7 @@ iem_times_two = m_iem_10GeV * 2
 
 
 ######################################################################
-# The logic operators can also by applied on maps (the result is a map of
+# The logic operators can also be applied on maps (the result is a map of
 # boolean type):
 #
 
@@ -765,7 +765,7 @@ print(is_null)
 
 
 ######################################################################
-# Here we check that the result is `True` for all the well-defiend
+# Here we check that the result is `True` for all the well-defined
 # pixels (not `NaN`):
 #
 
@@ -778,7 +778,7 @@ print(np.all(is_null.data[~np.isnan(iem_minus_iem)]))
 #
 # The `WCSNDMap` objects features a `~gammapy.maps.Map.cutout()` method, which allows
 # you to cut out a smaller part of a larger map. This can be useful,
-# e.g. when working with allsky diffuse maps. Here is an example:
+# e.g. when working with all-sky diffuse maps. Here is an example:
 #
 
 position = SkyCoord(0, 0, frame="galactic", unit="deg")
@@ -802,7 +802,7 @@ m_iem_cutout = m_iem_gc.cutout(position=position, width=(4 * u.deg, 2 * u.deg))
 # of a map. This method returns figure, axes, and image objects that can
 # be used to further tweak/customize the image. The `~gammapy.maps.Map.plot` method should
 # be used with 2D maps, while 3D maps can be displayed with the
-# `~gammapy.maps.Map.plot_interative()` or `~gammapy.maps.Map.plot_grid()` methods.
+# `~gammapy.maps.Map.plot_interactive()` or `~gammapy.maps.Map.plot_grid()` methods.
 #
 # Image Plotting
 # ~~~~~~~~~~~~~~
@@ -820,8 +820,8 @@ m_3fhl_gc = Map.read(filename)
 # ``.plot()`` method:
 #
 
-plt.figure()
 m_3fhl_gc.plot()
+plt.show()
 
 
 ######################################################################
@@ -831,9 +831,9 @@ m_3fhl_gc.plot()
 # `plt.imshow() <https://matplotlib.org/api/_as_gen/matplotlib.pyplot.imshow.html>`__:
 #
 
-plt.figure()
 smoothed = m_3fhl_gc.smooth(width=0.2 * u.deg, kernel="gauss")
 smoothed.plot(stretch="sqrt", add_cbar=True, vmax=4, cmap="inferno")
+plt.show()
 
 
 ######################################################################
@@ -843,11 +843,11 @@ smoothed.plot(stretch="sqrt", add_cbar=True, vmax=4, cmap="inferno")
 # font size:
 #
 
-plt.figure()
 rc_params = {"figure.figsize": (12, 5.4), "font.size": 12}
 with plt.rc_context(rc=rc_params):
     smoothed = m_3fhl_gc.smooth(width=0.2 * u.deg, kernel="gauss")
     smoothed.plot(stretch="sqrt", add_cbar=True, vmax=4)
+plt.show()
 
 
 ######################################################################
@@ -861,13 +861,13 @@ with plt.rc_context(rc=rc_params):
 # the data cube by calling `~gammapy.maps.Map.plot_interactive()`:
 #
 
-plt.figure()
 rc_params = {
     "figure.figsize": (12, 5.4),
     "font.size": 12,
     "axes.formatter.limits": (2, -2),
 }
 m_iem_gc.plot_interactive(add_cbar=True, stretch="sqrt", rc_params=rc_params)
+plt.show()
 
 
 ######################################################################
@@ -886,5 +886,4 @@ m_iem_gc.plot_interactive(add_cbar=True, stretch="sqrt", rc_params=rc_params)
 #
 
 counts_3d.plot_grid(ncols=4, figsize=(16, 12), vmin=0, vmax=100, stretch="log")
-
 plt.show()

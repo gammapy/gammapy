@@ -135,7 +135,7 @@ print(models)
 ######################################################################
 # Now, comes the main part of dataset simulation. We create an in-memory
 # observation and an empty dataset. We then predict the number of counts
-# for the given model, and Poission fluctuate it using `fake()` to make
+# for the given model, and Poisson fluctuate it using `fake()` to make
 # a simulated counts maps. Keep in mind that it is important to specify
 # the `selection` of the maps that you want to produce
 #
@@ -156,7 +156,7 @@ dataset = maker.run(empty, obs)
 dataset = maker_safe_mask.run(dataset, obs)
 print(dataset)
 
-# Add the model on the dataset and Poission fluctuate
+# Add the model on the dataset and Poisson fluctuate
 dataset.models = models
 dataset.fake()
 # Do a print on the dataset - there is now a counts maps
@@ -171,8 +171,8 @@ print(dataset)
 #
 
 # To plot, eg, counts:
-plt.figure()
 dataset.counts.smooth(0.05 * u.deg).plot_interactive(add_cbar=True, stretch="linear")
+plt.show()
 
 
 ######################################################################
@@ -197,8 +197,9 @@ print(dataset.models)
 # %%time
 fit = Fit(optimize_opts={"print_level": 1})
 result = fit.run(datasets=[dataset])
-plt.figure()
+
 dataset.plot_residuals_spatial(method="diff/sqrt(model)", vmin=-0.5, vmax=0.5)
+plt.show()
 
 
 ######################################################################
@@ -218,5 +219,3 @@ print(
 #
 
 display(result.parameters.to_table())
-
-plt.show()

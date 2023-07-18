@@ -5,8 +5,17 @@ from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.units import Quantity, Unit
-from gammapy.maps import HpxGeom, HpxNDMap, Map, MapAxis, TimeMapAxis, WcsGeom, WcsNDMap
-from gammapy.utils.testing import mpl_plot_check
+from gammapy.maps import (
+    HpxGeom,
+    HpxNDMap,
+    Map,
+    MapAxis,
+    RegionNDMap,
+    TimeMapAxis,
+    WcsGeom,
+    WcsNDMap,
+)
+from gammapy.utils.testing import modify_unit_order_astropy_5_3, mpl_plot_check
 
 pytest.importorskip("healpy")
 
@@ -235,7 +244,7 @@ def test_map_properties():
     assert isinstance(m.unit, u.CompositeUnit)
     assert m._unit == u.one
     m._unit = u.Unit("cm-2 s-1")
-    assert m.unit.to_string() == "1 / (cm2 s)"
+    assert m.unit.to_string() == modify_unit_order_astropy_5_3("1 / (cm2 s)")
 
     assert isinstance(m.meta, dict)
     m.meta = {"spam": 42}
@@ -276,7 +285,6 @@ map_arithmetics_args = [("wcs"), ("hpx")]
 
 @pytest.mark.parametrize(("map_type"), map_arithmetics_args)
 def test_map_arithmetics(map_type):
-
     m1 = Map.create(binsz=0.1, width=1.0, map_type=map_type, skydir=(0, 0), unit="m2")
 
     m2 = Map.create(binsz=0.1, width=1.0, map_type=map_type, skydir=(0, 0), unit="m2")
@@ -808,3 +816,104 @@ def test_rename_axes():
     new_map = m_4d.rename_axes("energy", "energy_true")
     assert m_4d.geom.axes.names == ["energy", "time"]
     assert new_map.geom.axes.names == ["energy_true", "time"]
+
+
+def test_reorder_axes_fail():
+    axis1 = MapAxis.from_edges((0, 1, 3), name="axis1")
+    axis2 = MapAxis.from_edges((0, 1, 2, 3, 4), name="axis2")
+
+    some_map = RegionNDMap.create(region=None, axes=[axis1, axis2])
+
+    with pytest.raises(ValueError):
+        some_map.reorder_axes(["axis3", "axis1"])
+
+    with pytest.raises(ValueError):
+        some_map.reorder_axes("axis3")
+
+
+def test_reorder_axes():
+    axis1 = MapAxis.from_edges((0, 1, 3), name="axis1")
+    axis2 = MapAxis.from_edges((0, 1, 2, 3, 4), name="axis2")
+    axis3 = MapAxis.from_edges((0, 1, 2, 3), name="axis3")
+
+    some_map = RegionNDMap.create(region=None, axes=[axis1, axis2, axis3])
+
+    some_map.data[:, 1, :] = 1
+
+    new_map = some_map.reorder_axes(["axis2", "axis1", "axis3"])
+
+    assert new_map.geom.axes.names == ["axis2", "axis1", "axis3"]
+    assert new_map.geom.data_shape == (3, 2, 4, 1, 1)
+
+    assert_allclose(new_map.data[:, :, 1], 1)
+
+
+def test_map_dot_product_fail():
+    axis1 = MapAxis.from_edges((0, 1, 2, 3), name="axis1")
+    axis2 = MapAxis.from_edges((0, 1, 2, 3, 4), name="axis2")
+    axis3 = MapAxis.from_edges((0, 1, 2), name="axis1")
+
+    map1 = WcsNDMap.create(npix=5, axes=[axis1])
+    map2 = RegionNDMap.create(region=None, axes=[axis2, axis3])
+    map3 = RegionNDMap.create(region=None, axes=[axis2, axis3])
+
+    with pytest.raises(TypeError):
+        map1.dot(map1)
+
+    with pytest.raises(ValueError):
+        map1.dot(map2)
+
+    with pytest.raises(ValueError):
+        map1.dot(map3)
+
+
+def test_map_dot_product():
+    axis1 = MapAxis.from_edges((0, 1, 3), name="axis1")
+    axis2 = MapAxis.from_edges((0, 1, 2, 3, 4), name="axis2")
+
+    map1 = WcsNDMap.create(npix=(5, 6), axes=[axis1])
+    map2 = RegionNDMap.create(region=None, axes=[axis1, axis2])
+
+    map1.data[0, ...] = 1
+    map1.data[1, ...] = 2
+    map2.data[0, 0, ...] = 1
+    map2.data[1, 1, ...] = 2
+
+    dot_map = map1 @ map2
+
+    assert dot_map.geom.axes.names == ["axis2"]
+    assert_allclose(dot_map.data[:, 0, 0], [1, 4, 0, 0])
+
+    map3 = RegionNDMap.create(region=None, axes=[axis1])
+    map3.data[1, 0, 0] = 1
+
+    dot_map = map1.dot(map3)
+    assert dot_map.geom.axes.names == []
+    assert_allclose(dot_map.data[0, 0], 2)
+
+    axis3 = MapAxis.from_edges((0, 1, 2, 3), name="axis3")
+    axis4 = MapAxis.from_edges((1, 2, 3, 4, 5), name="axis4")
+
+    map4 = RegionNDMap.create(region=None, axes=[axis2, axis3, axis4])
+    map4.data[...] = 1
+
+    dot_map = map4.dot(map2)
+
+    assert dot_map.geom.axes.names == ["axis1", "axis3", "axis4"]
+    assert dot_map.data.shape == (4, 3, 2, 1, 1)
+
+    dot_map = map2.dot(map4)
+
+    assert dot_map.geom.axes.names == ["axis1", "axis3", "axis4"]
+    assert dot_map.data.shape == (4, 3, 2, 1, 1)
+    assert_allclose(dot_map.data[0, 0, :, 0, 0], [1, 2])
+
+    map5 = RegionNDMap.create(region=None, axes=[axis3, axis2, axis4])
+    map5.data[:, 0, :, :, :] = 1
+
+    dot_map = map5.dot(map2)
+
+    assert dot_map.geom.axes.names == ["axis3", "axis1", "axis4"]
+    assert dot_map.data.shape == (4, 2, 3, 1, 1)
+
+    assert_allclose(dot_map.data[0, :, 0, 0, 0], [1, 0])

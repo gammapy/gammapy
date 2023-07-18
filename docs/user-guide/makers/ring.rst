@@ -36,7 +36,7 @@ A given `MapDataset` has to be reduced to a single image by calling
 .. testcode::
 
 	from gammapy.makers import MapDatasetMaker, RingBackgroundMaker, SafeMaskMaker
-	from gammapy.datasets import MapDataset
+	from gammapy.datasets import MapDataset, MapDatasetOnOff
 	from gammapy.data import DataStore
 	from gammapy.maps import MapAxis, WcsGeom, Map
 	from regions import CircleSkyRegion
@@ -50,7 +50,8 @@ A given `MapDataset` has to be reduced to a single image by calling
 
 	geom = WcsGeom.create(skydir=(83.63, 22.01), axes=[energy_axis], width=5, binsz=0.02)
 
-	stacked = MapDataset.create(geom, energy_axis_true=energy_axis_true)
+	empty = MapDataset.create(geom, energy_axis_true=energy_axis_true)
+	stacked = MapDatasetOnOff.create(geom, energy_axis_true=energy_axis_true)
 
 	maker = MapDatasetMaker()
 	safe_mask_maker = SafeMaskMaker(
@@ -63,7 +64,7 @@ A given `MapDataset` has to be reduced to a single image by calling
 	ring_bkg_maker = RingBackgroundMaker(r_in="0.3 deg", width="0.3 deg", exclusion_mask=exclusion_mask)
 
 	for obs in observations:
-		dataset = maker.run(stacked, obs)
+		dataset = maker.run(empty, obs)
 		dataset = safe_mask_maker.run(dataset, obs)
 		dataset_on_off = ring_bkg_maker.run(dataset)
 		stacked.stack(dataset_on_off)

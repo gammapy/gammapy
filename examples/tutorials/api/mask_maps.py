@@ -175,7 +175,7 @@ print(f"Fit range : {dataset.energy_range}")
 # we use the same frame to define the box to ensure a correct alignment.
 # We can now create the map. We use the `WcsGeom.region_mask` method
 # putting all pixels outside the regions to False (because we only want to
-# consider pixels inside the region. For convenience we can directly pass
+# consider pixels inside the region. For convenience, we can directly pass
 # a ds9 region string to the method:
 #
 
@@ -195,7 +195,8 @@ dataset.mask_fit &= mask_map
 # Let’s check the result and plot the full mask.
 #
 
-_ = dataset.mask_fit.plot_grid(ncols=5, vmin=0, vmax=1, figsize=(14, 3))
+dataset.mask_fit.plot_grid(ncols=5, vmin=0, vmax=1, figsize=(14, 3))
+plt.show()
 
 
 ######################################################################
@@ -231,7 +232,7 @@ mask_energy = Map.from_geom(dataset.counts.geom, data=mask_data)
 #
 # Masks are stored in `Map` objects. We must first define its geometry
 # and then we can determine which pixels to exclude. Here we consider a
-# region at the Galactic anticentre around the crab nebula.
+# region at the Galactic anti-centre around the crab nebula.
 #
 
 position = SkyCoord(83.633083, 22.0145, unit="deg", frame="icrs")
@@ -281,8 +282,8 @@ print(regions)
 
 # to define the exclusion mask we take the inverse
 mask_map = ~geom.region_mask(regions)
-plt.figure()
 mask_map.plot()
+plt.show()
 
 
 ######################################################################
@@ -321,8 +322,8 @@ regions = [CircleSkyRegion(position, exclusion_radius) for position in positions
 #
 
 mask_map_catalog = ~geom.region_mask(regions)
-plt.figure()
 mask_map_catalog.plot()
+plt.show()
 
 
 ######################################################################
@@ -363,8 +364,8 @@ significance_mask = result["sqrt_ts"] < 5.0
 
 invalid_pixels = np.isnan(result["sqrt_ts"].data)
 significance_mask.data[invalid_pixels] = True
-plt.figure()
 significance_mask.plot()
+plt.show()
 
 
 ######################################################################
@@ -394,8 +395,8 @@ significance_mask.plot()
 #
 
 mask = mask_map | mask_map_catalog
-plt.figure()
 mask.plot()
+plt.show()
 
 
 ######################################################################
@@ -403,8 +404,8 @@ mask.plot()
 #
 
 mask_map &= mask_map_catalog
-plt.figure()
 mask_map.plot()
+plt.show()
 
 
 ######################################################################
@@ -412,8 +413,8 @@ mask_map.plot()
 #
 
 significance_mask_inv = ~significance_mask
-plt.figure()
 significance_mask_inv.plot()
+plt.show()
 
 
 ######################################################################
@@ -427,13 +428,13 @@ significance_mask_inv.plot()
 # `binary_dilate` methods, respectively.
 #
 
-plt.figure()
 mask = significance_mask_inv.binary_erode(width=0.2 * u.deg, kernel="disk")
 mask.plot()
+plt.show()
 
-plt.figure()
 mask = significance_mask_inv.binary_dilate(width=0.2 * u.deg)
 mask.plot()
+plt.show()
 
 
 ######################################################################
@@ -450,12 +451,12 @@ mask.plot()
 # get PSF 95% containment radius
 energy_true = dataset.exposure.geom.axes[0].center
 psf_r95 = dataset.psf.containment_radius(fraction=0.95, energy_true=energy_true)
+plt.show()
+
 # create mask_fit with margin based on PSF
 mask_fit = dataset.counts.geom.boundary_mask(psf_r95.max())
 dataset.mask_fit = mask_fit
-plt.figure()
 dataset.mask_fit.sum_over_axes().plot()
-
 plt.show()
 
 ######################################################################

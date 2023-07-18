@@ -114,6 +114,8 @@ datasets[1].counts.sum_over_axes().smooth(0.05 * u.deg).plot(
 )
 ax1.set_title("Fermi counts")
 ax2.set_title("CTA counts")
+plt.show()
+
 
 ######################################################################
 #
@@ -276,7 +278,7 @@ print(len(models_selected))
 ######################################################################
 # We now want to assign `models_3fhl` to the Fermi dataset, and
 # `models_selected` to both the CTA and Fermi datasets. For this, we
-# explicitlty mention the `datasets_names` to the former, and leave it
+# explicitly mention the `datasets_names` to the former, and leave it
 # `None` (default) for the latter.
 #
 

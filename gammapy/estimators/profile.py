@@ -7,6 +7,7 @@ from astropy.convolution import Box1DKernel, Gaussian1DKernel
 from astropy.coordinates import Angle
 from astropy.table import Table
 import matplotlib.pyplot as plt
+from gammapy.maps.axes import UNIT_STRING_FORMAT
 from .core import Estimator
 
 __all__ = ["ImageProfile", "ImageProfileEstimator"]
@@ -325,7 +326,7 @@ class ImageProfile:
         kwargs.setdefault("alpha", 0.5)
 
         ax.fill_between(x, ymin, ymax, **kwargs)
-        ax.set_xlabel("x [deg]")
+        ax.set_xlabel(f"x [{u.deg.to_string(UNIT_STRING_FORMAT)}]")
         ax.set_ylabel("profile")
         return ax
 

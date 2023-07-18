@@ -48,6 +48,11 @@ class ObservationFilter:
         self.time_filter = time_filter
         self.event_filters = event_filters or []
 
+    @property
+    def livetime_fraction(self):
+        """Fraction of the livetime kept when applying the event_filters."""
+        return self._check_filter_phase(self.event_filters)
+
     def filter_events(self, events):
         """Apply filters to an event list.
 
@@ -97,3 +102,14 @@ class ObservationFilter:
     def copy(self):
         """Copy the `ObservationFilter` object."""
         return copy.deepcopy(self)
+
+    @staticmethod
+    def _check_filter_phase(event_filter):
+        if not event_filter:
+            return 1
+        for f in event_filter:
+            if f.get("opts").get("parameter") == "PHASE":
+                band = f.get("opts").get("band")
+                return band[1] - band[0]
+            else:
+                return 1

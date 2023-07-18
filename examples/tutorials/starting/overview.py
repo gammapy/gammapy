@@ -145,9 +145,8 @@ print(f"Total number of counts in the image: {gc_3fhl.data.sum():.0f}")
 # `astropy.visualization.wcsaxes <https://docs.astropy.org/en/stable/visualization/wcsaxes/>`__
 # and defines some defaults for nicer plots (e.g. the colormap ‘afmhot’):
 #
-plt.figure()
-
 gc_3fhl.plot(stretch="sqrt")
+plt.show()
 
 
 ######################################################################
@@ -155,10 +154,9 @@ gc_3fhl.plot(stretch="sqrt")
 # using a Gaussian kernel.
 #
 
-plt.figure()
 gc_3fhl_smoothed = gc_3fhl.smooth(kernel="gauss", width=0.2 * u.deg)
-
 gc_3fhl_smoothed.plot(stretch="sqrt")
+plt.show()
 
 
 ######################################################################
@@ -169,12 +167,11 @@ gc_3fhl_smoothed.plot(stretch="sqrt")
 # cutout map:
 #
 
-plt.figure()
 # define center and size of the cutout region
 center = SkyCoord(0, 0, unit="deg", frame="galactic")
 gc_3fhl_cutout = gc_3fhl_smoothed.cutout(center, 9 * u.deg)
-
 gc_3fhl_cutout.plot(stretch="sqrt")
+plt.show()
 
 
 ######################################################################
@@ -396,8 +393,8 @@ print(crab_3fhl_spec)
 # 2000 GeV:
 #
 
-plt.figure()
 ax_crab_3fhl = crab_3fhl_spec.plot(energy_bounds=[10, 2000] * u.GeV, energy_power=0)
+plt.show()
 
 
 ######################################################################
@@ -467,10 +464,8 @@ print(crab_3fhl.flux_points.to_table(sed_type="dnde", formatted=True))
 # distribution:
 #
 
-plt.figure()
 ax = crab_3fhl_spec.plot(energy_bounds=[10, 2000] * u.GeV, sed_type="e2dnde")
 crab_3fhl.flux_points.plot(ax=ax, sed_type="e2dnde")
-
 plt.show()
 
 ######################################################################

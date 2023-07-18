@@ -90,7 +90,7 @@ check_tutorials_setup()
 #
 # For configuration of the analysis we use the
 # `YAML <https://en.wikipedia.org/wiki/YAML>`__ data format. YAML is a
-# machine readable serialisation format, that is also friendly for humans
+# machine-readable serialisation format, that is also friendly for humans
 # to read. In this tutorial we will write the configuration file just
 # using Python strings, but of course the file can be created and modified
 # with any text editor of your choice.
@@ -151,7 +151,7 @@ print(config)
 # degrees of the Crab nebula. Parameters can be set directly or as a
 # python dict.
 #
-# PS: do not forget to setup your environment variable *$GAMMAPY_DATA* to
+# PS: do not forget to set up your environment variable *$GAMMAPY_DATA* to
 # your local directory containing the H.E.S.S. DL3-DR1 as described in
 # :ref:`quickstart-setup`.
 #
@@ -397,6 +397,7 @@ ax_spectrum.set_ylim(0.1, 200)
 ax_spectrum.set_xlim(0.2, 60)
 ax_residuals.set_xlim(0.2, 60)
 analysis.datasets[0].plot_masks(ax=ax_spectrum)
+plt.show()
 
 
 ######################################################################
@@ -439,6 +440,7 @@ crab_fp.plot(ax=ax_sed, sed_type="e2dnde", color="darkorange")
 ax_sed.set_ylim(1.0e-12, 2.0e-10)
 ax_sed.set_xlim(0.5, 40)
 crab_fp.plot_ts_profiles(ax=ax_sed, sed_type="e2dnde")
+plt.show()
 
 
 ######################################################################
@@ -477,6 +479,6 @@ plt.show()
 # You can look at the same analysis without the high level interface in
 # :doc:`/tutorials/analysis-1d/spectral_analysis`
 #
-# As we can store the best model fit, you can overlaid the fit results of
-# both methods on an unique plot.
+# As we can store the best model fit, you can overlay the fit results of
+# both methods on a unique plot.
 #

@@ -150,7 +150,7 @@ analysis.get_datasets()
 # ------------------------------
 #
 # Since the ring background is extracted from real off events, we need to
-# use the wstat statistics in this case. For this, we will use the
+# use the Wstat statistics in this case. For this, we will use the
 # `MapDatasetOnOFF` and the `RingBackgroundMaker` classes.
 #
 
@@ -173,6 +173,7 @@ geom_image = geom.to_image().to_cube([energy_axis.squash()])
 regions = CircleSkyRegion(center=source_pos, radius=0.3 * u.deg)
 exclusion_mask = ~geom_image.region_mask([regions])
 exclusion_mask.sum_over_axes().plot()
+plt.show()
 
 
 ######################################################################
@@ -244,10 +245,11 @@ significance_map.plot(ax=ax1, add_cbar=True)
 
 ax2.set_title("Excess map")
 excess_map.plot(ax=ax2, add_cbar=True)
+plt.show()
 
 
 ######################################################################
-# It is often important to look at the signficance distribution outside
+# It is often important to look at the significance distribution outside
 # the exclusion region to check that the background estimation is not
 # contaminated by gamma-ray events. This can be the case when exclusion
 # regions are not large enough. Typically, we expect the off distribution

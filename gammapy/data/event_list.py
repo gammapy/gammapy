@@ -12,6 +12,7 @@ from astropy.table import vstack as vstack_tables
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from gammapy.maps import MapAxis, MapCoord, RegionGeom, WcsNDMap
+from gammapy.maps.axes import UNIT_STRING_FORMAT
 from gammapy.utils.fits import earth_location_from_dict
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
@@ -475,7 +476,7 @@ class EventList:
         time = self.table["TIME"]
         time = time - np.min(time)
 
-        ax.set_xlabel("Time [sec]")
+        ax.set_xlabel(f"Time [{u.s.to_string(UNIT_STRING_FORMAT)}]")
         ax.set_ylabel("Counts")
         y, x_edges = np.histogram(time, bins=20)
 
@@ -489,7 +490,9 @@ class EventList:
 
         return ax
 
-    def plot_offset2_distribution(self, ax=None, center=None, **kwargs):
+    def plot_offset2_distribution(
+        self, ax=None, center=None, max_percentile=98, **kwargs
+    ):
         """Plot offset^2 distribution of the events.
 
         The distribution shown in this plot is for this quantity::
@@ -513,6 +516,8 @@ class EventList:
         center : `astropy.coordinates.SkyCoord`
             Center position for the offset^2 distribution.
             Default is the observation pointing position.
+        max_percentile : float
+            Define the percentile of the offset^2 distribution used to define the maximum offset^2 value.
         **kwargs :
             Extra keyword arguments are passed to `~matplotlib.pyplot.hist`.
 
@@ -552,14 +557,16 @@ class EventList:
             center = self._plot_center
 
         offset2 = center.separation(self.radec) ** 2
+        max2 = np.percentile(offset2, q=max_percentile)
 
         kwargs.setdefault("histtype", "step")
         kwargs.setdefault("bins", 30)
+        kwargs.setdefault("range", (0.0, max2.value))
 
         with quantity_support():
             ax.hist(offset2, **kwargs)
 
-        ax.set_xlabel(f"Offset^2 [{ax.xaxis.units}]")
+        ax.set_xlabel(rf"Offset$^2$ [{ax.xaxis.units.to_string(UNIT_STRING_FORMAT)}]")
         ax.set_ylabel("Counts")
         return ax
 

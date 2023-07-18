@@ -300,7 +300,6 @@ class RegionGeom(Geom):
         axis_name : str
             If mode = "edges", the edges will be returned for this axis only.
 
-
         Returns
         -------
         coord : `~MapCoord`
@@ -315,7 +314,12 @@ class RegionGeom(Geom):
         if frame is None:
             frame = self.frame
 
-        return MapCoord.create(coords, frame=self.frame).to_frame(frame)
+        coords = MapCoord.create(coords, frame=self.frame).to_frame(frame)
+
+        if not sparse:
+            coords = coords.broadcasted
+
+        return coords
 
     def _pad_spatial(self, pad_width):
         raise NotImplementedError("Spatial padding of `RegionGeom` not supported")
@@ -399,7 +403,6 @@ class RegionGeom(Geom):
         return wcs_geom
 
     def to_binsz_wcs(self, binsz):
-
         """Change the bin size of the underlying WCS geometry.
 
         Parameters

@@ -1,7 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
+from regions import PointSkyRegion
 from gammapy.data import EventList
 from gammapy.datasets import MapDatasetOnOff, SpectrumDataset
+from gammapy.makers.utils import make_counts_rad_max
 from gammapy.maps import Map
 from ..core import Maker
 
@@ -48,8 +50,12 @@ class PhaseBackgroundMaker(Maker):
             event_lists.append(events)
 
         events = EventList.from_stack(event_lists)
-        counts = Map.from_geom(dataset.counts.geom)
-        counts.fill_events(events)
+        geom = dataset.counts.geom
+        if geom.is_region and isinstance(geom.region, PointSkyRegion):
+            counts = make_counts_rad_max(geom, observation.rad_max, events)
+        else:
+            counts = Map.from_geom(geom)
+            counts.fill_events(events)
         return counts
 
     def make_counts_off(self, dataset, observation):

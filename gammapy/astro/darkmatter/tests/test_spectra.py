@@ -19,7 +19,7 @@ def test_primary_flux():
 
 
 @requires_data()
-def test_DMAnnihilation():
+def test_dm_annihilation_spectral_model(tmpdir):
     channel = "b"
     massDM = 5 * u.TeV
     jfactor = 3.41e19 * u.Unit("GeV2 cm-5")
@@ -39,8 +39,9 @@ def test_DMAnnihilation():
         name="skymodel",
     )
     models = Models([sky_model])
-    models.write("tmp.yaml", overwrite=True)
-    new_models = Models.read("tmp.yaml")
+    filename = tmpdir / "model.yaml"
+    models.write(filename, overwrite=True)
+    new_models = Models.read(filename)
 
     assert_quantity_allclose(integral_flux.value, 6.19575457e-14, rtol=1e-3)
     assert_quantity_allclose(differential_flux.value, 2.97506768e-16, rtol=1e-3)
