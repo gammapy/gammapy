@@ -2,7 +2,7 @@
 import logging
 import warnings
 import numpy as np
-from astropy.coordinates import Angle, SkyOffsetFrame
+from astropy.coordinates import Angle
 from astropy.table import Table
 from gammapy.data import FixedPointingInfo
 from gammapy.irf import EDispMap, FoVAlignment, PSFMap
