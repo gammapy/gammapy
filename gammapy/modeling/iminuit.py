@@ -127,7 +127,7 @@ def confidence_iminuit(parameters, function, parameter, reoptimize, sigma, **kwa
     idx = parameters.free_parameters.index(parameter)
     var = _make_parname(idx, parameter)
 
-    message = "Minos terminated successfully."
+    message = "Minos terminated"
     cl = 2 * norm.cdf(sigma) - 1
 
     try:
@@ -141,6 +141,11 @@ def confidence_iminuit(parameters, function, parameter, reoptimize, sigma, **kwa
             "errn": np.nan,
             "nfev": 0,
         }
+
+    if info.is_valid:
+        message += " successfully."
+    else:
+        message += ", but result is invalid."
 
     return {
         "success": info.is_valid,
@@ -180,7 +185,7 @@ def _get_message(m, parameters):
     success = m.valid
     success &= np.all(np.isfinite([par.value for par in parameters]))
     if success:
-        message = "Optimization terminated successfully."
+        message = "Optimization terminated successfully"
         if m.accurate:
             message += "."
         else:

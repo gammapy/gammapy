@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 import astropy.units as u
-from astropy.table import Column, Table
+from astropy.table import Table
 from gammapy.irf import EDispKernelMap, PSFMap
 from gammapy.utils.cluster import standard_scaler
 
@@ -56,14 +56,9 @@ def get_irfs_features(
             "`position` and `fixed_offset` arguments are mutually exclusive"
         )
 
-    n_obs = len(observations)
-    n_features = len(names)
-    data = np.zeros((n_obs, n_features))
-    units = [u.Unit("")] * n_features
-    for (
-        ko,
-        obs,
-    ) in enumerate(observations):
+    rows = []
+
+    for obs in observations:
         psf_kwargs = dict(fraction=containment_fraction, energy_true=energy_true)
         if isinstance(obs.psf, PSFMap) and isinstance(obs.edisp, EDispKernelMap):
             if position is None:
@@ -86,18 +81,20 @@ def get_irfs_features(
                 offset = fixed_offset
             edisp_kernel = obs.edisp.to_edisp_kernel(offset)
             psf_kwargs["offset"] = offset
-        for kf, name in enumerate(names):
-            if name == "edisp-bias":
-                data[ko, kf] = edisp_kernel.get_bias(energy_true)
-            if name == "edisp-res":
-                data[ko, kf] = edisp_kernel.get_resolution(energy_true)
-            if name == "psf-radius":
-                containment_radius = obs.psf.containment_radius(**psf_kwargs).to("deg")
-                data[ko, kf] = containment_radius.value
-                units[kf] = u.deg
 
-    features = Table(data, names=names, units=units)
-    features.add_column(Column(observations.ids, name="obs_id"), index=0)
+        data = {}
+        for name in names:
+            if name == "edisp-bias":
+                data[name] = edisp_kernel.get_bias(energy_true)[0]
+            if name == "edisp-res":
+                data[name] = edisp_kernel.get_resolution(energy_true)[0]
+            if name == "psf-radius":
+                data[name] = obs.psf.containment_radius(**psf_kwargs).to("deg")
+            data["obs_id"] = obs.obs_id
+
+        rows.append(data)
+
+    features = Table(rows)
 
     if apply_standard_scaler:
         features = standard_scaler(features)
