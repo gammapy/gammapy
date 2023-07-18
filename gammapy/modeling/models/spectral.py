@@ -236,11 +236,13 @@ class SpectralModel(ModelBase):
 
         std = np.std(min_func(x=np.linspace(bounds[0], bounds[1], 100)))
         if std < 1e-5:
+            log.warning("No minimum was found.")
             return np.nan * x_unit
 
         minimizer = scipy.optimize.minimize_scalar(min_func, bounds=bounds)
 
         if not minimizer.success:
+            log.warning("The minimizer was not successful.")
             return np.nan * x_unit
         else:
             return np.exp(minimizer.x) * x_unit
