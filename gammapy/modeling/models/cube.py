@@ -354,7 +354,7 @@ class SkyModel(ModelBase):
             integral = self.temporal_model.integral(gti.time_start, gti.time_stop)
             value = value * np.sum(integral)
 
-        return value
+        return np.resize(value, geom.data_shape)
 
     def integrate_geom(self, geom, gti=None, oversampling_factor=None):
         """Integrate model on `~gammapy.maps.Geom`.
