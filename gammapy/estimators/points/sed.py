@@ -64,6 +64,7 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
         Fit instance specifying the backend and fit options.
     reoptimize : bool
         Re-optimize other free model parameters. Default is False.
+        If True the available free parameters are fitted together with the norm of the source of interest in each bin independently, otherwise they are frozen at their current value.
     sum_over_energy_groups : bool
         Whether to sum over the energy groups or fit the norm on the full energy
         grid.
