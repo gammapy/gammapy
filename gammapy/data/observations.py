@@ -718,20 +718,46 @@ class Observations(collections.abc.MutableSequence):
 
     @classmethod
     def from_stack(cls, observations_list):
+        # TODO : Do more check when stacking observations when we have metadata.
         """Create a new `Observations` instance by concatenating a list of `Observations` objects.
 
         Parameters
         ----------
         observations_list : list of `~gammapy.data.Observations`
-            The list of `Observations` to concatenate.
+            The list of `Observations` to stack.
 
         Returns
         -------
         observations : `~gammapy.data.Observations`
-            The `Observations` object resulting from the concatenation of all the `Observations` in `observation_list`.
+            The `Observations` object resulting from the stacking of all the `Observations` in `observation_list`.
         """
         obs = itertools.chain(*observations_list)
-        return cls(list(obs))
+        return cls.check_uniqueness(cls(list(obs)))
+
+    @staticmethod
+    def check_uniqueness(obs):
+        # TODO : Change this once we support event type.
+        """
+        Check that there are no duplicate of `Observation` in the `Observations` object. If there are duplicates,
+        only raise a warning to signal the user.
+
+        Parameters
+        ----------
+            obs : `~gammapy.data.Observations`
+            The `Observations` to check for uniqueness.
+
+        Returns
+        -------
+            obs : `~gammapy.data.Observations`
+            The `Observations` that has been checked, left unchanged.
+        """
+        if len(set(obs.ids)) == len(obs.ids):
+            return obs
+        else:
+            log.warning(
+                "Found observation with the same `obs_id`. Check that all observations are different."
+            )
+            return obs
 
 
 class ObservationChecker(Checker):

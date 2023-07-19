@@ -510,7 +510,7 @@ def test_filter_live_time_phase(data_store):
 
 
 @requires_data()
-def test_observations_concatenate(data_store):
+def test_stack_observations(data_store):
     obs_1 = data_store.get_observations([20136, 20137, 20151])
     obs_2 = data_store.get_observations([20275, 20282])
 
