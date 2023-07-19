@@ -345,7 +345,15 @@ class SkyModel(ModelBase):
     def evaluate_geom(self, geom, gti=None):
         """Evaluate model on `~gammapy.maps.Geom`."""
         coords = geom.get_coord(sparse=True)
+
         value = self.spectral_model(coords["energy_true"])
+
+        if coords.ndim > 3:
+            additional_axes = set(coords._data.keys()) - set(
+                ["lon", "lat", "energy_true"]
+            )
+            for axis in additional_axes:
+                value = value * np.ones_like(coords[axis])
 
         if self.spatial_model:
             value = value * self.spatial_model.evaluate_geom(geom)
@@ -354,7 +362,7 @@ class SkyModel(ModelBase):
             integral = self.temporal_model.integral(gti.time_start, gti.time_stop)
             value = value * np.sum(integral)
 
-        return np.resize(value, geom.data_shape)
+        return value
 
     def integrate_geom(self, geom, gti=None, oversampling_factor=None):
         """Integrate model on `~gammapy.maps.Geom`.
