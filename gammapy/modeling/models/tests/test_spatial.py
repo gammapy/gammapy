@@ -466,7 +466,24 @@ def test_spatial_model_plot():
         ax = model.plot()
 
     with mpl_plot_check():
-        model.plot_error(ax=ax)
+        model.plot_error(ax=ax, selection_optional="all")
+
+
+def test_spatial_model_plot_error():
+    model = GaussianSpatialModel(
+        lon="0d", lat="0d", sigma=0.2 * u.deg, frame="galactic"
+    )
+    model.lat_0.error = 0.04
+    model.lon_0.error = 0.02
+    model.sigma.error = 0.04
+    model.e.error = 0.002
+
+    empty_map = Map.create(
+        skydir=model.position, frame=model.frame, width=1, binsz=0.02
+    )
+    with mpl_plot_check():
+        ax = empty_map.plot()
+        model.plot_error(ax=ax, selection_optional="all")
 
 
 def test_integrate_region_geom():
