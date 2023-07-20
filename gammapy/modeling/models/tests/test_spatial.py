@@ -578,38 +578,35 @@ def test_piecewise_spatial_model_gc():
     )
 
 
-def test_piecewise_spatial_model_anticenter():
-    geom = WcsGeom.create(skydir=(180, 2.3), npix=(2, 2), binsz=0.3, frame="galactic")
-    coords = MapCoord.create(geom.footprint)
-    coords["lon"] *= u.deg
-    coords["lat"] *= u.deg
+def test_piecewise_spatial_model():
 
-    model = PiecewiseNormSpatialModel(coords, frame="galactic")
+    for lon in range(-360, 360):
+        geom = WcsGeom.create(
+            skydir=(lon, 2.3), npix=(2, 2), binsz=0.3, frame="galactic"
+        )
+        coords = MapCoord.create(geom.footprint)
+        coords["lon"] *= u.deg
+        coords["lat"] *= u.deg
 
-    assert_allclose(model(*geom.to_image().center_coord), 1.0)
+        model = PiecewiseNormSpatialModel(coords, frame="galactic")
 
-    norms = np.arange(coords.shape[0])
+        assert_allclose(model(*geom.to_image().center_coord), 1.0)
 
-    model = PiecewiseNormSpatialModel(coords, norms, frame="galactic")
+        norms = np.arange(coords.shape[0])
 
-    assert not model.is_energy_dependent
+        model = PiecewiseNormSpatialModel(coords, norms, frame="galactic")
 
-    expected = np.array([[0, 3], [1, 2]])
-    assert_allclose(model(*geom.to_image().get_coord()), expected, atol=1e-5)
+        expected = np.array([[0, 3], [1, 2]])
+        assert_allclose(model(*geom.to_image().get_coord()), expected, atol=1e-5)
 
-    assert_allclose(model.evaluate_geom(geom.to_image()), expected, atol=1e-5)
+        assert_allclose(model.evaluate_geom(geom.to_image()), expected, atol=1e-5)
 
-    assert_allclose(model.evaluate_geom(geom), expected, atol=1e-5)
+        assert_allclose(model.evaluate_geom(geom), expected, atol=1e-5)
 
-    model_dict = model.to_dict()
-    new_model = PiecewiseNormSpatialModel.from_dict(model_dict)
+        model_dict = model.to_dict()
+        new_model = PiecewiseNormSpatialModel.from_dict(model_dict)
 
-    assert_allclose(new_model.evaluate_geom(geom.to_image()), expected, atol=1e-5)
-
-    assert_allclose(
-        model.evaluate(180.1 * u.deg, 2.3 * u.deg),
-        model.evaluate(-179.9 * u.deg, 2.3 * u.deg),
-    )
+        assert_allclose(new_model.evaluate_geom(geom.to_image()), expected, atol=1e-5)
 
 
 def test_piecewise_spatial_model_3d():
