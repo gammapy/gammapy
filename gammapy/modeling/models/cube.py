@@ -349,7 +349,7 @@ class SkyModel(ModelBase):
         value = self.spectral_model(coords["energy_true"])
 
         if coords.ndim > 3:
-            additional_axes = set(coords._data.keys()) - set(
+            additional_axes = set(coords.axes_names) - set(
                 ["lon", "lat", "energy_true"]
             )
             for axis in additional_axes:

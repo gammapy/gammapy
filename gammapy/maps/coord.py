@@ -76,6 +76,11 @@ class MapCoord:
         return len(self._data)
 
     @property
+    def axes_names(self):
+        """Names of axes."""
+        return list(self._data.keys())
+
+    @property
     def shape(self):
         """Coordinate array shape."""
         arrays = [_ for _ in self._data.values()]
