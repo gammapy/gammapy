@@ -15,6 +15,7 @@ from gammapy.utils.regions import (
     make_concentric_annulus_sky_regions,
     make_orthogonal_rectangle_sky_regions,
 )
+from gammapy.utils.testing import requires_data
 
 
 def get_simple_dataset_on_off():
@@ -187,6 +188,7 @@ def test_regions_init():
         FluxProfileEstimator(regions=[region])
 
 
+@requires_data()
 def test_profile_with_model_or_mask():
     dataset = simulate_map_dataset(name="test-map-pwl")
 
