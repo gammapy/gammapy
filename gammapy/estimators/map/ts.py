@@ -87,9 +87,9 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
         Default is None so the optional steps are not executed.
     energy_edges : list of `~astropy.units.Quantity`
-        Edges of the target maps energy bins. The resulting bin edges will be the energy bins closest
-        to those of the parent dataset.
-        Default is None: obtain the edges directly from the parent dataset energy binning.
+        Edges of the target maps energy bins. The resulting bin edges won't be exactly equal to the input ones,
+        but rather the closest values to the energy axis edges of the parent dataset.
+        Default is None: apply the estimator in each energy bin of the parent dataset.
         For further explanation see :ref:`estimators`.
     sum_over_energy_groups : bool
         Whether to sum over the energy groups or fit the norm on the full energy
