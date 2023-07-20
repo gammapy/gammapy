@@ -545,7 +545,7 @@ def test_templatemap_clip():
 
 
 def test_piecewise_spatial_model_gc():
-    geom = WcsGeom.create(skydir=(0, 2.3), npix=(2, 2), binsz=0.3, frame="galactic")
+    geom = WcsGeom.create(skydir=(0, 0), npix=(2, 2), binsz=0.3, frame="galactic")
     coords = MapCoord.create(geom.footprint)
     coords["lon"] *= u.deg
     coords["lat"] *= u.deg
