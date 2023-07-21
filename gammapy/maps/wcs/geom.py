@@ -403,7 +403,7 @@ class WcsGeom(Geom):
         cdelt = (-binsz[0].flat[0], binsz[1].flat[0])
         wcs.wcs.cdelt = cdelt
 
-        wcs.array_shape = npix[0].flat[0], npix[1].flat[0]
+        wcs.array_shape = npix[1].flat[0], npix[0].flat[0]
         wcs.wcs.datfix()
         return cls(wcs, npix, cdelt=binsz, axes=axes)
 
