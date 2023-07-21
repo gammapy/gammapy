@@ -614,6 +614,13 @@ def test_non_equal_binsz():
     assert_allclose(coords["lat"].to_value("deg"), [[-60], [0], [60]])
 
 
+def test_wcs_geom_non_equal_dim():
+    geom = WcsGeom.create(skydir=(0, 0), binsz=1, width=(3, 5))
+
+    assert geom.data_shape == (5, 3)
+    assert geom.data_shape == geom.wcs.array_shape
+
+
 def test_wcs_geom_to_even_npix():
     geom = WcsGeom.create(skydir=(0, 0), binsz=1, width=(3, 3))
 
