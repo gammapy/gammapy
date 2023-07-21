@@ -215,12 +215,12 @@ class SpectralModel(ModelBase):
 
     @property
     def pivot_energy(self):
-        """The decorrelation energy for a given spectral model calculated numerically.
+        """The pivot or decorrelation energy for a given spectral model calculated numerically.
 
         Returns
         -------
         pivot energy : `~astropy.units.Quantity`
-            The energy at which the statistical error is smallest.
+            The energy at which the statistical error in the computed flux is smallest.
             If no minimum is found, NaN will be returned.
         """
 
@@ -849,7 +849,7 @@ class PowerLawSpectralModel(SpectralModel):
 
     @property
     def pivot_energy(self):
-        r"""The decorrelation energy is defined as:
+        r"""The pivot or decorrelation energy is defined as:
 
         .. math::
 
@@ -947,7 +947,7 @@ class PowerLawNormSpectralModel(SpectralModel):
 
     @property
     def pivot_energy(self):
-        r"""The decorrelation energy is defined as:
+        r"""The pivot or decorrelation energy is defined as:
 
         .. math::
 
