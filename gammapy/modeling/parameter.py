@@ -9,7 +9,7 @@ from astropy import units as u
 from astropy.table import Table
 from gammapy.utils.interpolation import interpolation_scale
 
-__all__ = ["Parameter", "Parameters"]
+__all__ = ["Parameter", "Parameters", "PriorParameter", "PriorParameters"]
 
 log = logging.getLogger(__name__)
 
@@ -113,6 +113,7 @@ class Parameter:
         scale_method="scale10",
         interp="lin",
         is_norm=False,
+        prio=None,
     ):
         if not isinstance(name, str):
             raise TypeError(f"Name must be string, got '{type(name)}' instead")
@@ -144,6 +145,7 @@ class Parameter:
         self.scan_n_sigma = scan_n_sigma
         self.interp = interp
         self.scale_method = scale_method
+        self.prior = None
 
     def __get__(self, instance, owner):
         if instance is None:
@@ -163,6 +165,18 @@ class Parameter:
     def __set_name__(self, owner, name):
         if not self._name == name:
             raise ValueError(f"Expected parameter name '{name}', got {self._name}")
+
+    @property
+    def prior(self):
+        return self._prior
+
+    @prior.setter
+    def prior(self, value):
+        self._prior = value
+
+    def prior_stat_sum(self):
+        if self.prior is not None:
+            return self.prior(self)
 
     @property
     def is_norm(self):
@@ -396,7 +410,7 @@ class Parameter:
         return (
             f"{self.__class__.__name__}(name={self.name!r}, value={self.value!r}, "
             f"factor={self.factor!r}, scale={self.scale!r}, unit={self.unit!r}, "
-            f"min={self.min!r}, max={self.max!r}, frozen={self.frozen!r}, id={hex(id(self))})"
+            f"min={self.min!r}, max={self.max!r}, frozen={self.frozen!r}, prior={self.prior!r}, id={hex(id(self))})"
         )
 
     def copy(self):
@@ -427,6 +441,8 @@ class Parameter:
 
         if self._link_label_io is not None:
             output["link"] = self._link_label_io
+        if self.prior is not None:
+            output["prior"] = self.prior.to_dict()
 
         return output
 
@@ -482,6 +498,17 @@ class Parameters(collections.abc.Sequence):
         """Check parameter limits and emit a warning"""
         for par in self:
             par.check_limits()
+
+    @property
+    def prior(self):
+        return [par.prior for par in self]
+
+    def prior_stat_sum(self):
+        parameters_stat_sum = 0
+        for par in self:
+            if par.prior is not None:
+                parameters_stat_sum += par.prior(par)
+        return parameters_stat_sum
 
     @property
     def types(self):
@@ -755,3 +782,75 @@ class restore_parameters_status:
             if self.restore_values:
                 par.value = value
             par.frozen = frozen
+
+
+class PriorParameter(Parameter):
+    def __init__(
+        self,
+        name,
+        value,
+        unit="",
+        scale=1,
+        min=np.nan,
+        max=np.nan,
+        error=0,
+    ):
+        if not isinstance(name, str):
+            raise TypeError(f"Name must be string, got '{type(name)}' instead")
+
+        self._name = name
+        self.scale = scale
+        self.min = min
+        self.max = max
+        self._error = error
+        if isinstance(value, u.Quantity) or isinstance(value, str):
+            val = u.Quantity(value)
+            self.value = val.value
+            self.unit = val.unit
+        else:
+            self.factor = value
+            self.unit = unit
+        self._type = "prior"
+
+    def to_dict(self):
+        """Convert to dict."""
+        output = {
+            "name": self.name,
+            "value": self.value,
+            "unit": self.unit.to_string("fits"),
+            "error": self.error,
+            "min": self.min,
+            "max": self.max,
+        }
+        return output
+
+    def __repr__(self):
+        return (
+            f"{self.__class__.__name__}(name={self.name!r}, value={self.value!r}, "
+            f"factor={self.factor!r}, scale={self.scale!r}, unit={self.unit!r}, "
+            f"min={self.min!r}, max={self.max!r})"
+        )
+
+
+class PriorParameters(Parameters):
+    def __init__(self, parameters=None):
+        if parameters is None:
+            parameters = []
+        else:
+            parameters = list(parameters)
+
+        self._parameters = parameters
+
+    def to_table(self):
+        """Convert parameter attributes to `~astropy.table.Table`."""
+        rows = []
+        for p in self._parameters:
+            d = p.to_dict()
+            rows.append({**dict(type=p.type), **d})
+        table = Table(rows)
+
+        table["value"].format = ".4e"
+        for name in ["error", "min", "max"]:
+            table[name].format = ".3e"
+
+        return table

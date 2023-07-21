@@ -2,7 +2,7 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from gammapy.modeling import Parameter, Parameters
+from gammapy.modeling import Parameter, Parameters, PriorParameter, PriorParameters
 
 
 def test_parameter_init():
@@ -265,3 +265,51 @@ def test_update_from_dict():
     }
     par.update_from_dict(data)
     assert par.frozen
+
+
+def test_priorparameter_init():
+    par = PriorParameter("spam", 11)
+    assert par.name == "spam"
+    assert par.factor == 11
+    assert isinstance(par.factor, float)
+    assert par.scale == 1
+    assert isinstance(par.scale, float)
+    assert par.value == 11
+    assert isinstance(par.value, float)
+    assert par.unit == ""
+    assert par.min is np.nan
+    assert par.max is np.nan
+
+
+def test_priorparameter_repr():
+    par = PriorParameter("spam", 42, "deg")
+    assert repr(par).startswith("PriorParameter(name=")
+
+
+def test_priorparameter_to_dict():
+    par = Parameter("spam", 42, "deg")
+    d = par.to_dict()
+    assert isinstance(d["unit"], str)
+
+
+@pytest.fixture()
+def priorpars():
+    return PriorParameters([PriorParameter("spam", 42), PriorParameter("ham", 99)])
+
+
+def test_priorparameters_basics(priorpars):
+    # This applies a unit transformation
+    priorpars["ham"].error = "10000"
+    priorpars["spam"].error = 0.1
+    assert_allclose(priorpars["spam"].error, 0.1)
+    assert_allclose(priorpars[1].error, 10000)
+
+
+def test_priorparameters_to_table(priorpars):
+    priorpars["ham"].vallue = 1e-10
+    priorpars["spam"]._link_label_io = "test"
+    table = priorpars.to_table()
+    assert len(table) == 2
+    assert len(table.columns) == 7
+    assert table["name"][0] == "spam"
+    assert table["value"][1] == 99

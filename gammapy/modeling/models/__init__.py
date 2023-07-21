@@ -8,6 +8,7 @@ from .cube import (
     TemplateNPredModel,
     create_fermi_isotropic_diffuse_model,
 )
+from .prior import GaussianPrior, PriorModel, UniformPrior
 from .spatial import (
     ConstantFluxSpatialModel,
     ConstantSpatialModel,
