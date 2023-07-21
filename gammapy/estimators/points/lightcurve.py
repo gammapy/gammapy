@@ -39,8 +39,6 @@ class LightCurveEstimator(FluxPointsEstimator):
         Start and stop time for each interval to compute the LC
     source : str or int
         For which source in the model to compute the flux points. Default is 0
-    energy_edges : `~astropy.units.Quantity`
-        Energy edges of the light curve.
     atol : `~astropy.units.Quantity`
         Tolerance value for time comparison with different scale. Default 1e-6 sec.
     norm_min : float
@@ -64,6 +62,11 @@ class LightCurveEstimator(FluxPointsEstimator):
             * "scan": estimate fit statistic profiles.
 
         Default is None so the optional steps are not executed.
+    energy_edges : list of `~astropy.units.Quantity`
+        Edges of the lightcurve energy bins. The resulting bin edges won't be exactly equal to the input ones,
+        but rather the closest values to the energy axis edges of the parent dataset.
+        Default is None: apply the estimator in each energy bin of the parent dataset.
+        For further explanation see :ref:`estimators`.
     fit : `Fit`
         Fit instance specifying the backend and fit options.
     reoptimize : bool

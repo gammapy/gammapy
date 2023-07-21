@@ -35,8 +35,6 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
 
     Parameters
     ----------
-    energy_edges : `~astropy.units.Quantity`
-        Energy edges of the flux point bins.
     source : str or int
         For which source in the model to compute the flux points.
     norm_min : float
@@ -60,6 +58,11 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
             * "scan": estimate fit statistic profiles.
 
         Default is None so the optional steps are not executed.
+    energy_edges : list of `~astropy.units.Quantity`
+        Edges of the flux points energy bins. The resulting bin edges won't be exactly equal to the input ones,
+        but rather the closest values to the energy axis edges of the parent dataset.
+        Default is None: apply the estimator in each energy bin of the parent dataset.
+        For further explanation see :ref:`estimators`.
     fit : `Fit`
         Fit instance specifying the backend and fit options.
     reoptimize : bool
