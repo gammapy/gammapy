@@ -1017,13 +1017,10 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
     @lazyproperty
     def _interpolator(self):
         x = self.table["PHASE"].data
-        y = self.table["NORM"].data
+        y = self.table["NORM"].data * u.one
 
-        return (
-            scipy.interpolate.InterpolatedUnivariateSpline(
-                x, y, k=1, ext=2, bbox=[0.0, 1.0]
-            )
-            * u.one
+        return scipy.interpolate.InterpolatedUnivariateSpline(
+            x, y, k=1, ext=2, bbox=[0.0, 1.0]
         )
 
     def evaluate(self, time, t_ref, phi_ref, f0, f1, f2):
