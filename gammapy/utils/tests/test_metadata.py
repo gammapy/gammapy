@@ -35,3 +35,7 @@ def test_subclass():
 
     with pytest.raises(ValidationError):
         test_meta.mode = "coord"
+
+    yaml_str = test_meta.to_yaml()
+    print(yaml_str)
+    assert False
