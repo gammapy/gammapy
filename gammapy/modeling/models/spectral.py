@@ -215,7 +215,8 @@ class SpectralModel(ModelBase):
 
     @property
     def pivot_energy(self):
-        """The pivot or decorrelation energy for a given spectral model calculated numerically.
+        """The pivot or decorrelation energy, for a given spectral model calculated numerically.
+        It is defined as the energy at which the correlation between the spectral parameters is minimized.
 
         Returns
         -------
@@ -236,13 +237,17 @@ class SpectralModel(ModelBase):
 
         std = np.std(min_func(x=np.linspace(bounds[0], bounds[1], 100)))
         if std < 1e-5:
-            log.warning("No minimum was found.")
+            log.warning(
+                "The relative error on the flux does not depend on energy. No pivot energy found."
+            )
             return np.nan * x_unit
 
         minimizer = scipy.optimize.minimize_scalar(min_func, bounds=bounds)
 
         if not minimizer.success:
-            log.warning("The minimizer was not successful.")
+            log.warning(
+                "No minima found in the relative error on the flux. Pivot energy computation failed."
+            )
             return np.nan * x_unit
         else:
             return np.exp(minimizer.x) * x_unit
