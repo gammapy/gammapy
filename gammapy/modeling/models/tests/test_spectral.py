@@ -617,11 +617,23 @@ def test_pwl_pivot_energy():
     assert_quantity_allclose(pwl.pivot_energy, np.nan * u.TeV, rtol=1e-5)
 
     pwl.covariance = [
-        [0.0318377**2, 6.56889442e-14, 0],
-        [6.56889442e-14, 0, 0],
+        [0.08**2, 6.56889e-14, 0],
+        [6.56889e-14, (5.5e-12) ** 2, 0],
         [0, 0, 0],
     ]
-    assert_quantity_allclose(pwl.pivot_energy, 3.3540034 * u.TeV, rtol=1e-5)
+    assert_quantity_allclose(pwl.pivot_energy, 1.2112653 * u.TeV, rtol=1e-5)
+
+    ecpl = ExpCutoffPowerLawSpectralModel(
+        amplitude="5.35510540e-11 cm-2 s-1 TeV-1", lambda_=0.001 * (1 / u.TeV), index=2
+    )
+    ecpl.covariance = [
+        [0.08**2, 6.56889e-14, 0, 0, 0],
+        [6.56889e-14, (5.5e-12) ** 2, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+    ]
+    assert_quantity_allclose(pwl.pivot_energy, ecpl.pivot_energy, rtol=1e-5)
 
 
 def test_num_pivot_energy():
