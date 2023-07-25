@@ -519,3 +519,6 @@ def test_stack_observations(data_store):
     assert len(obs12) == 5
     assert isinstance(obs12[0], Observation)
     assert isinstance(obs12[0].events, EventList)
+
+    with pytest.raises(TypeError):
+        Observations.from_stack([obs_1, ["a"]])

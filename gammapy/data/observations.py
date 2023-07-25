@@ -622,7 +622,17 @@ class Observations(collections.abc.MutableSequence):
     """
 
     def __init__(self, observations=None):
-        self._observations = observations or []
+        if all(isinstance(obs, Observation) for obs in observations or []):
+            self._observations = observations or []
+            if len(set(observations)) != len(observations):
+                log.warning(
+                    "Found duplicates of the same observation in observations. "
+                    "Check that all observations are different."
+                )
+        else:
+            raise TypeError(
+                "Invalid type: at least one element in the input list is not of type 'Observation'."
+            )
 
     def __getitem__(self, key):
         return self._observations[self.index(key)]
@@ -638,6 +648,8 @@ class Observations(collections.abc.MutableSequence):
 
     def insert(self, idx, obs):
         if isinstance(obs, Observation):
+            if obs in self:
+                log.warning(f"{obs.obs_id} already belongs to Observations.")
             self._observations.insert(idx, obs)
         else:
             raise TypeError(f"Invalid type: {type(obs)!r}")
@@ -732,32 +744,7 @@ class Observations(collections.abc.MutableSequence):
             The `Observations` object resulting from the stacking of all the `Observations` in `observation_list`.
         """
         obs = itertools.chain(*observations_list)
-        return cls.check_uniqueness(cls(list(obs)))
-
-    @staticmethod
-    def check_uniqueness(obs):
-        # TODO : Change this once we support event type.
-        """
-        Check that there are no duplicate of `Observation` in the `Observations` object. If there are duplicates,
-        only raise a warning to signal the user.
-
-        Parameters
-        ----------
-            obs : `~gammapy.data.Observations`
-            The `Observations` to check for uniqueness.
-
-        Returns
-        -------
-            obs : `~gammapy.data.Observations`
-            The `Observations` that has been checked, left unchanged.
-        """
-        if len(set(obs.ids)) == len(obs.ids):
-            return obs
-        else:
-            log.warning(
-                "Found observation with the same `obs_id`. Check that all observations are different."
-            )
-            return obs
+        return cls(list(obs))
 
 
 class ObservationChecker(Checker):
