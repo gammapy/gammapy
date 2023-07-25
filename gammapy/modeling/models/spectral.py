@@ -1772,11 +1772,6 @@ class TemplateNDSpectralModel(SpectralModel):
             filename = str(make_path(filename))
         self.filename = filename
 
-        points_scale = [
-            "lin",
-            "lin",
-            "log",
-        ]
         parameters = []
         has_energy = False
         for axis in map.geom.axes:
@@ -1791,7 +1786,6 @@ class TemplateNDSpectralModel(SpectralModel):
                     max=axis.bounds[-1],
                     interp=axis.interp,
                 )
-                points_scale.append(axis.interp)
                 parameters.append(parameter)
             else:
                 has_energy |= True
@@ -1802,7 +1796,6 @@ class TemplateNDSpectralModel(SpectralModel):
 
         interp_kwargs = interp_kwargs or {}
         interp_kwargs.setdefault("values_scale", "log")
-        interp_kwargs.setdefault("points_scale", points_scale)
         self._interp_kwargs = interp_kwargs
         super().__init__()
 

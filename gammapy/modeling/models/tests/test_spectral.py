@@ -1175,7 +1175,7 @@ def test_template_ND_EBL(tmpdir):
     template = TemplateNDSpectralModel(region_map)
     assert len(template.parameters) == 1
     assert_allclose(template.parameters["redshift"].value, 1.001, rtol=1e-3)
-    expected = [9.950501e-01, 4.953951e-01, 1.588062e-06]
+    expected = [1.132092e00, 4.967878e-01, 1.596544e-06]
     assert_allclose(template([1, 100, 1000] * u.GeV), expected, rtol=1e-3)
     template.parameters["redshift"].value = 0.1
     template.filename = str(tmpdir / "template_ND_ebl_franceschini.fits")

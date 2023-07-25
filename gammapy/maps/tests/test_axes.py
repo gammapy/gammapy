@@ -28,7 +28,6 @@ MAP_AXIS_NODE_TYPES = [
     ([0.25, 0.75, 1.0, 2.0], "sqrt", "center"),
 ]
 
-
 nodes_array = np.array([0.25, 0.75, 1.0, 2.0])
 
 MAP_AXIS_NODE_TYPE_UNIT = [
@@ -536,6 +535,40 @@ def test_coord_to_idx_time_axis(time_intervals):
     assert_allclose(pixels[1::2], [np.nan, 1, 3, 5, 7, 9, 11, 13, 15, 17, 19])
 
 
+def test_pix_to_coord_time_axis(time_intervals):
+    tmin = time_intervals["t_min"]
+    tmax = time_intervals["t_max"]
+    tref = time_intervals["t_ref"]
+    axis = TimeMapAxis(tmin, tmax, tref, name="time")
+
+    pixels = [1.3, 3.2, 5.4, 7, 15.33, 17.21, 19.11]
+    coords = axis.pix_to_coord(pixels)
+    assert_allclose(
+        coords[0:3].mjd, [58927.0125, 58927.534649, 58928.069298], rtol=1e-5
+    )
+
+    # test with nan indices
+    pixels.append(np.nan)
+    coords = axis.pix_to_coord(pixels)
+    assert_allclose(
+        coords[-3:].mjd,
+        [58929.64032894737, 58930.162478070175, -3.725000e-04],
+        rtol=1e-5,
+    )
+
+    # assert with invalid pixels & multidim array
+    coords = axis.pix_to_coord([[-1.2, 0.6], [1.5, 24.7]])
+    assert_allclose(
+        coords.mjd,
+        [[-3.725000e-04, 58927.551315789475], [58928.07346491228, -3.725000e-04]],
+        rtol=1e-5,
+    )
+
+    # test with one value
+    coords = axis.pix_to_coord(3)
+    assert_allclose(coords.mjd, 58927.0, rtol=1e-5)
+
+
 def test_slice_time_axis(time_intervals):
     axis = TimeMapAxis(
         time_intervals["t_min"], time_intervals["t_max"], time_intervals["t_ref"]
@@ -880,3 +913,12 @@ def test_label_map_axis_squash():
 
     assert squash_label.nbin == 1
     assert_equal(squash_label.center, np.array(["a...c"]))
+
+
+def test_energy_bin_per_decade_not_strict_bounds():
+    nbin = 5
+    axis = MapAxis.from_energy_bounds(
+        "0.03 TeV", "333 TeV", nbin=nbin, per_decade=True, strict_bounds=False
+    )
+
+    assert_allclose(axis.edges[0:-nbin] * 10.0, axis.edges[nbin:], rtol=1e-5, atol=0)
