@@ -161,7 +161,7 @@ def test_parameters_to_table(pars):
 
     table = pars.to_table()
     assert len(table) == 2
-    assert len(table.columns) == 10
+    assert len(table.columns) == 11
     assert table["link"][0] == "test"
     assert table["link"][1] == ""
 
@@ -244,6 +244,7 @@ def test_update_from_dict():
         "max": np.nan,
         "frozen": True,
         "unit": "GeV",
+        "prior": np.nan,
     }
     par.update_from_dict(data)
     assert par.name == "test"
@@ -253,6 +254,7 @@ def test_update_from_dict():
     assert_allclose(par.min, 0)
     assert par.max is np.nan
     assert par.frozen
+    assert par.prior is np.nan
     data = {
         "model": "gc",
         "type": "spectral",
@@ -262,6 +264,7 @@ def test_update_from_dict():
         "max": np.nan,
         "frozen": "True",
         "unit": "GeV",
+        "prior": np.nan,
     }
     par.update_from_dict(data)
     assert par.frozen

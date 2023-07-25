@@ -113,7 +113,7 @@ class Parameter:
         scale_method="scale10",
         interp="lin",
         is_norm=False,
-        prio=None,
+        prior=None,
     ):
         if not isinstance(name, str):
             raise TypeError(f"Name must be string, got '{type(name)}' instead")
@@ -145,7 +145,12 @@ class Parameter:
         self.scan_n_sigma = scan_n_sigma
         self.interp = interp
         self.scale_method = scale_method
-        self.prior = None
+        if isinstance(prior, dict):
+            from gammapy.modeling.models import Model
+
+            self.prior = Model.from_dict({"prior": prior})
+        else:  # None
+            self.prior = prior
 
     def __get__(self, instance, owner):
         if instance is None:
@@ -420,7 +425,7 @@ class Parameter:
     def update_from_dict(self, data):
         """Update parameters from a dict.
         Protection against changing parameter model, type, name."""
-        keys = ["value", "unit", "min", "max", "frozen"]
+        keys = ["value", "unit", "min", "max", "frozen", "prior"]
         for k in keys:
             setattr(self, k, data[k])
 
@@ -442,8 +447,9 @@ class Parameter:
         if self._link_label_io is not None:
             output["link"] = self._link_label_io
         if self.prior is not None:
-            output["prior"] = self.prior.to_dict()
-
+            output["prior"] = self.prior.to_dict()["prior"]
+        else:
+            output["prior"] = np.nan
         return output
 
     def autoscale(self):
@@ -646,6 +652,9 @@ class Parameters(collections.abc.Sequence):
             for key in ["scale_method", "interp"]:
                 if key in d:
                     del d[key]
+            print("d[prior]", np.isnan(d["prior"]))
+            if not np.isnan(d["prior"]):
+                d["prior"] = d["prior"]["type"]
             rows.append({**dict(type=p.type), **d})
         table = Table(rows)
 
@@ -854,3 +863,13 @@ class PriorParameters(Parameters):
             table[name].format = ".3e"
 
         return table
+
+    @classmethod
+    def from_dict(cls, data):
+        parameters = []
+
+        for par in data:
+            parameter = PriorParameter(**par)
+            parameters.append(parameter)
+
+        return cls(parameters=parameters)
