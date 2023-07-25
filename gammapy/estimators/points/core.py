@@ -140,14 +140,13 @@ class FluxPoints(FluxMaps):
             table = Table.read(filename, **kwargs)
         except (IORegistryError, UnicodeDecodeError):
             with fits.open(filename) as hdulist:
-                hdu_names = [_.name for _ in hdulist]
-                if "FLUXPOINTS" in hdu_names:
+                if "FLUXPOINTS" in hdulist:
                     fp = hdulist["FLUXPOINTS"]
                 else:
                     fp = hdulist[""]  # to handle older files
                 table = Table.read(fp)
-                if "GTI" in hdu_names:
-                    gti = GTI.read(filename)
+                if "GTI" in hdulist:
+                    gti = GTI.from_table_hdu(hdulist["GTI"])
 
         return cls.from_table(
             table=table,
@@ -180,7 +179,7 @@ class FluxPoints(FluxMaps):
                 flux profiles. Basically a generalisation of the "gadf" format, but
                 currently there is no detailed documentation available.
         overwrite : bool
-            Overwrite existing file`.
+            Overwrite existing file.
         """
         filename = make_path(filename)
         if sed_type is None:
@@ -188,7 +187,7 @@ class FluxPoints(FluxMaps):
         table = self.to_table(sed_type=sed_type, format=format)
 
         # TODO: rather ugly - better method?
-        if str(filename).split(".")[-1] != "fits":
+        if not ".fits" in filename.suffixes:
             table.write(filename)
             return
 
