@@ -4,7 +4,7 @@ from astropy.time import Time
 from gammapy.modeling.models import LightCurveTemplateTemporalModel
 from gammapy.modeling.models.utils import _template_model_from_cta_sdc, read_hermes_cube
 from gammapy.utils.scripts import make_path
-from gammapy.utils.testing import requires_data
+from gammapy.utils.testing import requires_data, requires_dependency
 
 
 @requires_data()
@@ -25,6 +25,7 @@ def test__template_model_from_cta_sdc(tmp_path):
 
 
 @requires_data()
+@requires_dependency("healpy")
 def test_read_hermes_cube():
     filename = make_path(
         "$GAMMAPY_DATA/tests/hermes/hermes-VariableMin-pi0-Htot_CMZ_nside256.fits.gz"
