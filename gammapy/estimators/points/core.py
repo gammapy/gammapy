@@ -187,7 +187,7 @@ class FluxPoints(FluxMaps):
         table = self.to_table(sed_type=sed_type, format=format)
 
         # TODO: rather ugly - better method?
-        if not ".fits" in filename.suffixes:
+        if ".fits" not in filename.suffixes:
             table.write(filename)
             return
 
