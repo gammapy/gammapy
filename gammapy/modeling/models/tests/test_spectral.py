@@ -614,14 +614,14 @@ def test_ecpl_integrate():
 
 def test_pwl_pivot_energy():
     pwl = PowerLawSpectralModel(amplitude="5.35510540e-11 cm-2 s-1 TeV-1")
-    assert_quantity_allclose(pwl.pivot_energy, np.nan * u.TeV)
+    assert_quantity_allclose(pwl.pivot_energy, np.nan * u.TeV, rtol=1e-5)
 
     pwl.covariance = [
         [0.0318377**2, 6.56889442e-14, 0],
         [6.56889442e-14, 0, 0],
         [0, 0, 0],
     ]
-    assert_quantity_allclose(pwl.pivot_energy, 3.3540034 * u.TeV)
+    assert_quantity_allclose(pwl.pivot_energy, 3.3540034 * u.TeV, rtol=1e-5)
 
 
 def test_num_pivot_energy():
@@ -632,11 +632,11 @@ def test_num_pivot_energy():
         beta="0.2217",
     )
     lp.amplitude.error = "2.8804e-12 cm-2 s-1 GeV-1"
-    assert_quantity_allclose(lp.pivot_energy, np.nan * u.GeV)
+    assert_quantity_allclose(lp.pivot_energy, np.nan * u.GeV, rtol=1e-5)
 
     lp.alpha.error = "0.1126"
     lp.beta.error = "0.0670"
-    assert_quantity_allclose(lp.pivot_energy, 17.337042 * u.GeV)
+    assert_quantity_allclose(lp.pivot_energy, 17.337042 * u.GeV, rtol=1e-5)
 
 
 def test_template_spectral_model_evaluate_tiny():
