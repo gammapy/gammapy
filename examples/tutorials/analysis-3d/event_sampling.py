@@ -309,8 +309,9 @@ events.table.meta["OBJECT"] = dataset.models[0].name
 #
 
 primary_hdu = fits.PrimaryHDU()
-hdu_evt = fits.BinTableHDU(events.table)
-hdu_gti = fits.BinTableHDU(dataset.gti.table, name="GTI")
+hdu_gti = dataset.gti.to_table_hdu()
+hdu_evt = events.to_table_hdu()
+hdu_evt.header.update(observation.pointing.to_fits_header())
 hdu_all = fits.HDUList([primary_hdu, hdu_evt, hdu_gti])
 hdu_all.writeto("./event_sampling/events_0001.fits", overwrite=True)
 
@@ -561,6 +562,7 @@ display(data_store.obs_table)
 observations = data_store.get_observations()
 observations[0].peek()
 plt.show()
+print(observations[0])
 
 
 ######################################################################

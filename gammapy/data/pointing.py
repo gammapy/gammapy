@@ -200,7 +200,7 @@ class FixedPointingInfo:
                 raise IOError(
                     "Keywords ALT_PNT and AZ_PNT are required for OBSMODE=DRIFT"
                 )
-            pointing_altaz = AltAz(alt=alt * u.deg, az=az * u.deg)
+            pointing_altaz = AltAz(alt=float(alt) * u.deg, az=float(az) * u.deg)
         else:
             fixed_icrs = SkyCoord(ra, dec)
             if np.isnan(ra.value) or np.isnan(dec.value):
@@ -212,7 +212,7 @@ class FixedPointingInfo:
             # store given altaz also for POINTING for backwards compatibility,
             # FIXME: remove in 2.0
             if alt is not None and az is not None:
-                legacy_altaz = AltAz(alt=alt * u.deg, az=az * u.deg)
+                legacy_altaz = AltAz(alt=float(alt) * u.deg, az=float(az) * u.deg)
 
         time_start = header.get("TSTART")
         time_stop = header.get("TSTOP")
