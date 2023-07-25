@@ -78,7 +78,9 @@ class ObservationTable(Table):
             "OBSERVATORY_NAME", "N/A"
         )  # This is not GADF compliant
         if "N/A" in obs_name:
-            obs_name = self.meta.get("OBSERVATORY_NAME", self.meta.get("OBSERVER", "N/A"))
+            obs_name = self.meta.get(
+                "OBSERVATORY_NAME", self.meta.get("OBSERVER", "N/A")
+            )
 
         return (
             f"Observation table:\n"
