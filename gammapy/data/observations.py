@@ -622,17 +622,9 @@ class Observations(collections.abc.MutableSequence):
     """
 
     def __init__(self, observations=None):
-        if all(isinstance(obs, Observation) for obs in observations or []):
-            self._observations = observations or []
-            if len(set(observations)) != len(observations):
-                log.warning(
-                    "Found duplicates of the same observation in observations. "
-                    "Check that all observations are different."
-                )
-        else:
-            raise TypeError(
-                "Invalid type: at least one element in the input list is not of type 'Observation'."
-            )
+        self._observations = []
+        for obs in observations:
+            self.append(obs)
 
     def __getitem__(self, key):
         return self._observations[self.index(key)]
@@ -642,6 +634,10 @@ class Observations(collections.abc.MutableSequence):
 
     def __setitem__(self, key, obs):
         if isinstance(obs, Observation):
+            if obs in self:
+                log.warning(
+                    f"Observation with obs_id {obs.obs_id} already belongs to Observations."
+                )
             self._observations[self.index(key)] = obs
         else:
             raise TypeError(f"Invalid type: {type(obs)!r}")
@@ -649,7 +645,9 @@ class Observations(collections.abc.MutableSequence):
     def insert(self, idx, obs):
         if isinstance(obs, Observation):
             if obs in self:
-                log.warning(f"{obs.obs_id} already belongs to Observations.")
+                log.warning(
+                    f"Observation with obs_id {obs.obs_id} already belongs to Observations."
+                )
             self._observations.insert(idx, obs)
         else:
             raise TypeError(f"Invalid type: {type(obs)!r}")
