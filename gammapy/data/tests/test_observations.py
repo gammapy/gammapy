@@ -510,7 +510,7 @@ def test_filter_live_time_phase(data_store):
 
 
 @requires_data()
-def test_stack_observations(data_store):
+def test_stack_observations(data_store, caplog):
     obs_1 = data_store.get_observations([20136, 20137, 20151])
     obs_2 = data_store.get_observations([20275, 20282])
 
@@ -519,6 +519,14 @@ def test_stack_observations(data_store):
     assert len(obs12) == 5
     assert isinstance(obs12[0], Observation)
     assert isinstance(obs12[0].events, EventList)
+
+    assert "WARNING" in [_.levelname for _ in caplog.records]
+    assert "Observation with obs_id 20275 already belongs to Observations." in [
+        _.message for _ in caplog.records
+    ]
+    assert "Observation with obs_id 20282 already belongs to Observations." in [
+        _.message for _ in caplog.records
+    ]
 
     with pytest.raises(TypeError):
         Observations.from_stack([obs_1, ["a"]])
