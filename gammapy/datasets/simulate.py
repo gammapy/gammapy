@@ -14,6 +14,7 @@ from gammapy.modeling.models import (
     ConstantTemporalModel,
     PointSpatialModel,
 )
+from gammapy.utils.fits import earth_location_to_dict
 from gammapy.utils.random import get_random_state
 
 __all__ = ["MapDatasetEventSampler"]
@@ -495,16 +496,20 @@ class MapDatasetEventSampler:
         # Necessary for DataStore, but they should be ALT and AZ instead!
         telescope = observation.aeff.meta["TELESCOP"]
         instrument = observation.aeff.meta["INSTRUME"]
-        if telescope == "CTA":
-            if instrument == "Southern Array":
-                loc = observatory_locations["cta_south"]
-            elif instrument == "Northern Array":
-                loc = observatory_locations["cta_north"]
-            else:
-                loc = observatory_locations["cta_south"]
+        loc = observation.observatory_earth_location
+        if loc is None:
+            if telescope == "CTA":
+                if instrument == "Southern Array":
+                    loc = observatory_locations["cta_south"]
+                elif instrument == "Northern Array":
+                    loc = observatory_locations["cta_north"]
+                else:
+                    loc = observatory_locations["cta_south"]
 
-        else:
-            loc = observatory_locations[telescope.lower()]
+            else:
+                loc = observatory_locations[telescope.lower()]
+
+        meta.update(earth_location_to_dict(loc))
 
         # this is not really correct but maybe OK for now
         coord_altaz = observation.pointing.get_altaz(dataset.gti.time_start, loc)
