@@ -360,7 +360,7 @@ class SpatialModel(ModelBase):
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`, optional
-            Axis
+            Axes to plot the position error on.
         **kwargs : dict
             Keyword arguments passed to `~gammapy.maps.WcsMap.plot()`
 
@@ -388,39 +388,46 @@ class SpatialModel(ModelBase):
 
         return ax
 
-    def plot_extension_error(self, ax=None):
+    def plot_extension_error(self, ax=None, **kwargs):
         pass
 
-    def plot_error(self, ax, selection_optional="position", **kwargs):
+    def plot_error(
+        self, ax=None, which="position", kwargs_position=None, kwargs_extension=None
+    ):
         """Plot the errors of the spatial model.
 
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`, optional
-            Axis
-        selection_optional: list of str
+            Axes to plot the errors on.
+        which: list of str
             Which errors to plot.
             Available options are:
                 * "all": all the optional steps are plotted
                 * "position": plot the position error of the spatial model.
                 * "extension": plot the extension error of the spatial model.
-        **kwargs : dict
-            Keyword arguments passed to `~gammapy.maps.WcsMap.plot()`
+        kwargs_position : dict
+            Keyword arguments passed to `~SpatialModel.plot_position_error`
+        kwargs_extension : dict
+            Keyword arguments passed to `~SpatialModel.plot_extension_error`
 
         Returns
         -------
         ax : `~matplotlib.axes.Axes`, optional
             Axis
         """
-        if "all" in selection_optional:
-            self.plot_position_error(ax, **kwargs)
-            self.plot_extension_error(ax, **kwargs)
+        kwargs_position = kwargs_position or {}
+        kwargs_extension = kwargs_extension or {}
 
-        if "position" in selection_optional:
-            self.plot_position_error(ax, **kwargs)
+        if "all" in which:
+            self.plot_position_error(ax, **kwargs_position)
+            self.plot_extension_error(ax, **kwargs_extension)
 
-        if "extension" in selection_optional:
-            self.plot_extension_error(ax, **kwargs)
+        if "position" in which:
+            self.plot_position_error(ax, **kwargs_position)
+
+        if "extension" in which:
+            self.plot_extension_error(ax, **kwargs_extension)
 
     def plot_grid(self, geom=None, **kwargs):
         """Plot spatial model energy slices in a grid.
@@ -653,18 +660,18 @@ class GaussianSpatialModel(SpatialModel):
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`, optional
-                Axis
+            Axes to plot the extension error on.
         x_sigma : float
             Number of :math:`\sigma
             Default is :math:`1.5\sigma` which corresponds to about 68%
             containment for a 2D symmetric Gaussian.
         **kwargs : dict
-                Keyword arguments passed to `~gammapy.maps.WcsMap.plot()`
+            Keyword arguments passed to `~gammapy.maps.WcsMap.plot()`
 
         Returns
         -------
         ax : `~matplotlib.axes.Axes`, optional
-                Axis
+            Axis
         """
         ax = plt.gca() if ax is None else ax
 
@@ -786,6 +793,23 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
         return self.to_region(x_r_0=scale)
 
     def plot_extension_error(self, ax=None, x_r_0=1, **kwargs):
+        r"""Plot model error at a given number of :math:`r_0`.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes`, optional
+            Axes to plot the extension error on.
+        x_r_0 : float
+            Number of :math:`r_0`
+            Default is :math:`1`
+        **kwargs : dict
+            Keyword arguments passed to `~gammapy.maps.WcsMap.plot()`
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`, optional
+            Axis
+        """
 
         ax = plt.gca() if ax is None else ax
 
@@ -958,6 +982,20 @@ class DiskSpatialModel(SpatialModel):
         return cls.from_position(region.center, **kwargs)
 
     def plot_extension_error(self, ax=None, **kwargs):
+        r"""Plot model error.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes`, optional
+            Axes to plot the extension error on.
+        **kwargs : dict
+            Keyword arguments passed to `~gammapy.maps.WcsMap.plot()`
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`, optional
+            Axis
+        """
 
         ax = plt.gca() if ax is None else ax
 

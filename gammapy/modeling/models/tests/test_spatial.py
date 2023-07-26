@@ -466,7 +466,7 @@ def test_spatial_model_plot():
         ax = model.plot()
 
     with mpl_plot_check():
-        model.plot_error(ax=ax, selection_optional="all")
+        model.plot_error(ax=ax, which="all")
 
 
 def test_spatial_model_plot_error():
@@ -483,7 +483,7 @@ def test_spatial_model_plot_error():
     )
     with mpl_plot_check():
         ax = empty_map.plot()
-        model.plot_error(ax=ax, selection_optional="all")
+        model.plot_error(ax=ax, which="all")
 
 
 def test_integrate_region_geom():
