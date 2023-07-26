@@ -1091,7 +1091,7 @@ class FluxMaps:
         Parameters
         ----------
         slices : dict
-            Dict of axes names and `qstropy.Quantity` or `qstropy.Time` or `slice` object pairs.
+            Dict of axes names and `astropy.Quantity` or `astropy.Time` or `slice` object pairs.
             Contains one element for each non-spatial dimension. For integer indexing the
             corresponding axes is dropped from the map. Axes not specified in the
             dict are kept unchanged.
