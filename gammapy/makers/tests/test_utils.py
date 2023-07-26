@@ -127,7 +127,6 @@ def fixed_pointing_info_aligned():
     fixed_icrs = SkyCoord(0 * u.deg, 0 * u.deg, frame="icrs")
 
     return FixedPointingInfo(
-        mode=PointingMode.POINTING,
         fixed_icrs=fixed_icrs,
         location=location,
         time_start=time_start,
@@ -407,7 +406,6 @@ class TestTheta2Table:
                 reference_time=Time("2010-01-01", scale="tt"),
             )
             pointing = FixedPointingInfo(
-                mode=PointingMode.POINTING,
                 fixed_icrs=SkyCoord(0 * u.deg, sign * 0.5 * u.deg),
             )
 

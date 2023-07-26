@@ -337,7 +337,6 @@ def test_mde_sample_weak_src(dataset, models):
     )
     livetime = 10.0 * u.hr
     pointing = FixedPointingInfo(
-        mode=PointingMode.POINTING,
         fixed_icrs=SkyCoord(0, 0, unit="deg", frame="galactic").icrs,
     )
     obs = Observation.create(
@@ -430,7 +429,6 @@ def test_event_det_coords(dataset, models):
     )
     livetime = 1.0 * u.hr
     pointing = FixedPointingInfo(
-        mode=PointingMode.POINTING,
         fixed_icrs=SkyCoord(0, 0, unit="deg", frame="galactic").icrs,
     )
     obs = Observation.create(
@@ -466,7 +464,6 @@ def test_mde_run(dataset, models):
     )
     livetime = 1.0 * u.hr
     pointing = FixedPointingInfo(
-        mode=PointingMode.POINTING,
         fixed_icrs=SkyCoord(0, 0, unit="deg", frame="galactic").icrs,
     )
     obs = Observation.create(
@@ -567,7 +564,6 @@ def test_irf_alpha_config(dataset, models):
     )
     livetime = 1.0 * u.hr
     pointing = FixedPointingInfo(
-        mode=PointingMode.POINTING,
         fixed_icrs=SkyCoord(0, 0, unit="deg", frame="galactic").icrs,
     )
     obs = Observation.create(
@@ -591,7 +587,6 @@ def test_mde_run_switchoff(dataset, models):
     )
     livetime = 1.0 * u.hr
     pointing = FixedPointingInfo(
-        mode=PointingMode.POINTING,
         fixed_icrs=SkyCoord(0, 0, unit="deg", frame="galactic").icrs,
     )
     obs = Observation.create(
@@ -631,7 +626,6 @@ def test_events_datastore(tmp_path, dataset, models):
     )
     livetime = 10.0 * u.hr
     pointing = FixedPointingInfo(
-        mode=PointingMode.POINTING,
         fixed_icrs=SkyCoord(0, 0, unit="deg", frame="galactic").icrs,
     )
     obs = Observation.create(
@@ -662,7 +656,7 @@ def test_MC_ID(model_alternative):
     )
     livetime = 0.1 * u.hr
     skydir = SkyCoord(0, 0, unit="deg", frame="galactic")
-    pointing = FixedPointingInfo(mode=PointingMode.POINTING, fixed_icrs=skydir.icrs)
+    pointing = FixedPointingInfo(fixed_icrs=skydir.icrs)
     obs = Observation.create(
         obs_id=1001,
         pointing=pointing,
@@ -719,7 +713,7 @@ def test_MC_ID_NMCID(model_alternative):
     )
     livetime = 0.1 * u.hr
     skydir = SkyCoord(0, 0, unit="deg", frame="galactic")
-    pointing = FixedPointingInfo(mode=PointingMode.POINTING, fixed_icrs=skydir.icrs)
+    pointing = FixedPointingInfo(fixed_icrs=skydir.icrs)
     obs = Observation.create(
         obs_id=1001,
         pointing=pointing,

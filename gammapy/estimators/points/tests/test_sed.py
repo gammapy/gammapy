@@ -103,7 +103,7 @@ def simulate_map_dataset(random_state=0, name=None):
     )
 
     skydir = SkyCoord("0 deg", "0 deg", frame="galactic")
-    pointing = FixedPointingInfo(mode=PointingMode.POINTING, fixed_icrs=skydir.icrs)
+    pointing = FixedPointingInfo(fixed_icrs=skydir.icrs)
     energy_edges = np.logspace(-1, 2, 15) * u.TeV
     energy_axis = MapAxis.from_edges(edges=energy_edges, name="energy", interp="log")
 

@@ -232,7 +232,6 @@ def test_observations_select_time_time_intervals_list(data_store):
 def test_observation_cta_1dc():
     ontime = 5.0 * u.hr
     pointing = FixedPointingInfo(
-        mode=PointingMode.POINTING,
         fixed_icrs=SkyCoord(0, 0, unit="deg", frame="galactic").icrs,
     )
     irfs = load_irf_dict_from_file(
@@ -264,7 +263,6 @@ def test_observation_cta_1dc():
 @requires_data()
 def test_observation_create_radmax():
     pointing = FixedPointingInfo(
-        mode=PointingMode.POINTING,
         fixed_icrs=SkyCoord(0, 0, unit="deg", frame="galactic").icrs,
     )
     obs = Observation.read("$GAMMAPY_DATA/joint-crab/dl3/magic/run_05029748_DL3.fits")
