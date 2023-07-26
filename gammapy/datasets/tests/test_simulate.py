@@ -479,7 +479,7 @@ def test_event_det_coords(dataset, models):
 
 
 @requires_data()
-def test_mde_run(dataset, models):
+def test_mde_run(dataset, models, tmp_path):
     irfs = load_irf_dict_from_file(
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     )
@@ -569,13 +569,19 @@ def test_mde_run(dataset, models):
     assert meta["MMN00000"] == "test-bkg"
     assert meta["MID00001"] == 1
     assert meta["NMCIDS"] == 2
-    assert_allclose(float(meta["ALT_PNT"]), float("-13.5345076464"), rtol=1e-7)
-    assert_allclose(float(meta["AZ_PNT"]), float("228.82981620065763"), rtol=1e-7)
+    assert_allclose(meta["ALT_PNT"], -13.5345076464, rtol=1e-7)
+    assert_allclose(meta["AZ_PNT"], 228.82981620065763, rtol=1e-7)
     assert meta["ORIGIN"] == "Gammapy"
     assert meta["TELESCOP"] == "CTA"
     assert meta["INSTRUME"] == "1DC"
     assert meta["N_TELS"] == ""
     assert meta["TELLIST"] == ""
+
+    # test writing out and reading back in works
+    obs.events = events
+    path = tmp_path / "obs.fits.gz"
+    obs.write(path)
+    obs_back = Observation.read(path)
 
 
 @requires_data()

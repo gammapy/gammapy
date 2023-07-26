@@ -169,6 +169,12 @@ class Observation:
         events = self.obs_filter.filter_events(self._events)
         return events
 
+    @events.setter
+    def events(self, value):
+        if not isinstance(value, EventList):
+            raise TypeError(f"events must be an EventList instance, got: {type(value)}")
+        self._events = value
+
     @property
     def gti(self):
         """GTI of the observation as a `~gammapy.data.GTI`."""

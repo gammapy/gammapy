@@ -509,8 +509,8 @@ class MapDatasetEventSampler:
         # this is not really correct but maybe OK for now
         coord_altaz = observation.pointing.get_altaz(dataset.gti.time_start, loc)
 
-        meta["ALT_PNT"] = str(coord_altaz.alt.deg[0])
-        meta["AZ_PNT"] = str(coord_altaz.az.deg[0])
+        meta["ALT_PNT"] = coord_altaz.alt.deg[0]
+        meta["AZ_PNT"] = coord_altaz.az.deg[0]
 
         # TO DO: these keywords should be taken from the IRF of the dataset
         meta["ORIGIN"] = "Gammapy"
@@ -520,7 +520,7 @@ class MapDatasetEventSampler:
         meta["TELLIST"] = ""
 
         meta["CREATED"] = ""
-        meta["OBS_MODE"] = ""
+        meta["OBS_MODE"] = "POINTING"
         meta["EV_CLASS"] = ""
 
         return meta
