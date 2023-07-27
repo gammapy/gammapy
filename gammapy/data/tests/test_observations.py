@@ -6,7 +6,12 @@ import astropy.units as u
 from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.time import Time
 from astropy.units import Quantity
-from gammapy.data import DataStore, Observation, ObservationFilter
+from gammapy.data import (
+    DataStore,
+    Observation,
+    ObservationFilter,
+    Observations,
+)
 from gammapy.data.pointing import FixedPointingInfo, PointingMode
 from gammapy.data.utils import get_irfs_features
 from gammapy.irf import PSF3D, load_irf_dict_from_file
@@ -501,3 +506,33 @@ def test_filter_live_time_phase(data_store):
     live_time_filter = observation.observation_live_time_duration
 
     assert_allclose(live_time_filter, default_obs_live_time * (0.8 - 0.2))
+
+
+@requires_data()
+def test_stack_observations(data_store, caplog):
+    obs_1 = data_store.get_observations([20136, 20137, 20151])
+    obs_2 = data_store.get_observations([20275, 20282])
+
+    obs12 = Observations.from_stack([obs_1, obs_2])
+
+    assert len(obs12) == 5
+    assert isinstance(obs12[0], Observation)
+
+    obs122 = Observations.from_stack([obs12, obs_2])
+
+    assert len(obs122) == 7
+    assert "WARNING" in [_.levelname for _ in caplog.records]
+    assert "Observation with obs_id 20275 already belongs to Observations." in [
+        _.message for _ in caplog.records
+    ]
+
+    caplog.clear()
+    obs_1[2] = obs_1[0]
+
+    assert "WARNING" in [_.levelname for _ in caplog.records]
+    assert "Observation with obs_id 20136 already belongs to Observations." in [
+        _.message for _ in caplog.records
+    ]
+
+    with pytest.raises(TypeError):
+        Observations.from_stack([obs_1, ["a"]])
