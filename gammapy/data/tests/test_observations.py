@@ -520,7 +520,7 @@ def test_stack_observations(data_store, caplog):
 
     obs122 = Observations.from_stack([obs12, obs_2])
 
-    assert len(obs122) == 7 
+    assert len(obs122) == 7
     assert "WARNING" in [_.levelname for _ in caplog.records]
     assert "Observation with obs_id 20275 already belongs to Observations." in [
         _.message for _ in caplog.records
