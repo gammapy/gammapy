@@ -57,7 +57,17 @@ class MetaData(BaseModel):
 
 
 class CreatorMetaData(MetaData):
-    """Metadata containing information about the object creation."""
+    """Metadata containing information about the object creation.
+
+    Parameters
+    ----------
+    creator : str
+        the software used to create the data contained in the parent object
+    date : `~astropy.time.Time` or str
+        the creation date
+    origin : str
+        the organization at the origin of the data
+    """
 
     creator: Optional[str]
     date: Optional[Union[str, Time]]
