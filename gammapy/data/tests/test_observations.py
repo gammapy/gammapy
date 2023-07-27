@@ -8,7 +8,6 @@ from astropy.time import Time
 from astropy.units import Quantity
 from gammapy.data import (
     DataStore,
-    EventList,
     Observation,
     ObservationFilter,
     Observations,
@@ -519,8 +518,8 @@ def test_stack_observations(data_store, caplog):
     assert len(obs12) == 5
     assert isinstance(obs12[0], Observation)
 
-    obs122 = Observations.from_stack([obs12, obs2])
-    
+    obs122 = Observations.from_stack([obs12, obs_2])
+
     assert len(obs122) == 7 
     assert "WARNING" in [_.levelname for _ in caplog.records]
     assert "Observation with obs_id 20275 already belongs to Observations." in [
@@ -528,7 +527,7 @@ def test_stack_observations(data_store, caplog):
     ]
 
     caplog.clear()
-    obs[3] = obs[0]
+    obs_1[3] = obs_1[0]
 
     assert "WARNING" in [_.levelname for _ in caplog.records]
     assert "Observation with obs_id 20136 already belongs to Observations." in [
