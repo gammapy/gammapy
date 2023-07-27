@@ -37,5 +37,8 @@ def test_subclass():
         test_meta.mode = "coord"
 
     yaml_str = test_meta.to_yaml()
-    print(yaml_str)
-    assert False
+    assert "name: test" in yaml_str
+    assert "creation:" in yaml_str
+
+    test_meta.extra = 3
+    assert test_meta.extra == 3
