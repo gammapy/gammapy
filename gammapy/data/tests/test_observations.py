@@ -527,7 +527,7 @@ def test_stack_observations(data_store, caplog):
     ]
 
     caplog.clear()
-    obs_1[3] = obs_1[0]
+    obs_1[2] = obs_1[0]
 
     assert "WARNING" in [_.levelname for _ in caplog.records]
     assert "Observation with obs_id 20136 already belongs to Observations." in [
