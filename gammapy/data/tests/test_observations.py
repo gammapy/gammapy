@@ -518,13 +518,20 @@ def test_stack_observations(data_store, caplog):
 
     assert len(obs12) == 5
     assert isinstance(obs12[0], Observation)
-    assert isinstance(obs12[0].events, EventList)
 
+    obs122 = Observations.from_stack([obs12, obs2])
+    
+    assert len(obs122) == 7 
     assert "WARNING" in [_.levelname for _ in caplog.records]
     assert "Observation with obs_id 20275 already belongs to Observations." in [
         _.message for _ in caplog.records
     ]
-    assert "Observation with obs_id 20282 already belongs to Observations." in [
+    
+    caplog.clear()
+    obs[3] = obs[0]
+    
+    assert "WARNING" in [_.levelname for _ in caplog.records]
+    assert "Observation with obs_id 20136 already belongs to Observations." in [
         _.message for _ in caplog.records
     ]
 
