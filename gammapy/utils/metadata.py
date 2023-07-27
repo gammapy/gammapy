@@ -18,6 +18,7 @@ class MetaData(BaseModel):
     class Config:
         """Global config for all metadata."""
 
+        extra = "allow"
         arbitrary_types_allowed = True
         validate_all = True
         validate_assignment = True
