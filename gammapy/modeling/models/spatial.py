@@ -1395,7 +1395,7 @@ class TemplateNDSpatialModel(SpatialModel):
         return model
 
     def to_dict(self, full_output=False):
-        """Create dict for YAML serilisation"""
+        """Create dict for YAML serialisation"""
         data = super().to_dict(full_output)
         data["spatial"]["filename"] = self.filename
         data["spatial"]["unit"] = str(self.map.unit)
