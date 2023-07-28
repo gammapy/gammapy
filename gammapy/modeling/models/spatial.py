@@ -388,7 +388,7 @@ class SpatialModel(ModelBase):
 
         return ax
 
-    def plot_extension_error(self, ax=None, **kwargs):
+    def _to_region_error(self):
         pass
 
     def plot_error(
@@ -419,15 +419,29 @@ class SpatialModel(ModelBase):
         kwargs_position = kwargs_position or {}
         kwargs_extension = kwargs_extension or {}
 
+        ax = plt.gca() if ax is None else ax
+
+        kwargs_extension.setdefault("edgecolor", "red")
+        kwargs_extension.setdefault("facecolor", "red")
+        kwargs_extension.setdefault("alpha", 0.15)
+        kwargs_extension.setdefault("fill", True)
+
         if "all" in which:
             self.plot_position_error(ax, **kwargs_position)
-            self.plot_extension_error(ax, **kwargs_extension)
+
+            region = self._to_region_error()
+            if region is not None:
+                artist = region.to_pixel(ax.wcs).as_artist(**kwargs_extension)
+                ax.add_artist(artist)
 
         if "position" in which:
             self.plot_position_error(ax, **kwargs_position)
 
         if "extension" in which:
-            self.plot_extension_error(ax, **kwargs_extension)
+            region = self._to_region_error()
+            if region is not None:
+                artist = region.to_pixel(ax.wcs).as_artist(**kwargs_extension)
+                ax.add_artist(artist)
 
     def plot_grid(self, geom=None, **kwargs):
         """Plot spatial model energy slices in a grid.
@@ -654,26 +668,21 @@ class GaussianSpatialModel(SpatialModel):
         """Evaluation region consistent with evaluation radius"""
         return self.to_region(x_sigma=5)
 
-    def plot_extension_error(self, ax=None, x_sigma=1.5, **kwargs):
+    def _to_region_error(self, x_sigma=1.5):
         r"""Plot model error at a given number of :math:`\sigma`.
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`, optional
-            Axes to plot the extension error on.
         x_sigma : float
             Number of :math:`\sigma
             Default is :math:`1.5\sigma` which corresponds to about 68%
             containment for a 2D symmetric Gaussian.
-        **kwargs : dict
-            Keyword arguments passed to `~gammapy.maps.WcsMap.plot()`
 
         Returns
         -------
-        ax : `~matplotlib.axes.Axes`, optional
-            Axis
+        region : `~regions.EllipseSkyRegion`
+            Model error region.
         """
-        ax = plt.gca() if ax is None else ax
 
         sigma_hi = self.sigma.quantity + (self.sigma.error * self.sigma.unit)
         sigma_lo = self.sigma.quantity - (self.sigma.error * self.sigma.unit)
@@ -685,7 +694,7 @@ class GaussianSpatialModel(SpatialModel):
             sigma_lo * np.sqrt(1 - (self.e.quantity - self.e.error) ** 2)
         )
 
-        region = EllipseAnnulusSkyRegion(
+        return EllipseAnnulusSkyRegion(
             center=self.position,
             inner_height=2 * x_sigma * sigma_lo,
             outer_height=2 * x_sigma * sigma_hi,
@@ -693,15 +702,6 @@ class GaussianSpatialModel(SpatialModel):
             outer_width=2 * x_sigma * minor_axis_hi,
             angle=self.phi.quantity,
         )
-
-        kwargs.setdefault("edgecolor", "red")
-        kwargs.setdefault("facecolor", "red")
-        kwargs.setdefault("alpha", 0.15)
-        kwargs.setdefault("fill", True)
-        artist = region.to_pixel(ax.wcs).as_artist(**kwargs)
-        ax.add_artist(artist)
-
-        return ax
 
 
 class GeneralizedGaussianSpatialModel(SpatialModel):
@@ -792,27 +792,20 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
         scale = self.evaluation_radius / self.r_0.quantity
         return self.to_region(x_r_0=scale)
 
-    def plot_extension_error(self, ax=None, x_r_0=1, **kwargs):
-        r"""Plot model error at a given number of :math:`r_0`.
+    def _to_region_error(self, x_r_0=1):
+        r"""Model error at a given number of :math:`r_0`.
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`, optional
-            Axes to plot the extension error on.
         x_r_0 : float
             Number of :math:`r_0`
             Default is :math:`1`
-        **kwargs : dict
-            Keyword arguments passed to `~gammapy.maps.WcsMap.plot()`
 
         Returns
         -------
-        ax : `~matplotlib.axes.Axes`, optional
-            Axis
+        region : `~regions.EllipseSkyRegion`
+            Model error region.
         """
-
-        ax = plt.gca() if ax is None else ax
-
         r_0_lo = self.r_0.quantity - self.r_0.error * self.r_0.unit
         r_0_hi = self.r_0.quantity + self.r_0.error * self.r_0.unit
 
@@ -823,7 +816,7 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
             r_0_lo * np.sqrt(1 - (self.e.quantity - self.e.error) ** 2)
         )
 
-        region = EllipseAnnulusSkyRegion(
+        return EllipseAnnulusSkyRegion(
             center=self.position,
             inner_height=2 * x_r_0 * r_0_lo,
             outer_height=2 * x_r_0 * r_0_hi,
@@ -831,15 +824,6 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
             outer_width=2 * x_r_0 * minor_axis_hi,
             angle=self.phi.quantity,
         )
-
-        kwargs.setdefault("edgecolor", "red")
-        kwargs.setdefault("facecolor", "red")
-        kwargs.setdefault("alpha", 0.15)
-        kwargs.setdefault("fill", True)
-        artist = region.to_pixel(ax.wcs).as_artist(**kwargs)
-        ax.add_artist(artist)
-
-        return ax
 
 
 class DiskSpatialModel(SpatialModel):
@@ -981,24 +965,14 @@ class DiskSpatialModel(SpatialModel):
 
         return cls.from_position(region.center, **kwargs)
 
-    def plot_extension_error(self, ax=None, **kwargs):
-        r"""Plot model error.
-
-        Parameters
-        ----------
-        ax : `~matplotlib.axes.Axes`, optional
-            Axes to plot the extension error on.
-        **kwargs : dict
-            Keyword arguments passed to `~gammapy.maps.WcsMap.plot()`
+    def _to_region_error(self):
+        r"""Model error.
 
         Returns
         -------
-        ax : `~matplotlib.axes.Axes`, optional
-            Axis
+        region : `~regions.EllipseSkyRegion`
+            Model error region.
         """
-
-        ax = plt.gca() if ax is None else ax
-
         r_0_lo = self.r_0.quantity - self.r_0.error * self.r_0.unit
         r_0_hi = self.r_0.quantity + self.r_0.error * self.r_0.unit
 
@@ -1009,7 +983,7 @@ class DiskSpatialModel(SpatialModel):
             r_0_lo * np.sqrt(1 - (self.e.quantity - self.e.error) ** 2)
         )
 
-        region = EllipseAnnulusSkyRegion(
+        return EllipseAnnulusSkyRegion(
             center=self.position,
             inner_height=2 * r_0_lo,
             outer_height=2 * r_0_hi,
@@ -1017,15 +991,6 @@ class DiskSpatialModel(SpatialModel):
             outer_width=2 * minor_axis_hi,
             angle=self.phi.quantity,
         )
-
-        kwargs.setdefault("edgecolor", "red")
-        kwargs.setdefault("facecolor", "red")
-        kwargs.setdefault("alpha", 0.15)
-        kwargs.setdefault("fill", True)
-        artist = region.to_pixel(ax.wcs).as_artist(**kwargs)
-        ax.add_artist(artist)
-
-        return ax
 
 
 class ShellSpatialModel(SpatialModel):
