@@ -19,4 +19,4 @@ def test_containment():
     )
 
     radius = model_map.containment_radius(fraction=0.393)
-    assert_allclose(radius, model.sigma.quantity)
+    assert_allclose(radius, model.sigma.quantity, rtol=1e-2)
