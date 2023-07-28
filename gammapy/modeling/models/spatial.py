@@ -18,7 +18,7 @@ from regions import (
     RectangleSkyRegion,
 )
 import matplotlib.pyplot as plt
-from gammapy.maps import Map, MapCoord, WcsGeom, WcsNDMap
+from gammapy.maps import HpxNDMap, Map, MapCoord, WcsGeom, WcsNDMap
 from gammapy.modeling import Parameter, Parameters
 from gammapy.utils.deprecation import deprecated
 from gammapy.utils.gauss import Gauss2DPDF
@@ -1318,6 +1318,8 @@ class TemplateNDSpatialModel(SpatialModel):
         filename=None,
         copy_data=True,
     ):
+        if not isinstance(map, (HpxNDMap, WcsNDMap)):
+            raise TypeError("Map should be a HpxNDMap or WcsNDMap")
         if copy_data:
             self._map = map.copy()
         else:
@@ -1386,7 +1388,7 @@ class TemplateNDSpatialModel(SpatialModel):
     def from_dict(cls, data):
         data = data["spatial"]
         filename = data["filename"]
-        m = WcsNDMap.read(filename)
+        m = Map.read(filename)
         model = cls(m, filename=filename)
         for idx, p in enumerate(model.parameters):
             par = p.to_dict()
