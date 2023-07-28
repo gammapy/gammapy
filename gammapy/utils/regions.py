@@ -153,7 +153,7 @@ class SphericalCircleSkyRegion(CircleSkyRegion):
       TAN WCS and not have true cone select at all?
     """
 
-    def contains(integral_map, skycoord, wcs=None):
+    def contains(self, skycoord, wcs=None):
         """Defined by spherical distance."""
         separation = integral_map.center.separation(skycoord)
         return separation < integral_map.radius
