@@ -331,9 +331,9 @@ class WcsMap(Map):
         fmax = np.nanmax(self.data)
         if fmax > 0.0:
             frange = np.linspace(fmax / n_levels, fmax, n_levels)
-            fsum = self.data.sum()
+            fsum = np.nansum(self.data)
             for fval in frange:
-                S = np.sum(self.data[self.data > fval]) / fsum
+                S = np.nansum(self.data[self.data > fval]) / fsum
                 if S <= fraction:
                     break
             plt.ioff()
@@ -391,9 +391,9 @@ class WcsMap(Map):
         fmax = np.nanmax(self.data)
         if fmax > 0.0:
             rrange = np.linspace(hwidth / n_levels, hwidth, n_levels)
-            fsum = self.data.sum()
+            fsum = np.nansum(self.data)
             for radius in rrange:
-                S = np.sum(self.data[grid.separation(position) <= radius]) / fsum
+                S = np.nansum(self.data[grid.separation(position) <= radius]) / fsum
                 if S > fraction:
                     break
         return radius
