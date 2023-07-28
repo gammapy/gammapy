@@ -306,7 +306,7 @@ class WcsMap(Map):
 
         return fits.BinTableHDU.from_columns(cols, header=header, name=hdu)
 
-    def containment_region(self, fraction=0.68, n_levels=100, apply_union=True):
+    def containment_region(self, fraction=0.68, apply_union=True):
         """Find the iso-contours region corresponding to a given containment
             for a map of integral quantities.
 
@@ -316,8 +316,6 @@ class WcsMap(Map):
             Map of integral quantities
         fraction : float
             Containment fraction
-        n_levels : int
-            Numbers of contours levels used to find the required containment region.
         apply_union : bool
             It True return a compound region otherwise return a list of polygon regions.
             Default is True.
@@ -327,15 +325,13 @@ class WcsMap(Map):
         regions : list of ~regions.PolygonSkyRegion` or `~regions.CompoundSkyRegion`
             regions from iso-contours matching containment fraction
         """
-        self = self.reduce_over_axes()
         fmax = np.nanmax(self.data)
         if fmax > 0.0:
-            frange = np.linspace(fmax / n_levels, fmax, n_levels)
-            fsum = np.nansum(self.data)
-            for fval in frange:
-                S = np.nansum(self.data[self.data > fval]) / fsum
-                if S <= fraction:
-                    break
+            ordered = np.sort(self.data.flatten())[::-1]
+            cumsum = np.nancumsum(ordered)
+            ind = np.argmin(np.abs(cumsum / cumsum.max() - fraction))
+            fval = ordered[ind]
+
             plt.ioff()
             fig = plt.figure()
             cs = plt.contour(self.data.squeeze(), [fval])
@@ -361,7 +357,7 @@ class WcsMap(Map):
             else:
                 return regions_pieces
 
-    def containment_radius(self, fraction=0.68, n_levels=100, position=None):
+    def containment_radius(self, fraction=0.68, position=None):
         """Compute containment radius from the center of a map with integral quantities
 
         Parameters
@@ -380,20 +376,16 @@ class WcsMap(Map):
             Containement radius
 
         """
-        self = self.reduce_over_axes()
         coords = self.geom.get_coord()
         grid = coords.skycoord
         if position is None:
             position = self.geom.center_skydir
-        hwidth = np.max(self.geom.width) / 2.0
 
-        radius = np.nan
         fmax = np.nanmax(self.data)
         if fmax > 0.0:
-            rrange = np.linspace(hwidth / n_levels, hwidth, n_levels)
-            fsum = np.nansum(self.data)
-            for radius in rrange:
-                S = np.nansum(self.data[grid.separation(position) <= radius]) / fsum
-                if S > fraction:
-                    break
-        return radius
+            sep = grid.separation(position).flatten()
+            order = np.argsort(sep)
+            ordered = self.data.flatten()[order]
+            cumsum = np.nancumsum(ordered)
+            ind = np.argmin(np.abs(cumsum / cumsum.max() - fraction))
+        return sep[order][ind]

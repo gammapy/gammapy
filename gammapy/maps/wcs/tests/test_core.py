@@ -11,14 +11,12 @@ def test_containment():
     geom = model._get_plot_map(None).geom.upsample(factor=3)
     model_map = model.integrate_geom(geom)
 
-    regions = model_map.containment_region(
-        fraction=0.393, n_levels=100, apply_union=True
-    )
+    regions = model_map.containment_region(fraction=0.393, apply_union=True)
     assert isinstance(regions, PolygonSkyRegion)  # because there is only one
 
     assert_allclose(
         regions.vertices.separation(geom.center_skydir), model.sigma.quantity, rtol=1e-2
     )
 
-    radius = model_map.containment_radius(fraction=0.393, n_levels=100)
+    radius = model_map.containment_radius(fraction=0.393)
     assert_allclose(radius, model.sigma.quantity)
