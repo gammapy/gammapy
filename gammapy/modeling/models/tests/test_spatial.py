@@ -601,7 +601,7 @@ def test_template_ND(tmpdir):
         for kp, cste_value in enumerate(cste.center):
             nd_map.data[kp, kn, :, :] = norm_value * map_.data + cste_value
 
-    template = TemplateNDSpatialModel(nd_map)
+    template = TemplateNDSpatialModel(nd_map, interp_kwargs={"values_scale": "lin"})
     assert len(template.parameters) == 2
     assert_allclose(template.parameters["norm"].value, 5)
     assert_allclose(template.parameters["cste"].value, 0)
@@ -611,11 +611,11 @@ def test_template_ND(tmpdir):
         ),
         [0],
     )
-    assert_allclose(template.evaluate_geom(geom2d), 5 * map_.data, rtol=0.2)
+    assert_allclose(template.evaluate_geom(geom2d), 5 * map_.data, rtol=0.03, atol=10)
 
     template.parameters["norm"].value = 2
     template.parameters["cste"].value = 0
-    assert_allclose(template.evaluate_geom(geom2d), 2 * map_.data, rtol=0.2)
+    assert_allclose(template.evaluate_geom(geom2d), 2 * map_.data, rtol=0.03, atol=10)
 
     template.filename = str(tmpdir / "template_ND.fits")
     template.write()
