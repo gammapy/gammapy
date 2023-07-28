@@ -107,3 +107,7 @@ def test_plot_distribution():
 
         assert res == []
         assert axes.shape == (4, 3)
+
+        res, axes = plot_distribution(
+            wcs_map=map_, func="norm", kwargs_hist={"bins": 40}
+        )
