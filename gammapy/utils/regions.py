@@ -22,11 +22,9 @@ from regions import (
     CircleSkyRegion,
     CompoundSkyRegion,
     EllipseSkyRegion,
-    PolygonSkyRegion,
     RectangleSkyRegion,
     Regions,
 )
-import matplotlib.pyplot as plt
 
 __all__ = [
     "compound_region_to_regions",
@@ -155,8 +153,8 @@ class SphericalCircleSkyRegion(CircleSkyRegion):
 
     def contains(self, skycoord, wcs=None):
         """Defined by spherical distance."""
-        separation = integral_map.center.separation(skycoord)
-        return separation < integral_map.radius
+        separation = self.center.separation(skycoord)
+        return separation < self.radius
 
 
 def make_orthogonal_rectangle_sky_regions(start_pos, end_pos, wcs, height, nbin=1):
@@ -277,93 +275,3 @@ def region_circle_to_ellipse(region):
         center=region.center, width=region.radius, height=region.radius
     )
     return region_new
-
-
-def containment_region(integral_map, fraction=0.68, n_levels=100, apply_union=True):
-    """Find the iso-contours region corresponding to a given containment
-        for a map of integral quantities.
-
-    Parameters
-    ----------
-    integral_map : `~gammapy.maps.WcsNDMap`
-        Map of integral quantities
-    fraction : float
-        Containment fraction
-    n_levels : int
-        Numbers of contours levels used to find the required containment region.
-
-    Returns
-    -------
-    regions : list of ~regions.PolygonSkyRegion` or `~regions.CompoundSkyRegion`
-        regions from iso-contours matching containment fraction
-    """
-    integral_map = integral_map.reduce_over_axes()
-    fmax = np.nanmax(integral_map.data)
-    if fmax > 0.0:
-        frange = np.linspace(fmax / n_levels, fmax, n_levels)
-        fsum = integral_map.data.sum()
-        for fval in frange:
-            S = np.sum(integral_map.data[integral_map.data > fval]) / fsum
-            if S <= fraction:
-                break
-        plt.ioff()
-        fig = plt.figure()
-        cs = plt.contour(integral_map.data.squeeze(), [fval])
-        plt.close(fig)
-        plt.ion()
-        regions_pieces = []
-        for kp, pp in enumerate(cs.collections[0].get_paths()):
-            vertices = []
-            for v in pp.vertices:
-                v_coord = integral_map.geom.pix_to_coord(v)
-                vertices.append([v_coord[0], v_coord[1]])
-            vertices = SkyCoord(vertices, frame=integral_map.geom.frame)
-            regions_pieces.append(PolygonSkyRegion(vertices))
-
-        if apply_union:
-            # compound from union seems not supported to write in ds9 format
-            # so regions_pieces contains a list that is supported
-            # while regions_full can be saved as .npz
-            regions_union = regions_pieces[0]
-            for region in regions_pieces[1:]:
-                regions_union = regions_union.union(region)
-            return regions_union
-        else:
-            return regions_pieces
-
-
-def containment_radius(integral_map, fraction=0.68, n_levels=100):
-    """Compute containment radius from the center of a map with integral quantities
-
-    Parameters
-    ----------
-    integral_map : `~gammapy.maps.WcsNDMap`
-        Map of integral quantities
-    fraction : float
-        Containment fraction
-    n_levels : int
-        Numbers of contours levels used to find the required containment radius.
-
-    Returns
-    -------
-    radius : `~astropy.coordinates.Angle`
-        Containement radius
-
-
-    """
-    integral_map = integral_map.reduce_over_axes()
-    coords = integral_map.geom.get_coord()
-    grid = coords.skycoord
-    center = integral_map.geom.center_skydir
-    hwidth = np.max(integral_map.geom.width) / 2.0
-
-    radius = np.nan
-    fmax = np.nanmax(integral_map.data)
-    if fmax > 0.0:
-        rrange = np.linspace(hwidth / n_levels, hwidth, n_levels)
-        fsum = integral_map.data.sum()
-        for radius in rrange:
-            S = np.sum(integral_map.data[grid.separation(center) <= radius]) / fsum
-            if S > fraction:
-                break
-    return radius

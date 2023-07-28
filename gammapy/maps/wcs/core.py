@@ -2,7 +2,10 @@
 import json
 import numpy as np
 import astropy.units as u
+from astropy.coordinates import SkyCoord
 from astropy.io import fits
+from regions import PolygonSkyRegion
+import matplotlib.pyplot as plt
 from ..core import Map
 from ..io import JsonQuantityEncoder, find_bands_hdu, find_hdu
 from .geom import WcsGeom
@@ -302,3 +305,95 @@ class WcsMap(Map):
             ]
 
         return fits.BinTableHDU.from_columns(cols, header=header, name=hdu)
+
+    def containment_region(self, fraction=0.68, n_levels=100, apply_union=True):
+        """Find the iso-contours region corresponding to a given containment
+            for a map of integral quantities.
+
+        Parameters
+        ----------
+        self : `~gammapy.maps.WcsNDMap`
+            Map of integral quantities
+        fraction : float
+            Containment fraction
+        n_levels : int
+            Numbers of contours levels used to find the required containment region.
+        apply_union : bool
+            It True return a compound region otherwise return a list of polygon regions.
+            Default is True.
+
+        Returns
+        -------
+        regions : list of ~regions.PolygonSkyRegion` or `~regions.CompoundSkyRegion`
+            regions from iso-contours matching containment fraction
+        """
+        self = self.reduce_over_axes()
+        fmax = np.nanmax(self.data)
+        if fmax > 0.0:
+            frange = np.linspace(fmax / n_levels, fmax, n_levels)
+            fsum = self.data.sum()
+            for fval in frange:
+                S = np.sum(self.data[self.data > fval]) / fsum
+                if S <= fraction:
+                    break
+            plt.ioff()
+            fig = plt.figure()
+            cs = plt.contour(self.data.squeeze(), [fval])
+            plt.close(fig)
+            plt.ion()
+            regions_pieces = []
+            for kp, pp in enumerate(cs.collections[0].get_paths()):
+                vertices = []
+                for v in pp.vertices:
+                    v_coord = self.geom.pix_to_coord(v)
+                    vertices.append([v_coord[0], v_coord[1]])
+                vertices = SkyCoord(vertices, frame=self.geom.frame)
+                regions_pieces.append(PolygonSkyRegion(vertices))
+
+            if apply_union:
+                # compound from union seems not supported to write in ds9 format
+                # so regions_pieces contains a list that is supported
+                # while regions_full can be saved as .npz
+                regions_union = regions_pieces[0]
+                for region in regions_pieces[1:]:
+                    regions_union = regions_union.union(region)
+                return regions_union
+            else:
+                return regions_pieces
+
+    def containment_radius(self, fraction=0.68, n_levels=100, position=None):
+        """Compute containment radius from the center of a map with integral quantities
+
+        Parameters
+        ----------
+        fraction : float
+            Containment fraction
+        n_levels : int
+            Numbers of contours levels used to find the required containment radius.
+        position : `~astropy.coordinates.SkyCoord`
+            Position from where the containment is conputed.
+            Default is the center of the Map.
+
+        Returns
+        -------
+        radius : `~astropy.coordinates.Angle`
+            Containement radius
+
+        """
+        self = self.reduce_over_axes()
+        coords = self.geom.get_coord()
+        grid = coords.skycoord
+        if position is None:
+            position = self.geom.center_skydir
+        hwidth = np.max(self.geom.width) / 2.0
+
+        radius = np.nan
+        fmax = np.nanmax(self.data)
+        if fmax > 0.0:
+            rrange = np.linspace(hwidth / n_levels, hwidth, n_levels)
+            fsum = self.data.sum()
+            for radius in rrange:
+                S = np.sum(self.data[grid.separation(position) <= radius]) / fsum
+                if S > fraction:
+                    break
+        return radius

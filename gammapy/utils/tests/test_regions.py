@@ -10,13 +10,10 @@ stable, so need to establish a bit what works and what doesn't.
 from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
 from astropy.coordinates import SkyCoord
-from regions import CircleSkyRegion, EllipseSkyRegion, PolygonSkyRegion, Regions
-from gammapy.modeling.models import GaussianSpatialModel
+from regions import CircleSkyRegion, EllipseSkyRegion, Regions
 from gammapy.utils.regions import (
     SphericalCircleSkyRegion,
     compound_region_center,
-    containment_radius,
-    containment_region,
     region_circle_to_ellipse,
     region_to_frame,
     regions_to_compound_region,
@@ -105,22 +102,3 @@ def test_region_circle_to_ellipse():
     assert_allclose(region_new.height, region.radius, rtol=1e-3)
     assert_allclose(region_new.width, region.radius, rtol=1e-3)
     assert_allclose(region_new.angle, 0.0 * u.deg, rtol=1e-3)
-
-
-def test_containment():
-
-    model = GaussianSpatialModel(sigma="0.15 deg")
-    geom = model._get_plot_map(None).geom.upsample(factor=3)
-    integral_map = model.integrate_geom(geom)
-
-    regions = containment_region(
-        integral_map, fraction=0.393, n_levels=100, apply_union=True
-    )
-    assert isinstance(regions, PolygonSkyRegion)
-
-    assert_allclose(
-        regions.vertices.separation(geom.center_skydir), model.sigma.quantity, rtol=1e-2
-    )
-
-    radius = containment_radius(integral_map, fraction=0.393, n_levels=100)
-    assert_allclose(radius, model.sigma.quantity)
