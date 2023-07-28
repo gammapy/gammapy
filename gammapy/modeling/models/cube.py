@@ -407,6 +407,8 @@ class SkyModel(ModelBase):
             integral = self.temporal_model.integral(gti.time_start, gti.time_stop)
             value = value * np.sum(integral)
 
+        value = value * np.ones(geom.data_shape)
+
         return Map.from_geom(geom=geom, data=value.value, unit=value.unit)
 
     def copy(self, name=None, copy_data=False, **kwargs):
