@@ -284,13 +284,13 @@ class SourceCatalog(abc.ABC):
 
     @lazyproperty
     def _lookup_spectral_source_idx(self):
-        names = [_.strip() for _ in self.spectral_table["PSR_Name"]]
+        names = [_.strip() for _ in self.spectral_table[self._source_name_key]]
         idx = range(len(names))
         return dict(zip(names, idx))
 
     @lazyproperty
     def _lookup_extended_source_idx(self):
-        names = [_.strip() for _ in self.extended_sources_table["Source_Name"]]
+        names = [_.strip() for _ in self.extended_sources_table[self._source_name_key]]
         idx = range(len(names))
         return dict(zip(names, idx))
 
