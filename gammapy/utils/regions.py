@@ -299,7 +299,7 @@ def containment_region(integral_map, fraction=0.68, n_levels=100, apply_union=Tr
     """
     integral_map = integral_map.reduce_over_axes()
     fmax = np.nanmax(integral_map.data)
-    if fmax != 0.0:
+    if fmax > 0.0:
         frange = np.linspace(fmax / n_levels, fmax, n_levels)
         fsum = integral_map.data.sum()
         for fval in frange:
@@ -346,21 +346,20 @@ def containment_radius(integral_map, fraction=0.68, n_levels=100):
 
     Returns
     -------
-    radius : `~regions.CompoundSkyRegion`
+    radius : `~astropy.coordinates.Angle`
         Containement radius
-    regions_pieces : list of `~regions.PolygonSkyRegion`
 
 
     """
     integral_map = integral_map.reduce_over_axes()
     coords = integral_map.geom.get_coord()
-    grid = SkyCoord(coords["lon"], coords["lat"], frame=integral_map.geom.frame)
+    grid = coords.skycoord
     center = integral_map.geom.center_skydir
     hwidth = np.max(integral_map.geom.width) / 2.0
 
     radius = np.nan
     fmax = np.nanmax(integral_map.data)
-    if fmax != 0.0:
+    if fmax > 0.0:
         rrange = np.linspace(hwidth / n_levels, hwidth, n_levels)
         fsum = integral_map.data.sum()
         for radius in rrange:
