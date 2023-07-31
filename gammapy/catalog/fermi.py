@@ -375,9 +375,13 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
                 )
             elif morph_type in ["Map", "Ring", "2D Gaussian x2"]:
                 filename = de["Spatial_Filename"].strip()
-                path = make_path(
-                    "$GAMMAPY_DATA/catalogs/fermi/LAT_extended_sources_8years/Templates/"
-                )
+                if de["version"] < 28:
+                    path_extended = "$GAMMAPY_DATA/catalogs/fermi/LAT_extended_sources_8years/Templates/"
+                elif de["version"] < 32:
+                    path_extended = "$GAMMAPY_DATA/catalogs/fermi/LAT_extended_sources_12years/Templates/"
+                else:
+                    path_extended = "$GAMMAPY_DATA/catalogs/fermi/LAT_extended_sources_14years/Templates/"
+                path = make_path(path_extended)
                 with warnings.catch_warnings():  # ignore FITS units warnings
                     warnings.simplefilter("ignore", FITSFixedWarning)
                     model = TemplateSpatialModel.read(path / filename)
@@ -1291,6 +1295,9 @@ class SourceCatalog4FGL(SourceCatalog):
         )
 
         self.extended_sources_table = Table.read(filename, hdu="ExtendedSources")
+        self.extended_sources_table["version"] = int(
+            "".join(filter(str.isdigit, table.meta["VERSION"]))
+        )
         try:
             self.hist_table = Table.read(filename, hdu="Hist_Start")
             if "MJDREFI" not in self.hist_table.meta:
