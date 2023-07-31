@@ -1,11 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from collections.abc import MutableMapping
-from typing import Tuple
+from typing import Tuple, Union
 import numpy as np
+import astropy.units as u
 from astropy.table import Column, Table
-from astropy.units import UnitTypeError
+from astropy.units import Unit, UnitTypeError
 import yaml
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 
 GADF_EVENT_TABLE_DEFINITION = """
 EVENT_ID: { dtype: int, required: true, unit: null}
@@ -40,14 +41,22 @@ HIL_MSL_ERR : { dtype: float, unit: ''}
 
 class ColumnDefinition(BaseModel):
     dtype: str = None
-    unit: str = None
+    unit: Union[Unit, str] = u.one
     shape: Tuple = ()
     description: str = None
     required: bool = False
 
+    class Config:
+        arbitrary_types_allowed = True
+
+    @validator("unit")
+    @classmethod
+    def _check_unit(cls, v):
+        return Unit(v)
+
     def validate_column(self, column):
         """Check that input Column satisfies the column definition."""
-        #       self.check_column_type(self.dtype, column)
+        self.check_column_type(self.dtype, column)
         self.check_column_shape(self.shape, column)
         self.check_column_unit(self.unit, column)
         return column
@@ -72,8 +81,8 @@ class ColumnDefinition(BaseModel):
 
     @staticmethod
     def check_column_unit(unit, column):
-        unit = unit if unit is not None else ""
-        if column.unit is None and unit == "":
+        unit = unit if unit is not None else u.one
+        if column.unit is None and unit == u.one:
             return True
         elif column.unit.is_equivalent(unit):
             return True
