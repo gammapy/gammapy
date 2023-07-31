@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 
 from numpy.testing import assert_allclose
-from regions import PolygonSkyRegion
+from regions import CompoundSkyRegion, PolygonSkyRegion
 from gammapy.modeling.models import GaussianSpatialModel
 
 
@@ -20,3 +20,11 @@ def test_containment():
 
     radius = model_map.containment_radius(fraction=0.393)
     assert_allclose(radius, model.sigma.quantity, rtol=1e-2)
+
+    model2 = GaussianSpatialModel(lon_0="-0.5deg", sigma="0.15 deg")
+    model_map2 = model_map + model2.integrate_geom(geom)
+    regions = model_map2.containment_region(fraction=0.1, apply_union=True)
+    assert isinstance(regions, CompoundSkyRegion)
+
+    regions = model_map2.containment_region(fraction=0.1, apply_union=False)
+    assert isinstance(regions, list)
