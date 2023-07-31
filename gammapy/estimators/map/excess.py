@@ -88,6 +88,15 @@ class ExcessMapEstimator(Estimator):
         Confidence level for the upper limits expressed in number of sigma.
     n_sigma_sensitivity : float
         Confidence level for the sensitivity expressed in number of sigma.
+    gamma_min_sensitivity : float, optional
+        Minimum number of gamma-rays. Default is 10.
+        Usde only for for sensitivity computation if `apply_threshold_sensitivity`is True.
+    bkg_syst_fraction_sensitivity : float, optional
+        Fraction of background counts above which the number of gamma-rays is . Default is 0.05
+        Usde only for for sensitivity computation if `apply_threshold_sensitivity`is True.
+    apply_threshold_sensitivity : bool
+        If True use ``bkg_syst_fraction_sensitivity` and `gamma_min_sensitivity`
+        in sensitivity computation. Defalut is False which is setting used for the HGPS catalogue.
     selection_optional : list of str
         Which additional maps to estimate besides delta TS, significance and symmetric error.
         Available options are:
@@ -140,16 +149,22 @@ class ExcessMapEstimator(Estimator):
         correlation_radius="0.1 deg",
         n_sigma=1,
         n_sigma_ul=2,
-        n_sigma_sensitivity=5,
         selection_optional=None,
         energy_edges=None,
         correlate_off=True,
         spectral_model=None,
+        n_sigma_sensitivity=5,
+        gamma_min_sensitivity=10,
+        bkg_syst_fraction_sensitivity=0.05,
+        apply_threshold_sensitivity=False,
     ):
         self.correlation_radius = correlation_radius
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
         self.n_sigma_sensitivity = n_sigma_sensitivity
+        self.gamma_min_sensitivity = gamma_min_sensitivity
+        self.bkg_syst_fraction_sensitivity = bkg_syst_fraction_sensitivity
+        self.apply_threshold_sensitivity = apply_threshold_sensitivity
         self.selection_optional = selection_optional
         self.energy_edges = energy_edges
         self.correlate_off = correlate_off
@@ -335,15 +350,22 @@ class ExcessMapEstimator(Estimator):
                     / reco_exposure
                 )
             if "sensitivity" in self.selection_optional:
-                maps["norm_sensitivity"] = (
-                    Map.from_geom(
-                        geom,
-                        data=counts_stat.n_sig_matching_significance(
-                            self.n_sigma_sensitivity
-                        ),
-                    )
-                    / reco_exposure
+                excess_counts = counts_stat.n_sig_matching_significance(
+                    self.n_sigma_sensitivity
                 )
+                if self.apply_threshold_sensitivity:
+                    is_gamma_limited = excess_counts < self.gamma_min_sensitivity
+                    excess_counts[is_gamma_limited] = self.gamma_min_sensitivity
+                    bkg_syst_limited = (
+                        excess_counts
+                        < self.bkg_syst_fraction_sensitivity * dataset.background.data
+                    )
+                    excess_counts[bkg_syst_limited] = (
+                        self.bkg_syst_fraction_sensitivity
+                        * dataset.background.data[bkg_syst_limited]
+                    )
+                excess = Map.from_geom(geom=geom, data=excess_counts)
+                maps["norm_sensitivity"] = excess / reco_exposure
 
         # return nan values outside mask
         for name in maps:
@@ -355,6 +377,9 @@ class ExcessMapEstimator(Estimator):
             "n_sigma_sensitivity": self.n_sigma_sensitivity,
             "sed_type_init": "likelihood",
         }
+        if self.apply_threshold_sensitivity:
+            meta["gamma_min_sensitivity"] = self.gamma_min_sensitivity
+            meta["bkg_syst_fraction_sensitivity"] = self.bkg_syst_fraction_sensitivity
 
         return FluxMaps.from_maps(
             maps=maps,
