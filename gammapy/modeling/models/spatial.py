@@ -460,7 +460,6 @@ class PointSpatialModel(SpatialModel):
     tag = ["PointSpatialModel", "point"]
     lon_0 = Parameter("lon_0", "0 deg")
     lat_0 = Parameter("lat_0", "0 deg", min=-90, max=90)
-    is_energy_dependent = False
 
     @property
     def evaluation_bin_size_min(self):
