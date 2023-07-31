@@ -210,6 +210,7 @@ class TestFermi4FGLObject:
         assert_allclose(p["sigma"].value, 0.27)
 
         model = self.cat["4FGL J1443.0-6227e"].spatial_model()
+        assert self.cat["4FGL J1443.0-6227e"].data_extended["version"] == 20
         assert "TemplateSpatialModel" in model.tag
         assert model.frame == "fk5"
         assert model.normalize
