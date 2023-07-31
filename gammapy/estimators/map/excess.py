@@ -140,7 +140,7 @@ class ExcessMapEstimator(Estimator):
         correlation_radius="0.1 deg",
         n_sigma=1,
         n_sigma_ul=2,
-        n_sigma_sensitivity=4,
+        n_sigma_sensitivity=5,
         selection_optional=None,
         energy_edges=None,
         correlate_off=True,

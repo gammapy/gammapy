@@ -58,7 +58,7 @@ REQUIRED_QUANTITIES_SCAN = ["stat_scan", "stat"]
 OPTIONAL_QUANTITIES = {
     "dnde": ["dnde_err", "dnde_errp", "dnde_errn", "dnde_ul"],
     "e2dnde": ["e2dnde_err", "e2dnde_errp", "e2dnde_errn", "e2dnde_ul"],
-    "flux": ["flux_err", "flux_errp", "flux_errn", "flux_ul", "sensitivity"],
+    "flux": ["flux_err", "flux_errp", "flux_errn", "flux_ul", "flux_sensitivity"],
     "eflux": ["eflux_err", "eflux_errp", "eflux_errn", "eflux_ul"],
     "likelihood": ["norm_err", "norm_errn", "norm_errp", "norm_ul"],
 }
@@ -682,8 +682,8 @@ class FluxMaps:
         return self.norm_ul * self.flux_ref
 
     @property
-    def sensitivity(self):
-        """Sensitivity above a given significance"""
+    def flux_sensitivity(self):
+        """Sensitivity given as the flux for which the significance is ``self.meta["n_sigma_sensitivity]``"""
         return self.norm_sensitivity * self.flux_ref
 
     @property
