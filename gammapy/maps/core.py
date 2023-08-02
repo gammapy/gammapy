@@ -1128,15 +1128,11 @@ class Map(abc.ABC):
             raise TypeError("This method is only valid for 3d map")
             # TODO: could this work with more axes ? with iter_by_image maybe
 
-        axis = self.geom.axes[0]
-        slices = (
-            self.slice_by_idx({axis.name: slice(idx, idx + 1)})
-            for idx in range(len(axis.center))
-        )
+        output_map = Map.from_geom(geom.to_cube(self.geom.axes))
         maps = parallel.run_multiprocessing(
             self._reproject_slice,
             zip(
-                slices,
+                self.iter_by_image(),
                 repeat(geom),
                 repeat(preserve_counts),
                 repeat(precision_factor),
@@ -1146,12 +1142,13 @@ class Map(abc.ABC):
             task_name="Reprojection",
         )
         # TODO: uncomment after parallel support is added on maps
-        return Map.from_stack(maps, axis=axis)
+        for idx in np.ndindex(self.geom.shape_axes):
+            output_map.data[idx[0]] = maps[idx[0]].data
+        return output_map
 
     @staticmethod
-    def _reproject_slice(slice_, geom, preserve_counts, precision_factor):
-        slice_ = slice_.reduce_over_axes()
-        return slice_.reproject_to_geom(
+    def _reproject_slice(image, geom, preserve_counts, precision_factor):
+        return image.reproject_to_geom(
             geom, precision_factor=precision_factor, preserve_counts=preserve_counts
         )
 
