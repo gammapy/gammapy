@@ -10,6 +10,7 @@ import numpy as np
 from astropy import units as u
 from astropy.io import fits
 import matplotlib.pyplot as plt
+import gammapy.utils.parallel as parallel
 from gammapy.utils.deprecation import deprecated
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.scripts import make_path
@@ -1140,10 +1141,11 @@ class Map(abc.ABC):
                 repeat(preserve_counts),
                 repeat(precision_factor),
             ),
-            backend=self.parallel_backend,
-            pool_kwargs=dict(processes=self.n_jobs),
+            # backend=self.parallel_backend,
+            # pool_kwargs=dict(processes=self.n_jobs),
             task_name="Reprojection",
         )
+        # TODO: uncomment after parallel support is added on maps
         return Map.from_stack(maps, axis=axis)
 
     @staticmethod
