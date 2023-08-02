@@ -1097,13 +1097,13 @@ class Map(abc.ABC):
             output_map = output_map.resample(geom, preserve_counts=preserve_counts)
         return output_map
 
-    def reproject_by_slice(
+    def reproject_by_image(
         self,
         geom,
         preserve_counts=False,
         precision_factor=10,
     ):
-        """Reproject each slice of a 3d map to input 2d geometry.
+        """Reproject each image of a ND map to input 2d geometry.
 
         Parameters
         ----------
@@ -1124,9 +1124,6 @@ class Map(abc.ABC):
         """
         if not geom.is_image:
             raise TypeError("This method is only valid for 2d geom")
-        if len(self.geom.axes) != 1:
-            raise TypeError("This method is only valid for 3d map")
-            # TODO: could this work with more axes ? with iter_by_image maybe
 
         output_map = Map.from_geom(geom.to_cube(self.geom.axes))
         maps = parallel.run_multiprocessing(
@@ -1147,7 +1144,7 @@ class Map(abc.ABC):
         return output_map
 
     @staticmethod
-    def _reproject_slice(image, geom, preserve_counts, precision_factor):
+    def _reproject_image(image, geom, preserve_counts, precision_factor):
         return image.reproject_to_geom(
             geom, precision_factor=precision_factor, preserve_counts=preserve_counts
         )
