@@ -1,8 +1,8 @@
 import numpy as np
-from astropy import units as u
 from gammapy.datasets import Datasets, MapDataset
 from gammapy.modeling import Fit
 from gammapy.modeling.models import FoVBackgroundModel
+from gammapy.modeling.selection import TestStatisticNested
 from gammapy.stats.utils import ts_to_sigma
 from .core import Estimator
 
@@ -86,28 +86,7 @@ class EnergyDependenceEstimator(Estimator):
             energy_min=self.energy_edges[0], energy_max=None
         )
 
-        # Calculate the initial null hypothesis -- background only, no source
-        model_bkg = self.model.copy()
-        model_bkg.freeze(model_type="spectral")
-        model_bkg.freeze(model_type="spatial")
-
-        model_bkg.spectral_model.amplitude.value = 0
-
-        slices_bkg = Datasets()
-        for emin, emax in zip(self.energy_edges[:-1], self.energy_edges[1:]):
-            sliced_bkg = dataset.slice_by_energy(emin, emax)
-            bkg_sliced_model = FoVBackgroundModel(dataset_name=sliced_bkg.name)
-            sliced_bkg.models = [model_bkg.copy(), bkg_sliced_model]
-            slices_bkg.append(sliced_bkg)
-
-        results_bkg = []
-        for sliced in slices_bkg:
-            results_bkg.append(self.fit.run(sliced))
-
-        results_bkg_total_stat = [result.total_stat for result in results_bkg]
-        df_bkg = 1 * self.num_energy_bands
-
-        # Calculate the alternative hypothesis -- add the source in
+        # Calculate the dataset for each energy slice
         slices_src = Datasets()
         for emin, emax in zip(self.energy_edges[:-1], self.energy_edges[1:]):
             sliced_src = dataset.slice_by_energy(emin, emax)
@@ -115,21 +94,31 @@ class EnergyDependenceEstimator(Estimator):
             sliced_src.models = [self.model.copy(), bkg_sliced_model]
             slices_src.append(sliced_src)
 
-        results_src = []
+        # Norm is free and fit
+        test_results = []
         for sliced in slices_src:
-            results_src.append(self.fit.run(sliced))
+            parameters = [param for param in sliced.models.parameters.free_parameters]
+            null_values = [0] + [
+                param.value
+                for param in sliced.models[0].spatial_model.parameters.free_parameters
+            ]
 
-        results_src_total_stat = [result.total_stat for result in results_src]
+            test = TestStatisticNested(
+                parameters=parameters,
+                null_values=null_values,
+                n_sigma=-np.inf,
+                fit=self.fit,
+            )
+            test_results.append(test.run(sliced))
 
-        free_x, free_y = np.shape(
-            [result.parameters.free_parameters.names for result in results_src]
+        delta_ts_bkg_src = [_["ts"] for _ in test_results]
+        df_src = np.sum(
+            [
+                len(_["fit_results"].parameters.free_parameters.names)
+                for _ in test_results
+            ]
         )
-        df_src = free_x * free_y
-
-        # Calculate the signal above the background
-        delta_ts_bkg_src = [
-            (n - a) for n, a in zip(results_bkg_total_stat, results_src_total_stat)
-        ]
+        df_bkg = 1 * self.num_energy_bands
         df_bkg_src = df_src - df_bkg
         sigma_ts_bkg_src = ts_to_sigma(delta_ts_bkg_src, df=df_bkg_src)
 
@@ -220,13 +209,15 @@ class EnergyDependenceEstimator(Estimator):
         result["Emin"] = np.append(self.energy_edges[0], self.energy_edges[:-1])
         result["Emax"] = np.append(self.energy_edges[-1], self.energy_edges[1:])
 
+        units = [result_joint.parameters[param].unit for param in parameters]
+
         # Results for H0 in the first row and then H1 -- i.e. individual bands in other rows
         for i in range(len(parameters)):
-            result[f"{parameters[i]}"] = (
-                np.append(joint_values[i], parameter_values[i]) * u.deg
+            result[f"{parameters[i]}"] = np.append(
+                joint_values[i] * units[i], parameter_values[i] * units[i]
             )
-            result[f"{parameters[i]}_err"] = (
-                np.append(joint_errors[i], parameter_errors[i]) * u.deg
+            result[f"{parameters[i]}_err"] = np.append(
+                joint_errors[i] * units[i], parameter_errors[i] * units[i]
             )
 
         return dict(delta_ts=delta_ts_joint, df=df, result=result)
