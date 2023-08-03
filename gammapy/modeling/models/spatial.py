@@ -18,7 +18,7 @@ from regions import (
     RectangleSkyRegion,
 )
 import matplotlib.pyplot as plt
-from gammapy.maps import Map, MapCoord, WcsGeom
+from gammapy.maps import HpxNDMap, Map, MapCoord, WcsGeom, WcsNDMap
 from gammapy.modeling import Parameter, Parameters
 from gammapy.utils.deprecation import deprecated
 from gammapy.utils.gauss import Gauss2DPDF
@@ -38,6 +38,7 @@ __all__ = [
     "ShellSpatialModel",
     "SpatialModel",
     "TemplateSpatialModel",
+    "TemplateNDSpatialModel",
     "PiecewiseNormSpatialModel",
 ]
 
@@ -1286,6 +1287,120 @@ class TemplateSpatialModel(SpatialModel):
         if geom is None:
             geom = self.map.geom
         super().plot_interactive(ax=ax, geom=geom, **kwargs)
+
+
+class TemplateNDSpatialModel(SpatialModel):
+    """A model generated from a ND map where extra dimensions define the parameter space.
+
+    Parameters
+    ----------
+    map : `~gammapy.maps.WcsNDMap` or `~gammapy.maps.HpxNDMap`
+        Map template.
+    meta : dict, optional
+        Meta information, meta['filename'] will be used for serialization
+    interp_kwargs : dict
+        Interpolation keyword arguments passed to `gammapy.maps.Map.interp_by_pix`.
+        Default arguments are {'method': 'linear', 'fill_value': 0, "values_scale": "log"}.
+    copy_data : bool
+        Create a deepcopy of the map data or directly use the original. True by
+        default, can be turned to False to save memory in case of large maps.
+
+    """
+
+    tag = ["TemplateNDSpatialModel", "templateND"]
+
+    def __init__(
+        self,
+        map,
+        interp_kwargs=None,
+        meta=None,
+        filename=None,
+        copy_data=True,
+    ):
+        if not isinstance(map, (HpxNDMap, WcsNDMap)):
+            raise TypeError("Map should be a HpxNDMap or WcsNDMap")
+        if copy_data:
+            self._map = map.copy()
+        else:
+            self._map = map.copy(data=map.data)
+        self.meta = dict() if meta is None else meta
+        if filename is not None:
+            filename = str(make_path(filename))
+        self.filename = filename
+
+        parameters = []
+        for axis in map.geom.axes:
+            if axis.name not in ["energy_true", "energy"]:
+                center = (axis.bounds[1] + axis.bounds[0]) / 2
+                parameter = Parameter(
+                    name=axis.name,
+                    value=center,
+                    unit=axis.unit,
+                    scale_method="scale10",
+                    min=axis.bounds[0],
+                    max=axis.bounds[-1],
+                    interp=axis.interp,
+                )
+                parameters.append(parameter)
+        self.default_parameters = Parameters(parameters)
+
+        interp_kwargs = interp_kwargs or {}
+        interp_kwargs.setdefault("method", "linear")
+        interp_kwargs.setdefault("fill_value", 0)
+        interp_kwargs.setdefault("values_scale", "log")
+        self._interp_kwargs = interp_kwargs
+        super().__init__()
+
+    @property
+    def map(self):
+        """Template map  (`~gammapy.maps.WcsNDMap` or `~gammapy.maps.HpxNDMap`)"""
+        return self._map
+
+    @property
+    def is_energy_dependent(self):
+        return "energy_true" in self.map.geom.axes.names
+
+    def evaluate(self, lon, lat, energy=None, **kwargs):
+        coord = {
+            "lon": lon.to_value("deg"),
+            "lat": lat.to_value("deg"),
+        }
+        if energy is not None:
+            coord["energy_true"] = energy
+
+        coord.update(kwargs)
+
+        val = self.map.interp_by_coord(coord, **self._interp_kwargs)
+        val = np.clip(val, 0, a_max=None)
+
+        return u.Quantity(val, self.map.unit, copy=False)
+
+    def write(self, overwrite=False):
+        if self.filename is None:
+            raise IOError("Missing filename")
+        elif os.path.isfile(self.filename) and not overwrite:
+            log.warning("Template file already exits, and overwrite is False")
+        else:
+            self.map.write(self.filename)
+
+    @classmethod
+    def from_dict(cls, data):
+        data = data["spatial"]
+        filename = data["filename"]
+        m = Map.read(filename)
+        model = cls(m, filename=filename)
+        for idx, p in enumerate(model.parameters):
+            par = p.to_dict()
+            par.update(data["parameters"][idx])
+            setattr(model, p.name, Parameter(**par))
+        return model
+
+    def to_dict(self, full_output=False):
+        """Create dict for YAML serialisation"""
+        data = super().to_dict(full_output)
+        data["spatial"]["filename"] = self.filename
+        data["spatial"]["unit"] = str(self.map.unit)
+        return data
 
 
 class PiecewiseNormSpatialModel(SpatialModel):
