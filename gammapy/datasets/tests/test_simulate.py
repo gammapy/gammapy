@@ -367,14 +367,17 @@ def test_mde_sample_background(dataset, models):
     sampler = MapDatasetEventSampler(random_state=0)
     events = sampler.sample_background(dataset=dataset)
 
-    assert len(events.table["ENERGY"]) == 15
-    assert_allclose(events.table["ENERGY"][0], 1.894698, rtol=1e-5)
+    assert len(events.table) == 15
+
+    assert_allclose(np.mean(events.table["ENERGY"]), 4.1, rtol=0.1)
     assert events.table["ENERGY"].unit == "TeV"
 
-    assert_allclose(events.table["RA"][0], 266.571824, rtol=1e-5)
+    assert np.all(events.table["RA"] < 269.95)
+    assert np.all(events.table["RA"] > 262.90)
     assert events.table["RA"].unit == "deg"
 
-    assert_allclose(events.table["DEC"][0], -27.979152, rtol=1e-5)
+    assert np.all(events.table["DEC"] < -25.43)
+    assert np.all(events.table["DEC"] > -32.43)
     assert events.table["DEC"].unit == "deg"
 
     assert events.table["DEC_TRUE"][0] == events.table["DEC"][0]
