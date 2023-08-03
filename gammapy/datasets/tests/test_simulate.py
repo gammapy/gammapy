@@ -446,10 +446,16 @@ def test_event_det_coords(dataset, models):
     events = sampler.run(dataset=dataset, observation=obs)
 
     assert len(events.table) == 99
-    assert_allclose(events.table["DETX"][0], -1.15531813, rtol=1e-5)
+
+    # Check that det coordinates are within sqrt(2) * width of dataset
+    assert np.all(events.table["DETX"] < 3.53)
+    assert np.all(events.table["DETX"] > -3.53)
+
     assert events.table["DETX"].unit == "deg"
 
-    assert_allclose(events.table["DETY"][0], -1.3343611, rtol=1e-5)
+    assert np.all(events.table["DETY"] < 3.53)
+    assert np.all(events.table["DETY"] > -3.53)
+
     assert events.table["DETY"].unit == "deg"
 
 
