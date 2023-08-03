@@ -1295,7 +1295,7 @@ class TemplateNDSpatialModel(SpatialModel):
 
     Parameters
     ----------
-    map : `~gammapy.maps.WcsNDMap`
+    map : `~gammapy.maps.WcsNDMap` or `~gammapy.maps.HpxNDMap`
         Map template.
     meta : dict, optional
         Meta information, meta['filename'] will be used for serialization
@@ -1354,7 +1354,7 @@ class TemplateNDSpatialModel(SpatialModel):
 
     @property
     def map(self):
-        """Template map  (`~gammapy.maps.WcsNDMap`)"""
+        """Template map  (`~gammapy.maps.WcsNDMap` or `~gammapy.maps.HpxNDMap`)"""
         return self._map
 
     @property
