@@ -3,6 +3,7 @@ from typing import Optional, Union
 from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.time import Time
 from pydantic import Field, validator
+from gammapy.utils.fits import earth_location_from_dict
 from gammapy.utils.metadata import CreatorMetaData, MetaData
 
 __all__ = ["ObservationMetaData"]
@@ -72,3 +73,18 @@ class ObservationMetaData(MetaData):
             return v
         else:
             raise ValueError("Incorrect time input value.")
+
+    @classmethod
+    def from_gadf_header(cls, events_hdr):
+        """Create and fill the observation metadata from the event list metadata."""
+        # TODO: read really from events.meta once it is properly defined
+        kwargs = {}
+        kwargs["location"] = earth_location_from_dict(events_hdr)
+
+        if "RA_OBJ" in events_hdr and "DEC_OBJ" in events_hdr:
+            kwargs["target_position"] = SkyCoord(
+                events_hdr["RA_OBJ"], events_hdr["DEC_OBJ"], unit="deg", frame="icrs"
+            )
+
+        kwargs["creation"] = CreatorMetaData.from_header(events_hdr)
+        return cls(**kwargs)

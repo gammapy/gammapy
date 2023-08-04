@@ -92,7 +92,6 @@ class Observation:
         location=None,
     ):
         self.obs_id = obs_id
-        self._meta = meta or ObservationMetaData()
         self._obs_info = obs_info
         self.aeff = aeff
         self.edisp = edisp
@@ -102,8 +101,11 @@ class Observation:
         self._gti = gti
         self._events = events
         self._pointing = pointing
-        self._location = location
+        self._location = location  # this is part of the meta or is it data?
         self.obs_filter = obs_filter or ObservationFilter()
+        if meta is None and self.events:
+            meta = ObservationMetaData.from_gadf_header(self.events.table.meta)
+        self._meta = meta or ObservationMetaData()
 
     def _repr_html_(self):
         try:

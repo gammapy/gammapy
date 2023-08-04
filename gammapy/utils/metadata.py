@@ -71,12 +71,15 @@ class CreatorMetaData(MetaData):
     """
 
     creator: Optional[str]
-    date: Optional[Union[str, Time]]
+    date: Optional[Union[str, Time, None]]
     origin: Optional[str]
 
     @validator("date")
     def validate_time(cls, v):
-        return Time(v)
+        if v is not None:
+            return Time(v)
+        else:
+            return v
 
     @classmethod
     def from_default(cls):
@@ -84,3 +87,11 @@ class CreatorMetaData(MetaData):
         date = Time.now()
         creator = f"Gammapy {version}"
         return cls(creator=creator, date=date)
+
+    @classmethod
+    def from_header(cls, hdr):
+        """Builds creator metadata from fits header."""
+        date = hdr.get("CREATED", None)
+        origin = hdr.get("ORIGIN", None)
+        creator = hdr.get("CREATOR", None)
+        return cls(creator=creator, date=date, origin=origin)
