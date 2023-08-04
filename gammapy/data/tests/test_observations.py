@@ -8,6 +8,7 @@ from astropy.time import Time
 from astropy.units import Quantity
 from gammapy.data import DataStore, Observation, ObservationFilter, Observations
 from gammapy.data.pointing import FixedPointingInfo
+from gammapy.data.metadata import ObservationMetaData
 from gammapy.data.utils import get_irfs_features
 from gammapy.irf import PSF3D, load_irf_dict_from_file
 from gammapy.utils.cluster import hierarchical_clustering
@@ -253,6 +254,11 @@ def test_observation_cta_1dc():
     with pytest.warns(GammapyDeprecationWarning):
         assert not np.isnan(obs.pointing_zen)
     assert_allclose(obs.muoneff, 1)
+
+    assert isinstance(obs.meta, ObservationMetaData)
+    assert obs.meta.deadtime == 0.9
+    assert_allclose(obs.meta.location.height.to_value("m"), 2000)
+    assert "Gammapy" in obs.meta.creation.creator
 
 
 @requires_data()

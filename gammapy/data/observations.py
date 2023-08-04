@@ -18,12 +18,14 @@ import matplotlib.pyplot as plt
 from gammapy import __version__
 from gammapy.utils.deprecation import GammapyDeprecationWarning, deprecated
 from gammapy.utils.fits import LazyFitsData, earth_location_to_dict
+from gammapy.utils.metadata import CreatorMetaData
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_to_dict, time_relative_to_ref
 from .event_list import EventList, EventListChecker
 from .filters import ObservationFilter
 from .gti import GTI
+from .metadata import ObservationMetaData
 from .pointing import FixedPointingInfo
 
 __all__ = ["Observation", "Observations"]
@@ -72,9 +74,11 @@ class Observation:
     _gti = LazyFitsData(cache=False)
     _pointing = LazyFitsData(cache=True)
 
+    #    @deprecated_renamed_argument("obs_info", "meta", since="1.2")
     def __init__(
         self,
         obs_id=None,
+        meta=None,
         obs_info=None,
         gti=None,
         aeff=None,
@@ -88,6 +92,7 @@ class Observation:
         location=None,
     ):
         self.obs_id = obs_id
+        self._meta = meta or ObservationMetaData()
         self._obs_info = obs_info
         self.aeff = aeff
         self.edisp = edisp
@@ -105,6 +110,11 @@ class Observation:
             return self.to_html()
         except AttributeError:
             return f"<pre>{html.escape(str(self))}</pre>"
+
+    @property
+    def meta(self):
+        """Return metadata container."""
+        return self._meta
 
     @property
     def rad_max(self):
@@ -236,6 +246,15 @@ class Observation:
             location=location,
         )
 
+        meta = ObservationMetaData(
+            deadtime=1 - deadtime_fraction,
+            location=location,
+            time_start=gti.time_start[0],
+            time_stop=gti.time_stop[-1],
+            reference_time=reference_time,
+            creation=CreatorMetaData.from_default(),
+        )
+
         if not isinstance(pointing, FixedPointingInfo):
             warnings.warn(
                 "Pointing will be required to be provided as FixedPointingInfo",
@@ -245,6 +264,7 @@ class Observation:
 
         return cls(
             obs_id=obs_id,
+            meta=meta,
             obs_info=obs_info,
             gti=gti,
             aeff=irfs.get("aeff"),
