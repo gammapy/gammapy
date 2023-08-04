@@ -43,6 +43,80 @@ def compute_flux_points_ul(quantity, quantity_errp):
     return 2 * quantity_errp + quantity
 
 
+class SourceCatalogObjectFermiPCBase(SourceCatalogObject, abc.ABC):
+    """Base class for Fermi-LAT Pulsar catalogs."""
+
+    def _auxiliary_filename(self):
+        return make_path(
+            "$GAMMAPY_DATA/catalogs/fermi/2PC_auxiliary/PSR"
+            + self.name
+            + "_2PC_data.fits"
+        )
+
+    def __str__(self):
+        return self.info()
+
+    def info(self, info="all"):
+
+        if info == "all":
+            info = "basic,more,position,pulsar,spectral,lightcurve"
+
+        ss = ""
+        ops = info.split(",")
+        if "basic" in ops:
+            ss += self._info_basic()
+        if "more" in ops:
+            ss += self._info_more()
+        if "pulsar" in ops:
+            ss += self._info_pulsar()
+        if "position" in ops:
+            ss += self._info_position()
+        if "spectral" in ops:
+            ss += self._info_spectral_fit()
+            ss += self._info_spectral_points()
+        if "lightcurve" in ops:
+            ss += self._info_lightcurve()
+        return ss
+
+    def _info_basic(self):
+        ss = "\n*** Basic info ***\n\n"
+        ss += "Catalog row index (zero-based) : {}\n".format(self.row_index)
+        ss += "{:<20s} : {}\n".format("Source name", self.name)
+        return ss
+
+    def _info_more(self):
+        pass
+
+    def _info_pulsar(self):
+        pass
+
+    def _info_position(self):
+        d = self.data
+        ss = "\n*** Position info ***\n\n"
+        ss += "{:<20s} : {:.3f}\n".format("RA", d["RAJ2000"])
+        ss += "{:<20s} : {:.3f}\n".format("DEC", d["DEJ2000"])
+        ss += "{:<20s} : {:.3f}\n".format("GLON", d["GLON"])
+        ss += "{:<20s} : {:.3f}\n".format("GLAT", d["GLAT"])
+        return ss
+
+    def _info_spectral_fit(self):
+        pass
+
+    def _info_spectral_points(self):
+        pass
+
+    def _info_lightcurve(self):
+        pass
+
+    def spatial_model(self):
+        d = self.data
+        ra = d["RAJ2000"]
+        dec = d["DEJ2000"]
+
+        model = PointSpatialModel(lon_0=ra, lat_0=dec, frame="icrs")
+        return model
+
+
 class SourceCatalogObjectFermiBase(SourceCatalogObject, abc.ABC):
     """Base class for Fermi-LAT catalogs."""
 
@@ -1212,7 +1286,7 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
         return model
 
 
-class SourceCatalogObject2PC:
+class SourceCatalogObject2PC(SourceCatalogObjectFermiPCBase):
     pass
 
 
