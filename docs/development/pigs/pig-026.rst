@@ -15,7 +15,7 @@ PIG 26 - Model Priors API
 Abstract
 ========
 
-This PIG is intended to introduce priors on models or on parameters that are evaluated during fitting.
+This PIG is intended to introduce priors on parameters that are evaluated during fitting.
 
 Motivation
 ==========
@@ -42,165 +42,151 @@ Implementation
 The following implementation draft is compatible with the current API,
 where the models are set via Dataset.model and the Fit is run via Fit.run(datasets).
 
-Prior (abstract) base class:
---------------
+.. code:: python
 
-.. code:: python 
+  class PriorModel(ModelBase):
 
-  class Prior():
-  
-     def __call__(self, base):
-     
-        if isinstance(base, Parameter):
-            return self.evaluate(base.value)      
-        else: # model-like instance
-            return self.evaluate(base.parameters.value)  
-         
+        _weight = 1
+        _type = "prior"
 
-Future additional properties of the ``Prior`` classes: 
+        @property
+        def parameters(self):
+            """PriorParameters (`~gammapy.modeling.PriorParameters`)"""
+            return PriorParameters(
+                [getattr(self, name) for name in self.default_parameters.names]
+            )
+                    
+                  
+        @property
+        def weight(self):
+            return self._weight
+        
+        @weight.setter
+        def weight(self, value):
+            self._weight = value
+            
+        def __call__(self, value):
+            """Call evaluate method"""
+            kwargs = {par.name: par.quantity for par in self.parameters}
+            if isinstance(value, Parameter):
+                return self.evaluate(value.quantity, **kwargs)     
+             else:
+                raise TypeError(f"Invalid type: {value}, {type(value)}")
+            
 
-- Fittable parameters
+The base ``PriorModel`` class inherits from the ``ModelBase`` class and allows to set (for now one) unit to which the to-be-evaluated parameter the prior is set on is converged. In addition, there can be a weight set. The parameters of the  ``PriorModel`` are ``PriorParameters`` and ``PriorParameter``. They inherit from the ``Parameters`` and ``Parameter`` classes, respectively, however, have a limited amount of attributes. 
+It is assumed that the ``PriorParameters`` are set in the same unit as the ``Parameter`` they get evaluated on.  
+
+Future additional properties of the ``PriorModel`` classes: 
+
 - Write/read from/to a yaml file, ideally also when the corresponding model is written/read (see serialisation example below)
 - Prior registry system
-- Prior subclass use cases (i.e. for correlated nuisance parameters with correlation matrix as a parameter)
+- Different prior subclasses depending on the use cases 
 
 Exemplary additional prior subclasses:
 ---------------------------------------
 .. code:: python
 
-  class GaussianPrior(Prior):
-  
-      """Gaussian Prior with mu and sigma set on a single parameter
-      """
-      
-      def __init__(self, mu=0, sigma=1):
-          self.mu = mu
-          self.sigma = sigma
+  class GaussianPrior(PriorModel):
 
-      def evaluate(self, value):
-          return ((value - self.mu) / self.sigma) ** 2
+        """Gaussian Prior with mu and sigma.
+        """
+        tag = ["GaussianPrior"]
+        _type = "prior"
+        mu = PriorParameter(name="mu", value = 0, unit = '')
+        sigma = PriorParameter(name="sigma", value = 1, unit = '')
+        
+        @staticmethod
+        def evaluate(value, mu, sigma):
+            return ((value - mu) / sigma) ** 2
 
 
 .. code:: python
 
-    class UniformPrior(Prior):
-    
-        """Uniform Prior set on a single parameter or model.
-        """
-        
-        def __init__(self, uni=0):
-            self.uni = uni
+  class UniformPrior(PriorModel):
 
-        def evaluate(self, value):
-            return self.uni
+        """Uniform Prior
+        """
+        tag = ["UniformPrior"]
+        uni = PriorParameter(name="uni", value = 0, min = 0, max = 10, unit = '' )
+        
+        @staticmethod
+        def evaluate(value, uni):
+            return uni
+
+
+            
+The priors can be set on a ```Parameter``` as ``.prior`` and get evaluated within:
 
 .. code:: python 
-  
-    class CovarianceGaussianPrior(Prior):
-        """Gaussian Priors on mulitple parameters with covariance matrix. Set on a model. 
-        
-        Parameters
-        ----------
-        cov : `~numpy.ndarray`
-            Covariance matrix in the same order as the to be evaluated parameters.
-        """
-        tag = ["CovarianceGaussianPrior"]
-        def __init__(self, cov):
-            self.cov = cov
-            
-        def evaluate(self, values):
-            from numpy import linalg
-            return values @ linalg.inv(self.cov) @ values
-        
+
+  class Parameter():
+
+        _prior = None
+    
         @property
-        def prior_parameters(self):
-            return [("cov", self.cov)]    
-            
-The prior classes are supposed to be set as ``.prior`` on:
-
-* Model-like classes, for instance the ``SkyModel`` class:
-  (for multi-parameter priors ``MultivariateGaussianPrior`` or ``UniformPrior``)
-  
-.. code:: python 
-  
-  class SkyModel(ModelBase):
-  
-      _prior = None
-
-      @property
-      def prior(self):
-          return self._prior
-
-      @prior.setter
-      def prior(self, value):
-          self._prior = value
-
-      def prior_stat_sum(self):
-          return np.sum(self._prior(self))
-
-
-* the ``Parameter`` class (for priors like ``GaussianPrior`` or ``UniformPrior``)
-
-.. code:: python 
-  
-  class Parameter:
-  
-      _prior = None
-
-      @property
-      def prior(self):
-          return self._prior
-
-      @prior.setter
-      def prior(self, value):
-          self._prior = value
-
-      def prior_stat_sum(self):
-          return np.sum(self._prior(self))
+        def prior(self):
+            return self._prior
     
-Fit Statistic:
---------------
+        @prior.setter
+        def prior(self, value):
+            self._prior = value
+    
+        def prior_stat_sum(self):
+            if self.prior is not None:
+                return self.prior.weight * self.prior(self)
 
-All priors have to be combined and added to ``Datasets.stat_sum()`` during the fitting process. 
+The ``Parameters`` inherit the priors and evaluate the ``prior_stat_sum`` of all the ``Parameters.parameters``:
+
+.. code:: python 
+
+  class Parameters():
+   
+        @property
+        def prior(self):
+              return [par.prior for par in self]
+          
+          def prior_stat_sum(self):
+              parameters_stat_sum = 0
+              for par in self:
+                  if par.prior is not None:
+                      parameters_stat_sum += par.prior_stat_sum()
+              return parameters_stat_sum
+
+
+During the Fit the ``stat_sum`` of the Datasets is evaluated where now the statistics due to the priors set on the parameters is added. 
 
 .. code:: python 
 
   class Datasets():
   
-      def stat_sum(self):
-          """Total statistic given the current model parameters."""
-          stat = self.stat_array()
-          
-          if self.mask is not None:
-              stat = stat[self.mask.data]
-              
-          return np.sum(stat, dtype=np.float64) + PriorFitStatistic(weight=1).stat_sum(models = self.models)
-    
-    
-Where the ``PriorFitStatistic`` iterates the models and parameters, evaluates and combines the priors with the possibility to assign a weight.
+        def stat_sum(self):
+            """Total statistic given the current model parameters."""
+            stat = self.stat_array()
+            
+            if self.mask is not None:
+                stat = stat[self.mask.data]
+            prior_stat_sum = self.models.parameters.prior_stat_sum()
+            return np.sum(stat, dtype=np.float64) + prior_stat_sum
+
+
+A simple method in the ``Models`` class will allow setting priors on multiple parameters simultaneously. 
 
 .. code:: python 
 
- class PriorFitStatistic():
-       
-      def __init__(self, weight=1):
-            self.weight = weight
-  
-      def stat_sum(self, models):
-            stat= 0
-            for m in models:
-                if m.prior is not None:
-                    stat += m.prior_stat_sum()
-                for par in m.parameters:
-                    if par.prior is not None:
-                        stat += par.prior_stat_sum()
-            return stat * self.weight
+  class Models(Models):
+      
+        def set_prior(self, parameters, priors):
+            for parameter, prior in zip(parameters, priors):
+                parameter.prior = prior
 
-         
+
+
+
 Serialisation 
 ------------
 
-The priors are serialised and read and writeable to a yaml file. They are also saved if the associated ``Parameter`` or ``Model`` is transformed to a dictionary. For this the prior subclasses are tagged. The following two examples show the resulting yaml file for a ``Parameter`` and a ``PowerLawSpectralModel``, respectively.
+The priors are serialised and read and writeable to a yaml file. They are also saved if the associated ``Parameter`` or ``Parameters`` is transformed to a dictionary. For this, the prior subclasses are tagged. The following two example shows the resulting yaml file for a ``Parameter``.
 
 .. code-block:: yaml
 
@@ -217,18 +203,7 @@ The priors are serialised and read and writeable to a yaml file. They are also s
    'is_norm': False,
    'prior': {'tag': 'GaussianPrior',
             'parameters': [{'name': 'mu', 'value': 0},
-                           {'name': 'simga', 'value': 0.1}]}}
-
-.. code-block:: yaml
-
-
-  {'spectral': 
-  {'type': 'PowerLawSpectralModel',
-           'parameters': [{'name': 'index', 'value': 2.0},
-                          {'name': 'amplitude', 'value': 1e-12, 'unit': 'cm-2 s-1 TeV-1'},
-                          {'name': 'reference', 'value': 1.0, 'unit': 'TeV'}],
-           'prior': {'tag': 'UniformPrior',
-                     'parameters': [{'name': 'uni', 'value': 5.0}]}}}
+                           {'name': 'sigma', 'value': 0.1}]}}
 
 
 Implementation Outline
@@ -236,9 +211,9 @@ Implementation Outline
 
 The PIG implementation will be piece-wise within individual issues in the following order:
 
-1. ``Prior`` base class and subclasses
-2. ``.prior`` attribute in the ``Parameter`` and ``Model`` classes
-3.  ``PriorFitStatistic`` class 
+1. ``Prior`` base class and subclasses (See `#4620`_)
+2. ``PriorParameter`` and ``PriorParameters`` (See `#4620`_)
+3. ``.prior`` attribute in the ``Parameter``, ``Parameters`` and ``Model`` classes
 4.  Evaluation of the prior in the ``Datasets`` class
 
 
@@ -248,81 +223,47 @@ Addressing Use Cases
 
 Case 1: Background systematics as a nuisance parameter `#3955`_
 --------------
-The goal is to fit energy-dependent systematics in the FoVBackground with nuisance parameters. The correlation between the energy bins and the magnitude of the expected systematic uncertainty has to be accurately estimated and serves as an input to the covariance matrix. Combining the ``PieceWiseNormSpectralModel`` with a prior set and the ``PowerLawNormSpectralModel`` the FoVBackgrounds ``norm`` and ``tilt`` and in addition, the systematics can be fitted. 
-The first step consists of defining the energy bins in which the systematics is fitted and setting up the ``PieceWiseNormSpectralModel``:
+The goal is to fit energy-dependent systematics in the FoVBackground with nuisance parameters and set priors on the two model parameters ``norm`` and ``tilt``:
 
 
-.. code:: python
-
-  energy = dataset.geoms['geom'].axes[0].center
-  sys_model = PiecewiseNormSpectralModel(
-      energy= energy,
-      norms=[0]*len(energy),
-  )
-
-For the combination of the ``sys_model`` and the classical used ``PowerLawNormSpectralModel``, a ``NormCompoundSpectralModel`` is used and set as the ``spectral_model`` of the ``PriorFoVBackgroundModel``:
-
-
-.. code:: python
+.. code:: python 
   
-  bkg_spectral = NormCompoundSpectralModel(PowerLawNormSpectralModel(),
-                                      sys_model,
-                                      operator=operator.add)
-  bkg = PriorFoVBackgroundModel(spectral_model = bkg_spectral,
+  bkg_model = FoVBackgroundModel(spectral_model = PowerLawNormSpectralModel(),
                           dataset_name = dataset.name)
+  tilt_prior =  GaussianPrior(mu = "0", sigma = "0.05")
+  norm_prior =  GaussianPrior(mu = "1", sigma = "0.1")
 
-Now the prior is defined and set. Since there is a correlation of the systematics between the energy bins, the ``CovarianceGaussianPrior`` is used with a Gaussian covariance matrix.
+  bkg_model.set_prior([bkg_model.parameters['tilt'],bkg_model.parameters['norm']], [tilt_prior, norm_prior])
 
-.. code:: python
 
-  from scipy.stats import norm
-  cov = np.identity(l)
-  
-  # note: values set arbitrarily 
-  for i in range(l):
-      if i > 3:  # no correlation between the PowerLawNormSpectralModel parameters
-          cov[i,:] = norm.pdf(range(l) , loc = i , scale = 1 ) /0.4 * 0.1 
-  
-  prior = CovarianceGaussianPrior(cov = cov)
-  bkg.prior = prior
+A preliminary version was set up like this and tests on simulated datasets were successful. Note that this setup is quite simple and it can be developed more advanced based on the same principle. 
 
-A preliminary version was set up like this and tests on simulated datasets were successful.
 
-Case 2: Support unfolding methods for spectral flux points `#4122`_
+Case 2: Favoring postivive values for flux amplitudes
 --------------
 
-The proposed prior class allows the probability to unfold spectral flux points with Tikonov regularisation. The Tikonov matrix can be defined and set as the covariance matrix in the  ``CovarianceGaussianPrior``. The weight of the ``PriorFitStatistic`` can be interpreted as the regularisation strength tau.
+A step-like prior function can be used to favour positive values for physical properties like the flux amplitude. By setting a prior one avoids defining hard boundary conditions with the ``min`` attribute of the to-be-fitted parameter. 
+
+
+Case 3: Support unfolding methods for spectral flux points `#4122`_
+--------------
+
+The proposed prior class will allow the probability to unfold spectral flux points with Tikonov regularisation. The Tikonov matrix can be defined and set as the covariance matrix in the class ``CovarianceGaussianPrior``. The weight of the ``PriorFitStatistic`` can be interpreted as the regularisation strength tau. However, this requires a more advanced setup since this multi-dimensional prior is set on multiple parameters simultaneously. The goal is to use the proposed prior class as a starting point and develop it into multidimensional use cases in the near future. 
 
 
 
 
-
-
-(See `#4237`_ for an implementing PR draft.)
-
-
-
-
-
-
-Additional Information
-======================
-
-It is possible to implement priors as well as FitStatistics simultaneously.
-There will be two (default) FitStatistics: ``CashFitStatistic`` and ``WStatFitStatistic``,
-on the ``SpectrumDataset`` and ``SpectrumDatasetOnOff``, resp.
-This way priors and FitStatistics can share functionality, e.g. serialization, implementation.
-(User defined) FitStatistics allow for fine-grained fitting of models.
 
 
 Decision
 ========
 
 
+
+
 .. _#2075: https://github.com/gammapy/gammapy/issues/2075
 .. _#3955: https://github.com/gammapy/gammapy/issues/3955
 .. _#4122: https://github.com/gammapy/gammapy/issues/4122
 .. _#4208: https://github.com/gammapy/gammapy/issues/4208
-.. _#4237: https://github.com/gammapy/gammapy/issues/4237
+.. _#4620: https://github.com/gammapy/gammapy/pull/4620
 .. _#4381: https://github.com/gammapy/gammapy/issues/4381
-
