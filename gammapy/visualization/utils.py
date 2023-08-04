@@ -205,8 +205,8 @@ def plot_distribution(
         Axis object to plot on. If a list of Axis is provided it has to be the same length as the length of _map.data.
     ncols : int
         Number of columns to plot if a "plot grid" was to be done.
-    func : function object
-        The function to pass to `scipy.optimize.curve_fit` or "norm". Default is None.
+    func : function object or str
+        The function to used to fit a map data histogram or "norm". Default is None.
         If None, no fit will be done. If "norm" is given, `scipy.stats.norm.pdf`
         will be passed to `scipy.optimize.curve_fit`.
     kwargs_hist : dict
@@ -310,13 +310,13 @@ def plot_distribution(
                 )
 
                 mu, sig = pars[0], pars[1]
-                err_mu, err_sig = cov[0][0] ** 2, cov[1][1] ** 2
+                err_mu, err_sig = np.sqrt(cov[0][0]), np.sqrt(cov[1][1])
 
                 label_norm = (
-                    r"$\mu$ = {:.2f} ± {:.2E}, $\sigma$ = {:.2f} ± {:.2E}".format(
+                    r"$\mu$ = {:.2f} ± {:.2E}\n$\sigma$ = {:.2f} ± {:.2E}".format(
                         mu, err_mu, sig, err_sig
                     )
-                )
+                ).replace(r"\n", "\n")
                 kwargs_plot_fit["label"] = label_norm
 
             else:
