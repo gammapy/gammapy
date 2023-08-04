@@ -91,7 +91,7 @@ class CreatorMetaData(MetaData):
     @classmethod
     def from_header(cls, hdr):
         """Builds creator metadata from fits header."""
-        date = hdr.get("CREATED", None)
+        date = hdr.get("CREATED", None)  # note regular FITS keyword is DATE
         origin = hdr.get("ORIGIN", None)
         creator = hdr.get("CREATOR", None)
         return cls(creator=creator, date=date, origin=origin)
