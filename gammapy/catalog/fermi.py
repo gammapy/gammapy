@@ -374,7 +374,7 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
                     lon_0=ra, lat_0=dec, r_0=r_0, e=e, phi=phi, frame="icrs"
                 )
             elif morph_type in ["Map", "Ring", "2D Gaussian x2"]:
-                filename = de["Spatial_Filename"].strip()
+                filename = de["Spatial_Filename"].strip() + ".gz"
                 if de["version"] < 28:
                     path_extended = "$GAMMAPY_DATA/catalogs/fermi/LAT_extended_sources_8years/Templates/"
                 elif de["version"] < 32:
