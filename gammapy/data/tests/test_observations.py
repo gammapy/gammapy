@@ -305,6 +305,9 @@ def test_observation_read():
     assert_allclose(val.value, 278000.54120855, rtol=1e-5)
     assert val.unit == "m2"
 
+    assert isinstance(obs.meta, ObservationMetaData)
+    assert obs.meta.creation.creator == "SASH FITS::EventListWriter"
+
 
 @requires_data()
 def test_observation_read_single_file():
