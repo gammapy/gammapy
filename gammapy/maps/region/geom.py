@@ -397,7 +397,7 @@ class RegionGeom(Geom):
             )
         else:
             width = self.width
-        wcs_geom_region = WcsGeom(wcs=self.wcs, npix=self.wcs.array_shape)
+        wcs_geom_region = WcsGeom(wcs=self.wcs)
         wcs_geom = wcs_geom_region.cutout(position=self.center_skydir, width=width)
         wcs_geom = wcs_geom.to_cube(self.axes)
         return wcs_geom
@@ -654,7 +654,7 @@ class RegionGeom(Geom):
 
         table = Regions(pixel_region_list).serialize(format="fits")
 
-        header = WcsGeom(wcs=self.wcs, npix=self.wcs.array_shape).to_header()
+        header = WcsGeom(wcs=self.wcs).to_header()
         table.meta.update(header)
         return table
 

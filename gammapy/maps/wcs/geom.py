@@ -88,11 +88,14 @@ class WcsGeom(Geom):
     is_hpx = False
     is_region = False
 
-    def __init__(self, wcs, npix, cdelt=None, crpix=None, axes=None):
+    def __init__(self, wcs, npix=None, cdelt=None, crpix=None, axes=None):
         self._wcs = wcs
         self._frame = wcs_to_celestial_frame(wcs).name
         self._projection = wcs.wcs.ctype[0][5:]
         self._axes = MapAxes.from_default(axes, n_spatial_axes=2)
+
+        if npix is None:
+            npix = wcs.array_shape[::-1]
 
         if cdelt is None:
             cdelt = tuple(np.abs(self.wcs.wcs.cdelt))
