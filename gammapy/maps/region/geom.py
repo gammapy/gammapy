@@ -86,6 +86,15 @@ class RegionGeom(Geom):
                 proj=self.projection,
                 frame=self._center.frame.name,
             ).wcs
+            self._wcs = wcs
+            # TODO : can we get the width before defining the wcs ?
+            wcs = WcsGeom.create(
+                binsz=binsz_wcs,
+                width=tuple(self.width),
+                skydir=self._center,
+                proj=self.projection,
+                frame=self._center.frame.name,
+            ).wcs
 
         self._wcs = wcs
         self.ndim = len(self.data_shape)
