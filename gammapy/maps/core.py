@@ -1129,7 +1129,7 @@ class Map(abc.ABC):
 
         output_map = Map.from_geom(geom.to_cube(self.geom.axes))
         maps = parallel.run_multiprocessing(
-            self._reproject_slice,
+            self._reproject_image,
             zip(
                 self.iter_by_image(),
                 repeat(geom),
