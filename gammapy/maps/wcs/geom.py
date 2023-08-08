@@ -95,7 +95,10 @@ class WcsGeom(Geom):
         self._axes = MapAxes.from_default(axes, n_spatial_axes=2)
 
         if npix is None:
-            npix = wcs.array_shape[::-1]
+            if wcs.array_shape is not None:
+                npix = wcs.array_shape[::-1]
+            else:
+                npix = (0, 0)
 
         if cdelt is None:
             cdelt = tuple(np.abs(self.wcs.wcs.cdelt))
