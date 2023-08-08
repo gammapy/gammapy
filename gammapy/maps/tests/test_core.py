@@ -730,8 +730,8 @@ def test_map_reproject_by_image():
     geom_hpx_wrong = HpxGeom.create(binsz=10, frame="galactic", axes=[axis, axis2])
 
     m = HpxNDMap(geom_hpx_wrong)
-    with pytest.raises(TypeError):
-        m.reproject_by_image(geom_wcs)
+    m.reproject_by_image(geom_wcs)
+    assert len(m.geom.axes) == 2
 
     data = np.arange(3 * 768).reshape(geom_hpx.data_shape)
     m = HpxNDMap(geom_hpx, data=data)
