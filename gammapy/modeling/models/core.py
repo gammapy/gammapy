@@ -990,6 +990,37 @@ class DatasetModels(collections.abc.Sequence):
             spectral_model=spectral_model, spatial_model=spatial_model, name=name
         )
 
+    def to_template_spectral_model(self, geom, mask=None):
+        """Convert the model to a `~gammapy.modeling.models.TemplateSpectralModel`
+
+        Parameters
+        ----------
+        geom : `Geom`
+            Map geometry the evaluate model.
+        mask :  `Map`
+            Evaluate the model only where the mask is True.
+        maks : `~gammapy.modeling.models.SpectralModel`
+            One of the NormSpectralMdel
+
+        Returns
+        -------
+        model : `TemplateSpectralModel`
+            Template spectral model.
+        """
+
+        from . import TemplateSpectralModel
+
+        energy = geom.axes[0].center
+        values = self.spectral_model(energy)
+        if mask is None:
+            mask = Map.from_geom(geom, data=True)
+        elif mask.geom != geom:
+            mask = mask.interp_to_geom(geom, method="nearest")
+        spatial_integ = self.spatial_model.integrate_geom(geom) * mask
+        spatial_integ.data[~np.isfinite(spatial_integ.data)] = np.nan
+        values *= np.nansum(spatial_integ.data, axis=(1, 2))
+        return TemplateSpectralModel(energy, values)
+
     @property
     def positions(self):
         """Positions of the models (`~astropy.coordinates.SkyCoord`)"""
