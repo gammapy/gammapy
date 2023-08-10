@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
-from scipy.interpolate import interp1d
 from astropy import units as u
 from astropy.io import fits
 from astropy.table import Table
@@ -9,7 +8,7 @@ from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 from gammapy.maps.axes import UNIT_STRING_FORMAT
-from gammapy.modeling.models import DatasetModels
+from gammapy.modeling.models import DatasetModels, TemplateSpatialModel
 from gammapy.utils.scripts import make_name, make_path
 from .core import Dataset
 
@@ -286,24 +285,10 @@ class FluxPointsDataset(Dataset):
         for model in self.models:
             if isinstance(model.spatial_model, TemplateSpatialModel):
                 geom = model.spatial_model.map.geom
-                spatial_integ = model.spatial_model.integrate_geom(geom)
-                uspatial = spatial_integ.unit
-                spatial_integ.data[~np.isfinite(spatial_integ.data)] = np.nan
-                if model.spatial_model.is_energy_dependent:
-                    spatial_integ = np.nansum(spatial_integ.data, axis=(1, 2))
-                    energy = geom.axes[0].center.to(self.data.energy_ref.unit)
-                    interp = interp1d(
-                        np.log10(energy.value), np.log10(spatial_integ), kind="linear"
-                    )
-                    spatial_integ = (
-                        10 ** interp(np.log10(self.data.energy_ref.value)) * uspatial
-                    )
-                else:
-                    spatial_integ = np.nansum(spatial_integ.data) * uspatial
-                spectral_values = model.spectral_model(self.data.energy_ref)
-                flux_model = spectral_values * spatial_integ
+                reference_model = model.to_template_spectral_model(geom)
             else:
-                flux_model = model.spectral_model(self.data.energy_ref)
+                reference_model = model.spectral_model
+            flux_model = reference_model(self.data.energy_ref)
 
             if model.temporal_model is not None:
                 integral = model.temporal_model.integral(
