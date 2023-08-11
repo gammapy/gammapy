@@ -991,7 +991,7 @@ class DatasetModels(collections.abc.Sequence):
         )
 
     def to_template_spectral_model(self, geom, mask=None):
-        """Convert the model to a `~gammapy.modeling.models.TemplateSpectralModel`
+        """Merge a list of models into a single `~gammapy.modeling.models.TemplateSpectralModel`
 
         Parameters
         ----------
@@ -1011,14 +1011,17 @@ class DatasetModels(collections.abc.Sequence):
         from . import TemplateSpectralModel
 
         energy = geom.axes[0].center
-        values = self.spectral_model(energy)
         if mask is None:
             mask = Map.from_geom(geom, data=True)
         elif mask.geom != geom:
             mask = mask.interp_to_geom(geom, method="nearest")
-        spatial_integ = self.spatial_model.integrate_geom(geom) * mask
-        spatial_integ.data[~np.isfinite(spatial_integ.data)] = np.nan
-        values *= np.nansum(spatial_integ.data, axis=(1, 2))
+        values = 0
+        for m in self:
+            dnde = m.spectral_model(energy)
+            spatial_integ = m.spatial_model.integrate_geom(geom) * mask
+            spatial_integ.data[~np.isfinite(spatial_integ.data)] = np.nan
+            dnde *= np.nansum(spatial_integ.data, axis=(1, 2)) * spatial_integ.unit
+            values += dnde
         return TemplateSpectralModel(energy, values)
 
     @property
