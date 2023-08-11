@@ -7,7 +7,12 @@ from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.table import Table
 from gammapy.data import Observation
 from gammapy.data.pointing import FixedPointingInfo
-from gammapy.datasets import MapDataset, SpectrumDatasetOnOff
+from gammapy.datasets import (
+    Datasets,
+    FluxPointsDataset,
+    MapDataset,
+    SpectrumDatasetOnOff,
+)
 from gammapy.datasets.spectrum import SpectrumDataset
 from gammapy.estimators import FluxPoints, FluxPointsEstimator
 from gammapy.irf import EDispKernelMap, EffectiveAreaTable2D, load_irf_dict_from_file
@@ -17,12 +22,12 @@ from gammapy.maps import MapAxis, RegionGeom, RegionNDMap, WcsGeom
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
     ExpCutoffPowerLawSpectralModel,
-    PiecewiseNormSpectralModel,
     FoVBackgroundModel,
     GaussianSpatialModel,
+    Models,
+    PiecewiseNormSpectralModel,
     PowerLawSpectralModel,
     SkyModel,
-    Models,
     TemplateSpatialModel,
 )
 from gammapy.utils import parallel

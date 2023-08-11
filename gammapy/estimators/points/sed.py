@@ -6,9 +6,9 @@ from astropy import units as u
 from astropy.table import Table
 import gammapy.utils.parallel as parallel
 from gammapy.datasets import Datasets
+from gammapy.datasets.flux_points import _get_reference_model
 from gammapy.maps import MapAxis
 from gammapy.modeling import Fit
-from gammapy.models import TemplateSpatialModel
 from ..flux import FluxEstimator
 from .core import FluxPoints
 
@@ -146,20 +146,13 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
         )
 
         table = Table(rows, meta=meta)
-        model = self._get_reference_model(datasets.models[self.source])
+        model = _get_reference_model(self.energy_edges, datasets.models[self.source])
         return FluxPoints.from_table(
             table=table,
             reference_model=model.copy(),
             gti=datasets.gti,
             format="gadf-sed",
         )
-
-    def _get_reference_model(self, model):
-        if isinstance(model.spatial_model, TemplateSpatialModel):
-            geom = model.spatial_model.map.geom
-            return model.to_template_spectral_model(geom)
-        else:
-            return model.spectral_model
 
     def estimate_flux_point(self, datasets, energy_min, energy_max):
         """Estimate flux point for a single energy group.
@@ -189,7 +182,9 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
             return super().run(datasets=datasets_sliced)
         else:
             log.warning(f"No dataset contribute in range {energy_min}-{energy_max}")
-            model = self._get_reference_model(datasets.models[self.source])
+            model = _get_reference_model(
+                self.energy_edges, datasets.models[self.source]
+            )
             return self._nan_result(datasets, model, energy_min, energy_max)
 
     def _nan_result(self, datasets, model, energy_min, energy_max):
