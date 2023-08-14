@@ -1018,9 +1018,10 @@ class DatasetModels(collections.abc.Sequence):
         values = 0
         for m in self:
             dnde = m.spectral_model(energy)
-            spatial_integ = m.spatial_model.integrate_geom(geom) * mask
+            spatial_integ = m.spatial_model.integrate_geom(geom)
+            masked_integ = spatial_integ.data * np.isfinite(spatial_integ.data) * mask
             spatial_integ.data[~np.isfinite(spatial_integ.data)] = np.nan
-            dnde *= np.nansum(spatial_integ.data, axis=(1, 2)) * spatial_integ.unit
+            dnde *= masked_integ.sum(axis=(1, 2)) * spatial_integ.unit
             values += dnde
         return TemplateSpectralModel(energy, values)
 

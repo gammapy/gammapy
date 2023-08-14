@@ -17,14 +17,15 @@ log = logging.getLogger(__name__)
 __all__ = ["FluxPointsDataset"]
 
 
-def _get_reference_model(energy_edges, model):
+def _get_reference_model(energy_edges, model, margin_percent=70):
     if isinstance(model.spatial_model, TemplateSpatialModel):
         geom = model.spatial_model.map.geom
-        if geom.is_image:
-            energy_axis = MapAxis.from_energy_bounds(
-                energy_edges[0], energy_edges[-1], nbin=10, per_decade=True
-            )
-            geom = geom.to_cube([energy_axis])
+        emin = energy_edges[0] * (1 - margin_percent / 100)
+        emax = energy_edges[-1] * (1 + margin_percent / 100)
+        energy_axis = MapAxis.from_energy_bounds(
+            emin, emax, nbin=20, per_decade=True, name="energy_true"
+        )
+        geom = geom.to_image().to_cube([energy_axis])
         return Models([model]).to_template_spectral_model(geom)
     else:
         return model.spectral_model
