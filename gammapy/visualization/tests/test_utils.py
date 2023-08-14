@@ -1,13 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
+from scipy.stats import norm
 import astropy.units as u
 from astropy.table import Table
 import matplotlib.pyplot as plt
 from gammapy.maps import Map, MapAxis, WcsNDMap
+from gammapy.utils.random import get_random_state
 from gammapy.utils.testing import mpl_plot_check, requires_data
 from gammapy.visualization import (
     plot_contour_line,
+    plot_distribution,
     plot_map_rgb,
     plot_theta_squared_table,
 )
@@ -71,3 +74,36 @@ def test_plot_map_rgb():
     kwargs = {"stretch": 0.5, "Q": 1, "minimum": 0.15}
     with mpl_plot_check():
         plot_map_rgb(map_, **kwargs)
+
+
+def test_plot_distribution():
+    random_state = get_random_state(0)
+    array = random_state.normal(0, 1, 10000)
+
+    array_2d = array.reshape(1, 100, 100)
+
+    energy_axis = MapAxis.from_energy_edges([1, 10] * u.TeV)
+
+    map_ = WcsNDMap.create(npix=(100, 100), axes=[energy_axis])
+    map_.data = array_2d
+
+    energy_axis_10 = MapAxis.from_energy_bounds(1 * u.TeV, 10 * u.TeV, 10)
+    map_empty = WcsNDMap.create(npix=(100, 100), axes=[energy_axis_10])
+
+    def fit_func(x, mu, sigma):
+        return norm.pdf(x, mu, sigma)
+
+    with mpl_plot_check():
+        res, axes = plot_distribution(
+            wcs_map=map_, func=fit_func, kwargs_hist={"bins": 40}
+        )
+
+        assert axes.shape == (1,)
+        assert res[0].get("info_dict").get("nfev") == 19
+        assert res[0].get("param") is not None
+        assert res[0].get("covar") is not None
+
+        res, axes = plot_distribution(map_empty)
+
+        assert res == []
+        assert axes.shape == (4, 3)
