@@ -146,7 +146,7 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
         )
 
         table = Table(rows, meta=meta)
-        model = _get_reference_model(self.energy_edges, datasets.models[self.source])
+        model = _get_reference_model(datasets.models[self.source], self.energy_edges)
         return FluxPoints.from_table(
             table=table,
             reference_model=model.copy(),
@@ -183,7 +183,7 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
         else:
             log.warning(f"No dataset contribute in range {energy_min}-{energy_max}")
             model = _get_reference_model(
-                self.energy_edges, datasets.models[self.source]
+                datasets.models[self.source], self.energy_edges
             )
             return self._nan_result(datasets, model, energy_min, energy_max)
 

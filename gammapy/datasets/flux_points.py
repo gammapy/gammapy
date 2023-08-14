@@ -17,11 +17,11 @@ log = logging.getLogger(__name__)
 __all__ = ["FluxPointsDataset"]
 
 
-def _get_reference_model(energy_edges, model, margin_percent=70):
+def _get_reference_model(model, energy_bounds, margin_percent=70):
     if isinstance(model.spatial_model, TemplateSpatialModel):
         geom = model.spatial_model.map.geom
-        emin = energy_edges[0] * (1 - margin_percent / 100)
-        emax = energy_edges[-1] * (1 + margin_percent / 100)
+        emin = energy_bounds[0] * (1 - margin_percent / 100)
+        emax = energy_bounds[-1] * (1 + margin_percent / 100)
         energy_axis = MapAxis.from_energy_bounds(
             emin, emax, nbin=20, per_decade=True, name="energy_true"
         )
@@ -297,7 +297,7 @@ class FluxPointsDataset(Dataset):
         """Compute predicted flux."""
         flux = 0.0
         for model in self.models:
-            reference_model = _get_reference_model(self._energy_bounds, model)
+            reference_model = _get_reference_model(model, self._energy_bounds)
             flux_model = reference_model(self.data.energy_ref)
 
             if model.temporal_model is not None:
