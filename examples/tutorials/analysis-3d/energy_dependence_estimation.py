@@ -34,7 +34,7 @@ from astropy.coordinates import SkyCoord
 from astropy.table import Table
 from regions import CircleSkyRegion
 from gammapy.data import DataStore
-from gammapy.datasets import MapDataset
+from gammapy.datasets import Datasets, MapDataset
 from gammapy.estimators.energydependence import EnergyDependenceEstimator
 from gammapy.makers import (
     DatasetsMaker,
@@ -97,10 +97,8 @@ exclusion_mask.sum_over_axes().plot()
 # Data reduction loop
 # -------------------
 #
-# The FoVBackgroundMaker is utilised to rescale the background model
-# to the data excluding the region where the source is present. The SafeMaskMaker
-# is defined to exclude data in the MapDataset which is associated with high
-# systematics on instrument response functions.
+# For details on how the data reduction is performed see the
+# :doc:`/tutorials/analysis-3d/analysis_3d` tutorial.
 #
 # The data reduction steps can be combined using the DatasetsMaker class
 # which takes as an input the list of makers.
@@ -123,7 +121,6 @@ datasets_maker = DatasetsMaker(
 )
 
 datasets = datasets_maker.run(global_dataset, observations)
-stacked_dataset = datasets[0]
 
 ######################################################################
 # Define the energy edges of interest. These will be utilised to
@@ -133,9 +130,10 @@ energy_edges = [0.3, 1, 5, 10] * u.TeV
 
 ######################################################################
 # Define the spectral and spatial models of interest. Here we utilise
-# an PowerLawSpectralModel and a GaussianSpatialModel to test the energy
-# dependent morphology component in each energy band. Both models are
-# defined based on some initial educated guess
+# a PowerLawSpectralModel and a GaussianSpatialModel to test the energy
+# dependent morphology component in each energy band. A standard 3D fit
+# is performed then the best fit model is utilised here for the parameters
+# in each model.
 
 spectral_model = PowerLawSpectralModel(
     index=2.26, amplitude=2.58e-12 * u.Unit("cm-2 s-1 TeV-1"), reference=1.0 * u.TeV
@@ -190,18 +188,18 @@ estimator = EnergyDependenceEstimator(energy_edges=energy_edges, model=model)
 estimator = EnergyDependenceEstimator(
     energy_edges=energy_edges, model=model, selection_optional=["src-sig"]
 )
-table_bkg_src = estimator.estimate_source_significance(stacked_dataset)
+table_bkg_src = estimator.estimate_source_significance(datasets)
 table_bkg_src
 
 ######################################################################
 # The results for testing energy dependence
 # -----------------------------------------
 
-results = estimator.run(stacked_dataset)
-ts = results["delta_ts"]
-df = results["df"]
+results = estimator.run(datasets)
+ts = results["energy_dependence"]["delta_ts"]
+df = results["energy_dependence"]["df"]
 print(f"The significance value is {ts_to_sigma(ts, df=df)}")
-table = Table(results["result"])
+table = Table(results["energy_dependence"]["result"])
 table
 
 ######################################################################

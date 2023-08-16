@@ -1,5 +1,5 @@
 import numpy as np
-from gammapy.datasets import Datasets, MapDataset
+from gammapy.datasets import Datasets
 from gammapy.modeling import Fit
 from gammapy.modeling.models import FoVBackgroundModel
 from gammapy.modeling.selection import TestStatisticNested
@@ -37,10 +37,13 @@ class EnergyDependenceEstimator(Estimator):
         Energy edges for the energy-dependence test.
     model : `~gammapy.modeling.model.SkyModel`
         Source model kernel.
+    fit : `Fit`
+        Fit instance specifying the backend and fit options.
     selection_optional : list of str
         Which additional quantities to estimate. Available options are:
             * "src-sig": the significance above the background is
             calculated in each energy band
+        Default is None so the optional steps are not executed.
 
     Examples
     --------
@@ -62,12 +65,12 @@ class EnergyDependenceEstimator(Estimator):
         self.fit = fit
         self.selection_optional = selection_optional
 
-    def estimate_source_significance(self, dataset):
+    def estimate_source_significance(self, datasets):
         """Estimate the significance of the source above the background.
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.MapDataset`
+        datasets : `~gammapy.datasets.Datasets`
             Input dataset to use.
 
         Returns
@@ -77,22 +80,23 @@ class EnergyDependenceEstimator(Estimator):
             hypothesis with the source added in. Entries are:
             * "Emin" : the minimum energy of the energy band
             * "Emax" : the maximum energy of the energy band
-            * "delta ts" : difference in ts
+            * "delta_ts" : difference in ts
             * "df" : the degrees of freedom between null and alternative hypothesis
             * "significance" : significance of the result
         """
-
-        dataset.mask_fit = dataset.counts.geom.energy_mask(
-            energy_min=self.energy_edges[0], energy_max=None
-        )
+        for dataset in datasets:
+            dataset.mask_fit = dataset.counts.geom.energy_mask(
+                energy_min=self.energy_edges[0], energy_max=None
+            )
 
         # Calculate the dataset for each energy slice
         slices_src = Datasets()
         for emin, emax in zip(self.energy_edges[:-1], self.energy_edges[1:]):
-            sliced_src = dataset.slice_by_energy(emin, emax)
-            bkg_sliced_model = FoVBackgroundModel(dataset_name=sliced_src.name)
-            sliced_src.models = [self.model.copy(), bkg_sliced_model]
-            slices_src.append(sliced_src)
+            for dataset in datasets:
+                sliced_src = dataset.slice_by_energy(emin, emax)
+                bkg_sliced_model = FoVBackgroundModel(dataset_name=sliced_src.name)
+                sliced_src.models = [self.model.copy(), bkg_sliced_model]
+                slices_src.append(sliced_src)
 
         # Norm is free and fit
         test_results = []
@@ -112,14 +116,11 @@ class EnergyDependenceEstimator(Estimator):
             test_results.append(test.run(sliced))
 
         delta_ts_bkg_src = [_["ts"] for _ in test_results]
-        df_src = np.sum(
-            [
-                len(_["fit_results"].parameters.free_parameters.names)
-                for _ in test_results
-            ]
-        )
-        df_bkg = 1 * self.num_energy_bands
-        df_bkg_src = df_src - df_bkg
+        df_src = [
+            len(_["fit_results"].parameters.free_parameters.names) for _ in test_results
+        ]
+        df_bkg = 1
+        df_bkg_src = df_src[0] - df_bkg
         sigma_ts_bkg_src = ts_to_sigma(delta_ts_bkg_src, df=df_bkg_src)
 
         # Prepare results dictionary for signal above background
@@ -127,39 +128,41 @@ class EnergyDependenceEstimator(Estimator):
 
         result_bkg_src["Emin"] = self.energy_edges[:-1]
         result_bkg_src["Emax"] = self.energy_edges[1:]
-        result_bkg_src["delta ts"] = [val for val in delta_ts_bkg_src]
+        result_bkg_src["delta_ts"] = delta_ts_bkg_src
         result_bkg_src["df"] = [df_bkg_src] * self.num_energy_bands
         result_bkg_src["significance"] = [elem for elem in sigma_ts_bkg_src]
 
         return result_bkg_src
 
-    def estimate_energy_dependence(self, dataset):
+    def estimate_energy_dependence(self, datasets):
         """Estimate the potential of energy-dependent morphology.
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.MapDataset`
+        datasets : `~gammapy.datasets.Datasets`
             Input dataset to use.
 
         Returns
         -------
         results : `dict`
             Dict with results of the energy-dependence test.
-            * "delta_ts" : difference in ts between sliced fit and joint fit
-            * "df" : the degrees of freedom between sliced fit and joint fit
-            * "result" : the results for the sliced fit and joint fit
+            * "delta_ts" : difference in ts between fitting each energy band individually (sliced fit) and the joint fit
+            * "df" : the degrees of freedom between fitting each energy band individually (sliced fit) and the joint fit
+            * "result" : the results for the fitting each energy band individually (sliced fit) and the joint fit
         """
-        dataset.mask_fit = dataset.counts.geom.energy_mask(
-            energy_min=self.energy_edges[0], energy_max=None
-        )
+        for dataset in datasets:
+            dataset.mask_fit = dataset.counts.geom.energy_mask(
+                energy_min=self.energy_edges[0], energy_max=None
+            )
 
         # Calculate the individually sliced components
         slices_src = Datasets()
         for emin, emax in zip(self.energy_edges[:-1], self.energy_edges[1:]):
-            sliced_src = dataset.slice_by_energy(emin, emax)
-            bkg_sliced_model = FoVBackgroundModel(dataset_name=sliced_src.name)
-            sliced_src.models = [self.model.copy(), bkg_sliced_model]
-            slices_src.append(sliced_src)
+            for dataset in datasets:
+                sliced_src = dataset.slice_by_energy(emin, emax)
+                bkg_sliced_model = FoVBackgroundModel(dataset_name=sliced_src.name)
+                sliced_src.models = [self.model.copy(), bkg_sliced_model]
+                slices_src.append(sliced_src)
 
         results_src = []
         for sliced in slices_src:
@@ -236,7 +239,7 @@ class EnergyDependenceEstimator(Estimator):
             Dict with the various energy-dependence estimation values.
         """
 
-        if not isinstance(dataset, MapDataset):
+        if not isinstance(dataset, Datasets):
             raise ValueError("Unsupported dataset type.")
 
         results = self.estimate_energy_dependence(dataset)
