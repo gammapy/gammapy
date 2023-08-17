@@ -95,8 +95,11 @@ class ExcessMapEstimator(Estimator):
             * "ul": estimate upper limits.
 
         Default is None so the optional steps are not executed.
-    energy_edges : `~astropy.units.Quantity`
-        Energy edges of the target excess maps bins.
+    energy_edges : list of `~astropy.units.Quantity`
+        Edges of the target maps energy bins. The resulting bin edges won't be exactly equal to the input ones,
+        but rather the closest values to the energy axis edges of the parent dataset.
+        Default is None: apply the estimator in each energy bin of the parent dataset.
+        For further explanation see :ref:`estimators`.
     correlate_off : bool
         Correlate OFF events. Default is True.
     spectral_model : `~gammapy.modeling.models.SpectralModel`

@@ -313,7 +313,7 @@ def plot_distribution(
             xmin, xmax = kwargs_hist.get("range", (np.min(d), np.max(d)))
             x = np.linspace(xmin, xmax, 1000)
 
-            axe.plot(x, func(x, *pars), label="Fit")
+            axe.plot(x, func(x, *pars), label="Fit", lw=2, color="black")
 
         axe.set(**kwargs_axes)
         axe.legend()
