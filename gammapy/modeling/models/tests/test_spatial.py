@@ -469,13 +469,19 @@ def test_spatial_model_plot():
         model.plot_error(ax=ax, which="all")
 
 
-def test_spatial_model_plot_error():
-    model = GaussianSpatialModel(
-        lon="0d", lat="0d", sigma=0.2 * u.deg, frame="galactic"
-    )
+models_test = [
+    (GaussianSpatialModel, "sigma"),
+    (GeneralizedGaussianSpatialModel, "r_0"),
+    (DiskSpatialModel, "r_0"),
+]
+
+
+@pytest.mark.parametrize(("model_class", "extension_param"), models_test)
+def test_spatial_model_plot_error(model_class, extension_param):
+    model = model_class(lon="0d", lat="0d", sigma=0.2 * u.deg, frame="galactic")
     model.lat_0.error = 0.04
     model.lon_0.error = 0.02
-    model.sigma.error = 0.04
+    model.parameters[extension_param].error = 0.04
     model.e.error = 0.002
 
     empty_map = Map.create(
@@ -484,6 +490,8 @@ def test_spatial_model_plot_error():
     with mpl_plot_check():
         ax = empty_map.plot()
         model.plot_error(ax=ax, which="all")
+        model.plot_error(ax=ax, which="position")
+        model.plot_error(ax=ax, which="extension")
 
 
 def test_integrate_region_geom():
