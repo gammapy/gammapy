@@ -12,7 +12,7 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
 )
-from gammapy.stats import compute_fvar
+from gammapy.stats import compute_dtime, compute_fpp, compute_fvar
 from .map.core import FluxMaps
 
 __all__ = [
@@ -20,6 +20,8 @@ __all__ = [
     "find_peaks",
     "resample_energy_edges",
     "compute_lightcurve_fvar",
+    "compute_lightcurve_fpp",
+    "compute_lightcurve_dtime",
     "find_peaks_in_flux_map",
 ]
 
@@ -342,6 +344,83 @@ def compute_lightcurve_fvar(lightcurve, flux_quantity="flux"):
     table = Table(
         [energies[:-1], energies[1:], fvar, fvar_err, significance],
         names=("min_energy", "max_energy", "fvar", "fvar_err", "significance"),
+        meta=lightcurve.meta,
+    )
+
+    return table
+
+
+def compute_lightcurve_fpp(lightcurve, flux_quantity="flux"):
+    r"""Compute the point-to-point excess variance of the input lightcurve.
+
+    Internally calls the `~gammapy.stats.compute_fpp` function
+
+
+    Parameters
+    ----------
+    lightcurve : '~gammapy.estimators.FluxPoints'
+        the lightcurve object
+    flux_quantity : str
+        flux quantity to use for calculation. Should be 'dnde', 'flux', 'e2dnde' or 'eflux'. Default is 'flux'.
+        Useful in case of custom lightcurves computed outside gammapy
+
+    Returns
+    -------
+    table : `~astropy.table.Table`
+        Table of point-to-point excess variance and associated error for each energy bin of the lightcurve.
+    """
+
+    flux = getattr(lightcurve, flux_quantity)
+    flux_err = getattr(lightcurve, flux_quantity + "_err")
+
+    time_id = flux.geom.axes.index_data("time")
+
+    fpp, fpp_err = compute_fpp(flux.data, flux_err.data, axis=time_id)
+
+    significance = fpp / fpp_err
+
+    energies = lightcurve.geom.axes["energy"].edges
+    table = Table(
+        [energies[:-1], energies[1:], fpp, fpp_err, significance],
+        names=("min_energy", "max_energy", "fpp", "fpp_err", "significance"),
+        meta=lightcurve.meta,
+    )
+
+    return table
+
+
+def compute_lightcurve_dtime(lightcurve, flux_quantity="flux"):
+    r"""Compute the doubling time of the input lightcurve.
+
+    Internally calls the `~gammapy.stats.compute_dtime` function
+
+
+    Parameters
+    ----------
+    lightcurve : '~gammapy.estimators.FluxPoints'
+        the lightcurve object
+    flux_quantity : str
+        flux quantity to use for calculation. Should be 'dnde', 'flux', 'e2dnde' or 'eflux'. Default is 'flux'.
+        Useful in case of custom lightcurves computed outside gammapy
+
+    Returns
+    -------
+    table : `~astropy.table.Table`
+        Table of doubling times and associated error for each energy bin of the lightcurve.
+    """
+
+    flux = getattr(lightcurve, flux_quantity)
+    flux_err = getattr(lightcurve, flux_quantity + "_err")
+    time = lightcurve.geom.axes["time"].center
+
+    time_id = flux.geom.axes.index_data("time")
+
+    dtime, dtime_err = compute_dtime(flux.data, flux_err.data, time, axis=time_id)
+
+    energies = lightcurve.geom.axes["energy"].edges
+    table = Table(
+        [energies[:-1], energies[1:], dtime, dtime_err],
+        names=("min_energy", "max_energy", "dtime", "dtime_err"),
         meta=lightcurve.meta,
     )
 
