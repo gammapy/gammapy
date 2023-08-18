@@ -40,8 +40,9 @@ def lc():
             Column([True, True], "success"),
         ],
     )
+    gti = GTI.create("0h", "1h", "2010-01-01T00:00:00")
 
-    return FluxPoints.from_table(table=table, format="lightcurve")
+    return FluxPoints.from_table(table=table, format="lightcurve", gti=gti)
 
 
 @pytest.fixture(scope="session")
@@ -109,6 +110,7 @@ def test_lightcurve_read_write(tmp_path, lc, sed_type):
     lc.write(tmp_path / "tmp.fits", format="lightcurve", sed_type=sed_type)
 
     lc = FluxPoints.read(tmp_path / "tmp.fits", format="lightcurve")
+    assert_allclose(lc.gti.time_start[0].mjd, 55197.000766, rtol=1e-5)
 
     # Check if time-related info round-trips
     axis = lc.geom.axes["time"]

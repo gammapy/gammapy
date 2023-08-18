@@ -8,6 +8,7 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 import gammapy.utils.time as tu
+from gammapy.utils.pbar import progress_bar
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
 from .hdu_index_table import HDUIndexTable
@@ -388,7 +389,7 @@ class DataStore:
 
         obs_list = []
 
-        for _ in obs_id:
+        for _ in progress_bar(obs_id, desc="Obs Id"):
             try:
                 obs = self.obs(_, required_irf, require_events)
             except ValueError as err:

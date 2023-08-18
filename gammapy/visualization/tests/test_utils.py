@@ -6,6 +6,7 @@ import astropy.units as u
 from astropy.table import Table
 import matplotlib.pyplot as plt
 from gammapy.maps import Map, MapAxis, WcsNDMap
+from gammapy.utils.random import get_random_state
 from gammapy.utils.testing import mpl_plot_check, requires_data
 from gammapy.visualization import (
     plot_contour_line,
@@ -76,7 +77,8 @@ def test_plot_map_rgb():
 
 
 def test_plot_distribution():
-    array = np.random.normal(0, 1, 10000)
+    random_state = get_random_state(0)
+    array = random_state.normal(0, 1, 10000)
 
     array_2d = array.reshape(1, 100, 100)
 
