@@ -224,7 +224,7 @@ def test_edisp_kernel_map_stack():
     assert_allclose(exposure, 3.0)
 
 
-def test__incorrect_edisp_kernel_map_stack():
+def test_incorrect_edisp_kernel_map_stack():
     energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=5)
 
     energy_axis_true = MapAxis.from_energy_bounds(
