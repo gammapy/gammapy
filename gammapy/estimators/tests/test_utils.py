@@ -9,6 +9,7 @@ from astropy.time import Time
 from gammapy.datasets import MapDataset
 from gammapy.estimators import ExcessMapEstimator, FluxPoints
 from gammapy.estimators.utils import (
+    compute_lightcurve_dtime,
     compute_lightcurve_fpp,
     compute_lightcurve_fvar,
     find_peaks,
@@ -181,3 +182,15 @@ def test_compute_lightcurve_fpp():
 
     assert_allclose(ffpp, [[[0.99373035]], [[0.53551551]]])
     assert_allclose(ffpp_err, [[[0.07930673]], [[0.07397653]]])
+
+
+def test_compute_lightcurve_dtime():
+
+    lightcurve = lc()
+
+    dtime = compute_lightcurve_dtime(lightcurve)
+    ddtime = dtime["doubling_time"].quantity
+    ddtime_err = dtime["dtime_err"].quantity
+
+    assert_allclose(ddtime, [[[245305.49]], [[481572.59]]] * u.s)
+    assert_allclose(ddtime_err, [[[45999.766]], [[11935.665]]] * u.s)

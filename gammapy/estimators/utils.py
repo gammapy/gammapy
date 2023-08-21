@@ -419,8 +419,22 @@ def compute_lightcurve_dtime(lightcurve, flux_quantity="flux"):
 
     energies = lightcurve.geom.axes["energy"].edges
     table = Table(
-        [energies[:-1], energies[1:], dtime, dtime_err],
-        names=("min_energy", "max_energy", "dtime", "dtime_err"),
+        [
+            energies[:-1],
+            energies[1:],
+            dtime.T[0],
+            dtime_err.T[0],
+            np.abs(dtime.T[1]),
+            dtime_err.T[1],
+        ],
+        names=(
+            "min_energy",
+            "max_energy",
+            "doubling_time",
+            "dtime_err",
+            "halving_time",
+            "htime_err",
+        ),
         meta=lightcurve.meta,
     )
 

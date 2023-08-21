@@ -198,8 +198,16 @@ def compute_dtime(flux, flux_err, time, axis=0):
         (flux_err[..., 1:] * times_err_1) ** 2 + (flux_err[..., :-1] * times_err_2) ** 2
     )
 
-    imin = np.argmin(np.where(times > 0, times, 1e15 * u.s), axis=-1, keepdims=True)
-    imax = np.argmax(np.where(times < 0, times, -1e15 * u.s), axis=-1, keepdims=True)
+    imin = np.argmin(
+        np.where(np.logical_and(np.isfinite(times), times > 0), times, 1e15 * u.s),
+        axis=-1,
+        keepdims=True,
+    )
+    imax = np.argmax(
+        np.where(np.logical_and(np.isfinite(times), times < 0), times, -1e15 * u.s),
+        axis=-1,
+        keepdims=True,
+    )
     index = np.concatenate([imin, imax], axis=-1)
 
     dtime = np.take_along_axis(times, index, axis=-1)
