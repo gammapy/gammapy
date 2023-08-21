@@ -250,7 +250,7 @@ plt.show()
 
 
 ######################################################################
-# Cumulative excess and signficance
+# Cumulative excess and significance
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # Finally, we can look at cumulative significance and number of excesses.
@@ -263,7 +263,7 @@ info_table = datasets.info_table(cumulative=True)
 display(info_table)
 
 ######################################################################
-# And make the correponding plots
+# And make the corresponding plots
 
 fig, (ax_excess, ax_sqrt_ts) = plt.subplots(figsize=(10, 4), ncols=2, nrows=1)
 ax_excess.plot(
