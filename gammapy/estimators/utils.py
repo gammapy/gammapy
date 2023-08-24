@@ -12,7 +12,7 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
 )
-from gammapy.stats import compute_dtime, compute_fpp, compute_fvar
+from gammapy.stats import compute_fpp, compute_fvar
 from .map.core import FluxMaps
 
 __all__ = [
@@ -21,7 +21,6 @@ __all__ = [
     "resample_energy_edges",
     "compute_lightcurve_fvar",
     "compute_lightcurve_fpp",
-    "compute_lightcurve_dtime",
     "find_peaks_in_flux_map",
 ]
 
@@ -388,54 +387,3 @@ def compute_lightcurve_fpp(lightcurve, flux_quantity="flux"):
 
     return table
 
-
-def compute_lightcurve_dtime(lightcurve, flux_quantity="flux"):
-    r"""Compute the doubling time of the input lightcurve.
-
-    Internally calls the `~gammapy.stats.compute_dtime` function
-
-
-    Parameters
-    ----------
-    lightcurve : '~gammapy.estimators.FluxPoints'
-        the lightcurve object
-    flux_quantity : str
-        flux quantity to use for calculation. Should be 'dnde', 'flux', 'e2dnde' or 'eflux'. Default is 'flux'.
-        Useful in case of custom lightcurves computed outside gammapy
-
-    Returns
-    -------
-    table : `~astropy.table.Table`
-        Table of doubling times and associated error for each energy bin of the lightcurve.
-    """
-
-    flux = getattr(lightcurve, flux_quantity)
-    flux_err = getattr(lightcurve, flux_quantity + "_err")
-    time = lightcurve.geom.axes["time"].center
-
-    time_id = flux.geom.axes.index_data("time")
-
-    dtime, dtime_err = compute_dtime(flux.data, flux_err.data, time, axis=time_id)
-
-    energies = lightcurve.geom.axes["energy"].edges
-    table = Table(
-        [
-            energies[:-1],
-            energies[1:],
-            dtime.T[0],
-            dtime_err.T[0],
-            np.abs(dtime.T[1]),
-            dtime_err.T[1],
-        ],
-        names=(
-            "min_energy",
-            "max_energy",
-            "doubling_time",
-            "dtime_err",
-            "halving_time",
-            "htime_err",
-        ),
-        meta=lightcurve.meta,
-    )
-
-    return table

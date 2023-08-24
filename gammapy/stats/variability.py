@@ -6,7 +6,6 @@ import astropy.units as u
 __all__ = [
     "compute_fvar",
     "compute_fpp",
-    "compute_dtime",
     "compute_chisq",
 ]
 
@@ -142,75 +141,3 @@ def compute_chisq(flux):
     chi2, pval = stats.chisquare(yobs, yexp)
     return chi2, pval
 
-
-def compute_dtime(flux, flux_err, time, axis=0):
-    r"""Calculate the characteristic doubling time for a series of measurements.
-
-    The characteristic doubling time  is estimated to obtain the
-    minimum variability timescale for the light curves in which
-    rapid variations are clearly evident: for example it is useful in AGN flaring episodes.
-
-    This quantity, especially for AGN flares, is often expressed
-    as the pair of doubling time and halving time, or the minimum characteristic time
-    for the rising and falling components respectively.
-
-    Parameters
-    ----------
-    flux : `~astropy.units.Quantity`
-        the measured fluxes
-    flux_err : `~astropy.units.Quantity`
-        the error on measured fluxes
-    time: `~astropy.units.Quantity`
-        the times at which the fluxes are measured
-    axis : int, optional
-        Axis along which the value is computed.
-        The default is to compute the value on axis 0.
-
-    Returns
-    -------
-    dtime, dtime_err : `~numpy.ndarray`
-        Characteristic doubling time, halving time and errors.
-
-    References
-    ----------
-    ..[Brown2013] "Locating the γ-ray emission region
-    of the flat spectrum radio quasar PKS 1510−089", Brown et al. (2013)
-    https://academic.oup.com/mnras/article/431/1/824/1054498
-    """
-
-    flux = np.atleast_2d(flux).swapaxes(0, axis).T
-    flux_err = np.atleast_2d(flux_err).swapaxes(0, axis).T
-
-    times = (time[1:] - time[:-1]) / np.log2(flux[..., 1:] / flux[..., :-1])
-    times_err_1 = (
-        (time[1:] - time[:-1])
-        * np.log(2)
-        / flux[..., 1:]
-        * np.log(flux[..., 1:] / flux[..., :-1]) ** 2
-    )
-    times_err_2 = (
-        (time[1:] - time[:-1])
-        * np.log(2)
-        / flux[..., :-1]
-        * np.log(flux[..., 1:] / flux[..., :-1]) ** 2
-    )
-    times_err = np.sqrt(
-        (flux_err[..., 1:] * times_err_1) ** 2 + (flux_err[..., :-1] * times_err_2) ** 2
-    )
-
-    imin = np.argmin(
-        np.where(np.logical_and(np.isfinite(times), times > 0), times, 1e15 * u.s),
-        axis=-1,
-        keepdims=True,
-    )
-    imax = np.argmax(
-        np.where(np.logical_and(np.isfinite(times), times < 0), times, -1e15 * u.s),
-        axis=-1,
-        keepdims=True,
-    )
-    index = np.concatenate([imin, imax], axis=-1)
-
-    dtime = np.take_along_axis(times, index, axis=-1)
-    dtime_err = np.take_along_axis(times_err, index, axis=-1)
-
-    return dtime, dtime_err
