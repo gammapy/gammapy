@@ -145,7 +145,7 @@ print(dataset_cta)
 
 ######################################################################
 # To further explore the contents of a `Dataset`, you can use
-# e.g. `~gammay.datasets.MapDataset.info_dict()`
+# e.g. `~gammapy.datasets.MapDataset.info_dict()`
 #
 
 ######################################################################
@@ -299,7 +299,7 @@ plt.show()
 ######################################################################
 # To access the energy range defined by the mask you can use:
 #
-# -`~gammapy.datasets.MapDataset.energy_range_safe` : energy range definedby the `~gammapy.datasets.MapDataset.mask_safe`
+# -`~gammapy.datasets.MapDataset.energy_range_safe` : energy range defined by the `~gammapy.datasets.MapDataset.mask_safe`
 # - `~gammapy.datasets.MapDataset.energy_range_fit` : energy range defined by the `~gammapy.datasets.MapDataset.mask_fit`
 # - `~gammapy.datasets.MapDataset.energy_range` : the final energy range used in likelihood computation
 #

@@ -1151,7 +1151,7 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         )
         period = 1 / frequency
 
-        # Take minimum time delta between user input and the period divied by the number of raows in the model table
+        # Take minimum time delta between user input and the period divided by the number of rows in the model table
         # this assumes that phase values are evenly spaced.
         t_delta = np.minimum(period / len(self.table), t_delta)
 
