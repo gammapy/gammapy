@@ -706,7 +706,7 @@ class Observations(collections.abc.MutableSequence):
         return self.ids
 
     def group_by_label(self, labels):
-        """Split obsevations in multiple groups of observations
+        """Split observations in multiple groups of observations
 
         Parameters
         ----------
@@ -739,7 +739,7 @@ class Observations(collections.abc.MutableSequence):
         Returns
         -------
         observations : `~gammapy.data.Observations`
-            The `Observations` object resulting from the stacking of all the `Observations` in `observation_list`.
+            The `Observations` object resulting from stacking all the `Observations` in `observation_list`.
         """
         obs = itertools.chain(*observations_list)
         return cls(list(obs))
