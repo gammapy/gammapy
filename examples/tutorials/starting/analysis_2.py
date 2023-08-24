@@ -40,7 +40,7 @@ together (i.e.sum them all).
 
 In practice, we have to:
 
-- Create a `~gammapy.data.DataStore` poiting to the relevant data
+- Create a `~gammapy.data.DataStore` pointing to the relevant data
 - Apply an observation selection to produce a list of observations,
   a `~gammapy.data.Observations` object.
 - Define a geometry of the Map we want to produce, with a sky projection
