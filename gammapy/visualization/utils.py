@@ -1,13 +1,15 @@
+import logging as log
 import numpy as np
 from scipy.interpolate import CubicSpline
+from scipy.optimize import curve_fit
 from astropy.visualization import make_lupton_rgb
 import matplotlib.pyplot as plt
 
 __all__ = [
     "plot_contour_line",
     "plot_map_rgb",
-    "plot_spectrum_datasets_off_regions",
     "plot_theta_squared_table",
+    "plot_distribution",
 ]
 
 
@@ -46,7 +48,7 @@ def plot_map_rgb(map_, ax=None, **kwargs):
 
     Examples
     --------
-    >>> from gammapy.visualization.utils import plot_map_rgb
+    >>> from gammapy.visualization import plot_map_rgb
     >>> from gammapy.maps import Map, MapAxis
     >>> import astropy.units as u
     >>> map_ = Map.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
@@ -76,108 +78,6 @@ def plot_map_rgb(map_, ax=None, **kwargs):
 
     # without this the axis limits are changed when calling scatter
     ax.autoscale(enable=False)
-
-    return ax
-
-
-def plot_spectrum_datasets_off_regions(
-    datasets, ax=None, legend=None, legend_kwargs=None, **kwargs
-):
-    """Plot the off regions of spectrum datasets.
-
-    Parameters
-    ----------
-    datasets : `~gammapy.datasets.Datasets` or list of `~gammapy.datasets.SpectrumDatasetOnOff`
-        List of spectrum on-off datasets.
-    ax : `~astropy.visualization.wcsaxes.WCSAxes`
-        Axes object to plot on.
-    legend : bool
-        Whether to add/display the labels of the off regions in a legend. By default True if
-        ``len(datasets) <= 10``.
-    legend_kwargs : dict
-        Keyword arguments used in `matplotlib.axes.Axes.legend`. The ``handler_map`` cannot be
-        overridden.
-    **kwargs : dict
-        Keyword arguments used in `gammapy.maps.RegionNDMap.plot_region`. Can contain a
-        `~cycler.Cycler` in a ``prop_cycle`` argument.
-
-    Notes
-    -----
-    Properties from the ``prop_cycle`` have maximum priority, except ``color``,
-    ``edgecolor``/``color`` is selected from the sources below in this order:
-    ``kwargs["edgecolor"]``, ``kwargs["prop_cycle"]``, ``matplotlib.rcParams["axes.prop_cycle"]``
-    ``matplotlib.rcParams["patch.edgecolor"]``, ``matplotlib.rcParams["patch.facecolor"]``
-    is never used.
-
-    Examples
-    --------
-    Plot forcibly without legend and with thick circles::
-
-        plot_spectrum_datasets_off_regions(datasets, ax, legend=False, linewidth=2.5)
-
-    Plot that quantifies the overlap of off regions::
-
-        plot_spectrum_datasets_off_regions(datasets, ax, alpha=0.3, facecolor='black')
-
-    Plot that cycles through colors (``edgecolor``) and line styles together::
-
-        plot_spectrum_datasets_off_regions(datasets, ax, prop_cycle=plt.cycler(color=list('rgb'), ls=['--', '-', ':']))  # noqa: E501
-
-    Plot that uses a modified `~matplotlib.rcParams`, has two legend columns, static and
-    dynamic colors, but only shows labels for ``datasets1`` and ``datasets2``. Note that
-    ``legend_kwargs`` only applies if it's given in the last function call with ``legend=True``::
-
-        plt.rc('legend', columnspacing=1, fontsize=9)
-        plot_spectrum_datasets_off_regions(datasets1, ax, legend=True, edgecolor='cyan')
-        plot_spectrum_datasets_off_regions(datasets2, ax, legend=True, legend_kwargs=dict(ncol=2))
-        plot_spectrum_datasets_off_regions(datasets3, ax, legend=False, edgecolor='magenta')
-    """
-    from matplotlib.legend_handler import HandlerPatch, HandlerTuple
-    from matplotlib.patches import CirclePolygon, Patch
-
-    if ax is None:
-        ax = plt.subplot(projection=datasets[0].counts_off.geom.wcs)
-
-    legend = legend or legend is None and len(datasets) <= 10
-    legend_kwargs = legend_kwargs or {}
-    handles, labels = [], []
-
-    prop_cycle = kwargs.pop("prop_cycle", plt.rcParams["axes.prop_cycle"])
-
-    for props, dataset in zip(prop_cycle(), datasets):
-        plot_kwargs = kwargs.copy()
-        plot_kwargs["facecolor"] = "None"
-        plot_kwargs.setdefault("edgecolor")
-        plot_kwargs.update(props)
-
-        dataset.counts_off.plot_region(ax, **plot_kwargs)
-
-        # create proxy artist for the custom legend
-        if legend:
-            handle = Patch(**plot_kwargs)
-            handles.append(handle)
-            labels.append(dataset.name)
-
-    if legend:
-        legend = ax.get_legend()
-        if legend:
-            handles = legend.legendHandles + handles
-            labels = [text.get_text() for text in legend.texts] + labels
-
-        handles = [(handle, handle) for handle in handles]
-        tuple_handler = HandlerTuple(ndivide=None, pad=0)
-
-        def patch_func(
-            legend, orig_handle, xdescent, ydescent, width, height, fontsize
-        ):
-            radius = width / 2
-            return CirclePolygon((radius - xdescent, height / 2 - ydescent), radius)
-
-        patch_handler = HandlerPatch(patch_func)
-
-        legend_kwargs.setdefault("handletextpad", 0.5)
-        legend_kwargs["handler_map"] = {Patch: patch_handler, tuple: tuple_handler}
-        ax.legend(handles, labels, **legend_kwargs)
 
     return ax
 
@@ -230,6 +130,7 @@ def plot_theta_squared_table(table):
         Required columns: theta2_min, theta2_max, counts, counts_off and alpha
     """
     from gammapy.maps import MapAxis
+    from gammapy.maps.axes import UNIT_STRING_FORMAT
     from gammapy.maps.utils import edges_from_lo_hi
 
     theta2_edges = edges_from_lo_hi(
@@ -278,5 +179,143 @@ def plot_theta_squared_table(table):
 
     ax1 = plt.subplot(2, 1, 2)
     ax1.errorbar(x, table["sqrt_ts"], xerr=xerr, linestyle="None")
-    ax1.set_xlabel(f"Theta [{theta2_axis.unit}]")
+    ax1.set_xlabel(f"Theta [{theta2_axis.unit.to_string(UNIT_STRING_FORMAT)}]")
     ax1.set_ylabel("Significance")
+
+
+def plot_distribution(
+    wcs_map,
+    ax=None,
+    ncols=3,
+    func=None,
+    kwargs_hist=None,
+    kwargs_axes=None,
+    kwargs_fit=None,
+):
+    """
+    Plot the 1D distribution of data inside a map as an histogram. If the dimension of the map is smaller than 2,
+    a unique plot will be displayed. Otherwise, if the dimension is 3 or greater, a grid of plot will be displayed.
+
+    Parameters
+    ----------
+    wcs_map : an instance of `~gammapy.maps.WcsNDMap`
+        A map that contains data to be plotted.
+    ax : `~matplotlib.axes.Axes` or list of `~matplotlib.axes.Axes`
+        Axis object to plot on. If a list of Axis is provided it has to be the same length as the length of _map.data.
+    ncols : int
+        Number of columns to plot if a "plot grid" was to be done.
+    func : function object
+        The function to pass to `scipy.optimize.curve_fit`. Default is None.
+        If None, no fit will be done.
+    kwargs_hist : dict
+        Keyword arguments to pass to `matplotlib.pyplot.hist`.
+    kwargs_axes : dict
+        Keyword arguments to pass to `matplotlib.axes.Axes`.
+    kwargs_fit : dict
+        Keyword arguments to pass to `scipy.optimize.curve_fit`
+
+    Returns
+    -------
+    result_list : list of dict
+        List of dictionnary that contains the results of `scipy.optimize.curve_fit`. The number of elements in the list
+        correspond to the dimension of the non-spatial axis of the map.
+        The dictionnary contains:
+
+            * `axis_edges` : the edges of the non-spatial axis bin used
+            * `param` : the best-fit parameters of the input function `func`
+            * `covar` : the covariance matrix for the fitted parameters `param`
+            * `info_dict` : the `infodict` return of `scipy.optimize.curve_fit`
+
+    axes : `~numpy.ndarray` of `~matplotlib.pyplot.Axes`
+        Array of Axes.
+
+    Examples
+    --------
+    >>> from gammapy.datasets import MapDataset
+    >>> from gammapy.estimators import TSMapEstimator
+    >>> from scipy.stats import norm
+    >>> from gammapy.visualization import plot_distribution
+    >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
+    >>> tsmap_est = TSMapEstimator().run(dataset)
+    >>> func = lambda x, mu, sig : norm.pdf(x, loc=mu, scale=sig)
+    >>> res, ax = plot_distribution(tsmap_est.sqrt_ts, func=func, kwargs_hist={'bins': 75, 'range': (-10, 10), 'density': True})
+    """
+
+    from gammapy.maps import WcsNDMap  # import here to avoid circular import
+
+    if not isinstance(wcs_map, WcsNDMap):
+        raise TypeError(
+            f"map_ must be an instance of gammapy.maps.WcsNDMap, given {type(wcs_map)}"
+        )
+
+    kwargs_hist = kwargs_hist or {}
+    kwargs_axes = kwargs_axes or {}
+    kwargs_fit = kwargs_fit or {}
+
+    kwargs_hist.setdefault("density", True)
+    kwargs_fit.setdefault("full_output", True)
+
+    cutout, mask = wcs_map.cutout_and_mask_region()
+    idx_x, idx_y = np.where(mask)
+
+    data = cutout.data[..., idx_x, idx_y]
+
+    if ax is None:
+        n_plot = len(data)
+        cols = min(ncols, n_plot)
+        rows = 1 + (n_plot - 1) // cols
+
+        width = 12
+        figsize = (width, width * rows / cols)
+
+        fig, axes = plt.subplots(
+            nrows=rows,
+            ncols=cols,
+            figsize=figsize,
+        )
+        cells_in_grid = rows * cols
+    else:
+        axes = ax
+        cells_in_grid = len(ax.flatten())
+
+    if not isinstance(axes, np.ndarray):
+        axes = np.array([axes])
+
+    result_list = []
+
+    for idx in range(cells_in_grid):
+
+        axe = axes.flat[idx]
+        if idx > len(data) - 1:
+            axe.set_visible(False)
+            continue
+        d = data[idx][np.isfinite(data[idx])]
+        n, bins, _ = axe.hist(d, **kwargs_hist)
+
+        if func is not None:
+            centers = 0.5 * (bins[1:] + bins[:-1])
+
+            pars, cov, infodict, message, _ = curve_fit(func, centers, n, **kwargs_fit)
+
+            axis_edges = (
+                wcs_map.geom.axes[-1].edges[idx],
+                wcs_map.geom.axes[-1].edges[idx + 1],
+            )
+            result_dict = {
+                "axis_edges": axis_edges,
+                "param": pars,
+                "covar": cov,
+                "info_dict": infodict,
+            }
+            result_list.append(result_dict)
+            log.info(message)
+
+            xmin, xmax = kwargs_hist.get("range", (np.min(d), np.max(d)))
+            x = np.linspace(xmin, xmax, 1000)
+
+            axe.plot(x, func(x, *pars), label="Fit", lw=2, color="black")
+
+        axe.set(**kwargs_axes)
+        axe.legend()
+
+    return result_list, axes

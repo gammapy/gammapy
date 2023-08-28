@@ -14,6 +14,7 @@ from astropy.utils.decorators import classproperty
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from gammapy.maps import MapAxis, RegionNDMap
+from gammapy.maps.axes import UNIT_STRING_FORMAT
 from gammapy.modeling import Parameter, Parameters
 from gammapy.utils.integrate import trapz_loglog
 from gammapy.utils.interpolation import (
@@ -211,6 +212,45 @@ class SpectralModel(ModelBase):
             Tuple of flux and flux error.
         """
         return self._propagate_error(epsilon=epsilon, fct=self, energy=energy)
+
+    @property
+    def pivot_energy(self):
+        """The pivot or decorrelation energy, for a given spectral model calculated numerically.
+        It is defined as the energy at which the correlation between the spectral parameters is minimized.
+
+        Returns
+        -------
+        pivot energy : `~astropy.units.Quantity`
+            The energy at which the statistical error in the computed flux is smallest.
+            If no minimum is found, NaN will be returned.
+        """
+
+        x_unit = self.reference.unit
+
+        def min_func(x):
+            """Function to minimize"""
+            x = np.exp(x)
+            dnde, dnde_error = self.evaluate_error(x * x_unit)
+            return dnde_error / dnde
+
+        bounds = [np.log(self.reference.value) - 3, np.log(self.reference.value) + 3]
+
+        std = np.std(min_func(x=np.linspace(bounds[0], bounds[1], 100)))
+        if std < 1e-5:
+            log.warning(
+                "The relative error on the flux does not depend on energy. No pivot energy found."
+            )
+            return np.nan * x_unit
+
+        minimizer = scipy.optimize.minimize_scalar(min_func, bounds=bounds)
+
+        if not minimizer.success:
+            log.warning(
+                "No minima found in the relative error on the flux. Pivot energy computation failed."
+            )
+            return np.nan * x_unit
+        else:
+            return np.exp(minimizer.x) * x_unit
 
     def integral(self, energy_min, energy_max, **kwargs):
         r"""Integrate spectral model numerically if no analytical solution defined.
@@ -508,11 +548,15 @@ class SpectralModel(ModelBase):
 
     @staticmethod
     def _plot_format_ax(ax, energy_power, sed_type):
-        ax.set_xlabel(f"Energy [{ax.xaxis.units}]")
+        ax.set_xlabel(f"Energy [{ax.xaxis.units.to_string(UNIT_STRING_FORMAT)}]")
         if energy_power > 0:
-            ax.set_ylabel(f"e{energy_power} * {sed_type} [{ax.yaxis.units}]")
+            ax.set_ylabel(
+                f"e{energy_power} * {sed_type} [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]"
+            )
         else:
-            ax.set_ylabel(f"{sed_type} [{ax.yaxis.units}]")
+            ax.set_ylabel(
+                f"{sed_type} [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]"
+            )
 
         ax.set_xscale("log", nonpositive="clip")
         ax.set_yscale("log", nonpositive="clip")
@@ -810,13 +854,18 @@ class PowerLawSpectralModel(SpectralModel):
 
     @property
     def pivot_energy(self):
-        r"""The decorrelation energy is defined as:
+        r"""The pivot or decorrelation energy is defined as:
 
         .. math::
 
             E_D = E_0 * \exp{cov(\phi_0, \Gamma) / (\phi_0 \Delta \Gamma^2)}
 
         Formula (1) in https://arxiv.org/pdf/0910.4881.pdf
+
+        Returns
+        -------
+        pivot energy : `~astropy.units.Quantity`
+            If no minimum is found, NaN will be returned.
         """
         index_err = self.index.error
         reference = self.reference.quantity
@@ -903,13 +952,18 @@ class PowerLawNormSpectralModel(SpectralModel):
 
     @property
     def pivot_energy(self):
-        r"""The decorrelation energy is defined as:
+        r"""The pivot or decorrelation energy is defined as:
 
         .. math::
 
             E_D = E_0 * \exp{cov(\phi_0, \Gamma) / (\phi_0 \Delta \Gamma^2)}
 
         Formula (1) in https://arxiv.org/pdf/0910.4881.pdf
+
+        Returns
+        -------
+        pivot energy : `~astropy.units.Quantity`
+            If no minimum is found, NaN will be returned.
         """
         tilt_err = self.tilt.error
         reference = self.reference.quantity
@@ -1718,11 +1772,6 @@ class TemplateNDSpectralModel(SpectralModel):
             filename = str(make_path(filename))
         self.filename = filename
 
-        points_scale = [
-            "lin",
-            "lin",
-            "log",
-        ]
         parameters = []
         has_energy = False
         for axis in map.geom.axes:
@@ -1737,7 +1786,6 @@ class TemplateNDSpectralModel(SpectralModel):
                     max=axis.bounds[-1],
                     interp=axis.interp,
                 )
-                points_scale.append(axis.interp)
                 parameters.append(parameter)
             else:
                 has_energy |= True
@@ -1748,7 +1796,6 @@ class TemplateNDSpectralModel(SpectralModel):
 
         interp_kwargs = interp_kwargs or {}
         interp_kwargs.setdefault("values_scale", "log")
-        interp_kwargs.setdefault("points_scale", points_scale)
         self._interp_kwargs = interp_kwargs
         super().__init__()
 

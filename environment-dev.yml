@@ -22,7 +22,7 @@ dependencies:
   - click
   - cython
   - numpy>1.20
-  - pydantic
+  - pydantic<2.0
   - pyyaml
   - regions>=0.5
   - matplotlib>=3.4
@@ -53,6 +53,7 @@ dependencies:
   - flake8
   - isort
   - jinja2
+  - jupytext
   - nbsphinx
   - numdifftools
   - pandoc
@@ -78,3 +79,5 @@ dependencies:
   - memray
   - pip:
       - pytest-sphinx
+      - ray
+      - PyGithub

@@ -31,7 +31,9 @@ def dataset():
     path = "$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits"
     table = Table.read(make_path(path))
     table["e_ref"] = table["e_ref"].quantity.to("TeV")
-    gti = GTI.create(start=0 * u.s, stop=30 * u.min)
+    gti = GTI.create(
+        start=0 * u.s, stop=30 * u.min, reference_time=Time("2000-01-01", scale="utc")
+    )
     data = FluxPoints.from_table(table, format="gadf-sed")
     data.gti = gti
     model = SkyModel(

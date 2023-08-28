@@ -185,7 +185,7 @@ class IRF(metaclass=abc.ABCMeta):
     @lazyproperty
     def _interpolate(self):
         kwargs = self.interp_kwargs.copy()
-        # Allow extrap[olation with in bins
+        # Allow extrapolation with in bins
         kwargs["fill_value"] = None
         points = [a.center for a in self.axes]
         points_scale = tuple([a.interp for a in self.axes])

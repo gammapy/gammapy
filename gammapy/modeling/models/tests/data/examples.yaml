@@ -2,6 +2,7 @@ components:
 - name: background_irf
   datasets_names: CTA-gc
   type: TemplateNPredModel
+  filename: $GAMMAPY_DATA/tests/models/background_irf.fits
   parameters:
   - name: norm
     value: 1.01

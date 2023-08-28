@@ -84,7 +84,7 @@ check_tutorials_setup()
 # the livetime, the offset, the assumed integration radius, the energy
 # range to perform the simulation for and the choice of spectral model. We
 # then use an in-memory observation which is convolved with the IRFs to
-# get the predicted number of counts. This is Poission fluctuated using
+# get the predicted number of counts. This is Poisson fluctuated using
 # the `fake()` to get the simulated counts for each observation.
 #
 
@@ -119,7 +119,7 @@ model = SkyModel(spectral_model=model_simu, name="source")
 
 ######################################################################
 # Load the IRFs
-# In this simulation, we use the CTA-1DC irfs shipped with gammapy.
+# In this simulation, we use the CTA-1DC IRFs shipped with Gammapy.
 irfs = load_irf_dict_from_file(
     "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
 )
@@ -209,6 +209,7 @@ axes[1].hist(table["counts_off"])
 axes[1].set_xlabel("Counts Off")
 axes[2].hist(table["excess"])
 axes[2].set_xlabel("excess")
+plt.show()
 
 
 ######################################################################

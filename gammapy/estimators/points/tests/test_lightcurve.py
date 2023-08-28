@@ -14,7 +14,12 @@ from gammapy.estimators.points.tests.test_sed import (
 )
 from gammapy.modeling import Fit
 from gammapy.modeling.models import FoVBackgroundModel, PowerLawSpectralModel, SkyModel
-from gammapy.utils.testing import assert_time_allclose, mpl_plot_check, requires_data
+from gammapy.utils.testing import (
+    assert_time_allclose,
+    mpl_plot_check,
+    requires_data,
+    requires_dependency,
+)
 
 
 @pytest.fixture(scope="session")
@@ -35,8 +40,9 @@ def lc():
             Column([True, True], "success"),
         ],
     )
+    gti = GTI.create("0h", "1h", "2010-01-01T00:00:00")
 
-    return FluxPoints.from_table(table=table, format="lightcurve")
+    return FluxPoints.from_table(table=table, format="lightcurve", gti=gti)
 
 
 @pytest.fixture(scope="session")
@@ -104,6 +110,7 @@ def test_lightcurve_read_write(tmp_path, lc, sed_type):
     lc.write(tmp_path / "tmp.fits", format="lightcurve", sed_type=sed_type)
 
     lc = FluxPoints.read(tmp_path / "tmp.fits", format="lightcurve")
+    assert_allclose(lc.gti.time_start[0].mjd, 55197.000766, rtol=1e-5)
 
     # Check if time-related info round-trips
     axis = lc.geom.axes["time"]
@@ -154,12 +161,12 @@ def get_spectrum_datasets():
     model = SkyModel(spectral_model=PowerLawSpectralModel())
     dataset_1 = simulate_spectrum_dataset(model=model, random_state=0)
     dataset_1._name = "dataset_1"
-    gti1 = GTI.create("0h", "1h", "2010-01-01T00:00:00")
+    gti1 = GTI.create("0h", "1h", Time("2010-01-01T00:00:00").tt)
     dataset_1.gti = gti1
 
     dataset_2 = simulate_spectrum_dataset(model=model, random_state=1)
     dataset_2._name = "dataset_2"
-    gti2 = GTI.create("1h", "2h", "2010-01-01T00:00:00")
+    gti2 = GTI.create("1h", "2h", Time("2010-01-01T00:00:00").tt)
     dataset_2.gti = gti2
 
     return [dataset_1, dataset_2]
@@ -223,8 +230,8 @@ def test_lightcurve_estimator_fit_options():
 
     assert_allclose(estimator.fit.optimize_opts["tol"], 0.2)
 
-    estimator.fit.run(datasets=datasets)
-    assert_allclose(estimator.fit.minuit.tol, 0.2)
+    result = estimator.fit.run(datasets=datasets)
+    assert_allclose(result.minuit.tol, 0.2)
 
 
 @requires_data()
@@ -665,7 +672,7 @@ def test_recompute_ul():
 
 
 @requires_data()
-def test_lightcurve_parallel():
+def test_lightcurve_parallel_multiprocessing():
     datasets = get_spectrum_datasets()
     selection = ["all"]
     estimator = LightCurveEstimator(
@@ -674,6 +681,27 @@ def test_lightcurve_parallel():
         n_sigma_ul=2,
         n_jobs=2,
     )
+    assert estimator.n_jobs == 2
+    lightcurve = estimator.run(datasets)
+    assert_allclose(
+        lightcurve.dnde_ul.data[0], [[[3.260703e-13]], [[1.159354e-14]]], rtol=1e-3
+    )
+
+
+@requires_data()
+@requires_dependency("ray")
+def test_lightcurve_parallel_ray():
+    datasets = get_spectrum_datasets()
+    selection = ["all"]
+
+    estimator = LightCurveEstimator(
+        energy_edges=[1, 3, 30] * u.TeV,
+        selection_optional=selection,
+        n_sigma_ul=2,
+        n_jobs=2,
+        parallel_backend="ray",
+    )
+
     lightcurve = estimator.run(datasets)
     assert_allclose(
         lightcurve.dnde_ul.data[0], [[[3.260703e-13]], [[1.159354e-14]]], rtol=1e-3

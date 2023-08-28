@@ -4,7 +4,7 @@ import numpy as np
 from gammapy.datasets import Datasets
 from gammapy.estimators.parameter import ParameterEstimator
 from gammapy.maps import Map, MapAxis
-from gammapy.modeling import Parameter, Parameters
+from gammapy.modeling import Parameter
 from gammapy.modeling.models import ScaleSpectralModel
 
 log = logging.getLogger(__name__)
@@ -51,6 +51,7 @@ class FluxEstimator(ParameterEstimator):
         Fit instance specifying the backend and fit options.
     reoptimize : bool
         Re-optimize other free model parameters. Default is False.
+        If True the available free parameters are fitted together with the norm of the source of interest in each bin independently, otherwise they are frozen at their current values.
     """
 
     tag = "FluxEstimator"
@@ -121,7 +122,8 @@ class FluxEstimator(ParameterEstimator):
 
         scale_model = ScaleSpectralModel(ref_model)
 
-        norms = Parameters([p for p in ref_model.parameters if p.is_norm])
+        norms = ref_model.parameters.norm_parameters
+
         if len(norms) == 0 or len(norms.free_parameters) > 1:
             raise ValueError(
                 f"{self.tag} requires one and only one free 'norm' or 'amplitude' parameter"
@@ -151,7 +153,7 @@ class FluxEstimator(ParameterEstimator):
 
         for dataset in datasets:
             name = datasets.models[self.source].name
-            npred_signal = dataset.npred_signal(model_name=name)
+            npred_signal = dataset.npred_signal(model_names=[name])
             npred = Map.from_geom(dataset.counts.geom)
             npred.stack(npred_signal)
             npred_excess.append(npred.data[dataset.mask].sum())

@@ -3,6 +3,7 @@ import numpy as np
 import astropy.units as u
 import matplotlib.pyplot as plt
 from gammapy.astro.population import velocity_distributions
+from gammapy.maps.axes import UNIT_STRING_FORMAT
 from gammapy.utils.random import normalize
 
 velocity = np.linspace(10, 3000, 200) * u.km / u.s
@@ -18,8 +19,10 @@ for key in velocity_distributions:
 
 ax.set_xlim(velocity[0].value, velocity[-1].value)
 ax.set_ylim(0, 0.005)
-ax.set_xlabel("Velocity [km/s]")
-ax.set_ylabel("Probability Density [(km / s)^-1]")
+ax.set_xlabel(f"Velocity [{velocity.unit.to_string(UNIT_STRING_FORMAT)}]")
+ax.set_ylabel(
+    f"Probability Density [{((velocity.unit)**(-1)).to_string(UNIT_STRING_FORMAT)}]"
+)
 ax.semilogx()
 plt.legend(prop={"size": 10})
 plt.show()

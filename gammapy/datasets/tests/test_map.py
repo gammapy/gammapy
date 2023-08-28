@@ -2,7 +2,7 @@
 import json
 import pytest
 import numpy as np
-from numpy.testing import assert_allclose
+from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
@@ -21,7 +21,15 @@ from gammapy.irf import (
     RecoPSFMap,
 )
 from gammapy.makers.utils import make_map_exposure_true_energy, make_psf_map
-from gammapy.maps import HpxGeom, Map, MapAxis, RegionGeom, WcsGeom, WcsNDMap
+from gammapy.maps import (
+    HpxGeom,
+    LabelMapAxis,
+    Map,
+    MapAxis,
+    RegionGeom,
+    WcsGeom,
+    WcsNDMap,
+)
 from gammapy.maps.io import JsonQuantityEncoder
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
@@ -957,14 +965,36 @@ def test_npred(sky_model, geom, geom_etrue):
     dataset.models = [bkg, sky_model, model1]
 
     assert_allclose(
-        dataset.npred_signal(model_name=model1.name).data.sum(), 150.7487, rtol=1e-3
+        dataset.npred_signal(model_names=[model1.name]).data.sum(), 150.7487, rtol=1e-3
     )
+    npred_model1_not_stack = dataset.npred_signal(
+        model_names=[model1.name], stack=False
+    )
+    assert isinstance(npred_model1_not_stack.geom.axes[-1], LabelMapAxis)
+    assert npred_model1_not_stack.geom.axes[-1].name == "models"
+    assert_equal(npred_model1_not_stack.geom.axes[-1].center, [model1.name])
+
     assert dataset._background_cached is None
     assert_allclose(dataset.npred_background().data.sum(), 4000.0, rtol=1e-3)
     assert_allclose(dataset._background_cached.data.sum(), 4000.0, rtol=1e-3)
 
     assert_allclose(dataset.npred().data.sum(), 9676.047906, rtol=1e-3)
     assert_allclose(dataset.npred_signal().data.sum(), 5676.04790, rtol=1e-3)
+    assert_allclose(
+        dataset.npred_signal(model_names=[model1.name, sky_model.name]).data.sum(),
+        5676.04790,
+        rtol=1e-3,
+    )
+
+    npred_all_models_not_stack = dataset.npred_signal(
+        model_names=[model1.name, sky_model.name], stack=False
+    )
+    assert_allclose(npred_all_models_not_stack.geom.data_shape, (2, 2, 100, 100))
+    assert_allclose(
+        npred_all_models_not_stack.sum_over_axes(["models"]).data.sum(),
+        5676.04790,
+        rtol=1e-3,
+    )
 
     bkg.spectral_model.norm.value = 1.1
     assert_allclose(dataset.npred_background().data.sum(), 4400.0, rtol=1e-3)
@@ -974,7 +1004,7 @@ def test_npred(sky_model, geom, geom_etrue):
         KeyError,
         match="m2",
     ):
-        dataset.npred_signal(model_name="m2")
+        dataset.npred_signal(model_names=["m2"])
 
 
 def test_stack_npred():
@@ -1879,3 +1909,27 @@ def test_peek(images):
 def test_create_psf_reco(geom):
     dat = MapDataset.create(geom, reco_psf=True)
     assert isinstance(dat.psf, RecoPSFMap)
+
+
+def test_to_masked():
+    axis = MapAxis.from_energy_bounds(1, 10, 2, unit="TeV")
+    geom = WcsGeom.create(npix=(10, 10), binsz=0.05, axes=[axis])
+    counts = Map.from_geom(geom, data=1)
+    mask = Map.from_geom(geom, data=True, dtype=bool)
+    mask.data[0][5:8] = False
+    dataset = MapDataset(counts=counts, mask_safe=mask)
+    d1 = dataset.to_masked()
+    assert_allclose(d1.counts.data.sum(), 170)
+
+    acceptance = Map.from_geom(geom, data=1)
+    acceptance_off = Map.from_geom(geom, data=0.1)
+    counts_off = counts
+    datasetonoff = MapDatasetOnOff(
+        counts=counts,
+        acceptance=acceptance,
+        mask_safe=mask,
+        acceptance_off=acceptance_off,
+        counts_off=counts_off,
+    )
+    d1 = datasetonoff.to_masked()
+    assert_allclose(d1.counts.data.sum(), 170)

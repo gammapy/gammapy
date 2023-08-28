@@ -1,14 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 from itertools import repeat
-from multiprocessing import Pool
 import numpy as np
 from astropy import units as u
 from astropy.table import Table
+import gammapy.utils.parallel as parallel
 from gammapy.datasets import Datasets
 from gammapy.maps import MapAxis
 from gammapy.modeling import Fit
-from gammapy.utils.pbar import progress_bar
 from ..flux import FluxEstimator
 from .core import FluxPoints
 
@@ -17,7 +16,7 @@ log = logging.getLogger(__name__)
 __all__ = ["FluxPointsEstimator"]
 
 
-class FluxPointsEstimator(FluxEstimator):
+class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
     """Flux points estimator.
 
     Estimates flux points for a given list of datasets, energies and spectral model.
@@ -36,8 +35,6 @@ class FluxPointsEstimator(FluxEstimator):
 
     Parameters
     ----------
-    energy_edges : `~astropy.units.Quantity`
-        Energy edges of the flux point bins.
     source : str or int
         For which source in the model to compute the flux points.
     norm_min : float
@@ -61,15 +58,25 @@ class FluxPointsEstimator(FluxEstimator):
             * "scan": estimate fit statistic profiles.
 
         Default is None so the optional steps are not executed.
+    energy_edges : list of `~astropy.units.Quantity`
+        Edges of the flux points energy bins. The resulting bin edges won't be exactly equal to the input ones,
+        but rather the closest values to the energy axis edges of the parent dataset.
+        Default is None: apply the estimator in each energy bin of the parent dataset.
+        For further explanation see :ref:`estimators`.
     fit : `Fit`
         Fit instance specifying the backend and fit options.
     reoptimize : bool
         Re-optimize other free model parameters. Default is False.
+        If True the available free parameters are fitted together with the norm of the source of interest in each bin independently, otherwise they are frozen at their current value.
     sum_over_energy_groups : bool
         Whether to sum over the energy groups or fit the norm on the full energy
         grid.
     n_jobs : int
-        Number of processes used in parallel for the computation.
+        Number of processes used in parallel for the computation. Default is one, unless
+        `~gammapy.utils.parallel.N_JOBS_DEFAULT` was modified. The number of jobs is
+        limited to the number of physical CPUs.
+    parallel_backend : {"multiprocessing", "ray"}
+        Which backend to use for multiprocessing.
     """
 
     tag = "FluxPointsEstimator"
@@ -78,12 +85,14 @@ class FluxPointsEstimator(FluxEstimator):
         self,
         energy_edges=[1, 10] * u.TeV,
         sum_over_energy_groups=False,
-        n_jobs=1,
+        n_jobs=None,
+        parallel_backend=None,
         **kwargs,
     ):
         self.energy_edges = energy_edges
         self.sum_over_energy_groups = sum_over_energy_groups
         self.n_jobs = n_jobs
+        self.parallel_backend = parallel_backend
 
         fit = Fit(confidence_opts={"backend": "scipy"})
         kwargs.setdefault("fit", fit)
@@ -123,26 +132,17 @@ class FluxPointsEstimator(FluxEstimator):
             "sed_type_init": "likelihood",
         }
 
-        if self.n_jobs > 1:
-            with Pool(processes=self.n_jobs) as pool:
-                rows = pool.starmap(
-                    self.estimate_flux_point,
-                    zip(
-                        repeat(datasets),
-                        self.energy_edges[:-1],
-                        self.energy_edges[1:],
-                    ),
-                )
-        else:
-            for energy_min, energy_max in progress_bar(
-                zip(self.energy_edges[:-1], self.energy_edges[1:]), desc="Energy bins"
-            ):
-                row = self.estimate_flux_point(
-                    datasets,
-                    energy_min=energy_min,
-                    energy_max=energy_max,
-                )
-                rows.append(row)
+        rows = parallel.run_multiprocessing(
+            self.estimate_flux_point,
+            zip(
+                repeat(datasets),
+                self.energy_edges[:-1],
+                self.energy_edges[1:],
+            ),
+            backend=self.parallel_backend,
+            pool_kwargs=dict(processes=self.n_jobs),
+            task_name="Energy bins",
+        )
 
         table = Table(rows, meta=meta)
         model = datasets.models[self.source]

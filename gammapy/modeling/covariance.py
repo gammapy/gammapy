@@ -3,20 +3,10 @@
 import numpy as np
 import scipy
 import matplotlib.pyplot as plt
+from gammapy.utils.parallel import is_ray_initialized
 from .parameter import Parameters
 
 __all__ = ["Covariance"]
-
-
-def copy_covariance(func):
-    """Copy covariance decorator for model objects."""
-
-    def decorate(self, **kwargs):
-        result = func(self, **kwargs)
-        result.covariance = self.covariance.data.copy()
-        return result
-
-    return decorate
 
 
 class Covariance:
@@ -141,6 +131,9 @@ class Covariance:
             Sub list of parameters.
 
         """
+        if is_ray_initialized():
+            # This copy is required to make the covariance setting work with ray
+            self._data = self._data.copy()
 
         idx = [self.parameters.index(par) for par in covar.parameters]
 

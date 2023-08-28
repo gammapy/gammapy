@@ -28,7 +28,6 @@ MAP_AXIS_NODE_TYPES = [
     ([0.25, 0.75, 1.0, 2.0], "sqrt", "center"),
 ]
 
-
 nodes_array = np.array([0.25, 0.75, 1.0, 2.0])
 
 MAP_AXIS_NODE_TYPE_UNIT = [
@@ -388,6 +387,19 @@ def test_map_axis_plot_helpers():
     assert_allclose(axis.edges, axis.as_plot_edges)
 
 
+def test_map_axis_concatenate():
+    axis_1 = MapAxis.from_bounds(0, 10, 10, name="axis")
+    axis_2 = MapAxis.from_bounds(10, 20, 10, name="axis")
+    axis_2_other_name = MapAxis.from_bounds(10, 20, 10, name="other_axis")
+
+    axis_12 = axis_1.concatenate(axis_2)
+
+    assert_equal(axis_12.edges, np.linspace(0, 20, 21))
+
+    with pytest.raises(ValueError):
+        axis_1.concatenate(axis_2_other_name)
+
+
 def test_time_axis(time_intervals):
     axis = TimeMapAxis(
         time_intervals["t_min"], time_intervals["t_max"], time_intervals["t_ref"]
@@ -523,6 +535,40 @@ def test_coord_to_idx_time_axis(time_intervals):
     assert_allclose(pixels[1::2], [np.nan, 1, 3, 5, 7, 9, 11, 13, 15, 17, 19])
 
 
+def test_pix_to_coord_time_axis(time_intervals):
+    tmin = time_intervals["t_min"]
+    tmax = time_intervals["t_max"]
+    tref = time_intervals["t_ref"]
+    axis = TimeMapAxis(tmin, tmax, tref, name="time")
+
+    pixels = [1.3, 3.2, 5.4, 7, 15.33, 17.21, 19.11]
+    coords = axis.pix_to_coord(pixels)
+    assert_allclose(
+        coords[0:3].mjd, [58927.0125, 58927.534649, 58928.069298], rtol=1e-5
+    )
+
+    # test with nan indices
+    pixels.append(np.nan)
+    coords = axis.pix_to_coord(pixels)
+    assert_allclose(
+        coords[-3:].mjd,
+        [58929.64032894737, 58930.162478070175, -3.725000e-04],
+        rtol=1e-5,
+    )
+
+    # assert with invalid pixels & multidim array
+    coords = axis.pix_to_coord([[-1.2, 0.6], [1.5, 24.7]])
+    assert_allclose(
+        coords.mjd,
+        [[-3.725000e-04, 58927.551315789475], [58928.07346491228, -3.725000e-04]],
+        rtol=1e-5,
+    )
+
+    # test with one value
+    coords = axis.pix_to_coord(3)
+    assert_allclose(coords.mjd, 58927.0, rtol=1e-5)
+
+
 def test_slice_time_axis(time_intervals):
     axis = TimeMapAxis(
         time_intervals["t_min"], time_intervals["t_max"], time_intervals["t_ref"]
@@ -592,6 +638,30 @@ def test_from_gti_time_axis():
     expected = Time(53090.123451203704, format="mjd", scale="tt")
     assert_time_allclose(axis.time_min[0], expected)
     assert axis.nbin == 1
+
+
+def test_from_gti_bounds():
+    start = u.Quantity([1, 2], "min")
+    stop = u.Quantity([1.5, 2.5], "min")
+    time_ref = Time("2010-01-01 00:00:00.0")
+
+    gti = GTI.create(start, stop, time_ref)
+
+    axis = TimeMapAxis.from_gti_bounds(
+        gti=gti,
+        t_delta=10 * u.s,
+    )
+
+    assert axis.nbin == 8
+    expected = Time("2010-01-01 00:01:00.0")
+    # GTI.create() changes the reference time format
+    expected.format = "mjd"
+
+    assert_time_allclose(axis.time_min[0], expected)
+
+    expected = Time("2010-01-01 00:02:30.0")
+    expected.format = "mjd"
+    assert_time_allclose(axis.time_max[-1], expected)
 
 
 def test_map_with_time_axis(time_intervals):
@@ -813,22 +883,20 @@ def test_single_valued_axis():
     _ = MapAxis.from_table(table, format="gadf-dl3", column_prefix="THETA")
 
 
-def test_label_map_axis_append():
-
+def test_label_map_axis_concatenate():
     label1 = LabelMapAxis(["aa", "bb"], name="letters")
     label2 = LabelMapAxis(["cc", "dd"], name="letters")
     label3 = LabelMapAxis(["ee", "ff"], name="other_letters")
 
-    label_append12 = label1.append(label2)
+    label_append12 = label1.concatenate(label2)
 
     assert_equal(label_append12.center, np.array(["aa", "bb", "cc", "dd"], dtype="<U2"))
     assert label_append12.name == "letters"
     with pytest.raises(ValueError):
-        label2.append(label3)
+        label2.concatenate(label3)
 
 
 def test_label_map_axis_from_stack():
-
     label1 = LabelMapAxis(["a", "b", "c"], name="letters")
     label2 = LabelMapAxis(["d", "e"], name="letters")
     label3 = LabelMapAxis(["f"], name="letters")
@@ -840,9 +908,17 @@ def test_label_map_axis_from_stack():
 
 
 def test_label_map_axis_squash():
-
     label = LabelMapAxis(["a", "b", "c"], name="Letters")
     squash_label = label.squash()
 
     assert squash_label.nbin == 1
     assert_equal(squash_label.center, np.array(["a...c"]))
+
+
+def test_energy_bin_per_decade_not_strict_bounds():
+    nbin = 5
+    axis = MapAxis.from_energy_bounds(
+        "0.03 TeV", "333 TeV", nbin=nbin, per_decade=True, strict_bounds=False
+    )
+
+    assert_allclose(axis.edges[0:-nbin] * 10.0, axis.edges[nbin:], rtol=1e-5, atol=0)

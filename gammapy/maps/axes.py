@@ -11,9 +11,10 @@ from astropy.table import Column, Table, hstack
 from astropy.time import Time
 from astropy.utils import lazyproperty
 import matplotlib.pyplot as plt
+from gammapy.utils.deprecation import deprecated_attribute
 from gammapy.utils.interpolation import interpolation_scale
 from gammapy.utils.time import time_ref_from_dict, time_ref_to_dict
-from .utils import INVALID_INDEX, edges_from_lo_hi
+from .utils import INVALID_INDEX, INVALID_VALUE, edges_from_lo_hi
 
 __all__ = ["MapAxes", "MapAxis", "TimeMapAxis", "LabelMapAxis"]
 
@@ -68,6 +69,7 @@ PLOT_AXIS_LABEL = {
 }
 
 DEFAULT_LABEL_TEMPLATE = "{quantity} [{unit}]"
+UNIT_STRING_FORMAT = "latex_inline"
 
 
 class MapAxis:
@@ -103,9 +105,10 @@ class MapAxis:
         String specifying the data units.
     """
 
+    append = deprecated_attribute("append", "1.1", alternative="concatenate")
+
     # TODO: Cache an interpolation object?
     def __init__(self, nodes, interp="lin", name="", node_type="edges", unit=""):
-
         if not isinstance(name, str):
             raise TypeError(f"Name must be a string, got: {type(name)!r}")
 
@@ -378,7 +381,7 @@ class MapAxis:
 
         xlabel = DEFAULT_LABEL_TEMPLATE.format(
             quantity=PLOT_AXIS_LABEL.get(self.name, self.name.capitalize()),
-            unit=ax.xaxis.units,
+            unit=ax.xaxis.units.to_string(UNIT_STRING_FORMAT),
         )
         ax.set_xlabel(xlabel)
         xmin, xmax = self.bounds
@@ -403,7 +406,7 @@ class MapAxis:
 
         ylabel = DEFAULT_LABEL_TEMPLATE.format(
             quantity=PLOT_AXIS_LABEL.get(self.name, self.name.capitalize()),
-            unit=ax.yaxis.units,
+            unit=ax.yaxis.units.to_string(UNIT_STRING_FORMAT),
         )
         ax.set_ylabel(ylabel)
         ax.set_ylim(self.bounds)
@@ -490,7 +493,7 @@ class MapAxis:
         if interp == "lin":
             nodes = np.linspace(lo_bnd, hi_bnd, nnode)
         elif interp == "log":
-            nodes = np.exp(np.linspace(np.log(lo_bnd), np.log(hi_bnd), nnode))
+            nodes = np.geomspace(lo_bnd, hi_bnd, nnode)
         elif interp == "sqrt":
             nodes = np.linspace(lo_bnd**0.5, hi_bnd**0.5, nnode) ** 2.0
         else:
@@ -543,6 +546,7 @@ class MapAxis:
         per_decade=False,
         name=None,
         node_type="edges",
+        strict_bounds=True,
     ):
         """Make an energy axis.
 
@@ -561,6 +565,12 @@ class MapAxis:
             Whether `nbin` is given per decade.
         name : str
             Name of the energy axis, either 'energy' or 'energy_true'
+        strict_bounds : bool
+            Whether to strictly end the binning at 'energy_max' when
+            `per_decade=True`. If True, the number of bins per decade
+            might be slightly increased to match the bounds. If False,
+            'energy_max' might be reduced so the number of bins per
+            decade is exactly the given input.
 
         Returns
         -------
@@ -580,7 +590,15 @@ class MapAxis:
             )
 
         if per_decade:
-            nbin = np.ceil(np.log10(energy_max / energy_min).value * nbin)
+            if strict_bounds:
+                nbin = np.ceil(np.log10(energy_max / energy_min).value * nbin)
+            else:
+                bin_per_decade = nbin
+                nbin = np.floor(
+                    np.log10(energy_max / energy_min).value * bin_per_decade
+                )
+                if np.log10(energy_max / energy_min).value % (1 / bin_per_decade) != 0:
+                    energy_max = energy_min * 10 ** (nbin / bin_per_decade)
 
         if name is None:
             name = "energy"
@@ -641,8 +659,8 @@ class MapAxis:
 
         return cls(edges, node_type="edges", **kwargs)
 
-    def append(self, axis):
-        """Append another map axis to this axis
+    def concatenate(self, axis):
+        """Concatenate another `MapAxis` to this `MapAxis` into a new `MapAxis` object.
 
         Name, interp type and node type must agree between the axes. If the node
         type is "edges", the edges must be contiguous and non-overlapping.
@@ -650,12 +668,12 @@ class MapAxis:
         Parameters
         ----------
         axis : `MapAxis`
-            Axis to append.
+            Axis to concatenate with.
 
         Returns
         -------
         axis : `MapAxis`
-            Appended axis
+            Concatenation of the two axis.
         """
         if self.node_type != axis.node_type:
             raise ValueError(
@@ -725,7 +743,7 @@ class MapAxis:
         ax_stacked = axes[0]
 
         for ax in axes[1:]:
-            ax_stacked = ax_stacked.append(ax)
+            ax_stacked = ax_stacked.concatenate(ax)
 
         return ax_stacked
 
@@ -1008,7 +1026,7 @@ class MapAxis:
         Returns
         -------
         axis : `MapAxis`
-            Usampled map axis.
+            Unsampled map axis.
 
         """
         if self.node_type == "edges":
@@ -2492,6 +2510,35 @@ class TimeMapAxis:
         idx[~np.any(mask, axis=-1)] = INVALID_INDEX.int
         return idx
 
+    def pix_to_coord(self, pix):
+        """Transform from pixel position to time coordinate
+        Currently works only for linear interpolation scheme.
+
+        Parameters
+        ----------
+        pix : `~numpy.ndarray`
+            Array of pixel positions.
+
+        Returns
+        -------
+        coord : `~astropy.time.Time`
+            Array of axis coordinate values.
+        """
+        shape = np.shape(pix)
+        pix = np.atleast_1d(pix).ravel()
+        coords = np.zeros(len(pix))
+        frac, idx = np.modf(pix)
+        valid = np.logical_and(idx >= 0, idx < self.nbin, np.isfinite(idx))
+        idx_valid = np.where(valid)
+        idx_invalid = np.where(~valid)
+
+        coords[idx_valid] = (
+            frac[idx_valid] * self.time_delta[idx_valid] + self.edges_min[idx_valid]
+        ).jd
+        coords = coords * self.unit + self.reference_time
+        coords[idx_invalid] = Time(INVALID_VALUE.time, scale=self.reference_time.scale)
+        return coords.reshape(shape)
+
     def coord_to_pix(self, coord, **kwargs):
         """Transform from time to coordinate to pixel position.
 
@@ -2765,6 +2812,39 @@ class TimeMapAxis:
         )
 
     @classmethod
+    def from_gti_bounds(cls, gti, t_delta, name="time"):
+        """Create a time axis from an input GTI.
+
+        The unit for the axis is taken from the t_delta quantity.
+
+        Parameters
+        ----------
+        gti : `GTI`
+            GTI table
+        t_delta : `~astropy.units.Quantity`
+            Time binning
+        name : str
+            Axis name
+
+        Returns
+        -------
+        axis : `TimeMapAxis`
+            Time map axis.
+
+        """
+        time_min = gti.time_start[0]
+        time_max = gti.time_stop[-1]
+
+        nbin = int(((time_max - time_min) / t_delta).to(""))
+        return TimeMapAxis.from_time_bounds(
+            time_min=time_min,
+            time_max=time_max,
+            nbin=nbin,
+            name=name,
+            unit=t_delta.unit,
+        )
+
+    @classmethod
     def from_time_bounds(cls, time_min, time_max, nbin, unit="d", name="time"):
         """Create linearly spaced time axis from bounds
 
@@ -2832,6 +2912,8 @@ class LabelMapAxis:
         Name of the axis.
 
     """
+
+    append = deprecated_attribute("append", "1.1", alternative="concatenate")
 
     node_type = "label"
 
@@ -3172,24 +3254,24 @@ class LabelMapAxis:
         axis_stacked = axes[0]
 
         for ax in axes[1:]:
-            axis_stacked = axis_stacked.append(ax)
+            axis_stacked = axis_stacked.concatenate(ax)
 
         return axis_stacked
 
-    def append(self, axis):
-        """Append another label map axis to this label map axis.
+    def concatenate(self, axis):
+        """Concatenate another `LabelMapAxis` to this `LabelMapAxis` into a new `LabelMapAxis` object.
 
         Names must agree between the axes. labels must be unique.
 
         Parameters
         ----------
         axis : `LabelMapAxis`
-            Axis to append.
+            Axis to concatenate with.
 
         Returns
         -------
         axis : `LabelMapAxis`
-            Appended axis
+            Concatenation of the two axis.
         """
         if not isinstance(axis, LabelMapAxis):
             raise TypeError(

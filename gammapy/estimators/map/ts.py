@@ -1,13 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Functions to compute TS images."""
-import functools
-import logging
 import warnings
-from multiprocessing import Pool
+from itertools import repeat
 import numpy as np
 import scipy.optimize
 from astropy.coordinates import Angle
 from astropy.utils import lazyproperty
+import gammapy.utils.parallel as parallel
 from gammapy.datasets.map import MapEvaluator
 from gammapy.datasets.utils import get_nearest_valid_exposure_position
 from gammapy.maps import Map, Maps
@@ -21,8 +20,6 @@ from ..utils import estimate_exposure_reco_energy
 from .core import FluxMaps
 
 __all__ = ["TSMapEstimator"]
-
-log = logging.getLogger(__name__)
 
 
 def _extract_array(array, shape, position):
@@ -50,7 +47,7 @@ def _extract_array(array, shape, position):
     return array[:, y_lo:y_hi, x_lo:x_hi]
 
 
-class TSMapEstimator(Estimator):
+class TSMapEstimator(Estimator, parallel.ParallelMixin):
     r"""Compute TS map from a MapDataset using different optimization methods.
 
     The map is computed fitting by a single parameter norm fit. The fit is
@@ -89,13 +86,20 @@ class TSMapEstimator(Estimator):
             * "ul": estimate upper limits on flux.
 
         Default is None so the optional steps are not executed.
-    energy_edges : `~astropy.units.Quantity`
-        Energy edges of the maps bins.
+    energy_edges : list of `~astropy.units.Quantity`
+        Edges of the target maps energy bins. The resulting bin edges won't be exactly equal to the input ones,
+        but rather the closest values to the energy axis edges of the parent dataset.
+        Default is None: apply the estimator in each energy bin of the parent dataset.
+        For further explanation see :ref:`estimators`.
     sum_over_energy_groups : bool
         Whether to sum over the energy groups or fit the norm on the full energy
         cube.
     n_jobs : int
-        Number of processes used in parallel for the computation.
+        Number of processes used in parallel for the computation. Default is one,
+        unless `~gammapy.utils.parallel.N_JOBS_DEFAULT` was modified. The number
+        of jobs limited to the number of physical CPUs.
+    parallel_backend : {"multiprocessing", "ray"}
+        Which backend to use for multiprocessing. Defaults to `~gammapy.utils.parallel.BACKEND_DEFAULT`.
 
     Notes
     -----
@@ -160,6 +164,7 @@ class TSMapEstimator(Estimator):
         energy_edges=None,
         sum_over_energy_groups=True,
         n_jobs=None,
+        parallel_backend=None,
     ):
         if kernel_width is not None:
             kernel_width = Angle(kernel_width)
@@ -180,6 +185,7 @@ class TSMapEstimator(Estimator):
         self.threshold = threshold
         self.rtol = rtol
         self.n_jobs = n_jobs
+        self.parallel_backend = parallel_backend
         self.sum_over_energy_groups = sum_over_energy_groups
 
         self.selection_optional = selection_optional
@@ -411,25 +417,25 @@ class TSMapEstimator(Estimator):
         """
         maps = self.estimate_fit_input_maps(dataset=dataset)
 
-        wrap = functools.partial(
-            _ts_value,
-            counts=maps["counts"].data.astype(float),
-            exposure=maps["exposure"].data.astype(float),
-            background=maps["background"].data.astype(float),
-            kernel=maps["kernel"].data,
-            norm=maps["norm"].data,
-            flux_estimator=self._flux_estimator,
-        )
-
         x, y = np.where(np.squeeze(maps["mask"].data))
         positions = list(zip(x, y))
 
-        if self.n_jobs is None:
-            results = list(map(wrap, positions))
-        else:
-            with Pool(processes=self.n_jobs) as pool:
-                log.info("Using {} jobs to compute TS map.".format(self.n_jobs))
-                results = pool.map(wrap, positions)
+        inputs = zip(
+            positions,
+            repeat(maps["counts"].data.astype(float)),
+            repeat(maps["exposure"].data.astype(float)),
+            repeat(maps["background"].data.astype(float)),
+            repeat(maps["kernel"].data),
+            repeat(maps["norm"].data),
+            repeat(self._flux_estimator),
+        )
+
+        results = parallel.run_multiprocessing(
+            _ts_value,
+            inputs,
+            pool_kwargs=dict(processes=self.n_jobs),
+            task_name="TS map",
+        )
 
         result = {}
 
