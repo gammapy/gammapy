@@ -312,8 +312,7 @@ def to_obscore_table(base_dir, selected_obs=None, **kwargs):
     selected_obs : list or array of Observation ID (int)
     (default of ``None`` means ``no obaservation ``)
     If not given, the obscore default table is returned.
-    format : Astropy Table format
-    Define the format for the output obscore table
+
 
 
     **kwargs : `str` {obs_publisher_did, access_url}
