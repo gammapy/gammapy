@@ -20,18 +20,24 @@ from gammapy.modeling.models import (
     ExpCutoffPowerLawSpectralModel,
     Models,
     SkyModel,
+    TemplateSpectralModel,
 )
 
 energy_bounds = [0.1, 100] * u.TeV
 
-model = ExpCutoffPowerLawSpectralModel()
+energy = [0.3, 1, 3, 10, 30] * u.TeV
+values = [40, 30, 20, 10, 1] * u.Unit("TeV-1 s-1 cm-2")
+template = TemplateSpectralModel(energy, values)
 norm = ExpCutoffPowerLawNormSpectralModel(
     norm=2,
     reference=1 * u.TeV,
 )
-ecpl_norm = model * norm
-model.plot(energy_bounds, label="Cutoff PowerLaw")
-ecpl_norm.plot(energy_bounds, label="Cutoff PowerLaw with a norm correction")
+
+template.plot(energy_bounds=energy_bounds, label="Template model")
+ecpl_norm = template * norm
+ecpl_norm.plot(
+    energy_bounds, label="Template model with ExpCutoffPowerLaw norm correction"
+)
 plt.legend(loc="best")
 plt.grid(which="both")
 

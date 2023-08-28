@@ -20,18 +20,22 @@ from gammapy.modeling.models import (
     PowerLawNormSpectralModel,
     PowerLawSpectralModel,
     SkyModel,
+    TemplateSpectralModel,
 )
 
 energy_bounds = [0.1, 100] * u.TeV
 
-model = PowerLawSpectralModel()
+energy = [0.3, 1, 3, 10, 30] * u.TeV
+values = [40, 30, 20, 10, 1] * u.Unit("TeV-1 s-1 cm-2")
+template = TemplateSpectralModel(energy, values)
 norm = PowerLawNormSpectralModel(
     norm=5,
     reference=1 * u.TeV,
 )
-pwl_norm = model * norm
-model.plot(energy_bounds, label="PowerLaw")
-pwl_norm.plot(energy_bounds, label="PowerLaw with a norm correction")
+
+template.plot(energy_bounds=energy_bounds, label="Template model")
+pwl_norm = template * norm
+pwl_norm.plot(energy_bounds, label="Template model with PowerLaw norm correction")
 plt.legend(loc="best")
 plt.grid(which="both")
 
