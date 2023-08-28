@@ -257,7 +257,7 @@ class Background2D(BackgroundIRF):
         coords = axes.get_coord()
         offset = angular_separation(
             0 * u.rad, 0 * u.rad, coords["fov_lon"], coords["fov_lat"]
-        )```
+        )
         data = self.evaluate(offset=offset, energy=coords["energy"])
 
         return Background3D(
