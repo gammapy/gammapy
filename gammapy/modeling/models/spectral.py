@@ -1326,7 +1326,7 @@ class ExpCutoffPowerLawNormSpectralModel(SpectralModel):
     """
     tag = ["ExpCutoffPowerLawNormSpectralModel", "ecpl-norm"]
 
-    index = Parameter("index", 1.5)
+    index = Parameter("index", 0)
     norm = Parameter("norm", 1, unit="", interp="log", is_norm=True)
     reference = Parameter("reference", "1 TeV", frozen=True)
     lambda_ = Parameter("lambda_", "0.1 TeV-1")
@@ -1601,8 +1601,8 @@ class LogParabolaNormSpectralModel(SpectralModel):
     tag = ["LogParabolaNormSpectralModel", "lp-norm"]
     norm = Parameter("norm", 1, unit="", interp="log", is_norm=True)
     reference = Parameter("reference", "10 TeV", frozen=True)
-    alpha = Parameter("alpha", 2)
-    beta = Parameter("beta", 1)
+    alpha = Parameter("alpha", 0)
+    beta = Parameter("beta", 0)
 
     @classmethod
     def from_log10(cls, norm, reference, alpha, beta):
