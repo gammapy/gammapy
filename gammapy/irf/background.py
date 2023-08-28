@@ -255,7 +255,9 @@ class Background2D(BackgroundIRF):
 
         axes = MapAxes([self.axes["energy"], fov_lon, fov_lat])
         coords = axes.get_coord()
-        offset = angular_separation(0*u.rad, 0*u.rad, coords["fov_lon"], coords["fov_lat"])
+        offset = angular_separation(
+            0 * u.rad, 0 * u.rad, coords["fov_lon"], coords["fov_lat"]
+        )```
         data = self.evaluate(offset=offset, energy=coords["energy"])
 
         return Background3D(
