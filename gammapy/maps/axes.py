@@ -493,7 +493,7 @@ class MapAxis:
         if interp == "lin":
             nodes = np.linspace(lo_bnd, hi_bnd, nnode)
         elif interp == "log":
-            nodes = np.exp(np.linspace(np.log(lo_bnd), np.log(hi_bnd), nnode))
+            nodes = np.geomspace(lo_bnd, hi_bnd, nnode)
         elif interp == "sqrt":
             nodes = np.linspace(lo_bnd**0.5, hi_bnd**0.5, nnode) ** 2.0
         else:
