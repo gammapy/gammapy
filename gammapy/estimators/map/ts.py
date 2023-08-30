@@ -454,6 +454,8 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         """
         Run TS map estimation.
 
+        The progress bar can be displayed for this function.
+
         Requires a MapDataset with counts, exposure and background_model
         properly set to run.
 

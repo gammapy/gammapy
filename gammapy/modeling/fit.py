@@ -358,6 +358,8 @@ class Fit:
         The method used is to vary one parameter, keeping all others fixed.
         So this is taking a "slice" or "scan" of the fit statistic.
 
+        The progress bar can be displayed for this function.
+
         Parameters
         ----------
         datasets : `Datasets` or list of `Dataset`
@@ -411,6 +413,8 @@ class Fit:
         Caveat: This method can be very computationally intensive and slow
 
         See also: `Fit.stat_contour`
+
+        The progress bar can be displayed for this function.
 
         Parameters
         ----------

@@ -156,7 +156,10 @@ class Analysis:
             log.debug(obs)
 
     def get_datasets(self):
-        """Produce reduced datasets."""
+        """
+        Produce reduced datasets.
+        The progress bar can be displayed for this function.
+        """
         datasets_settings = self.config.datasets
         if not self.observations or len(self.observations) == 0:
             raise RuntimeError("No observations have been selected.")
