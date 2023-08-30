@@ -103,9 +103,7 @@ class Observation:
         self._pointing = pointing
         self._location = location  # this is part of the meta or is it data?
         self.obs_filter = obs_filter or ObservationFilter()
-        if meta is None and self.events:
-            meta = ObservationMetaData.from_gadf_header(self.events.table.meta)
-        self._meta = meta or ObservationMetaData()
+        self._meta = meta
 
     def _repr_html_(self):
         try:
@@ -116,6 +114,8 @@ class Observation:
     @property
     def meta(self):
         """Return metadata container."""
+        if self._meta is None and self.events:
+            self._meta = ObservationMetaData.from_gadf_header(self.events.table.meta)
         return self._meta
 
     @property
