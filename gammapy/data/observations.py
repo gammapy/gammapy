@@ -330,7 +330,7 @@ class Observation:
         The dead-time fraction is used in the live-time computation,
         which in turn is used in the exposure and flux computation.
         """
-        return 1 - self.obs_info["DEADC"]
+        return 1 - self.meta.deadtime
 
     @lazyproperty
     def obs_info(self):
@@ -349,7 +349,7 @@ class Observation:
     @property
     def pointing(self):
         if self._pointing is None:
-            self._pointing = FixedPointingInfo.from_fits_header(self.obs_info)
+            self._pointing = FixedPointingInfo.from_fits_header(self.events.table.meta)
         return self._pointing
 
     def get_pointing_altaz(self, time):
@@ -400,16 +400,12 @@ class Observation:
     @lazyproperty
     def target_radec(self):
         """Target RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)."""
-        lon, lat = (
-            self.obs_info.get("RA_OBJ", np.nan),
-            self.obs_info.get("DEC_OBJ", np.nan),
-        )
-        return SkyCoord(lon, lat, unit="deg", frame="icrs")
+        return self.meta.target_position
 
     @property
     def muoneff(self):
         """Observation muon efficiency."""
-        return self.obs_info.get("MUONEFF", 1)
+        return self.meta.muon_efficiency
 
     def __str__(self):
         pointing = self.get_pointing_icrs(self.tmid)

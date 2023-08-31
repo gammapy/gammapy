@@ -1,8 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from typing import Optional, Union
+import numpy as np
 from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.time import Time
-from pydantic import Field, validator
+from pydantic import Field, ValidationError, validator
 from gammapy.utils.fits import earth_location_from_dict
 from gammapy.utils.metadata import CreatorMetaData, MetaData
 
@@ -73,6 +74,17 @@ class ObservationMetaData(MetaData):
             return v
         else:
             raise ValueError("Incorrect time input value.")
+
+    @validator("target_position")
+    def validate_position(cls, v):
+        if v is None:
+            return SkyCoord(np.nan, np.nan, unit="deg", frame="icrs")
+        elif isinstance(v, SkyCoord):
+            return v
+        else:
+            raise ValidationError(
+                f"Incorrect position. Expect SkyCoord got {type(v)} instead."
+            )
 
     @classmethod
     def from_gadf_header(cls, events_hdr):
