@@ -405,7 +405,10 @@ class Observation:
     @property
     def muoneff(self):
         """Observation muon efficiency."""
-        return self.meta.muon_efficiency
+        if "MUONEFF" in self.meta.dict():
+            return self.meta.MUONEFF
+        else:
+            raise KeyError("No muon efficiency information.")
 
     def __str__(self):
         pointing = self.get_pointing_icrs(self.tmid)
@@ -539,12 +542,15 @@ class Observation:
         irf_dict = load_irf_dict_from_file(irf_file)
 
         obs_info = events.table.meta
+
+        meta = ObservationMetaData.from_gadf_header(obs_info)
         return cls(
             events=events,
             gti=gti,
             obs_info=obs_info,
             obs_id=obs_info.get("OBS_ID"),
             pointing=FixedPointingInfo.from_fits_header(obs_info),
+            meta=meta,
             **irf_dict,
         )
 

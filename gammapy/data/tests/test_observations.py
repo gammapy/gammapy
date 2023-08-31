@@ -253,7 +253,9 @@ def test_observation_cta_1dc():
     assert_allclose(obs.target_radec.ra, np.nan)
     with pytest.warns(GammapyDeprecationWarning):
         assert not np.isnan(obs.pointing_zen)
-    assert_allclose(obs.muoneff, 1)
+
+    with pytest.raises(KeyError):
+        obs.muoneff
 
     assert isinstance(obs.meta, ObservationMetaData)
     assert obs.meta.deadtime == 0.9
@@ -307,6 +309,13 @@ def test_observation_read():
 
     assert isinstance(obs.meta, ObservationMetaData)
     assert obs.meta.creation.creator == "SASH FITS::EventListWriter"
+    print(obs.meta.dict())
+    assert obs.meta.telescope == "HESS"
+    assert obs.meta.instrument == "H.E.S.S. Phase I"
+    assert obs.meta.target_name == "MSH15-52"
+    assert obs.meta.N_TELS == 4
+    with pytest.raises(AttributeError):
+        obs.meta.BROKPIX
 
 
 @requires_data()
