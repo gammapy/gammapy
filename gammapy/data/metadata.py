@@ -108,7 +108,9 @@ class ObservationMetaData(MetaData):
         kwargs["instrument"] = events_hdr.get("INSTRUME")
         kwargs["observation_mode"] = events_hdr.get("OBS_MODE")
         kwargs["deadtime_fraction"] = 1 - events_hdr.get("DEADC")
-        kwargs["location"] = earth_location_from_dict(events_hdr)
+
+        if set(["GEOLON", "GEOLAT"]).issubset(set(events_hdr)):
+            kwargs["location"] = earth_location_from_dict(events_hdr)
 
         reference_time = time_ref_from_dict(events_hdr)
         kwargs["reference_time"] = reference_time
