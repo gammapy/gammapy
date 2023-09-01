@@ -25,10 +25,8 @@ class ObservationMetaData(MetaData):
         the observation mode
     location : `~astropy.coordinates.EarthLocation` or str, optional
         the observatory location
-    deadtime : float
-        the observation deadtime. Default is 1.
-    muon_efficiency : float
-        the observation muon efficiency. Default is 1.
+    deadtime_fraction : float
+        the observation deadtime fraction. Default is 0.
     time_start : Time, str
         the observation start time
     time_stop : Time, str
@@ -41,19 +39,22 @@ class ObservationMetaData(MetaData):
         the target coordinate
     creation : `~gammapy.utils.CreatorMetaData`
         the creation metadata
+    optional : dict
+        additional optional metadata
     """
 
     telescope: Optional[str]
     instrument: Optional[str]
     observation_mode: Optional[str]
     location: Optional[Union[str, EarthLocation, None]]
-    deadtime: float = Field(1.0, gt=0, le=1.0)
+    deadtime_fraction: float = Field(0.0, ge=0, le=1.0)
     time_start: Optional[Union[Time, str, None]]
     time_stop: Optional[Union[Time, str, None]]
     reference_time: Optional[Union[Time, str, None]]
     target_name: Optional[str]
     target_position: Optional[SkyCoord]
     creation: Optional[CreatorMetaData]
+    optional: Optional[dict]
 
     @validator("location")
     def validate_location(cls, v):
@@ -88,14 +89,25 @@ class ObservationMetaData(MetaData):
             )
 
     @classmethod
-    def from_gadf_header(cls, events_hdr):
-        """Create and fill the observation metadata from the event list metadata."""
+    def from_header(cls, events_hdr, format="gadf"):
+        """Create and fill the observation metadata from the event list metadata.
+
+        Parameters
+        ----------
+        format : str
+            the header data format. Default is gadf.
+        """
         # TODO: read really from events.meta once it is properly defined
+        if not format == "gadf":
+            raise ValueError(
+                f"Metadata creation from format {format} is not supported."
+            )
+
         kwargs = {}
         kwargs["telescope"] = events_hdr.get("TELESCOP")
         kwargs["instrument"] = events_hdr.get("INSTRUME")
         kwargs["observation_mode"] = events_hdr.get("OBS_MODE")
-        kwargs["deadtime"] = events_hdr.get("DEADC")
+        kwargs["deadtime_fraction"] = 1 - events_hdr.get("DEADC")
         kwargs["location"] = earth_location_from_dict(events_hdr)
 
         reference_time = time_ref_from_dict(events_hdr)
@@ -105,7 +117,7 @@ class ObservationMetaData(MetaData):
         if "TIME_STOP" in events_hdr:
             kwargs["time_stop"] = reference_time + events_hdr.get("TIME_STOP") * u.s
 
-        kwargs["creation"] = CreatorMetaData.from_header(events_hdr)
+        kwargs["creation"] = CreatorMetaData.from_default()
 
         # optional gadf entries that are defined attributes of the ObservationMetaData
         kwargs["target_name"] = events_hdr.get("OBJECT")
@@ -137,8 +149,10 @@ class ObservationMetaData(MetaData):
             "RELHUM",
             "NSBLEVEL",
         ]
+        optional = dict()
         for key in optional_keywords:
             if key in events_hdr.keys():
-                kwargs[key] = events_hdr[key]
+                optional[key] = events_hdr[key]
+        kwargs["optional"] = optional
 
         return cls(**kwargs)

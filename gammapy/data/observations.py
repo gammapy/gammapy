@@ -15,7 +15,6 @@ from astropy.time import Time
 from astropy.units import Quantity
 from astropy.utils import lazyproperty
 import matplotlib.pyplot as plt
-from gammapy import __version__
 from gammapy.utils.deprecation import GammapyDeprecationWarning, deprecated
 from gammapy.utils.fits import LazyFitsData, earth_location_to_dict
 from gammapy.utils.metadata import CreatorMetaData
@@ -115,7 +114,7 @@ class Observation:
     def meta(self):
         """Return metadata container."""
         if self._meta is None and self.events:
-            self._meta = ObservationMetaData.from_gadf_header(self.events.table.meta)
+            self._meta = ObservationMetaData.from_header(self.events.table.meta)
         return self._meta
 
     @property
@@ -249,7 +248,7 @@ class Observation:
         )
 
         meta = ObservationMetaData(
-            deadtime=1 - deadtime_fraction,
+            deadtime_fraction=deadtime_fraction,
             location=location,
             time_start=gti.time_start[0],
             time_stop=gti.time_stop[-1],
@@ -330,7 +329,7 @@ class Observation:
         The dead-time fraction is used in the live-time computation,
         which in turn is used in the exposure and flux computation.
         """
-        return 1 - self.meta.deadtime
+        return self.meta.deadtime_fraction
 
     @lazyproperty
     def obs_info(self):
@@ -403,6 +402,10 @@ class Observation:
         return self.meta.target_position
 
     @property
+    @deprecated(
+        "v1.2",
+        message="Access additional metadata directly in obs.meta.opt.",
+    )
     def muoneff(self):
         """Observation muon efficiency."""
         if "MUONEFF" in self.meta.dict():
@@ -543,7 +546,7 @@ class Observation:
 
         obs_info = events.table.meta
 
-        meta = ObservationMetaData.from_gadf_header(obs_info)
+        meta = ObservationMetaData.from_header(obs_info)
         return cls(
             events=events,
             gti=gti,
@@ -575,8 +578,8 @@ class Observation:
         path = make_path(path)
 
         primary = fits.PrimaryHDU()
-        primary.header["CREATOR"] = f"Gammapy {__version__}"
-        primary.header["DATE"] = Time.now().iso
+
+        primary.header.update(self.meta.creation.to_header())
 
         hdul = fits.HDUList([primary])
 

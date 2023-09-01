@@ -254,11 +254,8 @@ def test_observation_cta_1dc():
     with pytest.warns(GammapyDeprecationWarning):
         assert not np.isnan(obs.pointing_zen)
 
-    with pytest.raises(KeyError):
-        obs.muoneff
-
     assert isinstance(obs.meta, ObservationMetaData)
-    assert obs.meta.deadtime == 0.9
+    assert obs.meta.deadtime_fraction == 0.1
     assert_allclose(obs.meta.location.height.to_value("m"), 2000)
     assert "Gammapy" in obs.meta.creation.creator
 
@@ -308,14 +305,14 @@ def test_observation_read():
     assert val.unit == "m2"
 
     assert isinstance(obs.meta, ObservationMetaData)
-    assert obs.meta.creation.creator == "SASH FITS::EventListWriter"
-    print(obs.meta.dict())
+    assert "Gammapy" in obs.meta.creation.creator
+
     assert obs.meta.telescope == "HESS"
     assert obs.meta.instrument == "H.E.S.S. Phase I"
     assert obs.meta.target_name == "MSH15-52"
-    assert obs.meta.N_TELS == 4
-    with pytest.raises(AttributeError):
-        obs.meta.BROKPIX
+    assert obs.meta.optional["N_TELS"] == 4
+    with pytest.raises(KeyError):
+        obs.meta.optional["BROKPIX"]
 
 
 @requires_data()
@@ -377,6 +374,8 @@ def test_observation_write(tmp_path):
         "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz"
     )
     path = tmp_path / "obs.fits.gz"
+
+    obs.meta.creation.origin = "test"
     obs.write(path)
     obs_read = obs.read(path)
 
@@ -386,6 +385,8 @@ def test_observation_write(tmp_path):
     assert obs_read.edisp is not None
     assert obs_read.bkg is not None
     assert obs_read.rad_max is None
+
+    #    assert obs_read.meta.creation.origin == "test"
 
     # unsupported format
     with pytest.raises(ValueError):
