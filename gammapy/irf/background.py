@@ -2,6 +2,7 @@
 import logging
 import numpy as np
 import astropy.units as u
+from astropy.coordinates import angular_separation
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
@@ -253,7 +254,9 @@ class Background2D(BackgroundIRF):
 
         axes = MapAxes([self.axes["energy"], fov_lon, fov_lat])
         coords = axes.get_coord()
-        offset = np.sqrt(coords["fov_lat"] ** 2 + coords["fov_lon"] ** 2)
+        offset = angular_separation(
+            0 * u.rad, 0 * u.rad, coords["fov_lon"], coords["fov_lat"]
+        )
         data = self.evaluate(offset=offset, energy=coords["energy"])
 
         return Background3D(
