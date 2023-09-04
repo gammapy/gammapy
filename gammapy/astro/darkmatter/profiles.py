@@ -35,19 +35,22 @@ class DMProfile(abc.ABC):
         scale = (self.LOCAL_DENSITY / self(self.DISTANCE_GC)).to_value("")
         self.parameters["rho_s"].value *= scale
 
-    def _eval_squared(self, radius, separation):
-        """Squared density at given radius together with the substitution part"""
+    def _eval_substitution(self, radius, separation, squared):
+        """Density at given radius together with the substitution part"""
+        exponent = 2 if squared else 1
         return (
-            self(radius) ** 2
+            self(radius) ** exponent
             * radius
             / np.sqrt(radius**2 - (self.DISTANCE_GC * np.sin(separation)) ** 2)
         )
 
-    def integral(self, rmin, rmax, separation, ndecade):
-        r"""Integrate squared dark matter profile numerically.
+    def integral(self, rmin, rmax, separation, ndecade, squared):
+        r"""Integrate dark matter profile numerically.
 
         .. math::
-            F(r_{min}, r_{max}) = \int_{r_{min}}^{r_{max}}\rho(r)^2 dr
+            F(r_{min}, r_{max}) = \int_{r_{min}}^{r_{max}}\rho(r)^\gamma dr \\
+            \gamma = 2 \text{for annihilation} \\
+            \gamma = 1 \text{for decay}
 
         Parameters
         ----------
@@ -58,13 +61,16 @@ class DMProfile(abc.ABC):
         ndecade    : int, optional
             Number of grid points per decade used for the integration.
             Default : 10000
+        squared : bool, optional
+            Square the profile before integration.
         """
         integral = self.integrate_spectrum_separation(
-            self._eval_squared, rmin, rmax, separation, ndecade
+            self._eval_substitution, rmin, rmax, separation, ndecade, squared
         )
-        return integral.to("GeV2 / cm5")
+        inegral_unit = u.Unit("GeV2 cm-5") if squared else u.Unit("GeV cm-2")
+        return integral.to(inegral_unit)
 
-    def integrate_spectrum_separation(self, func, xmin, xmax, separation, ndecade):
+    def integrate_spectrum_separation(self, func, xmin, xmax, separation, ndecade, squared):
         r"""Helper for the squared dark matter profile integral.
 
         Parameters
@@ -75,6 +81,8 @@ class DMProfile(abc.ABC):
             Separation angle in rad
         ndecade    : int
             Number of grid points per decade used for the integration.
+        squared : bool
+            Square the profile before integration.
         """
         unit = xmin.unit
         xmin = xmin.value
@@ -83,7 +91,7 @@ class DMProfile(abc.ABC):
         logmax = np.log10(xmax)
         n = np.int32((logmax - logmin) * ndecade)
         x = np.logspace(logmin, logmax, n) * unit
-        y = func(x, separation)
+        y = func(x, separation, squared)
         val = trapz_loglog(y, x)
         return val.sum()
 
