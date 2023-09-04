@@ -9,7 +9,11 @@ from .profiles import (
     NFWProfile,
     ZhaoProfile,
 )
-from .spectra import DarkMatterAnnihilationSpectralModel, DarkMatterDecaySpectralModel, PrimaryFlux
+from .spectra import (
+    DarkMatterAnnihilationSpectralModel,
+    DarkMatterDecaySpectralModel,
+    PrimaryFlux,
+)
 from .utils import JFactory
 
 __all__ = [

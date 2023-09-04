@@ -2,7 +2,11 @@
 import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
-from gammapy.astro.darkmatter import DarkMatterAnnihilationSpectralModel, DarkMatterDecaySpectralModel, PrimaryFlux
+from gammapy.astro.darkmatter import (
+    DarkMatterAnnihilationSpectralModel,
+    DarkMatterDecaySpectralModel,
+    PrimaryFlux,
+)
 from gammapy.modeling.models import Models, SkyModel
 from gammapy.utils.testing import assert_quantity_allclose, requires_data
 
@@ -53,6 +57,7 @@ def test_dm_annihilation_spectral_model(tmpdir):
     assert new_models[0].spectral_model.mass.value == 5
     assert new_models[0].spectral_model.mass.unit == u.TeV
 
+
 @requires_data()
 def test_dm_decay_spectral_model(tmpdir):
     channel = "b"
@@ -61,9 +66,7 @@ def test_dm_decay_spectral_model(tmpdir):
     energy_min = 0.01 * u.TeV
     energy_max = 10 * u.TeV
 
-    model = DarkMatterDecaySpectralModel(
-        mass=massDM, channel=channel, jfactor=jfactor
-    )
+    model = DarkMatterDecaySpectralModel(mass=massDM, channel=channel, jfactor=jfactor)
     integral_flux = model.integral(energy_min=energy_min, energy_max=energy_max).to(
         "cm-2 s-1"
     )

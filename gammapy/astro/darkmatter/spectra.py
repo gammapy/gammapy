@@ -338,5 +338,6 @@ class DarkMatterDecaySpectralModel(SpectralModel):
         scale = [p["value"] for p in parameters if p["name"] == "scale"][0]
         return cls(scale=scale, **data)
 
+
 SPECTRAL_MODEL_REGISTRY.append(DarkMatterAnnihilationSpectralModel)
 SPECTRAL_MODEL_REGISTRY.append(DarkMatterDecaySpectralModel)

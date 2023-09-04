@@ -70,7 +70,9 @@ class DMProfile(abc.ABC):
         inegral_unit = u.Unit("GeV2 cm-5") if squared else u.Unit("GeV cm-2")
         return integral.to(inegral_unit)
 
-    def integrate_spectrum_separation(self, func, xmin, xmax, separation, ndecade, squared):
+    def integrate_spectrum_separation(
+        self, func, xmin, xmax, separation, ndecade, squared
+    ):
         r"""Helper for the squared dark matter profile integral.
 
         Parameters
