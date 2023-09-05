@@ -181,4 +181,3 @@ def test_compute_lightcurve_fpp():
 
     assert_allclose(ffpp, [[[0.99373035]], [[0.53551551]]])
     assert_allclose(ffpp_err, [[[0.07930673]], [[0.07397653]]])
-

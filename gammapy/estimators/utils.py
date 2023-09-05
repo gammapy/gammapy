@@ -386,4 +386,3 @@ def compute_lightcurve_fpp(lightcurve, flux_quantity="flux"):
     )
 
     return table
-

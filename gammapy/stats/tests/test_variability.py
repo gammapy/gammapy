@@ -2,15 +2,10 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-import astropy.units as u
 from astropy.table import Column, Table
 from astropy.time import Time
 from gammapy.estimators import FluxPoints
-from gammapy.stats.variability import (
-    compute_chisq,
-    compute_fpp,
-    compute_fvar,
-)
+from gammapy.stats.variability import compute_chisq, compute_fpp, compute_fvar
 from gammapy.utils.testing import assert_quantity_allclose
 
 
