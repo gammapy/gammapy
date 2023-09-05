@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 import scipy.stats as stats
-import astropy.units as u
 
 __all__ = [
     "compute_fvar",
@@ -70,14 +69,15 @@ def compute_fpp(flux, flux_err, axis=0):
     This method accesses the ``FLUX`` and ``FLUX_ERR`` columns
     from the lightcurve data.
 
-    F_pp is a quantity strongly related to F_var, probing the variability
-    in a shorter timescale.
+    F_pp is a quantity strongly related to the fractional excess variance F_var
+    implemented in ~gammapy.stats.compute_fvar; F_pp probes the variability
+    on a shorter timescale.
 
     For white noise, F_pp and F_var give the same value.
     However, for red noise, F_var will be larger
     than F_pp, as the variations will be larger on longer timescales
 
-    It is important to note that the errors on the flux must be gaussian.
+    It is important to note that the errors on the flux must be Gaussian.
 
     Parameters
     ----------
@@ -140,4 +140,3 @@ def compute_chisq(flux):
     yobs = flux.data
     chi2, pval = stats.chisquare(yobs, yexp)
     return chi2, pval
-
