@@ -13,6 +13,7 @@ __all__ = [
     "IsothermalProfile",
     "MooreProfile",
     "NFWProfile",
+    "ZhaoProfile",
 ]
 
 
@@ -86,6 +87,59 @@ class DMProfile(abc.ABC):
         val = trapz_loglog(y, x)
         return val.sum()
 
+
+class ZhaoProfile(DMProfile):
+    r"""Zaho Profile.
+    .. math::
+        \rho(r) = \rho_s \frac{r_s}{r}^\gamma \left(1 + \frac{r}{r_s}^\alpha \right)^{\frac{\beta - \gamma}{\alpha}}
+
+    Parameters
+    ----------
+    r_s : `~astropy.units.Quantity`
+        Scale radius, :math:`r_s`
+    alpha : `~astropy.units.Quantity`
+        :math:`\alpha`
+    beta: `~astropy.units.Quantity`
+        :math:`\beta`
+    gamma : `~astropy.units.Quantity`
+        :math:`\gamma`
+    rho_s : `~astropy.units.Quantity`
+        Characteristic density, :math:`\rho_s`
+
+    References
+    ----------
+    * `1996MNRAS.278..488Z <https://ui.adsabs.harvard.edu/abs/1996MNRAS.278..488Z>`_
+    * `2011JCAP...03..051 <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051>`_
+    """
+
+    DEFAULT_SCALE_RADIUS = 24.42 * u.kpc
+    DEFAULT_ALPHA = 1
+    DEFAULT_BETA = 3
+    DEFAULT_GAMMA = 1
+    """
+    (alpha, beta, gamma) = (1,3,1) is NFW profile.
+    Default scale radius as given in reference 2 (same as for NFW profile)
+    """
+
+    def __init__(self, r_s=None, alpha=None, beta=None, gamma=None, rho_s=1 * u.Unit("GeV / cm3")):
+        r_s = self.DEFAULT_SCALE_RADIUS if r_s is None else r_s
+        alpha = self.DEFAULT_ALPHA if alpha is None else alpha
+        beta = self.DEFAULT_BETA if beta is None else beta
+        gamma = self.DEFAULT_GAMMA if gamma is None else gamma
+        self.parameters = Parameters(
+            [
+                Parameter("r_s", u.Quantity(r_s)),
+                Parameter("rho_s", u.Quantity(rho_s)),
+                Parameter("alpha", alpha),
+                Parameter("beta", beta),
+                Parameter("gamma", gamma),
+            ]
+        )
+
+    @staticmethod
+    def evaluate(radius, r_s, alpha, beta, gamma, rho_s):
+        rr = radius / r_s
+        return rho_s / (rr**gamma * (1 + rr**alpha) ** ((beta - gamma) / alpha))
 
 class NFWProfile(DMProfile):
     r"""NFW Profile.
