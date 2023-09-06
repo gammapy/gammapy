@@ -385,4 +385,6 @@ def compute_lightcurve_fpp(lightcurve, flux_quantity="flux"):
         meta=lightcurve.meta,
     )
 
+    table.meta["flux_quantity"] = flux_quantity
+
     return table
