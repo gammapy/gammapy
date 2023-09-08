@@ -91,7 +91,7 @@ class DMProfile(abc.ABC):
 class ZhaoProfile(DMProfile):
     r"""Zaho Profile.
     .. math::
-        \rho(r) = \rho_s \frac{r_s}{r}^\gamma \left(1 + \frac{r}{r_s}^\alpha \right)^{\frac{\beta - \gamma}{\alpha}}
+        \rho(r) = \rho_s \left(\frac{r_s}{r}\right)^\gamma \left(1 + \left(\frac{r}{r_s}\right)^\alpha \right)^{\frac{\gamma - \beta}{\alpha}}
 
     Parameters
     ----------
@@ -121,7 +121,9 @@ class ZhaoProfile(DMProfile):
     Default scale radius as given in reference 2 (same as for NFW profile)
     """
 
-    def __init__(self, r_s=None, alpha=None, beta=None, gamma=None, rho_s=1 * u.Unit("GeV / cm3")):
+    def __init__(
+        self, r_s=None, alpha=None, beta=None, gamma=None, rho_s=1 * u.Unit("GeV / cm3")
+    ):
         r_s = self.DEFAULT_SCALE_RADIUS if r_s is None else r_s
         alpha = self.DEFAULT_ALPHA if alpha is None else alpha
         beta = self.DEFAULT_BETA if beta is None else beta
@@ -140,6 +142,7 @@ class ZhaoProfile(DMProfile):
     def evaluate(radius, r_s, alpha, beta, gamma, rho_s):
         rr = radius / r_s
         return rho_s / (rr**gamma * (1 + rr**alpha) ** ((beta - gamma) / alpha))
+
 
 class NFWProfile(DMProfile):
     r"""NFW Profile.
