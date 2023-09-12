@@ -535,15 +535,15 @@ Here's to commands to check for and fix this (see `here <http://stackoverflow.co
 Making a pull request that requires backport
 ++++++++++++++++++++++++++++++++++++++++++++
 
-Some PRs will need to be backported to earlier versions of the code, for example
+Some PRs will need to be backported to specific maintenance branches, for example
 bug fixes or correcting typos in doc-strings. There are a few ways this can be done,
 one of which involves the `meeseeksmachine <https://github.com/meeseeksmachine>`__.
 
-1. Add the backport label to automatically backport your PR. i.e. "``backport-v1.1.v``"
+1. Add the backport label to automatically backport your PR. e.g. "``backport-v1.1.x``"
 
 2. If you forgot, on your merged PR make the comment: "``@meeseeksdev backport to [BRANCHNAME]``"
 
-3. If this does not work automatically, a set of instructions will be given to you in the next comment. This involves using the "``cherry-pick``" command. See `here <https://docs.astropy.org/en/latest/development/releasing.html#backporting-fixes-from-main>`__ for information.
+3. If this does not work automatically, a set of instructions will be given to you as a comment in the PR to be backported. This involves using the "``cherry-pick``" git command. See `here <https://docs.astropy.org/en/latest/development/releasing.html#backporting-fixes-from-main>`__ for information.
 
 
 
