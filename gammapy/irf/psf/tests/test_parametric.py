@@ -146,7 +146,7 @@ def test_psf_king_evaluate_2(psf_king):
     theta2 = Angle(1, "deg")
     rad = Angle(1, "deg")
     # energy = Quantity(1, "TeV") match with bin number 8
-    # offset equal 1 degre match with the bin 200 in the psf_table
+    # offset equal 1 degree match with the bin 200 in the psf_table
     value_off1 = psf_king.evaluate(rad=rad, energy_true=1 * u.TeV, offset=theta1)
     value_off2 = psf_king.evaluate(rad=rad, energy_true=1 * u.TeV, offset=theta2)
     # Test that the value at 1 degree in the histogram for the energy 1 Tev and

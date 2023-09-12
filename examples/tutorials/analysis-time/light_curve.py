@@ -191,7 +191,7 @@ analysis_3d.set_models(models)
 # bin.
 #
 # If we don’t set any time interval, the
-# `~gammapy.estimators.LightCurveEstimator` is determines the flux of
+# `~gammapy.estimators.LightCurveEstimator` determines the flux of
 # each dataset and places it at the corresponding time in the light curve.
 # Here one dataset equals to one observing run.
 #

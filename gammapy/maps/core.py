@@ -1396,7 +1396,7 @@ class Map(abc.ABC):
         map : `WcsNDMap`
             Map with energy dispersion applied.
         """
-        # TODO: either use sparse matrix mutiplication or something like edisp.is_diagonal
+        # TODO: either use sparse matrix multiplication or something like edisp.is_diagonal
         if edisp is not None:
             loc = self.geom.axes.index("energy_true")
             data = np.rollaxis(self.data, loc, len(self.data.shape))

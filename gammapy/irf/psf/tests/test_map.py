@@ -484,7 +484,7 @@ def test_psf_map_plot_psf_vs_rad():
 
 @requires_data()
 def test_psf_containment_coords():
-    # regression test to check the cooordinate conversion for PSFMap.containment
+    # regression test to check the coordinate conversion for PSFMap.containment
     psf = PSFMap.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz", hdu="PSF")
 
     position = SkyCoord("266.415d", "-29.006d", frame="icrs")
