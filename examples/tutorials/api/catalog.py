@@ -255,7 +255,7 @@ print(catalog_3fhl_bright.table["Source_Name"])
 ######################################################################
 # Similarly we can select only sources within a region of interest. Here
 # for example we use the `position` property of the catalog object to
-# select sources whitin 5 degrees from “PKS 0008-222”:
+# select sources within 5 degrees from “PKS 0008-222”:
 #
 
 source = catalog_4fgl["PKS 0008-222"]
@@ -348,7 +348,7 @@ discarded_spatial = [
 # In addition to the source components the HGPS catalog include a large
 # scale diffuse component built by fitting a gaussian model in a sliding
 # window along the Galactic plane. Information on this model can be
-# accessed via the propoerties `~gammapy.catalog.SourceCatalogHGPS.table_large_scale_component` and
+# accessed via the properties `~gammapy.catalog.SourceCatalogHGPS.table_large_scale_component` and
 # `~gammapy.catalog.SourceCatalogHGPS.large_scale_component` of `~gammapy.catalog.SourceCatalogHGPS`.
 #
 

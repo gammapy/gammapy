@@ -695,7 +695,7 @@ class Observations(collections.abc.MutableSequence):
         return self.ids
 
     def group_by_label(self, labels):
-        """Split obsevations in multiple groups of observations
+        """Split observations in multiple groups of observations
 
         Parameters
         ----------

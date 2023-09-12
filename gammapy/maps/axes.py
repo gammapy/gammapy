@@ -1011,7 +1011,7 @@ class MapAxis:
         Returns
         -------
         axis : `MapAxis`
-            Usampled map axis.
+            Unsampled map axis.
 
         """
         if self.node_type == "edges":
