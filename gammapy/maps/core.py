@@ -1787,7 +1787,7 @@ class Map(abc.ABC):
         data_eq = np.allclose(self.quantity, other.quantity, **kwargs)
         return axes_eq and data_eq
 
-    def __repr__(self):
+    def __str__(self):
         geom = self.geom.__class__.__name__
         axes = ["skycoord"] if self.geom.is_hpx else ["lon", "lat"]
         axes = axes + [_.name for _ in self.geom.axes]

@@ -298,7 +298,7 @@ class MapCoord:
         """Copy `MapCoord` object."""
         return copy.deepcopy(self)
 
-    def __repr__(self):
+    def __str__(self):
         return (
             f"{self.__class__.__name__}\n\n"
             f"\taxes     : {list(self._data.keys())}\n"
