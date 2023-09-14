@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import abc
 import copy
+import html
 import inspect
 import json
 from collections import OrderedDict
@@ -54,6 +55,12 @@ class Map(abc.ABC):
             self.meta = {}
         else:
             self.meta = meta
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     def _init_copy(self, **kwargs):
         """Init map instance by copying missing init arguments from self."""

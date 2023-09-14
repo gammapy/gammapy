@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import abc
+import html
 import numpy as np
 from scipy.special import lambertw
 from scipy.stats import chi2
@@ -74,6 +75,12 @@ class CountsStatistic(abc.ABC):
         str_ = str_.format(**info)
 
         return str_.expandtabs(tabsize=2)
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     def info_dict(self):
         """A dictionary of the relevant quantities

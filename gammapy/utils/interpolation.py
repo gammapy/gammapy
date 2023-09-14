@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Interpolation utilities"""
+import html
 from itertools import compress
 import numpy as np
 import scipy.interpolate
@@ -52,7 +53,6 @@ class ScaledRegularGridInterpolator:
         axis=None,
         **kwargs,
     ):
-
         if points_scale is None:
             points_scale = ["lin"] * len(points)
 
@@ -89,6 +89,12 @@ class ScaledRegularGridInterpolator:
             self._interpolate = scipy.interpolate.interp1d(
                 points_scaled[0], values_scaled, axis=axis
             )
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     def _scale_points(self, points):
         points_scaled = [scale(p) for p, scale in zip(points, self.scale_points)]
@@ -162,6 +168,12 @@ class InterpolationScale:
                 self._unit = values.unit
                 values = values.value
         return self._scale(values)
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     def inverse(self, values):
         values = self._inverse(values)

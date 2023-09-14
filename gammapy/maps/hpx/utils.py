@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import html
 import re
 import numpy as np
 from astropy.utils import lazyproperty
@@ -274,6 +275,12 @@ class HpxToWcsMapping:
         self._ipix = ipix
         self._mult_val = mult_val
         self._npix = npix
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     @property
     def hpx(self):

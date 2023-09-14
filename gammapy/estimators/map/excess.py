@@ -56,7 +56,6 @@ def convolved_map_dataset_counts_statistics(dataset, kernel, mask, correlate_off
             n_on_conv.data, n_off.data, alpha.data, npred_sig_convolve.data
         )
     else:
-
         npred = dataset.npred() * mask
         background_conv = npred.convolve(kernel_data)
         return CashCountsStatistic(n_on_conv.data, background_conv.data)

@@ -2,6 +2,7 @@
 import collections
 import copy
 import logging
+import html
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import AltAz, Angle, SkyCoord, angular_separation
@@ -87,6 +88,12 @@ class EventList:
 
     def __init__(self, table):
         self.table = table
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     @classmethod
     def read(cls, filename, **kwargs):

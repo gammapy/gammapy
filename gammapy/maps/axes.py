@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import copy
+import html
 import inspect
 import logging
 from collections.abc import Sequence
@@ -147,6 +148,12 @@ class MapAxis:
 
         self._nbin = nbin
         self._use_center_as_plot_labels = None
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     def assert_name(self, required_name):
         """Assert axis name if a specific one is required.
@@ -1425,6 +1432,12 @@ class MapAxes(Sequence):
         self._axes = axes
         self._n_spatial_axes = n_spatial_axes
 
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
+
     @property
     def primary_axis(self):
         """Primary extra axis, defined as the one longest
@@ -2225,6 +2238,12 @@ class TimeMapAxis:
         delta = edges_min[1:] - edges_max[:-1]
         if np.any(delta < 0 * u.s):
             raise ValueError("Time intervals must not overlap.")
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     @property
     def is_contiguous(self):
@@ -3164,6 +3183,12 @@ class LabelMapAxis:
         str_ += fmt.format("node type", self.node_type)
         str_ += fmt.format("labels", "{0}".format(list(self._labels)))
         return str_.expandtabs(tabsize=2)
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     def is_allclose(self, other, **kwargs):
         """Check if other map axis is all close.

@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import html
 import itertools
 import logging
 import numpy as np
@@ -136,6 +137,12 @@ class Fit:
         self.covariance_opts = covariance_opts
         self.confidence_opts = confidence_opts
         self._minuit = None
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     @property
     @deprecated(
@@ -573,6 +580,12 @@ class FitStepResult:
             f"\tmessage    : {self.message}\n"
         )
 
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
+
 
 class CovarianceResult(FitStepResult):
     """Covariance result object."""
@@ -732,3 +745,9 @@ class FitResult:
             str_ += str(self.covariance_result)
 
         return str_
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"

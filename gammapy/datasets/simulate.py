@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Simulate observations."""
+import html
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord, SkyOffsetFrame
@@ -38,6 +39,12 @@ class MapDatasetEventSampler:
         self.random_state = get_random_state(random_state)
         self.oversample_energy_factor = oversample_energy_factor
         self.t_delta = t_delta
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     def _make_table(self, coords, time_ref):
         """Create a table for sampled events.

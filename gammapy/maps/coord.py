@@ -1,4 +1,5 @@
 import copy
+import html
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
@@ -62,6 +63,12 @@ class MapCoord:
 
     def __iter__(self):
         return iter(self._data.values())
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     @property
     def ndim(self):
