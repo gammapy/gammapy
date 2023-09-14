@@ -161,7 +161,7 @@ class Analysis:
 
         Note
         ----
-            The progress bar can be displayed for this function.
+        The progress bar can be displayed for this function.
         """
         datasets_settings = self.config.datasets
         if not self.observations or len(self.observations) == 0:
