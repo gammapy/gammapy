@@ -154,6 +154,10 @@ class ASmoothMapEstimator(Estimator):
     def run(self, dataset):
         """Run adaptive smoothing on input MapDataset.
 
+        Note
+        ----
+        The progress bar can be displayed for this function.
+
         Parameters
         ----------
         dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.MapDatasetOnOff`
