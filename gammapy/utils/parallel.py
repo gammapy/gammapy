@@ -117,7 +117,7 @@ def run_multiprocessing(
 
     Note
     ----
-        The progress bar can be displayed for this function.
+    The progress bar can be displayed for this function.
 
     Parameters
     ----------
