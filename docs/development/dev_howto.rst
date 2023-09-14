@@ -884,3 +884,58 @@ Example what to put as a test::
         assert str(p).startswith('Hi')
         assert p.info(add_location=True).endswith('Heidelberg')
 
+
+Output in Jupyter notebook cells
+++++++++++++++++++++++++++++++++
+
+In addition to the standard `repr` and `str` outputs, Jupyter notebook
+cells have the option to display nicely formatted (HTML) output, using
+the IPython rich display options (other output options also exist,
+such as LaTeX or SVG, but these are less used). This requires the
+implementation of a `_repr_html_(self)` method (note: single
+underscore) in a class.
+
+By default, this method can just return the string representation of
+the object (which may already produce a nicely formatted output). That
+is often nicer than the default, which is to return the `repr` output,
+which tends to be shorter and may miss details of the object. Thus,
+the following would be a good default for a new class::
+
+    def _repr_html_(self):
+        return f'<pre>html.escape(str(self))</pre>'
+
+The surrounding `<pre>` takes care that the formatting in HTML is the
+same as that for the normal `__str__` method, while `html.escape`
+handles escaping HTML special characters (<, >, &, " and ').
+
+Note that if no `__str__` method is implemented, `__repr__` is used,
+and ultimately, the Python built-in `__repr__` method serves as the
+final fallback (which looks like `<gammapy.data.event_list.EventList
+at 0x129602550>` or similar).
+
+If more specific HTML output is preferred (for example, output
+formatted in a HTML table or list), it is best to create a separate
+`to_html(self)` method in the class, which is more explicit (and can
+be documentated as part of the API), and let `_repr_html_` call this
+method::
+
+    def _repr_html_(self):
+        return self.to_html(self)
+
+Thus very similar to `__str__` calling `info()`, with optional
+parameters if needed.
+
+To allow for both options, the following default `_repr_html_` can be
+implemented instead::
+
+    def _repr_html_(self):
+        try:
+           return self.to_html(self)
+       except AttributeError:
+           return f'<pre>html.escape(str(self))</pre>'
+
+Nearly all base classes in Gammapy implement this default
+`_repr_html_`. If a new class derives from an existing Gammapy class,
+a default implementation is not needed, since it will rely on its
+(grand)parent. As a result, for specific HTML output, only the
+`to_html` method needs to be implented for the relevant class.
