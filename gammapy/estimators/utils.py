@@ -357,7 +357,7 @@ def compute_lightcurve_fpp(lightcurve, flux_quantity="flux"):
 
     Parameters
     ----------
-    lightcurve : '~gammapy.estimators.FluxPoints'
+    lightcurve : `~gammapy.estimators.FluxPoints`
         the lightcurve object
     flux_quantity : str
         flux quantity to use for calculation. Should be 'dnde', 'flux', 'e2dnde' or 'eflux'. Default is 'flux'.

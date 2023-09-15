@@ -70,12 +70,12 @@ def compute_fpp(flux, flux_err, axis=0):
     from the lightcurve data.
 
     F_pp is a quantity strongly related to the fractional excess variance F_var
-    implemented in ~gammapy.stats.compute_fvar; F_pp probes the variability
+    implemented in `~gammapy.stats.compute_fvar`; F_pp probes the variability
     on a shorter timescale.
 
     For white noise, F_pp and F_var give the same value.
     However, for red noise, F_var will be larger
-    than F_pp, as the variations will be larger on longer timescales
+    than F_pp, as the variations will be larger on longer timescales.
 
     It is important to note that the errors on the flux must be Gaussian.
 
