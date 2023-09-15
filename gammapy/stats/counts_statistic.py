@@ -164,7 +164,7 @@ class CountsStatistic(abc.ABC):
         ul = np.zeros_like(self.n_on, dtype="float")
 
         min_range = self.n_sig
-        max_range = self.n_sig + 2 * n_sigma * (self.error + 1)
+        max_range = min_range + 2 * n_sigma * (self.error + 1)
         it = np.nditer(ul, flags=["multi_index"])
 
         while not it.finished:
@@ -333,6 +333,24 @@ class CashCountsStatistic(CountsStatistic):
         on = self.n_on[mask]
         result[mask] = -on * (lambertw(-np.exp(-c / on - 1), k=-1).real + 1)
         result[~mask] = c
+        return result
+
+    def compute_upper_limit(self, n_sigma=3):
+        result = np.zeros_like(self.n_on, dtype="float")
+        cmin = np.zeros_like(self.n_on, dtype="float")
+
+        cmin = self.stat_max / 2
+        vmin = self.n_on  # np.minimum(self.n_on, self.mu_bkg)
+
+        c = n_sigma**2 / 2
+        cmin += c
+
+        mask = self.n_on > 0
+
+        on = self.n_on[mask]
+        result[mask] = -on * (lambertw(-np.exp(-cmin / on) / on, k=-1).real) - vmin
+        result[~mask] = c
+
         return result
 
     def n_sig_matching_significance(self, significance):
