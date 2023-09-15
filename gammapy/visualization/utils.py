@@ -218,6 +218,9 @@ def plot_distribution(
 
     Returns
     -------
+    axes : `~numpy.ndarray` of `~matplotlib.pyplot.Axes`
+        Array of Axes.
+
     result_list : list of dict
         List of dictionnary that contains the results of `scipy.optimize.curve_fit`. The number of elements in the list
         correspond to the dimension of the non-spatial axis of the map.
@@ -228,9 +231,6 @@ def plot_distribution(
             * `covar` : the covariance matrix for the fitted parameters `param`
             * `info_dict` : the `infodict` return of `scipy.optimize.curve_fit`
 
-    axes : `~numpy.ndarray` of `~matplotlib.pyplot.Axes`
-        Array of Axes.
-
     Examples
     --------
     >>> from gammapy.datasets import MapDataset
@@ -239,10 +239,10 @@ def plot_distribution(
     >>> from gammapy.visualization import plot_distribution
     >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
     >>> tsmap_est = TSMapEstimator().run(dataset)
-    >>> res, ax = plot_distribution(tsmap_est.sqrt_ts, func="norm", kwargs_hist={'bins': 75, 'range': (-10, 10), 'density': True})
+    >>> axs, res = plot_distribution(tsmap_est.sqrt_ts, func="norm", kwargs_hist={'bins': 75, 'range': (-10, 10), 'density': True})
     >>> # Equivalently, one can do the following:
     >>> func = lambda x, mu, sig : norm.pdf(x, loc=mu, scale=sig)
-    >>> res, ax = plot_distribution(tsmap_est.sqrt_ts, func=func, kwargs_hist={'bins': 75, 'range': (-10, 10), 'density': True})
+    >>> axs, res = plot_distribution(tsmap_est.sqrt_ts, func=func, kwargs_hist={'bins': 75, 'range': (-10, 10), 'density': True})
     """
 
     from gammapy.maps import WcsNDMap  # import here to avoid circular import
@@ -345,4 +345,4 @@ def plot_distribution(
         axe.set(**kwargs_axes)
         axe.legend()
 
-    return result_list, axes
+    return axes, result_list
