@@ -106,12 +106,12 @@ Make small pull requests
 
 So as we'll explain in more detail below, the contribution cycle to Gammapy is roughly:
 
-1. Get the latest development version (``master`` branch) of Gammapy
+1. Get the latest development version (``main`` branch) of Gammapy
 2. Make fixes, changes and additions locally
 3. Make a pull request
 4. Someone else reviews the pull request, you iterate, others can chime in
 5. Someone else signs off on or merges your pull request
-6. You update to the latest ``master`` branch
+6. You update to the latest ``main`` branch
 
 Then you're done, and can start using the new version, or start a new pull request
 with further developments. It is possible and common to work on things in parallel
@@ -194,7 +194,7 @@ environment with the content present in `environment-dev.yml` see below:
     $ conda env update --file environment-dev.yml --prune
 
 
-When developing Gammapy you never want to work on the ``master`` branch, but
+When developing Gammapy you never want to work on the ``main`` branch, but
 always on a dedicated feature branch.
 
 .. code-block:: bash
