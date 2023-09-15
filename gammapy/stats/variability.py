@@ -66,9 +66,6 @@ def compute_fvar(flux, flux_err, axis=0):
 def compute_fpp(flux, flux_err, axis=0):
     r"""Calculate the point-to-point excess variance.
 
-    This method accesses the ``FLUX`` and ``FLUX_ERR`` columns
-    from the lightcurve data.
-
     F_pp is a quantity strongly related to the fractional excess variance F_var
     implemented in `~gammapy.stats.compute_fvar`; F_pp probes the variability
     on a shorter timescale.
@@ -98,13 +95,13 @@ def compute_fpp(flux, flux_err, axis=0):
     ----------
     .. [Edelson2002] "X-Ray Spectral Variability and Rapid Variability
        of the Soft X-Ray Spectrum Seyfert 1 Galaxies
-       Arakelian 564 and Ton S180", Edelson et al. (2002)
+       Arakelian 564 and Ton S180", Edelson et al. (2002), equation 3,
        https://iopscience.iop.org/article/10.1086/323779
     """
 
     flux_mean = np.nanmean(flux, axis=axis)
     n_points = np.count_nonzero(~np.isnan(flux), axis=axis)
-    flux = np.atleast_2d(flux).swapaxes(0, axis).T
+    flux = flux.swapaxes(0, axis).T
 
     s_square = np.nansum((flux[..., 1:] - flux[..., :-1]) ** 2, axis=-1) / (
         n_points.T - 1
