@@ -150,13 +150,13 @@ Get set up
 .. warning::
 
     The rest of this page isn't written yet. It's almost identical to
-    https://cta-observatory.github.io/ctapipe/getting_started/index.html so for
+    https://ctapipe.readthedocs.io/en/latest/developer-guide/getting-started.html so for
     now, see there. Also, we shouldn't duplicate content from
-    https://docs.astropy.org/en/latest/#developer-documentation but link
+    https://docs.astropy.org/en/latest/development/index.html but link
     there instead.
 
 The first steps are basically identical to
-https://cta-observatory.github.io/ctapipe/getting_started/index.html (until step
+https://ctapipe.readthedocs.io/en/latest/developer-guide/getting-started.html (until step
 4, excluding 5) and
 http://astropy.readthedocs.io/en/latest/development/workflow/get_devel_version.html
 (up to *Create your own private workspace*). The following is a quick summary of
