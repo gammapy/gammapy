@@ -38,7 +38,6 @@ def progress_bar(iterable, desc=None):
     return tqdm(
         iterable_to_list,
         total=total,
-        mininterval=0,
         disable=not SHOW_PROGRESS_BAR,
         desc=desc,
     )

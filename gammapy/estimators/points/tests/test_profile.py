@@ -8,12 +8,14 @@ from regions import CircleSkyRegion
 from gammapy.data import GTI
 from gammapy.datasets import MapDatasetOnOff
 from gammapy.estimators import FluxPoints, FluxProfileEstimator
+from gammapy.estimators.points.tests.test_sed import simulate_map_dataset
 from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.utils.regions import (
     make_concentric_annulus_sky_regions,
     make_orthogonal_rectangle_sky_regions,
 )
+from gammapy.utils.testing import requires_data
 
 
 def get_simple_dataset_on_off():
@@ -172,6 +174,7 @@ def test_serialisation(tmpdir):
     assert_allclose(result.norm_err, profile.norm_err, rtol=1e-4)
     assert_allclose(result.npred, profile.npred)
     assert_allclose(result.ts, profile.ts)
+    assert_allclose(profile.gti.time_start[0].mjd, 55197.000766, rtol=1e-5)
 
     assert np.all(result.is_ul == profile.is_ul)
 
@@ -184,3 +187,35 @@ def test_regions_init():
 
     with pytest.raises(ValueError):
         FluxProfileEstimator(regions=[region])
+
+
+@requires_data()
+def test_profile_with_model_or_mask():
+    dataset = simulate_map_dataset(name="test-map-pwl")
+
+    geom = dataset.counts.geom
+    regions = make_concentric_annulus_sky_regions(
+        center=geom.center_skydir,
+        radius_max=0.2 * u.deg,
+    )
+
+    prof_maker = FluxProfileEstimator(
+        regions,
+        selection_optional="all",
+        energy_edges=[0.1, 10] * u.TeV,
+        n_sigma_ul=3,
+        sum_over_energy_groups=True,
+    )
+    result = prof_maker.run(dataset)
+    imp_prof = result.to_table(sed_type="flux", format="profile")
+    assert_allclose(imp_prof[7]["npred_excess"], [[-1.115967]], rtol=1e-3)
+
+    dataset.models = None
+    result = prof_maker.run(dataset)
+    imp_prof = result.to_table(sed_type="flux", format="profile")
+    assert_allclose(imp_prof[7]["npred_excess"], [[112.95312]], rtol=1e-3)
+
+    dataset.mask_fit = ~geom.region_mask([regions[7]])
+    result = prof_maker.run(dataset)
+    imp_prof = result.to_table(sed_type="flux", format="profile")
+    assert_allclose(imp_prof[7]["npred_excess"], [[0]], rtol=1e-3)

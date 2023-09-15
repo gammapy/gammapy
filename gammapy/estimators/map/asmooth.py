@@ -42,6 +42,11 @@ class ASmoothMapEstimator(Estimator):
         Significance estimation method.
     threshold : float
         Significance threshold.
+    energy_edges : list of `~astropy.units.Quantity`
+        Edges of the target maps energy bins. The resulting bin edges won't be exactly equal to the input ones,
+        but rather the closest values to the energy axis edges of the parent dataset.
+        Default is None: apply the estimator in each energy bin of the parent dataset.
+        For further explanation see :ref:`estimators`.
 
     Examples
     --------
@@ -148,6 +153,10 @@ class ASmoothMapEstimator(Estimator):
 
     def run(self, dataset):
         """Run adaptive smoothing on input MapDataset.
+
+        Note
+        ----
+        The progress bar can be displayed for this function.
 
         Parameters
         ----------

@@ -4,6 +4,7 @@ import logging
 import numpy as np
 import scipy.interpolate
 from astropy import units as u
+from astropy.io import fits
 from astropy.table import Table
 from astropy.time import Time
 from astropy.utils import lazyproperty
@@ -11,7 +12,7 @@ from gammapy.maps import MapAxis, RegionNDMap, TimeMapAxis
 from gammapy.modeling import Parameter
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.scripts import make_path
-from gammapy.utils.time import time_ref_from_dict
+from gammapy.utils.time import time_ref_from_dict, time_ref_to_dict
 from .core import ModelBase, _build_parameters_from_dict
 
 __all__ = [
@@ -38,21 +39,65 @@ class TemporalModel(ModelBase):
 
     _type = "temporal"
 
-    def __call__(self, time):
+    def __init__(self, **kwargs):
+        scale = kwargs.pop("scale", "utc")
+
+        if scale not in Time.SCALES:
+            raise ValueError(
+                f"{scale} is not a valid time scale. Choose from {Time.SCALES}"
+            )
+
+        self.scale = scale
+        super().__init__(**kwargs)
+
+    def __call__(self, time, energy=None):
         """Evaluate model
 
         Parameters
         ----------
         time : `~astropy.time.Time`
             Time object
+        energy : `~astropy.units.Quantity`
+            Energy (optional)
+
+        Returns
+        -------
+        values : `~astropy.units.Quantity`
+            Model values
         """
         kwargs = {par.name: par.quantity for par in self.parameters}
-        time = u.Quantity(time.mjd, "day")
+
+        if energy is not None:
+            kwargs["energy"] = energy
+
+        time = Time(time, scale=self.scale).mjd * u.d
         return self.evaluate(time, **kwargs)
 
     @property
     def type(self):
         return self._type
+
+    @property
+    def is_energy_dependent(self):
+        return False
+
+    @property
+    def reference_time(self):
+        """Reference time in mjd"""
+        return Time(self.t_ref.value, format="mjd", scale=self.scale)
+
+    @reference_time.setter
+    def reference_time(self, t_ref):
+        """Reference time"""
+        if not isinstance(t_ref, Time):
+            raise TypeError(f"{t_ref} is not a {Time} object")
+        self.t_ref.value = Time(t_ref, scale=self.scale).mjd
+
+    def to_dict(self, full_output=False):
+        """Create dict for YAML serilisation"""
+        data = super().to_dict(full_output)
+        data["temporal"]["scale"] = self.scale
+        return data
 
     @staticmethod
     def time_sum(t_min, t_max):
@@ -102,7 +147,7 @@ class TemporalModel(ModelBase):
         kwargs.setdefault("marker", "None")
         kwargs.setdefault("ls", "-")
         kwargs.setdefault("xerr", None)
-        m.quantity = self(time_axis.time_mid)
+        m.quantity = self(time_axis.time_mid).to(u.one)
         ax = m.plot(ax=ax, **kwargs)
         ax.set_ylabel("Norm / A.U.")
         return ax
@@ -129,32 +174,24 @@ class TemporalModel(ModelBase):
         time : `~astropy.units.Quantity`
             Array with times of the sampled events.
         """
-        t_min = Time(t_min)
-        t_max = Time(t_max)
+        t_min = Time(t_min, scale=self.scale)
+        t_max = Time(t_max, scale=self.scale)
         t_delta = u.Quantity(t_delta)
         random_state = get_random_state(random_state)
 
-        ontime = u.Quantity((t_max - t_min).sec, "s")
+        ontime = u.Quantity((t_max - t_min).sec, t_delta.unit)
+        n_step = (ontime / t_delta).to_value("")
+        t_step = ontime / n_step
 
-        time_unit = (
-            u.Unit(self.table.meta["TIMEUNIT"])
-            if hasattr(self, "table")
-            else ontime.unit
-        )
-
-        t_step = t_delta.to_value(time_unit)
-        t_step = (t_step * u.s).to("d")
-
-        t = Time(np.arange(t_min.mjd, t_max.mjd, t_step.value), format="mjd")
+        indices = np.arange(n_step + 1)
+        steps = indices * t_step
+        t = Time(t_min + steps, format="mjd")
 
         pdf = self(t)
 
         sampler = InverseCDFSampler(pdf=pdf, random_state=random_state)
         time_pix = sampler.sample(n_events)[0]
-        time = (
-            np.interp(time_pix, np.arange(len(t)), t.value - min(t.value)) * t_step.unit
-        ).to(time_unit)
-
+        time = np.interp(time_pix, indices, steps)
         return t_min + time
 
     def integral(self, t_min, t_max, oversampling_factor=100, **kwargs):
@@ -177,7 +214,7 @@ class TemporalModel(ModelBase):
         t_values, steps = np.linspace(
             t_min.mjd, t_max.mjd, oversampling_factor, retstep=True, axis=-1
         )
-        times = Time(t_values, format="mjd")
+        times = Time(t_values, format="mjd", scale=self.scale)
         values = self(times)
         integral = np.sum(values, axis=-1) * steps
         return integral / self.time_sum(t_min, t_max).to_value("d")
@@ -194,7 +231,7 @@ class ConstantTemporalModel(TemporalModel):
     @staticmethod
     def evaluate(time):
         """Evaluate at given times."""
-        return np.ones(time.shape)
+        return np.ones(time.shape) * u.one
 
     def integral(self, t_min, t_max):
         """Evaluate the integrated flux within the given time intervals
@@ -259,7 +296,7 @@ class LinearTemporalModel(TemporalModel):
         pars = self.parameters
         alpha = pars["alpha"]
         beta = pars["beta"].quantity
-        t_ref = Time(pars["t_ref"].quantity, format="mjd")
+        t_ref = self.reference_time
         value = alpha * (t_max - t_min) + beta / 2.0 * (
             (t_max - t_ref) * (t_max - t_ref) - (t_min - t_ref) * (t_min - t_ref)
         )
@@ -307,7 +344,7 @@ class ExpDecayTemporalModel(TemporalModel):
         """
         pars = self.parameters
         t0 = pars["t0"].quantity
-        t_ref = Time(pars["t_ref"].quantity, format="mjd")
+        t_ref = self.reference_time
         value = self.evaluate(t_max, t0, t_ref) - self.evaluate(t_min, t0, t_ref)
         return -t0 * value / self.time_sum(t_min, t_max)
 
@@ -352,7 +389,7 @@ class GaussianTemporalModel(TemporalModel):
         """
         pars = self.parameters
         sigma = pars["sigma"].quantity
-        t_ref = Time(pars["t_ref"].quantity, format="mjd")
+        t_ref = self.reference_time
         norm = np.sqrt(np.pi / 2) * sigma
 
         u_min = (t_min - t_ref) / (np.sqrt(2) * sigma)
@@ -416,6 +453,10 @@ class LightCurveTemplateTemporalModel(TemporalModel):
     The model does linear interpolation for times between the given ``(time, energy, norm)``
     values.
 
+    When the temporal model is energy-dependent, the default interpolation scheme is
+    linear with a log scale for the values. The interpolation method and scale values
+    can be changed with the ``method`` and ``values_scale`` arguments.
+
     For more information see :ref:`LightCurve-temporal-model`.
 
     Examples
@@ -457,32 +498,37 @@ class LightCurveTemplateTemporalModel(TemporalModel):
     tag = ["LightCurveTemplateTemporalModel", "template"]
 
     _t_ref_default = Time("2000-01-01")
-    t_ref = Parameter("t_ref", _t_ref_default.mjd, unit="day", frozen=False)
+    t_ref = Parameter("t_ref", _t_ref_default.mjd, unit="day", frozen=True)
 
-    def __init__(self, map, t_ref=None, filename=None):
-
+    def __init__(self, map, t_ref=None, filename=None, method=None, values_scale=None):
         if (map.data < 0).any():
             log.warning("Map has negative values. Check and fix this!")
-
-        if map.geom.has_energy_axis:
-            raise NotImplementedError(
-                "LightCurveTemplateTemporalModel does not"
-                f" support energy axis, got {map.geom.axes.names}"
-            )
 
         self.map = map.copy()
         super().__init__()
 
         if t_ref:
-            self.t_ref.value = Time(t_ref, format="mjd").mjd
+            self.reference_time = t_ref
 
         self.filename = filename
+
+        if method is None:
+            method = "linear"
+
+        if values_scale is None:
+            if self.is_energy_dependent:
+                values_scale = "log"
+            else:
+                values_scale = "lin"
+
+        self.method = method
+        self.values_scale = values_scale
 
     def __str__(self):
         start_time = self.t_ref.quantity + self.map.geom.axes["time"].edges[0]
         end_time = self.t_ref.quantity + self.map.geom.axes["time"].edges[-1]
-        norm_min = np.min(self.map.data)
-        norm_max = np.max(self.map.data)
+        norm_min = np.nanmin(self.map.data)
+        norm_max = np.nanmax(self.map.data)
 
         prnt = (
             f"{self.__class__.__name__} model summary:\n "
@@ -493,7 +539,18 @@ class LightCurveTemplateTemporalModel(TemporalModel):
             f"Norm max: {norm_max}"
         )
 
+        if self.is_energy_dependent:
+            energy_min = self.map.geom.axes["energy"].center[0]
+            energy_max = self.map.geom.axes["energy"].center[-1]
+            prnt1 = f"Energy min: {energy_min} \n" f"Energy max: {energy_max} \n"
+            prnt = prnt + prnt1
+
         return prnt
+
+    @property
+    def is_energy_dependent(self):
+        """Whether the model is energy dependent"""
+        return self.map.geom.has_energy_axis
 
     @classmethod
     def from_table(cls, table, filename=None):
@@ -515,15 +572,20 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         if "time" not in columns:
             raise ValueError("A TIME column is necessary")
 
-        t_ref = time_ref_from_dict(table.meta)
+        t_ref = time_ref_from_dict(table.meta, scale="utc")
         nodes = table["TIME"]
-        time_axis = MapAxis.from_nodes(
-            nodes=nodes, name="time", unit=table.meta["TIMEUNIT"]
-        )
+
+        ax_unit = nodes.quantity.unit
+
+        if not ax_unit.is_equivalent("d"):
+            try:
+                ax_unit = u.Unit(table.meta["TIMEUNIT"])
+            except KeyError:
+                raise ValueError("Time unit not found in the table")
+
+        time_axis = MapAxis.from_nodes(nodes=nodes, name="time", unit=ax_unit)
         axes = [time_axis]
-        m = RegionNDMap.create(
-            region=None, axes=axes, meta=table.meta, data=table["NORM"]
-        )
+        m = RegionNDMap.create(region=None, axes=axes, data=table["NORM"])
 
         return cls(m, t_ref=t_ref, filename=filename)
 
@@ -549,8 +611,16 @@ class LightCurveTemplateTemporalModel(TemporalModel):
             return cls.from_table(table, filename=filename)
 
         elif format == "map":
-            m = RegionNDMap.read(filename)
-            t_ref = time_ref_from_dict(m.meta)
+            with fits.open(filename) as hdulist:
+                header = hdulist["SKYMAP_BANDS"].header
+                t_ref = time_ref_from_dict(header)
+                # TODO : Ugly hack to prevent creating a TimeMapAxis
+                # By default, MapAxis.from_table tries to create a
+                # TimeMapAxis, failing which, it creates a normal MapAxis.
+                # This ugly hack forces the fail. We need a normal Axis to
+                # have the evaluate method work
+                hdulist["SKYMAP_BANDS"].header.pop("MJDREFI")
+                m = RegionNDMap.from_hdulist(hdulist)
             return cls(m, t_ref=t_ref, filename=filename)
 
         else:
@@ -560,10 +630,12 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
     def to_table(self):
         """Convert model to an astropy table"""
+        if self.is_energy_dependent:
+            raise NotImplementedError("Not supported for energy dependent models")
         table = Table(
             data=[self.map.geom.axes["time"].center, self.map.quantity],
             names=["TIME", "NORM"],
-            meta=self.map.meta,
+            meta=time_ref_to_dict(self.reference_time, scale=self.scale),
         )
         return table
 
@@ -587,21 +659,57 @@ class LightCurveTemplateTemporalModel(TemporalModel):
             table = self.to_table()
             table.write(filename, overwrite=overwrite)
         elif format == "map":
-            self.map.write(filename, overwrite=overwrite)
+            # RegionNDMap.from_hdulist does not update the header
+            hdulist = self.map.to_hdulist()
+            hdulist["SKYMAP_BANDS"].header.update(
+                time_ref_to_dict(self.reference_time, scale=self.scale)
+            )
+            hdulist.writeto(filename, overwrite=overwrite)
         else:
             raise ValueError("Not a valid format, choose from ['map', 'table']")
 
-    def evaluate(self, time, t_ref=None):
-        """Evaluate the model at given coordinates."""
+    def evaluate(self, time, t_ref=None, energy=None):
+        """Evaluate the model at given coordinates.
 
+        Parameters
+        ----------
+        time: `~astropy.time.Time`
+            array of times where the model is evaluated;
+        t_ref: `~gammapy.modeling.Parameter`
+            Reference time for the model;
+        energy: `~astropy.units.Quantity`
+            array of energies where the model is evaluated;
+
+        Returns
+        -------
+        values : `~astropy.units.Quantity`
+            Model values
+        """
         if t_ref is None:
-            t_ref = Time(self.t_ref.value, format="mjd")
+            t_ref = self.reference_time
 
         t = (time - t_ref).to_value(self.map.geom.axes["time"].unit)
         coords = {"time": t}
-        val = self.map.interp_by_coord(coords)
+
+        if self.is_energy_dependent:
+            if energy is None:
+                energy = self.map.geom.axes["energy"].center
+
+            coords["energy"] = energy.reshape(-1, 1)
+
+        val = self.map.interp_by_coord(
+            coords, method=self.method, values_scale=self.values_scale
+        )
         val = np.clip(val, 0, a_max=None)
-        return u.Quantity(val, self.map.unit, copy=False)
+        return u.Quantity(val, unit=self.map.unit, copy=False)
+
+    def integral(self, t_min, t_max, oversampling_factor=100, **kwargs):
+        if self.is_energy_dependent:
+            raise NotImplementedError(
+                "Integral not supported for energy dependent models"
+            )
+
+        return super().integral(t_min, t_max, oversampling_factor, **kwargs)
 
     @classmethod
     def from_dict(cls, data):
@@ -617,6 +725,52 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         data["temporal"]["format"] = format
         data["temporal"]["unit"] = str(self.map.unit)
         return data
+
+    def plot(self, time_range, ax=None, n_points=100, energy=None, **kwargs):
+        """
+        Plot Temporal Model.
+
+        Parameters
+        ----------
+        time_range : `~astropy.time.Time`
+            times to plot the model
+        ax : `~matplotlib.axes.Axes`, optional
+            Axis to plot on
+        n_points : int
+            Number of bins to plot model
+        energy : `~astropy.units.quantity`
+            energies to compute the model at for energy dependent models, optional
+        **kwargs : dict
+            Keywords forwarded to `~matplotlib.pyplot.errorbar`
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`, optional
+            axis
+        """
+        if not self.is_energy_dependent:
+            super().plot(time_range=time_range, ax=ax, n_points=n_points, **kwargs)
+        else:
+            time_min, time_max = Time(time_range, scale=self.scale)
+            time_axis = TimeMapAxis.from_time_bounds(
+                time_min=time_min, time_max=time_max, nbin=n_points
+            )
+            if energy is None:
+                energy_axis = self.map.geom.axes["energy"]
+            else:
+                energy_axis = MapAxis.from_nodes(
+                    nodes=energy, name="energy", interp="log"
+                )
+
+            m = RegionNDMap.create(region=None, axes=[time_axis, energy_axis])
+            kwargs.setdefault("marker", "None")
+            kwargs.setdefault("ls", "-")
+            m.quantity = self.evaluate(
+                time=time_axis.time_mid, energy=energy_axis.center
+            )
+            ax = m.plot(axis_name="time", ax=ax, **kwargs)
+            ax.set_ylabel("Norm / A.U.")
+
+            return ax, m
 
 
 class PowerLawTemporalModel(TemporalModel):
@@ -664,7 +818,7 @@ class PowerLawTemporalModel(TemporalModel):
         pars = self.parameters
         alpha = pars["alpha"].quantity
         t0 = pars["t0"].quantity
-        t_ref = Time(pars["t_ref"].quantity, format="mjd")
+        t_ref = self.reference_time
         if alpha != -1:
             value = self.evaluate(t_max, alpha + 1.0, t_ref, t0) - self.evaluate(
                 t_min, alpha + 1.0, t_ref, t0
@@ -720,7 +874,7 @@ class SineTemporalModel(TemporalModel):
         pars = self.parameters
         omega = pars["omega"].quantity.to_value("rad/day")
         amp = pars["amp"].value
-        t_ref = Time(pars["t_ref"].quantity, format="mjd")
+        t_ref = self.reference_time
 
         value = (t_max - t_min).to_value(u.day) - amp / omega * (
             np.sin(omega * (t_max - t_ref).to_value(u.day))
@@ -871,7 +1025,7 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
 
     def evaluate(self, time, t_ref, phi_ref, f0, f1, f2):
         phase, _ = self._time_to_phase(time, t_ref, phi_ref, f0, f1, f2)
-        return self._interpolator(phase)
+        return self._interpolator(phase) * u.one
 
     def integral(self, t_min, t_max):
         """Evaluate the integrated flux within the given time intervals
@@ -891,7 +1045,7 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         ph_max, n_max = self._time_to_phase(t_max.mjd * u.d, **kwargs)
 
         # here we assume that the frequency does not change during the integration boundaries
-        delta_t = (t_min.mjd - self.t_ref.value) * u.d
+        delta_t = (t_min - self.reference_time).to(u.d)
         frequency = self.f0.quantity + delta_t * (
             self.f1.quantity + delta_t * self.f2.quantity / 2
         )
@@ -961,3 +1115,44 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         ax = m.plot(ax=ax, **kwargs)
         ax.set_ylabel("Norm / A.U.")
         return ax
+
+    def sample_time(self, n_events, t_min, t_max, t_delta="1 s", random_state=0):
+        """Sample arrival times of events.
+
+        To fully cover the phase range, t_delta is the minimum between the input
+        and product of the period at 0.5*(t_min + t_max) and the table bin size.
+
+        Parameters
+        ----------
+        n_events : int
+            Number of events to sample.
+        t_min : `~astropy.time.Time`
+            Start time of the sampling.
+        t_max : `~astropy.time.Time`
+            Stop time of the sampling.
+        t_delta : `~astropy.units.Quantity`
+            Time step used for sampling of the temporal model.
+        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+            Defines random number generator initialisation.
+            Passed to `~gammapy.utils.random.get_random_state`.
+
+        Returns
+        -------
+        time : `~astropy.units.Quantity`
+            Array with times of the sampled events.
+        """
+        t_delta = u.Quantity(t_delta)
+
+        # Determine period at the mid time
+        t_mid = Time(t_min, scale=self.scale) + 0.5 * (t_max - t_min)
+        delta_t = (t_mid - self.reference_time).to(u.d)
+        frequency = self.f0.quantity + delta_t * (
+            self.f1.quantity + delta_t * self.f2.quantity / 2
+        )
+        period = 1 / frequency
+
+        # Take minimum time delta between user input and the period divided by the number of rows in the model table
+        # this assumes that phase values are evenly spaced.
+        t_delta = np.minimum(period / len(self.table), t_delta)
+
+        return super().sample_time(n_events, t_min, t_max, t_delta, random_state)

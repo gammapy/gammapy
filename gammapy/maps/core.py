@@ -998,8 +998,8 @@ class Map(abc.ABC):
         if preserve_counts:
             if geom.ndim > 2 and geom.axes[0] != self.geom.axes[0]:
                 raise ValueError(
-                    f"Energy axis do not match: expected {self.geom.axes[0]},"
-                    " but got {geom.axes[0]}."
+                    f"Energy axes do not match, expected: \n {self.geom.axes[0]},"
+                    f" but got: \n {geom.axes[0]}."
                 )
             map_copy.data /= map_copy.geom.solid_angle().to_value("deg2")
 
@@ -1088,9 +1088,18 @@ class Map(abc.ABC):
             output_map = output_map.resample(geom, preserve_counts=preserve_counts)
         return output_map
 
-    def fill_events(self, events):
-        """Fill event coordinates (`~gammapy.data.EventList`)."""
-        self.fill_by_coord(events.map_coord(self.geom))
+    def fill_events(self, events, weights=None):
+        """Fill event coordinates (`~gammapy.data.EventList`).
+
+        Parameters
+        ----------
+        events : `~gammapy.data.EventList`
+            Events to be fill in the map.
+        weights : `~numpy.ndarray`
+            Weights vector. Default is weight of one. The weights vector must be of the same length
+            as the events column length.
+        """
+        self.fill_by_coord(events.map_coord(self.geom), weights=weights)
 
     def fill_by_coord(self, coords, weights=None):
         """Fill pixels at ``coords`` with given ``weights``.
@@ -1196,7 +1205,7 @@ class Map(abc.ABC):
         ncols : int
             Number of columns to plot
         **kwargs : dict
-            Keyword arguments passed to `Map.plot`.
+            Keyword arguments passed to `WcsNDMap.plot`.
 
         Returns
         -------
@@ -1398,7 +1407,7 @@ class Map(abc.ABC):
         map : `WcsNDMap`
             Map with energy dispersion applied.
         """
-        # TODO: either use sparse matrix mutiplication or something like edisp.is_diagonal
+        # TODO: either use sparse matrix multiplication or something like edisp.is_diagonal
         if edisp is not None:
             loc = self.geom.axes.index("energy_true")
             data = np.rollaxis(self.data, loc, len(self.data.shape))
@@ -1910,3 +1919,112 @@ class Map(abc.ABC):
         cdict = OrderedDict(zip(self.geom.axes_names, coords))
 
         return MapCoord.create(cdict, frame=self.geom.frame)
+
+    def reorder_axes(self, axes_names):
+        """Return a new map re-ordering the non-spatial axes order.
+
+        Parameters
+        ----------
+        axes_names : list of str
+            the list of axes names in the required order
+
+        Returns
+        -------
+        map : `~gammapy.maps.Map`
+            the map with axes re-ordered
+        """
+        old_axes = self.geom.axes
+        if not set(old_axes.names) == set(axes_names):
+            raise ValueError(f"{old_axes.names} is not compatible with {axes_names}")
+
+        new_axes = [old_axes[_] for _ in axes_names]
+        new_geom = self.geom.to_image().to_cube(new_axes)
+
+        old_indices = [old_axes.index_data(ax) for ax in axes_names]
+        new_indices = [new_geom.axes.index_data(ax) for ax in axes_names]
+
+        data = np.moveaxis(self.data, old_indices, new_indices)
+
+        return Map.from_geom(new_geom, data=data)
+
+    def dot(self, other):
+        """Apply dot product with the input map.
+
+        The input Map has to share a single MapAxis with the current Map.
+        Because it has no spatial dimension, it must be a `~gammapy.maps.RegionNDMap`.
+
+        Parameters
+        ----------
+        other : `~gammapy.maps.RegionNDMap`
+            Map to apply the dot product to.
+            It must share a unique non-spatial MapAxis with the current Map.
+
+        Returns
+        -------
+        map : `~gammapy.maps.Map`
+            Map with dot product applied.
+        """
+        from .region import RegionNDMap
+
+        if not isinstance(other, RegionNDMap):
+            raise TypeError(
+                f"Dot product can be applied to a RegionNDMap. Got {type(other)} instead."
+            )
+
+        common_names = list(
+            set(other.geom.axes.names).intersection(self.geom.axes.names)
+        )
+
+        if len(common_names) == 0:
+            raise ValueError(
+                "Map geometries have no axis in common. Cannot apply dot product."
+            )
+        elif len(common_names) > 1:
+            raise ValueError(
+                f"Map geometries have more than one axis in common: {common_names}."
+                "Cannot apply dot product."
+            )
+
+        axis_name = common_names[0]
+
+        if self.geom.axes[axis_name] != other.geom.axes[axis_name]:
+            raise ValueError(
+                f"Axes {axis_name} are not equal. Cannot apply dot product."
+            )
+
+        loc = self.geom.axes.index_data(axis_name)
+        other_loc = other.geom.axes.index_data(axis_name)
+
+        # move axes because numpy dot product is performed on last axis of a and second-to-last axis of b
+        data = np.moveaxis(self.data, loc, -1)
+
+        if len(other.geom.axes) > 1:
+            other_data = np.moveaxis(other.data[..., 0, 0], other_loc, -2)
+        else:
+            other_data = other.data[..., 0, 0]
+
+        data = np.dot(data, other_data)
+
+        # prepare new axes with expected shape (i.e. common axis replaced by other's axes)
+        index = self.geom.axes.index(axis_name)
+        axes1 = self.geom.axes.drop(axis_name)
+        inserted_axes = other.geom.axes.drop(axis_name)
+        new_axes = axes1[:index] + inserted_axes + axes1[index:]
+
+        # reorder axes to get the expected shape
+        remaining_axes = np.arange(len(inserted_axes))
+        old_axes_pos = -1 - remaining_axes
+        new_axes_pos = loc + remaining_axes[::-1]
+
+        data = np.moveaxis(data, old_axes_pos, new_axes_pos)
+
+        geom = self.geom.to_image().to_cube(new_axes)
+        return self._init_copy(geom=geom, data=data)
+
+    def __matmul__(self, other):
+        """Apply dot product with the input map.
+
+        The input Map has to share a single MapAxis with the current Map.
+        Because it has no spatial dimension, it must be a `~gammapy.maps.RegionNDMap`.
+        """
+        return self.dot(other)

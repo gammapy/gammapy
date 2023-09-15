@@ -9,7 +9,33 @@ log = logging.getLogger(__name__)
 
 EXCLUDE_AUTHORS = ["azure-pipelines[bot]", "GitHub Actions"]
 
+GAMMAPY_CC = [
+    "Axel Donath",
+    "Bruno Khelifi",
+    "Catherine Boisson",
+    "Christopher van Eldik",
+    "David Berge",
+    "Fabio Acero",
+    "Fabio Pintore",
+    "James Hinton",
+    "José Luis Contreras Gonzalez",
+    "Matthias Fuessling",
+    "Régis Terrier",
+    "Roberta Zanin",
+    "Rubén López-Coto",
+    "Stefan Funk",
+]
+
+# Approved authors that requested to be added to CITATION.cff
+ADDITIONAL_AUTHORS = [
+    "Amanda Weinstein",
+    "Tim Unbehaun",
+]
+
 PATH = Path(__file__).parent.parent
+
+LAST_LTS = "v1.0"
+NOW = "HEAD"
 
 
 @click.group()
@@ -17,10 +43,14 @@ def cli():
     pass
 
 
-def get_git_shortlog_authors():
+def get_git_shortlog_authors(since_last_lts=False):
     """Get list of authors from git shortlog"""
     authors = []
     command = ("git", "shortlog", "--summary", "--numbered")
+
+    if since_last_lts:
+        command += (f"{LAST_LTS}..{NOW}",)
+
     result = subprocess.check_output(command, stderr=subprocess.STDOUT).decode()
     data = result.split("\n")
     for row in data:
@@ -92,18 +122,34 @@ def sort_citation_cff():
 
 
 @cli.command("check", help="Check git shortlog vs CITATION.cff authors")
-def check_author_lists():
+@click.option("--since-last-lts", is_flag=True, help="Show authors since last LTS")
+def check_author_lists(since_last_lts):
     """Check CITATION.cff with git shortlog"""
-    authors = set(get_git_shortlog_authors())
+    authors = set(get_git_shortlog_authors(since_last_lts))
     authors_cff = set(get_citation_cff_authors())
 
     message = "****Authors not in CITATION.cff****\n\n  "
     diff = authors.difference(authors_cff)
     print(message + "\n  ".join(sorted(diff)) + "\n")
 
-    message = "****Authors not in shortlog****\n\n"
+    message = "****Authors not in shortlog****\n\n  "
     diff = authors_cff.difference(authors)
-    print(message + "\n  ".join(sorted(diff)) + "\n")
+
+    authors_annotated = []
+
+    for author in sorted(diff):
+        if author in ADDITIONAL_AUTHORS:
+            author = "(AA) " + author
+        elif author in GAMMAPY_CC:
+            author = "(CC) " + author
+        else:
+            author = 5 * " " + author
+
+        authors_annotated.append(author)
+
+    print(message + "\n  ".join(authors_annotated) + "\n")
+
+    print("(CC) = Coordination Committe, (AA) = Additional Authors, (OO) = Opted out\n")
 
 
 if __name__ == "__main__":

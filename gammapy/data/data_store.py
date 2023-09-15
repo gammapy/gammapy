@@ -7,6 +7,8 @@ import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
+import gammapy.utils.time as tu
+from gammapy.utils.pbar import progress_bar
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
 from .hdu_index_table import HDUIndexTable
@@ -259,7 +261,7 @@ class DataStore:
         else:
             return s
 
-    def obs(self, obs_id, required_irf="full-enclosure"):
+    def obs(self, obs_id, required_irf="full-enclosure", require_events=True):
         """Access a given `~gammapy.data.Observation`.
 
         Parameters
@@ -281,6 +283,8 @@ class DataStore:
 
             * `"full-enclosure"` : includes `["events", "gti", "aeff", "edisp", "psf", "bkg"]`
             * `"point-like"` : includes `["events", "gti", "aeff", "edisp"]`
+        require_events : bool
+            Require events and gti table or not.
 
         Returns
         -------
@@ -303,7 +307,10 @@ class DataStore:
                 f"{difference} is not a valid hdu key. Choose from: {ALL_IRFS}"
             )
 
-        required_hdus = {"events", "gti"}.union(required_irf)
+        if require_events:
+            required_hdus = {"events", "gti"}.union(required_irf)
+        else:
+            required_hdus = required_irf
 
         missing_hdus = []
         for hdu in ALL_HDUS:
@@ -324,16 +331,25 @@ class DataStore:
 
         # TODO: right now, gammapy doesn't support using the pointing table of GADF
         # so we always pass the events location here to be read into a FixedPointingInfo
-        pointing_location = copy(kwargs["events"])
-        pointing_location.hdu_class = "pointing"
-        kwargs["pointing"] = pointing_location
+        if "events" in kwargs:
+            pointing_location = copy(kwargs["events"])
+            pointing_location.hdu_class = "pointing"
+            kwargs["pointing"] = pointing_location
 
         return Observation(**kwargs)
 
     def get_observations(
-        self, obs_id=None, skip_missing=False, required_irf="full-enclosure"
+        self,
+        obs_id=None,
+        skip_missing=False,
+        required_irf="full-enclosure",
+        require_events=True,
     ):
         """Generate a `~gammapy.data.Observations`.
+
+        Note
+        ----
+        The progress bar can be displayed for this function.
 
         Parameters
         ----------
@@ -363,6 +379,9 @@ class DataStore:
             * `"all-optional"` : no HDUs are required, only warnings will be emitted
               for missing HDUs among all possibilities.
 
+        require_events : bool
+            Require events and gti table or not.
+
         Returns
         -------
         observations : `~gammapy.data.Observations`
@@ -374,9 +393,9 @@ class DataStore:
 
         obs_list = []
 
-        for _ in obs_id:
+        for _ in progress_bar(obs_id, desc="Obs Id"):
             try:
-                obs = self.obs(_, required_irf)
+                obs = self.obs(_, required_irf, require_events)
             except ValueError as err:
                 if skip_missing:
                     log.warning(f"Skipping missing obs_id: {_!r}")
@@ -615,27 +634,32 @@ class DataStoreMaker:
             info["IRF_FILENAME"] = str(caldb_irf.file_path)
         else:
             info["IRF_FILENAME"] = info["EVENTS_FILENAME"]
+
+        # Mandatory fields defining the time data
+        for name in tu.TIME_KEYWORDS:
+            info[name] = header.get(name, None)
+
         return info
 
     def make_obs_table(self):
         rows = []
+        time_rows = []
         for events_path, irf_path in zip(self.events_paths, self.irfs_paths):
             row = self.get_obs_info(events_path, irf_path)
             rows.append(row)
+            time_row = tu.extract_time_info(row)
+            time_rows.append(time_row)
 
         names = list(rows[0].keys())
         table = ObservationTable(rows=rows, names=names)
 
-        # TODO: Values copied from one of the EVENTS headers
-        # TODO: check consistency for all EVENTS files and handle inconsistent case
-        # Transform times to first ref time? Or raise error for now?
-        # Test by combining some HESS & CTA runs?
         m = table.meta
-        m["MJDREFI"] = 51544
-        m["MJDREFF"] = 5.0000000000e-01
-        m["TIMEUNIT"] = "s"
-        m["TIMESYS"] = "TT"
-        m["TIMEREF"] = "LOCAL"
+        if not tu.unique_time_info(time_rows):
+            raise RuntimeError(
+                "The time information in the EVENT header are not consistent between observations"
+            )
+        for name in tu.TIME_KEYWORDS:
+            m[name] = time_rows[0][name]
 
         m["HDUCLASS"] = "GADF"
         m["HDUDOC"] = "https://github.com/open-gamma-ray-astro/gamma-astro-data-formats"

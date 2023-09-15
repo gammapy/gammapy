@@ -3,7 +3,6 @@ import logging
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
-from astropy.table import Table
 from astropy.utils import classproperty
 from gammapy.data import GTI
 from gammapy.maps import Map, Maps, TimeMapAxis
@@ -431,7 +430,7 @@ class FluxMaps:
 
     @property
     def npred_excess(self):
-        """Predicted excess count  rom best fit hypothesis"""
+        """Predicted excess count from best fit hypothesis"""
         self._check_quantity("npred_excess")
         return self._data["npred_excess"]
 
@@ -959,7 +958,7 @@ class FluxMaps:
         hdulist.extend(maps.to_hdulist(hdu_bands=hdu_bands)[exclude_primary])
 
         if self.gti:
-            hdu = fits.BinTableHDU(self.gti.table, name="GTI")
+            hdu = self.gti.to_table_hdu(format="gadf")
             hdulist.append(hdu)
 
         return hdulist
@@ -996,7 +995,7 @@ class FluxMaps:
             reference_model = None
 
         if "GTI" in hdulist:
-            gti = GTI(Table.read(hdulist["GTI"]))
+            gti = GTI.from_table_hdu(hdulist["GTI"])
         else:
             gti = None
 
@@ -1073,6 +1072,7 @@ class FluxMaps:
         flux_maps : `FluxMaps`
             Sliced flux maps object.
         """
+
         data = {}
 
         for key, item in self._data.items():
@@ -1084,6 +1084,70 @@ class FluxMaps:
             meta=self.meta.copy(),
             gti=self.gti,
         )
+
+    def slice_by_coord(self, slices):
+        """Slice flux maps by coordinate values
+
+        Parameters
+        ----------
+        slices : dict
+            Dict of axes names and `astropy.Quantity` or `astropy.Time` or `slice` object pairs.
+            Contains one element for each non-spatial dimension. For integer indexing the
+            corresponding axes is dropped from the map. Axes not specified in the
+            dict are kept unchanged.
+
+
+        Returns
+        -------
+        flux_maps : `FluxMaps`
+            Sliced flux maps object.
+        """
+
+        idx_intervals = []
+
+        for key, interval in zip(slices.keys(), slices.values()):
+            imin = self.geom.axes[key].coord_to_idx(interval.start)
+            imax = self.geom.axes[key].coord_to_idx(interval.stop)
+
+            idx_intervals.append(slice(imin, imax))
+
+        return self.slice_by_idx(dict(zip(slices.keys(), idx_intervals)))
+
+    def slice_by_time(self, time_min, time_max):
+        """Slice flux maps by coordinate values along the time axis
+
+        Parameters
+        ----------
+        time_min, time_max : `~astropy.time.Time`
+            Time bounds used to slice the flux map
+
+        Returns
+        -------
+        flux_maps : `FluxMaps`
+            Sliced flux maps object.
+        """
+
+        time_slice = slice(time_min, time_max)
+
+        return self.slice_by_coord({"time": time_slice})
+
+    def slice_by_energy(self, energy_min, energy_max):
+        """Slice flux maps by coordinate values along the energy axis
+
+        Parameters
+        ----------
+        energy_min, energy_max : `~astropy.units.Quantity`
+            Energy bounds used to slice the flux map
+
+        Returns
+        -------
+        flux_maps : `FluxMaps`
+            Sliced flux maps object.
+        """
+
+        energy_slice = slice(energy_min, energy_max)
+
+        return self.slice_by_coord({"energy": energy_slice})
 
     # TODO: should we allow this?
     def __getitem__(self, item):

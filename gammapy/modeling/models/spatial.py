@@ -5,6 +5,7 @@ import os
 import numpy as np
 import scipy.integrate
 import scipy.special
+from scipy.interpolate import griddata
 import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from astropy.coordinates.angle_utilities import angular_separation, position_angle
@@ -12,16 +13,17 @@ from astropy.utils import lazyproperty
 from regions import (
     CircleAnnulusSkyRegion,
     CircleSkyRegion,
+    EllipseAnnulusSkyRegion,
     EllipseSkyRegion,
     PointSkyRegion,
     RectangleSkyRegion,
 )
 import matplotlib.pyplot as plt
-from gammapy.maps import Map, WcsGeom
-from gammapy.modeling import Parameter
-from gammapy.modeling.covariance import copy_covariance
+from gammapy.maps import HpxNDMap, Map, MapCoord, WcsGeom, WcsNDMap
+from gammapy.modeling import Parameter, Parameters
 from gammapy.utils.deprecation import deprecated
 from gammapy.utils.gauss import Gauss2DPDF
+from gammapy.utils.interpolation import interpolation_scale
 from gammapy.utils.regions import region_circle_to_ellipse, region_to_frame
 from gammapy.utils.scripts import make_path
 from .core import ModelBase
@@ -37,6 +39,8 @@ __all__ = [
     "ShellSpatialModel",
     "SpatialModel",
     "TemplateSpatialModel",
+    "TemplateNDSpatialModel",
+    "PiecewiseNormSpatialModel",
 ]
 
 
@@ -160,11 +164,12 @@ class SpatialModel(ModelBase):
         Parameters
         ----------
         geom : `~gammapy.maps.WcsGeom`
+            Map geometry
 
         Returns
         -------
-        `~gammapy.maps.Map`
-
+        map : `~gammapy.maps.Map`
+            Map containing the value in each spatial bin.
         """
         coords = geom.get_coord(frame=self.frame, sparse=True)
 
@@ -194,8 +199,8 @@ class SpatialModel(ModelBase):
 
         Returns
         -------
-        `~gammapy.maps.Map` or `gammapy.maps.RegionNDMap`, containing
-                the integral value in each spatial bin.
+        map : `~gammapy.maps.Map` or `gammapy.maps.RegionNDMap`
+            Map containing the integral value in each spatial bin.
         """
         wcs_geom = geom
         mask = None
@@ -349,13 +354,13 @@ class SpatialModel(ModelBase):
             raise TypeError("Use .plot() for 2D Maps")
         m.plot_interactive(ax=ax, **kwargs)
 
-    def plot_error(self, ax=None, **kwargs):
+    def plot_position_error(self, ax=None, **kwargs):
         """Plot position error
 
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`, optional
-            Axis
+            Axes to plot the position error on.
         **kwargs : dict
             Keyword arguments passed to `~gammapy.maps.WcsMap.plot()`
 
@@ -383,6 +388,61 @@ class SpatialModel(ModelBase):
 
         return ax
 
+    def _to_region_error(self):
+        pass
+
+    def plot_error(
+        self, ax=None, which="position", kwargs_position=None, kwargs_extension=None
+    ):
+        """Plot the errors of the spatial model.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes`, optional
+            Axes to plot the errors on.
+        which: list of str
+            Which errors to plot.
+            Available options are:
+                * "all": all the optional steps are plotted
+                * "position": plot the position error of the spatial model.
+                * "extension": plot the extension error of the spatial model.
+        kwargs_position : dict
+            Keyword arguments passed to `~SpatialModel.plot_position_error`
+        kwargs_extension : dict
+            Keyword arguments passed to `~SpatialModel.plot_extension_error`
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`, optional
+            Axis
+        """
+        kwargs_position = kwargs_position or {}
+        kwargs_extension = kwargs_extension or {}
+
+        ax = plt.gca() if ax is None else ax
+
+        kwargs_extension.setdefault("edgecolor", "red")
+        kwargs_extension.setdefault("facecolor", "red")
+        kwargs_extension.setdefault("alpha", 0.15)
+        kwargs_extension.setdefault("fill", True)
+
+        if "all" in which:
+            self.plot_position_error(ax, **kwargs_position)
+
+            region = self._to_region_error()
+            if region is not None:
+                artist = region.to_pixel(ax.wcs).as_artist(**kwargs_extension)
+                ax.add_artist(artist)
+
+        if "position" in which:
+            self.plot_position_error(ax, **kwargs_position)
+
+        if "extension" in which:
+            region = self._to_region_error()
+            if region is not None:
+                artist = region.to_pixel(ax.wcs).as_artist(**kwargs_extension)
+                ax.add_artist(artist)
+
     def plot_grid(self, geom=None, **kwargs):
         """Plot spatial model energy slices in a grid.
 
@@ -407,7 +467,7 @@ class SpatialModel(ModelBase):
     @classmethod
     def from_position(cls, position, **kwargs):
         """Define the position of the model using a sky coord
-
+           The model will be created in the frame of the sky coord
         Parameters
         ----------
         position : `~astropy.coordinates.SkyCoord`
@@ -457,7 +517,6 @@ class PointSpatialModel(SpatialModel):
     tag = ["PointSpatialModel", "point"]
     lon_0 = Parameter("lon_0", "0 deg")
     lat_0 = Parameter("lat_0", "0 deg", min=-90, max=90)
-    is_energy_dependent = False
 
     @property
     def evaluation_bin_size_min(self):
@@ -609,6 +668,41 @@ class GaussianSpatialModel(SpatialModel):
         """Evaluation region consistent with evaluation radius"""
         return self.to_region(x_sigma=5)
 
+    def _to_region_error(self, x_sigma=1.5):
+        r"""Plot model error at a given number of :math:`\sigma`.
+
+        Parameters
+        ----------
+        x_sigma : float
+            Number of :math:`\sigma
+            Default is :math:`1.5\sigma` which corresponds to about 68%
+            containment for a 2D symmetric Gaussian.
+
+        Returns
+        -------
+        region : `~regions.EllipseSkyRegion`
+            Model error region.
+        """
+
+        sigma_hi = self.sigma.quantity + (self.sigma.error * self.sigma.unit)
+        sigma_lo = self.sigma.quantity - (self.sigma.error * self.sigma.unit)
+
+        minor_axis_hi = Angle(
+            sigma_hi * np.sqrt(1 - (self.e.quantity + self.e.error) ** 2)
+        )
+        minor_axis_lo = Angle(
+            sigma_lo * np.sqrt(1 - (self.e.quantity - self.e.error) ** 2)
+        )
+
+        return EllipseAnnulusSkyRegion(
+            center=self.position,
+            inner_height=2 * x_sigma * sigma_lo,
+            outer_height=2 * x_sigma * sigma_hi,
+            inner_width=2 * x_sigma * minor_axis_lo,
+            outer_width=2 * x_sigma * minor_axis_hi,
+            angle=self.phi.quantity,
+        )
+
 
 class GeneralizedGaussianSpatialModel(SpatialModel):
     r"""Two-dimensional Generealized Gaussian model.
@@ -697,6 +791,39 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
         """Evaluation region consistent with evaluation radius"""
         scale = self.evaluation_radius / self.r_0.quantity
         return self.to_region(x_r_0=scale)
+
+    def _to_region_error(self, x_r_0=1):
+        r"""Model error at a given number of :math:`r_0`.
+
+        Parameters
+        ----------
+        x_r_0 : float
+            Number of :math:`r_0`
+            Default is :math:`1`
+
+        Returns
+        -------
+        region : `~regions.EllipseSkyRegion`
+            Model error region.
+        """
+        r_0_lo = self.r_0.quantity - self.r_0.error * self.r_0.unit
+        r_0_hi = self.r_0.quantity + self.r_0.error * self.r_0.unit
+
+        minor_axis_hi = Angle(
+            r_0_hi * np.sqrt(1 - (self.e.quantity + self.e.error) ** 2)
+        )
+        minor_axis_lo = Angle(
+            r_0_lo * np.sqrt(1 - (self.e.quantity - self.e.error) ** 2)
+        )
+
+        return EllipseAnnulusSkyRegion(
+            center=self.position,
+            inner_height=2 * x_r_0 * r_0_lo,
+            outer_height=2 * x_r_0 * r_0_hi,
+            inner_width=2 * x_r_0 * minor_axis_lo,
+            outer_width=2 * x_r_0 * minor_axis_hi,
+            angle=self.phi.quantity,
+        )
 
 
 class DiskSpatialModel(SpatialModel):
@@ -837,6 +964,33 @@ class DiskSpatialModel(SpatialModel):
         kwargs.setdefault("r_0", major_axis / 2.0)
 
         return cls.from_position(region.center, **kwargs)
+
+    def _to_region_error(self):
+        r"""Model error.
+
+        Returns
+        -------
+        region : `~regions.EllipseSkyRegion`
+            Model error region.
+        """
+        r_0_lo = self.r_0.quantity - self.r_0.error * self.r_0.unit
+        r_0_hi = self.r_0.quantity + self.r_0.error * self.r_0.unit
+
+        minor_axis_hi = Angle(
+            r_0_hi * np.sqrt(1 - (self.e.quantity + self.e.error) ** 2)
+        )
+        minor_axis_lo = Angle(
+            r_0_lo * np.sqrt(1 - (self.e.quantity - self.e.error) ** 2)
+        )
+
+        return EllipseAnnulusSkyRegion(
+            center=self.position,
+            inner_height=2 * r_0_lo,
+            outer_height=2 * r_0_hi,
+            inner_width=2 * minor_axis_lo,
+            outer_width=2 * minor_axis_hi,
+            angle=self.phi.quantity,
+        )
 
 
 class ShellSpatialModel(SpatialModel):
@@ -1092,6 +1246,8 @@ class TemplateSpatialModel(SpatialModel):
     copy_data : bool
         Create a deepcopy of the map data or directly use the original. True by
         default, can be turned to False to save memory in case of large maps.
+    **kwargs : dict
+        Keyword arguments forwarded to `SpatialModel.__init__`.
     """
 
     tag = ["TemplateSpatialModel", "template"]
@@ -1104,6 +1260,7 @@ class TemplateSpatialModel(SpatialModel):
         interp_kwargs=None,
         filename=None,
         copy_data=True,
+        **kwargs,
     ):
         if (map.data < 0).any():
             log.warning("Map has negative values. Check and fix this!")
@@ -1143,9 +1300,8 @@ class TemplateSpatialModel(SpatialModel):
 
         self._interp_kwargs = interp_kwargs
         self.filename = filename
-        super().__init__()
+        super().__init__(**kwargs)
 
-    @copy_covariance
     def copy(self, copy_data=False, **kwargs):
         """Copy model
 
@@ -1253,7 +1409,7 @@ class TemplateSpatialModel(SpatialModel):
     def write(self, overwrite=False):
         if self.filename is None:
             raise IOError("Missing filename")
-        elif os.path.isfile(self.filename) and not overwrite:
+        elif os.path.isfile(make_path(self.filename)) and not overwrite:
             log.warning("Template file already exits, and overwrite is False")
         else:
             self.map.write(self.filename, overwrite=overwrite)
@@ -1282,3 +1438,236 @@ class TemplateSpatialModel(SpatialModel):
         if geom is None:
             geom = self.map.geom
         super().plot_interactive(ax=ax, geom=geom, **kwargs)
+
+
+class TemplateNDSpatialModel(SpatialModel):
+    """A model generated from a ND map where extra dimensions define the parameter space.
+
+    Parameters
+    ----------
+    map : `~gammapy.maps.WcsNDMap` or `~gammapy.maps.HpxNDMap`
+        Map template.
+    meta : dict, optional
+        Meta information, meta['filename'] will be used for serialization
+    interp_kwargs : dict
+        Interpolation keyword arguments passed to `gammapy.maps.Map.interp_by_pix`.
+        Default arguments are {'method': 'linear', 'fill_value': 0, "values_scale": "log"}.
+    copy_data : bool
+        Create a deepcopy of the map data or directly use the original. True by
+        default, can be turned to False to save memory in case of large maps.
+
+    """
+
+    tag = ["TemplateNDSpatialModel", "templateND"]
+
+    def __init__(
+        self,
+        map,
+        interp_kwargs=None,
+        meta=None,
+        filename=None,
+        copy_data=True,
+    ):
+        if not isinstance(map, (HpxNDMap, WcsNDMap)):
+            raise TypeError("Map should be a HpxNDMap or WcsNDMap")
+        if copy_data:
+            self._map = map.copy()
+        else:
+            self._map = map.copy(data=map.data)
+        self.meta = dict() if meta is None else meta
+        if filename is not None:
+            filename = str(make_path(filename))
+        self.filename = filename
+
+        parameters = []
+        for axis in map.geom.axes:
+            if axis.name not in ["energy_true", "energy"]:
+                center = (axis.bounds[1] + axis.bounds[0]) / 2
+                parameter = Parameter(
+                    name=axis.name,
+                    value=center,
+                    unit=axis.unit,
+                    scale_method="scale10",
+                    min=axis.bounds[0],
+                    max=axis.bounds[-1],
+                    interp=axis.interp,
+                )
+                parameters.append(parameter)
+        self.default_parameters = Parameters(parameters)
+
+        interp_kwargs = interp_kwargs or {}
+        interp_kwargs.setdefault("method", "linear")
+        interp_kwargs.setdefault("fill_value", 0)
+        interp_kwargs.setdefault("values_scale", "log")
+        self._interp_kwargs = interp_kwargs
+        super().__init__()
+
+    @property
+    def map(self):
+        """Template map  (`~gammapy.maps.WcsNDMap` or `~gammapy.maps.HpxNDMap`)"""
+        return self._map
+
+    @property
+    def is_energy_dependent(self):
+        return "energy_true" in self.map.geom.axes.names
+
+    def evaluate(self, lon, lat, energy=None, **kwargs):
+        coord = {
+            "lon": lon.to_value("deg"),
+            "lat": lat.to_value("deg"),
+        }
+        if energy is not None:
+            coord["energy_true"] = energy
+
+        coord.update(kwargs)
+
+        val = self.map.interp_by_coord(coord, **self._interp_kwargs)
+        val = np.clip(val, 0, a_max=None)
+
+        return u.Quantity(val, self.map.unit, copy=False)
+
+    def write(self, overwrite=False):
+        if self.filename is None:
+            raise IOError("Missing filename")
+        elif os.path.isfile(self.filename) and not overwrite:
+            log.warning("Template file already exits, and overwrite is False")
+        else:
+            self.map.write(self.filename)
+
+    @classmethod
+    def from_dict(cls, data):
+        data = data["spatial"]
+        filename = data["filename"]
+        m = Map.read(filename)
+        model = cls(m, filename=filename)
+        for idx, p in enumerate(model.parameters):
+            par = p.to_dict()
+            par.update(data["parameters"][idx])
+            setattr(model, p.name, Parameter(**par))
+        return model
+
+    def to_dict(self, full_output=False):
+        """Create dict for YAML serialisation"""
+        data = super().to_dict(full_output)
+        data["spatial"]["filename"] = self.filename
+        data["spatial"]["unit"] = str(self.map.unit)
+        return data
+
+
+class PiecewiseNormSpatialModel(SpatialModel):
+    """Piecewise spatial correction
+       with a free normalization at each fixed nodes.
+
+       For more information see :ref:`piecewise-norm-spatial`.
+
+    Parameters
+    ----------
+    coord : `gammapy.maps.MapCoord`
+        Flat coordinates list at which the model values are given (nodes).
+    norms : `~numpy.ndarray` or list of `Parameter`
+        Array with the initial norms of the model at energies ``energy``.
+        A normalisation parameters is created for each value.
+        Default is one at each node.
+    interp : str
+        Interpolation scaling in {"log", "lin"}. Default is "lin"
+    """
+
+    tag = ["PiecewiseNormSpatialModel", "piecewise-norm"]
+
+    def __init__(self, coords, norms=None, interp="lin", **kwargs):
+        self._coords = coords.copy()
+        self._coords["lon"] = Angle(coords.lon).wrap_at(0 * u.deg)
+        self._wrap_angle = (coords.lon.max() - coords.lon.min()) / 2
+        self._coords["lon"] = Angle(coords.lon).wrap_at(self._wrap_angle)
+        self._interp = interp
+
+        if norms is None:
+            norms = np.ones(coords.shape)
+
+        if len(norms) != coords.shape[0]:
+            raise ValueError("dimension mismatch")
+
+        if len(norms) < 4:
+            raise ValueError("Input arrays must contain at least 4 elements")
+
+        if self.is_energy_dependent:
+            raise ValueError("Energy dependent nodes are not supported")
+
+        if not isinstance(norms[0], Parameter):
+            parameters = Parameters(
+                [Parameter(f"norm_{k}", norm) for k, norm in enumerate(norms)]
+            )
+        else:
+            parameters = Parameters(norms)
+        self.default_parameters = parameters
+        super().__init__(**kwargs)
+
+    @property
+    def coords(self):
+        """Energy nodes"""
+        return self._coords
+
+    @property
+    def norms(self):
+        """Norm values"""
+        return u.Quantity([p.quantity for p in self.parameters])
+
+    @property
+    def is_energy_dependent(self):
+        keys = self.coords._data.keys()
+        return "energy" in keys or "energy_true" in keys
+
+    def evaluate(self, lon, lat, energy=None, **norms):
+        """Evaluate the model at given coordinates."""
+        scale = interpolation_scale(scale=self._interp)
+        v_nodes = scale(self.norms.value)
+        coords = [value.value for value in self.coords._data.values()]
+        # TODO: apply axes scaling in this loop
+        coords = list(zip(*coords))
+        lon = Angle(lon).wrap_at(self._wrap_angle)
+        # by default rely on CloughTocher2DInterpolator
+        # (Piecewise cubic, C1 smooth, curvature-minimizing interpolant)
+        interpolated = griddata(coords, v_nodes, (lon, lat), method="cubic")
+        return scale.inverse(interpolated) * self.norms.unit
+
+    def evaluate_geom(self, geom):
+        """Evaluate model on `~gammapy.maps.Geom`
+
+        Parameters
+        ----------
+        geom : `~gammapy.maps.WcsGeom`
+            Map geometry
+
+        Returns
+        -------
+        map : `~gammapy.maps.Map`
+            Map containing the value in each spatial bin.
+
+        """
+        coords = geom.get_coord(frame=self.frame, sparse=True)
+        return self(coords.lon, coords.lat)
+
+    def to_dict(self, full_output=False):
+        data = super().to_dict(full_output=full_output)
+        for key, value in self.coords._data.items():
+            data["spatial"][key] = {
+                "data": value.data.tolist(),
+                "unit": str(value.unit),
+            }
+        return data
+
+    @classmethod
+    def from_dict(cls, data):
+        """Create model from dict"""
+        data = data["spatial"]
+        lon = u.Quantity(data["lon"]["data"], data["lon"]["unit"])
+        lat = u.Quantity(data["lat"]["data"], data["lat"]["unit"])
+        coords = MapCoord.create((lon, lat))
+
+        parameters = Parameters.from_dict(data["parameters"])
+        return cls.from_parameters(parameters, coords=coords, frame=data["frame"])
+
+    @classmethod
+    def from_parameters(cls, parameters, **kwargs):
+        """Create model from parameters"""
+        return cls(norms=parameters, **kwargs)

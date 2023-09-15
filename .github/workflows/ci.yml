@@ -21,46 +21,42 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            python: '3.8'
-            tox_env: 'py38-test-alldeps'
-            allowed_fail: false
-          - os: ubuntu-latest
             python: '3.9'
             tox_env: 'py39-test-alldeps-cov'
+            allowed_fail: false
+          - os: ubuntu-latest
+            python: '3.10'
+            tox_env: 'py310-test-alldeps_noray'
             gammapy_data_path: /home/runner/work/gammapy/gammapy/gammapy-datasets/dev
             allowed_fail: false
           - os: macos-latest
-            python: '3.9'
-            tox_env: 'py39-test'
+            python: '3.10'
+            tox_env: 'py310-test'
             gammapy_data_path: /Users/runner/work/gammapy/gammapy/gammapy-datasets/dev
             allowed_fail: false
           - os: windows-latest
-            python: '3.9'
-            tox_env: 'py39-test-alldeps'
+            python: '3.10'
+            tox_env: 'py310-test-alldeps_noray'
             gammapy_data_path:  D:\a\gammapy\gammapy\gammapy-datasets\dev
             allowed_fail: false
           - os: ubuntu-latest
             python: '3.10'
-            tox_env: 'py310-test-alldeps'
+            tox_env: 'py310-test'
             allowed_fail: false
           - os: ubuntu-latest
-            python: '3.9'
-            tox_env: 'py39-test'
-            allowed_fail: false
-          - os: ubuntu-latest
-            python: '3.9'
+            python: '3.10'
             tox_env: 'codestyle'
             allowed_fail: false
           - os: ubuntu-latest
-            python: '3.8'
-            tox_env: 'py38-test-alldeps-astropylts-numpy121'
+            python: '3.9'
+            tox_env: 'py39-test-alldeps_noray-astropylts-numpy121'
             allowed_fail: false
           - os: ubuntu-latest
-            python: '3.8'
+            python: '3.9'
             tox_env: 'oldestdeps'
             allowed_fail: false
           - os: ubuntu-latest
-            python: '3.8'
+            python: '3.9'
             tox_env: 'devdeps'
             allowed_fail: true
     steps:
@@ -103,7 +99,7 @@ jobs:
           file: ./coverage.xml
           verbose: true
   sphinx:
-    name: Linux python 3.8 sphinx all-deps
+    name: Linux python 3.9 sphinx all-deps
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -137,7 +133,7 @@ jobs:
         run: |
           tox -e linkcheck -- -j auto  
   conda-build:
-    name: Linux python 3.8 conda-build all-deps
+    name: Linux python 3.9 conda-build all-deps
     runs-on: ubuntu-latest
     defaults:
       run:

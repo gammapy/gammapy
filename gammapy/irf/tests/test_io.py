@@ -8,16 +8,16 @@ from astropy.units import Quantity
 from gammapy.irf import (
     Background3D,
     EffectiveAreaTable2D,
-    EnergyDispersion2D,
     EnergyDependentMultiGaussPSF,
+    EnergyDispersion2D,
     RadMax2D,
     load_cta_irfs,
     load_irf_dict_from_file,
 )
 from gammapy.maps import MapAxis
+from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import requires_data
-from gammapy.utils.deprecation import GammapyDeprecationWarning
 
 
 @requires_data()

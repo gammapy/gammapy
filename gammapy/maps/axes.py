@@ -11,9 +11,10 @@ from astropy.table import Column, Table, hstack
 from astropy.time import Time
 from astropy.utils import lazyproperty
 import matplotlib.pyplot as plt
+from gammapy.utils.deprecation import deprecated_attribute
 from gammapy.utils.interpolation import interpolation_scale
 from gammapy.utils.time import time_ref_from_dict, time_ref_to_dict
-from .utils import INVALID_INDEX, edges_from_lo_hi
+from .utils import INVALID_INDEX, INVALID_VALUE, edges_from_lo_hi
 
 __all__ = ["MapAxes", "MapAxis", "TimeMapAxis", "LabelMapAxis"]
 
@@ -68,6 +69,7 @@ PLOT_AXIS_LABEL = {
 }
 
 DEFAULT_LABEL_TEMPLATE = "{quantity} [{unit}]"
+UNIT_STRING_FORMAT = "latex_inline"
 
 
 class MapAxis:
@@ -103,9 +105,10 @@ class MapAxis:
         String specifying the data units.
     """
 
+    append = deprecated_attribute("append", "1.1", alternative="concatenate")
+
     # TODO: Cache an interpolation object?
     def __init__(self, nodes, interp="lin", name="", node_type="edges", unit=""):
-
         if not isinstance(name, str):
             raise TypeError(f"Name must be a string, got: {type(name)!r}")
 
@@ -378,7 +381,7 @@ class MapAxis:
 
         xlabel = DEFAULT_LABEL_TEMPLATE.format(
             quantity=PLOT_AXIS_LABEL.get(self.name, self.name.capitalize()),
-            unit=ax.xaxis.units,
+            unit=ax.xaxis.units.to_string(UNIT_STRING_FORMAT),
         )
         ax.set_xlabel(xlabel)
         xmin, xmax = self.bounds
@@ -403,7 +406,7 @@ class MapAxis:
 
         ylabel = DEFAULT_LABEL_TEMPLATE.format(
             quantity=PLOT_AXIS_LABEL.get(self.name, self.name.capitalize()),
-            unit=ax.yaxis.units,
+            unit=ax.yaxis.units.to_string(UNIT_STRING_FORMAT),
         )
         ax.set_ylabel(ylabel)
         ax.set_ylim(self.bounds)
@@ -490,7 +493,7 @@ class MapAxis:
         if interp == "lin":
             nodes = np.linspace(lo_bnd, hi_bnd, nnode)
         elif interp == "log":
-            nodes = np.exp(np.linspace(np.log(lo_bnd), np.log(hi_bnd), nnode))
+            nodes = np.geomspace(lo_bnd, hi_bnd, nnode)
         elif interp == "sqrt":
             nodes = np.linspace(lo_bnd**0.5, hi_bnd**0.5, nnode) ** 2.0
         else:
@@ -543,6 +546,7 @@ class MapAxis:
         per_decade=False,
         name=None,
         node_type="edges",
+        strict_bounds=True,
     ):
         """Make an energy axis.
 
@@ -561,6 +565,12 @@ class MapAxis:
             Whether `nbin` is given per decade.
         name : str
             Name of the energy axis, either 'energy' or 'energy_true'
+        strict_bounds : bool
+            Whether to strictly end the binning at 'energy_max' when
+            `per_decade=True`. If True, the number of bins per decade
+            might be slightly increased to match the bounds. If False,
+            'energy_max' might be reduced so the number of bins per
+            decade is exactly the given input.
 
         Returns
         -------
@@ -580,7 +590,15 @@ class MapAxis:
             )
 
         if per_decade:
-            nbin = np.ceil(np.log10(energy_max / energy_min).value * nbin)
+            if strict_bounds:
+                nbin = np.ceil(np.log10(energy_max / energy_min).value * nbin)
+            else:
+                bin_per_decade = nbin
+                nbin = np.floor(
+                    np.log10(energy_max / energy_min).value * bin_per_decade
+                )
+                if np.log10(energy_max / energy_min).value % (1 / bin_per_decade) != 0:
+                    energy_max = energy_min * 10 ** (nbin / bin_per_decade)
 
         if name is None:
             name = "energy"
@@ -641,8 +659,8 @@ class MapAxis:
 
         return cls(edges, node_type="edges", **kwargs)
 
-    def append(self, axis):
-        """Append another map axis to this axis
+    def concatenate(self, axis):
+        """Concatenate another `MapAxis` to this `MapAxis` into a new `MapAxis` object.
 
         Name, interp type and node type must agree between the axes. If the node
         type is "edges", the edges must be contiguous and non-overlapping.
@@ -650,12 +668,12 @@ class MapAxis:
         Parameters
         ----------
         axis : `MapAxis`
-            Axis to append.
+            Axis to concatenate with.
 
         Returns
         -------
         axis : `MapAxis`
-            Appended axis
+            Concatenation of the two axis.
         """
         if self.node_type != axis.node_type:
             raise ValueError(
@@ -725,7 +743,7 @@ class MapAxis:
         ax_stacked = axes[0]
 
         for ax in axes[1:]:
-            ax_stacked = ax_stacked.append(ax)
+            ax_stacked = ax_stacked.concatenate(ax)
 
         return ax_stacked
 
@@ -1008,7 +1026,7 @@ class MapAxis:
         Returns
         -------
         axis : `MapAxis`
-            Usampled map axis.
+            Unsampled map axis.
 
         """
         if self.node_type == "edges":
@@ -2000,7 +2018,7 @@ class MapAxes(Sequence):
                 except (KeyError, TypeError):
                     try:
                         axis = TimeMapAxis.from_table(table, format=format, idx=idx)
-                    except (KeyError, ValueError):
+                    except (KeyError, ValueError, IndexError):
                         axis = MapAxis.from_table(table, format=format, idx=idx)
 
                 axes.append(axis)
@@ -2160,10 +2178,10 @@ class TimeMapAxis:
     """
 
     node_type = "intervals"
-    time_format = "iso"
 
     def __init__(self, edges_min, edges_max, reference_time, name="time", interp="lin"):
         self._name = name
+        self._time_format = "iso"
 
         edges_min = u.Quantity(edges_min, ndmin=1)
         edges_max = u.Quantity(edges_max, ndmin=1)
@@ -2310,6 +2328,16 @@ class TimeMapAxis:
         return self.reference_time + self.edges
 
     @property
+    def time_format(self):
+        return self._time_format
+
+    @time_format.setter
+    def time_format(self, val):
+        if val not in ["iso", "mjd"]:
+            raise ValueError(f"Invalid time_format: {self.time_format}")
+        self._time_format = val
+
+    @property
     def as_plot_xerr(self):
         """Plot x error"""
         xn, xp = self.time_mid - self.time_min, self.time_max - self.time_mid
@@ -2317,11 +2345,9 @@ class TimeMapAxis:
         if self.time_format == "iso":
             x_errn = xn.to_datetime()
             x_errp = xp.to_datetime()
-        elif self.time_format == "mjd":
+        else:
             x_errn = xn.to("day")
             x_errp = xp.to("day")
-        else:
-            raise ValueError(f"Invalid time_format: {self.time_format}")
 
         return x_errn, x_errp
 
@@ -2341,10 +2367,8 @@ class TimeMapAxis:
         """Plot edges"""
         if self.time_format == "iso":
             edges = self.time_edges.to_datetime()
-        elif self.time_format == "mjd":
-            edges = self.time_edges.mjd * u.day
         else:
-            raise ValueError(f"Invalid time_format: {self.time_format}")
+            edges = self.time_edges.mjd * u.day
 
         return edges
 
@@ -2353,9 +2377,8 @@ class TimeMapAxis:
         """Plot center"""
         if self.time_format == "iso":
             center = self.time_mid.datetime
-        elif self.time_format == "mjd":
+        else:
             center = self.time_mid.mjd * u.day
-
         return center
 
     def format_plot_xaxis(self, ax):
@@ -2381,13 +2404,14 @@ class TimeMapAxis:
 
         if self.time_format == "iso":
             ax.xaxis.set_major_formatter(DateFormatter("%Y-%m-%d %H:%M:%S"))
-            plt.setp(
-                ax.xaxis.get_majorticklabels(),
-                rotation=30,
-                ha="right",
-                rotation_mode="anchor",
-            )
-
+        else:
+            ax.xaxis.set_major_formatter("{x:,.5f}")
+        plt.setp(
+            ax.xaxis.get_majorticklabels(),
+            rotation=30,
+            ha="right",
+            rotation_mode="anchor",
+        )
         return ax
 
     def assert_name(self, required_name):
@@ -2485,6 +2509,35 @@ class TimeMapAxis:
         idx = np.asanyarray(np.argmax(mask, axis=-1))
         idx[~np.any(mask, axis=-1)] = INVALID_INDEX.int
         return idx
+
+    def pix_to_coord(self, pix):
+        """Transform from pixel position to time coordinate
+        Currently works only for linear interpolation scheme.
+
+        Parameters
+        ----------
+        pix : `~numpy.ndarray`
+            Array of pixel positions.
+
+        Returns
+        -------
+        coord : `~astropy.time.Time`
+            Array of axis coordinate values.
+        """
+        shape = np.shape(pix)
+        pix = np.atleast_1d(pix).ravel()
+        coords = np.zeros(len(pix))
+        frac, idx = np.modf(pix)
+        valid = np.logical_and(idx >= 0, idx < self.nbin, np.isfinite(idx))
+        idx_valid = np.where(valid)
+        idx_invalid = np.where(~valid)
+
+        coords[idx_valid] = (
+            frac[idx_valid] * self.time_delta[idx_valid] + self.edges_min[idx_valid]
+        ).jd
+        coords = coords * self.unit + self.reference_time
+        coords[idx_invalid] = Time(INVALID_VALUE.time, scale=self.reference_time.scale)
+        return coords.reshape(shape)
 
     def coord_to_pix(self, coord, **kwargs):
         """Transform from time to coordinate to pixel position.
@@ -2759,6 +2812,39 @@ class TimeMapAxis:
         )
 
     @classmethod
+    def from_gti_bounds(cls, gti, t_delta, name="time"):
+        """Create a time axis from an input GTI.
+
+        The unit for the axis is taken from the t_delta quantity.
+
+        Parameters
+        ----------
+        gti : `GTI`
+            GTI table
+        t_delta : `~astropy.units.Quantity`
+            Time binning
+        name : str
+            Axis name
+
+        Returns
+        -------
+        axis : `TimeMapAxis`
+            Time map axis.
+
+        """
+        time_min = gti.time_start[0]
+        time_max = gti.time_stop[-1]
+
+        nbin = int(((time_max - time_min) / t_delta).to(""))
+        return TimeMapAxis.from_time_bounds(
+            time_min=time_min,
+            time_max=time_max,
+            nbin=nbin,
+            name=name,
+            unit=t_delta.unit,
+        )
+
+    @classmethod
     def from_time_bounds(cls, time_min, time_max, nbin, unit="d", name="time"):
         """Create linearly spaced time axis from bounds
 
@@ -2826,6 +2912,8 @@ class LabelMapAxis:
         Name of the axis.
 
     """
+
+    append = deprecated_attribute("append", "1.1", alternative="concatenate")
 
     node_type = "label"
 
@@ -3146,4 +3234,67 @@ class LabelMapAxis:
         return self.__class__(
             labels=self._labels[idx],
             name=self.name,
+        )
+
+    @classmethod
+    def from_stack(cls, axes):
+        """Create a label map axis by merging a list of axis.
+
+        Parameter
+        ---------
+        axes : list of `LabelMapAxis`
+            A list of map axis to be merged.
+
+        Returns
+        -------
+        axis : `LabelMapAxis`
+            Merged axis.
+        """
+
+        axis_stacked = axes[0]
+
+        for ax in axes[1:]:
+            axis_stacked = axis_stacked.concatenate(ax)
+
+        return axis_stacked
+
+    def concatenate(self, axis):
+        """Concatenate another `LabelMapAxis` to this `LabelMapAxis` into a new `LabelMapAxis` object.
+
+        Names must agree between the axes. labels must be unique.
+
+        Parameters
+        ----------
+        axis : `LabelMapAxis`
+            Axis to concatenate with.
+
+        Returns
+        -------
+        axis : `LabelMapAxis`
+            Concatenation of the two axis.
+        """
+        if not isinstance(axis, LabelMapAxis):
+            raise TypeError(
+                f"axis must be an instance of LabelMapAxis, got {axis.__class__.__name__} instead."
+            )
+
+        if self.name != axis.name:
+            raise ValueError(f"Names must agree, got {self.name} and {axis.name} ")
+
+        merged_labels = np.append(self.center, axis.center)
+
+        return LabelMapAxis(merged_labels, self.name)
+
+    def squash(self):
+        """Create a new axis object by squashing the axis into one bin.
+
+        The label of the new axis is given as "first-label...last-label".
+
+        Returns
+        -------
+        axis : `~MapAxis`
+            Sliced axis object.
+        """
+        return LabelMapAxis(
+            labels=[self.center[0] + "..." + self.center[-1]], name=self._name
         )

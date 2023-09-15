@@ -437,26 +437,34 @@ def test_model_plot_sed_type():
     with mpl_plot_check():
         ax1 = pwl.plot((1 * u.TeV, 100 * u.TeV), sed_type="dnde")
         ax2 = pwl.plot_error((1 * u.TeV, 100 * u.TeV), sed_type="dnde")
-        assert ax1.axes.axes.get_ylabel() == "dnde [1 / (cm2 s TeV)]"
-        assert ax2.axes.axes.get_ylabel() == "dnde [1 / (cm2 s TeV)]"
+        assert ax1.yaxis.units == u.Unit("1 / (s cm2 TeV)")
+        assert ax1.axes.axes.get_ylabel().split()[0] == "dnde"
+        assert ax2.yaxis.units == u.Unit("1 / (s cm2 TeV)")
+        assert ax2.axes.axes.get_ylabel().split()[0] == "dnde"
 
     with mpl_plot_check():
         ax1 = pwl.plot((1 * u.TeV, 100 * u.TeV), sed_type="e2dnde")
         ax2 = pwl.plot_error((1 * u.TeV, 100 * u.TeV), sed_type="e2dnde")
-        assert ax1.axes.axes.get_ylabel() == "e2dnde [erg / (cm2 s)]"
-        assert ax2.axes.axes.get_ylabel() == "e2dnde [erg / (cm2 s)]"
+        assert ax1.yaxis.units == u.Unit("erg / (cm2 s)")
+        assert ax1.axes.axes.get_ylabel().split()[0] == "e2dnde"
+        assert ax2.yaxis.units == u.Unit("erg / (cm2 s)")
+        assert ax2.axes.axes.get_ylabel().split()[0] == "e2dnde"
 
     with mpl_plot_check():
         ax1 = pwl.plot((1 * u.TeV, 100 * u.TeV), sed_type="flux")
         ax2 = pwl.plot_error((1 * u.TeV, 100 * u.TeV), sed_type="flux")
-        assert ax1.axes.axes.get_ylabel() == "flux [1 / (cm2 s)]"
-        assert ax2.axes.axes.get_ylabel() == "flux [1 / (cm2 s)]"
+        assert ax1.yaxis.units == u.Unit("1 / (s cm2)")
+        assert ax1.axes.axes.get_ylabel().split()[0] == "flux"
+        assert ax2.yaxis.units == u.Unit("1 / (s cm2)")
+        assert ax2.axes.axes.get_ylabel().split()[0] == "flux"
 
     with mpl_plot_check():
         ax1 = pwl.plot((1 * u.TeV, 100 * u.TeV), sed_type="eflux")
         ax2 = pwl.plot_error((1 * u.TeV, 100 * u.TeV), sed_type="eflux")
-        assert ax1.axes.axes.get_ylabel() == "eflux [erg / (cm2 s)]"
-        assert ax2.axes.axes.get_ylabel() == "eflux [erg / (cm2 s)]"
+        assert ax1.yaxis.units == u.Unit("erg / (cm2 s)")
+        assert ax1.axes.axes.get_ylabel().split()[0] == "eflux"
+        assert ax2.yaxis.units == u.Unit("erg / (cm2 s)")
+        assert ax2.axes.axes.get_ylabel().split()[0] == "eflux"
 
 
 def test_to_from_dict():
@@ -606,14 +614,41 @@ def test_ecpl_integrate():
 
 def test_pwl_pivot_energy():
     pwl = PowerLawSpectralModel(amplitude="5.35510540e-11 cm-2 s-1 TeV-1")
+    assert_quantity_allclose(pwl.pivot_energy, np.nan * u.TeV, rtol=1e-5)
 
     pwl.covariance = [
-        [0.0318377**2, 6.56889442e-14, 0],
-        [6.56889442e-14, 0, 0],
+        [0.08**2, 6.56889e-14, 0],
+        [6.56889e-14, (5.5e-12) ** 2, 0],
         [0, 0, 0],
     ]
+    assert_quantity_allclose(pwl.pivot_energy, 1.2112653 * u.TeV, rtol=1e-5)
 
-    assert_quantity_allclose(pwl.pivot_energy, 3.3540034240210987 * u.TeV)
+    ecpl = ExpCutoffPowerLawSpectralModel(
+        amplitude="5.35510540e-11 cm-2 s-1 TeV-1", lambda_=0.001 * (1 / u.TeV), index=2
+    )
+    ecpl.covariance = [
+        [0.08**2, 6.56889e-14, 0, 0, 0],
+        [6.56889e-14, (5.5e-12) ** 2, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+    ]
+    assert_quantity_allclose(pwl.pivot_energy, ecpl.pivot_energy, rtol=1e-5)
+
+
+def test_num_pivot_energy():
+    lp = LogParabolaSpectralModel(
+        amplitude="5.82442e-11 cm-2 s-1 GeV-1",
+        reference="17.337 GeV",
+        alpha="1.9134",
+        beta="0.2217",
+    )
+    lp.amplitude.error = "2.8804e-12 cm-2 s-1 GeV-1"
+    assert_quantity_allclose(lp.pivot_energy, np.nan * u.GeV, rtol=1e-5)
+
+    lp.alpha.error = "0.1126"
+    lp.beta.error = "0.0670"
+    assert_quantity_allclose(lp.pivot_energy, 17.337042 * u.GeV, rtol=1e-5)
 
 
 def test_template_spectral_model_evaluate_tiny():
@@ -1152,7 +1187,7 @@ def test_template_ND_EBL(tmpdir):
     template = TemplateNDSpectralModel(region_map)
     assert len(template.parameters) == 1
     assert_allclose(template.parameters["redshift"].value, 1.001, rtol=1e-3)
-    expected = [9.950501e-01, 4.953951e-01, 1.588062e-06]
+    expected = [1.132092e00, 4.967878e-01, 1.596544e-06]
     assert_allclose(template([1, 100, 1000] * u.GeV), expected, rtol=1e-3)
     template.parameters["redshift"].value = 0.1
     template.filename = str(tmpdir / "template_ND_ebl_franceschini.fits")
@@ -1162,3 +1197,9 @@ def test_template_ND_EBL(tmpdir):
     assert_allclose(template_new.map.data, region_map.data)
     assert len(template.parameters) == 1
     assert_allclose(template.parameters["redshift"].value, 0.1)
+
+
+def test_is_norm_spectral_models():
+    for test_model in TEST_MODELS:
+        m = test_model["model"]
+        assert np.any([p.is_norm for p in m.parameters])

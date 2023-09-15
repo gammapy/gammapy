@@ -12,11 +12,15 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
 )
+from gammapy.stats import compute_fvar
+from .map.core import FluxMaps
 
 __all__ = [
     "estimate_exposure_reco_energy",
     "find_peaks",
     "resample_energy_edges",
+    "compute_lightcurve_fvar",
+    "find_peaks_in_flux_map",
 ]
 
 
@@ -111,6 +115,83 @@ def find_peaks(image, threshold, min_distance=1):
     table["value"].format = ".5g"
 
     table.sort("value")
+    table.reverse()
+
+    return table
+
+
+def find_peaks_in_flux_map(maps, threshold, min_distance=1):
+    """Find local TS peaks for a given Map.
+
+    Utilises the find_peaks function to find various parameters from FluxMaps.
+
+    Parameters
+    ----------
+    maps : `~gammapy.estimators.map.FluxMaps`
+        Input flux map object
+    threshold : float or array-like
+        The TS data value or pixel-wise TS data values to be used for the
+        detection threshold.  A 2D ``threshold`` must have the same
+        shape as the map ``data``.
+    min_distance : int or `~astropy.units.Quantity`
+        Minimum distance between peaks. An integer value is interpreted
+        as pixels.
+
+    Returns
+    -------
+    output : `~astropy.table.Table`
+        Table with parameters of detected peaks
+    """
+    quantity_for_peaks = maps["sqrt_ts"]
+
+    if not isinstance(maps, FluxMaps):
+        raise TypeError(
+            f"find_peaks_in_flux_map expects FluxMaps input. Got {type(maps)} instead."
+        )
+
+    if not quantity_for_peaks.geom.is_flat:
+        raise ValueError(
+            "find_peaks_in_flux_map only supports flat Maps, with energy axis of length 1."
+        )
+
+    table = find_peaks(quantity_for_peaks, threshold, min_distance)
+
+    if len(table) == 0:
+        return Table()
+
+    x = np.array(table["x"])
+    y = np.array(table["y"])
+
+    table.remove_column("value")
+
+    for name in maps.available_quantities:
+        values = maps[name].quantity
+        peaks = values[0, y, x]
+        table[name] = peaks
+
+    flux_data = maps["flux"].quantity
+    table["flux"] = flux_data[0, y, x]
+    flux_err_data = maps["flux_err"].quantity
+    table["flux_err"] = flux_err_data[0, y, x]
+
+    for column in table.colnames:
+        if column.startswith(("flux", "flux_err")):
+            table[column].format = ".3e"
+        elif column.startswith(
+            (
+                "npred",
+                "npred_excess",
+                "counts",
+                "sqrt_ts",
+                "norm",
+                "ts",
+                "norm_err",
+                "stat",
+                "stat_null",
+            )
+        ):
+            table[column].format = ".5f"
+
     table.reverse()
 
     return table
@@ -226,3 +307,42 @@ def resample_energy_edges(dataset, conditions={}):
                 energy_edges.append(energy_min)
                 break
     return u.Quantity(energy_edges[::-1])
+
+
+def compute_lightcurve_fvar(lightcurve, flux_quantity="flux"):
+    r"""Compute the fractional excess variance of the input lightcurve.
+
+    Internally calls the `~gammapy.stats.compute_fvar` function
+
+
+    Parameters
+    ----------
+    lightcurve : '~gammapy.estimators.FluxPoints'
+        the lightcurve object
+    flux_quantity : str
+        flux quantity to use for calculation. Should be 'dnde', 'flux', 'e2dnde' or 'eflux'. Default is 'flux'.
+        Useful in case of custom lightcurves computed outside gammapy
+
+    Returns
+    -------
+    fvar : `~astropy.table.Table`
+        Table of fractional excess variance and associated error for each energy bin of the lightcurve.
+    """
+
+    flux = getattr(lightcurve, flux_quantity)
+    flux_err = getattr(lightcurve, flux_quantity + "_err")
+
+    time_id = flux.geom.axes.index_data("time")
+
+    fvar, fvar_err = compute_fvar(flux.data, flux_err.data, axis=time_id)
+
+    significance = fvar / fvar_err
+
+    energies = lightcurve.geom.axes["energy"].edges
+    table = Table(
+        [energies[:-1], energies[1:], fvar, fvar_err, significance],
+        names=("min_energy", "max_energy", "fvar", "fvar_err", "significance"),
+        meta=lightcurve.meta,
+    )
+
+    return table

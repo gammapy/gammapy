@@ -8,12 +8,12 @@ Introduction
 ------------
 
 `~gammapy.catalog` provides convenient access to common gamma-ray
-source catalogs. This module is mostly independent from the rest of
-Gammapy. Typically you use it to compare new analyses against catalog
-results, e.g. overplot the spectral model, or compare the source
+source catalogs. This module is mostly independent of the rest of
+Gammapy. Typically, you use it to compare new analyses against catalog
+results, e.g. overplot the spectral model, or compare the source
 position.
 
-Moreover as creating a source model and flux points for a given catalog
+Moreover, as creating a source model and flux points for a given catalog
 from the FITS table is tedious, `~gammapy.catalog` has this already
 implemented. So you can create initial source models for your analyses.
 This is very common for Fermi-LAT, to start with a catalog model. For
@@ -41,7 +41,7 @@ In this tutorial we will show examples using the following catalogs:
 
 All catalog and source classes work the same, as long as some
 information is available. E.g. trying to access a lightcurve from a
-catalog and source that doesn’t have that information will return
+catalog and source that does not have that information will return
 `None`.
 
 Further information is available at `~gammapy.catalog`.
@@ -255,7 +255,7 @@ print(catalog_3fhl_bright.table["Source_Name"])
 ######################################################################
 # Similarly we can select only sources within a region of interest. Here
 # for example we use the `position` property of the catalog object to
-# select sources whitin 5 degrees from “PKS 0008-222”:
+# select sources within 5 degrees from “PKS 0008-222”:
 #
 
 source = catalog_4fgl["PKS 0008-222"]
@@ -298,11 +298,11 @@ print(model.spatial_model)
 print(model.spectral_model)
 
 # %%
-plt.figure()
 energy_bounds = (100 * u.MeV, 100 * u.GeV)
 opts = dict(sed_type="e2dnde", yunits=u.Unit("TeV cm-2 s-1"))
 model.spectral_model.plot(energy_bounds, **opts)
 model.spectral_model.plot_error(energy_bounds, **opts)
+plt.show()
 
 
 ######################################################################
@@ -348,7 +348,7 @@ discarded_spatial = [
 # In addition to the source components the HGPS catalog include a large
 # scale diffuse component built by fitting a gaussian model in a sliding
 # window along the Galactic plane. Information on this model can be
-# accessed via the propoerties `~gammapy.catalog.SourceCatalogHGPS.table_large_scale_component` and
+# accessed via the properties `~gammapy.catalog.SourceCatalogHGPS.table_large_scale_component` and
 # `~gammapy.catalog.SourceCatalogHGPS.large_scale_component` of `~gammapy.catalog.SourceCatalogHGPS`.
 #
 
@@ -376,8 +376,8 @@ print(flux_points)
 display(flux_points.to_table(sed_type="flux"))
 
 # %%
-plt.figure()
 flux_points.plot(sed_type="e2dnde")
+plt.show()
 
 
 ######################################################################
@@ -397,8 +397,8 @@ print(lightcurve)
 display(lightcurve.to_table(format="lightcurve", sed_type="flux"))
 
 # %%
-plt.figure()
 lightcurve.plot()
+plt.show()
 
 
 ######################################################################
@@ -422,6 +422,3 @@ help(source.info)
 
 # %%
 print(source.info("associations"))
-
-# %%
-plt.show()

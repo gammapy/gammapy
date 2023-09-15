@@ -35,6 +35,12 @@ class TestEDispKernel:
 
         assert_equal(edisp.pdf_matrix, expected)
 
+        # Test with different energy units
+        energy_axis = MapAxis.from_energy_edges([2000, 4000, 6000] * u.GeV)
+        edisp = EDispKernel.from_diagonal_response(energy_axis_true, energy_axis)
+        assert edisp.pdf_matrix.shape == (4, 2)
+        assert_allclose(edisp.pdf_matrix, expected, atol=1e-5)
+
         # Test square matrix
         edisp = EDispKernel.from_diagonal_response(energy_axis_true)
         assert_allclose(edisp.axes["energy"].edges, edisp.axes["energy_true"].edges)

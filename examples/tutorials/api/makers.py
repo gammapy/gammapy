@@ -71,7 +71,7 @@ print(dataset_empty)
 
 ######################################################################
 # It is possible to compute the instrument response functions with
-# different spatial and energy binnings as compared to the counts and
+# different spatial and energy bins as compared to the counts and
 # background maps. For example, one can specify a true energy axis which
 # defines the energy binning of the IRFs:
 #
@@ -83,7 +83,7 @@ dataset_empty = MapDataset.create(geom=geom, energy_axis_true=energy_axis_true)
 
 
 ######################################################################
-# For the detail of the other options availables, you can always call the
+# For the detail of the other options available, you can always call the
 # help:
 #
 
@@ -103,8 +103,9 @@ obs = data_store.get_observations([23592])[0]
 maker = MapDatasetMaker()
 dataset = maker.run(dataset_empty, obs)
 print(dataset)
-plt.figure()
+
 dataset.counts.sum_over_axes().plot(stretch="sqrt", add_cbar=True)
+plt.show()
 
 
 ######################################################################
@@ -113,7 +114,7 @@ dataset.counts.sum_over_axes().plot(stretch="sqrt", add_cbar=True)
 # The `~gammapy.makers.MapDatasetMaker` has a `selection` parameter, in case some of
 # the maps should not be computed. There is also a
 # `background_oversampling` parameter that defines the oversampling
-# factor in energy used to compute the bakcground (default is None).
+# factor in energy used to compute the background (default is None).
 #
 # Safe data range handling
 # ------------------------
@@ -156,8 +157,9 @@ safe_mask_maker = SafeMaskMaker(
 dataset = maker.run(dataset_empty, obs)
 dataset = safe_mask_maker.run(dataset, obs)
 print(dataset.mask_safe)
-plt.figure()
+
 dataset.mask_safe.sum_over_axes().plot()
+plt.show()
 
 
 ######################################################################
@@ -210,7 +212,7 @@ dataset = fov_bkg_maker.run(dataset)
 # If the background model does not reproduce well the morphology, a
 # classical approach consists in applying local corrections by smoothing
 # the data with a ring kernel. This allows to build a set of OFF counts
-# taking into account the inperfect knowledge of the background. This is
+# taking into account the imperfect knowledge of the background. This is
 # implemented in the `~gammapy.makers.RingBackgroundMaker` which
 # transforms the Dataset in a `~gammapy.datasets.MapDatasetOnOff`. This technique is
 # mostly used for imaging, and should not be applied for 3D modeling and
@@ -239,7 +241,7 @@ dataset = fov_bkg_maker.run(dataset)
 #
 # The data reduction steps can be combined in a single loop to run a full
 # data reduction chain. For this the `MapDatasetMaker` is run first and
-# the output dataset is the passed on to the next maker step. Finally the
+# the output dataset is the passed on to the next maker step. Finally, the
 # dataset per observation is stacked into a larger map.
 #
 
@@ -280,11 +282,11 @@ print(stacked)
 # to zero, then data is added to the larger map dataset. To stack multiple
 # observations, the larger dataset must be created first.
 #
-# The data reduction loop shown above can be done throught the
+# The data reduction loop shown above can be done through the
 # `~gammapy.makers.DatasetsMaker` class that take as argument a list of makers. **Note
 # that the order of the makers list is important as it determines their
 # execution order.** Moreover the `stack_datasets` option offers the
-# possibily to stack or not the output datasets, and the `n_jobs` option
+# possibility to stack or not the output datasets, and the `n_jobs` option
 # allow to use multiple processes on run.
 #
 
@@ -299,7 +301,7 @@ print(datasets)
 # Spectrum dataset
 # ----------------
 #
-# The spectrum datasets represent 1D spectra along an energy axis whitin a
+# The spectrum datasets represent 1D spectra along an energy axis within a
 # given on region. The `~gammapy.datasets.SpectrumDataset` contains a counts spectrum, and
 # a background model. The `~gammapy.datasets.SpectrumDatasetOnOff` contains ON and OFF
 # count spectra, background is implicitly modeled via the OFF counts
@@ -307,7 +309,7 @@ print(datasets)
 #
 # The `~gammapy.datasets.SpectrumDatasetMaker` make spectrum dataset for a single
 # observation. In that case the irfs and background are computed at a
-# single fixed offset, which is recommend only for point-sources.
+# single fixed offset, which is recommended only for point-sources.
 #
 # Here is an example of data reduction loop to create
 # `~gammapy.datasets.SpectrumDatasetOnOff` datasets:

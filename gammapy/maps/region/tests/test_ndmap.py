@@ -245,7 +245,12 @@ def test_region_nd_map_fill_events(region_map):
     region_map = Map.from_geom(region_map.geom)
     region_map.fill_events(events)
 
+    weights = np.linspace(0, 1, len(events.time))
+    region_map2 = Map.from_geom(region_map.geom)
+    region_map2.fill_events(events, weights=weights)
+
     assert_allclose(region_map.data.sum(), 665)
+    assert_allclose(region_map2.data.sum(), 328.33487)
 
 
 @requires_data()
@@ -255,6 +260,11 @@ def test_region_nd_map_fill_events_point_sky_region(point_region_map):
     region_map = Map.from_geom(point_region_map.geom)
     region_map.fill_events(events)
 
+    assert_allclose(region_map.data.sum(), 0)
+
+    weights = np.linspace(0, 1, len(events.time))
+    region_map = Map.from_geom(point_region_map.geom)
+    region_map.fill_events(events, weights=weights)
     assert_allclose(region_map.data.sum(), 0)
 
 
