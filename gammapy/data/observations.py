@@ -2,6 +2,7 @@
 import collections.abc
 import copy
 import inspect
+import itertools
 import logging
 import warnings
 from itertools import zip_longest
@@ -621,7 +622,9 @@ class Observations(collections.abc.MutableSequence):
     """
 
     def __init__(self, observations=None):
-        self._observations = observations or []
+        self._observations = []
+        for obs in observations:
+            self.append(obs)
 
     def __getitem__(self, key):
         return self._observations[self.index(key)]
@@ -631,12 +634,20 @@ class Observations(collections.abc.MutableSequence):
 
     def __setitem__(self, key, obs):
         if isinstance(obs, Observation):
+            if obs in self:
+                log.warning(
+                    f"Observation with obs_id {obs.obs_id} already belongs to Observations."
+                )
             self._observations[self.index(key)] = obs
         else:
             raise TypeError(f"Invalid type: {type(obs)!r}")
 
     def insert(self, idx, obs):
         if isinstance(obs, Observation):
+            if obs in self:
+                log.warning(
+                    f"Observation with obs_id {obs.obs_id} already belongs to Observations."
+                )
             self._observations.insert(idx, obs)
         else:
             raise TypeError(f"Invalid type: {type(obs)!r}")
@@ -695,7 +706,7 @@ class Observations(collections.abc.MutableSequence):
         return self.ids
 
     def group_by_label(self, labels):
-        """Split obsevations in multiple groups of observations
+        """Split observations in multiple groups of observations
 
         Parameters
         ----------
@@ -714,6 +725,24 @@ class Observations(collections.abc.MutableSequence):
             )
             obs_groups[f"group_{label}"] = observations
         return obs_groups
+
+    @classmethod
+    def from_stack(cls, observations_list):
+        # TODO : Do more check when stacking observations when we have metadata.
+        """Create a new `Observations` instance by concatenating a list of `Observations` objects.
+
+        Parameters
+        ----------
+        observations_list : list of `~gammapy.data.Observations`
+            The list of `Observations` to stack.
+
+        Returns
+        -------
+        observations : `~gammapy.data.Observations`
+            The `Observations` object resulting from stacking all the `Observations` in `observation_list`.
+        """
+        obs = itertools.chain(*observations_list)
+        return cls(list(obs))
 
 
 class ObservationChecker(Checker):

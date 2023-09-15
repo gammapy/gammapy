@@ -20,6 +20,7 @@ from .spatial import (
     Shell2SpatialModel,
     ShellSpatialModel,
     SpatialModel,
+    TemplateNDSpatialModel,
     TemplateSpatialModel,
 )
 from .spectral import (
@@ -122,6 +123,7 @@ __all__ = [
     "TemplatePhaseCurveTemporalModel",
     "TemplateSpatialModel",
     "TemplateSpectralModel",
+    "TemplateNDSpatialModel",
     "TemplateNDSpectralModel",
     "TemplateNPredModel",
     "TEMPORAL_MODEL_REGISTRY",
@@ -133,6 +135,7 @@ SPATIAL_MODEL_REGISTRY = Registry(
     [
         ConstantSpatialModel,
         TemplateSpatialModel,
+        TemplateNDSpatialModel,
         DiskSpatialModel,
         GaussianSpatialModel,
         GeneralizedGaussianSpatialModel,

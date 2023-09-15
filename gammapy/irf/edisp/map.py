@@ -17,7 +17,7 @@ def get_overlap_fraction(energy_axis, energy_axis_true):
 
     xmin = np.fmin(a_max, b_max)
     xmax = np.fmax(a_min, b_min)
-    return np.clip(xmin - xmax, 0, np.inf) / (b_max - b_min)
+    return (np.clip(xmin - xmax, 0, np.inf) / (b_max - b_min)).to("")
 
 
 class EDispMap(IRFMap):

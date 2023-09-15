@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 from gammapy.utils.deprecation import deprecated_attribute
 from gammapy.utils.interpolation import interpolation_scale
 from gammapy.utils.time import time_ref_from_dict, time_ref_to_dict
-from .utils import INVALID_INDEX, edges_from_lo_hi
+from .utils import INVALID_INDEX, INVALID_VALUE, edges_from_lo_hi
 
 __all__ = ["MapAxes", "MapAxis", "TimeMapAxis", "LabelMapAxis"]
 
@@ -493,7 +493,7 @@ class MapAxis:
         if interp == "lin":
             nodes = np.linspace(lo_bnd, hi_bnd, nnode)
         elif interp == "log":
-            nodes = np.exp(np.linspace(np.log(lo_bnd), np.log(hi_bnd), nnode))
+            nodes = np.geomspace(lo_bnd, hi_bnd, nnode)
         elif interp == "sqrt":
             nodes = np.linspace(lo_bnd**0.5, hi_bnd**0.5, nnode) ** 2.0
         else:
@@ -546,6 +546,7 @@ class MapAxis:
         per_decade=False,
         name=None,
         node_type="edges",
+        strict_bounds=True,
     ):
         """Make an energy axis.
 
@@ -564,6 +565,12 @@ class MapAxis:
             Whether `nbin` is given per decade.
         name : str
             Name of the energy axis, either 'energy' or 'energy_true'
+        strict_bounds : bool
+            Whether to strictly end the binning at 'energy_max' when
+            `per_decade=True`. If True, the number of bins per decade
+            might be slightly increased to match the bounds. If False,
+            'energy_max' might be reduced so the number of bins per
+            decade is exactly the given input.
 
         Returns
         -------
@@ -583,7 +590,15 @@ class MapAxis:
             )
 
         if per_decade:
-            nbin = np.ceil(np.log10(energy_max / energy_min).value * nbin)
+            if strict_bounds:
+                nbin = np.ceil(np.log10(energy_max / energy_min).value * nbin)
+            else:
+                bin_per_decade = nbin
+                nbin = np.floor(
+                    np.log10(energy_max / energy_min).value * bin_per_decade
+                )
+                if np.log10(energy_max / energy_min).value % (1 / bin_per_decade) != 0:
+                    energy_max = energy_min * 10 ** (nbin / bin_per_decade)
 
         if name is None:
             name = "energy"
@@ -1011,7 +1026,7 @@ class MapAxis:
         Returns
         -------
         axis : `MapAxis`
-            Usampled map axis.
+            Unsampled map axis.
 
         """
         if self.node_type == "edges":
@@ -2494,6 +2509,35 @@ class TimeMapAxis:
         idx = np.asanyarray(np.argmax(mask, axis=-1))
         idx[~np.any(mask, axis=-1)] = INVALID_INDEX.int
         return idx
+
+    def pix_to_coord(self, pix):
+        """Transform from pixel position to time coordinate
+        Currently works only for linear interpolation scheme.
+
+        Parameters
+        ----------
+        pix : `~numpy.ndarray`
+            Array of pixel positions.
+
+        Returns
+        -------
+        coord : `~astropy.time.Time`
+            Array of axis coordinate values.
+        """
+        shape = np.shape(pix)
+        pix = np.atleast_1d(pix).ravel()
+        coords = np.zeros(len(pix))
+        frac, idx = np.modf(pix)
+        valid = np.logical_and(idx >= 0, idx < self.nbin, np.isfinite(idx))
+        idx_valid = np.where(valid)
+        idx_invalid = np.where(~valid)
+
+        coords[idx_valid] = (
+            frac[idx_valid] * self.time_delta[idx_valid] + self.edges_min[idx_valid]
+        ).jd
+        coords = coords * self.unit + self.reference_time
+        coords[idx_invalid] = Time(INVALID_VALUE.time, scale=self.reference_time.scale)
+        return coords.reshape(shape)
 
     def coord_to_pix(self, coord, **kwargs):
         """Transform from time to coordinate to pixel position.

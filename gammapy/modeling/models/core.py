@@ -362,7 +362,7 @@ class DatasetModels(collections.abc.Sequence):
 
         self._covariance = Covariance(self.parameters)
 
-        # Set separataly because this trigggers the update mechanism on the sub-models
+        # Set separately because this triggers the update mechanism on the sub-models
         if covariance_data is not None:
             self.covariance = covariance_data
 

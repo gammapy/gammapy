@@ -147,7 +147,7 @@ class TemporalModel(ModelBase):
         kwargs.setdefault("marker", "None")
         kwargs.setdefault("ls", "-")
         kwargs.setdefault("xerr", None)
-        m.quantity = self(time_axis.time_mid)
+        m.quantity = self(time_axis.time_mid).to(u.one)
         ax = m.plot(ax=ax, **kwargs)
         ax.set_ylabel("Norm / A.U.")
         return ax
@@ -231,7 +231,7 @@ class ConstantTemporalModel(TemporalModel):
     @staticmethod
     def evaluate(time):
         """Evaluate at given times."""
-        return np.ones(time.shape)
+        return np.ones(time.shape) * u.one
 
     def integral(self, t_min, t_max):
         """Evaluate the integrated flux within the given time intervals
@@ -1025,7 +1025,7 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
 
     def evaluate(self, time, t_ref, phi_ref, f0, f1, f2):
         phase, _ = self._time_to_phase(time, t_ref, phi_ref, f0, f1, f2)
-        return self._interpolator(phase)
+        return self._interpolator(phase) * u.one
 
     def integral(self, t_min, t_max):
         """Evaluate the integrated flux within the given time intervals
@@ -1151,7 +1151,7 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         )
         period = 1 / frequency
 
-        # Take minimum time delta between user input and the period divied by the number of raows in the model table
+        # Take minimum time delta between user input and the period divided by the number of rows in the model table
         # this assumes that phase values are evenly spaced.
         t_delta = np.minimum(period / len(self.table), t_delta)
 
