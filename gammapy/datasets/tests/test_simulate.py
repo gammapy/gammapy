@@ -250,11 +250,6 @@ def test_sample_coord_time_energy(dataset, energy_dependent_temporal_sky_model):
         rtol=1e-6,
     )
 
-    dataset.models[0].temporal_model.map.data *= 1e3
-    evaluator = dataset.evaluators["test-source"]
-    with pytest.raises(TypeError):
-        sampler._sample_coord_time_energy(dataset, evaluator.model)
-
 
 @requires_data()
 def test_fail_sample_coord_time_energy(
