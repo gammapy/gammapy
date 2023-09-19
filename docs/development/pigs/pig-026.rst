@@ -31,10 +31,66 @@ Use cases
 In the past priors were a regularly requested feature or the solution to a problem.
 See the following issues and PRs of Gammapy:
 
-- Add sigma v estimator functionality for dark matter use case `#2075`_
-- Background systematics as a nuisance parameter `#3955`_
-- Support unfolding methods for spectral flux points `#4122`_
-- Add PiecewiseNormSpatialModel `#4208`_
+Case 1: Background systematics as a nuisance parameter `#3955`_
+--------------
+The goal is to fit energy-dependent systematics in the FoVBackground with nuisance parameters and set priors on the two model parameters ``norm`` and ``tilt``:
+
+
+.. code:: python 
+  
+  from gammapy.modeling.model import GaussianPrior, PowerLawNormSpectralModel
+
+  bkg_model = FoVBackgroundModel(spectral_model = PowerLawNormSpectralModel(),
+                          dataset_name = dataset.name)
+  tilt_prior =  GaussianPrior(mu = "0", sigma = "0.05")
+  norm_prior =  GaussianPrior(mu = "1", sigma = "0.1")
+
+  bkg_model.set_prior([bkg_model.parameters['tilt'],bkg_model.parameters['norm']], [tilt_prior, norm_prior])
+
+
+A preliminary version was set up like this and tests on simulated datasets were successful. Note that this setup is quite simple and it can be developed more advanced based on the same principle. 
+
+Case 2: Favoring postivive values for flux amplitudes
+--------------
+
+A step-like prior function can be used to favour positive values for physical properties like the flux amplitude. By setting a prior one avoids defining hard boundary conditions with the ``min`` attribute of the to-be-fitted parameter. 
+The prior is set to ``value`` if the parameter value is between ``xmin`` and ``xmax`` and 0 if not.
+
+.. code:: python 
+
+   from gammapy.modeling.models import PowerLawSpectraModel, StepPrior
+
+   pwl = PowerLawSpectraModel()
+   prior = StepPrior(xmin = "-inf", xmax = "0",  value = "1")
+   pwl.set_prior([pwl.parameters['amplitude']], [prior])
+  
+
+
+
+Case 3: Support unfolding methods for spectral flux points `#4122`_
+--------------
+
+The proposed prior class will allow the probability to unfold spectral flux points with Tikonov regularisation. The Tikonov matrix can be defined and set as the covariance matrix in the class ``CovarianceGaussianPrior``. The weight of the ``PriorFitStatistic`` can be interpreted as the regularisation strength tau. However, this requires a more advanced setup since this multi-dimensional prior is set on multiple parameters simultaneously. The goal is to use the proposed prior class as a starting point and develop it into multidimensional use cases in the near future. 
+A suggested implementation example is shown below. Here the prior is set on the model instead of the single parameters.
+
+.. code:: python 
+
+  import numpy as np
+  from astropy import units as u
+  from gammapy.modeling.model import PiecewiseNormSpectralModel, MultivariateGaussianPrior, PowerLawSpectralModel
+
+  n_points = 10
+    
+  energy = np.geomspace(1, 10, n_points) * u.TeV
+  norm =  PiecewiseNormSpectralModel(energy=energy)
+  
+  prior = MultivariateGaussianPrior.from_covariance_matrix(means=np.ones(10), covariance_type="diagonal")
+  prior.weight = 1.1 
+  norm.prior = prior
+  
+  spectral_model = PowerLawSpectraModel() * norm
+
+Additional use case:  Add sigma v estimator functionality for dark matter use case `#2075`_
 
 Implementation
 ==============
@@ -113,7 +169,6 @@ Exemplary additional prior subclasses:
         @staticmethod
         def evaluate(value, uni):
             return uni
-
 
             
 The priors can be set on a ```Parameter``` as ``.prior`` and get evaluated within:
@@ -215,43 +270,6 @@ The PIG implementation will be piece-wise within individual issues in the follow
 2. ``PriorParameter`` and ``PriorParameters`` (See `#4620`_)
 3. ``.prior`` attribute in the ``Parameter``, ``Parameters`` and ``Model`` classes
 4.  Evaluation of the prior in the ``Datasets`` class
-
-
-
-Addressing Use Cases
-======================
-
-Case 1: Background systematics as a nuisance parameter `#3955`_
---------------
-The goal is to fit energy-dependent systematics in the FoVBackground with nuisance parameters and set priors on the two model parameters ``norm`` and ``tilt``:
-
-
-.. code:: python 
-  
-  bkg_model = FoVBackgroundModel(spectral_model = PowerLawNormSpectralModel(),
-                          dataset_name = dataset.name)
-  tilt_prior =  GaussianPrior(mu = "0", sigma = "0.05")
-  norm_prior =  GaussianPrior(mu = "1", sigma = "0.1")
-
-  bkg_model.set_prior([bkg_model.parameters['tilt'],bkg_model.parameters['norm']], [tilt_prior, norm_prior])
-
-
-A preliminary version was set up like this and tests on simulated datasets were successful. Note that this setup is quite simple and it can be developed more advanced based on the same principle. 
-
-
-Case 2: Favoring postivive values for flux amplitudes
---------------
-
-A step-like prior function can be used to favour positive values for physical properties like the flux amplitude. By setting a prior one avoids defining hard boundary conditions with the ``min`` attribute of the to-be-fitted parameter. 
-
-
-Case 3: Support unfolding methods for spectral flux points `#4122`_
---------------
-
-The proposed prior class will allow the probability to unfold spectral flux points with Tikonov regularisation. The Tikonov matrix can be defined and set as the covariance matrix in the class ``CovarianceGaussianPrior``. The weight of the ``PriorFitStatistic`` can be interpreted as the regularisation strength tau. However, this requires a more advanced setup since this multi-dimensional prior is set on multiple parameters simultaneously. The goal is to use the proposed prior class as a starting point and develop it into multidimensional use cases in the near future. 
-
-
-
 
 
 
