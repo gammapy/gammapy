@@ -3,6 +3,7 @@
 import logging
 import operator
 import os
+import warnings
 from pathlib import Path
 import numpy as np
 import scipy.optimize
@@ -16,6 +17,7 @@ import matplotlib.pyplot as plt
 from gammapy.maps import MapAxis, RegionNDMap
 from gammapy.maps.axes import UNIT_STRING_FORMAT
 from gammapy.modeling import Parameter, Parameters
+from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.utils.integrate import trapz_loglog
 from gammapy.utils.interpolation import (
     ScaledRegularGridInterpolator,
@@ -1326,11 +1328,34 @@ class ExpCutoffPowerLawNormSpectralModel(SpectralModel):
     """
     tag = ["ExpCutoffPowerLawNormSpectralModel", "ecpl-norm"]
 
-    index = Parameter("index", 0)
+    index = Parameter("index", 1.5)
     norm = Parameter("norm", 1, unit="", interp="log", is_norm=True)
     reference = Parameter("reference", "1 TeV", frozen=True)
     lambda_ = Parameter("lambda_", "0.1 TeV-1")
     alpha = Parameter("alpha", "1.0", frozen=True)
+
+    def __init__(
+        self, index=None, norm=None, reference=None, lambda_=None, alpha=None, **kwargs
+    ):
+
+        if not index:
+            warnings.warn(
+                "The default index value changed from 1.5 to 0 since v1.0.1",
+                GammapyDeprecationWarning,
+            )
+
+        if norm is not None:
+            kwargs.update({"norm": norm})
+        if index is not None:
+            kwargs.update({"index": index})
+        if reference is not None:
+            kwargs.update({"reference": reference})
+        if lambda_ is not None:
+            kwargs.update({"lambda_": lambda_})
+        if alpha is not None:
+            kwargs.update({"alpha": alpha})
+
+        super().__init__(**kwargs)
 
     @staticmethod
     def evaluate(energy, index, norm, reference, lambda_, alpha):
@@ -1594,15 +1619,42 @@ class LogParabolaNormSpectralModel(SpectralModel):
     beta : `~astropy.units.Quantity`
         :math:`\beta`
 
-    See Also
+    See also
     --------
     LogParabolaSpectralModel
     """
+
     tag = ["LogParabolaNormSpectralModel", "lp-norm"]
+
     norm = Parameter("norm", 1, unit="", interp="log", is_norm=True)
     reference = Parameter("reference", "10 TeV", frozen=True)
     alpha = Parameter("alpha", 0)
     beta = Parameter("beta", 0)
+
+    def __init__(self, norm=None, reference=None, alpha=None, beta=None, **kwargs):
+
+        if not alpha:
+            warnings.warn(
+                "The default alpha value changed from 2 to 0 since v1.0.1",
+                GammapyDeprecationWarning,
+            )
+
+        if not beta:
+            warnings.warn(
+                "The default beta value changed from 1 to 0 since v1.0.1",
+                GammapyDeprecationWarning,
+            )
+
+        if norm is not None:
+            kwargs.update({"norm": norm})
+        if beta is not None:
+            kwargs.update({"beta": beta})
+        if reference is not None:
+            kwargs.update({"reference": reference})
+        if alpha is not None:
+            kwargs.update({"alpha": alpha})
+
+        super().__init__(**kwargs)
 
     @classmethod
     def from_log10(cls, norm, reference, alpha, beta):
