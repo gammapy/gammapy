@@ -503,10 +503,10 @@ class WcsNDMap(WcsMap):
         _, ymin = self.geom.to_image().coord_to_pix({"lon": 0, "lat": -90})
         _, ymax = self.geom.to_image().coord_to_pix({"lon": 0, "lat": 90})
 
-        ax.set_xlim(xmin, xmax)
-        ax.set_ylim(ymin, ymax)
+        ax.set_xlim(xmin[0], xmax[0])
+        ax.set_ylim(ymin[0], ymax[0])
 
-        ax.text(0, ymax, self.geom.frame + " coords")
+        ax.text(0, ymax[0], self.geom.frame + " coords")
 
         # Grid and ticks
         glon_spacing, glat_spacing = 45, 15
