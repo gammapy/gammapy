@@ -181,7 +181,7 @@ class WcsGeom(Geom):
         slices = overlap_slices(
             large_array_shape=geom.data_shape[-2:],
             small_array_shape=self.data_shape[-2:],
-            position=position[::-1],
+            position=[_[0] for _ in position[::-1]],
             mode=mode,
         )
         return {
