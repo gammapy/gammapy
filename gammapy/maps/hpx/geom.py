@@ -1176,9 +1176,11 @@ class HpxGeom(Geom):
         hpx = self.to_image().to_nside(nside=nside_tiles)
         wcs_tiles = []
 
-        for pix in range(int(hpx.npix)):
-            skydir = hpx.pix_to_coord([pix])
-            vtx = hp.boundaries(nside=hpx.nside, pix=pix, nest=hpx.nest, step=1)
+        for pix in range(int(hpx.npix[0])):
+            skydir = np.squeeze(hpx.pix_to_coord([pix]))
+            vtx = hp.boundaries(
+                nside=np.squeeze(hpx.nside), pix=pix, nest=hpx.nest, step=1
+            )
 
             lon, lat = hp.vec2ang(vtx.T, lonlat=True)
             boundaries = SkyCoord(lon * u.deg, lat * u.deg, frame=hpx.frame)
