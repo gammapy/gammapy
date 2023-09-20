@@ -971,7 +971,9 @@ class HpxNDMap(HpxMap):
 
         wcs_lonlat = wcs.center_coord[:2]
         idx = self.geom.get_idx()
-        vtx = hp.boundaries(self.geom.nside, idx[0], nest=self.geom.nest, step=step)
+        vtx = hp.boundaries(
+            np.squeeze(self.geom.nside), idx[0], nest=self.geom.nest, step=step
+        )
         theta, phi = hp.vec2ang(np.rollaxis(vtx, 2))
         theta = theta.reshape((4 * step, -1)).T
         phi = phi.reshape((4 * step, -1)).T
