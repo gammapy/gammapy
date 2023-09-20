@@ -94,11 +94,12 @@ class HpxNDMap(HpxMap):
 
         hpx_ref = HpxGeom(nside=nside_superpix, nest=nest, frame=geom_wcs.frame)
 
-        idx = np.arange(map_hpx.geom.to_image().npix)
+        idx = np.arange(np.squeeze(map_hpx.geom.to_image().npix))
         indices = get_superpixels(idx, map_hpx.geom.nside, nside_superpix, nest=nest)
 
         for wcs_tile in wcs_tiles:
-            hpx_idx = int(hpx_ref.coord_to_idx(wcs_tile.geom.center_skydir)[0])
+            hpx_idx = hpx_ref.coord_to_idx(wcs_tile.geom.center_skydir)[0]
+            hpx_idx = int(np.squeeze(hpx_idx))
             mask = indices == hpx_idx
             map_hpx.data[mask] = wcs_tile.interp_by_coord(coords[mask])
 
