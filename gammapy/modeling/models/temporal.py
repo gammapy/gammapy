@@ -180,7 +180,7 @@ class TemporalModel(ModelBase):
         random_state = get_random_state(random_state)
 
         ontime = u.Quantity((t_max - t_min).sec, t_delta.unit)
-        n_step = (ontime / t_delta).to_value("")
+        n_step = np.squeeze((ontime / t_delta).to_value(""))
         t_step = ontime / n_step
 
         indices = np.arange(n_step + 1)
