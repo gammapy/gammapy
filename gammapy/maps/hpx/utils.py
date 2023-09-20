@@ -328,20 +328,25 @@ class HpxToWcsMapping:
             Mapping
 
         """
+        if not hpx.is_regular:
+            raise NotImplementedError(
+                "Hpx to Wcs conversion not supported for non-regular geom."
+            )
+
         import healpy as hp
 
         npix = wcs.npix
 
         # FIXME: Calculation of WCS pixel centers should be moved into a
         # method of WcsGeom
-        pix_crds = np.dstack(np.meshgrid(np.arange(npix[0]), np.arange(npix[1])))
+        pix_crds = np.dstack(np.meshgrid(np.arange(npix[0][0]), np.arange(npix[1][0])))
         pix_crds = pix_crds.swapaxes(0, 1).reshape((-1, 2))
         sky_crds = wcs.wcs.wcs_pix2world(pix_crds, 0)
         sky_crds *= np.radians(1.0)
         sky_crds[0:, 1] = (np.pi / 2) - sky_crds[0:, 1]
 
         mask = ~np.any(np.isnan(sky_crds), axis=1)
-        ipix = -1 * np.ones((len(hpx.nside), int(npix[0] * npix[1])), int)
+        ipix = -1 * np.ones((len(hpx.nside), int(npix[0][0] * npix[1][0])), int)
         m = mask[None, :] * np.ones_like(ipix, dtype=bool)
 
         ipix[m] = hp.ang2pix(
