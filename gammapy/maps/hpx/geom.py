@@ -1275,7 +1275,7 @@ class HpxGeom(Geom):
                 if idx is not None and idx_img != idx:
                     continue
 
-                npix = int(self._npix[idx_img])
+                npix = int(np.squeeze(self._npix[idx_img]))
                 if idx is None:
                     s_img = (slice(0, npix),) + idx_img
                 else:
