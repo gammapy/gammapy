@@ -344,7 +344,7 @@ class HpxNDMap(HpxMap):
         geom : `~HpxNDMap`
             Healpix map with new nside.
         """
-        factor = nside / self.geom.nside
+        factor = np.squeeze(nside / self.geom.nside)
 
         if factor > 1:
             return self.upsample(factor=int(factor), preserve_counts=preserve_counts)
