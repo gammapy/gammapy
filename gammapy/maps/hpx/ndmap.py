@@ -652,7 +652,7 @@ class HpxNDMap(HpxMap):
         """
         import healpy as hp
 
-        nside = self.geom.nside
+        nside = np.squeeze(self.geom.nside)
         lmax = int(3 * nside - 1)  # maximum l of the power spectrum
         nest = self.geom.nest
         allsky = self.geom.is_allsky
