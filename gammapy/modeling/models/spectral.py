@@ -1340,7 +1340,7 @@ class ExpCutoffPowerLawNormSpectralModel(SpectralModel):
 
         if index is None:
             warnings.warn(
-                "The default index value changed from 1.5 to 0 since v1.0.1",
+                "The default index value changed from 1.5 to 0 since v1.2",
                 GammapyDeprecationWarning,
             )
 
@@ -1635,13 +1635,13 @@ class LogParabolaNormSpectralModel(SpectralModel):
 
         if alpha is None:
             warnings.warn(
-                "The default alpha value changed from 2 to 0 since v1.0.1",
+                "The default alpha value changed from 2 to 0 since v1.2",
                 GammapyDeprecationWarning,
             )
 
         if beta is None:
             warnings.warn(
-                "The default beta value changed from 1 to 0 since v1.0.1",
+                "The default beta value changed from 1 to 0 since v1.2",
                 GammapyDeprecationWarning,
             )
 
