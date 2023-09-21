@@ -328,11 +328,6 @@ class HpxToWcsMapping:
             Mapping
 
         """
-        if not hpx.is_regular:
-            raise NotImplementedError(
-                "Hpx to Wcs conversion not supported for non-regular geom."
-            )
-
         import healpy as hp
 
         npix = wcs.npix

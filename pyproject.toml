@@ -33,4 +33,5 @@ filterwarnings = [
     "error::astropy.utils.exceptions.AstropyDeprecationWarning",
     "error::gammapy.utils.deprecation.GammapyDeprecationWarning",
     "error::matplotlib.MatplotlibDeprecationWarning",
+	"error::numpy.exceptions.VisibleDeprecationWarning",
 ]
