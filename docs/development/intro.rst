@@ -156,8 +156,8 @@ Get set up
     there instead.
 
 The first steps are basically identical to
-https://ctapipe.readthedocs.io/en/latest/developer-guide/getting-started.html (until step
-4, excluding 5) and
+https://ctapipe.readthedocs.io/en/latest/developer-guide/getting-started.html (until 
+section *Setting up the development environment*) and
 http://astropy.readthedocs.io/en/latest/development/workflow/get_devel_version.html
 (up to *Create your own private workspace*). The following is a quick summary of
 commands to set up an environment for Gammapy development:
