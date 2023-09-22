@@ -106,12 +106,12 @@ Make small pull requests
 
 So as we'll explain in more detail below, the contribution cycle to Gammapy is roughly:
 
-1. Get the latest development version (``master`` branch) of Gammapy
+1. Get the latest development version (``main`` branch) of Gammapy
 2. Make fixes, changes and additions locally
 3. Make a pull request
 4. Someone else reviews the pull request, you iterate, others can chime in
 5. Someone else signs off on or merges your pull request
-6. You update to the latest ``master`` branch
+6. You update to the latest ``main`` branch
 
 Then you're done, and can start using the new version, or start a new pull request
 with further developments. It is possible and common to work on things in parallel
@@ -150,14 +150,14 @@ Get set up
 .. warning::
 
     The rest of this page isn't written yet. It's almost identical to
-    https://cta-observatory.github.io/ctapipe/getting_started/index.html so for
+    https://ctapipe.readthedocs.io/en/latest/developer-guide/getting-started.html so for
     now, see there. Also, we shouldn't duplicate content from
-    https://docs.astropy.org/en/latest/#developer-documentation but link
+    https://docs.astropy.org/en/latest/development/index.html but link
     there instead.
 
 The first steps are basically identical to
-https://cta-observatory.github.io/ctapipe/getting_started/index.html (until step
-4, excluding 5) and
+https://ctapipe.readthedocs.io/en/latest/developer-guide/getting-started.html (until 
+section *Setting up the development environment*) and
 http://astropy.readthedocs.io/en/latest/development/workflow/get_devel_version.html
 (up to *Create your own private workspace*). The following is a quick summary of
 commands to set up an environment for Gammapy development:
@@ -194,7 +194,7 @@ environment with the content present in `environment-dev.yml` see below:
     $ conda env update --file environment-dev.yml --prune
 
 
-When developing Gammapy you never want to work on the ``master`` branch, but
+When developing Gammapy you never want to work on the ``main`` branch, but
 always on a dedicated feature branch.
 
 .. code-block:: bash
@@ -287,7 +287,7 @@ The codestyle can be checked using the command:
 
     tox -e codestyle
 
-Which will run the tool `flak8` to check for code style issues.
+Which will run the tool `flake8` to check for code style issues.
 
 
 
