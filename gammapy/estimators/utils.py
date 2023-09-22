@@ -382,9 +382,7 @@ def compute_lightcurve_fpp(lightcurve, flux_quantity="flux"):
     table = Table(
         [energies[:-1], energies[1:], fpp, fpp_err, significance],
         names=("min_energy", "max_energy", "fpp", "fpp_err", "significance"),
-        meta=lightcurve.meta,
+        meta=dict(quantity=flux_quantity),
     )
-
-    table.meta["flux_quantity"] = flux_quantity
 
     return table
