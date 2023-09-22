@@ -287,7 +287,7 @@ The codestyle can be checked using the command:
 
     tox -e codestyle
 
-Which will run the tool `flak8` to check for code style issues.
+Which will run the tool `flake8` to check for code style issues.
 
 
 
