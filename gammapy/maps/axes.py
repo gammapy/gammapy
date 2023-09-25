@@ -3240,8 +3240,8 @@ class LabelMapAxis:
     def from_stack(cls, axes):
         """Create a label map axis by merging a list of axis.
 
-        Parameter
-        ---------
+        Parameters
+        ----------
         axes : list of `LabelMapAxis`
             A list of map axis to be merged.
 
