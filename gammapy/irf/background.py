@@ -201,6 +201,8 @@ class Background3D(BackgroundIRF):
             else:
                 ax = axes.flat[i]
             bkg = self.evaluate(energy=ee)
+            bkg_unit = bkg.unit
+            bkg = bkg.value
             with quantity_support():
                 caxes = ax.pcolormesh(X, Y, bkg.squeeze(), **kwargs)
 
@@ -208,7 +210,7 @@ class Background3D(BackgroundIRF):
             self.axes["fov_lon"].format_plot_yaxis(ax)
             ax.set_title(str(ee))
             if add_cbar:
-                label = f"Background [{bkg.unit.to_string(UNIT_STRING_FORMAT)}]"
+                label = f"Background [{bkg_unit.to_string(UNIT_STRING_FORMAT)}]"
                 cbar = ax.figure.colorbar(caxes, ax=ax, label=label, fraction=cfraction)
                 cbar.formatter.set_powerlimits((0, 0))
 
