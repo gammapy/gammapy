@@ -159,8 +159,8 @@ class Analysis:
         """
         Produce reduced datasets.
 
-        Note
-        ----
+        Notes
+        -----
         The progress bar can be displayed for this function.
         """
         datasets_settings = self.config.datasets

@@ -98,8 +98,8 @@ class LightCurveEstimator(FluxPointsEstimator):
 
         Normalize integral and energy flux between emin and emax.
 
-        Note
-        ----
+        Notes
+        -----
         The progress bar can be displayed for this function.
 
         Parameters
