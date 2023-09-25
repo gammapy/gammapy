@@ -47,7 +47,7 @@ specifications offer two different ways to store this information:
   `RAD_MAX <https://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/point_like/#rad-max>`__
   keyword is added to the header of the data units containing IRF components. This
   should be used to define the size of the ON and OFF regions;
-* in case an energy- (and offset-) dependent :math:`\\theta` cut is applied, its
+* in case an energy-dependent (and offset-dependent) :math:`\\theta` cut is applied, its
   values are stored in additional `FITS` data unit, named
   `RAD_MAX_2D <https://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/point_like/#rad-max-2d>`__.
 
