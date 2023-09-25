@@ -4,8 +4,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-from astropy.coordinates import SkyCoord
-from astropy.coordinates.angle_utilities import angular_separation
+from astropy.coordinates import SkyCoord, angular_separation
 from astropy.time import Time
 from regions import CircleSkyRegion
 from gammapy.data.gti import GTI
