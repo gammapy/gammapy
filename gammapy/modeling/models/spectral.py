@@ -3,6 +3,7 @@
 import logging
 import operator
 import os
+import warnings
 from pathlib import Path
 import numpy as np
 import scipy.optimize
@@ -16,6 +17,7 @@ import matplotlib.pyplot as plt
 from gammapy.maps import MapAxis, RegionNDMap
 from gammapy.maps.axes import UNIT_STRING_FORMAT
 from gammapy.modeling import Parameter, Parameters
+from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.utils.integrate import trapz_loglog
 from gammapy.utils.interpolation import (
     ScaledRegularGridInterpolator,
@@ -670,6 +672,7 @@ class ConstantSpectralModel(SpectralModel):
     ----------
     const : `~astropy.units.Quantity`
         :math:`k`
+        Default is 1e-12 cm-2 s-1 TeV-1
     """
 
     tag = ["ConstantSpectralModel", "const"]
@@ -753,10 +756,13 @@ class PowerLawSpectralModel(SpectralModel):
     ----------
     index : `~astropy.units.Quantity`
         :math:`\Gamma`
+        Default is 2.0
     amplitude : `~astropy.units.Quantity`
         :math:`\phi_0`
+        Default is 1e-12 cm-2 s-1 TeV-1
     reference : `~astropy.units.Quantity`
         :math:`E_0`
+        Default is 1 TeV
 
     See Also
     --------
@@ -881,10 +887,13 @@ class PowerLawNormSpectralModel(SpectralModel):
     ----------
     tilt : `~astropy.units.Quantity`
         :math:`\Gamma`
+        Default is 0
     norm : `~astropy.units.Quantity`
         :math:`\phi_0`
+        Default is 1
     reference : `~astropy.units.Quantity`
         :math:`E_0`
+        Default is 1 TeV
 
     See Also
     --------
@@ -981,12 +990,16 @@ class PowerLaw2SpectralModel(SpectralModel):
     ----------
     index : `~astropy.units.Quantity`
         Spectral index :math:`\Gamma`
+        Default is 2
     amplitude : `~astropy.units.Quantity`
-        Integral flux :math:`F_0`.
+        Integral flux :math:`F_0`
+        Default is 1e-12 cm-2 s-1
     emin : `~astropy.units.Quantity`
-        Lower energy limit :math:`E_{0, min}`.
+        Lower energy limit :math:`E_{0, min}`
+        Default is 0.1 TeV
     emax : `~astropy.units.Quantity`
-        Upper energy limit :math:`E_{0, max}`.
+        Upper energy limit :math:`E_{0, max}`
+        Default is 100 TeV
 
     See Also
     --------
@@ -1067,12 +1080,16 @@ class BrokenPowerLawSpectralModel(SpectralModel):
     ----------
     index1 : `~astropy.units.Quantity`
         :math:`\Gamma1`
+        Default is 2
     index2 : `~astropy.units.Quantity`
         :math:`\Gamma2`
+        Default is 2
     amplitude : `~astropy.units.Quantity`
         :math:`\phi_0`
+        Default is 1e-12 cm-2 s-1 TeV-1
     ebreak : `~astropy.units.Quantity`
         :math:`E_{break}`
+        Default is 1 TeV
 
     See Also
     --------
@@ -1111,16 +1128,22 @@ class SmoothBrokenPowerLawSpectralModel(SpectralModel):
     ----------
     index1 : `~astropy.units.Quantity`
         :math:`\Gamma1`
+        Default is 2
     index2 : `~astropy.units.Quantity`
         :math:`\Gamma2`
+        Default is 2
     amplitude : `~astropy.units.Quantity`
         :math:`\phi_0`
+        Default is 1e-12 cm-2 s-1 TeV-1
     reference : `~astropy.units.Quantity`
         :math:`E_0`
+        Default is 1 TeV
     ebreak : `~astropy.units.Quantity`
         :math:`E_{break}`
+        Default is 1 TeV
     beta : `~astropy.units.Quantity`
         :math:`\beta`
+        Default is 1
 
     See Also
     --------
@@ -1248,14 +1271,19 @@ class ExpCutoffPowerLawSpectralModel(SpectralModel):
     ----------
     index : `~astropy.units.Quantity`
         :math:`\Gamma`
+        Default is 1.5
     amplitude : `~astropy.units.Quantity`
         :math:`\phi_0`
+        Default is 1e-12 cm-2 s-1 TeV-1
     reference : `~astropy.units.Quantity`
         :math:`E_0`
+        Default is 1 TeV
     lambda_ : `~astropy.units.Quantity`
         :math:`\lambda`
+        Default is 0.1 TeV-1
     alpha : `~astropy.units.Quantity`
         :math:`\alpha`
+        Default is 1
 
     See Also
     --------
@@ -1311,14 +1339,19 @@ class ExpCutoffPowerLawNormSpectralModel(SpectralModel):
     ----------
     index : `~astropy.units.Quantity`
         :math:`\Gamma`
+        Default is 1.5
     norm : `~astropy.units.Quantity`
         :math:`\phi_0`
+        Default is 1
     reference : `~astropy.units.Quantity`
         :math:`E_0`
+        Default is 1 TeV
     lambda_ : `~astropy.units.Quantity`
         :math:`\lambda`
+        Default is 0.1 TeV-1
     alpha : `~astropy.units.Quantity`
         :math:`\alpha`
+        Default is 1
 
     See Also
     --------
@@ -1331,6 +1364,29 @@ class ExpCutoffPowerLawNormSpectralModel(SpectralModel):
     reference = Parameter("reference", "1 TeV", frozen=True)
     lambda_ = Parameter("lambda_", "0.1 TeV-1")
     alpha = Parameter("alpha", "1.0", frozen=True)
+
+    def __init__(
+        self, index=None, norm=None, reference=None, lambda_=None, alpha=None, **kwargs
+    ):
+
+        if index is None:
+            warnings.warn(
+                "The default index value changed from 1.5 to 0 since v1.2",
+                GammapyDeprecationWarning,
+            )
+
+        if norm is not None:
+            kwargs.update({"norm": norm})
+        if index is not None:
+            kwargs.update({"index": index})
+        if reference is not None:
+            kwargs.update({"reference": reference})
+        if lambda_ is not None:
+            kwargs.update({"lambda_": lambda_})
+        if alpha is not None:
+            kwargs.update({"alpha": alpha})
+
+        super().__init__(**kwargs)
 
     @staticmethod
     def evaluate(energy, index, norm, reference, lambda_, alpha):
@@ -1350,12 +1406,16 @@ class ExpCutoffPowerLaw3FGLSpectralModel(SpectralModel):
     ----------
     index : `~astropy.units.Quantity`
         :math:`\Gamma`
+        Default is 1.5
     amplitude : `~astropy.units.Quantity`
         :math:`\phi_0`
+        Default is 1e-12 cm-2 s-1 TeV-1
     reference : `~astropy.units.Quantity`
         :math:`E_0`
+        Default is 1 TeV
     ecut : `~astropy.units.Quantity`
         :math:`E_{C}`
+        Default is 10 TeV
     """
 
     tag = ["ExpCutoffPowerLaw3FGLSpectralModel", "ecpl-3fgl"]
@@ -1393,14 +1453,19 @@ class SuperExpCutoffPowerLaw3FGLSpectralModel(SpectralModel):
     ----------
     index_1 : `~astropy.units.Quantity`
         :math:`\Gamma_1`
+        Default is 1.5
     index_2 : `~astropy.units.Quantity`
         :math:`\Gamma_2`
+        Default is 2
     amplitude : `~astropy.units.Quantity`
         :math:`\phi_0`
+        Default is 1e-12 cm-2 s-1 TeV-1
     reference : `~astropy.units.Quantity`
         :math:`E_0`
+        Default is 1 TeV
     ecut : `~astropy.units.Quantity`
         :math:`E_{C}`
+        Default is 10 TeV
     """
 
     tag = ["SuperExpCutoffPowerLaw3FGLSpectralModel", "secpl-3fgl"]
@@ -1433,15 +1498,20 @@ class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
     ----------
     index_1 : `~astropy.units.Quantity`
         :math:`\Gamma_1`
+        Default is 1.5
     index_2 : `~astropy.units.Quantity`
         :math:`\Gamma_2`
+        Default is 2
     amplitude : `~astropy.units.Quantity`
         :math:`\phi_0`
+        Default is 1e-12 cm-2 s-1 TeV-1
     reference : `~astropy.units.Quantity`
         :math:`E_0`
+        Default is 1 TeV
     expfactor : `~astropy.units.Quantity`
         :math:`a`, given as dimensionless value but
         internally assumes unit of :math: `[E_0]` power :math:`-\Gamma_2`
+        Default is 1e-2
     """
 
     tag = ["SuperExpCutoffPowerLaw4FGLSpectralModel", "secpl-4fgl"]
@@ -1478,14 +1548,19 @@ class SuperExpCutoffPowerLaw4FGLDR3SpectralModel(SpectralModel):
     ----------
     index_1 : `~astropy.units.Quantity`
         :math:`\Gamma_1`
+        Default is 1.5
     index_2 : `~astropy.units.Quantity`
         :math:`\Gamma_2`
+        Default is 2
     amplitude : `~astropy.units.Quantity`
         :math:`\phi_0`
+        Default is 1e-12 cm-2 s-1 TeV-1
     reference : `~astropy.units.Quantity`
         :math:`E_0`
+        Default is 1 TeV
     expfactor : `~astropy.units.Quantity`
         :math:`a`, given as dimensionless value
+        Default is 1e-2
     """
 
     tag = ["SuperExpCutoffPowerLaw4FGLDR3SpectralModel", "secpl-4fgl-dr3"]
@@ -1528,12 +1603,16 @@ class LogParabolaSpectralModel(SpectralModel):
     ----------
     amplitude : `~astropy.units.Quantity`
         :math:`\phi_0`
+        Default is 1e-12 cm-2 s-1 TeV-1
     reference : `~astropy.units.Quantity`
         :math:`E_0`
+        Default is 10 TeV
     alpha : `~astropy.units.Quantity`
         :math:`\alpha`
+        Default is 2
     beta : `~astropy.units.Quantity`
         :math:`\beta`
+        Default is 1
 
     See Also
     --------
@@ -1587,22 +1666,53 @@ class LogParabolaNormSpectralModel(SpectralModel):
     ----------
     norm : `~astropy.units.Quantity`
         :math:`\phi_0`
+        Default is 1
     reference : `~astropy.units.Quantity`
         :math:`E_0`
+        Default is 10 TeV
     alpha : `~astropy.units.Quantity`
         :math:`\alpha`
+        Default is 0
     beta : `~astropy.units.Quantity`
         :math:`\beta`
+        Default is 0
 
     See Also
     --------
     LogParabolaSpectralModel
     """
+
     tag = ["LogParabolaNormSpectralModel", "lp-norm"]
+
     norm = Parameter("norm", 1, unit="", interp="log", is_norm=True)
     reference = Parameter("reference", "10 TeV", frozen=True)
-    alpha = Parameter("alpha", 2)
-    beta = Parameter("beta", 1)
+    alpha = Parameter("alpha", 0)
+    beta = Parameter("beta", 0)
+
+    def __init__(self, norm=None, reference=None, alpha=None, beta=None, **kwargs):
+
+        if alpha is None:
+            warnings.warn(
+                "The default alpha value changed from 2 to 0 since v1.2",
+                GammapyDeprecationWarning,
+            )
+
+        if beta is None:
+            warnings.warn(
+                "The default beta value changed from 1 to 0 since v1.2",
+                GammapyDeprecationWarning,
+            )
+
+        if norm is not None:
+            kwargs.update({"norm": norm})
+        if beta is not None:
+            kwargs.update({"beta": beta})
+        if reference is not None:
+            kwargs.update({"reference": reference})
+        if alpha is not None:
+            kwargs.update({"alpha": alpha})
+
+        super().__init__(**kwargs)
 
     @classmethod
     def from_log10(cls, norm, reference, alpha, beta):
@@ -1852,6 +1962,7 @@ class ScaleSpectralModel(SpectralModel):
         Spectral model to wrap.
     norm : float
         Multiplicative norm factor for the model value.
+        Default is 1
     """
 
     tag = ["ScaleSpectralModel", "scale"]
@@ -1884,8 +1995,10 @@ class EBLAbsorptionNormSpectralModel(SpectralModel):
         Model value
     redshift : float
         Redshift of the absorption model
+        Default is 0.1
     alpha_norm: float
         Norm of the EBL model
+        Default is 1
     interp_kwargs : dict
         Interpolation option passed to `ScaledRegularGridInterpolator`.
         By default the models are extrapolated outside the range. To prevent
@@ -2254,10 +2367,13 @@ class GaussianSpectralModel(SpectralModel):
     ----------
     amplitude : `~astropy.units.Quantity`
         :math:`N_0`
+        Default is 1e-12 cm-2 s-1
     mean : `~astropy.units.Quantity`
         :math:`\bar{E}`
+        Default is 1 TeV
     sigma : `~astropy.units.Quantity`
         :math:`\sigma`
+        Default is 2 TeV
     """
 
     tag = ["GaussianSpectralModel", "gauss"]
