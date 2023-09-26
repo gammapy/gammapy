@@ -252,6 +252,24 @@ def test_sample_coord_time_energy(dataset, energy_dependent_temporal_sky_model):
 
 
 @requires_data()
+def test_fail_sample_coord_time_energy(
+    dataset, models, energy_dependent_temporal_sky_model
+):
+    new_dataset = dataset.copy("my-dataset")
+    new_dataset.gti = GTI.create(
+        start=0 * u.s, stop=2.5 * u.s, reference_time=Time("2000-01-01").tt
+    )
+
+    new_dataset.models = energy_dependent_temporal_sky_model
+    new_dataset.models[0].temporal_model.map.data *= 1e20
+    evaluator = new_dataset.evaluators["test-source"]
+
+    sampler = MapDatasetEventSampler(random_state=0, oversample_energy_factor=1)
+    with pytest.raises(ValueError):
+        sampler._sample_coord_time_energy(new_dataset, evaluator.model)
+
+
+@requires_data()
 def test_sample_coord_time_energy_random_seed(
     dataset, energy_dependent_temporal_sky_model
 ):
