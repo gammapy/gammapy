@@ -510,6 +510,7 @@ class PointSpatialModel(SpatialModel):
     ----------
     lon_0, lat_0 : `~astropy.coordinates.Angle`
         Center position
+        Default is 0,0 deg
     frame : {"icrs", "galactic"}
         Center position coordinate frame
     """
@@ -588,13 +589,17 @@ class GaussianSpatialModel(SpatialModel):
     ----------
     lon_0, lat_0 : `~astropy.coordinates.Angle`
         Center position
+        Default is 0,0 deg
     sigma : `~astropy.coordinates.Angle`
         Length of the major semiaxis of the Gaussian, in angular units.
+        Default is 1 deg
     e : `float`
         Eccentricity of the Gaussian (:math:`0< e< 1`).
+        Default is 0
     phi : `~astropy.coordinates.Angle`
         Rotation angle :math:`\phi`: of the major semiaxis.
         Increases counter-clockwise from the North direction.
+        Default is 0 deg
     frame : {"icrs", "galactic"}
         Center position coordinate frame
     """
@@ -705,7 +710,7 @@ class GaussianSpatialModel(SpatialModel):
 
 
 class GeneralizedGaussianSpatialModel(SpatialModel):
-    r"""Two-dimensional Generealized Gaussian model.
+    r"""Two-dimensional Generalized Gaussian model.
 
     For more information see :ref:`generalized-gaussian-spatial-model`.
 
@@ -713,15 +718,20 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
     ----------
     lon_0, lat_0 : `~astropy.coordinates.Angle`
         Center position
+        Default is 0,0 deg
     r_0 : `~astropy.coordinates.Angle`
         Length of the major semiaxis, in angular units.
+        Default is 1 deg
     eta : `float`
         Shape parameter whitin (0, 1]. Special cases for disk: ->0, Gaussian: 0.5, Laplace:1
+        Default is 0.5
     e : `float`
         Eccentricity (:math:`0< e< 1`).
+        Default is 0
     phi : `~astropy.coordinates.Angle`
         Rotation angle :math:`\phi`: of the major semiaxis.
         Increases counter-clockwise from the North direction.
+        Default is 0 deg
     frame : {"icrs", "galactic"}
         Center position coordinate frame
     """
@@ -835,17 +845,22 @@ class DiskSpatialModel(SpatialModel):
     ----------
     lon_0, lat_0 : `~astropy.coordinates.Angle`
         Center position
+        Default is 0,0 deg
     r_0 : `~astropy.coordinates.Angle`
         :math:`a`: length of the major semiaxis, in angular units.
+        Default is 1 deg
     e : `float`
         Eccentricity of the ellipse (:math:`0< e< 1`).
+        Default is 0
     phi : `~astropy.coordinates.Angle`
         Rotation angle :math:`\phi`: of the major semiaxis.
         Increases counter-clockwise from the North direction.
+        Default is 0 deg
     edge_width : float
         Width of the edge. The width is defined as the range within which
         the smooth edge of the model drops from 95% to 5% of its amplitude.
         It is given as fraction of r_0.
+        Default is 0.01
     frame : {"icrs", "galactic"}
         Center position coordinate frame
     """
@@ -1002,10 +1017,13 @@ class ShellSpatialModel(SpatialModel):
     ----------
     lon_0, lat_0 : `~astropy.coordinates.Angle`
         Center position
+        Default is 0,0 deg
     radius : `~astropy.coordinates.Angle`
         Inner radius, :math:`r_{in}`
+        Default is 1 deg
     width : `~astropy.coordinates.Angle`
         Shell width
+        Default is 0.2 deg
     frame : {"icrs", "galactic"}
         Center position coordinate frame
 
@@ -1073,10 +1091,13 @@ class Shell2SpatialModel(SpatialModel):
     ----------
     lon_0, lat_0 : `~astropy.coordinates.Angle`
         Center position
+        Default is 0,0 deg
     r_0 : `~astropy.coordinates.Angle`
         Outer radius, :math:`r_{out}`
+        Default is 1 deg
     eta : float
-        Shell width relative to outer radius, r_0, should be within (0,1]
+        Shell width relative to outer radius, r_0, should be within (0,1)
+        Default is 0.2
     frame : {"icrs", "galactic"}
         Center position coordinate frame
 
@@ -1148,6 +1169,7 @@ class ConstantSpatialModel(SpatialModel):
     ----------
     value : `~astropy.units.Quantity`
         Value
+        Default is 1 sr-1
     """
 
     tag = ["ConstantSpatialModel", "const"]
