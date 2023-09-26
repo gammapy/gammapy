@@ -358,8 +358,8 @@ class Fit:
         The method used is to vary one parameter, keeping all others fixed.
         So this is taking a "slice" or "scan" of the fit statistic.
 
-        Note
-        ----
+        Notes
+        -----
         The progress bar can be displayed for this function.
 
         Parameters
@@ -416,8 +416,8 @@ class Fit:
 
         See also: `Fit.stat_contour`
 
-        Note
-        ----
+        Notes
+        -----
         The progress bar can be displayed for this function.
 
         Parameters

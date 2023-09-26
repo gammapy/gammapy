@@ -41,15 +41,15 @@ provided.
 The directional cut is typically an angular distance from the assumed
 source position, :math:`\\theta`. The
 `gamma-astro-data-format <https://gamma-astro-data-formats.readthedocs.io/en/latest/>`__
-specifications offer two different ways to store this information: \* if
-the same :math:`\\theta` cut is applied at all energies and offsets, `a
-`RAD_MAX`
-keyword <https://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/point_like/#rad-max>`__
-is added to the header of the data units containing IRF components. This
-should be used to define the size of the ON and OFF regions; \* in case
-an energy- (and offset-) dependent :math:`\\theta` cut is applied, its
-values are stored in additional `FITS` data unit, named
-``RAD_MAX_2D` <https://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/point_like/#rad-max-2d>`__.
+specifications offer two different ways to store this information:
+
+* if the same :math:`\\theta` cut is applied at all energies and offsets, a
+  `RAD_MAX <https://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/point_like/#rad-max>`__
+  keyword is added to the header of the data units containing IRF components. This
+  should be used to define the size of the ON and OFF regions;
+* in case an energy-dependent (and offset-dependent) :math:`\\theta` cut is applied, its
+  values are stored in additional `FITS` data unit, named
+  `RAD_MAX_2D <https://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/point_like/#rad-max-2d>`__.
 
 `Gammapy` provides a class to automatically read these values,
 `~gammapy.irf.RadMax2D`, for both cases (fixed or energy-dependent
@@ -176,7 +176,7 @@ plt.show()
 # --------------------
 #
 # To use the `RAD_MAX_2D` values to define the sizes of the ON and OFF
-# regions **it is necessary to specify the ON region as
+# regions it is necessary to specify the ON region as
 # a `~regions.PointSkyRegion`:
 #
 

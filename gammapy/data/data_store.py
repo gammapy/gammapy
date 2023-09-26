@@ -347,8 +347,8 @@ class DataStore:
     ):
         """Generate a `~gammapy.data.Observations`.
 
-        Note
-        ----
+        Notes
+        -----
         The progress bar can be displayed for this function.
 
         Parameters
