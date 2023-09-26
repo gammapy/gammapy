@@ -6,13 +6,8 @@ import astropy.units as u
 from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.time import Time
 from astropy.units import Quantity
-from gammapy.data import (
-    DataStore,
-    Observation,
-    ObservationFilter,
-    Observations,
-)
-from gammapy.data.pointing import FixedPointingInfo, PointingMode
+from gammapy.data import DataStore, Observation, ObservationFilter, Observations
+from gammapy.data.pointing import FixedPointingInfo
 from gammapy.data.utils import get_irfs_features
 from gammapy.irf import PSF3D, load_irf_dict_from_file
 from gammapy.utils.cluster import hierarchical_clustering

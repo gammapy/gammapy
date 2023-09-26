@@ -15,7 +15,6 @@ from gammapy.data import (
     HDUIndexTable,
     Observation,
     ObservationTable,
-    PointingMode,
 )
 from gammapy.datasets import MapDataset
 from gammapy.datasets.map import RAD_AXIS_DEFAULT

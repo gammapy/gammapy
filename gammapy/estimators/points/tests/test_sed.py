@@ -6,7 +6,7 @@ from astropy import units as u
 from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.table import Table
 from gammapy.data import Observation
-from gammapy.data.pointing import FixedPointingInfo, PointingMode
+from gammapy.data.pointing import FixedPointingInfo
 from gammapy.datasets import MapDataset, SpectrumDatasetOnOff
 from gammapy.datasets.spectrum import SpectrumDataset
 from gammapy.estimators import FluxPoints, FluxPointsEstimator

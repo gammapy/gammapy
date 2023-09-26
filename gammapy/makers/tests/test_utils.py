@@ -7,14 +7,7 @@ from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.table import Table
 from astropy.time import Time
 from regions import PointSkyRegion
-from gammapy.data import (
-    GTI,
-    DataStore,
-    EventList,
-    FixedPointingInfo,
-    Observation,
-    PointingMode,
-)
+from gammapy.data import GTI, DataStore, EventList, FixedPointingInfo, Observation
 from gammapy.irf import (
     Background2D,
     Background3D,
