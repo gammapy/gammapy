@@ -29,7 +29,7 @@ class PointingMode(Enum):
     """
     Describes the behavior of the pointing during the observation.
 
-    See :ref:`gadf:obs-mode`.
+    See :ref:`gadf:iact-events-obs-mode`.
 
     For ground-based instruments, the most common options will be:
     * POINTING: The telescope observes a fixed position in the ICRS frame

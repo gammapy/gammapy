@@ -457,8 +457,8 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         Requires a MapDataset with counts, exposure and background_model
         properly set to run.
 
-        Note
-        ----
+        Notes
+        -----
         The progress bar can be displayed for this function.
 
         Parameters

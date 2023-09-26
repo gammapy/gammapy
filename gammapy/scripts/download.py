@@ -65,8 +65,8 @@ class DownloadIndex:
 
 def progress_download(source, destination):
     """
-    Note
-    ----
+    Notes
+    -----
     The progress bar can be displayed for this function.
     """
     import requests
