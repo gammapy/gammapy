@@ -7,8 +7,7 @@ import scipy.integrate
 import scipy.special
 from scipy.interpolate import griddata
 import astropy.units as u
-from astropy.coordinates import Angle, SkyCoord
-from astropy.coordinates.angle_utilities import angular_separation, position_angle
+from astropy.coordinates import Angle, SkyCoord, angular_separation, position_angle
 from astropy.utils import lazyproperty
 from regions import (
     CircleAnnulusSkyRegion,
@@ -468,6 +467,7 @@ class SpatialModel(ModelBase):
     def from_position(cls, position, **kwargs):
         """Define the position of the model using a sky coord
            The model will be created in the frame of the sky coord
+
         Parameters
         ----------
         position : `~astropy.coordinates.SkyCoord`

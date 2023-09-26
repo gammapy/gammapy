@@ -4,8 +4,7 @@ import copy
 import logging
 import numpy as np
 from astropy import units as u
-from astropy.coordinates import AltAz, Angle, SkyCoord
-from astropy.coordinates.angle_utilities import angular_separation
+from astropy.coordinates import AltAz, Angle, SkyCoord, angular_separation
 from astropy.io import fits
 from astropy.table import Table
 from astropy.table import vstack as vstack_tables

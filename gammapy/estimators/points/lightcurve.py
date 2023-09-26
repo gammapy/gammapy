@@ -98,6 +98,10 @@ class LightCurveEstimator(FluxPointsEstimator):
 
         Normalize integral and energy flux between emin and emax.
 
+        Notes
+        -----
+        The progress bar can be displayed for this function.
+
         Parameters
         ----------
         datasets : list of `~gammapy.datasets.SpectrumDataset` or `~gammapy.datasets.MapDataset`
