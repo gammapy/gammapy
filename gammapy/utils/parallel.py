@@ -115,8 +115,8 @@ def run_multiprocessing(
 ):
     """Run function in a loop or in Parallel
 
-    Note
-    ----
+    Notes
+    -----
     The progress bar can be displayed for this function.
 
     Parameters
