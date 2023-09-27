@@ -89,7 +89,9 @@ class DMProfile(abc.ABC):
 
 
 class ZhaoProfile(DMProfile):
-    r"""Zaho Profile.
+    r"""Zhao Profile.
+    This is taken from equation 1 from Zhao (1996). It is a generalization of the NFW profile. The volume density is parametrized with
+    a double power-law. Scale radii smaller than the scale radiu are described with a slope of :math:`-\gamma` and scale radii larger than the scale radius are described with a slope of :math:`-\beta`. :math:`\alpha` is a measure for the width of the transition region.
     .. math::
         \rho(r) = \rho_s \left(\frac{r_s}{r}\right)^\gamma \left(1 + \left(\frac{r}{r_s}\right)^\alpha \right)^{\frac{\gamma - \beta}{\alpha}}
 
