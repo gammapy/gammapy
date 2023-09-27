@@ -169,7 +169,13 @@ class MapDatasetEventSampler:
 
         npred = self._evaluate_timevar_source(dataset, model=model)
         data = npred.data[np.isfinite(npred.data)]
-        n_events = self.random_state.poisson(np.sum(data))
+
+        try:
+            n_events = self.random_state.poisson(np.sum(data))
+        except ValueError:
+            raise ValueError(
+                f"The number of predicted events for the model {model.name} is too large. No event sampling will be performed for this model!"
+            )
 
         coords = npred.sample_coord(n_events=n_events, random_state=self.random_state)
 
