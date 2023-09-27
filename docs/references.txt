@@ -132,6 +132,6 @@
 .. _setuptools console_scripts entry point: https://python-packaging.readthedocs.io/en/latest/command-line-scripts.html
 .. _pydantic: https://pydantic-docs.helpmanual.io
 
-.. _A Whirlwind tour of Python: https://nbviewer.jupyter.org/github/jakevdp/WhirlwindTourOfPython/blob/master/Index.ipynb
-.. _Python data science handbook: http://nbviewer.jupyter.org/github/jakevdp/PythonDataScienceHandbook/blob/master/notebooks/Index.ipynb
+.. _A Whirlwind tour of Python: https://nbviewer.org/github/jakevdp/WhirlwindTourOfPython/blob/master/Index.ipynb
+.. _Python data science handbook: https://jakevdp.github.io/PythonDataScienceHandbook/
 .. _Astropy Hands-On Tutorial: https://github.com/Asterics2020-Obelics/School2019/tree/master/astropy
