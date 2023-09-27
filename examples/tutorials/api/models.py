@@ -57,7 +57,7 @@ print(pwl)
 
 ######################################################################
 # To get a list of all available spectral models you can import and print
-# the spectral model registry or take a look at the :ref:`spectral-models-gallery`
+# the spectral model registry or take a look at the :ref:`spectral_models_gallery`
 #
 
 from gammapy.modeling.models import SPECTRAL_MODEL_REGISTRY
