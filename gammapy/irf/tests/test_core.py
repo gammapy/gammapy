@@ -68,3 +68,16 @@ def test_slice_by_idx():
         str(exc_info.value)
         == "Integer indexing not supported, got {'energy': 3, 'offset': 7}"
     )
+
+
+def test_cum_sum():
+    energy_axis = MapAxis.from_energy_bounds(10, 100, 10, unit="TeV", name="energy")
+    offset_axis = MapAxis.from_bounds(0, 2.5, 1, unit="deg", name="offset")
+
+    data = np.full((10, 1), 1)
+
+    irf = MyCustomIRF(axes=[energy_axis, offset_axis], data=data, unit=1 / u.deg**2)
+    cumsum = irf.cumsum(axis_name="offset")
+
+    assert cumsum.unit == u.Unit("")
+    assert cumsum.data[0, 0] == 2.5**2 * np.pi
