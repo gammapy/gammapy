@@ -206,8 +206,8 @@ def plot_distribution(
     ncols : int
         Number of columns to plot if a "plot grid" was to be done.
     func : function object or str
-        The function to used to fit a map data histogram or "norm". Default is None.
-        If None, no fit will be done. If "norm" is given, `scipy.stats.norm.pdf`
+        The function used to fit a map data histogram or "norm". Default is None.
+        If None, no fit will be performed. If "norm" is given, `scipy.stats.norm.pdf`
         will be passed to `scipy.optimize.curve_fit`.
     kwargs_hist : dict
         Keyword arguments to pass to `matplotlib.pyplot.hist`.
