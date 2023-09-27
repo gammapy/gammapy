@@ -76,8 +76,8 @@ def test_cum_sum():
 
     data = np.full((10, 1), 1)
 
-    irf = MyCustomIRF(axes=[energy_axis, offset_axis], data=data, unit=1 / u.deg**2)
+    irf = MyCustomIRF(axes=[energy_axis, offset_axis], data=data, unit="")
     cumsum = irf.cumsum(axis_name="offset")
 
-    assert cumsum.unit == u.Unit("")
+    assert cumsum.unit == u.Unit("deg^2")
     assert cumsum.data[0, 0] == 2.5**2 * np.pi
