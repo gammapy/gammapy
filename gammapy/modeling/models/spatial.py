@@ -510,7 +510,7 @@ class PointSpatialModel(SpatialModel):
     ----------
     lon_0, lat_0 : `~astropy.coordinates.Angle`
         Center position
-        Default is 0,0 deg
+        Default is "0 deg", "0 deg"
     frame : {"icrs", "galactic"}
         Center position coordinate frame
     """
@@ -589,7 +589,7 @@ class GaussianSpatialModel(SpatialModel):
     ----------
     lon_0, lat_0 : `~astropy.coordinates.Angle`
         Center position
-        Default is 0,0 deg
+        Default is "0 deg", "0 deg"
     sigma : `~astropy.coordinates.Angle`
         Length of the major semiaxis of the Gaussian, in angular units.
         Default is 1 deg
@@ -718,7 +718,7 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
     ----------
     lon_0, lat_0 : `~astropy.coordinates.Angle`
         Center position
-        Default is 0,0 deg
+        Default is "0 deg", "0 deg"
     r_0 : `~astropy.coordinates.Angle`
         Length of the major semiaxis, in angular units.
         Default is 1 deg
@@ -845,7 +845,7 @@ class DiskSpatialModel(SpatialModel):
     ----------
     lon_0, lat_0 : `~astropy.coordinates.Angle`
         Center position
-        Default is 0,0 deg
+        Default is "0 deg", "0 deg"
     r_0 : `~astropy.coordinates.Angle`
         :math:`a`: length of the major semiaxis, in angular units.
         Default is 1 deg
@@ -1017,7 +1017,7 @@ class ShellSpatialModel(SpatialModel):
     ----------
     lon_0, lat_0 : `~astropy.coordinates.Angle`
         Center position
-        Default is 0,0 deg
+        Default is "0 deg", "0 deg"
     radius : `~astropy.coordinates.Angle`
         Inner radius, :math:`r_{in}`
         Default is 1 deg
@@ -1091,7 +1091,7 @@ class Shell2SpatialModel(SpatialModel):
     ----------
     lon_0, lat_0 : `~astropy.coordinates.Angle`
         Center position
-        Default is 0,0 deg
+        Default is "0 deg", "0 deg"
     r_0 : `~astropy.coordinates.Angle`
         Outer radius, :math:`r_{out}`
         Default is 1 deg

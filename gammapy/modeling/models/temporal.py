@@ -929,16 +929,16 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         Default is 48442.5 mjd
     phi_ref : `~astropy.units.Quantity`
         The phase at reference time.
-        Default is 0.
+        Default is 0
     f0 : `~astropy.units.Quantity`
         The frequency at t_ref in s-1
         Default is 29.946923 s-1
     f1 : `~astropy.units.Quantity`
         The frequency derivative at t_ref in s-2.
-        Default is 0 s-2.
+        Default is 0 s-2
     f2 : `~astropy.units.Quantity`
         The frequency second derivative at t_ref in s-3.
-        Default is 0 s-3.
+        Default is 0 s-3
     """
 
     tag = ["TemplatePhaseCurveTemporalModel", "template-phase"]
@@ -1003,7 +1003,8 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         t_ref : `~astropy.units.Quantity`
             The reference time in mjd.
         phi_ref : `~astropy.units.Quantity`
-            The phase at reference time. Default is 0.
+            The phase at reference time.
+            Default is 0
         f0 : `~astropy.units.Quantity`
             The frequency at t_ref in s-1
         f1 : `~astropy.units.Quantity`
