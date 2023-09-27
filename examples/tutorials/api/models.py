@@ -237,7 +237,7 @@ print(gauss)
 
 ######################################################################
 # Again you can check the `SPATIAL_MODELS` registry to see which models
-# are available or take a look at the :ref:`spatial-models-gallery`
+# are available or take a look at the :ref:`spatial_models_gallery`
 #
 
 from gammapy.modeling.models import SPATIAL_MODEL_REGISTRY
