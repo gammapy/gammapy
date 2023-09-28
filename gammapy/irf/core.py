@@ -339,7 +339,7 @@ class IRF(metaclass=abc.ABCMeta):
 
         values = self.quantity * axis.bin_width.reshape(shape)
 
-        if axis_name == "rad":
+        if axis_name in ["rad", "offset"]:
             # take Jacobian into account
             values = 2 * np.pi * axis.center.reshape(shape) * values
 
