@@ -262,7 +262,7 @@ significance_map_off = significance_map * exclusion_mask
 
 kwargs_axes = {"xlabel": "Significance", "yscale": "log", "ylim": (1e-5, 1)}
 
-_, ax = plot_distribution(
+ax, _ = plot_distribution(
     significance_map,
     kwargs_hist={
         "density": True,
@@ -274,12 +274,10 @@ _, ax = plot_distribution(
     kwargs_axes=kwargs_axes,
 )
 
-func = lambda x, mu, sig: norm.pdf(x, loc=mu, scale=sig)
-
-res, ax = plot_distribution(
+ax, res = plot_distribution(
     significance_map_off,
     ax=ax,
-    func=func,
+    func="norm",
     kwargs_hist={
         "density": True,
         "alpha": 0.5,
@@ -291,10 +289,5 @@ res, ax = plot_distribution(
 )
 
 plt.show()
-
-param = res[0].get("param")
-covar = res[0].get("covar")
-
-print(f"mu = {param[0]} ± {covar[0][0]**2}, sig = {param[1]} ± {covar[1][1]**2}")
 
 # sphinx_gallery_thumbnail_number = 2
