@@ -93,7 +93,7 @@ class ZhaoProfile(DMProfile):
     This is taken from equation 1 from Zhao (1996). It is a generalization of the NFW profile. The volume density is parametrized with
     a double power-law. Scale radii smaller than the scale radiu are described with a slope of :math:`-\gamma` and scale radii larger than the scale radius are described with a slope of :math:`-\beta`. :math:`\alpha` is a measure for the width of the transition region.
     .. math::
-        \rho(r) = \rho_s \left(\frac{r_s}{r}\right)^\gamma \left(1 + \left(\frac{r}{r_s}\right)^\alpha \right)^{\frac{\gamma - \beta}{\alpha}}
+        \rho(r) = \rho_s \left(\frac{r_s}{r}\right)^\gamma \left(1 + \left(\frac{r}{r_s}\right)^\frac{1}{\alpha} \right)^{(\gamma - \beta) * \alpha}
 
     Parameters
     ----------
@@ -111,7 +111,7 @@ class ZhaoProfile(DMProfile):
     References
     ----------
     * `1996MNRAS.278..488Z <https://ui.adsabs.harvard.edu/abs/1996MNRAS.278..488Z>`_
-    * `2011JCAP...03..051 <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051>`_
+    * `2011JCAP...03..051C <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
     """
 
     DEFAULT_SCALE_RADIUS = 24.42 * u.kpc
@@ -143,7 +143,9 @@ class ZhaoProfile(DMProfile):
     @staticmethod
     def evaluate(radius, r_s, alpha, beta, gamma, rho_s):
         rr = radius / r_s
-        return rho_s / (rr**gamma * (1 + rr**alpha) ** ((beta - gamma) / alpha))
+        return rho_s / (
+            rr**gamma * (1 + rr ** (1 / alpha)) ** ((beta - gamma) * alpha)
+        )
 
 
 class NFWProfile(DMProfile):
@@ -162,7 +164,7 @@ class NFWProfile(DMProfile):
     References
     ----------
     * `1997ApJ...490..493 <https://ui.adsabs.harvard.edu/abs/1997ApJ...490..493N>`_
-    * `2011JCAP...03..051 <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051>`_
+    * `2011JCAP...03..051C <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
     """
 
     DEFAULT_SCALE_RADIUS = 24.42 * u.kpc
@@ -200,7 +202,7 @@ class EinastoProfile(DMProfile):
     References
     ----------
     * `1965TrAlm...5...87E <https://ui.adsabs.harvard.edu/abs/1965TrAlm...5...87E>`_
-    * `2011JCAP...03..051 <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051>`_
+    * `2011JCAP...03..051C <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
     """
 
     DEFAULT_SCALE_RADIUS = 28.44 * u.kpc
@@ -240,7 +242,7 @@ class IsothermalProfile(DMProfile):
     References
     ----------
     * `1991MNRAS.249..523B <https://ui.adsabs.harvard.edu/abs/1991MNRAS.249..523B>`_
-    * `2011JCAP...03..051 <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051>`_
+    * `2011JCAP...03..051C <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
     """
 
     DEFAULT_SCALE_RADIUS = 4.38 * u.kpc
@@ -272,7 +274,7 @@ class BurkertProfile(DMProfile):
     References
     ----------
     * `1995ApJ...447L..25B <https://ui.adsabs.harvard.edu/abs/1995ApJ...447L..25B>`_
-    * `2011JCAP...03..051 <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051>`_
+    * `2011JCAP...03..051C <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
     """
 
     DEFAULT_SCALE_RADIUS = 12.67 * u.kpc
@@ -306,7 +308,7 @@ class MooreProfile(DMProfile):
     References
     ----------
     * `2004MNRAS.353..624D <https://ui.adsabs.harvard.edu/abs/2004MNRAS.353..624D>`_
-    * `2011JCAP...03..051 <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051>`_
+    * `2011JCAP...03..051C <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
     """
 
     DEFAULT_SCALE_RADIUS = 30.28 * u.kpc
