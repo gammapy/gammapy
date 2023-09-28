@@ -301,11 +301,11 @@ def plot_distribution(
 
             if func == "norm":
 
-                def func(x, mu, sigma):
+                def func_to_fit(x, mu, sigma):
                     return norm.pdf(x, mu, sigma)
 
                 pars, cov, infodict, message, _ = curve_fit(
-                    func, centers, n, **kwargs_fit
+                    func_to_fit, centers, n, **kwargs_fit
                 )
 
                 mu, sig = pars[0], pars[1]
@@ -319,8 +319,10 @@ def plot_distribution(
                 kwargs_plot_fit["label"] = label_norm
 
             else:
+                func_to_fit = func
+
                 pars, cov, infodict, message, _ = curve_fit(
-                    func, centers, n, **kwargs_fit
+                    func_to_fit, centers, n, **kwargs_fit
                 )
 
             axis_edges = (
@@ -339,7 +341,7 @@ def plot_distribution(
             xmin, xmax = kwargs_hist.get("range", (np.min(d), np.max(d)))
             x = np.linspace(xmin, xmax, 1000)
 
-            axe.plot(x, func(x, *pars), lw=2, color="black", **kwargs_plot_fit)
+            axe.plot(x, func_to_fit(x, *pars), lw=2, color="black", **kwargs_plot_fit)
 
         axe.set(**kwargs_axes)
         axe.legend()
