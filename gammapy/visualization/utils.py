@@ -2,6 +2,7 @@ import logging as log
 import numpy as np
 from scipy.interpolate import CubicSpline
 from scipy.optimize import curve_fit
+from scipy.stats import norm
 from astropy.visualization import make_lupton_rgb
 import matplotlib.pyplot as plt
 
@@ -204,9 +205,10 @@ def plot_distribution(
         Axis object to plot on. If a list of Axis is provided it has to be the same length as the length of _map.data.
     ncols : int
         Number of columns to plot if a "plot grid" was to be done.
-    func : function object
-        The function to pass to `scipy.optimize.curve_fit`. Default is None.
-        If None, no fit will be done.
+    func : function object or str
+        The function used to fit a map data histogram or "norm". Default is None.
+        If None, no fit will be performed. If "norm" is given, `scipy.stats.norm.pdf`
+        will be passed to `scipy.optimize.curve_fit`.
     kwargs_hist : dict
         Keyword arguments to pass to `matplotlib.pyplot.hist`.
     kwargs_axes : dict
@@ -216,6 +218,8 @@ def plot_distribution(
 
     Returns
     -------
+    axes : `~numpy.ndarray` of `~matplotlib.pyplot.Axes`
+        Array of Axes.
     result_list : list of dict
         List of dictionnary that contains the results of `scipy.optimize.curve_fit`. The number of elements in the list
         correspond to the dimension of the non-spatial axis of the map.
@@ -226,9 +230,6 @@ def plot_distribution(
             * `covar` : the covariance matrix for the fitted parameters `param`
             * `info_dict` : the `infodict` return of `scipy.optimize.curve_fit`
 
-    axes : `~numpy.ndarray` of `~matplotlib.pyplot.Axes`
-        Array of Axes.
-
     Examples
     --------
     >>> from gammapy.datasets import MapDataset
@@ -237,8 +238,10 @@ def plot_distribution(
     >>> from gammapy.visualization import plot_distribution
     >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
     >>> tsmap_est = TSMapEstimator().run(dataset)
+    >>> axs, res = plot_distribution(tsmap_est.sqrt_ts, func="norm", kwargs_hist={'bins': 75, 'range': (-10, 10), 'density': True})
+    >>> # Equivalently, one can do the following:
     >>> func = lambda x, mu, sig : norm.pdf(x, loc=mu, scale=sig)
-    >>> res, ax = plot_distribution(tsmap_est.sqrt_ts, func=func, kwargs_hist={'bins': 75, 'range': (-10, 10), 'density': True})
+    >>> axs, res = plot_distribution(tsmap_est.sqrt_ts, func=func, kwargs_hist={'bins': 75, 'range': (-10, 10), 'density': True})
     """
 
     from gammapy.maps import WcsNDMap  # import here to avoid circular import
@@ -293,9 +296,32 @@ def plot_distribution(
         n, bins, _ = axe.hist(d, **kwargs_hist)
 
         if func is not None:
+            kwargs_plot_fit = {"label": "Fit"}
             centers = 0.5 * (bins[1:] + bins[:-1])
 
-            pars, cov, infodict, message, _ = curve_fit(func, centers, n, **kwargs_fit)
+            if func == "norm":
+
+                def func(x, mu, sigma):
+                    return norm.pdf(x, mu, sigma)
+
+                pars, cov, infodict, message, _ = curve_fit(
+                    func, centers, n, **kwargs_fit
+                )
+
+                mu, sig = pars[0], pars[1]
+                err_mu, err_sig = np.sqrt(cov[0][0]), np.sqrt(cov[1][1])
+
+                label_norm = (
+                    r"$\mu$ = {:.2f} ± {:.2E}\n$\sigma$ = {:.2f} ± {:.2E}".format(
+                        mu, err_mu, sig, err_sig
+                    )
+                ).replace(r"\n", "\n")
+                kwargs_plot_fit["label"] = label_norm
+
+            else:
+                pars, cov, infodict, message, _ = curve_fit(
+                    func, centers, n, **kwargs_fit
+                )
 
             axis_edges = (
                 wcs_map.geom.axes[-1].edges[idx],
@@ -313,9 +339,9 @@ def plot_distribution(
             xmin, xmax = kwargs_hist.get("range", (np.min(d), np.max(d)))
             x = np.linspace(xmin, xmax, 1000)
 
-            axe.plot(x, func(x, *pars), label="Fit", lw=2, color="black")
+            axe.plot(x, func(x, *pars), lw=2, color="black", **kwargs_plot_fit)
 
         axe.set(**kwargs_axes)
         axe.legend()
 
-    return result_list, axes
+    return axes, result_list
