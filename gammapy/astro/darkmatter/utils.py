@@ -7,10 +7,11 @@ __all__ = ["JFactory"]
 
 
 class JFactory:
-    """Compute J-Factor maps.
+    """Compute J-Factor or D-Factor maps.
 
-    All J-Factors can be computed for annihilation or decay. The assumed dark matter
-    profiles will be centered on the center of the map.
+    J-Factors are computed for annihilation and D-Factors for decay.
+    Set the argument `annihilation` to `False` to compute D-Factors.
+    The assumed dark matter profiles will be centered on the center of the map.
 
     Parameters
     ----------
