@@ -8,7 +8,7 @@ log = logging.getLogger(__name__)
 
 
 def _build_priorparameters_from_dict(data, default_parameters):
-    """Build Parameters object from input dict and default  parameter values."""
+    """Build Parameters object from input dict and default parameter values."""
     par_data = []
 
     input_names = [_["name"] for _ in data]
