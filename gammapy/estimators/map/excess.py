@@ -93,10 +93,10 @@ class ExcessMapEstimator(Estimator):
         Usde only for for sensitivity computation if `apply_threshold_sensitivity`is True.
     bkg_syst_fraction_sensitivity : float, optional
         Fraction of background counts above which the number of gamma-rays is . Default is 0.05
-        Usde only for for sensitivity computation if `apply_threshold_sensitivity`is True.
+        Used only for for sensitivity computation if `apply_threshold_sensitivity`is True.
     apply_threshold_sensitivity : bool
         If True use ``bkg_syst_fraction_sensitivity` and `gamma_min_sensitivity`
-        in sensitivity computation. Defalut is False which is setting used for the HGPS catalogue.
+        in sensitivity computation. Default is False which is setting used for the HGPS catalogue.
     selection_optional : list of str
         Which additional maps to estimate besides delta TS, significance and symmetric error.
         Available options are:
