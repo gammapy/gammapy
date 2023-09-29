@@ -44,7 +44,7 @@ class DMProfile(abc.ABC):
             / np.sqrt(radius**2 - (self.DISTANCE_GC * np.sin(separation)) ** 2)
         )
 
-    def integral(self, rmin, rmax, separation, ndecade, squared):
+    def integral(self, rmin, rmax, separation, ndecade, squared=True):
         r"""Integrate dark matter profile numerically.
 
         .. math::
@@ -63,6 +63,7 @@ class DMProfile(abc.ABC):
             Default : 10000
         squared : bool, optional
             Square the profile before integration.
+            Default: True
         """
         integral = self.integrate_spectrum_separation(
             self._eval_substitution, rmin, rmax, separation, ndecade, squared
@@ -71,7 +72,7 @@ class DMProfile(abc.ABC):
         return integral.to(inegral_unit)
 
     def integrate_spectrum_separation(
-        self, func, xmin, xmax, separation, ndecade, squared
+        self, func, xmin, xmax, separation, ndecade, squared=True
     ):
         r"""Helper for the squared dark matter profile integral.
 
@@ -85,6 +86,7 @@ class DMProfile(abc.ABC):
             Number of grid points per decade used for the integration.
         squared : bool
             Square the profile before integration.
+            Default: True
         """
         unit = xmin.unit
         xmin = xmin.value

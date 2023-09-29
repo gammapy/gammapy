@@ -144,7 +144,7 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
     mass : `~astropy.units.Quantity`
         Dark matter mass
     channel : str
-        Annihilation channel for `~gammapy.astro.darkmatter.PrimaryFlux`
+        Annihilation channel for `~gammapy.astro.darkmatter.PrimaryFlux`, e.g. "b" for "bbar". See `PrimaryFlux.channel_registry` for more.
     scale : float
         Scale parameter for model fitting
     jfactor : `~astropy.units.Quantity`
@@ -252,7 +252,7 @@ class DarkMatterDecaySpectralModel(SpectralModel):
     mass : `~astropy.units.Quantity`
         Dark matter mass
     channel : str
-        Annihilation channel for `~gammapy.astro.darkmatter.PrimaryFlux`
+        Annihilation channel for `~gammapy.astro.darkmatter.PrimaryFlux`, e.g. "b" for "bbar". See `PrimaryFlux.channel_registry` for more.
     scale : float
         Scale parameter for model fitting
     jfactor : `~astropy.units.Quantity`

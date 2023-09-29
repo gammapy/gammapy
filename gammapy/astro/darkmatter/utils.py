@@ -67,8 +67,8 @@ class JFactory:
             )
             for _ in rmin.ravel()
         ]
-        inegral_unit = u.Unit("GeV2 cm-5") if self.annihilation else u.Unit("GeV cm-2")
-        jfact = u.Quantity(val).to(inegral_unit).reshape(rmin.shape)
+        integral_unit = u.Unit("GeV2 cm-5") if self.annihilation else u.Unit("GeV cm-2")
+        jfact = u.Quantity(val).to(integral_unit).reshape(rmin.shape)
         return jfact / u.steradian
 
     def compute_jfactor(self, ndecade=1e4):
