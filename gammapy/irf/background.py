@@ -409,6 +409,7 @@ class Background2D(BackgroundIRF):
         energy_axis = self.axes["energy"]
 
         bkg = self.integral(offset=offset_axis.bounds[1], axis_name="offset")
+        bkg = bkg.to(u.Unit("s-1") / energy_axis.unit)
 
         with quantity_support():
             ax.plot(energy_axis.center, bkg, label="integrated spectrum", **kwargs)
