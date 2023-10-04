@@ -318,7 +318,7 @@ class WcsMap(Map):
             Containment fraction
         apply_union : bool
             It True return a compound region otherwise return a list of polygon regions.
-            Default is True.
+            Default is True. Note that compound regions cannot be written in ds9 format but can always be saved with numpy.savez.
 
         Returns
         -------
@@ -347,9 +347,6 @@ class WcsMap(Map):
                 regions_pieces.append(PolygonSkyRegion(vertices))
 
             if apply_union:
-                # compound from union seems not supported to write in ds9 format
-                # so regions_pieces contains a list that is supported
-                # while regions_full can be saved as .npz
                 regions_union = regions_pieces[0]
                 for region in regions_pieces[1:]:
                     regions_union = regions_union.union(region)
