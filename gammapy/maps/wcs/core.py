@@ -334,7 +334,7 @@ class WcsMap(Map):
 
             plt.ioff()
             fig = plt.figure()
-            cs = plt.contour(self.data.squeeze(), [fval]);
+            cs = plt.contour(self.data.squeeze(), [fval])
             plt.close(fig)
             plt.ion()
             regions_pieces = []
