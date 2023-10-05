@@ -178,7 +178,7 @@ model.spatial_model.sigma.frozen = False
 model.spectral_model.amplitude.frozen = False
 model.spectral_model.index.frozen = True
 
-datasets.model = model
+datasets.models = model
 
 estimator = EnergyDependenceEstimator(energy_edges=energy_edges, source="MSH1552")
 
@@ -190,9 +190,7 @@ estimator = EnergyDependenceEstimator(energy_edges=energy_edges, source="MSH1552
 # -----------------------------------------------
 #
 
-estimator = EnergyDependenceEstimator(
-    energy_edges=energy_edges, source=source, selection_optional=["src-sig"]
-)
+estimator = EnergyDependenceEstimator(energy_edges=energy_edges, source="MSH1552")
 table_bkg_src = estimator.estimate_source_significance(datasets)
 table_bkg_src
 

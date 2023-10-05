@@ -39,18 +39,12 @@ class EnergyDependenceEstimator(Estimator):
         For which source in the model to compute the estimator.
     fit : `Fit`
         Fit instance specifying the backend and fit options.
-    selection_optional : list of str
-        Which additional quantities to estimate. Available options are:
-            * "src-sig": the significance above the background is
-            calculated in each energy band
-        Default is None so the optional steps are not executed.
 
     """
 
     tag = "EnergyDependenceEstimator"
-    _available_selection_optional = ["src-sig"]
 
-    def __init__(self, energy_edges, source, fit=None, selection_optional=None):
+    def __init__(self, energy_edges, source, fit=None):
 
         self.energy_edges = energy_edges
         self.source = source
@@ -60,7 +54,6 @@ class EnergyDependenceEstimator(Estimator):
             fit = Fit(optimize_opts={"print_level": 1})
 
         self.fit = fit
-        self.selection_optional = selection_optional
 
     def estimate_source_significance(self, datasets):
         """Estimate the significance of the source above the background.
@@ -244,11 +237,9 @@ class EnergyDependenceEstimator(Estimator):
             raise ValueError("Unsupported dataset type.")
 
         results = self.estimate_energy_dependence(dataset)
-
-        if "src-sig" in self.selection_optional:
-            results = dict(
-                energy_dependence=results,
-                src_above_bkg=self.estimate_source_significance(dataset),
-            )
+        results = dict(
+            energy_dependence=results,
+            src_above_bkg=self.estimate_source_significance(dataset),
+        )
 
         return results
