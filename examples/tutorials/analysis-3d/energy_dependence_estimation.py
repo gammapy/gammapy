@@ -35,8 +35,11 @@ from astropy.coordinates import SkyCoord
 from astropy.table import Table
 from regions import CircleSkyRegion
 from gammapy.data import DataStore
-from gammapy.datasets import Datasets, MapDataset
-from gammapy.estimators.energydependence import EnergyDependenceEstimator
+from gammapy.datasets import MapDataset
+from gammapy.estimators.energydependence import (
+    EnergyDependenceEstimator,
+    weighted_chi2_parameter,
+)
 from gammapy.makers import (
     DatasetsMaker,
     FoVBackgroundMaker,
@@ -186,13 +189,13 @@ estimator = EnergyDependenceEstimator(energy_edges=energy_edges, source="MSH1552
 # Show the results tables
 # -----------------------
 #
-# The results for the source above the background
+# The results of the source signal above the background in each energy bin.
 # -----------------------------------------------
 #
 
 estimator = EnergyDependenceEstimator(energy_edges=energy_edges, source="MSH1552")
-table_bkg_src = estimator.estimate_source_significance(datasets)
-table_bkg_src
+result_bkg_src = estimator.estimate_source_significance(datasets)
+Table(result_bkg_src)
 
 ######################################################################
 # The results for testing energy dependence
@@ -201,9 +204,28 @@ table_bkg_src
 results = estimator.run(datasets)
 ts = results["energy_dependence"]["delta_ts"]
 df = results["energy_dependence"]["df"]
-print(f"The significance value is {ts_to_sigma(ts, df=df)}")
+sigma = ts_to_sigma(ts, df=df)
+print(f"The delta_ts for the energy-dependent study is {ts:.3f}.")
+print("")
+print(f"Converting this to a significance gives {sigma:.3f} \u03C3")
 table = Table(results["energy_dependence"]["result"])
 table
+
+# The chi-squared value for each parameter of interest
+# ----------------------------------------------------
+
+Table(
+    weighted_chi2_parameter(results["energy_dependence"]["result"], parameter="sigma")
+)
+
+Table(
+    weighted_chi2_parameter(results["energy_dependence"]["result"], parameter="lat_0")
+)
+
+Table(
+    weighted_chi2_parameter(results["energy_dependence"]["result"], parameter="lon_0")
+)
+
 
 ######################################################################
 # Plotting the results

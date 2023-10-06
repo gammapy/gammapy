@@ -1,4 +1,5 @@
 import numpy as np
+from astropy.table import Table
 from gammapy.datasets import Datasets
 from gammapy.modeling import Fit
 from gammapy.modeling.models import FoVBackgroundModel
@@ -7,8 +8,23 @@ from gammapy.stats.utils import ts_to_sigma
 from .core import Estimator
 
 
-def weighted_chi2_parameter_results(table_edep, parameter="sigma"):
-    """Calculate the weighted chi2 value for the parameter of interest"""
+def weighted_chi2_parameter(results_edep, parameter="sigma"):
+    """Calculate the weighted chi2 value for the parameter of interest
+
+    Parameters
+    ----------
+    result_edep : dict
+        Dictionary of results for the energy-dependent estimator
+    parameter : str
+        The model parameter to calculate the chi-squared value for
+
+    Returns
+    -------
+    chi2_result : dict
+        Dictionary with the chi-squared value for parameter of interest
+    """
+
+    table_edep = Table(results_edep)
 
     values = table_edep[f"{parameter}"][1:]
     errors = table_edep[f"{parameter}_err"][1:]
@@ -37,8 +53,9 @@ class EnergyDependenceEstimator(Estimator):
         Energy edges for the energy-dependence test.
     source : str or int
         For which source in the model to compute the estimator.
-    fit : `Fit`
+    fit : `~gammapy.modeling.Fit`
         Fit instance specifying the backend and fit options.
+        Fit backend default : minuit
 
     """
 
@@ -65,8 +82,8 @@ class EnergyDependenceEstimator(Estimator):
 
         Returns
         -------
-        table_bkg_src : `~astropy.table.Table`
-            Table with the results of the null hypothesis with no source, and alternative
+        result_bkg_src : dict
+            Dictionary with the results of the null hypothesis with no source, and alternative
             hypothesis with the source added in. Entries are:
             * "Emin" : the minimum energy of the energy band
             * "Emax" : the maximum energy of the energy band
@@ -137,7 +154,7 @@ class EnergyDependenceEstimator(Estimator):
         Returns
         -------
         results : `dict`
-            Dict with results of the energy-dependence test.
+            Dictionary with results of the energy-dependence test. Entries are:
             * "delta_ts" : difference in ts between fitting each energy band individually (sliced fit) and the joint fit
             * "df" : the degrees of freedom between fitting each energy band individually (sliced fit) and the joint fit
             * "result" : the results for the fitting each energy band individually (sliced fit) and the joint fit
@@ -230,7 +247,7 @@ class EnergyDependenceEstimator(Estimator):
         Returns
         -------
         results : dict
-            Dict with the various energy-dependence estimation values.
+            Dictionary with the various energy-dependence estimation values.
         """
 
         if not isinstance(dataset, Datasets):
