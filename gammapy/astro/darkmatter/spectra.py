@@ -2,27 +2,40 @@
 """Dark matter spectra."""
 import numpy as np
 import astropy.units as u
+from astropy.coordinates import SkyCoord
 from astropy.table import Table
+from regions import CircleSkyRegion
+from gammapy.maps import MapAxis, RegionNDMap
 from gammapy.modeling import Parameter
 from gammapy.modeling.models import (
     SPECTRAL_MODEL_REGISTRY,
     SpectralModel,
+    TemplateNDSpectralModel,
     TemplateSpectralModel,
 )
+from gammapy.utils.deprecation import deprecated
 from gammapy.utils.interpolation import LogScale
 from gammapy.utils.scripts import make_path
 
 __all__ = ["PrimaryFlux", "DarkMatterAnnihilationSpectralModel"]
 
 
-class PrimaryFlux:
+class PrimaryFlux(TemplateNDSpectralModel):
     """DM-annihilation gamma-ray spectra.
 
     Based on the precomputed models by Cirelli et al. (2016). All available
     annihilation channels can be found there. The dark matter mass will be set
     to the nearest available value. The spectra will be available as
-    `~gammapy.modeling.models.TemplateSpectralModel` for a chosen dark matter mass and
-    annihilation channel.
+    `~gammapy.modeling.models.TemplateNDSpectralModel` for a chosen dark matter mass and
+    annihilation channel. Using a `~gammapy.modeling.models.TemplateNDSpectralModel`
+    allows the interpolation beween different dark matter masses.
+
+    Parameters
+    ----------
+    mDM : `~astropy.units.Quantity`
+        Dark matter mass
+    channel: str
+        Annihilation channel
 
     References
     ----------
@@ -63,6 +76,8 @@ class PrimaryFlux:
 
     table_filename = "$GAMMAPY_DATA/dark_matter_spectra/AtProduction_gammas.dat"
 
+    tag = ["PrimaryFlux", "dm-pf"]
+
     def __init__(self, mDM, channel):
 
         self.table_path = make_path(self.table_filename)
@@ -80,20 +95,37 @@ class PrimaryFlux:
                 delimiter=" ",
             )
 
-        self.mDM = mDM
         self.channel = channel
+
+        # create RegionNDMap for channel
+
+        masses = np.unique(self.table["mDM"])
+        log10x = np.unique(self.table["Log[10,x]"])
+
+        coord = SkyCoord(0, 0, unit="deg", frame="galactic")
+        region = CircleSkyRegion(coord, radius=1 * u.deg)
+
+        mass_axis = MapAxis.from_nodes(masses, name="mass", interp="log", unit="GeV")
+        log10x_axis = MapAxis.from_nodes(log10x, name="energy_true")
+
+        channel_name = self.channel_registry[self.channel]
+        regionMap = RegionNDMap.create(
+            region, axes=[log10x_axis, mass_axis], data=self.table[channel_name]
+        )
+
+        super().__init__(regionMap)
+        self.mDM = mDM
+        self.mass.frozen = True
 
     @property
     def mDM(self):
         """Dark matter mass."""
-        return self._mDM
+        return u.Quantity(self.mass.value, "GeV")
 
     @mDM.setter
     def mDM(self, mDM):
-        mDM_vals = self.table["mDM"].data
-        mDM_ = u.Quantity(mDM).to_value("GeV")
-        interp_idx = np.argmin(np.abs(mDM_vals - mDM_))
-        self._mDM = u.Quantity(mDM_vals[interp_idx], "GeV")
+        _mDM = u.Quantity(mDM).to("GeV")
+        self.mass.value = _mDM.to_value("GeV")
 
     @property
     def allowed_channels(self):
@@ -114,7 +146,18 @@ class PrimaryFlux:
         else:
             self._channel = channel
 
+    def evaluate(self, energy, **kwargs):
+        mass = {"mass": self.mDM}
+        kwargs.update(mass)
+
+        log10x = np.log10(energy / self.mDM)
+
+        dN_dlogx = super().evaluate(log10x, **kwargs)
+        dN_dE = dN_dlogx / (energy * np.log(10))
+        return dN_dE
+
     @property
+    @deprecated("1.1", alternative="the `PrimaryFlux` class as the spectral model")
     def table_model(self):
         """Spectrum as `~gammapy.modeling.models.TemplateSpectralModel`."""
         subtable = self.table[self.table["mDM"] == self.mDM.value]
@@ -190,7 +233,7 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
         self.mass = u.Quantity(mass)
         self.channel = channel
         self.jfactor = u.Quantity(jfactor)
-        self.primary_flux = PrimaryFlux(mass, channel=self.channel).table_model
+        self.primary_flux = PrimaryFlux(mass, channel=self.channel)
         super().__init__(scale=scale)
 
     def evaluate(self, energy, scale):

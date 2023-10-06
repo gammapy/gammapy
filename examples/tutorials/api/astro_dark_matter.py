@@ -154,8 +154,9 @@ for mDM, ax in zip(mDMs, axes):
     ax.set_ylabel("dN/dE")
 
     for channel in ["tau", "mu", "b", "Z"]:
+        fluxes = PrimaryFlux(mDM=mDM, channel=channel)
         fluxes.channel = channel
-        fluxes.table_model.plot(
+        fluxes.plot(
             energy_bounds=[mDM / 100, mDM],
             ax=ax,
             label=channel,

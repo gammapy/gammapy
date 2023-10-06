@@ -13,7 +13,7 @@ def test_primary_flux():
         PrimaryFlux(channel="Spam", mDM=1 * u.TeV)
 
     primflux = PrimaryFlux(channel="W", mDM=1 * u.TeV)
-    actual = primflux.table_model(500 * u.GeV)
+    actual = primflux(500 * u.GeV)
     desired = 9.328234e-05 / u.GeV
     assert_quantity_allclose(actual, desired)
 
