@@ -28,6 +28,7 @@ __all__ = [
     "ParameterEstimator",
     "SensitivityEstimator",
     "TSMapEstimator",
+    "EnergyDependenceEstimator",
 ]
 
 
