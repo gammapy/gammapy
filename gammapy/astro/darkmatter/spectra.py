@@ -35,7 +35,7 @@ class PrimaryFlux(TemplateNDSpectralModel):
     mDM : `~astropy.units.Quantity`
         Dark matter mass
     channel: str
-        Annihilation channel
+        Annihilation channel. List available channels with `~gammapy.spectrum.PrimaryFlux.allowed_channels`.
 
     References
     ----------
