@@ -1,72 +1,139 @@
+import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import SkyCoord
-from regions import CircleSkyRegion
-from gammapy.data import DataStore
-from gammapy.datasets import MapDataset
+from astropy.coordinates.angle_utilities import angular_separation
+from gammapy.data import Observation, observatory_locations
+from gammapy.data.pointing import FixedPointingInfo, PointingMode
+from gammapy.datasets import Datasets, MapDataset
 from gammapy.estimators.energydependence import (
     EnergyDependenceEstimator,
     weighted_chi2_parameter,
 )
-from gammapy.makers import (
-    DatasetsMaker,
-    FoVBackgroundMaker,
-    MapDatasetMaker,
-    SafeMaskMaker,
-)
+from gammapy.irf import load_irf_dict_from_file
+from gammapy.makers import MapDatasetMaker, SafeMaskMaker
 from gammapy.maps import MapAxis, WcsGeom
+from gammapy.modeling import Parameter
 from gammapy.modeling.models import (
     GaussianSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
+    SpatialModel,
 )
 
 
-def dataset():
-    data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
-    obs_id = data_store.obs_table["OBS_ID"][
-        data_store.obs_table["OBJECT"] == "MSH 15-5-02"
-    ]
-    observations = data_store.get_observations(obs_id)
+class MyCustomGaussianModel(SpatialModel):
+    """My custom Energy Dependent Gaussian model.
 
-    energy_axis = MapAxis.from_energy_bounds(0.2, 100, nbin=15, unit="TeV")
+    Parameters
+    ----------
+    lon_0, lat_0 : `~astropy.coordinates.Angle`
+        Center position
+    sigma_1TeV : `~astropy.coordinates.Angle`
+        Width of the Gaussian at 1 TeV
+    sigma_10TeV : `~astropy.coordinates.Angle`
+        Width of the Gaussian at 10 TeV
 
-    source_pos = SkyCoord(320.33, -1.19, unit="deg", frame="galactic")
+    """
+
+    tag = "MyCustomGaussianModel"
+    is_energy_dependent = True
+    lon_0 = Parameter("lon_0", "5.6 deg")
+    lat_0 = Parameter("lat_0", "0.2 deg", min=-90, max=90)
+
+    sigma_1TeV = Parameter("sigma_1TeV", "0.3 deg", min=0)
+    sigma_10TeV = Parameter("sigma_10TeV", "0.15 deg", min=0)
+
+    SpatialModel.frame = "galactic"
+
+    @staticmethod
+    def evaluate(lon, lat, energy, lon_0, lat_0, sigma_1TeV, sigma_10TeV):
+        sep = angular_separation(lon, lat, lon_0, lat_0)
+
+        # Compute sigma for the given energy using linear interpolation in log energy
+        sigma_nodes = u.Quantity([sigma_1TeV, sigma_10TeV])
+        energy_nodes = [1, 10] * u.TeV
+        log_s = np.log(sigma_nodes.to("deg").value)
+        log_en = np.log(energy_nodes.to("TeV").value)
+        log_e = np.log(energy.to("TeV").value)
+        sigma = np.exp(np.interp(log_e, log_en, log_s)) * u.deg
+
+        exponent = -0.5 * (sep / sigma) ** 2
+        norm = 1 / (2 * np.pi * sigma**2)
+
+        return norm * np.exp(exponent)
+
+    @property
+    def evaluation_radius(self):
+        """Evaluation radius (`~astropy.coordinates.Angle`)."""
+        return 2 * np.max([self.sigma_1TeV.value, self.sigma_10TeV.value]) * u.deg
+
+
+def create_dataset():
+    source_lat = 0.2
+    source_lon = 5.6
+    spatial_model = MyCustomGaussianModel()
+
+    spectral_model = PowerLawSpectralModel(
+        index=3, amplitude="1e-11 cm-2 s-1 TeV-1", reference="1 TeV"
+    )
+    model = SkyModel(
+        spatial_model=spatial_model, spectral_model=spectral_model, name="model1"
+    )
+
+    irfs = load_irf_dict_from_file(
+        "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
+    )
+    livetime = 10.0 * u.hr
+    location = observatory_locations["cta_south"]
+    # TO DO: update to remove 'mode' in 1.3
+    pointing = FixedPointingInfo(
+        mode=PointingMode.POINTING,
+        fixed_icrs=SkyCoord(source_lon, source_lat, unit="deg", frame="galactic").icrs,
+    )
+
+    obs = Observation.create(
+        pointing=pointing,
+        livetime=livetime,
+        irfs=irfs,
+        location=location,
+    )
+
+    # Define map geometry for binned simulation
+    energy_reco = MapAxis.from_edges(
+        np.logspace(-1.0, 2, 20), unit="TeV", name="energy", interp="log"
+    )
     geom = WcsGeom.create(
-        skydir=(source_pos.galactic.l.deg, source_pos.galactic.b.deg),
-        frame="galactic",
-        axes=[energy_axis],
-        width=5,
+        skydir=(source_lon, source_lat),
         binsz=0.02,
-    )
-    regions = CircleSkyRegion(center=source_pos, radius=0.7 * u.deg)
-    exclusion_mask = geom.region_mask(regions, inside=False)
-
-    safe_mask_maker = SafeMaskMaker(
-        methods=["aeff-default", "offset-max"], offset_max=2.5 * u.deg
+        width=5 * u.deg,
+        frame="galactic",
+        axes=[energy_reco],
     )
 
-    dataset_maker = MapDatasetMaker()
+    # Make the MapDataset
+    empty = MapDataset.create(geom, name="dataset-simu")
+    maker = MapDatasetMaker(selection=["exposure", "background", "psf", "edisp"])
+    maker_safe_mask = SafeMaskMaker(methods=["offset-max"], offset_max=2.0 * u.deg)
+    dataset = maker.run(empty, obs)
+    dataset = maker_safe_mask.run(dataset, obs)
 
-    fov_bkg_maker = FoVBackgroundMaker(method="fit", exclusion_mask=exclusion_mask)
+    # Add the model on the dataset and Poission fluctuate
+    dataset.models = model
+    dataset.fake(random_state=42)
 
-    global_dataset = MapDataset.create(geom)
-    makers = [dataset_maker, safe_mask_maker, fov_bkg_maker]  # the order matters
-
-    datasets_maker = DatasetsMaker(
-        makers, stack_datasets=True, n_jobs=1, cutout_mode="partial"
-    )
-    datasets = datasets_maker.run(global_dataset, observations)
-
-    return datasets
+    return dataset
 
 
-source_pos = SkyCoord(320.33, -1.19, unit="deg", frame="galactic")
-
-spatial_model = GaussianSpatialModel(
-    lon_0=source_pos.l, lat_0=source_pos.b, frame="galactic", sigma="0.1 deg"
+source_pos = SkyCoord(5.58, 0.2, unit="deg", frame="galactic")
+energy_edges = [1, 3, 5, 20] * u.TeV
+spectral_model = PowerLawSpectralModel(
+    index=2.94, amplitude=9.8e-12 * u.Unit("cm-2 s-1 TeV-1"), reference=1.0 * u.TeV
 )
-spectral_model = PowerLawSpectralModel(index=2)
+spatial_model = GaussianSpatialModel(
+    lon_0=source_pos.l, lat_0=source_pos.b, frame="galactic", sigma=0.2 * u.deg
+)
+
 model = SkyModel(
     spatial_model=spatial_model, spectral_model=spectral_model, name="source"
 )
@@ -83,55 +150,53 @@ spatial_model.lon_0.max = source_pos.galactic.l.deg + 0.8
 spatial_model.lat_0.min = source_pos.galactic.b.deg - 0.8
 spatial_model.lat_0.max = source_pos.galactic.b.deg + 0.8
 
-datasets = dataset()
-datasets.models = model
+dataset = create_dataset()
+dataset.models = model
 
-energy_edges = [0.3, 1, 5, 10] * u.TeV
+datasets = Datasets([dataset])
+
 estimator = EnergyDependenceEstimator(energy_edges=energy_edges, source="source")
 results = estimator.run(datasets)
 
 
 def test_edep():
     results_edep = results["energy_dependence"]["result"]
-
     assert_allclose(
         results_edep["lon_0"],
-        [320.3243, 320.32481, 320.32449, 320.33946] * u.deg,
-        atol=1e-13,
+        [5.59758936, 5.59883752, 5.59508081, 5.60370771] * u.deg,
+        atol=1e-5,
     )
     assert_allclose(
         results_edep["lat_0"],
-        [-1.2019497, -1.2090126, -1.1939511, -1.2581422] * u.deg,
-        atol=1e-13,
+        [0.19058239, 0.20215059, 0.18426731, 0.17378267] * u.deg,
+        atol=1e-5,
     )
     assert_allclose(
         results_edep["sigma"],
-        [0.085480195, 0.083817991, 0.088305808, 0.029709042] * u.deg,
-        atol=1e-13,
+        [0.22264514, 0.25998229, 0.1891126, 0.18796409] * u.deg,
+        atol=1e-5,
     )
     assert_allclose(
-        results["energy_dependence"]["delta_ts"], 11.791874358721543, atol=1e-13
+        results["energy_dependence"]["delta_ts"], 56.38850999822898, atol=1e-5
     )
 
 
 def test_significance():
     results_src = results["src_above_bkg"]
-
     assert_allclose(
         results_src["delta_ts"],
-        [181.91815185037558, 382.6264919312089, 47.9404451529608],
-        atol=1e-13,
+        [1546.2458570901, 1168.6506571890714, 435.2570648315741],
+        atol=1e-5,
     )
     assert_allclose(
         results_src["significance"],
-        [12.934154684412816, 19.1245726422729, 6.114080695459439],
-        atol=1e-13,
+        [np.inf, 33.88815235691276, 20.44481642577318],
+        atol=1e-5,
     )
 
 
 def test_chi2():
     results_edep = results["energy_dependence"]["result"]
-
     chi2_sigma = weighted_chi2_parameter(results_edep, parameter="sigma")
-    assert_allclose(chi2_sigma["chi2 sigma"], [15.151767516908023], atol=1e-13)
-    assert_allclose(chi2_sigma["significance"], [3.4740491335633923], atol=1e-13)
+    assert_allclose(chi2_sigma["chi2 sigma"], [52.510946417517644], atol=1e-5)
+    assert_allclose(chi2_sigma["significance"], [6.938700011859214], atol=1e-5)
