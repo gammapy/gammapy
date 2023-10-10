@@ -2,9 +2,7 @@
 """Dark matter spectra."""
 import numpy as np
 import astropy.units as u
-from astropy.coordinates import SkyCoord
 from astropy.table import Table
-from regions import CircleSkyRegion
 from gammapy.maps import MapAxis, RegionNDMap
 from gammapy.modeling import Parameter
 from gammapy.modeling.models import (
@@ -102,18 +100,15 @@ class PrimaryFlux(TemplateNDSpectralModel):
         masses = np.unique(self.table["mDM"])
         log10x = np.unique(self.table["Log[10,x]"])
 
-        coord = SkyCoord(0, 0, unit="deg", frame="galactic")
-        region = CircleSkyRegion(coord, radius=1 * u.deg)
-
         mass_axis = MapAxis.from_nodes(masses, name="mass", interp="log", unit="GeV")
         log10x_axis = MapAxis.from_nodes(log10x, name="energy_true")
 
         channel_name = self.channel_registry[self.channel]
-        regionMap = RegionNDMap.create(
-            region, axes=[log10x_axis, mass_axis], data=self.table[channel_name]
+        region_map = RegionNDMap.create(
+            region=None, axes=[log10x_axis, mass_axis], data=self.table[channel_name]
         )
 
-        super().__init__(regionMap)
+        super().__init__(region_map)
         self.mDM = mDM
         self.mass.frozen = True
 
