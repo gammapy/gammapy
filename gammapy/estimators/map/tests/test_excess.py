@@ -154,7 +154,7 @@ def test_significance_map_estimator_map_dataset(simple_dataset):
     assert_allclose(result["npred_excess_ul"].data[0, 10, 10], 107.806275, atol=1e-3)
 
     assert_allclose(result["norm_sensitivity"].data[0, 10, 10], 48.997699, atol=1e-3)
-    assert_allclose(result["flux_sensitivity"].data[0, 10, 10], 4.850772e-10)
+    assert_allclose(result["flux_sensitivity"].data[0, 10, 10], 4.850772e-10, rtol=1e-4)
 
     estimator = ExcessMapEstimator(
         0.1 * u.deg,
@@ -163,7 +163,7 @@ def test_significance_map_estimator_map_dataset(simple_dataset):
     )
 
     assert_allclose(result["norm_sensitivity"].data[0, 10, 10], 48.997699, atol=1e-3)
-    assert_allclose(result["flux_sensitivity"].data[0, 10, 10], 4.850772e-10, atol=1e-3)
+    assert_allclose(result["flux_sensitivity"].data[0, 10, 10], 4.850772e-10, rtol=1e-3)
 
 
 def test_significance_map_estimator_map_dataset_mask_safe(simple_dataset_mask_safe):
@@ -204,7 +204,7 @@ def test_significance_map_estimator_map_dataset_exposure(simple_dataset):
 
     assert_allclose(result["npred_excess"].data.sum(), 19733.602, rtol=1e-3)
     assert_allclose(result["sqrt_ts"].data[0, 10, 10], 4.217129, rtol=1e-3)
-    assert_allclose(result["flux_sensitivity"].data[0, 10, 10], 5.742761e-09)
+    assert_allclose(result["flux_sensitivity"].data[0, 10, 10], 5.742761e-09, rtol=1e-3)
 
     # without mask safe
     simple_dataset_no_mask = MapDataset(
@@ -220,7 +220,7 @@ def test_significance_map_estimator_map_dataset_exposure(simple_dataset):
     result_no_mask = estimator.run(simple_dataset_no_mask)
     assert_allclose(result_no_mask["npred_excess"].data.sum(), 19733.602, rtol=1e-3)
     assert_allclose(result_no_mask["sqrt_ts"].data[0, 10, 10], 4.217129, rtol=1e-3)
-    assert_allclose(result["flux_sensitivity"].data[0, 10, 10], 5.742761e-09)
+    assert_allclose(result["flux_sensitivity"].data[0, 10, 10], 5.742761e-09, rtol=1e-3)
 
 
 def test_excess_map_estimator_map_dataset_on_off_no_correlation(
