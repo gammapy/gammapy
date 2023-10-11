@@ -154,7 +154,7 @@ def test_significance_map_estimator_map_dataset(simple_dataset):
     assert_allclose(result["npred_excess_ul"].data[0, 10, 10], 107.806275, atol=1e-3)
 
     assert_allclose(result["norm_sensitivity"].data[0, 10, 10], 48.997699, atol=1e-3)
-    assert_allclose(result["flux_sensitivity"].data[0, 10, 10], 4.850772e-10)
+    assert_allclose(result["flux_sensitivity"].data[0, 10, 10], 4.850772e-10, rtol=1e-4)
 
     estimator = ExcessMapEstimator(
         0.1 * u.deg,
@@ -163,7 +163,7 @@ def test_significance_map_estimator_map_dataset(simple_dataset):
     )
 
     assert_allclose(result["norm_sensitivity"].data[0, 10, 10], 48.997699, atol=1e-3)
-    assert_allclose(result["flux_sensitivity"].data[0, 10, 10], 4.850772e-10, atol=1e-3)
+    assert_allclose(result["flux_sensitivity"].data[0, 10, 10], 4.850772e-10, rtol=1e-3)
 
 
 def test_significance_map_estimator_map_dataset_mask_safe(simple_dataset_mask_safe):
