@@ -113,8 +113,8 @@ class PSFMap(IRFMap):
     def _psf_irf(self):
         geom = self.psf_map.geom
         npix_x, npix_y = geom.npix
-        axis_lon = MapAxis.from_edges(np.arange(npix_x + 1) - 0.5, name="lon_idx")
-        axis_lat = MapAxis.from_edges(np.arange(npix_y + 1) - 0.5, name="lat_idx")
+        axis_lon = MapAxis.from_edges(np.arange(npix_x[0] + 1) - 0.5, name="lon_idx")
+        axis_lat = MapAxis.from_edges(np.arange(npix_y[0] + 1) - 0.5, name="lat_idx")
         axes = MapAxes(
             [geom.axes[self.energy_name], geom.axes["rad"], axis_lat, axis_lon]
         )

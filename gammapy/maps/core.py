@@ -842,7 +842,7 @@ class Map(abc.ABC):
             raise ValueError("Tuple length must equal number of non-spatial dimensions")
 
         # Only support scalar indices per axis
-        idx = tuple([int(_) for _ in idx])
+        idx = tuple([int(_.item()) for _ in np.array(idx)])
 
         geom = self.geom.to_image()
         data = self.data[idx[::-1]]

@@ -202,7 +202,7 @@ class RegionGeom(Geom):
     @property
     def npix(self):
         """Number of spatial pixels"""
-        return (1, 1)
+        return ([1], [1])
 
     def contains(self, coords):
         """Check if a given map coordinate is contained in the region.

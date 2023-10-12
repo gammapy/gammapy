@@ -303,8 +303,8 @@ class WcsNDMap(WcsMap):
         if self.geom.is_regular:
             slices = [slice(None)] * len(self.geom.axes)
             slices += [
-                slice(crop_width[1], int(self.geom.npix[1] - crop_width[1])),
-                slice(crop_width[0], int(self.geom.npix[0] - crop_width[0])),
+                slice(crop_width[1], int(self.geom.npix[1][0] - crop_width[1])),
+                slice(crop_width[0], int(self.geom.npix[0][0] - crop_width[0])),
             ]
             data = self.data[tuple(slices)]
             map_out = self._init_copy(geom=geom, data=data)
@@ -509,10 +509,10 @@ class WcsNDMap(WcsMap):
         _, ymin = self.geom.to_image().coord_to_pix({"lon": 0, "lat": -90})
         _, ymax = self.geom.to_image().coord_to_pix({"lon": 0, "lat": 90})
 
-        ax.set_xlim(xmin, xmax)
-        ax.set_ylim(ymin, ymax)
+        ax.set_xlim(xmin[0], xmax[0])
+        ax.set_ylim(ymin[0], ymax[0])
 
-        ax.text(0, ymax, self.geom.frame + " coords")
+        ax.text(0, ymax[0], self.geom.frame + " coords")
 
         # Grid and ticks
         glon_spacing, glat_spacing = 45, 15
