@@ -94,12 +94,12 @@ class HpxNDMap(HpxMap):
 
         hpx_ref = HpxGeom(nside=nside_superpix, nest=nest, frame=geom_wcs.frame)
 
-        idx = np.arange(np.squeeze(map_hpx.geom.to_image().npix))
+        idx = np.arange(map_hpx.geom.to_image().npix.item())
         indices = get_superpixels(idx, map_hpx.geom.nside, nside_superpix, nest=nest)
 
         for wcs_tile in wcs_tiles:
             hpx_idx = hpx_ref.coord_to_idx(wcs_tile.geom.center_skydir)[0]
-            hpx_idx = int(np.squeeze(hpx_idx))
+            hpx_idx = int(hpx_idx.item())
             mask = indices == hpx_idx
             map_hpx.data[mask] = wcs_tile.interp_by_coord(coords[mask])
 
@@ -344,7 +344,12 @@ class HpxNDMap(HpxMap):
         geom : `~HpxNDMap`
             Healpix map with new nside.
         """
-        factor = np.squeeze(nside / self.geom.nside)
+        if len(self.geom.nside) > 1:
+            raise NotImplementedError(
+                "to_nside() is not supported for an irregular map."
+            )
+
+        factor = nside / self.geom.nside.item()
 
         if factor > 1:
             return self.upsample(factor=int(factor), preserve_counts=preserve_counts)
@@ -461,7 +466,10 @@ class HpxNDMap(HpxMap):
         """
         import healpy as hp
 
-        nside = np.squeeze(self.geom.nside)
+        if len(self.geom.nside) > 1:
+            raise NotImplementedError("smooth is not supported for an irregular map.")
+
+        nside = self.geom.nside.item()
         lmax = int(3 * nside - 1)  # maximum l of the power spectrum
         ipix = self.geom._ipix
 
@@ -653,7 +661,12 @@ class HpxNDMap(HpxMap):
         """
         import healpy as hp
 
-        nside = np.squeeze(self.geom.nside)
+        if len(self.geom.nside) > 1:
+            raise NotImplementedError(
+                "convolve_full() is not supported for an irregular map."
+            )
+
+        nside = self.geom.nside.item()
         lmax = int(3 * nside - 1)  # maximum l of the power spectrum
         nest = self.geom.nest
         allsky = self.geom.is_allsky
@@ -972,7 +985,7 @@ class HpxNDMap(HpxMap):
         wcs_lonlat = wcs.center_coord[:2]
         idx = self.geom.get_idx()
         vtx = hp.boundaries(
-            np.squeeze(self.geom.nside), idx[0], nest=self.geom.nest, step=step
+            self.geom.nside.item(), idx[0], nest=self.geom.nest, step=step
         )
         theta, phi = hp.vec2ang(np.rollaxis(vtx, 2))
         theta = theta.reshape((4 * step, -1)).T
