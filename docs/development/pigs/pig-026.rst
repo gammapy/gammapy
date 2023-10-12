@@ -107,7 +107,7 @@ Nuisance parameters and priors
 
 The user wants to add a systematic effect of unknown amplitude (e.g. a bias in the absolute
 energy scale) and wants to estimate the impact of this effect on the parameter estimation
-assuming a prior distribution of the nuisance parameter. 
+assuming a prior distribution of the nuisance parameter.
 
 Specific Projects
 =================
@@ -136,17 +136,19 @@ is of course a very long term perspective, beyond v2.0.
 Proposed minor changes
 ~~~~~~~~~~~~~~~~~~~~~~
 
-- RegionGeom should support sizes changing with axis.
+- Improve the user interface to ``Map``. In particular, better protect and
+  improve the documentation of ``Map.create()`` ``MapGeom.create()`` and constructors.
+  Improve the handling of ``MapCoord`` to ease slice extraction.
+- RegionGeom could support sizes changing with axis.
   This would handle energy dependent region sizes as well as (See `GH 3863`_).
-- Improve the user interface to ``Map``
-- Clean-up serialization code, e.g. for ``MapAxis``
+- The serialization code is complex and will become hard to maintain when new formats
+  are introduced, see e.g. for ``MapAxis``. Some clean-up and refactoring is necessary
+  here.
 
 Possible major changes
 ~~~~~~~~~~~~~~~~~~~~~~
 
-We discuss here some aspects that should be explored. The evaluation of the feasibility
-will require some detailed prototyping. Such a major change would probably be possible
-only when releasing v2.0.
+We discuss here some aspects that should be explored.
 
 - ``IRF`` and ``Map`` share a similar data model. A N-dimensional ``Quantity`` with a
   ``MapAxes`` and an interpolator. In addition, ``Maps`` use the ``Geom`` object to
@@ -156,6 +158,9 @@ only when releasing v2.0.
     - One could allow ``Maps`` and ``MapCoord`` objects without spatial axes.
       Introducing specialized spatial axes such as `WcsMapAxis`, `RegionMapAxis` or
       `HpxMapAxis` could allow avoiding using ``Geom`` objects.
+    - The evaluation of the feasibility will require some detailed prototyping.
+      Such a major change would probably be possible at best only when releasing v2.0.
+      Having a prototype at this timescale would be nice.
 - Migrate from the healpy dependency to using https://github.com/astropy/astropy-healpix
   or https://github.com/cds-astro/cds-healpix-python. Another option could be to interface
   multi resolution HPX maps: https://mhealpy.readthedocs.io ?
