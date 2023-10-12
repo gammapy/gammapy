@@ -39,13 +39,38 @@ Event type handling
 Starting from a datastore containing events lists and IRFs with types and classes of events,
 the user produces of a list of datasets per event type or class. Meta informations of
 the datasets allow for complex types handling at modeling/fitting step (e.g. joint fit
-of A & B type, stack all type together etc)
+of A & B type, stack all type together etc).
+
+Manipulation and selection of Datasets
+++++++++++++++++++++++++++++++++++++++
+
+After data reduction in a list of spectrum datasets, the user wants to stack spectra obtained
+in observation in given bands of zenith angle. The metadata information stored on the datasets
+allows complex manipulation at modeling/fitting step.
 
 Unbinned spectral or 3D analysis
 ++++++++++++++++++++++++++++++++
 
 The user produces a dataset with reprojected IRFs and a list of events and performs model
 fitting and parameter estimation computing likelihoods of individual events.
+
+Source detection
+++++++++++++++++
+
+After creating a MapDataset, a user extracts a list of source candidate positions and fluxes
+with associated errors and estimated significance. The list can be used as input for model
+fitting at later steps.
+
+Transient source detection
+++++++++++++++++++++++++++
+
+The user wants to search for unknown transient sources in a given observation or set of
+observations.
+
+The user wants to find flares in the long term light curve of a variable source or to
+study source variability on various temporal scales. A number of standard quantities
+such as excess variance, flux doubling time scale can be extracted from datasets
+or lightcurves products.
 
 Pulsed signal search
 ++++++++++++++++++++
@@ -55,12 +80,6 @@ and can evaluate the significance of a pulsed signal vs flat background. PSF wei
 phasograms could also be produced to increase the sensitivity. A map per phase bin
 can be produced. Spectral analysis per phase bin should be easy to perform, with either
 background model or off counts measurements.
-
-Transient source detection
-++++++++++++++++++++++++++
-
-The user wants to search for transient source or rapid source variability in a given observation.
-The user want to find flares in the long term light curve of a variable source.
 
 Spectral unfolding
 ++++++++++++++++++
@@ -75,20 +94,6 @@ An estimator API allows the user to test the model morphology parameters: extens
 and associated significance, position error contours. Applying it per energy bands allows
 testing for energy dependent morphology.
 
-Source detection
-++++++++++++++++
-
-After creating a MapDataset, a user extracts a list of source candidate positions and fluxes
-with associated errors and estimated significance. The list can be used as input for model
-fitting at later steps.
-
-Manipulation and selection of Datasets
-++++++++++++++++++++++++++++++++++++++
-
-After data reduction in a list of spectrum datasets, the user wants to stack spectra obtained
-in observation in given bands of zenith angle. The metadata information stored on the datasets
-allows complex manipulation at modeling/fitting step.
-
 Handling systematic effects
 +++++++++++++++++++++++++++
 
@@ -97,15 +102,12 @@ IRFs (e.g. a bias in the absolute energy scale, or a possible broadening of the 
 to allow quantifying its impact on a measurement. Specific models for such IRFs
 uncertainties could be defined on any dataset.
 
-
 Nuisance parameters and priors
 ++++++++++++++++++++++++++++++
 
 The user wants to add a systematic effect of unknown amplitude (e.g. a bias in the absolute
 energy scale) and wants to estimate the impact of this effect on the parameter estimation
-assuming a prior distribution of the nuisance parameter. (mixed likelihood, check terminology).
-Generic background model using a KernelBackgroundEstimator? Or parametrised background models?
-
+assuming a prior distribution of the nuisance parameter. 
 
 Specific Projects
 =================
