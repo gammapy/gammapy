@@ -33,17 +33,17 @@ jobs:
           - os: ubuntu-latest
             python: '3.9'
             tox_env: 'py39-test-alldeps-cov'
-            gammapy_data_path: /home/runner/work/gammapy/gammapy/gammapy-datasets/dev
+            gammapy_data_path: /home/runner/work/gammapy/gammapy/gammapy-datasets/1.0
             allowed_fail: false
           - os: macos-latest
             python: '3.9'
             tox_env: 'py39-test'
-            gammapy_data_path: /Users/runner/work/gammapy/gammapy/gammapy-datasets/dev
+            gammapy_data_path: /Users/runner/work/gammapy/gammapy/gammapy-datasets/1.0
             allowed_fail: false
           - os: windows-latest
             python: '3.9'
             tox_env: 'py39-test-alldeps'
-            gammapy_data_path:  D:\a\gammapy\gammapy\gammapy-datasets\dev
+            gammapy_data_path:  D:\a\gammapy\gammapy\gammapy-datasets\1.0
             allowed_fail: false
           - os: ubuntu-latest
             python: '3.10'
@@ -87,7 +87,7 @@ jobs:
         run: |
           python -m pip install tqdm requests
           python -m pip install -e .
-          gammapy download datasets
+          gammapy download datasets --release 1.0
       - name: Print Python, pip, setuptools, and tox versions
         run: |
           python -c "import sys; print(f'Python {sys.version}')"
@@ -116,7 +116,7 @@ jobs:
         shell: bash -l {0}
     env:
       PYTEST_ADDOPTS: --color=yes -n auto --dist=loadscope
-      GAMMAPY_DATA: /home/runner/work/gammapy/gammapy/gammapy-datasets/dev
+      GAMMAPY_DATA: /home/runner/work/gammapy/gammapy/gammapy-datasets/1.0
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -134,7 +134,7 @@ jobs:
         run: |
           python -m pip install tqdm requests
           python -m pip install -e .
-          gammapy download datasets
+          gammapy download datasets --release 1.0
       - name: test build docs
         run: |
           tox -e build_docs -- -j auto
