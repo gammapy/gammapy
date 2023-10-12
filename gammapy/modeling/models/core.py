@@ -157,8 +157,8 @@ class ModelBase:
 
         for par in self.parameters:
             pars = Parameters([par])
-            variance = self._covariance.get_subcovariance(pars)
-            par.error = np.sqrt(variance)
+            variance = self._covariance.get_subcovariance(pars).data
+            par.error = np.sqrt(variance[0][0])
 
     @property
     def parameters(self):
