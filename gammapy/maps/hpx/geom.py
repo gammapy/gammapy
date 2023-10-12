@@ -1177,10 +1177,8 @@ class HpxGeom(Geom):
         wcs_tiles = []
 
         for pix in range(int(hpx.npix[0])):
-            skydir = np.squeeze(hpx.pix_to_coord([pix]))
-            vtx = hp.boundaries(
-                nside=np.squeeze(hpx.nside), pix=pix, nest=hpx.nest, step=1
-            )
+            skydir = hpx.pix_to_coord([pix])
+            vtx = hp.boundaries(nside=hpx.nside.item(), pix=pix, nest=hpx.nest, step=1)
 
             lon, lat = hp.vec2ang(vtx.T, lonlat=True)
             boundaries = SkyCoord(lon * u.deg, lat * u.deg, frame=hpx.frame)
@@ -1190,7 +1188,7 @@ class HpxGeom(Geom):
             width = boundaries.separation(boundaries[:, np.newaxis]).max()
 
             wcs_tile_geom = WcsGeom.create(
-                skydir=(float(skydir[0]), float(skydir[1])),
+                skydir=(float(skydir[0].item()), float(skydir[1].item())),
                 width=width + margin,
                 binsz=binsz,
                 frame=hpx.frame,
@@ -1277,7 +1275,7 @@ class HpxGeom(Geom):
                 if idx is not None and idx_img != idx:
                     continue
 
-                npix = int(np.squeeze(self._npix[idx_img]))
+                npix = int(self._npix[idx_img].item())
                 if idx is None:
                     s_img = (slice(0, npix),) + idx_img
                 else:
