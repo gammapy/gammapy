@@ -130,11 +130,11 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install tox
-      - name: download datasets --release 1.0
+      - name: download datasets
         run: |
           python -m pip install tqdm requests
           python -m pip install -e .
-          gammapy download datasets
+          gammapy download datasets --release 1.0
       - name: test build docs
         run: |
           tox -e build_docs -- -j auto
