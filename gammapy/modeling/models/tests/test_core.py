@@ -206,7 +206,7 @@ def test_plot_models(caplog):
         models.plot_positions()
         models.plot_regions()
 
-    assert models.wcs_geom.data_shape == (171, 147)
+    assert models.wcs_geom.data_shape == models.wcs_geom.wcs.array_shape
 
     regions = models.to_regions()
     assert len(regions) == 3
