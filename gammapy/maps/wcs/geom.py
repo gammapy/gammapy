@@ -181,7 +181,7 @@ class WcsGeom(Geom):
         slices = overlap_slices(
             large_array_shape=geom.data_shape[-2:],
             small_array_shape=self.data_shape[-2:],
-            position=position[::-1],
+            position=[_[0] for _ in position[::-1]],
             mode=mode,
         )
         return {
@@ -440,8 +440,8 @@ class WcsGeom(Geom):
         width = _check_width(width) * u.deg
         npix = tuple(np.round(width / geom.pixel_scales).astype(int))
         xref, yref = geom.to_image().coord_to_pix(skydir)
-        xref = int(np.floor(-xref + npix[0] / 2.0)) + geom.wcs.wcs.crpix[0]
-        yref = int(np.floor(-yref + npix[1] / 2.0)) + geom.wcs.wcs.crpix[1]
+        xref = int(np.floor(-xref[0] + npix[0] / 2.0)) + geom.wcs.wcs.crpix[0]
+        yref = int(np.floor(-yref[0] + npix[1] / 2.0)) + geom.wcs.wcs.crpix[1]
         return cls.create(
             skydir=tuple(geom.wcs.wcs.crval),
             npix=npix,
