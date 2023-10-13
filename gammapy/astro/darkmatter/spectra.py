@@ -31,7 +31,7 @@ class PrimaryFlux(TemplateNDSpectralModel):
     Parameters
     ----------
     mDM : `~astropy.units.Quantity`
-        Dark matter mass
+        Dark matter particle mass as rest mass energy
     channel: str
         Annihilation channel. List available channels with `~gammapy.spectrum.PrimaryFlux.allowed_channels`.
 
@@ -119,8 +119,19 @@ class PrimaryFlux(TemplateNDSpectralModel):
 
     @mDM.setter
     def mDM(self, mDM):
-        _mDM = u.Quantity(mDM).to("GeV")
-        self.mass.value = _mDM.to_value("GeV")
+        unit = self.mass.unit
+        _mDM = u.Quantity(mDM).to(unit)
+        _mDM_val = _mDM.to_value(unit)
+
+        min_mass = u.Quantity(self.mass.min, unit)
+        max_mass = u.Quantity(self.mass.max, unit)
+
+        if _mDM_val < self.mass.min or _mDM_val > self.mass.max:
+            raise ValueError(
+                f"The mass {_mDM} is out of the bounds of the model. Please choose a mass between {min_mass} < `mDM` < {max_mass}"
+            )
+
+        self.mass.value = _mDM_val
 
     @property
     def allowed_channels(self):
