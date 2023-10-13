@@ -1886,14 +1886,15 @@ class TemplateNDSpectralModel(SpectralModel):
         has_energy = False
         for axis in map.geom.axes:
             if axis.name not in ["energy_true", "energy"]:
+                unit = axis.unit
                 center = (axis.bounds[1] + axis.bounds[0]) / 2
                 parameter = Parameter(
                     name=axis.name,
-                    value=center,
-                    unit=axis.unit,
+                    value=center.to_value(unit),
+                    unit=unit,
                     scale_method="scale10",
-                    min=axis.bounds[0],
-                    max=axis.bounds[-1],
+                    min=axis.bounds[0].to_value(unit),
+                    max=axis.bounds[-1].to_value(unit),
                     interp=axis.interp,
                 )
                 parameters.append(parameter)

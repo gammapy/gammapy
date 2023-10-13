@@ -13,9 +13,19 @@ def test_primary_flux():
         PrimaryFlux(channel="Spam", mDM=1 * u.TeV)
 
     primflux = PrimaryFlux(channel="W", mDM=1 * u.TeV)
-    actual = primflux.table_model(500 * u.GeV)
+    actual = primflux(500 * u.GeV)
     desired = 9.328234e-05 / u.GeV
     assert_quantity_allclose(actual, desired)
+
+
+@pytest.mark.parametrize(
+    "mass, expected_flux", [(1.6, 0.00024956), (11, 0.00501605), (75, 0.02027279)]
+)
+@requires_data()
+def test_primary_flux_interpolation(mass, expected_flux):
+    primflux = PrimaryFlux(channel="W", mDM=mass * u.TeV)
+    actual = primflux(500 * u.GeV)
+    assert_quantity_allclose(actual, expected_flux / u.GeV, rtol=1e-5)
 
 
 @requires_data()
