@@ -6,7 +6,7 @@ jobs:
     name: Black check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: psf/black@stable
         with:
           version: "22.6.0"
@@ -61,7 +61,7 @@ jobs:
             allowed_fail: true
     steps:
       - name: Check out repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Set up Python ${{ matrix.python }}
@@ -109,7 +109,7 @@ jobs:
       GAMMAPY_DATA: /home/runner/work/gammapy/gammapy/gammapy-datasets/dev
     steps:
       - name: Check out repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Set up Python ${{ matrix.python }}
@@ -140,7 +140,7 @@ jobs:
         shell: bash -l {0}
     steps:
       - name: checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: create and activate env
         uses: mamba-org/provision-with-micromamba@main
         with:

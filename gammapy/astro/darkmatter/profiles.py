@@ -13,6 +13,7 @@ __all__ = [
     "IsothermalProfile",
     "MooreProfile",
     "NFWProfile",
+    "ZhaoProfile",
 ]
 
 
@@ -20,7 +21,7 @@ class DMProfile(abc.ABC):
     """DMProfile model base class."""
 
     LOCAL_DENSITY = 0.3 * u.GeV / (u.cm**3)
-    """Local dark matter density as given in refenrece 2"""
+    """Local dark matter density as given in reference 2"""
     DISTANCE_GC = 8.33 * u.kpc
     """Distance to the Galactic Center as given in reference 2"""
 
@@ -34,19 +35,22 @@ class DMProfile(abc.ABC):
         scale = (self.LOCAL_DENSITY / self(self.DISTANCE_GC)).to_value("")
         self.parameters["rho_s"].value *= scale
 
-    def _eval_squared(self, radius, separation):
-        """Squared density at given radius together with the substitution part"""
+    def _eval_substitution(self, radius, separation, squared):
+        """Density at given radius together with the substitution part"""
+        exponent = 2 if squared else 1
         return (
-            self(radius) ** 2
+            self(radius) ** exponent
             * radius
             / np.sqrt(radius**2 - (self.DISTANCE_GC * np.sin(separation)) ** 2)
         )
 
-    def integral(self, rmin, rmax, separation, ndecade):
-        r"""Integrate squared dark matter profile numerically.
+    def integral(self, rmin, rmax, separation, ndecade, squared=True):
+        r"""Integrate dark matter profile numerically.
 
         .. math::
-            F(r_{min}, r_{max}) = \int_{r_{min}}^{r_{max}}\rho(r)^2 dr
+            F(r_{min}, r_{max}) = \int_{r_{min}}^{r_{max}}\rho(r)^\gamma dr \\
+            \gamma = 2 \text{for annihilation} \\
+            \gamma = 1 \text{for decay}
 
         Parameters
         ----------
@@ -57,13 +61,19 @@ class DMProfile(abc.ABC):
         ndecade    : int, optional
             Number of grid points per decade used for the integration.
             Default : 10000
+        squared : bool, optional
+            Square the profile before integration.
+            Default: True
         """
         integral = self.integrate_spectrum_separation(
-            self._eval_squared, rmin, rmax, separation, ndecade
+            self._eval_substitution, rmin, rmax, separation, ndecade, squared
         )
-        return integral.to("GeV2 / cm5")
+        inegral_unit = u.Unit("GeV2 cm-5") if squared else u.Unit("GeV cm-2")
+        return integral.to(inegral_unit)
 
-    def integrate_spectrum_separation(self, func, xmin, xmax, separation, ndecade):
+    def integrate_spectrum_separation(
+        self, func, xmin, xmax, separation, ndecade, squared=True
+    ):
         r"""Helper for the squared dark matter profile integral.
 
         Parameters
@@ -74,6 +84,9 @@ class DMProfile(abc.ABC):
             Separation angle in rad
         ndecade    : int
             Number of grid points per decade used for the integration.
+        squared : bool
+            Square the profile before integration.
+            Default: True
         """
         unit = xmin.unit
         xmin = xmin.value
@@ -82,9 +95,70 @@ class DMProfile(abc.ABC):
         logmax = np.log10(xmax)
         n = np.int32((logmax - logmin) * ndecade)
         x = np.logspace(logmin, logmax, n) * unit
-        y = func(x, separation)
+        y = func(x, separation, squared)
         val = trapz_loglog(y, x)
         return val.sum()
+
+
+class ZhaoProfile(DMProfile):
+    r"""Zhao Profile.
+    This is taken from equation 1 from Zhao (1996). It is a generalization of the NFW profile. The volume density is parametrized with
+    a double power-law. Scale radii smaller than the scale radius are described with a slope of :math:`-\gamma` and scale radii larger than the scale radius are described with a slope of :math:`-\beta`. :math:`\alpha` is a measure for the width of the transition region.
+
+    .. math::
+        \rho(r) = \rho_s \left(\frac{r_s}{r}\right)^\gamma \left(1 + \left(\frac{r}{r_s}\right)^\frac{1}{\alpha} \right)^{(\gamma - \beta) \alpha}
+
+    Parameters
+    ----------
+    r_s : `~astropy.units.Quantity`
+        Scale radius, :math:`r_s`
+    alpha : `~astropy.units.Quantity`
+        :math:`\alpha`
+    beta: `~astropy.units.Quantity`
+        :math:`\beta`
+    gamma : `~astropy.units.Quantity`
+        :math:`\gamma`
+    rho_s : `~astropy.units.Quantity`
+        Characteristic density, :math:`\rho_s`
+
+    References
+    ----------
+    * `1996MNRAS.278..488Z <https://ui.adsabs.harvard.edu/abs/1996MNRAS.278..488Z>`_
+    * `2011JCAP...03..051C <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
+    """
+
+    DEFAULT_SCALE_RADIUS = 24.42 * u.kpc
+    DEFAULT_ALPHA = 1
+    DEFAULT_BETA = 3
+    DEFAULT_GAMMA = 1
+    """
+    (alpha, beta, gamma) = (1,3,1) is NFW profile.
+    Default scale radius as given in reference 2 (same as for NFW profile)
+    """
+
+    def __init__(
+        self, r_s=None, alpha=None, beta=None, gamma=None, rho_s=1 * u.Unit("GeV / cm3")
+    ):
+        r_s = self.DEFAULT_SCALE_RADIUS if r_s is None else r_s
+        alpha = self.DEFAULT_ALPHA if alpha is None else alpha
+        beta = self.DEFAULT_BETA if beta is None else beta
+        gamma = self.DEFAULT_GAMMA if gamma is None else gamma
+        self.parameters = Parameters(
+            [
+                Parameter("r_s", u.Quantity(r_s)),
+                Parameter("rho_s", u.Quantity(rho_s)),
+                Parameter("alpha", alpha),
+                Parameter("beta", beta),
+                Parameter("gamma", gamma),
+            ]
+        )
+
+    @staticmethod
+    def evaluate(radius, r_s, alpha, beta, gamma, rho_s):
+        rr = radius / r_s
+        return rho_s / (
+            rr**gamma * (1 + rr ** (1 / alpha)) ** ((beta - gamma) * alpha)
+        )
 
 
 class NFWProfile(DMProfile):
@@ -103,7 +177,7 @@ class NFWProfile(DMProfile):
     References
     ----------
     * `1997ApJ...490..493 <https://ui.adsabs.harvard.edu/abs/1997ApJ...490..493N>`_
-    * `2011JCAP...03..051 <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051>`_
+    * `2011JCAP...03..051C <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
     """
 
     DEFAULT_SCALE_RADIUS = 24.42 * u.kpc
@@ -141,7 +215,7 @@ class EinastoProfile(DMProfile):
     References
     ----------
     * `1965TrAlm...5...87E <https://ui.adsabs.harvard.edu/abs/1965TrAlm...5...87E>`_
-    * `2011JCAP...03..051 <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051>`_
+    * `2011JCAP...03..051C <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
     """
 
     DEFAULT_SCALE_RADIUS = 28.44 * u.kpc
@@ -181,7 +255,7 @@ class IsothermalProfile(DMProfile):
     References
     ----------
     * `1991MNRAS.249..523B <https://ui.adsabs.harvard.edu/abs/1991MNRAS.249..523B>`_
-    * `2011JCAP...03..051 <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051>`_
+    * `2011JCAP...03..051C <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
     """
 
     DEFAULT_SCALE_RADIUS = 4.38 * u.kpc
@@ -213,7 +287,7 @@ class BurkertProfile(DMProfile):
     References
     ----------
     * `1995ApJ...447L..25B <https://ui.adsabs.harvard.edu/abs/1995ApJ...447L..25B>`_
-    * `2011JCAP...03..051 <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051>`_
+    * `2011JCAP...03..051C <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
     """
 
     DEFAULT_SCALE_RADIUS = 12.67 * u.kpc
@@ -247,7 +321,7 @@ class MooreProfile(DMProfile):
     References
     ----------
     * `2004MNRAS.353..624D <https://ui.adsabs.harvard.edu/abs/2004MNRAS.353..624D>`_
-    * `2011JCAP...03..051 <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051>`_
+    * `2011JCAP...03..051C <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
     """
 
     DEFAULT_SCALE_RADIUS = 30.28 * u.kpc

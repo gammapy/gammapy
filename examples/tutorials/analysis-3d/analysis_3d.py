@@ -39,6 +39,7 @@ from gammapy.modeling.models import (
 # Check setup
 # -----------
 from gammapy.utils.check import check_tutorials_setup
+from gammapy.visualization import plot_distribution
 
 check_tutorials_setup()
 
@@ -306,34 +307,22 @@ plt.show()
 ######################################################################
 # Distribution of residuals significance in the full map geometry:
 #
-significance_data = result["sqrt_ts"].data
+significance_map = result["sqrt_ts"]
 
-# Remove bins that are inside an exclusion region, that would create an artificial peak at significance=0.
-selection = np.isfinite(significance_data)
-significance_data = significance_data[selection]
+kwargs_hist = {"density": True, "alpha": 0.9, "color": "red", "bins": 40}
 
-fig, ax = plt.subplots()
-
-ax.hist(significance_data, density=True, alpha=0.9, color="red", bins=40)
-mu, std = norm.fit(significance_data)
-
-x = np.linspace(-5, 5, 100)
-p = norm.pdf(x, mu, std)
-
-ax.plot(
-    x,
-    p,
-    lw=2,
-    color="black",
-    label=r"$\mu$ = {:.2f}, $\sigma$ = {:.2f}".format(mu, std),
+ax, res = plot_distribution(
+    significance_map,
+    func="norm",
+    kwargs_hist=kwargs_hist,
+    kwargs_axes={"xlim": (-5, 5)},
 )
-ax.legend(fontsize=17)
-ax.set_xlim(-5, 5)
+
 plt.show()
 
 
 ######################################################################
-# Here we can plot the number of predicted counts for each model and
+# Here we could also plot the number of predicted counts for each model and
 # for the background in our dataset by using the
 # `~gammapy.visualization.plot_npred_signal` function.
 #
