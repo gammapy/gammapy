@@ -91,3 +91,43 @@ class SpectrumDatasetMaker(MapDatasetMaker):
             exposure.quantity *= containment.reshape(geom.data_shape)
 
         return exposure
+
+    @staticmethod
+    def make_counts(geom, observation):
+        """Make counts map.
+
+        If the `~gammapy.maps.Geom` is built from a `~regions.CircleSkyRegion`,
+        the latter will be directly used to extract the counts.
+        If instead the `~gammapy.maps.Geom` is built from a `~regions.PointSkyRegion`,
+        the size of the ON region is taken from the `RAD_MAX_2D` table containing energy-dependent theta2 cuts.
+
+        Parameters
+        ----------
+        geom : `~gammapy.maps.Geom`
+            Reference map geom.
+        observation : `~gammapy.data.Observation`
+            Observation container.
+
+        Returns
+        -------
+        counts : `~gammapy.maps.RegionNDMap`
+            Counts map.
+        """
+        return super().make_counts(geom, observation)
+
+    def run(self, dataset, observation):
+        """Make spectrum dataset.
+
+        Parameters
+        ----------
+        dataset : `~gammapy.spectrum.SpectrumDataset`
+            Reference dataset.
+        observation : `~gammapy.data.Observation`
+            Observation.
+
+        Returns
+        -------
+        dataset : `~gammapy.spectrum.SpectrumDataset`
+            Spectrum dataset.
+        """
+        return super().run(dataset, observation)
