@@ -113,7 +113,9 @@ class SpectrumDatasetMaker(MapDatasetMaker):
         counts : `~gammapy.maps.RegionNDMap`
             Counts map.
         """
-        return super().make_counts(geom, observation)
+        return super(SpectrumDatasetMaker, SpectrumDatasetMaker).make_counts(
+            geom, observation
+        )
 
     def run(self, dataset, observation):
         """Make spectrum dataset.
@@ -130,4 +132,4 @@ class SpectrumDatasetMaker(MapDatasetMaker):
         dataset : `~gammapy.spectrum.SpectrumDataset`
             Spectrum dataset.
         """
-        return super().run(dataset, observation)
+        return super(SpectrumDatasetMaker, self).run(dataset, observation)
