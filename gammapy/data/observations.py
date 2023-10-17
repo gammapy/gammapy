@@ -787,6 +787,17 @@ class Observations(collections.abc.MutableSequence):
         obs = itertools.chain(*observations_list)
         return cls(list(obs))
 
+    def iter(self, slice=None):
+        """Iterate over observations.
+
+        Parameters
+        ----------
+        slice : slice
+            Slice object defining which observations to return. Default is None, which means all observations.
+        """
+        for obs in self[slice]:
+            yield obs.copy(in_memory=True)
+
 
 class ObservationChecker(Checker):
     """Check an observation.
