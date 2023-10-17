@@ -95,9 +95,6 @@ class Parameter:
         Whether the parameter represents the flux norm of the model.
     prior : `~gammapy.modeling.models.PriorModel`
         Prior Model set on the parameter.
-
-
-    PriorModel
     """
 
     def __init__(
