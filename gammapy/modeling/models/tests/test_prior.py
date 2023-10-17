@@ -47,8 +47,7 @@ def test_priors(prior):
 def test_to_from_dict():
     prior = TEST_PRIORS[1]
     model = prior["model"]
-    print(prior)
-
+    model.weight = 2.0
     model_dict = model.to_dict()
     # Here we reverse the order of parameters list to ensure assignment is correct
     model_dict["prior"]["parameters"].reverse()
@@ -61,6 +60,7 @@ def test_to_from_dict():
     actual = [par.value for par in new_model.parameters]
     desired = [par.value for par in model.parameters]
     assert_quantity_allclose(actual, desired)
+    assert_allclose(model.weight, new_model.weight, rtol=1e-7)
 
     new_model = Model.from_dict(model_dict)
 
@@ -69,3 +69,4 @@ def test_to_from_dict():
     actual = [par.value for par in new_model.parameters]
     desired = [par.value for par in model.parameters]
     assert_quantity_allclose(actual, desired)
+    assert_allclose(model.weight, new_model.weight, rtol=1e-7)

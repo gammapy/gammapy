@@ -8,7 +8,7 @@ log = logging.getLogger(__name__)
 
 
 def _build_priorparameters_from_dict(data, default_parameters):
-    """Build Parameters object from input dict and default parameter values."""
+    """Build PriorParameters object from input dict and the default prior parameter values from the PriorModel class."""
     par_data = []
 
     input_names = [_["name"] for _ in data]
@@ -29,7 +29,6 @@ def _build_priorparameters_from_dict(data, default_parameters):
 
 
 class PriorModel(ModelBase):
-    _weight = 1
     _unit = ""
 
     def __init__(self, **kwargs):
@@ -45,15 +44,22 @@ class PriorModel(ModelBase):
 
             setattr(self, par.name, par)
 
+        _weight = kwargs.get("weight", None)
+
+        if _weight is not None:
+            self._weight = _weight
+        else:
+            self._weight = 1
+
     @property
     def parameters(self):
-        """Parameters (`~gammapy.modeling.Parameters`)"""
+        """PriorParameters (`~gammapy.modeling.PriorParameters`)"""
         return PriorParameters(
             [getattr(self, name) for name in self.default_parameters.names]
         )
 
     def __init_subclass__(cls, **kwargs):
-        # Add parameters list on the model sub-class (not instances)
+        # Add priorparameters list on the model sub-class (not instances)
         cls.default_parameters = PriorParameters(
             [_ for _ in cls.__dict__.values() if isinstance(_, PriorParameter)]
         )
@@ -84,7 +90,6 @@ class PriorModel(ModelBase):
                     "min",
                     "max",
                     "error",
-                    # "scale_method",
                 ]:
                     default = init[item]
 
@@ -93,13 +98,7 @@ class PriorModel(ModelBase):
                     ):
                         del par[item]
 
-                # if par["frozen"] == init["frozen"]:
-                #    del par["frozen"]
-
-                # if init["unit"] == "":
-                #    del par["unit"]
-
-        data = {"type": tag, "parameters": params}
+        data = {"type": tag, "parameters": params, "weight": self.weight}
 
         if self.type is None:
             return data
@@ -121,11 +120,23 @@ class PriorModel(ModelBase):
         priorparameters = _build_priorparameters_from_dict(
             data["parameters"], cls.default_parameters
         )
+        kwargs["weight"] = data["weight"]
         return cls.from_parameters(priorparameters, **kwargs)
 
 
 class GaussianPriorModel(PriorModel):
-    """Gaussian Prior with mu and sigma."""
+    r"""One-dimensional Gaussian Prior Model.
+
+
+    Parameters
+    ----------
+    mu : `float`
+        Mean of the Gaussian distribution
+        Default is 0
+    sigma : `float`
+        Standard deviation of the Gaussian distribution.
+        Default is 1
+    """
 
     tag = ["GaussianPriorModel"]
     _type = "prior"
@@ -138,7 +149,15 @@ class GaussianPriorModel(PriorModel):
 
 
 class UniformPriorModel(PriorModel):
-    """Uniform Prior"""
+    r"""Uniform Prior Model.
+
+
+    Parameters
+    ----------
+    uni : `float`
+        Value of the prior that is set uniformly.
+        Default is 0
+    """
 
     tag = ["UniformPriorModel"]
     _type = "prior"

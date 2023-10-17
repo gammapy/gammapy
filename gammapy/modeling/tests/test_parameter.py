@@ -244,7 +244,7 @@ def test_update_from_dict():
         "max": np.nan,
         "frozen": True,
         "unit": "GeV",
-        "prior": np.nan,
+        "prior": None,
     }
     par.update_from_dict(data)
     assert par.name == "test"
@@ -254,7 +254,7 @@ def test_update_from_dict():
     assert_allclose(par.min, 0)
     assert par.max is np.nan
     assert par.frozen
-    assert par.prior is np.nan
+    assert par.prior is None
     data = {
         "model": "gc",
         "type": "spectral",
@@ -264,7 +264,7 @@ def test_update_from_dict():
         "max": np.nan,
         "frozen": "True",
         "unit": "GeV",
-        "prior": np.nan,
+        "prior": None,
     }
     par.update_from_dict(data)
     assert par.frozen
