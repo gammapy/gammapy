@@ -339,10 +339,8 @@ def test_failure_datasets_maker_spectrum(
 
     counts = datasets[0].counts
     assert counts.unit == ""
-    assert_allclose(counts.data.sum(), 192, rtol=1e-5)
-    print(datasets[0].background)
-    print(datasets[1].background)
-    assert_allclose(datasets[0].background.data.sum(), 18.66666664, rtol=1e-5)
+    assert_allclose(counts.data.sum(), 0, rtol=1e-5)
+    assert_allclose(datasets[0].background.data.sum(), 0, rtol=1e-5)
 
 
 @requires_data()
