@@ -96,9 +96,9 @@ class SpectrumDatasetMaker(MapDatasetMaker):
     def make_counts(geom, observation):
         """Make counts map.
 
-        If the `~gammapy.maps.Geom` is built from a `~regions.CircleSkyRegion`,
+        If the `~gammapy.maps.RegionGeom` is built from a `~regions.CircleSkyRegion`,
         the latter will be directly used to extract the counts.
-        If instead the `~gammapy.maps.Geom` is built from a `~regions.PointSkyRegion`,
+        If instead the `~gammapy.maps.RegionGeom` is built from a `~regions.PointSkyRegion`,
         the size of the ON region is taken from the `RAD_MAX_2D` table containing energy-dependent theta2 cuts.
 
         Parameters

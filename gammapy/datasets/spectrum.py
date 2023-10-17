@@ -292,11 +292,11 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
     tag = "SpectrumDatasetOnOff"
 
     def cutout(self, *args, **kwargs):
-        """Not supported for `SpectrumDataset`"""
+        """Not supported for `SpectrumDatasetOnOff`"""
         raise NotImplementedError("Method not supported on a spectrum dataset")
 
     def plot_residuals_spatial(self, *args, **kwargs):
-        """Not supported for `SpectrumDataset`"""
+        """Not supported for `SpectrumDatasetOnOff`"""
         raise NotImplementedError("Method not supported on a spectrum dataset")
 
     @classmethod
