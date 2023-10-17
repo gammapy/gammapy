@@ -569,7 +569,7 @@ class ReflectedRegionsBackgroundMaker(Maker):
         Returns
         -------
         dataset_on_off : `SpectrumDatasetOnOff`
-            On off dataset.
+            On-Off dataset.
         """
         counts_off, acceptance_off = self.make_counts_off(dataset, observation)
         acceptance = RegionNDMap.from_geom(geom=dataset.counts.geom, data=1)
