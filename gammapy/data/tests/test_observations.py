@@ -561,7 +561,6 @@ def test_slice(data_store):
     assert isinstance(obs_1[0], Observation)
     assert isinstance(obs_1[1:], Observations)
 
-
 @requires_data()
 def test_observations_iter(data_store):
     """Test Observations.iter()"""
