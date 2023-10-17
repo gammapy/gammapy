@@ -126,8 +126,9 @@ class DatasetsMaker(Maker, parallel.ParallelMixin):
     def callback(self, dataset):
         try:
             if self.stack_datasets:
-                if isinstance(self._dataset, MapDataset) and isinstance(
-                    dataset, MapDatasetOnOff
+                if (
+                    type(self._dataset) is MapDataset
+                    and type(dataset) is MapDatasetOnOff
                 ):
                     dataset = dataset.to_map_dataset(name=dataset.name)
                 self._dataset.stack(dataset)
