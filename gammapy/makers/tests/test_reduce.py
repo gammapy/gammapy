@@ -121,6 +121,21 @@ def exclusion_mask():
 
 
 @pytest.fixture(scope="session")
+def full_exclusion_mask():
+    exclusion_region = CircleSkyRegion(
+        center=SkyCoord(183.604, -8.708, unit="deg", frame="galactic"),
+        radius=15 * u.deg,
+    )
+
+    skydir = SkyCoord(ra=83.63, dec=22.01, unit="deg", frame="icrs")
+    geom = WcsGeom.create(
+        npix=(150, 150), binsz=0.05, skydir=skydir, proj="TAN", frame="icrs"
+    )
+
+    return ~geom.region_mask([exclusion_region])
+
+
+@pytest.fixture(scope="session")
 def makers_map():
     return [
         MapDatasetMaker(),
@@ -136,6 +151,17 @@ def makers_spectrum(exclusion_mask):
             containment_correction=True, selection=["counts", "exposure", "edisp"]
         ),
         ReflectedRegionsBackgroundMaker(exclusion_mask=exclusion_mask),
+        SafeMaskMaker(methods=["aeff-max"], aeff_percent=10),
+    ]
+
+
+@pytest.fixture(scope="session")
+def failure_makers_spectrum(full_exclusion_mask):
+    return [
+        SpectrumDatasetMaker(
+            containment_correction=True, selection=["counts", "exposure", "edisp"]
+        ),
+        ReflectedRegionsBackgroundMaker(exclusion_mask=full_exclusion_mask),
         SafeMaskMaker(methods=["aeff-max"], aeff_percent=10),
     ]
 
@@ -302,6 +328,21 @@ def test_datasets_maker_spectrum(observations_hess, makers_spectrum, spectrum_da
     exposure = datasets[0].exposure
     assert exposure.unit == "m2 s"
     assert_allclose(exposure.data.mean(), 3.94257338e08, rtol=3e-3)
+
+
+@requires_data()
+def test_failure_datasets_maker_spectrum(
+    observations_hess, failure_makers_spectrum, spectrum_dataset
+):
+    makers = DatasetsMaker(failure_makers_spectrum, stack_datasets=True, n_jobs=4)
+    datasets = makers.run(spectrum_dataset, observations_hess)
+
+    counts = datasets[0].counts
+    assert counts.unit == ""
+    assert_allclose(counts.data.sum(), 192, rtol=1e-5)
+    print(datasets[0].background)
+    print(datasets[1].background)
+    assert_allclose(datasets[0].background.data.sum(), 18.66666664, rtol=1e-5)
 
 
 @requires_data()
