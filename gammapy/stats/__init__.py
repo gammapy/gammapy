@@ -7,7 +7,7 @@ from .fit_statistics_cython import (
     f_cash_root_cython,
     norm_bounds_cython,
 )
-from .variability import compute_chisq, compute_fpp, compute_fvar
+from .variability import compute_chisq, compute_flux_doubling, compute_fpp, compute_fvar
 
 __all__ = [
     "cash",
@@ -22,5 +22,6 @@ __all__ = [
     "WStatCountsStatistic",
     "compute_fvar",
     "compute_fpp",
+    "compute_flux_doubling",
     "compute_chisq",
 ]

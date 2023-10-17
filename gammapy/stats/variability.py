@@ -6,6 +6,7 @@ __all__ = [
     "compute_fvar",
     "compute_fpp",
     "compute_chisq",
+    "compute_flux_doubling",
 ]
 
 
@@ -137,3 +138,84 @@ def compute_chisq(flux):
     yobs = flux.data
     chi2, pval = stats.chisquare(yobs, yexp)
     return chi2, pval
+
+
+def compute_flux_doubling(flux, flux_err, coords, axis=0):
+    r"""Compute the minimum characteristic flux doubling and halving
+    over a certain coordinate axis for a series of measurements.
+
+    Computing the flux doubling can give the doubling time in a lightcurve
+    displaying significant temporal variability, e.g. an AGN flare.
+
+    The variable is computed as:
+
+     .. math::
+        doubling = min(\frac{t_(i+1)-t_i}{log_2{f_(i+1)/f_i}})
+
+    Where f_i and f_(i+1) are the fluxes measured at subsequent coordinates t_i and t_(i+1)
+    The error is obtained by propagating the relative errors on the flux measures.
+
+    Parameters
+    ----------
+    flux : `~astropy.units.Quantity`
+        the measured fluxes
+    flux_err : `~astropy.units.Quantity`
+        the error on measured fluxes
+    coords: `~astropy.units.Quantity`
+        the coordinates at which the fluxes are measured
+    axis : int, optional
+        Axis along which the value is computed.
+
+    Returns
+    -------
+    doubling, doubling_err, coord : `~numpy.ndarray`
+        Characteristic flux doubling, halving and errors,
+        with coordinates at which they were found.
+    """
+
+    flux = np.atleast_2d(flux).swapaxes(0, axis).T
+    flux_err = np.atleast_2d(flux_err).swapaxes(0, axis).T
+
+    axes = np.diff(coords) / np.log2(flux[..., 1:] / flux[..., :-1])
+    axes_err_1 = (
+        np.diff(coords)
+        * np.log(2)
+        / flux[..., 1:]
+        * np.log(flux[..., 1:] / flux[..., :-1]) ** 2
+    )
+    axes_err_2 = (
+        np.diff(coords)
+        * np.log(2)
+        / flux[..., :-1]
+        * np.log(flux[..., 1:] / flux[..., :-1]) ** 2
+    )
+    axes_err = np.sqrt(
+        (flux_err[..., 1:] * axes_err_1) ** 2 + (flux_err[..., :-1] * axes_err_2) ** 2
+    )
+
+    imin = np.expand_dims(
+        np.argmin(
+            np.where(
+                np.logical_and(np.isfinite(axes), axes > 0), axes, np.inf * coords.unit
+            ),
+            axis=-1,
+        ),
+        axis=-1,
+    )
+    imax = np.expand_dims(
+        np.argmax(
+            np.where(
+                np.logical_and(np.isfinite(axes), axes < 0), axes, -np.inf * coords.unit
+            ),
+            axis=-1,
+        ),
+        axis=-1,
+    )
+
+    index = np.concatenate([imin, imax], axis=-1)
+    coord = np.take_along_axis(coords, index.flatten(), axis=0).reshape(index.shape)
+
+    doubling = np.take_along_axis(axes, index, axis=-1)
+    doubling_err = np.take_along_axis(axes_err, index, axis=-1)
+
+    return doubling, doubling_err, coord
