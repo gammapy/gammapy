@@ -27,6 +27,14 @@ def observations_cta():
 
 
 @pytest.fixture(scope="session")
+def observations_cta_with_issue():
+    data_store = DataStore.from_dir("$GAMMAPY_DATA/cta-1dc/index/gps/")
+    list = data_store.get_observations()[:2]
+    list.append(None)
+    return list
+
+
+@pytest.fixture(scope="session")
 def observations_hess():
     datastore = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
     obs_ids = [23523, 23526, 23559, 23592]
@@ -185,6 +193,23 @@ def test_datasets_maker_map(pars, observations_cta, makers_map, map_dataset):
         exposure = datasets[0].exposure
         assert exposure.unit == "m2 s"
         assert_allclose(exposure.data.mean(), 2.436063e09, rtol=3e-3)
+
+
+@requires_data()
+def test_failure_datasets_maker_map(
+    observations_cta_with_issue, makers_map, map_dataset
+):
+    makers = DatasetsMaker(
+        makers_map,
+        stack_datasets=True,
+        cutout_mode="partial",
+        cutout_width="15 deg",
+        n_jobs=4,
+        parallel_backend="multiprocessing",
+    )
+
+    with pytest.raises(RuntimeError):
+        makers.run(map_dataset, observations_cta_with_issue)
 
 
 @requires_data()
