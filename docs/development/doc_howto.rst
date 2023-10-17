@@ -169,12 +169,13 @@ Links to other tutorials
 ++++++++++++++++++++++++
 
 From docstrings and RST documentation files in Gammapy you can link to other tutorials 
-aned gallery example by using RST syntax like this:
+and gallery examples by using RST syntax like this:
 
 
 .. code-block:: rst
+
     :doc:`/tutorials/starting/analysis_2`
-    
+
 Will link to the tutorial ``analysis_2`` from the tutorial base folder. The file
 suffix will be automatically infered by Sphinx.
 
