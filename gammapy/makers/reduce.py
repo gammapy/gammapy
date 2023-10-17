@@ -124,16 +124,18 @@ class DatasetsMaker(Maker, parallel.ParallelMixin):
         return dataset_obs
 
     def callback(self, dataset):
-        if self.stack_datasets:
-            # print(self._dataset)
-            # print(dataset)
-            if isinstance(self._dataset, MapDataset) and isinstance(
-                dataset, MapDatasetOnOff
-            ):
-                dataset = dataset.to_map_dataset(name=dataset.name)
-            self._dataset.stack(dataset)
-        else:
-            self._datasets.append(dataset)
+        try:
+            if self.stack_datasets:
+                if isinstance(self._dataset, MapDataset) and isinstance(
+                    dataset, MapDatasetOnOff
+                ):
+                    dataset = dataset.to_map_dataset(name=dataset.name)
+                self._dataset.stack(dataset)
+            else:
+                self._datasets.append(dataset)
+        except Exception as err:
+            self._error = True
+            log.error(err)
 
     def error_callback(self, dataset):
         # parallel run could cause a memory error with non-explicit message.
