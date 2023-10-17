@@ -2,6 +2,7 @@
 import logging
 import subprocess
 from copy import copy
+import html
 from pathlib import Path
 import numpy as np
 from astropy import units as u
@@ -83,6 +84,12 @@ class DataStore:
 
     def __str__(self):
         return self.info(show=False)
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     @property
     def obs_ids(self):

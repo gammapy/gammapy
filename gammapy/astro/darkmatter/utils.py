@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities to compute J-factor maps."""
+import html
 import numpy as np
 import astropy.units as u
 
@@ -30,6 +31,12 @@ class JFactory:
         self.profile = profile
         self.distance = distance
         self.annihilation = annihilation
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     def compute_differential_jfactor(self, ndecade=1e4):
         r"""Compute differential J-Factor.

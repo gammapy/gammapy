@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Multi-Gaussian distribution utilities (Gammapy internal)."""
+import html
 import numpy as np
 from astropy import units as u
 from gammapy.utils.roots import find_roots
@@ -18,6 +19,12 @@ class Gauss2DPDF:
 
     def __init__(self, sigma=1):
         self.sigma = sigma
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     @property
     def _sigma2(self):

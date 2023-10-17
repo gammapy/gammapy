@@ -380,12 +380,12 @@ def test_wcs_geom_get_pix_coords():
         assert_allclose(idx[0, 0, 0], desired)
 
 
-def test_geom_repr():
+def test_geom_str():
     geom = WcsGeom.create(
         skydir=(0, 0), npix=(10, 4), binsz=50, frame="galactic", proj="AIT"
     )
 
-    str_info = repr(geom)
+    str_info = str(geom)
     assert geom.__class__.__name__ in str_info
     assert "wcs ref" in str_info
     assert "center" in str_info

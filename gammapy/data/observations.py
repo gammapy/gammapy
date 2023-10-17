@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import collections.abc
 import copy
+import html
 import inspect
 import itertools
 import logging
@@ -94,6 +95,12 @@ class Observation:
         self._pointing = pointing
         self._location = location
         self.obs_filter = obs_filter or ObservationFilter()
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     @property
     def rad_max(self):

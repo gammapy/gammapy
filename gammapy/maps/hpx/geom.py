@@ -1365,7 +1365,7 @@ class HpxGeom(Geom):
 
         return Quantity(hp.nside2pixarea(self.nside), "sr")
 
-    def __repr__(self):
+    def __str__(self):
         lon, lat = self.center_skydir.data.lon.deg, self.center_skydir.data.lat.deg
         return (
             f"{self.__class__.__name__}\n\n"

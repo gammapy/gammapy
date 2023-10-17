@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import html
 import logging
 from abc import ABCMeta, abstractmethod
 from itertools import combinations
@@ -90,6 +91,12 @@ class RegionsFinder(metaclass=ABCMeta):
     def __init__(self, binsz=0.01 * u.deg):
         """Create a new RegionFinder"""
         self.binsz = Angle(binsz)
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     @abstractmethod
     def run(self, region, center, exclusion_mask=None):

@@ -998,7 +998,6 @@ class HpxNDMap(HpxMap):
             return 180.0 - (180.0 - x + t) % 360.0
 
         for i, (x, y) in enumerate(zip(phi, theta)):
-
             lon, lat = np.degrees(x), np.degrees(np.pi / 2.0 - y)
             # Add a small offset to avoid vertices wrapping to the
             # other size of the projection
