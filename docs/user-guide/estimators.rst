@@ -78,8 +78,8 @@ Quantity          Definition
 norm_errp         Positive error of the norm, given as absolute difference to the best fit norm
 norm_errn         Negative error of the norm, given as absolute difference to the best fit norm
 norm_ul           Upper limit of the norm
-norm_scan         Norm scan
-stat_scan         Fit statistics scan
+norm_scan         Norm parameter values used for the fit statistic scan
+stat_scan         Fit statistics values associated with norm_scan
 ================= =================================================
 
 To compute the error, asymmetric errors as well as upper limits one can
