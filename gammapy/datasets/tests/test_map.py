@@ -1667,6 +1667,11 @@ def test_to_map_dataset():
     assert isinstance(dataset, MapDataset)
     assert dataset.counts == dataset_onoff.counts
 
+    dataset_onoff.counts_off = None
+    dataset2 = dataset_onoff.to_map_dataset(name="ds2")
+    assert dataset2.background.geom == dataset.background.geom
+    assert_allclose(dataset2.background.data.sum(), 0.0, rtol=1e-6)
+
 
 def test_downsample_onoff():
     axis = MapAxis.from_energy_bounds(1, 10, 4, unit="TeV")
