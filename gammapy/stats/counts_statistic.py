@@ -1,6 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import abc
+import html
 import numpy as np
+from scipy.special import lambertw
 from scipy.stats import chi2
 from gammapy.utils.roots import find_roots
 from .fit_statistics import cash, wstat
@@ -73,6 +75,12 @@ class CountsStatistic(abc.ABC):
         str_ = str_.format(**info)
 
         return str_.expandtabs(tabsize=2)
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     def info_dict(self):
         """A dictionary of the relevant quantities
@@ -163,7 +171,7 @@ class CountsStatistic(abc.ABC):
         ul = np.zeros_like(self.n_on, dtype="float")
 
         min_range = self.n_sig
-        max_range = self.n_sig + 2 * n_sigma * (self.error + 1)
+        max_range = min_range + 2 * n_sigma * (self.error + 1)
         it = np.nditer(ul, flags=["multi_index"])
 
         while not it.finished:
@@ -314,6 +322,50 @@ class CashCountsStatistic(CountsStatistic):
 
     def __getitem__(self, key):
         return CashCountsStatistic(n_on=self.n_on[key], mu_bkg=self.n_bkg[key])
+
+    def compute_errn(self, n_sigma=1.0):
+        result = np.zeros_like(self.n_on, dtype="float")
+        c = n_sigma**2 / 2
+        mask = self.n_on > 0
+        on = self.n_on[mask]
+        result[mask] = on * (lambertw(-np.exp(-c / on - 1), k=0).real + 1)
+        result[~mask] = 0
+        return result
+
+    def compute_errp(self, n_sigma=1.0):
+        result = np.zeros_like(self.n_on, dtype="float")
+        c = n_sigma**2 / 2
+        mask = self.n_on > 0
+
+        on = self.n_on[mask]
+        result[mask] = -on * (lambertw(-np.exp(-c / on - 1), k=-1).real + 1)
+        result[~mask] = c
+        return result
+
+    def compute_upper_limit(self, n_sigma=3):
+        result = np.zeros_like(self.n_on, dtype="float")
+        c = n_sigma**2 / 2
+        mask = self.n_on > 0
+
+        on = self.n_on[mask]
+        result[mask] = (
+            -on * (lambertw(-np.exp(-c / on - 1), k=-1).real + 1) + self.n_sig[mask]
+        )
+
+        result[~mask] = c
+        return result
+
+    def n_sig_matching_significance(self, significance):
+        result = np.zeros_like(self.mu_bkg, dtype="float")
+        c = significance**2 / 2
+        mask = self.mu_bkg > 0
+
+        bkg = self.mu_bkg[mask]
+        branch = 0 if significance > 0 else -1
+        res = lambertw((c / bkg - 1) / np.exp(1), k=branch).real
+        result[mask] = bkg * (np.exp(res + 1) - 1)
+        result[~mask] = np.nan
+        return result
 
 
 class WStatCountsStatistic(CountsStatistic):

@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Pulsar source models."""
+import html
 import numpy as np
 from astropy.units import Quantity
 
@@ -35,6 +36,12 @@ class SimplePulsar:
         self.P_dot = P_dot
         self.I = I  # noqa: E741
         self.R = R
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     @property
     def luminosity_spindown(self):

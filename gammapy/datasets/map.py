@@ -2292,6 +2292,8 @@ class MapDatasetOnOff(MapDataset):
         """
         name = make_name(name)
 
+        background = self.counts_off * self.alpha if self.counts_off else None
+
         return MapDataset(
             counts=self.counts,
             exposure=self.exposure,
@@ -2301,7 +2303,7 @@ class MapDatasetOnOff(MapDataset):
             gti=self.gti,
             mask_fit=self.mask_fit,
             mask_safe=self.mask_safe,
-            background=self.counts_off * self.alpha,
+            background=background,
             meta_table=self.meta_table,
         )
 

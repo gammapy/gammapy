@@ -94,16 +94,23 @@ def test_plot_distribution():
         return norm.pdf(x, mu, sigma)
 
     with mpl_plot_check():
-        res, axes = plot_distribution(
+        axes, res = plot_distribution(
             wcs_map=map_, func=fit_func, kwargs_hist={"bins": 40}
         )
 
         assert axes.shape == (1,)
-        assert res[0].get("info_dict").get("nfev") == 19
+        assert "info_dict" in res[0]
+        assert ["fvec", "nfev", "fjac", "ipvt", "qtf"] == list(
+            (res[0].get("info_dict").keys())
+        )
         assert res[0].get("param") is not None
         assert res[0].get("covar") is not None
 
-        res, axes = plot_distribution(map_empty)
+        axes, res = plot_distribution(map_empty)
 
         assert res == []
         assert axes.shape == (4, 3)
+
+        axes, res = plot_distribution(
+            wcs_map=map_, func="norm", kwargs_hist={"bins": 40}
+        )

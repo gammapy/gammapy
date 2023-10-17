@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Session class driving the high level interface API"""
+import html
 import logging
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
@@ -55,6 +56,12 @@ class Analysis:
         self.fit = Fit()
         self.fit_result = None
         self.flux_points = None
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     @property
     def models(self):

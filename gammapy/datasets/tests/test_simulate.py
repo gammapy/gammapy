@@ -8,7 +8,7 @@ from astropy.io import fits
 from astropy.table import Table
 from astropy.time import Time
 from gammapy.data import GTI, DataStore, Observation
-from gammapy.data.pointing import FixedPointingInfo, PointingMode
+from gammapy.data.pointing import FixedPointingInfo
 from gammapy.datasets import MapDataset, MapDatasetEventSampler
 from gammapy.datasets.tests.test_map import get_map_dataset
 from gammapy.irf import load_irf_dict_from_file
@@ -252,6 +252,24 @@ def test_sample_coord_time_energy(dataset, energy_dependent_temporal_sky_model):
 
 
 @requires_data()
+def test_fail_sample_coord_time_energy(
+    dataset, models, energy_dependent_temporal_sky_model
+):
+    new_dataset = dataset.copy("my-dataset")
+    new_dataset.gti = GTI.create(
+        start=0 * u.s, stop=2.5 * u.s, reference_time=Time("2000-01-01").tt
+    )
+
+    new_dataset.models = energy_dependent_temporal_sky_model
+    new_dataset.models[0].temporal_model.map.data *= 1e20
+    evaluator = new_dataset.evaluators["test-source"]
+
+    sampler = MapDatasetEventSampler(random_state=0, oversample_energy_factor=1)
+    with pytest.raises(ValueError):
+        sampler._sample_coord_time_energy(new_dataset, evaluator.model)
+
+
+@requires_data()
 def test_sample_coord_time_energy_random_seed(
     dataset, energy_dependent_temporal_sky_model
 ):
@@ -337,7 +355,6 @@ def test_mde_sample_weak_src(dataset, models):
     )
     livetime = 10.0 * u.hr
     pointing = FixedPointingInfo(
-        mode=PointingMode.POINTING,
         fixed_icrs=SkyCoord(0, 0, unit="deg", frame="galactic").icrs,
     )
     obs = Observation.create(
@@ -430,7 +447,6 @@ def test_event_det_coords(dataset, models):
     )
     livetime = 1.0 * u.hr
     pointing = FixedPointingInfo(
-        mode=PointingMode.POINTING,
         fixed_icrs=SkyCoord(0, 0, unit="deg", frame="galactic").icrs,
     )
     obs = Observation.create(
@@ -466,7 +482,6 @@ def test_mde_run(dataset, models):
     )
     livetime = 1.0 * u.hr
     pointing = FixedPointingInfo(
-        mode=PointingMode.POINTING,
         fixed_icrs=SkyCoord(0, 0, unit="deg", frame="galactic").icrs,
     )
     obs = Observation.create(
@@ -567,7 +582,6 @@ def test_irf_alpha_config(dataset, models):
     )
     livetime = 1.0 * u.hr
     pointing = FixedPointingInfo(
-        mode=PointingMode.POINTING,
         fixed_icrs=SkyCoord(0, 0, unit="deg", frame="galactic").icrs,
     )
     obs = Observation.create(
@@ -591,7 +605,6 @@ def test_mde_run_switchoff(dataset, models):
     )
     livetime = 1.0 * u.hr
     pointing = FixedPointingInfo(
-        mode=PointingMode.POINTING,
         fixed_icrs=SkyCoord(0, 0, unit="deg", frame="galactic").icrs,
     )
     obs = Observation.create(
@@ -631,7 +644,6 @@ def test_events_datastore(tmp_path, dataset, models):
     )
     livetime = 10.0 * u.hr
     pointing = FixedPointingInfo(
-        mode=PointingMode.POINTING,
         fixed_icrs=SkyCoord(0, 0, unit="deg", frame="galactic").icrs,
     )
     obs = Observation.create(
@@ -662,7 +674,7 @@ def test_MC_ID(model_alternative):
     )
     livetime = 0.1 * u.hr
     skydir = SkyCoord(0, 0, unit="deg", frame="galactic")
-    pointing = FixedPointingInfo(mode=PointingMode.POINTING, fixed_icrs=skydir.icrs)
+    pointing = FixedPointingInfo(fixed_icrs=skydir.icrs)
     obs = Observation.create(
         obs_id=1001,
         pointing=pointing,
@@ -719,7 +731,7 @@ def test_MC_ID_NMCID(model_alternative):
     )
     livetime = 0.1 * u.hr
     skydir = SkyCoord(0, 0, unit="deg", frame="galactic")
-    pointing = FixedPointingInfo(mode=PointingMode.POINTING, fixed_icrs=skydir.icrs)
+    pointing = FixedPointingInfo(fixed_icrs=skydir.icrs)
     obs = Observation.create(
         obs_id=1001,
         pointing=pointing,

@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import html
 import itertools
 import logging
 import numpy as np
@@ -136,6 +137,12 @@ class Fit:
         self.covariance_opts = covariance_opts
         self.confidence_opts = confidence_opts
         self._minuit = None
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     @property
     @deprecated(
@@ -564,7 +571,7 @@ class FitStepResult:
         """Optimizer status message."""
         return self._message
 
-    def __repr__(self):
+    def __str__(self):
         return (
             f"{self.__class__.__name__}\n\n"
             f"\tbackend    : {self.backend}\n"
@@ -572,6 +579,12 @@ class FitStepResult:
             f"\tsuccess    : {self.success}\n"
             f"\tmessage    : {self.message}\n"
         )
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
 
 class CovarianceResult(FitStepResult):
@@ -628,11 +641,11 @@ class OptimizeResult(FitStepResult):
         """Value of the fit statistic at minimum."""
         return self._total_stat
 
-    def __repr__(self):
-        str_ = super().__repr__()
-        str_ += f"\tnfev       : {self.nfev}\n"
-        str_ += f"\ttotal stat : {self.total_stat:.2f}\n\n"
-        return str_
+    def __str__(self):
+        string = super().__str__()
+        string += f"\tnfev       : {self.nfev}\n"
+        string += f"\ttotal stat : {self.total_stat:.2f}\n\n"
+        return string
 
 
 class FitResult:
@@ -723,12 +736,18 @@ class FitResult:
         """Optimize result"""
         return self._covariance_result
 
-    def __repr__(self):
-        str_ = ""
+    def __str__(self):
+        string = ""
         if self.optimize_result:
-            str_ += str(self.optimize_result)
+            string += str(self.optimize_result)
 
         if self.covariance_result:
-            str_ += str(self.covariance_result)
+            string += str(self.covariance_result)
 
-        return str_
+        return string
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
