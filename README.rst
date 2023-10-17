@@ -24,9 +24,8 @@
 .. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.4701488.svg?style=flat
     :target: https://doi.org/10.5281/zenodo.4701488
 
-.. image:: https://archive.softwareheritage.org/badge/swh:1:dir:27e81770f5e2e977017789ef5aa4a35978137fa6/
-    :target: https://archive.softwareheritage.org/swh:1:dir:27e81770f5e2e977017789ef5aa4a35978137fa6;origin=https://github.com/gammapy/gammapy;visit=swh:1:snp:6017d488cdb0faaa2373663b86f751eafdf2a1d5;anchor=swh:1:rev:e2591a43bc04db8e51e693d0711c21ac0738203c
-
+.. image:: https://archive.softwareheritage.org/badge/origin/https://github.com/gammapy/gammapy/
+    :target: https://archive.softwareheritage.org/browse/origin/?origin_url=https://github.com/gammapy/gammapy
 
 Gammapy
 =======

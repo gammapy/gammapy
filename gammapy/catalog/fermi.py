@@ -374,10 +374,14 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
                     lon_0=ra, lat_0=dec, r_0=r_0, e=e, phi=phi, frame="icrs"
                 )
             elif morph_type in ["Map", "Ring", "2D Gaussian x2"]:
-                filename = de["Spatial_Filename"].strip()
-                path = make_path(
-                    "$GAMMAPY_DATA/catalogs/fermi/LAT_extended_sources_8years/Templates/"
-                )
+                filename = de["Spatial_Filename"].strip() + ".gz"
+                if de["version"] < 28:
+                    path_extended = "$GAMMAPY_DATA/catalogs/fermi/LAT_extended_sources_8years/Templates/"
+                elif de["version"] < 32:
+                    path_extended = "$GAMMAPY_DATA/catalogs/fermi/LAT_extended_sources_12years/Templates/"
+                else:
+                    path_extended = "$GAMMAPY_DATA/catalogs/fermi/LAT_extended_sources_14years/Templates/"
+                path = make_path(path_extended)
                 with warnings.catch_warnings():  # ignore FITS units warnings
                     warnings.simplefilter("ignore", FITSFixedWarning)
                     model = TemplateSpatialModel.read(path / filename)
@@ -1255,18 +1259,19 @@ class SourceCatalog4FGL(SourceCatalog):
     - https://arxiv.org/abs/1902.10045 (DR1)
     - https://arxiv.org/abs/2005.11208 (DR2)
     - https://arxiv.org/abs/2201.11184 (DR3)
+    - https://arxiv.org/abs/2307.12546 (DR4)
 
-    By default we use the file of the DR3 initial release
-    from https://fermi.gsfc.nasa.gov/ssc/data/access/lat/12yr_catalog/
+    By default we use the file of the DR4 initial release
+    from https://fermi.gsfc.nasa.gov/ssc/data/access/lat/14yr_catalog/
 
     One source is represented by `~gammapy.catalog.SourceCatalogObject4FGL`.
     """
 
     tag = "4fgl"
-    description = "LAT 8-year point source catalog"
+    description = "LAT 14-year point source catalog"
     source_object_class = SourceCatalogObject4FGL
 
-    def __init__(self, filename="$GAMMAPY_DATA/catalogs/fermi/gll_psc_v28.fit.gz"):
+    def __init__(self, filename="$GAMMAPY_DATA/catalogs/fermi/gll_psc_v32.fit.gz"):
         filename = make_path(filename)
         table = Table.read(filename, hdu="LAT_Point_Source_Catalog")
         table_standardise_units_inplace(table)
@@ -1290,6 +1295,9 @@ class SourceCatalog4FGL(SourceCatalog):
         )
 
         self.extended_sources_table = Table.read(filename, hdu="ExtendedSources")
+        self.extended_sources_table["version"] = int(
+            "".join(filter(str.isdigit, table.meta["VERSION"]))
+        )
         try:
             self.hist_table = Table.read(filename, hdu="Hist_Start")
             if "MJDREFI" not in self.hist_table.meta:

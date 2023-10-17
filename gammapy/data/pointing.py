@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import html
 import logging
 import warnings
 from enum import Enum, auto
@@ -6,7 +7,9 @@ import numpy as np
 import scipy.interpolate
 import astropy.units as u
 from astropy.coordinates import (
+    ICRS,
     AltAz,
+    BaseCoordinateFrame,
     CartesianRepresentation,
     SkyCoord,
     UnitSphericalRepresentation,
@@ -23,6 +26,28 @@ from gammapy.utils.time import time_ref_from_dict, time_ref_to_dict, time_to_fit
 log = logging.getLogger(__name__)
 
 __all__ = ["FixedPointingInfo", "PointingInfo", "PointingMode"]
+
+
+def _check_coord_frame(coord_or_frame, expected_frame, name):
+    """Check if a skycoord or frame is given in expected_frame"""
+    is_coord = isinstance(coord_or_frame, SkyCoord)
+    is_frame = isinstance(coord_or_frame, BaseCoordinateFrame)
+
+    if not (is_frame or is_coord):
+        raise TypeError(
+            f"{name} must be a 'astropy.coordinates.SkyCoord'"
+            "or {expected_frame} instance"
+        )
+
+    if is_coord:
+        frame = coord_or_frame.frame
+    else:
+        frame = coord_or_frame
+
+    if not isinstance(frame, expected_frame):
+        raise ValueError(
+            f"{name} is in wrong frame, expected {expected_frame}, got {frame}"
+        )
 
 
 class PointingMode(Enum):
@@ -74,7 +99,7 @@ class FixedPointingInfo:
         Passing this is deprecated, provide ``mode`` and ``fixed_icrs`` or ``fixed_altaz``
         instead or use `FixedPointingInfo.from_fits_header` instead.
     mode : `PointingMode`
-        How the telescope was pointing during the observation
+        How the telescope was pointing during the observation.
     fixed_icrs : SkyCoord in ICRS frame
         Mandatory if mode is `PointingMode.POINTING`, the ICRS coordinates that are fixed
         for the duration of the observation.
@@ -88,7 +113,7 @@ class FixedPointingInfo:
     >>> from astropy.coordinates import SkyCoord
     >>> import astropy.units as u
     >>> fixed_icrs = SkyCoord(83.633 * u.deg, 22.014 * u.deg, frame="icrs")
-    >>> pointing_info = FixedPointingInfo(mode=PointingMode.POINTING, fixed_icrs=fixed_icrs)
+    >>> pointing_info = FixedPointingInfo(fixed_icrs=fixed_icrs)
     >>> print(pointing_info)
     FixedPointingInfo:
     <BLANKLINE>
@@ -100,6 +125,7 @@ class FixedPointingInfo:
     def __init__(
         self,
         meta=None,
+        *,
         mode=None,
         fixed_icrs=None,
         fixed_altaz=None,
@@ -125,19 +151,24 @@ class FixedPointingInfo:
             self.__dict__.update(self.from_fits_header(meta).__dict__)
             return
 
-        if not isinstance(mode, PointingMode):
-            raise TypeError(f"mode must be an instance of PointingMode, got {mode!r}")
+        if mode is not None:
+            warnings.warn(
+                "Passing mode is deprecated and the argument will be removed in Gammapy 1.3."
+                " pointing mode is deduced from whether fixed_icrs or fixed_altaz is given",
+                GammapyDeprecationWarning,
+            )
 
-        self._mode = mode
         self._location = location
         self._time_start = time_start
         self._time_stop = time_stop
         self._time_ref = time_ref
         self._legacy_altaz = legacy_altaz or AltAz(np.nan * u.deg, np.nan * u.deg)
 
-        if mode is PointingMode.POINTING:
-            if fixed_icrs is None:
-                raise ValueError("fixed_icrs is mandatory for PointingMode.POINTING")
+        if fixed_icrs is not None and fixed_altaz is not None:
+            raise ValueError("fixed_icrs and fixed_altaz are mutually exclusive")
+
+        if fixed_icrs is not None:
+            _check_coord_frame(fixed_icrs, ICRS, "fixed_icrs")
 
             if np.isnan(fixed_icrs.ra.value) or np.isnan(fixed_icrs.dec.value):
                 warnings.warn(
@@ -145,20 +176,21 @@ class FixedPointingInfo:
                     GammapyDeprecationWarning,
                 )
 
+            self._mode = PointingMode.POINTING
             self._fixed_icrs = fixed_icrs
             self._fixed_altaz = None
 
-        elif mode is PointingMode.DRIFT:
-            if fixed_altaz is None:
-                raise ValueError("pointing_altaz is required for PointingMode.DRIFT")
-
-            if fixed_icrs is not None:
-                raise ValueError("fixed_icrs is excluded for PointingMode.DRIFT")
-
-            self._fixed_altaz = fixed_altaz
-            self._fixed_icrs = None
         else:
-            raise ValueError(f"Unsupported pointing mode for FixedPointingInfo: {mode}")
+            _check_coord_frame(fixed_altaz, AltAz, "fixed_altaz")
+            self._mode = PointingMode.DRIFT
+            self._fixed_icrs = None
+            self._fixed_altaz = fixed_altaz
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     @classmethod
     def from_fits_header(cls, header):
@@ -229,7 +261,6 @@ class FixedPointingInfo:
                 time_stop = time_ref + u.Quantity(time_stop, time_unit)
 
         return cls(
-            mode=mode,
             location=location,
             fixed_icrs=fixed_icrs,
             fixed_altaz=pointing_altaz,

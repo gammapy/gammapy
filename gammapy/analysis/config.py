@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import json
+import html
 import logging
 from collections import defaultdict
 from enum import Enum
@@ -107,6 +108,12 @@ class GammapyBaseConfig(BaseModel):
             Quantity: lambda v: f"{v.value} {v.unit}",
             Time: lambda v: f"{v.value}",
         }
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
 
 class SkyCoordConfig(GammapyBaseConfig):

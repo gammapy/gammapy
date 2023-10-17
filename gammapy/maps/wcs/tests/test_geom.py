@@ -380,12 +380,12 @@ def test_wcs_geom_get_pix_coords():
         assert_allclose(idx[0, 0, 0], desired)
 
 
-def test_geom_repr():
+def test_geom_str():
     geom = WcsGeom.create(
         skydir=(0, 0), npix=(10, 4), binsz=50, frame="galactic", proj="AIT"
     )
 
-    str_info = repr(geom)
+    str_info = str(geom)
     assert geom.__class__.__name__ in str_info
     assert "wcs ref" in str_info
     assert "center" in str_info
@@ -612,6 +612,13 @@ def test_non_equal_binsz():
 
     assert_allclose(coords["lon"].to_value("deg"), 0)
     assert_allclose(coords["lat"].to_value("deg"), [[-60], [0], [60]])
+
+
+def test_wcs_geom_non_equal_dim():
+    geom = WcsGeom.create(skydir=(0, 0), binsz=1, width=(3, 5))
+
+    assert geom.data_shape == (5, 3)
+    assert geom.data_shape == geom.wcs.array_shape
 
 
 def test_wcs_geom_to_even_npix():

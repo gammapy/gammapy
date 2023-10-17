@@ -1,4 +1,5 @@
 import abc
+import html
 import logging
 from copy import deepcopy
 from enum import Enum
@@ -247,6 +248,12 @@ class IRF(metaclass=abc.ABCMeta):
         str_ += f"\tdtype : {self.data.dtype}\n"
         return str_.expandtabs(tabsize=2)
 
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
+
     def evaluate(self, method=None, **kwargs):
         """Evaluate IRF
 
@@ -339,7 +346,7 @@ class IRF(metaclass=abc.ABCMeta):
 
         values = self.quantity * axis.bin_width.reshape(shape)
 
-        if axis_name == "rad":
+        if axis_name in ["rad", "offset"]:
             # take Jacobian into account
             values = 2 * np.pi * axis.center.reshape(shape) * values
 

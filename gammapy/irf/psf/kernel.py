@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import html
 import numpy as np
 import astropy.units as u
 import matplotlib.pyplot as plt
@@ -57,6 +58,12 @@ class PSFKernel:
 
         if normalize:
             self.normalize()
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     def normalize(self):
         """Force normalisation of the kernel"""
