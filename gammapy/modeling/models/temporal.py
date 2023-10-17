@@ -180,7 +180,7 @@ class TemporalModel(ModelBase):
         random_state = get_random_state(random_state)
 
         ontime = u.Quantity((t_max - t_min).sec, t_delta.unit)
-        n_step = (ontime / t_delta).to_value("")
+        n_step = (ontime / t_delta).to_value("").item()
         t_step = ontime / n_step
 
         indices = np.arange(n_step + 1)
@@ -260,10 +260,13 @@ class LinearTemporalModel(TemporalModel):
     ----------
     alpha : float
         Constant term of the baseline flux
+        Default is 1
     beta : `~astropy.units.Quantity`
         Time variation coefficient of the flux
+        Default is 0
     t_ref : `~astropy.units.Quantity`
-        The reference time in mjd. Frozen per default, at 2000-01-01.
+        The reference time in mjd.
+        Frozen per default, at 2000-01-01.
     """
 
     tag = ["LinearTemporalModel", "linear"]
@@ -312,8 +315,10 @@ class ExpDecayTemporalModel(TemporalModel):
     ----------
     t0 : `~astropy.units.Quantity`
         Decay time scale
+        Default is 1 day
     t_ref : `~astropy.units.Quantity`
-        The reference time in mjd. Frozen per default, at 2000-01-01 .
+        The reference time in mjd.
+        Frozen per default, at 2000-01-01.
     """
 
     tag = ["ExpDecayTemporalModel", "exp-decay"]
@@ -358,8 +363,10 @@ class GaussianTemporalModel(TemporalModel):
     ----------
     t_ref : `~astropy.units.Quantity`
         The reference time in mjd at the peak.
+        Default is 2000-01-01
     sigma : `~astropy.units.Quantity`
         Width of the gaussian profile.
+        Default is 1 day
     """
 
     tag = ["GaussianTemporalModel", "gauss"]
@@ -408,12 +415,16 @@ class GeneralizedGaussianTemporalModel(TemporalModel):
     ----------
     t_ref : `~astropy.units.Quantity`
         The time of the pulse's maximum intensity.
+        Default is 2000-01-01
     t_rise : `~astropy.units.Quantity`
         Rise time constant.
+        Default is 1 day
     t_decay : `~astropy.units.Quantity`
         Decay time constant.
+        Default is 1 day
     eta : `~astropy.units.Quantity`
         Inverse pulse sharpness -> higher values implies a more peaked pulse
+        Default is 1/2
 
     """
 
@@ -782,10 +793,13 @@ class PowerLawTemporalModel(TemporalModel):
     ----------
     alpha : float
         Decay time power
+        Default is 1
     t_ref: `~astropy.units.Quantity`
-        The reference time in mjd. Frozen by default, at 2000-01-01.
+        The reference time in mjd.
+        Frozen by default, at 2000-01-01.
     t0: `~astropy.units.Quantity`
-        The scaling time in mjd. Fixed by default, at 1 day.
+        The scaling time in mjd.
+        Fixed by default, at 1 day.
     """
 
     tag = ["PowerLawTemporalModel", "powerlaw"]
@@ -838,10 +852,13 @@ class SineTemporalModel(TemporalModel):
     ----------
     amp : float
         Amplitude of the sinusoidal function
+        Default is 1
     t_ref: `~astropy.units.Quantity`
         The reference time in mjd.
+        Default is 2000-01-01
     omega: `~astropy.units.Quantity`
         Pulsation of the signal.
+        Default is 1 rad/day
     """
 
     tag = ["SineTemporalModel", "sinus"]
@@ -909,14 +926,19 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         The name of the file containing the phase curve
     t_ref : `~astropy.units.Quantity`
         The reference time in mjd
+        Default is 48442.5 mjd
     phi_ref : `~astropy.units.Quantity`
-        The phase at reference time. Default is 0.
+        The phase at reference time.
+        Default is 0
     f0 : `~astropy.units.Quantity`
         The frequency at t_ref in s-1
+        Default is 29.946923 s-1
     f1 : `~astropy.units.Quantity`
-        The frequency derivative at t_ref in s-2. Default is 0 s-2.
+        The frequency derivative at t_ref in s-2.
+        Default is 0 s-2
     f2 : `~astropy.units.Quantity`
-        The frequency second derivative at t_ref in s-3. Default is 0 s-3.
+        The frequency second derivative at t_ref in s-3.
+        Default is 0 s-3
     """
 
     tag = ["TemplatePhaseCurveTemporalModel", "template-phase"]
@@ -981,7 +1003,8 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         t_ref : `~astropy.units.Quantity`
             The reference time in mjd.
         phi_ref : `~astropy.units.Quantity`
-            The phase at reference time. Default is 0.
+            The phase at reference time.
+            Default is 0
         f0 : `~astropy.units.Quantity`
             The frequency at t_ref in s-1
         f1 : `~astropy.units.Quantity`
