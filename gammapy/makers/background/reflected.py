@@ -526,7 +526,7 @@ class ReflectedRegionsBackgroundMaker(Maker):
 
         if geom.is_all_point_sky_regions and len(regions_off) > 0:
             regions_off = self._filter_regions_off_rad_max(
-                regions_off, energy_axis, geom, events, observation.rad_max
+                regions_off, energy_axis, geom, events, rad_max
             )
 
         if len(regions_off) == 0:
@@ -545,7 +545,7 @@ class ReflectedRegionsBackgroundMaker(Maker):
         if is_point_sky_region:
             counts_off = make_counts_off_rad_max(
                 geom_off=geom_off,
-                rad_max=observation.rad_max,
+                rad_max=rad_max,
                 events=events,
             )
         else:
