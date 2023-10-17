@@ -215,7 +215,8 @@ plt.show()
 
 
 ######################################################################
-# We can also utilise `` to display various parameters from the FluxMaps
+# We can also utilise `~gammapy.estimators.utils.find_peaks_in_flux_map`
+# to display various parameters from the FluxMaps
 
 sources_flux_map = find_peaks_in_flux_map(maps, threshold=5, min_distance="0.25 deg")
 display(sources_flux_map)
