@@ -787,7 +787,7 @@ class Observations(collections.abc.MutableSequence):
         obs = itertools.chain(*observations_list)
         return cls(list(obs))
 
-    def iter(self, idx=None):
+    def generator(self, idx=None):
         """Iterate over observations.
 
         Parameters
@@ -798,7 +798,10 @@ class Observations(collections.abc.MutableSequence):
         if idx is None:
             idx = slice(None)
         for obs in self[idx]:
-            yield obs.copy(in_memory=True)
+            obs_copy = obs.copy(in_memory=True)
+            yield obs_copy
+            del obs
+            del obs_copy
 
 
 class ObservationChecker(Checker):
