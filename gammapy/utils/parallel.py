@@ -210,13 +210,20 @@ def run_pool_star_map(pool, func, inputs, method_kwargs=None, task_name=""):
 def run_pool_async(pool, func, inputs, method_kwargs=None, task_name=""):
     """Run function in parallel async"""
     results = []
+    print("TOTO")
 
     for arguments in progress_bar(inputs, desc=task_name):
+        # try:
+        #     result = pool.apply_async(func, arguments, **method_kwargs)
+        #     results.append(result)
+        # except Exception as err:
+        #     print("PRINTING ERROR")
+        #     print(err)
         result = pool.apply_async(func, arguments, **method_kwargs)
         results.append(result)
-
     # wait async run is done
     [result.wait() for result in results]
+    print("\n END")
     return results
 
 
