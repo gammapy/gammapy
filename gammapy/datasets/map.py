@@ -2745,6 +2745,7 @@ class MapDatasetOnOff(MapDataset):
         )
 
     def pad(self):
+        """Not implemented for MapDatasetOnOff."""
         raise NotImplementedError
 
     def slice_by_idx(self, slices, name=None):
