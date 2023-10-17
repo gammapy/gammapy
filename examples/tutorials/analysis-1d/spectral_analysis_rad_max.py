@@ -318,7 +318,7 @@ plt.show()
 
 ######################################################################
 # For more ways of assessing fit quality, please refer to the dedicated
-# :ref:`modeling and fitting </tutorials/api/fitting>` tutorial.
+# modeling and fitting :doc:`/tutorials/api/fitting` tutorial.
 #
 
 
