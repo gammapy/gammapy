@@ -2292,10 +2292,7 @@ class MapDatasetOnOff(MapDataset):
         """
         name = make_name(name)
 
-        if self.counts_off is None:
-            background = self.counts * 0.0
-        else:
-            background = self.counts_off * self.alpha
+        background = self.counts_off * self.alpha if self.counts_off else None
 
         return MapDataset(
             counts=self.counts,
