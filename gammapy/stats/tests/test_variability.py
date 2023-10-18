@@ -134,8 +134,10 @@ def test_lightcurve_flux_doubling():
     )
     time_id = 0
 
-    dtime, dtime_err, coord = compute_flux_doubling(flux, flux_err, time, axis=time_id)
+    dtime_dict = compute_flux_doubling(flux, flux_err, time, axis=time_id)
 
+    dtime = dtime_dict["doubling"]
+    dtime_err = dtime_dict["doubling_err"]
     assert_allclose(
         dtime,
         [[2271.34711286, -2271.34711286], [21743.98603654, -22365.24278044]] * u.s,

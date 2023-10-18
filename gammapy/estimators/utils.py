@@ -433,21 +433,19 @@ def compute_lightcurve_doublingtime(lightcurve, flux_quantity="flux"):
 
     axis = flux.geom.axes.index_data("time")
 
-    doubling, doubling_err, coord = compute_flux_doubling(
-        flux.data, flux_err.data, coords, axis=axis
-    )
+    doubling_dict = compute_flux_doubling(flux.data, flux_err.data, coords, axis=axis)
 
     energies = lightcurve.geom.axes["energy"].edges
     table = Table(
         [
             energies[:-1],
             energies[1:],
-            doubling.T[0],
-            doubling_err.T[0],
-            coord.T[0],
-            np.abs(doubling.T[1]),
-            doubling_err.T[1],
-            coord.T[1],
+            doubling_dict["doubling"],
+            doubling_dict["doubling_err"],
+            doubling_dict["doubling_coord"],
+            doubling_dict["halving"],
+            doubling_dict["halving_err"],
+            doubling_dict["halving_coord"],
         ],
         names=(
             "min_energy",

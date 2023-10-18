@@ -168,8 +168,8 @@ def compute_flux_doubling(flux, flux_err, coords, axis=0):
 
     Returns
     -------
-    doubling, doubling_err, coord : `~numpy.ndarray`
-        Characteristic flux doubling, halving and errors,
+    doubling_dict: dict
+        A dictionary containing the characteristic flux doubling, halving and errors,
         with coordinates at which they were found.
     """
 
@@ -218,4 +218,13 @@ def compute_flux_doubling(flux, flux_err, coords, axis=0):
     doubling = np.take_along_axis(axes, index, axis=-1)
     doubling_err = np.take_along_axis(axes_err, index, axis=-1)
 
-    return doubling, doubling_err, coord
+    doubling_dict = {
+        "doubling": doubling.T[0],
+        "doubling_err": doubling_err.T[0],
+        "doubling_coord": coord.T[0],
+        "halving": np.abs(doubling.T[1]),
+        "halving_err": doubling_err.T[1],
+        "halving_coord": coord.T[1],
+    }
+
+    return doubling_dict
