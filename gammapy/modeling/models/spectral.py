@@ -265,7 +265,7 @@ class SpectralModel(ModelBase):
         energy_min, energy_max : `~astropy.units.Quantity`
             Lower and upper bound of integration range.
         **kwargs : dict
-            Keyword arguments passed to :func:`~gammapy.utils.integrate.integrate_spectrum`
+            Keyword arguments passed to :func:`~gammapy.modeling.models.spectral.integrate_spectrum`
         """
 
         if hasattr(self, "evaluate_integral"):
@@ -312,7 +312,7 @@ class SpectralModel(ModelBase):
         energy_min, energy_max : `~astropy.units.Quantity`
             Lower and upper bound of integration range.
         **kwargs : dict
-            Keyword arguments passed to func:`~gammapy.utils.integrate.integrate_spectrum`
+            Keyword arguments passed to :func:`~gammapy.modeling.models.spectral.integrate_spectrum`
         """
 
         def f(x):
@@ -2001,7 +2001,7 @@ class EBLAbsorptionNormSpectralModel(SpectralModel):
         Norm of the EBL model
         Default is 1
     interp_kwargs : dict
-        Interpolation option passed to `ScaledRegularGridInterpolator`.
+        Interpolation option passed to `~gammapy.utils.interpolation.ScaledRegularGridInterpolator`.
         By default the models are extrapolated outside the range. To prevent
         this and raise an error instead use interp_kwargs = {"extrapolate": False}
     """
@@ -2094,7 +2094,7 @@ class EBLAbsorptionNormSpectralModel(SpectralModel):
         alpha_norm: float
             Norm of the EBL model
         interp_kwargs : dict
-            Interpolation option passed to `ScaledRegularGridInterpolator`.
+            Interpolation option passed to `~gammapy.utils.interpolation.ScaledRegularGridInterpolator`.
 
         """
         # Create EBL data array
