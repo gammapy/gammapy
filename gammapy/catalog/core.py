@@ -260,8 +260,10 @@ class SourceCatalog(abc.ABC):
         else:
             name_extended = None
 
-        if self._source_name_key in data:
+        if self._source_name_key in data and self._source_name_key == "PSR_Name":
             name_spectral = data[self._source_name_key].strip()
+        elif self._source_name_key in data and self._source_name_key == "PSRJ":
+            name_spectral = f"PSR{data[self._source_name_key].strip()}"
         elif "Source_name" in data:
             name_spectral = data["Source_name"].strip()
         else:
@@ -284,7 +286,11 @@ class SourceCatalog(abc.ABC):
 
     @lazyproperty
     def _lookup_spectral_source_idx(self):
-        names = [_.strip() for _ in self.spectral_table[self._source_name_key]]
+        if self._source_name_key == "PSRJ":
+            source_name_key = "NickName"
+        else:
+            source_name_key = self._source_name_key
+        names = [_.strip() for _ in self.spectral_table[source_name_key]]
         idx = range(len(names))
         return dict(zip(names, idx))
 
