@@ -154,7 +154,7 @@ class UniformPriorModel(PriorModel):
 
     Parameters
     ----------
-    uni : `float`
+    uni : float
         Value of the prior that is set uniformly.
         Default is 0
     """
