@@ -36,6 +36,7 @@ import numpy as np
 from astropy.coordinates import SkyCoord
 import matplotlib.pyplot as plt
 from gammapy.data import DataStore
+from gammapy.data.observations import Observations
 from gammapy.data.utils import get_irfs_features
 from gammapy.utils.cluster import hierarchical_clustering
 
@@ -72,90 +73,118 @@ print(f"{np.min(obs_muoneff):.2f} < muon efficiency < {np.max(obs_muoneff):.2f}"
 
 
 ######################################################################
-# Split the observations by zenith angle
-# --------------------------------------
-#
-# Here we can plot the zenith angle vs muon efficiency of the
-# observations. We decide to group the observations according to their
-# zenith angle. The # median value of the zenith angles is used to
-# define these groups. These are shown visually below.
+# Manual grouping of observations
+# -------------------------------
+# Here we can plot the zenith angle vs muon efficiency of the observations.
+# We decide to group the observations according to their zenith angle.
+# This is done manually as per a user defined cut, in this case we take the
+# median value of the zenith angles to define each observation group. These
+# are shown visually below.
+
+# This type of grouping can be utilised according to different parameters i.e.
+# zenith angle, muon efficiency, offset angle. The quantity chosen can therefore
+# be adjusted according to each specific science case.
 #
 
-fig = plt.figure(figsize=(7, 5))
-ax = fig.add_subplot(111)
-
-obs_A = []
-obs_B = []
+fix, ax = plt.subplots(1, 1, figsize=(7, 5))
+obs_A = Observations([])
+obs_B = Observations([])
 for obs in observations:
     zenith = obs.get_pointing_altaz(time=obs.tmid).zen.deg
     if zenith < np.median(obs_zenith):
         ax.plot(zenith, obs.obs_info["MUONEFF"], "o", color="red", alpha=0.4)
-        obs_A.append(obs.obs_id)
+        obs_A.append(obs)
     if zenith > np.median(obs_zenith):
         ax.plot(zenith, obs.obs_info["MUONEFF"], "o", color="blue", alpha=0.4)
-        obs_B.append(obs.obs_id)
-
+        obs_B.append(obs)
 ax.set_ylabel("Muon efficiency")
 ax.set_xlabel("Zenith angle (deg)")
-ax.axvline(28.9, ls="--", color="black")
+ax.axvline(np.median(obs_zenith), ls="--", color="black")
 
 
 ######################################################################
-# This shows the observation group by zenith angle. The red points
+# This shows the observations grouped by zenith angle. The red points
 # are observations which have a zenith angle less than the median value,
 # whilst the blue points are observations above the median.
 #
-# These groups can then be used to create two separate datasets which
-# can be analysed utilising a joint fit method.
+# `obs_A` and `obs_B` are both `~gammapy.data.Observations` objects which
+# can be utilised in the usual way to show the various properties of the
+# observations i.e. see the :doc:`/tutorials/data/cta` tutorial.
 
 
 ######################################################################
-# Group observations according to IRF quantities
-# ----------------------------------------------
+# Hierarchical clustering of observations
+# ---------------------------------------
 #
-# This method shows how to cluster observations that have a similar edisp
-# and psf from the IRFs. The `gammapy.data.utils.get_irfs_features` is
-# utilised to achieve this. The observations are then clustered based on
-# this criteria using `gammapy.utils.cluster.hierarchical_clustering`. The
-# idea here is to minimise the variance of both edisp and psf within a specific
-# group to limit the error on the quantity when they are stacked at the dataset level.
+# This method shows how to cluster observations based on their IRF quantities,
+# in this case those that have a similar edisp and psf. The
+# `gammapy.data.utils.get_irfs_features` is utilised to achieve this. The
+# observations are then clustered based on this criteria using
+# `gammapy.utils.cluster.hierarchical_clustering`. The idea here is to minimise
+# the variance of both edisp and psf within a specific group to limit the error
+# on the quanitity when they are stacked at the dataset level.
+#
+# In this example, the irf features are computed for the `edisp-res` and
+# `psf-radius` at 1 TeV. This is stored as a `astropy.table.table.Table`, as shown below.
 #
 
 source_position = SkyCoord.from_name("PKS 2155-304")
-names = ["edisp-bias", "edisp-res", "psf-radius"]
+names = ["edisp-res", "psf-radius"]
 features_irfs = get_irfs_features(
     observations, energy_true="1 TeV", position=source_position, names=names
 )
-features = hierarchical_clustering(
-    features_irfs, fcluster_kwargs={"t": 2}
-)  # Allow only two groups for the cluster
+print(features_irfs)
+
+######################################################################
+# The `gammapy.utils.cluster.hierarchical_clustering` then clusters
+# this table into `t` groups with a corresponding label for each group.
+# In this case, we choose to cluster the observations into two groups.
+# We can print this table to show the corresponding label which has been
+# added to the previous `feature_irfs` table.
+
+
+features = hierarchical_clustering(features_irfs, fcluster_kwargs={"t": 2})
+print(features)
+
+######################################################################
+# Finally, `observations.group_by_label` creates `t`
+# `~gammapy.data.Observation` objects by grouping the similar labels.
+
 obs_clusters = observations.group_by_label(features["labels"])
+print(obs_clusters)
 
 
-fig = plt.figure(figsize=(7, 5))
-ax = fig.add_subplot(111)
-ax.set_ylabel("Muon efficiency")
-ax.set_xlabel("Zenith angle (deg)")
-
-for obs in obs_clusters["group_1"]:
-    ax.plot(
-        obs.get_pointing_altaz(time=obs.tmid).zen.deg,
-        obs.obs_info["MUONEFF"],
-        "o",
-        color="green",
-        alpha=0.4,
-    )
-for obs in obs_clusters["group_2"]:
-    ax.plot(
-        obs.get_pointing_altaz(time=obs.tmid).zen.deg,
-        obs.obs_info["MUONEFF"],
-        "o",
-        color="magenta",
-        alpha=0.4,
-    )
+mask_1 = features["labels"] == 1
+mask_2 = features["labels"] == 2
+fix, ax = plt.subplots(1, 1, figsize=(7, 5))
+ax.set_ylabel("edisp-res")
+ax.set_xlabel("psf-radius")
+ax.plot(
+    features[mask_1]["edisp-res"],
+    features[mask_1]["psf-radius"],
+    "o",
+    color="green",
+    alpha=0.4,
+    label="Group 1",
+)
+ax.plot(
+    features[mask_2]["edisp-res"],
+    features[mask_2]["psf-radius"],
+    "o",
+    color="magenta",
+    alpha=0.4,
+    label="Group 2",
+)
+ax.legend()
 
 
 ######################################################################
-# The groups here are divided by the quality of the IRFs values edisp
-# and psf. The green and magenta points indicate how the observations
+# The groups here are divided by the quality of the IRFs values `edisp-res`
+# and `psf-radius`. The green and magenta points indicate how the observations
 # are grouped.
+#
+#
+# In both examples we have a set of `~gammapy.data.Observation` objects which
+# can be reduced using the `gammapy.makers.DatasetsMaker` to create two (in this
+# specific case) separate datasets. These can then be jointly fitted using the
+# :doc:`tutorials/analysis-3d/analysis_mwl` tutorial.
