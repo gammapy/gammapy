@@ -135,7 +135,7 @@ class GaussianPriorModel(PriorModel):
         Default is 0
     sigma : float
         Standard deviation of the Gaussian distribution.
-        Default is 1
+        Default is 1.
     """
 
     tag = ["GaussianPriorModel"]
