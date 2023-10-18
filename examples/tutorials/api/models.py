@@ -9,7 +9,7 @@ related to modeling and fitting data. This includes spectral, spatial
 and temporal model classes, as well as the fit and parameter API.The
 models follow a naming scheme which contains the category as a suffix to
 the class name. An overview of all the available models can be found in
-the `model gallery <../../../docs/user-guide/model-gallery/index.rst>`__.
+the :ref:`model-gallery`.
 
 Note that there are separate tutorials,
 :doc:`/tutorials/api/model_management` and
@@ -57,7 +57,7 @@ print(pwl)
 
 ######################################################################
 # To get a list of all available spectral models you can import and print
-# the spectral model registry or take a look at the :ref:`spectral-models-gallery`
+# the spectral model registry or take a look at the :ref:`spectral_models_gallery`
 #
 
 from gammapy.modeling.models import SPECTRAL_MODEL_REGISTRY
@@ -237,7 +237,7 @@ print(gauss)
 
 ######################################################################
 # Again you can check the `SPATIAL_MODELS` registry to see which models
-# are available or take a look at the :ref:`spatial-models-gallery`
+# are available or take a look at the :ref:`spatial_models_gallery`
 #
 
 from gammapy.modeling.models import SPATIAL_MODEL_REGISTRY
