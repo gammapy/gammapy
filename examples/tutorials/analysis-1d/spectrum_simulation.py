@@ -165,8 +165,8 @@ print(dataset)
 # To do an on off spectral analysis, which is the usual science case, the
 # standard would be to use `SpectrumDatasetOnOff`, which uses the
 # acceptance to fake off-counts. Please also refer to the `Dataset simulations`
-# section in the :doc:`/tutorials/analysis-1d/spectral_analysis_rad_max`
-# tutorial for simulations based on observations of real off counts.
+# section in the :doc:`/tutorials/analysis-1d/spectral_analysis_rad_max` tutorial,
+# dealing with simulations based on observations of real off counts.
 #
 
 dataset_on_off = SpectrumDatasetOnOff.from_spectrum_dataset(
