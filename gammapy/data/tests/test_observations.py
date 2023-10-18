@@ -529,3 +529,10 @@ def test_stack_observations(data_store, caplog):
 
     with pytest.raises(TypeError):
         Observations.from_stack([obs_1, ["a"]])
+
+
+@requires_data()
+def test_slice(data_store):
+    obs_1 = data_store.get_observations([20136, 20137, 20151])
+    assert isinstance(obs_1[0], Observation)
+    assert isinstance(obs_1[1:], Observations)
