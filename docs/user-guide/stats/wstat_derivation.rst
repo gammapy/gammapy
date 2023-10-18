@@ -71,10 +71,10 @@ Goodness of fit
 The best-fit value of the WStat as defined now contains no information about the
 goodness of the fit. We consider the likelihood of the data
 :math:`n_{\mathrm{on}}` and :math:`n_{\mathrm{off}}` under the expectation of
-:math:`n_{\mathrm{on}}` and :math:`n_{\mathrm{off}}`, ie, an ideal scenario.
+:math:`n_{\mathrm{on}}` and :math:`n_{\mathrm{off}}`.
 
 .. math::
-    L (n_{\mathrm{on}}, n_{\mathrm{off}}; n_{\mathrm{on}}, n_{\mathrm{off}}) =
+    L (n_{\mathrm{on}}, n_{\mathrm{off}}, \alpha; n_{\mathrm{on}} - \alpha n_{\mathrm{off}}, \alpha n_{\mathrm{off}}) =
     \frac{n_{\mathrm{on}}^{n_{\mathrm{on}}}}{n_{\mathrm{on}} !}
     \exp{(-n_{\mathrm{on}})}\times
     \frac{n_{\mathrm{off}}^{n_{\mathrm{off}}}}{n_{\mathrm{off}} !}
@@ -127,7 +127,7 @@ If :math:`n_{\mathrm{on}} = 0` the likelihood formulae read
 and
 
 .. math::
-    L (0, n_{\mathrm{off}}; 0, n_{\mathrm{off}}) =
+    L (0, n_{\mathrm{off}}, \alpha; 0 - \alpha n_{\mathrm{off}}, \alpha n_{\mathrm{off}} ) =
     \frac{n_{\mathrm{off}}^{n_{\mathrm{off}}}}{n_{\mathrm{off}} !}
     \exp{(-n_{\mathrm{off}})}
 
