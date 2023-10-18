@@ -420,7 +420,12 @@ class Datasets(collections.abc.MutableSequence):
         return datasets
 
     def write(
-        self, filename, filename_models=None, overwrite=False, write_covariance=True
+        self,
+        filename,
+        filename_models=None,
+        overwrite=False,
+        write_covariance=True,
+        checksum=False,
     ):
         """Serialize datasets to YAML and FITS files.
 
@@ -434,6 +439,9 @@ class Datasets(collections.abc.MutableSequence):
             overwrite datasets FITS files
         write_covariance : bool
             save covariance or not
+        checksum : bool
+            When True adds both DATASUM and CHECKSUM cards to the headers written to the FITS files.
+            Default is False.
         """
         path = make_path(filename)
 
@@ -442,7 +450,9 @@ class Datasets(collections.abc.MutableSequence):
         for dataset in self._datasets:
             d = dataset.to_dict()
             filename = d["filename"]
-            dataset.write(path.parent / filename, overwrite=overwrite)
+            dataset.write(
+                path.parent / filename, overwrite=overwrite, checksum=checksum
+            )
             data["datasets"].append(d)
 
         write_yaml(data, path, sort_keys=False)
