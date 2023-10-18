@@ -163,20 +163,20 @@ of the docstring of the tutorial. You can change it by editing the docstring. Se
 Dealing with links
 ------------------
 
-Links in tutoials are just handled via normal RST syntax. 
+Links in tutorials are just handled via normal RST syntax.
 
 Links to other tutorials
 ++++++++++++++++++++++++
 
 From docstrings and RST documentation files in Gammapy you can link to other tutorials 
-aned gallery example by using RST syntax like this:
-
+and gallery examples by using RST syntax like this:
 
 .. code-block:: rst
+
     :doc:`/tutorials/starting/analysis_2`
-    
-Will link to the tutorial ``analysis_2`` from the tutorial base folder. The file
-suffix will be automatically infered by Sphinx.
+
+This will link to the tutorial :doc:`/tutorials/starting/analysis_2` from the tutorial base folder. The file
+suffix will be automatically inferred by Sphinx.
 
 
 API Links

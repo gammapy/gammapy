@@ -387,6 +387,12 @@ def test_sky_diffuse_map_3d():
     with pytest.raises(TypeError):
         model.plot()
 
+    with mpl_plot_check():
+        model.plot_grid()
+
+    with mpl_plot_check():
+        model.plot_interactive()
+
 
 def test_sky_diffuse_map_normalize():
     # define model map with a constant value of 1
@@ -605,7 +611,6 @@ def test_piecewise_spatial_model_gc():
 
 
 def test_piecewise_spatial_model():
-
     for lon in range(-360, 360):
         geom = WcsGeom.create(
             skydir=(lon, 2.3), npix=(2, 2), binsz=0.3, frame="galactic"

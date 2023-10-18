@@ -41,7 +41,7 @@ Acceptation of the Developer Certificate of Origin (DCO)
 ========================================================
 As described in the `PIG 24 <https://github.com/gammapy/gammapy/blob/master/docs/development/pigs/pig-024.rst>`_ and
 the `README.rst <https://github.com/gammapy/gammapy/blob/master/README.rst>`_ file, each contributor shall accept the
-DCO based stored in the file `DeveloperCertificate.rst <https://github.com/gammapy/gammapy/blob/master/DeveloperCertificate.rst>`_:
+DCO based stored in the file `CONTRIBUTING.md <https://github.com/gammapy/gammapy/blob/main/CONTRIBUTING.md#gammapy-developer-certification-of-origin>`_:
 this is a binding statement that asserts that you are the creator of your contribution, and that you wish to allow
 Gammapy to use your work to cite you as contributor.
 

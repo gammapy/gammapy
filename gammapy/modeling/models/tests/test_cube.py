@@ -719,6 +719,50 @@ def test_integrate_geom():
     assert_allclose(integral / 1e-12, [[[5.299]], [[2.460]], [[1.142]]], rtol=1e-3)
 
 
+def test_evaluate_integrate_nd_geom():
+    model = GaussianSpatialModel(lon="0d", lat="0d", sigma=0.1 * u.deg, frame="icrs")
+    spectral_model = PowerLawSpectralModel(amplitude="1e-11 cm-2 s-1 TeV-1")
+    sky_model = SkyModel(spectral_model=spectral_model, spatial_model=model)
+
+    center = SkyCoord("0d", "0d", frame="icrs")
+    radius = 0.3 * u.deg
+    region = CircleSkyRegion(center, radius)
+
+    energy_axis = MapAxis.from_energy_bounds(
+        "1 TeV", "10 TeV", nbin=3, name="energy_true"
+    )
+    other_axis = MapAxis.from_edges([0.0, 1.0, 2.0], name="other")
+
+    wcs_geom = WcsGeom.create(
+        width=[1, 1.2], binsz=0.05, skydir=center, axes=[energy_axis, other_axis]
+    )
+    region_geom = RegionGeom(
+        region=region, axes=[other_axis, energy_axis], binsz_wcs="0.01deg"
+    )
+
+    evaluation = sky_model.evaluate_geom(wcs_geom)
+    assert evaluation.shape == (2, 3, 24, 20)
+    assert_allclose(evaluation[0], evaluation[1])
+    assert_allclose(
+        evaluation.value[0, :, 12, 10],
+        [2.278184e-07, 4.908198e-08, 1.057439e-08],
+        rtol=1e-6,
+    )
+
+    integral = sky_model.integrate_geom(wcs_geom).data
+    assert integral.shape == (2, 3, 24, 20)
+    assert_allclose(integral[0], integral[1])
+    assert_allclose(integral[0, :, 12, 10], [1.973745e-13, 9.161312e-14, 4.252304e-14])
+
+    integral = sky_model.integrate_geom(region_geom).data
+
+    assert integral.shape == (3, 2, 1, 1)
+    assert_allclose(integral[:, 0, :, :], integral[:, 1, :, :])
+    assert_allclose(
+        integral[:, 0] / 1e-12, [[[5.299]], [[2.460]], [[1.142]]], rtol=1e-3
+    )
+
+
 def test_compound_spectral_model(caplog):
     spatial_model = GaussianSpatialModel(
         lon_0="3 deg", lat_0="4 deg", sigma="3 deg", frame="galactic"

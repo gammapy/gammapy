@@ -104,7 +104,7 @@ feature release whose rules are described here, plus the potentiel additional co
 
 The list of authors is composed of people who contributed to the current release code
 by accepting the DCO. The history of merged pull requests will be used as starting point.
-Other type of contributions (see :ref:`_contributor`) could be added during a dedicated call
+Other type of contributions (see :ref:`contributor`) could be added during a dedicated call
 (see below).
 
 The order of the authors is first 'The Gammapy team', followed by the list of contributors in alphabetical order:
@@ -282,7 +282,7 @@ metadata files.
 One should note that the GitHub profile does not contain a field associated with the ORCID
 identifier. However, one could also retrieve the ORCID identifier of a contributor with the ORCID API
 (e.g. `How-To-1 <https://stackoverflow.com/questions/71052912/extracting-credentials-from-orcid-seach-with-orcid-id-using-python>`_
-or `How-To-2 <https://info.orcid.org/documentation/api-tutorials/api-tutorial-searching-the-orcid-registry/#easy-faq-2532>`_).
+or `How-To-2 <https://info.orcid.org/documentation/api-tutorials/api-tutorial-searching-the-orcid-registry/>`_).
 
 In any case, a specific Python script located in the main Gammapy repository had to be written such
 that the authors' order follows these rules. In this case, integration within a GitHub action could be possible.
