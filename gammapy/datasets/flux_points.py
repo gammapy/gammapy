@@ -2,6 +2,7 @@
 import logging
 import numpy as np
 from astropy import units as u
+from astropy.io import fits
 from astropy.table import Table
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
@@ -128,7 +129,7 @@ class FluxPointsDataset(Dataset):
             models = DatasetModels(models)
             self._models = models.select(datasets_names=self.name)
 
-    def write(self, filename, overwrite=False, **kwargs):
+    def write(self, filename, overwrite=False, checksum=False, **kwargs):
         """Write flux point dataset to file.
 
         Parameters
@@ -137,6 +138,9 @@ class FluxPointsDataset(Dataset):
             Filename to write to
         overwrite : bool
             Overwrite existing file
+        checksum : bool
+            When True adds both DATASUM and CHECKSUM cards to the headers written to the FITS file.
+            Applies only if filename has .fits suffix. Default is False.
         **kwargs : dict
              Keyword arguments passed to `~astropy.table.Table.write`
         """
@@ -149,7 +153,17 @@ class FluxPointsDataset(Dataset):
 
         table["mask_fit"] = mask_fit
         table["mask_safe"] = self.mask_safe
-        table.write(make_path(filename), overwrite=overwrite, **kwargs)
+
+        filename = make_path(filename)
+
+        if "fits" in filename.suffixes:
+            primary_hdu = fits.PrimaryHDU()
+            hdu_table = fits.BinTableHDU(table, name="TABLE")
+            fits.HDUList([primary_hdu, hdu_table]).writeto(
+                filename, overwrite=overwrite, checksum=checksum
+            )
+        else:
+            table.write(make_path(filename), overwrite=overwrite, **kwargs)
 
     @classmethod
     def read(cls, filename, name=None, format="gadf-sed"):
