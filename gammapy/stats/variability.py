@@ -152,17 +152,17 @@ def compute_flux_doubling(flux, flux_err, coords, axis=0):
      .. math::
         doubling = min(\frac{t_(i+1)-t_i}{log_2{f_(i+1)/f_i}})
 
-    Where f_i and f_(i+1) are the fluxes measured at subsequent coordinates t_i and t_(i+1)
+    where f_i and f_(i+1) are the fluxes measured at subsequent coordinates t_i and t_(i+1).
     The error is obtained by propagating the relative errors on the flux measures.
 
     Parameters
     ----------
     flux : `~astropy.units.Quantity`
-        the measured fluxes
+        The measured fluxes.
     flux_err : `~astropy.units.Quantity`
-        the error on measured fluxes
+        The error on measured fluxes.
     coords: `~astropy.units.Quantity`
-        the coordinates at which the fluxes are measured
+        The coordinates at which the fluxes are measured.
     axis : int, optional
         Axis along which the value is computed.
 

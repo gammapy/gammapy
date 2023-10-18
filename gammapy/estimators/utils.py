@@ -406,12 +406,12 @@ def compute_lightcurve_doublingtime(lightcurve, flux_quantity="flux"):
     Parameters
     ----------
     lightcurve : `~gammapy.estimators.FluxPoints`
-        the lightcurve object
+        The lightcurve object.
     axis_name : str
-        name of the axis over which to compute the flux doubling
+        Name of the axis over which to compute the flux doubling.
     flux_quantity : str
-        flux quantity to use for calculation. Should be 'dnde', 'flux', 'e2dnde' or 'eflux'. Default is 'flux'.
-        Useful in case of custom lightcurves computed outside gammapy
+        Flux quantity to use for calculation. Should be 'dnde', 'flux', 'e2dnde' or 'eflux'.
+        Default is 'flux'.
 
     Returns
     -------
