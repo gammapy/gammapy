@@ -273,10 +273,13 @@ class SpatialModel(ModelBase):
             )
 
         if geom is None:
-            width = 2 * max(self.evaluation_radius, 0.1 * u.deg)
-            geom = WcsGeom.create(
-                skydir=self.position, frame=self.frame, width=width, binsz=0.02
-            )
+            if isinstance(self, TemplateSpatialModel):
+                geom = self.map.geom
+            else:
+                width = 2 * max(self.evaluation_radius, 0.1 * u.deg)
+                geom = WcsGeom.create(
+                    skydir=self.position, frame=self.frame, width=width, binsz=0.02
+                )
         data = self.evaluate_geom(geom)
         return Map.from_geom(geom, data=data.value, unit=data.unit)
 
@@ -401,9 +404,9 @@ class SpatialModel(ModelBase):
             Axis
         """
 
-        if (geom is None) or geom.is_image:
-            raise TypeError("Use .plot() for 2D Maps")
         m = self._get_plot_map(geom)
+        if (m.geom is None) or m.geom.is_image:
+            raise TypeError("Use .plot() for 2D Maps")
         m.plot_grid(**kwargs)
 
     @classmethod
