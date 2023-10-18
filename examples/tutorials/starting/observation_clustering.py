@@ -93,10 +93,10 @@ obs_B = Observations([])
 for obs in observations:
     zenith = obs.get_pointing_altaz(time=obs.tmid).zen.deg
     if zenith < np.median(obs_zenith):
-        ax.plot(zenith, obs.obs_info["MUONEFF"], "d", color="red", alpha=0.4)
+        ax.plot(zenith, obs.obs_info["MUONEFF"], "d", color="red")
         obs_A.append(obs)
     if zenith > np.median(obs_zenith):
-        ax.plot(zenith, obs.obs_info["MUONEFF"], "o", color="blue", alpha=0.4)
+        ax.plot(zenith, obs.obs_info["MUONEFF"], "o", color="blue")
         obs_B.append(obs)
 ax.set_ylabel("Muon efficiency")
 ax.set_xlabel("Zenith angle (deg)")
