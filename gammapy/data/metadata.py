@@ -107,7 +107,11 @@ class ObservationMetaData(MetaData):
         kwargs["telescope"] = events_hdr.get("TELESCOP")
         kwargs["instrument"] = events_hdr.get("INSTRUME")
         kwargs["observation_mode"] = events_hdr.get("OBS_MODE")
-        kwargs["deadtime_fraction"] = 1 - events_hdr.get("DEADC")
+
+        deadc = events_hdr.get("DEADC")
+        if deadc is None:
+            raise ValueError("No deadtime correction factor defined.")
+        kwargs["deadtime_fraction"] = 1 - deadc
 
         if set(["GEOLON", "GEOLAT"]).issubset(set(events_hdr)):
             kwargs["location"] = earth_location_from_dict(events_hdr)

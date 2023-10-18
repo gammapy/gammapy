@@ -573,13 +573,13 @@ class Observation:
             Whether to include irf components in the output file
         """
         if format != "gadf":
-            raise ValueError(f'Only the "gadf" format supported, got {format}')
+            raise ValueError(f'Only the "gadf" format is supported, got {format}')
 
         path = make_path(path)
 
         primary = fits.PrimaryHDU()
 
-        primary.header.update(self.meta.creation.to_header())
+        primary.header.update(self.meta.creation.to_header(format))
 
         hdul = fits.HDUList([primary])
 
