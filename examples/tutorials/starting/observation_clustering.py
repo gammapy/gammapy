@@ -75,6 +75,7 @@ print(f"{np.min(obs_muoneff):.2f} < muon efficiency < {np.max(obs_muoneff):.2f}"
 ######################################################################
 # Manual grouping of observations
 # -------------------------------
+#
 # Here we can plot the zenith angle vs muon efficiency of the observations.
 # We decide to group the observations according to their zenith angle.
 # This is done manually as per a user defined cut, in this case we take the
@@ -110,6 +111,7 @@ ax.axvline(np.median(obs_zenith), ls="--", color="black")
 # `obs_A` and `obs_B` are both `~gammapy.data.Observations` objects which
 # can be utilised in the usual way to show the various properties of the
 # observations i.e. see the :doc:`/tutorials/data/cta` tutorial.
+#
 
 
 ######################################################################
@@ -141,6 +143,7 @@ print(features_irfs)
 # In this case, we choose to cluster the observations into two groups.
 # We can print this table to show the corresponding label which has been
 # added to the previous `feature_irfs` table.
+#
 
 
 features = hierarchical_clustering(features_irfs, fcluster_kwargs={"t": 2})
@@ -149,6 +152,7 @@ print(features)
 ######################################################################
 # Finally, `observations.group_by_label` creates `t`
 # `~gammapy.data.Observation` objects by grouping the similar labels.
+#
 
 obs_clusters = observations.group_by_label(features["labels"])
 print(obs_clusters)
@@ -188,3 +192,4 @@ ax.legend()
 # can be reduced using the `gammapy.makers.DatasetsMaker` to create two (in this
 # specific case) separate datasets. These can then be jointly fitted using the
 # :doc:`tutorials/analysis-3d/analysis_mwl` tutorial.
+#
