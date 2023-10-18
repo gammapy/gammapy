@@ -1627,8 +1627,8 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
                 "expfactor": d["PLEC_ExpfactorS_bfr"],
             }
             errs = {
-                "amplitdue": d["Unc_PL_Prefactor_bfr"],
-                "index_1": d["Unc_PL_Photon_Index_bfr"],
+                "amplitude": d["Unc_PLEC_Flux_Density_bfr"],
+                "index_1": d["Unc_PLEC_IndexS_bfr"],
                 "index_2": d["Unc_PLEC_Exp_Index_bfr"],
                 "expfactor": d["Unc_PLEC_ExpfactorS_bfr"],
             }
