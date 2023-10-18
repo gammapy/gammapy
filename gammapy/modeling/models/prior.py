@@ -130,7 +130,7 @@ class GaussianPriorModel(PriorModel):
 
     Parameters
     ----------
-    mu : `float`
+    mu : float
         Mean of the Gaussian distribution
         Default is 0
     sigma : `float`
