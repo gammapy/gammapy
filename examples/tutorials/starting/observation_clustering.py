@@ -12,7 +12,7 @@ Typically, observations from gamma-ray telescopes can span a number of
 different observation periods, therefore it is likely that the observation
 conditions and quality are not always the same. This tutorial aims to provide
 a way in which observations can be grouped such that similar observations are grouped
-together, and then the data reduction in performed.
+together, and then the data reduction is performed.
 
 
 Objective
@@ -104,9 +104,9 @@ ax.axvline(np.median(obs_zenith), ls="--", color="black")
 
 
 ######################################################################
-# This shows the observations grouped by zenith angle. The red points
+# This shows the observations grouped by zenith angle. The diamonds
 # are observations which have a zenith angle less than the median value,
-# whilst the blue points are observations above the median.
+# whilst the circles are observations above the median.
 #
 # `obs_A` and `obs_B` are both `~gammapy.data.Observations` objects which
 # can be utilised in the usual way to show the various properties of the
@@ -166,9 +166,8 @@ ax.set_xlabel("psf-radius")
 ax.plot(
     features[mask_1]["edisp-res"],
     features[mask_1]["psf-radius"],
-    "o",
+    "d",
     color="green",
-    alpha=0.4,
     label="Group 1",
 )
 ax.plot(
@@ -176,7 +175,6 @@ ax.plot(
     features[mask_2]["psf-radius"],
     "o",
     color="magenta",
-    alpha=0.4,
     label="Group 2",
 )
 ax.legend()
@@ -184,12 +182,12 @@ ax.legend()
 
 ######################################################################
 # The groups here are divided by the quality of the IRFs values `edisp-res`
-# and `psf-radius`. The green and magenta points indicate how the observations
+# and `psf-radius`. The diamond and circular points indicate how the observations
 # are grouped.
 #
 #
 # In both examples we have a set of `~gammapy.data.Observation` objects which
 # can be reduced using the `gammapy.makers.DatasetsMaker` to create two (in this
 # specific case) separate datasets. These can then be jointly fitted using the
-# :doc:`tutorials/analysis-3d/analysis_mwl` tutorial.
+# :doc:`/tutorials/analysis-3d/analysis_mwl` tutorial.
 #
