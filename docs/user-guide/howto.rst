@@ -342,7 +342,7 @@ using a dummy phase column.
     o2 = obs.copy(events=events_new, in_memory=True)
 
     # The new observation and the new events table can be serialised independently
-    o2.write("new_obs.fits.gz")
+    o2.write("new_obs.fits.gz", overwrite=True)
     events_new.write("events.fits.gz", gti=obs.gti, overwrite=True)
 
 .. accordion-footer::

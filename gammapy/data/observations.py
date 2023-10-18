@@ -640,7 +640,10 @@ class Observations(collections.abc.MutableSequence):
             self.append(obs)
 
     def __getitem__(self, key):
-        return self._observations[self.index(key)]
+        if isinstance(key, slice):
+            return self.__class__(self._observations[key])
+        else:
+            return self._observations[self.index(key)]
 
     def __delitem__(self, key):
         del self._observations[self.index(key)]
