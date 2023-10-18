@@ -140,8 +140,6 @@ def test_lightcurve_flux_doubling():
     dtime_err = dtime_dict["doubling_err"]
     assert_allclose(
         dtime,
-        [[2271.34711286, -2271.34711286], [21743.98603654, -22365.24278044]] * u.s,
+        [2271.34711286, 21743.98603654] * u.s,
     )
-    assert_allclose(
-        dtime_err, [[425.92375713, 425.92375713], [242.80234065, 249.73955038]] * u.s
-    )
+    assert_allclose(dtime_err, [425.92375713, 242.80234065] * u.s)
