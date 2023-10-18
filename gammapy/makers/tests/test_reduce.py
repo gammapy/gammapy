@@ -20,13 +20,13 @@ from gammapy.maps import MapAxis, RegionGeom, WcsGeom
 from gammapy.utils.testing import requires_data, requires_dependency
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture()
 def observations_cta():
     data_store = DataStore.from_dir("$GAMMAPY_DATA/cta-1dc/index/gps/")
     return data_store.get_observations()[:3]
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture()
 def observations_cta_with_issue():
     data_store = DataStore.from_dir("$GAMMAPY_DATA/cta-1dc/index/gps/")
     list = data_store.get_observations()[:2]
@@ -34,7 +34,7 @@ def observations_cta_with_issue():
     return list
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture()
 def observations_hess():
     datastore = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
     obs_ids = [23523, 23526, 23559, 23592]
