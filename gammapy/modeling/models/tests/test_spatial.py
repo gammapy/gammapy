@@ -26,7 +26,7 @@ from gammapy.modeling.models import (
     SkyModel,
     TemplateSpatialModel,
 )
-from gammapy.utils.testing import mpl_plot_check, requires_data
+from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 
 def test_sky_point_source():
@@ -332,7 +332,7 @@ def test_sky_diffuse_constant():
 
 
 @requires_data()
-@requires_package('ipywidgets')
+@requires_dependency('ipywidgets')
 def test_sky_diffuse_map(caplog):
     filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits"  # noqa: E501
     model = TemplateSpatialModel.read(filename, normalize=False)
@@ -366,7 +366,7 @@ def test_sky_diffuse_map(caplog):
 
 
 @requires_data()
-@requires_package('ipywidgets')
+@requires_dependency('ipywidgets')
 def test_sky_diffuse_map_3d():
     filename = "$GAMMAPY_DATA/fermi-3fhl-gc/gll_iem_v06_gc.fits.gz"
     model = TemplateSpatialModel.read(filename, normalize=False)
