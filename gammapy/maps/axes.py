@@ -2492,6 +2492,7 @@ class TimeMapAxis:
         return id(self)
 
     def is_aligned(self, other, atol=2e-2):
+        """Not supported for time axis."""
         raise NotImplementedError
 
     @property
@@ -2626,9 +2627,11 @@ class TimeMapAxis:
         return str_.expandtabs(tabsize=2)
 
     def upsample(self):
+        """Not supported for time axis."""
         raise NotImplementedError
 
     def downsample(self):
+        """Not supported for time axis."""
         raise NotImplementedError
 
     def _init_copy(self, **kwargs):
@@ -3221,22 +3224,22 @@ class LabelMapAxis:
 
     # TODO: could create sub-labels here using dashes like "label-1-a", etc.
     def upsample(self, *args, **kwargs):
-        """Upsample axis"""
+        """Not supported for label axis."""
         raise NotImplementedError("Upsampling a LabelMapAxis is not supported")
 
     # TODO: could merge labels here like "label-1-label2", etc.
     def downsample(self, *args, **kwargs):
-        """Downsample axis"""
+        """Not supported for label axis."""
         raise NotImplementedError("Downsampling a LabelMapAxis is not supported")
 
     # TODO: could merge labels here like "label-1-label2", etc.
     def resample(self, *args, **kwargs):
-        """Resample axis"""
+        """Not supported for label axis."""
         raise NotImplementedError("Resampling a LabelMapAxis is not supported")
 
     # TODO: could create new labels here like "label-10-a"
     def pad(self, *args, **kwargs):
-        """Resample axis"""
+        """Not supported for label axis."""
         raise NotImplementedError("Padding a LabelMapAxis is not supported")
 
     def copy(self):
