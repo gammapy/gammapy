@@ -28,7 +28,7 @@ def _build_priorparameters_from_dict(data, default_parameters):
     return PriorParameters.from_dict(par_data)
 
 
-class PriorModel(ModelBase):
+class Prior(ModelBase):
     _unit = ""
 
     def __init__(self, **kwargs):
@@ -124,8 +124,8 @@ class PriorModel(ModelBase):
         return cls.from_parameters(priorparameters, **kwargs)
 
 
-class GaussianPriorModel(PriorModel):
-    r"""One-dimensional Gaussian Prior Model.
+class GaussianPrior(Prior):
+    r"""One-dimensional Gaussian Prior.
 
 
     Parameters
@@ -138,7 +138,7 @@ class GaussianPriorModel(PriorModel):
         Default is 1.
     """
 
-    tag = ["GaussianPriorModel"]
+    tag = ["GaussianPrior"]
     _type = "prior"
     mu = PriorParameter(name="mu", value=0)
     sigma = PriorParameter(name="sigma", value=1)
@@ -148,21 +148,32 @@ class GaussianPriorModel(PriorModel):
         return ((value - mu) / sigma) ** 2
 
 
-class UniformPriorModel(PriorModel):
-    r"""Uniform Prior Model.
+class UniformPrior(Prior):
+    r"""Uniform Prior.
 
+    Returns 1. if the parameter value is in (min, max).
+    0. if otherwise.
 
     Parameters
     ----------
-    uni : float
-        Value of the prior that is set uniformly.
-        Default is 0
+    min : float
+        Minimum value.
+        Default is -inf.
+
+    max : float
+        Maxmimum value.
+        Default is inf.
+
     """
 
-    tag = ["UniformPriorModel"]
+    tag = ["UniformPrior"]
     _type = "prior"
-    uni = PriorParameter(name="uni", value=0, min=0, max=10, unit="")
+    min = PriorParameter(name="min", value=-np.inf, unit="")
+    max = PriorParameter(name="max", value=np.inf, unit="")
 
     @staticmethod
-    def evaluate(value, uni):
-        return uni
+    def evaluate(value, min, max):
+        if min < value < max:
+            return 1.0
+        else:
+            return 0.0

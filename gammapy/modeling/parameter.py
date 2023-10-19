@@ -93,8 +93,8 @@ class Parameter:
         Parameter scaling to use for the scan.
     is_norm : bool
         Whether the parameter represents the flux norm of the model.
-    prior : `~gammapy.modeling.models.PriorModel`
-        Prior Model set on the parameter.
+    prior : `~gammapy.modeling.models.Prior`
+        Prior set on the parameter.
     """
 
     def __init__(
@@ -170,18 +170,19 @@ class Parameter:
 
     @property
     def prior(self):
+        """Prior applied to the parameter (`~gammapy.modeling.models.Prior`)"""
         return self._prior
 
     @prior.setter
     def prior(self, value):
         if value is not None:
-            from .models import PriorModel
+            from .models import Prior
 
             if isinstance(value, dict):
                 from .models import Model
 
                 self._prior = Model.from_dict(value)
-            elif isinstance(value, PriorModel):
+            elif isinstance(value, Prior):
                 self._prior = value
             else:
                 raise TypeError(f"Invalid type: {value!r}")
@@ -457,8 +458,6 @@ class Parameter:
             output["link"] = self._link_label_io
         if self.prior is not None:
             output["prior"] = self.prior.to_dict()["prior"]
-        else:
-            output["prior"] = None
         return output
 
     def autoscale(self):
@@ -522,7 +521,7 @@ class Parameters(collections.abc.Sequence):
         parameters_stat_sum = 0
         for par in self:
             if par.prior is not None:
-                parameters_stat_sum += par.prior(par)
+                parameters_stat_sum += par.prior_stat_sum()
         return parameters_stat_sum
 
     @property
@@ -661,8 +660,10 @@ class Parameters(collections.abc.Sequence):
             for key in ["scale_method", "interp"]:
                 if key in d:
                     del d[key]
-            if d["prior"] is not None:
+            if "prior" in d:
                 d["prior"] = d["prior"]["type"]
+            else:
+                d["prior"] = None
             rows.append({**dict(type=p.type), **d})
         table = Table(rows)
 

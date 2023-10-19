@@ -2,28 +2,23 @@
 import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
-from gammapy.modeling.models import (
-    PRIOR_MODEL_REGISTRY,
-    GaussianPriorModel,
-    Model,
-    UniformPriorModel,
-)
+from gammapy.modeling.models import PRIOR_REGISTRY, GaussianPrior, Model, UniformPrior
 from gammapy.utils.testing import assert_quantity_allclose
 
 TEST_PRIORS = [
     dict(
         name="gaussian",
-        model=GaussianPriorModel(mu=4.0, sigma=1.0),
+        model=GaussianPrior(mu=4.0, sigma=1.0),
         val_at_0=16.0,
         val_at_1=9.0,
         val_with_weight_2=32.0,
     ),
     dict(
         name="uni",
-        model=UniformPriorModel(uni=0.01),
-        val_at_0=0.01,
-        val_at_1=0.01,
-        val_with_weight_2=0.02,
+        model=UniformPrior(min=0.0),
+        val_at_0=0.0,
+        val_at_1=1.0,
+        val_with_weight_2=0.0,
     ),
 ]
 
@@ -52,10 +47,10 @@ def test_to_from_dict():
     # Here we reverse the order of parameters list to ensure assignment is correct
     model_dict["prior"]["parameters"].reverse()
 
-    model_class = PRIOR_MODEL_REGISTRY.get_cls(model_dict["prior"]["type"])
+    model_class = PRIOR_REGISTRY.get_cls(model_dict["prior"]["type"])
     new_model = model_class.from_dict(model_dict)
 
-    assert isinstance(new_model, UniformPriorModel)
+    assert isinstance(new_model, UniformPrior)
 
     actual = [par.value for par in new_model.parameters]
     desired = [par.value for par in model.parameters]
@@ -64,7 +59,7 @@ def test_to_from_dict():
 
     new_model = Model.from_dict(model_dict)
 
-    assert isinstance(new_model, UniformPriorModel)
+    assert isinstance(new_model, UniformPrior)
 
     actual = [par.value for par in new_model.parameters]
     desired = [par.value for par in model.parameters]

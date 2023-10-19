@@ -36,7 +36,7 @@ def _get_model_class_from_dict(data):
     """get a model class from a dict"""
     from . import (
         MODEL_REGISTRY,
-        PRIOR_MODEL_REGISTRY,
+        PRIOR_REGISTRY,
         SPATIAL_MODEL_REGISTRY,
         SPECTRAL_MODEL_REGISTRY,
         TEMPORAL_MODEL_REGISTRY,
@@ -51,7 +51,7 @@ def _get_model_class_from_dict(data):
     elif "temporal" in data:
         cls = TEMPORAL_MODEL_REGISTRY.get_cls(data["temporal"]["type"])
     elif "prior" in data:
-        cls = PRIOR_MODEL_REGISTRY.get_cls(data["prior"]["type"])
+        cls = PRIOR_REGISTRY.get_cls(data["prior"]["type"])
     return cls
 
 
