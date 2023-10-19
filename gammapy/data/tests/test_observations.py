@@ -4,6 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import EarthLocation, SkyCoord
+from astropy.io import fits
 from astropy.time import Time
 from astropy.units import Quantity
 from gammapy.data import DataStore, Observation, ObservationFilter, Observations
@@ -400,6 +401,20 @@ def test_observation_write(tmp_path):
     assert obs_read.edisp is None
     assert obs_read.bkg is None
     assert obs_read.rad_max is None
+
+
+@requires_data()
+def test_observation_write_checksum(tmp_path):
+    obs = Observation.read(
+        "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz"
+    )
+    path = tmp_path / "obs.fits.gz"
+
+    obs.write(path, checksum=True)
+    hdul = fits.open(path)
+    for hdu in hdul:
+        assert "CHECKSUM" in hdu.header
+        assert "DATASUM" in hdu.header
 
 
 @requires_data()
