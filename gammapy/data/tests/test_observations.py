@@ -561,9 +561,9 @@ def test_slice(data_store):
     assert isinstance(obs_1[0], Observation)
     assert isinstance(obs_1[1:], Observations)
 
-@requires_data()
-def test_observations_iter(data_store):
-    """Test Observations.iter()"""
+
+def test_observations_generator(data_store):
+    """Test Observations.generator()"""
     obs_1 = data_store.get_observations([20136, 20137, 20151])
 
     for idx, obs in enumerate(obs_1.generator()):
