@@ -114,7 +114,6 @@ class EventList:
         kwargs.setdefault("hdu", "EVENTS")
         table = Table.read(filename, **kwargs)
 
-        # build meta from the table.meta
         meta = EventListMetaData.from_header(table.meta)
 
         return cls(table=table, meta=meta)
@@ -221,16 +220,13 @@ class EventList:
         info = self.__class__.__name__ + "\n"
         info += "-" * len(self.__class__.__name__) + "\n\n"
 
-        # -----------------------------------  these are then read directly from the self.meta !
-
-        # instrument = self.table.meta.get("INSTRUME")
         instrument = self.meta.instrument
         info += f"\tInstrument       : {instrument}\n"
 
-        telescope = self.table.meta.get("TELESCOP")
+        telescope = self.meta.telescope
         info += f"\tTelescope        : {telescope}\n"
 
-        obs_id = self.table.meta.get("OBS_ID", "")
+        obs_id = self.meta.obs_id
         info += f"\tObs. ID          : {obs_id}\n\n"
 
         info += f"\tNumber of events : {len(self.table)}\n"
