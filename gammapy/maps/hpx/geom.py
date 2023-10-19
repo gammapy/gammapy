@@ -1176,9 +1176,9 @@ class HpxGeom(Geom):
         hpx = self.to_image().to_nside(nside=nside_tiles)
         wcs_tiles = []
 
-        for pix in range(int(hpx.npix)):
+        for pix in range(int(hpx.npix[0])):
             skydir = hpx.pix_to_coord([pix])
-            vtx = hp.boundaries(nside=hpx.nside, pix=pix, nest=hpx.nest, step=1)
+            vtx = hp.boundaries(nside=hpx.nside.item(), pix=pix, nest=hpx.nest, step=1)
 
             lon, lat = hp.vec2ang(vtx.T, lonlat=True)
             boundaries = SkyCoord(lon * u.deg, lat * u.deg, frame=hpx.frame)
@@ -1188,7 +1188,7 @@ class HpxGeom(Geom):
             width = boundaries.separation(boundaries[:, np.newaxis]).max()
 
             wcs_tile_geom = WcsGeom.create(
-                skydir=(float(skydir[0]), float(skydir[1])),
+                skydir=(float(skydir[0].item()), float(skydir[1].item())),
                 width=width + margin,
                 binsz=binsz,
                 frame=hpx.frame,
@@ -1275,7 +1275,7 @@ class HpxGeom(Geom):
                 if idx is not None and idx_img != idx:
                     continue
 
-                npix = int(self._npix[idx_img])
+                npix = int(self._npix[idx_img].item())
                 if idx is None:
                     s_img = (slice(0, npix),) + idx_img
                 else:
@@ -1365,7 +1365,7 @@ class HpxGeom(Geom):
 
         return Quantity(hp.nside2pixarea(self.nside), "sr")
 
-    def __repr__(self):
+    def __str__(self):
         lon, lat = self.center_skydir.data.lon.deg, self.center_skydir.data.lat.deg
         return (
             f"{self.__class__.__name__}\n\n"

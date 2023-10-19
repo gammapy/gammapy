@@ -6,8 +6,8 @@ import astropy.units as u
 from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.time import Time
 from astropy.units import Quantity
-from gammapy.data import DataStore, Observation, ObservationFilter
-from gammapy.data.pointing import FixedPointingInfo, PointingMode
+from gammapy.data import DataStore, Observation, ObservationFilter, Observations
+from gammapy.data.pointing import FixedPointingInfo
 from gammapy.data.utils import get_irfs_features
 from gammapy.irf import PSF3D, load_irf_dict_from_file
 from gammapy.utils.cluster import hierarchical_clustering
@@ -227,7 +227,6 @@ def test_observations_select_time_time_intervals_list(data_store):
 def test_observation_cta_1dc():
     ontime = 5.0 * u.hr
     pointing = FixedPointingInfo(
-        mode=PointingMode.POINTING,
         fixed_icrs=SkyCoord(0, 0, unit="deg", frame="galactic").icrs,
     )
     irfs = load_irf_dict_from_file(
@@ -259,7 +258,6 @@ def test_observation_cta_1dc():
 @requires_data()
 def test_observation_create_radmax():
     pointing = FixedPointingInfo(
-        mode=PointingMode.POINTING,
         fixed_icrs=SkyCoord(0, 0, unit="deg", frame="galactic").icrs,
     )
     obs = Observation.read("$GAMMAPY_DATA/joint-crab/dl3/magic/run_05029748_DL3.fits")
@@ -501,3 +499,40 @@ def test_filter_live_time_phase(data_store):
     live_time_filter = observation.observation_live_time_duration
 
     assert_allclose(live_time_filter, default_obs_live_time * (0.8 - 0.2))
+
+
+@requires_data()
+def test_stack_observations(data_store, caplog):
+    obs_1 = data_store.get_observations([20136, 20137, 20151])
+    obs_2 = data_store.get_observations([20275, 20282])
+
+    obs12 = Observations.from_stack([obs_1, obs_2])
+
+    assert len(obs12) == 5
+    assert isinstance(obs12[0], Observation)
+
+    obs122 = Observations.from_stack([obs12, obs_2])
+
+    assert len(obs122) == 7
+    assert "WARNING" in [_.levelname for _ in caplog.records]
+    assert "Observation with obs_id 20275 already belongs to Observations." in [
+        _.message for _ in caplog.records
+    ]
+
+    caplog.clear()
+    obs_1[2] = obs_1[0]
+
+    assert "WARNING" in [_.levelname for _ in caplog.records]
+    assert "Observation with obs_id 20136 already belongs to Observations." in [
+        _.message for _ in caplog.records
+    ]
+
+    with pytest.raises(TypeError):
+        Observations.from_stack([obs_1, ["a"]])
+
+
+@requires_data()
+def test_slice(data_store):
+    obs_1 = data_store.get_observations([20136, 20137, 20151])
+    assert isinstance(obs_1[0], Observation)
+    assert isinstance(obs_1[1:], Observations)

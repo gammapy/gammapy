@@ -55,7 +55,7 @@ def test_map_copy(binsz, width, map_type, skydir, axes, unit):
     )
 
     m_copy = m.copy()
-    assert repr(m) == repr(m_copy)
+    assert str(m) == str(m_copy)
 
     m_copy = m.copy(unit="cm-2 s-1")
     assert m_copy.unit == "cm-2 s-1"

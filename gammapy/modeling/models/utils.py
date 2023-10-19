@@ -3,7 +3,8 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from regions import PointSkyRegion
-from gammapy.maps import MapAxis, RegionNDMap
+from gammapy.maps import HpxNDMap, Map, MapAxis, RegionNDMap
+from gammapy.maps.hpx.io import HPX_FITS_CONVENTIONS, HpxConv
 from gammapy.utils.scripts import make_path
 from gammapy.utils.time import time_ref_from_dict
 from . import LightCurveTemplateTemporalModel
@@ -46,3 +47,38 @@ def _template_model_from_cta_sdc(filename):
             data=np.array(list(data.data) * u.Unit(data.header["UNITS"])),
         )
     return LightCurveTemplateTemporalModel(reg_map, t_ref=time_ref, filename=filename)
+
+
+def read_hermes_cube(filename):
+    """Read 3d templates produced with hermes"""
+    # add hermes conventions to the list used by gammapy
+    hermes_conv = HpxConv(
+        convname="hermes-template",
+        colstring="TFLOAT",
+        hduname="xtension",
+        frame="COORDTYPE",
+        quantity_type="differential",
+    )
+    HPX_FITS_CONVENTIONS["hermes-template"] = hermes_conv
+
+    maps = []
+    energy_nodes = []
+    with fits.open(filename) as hdulist:
+        # cannot read directly in 3d with Map.read because BANDS HDU is missing
+        # https://gamma-astro-data-formats.readthedocs.io/en/v0.2/skymaps/index.html#bands-hdu
+        # so we have to loop over hdus and create the energy axis
+        for hdu in hdulist[1:]:
+            template = HpxNDMap.from_hdu(hdu, format="hermes-template")
+            # fix missing/incompatible infos
+            template._unit = u.Unit(hdu.header["TUNIT1"])  # .from_hdu expect "BUNIT"
+            if template.geom.frame == "G":
+                template._geom._frame = "galactic"
+            maps.append(template)
+            energy_nodes.append(hdu.header["ENERGY"])  # SI unit (see header comment)
+    # create energy axis and set unit
+    energy_nodes *= u.Joule
+    energy_nodes = energy_nodes.to("GeV")
+    axis = MapAxis(
+        energy_nodes, interp="log", name="energy_true", node_type="center", unit="GeV"
+    )
+    return Map.from_stack(maps, axis=axis)

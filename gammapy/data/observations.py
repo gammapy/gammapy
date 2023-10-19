@@ -1,7 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import collections.abc
 import copy
+import html
 import inspect
+import itertools
 import logging
 import warnings
 from itertools import zip_longest
@@ -35,26 +37,30 @@ class Observation:
     Parameters
     ----------
     obs_id : int
-        Observation id
+        Observation id.
     obs_info : dict
-        Observation info dict
+        Observation info dict.
     aeff : `~gammapy.irf.EffectiveAreaTable2D`
-        Effective area
+        Effective area.
     edisp : `~gammapy.irf.EnergyDispersion2D`
-        Energy dispersion
+        Energy dispersion.
     psf : `~gammapy.irf.PSF3D`
-        Point spread function
+        Point spread function.
     bkg : `~gammapy.irf.Background3D`
-        Background rate model
+        Background rate model.
     rad_max: `~gammapy.irf.RadMax2D`
         Only for point-like IRFs: RAD_MAX table (energy dependent RAD_MAX)
         For a fixed RAD_MAX, create a RadMax2D with a single bin.
     gti : `~gammapy.data.GTI`
         Table with GTI start and stop time
     events : `~gammapy.data.EventList`
-        Event list
+        Event list.
     obs_filter : `ObservationFilter`
         Observation filter.
+    pointing : `~gammapy.data.FixedPointingInfo`
+        Pointing information.
+    location : `~astropy.coordinates.EarthLocation`
+        Earth location of the observatory.
     """
 
     aeff = LazyFitsData(cache=False)
@@ -93,6 +99,12 @@ class Observation:
         self._pointing = pointing
         self._location = location
         self.obs_filter = obs_filter or ObservationFilter()
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     @property
     def rad_max(self):
@@ -184,23 +196,25 @@ class Observation:
         Parameters
         ----------
         pointing : `~gammapy.data.FixedPointingInfo` or `~astropy.coordinates.SkyCoord`
-            Pointing information
+            Pointing information.
+        location : `~astropy.coordinates.EarthLocation`
+            Earth location of the observatory.
         obs_id : int
-            Observation ID as identifier
+            Observation ID as identifier.
         livetime : ~astropy.units.Quantity`
-            Livetime exposure of the simulated observation
+            Livetime exposure of the simulated observation.
         tstart: `~astropy.time.Time` or `~astropy.units.Quantity`
             Start time of observation as `~astropy.time.Time` or duration
-            relative to `reference_time`
+            relative to `reference_time`.
         tstop: `astropy.time.Time` or `~astropy.units.Quantity`
             Stop time of observation as `~astropy.time.Time` or duration
-            relative to `reference_time`
+            relative to `reference_time`.
         irfs: dict
-            IRFs used for simulating the observation: `bkg`, `aeff`, `psf`, `edisp`, `rad_max`
+            IRFs used for simulating the observation: `bkg`, `aeff`, `psf`, `edisp`, `rad_max`.
         deadtime_fraction : float, optional
-            Deadtime fraction, defaults to 0
+            Deadtime fraction, defaults to 0.
         reference_time : `~astropy.time.Time`
-            the reference time to use in GTI definition
+            the reference time to use in GTI definition.
 
         Returns
         -------
@@ -621,22 +635,35 @@ class Observations(collections.abc.MutableSequence):
     """
 
     def __init__(self, observations=None):
-        self._observations = observations or []
+        self._observations = []
+        for obs in observations:
+            self.append(obs)
 
     def __getitem__(self, key):
-        return self._observations[self.index(key)]
+        if isinstance(key, slice):
+            return self.__class__(self._observations[key])
+        else:
+            return self._observations[self.index(key)]
 
     def __delitem__(self, key):
         del self._observations[self.index(key)]
 
     def __setitem__(self, key, obs):
         if isinstance(obs, Observation):
+            if obs in self:
+                log.warning(
+                    f"Observation with obs_id {obs.obs_id} already belongs to Observations."
+                )
             self._observations[self.index(key)] = obs
         else:
             raise TypeError(f"Invalid type: {type(obs)!r}")
 
     def insert(self, idx, obs):
         if isinstance(obs, Observation):
+            if obs in self:
+                log.warning(
+                    f"Observation with obs_id {obs.obs_id} already belongs to Observations."
+                )
             self._observations.insert(idx, obs)
         else:
             raise TypeError(f"Invalid type: {type(obs)!r}")
@@ -695,7 +722,7 @@ class Observations(collections.abc.MutableSequence):
         return self.ids
 
     def group_by_label(self, labels):
-        """Split obsevations in multiple groups of observations
+        """Split observations in multiple groups of observations
 
         Parameters
         ----------
@@ -714,6 +741,24 @@ class Observations(collections.abc.MutableSequence):
             )
             obs_groups[f"group_{label}"] = observations
         return obs_groups
+
+    @classmethod
+    def from_stack(cls, observations_list):
+        # TODO : Do more check when stacking observations when we have metadata.
+        """Create a new `Observations` instance by concatenating a list of `Observations` objects.
+
+        Parameters
+        ----------
+        observations_list : list of `~gammapy.data.Observations`
+            The list of `Observations` to stack.
+
+        Returns
+        -------
+        observations : `~gammapy.data.Observations`
+            The `Observations` object resulting from stacking all the `Observations` in `observation_list`.
+        """
+        obs = itertools.chain(*observations_list)
+        return cls(list(obs))
 
 
 class ObservationChecker(Checker):

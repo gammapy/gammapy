@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 #
-# Gammapt documentation build configuration file.
+# Gammapy documentation build configuration file.
 #
 # This file is execfile()d with the current directory set to its containing dir.
 #

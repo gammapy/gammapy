@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Session class driving the high level interface API"""
+import html
 import logging
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
@@ -55,6 +56,12 @@ class Analysis:
         self.fit = Fit()
         self.fit_result = None
         self.flux_points = None
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     @property
     def models(self):
@@ -156,7 +163,13 @@ class Analysis:
             log.debug(obs)
 
     def get_datasets(self):
-        """Produce reduced datasets."""
+        """
+        Produce reduced datasets.
+
+        Notes
+        -----
+        The progress bar can be displayed for this function.
+        """
         datasets_settings = self.config.datasets
         if not self.observations or len(self.observations) == 0:
             raise RuntimeError("No observations have been selected.")

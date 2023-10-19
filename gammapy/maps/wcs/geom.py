@@ -88,11 +88,17 @@ class WcsGeom(Geom):
     is_hpx = False
     is_region = False
 
-    def __init__(self, wcs, npix, cdelt=None, crpix=None, axes=None):
+    def __init__(self, wcs, npix=None, cdelt=None, crpix=None, axes=None):
         self._wcs = wcs
         self._frame = wcs_to_celestial_frame(wcs).name
         self._projection = wcs.wcs.ctype[0][5:]
         self._axes = MapAxes.from_default(axes, n_spatial_axes=2)
+
+        if npix is None:
+            if wcs.array_shape is not None:
+                npix = wcs.array_shape[::-1]
+            else:
+                npix = (0, 0)
 
         if cdelt is None:
             cdelt = tuple(np.abs(self.wcs.wcs.cdelt))
@@ -181,7 +187,7 @@ class WcsGeom(Geom):
         slices = overlap_slices(
             large_array_shape=geom.data_shape[-2:],
             small_array_shape=self.data_shape[-2:],
-            position=position[::-1],
+            position=[_[0] for _ in position[::-1]],
             mode=mode,
         )
         return {
@@ -403,7 +409,7 @@ class WcsGeom(Geom):
         cdelt = (-binsz[0].flat[0], binsz[1].flat[0])
         wcs.wcs.cdelt = cdelt
 
-        wcs.array_shape = npix[0].flat[0], npix[1].flat[0]
+        wcs.array_shape = npix[1].flat[0], npix[0].flat[0]
         wcs.wcs.datfix()
         return cls(wcs, npix, cdelt=binsz, axes=axes)
 
@@ -448,8 +454,8 @@ class WcsGeom(Geom):
         width = _check_width(width) * u.deg
         npix = tuple(np.round(width / geom.pixel_scales).astype(int))
         xref, yref = geom.to_image().coord_to_pix(skydir)
-        xref = int(np.floor(-xref + npix[0] / 2.0)) + geom.wcs.wcs.crpix[0]
-        yref = int(np.floor(-yref + npix[1] / 2.0)) + geom.wcs.wcs.crpix[1]
+        xref = int(np.floor(-xref[0] + npix[0] / 2.0)) + geom.wcs.wcs.crpix[0]
+        yref = int(np.floor(-yref[0] + npix[1] / 2.0)) + geom.wcs.wcs.crpix[1]
         return cls.create(
             skydir=tuple(geom.wcs.wcs.crval),
             npix=npix,
@@ -1039,7 +1045,7 @@ class WcsGeom(Geom):
         shape = (1,) * len(self.axes) + structure.shape
         return structure.reshape(shape)
 
-    def __repr__(self):
+    def __str__(self):
         lon = self.center_skydir.data.lon.deg
         lat = self.center_skydir.data.lat.deg
         lon_ref, lat_ref = self.wcs.wcs.crval

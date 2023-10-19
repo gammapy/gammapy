@@ -53,6 +53,7 @@ dependencies:
   - flake8
   - isort
   - jinja2
+  - jupytext
   - nbsphinx
   - numdifftools
   - pandoc

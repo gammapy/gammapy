@@ -6,7 +6,7 @@ from astropy import units as u
 from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.table import Table
 from gammapy.data import Observation
-from gammapy.data.pointing import FixedPointingInfo, PointingMode
+from gammapy.data.pointing import FixedPointingInfo
 from gammapy.datasets import MapDataset, SpectrumDatasetOnOff
 from gammapy.datasets.spectrum import SpectrumDataset
 from gammapy.estimators import FluxPoints, FluxPointsEstimator
@@ -103,7 +103,7 @@ def simulate_map_dataset(random_state=0, name=None):
     )
 
     skydir = SkyCoord("0 deg", "0 deg", frame="galactic")
-    pointing = FixedPointingInfo(mode=PointingMode.POINTING, fixed_icrs=skydir.icrs)
+    pointing = FixedPointingInfo(fixed_icrs=skydir.icrs)
     energy_edges = np.logspace(-1, 2, 15) * u.TeV
     energy_axis = MapAxis.from_edges(edges=energy_edges, name="energy", interp="log")
 

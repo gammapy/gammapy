@@ -254,6 +254,20 @@ to your code:
     from gammapy.utils import pbar
     pbar.SHOW_PROGRESS_BAR = True
 
+The progress bar is available within the following:
+
+* `~gammapy.analysis.Analysis.get_datasets` method
+
+* `~gammapy.data.DataStore.get_observations` method
+
+* The ``run()`` method from the ``estimator`` classes: `~gammapy.estimators.ASmoothMapEstimator`, `~gammapy.estimators.TSMapEstimator`, `~gammapy.estimators.LightCurveEstimator`
+
+* `~gammapy.modeling.Fit.stat_profile` and `~gammapy.modeling.Fit.stat_surface` methods
+
+* `~gammapy.scripts.download.progress_download` method
+
+* `~gammapy.utils.parallel.run_multiprocessing` method
+
 .. accordion-footer::
 
 .. accordion-header::
@@ -328,7 +342,7 @@ using a dummy phase column.
     o2 = obs.copy(events=events_new, in_memory=True)
 
     # The new observation and the new events table can be serialised independently
-    o2.write("new_obs.fits.gz")
+    o2.write("new_obs.fits.gz", overwrite=True)
     events_new.write("events.fits.gz", gti=obs.gti, overwrite=True)
 
 .. accordion-footer::

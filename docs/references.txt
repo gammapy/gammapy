@@ -4,7 +4,7 @@
 .. _scipy: https://docs.scipy.org/doc/scipy/reference/
 .. _Scipy Lecture Notes: http://www.scipy-lectures.org/
 .. _Practical Python for Astronomers Tutorial: http://python4astronomers.github.io/
-.. _GammaLib: http://gammalib.sourceforge.net
+.. _GammaLib: http://cta.irap.omp.eu/gammalib-devel/
 .. _ctools: http://cta.irap.omp.eu/ctools
 .. _3ML: https://github.com/threeML/threeML
 .. _numpy: http://www.numpy.org/
@@ -132,6 +132,6 @@
 .. _setuptools console_scripts entry point: https://python-packaging.readthedocs.io/en/latest/command-line-scripts.html
 .. _pydantic: https://pydantic-docs.helpmanual.io
 
-.. _A Whirlwind tour of Python: https://nbviewer.jupyter.org/github/jakevdp/WhirlwindTourOfPython/blob/master/Index.ipynb
-.. _Python data science handbook: http://nbviewer.jupyter.org/github/jakevdp/PythonDataScienceHandbook/blob/master/notebooks/Index.ipynb
+.. _A Whirlwind tour of Python: https://nbviewer.org/github/jakevdp/WhirlwindTourOfPython/blob/master/Index.ipynb
+.. _Python data science handbook: https://jakevdp.github.io/PythonDataScienceHandbook/
 .. _Astropy Hands-On Tutorial: https://github.com/Asterics2020-Obelics/School2019/tree/master/astropy

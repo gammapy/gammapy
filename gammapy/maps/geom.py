@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import abc
 import copy
+import html
 import inspect
 import logging
 import numpy as np
@@ -68,6 +69,12 @@ class Geom(abc.ABC):
             if func is not None:
                 state[key] = func
         return state
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     @property
     @abc.abstractmethod

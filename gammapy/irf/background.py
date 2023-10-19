@@ -2,6 +2,7 @@
 import logging
 import numpy as np
 import astropy.units as u
+from astropy.coordinates import angular_separation
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
@@ -200,6 +201,8 @@ class Background3D(BackgroundIRF):
             else:
                 ax = axes.flat[i]
             bkg = self.evaluate(energy=ee)
+            bkg_unit = bkg.unit
+            bkg = bkg.value
             with quantity_support():
                 caxes = ax.pcolormesh(X, Y, bkg.squeeze(), **kwargs)
 
@@ -207,7 +210,7 @@ class Background3D(BackgroundIRF):
             self.axes["fov_lon"].format_plot_yaxis(ax)
             ax.set_title(str(ee))
             if add_cbar:
-                label = f"Background [{bkg.unit.to_string(UNIT_STRING_FORMAT)}]"
+                label = f"Background [{bkg_unit.to_string(UNIT_STRING_FORMAT)}]"
                 cbar = ax.figure.colorbar(caxes, ax=ax, label=label, fraction=cfraction)
                 cbar.formatter.set_powerlimits((0, 0))
 
@@ -254,7 +257,9 @@ class Background2D(BackgroundIRF):
 
         axes = MapAxes([self.axes["energy"], fov_lon, fov_lat])
         coords = axes.get_coord()
-        offset = np.sqrt(coords["fov_lat"] ** 2 + coords["fov_lon"] ** 2)
+        offset = angular_separation(
+            0 * u.rad, 0 * u.rad, coords["fov_lon"], coords["fov_lat"]
+        )
         data = self.evaluate(offset=offset, energy=coords["energy"])
 
         return Background3D(
@@ -411,6 +416,7 @@ class Background2D(BackgroundIRF):
         energy_axis = self.axes["energy"]
 
         bkg = self.integral(offset=offset_axis.bounds[1], axis_name="offset")
+        bkg = bkg.to(u.Unit("s-1") / energy_axis.unit)
 
         with quantity_support():
             ax.plot(energy_axis.center, bkg, label="integrated spectrum", **kwargs)

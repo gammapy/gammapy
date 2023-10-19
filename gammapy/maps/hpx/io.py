@@ -1,4 +1,5 @@
 import copy
+import html
 
 
 class HpxConv:
@@ -12,6 +13,12 @@ class HpxConv:
         self.bands_hdu = kwargs.get("bands_hdu", "EBOUNDS")
         self.quantity_type = kwargs.get("quantity_type", "integral")
         self.frame = kwargs.get("frame", "COORDSYS")
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     def colname(self, indx):
         return f"{self.colstring}{indx}"

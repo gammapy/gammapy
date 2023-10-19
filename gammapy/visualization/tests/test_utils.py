@@ -6,6 +6,7 @@ import astropy.units as u
 from astropy.table import Table
 import matplotlib.pyplot as plt
 from gammapy.maps import Map, MapAxis, WcsNDMap
+from gammapy.utils.random import get_random_state
 from gammapy.utils.testing import mpl_plot_check, requires_data
 from gammapy.visualization import (
     plot_contour_line,
@@ -76,7 +77,8 @@ def test_plot_map_rgb():
 
 
 def test_plot_distribution():
-    array = np.random.normal(0, 1, 10000)
+    random_state = get_random_state(0)
+    array = random_state.normal(0, 1, 10000)
 
     array_2d = array.reshape(1, 100, 100)
 
@@ -92,16 +94,23 @@ def test_plot_distribution():
         return norm.pdf(x, mu, sigma)
 
     with mpl_plot_check():
-        res, axes = plot_distribution(
+        axes, res = plot_distribution(
             wcs_map=map_, func=fit_func, kwargs_hist={"bins": 40}
         )
 
         assert axes.shape == (1,)
-        assert res[0].get("info_dict").get("nfev") == 19
+        assert "info_dict" in res[0]
+        assert ["fvec", "nfev", "fjac", "ipvt", "qtf"] == list(
+            (res[0].get("info_dict").keys())
+        )
         assert res[0].get("param") is not None
         assert res[0].get("covar") is not None
 
-        res, axes = plot_distribution(map_empty)
+        axes, res = plot_distribution(map_empty)
 
         assert res == []
         assert axes.shape == (4, 3)
+
+        axes, res = plot_distribution(
+            wcs_map=map_, func="norm", kwargs_hist={"bins": 40}
+        )

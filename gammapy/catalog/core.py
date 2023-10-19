@@ -3,6 +3,7 @@
 import abc
 import numbers
 from copy import deepcopy
+import html
 import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
@@ -55,6 +56,12 @@ class SourceCatalogObject:
         self.data = Bunch(**data)
         if data_extended:
             self.data_extended = Bunch(**data_extended)
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     @property
     def name(self):
@@ -133,6 +140,12 @@ class SourceCatalog(abc.ABC):
                     if not alias == "":
                         names[alias.strip()] = idx
         return names
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     def row_index(self, name):
         """Look up row index of source by name.

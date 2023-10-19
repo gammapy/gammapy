@@ -2,6 +2,7 @@
 import abc
 import collections.abc
 import copy
+import html
 import logging
 import numpy as np
 from astropy import units as u
@@ -34,6 +35,12 @@ class Dataset(abc.ABC):
         "diff/model": "(data - model) / model",
         "diff/sqrt(model)": "(data - model) / sqrt(model)",
     }
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     @property
     @abc.abstractmethod
@@ -358,6 +365,12 @@ class Datasets(collections.abc.MutableSequence):
             str_ += f"\tModels     : {names}\n\n"
 
         return str_.expandtabs(tabsize=2)
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     def copy(self):
         """A deep copy."""

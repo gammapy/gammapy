@@ -152,7 +152,7 @@ the `~gammapy.data.EventList.write` method:
     gti = GTI.read(filename)
 
     # Save separately
-    events.write("test_events.fits.gz", gti=None)
+    events.write("test_events.fits.gz", gti=None, overwrite=True)
     gti.write("test_gti.fits.gz")
 
     # Save together

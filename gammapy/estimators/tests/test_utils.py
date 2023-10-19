@@ -2,18 +2,18 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.table import Column, Table
-from astropy.time import Time
-from gammapy.estimators import FluxPoints
 import astropy.units as u
 from astropy.coordinates import SkyCoord
+from astropy.table import Column, Table
+from astropy.time import Time
 from gammapy.datasets import MapDataset
-from gammapy.estimators import ExcessMapEstimator
+from gammapy.estimators import ExcessMapEstimator, FluxPoints
 from gammapy.estimators.utils import (
+    compute_lightcurve_fpp,
+    compute_lightcurve_fvar,
     find_peaks,
     find_peaks_in_flux_map,
     resample_energy_edges,
-    compute_lightcurve_fvar,
 )
 from gammapy.maps import Map, MapAxis
 from gammapy.utils.testing import requires_data
@@ -169,3 +169,15 @@ def test_compute_lightcurve_fvar():
 
     assert_allclose(ffvar, [[[0.698212]], [[0.37150576]]])
     assert_allclose(ffvar_err, [[[0.0795621]], [[0.074706]]])
+
+
+def test_compute_lightcurve_fpp():
+
+    lightcurve = lc()
+
+    fpp = compute_lightcurve_fpp(lightcurve)
+    ffpp = fpp["fpp"].quantity
+    ffpp_err = fpp["fpp_err"].quantity
+
+    assert_allclose(ffpp, [[[0.99373035]], [[0.53551551]]])
+    assert_allclose(ffpp_err, [[[0.07930673]], [[0.07397653]]])

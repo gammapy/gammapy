@@ -97,7 +97,7 @@ class TestStatisticNested:
 
         ts = stat_null - stat
         if ts > self.ts_threshold:
-            # restore default model if prefered againt null hypothesis
+            # restore default model if preferred against null hypothesis
             for p in self.parameters:
                 p.frozen = False
             for kp, p in enumerate(datasets.models.parameters):

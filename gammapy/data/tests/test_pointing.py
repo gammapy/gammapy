@@ -21,7 +21,6 @@ def test_fixed_pointing_icrs():
     fixed_icrs = SkyCoord(ra=83.28 * u.deg, dec=21.78 * u.deg)
 
     pointing = FixedPointingInfo(
-        mode=PointingMode.POINTING,
         fixed_icrs=fixed_icrs,
         location=location,
     )
@@ -61,7 +60,6 @@ def test_fixed_pointing_info_altaz():
     location = observatory_locations["cta_south"]
     fixed_altaz = SkyCoord(alt=70 * u.deg, az=0 * u.deg, frame=AltAz())
     pointing = FixedPointingInfo(
-        mode=PointingMode.DRIFT,
         fixed_altaz=fixed_altaz,
     )
 

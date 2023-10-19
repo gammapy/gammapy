@@ -1,4 +1,5 @@
 import copy
+import html
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
@@ -63,10 +64,21 @@ class MapCoord:
     def __iter__(self):
         return iter(self._data.values())
 
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
+
     @property
     def ndim(self):
         """Number of dimensions."""
         return len(self._data)
+
+    @property
+    def axis_names(self):
+        """Names of axes."""
+        return list(self._data.keys())
 
     @property
     def shape(self):
@@ -291,7 +303,7 @@ class MapCoord:
         """Copy `MapCoord` object."""
         return copy.deepcopy(self)
 
-    def __repr__(self):
+    def __str__(self):
         return (
             f"{self.__class__.__name__}\n\n"
             f"\taxes     : {list(self._data.keys())}\n"

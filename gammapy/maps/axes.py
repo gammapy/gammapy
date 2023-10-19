@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import copy
+import html
 import inspect
 import logging
 from collections.abc import Sequence
@@ -147,6 +148,12 @@ class MapAxis:
 
         self._nbin = nbin
         self._use_center_as_plot_labels = None
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     def assert_name(self, required_name):
         """Assert axis name if a specific one is required.
@@ -493,7 +500,7 @@ class MapAxis:
         if interp == "lin":
             nodes = np.linspace(lo_bnd, hi_bnd, nnode)
         elif interp == "log":
-            nodes = np.exp(np.linspace(np.log(lo_bnd), np.log(hi_bnd), nnode))
+            nodes = np.geomspace(lo_bnd, hi_bnd, nnode)
         elif interp == "sqrt":
             nodes = np.linspace(lo_bnd**0.5, hi_bnd**0.5, nnode) ** 2.0
         else:
@@ -546,6 +553,7 @@ class MapAxis:
         per_decade=False,
         name=None,
         node_type="edges",
+        strict_bounds=True,
     ):
         """Make an energy axis.
 
@@ -564,6 +572,12 @@ class MapAxis:
             Whether `nbin` is given per decade.
         name : str
             Name of the energy axis, either 'energy' or 'energy_true'
+        strict_bounds : bool
+            Whether to strictly end the binning at 'energy_max' when
+            `per_decade=True`. If True, the number of bins per decade
+            might be slightly increased to match the bounds. If False,
+            'energy_max' might be reduced so the number of bins per
+            decade is exactly the given input.
 
         Returns
         -------
@@ -583,7 +597,15 @@ class MapAxis:
             )
 
         if per_decade:
-            nbin = np.ceil(np.log10(energy_max / energy_min).value * nbin)
+            if strict_bounds:
+                nbin = np.ceil(np.log10(energy_max / energy_min).value * nbin)
+            else:
+                bin_per_decade = nbin
+                nbin = np.floor(
+                    np.log10(energy_max / energy_min).value * bin_per_decade
+                )
+                if np.log10(energy_max / energy_min).value % (1 / bin_per_decade) != 0:
+                    energy_max = energy_min * 10 ** (nbin / bin_per_decade)
 
         if name is None:
             name = "energy"
@@ -1011,7 +1033,7 @@ class MapAxis:
         Returns
         -------
         axis : `MapAxis`
-            Usampled map axis.
+            Unsampled map axis.
 
         """
         if self.node_type == "edges":
@@ -1409,6 +1431,12 @@ class MapAxes(Sequence):
 
         self._axes = axes
         self._n_spatial_axes = n_spatial_axes
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     @property
     def primary_axis(self):
@@ -2211,6 +2239,12 @@ class TimeMapAxis:
         if np.any(delta < 0 * u.s):
             raise ValueError("Time intervals must not overlap.")
 
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
+
     @property
     def is_contiguous(self):
         """Whether the axis is contiguous"""
@@ -2458,6 +2492,7 @@ class TimeMapAxis:
         return id(self)
 
     def is_aligned(self, other, atol=2e-2):
+        """Not supported for time axis."""
         raise NotImplementedError
 
     @property
@@ -2592,9 +2627,11 @@ class TimeMapAxis:
         return str_.expandtabs(tabsize=2)
 
     def upsample(self):
+        """Not supported for time axis."""
         raise NotImplementedError
 
     def downsample(self):
+        """Not supported for time axis."""
         raise NotImplementedError
 
     def _init_copy(self, **kwargs):
@@ -3150,6 +3187,12 @@ class LabelMapAxis:
         str_ += fmt.format("labels", "{0}".format(list(self._labels)))
         return str_.expandtabs(tabsize=2)
 
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
+
     def is_allclose(self, other, **kwargs):
         """Check if other map axis is all close.
 
@@ -3181,22 +3224,22 @@ class LabelMapAxis:
 
     # TODO: could create sub-labels here using dashes like "label-1-a", etc.
     def upsample(self, *args, **kwargs):
-        """Upsample axis"""
+        """Not supported for label axis."""
         raise NotImplementedError("Upsampling a LabelMapAxis is not supported")
 
     # TODO: could merge labels here like "label-1-label2", etc.
     def downsample(self, *args, **kwargs):
-        """Downsample axis"""
+        """Not supported for label axis."""
         raise NotImplementedError("Downsampling a LabelMapAxis is not supported")
 
     # TODO: could merge labels here like "label-1-label2", etc.
     def resample(self, *args, **kwargs):
-        """Resample axis"""
+        """Not supported for label axis."""
         raise NotImplementedError("Resampling a LabelMapAxis is not supported")
 
     # TODO: could create new labels here like "label-10-a"
     def pad(self, *args, **kwargs):
-        """Resample axis"""
+        """Not supported for label axis."""
         raise NotImplementedError("Padding a LabelMapAxis is not supported")
 
     def copy(self):
@@ -3225,8 +3268,8 @@ class LabelMapAxis:
     def from_stack(cls, axes):
         """Create a label map axis by merging a list of axis.
 
-        Parameter
-        ---------
+        Parameters
+        ----------
         axes : list of `LabelMapAxis`
             A list of map axis to be merged.
 

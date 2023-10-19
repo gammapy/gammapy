@@ -15,7 +15,6 @@ from gammapy.data import (
     HDUIndexTable,
     Observation,
     ObservationTable,
-    PointingMode,
 )
 from gammapy.datasets import MapDataset
 from gammapy.datasets.map import RAD_AXIS_DEFAULT
@@ -347,9 +346,7 @@ def test_interpolate_map_dataset():
         bkg=bkg_map,
         events=events,
         obs_filter=None,
-        pointing=FixedPointingInfo(
-            mode=PointingMode.POINTING, fixed_icrs=SkyCoord(0 * u.deg, 0 * u.deg)
-        ),
+        pointing=FixedPointingInfo(fixed_icrs=SkyCoord(0 * u.deg, 0 * u.deg)),
     )
 
     # define analysis geometry

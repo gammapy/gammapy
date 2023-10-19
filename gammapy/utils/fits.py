@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import html
 import logging
 import sys
 import astropy.units as u
@@ -40,6 +41,12 @@ class HDULocation:
         self.hdu_name = hdu_name
         self.cache = cache
         self.format = format
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     def info(self, file=None):
         """Print some summary info to stdout."""

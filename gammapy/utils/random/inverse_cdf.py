@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import html
 import numpy as np
 from .utils import get_random_state
 
@@ -37,6 +38,12 @@ class InverseCDFSampler:
 
             self.pdf = pdf[self.sortindex]
             self.cdf = np.cumsum(self.pdf)
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     def sample_axis(self):
         """Sample along a given axis.

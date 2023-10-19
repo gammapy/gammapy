@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from collections.abc import MutableMapping
+import html
 from astropy.io import fits
 from gammapy.maps import Map
 from gammapy.utils.scripts import make_path
@@ -65,6 +66,12 @@ class Maps(MutableMapping):
             str_ += f"\t dtype\t : {value.data.dtype}\n"
             str_ += "\n"
         return str_
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     def to_hdulist(self, hdu_bands="BANDS"):
         """Convert map dictionary to list of HDUs.

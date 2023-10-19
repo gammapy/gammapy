@@ -81,7 +81,7 @@ data_store.info()
 display(data_store.obs_table[:2][["OBS_ID", "DATE-OBS", "RA_PNT", "DEC_PNT", "OBJECT"]])
 
 ######################################################################
-# Get a single obervation
+# Get a single observation
 
 obs = data_store.obs(23523)
 

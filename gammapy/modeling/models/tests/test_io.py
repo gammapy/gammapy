@@ -25,6 +25,7 @@ from gammapy.modeling.models import (
     SkyModel,
     TemplateNPredModel,
 )
+from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.utils.scripts import read_yaml, write_yaml
 from gammapy.utils.testing import requires_data
 
@@ -315,13 +316,15 @@ def make_all_models():
     yield Model.create("PowerLawNormSpectralModel", "spectral")
     yield Model.create("PowerLaw2SpectralModel", "spectral")
     yield Model.create("ExpCutoffPowerLawSpectralModel", "spectral")
-    yield Model.create("ExpCutoffPowerLawNormSpectralModel", "spectral")
+    with pytest.warns(GammapyDeprecationWarning):
+        yield Model.create("ExpCutoffPowerLawNormSpectralModel", "spectral")
     yield Model.create("ExpCutoffPowerLaw3FGLSpectralModel", "spectral")
     yield Model.create("SuperExpCutoffPowerLaw3FGLSpectralModel", "spectral")
     yield Model.create("SuperExpCutoffPowerLaw4FGLDR3SpectralModel", "spectral")
     yield Model.create("SuperExpCutoffPowerLaw4FGLSpectralModel", "spectral")
     yield Model.create("LogParabolaSpectralModel", "spectral")
-    yield Model.create("LogParabolaNormSpectralModel", "spectral")
+    with pytest.warns(GammapyDeprecationWarning):
+        yield Model.create("LogParabolaNormSpectralModel", "spectral")
     yield Model.create(
         "TemplateSpectralModel", "spectral", energy=[1, 2] * u.cm, values=[3, 4] * u.cm
     )  # TODO: add unit validation?

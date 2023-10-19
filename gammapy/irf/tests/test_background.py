@@ -151,7 +151,7 @@ def test_background_3d_missing_values(bkg_3d_interp):
         energy=999 * u.TeV,
     )
     assert_allclose(res.value, 8.796068e18)
-    # without missing value interplation
+    # without missing value interpolation
     # extrapolation within the last bin would give too high value
 
     bkg_3d_interp.interp_missing_data(axis_name="energy")
@@ -369,7 +369,7 @@ def test_to_3d(bkg_2d):
     assert bkg_3d.data.shape == (2, 6, 6)
     assert_allclose(bkg_3d.data[1, 3, 3], 2.31, rtol=0.1)
 
-    # assert you get back same after goint to 2d
+    # assert you get back same after joint to 2d
     # need high rtol due to interpolation effects?
     b2 = bkg_3d.to_2d()
     assert_allclose(bkg_2d.data, b2.data, rtol=0.2)

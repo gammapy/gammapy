@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Supernova remnant (SNR) source models."""
+import html
 import numpy as np
 import astropy.constants
 from astropy.units import Quantity
@@ -50,6 +51,12 @@ class SNR:
         self.spectral_index = spectral_index
         if age is not None:
             self.age = Quantity(age, "yr")
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     def radius(self, t):
         r"""Outer shell radius at age t.

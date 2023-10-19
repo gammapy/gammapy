@@ -82,6 +82,8 @@ def make_name(name=None):
     """Make a dataset name"""
     if name is None:
         name = urlsafe_b64encode(codecs.decode(uuid4().hex, "hex")).decode()[:8]
+        while name[0] == "_":
+            name = urlsafe_b64encode(codecs.decode(uuid4().hex, "hex")).decode()[:8]
 
     if not isinstance(name, str):
         raise ValueError(

@@ -661,7 +661,7 @@ def test_map_fit(sky_model, geom, geom_etrue):
     result = fit.run(datasets=datasets)
 
     assert result.success
-    assert "minuit" in repr(result)
+    assert "minuit" in str(result)
 
     npred = dataset_1.npred().data.sum()
     assert_allclose(npred, 7525.790688, rtol=1e-3)
@@ -735,7 +735,7 @@ def test_map_fit_linked(sky_model, geom, geom_etrue):
     result = fit.run(datasets=datasets)
 
     assert result.success
-    assert "minuit" in repr(result)
+    assert "minuit" in str(result)
 
     assert sky_model2.parameters["index"] is sky_model.parameters["index"]
     assert sky_model2.parameters["reference"] is sky_model.parameters["reference"]
@@ -1666,6 +1666,10 @@ def test_to_map_dataset():
     assert_allclose(dataset.npred_background().data.sum(), 100)
     assert isinstance(dataset, MapDataset)
     assert dataset.counts == dataset_onoff.counts
+
+    dataset_onoff.counts_off = None
+    dataset2 = dataset_onoff.to_map_dataset(name="ds2")
+    assert dataset2.background is None
 
 
 def test_downsample_onoff():

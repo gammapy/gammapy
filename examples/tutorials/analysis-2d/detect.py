@@ -57,7 +57,7 @@ import matplotlib.pyplot as plt
 from IPython.display import display
 from gammapy.datasets import MapDataset
 from gammapy.estimators import ASmoothMapEstimator, TSMapEstimator
-from gammapy.estimators.utils import find_peaks
+from gammapy.estimators.utils import find_peaks, find_peaks_in_flux_map
 from gammapy.irf import EDispKernelMap, PSFMap
 from gammapy.maps import Map
 from gammapy.modeling.models import PointSpatialModel, PowerLawSpectralModel, SkyModel
@@ -212,6 +212,15 @@ ax.scatter(
 plt.show()
 
 # sphinx_gallery_thumbnail_number = 3
+
+
+######################################################################
+# We can also utilise `~gammapy.estimators.utils.find_peaks_in_flux_map`
+# to display various parameters from the FluxMaps
+
+sources_flux_map = find_peaks_in_flux_map(maps, threshold=5, min_distance="0.25 deg")
+display(sources_flux_map)
+
 
 ######################################################################
 # Note that we used the instrument point-spread-function (PSF) as kernel,

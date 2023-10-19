@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose
 from astropy.table import Column, Table
 from astropy.time import Time
 from gammapy.estimators import FluxPoints
-from gammapy.stats.variability import compute_chisq, compute_fvar
+from gammapy.stats.variability import compute_chisq, compute_fpp, compute_fvar
 from gammapy.utils.testing import assert_quantity_allclose
 
 
@@ -72,6 +72,25 @@ def test_lightcurve_fvar():
 
     assert_allclose(fvar, [0.68322763, 0.84047606])
     assert_allclose(fvar_err, [0.06679978, 0.08285806])
+
+
+def test_lightcurve_fpp():
+
+    flux = np.array([[1e-11, 4e-12], [3e-11, np.nan], [1e-11, 1e-12]])
+    flux_err = np.array([[0.1e-11, 0.4e-12], [0.3e-11, np.nan], [0.1e-11, 0.1e-12]])
+
+    fpp, fpp_err = compute_fpp(flux, flux_err)
+
+    assert_allclose(fpp, [1.19448734, 0.11661904])
+    assert_allclose(fpp_err, [0.06648574, 0.10099505])
+
+    flux_1d = np.array([1e-11, 3e-11, 1e-11])
+    flux_err_1d = np.array([0.1e-11, 0.3e-11, 0.1e-11])
+
+    fpp_1d, fpp_err_1d = compute_fpp(flux_1d, flux_err_1d)
+
+    assert_allclose(fpp_1d, [1.19448734])
+    assert_allclose(fpp_err_1d, [0.06648574])
 
 
 def test_lightcurve_chisq(lc_table):

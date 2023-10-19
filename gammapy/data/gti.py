@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import copy
+import html
 from operator import le, lt
 import numpy as np
 import astropy.units as u
@@ -64,6 +65,12 @@ class GTI:
         if reference_time is None:
             reference_time = TIME_REF_DEFAULT
         self._time_ref = Time(reference_time)
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     @staticmethod
     def _validate_table(table):

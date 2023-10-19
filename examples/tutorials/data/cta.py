@@ -177,7 +177,7 @@ print(observation)
 # and the EVENTS header in `events.table.meta` can be used to look up
 # which `MC_ID` corresponds to which emission component.
 #
-# Events can be accessed from the observatiosn object like:
+# Events can be accessed from the observation object like:
 
 events = observation.events
 

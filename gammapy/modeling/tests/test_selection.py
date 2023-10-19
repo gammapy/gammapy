@@ -28,7 +28,7 @@ def test_test_statistic_detection(fermi_datasets):
 @requires_data()
 def test_test_statistic_link(fermi_datasets):
 
-    # TODO: better test with simuated data ?
+    # TODO: better test with simulated data ?
     model = fermi_datasets.models["Crab Nebula"]
     model2 = model.copy(name="other")
     model2.spectral_model.alpha.value = 2.4

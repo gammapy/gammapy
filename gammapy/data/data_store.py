@@ -2,12 +2,14 @@
 import logging
 import subprocess
 from copy import copy
+import html
 from pathlib import Path
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 import gammapy.utils.time as tu
+from gammapy.utils.pbar import progress_bar
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
 from .hdu_index_table import HDUIndexTable
@@ -82,6 +84,12 @@ class DataStore:
 
     def __str__(self):
         return self.info(show=False)
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     @property
     def obs_ids(self):
@@ -346,6 +354,10 @@ class DataStore:
     ):
         """Generate a `~gammapy.data.Observations`.
 
+        Notes
+        -----
+        The progress bar can be displayed for this function.
+
         Parameters
         ----------
         obs_id : list
@@ -388,7 +400,7 @@ class DataStore:
 
         obs_list = []
 
-        for _ in obs_id:
+        for _ in progress_bar(obs_id, desc="Obs Id"):
             try:
                 obs = self.obs(_, required_irf, require_events)
             except ValueError as err:

@@ -117,8 +117,8 @@ fit_scipy = Fit(store_trace=True, optimize_opts=scipy_opts)
 # the `Fit.run()` method. In addition we have specified to store the
 # trace of parameter values of the fit.
 #
-# Note that, for now, covaraince matrix and errors are computed only for
-# the fitting with MINUIT. However depending on the problem other
+# Note that, for now, covariance matrix and errors are computed only for
+# the fitting with MINUIT. However, depending on the problem other
 # optimizers can better perform, so sometimes it can be useful to run a
 # pre-fit with alternative optimization methods.
 #
@@ -192,7 +192,7 @@ print(result_minuit)
 
 
 ######################################################################
-# If the fit is performed with minuit you can print detailed informations
+# If the fit is performed with minuit you can print detailed information
 # to check the convergence
 #
 
@@ -320,7 +320,7 @@ plt.show()
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # After the fit, MINUIT offers the possibility to compute the confidence
-# confours. gammapy provides an interface to this functionality through
+# contours. gammapy provides an interface to this functionality through
 # the `~gammapy.modeling.Fit` object using the `~gammapy.modeling.Fit.stat_contour` method. Here we defined a
 # function to automate the contour production for the different
 # parameter and confidence levels (expressed in terms of sigma):

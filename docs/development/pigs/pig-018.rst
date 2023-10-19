@@ -74,7 +74,7 @@ figure out a good documentation for Gammapy:
 - https://fermi.gsfc.nasa.gov/ssc/data/analysis/
 - https://fermipy.readthedocs.io
 - http://cta.irap.omp.eu/ctools
-- https://cta-observatory.github.io/ctapipe
+- https://ctapipe.readthedocs.io/en/latest/
 - https://www.djangoproject.com/ and https://docs.djangoproject.com
 
 Generally one has to be aware that Gammapy is both a flexible and extensible

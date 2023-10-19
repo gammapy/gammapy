@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import html
 
 __all__ = ["Likelihood"]
 
@@ -45,3 +46,9 @@ class Likelihood:
             self.store_trace_iteration(total_stat)
 
         return total_stat
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"

@@ -1,8 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import html
 import logging
 import numpy as np
 import astropy.units as u
-from astropy.coordinates.angle_utilities import angular_separation
+from astropy.coordinates import angular_separation
 from astropy.utils import lazyproperty
 from regions import CircleSkyRegion
 import matplotlib.pyplot as plt
@@ -94,6 +95,12 @@ class MapEvaluator:
         if self.exposure is not None:
             if not self.geom.is_region or self.geom.region is not None:
                 self.update_spatial_oversampling_factor(self.geom)
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     def reset_cache_properties(self):
         """Reset cached properties."""
@@ -229,9 +236,9 @@ class MapEvaluator:
 
         res_scale = res_scale.to_value("deg") if res_scale is not None else 0
 
-        if geom.is_region or geom.is_hpx:
-            geom = geom.to_wcs_geom()
         if res_scale != 0:
+            if geom.is_region or geom.is_hpx:
+                geom = geom.to_wcs_geom()
             factor = int(np.ceil(np.max(geom.pixel_scales.deg) / res_scale))
             self._spatial_oversampling_factor = factor
 

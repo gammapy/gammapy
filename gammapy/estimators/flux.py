@@ -51,6 +51,7 @@ class FluxEstimator(ParameterEstimator):
         Fit instance specifying the backend and fit options.
     reoptimize : bool
         Re-optimize other free model parameters. Default is False.
+        If True the available free parameters are fitted together with the norm of the source of interest in each bin independently, otherwise they are frozen at their current values.
     """
 
     tag = "FluxEstimator"
