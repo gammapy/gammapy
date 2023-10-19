@@ -3,6 +3,7 @@ import pytest
 from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import SkyCoord
+from astropy.io import fits
 from astropy.table import Table
 from regions import CircleSkyRegion, RectangleSkyRegion
 from gammapy.data import GTI, EventList
@@ -81,6 +82,12 @@ class TestEventListBase:
             dummy_events.table.meta["HDUCLASS"] = "gadf"
             dummy_events.table.meta["HDUCLAS1"] = "events"
             dummy_events.write("test.fits", overwrite=True)
+
+    def test_write_checksum(self):
+        self.events.write("test.fits", overwrite=True, checksum=True)
+        hdu = fits.open("test.fits")["EVENTS"]
+        assert "CHECKSUM" in hdu.header
+        assert "DATASUM" in hdu.header
 
 
 @requires_data()
