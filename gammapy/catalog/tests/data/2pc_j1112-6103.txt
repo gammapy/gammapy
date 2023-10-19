@@ -53,7 +53,7 @@ TS b free            : 0
 
 *** Spectral points ***
 
-e_min   e_max  e_ref        flux           flux_err         e2dnde      e2dnde_err  is_ul     flux_ul        e2dnde_ul
+e_min   e_max  e_ref        flux           flux_err         e2dnde      e2dnde_err  is_ul     flux_ul        e2dnde_ul  
  GeV     GeV    GeV   ph / (GeV s cm2) ph / (GeV s cm2) erg / (s cm2) erg / (s cm2)       ph / (GeV s cm2) erg / (s cm2)
 ------ ------- ------ ---------------- ---------------- ------------- ------------- ----- ---------------- -------------
  0.100   0.316  0.152        2.641e-07        0.000e+00     9.769e-12     0.000e+00  True        2.641e-07     9.769e-12

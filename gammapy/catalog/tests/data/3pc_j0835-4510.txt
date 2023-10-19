@@ -42,7 +42,7 @@ Spectrum Type        : PLSuperExpCutoff4
 *** Spectral points ***
 
   e_min       e_max      e_ref        flux     flux_errn   flux_errp      e2dnde     e2dnde_errn   e2dnde_errp  is_ul   flux_ul     e2dnde_ul   sqrt_ts
-   MeV         MeV        MeV     1 / (s cm2) 1 / (s cm2) 1 / (s cm2) MeV / (s cm2) MeV / (s cm2) MeV / (s cm2)       1 / (s cm2) MeV / (s cm2)
+   MeV         MeV        MeV     1 / (s cm2) 1 / (s cm2) 1 / (s cm2) MeV / (s cm2) MeV / (s cm2) MeV / (s cm2)       1 / (s cm2) MeV / (s cm2)        
 ---------- ----------- ---------- ----------- ----------- ----------- ------------- ------------- ------------- ----- ----------- ------------- -------
     50.000     100.000     70.711   5.392e-06   3.093e-07   3.093e-07     5.543e-04     3.179e-05     3.179e-05 False         nan           nan   6.801
    100.000     300.000    173.205   5.596e-06   4.955e-07   4.955e-07     8.878e-04     7.861e-05     7.861e-05 False         nan           nan  35.488
