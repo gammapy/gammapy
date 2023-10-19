@@ -33,6 +33,7 @@ For completeness two different methods for grouping of observations are shown he
 
 
 import numpy as np
+import astropy.units as u
 from astropy.coordinates import SkyCoord
 import matplotlib.pyplot as plt
 from gammapy.data import DataStore
@@ -46,6 +47,7 @@ from gammapy.utils.cluster import hierarchical_clustering
 #
 # Create the data store and obtain the observations from the H.E.S.S.
 # DL3-DR1 for PKS 2155-304.
+#
 
 data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
 obs_id = data_store.obs_table["OBS_ID"][
@@ -60,6 +62,7 @@ observations = data_store.get_observations(obs_id)
 #
 # Print here the range of zenith angles and muon efficiencies, to see
 # if there is a sensible way to group the observations.
+#
 
 obs_zenith = []
 obs_muoneff = []
@@ -124,13 +127,13 @@ ax.axvline(np.median(obs_zenith), ls="--", color="black")
 # observations are then clustered based on this criteria using
 # `gammapy.utils.cluster.hierarchical_clustering`. The idea here is to minimise
 # the variance of both edisp and psf within a specific group to limit the error
-# on the quanitity when they are stacked at the dataset level.
+# on the quantity when they are stacked at the dataset level.
 #
 # In this example, the irf features are computed for the `edisp-res` and
 # `psf-radius` at 1 TeV. This is stored as a `astropy.table.table.Table`, as shown below.
 #
 
-source_position = SkyCoord.from_name("PKS 2155-304")
+source_position = SkyCoord(329.71693826 * u.deg, -30.2255890 * u.deg, frame="icrs")
 names = ["edisp-res", "psf-radius"]
 features_irfs = get_irfs_features(
     observations, energy_true="1 TeV", position=source_position, names=names
