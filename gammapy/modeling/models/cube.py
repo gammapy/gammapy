@@ -41,7 +41,7 @@ class SkyModel(ModelBase):
         Spectral model
     spatial_model : `~gammapy.modeling.models.SpatialModel`
         Spatial model (must be normalised to integrate to 1)
-    temporal_model : `~gammapy.modeling.models.temporalModel`
+    temporal_model : `~gammapy.modeling.models.TemporalModel`
         Temporal model
     name : str
         Model identifier

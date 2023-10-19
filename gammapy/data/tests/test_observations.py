@@ -7,6 +7,7 @@ from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.time import Time
 from astropy.units import Quantity
 from gammapy.data import DataStore, Observation, ObservationFilter, Observations
+from gammapy.data.metadata import ObservationMetaData
 from gammapy.data.pointing import FixedPointingInfo
 from gammapy.data.utils import get_irfs_features
 from gammapy.irf import PSF3D, load_irf_dict_from_file
@@ -252,7 +253,11 @@ def test_observation_cta_1dc():
     assert_allclose(obs.target_radec.ra, np.nan)
     with pytest.warns(GammapyDeprecationWarning):
         assert not np.isnan(obs.pointing_zen)
-    assert_allclose(obs.muoneff, 1)
+
+    assert isinstance(obs.meta, ObservationMetaData)
+    assert obs.meta.deadtime_fraction == 0.1
+    assert_allclose(obs.meta.location.height.to_value("m"), 2000)
+    assert "Gammapy" in obs.meta.creation.creator
 
 
 @requires_data()
@@ -298,6 +303,16 @@ def test_observation_read():
     assert obs.available_hdus == ["events", "gti", "aeff", "edisp", "psf", "bkg"]
     assert_allclose(val.value, 278000.54120855, rtol=1e-5)
     assert val.unit == "m2"
+
+    assert isinstance(obs.meta, ObservationMetaData)
+    assert "Gammapy" in obs.meta.creation.creator
+
+    assert obs.meta.telescope == "HESS"
+    assert obs.meta.instrument == "H.E.S.S. Phase I"
+    assert obs.meta.target_name == "MSH15-52"
+    assert obs.meta.optional["N_TELS"] == 4
+    with pytest.raises(KeyError):
+        obs.meta.optional["BROKPIX"]
 
 
 @requires_data()
@@ -359,6 +374,8 @@ def test_observation_write(tmp_path):
         "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz"
     )
     path = tmp_path / "obs.fits.gz"
+
+    obs.meta.creation.origin = "test"
     obs.write(path)
     obs_read = obs.read(path)
 
