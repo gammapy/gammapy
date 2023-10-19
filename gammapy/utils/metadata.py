@@ -76,7 +76,33 @@ class CreatorMetaData(MetaData):
 
     @validator("date")
     def validate_time(cls, v):
-        return Time(v)
+        if v is not None:
+            return Time(v)
+        else:
+            return v
+
+    def to_header(self, format="gadf"):
+        """Convert creator metadata to fits header.
+
+        Parameters
+        ----------
+        format : str
+            header format. Default is 'gadf'.
+
+        Returns
+        -------
+        header : dict
+            the header dictionary
+        """
+        if format != "gadf":
+            raise ValueError(f"Creator metadata: format {format} is not supported.")
+
+        hdr_dict = {}
+        hdr_dict["CREATED"] = self.date.iso
+        hdr_dict["CREATOR"] = self.creator
+        hdr_dict["ORIGIN"] = self.origin
+
+        return hdr_dict
 
     @classmethod
     def from_default(cls):
@@ -84,3 +110,22 @@ class CreatorMetaData(MetaData):
         date = Time.now()
         creator = f"Gammapy {version}"
         return cls(creator=creator, date=date)
+
+    @classmethod
+    def from_header(cls, hdr, format="gadf"):
+        """Builds creator metadata from fits header.
+
+        Parameters
+        ----------
+        hdr : dict
+            the header dictionary
+        format : str
+            header format. Default is 'gadf'.
+        """
+        if format != "gadf":
+            raise ValueError(f"Creator metadata: format {format} is not supported.")
+
+        date = hdr.get("CREATED", None)  # note regular FITS keyword is DATE
+        origin = hdr.get("ORIGIN", None)
+        creator = hdr.get("CREATOR", None)
+        return cls(creator=creator, date=date, origin=origin)
