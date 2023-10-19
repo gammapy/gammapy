@@ -9,7 +9,7 @@ from gammapy.utils.fits import earth_location_from_dict
 from gammapy.utils.metadata import CreatorMetaData, MetaData
 from gammapy.utils.time import time_ref_from_dict
 
-__all__ = ["ObservationMetaData"]
+__all__ = ["ObservationMetaData", "GTIMetaData"]
 
 
 class ObservationMetaData(MetaData):
@@ -162,3 +162,18 @@ class ObservationMetaData(MetaData):
         kwargs["optional"] = optional
 
         return cls(**kwargs)
+
+
+class GTIMetaData(MetaData):
+    """Metadata containing information about the GTI.
+
+    Parameters
+    ----------
+    reference_time : Time, str
+        the GTI reference time
+    creation : `~gammapy.utils.CreatorMetaData`
+        the creation metadata
+    """
+
+    reference_time: Optional[Union[Time, str]]
+    creation: Optional[CreatorMetaData]
