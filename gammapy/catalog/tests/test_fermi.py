@@ -688,7 +688,6 @@ class TestFermi2PCObject:
 
     @pytest.mark.parametrize("ref", SOURCES_2PC, ids=lambda _: _["name"])
     def test_str(self, ref):
-        # TODO: fix the test
         actual = str(self.cat[ref["idx"]])
 
         with open(get_pkg_data_filename(ref["str_ref_file"])) as fh:
@@ -791,7 +790,6 @@ class TestFermi3PCObject:
         "ref", [SOURCES_3PC[0], SOURCES_3PC_NONE[0]], ids=lambda _: _["name"]
     )
     def test_str(self, ref):
-        # TODO: fix the test
         actual = str(self.cat[ref["idx"]])
 
         with open(get_pkg_data_filename(ref["str_ref_file"])) as fh:
