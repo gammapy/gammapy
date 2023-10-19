@@ -26,7 +26,7 @@ constant terms, we define the **WStat**.
     - n_{\mathrm{on}} \log{(\mu_{\mathrm{sig}} + \mu_{\mathrm{bkg}})}
     - n_{\mathrm{off}} \log{(\mu_{\mathrm{bkg}}/\alpha)}\big)
 
-In the most general case, where :math:`\mu_{\mathrm{src}}` and
+In the most general case, where :math:`\mu_{\mathrm{sig}}` and
 :math:`\mu_{\mathrm{bkg}}` are free the minimum of :math:`W` is at
 
 .. math::
@@ -51,14 +51,13 @@ likelihood function. This is called 'profile likelihood'.
 This yields a quadratic equation for :math:`\mu_{\mathrm{bkg}}`
 
 .. math::
-    \frac{\alpha\,n_{\mathrm{on}}}{\mu_{\mathrm{sig}}+\alpha
-    \mu_{\mathrm{bkg}}} + \frac{n_{\mathrm{off}}}{\mu_{\mathrm{bkg}}} - (\alpha
+    \frac{\alpha n_{\mathrm{on}}}{\mu_{\mathrm{sig}}+\mu_{\mathrm{bkg}}} + \frac{\alpha n_{\mathrm{off}}}{\mu_{\mathrm{bkg}}} - (\alpha
     + 1) = 0
 
 with the solution
 
 .. math::
-    \mu_{\mathrm{bkg}} = \frac{C + D}{2\alpha(\alpha + 1)}
+    \mu_{\mathrm{bkg}} = \frac{C + D}{2(\alpha + 1)}
 
 where
 
@@ -72,10 +71,10 @@ Goodness of fit
 The best-fit value of the WStat as defined now contains no information about the
 goodness of the fit. We consider the likelihood of the data
 :math:`n_{\mathrm{on}}` and :math:`n_{\mathrm{off}}` under the expectation of
-:math:`n_{\mathrm{on}}` and :math:`n_{\mathrm{off}}`,
+:math:`n_{\mathrm{on}}` and :math:`n_{\mathrm{off}}`.
 
 .. math::
-    L (n_{\mathrm{on}}, n_{\mathrm{off}}; n_{\mathrm{on}}, n_{\mathrm{off}}) =
+    L (n_{\mathrm{on}}, n_{\mathrm{off}}, \alpha; n_{\mathrm{on}} - \alpha n_{\mathrm{off}}, \alpha n_{\mathrm{off}}) =
     \frac{n_{\mathrm{on}}^{n_{\mathrm{on}}}}{n_{\mathrm{on}} !}
     \exp{(-n_{\mathrm{on}})}\times
     \frac{n_{\mathrm{off}}^{n_{\mathrm{off}}}}{n_{\mathrm{off}} !}
@@ -84,8 +83,8 @@ goodness of the fit. We consider the likelihood of the data
 and add twice the log likelihood
 
 .. math::
-     2 \log L (n_{\mathrm{on}}, n_{\mathrm{off}}; n_{\mathrm{on}},
-     n_{\mathrm{off}}) = 2 (n_{\mathrm{on}} ( \log{(n_{\mathrm{on}})} - 1 ) +
+     2 \log L (n_{\mathrm{on}}, n_{\mathrm{off}}; \alpha; n_{\mathrm{on}} - \alpha n_{\mathrm{off}},
+     \alpha n_{\mathrm{off}}) = 2 (n_{\mathrm{on}} ( \log{(n_{\mathrm{on}})} - 1 ) +
      n_{\mathrm{off}} ( \log{(n_{\mathrm{off}})} - 1))
 
 to WStat. In doing so, we are computing the likelihood ratio:
@@ -93,7 +92,7 @@ to WStat. In doing so, we are computing the likelihood ratio:
 .. math::
     -2 \log \frac{L(n_{\mathrm{on}},n_{\mathrm{off}},\alpha;
     \mu_{\mathrm{sig}},\mu_{\mathrm{bkg}})}
-    {L(n_{\mathrm{on}},n_{\mathrm{off}};n_{\mathrm{on}},n_{\mathrm{off}})}
+    {L(n_{\mathrm{on}},n_{\mathrm{off}}, \alpha; n_{\mathrm{on}} - \alpha n_{\mathrm{off}}, \alpha n_{\mathrm{off}})}
 
 Intuitively, this log-likelihood ratio should asymptotically behave like a
 chi-square with ``m-n`` degrees of freedom, where ``m`` is the number of
@@ -103,10 +102,10 @@ Final result
 ^^^^^^^^^^^^
 
 .. math::
-    W = 2 \big(\mu_{\mathrm{sig}} + (1 + \alpha)\mu_{\mathrm{bkg}} -
+    W = 2 \big(\mu_{\mathrm{sig}} + (1 + \frac{1}{\alpha})\mu_{\mathrm{bkg}} -
     n_{\mathrm{on}} - n_{\mathrm{off}} - n_{\mathrm{on}}
-    (\log{(\mu_{\mathrm{sig}} + \alpha \mu_{\mathrm{bkg}}) -
-    \log{(n_{\mathrm{on}})}}) - n_{\mathrm{off}} (\log{(\mu_{\mathrm{bkg}})} -
+    (\log{(\mu_{\mathrm{sig}} + \mu_{\mathrm{bkg}}) -
+    \log{(n_{\mathrm{on}})}}) - n_{\mathrm{off}} (\log(\frac{{\mu_{\mathrm{bkg}}}}{\alpha}) -
     \log{(n_{\mathrm{off}})})\big)
 
 Special cases
@@ -121,14 +120,14 @@ If :math:`n_{\mathrm{on}} = 0` the likelihood formulae read
 
 .. math::
     L (0, n_{\mathrm{off}}, \alpha; \mu_{\mathrm{sig}}, \mu_{\mathrm{bkg}}) =
-    \exp{(-(\mu_{\mathrm{sig}}+\alpha \mu_{\mathrm{bkg}}))}\times
-    \frac{(\mu_{\mathrm{bkg}})^{n_{\mathrm{off}}}}{n_{\mathrm{off}}
-    !}\exp{(-\mu_{\mathrm{bkg}})},
+    \exp{(-(\mu_{\mathrm{sig}}+ \mu_{\mathrm{bkg}}))}\times
+    \frac{(\mu_{\mathrm{bkg}}/\alpha)^{n_{\mathrm{off}}}}{n_{\mathrm{off}}
+    !}\exp{(-\mu_{\mathrm{bkg}}/\alpha))},
 
 and
 
 .. math::
-    L (0, n_{\mathrm{off}}; 0, n_{\mathrm{off}}) =
+    L (0, n_{\mathrm{off}}, \alpha; 0 - \alpha n_{\mathrm{off}}, \alpha n_{\mathrm{off}} ) =
     \frac{n_{\mathrm{off}}^{n_{\mathrm{off}}}}{n_{\mathrm{off}} !}
     \exp{(-n_{\mathrm{off}})}
 
@@ -136,8 +135,8 @@ WStat is derived by taking 2 times the negative log likelihood and adding the
 goodness of fit term as ever
 
 .. math::
-    W = 2 \big(\mu_{\mathrm{sig}} + (1 + \alpha)\mu_{\mathrm{bkg}} -
-    n_{\mathrm{off}} - n_{\mathrm{off}} (\log{(\mu_{\mathrm{bkg}})} -
+    W = 2 \big(\mu_{\mathrm{sig}} + (1 + \frac{1}{\alpha})\mu_{\mathrm{bkg}} -
+    n_{\mathrm{off}} - n_{\mathrm{off}} (\log{(\mu_{\mathrm{bkg}}/\alpha)} -
     \log{(n_{\mathrm{off}})})\big)
 
 Note that this is the limit of the original Wstat formula for
@@ -147,7 +146,7 @@ The analytical result for
 :math:`\mu_{\mathrm{bkg}}` in this case reads:
 
 .. math::
-    \mu_{\mathrm{bkg}} = \frac{n_{\mathrm{off}}}{\alpha + 1}
+    \mu_{\mathrm{bkg}} = \frac{\alpha n_{\mathrm{off}}}{\alpha + 1}
 
 When inserting this into the WStat we find the simplified expression.
 
@@ -157,15 +156,15 @@ When inserting this into the WStat we find the simplified expression.
 If :math:`n_{\mathrm{off}} = 0` Wstat becomes
 
 .. math::
-    W = 2 \big(\mu_{\mathrm{sig}} + (1 + \alpha)\mu_{\mathrm{bkg}} -
-    n_{\mathrm{on}} - n_{\mathrm{on}} (\log{(\mu_{\mathrm{sig}} + \alpha
+    W = 2 \big(\mu_{\mathrm{sig}} + (1 + \frac{1}{\alpha})\mu_{\mathrm{bkg}} -
+    n_{\mathrm{on}} - n_{\mathrm{on}} (\log{(\mu_{\mathrm{sig}} +
     \mu_{\mathrm{bkg}}) - \log{(n_{\mathrm{on}})}})
 
 and
 
 .. math::
-    \mu_{\mathrm{bkg}} = \frac{n_{\mathrm{on}}}{1+\alpha} -
-    \frac{\mu_{\mathrm{sig}}}{\alpha}
+    \mu_{\mathrm{bkg}} = \frac{\alpha n_{\mathrm{on}}}{1+\alpha} -
+    {\mu_{\mathrm{sig}}}
 
 For :math:`\mu_{\mathrm{sig}} > n_{\mathrm{on}} (\frac{\alpha}{1 + \alpha})`,
 :math:`\mu_{\mathrm{bkg}}` becomes negative which is unphysical.

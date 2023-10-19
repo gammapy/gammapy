@@ -29,7 +29,7 @@ Variable          Dataset attribute name Definition
 ``n_sig``		  ``excess``			 Estimated signal counts defined as ``n_on`` - ``n_bkg``
 ``mu_on``         ``npred``              Predicted counts
 ``mu_off``        ``npred_off``          Predicted counts in the off region
-``mu_bkg``        ``npred_background``   Predicted background counts
+``mu_bkg``        ``npred_background``   Predicted background counts in the on region
 ``mu_sig``        ``npred_signal``       Predicted signal counts
 ``a_on``          ``acceptance``         Relative background exposure
 ``a_off``         ``acceptance_off``     Relative background exposure in the off region
