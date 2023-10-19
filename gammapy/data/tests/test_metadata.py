@@ -3,8 +3,19 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.coordinates import SkyCoord
+from astropy.io import fits
 from pydantic import ValidationError
 from gammapy.data import ObservationMetaData
+from gammapy.utils.scripts import make_path
+
+
+@pytest.fixture()
+def hess_eventlist_header():
+    filename = make_path(
+        "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz"
+    )
+    hdulist = fits.open(filename)
+    return hdulist["EVENTS"].header
 
 
 def test_observation_metadata():
@@ -43,3 +54,23 @@ def test_observation_metadata():
 
     with pytest.raises(ValueError):
         ObservationMetaData(**input_bad)
+
+
+def test_observation_metadata_from_header(hess_eventlist_header):
+    meta = ObservationMetaData.from_header(hess_eventlist_header, format="gadf")
+
+    assert meta.telescope == "HESS"
+    assert meta.target_name == "Crab Nebula"
+    assert_allclose(meta.location.lat.deg, -23.271778)
+    assert "TELLIST" in meta.optional
+    assert meta.optional["TELLIST"] == "1,2,3,4"
+
+
+def test_observation_metadata_bad(hess_eventlist_header):
+
+    with pytest.raises(ValueError):
+        ObservationMetaData.from_header(hess_eventlist_header, format="bad")
+
+    hess_eventlist_header.pop("DEADC")
+    with pytest.raises(ValueError):
+        ObservationMetaData.from_header(hess_eventlist_header, format="gadf")
