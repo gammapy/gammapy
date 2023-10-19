@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import html
 import logging
 from abc import ABCMeta, abstractmethod
 from itertools import combinations
@@ -90,6 +91,12 @@ class RegionsFinder(metaclass=ABCMeta):
     def __init__(self, binsz=0.01 * u.deg):
         """Create a new RegionFinder"""
         self.binsz = Angle(binsz)
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     @abstractmethod
     def run(self, region, center, exclusion_mask=None):
@@ -519,7 +526,7 @@ class ReflectedRegionsBackgroundMaker(Maker):
 
         if geom.is_all_point_sky_regions and len(regions_off) > 0:
             regions_off = self._filter_regions_off_rad_max(
-                regions_off, energy_axis, geom, events, observation.rad_max
+                regions_off, energy_axis, geom, events, rad_max
             )
 
         if len(regions_off) == 0:
@@ -538,7 +545,7 @@ class ReflectedRegionsBackgroundMaker(Maker):
         if is_point_sky_region:
             counts_off = make_counts_off_rad_max(
                 geom_off=geom_off,
-                rad_max=observation.rad_max,
+                rad_max=rad_max,
                 events=events,
             )
         else:
@@ -562,7 +569,7 @@ class ReflectedRegionsBackgroundMaker(Maker):
         Returns
         -------
         dataset_on_off : `SpectrumDatasetOnOff`
-            On off dataset.
+            On-Off dataset.
         """
         counts_off, acceptance_off = self.make_counts_off(dataset, observation)
         acceptance = RegionNDMap.from_geom(geom=dataset.counts.geom, data=1)

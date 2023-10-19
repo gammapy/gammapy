@@ -1045,7 +1045,7 @@ class WcsGeom(Geom):
         shape = (1,) * len(self.axes) + structure.shape
         return structure.reshape(shape)
 
-    def __repr__(self):
+    def __str__(self):
         lon = self.center_skydir.data.lon.deg
         lat = self.center_skydir.data.lat.deg
         lon_ref, lat_ref = self.wcs.wcs.crval

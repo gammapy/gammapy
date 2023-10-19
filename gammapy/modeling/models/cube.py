@@ -41,7 +41,7 @@ class SkyModel(ModelBase):
         Spectral model
     spatial_model : `~gammapy.modeling.models.SpatialModel`
         Spatial model (must be normalised to integrate to 1)
-    temporal_model : `~gammapy.modeling.models.temporalModel`
+    temporal_model : `~gammapy.modeling.models.TemporalModel`
         Temporal model
     name : str
         Model identifier
@@ -345,7 +345,15 @@ class SkyModel(ModelBase):
     def evaluate_geom(self, geom, gti=None):
         """Evaluate model on `~gammapy.maps.Geom`."""
         coords = geom.get_coord(sparse=True)
+
         value = self.spectral_model(coords["energy_true"])
+
+        if coords.ndim > 3:
+            additional_axes = set(coords.axis_names) - set(
+                ["lon", "lat", "energy_true"]
+            )
+            for axis in additional_axes:
+                value = value * np.ones_like(coords[axis])
 
         if self.spatial_model:
             value = value * self.spatial_model.evaluate_geom(geom)
@@ -378,10 +386,14 @@ class SkyModel(ModelBase):
             Predicted flux map
         """
         energy = geom.axes["energy_true"].edges
+        shape = len(geom.data_shape) * [
+            1,
+        ]
+        shape[geom.axes.index_data("energy_true")] = -1
         value = self.spectral_model.integral(
             energy[:-1],
             energy[1:],
-        ).reshape((-1, 1, 1))
+        ).reshape(shape)
 
         if self.spatial_model:
             value = (
@@ -394,6 +406,8 @@ class SkyModel(ModelBase):
         if self.temporal_model:
             integral = self.temporal_model.integral(gti.time_start, gti.time_stop)
             value = value * np.sum(integral)
+
+        value = value * np.ones(geom.data_shape)
 
         return Map.from_geom(geom=geom, data=value.value, unit=value.unit)
 

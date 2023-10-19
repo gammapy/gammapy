@@ -13,8 +13,6 @@ __all__ = ["PhaseBackgroundMaker"]
 class PhaseBackgroundMaker(Maker):
     """Background estimation with on and off phases.
 
-    TODO: For a usage example see future notebook.
-
     Parameters
     ----------
     on_phase : `tuple` or list of tuples
@@ -97,18 +95,18 @@ class PhaseBackgroundMaker(Maker):
         )
 
     def run(self, dataset, observation):
-        """Run all steps.
+        """Make on off dataset.
 
         Parameters
         ----------
-        dataset : `SpectrumDataset`
+        dataset : `SpectrumDataset` or `MapDataset`
             Input dataset.
         observation : `Observation`
             Data store observation.
 
         Returns
         -------
-        dataset_on_off : `SpectrumDatasetOnOff`
+        dataset_on_off : `SpectrumDatasetOnOff` or `MapDatasetOnOff`
             On off dataset.
         """
         counts_off = self.make_counts_off(dataset, observation)

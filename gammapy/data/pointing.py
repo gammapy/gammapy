@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import html
 import logging
 import warnings
 from enum import Enum, auto
@@ -184,6 +185,12 @@ class FixedPointingInfo:
             self._mode = PointingMode.DRIFT
             self._fixed_icrs = None
             self._fixed_altaz = fixed_altaz
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     @classmethod
     def from_fits_header(cls, header):

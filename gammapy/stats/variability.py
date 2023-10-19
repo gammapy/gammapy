@@ -4,6 +4,7 @@ import scipy.stats as stats
 
 __all__ = [
     "compute_fvar",
+    "compute_fpp",
     "compute_chisq",
 ]
 
@@ -60,6 +61,60 @@ def compute_fvar(flux, flux_err, axis=0):
     fvar_err = sigxserr / (2 * fvar)
 
     return fvar, fvar_err
+
+
+def compute_fpp(flux, flux_err, axis=0):
+    r"""Calculate the point-to-point excess variance.
+
+    F_pp is a quantity strongly related to the fractional excess variance F_var
+    implemented in `~gammapy.stats.compute_fvar`; F_pp probes the variability
+    on a shorter timescale.
+
+    For white noise, F_pp and F_var give the same value.
+    However, for red noise, F_var will be larger
+    than F_pp, as the variations will be larger on longer timescales.
+
+    It is important to note that the errors on the flux must be Gaussian.
+
+    Parameters
+    ----------
+    flux : `~astropy.units.Quantity`
+        the measured fluxes
+    flux_err : `~astropy.units.Quantity`
+        the error on measured fluxes
+    axis : int, optional
+        Axis along which the excess variance is computed.
+        The default is to compute the value on axis 0.
+
+    Returns
+    -------
+    fpp, fpp_err : `~numpy.ndarray`
+        Point-to-point excess variance.
+
+    References
+    ----------
+    .. [Edelson2002] "X-Ray Spectral Variability and Rapid Variability
+       of the Soft X-Ray Spectrum Seyfert 1 Galaxies
+       Arakelian 564 and Ton S180", Edelson et al. (2002), equation 3,
+       https://iopscience.iop.org/article/10.1086/323779
+    """
+
+    flux_mean = np.nanmean(flux, axis=axis)
+    n_points = np.count_nonzero(~np.isnan(flux), axis=axis)
+    flux = flux.swapaxes(0, axis).T
+
+    s_square = np.nansum((flux[..., 1:] - flux[..., :-1]) ** 2, axis=-1) / (
+        n_points.T - 1
+    )
+    sig_square = np.nansum(flux_err**2, axis=axis) / n_points
+    fpp = np.sqrt(np.abs(s_square.T - sig_square)) / flux_mean
+
+    sigxserr_a = np.sqrt(2 / n_points) * sig_square / flux_mean**2
+    sigxserr_b = np.sqrt(sig_square / n_points) * (2 * fpp / flux_mean)
+    sigxserr = np.sqrt(sigxserr_a**2 + sigxserr_b**2)
+    fpp_err = sigxserr / (2 * fpp)
+
+    return fpp, fpp_err
 
 
 def compute_chisq(flux):

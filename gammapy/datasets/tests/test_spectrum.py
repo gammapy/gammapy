@@ -172,7 +172,7 @@ def test_fit(spectrum_dataset):
     fit = Fit()
     result = fit.run(datasets=[spectrum_dataset])
     assert result.success
-    assert "minuit" in repr(result)
+    assert "minuit" in str(result)
 
     npred = spectrum_dataset.npred().data.sum()
     assert_allclose(npred, 907012.186399, rtol=1e-3)

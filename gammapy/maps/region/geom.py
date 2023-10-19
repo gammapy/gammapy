@@ -596,7 +596,7 @@ class RegionGeom(Geom):
         """
         return cls.from_regions(regions=region, **kwargs)
 
-    def __repr__(self):
+    def __str__(self):
         axes = ["lon", "lat"] + [_.name for _ in self.axes]
         try:
             frame = self.center_skydir.frame.name

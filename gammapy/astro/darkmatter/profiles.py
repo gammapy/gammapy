@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Dark matter profiles."""
 import abc
+import html
 import numpy as np
 import astropy.units as u
 from gammapy.modeling import Parameter, Parameters
@@ -29,6 +30,12 @@ class DMProfile(abc.ABC):
         """Call evaluate method of derived classes."""
         kwargs = {par.name: par.quantity for par in self.parameters}
         return self.evaluate(radius, **kwargs)
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     def scale_to_local_density(self):
         """Scale to local density."""

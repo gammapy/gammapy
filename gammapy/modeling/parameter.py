@@ -2,6 +2,7 @@
 """Model parameter classes."""
 import collections.abc
 import copy
+import html
 import itertools
 import logging
 import numpy as np
@@ -428,6 +429,12 @@ class Parameter:
             f"min={self.min!r}, max={self.max!r}, frozen={self.frozen!r}, prior={self.prior!r}, id={hex(id(self))})"
         )
 
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
+
     def copy(self):
         """A deep copy"""
         return copy.deepcopy(self)
@@ -507,6 +514,12 @@ class Parameters(collections.abc.Sequence):
             parameters = list(parameters)
 
         self._parameters = parameters
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     def check_limits(self):
         """Check parameter limits and emit a warning"""
