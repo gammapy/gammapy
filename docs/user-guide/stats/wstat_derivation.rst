@@ -83,8 +83,8 @@ goodness of the fit. We consider the likelihood of the data
 and add twice the log likelihood
 
 .. math::
-     2 \log L (n_{\mathrm{on}}, n_{\mathrm{off}}; n_{\mathrm{on}},
-     n_{\mathrm{off}}) = 2 (n_{\mathrm{on}} ( \log{(n_{\mathrm{on}})} - 1 ) +
+     2 \log L (n_{\mathrm{on}}, n_{\mathrm{off}}; \alpha; n_{\mathrm{on}} - \alpha n_{\mathrm{off}},
+     \alpha n_{\mathrm{off}}) = 2 (n_{\mathrm{on}} ( \log{(n_{\mathrm{on}})} - 1 ) +
      n_{\mathrm{off}} ( \log{(n_{\mathrm{off}})} - 1))
 
 to WStat. In doing so, we are computing the likelihood ratio:
@@ -92,7 +92,7 @@ to WStat. In doing so, we are computing the likelihood ratio:
 .. math::
     -2 \log \frac{L(n_{\mathrm{on}},n_{\mathrm{off}},\alpha;
     \mu_{\mathrm{sig}},\mu_{\mathrm{bkg}})}
-    {L(n_{\mathrm{on}},n_{\mathrm{off}};n_{\mathrm{on}},n_{\mathrm{off}})}
+    {L(n_{\mathrm{on}},n_{\mathrm{off}}, \alpha; n_{\mathrm{on}} - \alpha n_{\mathrm{off}}, \alpha n_{\mathrm{off}})}
 
 Intuitively, this log-likelihood ratio should asymptotically behave like a
 chi-square with ``m-n`` degrees of freedom, where ``m`` is the number of
