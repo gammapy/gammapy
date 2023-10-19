@@ -68,13 +68,15 @@ class Dataset(abc.ABC):
             return self.mask_safe
 
     def stat_sum(self):
-        """Total statistic given the current model parameters."""
+        """Total statistic given the current model parameters and priors."""
         stat = self.stat_array()
-
         if self.mask is not None:
             stat = stat[self.mask.data]
-
-        return np.sum(stat, dtype=np.float64)
+        if self.models is not None:
+            prior_stat_sum = self.models.parameters.prior_stat_sum()
+        else:
+            prior_stat_sum = 0.0
+        return np.sum(stat, dtype=np.float64) + prior_stat_sum
 
     @abc.abstractmethod
     def stat_array(self):
