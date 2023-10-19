@@ -70,7 +70,7 @@ class Observation:
     bkg = LazyFitsData(cache=False)
     _rad_max = LazyFitsData(cache=False)
     _events = LazyFitsData(cache=False)
-    _gti = LazyFitsData(cache=False)
+    _gti = LazyFitsData(cache=True)
     _pointing = LazyFitsData(cache=True)
 
     #    @deprecated_renamed_argument("obs_info", "meta", since="1.2")
