@@ -16,6 +16,7 @@ from .simulate import ObservationsEventsSampler
 __all__ = [
     "DataStore",
     "EventList",
+    "EventListMetaData",
     "FixedPointingInfo",
     "GTI",
     "HDUIndexTable",

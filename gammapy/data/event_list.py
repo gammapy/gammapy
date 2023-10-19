@@ -18,6 +18,7 @@ from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_from_dict
 from .gti import GTI
+from .metadata import EventListMetaData
 
 __all__ = ["EventList"]
 
@@ -86,8 +87,9 @@ class EventList:
 
     """
 
-    def __init__(self, table):
+    def __init__(self, table=None, meta=None):
         self.table = table
+        self.meta = meta
 
     def _repr_html_(self):
         try:
@@ -111,7 +113,11 @@ class EventList:
         filename = make_path(filename)
         kwargs.setdefault("hdu", "EVENTS")
         table = Table.read(filename, **kwargs)
-        return cls(table=table)
+
+        # build meta from the table.meta
+        meta = EventListMetaData.from_header(table.meta)
+
+        return cls(table=table, meta=meta)
 
     def to_table_hdu(self, format="gadf"):
         """
@@ -215,7 +221,10 @@ class EventList:
         info = self.__class__.__name__ + "\n"
         info += "-" * len(self.__class__.__name__) + "\n\n"
 
-        instrument = self.table.meta.get("INSTRUME")
+        # -----------------------------------  these are then read directly from the self.meta !
+
+        # instrument = self.table.meta.get("INSTRUME")
+        instrument = self.meta.instrument
         info += f"\tInstrument       : {instrument}\n"
 
         telescope = self.table.meta.get("TELESCOP")
