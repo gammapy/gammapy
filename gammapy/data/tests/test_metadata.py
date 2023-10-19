@@ -7,6 +7,7 @@ from astropy.io import fits
 from pydantic import ValidationError
 from gammapy.data import ObservationMetaData
 from gammapy.utils.scripts import make_path
+from gammapy.utils.testing import requires_data
 
 
 @pytest.fixture()
@@ -56,6 +57,7 @@ def test_observation_metadata():
         ObservationMetaData(**input_bad)
 
 
+@requires_data()
 def test_observation_metadata_from_header(hess_eventlist_header):
     meta = ObservationMetaData.from_header(hess_eventlist_header, format="gadf")
 
@@ -66,6 +68,7 @@ def test_observation_metadata_from_header(hess_eventlist_header):
     assert meta.optional["TELLIST"] == "1,2,3,4"
 
 
+@requires_data()
 def test_observation_metadata_bad(hess_eventlist_header):
 
     with pytest.raises(ValueError):
