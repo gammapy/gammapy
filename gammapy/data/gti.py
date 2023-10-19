@@ -335,7 +335,7 @@ class GTI:
         interval_start.format = self.time_start.format
         interval_stop.format = self.time_stop.format
 
-        trim_table = self.table
+        trim_table = self.table.copy()
 
         trim_table["STOP"][
             (self.time_start < interval_start) & (self.time_stop > interval_start)

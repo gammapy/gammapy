@@ -150,6 +150,8 @@ def test_gti_delete_intervals():
         ),
     )
     interval = Time(["2020-01-01 02:20:00.000", "2020-01-01 05:20:00.000"])
+    interval2 = Time(["2020-01-01 05:30:00.000", "2020-01-01 08:20:00.000"])
+    interval3 = Time(["2020-01-01 05:50:00.000", "2020-01-01 09:20:00.000"])
 
     gti_trim = gti.delete_interval(interval)
 
@@ -172,6 +174,30 @@ def test_gti_delete_intervals():
                 "2020-01-01 01:45:00.000",
                 "2020-01-01 02:20:00.000",
                 "2020-01-01 05:45:00.000",
+            ]
+        ),
+    )
+
+    gti_trim2 = gti_trim.delete_interval(interval2)
+    assert_time_allclose(
+        gti_trim2.table["STOP"],
+        Time(
+            [
+                "2020-01-01 01:45:00.000",
+                "2020-01-01 02:20:00.000",
+                "2020-01-01 05:30:00.000",
+            ]
+        ),
+    )
+
+    gti_trim3 = gti_trim2.delete_interval(interval3)
+    assert_time_allclose(
+        gti_trim3.table["STOP"],
+        Time(
+            [
+                "2020-01-01 01:45:00.000",
+                "2020-01-01 02:20:00.000",
+                "2020-01-01 05:30:00.000",
             ]
         ),
     )
