@@ -7,8 +7,10 @@ from astropy.time import Time
 from astropy.utils.data import get_pkg_data_filename
 from gammapy.catalog import (
     SourceCatalog2FHL,
+    SourceCatalog2PC,
     SourceCatalog3FGL,
     SourceCatalog3FHL,
+    SourceCatalog3PC,
     SourceCatalog4FGL,
 )
 from gammapy.modeling.models import (
@@ -17,6 +19,7 @@ from gammapy.modeling.models import (
     PowerLaw2SpectralModel,
     PowerLawSpectralModel,
     SuperExpCutoffPowerLaw3FGLSpectralModel,
+    SuperExpCutoffPowerLaw4FGLDR3SpectralModel,
     SuperExpCutoffPowerLaw4FGLSpectralModel,
 )
 from gammapy.utils.gauss import Gauss2DPDF
@@ -26,6 +29,45 @@ from gammapy.utils.testing import (
     modify_unit_order_astropy_5_3,
     requires_data,
 )
+
+SOURCES_2PC = [
+    dict(
+        idx=3,
+        name="J0034-0534",
+        str_ref_file="data/2pc_J0034-0534.txt",
+        spec_type=SuperExpCutoffPowerLaw3FGLSpectralModel,
+        dnde=u.Quantity(8.69100018e-12, "cm-2 s-1 MeV-1"),
+        dnde_err=u.Quantity(1.20799995e-12, "cm-2 s-1 MeV-1"),
+    ),
+    dict(
+        idx=38,
+        name="J1112-6103",
+        str_ref_file="data/2pc_J1112-6103.txt",
+        spec_type=PowerLawSpectralModel,
+        dnde=u.Quantity(2.55399998e-12, "cm-2 s-1 MeV-1"),
+        dnde_err=u.Quantity(6.34000014e-13, "cm-2 s-1 MeV-1"),
+    ),
+]
+
+SOURCES_3PC_NONE = [
+    dict(
+        idx=51,
+        name="J0834-4159",
+        str_ref_file="data/3pc_J0834-4159.txt",
+        spec_type=None,
+    ),
+]
+
+SOURCES_3PC = [
+    dict(
+        idx=52,
+        name="J0835-4510",
+        str_ref_file="data/3pc_J0835-4510.txt",
+        spec_type=SuperExpCutoffPowerLaw4FGLDR3SpectralModel,
+        dnde=u.Quantity(5.32697275e-10, "cm-2 s-1 MeV-1"),
+        dnde_err=u.Quantity(1.64905329e-12, "cm-2 s-1 MeV-1"),
+    ),
+]
 
 SOURCES_4FGL = [
     dict(
@@ -630,6 +672,204 @@ class TestFermi3FHLObject:
 
 
 @requires_data()
+class TestFermi2PCObject:
+    @classmethod
+    def setup_class(cls):
+        cls.cat = SourceCatalog2PC()
+        # Use J0835-4510 (Vela pulsar) as a test source
+        cls.source_name = "J0835-4510"
+        cls.source = cls.cat[cls.source_name]
+
+    def test_name(self):
+        assert self.source.name == self.source_name
+
+    def test_row_index(self):
+        assert self.source.row_index == 26
+
+    @pytest.mark.parametrize("ref", SOURCES_2PC, ids=lambda _: _["name"])
+    def test_str(self, ref):
+        # TODO: fix the test
+        actual = str(self.cat[ref["idx"]])
+
+        with open(get_pkg_data_filename(ref["str_ref_file"])) as fh:
+            expected = fh.read()
+
+        assert actual == modify_unit_order_astropy_5_3(expected)
+
+    def test_position(self):
+        position = self.source.position
+        assert_allclose(position.ra.deg, 128.83580017, atol=1e-3)
+        assert_allclose(position.dec.deg, -45.17630005, atol=1e-3)
+
+    def test_data(self):
+        assert_allclose(self.source.data["Period"], 89.36 * u.ms)
+
+    @pytest.mark.parametrize("ref", SOURCES_2PC, ids=lambda _: _["name"])
+    def test_spectral_model(self, ref):
+        model = self.cat[ref["idx"]].spectral_model()
+
+        e_ref = model.reference.quantity
+        dnde, dnde_err = model.evaluate_error(e_ref)
+        assert isinstance(model, ref["spec_type"])
+        assert_quantity_allclose(dnde, ref["dnde"], rtol=1e-4)
+        assert_quantity_allclose(dnde_err, ref["dnde_err"], rtol=1e-4)
+
+    def test_spatial_model(self):
+        model = self.source.spatial_model()
+        assert "PointSpatialModel" in model.tag
+        assert model.frame == "icrs"
+        p = model.parameters
+        assert_allclose(p["lon_0"].value, 128.83580017)
+        assert_allclose(p["lat_0"].value, -45.17630005)
+
+    @pytest.mark.parametrize("ref", SOURCES_2PC, ids=lambda _: _["name"])
+    def test_sky_model(self, ref):
+        self.cat[ref["idx"]].sky_model
+
+    def test_flux_points(self):
+        flux_points = self.source.flux_points
+
+        assert flux_points.norm.geom.axes["energy"].nbin == 12
+        assert flux_points.norm_ul
+
+        desired = [
+            3.72509152e-09,
+            2.66778077e-09,
+            1.89817530e-09,
+            1.23380980e-09,
+            7.13620134e-10,
+            3.64504041e-10,
+            1.47285787e-10,
+            4.66089223e-11,
+            9.73255716e-12,
+            1.48225895e-12,
+            1.20599140e-13,
+            3.89632873e-14,
+        ]
+        assert_allclose(flux_points.flux.data.flat, desired, rtol=1e-5)
+
+    def test_flux_points_ul(self):
+        flux_points = self.source.flux_points
+
+        desired = [
+            np.nan,
+            np.nan,
+            np.nan,
+            np.nan,
+            np.nan,
+            np.nan,
+            np.nan,
+            np.nan,
+            np.nan,
+            np.nan,
+            np.nan,
+            3.896328e-14,
+        ]
+        assert_allclose(flux_points.flux_ul.data.flat, desired, rtol=1e-5)
+
+    def test_lightcurve(self):
+        # TODO: add lightcurve test when lightcurve is introduce to the class.
+        pass
+
+
+@requires_data()
+class TestFermi3PCObject:
+    @classmethod
+    def setup_class(cls):
+        cls.cat = SourceCatalog3PC()
+        # Use J0835-4510 (Vela pulsar) as a test source
+        cls.source_name = "J0835-4510"
+        cls.source = cls.cat[cls.source_name]
+
+    def test_name(self):
+        assert self.source.name == self.source_name
+
+    def test_row_index(self):
+        assert self.source.row_index == 52
+
+    @pytest.mark.parametrize(
+        "ref", [SOURCES_3PC[0], SOURCES_3PC_NONE[0]], ids=lambda _: _["name"]
+    )
+    def test_str(self, ref):
+        # TODO: fix the test
+        actual = str(self.cat[ref["idx"]])
+
+        with open(get_pkg_data_filename(ref["str_ref_file"])) as fh:
+            expected = fh.read()
+
+        assert actual == modify_unit_order_astropy_5_3(expected)
+
+    def test_position(self):
+        position = self.source.position
+        assert_allclose(position.ra.deg, 128.83580017, atol=1e-3)
+        assert_allclose(position.dec.deg, -45.17630005, atol=1e-3)
+
+    def test_data(self):
+        assert_allclose(self.source.data["P0"], 0.08937108859019084)
+
+    @pytest.mark.parametrize("ref", SOURCES_3PC, ids=lambda _: _["name"])
+    def test_spectral_model(self, ref):
+        model = self.cat[ref["idx"]].spectral_model()
+
+        e_ref = model.reference.quantity
+        dnde, dnde_err = model.evaluate_error(e_ref)
+        assert isinstance(model, ref["spec_type"])
+        assert_quantity_allclose(dnde, ref["dnde"], rtol=1e-4)
+        assert_quantity_allclose(dnde_err, ref["dnde_err"], rtol=1e-4)
+
+    @pytest.mark.parametrize("ref", SOURCES_3PC_NONE, ids=lambda _: _["name"])
+    def test_spectral_model_none(self, ref):
+        model = self.cat[ref["idx"]].spectral_model()
+        assert model is None
+
+    def test_spatial_model(self):
+        model = self.source.spatial_model()
+        assert "PointSpatialModel" in model.tag
+        assert model.frame == "icrs"
+        p = model.parameters
+        assert_allclose(p["lon_0"].value, 128.83588121)
+        assert_allclose(p["lat_0"].value, -45.17635419)
+
+    @pytest.mark.parametrize("ref", SOURCES_3PC, ids=lambda _: _["name"])
+    def test_sky_model(self, ref):
+        self.cat[ref["idx"]].sky_model
+
+    @pytest.mark.parametrize("ref", SOURCES_3PC, ids=lambda _: _["name"])
+    def test_flux_points(self, ref):
+        flux_points = self.cat[ref["idx"]].flux_points
+
+        assert flux_points.norm.geom.axes["energy"].nbin == 8
+        assert flux_points.norm_ul
+
+        desired = [
+            5.431500e-06,
+            5.635604e-06,
+            3.341596e-06,
+            1.058516e-06,
+            2.264139e-07,
+            1.421599e-08,
+            6.306778e-10,
+            3.165719e-12,
+        ]
+        assert_allclose(flux_points.flux.data.flat, desired, rtol=1e-5)
+
+    @pytest.mark.parametrize("ref", SOURCES_3PC_NONE, ids=lambda _: _["name"])
+    def test_flux_points_none(self, ref):
+        flux_points = self.cat[ref["idx"]].flux_points
+        assert flux_points is None
+
+    def test_flux_points_ul(self):
+        flux_points = self.source.flux_points
+
+        desired = [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 5.146455e-08]
+        assert_allclose(flux_points.flux_ul.data.flat, desired, rtol=1e-5)
+
+    def test_lightcurve(self):
+        # TODO: add lightcurve test when lightcurve is introduce to the class.
+        pass
+
+
+@requires_data()
 class TestSourceCatalog3FGL:
     @classmethod
     def setup_class(cls):
@@ -676,6 +916,46 @@ class TestSourceCatalog3FHL:
 
     def test_to_models(self):
         mask = self.cat.table["GLAT"].quantity > 80 * u.deg
+        subcat = self.cat[mask]
+        models = subcat.to_models()
+        assert len(models) == 17
+
+
+@requires_data()
+class TestSourceCatalog2PC:
+    @classmethod
+    def setup_class(cls):
+        cls.cat = SourceCatalog2PC()
+
+    def test_main_table(self):
+        assert len(self.cat.table) == 117
+
+    def test_spectral_table(self):
+        table = self.cat.spectral_table
+        assert len(table) == 117
+
+    def test_to_models(self):
+        mask = self.cat.table["GLAT"].quantity > 30 * u.deg
+        subcat = self.cat[mask]
+        models = subcat.to_models()
+        assert len(models) == 2
+
+
+@requires_data()
+class TestSourceCatalog3PC:
+    @classmethod
+    def setup_class(cls):
+        cls.cat = SourceCatalog3PC()
+
+    def test_main_table(self):
+        assert len(self.cat.table) == 294
+
+    def test_spectral_table(self):
+        table = self.cat.spectral_table
+        assert len(table) == 305
+
+    def test_to_models(self):
+        mask = self.cat.table["Gb"] > 30
         subcat = self.cat[mask]
         models = subcat.to_models()
         assert len(models) == 17

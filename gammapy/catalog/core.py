@@ -56,7 +56,9 @@ class SourceCatalogObject:
         self.data = Bunch(**data)
         if data_extended:
             self.data_extended = Bunch(**data_extended)
-        if data_spectral:
+        if data_spectral is None:
+            self.data_spectral = None
+        else:
             self.data_spectral = Bunch(**data_spectral)
 
     def _repr_html_(self):
@@ -321,6 +323,8 @@ def _skycoord_from_table(table):
         lon, lat, frame = "RA", "DEC", "icrs"
     elif {"ra", "dec"}.issubset(keys):
         lon, lat, frame = "ra", "dec", "icrs"
+    elif {"RAJD", "DECJD"}.issubset(keys):
+        lon, lat, frame = "RAJD", "DECJD", "icrs"
     else:
         raise KeyError("No column GLON / GLAT or RA / DEC or RAJ2000 / DEJ2000 found.")
 
