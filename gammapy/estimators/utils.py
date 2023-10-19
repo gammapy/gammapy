@@ -12,7 +12,7 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
 )
-from gammapy.stats import compute_fpp, compute_fvar
+from gammapy.stats import compute_flux_doubling, compute_fpp, compute_fvar
 from .map.core import FluxMaps
 
 __all__ = [
@@ -21,6 +21,7 @@ __all__ = [
     "resample_energy_edges",
     "compute_lightcurve_fvar",
     "compute_lightcurve_fpp",
+    "compute_lightcurve_doublingtime",
     "find_peaks_in_flux_map",
 ]
 
@@ -383,6 +384,80 @@ def compute_lightcurve_fpp(lightcurve, flux_quantity="flux"):
         [energies[:-1], energies[1:], fpp, fpp_err, significance],
         names=("min_energy", "max_energy", "fpp", "fpp_err", "significance"),
         meta=dict(quantity=flux_quantity),
+    )
+
+    return table
+
+
+def compute_lightcurve_doublingtime(lightcurve, flux_quantity="flux"):
+    r"""Compute the minimum characteristic flux doubling and halving
+    time for the input lightcurve.
+
+    Internally calls the `~gammapy.stats.compute_flux_doubling` function
+
+    The characteristic doubling time  is estimated to obtain the
+    minimum variability timescale for the light curves in which
+    rapid variations are clearly evident: for example it is useful in AGN flaring episodes.
+
+    This quantity, especially for AGN flares, is often expressed
+    as the pair of doubling time and halving time, or the minimum characteristic time
+    for the rising and falling components respectively.
+
+    Parameters
+    ----------
+    lightcurve : `~gammapy.estimators.FluxPoints`
+        The lightcurve object.
+    axis_name : str
+        Name of the axis over which to compute the flux doubling.
+    flux_quantity : str
+        Flux quantity to use for calculation. Should be 'dnde', 'flux', 'e2dnde' or 'eflux'.
+        Default is 'flux'.
+
+    Returns
+    -------
+    table : `~astropy.table.Table`
+        Table of flux doubling/halving and associated error for each energy bin of the lightcurve
+        with axis coordinates at which they were found.
+
+
+    References
+    ----------
+    ..[Brown2013] "Locating the γ-ray emission region
+    of the flat spectrum radio quasar PKS 1510−089", Brown et al. (2013)
+    https://academic.oup.com/mnras/article/431/1/824/1054498
+    """
+
+    flux = getattr(lightcurve, flux_quantity)
+    flux_err = getattr(lightcurve, flux_quantity + "_err")
+    coords = lightcurve.geom.axes["time"].center
+
+    axis = flux.geom.axes.index_data("time")
+
+    doubling_dict = compute_flux_doubling(flux.data, flux_err.data, coords, axis=axis)
+
+    energies = lightcurve.geom.axes["energy"].edges
+    table = Table(
+        [
+            energies[:-1],
+            energies[1:],
+            doubling_dict["doubling"],
+            doubling_dict["doubling_err"],
+            doubling_dict["doubling_coord"],
+            doubling_dict["halving"],
+            doubling_dict["halving_err"],
+            doubling_dict["halving_coord"],
+        ],
+        names=(
+            "min_energy",
+            "max_energy",
+            "doublingtime",
+            "doubling_err",
+            "doubling_coord",
+            "halvingtime",
+            "halving_err",
+            "halving_coord",
+        ),
+        meta=dict(flux_quantity=flux_quantity),
     )
 
     return table
