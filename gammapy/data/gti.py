@@ -323,7 +323,7 @@ class GTI:
 
         Parameters
         ----------
-        time_interval : `astropy.time.Time`
+        time_interval : [`astropy.time.Time`, `astropy.time.Time`]
             Start and stop time for the selection.
 
         Returns
