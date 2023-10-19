@@ -70,6 +70,7 @@ class Dataset(abc.ABC):
     def stat_sum(self):
         """Total statistic given the current model parameters and priors."""
         stat = self.stat_array()
+
         if self.mask is not None:
             stat = stat[self.mask.data]
         if self.models is not None:
