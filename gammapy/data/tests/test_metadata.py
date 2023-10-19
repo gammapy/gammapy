@@ -1,11 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 from numpy.testing import assert_allclose
+import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from pydantic import ValidationError
-from gammapy.data import ObservationMetaData
 from gammapy.utils.metadata import ObsInfoMetaData, PointingInfoMetaData, TargetMetaData
+from gammapy.data import EventListMetaData, ObservationMetaData
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import requires_data
 
@@ -85,3 +86,45 @@ def test_observation_metadata_bad(hess_eventlist_header):
     hess_eventlist_header.pop("DEADC")
     with pytest.raises(KeyError):
         ObservationMetaData.from_header(hess_eventlist_header, format="gadf")
+
+
+def test_eventlist_metadata():
+    input = {
+        "obs_id": "33787",
+        "telescope": "HESS",
+        "instrument": "H.E.S.S.",
+        "observation_mode": "wobble",
+        "live_time": 1534 * u.s,
+        "deadtime_fraction": 0.03,
+        "location": "hess",
+        "optional": dict(target_name="PKS 2155-304"),
+    }
+    meta = EventListMetaData(**input)
+
+    assert meta.obs_id == "33787"
+    assert meta.telescope == "HESS"
+    assert meta.instrument == "H.E.S.S."
+    assert meta.observation_mode == "wobble"
+    assert_allclose(meta.location.lat.value, -23.271777777777775)
+
+    with pytest.raises(ValueError):
+        meta.live_time = 3
+
+    input_bad = input.copy()
+    input_bad["location"] = "bad"
+
+    with pytest.raises(ValueError):
+        EventListMetaData(**input_bad)
+
+
+@requires_data()
+def test_eventlist_metadata_from_header(hess_eventlist_header):
+    meta = EventListMetaData.from_header(hess_eventlist_header, format="gadf")
+
+    assert meta.obs_id == "23523"
+    assert meta.telescope == "HESS"
+    assert meta.target_name == "Crab Nebula"
+    assert_allclose(meta.location.lon.deg, 16.5002222222222)
+    assert meta.live_time.value == 1581.73681640625
+    assert "TASSIGN" in meta.optional
+    assert meta.optional["TASSIGN"] == "Namibia"

@@ -170,7 +170,7 @@ class EventListMetaData(MetaData):
     time_start: Optional[Union[Time, str]]
     time_stop: Optional[Union[Time, str]]
     reference_time: Optional[Union[Time, str]]
-    # do we want this to be optional or needed
+    # do we want this to be optional?
     live_time: Optional[Quantity]
     deadtime_fraction: float = Field(0.0, ge=0, le=1.0)
     location: Optional[Union[str, EarthLocation]]
@@ -226,7 +226,6 @@ class EventListMetaData(MetaData):
         if set(["GEOLON", "GEOLAT"]).issubset(set(events_hdr)):
             kwargs["location"] = earth_location_from_dict(events_hdr)
 
-        # ----------------------------------------- livetime
         kwargs["live_time"] = events_hdr.get("LIVETIME") * u.s
 
         reference_time = time_ref_from_dict(events_hdr)

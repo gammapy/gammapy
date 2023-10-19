@@ -6,7 +6,7 @@ from .event_list import EventList
 from .filters import ObservationFilter
 from .gti import GTI
 from .hdu_index_table import HDUIndexTable
-from .metadata import ObservationMetaData
+from .metadata import EventListMetaData, ObservationMetaData
 from .obs_table import ObservationTable
 from .observations import Observation, Observations
 from .pointing import FixedPointingInfo, PointingInfo, PointingMode
