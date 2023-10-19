@@ -8,6 +8,13 @@ from astropy.time import Time
 from astropy.units import Quantity
 from gammapy.data import DataStore, Observation, ObservationFilter, Observations
 from gammapy.data.metadata import ObservationMetaData
+from gammapy.data import (
+    DataStore,
+    EventList,
+    Observation,
+    ObservationFilter,
+    Observations,
+)
 from gammapy.data.pointing import FixedPointingInfo
 from gammapy.data.utils import get_irfs_features
 from gammapy.irf import PSF3D, load_irf_dict_from_file
@@ -553,3 +560,15 @@ def test_slice(data_store):
     obs_1 = data_store.get_observations([20136, 20137, 20151])
     assert isinstance(obs_1[0], Observation)
     assert isinstance(obs_1[1:], Observations)
+
+
+@requires_data()
+def test_observations_iter(data_store):
+    """Test Observations.iter()"""
+    obs_1 = data_store.get_observations([20136, 20137, 20151])
+
+    for idx, obs in enumerate(obs_1.iter()):
+        assert isinstance(obs, Observation)
+        assert obs.obs_id == obs_1[idx].obs_id
+        assert isinstance(obs.events, EventList)
+        assert isinstance(obs.psf, PSF3D)
