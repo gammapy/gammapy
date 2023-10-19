@@ -51,7 +51,7 @@ class MetaData(BaseModel):
 
     def to_yaml(self):
         """Dumps metadata content to yaml."""
-        meta = json.loads(self.json())
+        meta = {"metadata": json.loads(self.json())}
         return yaml.dump(
             meta, sort_keys=False, indent=4, width=80, default_flow_style=False
         )
@@ -63,11 +63,11 @@ class CreatorMetaData(MetaData):
     Parameters
     ----------
     creator : str
-        the software used to create the data contained in the parent object
+        The software used to create the data contained in the parent object.
     date : `~astropy.time.Time` or str
-        the creation date
+        The creation date.
     origin : str
-        the organization at the origin of the data
+        The organization at the origin of the data.
     """
 
     creator: Optional[str]
