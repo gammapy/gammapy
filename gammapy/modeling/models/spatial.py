@@ -1306,7 +1306,7 @@ class TemplateSpatialModel(SpatialModel):
                 # Normalize in each energy bin
                 data_sum = map.data.sum(axis=(1, 2)).reshape((-1, 1, 1))
 
-            data = map.data / data_sum
+            data = map.data / data_sum if data_sum > 0 else map.data * 0.0
             data /= map.geom.solid_angle().to_value("sr")
             map = map.copy(data=data, unit="sr-1")
 
