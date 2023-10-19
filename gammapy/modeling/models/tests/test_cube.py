@@ -10,7 +10,7 @@ from regions import CircleSkyRegion
 from gammapy.data.gti import GTI
 from gammapy.datasets.map import MapEvaluator
 from gammapy.irf import EDispKernel, PSFKernel
-from gammapy.maps import Map, MapAxis, RegionGeom, RegionNDMap, WcsGeom
+from gammapy.maps import Map, MapAxis, RegionGeom, RegionNDMap, TimeMapAxis, WcsGeom
 from gammapy.modeling import Parameter
 from gammapy.modeling.models import (
     CompoundSpectralModel,
@@ -26,6 +26,7 @@ from gammapy.modeling.models import (
     PointSpatialModel,
     PowerLawNormSpectralModel,
     PowerLawSpectralModel,
+    PowerLawTemporalModel,
     SkyModel,
     SpatialModel,
     TemplateNPredModel,
@@ -763,6 +764,42 @@ def test_evaluate_integrate_nd_geom():
     )
 
 
+def test_evaluate_integrate_nd_geom_with_time(gti):
+    model = GaussianSpatialModel(lon="0d", lat="0d", sigma=0.1 * u.deg, frame="icrs")
+    spectral_model = PowerLawSpectralModel(amplitude="1e-11 cm-2 s-1 TeV-1")
+    temporal_model = PowerLawTemporalModel()
+    temporal_model.t_ref.value = 55555
+    sky_model = SkyModel(spectral_model=spectral_model, spatial_model=model)
+
+    center = SkyCoord("0d", "0d", frame="icrs")
+    # radius = 0.3 * u.deg
+    # region = CircleSkyRegion(center, radius)
+
+    energy_axis = MapAxis.from_energy_bounds(
+        "1 TeV", "10 TeV", nbin=4, name="energy_true"
+    )
+    other_axis = MapAxis.from_edges([0.0, 1.0, 2.0], name="other")
+    time_axis = TimeMapAxis.from_gti(gti)
+
+    wcs_geom = WcsGeom.create(
+        width=[1, 1.2],
+        binsz=0.05,
+        skydir=center,
+        axes=[energy_axis, time_axis, other_axis],
+    )
+    # region_geom = RegionGeom(
+    #    region=region, axes=[time_axis, energy_axis], binsz_wcs="0.01deg"
+    # )
+
+    evaluation = sky_model.evaluate_geom(wcs_geom)
+    assert evaluation.shape == (2, 3, 4, 24, 20)
+    assert_allclose(
+        evaluation.value[0, 0, 1, 12, 10],
+        8.728147891504973e-08,
+        rtol=1e-6,
+    )
+
+
 def test_compound_spectral_model(caplog):
     spatial_model = GaussianSpatialModel(
         lon_0="3 deg", lat_0="4 deg", sigma="3 deg", frame="galactic"
@@ -794,7 +831,6 @@ def test_sky_model_contributes_point_region():
 
 
 def test_spatial_model_background(background):
-
     geom = background.geom
 
     spatial_model = ConstantSpatialModel(frame="galactic")
@@ -825,7 +861,6 @@ def test_spatial_model_background(background):
 
 
 def test_spatial_model_io_background(tmp_path, background):
-
     spatial_model = ConstantSpatialModel(frame="galactic")
 
     fbkg_irf = str(tmp_path / "background_irf_test.fits")
@@ -860,7 +895,6 @@ def test_spatial_model_io_background(tmp_path, background):
 
 
 def test_piecewise_spatial_model_background(background):
-
     geom = background.geom
     coords = geom.to_image().get_coord().flat
 

@@ -357,7 +357,18 @@ class SkyModel(ModelBase):
         if self.spatial_model:
             value = value * self.spatial_model.evaluate_geom(geom)
 
-        if self.temporal_model:
+        if "time" in coords.axis_names and self.temporal_model:
+            # set time as the last axis
+            new_order = list(set(geom.axes_names) - set(["lat", "lon", "time"]))
+            new_order.append("time")
+            m = Map.from_geom(geom, value)
+            m1 = m.reorder_axes(new_order)
+            temp_eval = self.temporal_model.integral(
+                geom.axes["time"].time_min, geom.axes["time"].time_max
+            )
+            value = (m1.data.T * temp_eval).T
+
+        if self.temporal_model and gti:
             integral = self.temporal_model.integral(gti.time_start, gti.time_stop)
             value = value * np.sum(integral)
 
