@@ -30,7 +30,8 @@ def observations_cta():
 def observations_cta_with_issue():
     data_store = DataStore.from_dir("$GAMMAPY_DATA/cta-1dc/index/gps/")
     list = data_store.get_observations()[:2]
-    list.append(None)
+    empty_obs = Observation()
+    list.append(empty_obs)
     return list
 
 
