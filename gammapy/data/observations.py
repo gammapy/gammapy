@@ -787,17 +787,9 @@ class Observations(collections.abc.MutableSequence):
         obs = itertools.chain(*observations_list)
         return cls(list(obs))
 
-    def generator(self, idx=None):
-        """Iterate over observations.
-
-        Parameters
-        ----------
-        idx : slice
-            Slice object defining which observations to return. Default is None, which means all observations.
-        """
-        if idx is None:
-            idx = slice(None)
-        for obs in self[idx]:
+    def in_memory_generator(self):
+        """A generator that iterates over observation. It yields an in memory copy of the observation."""
+        for obs in self:
             obs_copy = obs.copy(in_memory=True)
             yield obs_copy
             del obs

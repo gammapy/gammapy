@@ -566,7 +566,7 @@ def test_observations_generator(data_store):
     """Test Observations.generator()"""
     obs_1 = data_store.get_observations([20136, 20137, 20151])
 
-    for idx, obs in enumerate(obs_1.generator()):
+    for idx, obs in enumerate(obs_1.in_memory_generator()):
         assert isinstance(obs, Observation)
         assert obs.obs_id == obs_1[idx].obs_id
         assert isinstance(obs.events, EventList)
