@@ -10,6 +10,7 @@ from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.nddata import block_reduce
 from regions import PixCoord, PointPixelRegion, PointSkyRegion, SkyRegion
+import matplotlib.colors as mpcolors
 import matplotlib.pyplot as plt
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.units import unit_from_fits_image_hdu
@@ -21,6 +22,9 @@ from .geom import WcsGeom
 __all__ = ["WcsNDMap"]
 
 log = logging.getLogger(__name__)
+
+
+C_MAP_MASK = mpcolors.ListedColormap(["black", "white"], name="mask")
 
 
 class WcsNDMap(WcsMap):
@@ -409,6 +413,7 @@ class WcsNDMap(WcsMap):
         if self.is_mask:
             kwargs.setdefault("vmin", 0)
             kwargs.setdefault("vmax", 1)
+            kwargs["cmap"] = C_MAP_MASK
 
         if mask.any():
             min_cut, max_cut = kwargs.pop("vmin", None), kwargs.pop("vmax", None)
