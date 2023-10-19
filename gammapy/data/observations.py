@@ -408,8 +408,8 @@ class Observation:
     )
     def muoneff(self):
         """Observation muon efficiency."""
-        if "MUONEFF" in self.meta.dict():
-            return self.meta.MUONEFF
+        if "MUONEFF" in self.meta.optional:
+            return self.meta.optional["MUONEFF"]
         else:
             raise KeyError("No muon efficiency information.")
 
