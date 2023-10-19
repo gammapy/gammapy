@@ -3,6 +3,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
+from astropy.io import fits
 from astropy.table import Table
 from astropy.time import Time
 from gammapy.data import GTI
@@ -587,6 +588,16 @@ class TestSpectrumOnOff:
         assert newdataset.counts_off is None
         assert newdataset.edisp is None
         assert newdataset.gti is None
+
+    def test_to_ogip_files_checksum(self, tmp_path):
+        dataset = self.dataset.copy(name="test")
+        dataset.write(tmp_path / "test.fits", format="ogip", checksum=True)
+
+        for file in ["test.fits", "test_arf.fits", "test_rmf.fits", "test_bkg.fits"]:
+            hdul = fits.open(tmp_path / file)
+            for hdu in hdul:
+                assert "CHECKSUM" in hdu.header
+                assert "DATASUM" in hdu.header
 
     def test_spectrum_dataset_onoff_fits_io(self, tmp_path):
         self.dataset.write(tmp_path / "test.fits", format="gadf")
