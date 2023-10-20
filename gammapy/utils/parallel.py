@@ -36,6 +36,9 @@ class PoolMethodEnum(Enum):
 
 BACKEND_DEFAULT = ParallelBackendEnum.multiprocessing
 N_JOBS_DEFAULT = 1
+POOL_KWARGS_DEFAULT = dict(processes=N_JOBS_DEFAULT)
+METHOD_DEFAULT = PoolMethodEnum.starmap
+METHOD_KWARGS_DEFAULT = None
 
 
 def get_multiprocessing():
@@ -72,6 +75,35 @@ def is_ray_available():
         return True
     except ModuleNotFoundError:
         return False
+
+
+class multiprocessing_manager:
+    """context manager to update the global configuration for multiprocessing"""
+
+    def __init__(self, backend=None, pool_kwargs=None, method=None, method_kwargs=None):
+        global BACKEND_DEFAULT, POOL_KWARGS_DEFAULT, METHOD_DEFAULT, METHOD_KWARGS_DEFAULT
+        self._backend = BACKEND_DEFAULT
+        self._pool_kwargs = POOL_KWARGS_DEFAULT
+        self._method = METHOD_DEFAULT
+        self._method_kwargs = METHOD_KWARGS_DEFAULT
+        if backend is not None:
+            BACKEND_DEFAULT = backend
+        if pool_kwargs is not None:
+            POOL_KWARGS_DEFAULT = pool_kwargs
+        if method is not None:
+            METHOD_DEFAULT = method
+        if method_kwargs is not None:
+            METHOD_KWARGS_DEFAULT = method_kwargs
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, type, value, traceback):
+        global BACKEND_DEFAULT, POOL_KWARGS_DEFAULT, METHOD_DEFAULT, METHOD_KWARGS_DEFAULT
+        BACKEND_DEFAULT = self._backend
+        POOL_KWARGS_DEFAULT = self._pool_kwargs
+        METHOD_DEFAULT = self._method
+        METHOD_KWARGS_DEFAULT = self._method_kwargs
 
 
 class ParallelMixin:
@@ -115,7 +147,7 @@ def run_multiprocessing(
     inputs,
     backend=None,
     pool_kwargs=None,
-    method="starmap",
+    method=None,
     method_kwargs=None,
     task_name="",
 ):
@@ -145,11 +177,14 @@ def run_multiprocessing(
     """
     backend = ParallelBackendEnum.from_str(backend)
 
+    if method is None:
+        method = METHOD_DEFAULT
+
     if method_kwargs is None:
-        method_kwargs = {}
+        method_kwargs = METHOD_KWARGS_DEFAULT
 
     if pool_kwargs is None:
-        pool_kwargs = {}
+        pool_kwargs = POOL_KWARGS_DEFAULT
 
     processes = pool_kwargs.get("processes", N_JOBS_DEFAULT)
 
