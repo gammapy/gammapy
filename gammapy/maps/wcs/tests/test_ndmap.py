@@ -970,3 +970,19 @@ def test_to_region_nd_map_histogram_advanced():
     assert_allclose(
         hist.data[:, :, 2, 0, 0], [[24189, 13587, 9212], [24053, 13410, 9186]]
     )
+
+
+def test_plot_mask():
+    axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=2)
+    geom = WcsGeom.create(
+        binsz=0.02,
+        width=(2, 2),
+        frame="icrs",
+        axes=[axis],
+    )
+
+    mask = Map.from_geom(geom=geom, dtype=bool)
+    mask.data[1] |= True
+
+    with mpl_plot_check():
+        mask.plot_grid()
