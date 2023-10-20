@@ -566,7 +566,6 @@ class MapDataset(Dataset):
                         use_cache=USE_NPRED_CACHE,
                     )
                     self._evaluators[model.name] = evaluator
-        self.set_priors_from_models(models)
         self._models = models
 
     def set_priors_from_models(self, models):
@@ -1359,8 +1358,6 @@ class MapDataset(Dataset):
         counts, npred = self.counts.data.astype(float), self.npred().data
 
         prior_stat_sum = prior_fit_statistic(self.priors)
-
-        print("in map dataset: prior_fit_statistic", prior_stat_sum)
 
         if self.mask is not None:
             return (
