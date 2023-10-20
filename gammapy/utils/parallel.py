@@ -87,11 +87,11 @@ class multiprocessing_manager:
         self._method = METHOD_DEFAULT
         self._method_kwargs = METHOD_KWARGS_DEFAULT
         if backend is not None:
-            BACKEND_DEFAULT = backend
+            BACKEND_DEFAULT = ParallelBackendEnum.from_str(backend).value
         if pool_kwargs is not None:
             POOL_KWARGS_DEFAULT = pool_kwargs
         if method is not None:
-            METHOD_DEFAULT = method
+            METHOD_DEFAULT = PoolMethodEnum(method).value
         if method_kwargs is not None:
             METHOD_KWARGS_DEFAULT = method_kwargs
 
