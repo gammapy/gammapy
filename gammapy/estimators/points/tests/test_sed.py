@@ -563,6 +563,18 @@ def test_global_n_jobs_default_handling():
     assert fpe.n_jobs == 1
 
 
+def test_global_default_context_manger():
+    fpe = FluxPointsEstimator(energy_edges=[1, 3, 10] * u.TeV)
+
+    assert fpe.parallel_backend == parallel.ParallelBackendEnum.multiprocessing
+
+    with parallel.multiprocessing_manager(backend="ray"):
+        assert fpe.parallel_backend == "ray"
+
+        fpe = FluxPointsEstimator(energy_edges=[1, 3, 10] * u.TeV)
+        assert fpe.parallel_backend == "ray"
+
+
 @requires_dependency("ray")
 def test_flux_points_parallel_ray(fpe_pwl):
     datasets, fpe = fpe_pwl
