@@ -13,6 +13,7 @@ from gammapy.modeling.models import (
     SkyModel,
     TemplateSpatialModel,
 )
+from gammapy.utils.testing import requires_data
 
 
 @pytest.fixture
@@ -45,10 +46,11 @@ def test_apply_edisp(region_map_true):
     assert_allclose(e_reco[[0, -1]].value, [1, 10])
 
 
+@requires_data()
 def test_dataset_split():
 
     template_diffuse = TemplateSpatialModel.read(
-        filename="/Users/qremy/Work/GitHub/gammapy-data/fermi-3fhl-gc/gll_iem_v06_gc.fits.gz",
+        filename="$GAMMAPY_DATA/fermi-3fhl-gc/gll_iem_v06_gc.fits.gz",
         normalize=False,
     )
 
@@ -58,9 +60,7 @@ def test_dataset_split():
         name="diffuse-iem",
     )
 
-    dataset = MapDataset.read(
-        "/Users/qremy/Work/GitHub/gammapy-data/fermi-3fhl-gc/fermi-3fhl-gc.fits.gz"
-    )
+    dataset = MapDataset.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc.fits.gz")
     dataset.models = Models([diffuse_iem])
 
     width = 4 * u.deg
