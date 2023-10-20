@@ -9,6 +9,7 @@ from astropy.table import Table, vstack
 from astropy.time import Time
 from gammapy.utils.scripts import make_path
 from gammapy.utils.time import TIME_REF_DEFAULT, time_ref_from_dict, time_ref_to_dict
+from .metadata import GTIMetaData
 
 __all__ = ["GTI"]
 
@@ -59,12 +60,19 @@ class GTI:
     - Stop: 2015-08-02T23:14:24.184 (time standard: TT)
     """
 
-    def __init__(self, table, reference_time=None):
+    def __init__(self, table, meta=None):
         self.table = self._validate_table(table)
+        self._meta = meta
 
-        if reference_time is None:
-            reference_time = TIME_REF_DEFAULT
-        self._time_ref = Time(reference_time)
+        if self._meta is None:
+            self._meta = GTIMetaData.from_default()
+
+    def meta(self):
+        """Return metadata container."""
+        return self._meta
+
+    def time_ref(self):
+        return self.meta["reference_time"]
 
     def _repr_html_(self):
         try:
@@ -106,7 +114,7 @@ class GTI:
         stop : `~astropy.time.Time` or `~astropy.units.Quantity`
             Stop times, if a quantity then w.r.t. reference time
         reference_time : `~astropy.time.Time`
-            the reference time to use in GTI definition.
+            the reference time to use in GTI metadata definition.
             If None, use TIME_REF_DEFAULT.
             Default is None
         """
@@ -123,7 +131,9 @@ class GTI:
 
         table = Table({"START": np.atleast_1d(start), "STOP": np.atleast_1d(stop)})
 
-        return cls(table, reference_time=reference_time)
+        meta = {"reference_time": reference_time}
+
+        return cls(table, meta=meta)
 
     @classmethod
     def read(cls, filename, hdu="GTI", format="gadf"):
@@ -225,11 +235,6 @@ class GTI:
         return delta.to("s")
 
     @property
-    def time_ref(self):
-        """Time reference (`~astropy.time.Time`)."""
-        return self._time_ref
-
-    @property
     def time_sum(self):
         """Sum of GTIs in seconds (`~astropy.units.Quantity`)."""
         return self.time_delta.sum()
@@ -285,7 +290,9 @@ class GTI:
         if reference_time is None:
             reference_time = TIME_REF_DEFAULT
 
-        return cls.create(start, stop, reference_time)
+        meta = {"reference_time": reference_time}
+
+        return cls.create(start, stop, meta)
 
     def select_time(self, time_interval):
         """Select and crop GTIs in time interval.
@@ -389,7 +396,8 @@ class GTI:
                 merged[-1]["STOP"] = max(interval["STOP"], merged[-1]["STOP"])
 
         merged = Table(rows=merged, names=["START", "STOP"], meta=self.table.meta)
-        return self.__class__(merged, reference_time=self.time_ref)
+
+        return self.__class__(merged, meta=self.meta)
 
     def group_table(self, time_intervals, atol="1e-6 s"):
         """Compute the table with the info on the group to which belong each time interval.

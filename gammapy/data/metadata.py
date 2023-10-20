@@ -7,7 +7,7 @@ from astropy.time import Time
 from pydantic import Field, ValidationError, validator
 from gammapy.utils.fits import earth_location_from_dict
 from gammapy.utils.metadata import CreatorMetaData, MetaData
-from gammapy.utils.time import time_ref_from_dict
+from gammapy.utils.time import TIME_REF_DEFAULT, time_ref_from_dict
 
 __all__ = ["ObservationMetaData", "GTIMetaData"]
 
@@ -176,4 +176,36 @@ class GTIMetaData(MetaData):
     """
 
     reference_time: Optional[Union[Time, str]]
-    creation: Optional[CreatorMetaData]
+
+    @validator("reference_time")
+    def validate_time(cls, v):
+        if isinstance(v, str):
+            return Time(v)
+        elif isinstance(v, Time) or v is None:
+            # check size?
+            return v
+        else:
+            raise ValueError("Incorrect time input value.")
+
+    def from_default(cls):
+        """Create and fill the GTI metadata from the default reference time."""
+        kwargs = {}
+        reference_time = TIME_REF_DEFAULT
+        kwargs["reference_time"] = reference_time
+
+        return cls(**kwargs)
+
+    def from_header(cls, events_hdr, format="gadf"):
+        """Create and fill the GTI metadata from the event list metadata.
+
+        Parameters
+        ----------
+        format : str
+            the header data format. Default is gadf.
+        """
+
+        kwargs = {}
+        reference_time = time_ref_from_dict(events_hdr)
+        kwargs["reference_time"] = reference_time
+
+        return cls(**kwargs)
