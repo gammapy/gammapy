@@ -111,6 +111,7 @@ def test_run_multiprocessing_simple_ray_apply_async():
     assert task.sum_squared == N * (N + 1) * (2 * N + 1) / 6
 
 
+@requires_dependency("ray")
 def test_multiprocessing_manager():
     with parallel.multiprocessing_manager(
         backend="ray",
