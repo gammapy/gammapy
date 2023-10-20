@@ -86,7 +86,7 @@ def read_hermes_cube(filename):
     return Map.from_stack(maps, axis=axis)
 
 
-def cutout_models(models, cutout_kwargs):
+def cutout_template_models(models, cutout_kwargs, datasets_names=None):
     """apply cutout to template models"""
     models_cut = Models()
     for m in models:
@@ -99,8 +99,7 @@ def cutout_models(models, cutout_kwargs):
             model_cut = SkyModel(
                 spatial_model=template_cut,
                 spectral_model=m.spectral_model,
-                name=m.name,
-                datasets_names=m.datasets_names,
+                datasets_names=datasets_names,
             )
             models_cut.append(model_cut)
         else:

@@ -2,7 +2,7 @@
 import numpy as np
 from astropy.coordinates import SkyCoord
 from gammapy.maps import Map
-from gammapy.modeling.models.utils import cutout_models
+from gammapy.modeling.models.utils import cutout_template_models
 from . import Datasets
 
 
@@ -109,8 +109,10 @@ def split_dataset(dataset, width, margin, split_templates=False):
 
             if split_templates:
                 # template models cutout should limit memory usage in parallel
-                d.models = cutout_models(dataset.models)
+                d.models = cutout_template_models(
+                    dataset.models, cutout_kwargs, [d.name]
+                )
             else:
                 d.models = dataset.models
             datasets.append(d)
-        return datasets
+    return datasets
