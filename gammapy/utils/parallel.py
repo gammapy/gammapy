@@ -138,8 +138,11 @@ class ParallelMixin:
 
     @parallel_backend.setter
     def parallel_backend(self, value):
-        """Parallel backend setter as a string."""
-        self._parallel_backend = ParallelBackendEnum.from_str(value).value
+        """Parallel backend setter (str)"""
+        if value is None:
+            self._parallel_backend = None
+        else:
+            self._parallel_backend = ParallelBackendEnum.from_str(value).value
 
 
 def run_multiprocessing(
