@@ -196,9 +196,7 @@ class EventList:
         Parameters
         ----------
         event_lists : list
-            List of `~gammapy.data.EventList` to stack.
-        **kwargs : dict, optional
-            Keyword arguments passed to `~astropy.table.vstack`.
+            List of `~gammapy.data.EventList` to stack
         """
         tables = [_.table for _ in event_lists]
         stacked_table = vstack_tables(tables, **kwargs)
@@ -266,13 +264,13 @@ class EventList:
 
     @property
     def observation_time_start(self):
-        """Observation start time as a `~astropy.time.Time` object."""
-        return self.time_ref + u.Quantity(self.table.meta["TSTART"], "second")
+        """Observation start time (`~astropy.time.Time`)."""
+        return self.time_ref + self.meta.time_start
 
     @property
     def observation_time_stop(self):
-        """Observation stop time as a `~astropy.time.Time` object."""
-        return self.time_ref + u.Quantity(self.table.meta["TSTOP"], "second")
+        """Observation stop time (`~astropy.time.Time`)."""
+        return self.time_ref + self.meta.time_stop
 
     @property
     def radec(self):
@@ -720,7 +718,7 @@ class EventList:
         - In Fermi-LAT it is automatically provided in the header of the event list.
         - In IACTs is computed as ``t_live = t_observation * (1 - f_dead)`` where ``f_dead`` is the dead-time fraction.
         """
-        return u.Quantity(self.table.meta["LIVETIME"], "second")
+        return self.meta.live_time
 
     @property
     def observation_dead_time_fraction(self):
@@ -1010,7 +1008,7 @@ class EventListChecker(Checker):
         self.event_list = event_list
 
     def _record(self, level="info", msg=None):
-        obs_id = self.event_list.table.meta["OBS_ID"]
+        obs_id = self.meta.obs_id
         return {"level": level, "obs_id": obs_id, "msg": msg}
 
     def check_meta(self):

@@ -16,6 +16,8 @@ from gammapy.utils.metadata import (
     TargetMetaData,
 )
 from gammapy.utils.types import EarthLocationType, TimeType
+from gammapy.utils.time import time_ref_from_dict
+from .observers import observatory_locations
 
 
 __all__ = ["ObservationMetaData", "GTIMetaData", "EventListMetaData"]
@@ -179,8 +181,6 @@ class EventListMetaData(MetaData):
 
     @validator("location")
     def validate_location(cls, v):
-        from gammapy.data import observatory_locations
-
         if isinstance(v, str) and v in observatory_locations.keys():
             return observatory_locations[v]
         elif isinstance(v, EarthLocation):
