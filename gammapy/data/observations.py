@@ -604,7 +604,7 @@ class Observation:
     def copy(self, in_memory=False, **kwargs):
         """Copy observation
 
-        Overwriting arguments requires the 'in_memory` argument to be true.
+        Overwriting Observation arguments requires the 'in_memory` argument to be true.
 
         Parameters
         ----------
@@ -615,18 +615,14 @@ class Observation:
 
         Examples
         --------
-
-        .. code::
-
-            from gammapy.data import Observation
-
-            obs = Observation.read(
-                "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz"
-            )
-
-            obs_copy = obs.copy(obs_id=1234)
-            print(obs_copy)
-
+        >>>from gammapy.data import Observation
+        >>>
+        >>>obs = Observation.read(
+        >>>    "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz"
+        >>>)
+        >>>
+        >>>obs_copy = obs.copy(in_memory=True, obs_id=1234)
+        >>>print(obs_copy)
 
         Returns
         -------
