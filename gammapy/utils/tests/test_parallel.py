@@ -124,4 +124,4 @@ def test_multiprocessing_manager():
     assert parallel.BACKEND_DEFAULT == parallel.ParallelBackendEnum.multiprocessing
     assert parallel.POOL_KWARGS_DEFAULT["processes"] == 1
     assert parallel.METHOD_DEFAULT == parallel.PoolMethodEnum.starmap
-    assert parallel.METHOD_KWARGS_DEFAULT is None
+    assert "callback" not in parallel.METHOD_KWARGS_DEFAULT

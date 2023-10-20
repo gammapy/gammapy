@@ -38,7 +38,7 @@ BACKEND_DEFAULT = ParallelBackendEnum.multiprocessing
 N_JOBS_DEFAULT = 1
 POOL_KWARGS_DEFAULT = dict(processes=N_JOBS_DEFAULT)
 METHOD_DEFAULT = PoolMethodEnum.starmap
-METHOD_KWARGS_DEFAULT = None
+METHOD_KWARGS_DEFAULT = {}
 
 
 def get_multiprocessing():
@@ -178,7 +178,9 @@ def run_multiprocessing(
     task_name : str, optional
         Name of the task to display in the progress bar. Default is "".
     """
-    backend = ParallelBackendEnum.from_str(backend)
+
+    if backend is None:
+        backend = BACKEND_DEFAULT
 
     if method is None:
         method = METHOD_DEFAULT
@@ -191,6 +193,7 @@ def run_multiprocessing(
 
     processes = pool_kwargs.get("processes", N_JOBS_DEFAULT)
 
+    backend = ParallelBackendEnum.from_str(backend)
     multiprocessing = PARALLEL_BACKEND_MODULES[backend]()
 
     if backend == ParallelBackendEnum.multiprocessing:
