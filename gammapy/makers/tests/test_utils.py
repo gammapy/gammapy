@@ -475,6 +475,7 @@ class TestTheta2Table:
         assert_allclose(theta2_table["alpha"], alpha_two_obs)
 
 
+@requires_data()
 def test_get_camera_fov(observations):
     with pytest.raises(ValueError):
         get_camera_fov(observations)
@@ -489,6 +490,7 @@ def test_get_camera_fov(observations):
         get_camera_fov(obs_no_aeff)
 
 
+@requires_data()
 def test_make_observation_time_map():
     ds = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
     obs_id = ds.obs_table["OBS_ID"][ds.obs_table["OBJECT"] == "MSH 15-5-02"][:3]
@@ -507,6 +509,7 @@ def test_make_observation_time_map():
     assert obs_time.unit == u.hr
 
 
+@requires_data()
 def test_make_effective_livetime_map():
     ds = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
     obs_id = ds.obs_table["OBS_ID"][ds.obs_table["OBJECT"] == "MSH 15-5-02"][:3]
