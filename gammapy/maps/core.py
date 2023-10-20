@@ -1136,11 +1136,8 @@ class Map(abc.ABC):
                 repeat(preserve_counts),
                 repeat(precision_factor),
             ),
-            # backend=self.parallel_backend,
-            # pool_kwargs=dict(processes=self.n_jobs),
             task_name="Reprojection",
         )
-        # TODO: uncomment after parallel support is added on maps
         for idx in np.ndindex(self.geom.shape_axes):
             output_map.data[idx[0]] = maps[idx[0]].data
         return output_map
