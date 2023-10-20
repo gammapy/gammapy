@@ -1,6 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
+import astropy.units as u
 import gammapy.utils.parallel as parallel
+from gammapy.estimators import FluxPointsEstimator
 from gammapy.utils.testing import requires_dependency
 
 
@@ -125,3 +127,13 @@ def test_multiprocessing_manager():
     assert parallel.POOL_KWARGS_DEFAULT["processes"] == 1
     assert parallel.METHOD_DEFAULT == parallel.PoolMethodEnum.starmap
     assert "callback" not in parallel.METHOD_KWARGS_DEFAULT
+
+    fpe = FluxPointsEstimator(energy_edges=[1, 3, 10] * u.TeV)
+    assert fpe.parallel_backend == parallel.ParallelBackendEnum.multiprocessing
+
+    with parallel.multiprocessing_manager(backend="ray"):
+        assert fpe.parallel_backend == "ray"
+
+        fpe = FluxPointsEstimator(energy_edges=[1, 3, 10] * u.TeV)
+        assert fpe.parallel_backend == "ray"
+    assert fpe.parallel_backend == parallel.ParallelBackendEnum.multiprocessing
