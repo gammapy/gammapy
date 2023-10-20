@@ -422,9 +422,7 @@ class Map(abc.ABC):
         """
         checksum = kwargs.pop("checksum", False)
         hdulist = self.to_hdulist(**kwargs)
-        hdulist.writeto(
-            str(make_path(filename)), overwrite=overwrite, checksum=checksum
-        )
+        hdulist.writeto(make_path(filename), overwrite=overwrite, checksum=checksum)
 
     def iter_by_axis(self, axis_name, keepdims=False):
         """ "Iterate over a given axis

@@ -1251,8 +1251,7 @@ def test_map_datasets_on_off_fits_io(images, tmp_path):
 def test_map_datasets_on_off_checksum(images, tmp_path):
     dataset = get_map_dataset_onoff(images)
     Datasets([dataset]).write(tmp_path / "test.yaml", checksum=True)
-    file = open(tmp_path / "test.yaml")
-    print(file.read())
+
     hdul = fits.open(tmp_path / "MapDatasetOnOff-test.fits")
     for hdu in hdul:
         assert "CHECKSUM" in hdu.header
