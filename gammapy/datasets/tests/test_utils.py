@@ -46,27 +46,31 @@ def test_apply_edisp(region_map_true):
 
 
 def test_dataset_split():
-    import os
 
-    os.environ["GAMMAPY_DATA"] = "/Users/qremy/Work/GitHub/gammapy-data"
-    model = SkyModel(
-        spatial_model=TemplateSpatialModel.read(
-            f"{os.environ['GAMMAPY_DATA']}/fermi_3fhl/gll_iem_v06_cutout.fits",
-            normalize=False,
-        ),
-        spectral_model=PowerLawNormSpectralModel(),
+    template_diffuse = TemplateSpatialModel.read(
+        filename="/Users/qremy/Work/GitHub/gammapy-data/fermi-3fhl-gc/gll_iem_v06_gc.fits.gz",
+        normalize=False,
     )
-    geom = model.spatial_model.map.geom
-    geom_reco = geom.copy()
-    geom_reco._axes[0]._name = "energy"
 
-    dataset = MapDataset.from_geoms(geom_reco)
-    dataset.exposure = Map.from_geom(geom, data=1.0, unit="cm2 s")
-    dataset.mask_safe.data = True
+    diffuse_iem = SkyModel(
+        spectral_model=PowerLawNormSpectralModel(),
+        spatial_model=template_diffuse,
+        name="diffuse-iem",
+    )
 
-    dataset.models = Models([model])
+    dataset = MapDataset.read(
+        "/Users/qremy/Work/GitHub/gammapy-data/fermi-3fhl-gc/fermi-3fhl-gc.fits.gz"
+    )
+    dataset.models = Models([diffuse_iem])
+
+    width = 4 * u.deg
+    margin = 2 * u.deg
+    datasets = split_dataset(dataset, width, margin)
+    assert len(datasets) == 15
+    assert len(datasets.models) == 1
 
     datasets = split_dataset(
-        dataset, width=4 * u.deg, margin=2 * u.deg, split_templates=False
+        dataset, width=4 * u.deg, margin=2 * u.deg, split_templates=True
     )
-    assert len(datasets) > 1
+    assert len(datasets.models) == len(datasets)
+    assert len(datasets.parameters.free_parameters) == 1
