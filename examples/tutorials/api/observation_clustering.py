@@ -123,9 +123,9 @@ ax.axvline(np.median(obs_zenith), ls="--", color="black")
 #
 # This method shows how to cluster observations based on their IRF quantities,
 # in this case those that have a similar edisp and psf. The
-# `gammapy.data.utils.get_irfs_features` is utilised to achieve this. The
+# `~gammapy.data.utils.get_irfs_features` is utilised to achieve this. The
 # observations are then clustered based on this criteria using
-# `gammapy.utils.cluster.hierarchical_clustering`. The idea here is to minimise
+# `~gammapy.utils.cluster.hierarchical_clustering`. The idea here is to minimise
 # the variance of both edisp and psf within a specific group to limit the error
 # on the quantity when they are stacked at the dataset level.
 #
@@ -141,7 +141,7 @@ features_irfs = get_irfs_features(
 print(features_irfs)
 
 ######################################################################
-# The `gammapy.utils.cluster.hierarchical_clustering` then clusters
+# The `~gammapy.utils.cluster.hierarchical_clustering` then clusters
 # this table into `t` groups with a corresponding label for each group.
 # In this case, we choose to cluster the observations into two groups.
 # We can print this table to show the corresponding label which has been
@@ -190,7 +190,7 @@ ax.legend()
 #
 #
 # In both examples we have a set of `~gammapy.data.Observation` objects which
-# can be reduced using the `gammapy.makers.DatasetsMaker` to create two (in this
+# can be reduced using the `~gammapy.makers.DatasetsMaker` to create two (in this
 # specific case) separate datasets. These can then be jointly fitted using the
 # :doc:`/tutorials/analysis-3d/analysis_mwl` tutorial.
 #
