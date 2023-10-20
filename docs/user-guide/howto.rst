@@ -41,8 +41,8 @@ or also select observations based on other information available using the `~gam
 
 .. accordion-header::
     :id: collapseHowToThree
-    :title: Check IRFs
-    :link: ../tutorials/data/cta.html#irfs
+    :title: Make observation duration maps
+    :link: ../tutorials/api/makers.html#observation-duration-and-effective-livetime
 
 Gammapy offers a number of methods to explore the content of the various IRFs
 contained in an observation. This is usually done thanks to their ``peek()``
