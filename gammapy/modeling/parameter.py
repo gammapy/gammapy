@@ -10,7 +10,7 @@ from astropy import units as u
 from astropy.table import Table
 from gammapy.utils.interpolation import interpolation_scale
 
-__all__ = ["Parameter", "Parameters"]
+__all__ = ["Parameter", "Parameters", "PriorParameter", "PriorParameters"]
 
 log = logging.getLogger(__name__)
 
@@ -94,6 +94,8 @@ class Parameter:
         Parameter scaling to use for the scan.
     is_norm : bool
         Whether the parameter represents the flux norm of the model.
+    prior : `~gammapy.modeling.models.Prior`
+        Prior set on the parameter.
     """
 
     def __init__(
@@ -114,6 +116,7 @@ class Parameter:
         scale_method="scale10",
         interp="lin",
         is_norm=False,
+        prior=None,
     ):
         if not isinstance(name, str):
             raise TypeError(f"Name must be string, got '{type(name)}' instead")
@@ -145,6 +148,7 @@ class Parameter:
         self.scan_n_sigma = scan_n_sigma
         self.interp = interp
         self.scale_method = scale_method
+        self.prior = prior
 
     def __get__(self, instance, owner):
         if instance is None:
@@ -164,6 +168,31 @@ class Parameter:
     def __set_name__(self, owner, name):
         if not self._name == name:
             raise ValueError(f"Expected parameter name '{name}', got {self._name}")
+
+    @property
+    def prior(self):
+        """Prior applied to the parameter (`~gammapy.modeling.models.Prior`)"""
+        return self._prior
+
+    @prior.setter
+    def prior(self, value):
+        if value is not None:
+            from .models import Prior
+
+            if isinstance(value, dict):
+                from .models import Model
+
+                self._prior = Model.from_dict(value)
+            elif isinstance(value, Prior):
+                self._prior = value
+            else:
+                raise TypeError(f"Invalid type: {value!r}")
+        else:
+            self._prior = value
+
+    def prior_stat_sum(self):
+        if self.prior is not None:
+            return self.prior(self)
 
     @property
     def is_norm(self):
@@ -397,7 +426,7 @@ class Parameter:
         return (
             f"{self.__class__.__name__}(name={self.name!r}, value={self.value!r}, "
             f"factor={self.factor!r}, scale={self.scale!r}, unit={self.unit!r}, "
-            f"min={self.min!r}, max={self.max!r}, frozen={self.frozen!r}, id={hex(id(self))})"
+            f"min={self.min!r}, max={self.max!r}, frozen={self.frozen!r}, prior={self.prior!r}, id={hex(id(self))})"
         )
 
     def _repr_html_(self):
@@ -413,7 +442,7 @@ class Parameter:
     def update_from_dict(self, data):
         """Update parameters from a dict.
         Protection against changing parameter model, type, name."""
-        keys = ["value", "unit", "min", "max", "frozen"]
+        keys = ["value", "unit", "min", "max", "frozen", "prior"]
         for k in keys:
             setattr(self, k, data[k])
 
@@ -434,7 +463,8 @@ class Parameter:
 
         if self._link_label_io is not None:
             output["link"] = self._link_label_io
-
+        if self.prior is not None:
+            output["prior"] = self.prior.to_dict()["prior"]
         return output
 
     def autoscale(self):
@@ -495,6 +525,17 @@ class Parameters(collections.abc.Sequence):
         """Check parameter limits and emit a warning"""
         for par in self:
             par.check_limits()
+
+    @property
+    def prior(self):
+        return [par.prior for par in self]
+
+    def prior_stat_sum(self):
+        parameters_stat_sum = 0
+        for par in self:
+            if par.prior is not None:
+                parameters_stat_sum += par.prior_stat_sum()
+        return parameters_stat_sum
 
     @property
     def types(self):
@@ -632,6 +673,10 @@ class Parameters(collections.abc.Sequence):
             for key in ["scale_method", "interp"]:
                 if key in d:
                     del d[key]
+            if "prior" in d:
+                d["prior"] = d["prior"]["type"]
+            else:
+                d["prior"] = None
             rows.append({**dict(type=p.type), **d})
         table = Table(rows)
 
@@ -768,3 +813,85 @@ class restore_parameters_status:
             if self.restore_values:
                 par.value = value
             par.frozen = frozen
+
+
+class PriorParameter(Parameter):
+    def __init__(
+        self,
+        name,
+        value,
+        unit="",
+        scale=1,
+        min=np.nan,
+        max=np.nan,
+        error=0,
+    ):
+        if not isinstance(name, str):
+            raise TypeError(f"Name must be string, got '{type(name)}' instead")
+
+        self._name = name
+        self.scale = scale
+        self.min = min
+        self.max = max
+        self._error = error
+        if isinstance(value, u.Quantity) or isinstance(value, str):
+            val = u.Quantity(value)
+            self.value = val.value
+            self.unit = val.unit
+        else:
+            self.factor = value
+            self.unit = unit
+        self._type = "prior"
+
+    def to_dict(self):
+        """Convert to dict."""
+        output = {
+            "name": self.name,
+            "value": self.value,
+            "unit": self.unit.to_string("fits"),
+            "error": self.error,
+            "min": self.min,
+            "max": self.max,
+        }
+        return output
+
+    def __repr__(self):
+        return (
+            f"{self.__class__.__name__}(name={self.name!r}, value={self.value!r}, "
+            f"factor={self.factor!r}, scale={self.scale!r}, unit={self.unit!r}, "
+            f"min={self.min!r}, max={self.max!r})"
+        )
+
+
+class PriorParameters(Parameters):
+    def __init__(self, parameters=None):
+        if parameters is None:
+            parameters = []
+        else:
+            parameters = list(parameters)
+
+        self._parameters = parameters
+
+    def to_table(self):
+        """Convert parameter attributes to `~astropy.table.Table`."""
+        rows = []
+        for p in self._parameters:
+            d = p.to_dict()
+            rows.append({**dict(type=p.type), **d})
+        table = Table(rows)
+
+        table["value"].format = ".4e"
+        for name in ["error", "min", "max"]:
+            table[name].format = ".3e"
+
+        return table
+
+    @classmethod
+    def from_dict(cls, data):
+        parameters = []
+
+        for par in data:
+            parameter = PriorParameter(**par)
+            parameters.append(parameter)
+
+        return cls(parameters=parameters)

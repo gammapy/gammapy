@@ -2,7 +2,7 @@
 """Models and fitting."""
 from .covariance import Covariance
 from .fit import Fit
-from .parameter import Parameter, Parameters
+from .parameter import Parameter, Parameters, PriorParameter, PriorParameters
 
 __all__ = [
     "Covariance",
