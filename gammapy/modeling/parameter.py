@@ -153,7 +153,7 @@ class Parameter:
         self.scan_n_sigma = scan_n_sigma
         self.interp = interp
         self.scale_method = scale_method
-        self.prior = prior
+        self._prior = prior
 
     def __get__(self, instance, owner):
         if instance is None:
@@ -182,18 +182,17 @@ class Parameter:
     @prior.setter
     def prior(self, value):
         if value is not None:
-            from .models import Prior
+            if self in value.modelparameters:
+                from .models import Prior
 
-            if isinstance(value, dict):
-                from .models import Model
+                if isinstance(value, dict):
+                    from .models import Model
 
-                self._prior = Model.from_dict({"prior": value})
-            elif isinstance(value, Prior):
-                self._prior = value
-            else:
-                raise TypeError(f"Invalid type: {value!r}")
-        else:
-            self._prior = value
+                    self._prior = Model.from_dict(value)
+                elif isinstance(value, Prior):
+                    self._prior = value
+                else:
+                    raise TypeError(f"Invalid type: {value!r}")
 
     def prior_stat_sum(self):
         if self.prior is not None:
