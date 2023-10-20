@@ -38,7 +38,6 @@ release 1.
 
 """
 
-import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 
@@ -46,9 +45,8 @@ from astropy.coordinates import SkyCoord
 import matplotlib.pyplot as plt
 from IPython.display import display
 from gammapy.data import DataStore
-from gammapy.makers import MapDatasetMaker
 from gammapy.makers.utils import make_theta_squared_table
-from gammapy.maps import Map, MapAxis, WcsGeom
+from gammapy.maps import MapAxis, WcsGeom
 
 ######################################################################
 # Check setup
@@ -131,121 +129,6 @@ theta2_table = make_theta_squared_table(
 plt.figure(figsize=(10, 5))
 plot_theta_squared_table(theta2_table)
 plt.show()
-
-######################################################################
-# Observation duration map
-# It can often be useful to plot the total number of hours spent
-# in the given field of view (without correcting for the acceptance
-# variation in the field of view. We calculate the same
-# for the MSH 1552 runs here.
-#
-
-
-def create_obstime_map(observations, geom, offset_max=2.5 * u.deg):
-    stacked = Map.from_geom(geom, unit=u.h)
-    for obs in observations:
-        coords = geom.get_coord(sparse=True)
-        offset = coords.skycoord.separation(obs.get_pointing_icrs(obs.tmid))
-        mask = offset < offset_max
-        c1 = coords.apply_mask(mask)
-        weights = np.ones(c1.shape) * obs.observation_live_time_duration
-        stacked.fill_by_coord(coords=c1, weights=weights)
-    return stacked
-
-
-######################################################################
-# On-axis equivalent livetime
-# ---------------------------
-#
-# Since the acceptance of the H.E.S.S. camera varies within the field of
-# view, what is often interesting is not the simply the total number of
-# hours a source was observed, but the on-axis equivalent number of hours.
-#
-
-
-def create_effective_livetime(observations, geom):
-    livetime = Map.from_geom(geom, unit=u.hr)
-    for obs in observations:
-        geom_obs = geom.cutout(
-            position=obs.get_pointing_icrs(obs.tmid), width=2.0 * offset_max
-        )
-        exposure = MapDatasetMaker.make_exposure(geom=geom_obs, observation=obs)
-        on_axis = obs.aeff.evaluate(
-            offset=0.0 * u.deg, energy_true=geom.axes["energy_true"].center
-        )
-        on_axis = on_axis.reshape((on_axis.shape[0], 1, 1))
-        lv_obs = exposure / on_axis
-        livetime.stack(lv_obs)
-    return livetime
-
-
-# Now, we plot the total and the effective livetime for the MSH 1552 runs here
-
-# Get the observations
-obs_id = data_store.obs_table["OBS_ID"][data_store.obs_table["OBJECT"] == "MSH 15-5-02"]
-observations = data_store.get_observations(obs_id)
-print("No. of observations: ", len(observations))
-
-# Define an energy range
-energy_min = 100 * u.GeV
-energy_max = 10.0 * u.TeV
-
-# define a offset cut
-offset_max = 2.5 * u.deg
-
-# define the geom
-source_pos = SkyCoord(228.32, -59.08, unit="deg")
-energy_axis_true = MapAxis.from_energy_bounds(
-    energy_min, energy_max, nbin=1, name="energy_true"
-)
-geom_livetime = WcsGeom.create(
-    skydir=source_pos,
-    binsz=0.02,
-    width=(6, 6),
-    frame="icrs",
-    proj="CAR",
-    axes=[energy_axis_true],
-)
-
-geom_obs = WcsGeom.create(
-    skydir=source_pos,
-    binsz=0.02,
-    width=(6, 6),
-    frame="icrs",
-    proj="CAR",
-)
-
-
-effective_livetime = create_effective_livetime(observations, geom_livetime)
-total_obstime = create_obstime_map(observations, geom_obs)
-
-# Plot
-fig, (ax1, ax2) = plt.subplots(
-    figsize=(11, 5), subplot_kw={"projection": geom_obs.wcs}, ncols=2
-)
-total_obstime.plot(ax=ax1, add_cbar=True)
-# Add the pointing position on top
-for obs in observations:
-    ax1.plot(
-        obs.get_pointing_icrs(obs.tmid).to_pixel(wcs=ax1.wcs)[0],
-        obs.get_pointing_icrs(obs.tmid).to_pixel(wcs=ax1.wcs)[1],
-        "+",
-        color="black",
-    )
-ax1.set_title("Total observation time")
-
-effective_livetime.plot(ax=ax2, add_cbar=True)
-# Add the pointing position on top
-for obs in observations:
-    ax2.plot(
-        obs.get_pointing_icrs(obs.tmid).to_pixel(wcs=ax2.wcs)[0],
-        obs.get_pointing_icrs(obs.tmid).to_pixel(wcs=ax2.wcs)[1],
-        "+",
-        color="black",
-    )
-ax2.set_title("Effective livetime")
-plt.show()
-
 
 ######################################################################
 # Exercises
