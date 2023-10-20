@@ -318,6 +318,35 @@ class GTI:
 
         return self.__class__(gti_within)
 
+    def delete_interval(self, time_interval):
+        """Select and crop GTIs in time interval.
+
+        Parameters
+        ----------
+        time_interval : [`astropy.time.Time`, `astropy.time.Time`]
+            Start and stop time for the selection.
+
+        Returns
+        -------
+        gti : `GTI`
+            Copy of the GTI table with the bad time interval deleted.
+        """
+        interval_start, interval_stop = time_interval
+        interval_start.format = self.time_start.format
+        interval_stop.format = self.time_stop.format
+
+        trim_table = self.table.copy()
+
+        trim_table["STOP"][
+            (self.time_start < interval_start) & (self.time_stop > interval_start)
+        ] = interval_start
+        trim_table["START"][
+            (self.time_start < interval_stop) & (self.time_stop > interval_stop)
+        ] = interval_stop
+        mask = (self.time_stop > interval_stop) | (self.time_start < interval_start)
+
+        return self.__class__(trim_table[mask])
+
     def stack(self, other):
         """Stack with another GTI in place.
 

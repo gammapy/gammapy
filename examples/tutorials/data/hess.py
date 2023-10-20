@@ -65,7 +65,7 @@ check_tutorials_setup()
 # relevant file (i.e., events, effective area, psf…) and contains the path
 # to said file. Together they can be loaded into a Datastore by indicating
 # the directory in which they can be found, in this case
-# “$GAMMAPY_DATA/hess-dl3-dr1”:
+# `$GAMMAPY_DATA/hess-dl3-dr1`:
 #
 
 ######################################################################

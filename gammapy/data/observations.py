@@ -68,9 +68,9 @@ class Observation:
     edisp = LazyFitsData(cache=False)
     psf = LazyFitsData(cache=False)
     bkg = LazyFitsData(cache=False)
-    _rad_max = LazyFitsData(cache=False)
+    _rad_max = LazyFitsData(cache=True)
     _events = LazyFitsData(cache=False)
-    _gti = LazyFitsData(cache=False)
+    _gti = LazyFitsData(cache=True)
     _pointing = LazyFitsData(cache=True)
 
     #    @deprecated_renamed_argument("obs_info", "meta", since="1.2")
