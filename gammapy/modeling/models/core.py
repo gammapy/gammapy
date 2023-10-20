@@ -833,7 +833,8 @@ class DatasetModels(collections.abc.Sequence):
         models : `DatasetModels`
             Selected models.
         """
-        mask = Map.from_geom(geometry=geom, dtype=bool)
+        mask = Map.from_geom(geom=geom, dtype=bool)
+        mask.data |= True
         return self.select_mask(mask=mask, **kwargs)
 
     def select_region(self, regions, wcs=None):
