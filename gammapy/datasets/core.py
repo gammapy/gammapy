@@ -3,7 +3,6 @@ import abc
 import collections.abc
 import copy
 import html
-import inspect
 import logging
 import numpy as np
 from astropy import units as u
