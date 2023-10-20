@@ -604,7 +604,7 @@ class Observation:
     def copy(self, in_memory=False, **kwargs):
         """Copy observation
 
-        Overwriting observation arguments requires the 'in_memory` argument to be true.
+        Overwriting Observation arguments requires the 'in_memory` argument to be true.
 
         Parameters
         ----------
