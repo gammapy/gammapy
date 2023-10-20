@@ -3,7 +3,7 @@
 import logging
 import numpy as np
 import astropy.units as u
-from gammapy.modeling import PriorParameter, PriorParameters
+from gammapy.modeling import Parameter, Parameters, PriorParameter, PriorParameters
 from .core import ModelBase
 
 __all__ = ["GaussianPrior", "UniformPrior"]
@@ -37,7 +37,15 @@ class Prior(ModelBase):
 
     _unit = ""
 
-    def __init__(self, **kwargs):
+    def __init__(self, modelparameters, **kwargs):
+
+        if isinstance(modelparameters, Parameter):
+            self._modelparameters = Parameters([modelparameters])
+        elif isinstance(modelparameters, Parameters):
+            self._modelparameters = modelparameters
+        else:
+            raise ValueError(f"Invalid model type {modelparameters}")
+
         # Copy default parameters from the class to the instance
         default_parameters = self.default_parameters.copy()
 
@@ -56,6 +64,13 @@ class Prior(ModelBase):
             self._weight = _weight
         else:
             self._weight = 1
+
+        for par in self._modelparameters:
+            par.prior = self
+
+    @property
+    def modelparameters(self):
+        return self._modelparameters
 
     @property
     def parameters(self):
@@ -79,11 +94,17 @@ class Prior(ModelBase):
     def weight(self, value):
         self._weight = value
 
+<<<<<<< HEAD
     def __call__(self, value):
         """Call evaluate method."""
         # assuming the same unit as the PriorParamater here
+=======
+    def __call__(self):
+        """Call evaluate method"""
+        # assuming the same unit as the PriorParamter here
+>>>>>>> 65d1a8b6b (prior_stat_sum)
         kwargs = {par.name: par.value for par in self.parameters}
-        return self.weight * self.evaluate(value.value, **kwargs)
+        return self.weight * self.evaluate(self._modelparameters.value, **kwargs)
 
     def to_dict(self, full_output=False):
         """Create dictionary for YAML serialisation."""
@@ -150,9 +171,8 @@ class GaussianPrior(Prior):
     mu = PriorParameter(name="mu", value=0)
     sigma = PriorParameter(name="sigma", value=1)
 
-    @staticmethod
-    def evaluate(value, mu, sigma):
-        """Evaluate the Gaussian prior."""
+    def evaluate(self, value, mu, sigma):
+    """Evaluate the Gaussian prior."""
         return ((value - mu) / sigma) ** 2
 
 
@@ -177,9 +197,13 @@ class UniformPrior(Prior):
     min = PriorParameter(name="min", value=-np.inf, unit="")
     max = PriorParameter(name="max", value=np.inf, unit="")
 
+<<<<<<< HEAD
     @staticmethod
     def evaluate(value, min, max):
         """Evaluate the uniform prior."""
+=======
+    def evaluate(self, value, min, max):
+>>>>>>> 65d1a8b6b (prior_stat_sum)
         if min < value < max:
             return 1.0
         else:

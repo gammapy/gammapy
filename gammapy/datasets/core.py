@@ -10,6 +10,7 @@ from astropy.table import Table, vstack
 from gammapy.data import GTI
 from gammapy.modeling.models import DatasetModels, Models
 from gammapy.utils.scripts import make_name, make_path, read_yaml, to_yaml, write_yaml
+from gammapy.stats import prior_fit_statistic
 
 log = logging.getLogger(__name__)
 
@@ -176,6 +177,20 @@ class Datasets(collections.abc.MutableSequence):
         else:
             return models
 
+    @property
+    def priors(self):
+        """Priors (list).
+
+        Duplicate prior objects have been removed.
+        """
+        priors = {}
+
+        for dataset in self:
+            if dataset.models is not None:
+                for prior in dataset.priors:
+                    priors[prior] = prior
+        return priors
+
     @models.setter
     def models(self, models):
         """Unique models (`~gammapy.modeling.Models`).
@@ -238,7 +253,9 @@ class Datasets(collections.abc.MutableSequence):
         # TODO: add parallel evaluation of likelihoods
         for dataset in self:
             stat_sum += dataset.stat_sum()
-        return stat_sum
+            # remove prior_fit_statistic from individual dataset to avoid double counting
+            stat_sum -= prior_fit_statistic(dataset.priors)
+        return stat_sum + prior_fit_statistic(list(self.priors.values()))
 
     def select_time(self, time_min, time_max, atol="1e-6 s"):
         """Select datasets in a given time interval.

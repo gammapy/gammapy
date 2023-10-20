@@ -2,7 +2,14 @@
 """Statistics."""
 
 from .counts_statistic import CashCountsStatistic, WStatCountsStatistic
-from .fit_statistics import cash, cstat, get_wstat_gof_terms, get_wstat_mu_bkg, wstat
+from .fit_statistics import (
+    cash,
+    cstat,
+    get_wstat_gof_terms,
+    get_wstat_mu_bkg,
+    prior_fit_statistic,
+    wstat,
+)
 from .fit_statistics_cython import (
     cash_sum_cython,
     f_cash_root_cython,
