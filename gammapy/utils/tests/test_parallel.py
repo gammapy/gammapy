@@ -107,3 +107,21 @@ def test_run_multiprocessing_simple_ray_apply_async():
         backend="ray",
     )
     assert task.sum_squared == N * (N + 1) * (2 * N + 1) / 6
+
+
+def test_multiprocessing_manager():
+    with parallel.multiprocessing_manager(
+        backend="ray",
+        method="apply_async",
+        pool_kwargs=dict(processes=2),
+        method_kwargs=dict(callback=None),
+    ):
+        assert parallel.BACKEND_DEFAULT == "ray"
+        assert parallel.POOL_KWARGS_DEFAULT["processes"] == 2
+        assert parallel.METHOD_DEFAULT == "apply_async"
+        assert "callback" in parallel.METHOD_KWARGS_DEFAULT
+
+    assert parallel.BACKEND_DEFAULT == parallel.ParallelBackendEnum.multiprocessing
+    assert parallel.POOL_KWARGS_DEFAULT["processes"] == 1
+    assert parallel.METHOD_DEFAULT == parallel.PoolMethodEnum.starmap
+    assert parallel.METHOD_KWARGS_DEFAULT is None
