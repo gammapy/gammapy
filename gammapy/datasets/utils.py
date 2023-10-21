@@ -93,12 +93,18 @@ def split_dataset(dataset, width, margin, split_templates=False):
                 range(geom_cut_image.data_shape[1]), range(geom_cut_image.data_shape[0])
             )
             il_cut, ib_cut = geom_cut_image.coord_to_pix((l, b))
-            mask = (
-                (ilgrid >= il_cut - pixel_width[1] / 2.0)
-                & (ilgrid < il_cut + pixel_width[1] / 2.0)
-                & (ibgrid >= ib_cut - pixel_width[0] / 2.0)
-                & (ibgrid < ib_cut + pixel_width[0] / 2.0)
+            mask = (ilgrid >= il_cut - pixel_width[1] / 2.0) & (
+                ibgrid >= ib_cut - pixel_width[0] / 2.0
             )
+            if il == ilon[-1]:
+                mask &= ilgrid <= il_cut + pixel_width[1] / 2.0
+            else:
+                mask &= ilgrid < il_cut + pixel_width[1] / 2.0
+
+            if ib == ilat[-1]:
+                mask &= ibgrid <= ib_cut + pixel_width[0] / 2.0
+            else:
+                mask &= ibgrid < ib_cut + pixel_width[0] / 2.0
             mask = np.expand_dims(mask, 0)
             mask = np.repeat(mask, geom_cut.data_shape[0], axis=0)
             d.mask_fit = Map.from_geom(geom_cut, data=mask)
