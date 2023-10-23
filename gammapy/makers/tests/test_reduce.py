@@ -157,7 +157,7 @@ def makers_spectrum(exclusion_mask):
 
 
 @pytest.fixture()
-def failure_makers_spectrum(full_exclusion_mask):
+def makers_spectrum_large_region(full_exclusion_mask):
     return [
         SpectrumDatasetMaker(
             containment_correction=True, selection=["counts", "exposure", "edisp"]
@@ -332,10 +332,10 @@ def test_datasets_maker_spectrum(observations_hess, makers_spectrum, spectrum_da
 
 
 @requires_data()
-def test_failure_datasets_maker_spectrum(
-    observations_hess, failure_makers_spectrum, spectrum_dataset
+def test_datasets_maker_spectrum_large_region(
+    observations_hess, makers_spectrum_large_region, spectrum_dataset
 ):
-    makers = DatasetsMaker(failure_makers_spectrum, stack_datasets=True, n_jobs=4)
+    makers = DatasetsMaker(makers_spectrum_large_region, stack_datasets=True, n_jobs=4)
     datasets = makers.run(spectrum_dataset, observations_hess)
 
     counts = datasets[0].counts
