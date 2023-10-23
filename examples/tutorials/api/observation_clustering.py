@@ -39,21 +39,40 @@ import matplotlib.pyplot as plt
 from gammapy.data import DataStore
 from gammapy.data.observations import Observations
 from gammapy.data.utils import get_irfs_features
-from gammapy.utils.cluster import hierarchical_clustering
+from gammapy.utils.cluster import hierarchical_clustering, standard_scaler
 
 ######################################################################
 # Obtain the observations
 # -----------------------
 #
-# Create the data store and obtain the observations from the H.E.S.S.
-# DL3-DR1 for PKS 2155-304.
+# First need to define the `~gammapy.data.DataStore` object for the HESS DL3 DR1
+# data. Next, utilise a cone search to select only the observations of interest.
+# In this case, we choose PKS 2155-304 as the object of interest.
+#
+# The `~gammapy.data.ObservationTable` is then filtered using the `select_observations` tool.
 #
 
 data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
-obs_id = data_store.obs_table["OBS_ID"][
-    data_store.obs_table["OBJECT"] == "PKS 2155-304"
-]
-observations = data_store.get_observations(obs_id)
+
+selection = dict(
+    type="sky_circle",
+    frame="icrs",
+    lon="329.71693826 deg",
+    lat="-30.2255 deg",
+    radius="2 deg",
+)
+obs_table = data_store.obs_table
+selected_obs_table = obs_table.select_observations(selection)
+
+
+######################################################################
+# More complex selection can be done by utilising the obs_table entries directly.
+# We can now retrieve the relevant observations by passing their obs_id to the
+# `~gammapy.data.DataStore.get_observations` method.
+#
+
+obs_ids = selected_obs_table["OBS_ID"]
+observations = data_store.get_observations(obs_ids)
 
 
 ######################################################################
@@ -64,12 +83,8 @@ observations = data_store.get_observations(obs_id)
 # if there is a sensible way to group the observations.
 #
 
-obs_zenith = []
-obs_muoneff = []
-
-for obs in observations:
-    obs_zenith.append(obs.get_pointing_altaz(time=obs.tmid).zen.deg)
-    obs_muoneff.append(obs.obs_info["MUONEFF"])
+obs_zenith = selected_obs_table["ZEN_PNT"]
+obs_muoneff = selected_obs_table["MUONEFF"]
 
 print(f"{np.min(obs_zenith):.2f} deg < zenith angle < {np.max(obs_zenith):.2f} deg")
 print(f"{np.min(obs_muoneff):.2f} < muon efficiency < {np.max(obs_muoneff):.2f}")
@@ -141,6 +156,15 @@ features_irfs = get_irfs_features(
 print(features_irfs)
 
 ######################################################################
+# Compute standardized features by removing the mean and scaling to unit
+# variance:
+#
+
+scaled_features_irfs = standard_scaler(features_irfs)
+print(scaled_features_irfs)
+
+
+######################################################################
 # The `~gammapy.utils.cluster.hierarchical_clustering` then clusters
 # this table into `t` groups with a corresponding label for each group.
 # In this case, we choose to cluster the observations into two groups.
@@ -149,7 +173,7 @@ print(features_irfs)
 #
 
 
-features = hierarchical_clustering(features_irfs, fcluster_kwargs={"t": 2})
+features = hierarchical_clustering(scaled_features_irfs, fcluster_kwargs={"t": 2})
 print(features)
 
 ######################################################################
@@ -167,15 +191,15 @@ fix, ax = plt.subplots(1, 1, figsize=(7, 5))
 ax.set_ylabel("edisp-res")
 ax.set_xlabel("psf-radius")
 ax.plot(
-    features[mask_1]["edisp-res"],
-    features[mask_1]["psf-radius"],
+    features_irfs[mask_1]["edisp-res"],
+    features_irfs[mask_1]["psf-radius"],
     "d",
     color="green",
     label="Group 1",
 )
 ax.plot(
-    features[mask_2]["edisp-res"],
-    features[mask_2]["psf-radius"],
+    features_irfs[mask_2]["edisp-res"],
+    features_irfs[mask_2]["psf-radius"],
     "o",
     color="magenta",
     label="Group 2",
