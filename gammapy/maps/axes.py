@@ -2897,7 +2897,7 @@ class TimeMapAxis:
         Returns
         -------
         gti : `GTI`
-        GTI table
+            GTI table
         """
         from gammapy.data import GTI
 
