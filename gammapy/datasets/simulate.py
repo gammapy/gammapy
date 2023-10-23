@@ -31,14 +31,22 @@ class MapDatasetEventSampler:
         an energy-dependent time-varying source
     t_delta : `~astropy.units.Quantity`
         Time interval used to sample the time-dependent source
+    mc_id : `~bool`
+        Flag to tag sampled events from a given model with a Montecarlo identifier. If set to "False", no
+        identifier will be assigned
     """
 
     def __init__(
-        self, random_state="random-seed", oversample_energy_factor=10, t_delta=0.5 * u.s
+        self,
+        random_state="random-seed",
+        oversample_energy_factor=10,
+        t_delta=0.5 * u.s,
+        mc_id=True,
     ):
         self.random_state = get_random_state(random_state)
         self.oversample_energy_factor = oversample_energy_factor
         self.t_delta = t_delta
+        self.mc_id = mc_id
 
     def _repr_html_(self):
         try:
@@ -264,13 +272,14 @@ class MapDatasetEventSampler:
                 npred = evaluator.apply_exposure(flux)
                 table = self._sample_coord_time(npred, temporal_model, dataset.gti)
 
-            if len(table) == 0:
-                mcid = table.Column(name="MC_ID", length=0, dtype=int)
-                table.add_column(mcid)
+            if self.mc_id:
+                if len(table) == 0:
+                    mcid = table.Column(name="MC_ID", length=0, dtype=int)
+                    table.add_column(mcid)
 
-            table["MC_ID"] = idx + 1
-            table.meta["MID{:05d}".format(idx + 1)] = idx + 1
-            table.meta["MMN{:05d}".format(idx + 1)] = evaluator.model.name
+                table["MC_ID"] = idx + 1
+                table.meta["MID{:05d}".format(idx + 1)] = idx + 1
+                table.meta["MMN{:05d}".format(idx + 1)] = evaluator.model.name
 
             events_all.append(EventList(table))
 
@@ -295,13 +304,14 @@ class MapDatasetEventSampler:
 
         table = self._sample_coord_time(background, temporal_model, dataset.gti)
 
-        table["MC_ID"] = 0
         table["ENERGY"] = table["ENERGY_TRUE"]
         table["RA"] = table["RA_TRUE"]
         table["DEC"] = table["DEC_TRUE"]
 
-        table.meta["MID{:05d}".format(0)] = 0
-        table.meta["MMN{:05d}".format(0)] = dataset.background_model.name
+        if self.mc_id:
+            table["MC_ID"] = 0
+            table.meta["MID{:05d}".format(0)] = 0
+            table.meta["MMN{:05d}".format(0)] = dataset.background_model.name
 
         return EventList(table)
 
@@ -387,7 +397,7 @@ class MapDatasetEventSampler:
         return events
 
     @staticmethod
-    def event_list_meta(dataset, observation):
+    def event_list_meta(dataset, observation, mc_id=True):
         """Event list meta info.
 
         Parameters
@@ -476,7 +486,8 @@ class MapDatasetEventSampler:
         meta["CONV_RA"] = 0
         meta["CONV_DEC"] = 0
 
-        meta["NMCIDS"] = len(dataset.models)
+        if mc_id:
+            meta["NMCIDS"] = len(dataset.models)
 
         # Necessary for DataStore, but they should be ALT and AZ instead!
         telescope = observation.aeff.meta["TELESCOP"]
@@ -555,7 +566,7 @@ class MapDatasetEventSampler:
 
         events = self.event_det_coords(observation, events)
         events.table["EVENT_ID"] = np.arange(len(events.table))
-        events.table.meta.update(self.event_list_meta(dataset, observation))
+        events.table.meta.update(self.event_list_meta(dataset, observation, self.mc_id))
 
         geom = dataset._geom
         selection = geom.contains(events.map_coord(geom))
