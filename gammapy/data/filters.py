@@ -2,6 +2,9 @@
 import copy
 import html
 import logging
+from itertools import groupby
+import numpy as np
+from astropy.table import unique, vstack
 
 __all__ = ["ObservationFilter"]
 
@@ -24,8 +27,10 @@ class ObservationFilter:
           class that corresponds to the filter type
           (see `~gammapy.data.ObservationFilter.EVENT_FILTER_TYPES`)
 
-        The filtered event list will be an intersection of all filters. A union
-        of filters is not supported yet.
+    event_filter_method: str
+        The filterring method to use on the event_filters. Either "intersect" or "union". Default is "intersect".
+        If "intersect", the filtered event list will be the intersection of all the event filters.
+        If "union", the filtered event list will be the union of all the event fileters, under uniquness condition.
 
     Examples
     --------
@@ -45,9 +50,13 @@ class ObservationFilter:
 
     EVENT_FILTER_TYPES = dict(sky_region="select_region", custom="select_parameter")
 
-    def __init__(self, time_filter=None, event_filters=None):
+    def __init__(
+        self, time_filter=None, event_filters=None, event_filter_method="intersect"
+    ):
         self.time_filter = time_filter
-        self.event_filters = event_filters or []
+        event_filters = event_filters or []
+        self.event_filters = self._merge_overlapping(event_filters)
+        self.event_filter_method = event_filter_method
 
     def _repr_html_(self):
         try:
@@ -73,13 +82,38 @@ class ObservationFilter:
         filtered_events : `~gammapy.data.EventListBase`
             The filtered event list
         """
+        from gammapy.data import EventList
+
         filtered_events = self._filter_by_time(events)
 
-        for f in self.event_filters:
-            method_str = self.EVENT_FILTER_TYPES[f["type"]]
-            filtered_events = getattr(filtered_events, method_str)(**f["opts"])
+        if self.event_filter_method == "intersect":
 
-        return filtered_events
+            for f in self.event_filters:
+                method_str = self.EVENT_FILTER_TYPES[f["type"]]
+                filtered_events = getattr(filtered_events, method_str)(**f["opts"])
+
+            return filtered_events
+
+        elif self.event_filter_method == "union":
+
+            filtered_events_list = []
+            for f in self.event_filters:
+                method_str = self.EVENT_FILTER_TYPES[f["type"]]
+                filtered_events_list.append(
+                    getattr(filtered_events, method_str)(**f["opts"]).table
+                )
+
+            table = unique(
+                vstack(filtered_events_list, join_type="exact").sort("TIME"),
+                keys="TIME",
+            )
+            tot_filtered_events = EventList(table)
+            return tot_filtered_events
+
+        else:
+            raise ValueError(
+                "event_filter_method has to be either 'intersect' or 'union'."
+            )
 
     def filter_gti(self, gti):
         """Apply filters to a GTI table.
@@ -112,11 +146,43 @@ class ObservationFilter:
 
     @staticmethod
     def _check_filter_phase(event_filter):
-        if not event_filter:
-            return 1
+        fraction = 0
         for f in event_filter:
             if f.get("opts").get("parameter") == "PHASE":
                 band = f.get("opts").get("band")
-                return band[1] - band[0]
-            else:
-                return 1
+                fraction += band[1] - band[0]
+
+        return 1 if fraction == 0 else fraction
+
+    @staticmethod
+    def _merge_overlapping(event_filter):
+
+        group_list = []
+        not_custom_list = []
+
+        sky_region_indices = [
+            idx for idx, f in enumerate(event_filter) if f["type"] == "sky_region"
+        ]
+        for idx in reversed(sky_region_indices):
+            not_custom_list.append(event_filter.pop(idx))
+
+        for _, value in groupby(event_filter, lambda k: k["opts"]["parameter"]):
+            group_list.append(list(value))
+
+        new_event_filter = []
+        for group in group_list:
+            group.sort(key=lambda interval: interval["opts"]["band"][0])
+            merged = [group[0]]
+            for dictio in group:
+                previous = merged[-1]
+                if dictio["opts"]["band"][0] <= previous["opts"]["band"][1]:
+                    band_max = max(
+                        previous["opts"]["band"][1], dictio["opts"]["band"][1]
+                    )
+                    previous["opts"]["band"] = (previous["opts"]["band"][0], band_max)
+                else:
+                    merged.append(dictio)
+            new_event_filter.append(merged)
+
+        new_event_filter.append(not_custom_list)
+        return np.concatenate(new_event_filter)

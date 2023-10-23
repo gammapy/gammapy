@@ -102,6 +102,13 @@ def test_filter_gti(observation):
             "p_in": [],
             "p_out": 1,
         },
+        {
+            "p_in": [
+                {"type": "custom", "opts": dict(parameter="PHASE", band=(0.2, 0.4))},
+                {"type": "custom", "opts": dict(parameter="PHASE", band=(0.6, 0.8))},
+            ],
+            "p_out": 0.4,
+        },
     ],
 )
 def test_check_filter_phase(pars):
