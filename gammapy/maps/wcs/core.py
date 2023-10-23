@@ -338,7 +338,7 @@ class WcsMap(Map):
             plt.close(fig)
             plt.ion()
             regions_pieces = []
-            for kp, pp in enumerate(cs.collections[0].get_paths()):
+            for pp in cs.collections[0].get_paths():
                 vertices = []
                 for v in pp.vertices:
                     v_coord = self.geom.pix_to_coord(v)
@@ -353,6 +353,8 @@ class WcsMap(Map):
                 return regions_union
             else:
                 return regions_pieces
+        else:
+            raise ValueError("No positive values in the map.")
 
     def containment_radius(self, fraction=0.68, position=None):
         """Compute containment radius from the center of a map with integral quantities
@@ -370,19 +372,20 @@ class WcsMap(Map):
         Returns
         -------
         radius : `~astropy.coordinates.Angle`
-            Containement radius
+            Minimal radius required to reach the given containement fraction.
 
         """
-        coords = self.geom.get_coord()
-        grid = coords.skycoord
+
         if position is None:
             position = self.geom.center_skydir
 
         fmax = np.nanmax(self.data)
         if fmax > 0.0:
-            sep = grid.separation(position).flatten()
+            sep = self.geom.separation(position).flatten()
             order = np.argsort(sep)
             ordered = self.data.flatten()[order]
             cumsum = np.nancumsum(ordered)
             ind = np.argmin(np.abs(cumsum / cumsum.max() - fraction))
+        else:
+            raise ValueError("No positive values in the map.")
         return sep[order][ind]
