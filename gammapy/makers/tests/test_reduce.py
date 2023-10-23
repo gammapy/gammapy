@@ -121,7 +121,7 @@ def exclusion_mask():
     return ~geom.region_mask([exclusion_region])
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture()
 def full_exclusion_mask():
     exclusion_region = CircleSkyRegion(
         center=SkyCoord(183.604, -8.708, unit="deg", frame="galactic"),
@@ -156,7 +156,7 @@ def makers_spectrum(exclusion_mask):
     ]
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture()
 def failure_makers_spectrum(full_exclusion_mask):
     return [
         SpectrumDatasetMaker(
