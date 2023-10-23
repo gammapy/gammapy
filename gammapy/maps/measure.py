@@ -37,9 +37,9 @@ def containment_region(map_, fraction=0.68, apply_union=True):
         plt.close(fig)
         plt.ion()
         regions_pieces = []
-        for pp in cs.collections[0].get_paths():
+        for pp in cs.allsegs[0]:
             vertices = []
-            for v in pp.vertices:
+            for v in pp:
                 v_coord = map_.geom.pix_to_coord(v)
                 vertices.append([v_coord[0], v_coord[1]])
             vertices = SkyCoord(vertices, frame=map_.geom.frame)
