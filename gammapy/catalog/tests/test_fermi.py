@@ -34,7 +34,7 @@ SOURCES_2PC = [
     dict(
         idx=3,
         name="J0034-0534",
-        str_ref_file="data/2pc_J0034-0534.txt",
+        str_ref_file="data/2pc_j0034-0534.txt",
         spec_type=SuperExpCutoffPowerLaw3FGLSpectralModel,
         dnde=u.Quantity(8.69100018e-12, "cm-2 s-1 MeV-1"),
         dnde_err=u.Quantity(1.20799995e-12, "cm-2 s-1 MeV-1"),
@@ -42,7 +42,7 @@ SOURCES_2PC = [
     dict(
         idx=38,
         name="J1112-6103",
-        str_ref_file="data/2pc_J1112-6103.txt",
+        str_ref_file="data/2pc_j1112-6103.txt",
         spec_type=PowerLawSpectralModel,
         dnde=u.Quantity(2.55399998e-12, "cm-2 s-1 MeV-1"),
         dnde_err=u.Quantity(6.34000014e-13, "cm-2 s-1 MeV-1"),
@@ -53,7 +53,7 @@ SOURCES_3PC_NONE = [
     dict(
         idx=51,
         name="J0834-4159",
-        str_ref_file="data/3pc_J0834-4159.txt",
+        str_ref_file="data/3pc_j0834-4159.txt",
         spec_type=None,
     ),
 ]
@@ -62,7 +62,7 @@ SOURCES_3PC = [
     dict(
         idx=52,
         name="J0835-4510",
-        str_ref_file="data/3pc_J0835-4510.txt",
+        str_ref_file="data/3pc_j0835-4510.txt",
         spec_type=SuperExpCutoffPowerLaw4FGLDR3SpectralModel,
         dnde=u.Quantity(5.32697275e-10, "cm-2 s-1 MeV-1"),
         dnde_err=u.Quantity(1.64905329e-12, "cm-2 s-1 MeV-1"),
