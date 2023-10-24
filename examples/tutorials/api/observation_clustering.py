@@ -139,7 +139,7 @@ ax.axvline(np.median(obs_zenith), ls="--", color="black")
 # This method shows how to cluster observations based on their IRF quantities,
 # in this case those that have a similar edisp and psf. The
 # `~gammapy.data.utils.get_irfs_features` is utilised to achieve this. The
-# observations are then clustered based on this criteria using
+# observations are then clustered based on these criteria using
 # `~gammapy.utils.cluster.hierarchical_clustering`. The idea here is to minimise
 # the variance of both edisp and psf within a specific group to limit the error
 # on the quantity when they are stacked at the dataset level.
