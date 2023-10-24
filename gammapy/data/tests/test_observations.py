@@ -192,6 +192,11 @@ def test_observations_mutation(data_store):
         obss[["1", "2"]]
 
 
+def test_empty_observations():
+    observations = Observations()
+    assert len(observations) == 0
+
+
 @requires_data()
 def test_observations_str(data_store):
     obs_ids = data_store.obs_table["OBS_ID"][:4]
