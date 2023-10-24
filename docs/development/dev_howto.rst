@@ -939,3 +939,17 @@ Nearly all base classes in Gammapy implement this default
 a default implementation is not needed, since it will rely on its
 (grand)parent. As a result, for specific HTML output, only the
 `to_html` method needs to be implented for the relevant class.
+
+Convert a jupyter notebook to python script in the sphinx-gallery format
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The tutorials in Gammapy are represented by python scripts written in the sphinx-gallery format. However, since they are
+displayed as jupyter notebooks in the documentation,
+it is usually easier to first create a tutorial in a jupyter notebook and then convert
+it into a python script. This can be done using ``ipynb_to_gallery.py`` script located in the ``dev`` folder. This
+script can be used as follows::
+
+    python dev/ipynb_to_gallery.py <path_to_notebook> (Optional)<path_to_script>
+
+If the path of the output file is not provided, the script will be written in the same folder as the notebook and with
+the same name.
