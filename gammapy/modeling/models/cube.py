@@ -422,28 +422,6 @@ class SkyModel(ModelBase):
                 ).quantity
             )
 
-        if "time" in geom.axes.names:
-            if geom.axis_names[-1] != "time":
-                raise ValueError(
-                    "Incorrect axis order. The time axis must be the last axis"
-                )
-            time_axis = geom.axes["time"]
-            if gti is None:
-                temp_eval = self.temporal_model.integral(
-                    time_axis.time_min, time_axis.time_max
-                )
-            else:
-                temp_eval = []
-                for idx in range(time_axis.nbin):
-                    gti_in_bin = gti.select_time(
-                        time_interval=[time_axis.time_min[idx], time_axis.time_max[idx]]
-                    )
-                    integral = self.temporal_model.integral(
-                        gti_in_bin.time_start, gti_in_bin.time_stop
-                    )
-                    temp_eval.append(np.sum(integral))
-            value = (value.T * temp_eval).T
-
         elif self.temporal_model and gti:
             integral = self.temporal_model.integral(gti.time_start, gti.time_stop)
             value = value * np.sum(integral)

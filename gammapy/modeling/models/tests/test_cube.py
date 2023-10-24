@@ -806,23 +806,8 @@ def test_evaluate_integrate_geom_with_time(gti):
         rtol=1e-6,
     )
 
-    integral = sky_model.integrate_geom(wcs_geom)
-    assert integral.data.shape == (4, 2, 3, 24, 20)
-    assert_allclose(
-        integral.data.value[0, 0, 1, 12, 10],
-        1.8405743444123462e-08,
-        rtol=1e-6,
-    )
-
     radius = 0.3 * u.deg
     region = CircleSkyRegion(center, radius)
-    integral = sky_model.integrate_geom(geom)
-    assert integral.data.shape == (4, 3, 1, 1)
-    assert_allclose(
-        integral.data.value[0],
-        [[[1.74059581e-12]], [[3.75000000e-13]], [[8.07913009e-14]]],
-        rtol=1e-6,
-    )
 
     sky_model1 = SkyModel(spectral_model=spectral_model, temporal_model=temporal_model)
     region_geom = RegionGeom(
@@ -838,14 +823,6 @@ def test_evaluate_integrate_geom_with_time(gti):
     assert evaluation.shape == (4, 3, 1, 1)
     assert_allclose(
         evaluation[0].value,
-        [[[1.74059581e-12]], [[3.75000000e-13]], [[8.07913009e-14]]],
-        rtol=1e-6,
-    )
-
-    integral = sky_model1.integrate_geom(geom)
-    assert integral.data.shape == (4, 3, 1, 1)
-    assert_allclose(
-        integral.data.value[0],
         [[[1.74059581e-12]], [[3.75000000e-13]], [[8.07913009e-14]]],
         rtol=1e-6,
     )
