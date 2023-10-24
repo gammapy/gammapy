@@ -821,6 +821,24 @@ class DatasetModels(collections.abc.Sequence):
 
         return self.__class__(models=models)
 
+    def select_from_geom(self, geom, **kwargs):
+        """Select models that fall inside a given geometry.
+
+        Parameters
+        ----------
+        geom : `~gammapy.maps.Geom`
+            Geometry to select models from.
+        **kwargs : dict
+            Keyword arguments passed to `~gammapy.modeling.models.DatasetModels.select_mask`.
+
+        Returns
+        -------
+        models : `DatasetModels`
+            Selected models.
+        """
+        mask = Map.from_geom(geom=geom, data=True, dtype=bool)
+        return self.select_mask(mask=mask, **kwargs)
+
     def select_region(self, regions, wcs=None):
         """Select sky models with center position contained within a given region
 
