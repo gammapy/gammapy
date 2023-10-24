@@ -19,7 +19,8 @@ Gammapy provides the `~gammapy.makers.FoVBackgroundMaker`. The latter creates a
 and a `~gammapy.modeling.models.NormSpectralModel` which allows to renormalize the background cube, and
 possibly to change its spectral distribution. By default, only the `norm` parameter of a
 `~gammapy.modeling.models.PowerLawNormSpectralModel` is left free. Here we show the addition of a `~gammapy.modeling.models.PowerLawNormSpectralModel`
-in which the `norm` and `tilt` parameters are unfrozen as an example.
+in which the `norm` and `tilt` parameters are unfrozen as an example. It is also possible to implement other normed
+models, such as the `~gammapy.modeling.models.PiecewiseNormSpectralModel`.
 
 .. testcode::
 
