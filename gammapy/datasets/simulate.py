@@ -31,9 +31,9 @@ class MapDatasetEventSampler:
         an energy-dependent time-varying source
     t_delta : `~astropy.units.Quantity`
         Time interval used to sample the time-dependent source
-    mc_id : `~bool`
-        Flag to tag sampled events from a given model with a Montecarlo identifier. If set to "False", no
-        identifier will be assigned
+    keep_mc_id : bool
+        Flag to tag sampled events from a given model with a Montecarlo identifier.
+        Default is True. If set to False, no identifier will be assigned
     """
 
     def __init__(
@@ -41,12 +41,12 @@ class MapDatasetEventSampler:
         random_state="random-seed",
         oversample_energy_factor=10,
         t_delta=0.5 * u.s,
-        mc_id=True,
+        keep_mc_id=True,
     ):
         self.random_state = get_random_state(random_state)
         self.oversample_energy_factor = oversample_energy_factor
         self.t_delta = t_delta
-        self.mc_id = mc_id
+        self.keep_mc_id = keep_mc_id
 
     def _repr_html_(self):
         try:
@@ -272,7 +272,7 @@ class MapDatasetEventSampler:
                 npred = evaluator.apply_exposure(flux)
                 table = self._sample_coord_time(npred, temporal_model, dataset.gti)
 
-            if self.mc_id:
+            if self.keep_mc_id:
                 if len(table) == 0:
                     mcid = table.Column(name="MC_ID", length=0, dtype=int)
                     table.add_column(mcid)
@@ -308,7 +308,7 @@ class MapDatasetEventSampler:
         table["RA"] = table["RA_TRUE"]
         table["DEC"] = table["DEC_TRUE"]
 
-        if self.mc_id:
+        if self.keep_mc_id:
             table["MC_ID"] = 0
             table.meta["MID{:05d}".format(0)] = 0
             table.meta["MMN{:05d}".format(0)] = dataset.background_model.name
@@ -397,8 +397,9 @@ class MapDatasetEventSampler:
         return events
 
     @staticmethod
-    def event_list_meta(dataset, observation, mc_id=True):
+    def event_list_meta(dataset, observation, keep_mc_id=True):
         """Event list meta info.
+        Please, note that this function will be updated in the future.
 
         Parameters
         ----------
@@ -406,6 +407,9 @@ class MapDatasetEventSampler:
             Map dataset
         observation : `~gammapy.data.Observation`
             In memory observation
+        keep_mc_id : bool
+            Flag to tag sampled events from a given model with a Montecarlo identifier.
+            Default is True. If set to False, no identifier will be assigned
 
         Returns
         -------
@@ -486,7 +490,7 @@ class MapDatasetEventSampler:
         meta["CONV_RA"] = 0
         meta["CONV_DEC"] = 0
 
-        if mc_id:
+        if keep_mc_id:
             meta["NMCIDS"] = len(dataset.models)
 
         # Necessary for DataStore, but they should be ALT and AZ instead!
@@ -566,7 +570,9 @@ class MapDatasetEventSampler:
 
         events = self.event_det_coords(observation, events)
         events.table["EVENT_ID"] = np.arange(len(events.table))
-        events.table.meta.update(self.event_list_meta(dataset, observation, self.mc_id))
+        events.table.meta.update(
+            self.event_list_meta(dataset, observation, self.keep_mc_id)
+        )
 
         geom = dataset._geom
         selection = geom.contains(events.map_coord(geom))

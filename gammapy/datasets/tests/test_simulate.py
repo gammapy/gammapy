@@ -825,7 +825,7 @@ def test_MC_ID_flag(model_alternative):
 
     model_alternative[0].spectral_model.parameters["amplitude"].value = 1e-16
     dataset.models = model_alternative
-    sampler = MapDatasetEventSampler(random_state=0, mc_id=False)
+    sampler = MapDatasetEventSampler(random_state=0, keep_mc_id=False)
     events = sampler.run(dataset=dataset, observation=obs)
 
     meta = events.table.meta
