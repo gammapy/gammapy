@@ -211,5 +211,6 @@
         "pydantic>=1.4,<2.0",
         "iminuit>=2.8.0",
         "matplotlib>=3.4"
-    ]
+    ],
+    "referencePublication": "https://doi.org/10.1051/0004-6361/202346488"
 }
