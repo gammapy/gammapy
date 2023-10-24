@@ -764,43 +764,94 @@ def test_evaluate_integrate_nd_geom():
     )
 
 
-def test_evaluate_integrate_nd_geom_with_time(gti):
-    model = GaussianSpatialModel(lon="0d", lat="0d", sigma=0.1 * u.deg, frame="icrs")
+def test_evaluate_integrate_geom_with_time(gti):
+    spatial_model = GaussianSpatialModel(
+        lon="0d", lat="0d", sigma=0.1 * u.deg, frame="icrs"
+    )
     spectral_model = PowerLawSpectralModel(amplitude="1e-11 cm-2 s-1 TeV-1")
     temporal_model = PowerLawTemporalModel()
-    temporal_model.t_ref.value = 55555
-    sky_model = SkyModel(spectral_model=spectral_model, spatial_model=model)
+    temporal_model.t_ref.value = 55000
+    sky_model = SkyModel(
+        spectral_model=spectral_model,
+        spatial_model=spatial_model,
+        temporal_model=temporal_model,
+    )
 
     center = SkyCoord("0d", "0d", frame="icrs")
-    # radius = 0.3 * u.deg
-    # region = CircleSkyRegion(center, radius)
+
+    t_ref = Time(temporal_model.t_ref.value, format="mjd")
 
     energy_axis = MapAxis.from_energy_bounds(
-        "1 TeV", "10 TeV", nbin=4, name="energy_true"
+        "1 TeV", "10 TeV", nbin=3, name="energy_true"
     )
     other_axis = MapAxis.from_edges([0.0, 1.0, 2.0], name="other")
-    time_axis = TimeMapAxis.from_gti(gti)
+
+    time_min = t_ref + [1, 3, 5, 7] * u.day
+    time_max = t_ref + [2, 4, 6, 8] * u.day
+
+    time_axis = TimeMapAxis.from_time_edges(time_min=time_min, time_max=time_max)
 
     wcs_geom = WcsGeom.create(
         width=[1, 1.2],
         binsz=0.05,
         skydir=center,
-        axes=[energy_axis, time_axis, other_axis],
+        axes=[energy_axis, other_axis, time_axis],
     )
-    # region_geom = RegionGeom(
-    #    region=region, axes=[time_axis, energy_axis], binsz_wcs="0.01deg"
-    # )
 
     evaluation = sky_model.evaluate_geom(wcs_geom)
-    assert evaluation.shape == (2, 3, 4, 24, 20)
+    assert evaluation.shape == (4, 2, 3, 24, 20)
     assert_allclose(
         evaluation.value[0, 0, 1, 12, 10],
-        8.728147891504973e-08,
+        1.8405743444123462e-08,
+        rtol=1e-6,
+    )
+
+    integral = sky_model.integrate_geom(wcs_geom)
+    assert integral.data.shape == (4, 2, 3, 24, 20)
+    assert_allclose(
+        integral.data.value[0, 0, 1, 12, 10],
+        1.8405743444123462e-08,
+        rtol=1e-6,
+    )
+
+    radius = 0.3 * u.deg
+    region = CircleSkyRegion(center, radius)
+    integral = sky_model.integrate_geom(geom)
+    assert integral.data.shape == (4, 3, 1, 1)
+    assert_allclose(
+        integral.data.value[0],
+        [[[1.74059581e-12]], [[3.75000000e-13]], [[8.07913009e-14]]],
+        rtol=1e-6,
+    )
+
+    sky_model1 = SkyModel(spectral_model=spectral_model, temporal_model=temporal_model)
+    region_geom = RegionGeom(
+        region=region, axes=[time_axis, energy_axis], binsz_wcs="0.01deg"
+    )
+    with pytest.raises(ValueError):
+        sky_model1.evaluate_geom(region_geom)
+
+    region_geom = RegionGeom(
+        region=region, axes=[energy_axis, time_axis], binsz_wcs="0.01deg"
+    )
+    evaluation = sky_model1.evaluate_geom(geom=region_geom)
+    assert evaluation.shape == (4, 3, 1, 1)
+    assert_allclose(
+        evaluation[0].value,
+        [[[1.74059581e-12]], [[3.75000000e-13]], [[8.07913009e-14]]],
+        rtol=1e-6,
+    )
+
+    integral = sky_model1.integrate_geom(geom)
+    assert integral.data.shape == (4, 3, 1, 1)
+    assert_allclose(
+        integral.data.value[0],
+        [[[1.74059581e-12]], [[3.75000000e-13]], [[8.07913009e-14]]],
         rtol=1e-6,
     )
 
 
-def test_evaluate_integrate_nd_geom_with_time_and_gti():
+def test_evaluate_integrate_geom_with_time_and_gti():
     spatial_model = GaussianSpatialModel(
         lon="0d", lat="0d", sigma=0.1 * u.deg, frame="icrs"
     )
