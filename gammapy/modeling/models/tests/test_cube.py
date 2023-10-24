@@ -800,6 +800,73 @@ def test_evaluate_integrate_nd_geom_with_time(gti):
     )
 
 
+def test_evaluate_integrate_nd_geom_with_time_and_gti():
+    spatial_model = GaussianSpatialModel(
+        lon="0d", lat="0d", sigma=0.1 * u.deg, frame="icrs"
+    )
+    spectral_model = PowerLawSpectralModel(amplitude="1e-11 cm-2 s-1 TeV-1")
+    temporal_model = PowerLawTemporalModel()
+    temporal_model.t_ref.value = 55000
+    sky_model = SkyModel(
+        spectral_model=spectral_model,
+        spatial_model=spatial_model,
+        temporal_model=temporal_model,
+    )
+
+    center = SkyCoord("0d", "0d", frame="icrs")
+
+    start = np.linspace(0, 8, 10) * u.day
+    stop = np.linspace(0.5, 8.5, 10) * u.day
+    t_ref = Time(temporal_model.t_ref.value, format="mjd")
+    gti = GTI.create(start, stop, reference_time=t_ref)
+
+    energy_axis = MapAxis.from_energy_bounds(
+        "1 TeV", "10 TeV", nbin=3, name="energy_true"
+    )
+    other_axis = MapAxis.from_edges([0.0, 1.0, 2.0], name="other")
+
+    time_min = t_ref + [1, 3, 5, 7] * u.day
+    time_max = t_ref + [2, 4, 6, 8] * u.day
+
+    time_axis = TimeMapAxis.from_time_edges(time_min=time_min, time_max=time_max)
+
+    wcs_geom = WcsGeom.create(
+        width=[1, 1.2],
+        binsz=0.05,
+        skydir=center,
+        axes=[energy_axis, other_axis, time_axis],
+    )
+
+    evaluation = sky_model.evaluate_geom(geom=wcs_geom, gti=gti)
+    assert evaluation.shape == (4, 2, 3, 24, 20)
+    assert_allclose(
+        evaluation.value[0, 0, 1, 12, 10],
+        7.102014e-08,
+        rtol=1e-6,
+    )
+
+    radius = 0.3 * u.deg
+    region = CircleSkyRegion(center, radius)
+
+    sky_model1 = SkyModel(spectral_model=spectral_model, temporal_model=temporal_model)
+    region_geom = RegionGeom(
+        region=region, axes=[time_axis, energy_axis], binsz_wcs="0.01deg"
+    )
+    with pytest.raises(ValueError):
+        sky_model1.evaluate_geom(region_geom, gti)
+
+    region_geom = RegionGeom(
+        region=region, axes=[energy_axis, time_axis], binsz_wcs="0.01deg"
+    )
+    evaluation = sky_model1.evaluate_geom(geom=region_geom, gti=gti)
+    assert evaluation.shape == (4, 3, 1, 1)
+    assert_allclose(
+        evaluation[0].value,
+        [[[6.71623839e-12]], [[1.44696970e-12]], [[3.11740171e-13]]],
+        rtol=1e-3,
+    )
+
+
 def test_compound_spectral_model(caplog):
     spatial_model = GaussianSpatialModel(
         lon_0="3 deg", lat_0="4 deg", sigma="3 deg", frame="galactic"

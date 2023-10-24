@@ -356,22 +356,28 @@ class SkyModel(ModelBase):
             value = value * self.spatial_model.evaluate_geom(geom)
 
         if "time" in coords.axis_names and self.temporal_model:
-            # set time as the last axis
-            new_order = list(set(geom.axes_names) - set(["lat", "lon", "time"]))
-            new_order.append("time")
-            m = Map.from_geom(geom, value)
-            m1 = m.reorder_axes(new_order)
-            if self.gti is None:
+            if coords.axis_names[-1] != "time":
+                raise ValueError(
+                    "Incorrect axis order. The time axis must be the last axis"
+                )
+            time_axis = geom.axes["time"]
+            if gti is None:
                 temp_eval = self.temporal_model.integral(
-                    geom.axes["time"].time_min, geom.axes["time"].time_max
+                    time_axis.time_min, time_axis.time_max
                 )
             else:
                 temp_eval = []
-                for idx in range(geom.axes["time"].nbin):
-                    temp_eval.append(idx)
-            value = (m1.data.T * temp_eval).T
+                for idx in range(time_axis.nbin):
+                    gti_in_bin = gti.select_time(
+                        time_interval=[time_axis.time_min[idx], time_axis.time_max[idx]]
+                    )
+                    integral = self.temporal_model.integral(
+                        gti_in_bin.time_start, gti_in_bin.time_stop
+                    )
+                    temp_eval.append(np.sum(integral))
+            value = (value.T * temp_eval).T
 
-        if self.temporal_model and gti:
+        elif self.temporal_model and gti:
             integral = self.temporal_model.integral(gti.time_start, gti.time_stop)
             value = value * np.sum(integral)
 
