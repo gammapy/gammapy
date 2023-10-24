@@ -434,11 +434,11 @@ class Datasets(collections.abc.MutableSequence):
         filename : str or `Path`
             File path or name of datasets yaml file
         filename_models : str or `Path`
-            File path or name of models yaml file
+            File path or name of models yaml file. Default is None.
         overwrite : bool
-            overwrite datasets FITS files
+            overwrite datasets FITS files. Default is False.
         write_covariance : bool
-            save covariance or not
+            save covariance or not. Default is False.
         checksum : bool
             When True adds both DATASUM and CHECKSUM cards to the headers written to the FITS files.
             Default is False.

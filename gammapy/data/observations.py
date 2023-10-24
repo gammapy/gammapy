@@ -568,11 +568,11 @@ class Observation:
         path: str or `~pathlib.Path`
             Path for the output file
         overwrite: bool
-            If true, existing files are overwritten.
+            If true, existing files are overwritten. Default is False.
         format: str
-            Output format, currently only "gadf" is supported
+            Output format, currently only "gadf" is supported. Default is "gadf".
         include_irfs: bool
-            Whether to include irf components in the output file
+            Whether to include irf components in the output file. Default is True.
         checksum : bool
             When True adds both DATASUM and CHECKSUM cards to the headers written to the file.
             Default is False.
