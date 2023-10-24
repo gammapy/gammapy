@@ -8,7 +8,7 @@ abstract: 'Gammapy analyzes gamma-ray data and creates sky images, spectra and l
 type: software
 message: "If you use this software, please cite it using the metadata from this file."
 url: "https://gammapy.org/"
-doi: 10.5281/zenodo.4701488
+date-released: 2023-06-13
 keywords:
 - Astronomy
 - "Gamma-rays"
@@ -19,6 +19,10 @@ license: BSD-3-Clause
 contact:
 - email: GAMMAPY-COORDINATION-L@IN2P3.FR
   name: "Coordination committee of the Gammapy project"
+identifiers:
+- description: "Zenodo repository of the release 1.1"
+    type: doi
+    value: 10.5281/zenodo.4701488
 authors:
 - given-names: Arnau
   family-names: Aguasca-Cabot
@@ -96,4 +100,8 @@ authors:
   affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013\
     \ Paris, France"
   orcid: "https://orcid.org/0000-0002-8219-4667"
-date-released: 2023-06-13
+preferred-citation:
+  authors: "The Gammapy team"
+  title: "Gammapy: A Python package for gamma-ray astronomy"
+  type: article
+  doi: 10.1051/0004-6361/202346488
