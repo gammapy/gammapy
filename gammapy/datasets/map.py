@@ -25,6 +25,7 @@ from gammapy.utils.scripts import make_name, make_path
 from gammapy.utils.table import hstack_columns
 from .core import Dataset
 from .evaluator import MapEvaluator
+from .metadata import MapDatasetMetaData
 from .utils import get_axes
 
 __all__ = [
@@ -389,6 +390,7 @@ class MapDataset(Dataset):
         mask_fit=None,
         gti=None,
         meta_table=None,
+        meta=None,
         name=None,
     ):
         self._name = make_name(name)
@@ -420,6 +422,7 @@ class MapDataset(Dataset):
         self.gti = gti
         self.models = models
         self.meta_table = meta_table
+        self._meta = meta
 
     # TODO: keep or remove?
     @property
@@ -608,6 +611,13 @@ class MapDataset(Dataset):
         """Largest energy range among all pixels, defined by mask_safe and mask_fit."""
         energy_min_map, energy_max_map = self.energy_range
         return np.nanmin(energy_min_map.quantity), np.nanmax(energy_max_map.quantity)
+
+    @property
+    def meta(self):
+        """Return metadata container."""
+        if self._meta is None:
+            self._meta = MapDatasetMetaData.from_default()
+        return self._meta
 
     def npred(self):
         """Total predicted source and background counts.
