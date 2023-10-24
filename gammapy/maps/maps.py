@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from collections.abc import MutableMapping
 import html
+from collections.abc import MutableMapping
 from astropy.io import fits
 from gammapy.maps import Map
 from gammapy.utils.scripts import make_path
@@ -145,7 +145,7 @@ class Maps(MutableMapping):
         with fits.open(str(make_path(filename)), memmap=False) as hdulist:
             return cls.from_hdulist(hdulist)
 
-    def write(self, filename, overwrite=False):
+    def write(self, filename, overwrite=False, checksum=False):
         """Write map dictionary to file.
 
         Parameters
@@ -154,11 +154,14 @@ class Maps(MutableMapping):
             Filename to write to.
         overwrite : bool
             Overwrite file if it exists.
+        checksum : bool
+            When True adds both DATASUM and CHECKSUM cards to the headers written to the file.
+            Default is False.
         """
         filename = make_path(filename)
 
         hdulist = self.to_hdulist()
-        hdulist.writeto(filename, overwrite=overwrite)
+        hdulist.writeto(filename, overwrite=overwrite, checksum=checksum)
 
     @classmethod
     def from_geom(cls, geom, names, kwargs_list=None):

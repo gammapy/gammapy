@@ -557,7 +557,9 @@ class Observation:
             **irf_dict,
         )
 
-    def write(self, path, overwrite=False, format="gadf", include_irfs=True):
+    def write(
+        self, path, overwrite=False, format="gadf", include_irfs=True, checksum=False
+    ):
         """
         Write this observation into `path` using the specified format
 
@@ -566,11 +568,14 @@ class Observation:
         path: str or `~pathlib.Path`
             Path for the output file
         overwrite: bool
-            If true, existing files are overwritten.
+            If true, existing files are overwritten. Default is False.
         format: str
-            Output format, currently only "gadf" is supported
+            Output format, currently only "gadf" is supported. Default is "gadf".
         include_irfs: bool
-            Whether to include irf components in the output file
+            Whether to include irf components in the output file. Default is True.
+        checksum : bool
+            When True adds both DATASUM and CHECKSUM cards to the headers written to the file.
+            Default is False.
         """
         if format != "gadf":
             raise ValueError(f'Only the "gadf" format is supported, got {format}')
@@ -599,7 +604,7 @@ class Observation:
                 if irf is not None:
                     hdul.append(irf.to_table_hdu(format="gadf-dl3"))
 
-        hdul.writeto(path, overwrite=overwrite)
+        hdul.writeto(path, overwrite=overwrite, checksum=checksum)
 
     def copy(self, in_memory=False, **kwargs):
         """Copy observation
