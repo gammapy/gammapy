@@ -348,9 +348,7 @@ class SkyModel(ModelBase):
         value = self.spectral_model(coords["energy_true"])
 
         if coords.ndim > 3:
-            additional_axes = set(coords.axis_names) - set(
-                ["lon", "lat", "energy_true"]
-            )
+            additional_axes = set(coords.axis_names) - {"lon", "lat", "energy_true"}
             for axis in additional_axes:
                 value = value * np.ones_like(coords[axis])
 
@@ -363,9 +361,14 @@ class SkyModel(ModelBase):
             new_order.append("time")
             m = Map.from_geom(geom, value)
             m1 = m.reorder_axes(new_order)
-            temp_eval = self.temporal_model.integral(
-                geom.axes["time"].time_min, geom.axes["time"].time_max
-            )
+            if self.gti is None:
+                temp_eval = self.temporal_model.integral(
+                    geom.axes["time"].time_min, geom.axes["time"].time_max
+                )
+            else:
+                temp_eval = []
+                for idx in range(geom.axes["time"].nbin):
+                    temp_eval.append(idx)
             value = (m1.data.T * temp_eval).T
 
         if self.temporal_model and gti:
