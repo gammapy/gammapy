@@ -659,6 +659,10 @@ class Observations(collections.abc.MutableSequence):
 
     def __init__(self, observations=None):
         self._observations = []
+
+        if observations is None:
+            observations = []
+
         for obs in observations:
             self.append(obs)
 
