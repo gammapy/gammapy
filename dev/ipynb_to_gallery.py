@@ -30,12 +30,14 @@ def convert_ipynb_to_gallery(input_file_name, output_file_name=None):
             assert cell["cell_type"] == "markdown", "First cell has to be markdown"
 
             md_source = "".join(cell["source"])
-            rst_source = pdoc.convert_text(md_source, "rst", "md")
+            rst_source = pdoc.convert_text(md_source, "rst", "md").replace("``", "`")
             python_file = '"""\n' + rst_source + '\n"""'
         else:
             if cell["cell_type"] == "markdown":
                 md_source = "".join(cell["source"])
-                rst_source = pdoc.convert_text(md_source, "rst", "md")
+                rst_source = pdoc.convert_text(md_source, "rst", "md").replace(
+                    "``", "`"
+                )
                 commented_source = "\n".join(["# " + x for x in rst_source.split("\n")])
                 python_file = (
                     python_file + "\n\n\n" + "#" * 70 + "\n" + commented_source
