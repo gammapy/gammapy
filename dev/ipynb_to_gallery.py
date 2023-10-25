@@ -51,7 +51,7 @@ def convert_ipynb_to_gallery(input_file_name, output_file_name=None):
     else:
         if not output_file_name.endswith(".py"):
             output_file_name = output_file_name + ".py"
-        open(output_file_name.write(python_file))
+        open(output_file_name, "w").write(python_file)
 
 
 if __name__ == "__main__":
