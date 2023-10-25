@@ -2545,15 +2545,16 @@ class TimeMapAxis:
             Array of axis coordinate values.
         """
         shape = np.shape(pix)
-        pix = np.atleast_1d(pix).ravel()
-        coords = np.zeros(len(pix))
+        pix = np.atleast_1d(pix)
+        coords = np.zeros_like(pix)
         frac, idx = np.modf(pix)
+        idx1 = idx.astype(int)
         valid = np.logical_and(idx >= 0, idx < self.nbin, np.isfinite(idx))
         idx_valid = np.where(valid)
         idx_invalid = np.where(~valid)
 
         coords[idx_valid] = (
-            frac[idx_valid] * self.time_delta[idx_valid] + self.edges_min[idx_valid]
+            frac[idx_valid] * self.time_delta[idx1[valid]] + self.edges_min[idx1[valid]]
         ).jd
         coords = coords * self.unit + self.reference_time
         coords[idx_invalid] = Time(INVALID_VALUE.time, scale=self.reference_time.scale)
