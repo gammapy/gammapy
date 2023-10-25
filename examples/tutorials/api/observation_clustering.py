@@ -197,7 +197,7 @@ print(features)
 
 ######################################################################
 # Finally, `observations.group_by_label` creates a dictionary containing `t`
-# `~gammapy.data.Observation` objects by grouping the similar labels.
+# `~gammapy.data.Observations` objects by grouping the similar labels.
 #
 
 obs_clusters = observations.group_by_label(features["labels"])
