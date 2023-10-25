@@ -83,10 +83,10 @@ observations = data_store.get_observations(obs_ids)
 # if there is a sensible way to group the observations.
 #
 
-obs_zenith = selected_obs_table["ZEN_PNT"]
+obs_zenith = selected_obs_table["ZEN_PNT"].to(u.deg)
 obs_muoneff = selected_obs_table["MUONEFF"]
 
-print(f"{np.min(obs_zenith):.2f} deg < zenith angle < {np.max(obs_zenith):.2f} deg")
+print(f"{np.min(obs_zenith):.2f} < zenith angle < {np.max(obs_zenith):.2f}")
 print(f"{np.min(obs_muoneff):.2f} < muon efficiency < {np.max(obs_muoneff):.2f}")
 
 
@@ -97,28 +97,45 @@ print(f"{np.min(obs_muoneff):.2f} < muon efficiency < {np.max(obs_muoneff):.2f}"
 # Here we can plot the zenith angle vs muon efficiency of the observations.
 # We decide to group the observations according to their zenith angle.
 # This is done manually as per a user defined cut, in this case we take the
-# median value of the zenith angles to define each observation group. These
-# are shown visually below.
-
+# median value of the zenith angles to define each observation group.
+#
 # This type of grouping can be utilised according to different parameters i.e.
 # zenith angle, muon efficiency, offset angle. The quantity chosen can therefore
 # be adjusted according to each specific science case.
 #
 
-fix, ax = plt.subplots(1, 1, figsize=(7, 5))
-obs_A = Observations([])
-obs_B = Observations([])
+median_zenith = np.median(obs_zenith)
+
+labels = []
 for obs in observations:
-    zenith = obs.get_pointing_altaz(time=obs.tmid).zen.deg
-    if zenith < np.median(obs_zenith):
-        ax.plot(zenith, obs.obs_info["MUONEFF"], "d", color="red")
-        obs_A.append(obs)
-    if zenith > np.median(obs_zenith):
-        ax.plot(zenith, obs.obs_info["MUONEFF"], "o", color="blue")
-        obs_B.append(obs)
+    zenith = obs.get_pointing_altaz(time=obs.tmid).zen
+    labels.append("low_zenith" if zenith < median_zenith else "high_zenith")
+grouped_observations = observations.group_by_label(labels)
+
+print(grouped_observations)
+
+#
+# The results for each group of observations is shown visually below.
+#
+
+fix, ax = plt.subplots(1, 1, figsize=(7, 5))
+for obs in grouped_observations["group_low_zenith"]:
+    ax.plot(
+        obs.get_pointing_altaz(time=obs.tmid).zen,
+        obs.obs_info["MUONEFF"],
+        "d",
+        color="red",
+    )
+for obs in grouped_observations["group_high_zenith"]:
+    ax.plot(
+        obs.get_pointing_altaz(time=obs.tmid).zen,
+        obs.obs_info["MUONEFF"],
+        "o",
+        color="blue",
+    )
 ax.set_ylabel("Muon efficiency")
 ax.set_xlabel("Zenith angle (deg)")
-ax.axvline(np.median(obs_zenith), ls="--", color="black")
+ax.axvline(median_zenith.value, ls="--", color="black")
 
 
 ######################################################################
@@ -126,9 +143,9 @@ ax.axvline(np.median(obs_zenith), ls="--", color="black")
 # are observations which have a zenith angle less than the median value,
 # whilst the circles are observations above the median.
 #
-# `obs_A` and `obs_B` are both `~gammapy.data.Observations` objects which
-# can be utilised in the usual way to show the various properties of the
-# observations i.e. see the :doc:`/tutorials/data/cta` tutorial.
+# The `grouped_observations` provide a list of `~gammapy.data.Observations`
+# which can be utilised in the usual way to show the various properties
+# of the observations i.e. see the :doc:`/tutorials/data/cta` tutorial.
 #
 
 
@@ -166,18 +183,20 @@ print(scaled_features_irfs)
 
 ######################################################################
 # The `~gammapy.utils.cluster.hierarchical_clustering` then clusters
-# this table into `t` groups with a corresponding label for each group.
+# this table into `t=2` groups with a corresponding label for each group.
 # In this case, we choose to cluster the observations into two groups.
 # We can print this table to show the corresponding label which has been
 # added to the previous `feature_irfs` table.
 #
-
+# The arguments for `~scipy.cluster.hierarchy.fcluster` are passed as
+# a dictionary here.
+#
 
 features = hierarchical_clustering(scaled_features_irfs, fcluster_kwargs={"t": 2})
 print(features)
 
 ######################################################################
-# Finally, `observations.group_by_label` creates `t`
+# Finally, `observations.group_by_label` creates a dictionary containing `t`
 # `~gammapy.data.Observation` objects by grouping the similar labels.
 #
 
