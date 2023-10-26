@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Source catalog and object base classes."""
 import abc
+import html
 import numbers
 from copy import deepcopy
-import html
 import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
@@ -278,7 +278,7 @@ class SourceCatalog(abc.ABC):
         return _skycoord_from_table(self.table)
 
     def to_models(self, **kwargs):
-        """Create Models object from catalogue"""
+        """Create Models object from catalog."""
         return Models([_.sky_model(**kwargs) for _ in self])
 
 
