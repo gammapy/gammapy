@@ -5,6 +5,7 @@ from .core import Estimator
 from .energydependentmorphology import EnergyDependentMorphologyEstimator
 from .map import ASmoothMapEstimator, ExcessMapEstimator, FluxMaps, TSMapEstimator
 from .parameter import ParameterEstimator
+from .metadata import FluxMetaData
 from .points import (
     FluxPoints,
     FluxPointsEstimator,
@@ -30,6 +31,7 @@ __all__ = [
     "SensitivityEstimator",
     "TSMapEstimator",
     "EnergyDependentMorphologyEstimator",
+    "FluxMetaData",
 ]
 
 
