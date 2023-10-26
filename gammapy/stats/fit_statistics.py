@@ -28,7 +28,7 @@ def cash(n_on, mu_on, truncation_value=TRUNCATION_VALUE):
         Expected counts
     truncation_value : array_like
         Minimum value use for ``mu_on``
-        ``mu_on`` = ``truncation_value`` where ``n_on`` <= ``truncation_value``
+        ``mu_on`` = ``truncation_value`` where ``mu_on`` <= ``truncation_value``
         Default is 1e-25.
 
     Returns
