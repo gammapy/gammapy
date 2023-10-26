@@ -2,10 +2,11 @@
 import numpy as np
 from astropy.coordinates import SkyCoord
 from regions import PolygonSkyRegion
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 
-def containment_region(map_, fraction=0.68, apply_union=True):
+def containment_region(map_, fraction=0.393, apply_union=True):
     """Find the iso-contours region corresponding to a given containment
         for a map of integral quantities.
 
@@ -37,9 +38,24 @@ def containment_region(map_, fraction=0.68, apply_union=True):
         plt.close(fig)
         plt.ion()
         regions_pieces = []
-        for pp in cs.allsegs[0]:
+
+        try:
+            paths_all = cs.get_paths()[0]
+            starts = np.where(paths_all.codes == 1)[0]
+            stops = np.where(paths_all.codes == 79)[0] + 1
+            paths = []
+            for start, stop in zip(starts, stops):
+                paths.append(
+                    mpl.path.Path(
+                        paths_all.vertices[start:stop],
+                        codes=paths_all.codes[start:stop],
+                    )
+                )
+        except AttributeError:
+            paths = cs.collections[0].get_paths()
+        for pp in paths:
             vertices = []
-            for v in pp:
+            for v in pp.vertices:
                 v_coord = map_.geom.pix_to_coord(v)
                 vertices.append([v_coord[0], v_coord[1]])
             vertices = SkyCoord(vertices, frame=map_.geom.frame)
@@ -56,7 +72,7 @@ def containment_region(map_, fraction=0.68, apply_union=True):
         raise ValueError("No positive values in the map.")
 
 
-def containment_radius(map_, fraction=0.68, position=None):
+def containment_radius(map_, fraction=0.393, position=None):
     """Compute containment radius from the center of a map with integral quantities
 
     Parameters
