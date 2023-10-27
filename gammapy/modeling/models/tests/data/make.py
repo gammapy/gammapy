@@ -1,3 +1,4 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Create example model YAML files programmatically.
 
 (some will be also written manually)
