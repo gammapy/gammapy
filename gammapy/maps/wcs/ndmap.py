@@ -893,7 +893,8 @@ class WcsNDMap(WcsMap):
             data[idx] = convolved[idx_res]
         return self._init_copy(data=data, geom=geom)
 
-    def _convolve(self, image, kernel, method, mode):
+    @staticmethod
+    def _convolve(image, kernel, method, mode):
         """scipy.signal.convolve without kwargs for parallel evaluation"""
         return scipy.signal.convolve(image, kernel, method=method, mode=mode)
 
