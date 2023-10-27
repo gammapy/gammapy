@@ -1,38 +1,46 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-from typing import Optional
+from enum import Enum
+from typing import List, Optional
 import numpy as np
-from scipy import stats
 from astropy.coordinates import SkyCoord
 from pydantic import ValidationError, validator
+from gammapy.utils.metadata import FITS_META_KEYS as CREATOR_META_KEYS
 from gammapy.utils.metadata import CreatorMetaData, MetaData
 
 __all__ = ["FluxMetaData"]
 
-SEDTYPE = ["dnde", "flux", "eflux", "e2dnde", "likelihood"]
-FPFORMAT = ["gadf-sed", "lightcurve"]
-STANDARD_KEYS = [
-    "SED_TYPE",
-    "SEDTYPEI",
-    "UL_CONF",
-    "N_SIGMA",
-    "NSIGMAUL",
-    "STSTHUL",
-    "NSIGMSEN",
-    "TARGETNA",
-    "TARGETPO",
-    "OBS_IDS",
-    "DATASETS",
-    "INSTRU",
-]
+
+FITS_META_KEYS = {
+    "sed_type": "SED_TYPE",
+    "sed_type_init": "SEDTYPEI",
+    "n_sigma": "N_SIGMA",
+    "ul_conf": "UL_CONF",
+    # "n_sigma_ul": "NSIGMAUL",
+    "sqrt_ts_threshold_ul": "STSTHUL",
+    "n_sigma_sensitivity": "NSIGMSEN",
+    "target_name": "TARGETNA",
+    "target_position": ["RA_OBJ", "DEC_OBJ"],
+    "obs_ids": "OBS_IDS",
+    "dataset_names": "DATASETS",
+    "instrument": "INSTRU",
+}
 
 log = logging.getLogger(__name__)
+
+
+class SEDTYPEEnum(str, Enum):
+    dnde = "dnde"
+    flux = "flux"
+    eflux = "eflux"
+    e2dnde = "e2dnde"
+    likelihood = "likelihood"
 
 
 class FluxMetaData(MetaData):
     """Metadata containing information about the FluxPoints and FluxMaps.
 
-    Parameters
+    Attributes
     ----------
     sed_type : {"dnde", "flux", "eflux", "e2dnde", "likelihood"}, optional
         SED type.
@@ -42,19 +50,17 @@ class FluxMetaData(MetaData):
         Confidence level used for the upper limit computation.
     n_sigma : float, optional
         Significance threshold above which upper limits should be used.
-    n_sigma_ul : float, optional
-        Sigma number used to compute the upper limits.
+    # n_sigma_ul : float, optional
+    #     Sigma number used to compute the upper limits.
     sqrt_ts_threshold_ul : float, optional
         Threshold on the square root of the likelihood value above which upper limits should be used.
     n_sigma_sensitivity : float, optional
         Sigma number for which the flux sensitivity is computed
-    # gti : `~gammapy.data.gti`, optional
-    #     used Good Time Intervals.
     target_name : str, optional
         Name of the target.
     target_position : `~astropy.coordinates.SkyCoord`, optional
         Coordinates of the target.
-    obs_ids : list of int, optional
+    obs_ids : list of str, optional
         ID list of the used observations.
     dataset_names : list of str, optional
         Name list of the used datasets.
@@ -65,23 +71,22 @@ class FluxMetaData(MetaData):
     optional : dict, optional
         additional optional metadata.
 
-    Note: these quantities are serialized in FITS header with the keywords stored in STANDARD_KEYS
+    Note: these quantities are serialized in FITS header with the keywords stored in the dictionary FITS_META_KEYS
     """
 
-    sed_type: Optional[str]  # Are these 6 fields really optional?
-    sed_type_init: Optional[str]
+    sed_type: Optional[SEDTYPEEnum]
+    sed_type_init: Optional[SEDTYPEEnum]
     ul_conf: Optional[float]
     n_sigma: Optional[float]
-    n_sigma_ul: Optional[float]
+    # n_sigma_ul: Optional[float]
     sqrt_ts_threshold_ul: Optional[float]
     n_sigma_sensitivity: Optional[float]
-    # gti: Optional[GTI]
-    target_name: Optional[str]  # Are these 2 fields really optional?
+    target_name: Optional[str]
     target_position: Optional[SkyCoord]
-    obs_ids: Optional[list[int]]
-    dataset_names: Optional[list[str]]  # Are these 2 fields really optional?
+    obs_ids: Optional[List[str]]
+    dataset_names: Optional[List[str]]
     instrument: Optional[str]
-    creation: Optional[CreatorMetaData]  # Is this field really optional?
+    creation: Optional[CreatorMetaData]
     optional: Optional[dict]
 
     @validator("target_position")
@@ -89,100 +94,79 @@ class FluxMetaData(MetaData):
         if v is None:
             return SkyCoord(np.nan, np.nan, unit="deg", frame="icrs")
         elif isinstance(v, SkyCoord):
-            return v
+            return v.transform_to("icrs")
         else:
             raise ValidationError(
                 f"Incorrect position. Expect SkyCoord got {type(v)} instead."
             )
 
-    @validator("sed_type")
-    def validate_sed_type(cls, v):
-        if isinstance(v, str):
-            if v not in SEDTYPE:
-                raise ValidationError(f"Incorrect [sed_type]. Expect {SEDTYPE}")
-        return v
+    # @validator("sed_type")
+    # def validate_sed_type(cls, v):
+    #     if isinstance(v, str):
+    #         if v not in SEDTYPE:
+    #             raise ValidationError(f"Incorrect [sed_type]. Expect {SEDTYPE}")
+    #     return v
 
-    @validator("sed_type_init")
-    def validate_sed_type_init(cls, v):
-        if isinstance(v, str):
-            if v not in SEDTYPE:
-                raise ValidationError(f"Incorrect [sed_type_init]. Expect {SEDTYPE}")
-        return v
-
-    @validator("obs_ids")
-    def validate_obs_ids(cls, v):
-        if isinstance(v, list) and not all(np.isfinite(_) for _ in v):
-            raise ValidationError("Incorrect [obs_ids]. Expect [int]")
-        return v
-
-    @validator("creation")
-    def validate_creation(cls, v):
-        if v is None:
-            raise ValidationError(
-                f"[creation] should be precised. Expect {type(CreatorMetaData)}."
-            )
-        elif isinstance(v, CreatorMetaData):
-            return v
-        else:
-            raise ValidationError(
-                f"Incorrect [creation]. Expect 'CreatorMetaData' got {type(v)} instead."
-            )
+    # @validator("sed_type_init")
+    # def validate_sed_type_init(cls, v):
+    #     if isinstance(v, str):
+    #         if v not in SEDTYPE:
+    #             raise ValidationError(f"Incorrect [sed_type_init]. Expect {SEDTYPE}")
+    #     return v
 
     @classmethod
     def from_default(cls):
-        return cls(
-            # creation=CreatorMetaData.from_default(), target_position=None, gti=None
-            creation=CreatorMetaData.from_default()
-        )
+        return cls(creation=CreatorMetaData.from_default())
 
     @classmethod
-    def from_dict(cls, data):
-        """Extract metadata from a dictionary.
+    def from_header(cls, data, format=None):
+        """Extract metadata from a FITS header.
 
         Parameters
         ----------
         data : dict
             Dictionary containing data.
+        format : str
+            Header format. Not yet used.
         """
 
-        sed_type = data["SED_TYPE"] if "SED_TYPE" in data else None
-        sed_type_init = data["SEDTYPEI"] if "SEDTYPEI" in data else None
-        creation = CreatorMetaData.from_dict(data)
-        meta = cls(sed_type=sed_type, sed_type_init=sed_type_init, creation=creation)
+        creation = CreatorMetaData.from_header(data)
+        if creation.date is None:
+            creation = CreatorMetaData.from_default()
+        meta = cls(creation=creation)
 
-        if "UL_CONF" in data:
-            meta.ul_conf = float(data["UL_CONF"])
-        if "N_SIGMA" in data:
-            meta.n_sigma = float(data["N_SIGMA"])
-
-        if "NSIGMAUL" in data:
-            meta.n_sigma_ul = float(data["NSIGMAUL"])
-            if meta.ul_conf and meta.n_sigma_ul != np.round(
-                stats.norm.isf(0.5 * (1 - meta.ul_conf)), 1
+        for item in FITS_META_KEYS.items():
+            if (
+                item[0] == "target_position"
+                and item[1][0] in data
+                and item[1][1] in data
             ):
-                log.warning(
-                    f"Inconsistency between n_sigma_ul={meta.n_sigma_ul} and ul_conf={meta.ul_conf}"
+                meta.target_position = FluxMetaData._target_from_string(
+                    data[item[1][0]], data[item[1][1]]
                 )
-        elif meta.ul_conf:
-            meta.n_sigma_ul = np.round(stats.norm.isf(0.5 * (1 - meta.ul_conf)), 1)
+            elif item[1] in data:
+                val = data[item[1]]
+                if item[0] == "obs_ids" or item[0] == "dataset_names":
+                    val = val.split()
+                setattr(meta, item[0], val)
 
-        if "STSTHUL" in data:
-            meta.sqrt_ts_threshold_ul = float(data["STSTHUL"])
-        if "NSIGMSEN" in data:
-            meta.n_sigma_sensitivity = float(data["NSIGMSEN"])
-        if "TARGETNA" in data:
-            meta.target_name = data["TARGETNA"]
-        if "OBS_IDS" in data:
-            meta.obs_ids = FluxMetaData._obsids_from_string(data["OBS_IDS"])
-        if "DATASETS" in data:
-            meta.dataset_names = data["DATASETS"]
-        if "INSTRU" in data:
-            meta.instrument = data["INSTRU"]
-        if "TARGETPO" in data:
-            meta.target_position = FluxMetaData._target_from_string(data["TARGETPO"])
+        # if "NSIGMAUL" in data:
+        #     meta.n_sigma_ul = float(data["NSIGMAUL"])
+        #     if meta.ul_conf and meta.n_sigma_ul != np.round(
+        #         stats.norm.isf(0.5 * (1 - meta.ul_conf)), 1
+        #     ):
+        #         log.warning(
+        #             f"Inconsistency between n_sigma_ul={meta.n_sigma_ul} and ul_conf={meta.ul_conf}"
+        #         )
+        # elif meta.ul_conf:
+        #     meta.n_sigma_ul = np.round(stats.norm.isf(0.5 * (1 - meta.ul_conf)), 1)
 
         for kk in data:
-            if kk not in STANDARD_KEYS:
+            if (
+                kk not in FITS_META_KEYS.values()
+                and kk not in CREATOR_META_KEYS.values()
+                and kk not in FITS_META_KEYS["target_position"]
+            ):
                 if meta.optional is None:
                     meta.optional = {}
                 meta.optional[str(kk).lower()] = data[kk]
@@ -198,59 +182,28 @@ class FluxMetaData(MetaData):
             Flux table.
         """
 
-        if self.sed_type:
-            table.meta["SED_TYPE"] = self.sed_type
-        if self.sed_type_init:
-            table.meta["SEDTYPEI"] = self.sed_type_init
-        if self.ul_conf:
-            table.meta["UL_CONF"] = str(self.ul_conf)
-        if self.n_sigma:
-            table.meta["N_SIGMA"] = str(self.n_sigma)
-        if self.n_sigma_ul:
-            table.meta["NSIGMAUL"] = str(self.n_sigma_ul)
-        if self.sqrt_ts_threshold_ul:
-            table.meta["STSTHUL"] = str(self.sqrt_ts_threshold_ul)
-        if self.n_sigma_sensitivity:
-            table.meta["NSIGMSEN"] = str(self.n_sigma_sensitivity)
-        if self.target_name:
-            table.meta["TARGETNA"] = self.target_name
-        if self.obs_ids:
-            table.meta["OBS_IDS"] = FluxMetaData._obsids_to_string(self.obs_ids)
-        if self.dataset_names:
-            table.meta["DATASETS"] = self.dataset_names
-        if self.instrument:
-            table.meta["INSTRU"] = self.instrument
-        if self.target_position and np.isfinite(self.target_position.ra):
-            table.meta["TARGETPO"] = FluxMetaData._target_to_string(
-                self.target_position
-            )
-        # table.meta["GTI"] = self.gti #There are stored in a dedicated HDU
+        for item in FITS_META_KEYS.items():
+            if item[0] == "target_position" and np.isfinite(self.target_position.ra):
+                val = FluxMetaData._target_to_string(self.target_position)
+                table.meta[item[1][0]] = val[0]
+                table.meta[item[1][1]] = val[1]
+            elif item[0] == "obs_ids" or item[0] == "dataset_names":
+                table.meta[item[1]] = " ".join(getattr(self, item[0]))
+            elif getattr(self, item[0]):
+                table.meta[item[1]] = str(getattr(self, item[0]))
 
-        self.creation.to_table(table)
+        table.meta.update(self.creation.to_header())
 
         if self.optional:
             for k in self.optional:
                 table.meta[str(k).upper()] = self.optional[k]
 
     @staticmethod
-    def _target_from_string(data):
-        values = data.split()
-        if "nan" in values:
+    def _target_from_string(v1, v2):
+        if "nan" in [v1, v2]:
             return SkyCoord(np.nan, np.nan, unit="deg", frame="icrs")
-        return SkyCoord(values[0], values[1], unit="deg", frame="icrs")
+        return SkyCoord(v1, v2, unit="deg", frame="icrs")
 
     @staticmethod
     def _target_to_string(coord):
-        return coord.transform_to("icrs").to_string(precision=6)
-
-    @staticmethod
-    def _obsids_from_string(data):
-        values = data.split()
-        return [int(_) for _ in values]
-
-    @staticmethod
-    def _obsids_to_string(values):
-        out = ""
-        for _ in values:
-            out += str(_) + " "
-        return out
+        return coord.to_string(precision=6).split()
