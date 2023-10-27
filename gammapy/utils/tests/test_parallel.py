@@ -132,9 +132,17 @@ def test_multiprocessing_manager():
     fpe = FluxPointsEstimator(energy_edges=[1, 3, 10] * u.TeV)
     assert fpe.parallel_backend == parallel.ParallelBackendEnum.multiprocessing
 
-    with parallel.multiprocessing_manager(backend="ray"):
+    with parallel.multiprocessing_manager(backend="ray", pool_kwargs=dict(processes=2)):
         assert fpe.parallel_backend == "ray"
+        assert fpe.n_jobs == 2
 
         fpe = FluxPointsEstimator(energy_edges=[1, 3, 10] * u.TeV)
         assert fpe.parallel_backend == "ray"
     assert fpe.parallel_backend == parallel.ParallelBackendEnum.multiprocessing
+
+    fpe = FluxPointsEstimator(
+        energy_edges=[1, 3, 10] * u.TeV, n_jobs=2, parallel_backend="multiprocessing"
+    )
+    with parallel.multiprocessing_manager(backend="ray", pool_kwargs=dict(processes=3)):
+        assert fpe.parallel_backend == "multiprocessing"
+        assert fpe.n_jobs == 2

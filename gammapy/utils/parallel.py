@@ -78,7 +78,10 @@ def is_ray_available():
 
 
 class multiprocessing_manager:
-    """context manager to update the global configuration for multiprocessing
+    """Context manager to update the default configuration for multiprocessing.
+
+    Only the default configuration will be modified, if class arguments like
+    `n_jobs` and `parallel_backend` are set they will overwrite the default configuration.
 
     Parameters
     ----------
