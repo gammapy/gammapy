@@ -108,15 +108,17 @@ class multiprocessing_manager:
     """
 
     def __init__(self, backend=None, pool_kwargs=None, method=None, method_kwargs=None):
-        global BACKEND_DEFAULT, POOL_KWARGS_DEFAULT, METHOD_DEFAULT, METHOD_KWARGS_DEFAULT
+        global BACKEND_DEFAULT, POOL_KWARGS_DEFAULT, METHOD_DEFAULT, METHOD_KWARGS_DEFAULT, N_JOBS_DEFAULT
         self._backend = BACKEND_DEFAULT
         self._pool_kwargs = POOL_KWARGS_DEFAULT
         self._method = METHOD_DEFAULT
         self._method_kwargs = METHOD_KWARGS_DEFAULT
+        self._n_jobs = N_JOBS_DEFAULT
         if backend is not None:
             BACKEND_DEFAULT = ParallelBackendEnum.from_str(backend).value
         if pool_kwargs is not None:
             POOL_KWARGS_DEFAULT = pool_kwargs
+            N_JOBS_DEFAULT = pool_kwargs.get("processes", N_JOBS_DEFAULT)
         if method is not None:
             METHOD_DEFAULT = PoolMethodEnum(method).value
         if method_kwargs is not None:
@@ -126,11 +128,12 @@ class multiprocessing_manager:
         pass
 
     def __exit__(self, type, value, traceback):
-        global BACKEND_DEFAULT, POOL_KWARGS_DEFAULT, METHOD_DEFAULT, METHOD_KWARGS_DEFAULT
+        global BACKEND_DEFAULT, POOL_KWARGS_DEFAULT, METHOD_DEFAULT, METHOD_KWARGS_DEFAULT, N_JOBS_DEFAULT
         BACKEND_DEFAULT = self._backend
         POOL_KWARGS_DEFAULT = self._pool_kwargs
         METHOD_DEFAULT = self._method
         METHOD_KWARGS_DEFAULT = self._method_kwargs
+        N_JOBS_DEFAULT = self._n_jobs
 
 
 class ParallelMixin:
