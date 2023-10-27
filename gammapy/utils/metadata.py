@@ -10,7 +10,13 @@ from gammapy.utils.fits import skycoord_from_dict
 from gammapy.version import version
 from .types import AltAzSkyCoordType, ICRSSkyCoordType, SkyCoordType, TimeType
 
-__all__ = ["MetaData", "CreatorMetaData"]
+__all__ = [
+    "MetaData",
+    "CreatorMetaData",
+    "ObsInfoMetaData",
+    "PointingInfoMetaData",
+    "TargetMetaData",
+]
 
 METADATA_FITS_KEYS = {
     "creator": {
