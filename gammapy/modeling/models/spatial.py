@@ -405,9 +405,11 @@ class SpatialModel(ModelBase):
         which: list of str
             Which errors to plot.
             Available options are:
+
                 * "all": all the optional steps are plotted
                 * "position": plot the position error of the spatial model.
                 * "extension": plot the extension error of the spatial model.
+
         kwargs_position : dict
             Keyword arguments passed to `~SpatialModel.plot_position_error`
         kwargs_extension : dict

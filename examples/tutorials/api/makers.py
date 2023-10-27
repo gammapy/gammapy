@@ -127,7 +127,7 @@ plt.show()
 # includes the pixel, while a value of `False` or `0` excludes a
 # pixels from the analysis. To compute safe data range masks according to
 # certain criteria, Gammapy provides a `~gammapy.makers.SafeMaskMaker` class. The
-# different criteria are given by the `methods`\ argument, available
+# different criteria are given by the `methods` argument, available
 # options are :
 #
 # -  aeff-default, uses the energy ranged specified in the DL3 data files,
@@ -188,7 +188,7 @@ plt.show()
 # is incorrect and that some spectral corrections are necessary. This is
 # made possible thanks to the `~gammapy.makers.FoVBackgroundMaker`. This
 # technique is recommended in most 3D data reductions. For more details
-# and usage, see `fov_background <../../user-guide/makers/fov.rst>`__.
+# and usage, see the :doc:`FoV background </user-guide/makers/fov>`.
 #
 # Here we are going to use a `~gammapy.makers.FoVBackgroundMaker` that
 # will rescale the background model to the data excluding the region where
@@ -204,7 +204,7 @@ dataset = fov_bkg_maker.run(dataset)
 
 
 ######################################################################
-# Other backgrounds production methods are available as listed below.
+# Other backgrounds production methods available are listed below.
 #
 # Ring background
 # ~~~~~~~~~~~~~~~
@@ -219,7 +219,7 @@ dataset = fov_bkg_maker.run(dataset)
 # fitting.
 #
 # For more details and usage, see
-# `ring_background <../../user-guide/makers/ring.rst>`__.
+# :doc:`Ring background </user-guide/makers/ring>`
 #
 # Reflected regions background
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -234,7 +234,7 @@ dataset = fov_bkg_maker.run(dataset)
 # This method is only used for 1D spectral analysis.
 #
 # For more details and usage, see
-# `reflected_background <../../user-guide/makers/reflected.rst>`__.
+# the :doc:`Reflected background </user-guide/makers/ring>`
 #
 # Data reduction loop
 # -------------------

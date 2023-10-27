@@ -8,8 +8,7 @@ Fit spectral models to combined Fermi-LAT and IACT flux points tables.
 Prerequisites
 -------------
 
--  Some knowledge about retrieving information from catalogs,
- see :doc:`/tutorials/api/catalog` tutorial.
+-  Some knowledge about retrieving information from catalogs, see :doc:`/tutorials/api/catalog` tutorial.
 
 Context
 -------

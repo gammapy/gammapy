@@ -7,9 +7,9 @@ Build a list of significant excesses in a Fermi-LAT map.
 Context
 -------
 
-The first task in a source catalogue production is to identify
+The first task in a source catalog production is to identify
 significant excesses in the data that can be associated to unknown
-sources and provide a preliminary parametrization in term of position,
+sources and provide a preliminary parametrization in terms of position,
 extent, and flux. In this notebook we will use Fermi-LAT data to
 illustrate how to detect candidate sources in counts images with known
 background.

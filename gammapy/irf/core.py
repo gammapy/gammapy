@@ -850,7 +850,7 @@ class IRFMap:
 
         return hdulist
 
-    def write(self, filename, overwrite=False, format="gadf"):
+    def write(self, filename, overwrite=False, format="gadf", checksum=False):
         """Write IRF map to fits
 
         Parameters
@@ -861,9 +861,12 @@ class IRFMap:
             Whether to overwrite
         format : {"gadf", "gtpsf"}
             File format
+        checksum : bool
+            When True adds both DATASUM and CHECKSUM cards to the headers written to the file.
+            Default is False.
         """
         hdulist = self.to_hdulist(format=format)
-        hdulist.writeto(str(filename), overwrite=overwrite)
+        hdulist.writeto(str(filename), overwrite=overwrite, checksum=checksum)
 
     def stack(self, other, weights=None, nan_to_num=True):
         """Stack IRF map with another one in place.

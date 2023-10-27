@@ -2,6 +2,9 @@
 import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
+from astropy.coordinates import SkyCoord
+from gammapy.catalog import SourceCatalog4FGL
+from gammapy.maps import WcsGeom
 from gammapy.modeling import Parameter, Parameters
 from gammapy.modeling.models import Model, ModelBase, Models, SkyModel
 from gammapy.utils.testing import mpl_plot_check, requires_data
@@ -257,3 +260,15 @@ def test_parameter_name():
             par = Parameter("wrong-name", value=3)
 
         _ = MyTestModel()
+
+
+@requires_data()
+def test_select_models():
+    cat = SourceCatalog4FGL()
+    mask_models = cat.table["GLAT"].quantity > 80 * u.deg
+    subcat = cat[mask_models]
+    models = subcat.to_models()
+    pos = SkyCoord(182, 25, unit="deg", frame="icrs")
+    geom = WcsGeom.create(skydir=pos, width=2 * u.deg, binsz=0.02, frame="icrs")
+    models_selected = models.select_from_geom(geom)
+    assert len(models_selected) == 2

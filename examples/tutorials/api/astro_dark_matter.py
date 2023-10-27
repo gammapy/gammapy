@@ -211,7 +211,7 @@ plt.show()
 
 ######################################################################
 # Flux maps for annihilation
-# ---------
+# --------------------------
 #
 # Finally flux maps can be produced like this:
 #
@@ -235,7 +235,7 @@ plt.show()
 
 ######################################################################
 # Flux maps for decay
-# ---------
+# -------------------
 #
 # Finally flux maps for decay can be produced like this:
 #
