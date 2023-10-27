@@ -999,8 +999,6 @@ class DatasetModels(collections.abc.Sequence):
             Map geometry the evaluate model.
         mask :  `Map`
             Evaluate the model only where the mask is True.
-        maks : `~gammapy.modeling.models.SpectralModel`
-            One of the NormSpectralMdel
 
         Returns
         -------
