@@ -78,7 +78,34 @@ def is_ray_available():
 
 
 class multiprocessing_manager:
-    """context manager to update the global configuration for multiprocessing"""
+    """context manager to update the global configuration for multiprocessing
+
+    Parameters
+    ----------
+    backend : {'multiprocessing', 'ray'}
+        Backend to use.
+    pool_kwargs : dict
+        Keyword arguments passed to the pool. The number of processes is limited
+        to the number of physical CPUs.
+    method : {'starmap', 'apply_async'}
+        Pool method to use.
+    method_kwargs : dict
+        Keyword arguments passed to the method
+
+    Examples
+    --------
+    ::
+        import gammapy.utils.parallel as parallel
+        from gammapy.estimators import FluxPointsEstimator
+
+        fpe = FluxPointsEstimator(energy_edges=[1, 3, 10] * u.TeV)
+
+        with parallel.multiprocessing_manager(
+                backend="multiprocessing",
+                pool_kwargs=dict(processes=2),
+            ):
+            fpe.run(datasets)
+    """
 
     def __init__(self, backend=None, pool_kwargs=None, method=None, method_kwargs=None):
         global BACKEND_DEFAULT, POOL_KWARGS_DEFAULT, METHOD_DEFAULT, METHOD_KWARGS_DEFAULT
