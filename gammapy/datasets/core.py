@@ -436,7 +436,7 @@ class Datasets(collections.abc.MutableSequence):
         filename_models : str or `Path`
             File path or name of models yaml file. Default is None.
         overwrite : bool, optional
-            Overwrite existing FITS file. Default is False.
+            Overwrite existing file. Default is False.
         write_covariance : bool
             save covariance or not. Default is False.
         checksum : bool
@@ -454,6 +454,9 @@ class Datasets(collections.abc.MutableSequence):
                 path.parent / filename, overwrite=overwrite, checksum=checksum
             )
             data["datasets"].append(d)
+
+        if path.exists() and not overwrite:
+            raise IOError(f"File exists already: {path}")
 
         write_yaml(data, path, sort_keys=False)
 

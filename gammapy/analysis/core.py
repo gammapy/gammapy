@@ -271,7 +271,7 @@ class Analysis:
         Parameters
         ----------
         overwrite : bool, optional
-            Overwrite existing FITS file. Default is True.
+            Overwrite existing file. Default is True.
         write_covariance : bool
             save covariance or not
         """
