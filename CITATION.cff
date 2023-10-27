@@ -13,14 +13,14 @@ keywords:
 - Astronomy
 - "Gamma-rays"
 - "Data analysis"
-version: v1.1
+version: v1.2
 repository-code: "https://github.com/gammapy/gammapy"
 license: BSD-3-Clause
 contact:
 - email: GAMMAPY-COORDINATION-L@IN2P3.FR
   name: "Coordination committee of the Gammapy project"
 identifiers:
-- description: "Zenodo repository of the release 1.1"
+- description: "Zenodo repository of Gammapy"
     type: doi
     value: 10.5281/zenodo.4701488
 authors:
