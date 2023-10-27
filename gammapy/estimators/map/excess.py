@@ -71,7 +71,7 @@ class ExcessMapEstimator(Estimator):
 
         By default the excess estimator correlates the off counts as well to avoid
         artifacts at the edges of the :term:`FoV` for stacked on-off datasets.
-        However when the on-off dataset has been derived from a ring background
+        However, when the on-off dataset has been derived from a ring background
         estimate, this leads to the off counts being correlated twice. To avoid
         artifacts and the double correlation, the `ExcessMapEstimator` has to
         be applied per dataset and the resulting maps need to be stacked, taking
@@ -89,13 +89,11 @@ class ExcessMapEstimator(Estimator):
         Confidence level for the sensitivity expressed in number of sigma.
     gamma_min_sensitivity : float, optional
         Minimum number of gamma-rays. Default is 10.
-        Usde only for for sensitivity computation if `apply_threshold_sensitivity`is True.
     bkg_syst_fraction_sensitivity : float, optional
-        Fraction of background counts above which the number of gamma-rays is . Default is 0.05
-        Used only for for sensitivity computation if `apply_threshold_sensitivity`is True.
+        Fraction of background counts that are above the gamma-ray counts. Default is 0.05.
     apply_threshold_sensitivity : bool
-        If True use ``bkg_syst_fraction_sensitivity` and `gamma_min_sensitivity`
-        in sensitivity computation. Default is False which is setting used for the HGPS catalogue.
+        If True, use `bkg_syst_fraction_sensitivity` and `gamma_min_sensitivity` in the sensitivity computation.
+        Default is False which is the same setting as the HGPS catalog.
     selection_optional : list of str
         Which additional maps to estimate besides delta TS, significance and symmetric error.
         Available options are:

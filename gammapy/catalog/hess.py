@@ -874,7 +874,7 @@ class SourceCatalogHGPS(SourceCatalog):
         return SourceCatalogObjectHGPSComponent(data=data)
 
     def to_models(self, which="best", components_status="independent"):
-        """Create Models object from catalogue
+        """Create Models object from catalog.
 
         Parameters
         ----------
