@@ -16,7 +16,7 @@ __all__ = ["GTI"]
 class GTI:
     """Good time intervals (GTI) `~astropy.table.Table`.
 
-    Data format specification: :ref:`gadf:iact-gti`
+    Data format specification: :ref:`gadf:iact-gti`.
 
     Note: at the moment dead-time and live-time is in the
     EVENTS header ... the GTI header just deals with
@@ -25,11 +25,11 @@ class GTI:
     Parameters
     ----------
     table : `~astropy.table.Table`
-        GTI table
+        GTI table.
     reference_time : `~astropy.time.Time`
-        the reference time
+        the reference time.
         If None, use TIME_REF_DEFAULT.
-        Default is None
+        Default is None.
 
     Examples
     --------
@@ -102,13 +102,13 @@ class GTI:
         Parameters
         ----------
         start : `~astropy.time.Time` or `~astropy.units.Quantity`
-            Start times, if a quantity then w.r.t. reference time
+            Start times, if a quantity then w.r.t. reference time.
         stop : `~astropy.time.Time` or `~astropy.units.Quantity`
-            Stop times, if a quantity then w.r.t. reference time
+            Stop times, if a quantity then w.r.t. reference time.
         reference_time : `~astropy.time.Time`
             the reference time to use in GTI definition.
             If None, use TIME_REF_DEFAULT.
-            Default is None
+            Default is None.
         """
         if reference_time is None:
             reference_time = TIME_REF_DEFAULT
@@ -132,11 +132,11 @@ class GTI:
         Parameters
         ----------
         filename : `pathlib.Path`, str
-            Filename
+            Filename.
         hdu : str
             hdu name. Default GTI.
         format: str
-            Input format, currently only "gadf" is supported
+            Input format, currently only "gadf" is supported.
         """
         filename = make_path(filename)
         with fits.open(str(make_path(filename)), memmap=False) as hdulist:
@@ -149,9 +149,9 @@ class GTI:
         Parameters
         ----------
         table_hdu : `~astropy.io.fits.BinTableHDU`
-            table hdu
+            table hdu.
         format: str
-            Input format, currently only "gadf" is supported
+            Input format, currently only "gadf" is supported.
         """
         if format != "gadf":
             raise ValueError(f'Only the "gadf" format supported, got {format}')
@@ -173,12 +173,12 @@ class GTI:
         Parameters
         ----------
         format: str
-            Output format, currently only "gadf" is supported
+            Output format, currently only "gadf" is supported.
 
         Returns
         -------
         hdu: `astropy.io.fits.BinTableHDU`
-            GTI table converted to FITS representation
+            GTI table converted to FITS representation.
         """
         if format != "gadf":
             raise ValueError(f'Only the "gadf" format supported, got {format}')
@@ -256,7 +256,7 @@ class GTI:
 
     @property
     def time_intervals(self):
-        """List of time intervals"""
+        """List of time intervals."""
         return [
             (t_start, t_stop)
             for t_start, t_stop in zip(self.time_start, self.time_stop)
@@ -264,12 +264,12 @@ class GTI:
 
     @classmethod
     def from_time_intervals(cls, time_intervals, reference_time=None):
-        """From list of time intervals
+        """From list of time intervals.
 
         Parameters
         ----------
         time_intervals : list of `~astropy.time.Time` objects
-            Time intervals
+            Time intervals.
         reference_time : `~astropy.time.Time`
             Reference time to use in GTI definition. Default is None.
             If None, use TIME_REF_DEFAULT.
@@ -356,8 +356,7 @@ class GTI:
         Parameters
         ----------
         other : `~gammapy.data.GTI`
-            GTI to stack to self
-
+            GTI to stack to self.
         """
         self.table = self._validate_table(vstack([self.table, other.table]))
 
@@ -370,9 +369,9 @@ class GTI:
         Parameters
         ----------
         gtis : list of `GTI`
-            List of good time intervals to stack
+            List of good time intervals to stack.
         **kwargs : dict
-            Keywords passed on to `~astropy.table.vstack`
+            Keywords passed on to `~astropy.table.vstack`.
 
         Returns
         -------
@@ -428,7 +427,7 @@ class GTI:
         Parameters
         ----------
         time_intervals : list of `astropy.time.Time`
-            Start and stop time for each interval to compute the LC
+            Start and stop time for each interval to compute the LC.
         atol : `~astropy.units.Quantity`
             Tolerance value for time comparison with different scale. Default 1e-6 sec.
 

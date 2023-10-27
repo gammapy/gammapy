@@ -15,7 +15,7 @@ __all__ = ["ObservationTable"]
 class ObservationTable(Table):
     """Observation table.
 
-    Data format specification: :ref:`gadf:obs-index`
+    Data format specification: :ref:`gadf:obs-index`.
     """
 
     @classmethod
@@ -25,7 +25,7 @@ class ObservationTable(Table):
         Parameters
         ----------
         filename : `pathlib.Path`, str
-            Filename
+            Filename.
         """
         return super().read(make_path(filename), **kwargs)
 
@@ -63,8 +63,8 @@ class ObservationTable(Table):
 
         Parameters
         ----------
-        obs_id: int, list
-            observation ids
+        obs_id : int, list
+            Observation ids.
         """
         try:
             self.indices["OBS_ID"]
@@ -93,7 +93,7 @@ class ObservationTable(Table):
 
         Generic function to apply a 1D box selection (min, max) to a
         table on any variable that is in the observation table and can
-        be casted into a `~astropy.units.Quantity` object.
+        be cast into a `~astropy.units.Quantity` object.
 
         If the range length is 0 (min = max), the selection is applied
         to the exact value indicated by the min value. This is useful
@@ -148,7 +148,7 @@ class ObservationTable(Table):
         time_range : `~astropy.time.Time`
             Allowed time range (min, max).
         partial_overlap : bool, optional
-            Include partially overlapping observations. Default is False
+            Include partially overlapping observations. Default is False.
         inverted : bool, optional
             Invert selection: keep all entries outside the (min, max) range.
 
@@ -217,7 +217,7 @@ class ObservationTable(Table):
         - time intervals (min, max)
 
         - intervals (min, max) on any other parameter present in the
-          observation table, that can be casted into an
+          observation table, that can be cast into an
           `~astropy.units.Quantity` object
 
         Allowed selection criteria are interpreted using the following
@@ -247,7 +247,7 @@ class ObservationTable(Table):
 
         Parameters
         ----------
-        selection : list of dict
+        selections : list of dict
             List of selection cuts dictionaries.
 
         Returns
@@ -315,12 +315,12 @@ class ObservationTable(Table):
 class ObservationTableChecker(Checker):
     """Event list checker.
 
-    Data format specification: ref:`gadf:iact-events`
+    Data format specification: ref:`gadf:iact-events`.
 
     Parameters
     ----------
-    event_list : `~gammapy.data.EventList`
-        Event list
+    obs_table : `~gammapy.data.ObservationTable`
+        Observation table.
     """
 
     CHECKS = {

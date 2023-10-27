@@ -145,7 +145,7 @@ class Observation:
 
     @property
     def available_hdus(self):
-        """Which HDUs are available"""
+        """Which HDUs are available."""
         available_hdus = []
         keys = ["_events", "_gti", "aeff", "edisp", "psf", "bkg", "_rad_max"]
         hdus = ["events", "gti", "aeff", "edisp", "psf", "bkg", "rad_max"]
@@ -159,7 +159,7 @@ class Observation:
 
     @property
     def available_irfs(self):
-        """Which IRFs are available"""
+        """Which IRFs are available."""
         return [_ for _ in self.available_hdus if _ not in ["events", "gti"]]
 
     @property
@@ -176,7 +176,7 @@ class Observation:
     def _get_obs_info(
         pointing, deadtime_fraction, time_start, time_stop, reference_time, location
     ):
-        """Create obs info dict from in memory data"""
+        """Create obs info dict from in memory data."""
         obs_info = {
             "DEADC": 1 - deadtime_fraction,
         }
@@ -236,6 +236,7 @@ class Observation:
         Returns
         -------
         obs : `gammapy.data.MemoryObservation`
+            Observation
         """
         if tstart is None:
             tstart = reference_time.copy()
@@ -295,7 +296,7 @@ class Observation:
 
     @property
     def tmid(self):
-        """Midpoint between start and stop time"""
+        """Midpoint between start and stop time."""
         return self.tstart + 0.5 * (self.tstop - self.tstart)
 
     @property
@@ -353,11 +354,11 @@ class Observation:
         return self._pointing
 
     def get_pointing_altaz(self, time):
-        """Get the pointing in altaz for given time"""
+        """Get the pointing in altaz for given time."""
         return self.pointing.get_altaz(time, self.observatory_earth_location)
 
     def get_pointing_icrs(self, time):
-        """Get the pointing in icrs for given time"""
+        """Get the pointing in icrs for given time."""
         return self.pointing.get_icrs(time, self.observatory_earth_location)
 
     @lazyproperty
@@ -446,7 +447,7 @@ class Observation:
         Parameters
         ----------
         figsize : tuple
-            Figure size
+            Figure size.
         """
 
         plottable_hds = ["events", "aeff", "psf", "edisp", "bkg", "rad_max"]
@@ -506,12 +507,12 @@ class Observation:
         ----------
         time_interval : `astropy.time.Time`
             Start and stop time of the selected time interval.
-            For now we only support a single time interval.
+            For now, we only support a single time interval.
 
         Returns
         -------
         new_obs : `~gammapy.data.Observation`
-            A new observation instance of the specified time interval
+            A new observation instance of the specified time interval.
         """
         new_obs_filter = self.obs_filter.copy()
         new_obs_filter.time_filter = time_interval
@@ -526,15 +527,15 @@ class Observation:
         Parameters
         ----------
         event_file : str, Path
-            path to the .fits file containing the event list and the GTI
-        irf_file : str, Path
-            (optional) path to the .fits file containing the IRF components,
-            if not provided the IRF will be read from the event file
+            Path to the FITS file containing the event list and the GTI.
+        irf_file : str, Path, optional
+            Path to the .fits file containing the IRF components,
+            if not provided the IRF will be read from the event file.
 
         Returns
         -------
         observation : `~gammapy.data.Observation`
-            observation with the events and the irf read from the file
+            observation with the events and the irf read from the file.
         """
         from gammapy.irf.io import load_irf_dict_from_file
 
@@ -607,16 +608,16 @@ class Observation:
         hdul.writeto(path, overwrite=overwrite, checksum=checksum)
 
     def copy(self, in_memory=False, **kwargs):
-        """Copy observation
+        """Copy observation.
 
-        Overwriting Observation arguments requires the 'in_memory` argument to be true.
+        Overwriting Observation arguments requires the 'in_memory' argument to be true.
 
         Parameters
         ----------
         in_memory : bool
             Copy observation in memory.
         **kwargs : dict
-            Keyword arguments passed to `Observation`
+            Keyword arguments passed to `Observation`.
 
         Examples
         --------
@@ -632,7 +633,7 @@ class Observation:
         Returns
         -------
         obs : `Observation`
-            Copied observation
+            Copied observation.
         """
         if in_memory:
             argnames = inspect.getfullargspec(self.__init__).args
@@ -661,7 +662,7 @@ class Observations(collections.abc.MutableSequence):
     Parameters
     ----------
     observations : list
-        A list of `~gammapy.data.Observation`
+        A list of `~gammapy.data.Observation`.
     """
 
     def __init__(self, observations=None):
@@ -724,7 +725,7 @@ class Observations(collections.abc.MutableSequence):
 
     @property
     def ids(self):
-        """List of obs IDs (`list`)"""
+        """List of obs IDs (`list`)."""
         return [str(obs.obs_id) for obs in self]
 
     def select_time(self, time_intervals):
@@ -733,12 +734,12 @@ class Observations(collections.abc.MutableSequence):
         Parameters
         ----------
         time_intervals : `astropy.time.Time` or list of `astropy.time.Time`
-            list of Start and stop time of the time intervals or one Time interval
+            list of Start and stop time of the time intervals or one Time interval.
 
         Returns
         -------
         new_observations : `~gammapy.data.Observations`
-            A new Observations instance of the specified time intervals
+            A new Observations instance of the specified time intervals.
         """
         new_obs_list = []
         if isinstance(time_intervals, Time):
@@ -761,12 +762,12 @@ class Observations(collections.abc.MutableSequence):
         Parameters
         ----------
         labels : array
-            Array of group labels
+            Array of group labels.
 
         Returns
         -------
         obs_clusters : dict of `~gammapy.data.Observations`
-            dict of Observations instance, one instance for each group.
+            Dict of Observations instance, one instance for each group.
         """
         obs_groups = {}
         for label in np.unique(labels):

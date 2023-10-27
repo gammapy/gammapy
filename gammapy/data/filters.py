@@ -66,12 +66,12 @@ class ObservationFilter:
         Parameters
         ----------
         events : `~gammapy.data.EventListBase`
-            Event list to which the filters will be applied
+            Event list to which the filters will be applied.
 
         Returns
         -------
         filtered_events : `~gammapy.data.EventListBase`
-            The filtered event list
+            The filtered event list.
         """
         filtered_events = self._filter_by_time(events)
 
@@ -87,12 +87,12 @@ class ObservationFilter:
         Parameters
         ----------
         gti : `~gammapy.data.GTI`
-            GTI table to which the filters will be applied
+            GTI table to which the filters will be applied.
 
         Returns
         -------
         filtered_gti : `~gammapy.data.GTI`
-            The filtered GTI table
+            The filtered GTI table.
         """
         return self._filter_by_time(gti)
 

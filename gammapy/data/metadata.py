@@ -39,25 +39,25 @@ class ObservationMetaData(MetaData):
     Parameters
     ----------
     obs_info : `~gammapy.utils.ObsInfoMetaData`
-        the general observation information
+        The general observation information.
     pointing : `~gammapy.utils.PointingInfoMetaData
-        the pointing metadata
+        The pointing metadata.
     target : `~gammapy.utils.TargetMetaData
-        the target metadata
-    creation : `~gammapy.utils.CreatorMetaData`
-        the creation metadata
+        The target metadata.
     location : `~astropy.coordinates.EarthLocation` or str, optional
-        the observatory location
+        The observatory location.
     deadtime_fraction : float
-        the observation deadtime fraction. Default is 0.
-    time_start : Time, str
-        the observation start time
-    time_stop : Time, str
-        the observation stop time
-    reference_time : Time, str
-        the observation reference time
+        The observation deadtime fraction. Default is 0.
+    time_start : `~astropy.time.Time` or str
+        The observation start time.
+    time_stop : `~astropy.time.Time` or str
+        The observation stop time.
+    reference_time : `~astropy.time.Time` or str
+        The observation reference time.
+    creation : `~gammapy.utils.CreatorMetaData`
+        The creation metadata.
     optional : dict
-        additional optional metadata
+        Additional optional metadata.
     """
 
     _tag = "observation"

@@ -21,9 +21,9 @@ def get_irfs_features(
     Parameters
     ----------
     observations : `~gammapy.data.Observations`
-        Container holding a list of `~gammapy.data.Observation`
+        Container holding a list of `~gammapy.data.Observation`.
     energy_true : `~astropy.units.Quantity`
-        Energy true at which to compute the containment radius
+        Energy true at which to compute the containment radius.
     position : `~astropy.coordinates.SkyCoord`
         Sky position.
     fixed_offset : `~astropy.coordinates.Angle`
@@ -37,14 +37,14 @@ def get_irfs_features(
     containment_fraction : float
         Containment_fraction to compute the `psf-radius`.
         Default is 68%.
-    standard_scaler : bool
+    apply_standard_scaler : bool
         Compute standardize features by removing the mean and scaling to unit variance.
         Default is False.
 
     Returns
     -------
     features : `~astropy.table.Table`
-        Features table
+        Features table.
 
     """
 

@@ -51,7 +51,7 @@ class HDUIndexTable(Table):
         Parameters
         ----------
         filename : `pathlib.Path`, str
-            Filename
+            Filename.
         """
         filename = make_path(filename)
         table = super().read(filename, **kwargs)
@@ -74,16 +74,16 @@ class HDUIndexTable(Table):
         Parameters
         ----------
         obs_id : int
-            Observation ID
+            Observation ID.
         hdu_type : str
-            HDU type (see `~gammapy.data.HDUIndexTable.VALID_HDU_TYPE`)
+            HDU type (see `~gammapy.data.HDUIndexTable.VALID_HDU_TYPE`).
         hdu_class : str
-            HDU class (see `~gammapy.data.HDUIndexTable.VALID_HDU_CLASS`)
+            HDU class (see `~gammapy.data.HDUIndexTable.VALID_HDU_CLASS`).
 
         Returns
         -------
         location : `~gammapy.data.HDULocation`
-            HDU location
+            HDU location.
         """
         self._validate_selection(obs_id=obs_id, hdu_type=hdu_type, hdu_class=hdu_class)
 
@@ -136,11 +136,11 @@ class HDUIndexTable(Table):
         Parameters
         ----------
         obs_id : int
-            Observation ID
+            Observation ID.
         hdu_type : str
-            HDU type (see `~gammapy.data.HDUIndexTable.VALID_HDU_TYPE`)
+            HDU type (see `~gammapy.data.HDUIndexTable.VALID_HDU_TYPE`).
         hdu_class : str
-            HDU class (see `~gammapy.data.HDUIndexTable.VALID_HDU_CLASS`)
+            HDU class (see `~gammapy.data.HDUIndexTable.VALID_HDU_CLASS`).
 
         Returns
         -------

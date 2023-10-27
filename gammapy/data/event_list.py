@@ -57,7 +57,7 @@ class EventList:
     Parameters
     ----------
     table : `~astropy.table.Table`
-        Event list table
+        Event list table.
 
     Examples
     --------
@@ -104,7 +104,7 @@ class EventList:
         Parameters
         ----------
         filename : `pathlib.Path`, str
-            Filename
+            Filename.
         """
         filename = make_path(filename)
         kwargs.setdefault("hdu", "EVENTS")
@@ -118,12 +118,12 @@ class EventList:
         Parameters
         ----------
         format: str
-            Output format, currently only "gadf" is supported
+            Output format, currently only "gadf" is supported.
 
         Returns
         -------
         hdu: `astropy.io.fits.BinTableHDU`
-            EventList converted to FITS representation
+            EventList converted to FITS representation.
         """
         if format != "gadf":
             raise ValueError(f"Only the 'gadf' format supported, got {format}")
@@ -146,7 +146,7 @@ class EventList:
         overwrite : bool, optional
             Overwrite existing file. Default is False.
         format : str, optional
-            FITS format convention.  By default files will be written
+            FITS format convention. By default files will be written
             to the gamma-astro-data-formats (GADF) format.
         checksum : bool
             When True adds both DATASUM and CHECKSUM cards to the headers written to the file.
@@ -191,7 +191,7 @@ class EventList:
         Parameters
         ----------
         event_lists : list
-            list of `~gammapy.data.EventList` to stack
+            list of `~gammapy.data.EventList` to stack.
         """
         tables = [_.table for _ in event_lists]
         stacked_table = vstack_tables(tables, **kwargs)
@@ -205,7 +205,7 @@ class EventList:
         Parameters
         ----------
         other : `~gammapy.data.EventList`
-            Event list to stack to self
+            Event list to stack to self.
         """
         self.table = vstack_tables([self.table, other.table])
 
@@ -288,7 +288,7 @@ class EventList:
 
     @property
     def galactic_median(self):
-        """Median position in radec"""
+        """Median position in radec."""
         galactic = self.galactic
         median_lon = np.median(galactic.l.wrap_at("180d"))
         median_lat = np.median(galactic.b)
@@ -306,7 +306,7 @@ class EventList:
         Returns
         -------
         event_list : `EventList`
-            New event list with table row subset selected
+            New event list with table row subset selected.
 
         Examples
         --------
@@ -335,7 +335,7 @@ class EventList:
         Parameters
         ----------
         energy_range : `~astropy.units.Quantity`
-            Energy range ``[energy_min, energy_max)``
+            Energy range ``[energy_min, energy_max)``.
 
         Returns
         -------
@@ -384,7 +384,7 @@ class EventList:
             A region can be defined as a string ind DS9 format as well.
             See http://ds9.si.edu/doc/ref/region.html for details.
         wcs : `~astropy.wcs.WCS`
-            World coordinate system transformation
+            World coordinate system transformation.
 
         Returns
         -------
@@ -439,14 +439,14 @@ class EventList:
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes` or None
-            Axes
+            Axes.
         **kwargs : dict
-            Keyword arguments passed to `~matplotlib.pyplot.hist`
+            Keyword arguments passed to `~matplotlib.pyplot.hist`.
 
         Returns
         -------
         ax : `~matplotlib.axes.Axes` or None
-            Axes
+            Axes.
         """
         ax = plt.gca() if ax is None else ax
 
@@ -470,14 +470,14 @@ class EventList:
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes` or None
-            Axes
+            Axes.
         **kwargs : dict
-            Keyword arguments passed to `~matplotlib.pyplot.errorbar`
+            Keyword arguments passed to `~matplotlib.pyplot.errorbar`.
 
         Returns
         -------
         ax : `~matplotlib.axes.Axes`
-            Axes
+            Axes.
         """
         ax = plt.gca() if ax is None else ax
 
@@ -521,7 +521,7 @@ class EventList:
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes` (optional)
-            Axes
+            Axes.
         center : `astropy.coordinates.SkyCoord`
             Center position for the offset^2 distribution.
             Default is the observation pointing position.
@@ -533,7 +533,7 @@ class EventList:
         Returns
         -------
         ax : `~matplotlib.axes.Axes`
-            Axes
+            Axes.
 
         Examples
         --------
@@ -585,16 +585,16 @@ class EventList:
         Parameters
         ----------
         ax : `~matplotlib.pyplot.Axis`
-            Plot axis
+            Plot axis.
         center : `~astropy.coordinates.SkyCoord`
-            Sky coord from which offset is computed
+            Sky coord from which offset is computed.
         **kwargs : dict
-            Keyword arguments forwarded to `~matplotlib.pyplot.pcolormesh`
+            Keyword arguments forwarded to `~matplotlib.pyplot.pcolormesh`.
 
         Returns
         -------
         ax : `~matplotlib.pyplot.Axis`
-            Plot axis
+            Plot axis.
         """
         from matplotlib.colors import LogNorm
 
@@ -639,12 +639,12 @@ class EventList:
         Parameters
         ----------
         geom : `~gammapy.maps.Geom`
-            Geometry
+            Geometry.
 
         Returns
         -------
         coord : `~gammapy.maps.MapCoord`
-            Coordinates
+            Coordinates.
         """
         coord = {"skycoord": self.radec}
 
@@ -665,7 +665,7 @@ class EventList:
         Parameters
         ----------
         mask : `~gammapy.maps.Map`
-            Mask
+            Mask.
 
         Returns
         -------
@@ -698,7 +698,7 @@ class EventList:
     def observation_time_duration(self):
         """Observation time duration in seconds (`~astropy.units.Quantity`).
 
-        This is a keyword related to IACTs
+        This is a keyword related to IACTs.
         The wall time, including dead-time.
         """
         time_delta = (self.observation_time_stop - self.observation_time_start).sec
@@ -721,7 +721,7 @@ class EventList:
     def observation_dead_time_fraction(self):
         """Dead-time fraction (float).
 
-        This is a keyword related to IACTs
+        This is a keyword related to IACTs.
         Defined as dead-time over observation time.
 
         Dead-time is defined as the time during the observation
@@ -780,7 +780,7 @@ class EventList:
         Parameters
         ----------
         offset_band : `~astropy.coordinates.Angle`
-            offset band ``[offset_min, offset_max)``
+            offset band ``[offset_min, offset_max)``.
 
         Returns
         -------
@@ -804,12 +804,12 @@ class EventList:
         return self.select_row_subset(mask)
 
     def select_rad_max(self, rad_max, position=None):
-        """Select energy dependent offset
+        """Select energy dependent offset.
 
         Parameters
         ----------
         rad_max : `~gamapy.irf.RadMax2D`
-            Rad max definition
+            Rad max definition.
         position : `~astropy.coordinates.SkyCoord`
             Center position. By default the pointing position is used.
 
@@ -833,7 +833,7 @@ class EventList:
 
     @property
     def is_pointed_observation(self):
-        """Whether observation is pointed"""
+        """Whether observation is pointed."""
         return "RA_PNT" in self.table.meta
 
     def peek(self, allsky=False):
@@ -842,7 +842,7 @@ class EventList:
         Parameters
         ----------
         allsky : bool
-            Whether to look at the events allsky
+            Whether to look at the events all-sky.
         """
         import matplotlib.gridspec as gridspec
 
@@ -923,7 +923,7 @@ class EventList:
         ax : `~matplotlib.pyplot.Axes`
             Axes to plot on.
         allsky :  bool,
-            Whether to plot on an all sky geom
+            Whether to plot on an all sky geom.
         """
         if ax is None:
             ax = plt.gca()
@@ -931,19 +931,19 @@ class EventList:
         m.plot(ax=ax, stretch="sqrt")
 
     def copy(self):
-        """Copy event list (`EventList`)"""
+        """Copy event list (`EventList`)."""
         return copy.deepcopy(self)
 
 
 class EventListChecker(Checker):
     """Event list checker.
 
-    Data format specification: ref:`gadf:iact-events`
+    Data format specification: ref:`gadf:iact-events`.
 
     Parameters
     ----------
     event_list : `~gammapy.data.EventList`
-        Event list
+        Event list.
     """
 
     CHECKS = {

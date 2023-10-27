@@ -29,7 +29,7 @@ __all__ = ["FixedPointingInfo", "PointingInfo", "PointingMode"]
 
 
 def _check_coord_frame(coord_or_frame, expected_frame, name):
-    """Check if a skycoord or frame is given in expected_frame"""
+    """Check if a skycoord or frame is given in expected_frame."""
     is_coord = isinstance(coord_or_frame, SkyCoord)
     is_frame = isinstance(coord_or_frame, BaseCoordinateFrame)
 
@@ -206,7 +206,7 @@ class FixedPointingInfo:
         Returns
         -------
         pointing: FixedPointingInfo
-            The FixedPointingInfo instance filled from the given header
+            The FixedPointingInfo instance filled from the given header.
         """
         obs_mode = header.get("OBS_MODE", "POINTING")
         mode = PointingMode.from_gadf_string(obs_mode)
@@ -272,22 +272,22 @@ class FixedPointingInfo:
 
     def to_fits_header(self, format="gadf", version="0.3", time_ref=None):
         """
-        Convert this FixedPointingInfo object into a fits header for the given format
+        Convert this FixedPointingInfo object into a fits header for the given format.
 
         Parameters
         ----------
         format : str
-            Format, currently only "gadf" is supported
+            Format, currently only "gadf" is supported.
         version : str
             Version of the ``format``, this function currently supports
             gadf versions 0.2 and 0.3.
         time_ref : astropy.time.Time or None
-            Reference time for storing the time related information in fits format
+            Reference time for storing the time related information in fits format.
 
         Returns
         -------
         header : astropy.fits.Header
-            Header with fixed pointing information filled for the requested format
+            Header with fixed pointing information filled for the requested format.
         """
         if format != "gadf":
             raise ValueError(f'Only the "gadf" format supported, got {format}')
@@ -335,14 +335,14 @@ class FixedPointingInfo:
         Parameters
         ----------
         filename : str
-            File name
+            Filename.
         hdu : int or str
-            HDU number or name
+            HDU number or name.
 
         Returns
         -------
         pointing_info : `PointingInfo`
-            Pointing info object
+            Pointing info object.
         """
         filename = make_path(filename)
         header = fits.getheader(filename, extname=hdu)
@@ -350,14 +350,14 @@ class FixedPointingInfo:
 
     @property
     def mode(self):
-        """See `PointingMode`, if not present, assume POINTING"""
+        """See `PointingMode`, if not present, assume POINTING."""
         return self._mode
 
     @property
     def fixed_altaz(self):
         """The fixed coordinates in AltAz of the observation.
 
-        None if not a DRIFT observation
+        None if not a DRIFT observation.
         """
         return self._fixed_altaz
 
@@ -366,7 +366,7 @@ class FixedPointingInfo:
         """
         The fixed coordinates in ICRS of the observation.
 
-        None if not a POINTING observation
+        None if not a POINTING observation.
         """
         return self._fixed_icrs
 
@@ -384,7 +384,7 @@ class FixedPointingInfo:
         Parameters
         ----------
         obstime: `astropy.time.Time`
-            Time for which to get the pointing position in ICRS frame
+            Time for which to get the pointing position in ICRS frame.
         location: `astropy.coordinates.EarthLocation`
             Observatory location, only needed for drift observations to transform
             from horizontal coordinates to ICRS.
@@ -414,7 +414,7 @@ class FixedPointingInfo:
         Parameters
         ----------
         obstime: `astropy.time.Time`
-            Time for which to get the pointing position in AltAz frame
+            Time for which to get the pointing position in AltAz frame.
         location: `astropy.coordinates.EarthLocation`
             Observatory location, only needed for pointing observations to transform
             from ICRS to horizontal coordinates.
@@ -543,12 +543,12 @@ class FixedPointingInfo:
 class PointingInfo:
     """IACT array pointing info.
 
-    Data format specification: :ref:`gadf:iact-pnt`
+    Data format specification: :ref:`gadf:iact-pnt`.
 
     Parameters
     ----------
     table : `~astropy.table.Table`
-        Table (with meta header info) on pointing
+        Table (with meta header info) on pointing.
 
     Examples
     --------
@@ -594,14 +594,14 @@ class PointingInfo:
         Parameters
         ----------
         filename : str
-            File name
+            Filename.
         hdu : int or str
-            HDU number or name
+            HDU number or name.
 
         Returns
         -------
         pointing_info : `PointingInfo`
-            Pointing info object
+            Pointing info object.
         """
         filename = make_path(filename)
         table = Table.read(filename, hdu=hdu)
@@ -708,7 +708,7 @@ class PointingInfo:
         Parameters
         ----------
         obstime: `astropy.time.Time`
-            Time for which to get the pointing position in ICRS frame
+            Time for which to get the pointing position in ICRS frame.
         """
         return SkyCoord(
             self._interpolate_cartesian(self.time.mjd, self.radec, obstime.mjd),
@@ -730,7 +730,7 @@ class PointingInfo:
         Parameters
         ----------
         obstime: `astropy.time.Time`
-            Time for which to get the pointing position in AltAz frame
+            Time for which to get the pointing position in AltAz frame.
         """
         # give precedence to ALT_PNT / AZ_PNT if present
         if "ALT_PNT" in self.table and "AZ_PNT" in self.table:

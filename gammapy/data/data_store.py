@@ -44,9 +44,9 @@ class DataStore:
     Parameters
     ----------
     hdu_table : `~gammapy.data.HDUIndexTable`
-        HDU index table
+        HDU index table.
     obs_table : `~gammapy.data.ObservationTable`
-        Observation index table
+        Observation index table.
 
     Examples
     --------
@@ -105,16 +105,16 @@ class DataStore:
         Parameters
         ----------
         filename : str, Path
-            FITS filename
+            FITS filename.
         hdu_hdu : str or int
-            FITS HDU name or number for the HDU index table
+            FITS HDU name or number for the HDU index table.
         hdu_obs : str or int
-            FITS HDU name or number for the observation index table
+            FITS HDU name or number for the observation index table.
 
         Returns
         -------
         data_store : `DataStore`
-            Data store
+            Data store.
         """
         filename = make_path(filename)
 
@@ -146,7 +146,7 @@ class DataStore:
         Returns
         -------
         data_store : `DataStore`
-            Data store
+            Data store.
 
         Examples
         --------
@@ -201,14 +201,14 @@ class DataStore:
         - ``IRF`` (example: ``IRF = South_z20_50h``)
 
         This method is useful specifically if you want to load data simulated
-        with `ctobssim`_
+        with `ctobssim`_.
 
         .. _ctobssim: http://cta.irap.omp.eu/ctools/users/reference_manual/ctobssim.html
 
         Parameters
         ----------
         events_paths : list of str or Path
-            List of paths to the events files
+            List of paths to the events files.
         irfs_paths : str, Path, or list of str or Path
             Path to the IRFs file. If a list is provided it must be the same length
             than `events_paths`. If None the events files have to contain CALDB and
@@ -218,7 +218,7 @@ class DataStore:
         Returns
         -------
         data_store : `DataStore`
-            Data store
+            Data store.
 
         Examples
         --------
@@ -296,7 +296,7 @@ class DataStore:
         Returns
         -------
         observation : `~gammapy.data.Observation`
-            Observation container
+            Observation container.
 
         """
         if obs_id not in self.hdu_table["OBS_ID"]:
@@ -361,11 +361,11 @@ class DataStore:
         Parameters
         ----------
         obs_id : list
-            Observation IDs (default of ``None`` means "all")
+            Observation IDs (default of ``None`` means "all").
             If not given, all observations ordered by OBS_ID are returned.
             This is not necessarily the order in the ``obs_table``.
         skip_missing : bool, optional
-            Skip missing observations, default: False
+            Skip missing observations, default: False.
         required_irf : list of str or str
             Runs will be added to the list of observations only if the
             required HDUs are present. Otherwise, the given run will be skipped
@@ -392,7 +392,7 @@ class DataStore:
         Returns
         -------
         observations : `~gammapy.data.Observations`
-            Container holding a list of `~gammapy.data.Observation`
+            Container holding a list of `~gammapy.data.Observation`.
         """
 
         if obs_id is None:
@@ -425,7 +425,7 @@ class DataStore:
         ----------
         obs_id : array-like, `~gammapy.data.ObservationTable`
             List of observations to copy.
-        outdir : str, Path
+        outdir : str, `~pathlib.Path
             Directory for the new store.
         hdu_class : list of str, optional
             see :attr:`gammapy.data.HDUIndexTable.VALID_HDU_CLASS`.
@@ -589,7 +589,7 @@ class DataStoreMaker:
 
     @staticmethod
     def read_events_info(events_path, irf_path=None):
-        """Read mandatory events header info"""
+        """Read mandatory events header info."""
         log.debug(f"Reading {events_path}")
 
         with fits.open(events_path, memmap=False) as hdu_list:
