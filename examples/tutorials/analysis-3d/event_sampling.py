@@ -72,6 +72,7 @@ We will work with the following functions and classes:
 -  `~gammapy.modeling.models.SkyModel`
 -  `~gammapy.datasets.MapDatasetEventSampler`
 -  `~gammapy.data.EventList`
+
 """
 
 ######################################################################
@@ -526,7 +527,7 @@ for idx, tstart in enumerate(tstarts):
 
 ######################################################################
 # You can now load the event list and the corresponding IRFs with
-# `DataStore.from_events_files` :
+# `DataStore.from_events_files`:
 #
 
 path = Path("./event_sampling/")

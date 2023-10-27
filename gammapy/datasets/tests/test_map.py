@@ -5,6 +5,7 @@ import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
 from astropy.coordinates import SkyCoord
+from astropy.io import fits
 from astropy.table import Table
 from regions import CircleSkyRegion
 from gammapy.catalog import SourceCatalog3FHL
@@ -1244,6 +1245,17 @@ def test_map_datasets_on_off_fits_io(images, tmp_path):
     assert_allclose(dataset.acceptance_off.data, dataset_new.acceptance_off.data)
     assert_allclose(dataset.exposure.data, dataset_new.exposure.data)
     assert_allclose(dataset.mask_safe, dataset_new.mask_safe)
+
+
+@requires_data()
+def test_map_datasets_on_off_checksum(images, tmp_path):
+    dataset = get_map_dataset_onoff(images)
+    Datasets([dataset]).write(tmp_path / "test.yaml", checksum=True)
+
+    hdul = fits.open(tmp_path / "MapDatasetOnOff-test.fits")
+    for hdu in hdul:
+        assert "CHECKSUM" in hdu.header
+        assert "DATASUM" in hdu.header
 
 
 def test_create_onoff(geom):

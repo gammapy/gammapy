@@ -523,7 +523,7 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
             tag = "Flux2_History"
             if tag not in self.data or "time_axis_2" not in self.data:
                 raise ValueError(
-                    "2-month interval is not available for this catalogue version"
+                    "2-month interval is not available for this catalog version"
                 )
             time_axis = self.data["time_axis_2"]
             tag_sqrt_ts = "Sqrt_TS2_History"

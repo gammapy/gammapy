@@ -63,20 +63,24 @@ class OGIPDatasetWriter(DatasetWriter):
     filename : `pathlib.Path` or str
         Filename
     format : {"ogip", "ogip-sherpa"}
-        Which format to use
+        Which format to use. Default is 'ogip'.
     overwrite : bool
-        Overwrite existing files?
+        Overwrite existing files? Default is False.
+    checksum : bool
+        When True adds both DATASUM and CHECKSUM cards to the headers written to the files.
+        Default is False.
     """
 
     tag = ["ogip", "ogip-sherpa"]
 
-    def __init__(self, filename, format="ogip", overwrite=False):
+    def __init__(self, filename, format="ogip", overwrite=False, checksum=False):
         filename = make_path(filename)
         filename.parent.mkdir(exist_ok=True, parents=True)
 
         self.filename = filename
         self.format = format
         self.overwrite = overwrite
+        self.checksum = checksum
 
     @staticmethod
     def get_filenames(filename):
@@ -164,7 +168,12 @@ class OGIPDatasetWriter(DatasetWriter):
             Filename to use
         """
         kernel = dataset.edisp.get_edisp_kernel()
-        kernel.write(filename=filename, overwrite=self.overwrite, format=self.format)
+        kernel.write(
+            filename=filename,
+            overwrite=self.overwrite,
+            format=self.format,
+            checksum=self.checksum,
+        )
 
     def write_arf(self, dataset, filename):
         """Write effective area.
@@ -182,6 +191,7 @@ class OGIPDatasetWriter(DatasetWriter):
             filename=filename,
             overwrite=self.overwrite,
             format=self.format.replace("ogip", "ogip-arf"),
+            checksum=self.checksum,
         )
 
     def to_counts_hdulist(self, dataset, is_bkg=False):
@@ -235,7 +245,7 @@ class OGIPDatasetWriter(DatasetWriter):
             hdu = dataset.gti.to_table_hdu()
             hdulist.append(hdu)
 
-        hdulist.writeto(filename, overwrite=self.overwrite)
+        hdulist.writeto(filename, overwrite=self.overwrite, checksum=self.checksum)
 
     def write_bkg(self, dataset, filename):
         """Write off counts file.
@@ -248,7 +258,7 @@ class OGIPDatasetWriter(DatasetWriter):
             Filename to use
         """
         hdulist = self.to_counts_hdulist(dataset, is_bkg=True)
-        hdulist.writeto(filename, overwrite=self.overwrite)
+        hdulist.writeto(filename, overwrite=self.overwrite, checksum=self.checksum)
 
 
 class OGIPDatasetReader(DatasetReader):

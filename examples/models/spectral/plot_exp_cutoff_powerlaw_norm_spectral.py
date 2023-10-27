@@ -2,7 +2,7 @@ r"""
 .. _exp-cutoff-powerlaw-norm-spectral-model:
 
 Exponential cutoff power law norm spectral model
-========================
+================================================
 
 This model parametrises a cutoff power law spectral correction with a norm parameter.
 

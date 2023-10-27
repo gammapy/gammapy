@@ -18,14 +18,16 @@ Gammapy provides the `~gammapy.makers.FoVBackgroundMaker`. The latter creates a
 `~gammapy.modeling.models.FoVBackgroundModel` which combines the `background` predicted number of counts
 and a `~gammapy.modeling.models.NormSpectralModel` which allows to renormalize the background cube, and
 possibly to change its spectral distribution. By default, only the `norm` parameter of a
-`~gammapy.modeling.models.PowerLawNormSpectralModel` is left free. If needed the spectral parameters
-can be unfrozen.
+`~gammapy.modeling.models.PowerLawNormSpectralModel` is left free. Here we show the addition of a `~gammapy.modeling.models.PowerLawNormSpectralModel`
+in which the `norm` and `tilt` parameters are unfrozen as an example. It is also possible to implement other normed
+models, such as the `~gammapy.modeling.models.PiecewiseNormSpectralModel`.
 
 .. testcode::
 
 	from gammapy.makers import MapDatasetMaker, FoVBackgroundMaker, SafeMaskMaker
 	from gammapy.datasets import MapDataset
 	from gammapy.data import DataStore
+	from gammapy.modeling.models import PowerLawNormSpectralModel
 	from gammapy.maps import MapAxis, WcsGeom, Map
 	from regions import CircleSkyRegion
 	from astropy import units as u
@@ -48,7 +50,14 @@ can be unfrozen.
 	circle = CircleSkyRegion(center=geom.center_skydir, radius=0.2 * u.deg)
 	exclusion_mask = geom.region_mask([circle], inside=False)
 
-	fov_bkg_maker = FoVBackgroundMaker(method="fit", exclusion_mask=exclusion_mask)
+	spectral_model = PowerLawNormSpectralModel()
+	spectral_model.norm.frozen = False
+	spectral_model.tilt.frozen = False
+	fov_bkg_maker = FoVBackgroundMaker(
+		method="fit",
+		exclusion_mask=exclusion_mask,
+		spectral_model=spectral_model
+	)
 
 	for obs in observations:
 		dataset = maker.run(stacked, obs)

@@ -664,6 +664,15 @@ def test_from_gti_bounds():
     assert_time_allclose(axis.time_max[-1], expected)
 
 
+def test_to_gti(time_intervals):
+    time_axis = TimeMapAxis(
+        time_intervals["t_min"], time_intervals["t_max"], time_intervals["t_ref"]
+    )
+    gti = time_axis.to_gti()
+    assert len(gti.table) == 20
+    assert TimeMapAxis.from_gti(gti) == time_axis
+
+
 def test_map_with_time_axis(time_intervals):
     time_axis = TimeMapAxis(
         time_intervals["t_min"], time_intervals["t_max"], time_intervals["t_ref"]

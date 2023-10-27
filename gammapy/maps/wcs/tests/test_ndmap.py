@@ -95,6 +95,22 @@ def test_wcsndmap_read_write(tmp_path, npix, binsz, frame, proj, skydir, axes):
     m3 = Map.read(path, map_type="wcs")
 
 
+@pytest.mark.parametrize(
+    ("npix", "binsz", "frame", "proj", "skydir", "axes"), wcs_test_geoms
+)
+def test_wcsndmap_write_checksum(tmp_path, npix, binsz, frame, proj, skydir, axes):
+    geom = WcsGeom.create(npix=npix, binsz=binsz, proj=proj, frame=frame, axes=axes)
+    path = tmp_path / "tmp.fits"
+
+    m0 = WcsNDMap(geom)
+    m0.write(path, overwrite=True, checksum=True)
+
+    hdul = fits.open(path)
+    for hdu in hdul:
+        assert "CHECKSUM" in hdu.header
+        assert "DATASUM" in hdu.header
+
+
 def test_wcsndmap_read_write_fgst(tmp_path):
     path = tmp_path / "tmp.fits"
 
@@ -970,3 +986,19 @@ def test_to_region_nd_map_histogram_advanced():
     assert_allclose(
         hist.data[:, :, 2, 0, 0], [[24189, 13587, 9212], [24053, 13410, 9186]]
     )
+
+
+def test_plot_mask():
+    axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=2)
+    geom = WcsGeom.create(
+        binsz=0.02,
+        width=(2, 2),
+        frame="icrs",
+        axes=[axis],
+    )
+
+    mask = Map.from_geom(geom=geom, dtype=bool)
+    mask.data[1] |= True
+
+    with mpl_plot_check():
+        mask.plot_grid()

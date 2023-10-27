@@ -214,7 +214,6 @@ def run_pool_async(pool, func, inputs, method_kwargs=None, task_name=""):
     for arguments in progress_bar(inputs, desc=task_name):
         result = pool.apply_async(func, arguments, **method_kwargs)
         results.append(result)
-
     # wait async run is done
     [result.wait() for result in results]
     return results
