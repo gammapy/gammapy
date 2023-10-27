@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import html
 import logging
 import subprocess
 from copy import copy
-import html
 from pathlib import Path
 import numpy as np
 from astropy import units as u
@@ -424,15 +424,16 @@ class DataStore:
         Parameters
         ----------
         obs_id : array-like, `~gammapy.data.ObservationTable`
-            List of observations to copy
+            List of observations to copy.
         outdir : str, Path
-            Directory for the new store
-        hdu_class : list of str
-            see :attr:`gammapy.data.HDUIndexTable.VALID_HDU_CLASS`
-        verbose : bool
-            Print copied files
-        overwrite : bool
-            Overwrite
+            Directory for the new store.
+        hdu_class : list of str, optional
+            see :attr:`gammapy.data.HDUIndexTable.VALID_HDU_CLASS`.
+            Default is None.
+        verbose : bool, optional
+            Print copied files. Default is False.
+        overwrite : bool, optional
+            Overwrite existing file. Default is False.
         """
         outdir = make_path(outdir)
 

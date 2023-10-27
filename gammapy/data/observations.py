@@ -567,8 +567,8 @@ class Observation:
         ----------
         path: str or `~pathlib.Path`
             Path for the output file
-        overwrite: bool
-            If true, existing files are overwritten. Default is False.
+        overwrite: bool, optional
+            Overwrite existing file. Default is False.
         format: str
             Output format, currently only "gadf" is supported. Default is "gadf".
         include_irfs: bool

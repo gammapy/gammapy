@@ -435,8 +435,8 @@ class Datasets(collections.abc.MutableSequence):
             File path or name of datasets yaml file
         filename_models : str or `Path`
             File path or name of models yaml file. Default is None.
-        overwrite : bool
-            overwrite datasets FITS files. Default is False.
+        overwrite : bool, optional
+            Overwrite existing file. Default is False.
         write_covariance : bool
             save covariance or not. Default is False.
         checksum : bool
