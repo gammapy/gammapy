@@ -114,7 +114,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         Parameters
         ----------
         info : {'all', 'basic', 'map', 'spec', 'flux_points', 'components', 'associations', 'id'}
-            Comma separated list of options
+            Comma separated list of options.
         """
         if info == "all":
             info = "basic,associations,id,map,spec,flux_points,components"
@@ -433,13 +433,13 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
         One of the following models (given by ``Spectral_Model`` in the catalog):
 
-        - ``PL`` : `~gammapy.modeling.models.PowerLawSpectralModel`
-        - ``ECPL`` : `~gammapy.modeling.models.ExpCutoffPowerLawSpectralModel`
+        - ``PL`` : `~gammapy.modeling.models.PowerLawSpectralModel`.
+        - ``ECPL`` : `~gammapy.modeling.models.ExpCutoffPowerLawSpectralModel`.
 
         Parameters
         ----------
         which : {'best', 'pl', 'ecpl'}
-            Which spectral model
+            Which spectral model.
         """
         data = self.data
 
@@ -530,7 +530,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         Parameters
         ----------
         which : {'best', 'pl', 'ecpl'}
-            Which spectral model
+            Which spectral model.
 
         Returns
         -------
@@ -551,12 +551,12 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         Parameters
         ----------
         which : {'best', 'pl', 'ecpl'}
-            Which spectral model
+            Which spectral model.
 
         linked : bool
-             Each sub-component of a source is given as a different `SkyModel`
-             If True the spectral parameters except the mormalisation are linked.
-             Default is False
+             Each subcomponent of a source is given as a different `SkyModel`.
+             If True, the spectral parameters except the normalisation are linked.
+             Default is False.
 
         Returns
         -------
@@ -645,7 +645,7 @@ class SourceCatalogHGPS(SourceCatalog):
 
         curl -O https://www.mpi-hd.mpg.de/hfm/HESS/hgps/data/hgps_catalog_v1.fits.gz
 
-    Then you can load it up like this:
+    Then you can load it like this:
 
     >>> import matplotlib.pyplot as plt
     >>> from gammapy.catalog import SourceCatalogHGPS
@@ -879,20 +879,14 @@ class SourceCatalogHGPS(SourceCatalog):
         Parameters
         ----------
         which : {'best', 'pl', 'ecpl'}
-            Which spectral model
+            Which spectral model.
 
         components_status : {'independent', 'linked', 'merged'}
-            Relation between the sources components:
-                'independent' : each sub-component of a source is given as
-                                a different `SkyModel` (Default)
-                'linked' : each sub-component of a source is given as
-                           a different `SkyModel` but the spectral parameters
-                           except the mormalisation are linked.
-                'merged' : the sub-components are merged into a single `SkyModel`
-                           given as a `~gammapy.modeling.models.TemplateSpatialModel`
-                           with a `~gammapy.modeling.models.PowerLawNormSpectralModel`.
-                           In that case the relavtie weights between the components
-                           cannot be adjusted.
+            Relation between the sources components. Available options are:
+
+                - 'independent': each subcomponent of a source is given as a different `SkyModel` (Default).
+                - 'linked': each subcomponent of a source is given as a different `SkyModel` but the spectral parameters except the normalisation are linked.
+                - 'merged': the subcomponents are merged into a single `SkyModel` given as a `~gammapy.modeling.models.TemplateSpatialModel` with a `~gammapy.modeling.models.PowerLawNormSpectralModel`. In that case the relative weights between the components cannot be adjusted.
 
         Returns
         -------
@@ -927,7 +921,7 @@ class SourceCatalogLargeScaleHGPS:
         Table of Gaussian parameters.
         ``x``, ``amplitude``, ``mean``, ``stddev``.
     interp_kwargs : dict
-        Keyword arguments passed to `ScaledRegularGridInterpolator`
+        Keyword arguments passed to `ScaledRegularGridInterpolator`.
     """
 
     def __init__(self, table, interp_kwargs=None):

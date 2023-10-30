@@ -29,7 +29,7 @@ class SourceCatalogObjectHWCBase(SourceCatalogObject, abc.ABC):
         Parameters
         ----------
         info : {'all', 'basic', 'position', 'spectrum'}
-            Comma separated list of options
+            Comma separated list of options.
         """
         if info == "all":
             info = "basic,position,spectrum"
@@ -143,7 +143,7 @@ class SourceCatalogObject2HWC(SourceCatalogObjectHWCBase):
     def spatial_model(self, which="point"):
         """Spatial model (`~gammapy.modeling.models.SpatialModel`).
 
-        * ``which="point"`` - `~gammapy.modeling.models.PointSpatialModel`
+        * ``which="point"`` - `~gammapy.modeling.models.PointSpatialModel`.
         * ``which="extended"`` - `~gammapy.modeling.models.DiskSpatialModel`.
           Only available for some sources. Raise ValueError if not available.
         """
@@ -171,7 +171,7 @@ class SourceCatalogObject2HWC(SourceCatalogObjectHWCBase):
     def sky_model(self, which="point"):
         """Sky model (`~gammapy.modeling.models.SkyModel`).
 
-        * ``which="point"`` - Sky model for point source analysis
+        * ``which="point"`` - Sky model for point source analysis.
         * ``which="extended"`` - Sky model for extended source analysis.
           Only available for some sources. Raise ValueError if not available.
 

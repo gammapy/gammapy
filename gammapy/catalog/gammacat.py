@@ -339,7 +339,7 @@ class SourceCatalogGammaCat(SourceCatalog):
     Parameters
     ----------
     filename : str
-        Path to the gamma-cat fits file.
+        Path to the gamma-cat FITS file.
 
     Examples
     --------
