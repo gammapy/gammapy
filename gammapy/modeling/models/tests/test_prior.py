@@ -2,8 +2,12 @@
 import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
+from gammapy.modeling import Parameter
 from gammapy.modeling.models import PRIOR_REGISTRY, GaussianPrior, Model, UniformPrior
 from gammapy.utils.testing import assert_quantity_allclose
+
+TEST_PARAMETER = [dict(testparameter=Parameter(name="test", value=1))]
+
 
 TEST_PRIORS = [
     dict(
