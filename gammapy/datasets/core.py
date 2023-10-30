@@ -79,6 +79,20 @@ class Dataset(abc.ABC):
             prior_stat_sum = self.models.parameters.prior_stat_sum()
         return np.sum(stat, dtype=np.float64) + prior_stat_sum
 
+    def set_priors_from_models(self, models):
+        if models is not None:
+            self._priors = [
+                par.prior for par in models.parameters if par.prior is not None
+            ]
+        else:
+            self._priors = None
+
+    @property
+    def priors(self):
+        """Priors set on model parameters (list)."""
+        self.set_priors_from_models(self.models)
+        return self._priors
+
     @abc.abstractmethod
     def stat_array(self):
         """Statistic array, one value per data point."""
