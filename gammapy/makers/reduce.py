@@ -1,3 +1,4 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 from astropy.coordinates import Angle
 import gammapy.utils.parallel as parallel

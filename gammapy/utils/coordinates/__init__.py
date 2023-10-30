@@ -1,3 +1,4 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Astronomical coordinate calculation utility functions.
 """
 from .fov import fov_to_sky, sky_to_fov

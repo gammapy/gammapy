@@ -1,3 +1,4 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 from itertools import product
 import numpy as np
 from scipy.ndimage import label as ndi_label
