@@ -58,7 +58,9 @@ class EventList:
     Parameters
     ----------
     table : `~astropy.table.Table`
-        Event list table.
+        Event list table
+    meta : `~gammapy.data.EventListMetaData`
+        The metadata. Default is None.
 
     Examples
     --------
@@ -87,7 +89,7 @@ class EventList:
 
     """
 
-    def __init__(self, table=None, meta=None):
+    def __init__(self, table, meta=None):
         self.table = table
         self.meta = meta
 
