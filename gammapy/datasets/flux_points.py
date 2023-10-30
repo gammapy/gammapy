@@ -72,11 +72,11 @@ class FluxPointsDataset(Dataset):
         message    : Hesse terminated successfully.
 
     >>> print(result.parameters.to_table())
-      type      name     value         unit      ... max frozen is_norm link
-    -------- --------- ---------- -------------- ... --- ------ ------- ----
-    spectral     index 2.2159e+00                ... nan  False   False
-    spectral amplitude 2.1619e-13 cm-2 s-1 TeV-1 ... nan  False    True
-    spectral reference 1.0000e+00            TeV ... nan   True   False
+      type      name     value         unit      ... max frozen link
+    -------- --------- ---------- -------------- ... --- ------ ----
+    spectral     index 2.2159e+00                ... nan  False
+    spectral amplitude 2.1619e-13 cm-2 s-1 TeV-1 ... nan  False
+    spectral reference 1.0000e+00            TeV ... nan   True
 
     Note: In order to reproduce the example, you need the tests datasets folder.
     You may download it with the command

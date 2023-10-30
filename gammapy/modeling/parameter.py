@@ -92,8 +92,6 @@ class Parameter:
         Method used to set ``factor`` and ``scale``
     interp : {"lin", "sqrt", "log"}
         Parameter scaling to use for the scan.
-    is_norm : bool
-        Whether the parameter represents the flux norm of the model.
     prior : `~gammapy.modeling.models.Prior`
         Prior set on the parameter.
     """
@@ -115,7 +113,6 @@ class Parameter:
         scan_values=None,
         scale_method="scale10",
         interp="lin",
-        is_norm=False,
         prior=None,
     ):
         if not isinstance(name, str):
@@ -128,7 +125,6 @@ class Parameter:
         self.max = max
         self.frozen = frozen
         self._error = error
-        self._is_norm = is_norm
         self._type = None
 
         # TODO: move this to a setter method that can be called from `__set__` also!
@@ -193,11 +189,6 @@ class Parameter:
     def prior_stat_sum(self):
         if self.prior is not None:
             return self.prior(self)
-
-    @property
-    def is_norm(self):
-        """Whether the parameter represents the norm of the model"""
-        return self._is_norm
 
     @property
     def type(self):
@@ -458,7 +449,6 @@ class Parameter:
             "frozen": self.frozen,
             "interp": self.interp,
             "scale_method": self.scale_method,
-            "is_norm": self.is_norm,
         }
 
         if self._link_label_io is not None:
@@ -599,11 +589,6 @@ class Parameters(collections.abc.Sequence):
     def copy(self):
         """A deep copy"""
         return copy.deepcopy(self)
-
-    @property
-    def norm_parameters(self):
-        """List of norm parameters"""
-        return self.__class__([par for par in self._parameters if par.is_norm])
 
     @property
     def free_parameters(self):

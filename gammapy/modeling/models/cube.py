@@ -77,13 +77,6 @@ class SkyModel(ModelBase):
         self.datasets_names = datasets_names
         self._check_unit()
 
-        is_norm = np.array([par.is_norm for par in spectral_model.parameters])
-
-        if not np.any(is_norm):
-            raise ValueError(
-                "Spectral model used with SkyModel requires a norm type parameter."
-            )
-
         super().__init__(covariance_data=covariance_data)
 
     @property

@@ -677,9 +677,7 @@ def test_template_spectral_model_single_value():
 
     assert_allclose(result.data, 1e-12)
 
-    model.norm.value = 0.5
     data = model.to_dict()
-    assert_allclose(data["spectral"]["parameters"][0]["value"], 0.5)
     model2 = TemplateSpectralModel.from_dict(data)
     assert model2.to_dict() == data
 
@@ -1197,9 +1195,3 @@ def test_template_ND_EBL(tmpdir):
     assert_allclose(template_new.map.data, region_map.data)
     assert len(template.parameters) == 1
     assert_allclose(template.parameters["redshift"].value, 0.1)
-
-
-def test_is_norm_spectral_models():
-    for test_model in TEST_MODELS:
-        m = test_model["model"]
-        assert np.any([p.is_norm for p in m.parameters])

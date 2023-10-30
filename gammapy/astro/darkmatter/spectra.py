@@ -229,7 +229,6 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
         1,
         unit="",
         interp="log",
-        is_norm=True,
     )
     tag = ["DarkMatterAnnihilationSpectralModel", "dm-annihilation"]
 
@@ -335,7 +334,6 @@ class DarkMatterDecaySpectralModel(SpectralModel):
         1,
         unit="",
         interp="log",
-        is_norm=True,
     )
     tag = ["DarkMatterDecaySpectralModel", "dm-decay"]
 
