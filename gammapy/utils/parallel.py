@@ -2,7 +2,6 @@
 """Multiprocessing and multithreading setup"""
 import importlib
 import logging
-import multiprocessing
 from enum import Enum
 from gammapy.utils.pbar import progress_bar
 
@@ -37,6 +36,13 @@ class PoolMethodEnum(Enum):
 
 BACKEND_DEFAULT = ParallelBackendEnum.multiprocessing
 N_JOBS_DEFAULT = 1
+
+
+def get_multiprocessing():
+    """Get multiprocessing module"""
+    import multiprocessing
+
+    return multiprocessing
 
 
 def get_multiprocessing_ray():
@@ -143,7 +149,7 @@ def run_multiprocessing(
 
     processes = pool_kwargs.get("processes", N_JOBS_DEFAULT)
 
-    multiprocessing = PARALLEL_BACKEND_MODULES[backend]
+    multiprocessing = PARALLEL_BACKEND_MODULES[backend]()
 
     if backend == ParallelBackendEnum.multiprocessing:
         cpu_count = multiprocessing.cpu_count()
@@ -222,8 +228,6 @@ POOL_METHODS = {
 }
 
 PARALLEL_BACKEND_MODULES = {
-    ParallelBackendEnum.multiprocessing: multiprocessing,
+    ParallelBackendEnum.multiprocessing: get_multiprocessing,
+    ParallelBackendEnum.ray: get_multiprocessing_ray,
 }
-
-if is_ray_available():
-    PARALLEL_BACKEND_MODULES[ParallelBackendEnum.ray] = get_multiprocessing_ray()
