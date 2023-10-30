@@ -6,6 +6,7 @@ import astropy.units as u
 from gammapy.datasets import Datasets, SpectrumDatasetOnOff
 from gammapy.estimators.flux import FluxEstimator
 from gammapy.maps import MapAxis, WcsNDMap
+from gammapy.modeling import Parameter
 from gammapy.modeling.models import (
     Models,
     NaimaSpectralModel,
@@ -43,11 +44,12 @@ def hess_datasets():
 
 @requires_data()
 def test_flux_estimator_fermi_no_reoptimization(fermi_datasets):
+    norm = Parameter(
+        value=1, name="norm", scan_n_values=5, scan_min=0.5, scan_max=2, interp="log"
+    )
     estimator = FluxEstimator(
         0,
-        norm_n_values=5,
-        norm_min=0.5,
-        norm_max=2,
+        norm,
         selection_optional="all",
         reoptimize=False,
     )
@@ -136,10 +138,10 @@ def test_inhomogeneous_datasets(fermi_datasets, hess_datasets):
 def test_flux_estimator_norm_range():
     model = SkyModel.create("pl", "gauss", name="test")
 
-    model.spectral_model.amplitude.min = 1e-15
-    model.spectral_model.amplitude.max = 1e-10
-
-    estimator = FluxEstimator(source="test", selection_optional=[], reoptimize=True)
+    norm = Parameter(value=1, name="norm", min=1e-3, max=1e2, interp="log")
+    estimator = FluxEstimator(
+        source="test", norm=norm, selection_optional=[], reoptimize=True
+    )
 
     scale_model = estimator.get_scale_model(Models([model]))
 
@@ -172,7 +174,10 @@ def test_flux_estimator_compound_model():
     spectral_model = pl * pln
     model = SkyModel(spectral_model=spectral_model, name="test")
 
-    estimator = FluxEstimator(source="test", selection_optional=[], reoptimize=True)
+    norm = Parameter(value=1, name="norm", min=1e-3, max=1e2, interp="log")
+    estimator = FluxEstimator(
+        source="test", norm=norm, selection_optional=[], reoptimize=True
+    )
 
     scale_model = estimator.get_scale_model(Models([model]))
     assert_allclose(scale_model.norm.min, 1e-3)
@@ -183,12 +188,6 @@ def test_flux_estimator_compound_model():
     pl2.amplitude.max = 1e-10
     spectral_model2 = pl + pl2
     model2 = SkyModel(spectral_model=spectral_model2, name="test")
-    with pytest.raises(ValueError) as e_info:
-        scale_model = estimator.get_scale_model(Models([model2]))
-    assert (
-        "FluxEstimator requires one and only one free 'norm' or 'amplitude'"
-        " parameter in the model to run" in str(e_info.value)
-    )
 
     pl2.amplitude.frozen = True
     scale_model = estimator.get_scale_model(Models([model2]))
@@ -197,7 +196,7 @@ def test_flux_estimator_compound_model():
     pl.amplitude.frozen = True
     pl2.amplitude.frozen = False
     scale_model = estimator.get_scale_model(Models([model2]))
-    assert_allclose(scale_model.norm.min, 1e-2)
+    assert_allclose(scale_model.norm.min, 1e-3)
 
     pl2.amplitude.frozen = True
     scale_model = estimator.get_scale_model(Models([model2]))

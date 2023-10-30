@@ -37,14 +37,9 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
     ----------
     source : str or int
         For which source in the model to compute the flux points.
-    norm_min : float
-        Minimum value for the norm used for the fit statistic profile evaluation.
-    norm_max : float
-        Maximum value for the norm used for the fit statistic profile evaluation.
-    norm_n_values : int
-        Number of norm values used for the fit statistic profile.
-    norm_values : `numpy.ndarray`
-        Array of norm values to be used for the fit statistic profile.
+    norm : ~gammapy.modeling.Parameter`
+        Norm parameter used for the fit.
+        Default is None and a new parameter is created automatically.
     n_sigma : int
         Number of sigma to use for asymmetric error computation. Default is 1.
     n_sigma_ul : int
@@ -214,8 +209,7 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
             result.update({"norm_ul": np.nan})
 
         if "scan" in self.selection_optional:
-            norm = super()._set_norm_parameter()
-            norm_scan = norm.scan_values
+            norm_scan = self.norm.scan_values
             result.update({"norm_scan": norm_scan, "stat_scan": np.nan * norm_scan})
 
         return result

@@ -26,14 +26,9 @@ class FluxEstimator(ParameterEstimator):
     ----------
     source : str or int
         For which source in the model to compute the flux.
-    norm_min : float
-        Minimum value for the norm used for the fit statistic profile evaluation.
-    norm_max : float
-        Maximum value for the norm used for the fit statistic profile evaluation.
-    norm_n_values : int
-        Number of norm values used for the fit statistic profile.
-    norm_values : `numpy.ndarray`
-        Array of norm values to be used for the fit statistic profile.
+    norm : ~gammapy.modeling.Parameter`
+        Norm parameter used for the fit.
+        Default is None and a new parameter is created automatically.
     n_sigma : int
         Sigma to use for asymmetric error computation.
     n_sigma_ul : int
@@ -59,20 +54,24 @@ class FluxEstimator(ParameterEstimator):
     def __init__(
         self,
         source=0,
-        norm_min=0.2,
-        norm_max=5,
-        norm_n_values=11,
-        norm_values=None,
+        norm=None,
         n_sigma=1,
         n_sigma_ul=2,
         selection_optional=None,
         fit=None,
         reoptimize=False,
     ):
-        self.norm_values = norm_values
-        self.norm_min = norm_min
-        self.norm_max = norm_max
-        self.norm_n_values = norm_n_values
+        if norm is None:
+            norm = Parameter(
+                "norm",
+                1,
+                unit="",
+                interp="log",
+                scan_min=0.2,
+                scan_max=5,
+                scan_n_values=11,
+            )
+        self.norm = norm
         self.source = source
         super().__init__(
             null_value=0,
@@ -82,23 +81,6 @@ class FluxEstimator(ParameterEstimator):
             fit=fit,
             reoptimize=reoptimize,
         )
-
-    def _set_norm_parameter(self, norm=None, scaled_parameter=None):
-        """Define properties of the norm spectral parameter."""
-        if norm is None:
-            norm = Parameter("norm", 1, unit="", interp="log")
-
-        norm.value = 1.0
-        norm.frozen = False
-
-        norm.min = scaled_parameter.min / scaled_parameter.value
-        norm.max = scaled_parameter.max / scaled_parameter.value
-        norm.interp = scaled_parameter.interp
-        norm.scan_values = self.norm_values
-        norm.scan_min = self.norm_min
-        norm.scan_max = self.norm_max
-        norm.scan_n_values = self.norm_n_values
-        return norm
 
     def get_scale_model(self, models):
         """Set scale model
@@ -121,18 +103,7 @@ class FluxEstimator(ParameterEstimator):
             )
 
         scale_model = ScaleSpectralModel(ref_model)
-
-        norms = ref_model.parameters.norm_parameters
-
-        if len(norms) == 0 or len(norms.free_parameters) > 1:
-            raise ValueError(
-                f"{self.tag} requires one and only one free 'norm' or 'amplitude' parameter"
-                " in the model to run"
-            )
-        elif len(norms.free_parameters) == 1:
-            norms = norms.free_parameters
-
-        scale_model.norm = self._set_norm_parameter(scale_model.norm, norms[0])
+        scale_model.norm = self.norm
         return scale_model
 
     def estimate_npred_excess(self, datasets):

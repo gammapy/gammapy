@@ -38,17 +38,12 @@ class LightCurveEstimator(FluxPointsEstimator):
     time_intervals : list of `astropy.time.Time`
         Start and stop time for each interval to compute the LC
     source : str or int
-        For which source in the model to compute the flux points. Default is 0
+        For which source in the model to compute the flux points. Default is 0.
+    norm : ~gammapy.modeling.Parameter`
+        Norm parameter used for the fit.
+        Default is None and a new parameter is created automatically.
     atol : `~astropy.units.Quantity`
         Tolerance value for time comparison with different scale. Default 1e-6 sec.
-    norm_min : float
-        Minimum value for the norm used for the fit statistic profile evaluation.
-    norm_max : float
-        Maximum value for the norm used for the fit statistic profile evaluation.
-    norm_n_values : int
-        Number of norm values used for the fit statistic profile.
-    norm_values : `numpy.ndarray`
-        Array of norm values to be used for the fit statistic profile.
     n_sigma : int
         Number of sigma to use for asymmetric error computation. Default is 1.
     n_sigma_ul : int
