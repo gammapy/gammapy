@@ -36,9 +36,9 @@ class Paczynski1990(Fittable1DModel):
     Parameters
     ----------
     amplitude : float
-        See formula
+        See formula.
     r_exp : float
-        See formula
+        See formula.
 
     See Also
     --------
@@ -72,11 +72,11 @@ class CaseBattacharya1998(Fittable1DModel):
     Parameters
     ----------
     amplitude : float
-        See model formula
+        See model formula.
     alpha : float
-        See model formula
+        See model formula.
     beta : float
-        See model formula
+        See model formula.
 
     See Also
     --------
@@ -115,13 +115,13 @@ class YusifovKucuk2004(Fittable1DModel):
     Parameters
     ----------
     amplitude : float
-        See model formula
+        See model formula.
     a : float
-        See model formula
+        See model formula.
     b : float
-        See model formula
+        See model formula.
     r_1 : float
-        See model formula
+        See model formula.
 
     See Also
     --------
@@ -161,11 +161,11 @@ class YusifovKucuk2004B(Fittable1DModel):
     Parameters
     ----------
     amplitude : float
-        See model formula
+        See model formula.
     a : float
-        See model formula
+        See model formula.
     b : float
-        See model formula
+        See model formula.
 
     See Also
     --------
@@ -201,11 +201,11 @@ class FaucherKaspi2006(Fittable1DModel):
     Parameters
     ----------
     amplitude : float
-        See model formula
+        See model formula.
     r_0 : float
-        See model formula
+        See model formula.
     sigma : float
-        See model formula
+        See model formula.
 
     See Also
     --------
@@ -241,11 +241,11 @@ class Lorimer2006(Fittable1DModel):
     Parameters
     ----------
     amplitude : float
-        See model formula
+        See model formula.
     B : float
-        See model formula
+        See model formula.
     C : float
-        See model formula
+        See model formula.
 
     See Also
     --------
@@ -282,9 +282,9 @@ class Exponential(Fittable1DModel):
     Parameters
     ----------
     amplitude : float
-        See model formula
+        See model formula.
     z_0 : float
-        Scale height of the distribution
+        Scale height of the distribution.
 
     See Also
     --------
@@ -316,19 +316,20 @@ class LogSpiral:
 
         Parameters
         ----------
-        theta : array_like
-            Angle (deg)
-        radius : array_like
-            Radius (kpc)
-        spiralarm_index : int
-            Spiral arm index
+        theta : `~astropy.units.Quantity`, optional
+            Angle (deg). Default is None.
+        radius : `~astropy.units.Quantity`, optional
+            Radius (kpc). Default is None
+        spiralarm_index : int, optional
+            Spiral arm index. Default is 0.
 
         Returns
         -------
-        x, y : array_like
+        x, y : `~numpy.ndarray`
             Position (x, y)
         """
         if (theta is None) and not (radius is None):
+            print(self.theta)
             theta = self.theta(radius, spiralarm_index=spiralarm_index)
         elif (radius is None) and not (theta is None):
             radius = self.radius(theta, spiralarm_index=spiralarm_index)
@@ -345,15 +346,15 @@ class LogSpiral:
 
         Parameters
         ----------
-        theta : array_like
-            Angle (deg)
+        theta : `~astropy.units.Quantity`
+            Angle (deg).
         spiralarm_index : int
-            Spiral arm index
+            Spiral arm index.
 
         Returns
         -------
-        radius : array_like
-            Radius (kpc)
+        radius : `~numpy.ndarray`
+            Radius (kpc).
         """
         k = self.k[spiralarm_index]
         r_0 = self.r_0[spiralarm_index]
@@ -367,14 +368,14 @@ class LogSpiral:
 
         Parameters
         ----------
-        radius : array_like
-            Radius (kpc)
+        radius : `~astropy.units.Quantity`
+            Radius (kpc).
         spiralarm_index : int
-            Spiral arm index
+            Spiral arm index.
 
         Returns
         -------
-        theta : array_like
+        theta : `~numpy.ndarray`
             Angle (deg)
         """
         k = self.k[spiralarm_index]
@@ -408,14 +409,16 @@ class FaucherSpiral(LogSpiral):
         Parameters
         ----------
         radius : `~astropy.units.Quantity`
-            Radius coordinate
+            Radius coordinate.
         theta : `~astropy.units.Quantity`
-            Angle coordinate
+            Angle coordinate.
         amount: float, optional
             Amount of blurring of the position, given as a fraction of `radius`.
+            Default is 0.07.
         random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
             Defines random number generator initialisation.
             Passed to `~gammapy.utils.random.get_random_state`.
+            Default is 'random-seed'.
         """
         random_state = get_random_state(random_state)
 
@@ -437,14 +440,16 @@ class FaucherSpiral(LogSpiral):
         Parameters
         ----------
         radius : `~astropy.units.Quantity`
-            Radius coordinate
+            Radius coordinate.
         theta : `~astropy.units.Quantity`
-            Angle coordinate
+            Angle coordinate.
         r_corr : `~astropy.units.Quantity`, optional
-            Scale of the correction towards the GC
+            Scale of the correction towards the GC.
+            Default is 2.857 * u.kpc.
         random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
             Defines random number generator initialisation.
             Passed to `~gammapy.utils.random.get_random_state`.
+            Default is 'random-seed'.
         """
         random_state = get_random_state(random_state)
 
@@ -467,6 +472,7 @@ class FaucherSpiral(LogSpiral):
         random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
             Defines random number generator initialisation.
             Passed to `~gammapy.utils.random.get_random_state`.
+            Default is 'random-seed'.
 
         Returns
         -------

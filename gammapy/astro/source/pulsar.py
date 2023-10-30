@@ -22,13 +22,13 @@ class SimplePulsar:
     Parameters
     ----------
     P : `~astropy.units.Quantity`
-        Rotation period (sec)
+        Rotation period (sec).
     P_dot : `~astropy.units.Quantity`
-        Rotation period derivative (sec sec^-1)
+        Rotation period derivative (sec sec^-1).
     I : `~astropy.units.Quantity`
-        Moment of inertia (g cm^2)
+        Moment of inertia (g cm^2).
     R : `~astropy.units.Quantity`
-        Radius of the pulsar (cm)
+        Radius of the pulsar (cm).
     """
 
     def __init__(self, P, P_dot, I=DEFAULT_I, R=DEFAULT_R):  # noqa: E741
@@ -74,15 +74,15 @@ class Pulsar:
     Parameters
     ----------
     P_0 : float
-        Period at birth
+        Period at birth.
     B : `~astropy.units.Quantity`
-        Magnetic field strength at the poles (Gauss)
+        Magnetic field strength at the poles (Gauss).
     n : float
-        Spin-down braking index
+        Spin-down braking index.
     I : float
-        Moment of inertia
+        Moment of inertia.
     R : float
-        Radius
+        Radius.
     """
 
     def __init__(
@@ -120,7 +120,7 @@ class Pulsar:
         Parameters
         ----------
         t : `~astropy.units.Quantity`
-            Time after birth of the pulsar
+            Time after birth of the pulsar.
         """
         t = Quantity(t, "yr")
         return self.L_0 * (1 + (t / self.tau_0)) ** self.beta
@@ -149,7 +149,7 @@ class Pulsar:
         Parameters
         ----------
         t : `~astropy.units.Quantity`
-            Time after birth of the pulsar
+            Time after birth of the pulsar.
         """
         t = Quantity(t, "yr")
         return self.P_0 * (1 + (t / self.tau_0)) ** (1.0 / (self.n - 1))

@@ -64,13 +64,13 @@ class DMProfile(abc.ABC):
         rmin, rmax : `~astropy.units.Quantity`
             Lower and upper bound of integration range.
         separation : `~numpy.ndarray`
-            Separation angle in rad
-        ndecade    : int, optional
+            Separation angle in rad.
+        ndecade : int, optional
             Number of grid points per decade used for the integration.
-            Default : 10000
+            Default is 10000.
         squared : bool, optional
             Square the profile before integration.
-            Default: True
+            Default is True.
         """
         integral = self.integrate_spectrum_separation(
             self._eval_substitution, rmin, rmax, separation, ndecade, squared
@@ -88,12 +88,12 @@ class DMProfile(abc.ABC):
         xmin, xmax : `~astropy.units.Quantity`
             Lower and upper bound of integration range.
         separation : `~numpy.ndarray`
-            Separation angle in rad
-        ndecade    : int
+            Separation angle in rad.
+        ndecade : int
             Number of grid points per decade used for the integration.
         squared : bool
             Square the profile before integration.
-            Default: True
+            Default is True.
         """
         unit = xmin.unit
         xmin = xmin.value
@@ -109,8 +109,10 @@ class DMProfile(abc.ABC):
 
 class ZhaoProfile(DMProfile):
     r"""Zhao Profile.
-    This is taken from equation 1 from Zhao (1996). It is a generalization of the NFW profile. The volume density is parametrized with
-    a double power-law. Scale radii smaller than the scale radius are described with a slope of :math:`-\gamma` and scale radii larger than the scale radius are described with a slope of :math:`-\beta`. :math:`\alpha` is a measure for the width of the transition region.
+    This is taken from equation 1 from Zhao (1996). It is a generalization of the NFW profile. The volume density
+    is parametrized with a double power-law. Scale radii smaller than the scale radius are described with a slope of
+    :math:`-\gamma` and scale radii larger than the scale radius are described with a slope of :math:`-\beta`.
+    :math:`\alpha` is a measure for the width of the transition region.
 
     .. math::
         \rho(r) = \rho_s \left(\frac{r_s}{r}\right)^\gamma \left(1 + \left(\frac{r}{r_s}\right)^\frac{1}{\alpha} \right)^{(\gamma - \beta) \alpha}
@@ -118,15 +120,15 @@ class ZhaoProfile(DMProfile):
     Parameters
     ----------
     r_s : `~astropy.units.Quantity`
-        Scale radius, :math:`r_s`
+        Scale radius, :math:`r_s`.
     alpha : `~astropy.units.Quantity`
-        :math:`\alpha`
+        :math:`\alpha`.
     beta: `~astropy.units.Quantity`
-        :math:`\beta`
+        :math:`\beta`.
     gamma : `~astropy.units.Quantity`
-        :math:`\gamma`
+        :math:`\gamma`.
     rho_s : `~astropy.units.Quantity`
-        Characteristic density, :math:`\rho_s`
+        Characteristic density, :math:`\rho_s`.
 
     References
     ----------
@@ -177,9 +179,9 @@ class NFWProfile(DMProfile):
     Parameters
     ----------
     r_s : `~astropy.units.Quantity`
-        Scale radius, :math:`r_s`
+        Scale radius, :math:`r_s`.
     rho_s : `~astropy.units.Quantity`
-        Characteristic density, :math:`\rho_s`
+        Characteristic density, :math:`\rho_s`.
 
     References
     ----------
@@ -213,11 +215,11 @@ class EinastoProfile(DMProfile):
     Parameters
     ----------
     r_s : `~astropy.units.Quantity`
-        Scale radius, :math:`r_s`
+        Scale radius, :math:`r_s`.
     alpha : `~astropy.units.Quantity`
-        :math:`\alpha`
+        :math:`\alpha`.
     rho_s : `~astropy.units.Quantity`
-        Characteristic density, :math:`\rho_s`
+        Characteristic density, :math:`\rho_s`.
 
     References
     ----------
@@ -257,7 +259,7 @@ class IsothermalProfile(DMProfile):
     Parameters
     ----------
     r_s : `~astropy.units.Quantity`
-        Scale radius, :math:`r_s`
+        Scale radius, :math:`r_s`.
 
     References
     ----------
@@ -289,7 +291,7 @@ class BurkertProfile(DMProfile):
     Parameters
     ----------
     r_s : `~astropy.units.Quantity`
-        Scale radius, :math:`r_s`
+        Scale radius, :math:`r_s`.
 
     References
     ----------
@@ -323,7 +325,7 @@ class MooreProfile(DMProfile):
     Parameters
     ----------
     r_s : `~astropy.units.Quantity`
-        Scale radius, :math:`r_s`
+        Scale radius, :math:`r_s`.
 
     References
     ----------

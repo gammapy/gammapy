@@ -27,9 +27,9 @@ class FaucherKaspi2006VelocityMaxwellian(Fittable1DModel):
     Parameters
     ----------
     amplitude : float
-        Value of the integral
+        Value of the integral.
     sigma : float
-        Velocity parameter (km s^-1)
+        Velocity parameter (km s^-1).
     """
 
     amplitude = Parameter()
@@ -59,13 +59,13 @@ class FaucherKaspi2006VelocityBimodal(Fittable1DModel):
     Parameters
     ----------
     amplitude : float
-        Value of the integral
+        Value of the integral.
     sigma1 : float
-        See model formula
+        See model formula.
     sigma2 : float
-        See model formula
+        See model formula.
     w : float
-        See model formula
+        See model formula.
     """
 
     amplitude = Parameter()
@@ -98,9 +98,9 @@ class Paczynski1990Velocity(Fittable1DModel):
     Parameters
     ----------
     amplitude : float
-        Value of the integral
+        Value of the integral.
     v_0 : float
-        Velocity parameter (km s^-1)
+        Velocity parameter (km s^-1).
     """
 
     amplitude = Parameter()
