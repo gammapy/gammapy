@@ -28,18 +28,18 @@ class PlotMixin:
         Parameters
         ----------
         ax_spectrum : `~matplotlib.axes.Axes`
-            Axes to plot spectrum on
+            Axes to plot spectrum on. Default is None.
         ax_residuals : `~matplotlib.axes.Axes`
-            Axes to plot residuals on
+            Axes to plot residuals on. Default is None.
         kwargs_spectrum : dict
-            Keyword arguments passed to `~SpectrumDataset.plot_excess`
+            Keyword arguments passed to `~SpectrumDataset.plot_excess`. Default is None.
         kwargs_residuals : dict
-            Keyword arguments passed to `~SpectrumDataset.plot_residuals_spectral`
+            Keyword arguments passed to `~SpectrumDataset.plot_residuals_spectral`. Default is None.
 
         Returns
         -------
         ax_spectrum, ax_residuals : `~matplotlib.axes.Axes`
-            Spectrum and residuals plots
+            Spectrum and residuals plots.
 
         Examples
         --------
@@ -88,18 +88,18 @@ class PlotMixin:
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`
-            Axes to plot on
-        kwargs_counts: dict
-            Keyword arguments passed to `~matplotlib.axes.Axes.hist` for the counts
-        kwargs_background: dict
-            Keyword arguments passed to `~matplotlib.axes.Axes.hist` for the background
-        **kwargs: dict
-            Keyword arguments passed to both `~matplotlib.axes.Axes.hist`
+            Axes to plot on. Default is None.
+        kwargs_counts : dict
+            Keyword arguments passed to `~matplotlib.axes.Axes.hist` for the counts. Default is None.
+        kwargs_background : dict
+            Keyword arguments passed to `~matplotlib.axes.Axes.hist` for the background. Default is None.
+        **kwargs : dict
+            Keyword arguments passed to both `~matplotlib.axes.Axes.hist`.
 
         Returns
         -------
         ax : `~matplotlib.axes.Axes`
-            Axes object
+            Axes object.
         """
         kwargs_counts = kwargs_counts or {}
         kwargs_background = kwargs_background or {}
@@ -124,11 +124,11 @@ class PlotMixin:
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`
-            Axes to plot on
-        kwargs_fit: dict
-            Keyword arguments passed to `~RegionNDMap.plot_mask()` for mask fit
-        kwargs_safe: dict
-            Keyword arguments passed to `~RegionNDMap.plot_mask()` for mask safe
+            Axes to plot on. Default is None.
+        kwargs_fit : dict
+            Keyword arguments passed to `~RegionNDMap.plot_mask()` for mask fit. Default is None.
+        kwargs_safe : dict
+            Keyword arguments passed to `~RegionNDMap.plot_mask()` for mask safe. Default is None.
 
         Returns
         -------
@@ -177,13 +177,13 @@ class PlotMixin:
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`
-            Axes to plot on.
-        kwargs_excess: dict
+            Axes to plot on. Default is None.
+        kwargs_excess : dict
             Keyword arguments passed to `~matplotlib.axes.Axes.errorbar` for
-            the excess.
+            the excess. Default is None.
         kwargs_npred_signal : dict
             Keyword arguments passed to `~matplotlib.axes.Axes.hist` for the
-            predicted signal.
+            predicted signal. Default is None.
         **kwargs: dict
             Keyword arguments passed to both plot methods.
 
@@ -231,7 +231,7 @@ class PlotMixin:
         Parameters
         ----------
         figsize : tuple
-            Size of the figure.
+            Size of the figure. Default is (16, 4).
 
         """
         fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=figsize)
@@ -292,11 +292,11 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
     tag = "SpectrumDatasetOnOff"
 
     def cutout(self, *args, **kwargs):
-        """Not supported for `SpectrumDatasetOnOff`"""
+        """Not supported for `SpectrumDatasetOnOff`."""
         raise NotImplementedError("Method not supported on a spectrum dataset")
 
     def plot_residuals_spatial(self, *args, **kwargs):
-        """Not supported for `SpectrumDatasetOnOff`"""
+        """Not supported for `SpectrumDatasetOnOff`."""
         raise NotImplementedError("Method not supported on a spectrum dataset")
 
     @classmethod
@@ -311,10 +311,11 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         Parameters
         ----------
         filename : `~pathlib.Path` or str
-            OGIP PHA file to read
+            OGIP PHA file to read.
         format : {"ogip", "ogip-sherpa", "gadf"}
-            Format to use.
-        kwargs : arguments passed to `MapDataset.read`
+            Format to use. Default is "ogip".
+        kwargs : dict
+            Arguments passed to `MapDataset.read`.
         """
         from .io import OGIPDatasetReader
 
@@ -336,9 +337,9 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         filename : `~pathlib.Path` or str
             Filename to write to.
         overwrite : bool
-            Overwrite existing file.
+            Overwrite existing file. Default is False.
         format : {"ogip", "ogip-sherpa", "gadf"}
-            Format to use.
+            Format to use. Default is "ogip".
         checksum : bool
             When True adds both DATASUM and CHECKSUM cards to the headers written to the file.
             Default is False.
@@ -356,14 +357,14 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
             raise ValueError(f"{format} is not a valid serialisation format")
 
     @classmethod
-    def from_dict(cls, data, **kwargs):
+    def from_dict(cls, data):
         """Create spectrum dataset from dict.
         Reads file from the disk as specified in the dict.
 
         Parameters
         ----------
         data : dict
-            Dict containing data to create dataset from.
+            Dictionary containing data to create dataset from.
 
         Returns
         -------
@@ -412,11 +413,11 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         Parameters
         ----------
         name: str
-            Name of the new dataset
+            Name of the new dataset. Default is None.
 
         Returns
         -------
         dataset: `SpectrumDataset`
-            SpectrumDataset with Cash statistic
+            SpectrumDataset with Cash statistic.
         """
         return self.to_map_dataset(name=name).to_spectrum_dataset(on_region=None)

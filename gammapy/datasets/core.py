@@ -19,11 +19,11 @@ __all__ = ["Dataset", "Datasets"]
 
 class Dataset(abc.ABC):
     """Dataset abstract base class.
-    For now, see existing examples of type of datasets:
+    For now, see existing examples of type of datasets :
 
-    - `gammapy.datasets.MapDataset`
-    - `gammapy.datasets.SpectrumDataset`
-    - `gammapy.datasets.FluxPointsDataset`
+    - `gammapy.datasets.MapDataset`.
+    - `gammapy.datasets.SpectrumDataset`.
+    - `gammapy.datasets.FluxPointsDataset`.
 
     For more information see :ref:`datasets`.
 
@@ -86,7 +86,7 @@ class Dataset(abc.ABC):
         Parameters
         ----------
         name : str
-            Name of the copied dataset
+            Name of the copied dataset. Default is None.
 
         Returns
         -------
@@ -122,7 +122,7 @@ class Datasets(collections.abc.MutableSequence):
     Parameters
     ----------
     datasets : `Dataset` or list of `Dataset`
-        Datasets
+        Datasets.
     """
 
     def __init__(self, datasets=None):
@@ -237,7 +237,7 @@ class Datasets(collections.abc.MutableSequence):
         Parameters
         ----------
         time_min, time_max : `~astropy.time.Time`
-            Time interval
+            Time interval.
         atol : `~astropy.units.Quantity`
             Tolerance value for time comparison with different scale. Default 1e-6 sec.
 
@@ -269,12 +269,12 @@ class Datasets(collections.abc.MutableSequence):
         Parameters
         ----------
         energy_min, energy_max : `~astropy.units.Quantity`
-            Energy bounds to compute the flux point for
+            Energy bounds to compute the flux point for.
 
         Returns
         -------
         datasets : Datasets
-            Datasets
+            Datasets.
 
         """
         datasets = []
@@ -299,18 +299,18 @@ class Datasets(collections.abc.MutableSequence):
     def to_spectrum_datasets(self, region):
         """Extract spectrum datasets for the given region.
 
-        To get more detailed information, see the corresponding function associated to each dataset type:
+        To get more detailed information, see the corresponding function associated to each dataset type :
         `~gammapy.datasets.MapDataset.to_spectrum_dataset` or `~gammapy.datasets.MapDatasetOnOff.to_spectrum_dataset`.
 
         Parameters
         ----------
         region : `~regions.SkyRegion`
-            Region definition
+            Region definition.
 
         Returns
         -------
         datasets : `Datasets`
-            List of `~gammapy.datasets.SpectrumDataset`
+            List of `~gammapy.datasets.SpectrumDataset`.
         """
         datasets = Datasets()
 
@@ -333,7 +333,7 @@ class Datasets(collections.abc.MutableSequence):
         Returns
         -------
         energy_min, energy_max : `~astropy.units.Quantity`
-            Energy range
+            Energy range.
         """
 
         energy_mins, energy_maxs = [], []
@@ -383,18 +383,18 @@ class Datasets(collections.abc.MutableSequence):
         Parameters
         ----------
         filename : str or `Path`
-            File path or name of datasets yaml file
+            File path or name of datasets yaml file.
         filename_models : str or `Path`
-            File path or name of models yaml file
+            File path or name of models yaml file. Default is None.
         lazy : bool
-            Whether to lazy load data into memory
+            Whether to lazy load data into memory. Default is True.
         cache : bool
-            Whether to cache the data after loading
+            Whether to cache the data after loading. Default is True.
 
         Returns
         -------
         dataset : `gammapy.datasets.Datasets`
-            Datasets
+            Datasets.
         """
         from . import DATASET_REGISTRY
 
@@ -432,7 +432,7 @@ class Datasets(collections.abc.MutableSequence):
         Parameters
         ----------
         filename : str or `Path`
-            File path or name of datasets yaml file
+            File path or name of datasets yaml file.
         filename_models : str or `Path`
             File path or name of models yaml file. Default is None.
         overwrite : bool
@@ -473,14 +473,14 @@ class Datasets(collections.abc.MutableSequence):
         Parameters
         ----------
         name : str
-            Name of the stacked dataset
-        nan_to_num: bool
-            Non-finite values are replaced by zero if True (default)
+            Name of the stacked dataset. Default is None.
+        nan_to_num : bool
+            Non-finite values are replaced by zero if True. Default is True.
 
         Returns
         -------
         dataset : `~gammapy.datasets.Dataset`
-            the stacked dataset
+            The stacked dataset.
         """
         if not self.is_all_same_type:
             raise ValueError(
@@ -500,7 +500,7 @@ class Datasets(collections.abc.MutableSequence):
         Parameters
         ----------
         cumulative : bool
-            Cumulate info across all observations
+            Cumulate info across all observations. Default is False.
 
         Returns
         -------
@@ -544,7 +544,7 @@ class Datasets(collections.abc.MutableSequence):
 
     @property
     def meta_table(self):
-        """Meta table"""
+        """Meta table."""
         tables = [d.meta_table for d in self]
 
         if np.all([table is None for table in tables]):
