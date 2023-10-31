@@ -129,3 +129,27 @@ class CreatorMetaData(MetaData):
         origin = hdr.get("ORIGIN", None)
         creator = hdr.get("CREATOR", None)
         return cls(creator=creator, date=date, origin=origin)
+
+
+class ObsInfoMetaData(MetaData):
+    """General metadata information about the observation.
+
+    Parameters
+    ----------
+    obs_id : str or int
+        the observation identifier
+    telescope : str, optional
+        the telescope/observatory name
+    instrument : str, optional
+        the specific instrument used
+    sub_array : str, optional
+        the specific sub-array used
+    observation_mode : str, optional
+        the observation mode
+    """
+
+    obs_id: Union[str, int]
+    telescope: Optional[str]
+    instrument: Optional[str]
+    sub_array: Optional[str]
+    observation_mode: Optional[str]

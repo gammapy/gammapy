@@ -4,7 +4,7 @@ import pytest
 from numpy.testing import assert_allclose
 from astropy.coordinates import SkyCoord
 from pydantic import ValidationError
-from gammapy.utils.metadata import CreatorMetaData, MetaData
+from gammapy.utils.metadata import CreatorMetaData, MetaData, ObsInfoMetaData
 
 
 def test_creator():
@@ -42,3 +42,16 @@ def test_subclass():
 
     test_meta.extra = 3
     assert test_meta.extra == 3
+
+
+def test_obs_info():
+    obs_info = ObsInfoMetaData(obs_id="23523")
+
+    assert obs_info.telescope is None
+    assert obs_info.obs_id == "23523"
+
+    obs_info.obs_id = 23523
+    assert obs_info.obs_id == "23523"
+
+    obs_info.instrument = "CTA-North"
+    assert obs_info.instrument == "CTA-North"
