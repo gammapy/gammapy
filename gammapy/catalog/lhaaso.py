@@ -113,7 +113,8 @@ class SourceCatalogObject1LHAASO(SourceCatalogObject):
     def sky_model(self, which="both"):
         """Sky model (`~gammapy.modeling.models.SkyModel`).
 
-        * ``which="both"`` -  Create a composite template if both models are available, or, use the available one if only one is present
+        * ``which="both"`` -  Create a composite template if both models are available, or, use the available one
+           if only one is present.
         * ``which="KM2A"`` - Sky model for KM2A analysis if available.
         * ``which="WCDA"`` - Sky model for WCDA analysis if available.
 

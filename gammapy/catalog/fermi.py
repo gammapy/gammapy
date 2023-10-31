@@ -60,8 +60,8 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject, abc.ABC):
 
         Parameters
         ----------
-        info : {'all', 'basic', 'more', 'position', 'spectral','lightcurve'}
-            Comma separated list of options
+        info : {'all', 'basic', 'more', 'position', 'spectral', 'lightcurve'}
+            Comma separated list of options.
         """
         if info == "all":
             info = "basic,more,position,spectral,lightcurve"
