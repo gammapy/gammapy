@@ -27,10 +27,6 @@ class GTI:
     ----------
     table : `~astropy.table.Table`
         GTI table
-    reference_time : `~astropy.time.Time`
-        the reference time
-        If None, use TIME_REF_DEFAULT.
-        Default is None
 
     Examples
     --------
@@ -104,34 +100,28 @@ class GTI:
         return copy.deepcopy(self)
 
     @classmethod
-    def create(cls, start, stop, reference_time=None):
+    def create(cls, start, stop, meta=None):
         """Creates a GTI table from start and stop times.
 
-        Parameters
-        ----------
-        start : `~astropy.time.Time` or `~astropy.units.Quantity`
-            Start times, if a quantity then w.r.t. reference time
-        stop : `~astropy.time.Time` or `~astropy.units.Quantity`
-            Stop times, if a quantity then w.r.t. reference time
-        reference_time : `~astropy.time.Time`
-            the reference time to use in GTI metadata definition.
-            If None, use TIME_REF_DEFAULT.
-            Default is None
+         Parameters
+         ----------
+         start : `~astropy.time.Time` or `~astropy.units.Quantity`
+             Start times, if a quantity then w.r.t. reference time
+         stop : `~astropy.time.Time` or `~astropy.units.Quantity`
+             Stop times, if a quantity then w.r.t. reference time
+        meta : `dict`
+             Dictionary containing the metadata
         """
-        if reference_time is None:
-            reference_time = TIME_REF_DEFAULT
-        reference_time = Time(reference_time)
-        reference_time.format = "mjd"
+        if meta is None:
+            meta = GTIMetaData.from_default()
 
         if not isinstance(start, Time):
-            start = reference_time + u.Quantity(start)
+            start = meta["reference_time"] + u.Quantity(start)
 
         if not isinstance(stop, Time):
-            stop = reference_time + u.Quantity(stop)
+            stop = meta["reference_time"] + u.Quantity(stop)
 
         table = Table({"START": np.atleast_1d(start), "STOP": np.atleast_1d(stop)})
-
-        meta = {"reference_time": reference_time}
 
         return cls(table, meta=meta)
 
