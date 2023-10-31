@@ -37,31 +37,31 @@ class Observation:
 
     Parameters
     ----------
-    obs_id : int
-        Observation id.
-    obs_info : dict
-        Observation info dict.
-    aeff : `~gammapy.irf.EffectiveAreaTable2D`
-        Effective area.
-    edisp : `~gammapy.irf.EnergyDispersion2D`
-        Energy dispersion.
-    psf : `~gammapy.irf.PSF3D`
-        Point spread function.
-    bkg : `~gammapy.irf.Background3D`
-        Background rate model.
-    rad_max: `~gammapy.irf.RadMax2D`
+    obs_id : int, optional
+        Observation id. Default is None
+    obs_info : dict, optional
+        Observation info dict. Default is None.
+    aeff : `~gammapy.irf.EffectiveAreaTable2D`, optional
+        Effective area. Default is None.
+    edisp : `~gammapy.irf.EnergyDispersion2D`, optional
+        Energy dispersion. Default is None.
+    psf : `~gammapy.irf.PSF3D`, optional
+        Point spread function. Default is None.
+    bkg : `~gammapy.irf.Background3D`, optional
+        Background rate model. Default is None.
+    rad_max: `~gammapy.irf.RadMax2D`, optional
         Only for point-like IRFs: RAD_MAX table (energy dependent RAD_MAX)
-        For a fixed RAD_MAX, create a RadMax2D with a single bin.
-    gti : `~gammapy.data.GTI`
-        Table with GTI start and stop time
-    events : `~gammapy.data.EventList`
-        Event list.
-    obs_filter : `ObservationFilter`
-        Observation filter.
-    pointing : `~gammapy.data.FixedPointingInfo`
-        Pointing information.
-    location : `~astropy.coordinates.EarthLocation`
-        Earth location of the observatory.
+        For a fixed RAD_MAX, create a RadMax2D with a single bin. Default is None.
+    gti : `~gammapy.data.GTI`, optional
+        Table with GTI start and stop time. Default is None.
+    events : `~gammapy.data.EventList`, optional
+        Event list. Default is None.
+    obs_filter : `ObservationFilter`, optional
+        Observation filter. Default is None.
+    pointing : `~gammapy.data.FixedPointingInfo`, optional
+        Pointing information. Default is None.
+    location : `~astropy.coordinates.EarthLocation`, optional
+        Earth location of the observatory. Default is None.
     """
 
     aeff = LazyFitsData(cache=False)
@@ -214,24 +214,24 @@ class Observation:
         ----------
         pointing : `~gammapy.data.FixedPointingInfo` or `~astropy.coordinates.SkyCoord`
             Pointing information.
-        location : `~astropy.coordinates.EarthLocation`
-            Earth location of the observatory.
-        obs_id : int
-            Observation ID as identifier.
-        livetime : ~astropy.units.Quantity`
-            Livetime exposure of the simulated observation.
-        tstart: `~astropy.time.Time` or `~astropy.units.Quantity`
+        location : `~astropy.coordinates.EarthLocation`, optional
+            Earth location of the observatory. Default is None.
+        obs_id : int, optional
+            Observation ID as identifier. Default is 0.
+        livetime : ~astropy.units.Quantity`, optional
+            Livetime exposure of the simulated observation. Default is None.
+        tstart: `~astropy.time.Time` or `~astropy.units.Quantity`, optional
             Start time of observation as `~astropy.time.Time` or duration
-            relative to `reference_time`.
-        tstop: `astropy.time.Time` or `~astropy.units.Quantity`
+            relative to `reference_time`. Default is None.
+        tstop: `astropy.time.Time` or `~astropy.units.Quantity`, optional
             Stop time of observation as `~astropy.time.Time` or duration
-            relative to `reference_time`.
-        irfs: dict
-            IRFs used for simulating the observation: `bkg`, `aeff`, `psf`, `edisp`, `rad_max`.
+            relative to `reference_time`. Default is None.
+        irfs: dict, optional
+            IRFs used for simulating the observation: `bkg`, `aeff`, `psf`, `edisp`, `rad_max`. Default is None.
         deadtime_fraction : float, optional
-            Deadtime fraction, defaults to 0.
-        reference_time : `~astropy.time.Time`
-            the reference time to use in GTI definition.
+            Deadtime fraction. Default is 0.
+        reference_time : `~astropy.time.Time`, optional
+            the reference time to use in GTI definition. Default is `~astropy.time.Time("2000-01-01 00:00:00")`.
 
         Returns
         -------
@@ -446,8 +446,8 @@ class Observation:
 
         Parameters
         ----------
-        figsize : tuple
-            Figure size.
+        figsize : tuple, optional
+            Figure size. Default is (15, 10).
         """
 
         plottable_hds = ["events", "aeff", "psf", "edisp", "bkg", "rad_max"]
@@ -526,11 +526,11 @@ class Observation:
 
         Parameters
         ----------
-        event_file : str, Path
+        event_file : str or Path
             Path to the FITS file containing the event list and the GTI.
-        irf_file : str, Path, optional
-            Path to the .fits file containing the IRF components,
-            if not provided the IRF will be read from the event file.
+        irf_file : str or Path, optional
+            Path to the FITS file containing the IRF components. Default is None.
+            If None, the IRFs will be read from the event file.
 
         Returns
         -------
@@ -567,14 +567,14 @@ class Observation:
         Parameters
         ----------
         path: str or `~pathlib.Path`
-            Path for the output file
+            Path for the output file.
         overwrite: bool, optional
             Overwrite existing file. Default is False.
-        format: str
+        format: str, optional
             Output format, currently only "gadf" is supported. Default is "gadf".
-        include_irfs: bool
+        include_irfs: bool, optional
             Whether to include irf components in the output file. Default is True.
-        checksum : bool
+        checksum : bool, optional
             When True adds both DATASUM and CHECKSUM cards to the headers written to the file.
             Default is False.
         """
@@ -610,12 +610,12 @@ class Observation:
     def copy(self, in_memory=False, **kwargs):
         """Copy observation.
 
-        Overwriting Observation arguments requires the 'in_memory' argument to be true.
+        Overwriting `Observation arguments requires the 'in_memory' argument to be true.
 
         Parameters
         ----------
-        in_memory : bool
-            Copy observation in memory.
+        in_memory : bool, optional
+            Copy observation in memory. Default is False.
         **kwargs : dict
             Keyword arguments passed to `Observation`.
 
@@ -761,7 +761,7 @@ class Observations(collections.abc.MutableSequence):
 
         Parameters
         ----------
-        labels : array
+        labels : list or `numpy.ndarray`
             Array of group labels.
 
         Returns

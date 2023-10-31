@@ -26,10 +26,9 @@ class GTI:
     ----------
     table : `~astropy.table.Table`
         GTI table.
-    reference_time : `~astropy.time.Time`
-        the reference time.
+    reference_time : `~astropy.time.Time`, optional
+        the reference time. Default is None.
         If None, use TIME_REF_DEFAULT.
-        Default is None.
 
     Examples
     --------
@@ -105,10 +104,9 @@ class GTI:
             Start times, if a quantity then w.r.t. reference time.
         stop : `~astropy.time.Time` or `~astropy.units.Quantity`
             Stop times, if a quantity then w.r.t. reference time.
-        reference_time : `~astropy.time.Time`
-            the reference time to use in GTI definition.
+        reference_time : `~astropy.time.Time`, optional
+            the reference time to use in GTI definition. Default is None.
             If None, use TIME_REF_DEFAULT.
-            Default is None.
         """
         if reference_time is None:
             reference_time = TIME_REF_DEFAULT
@@ -131,12 +129,12 @@ class GTI:
 
         Parameters
         ----------
-        filename : `pathlib.Path`, str
+        filename : `pathlib.Path` or str
             Filename.
-        hdu : str
-            hdu name. Default GTI.
-        format: str
-            Input format, currently only "gadf" is supported.
+        hdu : str, optional
+            hdu name. Default "GTI".
+        format: str, optional
+            Input format, currently only "gadf" is supported. Default is "gadf".
         """
         filename = make_path(filename)
         with fits.open(str(make_path(filename)), memmap=False) as hdulist:
@@ -150,8 +148,8 @@ class GTI:
         ----------
         table_hdu : `~astropy.io.fits.BinTableHDU`
             table hdu.
-        format: str
-            Input format, currently only "gadf" is supported.
+        format: str, optional
+            Input format, currently only "gadf" is supported. Default is "gadf".
         """
         if format != "gadf":
             raise ValueError(f'Only the "gadf" format supported, got {format}')
@@ -172,8 +170,8 @@ class GTI:
 
         Parameters
         ----------
-        format: str
-            Output format, currently only "gadf" is supported.
+        format: str, optional
+            Output format, currently only "gadf" is supported. Default is "gadf".
 
         Returns
         -------
@@ -197,7 +195,9 @@ class GTI:
         Parameters
         ----------
         filename : str or `Path`
-            File name to write to.
+            Filename.
+        **kwargs : dict
+            Keyword arguments passed to `~astropy.io.fits.HDUList.writeto`.
         """
         hdu = self.to_table_hdu()
         hdulist = fits.HDUList([fits.PrimaryHDU(), hdu])
@@ -270,7 +270,7 @@ class GTI:
         ----------
         time_intervals : list of `~astropy.time.Time` objects
             Time intervals.
-        reference_time : `~astropy.time.Time`
+        reference_time : `~astropy.time.Time`, optional
             Reference time to use in GTI definition. Default is None.
             If None, use TIME_REF_DEFAULT.
 
@@ -389,11 +389,11 @@ class GTI:
 
         Parameters
         ----------
-        overlap_ok : bool
-            Whether to raise an error when overlapping time bins are found.
-        merge_equal : bool
+        overlap_ok : bool, optional
+            Whether to raise an error when overlapping time bins are found. Default is True.
+        merge_equal : bool; optional
             Whether to merge touching time bins e.g. ``(1, 2)`` and ``(2, 3)``
-            will result in ``(1, 3)``.
+            will result in ``(1, 3)``. Default is True.
         """
         # Algorithm to merge overlapping intervals is well-known,
         # see e.g. https://stackoverflow.com/a/43600953/498873
@@ -429,7 +429,7 @@ class GTI:
         time_intervals : list of `astropy.time.Time`
             Start and stop time for each interval to compute the LC.
         atol : `~astropy.units.Quantity`
-            Tolerance value for time comparison with different scale. Default 1e-6 sec.
+            Tolerance value for time comparison with different scale. Default is "1e-6 s".
 
         Returns
         -------

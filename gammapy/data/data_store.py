@@ -104,12 +104,12 @@ class DataStore:
 
         Parameters
         ----------
-        filename : str, Path
+        filename : str or Path
             FITS filename.
-        hdu_hdu : str or int
-            FITS HDU name or number for the HDU index table.
-        hdu_obs : str or int
-            FITS HDU name or number for the observation index table.
+        hdu_hdu : str or int, optional
+            FITS HDU name or number for the HDU index table. Default is "HDU_INDEX".
+        hdu_obs : str or int, optional
+            FITS HDU name or number for the observation index table. Default is "OBS_INDEX".
 
         Returns
         -------
@@ -132,16 +132,14 @@ class DataStore:
 
         Parameters
         ----------
-        base_dir : str, Path
+        base_dir : str or Path
             Base directory of the data files.
-        hdu_table_filename : str, Path
+        hdu_table_filename : str or Path, optional
             Filename of the HDU index file. May be specified either relative
-            to `base_dir` or as an absolute path. If None, the default filename
-            will be looked for.
-        obs_table_filename : str, Path
+            to `base_dir` or as an absolute path. If None, default is "hdu-index.fits.gz".
+        obs_table_filename : str or Path, optional
             Filename of the observation index file. May be specified either relative
-            to `base_dir` or as an absolute path. If None, the default filename
-            will be looked for.
+            to `base_dir` or as an absolute path. If None, default is obs-index.fits.gz.
 
         Returns
         -------
@@ -209,9 +207,9 @@ class DataStore:
         ----------
         events_paths : list of str or Path
             List of paths to the events files.
-        irfs_paths : str, Path, or list of str or Path
+        irfs_paths : str or Path, or list of str or Path, optional
             Path to the IRFs file. If a list is provided it must be the same length
-            than `events_paths`. If None the events files have to contain CALDB and
+            as `events_paths`. If None the events files have to contain CALDB and
             IRF header keywords to locate the IRF files, otherwise the IRFs are
             assumed to be contained in the events files.
 
@@ -275,7 +273,7 @@ class DataStore:
         ----------
         obs_id : int
             Observation ID.
-        required_irf : list of str or str
+        required_irf : list of str or str, optional
             The list can include the following options:
 
             * `"events"` : Events
@@ -290,8 +288,10 @@ class DataStore:
 
             * `"full-enclosure"` : includes `["events", "gti", "aeff", "edisp", "psf", "bkg"]`
             * `"point-like"` : includes `["events", "gti", "aeff", "edisp"]`
-        require_events : bool
-            Require events and gti table or not.
+
+            Default is `"full-enclosure"`.
+        require_events : bool, optional
+            Require events and gti table or not. Default is True.
 
         Returns
         -------
@@ -360,13 +360,13 @@ class DataStore:
 
         Parameters
         ----------
-        obs_id : list
-            Observation IDs (default of ``None`` means "all").
-            If not given, all observations ordered by OBS_ID are returned.
+        obs_id : list, optional
+            Observation IDs.
+            If None, default is all observations ordered by OBS_ID are returned.
             This is not necessarily the order in the ``obs_table``.
         skip_missing : bool, optional
-            Skip missing observations, default: False.
-        required_irf : list of str or str
+            Skip missing observations. Default is False.
+        required_irf : list of str or str, optional
             Runs will be added to the list of observations only if the
             required HDUs are present. Otherwise, the given run will be skipped
             The list can include the following options:
@@ -386,8 +386,9 @@ class DataStore:
             * `"all-optional"` : no HDUs are required, only warnings will be emitted
               for missing HDUs among all possibilities.
 
-        require_events : bool
-            Require events and gti table or not.
+            Default is `"full-enclosure"`.
+        require_events : bool, optional
+            Require events and gti table or not. Default is True.
 
         Returns
         -------
@@ -425,15 +426,14 @@ class DataStore:
         ----------
         obs_id : array-like, `~gammapy.data.ObservationTable`
             List of observations to copy.
-        outdir : str, `~pathlib.Path
+        outdir : str or `~pathlib.Path
             Directory for the new store.
         hdu_class : list of str, optional
             see :attr:`gammapy.data.HDUIndexTable.VALID_HDU_CLASS`.
-            Default is None.
         verbose : bool, optional
             Print copied files. Default is False.
         overwrite : bool, optional
-            Overwrite existing file. Default is False.
+            Overwrite. Default is False.
         """
         outdir = make_path(outdir)
 
@@ -553,7 +553,7 @@ class DataStoreChecker(Checker):
 class DataStoreMaker:
     """Create data store index tables.
 
-    This is a multi-step process coded as a class.
+    This is a multistep process coded as a class.
     Users will usually call this via `DataStore.from_events_files`.
     """
 

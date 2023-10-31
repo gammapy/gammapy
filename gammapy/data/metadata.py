@@ -44,6 +44,8 @@ class ObservationMetaData(MetaData):
         The pointing metadata.
     target : `~gammapy.utils.TargetMetaData
         The target metadata.
+    creation : `~gammapy.utils.CreatorMetaData`
+        The creation metadata.
     location : `~astropy.coordinates.EarthLocation` or str, optional
         The observatory location.
     deadtime_fraction : float
@@ -54,9 +56,7 @@ class ObservationMetaData(MetaData):
         The observation stop time.
     reference_time : `~astropy.time.Time` or str
         The observation reference time.
-    creation : `~gammapy.utils.CreatorMetaData`
-        The creation metadata.
-    optional : dict
+    optional : dict, optional
         Additional optional metadata.
     """
 
@@ -94,8 +94,55 @@ class ObservationMetaData(MetaData):
             raise ValueError("Incorrect time input value.")
 
     @classmethod
+<<<<<<< HEAD
     def from_header(cls, header, format="gadf"):
         meta = super(ObservationMetaData, cls).from_header(header, format)
+=======
+    def from_header(cls, events_hdr, format="gadf"):
+        """Create and fill the observation metadata from the event list metadata.
+
+        Parameters
+        ----------
+        events_hdr : dict-like
+            The `~gammapy.data.EventList` header.
+        format : str, optional
+            The header data format. Default is gadf.
+        """
+        # TODO: read really from events.meta once it is properly defined
+        if not format == "gadf":
+            raise ValueError(
+                f"Metadata creation from format {format} is not supported."
+            )
+
+        kwargs = {}
+        kwargs["telescope"] = events_hdr.get("TELESCOP")
+        kwargs["instrument"] = events_hdr.get("INSTRUME")
+        kwargs["observation_mode"] = events_hdr.get("OBS_MODE")
+
+        deadc = events_hdr.get("DEADC")
+        if deadc is None:
+            raise ValueError("No deadtime correction factor defined.")
+        kwargs["deadtime_fraction"] = 1 - deadc
+
+        if set(["GEOLON", "GEOLAT"]).issubset(set(events_hdr)):
+            kwargs["location"] = earth_location_from_dict(events_hdr)
+
+        reference_time = time_ref_from_dict(events_hdr)
+        kwargs["reference_time"] = reference_time
+        if "TIME_START" in events_hdr:
+            kwargs["time_start"] = reference_time + events_hdr.get("TIME_START") * u.s
+        if "TIME_STOP" in events_hdr:
+            kwargs["time_stop"] = reference_time + events_hdr.get("TIME_STOP") * u.s
+
+        kwargs["creation"] = CreatorMetaData.from_default()
+
+        # optional gadf entries that are defined attributes of the ObservationMetaData
+        kwargs["target_name"] = events_hdr.get("OBJECT")
+        if "RA_OBJ" in events_hdr and "DEC_OBJ" in events_hdr:
+            kwargs["target_position"] = SkyCoord(
+                events_hdr["RA_OBJ"], events_hdr["DEC_OBJ"], unit="deg", frame="icrs"
+            )
+>>>>>>> e423a2f24 (add optional and default value)
 
         meta.creation = CreatorMetaData.from_default()
         # Include additional gadf keywords not specified as ObservationMetaData attributes

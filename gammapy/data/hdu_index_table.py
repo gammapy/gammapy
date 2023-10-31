@@ -50,8 +50,10 @@ class HDUIndexTable(Table):
 
         Parameters
         ----------
-        filename : `pathlib.Path`, str
+        filename : `pathlib.Path` or str
             Filename.
+        **kwargs : dict
+            Keyword arguments passed to `~astropy.table.Table.read`.
         """
         filename = make_path(filename)
         table = super().read(filename, **kwargs)
@@ -75,10 +77,12 @@ class HDUIndexTable(Table):
         ----------
         obs_id : int
             Observation ID.
-        hdu_type : str
-            HDU type (see `~gammapy.data.HDUIndexTable.VALID_HDU_TYPE`).
-        hdu_class : str
-            HDU class (see `~gammapy.data.HDUIndexTable.VALID_HDU_CLASS`).
+        hdu_type : str, optional
+            HDU type (see `~gammapy.data.HDUIndexTable.VALID_HDU_TYPE`). Default is None.
+        hdu_class : str, optional
+            HDU class (see `~gammapy.data.HDUIndexTable.VALID_HDU_CLASS`). Default is None.
+        warn_missing : bool, optional
+            Warn if no HDU is found matching the selection. Default is True.
 
         Returns
         -------
@@ -137,10 +141,10 @@ class HDUIndexTable(Table):
         ----------
         obs_id : int
             Observation ID.
-        hdu_type : str
-            HDU type (see `~gammapy.data.HDUIndexTable.VALID_HDU_TYPE`).
-        hdu_class : str
-            HDU class (see `~gammapy.data.HDUIndexTable.VALID_HDU_CLASS`).
+        hdu_type : str, optional
+            HDU type (see `~gammapy.data.HDUIndexTable.VALID_HDU_TYPE`). Default is None.
+        hdu_class : str, optional
+            HDU class (see `~gammapy.data.HDUIndexTable.VALID_HDU_CLASS`). Default is None.
 
         Returns
         -------

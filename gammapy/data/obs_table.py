@@ -24,8 +24,10 @@ class ObservationTable(Table):
 
         Parameters
         ----------
-        filename : `pathlib.Path`, str
+        filename : `pathlib.Path` or str
             Filename.
+        **kwargs : dict
+            Keyword arguments passed to `~astropy.table.Table.read`.
         """
         return super().read(make_path(filename), **kwargs)
 
@@ -63,7 +65,7 @@ class ObservationTable(Table):
 
         Parameters
         ----------
-        obs_id : int, list
+        obs_id : int or list of int
             Observation ids.
         """
         try:
@@ -112,6 +114,7 @@ class ObservationTable(Table):
             consistent with the selection_variable.
         inverted : bool, optional
             Invert selection: keep all entries outside the (min, max) range.
+            Default is False.
 
         Returns
         -------
@@ -151,6 +154,7 @@ class ObservationTable(Table):
             Include partially overlapping observations. Default is False.
         inverted : bool, optional
             Invert selection: keep all entries outside the (min, max) range.
+            Default is False.
 
         Returns
         -------
@@ -191,7 +195,7 @@ class ObservationTable(Table):
             Cone opening angle. The maximal separation allowed between the center
             and the observation pointing direction.
         inverted : bool, optional
-            Invert selection: keep all entries outside the cone.
+            Invert selection: keep all entries outside the cone. Default is False.
 
         Returns
         -------
@@ -247,8 +251,8 @@ class ObservationTable(Table):
 
         Parameters
         ----------
-        selections : list of dict
-            List of selection cuts dictionaries.
+        selections : list of dict, optional
+            Dictionary of selection criteria. Default is None.
 
         Returns
         -------

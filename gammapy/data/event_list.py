@@ -103,7 +103,7 @@ class EventList:
 
         Parameters
         ----------
-        filename : `pathlib.Path`, str
+        filename : `pathlib.Path` or str
             Filename.
         """
         filename = make_path(filename)
@@ -117,12 +117,12 @@ class EventList:
 
         Parameters
         ----------
-        format: str
-            Output format, currently only "gadf" is supported.
+        format : str, optional
+            Output format, currently only "gadf" is supported. Default is "gadf".
 
         Returns
         -------
-        hdu: `astropy.io.fits.BinTableHDU`
+        hdu : `astropy.io.fits.BinTableHDU`
             EventList converted to FITS representation.
         """
         if format != "gadf":
@@ -138,17 +138,16 @@ class EventList:
 
         Parameters
         ----------
-        filename : `pathlib.Path`, str
-            Filename
+        filename : `pathlib.Path` or str
+            Filename.
         gti : `~gammapy.data.GTI`, optional
             Good Time Intervals object to save to the same file.
             Default is None.
         overwrite : bool, optional
             Overwrite existing file. Default is False.
         format : str, optional
-            FITS format convention. By default files will be written
-            to the gamma-astro-data-formats (GADF) format.
-        checksum : bool
+            FITS format convention. Default is "gadf".
+        checksum : bool, optional
             When True adds both DATASUM and CHECKSUM cards to the headers written to the file.
             Default is False.
         """
@@ -192,6 +191,8 @@ class EventList:
         ----------
         event_lists : list
             list of `~gammapy.data.EventList` to stack.
+        **kwargs : dict
+            Keyword arguments passed to `~astropy.table.vstack`.
         """
         tables = [_.table for _ in event_lists]
         stacked_table = vstack_tables(tables, **kwargs)
@@ -299,7 +300,7 @@ class EventList:
 
         Parameters
         ----------
-        row_specifier : slice, int, or array of ints
+        row_specifier : slice or int or array of int
             Specification for rows to select,
             passed on to ``self.table[row_specifier]``.
 
@@ -379,12 +380,12 @@ class EventList:
 
         Parameters
         ----------
-        regions : str, `~regions.Region` or list of `~regions.Region`
+        regions : str or `~regions.Region` or list of `~regions.Region`
             Region or list of regions (pixel or sky regions accepted).
             A region can be defined as a string ind DS9 format as well.
             See http://ds9.si.edu/doc/ref/region.html for details.
-        wcs : `~astropy.wcs.WCS`
-            World coordinate system transformation.
+        wcs : `~astropy.wcs.WCS`, optional
+            World coordinate system transformation. Default is None.
 
         Returns
         -------
@@ -404,7 +405,7 @@ class EventList:
             Parameter used for the selection. Must be present in `self.table`.
         band : tuple or `astropy.units.Quantity`
             Min and max value for the parameter to be selected (min <= parameter < max).
-            If parameter is not dimensionless you have to provide a Quantity.
+            If parameter is not dimensionless, a Quantity is required.
 
         Returns
         -------
@@ -438,15 +439,15 @@ class EventList:
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes` or None
-            Axes.
+        ax : `~matplotlib.axes.Axes`, optional
+            Matplotlib axes. Default is None
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.pyplot.hist`.
 
         Returns
         -------
-        ax : `~matplotlib.axes.Axes` or None
-            Axes.
+        ax : `~matplotlib.axes.Axes`
+            Matplotlib axes.
         """
         ax = plt.gca() if ax is None else ax
 
@@ -469,15 +470,15 @@ class EventList:
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes` or None
-            Axes.
+        ax : `~matplotlib.axes.Axes`, optional
+            Matplotlib axes. Default is None.
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.pyplot.errorbar`.
 
         Returns
         -------
         ax : `~matplotlib.axes.Axes`
-            Axes.
+            Matplotlib axes.
         """
         ax = plt.gca() if ax is None else ax
 
@@ -520,20 +521,21 @@ class EventList:
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes` (optional)
-            Axes.
-        center : `astropy.coordinates.SkyCoord`
+        ax : `~matplotlib.axes.Axes`, optional
+            Matplotlib axes. Default is None.
+        center : `astropy.coordinates.SkyCoord`, optional
             Center position for the offset^2 distribution.
             Default is the observation pointing position.
-        max_percentile : float
+        max_percentile : float, optional
             Define the percentile of the offset^2 distribution used to define the maximum offset^2 value.
+            Default is 98.
         **kwargs :
             Extra keyword arguments are passed to `~matplotlib.pyplot.hist`.
 
         Returns
         -------
         ax : `~matplotlib.axes.Axes`
-            Axes.
+            Matplotlib axes.
 
         Examples
         --------
@@ -584,10 +586,10 @@ class EventList:
 
         Parameters
         ----------
-        ax : `~matplotlib.pyplot.Axis`
-            Plot axis.
-        center : `~astropy.coordinates.SkyCoord`
-            Sky coord from which offset is computed.
+        ax : `~matplotlib.pyplot.Axis`, optional
+            Plot axis. Default is None.
+        center : `~astropy.coordinates.SkyCoord`, optional
+            Sky coord from which offset is computed. Default is None.
         **kwargs : dict
             Keyword arguments forwarded to `~matplotlib.pyplot.pcolormesh`.
 
@@ -711,9 +713,7 @@ class EventList:
         The dead-time-corrected observation time.
 
         - In Fermi-LAT it is automatically provided in the header of the event list.
-        - In IACTs is computed as ``t_live = t_observation * (1 - f_dead)``
-
-        where ``f_dead`` is the dead-time fraction.
+        - In IACTs is computed as ``t_live = t_observation * (1 - f_dead)`` where ``f_dead`` is the dead-time fraction.
         """
         return u.Quantity(self.table.meta["LIVETIME"], "second")
 
@@ -810,8 +810,8 @@ class EventList:
         ----------
         rad_max : `~gamapy.irf.RadMax2D`
             Rad max definition.
-        position : `~astropy.coordinates.SkyCoord`
-            Center position. By default the pointing position is used.
+        position : `~astropy.coordinates.SkyCoord`, optional
+            Center position. Default is the pointing position.
 
         Returns
         -------
@@ -841,8 +841,8 @@ class EventList:
 
         Parameters
         ----------
-        allsky : bool
-            Whether to look at the events all-sky.
+        allsky : bool, optional
+            Whether to look at the events all-sky. Default is False.
         """
         import matplotlib.gridspec as gridspec
 
@@ -920,10 +920,10 @@ class EventList:
 
         Parameters
         ----------
-        ax : `~matplotlib.pyplot.Axes`
-            Axes to plot on.
-        allsky :  bool,
-            Whether to plot on an all sky geom.
+        ax : `~matplotlib.pyplot.Axes`, optional
+            Matplotlib axes.
+        allsky :  bool, optional
+            Whether to plot on an all sky geom. Default is False.
         """
         if ax is None:
             ax = plt.gca()

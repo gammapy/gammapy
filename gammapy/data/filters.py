@@ -13,10 +13,10 @@ class ObservationFilter:
 
     Parameters
     ----------
-    time_filter : `astropy.time.Time`
-        Start and stop time of the selected time interval. For now we only support
-        a single time interval.
-    event_filters : list of dict
+    time_filter : `astropy.time.Time`, optional
+        Start and stop time of the selected time interval. Currently, we only support
+        a single time interval. Default is None.
+    event_filters : list of dict, optional
         An event filter dictionary needs two keys:
 
         - **type** : str, one of the keys in `~gammapy.data.ObservationFilter.EVENT_FILTER_TYPES`
@@ -25,7 +25,7 @@ class ObservationFilter:
           (see `~gammapy.data.ObservationFilter.EVENT_FILTER_TYPES`)
 
         The filtered event list will be an intersection of all filters. A union
-        of filters is not supported yet.
+        of filters is not supported yet. Default is None.
 
     Examples
     --------

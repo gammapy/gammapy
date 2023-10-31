@@ -24,20 +24,20 @@ def get_irfs_features(
         Container holding a list of `~gammapy.data.Observation`.
     energy_true : `~astropy.units.Quantity`
         Energy true at which to compute the containment radius.
-    position : `~astropy.coordinates.SkyCoord`
-        Sky position.
-    fixed_offset : `~astropy.coordinates.Angle`
-        Offset calculated from the pointing position.
-        If neither the position nor fixed_offset is specified,
+    position : `~astropy.coordinates.SkyCoord`, optional
+        Sky position. Default is None.
+    fixed_offset : `~astropy.coordinates.Angle`, optional
+        Offset calculated from the pointing position. Default is None.
+        If neither the `position` nor the `fixed_offset` is specified,
         it uses the position of the center of the map by default.
-    names : list of str
+    names : list of str, optional
         IRFs properties to be considered.
-        Available options are ["edisp-bias", "edisp-res", "psf-radius"]
-        (all used by default).
-    containment_fraction : float
+        Available options are ["edisp-bias", "edisp-res", "psf-radius"]. Default is None.
+        If None, all the features are computed.
+    containment_fraction : float, optional
         Containment_fraction to compute the `psf-radius`.
         Default is 68%.
-    apply_standard_scaler : bool
+    apply_standard_scaler : bool, optional
         Compute standardize features by removing the mean and scaling to unit variance.
         Default is False.
 
