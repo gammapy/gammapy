@@ -15,7 +15,7 @@ Context
 
 A useful tool to study and compare the spatial distribution of flux in
 images and data cubes is the measurement of flux profiles. Flux profiles
-can show spatial correlations of gamma-ray data with e.g. gas maps or
+can show spatial correlations of gamma-ray data with e.g. gas maps or
 other type of gamma-ray data. Most commonly flux profiles are measured
 along some preferred coordinate axis, either radially distance from a
 source of interest, along longitude and latitude coordinate axes or
@@ -178,7 +178,7 @@ plt.show()
 
 ######################################################################
 # Based on the spectral model we specified above we can also plot in any
-# other sed type, e.g. energy flux and define a different threshold when
+# other sed type, e.g. energy flux and define a different threshold when
 # to plot upper limits:
 #
 
@@ -272,9 +272,8 @@ flux_profile_estimator = FluxProfileEstimator(
     spectrum=PowerLawSpectralModel(index=2.3),
     energy_edges=[10, 100, 2000] * u.GeV,
     selection_optional=["ul", "scan"],
-    norm_values=np.linspace(-1, 5, 11),
 )
-
+flux_profile_estimator.norm.scan_values = np.linspace(-1, 5, 11)
 profile = flux_profile_estimator.run(datasets=dataset)
 
 
