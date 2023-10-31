@@ -274,7 +274,7 @@ class SourceCatalog(abc.ABC):
 
     @property
     def positions(self):
-        """Source positions as a list of `~astropy.coordinates.SkyCoord` objects."""
+        """Source positions as a `~astropy.coordinates.SkyCoord` object."""
         return _skycoord_from_table(self.table)
 
     def to_models(self, **kwargs):
