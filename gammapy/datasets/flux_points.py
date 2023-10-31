@@ -50,7 +50,7 @@ class FluxPointsDataset(Dataset):
     >>> model = SkyModel(spectral_model=PowerLawSpectralModel())
     >>> dataset.models = model
 
-    Make the fit :
+    Make the fit:
 
     >>> fit = Fit()
     >>> result = fit.run([dataset])
@@ -79,7 +79,7 @@ class FluxPointsDataset(Dataset):
     spectral reference 1.0000e+00            TeV ... nan   True   False
 
     Note: In order to reproduce the example, you need the tests datasets folder.
-    You may download it with the command :
+    You may download it with the command:
     ``gammapy download datasets --tests --out $GAMMAPY_DATA``
     """
 
@@ -463,7 +463,7 @@ class FluxPointsDataset(Dataset):
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`
-            Axes to plot on.  Default is None.
+            Axes to plot on. Default is None.
         kwargs_fp : dict
             Keyword arguments passed to `gammapy.estimators.FluxPoints.plot` to configure the plot style.
             Default is None.
