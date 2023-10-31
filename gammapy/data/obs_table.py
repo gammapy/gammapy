@@ -26,7 +26,7 @@ class ObservationTable(Table):
         ----------
         filename : `pathlib.Path` or str
             Filename.
-        **kwargs : dict
+        **kwargs : dict, optional
             Keyword arguments passed to `~astropy.table.Table.read`.
         """
         return super().read(make_path(filename), **kwargs)

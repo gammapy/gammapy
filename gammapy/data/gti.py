@@ -148,7 +148,7 @@ class GTI:
         ----------
         table_hdu : `~astropy.io.fits.BinTableHDU`
             table hdu.
-        format: str, optional
+        format : str, optional
             Input format, currently only "gadf" is supported. Default is "gadf".
         """
         if format != "gadf":
@@ -170,12 +170,12 @@ class GTI:
 
         Parameters
         ----------
-        format: str, optional
+        format : str, optional
             Output format, currently only "gadf" is supported. Default is "gadf".
 
         Returns
         -------
-        hdu: `astropy.io.fits.BinTableHDU`
+        hdu : `astropy.io.fits.BinTableHDU`
             GTI table converted to FITS representation.
         """
         if format != "gadf":
@@ -194,9 +194,9 @@ class GTI:
 
         Parameters
         ----------
-        filename : str or `Path`
+        filename : str or `~pathlib.Path`
             Filename.
-        **kwargs : dict
+        **kwargs : dict, optional
             Keyword arguments passed to `~astropy.io.fits.HDUList.writeto`.
         """
         hdu = self.to_table_hdu()
@@ -370,7 +370,7 @@ class GTI:
         ----------
         gtis : list of `GTI`
             List of good time intervals to stack.
-        **kwargs : dict
+        **kwargs : dict, optional
             Keywords passed on to `~astropy.table.vstack`.
 
         Returns

@@ -105,6 +105,8 @@ class EventList:
         ----------
         filename : `pathlib.Path` or str
             Filename.
+        **kwargs : dict, optional
+            Keyword arguments passed to `~astropy.table.Table.read`.
         """
         filename = make_path(filename)
         kwargs.setdefault("hdu", "EVENTS")
@@ -191,7 +193,7 @@ class EventList:
         ----------
         event_lists : list
             list of `~gammapy.data.EventList` to stack.
-        **kwargs : dict
+        **kwargs : dict, optional
             Keyword arguments passed to `~astropy.table.vstack`.
         """
         tables = [_.table for _ in event_lists]
@@ -441,7 +443,7 @@ class EventList:
         ----------
         ax : `~matplotlib.axes.Axes`, optional
             Matplotlib axes. Default is None
-        **kwargs : dict
+        **kwargs : dict, optional
             Keyword arguments passed to `~matplotlib.pyplot.hist`.
 
         Returns
@@ -472,7 +474,7 @@ class EventList:
         ----------
         ax : `~matplotlib.axes.Axes`, optional
             Matplotlib axes. Default is None.
-        **kwargs : dict
+        **kwargs : dict, optional
             Keyword arguments passed to `~matplotlib.pyplot.errorbar`.
 
         Returns
@@ -529,7 +531,7 @@ class EventList:
         max_percentile : float, optional
             Define the percentile of the offset^2 distribution used to define the maximum offset^2 value.
             Default is 98.
-        **kwargs :
+        **kwargs : dict, optional
             Extra keyword arguments are passed to `~matplotlib.pyplot.hist`.
 
         Returns
@@ -590,7 +592,7 @@ class EventList:
             Plot axis. Default is None.
         center : `~astropy.coordinates.SkyCoord`, optional
             Sky coord from which offset is computed. Default is None.
-        **kwargs : dict
+        **kwargs : dict, optional
             Keyword arguments forwarded to `~matplotlib.pyplot.pcolormesh`.
 
         Returns

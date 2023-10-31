@@ -104,7 +104,7 @@ class DataStore:
 
         Parameters
         ----------
-        filename : str or Path
+        filename : str or `~pathlib.Path`
             FITS filename.
         hdu_hdu : str or int, optional
             FITS HDU name or number for the HDU index table. Default is "HDU_INDEX".
@@ -132,12 +132,12 @@ class DataStore:
 
         Parameters
         ----------
-        base_dir : str or Path
+        base_dir : str or `~pathlib.Path`
             Base directory of the data files.
-        hdu_table_filename : str or Path, optional
+        hdu_table_filename : str or `~pathlib.Path`, optional
             Filename of the HDU index file. May be specified either relative
             to `base_dir` or as an absolute path. If None, default is "hdu-index.fits.gz".
-        obs_table_filename : str or Path, optional
+        obs_table_filename : str or `~pathlib.Path`, optional
             Filename of the observation index file. May be specified either relative
             to `base_dir` or as an absolute path. If None, default is obs-index.fits.gz.
 
@@ -205,9 +205,9 @@ class DataStore:
 
         Parameters
         ----------
-        events_paths : list of str or Path
+        events_paths : list of str or `~pathlib.Path`
             List of paths to the events files.
-        irfs_paths : str or Path, or list of str or Path, optional
+        irfs_paths : str or `~pathlib.Path`, or list of str or list of `~pathlib.Path`, optional
             Path to the IRFs file. If a list is provided it must be the same length
             as `events_paths`. If None the events files have to contain CALDB and
             IRF header keywords to locate the IRF files, otherwise the IRFs are
@@ -280,7 +280,7 @@ class DataStore:
             * `"gti"` :  Good time intervals
             * `"aeff"` : Effective area
             * `"bkg"` : Background
-            * `"edisp"`: Energy dispersion
+            * `"edisp"` : Energy dispersion
             * `"psf"` : Point Spread Function
             * `"rad_max"` : Maximal radius
 
@@ -375,7 +375,7 @@ class DataStore:
             * `"gti"` :  Good time intervals
             * `"aeff"` : Effective area
             * `"bkg"` : Background
-            * `"edisp"`: Energy dispersion
+            * `"edisp"` : Energy dispersion
             * `"psf"` : Point Spread Function
             * `"rad_max"` : Maximal radius
 
@@ -426,7 +426,7 @@ class DataStore:
         ----------
         obs_id : array-like, `~gammapy.data.ObservationTable`
             List of observations to copy.
-        outdir : str or `~pathlib.Path
+        outdir : str or `~pathlib.Path`
             Directory for the new store.
         hdu_class : list of str, optional
             see :attr:`gammapy.data.HDUIndexTable.VALID_HDU_CLASS`.

@@ -49,7 +49,7 @@ class Observation:
         Point spread function. Default is None.
     bkg : `~gammapy.irf.Background3D`, optional
         Background rate model. Default is None.
-    rad_max: `~gammapy.irf.RadMax2D`, optional
+    rad_max : `~gammapy.irf.RadMax2D`, optional
         Only for point-like IRFs: RAD_MAX table (energy dependent RAD_MAX)
         For a fixed RAD_MAX, create a RadMax2D with a single bin. Default is None.
     gti : `~gammapy.data.GTI`, optional
@@ -220,13 +220,13 @@ class Observation:
             Observation ID as identifier. Default is 0.
         livetime : ~astropy.units.Quantity`, optional
             Livetime exposure of the simulated observation. Default is None.
-        tstart: `~astropy.time.Time` or `~astropy.units.Quantity`, optional
+        tstart : `~astropy.time.Time` or `~astropy.units.Quantity`, optional
             Start time of observation as `~astropy.time.Time` or duration
             relative to `reference_time`. Default is None.
-        tstop: `astropy.time.Time` or `~astropy.units.Quantity`, optional
+        tstop : `astropy.time.Time` or `~astropy.units.Quantity`, optional
             Stop time of observation as `~astropy.time.Time` or duration
             relative to `reference_time`. Default is None.
-        irfs: dict, optional
+        irfs : dict, optional
             IRFs used for simulating the observation: `bkg`, `aeff`, `psf`, `edisp`, `rad_max`. Default is None.
         deadtime_fraction : float, optional
             Deadtime fraction. Default is 0.
@@ -526,9 +526,9 @@ class Observation:
 
         Parameters
         ----------
-        event_file : str or Path
+        event_file : str or `~pathlib.Path`
             Path to the FITS file containing the event list and the GTI.
-        irf_file : str or Path, optional
+        irf_file : str or `~pathlib.Path`, optional
             Path to the FITS file containing the IRF components. Default is None.
             If None, the IRFs will be read from the event file.
 
@@ -562,17 +562,17 @@ class Observation:
         self, path, overwrite=False, format="gadf", include_irfs=True, checksum=False
     ):
         """
-        Write this observation into `path` using the specified format
+        Write this observation into `~pathlib.Path` using the specified format
 
         Parameters
         ----------
-        path: str or `~pathlib.Path`
+        path : str or `~pathlib.Path`
             Path for the output file.
-        overwrite: bool, optional
+        overwrite : bool, optional
             Overwrite existing file. Default is False.
-        format: str, optional
+        format : str, optional
             Output format, currently only "gadf" is supported. Default is "gadf".
-        include_irfs: bool, optional
+        include_irfs : bool, optional
             Whether to include irf components in the output file. Default is True.
         checksum : bool, optional
             When True adds both DATASUM and CHECKSUM cards to the headers written to the file.
@@ -616,7 +616,7 @@ class Observation:
         ----------
         in_memory : bool, optional
             Copy observation in memory. Default is False.
-        **kwargs : dict
+        **kwargs : dict, optional
             Keyword arguments passed to `Observation`.
 
         Examples
