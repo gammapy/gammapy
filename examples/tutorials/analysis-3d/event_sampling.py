@@ -34,7 +34,7 @@ of predicted counts (`npred`) per bin of the given Sky model, and the
 output of the event-sampler will be a set of events having information
 about their true coordinates, true energies and times of arrival.
 
-To these events, IRF corrections (i.e. PSF and energy dispersion) can
+To these events, IRF corrections (i.e. PSF and energy dispersion) can
 also further be applied in order to obtain reconstructed coordinates and
 energies of the sampled events.
 
@@ -100,8 +100,7 @@ from gammapy.data import (
 from gammapy.datasets import MapDataset, MapDatasetEventSampler
 from gammapy.irf import load_irf_dict_from_file
 from gammapy.makers import MapDatasetMaker
-from gammapy.maps import Map, MapAxis, WcsGeom
-from gammapy.modeling import Fit
+from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling.models import (
     ExpDecayTemporalModel,
     FoVBackgroundModel,
@@ -311,47 +310,6 @@ hdu_gti = fits.BinTableHDU(dataset.gti.table, name="GTI")
 hdu_all = fits.HDUList([primary_hdu, hdu_evt, hdu_gti])
 hdu_all.writeto("./event_sampling/events_0001.fits", overwrite=True)
 
-######################################################################
-# Generate a skymap
-# ~~~~~~~~~~~~~~~~~
-#
-# A skymap of the simulated events can be obtained with:
-#
-
-counts = Map.from_geom(geom)
-counts.fill_events(events)
-counts.sum_over_axes().plot(add_cbar=True)
-plt.show()
-
-######################################################################
-# Fit the simulated data
-# ----------------------
-#
-# We can now check the sake of the event sampling by fitting the data.
-#  We make use of the same
-# `~gammapy.modeling.models.Models` adopted for the simulation. Hence,
-# we firstly read the `~gammapy.datasets.Dataset` and the model file,
-# and we fill the `~gammapy.datasets.Dataset` with the sampled events.
-# We set the `counts` map to the `dataset`:
-#
-
-models_fit = Models.read("./event_sampling/point-pwl.yaml")
-
-dataset.counts = counts
-dataset.models = models_fit
-
-######################################################################
-# Let’s fit the data and look at the results:
-#
-
-# %%time
-fit = Fit()
-result = fit.run(dataset)
-print(result)
-
-######################################################################
-# The results looks great!
-#
 
 ######################################################################
 # Time variable source using a lightcurve
@@ -550,7 +508,7 @@ plt.show()
 # Exercises
 # ---------
 #
-# -  Try to sample events for an extended source (e.g. a radial gaussian
+# -  Try to sample events for an extended source (e.g. a radial gaussian
 #    morphology);
 # -  Change the spatial model and the spectrum of the simulated Sky model;
 # -  Include a temporal model in the simulation
