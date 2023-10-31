@@ -2,11 +2,12 @@
 """Metadata base container for Gammapy."""
 import json
 from typing import Optional, Union
-from astropy.coordinates import Angle, EarthLocation, SkyCoord
+import numpy as np
+from astropy.coordinates import AltAz, Angle, EarthLocation, SkyCoord
 from astropy.time import Time
 from astropy.units import Quantity
 import yaml
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, ValidationError, validator
 from gammapy.version import version
 
 __all__ = ["MetaData", "CreatorMetaData"]
@@ -137,15 +138,15 @@ class ObsInfoMetaData(MetaData):
     Parameters
     ----------
     obs_id : str or int
-        the observation identifier
+        the observation identifier.
     telescope : str, optional
-        the telescope/observatory name
+        the telescope/observatory name.
     instrument : str, optional
-        the specific instrument used
+        the specific instrument used.
     sub_array : str, optional
-        the specific sub-array used
+        the specific sub-array used.
     observation_mode : str, optional
-        the observation mode
+        the observation mode.
     """
 
     obs_id: Union[str, int]
@@ -153,3 +154,42 @@ class ObsInfoMetaData(MetaData):
     instrument: Optional[str]
     sub_array: Optional[str]
     observation_mode: Optional[str]
+
+
+class PointingInfoMetaData(MetaData):
+    """General metadata information about the pointing.
+
+    Parameters
+    ----------
+    radec_mean : `~astropy.coordinates.SkyCoord`, optional
+        Mean pointing position of the observation in `icrs` frame.
+    altaz_mean : `~astropy.coordinates.SkyCoord`, or `~astropy.coordinates.AltAz`, optional
+        Mean pointing position of the observation in local AltAz frame.
+    """
+
+    radec_mean: Optional[SkyCoord]
+    altaz_mean: Optional[Union[SkyCoord, AltAz]]
+
+    @validator("radec_mean")
+    def validate_icrs_position(cls, v):
+        if v is None:
+            return SkyCoord(np.nan, np.nan, unit="deg", frame="icrs")
+        elif isinstance(v, SkyCoord):
+            return v.icrs
+        else:
+            raise ValidationError(
+                f"Incorrect position. Expect SkyCoord got {type(v)} instead."
+            )
+
+    @validator("altaz_mean")
+    def validate_altaz_position(cls, v):
+        if v is None:
+            return SkyCoord(np.nan, np.nan, unit="deg", frame="altaz")
+        elif isinstance(v, AltAz):
+            return SkyCoord(v)
+        elif isinstance(v, SkyCoord):
+            return v.altaz
+        else:
+            raise ValidationError(
+                f"Incorrect position. Expect SkyCoord in altaz frame got {type(v)} instead."
+            )

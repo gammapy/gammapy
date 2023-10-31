@@ -2,9 +2,14 @@
 from typing import Optional
 import pytest
 from numpy.testing import assert_allclose
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import AltAz, SkyCoord
 from pydantic import ValidationError
-from gammapy.utils.metadata import CreatorMetaData, MetaData, ObsInfoMetaData
+from gammapy.utils.metadata import (
+    CreatorMetaData,
+    MetaData,
+    ObsInfoMetaData,
+    PointingInfoMetaData,
+)
 
 
 def test_creator():
@@ -55,3 +60,21 @@ def test_obs_info():
 
     obs_info.instrument = "CTA-North"
     assert obs_info.instrument == "CTA-North"
+
+
+def test_pointing_info():
+    position = SkyCoord(83.6287, 22.0147, unit="deg", frame="icrs")
+    altaz = AltAz("20 deg", "45 deg")
+
+    pointing = PointingInfoMetaData(radec_mean=position, altaz_mean=altaz)
+
+    assert isinstance(pointing.altaz_mean, SkyCoord)
+    assert_allclose(pointing.altaz_mean.alt.deg, 45.0)
+
+    assert_allclose(pointing.radec_mean.ra.deg, 83.6287)
+
+    pointing.radec_mean = position.galactic
+    assert_allclose(pointing.radec_mean.ra.deg, 83.6287)
+
+    with pytest.raises(ValidationError):
+        pointing.radec_mean = altaz

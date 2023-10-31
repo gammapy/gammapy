@@ -17,12 +17,8 @@ class ObservationMetaData(MetaData):
 
     Parameters
     ----------
-    telescope : str, optional
-        the telescope/observatory name
-    instrument : str, optional
-        the specific instrument used
-    observation_mode : str, optional
-        the observation mode
+    obs_info : `~gammapy.utils.ObsInfoMetaData`
+        the general observation information
     location : `~astropy.coordinates.EarthLocation` or str, optional
         the observatory location
     deadtime_fraction : float
