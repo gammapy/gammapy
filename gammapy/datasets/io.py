@@ -53,10 +53,10 @@ class OGIPDatasetWriter(DatasetWriter):
 
     The naming scheme is fixed as following:
 
-    * PHA file is named filename.fits.
-    * BKG file is named filename_bkg.fits.
-    * ARF file is named filename_arf.fits.
-    * RMF file is named filename_rmf.fits.
+    * PHA file is named filename.fits
+    * BKG file is named filename_bkg.fits
+    * ARF file is named filename_arf.fits
+    * RMF file is named filename_rmf.fits
 
     Parameters
     ----------
