@@ -288,7 +288,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         )
 
     def _add_source_meta(self, table):
-        """Copy over some info to table.meta"""
+        """Copy over some information to `table.meta`."""
         d = self.data
         m = table.meta
         m["origin"] = "Data from gamma-cat"

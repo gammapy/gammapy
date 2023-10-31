@@ -47,7 +47,7 @@ class SourceCatalogObjectHGPSComponent(SourceCatalogObject):
         return f"{self.__class__.__name__}({self.name!r})"
 
     def __str__(self):
-        """Pretty-print source data"""
+        """Pretty-print source data."""
         d = self.data
         ss = "Component {}:\n".format(d["Component_ID"])
         fmt = "{:<20s} : {:8.3f} +/- {:.3f} deg\n"
@@ -64,7 +64,7 @@ class SourceCatalogObjectHGPSComponent(SourceCatalogObject):
 
     @property
     def name(self):
-        """Source name (str)"""
+        """Source name as a string."""
         return self.data[self._source_name_key]
 
     def spatial_model(self):
@@ -389,7 +389,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         return ss
 
     def _info_flux_points(self):
-        """Print flux point results"""
+        """Print flux point results."""
         d = self.data
         ss = "\n*** Flux points info ***\n\n"
         ss += "Number of flux points: {}\n".format(d["N_Flux_Points"])
@@ -815,22 +815,22 @@ class SourceCatalogHGPS(SourceCatalog):
 
     @property
     def table_components(self):
-        """Gaussian component table (`~astropy.table.Table`)"""
+        """Gaussian component table (`~astropy.table.Table`)."""
         return self._table_components
 
     @property
     def table_associations(self):
-        """Source association table (`~astropy.table.Table`)"""
+        """Source association table (`~astropy.table.Table`)."""
         return self._table_associations
 
     @property
     def table_identifications(self):
-        """Source identification table (`~astropy.table.Table`)"""
+        """Source identification table (`~astropy.table.Table`)."""
         return self._table_identifications
 
     @property
     def table_large_scale_component(self):
-        """Large scale component table (`~astropy.table.Table`)"""
+        """Large scale component table (`~astropy.table.Table`)."""
         return self._table_large_scale_component
 
     @property
@@ -839,7 +839,7 @@ class SourceCatalogHGPS(SourceCatalog):
         return SourceCatalogLargeScaleHGPS(self.table_large_scale_component)
 
     def _make_source_object(self, index):
-        """Make `SourceCatalogObject` for given row index"""
+        """Make `SourceCatalogObject` for given row index."""
         source = super()._make_source_object(index)
 
         if source.data["Components"] != "":

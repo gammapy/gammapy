@@ -179,6 +179,7 @@ class SourceCatalog1LHAASO(SourceCatalog):
 
     def to_models(self, which="both"):
         """Create Models object from catalog.
+
         * ``which="both"`` - Use first model or create a composite template if both models are available.
         * ``which="KM2A"`` - Sky model for KM2A analysis if available.
         * ``which="WCDA"`` - Sky model for WCDA analysis if available.

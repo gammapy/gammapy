@@ -65,18 +65,18 @@ class SourceCatalogObject:
 
     @property
     def name(self):
-        """Source name (str)"""
+        """Source name as a string."""
         name = self.data[self._source_name_key]
         return name.strip()
 
     @property
     def row_index(self):
-        """Row index of source in catalog (int)"""
+        """Row index of source in catalog as an integer."""
         return self.data[self._row_index_key]
 
     @property
     def position(self):
-        """Source position (`~astropy.coordinates.SkyCoord`)."""
+        """Source position as an `~astropy.coordinates.SkyCoord` object."""
         table = Table([self.data])
         return _skycoord_from_table(table)[0]
 
@@ -104,7 +104,7 @@ class SourceCatalog(abc.ABC):
     @classmethod
     @abc.abstractmethod
     def description(cls):
-        """Catalog description (str)."""
+        """Catalog description as a string."""
         pass
 
     @property
@@ -274,7 +274,7 @@ class SourceCatalog(abc.ABC):
 
     @property
     def positions(self):
-        """Source positions (`~astropy.coordinates.SkyCoord`)."""
+        """Source positions as a list of `~astropy.coordinates.SkyCoord` objects."""
         return _skycoord_from_table(self.table)
 
     def to_models(self, **kwargs):

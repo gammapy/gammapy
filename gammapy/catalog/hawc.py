@@ -16,7 +16,7 @@ __all__ = [
 
 
 class SourceCatalogObjectHWCBase(SourceCatalogObject, abc.ABC):
-    """Base class for the HAWC catalogs objects"""
+    """Base class for the HAWC catalogs objects."""
 
     _source_name_key = "source_name"
 
@@ -254,7 +254,6 @@ class SourceCatalogObject3HWC(SourceCatalogObjectHWCBase):
 
     def spectral_model(self):
         """Spectral model (`~gammapy.modeling.models.PowerLawSpectralModel`)."""
-
         pars = {
             "reference": "7 TeV",
             "amplitude": self.data["spec0_dnde"],
