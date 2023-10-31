@@ -103,7 +103,7 @@ class FluxEstimator(ParameterEstimator):
             )
 
         scale_model = ScaleSpectralModel(ref_model)
-        scale_model.norm = self.norm
+        scale_model.norm = self.norm.copy()
         return scale_model
 
     def estimate_npred_excess(self, datasets):
