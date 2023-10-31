@@ -991,7 +991,10 @@ class DatasetModels(collections.abc.Sequence):
         )
 
     def to_template_spectral_model(self, geom, mask=None):
-        """Merge a list of models into a single `~gammapy.modeling.models.TemplateSpectralModel`
+        """Merge a list of models into a single `~gammapy.modeling.models.TemplateSpectralModel`.
+
+        For each model the spatial component is intergated over the given geom where the mask is true
+        and multiplied by the spectral component value in each energy bin.
 
         Parameters
         ----------
