@@ -268,6 +268,17 @@ class SpatialModel(ModelBase):
         data["spatial"]["parameters"] = data["spatial"].pop("parameters")
         return data
 
+    @property
+    def _evaluation_geom(self):
+        if isinstance(self, TemplateSpatialModel):
+            geom = self.map.geom
+        else:
+            width = 2 * max(self.evaluation_radius, 0.1 * u.deg)
+            geom = WcsGeom.create(
+                skydir=self.position, frame=self.frame, width=width, binsz=0.02
+            )
+        return geom
+
     def _get_plot_map(self, geom):
         if self.evaluation_radius is None and geom is None:
             raise ValueError(
@@ -275,13 +286,8 @@ class SpatialModel(ModelBase):
             )
 
         if geom is None:
-            if isinstance(self, TemplateSpatialModel):
-                geom = self.map.geom
-            else:
-                width = 2 * max(self.evaluation_radius, 0.1 * u.deg)
-                geom = WcsGeom.create(
-                    skydir=self.position, frame=self.frame, width=width, binsz=0.02
-                )
+            geom = self._evaluation_geom
+
         data = self.evaluate_geom(geom)
         return Map.from_geom(geom, data=data.value, unit=data.unit)
 
