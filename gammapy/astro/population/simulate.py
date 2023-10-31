@@ -385,9 +385,9 @@ def add_observed_parameters(table, obs_pos=None):
     ----------
     table : `~astropy.table.Table`
         Input table.
-    obs_pos : tuple or None
+    obs_pos : tuple, optional
         Observation position (X, Y, Z) in Galactocentric coordinates.
-        Default is Earth.
+        Default is None, which uses the Earth's position.
 
     Returns
     -------
