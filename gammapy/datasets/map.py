@@ -635,7 +635,7 @@ class MapDataset(Dataset):
         binsz_irf : float
             IRF Map pixel size in degrees. Default is BINSZ_IRF_DEFAULT.
         reference_time : `~astropy.time.Time`
-            The reference time to use in GTI definition. Default i "2000-01-01".
+            The reference time to use in GTI definition. Default is "2000-01-01".
         name : str
             Name of the returned dataset. Default is None.
         meta_table : `~astropy.table.Table`
