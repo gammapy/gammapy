@@ -1569,8 +1569,11 @@ class TemplateNDSpatialModel(SpatialModel):
         Parameters
         ----------
         overwrite: bool, optional
-            Overwrite existing file.
-            Default is False, which will raise a warning if the template file exists already.
+            Overwrite existing file. Default is False.
+
+        Note
+        ----
+        If overwrite is False and the template file already exists, a warning will be raised.
         """
         if self.filename is None:
             raise IOError("Missing filename")
