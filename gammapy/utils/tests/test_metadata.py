@@ -3,6 +3,7 @@ from typing import Optional
 import pytest
 from numpy.testing import assert_allclose
 from astropy.coordinates import AltAz, SkyCoord
+from astropy.io import fits
 from pydantic import ValidationError
 from gammapy.utils.metadata import (
     CreatorMetaData,
@@ -10,6 +11,17 @@ from gammapy.utils.metadata import (
     ObsInfoMetaData,
     PointingInfoMetaData,
 )
+from gammapy.utils.scripts import make_path
+from gammapy.utils.testing import requires_data
+
+
+@pytest.fixture()
+def hess_eventlist_header():
+    filename = make_path(
+        "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz"
+    )
+    hdulist = fits.open(filename)
+    return hdulist["EVENTS"].header
 
 
 def test_creator():
@@ -78,3 +90,13 @@ def test_pointing_info():
 
     with pytest.raises(ValidationError):
         pointing.radec_mean = altaz
+
+
+@requires_data()
+def test_obs_info_from_header(hess_eventlist_header):
+    meta = ObsInfoMetaData.from_header(hess_eventlist_header, format="gadf")
+
+    assert meta.telescope == "HESS"
+    assert meta.obs_id == "23523"
+    assert meta.observation_mode == "WOBBLE"
+    assert meta.sub_array is None

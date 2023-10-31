@@ -155,6 +155,31 @@ class ObsInfoMetaData(MetaData):
     sub_array: Optional[str]
     observation_mode: Optional[str]
 
+    @classmethod
+    def from_header(cls, header, format="gadf"):
+        """Create and fill the observation info metadata from a gadf header.
+
+        Parameters
+        ----------
+        header : `dict`
+            the input header.
+        format : {"gadf"}
+            the header data format. Default is gadf.
+        """
+        if not format == "gadf":
+            raise ValueError(
+                f"Metadata creation from format {format} is not supported."
+            )
+
+        kwargs = {}
+
+        kwargs["telescope"] = header.get("TELESCOP")
+        kwargs["instrument"] = header.get("INSTRUME")
+        kwargs["observation_mode"] = header.get("OBS_MODE")
+        kwargs["obs_id"] = header.get("OBS_ID")
+
+        return cls(**kwargs)
+
 
 class PointingInfoMetaData(MetaData):
     """General metadata information about the pointing.

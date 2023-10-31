@@ -6,7 +6,12 @@ from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.time import Time
 from pydantic import Field, ValidationError, validator
 from gammapy.utils.fits import earth_location_from_dict
-from gammapy.utils.metadata import CreatorMetaData, MetaData
+from gammapy.utils.metadata import (
+    CreatorMetaData,
+    MetaData,
+    ObsInfoMetaData,
+    PointingInfoMetaData,
+)
 from gammapy.utils.time import time_ref_from_dict
 
 __all__ = ["ObservationMetaData"]
@@ -19,6 +24,8 @@ class ObservationMetaData(MetaData):
     ----------
     obs_info : `~gammapy.utils.ObsInfoMetaData`
         the general observation information
+    pointing : `~gammapy.utils.PointingInfoMetaData
+        the pointing metadata
     location : `~astropy.coordinates.EarthLocation` or str, optional
         the observatory location
     deadtime_fraction : float
@@ -39,9 +46,8 @@ class ObservationMetaData(MetaData):
         additional optional metadata
     """
 
-    telescope: Optional[str]
-    instrument: Optional[str]
-    observation_mode: Optional[str]
+    obs_info: ObsInfoMetaData
+    pointing: PointingInfoMetaData
     location: Optional[Union[str, EarthLocation]]
     deadtime_fraction: float = Field(0.0, ge=0, le=1.0)
     time_start: Optional[Union[Time, str]]
@@ -100,9 +106,8 @@ class ObservationMetaData(MetaData):
             )
 
         kwargs = {}
-        kwargs["telescope"] = events_hdr.get("TELESCOP")
-        kwargs["instrument"] = events_hdr.get("INSTRUME")
-        kwargs["observation_mode"] = events_hdr.get("OBS_MODE")
+
+        kwargs["obs_info"] = ObsInfoMetaData.from_header(events_hdr, format)
 
         deadc = events_hdr.get("DEADC")
         if deadc is None:
