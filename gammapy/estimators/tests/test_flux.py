@@ -16,14 +16,6 @@ from gammapy.utils.testing import requires_data, requires_dependency
 
 
 @pytest.fixture(scope="session")
-def fermi_datasets():
-    filename = "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_datasets.yaml"
-    filename_models = "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_models.yaml"
-
-    return Datasets.read(filename=filename, filename_models=filename_models)
-
-
-@pytest.fixture(scope="session")
 def hess_datasets():
     datasets = Datasets()
     pwl = PowerLawSpectralModel(amplitude="3.5e-11 cm-2s-1TeV-1", index=2.7)

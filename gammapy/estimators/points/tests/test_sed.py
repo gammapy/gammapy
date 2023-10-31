@@ -7,12 +7,7 @@ from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.table import Table
 from gammapy.data import Observation
 from gammapy.data.pointing import FixedPointingInfo
-from gammapy.datasets import (
-    Datasets,
-    FluxPointsDataset,
-    MapDataset,
-    SpectrumDatasetOnOff,
-)
+from gammapy.datasets import FluxPointsDataset, MapDataset, SpectrumDatasetOnOff
 from gammapy.datasets.spectrum import SpectrumDataset
 from gammapy.estimators import FluxPoints, FluxPointsEstimator
 from gammapy.irf import EDispKernelMap, EffectiveAreaTable2D, load_irf_dict_from_file
@@ -32,14 +27,6 @@ from gammapy.modeling.models import (
 )
 from gammapy.utils import parallel
 from gammapy.utils.testing import requires_data, requires_dependency
-
-
-@pytest.fixture(scope="session")
-def fermi_datasets():
-    filename = "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_datasets.yaml"
-    filename_models = "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_models.yaml"
-
-    return Datasets.read(filename=filename, filename_models=filename_models)
 
 
 # TODO: use pre-generated data instead
@@ -629,11 +616,6 @@ def test_fpe_non_uniform_datasets():
 
 @requires_data()
 def test_flux_points_estimator_norm_spectral_model(fermi_datasets):
-
-    filename = "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_datasets.yaml"
-    filename_models = "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_models.yaml"
-
-    fermi_datasets = Datasets.read(filename=filename, filename_models=filename_models)
 
     energy_edges = [10, 30, 100, 300, 1000] * u.GeV
 
