@@ -125,13 +125,12 @@ class MapDatasetEventSampler:
             time_axis_eval.time_mid, energy=energy_new.center
         )
 
-        norm_parameters = model.spectral_model.parameters.norm_parameters
-        norm = norm_parameters[0].quantity
+        norm = model.spectral_model(energy=energy_new.center)
 
         if temp_eval.unit.is_equivalent(norm.unit):
-            flux_diff = temp_eval.to(norm.unit)
+            flux_diff = temp_eval.to(norm.unit) * norm.value[:, None]
         else:
-            flux_diff = temp_eval * norm
+            flux_diff = temp_eval * norm[:, None]
 
         flux_inte = flux_diff * energy_new.bin_width[:, None]
 
