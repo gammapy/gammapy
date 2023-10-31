@@ -883,10 +883,12 @@ class SourceCatalogHGPS(SourceCatalog):
 
         components_status : {'independent', 'linked', 'merged'}
             Relation between the sources components. Available options are:
-
-                - 'independent': each subcomponent of a source is given as a different `SkyModel` (Default).
-                - 'linked': each subcomponent of a source is given as a different `SkyModel` but the spectral parameters except the normalisation are linked.
-                - 'merged': the subcomponents are merged into a single `SkyModel` given as a `~gammapy.modeling.models.TemplateSpatialModel` with a `~gammapy.modeling.models.PowerLawNormSpectralModel`. In that case the relative weights between the components cannot be adjusted.
+                * 'independent': each subcomponent of a source is given as a different `SkyModel` (Default).
+                * 'linked': each subcomponent of a source is given as a different `SkyModel` but the spectral
+                  parameters except the normalisation are linked.
+                * 'merged': the subcomponents are merged into a single `SkyModel` given as a
+                  `~gammapy.modeling.models.TemplateSpatialModel` with a `~gammapy.modeling.models.PowerLawNormSpectralModel`.
+                  In that case the relative weights between the components cannot be adjusted.
 
         Returns
         -------
