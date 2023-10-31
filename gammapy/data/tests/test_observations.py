@@ -313,8 +313,8 @@ def test_observation_read():
     assert isinstance(obs.meta, ObservationMetaData)
     assert "Gammapy" in obs.meta.creation.creator
 
-    assert obs.meta.telescope == "HESS"
-    assert obs.meta.instrument == "H.E.S.S. Phase I"
+    assert obs.meta.obs_info.telescope == "HESS"
+    assert obs.meta.obs_info.instrument == "H.E.S.S. Phase I"
     assert obs.meta.target_name == "MSH15-52"
     assert obs.meta.optional["N_TELS"] == 4
     with pytest.raises(KeyError):

@@ -157,7 +157,7 @@ class ObsInfoMetaData(MetaData):
 
     @classmethod
     def from_header(cls, header, format="gadf"):
-        """Create and fill the observation info metadata from a gadf header.
+        """Create and fill the observation info metadata from a header.
 
         Parameters
         ----------
@@ -221,7 +221,7 @@ class PointingInfoMetaData(MetaData):
 
     @classmethod
     def from_header(cls, header, format="gadf"):
-        """Create and fill the pointing info metadata from a gadf header.
+        """Create and fill the pointing info metadata from a header.
 
         Parameters
         ----------

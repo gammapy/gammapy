@@ -46,8 +46,8 @@ class ObservationMetaData(MetaData):
         additional optional metadata
     """
 
-    obs_info: ObsInfoMetaData
-    pointing: PointingInfoMetaData
+    obs_info: Optional[ObsInfoMetaData]
+    pointing: Optional[PointingInfoMetaData]
     location: Optional[Union[str, EarthLocation]]
     deadtime_fraction: float = Field(0.0, ge=0, le=1.0)
     time_start: Optional[Union[Time, str]]
@@ -108,6 +108,7 @@ class ObservationMetaData(MetaData):
         kwargs = {}
 
         kwargs["obs_info"] = ObsInfoMetaData.from_header(events_hdr, format)
+        kwargs["pointing"] = PointingInfoMetaData.from_header(events_hdr, format)
 
         deadc = events_hdr.get("DEADC")
         if deadc is None:

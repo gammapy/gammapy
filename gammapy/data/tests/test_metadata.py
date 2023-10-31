@@ -6,6 +6,7 @@ from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from pydantic import ValidationError
 from gammapy.data import ObservationMetaData
+from gammapy.utils.metadata import ObsInfoMetaData, PointingInfoMetaData
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import requires_data
 
@@ -20,10 +21,16 @@ def hess_eventlist_header():
 
 
 def test_observation_metadata():
-    input = {
+    obs_info = {
+        "obs_id": 0,
         "telescope": "cta-north",
         "instrument": "lst",
         "observation_mode": "wobble",
+    }
+
+    input = {
+        "obs_info": ObsInfoMetaData(**obs_info),
+        "pointing": PointingInfoMetaData(),
         "location": "cta_north",
         "deadtime_fraction": 0.05,
         "target_name": "Crab",
@@ -32,9 +39,9 @@ def test_observation_metadata():
     }
     meta = ObservationMetaData(**input)
 
-    assert meta.telescope == "cta-north"
-    assert meta.instrument == "lst"
-    assert meta.observation_mode == "wobble"
+    assert meta.obs_info.telescope == "cta-north"
+    assert meta.obs_info.instrument == "lst"
+    assert meta.obs_info.observation_mode == "wobble"
     assert_allclose(meta.location.lon.value, -17.892005)
     assert meta.target_name == "Crab"
     assert_allclose(meta.target_position.ra.deg, 83.6287)
@@ -61,7 +68,8 @@ def test_observation_metadata():
 def test_observation_metadata_from_header(hess_eventlist_header):
     meta = ObservationMetaData.from_header(hess_eventlist_header, format="gadf")
 
-    assert meta.telescope == "HESS"
+    assert meta.obs_info.telescope == "HESS"
+    assert_allclose(meta.pointing.altaz_mean.alt.deg, 41.389789)
     assert meta.target_name == "Crab Nebula"
     assert_allclose(meta.location.lat.deg, -23.271778)
     assert "TELLIST" in meta.optional
