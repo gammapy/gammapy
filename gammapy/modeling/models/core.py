@@ -996,13 +996,13 @@ class DatasetModels(collections.abc.Sequence):
         Parameters
         ----------
         geom : `Geom`
-            Map geometry the evaluate model.
-        mask :  `Map`
+            Map geometry on which the template model is computed.
+        mask :  `Map` with bool dtype.
             Evaluate the model only where the mask is True.
 
         Returns
         -------
-        model : `TemplateSpectralModel`
+        model : `~gammapy.modeling.models.TemplateSpectralModel`
             Template spectral model.
         """
 
