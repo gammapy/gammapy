@@ -159,7 +159,7 @@ def make_base_catalog_galactic(
     max_age : `~astropy.units.Quantity`
         Maximal age of the source.
     spiralarms : bool
-        Include a spiralarm model in the catalog.
+        Include a spiral arm model in the catalog.
     n_ISM : `~astropy.units.Quantity`
         Density of the interstellar medium.
     random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}

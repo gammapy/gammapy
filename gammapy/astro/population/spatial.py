@@ -329,7 +329,6 @@ class LogSpiral:
             Position (x, y)
         """
         if (theta is None) and not (radius is None):
-            print(self.theta)
             theta = self.theta(radius, spiralarm_index=spiralarm_index)
         elif (radius is None) and not (theta is None):
             radius = self.radius(theta, spiralarm_index=spiralarm_index)
