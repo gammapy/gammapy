@@ -130,17 +130,19 @@ class GTI:
         return cls(table, reference_time=reference_time)
 
     @classmethod
-    def read(cls, filename, hdu="GTI", format="gadf"):
+    def read(cls, filename, hdu="GTI", format="gadf", checksum=False):
         """Read from FITS file.
 
         Parameters
         ----------
-        filename : `pathlib.Path` or str
-            Filename.
-        hdu : str, optional
+        filename : `pathlib.Path`, str
+            Filename
+        hdu : str
             hdu name. Default is "GTI".
-        format: str, optional
+        format: str
             Input format, currently only "gadf" is supported. Default is "gadf".
+        checksum : bool
+            If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
         """
         filename = make_path(filename)
         with fits.open(str(make_path(filename)), memmap=False) as hdulist:
