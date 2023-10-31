@@ -175,7 +175,7 @@ class FluxPointsDataset(Dataset):
             Filename to read from.
         name : str
             Name of the new dataset. Default is None.
-        format : str
+        format : {"gadf-sed"}
             Format of the dataset file. Default is "gadf-sed".
 
         Returns
