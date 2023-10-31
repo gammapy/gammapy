@@ -32,6 +32,8 @@ def test_sky_point_source():
     geom = WcsGeom.create(skydir=(2.4, 2.3), npix=(10, 10), binsz=0.3)
     model = PointSpatialModel(lon_0="2.5 deg", lat_0="2.5 deg", frame="icrs")
 
+    assert model.is_energy_dependent is False
+
     assert model.evaluation_radius.unit == "deg"
     assert_allclose(model.evaluation_radius.value, 0)
 
