@@ -5,10 +5,12 @@ from numpy.testing import assert_allclose
 from astropy.coordinates import AltAz, SkyCoord
 from pydantic import ValidationError
 from gammapy.utils.metadata import (
+    METADATA_FITS_KEYS,
     CreatorMetaData,
     MetaData,
     ObsInfoMetaData,
     PointingInfoMetaData,
+    TargetMetaData,
 )
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import requires_data
