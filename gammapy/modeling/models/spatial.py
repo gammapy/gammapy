@@ -548,6 +548,7 @@ class PointSpatialModel(SpatialModel):
 
         return dx * dy
 
+    @property
     def is_energy_dependent(self):
         return False
 
