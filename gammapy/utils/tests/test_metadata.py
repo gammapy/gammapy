@@ -100,3 +100,11 @@ def test_obs_info_from_header(hess_eventlist_header):
     assert meta.obs_id == "23523"
     assert meta.observation_mode == "WOBBLE"
     assert meta.sub_array is None
+
+
+@requires_data()
+def test_pointing_info_from_header(hess_eventlist_header):
+    meta = PointingInfoMetaData.from_header(hess_eventlist_header, format="gadf")
+
+    assert_allclose(meta.radec_mean.ra.deg, 83.633333)
+    assert_allclose(meta.altaz_mean.alt.deg, 41.389789)

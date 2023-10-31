@@ -3,9 +3,9 @@
 import json
 from typing import Optional, Union
 import numpy as np
+import astropy.units as u
 from astropy.coordinates import AltAz, Angle, EarthLocation, SkyCoord
 from astropy.time import Time
-from astropy.units import Quantity
 import yaml
 from pydantic import BaseModel, ValidationError, validator
 from gammapy.version import version
@@ -27,7 +27,7 @@ class MetaData(BaseModel):
         # provides a recipe to export arbitrary types to json
         json_encoders = {
             Angle: lambda v: f"{v.value} {v.unit}",
-            Quantity: lambda v: f"{v.value} {v.unit}",
+            u.Quantity: lambda v: f"{v.value} {v.unit}",
             Time: lambda v: f"{v.iso}",
             EarthLocation: lambda v: f"lon : {v.lon.value} {v.lon.unit}, "
             f"lat : {v.lat.value} {v.lat.unit}, "
@@ -218,3 +218,30 @@ class PointingInfoMetaData(MetaData):
             raise ValidationError(
                 f"Incorrect position. Expect SkyCoord in altaz frame got {type(v)} instead."
             )
+
+    @classmethod
+    def from_header(cls, header, format="gadf"):
+        """Create and fill the pointing info metadata from a gadf header.
+
+        Parameters
+        ----------
+        header : `dict`
+            the input header.
+        format : {"gadf"}
+            the header data format. Default is gadf.
+        """
+        if not format == "gadf":
+            raise ValueError(
+                f"Metadata creation from format {format} is not supported."
+            )
+
+        kwargs = {}
+
+        ra_pnt = header.get("RA_PNT", np.nan)
+        dec_pnt = header.get("DEC_PNT", np.nan)
+        kwargs["radec_mean"] = SkyCoord(ra_pnt, dec_pnt, unit="deg", frame="icrs")
+        alt_pnt = header.get("ALT_PNT", np.nan) * u.deg
+        az_pnt = header.get("AZ_PNT", np.nan) * u.deg
+        kwargs["altaz_mean"] = AltAz(az=az_pnt, alt=alt_pnt)
+
+        return cls(**kwargs)
