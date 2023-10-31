@@ -29,6 +29,15 @@ from gammapy.utils import parallel
 from gammapy.utils.testing import requires_data, requires_dependency
 
 
+@pytest.fixture()
+def fermi_datasets():
+    from gammapy.datasets import Datasets
+
+    filename = "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_datasets.yaml"
+    filename_models = "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_models.yaml"
+    return Datasets.read(filename=filename, filename_models=filename_models)
+
+
 # TODO: use pre-generated data instead
 def simulate_spectrum_dataset(model, random_state=0):
     energy_edges = np.logspace(-0.5, 1.5, 21) * u.TeV
