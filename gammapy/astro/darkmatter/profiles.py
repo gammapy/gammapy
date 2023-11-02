@@ -43,7 +43,7 @@ class DMProfile(abc.ABC):
         self.parameters["rho_s"].value *= scale
 
     def _eval_substitution(self, radius, separation, squared):
-        """Density at given radius together with the substitution part"""
+        """Density at given radius together with the substitution part."""
         exponent = 2 if squared else 1
         return (
             self(radius) ** exponent
@@ -81,14 +81,14 @@ class DMProfile(abc.ABC):
     def integrate_spectrum_separation(
         self, func, xmin, xmax, separation, ndecade, squared=True
     ):
-        r"""Helper for the squared dark matter profile integral.
+        """Squared dark matter profile integral.
 
         Parameters
         ----------
         xmin, xmax : `~astropy.units.Quantity`
             Lower and upper bound of integration range.
         separation : `~numpy.ndarray`
-            Separation angle in rad.
+            Separation angle in radians.
         ndecade : int
             Number of grid points per decade used for the integration.
         squared : bool
@@ -109,6 +109,7 @@ class DMProfile(abc.ABC):
 
 class ZhaoProfile(DMProfile):
     r"""Zhao Profile.
+
     This is taken from equation 1 from Zhao (1996). It is a generalization of the NFW profile. The volume density
     is parametrized with a double power-law. Scale radii smaller than the scale radius are described with a slope of
     :math:`-\gamma` and scale radii larger than the scale radius are described with a slope of :math:`-\beta`.
@@ -164,6 +165,7 @@ class ZhaoProfile(DMProfile):
 
     @staticmethod
     def evaluate(radius, r_s, alpha, beta, gamma, rho_s):
+        """Evaluate the profile."""
         rr = radius / r_s
         return rho_s / (
             rr**gamma * (1 + rr ** (1 / alpha)) ** ((beta - gamma) * alpha)
@@ -200,6 +202,7 @@ class NFWProfile(DMProfile):
 
     @staticmethod
     def evaluate(radius, r_s, rho_s):
+        """Evaluate the profile."""
         rr = radius / r_s
         return rho_s / (rr * (1 + rr) ** 2)
 
@@ -246,6 +249,7 @@ class EinastoProfile(DMProfile):
 
     @staticmethod
     def evaluate(radius, r_s, alpha, rho_s):
+        """Evaluate the profile."""
         rr = radius / r_s
         exponent = (2 / alpha) * (rr**alpha - 1)
         return rho_s * np.exp(-1 * exponent)
@@ -279,6 +283,7 @@ class IsothermalProfile(DMProfile):
 
     @staticmethod
     def evaluate(radius, r_s, rho_s):
+        """Evaluate the profile."""
         rr = radius / r_s
         return rho_s / (1 + rr**2)
 
@@ -311,6 +316,7 @@ class BurkertProfile(DMProfile):
 
     @staticmethod
     def evaluate(radius, r_s, rho_s):
+        """Evaluate the profile."""
         rr = radius / r_s
         return rho_s / ((1 + rr) * (1 + rr**2))
 
@@ -345,6 +351,7 @@ class MooreProfile(DMProfile):
 
     @staticmethod
     def evaluate(radius, r_s, rho_s):
+        """Evaluate the profile."""
         rr = radius / r_s
         rr_ = r_s / radius
         return rho_s * rr_**1.16 * (1 + rr) ** (-1.84)

@@ -140,7 +140,7 @@ class PrimaryFlux(TemplateNDSpectralModel):
 
     @property
     def channel(self):
-        """Annihilation channel (str)."""
+        """Annihilation channel as a string."""
         return self._channel
 
     @channel.setter
@@ -153,6 +153,7 @@ class PrimaryFlux(TemplateNDSpectralModel):
             self._channel = channel
 
     def evaluate(self, energy, **kwargs):
+        """Evaluate the PrimaryFlux."""
         mass = {"mass": self.mDM}
         kwargs.update(mass)
 
@@ -258,6 +259,7 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
         return flux
 
     def to_dict(self, full_output=False):
+        """Convert to dictionary."""
         data = super().to_dict(full_output=full_output)
         data["spectral"]["channel"] = self.channel
         data["spectral"]["mass"] = self.mass.to_string()
