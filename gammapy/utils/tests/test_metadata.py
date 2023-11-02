@@ -171,3 +171,10 @@ def test_subclass_to_from_header():
     assert header["ORIGIN"] == "CTA"
     assert_allclose(header["RA_PNT"], 83.6287)
     assert_allclose(header["AZ_PNT"], 20.0)
+
+    new = TestMetaData.from_header(header)
+
+    assert new.creation.creator == "gammapy"
+    assert_allclose(new.creation.date.decimalyear, 2022)
+    assert_allclose(new.pointing.radec_mean.ra.deg, 83.6287)
+    assert_allclose(new.pointing.altaz_mean.alt.deg, 45)

@@ -8,8 +8,7 @@ from astropy.coordinates import AltAz, Angle, EarthLocation, SkyCoord
 from astropy.time import Time
 import yaml
 from pydantic import BaseModel, ValidationError, validator
-
-# from typing_extensions import get_args
+from typing_extensions import get_args
 from gammapy.utils.fits import skycoord_from_dict
 from gammapy.version import version
 
@@ -144,6 +143,13 @@ class MetaData(BaseModel):
                 kwargs[key] = item["input"](header)
             else:
                 kwargs[key] = header.get(item)
+
+        extra_keys = set(cls.__annotations__.keys()) - set(fits_export_keys.keys())
+        for key in extra_keys:
+            args = get_args(cls.__annotations__[key])
+            if issubclass(args[0], MetaData):
+                kwargs[key] = args[0].from_header(header, format)
+
         return cls(**kwargs)
 
     def to_yaml(self):
