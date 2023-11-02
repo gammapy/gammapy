@@ -5,7 +5,7 @@ from typing import ClassVar, Literal, Optional, get_args
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
 import yaml
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from gammapy.utils.fits import skycoord_from_dict
 from gammapy.version import version
 from .types import AltAzSkyCoordType, ICRSSkyCoordType, SkyCoordType, TimeType
