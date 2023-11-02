@@ -13,16 +13,16 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
 
-# 	def __init__(self, datastore=None):
-# 		self.datastore = datastore
 
 
 def _obscore_def():
     """Generate the Obscore default table
     In case the obscore standard changes, this function should be changed consistently
+    
     Returns
     -------
-    Astropy Table length=0
+    table : `~astropy.table.Table`
+       the empty table
     """
     n_obscore_val = 29  # Number of obscore values
     obscore_default = np.empty(n_obscore_val, dtype=object)
@@ -235,11 +235,12 @@ def _obscore_def():
     return tab_default
 
 
-def _obscore_row(base_dir, single_obsID, **kwargs):
+def _obscore_row(base_dir, single_obsID, obs_publisher_did=None, access_url=None):
     """Generates an obscore row corresponding to a single obsID
+    
     Parameters
     ----------
-    single_obsID : `int`
+    single_obsID : int
             single Observation ID
     **kwargs : `str` {obs_publisher_did, access_url}
     Giving the values for is highly recommended.
@@ -247,7 +248,8 @@ def _obscore_row(base_dir, single_obsID, **kwargs):
 
     Returns
     -------
-    Astropy Table length=1
+    table : `~astropy.table.Table`
+        the IVOA table of length 1
     """
     base_dir = make_path(base_dir)
     data_store = DataStore.from_dir(base_dir)
