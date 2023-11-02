@@ -127,14 +127,14 @@ def _obscore_def():
     obscore_default[14] = Column(
         name="s_xel1",
         unit="",
-        description="Number of elements along the first coordinate of the spatial  axis",
+        description="Number of elements along the first coordinate of the spatial axis",
         dtype="i4",
         meta={"Utype": "Char.SpatialAxis.numBins1"},
     )
     obscore_default[15] = Column(
         name="s_xel2",
         unit="",
-        description="Number of elements along the second coordinate of the spatial  axis",
+        description="Number of elements along the second coordinate of the spatial axis",
         dtype="i4",
         meta={"Utype": "Char.SpatialAxis.numBins2"},
     )
@@ -155,7 +155,7 @@ def _obscore_def():
     obscore_default[18] = Column(
         name="t_max",
         unit="d",
-        description="Stop time  in MJD",
+        description="Stop time in MJD",
         dtype="f8",
         meta={"Utype": "Char.TimeAxis.Coverage.Bounds.Limits.StopTime"},
     )
