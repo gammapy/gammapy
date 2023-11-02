@@ -115,7 +115,7 @@ class EventList:
 
     def to_table_hdu(self, format="gadf"):
         """
-        Convert event list to a `~astropy.io.fits.BinTableHDU`
+        Convert event list to a `~astropy.io.fits.BinTableHDU`.
 
         Parameters
         ----------
@@ -153,7 +153,6 @@ class EventList:
             When True adds both DATASUM and CHECKSUM cards to the headers written to the file.
             Default is False.
         """
-
         if format != "gadf":
             raise ValueError(f"{format} is not a valid EventList format.")
 
@@ -313,7 +312,6 @@ class EventList:
 
         Examples
         --------
-
         >>> from gammapy.data import EventList
         >>> import numpy as np
         >>> filename = "$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_110380.fits"
@@ -468,7 +466,7 @@ class EventList:
         return ax
 
     def plot_time(self, ax=None, **kwargs):
-        """Plots an event rate time curve.
+        """Plot an event rate time curve.
 
         Parameters
         ----------
@@ -584,7 +582,7 @@ class EventList:
         return ax
 
     def plot_energy_offset(self, ax=None, center=None, **kwargs):
-        """Plot counts histogram with energy and offset axes
+        """Plot counts histogram with energy and offset axes.
 
         Parameters
         ----------

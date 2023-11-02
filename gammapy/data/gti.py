@@ -73,7 +73,7 @@ class GTI:
 
     @staticmethod
     def _validate_table(table):
-        """Checks that the input GTI fits the gammapy internal model."""
+        """Check that the input GTI fits the gammapy internal model."""
         if not isinstance(table, Table):
             raise TypeError("GTI table is not an astropy Table.")
 
@@ -92,11 +92,12 @@ class GTI:
         return table
 
     def copy(self):
+        """Deep copy of the `~gammapy.data.GIT` object."""
         return copy.deepcopy(self)
 
     @classmethod
     def create(cls, start, stop, reference_time=None):
-        """Creates a GTI table from start and stop times.
+        """Create a GTI table from start and stop times.
 
         Parameters
         ----------

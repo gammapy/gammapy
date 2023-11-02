@@ -97,7 +97,7 @@ class ObservationFilter:
         return self._filter_by_time(gti)
 
     def _filter_by_time(self, data):
-        """Returns a new time filtered data object.
+        """Return a new time filtered data object.
 
         Calls the `select_time` method of the data object.
         """

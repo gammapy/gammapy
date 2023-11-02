@@ -151,7 +151,6 @@ class DataStore:
         >>> from gammapy.data import DataStore
         >>> data_store = DataStore.from_dir('$GAMMAPY_DATA/hess-dl3-dr1')
         """
-
         base_dir = make_path(base_dir)
 
         if hdu_table_filename:
@@ -395,7 +394,6 @@ class DataStore:
         observations : `~gammapy.data.Observations`
             Container holding a list of `~gammapy.data.Observation`.
         """
-
         if obs_id is None:
             obs_id = self.obs_ids
 
@@ -500,11 +498,11 @@ class DataStoreChecker(Checker):
         self.data_store = data_store
 
     def check_obs_table(self):
-        """Checks for the observation index table."""
+        """Check for the observation index table."""
         yield from ObservationTableChecker(self.data_store.obs_table).run()
 
     def check_hdu_table(self):
-        """Checks for the HDU index table."""
+        """Check for the HDU index table."""
         t = self.data_store.hdu_table
         m = t.meta
         if m.get("HDUCLAS1", "") != "INDEX":

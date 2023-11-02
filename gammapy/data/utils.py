@@ -15,8 +15,7 @@ def get_irfs_features(
     containment_fraction=0.68,
     apply_standard_scaler=False,
 ):
-    """Get features from irfs properties at a given position.
-    Used for observations clustering.
+    """Get features from irfs properties at a given position. Used for observations clustering.
 
     Parameters
     ----------
@@ -45,9 +44,7 @@ def get_irfs_features(
     -------
     features : `~astropy.table.Table`
         Features table.
-
     """
-
     if names is None:
         names = ["edisp-bias", "edisp-res", "psf-radius"]
 

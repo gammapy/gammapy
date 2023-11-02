@@ -125,6 +125,7 @@ class Observation:
 
     @property
     def rad_max(self):
+        """Rad max IRF. None if not available."""
         # prevent circular import
         from gammapy.irf import RadMax2D
 
@@ -164,11 +165,13 @@ class Observation:
 
     @property
     def events(self):
+        """Event list of the observation as an `~gammapy.data.EventList`."""
         events = self.obs_filter.filter_events(self._events)
         return events
 
     @property
     def gti(self):
+        """GTI of the observation as a `~gammapy.data.GTI`."""
         gti = self.obs_filter.filter_gti(self._gti)
         return gti
 
@@ -286,22 +289,22 @@ class Observation:
 
     @property
     def tstart(self):
-        """Observation start time (`~astropy.time.Time`)."""
+        """Observation start time as a `~astropy.time.Time` object."""
         return self.gti.time_start[0]
 
     @property
     def tstop(self):
-        """Observation stop time (`~astropy.time.Time`)."""
+        """Observation stop time as a `~astropy.time.Time` object."""
         return self.gti.time_stop[0]
 
     @property
     def tmid(self):
-        """Midpoint between start and stop time."""
+        """Midpoint between start and stop time as a `~astropy.time.Time` object."""
         return self.tstart + 0.5 * (self.tstop - self.tstart)
 
     @property
     def observation_time_duration(self):
-        """Observation time duration in seconds (`~astropy.units.Quantity`).
+        """Observation time duration in seconds as a `~astropy.units.Quantity`.
 
         The wall time, including dead-time.
         """
@@ -309,7 +312,7 @@ class Observation:
 
     @property
     def observation_live_time_duration(self):
-        """Live-time duration in seconds (`~astropy.units.Quantity`).
+        """Live-time duration in seconds as a `~astropy.units.Quantity`.
 
         The dead-time-corrected observation time.
 
@@ -349,6 +352,7 @@ class Observation:
 
     @property
     def pointing(self):
+        """Get the pointing for the observation as a `~gammapy.data.FixedPointingInfo` object."""
         if self._pointing is None:
             self._pointing = FixedPointingInfo.from_fits_header(self.events.table.meta)
         return self._pointing
@@ -367,29 +371,30 @@ class Observation:
         message="Use observation.pointing or observation.get_pointing_{{altaz,icrs}} instead",
     )
     def fixed_pointing_info(self):
-        """Fixed pointing info for this observation (`FixedPointingInfo`)."""
+        """Fixed pointing information for this observation as a `~gammapy.data.FixedPointingInfo` object."""
         return self._pointing
 
     @property
     @deprecated("v1.1", message="Use observation.get_pointing_icrs(time) instead")
     def pointing_radec(self):
-        """Pointing RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)."""
+        """Pointing RA / DEC sky coordinates as a `~astropy.coordinates.SkyCoord`."""
         return self.fixed_pointing_info.radec
 
     @property
     @deprecated("v1.1", message="Use observation.get_pointing_altaz(time) instead")
     def pointing_altaz(self):
+        """Pointing ALT / AZ sky coordinates as a `~astropy.coordinates.SkyCoord`."""
         return self.fixed_pointing_info.altaz
 
     @property
     @deprecated("v1.1", message="Use observation.get_pointing_altaz(time).zen instead")
     def pointing_zen(self):
-        """Pointing zenith angle sky (`~astropy.units.Quantity`)."""
+        """Pointing zenith angle sky as a `~astropy.units.Quantity`."""
         return self.get_pointing_altaz(self.tmid).zen
 
     @property
     def observatory_earth_location(self):
-        """Observatory location (`~astropy.coordinates.EarthLocation`)."""
+        """Observatory location as an`~astropy.coordinates.EarthLocation` object."""
         if self._location is not None:
             return self._location
 
@@ -400,8 +405,8 @@ class Observation:
 
     @lazyproperty
     def target_radec(self):
-        """Target RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)."""
-        return self.meta.target.position
+        """Target RA / DEC sky coordinates as a `~astropy.coordinates.SkyCoord`."""
+        return self.meta.target_position
 
     @property
     @deprecated(
@@ -449,7 +454,6 @@ class Observation:
         figsize : tuple, optional
             Figure size. Default is (15, 10).
         """
-
         plottable_hds = ["events", "aeff", "psf", "edisp", "bkg", "rad_max"]
 
         plot_hdus = list(set(plottable_hds) & set(self.available_hdus))
@@ -562,7 +566,7 @@ class Observation:
         self, path, overwrite=False, format="gadf", include_irfs=True, checksum=False
     ):
         """
-        Write this observation into `~pathlib.Path` using the specified format
+        Write this observation into `~pathlib.Path` using the specified format.
 
         Parameters
         ----------
@@ -757,7 +761,7 @@ class Observations(collections.abc.MutableSequence):
         return self.ids
 
     def group_by_label(self, labels):
-        """Split observations in multiple groups of observations
+        """Split observations in multiple groups of observations.
 
         Parameters
         ----------

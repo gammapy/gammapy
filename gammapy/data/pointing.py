@@ -78,6 +78,7 @@ class PointingMode(Enum):
 
     @staticmethod
     def from_gadf_string(val):
+        """Parse a string from the GADF header into a PointingMode."""
         # OBS_MODE is not well-defined and not mandatory in GADF 0.2
         # We always assume that the observations are pointing observations
         # unless the OBS_MODE is set to DRIFT
@@ -195,7 +196,7 @@ class FixedPointingInfo:
     @classmethod
     def from_fits_header(cls, header):
         """
-        Parse FixedPointingInfo from the given fits header
+        Parse FixedPointingInfo from the given FITS header.
 
         Parameters
         ----------
@@ -451,6 +452,7 @@ class FixedPointingInfo:
     @property
     @deprecated("1.1")
     def meta(self):
+        """Meta header info as a dictionary."""
         if self._meta is not None:
             return self._meta
         return dict(self.to_fits_header(time_ref=self._time_ref))
@@ -458,19 +460,19 @@ class FixedPointingInfo:
     @property
     @deprecated("1.1")
     def location(self):
-        """Observatory location (`~astropy.coordinates.EarthLocation`)."""
+        """Observatory location as an `~astropy.coordinates.EarthLocation` object."""
         return self._location
 
     @property
     @deprecated("1.1")
     def time_start(self):
-        """Start time (`~astropy.time.Time`)."""
+        """Start time as a `~astropy.time.Time` object."""
         return self._time_start
 
     @property
     @deprecated("1.1")
     def time_stop(self):
-        """Stop time (`~astropy.time.Time`)."""
+        """Stop time as a `~astropy.time.Time` object."""
         warnings.warn(
             "Accessing time information through pointing is deprecated",
             DeprecationWarning,
@@ -480,13 +482,13 @@ class FixedPointingInfo:
     @property
     @deprecated("1.1")
     def time_ref(self):
-        """Reference time (`~astropy.time.Time`)."""
+        """Reference time as a `~astropy.time.Time` object."""
         return self._time_ref
 
     @lazyproperty
     @deprecated("1.1")
     def obstime(self):
-        """Average observation time for the observation (`~astropy.time.Time`)."""
+        """Average observation time for the observation as a `~astropy.time.Time` object."""
         if self.time_start is None or self.duration is None:
             return None
         return self.time_start + self.duration / 2
@@ -494,7 +496,7 @@ class FixedPointingInfo:
     @lazyproperty
     @deprecated("1.1")
     def duration(self):
-        """Pointing duration (`~astropy.time.TimeDelta`).
+        """Pointing duration as a `~astropy.time.TimeDelta` object.
 
         The time difference between the TSTART and TSTOP.
         """
@@ -506,7 +508,7 @@ class FixedPointingInfo:
     @deprecated("1.1")
     def radec(self):
         """
-        RA/DEC pointing position from table (`~astropy.coordinates.SkyCoord`).
+        RA/DEC pointing position from table as a `~astropy.coordinates.SkyCoord`.
 
         Use `get_icrs` to get the pointing at a specific time, correctly
         handling different pointing modes.
@@ -523,8 +525,7 @@ class FixedPointingInfo:
     @deprecated("1.1")
     def altaz(self):
         """
-        ALT/AZ pointing position computed from RA/DEC (`~astropy.coordinates.SkyCoord`)
-        for the midpoint of the run.
+        ALT/AZ pointing position computed from RA/DEC a a `~astropy.coordinates.SkyCoord` for the midpoint of the run.
 
         Use `get_altaz` to get the pointing at a specific time, correctly
         handling different pointing modes.
@@ -646,17 +647,17 @@ class PointingInfo:
 
     @lazyproperty
     def location(self):
-        """Observatory location (`~astropy.coordinates.EarthLocation`)."""
+        """Observatory location as an `~astropy.coordinates.EarthLocation` object."""
         return earth_location_from_dict(self.table.meta)
 
     @lazyproperty
     def time_ref(self):
-        """Time reference (`~astropy.time.Time`)."""
+        """Time reference as a `~astropy.time.Time` object."""
         return time_ref_from_dict(self.table.meta)
 
     @lazyproperty
     def duration(self):
-        """Pointing table duration (`~astropy.time.TimeDelta`).
+        """Pointing table duration as a `~astropy.time.TimeDelta` object.
 
         The time difference between the first and last entry.
         """
@@ -664,31 +665,31 @@ class PointingInfo:
 
     @lazyproperty
     def time(self):
-        """Time array (`~astropy.time.Time`)."""
+        """Time array as a `~astropy.time.Time` object."""
         met = Quantity(self.table["TIME"].astype("float64"), "second")
         time = self.time_ref + met
         return time.tt
 
     @lazyproperty
     def radec(self):
-        """RA / DEC position from table (`~astropy.coordinates.SkyCoord`)."""
+        """RA / DEC position from table as a `~astropy.coordinates.SkyCoord`."""
         lon = self.table["RA_PNT"]
         lat = self.table["DEC_PNT"]
         return SkyCoord(lon, lat, unit="deg", frame="icrs")
 
     @lazyproperty
     def altaz_frame(self):
-        """ALT / AZ frame (`~astropy.coordinates.AltAz`)."""
+        """ALT / AZ frame as a `~astropy.coordinates.AltAz` object."""
         return AltAz(obstime=self.time, location=self.location)
 
     @lazyproperty
     def altaz(self):
-        """ALT / AZ position computed from RA / DEC (`~astropy.coordinates.SkyCoord`)."""
+        """ALT / AZ position computed from RA / DEC as a`~astropy.coordinates.SkyCoord`."""
         return self.radec.transform_to(self.altaz_frame)
 
     @lazyproperty
     def altaz_from_table(self):
-        """ALT / AZ position from table (`~astropy.coordinates.SkyCoord`)."""
+        """ALT / AZ position from table as a `~astropy.coordinates.SkyCoord`."""
         lon = self.table["AZ_PNT"]
         lat = self.table["ALT_PNT"]
         return SkyCoord(lon, lat, unit="deg", frame=self.altaz_frame)
