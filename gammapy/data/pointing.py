@@ -201,7 +201,7 @@ class FixedPointingInfo:
         ----------
         header : `astropy.fits.Header`
             Header to parse, e.g. from a GADF EVENTS HDU.
-            Currently, only GADF format is supported.
+            Currently, only the GADF format is supported.
 
         Returns
         -------

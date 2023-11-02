@@ -236,7 +236,7 @@ class Observation:
         Returns
         -------
         obs : `gammapy.data.MemoryObservation`
-            Observation
+            Observation.
         """
         if tstart is None:
             tstart = reference_time.copy()
@@ -767,7 +767,7 @@ class Observations(collections.abc.MutableSequence):
         Returns
         -------
         obs_clusters : dict of `~gammapy.data.Observations`
-            Dict of Observations instance, one instance for each group.
+            Dictionary of Observations instance, one instance for each group.
         """
         obs_groups = {}
         for label in np.unique(labels):
