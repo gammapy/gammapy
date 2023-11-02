@@ -7,6 +7,7 @@ from astropy.time import Time
 from pydantic import Field, ValidationError, validator
 from gammapy.utils.fits import earth_location_from_dict
 from gammapy.utils.metadata import (
+    METADATA_FITS_KEYS,
     CreatorMetaData,
     MetaData,
     ObsInfoMetaData,
@@ -15,6 +16,23 @@ from gammapy.utils.metadata import (
 from gammapy.utils.time import time_ref_from_dict
 
 __all__ = ["ObservationMetaData"]
+
+OBSERVATION_METADATA_FITS_KEYS = {
+    "location": {
+        "input": lambda v: earth_location_from_dict(v),
+        "output": lambda v: {
+            "GEOLON": v.lon.deg,
+            "GEOLAT": v.lat.deg,
+            "ALTITUDE": v.height.to_value("m"),
+        },
+    },
+    "deadtime_fraction": {
+        "input": lambda v: 1 - v.get("DEADC"),
+        "output": lambda v: {"DEADC": 1 - v},
+    },
+}
+
+METADATA_FITS_KEYS["observation"] = OBSERVATION_METADATA_FITS_KEYS
 
 
 class ObservationMetaData(MetaData):
@@ -46,9 +64,10 @@ class ObservationMetaData(MetaData):
         additional optional metadata
     """
 
+    _tag = "observation"
     obs_info: Optional[ObsInfoMetaData]
     pointing: Optional[PointingInfoMetaData]
-    location: Optional[Union[str, EarthLocation]]
+    location: Optional[Union[EarthLocation, str]]
     deadtime_fraction: float = Field(0.0, ge=0, le=1.0)
     time_start: Optional[Union[Time, str]]
     time_stop: Optional[Union[Time, str]]
