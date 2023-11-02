@@ -74,6 +74,26 @@ def test_obs_info():
     assert obs_info.instrument == "CTA-North"
 
 
+@requires_data()
+def test_obs_info_from_header(hess_eventlist_header):
+    meta = ObsInfoMetaData.from_header(hess_eventlist_header, format="gadf")
+
+    assert meta.telescope == "HESS"
+    assert meta.obs_id == "23523"
+    assert meta.observation_mode == "WOBBLE"
+    assert meta.sub_array is None
+
+
+def test_obs_info_to_header():
+    obs_info = ObsInfoMetaData(obs_id=23523, telescope="CTA-South")
+
+    header = obs_info.to_header("gadf")
+
+    assert header["OBS_ID"] == "23523"
+    assert header["TELESCOP"] == "CTA-South"
+    assert "OBS_MODE" not in header
+
+
 def test_pointing_info():
     position = SkyCoord(83.6287, 22.0147, unit="deg", frame="icrs")
     altaz = AltAz("20 deg", "45 deg")
@@ -92,14 +112,19 @@ def test_pointing_info():
         pointing.radec_mean = altaz
 
 
-@requires_data()
-def test_obs_info_from_header(hess_eventlist_header):
-    meta = ObsInfoMetaData.from_header(hess_eventlist_header, format="gadf")
+def test_pointing_info_to_header():
+    position = SkyCoord(83.6287, 22.0147, unit="deg", frame="icrs")
+    altaz = AltAz("20 deg", "45 deg")
 
-    assert meta.telescope == "HESS"
-    assert meta.obs_id == "23523"
-    assert meta.observation_mode == "WOBBLE"
-    assert meta.sub_array is None
+    header = PointingInfoMetaData(radec_mean=position, altaz_mean=altaz).to_header(
+        "gadf"
+    )
+
+    assert_allclose(header["RA_PNT"], 83.6287)
+    assert_allclose(header["AZ_PNT"], 20.0)
+
+    with pytest.raises(ValueError):
+        PointingInfoMetaData(radec_mean=position, altaz_mean=altaz).to_header("bad")
 
 
 @requires_data()

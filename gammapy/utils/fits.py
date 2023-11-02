@@ -2,8 +2,9 @@
 import html
 import logging
 import sys
+import numpy as np
 import astropy.units as u
-from astropy.coordinates import Angle, EarthLocation
+from astropy.coordinates import AltAz, Angle, EarthLocation, SkyCoord
 from astropy.io import fits
 from astropy.units import Quantity
 from .scripts import make_path
@@ -176,3 +177,78 @@ def earth_location_to_dict(location):
         "GEOLAT": location.lat.deg,
         "ALTITUDE": location.height.to_value(u.m),
     }
+
+
+def skycoord_to_dict(skycoord, frame, ext=None):
+    """Transform `~astropy.coordinates.SkyCoord` in a dictionary to store in a FITS header.
+
+    Parameters
+    ----------
+    skycoord : `~astropy.coordinates.skycoord`
+        The input SkyCoord.
+    frame : {"icrs", "galactic", "altaz"}
+        the frame to use.
+    ext: str, optional
+        The keyword extension to apply to the keywords names.
+
+    Returns
+    -------
+    dict : dict
+        the resulting dictionary
+    """
+    if ext is not None and ext != "":
+        ext = "_" + ext
+    else:
+        ext = ""
+
+    result = {}
+    if frame == "icrs":
+        result["RA" + ext] = skycoord.icrs.ra.deg
+        result["DEC" + ext] = skycoord.icrs.dec.deg
+    elif frame == "galactic":
+        result["GLON" + ext] = skycoord.galactic.l.deg
+        result["GLAT" + ext] = skycoord.galactic.b.deg
+    elif frame == "altaz":
+        result["ALT" + ext] = skycoord.altaz.alt.deg
+        result["AZ" + ext] = skycoord.altaz.az.deg
+    else:
+        raise ValueError(
+            f"Unsupported frame {frame}. Select in 'icrs', 'galactic', 'altaz'."
+        )
+
+    return result
+
+
+def skycoord_from_dict(header, frame="icrs", ext="PNT"):
+    """Creates `~astropy.coordinates.SkyCoord` from a dictionary of FITS keywords.
+
+    Parameters
+    ----------
+    header : dict
+        the input dictionary
+    frame : {"icrs", "galactic", "altaz"}
+        the frame to use. Default is 'icrs'.
+    ext: str, optional
+        The keyword extension to apply to the keywords names. Default is 'PNT'.
+
+    Returns
+    -------
+    skycoord : `~astropy.coordinates.skycoord`
+        The input SkyCoord.
+    """
+
+    ext = "_" + ext if ext != "" else ""
+
+    if frame == "altaz":
+        alt = header.get("ALT" + ext, np.nan)
+        az = header.get("AZ" + ext, np.nan)
+        return AltAz(alt=alt * u.deg, az=az * u.deg)
+    elif frame == "icrs":
+        coords = header.get("RA" + ext, np.nan), header.get("DEC" + ext, np.nan)
+    elif frame == "galactic":
+        coords = header.get("GLON" + ext, np.nan), header.get("GLAT" + ext, np.nan)
+    else:
+        raise ValueError(
+            f"Unsupported frame {frame}. Select in 'icrs', 'galactic', 'altaz'."
+        )
+    return SkyCoord(coords[0], coords[1], unit="deg", frame=frame)
