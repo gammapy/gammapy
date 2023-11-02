@@ -268,12 +268,12 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
 
     @classmethod
     def from_dict(cls, data):
-        """Create spectral model from dict
+        """Create spectral model from a dictionary.
 
         Parameters
         ----------
         data : dict
-            Dict with model data.
+            Dictionary with model data.
 
         Returns
         -------
@@ -371,12 +371,12 @@ class DarkMatterDecaySpectralModel(SpectralModel):
 
     @classmethod
     def from_dict(cls, data):
-        """Create spectral model from dict
+        """Create spectral model from dictionary.
 
         Parameters
         ----------
         data : dict
-            Dict with model data.
+            Dictionary with model data.
 
         Returns
         -------
