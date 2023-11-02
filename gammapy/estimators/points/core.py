@@ -28,7 +28,7 @@ log = logging.getLogger(__name__)
 class FluxPoints(FluxMaps):
     """Flux points container.
 
-    The supported formats are described here: :ref:`gadf:flux-points`
+    The supported formats are described here: :ref:`gadf:flux-points`.
 
     In summary, the following formats and minimum required columns are:
 
@@ -40,12 +40,12 @@ class FluxPoints(FluxMaps):
     Parameters
     ----------
     table : `~astropy.table.Table`
-        Table with flux point data
+        Table with flux point data.
 
     Attributes
     ----------
     table : `~astropy.table.Table`
-        Table with flux point data
+        Table with flux point data.
 
     Examples
     --------
@@ -118,20 +118,20 @@ class FluxPoints(FluxMaps):
         Parameters
         ----------
         filename : str
-            Filename
+            Filename.
         sed_type : {"dnde", "flux", "eflux", "e2dnde", "likelihood"}
-            Sed type
+            Sed type.
         format : {"gadf-sed", "lightcurve"}
             Format string.
         reference_model : `SpectralModel`
-            Reference spectral model
+            Reference spectral model.
         **kwargs : dict
             Keyword arguments passed to `astropy.table.Table.read`.
 
         Returns
         -------
         flux_points : `FluxPoints`
-            Flux points
+            Flux points.
         """
         filename = make_path(filename)
         gti = None
@@ -162,14 +162,14 @@ class FluxPoints(FluxMaps):
         Parameters
         ----------
         filename : str
-            Filename
+            Filename.
         sed_type : {"dnde", "flux", "eflux", "e2dnde", "likelihood"}
-            Sed type
+            Sed type. Default is None.
         format : {"gadf-sed", "lightcurve", "binned-time-series", "profile"}
             Format specification. The following formats are supported:
 
             * "gadf-sed": format for sed flux points see :ref:`gadf:flux-points`
-                for details
+                for details.
             * "lightcurve": Gammapy internal format to store energy dependent
                 lightcurves. Basically a generalisation of the "gadf" format, but
                 currently there is no detailed documentation available.
@@ -178,6 +178,7 @@ class FluxPoints(FluxMaps):
             * "profile": Gammapy internal format to store energy dependent
                 flux profiles. Basically a generalisation of the "gadf" format, but
                 currently there is no detailed documentation available.
+            Default is "gadf-sed".
         overwrite : bool, optional
             Overwrite existing file. Default is False.
         """
@@ -223,27 +224,25 @@ class FluxPoints(FluxMaps):
         cls, table, sed_type=None, format="gadf-sed", reference_model=None, gti=None
     ):
         """Create flux points from a table. The table column names must be consistent with the
-        sed_type
+        sed_type.
 
         Parameters
         ----------
         table : `~astropy.table.Table`
-            Table
+            Table.
         sed_type : {"dnde", "flux", "eflux", "e2dnde", "likelihood"}
-            Sed type
+            Sed type. Default is None.
         format : {"gadf-sed", "lightcurve", "profile"}
-            Table format.
+            Table format. Default is "gadf-sed".
         reference_model : `SpectralModel`
-            Reference spectral model
+            Reference spectral model. Default is None.
         gti : `GTI`
-            Good time intervals
-        meta : dict
-            Meta data.
+            Good time intervals. Default is None.
 
         Returns
         -------
         flux_points : `FluxPoints`
-            Flux points
+            Flux points.
         """
         table = table_standardise_units_copy(table)
 
@@ -295,7 +294,7 @@ class FluxPoints(FluxMaps):
 
     @staticmethod
     def _format_table(table):
-        """Format table"""
+        """Format table."""
         for column in table.colnames:
             if column.startswith(("dnde", "eflux", "flux", "e2dnde", "ref")):
                 table[column].format = ".3e"
@@ -312,7 +311,7 @@ class FluxPoints(FluxMaps):
         Parameters
         ----------
         sed_type : {"likelihood", "dnde", "e2dnde", "flux", "eflux"}
-            Sed type to convert to. Default is `likelihood`
+            Sed type to convert to. Default is `likelihood`.
         format : {"gadf-sed", "lightcurve", "binned-time-series", "profile"}
             Format specification. The following formats are supported:
 
@@ -327,14 +326,16 @@ class FluxPoints(FluxMaps):
                   flux profiles. Basically a generalisation of the "gadf" format, but
                   currently there is no detailed documentation available.
 
+                  Default is "gadf-sed".
+
         formatted : bool
             Formatted version with column formats applied. Numerical columns are
-            formatted to .3f and .3e respectively.
+            formatted to .3f and .3e respectively. Default is False.
 
         Returns
         -------
         table : `~astropy.table.Table`
-            Flux points table
+            Flux points table.
 
         Examples
         --------
@@ -500,20 +501,20 @@ class FluxPoints(FluxMaps):
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`
-            Axis object to plot on.
+            Axis object to plot on. Default is None.
         sed_type : {"dnde", "flux", "eflux", "e2dnde"}
-            Sed type
+            Sed type. Default is None.
         energy_power : float
-            Power of energy to multiply flux axis with
+            Power of energy to multiply flux axis with. Default is 0.
         time_format : {"iso", "mjd"}
-            Used time format is a time axis is present. Default: "iso"
+            Used time format is a time axis is present. Default is "iso".
         **kwargs : dict
-            Keyword arguments passed to `~RegionNDMap.plot`
+            Keyword arguments passed to `~RegionNDMap.plot`.
 
         Returns
         -------
         ax : `~matplotlib.axes.Axes`
-            Axis object
+            Axis object.
         """
         if sed_type is None:
             sed_type = self.sed_type_plot_default
@@ -573,18 +574,18 @@ class FluxPoints(FluxMaps):
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`
-            Axis object to plot on.
+            Axis object to plot on. Default is None.
         sed_type : {"dnde", "flux", "eflux", "e2dnde"}
-            Sed type
+            Sed type. Default is None.
         add_cbar : bool
-            Whether to add a colorbar to the plot.
+            Whether to add a colorbar to the plot. Default is True.
         **kwargs : dict
-            Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`
+            Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
 
         Returns
         -------
         ax : `~matplotlib.axes.Axes`
-            Axis object
+            Axis object.
         """
         if ax is None:
             ax = plt.gca()
@@ -672,7 +673,7 @@ class FluxPoints(FluxMaps):
         Returns
         -------
         flux_points : `FluxPoints`
-            A new FluxPoints object with modified upper limits
+            A new FluxPoints object with modified upper limits.
 
         Examples
         --------

@@ -13,18 +13,18 @@ __all__ = ["FluxProfileEstimator"]
 
 
 class FluxProfileEstimator(FluxPointsEstimator):
-    """Estimate flux profiles
+    """Estimate flux profiles.
 
     Parameters
     ----------
     regions : list of `~regions.SkyRegion`
-        regions to use
+        Regions to use.
     spectrum : `~gammapy.modeling.models.SpectralModel` (optional)
         Spectral model to compute the fluxes or brightness.
         Default is power-law with spectral index of 2.
     **kwargs : dict
         Keywords forwarded to the `FluxPointsEstimator` (see documentation
-        there for further description of valid keywords)
+        there for further description of valid keywords).
 
     Examples
     --------
@@ -104,7 +104,7 @@ class FluxProfileEstimator(FluxPointsEstimator):
         Returns
         -------
         axis : `MapAxis`
-            Projected distance axis
+            Projected distance axis.
         """
         distances = []
         center = self.regions[0].center
@@ -122,7 +122,7 @@ class FluxProfileEstimator(FluxPointsEstimator):
         )
 
     def run(self, datasets):
-        """Run flux profile estimation
+        """Run flux profile estimation.
 
         Parameters
         ----------
@@ -159,7 +159,7 @@ class FluxProfileEstimator(FluxPointsEstimator):
 
     @property
     def config_parameters(self):
-        """Config parameters"""
+        """Config parameters."""
         pars = self.__dict__.copy()
         pars = {key.strip("_"): value for key, value in pars.items()}
         pars.pop("regions")

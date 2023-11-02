@@ -20,7 +20,7 @@ log = logging.getLogger(__name__)
 
 
 def convolved_map_dataset_counts_statistics(dataset, kernel, mask, correlate_off):
-    """Return CountsDataset objects containing smoothed maps from the MapDataset"""
+    """Return CountsDataset objects containing smoothed maps from the MapDataset."""
     # Kernel is modified later make a copy here
     kernel = copy.deepcopy(kernel)
     kernel_data = kernel.data / kernel.data.max()
@@ -177,7 +177,7 @@ class ExcessMapEstimator(Estimator):
 
     @correlation_radius.setter
     def correlation_radius(self, correlation_radius):
-        """Sets radius"""
+        """Sets radius."""
         self._correlation_radius = Angle(correlation_radius)
 
     def run(self, dataset):
@@ -189,12 +189,12 @@ class ExcessMapEstimator(Estimator):
         Parameters
         ----------
         dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.MapDatasetOnOff`
-            Map dataset
+            Map dataset.
 
         Returns
         -------
         maps : `FluxMaps`
-            Flux maps
+            Flux maps.
         """
         if not isinstance(dataset, MapDataset):
             raise ValueError(
@@ -228,7 +228,7 @@ class ExcessMapEstimator(Estimator):
         Returns
         -------
         kernel : `~astropy.convolution.Tophat2DKernel`
-            Kernel
+            Kernel.
         """
 
         pixel_size = np.mean(np.abs(dataset.counts.geom.wcs.wcs.cdelt))
@@ -251,7 +251,7 @@ class ExcessMapEstimator(Estimator):
         Returns
         -------
         mask : `Map`
-            Mask map
+            Mask map.
         """
         if dataset.mask_fit:
             mask = dataset.mask
@@ -268,16 +268,16 @@ class ExcessMapEstimator(Estimator):
         Parameters
         ----------
         dataset : `MapDataset`
-            Map dataset
+            Map dataset.
         kernel : `~astropy.convolution.Tophat2DKernel`
-            Kernel
+            Kernel.
         mask : `Map`
-            Mask map
+            Mask map.
 
         Returns
         -------
         reco_exposure : `Map`
-            Reconstructed exposure map
+            Reconstructed exposure map.
         """
         if dataset.exposure:
             reco_exposure = estimate_exposure_reco_energy(
@@ -299,7 +299,7 @@ class ExcessMapEstimator(Estimator):
         Parameters
         ----------
         dataset : `MapDataset`
-            Map dataset
+            Map dataset.
         """
 
         kernel = self.estimate_kernel(dataset)

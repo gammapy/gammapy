@@ -32,7 +32,7 @@ class Estimator(abc.ABC):
 
     @selection_optional.setter
     def selection_optional(self, selection):
-        """Set optional selection"""
+        """Set optional selection."""
         available = self._available_selection_optional
 
         if selection is None:
@@ -47,7 +47,7 @@ class Estimator(abc.ABC):
                 raise ValueError(f"{difference} is not a valid method.")
 
     def _get_energy_axis(self, dataset):
-        """Energy axis"""
+        """Energy axis."""
         if self.energy_edges is None:
             energy_axis = dataset.counts.geom.axes["energy"].squash()
         else:
@@ -56,12 +56,12 @@ class Estimator(abc.ABC):
         return energy_axis
 
     def copy(self):
-        """Copy estimator"""
+        """Copy estimator."""
         return deepcopy(self)
 
     @property
     def config_parameters(self):
-        """Config parameters"""
+        """Config parameters."""
         pars = self.__dict__.copy()
         pars = {key.strip("_"): value for key, value in pars.items()}
         return pars

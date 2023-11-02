@@ -36,9 +36,9 @@ class LightCurveEstimator(FluxPointsEstimator):
     Parameters
     ----------
     time_intervals : list of `astropy.time.Time`
-        Start and stop time for each interval to compute the LC
+        Start and stop time for each interval to compute the LC.
     source : str or int
-        For which source in the model to compute the flux points. Default is 0
+        For which source in the model to compute the flux points. Default is 0.
     atol : `~astropy.units.Quantity`
         Tolerance value for time comparison with different scale. Default 1e-6 sec.
     norm_min : float
@@ -56,7 +56,7 @@ class LightCurveEstimator(FluxPointsEstimator):
     selection_optional : list of str
         Which steps to execute. Available options are:
 
-            * "all": all the optional steps are executed
+            * "all": all the optional steps are executed.
             * "errn-errp": estimate asymmetric errors.
             * "ul": estimate upper limits.
             * "scan": estimate fit statistic profiles.
@@ -71,7 +71,8 @@ class LightCurveEstimator(FluxPointsEstimator):
         Fit instance specifying the backend and fit options.
     reoptimize : bool
         Re-optimize other free model parameters. Default is False.
-        If True the available free parameters are fitted together with the norm of the source of interest in each bin independently, otherwise they are frozen at their current values.
+        If True the available free parameters are fitted together with the norm of the source of interest
+        in each bin independently, otherwise they are frozen at their current values.
     n_jobs : int
         Number of processes used in parallel for the computation. Default is one,
         unless `~gammapy.utils.parallel.N_JOBS_DEFAULT` was modified. The number
@@ -110,7 +111,7 @@ class LightCurveEstimator(FluxPointsEstimator):
         Returns
         -------
         lightcurve : `~gammapy.estimators.FluxPoints`
-            Light curve flux points
+            Light curve flux points.
         """
         datasets = Datasets(datasets)
 
@@ -170,14 +171,14 @@ class LightCurveEstimator(FluxPointsEstimator):
 
     @staticmethod
     def expand_map(m, dataset_names):
-        """Expand map in dataset axis
+        """Expand map in dataset axis.
 
         Parameters
         ----------
         map : `Map`
             Map to expand.
         dataset_names : list of str
-            Dataset names
+            Dataset names.
 
         Returns
         -------
@@ -198,7 +199,7 @@ class LightCurveEstimator(FluxPointsEstimator):
         Parameters
         ----------
         datasets : `~gammapy.modeling.Datasets`
-            List of dataset objects
+            List of dataset objects.
 
         Returns
         -------

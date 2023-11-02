@@ -41,7 +41,7 @@ class FluxEstimator(ParameterEstimator):
     selection_optional : list of str
         Which additional quantities to estimate. Available options are:
 
-            * "all": all the optional steps are executed
+            * "all": all the optional steps are executed.
             * "errn-errp": estimate asymmetric errors.
             * "ul": estimate upper limits.
             * "scan": estimate fit statistic profiles.
@@ -51,7 +51,8 @@ class FluxEstimator(ParameterEstimator):
         Fit instance specifying the backend and fit options.
     reoptimize : bool
         Re-optimize other free model parameters. Default is False.
-        If True the available free parameters are fitted together with the norm of the source of interest in each bin independently, otherwise they are frozen at their current values.
+        If True the available free parameters are fitted together with the norm of the source of interest
+        in each bin independently, otherwise they are frozen at their current values.
     """
 
     tag = "FluxEstimator"
@@ -101,17 +102,17 @@ class FluxEstimator(ParameterEstimator):
         return norm
 
     def get_scale_model(self, models):
-        """Set scale model
+        """Set scale model.
 
         Parameters
         ----------
         models : `Models`
-            Models
+            Models.
 
         Returns
         -------
         model : `ScaleSpectralModel`
-            Scale spectral model
+            Scale spectral model.
         """
         ref_model = models[self.source].spectral_model
         scale_model = ScaleSpectralModel(ref_model)
@@ -135,12 +136,12 @@ class FluxEstimator(ParameterEstimator):
         Parameters
         ----------
         datasets : Datasets
-            Datasets
+            Datasets.
 
         Returns
         -------
         result : dict
-            Dict with an array with one entry per dataset with the sum of the
+            Dictionary with an array with one entry per dataset with the sum of the
             masked npred excess.
         """
         npred_excess = []
@@ -165,7 +166,7 @@ class FluxEstimator(ParameterEstimator):
         Returns
         -------
         result : dict
-            Dict with results for the flux point.
+            Dictionary with results for the flux point.
         """
         datasets = Datasets(datasets)
         models = datasets.models.copy()
