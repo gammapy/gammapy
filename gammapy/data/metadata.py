@@ -1,11 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from typing import Optional, Union
 import numpy as np
-import astropy.units as u
 from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.time import Time
 from pydantic import Field, ValidationError, validator
-from gammapy.utils.fits import earth_location_from_dict
+from gammapy.utils.fits import earth_location_from_dict, skycoord_from_dict
 from gammapy.utils.metadata import (
     METADATA_FITS_KEYS,
     CreatorMetaData,
@@ -13,7 +12,6 @@ from gammapy.utils.metadata import (
     ObsInfoMetaData,
     PointingInfoMetaData,
 )
-from gammapy.utils.time import time_ref_from_dict
 
 __all__ = ["ObservationMetaData"]
 
@@ -27,8 +25,13 @@ OBSERVATION_METADATA_FITS_KEYS = {
         },
     },
     "deadtime_fraction": {
-        "input": lambda v: 1 - v.get("DEADC"),
+        "input": lambda v: 1 - v["DEADC"],
         "output": lambda v: {"DEADC": 1 - v},
+    },
+    "target_name": "OBJECT",
+    "target_position": {
+        "input": lambda v: skycoord_from_dict(v, frame="icrs", ext="OBJ"),
+        "output": lambda v: {"RA_OBJ": v.ra.deg, "DEC_OBJ": v.dec.deg},
     },
 }
 
@@ -110,48 +113,8 @@ class ObservationMetaData(MetaData):
             )
 
     @classmethod
-    def from_header(cls, events_hdr, format="gadf"):
-        """Create and fill the observation metadata from the event list metadata.
-
-        Parameters
-        ----------
-        format : str
-            the header data format. Default is gadf.
-        """
-        # TODO: read really from events.meta once it is properly defined
-        if not format == "gadf":
-            raise ValueError(
-                f"Metadata creation from format {format} is not supported."
-            )
-
-        kwargs = {}
-
-        kwargs["obs_info"] = ObsInfoMetaData.from_header(events_hdr, format)
-        kwargs["pointing"] = PointingInfoMetaData.from_header(events_hdr, format)
-
-        deadc = events_hdr.get("DEADC")
-        if deadc is None:
-            raise ValueError("No deadtime correction factor defined.")
-        kwargs["deadtime_fraction"] = 1 - deadc
-
-        if set(["GEOLON", "GEOLAT"]).issubset(set(events_hdr)):
-            kwargs["location"] = earth_location_from_dict(events_hdr)
-
-        reference_time = time_ref_from_dict(events_hdr)
-        kwargs["reference_time"] = reference_time
-        if "TIME_START" in events_hdr:
-            kwargs["time_start"] = reference_time + events_hdr.get("TIME_START") * u.s
-        if "TIME_STOP" in events_hdr:
-            kwargs["time_stop"] = reference_time + events_hdr.get("TIME_STOP") * u.s
-
-        kwargs["creation"] = CreatorMetaData.from_default()
-
-        # optional gadf entries that are defined attributes of the ObservationMetaData
-        kwargs["target_name"] = events_hdr.get("OBJECT")
-        if "RA_OBJ" in events_hdr and "DEC_OBJ" in events_hdr:
-            kwargs["target_position"] = SkyCoord(
-                events_hdr["RA_OBJ"], events_hdr["DEC_OBJ"], unit="deg", frame="icrs"
-            )
+    def from_header(cls, header, format="gadf"):
+        meta = super(ObservationMetaData, cls).from_header(header, format)
 
         # Include additional gadf keywords not specified as ObservationMetaData attributes
         optional_keywords = [
@@ -178,8 +141,8 @@ class ObservationMetaData(MetaData):
         ]
         optional = dict()
         for key in optional_keywords:
-            if key in events_hdr.keys():
-                optional[key] = events_hdr[key]
-        kwargs["optional"] = optional
+            if key in header.keys():
+                optional[key] = header[key]
+        meta.optional = optional
 
-        return cls(**kwargs)
+        return meta

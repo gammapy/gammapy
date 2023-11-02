@@ -83,5 +83,5 @@ def test_observation_metadata_bad(hess_eventlist_header):
         ObservationMetaData.from_header(hess_eventlist_header, format="bad")
 
     hess_eventlist_header.pop("DEADC")
-    with pytest.raises(ValueError):
+    with pytest.raises(KeyError):
         ObservationMetaData.from_header(hess_eventlist_header, format="gadf")
