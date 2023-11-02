@@ -17,7 +17,7 @@ from astropy.utils import lazyproperty
 import matplotlib.pyplot as plt
 from gammapy.utils.deprecation import GammapyDeprecationWarning, deprecated
 from gammapy.utils.fits import LazyFitsData, earth_location_to_dict
-from gammapy.utils.metadata import CreatorMetaData
+from gammapy.utils.metadata import CreatorMetaData, TargetMetaData
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_to_dict, time_relative_to_ref
@@ -254,6 +254,7 @@ class Observation:
             time_stop=gti.time_stop[-1],
             reference_time=reference_time,
             creation=CreatorMetaData.from_default(),
+            target=TargetMetaData(),
         )
 
         if not isinstance(pointing, FixedPointingInfo):
@@ -399,7 +400,7 @@ class Observation:
     @lazyproperty
     def target_radec(self):
         """Target RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)."""
-        return self.meta.target_position
+        return self.meta.target.position
 
     @property
     @deprecated(

@@ -6,7 +6,7 @@ from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from pydantic import ValidationError
 from gammapy.data import ObservationMetaData
-from gammapy.utils.metadata import ObsInfoMetaData, PointingInfoMetaData
+from gammapy.utils.metadata import ObsInfoMetaData, PointingInfoMetaData, TargetMetaData
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import requires_data
 
@@ -27,14 +27,17 @@ def test_observation_metadata():
         "instrument": "lst",
         "observation_mode": "wobble",
     }
+    target = {
+        "name": "Crab",
+        "position": SkyCoord(83.6287, 22.0147, unit="deg", frame="icrs"),
+    }
 
     input = {
         "obs_info": ObsInfoMetaData(**obs_info),
         "pointing": PointingInfoMetaData(),
         "location": "cta_north",
         "deadtime_fraction": 0.05,
-        "target_name": "Crab",
-        "target_position": SkyCoord(83.6287, 22.0147, unit="deg", frame="icrs"),
+        "target": TargetMetaData(**target),
         "optional": dict(test=0.5, other=True),
     }
     meta = ObservationMetaData(**input)
@@ -43,19 +46,19 @@ def test_observation_metadata():
     assert meta.obs_info.instrument == "lst"
     assert meta.obs_info.observation_mode == "wobble"
     assert_allclose(meta.location.lon.value, -17.892005)
-    assert meta.target_name == "Crab"
-    assert_allclose(meta.target_position.ra.deg, 83.6287)
+    assert meta.target.name == "Crab"
+    assert_allclose(meta.target.position.ra.deg, 83.6287)
     assert meta.optional["other"] is True
 
     with pytest.raises(ValidationError):
         meta.deadtime_fraction = 2.0
 
     with pytest.raises(ValidationError):
-        meta.target_position = "J1749-2901"
+        meta.target.position = "J1749-2901"
 
-    meta.target_position = None
-    assert isinstance(meta.target_position, SkyCoord)
-    assert np.isnan(meta.target_position.ra.deg)
+    meta.target.position = None
+    assert isinstance(meta.target.position, SkyCoord)
+    assert np.isnan(meta.target.position.ra.deg)
 
     input_bad = input.copy()
     input_bad["location"] = "bad"
@@ -70,7 +73,7 @@ def test_observation_metadata_from_header(hess_eventlist_header):
 
     assert meta.obs_info.telescope == "HESS"
     assert_allclose(meta.pointing.altaz_mean.alt.deg, 41.389789)
-    assert meta.target_name == "Crab Nebula"
+    assert meta.target.name == "Crab Nebula"
     assert_allclose(meta.location.lat.deg, -23.271778)
     assert "TELLIST" in meta.optional
     assert meta.optional["TELLIST"] == "1,2,3,4"

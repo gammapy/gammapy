@@ -256,7 +256,7 @@ def test_observation_cta_1dc():
 
     assert_skycoord_allclose(obs.get_pointing_icrs(obs.tmid), pointing.fixed_icrs)
     assert_allclose(obs.observation_live_time_duration, 0.9 * ontime)
-    assert_allclose(obs.target_radec.ra, np.nan)
+    assert_allclose(obs.target_radec.ra.deg, np.nan)
     with pytest.warns(GammapyDeprecationWarning):
         assert not np.isnan(obs.pointing_zen)
 
@@ -315,7 +315,7 @@ def test_observation_read():
 
     assert obs.meta.obs_info.telescope == "HESS"
     assert obs.meta.obs_info.instrument == "H.E.S.S. Phase I"
-    assert obs.meta.target_name == "MSH15-52"
+    assert obs.meta.target.name == "MSH15-52"
     assert obs.meta.optional["N_TELS"] == 4
     with pytest.raises(KeyError):
         obs.meta.optional["BROKPIX"]

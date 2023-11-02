@@ -39,6 +39,13 @@ METADATA_FITS_KEYS = {
             "output": lambda v: {"ALT_PNT": v.alt.deg, "AZ_PNT": v.az.deg},
         },
     },
+    "target": {
+        "name": "OBJECT",
+        "position": {
+            "input": lambda v: skycoord_from_dict(v, frame="icrs", ext="OBJ"),
+            "output": lambda v: {"RA_OBJ": v.ra.deg, "DEC_OBJ": v.dec.deg},
+        },
+    },
 }
 
 
@@ -257,4 +264,32 @@ class PointingInfoMetaData(MetaData):
         else:
             raise ValidationError(
                 f"Incorrect position. Expect SkyCoord in altaz frame got {type(v)} instead."
+            )
+
+
+class TargetMetaData(MetaData):
+    """General metadata information about the target.
+
+    Parameters
+    ----------
+    name : str, optional
+        the target name.
+    position : `~astropy.coordinates.SkyCoord`, optional
+        Position of the observation in `icrs` frame.
+
+    """
+
+    _tag = "target"
+    name: Optional[str]
+    position: Optional[SkyCoord]
+
+    @validator("position")
+    def validate_icrs_position(cls, v):
+        if v is None:
+            return SkyCoord(np.nan, np.nan, unit="deg", frame="icrs")
+        elif isinstance(v, SkyCoord):
+            return v.icrs
+        else:
+            raise ValidationError(
+                f"Incorrect position. Expect SkyCoord got {type(v)} instead."
             )

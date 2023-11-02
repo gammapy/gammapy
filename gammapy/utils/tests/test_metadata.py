@@ -11,6 +11,7 @@ from gammapy.utils.metadata import (
     MetaData,
     ObsInfoMetaData,
     PointingInfoMetaData,
+    TargetMetaData,
 )
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import requires_data
@@ -147,6 +148,26 @@ def test_pointing_info_from_header(hess_eventlist_header):
 
     assert_allclose(meta.radec_mean.ra.deg, 83.633333)
     assert_allclose(meta.altaz_mean.alt.deg, 41.389789)
+
+
+def test_taget_metadata():
+    meta = TargetMetaData(
+        name="center", position=SkyCoord(0.0, 0.0, unit="deg", frame="galactic")
+    )
+    header = meta.to_header(format="gadf")
+
+    assert meta.name == "center"
+    assert_allclose(meta.position.ra.deg, 266.404988)
+
+    assert header["OBJECT"] == "center"
+    assert_allclose(header["RA_OBJ"], 266.404988)
+
+
+def test_target_metadata_from_header(hess_eventlist_header):
+    meta = TargetMetaData.from_header(hess_eventlist_header, format="gadf")
+
+    assert meta.name == "Crab Nebula"
+    assert_allclose(meta.position.ra.deg, 83.63333333)
 
 
 def test_subclass_to_from_header():
