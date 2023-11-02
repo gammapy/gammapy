@@ -6,6 +6,7 @@ from astropy.coordinates import AltAz, SkyCoord
 from astropy.io import fits
 from pydantic import ValidationError
 from gammapy.utils.metadata import (
+    METADATA_FITS_KEYS,
     CreatorMetaData,
     MetaData,
     ObsInfoMetaData,
@@ -38,14 +39,27 @@ def test_creator():
         default.date = 3
 
 
+def test_creator_to_header():
+    header = CreatorMetaData(
+        date="2022-01-01", creator="gammapy", origin="CTA"
+    ).to_header(format="gadf")
+
+    assert header["CREATOR"] == "gammapy"
+    assert header["ORIGIN"] == "CTA"
+    assert header["CREATED"] == "2022-01-01 00:00:00.000"
+
+
 def test_subclass():
     class TestMetaData(MetaData):
+        _tag = "tag"
         name: str
         mode: Optional[SkyCoord]
         creation: Optional[CreatorMetaData]
 
     creator = CreatorMetaData.from_default()
     test_meta = TestMetaData(name="test", creation=creator)
+
+    assert test_meta.tag == "tag"
 
     assert test_meta.name == "test"
     assert test_meta.creation.creator.split()[0] == "Gammapy"
@@ -133,3 +147,27 @@ def test_pointing_info_from_header(hess_eventlist_header):
 
     assert_allclose(meta.radec_mean.ra.deg, 83.633333)
     assert_allclose(meta.altaz_mean.alt.deg, 41.389789)
+
+
+def test_subclass_to_from_header():
+    class TestMetaData(MetaData):
+        _tag = "test"
+        creation: Optional[CreatorMetaData]
+        pointing: Optional[PointingInfoMetaData]
+
+    METADATA_FITS_KEYS.update({"test": {}})
+
+    creator = CreatorMetaData(date="2022-01-01", creator="gammapy", origin="CTA")
+    position = SkyCoord(83.6287, 22.0147, unit="deg", frame="icrs")
+    altaz = AltAz("20 deg", "45 deg")
+
+    pointing = PointingInfoMetaData(radec_mean=position, altaz_mean=altaz)
+
+    test_meta = TestMetaData(pointing=pointing, creation=creator)
+
+    header = test_meta.to_header()
+
+    assert header["CREATOR"] == "gammapy"
+    assert header["ORIGIN"] == "CTA"
+    assert_allclose(header["RA_PNT"], 83.6287)
+    assert_allclose(header["AZ_PNT"], 20.0)

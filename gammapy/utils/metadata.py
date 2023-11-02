@@ -8,6 +8,8 @@ from astropy.coordinates import AltAz, Angle, EarthLocation, SkyCoord
 from astropy.time import Time
 import yaml
 from pydantic import BaseModel, ValidationError, validator
+
+# from typing_extensions import get_args
 from gammapy.utils.fits import skycoord_from_dict
 from gammapy.version import version
 
@@ -94,6 +96,7 @@ class MetaData(BaseModel):
         fits_export_keys = METADATA_FITS_KEYS.get(self.tag)
 
         if fits_export_keys is None:
+            # TODO: Should we raise an exception or simply a warning and return empty dict?
             raise TypeError(f"No FITS export is defined for metadata {self.tag}.")
 
         for key, item in fits_export_keys.items():
@@ -104,6 +107,12 @@ class MetaData(BaseModel):
             else:
                 if value is not None:
                     hdr_dict[item] = value
+
+        extra_keys = set(self.dict().keys()) - set(fits_export_keys.keys())
+        for key in extra_keys:
+            entry = getattr(self, key)
+            if isinstance(entry, MetaData):
+                hdr_dict.update(entry.to_header(format))
         return hdr_dict
 
     @classmethod
