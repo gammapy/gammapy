@@ -9,7 +9,9 @@ log = logging.getLogger(__name__)
 
 
 def _build_priorparameters_from_dict(data, default_parameters):
-    """Build PriorParameters object from input dict and the default prior parameter values from the PriorModel class."""
+    """Build `~gammapy.modeling.PriorParameters` object from an input dictionary and the
+    default prior parameter values from the PriorModel class.
+    """
     par_data = []
 
     input_names = [_["name"] for _ in data]
@@ -54,7 +56,7 @@ class Prior(ModelBase):
 
     @property
     def parameters(self):
-        """PriorParameters (`~gammapy.modeling.PriorParameters`)"""
+        """Prior parameters as a `~gammapy.modeling.PriorParameters` object."""
         return PriorParameters(
             [getattr(self, name) for name in self.default_parameters.names]
         )
@@ -74,13 +76,13 @@ class Prior(ModelBase):
         self._weight = value
 
     def __call__(self, value):
-        """Call evaluate method"""
-        # assuming the same unit as the PriorParamter here
+        """Call evaluate method."""
+        # assuming the same unit as the PriorParamater here
         kwargs = {par.name: par.value for par in self.parameters}
         return self.weight * self.evaluate(value.value, **kwargs)
 
     def to_dict(self, full_output=False):
-        """Create dict for YAML serialisation"""
+        """Create dictionary for YAML serialisation."""
         tag = self.tag[0] if isinstance(self.tag, list) else self.tag
         params = self.parameters.to_dict()
 
@@ -108,6 +110,7 @@ class Prior(ModelBase):
 
     @classmethod
     def from_dict(cls, data):
+        """Get prior parameters from dictionary."""
         kwargs = {}
 
         key0 = next(iter(data))
@@ -126,14 +129,13 @@ class Prior(ModelBase):
 
 
 class GaussianPrior(Prior):
-    r"""One-dimensional Gaussian Prior.
-
+    """One-dimensional Gaussian Prior.
 
     Parameters
     ----------
     mu : float
-        Mean of the Gaussian distribution
-        Default is 0
+        Mean of the Gaussian distribution.
+        Default is 0.
     sigma : float
         Standard deviation of the Gaussian distribution.
         Default is 1.
@@ -146,25 +148,24 @@ class GaussianPrior(Prior):
 
     @staticmethod
     def evaluate(value, mu, sigma):
+        """Evaluate the Gaussian prior."""
         return ((value - mu) / sigma) ** 2
 
 
 class UniformPrior(Prior):
-    r"""Uniform Prior.
+    """Uniform Prior.
 
-    Returns 1. if the parameter value is in (min, max).
-    0. if otherwise.
+    Returns 1 if the parameter value is in (min, max).
+    0, if otherwise.
 
     Parameters
     ----------
     min : float
         Minimum value.
         Default is -inf.
-
     max : float
         Maxmimum value.
         Default is inf.
-
     """
 
     tag = ["UniformPrior"]
@@ -174,6 +175,7 @@ class UniformPrior(Prior):
 
     @staticmethod
     def evaluate(value, min, max):
+        """Evaluate the uniform prior."""
         if min < value < max:
             return 1.0
         else:

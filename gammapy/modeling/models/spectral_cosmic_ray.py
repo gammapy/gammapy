@@ -53,13 +53,13 @@ def create_cosmic_ray_spectral_model(particle="proton"):
 
     Parameters
     ----------
-    particle : {'electron', 'proton', 'He', 'N', 'Si', 'Fe'}
-        Particle type
+    particle : {'electron', 'proton', 'He', 'N', 'Si', 'Fe'}, optional
+        Particle type. Default is 'proton'.
 
     Returns
     -------
     `~gammapy.modeling.models.SpectralModel`
-        Spectral model (for all-sky cosmic ray flux)
+        Spectral model (for all-sky cosmic ray flux).
     """
     omega = 4 * np.pi * u.sr
     if particle == "proton":
