@@ -19,9 +19,9 @@ class Likelihood:
     Parameters
     ----------
     parameters : `~gammapy.modeling.Parameters`
-        Parameters with starting values
+        Parameters with starting values.
     function : callable
-        Likelihood function
+        Likelihood function.
     """
 
     def __init__(self, function, parameters, store_trace):

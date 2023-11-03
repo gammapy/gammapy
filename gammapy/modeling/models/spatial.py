@@ -291,9 +291,9 @@ class SpatialModel(ModelBase):
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`, optional
-            Matplotlib axes.
+            Matplotlib axes. Default is None.
         geom : `~gammapy.maps.WcsGeom`, optional
-            Geometry to use for plotting.
+            Geometry to use for plotting. Default is None.
         **kwargs : dict
             Keyword arguments passed to `~gammapy.maps.WcsMap.plot()`.
 
@@ -316,9 +316,9 @@ class SpatialModel(ModelBase):
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`, optional
-            Matplotlib axes.
+            Matplotlib axes. Default is None.
         geom : `~gammapy.maps.WcsGeom`, optional
-            Geometry to use for plotting.
+            Geometry to use for plotting. Default is None.
         **kwargs : dict
             Keyword arguments passed to `~gammapy.maps.WcsMap.plot()`.
 
@@ -338,9 +338,9 @@ class SpatialModel(ModelBase):
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`, optional
-            Matplotlib axes.
+            Matplotlib axes. Default is None.
         geom : `~gammapy.maps.WcsGeom`, optional
-            Geom to use for plotting.
+            Geom to use for plotting. Default is None.
         **kwargs : dict
             Keyword arguments passed to `~gammapy.maps.WcsMap.plot()`.
 
@@ -360,7 +360,7 @@ class SpatialModel(ModelBase):
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`, optional
-            Matplotlib axes to plot the position error on.
+            Matplotlib axes to plot the position error on. Default is None.
         **kwargs : dict
             Keyword arguments passed to `~gammapy.maps.WcsMap.plot()`.
 
@@ -399,7 +399,7 @@ class SpatialModel(ModelBase):
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`, optional
-            Matplotlib axes to plot the errors on.
+            Matplotlib axes to plot the errors on. Default is None.
         which: list of str
             Which errors to plot.
             Available options are:
@@ -408,10 +408,12 @@ class SpatialModel(ModelBase):
                 * "position": plot the position error of the spatial model
                 * "extension": plot the extension error of the spatial model
 
-        kwargs_position : dict
+        kwargs_position : dict, optional
             Keyword arguments passed to `~SpatialModel.plot_position_error`.
-        kwargs_extension : dict
+            Default is None.
+        kwargs_extension : dict, optional
             Keyword arguments passed to `~SpatialModel.plot_extension_error`.
+            Default is None.
 
         Returns
         -------
@@ -451,7 +453,7 @@ class SpatialModel(ModelBase):
         Parameters
         ----------
         geom : `~gammapy.maps.WcsGeom`, optional
-            Geometry to use for plotting.
+            Geometry to use for plotting. Default is None.
         **kwargs : dict
             Keyword arguments passed to `~gammapy.maps.WcsMap.plot()`.
 
@@ -1611,7 +1613,7 @@ class PiecewiseNormSpatialModel(SpatialModel):
         Flat coordinates list at which the model values are given (nodes).
     norms : `~numpy.ndarray` or list of `Parameter`
         Array with the initial norms of the model at energies ``energy``.
-        A normalisation parameters is created for each value.
+        Normalisation parameters are created for each value.
         Default is one at each node.
     interp : str
         Interpolation scaling in {"log", "lin"}. Default is "lin".

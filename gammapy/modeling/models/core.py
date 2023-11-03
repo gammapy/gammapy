@@ -1035,14 +1035,14 @@ class DatasetModels(collections.abc.Sequence):
 
         Parameters
         ----------
-        ax : `~astropy.visualization.WCSAxes`
+        ax : `~astropy.visualization.WCSAxes`, optional
             Axes to plot on. If no axes are given, an all-sky WCS
-            is chosen using a CAR projection.
-        kwargs_point : dict
+            is chosen using a CAR projection. Default is None.
+        kwargs_point : dict, optional
             Keyword arguments passed to `~matplotlib.lines.Line2D` for plotting
-            of point sources.
-        path_effect : `~matplotlib.patheffects.PathEffect`
-            Path effect applied to artists and lines.
+            of point sources. Default is None.
+        path_effect : `~matplotlib.patheffects.PathEffect`, optional
+            Path effect applied to artists and lines. Default is None.
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.artists.Artist`.
 
@@ -1064,9 +1064,9 @@ class DatasetModels(collections.abc.Sequence):
 
         Parameters
         ----------
-        ax : `~astropy.visualization.WCSAxes`
+        ax : `~astropy.visualization.WCSAxes`, optional
             Axes to plot on. If no axes are given, an all-sky WCS
-            is chosen using a CAR projection.
+            is chosen using a CAR projection. Default is None.
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.pyplot.scatter`.
 

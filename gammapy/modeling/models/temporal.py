@@ -572,8 +572,8 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         ----------
         table : `~astropy.table.Table`
             Table containing the template model.
-        filename : str
-            Name of input file.
+        filename : str, optional
+            Name of input file. Default is None.
 
         Returns
         -------
@@ -685,11 +685,11 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         Parameters
         ----------
         time: `~astropy.time.Time`
-            Array of times where the model is evaluated.
-        t_ref: `~gammapy.modeling.Parameter`
-            Reference time for the model.
-        energy: `~astropy.units.Quantity`
-            Array of energies where the model is evaluated.
+            Time.
+        t_ref: `~gammapy.modeling.Parameter`, optional
+            Reference time for the model. Default is None.
+        energy: `~astropy.units.Quantity`, optional
+            Energy. Default is None.
 
         Returns
         -------
@@ -746,8 +746,8 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         time_range : `~astropy.time.Time`
             Times to plot the model.
         ax : `~matplotlib.axes.Axes`, optional
-            Axis to plot on.
-        n_points : int
+            Axis to plot on. Default is None.
+        n_points : int, optional
             Number of bins to plot model. Default is 100.
         energy : `~astropy.units.quantity`, optional
             Energies to compute the model at for energy dependent models. Default is None.
@@ -1117,7 +1117,7 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`, optional
-            Axis to plot on.
+            Axis to plot on. Default is None.
         n_points : int, optional
             Number of bins to plot model. Default is 100.
         **kwargs : dict

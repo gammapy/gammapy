@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Covariance class"""
+"""Covariance class."""
 import numpy as np
 import scipy
 import matplotlib.pyplot as plt
@@ -10,14 +10,14 @@ __all__ = ["Covariance"]
 
 
 class Covariance:
-    """Parameter covariance class
+    """Parameter covariance class.
 
     Parameters
     ----------
     parameters : `~gammapy.modeling.Parameters`
-        Parameter list
+        Parameter list.
     data : `~numpy.ndarray`
-        Covariance data array
+        Covariance data array.
 
     """
 
@@ -30,13 +30,13 @@ class Covariance:
 
     @property
     def shape(self):
-        """Covariance shape"""
+        """Covariance shape."""
         npars = len(self.parameters)
         return npars, npars
 
     @property
     def data(self):
-        """Covariance data (`~numpy.ndarray`)"""
+        """Covariance data as a `~numpy.ndarray`."""
         return self._data
 
     @data.setter
@@ -54,7 +54,7 @@ class Covariance:
 
     @staticmethod
     def _expand_factor_matrix(matrix, parameters):
-        """Expand covariance matrix with zeros for frozen parameters"""
+        """Expand covariance matrix with zeros for frozen parameters."""
         npars = len(parameters)
         matrix_expanded = np.zeros((npars, npars))
         mask_frozen = [par.frozen for par in parameters]
@@ -84,17 +84,17 @@ class Covariance:
 
     @classmethod
     def from_stack(cls, covar_list):
-        """Stack sub-covariance matrices from list
+        """Stack sub-covariance matrices from list.
 
         Parameters
         ----------
         covar_list : list of `Covariance`
-            List of sub-covariances
+            List of sub-covariances.
 
         Returns
         -------
         covar : `Covariance`
-            Stacked covariance
+            Stacked covariance.
         """
         parameters = Parameters.from_stack([_.parameters for _ in covar_list])
 
@@ -106,7 +106,7 @@ class Covariance:
         return covar
 
     def get_subcovariance(self, parameters):
-        """Get sub-covariance matrix
+        """Get sub-covariance matrix.
 
         Parameters
         ----------
@@ -123,13 +123,12 @@ class Covariance:
         return self.__class__(parameters=parameters, data=data)
 
     def set_subcovariance(self, covar):
-        """Set sub-covariance matrix
+        """Set sub-covariance matrix.
 
         Parameters
         ----------
-        parameters : `Parameters`
-            Sub list of parameters.
-
+        covariance :
+            Sub-covariance.
         """
         if is_ray_initialized():
             # This copy is required to make the covariance setting work with ray
@@ -149,14 +148,14 @@ class Covariance:
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`, optional
-            Axis to plot on.
+            Axis to plot on. Default is None.
         **kwargs : dict
-            Keyword arguments passed to `~gammapy.visualization.plot_heatmap`
+            Keyword arguments passed to `~gammapy.visualization.plot_heatmap`.
 
         Returns
         -------
         ax : `~matplotlib.axes.Axes`, optional
-            Axis
+            Matplotlib axes.
 
         """
         from gammapy.visualization import annotate_heatmap, plot_heatmap
@@ -186,7 +185,7 @@ class Covariance:
 
     @property
     def correlation(self):
-        r"""Correlation matrix (`numpy.ndarray`).
+        r"""Correlation matrix as a `numpy.ndarray`.
 
         Correlation :math:`C` is related to covariance :math:`\Sigma` via:
 

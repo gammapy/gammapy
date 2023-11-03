@@ -317,8 +317,8 @@ class SkyModel(ModelBase):
             Spatial coordinates.
         energy : `~astropy.units.Quantity`
             Energy coordinate.
-        time: `~astropy.time.Time`
-            Time coordinate.
+        time: `~astropy.time.Time`, optional
+            Time coordinate. Default is None.
 
         Returns
         -------
@@ -375,7 +375,7 @@ class SkyModel(ModelBase):
             Map geometry.
         gti : `GTI`, optional
             GIT table. Default is None.
-        oversampling_factor : int or None
+        oversampling_factor : int, optional
             The oversampling factor to use for spatial integration.
             Default is None: the factor is estimated from the model minimal bin size.
 
@@ -415,10 +415,10 @@ class SkyModel(ModelBase):
 
         Parameters
         ----------
-        name : str
-            Assign a new name to the copied model.
-        copy_data : bool
-            Copy the data arrays attached to models.
+        name : str, optional
+            Assign a new name to the copied model. Default is None.
+        copy_data : bool, optional
+            Copy the data arrays attached to models. Default is False.
         **kwargs : dict
             Keyword arguments forwarded to `SkyModel`.
 
@@ -545,10 +545,10 @@ class SkyModel(ModelBase):
         ----------
         spectral_model : str
             Tag to create spectral model.
-        spatial_model : str
-            Tag to create spatial model.
-        temporal_model : str
-            Tag to create temporal model.
+        spatial_model : str, optional
+            Tag to create spatial model. Default is None.
+        temporal_model : str, optional
+            Tag to create temporal model. Default is None.
         **kwargs : dict
             Keyword arguments passed to `SkyModel`.
 
@@ -577,9 +577,9 @@ class SkyModel(ModelBase):
 
         Parameters
         ----------
-        model_type : {None, "spatial", "spectral", "temporal"}
+        model_type : {None, "spatial", "spectral", "temporal"}, optional
            Freeze all parameters or only spatial/spectral/temporal.
-           Default is None so all parameters are frozen.
+           Default is None, such that all parameters are frozen.
         """
         if model_type is None:
             self.parameters.freeze_all()
@@ -592,9 +592,9 @@ class SkyModel(ModelBase):
 
         Parameters
         ----------
-        model_type : {None, "spatial", "spectral", "temporal"}
+        model_type : {None, "spatial", "spectral", "temporal"}, optional
            Restore frozen status to default for all parameters or only spatial/spectral/temporal.
-           Default is None so all parameters are restore to default frozen status.
+           Default is None, such that all parameters are restored to default frozen status.
 
         """
         if model_type is None:
@@ -718,10 +718,12 @@ class FoVBackgroundModel(ModelBase):
 
         Parameters
         ----------
-        name : str
+        name : str, optional
             Ignored, present for API compatibility.
-        copy_data : bool
+            Default is None.
+        copy_data : bool, optional
             Ignored, present for API compatibility.
+            Default is False.
         **kwargs : dict
             Keyword arguments forwarded to `FoVBackgroundModel`.
 
@@ -874,10 +876,12 @@ class TemplateNPredModel(ModelBase):
 
         Parameters
         ----------
-        name : str
+        name : str, optional
             Assign a new name to the copied model.
-        copy_data : bool
+            Default is None.
+        copy_data : bool, optional
             Copy the data arrays attached to models.
+            Default is False.
         **kwargs : dict
             Keyword arguments forwarded to `TemplateNPredModel`.
 
@@ -1015,10 +1019,11 @@ class TemplateNPredModel(ModelBase):
         width : tuple of `~astropy.coordinates.Angle`
             Angular sizes of the region in (lon, lat) in that specific order.
             If only one value is passed, a square region is extracted.
-        mode : {'trim', 'partial', 'strict'}
+        mode : {'trim', 'partial', 'strict'}, optional
             Mode option for Cutout2D, for details see `~astropy.nddata.utils.Cutout2D`.
-        name : str
-            Name of the returned background model.
+            Default is "trim".
+        name : str, optional
+            Name of the returned background model. Default is None.
 
         Returns
         -------
@@ -1040,9 +1045,12 @@ class TemplateNPredModel(ModelBase):
         ----------
         other : `TemplateNPredModel`
             Other background model.
-        nan_to_num: bool
-            Non-finite values are replaced by zero if True (default).
+        weights : float, optional
+            Weights. Default is None.
+        nan_to_num: bool, optional
+            Non-finite values are replaced by zero if True. Default is True.
         """
+        # TODO: weights appears not to be used?
         bkg = self.evaluate()
         if nan_to_num:
             bkg.data[~np.isfinite(bkg.data)] = 0

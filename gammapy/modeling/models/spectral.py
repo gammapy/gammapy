@@ -411,27 +411,27 @@ class SpectralModel(ModelBase):
         """Plot spectral model curve.
 
         By default a log-log scaling of the axes is used, if you want to change
-        the y axis scaling to linear you can use::
+        the y-axis scaling to linear you can use::
 
-            from gammapy.modeling.models import ExpCutoffPowerLawSpectralModel
-            from astropy import units as u
+            >>> from gammapy.modeling.models import ExpCutoffPowerLawSpectralModel
+            >>> from astropy import units as u
 
-            pwl = ExpCutoffPowerLawSpectralModel()
-            ax = pwl.plot(energy_bounds=(0.1, 100) * u.TeV)
-            ax.set_yscale('linear')
+            >>> pwl = ExpCutoffPowerLawSpectralModel()
+            >>> ax = pwl.plot(energy_bounds=(0.1, 100) * u.TeV)
+            >>> ax.set_yscale('linear')
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`, optional
-            Matplotlib axes.
         energy_bounds : `~astropy.units.Quantity`
             Plot energy bounds passed to MapAxis.from_energy_bounds.
-        sed_type : {"dnde", "flux", "eflux", "e2dnde"}
-            Evaluation methods of the model.
+        ax : `~matplotlib.axes.Axes`, optional
+            Matplotlib axes. Default is None.
+        sed_type : {"dnde", "flux", "eflux", "e2dnde"}, optional
+            Evaluation methods of the model. Default is "dnde".
         energy_power : int, optional
-            Power of energy to multiply flux axis with.
+            Power of energy to multiply flux axis with. Default is 0.
         n_points : int, optional
-            Number of evaluation nodes.
+            Number of evaluation nodes. Default is 100.
         **kwargs : dict
             Keyword arguments forwarded to `~matplotlib.pyplot.plot`.
 
@@ -494,16 +494,16 @@ class SpectralModel(ModelBase):
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`, optional
-            Matplotlib axes.
         energy_bounds : `~astropy.units.Quantity`
             Plot energy bounds passed to `~gammapy.maps.MapAxis.from_energy_bounds`.
-        sed_type : {"dnde", "flux", "eflux", "e2dnde"}
-            Evaluation methods of the model.
+        ax : `~matplotlib.axes.Axes`, optional
+            Matplotlib axes. Default is None.
+        sed_type : {"dnde", "flux", "eflux", "e2dnde"}, optional
+            Evaluation methods of the model. Default is "dnde".
         energy_power : int, optional
-            Power of energy to multiply flux axis with.
+            Power of energy to multiply flux axis with. Default is 0.
         n_points : int, optional
-            Number of evaluation nodes.
+            Number of evaluation nodes. Default is 100.
         **kwargs : dict
             Keyword arguments forwarded to `matplotlib.pyplot.fill_between`.
 
@@ -607,9 +607,9 @@ class SpectralModel(ModelBase):
         ----------
         value : `~astropy.units.Quantity`
             Function value of the spectral model.
-        energy_min : `~astropy.units.Quantity`
+        energy_min : `~astropy.units.Quantity`, optional
             Lower energy bound of the roots finding. Default is 0.1 TeV.
-        energy_max : `~astropy.units.Quantity`
+        energy_max : `~astropy.units.Quantity`, optional
             Upper energy bound of the roots finding. Default is 100 TeV.
 
         Returns
@@ -639,10 +639,10 @@ class SpectralModel(ModelBase):
         ----------
         values : `~astropy.units.Quantity`
             Function values of the spectral model.
-        energy_min : `~astropy.units.Quantity`
-            Lower energy bound of the roots finding.
-        energy_max : `~astropy.units.Quantity`
-            Upper energy bound of the roots finding.
+        energy_min : `~astropy.units.Quantity`, optional
+            Lower energy bound of the roots finding. Default is 0.1 TeV.
+        energy_max : `~astropy.units.Quantity`, optional
+            Upper energy bound of the roots finding. Default is 100 TeV.
 
         Returns
         -------
@@ -665,8 +665,7 @@ class ConstantSpectralModel(SpectralModel):
     Parameters
     ----------
     const : `~astropy.units.Quantity`
-        :math:`k`.
-        Default is 1e-12 cm-2 s-1 TeV-1.
+        :math:`k`. Default is 1e-12 cm-2 s-1 TeV-1.
     """
 
     tag = ["ConstantSpectralModel", "const"]
@@ -2071,14 +2070,15 @@ class EBLAbsorptionNormSpectralModel(SpectralModel):
         ----------
         filename : str
             File containing the model.
-        redshift : float
+        redshift : float, optional
             Redshift of the absorption model.
             Default is 0.1.
-        alpha_norm: float
+        alpha_norm: float, optional
             Norm of the EBL model.
             Default is 1.
-        interp_kwargs : dict
+        interp_kwargs : dict, optional
             Interpolation option passed to `~gammapy.utils.interpolation.ScaledRegularGridInterpolator`.
+            Default is None.
 
         """
         # Create EBL data array
@@ -2120,12 +2120,14 @@ class EBLAbsorptionNormSpectralModel(SpectralModel):
 
         Parameters
         ----------
-        reference : {'franceschini', 'dominguez', 'finke'}
-            Name of one of the available model in gammapy-data.
-        redshift : float
-            Redshift of the absorption model.
-        alpha_norm: float
-            Norm of the EBL model.
+        reference : {'franceschini', 'dominguez', 'finke'}, optional
+            Name of one of the available model in gammapy-data. Default is 'dominquez'.
+        redshift : float, optional
+            Redshift of the absorption model. Default is 0.1.
+        alpha_norm : float, optional
+            Norm of the EBL model. Default is 1.
+        interp_kwargs : dict, optional
+            Interpolation keyword arguments. Default is None.
 
         References
         ----------
