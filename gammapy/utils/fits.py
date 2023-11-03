@@ -179,46 +179,6 @@ def earth_location_to_dict(location):
     }
 
 
-def skycoord_to_dict(skycoord, frame, ext=None):
-    """Transform `~astropy.coordinates.SkyCoord` in a dictionary to store in a FITS header.
-
-    Parameters
-    ----------
-    skycoord : `~astropy.coordinates.skycoord`
-        The input SkyCoord.
-    frame : {"icrs", "galactic", "altaz"}
-        the frame to use.
-    ext: str, optional
-        The keyword extension to apply to the keywords names.
-
-    Returns
-    -------
-    dict : dict
-        the resulting dictionary
-    """
-    if ext is not None and ext != "":
-        ext = "_" + ext
-    else:
-        ext = ""
-
-    result = {}
-    if frame == "icrs":
-        result["RA" + ext] = skycoord.icrs.ra.deg
-        result["DEC" + ext] = skycoord.icrs.dec.deg
-    elif frame == "galactic":
-        result["GLON" + ext] = skycoord.galactic.l.deg
-        result["GLAT" + ext] = skycoord.galactic.b.deg
-    elif frame == "altaz":
-        result["ALT" + ext] = skycoord.altaz.alt.deg
-        result["AZ" + ext] = skycoord.altaz.az.deg
-    else:
-        raise ValueError(
-            f"Unsupported frame {frame}. Select in 'icrs', 'galactic', 'altaz'."
-        )
-
-    return result
-
-
 def skycoord_from_dict(header, frame="icrs", ext="PNT"):
     """Creates `~astropy.coordinates.SkyCoord` from a dictionary of FITS keywords.
 
