@@ -170,9 +170,7 @@ class GTIMetaData(MetaData):
     Parameters
     ----------
     reference_time : Time, str
-        the GTI reference time
-    creation : `~gammapy.utils.CreatorMetaData`
-        the creation metadata
+        The GTI reference time.
     """
 
     reference_time: Optional[Union[Time, str]]
@@ -201,7 +199,7 @@ class GTIMetaData(MetaData):
         Parameters
         ----------
         format : str
-            the header data format. Default is gadf.
+            The header data format. Default is "gadf".
         """
 
         kwargs = {}
