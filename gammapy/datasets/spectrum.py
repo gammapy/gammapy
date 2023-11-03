@@ -335,8 +335,8 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         ----------
         filename : `~pathlib.Path` or str
             Filename to write to.
-        overwrite : bool
-            Overwrite existing file.
+        overwrite : bool, optional
+            Overwrite existing file. Default is False.
         format : {"ogip", "ogip-sherpa", "gadf"}
             Format to use.
         checksum : bool

@@ -387,8 +387,8 @@ class Map(abc.ABC):
         ----------
         filename : str
             Output file name.
-        overwrite : bool
-            Overwrite existing file?
+        overwrite : bool, optional
+            Overwrite existing file. Default is False.
         hdu : str
             Set the name of the image extension.  By default this will
             be set to SKYMAP (for BINTABLE HDU) or PRIMARY (for IMAGE

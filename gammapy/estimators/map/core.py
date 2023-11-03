@@ -1025,8 +1025,8 @@ class FluxMaps:
         filename_model : str
             Filename of the model (yaml format).
             If None, keep string before '.' and add '_model.yaml' suffix
-        overwrite : bool
-            Overwrite file if it exists.
+        overwrite : bool, optional
+            Overwrite existing file. Default is False.
         sed_type : str
             sed type to convert to. Default is `likelihood`
         """
