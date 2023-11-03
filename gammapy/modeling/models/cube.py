@@ -348,7 +348,12 @@ class SkyModel(ModelBase):
         value = self.spectral_model(coords["energy_true"])
 
         if coords.ndim > 3:
-            additional_axes = set(coords.axis_names) - {"lon", "lat", "energy_true"}
+            additional_axes = set(coords.axis_names) - {
+                "lon",
+                "lat",
+                "energy_true",
+                "time",
+            }
             for axis in additional_axes:
                 value = value * np.ones_like(coords[axis])
 

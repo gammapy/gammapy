@@ -764,7 +764,7 @@ def test_evaluate_integrate_nd_geom():
     )
 
 
-def test_evaluate_integrate_geom_with_time(gti):
+def test_evaluate_geom_with_time():
     spatial_model = GaussianSpatialModel(
         lon="0d", lat="0d", sigma=0.1 * u.deg, frame="icrs"
     )
@@ -778,17 +778,14 @@ def test_evaluate_integrate_geom_with_time(gti):
     )
 
     center = SkyCoord("0d", "0d", frame="icrs")
-
-    t_ref = Time(temporal_model.t_ref.value, format="mjd")
-
     energy_axis = MapAxis.from_energy_bounds(
         "1 TeV", "10 TeV", nbin=3, name="energy_true"
     )
     other_axis = MapAxis.from_edges([0.0, 1.0, 2.0], name="other")
 
+    t_ref = Time(temporal_model.t_ref.value, format="mjd")
     time_min = t_ref + [1, 3, 5, 7] * u.day
     time_max = t_ref + [2, 4, 6, 8] * u.day
-
     time_axis = TimeMapAxis.from_time_edges(time_min=time_min, time_max=time_max)
 
     wcs_geom = WcsGeom.create(
@@ -797,9 +794,11 @@ def test_evaluate_integrate_geom_with_time(gti):
         skydir=center,
         axes=[energy_axis, other_axis, time_axis],
     )
+    unit_exp = 1 / u.TeV / u.cm**2 / u.s / u.sr
 
     evaluation = sky_model.evaluate_geom(wcs_geom)
     assert evaluation.shape == (4, 2, 3, 24, 20)
+    assert evaluation.unit.is_equivalent(unit_exp)
     assert_allclose(
         evaluation.value[0, 0, 1, 12, 10],
         1.8405743444123462e-08,
@@ -826,9 +825,11 @@ def test_evaluate_integrate_geom_with_time(gti):
         [[[1.74059581e-12]], [[3.75000000e-13]], [[8.07913009e-14]]],
         rtol=1e-6,
     )
+    unit_exp = 1 / u.TeV / u.cm**2 / u.s
+    assert evaluation.unit.is_equivalent(unit_exp)
 
 
-def test_evaluate_integrate_geom_with_time_and_gti():
+def test_evaluate_geom_with_time_and_gti():
     spatial_model = GaussianSpatialModel(
         lon="0d", lat="0d", sigma=0.1 * u.deg, frame="icrs"
     )
@@ -867,6 +868,8 @@ def test_evaluate_integrate_geom_with_time_and_gti():
 
     evaluation = sky_model.evaluate_geom(geom=wcs_geom, gti=gti)
     assert evaluation.shape == (4, 2, 3, 24, 20)
+    unit_exp = 1 / u.TeV / u.cm**2 / u.s / u.sr
+    assert evaluation.unit.is_equivalent(unit_exp)
     assert_allclose(
         evaluation.value[0, 0, 1, 12, 10],
         7.102014e-08,
@@ -893,6 +896,8 @@ def test_evaluate_integrate_geom_with_time_and_gti():
         [[[6.71623839e-12]], [[1.44696970e-12]], [[3.11740171e-13]]],
         rtol=1e-3,
     )
+    unit_exp = 1 / u.TeV / u.cm**2 / u.s
+    assert evaluation.unit.is_equivalent(unit_exp)
 
 
 def test_compound_spectral_model(caplog):
