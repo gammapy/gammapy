@@ -133,7 +133,7 @@ class GTI:
         filename : `pathlib.Path` or str
             Filename.
         hdu : str, optional
-            hdu name. Default "GTI".
+            hdu name. Default is "GTI".
         format: str, optional
             Input format, currently only "gadf" is supported. Default is "gadf".
         """
