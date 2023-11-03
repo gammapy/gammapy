@@ -8,8 +8,8 @@ PIG 26 - Model Priors API
 
 * Author: Noah Biederbeck, Katrin Streil
 * Created: ``2023-03-13``
-* Accepted:
-* Status: draft
+* Accepted: ``2023-11-03``
+* Status: Accepted
 * Discussion: `#4381`_
 
 Abstract
@@ -140,7 +140,8 @@ Future additional properties of the ``PriorModel`` classes:
 - Different prior subclasses depending on the use cases 
 
 Exemplary additional prior subclasses:
----------------------------------------
+--------------------------------------
+
 .. code:: python
 
   class GaussianPrior(PriorModel):
@@ -276,7 +277,7 @@ The PIG implementation will be piece-wise within individual issues in the follow
 Decision
 ========
 
-
+The PIG was discussed and reviewed among Gammapy developers. It has been reviewed by the CC and is now considered accepted.
 
 
 .. _#2075: https://github.com/gammapy/gammapy/issues/2075
