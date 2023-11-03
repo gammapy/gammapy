@@ -2,7 +2,7 @@
 import logging
 import os
 import numpy as np
-from astropy.table import Column, Table, vstack
+from astropy.table import Column, Table
 from gammapy.data import DataStore
 from gammapy.utils.scripts import make_path
 
@@ -13,12 +13,10 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
 
-
-
 def _obscore_def():
     """Generate the Obscore default table
     In case the obscore standard changes, this function should be changed consistently
-    
+
     Returns
     -------
     table : `~astropy.table.Table`
@@ -50,7 +48,7 @@ def _obscore_def():
     obscore_default[3] = Column(
         name="obs_id",
         unit="",
-        description="Internal  ID given by the ObsTAP service",
+        description="Internal ID given by the ObsTAP service",
         dtype="U10",
         meta={"Utype": "DataID.observationID"},
     )
@@ -64,7 +62,7 @@ def _obscore_def():
     obscore_default[5] = Column(
         name="obs_publisher_did",
         unit="",
-        description="ID for the Dataset   given by the publisher",
+        description="ID for the Dataset given by the publisher",
         dtype="U30",
         meta={"Utype": "Curation.publisherDID"},
     )
@@ -113,7 +111,7 @@ def _obscore_def():
     obscore_default[12] = Column(
         name="s_region",
         unit="",
-        description="Sky region covered by the  data product (expressed in ICRS frame)",
+        description="Sky region covered by the data product (expressed in ICRS frame)",
         dtype="U30",
         meta={"Utype": "Char.SpatialAxis.Coverage.Support.Area"},
     )
@@ -197,7 +195,7 @@ def _obscore_def():
     obscore_default[24] = Column(
         name="em_res_power",
         unit="",
-        description="Value of the resolving power along the spectral axis (R)",
+        description="Value of the resolving power along the spectral axis(R)",
         dtype="f8",
         meta={"Utype": "Char.SpectralAxis.Resolution.ResolPower.refVal"},
     )
@@ -235,13 +233,13 @@ def _obscore_def():
     return tab_default
 
 
-def _obscore_row(base_dir, single_obsID, obs_publisher_did=None, access_url=None):
+def _obscore_row(base_dir, single_obsID, obs_publisher_did, access_url, table):
     """Generates an obscore row corresponding to a single obsID
-    
+
     Parameters
     ----------
     single_obsID : int
-            single Observation ID
+        single Observation ID
     **kwargs : `str` {obs_publisher_did, access_url}
     Giving the values for is highly recommended.
     If any of these are not given the corresponding obscore field is left empty and a warning is raised for each empty value.
@@ -249,69 +247,64 @@ def _obscore_row(base_dir, single_obsID, obs_publisher_did=None, access_url=None
     Returns
     -------
     table : `~astropy.table.Table`
-        the IVOA table of length 1
     """
     base_dir = make_path(base_dir)
     data_store = DataStore.from_dir(base_dir)
-    if kwargs:
-        obs_publisher_did = kwargs.get("obs_publisher_did")
-        access_url = kwargs.get("access_url")
 
-        if obs_publisher_did is None:
+    if obs_publisher_did is None:
 
-            log.warning(
-                "Insufficient publisher information: 'obs_publisher_did' obscore value will be empty."
-            )
-        if access_url is None:
-            log.warning(
-                "Insufficient publisher information: access_url' obscore value will be empty."
-            )
-    else:
-        obs_publisher_did = ""
-        access_url = ""
         log.warning(
-            "Insufficient publisher information: 'obs_publisher_did' and 'access_url' obscore values will be empty."
+            "Insufficient publisher information: 'obs_publisher_did' obscore value will be empty."
+        )
+    if access_url is None:
+        log.warning(
+            "Insufficient publisher information: access_url' obscore value will be empty."
         )
 
-    tab = _obscore_def()
-    tab.add_row()
-
+    tab = table
     observation = data_store.obs(single_obsID)
-
     obs_mask = data_store.obs_table["OBS_ID"] == observation.obs_id
     obs_pos = data_store.obs_table[obs_mask]["EVENTS_FILENAME"]
     path = make_path(os.environ["GAMMAPY_DATA"] + "/" + obs_pos[0])
     size = int(os.path.getsize(path) / 1000.0)
-    tab["dataproduct_type"] = observation.obs_info["EXTNAME"]
-    tab["calib_level"] = 2  # Look into the data
-    tab["target_name"] = observation.obs_info["OBJECT"]
-    tab["obs_id"] = str(observation.obs_info["OBS_ID"])
-    tab["obs_collection"] = "DL3"
-    tab["obs_publisher_did"] = obs_publisher_did
-    tab["access_url"] = access_url
-    tab["access_format"] = "application/fits"
-    tab["access_estsize"] = size
-    tab["s_ra"] = observation.get_pointing_icrs(observation.tmid).ra.value
-    tab["s_dec"] = observation.get_pointing_icrs(observation.tmid).dec.value
-    tab["s_fov"] = 10.0
-    tab["t_min"] = observation.tstart.value
-    tab["t_max"] = observation.tstop.value
-    tab["t_exptime"] = observation.observation_live_time_duration.value
-    tab["em_min"] = observation.events.energy.min().value
-    tab["em_max"] = observation.events.energy.max().value
-    tab["facility_name"] = observation.obs_info["TELESCOP"]
-    tab["instrument_name"] = observation.obs_info["TELLIST"]
+    tab.add_row(
+        {
+            "dataproduct_type": observation.obs_info["EXTNAME"],
+            "calib_level": 2,  # Look into the data
+            "target_name": observation.obs_info["OBJECT"],
+            "obs_id": str(observation.obs_info["OBS_ID"]),
+            "obs_collection": "DL3",
+            "obs_publisher_did": str(obs_publisher_did),
+            "access_url": str(access_url),
+            "access_format": "application/fits",
+            "access_estsize": size,
+            "s_ra": observation.get_pointing_icrs(observation.tmid).ra.to_value("deg"),
+            "s_dec": observation.get_pointing_icrs(observation.tmid).dec.to_value(
+                "deg"
+            ),
+            "s_fov": 10.0,
+            "t_min": observation.tstart.to_value("mjd"),
+            "t_max": observation.tstop.to_value("mjd"),
+            "t_exptime": observation.observation_live_time_duration.to_value("s"),
+            "em_min": observation.events.energy.min().value,
+            "em_max": observation.events.energy.max().value,
+            "facility_name": observation.obs_info["TELESCOP"],
+            "instrument_name": observation.obs_info["TELLIST"],
+        }
+    )
 
     return tab
 
 
-def to_obscore_table(base_dir, selected_obs=None, **kwargs):
+def to_obscore_table(
+    base_dir, selected_obs=None, obs_publisher_did=None, access_url=None
+):
 
-    """Generate the complete obscore Table by stacking length=1 Tables given by DataStore._obscore_row()
+    """Generate the complete obscore Table by adding one row per observation using DataStore._obscore_row()
 
     Parameters
     ----------
-    selected_obs : list or array of Observation ID (int)
+    selected_obs : list or array of Observation ID(int)
     (default of ``None`` means ``no obaservation ``)
     If not given, the obscore default table is returned.
 
@@ -326,15 +319,10 @@ def to_obscore_table(base_dir, selected_obs=None, **kwargs):
     Astropy Table length = len(selected_obs)
     """
 
-    tab_default = _obscore_def()
-
-    if selected_obs is None:
-        obscore_tab = tab_default
-
-    else:
-        obscore_tab = Table()
-        for i in range(0, len(selected_obs)):
-            obscore_row = _obscore_row(base_dir, selected_obs[i], **kwargs)
-            obscore_tab = vstack([obscore_tab, obscore_row])
-
+    obscore_tab = _obscore_def()
+    for i in range(0, len(selected_obs)):
+        obscore_row = _obscore_row(
+            base_dir, selected_obs[i], obs_publisher_did, access_url, obscore_tab
+        )
+        obscore_tab = obscore_row
     return obscore_tab
