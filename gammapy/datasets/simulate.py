@@ -344,7 +344,7 @@ class MapDatasetEventSampler:
         return events
 
     def sample_psf(self, psf_map, events):
-        """Sample psf map.
+        """Sample PSF map.
 
         Parameters
         ----------

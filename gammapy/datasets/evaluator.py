@@ -150,7 +150,7 @@ class MapEvaluator:
         return psf_width
 
     def use_psf_containment(self, geom):
-        """Use psf containment for point sources and circular regions."""
+        """Use PSF containment for point sources and circular regions."""
         if not geom.is_region:
             return False
 
@@ -258,7 +258,7 @@ class MapEvaluator:
         return self.model.integrate_geom(self.geom, self.gti)
 
     def compute_flux_psf_convolved(self, *arg):
-        """Compute psf convolved and temporal model corrected flux."""
+        """Compute PSF convolved and temporal model corrected flux."""
         value = self.compute_flux_spectral()
 
         if self.model.spatial_model:

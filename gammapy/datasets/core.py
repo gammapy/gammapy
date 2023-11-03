@@ -21,9 +21,9 @@ class Dataset(abc.ABC):
     """Dataset abstract base class.
     For now, see existing examples of type of datasets:
 
-    - `gammapy.datasets.MapDataset`.
-    - `gammapy.datasets.SpectrumDataset`.
-    - `gammapy.datasets.FluxPointsDataset`.
+    - `gammapy.datasets.MapDataset`
+    - `gammapy.datasets.SpectrumDataset`
+    - `gammapy.datasets.FluxPointsDataset`
 
     For more information see :ref:`datasets`.
 

@@ -59,14 +59,14 @@ def create_map_dataset_geoms(
     Parameters
     ----------
     geom : `~gammapy.maps.WcsGeom`
-        Reference target geometry in reco energy, used for counts and background maps.
+        Reference target geometry in reconstructed energy, used for counts and background maps.
     energy_axis_true : `~gammapy.maps.MapAxis`
         True energy axis used for IRF maps.
     migra_axis : `~gammapy.maps.MapAxis`
         If set, this provides the migration axis for the energy dispersion map.
         If not set, an EDispKernelMap is produced instead. Default is None.
     rad_axis : `~gammapy.maps.MapAxis`
-        Rad axis for the psf map.
+        Rad axis for the PSF map.
     binsz_irf : float
         IRF Map pixel size in degrees.
     reco_psf : bool
@@ -140,6 +140,9 @@ class MapDataset(Dataset):
         Table listing information on observations used to create the dataset.
         One line per observation for stacked datasets.
 
+
+    Note
+    ----
 
     If an `HDULocation` is passed the map is loaded lazily. This means the
     map data is only loaded in memory as the corresponding data attribute
@@ -564,7 +567,7 @@ class MapDataset(Dataset):
         geom_exposure : `Geom`
             Geometry for the exposure map. Default is None.
         geom_psf : `Geom`
-            Geometry for the psf map. Default is None.
+            Geometry for the PSF map. Default is None.
         geom_edisp : `Geom`
             Geometry for the energy dispersion kernel map.
             If geom_edisp has a migra axis, this will create an EDispMap instead. Default is None.
@@ -634,7 +637,7 @@ class MapDataset(Dataset):
             If set, this provides the migration axis for the energy dispersion map.
             If not set, an EDispKernelMap is produced instead. Default is None.
         rad_axis : `~gammapy.maps.MapAxis`, optional
-            Rad axis for the psf map. Default is None.
+            Rad axis for the PSF map. Default is None.
         binsz_irf : float
             IRF Map pixel size in degrees. Default is BINSZ_IRF_DEFAULT.
         reference_time : `~astropy.time.Time`
@@ -711,7 +714,7 @@ class MapDataset(Dataset):
 
     @property
     def mask_safe_psf(self):
-        """Safe mask for psf maps."""
+        """Safe mask for PSF maps."""
         if self.mask_safe is None or self.psf is None:
             return None
 
@@ -2203,7 +2206,7 @@ class MapDatasetOnOff(MapDataset):
         geom_exposure : `gammapy.maps.WcsGeom`, optional
             Geometry for the exposure map. Default is None.
         geom_psf : `gammapy.maps.WcsGeom`, optional
-            Geometry for the psf map. Default is None.
+            Geometry for the PSF map. Default is None.
         geom_edisp : `gammapy.maps.WcsGeom`, optional
             Geometry for the energy dispersion kernel map.
             If geom_edisp has a migra axis, this will create an EDispMap instead. Default is None.
