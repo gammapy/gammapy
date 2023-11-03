@@ -24,15 +24,15 @@ def colormap_hess(transition=0.5, width=0.1):
 
     Parameters
     ----------
-    transition : float (default = 0.5)
-        Value of the transition to red (between 0 and 1).
-    width : float (default = 0.5)
-        Width of the blue-red color transition (between 0 and 1).
+    transition : float
+        Value of the transition to red (between 0 and 1). Default is 0.5.
+    width : float
+        Width of the blue-red color transition (between 0 and 1). Default is 0.5.
 
     Returns
     -------
     colormap : `matplotlib.colors.LinearSegmentedColormap`
-        Colormap
+        Colormap.
 
     Examples
     --------
@@ -90,17 +90,17 @@ def colormap_milagro(transition=0.5, width=0.0001, huestart=0.6):
 
     Parameters
     ----------
-    transition : float (default = 0.5)
-        Transition value (below: gray, above: color).
-    width : float (default = 0.0001)
-        Width of the transition
-    huestart : float (default = 0.6)
-        Hue of the color at ``transition``
+    transition : float
+        Transition value (below: gray, above: color). Default is 0.5.
+    width : float
+        Width of the transition. Default is 0.0001.
+    huestart : float
+        Hue of the color at ``transition``. Default is 0.6.
 
     Returns
     -------
     colormap : `~matplotlib.colors.LinearSegmentedColormap`
-        Colormap
+        Colormap.
 
     Examples
     --------
