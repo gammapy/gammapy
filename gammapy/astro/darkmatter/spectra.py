@@ -153,7 +153,7 @@ class PrimaryFlux(TemplateNDSpectralModel):
             self._channel = channel
 
     def evaluate(self, energy, **kwargs):
-        """Evaluate the PrimaryFlux."""
+        """Evaluate the primary flux."""
         mass = {"mass": self.mDM}
         kwargs.update(mass)
 
