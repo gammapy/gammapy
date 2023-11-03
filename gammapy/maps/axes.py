@@ -2555,7 +2555,7 @@ class TimeMapAxis:
 
         coords[idx_valid] = (
             frac[idx_valid] * self.time_delta[idx1[valid]] + self.edges_min[idx1[valid]]
-        ).jd
+        ).value
         coords = coords * self.unit + self.reference_time
         coords[idx_invalid] = Time(INVALID_VALUE.time, scale=self.reference_time.scale)
         return coords.reshape(shape)
