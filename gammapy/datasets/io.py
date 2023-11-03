@@ -60,7 +60,7 @@ class OGIPDatasetWriter(DatasetWriter):
 
     Parameters
     ----------
-    filename : `pathlib.Path` or str
+    filename : `~pathlib.Path` or str
         Filename.
     format : {"ogip", "ogip-sherpa"}
         Which format to use. Default is 'ogip'.
@@ -164,7 +164,7 @@ class OGIPDatasetWriter(DatasetWriter):
         ----------
         dataset : `SpectrumDatasetOnOff`
             Dataset to write.
-        filename : str or `Path`
+        filename : str or `~pathlib.Path`
             Filename to use.
         """
         kernel = dataset.edisp.get_edisp_kernel()
@@ -182,7 +182,7 @@ class OGIPDatasetWriter(DatasetWriter):
         ----------
         dataset : `SpectrumDatasetOnOff`
             Dataset to write.
-        filename : str or `Path`
+        filename : str or `~pathlib.Path`
             Filename to use.
 
         """
@@ -235,7 +235,7 @@ class OGIPDatasetWriter(DatasetWriter):
         ----------
         dataset : `SpectrumDatasetOnOff`
             Dataset to write.
-        filename : str or `Path`
+        filename : str or `~pathlib.Path`
             Filename to use.
 
         """
@@ -254,7 +254,7 @@ class OGIPDatasetWriter(DatasetWriter):
         ----------
         dataset : `SpectrumDatasetOnOff`
             Dataset to write.
-        filename : str or `Path`
+        filename : str or `~pathlib.Path`
             Filename to use.
         """
         hdulist = self.to_counts_hdulist(dataset, is_bkg=True)
@@ -298,7 +298,7 @@ class OGIPDatasetReader(DatasetReader):
 
         Returns
         -------
-        filename : `Path`
+        filename : `~pathlib.Path`
             Valid path.
         """
         filename = make_path(filename)
@@ -338,7 +338,7 @@ class OGIPDatasetReader(DatasetReader):
 
         Parameters
         ----------
-        filename : str or `Path`
+        filename : str or `~pathlib.Path`
             PHA file name.
 
         Returns
@@ -369,7 +369,7 @@ class OGIPDatasetReader(DatasetReader):
 
         Parameters
         ----------
-        filename : str or `Path`
+        filename : str or `~pathlib.Path`
             PHA file name.
 
         Returns
@@ -390,7 +390,7 @@ class OGIPDatasetReader(DatasetReader):
 
         Parameters
         ----------
-        filename : str or `Path`
+        filename : str or `~pathlib.Path`
             PHA file name.
         exposure : `RegionNDMap`
             Exposure map.
@@ -413,7 +413,7 @@ class OGIPDatasetReader(DatasetReader):
 
         Parameters
         ----------
-        filename : str or `Path`
+        filename : str or `~pathlib.Path`
             PHA file name.
         livetime : `Quantity`
             Livetime.
