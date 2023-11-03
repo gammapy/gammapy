@@ -377,13 +377,13 @@ class Observation:
     @property
     @deprecated("v1.1", message="Use observation.get_pointing_icrs(time) instead")
     def pointing_radec(self):
-        """Pointing RA / DEC sky coordinates as a `~astropy.coordinates.SkyCoord`."""
+        """Pointing RA / DEC sky coordinates as a `~astropy.coordinates.SkyCoord` object."""
         return self.fixed_pointing_info.radec
 
     @property
     @deprecated("v1.1", message="Use observation.get_pointing_altaz(time) instead")
     def pointing_altaz(self):
-        """Pointing ALT / AZ sky coordinates as a `~astropy.coordinates.SkyCoord`."""
+        """Pointing ALT / AZ sky coordinates as a `~astropy.coordinates.SkyCoord` object."""
         return self.fixed_pointing_info.altaz
 
     @property
@@ -405,7 +405,7 @@ class Observation:
 
     @lazyproperty
     def target_radec(self):
-        """Target RA / DEC sky coordinates as a `~astropy.coordinates.SkyCoord`."""
+        """Target RA / DEC sky coordinates as a `~astropy.coordinates.SkyCoord` object."""
         return self.meta.target_position
 
     @property
@@ -441,7 +441,7 @@ class Observation:
     def check(self, checks="all"):
         """Run checks.
 
-        This is a generator that yields a list of dicts.
+        This is a generator that yields a list of dictionary.
         """
         checker = ObservationChecker(self)
         return checker.run(checks=checks)

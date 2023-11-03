@@ -243,12 +243,12 @@ class EventList:
 
     @property
     def time_ref(self):
-        """Time reference (`~astropy.time.Time`)."""
+        """Time reference as a `~astropy.time.Time` object."""
         return time_ref_from_dict(self.table.meta)
 
     @property
     def time(self):
-        """Event times (`~astropy.time.Time`).
+        """Event times as a `~astropy.time.Time` object.
 
         Notes
         -----
@@ -261,23 +261,23 @@ class EventList:
 
     @property
     def observation_time_start(self):
-        """Observation start time (`~astropy.time.Time`)."""
+        """Observation start time as a `~astropy.time.Time` object."""
         return self.time_ref + u.Quantity(self.table.meta["TSTART"], "second")
 
     @property
     def observation_time_stop(self):
-        """Observation stop time (`~astropy.time.Time`)."""
+        """Observation stop time as a `~astropy.time.Time` object."""
         return self.time_ref + u.Quantity(self.table.meta["TSTOP"], "second")
 
     @property
     def radec(self):
-        """Event RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)."""
+        """Event RA / DEC sky coordinates as a `~astropy.coordinates.SkyCoord` object."""
         lon, lat = self.table["RA"], self.table["DEC"]
         return SkyCoord(lon, lat, unit="deg", frame="icrs")
 
     @property
     def galactic(self):
-        """Event Galactic sky coordinates (`~astropy.coordinates.SkyCoord`).
+        """Event Galactic sky coordinates as a `~astropy.coordinates.SkyCoord` object.
 
         Always computed from RA / DEC using Astropy.
         """
@@ -285,12 +285,12 @@ class EventList:
 
     @property
     def energy(self):
-        """Event energies (`~astropy.units.Quantity`)."""
+        """Event energies as a `~astropy.units.Quantity`."""
         return self.table["ENERGY"].quantity
 
     @property
     def galactic_median(self):
-        """Median position in radec."""
+        """Median position as a `~astropy.coordinates.SkyCoord` object."""
         galactic = self.galactic
         median_lon = np.median(galactic.l.wrap_at("180d"))
         median_lat = np.median(galactic.b)
@@ -693,12 +693,12 @@ class EventList:
 
     @property
     def observatory_earth_location(self):
-        """Observatory location (`~astropy.coordinates.EarthLocation`)."""
+        """Observatory location as an `~astropy.coordinates.EarthLocation` object."""
         return earth_location_from_dict(self.table.meta)
 
     @property
     def observation_time_duration(self):
-        """Observation time duration in seconds (`~astropy.units.Quantity`).
+        """Observation time duration in seconds as a `~astropy.units.Quantity`.
 
         This is a keyword related to IACTs.
         The wall time, including dead-time.
@@ -708,7 +708,7 @@ class EventList:
 
     @property
     def observation_live_time_duration(self):
-        """Live-time duration in seconds (`~astropy.units.Quantity`).
+        """Live-time duration in seconds as a `~astropy.units.Quantity`.
 
         The dead-time-corrected observation time.
 
@@ -719,7 +719,7 @@ class EventList:
 
     @property
     def observation_dead_time_fraction(self):
-        """Dead-time fraction (float).
+        """Dead-time fraction as a float.
 
         This is a keyword related to IACTs.
         Defined as dead-time over observation time.
@@ -736,31 +736,31 @@ class EventList:
 
     @property
     def altaz_frame(self):
-        """ALT / AZ frame (`~astropy.coordinates.AltAz`)."""
+        """ALT / AZ frame as an `~astropy.coordinates.AltAz` object."""
         return AltAz(obstime=self.time, location=self.observatory_earth_location)
 
     @property
     def altaz(self):
-        """ALT / AZ position computed from RA / DEC (`~astropy.coordinates.SkyCoord`)."""
+        """ALT / AZ position computed from RA / DEC as a `~astropy.coordinates.SkyCoord` object."""
         return self.radec.transform_to(self.altaz_frame)
 
     @property
     def altaz_from_table(self):
-        """ALT / AZ position from table (`~astropy.coordinates.SkyCoord`)."""
+        """ALT / AZ position from table as a `~astropy.coordinates.SkyCoord` object."""
         lon = self.table["AZ"]
         lat = self.table["ALT"]
         return SkyCoord(lon, lat, unit="deg", frame=self.altaz_frame)
 
     @property
     def pointing_radec(self):
-        """Pointing RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)."""
+        """Pointing RA / DEC sky coordinates as a `~astropy.coordinates.SkyCoord` object."""
         info = self.table.meta
         lon, lat = info["RA_PNT"], info["DEC_PNT"]
         return SkyCoord(lon, lat, unit="deg", frame="icrs")
 
     @property
     def offset(self):
-        """Event offset from the array pointing position (`~astropy.coordinates.Angle`)."""
+        """Event offset from the array pointing position as an `~astropy.coordinates.Angle`."""
         position = self.radec
         center = self.pointing_radec
         offset = center.separation(position)
@@ -768,7 +768,7 @@ class EventList:
 
     @property
     def offset_from_median(self):
-        """Event offset from the median position (`~astropy.coordinates.Angle`)."""
+        """Event offset from the median position as an `~astropy.coordinates.Angle`."""
         position = self.radec
         center = self.galactic_median
         offset = center.separation(position)

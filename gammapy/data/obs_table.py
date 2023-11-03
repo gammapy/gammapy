@@ -33,29 +33,29 @@ class ObservationTable(Table):
 
     @property
     def pointing_radec(self):
-        """Pointing positions as ICRS (`~astropy.coordinates.SkyCoord`)."""
+        """Pointing positions in ICRS as a `~astropy.coordinates.SkyCoord` object."""
         return SkyCoord(self["RA_PNT"], self["DEC_PNT"], unit="deg", frame="icrs")
 
     @property
     def pointing_galactic(self):
-        """Pointing positions as Galactic (`~astropy.coordinates.SkyCoord`)."""
+        """Pointing positions in Galactic as a `~astropy.coordinates.SkyCoord` object."""
         return SkyCoord(
             self["GLON_PNT"], self["GLAT_PNT"], unit="deg", frame="galactic"
         )
 
     @property
     def time_ref(self):
-        """Time reference (`~astropy.time.Time`)."""
+        """Time reference as a `~astropy.time.Time` object."""
         return time_ref_from_dict(self.meta)
 
     @property
     def time_start(self):
-        """Observation start time (`~astropy.time.Time`)."""
+        """Observation start time as a `~astropy.time.Time` object."""
         return self.time_ref + Quantity(self["TSTART"], "second")
 
     @property
     def time_stop(self):
-        """Observation stop time (`~astropy.time.Time`)."""
+        """Observation stop time as a `~astropy.time.Time` object."""
         return self.time_ref + Quantity(self["TSTOP"], "second")
 
     def select_obs_id(self, obs_id):
@@ -75,7 +75,7 @@ class ObservationTable(Table):
         return self.__class__(self.loc["OBS_ID", obs_id])
 
     def summary(self):
-        """Summary info string (str)."""
+        """Summary info string."""
         obs_name = self.meta.get(
             "OBSERVATORY_NAME", "N/A"
         )  # This is not GADF compliant

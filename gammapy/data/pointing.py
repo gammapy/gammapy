@@ -196,7 +196,7 @@ class FixedPointingInfo:
     @classmethod
     def from_fits_header(cls, header):
         """
-        Parse FixedPointingInfo from the given FITS header.
+        Parse `~gammapy.data.FixedPointingInfo` from the given FITS header.
 
         Parameters
         ----------
@@ -206,8 +206,8 @@ class FixedPointingInfo:
 
         Returns
         -------
-        pointing : `FixedPointingInfo`
-            The `FixedPointingInfo` instance filled from the given header.
+        pointing : `~gammapy.data.FixedPointingInfo`
+            The FixedPointingInfo instance filled from the given header.
         """
         obs_mode = header.get("OBS_MODE", "POINTING")
         mode = PointingMode.from_gadf_string(obs_mode)
@@ -356,7 +356,7 @@ class FixedPointingInfo:
 
     @property
     def fixed_altaz(self):
-        """The fixed coordinates in AltAz of the observation.
+        """The fixed coordinates of the observation in AltAz as a `~astropy.coordinates.SkyCoord` object.
 
         None if not a DRIFT observation.
         """
@@ -365,7 +365,7 @@ class FixedPointingInfo:
     @property
     def fixed_icrs(self):
         """
-        The fixed coordinates in ICRS of the observation.
+        The fixed coordinates of the observation in ICRS as a `~astropy.coordinates.SkyCoord` object.
 
         None if not a POINTING observation.
         """

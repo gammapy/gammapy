@@ -221,38 +221,38 @@ class GTI:
 
     @property
     def time_delta(self):
-        """GTI durations in seconds (`~astropy.units.Quantity`)."""
+        """GTI durations in seconds as a `~astropy.units.Quantity`."""
         delta = self.time_stop - self.time_start
         return delta.to("s")
 
     @property
     def time_ref(self):
-        """Time reference (`~astropy.time.Time`)."""
+        """Time reference as a `~astropy.time.Time` object."""
         return self._time_ref
 
     @property
     def time_sum(self):
-        """Sum of GTIs in seconds (`~astropy.units.Quantity`)."""
+        """Sum of GTIs in seconds as a `~astropy.units.Quantity`."""
         return self.time_delta.sum()
 
     @property
     def time_start(self):
-        """GTI start times (`~astropy.time.Time`)."""
+        """GTI start times as a `~astropy.time.Time` object."""
         return self.table["START"]
 
     @property
     def time_stop(self):
-        """GTI end times (`~astropy.time.Time`)."""
+        """GTI end times as a `~astropy.time.Time` object."""
         return self.table["STOP"]
 
     @property
     def met_start(self):
-        """GTI start time difference with reference time in sec, MET (`~astropy.units.Quantity`)."""
+        """GTI start time difference with reference time in sec, MET as a `~astropy.units.Quantity`."""
         return (self.time_start - self.time_ref).to("s")
 
     @property
     def met_stop(self):
-        """GTI start time difference with reference time in sec, MET (`~astropy.units.Quantity`)."""
+        """GTI start time difference with reference time in sec, MET as a `~astropy.units.Quantity`."""
         return (self.time_stop - self.time_ref).to("s")
 
     @property

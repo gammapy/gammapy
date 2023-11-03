@@ -569,11 +569,13 @@ class DataStoreMaker:
         self._events_info = {}
 
     def run(self):
+        """Run all steps."""
         hdu_table = self.make_hdu_table()
         obs_table = self.make_obs_table()
         return DataStore(hdu_table=hdu_table, obs_table=obs_table)
 
     def get_events_info(self, events_path, irf_path=None):
+        """Read events header info."""
         if events_path not in self._events_info:
             self._events_info[events_path] = self.read_events_info(
                 events_path, irf_path
@@ -582,6 +584,7 @@ class DataStoreMaker:
         return self._events_info[events_path]
 
     def get_obs_info(self, events_path, irf_path=None):
+        """Read events header info and add some extra info."""
         # We could add or remove info here depending on what we want in the obs table
         return self.get_events_info(events_path, irf_path)
 
@@ -648,6 +651,7 @@ class DataStoreMaker:
         return info
 
     def make_obs_table(self):
+        """Make observation index table."""
         rows = []
         time_rows = []
         for events_path, irf_path in zip(self.events_paths, self.irfs_paths):
@@ -676,6 +680,7 @@ class DataStoreMaker:
         return table
 
     def make_hdu_table(self):
+        """Make HDU index table."""
         rows = []
         for events_path, irf_path in zip(self.events_paths, self.irfs_paths):
             rows.extend(self.get_hdu_table_rows(events_path, irf_path))
@@ -695,6 +700,7 @@ class DataStoreMaker:
         return table
 
     def get_hdu_table_rows(self, events_path, irf_path=None):
+        """Make HDU index table rows for one observation."""
         events_info = self.get_obs_info(events_path, irf_path)
 
         info = dict(
