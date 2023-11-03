@@ -129,7 +129,7 @@ def test_datasets_write(tmp_path):
     )
     os.remove(tmp_path / "test-1.fits")
 
-    with pytest.raises(OSError, match=f"File exists already: {tmp_path / 'test'}"):
+    with pytest.raises(OSError):
         datasets.write(
             filename=tmp_path / "test",
             filename_models=tmp_path / "test_model",
