@@ -94,6 +94,7 @@ def test_datasets_info_table():
     assert table["name"][1] == "stacked"
 
 
+@requires_data()
 def test_datasets_write(tmp_path):
     axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=2)
     geom = WcsGeom.create(
