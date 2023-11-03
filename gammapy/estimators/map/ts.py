@@ -71,13 +71,13 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         Sample down the input maps to speed up the computation. Only integer
         values that are a multiple of 2 are allowed. Note that the kernel is
         not sampled down, but must be provided with the downsampled bin size.
-    threshold : float (None)
+    threshold : float, optional
         If the TS value corresponding to the initial flux estimate is not above
         this threshold, the optimizing step is omitted to save computing time. Default is None.
     rtol : float
         Relative precision of the flux estimate. Used as a stopping criterion for
         the norm fit. Default is 0.1.
-    selection_optional : list of str
+    selection_optional : list of str, optional
         Which maps to compute besides TS, sqrt(TS), flux and symmetric error on flux.
         Available options are:
 
@@ -86,7 +86,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
             * "ul": estimate upper limits on flux.
 
         Default is None so the optional steps are not executed.
-    energy_edges : list of `~astropy.units.Quantity`
+    energy_edges : list of `~astropy.units.Quantity`, optional
         Edges of the target maps energy bins. The resulting bin edges won't be exactly equal to the input ones,
         but rather the closest values to the energy axis edges of the parent dataset.
         Default is None: apply the estimator in each energy bin of the parent dataset.
@@ -103,7 +103,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
     Notes
     -----
-    Negative :math:`TS` values are defined as following :
+    Negative :math:`TS` values are defined as following:
 
     .. math::
         TS = \left \{

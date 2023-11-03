@@ -42,7 +42,7 @@ class ASmoothMapEstimator(Estimator):
         Significance estimation method.
     threshold : float
         Significance threshold.
-    energy_edges : list of `~astropy.units.Quantity`
+    energy_edges : list of `~astropy.units.Quantity`, optional
         Edges of the target maps energy bins. The resulting bin edges won't be exactly equal to the input ones,
         but rather the closest values to the energy axis edges of the parent dataset.
         Default is None: apply the estimator in each energy bin of the parent dataset.
@@ -166,7 +166,7 @@ class ASmoothMapEstimator(Estimator):
         Returns
         -------
         images : dict of `~gammapy.maps.WcsNDMap`
-            Smoothed images; keys are :
+            Smoothed images; keys are:
                 * 'counts'
                 * 'background'
                 * 'flux' (optional)
@@ -207,7 +207,7 @@ class ASmoothMapEstimator(Estimator):
         Returns
         -------
         images : dict of `~gammapy.maps.WcsNDMap`
-            Smoothed images; keys are :
+            Smoothed images; keys are:
                 * 'counts'
                 * 'background'
                 * 'flux' (optional)

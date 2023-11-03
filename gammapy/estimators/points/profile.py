@@ -22,7 +22,7 @@ class FluxProfileEstimator(FluxPointsEstimator):
     spectrum : `~gammapy.modeling.models.SpectralModel` (optional)
         Spectral model to compute the fluxes or brightness.
         Default is power-law with spectral index of 2.
-    **kwargs : dict
+    **kwargs : dict, optional
         Keywords forwarded to the `FluxPointsEstimator` (see documentation
         there for further description of valid keywords).
 

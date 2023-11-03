@@ -38,7 +38,7 @@ class FluxEstimator(ParameterEstimator):
         Sigma to use for asymmetric error computation.
     n_sigma_ul : int
         Sigma to use for upper limit computation.
-    selection_optional : list of str
+    selection_optional : list of str, optional
         Which additional quantities to estimate. Available options are:
 
             * "all": all the optional steps are executed.

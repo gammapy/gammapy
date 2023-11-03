@@ -119,7 +119,7 @@ class FluxMaps:
     Parameters
     ----------
     data : dict of `~gammapy.maps.Map`
-        The maps dictionary. Expected entries are the following :
+        The maps dictionary. Expected entries are the following:
         * norm : the norm factor.
         * norm_err : optional, the error on the norm factor.
         * norm_errn : optional, the negative error on the norm factor.
@@ -508,7 +508,7 @@ class FluxMaps:
     # TODO: always derive sqrt(TS) from TS?
     @property
     def sqrt_ts(self):
-        r"""sqrt(TS) as defined by :
+        r"""sqrt(TS) as defined by:
 
         .. math::
 
@@ -770,7 +770,7 @@ class FluxMaps:
 
         Parameters
         ----------
-        sed_type : {"likelihood", "dnde", "e2dnde", "flux", "eflux"}
+        sed_type : {"likelihood", "dnde", "e2dnde", "flux", "eflux"}, optional
             sed type to convert to. If None, set to `Likelihood`. Default is None.
 
         Returns
@@ -803,7 +803,7 @@ class FluxMaps:
             List of maps to stack.
         axis : `MapAxis`
             New axis to create.
-        meta : dict
+        meta : dict, optional
             Metadata of the resulting flux points. Default is None.
 
         Returns
@@ -878,13 +878,13 @@ class FluxMaps:
         ----------
         maps : `Maps`
             Maps object containing the input maps.
-        sed_type : str
+        sed_type : str, optional
             SED type of the input maps. If None, set to "likelihood". Default is None.
         reference_model : `~gammapy.modeling.models.SkyModel`, optional
             Reference model to use for conversions.
             If None, a model consisting of a point source with a power
             law spectrum of index 2 is assumed. Default is None.
-        gti : `~gammapy.data.GTI`
+        gti : `~gammapy.data.GTI`, optional
             Maps GTI information. Default is None.
         meta : `dict`
             Meta dictionary.
@@ -946,9 +946,9 @@ class FluxMaps:
 
         Parameters
         ----------
-        sed_type : str
+        sed_type : str, optional
             sed type to convert to. If None, set to "likelihood". Default is None.
-        hdu_bands : str
+        hdu_bands : str, optional
             Name of the HDU with the BANDS table. Default is 'BANDS'
             If set to None, each map will have its own hdu_band. Default is None.
 
@@ -983,10 +983,10 @@ class FluxMaps:
         ----------
         hdulist : `~astropy.io.fits.HDUList`
             List of HDUs.
-        hdu_bands : str
+        hdu_bands : str, optional
             Name of the HDU with the BANDS table. Default is 'BANDS'
             If set to None, each map should have its own hdu_band. Default is None.
-        sed_type : {"dnde", "flux", "e2dnde", "eflux", "likelihood"}
+        sed_type : {"dnde", "flux", "e2dnde", "eflux", "likelihood"}, optional
             Sed type. Default is None.
 
         Returns
@@ -1027,7 +1027,7 @@ class FluxMaps:
             If None, keep string before '.' and add '_model.yaml' suffix
         overwrite : bool, optional
             Overwrite existing file. Default is False.
-        sed_type : str
+        sed_type : str, optional
             Sed type to convert to. If None, set to "likelihood". Default is None.
         """
         if sed_type is None:

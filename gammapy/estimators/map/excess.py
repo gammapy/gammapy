@@ -94,7 +94,7 @@ class ExcessMapEstimator(Estimator):
     apply_threshold_sensitivity : bool
         If True, use `bkg_syst_fraction_sensitivity` and `gamma_min_sensitivity` in the sensitivity computation.
         Default is False which is the same setting as the HGPS catalog.
-    selection_optional : list of str
+    selection_optional : list of str, optional
         Which additional maps to estimate besides delta TS, significance and symmetric error.
         Available options are:
 
@@ -104,7 +104,7 @@ class ExcessMapEstimator(Estimator):
             * "sensitivity": estimate sensitivity for a given significance
 
         Default is None so the optional steps are not executed.
-    energy_edges : list of `~astropy.units.Quantity`
+    energy_edges : list of `~astropy.units.Quantity`, optional
         Edges of the target maps energy bins. The resulting bin edges won't be exactly equal to the input ones,
         but rather the closest values to the energy axis edges of the parent dataset.
         Default is None: apply the estimator in each energy bin of the parent dataset.

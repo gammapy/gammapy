@@ -147,7 +147,7 @@ class ImageProfileEstimator(Estimator):
         ----------
         image : `~gammapy.maps.Map`
             Input image to run profile estimator on.
-        image_err : `~gammapy.maps.Map`
+        image_err : `~gammapy.maps.Map`, optional
             Input error image to run profile estimator on. Default is None.
         mask : `~gammapy.maps.Map`
             Optional mask to exclude regions from the measurement.
@@ -203,7 +203,7 @@ class ImageProfile:
     def smooth(self, kernel="box", radius="0.1 deg", **kwargs):
         r"""Smooth profile with error propagation.
 
-        Smoothing is described by a convolution :
+        Smoothing is described by a convolution:
 
         .. math::
             x_j = \sum_i x_{(j - i)} h_i
@@ -225,7 +225,7 @@ class ImageProfile:
             Smoothing width given as quantity or float. If a float is given it
             is interpreted as smoothing width in pixels. If an (angular) quantity
             is given it is converted to pixels using `xref[1] - x_ref[0]`. Default is "0.1 deg".
-        kwargs : dict
+        kwargs : dict, optional
             Keyword arguments passed to `~scipy.ndimage.uniform_filter`
             ('box') and `~scipy.ndimage.gaussian_filter` ('gauss').
 
@@ -278,9 +278,9 @@ class ImageProfile:
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`
+        ax : `~matplotlib.axes.Axes`, optional
             Axes object. Default is None.
-        **kwargs : dict
+        **kwargs : dict, optional
             Keyword arguments passed to `~matplotlib.axes.Axes.plot`.
 
         Returns
@@ -304,9 +304,9 @@ class ImageProfile:
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`
+        ax : `~matplotlib.axes.Axes`, optional
             Axes object. Default is None.
-        **kwargs : dict
+        **kwargs : dict, optional
             Keyword arguments passed to plt.fill_between().
 
         Returns
@@ -365,7 +365,7 @@ class ImageProfile:
         ----------
         figsize : tuple
             Size of the figure. Default is (8, 4.5).
-        **kwargs : dict
+        **kwargs : dict, optional
             Keyword arguments passed to `ImageProfile.plot_profile()`.
 
         Returns

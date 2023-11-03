@@ -125,7 +125,7 @@ class FluxPoints(FluxMaps):
             Format string.
         reference_model : `SpectralModel`
             Reference spectral model.
-        **kwargs : dict
+        **kwargs : dict, optional
             Keyword arguments passed to `astropy.table.Table.read`.
 
         Returns
@@ -163,7 +163,7 @@ class FluxPoints(FluxMaps):
         ----------
         filename : str
             Filename.
-        sed_type : {"dnde", "flux", "eflux", "e2dnde", "likelihood"}
+        sed_type : {"dnde", "flux", "eflux", "e2dnde", "likelihood"}, optional
             Sed type. Default is None.
         format : {"gadf-sed", "lightcurve", "binned-time-series", "profile"}
             Format specification. The following formats are supported:
@@ -230,13 +230,13 @@ class FluxPoints(FluxMaps):
         ----------
         table : `~astropy.table.Table`
             Table.
-        sed_type : {"dnde", "flux", "eflux", "e2dnde", "likelihood"}
+        sed_type : {"dnde", "flux", "eflux", "e2dnde", "likelihood"}, optional
             Sed type. Default is None.
         format : {"gadf-sed", "lightcurve", "profile"}
             Table format. Default is "gadf-sed".
-        reference_model : `SpectralModel`
+        reference_model : `SpectralModel`, optional
             Reference spectral model. Default is None.
-        gti : `GTI`
+        gti : `GTI`, optional
             Good time intervals. Default is None.
 
         Returns
@@ -500,15 +500,15 @@ class FluxPoints(FluxMaps):
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`
+        ax : `~matplotlib.axes.Axes`, optional
             Axis object to plot on. Default is None.
-        sed_type : {"dnde", "flux", "eflux", "e2dnde"}
+        sed_type : {"dnde", "flux", "eflux", "e2dnde"}, optional
             Sed type. Default is None.
         energy_power : float
             Power of energy to multiply flux axis with. Default is 0.
         time_format : {"iso", "mjd"}
             Used time format is a time axis is present. Default is "iso".
-        **kwargs : dict
+        **kwargs : dict, optional
             Keyword arguments passed to `~RegionNDMap.plot`.
 
         Returns
@@ -573,13 +573,13 @@ class FluxPoints(FluxMaps):
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`
+        ax : `~matplotlib.axes.Axes`, optional
             Axis object to plot on. Default is None.
-        sed_type : {"dnde", "flux", "eflux", "e2dnde"}
+        sed_type : {"dnde", "flux", "eflux", "e2dnde"}, optional
             Sed type. Default is None.
         add_cbar : bool
             Whether to add a colorbar to the plot. Default is True.
-        **kwargs : dict
+        **kwargs : dict, optional
             Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
 
         Returns
@@ -667,7 +667,7 @@ class FluxPoints(FluxMaps):
         ----------
         n_sigma_ul : int
             Number of sigma to use for upper limit computation. Default is 2.
-        **kwargs : dict
+        **kwargs : dict, optional
             Keyword arguments passed to `~scipy.optimize.brentq`.
 
         Returns

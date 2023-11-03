@@ -23,7 +23,7 @@ class ParameterEstimator(Estimator):
         Sigma to use for upper limit computation. Default is 2.
     null_value : float
         Which null value to use for the parameter.
-    selection_optional : list of str
+    selection_optional : list of str, optional
         Which additional quantities to estimate. Available options are:
 
             * "all": all the optional steps are executed.

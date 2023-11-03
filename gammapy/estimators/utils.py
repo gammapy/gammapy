@@ -38,7 +38,7 @@ def find_peaks(image, threshold, min_distance=1):
     a different method in the first place to result in a smooth image.
     You can also increase the ``min_distance`` parameter.
 
-    The output table contains one row per peak and the following columns :
+    The output table contains one row per peak and the following columns:
 
     - ``x`` and ``y`` are the pixel coordinates (first pixel at zero).
     - ``ra`` and ``dec`` are the RA / DEC sky coordinates (ICRS frame).
@@ -206,7 +206,7 @@ def estimate_exposure_reco_energy(dataset, spectral_model=None, normalize=True):
     ----------
     dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.MapDatasetOnOff`
         The input dataset.
-    spectral_model : `~gammapy.modeling.models.SpectralModel`
+    spectral_model : `~gammapy.modeling.models.SpectralModel`, optional
         Assumed spectral shape. If None, a Power Law of index 2 is assumed. Default is None.
     normalize : bool
         Normalize the exposure to the total integrated flux of the spectral model.

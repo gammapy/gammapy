@@ -50,7 +50,7 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
         Number of sigma to use for asymmetric error computation. Default is 1.
     n_sigma_ul : int
         Number of sigma to use for upper limit computation. Default is 2.
-    selection_optional : list of str
+    selection_optional : list of str, optional
         Which additional quantities to estimate. Available options are:
 
             * "all": all the optional steps are executed.
@@ -59,7 +59,7 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
             * "scan": estimate fit statistic profiles.
 
         Default is None so the optional steps are not executed.
-    energy_edges : list of `~astropy.units.Quantity`
+    energy_edges : list of `~astropy.units.Quantity`, optional
         Edges of the flux points energy bins. The resulting bin edges won't be exactly equal to the input ones,
         but rather the closest values to the energy axis edges of the parent dataset.
         Default is None: apply the estimator in each energy bin of the parent dataset.
