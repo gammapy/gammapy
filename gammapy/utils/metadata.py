@@ -1,14 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Metadata base container for Gammapy."""
 import json
-from typing import Optional, Union
+from typing import Optional, Union, get_args
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import AltAz, Angle, EarthLocation, SkyCoord
 from astropy.time import Time
 import yaml
 from pydantic import BaseModel, ValidationError, validator
-from typing_extensions import get_args
 from gammapy.utils.fits import skycoord_from_dict
 from gammapy.version import version
 
