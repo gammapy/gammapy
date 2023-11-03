@@ -163,6 +163,7 @@ def test_taget_metadata():
     assert_allclose(header["RA_OBJ"], 266.404988)
 
 
+@requires_data()
 def test_target_metadata_from_header(hess_eventlist_header):
     meta = TargetMetaData.from_header(hess_eventlist_header, format="gadf")
 
