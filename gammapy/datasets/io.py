@@ -293,7 +293,7 @@ class OGIPDatasetReader(DatasetReader):
 
         Parameters
         ----------
-        filename : str or `Path`
+        filename : str or `~pathlib.Path`
             Filename.
 
         Returns

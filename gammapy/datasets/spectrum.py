@@ -31,7 +31,7 @@ class PlotMixin:
             Axes to plot spectrum on. Default is None.
         ax_residuals : `~matplotlib.axes.Axes`
             Axes to plot residuals on. Default is None.
-        kwargs_spectrum : dict
+        kwargs_spectrum : dict, optional
             Keyword arguments passed to `~SpectrumDataset.plot_excess`. Default is None.
         kwargs_residuals : dict
             Keyword arguments passed to `~SpectrumDataset.plot_residuals_spectral`. Default is None.
@@ -315,7 +315,7 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         format : {"ogip", "ogip-sherpa", "gadf"}
             Format to use. Default is "ogip".
         kwargs : dict
-            Arguments passed to `MapDataset.read`.
+            Keyword arguments passed to `MapDataset.read`.
         """
         from .io import OGIPDatasetReader
 
