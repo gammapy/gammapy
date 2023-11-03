@@ -1269,7 +1269,7 @@ class MapDataset(Dataset):
         ----------
         filename : str
             Filename to write to.
-        overwrite : bool
+        overwrite : bool, optional
             Overwrite file if it exists. Default is False.
         checksum : bool
             When True adds both DATASUM and CHECKSUM cards to the headers written to the file.
