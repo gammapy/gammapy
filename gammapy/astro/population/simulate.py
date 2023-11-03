@@ -169,7 +169,7 @@ def make_base_catalog_galactic(
     Returns
     -------
     table : `~astropy.table.Table`
-        Catalog of simulated source positions and proper velocities
+        Catalog of simulated source positions and proper velocities.
     """
     max_age = Quantity(max_age).to_value("yr")
     n_ISM = Quantity(n_ISM).to("cm-3")
@@ -374,9 +374,9 @@ def add_pwn_parameters(table):
 def add_observed_parameters(table, obs_pos=None):
     """Add observable parameters (such as sky position or distance).
 
-    Input table columns: x, y, z, extension, luminosity
+    Input table columns: x, y, z, extension, luminosity.
 
-    Output table columns: distance, glon, glat, flux, angular_extension
+    Output table columns: distance, glon, glat, flux, angular_extension.
 
     Position of observer in cartesian coordinates.
     Center of galaxy as origin, x-axis goes through sun.

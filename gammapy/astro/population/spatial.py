@@ -26,12 +26,12 @@ ZMIN, ZMAX = Quantity([-0.5, 0.5], "kpc")
 
 
 class Paczynski1990(Fittable1DModel):
-    r"""Radial distribution of the birth surface density of neutron stars - Paczynski 1990.
+    r"""Radial distribution of the birth surface density of neutron stars.
 
     .. math::
         f(r) = A r_{exp}^{-2} \exp \left(-\frac{r}{r_{exp}} \right)
 
-    Reference: https://ui.adsabs.harvard.edu/abs/1990ApJ...348..485P (Formula (2))
+    Formula (2) [Paczynski1990]_.
 
     Parameters
     ----------
@@ -44,6 +44,10 @@ class Paczynski1990(Fittable1DModel):
     --------
     CaseBattacharya1998, YusifovKucuk2004, Lorimer2006, YusifovKucuk2004B,
     FaucherKaspi2006, Exponential
+
+    References
+    ----------
+    .. [Paczynski1990] https://ui.adsabs.harvard.edu/abs/1990ApJ...348..485P
     """
 
     amplitude = Parameter()
@@ -60,13 +64,13 @@ class Paczynski1990(Fittable1DModel):
 
 
 class CaseBattacharya1998(Fittable1DModel):
-    r"""Radial distribution of the surface density of supernova remnants in the galaxy - Case & Battacharya 1998.
+    r"""Radial distribution of the surface density of supernova remnants in the galaxy.
 
     .. math::
         f(r) = A \left( \frac{r}{r_{\odot}} \right) ^ \alpha \exp
         \left[ -\beta \left( \frac{ r - r_{\odot}}{r_{\odot}} \right) \right]
 
-    Reference: https://ui.adsabs.harvard.edu/abs/1998ApJ...504..761C (Formula (14))
+    Formula (14) [CaseBattacharya1998]_.
 
     Parameters
     ----------
@@ -81,6 +85,10 @@ class CaseBattacharya1998(Fittable1DModel):
     --------
     Paczynski1990, YusifovKucuk2004, Lorimer2006, YusifovKucuk2004B,
     FaucherKaspi2006, Exponential
+
+    References
+    ----------
+    .. [CaseBattacharya1998] https://ui.adsabs.harvard.edu/abs/1998ApJ...504..761C
     """
 
     amplitude = Parameter()
@@ -101,7 +109,7 @@ class CaseBattacharya1998(Fittable1DModel):
 
 
 class YusifovKucuk2004(Fittable1DModel):
-    r"""Radial distribution of the surface density of pulsars in the galaxy - Yusifov & Kucuk 2004.
+    r"""Radial distribution of the surface density of pulsars in the galaxy.
 
     .. math::
         f(r) = A \left ( \frac{r + r_1}{r_{\odot} + r_1} \right )^a \exp
@@ -109,7 +117,7 @@ class YusifovKucuk2004(Fittable1DModel):
 
     Used by Faucher-Guigere and Kaspi. Density at ``r = 0`` is nonzero.
 
-    Reference: https://ui.adsabs.harvard.edu/abs/2004A%26A...422..545Y (Formula (15))
+    Formula (15) [YusifovKucuk2004]_.
 
     Parameters
     ----------
@@ -126,6 +134,10 @@ class YusifovKucuk2004(Fittable1DModel):
     --------
     CaseBattacharya1998, Paczynski1990, Lorimer2006, YusifovKucuk2004B,
     FaucherKaspi2006, Exponential
+
+    References
+    ----------
+    .. [YusifovKucuk2004] https://ui.adsabs.harvard.edu/abs/2004A%26A...422..545Y
     """
 
     amplitude = Parameter()
@@ -147,7 +159,7 @@ class YusifovKucuk2004(Fittable1DModel):
 
 
 class YusifovKucuk2004B(Fittable1DModel):
-    r"""Radial distribution of the surface density of OB stars in the galaxy - Yusifov & Kucuk 2004.
+    r"""Radial distribution of the surface density of OB stars in the galaxy.
 
     .. math::
         f(r) = A \left( \frac{r}{r_{\odot}} \right) ^ a
@@ -155,7 +167,7 @@ class YusifovKucuk2004B(Fittable1DModel):
 
     Derived empirically from OB-stars distribution.
 
-    Reference: https://ui.adsabs.harvard.edu/abs/2004A%26A...422..545Y (Formula (17))
+    Formula (17) [YusifovKucuk2004]_.
 
     Parameters
     ----------
@@ -170,6 +182,11 @@ class YusifovKucuk2004B(Fittable1DModel):
     --------
     CaseBattacharya1998, Paczynski1990, YusifovKucuk2004, Lorimer2006,
     FaucherKaspi2006, Exponential
+
+    References
+    ----------
+    .. [YusifovKucuk2004] https://ui.adsabs.harvard.edu/abs/2004A%26A...422..545Y
+
     """
 
     amplitude = Parameter()
@@ -189,13 +206,13 @@ class YusifovKucuk2004B(Fittable1DModel):
 
 class FaucherKaspi2006(Fittable1DModel):
     r"""
-    Radial distribution of the birth surface density of pulsars in the galaxy - Faucher-Giguere & Kaspi 2006.
+    Radial distribution of the birth surface density of pulsars in the galaxy.
 
     .. math::
         f(r) = A \frac{1}{\sqrt{2 \pi} \sigma} \exp
         \left(- \frac{(r - r_0)^2}{2 \sigma ^ 2}\right)
 
-    Reference: https://ui.adsabs.harvard.edu/abs/2006ApJ...643..332F (Appendix B)
+    Appendix B [FaucherKaspi2006]_.
 
     Parameters
     ----------
@@ -210,6 +227,10 @@ class FaucherKaspi2006(Fittable1DModel):
     --------
     CaseBattacharya1998, Paczynski1990, YusifovKucuk2004, Lorimer2006,
     YusifovKucuk2004B, Exponential
+
+    References
+    ----------
+    .. [FaucherKaspi2006] https://ui.adsabs.harvard.edu/abs/2006ApJ...643..332F
     """
 
     amplitude = Parameter()
@@ -229,13 +250,13 @@ class FaucherKaspi2006(Fittable1DModel):
 
 
 class Lorimer2006(Fittable1DModel):
-    r"""Radial distribution of the surface density of pulsars in the galaxy - Lorimer 2006.
+    r"""Radial distribution of the surface density of pulsars in the galaxy.
 
     .. math::
         f(r) = A \left( \frac{r}{r_{\odot}} \right) ^ B \exp
         \left[ -C \left( \frac{r - r_{\odot}}{r_{\odot}} \right) \right]
 
-    Reference: https://ui.adsabs.harvard.edu/abs/2006MNRAS.372..777L (Formula (10))
+    Formula (10) [Lorimer2006]_.
 
     Parameters
     ----------
@@ -250,6 +271,10 @@ class Lorimer2006(Fittable1DModel):
     --------
     CaseBattacharya1998, Paczynski1990, YusifovKucuk2004, Lorimer2006,
     YusifovKucuk2004B, FaucherKaspi2006
+
+    References
+    ----------
+    .. [Lorimer2006] https://ui.adsabs.harvard.edu/abs/2006MNRAS.372..777L
     """
 
     amplitude = Parameter()
@@ -318,14 +343,14 @@ class LogSpiral:
         theta : `~astropy.units.Quantity`, optional
             Angle (deg). Default is None.
         radius : `~astropy.units.Quantity`, optional
-            Radius (kpc). Default is None
+            Radius (kpc). Default is None.
         spiralarm_index : int, optional
             Spiral arm index. Default is 0.
 
         Returns
         -------
         x, y : `~numpy.ndarray`
-            Position (x, y)
+            Position (x, y).
         """
         if (theta is None) and not (radius is None):
             theta = self.theta(radius, spiralarm_index=spiralarm_index)
@@ -374,7 +399,7 @@ class LogSpiral:
         Returns
         -------
         theta : `~numpy.ndarray`
-            Angle (deg)
+            Angle (deg).
         """
         k = self.k[spiralarm_index]
         r_0 = self.r_0[spiralarm_index]
@@ -398,7 +423,7 @@ class FaucherSpiral(LogSpiral):
 
     @staticmethod
     def _blur(radius, theta, amount=0.07, random_state="random-seed"):
-        """Blur the positions around the centroid of the spiralarm.
+        """Blur the positions around the centroid of the spiral arm.
 
         The given positions are blurred by drawing a displacement in radius from
         a normal distribution, with sigma = amount * radius. And a direction
@@ -410,7 +435,7 @@ class FaucherSpiral(LogSpiral):
             Radius coordinate.
         theta : `~astropy.units.Quantity`
             Angle coordinate.
-        amount: float, optional
+        amount : float, optional
             Amount of blurring of the position, given as a fraction of `radius`.
             Default is 0.07.
         random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
@@ -432,7 +457,7 @@ class FaucherSpiral(LogSpiral):
     ):
         """Correction of source distribution towards the galactic center.
 
-        To avoid spiralarm features near the Galactic Center, the position angle theta
+        To avoid spiral arm features near the Galactic Center, the position angle theta
         is blurred by a certain amount towards the GC.
 
         Parameters
@@ -457,7 +482,7 @@ class FaucherSpiral(LogSpiral):
     def __call__(self, radius, blur=True, random_state="random-seed"):
         """Draw random position from spiral arm distribution.
 
-        Returns the corresponding angle theta[rad] to a given radius[kpc] and number of spiralarm.
+        Returns the corresponding angle theta[rad] to a given radius[kpc] and number of spiral arm.
         Possible numbers are:
 
         * Norma = 0,

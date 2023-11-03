@@ -64,7 +64,7 @@ class DMProfile(abc.ABC):
         rmin, rmax : `~astropy.units.Quantity`
             Lower and upper bound of integration range.
         separation : `~numpy.ndarray`
-            Separation angle in rad.
+            Separation angle in radians.
         ndecade : int, optional
             Number of grid points per decade used for the integration.
             Default is 10000.
