@@ -533,7 +533,7 @@ class MapDatasetEventSampler:
         ----------
         dataset : `~gammapy.datasets.MapDataset`
             Map dataset.
-        observation : `~gammapy.data.Observation`
+        observation : `~gammapy.data.Observation`, optional
             In memory observation. Default is None.
 
         Returns

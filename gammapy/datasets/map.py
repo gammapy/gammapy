@@ -562,16 +562,19 @@ class MapDataset(Dataset):
         geom : `Geom`
             Geometry for the counts and background maps.
         geom_exposure : `Geom`
-            Geometry for the exposure map.
+            Geometry for the exposure map. Default is None.
         geom_psf : `Geom`
-            Geometry for the psf map.
+            Geometry for the psf map. Default is None.
         geom_edisp : `Geom`
             Geometry for the energy dispersion kernel map.
-            If geom_edisp has a migra axis, this will create an EDispMap instead.
+            If geom_edisp has a migra axis, this will create an EDispMap instead. Default is None.
         reference_time : `~astropy.time.Time`
-            The reference time to use in GTI definition.
+            The reference time to use in GTI definition. Default is "2000-01-01".
         name : str
-            Name of the returned dataset.
+            Name of the returned dataset. Default is None.
+        kwargs : dict, optional
+            Keyword arguments to be passed.
+
 
         Returns
         -------
@@ -625,20 +628,20 @@ class MapDataset(Dataset):
         ----------
         geom : `~gammapy.maps.WcsGeom`
             Reference target geometry in reco energy, used for counts and background maps.
-        energy_axis_true : `~gammapy.maps.MapAxis`
+        energy_axis_true : `~gammapy.maps.MapAxis`, optional
             True energy axis used for IRF maps. Default is None.
-        migra_axis : `~gammapy.maps.MapAxis`
+        migra_axis : `~gammapy.maps.MapAxis`, optional
             If set, this provides the migration axis for the energy dispersion map.
             If not set, an EDispKernelMap is produced instead. Default is None.
-        rad_axis : `~gammapy.maps.MapAxis`
+        rad_axis : `~gammapy.maps.MapAxis`, optional
             Rad axis for the psf map. Default is None.
         binsz_irf : float
             IRF Map pixel size in degrees. Default is BINSZ_IRF_DEFAULT.
         reference_time : `~astropy.time.Time`
             The reference time to use in GTI definition. Default is "2000-01-01".
-        name : str
+        name : str, optional
             Name of the returned dataset. Default is None.
-        meta_table : `~astropy.table.Table`
+        meta_table : `~astropy.table.Table`, optional
             Table listing information on observations used to create the dataset.
             One line per observation for stacked datasets. Default is None.
         reco_psf : bool
@@ -739,7 +742,7 @@ class MapDataset(Dataset):
 
         Parameters
         ----------
-        name : str
+        name : str, optional
             Name of the masked dataset. Default is None.
         nan_to_num : bool
             Non-finite values are replaced by zero if True. Default is True.
@@ -762,7 +765,7 @@ class MapDataset(Dataset):
         The stacking of 2 datasets is implemented as follows. Here, :math:`k`
         denotes a bin in reconstructed energy and :math:`j = {1,2}` is the dataset number.
 
-        The ``mask_safe`` of each dataset is defined as :
+        The ``mask_safe`` of each dataset is defined as:
 
         .. math::
 
@@ -770,7 +773,7 @@ class MapDataset(Dataset):
             \mbox{if bin k is inside the thresholds}\\ 0, &
             \mbox{otherwise} \end{array}\right.
 
-        Then the total ``counts`` and model background ``bkg`` are computed according to :
+        Then the total ``counts`` and model background ``bkg`` are computed according to:
 
         .. math::
 
@@ -780,7 +783,7 @@ class MapDataset(Dataset):
             \overline{bkg}_k = bkg_{1k} \cdot \epsilon_{1k} +
              bkg_{2k} \cdot \epsilon_{2k}.
 
-        The stacked ``safe_mask`` is then :
+        The stacked ``safe_mask`` is then:
 
         .. math::
 
@@ -863,7 +866,7 @@ class MapDataset(Dataset):
                 - "diff/model": (data - model) / model.
                 - "diff/sqrt(model)": (data - model) / sqrt(model).
             Default is "diff".
-        **kwargs : dict
+        **kwargs : dict, optional
             Keyword arguments forwarded to `Map.smooth()`.
 
         Returns
@@ -911,7 +914,7 @@ class MapDataset(Dataset):
 
         Parameters
         ----------
-        ax : `~astropy.visualization.wcsaxes.WCSAxes`
+        ax : `~astropy.visualization.wcsaxes.WCSAxes`, optional
             Axes to plot on. Default is None.
         method : {"diff", "diff/model", "diff/sqrt(model)"}
             Normalization used to compute the residuals, see `MapDataset.residuals`. Default is "diff".
@@ -920,7 +923,7 @@ class MapDataset(Dataset):
         smooth_radius: `~astropy.units.Quantity`, str or float
             Smoothing width given as quantity or float. If a float is given, it
             is interpreted as smoothing width in pixels. Default is "0.1 deg".
-        **kwargs : dict
+        **kwargs : dict, optional
             Keyword arguments passed to `~matplotlib.axes.Axes.imshow`.
 
         Returns
@@ -973,13 +976,13 @@ class MapDataset(Dataset):
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`
+        ax : `~matplotlib.axes.Axes`, optional
             Axes to plot on. Default is None.
         method : {"diff", "diff/sqrt(model)"}
             Normalization used to compute the residuals, see `SpectrumDataset.residuals`. Default is "diff".
         region : `~regions.SkyRegion` (required)
             Target sky region. Default is None.
-        **kwargs : dict
+        **kwargs : dict, optional
             Keyword arguments passed to `~matplotlib.axes.Axes.errorbar`.
 
         Returns
@@ -1064,13 +1067,13 @@ class MapDataset(Dataset):
 
         Parameters
         ----------
-        ax_spatial : `~astropy.visualization.wcsaxes.WCSAxes`
+        ax_spatial : `~astropy.visualization.wcsaxes.WCSAxes`, optional
             Axes to plot spatial residuals on. Default is None.
-        ax_spectral : `~matplotlib.axes.Axes`
+        ax_spectral : `~matplotlib.axes.Axes`, optional
             Axes to plot spectral residuals on. Default is None.
-        kwargs_spatial : dict
+        kwargs_spatial : dict, optional
             Keyword arguments passed to `~MapDataset.plot_residuals_spatial`. Default is None.
-        kwargs_spectral : dict
+        kwargs_spectral : dict, optional
             Keyword arguments passed to `~MapDataset.plot_residuals_spectral`.
             The region should be passed as a dictionary key. Default is None.
 
@@ -1194,7 +1197,7 @@ class MapDataset(Dataset):
         ----------
         hdulist : `~astropy.io.fits.HDUList`
             List of HDUs.
-        name : str
+        name : str, optional
             Name of the new dataset. Default is None.
         lazy : bool
             Whether to lazy load data into memory. Default is False.
@@ -1321,7 +1324,7 @@ class MapDataset(Dataset):
         ----------
         filename : str
             Filename to read from.
-        name : str
+        name : str, optional
             Name of the new dataset. Default is None.
         lazy : bool
             Whether to lazy load data into memory. Default is False.
@@ -1488,7 +1491,7 @@ class MapDataset(Dataset):
             The input ON region on which to extract the spectrum.
         containment_correction : bool
             Apply containment correction for point sources and circular on regions. Default is False.
-        name : str
+        name : str, optional
             Name of the new dataset. Default is None.
 
         Returns
@@ -1547,7 +1550,7 @@ class MapDataset(Dataset):
         ----------
         region : `~regions.SkyRegion`
             Region from which to extract the spectrum.
-        name : str
+        name : str, optional
             Name of the new dataset. Default is None.
 
         Returns
@@ -1601,7 +1604,7 @@ class MapDataset(Dataset):
             If only one value is passed, a square region is extracted.
         mode : {'trim', 'partial', 'strict'}
             Mode option for Cutout2D, for details see `~astropy.nddata.utils.Cutout2D`. Default is "trim".
-        name : str
+        name : str, optional
             Name of the new dataset. Default is None.
 
         Returns
@@ -1646,9 +1649,9 @@ class MapDataset(Dataset):
         ----------
         factor : int
             Downsampling factor.
-        axis_name : str
+        axis_name : str, optional
             Which non-spatial axis to downsample. By default only spatial axes are downsampled. Default is None.
-        name : str
+        name : str, optional
             Name of the downsampled dataset. Default is None.
 
         Returns
@@ -1717,7 +1720,7 @@ class MapDataset(Dataset):
             Number of pixels padded to the edges of each axis.
         mode : str
             Pad mode. Default is "constant".
-        name : str
+        name : str, optional
             Name of the padded dataset. Default is None.
 
         Returns
@@ -1764,7 +1767,7 @@ class MapDataset(Dataset):
             element for each non-spatial dimension. For integer indexing the
             corresponding axes is dropped from the map. Axes not specified in the
             dict are kept unchanged.
-        name : str
+        name : str, optional
             Name of the sliced dataset. Default is None.
 
         Returns
@@ -1820,9 +1823,9 @@ class MapDataset(Dataset):
 
         Parameters
         ----------
-        energy_min, energy_max : `~astropy.units.Quantity`
+        energy_min, energy_max : `~astropy.units.Quantity`, optional
             Energy bounds to compute the flux point for. Default is None.
-        name : str
+        name : str, optional
             Name of the sliced dataset. Default is None.
 
         Returns
@@ -1876,12 +1879,12 @@ class MapDataset(Dataset):
         ----------
         energy_axis : `~gammapy.maps.MapAxis`
             New reconstructed energy axis.
-        name: str
+        name : str, optional
             Name of the new dataset. Default is None.
 
         Returns
         -------
-        dataset: `MapDataset` or `SpectrumDataset`
+        dataset : `MapDataset` or `SpectrumDataset`
             Resampled dataset.
         """
         name = make_name(name)
@@ -1928,7 +1931,7 @@ class MapDataset(Dataset):
 
         Parameters
         ----------
-        name : str
+        name : str, optional
             Name of the new dataset. Default is None.
 
         Returns
@@ -2197,17 +2200,19 @@ class MapDatasetOnOff(MapDataset):
         ----------
         geom : `gammapy.maps.WcsGeom`
             Geometry for the counts, counts_off, acceptance and acceptance_off maps.
-        geom_exposure : `gammapy.maps.WcsGeom`
+        geom_exposure : `gammapy.maps.WcsGeom`, optional
             Geometry for the exposure map. Default is None.
-        geom_psf : `gammapy.maps.WcsGeom`
+        geom_psf : `gammapy.maps.WcsGeom`, optional
             Geometry for the psf map. Default is None.
-        geom_edisp : `gammapy.maps.WcsGeom`
+        geom_edisp : `gammapy.maps.WcsGeom`, optional
             Geometry for the energy dispersion kernel map.
             If geom_edisp has a migra axis, this will create an EDispMap instead. Default is None.
         reference_time : `~astropy.time.Time`
             The reference time to use in GTI definition. Default is "2000-01-01".
-        name : str
+        name : str, optional
             Name of the returned dataset. Default is None.
+        **kwargs : dict, optional
+            Keyword arguments to be passed.
 
         Returns
         -------
@@ -2246,11 +2251,11 @@ class MapDatasetOnOff(MapDataset):
             Relative background efficiency in the on region.
         acceptance_off : `Map`
             Relative background efficiency in the off region.
-        counts_off : `Map`
+        counts_off : `Map`, optional
             Off counts map . If the dataset provides a background model,
             and no off counts are defined. The off counts are deferred from
             counts_off / alpha. Default is None.
-        name : str
+        name : str, optional
             Name of the returned dataset. Default is None.
 
         Returns
@@ -2292,7 +2297,7 @@ class MapDatasetOnOff(MapDataset):
 
         Parameters
         ----------
-        name : str
+        name : str, optional
             Name of the new dataset. Default is None.
 
         Returns
@@ -2475,7 +2480,7 @@ class MapDatasetOnOff(MapDataset):
         ----------
         hdulist : `~astropy.io.fits.HDUList`
             List of HDUs.
-        name : str
+        name : str, optional
             Name of the new dataset. Default is None.
         format : {"gadf"}
             Format the hdulist is given in. Default is "gadf".
@@ -2626,7 +2631,7 @@ class MapDatasetOnOff(MapDataset):
             The input ON region on which to extract the spectrum.
         containment_correction : bool
             Apply containment correction for point sources and circular on regions. Default is False.
-        name : str
+        name : str, optional
             Name of the new dataset. Default is None.
 
         Returns
@@ -2674,7 +2679,7 @@ class MapDatasetOnOff(MapDataset):
             If only one value is passed, a square region is extracted.
         mode : {'trim', 'partial', 'strict'}
             Mode option for Cutout2D, for details see `~astropy.nddata.utils.Cutout2D`. Default is "trim".
-        name : str
+        name : str, optional
             Name of the new dataset. Default is None.
 
         Returns
@@ -2714,9 +2719,9 @@ class MapDatasetOnOff(MapDataset):
         ----------
         factor : int
             Downsampling factor.
-        axis_name : str
+        axis_name : str, optional
             Which non-spatial axis to downsample. By default, only spatial axes are downsampled. Default is None.
-        name : str
+        name : str, optional
             Name of the downsampled dataset. Default is None.
 
         Returns
@@ -2772,7 +2777,7 @@ class MapDatasetOnOff(MapDataset):
             element for each non-spatial dimension. For integer indexing the
             corresponding axes is dropped from the map. Axes not specified in the
             dict are kept unchanged.
-        name : str
+        name : str, optional
             Name of the sliced dataset. Default is None.
 
         Returns
@@ -2803,7 +2808,7 @@ class MapDatasetOnOff(MapDataset):
         ----------
         energy_axis : `~gammapy.maps.MapAxis`
             New reco energy axis.
-        name : str
+        name : str, optional
             Name of the new dataset. Default is None.
 
         Returns

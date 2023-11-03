@@ -141,7 +141,7 @@ class FluxPointsDataset(Dataset):
         checksum : bool
             When True adds both DATASUM and CHECKSUM cards to the headers written to the FITS file.
             Applies only if filename has .fits suffix. Default is False.
-        **kwargs : dict
+        **kwargs : dict, optional
              Keyword arguments passed to `~astropy.table.Table.write`.
         """
         table = self.data.to_table()
@@ -173,7 +173,7 @@ class FluxPointsDataset(Dataset):
         ----------
         filename : str
             Filename to read from.
-        name : str
+        name : str, optional
             Name of the new dataset. Default is None.
         format : {"gadf-sed"}
             Format of the dataset file. Default is "gadf-sed".
@@ -342,13 +342,13 @@ class FluxPointsDataset(Dataset):
 
         Parameters
         ----------
-        ax_spectrum : `~matplotlib.axes.Axes`
+        ax_spectrum : `~matplotlib.axes.Axes`, optional
             Axes to plot flux points and best fit model on. Default is None.
-        ax_residuals : `~matplotlib.axes.Axes`
+        ax_residuals : `~matplotlib.axes.Axes`, optional
             Axes to plot residuals on. Default is None.
-        kwargs_spectrum : dict
+        kwargs_spectrum : dict, optional
             Keyword arguments passed to `~FluxPointsDataset.plot_spectrum`. Default is None.
-        kwargs_residuals : dict
+        kwargs_residuals : dict, optional
             Keyword arguments passed to `~FluxPointsDataset.plot_residuals`. Default is None.
 
         Returns
@@ -405,7 +405,7 @@ class FluxPointsDataset(Dataset):
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`
+        ax : `~matplotlib.axes.Axes`, optional
             Axes to plot on. Default is None.
         method : {"diff", "diff/model"}
             Normalization used to compute the residuals, see `FluxPointsDataset.residuals`. Default is "diff".
@@ -462,12 +462,12 @@ class FluxPointsDataset(Dataset):
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`
+        ax : `~matplotlib.axes.Axes`, optional
             Axes to plot on. Default is None.
-        kwargs_fp : dict
+        kwargs_fp : dict, optional
             Keyword arguments passed to `gammapy.estimators.FluxPoints.plot` to configure the plot style.
             Default is None.
-        kwargs_model : dict
+        kwargs_model : dict, optional
             Keyword arguments passed to `gammapy.modeling.models.SpectralModel.plot` and
             `gammapy.modeling.models.SpectralModel.plot_error` to configure the plot style. Default is None.
 

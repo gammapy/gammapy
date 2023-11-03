@@ -27,13 +27,13 @@ class PlotMixin:
 
         Parameters
         ----------
-        ax_spectrum : `~matplotlib.axes.Axes`
+        ax_spectrum : `~matplotlib.axes.Axes`, optional
             Axes to plot spectrum on. Default is None.
-        ax_residuals : `~matplotlib.axes.Axes`
+        ax_residuals : `~matplotlib.axes.Axes`, optional
             Axes to plot residuals on. Default is None.
         kwargs_spectrum : dict, optional
             Keyword arguments passed to `~SpectrumDataset.plot_excess`. Default is None.
-        kwargs_residuals : dict
+        kwargs_residuals : dict, optional
             Keyword arguments passed to `~SpectrumDataset.plot_residuals_spectral`. Default is None.
 
         Returns
@@ -87,13 +87,13 @@ class PlotMixin:
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`
+        ax : `~matplotlib.axes.Axes`, optional
             Axes to plot on. Default is None.
-        kwargs_counts : dict
+        kwargs_counts : dict, optional
             Keyword arguments passed to `~matplotlib.axes.Axes.hist` for the counts. Default is None.
-        kwargs_background : dict
+        kwargs_background : dict, optional
             Keyword arguments passed to `~matplotlib.axes.Axes.hist` for the background. Default is None.
-        **kwargs : dict
+        **kwargs : dict, optional
             Keyword arguments passed to both `~matplotlib.axes.Axes.hist`.
 
         Returns
@@ -123,11 +123,11 @@ class PlotMixin:
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`
+        ax : `~matplotlib.axes.Axes`, optional
             Axes to plot on. Default is None.
-        kwargs_fit : dict
+        kwargs_fit : dict, optional
             Keyword arguments passed to `~RegionNDMap.plot_mask()` for mask fit. Default is None.
-        kwargs_safe : dict
+        kwargs_safe : dict, optional
             Keyword arguments passed to `~RegionNDMap.plot_mask()` for mask safe. Default is None.
 
         Returns
@@ -176,15 +176,15 @@ class PlotMixin:
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`
+        ax : `~matplotlib.axes.Axes`, optional
             Axes to plot on. Default is None.
-        kwargs_excess : dict
+        kwargs_excess : dict, optional
             Keyword arguments passed to `~matplotlib.axes.Axes.errorbar` for
             the excess. Default is None.
-        kwargs_npred_signal : dict
+        kwargs_npred_signal : dict, optional
             Keyword arguments passed to `~matplotlib.axes.Axes.hist` for the
             predicted signal. Default is None.
-        **kwargs: dict
+        **kwargs : dict, optional
             Keyword arguments passed to both plot methods.
 
         Returns
@@ -314,7 +314,7 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
             OGIP PHA file to read.
         format : {"ogip", "ogip-sherpa", "gadf"}
             Format to use. Default is "ogip".
-        kwargs : dict
+        kwargs : dict, optional
             Keyword arguments passed to `MapDataset.read`.
         """
         from .io import OGIPDatasetReader
@@ -412,12 +412,12 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
 
         Parameters
         ----------
-        name: str
+        name : str, optional
             Name of the new dataset. Default is None.
 
         Returns
         -------
-        dataset: `SpectrumDataset`
+        dataset : `SpectrumDataset`
             SpectrumDataset with Cash statistic.
         """
         return self.to_map_dataset(name=name).to_spectrum_dataset(on_region=None)

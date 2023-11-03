@@ -85,7 +85,7 @@ class Dataset(abc.ABC):
 
         Parameters
         ----------
-        name : str
+        name : str, optional
             Name of the copied dataset. Default is None.
 
         Returns
@@ -299,7 +299,7 @@ class Datasets(collections.abc.MutableSequence):
     def to_spectrum_datasets(self, region):
         """Extract spectrum datasets for the given region.
 
-        To get more detailed information, see the corresponding function associated to each dataset type :
+        To get more detailed information, see the corresponding function associated to each dataset type:
         `~gammapy.datasets.MapDataset.to_spectrum_dataset` or `~gammapy.datasets.MapDatasetOnOff.to_spectrum_dataset`.
 
         Parameters
@@ -384,7 +384,7 @@ class Datasets(collections.abc.MutableSequence):
         ----------
         filename : str or `Path`
             File path or name of datasets yaml file.
-        filename_models : str or `Path`
+        filename_models : str or `Path`, optional
             File path or name of models yaml file. Default is None.
         lazy : bool
             Whether to lazy load data into memory. Default is True.
@@ -433,7 +433,7 @@ class Datasets(collections.abc.MutableSequence):
         ----------
         filename : str or `Path`
             File path or name of datasets yaml file.
-        filename_models : str or `Path`
+        filename_models : str or `Path`, optional
             File path or name of models yaml file. Default is None.
         overwrite : bool
             overwrite datasets FITS files. Default is False.
@@ -472,7 +472,7 @@ class Datasets(collections.abc.MutableSequence):
 
         Parameters
         ----------
-        name : str
+        name : str, optional
             Name of the stacked dataset. Default is None.
         nan_to_num : bool
             Non-finite values are replaced by zero if True. Default is True.
