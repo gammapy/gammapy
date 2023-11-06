@@ -88,7 +88,7 @@ class CountsStatistic(abc.ABC):
         Returns
         -------
         info_dict : dict
-            Dictionary with summary info.
+            Dictionary with summary information.
         """
         info_dict = {}
         info_dict["n_on"] = self.n_on
