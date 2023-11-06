@@ -410,7 +410,6 @@ class TestTheta2Table:
             self.observations.append(
                 Observation(
                     events=EventList(events),
-                    obs_info=obs_info,
                     gti=gti,
                     pointing=pointing,
                 )
