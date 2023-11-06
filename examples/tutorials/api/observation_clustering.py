@@ -122,14 +122,14 @@ fix, ax = plt.subplots(1, 1, figsize=(7, 5))
 for obs in grouped_observations["group_low_zenith"]:
     ax.plot(
         obs.get_pointing_altaz(time=obs.tmid).zen,
-        obs.obs_info["MUONEFF"],
+        obs.meta.optional["MUONEFF"],
         "d",
         color="red",
     )
 for obs in grouped_observations["group_high_zenith"]:
     ax.plot(
         obs.get_pointing_altaz(time=obs.tmid).zen,
-        obs.obs_info["MUONEFF"],
+        obs.meta.optional["MUONEFF"],
         "o",
         color="blue",
     )
