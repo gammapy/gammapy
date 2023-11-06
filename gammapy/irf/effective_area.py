@@ -13,18 +13,18 @@ __all__ = ["EffectiveAreaTable2D"]
 class EffectiveAreaTable2D(IRF):
     """2D effective area table.
 
-    Data format specification: :ref:`gadf:aeff_2d`
+    Data format specification: :ref:`gadf:aeff_2d`.
 
     Parameters
     ----------
     energy_axis_true : `MapAxis`
-        True energy axis
+        True energy axis.
     offset_axis : `MapAxis`
         Field of view offset axis.
     data : `~astropy.units.Quantity`
-        Effective area
+        Effective area.
     meta : dict
-        Meta data
+        Meta data.
 
     Examples
     --------
@@ -76,16 +76,16 @@ class EffectiveAreaTable2D(IRF):
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`, optional
-            Axis
-        offset : `~astropy.coordinates.Angle`
-            Offset
+            Matplotlib axes. Default is None.
+        offset : `~astropy.coordinates.Angle`, optional
+            Offset. Default is None.
         kwargs : dict
-            Forwarded tp plt.plot()
+            Forwarded tp plt.plot().
 
         Returns
         -------
         ax : `~matplotlib.axes.Axes`
-            Axis
+            Matplotlib axes.
         """
         ax = plt.gca() if ax is None else ax
 
@@ -114,16 +114,16 @@ class EffectiveAreaTable2D(IRF):
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`, optional
-            Axis
+            Matplotlib axes. Default is None.
         energy : `~astropy.units.Quantity`
-            Energy
+            Energy.
         **kwargs : dict
-            Keyword argument passed to `~matplotlib.pyplot.plot`
+            Keyword argument passed to `~matplotlib.pyplot.plot`.
 
         Returns
         -------
         ax : `~matplotlib.axes.Axes`
-            Axis
+            Matplotlib axes.
         """
         ax = plt.gca() if ax is None else ax
 
@@ -183,8 +183,8 @@ class EffectiveAreaTable2D(IRF):
 
         Parameters
         ----------
-        figsize : tuple
-            Size of the figure.
+        figsize : tuple, optional
+            Size of the figure. Default is (15, 5).
 
         """
         ncols = 2 if self.is_pointlike else 3
@@ -212,14 +212,14 @@ class EffectiveAreaTable2D(IRF):
         Parameters
         ----------
         energy_axis_true : `MapAxis`
-            Energy binning, analytic function is evaluated at log centers
+            Energy binning, analytic function is evaluated at log centers.
         instrument : {'HESS', 'HESS2', 'CTA'}
-            Instrument name
+            Instrument name.
 
         Returns
         -------
         aeff : `EffectiveAreaTable2D`
-            Effective area table
+            Effective area table.
         """  # noqa: E501
         # Put the parameters g in a dictionary.
         # Units: g1 (cm^2), g2 (), g3 (MeV)

@@ -18,13 +18,13 @@ class PSF3D(PSF):
     energy_axis_true : `MapAxis`
         True energy axis.
     offset_axis : `MapAxis`
-        Offset axis
+        Offset axis.
     rad_axis : `MapAxis`
-        Rad axis
+        Rad axis.
     data : `~astropy.units.Quantity`
-        PSF (3-dim with axes: psf[rad_index, offset_index, energy_index]
+        PSF (3-dim with axes: psf[rad_index, offset_index, energy_index].
     meta : dict
-        Meta dict
+        Meta dict.
     """
 
     tag = "psf_table"
