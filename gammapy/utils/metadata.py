@@ -159,7 +159,7 @@ class MetaData(BaseModel):
         return cls(**kwargs)
 
     def to_yaml(self):
-        """Dumps metadata content to yaml."""
+        """Dump metadata content to yaml."""
         meta = json.loads(self.json())
         return yaml.dump(
             meta, sort_keys=False, indent=4, width=80, default_flow_style=False
@@ -172,11 +172,11 @@ class CreatorMetaData(MetaData):
     Parameters
     ----------
     creator : str
-        the software used to create the data contained in the parent object
+        The software used to create the data contained in the parent object.
     date : `~astropy.time.Time` or str
-        the creation date
+        The creation date.
     origin : str
-        the organization at the origin of the data
+        The organization at the origin of the data.
     """
 
     _tag = "creator"
@@ -190,6 +190,29 @@ class CreatorMetaData(MetaData):
             return Time(v)
         else:
             return v
+
+    def to_header(self, format="gadf"):
+        """Convert creator metadata to fits header.
+
+        Parameters
+        ----------
+        format : str, optional
+            Header format. Default is 'gadf'.
+
+        Returns
+        -------
+        header : dict
+            The header dictionary.
+        """
+        if format != "gadf":
+            raise ValueError(f"Creator metadata: format {format} is not supported.")
+
+        hdr_dict = {}
+        hdr_dict["CREATED"] = self.date.iso
+        hdr_dict["CREATOR"] = self.creator
+        hdr_dict["ORIGIN"] = self.origin
+
+        return hdr_dict
 
     @classmethod
     def from_default(cls):

@@ -6,14 +6,17 @@ import scipy.cluster.hierarchy as sch
 
 
 def standard_scaler(features):
-    """Compute standardized features by removing the mean and scaling to unit variance:
+    r"""Compute standardized features by removing the mean and scaling to unit variance.
+
+    Calculated through:
+
        .. math::
            f_\text{scaled} = \frac{f-\text{mean}(f)}{\text{std}(f)} .
 
     Parameters
     ----------
     features : `~astropy.table.Table`
-        Table containing the features
+        Table containing the features.
 
     Returns
     -------
@@ -50,7 +53,7 @@ def hierarchical_clustering(
         Table containing the features and an extra column for the groups labels.
 
     """
-
+    # TODO: standard_scaler is not utilised here?
     features = features.copy()
     features_array = np.array(
         [

@@ -8,7 +8,7 @@ log = logging.getLogger(__name__)
 
 
 def check_tutorials_setup(download_datasets_path="./gammapy-data"):
-    """Check tutorials setup and download data if not available
+    """Check tutorials setup and download data if not available.
 
     Parameters
     ----------

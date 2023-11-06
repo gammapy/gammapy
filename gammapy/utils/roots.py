@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Utils to find roots of a scalar function within a given range"""
+"""Utils to find roots of a scalar function within a given range."""
 
 import numpy as np
 from scipy.optimize import RootResults, root_scalar
@@ -34,12 +34,13 @@ def find_roots(
         Lower bound of the search ranges to find roots.
         If an array is given search will be performed element-wise.
     upper_bound : `~astropy.units.Quantity`
-        Uper bound of the search ranges to find roots.
+        Upper bound of the search ranges to find roots.
         If an array is given search will be performed element-wise.
-    nbin : int
-        Number of bins to sample the search range, ignored if bounds are arrays
-    points_scale : {"lin", "log", "sqrt"}
-        Scale used to sample the search range. Default is linear ("lin")
+    nbin : int, optional
+        Number of bins to sample the search range, ignored if bounds are arrays.
+        Default is 100.
+    points_scale : {"lin", "log", "sqrt"}, optional
+        Scale used to sample the search range. Default is "lin".
     args : tuple, optional
         Extra arguments passed to the objective function and its derivative(s).
     method : str, optional
@@ -85,7 +86,6 @@ def find_roots(
         the corresponding `roots` array element is NaN.
 
     """
-
     kwargs = dict(
         args=args,
         method=method,

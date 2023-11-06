@@ -50,7 +50,7 @@ class HDULocation:
             return f"<pre>{html.escape(str(self))}</pre>"
 
     def info(self, file=None):
-        """Print some summary info to stdout."""
+        """Print some summary information to stdout."""
         if not file:
             file = sys.stdout
         print(f"HDU_CLASS = {self.hdu_class}", file=file)
@@ -155,7 +155,7 @@ class LazyFitsData(object):
 
 # TODO: add unit test
 def earth_location_from_dict(meta):
-    """Create `~astropy.coordinates.EarthLocation` from FITS header dict."""
+    """Create `~astropy.coordinates.EarthLocation` from FITS header dictionary."""
     lon = Angle(meta["GEOLON"], "deg")
     lat = Angle(meta["GEOLAT"], "deg")
     # TODO: should we support both here?
@@ -171,7 +171,7 @@ def earth_location_from_dict(meta):
 
 
 def earth_location_to_dict(location):
-    """Create `~astropy.coordinates.EarthLocation` from FITS header dict."""
+    """Create `~astropy.coordinates.EarthLocation` from FITS header dictionary."""
     return {
         "GEOLON": location.lon.deg,
         "GEOLAT": location.lat.deg,
