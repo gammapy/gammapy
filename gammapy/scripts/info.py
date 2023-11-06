@@ -75,7 +75,7 @@ def print_info(info, title):
 
 
 def get_info_system():
-    """Get info about user system."""
+    """Get information about user system."""
     return {
         "python_executable": sys.executable,
         "python_version": platform.python_version(),
