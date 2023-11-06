@@ -40,6 +40,7 @@ from gammapy.modeling.models import (
     PointSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
+    UniformPrior,
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
@@ -705,6 +706,29 @@ def test_map_fit(sky_model, geom, geom_etrue):
     dataset_1.models[0].spatial_model.lon_0.value = 150
     dataset_1.npred()
     assert not dataset_1.evaluators["test-model"].contributes
+
+
+@requires_data()
+def test_prior_stat_sum(sky_model, geom, geom_etrue):
+    dataset = get_map_dataset(geom, geom_etrue, name="test")
+    datasets = Datasets([dataset])
+
+    models = Models(datasets.models)
+    models.insert(0, sky_model)
+
+    datasets.models = models
+    dataset.counts = dataset.npred()
+
+    uniformprior = UniformPrior(min=-np.inf, max=0, weight=1)
+    datasets.models.parameters["amplitude"].prior = uniformprior
+    assert_allclose(datasets.stat_sum(), 12825.9370, rtol=1e-3)
+
+    datasets.models.parameters["amplitude"].value = -1e-12
+    stat_sum_neg = datasets.stat_sum()
+    assert_allclose(stat_sum_neg, 470298.864993, rtol=1e-3)
+
+    datasets.models.parameters["amplitude"].prior.weight = 100
+    assert_allclose(datasets.stat_sum() - stat_sum_neg, 99, rtol=1e-3)
 
 
 @requires_data()
