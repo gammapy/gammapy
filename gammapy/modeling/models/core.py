@@ -481,15 +481,15 @@ class DatasetModels(collections.abc.Sequence):
         Parameters
         ----------
         path : `pathlib.Path` or str
-            path to write files
+            Path to write files.
         overwrite : bool, optional
             Overwrite existing file. Default is False.
-        full_output : bool
-            Store full parameter output.
-        overwrite_templates : bool
-            overwrite templates FITS files
-        write_covariance : bool
-            save covariance or not
+        full_output : bool, optional
+            Store full parameter output. Default is False.
+        overwrite_templates : bool, optional
+            Overwrite templates FITS files. Default is False.
+        write_covariance : bool, optional
+            Save the covariance. Default is True.
         """
         base_path, _ = split(path)
         path = make_path(path)
@@ -558,7 +558,7 @@ class DatasetModels(collections.abc.Sequence):
             return {"components": models_data}
 
     def to_parameters_table(self):
-        """Convert Models parameters to an `~astropy.table.Table` object."""
+        """Convert model parameters to a `~astropy.table.Table`."""
         table = self.parameters.to_table()
         # Warning: splitting of parameters will break is source name has a "." in its name.
         model_name = [name.split(".")[0] for name in self.parameters_unique_names]
@@ -566,7 +566,7 @@ class DatasetModels(collections.abc.Sequence):
         return table
 
     def update_parameters_from_table(self, t):
-        """Update models from a `~astropy.table.Table` object."""
+        """Update models from a `~astropy.table.Table`."""
         parameters_dict = [dict(zip(t.colnames, row)) for row in t]
         for k, data in enumerate(parameters_dict):
             self.parameters[k].update_from_dict(data)
@@ -794,7 +794,7 @@ class DatasetModels(collections.abc.Sequence):
             Add a margin in degree to the source evaluation radius.
             Used to take into account PSF width. Default is "0 deg".
         use_evaluation_region : bool, optional
-            Account for the extension of the model or not. The default is True.
+            Account for the extension of the model or not. Default is True.
 
         Returns
         -------

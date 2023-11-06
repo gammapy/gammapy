@@ -2262,10 +2262,9 @@ class NaimaSpectralModel(SpectralModel):
         """
         Compute photon density spectrum from synchrotron emission for synchrotron self-compton
         model, assuming uniform synchrotron emissivity inside a sphere of radius R (see Section
-        4.1 of Atoyan & Aharonian 1996)
+        4.1 of Atoyan & Aharonian 1996).
 
         Based on :
-
         https://naima.readthedocs.io/en/latest/examples.html#crab-nebula-ssc-model
 
         """

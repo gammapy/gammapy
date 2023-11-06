@@ -658,8 +658,9 @@ class LightCurveTemplateTemporalModel(TemporalModel):
             filename : str
                 Name of output file.
             format : str, either "table" or "map"
-                if format is table, it is serialised as an astropy Table
-                if map, then it is serialised as a RegionNDMap
+                If format is "table", it is serialised as a `~astropy.table.Table`.
+                If "map", then it is serialised as a `~gammapy.maps.RegionNDMap`.
+                Default is "table".
             overwrite : bool, optional
                 Overwrite existing file. Default is False.
         """

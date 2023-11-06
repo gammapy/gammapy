@@ -127,7 +127,7 @@ class Covariance:
 
         Parameters
         ----------
-        covariance :
+        covar : `Covariance`
             Sub-covariance.
         """
         if is_ray_initialized():
