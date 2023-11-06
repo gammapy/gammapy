@@ -73,10 +73,9 @@ class Dataset(abc.ABC):
 
         if self.mask is not None:
             stat = stat[self.mask.data]
+        prior_stat_sum = 0.0
         if self.models is not None:
-            prior_stat_sum = self.models.parameters.prior_stat_sum()
-        else:
-            prior_stat_sum = 0.0
+            prior_stat_sum = self.models.parameters.prior_stat_sum()    
         return np.sum(stat, dtype=np.float64) + prior_stat_sum
 
     @abc.abstractmethod
