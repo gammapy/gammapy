@@ -73,7 +73,6 @@ class Observation:
     _gti = LazyFitsData(cache=True)
     _pointing = LazyFitsData(cache=True)
 
-    #    @deprecated_renamed_argument("obs_info", "meta", since="1.2")
     def __init__(
         self,
         obs_id=None,
@@ -90,8 +89,15 @@ class Observation:
         pointing=None,
         location=None,
     ):
+        if obs_info is not None:
+            warnings.warn(
+                "obs_info argument is deprecated since v1.2. Use meta instead.",
+                GammapyDeprecationWarning,
+            )
+            if meta is None:
+                meta = ObservationMetaData.from_header(obs_info)
+
         self.obs_id = obs_id
-        self._obs_info = obs_info
         self.aeff = aeff
         self.edisp = edisp
         self.psf = psf
@@ -267,7 +273,6 @@ class Observation:
         return cls(
             obs_id=obs_id,
             meta=meta,
-            obs_info=obs_info,
             gti=gti,
             aeff=irfs.get("aeff"),
             bkg=irfs.get("bkg"),
@@ -332,19 +337,15 @@ class Observation:
         """
         return self.meta.deadtime_fraction
 
-    @lazyproperty
+    #    @deprecated("v1.2", alternative="meta")
+    @property
     def obs_info(self):
         """Observation info dictionary."""
-        meta = self._obs_info.copy() if self._obs_info is not None else {}
-        if self.events is not None:
-            meta.update(
-                {
-                    k: v
-                    for k, v in self.events.table.meta.items()
-                    if not k.startswith("HDU")
-                }
-            )
-        return meta
+        warnings.warn(
+            "obs_info property is deprecated since v1.2. Use meta instead.",
+            GammapyDeprecationWarning,
+        )
+        return self.meta.to_header()
 
     @property
     def pointing(self):
@@ -551,7 +552,7 @@ class Observation:
         return cls(
             events=events,
             gti=gti,
-            obs_info=obs_info,
+            #            obs_info=obs_info,
             obs_id=obs_info.get("OBS_ID"),
             pointing=FixedPointingInfo.from_fits_header(obs_info),
             meta=meta,
@@ -637,6 +638,8 @@ class Observation:
         """
         if in_memory:
             argnames = inspect.getfullargspec(self.__init__).args
+            # TODO: remove once obs_info is removed from the list of arguments in __init__
+            argnames.remove("obs_info")
             argnames.remove("self")
 
             for name in argnames:
