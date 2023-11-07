@@ -26,13 +26,13 @@ def plot_heatmap(
     col_labels : list or `~numpy.ndarray`
         List or array of labels for the columns.
     ax : `matplotlib.axes.Axes`, optional
-         Ax instance to which the heatmap is plotted. Default is None. If None, the current one is used.
+        Axis instance to which the heatmap is plotted. Default is None. If None, the current one is used.
     cbar_kw : dict, optional
         A dictionary with arguments to `matplotlib.Figure.colorbar`. Default is None.
     cbarlabel : str, optional
         The label for the color bar. Default is "".
     **kwargs : dict, optional
-         Other keyword arguments forwarded to `matplotlib.axes.Axes.imshow`.
+        Other keyword arguments forwarded to `matplotlib.axes.Axes.imshow`.
     """
     if ax is None:
         ax = plt.gca()
