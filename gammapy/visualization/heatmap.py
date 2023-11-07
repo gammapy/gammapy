@@ -95,7 +95,7 @@ def annotate_heatmap(
         or be a `matplotlib.ticker.Formatter` instance. Default is "{x:.2f}".
     textcolors : list or `~numpy.ndarray`, optional
         Two color specifications.  The first is used for
-        values below a threshold, the second for those above. Default is ("black", "white").
+        values below a threshold, the second for those above. Default is ["black", "white"].
     threshold : float, optional
         Value in data units according to which the colors from textcolors are
         applied. Default is None. If None the middle of the colormap is used as
