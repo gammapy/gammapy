@@ -1105,7 +1105,7 @@ class Map(abc.ABC):
     ):
         """Reproject each image of a ND map to input 2d geometry.
 
-           For large maps this method is faster than `reproject_to_geom`.
+       For large maps this method is faster than `reproject_to_geom`.
 
         Parameters
         ----------
