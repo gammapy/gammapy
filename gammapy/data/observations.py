@@ -792,8 +792,6 @@ class Observations(collections.abc.MutableSequence):
         for obs in self:
             obs_copy = obs.copy(in_memory=True)
             yield obs_copy
-            del obs
-            del obs_copy
 
 
 class ObservationChecker(Checker):
