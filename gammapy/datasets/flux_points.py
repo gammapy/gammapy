@@ -135,7 +135,7 @@ class FluxPointsDataset(Dataset):
         Parameters
         ----------
         filename : str
-            Filename to write to
+            Filename to write to.
         overwrite : bool, optional
             Overwrite existing file. Default is False.
         checksum : bool
