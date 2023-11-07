@@ -7,7 +7,13 @@ from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.io import fits
 from astropy.time import Time
 from astropy.units import Quantity
-from gammapy.data import DataStore, Observation, ObservationFilter, Observations
+from gammapy.data import (
+    DataStore,
+    EventList,
+    Observation,
+    ObservationFilter,
+    Observations,
+)
 from gammapy.data.metadata import ObservationMetaData
 from gammapy.data.pointing import FixedPointingInfo
 from gammapy.data.utils import get_irfs_features
@@ -573,3 +579,15 @@ def test_slice(data_store):
     obs_1 = data_store.get_observations([20136, 20137, 20151])
     assert isinstance(obs_1[0], Observation)
     assert isinstance(obs_1[1:], Observations)
+
+
+@requires_data()
+def test_observations_generator(data_store):
+    """Test Observations.generator()"""
+    obs_1 = data_store.get_observations([20136, 20137, 20151])
+
+    for idx, obs in enumerate(obs_1.in_memory_generator()):
+        assert isinstance(obs, Observation)
+        assert obs.obs_id == obs_1[idx].obs_id
+        assert isinstance(obs.events, EventList)
+        assert isinstance(obs.psf, PSF3D)

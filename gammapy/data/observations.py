@@ -794,6 +794,12 @@ class Observations(collections.abc.MutableSequence):
         obs = itertools.chain(*observations_list)
         return cls(list(obs))
 
+    def in_memory_generator(self):
+        """A generator that iterates over observation. Yield an in memory copy of the observation."""
+        for obs in self:
+            obs_copy = obs.copy(in_memory=True)
+            yield obs_copy
+
 
 class ObservationChecker(Checker):
     """Check an observation.
