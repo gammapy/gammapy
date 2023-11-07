@@ -191,7 +191,7 @@ class EventList:
         Parameters
         ----------
         event_lists : list
-            list of `~gammapy.data.EventList` to stack.
+            List of `~gammapy.data.EventList` to stack.
         **kwargs : dict, optional
             Keyword arguments passed to `~astropy.table.vstack`.
         """
@@ -303,7 +303,7 @@ class EventList:
         ----------
         row_specifier : slice or int or array of int
             Specification for rows to select,
-            passed on to ``self.table[row_specifier]``.
+            passed to ``self.table[row_specifier]``.
 
         Returns
         -------
@@ -404,7 +404,7 @@ class EventList:
         parameter : str
             Parameter used for the selection. Must be present in `self.table`.
         band : tuple or `astropy.units.Quantity`
-            Min and max value for the parameter to be selected (min <= parameter < max).
+            Minimum and maximum value for the parameter to be selected (minimum <= parameter < maximum).
             If parameter is not dimensionless, a Quantity is required.
 
         Returns

@@ -38,7 +38,7 @@ class ObservationTable(Table):
 
     @property
     def pointing_galactic(self):
-        """Pointing positions in Galactic as a `~astropy.coordinates.SkyCoord` object."""
+        """Pointing positions in Galactic coordinates as a `~astropy.coordinates.SkyCoord` object."""
         return SkyCoord(
             self["GLON_PNT"], self["GLAT_PNT"], unit="deg", frame="galactic"
         )
@@ -75,7 +75,7 @@ class ObservationTable(Table):
         return self.__class__(self.loc["OBS_ID", obs_id])
 
     def summary(self):
-        """Summary info string."""
+        """Summary information string."""
         obs_name = self.meta.get(
             "OBSERVATORY_NAME", "N/A"
         )  # This is not GADF compliant

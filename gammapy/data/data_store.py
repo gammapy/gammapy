@@ -575,7 +575,7 @@ class DataStoreMaker:
         return DataStore(hdu_table=hdu_table, obs_table=obs_table)
 
     def get_events_info(self, events_path, irf_path=None):
-        """Read events header info."""
+        """Read events header information."""
         if events_path not in self._events_info:
             self._events_info[events_path] = self.read_events_info(
                 events_path, irf_path
@@ -584,13 +584,13 @@ class DataStoreMaker:
         return self._events_info[events_path]
 
     def get_obs_info(self, events_path, irf_path=None):
-        """Read events header info and add some extra info."""
+        """Read events header information and add some extra information."""
         # We could add or remove info here depending on what we want in the obs table
         return self.get_events_info(events_path, irf_path)
 
     @staticmethod
     def read_events_info(events_path, irf_path=None):
-        """Read mandatory events header info."""
+        """Read mandatory events header information."""
         log.debug(f"Reading {events_path}")
 
         with fits.open(events_path, memmap=False) as hdu_list:

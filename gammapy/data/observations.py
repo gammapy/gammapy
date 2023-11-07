@@ -179,7 +179,7 @@ class Observation:
     def _get_obs_info(
         pointing, deadtime_fraction, time_start, time_stop, reference_time, location
     ):
-        """Create obs info dict from in memory data."""
+        """Create observation information dictionary from in memory data."""
         obs_info = {
             "DEADC": 1 - deadtime_fraction,
         }
@@ -343,7 +343,7 @@ class Observation:
 
     @property
     def obs_info(self):
-        """Observation info dictionary."""
+        """Observation information dictionary."""
         warnings.warn(
             "obs_info property is deprecated since v1.2. Use meta instead.",
             GammapyDeprecationWarning,
@@ -358,11 +358,11 @@ class Observation:
         return self._pointing
 
     def get_pointing_altaz(self, time):
-        """Get the pointing in altaz for given time."""
+        """Get the pointing in alt-az for given time."""
         return self.pointing.get_altaz(time, self.observatory_earth_location)
 
     def get_pointing_icrs(self, time):
-        """Get the pointing in icrs for given time."""
+        """Get the pointing in ICRS for given time."""
         return self.pointing.get_icrs(time, self.observatory_earth_location)
 
     @lazyproperty
@@ -539,7 +539,7 @@ class Observation:
         Returns
         -------
         observation : `~gammapy.data.Observation`
-            observation with the events and the irf read from the file.
+            Observation with the events and the IRF read from the file.
         """
         from gammapy.irf.io import load_irf_dict_from_file
 
@@ -729,7 +729,7 @@ class Observations(collections.abc.MutableSequence):
 
     @property
     def ids(self):
-        """List of obs IDs (`list`)."""
+        """List of observation IDs (`list`)."""
         return [str(obs.obs_id) for obs in self]
 
     def select_time(self, time_intervals):
@@ -738,7 +738,7 @@ class Observations(collections.abc.MutableSequence):
         Parameters
         ----------
         time_intervals : `astropy.time.Time` or list of `astropy.time.Time`
-            list of Start and stop time of the time intervals or one Time interval.
+            list of start and stop time of the time intervals or one time interval.
 
         Returns
         -------

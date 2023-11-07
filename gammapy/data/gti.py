@@ -247,12 +247,12 @@ class GTI:
 
     @property
     def met_start(self):
-        """GTI start time difference with reference time in sec, MET as a `~astropy.units.Quantity`."""
+        """GTI start time difference with reference time in seconds, MET as a `~astropy.units.Quantity`."""
         return (self.time_start - self.time_ref).to("s")
 
     @property
     def met_stop(self):
-        """GTI start time difference with reference time in sec, MET as a `~astropy.units.Quantity`."""
+        """GTI start time difference with reference time in seconds, MET as a `~astropy.units.Quantity`."""
         return (self.time_stop - self.time_ref).to("s")
 
     @property
