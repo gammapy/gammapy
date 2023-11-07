@@ -17,7 +17,7 @@ from astropy.utils import lazyproperty
 import matplotlib.pyplot as plt
 from gammapy.utils.deprecation import GammapyDeprecationWarning, deprecated
 from gammapy.utils.fits import LazyFitsData, earth_location_to_dict
-from gammapy.utils.metadata import CreatorMetaData
+from gammapy.utils.metadata import CreatorMetaData, TargetMetaData
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_to_dict, time_relative_to_ref
@@ -73,7 +73,6 @@ class Observation:
     _gti = LazyFitsData(cache=True)
     _pointing = LazyFitsData(cache=True)
 
-    #    @deprecated_renamed_argument("obs_info", "meta", since="1.2")
     def __init__(
         self,
         obs_id=None,
@@ -90,8 +89,15 @@ class Observation:
         pointing=None,
         location=None,
     ):
+        if obs_info is not None:
+            warnings.warn(
+                "obs_info argument is deprecated since v1.2. Use meta instead.",
+                GammapyDeprecationWarning,
+            )
+            if meta is None:
+                meta = ObservationMetaData.from_header(obs_info)
+
         self.obs_id = obs_id
-        self._obs_info = obs_info
         self.aeff = aeff
         self.edisp = edisp
         self.psf = psf
@@ -254,6 +260,7 @@ class Observation:
             time_stop=gti.time_stop[-1],
             reference_time=reference_time,
             creation=CreatorMetaData.from_default(),
+            target=TargetMetaData(),
         )
 
         if not isinstance(pointing, FixedPointingInfo):
@@ -266,7 +273,6 @@ class Observation:
         return cls(
             obs_id=obs_id,
             meta=meta,
-            obs_info=obs_info,
             gti=gti,
             aeff=irfs.get("aeff"),
             bkg=irfs.get("bkg"),
@@ -331,19 +337,14 @@ class Observation:
         """
         return self.meta.deadtime_fraction
 
-    @lazyproperty
+    @property
     def obs_info(self):
         """Observation info dictionary."""
-        meta = self._obs_info.copy() if self._obs_info is not None else {}
-        if self.events is not None:
-            meta.update(
-                {
-                    k: v
-                    for k, v in self.events.table.meta.items()
-                    if not k.startswith("HDU")
-                }
-            )
-        return meta
+        warnings.warn(
+            "obs_info property is deprecated since v1.2. Use meta instead.",
+            GammapyDeprecationWarning,
+        )
+        return self.meta.to_header()
 
     @property
     def pointing(self):
@@ -399,7 +400,7 @@ class Observation:
     @lazyproperty
     def target_radec(self):
         """Target RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)."""
-        return self.meta.target_position
+        return self.meta.target.position
 
     @property
     @deprecated(
@@ -550,7 +551,6 @@ class Observation:
         return cls(
             events=events,
             gti=gti,
-            obs_info=obs_info,
             obs_id=obs_info.get("OBS_ID"),
             pointing=FixedPointingInfo.from_fits_header(obs_info),
             meta=meta,
@@ -636,6 +636,8 @@ class Observation:
         """
         if in_memory:
             argnames = inspect.getfullargspec(self.__init__).args
+            # TODO: remove once obs_info is removed from the list of arguments in __init__
+            argnames.remove("obs_info")
             argnames.remove("self")
 
             for name in argnames:
@@ -791,6 +793,12 @@ class Observations(collections.abc.MutableSequence):
         """
         obs = itertools.chain(*observations_list)
         return cls(list(obs))
+
+    def in_memory_generator(self):
+        """A generator that iterates over observation. Yield an in memory copy of the observation."""
+        for obs in self:
+            obs_copy = obs.copy(in_memory=True)
+            yield obs_copy
 
 
 class ObservationChecker(Checker):
