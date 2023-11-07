@@ -388,8 +388,13 @@ class TestTheta2Table:
             events["TIME"] = [0.1, 0.2, 0.3, 0.4, 0.5] * u.s
 
             obs_info = dict(
+                OBS_ID=0,
                 DEADC=1,
+                GEOLON=16.500222222222224,
+                GEOLAT=-23.271777777777775,
+                ALTITUDE=1834.9999999997833,
             )
+
             meta = time_ref_to_dict("2010-01-01")
             obs_info.update(meta)
             events.meta.update(obs_info)
@@ -405,7 +410,6 @@ class TestTheta2Table:
             self.observations.append(
                 Observation(
                     events=EventList(events),
-                    obs_info=obs_info,
                     gti=gti,
                     pointing=pointing,
                 )
