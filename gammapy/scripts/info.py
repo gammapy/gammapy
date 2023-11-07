@@ -46,7 +46,7 @@ GAMMAPY_ENV_VARIABLES = ["GAMMAPY_DATA"]
 )
 @click.option("--envvar/--no-envvar", default=True, help="Show environment variables")
 def cli_info(system, version, dependencies, envvar):
-    """Display information about Gammapy"""
+    """Display information about Gammapy."""
     if system:
         info = get_info_system()
         print_info(info=info, title="System")
@@ -75,7 +75,7 @@ def print_info(info, title):
 
 
 def get_info_system():
-    """Get info about user system"""
+    """Get information about user system."""
     return {
         "python_executable": sys.executable,
         "python_version": platform.python_version(),

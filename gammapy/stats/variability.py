@@ -17,7 +17,7 @@ def compute_fvar(flux, flux_err, axis=0):
     from the lightcurve data.
 
     The fractional excess variance :math:`F_{var}`, an intrinsic
-    variability estimator, is given by
+    variability estimator, is given by:
 
     .. math::
         F_{var} = \sqrt{ \frac{S^{2} - \bar{ \sigma^{2}}}{ \bar{x}^{2}}}
@@ -30,12 +30,12 @@ def compute_fvar(flux, flux_err, axis=0):
     Parameters
     ----------
     flux : `~astropy.units.Quantity`
-        the measured fluxes
+        The measured fluxes.
     flux_err : `~astropy.units.Quantity`
-        the error on measured fluxes
+        The error on measured fluxes.
     axis : int, optional
         Axis along which the excess variance is computed.
-        The default is to compute the value on axis 0.
+        Default is 0.
 
     Returns
     -------
@@ -80,12 +80,12 @@ def compute_fpp(flux, flux_err, axis=0):
     Parameters
     ----------
     flux : `~astropy.units.Quantity`
-        the measured fluxes
+        The measured fluxes.
     flux_err : `~astropy.units.Quantity`
-        the error on measured fluxes
+        The error on measured fluxes.
     axis : int, optional
         Axis along which the excess variance is computed.
-        The default is to compute the value on axis 0.
+        Default is 0.
 
     Returns
     -------
@@ -122,17 +122,17 @@ def compute_chisq(flux):
     r"""Calculate the chi-square test for `LightCurve`.
 
     Chisquare test is a variability estimator. It computes
-    deviations from the expected value here mean value
+    deviations from the expected value here mean value.
 
     Parameters
     ----------
     flux : `~astropy.units.Quantity`
-        the measured fluxes
+        The measured fluxes.
 
     Returns
     -------
     ChiSq, P-value : tuple of float or `~numpy.ndarray`
-        Tuple of Chi-square and P-value
+        Tuple of Chi-square and P-value.
     """
     yexp = np.mean(flux)
     yobs = flux.data
@@ -161,15 +161,15 @@ def compute_flux_doubling(flux, flux_err, coords, axis=0):
         The measured fluxes.
     flux_err : `~astropy.units.Quantity`
         The error on measured fluxes.
-    coords: `~astropy.units.Quantity`
+    coords : `~astropy.units.Quantity`
         The coordinates at which the fluxes are measured.
     axis : int, optional
         Axis along which the value is computed.
 
     Returns
     -------
-    doubling_dict: dict
-        A dictionary containing the characteristic flux doubling, halving and errors,
+    doubling_dict : dict
+        Dictionary containing the characteristic flux doubling, halving and errors,
         with coordinates at which they were found.
     """
 
