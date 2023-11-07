@@ -140,11 +140,11 @@ class EventList:
         ----------
         filename : `pathlib.Path`, str
             Filename
-        gti : `~gammapy.data.GTI`
+        gti : `~gammapy.data.GTI`, optional
             Good Time Intervals object to save to the same file.
             Default is None.
-        overwrite : bool
-            Overwrite existing file?
+        overwrite : bool, optional
+            Overwrite existing file. Default is False.
         format : str, optional
             FITS format convention.  By default files will be written
             to the gamma-astro-data-formats (GADF) format.

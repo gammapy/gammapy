@@ -659,8 +659,8 @@ class LightCurveTemplateTemporalModel(TemporalModel):
             format : str, either "table" or "map"
                 if format is table, it is serialised as an astropy Table
                 if map, then it is serialised as a RegionNDMap
-            overwrite : bool
-                Overwrite file on disk if present
+            overwrite : bool, optional
+                Overwrite existing file. Default is False.
         """
 
         if self.filename is None:

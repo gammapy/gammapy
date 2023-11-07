@@ -1435,6 +1435,15 @@ class TemplateSpatialModel(SpatialModel):
         return data
 
     def write(self, overwrite=False):
+        """
+        Write the map.
+
+        Parameters
+        ----------
+        overwrite: bool, optional
+            Overwrite existing file.
+            Default is False, which will raise a warning if the template file exists already.
+        """
         if self.filename is None:
             raise IOError("Missing filename")
         elif os.path.isfile(make_path(self.filename)) and not overwrite:
@@ -1555,6 +1564,18 @@ class TemplateNDSpatialModel(SpatialModel):
         return u.Quantity(val, self.map.unit, copy=False)
 
     def write(self, overwrite=False):
+        """
+        Write the map.
+
+        Parameters
+        ----------
+        overwrite: bool, optional
+            Overwrite existing file. Default is False.
+
+        Note
+        ----
+        If overwrite is False and the template file already exists, a warning will be raised.
+        """
         if self.filename is None:
             raise IOError("Missing filename")
         elif os.path.isfile(self.filename) and not overwrite:

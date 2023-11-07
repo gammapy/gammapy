@@ -36,7 +36,7 @@ __all__ = [
 def compute_flux_points_ul(quantity, quantity_errp):
     """Compute UL value for fermi flux points.
 
-    See https://arxiv.org/pdf/1501.02003.pdf (page 30)
+    See https://arxiv.org/pdf/1501.02003.pdf (page 30).
     """
     return 2 * quantity_errp + quantity
 
@@ -56,12 +56,12 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject, abc.ABC):
         return self.info()
 
     def info(self, info="all"):
-        """Summary info string.
+        """Summary information string.
 
         Parameters
         ----------
-        info : {'all', 'basic', 'more', 'position', 'spectral','lightcurve'}
-            Comma separated list of options
+        info : {'all', 'basic', 'more', 'position', 'spectral', 'lightcurve'}
+            Comma separated list of options.
         """
         if info == "all":
             info = "basic,more,position,spectral,lightcurve"
@@ -198,7 +198,7 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject, abc.ABC):
             model.phi_0 = phi_0
 
     def sky_model(self, name=None):
-        """Sky model (`~gammapy.modeling.models.SkyModel`)."""
+        """Sky model as a `~gammapy.modeling.models.SkyModel` object."""
         if name is None:
             name = self.name
 
@@ -210,8 +210,7 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject, abc.ABC):
 
     @property
     def flux_points(self):
-        """Flux points (`~gammapy.estimators.FluxPoints`)."""
-
+        """Flux points as a `~gammapy.estimators.FluxPoints` object."""
         return FluxPoints.from_table(
             table=self.flux_points_table,
             reference_model=self.sky_model(),
@@ -355,7 +354,7 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         return ss
 
     def spatial_model(self):
-        """Spatial model (`~gammapy.modeling.models.SpatialModel`)."""
+        """Spatial model as a `~gammapy.modeling.models.SpatialModel` object."""
         d = self.data
         ra = d["RAJ2000"]
         dec = d["DEJ2000"]
@@ -395,7 +394,7 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         return model
 
     def spectral_model(self):
-        """Best fit spectral model (`~gammapy.modeling.models.SpectralModel`)."""
+        """Best fit spectral model as a `~gammapy.modeling.models.SpectralModel` object."""
         spec_type = self.data["SpectrumType"].strip()
 
         if spec_type == "PowerLaw":
@@ -461,7 +460,7 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
 
     @property
     def flux_points_table(self):
-        """Flux points (`~astropy.table.Table`)."""
+        """Flux points as a `~astropy.table.Table`."""
         table = Table()
         table.meta.update(self.flux_points_meta)
 
@@ -501,7 +500,7 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         return u.Quantity(values, unit)
 
     def lightcurve(self, interval="1-year"):
-        """Lightcurve (`~gammapy.estimators.FluxPoints`).
+        """Lightcurve as a `~gammapy.estimators.FluxPoints` object.
 
         Parameters
         ----------
@@ -509,7 +508,6 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
             Time interval of the lightcurve. Default is '1-year'.
             Note that '2-month' is not available for all catalogue version.
         """
-
         if interval == "1-year":
             tag = "Flux_History"
             if tag not in self.data or "time_axis" not in self.data:
@@ -680,7 +678,7 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
         return ss
 
     def spectral_model(self):
-        """Best fit spectral model (`~gammapy.modeling.models.SpectralModel`)."""
+        """Best fit spectral model as a `~gammapy.modeling.models.SpectralModel` object."""
         spec_type = self.data["SpectrumType"].strip()
 
         if spec_type == "PowerLaw":
@@ -746,7 +744,7 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
         return model
 
     def spatial_model(self):
-        """Spatial model (`~gammapy.modeling.models.SpatialModel`)."""
+        """Spatial model as a `~gammapy.modeling.models.SpatialModel` object."""
         d = self.data
         ra = d["RAJ2000"]
         dec = d["DEJ2000"]
@@ -781,7 +779,7 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
 
     @property
     def flux_points_table(self):
-        """Flux points (`~astropy.table.Table`)."""
+        """Flux points as a `~astropy.table.Table`."""
         table = Table()
         table.meta.update(self.flux_points_meta)
 
@@ -821,7 +819,7 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
         return u.Quantity(values, unit)
 
     def lightcurve(self):
-        """Lightcurve (`~gammapy.estimators.FluxPoints`)."""
+        """Lightcurve as a `~gammapy.estimators.FluxPoints` object."""
         time_axis = self.data["time_axis"]
         tag = "Flux_History"
 
@@ -911,7 +909,7 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
         return self.data["Source_Name"].strip()[-1] != "e"
 
     def spatial_model(self):
-        """Spatial model (`~gammapy.modeling.models.SpatialModel`)."""
+        """Spatial model as a `~gammapy.modeling.models.SpatialModel` object."""
         d = self.data
         ra = d["RAJ2000"]
         dec = d["DEJ2000"]
@@ -946,7 +944,7 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
         return model
 
     def spectral_model(self):
-        """Best fit spectral model (`~gammapy.modeling.models.SpectralModel`)."""
+        """Best fit spectral model as a `~gammapy.modeling.models.SpectralModel`."""
         tag = "PowerLaw2SpectralModel"
         pars = {
             "amplitude": self.data["Flux50"],
@@ -968,7 +966,7 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
 
     @property
     def flux_points_table(self):
-        """Flux points (`~astropy.table.Table`)."""
+        """Flux points as a `~astropy.table.Table`."""
         table = Table()
         table.meta.update(self.flux_points_meta)
         table["e_min"] = self._energy_edges[:-1]
@@ -1101,7 +1099,7 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
         return ss
 
     def spectral_model(self):
-        """Best fit spectral model (`~gammapy.modeling.models.SpectralModel`)."""
+        """Best fit spectral model as a `~gammapy.modeling.models.SpectralModel` object."""
         d = self.data
         spec_type = self.data["SpectrumType"].strip()
 
@@ -1141,7 +1139,7 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
 
     @property
     def flux_points_table(self):
-        """Flux points (`~astropy.table.Table`)."""
+        """Flux points as a `~astropy.table.Table`."""
         table = Table()
         table.meta.update(self.flux_points_meta)
         table["e_min"] = self._energy_edges[:-1]
@@ -1176,7 +1174,7 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
         return table
 
     def spatial_model(self):
-        """Source spatial model (`~gammapy.modeling.models.SpatialModel`)."""
+        """Source spatial model as a `~gammapy.modeling.models.SpatialModel` object."""
         d = self.data
         ra = d["RAJ2000"]
         dec = d["DEJ2000"]

@@ -48,11 +48,11 @@ def make_catalog_random_positions_cube(
     Parameters
     ----------
     size : int
-        Number of sources
+        Number of sources.
     dimension : {1, 2, 3}
-        Number of dimensions
+        Number of dimensions.
     distance_max : `~astropy.units.Quantity`
-        Maximum distance
+        Maximum distance.
     random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
         Defines random number generator initialisation.
         Passed to `~gammapy.utils.random.get_random_state`.
@@ -61,7 +61,7 @@ def make_catalog_random_positions_cube(
     -------
     table : `~astropy.table.Table`
         Table with 3D position cartesian coordinates.
-        Columns: x (pc), y (pc), z (pc)
+        Columns: x (pc), y (pc), z (pc).
     """
     distance_max = Quantity(distance_max).to_value("pc")
     random_state = get_random_state(random_state)
@@ -100,9 +100,9 @@ def make_catalog_random_positions_sphere(
     Parameters
     ----------
     size : int
-        Number of sources
+        Number of sources.
     distance_min, distance_max : `~astropy.units.Quantity`
-        Minimum and maximum distance
+        Minimum and maximum distance.
     random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
         Defines random number generator initialisation.
         Passed to `~gammapy.utils.random.get_random_state`.
@@ -111,7 +111,7 @@ def make_catalog_random_positions_sphere(
     -------
     catalog : `~astropy.table.Table`
         Table with 3D position spherical coordinates.
-        Columns: lon (deg), lat (deg), distance(pc)
+        Columns: lon (deg), lat (deg), distance(pc).
     """
     distance_min = Quantity(distance_min).to_value("pc")
     distance_max = Quantity(distance_max).to_value("pc")
@@ -151,17 +151,17 @@ def make_base_catalog_galactic(
     Parameters
     ----------
     n_sources : int
-        Number of sources to simulate
+        Number of sources to simulate.
     rad_dis : callable
-        Radial surface density distribution of sources
+        Radial surface density distribution of sources.
     vel_dis : callable
-        Proper motion velocity distribution of sources
+        Proper motion velocity distribution of sources.
     max_age : `~astropy.units.Quantity`
-        Maximal age of the source
+        Maximal age of the source.
     spiralarms : bool
-        Include a spiralarm model in the catalog?
+        Include a spiral arm model in the catalog.
     n_ISM : `~astropy.units.Quantity`
-        Density of the interstellar medium
+        Density of the interstellar medium.
     random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
         Defines random number generator initialisation.
         Passed to `~gammapy.utils.random.get_random_state`.
@@ -169,7 +169,7 @@ def make_base_catalog_galactic(
     Returns
     -------
     table : `~astropy.table.Table`
-        Catalog of simulated source positions and proper velocities
+        Catalog of simulated source positions and proper velocities.
     """
     max_age = Quantity(max_age).to_value("yr")
     n_ISM = Quantity(n_ISM).to("cm-3")
@@ -291,7 +291,7 @@ def add_pulsar_parameters(
     """Add pulsar parameters to the table.
 
     For the initial normal distribution of period and logB can exist the following
-    Parameters: B_mean=12.05[log Gauss], B_stdv=0.55, P_mean=0.3[s], P_stdv=0.15
+    Parameters: B_mean=12.05[log Gauss], B_stdv=0.55, P_mean=0.3[s], P_stdv=0.15.
 
     Parameters
     ----------
@@ -374,9 +374,9 @@ def add_pwn_parameters(table):
 def add_observed_parameters(table, obs_pos=None):
     """Add observable parameters (such as sky position or distance).
 
-    Input table columns: x, y, z, extension, luminosity
+    Input table columns: x, y, z, extension, luminosity.
 
-    Output table columns: distance, glon, glat, flux, angular_extension
+    Output table columns: distance, glon, glat, flux, angular_extension.
 
     Position of observer in cartesian coordinates.
     Center of galaxy as origin, x-axis goes through sun.
@@ -384,14 +384,15 @@ def add_observed_parameters(table, obs_pos=None):
     Parameters
     ----------
     table : `~astropy.table.Table`
-        Input table
-    obs_pos : tuple or None
-        Observation position (X, Y, Z) in Galactocentric coordinates (default: Earth)
+        Input table.
+    obs_pos : tuple, optional
+        Observation position (X, Y, Z) in Galactocentric coordinates.
+        Default is None, which uses the Earth's position.
 
     Returns
     -------
     table : `~astropy.table.Table`
-        Modified input table with columns added
+        Modified input table with columns added.
     """
     obs_pos = obs_pos or [astrometry.D_SUN_TO_GALACTIC_CENTER, 0, 0]
 

@@ -20,7 +20,7 @@ class PWN:
     pulsar : `~gammapy.astro.source.Pulsar`
         Pulsar model instance.
     snr : `~gammapy.astro.source.SNRTrueloveMcKee`
-        SNR model instance
+        SNR model instance.
     eta_e : float
         Fraction of energy going into electrons.
     eta_B : float
@@ -28,7 +28,7 @@ class PWN:
     age : `~astropy.units.Quantity`
         Age of the PWN.
     morphology : str
-        Morphology model of the PWN
+        Morphology model of the PWN.
     """
 
     def __init__(
@@ -101,7 +101,7 @@ class PWN:
         Parameters
         ----------
         t : `~astropy.units.Quantity`
-            Time after birth of the SNR
+            Time after birth of the SNR.
         """
         t = Quantity(t, "yr")
         r_collision = self._radius_free_expansion(self._collision_time)
@@ -122,7 +122,7 @@ class PWN:
         Parameters
         ----------
         t : `~astropy.units.Quantity`
-            Time after birth of the SNR
+            Time after birth of the SNR.
         """
         t = Quantity(t, "yr")
         energy = self.pulsar.energy_integrated(t)

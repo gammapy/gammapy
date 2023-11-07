@@ -16,7 +16,7 @@ __all__ = [
 
 
 class SourceCatalogObjectHWCBase(SourceCatalogObject, abc.ABC):
-    """Base class for the HAWC catalogs objects"""
+    """Base class for the HAWC catalogs objects."""
 
     _source_name_key = "source_name"
 
@@ -24,7 +24,7 @@ class SourceCatalogObjectHWCBase(SourceCatalogObject, abc.ABC):
         return self.info()
 
     def info(self, info="all"):
-        """Summary info string.
+        """Summary information string.
 
         Parameters
         ----------
@@ -46,7 +46,7 @@ class SourceCatalogObjectHWCBase(SourceCatalogObject, abc.ABC):
         return ss
 
     def _info_basic(self):
-        """Print basic info."""
+        """Print basic information."""
         return (
             f"\n*** Basic info ***\n\n"
             f"Catalog row index (zero-based) : {self.row_index}\n"
@@ -54,7 +54,7 @@ class SourceCatalogObjectHWCBase(SourceCatalogObject, abc.ABC):
         )
 
     def _info_position(self):
-        """Print position info."""
+        """Print position information."""
         return (
             f"\n*** Position info ***\n\n"
             f"RA: {self.data.ra:.3f}\n"
@@ -65,7 +65,7 @@ class SourceCatalogObjectHWCBase(SourceCatalogObject, abc.ABC):
         )
 
     def _info_spectrum(self):
-        """Print spectral info."""
+        """Print spectral information."""
         ss = "\n*** Spectral info ***\n\n"
         ss += self._info_spectrum_one(0)
 
@@ -143,7 +143,7 @@ class SourceCatalogObject2HWC(SourceCatalogObjectHWCBase):
     def spatial_model(self, which="point"):
         """Spatial model (`~gammapy.modeling.models.SpatialModel`).
 
-        * ``which="point"`` - `~gammapy.modeling.models.PointSpatialModel`
+        * ``which="point"`` - `~gammapy.modeling.models.PointSpatialModel`.
         * ``which="extended"`` - `~gammapy.modeling.models.DiskSpatialModel`.
           Only available for some sources. Raise ValueError if not available.
         """
@@ -171,12 +171,12 @@ class SourceCatalogObject2HWC(SourceCatalogObjectHWCBase):
     def sky_model(self, which="point"):
         """Sky model (`~gammapy.modeling.models.SkyModel`).
 
-        * ``which="point"`` - Sky model for point source analysis
+        * ``which="point"`` - Sky model for point source analysis.
         * ``which="extended"`` - Sky model for extended source analysis.
           Only available for some sources. Raise ValueError if not available.
 
         According to the paper, the radius of the extended source model is only a rough estimate
-        of the source size, based on the residual excess..
+        of the source size, based on the residual excess.
         """
         return SkyModel(
             spatial_model=self.spatial_model(which),
@@ -227,6 +227,7 @@ class SourceCatalogObject3HWC(SourceCatalogObjectHWCBase):
 
     @property
     def n_models(self):
+        """Number of models."""
         return 1
 
     def _info_spectrum_one(self, idx):
@@ -253,8 +254,7 @@ class SourceCatalogObject3HWC(SourceCatalogObjectHWCBase):
         return self.data["spec0_radius"] == 0.0
 
     def spectral_model(self):
-        """Spectral model (`~gammapy.modeling.models.PowerLawSpectralModel`)."""
-
+        """Spectral model as a `~gammapy.modeling.models.PowerLawSpectralModel` object."""
         pars = {
             "reference": "7 TeV",
             "amplitude": self.data["spec0_dnde"],
@@ -276,7 +276,7 @@ class SourceCatalogObject3HWC(SourceCatalogObjectHWCBase):
         return model
 
     def spatial_model(self):
-        """Spatial model (`~gammapy.modeling.models.SpatialModel`)."""
+        """Spatial model as a `~gammapy.modeling.models.SpatialModel` object."""
         pars = {"lon_0": self.data.glon, "lat_0": self.data.glat, "frame": "galactic"}
 
         if self.is_pointlike:
@@ -298,7 +298,7 @@ class SourceCatalogObject3HWC(SourceCatalogObjectHWCBase):
         return model
 
     def sky_model(self):
-        """Sky model (`~gammapy.modeling.models.SkyModel`)."""
+        """Sky model as a `~gammapy.modeling.models.SkyModel` object."""
         return SkyModel(
             spatial_model=self.spatial_model(),
             spectral_model=self.spectral_model(),
@@ -318,7 +318,7 @@ class SourceCatalog3HWC(SourceCatalog):
     References
     ----------
     .. [1] 3HWC: The Third HAWC Catalog of Very-High-Energy Gamma-ray Sources",
-       <https://data.hawc-observatory.org/datasets/3hwc-survey/index.php>`__
+       https://data.hawc-observatory.org/datasets/3hwc-survey/index.php
     """
 
     tag = "3hwc"

@@ -1927,6 +1927,15 @@ class TemplateNDSpectralModel(SpectralModel):
         return u.Quantity(val, self.map.unit, copy=False)
 
     def write(self, overwrite=False):
+        """
+        Write the map.
+
+        Parameters
+        ----------
+        overwrite: bool, optional
+            Overwrite existing file.
+            Default is False, which will raise a warning if the template file exists already.
+        """
         if self.filename is None:
             raise IOError("Missing filename")
         elif os.path.isfile(self.filename) and not overwrite:

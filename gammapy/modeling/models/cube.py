@@ -955,6 +955,15 @@ class TemplateNPredModel(ModelBase):
         return data
 
     def write(self, overwrite=False):
+        """
+        Write the map.
+
+        Parameters
+        ----------
+        overwrite: bool, optional
+            Overwrite existing file.
+            Default is False, which will raise a warning if the template file exists already.
+        """
         if self.filename is None:
             raise IOError("Missing filename")
         elif os.path.isfile(make_path(self.filename)) and not overwrite:
