@@ -27,6 +27,7 @@ the english word "pie". You can listen to it `here <http://ipa-reader.xyz/?text=
 
 .. accordion-footer::
 
+
 .. accordion-header::
     :id: collapseHowToTwo
     :title: Select observations
@@ -56,8 +57,9 @@ methods.
     :title: Group observations
     :link: ../tutorials/api/observation_clustering.html
 
- `~gammapy.data.Observations` can be grouped depending on a number of various quantities. The two methods to do so
-are manual grouping and hierarchical clustering. The quantity you group by can be adjusted according to each science case.
+`~gammapy.data.Observations` can be grouped depending on a number of various quantities.
+The two methods to do so are manual grouping and hierarchical clustering. The quantity
+you group by can be adjusted according to each science case.
 
 .. accordion-footer::
 
@@ -114,8 +116,21 @@ take the difference. Note that in Gammapy, the fit statistic is defined as ``S =
 
 .. accordion-footer::
 
+
 .. accordion-header::
     :id: collapseHowToEight
+    :title: Reduce data
+    :link: ../tutorials/api/makers.html#data-reduction-loop
+
+There are two ways for the data reductions steps to be implemented. Either a loop is used to
+run the full reduction chain, or `~gammapy.makers.DatasetsMaker` is utilised to perform the
+reduction loop internally.
+
+.. accordion-footer::
+
+
+.. accordion-header::
+    :id: collapseHowToNine
     :title: Compute cumulative significance
     :link: ../tutorials/analysis-1d/spectral_analysis.html#source-statistic
 
@@ -128,7 +143,7 @@ access the total statistics with the ``info_table(cumulative=True)`` method of
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseHowToNine
+    :id: collapseHowToTen
     :title: Implement a custom model
     :link: ../tutorials/api/models.html#implementing-a-custom-model
 
@@ -137,7 +152,7 @@ Gammapy allows the flexibility of using user-defined models for analysis.
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseHowToTen
+    :id: collapseHowToEleven
     :title: Implement energy dependent spatial models
     :link: ../tutorials/api/models.html#models-with-energy-dependent-morphology
 
@@ -147,7 +162,7 @@ such models within the modeling framework.
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseHowToEleven
+    :id: collapseSHowToTwelve
     :title: Model astrophysical source spectra
 
 It is possible to combine Gammapy with astrophysical modeling codes, if they
@@ -160,7 +175,7 @@ H.E.S.S. or Fermi-LAT data).
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseSHowToTwelve
+    :id: collapseHowToThirteen
     :title: Model temporal profiles
     :link: ../tutorials/analysis-time/light_curve_simulation.html#fitting-temporal-models
 
@@ -171,7 +186,7 @@ one for each time bin.
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseHowToThirteen
+    :id: collapseHowToFourteen
     :title: Improve fit convergence with constraints on the source position
 
 It happens that a 3D fit does not converge with warning messages indicating that the
@@ -193,7 +208,7 @@ explains how to add a validity range of a model parameter.
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseHowToFourteen
+    :id: collapseHowToFifteen
     :title: Reduce memory budget for large datasets
 
 When dealing with surveys and large sky regions, the amount of memory required might become
@@ -212,7 +227,7 @@ by removing it from the list of options passed to the `~gammapy.makers.MapDatase
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseHowToFifteen
+    :id: collapseHowToSixteen
     :title: Copy part of a data store
 
 To share specific data from a database, it might be necessary to create a new data storage with
@@ -224,7 +239,7 @@ and build the associated observation and HDU tables.
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseHowToSixteen
+    :id: collapseHowToSeventeen
     :title: Interpolate onto a different geometry
     :link: ../tutorials/api/maps.html#filling-maps-from-interpolation
 
@@ -233,7 +248,7 @@ To interpolate maps onto a different geometry use `~gammapy.maps.Map.interp_to_g
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseHowToSeventeen
+    :id: collapseHowToEighteen
     :title: Suppress warnings
 
 In general it is not recommended to suppress warnings from code because they
@@ -254,7 +269,7 @@ warning like so:
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseHowToEighteen
+    :id: collapseHowToNineteen
     :title: Display a progress bar
 
 Gammapy provides the possibility of displaying a
@@ -284,7 +299,7 @@ The progress bar is available within the following:
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseHowToNineteen
+    :id: collapseHowToTwenty
     :title: Change plotting style and color-blind friendly visualizations
 
 As the Gammapy visualisations are using the library `matplotlib` that provides color styles, it is possible to change the
@@ -322,7 +337,7 @@ or
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseHowToTwenty
+    :id: collapseHowToTwentyOne
     :title: Add PHASE information to your data
 
 For doing pulsar analysis, you must compute the phase associated
