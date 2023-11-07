@@ -484,8 +484,8 @@ class DatasetModels(collections.abc.Sequence):
         ----------
         path : `pathlib.Path` or str
             path to write files
-        overwrite : bool
-            overwrite YAML files
+        overwrite : bool, optional
+            Overwrite existing file. Default is False.
         full_output : bool
             Store full parameter output.
         overwrite_templates : bool

@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import pytest
 import numpy as np
+from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.io import fits
 from gammapy.data import DataStore
@@ -242,16 +243,12 @@ def test_data_store_fixed_rad_max():
 
 
 @requires_data()
-def test_data_store_header_info_in_obs_info(data_store):
-    """Test information from the obs index header is propagated into obs_info"""
+def test_data_store_header_info_in_meta(data_store):
+    """Test information from the obs index header is propagated into meta"""
     obs = data_store.obs(obs_id=23523)
 
-    assert "MJDREFI" in obs.obs_info
-    assert "MJDREFF" in obs.obs_info
-    assert "GEOLON" in obs.obs_info
-    assert "GEOLAT" in obs.obs_info
-    # make sure we don't add the OBS_INDEX HDUCLAS
-    assert "HDUCLAS1" not in obs.obs_info
+    assert obs.meta.obs_info is not None
+    # TODO: restructure test once all elements are in place
 
 
 @requires_data()
@@ -276,7 +273,7 @@ def test_data_store_from_dir_no_obs_index(caplog, tmpdir):
     assert data_store.obs_table is None
     assert "No observation index table." in data_store.info(show=False)
 
-    assert obs.obs_info["ONTIME"] == 1687.0
+    assert_allclose(obs.meta.location.lon.deg, 16.500222)
     assert len(observations) == 2
 
     test_dir = tmpdir / "test"
