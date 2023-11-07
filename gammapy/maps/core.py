@@ -486,6 +486,24 @@ class Map(abc.ABC):
         for idx in np.ndindex(self.geom.shape_axes):
             yield self.data[idx[::-1]], idx[::-1]
 
+    def iter_by_image_index(self):
+        """Iterate over image planes of the map.
+
+        The image plane index is in data order, so that the data array can be
+        indexed directly.
+
+        Yields
+        ------
+        idx : tuple
+            ``idx`` is a tuple of int, the index of the image plane.
+
+        See also
+        --------
+        iter_by_image : iterate by image returning a map
+        """
+        for idx in np.ndindex(self.geom.shape_axes):
+            yield idx[::-1]
+
     def coadd(self, map_in, weights=None):
         """Add the contents of ``map_in`` to this map.
 
