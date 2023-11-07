@@ -1105,19 +1105,19 @@ class Map(abc.ABC):
     ):
         """Reproject each image of a ND map to input 2d geometry.
 
-       For large maps this method is faster than `reproject_to_geom`.
+        For large maps this method is faster than `reproject_to_geom`.
 
         Parameters
         ----------
         geom : `~gammapy.maps.Geom`
             Target slice geometry (2d)
         preserve_counts : bool
-            Preserve the integral over each bin.  This should be true
-            if the map is an integral quantity (e.g. counts) and false if
-            the map is a differential quantity (e.g. intensity)
+            Preserve the integral over each bin.  This should be True
+            if the map is an integral quantity (e.g. counts) and False if
+            the map is a differential quantity (e.g. intensity).
         precision_factor : int
-             Minimal factor between the bin size of the output map and the oversampled base map.
-           Used only for the oversampling method.
+            Minimal factor between the bin size of the output map and the oversampled base map.
+            Used only for the oversampling method.
 
         Returns
         -------
