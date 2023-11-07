@@ -1,3 +1,4 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 from .cmap import colormap_hess, colormap_milagro
 from .datasets import plot_npred_signal, plot_spectrum_datasets_off_regions
 from .heatmap import annotate_heatmap, plot_heatmap

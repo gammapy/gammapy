@@ -95,6 +95,22 @@ def test_wcsndmap_read_write(tmp_path, npix, binsz, frame, proj, skydir, axes):
     m3 = Map.read(path, map_type="wcs")
 
 
+@pytest.mark.parametrize(
+    ("npix", "binsz", "frame", "proj", "skydir", "axes"), wcs_test_geoms
+)
+def test_wcsndmap_write_checksum(tmp_path, npix, binsz, frame, proj, skydir, axes):
+    geom = WcsGeom.create(npix=npix, binsz=binsz, proj=proj, frame=frame, axes=axes)
+    path = tmp_path / "tmp.fits"
+
+    m0 = WcsNDMap(geom)
+    m0.write(path, overwrite=True, checksum=True)
+
+    hdul = fits.open(path)
+    for hdu in hdul:
+        assert "CHECKSUM" in hdu.header
+        assert "DATASUM" in hdu.header
+
+
 def test_wcsndmap_read_write_fgst(tmp_path):
     path = tmp_path / "tmp.fits"
 

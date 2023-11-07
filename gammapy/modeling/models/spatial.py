@@ -405,9 +405,11 @@ class SpatialModel(ModelBase):
         which: list of str
             Which errors to plot.
             Available options are:
+
                 * "all": all the optional steps are plotted
                 * "position": plot the position error of the spatial model.
                 * "extension": plot the extension error of the spatial model.
+
         kwargs_position : dict
             Keyword arguments passed to `~SpatialModel.plot_position_error`
         kwargs_extension : dict
@@ -546,6 +548,7 @@ class PointSpatialModel(SpatialModel):
 
         return dx * dy
 
+    @property
     def is_energy_dependent(self):
         return False
 
@@ -1432,6 +1435,15 @@ class TemplateSpatialModel(SpatialModel):
         return data
 
     def write(self, overwrite=False):
+        """
+        Write the map.
+
+        Parameters
+        ----------
+        overwrite: bool, optional
+            Overwrite existing file.
+            Default is False, which will raise a warning if the template file exists already.
+        """
         if self.filename is None:
             raise IOError("Missing filename")
         elif os.path.isfile(make_path(self.filename)) and not overwrite:
@@ -1552,6 +1564,18 @@ class TemplateNDSpatialModel(SpatialModel):
         return u.Quantity(val, self.map.unit, copy=False)
 
     def write(self, overwrite=False):
+        """
+        Write the map.
+
+        Parameters
+        ----------
+        overwrite: bool, optional
+            Overwrite existing file. Default is False.
+
+        Note
+        ----
+        If overwrite is False and the template file already exists, a warning will be raised.
+        """
         if self.filename is None:
             raise IOError("Missing filename")
         elif os.path.isfile(self.filename) and not overwrite:

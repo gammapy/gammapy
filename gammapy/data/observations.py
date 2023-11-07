@@ -557,7 +557,9 @@ class Observation:
             **irf_dict,
         )
 
-    def write(self, path, overwrite=False, format="gadf", include_irfs=True):
+    def write(
+        self, path, overwrite=False, format="gadf", include_irfs=True, checksum=False
+    ):
         """
         Write this observation into `path` using the specified format
 
@@ -565,12 +567,15 @@ class Observation:
         ----------
         path: str or `~pathlib.Path`
             Path for the output file
-        overwrite: bool
-            If true, existing files are overwritten.
+        overwrite: bool, optional
+            Overwrite existing file. Default is False.
         format: str
-            Output format, currently only "gadf" is supported
+            Output format, currently only "gadf" is supported. Default is "gadf".
         include_irfs: bool
-            Whether to include irf components in the output file
+            Whether to include irf components in the output file. Default is True.
+        checksum : bool
+            When True adds both DATASUM and CHECKSUM cards to the headers written to the file.
+            Default is False.
         """
         if format != "gadf":
             raise ValueError(f'Only the "gadf" format is supported, got {format}')
@@ -599,12 +604,12 @@ class Observation:
                 if irf is not None:
                     hdul.append(irf.to_table_hdu(format="gadf-dl3"))
 
-        hdul.writeto(path, overwrite=overwrite)
+        hdul.writeto(path, overwrite=overwrite, checksum=checksum)
 
     def copy(self, in_memory=False, **kwargs):
         """Copy observation
 
-        Overwriting arguments requires the 'in_memory` argument to be true.
+        Overwriting Observation arguments requires the 'in_memory` argument to be true.
 
         Parameters
         ----------
@@ -615,18 +620,14 @@ class Observation:
 
         Examples
         --------
-
-        .. code::
-
-            from gammapy.data import Observation
-
-            obs = Observation.read(
-                "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz"
-            )
-
-            obs_copy = obs.copy(obs_id=1234)
-            print(obs_copy)
-
+        >>>from gammapy.data import Observation
+        >>>
+        >>>obs = Observation.read(
+        >>>    "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz"
+        >>>)
+        >>>
+        >>>obs_copy = obs.copy(in_memory=True, obs_id=1234)
+        >>>print(obs_copy)
 
         Returns
         -------
@@ -663,6 +664,10 @@ class Observations(collections.abc.MutableSequence):
 
     def __init__(self, observations=None):
         self._observations = []
+
+        if observations is None:
+            observations = []
+
         for obs in observations:
             self.append(obs)
 

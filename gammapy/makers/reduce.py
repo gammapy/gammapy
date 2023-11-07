@@ -1,3 +1,4 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 from astropy.coordinates import Angle
 import gammapy.utils.parallel as parallel
@@ -21,7 +22,8 @@ class DatasetsMaker(Maker, parallel.ParallelMixin):
     makers : list of `Maker` objects
         Makers
     stack_datasets : bool
-        If True stack into the reference dataset (see `run` method arguments).
+        If True, stack into the reference dataset (see `run` method arguments).
+        Default is True.
     n_jobs : int
         Number of processes to run in parallel.
         Default is one, unless `~gammapy.utils.parallel.N_JOBS_DEFAULT` was modified.
@@ -34,8 +36,10 @@ class DatasetsMaker(Maker, parallel.ParallelMixin):
         If only one value is passed, a square region is extracted.
         If None it returns an error, except if the list of makers includes a `SafeMaskMaker`
         with the offset-max method defined. In that case it is set to two times `offset_max`.
+        Default is None.
     parallel_backend : {'multiprocessing', 'ray'}
         Which backend to use for multiprocessing.
+        Default is None.
     """
 
     tag = "DatasetsMaker"
@@ -122,9 +126,7 @@ class DatasetsMaker(Maker, parallel.ParallelMixin):
 
     def callback(self, dataset):
         if self.stack_datasets:
-            if isinstance(self._dataset, MapDataset) and isinstance(
-                dataset, MapDatasetOnOff
-            ):
+            if type(self._dataset) is MapDataset and type(dataset) is MapDatasetOnOff:
                 dataset = dataset.to_map_dataset(name=dataset.name)
             self._dataset.stack(dataset)
         else:

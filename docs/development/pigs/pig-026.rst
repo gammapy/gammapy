@@ -1,0 +1,288 @@
+.. include:: ../../references.txt
+
+.. _pig-026:
+
+********************************
+PIG 26 - Model Priors API 
+********************************
+
+* Author: Noah Biederbeck, Katrin Streil
+* Created: ``2023-03-13``
+* Accepted: ``2023-11-03``
+* Status: Accepted
+* Discussion: `#4381`_
+
+Abstract
+========
+
+This PIG is intended to introduce priors on parameters that are evaluated during fitting.
+
+Motivation
+==========
+
+Using priors on models or on parameters is the next step in full-fledged statistical analyses. 
+A prior can incorporate the analysers' knowledge of the topic at hand or information about
+the estimated IRFs systematics provided by the corresponding experiment, and yield more realistic and trustworthy results. 
+The proposed formalism also includes the application of nuisance parameters and regularization.
+
+Use cases
+=========
+
+In the past priors were a regularly requested feature or the solution to a problem.
+See the following issues and PRs of Gammapy:
+
+Case 1: Background systematics as a nuisance parameter `#3955`_
+---------------------------------------------------------
+The goal is to fit energy-dependent systematics in the FoVBackground with nuisance parameters and set priors on the two model parameters ``norm`` and ``tilt``:
+
+
+.. code:: python 
+  
+  from gammapy.modeling.model import GaussianPrior, PowerLawNormSpectralModel
+
+  bkg_model = FoVBackgroundModel(spectral_model = PowerLawNormSpectralModel(),
+                          dataset_name = dataset.name)
+  tilt_prior =  GaussianPrior(mu = "0", sigma = "0.05")
+  norm_prior =  GaussianPrior(mu = "1", sigma = "0.1")
+
+  bkg_model.set_prior([bkg_model.parameters['tilt'],bkg_model.parameters['norm']], [tilt_prior, norm_prior])
+
+
+A preliminary version was set up like this and tests on simulated datasets were successful. Note that this setup is quite simple and it can be developed more advanced based on the same principle. 
+
+Case 2: Favoring positive values for flux amplitudes
+---------------------------------------------------
+
+A step-like prior function can be used to favour positive values for physical properties like the flux amplitude. By setting a prior one avoids defining hard boundary conditions with the ``min`` attribute of the to-be-fitted parameter. 
+The prior is set to ``value`` if the parameter value is between ``xmin`` and ``xmax`` and 0 if not.
+
+.. code:: python 
+
+   from gammapy.modeling.models import PowerLawSpectraModel, StepPrior
+
+   pwl = PowerLawSpectraModel()
+   prior = StepPrior(xmin = "-inf", xmax = "0",  value = "1")
+   pwl.set_prior([pwl.parameters['amplitude']], [prior])
+  
+
+
+
+Case 3: Support unfolding methods for spectral flux points `#4122`_
+----------------------------------------------------------
+
+The proposed prior class will allow the probability to unfold spectral flux points with Tikonov regularisation. The Tikonov matrix can be defined and set as the covariance matrix in the class ``CovarianceGaussianPrior``. The weight of the ``PriorFitStatistic`` can be interpreted as the regularisation strength tau. However, this requires a more advanced setup since this multi-dimensional prior is set on multiple parameters simultaneously. The goal is to use the proposed prior class as a starting point and develop it into multidimensional use cases in the near future. 
+A suggested implementation example is shown below. Here the prior is set on the model instead of the single parameters.
+
+.. code:: python 
+
+  import numpy as np
+  from astropy import units as u
+  from gammapy.modeling.model import PiecewiseNormSpectralModel, MultivariateGaussianPrior, PowerLawSpectralModel
+
+  n_points = 10
+    
+  energy = np.geomspace(1, 10, n_points) * u.TeV
+  norm =  PiecewiseNormSpectralModel(energy=energy)
+  
+  prior = MultivariateGaussianPrior.from_covariance_matrix(means=np.ones(10), covariance_type="diagonal")
+  prior.weight = 1.1 
+  norm.prior = prior
+  
+  spectral_model = PowerLawSpectraModel() * norm
+
+Additional use case:  Add sigma v estimator functionality for dark matter use case `#2075`_
+
+Implementation
+==============
+
+The following implementation draft is compatible with the current API,
+where the models are set via Dataset.model and the Fit is run via Fit.run(datasets).
+
+.. code:: python
+
+  class PriorModel(ModelBase):
+
+        _weight = 1
+        _type = "prior"
+
+        @property
+        def parameters(self):
+            """PriorParameters (`~gammapy.modeling.PriorParameters`)"""
+            return PriorParameters(
+                [getattr(self, name) for name in self.default_parameters.names]
+            )
+                    
+                  
+        @property
+        def weight(self):
+            return self._weight
+        
+        @weight.setter
+        def weight(self, value):
+            self._weight = value
+            
+        def __call__(self, value):
+            """Call evaluate method"""
+            kwargs = {par.name: par.quantity for par in self.parameters}
+            if isinstance(value, Parameter):
+                return self.evaluate(value.quantity, **kwargs)     
+             else:
+                raise TypeError(f"Invalid type: {value}, {type(value)}")
+            
+
+The base ``PriorModel`` class inherits from the ``ModelBase`` class and allows to set (for now one) unit to which the to-be-evaluated parameter the prior is set on is converged. In addition, there can be a weight set. The parameters of the  ``PriorModel`` are ``PriorParameters`` and ``PriorParameter``. They inherit from the ``Parameters`` and ``Parameter`` classes, respectively, however, have a limited amount of attributes. 
+It is assumed that the ``PriorParameters`` are set in the same unit as the ``Parameter`` they get evaluated on.  
+
+Future additional properties of the ``PriorModel`` classes: 
+
+- Write/read from/to a yaml file, ideally also when the corresponding model is written/read (see serialisation example below)
+- Prior registry system
+- Different prior subclasses depending on the use cases 
+
+Exemplary additional prior subclasses:
+--------------------------------------
+
+.. code:: python
+
+  class GaussianPrior(PriorModel):
+
+        """Gaussian Prior with mu and sigma.
+        """
+        tag = ["GaussianPrior"]
+        _type = "prior"
+        mu = PriorParameter(name="mu", value = 0, unit = '')
+        sigma = PriorParameter(name="sigma", value = 1, unit = '')
+        
+        @staticmethod
+        def evaluate(value, mu, sigma):
+            return ((value - mu) / sigma) ** 2
+
+
+.. code:: python
+
+  class UniformPrior(PriorModel):
+
+        """Uniform Prior
+        """
+        tag = ["UniformPrior"]
+        uni = PriorParameter(name="uni", value = 0, min = 0, max = 10, unit = '' )
+        
+        @staticmethod
+        def evaluate(value, uni):
+            return uni
+
+            
+The priors can be set on a ```Parameter``` as ``.prior`` and get evaluated within:
+
+.. code:: python 
+
+  class Parameter():
+
+        _prior = None
+    
+        @property
+        def prior(self):
+            return self._prior
+    
+        @prior.setter
+        def prior(self, value):
+            self._prior = value
+    
+        def prior_stat_sum(self):
+            if self.prior is not None:
+                return self.prior.weight * self.prior(self)
+
+The ``Parameters`` inherit the priors and evaluate the ``prior_stat_sum`` of all the ``Parameters.parameters``:
+
+.. code:: python 
+
+  class Parameters():
+   
+        @property
+        def prior(self):
+              return [par.prior for par in self]
+          
+          def prior_stat_sum(self):
+              parameters_stat_sum = 0
+              for par in self:
+                  if par.prior is not None:
+                      parameters_stat_sum += par.prior_stat_sum()
+              return parameters_stat_sum
+
+
+During the Fit the ``Datasets.stat_sum()`` function is evaluated.  Now the function has to compute the statistics due to the priors set on the parameters and add to the stat_sum. 
+
+.. code:: python 
+
+  class Datasets():
+  
+        def stat_sum(self):
+            """Total statistic given the current model parameters."""
+            stat = self.stat_array()
+            
+            if self.mask is not None:
+                stat = stat[self.mask.data]
+            prior_stat_sum = self.models.parameters.prior_stat_sum()
+            return np.sum(stat, dtype=np.float64) + prior_stat_sum
+
+
+A simple method in the ``Models`` class will allow setting priors on multiple parameters simultaneously. 
+
+.. code:: python 
+
+  class Models(Models):
+      
+        def set_prior(self, parameters, priors):
+            for parameter, prior in zip(parameters, priors):
+                parameter.prior = prior
+
+
+
+
+Serialisation 
+------------
+
+The priors are serialised and read and writeable to a yaml file. They are also saved if the associated ``Parameter`` or ``Parameters`` is transformed to a dictionary. For this, the prior subclasses are tagged. The following two example shows the resulting yaml file for a ``Parameter``.
+
+.. code-block:: yaml
+
+
+  {'name': 'testpar',
+   'value': 0.1,
+   'unit': '',
+   'error': 0,
+   'min': nan,
+   'max': nan,
+   'frozen': False,
+   'interp': 'lin',
+   'scale_method': 'scale10',
+   'is_norm': False,
+   'prior': {'tag': 'GaussianPrior',
+            'parameters': [{'name': 'mu', 'value': 0},
+                           {'name': 'sigma', 'value': 0.1}]}}
+
+
+Implementation Outline
+-----------------------
+
+The PIG implementation will be piece-wise within individual issues in the following order:
+
+1. ``Prior`` base class and subclasses (See `#4620`_)
+2. ``PriorParameter`` and ``PriorParameters`` (See `#4620`_)
+3. ``.prior`` attribute in the ``Parameter``, ``Parameters`` and ``Model`` classes
+4.  Evaluation of the prior in the ``Datasets`` class
+
+
+
+Decision
+========
+
+The PIG was discussed and reviewed among Gammapy developers. It has been reviewed by the CC and is now considered accepted.
+
+
+.. _#2075: https://github.com/gammapy/gammapy/issues/2075
+.. _#3955: https://github.com/gammapy/gammapy/issues/3955
+.. _#4122: https://github.com/gammapy/gammapy/issues/4122
+.. _#4208: https://github.com/gammapy/gammapy/issues/4208
+.. _#4620: https://github.com/gammapy/gammapy/pull/4620
+.. _#4381: https://github.com/gammapy/gammapy/issues/4381

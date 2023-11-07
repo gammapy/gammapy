@@ -324,7 +324,7 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         reader = OGIPDatasetReader(filename=filename)
         return reader.read()
 
-    def write(self, filename, overwrite=False, format="ogip"):
+    def write(self, filename, overwrite=False, format="ogip", checksum=False):
         """Write spectrum dataset on off to file.
 
         Can be serialised either as a `MapDataset` with a `RegionGeom`
@@ -335,18 +335,21 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         ----------
         filename : `~pathlib.Path` or str
             Filename to write to.
-        overwrite : bool
-            Overwrite existing file.
+        overwrite : bool, optional
+            Overwrite existing file. Default is False.
         format : {"ogip", "ogip-sherpa", "gadf"}
             Format to use.
+        checksum : bool
+            When True adds both DATASUM and CHECKSUM cards to the headers written to the file.
+            Default is False.
         """
         from .io import OGIPDatasetWriter
 
         if format == "gadf":
-            super().write(filename=filename, overwrite=overwrite)
+            super().write(filename=filename, overwrite=overwrite, checksum=checksum)
         elif format in ["ogip", "ogip-sherpa"]:
             writer = OGIPDatasetWriter(
-                filename=filename, format=format, overwrite=overwrite
+                filename=filename, format=format, overwrite=overwrite, checksum=checksum
             )
             writer.write(self)
         else:

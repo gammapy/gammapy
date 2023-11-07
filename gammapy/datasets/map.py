@@ -1257,7 +1257,7 @@ class MapDataset(Dataset):
 
         return cls(**kwargs)
 
-    def write(self, filename, overwrite=False):
+    def write(self, filename, overwrite=False, checksum=False):
         """Write Dataset to file.
 
         A MapDataset is serialised using the GADF format with a WCS geometry.
@@ -1267,10 +1267,15 @@ class MapDataset(Dataset):
         ----------
         filename : str
             Filename to write to.
-        overwrite : bool
-            Overwrite file if it exists.
+        overwrite : bool, optional
+            Overwrite existing file. Default is False.
+        checksum : bool
+            When True adds both DATASUM and CHECKSUM cards to the headers written to the file.
+            Default is False.
         """
-        self.to_hdulist().writeto(str(make_path(filename)), overwrite=overwrite)
+        self.to_hdulist().writeto(
+            str(make_path(filename)), overwrite=overwrite, checksum=checksum
+        )
 
     @classmethod
     def _read_lazy(cls, name, filename, cache, format=format):

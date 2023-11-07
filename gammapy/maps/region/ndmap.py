@@ -1,3 +1,4 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 from itertools import product
 import numpy as np
 from scipy.ndimage import label as ndi_label
@@ -471,7 +472,9 @@ class RegionNDMap(Map):
                 hdulist, format=format, ogip_column=ogip_column, hdu=hdu
             )
 
-    def write(self, filename, overwrite=False, format="gadf", hdu="SKYMAP"):
+    def write(
+        self, filename, overwrite=False, format="gadf", hdu="SKYMAP", checksum=False
+    ):
         """Write map to file
 
         Parameters
@@ -480,11 +483,16 @@ class RegionNDMap(Map):
             Filename.
         format : {"gadf", "ogip", "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"}
             Which format to use.
-        overwrite : bool
-            Overwrite existing files?
+        overwrite : bool, optional
+            Overwrite existing file. Default is False.
+        checksum : bool
+            When True adds both DATASUM and CHECKSUM cards to the headers written to the file.
+            Default is False.
         """
         filename = make_path(filename)
-        self.to_hdulist(format=format, hdu=hdu).writeto(filename, overwrite=overwrite)
+        self.to_hdulist(format=format, hdu=hdu).writeto(
+            filename, overwrite=overwrite, checksum=checksum
+        )
 
     def to_hdulist(self, format="gadf", hdu="SKYMAP", hdu_bands=None, hdu_region=None):
         """Convert to `~astropy.io.fits.HDUList`.

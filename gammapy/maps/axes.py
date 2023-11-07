@@ -2891,6 +2891,20 @@ class TimeMapAxis:
             name=name,
         )
 
+    def to_gti(self):
+        """Convert the axis to a GTI.
+
+        Returns
+        -------
+        gti : `GTI`
+            GTI table
+        """
+        from gammapy.data import GTI
+
+        return GTI.create(
+            self.edges_min, self.edges_max, reference_time=self.reference_time
+        )
+
     def to_header(self, format="gadf", idx=0):
         """Create FITS header
 

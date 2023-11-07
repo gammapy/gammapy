@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import collections
 import copy
-import logging
 import html
+import logging
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import AltAz, Angle, SkyCoord, angular_separation
@@ -130,7 +130,7 @@ class EventList:
 
         return fits.BinTableHDU(self.table, name="EVENTS")
 
-    def write(self, filename, gti=None, overwrite=False, format="gadf"):
+    def write(self, filename, gti=None, overwrite=False, format="gadf", checksum=False):
         """Write the event list to a FITS file.
 
         If a GTI object is provided, it is saved into
@@ -140,14 +140,17 @@ class EventList:
         ----------
         filename : `pathlib.Path`, str
             Filename
-        gti : `~gammapy.data.GTI`
+        gti : `~gammapy.data.GTI`, optional
             Good Time Intervals object to save to the same file.
             Default is None.
-        overwrite : bool
-            Overwrite existing file?
+        overwrite : bool, optional
+            Overwrite existing file. Default is False.
         format : str, optional
             FITS format convention.  By default files will be written
             to the gamma-astro-data-formats (GADF) format.
+        checksum : bool
+            When True adds both DATASUM and CHECKSUM cards to the headers written to the file.
+            Default is False.
         """
 
         if format != "gadf":
@@ -177,7 +180,7 @@ class EventList:
             hdu_gti = gti.to_table_hdu(format=format)
             hdu_all.append(hdu_gti)
 
-        hdu_all.writeto(filename, overwrite=overwrite)
+        hdu_all.writeto(filename, overwrite=overwrite, checksum=checksum)
 
     @classmethod
     def from_stack(cls, event_lists, **kwargs):

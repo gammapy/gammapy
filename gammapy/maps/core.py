@@ -387,8 +387,8 @@ class Map(abc.ABC):
         ----------
         filename : str
             Output file name.
-        overwrite : bool
-            Overwrite existing file?
+        overwrite : bool, optional
+            Overwrite existing file. Default is False.
         hdu : str
             Set the name of the image extension.  By default this will
             be set to SKYMAP (for BINTABLE HDU) or PRIMARY (for IMAGE
@@ -416,9 +416,13 @@ class Map(abc.ABC):
         sparse : bool
             Sparsify the map by dropping pixels with zero amplitude.
             This option is only compatible with the 'gadf' format.
+        checksum : bool
+            When True adds both DATASUM and CHECKSUM cards to the headers written to the file.
+            Default is False.
         """
+        checksum = kwargs.pop("checksum", False)
         hdulist = self.to_hdulist(**kwargs)
-        hdulist.writeto(str(make_path(filename)), overwrite=overwrite)
+        hdulist.writeto(make_path(filename), overwrite=overwrite, checksum=checksum)
 
     def iter_by_axis(self, axis_name, keepdims=False):
         """ "Iterate over a given axis

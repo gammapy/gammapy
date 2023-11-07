@@ -1,3 +1,4 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import os
 from gammapy.scripts.download import RELEASE, cli_download_datasets
