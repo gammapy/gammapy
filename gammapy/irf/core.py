@@ -858,8 +858,8 @@ class IRFMap:
         ----------
         filename : str or `Path`
             Filename to write to
-        overwrite : bool
-            Whether to overwrite
+        overwrite : bool, optional
+            Overwrite existing file. Default is False.
         format : {"gadf", "gtpsf"}
             File format
         checksum : bool
