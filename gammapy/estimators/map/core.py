@@ -1024,7 +1024,7 @@ class FluxMaps:
             Filename to write to.
         filename_model : str
             Filename of the model (yaml format).
-            If None, keep string before '.' and add '_model.yaml' suffix
+            If None, keep string before '.' and add '_model.yaml' suffix.
         overwrite : bool, optional
             Overwrite existing file. Default is False.
         sed_type : str, optional
