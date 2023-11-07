@@ -337,7 +337,6 @@ class Observation:
         """
         return self.meta.deadtime_fraction
 
-    #    @deprecated("v1.2", alternative="meta")
     @property
     def obs_info(self):
         """Observation info dictionary."""
@@ -552,7 +551,6 @@ class Observation:
         return cls(
             events=events,
             gti=gti,
-            #            obs_info=obs_info,
             obs_id=obs_info.get("OBS_ID"),
             pointing=FixedPointingInfo.from_fits_header(obs_info),
             meta=meta,
