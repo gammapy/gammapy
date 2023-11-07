@@ -1116,7 +1116,7 @@ class Map(abc.ABC):
             if the map is an integral quantity (e.g. counts) and false if
             the map is a differential quantity (e.g. intensity)
         precision_factor : int
-           Minimal factor between the bin size of the output map and the oversampled base map.
+             Minimal factor between the bin size of the output map and the oversampled base map.
            Used only for the oversampling method.
 
         Returns
