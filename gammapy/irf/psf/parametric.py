@@ -25,7 +25,7 @@ class ParametricPSF(PSF):
     unit : dict of str or `~astropy.units.Unit`
         Unit.
     meta : dict
-        Meta data.
+        Metadata dictionary.
     """
 
     @property
@@ -380,7 +380,7 @@ class PSFKing(ParametricPSF):
     axes : list of `MapAxis` or `MapAxes`
         Data axes, required are ["energy_true", "offset"].
     meta : dict
-        Meta data.
+        Metadata dictionary.
 
     """
 

@@ -50,7 +50,7 @@ class IRF(metaclass=abc.ABCMeta):
     fov_alignment : `FoVAlignment`
         The orientation of the field of view coordinate system.
     meta : dict
-        Meta data.
+        Metadata dictionary.
     """
 
     default_interp_kwargs = dict(
@@ -126,7 +126,7 @@ class IRF(metaclass=abc.ABCMeta):
 
         Parameters
         ----------
-        value : `~np.ndarray`
+        value : `~numpy.ndarray`
             Data array.
         """
         required_shape = self.axes.shape
@@ -407,8 +407,8 @@ class IRF(metaclass=abc.ABCMeta):
             HDU list.
         hdu : str
             HDU name.
-        format : {"gadf-dl3"}
-            Format specification.
+        format : {"gadf-dl3"}, optional
+            Format specification. Default is "gadf-dl3".
 
         Returns
         -------
@@ -430,8 +430,8 @@ class IRF(metaclass=abc.ABCMeta):
             Filename.
         hdu : str
             HDU name.
-        format : {"gadf-dl3"}
-            Format specification.
+        format : {"gadf-dl3"}, optional
+            Format specification. Default is "gadf-dl3".
 
         Returns
         -------
@@ -449,8 +449,8 @@ class IRF(metaclass=abc.ABCMeta):
         ----------
         table : `~astropy.table.Table`
             Table with IRF data.
-        format : {"gadf-dl3"}
-            Format specification.
+        format : {"gadf-dl3"}, optional
+            Format specification. Default is "gadf-dl3".
 
         Returns
         -------
@@ -476,8 +476,8 @@ class IRF(metaclass=abc.ABCMeta):
 
         Parameters
         ----------
-        format : {"gadf-dl3"}
-            Format specification.
+        format : {"gadf-dl3"}, optional
+            Format specification. Default is "gadf-dl3".
 
         Returns
         -------
@@ -511,8 +511,8 @@ class IRF(metaclass=abc.ABCMeta):
 
         Parameters
         ----------
-        format : {"gadf-dl3"}
-            Format specification.
+        format : {"gadf-dl3"}, optional
+            Format specification. Default is "gadf-dl3".
 
         Returns
         -------

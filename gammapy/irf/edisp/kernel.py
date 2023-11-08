@@ -97,9 +97,9 @@ class EDispKernel(IRF):
         Parameters
         ----------
         lo_threshold : `~astropy.units.Quantity`, optional
-            Low reco energy threshold. Default is None.
+            Low reconstructed energy threshold. Default is None.
         hi_threshold : `~astropy.units.Quantity`, optional
-            High reco energy threshold. Default is None.
+            High reconstructed energy threshold. Default is None.
         """
         energy_axis = self.axes["energy"]
         lo_threshold = lo_threshold or energy_axis.edges[0]

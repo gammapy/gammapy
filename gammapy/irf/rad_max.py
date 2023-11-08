@@ -28,7 +28,7 @@ class RadMax2D(IRF):
     data : `~astropy.units.Quantity`
         Applied directional cut.
     meta : dict
-        Meta data.
+        Metadata dictionary.
     """
 
     tag = "rad_max_2d"

@@ -24,7 +24,7 @@ class PSF3D(PSF):
     data : `~astropy.units.Quantity`
         PSF (3-dim with axes: psf[rad_index, offset_index, energy_index].
     meta : dict
-        Meta dict.
+        Metadata dictionary.
     """
 
     tag = "psf_table"

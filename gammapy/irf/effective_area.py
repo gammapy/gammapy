@@ -24,7 +24,7 @@ class EffectiveAreaTable2D(IRF):
     data : `~astropy.units.Quantity`
         Effective area.
     meta : dict
-        Meta data.
+        Metadata dictionary.
 
     Examples
     --------

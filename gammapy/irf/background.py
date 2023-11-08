@@ -30,8 +30,8 @@ class BackgroundIRF(IRF):
         ----------
         table : `~astropy.table.Table`
             Table with background data.
-        format : {"gadf-dl3"}
-            Format specification.
+        format : {"gadf-dl3"}, optional
+            Format specification. Default is "gadf-dl3".
 
         Returns
         -------
@@ -102,7 +102,7 @@ class Background3D(BackgroundIRF):
     fov_alignment : `~gammapy.irf.FoVAlignment`
         The orientation of the field of view coordinate system.
     meta : dict
-        Meta data.
+        Metadata dictionary.
 
     Examples
     --------
@@ -236,7 +236,7 @@ class Background2D(BackgroundIRF):
     unit : str or `~astropy.units.Unit`
         Data unit usually ``s^-1 MeV^-1 sr^-1``.
     meta : dict
-        Meta data.
+        Metadata dictionary.
     """
 
     tag = "bkg_2d"
