@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Utils for hierarchical/agglomerative clustering."""
+"""Utilities for hierarchical/agglomerative clustering."""
 
 import numpy as np
 import scipy.cluster.hierarchy as sch
@@ -40,11 +40,11 @@ def hierarchical_clustering(
     Parameters
     ----------
     features : `~astropy.table.Table`
-        Table containing the features
+        Table containing the features.
     linkage_kwargs : dict
-        Arguments forwarded to `scipy.cluster.hierarchy.linkage`
+        Arguments forwarded to `scipy.cluster.hierarchy.linkage`.
     fcluster_kwargs : dict
-        Arguments forwarded to `scipy.cluster.hierarchy.fcluster`
+        Arguments forwarded to `scipy.cluster.hierarchy.fcluster`.
 
 
     Returns

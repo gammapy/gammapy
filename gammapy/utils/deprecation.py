@@ -22,7 +22,7 @@ def deprecated(since, **kwargs):
     Parameters
     ----------
     since : str
-        The release at which this API became deprecated.  This is required.
+        The release at which this API became deprecated. This is required.
     """
     from astropy.utils import deprecated
 

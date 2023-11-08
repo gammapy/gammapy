@@ -35,13 +35,14 @@ def time_to_fits(time, epoch=None, unit=u.s):
     ----------
     time : `~astropy.time.Time`
         Time to be converted.
-    epoch : `astropy.time.Time`
+    epoch : `astropy.time.Time`, optional
         Epoch to use for the time. The corresponding keywords must
         be stored in the same FITS header.
-        If None, `DEFAULT_EPOCH` will be used.
-    unit : `astropy.time.Time`
+        Default is None, so the `DEFAULT_EPOCH` is used.
+    unit : `astropy.time.Time`, optional
         If None, `DEFAULT_EPOCH` will be used.
         Should be stored as `TIMEUNIT` in the same FITS header.
+        Default is u.s.
 
     Returns
     -------
@@ -63,13 +64,14 @@ def time_to_fits_header(time, epoch=None, unit=u.s):
     ----------
     time : `~astropy.time.Time`
         Time to be converted.
-    epoch : `astropy.time.Time`
+    epoch : `astropy.time.Time`, optional
         Epoch to use for the time. The corresponding keywords must
         be stored in the same FITS header.
-        If None, `DEFAULT_EPOCH` will be used.
-    unit : `astropy.time.Time`
+        Default is None, so `DEFAULT_EPOCH` is used.
+    unit : `astropy.time.Time`, optional
         If None, `DEFAULT_EPOCH` will be used.
         Should be stored as `TIMEUNIT` in the same FITS header.
+        Default is u.s.
 
     Returns
     -------
@@ -88,11 +90,11 @@ def time_ref_from_dict(meta, format="mjd", scale="tt"):
     Parameters
     ----------
     meta : dict
-        FITS time standard header info.
-    format: str
-        Format of the `~astropy.time.Time` information.
-    scale: str
-        Scale of the `~astropy.time.Time` information.
+        FITS time standard header information.
+    format: str, optional
+        Format of the `~astropy.time.Time` information. Default is 'mjd'.
+    scale: str, optional
+        Scale of the `~astropy.time.Time` information. Default is 'tt'.
 
     Returns
     -------
@@ -110,8 +112,9 @@ def time_ref_to_dict(time=None, scale="tt"):
 
     Parameters
     ----------
-    time : `~astropy.time.Time`
+    time : `~astropy.time.Time`, optional
         The reference epoch for storing time in FITS.
+        Default is None, so 'DEFAULT_EPOCH' is used.
     scale: str, optional
         Scale of the `~astropy.time.Time` information.
         Default is "tt".

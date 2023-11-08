@@ -81,7 +81,7 @@ def energy_unit_format(E):
     Returns
     -------
     str : str
-        Returns a string or tuple of strings with energy unit formatted.
+        A string or tuple of strings with energy unit formatted.
     """
     try:
         iter(E)

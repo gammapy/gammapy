@@ -103,7 +103,7 @@ def table_from_row_data(rows, **kwargs):
     Parameters
     ----------
     rows : list
-        List of row data (each row a dict).
+        List of row data (each row a dictionary).
     """
     table = Table(**kwargs)
 

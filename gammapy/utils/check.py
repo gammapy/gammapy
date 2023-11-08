@@ -12,8 +12,8 @@ def check_tutorials_setup(download_datasets_path="./gammapy-data"):
 
     Parameters
     ----------
-    download_datasets_path : str
-        Path to download the data, if not present.
+    download_datasets_path : str, optional
+        Path to download the data. Default is "./gammapy-data".
     """
     if "GAMMAPY_DATA" not in os.environ:
         log.info(

@@ -179,7 +179,7 @@ class MultiGauss2D:
 
     @property
     def integral(self):
-        """Integral as sum of norms as an`~numpy.ndarray`."""
+        """Integral as sum of norms as an `~numpy.ndarray`."""
         return np.nansum(self.norms, axis=0)
 
     @property

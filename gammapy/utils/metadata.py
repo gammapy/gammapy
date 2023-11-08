@@ -52,7 +52,7 @@ class MetaData(BaseModel):
     """Base model for all metadata classes in Gammapy."""
 
     class Config:
-        """Global config for all metadata."""
+        """Global configuration for all metadata."""
 
         extra = "allow"
         arbitrary_types_allowed = True
@@ -84,13 +84,13 @@ class MetaData(BaseModel):
 
         Parameters
         ----------
-        format : {'gadf'}
-            header format. Default is 'gadf'.
+        format : {'gadf'}, optional
+            Header format. Default is 'gadf'.
 
         Returns
         -------
         header : dict
-            the header dictionary
+            The header dictionary.
         """
 
         if format != "gadf":
@@ -129,9 +129,9 @@ class MetaData(BaseModel):
         Parameters
         ----------
         header : dict
-            the header dictionary
-        format : {'gadf'}
-            header format. Default is 'gadf'.
+            The header dictionary.
+        format : {'gadf'}, optional
+            Header format. Default is 'gadf'.
         """
         if format != "gadf":
             raise ValueError(f"Metadata from header: format {format} is not supported.")
@@ -228,15 +228,15 @@ class ObsInfoMetaData(MetaData):
     Parameters
     ----------
     obs_id : str or int
-        the observation identifier.
+        The observation identifier.
     telescope : str, optional
-        the telescope/observatory name.
+        The telescope/observatory name.
     instrument : str, optional
-        the specific instrument used.
+        The specific instrument used.
     sub_array : str, optional
-        the specific sub-array used.
+        The specific sub-array used.
     observation_mode : str, optional
-        the observation mode.
+        The observation mode.
     """
 
     _tag = "obs_info"
@@ -295,7 +295,7 @@ class TargetMetaData(MetaData):
     Parameters
     ----------
     name : str, optional
-        the target name.
+        The target name.
     position : `~astropy.coordinates.SkyCoord`, optional
         Position of the observation in `icrs` frame.
 

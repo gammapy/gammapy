@@ -131,8 +131,8 @@ def run_multiprocessing(
         Function to run.
     inputs : list
         List of arguments to pass to the function.
-    backend : {'multiprocessing', 'ray'}
-        Backend to use.
+    backend : {'multiprocessing', 'ray'}, optional
+        Backend to use. Default is None.
     pool_kwargs : dict, optional
         Keyword arguments passed to the pool. The number of processes is limited
         to the number of physical CPUs. Default is None.
@@ -140,8 +140,8 @@ def run_multiprocessing(
         Pool method to use. Default is "starmap".
     method_kwargs : dict, optional
         Keyword arguments passed to the method. Default is None.
-    task_name : str
-        Name of the task to display in the progress bar.
+    task_name : str, optional
+        Name of the task to display in the progress bar. Default is "".
     """
     backend = ParallelBackendEnum.from_str(backend)
 

@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Utils to find roots of a scalar function within a given range."""
+"""Utilities to find roots of a scalar function within a given range."""
 
 import numpy as np
 from scipy.optimize import RootResults, root_scalar

@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Utils to create scripts and command-line tools."""
+"""Utilities to create scripts and command-line tools."""
 import codecs
 import os.path
 from base64 import urlsafe_b64encode
@@ -64,10 +64,10 @@ def write_yaml(dictionary, filename, logger=None, sort_keys=True):
         Python dictionary.
     filename : `~pathlib.Path`
         Filename.
-    logger : `~logging.Logger`
-        Logger.
-    sort_keys : bool
-        Whether to sort keys.
+    logger : `~logging.Logger`, optional
+        Logger. Default is None.
+    sort_keys : bool, optional
+        Whether to sort keys. Default is True.
     """
     text = yaml.safe_dump(dictionary, default_flow_style=False, sort_keys=sort_keys)
 

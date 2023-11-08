@@ -185,9 +185,9 @@ def skycoord_from_dict(header, frame="icrs", ext="PNT"):
     Parameters
     ----------
     header : dict
-        the input dictionary
-    frame : {"icrs", "galactic", "altaz"}
-        the frame to use. Default is 'icrs'.
+        The input dictionary.
+    frame : {"icrs", "galactic", "altaz"}, optional
+        The frame to use. Default is 'icrs'.
     ext: str, optional
         The keyword extension to apply to the keywords names. Default is 'PNT'.
 
