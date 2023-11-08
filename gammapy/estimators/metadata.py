@@ -4,26 +4,33 @@ from enum import Enum
 from typing import List, Optional
 import numpy as np
 from astropy.coordinates import SkyCoord
-from pydantic import ValidationError, validator
-from gammapy.utils.metadata import FITS_META_KEYS as CREATOR_META_KEYS
-from gammapy.utils.metadata import CreatorMetaData, MetaData
+
+# from pydantic import ValidationError, validator
+from gammapy.utils.metadata import (
+    METADATA_FITS_KEYS,
+    CreatorMetaData,
+    MetaData,
+    TargetMetaData,
+)
 
 __all__ = ["FluxMetaData"]
 
 
-FITS_META_KEYS = {
-    "sed_type": "SED_TYPE",
-    "sed_type_init": "SEDTYPEI",
-    "n_sigma": "N_SIGMA",
-    "ul_conf": "UL_CONF",
-    # "n_sigma_ul": "NSIGMAUL",
-    "sqrt_ts_threshold_ul": "STSTHUL",
-    "n_sigma_sensitivity": "NSIGMSEN",
-    "target_name": "TARGETNA",
-    "target_position": ["RA_OBJ", "DEC_OBJ"],
-    "obs_ids": "OBS_IDS",
-    "dataset_names": "DATASETS",
-    "instrument": "INSTRU",
+FLUX_METADATA_FITS_KEYS = {
+    "flux": {
+        "sed_type": "SED_TYPE",
+        "sed_type_init": "SEDTYPEI",
+        "n_sigma": "N_SIGMA",
+        "ul_conf": "UL_CONF",
+        # "n_sigma_ul": "NSIGMAUL",
+        "sqrt_ts_threshold_ul": "STSTHUL",
+        "n_sigma_sensitivity": "NSIGMSEN",
+        # "target_name": "TARGETNA",
+        # "target_position": ["RA_OBJ", "DEC_OBJ"],
+        "obs_ids": "OBS_IDS",
+        "dataset_names": "DATASETS",
+        # "instrument": "INSTRU",
+    },
 }
 
 log = logging.getLogger(__name__)
@@ -56,10 +63,12 @@ class FluxMetaData(MetaData):
         Threshold on the square root of the likelihood value above which upper limits should be used.
     n_sigma_sensitivity : float, optional
         Sigma number for which the flux sensitivity is computed
-    target_name : str, optional
-        Name of the target.
-    target_position : `~astropy.coordinates.SkyCoord`, optional
-        Coordinates of the target.
+    target : `~gammapy.utils.TargetMetaData`, optional
+        General metadata information about the target.
+    # target_name : str, optional
+    #     Name of the target.
+    # target_position : `~astropy.coordinates.SkyCoord`, optional
+    #     Coordinates of the target.
     obs_ids : list of str, optional
         ID list of the used observations.
     dataset_names : list of str, optional
@@ -71,9 +80,10 @@ class FluxMetaData(MetaData):
     optional : dict, optional
         additional optional metadata.
 
-    Note: these quantities are serialized in FITS header with the keywords stored in the dictionary FITS_META_KEYS
+    Note : these quantities are serialized in FITS header with the keywords stored in the dictionary FLUX_METADATA_FITS_KEYS
     """
 
+    _tag = "flux"
     sed_type: Optional[SEDTYPEEnum]
     sed_type_init: Optional[SEDTYPEEnum]
     ul_conf: Optional[float]
@@ -81,24 +91,25 @@ class FluxMetaData(MetaData):
     # n_sigma_ul: Optional[float]
     sqrt_ts_threshold_ul: Optional[float]
     n_sigma_sensitivity: Optional[float]
-    target_name: Optional[str]
-    target_position: Optional[SkyCoord]
+    # target_name: Optional[str]
+    # target_position: Optional[SkyCoord]
+    target: Optional[TargetMetaData]
     obs_ids: Optional[List[str]]
     dataset_names: Optional[List[str]]
     instrument: Optional[str]
     creation: Optional[CreatorMetaData]
     optional: Optional[dict]
 
-    @validator("target_position")
-    def validate_position(cls, v):
-        if v is None:
-            return SkyCoord(np.nan, np.nan, unit="deg", frame="icrs")
-        elif isinstance(v, SkyCoord):
-            return v.transform_to("icrs")
-        else:
-            raise ValidationError(
-                f"Incorrect position. Expect SkyCoord got {type(v)} instead."
-            )
+    # @validator("target_position")
+    # def validate_position(cls, v):
+    #     if v is None:
+    #         return SkyCoord(np.nan, np.nan, unit="deg", frame="icrs")
+    #     elif isinstance(v, SkyCoord):
+    #         return v.transform_to("icrs")
+    #     else:
+    #         raise ValidationError(
+    #             f"Incorrect position. Expect SkyCoord got {type(v)} instead."
+    #         )
 
     # @validator("sed_type")
     # def validate_sed_type(cls, v):
@@ -135,7 +146,7 @@ class FluxMetaData(MetaData):
             creation = CreatorMetaData.from_default()
         meta = cls(creation=creation)
 
-        for item in FITS_META_KEYS.items():
+        for item in FLUX_METADATA_FITS_KEYS.items():
             if (
                 item[0] == "target_position"
                 and item[1][0] in data
@@ -163,9 +174,9 @@ class FluxMetaData(MetaData):
 
         for kk in data:
             if (
-                kk not in FITS_META_KEYS.values()
-                and kk not in CREATOR_META_KEYS.values()
-                and kk not in FITS_META_KEYS["target_position"]
+                kk not in FLUX_METADATA_FITS_KEYS.values()
+                and kk not in METADATA_FITS_KEYS.values()
+                and kk not in FLUX_METADATA_FITS_KEYS["target_position"]
             ):
                 if meta.optional is None:
                     meta.optional = {}
@@ -182,7 +193,7 @@ class FluxMetaData(MetaData):
             Flux table.
         """
 
-        for item in FITS_META_KEYS.items():
+        for item in FLUX_METADATA_FITS_KEYS.items():
             if item[0] == "target_position" and np.isfinite(self.target_position.ra):
                 val = FluxMetaData._target_to_string(self.target_position)
                 table.meta[item[1][0]] = val[0]
