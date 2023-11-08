@@ -95,7 +95,7 @@ class TemporalModel(ModelBase):
         self.t_ref.value = Time(t_ref, scale=self.scale).mjd
 
     def to_dict(self, full_output=False):
-        """Create dict for YAML serilisation."""
+        """Create dictionary for YAML serilisation."""
         data = super().to_dict(full_output)
         data["temporal"]["scale"] = self.scale
         return data
@@ -731,7 +731,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         return cls.read(filename, format)
 
     def to_dict(self, full_output=False, format="table"):
-        """Create dict for YAML serialisation."""
+        """Create dictionary for YAML serialisation."""
         data = super().to_dict(full_output)
         data["temporal"]["filename"] = self.filename
         data["temporal"]["format"] = format
@@ -1106,7 +1106,7 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         return cls.read(filename, **kwargs)
 
     def to_dict(self, full_output=False):
-        """Create dict for YAML serialisation."""
+        """Create dictionary for YAML serialisation."""
         model_dict = super().to_dict()
         model_dict["temporal"]["filename"] = self.filename
         return model_dict

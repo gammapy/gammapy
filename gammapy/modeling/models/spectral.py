@@ -1929,7 +1929,7 @@ class TemplateNDSpectralModel(SpectralModel):
         return model
 
     def to_dict(self, full_output=False):
-        """Create dict for YAML serilisation."""
+        """Create dictionary for YAML serilisation."""
         data = super().to_dict(full_output)
         data["spectral"]["filename"] = self.filename
         data["spectral"]["unit"] = str(self.map.unit)

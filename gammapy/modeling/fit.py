@@ -513,7 +513,7 @@ class Fit:
         -------
         result : dict
             Dictionary containing the parameter values defining the contour, with the
-            boolean flag "success" and the info objects from ``mncontour``.
+            boolean flag "success" and the information objects from ``mncontour``.
         """
         datasets, parameters = self._parse_datasets(datasets=datasets)
 
