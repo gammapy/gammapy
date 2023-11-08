@@ -75,7 +75,7 @@ class Analysis:
 
     @property
     def config(self):
-        """Analysis configuration as an `AnalysisConfig` object."""
+        """Analysis configuration as an `~gammapy.analysis.AnalysisConfig` object."""
         return self._config
 
     @config.setter
