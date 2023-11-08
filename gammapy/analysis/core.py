@@ -43,7 +43,7 @@ class Analysis:
 
     Parameters
     ----------
-    config : dict or `AnalysisConfig`
+    config : dict or `~gammapy.analysis.AnalysisConfig`
         Configuration options following `AnalysisConfig` schema.
     """
 
