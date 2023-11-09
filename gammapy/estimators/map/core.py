@@ -771,7 +771,7 @@ class FluxMaps:
         Parameters
         ----------
         sed_type : {"likelihood", "dnde", "e2dnde", "flux", "eflux"}, optional
-            sed type to convert to. If None, set to `Likelihood`. Default is None.
+            SED type to convert to. If None, set to `Likelihood`. Default is None.
 
         Returns
         -------
