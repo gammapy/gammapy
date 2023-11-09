@@ -346,7 +346,7 @@ class FluxMaps:
 
     @property
     def energy_min(self):
-        """Energy min.
+        """Energy minimum.
 
         Returns
         -------
