@@ -584,7 +584,7 @@ def make_effective_livetime_map(observations, geom, offset_max=None):
     geom : `~gammapy.maps.Geom`
             Reference geom.
     offset_max : `~astropy.units.quantity.Quantity`
-        The maximum offset FoV
+        The maximum offset FoV.
 
     Returns
     -------
