@@ -304,7 +304,7 @@ def to_obscore_table(
     Parameters
     ----------
     selected_obs : list or array of Observation ID(int)
-    (default of ``None`` means ``no obaservation ``)
+    (default of ``None`` means ``no observation ``)
     If not given, the obscore default table is returned.
 
 
