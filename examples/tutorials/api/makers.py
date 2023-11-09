@@ -396,9 +396,9 @@ for obs in observations:
 ax.set_title("Total observation time")
 plt.show()
 
-# However, since the acceptance of IACT cameras vary within the field of
-# view, what is often interesting is not simply the total number of
-# hours a source was observed, but the on-axis equivalent number of hours.
+# As the acceptance of IACT cameras vary within the field of
+# view, it can also be interesting to plot the on-axis equivalent 
+# number of hours.
 #
 
 effective_livetime = make_effective_livetime_map(
