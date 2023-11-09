@@ -551,7 +551,7 @@ def make_observation_time_map(observations, geom, offset_max=None):
     geom : `~gammapy.maps.Geom`
             Reference geom.
     offset_max : `~astropy.units.quantity.Quantity`
-        The maximum offset FoV. If None, will be guessed from the irfs
+        The maximum offset FoV. If None, it will be taken from the IRFs
 
     Returns
     -------
