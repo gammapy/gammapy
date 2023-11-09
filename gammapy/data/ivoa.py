@@ -15,7 +15,7 @@ log.setLevel(logging.INFO)
 
 def _obscore_def():
     """Generate the Obscore default table
-    In case the obscore standard changes, this function should be changed consistently
+    In case the obscore standard changes, this function should be changed according to https://www.ivoa.net/documents/ObsCore
 
     Returns
     -------
@@ -299,7 +299,7 @@ def _obscore_row(base_dir, single_obsID, obs_publisher_did, access_url, table):
 def to_obscore_table(
     base_dir, selected_obs=None, obs_publisher_did=None, access_url=None
 ):
-    """Generate the complete obscore Table by adding one row per observation using DataStore._obscore_row()
+    """Generate the complete obscore Table by adding one row per observation using _obscore_row()
 
     Parameters
     ----------
