@@ -504,7 +504,7 @@ class FluxPoints(FluxMaps):
             Axis object to plot on. Default is None.
         sed_type : {"dnde", "flux", "eflux", "e2dnde"}, optional
             Sed type. Default is None.
-        energy_power : float
+        energy_power : float, optional
             Power of energy to multiply flux axis with. Default is 0.
         time_format : {"iso", "mjd"}
             Used time format is a time axis is present. Default is "iso".
@@ -577,7 +577,7 @@ class FluxPoints(FluxMaps):
             Axis object to plot on. Default is None.
         sed_type : {"dnde", "flux", "eflux", "e2dnde"}, optional
             Sed type. Default is None.
-        add_cbar : bool
+        add_cbar : bool, optional
             Whether to add a colorbar to the plot. Default is True.
         **kwargs : dict, optional
             Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
