@@ -1069,7 +1069,7 @@ class FluxMaps:
             return cls.from_hdulist(hdulist)
 
     def slice_by_idx(self, slices):
-        """Slice flux maps by idx.
+        """Slice flux maps by index.
 
         Parameters
         ----------
