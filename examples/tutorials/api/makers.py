@@ -366,7 +366,7 @@ energy_max = 10.0 * u.TeV
 # Define an offset cut (the camera field of view)
 offset_max = 2.5 * u.deg
 
-# define the geom
+# Define the geom
 source_pos = SkyCoord(228.32, -59.08, unit="deg")
 energy_axis_true = MapAxis.from_energy_bounds(
     energy_min, energy_max, nbin=2, name="energy_true"
