@@ -13,12 +13,12 @@ log = logging.getLogger(__name__)
 
 @click.group("check")
 def cli_check():
-    """Run checks for Gammapy"""
+    """Run checks for Gammapy."""
 
 
 @cli_check.command("logging")
 def cli_check_logging():
-    """Check logging"""
+    """Check logging."""
     log.debug("this is log.debug() output")
     log.info("this is log.info() output")
     log.warning("this is log.warning() output")

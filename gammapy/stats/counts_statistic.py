@@ -11,7 +11,7 @@ __all__ = ["WStatCountsStatistic", "CashCountsStatistic"]
 
 
 class CountsStatistic(abc.ABC):
-    """Counts statistics base class"""
+    """Counts statistics base class."""
 
     @property
     @abc.abstractmethod
@@ -83,12 +83,12 @@ class CountsStatistic(abc.ABC):
             return f"<pre>{html.escape(str(self))}</pre>"
 
     def info_dict(self):
-        """A dictionary of the relevant quantities
+        """A dictionary of the relevant quantities.
 
         Returns
         -------
         info_dict : dict
-            Dictionary with summary info
+            Dictionary with summary information.
         """
         info_dict = {}
         info_dict["n_on"] = self.n_on
@@ -200,12 +200,12 @@ class CountsStatistic(abc.ABC):
         Parameters
         ----------
         significance : float
-            Significance
+            Significance.
 
         Returns
         -------
         n_sig : `numpy.ndarray`
-            Excess
+            Excess.
         """
 
         n_sig = np.zeros_like(self.n_bkg, dtype="float")
@@ -242,7 +242,7 @@ class CountsStatistic(abc.ABC):
         Returns
         -------
         stat : `~gammapy.stats.CountsStatistics`
-             the return stat object
+             The summed stat object.
         """
         pass
 
@@ -253,9 +253,9 @@ class CashCountsStatistic(CountsStatistic):
     Parameters
     ----------
     n_on : int
-        Measured counts
+        Measured counts.
     mu_bkg : float
-        Known level of background
+        Known level of background.
     """
 
     def __init__(self, n_on, mu_bkg):
@@ -264,12 +264,12 @@ class CashCountsStatistic(CountsStatistic):
 
     @property
     def n_bkg(self):
-        """Expected background counts"""
+        """Expected background counts."""
         return self.mu_bkg
 
     @property
     def n_sig(self):
-        """Excess"""
+        """Excess."""
         return self.n_on - self.n_bkg
 
     @property
@@ -279,21 +279,21 @@ class CashCountsStatistic(CountsStatistic):
 
     @property
     def stat_null(self):
-        """Stat value for null hypothesis, i.e. 0 expected signal counts"""
+        """Stat value for null hypothesis, i.e. 0 expected signal counts."""
         return cash(self.n_on, self.mu_bkg + 0)
 
     @property
     def stat_max(self):
-        """Stat value for best fit hypothesis, i.e. expected signal mu = n_on - mu_bkg"""
+        """Stat value for best fit hypothesis, i.e. expected signal mu = n_on - mu_bkg."""
         return cash(self.n_on, self.n_on)
 
     def info_dict(self):
-        """A dictionary of the relevant quantities
+        """A dictionary of the relevant quantities.
 
         Returns
         -------
         info_dict : dict
-            Dictionary with summary info
+            Dictionary with summary info.
         """
         info_dict = super().info_dict()
         info_dict["mu_bkg"] = self.mu_bkg
@@ -374,13 +374,13 @@ class WStatCountsStatistic(CountsStatistic):
     Parameters
     ----------
     n_on : int
-        Measured counts in on region
+        Measured counts in on region.
     n_off : int
-        Measured counts in off region
+        Measured counts in off region.
     alpha : float
-        Acceptance ratio of on and off measurements
+        Acceptance ratio of on and off measurements.
     mu_sig : float
-        Expected signal counts in on region
+        Expected signal counts in on region.
     """
 
     def __init__(self, n_on, n_off, alpha, mu_sig=None):
@@ -395,7 +395,7 @@ class WStatCountsStatistic(CountsStatistic):
 
     @property
     def n_bkg(self):
-        """Known background computed alpha * n_off"""
+        """Known background computed alpha * n_off."""
         return self.alpha * self.n_off
 
     @property
@@ -410,24 +410,24 @@ class WStatCountsStatistic(CountsStatistic):
 
     @property
     def stat_null(self):
-        """Stat value for null hypothesis, i.e. mu_sig expected signal counts"""
+        """Stat value for null hypothesis, i.e. mu_sig expected signal counts."""
         return wstat(self.n_on, self.n_off, self.alpha, self.mu_sig)
 
     @property
     def stat_max(self):
-        """Stat value for best fit hypothesis
+        """Stat value for best fit hypothesis.
 
-        i.e. expected signal mu = n_on - alpha * n_off - mu_sig
+        i.e. expected signal mu = n_on - alpha * n_off - mu_sig.
         """
         return wstat(self.n_on, self.n_off, self.alpha, self.n_sig + self.mu_sig)
 
     def info_dict(self):
-        """A dictionary of the relevant quantities
+        """A dictionary of the relevant quantities.
 
         Returns
         -------
         info_dict : dict
-            Dictionary with summary info
+            Dictionary with summary info.
         """
         info_dict = super().info_dict()
         info_dict["n_off"] = self.n_off
