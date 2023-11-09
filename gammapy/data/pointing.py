@@ -525,7 +525,7 @@ class FixedPointingInfo:
     @deprecated("1.1")
     def altaz(self):
         """
-        ALT/AZ pointing position computed from RA/DEC a `~astropy.coordinates.SkyCoord` for the midpoint of the run.
+        Alt-az pointing position computed from RA/DEC a `~astropy.coordinates.SkyCoord` for the midpoint of the run.
 
         Use `get_altaz` to get the pointing at a specific time, correctly
         handling different pointing modes.

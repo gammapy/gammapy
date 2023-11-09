@@ -738,7 +738,7 @@ class Observations(collections.abc.MutableSequence):
         Parameters
         ----------
         time_intervals : `astropy.time.Time` or list of `astropy.time.Time`
-            list of start and stop time of the time intervals or one time interval.
+            List of start and stop time of the time intervals or one time interval.
 
         Returns
         -------
