@@ -447,7 +447,6 @@ class ReflectedRegionsBackgroundMaker(Maker):
         exclusion_mask=None,
         **kwargs,
     ):
-
         if exclusion_mask and not exclusion_mask.is_mask:
             raise ValueError("Exclusion mask must contain boolean values")
 

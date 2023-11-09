@@ -195,7 +195,6 @@ def test_spectrum_dataset_maker_hess_cta(spectrum_dataset_gc, observations_cta_d
 
 @requires_data()
 def test_safe_mask_maker_dl3(spectrum_dataset_crab, observations_hess_dl3):
-
     safe_mask_maker = SafeMaskMaker(bias_percent=20)
     maker = SpectrumDatasetMaker()
 
@@ -347,7 +346,6 @@ class TestSpectrumMakerChain:
     def test_compute_energy_threshold(
         self, spectrum_dataset_crab_fine, observations_hess_dl3
     ):
-
         maker = SpectrumDatasetMaker(containment_correction=True)
         safe_mask_maker = SafeMaskMaker(methods=["aeff-max"], aeff_percent=10)
 

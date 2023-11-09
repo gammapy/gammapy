@@ -95,7 +95,6 @@ def test_flux_point_dataset_str(dataset):
 
 @requires_data()
 def test_flux_point_dataset_flux_pred(dataset):
-
     assert_allclose(dataset.flux_pred()[0].value, 0.00022766, rtol=1e-2)
     dataset.models[0].temporal_model = ExpDecayTemporalModel(
         t0=5.0 * u.hr, t_ref=51543.5 * u.d
@@ -193,6 +192,5 @@ class TestFluxPointFit:
 
     @staticmethod
     def test_fp_dataset_plot_fit(dataset):
-
         with mpl_plot_check():
             dataset.plot_fit(kwargs_residuals=dict(method="diff/model"))

@@ -64,7 +64,6 @@ class TSDifference:
 def _confidence_scipy_brentq(
     parameters, parameter, function, sigma, reoptimize, upper=True, **kwargs
 ):
-
     ts_diff = TSDifference(
         function, parameters, parameter, reoptimize, ts_diff=sigma**2
     )
@@ -102,7 +101,6 @@ def _confidence_scipy_brentq(
 
 
 def confidence_scipy(parameters, parameter, function, sigma, reoptimize=True, **kwargs):
-
     if len(parameters.free_parameters) <= 1:
         reoptimize = False
 
