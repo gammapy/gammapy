@@ -364,7 +364,7 @@ class MapEvaluator:
         Returns
         -------
         npred_reco : `~gammapy.maps.Map`
-            Predicted counts in reco energy bins.
+            Predicted counts in reconstructed energy bins.
         """
         return apply_edisp(npred, self.edisp)
 
@@ -400,7 +400,7 @@ class MapEvaluator:
         Returns
         -------
         npred : `~gammapy.maps.Map`
-            Predicted counts on the map (in reco energy bins).
+            Predicted counts on the map (in reconstructed energy bins).
         """
         if self.parameters_changed or not self.use_cache:
             del self._compute_npred
