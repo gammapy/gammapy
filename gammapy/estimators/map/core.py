@@ -357,7 +357,7 @@ class FluxMaps:
 
     @property
     def energy_max(self):
-        """Energy max.
+        """Energy maximum.
 
         Returns
         -------
