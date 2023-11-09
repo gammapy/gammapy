@@ -629,7 +629,7 @@ def get_camera_fov(obs):
     Returns
     -------
     offset_max : `~astropy.units.quantity.Quantity`
-        The maximum offset of the aeff irf
+        The maximum offset of the effective area IRF.
     """
 
     if "aeff" not in obs.available_irfs:
