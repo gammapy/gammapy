@@ -350,7 +350,7 @@ plt.show()
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # It can often be useful to know the total number of hours spent
 # in the given field of view (without correcting for the acceptance
-# variation in the field of view. This can be computed using `make_observation_time_map`
+# variation). This can be computed using `make_observation_time_map`
 # as shown below
 #
 
