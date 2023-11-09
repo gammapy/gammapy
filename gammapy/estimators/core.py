@@ -61,7 +61,7 @@ class Estimator(abc.ABC):
 
     @property
     def config_parameters(self):
-        """Config parameters."""
+        """Configuration parameters."""
         pars = self.__dict__.copy()
         pars = {key.strip("_"): value for key, value in pars.items()}
         return pars

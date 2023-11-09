@@ -177,7 +177,7 @@ class ExcessMapEstimator(Estimator):
 
     @correlation_radius.setter
     def correlation_radius(self, correlation_radius):
-        """Sets radius."""
+        """Set radius."""
         self._correlation_radius = Angle(correlation_radius)
 
     def run(self, dataset):

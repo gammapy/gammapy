@@ -85,7 +85,7 @@ class SensitivityEstimator(Estimator):
         return excess
 
     def estimate_min_e2dnde(self, excess, dataset):
-        """Estimate dnde from given min. excess.
+        """Estimate dnde from a given minimum excess.
 
         Parameters
         ----------

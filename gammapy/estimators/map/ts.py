@@ -373,7 +373,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         Returns
         -------
         maps : dict of `Map`
-            Maps dict.
+            Maps dictionary.
         """
         # First create 2D map arrays
         counts = dataset.counts
@@ -625,7 +625,7 @@ class BrentqFluxEstimator(Estimator):
         Returns
         -------
         result : dict
-            Result dict including 'norm' and 'norm_err'.
+            Result dictionary including 'norm' and 'norm_err'.
         """
         # Compute norm bounds and assert counts > 0
         norm_min, norm_max, norm_min_total = dataset.norm_bounds

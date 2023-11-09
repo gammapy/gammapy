@@ -225,7 +225,7 @@ class ParameterEstimator(Estimator):
         Returns
         -------
         result : dict
-            Dictionary with the parameter ULs. Entries are:
+            Dictionary with the parameter upper limits. Entries are:
 
                 * parameter.name_ul : upper limit on parameter value.
         """
