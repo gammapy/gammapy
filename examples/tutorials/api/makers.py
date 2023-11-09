@@ -363,7 +363,7 @@ print("No. of observations: ", len(observations))
 energy_min = 100 * u.GeV
 energy_max = 10.0 * u.TeV
 
-# define a offset cut (the camera field of view)
+# Define an offset cut (the camera field of view)
 offset_max = 2.5 * u.deg
 
 # define the geom
