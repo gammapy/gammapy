@@ -109,7 +109,6 @@ def test_spectrum_datasets_to_io(tmp_path):
 
 @requires_data()
 def test_ogip_writer(tmp_path):
-
     dataset = SpectrumDatasetOnOff.read(
         "$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits"
     )

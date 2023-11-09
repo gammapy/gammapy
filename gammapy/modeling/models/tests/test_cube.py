@@ -794,7 +794,6 @@ def test_sky_model_contributes_point_region():
 
 
 def test_spatial_model_background(background):
-
     geom = background.geom
 
     spatial_model = ConstantSpatialModel(frame="galactic")
@@ -825,7 +824,6 @@ def test_spatial_model_background(background):
 
 
 def test_spatial_model_io_background(tmp_path, background):
-
     spatial_model = ConstantSpatialModel(frame="galactic")
 
     fbkg_irf = str(tmp_path / "background_irf_test.fits")
@@ -860,7 +858,6 @@ def test_spatial_model_io_background(tmp_path, background):
 
 
 def test_piecewise_spatial_model_background(background):
-
     geom = background.geom
     coords = geom.to_image().get_coord().flat
 

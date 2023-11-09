@@ -1360,7 +1360,6 @@ class ExpCutoffPowerLawNormSpectralModel(SpectralModel):
     def __init__(
         self, index=None, norm=None, reference=None, lambda_=None, alpha=None, **kwargs
     ):
-
         if index is None:
             warnings.warn(
                 "The default index value changed from 1.5 to 0 since v1.2",
@@ -1667,7 +1666,6 @@ class LogParabolaNormSpectralModel(SpectralModel):
     beta = Parameter("beta", 0)
 
     def __init__(self, norm=None, reference=None, alpha=None, beta=None, **kwargs):
-
         if alpha is None:
             warnings.warn(
                 "The default alpha value changed from 2 to 0 since v1.2",

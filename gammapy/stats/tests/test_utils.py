@@ -4,7 +4,6 @@ from gammapy.stats.utils import sigma_to_ts, ts_to_sigma
 
 
 def test_sigma_ts_conversion():
-
     sigma_ref = 3
     ts_ref = 9
     df = 1

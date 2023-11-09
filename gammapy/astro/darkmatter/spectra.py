@@ -74,7 +74,6 @@ class PrimaryFlux(TemplateNDSpectralModel):
     tag = ["PrimaryFlux", "dm-pf"]
 
     def __init__(self, mDM, channel):
-
         self.table_path = make_path(self.table_filename)
         if not self.table_path.exists():
             raise FileNotFoundError(

@@ -17,7 +17,6 @@ def fermi_datasets():
 
 @requires_data()
 def test_test_statistic_detection(fermi_datasets):
-
     model = fermi_datasets.models["Crab Nebula"]
     results = select_nested_models(
         fermi_datasets, [model.spectral_model.amplitude], [0]
@@ -27,7 +26,6 @@ def test_test_statistic_detection(fermi_datasets):
 
 @requires_data()
 def test_test_statistic_link(fermi_datasets):
-
     # TODO: better test with simulated data ?
     model = fermi_datasets.models["Crab Nebula"]
     model2 = model.copy(name="other")

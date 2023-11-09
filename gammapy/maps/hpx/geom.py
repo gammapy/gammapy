@@ -313,7 +313,6 @@ class HpxGeom(Geom):
         idx = pix_tuple_to_idx(pix)
         idx_local = self.global_to_local(idx)
         for i, _ in enumerate(idx):
-
             if clip:
                 if i > 0:
                     np.clip(idx[i], 0, self.axes[i - 1].nbin - 1, out=idx[i])
@@ -1245,7 +1244,6 @@ class HpxGeom(Geom):
 
         # Non-regular all-sky
         elif self.is_allsky and not self.is_regular:
-
             shape = (np.max(self.npix),)
             if idx is None:
                 shape = shape + self.shape_axes
@@ -1253,7 +1251,6 @@ class HpxGeom(Geom):
                 shape = shape + (1,) * len(self.axes)
             pix = [np.full(shape, -1, dtype=int) for i in range(1 + len(self.axes))]
             for idx_img in np.ndindex(self.shape_axes):
-
                 if idx is not None and idx_img != idx:
                     continue
 
@@ -1270,7 +1267,6 @@ class HpxGeom(Geom):
 
         # Explicit pixel indices
         else:
-
             if idx is not None:
                 npix_sum = np.concatenate(([0], np.cumsum(self._npix)))
                 idx_ravel = np.ravel_multi_index(idx, self.shape_axes)
@@ -1287,7 +1283,6 @@ class HpxGeom(Geom):
             pix = [np.full(shape, -1, dtype=int) for _ in range(1 + len(self.axes))]
 
             for idx_img in np.ndindex(self.shape_axes):
-
                 if idx is not None and idx_img != idx:
                     continue
 

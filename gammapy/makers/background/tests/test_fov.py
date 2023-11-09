@@ -154,7 +154,6 @@ def test_fov_bkg_maker_fit_nocounts(obs_dataset, exclusion_mask):
 
 @requires_data()
 def test_fov_bkg_maker_with_source_model(obs_dataset, exclusion_mask, caplog):
-
     test_dataset = obs_dataset.copy(name="test-fov")
 
     # crab model
