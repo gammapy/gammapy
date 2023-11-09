@@ -64,7 +64,7 @@ class SensitivityEstimator(Estimator):
 
         Returns
         -------
-        excess : `RegionNDMap`
+        excess : `~gammapy.maps.RegionNDMap`
             Minimal excess.
         """
         n_off = dataset.counts_off.data
@@ -89,9 +89,9 @@ class SensitivityEstimator(Estimator):
 
         Parameters
         ----------
-        excess : `RegionNDMap`
+        excess : `~gammapy.maps.RegionNDMap`
             Minimal excess.
-        dataset : `SpectrumDataset`
+        dataset : `~gammapy.datasets.SpectrumDataset`
             Spectrum dataset.
 
         Returns

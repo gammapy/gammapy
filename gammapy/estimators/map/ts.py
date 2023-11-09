@@ -76,7 +76,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         this threshold, the optimizing step is omitted to save computing time. Default is None.
     rtol : float
         Relative precision of the flux estimate. Used as a stopping criterion for
-        the norm fit. Default is 0.1.
+        the norm fit. Default is 0.01.
     selection_optional : list of str, optional
         Which maps to compute besides TS, sqrt(TS), flux and symmetric error on flux.
         Available options are:
@@ -234,7 +234,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
         Returns
         -------
-        kernel : `Map`
+        kernel : `~gammapy.maps.Map`
             Kernel map.
 
         """
@@ -412,7 +412,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
         Parameters
         ----------
-        dataset : `MapDataset`
+        dataset : `~gammapy.datasets.MapDataset`
             Map dataset.
         """
         maps = self.estimate_fit_input_maps(dataset=dataset)

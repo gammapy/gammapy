@@ -182,7 +182,7 @@ class ParameterEstimator(Estimator):
         ----------
         datasets : `~gammapy.datasets.Datasets`
             The datasets used to estimate the model parameter.
-        parameter : `Parameter`
+        parameter : `~gammapy.modeling.Parameter`
             For which parameter to get the value.
 
         Returns
@@ -219,7 +219,7 @@ class ParameterEstimator(Estimator):
         ----------
         datasets : `~gammapy.datasets.Datasets`
             The datasets used to estimate the model parameter.
-        parameter : `Parameter`
+        parameter : `~gammapy.modeling.Parameter`
             For which parameter to get the value.
 
         Returns
@@ -271,7 +271,7 @@ class ParameterEstimator(Estimator):
 
         Parameters
         ----------
-        datasets : Datasets
+        datasets : `~gammapy.datasets.Datasets`
             Datasets.
 
         Returns
@@ -295,7 +295,7 @@ class ParameterEstimator(Estimator):
         ----------
         datasets : `~gammapy.datasets.Datasets`
             The datasets used to estimate the model parameter.
-        parameter : `str` or `Parameter`
+        parameter : `str` or `~gammapy.modeling.Parameter`
             For which parameter to run the estimator.
 
         Returns

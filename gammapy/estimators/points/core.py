@@ -121,8 +121,8 @@ class FluxPoints(FluxMaps):
             Filename.
         sed_type : {"dnde", "flux", "eflux", "e2dnde", "likelihood"}
             Sed type.
-        format : {"gadf-sed", "lightcurve"}
-            Format string.
+        format : {"gadf-sed", "lightcurve"}, optional
+            Format string. Default is "gadf-sed".
         reference_model : `SpectralModel`
             Reference spectral model.
         **kwargs : dict, optional
@@ -672,7 +672,7 @@ class FluxPoints(FluxMaps):
 
         Returns
         -------
-        flux_points : `FluxPoints`
+        flux_points : `~gammapy.estimators.FluxPoints`
             A new FluxPoints object with modified upper limits.
 
         Examples

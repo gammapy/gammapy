@@ -250,7 +250,7 @@ class ExcessMapEstimator(Estimator):
 
         Returns
         -------
-        mask : `Map`
+        mask : `~gammapy.maps.Map`
             Mask map.
         """
         if dataset.mask_fit:
@@ -267,11 +267,11 @@ class ExcessMapEstimator(Estimator):
 
         Parameters
         ----------
-        dataset : `MapDataset`
+        dataset : `~gammapy.datasets.MapDataset`
             Map dataset.
         kernel : `~astropy.convolution.Tophat2DKernel`
             Kernel.
-        mask : `Map`
+        mask : `~gammapy.maps.Map`
             Mask map.
 
         Returns
@@ -298,7 +298,7 @@ class ExcessMapEstimator(Estimator):
 
         Parameters
         ----------
-        dataset : `MapDataset`
+        dataset : `~gammapy.datasets.MapDataset`
             Map dataset.
         """
 

@@ -159,7 +159,7 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
 
         Parameters
         ----------
-        datasets : `Datasets`
+        datasets : `~gammapy.datasets.Datasets`
             Datasets.
         energy_min, energy_max : `~astropy.units.Quantity`
             Energy bounds to compute the flux point for.
