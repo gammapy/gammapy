@@ -161,7 +161,6 @@ def lc():
 
 
 def test_compute_lightcurve_fvar():
-
     lightcurve = lc()
 
     fvar = compute_lightcurve_fvar(lightcurve)
@@ -173,7 +172,6 @@ def test_compute_lightcurve_fvar():
 
 
 def test_compute_lightcurve_fpp():
-
     lightcurve = lc()
 
     fpp = compute_lightcurve_fpp(lightcurve)
@@ -185,7 +183,6 @@ def test_compute_lightcurve_fpp():
 
 
 def test_compute_lightcurve_doublingtime():
-
     lightcurve = lc()
 
     dtime = compute_lightcurve_doublingtime(lightcurve)

@@ -307,7 +307,6 @@ class ParameterEstimator(Estimator):
         parameter = datasets.parameters[parameter]
 
         with datasets.parameters.restore_status():
-
             if not self.reoptimize:
                 datasets.parameters.freeze_all()
                 parameter.frozen = False

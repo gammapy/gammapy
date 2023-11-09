@@ -45,7 +45,6 @@ class SensitivityEstimator(Estimator):
         gamma_min=10,
         bkg_syst_fraction=0.05,
     ):
-
         if spectrum is None:
             spectrum = PowerLawSpectralModel(index=2, amplitude="1 cm-2 s-1 TeV-1")
 

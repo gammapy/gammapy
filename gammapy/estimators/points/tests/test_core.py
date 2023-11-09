@@ -148,7 +148,6 @@ def test_compute_flux_points_dnde_exp(method):
 
 @requires_data()
 def test_fermi_to_dnde():
-
     catalog_4fgl = SourceCatalog4FGL("$GAMMAPY_DATA/catalogs/fermi/gll_psc_v20.fit.gz")
     src = catalog_4fgl["FGES J1553.8-5325"]
     fp = src.flux_points
@@ -228,7 +227,6 @@ class TestFluxPoints:
         assert flux_points_likelihood.sed_type_init == "likelihood"
 
     def test_plot(self, flux_points):
-
         fig = plt.figure()
         ax = fig.add_axes([0.2, 0.2, 0.7, 0.7])
         ax.xaxis.set_units(u.eV)
