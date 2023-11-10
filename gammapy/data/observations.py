@@ -406,7 +406,7 @@ class Observation:
     @lazyproperty
     def target_radec(self):
         """Target RA / DEC sky coordinates as a `~astropy.coordinates.SkyCoord` object."""
-        return self.meta.target_position
+        return self.meta.target.position
 
     @property
     @deprecated(
