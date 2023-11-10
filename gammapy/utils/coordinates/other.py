@@ -73,7 +73,7 @@ def velocity_glon_glat(x, y, z, vx, vy, vz):
 
 def motion_since_birth(v, age, theta, phi):
     """
-    Compute motion of an object with given velocity, direction and age.
+    Compute motion of an astrophysical object with a given velocity, direction and age.
 
     Parameters
     ----------

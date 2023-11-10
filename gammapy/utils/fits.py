@@ -180,7 +180,7 @@ def earth_location_to_dict(location):
 
 
 def skycoord_from_dict(header, frame="icrs", ext="PNT"):
-    """Creates `~astropy.coordinates.SkyCoord` from a dictionary of FITS keywords.
+    """Create `~astropy.coordinates.SkyCoord` from a dictionary of FITS keywords.
 
     Parameters
     ----------

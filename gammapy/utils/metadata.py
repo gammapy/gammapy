@@ -92,7 +92,6 @@ class MetaData(BaseModel):
         header : dict
             The header dictionary.
         """
-
         if format != "gadf":
             raise ValueError(f"Metadata to header: format {format} is not supported.")
 

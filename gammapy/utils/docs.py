@@ -36,7 +36,7 @@ log = logging.getLogger(__name__)
 
 
 class AccordionHeader(Directive):
-    """Inserts HTML code to open an accordion box in the How To."""
+    """Insert HTML code to open an accordion box in the How To."""
 
     option_spec = {"id": str, "title": str, "link": str}
 
@@ -81,7 +81,7 @@ class AccordionHeader(Directive):
 
 
 class AccordionFooter(Directive):
-    """Inserts HTML code to close an accordion box in the How To."""
+    """Insert HTML code to close an accordion box in the How To."""
 
     def run(self):
         raw = """
