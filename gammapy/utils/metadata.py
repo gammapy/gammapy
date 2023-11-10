@@ -191,29 +191,6 @@ class CreatorMetaData(MetaData):
         else:
             return v
 
-    def to_header(self, format="gadf"):
-        """Convert creator metadata to fits header.
-
-        Parameters
-        ----------
-        format : str, optional
-            Header format. Default is 'gadf'.
-
-        Returns
-        -------
-        header : dict
-            The header dictionary.
-        """
-        if format != "gadf":
-            raise ValueError(f"Creator metadata: format {format} is not supported.")
-
-        hdr_dict = {}
-        hdr_dict["CREATED"] = self.date.iso
-        hdr_dict["CREATOR"] = self.creator
-        hdr_dict["ORIGIN"] = self.origin
-
-        return hdr_dict
-
     @classmethod
     def from_default(cls):
         """Creation metadata containing current time and Gammapy version."""
