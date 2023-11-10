@@ -25,7 +25,7 @@ def array_stats_str(x, label=""):
 
     Parameters
     ----------
-    x : `~numpy.ndarray`
+    x : array-like
         Array.
     label : str, optional
         Label.

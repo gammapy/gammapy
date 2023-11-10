@@ -35,13 +35,12 @@ def time_to_fits(time, epoch=None, unit=u.s):
     ----------
     time : `~astropy.time.Time`
         Time to be converted.
-    epoch : `astropy.time.Time`, optional
+    epoch : `~astropy.time.Time`, optional
         Epoch to use for the time. The corresponding keywords must
         be stored in the same FITS header.
         Default is None, so the `DEFAULT_EPOCH` is used.
-    unit : `astropy.time.Time`, optional
-        If None, `DEFAULT_EPOCH` will be used.
-        Should be stored as `TIMEUNIT` in the same FITS header.
+    unit : `~astropy.units.Unit`, optional
+        Unit, should be stored as `TIMEUNIT` in the same FITS header.
         Default is u.s.
 
     Returns
@@ -64,13 +63,12 @@ def time_to_fits_header(time, epoch=None, unit=u.s):
     ----------
     time : `~astropy.time.Time`
         Time to be converted.
-    epoch : `astropy.time.Time`, optional
+    epoch : `~astropy.time.Time`, optional
         Epoch to use for the time. The corresponding keywords must
         be stored in the same FITS header.
         Default is None, so `DEFAULT_EPOCH` is used.
-    unit : `astropy.time.Time`, optional
-        If None, `DEFAULT_EPOCH` will be used.
-        Should be stored as `TIMEUNIT` in the same FITS header.
+    unit : `~astropy.units.Unit`, optional
+        Unit, should be stored as `TIMEUNIT` in the same FITS header.
         Default is u.s.
 
     Returns
