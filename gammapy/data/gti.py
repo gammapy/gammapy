@@ -27,7 +27,7 @@ class GTI:
     table : `~astropy.table.Table`
         GTI table.
     reference_time : `~astropy.time.Time`, optional
-        the reference time. Default is None.
+        The reference time. Default is None.
         If None, use TIME_REF_DEFAULT.
 
     Examples
