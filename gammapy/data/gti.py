@@ -106,7 +106,7 @@ class GTI:
         stop : `~astropy.time.Time` or `~astropy.units.Quantity`
             Stop times, if a quantity then w.r.t. reference time.
         reference_time : `~astropy.time.Time`, optional
-            the reference time to use in GTI definition. Default is None.
+            The reference time to use in GTI definition. Default is None.
             If None, use TIME_REF_DEFAULT.
         """
         if reference_time is None:
