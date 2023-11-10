@@ -77,7 +77,7 @@ def is_rad_max_compatible_region_geom(rad_max, geom, rtol=1e-3):
 
 
 class RegionsFinder(metaclass=ABCMeta):
-    """Baseclass for regions finders.
+    """Base class for regions finders.
 
     Parameters
     ----------
