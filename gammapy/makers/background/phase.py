@@ -16,9 +16,9 @@ class PhaseBackgroundMaker(Maker):
     Parameters
     ----------
     on_phase : `tuple` or list of tuples
-        Pn-phase defined by the two edges of each interval (edges are excluded).
+        On-phase defined by the two edges of each interval (edges are excluded).
     off_phase : `tuple` or list of tuples
-        Pff-phase defined by the two edges of each interval (edges are excluded).
+        Off-phase defined by the two edges of each interval (edges are excluded).
     phase_column_name : `str`, optional
         The name of the column in the event file from which the phase information are extracted.
         Default is 'PHASE'.
