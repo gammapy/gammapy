@@ -48,6 +48,10 @@ jobs:
             tox_env: 'codestyle'
             allowed_fail: false
           - os: ubuntu-latest
+            python: '3.10'
+            tox_env: 'astropy60'
+            allowed_fail: false
+          - os: ubuntu-latest
             python: '3.9'
             tox_env: 'py39-test-alldeps_noray-astropylts-numpy121'
             allowed_fail: false
