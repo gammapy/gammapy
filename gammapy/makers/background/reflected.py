@@ -143,7 +143,7 @@ class RegionsFinder(metaclass=ABCMeta):
 
     @staticmethod
     def _get_center_pixel(center, reference_geom):
-        """Center pix coordinate."""
+        """Center pixel coordinate."""
         return PixCoord.from_sky(center, reference_geom.wcs)
 
     @staticmethod
