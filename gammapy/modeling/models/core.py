@@ -12,10 +12,8 @@ import matplotlib.pyplot as plt
 import yaml
 from gammapy.maps import Map, RegionGeom
 from gammapy.modeling import Covariance, Parameter, Parameters
-from gammapy.utils.check import check_version
 from gammapy.utils.metadata import CreatorMetaData
 from gammapy.utils.scripts import make_name, make_path
-from gammapy.version import version
 
 __all__ = ["Model", "Models", "DatasetModels", "ModelBase"]
 
@@ -434,18 +432,8 @@ class DatasetModels(collections.abc.Sequence):
     def from_yaml(cls, yaml_str, path=""):
         """Create from YAML string."""
         data = yaml.safe_load(yaml_str)
-        if "metadata" in data.keys():
-            creator_version = data["metadata"]["creator"].split()[1]
-            if check_version(creator_version) < 0:
-                log.warning(
-                    f"The currently used Gammapy version ({version}) is older than the one used to create the model ({creator_version})"
-                )
-            else:
-                log.debug(
-                    f"The currently used Gammapy version ({version}) is compatible with the one used to create the model ({creator_version})"
-                )
-            # For the moment, models metadata are not kept in a dedicated metadata class
-            del data["metadata"]
+        # TODO : for now metadata are not kept. Add proper metadata creation.
+        data.pop("metadata", None)
         return cls.from_dict(data, path=path)
 
     @classmethod

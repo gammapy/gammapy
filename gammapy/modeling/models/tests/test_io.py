@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import logging
 import operator
 import pytest
 import numpy as np
@@ -29,7 +28,6 @@ from gammapy.modeling.models import (
 from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.utils.scripts import read_yaml, write_yaml
 from gammapy.utils.testing import requires_data
-from gammapy.version import version
 
 
 @pytest.fixture(scope="session")
@@ -494,11 +492,4 @@ def test_meta_io(caplog, tmp_path):
 
     sk_dict = read_yaml(tmp_path / "test.yaml")
     assert "metadata" in sk_dict
-    assert sk_dict["metadata"]["creator"].split()[1] == version
-
-    sk_dict["metadata"]["creator"] = "Gammapy 1.1"
-    write_yaml(sk_dict, tmp_path / "test2.yaml", sort_keys=False)
-
-    with caplog.at_level(logging.DEBUG):
-        Models.read(tmp_path / "test2.yaml")
-        assert "DEBUG" in [_.levelname for _ in caplog.records]
+    assert "Gammapy" in sk_dict["metadata"]["creator"]
