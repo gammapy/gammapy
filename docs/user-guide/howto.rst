@@ -118,19 +118,19 @@ take the difference. Note that in Gammapy, the fit statistic is defined as ``S =
 
 
 .. accordion-header::
-    :id: collapseHowToEight
-    :title: Reduce data
+    :id: HowToReduceData
+    :title: Perform data reduction loop with multi-processing
     :link: ../tutorials/api/makers.html#data-reduction-loop
 
-There are two ways for the data reductions steps to be implemented. Either a loop is used to
-run the full reduction chain, or `~gammapy.makers.DatasetsMaker` is utilised to perform the
-reduction loop internally.
+There are two ways for the data reduction steps to be implemented. Either a loop is used to
+run the full reduction chain, or the reduction is performed with multi-processing tools by
+utilising `~gammapy.makers.DatasetsMaker` to perform the loop internally.
 
 .. accordion-footer::
 
 
 .. accordion-header::
-    :id: collapseHowToNine
+    :id: collapseHowToEight
     :title: Compute cumulative significance
     :link: ../tutorials/analysis-1d/spectral_analysis.html#source-statistic
 
@@ -143,7 +143,7 @@ access the total statistics with the ``info_table(cumulative=True)`` method of
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseHowToTen
+    :id: collapseHowToNine
     :title: Implement a custom model
     :link: ../tutorials/api/models.html#implementing-a-custom-model
 
@@ -152,7 +152,7 @@ Gammapy allows the flexibility of using user-defined models for analysis.
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseHowToEleven
+    :id: collapseHowToTen
     :title: Implement energy dependent spatial models
     :link: ../tutorials/api/models.html#models-with-energy-dependent-morphology
 
@@ -162,7 +162,7 @@ such models within the modeling framework.
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseSHowToTwelve
+    :id: collapseHowToEleven
     :title: Model astrophysical source spectra
 
 It is possible to combine Gammapy with astrophysical modeling codes, if they
@@ -175,7 +175,7 @@ H.E.S.S. or Fermi-LAT data).
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseHowToThirteen
+    :id: collapseHowToTwelve
     :title: Model temporal profiles
     :link: ../tutorials/analysis-time/light_curve_simulation.html#fitting-temporal-models
 
@@ -186,7 +186,7 @@ one for each time bin.
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseHowToFourteen
+    :id: collapseHowToThirteen
     :title: Improve fit convergence with constraints on the source position
 
 It happens that a 3D fit does not converge with warning messages indicating that the
@@ -208,7 +208,7 @@ explains how to add a validity range of a model parameter.
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseHowToFifteen
+    :id: collapseHowToFourteen
     :title: Reduce memory budget for large datasets
 
 When dealing with surveys and large sky regions, the amount of memory required might become
@@ -227,7 +227,7 @@ by removing it from the list of options passed to the `~gammapy.makers.MapDatase
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseHowToSixteen
+    :id: collapseHowToFifteen
     :title: Copy part of a data store
 
 To share specific data from a database, it might be necessary to create a new data storage with
@@ -239,7 +239,7 @@ and build the associated observation and HDU tables.
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseHowToSeventeen
+    :id: collapseHowToSixteen
     :title: Interpolate onto a different geometry
     :link: ../tutorials/api/maps.html#filling-maps-from-interpolation
 
@@ -248,7 +248,7 @@ To interpolate maps onto a different geometry use `~gammapy.maps.Map.interp_to_g
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseHowToEighteen
+    :id: collapseHowToSeventeen
     :title: Suppress warnings
 
 In general it is not recommended to suppress warnings from code because they
@@ -269,7 +269,7 @@ warning like so:
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseHowToNineteen
+    :id: collapseHowToEighteen
     :title: Display a progress bar
 
 Gammapy provides the possibility of displaying a
@@ -299,7 +299,7 @@ The progress bar is available within the following:
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseHowToTwenty
+    :id: collapseHowToNineteen
     :title: Change plotting style and color-blind friendly visualizations
 
 As the Gammapy visualisations are using the library `matplotlib` that provides color styles, it is possible to change the
@@ -337,7 +337,7 @@ or
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseHowToTwentyOne
+    :id: collapseHowToTwenty
     :title: Add PHASE information to your data
 
 For doing pulsar analysis, you must compute the phase associated
