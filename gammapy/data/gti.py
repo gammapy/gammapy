@@ -116,10 +116,20 @@ class GTI:
         reference_time.format = "mjd"
 
         if not isinstance(start, Time):
-            start = reference_time + u.Quantity(start)
+            start = np.atleast_1d(u.Quantity(start))
+            start = (
+                reference_time + start
+                if len(start) > 0
+                else Time([], format=reference_time.format, scale=reference_time.scale)
+            )
 
         if not isinstance(stop, Time):
-            stop = reference_time + u.Quantity(stop)
+            stop = np.atleast_1d(u.Quantity(stop))
+            stop = (
+                reference_time + stop
+                if len(stop) > 0
+                else Time([], format=reference_time.format, scale=reference_time.scale)
+            )
 
         table = Table({"START": np.atleast_1d(start), "STOP": np.atleast_1d(stop)})
 
