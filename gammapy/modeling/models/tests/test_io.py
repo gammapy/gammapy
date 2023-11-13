@@ -483,3 +483,13 @@ def test_compound_models_io(tmp_path):
         "model.spectral.alpha",
         "model.spectral.beta",
     ]
+
+
+def test_meta_io(caplog, tmp_path):
+    m = PowerLawSpectralModel()
+    sk = SkyModel(spectral_model=m, name="model")
+    Models([sk]).write(tmp_path / "test.yaml")
+
+    sk_dict = read_yaml(tmp_path / "test.yaml")
+    assert "metadata" in sk_dict
+    assert "Gammapy" in sk_dict["metadata"]["creator"]
