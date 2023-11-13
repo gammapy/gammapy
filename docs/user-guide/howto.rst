@@ -124,7 +124,7 @@ take the difference. Note that in Gammapy, the fit statistic is defined as ``S =
 
 There are two ways for the data reduction steps to be implemented. Either a loop is used to
 run the full reduction chain, or the reduction is performed with multi-processing tools by
-utilising `~gammapy.makers.DatasetsMaker` to perform the loop internally.
+utilising the `~gammapy.makers.DatasetsMaker` to perform the loop internally.
 
 .. accordion-footer::
 
