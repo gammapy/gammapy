@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Interpolation utilities"""
+"""Interpolation utilities."""
 import html
 from itertools import compress
 import numpy as np
@@ -111,7 +111,7 @@ class ScaledRegularGridInterpolator:
         ----------
         points : tuple of `~numpy.ndarray` or `~astropy.units.Quantity`
             Tuple of coordinate arrays of the form (x_1, x_2, x_3, ...). Arrays are
-            broadcasted internally.
+            broadcast internally.
         method : {None, "linear", "nearest"}
             Linear or nearest neighbour interpolation. None will choose the default
             defined on init.
@@ -184,7 +184,7 @@ class InterpolationScale:
 
 
 class LogScale(InterpolationScale):
-    """Logarithmic scaling"""
+    """Logarithmic scaling."""
 
     tiny = np.finfo(np.float32).tiny
 
@@ -199,7 +199,7 @@ class LogScale(InterpolationScale):
 
 
 class SqrtScale(InterpolationScale):
-    """Sqrt scaling"""
+    """Square root scaling."""
 
     @staticmethod
     def _scale(values):
@@ -212,7 +212,7 @@ class SqrtScale(InterpolationScale):
 
 
 class StatProfileScale(InterpolationScale):
-    """Sqrt scaling"""
+    """Square root profile scaling."""
 
     def __init__(self, axis=0):
         self.axis = axis
@@ -228,7 +228,7 @@ class StatProfileScale(InterpolationScale):
 
 
 class LinearScale(InterpolationScale):
-    """Linear scaling"""
+    """Linear scaling."""
 
     @staticmethod
     def _scale(values):
@@ -245,18 +245,19 @@ def interpolate_profile(x, y, interp_scale="sqrt"):
     Parameters
     ----------
     x : `~numpy.ndarray`
-        Array of x values
+        Array of x values.
     y : `~numpy.ndarray`
-        Array of y values
-    interp_scale : {"sqrt", "lin"}
+        Array of y values.
+    interp_scale : {"sqrt", "lin"}, optional
         Interpolation scale applied to the profile. If the profile is
         of parabolic shape, a "sqrt" scaling is recommended. In other cases or
         for fine sampled profiles a "lin" can also be used.
+        Default is "sqrt".
 
     Returns
     -------
     interp : `ScaledRegularGridInterpolator`
-        Interpolator
+        Interpolator.
     """
     sign = np.sign(np.gradient(y))
     return ScaledRegularGridInterpolator(

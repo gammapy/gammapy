@@ -36,7 +36,7 @@ __all__ = [
 
 
 def compound_region_center(compound_region):
-    """Compute center for a CompoundRegion
+    """Compute center for a CompoundRegion.
 
     The center of the compound region is defined here as the geometric median
     of the individual centers of the regions. The geometric median is defined
@@ -45,12 +45,12 @@ def compound_region_center(compound_region):
     Parameters
     ----------
     compound_region : `CompoundRegion`
-        Compound region
+        Compound region.
 
     Returns
     -------
     center : `~astropy.coordinates.SkyCoord`
-        Geometric median of the positions of the individual regions
+        Geometric median of the positions of the individual regions.
     """
     regions = compound_region_to_regions(compound_region)
 
@@ -60,7 +60,7 @@ def compound_region_center(compound_region):
     positions = SkyCoord([region.center.icrs for region in regions])
 
     def f(x, coords):
-        """Function to minimize"""
+        """Function to minimize."""
         lon, lat = x
         center = SkyCoord(lon * u.deg, lat * u.deg)
         return np.sum(center.separation(coords).deg)
@@ -92,7 +92,7 @@ def compound_region_to_regions(region):
     Parameters
     ----------
     region : `~regions.CompoundSkyRegion` or `~regions.SkyRegion`
-        Compound sky region
+        Compound sky region.
 
     Returns
     -------
@@ -127,7 +127,7 @@ def regions_to_compound_region(regions):
     Returns
     -------
     compound : `~regions.CompoundSkyRegion` or `~regions.CompoundPixelRegion`
-        Compound sky region
+        Compound sky region.
     """
     region_union = regions[0]
 
@@ -158,25 +158,25 @@ class SphericalCircleSkyRegion(CircleSkyRegion):
 
 
 def make_orthogonal_rectangle_sky_regions(start_pos, end_pos, wcs, height, nbin=1):
-    """Utility returning an array of regions to make orthogonal projections
+    """Utility returning an array of regions to make orthogonal projections.
 
     Parameters
     ----------
     start_pos : `~astropy.regions.SkyCoord`
-        First sky coordinate defining the line to which the orthogonal boxes made
+        First sky coordinate defining the line to which the orthogonal boxes made.
     end_pos : `~astropy.regions.SkyCoord`
-        Second sky coordinate defining the line to which the orthogonal boxes made
+        Second sky coordinate defining the line to which the orthogonal boxes made.
     height : `~astropy.quantity.Quantity`
         Height of the rectangle region.
     wcs : `~astropy.wcs.WCS`
-        WCS projection object
-    nbin : int
-        Number of boxes along the line
+        WCS projection object.
+    nbin : int, optional
+        Number of boxes along the line. Default is 1.
 
     Returns
     -------
     regions : list of `~regions.RectangleSkyRegion`
-        Regions in which the profiles are made
+        Regions in which the profiles are made.
     """
     pix_start = start_pos.to_pixel(wcs)
     pix_stop = end_pos.to_pixel(wcs)
@@ -207,18 +207,18 @@ def make_concentric_annulus_sky_regions(
     Parameters
     ----------
     center : `~astropy.coordinates.SkyCoord`
-        Center coordinate
+        Center coordinate.
     radius_max : `~astropy.units.Quantity`
         Maximum radius.
-    radius_min : `~astropy.units.Quantity`
-        Minimum radius.
-    nbin : int
-        Number of boxes along the line
+    radius_min : `~astropy.units.Quantity`, optional
+        Minimum radius. Default is 1e-5 deg.
+    nbin : int, optional
+        Number of boxes along the line. Default is 11.
 
     Returns
     -------
     regions : list of `~regions.RectangleSkyRegion`
-        Regions in which the profiles are made
+        Regions in which the profiles are made.
     """
     regions = []
 
@@ -236,19 +236,19 @@ def make_concentric_annulus_sky_regions(
 
 
 def region_to_frame(region, frame):
-    """Convert a region to a different frame
+    """Convert a region to a different frame.
 
     Parameters
     ----------
     region : `~regions.SkyRegion`
-        region to transform
+        Region to transform.
     frame : "icrs" or "galactic"
-        frame to tranform the region into
+        Frame to transform the region into.
 
     Returns
     -------
     region_new : `~regions.SkyRegion`
-        region in the given frame
+        Region in the given frame.
     """
     from gammapy.maps import WcsGeom
 
@@ -258,19 +258,18 @@ def region_to_frame(region, frame):
 
 
 def region_circle_to_ellipse(region):
-    """Convert a CircleSkyRegion to an EllipseSkyRegion
+    """Convert a CircleSkyRegion to an EllipseSkyRegion.
 
     Parameters
     ----------
     region : `~regions.CircleSkyRegion`
-        region to transform
+        Region to transform.
 
     Returns
     -------
     region_new : `~regions.EllipseSkyRegion`
-        Elliptical region with same major and minor axis
+        Elliptical region with same major and minor axis.
     """
-
     region_new = EllipseSkyRegion(
         center=region.center, width=region.radius, height=region.radius
     )
