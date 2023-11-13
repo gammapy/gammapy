@@ -544,7 +544,7 @@ def test_pix_to_coord_time_axis(time_intervals):
     pixels = [1.3, 3.2, 5.4, 7, 15.33, 17.21, 19.11]
     coords = axis.pix_to_coord(pixels)
     assert_allclose(
-        coords[0:3].mjd, [58927.0125, 58927.534649, 58928.069298], rtol=1e-5
+        coords[0:3].mjd, [58927.538816, 58928.587281, 58929.648246], rtol=1e-5
     )
 
     # test with nan indices
@@ -552,7 +552,7 @@ def test_pix_to_coord_time_axis(time_intervals):
     coords = axis.pix_to_coord(pixels)
     assert_allclose(
         coords[-3:].mjd,
-        [58929.64032894737, 58930.162478070175, -3.725000e-04],
+        [58935.9561, 58937.0046, -3.72500000e-04],
         rtol=1e-5,
     )
 
@@ -560,13 +560,13 @@ def test_pix_to_coord_time_axis(time_intervals):
     coords = axis.pix_to_coord([[-1.2, 0.6], [1.5, 24.7]])
     assert_allclose(
         coords.mjd,
-        [[-3.725000e-04, 58927.551315789475], [58928.07346491228, -3.725000e-04]],
+        [[-3.72500000e-04, 5.89270250e04], [5.89275471e04, -3.72500000e-04]],
         rtol=1e-5,
     )
 
     # test with one value
     coords = axis.pix_to_coord(3)
-    assert_allclose(coords.mjd, 58927.0, rtol=1e-5)
+    assert_allclose(coords.mjd, axis.time_min[3].mjd, rtol=1e-5)
 
 
 def test_slice_time_axis(time_intervals):

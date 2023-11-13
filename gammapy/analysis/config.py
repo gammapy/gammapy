@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import json
 import html
+import json
 import logging
 from collections import defaultdict
 from enum import Enum
@@ -265,7 +265,7 @@ class AnalysisConfig(GammapyBaseConfig):
 
     @classmethod
     def read(cls, path):
-        """Reads from YAML file."""
+        """Read from YAML file."""
         config = read_yaml(path)
         return AnalysisConfig(**config)
 
@@ -306,8 +306,8 @@ class AnalysisConfig(GammapyBaseConfig):
 
         Parameters
         ----------
-        config : string dict or `AnalysisConfig` object
-            Configuration settings provided in dict() syntax.
+        config : str or `AnalysisConfig` object, optional
+            Configuration settings provided in dict() syntax. Default is None.
         """
         if isinstance(config, str):
             other = AnalysisConfig.from_yaml(config)
@@ -323,7 +323,7 @@ class AnalysisConfig(GammapyBaseConfig):
 
     @staticmethod
     def _get_doc_sections():
-        """Returns dict with commented docs from docs file"""
+        """Return dictionary with commented docs from docs file."""
         doc = defaultdict(str)
         with open(DOCS_FILE) as f:
             for line in filter(lambda line: not line.startswith("---"), f):
