@@ -17,8 +17,6 @@ class ParallelBackendEnum(Enum):
     @classmethod
     def from_str(cls, value):
         """Get enum from string."""
-        if value is None:
-            value = BACKEND_DEFAULT
 
         if value == "ray" and not is_ray_available():
             log.warning("Ray is not installed, falling back to multiprocessing backend")
