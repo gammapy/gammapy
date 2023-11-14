@@ -13,9 +13,9 @@ def containment_region(map_, fraction=0.393, apply_union=True):
     Parameters
     ----------
     map_ : `~gammapy.maps.WcsNDMap`
-        Map of integral quantities
+        Map of integral quantities.
     fraction : float
-        Containment fraction
+        Containment fraction. Default is 0.393.
     apply_union : bool
         It True return a compound region otherwise return a list of polygon regions.
         Default is True. Note that compound regions cannot be written in ds9 format but can always be saved with numpy.savez.
@@ -23,7 +23,7 @@ def containment_region(map_, fraction=0.393, apply_union=True):
     Returns
     -------
     regions : list of ~regions.PolygonSkyRegion` or `~regions.CompoundSkyRegion`
-        regions from iso-contours matching containment fraction
+        regions from iso-contours matching containment fraction.
     """
     fmax = np.nanmax(map_.data)
     if fmax > 0.0:
@@ -73,16 +73,14 @@ def containment_region(map_, fraction=0.393, apply_union=True):
 
 
 def containment_radius(map_, fraction=0.393, position=None):
-    """Compute containment radius from the center of a map with integral quantities
+    """Compute containment radius from the center of a map with integral quantities.
 
     Parameters
     ----------
     fraction : float
-        Containment fraction
-    n_levels : int
-        Numbers of contours levels used to find the required containment radius.
+        Containment fraction.
     position : `~astropy.coordinates.SkyCoord`
-        Position from where the containment is conputed.
+        Position from where the containment is computed.
         Default is the center of the Map.
 
     Returns
