@@ -26,6 +26,10 @@ class DatasetsActor(Datasets):
     def __init__(self, datasets=None):
         from ray import get
 
+        log.warning(
+            "Gammapy support for parallelisation with ray is still a prototype and is not fully functional."
+        )
+
         if datasets is not None:
             actors = []
             datasets_list = []
