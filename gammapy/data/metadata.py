@@ -39,25 +39,25 @@ class ObservationMetaData(MetaData):
     Parameters
     ----------
     obs_info : `~gammapy.utils.ObsInfoMetaData`
-        the general observation information
+        The general observation information.
     pointing : `~gammapy.utils.PointingInfoMetaData
-        the pointing metadata
+        The pointing metadata.
     target : `~gammapy.utils.TargetMetaData
-        the target metadata
+        The target metadata.
     creation : `~gammapy.utils.CreatorMetaData`
-        the creation metadata
+        The creation metadata.
     location : `~astropy.coordinates.EarthLocation` or str, optional
-        the observatory location
+        The observatory location.
     deadtime_fraction : float
-        the observation deadtime fraction. Default is 0.
-    time_start : Time, str
-        the observation start time
-    time_stop : Time, str
-        the observation stop time
-    reference_time : Time, str
-        the observation reference time
-    optional : dict
-        additional optional metadata
+        The observation deadtime fraction. Default is 0.
+    time_start : `~astropy.time.Time` or str
+        The observation start time.
+    time_stop : `~astropy.time.Time` or str
+        The observation stop time.
+    reference_time : `~astropy.time.Time` or str
+        The observation reference time.
+    optional : dict, optional
+        Additional optional metadata.
     """
 
     _tag = "observation"
@@ -74,6 +74,7 @@ class ObservationMetaData(MetaData):
 
     @validator("location")
     def validate_location(cls, v):
+        """Validate the location value."""
         from gammapy.data import observatory_locations
 
         if isinstance(v, str) and v in observatory_locations.keys():
@@ -85,6 +86,7 @@ class ObservationMetaData(MetaData):
 
     @validator("time_start", "time_stop", "reference_time")
     def validate_time(cls, v):
+        """Validate the time value."""
         if isinstance(v, str):
             return Time(v)
         elif isinstance(v, Time) or v is None:
