@@ -170,7 +170,7 @@ class MapAxis:
             )
 
     def is_aligned(self, other, atol=2e-2):
-        """Check if other map axis is aligned.
+        """Check if the other map axis is aligned.
 
         Two axes are aligned if their center coordinate values map to integers
         on the other axes as well and if the interpolation modes are equivalent.
@@ -194,19 +194,19 @@ class MapAxis:
         return aligned and self.interp == other.interp
 
     def is_allclose(self, other, **kwargs):
-        """Check if other map axis is all close.
+        """Check if the other map axis is all close.
 
         Parameters
         ----------
         other : `MapAxis`
             Other map axis.
         **kwargs : dict, optional
-            Keyword arguments forwarded to `~numpy.allclose`.
+            Keyword arguments passed to `~numpy.allclose`.
 
         Returns
         -------
         is_allclose : bool
-            Whether other axis is allclose.
+            Whether the other axis is allclose.
         """
         if not isinstance(other, self.__class__):
             return TypeError(f"Cannot compare {type(self)} and {type(other)}")
@@ -272,7 +272,7 @@ class MapAxis:
 
     @property
     def bounds(self):
-        """Bounds of the axis as a `~astropy.units.Quantity`"""
+        """Bounds of the axis as a `~astropy.units.Quantity`."""
         idx = [0, -1]
         if self.node_type == "edges":
             return self.edges[idx]
@@ -458,7 +458,7 @@ class MapAxis:
 
     @property
     def node_type(self):
-        """Return node type ('center' or 'edges')."""
+        """Return node type, either 'center' or 'edges'."""
         return self._node_type
 
     @property
@@ -517,7 +517,7 @@ class MapAxis:
 
         Parameters
         ----------
-        energy_edges : `~astropy.units.Quantity`, float
+        energy_edges : `~astropy.units.Quantity` or float
             Energy edges.
         unit : `~astropy.units.Unit`, optional
             Energy unit. Default is None.
@@ -634,7 +634,7 @@ class MapAxis:
         """Generate an axis object from a sequence of nodes (bin centers).
 
         This will create a sequence of bins with edges half-way
-        between the node values.  This method should be used to
+        between the node values. This method should be used to
         construct an axis where the bin center should lie at a
         specific value (e.g. a map of a continuous function).
 
@@ -644,7 +644,7 @@ class MapAxis:
             Axis nodes (bin center).
         interp : {'lin', 'log', 'sqrt'}
             Interpolation method used to transform between axis and pixel
-            coordinates.  Default is 'lin'.
+            coordinates. Default is 'lin'.
         **kwargs : dict, optional
             Keyword arguments passed to `MapAxis`.
         """
@@ -950,7 +950,9 @@ class MapAxis:
         coord : `~astropy.units.Quantity`
             Coordinates to be rounded.
         clip : bool, optional
-            Choose whether to clip indices to the valid range of the axis. Default is False.
+            Choose whether to clip the index to the valid range of the
+            axis. Default is False. If false then indices for values outside the axis
+            range will be set -1.
 
         Returns
         -------
@@ -1071,7 +1073,6 @@ class MapAxis:
         ----------
         factor : int
             Down-sampling factor.
-
 
         Returns
         -------
@@ -1450,7 +1451,7 @@ class MapAxes(Sequence):
 
     @property
     def primary_axis(self):
-        """Primary extra axis, defined as the one longest.
+        """Primary extra axis, defined as the longest one.
 
         Returns
         -------
@@ -1481,7 +1482,8 @@ class MapAxes(Sequence):
 
     @property
     def iter_with_reshape(self):
-        """Iterate and reshape."""
+        # TODO: The name is misleading. Maybe iter_axis_and_shape?
+        """Generator that iterates over axes and their shape."""
         for idx, axis in enumerate(self):
             # Extract values for each axis, default: nodes
             shape = [1] * len(self)
@@ -1539,7 +1541,7 @@ class MapAxes(Sequence):
 
     @property
     def shape(self):
-        """Shape of the axes."""
+        """Shapes of the axes."""
         return tuple([ax.nbin for ax in self])
 
     @property
@@ -1599,7 +1601,8 @@ class MapAxes(Sequence):
         return self.__class__(axes=axes)
 
     def replace(self, axis):
-        """Replace a given axis.
+        """Replace a given axis. In order to be replaced,
+        the name of the new axis must match the name of the old axis.
 
         Parameters
         ----------
@@ -1823,7 +1826,7 @@ class MapAxes(Sequence):
         return tuple([ax.pix_to_coord(p) for ax, p in zip(self, pix)])
 
     def pix_to_idx(self, pix, clip=False):
-        """Convert pix to idx
+        """Convert pix to idx.
 
         Parameters
         ----------
@@ -1852,7 +1855,7 @@ class MapAxes(Sequence):
         Parameters
         ----------
         slices : dict
-            Dict of axes names and integers or `slice` object pairs. Contains one
+            Dictionary of axes names and integers or `slice` object pairs. Contains one
             element for each non-spatial dimension. For integer indexing the
             corresponding axes is dropped from the map. Axes not specified in the
             dict are kept unchanged.
@@ -1983,7 +1986,7 @@ class MapAxes(Sequence):
 
     @classmethod
     def from_table_hdu(cls, hdu, format="gadf"):
-        """Create MapAxes from BinTableHDU
+        """Create MapAxes from BinTableHDU.
 
         Parameters
         ----------
@@ -2006,7 +2009,7 @@ class MapAxes(Sequence):
 
     @classmethod
     def from_table(cls, table, format="gadf"):
-        """Create MapAxes from table
+        """Create MapAxes from table.
 
         Parameters
         ----------
@@ -2532,8 +2535,7 @@ class TimeMapAxis:
         for time_min, time_max in zip(self.time_min, self.time_max):
             yield (time_min, time_max)
 
-    def coord_to_idx(self, coord, **kwargs):
-        # TODO: Why kwargs is here but not used ?
+    def coord_to_idx(self, coord):
         """Transform time axis coordinate to bin index.
 
         Indices of time values falling outside time bins will be
@@ -2591,7 +2593,7 @@ class TimeMapAxis:
         coords[idx_invalid] = Time(INVALID_VALUE.time, scale=self.reference_time.scale)
         return coords.reshape(shape)
 
-    def coord_to_pix(self, coord, **kwargs):
+    def coord_to_pix(self, coord):
         """Transform time axis coordinate to pixel position.
 
         Pixels of time values falling outside time bins will be
@@ -3045,7 +3047,7 @@ class LabelMapAxis:
         idx = np.round(pix).astype(int)
         return self._labels[idx]
 
-    def coord_to_idx(self, coord, **kwargs):
+    def coord_to_idx(self, coord):
         """Transform labels to indices.
 
         If the label is not present an error is raised.
@@ -3178,7 +3180,7 @@ class LabelMapAxis:
         return ax
 
     def to_header(self, format="gadf", idx=0):
-        """Create FITS header
+        """Create FITS header.
 
         Parameters
         ----------
@@ -3342,9 +3344,9 @@ class LabelMapAxis:
         return axis_stacked
 
     def concatenate(self, axis):
-        """Concatenate another label map axis to this one into a new instance of `LabelMapAxis.
+        """Concatenate another label map axis to this one into a new instance of `LabelMapAxis`.
 
-        Names must agree between the axes. labels must be unique.
+        Names must agree between the axes. Labels must be unique.
 
         Parameters
         ----------
@@ -3376,7 +3378,7 @@ class LabelMapAxis:
         Returns
         -------
         axis : `LabelMapAxis`
-            Sliced axis obje
+            Squashed label map axis.
         """
         return LabelMapAxis(
             labels=[self.center[0] + "..." + self.center[-1]], name=self._name
