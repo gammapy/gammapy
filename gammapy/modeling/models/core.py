@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import yaml
 from gammapy.maps import Map, RegionGeom
 from gammapy.modeling import Covariance, Parameter, Parameters
+from gammapy.utils.check import add_checksum
 from gammapy.utils.metadata import CreatorMetaData
 from gammapy.utils.scripts import make_name, make_path
 
@@ -468,6 +469,7 @@ class DatasetModels(collections.abc.Sequence):
         full_output=False,
         overwrite_templates=False,
         write_covariance=True,
+        checksum=False,
     ):
         """Write to YAML file.
 
@@ -483,6 +485,9 @@ class DatasetModels(collections.abc.Sequence):
             Overwrite templates FITS files. Default is False.
         write_covariance : bool, optional
             Whether to save the covariance. Default is True.
+        checksum : bool
+            When True adds a CHECKSUM entry to the file.
+            Default is False.
         """
         base_path, _ = split(path)
         path = make_path(path)
@@ -503,7 +508,10 @@ class DatasetModels(collections.abc.Sequence):
             self.write_covariance(base_path / filecovar, **kwargs)
             self._covar_file = filecovar
 
-        path.write_text(self.to_yaml(full_output, overwrite_templates))
+        yaml_str = self.to_yaml(full_output, overwrite_templates)
+        if checksum:
+            yaml_str = add_checksum(yaml_str)
+        path.write_text(yaml_str)
 
     def to_yaml(self, full_output=False, overwrite_templates=False):
         """Convert to YAML string."""

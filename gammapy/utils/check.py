@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import os
+import yaml
 from gammapy.scripts.download import RELEASE, cli_download_datasets
 from gammapy.scripts.info import cli_info
 
@@ -38,3 +39,12 @@ def yaml_checksum(yaml_content):
 def verify_checksum(yaml_content, checksum):
     """Compare MD5 checksum for yaml_content with input checksum."""
     return yaml_checksum(yaml_content) == checksum
+
+
+def add_checksum(yaml_str):
+    """Append a checksum at the end of the yaml string."""
+    checksum = {"checksum": yaml_checksum(yaml_str)}
+    checksum = yaml.dump(
+        checksum, sort_keys=False, indent=4, width=80, default_flow_style=False
+    )
+    return yaml_str + checksum

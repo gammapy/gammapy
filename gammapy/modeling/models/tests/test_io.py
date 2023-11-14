@@ -124,6 +124,17 @@ def test_sky_models_io(tmpdir, models):
 
 
 @requires_data()
+def test_sky_models_checksum(tmpdir, models):
+    models.write(
+        tmpdir / "tmp.yaml", full_output=True, overwrite_templates=False, checksum=True
+    )
+    file = open(tmpdir / "tmp.yaml", "rb")
+    yaml_content = file.read()
+
+    assert "checksum: " in str(yaml_content)
+
+
+@requires_data()
 def test_sky_models_io_auto_write(tmp_path, models):
     models_new = models.copy()
     fsource2 = str(tmp_path / "source2_test.fits")
