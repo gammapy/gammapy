@@ -23,7 +23,7 @@ log = logging.getLogger(__name__)
 class HpxNDMap(HpxMap):
     """HEALPix map with any number of non-spatial dimensions.
 
-    This class uses a N+1D numpy array to represent the sequence of
+    This class uses an N+1D numpy array to represent the sequence of
     HEALPix image planes.  Following the convention of WCS-based maps
     this class uses a column-wise ordering for the data array with the
     spatial dimension being tied to the last index of the array.
@@ -31,14 +31,14 @@ class HpxNDMap(HpxMap):
     Parameters
     ----------
     geom : `~gammapy.maps.HpxGeom`
-        HEALPIX geometry object.
+        HEALPix geometry object.
     data : `~numpy.ndarray`
-        HEALPIX data array.
-        If none then an empty array will be allocated.
+        HEALPix data array.
+        If None, then an empty array will be allocated.
     meta : `dict`
-        Dictionary to store meta data.
+        Dictionary to store metadata.
     unit : str or `~astropy.units.Unit`
-        The map unit
+        The map unit.
     """
 
     def __init__(self, geom, data=None, dtype="float32", meta=None, unit=""):
@@ -67,14 +67,15 @@ class HpxNDMap(HpxMap):
         Parameters
         ----------
         wcs_tiles : list of  `WcsNDMap`
-            Wcs map tiles
-        nest : bool
-            Whether to use nested HEALPix scheme
+            WCS map tiles.
+        nest : bool, optional
+            Indexing scheme. If True, "NESTED" scheme. If False, "RING" scheme.
+            Default is True.
 
         Returns
         -------
         hpx_map : `HpxNDMap`
-            HEALPix map
+            HEALPix map.
         """
         import healpy as hp
 
@@ -108,18 +109,18 @@ class HpxNDMap(HpxMap):
     def to_wcs_tiles(
         self, nside_tiles=4, margin="0 deg", method="nearest", oversampling_factor=1
     ):
-        """Convert HpxNDMap to a list of WCS tiles
+        """Convert HpxNDMap to a list of WCS tiles.
 
         Parameters
         ----------
-        nside_tiles : int
-            Nside for super pixel tiles. Usually nsi
-        margin : Angle
-            Width margin of the wcs tile
-        method : {'nearest', 'linear'}
-            Interpolation method
-        oversampling_factor : int
-            Oversampling factor.
+        nside_tiles : int, optional
+            HEALPix NSIDE parameter for super pixel tiles. Default is 4.
+        margin : Angle, optional
+            Width margin of the WCS tile. Default is "0 deg".
+        method : {'nearest', 'linear'}, optional
+            Interpolation method. Default is "nearest".
+        oversampling_factor : int, optional
+            Oversampling factor. Default is 1.
 
         Returns
         -------
@@ -146,11 +147,12 @@ class HpxNDMap(HpxMap):
         Parameters
         ----------
         hdu : `~astropy.io.fits.BinTableHDU`
-            The FITS HDU
-        hdu_bands  : `~astropy.io.fits.BinTableHDU`
-            The BANDS table HDU
+            The FITS HDU.
+        hdu_bands  : `~astropy.io.fits.BinTableHDU`, optional
+            The BANDS table HDU. Default is None.
         format : str, optional
-            FITS convention. If None the format is guessed. The following
+            FITS convention. Default is None.
+            If None the format is guessed. The following
             formats are supported:
 
                 - "gadf"
@@ -164,11 +166,12 @@ class HpxNDMap(HpxMap):
                 - "galprop2"
         colname : str, optional
             Data column name to be used for the HEALPix map.
+            Default is None.
 
         Returns
         -------
         map : `HpxMap`
-            HEALPix map
+            HEALPix map.
 
         """
         if format is None:
@@ -327,22 +330,22 @@ class HpxNDMap(HpxMap):
         return map_out
 
     def to_nside(self, nside, preserve_counts=True):
-        """Upsample or downsample the map to a given nside
+        """Upsample or downsample the map to a given nside.
 
         Parameters
         ----------
         nside : int
-            Nside
-        preserve_counts : bool
+            HEALPix NSIDE parameter.
+        preserve_counts : bool, optional
             Preserve the integral over each bin.  This should be true
             if the map is an integral quantity (e.g. counts) and false if
             the map is a differential quantity (e.g. intensity).
-
+            Default is True.
 
         Returns
         -------
         geom : `~HpxNDMap`
-            Healpix map with new nside.
+            HEALPix map with new NSIDE.
         """
         if len(self.geom.nside) > 1:
             raise NotImplementedError(
@@ -388,7 +391,7 @@ class HpxNDMap(HpxMap):
         Returns
         -------
         cutout : `~gammapy.maps.HpxNDMap`
-            Cutout map
+            Cutout map.
         """
         geom = self.geom.cutout(position=position, width=width)
 
@@ -406,12 +409,14 @@ class HpxNDMap(HpxMap):
         Parameters
         ----------
         other : `HpxNDMap`
-            Other map to stack
-        weights : `HpxNDMap`
+            Other map to stack.
+        weights : `HpxNDMap`, optional
             Array to be used as weights. The spatial geometry must be equivalent
             to `other` and additional axes must be broadcastable.
-        nan_to_num: bool
-            Non-finite values are replaced by zero if True (default).
+            Default is None.
+        nan_to_num: bool, optional
+            Non-finite values are replaced by zero if True.
+            Default is True.
         """
         if self.geom == other.geom:
             idx = None
@@ -451,13 +456,13 @@ class HpxNDMap(HpxMap):
         Parameters
         ----------
         width : `~astropy.units.Quantity`, str or float
-            Smoothing width given as quantity or float. If a float is given it
+            Smoothing width given as quantity or float. If a float is given it is
             interpreted as smoothing width in pixels. If an (angular) quantity
-            is given it converted to pixels using ``healpy.nside2resol``.
+            is given it is converted to pixels using ``healpy.nside2resol``.
             It corresponds to the standard deviation in case of a Gaussian kernel,
             and the radius in case of a disk kernel.
-        kernel : {'gauss', 'disk'}
-            Kernel shape
+        kernel : {'gauss', 'disk'}, optional
+            Kernel shape. Default is "gauss".
 
         Returns
         -------
@@ -534,10 +539,10 @@ class HpxNDMap(HpxMap):
     def convolve(self, kernel, convolution_method="wcs-tan", **kwargs):
         """Convolve map with a WCS kernel.
 
-        It projects the map into a WCS geometry, convolves with a WCS kernel and
-        projects back into the initial Healpix geometry.
+        Project the map into a WCS geometry, convolve with a WCS kernel and
+        project back into the initial HEALPix geometry.
 
-        If the kernel is two dimensional, it is applied to all image planes likewise.
+        If the kernel is two-dimensional, it is applied to all image planes likewise.
         If the kernel is higher dimensional it must match the map in the number of
         dimensions and the corresponding kernel is selected for every image plane.
 
@@ -546,10 +551,11 @@ class HpxNDMap(HpxMap):
         kernel : `~gammapy.irf.PSFKernel`
             Convolution kernel. The pixel size must be upsampled by a factor 2 or bigger
             with respect to the input map to prevent artifacts in the projection.
-        convolution_method : str
-            Supported methods are :
-            'wcs-tan': project on WCS geometry and convolve with WCS kernel.
-            See `~gammapy.maps.HpxNDMap.convolve_wcs`.
+        convolution_method : {"wcs-tan", ""}, optional
+            Convolution method. If "wcs-tan", project on WCS geometry and
+            convolve with WCS kernel. See `~gammapy.maps.HpxNDMap.convolve_wcs`.
+            If "", convolve map with a symmetrical WCS kernel. See `~gammapy.maps.HpxNDMap.convolve_full`.
+            Default is "wcs-tan".
         **kwargs : dict
             Keyword arguments passed to `~gammapy.maps.WcsNDMap.convolve`.
 
@@ -570,10 +576,10 @@ class HpxNDMap(HpxMap):
     def convolve_wcs(self, kernel, **kwargs):
         """Convolve map with a WCS kernel.
 
-        It projects the map into a WCS geometry, convolves with a WCS kernel and
-        projects back into the initial Healpix geometry.
+        Project the map into a WCS geometry, convolve with a WCS kernel and
+        project back into the initial HEALPix geometry.
 
-        If the kernel is two dimensional, it is applied to all image planes likewise.
+        If the kernel is two-dimensional, it is applied to all image planes likewise.
         If the kernel is higher dimensional should either match the map in the number of
         dimensions or the map must be an image (no non-spatial axes). In that case, the
         corresponding kernel is selected and applied to every image plane or to the single
@@ -639,11 +645,11 @@ class HpxNDMap(HpxMap):
     def convolve_full(self, kernel):
         """Convolve map with a symmetrical WCS kernel.
 
-        It extracts the radial profile of the kernel (assuming radial symmetry) and
-        convolves via `hp.sphtfunc.smoothing`. Since no projection is applied, this is
+        Extract the radial profile of the kernel (assuming radial symmetry) and
+        convolve via `hp.sphtfunc.smoothing`. Since no projection is applied, this is
         suited for full-sky and large maps.
 
-        If the kernel is two dimensional, it is applied to all image planes likewise.
+        If the kernel is two-dimensional, it is applied to all image planes likewise.
         If the kernel is higher dimensional it must match the map in the number of
         dimensions and the corresponding kernel is selected for every image plane.
 
@@ -850,19 +856,21 @@ class HpxNDMap(HpxMap):
     def to_region_nd_map(self, region, func=np.nansum, weights=None, method="nearest"):
         """Get region ND map in a given region.
 
-        By default the whole map region is considered.
+        By default, the whole map region is considered.
 
         Parameters
         ----------
         region: `~regions.Region` or `~astropy.coordinates.SkyCoord`
              Region.
-        func : numpy.func
+        func : numpy.func, optional
             Function to reduce the data. Default is np.nansum.
             For boolean Map, use np.any or np.all.
-        weights : `WcsNDMap`
+        weights : `WcsNDMap`, optional
             Array to be used as weights. The geometry must be equivalent.
-        method : {"nearest", "linear"}
+            Default is None.
+        method : {"nearest", "linear"}, optional
             How to interpolate if a position is given.
+            Default is "neraest".
 
         Returns
         -------
@@ -917,31 +925,33 @@ class HpxNDMap(HpxMap):
 
         Parameters
         ----------
-        method : {'raster','poly'}
+        method : {'raster','poly'}, optional
             Method for mapping HEALPix pixels to a two-dimensional
-            image.  Can be set to 'raster' (rasterization to cartesian
+            image. Can be set to 'raster' (rasterization to cartesian
             image plane) or 'poly' (explicit polygons for each pixel).
             WARNING: The 'poly' method is much slower than 'raster'
             and only suitable for maps with less than ~10k pixels.
+            Default is "raster".
         proj : string, optional
-            Any valid WCS projection type.
-        oversample : float
+            Any valid WCS projection type. Default is "AIT".
+        oversample : float, optional
             Oversampling factor for WCS map. This will be the
             approximate ratio of the width of a HPX pixel to a WCS
             pixel. If this parameter is None then the width will be
-            set from ``width_pix``.
-        width_pix : int
+            set from ``width_pix``. Default is 2.
+        width_pix : int, optional
             Width of the WCS geometry in pixels.  The pixel size will
             be set to the number of pixels satisfying ``oversample``
             or ``width_pix`` whichever is smaller.  If this parameter
             is None then the width will be set from ``oversample``.
+            Default is 1000.
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.pyplot.imshow`.
 
         Returns
         -------
         ax : `~astropy.visualization.wcsaxes.WCSAxes`
-            WCS axis object
+            WCS axes object.
         """
         if method == "raster":
             m = self.to_wcs(
@@ -964,9 +974,13 @@ class HpxNDMap(HpxMap):
         ----------
         proj : string, optional
             Any valid WCS projection type.
-        step : int
+            Default is "AIT".
+        step : int, optional
             Set the number vertices that will be computed for each
             pixel in multiples of 4.
+            Default is 1.
+        ax : `~matplotlib.axes.Axes`, optional
+            Matplotlib axes. Default is None
         """
         # FIXME: At the moment this only works for all-sky maps if the
         # projection is centered at (0,0)
@@ -1048,35 +1062,37 @@ class HpxNDMap(HpxMap):
         width_pix=1000,
         **kwargs,
     ):
-        """Plot the mask as a shaded area
+        """Plot the mask as a shaded area.
 
         Parameters
         ----------
-        method : {'raster','poly'}
+        method : {'raster','poly'}, optional
             Method for mapping HEALPix pixels to a two-dimensional
             image.  Can be set to 'raster' (rasterization to cartesian
             image plane) or 'poly' (explicit polygons for each pixel).
             WARNING: The 'poly' method is much slower than 'raster'
             and only suitable for maps with less than ~10k pixels.
+            Default is "raster".
         proj : string, optional
-            Any valid WCS projection type.
-        oversample : float
+            Any valid WCS projection type. Default is "AIT".
+        oversample : float, optional
             Oversampling factor for WCS map. This will be the
             approximate ratio of the width of a HPX pixel to a WCS
             pixel. If this parameter is None then the width will be
-            set from ``width_pix``.
-        width_pix : int
+            set from ``width_pix``. Default is 2.
+        width_pix : int, optional
             Width of the WCS geometry in pixels.  The pixel size will
             be set to the number of pixels satisfying ``oversample``
             or ``width_pix`` whichever is smaller.  If this parameter
             is None then the width will be set from ``oversample``.
+            Default is 1000.
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.pyplot.imshow`.
 
         Returns
         -------
         ax : `~astropy.visualization.wcsaxes.WCSAxes`
-            WCS axis object
+            WCS axis object.
         """
         if not self.is_mask:
             raise ValueError(
