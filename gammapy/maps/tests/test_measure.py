@@ -5,6 +5,7 @@ from numpy.testing import assert_allclose
 from regions import CompoundSkyRegion, PolygonSkyRegion
 from gammapy.maps import HpxGeom, HpxNDMap, containment_radius, containment_region
 from gammapy.modeling.models import GaussianSpatialModel
+from gammapy.utils.testing import requires_dependency
 
 
 def test_containment():
@@ -32,6 +33,7 @@ def test_containment():
     assert isinstance(regions, list)
 
 
+@requires_dependency("healpy")
 def test_containment_fail_hpx():
 
     geom_hpx = HpxGeom.create(binsz=10, frame="galactic")
