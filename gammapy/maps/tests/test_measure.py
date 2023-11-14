@@ -1,8 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 
+import pytest
 from numpy.testing import assert_allclose
 from regions import CompoundSkyRegion, PolygonSkyRegion
-from gammapy.maps import containment_radius, containment_region
+from gammapy.maps import HpxGeom, HpxNDMap, containment_radius, containment_region
 from gammapy.modeling.models import GaussianSpatialModel
 
 
@@ -29,3 +30,15 @@ def test_containment():
 
     regions = containment_region(model_map2, fraction=0.1, apply_union=False)
     assert isinstance(regions, list)
+
+
+def test_containment_fail_hpx():
+
+    geom_hpx = HpxGeom.create(binsz=10, frame="galactic")
+    m = HpxNDMap(geom_hpx)
+
+    with pytest.raises(TypeError):
+        containment_region(m, fraction=0.393, apply_union=True)
+
+    with pytest.raises(TypeError):
+        containment_radius(m, fraction=0.393)
