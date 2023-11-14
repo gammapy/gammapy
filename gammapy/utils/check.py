@@ -23,3 +23,18 @@ def check_tutorials_setup(download_datasets_path="./gammapy-data"):
         os.environ["GAMMAPY_DATA"] = download_datasets_path
 
     cli_info.callback(system=True, version=True, dependencies=True, envvar=True)
+
+
+def yaml_checksum(yaml_content):
+    """Compute a MD5 checksum for a given yaml string input."""
+    import hashlib
+
+    # Calculate the MD5 checksum
+    checksum = hashlib.md5(yaml_content.encode("utf-8")).hexdigest()
+
+    return checksum
+
+
+def verify_checksum(yaml_content, checksum):
+    """Compare MD5 checksum for yaml_content with input checksum."""
+    return yaml_checksum(yaml_content) == checksum
