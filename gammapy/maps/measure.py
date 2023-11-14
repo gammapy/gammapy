@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 def containment_region(map_, fraction=0.393, apply_union=True):
     """Find the iso-contours region corresponding to a given containment
-        for a map of integral quantities.
+        for a map of integral quantities with a flat geometry.
 
     Parameters
     ----------
@@ -25,6 +25,13 @@ def containment_region(map_, fraction=0.393, apply_union=True):
     regions : list of ~regions.PolygonSkyRegion` or `~regions.CompoundSkyRegion`
         regions from iso-contours matching containment fraction.
     """
+    from . import WcsNDMap
+
+    if not isinstance(map_, WcsNDMap):
+        raise TypeError(
+            f"This function is only supported for WcsNDMap, got {type(map_)} instead."
+        )
+
     fmax = np.nanmax(map_.data)
     if fmax > 0.0:
         ordered = np.sort(map_.data.flatten())[::-1]
@@ -73,12 +80,15 @@ def containment_region(map_, fraction=0.393, apply_union=True):
 
 
 def containment_radius(map_, fraction=0.393, position=None):
-    """Compute containment radius from the center of a map with integral quantities.
+    """Compute containment radius from a position in a map
+        with integral quantities and flat geometry.
 
     Parameters
     ----------
+    map_ : `~gammapy.maps.WcsNDMap`
+        Map of integral quantities.
     fraction : float
-        Containment fraction.
+        Containment fraction. Default is 0.393.
     position : `~astropy.coordinates.SkyCoord`
         Position from where the containment is computed.
         Default is the center of the Map.
@@ -89,6 +99,12 @@ def containment_radius(map_, fraction=0.393, position=None):
         Minimal radius required to reach the given containement fraction.
 
     """
+    from . import WcsNDMap
+
+    if not isinstance(map_, WcsNDMap):
+        raise TypeError(
+            f"This function is only supported for WcsNDMap, got {type(map_)} instead."
+        )
 
     if position is None:
         position = map_.geom.center_skydir
