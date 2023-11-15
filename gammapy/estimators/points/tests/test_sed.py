@@ -100,11 +100,11 @@ def create_fpe(model):
     dataset.models = model
     fpe = FluxPointsEstimator(
         energy_edges=energy_edges,
-        norm_n_values=11,
         source="source",
         selection_optional="all",
         fit=Fit(backend="minuit", optimize_opts=dict(tol=0.2, strategy=1)),
     )
+    fpe.norm.scan_n_values = 11
     datasets = [dataset]
     return datasets, fpe
 
@@ -158,10 +158,11 @@ def fpe_map_pwl():
     datasets = [dataset_1, dataset_2]
     fpe = FluxPointsEstimator(
         energy_edges=energy_edges,
-        norm_n_values=3,
         source="source",
         selection_optional="all",
     )
+    fpe.norm.scan_n_values = 3
+
     return datasets, fpe
 
 
@@ -175,10 +176,10 @@ def fpe_map_pwl_reoptimize():
     datasets = [dataset]
     fpe = FluxPointsEstimator(
         energy_edges=energy_edges,
-        norm_values=[0.8, 1, 1.2],
         reoptimize=True,
         source="source",
     )
+    fpe.norm.scan_values = [0.8, 1, 1.2]
     return datasets, fpe
 
 
@@ -472,11 +473,11 @@ def test_run_pwl_parameter_range(fpe_pwl):
     datasets, fpe = create_fpe(pl)
 
     fp = fpe.run(datasets)
+
     table_no_bounds = fp.to_table()
 
-    pl.amplitude.min = 0
-    pl.amplitude.max = 1e-12
-
+    fpe.norm.min = 0
+    fpe.norm.max = 1e4
     fp = fpe.run(datasets)
     table_with_bounds = fp.to_table()
 
@@ -493,7 +494,7 @@ def test_run_pwl_parameter_range(fpe_pwl):
     assert_allclose(actual, [0.0, 0.0, 0.0], atol=1e-2)
 
     actual = table_no_bounds["norm"].data
-    assert_allclose(actual, [-511.76675, -155.75408, -853.547117], rtol=1e-3)
+    assert_allclose(actual, [-511.76675, -153.610019, -853.544154], rtol=1e-3)
 
     actual = table_no_bounds["norm_err"].data
     assert_allclose(actual, [504.601499, 416.69248, 851.223077], rtol=1e-2)
