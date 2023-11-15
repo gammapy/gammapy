@@ -22,6 +22,7 @@ __all__ = ["RegionNDMap"]
 
 class RegionNDMap(Map):
     """N-dimensional region map.
+
     A `~RegionNDMap` owns a `~RegionGeom` instance as well as a data array
     containing the values associated to that region in the sky along the non-spatial
     axis, usually an energy axis. The spatial dimensions of a `~RegionNDMap`
@@ -33,13 +34,15 @@ class RegionNDMap(Map):
     geom : `~gammapy.maps.RegionGeom`
         Region geometry object.
     data : `~numpy.ndarray`
-        Data array. If none then an empty array will be allocated.
+        Data array. If None then an empty array will be allocated.
     dtype : str, optional
-        Data type, default is float32
-    meta : `dict`
-        Dictionary to store meta data.
-    unit : str or `~astropy.units.Unit`
-        The map unit
+        Data type. Default is "float32".
+    meta : `dict`, optional
+        Dictionary to store metadata.
+        Default is None.
+    unit : str or `~astropy.units.Unit`, optional
+        The map unit.
+        Default is "".
     """
 
     def __init__(self, geom, data=None, dtype="float32", meta=None, unit=""):
@@ -59,18 +62,19 @@ class RegionNDMap(Map):
 
         Parameters
         ----------
-        ax : `~matplotlib.pyplot.Axis`
-            Axis used for plotting
-        axis_name : str
-            Which axis to plot on the x axis. Extra axes will be plotted as
-            additional lines.
+        ax : `~matplotlib.pyplot.Axis`, optional
+            Axis used for plotting.
+            Default is None.
+        axis_name : str, optional
+            Which axis to plot on the x-axis. Extra axes will be plotted as
+            additional lines. Default is None.
         **kwargs : dict
-            Keyword arguments passed to `~matplotlib.pyplot.errorbar`
+            Keyword arguments passed to `~matplotlib.pyplot.errorbar`.
 
         Returns
         -------
         ax : `~matplotlib.pyplot.Axis`
-            Axis used for plotting
+            Axis used for plotting.
         """
         ax = ax or plt.gca()
 
@@ -133,19 +137,18 @@ class RegionNDMap(Map):
     def plot_hist(self, ax=None, **kwargs):
         """Plot as histogram.
 
-        kwargs are forwarded to `~matplotlib.pyplot.hist`
-
         Parameters
         ----------
-        ax : `~matplotlib.axis` (optional)
-            Axis instance to be used for the plot
+        ax : `~matplotlib.axis`, optional
+            Axis instance to be used for the plot.
+            Default is None.
         **kwargs : dict
-            Keyword arguments passed to `~matplotlib.pyplot.hist`
+            Keyword arguments passed to `~matplotlib.pyplot.hist`.
 
         Returns
         -------
         ax : `~matplotlib.pyplot.Axis`
-            Axis used for plotting
+            Axis used for plotting.
         """
         ax = plt.gca() if ax is None else ax
 
@@ -176,34 +179,35 @@ class RegionNDMap(Map):
         )
 
     def plot_region(self, ax=None, **kwargs):
-        """Plot region
+        """Plot region.
 
         Parameters
         ----------
-        ax : `~astropy.visualization.WCSAxes`
+        ax : `~astropy.visualization.WCSAxes`, optional
             Axes to plot on. If no axes are given,
             the region is shown using the minimal
-            equivalent WCS geometry.
+            equivalent WCS geometry. Default is None.
         **kwargs : dict
-            Keyword arguments forwarded to `~regions.PixelRegion.as_artist`
+            Keyword arguments forwarded to `~regions.PixelRegion.as_artist`.
         """
         ax = self.geom.plot_region(ax, **kwargs)
         return ax
 
     def plot_mask(self, ax=None, **kwargs):
-        """Plot the mask as a shaded area in a xmin-xmax range
+        """Plot the mask as a shaded area in a xmin-xmax range.
 
         Parameters
         ----------
-        ax : `~matplotlib.axis`
+        ax : `~matplotlib.axis`, optional
             Axis instance to be used for the plot.
+            Default is None.
         **kwargs : dict
-            Keyword arguments passed to `~matplotlib.pyplot.axvspan`
+            Keyword arguments passed to `~matplotlib.pyplot.axvspan`.
 
         Returns
         -------
         ax : `~matplotlib.pyplot.Axis`
-            Axis used for plotting
+            Axis used for plotting.
         """
         if not self.is_mask:
             raise ValueError("This is not a mask and cannot be plotted")
@@ -243,26 +247,29 @@ class RegionNDMap(Map):
         Parameters
         ----------
         region : str or `~regions.SkyRegion`
-            Region specification
-        axes : list of `MapAxis`
-            Non spatial axes.
-        dtype : str
-            Data type, default is 'float32'
-        unit : str or `~astropy.units.Unit`
-            Data unit.
-        meta : `dict`
-            Dictionary to store meta data.
-        wcs : `~astropy.wcs.WCS`
-            WCS projection to use for local projections of the region
-        binsz_wcs: `~astropy.units.Quantity` or str
+            Region specification.
+        axes : list of `MapAxis`, optional
+            Non-spatial axes. Default is None.
+        dtype : str, optional
+            Data type. Default is 'float32'.
+        unit : str or `~astropy.units.Unit`, optional
+            Data unit. Default is "".
+        meta : `dict`, optional
+            Dictionary to store metadata.
+            Default is None.
+        wcs : `~astropy.wcs.WCS`, optional
+            WCS projection to use for local projections of the region.
+            Default is None.
+        binsz_wcs: `~astropy.units.Quantity` or str, optional
             Bin size used for the default WCS, if wcs=None.
-        data : `~numpy.ndarray`
-            Data array
+            Default is "0.1deg".
+        data : `~numpy.ndarray`, optional
+            Data array. Default is None.
 
         Returns
         -------
         map : `RegionNDMap`
-            Region map
+            Region map.
         """
         geom = RegionGeom.create(region=region, axes=axes, wcs=wcs, binsz_wcs=binsz_wcs)
         return cls(geom=geom, dtype=dtype, unit=unit, meta=meta, data=data)
@@ -270,21 +277,22 @@ class RegionNDMap(Map):
     def downsample(self, factor, preserve_counts=True, axis_name=None, weights=None):
         """Downsample the non-spatial dimension by a given factor.
 
-        By default the first axes is downsampled.
+        By default, the first axes is downsampled.
 
         Parameters
         ----------
         factor : int
             Downsampling factor.
-        preserve_counts : bool
+        preserve_counts : bool, optional
             Preserve the integral over each bin.  This should be true
             if the map is an integral quantity (e.g. counts) and false if
             the map is a differential quantity (e.g. intensity).
-        axis_name : str
+            Default is True.
+        axis_name : str, optional
             Which axis to downsample. Default is "energy".
-        weights : `RegionNDMap`
+        weights : `RegionNDMap`, optional
             Contains the weights to apply to the axis to reduce. Default
-            is just weighs of one.
+            weights of one.
 
         Returns
         -------
@@ -315,19 +323,21 @@ class RegionNDMap(Map):
     def upsample(self, factor, order=0, preserve_counts=True, axis_name=None):
         """Upsample the non-spatial dimension by a given factor.
 
-        By default the first axes is upsampled.
+        By default, the first axes is upsampled.
 
         Parameters
         ----------
         factor : int
             Upsampling factor.
-        order : int
+        order : int, optional
             Order of the interpolation used for upsampling.
-        preserve_counts : bool
+            Default is 0.
+        preserve_counts : bool, optional
             Preserve the integral over each bin.  This should be true
             if the RegionNDMap is an integral quantity (e.g. counts) and false if
             the RegionNDMap is a differential quantity (e.g. intensity).
-        axis_name : str
+            Default is True.
+        axis_name : str, optional
             Which axis to upsample. Default is "energy".
 
         Returns
@@ -347,17 +357,17 @@ class RegionNDMap(Map):
         return self._init_copy(geom=geom, data=data)
 
     def iter_by_axis_data(self, axis_name):
-        """Iterate data by axis
+        """Iterate data by axis.
 
         Parameters
         ----------
         axis_name : str
-            Axis name
+            Axis name.
 
         Returns
         -------
         idx, data : tuple, `~astropy.units.Quantity`
-            Data and index
+            Data and index.
         """
         idx_axis = self.geom.axes.index_data(axis_name)
         shape = list(self.data.shape)
@@ -407,10 +417,10 @@ class RegionNDMap(Map):
             "lon" and "lat" are optional and will be taken at the center
             of the region by default.
         method : {"linear", "nearest"}
-            Method to interpolate data values. By default linear
+            Method to interpolate data values. By default, linear
             interpolation is performed.
         fill_value : None or float value
-            The value to use for points outside of the interpolation domain.
+            The value to use for points outside the interpolation domain.
             If None, values outside the domain are extrapolated.
         values_scale : {"lin", "log", "sqrt"}
             Optional value scaling.
@@ -454,17 +464,19 @@ class RegionNDMap(Map):
         ----------
         filename : `pathlib.Path` or str
             Filename.
-        format : {"gadf", "ogip", "ogip-arf"}
-            Which format to use.
-        ogip_column : {None, "COUNTS", "QUALITY", "BACKSCAL"}
+        format : {"gadf", "ogip", "ogip-arf"}, optional
+            Which format to use. Default is "gadf".
+        ogip_column : {None, "COUNTS", "QUALITY", "BACKSCAL"}, optional
             If format 'ogip' is chosen which table hdu column to read.
-        hdu : str
+            Default is None.
+        hdu : str, optional
             Name or index of the HDU with the map data.
+            Default is None.
 
         Returns
         -------
         region_map : `RegionNDMap`
-            Region nd map
+            Region map.
         """
         filename = make_path(filename)
         with fits.open(filename, memmap=False) as hdulist:
@@ -475,17 +487,19 @@ class RegionNDMap(Map):
     def write(
         self, filename, overwrite=False, format="gadf", hdu="SKYMAP", checksum=False
     ):
-        """Write map to file
+        """Write map to file.
 
         Parameters
         ----------
         filename : `pathlib.Path` or str
             Filename.
-        format : {"gadf", "ogip", "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"}
-            Which format to use.
         overwrite : bool, optional
             Overwrite existing file. Default is False.
-        checksum : bool
+        format : {"gadf", "ogip", "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"}, optional
+            Which format to use. Default is "gadf".
+        hdu : str, optional
+            Name of the HDU. Default is "SKYMAP".
+        checksum : bool, optional
             When True adds both DATASUM and CHECKSUM cards to the headers written to the file.
             Default is False.
         """
@@ -499,19 +513,22 @@ class RegionNDMap(Map):
 
         Parameters
         ----------
-        format : {"gadf", "ogip", "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"}
-            Format specification
-        hdu : str
+        format : {"gadf", "ogip", "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"}, optional
+            Format specification. Default is "gadf".
+        hdu : str, optional
             Name of the HDU with the map data, used for "gadf" format.
-        hdu_bands : str
+            Default is "SKYMAP".
+        hdu_bands : str, optional
             Name or index of the HDU with the BANDS table, used for "gadf" format.
-        hdu_region : str
+            Default is None.
+        hdu_region : str, optional
             Name or index of the HDU with the region table.
+            Default is None.
 
         Returns
         -------
         hdulist : `~astropy.fits.HDUList`
-            HDU list
+            HDU list.
         """
         hdulist = fits.HDUList()
         table = self.to_table(format=format)
@@ -539,21 +556,21 @@ class RegionNDMap(Map):
 
     @classmethod
     def from_table(cls, table, format="", colname=None):
-        """Create region map from table
+        """Create region map from table.
 
         Parameters
         ----------
         table : `~astropy.table.Table`
-            Table with input data
+            Table with input data.
         format : {"gadf-sed", "lightcurve", "profile"}
-            Format to use
+            Format to use.
         colname : str
             Column name to take the data from.
 
         Returns
         -------
         region_map : `RegionNDMap`
-            Region map
+            Region map.
         """
         if format == "gadf-sed":
             if colname is None:
@@ -614,12 +631,14 @@ class RegionNDMap(Map):
         ----------
         hdulist : `~astropy.io.fits.HDUList`
             HDU list.
-        format : {"gadf", "ogip", "ogip-arf"}
-            Format specification
-        ogip_column : {"COUNTS", "QUALITY", "BACKSCAL"}
-            If format 'ogip' is chosen which table hdu column to read.
-        hdu : str
+        format : {"gadf", "ogip", "ogip-arf"}, optional
+            Format specification. Default is "gadf".
+        ogip_column : {"COUNTS", "QUALITY", "BACKSCAL"}, optional
+            If format 'ogip' is chosen which table HDU column to read.
+            Default is None.
+        hdu : str, optional
             Name or index of the HDU with the map data.
+            Default is None.
 
         Returns
         -------
@@ -662,12 +681,14 @@ class RegionNDMap(Map):
         Parameters
         ----------
         other : `RegionNDMap`
-            Other map to stack
-        weights : `RegionNDMap`
+            Other map to stack.
+        weights : `RegionNDMap`, optional
             Array to be used as weights. The spatial geometry must be equivalent
             to `other` and additional axes must be broadcastable.
-        nan_to_num: bool
-            Non-finite values are replaced by zero if True (default).
+            Default is None.
+        nan_to_num: bool, optional
+            Non-finite values are replaced by zero if True.
+            Default is True.
         """
         data = other.quantity.to_value(self.unit).astype(self.data.dtype)
 
@@ -688,17 +709,17 @@ class RegionNDMap(Map):
     def to_table(self, format="gadf"):
         """Convert to `~astropy.table.Table`.
 
-        Data format specification: :ref:`gadf:ogip-pha`
+        Data format specification: :ref:`gadf:ogip-pha`.
 
         Parameters
         ----------
-        format : {"gadf", "ogip", "ogip-arf", "ogip-arf-sherpa"}
-            Format specification
+        format : {"gadf", "ogip", "ogip-arf", "ogip-arf-sherpa"}, optional
+            Format specification. Default is "gadf".
 
         Returns
         -------
         table : `~astropy.table.Table`
-            Table
+            Table.
         """
         data = np.nan_to_num(self.quantity[:, 0, 0])
 
@@ -775,12 +796,13 @@ class RegionNDMap(Map):
         return table
 
     def get_spectrum(self, *args, **kwargs):
-        """Return self"""
+        """Return self."""
         return self
 
     def to_region_nd_map(self, *args, **kwargs):
+        """Return self."""
         return self
 
     def cutout(self, *args, **kwargs):
-        """Return self"""
+        """Return self."""
         return self
