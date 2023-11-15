@@ -16,14 +16,15 @@ Context
 A tool to investigate the potential of energy-dependent morphology from spatial maps. This tutorial consists
 of two main steps.
 
-Firstly, the user defines both the initial SkyModel as determined through previous investigate along with the
-energy-band of interest to test for energy dependence. The null hypothesis (H0) is defined as only the background
-component being free (norm). The alternative hypothesis (H1) is adding the source model back in. The results of this
-first step show the significance of your source above the background in each energy band.
+Firstly, the user defines the initial `~gammapy.modeling.models.SkyModel` based on previous investigations
+and selects the energy bands of interest to test for energy dependence. The null hypothesis is defined as
+only the background component being free (norm). The alternative hypothesis introduces the source model.
+The results of this first step show the significance of the source above the background in each energy band.
 
-The second step is for the purpose of quantifying any energy dependent morphology. The null hypothesis here is defined
-through a joint fit of parameters. Giving a base for the analysis. The alternative hypothesis is where the free
-parameters of the model are fit individually in each energy band.
+The second step is to quantify any energy-dependent morphology. The null hypothesis is determined by performing
+a joint fit of the parameters. In the alternative hypothesis, the free parameters of the model are fit
+individually within each energy band.
+
 
 Setup
 -----
@@ -34,6 +35,8 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
 from regions import CircleSkyRegion
+import matplotlib.pyplot as plt
+from IPython.display import display
 from gammapy.data import DataStore
 from gammapy.datasets import MapDataset
 from gammapy.estimators.energydependence import (
@@ -46,28 +49,30 @@ from gammapy.makers import (
     MapDatasetMaker,
     SafeMaskMaker,
 )
-from gammapy.maps import MapAxis, WcsGeom
+from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling.models import (
     GaussianSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
 )
 from gammapy.stats.utils import ts_to_sigma
+from gammapy.utils.check import check_tutorials_setup
 
 ######################################################################
 # Check setup
 # -----------
 
-# from gammapy.utils.check import check_tutorials_setup
-# check_tutorials_setup()
+check_tutorials_setup()
 
 ######################################################################
 # Obtain the data to use
 # ----------------------
 #
-# Create the data store and obtain the observations from the HESS DL3 DR1 for MSH 1552.
+# Create the data store and obtain the observations from the `H.E.S.S. DL3
+# DR1 <https://www.mpi-hd.mpg.de/hfm/HESS/pages/dl3-dr1/>`__ for MSH 1552.
 #
-# P.S.: do not forget to setup your environment variable $GAMMAPY_DATA to your local directory
+# P.S.: do not forget to set up your environment variable `$GAMMAPY_DATA`
+# to your local directory.
 
 data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
 obs_id = data_store.obs_table["OBS_ID"][data_store.obs_table["OBJECT"] == "MSH 15-5-02"]
@@ -81,10 +86,6 @@ observations = data_store.get_observations(obs_id)
 # defined, based on the position of MSH 1552 (the source of interest here).
 
 energy_axis = MapAxis.from_energy_bounds(0.2, 100, nbin=15, unit="TeV")
-energy_axis_true = MapAxis.from_energy_bounds(
-    0.05, 110, nbin=30, unit="TeV", name="energy_true"
-)
-
 source_pos = SkyCoord(320.33, -1.19, unit="deg", frame="galactic")
 geom = WcsGeom.create(
     skydir=(source_pos.galactic.l.deg, source_pos.galactic.b.deg),
@@ -96,17 +97,17 @@ geom = WcsGeom.create(
 regions = CircleSkyRegion(center=source_pos, radius=0.7 * u.deg)
 exclusion_mask = geom.region_mask(regions, inside=False)
 exclusion_mask.sum_over_axes().plot()
+plt.show()
 
 ######################################################################
 # Data reduction loop
 # -------------------
 #
-# For details on how the data reduction is performed see the
-# :doc:`/tutorials/analysis-3d/analysis_3d` tutorial.
-#
-# The data reduction steps can be combined using the DatasetsMaker class
-# which takes as an input the list of makers.
-# Here we stack the dataset in this step.
+# For further details on how the data reduction is performed see the
+# :doc:`/tutorials/api/makers` tutorial.
+# The data reduction steps can be combined using the `~gammapy.makers.DatasetsMaker`
+# class which takes as an input the list of makers.
+# We stack the dataset in this step.
 #
 
 safe_mask_maker = SafeMaskMaker(
@@ -133,10 +134,12 @@ datasets = datasets_maker.run(global_dataset, observations)
 energy_edges = [0.3, 1, 5, 10] * u.TeV
 
 ######################################################################
-# Define the spectral and spatial models of interest. Here we utilise
-# a PowerLawSpectralModel and a GaussianSpatialModel to test the energy
-# dependent morphology component in each energy band. A standard 3D fit
-# is performed then the best fit model is utilised here for the parameters
+# Define the spectral and spatial models of interest. We utilise
+# a `~gammapy.modeling.models.PowerLawSpectralModel` and a
+# `~gammapy.modeling.models.GaussianSpatialModel` to test the energy-dependent
+# morphology component in each energy band. A standard 3D fit (see the
+# :doc:`/tutorials/analysis-3d/analysis_3d` tutorial)
+# is performed, then the best fit model is utilised here for the initial parameters
 # in each model.
 
 spectral_model = PowerLawSpectralModel(
@@ -166,13 +169,15 @@ model = SkyModel(
 # Run Estimator
 # -------------
 #
-# Now we can run the energy dependent estimation and explore the results.
+# We can now run the energy-dependent estimation tool and explore the results.
 #
-# We start with the initial hypothesis, in which the source is added
-# in to compare with the background. We define here which parameters we
-# wish to use to test the energy dependence. To test the energy dependence
-# it is advised to let the position and extension parameter to be free
-# such that these can be used to fit the spatial model in each band.
+# Let's start with the initial hypothesis, in which the source is introduced
+# to compare with the background. We specify which parameters we
+# wish to use for testing the energy dependence.
+# To test for the energy dependence, it is recommended to keep the position and
+# extension parameters free. This allows them to be used for fitting the spatial model
+# in each energy band.
+#
 
 model.spatial_model.lon_0.frozen = False
 model.spatial_model.lat_0.frozen = False
@@ -189,50 +194,75 @@ estimator = EnergyDependenceEstimator(energy_edges=energy_edges, source="MSH1552
 # Show the results tables
 # -----------------------
 #
-# The results of the source signal above the background in each energy bin.
-# -----------------------------------------------
+# The results of the source signal above the background in each energy bin
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# The table shows the delta TS value, the number of degrees of freedom (df)
+# and the significance in each energy bin. The significance values here show that each
+# energy band has significant signal above the background.
 #
 
-estimator = EnergyDependenceEstimator(energy_edges=energy_edges, source="MSH1552")
 result_bkg_src = estimator.estimate_source_significance(datasets)
-Table(result_bkg_src)
+table_bkg_src = Table(result_bkg_src)
+display(table_bkg_src)
 
 ######################################################################
 # The results for testing energy dependence
-# -----------------------------------------
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 results = estimator.run(datasets)
 ts = results["energy_dependence"]["delta_ts"]
 df = results["energy_dependence"]["df"]
 sigma = ts_to_sigma(ts, df=df)
-print(f"The delta_ts for the energy-dependent study is {ts:.3f}.")
-print("")
-print(f"Converting this to a significance gives {sigma:.3f} \u03C3")
-table = Table(results["energy_dependence"]["result"])
-table
 
+print(f"The delta_ts for the energy-dependent study: {ts:.3f}.")
+print(f"Converting this to a significance gives: {sigma:.3f} \u03C3")
+
+results_table = Table(results["energy_dependence"]["result"])
+display(results_table)
+
+
+######################################################################
 # The chi-squared value for each parameter of interest
-# ----------------------------------------------------
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# The sigma values.
+#
 
-Table(
-    weighted_chi2_parameter(results["energy_dependence"]["result"], parameter="sigma")
+display(
+    Table(
+        weighted_chi2_parameter(
+            results["energy_dependence"]["result"], parameter="sigma"
+        )
+    )
 )
 
-Table(
-    weighted_chi2_parameter(results["energy_dependence"]["result"], parameter="lat_0")
+######################################################################
+# The lat_0 values.
+
+display(
+    Table(
+        weighted_chi2_parameter(
+            results["energy_dependence"]["result"], parameter="lat_0"
+        )
+    )
 )
 
-Table(
-    weighted_chi2_parameter(results["energy_dependence"]["result"], parameter="lon_0")
+######################################################################
+# The lon_0 values.
+
+display(
+    Table(
+        weighted_chi2_parameter(
+            results["energy_dependence"]["result"], parameter="lon_0"
+        )
+    )
 )
 
 
 ######################################################################
 # Plotting the results
-# ---------------------------------------------------------------------------
-
-import matplotlib.pyplot as plt
-from gammapy.maps import Map
+# --------------------
 
 empty_map = Map.create(
     skydir=spatial_model.position, frame=spatial_model.frame, width=0.7, binsz=0.02
@@ -264,3 +294,4 @@ for i in range(len(lat_0)):
         kwargs_extension={"facecolor": colors[i], "edgecolor": colors[i]},
         kwargs_position={"color": colors[i]},
     )
+plt.show()

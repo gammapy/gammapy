@@ -2,6 +2,7 @@
 """Estimators."""
 from gammapy.utils.registry import Registry
 from .core import Estimator
+from .energydependence import EnergyDependenceEstimator
 from .map import ASmoothMapEstimator, ExcessMapEstimator, FluxMaps, TSMapEstimator
 from .parameter import ParameterEstimator
 from .points import (

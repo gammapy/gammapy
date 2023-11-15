@@ -1,3 +1,5 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
+"""Implementation of energy dependent estimator tool."""
 import numpy as np
 from astropy.table import Table
 from gammapy.datasets import Datasets
@@ -7,26 +9,29 @@ from gammapy.modeling.selection import TestStatisticNested
 from gammapy.stats.utils import ts_to_sigma
 from .core import Estimator
 
+__all__ = ["EnergyDependenceEstimator"]
+
 
 def weighted_chi2_parameter(results_edep, parameter="sigma"):
-    """Calculate the weighted chi2 value for the parameter of interest
+    """Calculate the weighted chi-squared value for the parameter of interest.
 
     Parameters
     ----------
     result_edep : dict
-        Dictionary of results for the energy-dependent estimator
-    parameter : str
-        The model parameter to calculate the chi-squared value for
+        Dictionary of results for the energy-dependent estimator.
+    parameter : str, optional
+        The model parameter to calculate the chi-squared value for.
+        Default is "sigma".
 
     Returns
     -------
     chi2_result : dict
-        Dictionary with the chi-squared value for parameter of interest
+        Dictionary with the chi-squared value for parameter of interest.
     """
 
     table_edep = Table(results_edep)
 
-    values = table_edep[f"{parameter}"][1:]
+    values = table_edep[parameter][1:]
     errors = table_edep[f"{parameter}_err"][1:]
 
     weights = 1 / errors**2
@@ -53,9 +58,10 @@ class EnergyDependenceEstimator(Estimator):
         Energy edges for the energy-dependence test.
     source : str or int
         For which source in the model to compute the estimator.
-    fit : `~gammapy.modeling.Fit`
+    fit : `~gammapy.modeling.Fit`, optional
         Fit instance specifying the backend and fit options.
-        Fit backend default : minuit
+        If None, the fit backend default is minuit.
+        Default is None.
 
     """
 
@@ -78,7 +84,7 @@ class EnergyDependenceEstimator(Estimator):
         Parameters
         ----------
         datasets : `~gammapy.datasets.Datasets`
-            Input dataset to use.
+            Input datasets to use.
 
         Returns
         -------
