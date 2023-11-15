@@ -101,6 +101,8 @@ class Parameter:
 
     norm_parameters = deprecated_attribute("norm_parameters", "1.2")
 
+    is_norm = deprecated_attribute("is_norm", "1.2")
+
     def __init__(
         self,
         name,
