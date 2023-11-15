@@ -315,7 +315,8 @@ def to_obscore_table(
 
     Returns
     -------
-    Astropy Table length = len(selected_obs)
+    obscore_tab : ~astropy.table.Table
+          Obscore table with number of rows = len(selected_obs)
     """
 
     obscore_tab = _obscore_def()
