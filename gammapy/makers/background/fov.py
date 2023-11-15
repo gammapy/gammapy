@@ -56,7 +56,7 @@ class FoVBackgroundMaker(Maker):
         min_npred_background=0,
         fit=None,
     ):
-        self.method = method
+        self._method = method
         self.exclusion_mask = exclusion_mask
         self.min_counts = min_counts
         self.min_npred_background = min_npred_background
