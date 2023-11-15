@@ -408,7 +408,7 @@ class MapDataset(Dataset):
     ):
         self._name = make_name(name)
         self._evaluators = {}
-        self._priors = None
+        # self._priors = None
 
         self.counts = counts
         self.exposure = exposure
@@ -1336,14 +1336,10 @@ class MapDataset(Dataset):
         return ax_spatial, ax_spectral
 
     def stat_sum(self):
-        """Total statistic function value given the current model parameters and priors."""
-        prior_stat_sum = 0.0
-        if self.models is not None:
-            prior_stat_sum = self.models.parameters.prior_stat_sum()
-
+        """Total statistic function value given the current model parameters and priors set on the models."""
         counts, npred = self.counts.data.astype(float), self.npred().data
 
-        prior_stat_sum = prior_fit_statistic(self.priors)
+        prior_stat_sum = prior_fit_statistic(self.models.priors)
 
         if self.mask is not None:
             return (

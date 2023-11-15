@@ -79,19 +79,19 @@ class Dataset(abc.ABC):
             prior_stat_sum = self.models.parameters.prior_stat_sum()
         return np.sum(stat, dtype=np.float64) + prior_stat_sum
 
-    def set_priors_from_models(self, models):
-        if models is not None:
-            self._priors = [
-                par.prior for par in models.parameters if par.prior is not None
-            ]
-        else:
-            self._priors = None
+    # def set_priors_from_models(self, models):
+    #    if models is not None:
+    #        self._priors = [
+    #            par.prior for par in models.parameters if par.prior is not None
+    #        ]
+    #    else:
+    #        self._priors = None
 
-    @property
-    def priors(self):
-        """Priors set on model parameters (list)."""
-        self.set_priors_from_models(self.models)
-        return self._priors
+    # @property
+    # def priors(self):
+    #    """Priors set on model parameters (list)."""
+    #    self.set_priors_from_models(self.models)
+    #    return self._priors
 
     @abc.abstractmethod
     def stat_array(self):
@@ -191,19 +191,20 @@ class Datasets(collections.abc.MutableSequence):
         else:
             return models
 
-    @property
-    def priors(self):
+        # @property
+        # def priors(self):
         """Priors (list).
 
         Duplicate prior objects have been removed.
         """
-        priors = {}
 
-        for dataset in self:
-            if dataset.models is not None:
-                for prior in dataset.priors:
-                    priors[prior] = prior
-        return priors
+    #   priors = {}
+
+    #   for dataset in self:
+    #       if dataset.models is not None:
+    #           for prior in dataset.priors:
+    #               priors[prior] = prior
+    #   return priors
 
     @models.setter
     def models(self, models):
@@ -268,8 +269,8 @@ class Datasets(collections.abc.MutableSequence):
         for dataset in self:
             stat_sum += dataset.stat_sum()
             # remove prior_fit_statistic from individual dataset to avoid double counting
-            stat_sum -= prior_fit_statistic(dataset.priors)
-        return stat_sum + prior_fit_statistic(list(self.priors.values()))
+            stat_sum -= prior_fit_statistic(dataset.models.priors)
+        return stat_sum + prior_fit_statistic(list(self.models.priors.values()))
 
     def select_time(self, time_min, time_max, atol="1e-6 s"):
         """Select datasets in a given time interval.
