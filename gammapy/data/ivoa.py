@@ -6,14 +6,14 @@ from astropy.table import Column, Table
 from gammapy.data import DataStore
 from gammapy.utils.scripts import make_path
 
-__all__ = ["to_obscore_table"]
+__all__ = ["to_obscore_table", "obscore_def"]
 
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
 
-def _obscore_def():
+def obscore_def():
     """Generate the Obscore default table
     In case the obscore standard changes, this function should be changed according to https://www.ivoa.net/documents/ObsCore
 
@@ -240,9 +240,6 @@ def _obscore_row(base_dir, single_obsID, obs_publisher_did, access_url, table):
     ----------
     single_obsID : int
         single Observation ID
-    **kwargs : `str` {obs_publisher_did, access_url}
-    Giving the values for is highly recommended.
-    If any of these are not given the corresponding obscore field is left empty and a warning is raised for each empty value.
 
     Returns
     -------
@@ -250,16 +247,6 @@ def _obscore_row(base_dir, single_obsID, obs_publisher_did, access_url, table):
     """
     base_dir = make_path(base_dir)
     data_store = DataStore.from_dir(base_dir)
-
-    if obs_publisher_did is None:
-
-        log.warning(
-            "Insufficient publisher information: 'obs_publisher_did' obscore value will be empty."
-        )
-    if access_url is None:
-        log.warning(
-            "Insufficient publisher information: access_url' obscore value will be empty."
-        )
 
     tab = table
     observation = data_store.obs(single_obsID)
@@ -305,12 +292,10 @@ def to_obscore_table(
     ----------
     selected_obs : list or array of Observation ID(int)
     (default of ``None`` means ``no observation ``)
-    If not given, the obscore default table is returned.
-
-
+    If not given, the full obscore (for all the obs_ids in DataStore) table is returned.
 
     **kwargs : `str` {obs_publisher_did, access_url}
-    Giving the values for is highly recommended.
+    Giving the values of these arguments is highly recommended.
     If any of these are not given the corresponding obscore field is left empty and a warning is raised for each empty value.
 
     Returns
@@ -319,7 +304,19 @@ def to_obscore_table(
           Obscore table with number of rows = len(selected_obs)
     """
 
-    obscore_tab = _obscore_def()
+    if obs_publisher_did is None:
+        log.warning(
+            "Insufficient publisher information: 'obs_publisher_did' obscore value will be empty. Giving this values is highly recommended. obs_publisher_did is the Dataset identifier given by the publisher. For more information about these arguments please check the IVOA recommendations: https://www.ivoa.net/documents/ObsCore and https://www.ivoa.net/documents/IVOAIdentifiers/20160523/REC-Identifiers-2.0.html"
+        )
+    if access_url is None:
+        log.warning(
+            "Insufficient publisher information: access_url' obscore value will be empty. Giving this values is highly recommended. access_url is the URL used to access (download) dataset. For more information about these arguments please check the IVOA recommendations: https://www.ivoa.net/documents/ObsCore and https://www.ivoa.net/documents/TAP/"
+        )
+    if selected_obs is None:
+        data_store = DataStore.from_dir(base_dir)
+        selected_obs = data_store.obs_ids
+
+    obscore_tab = obscore_def()
     for i in range(0, len(selected_obs)):
         obscore_row = _obscore_row(
             base_dir, selected_obs[i], obs_publisher_did, access_url, obscore_tab
