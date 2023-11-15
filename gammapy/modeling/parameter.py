@@ -182,17 +182,26 @@ class Parameter:
     @prior.setter
     def prior(self, value):
         if value is not None:
-            if self in value.modelparameters:
-                from .models import Prior
+            from .models import Prior
 
-                if isinstance(value, dict):
-                    from .models import Model
+            # creating Prior out of dict
+            if isinstance(value, dict):
+                from .models import Model
 
-                    self._prior = Model.from_dict(value)
-                elif isinstance(value, Prior):
+                value = Model.from_dict(value)
+                if self in value.modelparameters:
+                    self._prior = value
+
+            # testing of self in prior.modelparameter
+            if isinstance(value, Prior):
+                if self in value.modelparameters:
                     self._prior = value
                 else:
-                    raise TypeError(f"Invalid type: {value!r}")
+                    raise TypeError(
+                        f"Invalid modelparameter: {value.modelparameters!r}"
+                    )
+            else:
+                raise TypeError(f"Invalid type: {value!r}")
 
     @property
     def type(self):
@@ -521,6 +530,17 @@ class Parameters(collections.abc.Sequence):
         """Check parameter limits and emit a warning."""
         for par in self:
             par.check_limits()
+
+    @property
+    def prior(self):
+        return [par.prior for par in self]
+
+    def prior_stat_sum(self):
+        parameters_stat_sum = 0
+        for par in self:
+            if par.prior is not None:
+                parameters_stat_sum += par.prior_stat_sum()
+        return parameters_stat_sum
 
     @property
     def types(self):

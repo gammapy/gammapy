@@ -126,7 +126,12 @@ class Prior(ModelBase):
                     ):
                         del par[item]
 
-        data = {"type": tag, "parameters": params, "weight": self.weight}
+        data = {
+            "type": tag,
+            "parameters": params,
+            "weight": self.weight,
+            "modelparameters": self._modelparameters,
+        }
 
         if self.type is None:
             return data
@@ -134,23 +139,38 @@ class Prior(ModelBase):
             return {self.type: data}
 
     @classmethod
+<<<<<<< HEAD
     def from_dict(cls, data, **kwargs):
         """Get prior parameters from dictionary."""
         kwargs = {}
+=======
+    def from_dict(cls, data):
+
+        from . import PRIOR_REGISTRY
+>>>>>>> 0bd7a348f (mulitdim)
 
         key0 = next(iter(data))
         if key0 in ["prior"]:
             data = data[key0]
-        if data["type"] not in cls.tag:
+
+        prior_cls = PRIOR_REGISTRY.get_cls(data)
+
+        print("in from dict from prior")
+        kwargs = {}
+        print("prior_cls ", prior_cls)
+
+        if data["type"] not in prior_cls.tag:
             raise ValueError(
                 f"Invalid model type {data['type']} for class {cls.__name__}"
             )
-
+        print("cls.default_parameters.names", cls.default_parameters.names)
         priorparameters = _build_priorparameters_from_dict(
-            data["parameters"], cls.default_parameters
+            data["parameters"], prior_cls.default_parameters
         )
         kwargs["weight"] = data["weight"]
-        return cls.from_parameters(priorparameters, **kwargs)
+        kwargs["modelparameters"] = data["modelparameters"]
+
+        return prior_cls.from_parameters(priorparameters, **kwargs)
 
 
 class GaussianPrior(Prior):
@@ -197,13 +217,8 @@ class UniformPrior(Prior):
     min = PriorParameter(name="min", value=-np.inf, unit="")
     max = PriorParameter(name="max", value=np.inf, unit="")
 
-<<<<<<< HEAD
-    @staticmethod
-    def evaluate(value, min, max):
-        """Evaluate the uniform prior."""
-=======
     def evaluate(self, value, min, max):
->>>>>>> 65d1a8b6b (prior_stat_sum)
+    """Evaluate the uniform prior."""
         if min < value < max:
             return 1.0
         else:
