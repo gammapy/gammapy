@@ -1800,9 +1800,9 @@ class TemplateSpectralModel(SpectralModel):
         kwargs.setdefault("interp_kwargs", {"values_scale": "lin"})
         return cls(energy=energy, values=values, **kwargs)
 
-    def evaluate(self, energy, norm):
+    def evaluate(self, energy):
         """Evaluate the model (static function)."""
-        return norm * self._evaluate((energy,), clip=True)
+        return self._evaluate((energy,), clip=True)
 
     def to_dict(self, full_output=False):
         data = super().to_dict(full_output)
