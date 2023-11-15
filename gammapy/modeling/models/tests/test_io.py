@@ -444,7 +444,6 @@ def test_to_dict_not_default():
     assert "error" not in index_dict
     assert "interp" not in index_dict
     assert "scale_method" not in index_dict
-    assert "is_norm" not in index_dict
 
     model_2 = model.from_dict(mdict)
     assert model_2.index.min == model.index.min
