@@ -7,6 +7,7 @@ import gammapy.utils.parallel as parallel
 from gammapy.data import GTI
 from gammapy.datasets import Datasets
 from gammapy.maps import LabelMapAxis, Map, TimeMapAxis
+from gammapy.utils.deprecation import deprecated_attribute
 from gammapy.utils.pbar import progress_bar
 from .core import FluxPoints
 from .sed import FluxPointsEstimator
@@ -89,6 +90,11 @@ class LightCurveEstimator(FluxPointsEstimator):
     """
 
     tag = "LightCurveEstimator"
+
+    norm_min = deprecated_attribute("norm_min", "1.2")
+    norm_max = deprecated_attribute("norm_max", "1.2")
+    norm_n_values = deprecated_attribute("norm_n_values", "1.2")
+    norm_values = deprecated_attribute("norm_values", "1.2")
 
     def __init__(self, time_intervals=None, atol="1e-6 s", **kwargs):
         self.time_intervals = time_intervals

@@ -6,6 +6,7 @@ from gammapy.estimators.parameter import ParameterEstimator
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling import Parameter
 from gammapy.modeling.models import ScaleSpectralModel
+from gammapy.utils.deprecation import deprecated_attribute
 
 log = logging.getLogger(__name__)
 
@@ -59,6 +60,11 @@ class FluxEstimator(ParameterEstimator):
     """
 
     tag = "FluxEstimator"
+
+    norm_min = deprecated_attribute("norm_min", "1.2")
+    norm_max = deprecated_attribute("norm_max", "1.2")
+    norm_n_values = deprecated_attribute("norm_n_values", "1.2")
+    norm_values = deprecated_attribute("norm_values", "1.2")
 
     def __init__(
         self,

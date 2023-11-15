@@ -9,6 +9,7 @@ from gammapy.datasets import Datasets
 from gammapy.datasets.flux_points import _get_reference_model
 from gammapy.maps import MapAxis
 from gammapy.modeling import Fit
+from gammapy.utils.deprecation import deprecated_attribute
 from ..flux import FluxEstimator
 from .core import FluxPoints
 
@@ -83,6 +84,11 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
     """
 
     tag = "FluxPointsEstimator"
+
+    norm_min = deprecated_attribute("norm_min", "1.2")
+    norm_max = deprecated_attribute("norm_max", "1.2")
+    norm_n_values = deprecated_attribute("norm_n_values", "1.2")
+    norm_values = deprecated_attribute("norm_values", "1.2")
 
     def __init__(
         self,
