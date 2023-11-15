@@ -57,6 +57,12 @@ class FluxEstimator(ParameterEstimator):
         If False only the norm of the source of interest if fitted,
         and all other parameters are frozen at their current values.
         Default is False.
+    norm : ~gammapy.modeling.Parameter`
+        Norm parameter used for the fit
+        Used if the source model does not have one and only one norm parameter.
+        Default is None and a new parameter is created automatically,
+        with min=0.2, max=5, scan_n_values = 11.
+
     """
 
     tag = "FluxEstimator"
@@ -78,12 +84,27 @@ class FluxEstimator(ParameterEstimator):
         selection_optional=None,
         fit=None,
         reoptimize=False,
+        norm=None,
     ):
+
         self.norm_values = norm_values
         self.norm_min = norm_min
         self.norm_max = norm_max
         self.norm_n_values = norm_n_values
         self.source = source
+        if norm is None:
+            norm = Parameter(
+                "norm",
+                1,
+                unit="",
+                interp="log",
+                scan_min=norm_min,
+                scan_max=norm_max,
+                scan_n_values=norm_n_values,
+                scan_values=None,
+            )
+        self.norm = norm
+
         super().__init__(
             null_value=0,
             n_sigma=n_sigma,
@@ -128,15 +149,12 @@ class FluxEstimator(ParameterEstimator):
 
         norms = ref_model.parameters.norm_parameters
 
-        if len(norms) == 0 or len(norms.free_parameters) > 1:
-            raise ValueError(
-                f"{self.tag} requires one and only one free 'norm' or 'amplitude' parameter"
-                " in the model to run"
+        if len(norms.free_parameters) == 1:
+            self.norm = self._set_norm_parameter(
+                scale_model.norm, norms.free_parameters[0]
             )
-        elif len(norms.free_parameters) == 1:
-            norms = norms.free_parameters
 
-        scale_model.norm = self._set_norm_parameter(scale_model.norm, norms[0])
+        scale_model.norm = self.norm.copy()
         return scale_model
 
     def estimate_npred_excess(self, datasets):
