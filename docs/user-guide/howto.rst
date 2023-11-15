@@ -27,7 +27,6 @@ the english word "pie". You can listen to it `here <http://ipa-reader.xyz/?text=
 
 .. accordion-footer::
 
-
 .. accordion-header::
     :id: collapseHowToTwo
     :title: Select observations
@@ -175,7 +174,7 @@ H.E.S.S. or Fermi-LAT data).
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseHowToTwelve
+    :id: collapseSHowToTwelve
     :title: Model temporal profiles
     :link: ../tutorials/analysis-time/light_curve_simulation.html#fitting-temporal-models
 
