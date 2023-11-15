@@ -86,6 +86,10 @@ observations = data_store.get_observations(obs_id)
 # defined, based on the position of MSH 1552 (the source of interest here).
 
 energy_axis = MapAxis.from_energy_bounds(0.2, 100, nbin=15, unit="TeV")
+energy_axis_true = MapAxis.from_energy_bounds(
+    0.05, 110, nbin=30, unit="TeV", name="energy_true"
+)
+
 source_pos = SkyCoord(320.33, -1.19, unit="deg", frame="galactic")
 geom = WcsGeom.create(
     skydir=(source_pos.galactic.l.deg, source_pos.galactic.b.deg),
@@ -118,7 +122,7 @@ dataset_maker = MapDatasetMaker()
 
 fov_bkg_maker = FoVBackgroundMaker(method="fit", exclusion_mask=exclusion_mask)
 
-global_dataset = MapDataset.create(geom)
+global_dataset = MapDataset.create(geom, energy_axis_true=energy_axis_true)
 makers = [dataset_maker, safe_mask_maker, fov_bkg_maker]  # the order matters
 
 datasets_maker = DatasetsMaker(
