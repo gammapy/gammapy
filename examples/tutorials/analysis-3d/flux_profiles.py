@@ -272,9 +272,8 @@ flux_profile_estimator = FluxProfileEstimator(
     spectrum=PowerLawSpectralModel(index=2.3),
     energy_edges=[10, 100, 2000] * u.GeV,
     selection_optional=["ul", "scan"],
-    norm_values=np.linspace(-1, 5, 11),
 )
-
+flux_profile_estimator.norm.scan_values = np.linspace(-1, 5, 11)
 profile = flux_profile_estimator.run(datasets=dataset)
 
 
