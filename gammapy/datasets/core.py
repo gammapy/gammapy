@@ -76,7 +76,7 @@ class Dataset(abc.ABC):
             stat = stat[self.mask.data]
         prior_stat_sum = 0.0
         if self.models is not None:
-            prior_stat_sum = self.models.parameters.prior_stat_sum()
+            prior_stat_sum = prior_fit_statistic(self.models.priors)
         return np.sum(stat, dtype=np.float64) + prior_stat_sum
 
     @abc.abstractmethod
@@ -241,7 +241,7 @@ class Datasets(collections.abc.MutableSequence):
             stat_sum += dataset.stat_sum()
             # remove prior_fit_statistic from individual dataset to avoid double counting
             stat_sum -= prior_fit_statistic(dataset.models.priors)
-        return stat_sum + prior_fit_statistic(list(self.models.priors.values()))
+        return stat_sum + prior_fit_statistic(self.models.priors)
 
     def select_time(self, time_min, time_max, atol="1e-6 s"):
         """Select datasets in a given time interval.

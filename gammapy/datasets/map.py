@@ -408,8 +408,6 @@ class MapDataset(Dataset):
     ):
         self._name = make_name(name)
         self._evaluators = {}
-        # self._priors = None
-
         self.counts = counts
         self.exposure = exposure
         self.background = background
