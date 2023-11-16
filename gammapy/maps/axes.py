@@ -1746,7 +1746,7 @@ class MapAxes(Sequence):
         Returns
         -------
         axes : `MapAxes`
-            Axes without the axis with name `axis_name`.
+            Axes without the `axis_name`.
         """
         axes = []
         for ax in self:
@@ -3032,7 +3032,7 @@ class LabelMapAxis:
         return len(self._labels)
 
     def pix_to_coord(self, pix):
-        """Transform pixel to axis coordinates.
+        """Transform pixel to label coordinate.
 
         Parameters
         ----------
@@ -3048,7 +3048,7 @@ class LabelMapAxis:
         return self._labels[idx]
 
     def coord_to_idx(self, coord, **kwargs):
-        """Transform labels to indices.
+        """Transform label coordinate to indices.
 
         If the label is not present an error is raised.
 
@@ -3072,7 +3072,7 @@ class LabelMapAxis:
         return np.argmax(is_equal, axis=-1)
 
     def coord_to_pix(self, coord):
-        """Transform axis labels to pixel coordinates.
+        """Transform label coordinate to pixel coordinate.
 
         Parameters
         ----------
