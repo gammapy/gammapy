@@ -1336,8 +1336,9 @@ class MapDataset(Dataset):
     def stat_sum(self):
         """Total statistic function value given the current model parameters and priors set on the models."""
         counts, npred = self.counts.data.astype(float), self.npred().data
-
-        prior_stat_sum = prior_fit_statistic(self.models.priors)
+        prior_stat_sum = 0.0
+        if self.models is not None:
+            prior_stat_sum = prior_fit_statistic(self.models.priors)
 
         if self.mask is not None:
             return (
