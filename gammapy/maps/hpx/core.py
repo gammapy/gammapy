@@ -54,7 +54,7 @@ class HpxMap(Map):
         binsz : float or `~numpy.ndarray`, optional
             Approximate pixel size in degrees. An NSIDE will be
             chosen that corresponds to a pixel size closest to this
-            value. This option is superseded by nside.
+            value. This option is superseded by ``nside``.
             Default is None.
         nest : bool, optional
             Indexing scheme. If True, "NESTED" scheme. If False, "RING" scheme.
@@ -247,7 +247,7 @@ class HpxMap(Map):
         Parameters
         ----------
         sum_bands : bool, optional
-            Sum over non-spatial axes before reprojecting. If False,
+            Sum over non-spatial axes before reprojecting. If False
             then the WCS map will have the same dimensionality as the
             HEALPix one. Default is False.
         normalize : bool, optional

@@ -47,11 +47,11 @@ class HpxGeom(Geom):
     ----------
     nside : `~numpy.ndarray`
         HEALPix NSIDE parameter, the total number of pixels is
-        12*nside*nside.  For multi-dimensional maps one can pass
-        either a single nside value or a vector of nside values
-        defining the pixel size for each image plane. If nside is not
+        12*nside*nside. For multi-dimensional maps one can pass
+        either a single ``nside`` value or a vector of ``nside`` values
+        defining the pixel size for each image plane. If ``nside`` is not
         a scalar then its dimensionality should match that of the
-        non-spatial axes. If nest is True, nside must be a power of 2,
+        non-spatial axes. If nest is True, ``nside`` must be a power of 2,
         less than 2**30.
     nest : bool
         Indexing scheme. If True, "NESTED" scheme. If False, "RING" scheme.
@@ -814,13 +814,13 @@ class HpxGeom(Geom):
         ----------
         nside : int or `~numpy.ndarray`, optional
             HEALPix NSIDE parameter. This parameter sets the size of
-            the spatial pixels in the map. If nest is True, nside must be a
+            the spatial pixels in the map. If nest is True, ``nside`` must be a
             power of 2, less than 2**30.
             Default is None.
         binsz : float or `~numpy.ndarray`, optional
-            Approximate pixel size in degrees.  An NSIDE will be
+            Approximate pixel size in degrees. An ``nside`` will be
             chosen that corresponds to a pixel size closest to this
-            value.  This option is superseded by nside.
+            value.  This option is superseded by ``nside``.
             Default is None.
         nest : bool, optional
             Indexing scheme. If True, "NESTED" scheme. If False, "RING" scheme.
@@ -1157,17 +1157,17 @@ class HpxGeom(Geom):
     def to_wcs_tiles(self, nside_tiles=4, margin="0 deg"):
         """Create WCS tiles geometries from HPX geometry with given nside.
 
-        The HEALPix geom is divide into superpixels defined by nside_tiles,
+        The HEALPix geom is divide into superpixels defined by ``nside_tiles``,
         which are then represented by a WCS geometry using a tangential
         projection. The number of WCS tiles is given by the number of pixels
-        for the given nside_tiles.
+        for the given ``nside_tiles``.
 
         Parameters
         ----------
         nside_tiles : int, optional
             HEALPix NSIDE parameter for super pixel tiles.
             Default is 4.
-        margin : Angle, optional
+        margin : `~astropy.units.Quantity`, optional
             Width margin of the WCS tile.
             Default is "0 deg".
 
