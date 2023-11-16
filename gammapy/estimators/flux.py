@@ -87,10 +87,11 @@ class FluxEstimator(ParameterEstimator):
         norm=None,
     ):
 
-        self.norm_values = norm_values
         self.norm_min = norm_min
         self.norm_max = norm_max
         self.norm_n_values = norm_n_values
+        self.norm_values = norm_values
+
         self.source = source
         if norm is None:
             norm = Parameter(
@@ -101,7 +102,7 @@ class FluxEstimator(ParameterEstimator):
                 scan_min=norm_min,
                 scan_max=norm_max,
                 scan_n_values=norm_n_values,
-                scan_values=None,
+                scan_values=norm_values,
             )
         self.norm = norm
 
