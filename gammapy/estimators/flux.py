@@ -58,6 +58,7 @@ class FluxEstimator(ParameterEstimator):
         and all other parameters are frozen at their current values.
         Default is False.
     norm : ~gammapy.modeling.Parameter`
+    norm : ~gammapy.modeling.Parameter` or dict
         Norm parameter used for the fit
         Used if the source model does not have one and only one norm parameter.
         Default is None and a new parameter is created automatically,
@@ -93,10 +94,10 @@ class FluxEstimator(ParameterEstimator):
     ):
 
         self.source = source
-        if norm is None:
-            norm = Parameter(
-                "norm",
-                1,
+        if norm is None or isinstance(norm, dict):
+            norm_kwargs = dict(
+                name="norm",
+                value=1,
                 unit="",
                 interp="log",
                 frozen=False,
@@ -105,6 +106,9 @@ class FluxEstimator(ParameterEstimator):
                 scan_n_values=norm_n_values,
                 scan_values=norm_values,
             )
+            if isinstance(norm, dict):
+                norm_kwargs.update(norm)
+            norm = Parameter(**norm_kwargs)
         self.norm = norm
 
         super().__init__(
