@@ -276,7 +276,7 @@ class EDispKernel(IRF):
 
         Notes
         -----
-        For more info on the RMF FITS file format see:
+        For more information on the RMF FITS file format see:
         https://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/summary/cal_gen_92_002_summary.html
         """
         # Cannot use table_to_fits here due to variable length array

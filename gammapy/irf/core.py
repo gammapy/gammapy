@@ -582,7 +582,7 @@ class IRF(metaclass=abc.ABCMeta):
         slices : dict
             Dictionary of axes names and `slice` object pairs. Contains one
             element for each non-spatial dimension. Axes not specified in the
-            dict are kept unchanged.
+            dictionary are kept unchanged.
 
         Returns
         -------
@@ -997,7 +997,7 @@ class IRFMap:
             Dictionary of axes names and integers or `slice` object pairs. Contains one
             element for each non-spatial dimension. For integer indexing the
             corresponding axes is dropped from the map. Axes not specified in the
-            dict are kept unchanged.
+            dictionary are kept unchanged.
 
         Returns
         -------
