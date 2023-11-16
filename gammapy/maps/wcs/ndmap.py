@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
+from itertools import repeat
 import numpy as np
 import scipy.interpolate
 import scipy.ndimage as ndi
@@ -12,6 +13,7 @@ from astropy.nddata import block_reduce
 from regions import PixCoord, PointPixelRegion, PointSkyRegion, SkyRegion
 import matplotlib.colors as mpcolors
 import matplotlib.pyplot as plt
+import gammapy.utils.parallel as parallel
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.units import unit_from_fits_image_hdu
 from ..geom import pix_tuple_to_idx
@@ -831,8 +833,6 @@ class WcsNDMap(WcsMap):
         """
         from gammapy.irf import PSFKernel
 
-        convolve = scipy.signal.convolve
-
         if self.geom.is_image and not isinstance(kernel, PSFKernel):
             if kernel.ndim > 2:
                 raise ValueError(
@@ -859,8 +859,6 @@ class WcsNDMap(WcsMap):
                 "WcsNDMap.convolve: mode='valid' is not supported."
             )
 
-        data = np.empty(geom.data_shape, dtype=np.float32)
-
         shape_axes_kernel = kernel.shape[slice(0, -2)]
 
         if len(shape_axes_kernel) > 0:
@@ -871,17 +869,34 @@ class WcsNDMap(WcsMap):
                 )
 
         if self.geom.is_image and kernel.ndim == 3:
-            for idx in range(kernel.shape[0]):
-                data[idx] = convolve(
-                    self.data.astype(np.float32), kernel[idx], method=method, mode=mode
-                )
+            indexes = range(kernel.shape[0])
+            images = repeat(self.data.astype(np.float32))
         else:
-            for img, idx in self.iter_by_image_data():
-                ikern = Ellipsis if kernel.ndim == 2 else idx
-                data[idx] = convolve(
-                    img.astype(np.float32), kernel[ikern], method=method, mode=mode
-                )
+            indexes = list(self.iter_by_image_index())
+            images = (self.data[idx] for idx in indexes)
+        kernels = (
+            kernel[Ellipsis] if kernel.ndim == 2 else kernel[idx] for idx in indexes
+        )
+
+        convolved = parallel.run_multiprocessing(
+            self._convolve,
+            zip(
+                images,
+                kernels,
+                repeat(method),
+                repeat(mode),
+            ),
+            task_name="Convolution",
+        )
+        data = np.empty(geom.data_shape, dtype=np.float32)
+        for idx_res, idx in enumerate(indexes):
+            data[idx] = convolved[idx_res]
         return self._init_copy(data=data, geom=geom)
+
+    @staticmethod
+    def _convolve(image, kernel, method, mode):
+        """scipy.signal.convolve without kwargs for parallel evaluation"""
+        return scipy.signal.convolve(image, kernel, method=method, mode=mode)
 
     def smooth(self, width, kernel="gauss", **kwargs):
         """Smooth the map.

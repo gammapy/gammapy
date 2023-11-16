@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import yaml
 from gammapy.maps import Map, RegionGeom
 from gammapy.modeling import Covariance, Parameter, Parameters
+from gammapy.utils.metadata import CreatorMetaData
 from gammapy.utils.scripts import make_name, make_path
 
 __all__ = ["Model", "Models", "DatasetModels", "ModelBase"]
@@ -429,6 +430,8 @@ class DatasetModels(collections.abc.Sequence):
     def from_yaml(cls, yaml_str, path=""):
         """Create from YAML string."""
         data = yaml.safe_load(yaml_str)
+        # TODO : for now metadata are not kept. Add proper metadata creation.
+        data.pop("metadata", None)
         return cls.from_dict(data, path=path)
 
     @classmethod
@@ -515,9 +518,11 @@ class DatasetModels(collections.abc.Sequence):
     def to_yaml(self, full_output=False, overwrite_templates=False):
         """Convert to YAML string."""
         data = self.to_dict(full_output, overwrite_templates)
-        return yaml.dump(
+        text = yaml.dump(
             data, sort_keys=False, indent=4, width=80, default_flow_style=False
         )
+        creation = CreatorMetaData.from_default()
+        return text + creation.to_yaml()
 
     def update_link_label(self):
         """Update linked parameters labels used for serialisation and print."""

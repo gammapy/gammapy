@@ -18,31 +18,31 @@ def cash(n_on, mu_on, truncation_value=TRUNCATION_VALUE):
         C = 2 \left( \mu_{on} - n_{on} \log \mu_{on} \right)
 
     and :math:`C = 0` where :math:`\mu <= 0`.
-    For more information see :ref:`fit-statistics`
+    For more information see :ref:`fit-statistics`.
 
     Parameters
     ----------
     n_on : array_like
-        Observed counts
+        Observed counts.
     mu_on : array_like
-        Expected counts
+        Expected counts.
     truncation_value : array_like
         Minimum value use for ``mu_on``
-        ``mu_on`` = ``truncation_value`` where ``mu_on`` <= ``truncation_value``
+        ``mu_on`` = ``truncation_value`` where ``mu_on`` <= ``truncation_value``.
         Default is 1e-25.
 
     Returns
     -------
     stat : ndarray
-        Statistic per bin
+        Statistic per bin.
 
     References
     ----------
-    * `Sherpa statistics page section on the Cash statistic
+    * `Sherpa statistics page section on the Cash statistic:
       <http://cxc.cfa.harvard.edu/sherpa/statistics/#cash>`_
-    * `Sherpa help page on the Cash statistic
+    * `Sherpa help page on the Cash statistic:
       <http://cxc.harvard.edu/sherpa/ahelp/cash.html>`_
-    * `Cash 1979, ApJ 228, 939
+    * `Cash 1979, ApJ 228, 939,
       <https://ui.adsabs.harvard.edu/abs/1979ApJ...228..939C>`_
     """
     n_on = np.asanyarray(n_on)
@@ -62,7 +62,7 @@ def cash(n_on, mu_on, truncation_value=TRUNCATION_VALUE):
 def cstat(n_on, mu_on, truncation_value=TRUNCATION_VALUE):
     r"""C statistic, for Poisson data.
 
-    The C statistic is defined as
+    The C statistic is defined as:
 
     .. math::
         C = 2 \left[ \mu_{on} - n_{on} + n_{on}
@@ -72,14 +72,14 @@ def cstat(n_on, mu_on, truncation_value=TRUNCATION_VALUE):
 
     ``truncation_value`` handles the case where ``n_on`` or ``mu_on`` is 0 or less and
     the log cannot be taken.
-    For more information see :ref:`fit-statistics`
+    For more information see :ref:`fit-statistics`.
 
     Parameters
     ----------
     n_on : array_like
-        Observed counts
+        Observed counts.
     mu_on : array_like
-        Expected counts
+        Expected counts.
     truncation_value : array_like
         ``n_on`` = ``truncation_value`` where ``n_on`` <= ``truncation_value.``
         ``mu_on`` = ``truncation_value`` where ``n_on`` <= ``truncation_value``
@@ -88,15 +88,15 @@ def cstat(n_on, mu_on, truncation_value=TRUNCATION_VALUE):
     Returns
     -------
     stat : ndarray
-        Statistic per bin
+        Statistic per bin.
 
     References
     ----------
-    * `Sherpa stats page section on the C statistic
+    * `Sherpa stats page section on the C statistic:
       <http://cxc.cfa.harvard.edu/sherpa/statistics/#cstat>`_
-    * `Sherpa help page on the C statistic
+    * `Sherpa help page on the C statistic:
       <http://cxc.harvard.edu/sherpa/ahelp/cash.html>`_
-    * `Cash 1979, ApJ 228, 939
+    * `Cash 1979, ApJ 228, 939,
       <https://ui.adsabs.harvard.edu/abs/1979ApJ...228..939C>`_
     """
     n_on = np.asanyarray(n_on, dtype=np.float64)
@@ -125,29 +125,29 @@ def wstat(n_on, n_off, alpha, mu_sig, mu_bkg=None, extra_terms=True):
     Parameters
     ----------
     n_on : array_like
-        Total observed counts
+        Total observed counts.
     n_off : array_like
-        Total observed background counts
+        Total observed background counts.
     alpha : array_like
-        Exposure ratio between on and off region
+        Exposure ratio between on and off region.
     mu_sig : array_like
-        Signal expected counts
+        Signal expected counts.
     mu_bkg : array_like, optional
-        Background expected counts
+        Background expected counts.
     extra_terms : bool, optional
         Add model independent terms to convert stat into goodness-of-fit
-        parameter, default: True
+        parameter. Default is True.
 
     Returns
     -------
     stat : ndarray
-        Statistic per bin
+        Statistic per bin.
 
     References
     ----------
-    * `Habilitation M. de Naurois, p. 141
+    * `Habilitation M. de Naurois, p. 141,
       <http://inspirehep.net/record/1122589/files/these_short.pdf>`_
-    * `XSPEC page on Poisson data with Poisson background
+    * `XSPEC page on Poisson data with Poisson background,
       <https://heasarc.gsfc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html>`_
     """
     # Note: This is equivalent to what's defined on the XSPEC page under the

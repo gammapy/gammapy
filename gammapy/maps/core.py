@@ -5,10 +5,12 @@ import html
 import inspect
 import json
 from collections import OrderedDict
+from itertools import repeat
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
 import matplotlib.pyplot as plt
+import gammapy.utils.parallel as parallel
 from gammapy.utils.deprecation import deprecated
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.scripts import make_path
@@ -485,6 +487,24 @@ class Map(abc.ABC):
         """
         for idx in np.ndindex(self.geom.shape_axes):
             yield self.data[idx[::-1]], idx[::-1]
+
+    def iter_by_image_index(self):
+        """Iterate over image planes of the map.
+
+        The image plane index is in data order, so that the data array can be
+        indexed directly.
+
+        Yields
+        ------
+        idx : tuple
+            ``idx`` is a tuple of int, the index of the image plane.
+
+        See also
+        --------
+        iter_by_image : iterate by image returning a map
+        """
+        for idx in np.ndindex(self.geom.shape_axes):
+            yield idx[::-1]
 
     def coadd(self, map_in, weights=None):
         """Add the contents of ``map_in`` to this map.
@@ -1098,6 +1118,57 @@ class Map(abc.ABC):
                     )
             output_map = output_map.resample(geom, preserve_counts=preserve_counts)
         return output_map
+
+    def reproject_by_image(
+        self,
+        geom,
+        preserve_counts=False,
+        precision_factor=10,
+    ):
+        """Reproject each image of a ND map to input 2d geometry.
+
+        For large maps this method is faster than `reproject_to_geom`.
+
+        Parameters
+        ----------
+        geom : `~gammapy.maps.Geom`
+            Target slice geometry (2d)
+        preserve_counts : bool
+            Preserve the integral over each bin.  This should be True
+            if the map is an integral quantity (e.g. counts) and False if
+            the map is a differential quantity (e.g. intensity).
+        precision_factor : int
+            Minimal factor between the bin size of the output map and the oversampled base map.
+            Used only for the oversampling method.
+
+        Returns
+        -------
+        output_map : `Map`
+            Reprojected Map
+        """
+        if not geom.is_image:
+            raise TypeError("This method is only valid for 2d geom")
+
+        output_map = Map.from_geom(geom.to_cube(self.geom.axes))
+        maps = parallel.run_multiprocessing(
+            self._reproject_image,
+            zip(
+                self.iter_by_image(),
+                repeat(geom),
+                repeat(preserve_counts),
+                repeat(precision_factor),
+            ),
+            task_name="Reprojection",
+        )
+        for idx in np.ndindex(self.geom.shape_axes):
+            output_map.data[idx[0]] = maps[idx[0]].data
+        return output_map
+
+    @staticmethod
+    def _reproject_image(image, geom, preserve_counts, precision_factor):
+        return image.reproject_to_geom(
+            geom, precision_factor=precision_factor, preserve_counts=preserve_counts
+        )
 
     def fill_events(self, events, weights=None):
         """Fill event coordinates (`~gammapy.data.EventList`).
