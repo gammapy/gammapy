@@ -99,6 +99,7 @@ class FluxEstimator(ParameterEstimator):
                 1,
                 unit="",
                 interp="log",
+                frozen=False,
                 scan_min=norm_min,
                 scan_max=norm_max,
                 scan_n_values=norm_n_values,
@@ -117,19 +118,12 @@ class FluxEstimator(ParameterEstimator):
 
     def _set_norm_parameter(self, norm=None, scaled_parameter=None):
         """Define properties of the norm spectral parameter."""
-        if norm is None:
-            norm = Parameter("norm", 1, unit="", interp="log")
 
-        norm.value = 1.0
-        norm.frozen = False
-
-        norm.min = scaled_parameter.min / scaled_parameter.value
-        norm.max = scaled_parameter.max / scaled_parameter.value
+        if np.isnan(self.norm.min):
+            norm.min = scaled_parameter.min / scaled_parameter.value
+        if np.isnan(self.norm.max):
+            norm.max = scaled_parameter.max / scaled_parameter.value
         norm.interp = scaled_parameter.interp
-        norm.scan_values = self.norm.scan_values
-        norm.scan_min = self.norm.scan_min
-        norm.scan_max = self.norm.scan_max
-        norm.scan_n_values = self.norm.scan_n_values
         return norm
 
     def get_scale_model(self, models):
@@ -151,9 +145,7 @@ class FluxEstimator(ParameterEstimator):
         norms = ref_model.parameters.norm_parameters
 
         if len(norms.free_parameters) == 1:
-            self.norm = self._set_norm_parameter(
-                scale_model.norm, norms.free_parameters[0]
-            )
+            self.norm = self._set_norm_parameter(self.norm, norms.free_parameters[0])
 
         scale_model.norm = self.norm.copy()
         return scale_model
