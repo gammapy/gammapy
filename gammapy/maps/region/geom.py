@@ -55,11 +55,11 @@ class RegionGeom(Geom):
         Non-spatial data axes.
     wcs : `~astropy.wcs.WCS`
         Optional WCS object to project the region if needed.
-    binsz_wcs : `float`
+    binsz_wcs : `~astropy.units.Quantity`
         Angular bin size of the underlying `~WcsGeom` used to evaluate
         quantities in the region. Default is "0.1 deg". This default
         value is adequate for the majority of use cases. If a WCS object
-        is provided, the input of binsz_wcs is overridden.
+        is provided, the input of ``binsz_wcs`` is overridden.
     """
 
     is_regular = True
@@ -418,14 +418,14 @@ class RegionGeom(Geom):
 
         Parameters
         ----------
-        binzs : float, string or `~astropy.quantity.Quantity`
+        binsz : float, string or `~astropy.quantity.Quantity`
             Bin size.
 
         Returns
         -------
         region : `~RegionGeom`
             Region geometry with the same axes and region as the input,
-            but different wcs pixelization.
+            but different WCS pixelization.
         """
         new_geom = RegionGeom(self.region, axes=self.axes, binsz_wcs=binsz)
         return new_geom
@@ -589,7 +589,7 @@ class RegionGeom(Geom):
         Parameters
         ----------
         region : str or `~regions.SkyRegion`
-            Region definitiont.
+            Region definition.
         **kwargs : dict
             Keyword arguments passed to `RegionGeom.__init__`.
 

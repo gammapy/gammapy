@@ -239,7 +239,7 @@ class RegionNDMap(Map):
         meta=None,
         unit="",
         wcs=None,
-        binsz_wcs="0.1deg",
+        binsz_wcs="0.1 deg",
         data=None,
     ):
         """Create an empty region map object.
@@ -261,8 +261,8 @@ class RegionNDMap(Map):
             WCS projection to use for local projections of the region.
             Default is None.
         binsz_wcs: `~astropy.units.Quantity` or str, optional
-            Bin size used for the default WCS, if wcs=None.
-            Default is "0.1deg".
+            Bin size used for the default WCS, if ``wcs``=None.
+            Default is "0.1 deg".
         data : `~numpy.ndarray`, optional
             Data array. Default is None.
 
