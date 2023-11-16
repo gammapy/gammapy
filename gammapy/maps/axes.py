@@ -30,7 +30,7 @@ def flat_if_equal(array):
 
 
 class AxisCoordInterpolator:
-    """Axis coord interpolator."""
+    """Axis coordinate interpolator."""
 
     def __init__(self, edges, interp="lin"):
         self.scale = interpolation_scale(interp)
@@ -44,14 +44,14 @@ class AxisCoordInterpolator:
             self.kind = 1
 
     def coord_to_pix(self, coord):
-        """Pix to coord."""
+        """Transform coordinate to pixel."""
         interp_fn = scipy.interpolate.interp1d(
             x=self.x, y=self.y, kind=self.kind, fill_value=self.fill_value
         )
         return interp_fn(self.scale(coord))
 
     def pix_to_coord(self, pix):
-        """Coord to pix."""
+        """Transform pixel to coordinate."""
         interp_fn = scipy.interpolate.interp1d(
             x=self.y, y=self.x, kind=self.kind, fill_value=self.fill_value
         )
@@ -262,12 +262,12 @@ class MapAxis:
 
     @property
     def edges_min(self):
-        """Return an array of bin edges max values."""
+        """Return an array of bin edges maximum values."""
         return self.edges[:-1]
 
     @property
     def edges_max(self):
-        """Return an array of bin edges min values."""
+        """Return an array of bin edges minimum values."""
         return self.edges[1:]
 
     @property
@@ -790,8 +790,8 @@ class MapAxis:
             Pixel coordinates.
         clip : bool, optional
             Choose whether to clip indices to the valid range of the
-            axis. Default is False. If false, indices for coordinates outside
-            the axi range will be set -1.
+            axis. Default is False. If False, indices for coordinates outside
+            the axis range will be set to -1.
 
         Returns
         -------
@@ -832,8 +832,8 @@ class MapAxis:
             Array of axis coordinate values.
         clip : bool, optional
             Choose whether to clip the index to the valid range of the
-            axis. Default is False. If false then indices for values outside the axis
-            range will be set -1.
+            axis. Default is False. If False, then indices for values outside the axis
+            range will be set to -1.
 
         Returns
         -------
@@ -943,7 +943,7 @@ class MapAxis:
         return self._init_copy(**kwargs)
 
     def round(self, coord, clip=False):
-        """Round coord to the nearest axis edge.
+        """Round coordinate to the nearest axis edge.
 
         Parameters
         ----------
@@ -951,8 +951,8 @@ class MapAxis:
             Coordinates to be rounded.
         clip : bool, optional
             Choose whether to clip the index to the valid range of the
-            axis. Default is False. If false then indices for values outside the axis
-            range will be set -1.
+            axis. Default is False. If False, then indices for values outside the axis
+            range will be set to -1.
 
         Returns
         -------
@@ -1785,7 +1785,7 @@ class MapAxes(Sequence):
             Array of axis coordinate values.
         clip : bool, optional
             Choose whether to clip indices to the valid range of the axis. Default is True.
-            If False then indices for coordinates outside the axi range will be set -1.
+            If False, then indices for coordinates outside the axi range will be set to -1.
 
 
         Returns
@@ -1826,7 +1826,7 @@ class MapAxes(Sequence):
         return tuple([ax.pix_to_coord(p) for ax, p in zip(self, pix)])
 
     def pix_to_idx(self, pix, clip=False):
-        """Convert pix to idx.
+        """Convert pixel to pixel indices.
 
         Parameters
         ----------
@@ -1834,8 +1834,8 @@ class MapAxes(Sequence):
             Pixel coordinates.
         clip : bool, optional
             Choose whether to clip indices to the valid range of the
-            axis. Default is False. If false then indices for coordinates outside
-            the axi range will be set -1.
+            axis. Default is False. If False, then indices for coordinates outside
+            the axi range will be set to -1.
 
         Returns
         -------
@@ -1858,7 +1858,7 @@ class MapAxes(Sequence):
             Dictionary of axes names and integers or `slice` object pairs. Contains one
             element for each non-spatial dimension. For integer indexing the
             corresponding axes is dropped from the map. Axes not specified in the
-            dict are kept unchanged.
+            dictionary are kept unchanged.
 
         Returns
         -------
@@ -2325,12 +2325,12 @@ class TimeMapAxis:
 
     @property
     def edges_min(self):
-        """Return the array of bin edges max values."""
+        """Return the array of bin edges maximum values."""
         return self._edges_min
 
     @property
     def edges_max(self):
-        """Return the array of bin edges min values."""
+        """Return the array of bin edges minimum values."""
         return self._edges_max
 
     @property
@@ -2392,7 +2392,7 @@ class TimeMapAxis:
 
     @property
     def as_plot_xerr(self):
-        """Return x errors as if plotting."""
+        """Return x errors for plotting."""
         xn, xp = self.time_mid - self.time_min, self.time_max - self.time_mid
 
         if self.time_format == "iso":
@@ -2406,7 +2406,7 @@ class TimeMapAxis:
 
     @property
     def as_plot_labels(self):
-        """Return labels as if plotting."""
+        """Return labels for plotting."""
         labels = []
 
         for t_min, t_max in self.iter_by_edges:
@@ -2417,7 +2417,7 @@ class TimeMapAxis:
 
     @property
     def as_plot_edges(self):
-        """Return edges as if plotting."""
+        """Return edges for plotting."""
         if self.time_format == "iso":
             edges = self.time_edges.to_datetime()
         else:
@@ -2427,7 +2427,7 @@ class TimeMapAxis:
 
     @property
     def as_plot_center(self):
-        """Return center as if plotting."""
+        """Return center for plotting."""
         if self.time_format == "iso":
             center = self.time_mid.datetime
         else:
@@ -3087,7 +3087,7 @@ class LabelMapAxis:
         return self.coord_to_idx(coord).astype("float")
 
     def pix_to_idx(self, pix, clip=False):
-        """Convert pix to idx
+        """Convert pixel to idx
 
         Parameters
         ----------
@@ -3095,8 +3095,8 @@ class LabelMapAxis:
             Pixel coordinates.
         clip : bool, optional
             Choose whether to clip indices to the valid range of the
-            axis. Default is False. If False then indices for coordinates outside
-            the axi range will be set -1.
+            axis. Default is False. If False, then indices for coordinates outside
+            the axis range will be set to -1.
 
         Returns
         -------
@@ -3139,22 +3139,22 @@ class LabelMapAxis:
 
     @property
     def as_plot_xerr(self):
-        """Return labels as if plotting."""
+        """Return labels for plotting."""
         return 0.5 * np.ones(self.nbin)
 
     @property
     def as_plot_labels(self):
-        """Return labels as if plotting."""
+        """Return labels for plotting."""
         return self._labels.tolist()
 
     @property
     def as_plot_center(self):
-        """Return labels as if plotting."""
+        """Return labels for plotting."""
         return np.arange(self.nbin)
 
     @property
     def as_plot_edges(self):
-        """Return labels as if plotting."""
+        """Return labels for plotting."""
         return np.arange(self.nbin + 1) - 0.5
 
     def format_plot_xaxis(self, ax):
