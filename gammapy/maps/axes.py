@@ -2950,7 +2950,7 @@ class TimeMapAxis:
         Parameters
         ----------
         format : {"ogip"}
-            Format specification. Default is "ogip".
+            Format specification. Default is "gadf".
         idx : int, optional
             Column index of the axis. Default is 0.
 
@@ -3185,7 +3185,7 @@ class LabelMapAxis:
         Parameters
         ----------
         format : {"ogip"}
-            Format specification. Default is "ogip".
+            Format specification. Default is "gadf".
         idx : int, optional
             Column index of the axis. Default is 0.
 
