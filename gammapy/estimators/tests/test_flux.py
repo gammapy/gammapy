@@ -49,7 +49,7 @@ def test_flux_estimator_fermi_no_reoptimization(fermi_datasets):
     )
     estimator = FluxEstimator(
         0,
-        norm,
+        norm=norm,
         selection_optional="all",
         reoptimize=False,
     )
