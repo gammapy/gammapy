@@ -87,10 +87,14 @@ class FluxEstimator(ParameterEstimator):
         norm=None,
     ):
 
-        self.norm_min = norm_min
-        self.norm_max = norm_max
-        self.norm_n_values = norm_n_values
-        self.norm_values = norm_values
+        if norm_min != 0.2:
+            self.norm_min = norm_min
+        if norm_max != 5:
+            self.norm_max = norm_max
+        if norm_n_values != 11:
+            self.norm_n_values = norm_n_values
+        if norm_values is not None:
+            self.norm_values = norm_values
 
         self.source = source
         if norm is None:
@@ -126,10 +130,10 @@ class FluxEstimator(ParameterEstimator):
         norm.min = scaled_parameter.min / scaled_parameter.value
         norm.max = scaled_parameter.max / scaled_parameter.value
         norm.interp = scaled_parameter.interp
-        norm.scan_values = self.norm_values
-        norm.scan_min = self.norm_min
-        norm.scan_max = self.norm_max
-        norm.scan_n_values = self.norm_n_values
+        norm.scan_values = self.norm.scan_values
+        norm.scan_min = self.norm.min
+        norm.scan_max = self.norm.max
+        norm.scan_n_values = self.norm.scan_n_values
         return norm
 
     def get_scale_model(self, models):
