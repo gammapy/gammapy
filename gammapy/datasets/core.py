@@ -237,11 +237,16 @@ class Datasets(collections.abc.MutableSequence):
         """Compute joint statistic function value."""
         stat_sum = 0
         # TODO: add parallel evaluation of likelihoods
+        prior_stat_sum = 0
         for dataset in self:
             stat_sum += dataset.stat_sum()
             # remove prior_fit_statistic from individual dataset to avoid double counting
-            stat_sum -= prior_fit_statistic(dataset.models.priors)
-        return stat_sum + prior_fit_statistic(self.models.priors)
+            if dataset.models is not None:
+                prior_stat_sum -= prior_fit_statistic(dataset.models.priors)
+        # compute prior_fit_statistics from all datasets
+        if self.models is not None:
+            prior_stat_sum += prior_fit_statistic(self.models.priors)
+        return stat_sum + prior_stat_sum
 
     def select_time(self, time_min, time_max, atol="1e-6 s"):
         """Select datasets in a given time interval.
