@@ -747,8 +747,12 @@ def test_prior_stat_sum(sky_model, geom, geom_etrue):
     datasets.models = models
     dataset.counts = dataset.npred()
 
-    uniformprior = UniformPrior(min=-np.inf, max=0, weight=1)
-    datasets.models.parameters["amplitude"].prior = uniformprior
+    UniformPrior(
+        min=-np.inf,
+        max=0,
+        weight=1,
+        modelparameters=datasets.models.parameters["amplitude"],
+    )
     assert_allclose(datasets.stat_sum(), 12825.9370, rtol=1e-3)
 
     datasets.models.parameters["amplitude"].value = -1e-12
