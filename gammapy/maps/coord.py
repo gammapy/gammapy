@@ -37,11 +37,10 @@ class MapCoord:
     data : `dict` of `~numpy.ndarray`
         Dictionary of coordinate arrays.
     frame : {"icrs", "galactic", None}
-        Spatial coordinate system.  If None then the coordinate system
-        will be set to the native coordinate system of the geometry.
-    match_by_name : bool
-        Match coordinates to axes by name?
-        If false coordinates will be matched by index.
+        Spatial coordinate system. If None then the coordinate system
+        will be set to the native coordinate system of the geometry. Default is None.
+    match_by_name : bool, optional
+        Match coordinates to axes by name. If False, coordinates will be matched by index. Default is True.
     """
 
     def __init__(self, data, frame=None, match_by_name=True):
@@ -89,6 +88,7 @@ class MapCoord:
 
     @property
     def size(self):
+        """Product of all shape elements."""
         return np.prod(self.shape)
 
     @property
@@ -115,16 +115,17 @@ class MapCoord:
 
     @property
     def frame(self):
-        """Coordinate system (str)."""
+        """Coordinate system as a str."""
         return self._frame
 
     @property
     def match_by_name(self):
-        """Boolean flag: axis lookup by name (True) or index (False)."""
+        """Boolean flag: axis lookup by name return True or by index return False."""
         return self._match_by_name
 
     @property
     def skycoord(self):
+        """Coordinate object as an `~astropy.coordinates.SkyCoord`."""
         return SkyCoord(self.lon, self.lat, unit="deg", frame=self.frame)
 
     @classmethod
@@ -137,6 +138,12 @@ class MapCoord:
         ----------
         coords : tuple
             Tuple of `~numpy.ndarray`.
+        frame : {"icrs", "galactic", None}
+            Set the coordinate system for longitude and latitude. If
+            None, longitude and latitude will be assumed to be in
+            the coordinate system native to a given map geometry. Default is None.
+        axis_names : list of str, optional
+            Axis names to use.
 
         Returns
         -------
@@ -157,7 +164,7 @@ class MapCoord:
 
     @classmethod
     def _from_tuple(cls, coords, frame=None, axis_names=None):
-        """Create from tuple of coordinate vectors."""
+        """Create from a tuple of coordinate vectors."""
         if isinstance(coords[0], (list, np.ndarray)) or np.isscalar(coords[0]):
             return cls._from_lonlat(coords, frame=frame, axis_names=axis_names)
         elif isinstance(coords[0], SkyCoord):
@@ -194,12 +201,12 @@ class MapCoord:
         ----------
         data : tuple, dict, `~gammapy.maps.MapCoord` or `~astropy.coordinates.SkyCoord`
             Object containing coordinate arrays.
-        frame : {"icrs", "galactic", None}, optional
+        frame : {"icrs", "galactic", None}
             Set the coordinate system for longitude and latitude. If
             None longitude and latitude will be assumed to be in
-            the coordinate system native to a given map geometry.
-        axis_names : list of str
-            Axis names use if a tuple is provided
+            the coordinate system native to a given map geometry. Default is None.
+        axis_names : list of str, optional
+            Axis names uses if a tuple is provided. Default is None.
 
         Examples
         --------
@@ -293,7 +300,7 @@ class MapCoord:
 
     @property
     def broadcasted(self):
-        """Return broadcasted coords"""
+        """Return broadcasted coordinates"""
         vals = np.broadcast_arrays(*self._data.values(), subok=True)
         data = dict(zip(self._data.keys(), vals))
         return self.__class__(

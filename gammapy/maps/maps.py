@@ -24,7 +24,7 @@ class Maps(MutableMapping):
 
     @property
     def geom(self):
-        """Map geometry (`Geom`)"""
+        """Map geometry as a `Geom` object."""
         return self._geom
 
     def __setitem__(self, key, value):
@@ -42,7 +42,7 @@ class Maps(MutableMapping):
         return self._data[key]
 
     def __len__(self):
-        """Returns length of MapDict."""
+        """Returns the length of MapDict."""
         return len(self._data)
 
     def __delitem__(self, key):
@@ -78,9 +78,9 @@ class Maps(MutableMapping):
 
         Parameters
         ----------
-        hdu_bands : str
-            Name of the HDU with the BANDS table. Default is 'BANDS'
-            If set to None, each map will have its own hdu_band
+        hdu_bands : str, optional
+            Name of the HDU with the BANDS table. If set to None, each map will have its own hdu_band.
+            Default is 'BANDS'.
 
         Returns
         -------
@@ -99,17 +99,17 @@ class Maps(MutableMapping):
 
     @classmethod
     def from_hdulist(cls, hdulist, hdu_bands="BANDS"):
-        """Create map dictionary from list of HDUs.
+        """Create map dictionary from a HDU list.
 
-        Because FITS keywords are case insensitive, all key names will return as lower-case.
+        Because FITS keywords are case-insensitive, all key names will return as lower-case.
 
         Parameters
         ----------
         hdulist : `~astropy.io.fits.HDUList`
             List of HDUs.
-        hdu_bands : str
-            Name of the HDU with the BANDS table. Default is 'BANDS'
-            If set to None, each map should have its own hdu_band
+        hdu_bands : str, optional
+            Name of the HDU with the BANDS table. If set to None, each map should have its own hdu_band.
+            Default is 'BANDS'.
 
         Returns
         -------
@@ -130,7 +130,7 @@ class Maps(MutableMapping):
     def read(cls, filename):
         """Read map dictionary from file.
 
-        Because FITS keywords are case insensitive, all key names will return as lower-case.
+        Because FITS keywords are case-insensitive, all key names will return as lower-case.
 
         Parameters
         ----------
@@ -154,7 +154,7 @@ class Maps(MutableMapping):
             Filename to write to.
         overwrite : bool, optional
             Overwrite existing file. Default is False.
-        checksum : bool
+        checksum : bool, optional
             When True adds both DATASUM and CHECKSUM cards to the headers written to the file.
             Default is False.
         """
@@ -165,16 +165,16 @@ class Maps(MutableMapping):
 
     @classmethod
     def from_geom(cls, geom, names, kwargs_list=None):
-        """Create map dictionary from geometry.
+        """Create map dictionary from a geometry.
 
         Parameters
         ----------
         geom : `~gammapy.maps.Geom`
-            the input geometry that will be used by all maps
+            The input geometry that will be used by all maps.
         names : list of str
-            the list of all map names
+            The list of all map names.
         kwargs_list : list of dict
-            the list of arguments to be passed to `~gammapy.maps.Map.from_geom()`
+            the list of arguments to be passed to `~gammapy.maps.Map.from_geom()`.
 
         Returns
         -------

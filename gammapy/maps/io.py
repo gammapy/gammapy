@@ -36,13 +36,13 @@ def find_bands_hdu(hdu_list, hdu):
     Parameters
     ----------
     hdu_list : `~astropy.io.fits.HDUList`
-
+        The FITS HDU list.
     hdu : `~astropy.io.fits.BinTableHDU` or `~astropy.io.fits.ImageHDU`
-
+        The HDU to check.
     Returns
     -------
     hduname : str
-        Extension name of the BANDS HDU.  None if no BANDS HDU was found.
+        Extension name of the BANDS HDU. Returns None if no BANDS HDU was found.
     """
     if "BANDSHDU" in hdu.header:
         return hdu.header["BANDSHDU"]
