@@ -31,6 +31,13 @@ def test_datasets_types(datasets):
 
 
 def test_datasets_likelihood(datasets):
+    print(datasets[0].models)
+    print(datasets[0].models.names)
+    print(datasets[1].models)
+    print(datasets[1].models.names)
+
+    print(datasets.models.names)
+
     likelihood = datasets.stat_sum()
     assert_allclose(likelihood, 14472200.0002)
 
