@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+"""Priors for Gammapy."""
 import logging
 import numpy as np
 import astropy.units as u
@@ -9,9 +10,7 @@ log = logging.getLogger(__name__)
 
 
 def _build_priorparameters_from_dict(data, default_parameters):
-    """Build `~gammapy.modeling.PriorParameters` object from an input dictionary and the
-    default prior parameter values from the PriorModel class.
-    """
+    """Build a `~gammapy.modeling.PriorParameters` object from input dictionary and default prior parameter values."""
     par_data = []
 
     input_names = [_["name"] for _ in data]
@@ -32,6 +31,8 @@ def _build_priorparameters_from_dict(data, default_parameters):
 
 
 class Prior(ModelBase):
+    """Prior base class."""
+
     _unit = ""
 
     def __init__(self, **kwargs):
@@ -69,6 +70,7 @@ class Prior(ModelBase):
 
     @property
     def weight(self):
+        """Weight mulitplied to the prior when evaluated."""
         return self._weight
 
     @weight.setter
