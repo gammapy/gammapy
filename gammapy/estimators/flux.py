@@ -127,8 +127,8 @@ class FluxEstimator(ParameterEstimator):
         norm.max = scaled_parameter.max / scaled_parameter.value
         norm.interp = scaled_parameter.interp
         norm.scan_values = self.norm.scan_values
-        norm.scan_min = self.norm.min
-        norm.scan_max = self.norm.max
+        norm.scan_min = self.norm.scan_min
+        norm.scan_max = self.norm.scan_max
         norm.scan_n_values = self.norm.scan_n_values
         return norm
 
