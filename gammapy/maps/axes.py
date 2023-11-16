@@ -2535,7 +2535,7 @@ class TimeMapAxis:
         for time_min, time_max in zip(self.time_min, self.time_max):
             yield (time_min, time_max)
 
-    def coord_to_idx(self, coord):
+    def coord_to_idx(self, coord, **kwargs):
         """Transform time axis coordinate to bin index.
 
         Indices of time values falling outside time bins will be
@@ -2593,7 +2593,7 @@ class TimeMapAxis:
         coords[idx_invalid] = Time(INVALID_VALUE.time, scale=self.reference_time.scale)
         return coords.reshape(shape)
 
-    def coord_to_pix(self, coord):
+    def coord_to_pix(self, coord, **kwargs):
         """Transform time axis coordinate to pixel position.
 
         Pixels of time values falling outside time bins will be
@@ -3047,7 +3047,7 @@ class LabelMapAxis:
         idx = np.round(pix).astype(int)
         return self._labels[idx]
 
-    def coord_to_idx(self, coord):
+    def coord_to_idx(self, coord, **kwargs):
         """Transform labels to indices.
 
         If the label is not present an error is raised.
