@@ -94,15 +94,9 @@ class Prior(ModelBase):
     def weight(self, value):
         self._weight = value
 
-<<<<<<< HEAD
-    def __call__(self, value):
-        """Call evaluate method."""
-        # assuming the same unit as the PriorParamater here
-=======
     def __call__(self):
         """Call evaluate method"""
-        # assuming the same unit as the PriorParamter here
->>>>>>> 65d1a8b6b (prior_stat_sum)
+        # assuming the same unit as the PriorParameter here
         kwargs = {par.name: par.value for par in self.parameters}
         return self.weight * self.evaluate(self._modelparameters.value, **kwargs)
 
@@ -133,37 +127,20 @@ class Prior(ModelBase):
             "modelparameters": self._modelparameters,
         }
 
-        if self.type is None:
-            return data
-        else:
-            return {self.type: data}
+        return data
 
     @classmethod
-<<<<<<< HEAD
-    def from_dict(cls, data, **kwargs):
-        """Get prior parameters from dictionary."""
-        kwargs = {}
-=======
     def from_dict(cls, data):
-
+        """Get prior parameters from dictionary."""
         from . import PRIOR_REGISTRY
->>>>>>> 0bd7a348f (mulitdim)
 
-        key0 = next(iter(data))
-        if key0 in ["prior"]:
-            data = data[key0]
-
-        prior_cls = PRIOR_REGISTRY.get_cls(data)
-
-        print("in from dict from prior")
+        prior_cls = PRIOR_REGISTRY.get_cls(data["type"])
         kwargs = {}
-        print("prior_cls ", prior_cls)
 
         if data["type"] not in prior_cls.tag:
             raise ValueError(
                 f"Invalid model type {data['type']} for class {cls.__name__}"
             )
-        print("cls.default_parameters.names", cls.default_parameters.names)
         priorparameters = _build_priorparameters_from_dict(
             data["parameters"], prior_cls.default_parameters
         )
