@@ -79,20 +79,6 @@ class Dataset(abc.ABC):
             prior_stat_sum = self.models.parameters.prior_stat_sum()
         return np.sum(stat, dtype=np.float64) + prior_stat_sum
 
-    # def set_priors_from_models(self, models):
-    #    if models is not None:
-    #        self._priors = [
-    #            par.prior for par in models.parameters if par.prior is not None
-    #        ]
-    #    else:
-    #        self._priors = None
-
-    # @property
-    # def priors(self):
-    #    """Priors set on model parameters (list)."""
-    #    self.set_priors_from_models(self.models)
-    #    return self._priors
-
     @abc.abstractmethod
     def stat_array(self):
         """Statistic array, one value per data point."""
@@ -190,21 +176,6 @@ class Datasets(collections.abc.MutableSequence):
             return DatasetModels(models, covariance_data=self._covariance.data)
         else:
             return models
-
-        # @property
-        # def priors(self):
-        """Priors (list).
-
-        Duplicate prior objects have been removed.
-        """
-
-    #   priors = {}
-
-    #   for dataset in self:
-    #       if dataset.models is not None:
-    #           for prior in dataset.priors:
-    #               priors[prior] = prior
-    #   return priors
 
     @models.setter
     def models(self, models):

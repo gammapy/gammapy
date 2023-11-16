@@ -186,9 +186,8 @@ class Parameter:
 
             # creating Prior out of dict
             if isinstance(value, dict):
-                from .models import Model
 
-                value = Model.from_dict(value)
+                value = Prior.from_dict(value)
                 if self in value.modelparameters:
                     self._prior = value
 
@@ -469,7 +468,7 @@ class Parameter:
         if self._link_label_io is not None:
             output["link"] = self._link_label_io
         if self.prior is not None:
-            output["prior"] = self.prior.to_dict()["prior"]
+            output["prior"] = self.prior.to_dict()
         return output
 
     def autoscale(self):
