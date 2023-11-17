@@ -134,7 +134,6 @@ def match_hpx_pix(nside, nest, nside_pix, ipix_ring):
         HEALPix NSIDE parameter of subpixel.
     ipix_ring : int or `~numpy.ndarray`
         HEALPix pixel number.
-
     """
     import healpy as hp
 
@@ -409,6 +408,11 @@ class HpxToWcsMapping:
         fill_nan : bool, optional
             Fill pixels outside the HEALPix geometry with NaN.
             Default is True.
+
+        Returns
+        -------
+        wcs_data : `~numpy.ndarray`
+            The WCS data array.
         """
         # FIXME: Do we want to flatten mapping arrays?
 
@@ -450,6 +454,11 @@ class HpxToWcsMapping:
         normalize : bool, optional
             If True, preserve integral by splitting HEALPix values between bins.
             Default is True.
+
+        Returns
+        -------
+        hpx_data : `~numpy.ndarray`
+            The HEALPix data array.
         """
         shape = tuple([t.flat[0] for t in self._npix])
         if self.valid.ndim != 1:
