@@ -53,7 +53,7 @@ class DatasetsActor(Datasets):
             raise TypeError(f"Invalid type: {type(dataset)!r}")
 
     def __getattr__(self, name):
-        """get attribute from remote each dataset"""
+        """Get attribute from remote each dataset."""
 
         def wrapper(**kwargs):
             results = self._ray_get(
@@ -71,13 +71,13 @@ class DatasetsActor(Datasets):
             return wrapper()
 
     def stat_sum(self):
-        """Compute joint likelihood"""
+        """Compute joint likelihood."""
         results = self._ray_get([d._update_stat_sum() for d in self._datasets])
         return np.sum(results)
 
 
 class RayFrontendMixin(object):
-    """Ray mixin for a local class that interact with a remote instance"""
+    """Ray mixin for a local class that interact with a remote instance."""
 
     # TODO: abstract class ?
 
@@ -90,7 +90,7 @@ class RayFrontendMixin(object):
         ]
 
     def __getattr__(self, name, **kwargs):
-        """get attribute from remote"""
+        """Get attribute from remote."""
         if name in self._remote_attr:
             results = self._ray_get(self._get_remote(name, **kwargs))
             self._to_update = {}
@@ -112,7 +112,7 @@ class RayFrontendMixin(object):
 
 
 class RayBackendMixin:
-    """Ray mixin for the remote class"""
+    """Ray mixin for the remote class."""
 
     def _get(self, name, to_update={}, **kwargs):
         for key, value in to_update.items():
