@@ -141,7 +141,7 @@ class MapDataset(Dataset):
         One line per observation for stacked datasets.
 
 
-    Note
+    Notes
     ----
 
     If an `HDULocation` is passed the map is loaded lazily. This means the
