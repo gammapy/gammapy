@@ -1,8 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Multiprocessing and multithreading setup"""
+"""Multiprocessing and multithreading setup."""
 import importlib
 import logging
-import multiprocessing
 from enum import Enum
 from gammapy.utils.pbar import progress_bar
 
@@ -10,14 +9,14 @@ log = logging.getLogger(__name__)
 
 
 class ParallelBackendEnum(Enum):
-    """Enum for parallel backend"""
+    """Enum for parallel backend."""
 
     multiprocessing = "multiprocessing"
     ray = "ray"
 
     @classmethod
     def from_str(cls, value):
-        """Get enum from string"""
+        """Get enum from string."""
         if value is None:
             value = BACKEND_DEFAULT
 
@@ -29,7 +28,7 @@ class ParallelBackendEnum(Enum):
 
 
 class PoolMethodEnum(Enum):
-    """Enum for pool method"""
+    """Enum for pool method."""
 
     starmap = "starmap"
     apply_async = "apply_async"
@@ -39,8 +38,15 @@ BACKEND_DEFAULT = ParallelBackendEnum.multiprocessing
 N_JOBS_DEFAULT = 1
 
 
+def get_multiprocessing():
+    """Get multiprocessing module."""
+    import multiprocessing
+
+    return multiprocessing
+
+
 def get_multiprocessing_ray():
-    """Get multiprocessing module for ray backend"""
+    """Get multiprocessing module for ray backend."""
     import ray.util.multiprocessing as multiprocessing
 
     log.warning(
@@ -50,7 +56,7 @@ def get_multiprocessing_ray():
 
 
 def is_ray_initialized():
-    """Check if ray is initialized"""
+    """Check if ray is initialized."""
     try:
         from ray import is_initialized
 
@@ -60,7 +66,7 @@ def is_ray_initialized():
 
 
 def is_ray_available():
-    """Check if ray is available"""
+    """Check if ray is available."""
     try:
         importlib.import_module("ray")
         return True
@@ -69,11 +75,11 @@ def is_ray_available():
 
 
 class ParallelMixin:
-    """Mixin class to handle parallel processing"""
+    """Mixin class to handle parallel processing."""
 
     @property
     def n_jobs(self):
-        """Number of jobs (int)"""
+        """Number of jobs as an integer."""
         # TODO: this is somewhat unusual behaviour. It deviates from a normal default value handling
         if self._n_jobs is None:
             return N_JOBS_DEFAULT
@@ -82,7 +88,7 @@ class ParallelMixin:
 
     @n_jobs.setter
     def n_jobs(self, value):
-        """Number of jobs setter (int)"""
+        """Number of jobs setter as an integer."""
         if not isinstance(value, (int, type(None))):
             raise ValueError(
                 f"Invalid type: {value!r}, and integer or None is expected."
@@ -92,7 +98,7 @@ class ParallelMixin:
 
     @property
     def parallel_backend(self):
-        """Parallel backend (str)"""
+        """Parallel backend as a string."""
         if self._parallel_backend is None:
             return BACKEND_DEFAULT
 
@@ -100,7 +106,7 @@ class ParallelMixin:
 
     @parallel_backend.setter
     def parallel_backend(self, value):
-        """Parallel backend setter (str)"""
+        """Parallel backend setter as a string."""
         self._parallel_backend = ParallelBackendEnum.from_str(value).value
 
 
@@ -113,7 +119,7 @@ def run_multiprocessing(
     method_kwargs=None,
     task_name="",
 ):
-    """Run function in a loop or in Parallel
+    """Run function in a loop or in Parallel.
 
     Notes
     -----
@@ -122,20 +128,20 @@ def run_multiprocessing(
     Parameters
     ----------
     func : function
-        Function to run
+        Function to run.
     inputs : list
-        List of arguments to pass to the function
-    backend : {'multiprocessing', 'ray'}
-        Backend to use.
-    pool_kwargs : dict
+        List of arguments to pass to the function.
+    backend : {'multiprocessing', 'ray'}, optional
+        Backend to use. Default is None.
+    pool_kwargs : dict, optional
         Keyword arguments passed to the pool. The number of processes is limited
-        to the number of physical CPUs.
-    method : {'starmap', 'apply_async'}
-        Pool method to use.
-    method_kwargs : dict
-        Keyword arguments passed to the method
-    task_name : str
-        Name of the task to display in the progress bar
+        to the number of physical CPUs. Default is None.
+    method : {'starmap', 'apply_async'}, optional
+        Pool method to use. Default is "starmap".
+    method_kwargs : dict, optional
+        Keyword arguments passed to the method. Default is None.
+    task_name : str, optional
+        Name of the task to display in the progress bar. Default is "".
     """
     backend = ParallelBackendEnum.from_str(backend)
 
@@ -147,7 +153,7 @@ def run_multiprocessing(
 
     processes = pool_kwargs.get("processes", N_JOBS_DEFAULT)
 
-    multiprocessing = PARALLEL_BACKEND_MODULES[backend]
+    multiprocessing = PARALLEL_BACKEND_MODULES[backend]()
 
     if backend == ParallelBackendEnum.multiprocessing:
         cpu_count = multiprocessing.cpu_count()
@@ -186,7 +192,7 @@ def run_multiprocessing(
 
 
 def run_loop(func, inputs, method_kwargs=None, task_name=""):
-    """Loop over inputs an run function"""
+    """Loop over inputs and run function."""
     results = []
 
     callback = method_kwargs.get("callback", None)
@@ -203,12 +209,12 @@ def run_loop(func, inputs, method_kwargs=None, task_name=""):
 
 
 def run_pool_star_map(pool, func, inputs, method_kwargs=None, task_name=""):
-    """Run function in parallel"""
+    """Run function in parallel."""
     return pool.starmap(func, progress_bar(inputs, desc=task_name), **method_kwargs)
 
 
 def run_pool_async(pool, func, inputs, method_kwargs=None, task_name=""):
-    """Run function in parallel async"""
+    """Run function in parallel async."""
     results = []
 
     for arguments in progress_bar(inputs, desc=task_name):
@@ -225,8 +231,6 @@ POOL_METHODS = {
 }
 
 PARALLEL_BACKEND_MODULES = {
-    ParallelBackendEnum.multiprocessing: multiprocessing,
+    ParallelBackendEnum.multiprocessing: get_multiprocessing,
+    ParallelBackendEnum.ray: get_multiprocessing_ray,
 }
-
-if is_ray_available():
-    PARALLEL_BACKEND_MODULES[ParallelBackendEnum.ray] = get_multiprocessing_ray()

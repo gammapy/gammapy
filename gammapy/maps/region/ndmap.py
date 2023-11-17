@@ -1,3 +1,4 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 from itertools import product
 import numpy as np
 from scipy.ndimage import label as ndi_label
@@ -482,8 +483,8 @@ class RegionNDMap(Map):
             Filename.
         format : {"gadf", "ogip", "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"}
             Which format to use.
-        overwrite : bool
-            Overwrite existing files?
+        overwrite : bool, optional
+            Overwrite existing file. Default is False.
         checksum : bool
             When True adds both DATASUM and CHECKSUM cards to the headers written to the file.
             Default is False.

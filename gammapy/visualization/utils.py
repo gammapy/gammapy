@@ -1,3 +1,4 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging as log
 import numpy as np
 from scipy.interpolate import CubicSpline

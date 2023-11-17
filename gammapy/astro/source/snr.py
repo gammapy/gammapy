@@ -19,15 +19,15 @@ class SNR:
     Parameters
     ----------
     e_sn : `~astropy.units.Quantity`
-        SNR energy (erg), equal to the SN energy after neutrino losses
+        SNR energy (erg), equal to the SN energy after neutrino losses.
     theta : `~astropy.units.Quantity`
-        Fraction of E_SN that goes into cosmic rays
+        Fraction of E_SN that goes into cosmic rays.
     n_ISM : `~astropy.units.Quantity`
-        ISM density (g cm^-3)
+        ISM density (g cm^-3).
     m_ejecta : `~astropy.units.Quantity`
-        Ejecta mass (g)
+        Ejecta mass (g).
     t_stop : `~astropy.units.Quantity`
-        Post-shock temperature where gamma-ray emission stops
+        Post-shock temperature where gamma-ray emission stops.
     """
 
     def __init__(
@@ -77,7 +77,7 @@ class SNR:
         Parameters
         ----------
         t : `~astropy.units.Quantity`
-            Time after birth of the SNR
+            Time after birth of the SNR.
         """
         t = Quantity(t, "yr")
         r = np.where(
@@ -93,7 +93,7 @@ class SNR:
         Parameters
         ----------
         t : `~astropy.units.Quantity`
-            Time after birth of the SNR
+            Time after birth of the SNR.
         """
         # proportional constant for the free expansion phase
         term_1 = (self.e_sn / Quantity(1e51, "erg")) ** (1.0 / 2)
@@ -106,7 +106,7 @@ class SNR:
         Parameters
         ----------
         t : `~astropy.units.Quantity`
-            Time after birth of the SNR
+            Time after birth of the SNR.
         """
         R_FE = self._radius_free_expansion(self.sedov_taylor_begin)
         return R_FE * (t / self.sedov_taylor_begin) ** (2.0 / 5)
@@ -117,7 +117,7 @@ class SNR:
         Parameters
         ----------
         t : `~astropy.units.Quantity`
-            Time after birth of the SNR
+            Time after birth of the SNR.
         """
         return self.radius(t) * (1 - fraction)
 
@@ -140,9 +140,9 @@ class SNR:
         Parameters
         ----------
         t : `~astropy.units.Quantity`
-            Time after birth of the SNR
+            Time after birth of the SNR.
         energy_min : `~astropy.units.Quantity`
-            Lower energy limit for the luminosity
+            Lower energy limit for the luminosity.
         """
         t = Quantity(t, "yr")
         energy_min = Quantity(energy_min, "TeV")
@@ -248,7 +248,7 @@ class SNRTrueloveMcKee(SNR):
         Parameters
         ----------
         t : `~astropy.units.Quantity`
-            Time after birth of the SNR
+            Time after birth of the SNR.
         """
         t = Quantity(t, "yr")
 
@@ -266,7 +266,7 @@ class SNRTrueloveMcKee(SNR):
         Parameters
         ----------
         t : `~astropy.units.Quantity`
-            Time after birth of the SNR
+            Time after birth of the SNR.
         """
         return 1.12 * self.r_c * (t / self.t_c) ** (2.0 / 3)
 
@@ -276,7 +276,7 @@ class SNRTrueloveMcKee(SNR):
         Parameters
         ----------
         t : `~astropy.units.Quantity`
-            Time after birth of the SNR
+            Time after birth of the SNR.
         """
         term1 = self._radius_free_expansion(self.sedov_taylor_begin) ** (5.0 / 2)
         term2 = (2.026 * (self.e_sn / self.rho_ISM)) ** (1.0 / 2)
@@ -308,7 +308,7 @@ class SNRTrueloveMcKee(SNR):
         Parameters
         ----------
         t : `~astropy.units.Quantity`
-            Time after birth of the SNR
+            Time after birth of the SNR.
         """
         t = Quantity(t, "yr")
 

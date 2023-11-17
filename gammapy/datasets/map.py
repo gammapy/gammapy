@@ -1114,13 +1114,20 @@ class MapDataset(Dataset):
         return ax_spatial, ax_spectral
 
     def stat_sum(self):
-        """Total statistic function value given the current model parameters."""
+        """Total statistic function value given the current model parameters and priors."""
+        prior_stat_sum = 0.0
+        if self.models is not None:
+            prior_stat_sum = self.models.parameters.prior_stat_sum()
+
         counts, npred = self.counts.data.astype(float), self.npred().data
 
         if self.mask is not None:
-            return cash_sum_cython(counts[self.mask.data], npred[self.mask.data])
+            return (
+                cash_sum_cython(counts[self.mask.data], npred[self.mask.data])
+                + prior_stat_sum
+            )
         else:
-            return cash_sum_cython(counts.ravel(), npred.ravel())
+            return cash_sum_cython(counts.ravel(), npred.ravel()) + prior_stat_sum
 
     def fake(self, random_state="random-seed"):
         """Simulate fake counts for the current model and reduced IRFs.
@@ -1260,8 +1267,8 @@ class MapDataset(Dataset):
         ----------
         filename : str
             Filename to write to.
-        overwrite : bool
-            Overwrite file if it exists.
+        overwrite : bool, optional
+            Overwrite existing file. Default is False.
         checksum : bool
             When True adds both DATASUM and CHECKSUM cards to the headers written to the file.
             Default is False.

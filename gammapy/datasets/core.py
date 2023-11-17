@@ -68,13 +68,15 @@ class Dataset(abc.ABC):
             return self.mask_safe
 
     def stat_sum(self):
-        """Total statistic given the current model parameters."""
+        """Total statistic given the current model parameters and priors."""
         stat = self.stat_array()
 
         if self.mask is not None:
             stat = stat[self.mask.data]
-
-        return np.sum(stat, dtype=np.float64)
+        prior_stat_sum = 0.0
+        if self.models is not None:
+            prior_stat_sum = self.models.parameters.prior_stat_sum()
+        return np.sum(stat, dtype=np.float64) + prior_stat_sum
 
     @abc.abstractmethod
     def stat_array(self):
@@ -435,8 +437,8 @@ class Datasets(collections.abc.MutableSequence):
             File path or name of datasets yaml file
         filename_models : str or `Path`
             File path or name of models yaml file. Default is None.
-        overwrite : bool
-            overwrite datasets FITS files. Default is False.
+        overwrite : bool, optional
+            Overwrite existing file. Default is False.
         write_covariance : bool
             save covariance or not. Default is False.
         checksum : bool
@@ -454,6 +456,9 @@ class Datasets(collections.abc.MutableSequence):
                 path.parent / filename, overwrite=overwrite, checksum=checksum
             )
             data["datasets"].append(d)
+
+        if path.exists() and not overwrite:
+            raise IOError(f"File exists already: {path}")
 
         write_yaml(data, path, sort_keys=False)
 

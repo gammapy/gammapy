@@ -11,23 +11,22 @@ log = logging.getLogger(__name__)
 class SpectrumDatasetMaker(MapDatasetMaker):
     """Make spectrum for a single IACT observation.
 
-    The irfs and background are computed at a single fixed offset,
+    The IRFs and background are computed at a single fixed offset,
     which is recommended only for point-sources.
 
     Parameters
     ----------
     selection : list
-        List of str, selecting which maps to make.
-        Available: 'counts', 'exposure', 'background', 'edisp'
+        List of string, selecting which maps to make.
+        Available: 'counts', 'exposure', 'background', 'edisp'.
         By default, all spectra are made.
     containment_correction : bool
         Apply containment correction for point sources and circular on regions.
     background_oversampling : int
         Background evaluation oversampling factor in energy.
     use_region_center : bool
-        If True, approximate the IRFs by the value at the center of the region
-        If False, the IRFs are averaged over the entire region
-
+        If True, approximate the IRFs by the value at the center of the region.
+        If False, the IRFs are averaged over the entire.
     """
 
     tag = "SpectrumDatasetMaker"
@@ -52,8 +51,8 @@ class SpectrumDatasetMaker(MapDatasetMaker):
         Parameters
         ----------
         geom : `~gammapy.maps.RegionGeom`
-            Reference map geom.
-        observation: `~gammapy.data.Observation`
+            Reference map geometry.
+        observation : `~gammapy.data.Observation`
             Observation to compute effective area for.
 
         Returns
@@ -104,7 +103,7 @@ class SpectrumDatasetMaker(MapDatasetMaker):
         Parameters
         ----------
         geom : `~gammapy.maps.Geom`
-            Reference map geom.
+            Reference map geometry.
         observation : `~gammapy.data.Observation`
             Observation container.
 

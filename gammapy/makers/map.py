@@ -27,21 +27,21 @@ class MapDatasetMaker(Maker):
     ----------
     selection : list
         List of str, selecting which maps to make.
-        Available: 'counts', 'exposure', 'background', 'psf', 'edisp'
+        Available: 'counts', 'exposure', 'background', 'psf', 'edisp'.
         By default, all maps are made.
     background_oversampling : int
         Background evaluation oversampling factor in energy.
-    background_interp_missing_data: bool
+    background_interp_missing_data : bool, optional
         Interpolate missing values in background 3d map.
         Default is True, have to be set to True for CTA IRF.
-    background_pad_offset: bool
+    background_pad_offset : bool, optional
         Pad one bin in offset for 2d background map.
-        This avoid extrapolation at edges and use the nearest value.
+        This avoids extrapolation at edges and use the nearest value.
         Default is True.
 
     Examples
     --------
-    This example shows how to run the MapMaker for a single observation
+    This example shows how to run the MapMaker for a single observation.
 
     >>> from gammapy.data import DataStore
     >>> from gammapy.datasets import MapDataset
@@ -128,7 +128,7 @@ class MapDatasetMaker(Maker):
         Parameters
         ----------
         geom : `~gammapy.maps.Geom`
-            Reference map geom.
+            Reference map geometry.
         observation : `~gammapy.data.Observation`
             Observation container.
 
@@ -151,9 +151,13 @@ class MapDatasetMaker(Maker):
         Parameters
         ----------
         geom : `~gammapy.maps.Geom`
-            Reference map geom.
+            Reference map geometry.
         observation : `~gammapy.data.Observation`
             Observation container.
+        use_region_center : bool, optional
+            For geom as a `~gammapy.maps.RegionGeom`. If True, consider the values at the region center.
+            If False, average over the whole region.
+            Default is True.
 
         Returns
         -------
@@ -174,14 +178,18 @@ class MapDatasetMaker(Maker):
 
     @staticmethod
     def make_exposure_irf(geom, observation, use_region_center=True):
-        """Make exposure map with irf geometry.
+        """Make exposure map with IRF geometry.
 
         Parameters
         ----------
         geom : `~gammapy.maps.Geom`
-            Reference geom.
+            Reference geometry.
         observation : `~gammapy.data.Observation`
             Observation container.
+        use_region_center : bool, optional
+            For geom as a `~gammapy.maps.RegionGeom`. If True, consider the values at the region center.
+            If False, average over the whole region.
+            Default is True.
 
         Returns
         -------
@@ -202,7 +210,7 @@ class MapDatasetMaker(Maker):
         Parameters
         ----------
         geom : `~gammapy.maps.Geom`
-            Reference geom.
+            Reference geometry.
         observation : `~gammapy.data.Observation`
             Observation container.
 
@@ -211,7 +219,6 @@ class MapDatasetMaker(Maker):
         background : `~gammapy.maps.Map`
             Background map.
         """
-
         bkg = observation.bkg
 
         if isinstance(bkg, Map):
@@ -241,14 +248,14 @@ class MapDatasetMaker(Maker):
         Parameters
         ----------
         geom : `~gammapy.maps.Geom`
-            Reference geom.
+            Reference geometry.
         observation : `~gammapy.data.Observation`
             Observation container.
 
         Returns
         -------
         edisp : `~gammapy.irf.EDispMap`
-            Edisp map.
+            Energy dispersion map.
         """
         exposure = self.make_exposure_irf(geom.squash(axis_name="migra"), observation)
 
@@ -268,14 +275,14 @@ class MapDatasetMaker(Maker):
         Parameters
         ----------
         geom : `~gammapy.maps.Geom`
-            Reference geom. Must contain "energy" and "energy_true" axes in that order.
+            Reference geometry. Must contain "energy" and "energy_true" axes in that order.
         observation : `~gammapy.data.Observation`
             Observation container.
 
         Returns
         -------
         edisp : `~gammapy.irf.EDispKernelMap`
-            EdispKernel map.
+            Energy dispersion kernel map.
         """
         if isinstance(observation.edisp, EDispKernelMap):
             exposure = None
@@ -295,19 +302,19 @@ class MapDatasetMaker(Maker):
         )
 
     def make_psf(self, geom, observation):
-        """Make psf map.
+        """Make PSF map.
 
         Parameters
         ----------
         geom : `~gammapy.maps.Geom`
-            Reference geom.
+            Reference geometry.
         observation : `~gammapy.data.Observation`
             Observation container.
 
         Returns
         -------
         psf : `~gammapy.irf.PSFMap`
-            Psf map.
+            PSF map.
         """
         psf = observation.psf
 
@@ -326,18 +333,18 @@ class MapDatasetMaker(Maker):
 
     @staticmethod
     def make_meta_table(observation):
-        """Make info meta table.
+        """Make information meta table.
 
         Parameters
         ----------
         observation : `~gammapy.data.Observation`
-            Observation
+            Observation.
 
         Returns
         -------
-        meta_table: `~astropy.table.Table`
+        meta_table : `~astropy.table.Table`
+            Meta table.
         """
-
         row = {}
         row["TELESCOP"] = observation.aeff.meta.get("TELESCOP", "Unknown")
         row["OBS_ID"] = observation.obs_id
@@ -362,7 +369,7 @@ class MapDatasetMaker(Maker):
         dataset : `~gammapy.datasets.MapDataset`
             Reference dataset.
         observation : `~gammapy.data.Observation`
-            Observation
+            Observation.
 
         Returns
         -------

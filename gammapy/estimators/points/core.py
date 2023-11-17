@@ -178,8 +178,8 @@ class FluxPoints(FluxMaps):
             * "profile": Gammapy internal format to store energy dependent
                 flux profiles. Basically a generalisation of the "gadf" format, but
                 currently there is no detailed documentation available.
-        overwrite : bool
-            Overwrite existing file.
+        overwrite : bool, optional
+            Overwrite existing file. Default is False.
         """
         filename = make_path(filename)
         if sed_type is None:

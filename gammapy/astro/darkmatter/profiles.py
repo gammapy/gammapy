@@ -43,7 +43,7 @@ class DMProfile(abc.ABC):
         self.parameters["rho_s"].value *= scale
 
     def _eval_substitution(self, radius, separation, squared):
-        """Density at given radius together with the substitution part"""
+        """Density at given radius together with the substitution part."""
         exponent = 2 if squared else 1
         return (
             self(radius) ** exponent
@@ -64,13 +64,13 @@ class DMProfile(abc.ABC):
         rmin, rmax : `~astropy.units.Quantity`
             Lower and upper bound of integration range.
         separation : `~numpy.ndarray`
-            Separation angle in rad
-        ndecade    : int, optional
+            Separation angle in radians.
+        ndecade : int, optional
             Number of grid points per decade used for the integration.
-            Default : 10000
+            Default is 10000.
         squared : bool, optional
             Square the profile before integration.
-            Default: True
+            Default is True.
         """
         integral = self.integrate_spectrum_separation(
             self._eval_substitution, rmin, rmax, separation, ndecade, squared
@@ -81,19 +81,19 @@ class DMProfile(abc.ABC):
     def integrate_spectrum_separation(
         self, func, xmin, xmax, separation, ndecade, squared=True
     ):
-        r"""Helper for the squared dark matter profile integral.
+        """Squared dark matter profile integral.
 
         Parameters
         ----------
         xmin, xmax : `~astropy.units.Quantity`
             Lower and upper bound of integration range.
         separation : `~numpy.ndarray`
-            Separation angle in rad
-        ndecade    : int
+            Separation angle in radians.
+        ndecade : int
             Number of grid points per decade used for the integration.
         squared : bool
             Square the profile before integration.
-            Default: True
+            Default is True.
         """
         unit = xmin.unit
         xmin = xmin.value
@@ -109,8 +109,11 @@ class DMProfile(abc.ABC):
 
 class ZhaoProfile(DMProfile):
     r"""Zhao Profile.
-    This is taken from equation 1 from Zhao (1996). It is a generalization of the NFW profile. The volume density is parametrized with
-    a double power-law. Scale radii smaller than the scale radius are described with a slope of :math:`-\gamma` and scale radii larger than the scale radius are described with a slope of :math:`-\beta`. :math:`\alpha` is a measure for the width of the transition region.
+
+    This is taken from equation 1 from Zhao (1996). It is a generalization of the NFW profile. The volume density
+    is parametrized with a double power-law. Scale radii smaller than the scale radius are described with a slope of
+    :math:`-\gamma` and scale radii larger than the scale radius are described with a slope of :math:`-\beta`.
+    :math:`\alpha` is a measure for the width of the transition region.
 
     .. math::
         \rho(r) = \rho_s \left(\frac{r_s}{r}\right)^\gamma \left(1 + \left(\frac{r}{r_s}\right)^\frac{1}{\alpha} \right)^{(\gamma - \beta) \alpha}
@@ -118,15 +121,15 @@ class ZhaoProfile(DMProfile):
     Parameters
     ----------
     r_s : `~astropy.units.Quantity`
-        Scale radius, :math:`r_s`
+        Scale radius, :math:`r_s`.
     alpha : `~astropy.units.Quantity`
-        :math:`\alpha`
+        :math:`\alpha`.
     beta: `~astropy.units.Quantity`
-        :math:`\beta`
+        :math:`\beta`.
     gamma : `~astropy.units.Quantity`
-        :math:`\gamma`
+        :math:`\gamma`.
     rho_s : `~astropy.units.Quantity`
-        Characteristic density, :math:`\rho_s`
+        Characteristic density, :math:`\rho_s`.
 
     References
     ----------
@@ -162,6 +165,7 @@ class ZhaoProfile(DMProfile):
 
     @staticmethod
     def evaluate(radius, r_s, alpha, beta, gamma, rho_s):
+        """Evaluate the profile."""
         rr = radius / r_s
         return rho_s / (
             rr**gamma * (1 + rr ** (1 / alpha)) ** ((beta - gamma) * alpha)
@@ -177,9 +181,9 @@ class NFWProfile(DMProfile):
     Parameters
     ----------
     r_s : `~astropy.units.Quantity`
-        Scale radius, :math:`r_s`
+        Scale radius, :math:`r_s`.
     rho_s : `~astropy.units.Quantity`
-        Characteristic density, :math:`\rho_s`
+        Characteristic density, :math:`\rho_s`.
 
     References
     ----------
@@ -198,6 +202,7 @@ class NFWProfile(DMProfile):
 
     @staticmethod
     def evaluate(radius, r_s, rho_s):
+        """Evaluate the profile."""
         rr = radius / r_s
         return rho_s / (rr * (1 + rr) ** 2)
 
@@ -213,11 +218,11 @@ class EinastoProfile(DMProfile):
     Parameters
     ----------
     r_s : `~astropy.units.Quantity`
-        Scale radius, :math:`r_s`
+        Scale radius, :math:`r_s`.
     alpha : `~astropy.units.Quantity`
-        :math:`\alpha`
+        :math:`\alpha`.
     rho_s : `~astropy.units.Quantity`
-        Characteristic density, :math:`\rho_s`
+        Characteristic density, :math:`\rho_s`.
 
     References
     ----------
@@ -244,6 +249,7 @@ class EinastoProfile(DMProfile):
 
     @staticmethod
     def evaluate(radius, r_s, alpha, rho_s):
+        """Evaluate the profile."""
         rr = radius / r_s
         exponent = (2 / alpha) * (rr**alpha - 1)
         return rho_s * np.exp(-1 * exponent)
@@ -257,7 +263,7 @@ class IsothermalProfile(DMProfile):
     Parameters
     ----------
     r_s : `~astropy.units.Quantity`
-        Scale radius, :math:`r_s`
+        Scale radius, :math:`r_s`.
 
     References
     ----------
@@ -277,6 +283,7 @@ class IsothermalProfile(DMProfile):
 
     @staticmethod
     def evaluate(radius, r_s, rho_s):
+        """Evaluate the profile."""
         rr = radius / r_s
         return rho_s / (1 + rr**2)
 
@@ -289,7 +296,7 @@ class BurkertProfile(DMProfile):
     Parameters
     ----------
     r_s : `~astropy.units.Quantity`
-        Scale radius, :math:`r_s`
+        Scale radius, :math:`r_s`.
 
     References
     ----------
@@ -309,6 +316,7 @@ class BurkertProfile(DMProfile):
 
     @staticmethod
     def evaluate(radius, r_s, rho_s):
+        """Evaluate the profile."""
         rr = radius / r_s
         return rho_s / ((1 + rr) * (1 + rr**2))
 
@@ -323,7 +331,7 @@ class MooreProfile(DMProfile):
     Parameters
     ----------
     r_s : `~astropy.units.Quantity`
-        Scale radius, :math:`r_s`
+        Scale radius, :math:`r_s`.
 
     References
     ----------
@@ -343,6 +351,7 @@ class MooreProfile(DMProfile):
 
     @staticmethod
     def evaluate(radius, r_s, rho_s):
+        """Evaluate the profile."""
         rr = radius / r_s
         rr_ = r_s / radius
         return rho_s * rr_**1.16 * (1 + rr) ** (-1.84)
