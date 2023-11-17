@@ -115,7 +115,7 @@ class WcsMap(Map):
 
         Parameters
         ----------
-        hdu_list :  `~astropy.io.fits.HDUList`
+        hdu_list : `~astropy.io.fits.HDUList`
             HDU list containing HDUs for map data and bands.
         hdu : str, optional
             Name or index of the HDU with the map data.

@@ -74,7 +74,7 @@ class WcsGeom(Geom):
     npix : tuple
         Number of pixels in each spatial dimension.
     cdelt : tuple
-        Pixel size in each image plane.  If None then a constant pixel size will be used.
+        Pixel size in each image plane. If None then a constant pixel size will be used.
     crpix : tuple
         Reference pixel coordinate in each image plane.
     axes : list
@@ -309,20 +309,20 @@ class WcsGeom(Geom):
         ``binsz`` and one of either ``npix`` or ``width`` arguments.
         For maps with non-spatial dimensions a different pixelization
         can be used for each image plane by passing a list or array
-        argument for any of the pixelization parameters.  If both npix
+        argument for any of the pixelization parameters. If both npix
         and width are None then an all-sky geometry will be created.
 
         Parameters
         ----------
         npix : int or tuple or list, optional
             Width of the map in pixels. A tuple will be interpreted as
-            parameters for longitude and latitude axes.  For maps with
+            parameters for longitude and latitude axes. For maps with
             non-spatial dimensions, list input can be used to define a
-            different map width in each image plane.  This option
+            different map width in each image plane. This option
             supersedes width. Default is None.
         binsz : float or tuple or list, optional
-            Map pixel size in degrees.  A tuple will be interpreted
-            as parameters for longitude and latitude axes.  For maps
+            Map pixel size in degrees. A tuple will be interpreted
+            as parameters for longitude and latitude axes. For maps
             with non-spatial dimensions, list input can be used to
             define a different bin size in each image plane.
             Default is 0.5
@@ -333,17 +333,17 @@ class WcsGeom(Geom):
             Coordinate system, either Galactic ("galactic") or Equatorial ("icrs").
             Default is "icrs".
         refpix : tuple, optional
-            Reference pixel of the projection.  If None this will be
+            Reference pixel of the projection. If None this will be
             set to the center of the map. Default is None.
         axes : list, optional
             List of non-spatial axes.
         skydir : tuple or `~astropy.coordinates.SkyCoord`, optional
-            Sky position of map center.  Can be either a SkyCoord
+            Sky position of map center. Can be either a SkyCoord
             object or a tuple of longitude and latitude in deg in the
             coordinate system of the map. Default is None.
         width : float or tuple or list or string, optional
-            Width of the map in degrees.  A tuple will be interpreted
-            as parameters for longitude and latitude axes.  For maps
+            Width of the map in degrees. A tuple will be interpreted
+            as parameters for longitude and latitude axes. For maps
             with non-spatial dimensions, list input can be used to
             define a different map width in each image plane.
             Default is None.
@@ -423,7 +423,7 @@ class WcsGeom(Geom):
 
     @property
     def footprint_rectangle_sky_region(self):
-        """Footprint of the geometry as a `~RectangleSkyRegion`."""
+        """Footprint of the geometry as a `~regions.RectangleSkyRegion`."""
         width, height = self.width
         return RectangleSkyRegion(
             center=self.center_skydir, width=width[0], height=height[0]
@@ -438,7 +438,7 @@ class WcsGeom(Geom):
         geom : `~WcsGeom`
             A reference WCS geometry object.
         skydir : tuple or `~astropy.coordinates.SkyCoord`
-            Sky position of map center.  Can be either a SkyCoord
+            Sky position of map center. Can be either a SkyCoord
             object or a tuple of longitude and latitude in degrees in the
             coordinate system of the map.
         width : float or tuple or list or string
@@ -612,7 +612,7 @@ class WcsGeom(Geom):
         frame : str or `~astropy.coordinates.Frame`, optional
             Coordinate frame. Default is None.
         sparse : bool, optional
-            Compute sparse coordinates.  Default is False.
+            Compute sparse coordinates. Default is False.
         axis_name : str, optional
             If mode = "edges", the edges will be returned for this axis.
              Default is None.
@@ -948,8 +948,8 @@ class WcsGeom(Geom):
             A region can be defined as a string ind DS9 format as well.
             See http://ds9.si.edu/doc/ref/region.html for details.
         inside : bool, optional
-            For ``inside=True``, pixels in the region to True.
-            For ``inside=False``, pixels in the region are False.
+            For ``inside=True``, set pixels in the region to True.
+            For ``inside=False``, set pixels in the region to False.
             Default is True.
 
         Returns
@@ -1218,10 +1218,10 @@ def pix2world(wcs, cdelt, crpix, pix):
     wcs : `~astropy.wcs.WCS`
         WCS transform object.
     cdelt : tuple
-        Tuple of X/Y pixel size in deg.  Each element should have the
+        Tuple of X/Y pixel size in deg. Each element should have the
         same length as ``pix``.
     crpix : tuple
-        Tuple of reference pixel parameters in X and Y dimensions.  Each
+        Tuple of reference pixel parameters in X and Y dimensions. Each
         element should have the same length as ``pix``.
     pix : tuple
         Tuple of pixel coordinates.

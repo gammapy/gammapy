@@ -89,7 +89,7 @@ class WcsNDMap(WcsMap):
         Returns
         -------
         map : `WcsNDMap`
-            Wcs map
+            WCS map.
         """
         geom = WcsGeom.from_header(hdu.header, hdu_bands, format=format)
         shape = geom.axes.shape
@@ -134,7 +134,7 @@ class WcsNDMap(WcsMap):
         Parameters
         ----------
         coords : tuple, dict or `~gammapy.maps.MapCoord`
-            Coordinate arrays for each dimension of the map.  Tuple
+            Coordinate arrays for each dimension of the map. Tuple
             should be ordered as (lon, lat, x_0, ..., x_n) where x_i
             are coordinates for non-spatial dimensions of the map.
             "lon" and "lat" are optional and will be taken at the center
@@ -376,7 +376,7 @@ class WcsNDMap(WcsMap):
         ax : `~astropy.visualization.wcsaxes.WCSAxes`, optional
             WCS axis object to plot on. Default is None.
         fig : `~matplotlib.figure.Figure`, optional
-            Figure object.  Default is None.
+            Figure object. Default is None.
         add_cbar : bool, optional
             Add color bar. Default is False.
         stretch : str, optional
