@@ -31,14 +31,12 @@ class DatasetsActor(Datasets):
         )
 
         if datasets is not None:
-            actors = []
             datasets_list = []
             while datasets:
                 d0 = datasets[0]
                 datasets_list.append(MapDatasetActor(d0))
                 datasets.remove(d0)  # moved to remote so removed from main process
             self._datasets = datasets_list
-            self._actors = actors
             self._ray_get = get
 
     def insert(self, idx, dataset):
@@ -46,9 +44,6 @@ class DatasetsActor(Datasets):
             if dataset.name in self.names:
                 raise (ValueError("Dataset names must be unique"))
             self._datasets.insert(idx, MapDatasetActor(dataset))
-            self._actors.insert(
-                idx,
-            )
         else:
             raise TypeError(f"Invalid type: {type(dataset)!r}")
 
