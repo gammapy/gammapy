@@ -10,7 +10,7 @@ from .map import MapDataset
 log = logging.getLogger(__name__)
 
 
-__all__ = ["DatasetsActor", "MapDatasetActor"]
+__all__ = ["DatasetsActor"]
 
 
 class DatasetsActor(Datasets):
