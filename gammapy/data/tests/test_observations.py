@@ -58,6 +58,7 @@ def test_observation(data_store):
 
 @requires_data()
 def test_observation_peek(data_store):
+
     obs = Observation.read(
         "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz"
     )
@@ -458,6 +459,7 @@ def test_observation_tmid():
 
 @requires_data()
 def test_observations_clustering(data_store):
+
     selection = dict(
         type="sky_circle",
         frame="icrs",

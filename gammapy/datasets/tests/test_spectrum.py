@@ -565,6 +565,7 @@ class TestSpectrumOnOff:
         assert newdataset.counts.meta["ANCRFILE"] == "test_arf.fits.gz"
 
     def test_to_from_ogip_files_no_edisp(self, tmp_path):
+
         mask_safe = RegionNDMap.from_geom(self.on_counts.geom, dtype=bool)
         mask_safe.data += True
 

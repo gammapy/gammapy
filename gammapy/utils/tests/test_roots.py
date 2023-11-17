@@ -18,6 +18,7 @@ class TestFindRoots:
         return x**3 - 1
 
     def test_methods(self):
+
         methods = ["brentq", "secant"]
         for method in methods:
             roots, res = find_roots(

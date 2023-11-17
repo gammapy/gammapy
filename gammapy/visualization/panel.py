@@ -31,6 +31,7 @@ class MapPanelPlotter:
     """
 
     def __init__(self, figure, xlim, ylim, npanels=4, **kwargs):
+
         self.figure = figure
         self.parameters = {"xlim": xlim, "ylim": ylim, "npanels": npanels}
         self.grid_spec = GridSpec(nrows=npanels, ncols=1, **kwargs)
