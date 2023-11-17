@@ -418,7 +418,7 @@ class RegionGeom(Geom):
 
         Parameters
         ----------
-        binsz : float, string or `~astropy.quantity.Quantity`
+        binsz : float, str or `~astropy.quantity.Quantity`
             Bin size.
 
         Returns

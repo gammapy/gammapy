@@ -417,8 +417,7 @@ class RegionNDMap(Map):
             "lon" and "lat" are optional and will be taken at the center
             of the region by default.
         method : {"linear", "nearest"}
-            Method to interpolate data values. By default, linear
-            interpolation is performed.
+            Method to interpolate data values. Default is "linear".
         fill_value : None or float value
             The value to use for points outside the interpolation domain.
             If None, values outside the domain are extrapolated.
