@@ -26,7 +26,7 @@ __all__ = ["Map"]
 class Map(abc.ABC):
     """Abstract map class.
 
-    This can represent WCS or HEALPIX-based maps
+    This can represent WCS or HEALPix-based maps
     with 2 spatial dimensions and N non-spatial dimensions.
 
     Parameters
@@ -36,7 +36,7 @@ class Map(abc.ABC):
     data : `~numpy.ndarray` or `~astropy.units.Quantity`
         Data array.
     meta : `dict`, optional
-        Dictionary that store metadata. Default is None.
+        Dictionary to store metadata. Default is None.
     unit : str or `~astropy.units.Unit`, optional
         Data unit, ignored if data is a Quantity. Default is ''.
     """
@@ -79,7 +79,7 @@ class Map(abc.ABC):
 
     @property
     def is_mask(self):
-        """Whether map is a mask with bool data type."""
+        """Whether map is a mask with boolean data type."""
         return self.data.dtype == bool
 
     @property
@@ -398,8 +398,7 @@ class Map(abc.ABC):
             be set to SKYMAP (for BINTABLE HDU) or PRIMARY (for IMAGE
             HDU).
         hdu_bands : str, optional
-            Set the name of the bands table extension. By default, this will
-            be set to BANDS.
+            Set the name of the bands table extension. Default is 'BANDS'.
         format : str, optional
             FITS format convention. By default, files will be written
             to the gamma-astro-data-formats (GADF) format.  This
@@ -922,7 +921,7 @@ class Map(abc.ABC):
         Returns
         -------
         vals : `~numpy.ndarray`
-           Array of pixel values. `numpy.nan` is used to flag coordinates
+           Array of pixel values. `~numpy.nan` is used to flag coordinates
            outside the map.
         """
         # FIXME: Support local indexing here?
@@ -1508,7 +1507,7 @@ class Map(abc.ABC):
     def mask_nearest_position(self, position):
         """Given a sky coordinate return nearest valid position in the mask.
 
-        If the mask contains additional axes, the mask is reduced over such axes.
+        If the mask contains additional axes, the mask is reduced over those axes.
 
         Parameters
         ----------
@@ -1518,7 +1517,7 @@ class Map(abc.ABC):
         Returns
         -------
         position : `~astropy.coordinates.SkyCoord`
-            The Nearest position in the mask.
+            The nearest position in the mask.
         """
         if not self.geom.is_image:
             raise ValueError("Method only supported for 2D images")
@@ -1666,7 +1665,7 @@ class Map(abc.ABC):
         coords : dict or `MapCoord`
             Map coordinates.
         **kwargs : dict, optional
-            Coordinates at which to evaluate the IRF.
+            Keyword arguments passed to `Map.interp_by_coord`.
 
         Returns
         -------
@@ -1801,7 +1800,7 @@ class Map(abc.ABC):
         region: `~regions.Region`, optional
              Region to extract the spectrum from. Pixel or sky regions are accepted. Default is None.
         func : `numpy.func`, optional
-            Function to reduce the data. Default is `numpy.nansum`.
+            Function to reduce the data. Default is `~numpy.nansum`.
             For a boolean Map, use `numpy.any` or `numpy.all`. Default is `numpy.nansum`.
         weights : `WcsNDMap`, optional
             Array to be used as weights. The geometry must be equivalent. Default is None.
@@ -1844,7 +1843,7 @@ class Map(abc.ABC):
         atol_axes : float, optional
             Relative tolerance for the axes' comparison. Default is 1e-6.
         **kwargs : dict, optional
-                keywords passed to `numpy.allclose`.
+                Keywords passed to `~numpy.allclose`.
 
         Returns
         -------
