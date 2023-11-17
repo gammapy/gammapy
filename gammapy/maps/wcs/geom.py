@@ -608,7 +608,7 @@ class WcsGeom(Geom):
         ----------
         mode : {'center', 'edges'}, optional
             Get center or edge coordinates for the spatial axes.
-            Default is "center"
+            Default is "center".
         frame : str or `~astropy.coordinates.Frame`, optional
             Coordinate frame. Default is None.
         sparse : bool, optional
