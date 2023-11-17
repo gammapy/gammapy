@@ -476,6 +476,7 @@ def test_dataset_hawc():
     results["NN"] = [6.57154247837e16, 62, 0.76743538]
 
     for which in ["GP", "NN"]:
+
         # paths and file names
         data_path = "$GAMMAPY_DATA/hawc/crab_events_pass4/"
         hdu_filename = "hdu-index-table-" + which + "-Crab.fits.gz"

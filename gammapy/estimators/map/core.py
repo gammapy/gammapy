@@ -120,7 +120,7 @@ class FluxMaps:
     ----------
     data : dict of `~gammapy.maps.Map`
         The maps dictionary. Expected entries are the following:
-
+        
         * norm : the norm factor.
         * norm_err : optional, the error on the norm factor.
         * norm_errn : optional, the negative error on the norm factor.
@@ -131,7 +131,7 @@ class FluxMaps:
         * ts : optional, the delta TS associated with the flux value.
         * sqrt_ts : optional, the square root of the TS, when relevant.
         * success : optional, a boolean tagging the validity of the estimation.
-
+        
     reference_model : `~gammapy.modeling.models.SkyModel`, optional
         The reference model to use for conversions. If None, a model consisting
         of a point source with a power law spectrum of index 2 is assumed.

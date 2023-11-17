@@ -288,6 +288,7 @@ def plot_distribution(
     result_list = []
 
     for idx in range(cells_in_grid):
+
         axe = axes.flat[idx]
         if idx > len(data) - 1:
             axe.set_visible(False)

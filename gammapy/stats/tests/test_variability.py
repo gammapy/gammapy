@@ -68,6 +68,7 @@ def lc():
 
 
 def test_lightcurve_fvar():
+
     flux = np.array([[1e-11, 4e-12], [3e-11, np.nan], [1e-11, 1e-12]])
     flux_err = np.array([[0.1e-11, 0.4e-12], [0.3e-11, np.nan], [0.1e-11, 0.1e-12]])
 
@@ -80,6 +81,7 @@ def test_lightcurve_fvar():
 
 
 def test_lightcurve_fpp():
+
     flux = np.array([[1e-11, 4e-12], [3e-11, np.nan], [1e-11, 1e-12]])
     flux_err = np.array([[0.1e-11, 0.4e-12], [0.3e-11, np.nan], [0.1e-11, 0.1e-12]])
 
@@ -105,6 +107,7 @@ def test_lightcurve_chisq(lc_table):
 
 
 def test_lightcurve_flux_doubling():
+
     flux = np.array(
         [
             [1e-11, 4e-12],

@@ -1144,6 +1144,7 @@ def test_template_ND_no_energy(tmpdir):
 
 @requires_data()
 def test_template_ND_EBL(tmpdir):
+
     # TODO: add RegionNDMap.read(format="xspec")
     # Create EBL data array
     filename = "$GAMMAPY_DATA/ebl/ebl_franceschini.fits.gz"

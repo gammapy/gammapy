@@ -344,6 +344,7 @@ def test_make_edisp_kernel_map():
 
 @requires_data()
 def test_make_counts_rad_max(observations):
+
     pos = SkyCoord(083.6331144560900, +22.0144871383400, unit="deg", frame="icrs")
     on_region = PointSkyRegion(pos)
     energy_axis = MapAxis.from_energy_bounds(
@@ -357,6 +358,7 @@ def test_make_counts_rad_max(observations):
 
 @requires_data()
 def test_make_counts_off_rad_max(observations):
+
     pos = SkyCoord(83.6331, +22.0145, unit="deg", frame="icrs")
     on_region = PointSkyRegion(pos)
     energy_axis = MapAxis.from_energy_bounds(

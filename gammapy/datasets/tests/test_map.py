@@ -296,6 +296,7 @@ def test_different_exposure_unit(sky_model, geom):
 @pytest.mark.parametrize(("edisp_mode"), ["edispmap", "edispkernelmap"])
 @requires_data()
 def test_to_spectrum_dataset(sky_model, geom, geom_etrue, edisp_mode):
+
     dataset_ref = get_map_dataset(geom, geom_etrue, edisp=edisp_mode)
 
     bkg_model = FoVBackgroundModel(dataset_name=dataset_ref.name)
@@ -1862,6 +1863,7 @@ def test_map_dataset_region_geom_npred():
 
 @requires_dependency("healpy")
 def test_map_dataset_create_hpx_geom(geom_hpx):
+
     dataset = MapDataset.create(**geom_hpx, binsz_irf=10 * u.deg)
 
     assert isinstance(dataset.counts.geom, HpxGeom)
@@ -1882,6 +1884,7 @@ def test_map_dataset_create_hpx_geom(geom_hpx):
 
 @requires_dependency("healpy")
 def test_map_dataset_create_hpx_geom_partial(geom_hpx_partial):
+
     dataset = MapDataset.create(**geom_hpx_partial, binsz_irf=2 * u.deg)
 
     assert isinstance(dataset.counts.geom, HpxGeom)
@@ -1902,6 +1905,7 @@ def test_map_dataset_create_hpx_geom_partial(geom_hpx_partial):
 
 @requires_dependency("healpy")
 def test_map_dataset_stack_hpx_geom(geom_hpx_partial, geom_hpx):
+
     dataset_all = MapDataset.create(**geom_hpx, binsz_irf=5 * u.deg)
 
     gti = GTI.create(start=0 * u.s, stop=30 * u.min)

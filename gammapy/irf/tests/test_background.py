@@ -137,6 +137,7 @@ def test_plot_at_energy(bkg_3d):
 
 
 def test_background_3d_missing_values(bkg_3d_interp):
+
     res = bkg_3d_interp.evaluate(
         fov_lon=0.5 * u.deg,
         fov_lat=0.5 * u.deg,

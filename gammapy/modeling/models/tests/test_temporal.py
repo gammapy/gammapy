@@ -354,6 +354,7 @@ def test_sine_temporal_model_integral():
 
 @requires_data()
 def test_to_dict(light_curve):
+
     out = light_curve.to_dict()
     assert out["temporal"]["type"] == "LightCurveTemplateTemporalModel"
     assert "lightcrv_PKSB1222+216.fits" in out["temporal"]["filename"]
@@ -361,6 +362,7 @@ def test_to_dict(light_curve):
 
 @requires_data()
 def test_with_skymodel(light_curve):
+
     sky_model = SkyModel(spectral_model=PowerLawSpectralModel())
     out = sky_model.to_dict()
     assert "temporal" not in out

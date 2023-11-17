@@ -40,6 +40,7 @@ class PhaseBackgroundMaker(Maker):
 
     @staticmethod
     def _make_counts(dataset, observation, phases, phase_column_name):
+
         event_lists = []
         for interval in phases:
             events = observation.events.select_parameter(
