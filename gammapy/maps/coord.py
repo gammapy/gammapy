@@ -115,7 +115,7 @@ class MapCoord:
 
     @property
     def frame(self):
-        """Coordinate system as a str."""
+        """Coordinate system as a string."""
         return self._frame
 
     @property
@@ -125,7 +125,7 @@ class MapCoord:
 
     @property
     def skycoord(self):
-        """Coordinate object as an `~astropy.coordinates.SkyCoord`."""
+        """Coordinate object as a `~astropy.coordinates.SkyCoord`."""
         return SkyCoord(self.lon, self.lat, unit="deg", frame=self.frame)
 
     @classmethod
@@ -201,7 +201,7 @@ class MapCoord:
         ----------
         data : tuple, dict, `~gammapy.maps.MapCoord` or `~astropy.coordinates.SkyCoord`
             Object containing coordinate arrays.
-        frame : {"icrs", "galactic", None}
+        frame : {"icrs", "galactic", None}, optional
             Set the coordinate system for longitude and latitude. If
             None longitude and latitude will be assumed to be in
             the coordinate system native to a given map geometry. Default is None.
@@ -293,14 +293,14 @@ class MapCoord:
 
     @property
     def flat(self):
-        """Return flattened, valid coordinates"""
+        """Return flattened, valid coordinates."""
         coords = self.broadcasted
         is_finite = np.isfinite(coords[0])
         return coords.apply_mask(is_finite)
 
     @property
     def broadcasted(self):
-        """Return broadcasted coordinates"""
+        """Return broadcasted coordinates."""
         vals = np.broadcast_arrays(*self._data.values(), subok=True)
         data = dict(zip(self._data.keys(), vals))
         return self.__class__(

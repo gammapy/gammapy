@@ -88,7 +88,7 @@ class Geom(abc.ABC):
 
         Parameters
         ----------
-        dtype : data-type, optional
+        dtype : str, optional
             The desired data-type for the array. Default is "float32"
 
         Returns
@@ -255,7 +255,7 @@ class Geom(abc.ABC):
             coordinate vector for axis i.
         clip : bool
             Choose whether to clip indices to the valid range of the
-            geometry. If false then indices for coordinates outside
+            geometry. If False then indices for coordinates outside
             the geometry range will be set -1. Default is False.
 
         Returns
@@ -296,7 +296,7 @@ class Geom(abc.ABC):
             Tuple of pixel coordinates.
         clip : bool
             Choose whether to clip indices to the valid range of the
-            geometry. If false then indices for coordinates outside
+            geometry. If False then indices for coordinates outside
             the geometry range will be set -1. Default is False.
 
         Returns
@@ -565,7 +565,7 @@ class Geom(abc.ABC):
 
     @abc.abstractmethod
     def solid_angle(self):
-        """Solid angle as an `~astropy.units.Quantity` object (in ``sr``)."""
+        """Solid angle as a `~astropy.units.Quantity` object (in ``sr``)."""
         pass
 
     @property
