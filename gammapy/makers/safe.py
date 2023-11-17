@@ -17,7 +17,6 @@ log = logging.getLogger(__name__)
 class SafeMaskMaker(Maker):
     """Make safe data range mask for a given observation.
 
-
     .. warning::
 
          Currently some methods computing a safe energy range ("aeff-default",
@@ -37,11 +36,11 @@ class SafeMaskMaker(Maker):
         as lower energy threshold for method "aeff-max".
     bias_percent : float
         Percentage of the energy bias to be used as lower
-        energy threshold for method "edisp-bias"
+        energy threshold for method "edisp-bias".
     position : `~astropy.coordinates.SkyCoord`
         Position at which the `aeff_percent` or `bias_percent` are computed.
     fixed_offset : `~astropy.coordinates.Angle`
-        offset, calculated from the pointing position, at which
+        Offset, calculated from the pointing position, at which
         the `aeff_percent` or `bias_percent` are computed.
         If neither the position nor fixed_offset is specified,
         it uses the position of the center of the map by default.
@@ -91,7 +90,7 @@ class SafeMaskMaker(Maker):
         ----------
         dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.SpectrumDataset`
             Dataset to compute mask for.
-        observation: `~gammapy.data.Observation`
+        observation : `~gammapy.data.Observation`
             Observation to compute mask for.
 
         Returns
@@ -115,7 +114,7 @@ class SafeMaskMaker(Maker):
         ----------
         dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.SpectrumDataset`
             Dataset to compute mask for.
-        observation: `~gammapy.data.Observation`
+        observation : `~gammapy.data.Observation`
             Observation to compute mask for.
 
         Returns
@@ -153,7 +152,7 @@ class SafeMaskMaker(Maker):
         ----------
         dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.SpectrumDataset`
             Dataset to compute mask for.
-        observation: `~gammapy.data.Observation`
+        observation : `~gammapy.data.Observation`
             Observation to compute mask for. It is a mandatory argument when fixed_offset is set.
 
         Returns
@@ -212,7 +211,7 @@ class SafeMaskMaker(Maker):
         ----------
         dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.SpectrumDataset`
             Dataset to compute mask for.
-        observation: `~gammapy.data.Observation`
+        observation : `~gammapy.data.Observation`
             Observation to compute mask for. It is a mandatory argument when fixed_offset is set.
 
         Returns
@@ -307,7 +306,7 @@ class SafeMaskMaker(Maker):
         ----------
         dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.SpectrumDataset`
             Dataset to compute mask for.
-        observation: `~gammapy.data.Observation`
+        observation : `~gammapy.data.Observation`
             Observation to compute mask for.
 
         Returns
@@ -315,7 +314,6 @@ class SafeMaskMaker(Maker):
         dataset : `Dataset`
             Dataset with defined safe range mask.
         """
-
         if dataset.mask_safe:
             mask_safe = dataset.mask_safe.data
         else:
