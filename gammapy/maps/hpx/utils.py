@@ -177,7 +177,7 @@ def get_superpixels(idx, nside_subpix, nside_superpix, nest=True):
     idx : `~numpy.ndarray`
         Array of HEALPix pixel indices for subpixels of NSIDE
         ``nside_subpix``.
-    nside_subpix  : int or `~numpy.ndarray`
+    nside_subpix : int or `~numpy.ndarray`
         HEALPix NSIDE parameter of subpixel.
     nside_superpix : int or `~numpy.ndarray`
         HEALPix NSIDE parameter of superpixel.
@@ -231,7 +231,7 @@ def get_subpixels(idx, nside_superpix, nside_subpix, nest=True):
         ``nside_superpix``.
     nside_superpix : int or `~numpy.ndarray`
         HEALPix NSIDE parameter of superpixel.
-    nside_subpix  : int or `~numpy.ndarray`
+    nside_subpix : int or `~numpy.ndarray`
         HEALPix NSIDE parameter of subpixel.
     nest : bool, optional
         Indexing scheme. If True, "NESTED" scheme. If False, "RING" scheme.

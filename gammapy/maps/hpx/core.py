@@ -72,7 +72,7 @@ class HpxMap(Map):
             object or a tuple of longitude and latitude in deg in the
             coordinate system of the map. Default is None.
         width : float, optional
-            Diameter of the map in degrees.  If None then an all-sky
+            Diameter of the map in degrees. If None then an all-sky
             geometry will be created. Default is None.
         dtype : str, optional
             Data type. Default is "float32".
@@ -118,7 +118,7 @@ class HpxMap(Map):
 
         Parameters
         ----------
-        hdu_list :  `~astropy.io.fits.HDUList`
+        hdu_list : `~astropy.io.fits.HDUList`
             HDU list containing HDUs for map data and bands.
         hdu : str, optional
             Name or index of the HDU with the map data. If None then
@@ -129,8 +129,8 @@ class HpxMap(Map):
             Name or index of the HDU with the BANDS table.
             Default is None.
         format : str, optional
-            FITS format convention.  By default, files will be written
-            to the gamma-astro-data-formats (GADF) format.  This
+            FITS format convention. By default, files will be written
+            to the gamma-astro-data-formats (GADF) format. This
             option can be used to write files that are compliant with
             format conventions required by specific software (e.g. the
             Fermi Science Tools). The following formats are supported:
@@ -188,8 +188,8 @@ class HpxMap(Map):
             writing pixels with non-zero amplitude.
             Default is False.
         format : str, optional
-            FITS format convention.  By default, files will be written
-            to the gamma-astro-data-formats (GADF) format.  This
+            FITS format convention. By default, files will be written
+            to the gamma-astro-data-formats (GADF) format. This
             option can be used to write files that are compliant with
             format conventions required by specific software (e.g. the
             Fermi Science Tools). The following formats are supported:
@@ -261,14 +261,14 @@ class HpxMap(Map):
             pixel. If this parameter is None then the width will be
             set from ``width_pix``. Default is 2.
         width_pix : int, optional
-            Width of the WCS geometry in pixels.  The pixel size will
+            Width of the WCS geometry in pixels. The pixel size will
             be set to the number of pixels satisfying ``oversample``
-            or ``width_pix`` whichever is smaller.  If this parameter
+            or ``width_pix`` whichever is smaller. If this parameter
             is None then the width will be set from ``oversample``.
             Default is None.
         hpx2wcs : `~HpxToWcsMapping`, optional
             Set the HEALPix to WCS mapping object that will be used to
-            generate the WCS map.  If None then a new mapping will be
+            generate the WCS map. If None then a new mapping will be
             generated based on ``proj`` and ``oversample`` arguments.
             Default is None.
 
@@ -304,7 +304,7 @@ class HpxMap(Map):
             writing pixels with non-zero amplitude.
             Default is False.
         format : {'fgst-ccube', 'fgst-template', 'gadf', None}, optional
-            FITS format convention.  If None this will be set to the
+            FITS format convention. If None this will be set to the
             default convention of the map. Default is None.
 
         Returns

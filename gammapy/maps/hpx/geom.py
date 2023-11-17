@@ -35,9 +35,9 @@ class HpxGeom(Geom):
 
     This class performs mapping between partial-sky indices (pixel
     number within a HEALPix region) and all-sky indices (pixel number
-    within an all-sky HEALPix map).  Multi-band HEALPix geometries use
+    within an all-sky HEALPix map). Multi-band HEALPix geometries use
     a global indexing scheme that assigns a unique pixel number based
-    on the all-sky index and band index.  In the single-band case the
+    on the all-sky index and band index. In the single-band case the
     global index is the same as the HEALPix index.
 
     By default, the constructor will return an all-sky map.
@@ -58,9 +58,9 @@ class HpxGeom(Geom):
     frame : {"icrs", "galactic"}
         Coordinate system.
     region : str or tuple
-        Spatial geometry for partial-sky maps.  If None, the map will
-        encompass the whole sky.  String input will be parsed
-        according to HPX_REG header keyword conventions.  Tuple
+        Spatial geometry for partial-sky maps. If None, the map will
+        encompass the whole sky. String input will be parsed
+        according to HPX_REG header keyword conventions. Tuple
         input can be used to define an explicit list of pixels
         encompassed by the geometry.
     axes : list
@@ -820,7 +820,7 @@ class HpxGeom(Geom):
         binsz : float or `~numpy.ndarray`, optional
             Approximate pixel size in degrees. An ``nside`` will be
             chosen that corresponds to a pixel size closest to this
-            value.  This option is superseded by ``nside``.
+            value. This option is superseded by ``nside``.
             Default is None.
         nest : bool, optional
             Indexing scheme. If True, "NESTED" scheme. If False, "RING" scheme.
@@ -828,16 +828,16 @@ class HpxGeom(Geom):
         frame : {"icrs", "galactic"}, optional
             Coordinate system, either Galactic ("galactic") or Equatorial ("icrs").
             Default is "icrs".
-        region  : str, optional
-            HEALPix region string.  Allows for partial-sky maps. Default is None.
+        region : str, optional
+            HEALPix region string. Allows for partial-sky maps. Default is None.
         axes : list, optional
             List of axes for non-spatial dimensions. Default is None.
         skydir : tuple or `~astropy.coordinates.SkyCoord`, optional
-            Sky position of map center.  Can be either a SkyCoord
+            Sky position of map center. Can be either a SkyCoord
             object or a tuple of longitude and latitude in deg in the
             coordinate system of the map. Default is None.
         width : float, optional
-            Diameter of the map in degrees.  If set the map will
+            Diameter of the map in degrees. If set the map will
             encompass all pixels within a circular region centered on
             ``skydir``. Default is None.
 
@@ -1120,9 +1120,9 @@ class HpxGeom(Geom):
             set from ``width_pix``.
             Default is 2.
         width_pix : int, optional
-            Width of the WCS geometry in pixels.  The pixel size will
+            Width of the WCS geometry in pixels. The pixel size will
             be set to the number of pixels satisfying ``oversample``
-            or ``width_pix`` whichever is smaller.  If this parameter
+            or ``width_pix`` whichever is smaller. If this parameter
             is None then the width will be set from ``oversample``.
             Default is None.
 
@@ -1400,7 +1400,7 @@ class HpxGeom(Geom):
 
         Parameters
         ----------
-        other :  `HpxGeom`
+        other : `HpxGeom`
             Geometry to compare against.
         rtol_axes : float, optional
             Relative tolerance for axes comparison.

@@ -24,7 +24,7 @@ class HpxNDMap(HpxMap):
     """HEALPix map with any number of non-spatial dimensions.
 
     This class uses an N+1D numpy array to represent the sequence of
-    HEALPix image planes.  Following the convention of WCS-based maps
+    HEALPix image planes. Following the convention of WCS-based maps
     this class uses a column-wise ordering for the data array with the
     spatial dimension being tied to the last index of the array.
 
@@ -66,7 +66,7 @@ class HpxNDMap(HpxMap):
 
         Parameters
         ----------
-        wcs_tiles : list of  `WcsNDMap`
+        wcs_tiles : list of `WcsNDMap`
             WCS map tiles.
         nest : bool, optional
             Indexing scheme. If True, "NESTED" scheme. If False, "RING" scheme.
@@ -148,7 +148,7 @@ class HpxNDMap(HpxMap):
         ----------
         hdu : `~astropy.io.fits.BinTableHDU`
             The FITS HDU.
-        hdu_bands  : `~astropy.io.fits.BinTableHDU`, optional
+        hdu_bands : `~astropy.io.fits.BinTableHDU`, optional
             The BANDS table HDU. Default is None.
         format : str, optional
             FITS convention. Default is None.
@@ -337,7 +337,7 @@ class HpxNDMap(HpxMap):
         nside : int
             HEALPix NSIDE parameter.
         preserve_counts : bool, optional
-            Preserve the integral over each bin.  This should be true
+            Preserve the integral over each bin. This should be true
             if the map is an integral quantity (e.g. counts) and false if
             the map is a differential quantity (e.g. intensity).
             Default is True.
@@ -646,7 +646,7 @@ class HpxNDMap(HpxMap):
         """Convolve map with a symmetrical WCS kernel.
 
         Extract the radial profile of the kernel (assuming radial symmetry) and
-        convolve via `hp.sphtfunc.smoothing`. Since no projection is applied, this is
+        convolve via `healpy.sphtfunc.smoothing`. Since no projection is applied, this is
         suited for full-sky and large maps.
 
         If the kernel is two-dimensional, it is applied to all image planes likewise.
@@ -940,9 +940,9 @@ class HpxNDMap(HpxMap):
             pixel. If this parameter is None then the width will be
             set from ``width_pix``. Default is 2.
         width_pix : int, optional
-            Width of the WCS geometry in pixels.  The pixel size will
+            Width of the WCS geometry in pixels. The pixel size will
             be set to the number of pixels satisfying ``oversample``
-            or ``width_pix`` whichever is smaller.  If this parameter
+            or ``width_pix`` whichever is smaller. If this parameter
             is None then the width will be set from ``oversample``.
             Default is 1000.
         **kwargs : dict
@@ -980,7 +980,7 @@ class HpxNDMap(HpxMap):
             pixel in multiples of 4.
             Default is 1.
         ax : `~matplotlib.axes.Axes`, optional
-            Matplotlib axes. Default is None
+            Matplotlib axes. Default is None.
         """
         # FIXME: At the moment this only works for all-sky maps if the
         # projection is centered at (0,0)
@@ -1068,7 +1068,7 @@ class HpxNDMap(HpxMap):
         ----------
         method : {'raster','poly'}, optional
             Method for mapping HEALPix pixels to a two-dimensional
-            image.  Can be set to 'raster' (rasterization to cartesian
+            image. Can be set to 'raster' (rasterization to cartesian
             image plane) or 'poly' (explicit polygons for each pixel).
             WARNING: The 'poly' method is much slower than 'raster'
             and only suitable for maps with less than ~10k pixels.
@@ -1081,9 +1081,9 @@ class HpxNDMap(HpxMap):
             pixel. If this parameter is None then the width will be
             set from ``width_pix``. Default is 2.
         width_pix : int, optional
-            Width of the WCS geometry in pixels.  The pixel size will
+            Width of the WCS geometry in pixels. The pixel size will
             be set to the number of pixels satisfying ``oversample``
-            or ``width_pix`` whichever is smaller.  If this parameter
+            or ``width_pix`` whichever is smaller. If this parameter
             is None then the width will be set from ``oversample``.
             Default is 1000.
         **kwargs : dict
