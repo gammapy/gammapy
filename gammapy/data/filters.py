@@ -13,10 +13,10 @@ class ObservationFilter:
 
     Parameters
     ----------
-    time_filter : `astropy.time.Time`
-        Start and stop time of the selected time interval. For now we only support
-        a single time interval.
-    event_filters : list of dict
+    time_filter : `astropy.time.Time`, optional
+        Start and stop time of the selected time interval. Currently, we only support
+        a single time interval. Default is None.
+    event_filters : list of dict, optional
         An event filter dictionary needs two keys:
 
         - **type** : str, one of the keys in `~gammapy.data.ObservationFilter.EVENT_FILTER_TYPES`
@@ -25,7 +25,7 @@ class ObservationFilter:
           (see `~gammapy.data.ObservationFilter.EVENT_FILTER_TYPES`)
 
         The filtered event list will be an intersection of all filters. A union
-        of filters is not supported yet.
+        of filters is not supported yet. Default is None.
 
     Examples
     --------
@@ -66,12 +66,12 @@ class ObservationFilter:
         Parameters
         ----------
         events : `~gammapy.data.EventListBase`
-            Event list to which the filters will be applied
+            Event list to which the filters will be applied.
 
         Returns
         -------
         filtered_events : `~gammapy.data.EventListBase`
-            The filtered event list
+            The filtered event list.
         """
         filtered_events = self._filter_by_time(events)
 
@@ -87,17 +87,17 @@ class ObservationFilter:
         Parameters
         ----------
         gti : `~gammapy.data.GTI`
-            GTI table to which the filters will be applied
+            GTI table to which the filters will be applied.
 
         Returns
         -------
         filtered_gti : `~gammapy.data.GTI`
-            The filtered GTI table
+            The filtered GTI table.
         """
         return self._filter_by_time(gti)
 
     def _filter_by_time(self, data):
-        """Returns a new time filtered data object.
+        """Return a new time filtered data object.
 
         Calls the `select_time` method of the data object.
         """

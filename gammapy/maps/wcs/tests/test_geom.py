@@ -5,8 +5,9 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from astropy.io import fits
+from astropy.time import Time
 from regions import CircleSkyRegion
-from gammapy.maps import Map, MapAxis, WcsGeom
+from gammapy.maps import Map, MapAxis, TimeMapAxis, WcsGeom
 from gammapy.maps.utils import _check_binsz, _check_width
 
 axes1 = [MapAxis(np.logspace(0.0, 3.0, 3), interp="log", name="energy")]
@@ -637,3 +638,30 @@ def test_wcs_geom_no_zero_shape_cut():
 
     assert geom_cut.data_shape != (1, 0)
     assert geom_cut.data_shape == (1, 1)
+
+
+def test_wcs_geom_with_timeaxis():
+    center = SkyCoord("0d", "0d", frame="icrs")
+
+    t_ref = Time(55555, format="mjd")
+
+    energy_axis = MapAxis.from_energy_bounds(
+        "1 TeV", "10 TeV", nbin=3, name="energy_true"
+    )
+
+    time_min = t_ref + [1, 3, 5, 7] * u.day
+    time_max = t_ref + [2, 4, 6, 8] * u.day
+
+    time_axis = TimeMapAxis.from_time_edges(time_min=time_min, time_max=time_max)
+
+    wcs_geom = WcsGeom.create(
+        width=[1, 1.2], binsz=0.2, skydir=center, axes=[energy_axis, time_axis]
+    )
+
+    coords = wcs_geom.get_coord()
+    assert coords.shape == (4, 3, 6, 5)
+    assert_allclose(
+        coords[0][0][0][0:-1:5].value,
+        [[4.000e-01, 2.000e-01, 0.000e00, 3.598e02, 3.596e02]],
+        rtol=1e-5,
+    )

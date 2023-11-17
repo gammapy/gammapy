@@ -52,7 +52,7 @@ class MetaData(BaseModel):
     """Base model for all metadata classes in Gammapy."""
 
     class Config:
-        """Global config for all metadata."""
+        """Global configuration for all metadata."""
 
         extra = "allow"
         arbitrary_types_allowed = True
@@ -84,15 +84,14 @@ class MetaData(BaseModel):
 
         Parameters
         ----------
-        format : {'gadf'}
-            header format. Default is 'gadf'.
+        format : {'gadf'}, optional
+            Header format. Default is 'gadf'.
 
         Returns
         -------
         header : dict
-            the header dictionary
+            The header dictionary.
         """
-
         if format != "gadf":
             raise ValueError(f"Metadata to header: format {format} is not supported.")
 
@@ -129,9 +128,9 @@ class MetaData(BaseModel):
         Parameters
         ----------
         header : dict
-            the header dictionary
-        format : {'gadf'}
-            header format. Default is 'gadf'.
+            The header dictionary.
+        format : {'gadf'}, optional
+            Header format. Default is 'gadf'.
         """
         if format != "gadf":
             raise ValueError(f"Metadata from header: format {format} is not supported.")
@@ -159,8 +158,8 @@ class MetaData(BaseModel):
         return cls(**kwargs)
 
     def to_yaml(self):
-        """Dumps metadata content to yaml."""
-        meta = json.loads(self.json())
+        """Dump metadata content to yaml."""
+        meta = {"metadata": json.loads(self.json())}
         return yaml.dump(
             meta, sort_keys=False, indent=4, width=80, default_flow_style=False
         )
@@ -172,11 +171,11 @@ class CreatorMetaData(MetaData):
     Parameters
     ----------
     creator : str
-        the software used to create the data contained in the parent object
+        The software used to create the data contained in the parent object.
     date : `~astropy.time.Time` or str
-        the creation date
+        The creation date.
     origin : str
-        the organization at the origin of the data
+        The organization at the origin of the data.
     """
 
     _tag = "creator"
@@ -205,15 +204,15 @@ class ObsInfoMetaData(MetaData):
     Parameters
     ----------
     obs_id : str or int
-        the observation identifier.
+        The observation identifier.
     telescope : str, optional
-        the telescope/observatory name.
+        The telescope/observatory name.
     instrument : str, optional
-        the specific instrument used.
+        The specific instrument used.
     sub_array : str, optional
-        the specific sub-array used.
+        The specific sub-array used.
     observation_mode : str, optional
-        the observation mode.
+        The observation mode.
     """
 
     _tag = "obs_info"
@@ -272,7 +271,7 @@ class TargetMetaData(MetaData):
     Parameters
     ----------
     name : str, optional
-        the target name.
+        The target name.
     position : `~astropy.coordinates.SkyCoord`, optional
         Position of the observation in `icrs` frame.
 

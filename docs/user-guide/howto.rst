@@ -56,8 +56,9 @@ methods.
     :title: Group observations
     :link: ../tutorials/api/observation_clustering.html
 
- `~gammapy.data.Observations` can be grouped depending on a number of various quantities. The two methods to do so
-are manual grouping and hierarchical clustering. The quantity you group by can be adjusted according to each science case.
+`~gammapy.data.Observations` can be grouped depending on a number of various quantities.
+The two methods to do so are manual grouping and hierarchical clustering. The quantity
+you group by can be adjusted according to each science case.
 
 .. accordion-footer::
 
@@ -113,6 +114,19 @@ take the difference. Note that in Gammapy, the fit statistic is defined as ``S =
 :ref:`datasets` for an overview of fit statistics used.
 
 .. accordion-footer::
+
+
+.. accordion-header::
+    :id: HowToReduceData
+    :title: Perform data reduction loop with multi-processing
+    :link: ../tutorials/api/makers.html#data-reduction-loop
+
+There are two ways for the data reduction steps to be implemented. Either a loop is used to
+run the full reduction chain, or the reduction is performed with multi-processing tools by
+utilising the `~gammapy.makers.DatasetsMaker` to perform the loop internally.
+
+.. accordion-footer::
+
 
 .. accordion-header::
     :id: collapseHowToEight
