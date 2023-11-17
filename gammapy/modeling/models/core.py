@@ -492,7 +492,7 @@ class DatasetModels(collections.abc.Sequence):
         overwrite_templates : bool, optional
             Overwrite templates FITS files. Default is False.
         write_covariance : bool, optional
-            Save the covariance. Default is True.
+            Whether to save the covariance. Default is True.
         """
         base_path, _ = split(path)
         path = make_path(path)
@@ -712,7 +712,7 @@ class DatasetModels(collections.abc.Sequence):
         model_type : {'None', 'spatial', 'spectral'}, optional
            Type of model, used together with "tag", if the tag is not unique. Default is None.
         frozen : bool, optional
-            Select models with all parameters frozen if True, exclude them if False.  Default is None.
+            If True, select models with all parameters frozen; if False, exclude them.  Default is None.
 
         Returns
         -------

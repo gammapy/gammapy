@@ -440,10 +440,7 @@ class Parameter:
         return copy.deepcopy(self)
 
     def update_from_dict(self, data):
-        """Update parameters from a dictionary.
-
-        Protection against changing parameter model, type, name.
-        """
+        """Update parameters from a dictionary."""
         keys = ["value", "unit", "min", "max", "frozen", "prior"]
         for k in keys:
             setattr(self, k, data[k])
