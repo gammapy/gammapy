@@ -329,6 +329,7 @@ def test_excess_map_estimator_map_dataset_on_off_with_correlation_model(
 def test_excess_map_estimator_map_dataset_on_off_reco_exposure(
     simple_dataset_on_off,
 ):
+
     # TODO: this has never worked...
     model = SkyModel(
         PowerLawSpectralModel(amplitude="1e-9 cm-2 s-1TeV-1"),
