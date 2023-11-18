@@ -209,6 +209,9 @@ class MapDataset(Dataset):
         "mask_safe",
         "background",
     ]
+    # TODO: shoule be part of the LazyFitsData no ?
+    gti = None
+    meta_table = None
 
     def __init__(
         self,
