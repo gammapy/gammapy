@@ -34,6 +34,10 @@ class DatasetsActor(Datasets):
             datasets_list = []
             while datasets:
                 d0 = datasets[0]
+                if d0.tag != "MapDataset":
+                    raise TypeError(
+                        f"For now datasets parallel evaluation is only supported for MapDataset, got {d0.tag} instead"
+                    )
                 datasets_list.append(MapDatasetActor(d0))
                 datasets.remove(d0)  # moved to remote so removed from main process
             self._datasets = datasets_list
