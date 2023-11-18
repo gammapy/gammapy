@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
-from gammapy.datasets import Datasets
+from gammapy.datasets import Datasets, DatasetsActor
 from gammapy.estimators.parameter import ParameterEstimator
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling import Parameter
@@ -201,7 +201,8 @@ class FluxEstimator(ParameterEstimator):
         result : dict
             Dictionary with results for the flux point.
         """
-        datasets = Datasets(datasets)
+        if not isinstance(datasets, DatasetsActor):
+            datasets = Datasets(datasets)
         models = datasets.models.copy()
 
         model = self.get_scale_model(models)
