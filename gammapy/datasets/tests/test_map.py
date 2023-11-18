@@ -758,9 +758,9 @@ def test_map_fit_ray(sky_model, geom, geom_etrue):
     result = fit.run(datasets=actors)
 
     assert result.success
-    assert "minuit" in repr(result)
+    assert result.optimize_result.backend == "minuit"
 
-    npred = actors.npred[0].data.sum()
+    npred = actors[0].npred().data.sum()
     assert_allclose(npred, 7525.790688, rtol=1e-3)
     assert_allclose(result.total_stat, 21625.845714, rtol=1e-3)
 
