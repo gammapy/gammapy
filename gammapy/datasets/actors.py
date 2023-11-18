@@ -95,7 +95,7 @@ class RayFrontendMixin(object):
             self._to_update = {}
             return results
         else:
-            return super().__getattr__(name)
+            return super().__getattribute__(name)
 
     def __setattr__(self, name, value):
         if name in self._remote_attr:
@@ -134,13 +134,14 @@ class MapDatasetActor(RayFrontendMixin):
 
     _mutable_attr = ["models", "mask_fit"]
     _local_attr = ["name"]  # immutable small enough to keep and acces locally
-    _public_attr = [key for key in dir(MapDataset) if not key.startswith("_")]
+    _public_attr = [key for key in dir(MapDataset) if not key.startswith("__")]
 
     def __init__(self, dataset):
         from ray import get, remote
 
         self._ray_get = get
-        self._actor = remote(_MapDatasetActorBackend).remote(dataset)
+        self._actor = remote(_MapDatasetActorBackend).remote()
+        self._actor._from_dataset.remote(dataset)
         self._name = dataset.name
         self._to_update = {}
         self._cache = {}
@@ -179,7 +180,7 @@ class _MapDatasetActorBackend(MapDataset, RayBackendMixin):
         MapDataset
     """
 
-    def __init__(self, dataset):
+    def _from_dataset(self, dataset):
         self.__dict__.update(dataset.__dict__)
         if self.models is None:
             self.models = DatasetModels()
