@@ -58,7 +58,9 @@ class DatasetsActor(Datasets):
             results = self._ray_get(
                 [d._get_remote(name, **kwargs) for d in self._datasets]
             )
-            if "plot" in name:
+            # TODO restore to execute all methods execution in parallel
+            # if "plot" in name:
+            if True:
                 results = [res(**kwargs) for res in results]
             for d in self._datasets:
                 d._to_update = {}
@@ -117,10 +119,15 @@ class RayBackendMixin:
         for key, value in to_update.items():
             setattr(self, key, value)
         res = getattr(self, name)
-        if inspect.ismethod(res) and "plot" not in name:
-            return res(**kwargs)
-        else:
-            return res
+        # TODO restore to execute all methods execution in parallel
+        # but first move methods that loop over datasets to a separate base class
+        # otherwise they overtwrite the actors behaviour
+        # if inspect.ismethod(res) and "plot" not in name:
+        #     try:
+        #         res = res(**kwargs)
+        #     except:
+        #         return res
+        return res
 
 
 class MapDatasetActor(RayFrontendMixin):
