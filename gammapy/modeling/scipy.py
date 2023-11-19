@@ -49,13 +49,13 @@ class TSDifference:
         self.parameters = parameters
         self.function = function
         self.parameter = parameter
-        self.parameter.frozen = True
         self.ts_diff = ts_diff
         self.reoptimize = reoptimize
 
     def fcn(self, factor):
         self.parameter.factor = factor
         if self.reoptimize:
+            self.parameter.frozen = True
             optimize_scipy(self.parameters, self.function, method="L-BFGS-B")
         value = self.function() - self.stat_null - self.ts_diff
         return value
