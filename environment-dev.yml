@@ -48,7 +48,7 @@ dependencies:
   - reproject
   - sherpa
   # dev dependencies
-  - black
+  - black=22.6.0
   - codespell
   - flake8
   - isort
