@@ -191,7 +191,7 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
             energy_min=energy_min, energy_max=energy_max
         )
         if self.sum_over_energy_groups:
-            datasets_sliced = Datasets(
+            datasets_sliced = datasets_sliced.__class__(
                 [_.to_image(name=_.name) for _ in datasets_sliced]
             )
 
