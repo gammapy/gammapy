@@ -54,13 +54,14 @@ class DatasetsActor(Datasets):
     def __getattr__(self, name):
         """Get attribute from remote each dataset."""
 
-        def wrapper(**kwargs):
+        def wrapper(*args, **kwargs):
             results = self._ray_get(
-                [d._get_remote(name, **kwargs) for d in self._datasets]
+                [
+                    d._get_remote(name, *args, **kwargs, from_actors=True)
+                    for d in self._datasets
+                ]
             )
-            # TODO restore to execute all methods execution in parallel
-            # if "plot" in name:
-            if True:
+            if "plot" in name:
                 results = [res(**kwargs) for res in results]
             for d in self._datasets:
                 d._to_update = {}
@@ -73,7 +74,7 @@ class DatasetsActor(Datasets):
 
     def stat_sum(self):
         """Compute joint likelihood."""
-        results = self._ray_get([d._update_stat_sum() for d in self._datasets])
+        results = self._ray_get([d._update_stat_sum_remote() for d in self._datasets])
         return np.sum(results)
 
 
@@ -90,11 +91,10 @@ class RayFrontendMixin(object):
             if key not in self._mutable_attr + self._local_attr
         ]
 
-    def __getattr__(self, name, **kwargs):
+    def __getattr__(self, name):
         """Get attribute from remote."""
         if name in self._remote_attr:
-            results = self._ray_get(self._get_remote(name, **kwargs))
-            self._to_update = {}
+            results = self._ray_get(self._get_remote(name, from_actors=False))
             return results
         else:
             return super().__getattribute__(name)
@@ -108,26 +108,12 @@ class RayFrontendMixin(object):
                 self._to_update[name] = value
                 self._cache[name] = copy.deepcopy(value)
 
-    def _get_remote(self, attr, **kwargs):
-        return self._actor._get.remote(attr, self._to_update, **kwargs)
-
-
-class RayBackendMixin:
-    """Ray mixin for the remote class."""
-
-    def _get(self, name, to_update={}, **kwargs):
-        for key, value in to_update.items():
-            setattr(self, key, value)
-        res = getattr(self, name)
-        # TODO restore to execute all methods execution in parallel
-        # but first move methods that loop over datasets to a separate base class
-        # otherwise they overtwrite the actors behaviour
-        # if inspect.ismethod(res) and "plot" not in name:
-        #     try:
-        #         res = res(**kwargs)
-        #     except:
-        #         return res
-        return res
+    def _get_remote(self, attr, *args, from_actors=False, **kwargs):
+        results = self._actor._get.remote(
+            attr, *args, **kwargs, to_update=self._to_update, from_actors=from_actors
+        )
+        self._to_update = {}
+        return results
 
 
 class MapDatasetActor(RayFrontendMixin):
@@ -163,19 +149,56 @@ class MapDatasetActor(RayFrontendMixin):
     def name(self):
         return self._name
 
-    def _update_stat_sum(self):
-        values = self.models.parameters.get_parameter_values()
-        output = self._actor._update_stat_sum.remote(values, self._to_update)
+    def _update_stat_sum_remote(self):
+        self._check_parameters()
+        values = self.models.parameters.free_parameters.value
+        output = self._actor._update_stat_sum.remote(values, to_update=self._to_update)
         self._to_update = {}
         return output
 
-    def _get_remote(self, attr, **kwargs):
+    def _get_remote(self, attr, *args, from_actors=False, **kwargs):
+        self._check_models()
+        res = self._actor._get.remote(
+            attr, *args, to_update=self._to_update, from_actors=from_actors, **kwargs
+        )
+        self._to_update = {}
+        return res
+
+    def _check_models(self):
         if ~np.all(
             self.models.parameters.value == self._cache["models"].parameters.value
+        ) or len(self.models.parameters.free_parameters) != len(
+            self._cache["models"].parameters.free_parameters
         ):
             self._to_update["models"] = self.models
             self._cache["models"] = self.models.copy()
-        return self._actor._get.remote(attr, self._to_update, **kwargs)
+
+    def _check_parameters(self):
+
+        if self.models.parameters.names != self._cache[
+            "models"
+        ].parameters.names or len(self.models.parameters.free_parameters) != len(
+            self._cache["models"].parameters.free_parameters
+        ):
+            self._to_update["models"] = self.models
+            self._cache["models"] = self.models.copy()
+
+
+class RayBackendMixin:
+    """Ray mixin for the remote class."""
+
+    def _get(self, name, *args, to_update={}, from_actors=False, **kwargs):
+        for key, value in to_update.items():
+            setattr(self, key, value)
+        res = getattr(self, name)
+        if isinstance(res, property):
+            res = res()
+        elif inspect.ismethod(res) and from_actors and "plot" not in name:
+            try:
+                res = res(*args, **kwargs)
+            except TypeError:
+                return res
+        return res
 
 
 class _MapDatasetActorBackend(MapDataset, RayBackendMixin):
@@ -195,5 +218,5 @@ class _MapDatasetActorBackend(MapDataset, RayBackendMixin):
     def _update_stat_sum(self, values, to_update={}):
         for key, value in to_update.items():
             setattr(self, key, value)
-        self.models.parameters.set_parameter_values(values)
+        self.models.parameters.free_parameters.value = values
         return self.stat_sum()
