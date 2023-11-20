@@ -38,7 +38,10 @@ class DatasetsActor(Datasets):
                     raise TypeError(
                         f"For now datasets parallel evaluation is only supported for MapDataset, got {d0.tag} instead"
                     )
-                datasets_list.append(MapDatasetActor(d0))
+                if isinstance(d0, MapDatasetActor):
+                    datasets_list.append(d0)
+                else:
+                    datasets_list.append(MapDatasetActor(d0))
                 datasets.remove(d0)  # moved to remote so removed from main process
             self._datasets = datasets_list
             self._ray_get = get
