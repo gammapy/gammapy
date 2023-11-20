@@ -524,7 +524,7 @@ class MapDatasetEventSampler:
         meta["N_TELS"] = ""
         meta["TELLIST"] = ""
 
-        meta["CREATED"] = ""
+        meta["CREATED"] = Time.now().iso
         meta["OBS_MODE"] = "POINTING"
         meta["EV_CLASS"] = ""
 
