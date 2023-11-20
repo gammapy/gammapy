@@ -56,7 +56,7 @@ class HpxGeom(Geom):
     nest : bool
         Indexing scheme. If True, "NESTED" scheme. If False, "RING" scheme.
     frame : {"icrs", "galactic"}
-        Coordinate system.
+        Coordinate system. Default is "icrs".
     region : str or tuple
         Spatial geometry for partial-sky maps. If None, the map will
         encompass the whole sky. String input will be parsed
@@ -138,7 +138,7 @@ class HpxGeom(Geom):
             raise ValueError(f"Invalid region string: {region!r}")
 
     def local_to_global(self, idx_local):
-        """Compute a local index (partial-sky) from a global (all-sky) index.
+        """Compute a global index (all-sky) from a local (partial-sky) index.
 
         Parameters
         ----------

@@ -458,7 +458,7 @@ class HpxNDMap(HpxMap):
         width : `~astropy.units.Quantity`, str or float
             Smoothing width given as quantity or float. If a float is given it is
             interpreted as smoothing width in pixels. If an (angular) quantity
-            is given it is converted to pixels using ``healpy.nside2resol``.
+            is given it is converted to pixels using `~healpy.nside2resol`.
             It corresponds to the standard deviation in case of a Gaussian kernel,
             and the radius in case of a disk kernel.
         kernel : {'gauss', 'disk'}, optional
@@ -646,7 +646,7 @@ class HpxNDMap(HpxMap):
         """Convolve map with a symmetrical WCS kernel.
 
         Extract the radial profile of the kernel (assuming radial symmetry) and
-        convolve via `healpy.sphtfunc.smoothing`. Since no projection is applied, this is
+        convolve via `~healpy.sphtfunc.smoothing`. Since no projection is applied, this is
         suited for full-sky and large maps.
 
         If the kernel is two-dimensional, it is applied to all image planes likewise.
