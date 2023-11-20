@@ -43,6 +43,9 @@ class DatasetsActor(Datasets):
             self._datasets = datasets_list
             self._ray_get = get
 
+        # trigger actors auto_init_wrapper (so overhead so appears on init)
+        self.name
+
     def insert(self, idx, dataset):
         if isinstance(dataset, Dataset):
             if dataset.name in self.names:
