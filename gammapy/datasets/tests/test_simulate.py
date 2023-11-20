@@ -237,16 +237,19 @@ def test_sample_coord_time_energy(dataset, energy_dependent_temporal_sky_model):
     energy_dependent_temporal_sky_model.spatial_model = PointSpatialModel(
         lon_0="0 deg", lat_0="0 deg", frame="galactic"
     )
+    energy_dependent_temporal_sky_model.spectral_model.const.value = 2
+
     dataset.models = energy_dependent_temporal_sky_model
     evaluator = dataset.evaluators["test-source"]
 
+    expected = np.array([854.26361, 7.840697, 266.404988, -28.936178])
     events = sampler._sample_coord_time_energy(dataset, evaluator.model)
 
-    assert len(events) == 1254
+    assert len(events) == 2514
 
     assert_allclose(
         [events[0][0], events[0][1], events[0][2], events[0][3]],
-        [854.108591, 6.22904, 266.404988, -28.936178],
+        expected,
         rtol=1e-6,
     )
 
