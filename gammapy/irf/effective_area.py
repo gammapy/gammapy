@@ -80,7 +80,7 @@ class EffectiveAreaTable2D(IRF):
         offset : `~astropy.coordinates.Angle`, optional
             Offset. Default is None.
         kwargs : dict
-            Forwarded tp plt.plot().
+            Forwarded to plt.plot().
 
         Returns
         -------
@@ -211,10 +211,11 @@ class EffectiveAreaTable2D(IRF):
 
         Parameters
         ----------
-        energy_axis_true : `MapAxis`
+        energy_axis_true : `MapAxis`, optional
             Energy binning, analytic function is evaluated at log centers.
-        instrument : {'HESS', 'HESS2', 'CTA'}
-            Instrument name.
+            Default is None.
+        instrument : {'HESS', 'HESS2', 'CTA'}, optional
+            Instrument name. Default is 'HESS'.
 
         Returns
         -------

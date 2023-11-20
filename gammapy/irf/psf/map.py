@@ -156,7 +156,8 @@ class PSFMap(IRFMap):
         energy_true : `~astropy.units.Quantity`
             Energy true value.
         position : `~astropy.coordinates.SkyCoord`, optional
-            Sky position. By default, the center of the map is chosen.
+            Sky position. If None, the center of the map is chosen.
+            Default is None.
 
         Returns
         -------
@@ -180,7 +181,8 @@ class PSFMap(IRFMap):
         energy_true : `~astropy.units.Quantity`
             Energy true value.
         position : `~astropy.coordinates.SkyCoord`, optional
-            Sky position. By default, the center of the map is chosen.
+            Sky position. If None, the center of the map is chosen.
+            Default is None.
 
         Returns
         -------

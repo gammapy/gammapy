@@ -41,16 +41,20 @@ class IRF(metaclass=abc.ABCMeta):
     -----------
     axes : list of `MapAxis` or `MapAxes`
         Axes.
-    data : `~numpy.ndarray` or `~astropy.units.Quantity`
-        Data.
-    unit : str or `~astropy.units.Unit`
+    data : `~numpy.ndarray` or `~astropy.units.Quantity`, optional
+        Data. Default is 0.
+    unit : str or `~astropy.units.Unit`, optional
         Unit, ignored if data is a Quantity.
-    is_pointlike : boolean
-        True for point-like IRFs, False for full-enclosure.
-    fov_alignment : `FoVAlignment`
+        Default is "".
+    is_pointlike : bool, optional
+        Whether the IRF is point-like. True for point-like IRFs, False for full-enclosure.
+        Default is False.
+    fov_alignment : `FoVAlignment`, optional
         The orientation of the field of view coordinate system.
-    meta : dict
+        Default is FoVAlignment.RADEC.
+    meta : dict, optional
         Metadata dictionary.
+        Default is None.
     """
 
     default_interp_kwargs = dict(
@@ -612,7 +616,7 @@ class IRF(metaclass=abc.ABCMeta):
             Relative tolerance for the axis comparison.
             Default is 1e-3.
         atol_axes : float, optional
-            Relative tolerance for the axis comparison.
+            Absolute tolerance for the axis comparison.
             Default is 1e-6.
         **kwargs : dict
             Keywords passed to `numpy.allclose`.

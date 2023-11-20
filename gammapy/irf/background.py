@@ -150,7 +150,7 @@ class Background3D(BackgroundIRF):
 
         Parameters
         ----------
-        figsize : tuple optional
+        figsize : tuple, optional
             Size of the figure. Default is (10, 8).
 
         """
@@ -164,7 +164,7 @@ class Background3D(BackgroundIRF):
         Parameters
         ----------
         energy : `~astropy.units.Quantity`
-            List of energy.
+            List of energies.
         add_cbar : bool, optional
             Add color bar. Default is True.
         ncols : int, optional

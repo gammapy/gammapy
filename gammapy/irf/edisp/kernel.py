@@ -26,7 +26,7 @@ class EDispKernel(IRF):
     energy_axis : `~gammapy.maps.MapAxis`
         Reconstructed energy axis. Its name must be "energy".
     data : array_like
-        2-dim energy dispersion matrix.
+        2D energy dispersion matrix.
 
     Examples
     --------

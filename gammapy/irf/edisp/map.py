@@ -26,7 +26,7 @@ class EDispMap(IRFMap):
     Parameters
     ----------
     edisp_map : `~gammapy.maps.Map`
-        The input Energy Dispersion Map. Should be a Map with 2 non spatial axes.
+        The input Energy Dispersion Map. Should be a Map with 2 non-spatial axes.
         migra and true energy axes should be given in this specific order.
     exposure_map : `~gammapy.maps.Map`, optional
         Associated exposure map. Needs to have a consistent map geometry.
@@ -283,7 +283,7 @@ class EDispKernelMap(IRFMap):
     Parameters
     ----------
     edisp_kernel_map : `~gammapy.maps.Map`
-        The input energy dispersion kernel map. Should be a Map with 2 non spatial axes.
+        The input energy dispersion kernel map. Should be a Map with 2 non-spatial axes.
         Reconstructed and true energy axes should be given in this specific order.
     exposure_map : `~gammapy.maps.Map`, optional
         Associated exposure map. Needs to have a consistent map geometry.
@@ -377,8 +377,9 @@ class EDispKernelMap(IRFMap):
             Energy axis.
         energy_axis_true : `~gammapy.maps.MapAxis`
             True energy axis
-        geom : `~gammapy.maps.Geom`
-            The (2D) geom object to use. Default creates an all sky geometry with 2 bins.
+        geom : `~gammapy.maps.Geom`, optional
+            The (2D) geometry object to use. If None, an all sky geometry with 2 bins is created.
+            Default is None.
 
         Returns
         -------
@@ -404,8 +405,9 @@ class EDispKernelMap(IRFMap):
         ----------
         edisp : `~gammapy.irfs.EDispKernel`
             The input 1D kernel.
-        geom : `~gammapy.maps.Geom`
-            The (2D) geom object to use. Default creates an all sky geometry with 2 bins.
+        geom : `~gammapy.maps.Geom`, optional
+            The (2D) geometry object to use. If None, an all sky geometry with 2 bins is created.
+            Default is None.
 
         Returns
         -------
@@ -441,8 +443,9 @@ class EDispKernelMap(IRFMap):
             RMS width of Gaussian energy dispersion, resolution.
         pdf_threshold : float, optional
             Zero suppression threshold. Default is 1e-6.
-        geom : `~gammapy.maps.Geom`
-            The (2D) geom object to use. Default creates an all sky geometry with 2 bins.
+        geom : `~gammapy.maps.Geom`, optional
+            The (2D) geometry object to use. If None, an all sky geometry with 2 bins is created.
+            Default is None.
 
         Returns
         -------

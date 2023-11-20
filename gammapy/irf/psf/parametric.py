@@ -20,7 +20,7 @@ class ParametricPSF(PSF):
     ----------
     axes : list of `MapAxis` or `MapAxes`
         Axes.
-    data : dict of `~numpy.ndarray`, or `~numpy.recarray`
+    data : dict of `~numpy.ndarray` or `~numpy.recarray`
         Data.
     unit : dict of str or `~astropy.units.Unit`
         Unit.
@@ -305,7 +305,7 @@ class EnergyDependentMultiGaussPSF(ParametricPSF):
     data : `~numpy.recarray`
         Data array.
     meta : dict
-        Meta data.
+        Metadata dictionary.
 
     Examples
     --------
