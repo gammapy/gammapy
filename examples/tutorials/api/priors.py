@@ -62,15 +62,12 @@ The setup
 
 """
 
-from itertools import combinations
 import numpy as np
 from astropy import units as u
 import matplotlib.pyplot as plt
-from IPython.display import display
 from gammapy.datasets import Datasets, SpectrumDatasetOnOff
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
-    FoVBackgroundModel,
     GaussianPrior,
     Models,
     PowerLawSpectralModel,
@@ -78,7 +75,6 @@ from gammapy.modeling.models import (
     UniformPrior,
 )
 from gammapy.utils.check import check_tutorials_setup
-from gammapy.visualization.utils import plot_contour_line
 
 ######################################################################
 # Check setup
