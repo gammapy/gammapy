@@ -395,7 +395,7 @@ class Map(abc.ABC):
             Overwrite existing file. Default is False.
         hdu : str, optional
             Set the name of the image extension. By default, this will
-            be set to SKYMAP (for BINTABLE HDU) or PRIMARY (for IMAGE
+            be set to 'SKYMAP' (for BINTABLE HDU) or 'PRIMARY' (for IMAGE
             HDU).
         hdu_bands : str, optional
             Set the name of the bands table extension. Default is 'BANDS'.
@@ -707,7 +707,7 @@ class Map(abc.ABC):
             to `other` and additional axes must be broadcastable. If set to None, weights will be set to 1.
             Default is None.
         ufunc : `~numpy.ufunc`
-            ufunc to use to resample the axis. Default is `numpy.add`.
+            Universal function to use to resample the axis. Default is `numpy.add`.
 
         Returns
         -------
@@ -1534,7 +1534,7 @@ class Map(abc.ABC):
         Parameters
         ----------
          axes_names: list of str
-            Names of the axis to reduce over. If None, all non-spatial axis will be summed over.
+            Names of the axis to reduce over. If None, all non-spatial axis will be summed over. Default is None.
         keepdims : bool, optional
             If this is set to true, the axes which are summed over are left in
             the map with a single bin. Default is True.
