@@ -231,7 +231,7 @@ class Map(abc.ABC):
             Name or index of the HDU with the BANDS table.  If not
             defined this will be inferred from the FITS header of the
             map HDU. Default is None.
-        map_type : {'wcs', 'wcs-sparse', 'hpx', 'hpx-sparse', 'auto', 'region'}
+        map_type : {'auto', 'wcs', 'wcs-sparse', 'hpx', 'hpx-sparse', 'region'}
             Map type. Selects the class that will be used to
             instantiate the map. The map type should be consistent
             with the format of the input file. If map_type is 'auto'
@@ -541,7 +541,7 @@ class Map(abc.ABC):
             Number of pixels padded to the edges of each axis.
         axis_name : str, optional
             Which axis to downsample. By default, spatial axes are padded. Default is None.
-        mode : {'edge', 'constant', 'interp'}
+        mode : {'constant', 'edge', 'interp'}
             Padding mode.  'edge' pads with the closest edge value.
             'constant' pads with a constant value. 'interp' pads with
             an extrapolated value. Default is 'constant'.
@@ -921,7 +921,7 @@ class Map(abc.ABC):
         Returns
         -------
         vals : `~numpy.ndarray`
-           Array of pixel values. `~numpy.nan` is used to flag coordinates
+           Array of pixel values. `numpy.nan` is used to flag coordinates
            outside the map.
         """
         # FIXME: Support local indexing here?
@@ -1841,7 +1841,7 @@ class Map(abc.ABC):
         rtol_axes : float, optional
             Relative tolerance for the axes' comparison. Default is 1e-3.
         atol_axes : float, optional
-            Relative tolerance for the axes' comparison. Default is 1e-6.
+            Absolute tolerance for the axes' comparison. Default is 1e-6.
         **kwargs : dict, optional
                 Keywords passed to `~numpy.allclose`.
 
