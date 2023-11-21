@@ -1032,7 +1032,7 @@ class MapAxis:
     def upsample(self, factor):
         """Upsample map axis by a given factor.
 
-        When up-sampling for each node specified in the axis, the corresponding
+        When upsampling for each node specified in the axis, the corresponding
         number of sub-nodes are introduced and preserving the initial nodes. For
         node type "edges" this results in nbin * factor new bins. For node type
         "center" this results in (nbin - 1) * factor + 1 new bins.
@@ -1040,12 +1040,12 @@ class MapAxis:
         Parameters
         ----------
         factor : int
-            Up-sampling factor.
+            Upsampling factor.
 
         Returns
         -------
         axis : `MapAxis`
-            Up-sampled map axis.
+            Upsampled map axis.
 
         """
         if self.node_type == "edges":
@@ -1062,9 +1062,9 @@ class MapAxis:
             return self.from_nodes(nodes, name=self.name, interp=self.interp)
 
     def downsample(self, factor):
-        """Down-sample map axis by a given factor.
+        """Downsample map axis by a given factor.
 
-        When down-sampling each n-th (given by the factor) bin is selected from
+        When downsampling each n-th (given by the factor) bin is selected from
         the axis while preserving the axis limits. For node type "edges" this
         requires nbin to be dividable by the factor, for node type "center" this
         requires nbin - 1 to be dividable by the factor.
@@ -1072,12 +1072,12 @@ class MapAxis:
         Parameters
         ----------
         factor : int
-            Down-sampling factor.
+            Downsampling factor.
 
         Returns
         -------
         axis : `MapAxis`
-            Down-sampled map axis.
+            Downsampled map axis.
         """
         if self.node_type == "edges":
             nbin = self.nbin / factor
@@ -1576,14 +1576,14 @@ class MapAxes(Sequence):
         return self.__class__(list(self) + list(other))
 
     def upsample(self, factor, axis_name):
-        """Up-sample axis by a given factor.
+        """Upsample axis by a given factor.
 
         Parameters
         ----------
         factor : int
-            Up-sampling factor.
+            Upsampling factor.
         axis_name : str
-            Axis to up-sample.
+            Axis to upsample.
 
         Returns
         -------
@@ -1664,14 +1664,14 @@ class MapAxes(Sequence):
         return self.__class__(axes=axes)
 
     def downsample(self, factor, axis_name):
-        """Down-sample axis by a given factor.
+        """Downsample axis by a given factor.
 
         Parameters
         ----------
         factor : int
-            Down-sampling factor.
+            Downsampling factor.
         axis_name : str
-            Axis to Down-sample.
+            Axis to downsample.
 
         Returns
         -------
