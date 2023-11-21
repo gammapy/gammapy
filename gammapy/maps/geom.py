@@ -89,7 +89,7 @@ class Geom(abc.ABC):
         Parameters
         ----------
         dtype : str, optional
-            The desired data-type for the array. Default is "float32"
+            The desired data-type for the array. Default is "float32".
 
         Returns
         -------

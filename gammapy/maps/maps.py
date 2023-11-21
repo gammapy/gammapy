@@ -24,7 +24,7 @@ class Maps(MutableMapping):
 
     @property
     def geom(self):
-        """Map geometry as a `Geom` object."""
+        """Map geometry as a `~gammapy.maps.Geom` object."""
         return self._geom
 
     def __setitem__(self, key, value):
