@@ -21,7 +21,7 @@ log = logging.getLogger(__name__)
 
 def convolved_map_dataset_counts_statistics(dataset, kernel, mask, correlate_off):
     """Return CountsDataset objects containing smoothed maps from the MapDataset."""
-    #TODO: Add a full docstring
+    # TODO: Add a full docstring
     # Kernel is modified later make a copy here
     kernel = copy.deepcopy(kernel)
     kernel_data = kernel.data / kernel.data.max()
@@ -293,7 +293,7 @@ class ExcessMapEstimator(Estimator):
         return reco_exposure
 
     def estimate_excess_map(self, dataset):
-        """Estimate excess and ts maps for a single dataset.
+        """Estimate excess and test statistic maps for a single dataset.
 
         If exposure is defined, a flux map is also computed.
 

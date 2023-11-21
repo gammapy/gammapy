@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Functions to compute TS images."""
+"""Functions to compute test statistic images."""
 import warnings
 from itertools import repeat
 import numpy as np
@@ -48,7 +48,7 @@ def _extract_array(array, shape, position):
 
 
 class TSMapEstimator(Estimator, parallel.ParallelMixin):
-    r"""Compute TS map from a MapDataset using different optimization methods.
+    r"""Compute test statistic map from a MapDataset using different optimization methods.
 
     The map is computed fitting by a single parameter norm fit. The fit is
     simplified by finding roots of the derivative of the fit statistics using
@@ -72,7 +72,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         values that are a multiple of 2 are allowed. Note that the kernel is
         not sampled down, but must be provided with the downsampled bin size.
     threshold : float, optional
-        If the TS value corresponding to the initial flux estimate is not above
+        If the test statistic value corresponding to the initial flux estimate is not above
         this threshold, the optimizing step is omitted to save computing time. Default is None.
     rtol : float
         Relative precision of the flux estimate. Used as a stopping criterion for
@@ -307,7 +307,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
     @staticmethod
     def estimate_mask_default(dataset):
-        """Compute default mask where to estimate TS values.
+        """Compute default mask where to estimate test statistic values.
 
         Parameters
         ----------
@@ -408,7 +408,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         }
 
     def estimate_flux_map(self, dataset):
-        """Estimate flux and ts maps for single dataset.
+        """Estimate flux and test statistic maps for single dataset.
 
         Parameters
         ----------
@@ -452,7 +452,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
     def run(self, dataset):
         """
-        Run TS map estimation.
+        Run test statistic map estimation.
 
         Requires a MapDataset with counts, exposure and background_model
         properly set to run.
@@ -471,8 +471,8 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         maps : dict
              Dictionary containing result maps. Keys are:
 
-                * ts : delta TS map
-                * sqrt_ts : sqrt(delta TS), or significance map
+                * ts : delta(TS) map
+                * sqrt_ts : sqrt(delta(TS)), or significance map
                 * flux : flux map
                 * flux_err : symmetric error map
                 * flux_ul : upper limit map.
@@ -560,17 +560,17 @@ class SimpleMapDataset:
         return self.background + norm * self.model
 
     def stat_sum(self, norm):
-        """Stat sum."""
+        """Statistics sum."""
         return cash_sum_cython(self.counts.ravel(), self.npred(norm).ravel())
 
     def stat_derivative(self, norm):
-        """Stat derivative."""
+        """Statistics derivative."""
         return f_cash_root_cython(
             norm, self.counts.ravel(), self.background.ravel(), self.model.ravel()
         )
 
     def stat_2nd_derivative(self, norm):
-        """Stat 2nd derivative."""
+        """Statistics 2nd derivative."""
         term_top = self.model**2 * self.counts
         term_bottom = (self.background + norm * self.model) ** 2
         mask = term_bottom == 0
@@ -803,7 +803,7 @@ class BrentqFluxEstimator(Estimator):
 
 
 def _ts_value(position, counts, exposure, background, kernel, norm, flux_estimator):
-    """Compute TS value at a given pixel position.
+    """Compute test statistic value at a given pixel position.
 
     Uses approach described in Stewart (2009).
 
@@ -826,7 +826,7 @@ def _ts_value(position, counts, exposure, background, kernel, norm, flux_estimat
     Returns
     -------
     TS : float
-        TS value at the given pixel position.
+        Test statistic value at the given pixel position.
     """
     dataset = SimpleMapDataset.from_arrays(
         counts=counts,

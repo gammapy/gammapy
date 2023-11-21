@@ -120,7 +120,7 @@ class FluxPoints(FluxMaps):
         filename : str
             Filename.
         sed_type : {"dnde", "flux", "eflux", "e2dnde", "likelihood"}
-            Sed type.
+            SED type.
         format : {"gadf-sed", "lightcurve"}, optional
             Format string. Default is "gadf-sed".
         reference_model : `SpectralModel`
@@ -164,11 +164,11 @@ class FluxPoints(FluxMaps):
         filename : str
             Filename.
         sed_type : {"dnde", "flux", "eflux", "e2dnde", "likelihood"}, optional
-            Sed type. Default is None.
+            SED type. Default is None.
         format : {"gadf-sed", "lightcurve", "binned-time-series", "profile"}
             Format specification. The following formats are supported:
 
-            * "gadf-sed": format for sed flux points see :ref:`gadf:flux-points`
+            * "gadf-sed": format for SED flux points see :ref:`gadf:flux-points`
                 for details.
             * "lightcurve": Gammapy internal format to store energy dependent
                 lightcurves. Basically a generalisation of the "gadf" format, but
@@ -231,7 +231,7 @@ class FluxPoints(FluxMaps):
         table : `~astropy.table.Table`
             Table.
         sed_type : {"dnde", "flux", "eflux", "e2dnde", "likelihood"}, optional
-            Sed type. Default is None.
+            SED type. Default is None.
         format : {"gadf-sed", "lightcurve", "profile"}
             Table format. Default is "gadf-sed".
         reference_model : `SpectralModel`, optional
@@ -253,7 +253,7 @@ class FluxPoints(FluxMaps):
             sed_type = cls._guess_sed_type(table.colnames)
 
         if sed_type is None:
-            raise ValueError("Specifying the sed type is required")
+            raise ValueError("Specifying the SEDtype is required")
 
         if sed_type == "likelihood":
             table = cls._convert_loglike_columns(table)
@@ -311,11 +311,11 @@ class FluxPoints(FluxMaps):
         Parameters
         ----------
         sed_type : {"likelihood", "dnde", "e2dnde", "flux", "eflux"}
-            Sed type to convert to. Default is `likelihood`.
+            SED type to convert to. Default is `likelihood`.
         format : {"gadf-sed", "lightcurve", "binned-time-series", "profile"}
             Format specification. The following formats are supported:
 
-                * "gadf-sed": format for sed flux points see :ref:`gadf:flux-points`
+                * "gadf-sed": format for SED flux points see :ref:`gadf:flux-points`
                   for details
                 * "lightcurve": Gammapy internal format to store energy dependent
                   lightcurves. Basically a generalisation of the "gadf" format, but
@@ -481,7 +481,7 @@ class FluxPoints(FluxMaps):
         return model.inverse(dnde_mean)
 
     def _plot_get_flux_err(self, sed_type=None):
-        """Compute flux error for given sed type"""
+        """Compute flux error for given SED type"""
         y_errn, y_errp = None, None
 
         if "norm_err" in self.available_quantities:
@@ -503,7 +503,7 @@ class FluxPoints(FluxMaps):
         ax : `~matplotlib.axes.Axes`, optional
             Axis object to plot on. Default is None.
         sed_type : {"dnde", "flux", "eflux", "e2dnde"}, optional
-            Sed type. Default is None.
+            SED type. Default is None.
         energy_power : float, optional
             Power of energy to multiply flux axis with. Default is 0.
         time_format : {"iso", "mjd"}
@@ -576,7 +576,7 @@ class FluxPoints(FluxMaps):
         ax : `~matplotlib.axes.Axes`, optional
             Axis object to plot on. Default is None.
         sed_type : {"dnde", "flux", "eflux", "e2dnde"}, optional
-            Sed type. Default is None.
+            SED type. Default is None.
         add_cbar : bool, optional
             Whether to add a colorbar to the plot. Default is True.
         **kwargs : dict, optional
@@ -661,7 +661,7 @@ class FluxPoints(FluxMaps):
 
     def recompute_ul(self, n_sigma_ul=2, **kwargs):
         """Recompute upper limits corresponding to the given value.
-        The pre-computed stat profiles must exist for the re-computation.
+        The pre-computed statistic profiles must exist for the re-computation.
 
         Parameters
         ----------

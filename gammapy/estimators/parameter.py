@@ -12,7 +12,7 @@ class ParameterEstimator(Estimator):
     """Model parameter estimator.
 
     Estimates a model parameter for a group of datasets. Compute best fit value,
-    symmetric and delta TS for a given null value. Additionally asymmetric errors
+    symmetric and delta(TS) for a given null value. Additionally asymmetric errors
     as well as parameter upper limit and fit statistic profile can be estimated.
 
     Parameters
@@ -109,7 +109,7 @@ class ParameterEstimator(Estimator):
         Returns
         -------
         result : dict
-            Dictionary with the TS of the best fit value compared to the null hypothesis. Entries are:
+            Dictionary with the test statistic of the best fit value compared to the null hypothesis. Entries are:
 
                 * "ts" : fit statistic difference with null hypothesis.
                 * "npred" : predicted number of counts per dataset.
@@ -176,7 +176,7 @@ class ParameterEstimator(Estimator):
         }
 
     def estimate_scan(self, datasets, parameter):
-        """Estimate parameter stat scan.
+        """Estimate parameter statistic scan.
 
         Parameters
         ----------

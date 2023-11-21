@@ -123,7 +123,7 @@ def find_peaks(image, threshold, min_distance=1):
 
 
 def find_peaks_in_flux_map(maps, threshold, min_distance=1):
-    """Find local TS peaks for a given Map.
+    """Find local test statistic peaks for a given Map.
 
     Utilises the find_peaks function to find various parameters from FluxMaps.
 
@@ -132,7 +132,7 @@ def find_peaks_in_flux_map(maps, threshold, min_distance=1):
     maps : `~gammapy.estimators.map.FluxMaps`
         Input flux map object.
     threshold : float or array-like
-        The TS data value or pixel-wise TS data values to be used for the
+        The test statistic data value or pixel-wise test statistic data values to be used for the
         detection threshold.  A 2D ``threshold`` must have the same.
         shape as the map ``data``.
     min_distance : int or `~astropy.units.Quantity`

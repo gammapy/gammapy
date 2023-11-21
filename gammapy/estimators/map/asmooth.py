@@ -23,12 +23,12 @@ def _sqrt_ts_asmooth(counts, background):
 class ASmoothMapEstimator(Estimator):
     """Adaptively smooth counts image.
 
-    Achieves a roughly constant sqrt_ts of features across the whole image.
+    Achieves a roughly constant sqrt(TS) of features across the whole image.
 
     Algorithm based on https://ui.adsabs.harvard.edu/abs/2006MNRAS.368...65E .
 
     The algorithm was slightly adapted to also allow Li & Ma  to estimate the
-    sqrt_ts of a feature in the image.
+    sqrt(TS) of a feature in the image.
 
     Parameters
     ----------

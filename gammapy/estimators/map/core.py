@@ -120,7 +120,7 @@ class FluxMaps:
     ----------
     data : dict of `~gammapy.maps.Map`
         The maps dictionary. Expected entries are the following:
-        
+
         * norm : the norm factor.
         * norm_err : optional, the error on the norm factor.
         * norm_errn : optional, the negative error on the norm factor.
@@ -128,10 +128,10 @@ class FluxMaps:
         * norm_ul : optional, the upper limit on the norm factor.
         * norm_scan : optional, the norm values of the test statistic scan.
         * stat_scan : optional, the test statistic scan values.
-        * ts : optional, the delta TS associated with the flux value.
-        * sqrt_ts : optional, the square root of the TS, when relevant.
+        * ts : optional, the delta test statistic associated with the flux value.
+        * sqrt_ts : optional, the square root of the test statistic, when relevant.
         * success : optional, a boolean tagging the validity of the estimation.
-        
+
     reference_model : `~gammapy.modeling.models.SkyModel`, optional
         The reference model to use for conversions. If None, a model consisting
         of a point source with a power law spectrum of index 2 is assumed.
@@ -178,17 +178,17 @@ class FluxMaps:
 
     @staticmethod
     def all_quantities(sed_type):
-        """All quantities allowed for a given sed type.
+        """All quantities allowed for a given SED type.
 
         Parameters
         ----------
         sed_type : {"likelihood", "dnde", "e2dnde", "flux", "eflux"}
-            Sed type.
+            SED type.
 
         Returns
         -------
         list : list of str
-            All allowed quantities for a given sed type.
+            All allowed quantities for a given SED type.
         """
         quantities = []
         quantities += REQUIRED_MAPS[sed_type]
@@ -215,7 +215,7 @@ class FluxMaps:
         if not required.issubset(keys):
             missing = required.difference(keys)
             raise ValueError(
-                "Missing data / column for sed type '{}':"
+                "Missing data / column for SED type '{}':"
                 " {}".format(sed_type, missing)
             )
 
@@ -237,7 +237,7 @@ class FluxMaps:
 
     @property
     def is_convertible_to_flux_sed_type(self):
-        """Check whether differential sed type is convertible to integral sed type."""
+        """Check whether differential SED type is convertible to integral SED type."""
         if self.sed_type_init in ["dnde", "e2dnde"]:
             return self.energy_axis.node_type == "edges"
 
@@ -250,12 +250,12 @@ class FluxMaps:
 
     @property
     def has_any_ts(self):
-        """Whether the flux estimate has either sqrt(ts) or ts defined."""
+        """Whether the flux estimate has either sqrt(TS) or test statistic defined."""
         return any(_ in self._data for _ in ["ts", "sqrt_ts"])
 
     @property
     def has_stat_profiles(self):
-        """Whether the flux estimate has stat profiles."""
+        """Whether the flux estimate has test statistic profiles."""
         return "stat_scan" in self._data
 
     @property
@@ -292,16 +292,16 @@ class FluxMaps:
         if self.has_any_ts:
             self.is_ul = self.sqrt_ts < self.sqrt_ts_threshold_ul
         else:
-            raise ValueError("Either ts or sqrt_ts is required to set the threshold")
+            raise ValueError("Either TS or sqrt_ts is required to set the threshold")
 
     @property
     def sed_type_init(self):
-        """Initial sed type."""
+        """Initial SED type."""
         return self.meta.get("sed_type_init")
 
     @property
     def sed_type_plot_default(self):
-        """Initial sed type."""
+        """Initial SED type."""
         if self.sed_type_init == "likelihood":
             return "dnde"
 
@@ -498,13 +498,13 @@ class FluxMaps:
 
     @property
     def ts(self):
-        """ts map as a `Map`."""
+        """Test statistic map as a `Map` object."""
         self._check_quantity("ts")
         return self._data["ts"]
 
     @property
     def ts_scan(self):
-        """ts scan (`Map`)"""
+        """Test statistic scan as a `Map` object"""
         return self.stat_scan - np.expand_dims(self.stat.data, 2)
 
     # TODO: always derive sqrt(TS) from TS?
@@ -587,7 +587,7 @@ class FluxMaps:
         """Reference integral flux."""
         if not self.is_convertible_to_flux_sed_type:
             raise ValueError(
-                "Missing energy range definition, cannot convert to sed type 'flux'."
+                "Missing energy range definition, cannot convert to SED type 'flux'."
             )
 
         energy_min = self.energy_axis.edges[:-1]
@@ -600,7 +600,7 @@ class FluxMaps:
         """Reference energy flux."""
         if not self.is_convertible_to_flux_sed_type:
             raise ValueError(
-                "Missing energy range definition, cannot convert to sed type 'eflux'."
+                "Missing energy range definition, cannot convert to SED type 'eflux'."
             )
 
         energy_min = self.energy_axis.edges[:-1]
@@ -900,7 +900,7 @@ class FluxMaps:
             sed_type = cls._guess_sed_type(maps.keys())
 
         if sed_type is None:
-            raise ValueError("Specifying the sed type is required")
+            raise ValueError("Specifying the SED type is required")
 
         cls._validate_data(data=maps, sed_type=sed_type)
 
@@ -949,7 +949,7 @@ class FluxMaps:
         Parameters
         ----------
         sed_type : str, optional
-            sed type to convert to. If None, set to "likelihood". Default is None.
+           SED type to convert to. If None, set to "likelihood". Default is None.
         hdu_bands : str, optional
             Name of the HDU with the BANDS table. Default is 'BANDS'
             If set to None, each map will have its own hdu_band. Default is None.
