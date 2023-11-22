@@ -27,7 +27,7 @@ class PSFMap(IRFMap):
     Parameters
     ----------
     psf_map : `~gammapy.maps.Map`
-        the input PSF Map. Should be a Map with 2 non spatial axes.
+        The input PSF Map. Should be a Map with 2 non spatial axes.
         rad and true energy axes should be given in this specific order.
     exposure_map : `~gammapy.maps.Map`
         Associated exposure map. Needs to have a consistent map geometry.
@@ -87,12 +87,12 @@ class PSFMap(IRFMap):
         self._irf_map = value
 
     def normalize(self):
-        """Normalize PSF map"""
+        """Normalize PSF map."""
         self.psf_map.normalize(axis_name="rad")
 
     @classmethod
     def from_geom(cls, geom):
-        """Create psf map from geom.
+        """Create PSF map from geometry.
 
         Parameters
         ----------
@@ -147,21 +147,22 @@ class PSFMap(IRFMap):
         return coords_irf
 
     def containment(self, rad, energy_true, position=None):
-        """Containment at given coords
+        """Containment at given coordinates.
 
         Parameters
         ----------
         rad : `~astropy.units.Quantity`
-            Rad value
+            Rad value.
         energy_true : `~astropy.units.Quantity`
-            Energy true value
-        position : `~astropy.coordinates.SkyCoord`
-            Sky position. By default the center of the map is chosen
+            Energy true value.
+        position : `~astropy.coordinates.SkyCoord`, optional
+            Sky position. If None, the center of the map is chosen.
+            Default is None.
 
         Returns
         -------
         containment : `~astropy.units.Quantity`
-            Containment values
+            Containment values.
         """
         if position is None:
             position = self.psf_map.geom.center_skydir
@@ -171,21 +172,22 @@ class PSFMap(IRFMap):
         return self.psf_map.integral(axis_name="rad", coords=coords).to("")
 
     def containment_radius(self, fraction, energy_true, position=None):
-        """Containment at given coords
+        """Containment at given coordinates.
 
         Parameters
         ----------
         fraction : float
-            Containment fraction
+            Containment fraction.
         energy_true : `~astropy.units.Quantity`
-            Energy true value
-        position : `~astropy.coordinates.SkyCoord`
-            Sky position. By default the center of the map is chosen
+            Energy true value.
+        position : `~astropy.coordinates.SkyCoord`, optional
+            Sky position. If None, the center of the map is chosen.
+            Default is None.
 
         Returns
         -------
         containment : `~astropy.units.Quantity`
-            Containment values
+            Containment values.
         """
         if position is None:
             position = self.psf_map.geom.center_skydir
@@ -201,14 +203,15 @@ class PSFMap(IRFMap):
         Parameters
         ----------
         energy_true : `~astropy.units.Quantity`
-            Energy true at which to compute the containment radius
-        fraction : float
-            Containment fraction (range: 0 to 1)
+            Energy true at which to compute the containment radius.
+        fraction : float, optional
+            Containment fraction (range: 0 to 1).
+            Default is 0.68.
 
         Returns
         -------
         containment_radius_map : `~gammapy.maps.Map`
-            Containment radius map
+            Containment radius map.
         """
         geom = self.psf_map.geom.to_image()
 
@@ -222,30 +225,30 @@ class PSFMap(IRFMap):
     def get_psf_kernel(
         self, geom, position=None, max_radius=None, containment=0.999, factor=4
     ):
-        """Returns a PSF kernel at the given position.
+        """Return a PSF kernel at the given position.
 
         The PSF is returned in the form a WcsNDMap defined by the input Geom.
 
         Parameters
         ----------
         geom : `~gammapy.maps.Geom`
-            Target geometry to use
-        position : `~astropy.coordinates.SkyCoord`
-            Target position. Should be a single coordinate. By default the
+            Target geometry to use.
+        position : `~astropy.coordinates.SkyCoord`, optional
+            Target position. Should be a single coordinate. By default, the
             center position is used.
-        max_radius : `~astropy.coordinates.Angle`
-            maximum angular size of the kernel map
-        containment : float
+        max_radius : `~astropy.coordinates.Angle`, optional
+            Maximum angular size of the kernel map.
+        containment : float, optional
             Containment fraction to use as size of the kernel. The max. radius
             across all energies is used. The radius can be overwritten using
-            the `max_radius` argument.
-        factor : int
-            oversampling factor to compute the PSF
+            the `max_radius` argument. Default is 0.999.
+        factor : int, optional
+            Oversampling factor to compute the PSF. Default is 4.
 
         Returns
         -------
         kernel : `~gammapy.irf.PSFKernel`
-            the resulting kernel
+            The resulting kernel.
         """
         # TODO: try to simplify...is the oversampling needed?
         if position is None:
@@ -290,16 +293,15 @@ class PSFMap(IRFMap):
         ----------
         map_coord : `~gammapy.maps.MapCoord` object.
             Sequence of coordinates and energies of sampled events.
-        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
             Defines random number generator initialisation.
-            Passed to `~gammapy.utils.random.get_random_state`.
+            Passed to `~gammapy.utils.random.get_random_state`. Default is 0.
 
         Returns
         -------
-        corr_coord : `~gammapy.maps.MapCoord` object.
+        corr_coord : `~gammapy.maps.MapCoord`
             Sequence of PSF-corrected coordinates of the input map_coord map.
         """
-
         random_state = get_random_state(random_state)
         rad_axis = self.psf_map.geom.axes["rad"]
 
@@ -330,7 +332,7 @@ class PSFMap(IRFMap):
 
     @classmethod
     def from_gauss(cls, energy_axis_true, rad_axis=None, sigma=0.1 * u.deg, geom=None):
-        """Create all -sky PSF map from Gaussian width.
+        """Create all-sky PSF map from Gaussian width.
 
         This is used for testing and examples.
 
@@ -347,7 +349,7 @@ class PSFMap(IRFMap):
         sigma : `~astropy.coordinates.Angle`
             Gaussian width.
         geom : `Geom`
-            Image geometry. By default an allsky geometry is created.
+            Image geometry. By default, an all-sky geometry is created.
 
         Returns
         -------
@@ -383,8 +385,7 @@ class PSFMap(IRFMap):
         return cls(psf_map=psf_map, exposure_map=exposure_map)
 
     def to_image(self, spectrum=None, keepdims=True):
-        """Reduce to a 2-D map after weighing
-        with the associated exposure and a spectrum
+        """Reduce to a 2D map after weighing with the associated exposure and a spectrum.
 
         Parameters
         ----------
@@ -393,13 +394,12 @@ class PSFMap(IRFMap):
             Default is power-law with spectral index of 2.
         keepdims : bool, optional
             If True, the energy axis is kept with one bin.
-            If False, the axis is removed
-
+            If False, the axis is removed.
 
         Returns
         -------
         psf_out : `PSFMap`
-            `PSFMap` with the energy axis summed over
+            `PSFMap` with the energy axis summed over.
         """
         from gammapy.makers.utils import _map_spectrum_weight
 
@@ -426,8 +426,8 @@ class PSFMap(IRFMap):
 
         Parameters
         ----------
-        ax : `~matplotlib.pyplot.Axes`
-            Axes to plot on.
+        ax : `~matplotlib.pyplot.Axes`, optional
+            Matplotlib axes. Default is None.
         fraction : list of float or `~numpy.ndarray`
             Containment fraction between 0 and 1.
         **kwargs : dict
@@ -436,7 +436,7 @@ class PSFMap(IRFMap):
         Returns
         -------
         ax : `~matplotlib.pyplot.Axes`
-             Axes to plot on.
+             Matplotlib axes.
 
         """
         ax = plt.gca() if ax is None else ax
@@ -467,8 +467,8 @@ class PSFMap(IRFMap):
 
         Parameters
         ----------
-        ax : `~matplotlib.pyplot.Axes`
-            Axes to plot on.
+        ax : `~matplotlib.pyplot.Axes`, optional
+            Matplotlib axes. Default is None.
         energy : `~astropy.units.Quantity`
             Energies where to plot the PSF.
         **kwargs : dict
@@ -477,7 +477,7 @@ class PSFMap(IRFMap):
         Returns
         -------
         ax : `~matplotlib.pyplot.Axes`
-             Axes to plot on.
+             Matplotlib axes.
 
         """
         ax = plt.gca() if ax is None else ax
@@ -582,7 +582,7 @@ class RecoPSFMap(PSFMap):
         sigma : `~astropy.coordinates.Angle`
             Gaussian width.
         geom : `Geom`
-            Image geometry. By default an allsky geometry is created.
+            Image geometry. By default, an all-sky geometry is created.
 
         Returns
         -------
@@ -592,40 +592,40 @@ class RecoPSFMap(PSFMap):
         return super().from_gauss(energy_axis, rad_axis, sigma, geom)
 
     def containment(self, rad, energy, position=None):
-        """Containment at given coords
+        """Containment at given coordinates.
 
         Parameters
         ----------
         rad : `~astropy.units.Quantity`
-            Rad value
+            Rad value.
         energy : `~astropy.units.Quantity`
-            Energy value
-        position : `~astropy.coordinates.SkyCoord`
-            Sky position. By default the center of the map is chosen
+            Energy value.
+        position : `~astropy.coordinates.SkyCoord`, optional
+            Sky position. By default, the center of the map is chosen.
 
         Returns
         -------
         containment : `~astropy.units.Quantity`
-            Containment values
+            Containment values.
         """
         return super().containment(rad, energy, position)
 
     def containment_radius(self, fraction, energy, position=None):
-        """Containment at given coords
+        """Containment at given coordinates.
 
         Parameters
         ----------
         fraction : float
-            Containment fraction
+            Containment fraction.
         energy : `~astropy.units.Quantity`
-            Energy value
-        position : `~astropy.coordinates.SkyCoord`
-            Sky position. By default the center of the map is chosen
+            Energy value.
+        position : `~astropy.coordinates.SkyCoord`, optional
+            Sky position. By default, the center of the map is chosen.
 
         Returns
         -------
         containment : `~astropy.units.Quantity`
-            Containment values
+            Containment values.
         """
         return super().containment_radius(fraction, energy, position)
 
@@ -636,13 +636,14 @@ class RecoPSFMap(PSFMap):
         ----------
         energy : `~astropy.units.Quantity`
             Energy at which to compute the containment radius
-        fraction : float
-            Containment fraction (range: 0 to 1)
+        fraction : float, optional
+            Containment fraction (range: 0 to 1).
+            Default is 0.68.
 
         Returns
         -------
         containment_radius_map : `~gammapy.maps.Map`
-            Containment radius map
+            Containment radius map.
         """
         return super().containment_radius_map(energy, fraction=0.68)
 
@@ -653,8 +654,8 @@ class RecoPSFMap(PSFMap):
 
         Parameters
         ----------
-        ax : `~matplotlib.pyplot.Axes`
-            Axes to plot on.
+        ax : `~matplotlib.pyplot.Axes`, optional
+            Matplotlib axes. Default is None.
         energy : `~astropy.units.Quantity`
             Energies where to plot the PSF.
         **kwargs : dict
@@ -663,7 +664,7 @@ class RecoPSFMap(PSFMap):
         Returns
         -------
         ax : `~matplotlib.pyplot.Axes`
-             Axes to plot on.
+             Matplotlib axes.
 
         """
         return super().plot_psf_vs_rad(ax, energy_true=energy, **kwargs)
