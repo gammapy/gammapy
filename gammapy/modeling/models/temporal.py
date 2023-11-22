@@ -317,7 +317,7 @@ class ExpDecayTemporalModel(TemporalModel):
     Parameters
     ----------
     t0 : `~astropy.units.Quantity`
-        Decay timescale. Default is 1 day
+        Decay timescale. Default is 1 day.
     t_ref : `~astropy.units.Quantity`
         The reference time in mjd. Frozen per default, at 2000-01-01.
     """

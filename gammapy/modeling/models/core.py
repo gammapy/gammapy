@@ -404,7 +404,7 @@ class DatasetModels(collections.abc.Sequence):
 
     @property
     def parameters_unique_names(self):
-        """List of unique parameter names as model_name.par_type.par_name."""
+        """List of unique parameter names. Return formatted as model_name.par_type.par_name."""
         names = []
         for model in self:
             for par in model.parameters:

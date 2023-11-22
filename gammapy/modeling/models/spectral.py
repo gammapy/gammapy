@@ -90,7 +90,7 @@ def scale_plot_flux(flux, energy_power=0):
 
 
 def integrate_spectrum(func, energy_min, energy_max, ndecade=100):
-    """Integrate 1 dimensional function using the log-log trapezoidal rule.
+    """Integrate one-dimensional function using the log-log trapezoidal rule.
 
     Internally an oversampling of the energy bins to "ndecade" is used.
 

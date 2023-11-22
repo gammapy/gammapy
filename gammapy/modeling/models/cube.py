@@ -276,7 +276,7 @@ class SkyModel(ModelBase):
         Returns
         -------
         models : `DatasetModels`
-            Selected models contributing inside the region where mask==True.
+            Selected models contributing inside the region where mask is True.
         """
         from gammapy.datasets.evaluator import CUTOUT_MARGIN
 
@@ -714,7 +714,7 @@ class FoVBackgroundModel(ModelBase):
             return value
 
     def copy(self, name=None, copy_data=False, **kwargs):
-        """Copy FoVBackgroundModel.
+        """Copy the `FoVBackgroundModel` instance.
 
         Parameters
         ----------
