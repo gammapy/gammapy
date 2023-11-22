@@ -1050,7 +1050,6 @@ class TemplateNPredModel(ModelBase):
         nan_to_num: bool, optional
             Non-finite values are replaced by zero if True. Default is True.
         """
-        # TODO: weights appears not to be used?
         bkg = self.evaluate()
         if nan_to_num:
             bkg.data[~np.isfinite(bkg.data)] = 0
