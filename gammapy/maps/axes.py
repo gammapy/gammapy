@@ -1510,7 +1510,7 @@ class MapAxes(Sequence):
 
         Returns
         -------
-        coords : dict of `~astropy.units.Quanity`.
+        coords : dict of `~astropy.units.Quantity`.
             Map coordinates as a dictionary.
         """
         coords = {}
@@ -1785,7 +1785,7 @@ class MapAxes(Sequence):
             Array of axis coordinate values.
         clip : bool, optional
             Choose whether to clip indices to the valid range of the axis. Default is True.
-            If False, then indices for coordinates outside the axi range will be set to -1.
+            If False, then indices for coordinates outside the axis range will be set to -1.
 
 
         Returns
