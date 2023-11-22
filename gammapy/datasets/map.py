@@ -142,7 +142,7 @@ class MapDataset(Dataset):
 
 
     Notes
-    ----
+    -----
 
     If an `HDULocation` is passed the map is loaded lazily. This means the
     map data is only loaded in memory as the corresponding data attribute
