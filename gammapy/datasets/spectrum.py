@@ -357,7 +357,7 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
             raise ValueError(f"{format} is not a valid serialisation format")
 
     @classmethod
-    def from_dict(cls, data):
+    def from_dict(cls, data, **kwargs):
         """Create spectrum dataset from dict.
         Reads file from the disk as specified in the dict.
 
