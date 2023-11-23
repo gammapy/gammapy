@@ -764,7 +764,7 @@ def test_evaluate_integrate_nd_geom():
     )
 
 
-def test_evaluate_geom_with_time():
+def test_evaluate_integrate_geom_with_time():
     spatial_model = GaussianSpatialModel(
         lon="0d", lat="0d", sigma=0.1 * u.deg, frame="icrs"
     )
@@ -828,8 +828,18 @@ def test_evaluate_geom_with_time():
     unit_exp = 1 / u.TeV / u.cm**2 / u.s
     assert evaluation.unit.is_equivalent(unit_exp)
 
+    integral = sky_model1.integrate_geom(geom=region_geom)
+    assert integral.geom.data_shape == (4, 3, 1, 1)
+    assert_allclose(
+        integral.data[0],
+        [[[8.03761675e-12]], [[3.73073122e-12]], [[1.73165204e-12]]],
+        rtol=1e-6,
+    )
+    unit_exp = 1 / u.cm**2 / u.s
+    assert integral.unit.is_equivalent(unit_exp)
 
-def test_evaluate_geom_with_time_and_gti():
+
+def test_evaluate_integrate_geom_with_time_and_gti():
     spatial_model = GaussianSpatialModel(
         lon="0d", lat="0d", sigma=0.1 * u.deg, frame="icrs"
     )
@@ -898,6 +908,16 @@ def test_evaluate_geom_with_time_and_gti():
     )
     unit_exp = 1 / u.TeV / u.cm**2 / u.s
     assert evaluation.unit.is_equivalent(unit_exp)
+
+    integral = sky_model1.integrate_geom(geom=region_geom, gti=gti)
+    assert integral.geom.data_shape == (4, 3, 1, 1)
+    assert_allclose(
+        integral.data[0],
+        [[[7.75345858e-12]], [[3.59883668e-12]], [[1.67043201e-12]]],
+        rtol=1e-3,
+    )
+    unit_exp = 1 / u.cm**2 / u.s
+    assert integral.unit.is_equivalent(unit_exp)
 
 
 def test_compound_spectral_model(caplog):
