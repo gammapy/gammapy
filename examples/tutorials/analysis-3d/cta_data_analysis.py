@@ -106,11 +106,19 @@ display(data_store.obs_table.select_obs_id(obs_id)[obs_cols])
 # analysis
 #
 
-axis = MapAxis.from_edges(
-    np.logspace(-1.0, 1.0, 10), unit="TeV", name="energy", interp="log"
+axis = MapAxis.from_energy_bounds(
+    0.1,
+    10,
+    nbin=10,
+    unit="TeV",
+    name="energy",
 )
-axis_true = MapAxis.from_bounds(
-    0.01, 20, nbin=20, name="energy_true", unit="TeV", interp="log"
+axis_true = MapAxis.from_energy_bounds(
+    0.05,
+    20,
+    nbin=20,
+    name="energy_true",
+    unit="TeV",
 )
 geom = WcsGeom.create(
     skydir=(0, 0), npix=(500, 400), binsz=0.02, frame="galactic", axes=[axis]
