@@ -2,7 +2,7 @@
 import logging
 import numpy as np
 import astropy.units as u
-from gammapy.modeling import PriorParameter, PriorParameters
+from gammapy.modeling import Parameter, Parameters, PriorParameter, PriorParameters
 from .core import ModelBase
 
 log = logging.getLogger(__name__)
@@ -32,7 +32,15 @@ def _build_priorparameters_from_dict(data, default_parameters):
 class Prior(ModelBase):
     _unit = ""
 
-    def __init__(self, **kwargs):
+    def __init__(self, modelparameters, **kwargs):
+
+        if isinstance(modelparameters, Parameter):
+            self._modelparameters = Parameters([modelparameters])
+        elif isinstance(modelparameters, Parameters):
+            self._modelparameters = modelparameters
+        else:
+            raise ValueError(f"Invalid model type {modelparameters}")
+
         # Copy default parameters from the class to the instance
         default_parameters = self.default_parameters.copy()
 
@@ -51,6 +59,13 @@ class Prior(ModelBase):
             self._weight = _weight
         else:
             self._weight = 1
+
+        for par in self._modelparameters:
+            par.prior = self
+
+    @property
+    def modelparameters(self):
+        return self._modelparameters
 
     @property
     def parameters(self):
@@ -73,11 +88,11 @@ class Prior(ModelBase):
     def weight(self, value):
         self._weight = value
 
-    def __call__(self, value):
+    def __call__(self):
         """Call evaluate method"""
-        # assuming the same unit as the PriorParamter here
+        # assuming the same unit as the PriorParameter here
         kwargs = {par.name: par.value for par in self.parameters}
-        return self.weight * self.evaluate(value.value, **kwargs)
+        return self.weight * self.evaluate(self._modelparameters.value, **kwargs)
 
     def to_dict(self, full_output=False):
         """Create dict for YAML serialisation"""
@@ -99,30 +114,33 @@ class Prior(ModelBase):
                     ):
                         del par[item]
 
-        data = {"type": tag, "parameters": params, "weight": self.weight}
+        data = {
+            "type": tag,
+            "parameters": params,
+            "weight": self.weight,
+            "modelparameters": self._modelparameters,
+        }
 
-        if self.type is None:
-            return data
-        else:
-            return {self.type: data}
+        return data
 
     @classmethod
     def from_dict(cls, data):
+        from . import PRIOR_REGISTRY
+
+        prior_cls = PRIOR_REGISTRY.get_cls(data["type"])
         kwargs = {}
 
-        key0 = next(iter(data))
-        if key0 in ["prior"]:
-            data = data[key0]
-        if data["type"] not in cls.tag:
+        if data["type"] not in prior_cls.tag:
             raise ValueError(
                 f"Invalid model type {data['type']} for class {cls.__name__}"
             )
-
         priorparameters = _build_priorparameters_from_dict(
-            data["parameters"], cls.default_parameters
+            data["parameters"], prior_cls.default_parameters
         )
         kwargs["weight"] = data["weight"]
-        return cls.from_parameters(priorparameters, **kwargs)
+        kwargs["modelparameters"] = data["modelparameters"]
+
+        return prior_cls.from_parameters(priorparameters, **kwargs)
 
 
 class GaussianPrior(Prior):
@@ -144,8 +162,7 @@ class GaussianPrior(Prior):
     mu = PriorParameter(name="mu", value=0)
     sigma = PriorParameter(name="sigma", value=1)
 
-    @staticmethod
-    def evaluate(value, mu, sigma):
+    def evaluate(self, value, mu, sigma):
         return ((value - mu) / sigma) ** 2
 
 
@@ -172,8 +189,7 @@ class UniformPrior(Prior):
     min = PriorParameter(name="min", value=-np.inf, unit="")
     max = PriorParameter(name="max", value=np.inf, unit="")
 
-    @staticmethod
-    def evaluate(value, min, max):
+    def evaluate(self, value, min, max):
         if min < value < max:
             return 1.0
         else:

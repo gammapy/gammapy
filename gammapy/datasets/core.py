@@ -9,6 +9,7 @@ from astropy import units as u
 from astropy.table import Table, vstack
 from gammapy.data import GTI
 from gammapy.modeling.models import DatasetModels, Models
+from gammapy.stats import prior_fit_statistic
 from gammapy.utils.scripts import make_name, make_path, read_yaml, write_yaml
 
 log = logging.getLogger(__name__)
@@ -75,7 +76,7 @@ class Dataset(abc.ABC):
             stat = stat[self.mask.data]
         prior_stat_sum = 0.0
         if self.models is not None:
-            prior_stat_sum = self.models.parameters.prior_stat_sum()
+            prior_stat_sum = prior_fit_statistic(self.models.priors)
         return np.sum(stat, dtype=np.float64) + prior_stat_sum
 
     @abc.abstractmethod
@@ -229,9 +230,16 @@ class Datasets(collections.abc.MutableSequence):
         """Compute joint statistic function value."""
         stat_sum = 0
         # TODO: add parallel evaluation of likelihoods
+        prior_stat_sum = 0
         for dataset in self:
             stat_sum += dataset.stat_sum()
-        return stat_sum
+            # remove prior_fit_statistic from individual dataset to avoid double counting
+            if dataset.models is not None:
+                prior_stat_sum -= prior_fit_statistic(dataset.models.priors)
+        # compute prior_fit_statistics from all datasets
+        if self.models is not None:
+            prior_stat_sum += prior_fit_statistic(self.models.priors)
+        return stat_sum + prior_stat_sum
 
     def select_time(self, time_min, time_max, atol="1e-6 s"):
         """Select datasets in a given time interval.

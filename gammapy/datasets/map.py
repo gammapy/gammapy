@@ -16,6 +16,7 @@ from gammapy.stats import (
     cash,
     cash_sum_cython,
     get_wstat_mu_bkg,
+    prior_fit_statistic,
     wstat,
 )
 from gammapy.utils.deprecation import deprecated_renamed_argument
@@ -220,7 +221,6 @@ class MapDataset(Dataset):
     ):
         self._name = make_name(name)
         self._evaluators = {}
-
         self.counts = counts
         self.exposure = exposure
         self.background = background
@@ -354,7 +354,6 @@ class MapDataset(Dataset):
                         use_cache=USE_NPRED_CACHE,
                     )
                     self._evaluators[model.name] = evaluator
-
         self._models = models
 
     @property
@@ -1114,12 +1113,11 @@ class MapDataset(Dataset):
         return ax_spatial, ax_spectral
 
     def stat_sum(self):
-        """Total statistic function value given the current model parameters and priors."""
+        """Total statistic function value given the current model parameters and priors set on the models."""
+        counts, npred = self.counts.data.astype(float), self.npred().data
         prior_stat_sum = 0.0
         if self.models is not None:
-            prior_stat_sum = self.models.parameters.prior_stat_sum()
-
-        counts, npred = self.counts.data.astype(float), self.npred().data
+            prior_stat_sum = prior_fit_statistic(self.models.priors)
 
         if self.mask is not None:
             return (

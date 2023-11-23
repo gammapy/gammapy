@@ -38,7 +38,6 @@ def _get_model_class_from_dict(data):
     """get a model class from a dict"""
     from . import (
         MODEL_REGISTRY,
-        PRIOR_REGISTRY,
         SPATIAL_MODEL_REGISTRY,
         SPECTRAL_MODEL_REGISTRY,
         TEMPORAL_MODEL_REGISTRY,
@@ -52,8 +51,6 @@ def _get_model_class_from_dict(data):
         cls = SPECTRAL_MODEL_REGISTRY.get_cls(data["spectral"]["type"])
     elif "temporal" in data:
         cls = TEMPORAL_MODEL_REGISTRY.get_cls(data["temporal"]["type"])
-    elif "prior" in data:
-        cls = PRIOR_REGISTRY.get_cls(data["prior"]["type"])
     return cls
 
 
@@ -403,6 +400,19 @@ class DatasetModels(collections.abc.Sequence):
     def parameters(self):
         """Parameters (`~gammapy.modeling.Parameters`)"""
         return Parameters.from_stack([_.parameters for _ in self._models])
+
+    @property
+    def priors(self):
+        """Priors (list).
+
+        Duplicate prior objects have been removed.
+        """
+        priors = {}
+
+        for parameter in self.parameters:
+            if parameter.prior is not None:
+                priors[parameter.prior] = parameter.prior
+        return list(priors)
 
     @property
     def parameters_unique_names(self):
@@ -1128,10 +1138,6 @@ class Models(DatasetModels, collections.abc.MutableSequence):
             raise (ValueError("Model names must be unique"))
 
         self._models.insert(idx, model)
-
-    def set_prior(self, parameters, priors):
-        for parameter, prior in zip(parameters, priors):
-            parameter.prior = prior
 
 
 class restore_models_status:
