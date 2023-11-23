@@ -12,9 +12,10 @@ from . import LightCurveTemplateTemporalModel
 
 
 def _template_model_from_cta_sdc(filename):
-    """To create a `LightCurveTemplateTemporalModel`
-    from the energy-dependent temporal model files of the cta-sdc1.
-     This format is subject to change"""
+    """To create a `LightCurveTemplateTemporalModel` from the energy-dependent temporal model files of the cta-sdc1.
+
+    This format is subject to change.
+    """
     filename = str(make_path(filename))
     with fits.open(filename) as hdul:
         frame = hdul[0].header.get("frame", "icrs")
@@ -51,7 +52,7 @@ def _template_model_from_cta_sdc(filename):
 
 
 def read_hermes_cube(filename):
-    """Read 3d templates produced with hermes"""
+    """Read 3d templates produced with hermes."""
     # add hermes conventions to the list used by gammapy
     hermes_conv = HpxConv(
         convname="hermes-template",
