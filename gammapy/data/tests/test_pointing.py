@@ -54,6 +54,12 @@ def test_fixed_pointing_icrs():
     assert u.isclose(back_trafo.dec, fixed_icrs.dec).all()
     assert np.all(u.isclose(fixed_icrs.ra, icrs.ra))
 
+    header = pointing.to_fits_header()
+
+    assert header["OBS_MODE"] == "POINTING"
+    assert header["RA_PNT"] == fixed_icrs.ra.deg
+    assert header["DEC_PNT"] == fixed_icrs.dec.deg
+
 
 def test_fixed_pointing_info_altaz():
     """Test new api of FixedPointingInfo in AltAz (DRIFT)"""
@@ -98,6 +104,12 @@ def test_fixed_pointing_info_altaz():
     assert isinstance(icrs.frame, ICRS)
     assert u.isclose(back_trafo.alt, fixed_altaz.alt).all()
     assert u.isclose(back_trafo.az, fixed_altaz.az, atol=1e-10 * u.deg).all()
+
+    header = pointing.to_fits_header()
+
+    assert header["OBS_MODE"] == "DRIFT"
+    assert header["AZ_PNT"] == fixed_altaz.az.deg
+    assert header["ALT_PNT"] == fixed_altaz.alt.deg
 
 
 @requires_data()
