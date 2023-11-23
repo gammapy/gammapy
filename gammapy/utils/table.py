@@ -3,12 +3,10 @@
 import numpy as np
 from astropy.table import Table
 from astropy.units import Quantity
-from .deprecation import deprecated
 from .units import standardise_unit
 
 __all__ = [
     "hstack_columns",
-    "table_from_row_data",
     "table_row_to_dict",
     "table_standardise_units_copy",
     "table_standardise_units_inplace",
@@ -92,30 +90,3 @@ def table_row_to_dict(row, make_quantity=True):
             val = Quantity(val, unit=col.unit)
         data[name] = val
     return data
-
-
-@deprecated("v1.1", alternative="astropy.table.Table")
-def table_from_row_data(rows, **kwargs):
-    """Helper function to create table objects from row data.
-
-    Works with quantities.
-
-    Parameters
-    ----------
-    rows : list
-        List of row data (each row a dictionary).
-    """
-    table = Table(**kwargs)
-
-    if len(rows) == 0:
-        return table
-
-    colnames = list(rows[0].keys())
-
-    for name in colnames:
-        coldata = [_[name] for _ in rows]
-        if isinstance(rows[0][name], Quantity):
-            coldata = Quantity(coldata, unit=rows[0][name].unit)
-        table[name] = coldata
-
-    return table
