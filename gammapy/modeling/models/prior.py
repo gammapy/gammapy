@@ -113,7 +113,7 @@ class Prior(ModelBase):
     @classmethod
     def from_dict(cls, data, **kwargs):
         """Get prior parameters from dictionary."""
-        kwargs = kwargs or {}
+        kwargs = {}
 
         key0 = next(iter(data))
         if key0 in ["prior"]:

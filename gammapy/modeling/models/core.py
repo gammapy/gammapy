@@ -217,7 +217,7 @@ class ModelBase:
 
         key0 = next(iter(data))
 
-        if key0 in ["spatial", "temporal", "spectral", "prior"]:
+        if key0 in ["spatial", "temporal", "spectral"]:
             data = data[key0]
 
         if data["type"] not in cls.tag:
