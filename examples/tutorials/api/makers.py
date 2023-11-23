@@ -396,6 +396,7 @@ for obs in observations:
 ax.set_title("Total observation time")
 plt.show()
 
+######################################################################
 # As the acceptance of IACT cameras vary within the field of
 # view, it can also be interesting to plot the on-axis equivalent
 # number of hours.
@@ -418,6 +419,7 @@ for ax in axs:
         )
 plt.show()
 
+######################################################################
 # To get the value of the observation time at a particular position,
 # use `get_by_coord`
 
