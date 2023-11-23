@@ -109,7 +109,7 @@ display(data_store.obs_table.select_obs_id(obs_id)[obs_cols])
 axis = MapAxis.from_edges(
     np.logspace(-1.0, 1.0, 10), unit="TeV", name="energy", interp="log"
 )
-axis_true = energy_axis_true = MapAxis.from_bounds(
+axis_true = MapAxis.from_bounds(
     0.01, 20, nbin=20, name="energy_true", unit="TeV", interp="log"
 )
 geom = WcsGeom.create(
