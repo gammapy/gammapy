@@ -366,9 +366,12 @@ class SkyModel(ModelBase):
                 )
             time_axis = geom.axes["time"]
             if gti is None:
-                temp_eval = self.temporal_model.integral(
-                    time_axis.time_min, time_axis.time_max
-                )
+                temp_eval = []
+                for idx in range(time_axis.nbin):
+                    val = self.temporal_model.integral(
+                        time_axis.time_min[idx], time_axis.time_max[idx]
+                    )
+                    temp_eval.append(val)
             else:
                 temp_eval = []
                 for idx in range(time_axis.nbin):

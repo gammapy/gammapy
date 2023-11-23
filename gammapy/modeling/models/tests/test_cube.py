@@ -801,7 +801,7 @@ def test_evaluate_geom_with_time():
     assert evaluation.unit.is_equivalent(unit_exp)
     assert_allclose(
         evaluation.value[0, 0, 1, 12, 10],
-        1.8405743444123462e-08,
+        7.362297e-08,
         rtol=1e-6,
     )
 
@@ -822,7 +822,7 @@ def test_evaluate_geom_with_time():
     assert evaluation.shape == (4, 3, 1, 1)
     assert_allclose(
         evaluation[0].value,
-        [[[1.74059581e-12]], [[3.75000000e-13]], [[8.07913009e-14]]],
+        [[[6.96238325e-12]], [[1.5000000e-12]], [[3.23165204e-13]]],
         rtol=1e-6,
     )
     unit_exp = 1 / u.TeV / u.cm**2 / u.s
