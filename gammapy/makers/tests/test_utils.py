@@ -17,7 +17,7 @@ from gammapy.irf import (
 from gammapy.makers import WobbleRegionsFinder
 from gammapy.makers.utils import (
     _map_spectrum_weight,
-    get_camera_fov,
+    guess_instrument_fov,
     make_counts_off_rad_max,
     make_counts_rad_max,
     make_edisp_kernel_map,
@@ -476,18 +476,18 @@ class TestTheta2Table:
 
 
 @requires_data()
-def test_get_camera_fov(observations):
+def test_guess_instrument_fov(observations):
     with pytest.raises(ValueError):
-        get_camera_fov(observations)
+        guess_instrument_fov(observations)
 
     ds = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
     obs_hess = ds.obs(23523)
 
-    assert_allclose(get_camera_fov(obs_hess), 2.5 * u.deg)
+    assert_allclose(guess_instrument_fov(obs_hess), 2.5 * u.deg)
 
     obs_no_aeff = obs_hess.copy(in_memory=True, aeff=None)
     with pytest.raises(ValueError):
-        get_camera_fov(obs_no_aeff)
+        guess_instrument_fov(obs_no_aeff)
 
 
 @requires_data()
