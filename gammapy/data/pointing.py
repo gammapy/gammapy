@@ -272,7 +272,7 @@ class FixedPointingInfo:
             header["OBS_MODE"] = "POINTING"
             header["RA_PNT"] = self.fixed_icrs.ra.deg, u.deg.to_string("fits")
             header["DEC_PNT"] = self.fixed_icrs.dec.deg, u.deg.to_string("fits")
-        elif self.mode is PointingMode.POINTING:
+        elif self.mode is PointingMode.DRIFT:
             header["OBS_MODE"] = "DRIFT"
             header["AZ_PNT"] = self.fixed_altaz.az.deg, u.deg.to_string("fits")
             header["ALT_PNT"] = self.fixed_altaz.alt.deg, u.deg.to_string("fits")
