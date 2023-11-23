@@ -359,34 +359,36 @@ class SkyModel(ModelBase):
         if self.spatial_model:
             value = value * self.spatial_model.evaluate_geom(geom)
 
-        if "time" in coords.axis_names and self.temporal_model:
-            if coords.axis_names[-1] != "time":
-                raise ValueError(
-                    "Incorrect axis order. The time axis must be the last axis"
-                )
-            time_axis = geom.axes["time"]
-            if gti is None:
-                temp_eval = []
-                for idx in range(time_axis.nbin):
-                    val = self.temporal_model.integral(
-                        time_axis.time_min[idx], time_axis.time_max[idx]
+        if self.temporal_model:
+            if "time" in coords.axis_names:
+                if coords.axis_names[-1] != "time":
+                    raise ValueError(
+                        "Incorrect axis order. The time axis must be the last axis"
                     )
-                    temp_eval.append(val)
-            else:
-                temp_eval = []
-                for idx in range(time_axis.nbin):
-                    gti_in_bin = gti.select_time(
-                        time_interval=[time_axis.time_min[idx], time_axis.time_max[idx]]
-                    )
-                    integral = self.temporal_model.integral(
-                        gti_in_bin.time_start, gti_in_bin.time_stop
-                    )
-                    temp_eval.append(np.sum(integral))
-            value = (value.T * temp_eval).T
+                time_axis = geom.axes["time"]
 
-        elif self.temporal_model and gti:
-            integral = self.temporal_model.integral(gti.time_start, gti.time_stop)
-            value = value * np.sum(integral)
+                temp_eval = []
+                for idx in range(time_axis.nbin):
+                    if gti is None:
+                        t1, t2 = time_axis.time_min[idx], time_axis.time_max[idx]
+                    else:
+                        gti_in_bin = gti.select_time(
+                            time_interval=[
+                                time_axis.time_min[idx],
+                                time_axis.time_max[idx],
+                            ]
+                        )
+                        t1, t2 = gti_in_bin.time_start, gti_in_bin.time_stop
+                    integral = self.temporal_model.integral(t1, t2)
+                    temp_eval.append(np.sum(integral))
+                value = (value.T * temp_eval).T
+
+            else:
+                if gti is not None:
+                    integral = self.temporal_model.integral(
+                        gti.time_start, gti.time_stop
+                    )
+                    value = value * np.sum(integral)
 
         return value
 
@@ -429,9 +431,44 @@ class SkyModel(ModelBase):
                 ).quantity
             )
 
-        elif self.temporal_model and gti:
-            integral = self.temporal_model.integral(gti.time_start, gti.time_stop)
-            value = value * np.sum(integral)
+        if self.temporal_model:
+            if "time" in geom.axes.names:
+                if geom.axes.names[-1] != "time":
+                    raise ValueError(
+                        "Incorrect axis order. The time axis must be the last axis"
+                    )
+
+                time_axis = geom.axes["time"]
+
+                temp_eval = []
+
+                for idx in range(time_axis.nbin):
+                    if gti is None:
+                        t1, t2 = time_axis.time_min[idx], time_axis.time_max[idx]
+
+                    else:
+                        gti_in_bin = gti.select_time(
+                            time_interval=[
+                                time_axis.time_min[idx],
+                                time_axis.time_max[idx],
+                            ]
+                        )
+
+                        t1, t2 = gti_in_bin.time_start, gti_in_bin.time_stop
+
+                    integral = self.temporal_model.integral(t1, t2)
+
+                    temp_eval.append(np.sum(integral))
+
+                value = (value.T * temp_eval).T
+
+            else:
+                if gti is not None:
+                    integral = self.temporal_model.integral(
+                        gti.time_start, gti.time_stop
+                    )
+
+                    value = value * np.sum(integral)
 
         value = value * np.ones(geom.data_shape)
 
