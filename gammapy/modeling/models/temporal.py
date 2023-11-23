@@ -100,6 +100,23 @@ class TemporalModel(ModelBase):
         data["temporal"]["scale"] = self.scale
         return data
 
+    @classmethod
+    def from_dict(cls, data, **kwargs):
+        """Create a temporal model from a dictionary.
+
+        Parameters
+        ----------
+        data : dict
+            Dictionary containing the model parameters.
+        **kwargs : dict
+            Keyword arguments passed to `~TemporalModel.from_parameters`.
+        """
+        kwargs = kwargs or {}
+        temporal_data = data.get("temporal", data)
+        if "scale" in temporal_data:
+            kwargs["scale"] = temporal_data["scale"]
+        return super().from_dict(data, **kwargs)
+
     @staticmethod
     def time_sum(t_min, t_max):
         """Total time between t_min and t_max.

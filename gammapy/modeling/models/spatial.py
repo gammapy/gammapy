@@ -271,6 +271,23 @@ class SpatialModel(ModelBase):
         data["spatial"]["parameters"] = data["spatial"].pop("parameters")
         return data
 
+    @classmethod
+    def from_dict(cls, data, **kwargs):
+        """Create a spatial model from a dictionary.
+
+        Parameters
+        ----------
+        data : dict
+            Dictionary containing model parameters.
+        kwargs : dict
+            Keyword arguments passed to `~SpatialModel.from_parameters`.
+        """
+        kwargs = kwargs or {}
+        spatial_data = data.get("spatial", data)
+        if "frame" in spatial_data:
+            kwargs["frame"] = spatial_data["frame"]
+        return super().from_dict(data, **kwargs)
+
     @property
     def _evaluation_geom(self):
         if isinstance(self, TemplateSpatialModel):
