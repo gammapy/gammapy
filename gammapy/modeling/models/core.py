@@ -229,10 +229,6 @@ class ModelBase:
             data["parameters"], cls.default_parameters
         )
 
-        # TODO: this is a special case for spatial models, maybe better move to
-        #  `SpatialModel` base class
-        # TODO: same as above for temporal models
-
         return cls.from_parameters(parameters, **kwargs)
 
     def __str__(self):
