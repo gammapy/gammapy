@@ -373,3 +373,14 @@ using a dummy phase column.
     events_new.write("events.fits.gz", gti=obs.gti, overwrite=True)
 
 .. accordion-footer::
+
+.. accordion-header::
+    :id: collapseHowTo_ObservationMaps
+    :title: Make observation duration maps
+    :link: ../tutorials/api/makers.html#observation-duration-and-effective-livetime
+   
+Compute the absolute and acceptance corrected observation duration in the field of view
+
+.. accordion-footer::
+
+

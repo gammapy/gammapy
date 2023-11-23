@@ -541,28 +541,29 @@ def make_counts_off_rad_max(geom_off, rad_max, events):
 
 def make_observation_time_map(observations, geom, offset_max=None):
     """
-    Compute the total observation time on the target geom
-    for a list of observations
+    Compute the total observation time on the target geometry
+    for a list of observations.
 
     Parameters
     ----------
     observations : `~gammapy.data.Observations`
             Observations container containing list of observations.
     geom : `~gammapy.maps.Geom`
-            Reference geom.
-    offset_max : `~astropy.units.quantity.Quantity`
-        The maximum offset FoV. If None, it will be taken from the IRFs
+            Reference geometry.
+    offset_max : `~astropy.units.quantity.Quantity`, optional
+        The maximum offset FoV. Default is None.
+        If None, it will be taken from the IRFs.
 
     Returns
     -------
     exposure : `~gammapy.maps.Map`
-                Effective livetime.
+        Effective livetime.
     """
     geom = geom.to_image()
     stacked = Map.from_geom(geom, unit=u.h)
     for obs in observations:
         if offset_max is None:
-            offset_max = get_camera_fov(obs)
+            offset_max = guess_instrument_fov(obs)
         coords = geom.get_coord(sparse=True)
         offset = coords.skycoord.separation(obs.get_pointing_icrs(obs.tmid))
         mask = offset < offset_max
@@ -575,27 +576,27 @@ def make_observation_time_map(observations, geom, offset_max=None):
 def make_effective_livetime_map(observations, geom, offset_max=None):
     """
     Compute the acceptance corrected livetime map
-    for a list of observations
+    for a list of observations.
 
     Parameters
     ----------
     observations : `~gammapy.data.Observations`
-            Observations container containing list of observations.
+        Observations container containing list of observations.
     geom : `~gammapy.maps.Geom`
-            Reference geom.
-    offset_max : `~astropy.units.quantity.Quantity`
-        The maximum offset FoV.
+        Reference geometry.
+    offset_max : `~astropy.units.quantity.Quantity`, optional
+        The maximum offset FoV. Default is None.
 
     Returns
     -------
      exposure : `~gammapy.maps.Map`
-            Effective livetime.
+        Effective livetime.
     """
 
     livetime = Map.from_geom(geom, unit=u.hr)
     for obs in observations:
         if offset_max is None:
-            offset_max = get_camera_fov(obs)
+            offset_max = guess_instrument_fov(obs)
         geom_obs = geom.cutout(
             position=obs.get_pointing_icrs(obs.tmid), width=2.0 * offset_max
         )
@@ -616,10 +617,14 @@ def make_effective_livetime_map(observations, geom, offset_max=None):
     return livetime
 
 
-def get_camera_fov(obs):
+def guess_instrument_fov(obs):
     """
     Guess the camera field of view for the given observation
-    from the effective area
+    from the IRFs. This simply takes the maximum offset of the
+    effective area IRF.
+    TODO: This logic will break for more complex IRF models.
+    A better option would be to compute the offset at which
+    the effective area is above 10% of the maximum.
 
     Parameters
     ----------
@@ -636,4 +641,6 @@ def get_camera_fov(obs):
         raise ValueError("No Effective area IRF to infer the FoV from")
     if obs.aeff.is_pointlike:
         raise ValueError("Cannot guess FoV from pointlike IRFs")
+    if "offset" not in obs.aeff.axes.names:
+        raise ValueError("Offset axis not present!")
     return obs.aeff.axes["offset"].center[-1]
