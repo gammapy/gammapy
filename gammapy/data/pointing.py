@@ -18,7 +18,7 @@ from astropy.io import fits
 from astropy.table import Table
 from astropy.units import Quantity
 from astropy.utils import lazyproperty
-from gammapy.utils.deprecation import GammapyDeprecationWarning, deprecated
+from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.utils.fits import earth_location_from_dict, earth_location_to_dict
 from gammapy.utils.scripts import make_path
 from gammapy.utils.time import time_ref_from_dict, time_ref_to_dict, time_to_fits_header
@@ -447,98 +447,6 @@ class FixedPointingInfo:
             )
 
         raise ValueError(f"Unsupported pointing mode: {self.mode}.")
-
-    # the rest is deprecated...
-    @property
-    @deprecated("1.1")
-    def meta(self):
-        """Meta header information as a dictionary."""
-        if self._meta is not None:
-            return self._meta
-        return dict(self.to_fits_header(time_ref=self._time_ref))
-
-    @property
-    @deprecated("1.1")
-    def location(self):
-        """Observatory location as an `~astropy.coordinates.EarthLocation` object."""
-        return self._location
-
-    @property
-    @deprecated("1.1")
-    def time_start(self):
-        """Start time as a `~astropy.time.Time` object."""
-        return self._time_start
-
-    @property
-    @deprecated("1.1")
-    def time_stop(self):
-        """Stop time as a `~astropy.time.Time` object."""
-        warnings.warn(
-            "Accessing time information through pointing is deprecated",
-            DeprecationWarning,
-        )
-        return self._time_stop
-
-    @property
-    @deprecated("1.1")
-    def time_ref(self):
-        """Reference time as a `~astropy.time.Time` object."""
-        return self._time_ref
-
-    @lazyproperty
-    @deprecated("1.1")
-    def obstime(self):
-        """Average observation time for the observation as a `~astropy.time.Time` object."""
-        if self.time_start is None or self.duration is None:
-            return None
-        return self.time_start + self.duration / 2
-
-    @lazyproperty
-    @deprecated("1.1")
-    def duration(self):
-        """Pointing duration as a `~astropy.time.TimeDelta` object.
-
-        The time difference between the TSTART and TSTOP.
-        """
-        if self.time_start is None or self.time_stop is None:
-            return None
-        return self.time_stop - self.time_start
-
-    @lazyproperty
-    @deprecated("1.1")
-    def radec(self):
-        """
-        RA/DEC pointing position from table as a `~astropy.coordinates.SkyCoord`.
-
-        Use `get_icrs` to get the pointing at a specific time, correctly
-        handling different pointing modes.
-        """
-        return self._fixed_icrs
-
-    @lazyproperty
-    @deprecated("1.1")
-    def altaz_frame(self):
-        """ALT / AZ frame (`~astropy.coordinates.AltAz`)."""
-        return AltAz(obstime=self.obstime, location=self.location)
-
-    @lazyproperty
-    @deprecated("1.1")
-    def altaz(self):
-        """
-        Alt-az pointing position computed from RA/DEC a `~astropy.coordinates.SkyCoord` for the midpoint of the run.
-
-        Use `get_altaz` to get the pointing at a specific time, correctly
-        handling different pointing modes.
-        """
-        frame = AltAz(location=self.location, obstime=self.obstime)
-        if frame.location is None or frame.obstime is None:
-            log.warning(
-                "Location or time information missing,"
-                " using ALT_PNT/AZ_PNT and incomplete frame"
-            )
-            return self._legacy_altaz
-
-        return self.radec.transform_to(frame)
 
     def __str__(self):
         coordinates = (

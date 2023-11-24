@@ -365,43 +365,12 @@ class Observation:
         """Get the pointing in ICRS for given time."""
         return self.pointing.get_icrs(time, self.observatory_earth_location)
 
-    @lazyproperty
-    @deprecated(
-        "v1.1",
-        message="Use observation.pointing or observation.get_pointing_{{altaz,icrs}} instead",
-    )
-    def fixed_pointing_info(self):
-        """Fixed pointing information for this observation as a `~gammapy.data.FixedPointingInfo` object."""
-        return self._pointing
-
-    @property
-    @deprecated("v1.1", message="Use observation.get_pointing_icrs(time) instead")
-    def pointing_radec(self):
-        """Pointing RA / DEC sky coordinates as a `~astropy.coordinates.SkyCoord` object."""
-        return self.fixed_pointing_info.radec
-
-    @property
-    @deprecated("v1.1", message="Use observation.get_pointing_altaz(time) instead")
-    def pointing_altaz(self):
-        """Pointing ALT / AZ sky coordinates as a `~astropy.coordinates.SkyCoord` object."""
-        return self.fixed_pointing_info.altaz
-
-    @property
-    @deprecated("v1.1", message="Use observation.get_pointing_altaz(time).zen instead")
-    def pointing_zen(self):
-        """Pointing zenith angle sky as a `~astropy.units.Quantity`."""
-        return self.get_pointing_altaz(self.tmid).zen
-
     @property
     def observatory_earth_location(self):
-        """Observatory location as an`~astropy.coordinates.EarthLocation` object."""
+        """Observatory location as an `~astropy.coordinates.EarthLocation` object."""
         if self._location is not None:
             return self._location
-
-        # for now we catch the deprecation warning until we store location on the observation properly
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", category=GammapyDeprecationWarning)
-            return self.fixed_pointing_info.location
+        return self.pointing.location
 
     @lazyproperty
     def target_radec(self):

@@ -19,7 +19,6 @@ from gammapy.data.pointing import FixedPointingInfo
 from gammapy.data.utils import get_irfs_features
 from gammapy.irf import PSF3D, load_irf_dict_from_file
 from gammapy.utils.cluster import hierarchical_clustering
-from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.utils.fits import HDULocation
 from gammapy.utils.testing import (
     assert_skycoord_allclose,
@@ -44,13 +43,9 @@ def test_observation(data_store):
 
     c = SkyCoord(83.63333129882812, 21.51444435119629, unit="deg")
     assert_skycoord_allclose(obs.get_pointing_icrs(obs.tmid), c)
-    with pytest.warns(GammapyDeprecationWarning):
-        assert_skycoord_allclose(obs.pointing_radec, c)
 
     c = SkyCoord(22.558341, 41.950807, unit="deg")
     assert_skycoord_allclose(obs.get_pointing_altaz(obs.tmid), c)
-    with pytest.warns(GammapyDeprecationWarning):
-        assert_skycoord_allclose(obs.pointing_altaz, c)
 
     c = SkyCoord(83.63333129882812, 22.01444435119629, unit="deg")
     assert_skycoord_allclose(obs.target_radec, c)
@@ -263,8 +258,6 @@ def test_observation_cta_1dc():
     assert_skycoord_allclose(obs.get_pointing_icrs(obs.tmid), pointing.fixed_icrs)
     assert_allclose(obs.observation_live_time_duration, 0.9 * ontime)
     assert_allclose(obs.target_radec.ra.deg, np.nan)
-    with pytest.warns(GammapyDeprecationWarning):
-        assert not np.isnan(obs.pointing_zen)
 
     assert isinstance(obs.meta, ObservationMetaData)
     assert obs.meta.deadtime_fraction == 0.1
