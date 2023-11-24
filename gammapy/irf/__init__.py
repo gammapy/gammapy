@@ -5,7 +5,7 @@ from .background import Background2D, Background3D
 from .core import FoVAlignment, IRFMap
 from .edisp import EDispKernel, EDispKernelMap, EDispMap, EnergyDispersion2D
 from .effective_area import EffectiveAreaTable2D
-from .io import load_cta_irfs, load_irf_dict_from_file
+from .io import load_irf_dict_from_file
 from .psf import (
     PSF3D,
     EnergyDependentMultiGaussPSF,
@@ -29,7 +29,6 @@ __all__ = [
     "FoVAlignment",
     "IRF_REGISTRY",
     "IRFMap",
-    "load_cta_irfs",
     "load_irf_dict_from_file",
     "ParametricPSF",
     "PSF3D",
