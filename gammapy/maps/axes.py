@@ -12,7 +12,6 @@ from astropy.table import Column, Table, hstack
 from astropy.time import Time
 from astropy.utils import lazyproperty
 import matplotlib.pyplot as plt
-from gammapy.utils.deprecation import deprecated_attribute
 from gammapy.utils.interpolation import interpolation_scale
 from gammapy.utils.time import time_ref_from_dict, time_ref_to_dict
 from .utils import INVALID_INDEX, INVALID_VALUE, edges_from_lo_hi
@@ -105,8 +104,6 @@ class MapAxis:
     unit : str, optional
         String specifying the data units. Default is "".
     """
-
-    append = deprecated_attribute("append", "1.1", alternative="concatenate")
 
     # TODO: Cache an interpolation object?
     def __init__(self, nodes, interp="lin", name="", node_type="edges", unit=""):
@@ -2988,8 +2985,6 @@ class LabelMapAxis:
         Name of the axis. Default is "".
 
     """
-
-    append = deprecated_attribute("append", "1.1", alternative="concatenate")
 
     node_type = "label"
 
