@@ -55,14 +55,18 @@ __all__ = [
     "SuperExpCutoffPowerLaw4FGLDR3SpectralModel",
     "SuperExpCutoffPowerLaw4FGLSpectralModel",
     "TemplateSpectralModel",
+    "TemplateNDSpectralModel",
+    "EBL_DATA_BUILTIN",
 ]
 
-EBL_DATA_BUILTIN = {}
-EBL_DATA_BUILTIN["franceschini"] = "$GAMMAPY_DATA/ebl/ebl_franceschini.fits.gz"
-EBL_DATA_BUILTIN["dominguez"] = "$GAMMAPY_DATA/ebl/ebl_dominguez11.fits.gz"
-EBL_DATA_BUILTIN["finke"] = "$GAMMAPY_DATA/ebl/frd_abs.fits.gz"
-EBL_DATA_BUILTIN["franceschini17"] = "$GAMMAPY_DATA/ebl/ebl_franceschini_2017.fits.gz"
-EBL_DATA_BUILTIN["saldana-lopez21"] = "$GAMMAPY_DATA/ebl/ebl_saldana-lopez_2021.fits.gz"
+
+EBL_DATA_BUILTIN = {
+    "franceschini": "$GAMMAPY_DATA/ebl/ebl_franceschini.fits.gz",
+    "dominguez": "$GAMMAPY_DATA/ebl/ebl_dominguez11.fits.gz",
+    "finke": "$GAMMAPY_DATA/ebl/frd_abs.fits.gz",
+    "franceschini17": "$GAMMAPY_DATA/ebl/ebl_franceschini_2017.fits.gz",
+    "saldana-lopez21": "$GAMMAPY_DATA/ebl/ebl_saldana-lopez_2021.fits.gz",
+}
 
 
 def scale_plot_flux(flux, energy_power=0):

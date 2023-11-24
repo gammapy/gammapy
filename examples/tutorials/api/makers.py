@@ -234,7 +234,7 @@ dataset = fov_bkg_maker.run(dataset)
 # This method is only used for 1D spectral analysis.
 #
 # For more details and usage, see
-# the :doc:`Reflected background </user-guide/makers/ring>`
+# the :doc:`Reflected background </user-guide/makers/reflected>`
 #
 # Data reduction loop
 # -------------------
