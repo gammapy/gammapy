@@ -20,7 +20,7 @@ Proposed approach
 -------------
 We will start by computing a lightcurve in the same way as :doc:`light curve notebook </tutorials/analysis-time/light_curve_flare`
 
-On these flux points we will then show the computation of different significance estimators of variability, from the simplest ones based on peak-to-trough varation, to fractional excess variance which takes into account the whole light curve, to a different approach using bayesian blocks.
+On these flux points we will then show the computation of different significance estimators of variability, from the simplest ones based on peak-to-trough variation, to fractional excess variance which takes into account the whole light curve, to a different approach using bayesian blocks.
 In summary the steps will be:
 
 -  Create a custom temporal model showing interesting time variability characteristics.
@@ -63,7 +63,8 @@ from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 log = logging.getLogger(__name__)
 
 ######################################################################
-# We load the data store and perform the same lightcurve computation as in :doc:`light curve notebook </tutorials/analysis-time/light_curve_flare`.
+# We load the data store and perform the same lightcurve computation
+# as in :doc:`light curve notebook </tutorials/analysis-time/light_curve_flare`.
 
 
 data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
@@ -152,7 +153,8 @@ plt.show()
 #  Amplitude maximum variation, relative variability amplitude and variability amplitude
 #
 # The amplitude maximum variation is the simplest method to define variability ([reference
-# paper](https://ui.adsabs.harvard.edu/abs/2016A&A...588A.103B/abstract)) as it just computes the level of tension between the lowest and highest measured fluxes in the lighcurve
+# paper](https://ui.adsabs.harvard.edu/abs/2016A&A...588A.103B/abstract)) as it just computes
+# the level of tension between the lowest and highest measured fluxes in the lightcurve
 
 flux = lc_1d.flux.data
 flux_err = lc_1d.flux_err.data
@@ -173,7 +175,9 @@ amplitude_maximum_significance = amplitude_maximum_variation / np.sqrt(
 
 print(amplitude_maximum_significance)
 
-# There are other methods based on the peak-to-trough difference to asses the varability in a lighcurve. Here we present as example the relative variability amplitude ([reference paper](https://iopscience.iop.org/article/10.1086/497430)):
+# There are other methods based on the peak-to-trough difference to assess the variability in a lightcurve.
+# Here we present as example the relative variability amplitude
+# ([reference paper](https://iopscience.iop.org/article/10.1086/497430)):
 
 relative_variability_amplitude = (f_max - f_min) / (f_max + f_min)
 
@@ -187,7 +191,7 @@ relative_variability_significance = (
     relative_variability_amplitude / relative_variability_error
 )
 
-print(sig_RV_a)
+print(relative_variability_significance)
 
 # And the variability amplitude ([reference paper](https://ui.adsabs.harvard.edu/abs/1996A%26A...305...42H/abstract)):
 
@@ -216,9 +220,15 @@ print(variability_amplitude_significance)
 #  Fractional excess variance, point-to-point fractional variance and doubling/halving time
 # ----------------------------------------------
 # The fractional excess variance ([reference
-# paper](https://ui.adsabs.harvard.edu/abs/2003MNRAS.345.1271V/abstract)) is a simple but effective method to assess the significance of a time variability feature in an object, for example an AGN flare. It is important to note that it requires gaussian errors to be applicable. The excess variance computation is implemented in the `estimators.utils` subpackage of `gammapy`. A similar estimator is the point-to-point fractional variance, which samples the lightcurve with a smaller time granularity. In general, the point-to-point fractional variance being higher than the fractional excess variance is a sign of the presence of very short timescale variability. The point-to-point variability is also implemented in the `estimators.utils` subpackage of `gammapy`.
+# paper](https://ui.adsabs.harvard.edu/abs/2003MNRAS.345.1271V/abstract)) is a simple but effective method to assess
+# the significance of a time variability feature in an object, for example an AGN flare.
+# It is important to note that it requires gaussian errors to be applicable.
+# The excess variance computation is implemented in the `estimators.utils` subpackage of `gammapy`.
+# A similar estimator is the point-to-point fractional variance, which samples the lightcurve with smaller time granularity.
+# In general, the point-to-point fractional variance being higher than the fractional excess variance is a sign of the presence of very short timescale variability. The point-to-point variability is also implemented in the `estimators.utils` subpackage of `gammapy`.
 #
-# In the same subpackage `gammapy` also offers the computation of the doubling and halving time of the lightcurve, an estimator which gives information on the shape of the variability feature.
+# In the same subpackage `gammapy` also offers the computation of the doubling and halving time of the lightcurve,
+# an estimator which gives information on the shape of the variability feature.
 
 fvar_table = compute_lightcurve_fvar(lc_1d)
 print(fvar_table)
@@ -233,7 +243,7 @@ print(dtime_table)
 # ## Bayesian blocks
 # ----------------------------------------------
 # The presence of temporal variability in a lightcurve can be assessed by using bayesian blocks ([reference
-# paper](https://ui.adsabs.harvard.edu/abs/2013ApJ...764..167S/abstract)). A good and simple-to-use implementation of the algorithm is found in `astropy.stats`([documentation](https://docs.astropy.org/en/stable/api/astropy.stats.bayesian_blocks.html)). This implementation uses guassian statistics, as opposed to the [first introductory paper](https://iopscience.iop.org/article/10.1086/306064) which was based on poissonian statistics.
+# paper](https://ui.adsabs.harvard.edu/abs/2013ApJ...764..167S/abstract)). A good and simple-to-use implementation of the algorithm is found in `astropy.stats`([documentation](https://docs.astropy.org/en/stable/api/astropy.stats.bayesian_blocks.html)). This implementation uses gaussian statistics, as opposed to the [first introductory paper](https://iopscience.iop.org/article/10.1086/306064) which was based on poissonian statistics.
 #
 # By passing the flux and error on the flux as `measures` to the method we can obtain the list of optimal bin edges defined by the bayesian blocks algorithm.
 
@@ -246,7 +256,7 @@ bayesian_edges = Time(
     format="mjd",
 )
 
-# We then can then (optionally) compute the new lightcurve and plot it
+# We can then (optionally) compute the new lightcurve and plot it
 
 time_intervalsB = [
     Time([tstart, tstop])
@@ -254,7 +264,7 @@ time_intervalsB = [
 ]
 
 lc_maker_1d = LightCurveEstimator(
-    energy_edges=[0.7, 10] * u.TeV,
+    energy_edges=[0.7, 20] * u.TeV,
     source="pks2155",
     selection_optional=["ul"],
     time_intervals=time_intervalsB,
@@ -272,7 +282,7 @@ lc_1d.plot(marker="o", axis_name="time", sed_type="flux")
 plt.legend()
 plt.show()
 
-# The result giving a significance estimation for variability in the lighcurve is the number of *change points*, i.e. the number of internal bin edges: if at least one change point is identified by the algorithm, there is significant variability.
+# The result giving a significance estimation for variability in the lightcurve is the number of *change points*, i.e. the number of internal bin edges: if at least one change point is identified by the algorithm, there is significant variability.
 
 ncp = len(bayesian_edges) - 2
 print(ncp)
