@@ -8,6 +8,7 @@ import scipy.special
 from scipy.interpolate import griddata
 import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord, angular_separation, position_angle
+from astropy.nddata import NoOverlapError
 from astropy.utils import lazyproperty
 from regions import (
     CircleAnnulusSkyRegion,
@@ -223,10 +224,13 @@ class SpatialModel(ModelBase):
         if oversampling_factor > 1:
             if self.evaluation_radius is not None:
                 # Is it still needed?
-                width = 2 * np.maximum(
-                    self.evaluation_radius.to_value("deg"), pix_scale
-                )
-                wcs_geom = wcs_geom.cutout(self.position, width)
+                try:
+                    width = 2 * np.maximum(
+                        self.evaluation_radius.to_value("deg"), pix_scale
+                    )
+                    wcs_geom = wcs_geom.cutout(self.position, width)
+                except (NoOverlapError, ValueError):
+                    pass
 
             upsampled_geom = wcs_geom.upsample(oversampling_factor, axis_name=None)
 
