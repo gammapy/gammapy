@@ -111,6 +111,8 @@ class FluxEstimator(ParameterEstimator):
             if isinstance(norm, dict):
                 norm_kwargs.update(norm)
             norm = Parameter(**norm_kwargs)
+        if norm.name != "norm":
+            raise ValueError("norm should be a norm parameter")
         self.norm = norm
 
         super().__init__(
