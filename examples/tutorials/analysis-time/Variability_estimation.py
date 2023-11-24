@@ -33,26 +33,15 @@ On these flux points we will then show the computation of different significance
 import logging
 import numpy as np
 import astropy.units as u
-from astropy.coordinates import Angle, SkyCoord
 from astropy.stats import bayesian_blocks
 from astropy.time import Time
-from regions import CircleSkyRegion
 import matplotlib.pyplot as plt
-from gammapy.data import DataStore
-from gammapy.datasets import Datasets, SpectrumDataset
 from gammapy.estimators import LightCurveEstimator
 from gammapy.estimators.utils import (
     compute_lightcurve_doublingtime,
     compute_lightcurve_fpp,
     compute_lightcurve_fvar,
 )
-from gammapy.makers import (
-    ReflectedRegionsBackgroundMaker,
-    SafeMaskMaker,
-    SpectrumDatasetMaker,
-)
-from gammapy.maps import MapAxis, RegionGeom
-from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 
 log = logging.getLogger(__name__)
 
