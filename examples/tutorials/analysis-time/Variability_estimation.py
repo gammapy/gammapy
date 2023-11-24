@@ -1,12 +1,13 @@
 """
 Estimation of time variability in a lightcurve
 =============
-Compute a series of time variability significance estimators for a simulated lightcurve.
+Compute a series of time variability significance estimators for a lightcurve.
 
 Prerequisites
 -------------
 
-Understanding the light curve estimator, please refer to the :doc:`light curve notebook </tutorials/analysis-time/light_curve`. For more in-depth explanation on the creation of smaller observations for exploring time variability, refer to :doc:`light curve notebook </tutorials/analysis-time/light_curve_flare`
+Understanding the light curve estimator, please refer to the :doc:`light curve notebook </tutorials/analysis-time/light_curve`.
+For more in-depth explanation on the creation of smaller observations for exploring time variability, refer to :doc:`light curve notebook </tutorials/analysis-time/light_curve_flare`
 
 Context
 -------------
@@ -18,17 +19,10 @@ There are many ways to define the significance of the variability.
 
 Proposed approach
 -------------
-We will start by computing a lightcurve in the same way as :doc:`light curve notebook </tutorials/analysis-time/light_curve_flare`
+We will start by reading the pre-computed lightcurve for the PKS2155 that is stored in GAMMAPY_DATA
+To learn how to compute such object, see :doc:`light curve notebook </tutorials/analysis-time/light_curve_flare`
 
-On these flux points we will then show the computation of different significance estimators of variability, from the simplest ones based on peak-to-trough variation, to fractional excess variance which takes into account the whole light curve, to a different approach using bayesian blocks.
-In summary the steps will be:
-
--  Create a custom temporal model showing interesting time variability characteristics.
--  Simulate `~gammapy.data.Observations` in 1D according to the model
-    as shown in the :doc:`/tutorials/analysis-time/light_curve_simulation` tutorial.
--  Extract the light curve from the reduced dataset as shown
-    in :doc:`/tutorials/analysis-time/light_curve` tutorial.
--  Compute the variability significance with methods from 3 different classes: peak-to-trough, fractional excess variance, bayesian blocks.
+On these flux points we will then show the computation of different significance estimators of variability, from the simplest ones based on peak-to-trough variation, to fractional excess variance and point-to-point fractional variance which take into account the whole light curve, to a different approach using the change points in bayesian blocks as variability flags.
 """
 ######################################################################
 # Setup
@@ -63,85 +57,11 @@ from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 log = logging.getLogger(__name__)
 
 ######################################################################
-# We load the data store and perform the same lightcurve computation
-# as in :doc:`light curve notebook </tutorials/analysis-time/light_curve_flare`.
+# We load the lightcurve for the PKS2155 flare directly from.GAMMAPY_DATA/estimators
 
-
-data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
-
-target_position = SkyCoord(329.71693826 * u.deg, -30.2255890 * u.deg, frame="icrs")
-selection = dict(
-    type="sky_circle",
-    frame="icrs",
-    lon=target_position.ra,
-    lat=target_position.dec,
-    radius=2 * u.deg,
+lc_1d = FluxPoints.read(
+    "$GAMMAPY_DATA/estimators/pks2155_hess_lc/pks2155_hess_lc.fits", format="lightcurve"
 )
-obs_ids = data_store.obs_table.select_observations(selection)["OBS_ID"]
-observations = data_store.get_observations(obs_ids)
-print(f"Number of selected observations : {len(observations)}")
-
-t0 = Time("2006-07-29T20:30")
-duration = 10 * u.min
-n_time_bins = 35
-times = t0 + np.arange(n_time_bins) * duration
-time_intervals = [Time([tstart, tstop]) for tstart, tstop in zip(times[:-1], times[1:])]
-print(time_intervals[0].mjd)
-
-short_observations = observations.select_time(time_intervals)
-
-######################################################################
-# check that observations have been filtered
-
-print(f"Number of observations after time filtering: {len(short_observations)}\n")
-print(short_observations[1].gti)
-
-######################################################################
-# Target definition
-energy_axis = MapAxis.from_energy_bounds("0.4 TeV", "20 TeV", nbin=10)
-energy_axis_true = MapAxis.from_energy_bounds(
-    "0.1 TeV", "40 TeV", nbin=20, name="energy_true"
-)
-
-on_region_radius = Angle("0.11 deg")
-on_region = CircleSkyRegion(center=target_position, radius=on_region_radius)
-
-geom = RegionGeom.create(region=on_region, axes=[energy_axis])
-
-dataset_maker = SpectrumDatasetMaker(
-    containment_correction=True, selection=["counts", "exposure", "edisp"]
-)
-bkg_maker = ReflectedRegionsBackgroundMaker()
-safe_mask_masker = SafeMaskMaker(methods=["aeff-max"], aeff_percent=10)
-
-datasets = Datasets()
-
-dataset_empty = SpectrumDataset.create(geom=geom, energy_axis_true=energy_axis_true)
-
-for obs in short_observations:
-    dataset = dataset_maker.run(dataset_empty.copy(), obs)
-
-    dataset_on_off = bkg_maker.run(dataset, obs)
-    dataset_on_off = safe_mask_masker.run(dataset_on_off, obs)
-    datasets.append(dataset_on_off)
-
-spectral_model = PowerLawSpectralModel(
-    index=3.4, amplitude=2e-11 * u.Unit("1 / (cm2 s TeV)"), reference=1 * u.TeV
-)
-spectral_model.parameters["index"].frozen = False
-
-sky_model = SkyModel(spatial_model=None, spectral_model=spectral_model, name="pks2155")
-
-datasets.models = sky_model
-
-lc_maker_1d = LightCurveEstimator(
-    energy_edges=[0.7, 20] * u.TeV,
-    source="pks2155",
-    time_intervals=time_intervals,
-    selection_optional=None,
-)
-
-lc_1d = lc_maker_1d.run(datasets)
 
 plt.figure(figsize=(8, 6))
 lc_1d.plot(marker="o")
