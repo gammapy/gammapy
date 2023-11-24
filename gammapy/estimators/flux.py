@@ -65,7 +65,7 @@ class FluxEstimator(ParameterEstimator):
         By default the min and max are not set and derived from the source model,
         unless the source model does not have one and only one norm parameter.
         If a dict is given the entries should be a subset of
-        ~gammapy.modeling.Parameter` arguments.
+        `~gammapy.modeling.Parameter` arguments.
     """
 
     tag = "FluxEstimator"

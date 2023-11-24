@@ -81,6 +81,14 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
         limited to the number of physical CPUs.
     parallel_backend : {"multiprocessing", "ray"}
         Which backend to use for multiprocessing.
+    norm : ~gammapy.modeling.Parameter` or dict
+        Norm parameter used for the fit
+        Default is None and a new parameter is created automatically,
+        with value=1, name="norm", scan_min=0.2, scan_max=5, and scan_n_values = 11.
+        By default the min and max are not set and derived from the source model,
+        unless the source model does not have one and only one norm parameter.
+        If a dict is given the entries should be a subset of
+        `~gammapy.modeling.Parameter` arguments.
     """
 
     tag = "FluxPointsEstimator"
