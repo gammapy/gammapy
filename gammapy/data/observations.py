@@ -368,9 +368,7 @@ class Observation:
     @property
     def observatory_earth_location(self):
         """Observatory location as an `~astropy.coordinates.EarthLocation` object."""
-        if self._location is not None:
-            return self._location
-        return self.pointing.location
+        self._location
 
     @lazyproperty
     def target_radec(self):
