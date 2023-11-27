@@ -1,6 +1,6 @@
 """
-Priors Test
-===========
+Priors 
+======
 
 Learn how you can include prior knowledge into the fitting by setting
 priors on single parameters.
@@ -89,7 +89,7 @@ check_tutorials_setup()
 # Model and dataset
 # -----------------
 #
-# First we define the source model, a power-law with an index of
+# First, we define the source model, a power-law with an index of
 # :math:`2.3`
 #
 
@@ -102,9 +102,9 @@ model = SkyModel(spectral_model=pl_spectrum, name="simu-source")
 
 ######################################################################
 # The data and background are read from pre-computed ON/OFF datasets of
-# HESS observations. For simplicity we stack them together and transform
+# HESS observations. For simplicity, we stack them together and transform
 # the dataset to a `SpectrumDataset`. Then we set the model and create
-# an Asimov dataset (dataset without statitics) by setting the counts as
+# an Asimov dataset (dataset without statistics) by setting the counts as
 # the model predictions.
 #
 
@@ -153,8 +153,8 @@ model_prior.parameters["index"].prior = gaussianprior
 ######################################################################
 # The value of the prior depends on the value of the index. If the index
 # value equals the Gaussians mean (here 2.1), the prior is zero. This
-# means that nothing is added to the cash statistics and this value is
-# favored in the fit. If the value of the index deviates from the mean of
+# means that nothing is added to the cash statistics, and this value is
+# favoured in the fit. If the value of the index deviates from the mean of
 # 2.1, a prior value > 0 is added to the cash statistics.
 #
 
@@ -204,7 +204,7 @@ results_prior = fit_prior.run(dataset1_prior)
 ######################################################################
 # The Likelihood profiles can be computed for both the datasets. Hereby,
 # the likelihood gets computed for different values of the index. For each
-# step the other free parameters are getting reopimized.
+# step the other free parameters are getting reoptimized.
 #
 
 dataset1.models.parameters["index"].scan_n_values = 20
@@ -305,8 +305,8 @@ plt.show()
 # positive, i.e. physical, values. Instead of setting hard bounds, we can
 # also set a uniform prior, which prefers positive values over negatives.
 #
-# We set the amplitude of the power-law used to simuate the source very
-# small. Together with statistical fluctuations this will result in some
+# We set the amplitude of the power-law used to simulate the source very
+# small. Together with statistical fluctuations, this will result in some
 # negative amplitude best-fit values.
 #
 
@@ -324,8 +324,8 @@ model_weak_prior.parameters["amplitude"].prior = uniform
 
 ######################################################################
 # We set the maximum value where the prior is applied to zero. Note that,
-# per default, the minimum value is set to negative infinity.Therfore, the
-# uniform prior is zero, i.e. no influenc on the fit at all if the
+# per default, the minimum value is set to negative infinity. Therefore, the
+# uniform prior is zero, i.e. no influence on the fit at all if the
 # amplitude value is positive.
 #
 # The weight of the prior again quantifies how strong we want prior to
@@ -354,7 +354,7 @@ plt.show()
 
 
 ######################################################################
-# Fitting Muliple Datasets with and without the Prior
+# Fitting Multiple Datasets with and without the Prior
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # To showcase how the uniform prior affects the fit results, :math:`100`
