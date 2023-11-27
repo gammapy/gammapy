@@ -35,7 +35,8 @@ log = logging.getLogger(__name__)
 class TemporalModel(ModelBase):
     """Temporal model base class.
 
-    Evaluates on  astropy.time.Time objects"""
+    Evaluates on `~astropy.time.Time` objects.
+    """
 
     _type = "temporal"
 
@@ -51,19 +52,19 @@ class TemporalModel(ModelBase):
         super().__init__(**kwargs)
 
     def __call__(self, time, energy=None):
-        """Evaluate model
+        """Evaluate model.
 
         Parameters
         ----------
         time : `~astropy.time.Time`
-            Time object
-        energy : `~astropy.units.Quantity`
-            Energy (optional)
+            Time object.
+        energy : `~astropy.units.Quantity`, optional
+            Energy. Default is None.
 
         Returns
         -------
         values : `~astropy.units.Quantity`
-            Model values
+            Model values.
         """
         kwargs = {par.name: par.quantity for par in self.parameters}
 
@@ -83,30 +84,30 @@ class TemporalModel(ModelBase):
 
     @property
     def reference_time(self):
-        """Reference time in mjd"""
+        """Reference time in MJD."""
         return Time(self.t_ref.value, format="mjd", scale=self.scale)
 
     @reference_time.setter
     def reference_time(self, t_ref):
-        """Reference time"""
+        """Reference time."""
         if not isinstance(t_ref, Time):
             raise TypeError(f"{t_ref} is not a {Time} object")
         self.t_ref.value = Time(t_ref, scale=self.scale).mjd
 
     def to_dict(self, full_output=False):
-        """Create dict for YAML serilisation"""
+        """Create dictionary for YAML serilisation."""
         data = super().to_dict(full_output)
         data["temporal"]["scale"] = self.scale
         return data
 
     @staticmethod
     def time_sum(t_min, t_max):
-        """Total time between t_min and t_max
+        """Total time between t_min and t_max.
 
         Parameters
         ----------
         t_min, t_max : `~astropy.time.Time`
-            Lower and upper bound of integration range
+            Lower and upper bound of integration range.
 
         Returns
         -------
@@ -120,23 +121,23 @@ class TemporalModel(ModelBase):
 
     def plot(self, time_range, ax=None, n_points=100, **kwargs):
         """
-        Plot Temporal Model.
+        Plot the temporal model.
 
         Parameters
         ----------
         time_range : `~astropy.time.Time`
-            times to plot the model
+            Times to plot the model.
         ax : `~matplotlib.axes.Axes`, optional
-            Axis to plot on
+            Axis to plot on.
         n_points : int
-            Number of bins to plot model
+            Number of bins to plot model. Default is 100.
         **kwargs : dict
-            Keywords forwarded to `~matplotlib.pyplot.errorbar`
+            Keywords forwarded to `~matplotlib.pyplot.errorbar`.
 
         Returns
         -------
         ax : `~matplotlib.axes.Axes`, optional
-            axis
+            Matplotlib axes.
         """
         time_min, time_max = time_range
         time_axis = TimeMapAxis.from_time_bounds(
@@ -163,11 +164,12 @@ class TemporalModel(ModelBase):
             Start time of the sampling.
         t_max : `~astropy.time.Time`
             Stop time of the sampling.
-        t_delta : `~astropy.units.Quantity`
-            Time step used for sampling of the temporal model.
+        t_delta : `~astropy.units.Quantity`, optional
+            Time step used for sampling of the temporal model. Default is 1 s.
         random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
             Defines random number generator initialisation.
             Passed to `~gammapy.utils.random.get_random_state`.
+            Default is 0.
 
         Returns
         -------
@@ -195,21 +197,22 @@ class TemporalModel(ModelBase):
         return t_min + time
 
     def integral(self, t_min, t_max, oversampling_factor=100, **kwargs):
-        """Evaluate the integrated flux within the given time intervals
+        """Evaluate the integrated flux within the given time intervals.
 
         Parameters
         ----------
         t_min: `~astropy.time.Time`
-            Start times of observation
+            Start times of observation.
         t_max: `~astropy.time.Time`
-            Stop times of observation
-        oversampling_factor : int
+            Stop times of observation.
+        oversampling_factor : int, optional
             Oversampling factor to be used for numerical integration.
+            Default is 100.
 
         Returns
         -------
         norm : float
-            Integrated flux norm on the given time intervals
+            Integrated flux norm on the given time intervals.
         """
         t_values, steps = np.linspace(
             t_min.mjd, t_max.mjd, oversampling_factor, retstep=True, axis=-1
@@ -234,19 +237,19 @@ class ConstantTemporalModel(TemporalModel):
         return np.ones(time.shape) * u.one
 
     def integral(self, t_min, t_max):
-        """Evaluate the integrated flux within the given time intervals
+        """Evaluate the integrated flux within the given time intervals.
 
         Parameters
         ----------
         t_min : `~astropy.time.Time`
-            Start times of observation
+            Start times of observation.
         t_max : `~astropy.time.Time`
-            Stop times of observation
+            Stop times of observation.
 
         Returns
         -------
         norm : `~astropy.units.Quantity`
-            Integrated flux norm on the given time intervals
+            Integrated flux norm on the given time intervals.
         """
         return (t_max - t_min) / self.time_sum(t_min, t_max)
 
@@ -259,11 +262,11 @@ class LinearTemporalModel(TemporalModel):
     Parameters
     ----------
     alpha : float
-        Constant term of the baseline flux
-        Default is 1
+        Constant term of the baseline flux.
+        Default is 1.
     beta : `~astropy.units.Quantity`
-        Time variation coefficient of the flux
-        Default is 0
+        Time variation coefficient of the flux.
+        Default is 0.
     t_ref : `~astropy.units.Quantity`
         The reference time in mjd.
         Frozen per default, at 2000-01-01.
@@ -278,23 +281,23 @@ class LinearTemporalModel(TemporalModel):
 
     @staticmethod
     def evaluate(time, alpha, beta, t_ref):
-        """Evaluate at given times"""
+        """Evaluate at given times."""
         return alpha + beta * (time - t_ref)
 
     def integral(self, t_min, t_max):
-        """Evaluate the integrated flux within the given time intervals
+        """Evaluate the integrated flux within the given time intervals.
 
         Parameters
         ----------
         t_min : `~astropy.time.Time`
-            Start times of observation
+            Start times of observation.
         t_max : `~astropy.time.Time`
-            Stop times of observation
+            Stop times of observation.
 
         Returns
         -------
         norm : float
-            Integrated flux norm on the given time intervals
+            Integrated flux norm on the given time intervals.
         """
         pars = self.parameters
         alpha = pars["alpha"]
@@ -314,11 +317,9 @@ class ExpDecayTemporalModel(TemporalModel):
     Parameters
     ----------
     t0 : `~astropy.units.Quantity`
-        Decay time scale
-        Default is 1 day
+        Decay timescale. Default is 1 day.
     t_ref : `~astropy.units.Quantity`
-        The reference time in mjd.
-        Frozen per default, at 2000-01-01.
+        The reference time in mjd. Frozen per default, at 2000-01-01.
     """
 
     tag = ["ExpDecayTemporalModel", "exp-decay"]
@@ -329,23 +330,23 @@ class ExpDecayTemporalModel(TemporalModel):
 
     @staticmethod
     def evaluate(time, t0, t_ref):
-        """Evaluate at given times"""
+        """Evaluate at given times."""
         return np.exp(-(time - t_ref) / t0)
 
     def integral(self, t_min, t_max):
-        """Evaluate the integrated flux within the given time intervals
+        """Evaluate the integrated flux within the given time intervals.
 
         Parameters
         ----------
         t_min : `~astropy.time.Time`
-            Start times of observation
+            Start times of observation.
         t_max : `~astropy.time.Time`
-            Stop times of observation
+            Stop times of observation.
 
         Returns
         -------
         norm : float
-            Integrated flux norm on the given time intervals
+            Integrated flux norm on the given time intervals.
         """
         pars = self.parameters
         t0 = pars["t0"].quantity
@@ -355,7 +356,7 @@ class ExpDecayTemporalModel(TemporalModel):
 
 
 class GaussianTemporalModel(TemporalModel):
-    r"""A Gaussian temporal profile
+    r"""A Gaussian temporal profile.
 
     For more information see :ref:`gaussian-temporal-model`.
 
@@ -363,10 +364,10 @@ class GaussianTemporalModel(TemporalModel):
     ----------
     t_ref : `~astropy.units.Quantity`
         The reference time in mjd at the peak.
-        Default is 2000-01-01
+        Default is 2000-01-01.
     sigma : `~astropy.units.Quantity`
         Width of the gaussian profile.
-        Default is 1 day
+        Default is 1 day.
     """
 
     tag = ["GaussianTemporalModel", "gauss"]
@@ -380,19 +381,19 @@ class GaussianTemporalModel(TemporalModel):
         return np.exp(-((time - t_ref) ** 2) / (2 * sigma**2))
 
     def integral(self, t_min, t_max, **kwargs):
-        """Evaluate the integrated flux within the given time intervals
+        """Evaluate the integrated flux within the given time intervals.
 
         Parameters
         ----------
         t_min : `~astropy.time.Time`
-            Start times of observation
+            Start times of observation.
         t_max : `~astropy.time.Time`
-            Stop times of observation
+            Stop times of observation.
 
         Returns
         -------
         norm : float
-            Integrated flux norm on the given time intervals
+            Integrated flux norm on the given time intervals.
         """
         pars = self.parameters
         sigma = pars["sigma"].quantity
@@ -407,7 +408,7 @@ class GaussianTemporalModel(TemporalModel):
 
 
 class GeneralizedGaussianTemporalModel(TemporalModel):
-    r"""A generalized Gaussian temporal profile
+    r"""A generalized Gaussian temporal profile.
 
     For more information see :ref:`generalized-gaussian-temporal-model`.
 
@@ -415,16 +416,16 @@ class GeneralizedGaussianTemporalModel(TemporalModel):
     ----------
     t_ref : `~astropy.units.Quantity`
         The time of the pulse's maximum intensity.
-        Default is 2000-01-01
+        Default is 2000-01-01.
     t_rise : `~astropy.units.Quantity`
         Rise time constant.
-        Default is 1 day
+        Default is 1 day.
     t_decay : `~astropy.units.Quantity`
         Decay time constant.
-        Default is 1 day
+        Default is 1 day.
     eta : `~astropy.units.Quantity`
-        Inverse pulse sharpness -> higher values implies a more peaked pulse
-        Default is 1/2
+        Inverse pulse sharpness -> higher values implies a more peaked pulse.
+        Default is 1/2.
 
     """
 
@@ -560,24 +561,24 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
     @property
     def is_energy_dependent(self):
-        """Whether the model is energy dependent"""
+        """Whether the model is energy dependent."""
         return self.map.geom.has_energy_axis
 
     @classmethod
     def from_table(cls, table, filename=None):
-        """Create a template model from an astropy table
+        """Create a template model from an astropy table.
 
         Parameters
         ----------
         table : `~astropy.table.Table`
             Table containing the template model.
-        filename : str
-            Name of input file
+        filename : str, optional
+            Name of input file. Default is None.
 
         Returns
         -------
         model : `LightCurveTemplateTemporalModel`
-            Light curve template model
+            Light curve template model.
         """
         columns = [_.lower() for _ in table.colnames]
         if "time" not in columns:
@@ -602,19 +603,19 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
     @classmethod
     def read(cls, filename, format="table"):
-        """Read a template model
+        """Read a template model.
 
         Parameters
         ----------
         filename : str
-            Name of file to read
+            Name of file to read.
         format : {"table", "map"}
             Format of the input file.
 
         Returns
         -------
         model : `LightCurveTemplateTemporalModel`
-            Light curve template model
+            Light curve template model.
         """
         filename = str(make_path(filename))
         if format == "table":
@@ -640,7 +641,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
             )
 
     def to_table(self):
-        """Convert model to an astropy table"""
+        """Convert model to an astropy table."""
         if self.is_energy_dependent:
             raise NotImplementedError("Not supported for energy dependent models")
         table = Table(
@@ -651,18 +652,18 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         return table
 
     def write(self, filename, format="table", overwrite=False):
-        """Write a model to disk as per the specified format
+        """Write a model to disk as per the specified format.
 
         Parameters:
             filename : str
-                name of output file
+                Name of output file.
             format : str, either "table" or "map"
-                if format is table, it is serialised as an astropy Table
-                if map, then it is serialised as a RegionNDMap
+                If format is "table", it is serialised as a `~astropy.table.Table`.
+                If "map", then it is serialised as a `~gammapy.maps.RegionNDMap`.
+                Default is "table".
             overwrite : bool, optional
                 Overwrite existing file. Default is False.
         """
-
         if self.filename is None:
             raise IOError("Missing filename")
 
@@ -685,16 +686,16 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         Parameters
         ----------
         time: `~astropy.time.Time`
-            array of times where the model is evaluated;
-        t_ref: `~gammapy.modeling.Parameter`
-            Reference time for the model;
-        energy: `~astropy.units.Quantity`
-            array of energies where the model is evaluated;
+            Time.
+        t_ref: `~gammapy.modeling.Parameter`, optional
+            Reference time for the model. Default is None.
+        energy: `~astropy.units.Quantity`, optional
+            Energy. Default is None.
 
         Returns
         -------
         values : `~astropy.units.Quantity`
-            Model values
+            Model values.
         """
         if t_ref is None:
             t_ref = self.reference_time
@@ -730,7 +731,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         return cls.read(filename, format)
 
     def to_dict(self, full_output=False, format="table"):
-        """Create dict for YAML serialisation"""
+        """Create dictionary for YAML serialisation."""
         data = super().to_dict(full_output)
         data["temporal"]["filename"] = self.filename
         data["temporal"]["format"] = format
@@ -739,24 +740,24 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
     def plot(self, time_range, ax=None, n_points=100, energy=None, **kwargs):
         """
-        Plot Temporal Model.
+        Plot the temporal model.
 
         Parameters
         ----------
         time_range : `~astropy.time.Time`
-            times to plot the model
+            Times to plot the model.
         ax : `~matplotlib.axes.Axes`, optional
-            Axis to plot on
-        n_points : int
-            Number of bins to plot model
-        energy : `~astropy.units.quantity`
-            energies to compute the model at for energy dependent models, optional
+            Axis to plot on. Default is None.
+        n_points : int, optional
+            Number of bins to plot model. Default is 100.
+        energy : `~astropy.units.quantity`, optional
+            Energies to compute the model at for energy dependent models. Default is None.
         **kwargs : dict
-            Keywords forwarded to `~matplotlib.pyplot.errorbar`
+            Keywords forwarded to `~matplotlib.pyplot.errorbar`.
         Returns
         -------
         ax : `~matplotlib.axes.Axes`, optional
-            axis
+            Matplotlib axes.
         """
         if not self.is_energy_dependent:
             super().plot(time_range=time_range, ax=ax, n_points=n_points, **kwargs)
@@ -792,8 +793,7 @@ class PowerLawTemporalModel(TemporalModel):
     Parameters
     ----------
     alpha : float
-        Decay time power
-        Default is 1
+        Decay time power. Default is 1.
     t_ref: `~astropy.units.Quantity`
         The reference time in mjd.
         Frozen by default, at 2000-01-01.
@@ -811,23 +811,23 @@ class PowerLawTemporalModel(TemporalModel):
 
     @staticmethod
     def evaluate(time, alpha, t_ref, t0=1 * u.day):
-        """Evaluate at given times"""
+        """Evaluate at given times."""
         return np.power((time - t_ref) / t0, alpha)
 
     def integral(self, t_min, t_max):
-        """Evaluate the integrated flux within the given time intervals
+        """Evaluate the integrated flux within the given time intervals.
 
         Parameters
         ----------
         t_min: `~astropy.time.Time`
-            Start times of observation
+            Start times of observation.
         t_max: `~astropy.time.Time`
-            Stop times of observation
+            Stop times of observation.
 
         Returns
         -------
         norm : float
-            Integrated flux norm on the given time intervals
+            Integrated flux norm on the given time intervals.
         """
         pars = self.parameters
         alpha = pars["alpha"].quantity
@@ -851,14 +851,14 @@ class SineTemporalModel(TemporalModel):
     Parameters
     ----------
     amp : float
-        Amplitude of the sinusoidal function
-        Default is 1
+        Amplitude of the sinusoidal function.
+        Default is 1.
     t_ref: `~astropy.units.Quantity`
         The reference time in mjd.
-        Default is 2000-01-01
+        Default is 2000-01-01.
     omega: `~astropy.units.Quantity`
         Pulsation of the signal.
-        Default is 1 rad/day
+        Default is 1 rad/day.
     """
 
     tag = ["SineTemporalModel", "sinus"]
@@ -870,23 +870,23 @@ class SineTemporalModel(TemporalModel):
 
     @staticmethod
     def evaluate(time, amp, omega, t_ref):
-        """Evaluate at given times"""
+        """Evaluate at given times."""
         return 1.0 + amp * np.sin(omega * (time - t_ref))
 
     def integral(self, t_min, t_max):
-        """Evaluate the integrated flux within the given time intervals
+        """Evaluate the integrated flux within the given time intervals.
 
         Parameters
         ----------
         t_min: `~astropy.time.Time`
-            Start times of observation
+            Start times of observation.
         t_max: `~astropy.time.Time`
-            Stop times of observation
+            Stop times of observation.
 
         Returns
         -------
         norm : float
-            Integrated flux norm on the given time intervals
+            Integrated flux norm on the given time intervals.
         """
         pars = self.parameters
         omega = pars["omega"].quantity.to_value("rad/day")
@@ -921,24 +921,24 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
     Parameters
     ----------
     table : `~astropy.table.Table`
-        A table with 'PHASE' vs 'NORM'
+        A table with 'PHASE' vs 'NORM'.
     filename : str
-        The name of the file containing the phase curve
+        The name of the file containing the phase curve.
     t_ref : `~astropy.units.Quantity`
-        The reference time in mjd
-        Default is 48442.5 mjd
+        The reference time in mjd.
+        Default is 48442.5 mjd.
     phi_ref : `~astropy.units.Quantity`
         The phase at reference time.
-        Default is 0
+        Default is 0.
     f0 : `~astropy.units.Quantity`
-        The frequency at t_ref in s-1
-        Default is 29.946923 s-1
+        The frequency at t_ref in s-1.
+        Default is 29.946923 s-1.
     f1 : `~astropy.units.Quantity`
         The frequency derivative at t_ref in s-2.
-        Default is 0 s-2
+        Default is 0 s-2.
     f2 : `~astropy.units.Quantity`
         The frequency second derivative at t_ref in s-3.
-        Default is 0 s-3
+        Default is 0 s-3.
     """
 
     tag = ["TemplatePhaseCurveTemporalModel", "template-phase"]
@@ -979,7 +979,7 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         Parameters
         ----------
         path : str or `~pathlib.Path`
-            filename with path
+            Filename with path.
         """
         filename = str(make_path(path))
         return cls(
@@ -999,14 +999,14 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         Parameters
         ----------
         time : `~astropy.units.Quantity`
-            The time at which to compute the phase
+            The time at which to compute the phase.
         t_ref : `~astropy.units.Quantity`
             The reference time in mjd.
         phi_ref : `~astropy.units.Quantity`
             The phase at reference time.
-            Default is 0
+            Default is 0.
         f0 : `~astropy.units.Quantity`
-            The frequency at t_ref in s-1
+            The frequency at t_ref in s-1.
         f1 : `~astropy.units.Quantity`
             The frequency derivative at t_ref in s-2.
         f2 : `~astropy.units.Quantity`
@@ -1051,17 +1051,18 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         return self._interpolator(phase) * u.one
 
     def integral(self, t_min, t_max):
-        """Evaluate the integrated flux within the given time intervals
+        """Evaluate the integrated flux within the given time intervals.
 
         Parameters
         ----------
         t_min: `~astropy.time.Time`
-            Start times of observation
+            Start times of observation.
         t_max: `~astropy.time.Time`
-            Stop times of observation
+            Stop times of observation.
+
         Returns
         -------
-        norm: The model integrated flux
+        norm: The model integrated flux.
         """
         kwargs = {par.name: par.quantity for par in self.parameters}
         ph_min, n_min = self._time_to_phase(t_min.mjd * u.d, **kwargs)
@@ -1105,7 +1106,7 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         return cls.read(filename, **kwargs)
 
     def to_dict(self, full_output=False):
-        """Create dict for YAML serialisation"""
+        """Create dictionary for YAML serialisation."""
         model_dict = super().to_dict()
         model_dict["temporal"]["filename"] = self.filename
         return model_dict
@@ -1117,16 +1118,16 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`, optional
-            Axis to plot on
-        n_points : int
-            Number of bins to plot model
+            Axis to plot on. Default is None.
+        n_points : int, optional
+            Number of bins to plot model. Default is 100.
         **kwargs : dict
-            Keywords forwarded to `~matplotlib.pyplot.errorbar`
+            Keywords forwarded to `~matplotlib.pyplot.errorbar`.
 
         Returns
         -------
         ax : `~matplotlib.axes.Axes`, optional
-            axis
+            Matplotlib axes.
         """
         phase_axis = MapAxis.from_bounds(0.0, 1, nbin=n_points, name="Phase", unit="")
 

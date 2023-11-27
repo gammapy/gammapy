@@ -16,7 +16,7 @@ where :math:`\tau(E, z)` is the optical depth predicted by the model
 redshift z of the source, and :math:`\alpha` is a scale factor
 (default: 1) for the optical depth.
 
-The available EBL models are defined in `~gammapy.modeling.models.spectral.EBL_DATA_BUILTIN`.
+The available EBL models are defined in `~gammapy.modeling.models.EBL_DATA_BUILTIN`.
 """
 
 # %%
@@ -27,12 +27,12 @@ The available EBL models are defined in `~gammapy.modeling.models.spectral.EBL_D
 from astropy import units as u
 import matplotlib.pyplot as plt
 from gammapy.modeling.models import (
+    EBL_DATA_BUILTIN,
     EBLAbsorptionNormSpectralModel,
     Models,
     PowerLawSpectralModel,
     SkyModel,
 )
-from gammapy.modeling.models.spectral import EBL_DATA_BUILTIN
 
 # Print the available EBL models
 print(EBL_DATA_BUILTIN.keys())

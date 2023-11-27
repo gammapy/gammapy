@@ -17,8 +17,6 @@ class ParallelBackendEnum(Enum):
     @classmethod
     def from_str(cls, value):
         """Get enum from string."""
-        if value is None:
-            value = BACKEND_DEFAULT
 
         if value == "ray" and not is_ray_available():
             log.warning("Ray is not installed, falling back to multiprocessing backend")
@@ -36,6 +34,9 @@ class PoolMethodEnum(Enum):
 
 BACKEND_DEFAULT = ParallelBackendEnum.multiprocessing
 N_JOBS_DEFAULT = 1
+POOL_KWARGS_DEFAULT = dict(processes=N_JOBS_DEFAULT)
+METHOD_DEFAULT = PoolMethodEnum.starmap
+METHOD_KWARGS_DEFAULT = {}
 
 
 def get_multiprocessing():
@@ -74,6 +75,68 @@ def is_ray_available():
         return False
 
 
+class multiprocessing_manager:
+    """Context manager to update the default configuration for multiprocessing.
+
+    Only the default configuration will be modified, if class arguments like
+    `n_jobs` and `parallel_backend` are set they will overwrite the default configuration.
+
+    Parameters
+    ----------
+    backend : {'multiprocessing', 'ray'}
+        Backend to use.
+    pool_kwargs : dict
+        Keyword arguments passed to the pool. The number of processes is limited
+        to the number of physical CPUs.
+    method : {'starmap', 'apply_async'}
+        Pool method to use.
+    method_kwargs : dict
+        Keyword arguments passed to the method
+
+    Examples
+    --------
+    ::
+        import gammapy.utils.parallel as parallel
+        from gammapy.estimators import FluxPointsEstimator
+
+        fpe = FluxPointsEstimator(energy_edges=[1, 3, 10] * u.TeV)
+
+        with parallel.multiprocessing_manager(
+                backend="multiprocessing",
+                pool_kwargs=dict(processes=2),
+            ):
+            fpe.run(datasets)
+    """
+
+    def __init__(self, backend=None, pool_kwargs=None, method=None, method_kwargs=None):
+        global BACKEND_DEFAULT, POOL_KWARGS_DEFAULT, METHOD_DEFAULT, METHOD_KWARGS_DEFAULT, N_JOBS_DEFAULT
+        self._backend = BACKEND_DEFAULT
+        self._pool_kwargs = POOL_KWARGS_DEFAULT
+        self._method = METHOD_DEFAULT
+        self._method_kwargs = METHOD_KWARGS_DEFAULT
+        self._n_jobs = N_JOBS_DEFAULT
+        if backend is not None:
+            BACKEND_DEFAULT = ParallelBackendEnum.from_str(backend).value
+        if pool_kwargs is not None:
+            POOL_KWARGS_DEFAULT = pool_kwargs
+            N_JOBS_DEFAULT = pool_kwargs.get("processes", N_JOBS_DEFAULT)
+        if method is not None:
+            METHOD_DEFAULT = PoolMethodEnum(method).value
+        if method_kwargs is not None:
+            METHOD_KWARGS_DEFAULT = method_kwargs
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, type, value, traceback):
+        global BACKEND_DEFAULT, POOL_KWARGS_DEFAULT, METHOD_DEFAULT, METHOD_KWARGS_DEFAULT, N_JOBS_DEFAULT
+        BACKEND_DEFAULT = self._backend
+        POOL_KWARGS_DEFAULT = self._pool_kwargs
+        METHOD_DEFAULT = self._method
+        METHOD_KWARGS_DEFAULT = self._method_kwargs
+        N_JOBS_DEFAULT = self._n_jobs
+
+
 class ParallelMixin:
     """Mixin class to handle parallel processing."""
 
@@ -106,8 +169,11 @@ class ParallelMixin:
 
     @parallel_backend.setter
     def parallel_backend(self, value):
-        """Parallel backend setter as a string."""
-        self._parallel_backend = ParallelBackendEnum.from_str(value).value
+        """Parallel backend setter (str)"""
+        if value is None:
+            self._parallel_backend = None
+        else:
+            self._parallel_backend = ParallelBackendEnum.from_str(value).value
 
 
 def run_multiprocessing(
@@ -115,7 +181,7 @@ def run_multiprocessing(
     inputs,
     backend=None,
     pool_kwargs=None,
-    method="starmap",
+    method=None,
     method_kwargs=None,
     task_name="",
 ):
@@ -143,16 +209,22 @@ def run_multiprocessing(
     task_name : str, optional
         Name of the task to display in the progress bar. Default is "".
     """
-    backend = ParallelBackendEnum.from_str(backend)
+
+    if backend is None:
+        backend = BACKEND_DEFAULT
+
+    if method is None:
+        method = METHOD_DEFAULT
 
     if method_kwargs is None:
-        method_kwargs = {}
+        method_kwargs = METHOD_KWARGS_DEFAULT
 
     if pool_kwargs is None:
-        pool_kwargs = {}
+        pool_kwargs = POOL_KWARGS_DEFAULT
 
     processes = pool_kwargs.get("processes", N_JOBS_DEFAULT)
 
+    backend = ParallelBackendEnum.from_str(backend)
     multiprocessing = PARALLEL_BACKEND_MODULES[backend]()
 
     if backend == ParallelBackendEnum.multiprocessing:

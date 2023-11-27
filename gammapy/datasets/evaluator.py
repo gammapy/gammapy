@@ -28,17 +28,17 @@ class MapEvaluator:
     Parameters
     ----------
     model : `~gammapy.modeling.models.SkyModel`
-        Sky model
+        Sky model.
     exposure : `~gammapy.maps.Map`
-        Exposure map
+        Exposure map.
     psf : `~gammapy.irf.PSFKernel`
-        PSF kernel
+        PSF kernel.
     edisp : `~gammapy.irf.EDispKernel`
-        Energy dispersion
+        Energy dispersion.
     mask : `~gammapy.maps.Map`
         Mask to apply to the likelihood for fitting.
     gti : `~gammapy.data.GTI`
-        GTI of the observation or union of GTI if it is a stacked observation
+        GTI of the observation or union of GTI if it is a stacked observation.
     evaluation_mode : {"local", "global"}
         Model evaluation mode.
         The "local" mode evaluates the model components on smaller grids to save computation time.
@@ -46,7 +46,7 @@ class MapEvaluator:
         The "global" evaluation mode evaluates the model components on the full map.
         This mode is recommended for global optimization algorithms.
     use_cache : bool
-        Use npred caching
+        Use npred caching.
     """
 
     def __init__(
@@ -150,7 +150,7 @@ class MapEvaluator:
         return psf_width
 
     def use_psf_containment(self, geom):
-        """Use psf containment for point sources and circular regions."""
+        """Use PSF containment for point sources and circular regions."""
         if not geom.is_region:
             return False
 
@@ -169,15 +169,15 @@ class MapEvaluator:
         Parameters
         ----------
         exposure : `~gammapy.maps.Map`
-            Exposure map
+            Exposure map.
         psf : `gammapy.irf.PSFMap`
-            PSF map
+            PSF map.
         edisp : `gammapy.irf.EDispMap`
-            Edisp map
+            Edisp map.
         geom : `WcsGeom`
-            Counts geom
+            Counts geom.
         mask : `~gammapy.maps.Map`
-            Mask to apply to the likelihood for fitting
+            Mask to apply to the likelihood for fitting.
         """
         # TODO: simplify and clean up
         log.debug("Updating model evaluator")
@@ -248,8 +248,8 @@ class MapEvaluator:
         Returns
         -------
         model_map : `~gammapy.maps.Map`
-            Sky cube with data filled with evaluated model values
-            Units: ``cm-2 s-1 TeV-1 deg-2``
+            Sky cube with data filled with evaluated model values.
+            Units: ``cm-2 s-1 TeV-1 deg-2``.
         """
         return self.model.evaluate_geom(self.geom, self.gti)
 
@@ -258,7 +258,7 @@ class MapEvaluator:
         return self.model.integrate_geom(self.geom, self.gti)
 
     def compute_flux_psf_convolved(self, *arg):
-        """Compute psf convolved and temporal model corrected flux."""
+        """Compute PSF convolved and temporal model corrected flux."""
         value = self.compute_flux_spectral()
 
         if self.model.spatial_model:
@@ -285,7 +285,7 @@ class MapEvaluator:
         Returns
         ----------
         value: `~astropy.units.Quantity`
-            PSF-corrected, integrated flux over a given region
+            PSF-corrected, integrated flux over a given region.
         """
         if self.geom.is_region:
             # We don't estimate spatial contributions if no psf are defined
@@ -359,12 +359,12 @@ class MapEvaluator:
         Parameters
         ----------
         npred : `~gammapy.maps.Map`
-            Predicted counts in true energy bins
+            Predicted counts in true energy bins.
 
         Returns
         -------
         npred_reco : `~gammapy.maps.Map`
-            Predicted counts in reco energy bins
+            Predicted counts in reconstructed energy bins.
         """
         return apply_edisp(npred, self.edisp)
 
@@ -400,7 +400,7 @@ class MapEvaluator:
         Returns
         -------
         npred : `~gammapy.maps.Map`
-            Predicted counts on the map (in reco energy bins)
+            Predicted counts on the map (in reconstructed energy bins).
         """
         if self.parameters_changed or not self.use_cache:
             del self._compute_npred
@@ -440,12 +440,12 @@ class MapEvaluator:
         Parameters
         ----------
         reset : bool
-            Reset cached values
+            Reset cached values. Default is True.
 
         Returns
         -------
         changed : bool
-            Whether spatial parameters changed
+            Whether spatial parameters changed.
         """
         values = self.model.spatial_model.parameters.value
 
@@ -518,10 +518,11 @@ class MapEvaluator:
 
     def peek(self, figsize=(12, 15)):
         """Quick-look summary plots.
+
         Parameters
         ----------
         figsize : tuple
-            Size of the figure
+            Size of the figure. Default is (12, 15).
         """
         if self.needs_update:
             raise AttributeError(

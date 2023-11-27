@@ -4,7 +4,7 @@ import html
 
 
 class HpxConv:
-    """Data structure to define how a HEALPIX map is stored to FITS."""
+    """Data structure to define how a HEALPix map is stored to FITS."""
 
     def __init__(self, convname, **kwargs):
         self.convname = convname
