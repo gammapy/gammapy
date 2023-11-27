@@ -1,6 +1,6 @@
 """
-Priors
-======
+Priors Test
+===========
 
 Learn how you can include prior knowledge into the fitting by setting
 priors on single parameters.
@@ -179,6 +179,7 @@ plt.ylabel("Prior")
 plt.legend()
 plt.xlim(2.0, 2.2)
 plt.ylim(-0.05, 1.1)
+plt.show()
 
 
 ######################################################################
@@ -278,6 +279,7 @@ plt.legend()
 plt.ylim(-55.5, -50)
 plt.xlabel("Index")
 plt.ylabel("Fit Statistics [arb. unit]")
+plt.show()
 
 
 ######################################################################
@@ -285,6 +287,13 @@ plt.ylabel("Fit Statistics [arb. unit]")
 # manipulate the best-fit index. This can have multiple advantages if one
 # wants to include additional information. But it should always be used
 # carefully to not falsify or bias any results!
+#
+# Note how the :math:`\Delta`\ TS of the dataset with the prior set is
+# larger (:math:`-53.91`) than the one without prior (:math:`-55.03`)
+# since the index is not fitted to the underlying true value. If the
+# Gaussian priors mean were the true value of :math:`2.3`, the index would
+# be fitted correctly, and the :math:`\Delta`\ TS values would be the
+# same.
 #
 
 
@@ -341,13 +350,14 @@ plt.plot(
 plt.xlabel("Amplitude Value [1 / (TeV s cm2)]")
 plt.ylabel("Prior")
 plt.legend()
+plt.show()
 
 
 ######################################################################
 # Fitting Muliple Datasets with and without the Prior
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# To showcase how the uniform prior affects the fit results, :math:`1000`
+# To showcase how the uniform prior affects the fit results, :math:`100`
 # datasets are created and fitted without and with the prior
 #
 
@@ -355,10 +365,10 @@ results, results_prior = [], []
 N = 100
 dataset2 = dataset.copy()
 for n in range(N):
-
     # simulating the dataset
     dataset2.models = model_weak.copy()
     dataset2.fake()
+
     dataset2_prior = dataset2.copy()
     dataset2_prior.models = model_weak_prior.copy()
     # fitting without the prior
@@ -371,14 +381,15 @@ for n in range(N):
         }
     )
     # fitting with the prior
-    fit = Fit()
-    result = fit.optimize(dataset2_prior)
+    fit_prior = Fit()
+    result = fit_prior.optimize(dataset2_prior)
     results_prior.append(
         {
             "index": result.parameters["index"].value,
             "amplitude": result.parameters["amplitude"].value,
         }
     )
+
 
 fig, axs = plt.subplots(1, 2, figsize=(7, 4))
 for i, parname in enumerate(["index", "amplitude"]):
