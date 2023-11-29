@@ -65,16 +65,16 @@ plt.show()
 # paper](https://ui.adsabs.harvard.edu/abs/2016A&A...588A.103B/abstract)) as it just computes
 # the level of tension between the lowest and highest measured fluxes in the lightcurve
 
-flux = lc_1d.flux.data
-flux_err = lc_1d.flux_err.data
+flux = lc_1d.flux.quantity
+flux_err = lc_1d.flux_err.quantity
 
 f_mean = np.mean(flux)
 f_mean_err = np.mean(flux_err)
 
 f_max = flux.max()
-f_max_err = flux_err[np.argmax(flux)]
+f_max_err = flux_err[flux.argmax()]
 f_min = flux.min()
-f_min_err = flux_err[np.argmin(flux)]
+f_min_err = flux_err[flux.argmin()]
 
 amplitude_maximum_variation = (f_max - f_max_err) - (f_min - f_min_err)
 
