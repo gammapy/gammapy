@@ -201,8 +201,8 @@ estimator = EnergyDependenceEstimator(energy_edges=energy_edges, source="MSH1552
 # The results of the source signal above the background in each energy bin
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# The table shows the delta TS value, the number of degrees of freedom (df)
-# and the significance in each energy bin. The significance values here show that each
+# The table shows the ∆(TS) value, the number of degrees of freedom (df)
+# and the significance (σ) in each energy bin. The significance values here show that each
 # energy band has significant signal above the background.
 #
 
@@ -213,6 +213,10 @@ display(table_bkg_src)
 ######################################################################
 # The results for testing energy dependence
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Next, the estimator is run to produce the results of the energy-dependent estimator.
+# The table shows the various free parameters for the joint fit for :math:`H_0` across the entire
+# energy band and for each energy bin shown for :math:`H_1`.
 
 results = estimator.run(datasets)
 ts = results["energy_dependence"]["delta_ts"]
@@ -230,7 +234,9 @@ display(results_table)
 # The chi-squared value for each parameter of interest
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# The sigma values.
+# We can also utilise the `~gammapy.estimators.energydependence.weighted_chi2_parameter` function for each parameter.
+#
+# The weighted chi-squared significance for the sigma values.
 #
 
 display(
@@ -242,7 +248,7 @@ display(
 )
 
 ######################################################################
-# The lat_0 values.
+# The weighted chi-squared significance for the lat_0 values.
 
 display(
     Table(
@@ -253,7 +259,7 @@ display(
 )
 
 ######################################################################
-# The lon_0 values.
+# The weighted chi-squared significance for the lon_0 values.
 
 display(
     Table(

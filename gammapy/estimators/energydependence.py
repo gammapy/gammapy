@@ -9,7 +9,7 @@ from gammapy.modeling.selection import TestStatisticNested
 from gammapy.stats.utils import ts_to_sigma
 from .core import Estimator
 
-__all__ = ["EnergyDependenceEstimator"]
+__all__ = ["weighted_chi2_parameter", "EnergyDependenceEstimator"]
 
 
 def weighted_chi2_parameter(results_edep, parameter="sigma"):
