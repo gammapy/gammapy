@@ -532,6 +532,16 @@ class Test_template_cube_MapEvaluator:
         assert_allclose(out.data.sum(), 1.106403e12, rtol=5e-3)
         assert_allclose(out.data[0, 0, 0], 8.778828e09, rtol=5e-3)
 
+    @staticmethod
+    def test_apply_edisp_false(diffuse_evaluator):
+        diffuse_evaluator.model.apply_irf["edisp"] = False
+        diffuse_evaluator.use_cache = False
+        out = diffuse_evaluator.compute_npred()
+        assert "energy" in out.geom.axes.names
+        assert out.data.shape == (2, 4, 5)
+        assert_allclose(out.data.sum(), 1.106403e12, rtol=5e-3)
+        assert_allclose(out.data[0, 0, 0], 8.778828e09, rtol=5e-3)
+
 
 class TestSkyModelMapEvaluator:
     @staticmethod
