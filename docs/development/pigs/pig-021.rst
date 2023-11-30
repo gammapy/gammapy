@@ -97,7 +97,7 @@ An example of how this can be achieved with a custom implemented model is given 
 .. code::
 
     from gammapy.modeling.models import SpatialModel
-    from astropy.coordinates.angle_utilities import angular_separation
+    from astropy.coordinates import angular_separation
 
     class MyCustomGaussianModel(SpatialModel):
         """My custom gaussian model.

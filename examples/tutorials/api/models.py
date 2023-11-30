@@ -760,7 +760,7 @@ models.write("my-custom-models.yaml", overwrite=True)
 # models.
 #
 
-from astropy.coordinates.angle_utilities import angular_separation
+from astropy.coordinates import angular_separation
 from gammapy.modeling.models import SpatialModel
 
 
