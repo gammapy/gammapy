@@ -993,14 +993,14 @@ class DatasetModels(collections.abc.Sequence):
     def to_template_spectral_model(self, geom, mask=None):
         """Merge a list of models into a single `~gammapy.modeling.models.TemplateSpectralModel`.
 
-        For each model the spatial component is intergated over the given geom where the mask is true
+        For each model the spatial component is integrated over the given geometry where the mask is true
         and multiplied by the spectral component value in each energy bin.
 
         Parameters
         ----------
-        geom : `Geom`
+        geom : `~gammapy.maps.Geom`
             Map geometry on which the template model is computed.
-        mask :  `Map` with bool dtype.
+        mask :  `~gammapy.maps.Map` with bool dtype.
             Evaluate the model only where the mask is True.
 
         Returns
