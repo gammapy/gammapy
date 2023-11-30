@@ -534,8 +534,10 @@ class Test_template_cube_MapEvaluator:
 
     @staticmethod
     def test_apply_edisp_false(diffuse_evaluator):
+        # TODO: needs_update=True if apply_irf change ?
         diffuse_evaluator.model.apply_irf["edisp"] = False
         diffuse_evaluator.use_cache = False
+        del diffuse_evaluator.methods_sequence
         out = diffuse_evaluator.compute_npred()
         assert "energy" in out.geom.axes.names
         assert out.data.shape == (2, 4, 5)
