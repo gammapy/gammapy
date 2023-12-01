@@ -145,7 +145,7 @@ print(dataset_cta)
 
 ######################################################################
 # To further explore the contents of a `Dataset`, you can use
-# e.g. `~gammapy.datasets.MapDataset.info_dict()`
+# e.g. `~gammapy.datasets.MapDataset.info_dict()`
 #
 
 ######################################################################
@@ -171,7 +171,7 @@ plt.show()
 
 
 ######################################################################
-# Of course you can also access IRF related maps, e.g. the psf as
+# Of course you can also access IRF related maps, e.g. the psf as
 # `~gammapy.irf.PSFMap`:
 #
 
@@ -235,7 +235,7 @@ plt.show()
 # use:
 #
 
-npred_source = dataset_cta.npred_signal(model_name="gc")
+npred_source = dataset_cta.npred_signal(model_names=["gc"])
 npred_source.sum_over_axes().plot()
 plt.show()
 
@@ -263,7 +263,7 @@ plt.show()
 #    according to the specified selection cuts, and should not be changed
 #    by the user.
 # -  During modelling and fitting, the user might want to additionally
-#    ignore some parts of a reduced dataset, e.g. to restrict the fit to a
+#    ignore some parts of a reduced dataset, e.g. to restrict the fit to a
 #    specific energy range or to ignore parts of the region of interest.
 #    This should be done by applying the `~gammapy.datasets.MapDataset.mask_fit`. To see details of
 #    applying masks, please refer to :ref:`masks-for-fitting`.
