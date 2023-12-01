@@ -527,7 +527,7 @@ class MapEvaluator:
         if self.needs_update:
             raise AttributeError(
                 "The evaluator needs to be updated first. Execute "
-                "`MapDataset.npred_signal(model_name=...)` before calling this method."
+                "`MapDataset.npred_signal(model_names=...)` before calling this method."
             )
 
         nrows = 1
