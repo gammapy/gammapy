@@ -110,9 +110,12 @@ class FluxEstimator(ParameterEstimator):
             )
             if isinstance(norm, dict):
                 norm_kwargs.update(norm)
-            norm = Parameter(**norm_kwargs)
+            try:
+                norm = Parameter(**norm_kwargs)
+            except TypeError as error:
+                raise TypeError(f"Invalid dict key for norm init : {error}")
         if norm.name != "norm":
-            raise ValueError("norm should be a norm parameter")
+            raise ValueError("norm.name is not 'norm'")
         self.norm = norm
 
         super().__init__(

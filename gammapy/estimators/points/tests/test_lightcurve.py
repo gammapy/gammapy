@@ -226,8 +226,8 @@ def test_lightcurve_estimator_fit_options():
         time_intervals=time_intervals,
         selection_optional="all",
         fit=Fit(backend="minuit", optimize_opts=dict(tol=0.2, strategy=1)),
+        norm=dict(scan_n_values=3),
     )
-    estimator.norm.scan_n_values = 3
 
     assert_allclose(estimator.fit.optimize_opts["tol"], 0.2)
 
