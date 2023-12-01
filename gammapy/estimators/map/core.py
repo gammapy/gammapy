@@ -309,22 +309,22 @@ class FluxMaps:
 
     @property
     def geom(self):
-        """Reference map geometry as a `Geom`."""
+        """Reference map geometry as a `~gammapy.maps.Geom`."""
         return self.norm.geom
 
     @property
     def energy_axis(self):
-        """Energy axis as a `MapAxis`"""
+        """Energy axis as a `~gammapy.maps.MapAxis`."""
         return self.geom.axes["energy"]
 
     @classproperty
     def reference_model_default(self):
-        """Reference model default as a `SkyModel`"""
+        """Reference model default as a `~gammapy.modeling.models.SkyModel`."""
         return SkyModel(PowerLawSpectralModel(index=2))
 
     @property
     def reference_model(self):
-        """Reference model as a `SkyModel`"""
+        """Reference model as a `~gammapy.modeling.models.SkyModel`."""
         return self._reference_model
 
     @property
@@ -498,13 +498,13 @@ class FluxMaps:
 
     @property
     def ts(self):
-        """Test statistic map as a `Map` object."""
+        """Test statistic map as a `~gammapy.maps.Map` object."""
         self._check_quantity("ts")
         return self._data["ts"]
 
     @property
     def ts_scan(self):
-        """Test statistic scan as a `Map` object"""
+        """Test statistic scan as a `~gammapy.maps.Map` object"""
         return self.stat_scan - np.expand_dims(self.stat.data, 2)
 
     # TODO: always derive sqrt(TS) from TS?

@@ -253,7 +253,7 @@ class FluxPoints(FluxMaps):
             sed_type = cls._guess_sed_type(table.colnames)
 
         if sed_type is None:
-            raise ValueError("Specifying the SEDtype is required")
+            raise ValueError("Specifying the SED type is required")
 
         if sed_type == "likelihood":
             table = cls._convert_loglike_columns(table)

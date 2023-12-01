@@ -307,7 +307,7 @@ class ImageProfile:
         ax : `~matplotlib.axes.Axes`, optional
             Axes object. Default is None.
         **kwargs : dict, optional
-            Keyword arguments passed to plt.fill_between().
+            Keyword arguments passed to `~matplotlib.pyplot.fill_between`.
 
         Returns
         -------
