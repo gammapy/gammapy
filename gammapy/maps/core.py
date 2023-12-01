@@ -11,7 +11,6 @@ from astropy import units as u
 from astropy.io import fits
 import matplotlib.pyplot as plt
 import gammapy.utils.parallel as parallel
-from gammapy.utils.deprecation import deprecated
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.scripts import make_path
 from gammapy.utils.units import energy_unit_format
@@ -1475,34 +1474,6 @@ class Map(abc.ABC):
                 )
 
         return self._init_copy(**kwargs)
-
-    @deprecated("v1.1", alternative="gammapy.datasets.apply_edisp")
-    def apply_edisp(self, edisp):
-        """Apply energy dispersion to map. Requires energy axis.
-
-        Parameters
-        ----------
-        edisp : `gammapy.irf.EDispKernel`
-            Energy dispersion matrix.
-
-        Returns
-        -------
-        map : `WcsNDMap`
-            Map with energy dispersion applied.
-        """
-        # TODO: either use sparse matrix multiplication or something like edisp.is_diagonal
-        if edisp is not None:
-            loc = self.geom.axes.index("energy_true")
-            data = np.rollaxis(self.data, loc, len(self.data.shape))
-            data = np.dot(data, edisp.pdf_matrix)
-            data = np.rollaxis(data, -1, loc)
-            energy_axis = edisp.axes["energy"].copy(name="energy")
-        else:
-            data = self.data
-            energy_axis = self.geom.axes["energy_true"].copy(name="energy")
-
-        geom = self.geom.to_image().to_cube(axes=[energy_axis])
-        return self.__class__(geom=geom, data=data, unit=self.unit)
 
     def mask_nearest_position(self, position):
         """Given a sky coordinate return nearest valid position in the mask.
