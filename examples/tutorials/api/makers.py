@@ -20,6 +20,7 @@ Setup
 
 import numpy as np
 from astropy import units as u
+from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
 import matplotlib.pyplot as plt
 from IPython.display import display
@@ -33,6 +34,7 @@ from gammapy.makers import (
     SafeMaskMaker,
     SpectrumDatasetMaker,
 )
+from gammapy.makers.utils import make_effective_livetime_map, make_observation_time_map
 from gammapy.maps import MapAxis, RegionGeom, WcsGeom
 
 ######################################################################
@@ -342,3 +344,95 @@ for observation in observations:
 print(datasets)
 
 plt.show()
+
+######################################################################
+# Observation duration and effective livetime
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# It can often be useful to know the total number of hours spent
+# in the given field of view (without correcting for the acceptance
+# variation). This can be computed using `make_observation_time_map`
+# as shown below
+#
+
+# Get the observations
+obs_id = data_store.obs_table["OBS_ID"][data_store.obs_table["OBJECT"] == "MSH 15-5-02"]
+observations = data_store.get_observations(obs_id)
+print("No. of observations: ", len(observations))
+
+# Define an energy range
+energy_min = 100 * u.GeV
+energy_max = 10.0 * u.TeV
+
+# Define an offset cut (the camera field of view)
+offset_max = 2.5 * u.deg
+
+# Define the geom
+source_pos = SkyCoord(228.32, -59.08, unit="deg")
+energy_axis_true = MapAxis.from_energy_bounds(
+    energy_min, energy_max, nbin=2, name="energy_true"
+)
+geom = WcsGeom.create(
+    skydir=source_pos,
+    binsz=0.02,
+    width=(6, 6),
+    frame="icrs",
+    proj="CAR",
+    axes=[energy_axis_true],
+)
+
+total_obstime = make_observation_time_map(observations, geom, offset_max=offset_max)
+
+
+plt.figure(figsize=(5, 5))
+ax = total_obstime.plot(add_cbar=True)
+# Add the pointing position on top
+for obs in observations:
+    ax.plot(
+        obs.get_pointing_icrs(obs.tmid).to_pixel(wcs=ax.wcs)[0],
+        obs.get_pointing_icrs(obs.tmid).to_pixel(wcs=ax.wcs)[1],
+        "+",
+        color="black",
+    )
+ax.set_title("Total observation time")
+plt.show()
+
+######################################################################
+# As the acceptance of IACT cameras vary within the field of
+# view, it can also be interesting to plot the on-axis equivalent
+# number of hours.
+#
+
+effective_livetime = make_effective_livetime_map(
+    observations, geom, offset_max=offset_max
+)
+
+
+axs = effective_livetime.plot_grid(add_cbar=True)
+# Add the pointing position on top
+for ax in axs:
+    for obs in observations:
+        ax.plot(
+            obs.get_pointing_icrs(obs.tmid).to_pixel(wcs=ax.wcs)[0],
+            obs.get_pointing_icrs(obs.tmid).to_pixel(wcs=ax.wcs)[1],
+            "+",
+            color="black",
+        )
+plt.show()
+
+######################################################################
+# To get the value of the observation time at a particular position,
+# use `get_by_coord`
+
+obs_time_src = total_obstime.get_by_coord(source_pos)
+effective_times_src = effective_livetime.get_by_coord(
+    (source_pos, energy_axis_true.center)
+)
+
+print(f"Time spent on position {source_pos}")
+print(f"Total observation time: {obs_time_src}* {total_obstime.unit}")
+print(
+    f"Effective livetime at {energy_axis_true.center[0]}: {effective_times_src[0]} * {effective_livetime.unit}"
+)
+print(
+    f"Effective livetime at {energy_axis_true.center[1]}: {effective_times_src[1]} * {effective_livetime.unit}"
+)

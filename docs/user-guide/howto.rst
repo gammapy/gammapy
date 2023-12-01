@@ -41,8 +41,8 @@ or also select observations based on other information available using the `~gam
 
 .. accordion-header::
     :id: collapseHowToThree
-    :title: Check IRFs
-    :link: ../tutorials/data/cta.html#irfs
+    :title: Make observation duration maps
+    :link: ../tutorials/api/makers.html#observation-duration-and-effective-livetime
 
 Gammapy offers a number of methods to explore the content of the various IRFs
 contained in an observation. This is usually done thanks to their ``peek()``
@@ -373,3 +373,14 @@ using a dummy phase column.
     events_new.write("events.fits.gz", gti=obs.gti, overwrite=True)
 
 .. accordion-footer::
+
+.. accordion-header::
+    :id: collapseHowTo_ObservationMaps
+    :title: Make observation duration maps
+    :link: ../tutorials/api/makers.html#observation-duration-and-effective-livetime
+   
+Compute the absolute and acceptance corrected observation duration in the field of view
+
+.. accordion-footer::
+
+
