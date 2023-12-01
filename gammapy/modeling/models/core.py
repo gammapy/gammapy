@@ -991,6 +991,42 @@ class DatasetModels(collections.abc.Sequence):
             spectral_model=spectral_model, spatial_model=spatial_model, name=name
         )
 
+    def to_template_spectral_model(self, geom, mask=None):
+        """Merge a list of models into a single `~gammapy.modeling.models.TemplateSpectralModel`.
+
+        For each model the spatial component is integrated over the given geometry where the mask is true
+        and multiplied by the spectral component value in each energy bin.
+
+        Parameters
+        ----------
+        geom : `~gammapy.maps.Geom`
+            Map geometry on which the template model is computed.
+        mask :  `~gammapy.maps.Map` with bool dtype.
+            Evaluate the model only where the mask is True.
+
+        Returns
+        -------
+        model : `~gammapy.modeling.models.TemplateSpectralModel`
+            Template spectral model.
+        """
+
+        from . import TemplateSpectralModel
+
+        energy = geom.axes[0].center
+        if mask is None:
+            mask = Map.from_geom(geom, data=True)
+        elif mask.geom != geom:
+            mask = mask.interp_to_geom(geom, method="nearest")
+        values = 0
+        for m in self:
+            dnde = m.spectral_model(energy)
+            spatial_integ = m.spatial_model.integrate_geom(geom)
+            masked_integ = spatial_integ.data * np.isfinite(spatial_integ.data) * mask
+            spatial_integ.data[~np.isfinite(spatial_integ.data)] = np.nan
+            dnde *= masked_integ.sum(axis=(1, 2)) * spatial_integ.unit
+            values += dnde
+        return TemplateSpectralModel(energy, values)
+
     @property
     def positions(self):
         """Positions of the models as a `~astropy.coordinates.SkyCoord`."""

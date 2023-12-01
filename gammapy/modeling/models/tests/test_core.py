@@ -4,9 +4,16 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from gammapy.catalog import SourceCatalog4FGL
-from gammapy.maps import WcsGeom
+from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling import Parameter, Parameters
-from gammapy.modeling.models import Model, ModelBase, Models, SkyModel
+from gammapy.modeling.models import (
+    GaussianSpatialModel,
+    Model,
+    ModelBase,
+    Models,
+    PowerLawSpectralModel,
+    SkyModel,
+)
 from gammapy.utils.testing import mpl_plot_check, requires_data
 
 
@@ -272,3 +279,33 @@ def test_select_models():
     geom = WcsGeom.create(skydir=pos, width=2 * u.deg, binsz=0.02, frame="icrs")
     models_selected = models.select_from_geom(geom)
     assert len(models_selected) == 2
+
+
+def test_to_template():
+
+    energy_bounds = [1, 100] * u.TeV
+    energy_axis = MapAxis.from_energy_bounds(
+        energy_bounds[0], energy_bounds[1], nbin=2, per_decade=True, name="energy_true"
+    )
+
+    spatial_model = GaussianSpatialModel()
+    spectral_model = PowerLawSpectralModel()
+    geom = spatial_model._evaluation_geom.to_cube([energy_axis])
+
+    model = SkyModel(
+        spatial_model=spatial_model, spectral_model=PowerLawSpectralModel()
+    )
+    models = Models([model])
+
+    template3d = models.to_template_sky_model(geom)
+
+    template_1d_direct = models.to_template_spectral_model(geom)
+    template_1d_from3d = Models([template3d]).to_template_spectral_model(geom)
+
+    energy_axis_down = energy_axis.upsample(2)
+    values_ref = spectral_model(energy_axis_down.edges)
+    values_direct = template_1d_direct(energy_axis_down.edges)
+    values_from3d = template_1d_from3d(energy_axis_down.edges)
+
+    assert_allclose(values_ref, values_direct, rtol=1e-5)
+    assert_allclose(values_ref, values_from3d, rtol=1e-5)

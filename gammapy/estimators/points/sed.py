@@ -6,6 +6,7 @@ from astropy import units as u
 from astropy.table import Table
 import gammapy.utils.parallel as parallel
 from gammapy.datasets import Datasets
+from gammapy.datasets.flux_points import _get_reference_model
 from gammapy.maps import MapAxis
 from gammapy.modeling import Fit
 from ..flux import FluxEstimator
@@ -145,7 +146,7 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
         )
 
         table = Table(rows, meta=meta)
-        model = datasets.models[self.source]
+        model = _get_reference_model(datasets.models[self.source], self.energy_edges)
         return FluxPoints.from_table(
             table=table,
             reference_model=model.copy(),
@@ -181,7 +182,9 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
             return super().run(datasets=datasets_sliced)
         else:
             log.warning(f"No dataset contribute in range {energy_min}-{energy_max}")
-            model = datasets.models[self.source].spectral_model
+            model = _get_reference_model(
+                datasets.models[self.source], self.energy_edges
+            )
             return self._nan_result(datasets, model, energy_min, energy_max)
 
     def _nan_result(self, datasets, model, energy_min, energy_max):
