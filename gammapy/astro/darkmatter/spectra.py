@@ -9,10 +9,7 @@ from gammapy.modeling.models import (
     SPECTRAL_MODEL_REGISTRY,
     SpectralModel,
     TemplateNDSpectralModel,
-    TemplateSpectralModel,
 )
-from gammapy.utils.deprecation import deprecated
-from gammapy.utils.interpolation import LogScale
 from gammapy.utils.scripts import make_path
 
 __all__ = ["PrimaryFlux", "DarkMatterAnnihilationSpectralModel"]
@@ -162,21 +159,6 @@ class PrimaryFlux(TemplateNDSpectralModel):
         dN_dlogx = super().evaluate(log10x, **kwargs)
         dN_dE = dN_dlogx / (energy * np.log(10))
         return dN_dE
-
-    @property
-    @deprecated("1.1", alternative="the `PrimaryFlux` class as the spectral model")
-    def table_model(self):
-        """Spectrum as `~gammapy.modeling.models.TemplateSpectralModel`."""
-        subtable = self.table[self.table["mDM"] == self.mDM.value]
-        energies = (10 ** subtable["Log[10,x]"]) * self.mDM
-        channel_name = self.channel_registry[self.channel]
-        dN_dlogx = subtable[channel_name]
-        dN_dE = dN_dlogx / (energies * np.log(10))
-        return TemplateSpectralModel(
-            energy=energies,
-            values=dN_dE,
-            interp_kwargs={"fill_value": np.log(LogScale.tiny)},
-        )
 
 
 class DarkMatterAnnihilationSpectralModel(SpectralModel):
