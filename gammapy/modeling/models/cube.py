@@ -419,7 +419,7 @@ class SkyModel(ModelBase):
                 )
             time_axis = geom.axes["time"]
 
-            temp_eval = []
+            temp_eval = np.ones(time_axis.nbin)
             for idx in range(time_axis.nbin):
                 if gti is None:
                     t1, t2 = time_axis.time_min[idx], time_axis.time_max[idx]
@@ -432,7 +432,7 @@ class SkyModel(ModelBase):
                     )
                     t1, t2 = gti_in_bin.time_start, gti_in_bin.time_stop
                 integral = self.temporal_model.integral(t1, t2)
-                temp_eval.append(np.sum(integral))
+                temp_eval[idx] = np.sum(integral)
             value = (value.T * temp_eval).T
 
         else:
