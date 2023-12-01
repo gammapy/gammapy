@@ -11,4 +11,6 @@ __all__ = [
     "Parameter",
     "Parameters",
     "select_nested_models",
+    "PriorParameter",
+    "PriorParameters",
 ]
