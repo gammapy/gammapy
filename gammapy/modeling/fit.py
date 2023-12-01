@@ -4,7 +4,6 @@ import itertools
 import logging
 import numpy as np
 from astropy.table import Table
-from gammapy.utils.deprecation import deprecated
 from gammapy.utils.pbar import progress_bar
 from .covariance import Covariance
 from .iminuit import (
@@ -143,15 +142,6 @@ class Fit:
             return self.to_html()
         except AttributeError:
             return f"<pre>{html.escape(str(self))}</pre>"
-
-    @property
-    @deprecated(
-        "v1.1",
-        message="The IMinuit object is attached to the OptimizeResult object instead.",
-    )
-    def minuit(self):
-        """Iminuit object."""
-        return self._minuit
 
     @staticmethod
     def _parse_datasets(datasets):
