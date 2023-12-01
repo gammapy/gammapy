@@ -11,8 +11,8 @@ def standard_scaler(features):
 
     Calculated through:
 
-       .. math::
-           f_\text{scaled} = \frac{f-\text{mean}(f)}{\text{std}(f)} .
+    .. math::
+        f_\text{scaled} = \frac{f-\text{mean}(f)}{\text{std}(f)} .
 
     Parameters
     ----------
@@ -40,10 +40,12 @@ def hierarchical_clustering(features, linkage_kwargs=None, fcluster_kwargs=None)
     ----------
     features : `~astropy.table.Table`
         Table containing the features.
-    linkage_kwargs : dict
+    linkage_kwargs : dict, optional
         Arguments forwarded to `scipy.cluster.hierarchy.linkage`.
-    fcluster_kwargs : dict
+        Default is None, which uses method="ward" and metric="euclidean".
+    fcluster_kwargs : dict, optional
         Arguments forwarded to `scipy.cluster.hierarchy.fcluster`.
+        Default is None, which uses criterion="maxclust" and t=3.
 
 
     Returns
