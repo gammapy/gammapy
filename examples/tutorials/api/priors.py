@@ -17,14 +17,14 @@ Prerequisites
 Context
 -------
 
-Generally, the set of parameters describing the data the best is where
+Generally, the set of parameters describing best the data is where
 the fit statistic :math:`2 x log L` has its global minimum. Depending on
 the type of background estimation, it is either the cash fit statistics
 or the wstat (see :doc:`/user-guide/stats/fit_statistics` for more
 details).
 
 A so-called prior can be added to this fit statistic. The prior is again
-a function of the model parameters and can take different forms,
+a probability density function of the model parameters and can take different forms,
 including Gaussian distributions, uniform distributions, etc. The prior
 includes information or knowledge about the dataset or the parameters of
 the fit.
@@ -132,7 +132,7 @@ dataset1.counts = dataset1.npred()
 # Example 1: Including Prior Information about the Sources Index
 # --------------------------------------------------------------
 #
-# The index was simulated to be :math:`2.3`. However, let us assume you
+# The index was assumed to be :math:`2.3`. However, let us assume you
 # have reasons to believe that the index value of the source is actually
 # :math:`2.1`. This can be due to theoretical predictions, other
 # instruments’ results, etc. We can now create a Gaussian distributed
