@@ -33,9 +33,7 @@ def standard_scaler(features):
     return scaled_features
 
 
-def hierarchical_clustering(
-    features, linkage_kwargs=None, fcluster_kwargs=None, standard_scaler=False
-):
+def hierarchical_clustering(features, linkage_kwargs=None, fcluster_kwargs=None):
     """Hierarchical clustering using given features.
 
     Parameters
@@ -54,7 +52,6 @@ def hierarchical_clustering(
         Table containing the features and an extra column for the groups labels.
 
     """
-    # TODO: standard_scaler is not utilised here?
     features = features.copy()
     features_array = np.array(
         [
