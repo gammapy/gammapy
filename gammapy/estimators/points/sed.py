@@ -50,16 +50,16 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
         Number of sigma to use for asymmetric error computation. Default is 1.
     n_sigma_ul : int
         Number of sigma to use for upper limit computation. Default is 2.
-    selection_optional : list of str
+    selection_optional : list of str, optional
         Which additional quantities to estimate. Available options are:
 
-            * "all": all the optional steps are executed
+            * "all": all the optional steps are executed.
             * "errn-errp": estimate asymmetric errors on flux.
             * "ul": estimate upper limits.
             * "scan": estimate fit statistic profiles.
 
         Default is None so the optional steps are not executed.
-    energy_edges : list of `~astropy.units.Quantity`
+    energy_edges : list of `~astropy.units.Quantity`, optional
         Edges of the flux points energy bins. The resulting bin edges won't be exactly equal to the input ones,
         but rather the closest values to the energy axis edges of the parent dataset.
         Default is None: apply the estimator in each energy bin of the parent dataset.
@@ -68,10 +68,10 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
         Fit instance specifying the backend and fit options.
     reoptimize : bool
         Re-optimize other free model parameters. Default is False.
-        If True the available free parameters are fitted together with the norm of the source of interest in each bin independently, otherwise they are frozen at their current value.
+        If True the available free parameters are fitted together with the norm of the source of interest
+        in each bin independently, otherwise they are frozen at their current value.
     sum_over_energy_groups : bool
-        Whether to sum over the energy groups or fit the norm on the full energy
-        grid.
+        Whether to sum over the energy groups or fit the norm on the full energy grid.
     n_jobs : int
         Number of processes used in parallel for the computation. Default is one, unless
         `~gammapy.utils.parallel.N_JOBS_DEFAULT` was modified. The number of jobs is
@@ -105,7 +105,7 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
         Parameters
         ----------
         datasets : `~gammapy.datasets.Datasets`
-            Datasets
+            Datasets.
 
         Returns
         -------
@@ -159,15 +159,15 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
 
         Parameters
         ----------
-        datasets : `Datasets`
-            Datasets
+        datasets : `~gammapy.datasets.Datasets`
+            Datasets.
         energy_min, energy_max : `~astropy.units.Quantity`
             Energy bounds to compute the flux point for.
 
         Returns
         -------
         result : dict
-            Dict with results for the flux point.
+            Dictionary with results for the flux point.
         """
         datasets_sliced = datasets.slice_by_energy(
             energy_min=energy_min, energy_max=energy_max

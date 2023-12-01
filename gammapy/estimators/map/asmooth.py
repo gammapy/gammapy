@@ -23,12 +23,12 @@ def _sqrt_ts_asmooth(counts, background):
 class ASmoothMapEstimator(Estimator):
     """Adaptively smooth counts image.
 
-    Achieves a roughly constant sqrt_ts of features across the whole image.
+    Achieves a roughly constant sqrt(TS) of features across the whole image.
 
-    Algorithm based on https://ui.adsabs.harvard.edu/abs/2006MNRAS.368...65E
+    Algorithm based on https://ui.adsabs.harvard.edu/abs/2006MNRAS.368...65E .
 
     The algorithm was slightly adapted to also allow Li & Ma  to estimate the
-    sqrt_ts of a feature in the image.
+    sqrt(TS) of a feature in the image.
 
     Parameters
     ----------
@@ -37,12 +37,12 @@ class ASmoothMapEstimator(Estimator):
     kernel : `astropy.convolution.Kernel`
         Smoothing kernel.
     spectrum : `SpectralModel`
-        Spectral model assumption
+        Spectral model assumption.
     method : {'asmooth', 'lima'}
         Significance estimation method.
     threshold : float
         Significance threshold.
-    energy_edges : list of `~astropy.units.Quantity`
+    energy_edges : list of `~astropy.units.Quantity`, optional
         Edges of the target maps energy bins. The resulting bin edges won't be exactly equal to the input ones,
         but rather the closest values to the energy axis edges of the parent dataset.
         Default is None: apply the estimator in each energy bin of the parent dataset.
@@ -86,7 +86,7 @@ class ASmoothMapEstimator(Estimator):
         self.energy_edges = energy_edges
 
     def selection_all(self):
-        """Which quantities are computed"""
+        """Which quantities are computed."""
         return
 
     @staticmethod
@@ -96,14 +96,14 @@ class ASmoothMapEstimator(Estimator):
         Parameters
         ----------
         n_scales : int
-            Number of scales
+            Number of scales.
         factor : float
-            Incremental factor
+            Incremental factor.
 
         Returns
         -------
         scales : `~numpy.ndarray`
-            Scale array
+            Scale array.
         """
         if kernel == Gaussian2DKernel:
             sigma_0 = 1.0 / np.sqrt(9 * np.pi)
@@ -118,12 +118,12 @@ class ASmoothMapEstimator(Estimator):
         Parameters
         ----------
         pixel_scale : `~astropy.coordinates.Angle`
-            Sky image pixel scale
+            Sky image pixel scale.
 
         Returns
         -------
         kernels : list
-            List of `~astropy.convolution.Kernel`
+            List of `~astropy.convolution.Kernel`.
         """
         scales = self.scales.to_value("deg") / Angle(pixel_scale).deg
 
@@ -161,7 +161,7 @@ class ASmoothMapEstimator(Estimator):
         Parameters
         ----------
         dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.MapDatasetOnOff`
-            the input dataset (with one bin in energy at most)
+            The input dataset (with one bin in energy at most).
 
         Returns
         -------
@@ -202,7 +202,7 @@ class ASmoothMapEstimator(Estimator):
         Parameters
         ----------
         dataset : `MapDataset`
-            Dataset
+            Dataset.
 
         Returns
         -------
@@ -273,7 +273,7 @@ class ASmoothMapEstimator(Estimator):
         Parameters
         ----------
         cubes : dict
-            Data cubes
+            Data cubes.
         """
         shape = cubes["counts"].shape[:2]
         smoothed = {}
