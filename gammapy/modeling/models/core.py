@@ -213,8 +213,7 @@ class ModelBase:
             return {self.type: data}
 
     @classmethod
-    def from_dict(cls, data):
-        kwargs = {}
+    def from_dict(cls, data, **kwargs):
 
         key0 = next(iter(data))
 
@@ -229,14 +228,6 @@ class ModelBase:
         parameters = _build_parameters_from_dict(
             data["parameters"], cls.default_parameters
         )
-
-        # TODO: this is a special case for spatial models, maybe better move to
-        #  `SpatialModel` base class
-        if "frame" in data:
-            kwargs["frame"] = data["frame"]
-        # TODO: same as above for temporal models
-        if "scale" in data:
-            kwargs["scale"] = data["scale"]
 
         return cls.from_parameters(parameters, **kwargs)
 

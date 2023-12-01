@@ -732,7 +732,7 @@ class CompoundSpectralModel(SpectralModel):
         return self.operator(val1, val2)
 
     @classmethod
-    def from_dict(cls, data):
+    def from_dict(cls, data, **kwargs):
         from gammapy.modeling.models import SPECTRAL_MODEL_REGISTRY
 
         data = data["spectral"]
@@ -1240,7 +1240,7 @@ class PiecewiseNormSpectralModel(SpectralModel):
         return data
 
     @classmethod
-    def from_dict(cls, data):
+    def from_dict(cls, data, **kwargs):
         """Create model from dictionary."""
         data = data["spectral"]
         energy = u.Quantity(data["energy"]["data"], data["energy"]["unit"])
@@ -1821,7 +1821,7 @@ class TemplateSpectralModel(SpectralModel):
         return data
 
     @classmethod
-    def from_dict(cls, data):
+    def from_dict(cls, data, **kwargs):
         data = data["spectral"]
         energy = u.Quantity(data["energy"]["data"], data["energy"]["unit"])
         values = u.Quantity(data["values"]["data"], data["values"]["unit"])
@@ -1921,7 +1921,7 @@ class TemplateNDSpectralModel(SpectralModel):
             self.map.write(self.filename)
 
     @classmethod
-    def from_dict(cls, data):
+    def from_dict(cls, data, **kwargs):
         data = data["spectral"]
         filename = data["filename"]
         m = RegionNDMap.read(filename)
@@ -2034,7 +2034,7 @@ class EBLAbsorptionNormSpectralModel(SpectralModel):
         return data
 
     @classmethod
-    def from_dict(cls, data):
+    def from_dict(cls, data, **kwargs):
         data = data["spectral"]
         redshift = [p["value"] for p in data["parameters"] if p["name"] == "redshift"][
             0
@@ -2335,7 +2335,7 @@ class NaimaSpectralModel(SpectralModel):
         return super().to_dict(full_output=True)
 
     @classmethod
-    def from_dict(cls, data):
+    def from_dict(cls, data, **kwargs):
         raise NotImplementedError(
             "Currently the NaimaSpectralModel cannot be read from YAML"
         )
