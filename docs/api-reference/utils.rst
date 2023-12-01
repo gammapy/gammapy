@@ -36,6 +36,10 @@ utils - Utilities
     :no-inheritance-diagram:
     :include-all-objects:
 
+.. automodapi:: gammapy.utils.parallel
+    :no-inheritance-diagram:
+    :include-all-objects:
+    
 .. automodapi:: gammapy.utils.scripts
     :no-inheritance-diagram:
     :include-all-objects:
