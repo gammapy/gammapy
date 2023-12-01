@@ -7,6 +7,16 @@ from gammapy.utils.pbar import progress_bar
 
 log = logging.getLogger(__name__)
 
+__all__ = [
+    "multiprocessing_manager",
+    "run_multiprocessing",
+    "BACKEND_DEFAULT",
+    "N_JOBS_DEFAULT",
+    "POOL_KWARGS_DEFAULT",
+    "METHOD_DEFAULT",
+    "METHOD_KWARGS_DEFAULT",
+]
+
 
 class ParallelBackendEnum(Enum):
     """Enum for parallel backend."""
