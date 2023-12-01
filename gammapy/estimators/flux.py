@@ -156,7 +156,9 @@ class FluxEstimator(ParameterEstimator):
         norms = ref_model.parameters.norm_parameters
 
         if len(norms.free_parameters) == 1:
-            self.norm = self._set_norm_parameter(self.norm, norms.free_parameters[0])
+            self.norm = self._set_norm_parameter(
+                self.norm.copy(), norms.free_parameters[0]
+            )
 
         scale_model.norm = self.norm.copy()
         return scale_model
