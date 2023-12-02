@@ -1292,6 +1292,12 @@ class TemplateSpatialModel(SpatialModel):
     ):
         if (map.data < 0).any():
             log.warning("Map has negative values. Check and fix this!")
+        if (map.data == 0.0).all():
+            log.warning("Map values are all zeros. Check and fix this!")
+        if not map.geom.is_image and (map.data.sum(axis=(1, 2)) == 0).any():
+            log.warning(
+                "Map values are all zeros in at least one energy bin. Check and fix this!"
+            )
 
         if filename is not None:
             filename = str(make_path(filename))
