@@ -256,12 +256,13 @@ def resample_energy_edges(dataset, conditions={}):
 
     Parameters
     ----------
-    dataset :`~gammapy.datasets.SpectrumDataset` or `~gammapy.datasets.SpectrumDatasetOnOff`
+    dataset : `~gammapy.datasets.SpectrumDataset` or `~gammapy.datasets.SpectrumDatasetOnOff`
         The input dataset.
     conditions : dict
         Keyword arguments containing the per-bin conditions used to resample the axis.
         Available options are: 'counts_min', 'background_min', 'excess_min', 'sqrt_ts_min',
         'npred_min', 'npred_background_min', 'npred_signal_min'. Default is {}.
+
     Returns
     -------
     energy_edges : list of `~astropy.units.Quantity`
@@ -319,7 +320,7 @@ def compute_lightcurve_fvar(lightcurve, flux_quantity="flux"):
 
     Parameters
     ----------
-    lightcurve : '~gammapy.estimators.FluxPoints'
+    lightcurve : `~gammapy.estimators.FluxPoints`
         The lightcurve object.
     flux_quantity : str
         Flux quantity to use for calculation. Should be 'dnde', 'flux', 'e2dnde' or 'eflux'. Default is 'flux'.

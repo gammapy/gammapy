@@ -74,6 +74,18 @@ The on-axis equivalent number of observation hours on the source can be calculat
 
 .. accordion-footer::
 
+
+.. accordion-header::
+    :id: collapseHowToEnergyEdges
+    :title: Compute minimum number of counts of significance per bin
+    :link: ../tutorials/analysis-1d/spectral_analysis.html#compute-flux-points
+
+The `~gammapy.estimators.utils.resample_energy_edges` provides a way to resample the energy bins
+t o satisfy a minimum number of counts of significance per bin.
+
+.. accordion-footer::
+
+
 .. accordion-header::
     :id: collapseHowToSix
     :title: Choose units for plotting
