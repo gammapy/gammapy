@@ -64,13 +64,20 @@ def test_dataset_split():
     dataset.models = Models([diffuse_iem])
 
     width = 4 * u.deg
-    margin = 2 * u.deg
+    margin = 1 * u.deg
     datasets = split_dataset(dataset, width, margin)
     assert len(datasets) == 15
     assert len(datasets.models) == 1
 
-    datasets = split_dataset(
-        dataset, width=4 * u.deg, margin=2 * u.deg, split_templates=True
-    )
+    datasets = split_dataset(dataset, width=width, margin=margin, split_templates=True)
     assert len(datasets.models) == len(datasets)
     assert len(datasets.parameters.free_parameters) == 1
+
+    geom = dataset.counts.geom
+    pixel_width = np.ceil((width / geom.pixel_scales).to_value("")).astype(int)
+    margin_width = np.ceil((margin / geom.pixel_scales).to_value("")).astype(int)
+
+    assert datasets[4].mask_fit.data[0, :, :].sum() == np.prod(pixel_width)
+    assert (datasets[4].mask_fit.data[0, :, :] == False).sum() == np.prod(
+        pixel_width + 2 * margin_width
+    ) - np.prod(pixel_width)
