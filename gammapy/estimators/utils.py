@@ -439,10 +439,12 @@ def compute_lightcurve_doublingtime(lightcurve, flux_quantity="flux"):
             energies[1:],
             doubling_dict["doubling"],
             doubling_dict["doubling_err"],
-            doubling_dict["doubling_coord"],
+            lightcurve.geom.axes["time"].reference_time
+            + doubling_dict["doubling_coord"],
             doubling_dict["halving"],
             doubling_dict["halving_err"],
-            doubling_dict["halving_coord"],
+            lightcurve.geom.axes["time"].reference_time
+            + doubling_dict["halving_coord"],
         ],
         names=(
             "min_energy",
