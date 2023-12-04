@@ -1,6 +1,6 @@
 """
 Estimation of time variability in a lightcurve
-=============
+==============================================
 Compute a series of time variability significance estimators for a lightcurve.
 
 Prerequisites
@@ -10,7 +10,7 @@ Understanding the light curve estimator, please refer to the :doc:`light curve n
 For more in-depth explanation on the creation of smaller observations for exploring time variability, refer to :doc:`light curve notebook </tutorials/analysis-time/light_curve_flare`
 
 Context
--------------
+-------
 Frequently, after computing a lightcurve, we need to quantify its variability in the time domain, for example in the case of a flare, burst, decaying light curve in GRBs or heightened activity in general.
 
 There are many ways to define the significance of the variability.
@@ -19,10 +19,10 @@ There are many ways to define the significance of the variability.
 
 Proposed approach
 -------------
-We will start by reading the pre-computed lightcurve for the PKS2155 that is stored in GAMMAPY_DATA
-To learn how to compute such object, see :doc:`light curve notebook </tutorials/analysis-time/light_curve_flare`
+We will start by reading the pre-computed light curve for PKS 2155-304 that is stored in `$GAMMAPY_DATA` 
+To learn how to compute such an object, see the :doc:`light curve tutorial </tutorials/analysis-time/light_curve_flare`
 
-On these flux points we will then show the computation of different significance estimators of variability, from the simplest ones based on peak-to-trough variation, to fractional excess variance and point-to-point fractional variance which take into account the whole light curve, to a different approach using the change points in bayesian blocks as variability flags.
+This tutorial will demonstrate how to compute different estimates which measure the significance of variability. These estimators range from basic ones that calculate the peak-to-trough variation, to more complex ones like fractional excess and point-to-point fractional variance, which consider the entire light curve. We also show an approach which utilises the change points inn Bayesian blocks as indicators of variability.
 """
 ######################################################################
 # Setup
@@ -46,7 +46,7 @@ from gammapy.estimators.utils import (
 log = logging.getLogger(__name__)
 
 ######################################################################
-# We load the lightcurve for the PKS2155 flare directly from.GAMMAPY_DATA/estimators
+# Load the light curve for the PKS 2155-304 flare directly from “$GAMMAPY_DATA/estimators”
 
 lc_1d = FluxPoints.read(
     "$GAMMAPY_DATA/estimators/pks2155_hess_lc/pks2155_hess_lc.fits", format="lightcurve"
@@ -133,12 +133,12 @@ print(variability_amplitude_significance)
 # paper](https://ui.adsabs.harvard.edu/abs/2003MNRAS.345.1271V/abstract)) is a simple but effective method to assess
 # the significance of a time variability feature in an object, for example an AGN flare.
 # It is important to note that it requires gaussian errors to be applicable.
-# The excess variance computation is implemented in the `estimators.utils` subpackage of `gammapy`.
+# The excess variance computation is implemented in `~gammapy.estimators.utils`.
 # A similar estimator is the point-to-point fractional variance, which samples the lightcurve with smaller time granularity.
-# In general, the point-to-point fractional variance being higher than the fractional excess variance is a sign of the presence of very short timescale variability. The point-to-point variability is also implemented in the `estimators.utils` subpackage of `gammapy`.
+# In general, the point-to-point fractional variance being higher than the fractional excess variance is indicative of the presence of very short timescale variability. 
 #
-# In the same subpackage `gammapy` also offers the computation of the doubling and halving time of the lightcurve,
-# an estimator which gives information on the shape of the variability feature.
+# The doubling and halving time of the light curve can also be computed.
+# This provides information on the shape of the variability feature.
 
 fvar_table = compute_lightcurve_fvar(lc_1d)
 print(fvar_table)
@@ -150,7 +150,7 @@ dtime_table = compute_lightcurve_doublingtime(lc_1d, flux_quantity="flux")
 print(dtime_table)
 
 ######################################################################
-# ## Bayesian blocks
+# Bayesian blocks
 # ----------------------------------------------
 # The presence of temporal variability in a lightcurve can be assessed by using bayesian blocks ([reference
 # paper](https://ui.adsabs.harvard.edu/abs/2013ApJ...764..167S/abstract)). A good and simple-to-use implementation of the algorithm is found in `astropy.stats`([documentation](https://docs.astropy.org/en/stable/api/astropy.stats.bayesian_blocks.html)). This implementation uses gaussian statistics, as opposed to the [first introductory paper](https://iopscience.iop.org/article/10.1086/306064) which was based on poissonian statistics.
