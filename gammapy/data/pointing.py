@@ -430,7 +430,7 @@ class FixedPointingInfo:
         altaz : `astropy.coordinates.SkyCoord`
             Pointing position in alt-az frame.
         """
-        location = location if location is not None else self.location
+        location = location if location is not None else self._location
         frame = AltAz(location=location, obstime=obstime)
 
         if self.mode == PointingMode.POINTING:
