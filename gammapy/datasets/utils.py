@@ -73,6 +73,10 @@ def get_nearest_valid_exposure_position(exposure, position=None):
 
 
 def split_dataset(dataset, width, margin, split_templates=False):
+
+    if margin >= width / 2.0:
+        raise ValueError("margin should be lower than width/2.")
+
     geom = dataset.counts.geom.to_image()
     pixel_width = np.ceil((width / geom.pixel_scales).to_value("")).astype(int)
 
