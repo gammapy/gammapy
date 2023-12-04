@@ -1246,8 +1246,10 @@ class PiecewiseNormSpectralModel(SpectralModel):
         data = data["spectral"]
         energy = u.Quantity(data["energy"]["data"], data["energy"]["unit"])
         parameters = Parameters.from_dict(data["parameters"])
-        interp = data.get("interp", "lin")
-        return cls.from_parameters(parameters, energy=energy, interp=interp)
+        if "interp" in data:
+            return cls.from_parameters(parameters, energy=energy, interp=data["interp"])
+        else:
+            return cls.from_parameters(parameters, energy=energy)
 
     @classmethod
     def from_parameters(cls, parameters, **kwargs):
