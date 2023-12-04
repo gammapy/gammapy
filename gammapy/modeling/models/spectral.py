@@ -1246,7 +1246,7 @@ class PiecewiseNormSpectralModel(SpectralModel):
         data = data["spectral"]
         energy = u.Quantity(data["energy"]["data"], data["energy"]["unit"])
         parameters = Parameters.from_dict(data["parameters"])
-        interp = data["interp"]
+        interp = data.get("interp", "lin")
         return cls.from_parameters(parameters, energy=energy, interp=interp)
 
     @classmethod
