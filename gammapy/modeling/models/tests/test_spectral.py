@@ -569,6 +569,11 @@ def test_to_from_dict_piecewise_lin():
     assert_quantity_allclose(actual, desired)
     assert new_model._interp == model._interp
 
+    model_dict["spectral"].pop("interp")
+    new_model_default = model_class.from_dict(model_dict)
+    assert isinstance(new_model_default, PiecewiseNormSpectralModel)
+    assert new_model_default._interp == "log"
+
 
 def test_to_from_dict_piecewise():
     spectrum = TEST_MODELS[-5]
@@ -583,6 +588,11 @@ def test_to_from_dict_piecewise():
     desired = [par.value for par in model.parameters]
     assert_quantity_allclose(actual, desired)
     assert new_model._interp == model._interp
+
+    model_dict["spectral"].pop("interp")
+    new_model_default = model_class.from_dict(model_dict)
+    assert isinstance(new_model_default, PiecewiseNormSpectralModel)
+    assert new_model_default._interp == "log"
 
 
 @requires_data()
