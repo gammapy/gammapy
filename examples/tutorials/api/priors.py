@@ -23,18 +23,13 @@ the type of background estimation, it is either the cash fit statistics
 or the wstat (see :doc:`/user-guide/stats/fit_statistics` for more
 details).
 
-A so-called prior can be added to this fit statistic. The prior is again
+A prior on the value of some of the parameters can be added to this fit statistic. The prior is again
 a probability density function of the model parameters and can take different forms,
 including Gaussian distributions, uniform distributions, etc. The prior
 includes information or knowledge about the dataset or the parameters of
 the fit.
 
-Proposed approach
------------------
-
-This is a hands-on tutorial to `~gammapy.modeling.models.prior`,
-showing how to include priors in the fitting process. For now, only
-setting a prior on a single parameter is supported.
+For now, only setting a prior on a single parameter is supported.
 
 The spectral dataset used here contains a simulated power-law source and
 its IRFs are based on HESS data of the Crab Nebula (similar to
@@ -197,8 +192,7 @@ dataset1_prior.models = model_prior.copy(name="prior-model")
 fit = Fit()
 results = fit.run(dataset1)
 
-fit_prior = Fit()
-results_prior = fit_prior.run(dataset1_prior)
+results_prior = fit.run(dataset1_prior)
 
 
 ######################################################################
@@ -212,7 +206,7 @@ dataset1_prior.models.parameters["index"].scan_n_values = 20
 
 scan = fit.stat_profile(datasets=dataset1, parameter="index", reoptimize=True)
 
-scan_prior = fit_prior.stat_profile(
+scan_prior = fit.stat_profile(
     datasets=dataset1_prior, parameter="index", reoptimize=True
 )
 
@@ -227,9 +221,9 @@ scan_prior = fit_prior.stat_profile(
 # the minimum + 1.
 #
 # The plot also shows the prior we set on the index for the second
-# dataset. The scan was computed above. If the prior is added to the cash
+# dataset. The scan was computed above. If the logarithm of the prior is added to the cash
 # statistics, one ends up with the posterior function. The posterior is
-# minimized during the second fit. Its minimum is between the priors and
+# minimized during the second fit to obtain the maximum a posteriori estimation. Its minimum is between the priors and
 # the cash statistics minimum. The best-fit value is :math:`2.16`. We
 # weighed the truth with our prior beliefs and ended up with a compromise
 # between the values. The uncertainty of the parameter is again where the
