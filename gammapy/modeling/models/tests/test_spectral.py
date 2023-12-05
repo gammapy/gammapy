@@ -305,6 +305,17 @@ TEST_MODELS = [
         integral_1_10TeV=u.Quantity(24.758255, "TeV"),
         eflux_1_10TeV=u.Quantity(117.745068, "TeV2"),
     ),
+    dict(
+        name="pbpllin",
+        model=PiecewiseNormSpectralModel(
+            energy=[1, 3, 7, 10] * u.TeV,
+            norms=[1, 5, 3, 0.5] * u.Unit(""),
+            interp="lin",
+        ),
+        val_at_2TeV=u.Quantity(3.0, ""),
+        integral_1_10TeV=u.Quantity(27.24066846, "TeV"),
+        eflux_1_10TeV=u.Quantity(133.34487, "TeV2"),
+    ),
 ]
 
 # Add compound models
@@ -382,7 +393,7 @@ def test_models(spectrum):
         isinstance(model, ConstantSpectralModel)
         or spectrum["name"] == "compound6"
         or spectrum["name"] == "GaussianSpectralModel"
-        or spectrum["name"] == "pbpl"
+        or "pbpl" in spectrum["name"]
     ):
         assert_quantity_allclose(model.inverse(value), energy, rtol=0.01)
         inverse = model.inverse_all(values)
@@ -542,6 +553,46 @@ def test_to_from_dict_compound():
     actual = [par.value for par in new_model.parameters]
     desired = [par.value for par in model.parameters]
     assert_quantity_allclose(actual, desired)
+
+
+def test_to_from_dict_piecewise_lin():
+    spectrum = TEST_MODELS[-4]
+    model = spectrum["model"]
+    assert spectrum["name"] == "pbpllin"
+    model_dict = model.to_dict()
+    assert model_dict["spectral"]["interp"] == "lin"
+    model_class = SPECTRAL_MODEL_REGISTRY.get_cls(model_dict["spectral"]["type"])
+    new_model = model_class.from_dict(model_dict)
+    assert isinstance(new_model, PiecewiseNormSpectralModel)
+    actual = [par.value for par in new_model.parameters]
+    desired = [par.value for par in model.parameters]
+    assert_quantity_allclose(actual, desired)
+    assert new_model._interp == model._interp
+
+    model_dict["spectral"].pop("interp")
+    new_model_default = model_class.from_dict(model_dict)
+    assert isinstance(new_model_default, PiecewiseNormSpectralModel)
+    assert new_model_default._interp == "log"
+
+
+def test_to_from_dict_piecewise():
+    spectrum = TEST_MODELS[-5]
+    model = spectrum["model"]
+    assert spectrum["name"] == "pbpl"
+    model_dict = model.to_dict()
+    assert model_dict["spectral"]["interp"] == "log"
+    model_class = SPECTRAL_MODEL_REGISTRY.get_cls(model_dict["spectral"]["type"])
+    new_model = model_class.from_dict(model_dict)
+    assert isinstance(new_model, PiecewiseNormSpectralModel)
+    actual = [par.value for par in new_model.parameters]
+    desired = [par.value for par in model.parameters]
+    assert_quantity_allclose(actual, desired)
+    assert new_model._interp == model._interp
+
+    model_dict["spectral"].pop("interp")
+    new_model_default = model_class.from_dict(model_dict)
+    assert isinstance(new_model_default, PiecewiseNormSpectralModel)
+    assert new_model_default._interp == "log"
 
 
 @requires_data()

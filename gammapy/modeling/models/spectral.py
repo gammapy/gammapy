@@ -1174,6 +1174,7 @@ class PiecewiseNormSpectralModel(SpectralModel):
             "data": self.energy.data.tolist(),
             "unit": str(self.energy.unit),
         }
+        data["spectral"]["interp"] = self._interp
         return data
 
     @classmethod
@@ -1182,7 +1183,10 @@ class PiecewiseNormSpectralModel(SpectralModel):
         data = data["spectral"]
         energy = u.Quantity(data["energy"]["data"], data["energy"]["unit"])
         parameters = Parameters.from_dict(data["parameters"])
-        return cls.from_parameters(parameters, energy=energy)
+        if "interp" in data:
+            return cls.from_parameters(parameters, energy=energy, interp=data["interp"])
+        else:
+            return cls.from_parameters(parameters, energy=energy)
 
     @classmethod
     def from_parameters(cls, parameters, **kwargs):
