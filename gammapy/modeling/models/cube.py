@@ -347,19 +347,20 @@ class SkyModel(ModelBase):
 
         value = self.spectral_model(coords["energy_true"])
 
-        if coords.ndim > 3:
-            additional_axes = set(coords.axis_names) - set(
-                ["lon", "lat", "energy_true"]
-            )
-            for axis in additional_axes:
-                value = value * np.ones_like(coords[axis])
+        additional_axes = set(coords.axis_names) - {
+            "lon",
+            "lat",
+            "energy_true",
+            "time",
+        }
+        for axis in additional_axes:
+            value = value * np.ones_like(coords[axis])
 
         if self.spatial_model:
             value = value * self.spatial_model.evaluate_geom(geom)
 
         if self.temporal_model:
-            integral = self.temporal_model.integral(gti.time_start, gti.time_stop)
-            value = value * np.sum(integral)
+            value = self._compute_time_integral(value, geom, gti)
 
         return value
 
@@ -403,12 +404,42 @@ class SkyModel(ModelBase):
             )
 
         if self.temporal_model:
-            integral = self.temporal_model.integral(gti.time_start, gti.time_stop)
-            value = value * np.sum(integral)
+            value = self._compute_time_integral(value, geom, gti)
 
         value = value * np.ones(geom.data_shape)
 
         return Map.from_geom(geom=geom, data=value.value, unit=value.unit)
+
+    def _compute_time_integral(self, value, geom, gti):
+        """Multiply input value with time integral for the given geometry and GTI."""
+        if "time" in geom.axes.names:
+            if geom.axes.names[-1] != "time":
+                raise ValueError(
+                    "Incorrect axis order. The time axis must be the last axis"
+                )
+            time_axis = geom.axes["time"]
+
+            temp_eval = np.ones(time_axis.nbin)
+            for idx in range(time_axis.nbin):
+                if gti is None:
+                    t1, t2 = time_axis.time_min[idx], time_axis.time_max[idx]
+                else:
+                    gti_in_bin = gti.select_time(
+                        time_interval=[
+                            time_axis.time_min[idx],
+                            time_axis.time_max[idx],
+                        ]
+                    )
+                    t1, t2 = gti_in_bin.time_start, gti_in_bin.time_stop
+                integral = self.temporal_model.integral(t1, t2)
+                temp_eval[idx] = np.sum(integral)
+            value = (value.T * temp_eval).T
+
+        else:
+            if gti is not None:
+                integral = self.temporal_model.integral(gti.time_start, gti.time_stop)
+                value = value * np.sum(integral)
+        return value
 
     def copy(self, name=None, copy_data=False, **kwargs):
         """Copy sky model.
