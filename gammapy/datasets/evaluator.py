@@ -6,6 +6,7 @@ from astropy.coordinates import angular_separation
 from astropy.utils import lazyproperty
 from regions import CircleSkyRegion
 import matplotlib.pyplot as plt
+from gammapy.irf import EDispKernel
 from gammapy.maps import HpxNDMap, Map, RegionNDMap, WcsNDMap
 from gammapy.modeling.models import PointSpatialModel, TemplateNPredModel
 from .utils import apply_edisp
@@ -181,6 +182,7 @@ class MapEvaluator:
             self.edisp = edisp.get_edisp_kernel(
                 position=self.model.position, energy_axis=energy_axis
             )
+            del self._edisp_diagonal
 
         # lookup psf
         if psf and self.model.spatial_model:
@@ -222,6 +224,13 @@ class MapEvaluator:
         self.reset_cache_properties()
         self._computation_cache = None
         self._cached_parameter_previous = None
+
+    @lazyproperty
+    def _edisp_diagonal(self):
+        return EDispKernel.from_diagonal_response(
+            energy_axis_true=self.edisp.axes["energy_true"],
+            energy_axis=self.edisp.axes["energy"],
+        )
 
     def update_spatial_oversampling_factor(self, geom):
         """Update spatial oversampling_factor for model evaluation."""
@@ -359,7 +368,13 @@ class MapEvaluator:
         npred_reco : `~gammapy.maps.Map`
             Predicted counts in reco energy bins
         """
-        return apply_edisp(npred, self.edisp)
+        if self.model.apply_irf["edisp"]:
+            return apply_edisp(npred, self.edisp)
+        else:
+            if "energy_true" in npred.geom.axes.names:
+                return apply_edisp(npred, self._edisp_diagonal)
+            else:
+                return npred
 
     @lazyproperty
     def _compute_npred(self):
@@ -505,8 +520,6 @@ class MapEvaluator:
             ]
         if not self.model.apply_irf["exposure"]:
             methods.remove(self.apply_exposure)
-        if not self.model.apply_irf["edisp"]:
-            methods.remove(self.apply_edisp)
         return methods
 
     def peek(self, figsize=(12, 15)):
