@@ -5,7 +5,7 @@ requires = [
 	"Cython",
 	'oldest-supported-numpy',
 	'setuptools_scm[toml]',
-	"extension-helpers",
+	"extension-helpers==1.*",
 ]
 build-backend = "setuptools.build_meta"
 
