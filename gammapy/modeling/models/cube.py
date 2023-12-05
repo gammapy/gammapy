@@ -411,7 +411,7 @@ class SkyModel(ModelBase):
         return Map.from_geom(geom=geom, data=value.value, unit=value.unit)
 
     def _compute_time_integral(self, value, geom, gti):
-        """Multiply input value with time integral for the given geom and gti"""
+        """Multiply input value with time integral for the given geometry and GTI."""
         if "time" in geom.axes.names:
             if geom.axes.names[-1] != "time":
                 raise ValueError(
