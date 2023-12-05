@@ -7,7 +7,7 @@ from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.table import Table
 from gammapy.data import Observation
 from gammapy.data.pointing import FixedPointingInfo
-from gammapy.datasets import MapDataset, SpectrumDatasetOnOff
+from gammapy.datasets import FluxPointsDataset, MapDataset, SpectrumDatasetOnOff
 from gammapy.datasets.spectrum import SpectrumDataset
 from gammapy.estimators import FluxPoints, FluxPointsEstimator
 from gammapy.irf import EDispKernelMap, EffectiveAreaTable2D, load_irf_dict_from_file
@@ -19,11 +19,23 @@ from gammapy.modeling.models import (
     ExpCutoffPowerLawSpectralModel,
     FoVBackgroundModel,
     GaussianSpatialModel,
+    Models,
+    PiecewiseNormSpectralModel,
     PowerLawSpectralModel,
     SkyModel,
+    TemplateSpatialModel,
 )
 from gammapy.utils import parallel
 from gammapy.utils.testing import requires_data, requires_dependency
+
+
+@pytest.fixture()
+def fermi_datasets():
+    from gammapy.datasets import Datasets
+
+    filename = "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_datasets.yaml"
+    filename_models = "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_models.yaml"
+    return Datasets.read(filename=filename, filename_models=filename_models)
 
 
 # TODO: use pre-generated data instead
@@ -609,3 +621,51 @@ def test_fpe_non_uniform_datasets():
 
     with pytest.raises(ValueError, match="same value of the 'TELESCOP' meta keyword"):
         fpe.run(datasets=[dataset_1, dataset_2])
+
+
+@requires_data()
+def test_flux_points_estimator_norm_spectral_model(fermi_datasets):
+
+    energy_edges = [10, 30, 100, 300, 1000] * u.GeV
+
+    model_ref = fermi_datasets.models["Crab Nebula"]
+    estimator = FluxPointsEstimator(
+        energy_edges=energy_edges,
+        source="Crab Nebula",
+        selection_optional=[],
+        reoptimize=True,
+    )
+    flux_points = estimator.run(fermi_datasets[0])
+    flux_points_dataset = FluxPointsDataset(data=flux_points, models=model_ref)
+    flux_pred_ref = flux_points_dataset.flux_pred()
+
+    models = Models([model_ref])
+    geom = fermi_datasets[0].exposure.geom.to_image()
+    energy_axis = MapAxis.from_energy_bounds(
+        3 * u.GeV, 1.7 * u.TeV, nbin=30, per_decade=True, name="energy_true"
+    )
+    geom = geom.to_cube([energy_axis])
+
+    model = models.to_template_sky_model(geom, name="test")
+    fermi_datasets.models = [fermi_datasets[0].background_model, model]
+    estimator = FluxPointsEstimator(
+        energy_edges=energy_edges, source="test", selection_optional=[], reoptimize=True
+    )
+    flux_points = estimator.run(fermi_datasets[0])
+
+    flux_points_dataset = FluxPointsDataset(data=flux_points, models=model)
+    flux_pred = flux_points_dataset.flux_pred()
+    assert_allclose(flux_pred, flux_pred_ref, rtol=2e-4)
+
+    # test model 2d
+    norms = (
+        model.spatial_model.map.data.sum(axis=(1, 2))
+        / model.spatial_model.map.data.sum()
+    )
+    model.spatial_model = TemplateSpatialModel(
+        model.spatial_model.map.reduce_over_axes(), normalize=False
+    )
+    model.spectral_model = PiecewiseNormSpectralModel(geom.axes[0].center, norms)
+    flux_points_dataset = FluxPointsDataset(data=flux_points, models=model)
+    flux_pred = flux_points_dataset.flux_pred()
+    assert_allclose(flux_pred, flux_pred_ref, rtol=2e-4)

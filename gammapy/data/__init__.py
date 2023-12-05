@@ -10,6 +10,7 @@ from .obs_table import ObservationTable
 from .observations import Observation, Observations
 from .observers import observatory_locations
 from .pointing import FixedPointingInfo, PointingInfo, PointingMode
+from .utils import get_irfs_features
 
 __all__ = [
     "DataStore",
@@ -25,4 +26,5 @@ __all__ = [
     "observatory_locations",
     "PointingInfo",
     "PointingMode",
+    "get_irfs_features",
 ]

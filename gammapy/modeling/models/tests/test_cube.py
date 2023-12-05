@@ -845,6 +845,7 @@ def test_spatial_model_io_background(tmp_path, background):
     assert "spatial" in model_dict
     new_model = TemplateNPredModel.from_dict(model_dict)
     assert isinstance(new_model.spatial_model, ConstantSpatialModel)
+    assert new_model.spatial_model.frame == "icrs"
 
     model = FoVBackgroundModel(spatial_model=None, dataset_name="test")
     model_dict = model.to_dict()

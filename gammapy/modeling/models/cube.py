@@ -470,7 +470,7 @@ class SkyModel(ModelBase):
         return data
 
     @classmethod
-    def from_dict(cls, data):
+    def from_dict(cls, data, **kwargs):
         """Create SkyModel from dictionary."""
         from gammapy.modeling.models import (
             SPATIAL_MODEL_REGISTRY,
@@ -747,7 +747,7 @@ class FoVBackgroundModel(ModelBase):
         return data
 
     @classmethod
-    def from_dict(cls, data):
+    def from_dict(cls, data, **kwargs):
         """Create model from dictionary.
 
         Parameters
@@ -975,7 +975,7 @@ class TemplateNPredModel(ModelBase):
             self.map.write(self.filename)
 
     @classmethod
-    def from_dict(cls, data):
+    def from_dict(cls, data, **kwargs):
         from gammapy.modeling.models import (
             SPATIAL_MODEL_REGISTRY,
             SPECTRAL_MODEL_REGISTRY,
