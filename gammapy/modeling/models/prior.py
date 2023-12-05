@@ -111,7 +111,7 @@ class Prior(ModelBase):
             return {self.type: data}
 
     @classmethod
-    def from_dict(cls, data):
+    def from_dict(cls, data, **kwargs):
         """Get prior parameters from dictionary."""
         kwargs = {}
 

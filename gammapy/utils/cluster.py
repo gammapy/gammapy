@@ -1,8 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities for hierarchical/agglomerative clustering."""
-
 import numpy as np
 import scipy.cluster.hierarchy as sch
+
+__all__ = ["standard_scaler", "hierarchical_clustering"]
 
 
 def standard_scaler(features):
@@ -10,8 +11,8 @@ def standard_scaler(features):
 
     Calculated through:
 
-       .. math::
-           f_\text{scaled} = \frac{f-\text{mean}(f)}{\text{std}(f)} .
+    .. math::
+        f_\text{scaled} = \frac{f-\text{mean}(f)}{\text{std}(f)} .
 
     Parameters
     ----------
@@ -32,19 +33,19 @@ def standard_scaler(features):
     return scaled_features
 
 
-def hierarchical_clustering(
-    features, linkage_kwargs=None, fcluster_kwargs=None, standard_scaler=False
-):
+def hierarchical_clustering(features, linkage_kwargs=None, fcluster_kwargs=None):
     """Hierarchical clustering using given features.
 
     Parameters
     ----------
     features : `~astropy.table.Table`
         Table containing the features.
-    linkage_kwargs : dict
+    linkage_kwargs : dict, optional
         Arguments forwarded to `scipy.cluster.hierarchy.linkage`.
-    fcluster_kwargs : dict
+        Default is None, which uses method="ward" and metric="euclidean".
+    fcluster_kwargs : dict, optional
         Arguments forwarded to `scipy.cluster.hierarchy.fcluster`.
+        Default is None, which uses criterion="maxclust" and t=3.
 
 
     Returns
@@ -53,7 +54,6 @@ def hierarchical_clustering(
         Table containing the features and an extra column for the groups labels.
 
     """
-    # TODO: standard_scaler is not utilised here?
     features = features.copy()
     features_array = np.array(
         [

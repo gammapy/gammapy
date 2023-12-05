@@ -7,14 +7,28 @@ from astropy.table import Table
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
-from gammapy.maps.axes import UNIT_STRING_FORMAT
-from gammapy.modeling.models import DatasetModels
+from gammapy.maps.axes import UNIT_STRING_FORMAT, MapAxis
+from gammapy.modeling.models import DatasetModels, Models, TemplateSpatialModel
 from gammapy.utils.scripts import make_name, make_path
 from .core import Dataset
 
 log = logging.getLogger(__name__)
 
 __all__ = ["FluxPointsDataset"]
+
+
+def _get_reference_model(model, energy_bounds, margin_percent=70):
+    if isinstance(model.spatial_model, TemplateSpatialModel):
+        geom = model.spatial_model.map.geom
+        emin = energy_bounds[0] * (1 - margin_percent / 100)
+        emax = energy_bounds[-1] * (1 + margin_percent / 100)
+        energy_axis = MapAxis.from_energy_bounds(
+            emin, emax, nbin=20, per_decade=True, name="energy_true"
+        )
+        geom = geom.to_image().to_cube([energy_axis])
+        return Models([model]).to_template_spectral_model(geom)
+    else:
+        return model.spectral_model
 
 
 class FluxPointsDataset(Dataset):
@@ -283,7 +297,8 @@ class FluxPointsDataset(Dataset):
         """Compute predicted flux."""
         flux = 0.0
         for model in self.models:
-            flux_model = model.spectral_model(self.data.energy_ref)
+            reference_model = _get_reference_model(model, self._energy_bounds)
+            flux_model = reference_model(self.data.energy_ref)
 
             if model.temporal_model is not None:
                 integral = model.temporal_model.integral(

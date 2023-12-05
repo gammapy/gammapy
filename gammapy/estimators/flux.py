@@ -38,10 +38,10 @@ class FluxEstimator(ParameterEstimator):
         Sigma to use for asymmetric error computation.
     n_sigma_ul : int
         Sigma to use for upper limit computation.
-    selection_optional : list of str
+    selection_optional : list of str, optional
         Which additional quantities to estimate. Available options are:
 
-            * "all": all the optional steps are executed
+            * "all": all the optional steps are executed.
             * "errn-errp": estimate asymmetric errors.
             * "ul": estimate upper limits.
             * "scan": estimate fit statistic profiles.
@@ -50,8 +50,12 @@ class FluxEstimator(ParameterEstimator):
     fit : `Fit`
         Fit instance specifying the backend and fit options.
     reoptimize : bool
-        Re-optimize other free model parameters. Default is False.
-        If True the available free parameters are fitted together with the norm of the source of interest in each bin independently, otherwise they are frozen at their current values.
+        If True the free parameters of the other models are fitted in each bin independently,
+        together with the norm of the source of interest
+        (but the other parameters of the source of interest are kept frozen).
+        If False only the norm of the source of interest if fitted,
+        and all other parameters are frozen at their current values.
+        Default is False.
     """
 
     tag = "FluxEstimator"
@@ -101,25 +105,19 @@ class FluxEstimator(ParameterEstimator):
         return norm
 
     def get_scale_model(self, models):
-        """Set scale model
+        """Set scale model.
 
         Parameters
         ----------
         models : `Models`
-            Models
+            Models.
 
         Returns
         -------
         model : `ScaleSpectralModel`
-            Scale spectral model
+            Scale spectral model.
         """
         ref_model = models[self.source].spectral_model
-
-        if ref_model.is_norm_spectral_model:
-            raise ValueError(
-                "Instances of `NormSpectralModel` are not supported for flux point estimation."
-            )
-
         scale_model = ScaleSpectralModel(ref_model)
 
         norms = ref_model.parameters.norm_parameters
@@ -141,12 +139,12 @@ class FluxEstimator(ParameterEstimator):
         Parameters
         ----------
         datasets : Datasets
-            Datasets
+            Datasets.
 
         Returns
         -------
         result : dict
-            Dict with an array with one entry per dataset with the sum of the
+            Dictionary with an array with one entry per dataset with the sum of the
             masked npred excess.
         """
         npred_excess = []
@@ -171,7 +169,7 @@ class FluxEstimator(ParameterEstimator):
         Returns
         -------
         result : dict
-            Dict with results for the flux point.
+            Dictionary with results for the flux point.
         """
         datasets = Datasets(datasets)
         models = datasets.models.copy()
@@ -185,6 +183,9 @@ class FluxEstimator(ParameterEstimator):
             result = model.reference_fluxes(energy_axis=energy_axis)
             # convert to scalar values
             result = {key: value.item() for key, value in result.items()}
+
+        # freeze all source model parameters
+        models[self.source].parameters.freeze_all()
 
         models[self.source].spectral_model = model
         datasets.models = models

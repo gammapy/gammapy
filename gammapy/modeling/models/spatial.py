@@ -21,7 +21,6 @@ from regions import (
 import matplotlib.pyplot as plt
 from gammapy.maps import HpxNDMap, Map, MapCoord, WcsGeom, WcsNDMap
 from gammapy.modeling import Parameter, Parameters
-from gammapy.utils.deprecation import deprecated
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.interpolation import interpolation_scale
 from gammapy.utils.regions import region_circle_to_ellipse, region_to_frame
@@ -272,6 +271,34 @@ class SpatialModel(ModelBase):
         data["spatial"]["parameters"] = data["spatial"].pop("parameters")
         return data
 
+    @classmethod
+    def from_dict(cls, data, **kwargs):
+        """Create a spatial model from a dictionary.
+
+        Parameters
+        ----------
+        data : dict
+            Dictionary containing model parameters.
+        kwargs : dict
+            Keyword arguments passed to `~SpatialModel.from_parameters`.
+        """
+        kwargs = kwargs or {}
+        spatial_data = data.get("spatial", data)
+        if "frame" in spatial_data:
+            kwargs["frame"] = spatial_data["frame"]
+        return super().from_dict(data, **kwargs)
+
+    @property
+    def _evaluation_geom(self):
+        if isinstance(self, TemplateSpatialModel):
+            geom = self.map.geom
+        else:
+            width = 2 * max(self.evaluation_radius, 0.1 * u.deg)
+            geom = WcsGeom.create(
+                skydir=self.position, frame=self.frame, width=width, binsz=0.02
+            )
+        return geom
+
     def _get_plot_map(self, geom):
         if self.evaluation_radius is None and geom is None:
             raise ValueError(
@@ -279,13 +306,8 @@ class SpatialModel(ModelBase):
             )
 
         if geom is None:
-            if isinstance(self, TemplateSpatialModel):
-                geom = self.map.geom
-            else:
-                width = 2 * max(self.evaluation_radius, 0.1 * u.deg)
-                geom = WcsGeom.create(
-                    skydir=self.position, frame=self.frame, width=width, binsz=0.02
-                )
+            geom = self._evaluation_geom
+
         data = self.evaluate_geom(geom)
         return Map.from_geom(geom, data=data.value, unit=data.unit)
 
@@ -312,29 +334,6 @@ class SpatialModel(ModelBase):
                 "Use .plot_interactive() or .plot_grid() for Map dimension > 2"
             )
         return m.plot(ax=ax, **kwargs)
-
-    @deprecated("v1.0.1", alternative="plot_interactive")
-    def plot_interative(self, ax=None, geom=None, **kwargs):
-        """Plot spatial model.
-
-        Parameters
-        ----------
-        ax : `~matplotlib.axes.Axes`, optional
-            Matplotlib axes. Default is None.
-        geom : `~gammapy.maps.WcsGeom`, optional
-            Geometry to use for plotting. Default is None.
-        **kwargs : dict
-            Keyword arguments passed to `~gammapy.maps.WcsMap.plot()`.
-
-        Returns
-        -------
-        ax : `~matplotlib.axes.Axes`, optional
-            Matplotlib axes.
-        """
-        m = self._get_plot_map(geom)
-        if m.geom.is_image:
-            raise TypeError("Use .plot() for 2D Maps")
-        m.plot_interactive(ax=ax, **kwargs)
 
     def plot_interactive(self, ax=None, geom=None, **kwargs):
         """Plot spatial model.
@@ -1467,12 +1466,6 @@ class TemplateSpatialModel(SpatialModel):
         if geom is None:
             geom = self.map.geom
         super().plot(ax=ax, geom=geom, **kwargs)
-
-    @deprecated("v1.0.1", alternative="plot_interactive")
-    def plot_interative(self, ax=None, geom=None, **kwargs):
-        if geom is None:
-            geom = self.map.geom
-        super().plot_interactive(ax=ax, geom=geom, **kwargs)
 
     def plot_interactive(self, ax=None, geom=None, **kwargs):
         if geom is None:

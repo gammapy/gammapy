@@ -5,6 +5,8 @@ from astropy.table import Table
 from gammapy.irf import EDispKernelMap, PSFMap
 from gammapy.utils.cluster import standard_scaler
 
+__all__ = ["get_irfs_features"]
+
 
 def get_irfs_features(
     observations,
@@ -15,7 +17,7 @@ def get_irfs_features(
     containment_fraction=0.68,
     apply_standard_scaler=False,
 ):
-    """Get features from irfs properties at a given position. Used for observations clustering.
+    """Get features from IRFs properties at a given position. Used for observations clustering.
 
     Parameters
     ----------
