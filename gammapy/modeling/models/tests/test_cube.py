@@ -133,6 +133,13 @@ def diffuse_evaluator(diffuse_model, exposure, psf, edisp):
 
 
 @pytest.fixture(scope="session")
+def diffuse_evaluator_edisp_false(diffuse_model, exposure, psf, edisp):
+    model = diffuse_model.copy()
+    model.apply_irf["edisp"] = False
+    return MapEvaluator(model, exposure, psf=psf, edisp=edisp)
+
+
+@pytest.fixture(scope="session")
 def sky_models(sky_model):
     sky_model_2 = sky_model.copy(name="source-2")
     sky_model_3 = sky_model.copy(name="source-3")
@@ -528,6 +535,14 @@ class Test_template_cube_MapEvaluator:
     @staticmethod
     def test_compute_npred(diffuse_evaluator):
         out = diffuse_evaluator.compute_npred()
+        assert out.data.shape == (2, 4, 5)
+        assert_allclose(out.data.sum(), 1.106403e12, rtol=5e-3)
+        assert_allclose(out.data[0, 0, 0], 8.778828e09, rtol=5e-3)
+
+    @staticmethod
+    def test_apply_edisp_false(diffuse_evaluator_edisp_false):
+        out = diffuse_evaluator_edisp_false.compute_npred()
+        assert "energy" in out.geom.axes.names
         assert out.data.shape == (2, 4, 5)
         assert_allclose(out.data.sum(), 1.106403e12, rtol=5e-3)
         assert_allclose(out.data[0, 0, 0], 8.778828e09, rtol=5e-3)
