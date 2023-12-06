@@ -65,19 +65,25 @@ def test_dataset_split():
 
     width = 4 * u.deg
     margin = 1 * u.deg
-    datasets = split_dataset(dataset, width, margin)
+    datasets = split_dataset(dataset, width, margin, split_templates=False)
     assert len(datasets) == 15
     assert len(datasets.models) == 1
 
     datasets = split_dataset(dataset, width=width, margin=margin, split_templates=True)
     assert len(datasets.models) == len(datasets)
     assert len(datasets.parameters.free_parameters) == 1
+    assert (
+        datasets[7].models[0].spatial_model.map.geom.width[0][0] == width + 2 * margin
+    )
+    assert (
+        datasets[7].models[0].spatial_model.map.geom.width[1][0] == width + 2 * margin
+    )
 
     geom = dataset.counts.geom
     pixel_width = np.ceil((width / geom.pixel_scales).to_value("")).astype(int)
     margin_width = np.ceil((margin / geom.pixel_scales).to_value("")).astype(int)
 
-    assert datasets[4].mask_fit.data[0, :, :].sum() == np.prod(pixel_width)
-    assert (datasets[4].mask_fit.data[0, :, :] == False).sum() == np.prod(
+    assert datasets[7].mask_fit.data[0, :, :].sum() == np.prod(pixel_width)
+    assert (datasets[7].mask_fit.data[0, :, :] == False).sum() == np.prod(
         pixel_width + 2 * margin_width
     ) - np.prod(pixel_width)
