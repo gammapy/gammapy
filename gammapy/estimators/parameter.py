@@ -2,6 +2,7 @@
 import logging
 import numpy as np
 from gammapy.datasets import Datasets
+from gammapy.datasets.actors import DatasetsActor
 from gammapy.modeling import Fit
 from .core import Estimator
 
@@ -303,7 +304,8 @@ class ParameterEstimator(Estimator):
         result : dict
             Dictionary with the various parameter estimation values.
         """
-        datasets = Datasets(datasets)
+        if not isinstance(datasets, DatasetsActor):
+            datasets = Datasets(datasets)
         parameter = datasets.parameters[parameter]
 
         with datasets.parameters.restore_status():

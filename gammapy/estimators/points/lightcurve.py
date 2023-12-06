@@ -6,6 +6,7 @@ import astropy.units as u
 import gammapy.utils.parallel as parallel
 from gammapy.data import GTI
 from gammapy.datasets import Datasets
+from gammapy.datasets.actors import DatasetsActor
 from gammapy.maps import LabelMapAxis, Map, TimeMapAxis
 from gammapy.utils.deprecation import deprecated_attribute
 from gammapy.utils.pbar import progress_bar
@@ -129,7 +130,8 @@ class LightCurveEstimator(FluxPointsEstimator):
         lightcurve : `~gammapy.estimators.FluxPoints`
             Light curve flux points.
         """
-        datasets = Datasets(datasets)
+        if not isinstance(datasets, DatasetsActor):
+            datasets = Datasets(datasets)
 
         if self.time_intervals is None:
             gti = datasets.gti

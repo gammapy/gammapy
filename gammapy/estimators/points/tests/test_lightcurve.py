@@ -8,6 +8,7 @@ from astropy.time import Time
 from astropy.timeseries import BinnedTimeSeries, BoxLeastSquares
 from gammapy.data import GTI
 from gammapy.datasets import Datasets
+from gammapy.datasets.actors import DatasetsActor
 from gammapy.estimators import FluxPoints, LightCurveEstimator
 from gammapy.estimators.points.tests.test_sed import (
     simulate_map_dataset,
@@ -593,6 +594,65 @@ def get_map_datasets():
 @requires_data()
 def test_lightcurve_estimator_map_datasets():
     datasets = get_map_datasets()
+
+    time_intervals = [
+        Time(["2010-01-01T00:00:00", "2010-01-01T01:00:00"]),
+        Time(["2010-01-01T01:00:00", "2010-01-01T02:00:00"]),
+    ]
+    estimator = LightCurveEstimator(
+        energy_edges=[1, 100] * u.TeV,
+        source="test_source",
+        time_intervals=time_intervals,
+        selection_optional=["scan"],
+    )
+    lightcurve = estimator.run(datasets)
+    table = lightcurve.to_table(format="lightcurve")
+    assert_allclose(table["time_min"], [55197.0, 55197.041667])
+    assert_allclose(table["time_max"], [55197.041667, 55197.083333])
+    assert_allclose(table["e_ref"], [[10.857111], [10.857111]])
+    assert_allclose(table["e_min"], [[1.178769], [1.178769]], rtol=1e-5)
+    assert_allclose(table["e_max"], [[100], [100]])
+    assert_allclose(table["ref_dnde"], [[8.483429e-14], [8.483429e-14]], rtol=1e-5)
+    assert_allclose(table["ref_flux"], [[8.383429e-12], [8.383429e-12]], rtol=1e-5)
+    assert_allclose(table["ref_eflux"], [[4.4407e-11], [4.4407e-11]], rtol=1e-5)
+    assert_allclose(table["stat"], [[9402.778975], [9517.750207]], rtol=1e-2)
+    assert_allclose(table["norm"], [[0.971592], [0.963286]], rtol=1e-2)
+    assert_allclose(table["norm_err"], [[0.044643], [0.044475]], rtol=1e-2)
+    assert_allclose(table["sqrt_ts"], [[35.880361], [35.636547]], rtol=1e-2)
+    assert_allclose(table["ts"], [[1287.4003], [1269.963491]], rtol=1e-2)
+
+    datasets = get_map_datasets()
+
+    time_intervals2 = [Time(["2010-01-01T00:00:00", "2010-01-01T02:00:00"])]
+    estimator2 = LightCurveEstimator(
+        energy_edges=[1, 100] * u.TeV,
+        source="test_source",
+        time_intervals=time_intervals2,
+        selection_optional=["scan"],
+    )
+    lightcurve2 = estimator2.run(datasets)
+    table = lightcurve2.to_table(format="lightcurve")
+    assert_allclose(table["time_min"][0], [55197.0])
+    assert_allclose(table["time_max"][0], [55197.083333])
+    assert_allclose(table["e_ref"][0], [10.857111], rtol=1e-5)
+    assert_allclose(table["e_min"][0], [1.178769], rtol=1e-5)
+    assert_allclose(table["e_max"][0], [100])
+    assert_allclose(table["ref_dnde"][0], [8.483429e-14], rtol=1e-5)
+    assert_allclose(table["ref_flux"][0], [8.383429e-12], rtol=1e-5)
+    assert_allclose(table["ref_eflux"][0], [4.4407e-11], rtol=1e-5)
+    assert_allclose(table["stat"][0], [18920.54651], rtol=1e-2)
+    assert_allclose(table["norm"][0], [0.967438], rtol=1e-2)
+    assert_allclose(table["norm_err"][0], [0.031508], rtol=1e-2)
+    assert_allclose(table["counts"][0], [[2205, 2220]])
+    assert_allclose(table["ts"][0], [2557.346464], rtol=1e-2)
+
+
+@requires_data()
+@requires_dependency("ray")
+def test_lightcurve_estimator_map_datasets_ray_actors():
+    datasets = get_map_datasets()
+
+    datasets = DatasetsActor(datasets)
 
     time_intervals = [
         Time(["2010-01-01T00:00:00", "2010-01-01T01:00:00"]),

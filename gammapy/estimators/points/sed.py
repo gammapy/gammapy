@@ -6,6 +6,7 @@ from astropy import units as u
 from astropy.table import Table
 import gammapy.utils.parallel as parallel
 from gammapy.datasets import Datasets
+from gammapy.datasets.actors import DatasetsActor
 from gammapy.datasets.flux_points import _get_reference_model
 from gammapy.maps import MapAxis
 from gammapy.modeling import Fit
@@ -128,7 +129,9 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
         flux_points : `FluxPoints`
             Estimated flux points.
         """
-        datasets = Datasets(datasets=datasets)
+
+        if not isinstance(datasets, DatasetsActor):
+            datasets = Datasets(datasets=datasets)
 
         if not datasets.energy_axes_are_aligned:
             raise ValueError("All datasets must have aligned energy axes.")
@@ -189,7 +192,7 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
             energy_min=energy_min, energy_max=energy_max
         )
         if self.sum_over_energy_groups:
-            datasets_sliced = Datasets(
+            datasets_sliced = datasets_sliced.__class__(
                 [_.to_image(name=_.name) for _ in datasets_sliced]
             )
 
