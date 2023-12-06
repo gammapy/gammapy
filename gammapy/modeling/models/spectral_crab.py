@@ -26,6 +26,7 @@ class MeyerCrabSpectralModel(SpectralModel):
 
     @staticmethod
     def evaluate(energy, norm):
+        """Evaluate the model."""
         polynomial = np.poly1d(MeyerCrabSpectralModel.coefficients)
         log_energy = np.log10(energy.to_value("TeV"))
         log_flux = polynomial(log_energy)
@@ -48,20 +49,20 @@ def create_crab_spectral_model(reference="meyer"):
 
     Parameters
     ----------
-    reference : {'meyer', 'hegra', 'hess_pl', 'hess_ecpl', 'magic_lp', 'magic_ecpl'}
-        Which reference to use for the spectral model.
+    reference : {'meyer', 'hegra', 'hess_pl', 'hess_ecpl', 'magic_lp', 'magic_ecpl'}, optional
+        Which reference to use for the spectral model. Default is 'meyer'.
 
     Examples
     --------
     Let's first import what we need::
 
-        import astropy.units as u
-        from gammapy.modeling.models import PowerLaw, create_crab_spectral_model
+        >>> import astropy.units as u
+        >>> from gammapy.modeling.models import PowerLaw, create_crab_spectral_model
 
     Plot the 'hess_ecpl' reference Crab spectrum between 1 TeV and 100 TeV::
 
-        crab_hess_ecpl = create_crab_spectral_model('hess_ecpl')
-        crab_hess_ecpl.plot([1, 100] * u.TeV)
+        >>> crab_hess_ecpl = create_crab_spectral_model('hess_ecpl')
+        >>> crab_hess_ecpl.plot([1, 100] * u.TeV)
 
     Use a reference crab spectrum as unit to measure a differential flux (at 10 TeV)::
 

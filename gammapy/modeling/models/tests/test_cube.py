@@ -10,7 +10,7 @@ from regions import CircleSkyRegion
 from gammapy.data.gti import GTI
 from gammapy.datasets.map import MapEvaluator
 from gammapy.irf import EDispKernel, PSFKernel
-from gammapy.maps import Map, MapAxis, RegionGeom, RegionNDMap, WcsGeom
+from gammapy.maps import Map, MapAxis, RegionGeom, RegionNDMap, TimeMapAxis, WcsGeom
 from gammapy.modeling import Parameter
 from gammapy.modeling.models import (
     CompoundSpectralModel,
@@ -26,6 +26,7 @@ from gammapy.modeling.models import (
     PointSpatialModel,
     PowerLawNormSpectralModel,
     PowerLawSpectralModel,
+    PowerLawTemporalModel,
     SkyModel,
     SpatialModel,
     TemplateNPredModel,
@@ -130,6 +131,13 @@ def evaluator(sky_model, exposure, psf, edisp, gti):
 @pytest.fixture(scope="session")
 def diffuse_evaluator(diffuse_model, exposure, psf, edisp):
     return MapEvaluator(diffuse_model, exposure, psf=psf, edisp=edisp)
+
+
+@pytest.fixture(scope="session")
+def diffuse_evaluator_edisp_false(diffuse_model, exposure, psf, edisp):
+    model = diffuse_model.copy()
+    model.apply_irf["edisp"] = False
+    return MapEvaluator(model, exposure, psf=psf, edisp=edisp)
 
 
 @pytest.fixture(scope="session")
@@ -532,6 +540,14 @@ class Test_template_cube_MapEvaluator:
         assert_allclose(out.data.sum(), 1.106403e12, rtol=5e-3)
         assert_allclose(out.data[0, 0, 0], 8.778828e09, rtol=5e-3)
 
+    @staticmethod
+    def test_apply_edisp_false(diffuse_evaluator_edisp_false):
+        out = diffuse_evaluator_edisp_false.compute_npred()
+        assert "energy" in out.geom.axes.names
+        assert out.data.shape == (2, 4, 5)
+        assert_allclose(out.data.sum(), 1.106403e12, rtol=5e-3)
+        assert_allclose(out.data[0, 0, 0], 8.778828e09, rtol=5e-3)
+
 
 class TestSkyModelMapEvaluator:
     @staticmethod
@@ -763,6 +779,162 @@ def test_evaluate_integrate_nd_geom():
     )
 
 
+def test_evaluate_integrate_geom_with_time():
+    spatial_model = GaussianSpatialModel(
+        lon="0d", lat="0d", sigma=0.1 * u.deg, frame="icrs"
+    )
+    spectral_model = PowerLawSpectralModel(amplitude="1e-11 cm-2 s-1 TeV-1")
+    temporal_model = PowerLawTemporalModel()
+    temporal_model.t_ref.value = 55000
+    sky_model = SkyModel(
+        spectral_model=spectral_model,
+        spatial_model=spatial_model,
+        temporal_model=temporal_model,
+    )
+
+    center = SkyCoord("0d", "0d", frame="icrs")
+    energy_axis = MapAxis.from_energy_bounds(
+        "1 TeV", "10 TeV", nbin=3, name="energy_true"
+    )
+    other_axis = MapAxis.from_edges([0.0, 1.0, 2.0], name="other")
+
+    t_ref = Time(temporal_model.t_ref.value, format="mjd")
+    time_min = t_ref + [1, 3, 5, 7] * u.day
+    time_max = t_ref + [2, 4, 6, 8] * u.day
+    time_axis = TimeMapAxis.from_time_edges(time_min=time_min, time_max=time_max)
+
+    wcs_geom = WcsGeom.create(
+        width=[1, 1.2],
+        binsz=0.05,
+        skydir=center,
+        axes=[energy_axis, other_axis, time_axis],
+    )
+    unit_exp = 1 / u.TeV / u.cm**2 / u.s / u.sr
+
+    evaluation = sky_model.evaluate_geom(wcs_geom)
+    assert evaluation.shape == (4, 2, 3, 24, 20)
+    assert evaluation.unit.is_equivalent(unit_exp)
+    assert_allclose(
+        evaluation.value[0, 0, 1, 12, 10],
+        7.362297e-08,
+        rtol=1e-6,
+    )
+
+    radius = 0.3 * u.deg
+    region = CircleSkyRegion(center, radius)
+
+    sky_model1 = SkyModel(spectral_model=spectral_model, temporal_model=temporal_model)
+    region_geom = RegionGeom(
+        region=region, axes=[time_axis, energy_axis], binsz_wcs="0.01deg"
+    )
+    with pytest.raises(ValueError):
+        sky_model1.evaluate_geom(region_geom)
+
+    region_geom = RegionGeom(
+        region=region, axes=[energy_axis, time_axis], binsz_wcs="0.01deg"
+    )
+    evaluation = sky_model1.evaluate_geom(geom=region_geom)
+    assert evaluation.shape == (4, 3, 1, 1)
+    assert_allclose(
+        evaluation[0].value,
+        [[[6.96238325e-12]], [[1.5000000e-12]], [[3.23165204e-13]]],
+        rtol=1e-6,
+    )
+    unit_exp = 1 / u.TeV / u.cm**2 / u.s
+    assert evaluation.unit.is_equivalent(unit_exp)
+
+    integral = sky_model1.integrate_geom(geom=region_geom)
+    assert integral.geom.data_shape == (4, 3, 1, 1)
+    assert_allclose(
+        integral.data[0],
+        [[[8.03761675e-12]], [[3.73073122e-12]], [[1.73165204e-12]]],
+        rtol=1e-6,
+    )
+    unit_exp = 1 / u.cm**2 / u.s
+    assert integral.unit.is_equivalent(unit_exp)
+
+
+def test_evaluate_integrate_geom_with_time_and_gti():
+    spatial_model = GaussianSpatialModel(
+        lon="0d", lat="0d", sigma=0.1 * u.deg, frame="icrs"
+    )
+    spectral_model = PowerLawSpectralModel(amplitude="1e-11 cm-2 s-1 TeV-1")
+    temporal_model = PowerLawTemporalModel()
+    temporal_model.t_ref.value = 55000
+    sky_model = SkyModel(
+        spectral_model=spectral_model,
+        spatial_model=spatial_model,
+        temporal_model=temporal_model,
+    )
+
+    center = SkyCoord("0d", "0d", frame="icrs")
+
+    start = np.linspace(0, 8, 10) * u.day
+    stop = np.linspace(0.5, 8.5, 10) * u.day
+    t_ref = Time(temporal_model.t_ref.value, format="mjd")
+    gti = GTI.create(start, stop, reference_time=t_ref)
+
+    energy_axis = MapAxis.from_energy_bounds(
+        "1 TeV", "10 TeV", nbin=3, name="energy_true"
+    )
+    other_axis = MapAxis.from_edges([0.0, 1.0, 2.0], name="other")
+
+    time_min = t_ref + [1, 3, 5, 7] * u.day
+    time_max = t_ref + [2, 4, 6, 8] * u.day
+
+    time_axis = TimeMapAxis.from_time_edges(time_min=time_min, time_max=time_max)
+
+    wcs_geom = WcsGeom.create(
+        width=[1, 1.2],
+        binsz=0.05,
+        skydir=center,
+        axes=[energy_axis, other_axis, time_axis],
+    )
+
+    evaluation = sky_model.evaluate_geom(geom=wcs_geom, gti=gti)
+    assert evaluation.shape == (4, 2, 3, 24, 20)
+    unit_exp = 1 / u.TeV / u.cm**2 / u.s / u.sr
+    assert evaluation.unit.is_equivalent(unit_exp)
+    assert_allclose(
+        evaluation.value[0, 0, 1, 12, 10],
+        7.102014e-08,
+        rtol=1e-6,
+    )
+
+    radius = 0.3 * u.deg
+    region = CircleSkyRegion(center, radius)
+
+    sky_model1 = SkyModel(spectral_model=spectral_model, temporal_model=temporal_model)
+    region_geom = RegionGeom(
+        region=region, axes=[time_axis, energy_axis], binsz_wcs="0.01deg"
+    )
+    with pytest.raises(ValueError):
+        sky_model1.evaluate_geom(region_geom, gti)
+
+    region_geom = RegionGeom(
+        region=region, axes=[energy_axis, time_axis], binsz_wcs="0.01deg"
+    )
+    evaluation = sky_model1.evaluate_geom(geom=region_geom, gti=gti)
+    assert evaluation.shape == (4, 3, 1, 1)
+    assert_allclose(
+        evaluation[0].value,
+        [[[6.71623839e-12]], [[1.44696970e-12]], [[3.11740171e-13]]],
+        rtol=1e-3,
+    )
+    unit_exp = 1 / u.TeV / u.cm**2 / u.s
+    assert evaluation.unit.is_equivalent(unit_exp)
+
+    integral = sky_model1.integrate_geom(geom=region_geom, gti=gti)
+    assert integral.geom.data_shape == (4, 3, 1, 1)
+    assert_allclose(
+        integral.data[0],
+        [[[7.75345858e-12]], [[3.59883668e-12]], [[1.67043201e-12]]],
+        rtol=1e-3,
+    )
+    unit_exp = 1 / u.cm**2 / u.s
+    assert integral.unit.is_equivalent(unit_exp)
+
+
 def test_compound_spectral_model(caplog):
     spatial_model = GaussianSpatialModel(
         lon_0="3 deg", lat_0="4 deg", sigma="3 deg", frame="galactic"
@@ -794,7 +966,6 @@ def test_sky_model_contributes_point_region():
 
 
 def test_spatial_model_background(background):
-
     geom = background.geom
 
     spatial_model = ConstantSpatialModel(frame="galactic")
@@ -825,7 +996,6 @@ def test_spatial_model_background(background):
 
 
 def test_spatial_model_io_background(tmp_path, background):
-
     spatial_model = ConstantSpatialModel(frame="galactic")
 
     fbkg_irf = str(tmp_path / "background_irf_test.fits")
@@ -845,6 +1015,7 @@ def test_spatial_model_io_background(tmp_path, background):
     assert "spatial" in model_dict
     new_model = TemplateNPredModel.from_dict(model_dict)
     assert isinstance(new_model.spatial_model, ConstantSpatialModel)
+    assert new_model.spatial_model.frame == "icrs"
 
     model = FoVBackgroundModel(spatial_model=None, dataset_name="test")
     model_dict = model.to_dict()
@@ -860,7 +1031,6 @@ def test_spatial_model_io_background(tmp_path, background):
 
 
 def test_piecewise_spatial_model_background(background):
-
     geom = background.geom
     coords = geom.to_image().get_coord().flat
 

@@ -2,6 +2,7 @@
 import logging
 import warnings
 import numpy as np
+import astropy.units as u
 from astropy.coordinates import Angle, SkyOffsetFrame
 from astropy.table import Table
 from gammapy.data import FixedPointingInfo
@@ -20,6 +21,8 @@ __all__ = [
     "make_map_exposure_true_energy",
     "make_psf_map",
     "make_theta_squared_table",
+    "make_effective_livetime_map",
+    "make_observation_time_map",
 ]
 
 log = logging.getLogger(__name__)
@@ -534,3 +537,110 @@ def make_counts_off_rad_max(geom_off, rad_max, events):
         counts_off.fill_events(selected_events)
 
     return counts_off
+
+
+def make_observation_time_map(observations, geom, offset_max=None):
+    """
+    Compute the total observation time on the target geometry
+    for a list of observations.
+
+    Parameters
+    ----------
+    observations : `~gammapy.data.Observations`
+            Observations container containing list of observations.
+    geom : `~gammapy.maps.Geom`
+            Reference geometry.
+    offset_max : `~astropy.units.quantity.Quantity`, optional
+        The maximum offset FoV. Default is None.
+        If None, it will be taken from the IRFs.
+
+    Returns
+    -------
+    exposure : `~gammapy.maps.Map`
+        Effective livetime.
+    """
+    geom = geom.to_image()
+    stacked = Map.from_geom(geom, unit=u.h)
+    for obs in observations:
+        if offset_max is None:
+            offset_max = guess_instrument_fov(obs)
+        coords = geom.get_coord(sparse=True)
+        offset = coords.skycoord.separation(obs.get_pointing_icrs(obs.tmid))
+        mask = offset < offset_max
+        c1 = coords.apply_mask(mask)
+        weights = np.ones(c1.shape) * obs.observation_live_time_duration
+        stacked.fill_by_coord(coords=c1, weights=weights)
+    return stacked
+
+
+def make_effective_livetime_map(observations, geom, offset_max=None):
+    """
+    Compute the acceptance corrected livetime map
+    for a list of observations.
+
+    Parameters
+    ----------
+    observations : `~gammapy.data.Observations`
+        Observations container containing list of observations.
+    geom : `~gammapy.maps.Geom`
+        Reference geometry.
+    offset_max : `~astropy.units.quantity.Quantity`, optional
+        The maximum offset FoV. Default is None.
+
+    Returns
+    -------
+     exposure : `~gammapy.maps.Map`
+        Effective livetime.
+    """
+
+    livetime = Map.from_geom(geom, unit=u.hr)
+    for obs in observations:
+        if offset_max is None:
+            offset_max = guess_instrument_fov(obs)
+        geom_obs = geom.cutout(
+            position=obs.get_pointing_icrs(obs.tmid), width=2.0 * offset_max
+        )
+        exposure = make_map_exposure_true_energy(
+            pointing=geom.center_skydir,
+            livetime=obs.observation_live_time_duration,
+            aeff=obs.aeff,
+            geom=geom_obs,
+            use_region_center=True,
+        )
+
+        on_axis = obs.aeff.evaluate(
+            offset=0.0 * u.deg, energy_true=geom.axes["energy_true"].center
+        )
+        on_axis = on_axis.reshape((on_axis.shape[0], 1, 1))
+        lv_obs = exposure / on_axis
+        livetime.stack(lv_obs)
+    return livetime
+
+
+def guess_instrument_fov(obs):
+    """
+    Guess the camera field of view for the given observation
+    from the IRFs. This simply takes the maximum offset of the
+    effective area IRF.
+    TODO: This logic will break for more complex IRF models.
+    A better option would be to compute the offset at which
+    the effective area is above 10% of the maximum.
+
+    Parameters
+    ----------
+    obs : `~gammapy.data.Observation`
+        Observation container.
+
+    Returns
+    -------
+    offset_max : `~astropy.units.quantity.Quantity`
+        The maximum offset of the effective area IRF.
+    """
+
+    if "aeff" not in obs.available_irfs:
+        raise ValueError("No Effective area IRF to infer the FoV from")
+    if obs.aeff.is_pointlike:
+        raise ValueError("Cannot guess FoV from pointlike IRFs")
+    if "offset" not in obs.aeff.axes.names:
+        raise ValueError("Offset axis not present!")
+    return obs.aeff.axes["offset"].center[-1]

@@ -28,7 +28,7 @@ class SensitivityEstimator(Estimator):
     gamma_min : float, optional
         Minimum number of gamma-rays. Default is 10.
     bkg_syst_fraction : float, optional
-        Fraction of background counts above which the number of gamma-rays is. Default is 0.05
+        Fraction of background counts above which the number of gamma-rays is. Default is 0.05.
 
     Examples
     --------
@@ -60,12 +60,12 @@ class SensitivityEstimator(Estimator):
         Parameters
         ----------
         dataset : `SpectrumDataset`
-            Spectrum dataset
+            Spectrum dataset.
 
         Returns
         -------
-        excess : `RegionNDMap`
-            Minimal excess
+        excess : `~gammapy.maps.RegionNDMap`
+            Minimal excess.
         """
         n_off = dataset.counts_off.data
 
@@ -85,14 +85,14 @@ class SensitivityEstimator(Estimator):
         return excess
 
     def estimate_min_e2dnde(self, excess, dataset):
-        """Estimate dnde from given min. excess
+        """Estimate dnde from a given minimum excess.
 
         Parameters
         ----------
-        excess : `RegionNDMap`
-            Minimal excess
-        dataset : `SpectrumDataset`
-            Spectrum dataset
+        excess : `~gammapy.maps.RegionNDMap`
+            Minimal excess.
+        dataset : `~gammapy.datasets.SpectrumDataset`
+            Spectrum dataset.
 
         Returns
         -------
@@ -122,7 +122,7 @@ class SensitivityEstimator(Estimator):
         return criterion
 
     def run(self, dataset):
-        """Run the sensitivity estimation
+        """Run the sensitivity estimation.
 
         Parameters
         ----------
@@ -132,7 +132,7 @@ class SensitivityEstimator(Estimator):
         Returns
         -------
         sensitivity : `~astropy.table.Table`
-            Sensitivity table
+            Sensitivity table.
         """
         energy = dataset._geom.axes["energy"].center
         excess = self.estimate_min_excess(dataset)

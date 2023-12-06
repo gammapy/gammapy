@@ -17,7 +17,7 @@ from gammapy.estimators.utils import (
     resample_energy_edges,
 )
 from gammapy.maps import Map, MapAxis
-from gammapy.utils.testing import requires_data
+from gammapy.utils.testing import assert_time_allclose, requires_data
 
 
 class TestFindPeaks:
@@ -191,6 +191,11 @@ def test_compute_lightcurve_doublingtime():
     dtime = compute_lightcurve_doublingtime(lightcurve)
     ddtime = dtime["doublingtime"].quantity
     ddtime_err = dtime["doubling_err"].quantity
+    dcoord = dtime["doubling_coord"]
 
     assert_allclose(ddtime, [[[245305.49]], [[481572.59]]] * u.s)
     assert_allclose(ddtime_err, [[[45999.766]], [[11935.665]]] * u.s)
+    assert_time_allclose(
+        dcoord,
+        Time([[[55197.99960648]], [[55197.99960648]]], format="mjd", scale="utc"),
+    )

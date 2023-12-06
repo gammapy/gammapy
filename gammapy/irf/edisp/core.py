@@ -20,13 +20,13 @@ class EnergyDispersion2D(IRF):
     Parameters
     ----------
     energy_axis_true : `MapAxis`
-        True energy axis
+        True energy axis.
     migra_axis : `MapAxis`
-        Energy migration axis
+        Energy migration axis.
     offset_axis : `MapAxis`
-        Field of view offset axis
+        Field of view offset axis.
     data : `~numpy.ndarray`
-        Energy dispersion probability density
+        Energy dispersion probability density.
 
     Examples
     --------
@@ -45,7 +45,7 @@ class EnergyDispersion2D(IRF):
 
     See Also
     --------
-    EnergyDispersion
+    EnergyDispersion.
     """
 
     tag = "edisp_2d"
@@ -82,17 +82,17 @@ class EnergyDispersion2D(IRF):
         Parameters
         ----------
         energy_axis_true : `MapAxis`
-            True energy axis
+            True energy axis.
         migra_axis : `~astropy.units.Quantity`
-            Migra axis
+            Migra axis.
         offset_axis : `~astropy.units.Quantity`
-            Bin edges of offset
+            Bin edges of offset.
         bias : float or `~numpy.ndarray`
-            Center of Gaussian energy dispersion, bias
+            Center of Gaussian energy dispersion, bias.
         sigma : float or `~numpy.ndarray`
             RMS width of Gaussian energy dispersion, resolution.
         pdf_threshold : float, optional
-            Zero suppression threshold
+            Zero suppression threshold. Default is 1e-6.
         """
         axes = MapAxes([energy_axis_true, migra_axis, offset_axis])
         coords = axes.get_coord(mode="edges", axis_name="migra")
@@ -117,24 +117,24 @@ class EnergyDispersion2D(IRF):
         )
 
     def to_edisp_kernel(self, offset, energy_true=None, energy=None):
-        """Detector response R(Delta E_reco, Delta E_true)
+        """Detector response R(Delta E_reco, Delta E_true).
 
         Probability to reconstruct an energy in a given true energy band
-        in a given reconstructed energy band
+        in a given reconstructed energy band.
 
         Parameters
         ----------
         offset : `~astropy.coordinates.Angle`
-            Offset
-        energy_true : `~astropy.units.Quantity`, None
-            True energy axis
-        energy : `~astropy.units.Quantity`
-            Reconstructed energy axis
+            Offset.
+        energy_true : `~astropy.units.Quantity`, optional
+            True energy axis. Default is None.
+        energy : `~astropy.units.Quantity`, optional
+            Reconstructed energy axis. Default is None.
 
         Returns
         -------
         edisp : `~gammapy.irf.EDispKernel`
-            Energy dispersion matrix
+            Energy dispersion matrix.
         """
         from gammapy.makers.utils import make_edisp_kernel_map
 
@@ -165,7 +165,7 @@ class EnergyDispersion2D(IRF):
         return edisp.get_edisp_kernel()
 
     def normalize(self):
-        """Normalise energy dispersion"""
+        """Normalise energy dispersion."""
         super().normalize(axis_name="migra")
 
     def plot_migration(self, ax=None, offset=None, energy_true=None, **kwargs):
@@ -174,18 +174,18 @@ class EnergyDispersion2D(IRF):
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`, optional
-            Axis
+            Matplotlib axes. Default is None.
         offset : `~astropy.coordinates.Angle`, optional
-            Offset
+            Offset. Default is None.
         energy_true : `~astropy.units.Quantity`, optional
-            True energy
+            True energy. Default is None.
         **kwargs : dict
-            Keyword arguments forwarded to `~matplotlib.pyplot.plot`
+            Keyword arguments forwarded to `~matplotlib.pyplot.plot`.
 
         Returns
         -------
         ax : `~matplotlib.axes.Axes`
-            Axis
+            Matplotlib axes.
         """
         ax = plt.gca() if ax is None else ax
 
@@ -221,18 +221,18 @@ class EnergyDispersion2D(IRF):
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`, optional
-            Axis
+            Matplotlib axes. Default is None.
         offset : `~astropy.coordinates.Angle`, optional
-            Offset
-        add_cbar : bool
-            Add a colorbar to the plot.
+            Offset. Default is None.
+        add_cbar : bool, optional
+            Add a colorbar to the plot. Default is False.
         kwargs : dict
             Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
 
         Returns
         -------
         ax : `~matplotlib.axes.Axes`
-            Axis
+            Matplotlib axes.
         """
         kwargs.setdefault("cmap", "GnBu")
         kwargs.setdefault("norm", PowerNorm(gamma=0.5))
@@ -268,8 +268,8 @@ class EnergyDispersion2D(IRF):
 
         Parameters
         ----------
-        figsize : (float, float)
-            Size of the resulting plot
+        figsize : tuple, optional
+            Size of the resulting plot. Default is (15, 5).
         """
         fig, axes = plt.subplots(nrows=1, ncols=3, figsize=figsize)
         self.plot_bias(ax=axes[0])
