@@ -715,24 +715,6 @@ class Parameters(collections.abc.Sequence):
                 parameter.factor = factors[idx]
                 idx += 1
 
-    def set_parameter_values(self, values):
-        """Set values of all parameters.
-
-        Used in the optimizer interface.
-        """
-        idx = 0
-        for parameter in self._parameters:
-            if not parameter.frozen:
-                parameter.value = values[idx]
-                idx += 1
-
-    def get_parameter_values(self):
-        """Get values of all parameters.
-
-        Used in the optimizer interface.
-        """
-        return [p.value for p in self._parameters if not p.frozen]
-
     def autoscale(self):
         """Autoscale all parameters.
 
