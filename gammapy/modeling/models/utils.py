@@ -3,6 +3,7 @@ import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
+from astropy.nddata import NoOverlapError
 from regions import PointSkyRegion
 from gammapy.maps import HpxNDMap, Map, MapAxis, RegionNDMap
 from gammapy.maps.hpx.io import HPX_FITS_CONVENTIONS, HpxConv
@@ -91,7 +92,10 @@ def cutout_template_models(models, cutout_kwargs, datasets_names=None):
     models_cut = Models()
     for m in models:
         if isinstance(m.spatial_model, TemplateSpatialModel):
-            map_ = m.spatial_model.map.cutout(**cutout_kwargs)
+            try:
+                map_ = m.spatial_model.map.cutout(**cutout_kwargs)
+            except (NoOverlapError, ValueError):
+                continue
             template_cut = TemplateSpatialModel(
                 map_,
                 normalize=m.spatial_model.normalize,
