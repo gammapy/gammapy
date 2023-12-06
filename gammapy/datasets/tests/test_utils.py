@@ -84,6 +84,6 @@ def test_dataset_split():
     margin_width = np.ceil((margin / geom.pixel_scales).to_value("")).astype(int)
 
     assert datasets[7].mask_fit.data[0, :, :].sum() == np.prod(pixel_width)
-    assert (datasets[7].mask_fit.data[0, :, :] == False).sum() == np.prod(
+    assert (~datasets[7].mask_fit.data[0, :, :]).sum() == np.prod(
         pixel_width + 2 * margin_width
     ) - np.prod(pixel_width)
