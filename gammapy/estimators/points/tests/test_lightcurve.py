@@ -223,10 +223,10 @@ def test_lightcurve_estimator_fit_options():
 
     estimator = LightCurveEstimator(
         energy_edges=energy_edges,
-        norm_n_values=3,
         time_intervals=time_intervals,
         selection_optional="all",
         fit=Fit(backend="minuit", optimize_opts=dict(tol=0.2, strategy=1)),
+        norm=dict(scan_n_values=3),
     )
 
     assert_allclose(estimator.fit.optimize_opts["tol"], 0.2)
@@ -246,10 +246,10 @@ def test_lightcurve_estimator_spectrum_datasets():
 
     estimator = LightCurveEstimator(
         energy_edges=[1, 30] * u.TeV,
-        norm_n_values=3,
         time_intervals=time_intervals,
         selection_optional="all",
     )
+    estimator.norm.scan_n_values = 3
 
     lightcurve = estimator.run(datasets)
     table = lightcurve.to_table(format="lightcurve")
@@ -307,10 +307,10 @@ def test_lightcurve_estimator_spectrum_datasets_2_energy_bins():
 
     estimator = LightCurveEstimator(
         energy_edges=[1, 5, 30] * u.TeV,
-        norm_n_values=3,
         time_intervals=time_intervals,
         selection_optional="all",
     )
+    estimator.norm.scan_n_values = 3
     lightcurve = estimator.run(datasets)
     table = lightcurve.to_table(format="lightcurve")
 
@@ -434,10 +434,10 @@ def test_lightcurve_estimator_spectrum_datasets_with_mask_fit():
     selection = ["scan"]
     estimator = LightCurveEstimator(
         energy_edges=[1, 30] * u.TeV,
-        norm_n_values=3,
         time_intervals=time_intervals,
         selection_optional=selection,
     )
+    estimator.norm.scan_n_values = 3
     lightcurve = estimator.run(datasets)
     table = lightcurve.to_table(format="lightcurve")
     assert_allclose(table["time_min"], [55197.0, 55197.041667])
@@ -453,8 +453,9 @@ def test_lightcurve_estimator_spectrum_datasets_default():
     datasets = get_spectrum_datasets()
     selection = ["scan"]
     estimator = LightCurveEstimator(
-        energy_edges=[1, 30] * u.TeV, norm_n_values=3, selection_optional=selection
+        energy_edges=[1, 30] * u.TeV, selection_optional=selection
     )
+    estimator.norm.scan_n_values = 3
     lightcurve = estimator.run(datasets)
     table = lightcurve.to_table(format="lightcurve")
     assert_allclose(table["time_min"], [55197.0, 55197.041667])
@@ -473,10 +474,10 @@ def test_lightcurve_estimator_spectrum_datasets_notordered():
     ]
     estimator = LightCurveEstimator(
         energy_edges=[1, 100] * u.TeV,
-        norm_n_values=3,
         time_intervals=time_intervals,
         selection_optional=["scan"],
     )
+    estimator.norm.scan_n_values = 3
     lightcurve = estimator.run(datasets)
     table = lightcurve.to_table(format="lightcurve")
     assert_allclose(table["time_min"], [55197.0, 55197.041667])
@@ -491,10 +492,10 @@ def test_lightcurve_estimator_spectrum_datasets_largerbin():
     time_intervals = [Time(["2010-01-01T00:00:00", "2010-01-01T02:00:00"])]
     estimator = LightCurveEstimator(
         energy_edges=[1, 30] * u.TeV,
-        norm_n_values=3,
         time_intervals=time_intervals,
         selection_optional=["scan"],
     )
+    estimator.norm.scan_n_values = 3
     lightcurve = estimator.run(datasets)
     table = lightcurve.to_table(format="lightcurve")
 
@@ -522,10 +523,10 @@ def test_lightcurve_estimator_spectrum_datasets_emptybin():
     ]
     estimator = LightCurveEstimator(
         energy_edges=[1, 30] * u.TeV,
-        norm_n_values=3,
         time_intervals=time_intervals,
         selection_optional=["scan"],
     )
+    estimator.norm.scan_n_values = 3
     lightcurve = estimator.run(datasets)
     table = lightcurve.to_table(format="lightcurve")
 
@@ -542,7 +543,8 @@ def test_lightcurve_estimator_spectrum_datasets_timeoverlaped():
         Time(["2010-01-01T01:00:00", "2010-01-01T02:00:00"]),
     ]
     with pytest.raises(ValueError) as excinfo:
-        estimator = LightCurveEstimator(norm_n_values=3, time_intervals=time_intervals)
+        estimator = LightCurveEstimator(time_intervals=time_intervals)
+        estimator.norm.scan_n_values = 3
         estimator.run(datasets)
 
     msg = "Overlapping time bins"
@@ -559,10 +561,10 @@ def test_lightcurve_estimator_spectrum_datasets_gti_not_include_in_time_interval
     ]
     estimator = LightCurveEstimator(
         energy_edges=[1, 30] * u.TeV,
-        norm_n_values=3,
         time_intervals=time_intervals,
         selection_optional=["scan"],
     )
+    estimator.norm.scan_n_values = 3
     with pytest.raises(ValueError) as excinfo:
         estimator.run(datasets)
     msg = "LightCurveEstimator: No datasets in time intervals"

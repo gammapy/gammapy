@@ -8,6 +8,7 @@ import logging
 import numpy as np
 from astropy import units as u
 from astropy.table import Table
+from gammapy.utils.deprecation import deprecated_attribute
 from gammapy.utils.interpolation import interpolation_scale
 
 __all__ = ["Parameter", "Parameters", "PriorParameter", "PriorParameters"]
@@ -97,6 +98,8 @@ class Parameter:
     prior : `~gammapy.modeling.models.Prior`
         Prior set on the parameter.
     """
+
+    norm_parameters = deprecated_attribute("norm_parameters", "1.2")
 
     def __init__(
         self,
