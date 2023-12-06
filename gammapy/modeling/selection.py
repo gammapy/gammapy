@@ -176,8 +176,9 @@ def select_nested_models(
         fermi_datasets = Datasets.read(filename=filename, filename_models=filename_models)
         model = fermi_datasets.models["Crab Nebula"]
         results = select_nested_models(fermi_datasets,
-                                       [model.spectral_model.amplitude],
-                                       [0],
+                                       parameters=[model.spectral_model.amplitude],
+                                       null_values=[0],
+                                       n_sigma=4,
                                       )
     """
     test = TestStatisticNested(parameters, null_values, n_sigma, n_free_parameters, fit)
