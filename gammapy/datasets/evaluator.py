@@ -63,7 +63,7 @@ class MapEvaluator:
     ):
 
         self.model = model
-        self.exposure = exposure
+        self._exposure = exposure
         self.psf = psf
         self.edisp = edisp
         self.mask = mask
@@ -72,6 +72,7 @@ class MapEvaluator:
         self._init_position = None
         self.contributes = True
         self.psf_containment = None
+        self._geom = None
 
         if evaluation_mode not in {"local", "global"}:
             raise ValueError(f"Invalid evaluation_mode: {evaluation_mode!r}")
@@ -93,7 +94,8 @@ class MapEvaluator:
         self._cached_position = (0, 0)
         self._computation_cache = None
         self._spatial_oversampling_factor = 1
-        if self.exposure is not None:
+        if self._exposure is not None:
+            self._geom = self._exposure.geom
             if not self.geom.is_region or self.geom.region is not None:
                 self.update_spatial_oversampling_factor(self.geom)
 
@@ -111,7 +113,7 @@ class MapEvaluator:
     @property
     def geom(self):
         """True energy map geometry (`~gammapy.maps.Geom`)."""
-        return self.exposure.geom
+        return self._geom
 
     @property
     def _geom_reco(self):
@@ -130,7 +132,7 @@ class MapEvaluator:
             return False
         elif not self.contributes:
             return False
-        elif self.exposure is None:
+        elif self._exposure is None:
             return True
         elif self.geom.is_region:
             return False
@@ -216,13 +218,10 @@ class MapEvaluator:
 
         if self.evaluation_mode == "local":
             self.contributes = self.model.contributes(mask=mask, margin=self.psf_width)
-
-            if self.contributes:
-                self.exposure = exposure.cutout(
-                    position=self.model.position, width=self.cutout_width, odd_npix=True
-                )
-        else:
-            self.exposure = exposure
+            self._geom = exposure.geom.cutout(
+                position=self.model.position, width=self.cutout_width, odd_npix=True
+            )
+        self._exposure = exposure
 
         if self.contributes:
             if not self.geom.is_region or self.geom.region is not None:
@@ -238,6 +237,19 @@ class MapEvaluator:
             energy_axis_true=self.edisp.axes["energy_true"],
             energy_axis=self.edisp.axes["energy"],
         )
+
+    @property
+    def exposure(self):
+        if (
+            self._exposure is not None
+            and self.contributes
+            and self.model.evaluation_radius is not None
+        ):
+            return self._exposure.cutout(
+                position=self.model.position, width=self.cutout_width, odd_npix=True
+            )
+        else:
+            return self._exposure
 
     def update_spatial_oversampling_factor(self, geom):
         """Update spatial oversampling_factor for model evaluation."""
