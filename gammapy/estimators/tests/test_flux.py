@@ -5,7 +5,6 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.datasets import Datasets, SpectrumDatasetOnOff
 from gammapy.estimators.flux import FluxEstimator
-from gammapy.maps import MapAxis, WcsNDMap
 from gammapy.modeling import Parameter
 from gammapy.modeling.models import (
     Models,
@@ -159,19 +158,6 @@ def test_flux_estimator_norm_dict():
     assert_allclose(estimator.norm.min, 1e-3)
     assert_allclose(estimator.norm.max, 1e2)
     assert estimator.norm.interp == "log"
-
-
-def test_flux_estimator_norm_spectral_model():
-    energy = MapAxis.from_energy_bounds(0.1, 10, 3.0, unit="TeV", name="energy_true")
-    template = WcsNDMap.create(npix=10, axes=[energy], unit="cm-2 s-1 sr-1 TeV-1")
-    spatial = TemplateSpatialModel(template, normalize=False)
-    spectral = PowerLawNormSpectralModel()
-    model = SkyModel(spectral_model=spectral, spatial_model=spatial, name="test")
-
-    estimator = FluxEstimator(source="test", selection_optional=[], reoptimize=True)
-
-    with pytest.raises(ValueError, match="`NormSpectralModel` are not supported"):
-        estimator.get_scale_model(Models([model]))
 
 
 def test_flux_estimator_compound_model():
