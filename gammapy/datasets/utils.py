@@ -72,7 +72,29 @@ def get_nearest_valid_exposure_position(exposure, position=None):
     return mask_exposure.mask_nearest_position(position)
 
 
-def split_dataset(dataset, width, margin, split_templates=False):
+def split_dataset(dataset, width, margin, split_templates=True):
+    """Split dataset in multiple non-overlapping analysis regions.
+
+    Parameters
+    ----------
+    dataset : `~gammapy.datasets.Dataset`
+        Dataset to split
+    split_templates : bool, optional
+        Apply cutout to template models or not. Default is True.
+    width : `~astropy.coordinates.Angle`
+        Angular size of the each sub-region.
+    margin : `~astropy.coordinates.Angle`
+        Angular size to be added to the `width`.
+        The margin should be defined such as sources outside the region of interest
+        that contributes inside are well defined.
+        The mask_fit in the margin region is False and unchanged elsewhere.
+
+
+    Returns
+    -------
+    datasets : `~gammapy.datasets.Datasets`
+        Splitted datasets
+    """
 
     if margin >= width / 2.0:
         raise ValueError("margin should be lower than width/2.")
@@ -91,6 +113,8 @@ def split_dataset(dataset, width, margin, split_templates=False):
                 position=SkyCoord(l, b, frame=geom.frame), width=width + 2 * margin
             )
             d = dataset.cutout(**cutout_kwargs)
+
+            # apply mask
             geom_cut = d.counts.geom
             geom_cut_image = geom_cut.to_image()
             ilgrid, ibgrid = np.meshgrid(
@@ -117,8 +141,8 @@ def split_dataset(dataset, width, margin, split_templates=False):
                     geom_cut, method="nearest"
                 )
 
+            # template models cutout (should limit memory usage in parallel)
             if split_templates:
-                # template models cutout should limit memory usage in parallel
                 d.models = cutout_template_models(
                     dataset.models, cutout_kwargs, [d.name]
                 )
