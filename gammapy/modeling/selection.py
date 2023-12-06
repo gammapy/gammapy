@@ -151,6 +151,34 @@ def select_nested_models(
             * "ts" : fit statistic difference with null hypothesis
             * "fit_results" : results for the best fit
             * "fit_results_null" : fit results for the null hypothesis
+
+    Examples
+    --------
+    ::
+
+        from gammapy.modeling.selection import select_nested_models
+        from gammapy.datasets import Datasets, SpectrumDatasetOnOff
+        from gammapy.modeling.models import SkyModel
+
+        # Test if cutoff is significant
+        dataset = SpectrumDatasetOnOff.read("$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits")
+        datasets = Datasets(dataset)
+        model = SkyModel.create(spectral_model="ecpl", spatial_model="point", name='hess')
+        datasets.models = model
+        result = select_nested_models(datasets,
+                                      parameters=[model.spectral_model.lambda_],
+                                      null_values=[0],
+                                      )
+
+        # Test if source is significant
+        filename = "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_datasets.yaml"
+        filename_models = "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_models.yaml"
+        fermi_datasets = Datasets.read(filename=filename, filename_models=filename_models)
+        model = fermi_datasets.models["Crab Nebula"]
+        results = select_nested_models(fermi_datasets,
+                                       [model.spectral_model.amplitude],
+                                       [0],
+                                      )
     """
     test = TestStatisticNested(parameters, null_values, n_sigma, n_free_parameters, fit)
     return test.run(datasets)

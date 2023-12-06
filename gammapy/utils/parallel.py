@@ -106,6 +106,7 @@ class multiprocessing_manager:
     Examples
     --------
     ::
+
         import gammapy.utils.parallel as parallel
         from gammapy.estimators import FluxPointsEstimator
 
