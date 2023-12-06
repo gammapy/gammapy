@@ -5,7 +5,8 @@ import numpy as np
 import astropy.units as u
 import gammapy.utils.parallel as parallel
 from gammapy.data import GTI
-from gammapy.datasets import Datasets, DatasetsActor
+from gammapy.datasets import Datasets
+from gammapy.datasets.actors import DatasetsActor
 from gammapy.maps import LabelMapAxis, Map, TimeMapAxis
 from gammapy.utils.deprecation import deprecated_attribute
 from gammapy.utils.pbar import progress_bar

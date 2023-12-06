@@ -1,7 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
-from gammapy.datasets import Datasets, DatasetsActor
+from gammapy.datasets import Datasets
+from gammapy.datasets.actors import DatasetsActor
 from gammapy.estimators.parameter import ParameterEstimator
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling import Parameter

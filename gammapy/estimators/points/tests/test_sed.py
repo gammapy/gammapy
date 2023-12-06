@@ -592,7 +592,7 @@ def test_flux_points_parallel_ray(fpe_pwl):
 
 @requires_dependency("ray")
 def test_flux_points_parallel_ray_actor_spectrum(fpe_pwl):
-    from gammapy.datasets import DatasetsActor
+    from gammapy.datasets.actors import DatasetsActor
 
     datasets, fpe = fpe_pwl
     with pytest.raises(TypeError):
@@ -602,7 +602,7 @@ def test_flux_points_parallel_ray_actor_spectrum(fpe_pwl):
 @requires_data()
 @requires_dependency("ray")
 def test_flux_points_parallel_ray_actor_map(fpe_map_pwl):
-    from gammapy.datasets import DatasetsActor
+    from gammapy.datasets.actors import DatasetsActor
 
     datasets, fpe = fpe_map_pwl
     actors = DatasetsActor(datasets)

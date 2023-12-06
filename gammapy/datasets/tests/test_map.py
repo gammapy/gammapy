@@ -734,7 +734,7 @@ def test_prior_stat_sum(sky_model, geom, geom_etrue):
 @requires_data()
 @requires_dependency("ray")
 def test_map_fit_ray(sky_model, geom, geom_etrue):
-    from gammapy.datasets import DatasetsActor
+    from gammapy.datasets.actors import DatasetsActor
 
     dataset_1 = get_map_dataset(geom, geom_etrue, name="test-1")
     dataset_2 = get_map_dataset(geom, geom_etrue, name="test-2")

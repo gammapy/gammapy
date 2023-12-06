@@ -5,7 +5,8 @@ import numpy as np
 from astropy import units as u
 from astropy.table import Table
 import gammapy.utils.parallel as parallel
-from gammapy.datasets import Datasets, DatasetsActor
+from gammapy.datasets import Datasets
+from gammapy.datasets.actors import DatasetsActor
 from gammapy.datasets.flux_points import _get_reference_model
 from gammapy.maps import MapAxis
 from gammapy.modeling import Fit

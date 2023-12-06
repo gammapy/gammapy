@@ -7,7 +7,8 @@ from astropy.table import Column, Table
 from astropy.time import Time
 from astropy.timeseries import BinnedTimeSeries, BoxLeastSquares
 from gammapy.data import GTI
-from gammapy.datasets import Datasets, DatasetsActor
+from gammapy.datasets import Datasets
+from gammapy.datasets.actors import DatasetsActor
 from gammapy.estimators import FluxPoints, LightCurveEstimator
 from gammapy.estimators.points.tests.test_sed import (
     simulate_map_dataset,
