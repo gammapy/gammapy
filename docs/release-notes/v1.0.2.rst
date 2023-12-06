@@ -9,21 +9,21 @@ Summary
 ~~~~~~~
 
 - Released Dec 6th, 2023
-- 14 contributors
+- 16 contributors
 - 60 pull requests since v1.0.1 (not all listed below)
 
 This is the second bug-fix of the v1.0 maintenance. Several bugs and typos in the documentation are corrected.
 
 - The ``FluxProfileEstimator`` has been fixed so that the models attached to the dataset are
   properly taken into account.
-- A `scale` attribute has been added to `TemporalModel` classes to treat the `t_ref`
-  parameter in a consistent manner via a `TemporalModel.reference_time` that converts the
-  parameter (defined in mjd) in a proper `~astropy.time.Time`. It avoids comparing
+- A ``scale`` attribute has been added to ``TemporalModel`` classes to treat the ``t_ref``
+  parameter in a consistent manner via a ``TemporalModel.reference_time`` that converts the
+  parameter (defined in mjd) in a proper ``~astropy.time.Time``. It avoids comparing
   inconsistent scales when evaluating temporal models.
 - The ``ExcessMapEstimator`` has been fixed to properly take into account the mask safe.
 - The ``wcs.array_shape`` definition in ``WcsGeom.create()`` was inconsistent with the ``WcsGeom`` shape.
   This is now fixed.
-- The offset calculation in ``Background2D.to_3d`()` has been modified to compute
+- The offset calculation in ``Background2D.to_3d()`` has been modified to compute
   angular separation rather than cartesian distance.
 - The serialization of ``PiecewiseNormSpectralModel`` has been fixed to include interpolation
   attribute.
@@ -36,15 +36,17 @@ Contributors
 - Arnau Aguasca
 - Axel Donath
 - Kirsty Feijen
-- Claudio Galleli
+- Claudio Galelli
 - Bruno Khélifi
 - Maximilian Linhoff
 - Simone Mender
+- Daniel Morcuende
 - Laura Olivera-Nieto
+- Fabio Pintore
 - Michael Punch
-- Atreyee Sinha
 - Maxime Regeard
 - Quentin Remy
+- Atreyee Sinha
 - Katrin Streil
 - Régis Terrier
 
