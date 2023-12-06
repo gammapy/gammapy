@@ -135,7 +135,7 @@ print(variability_amplitude_significance)
 # It is important to note that it requires gaussian errors to be applicable.
 # The excess variance computation is implemented in `~gammapy.estimators.utils`.
 # A similar estimator is the point-to-point fractional variance, which samples the lightcurve with smaller time granularity.
-# In general, the point-to-point fractional variance being higher than the fractional excess variance is indicative of the presence of very short timescale variability. 
+# In general, the point-to-point fractional variance being higher than the fractional excess variance is indicative of the presence of very short timescale variability.
 #
 # The doubling and halving time of the light curve can also be computed.
 # This provides information on the shape of the variability feature.
