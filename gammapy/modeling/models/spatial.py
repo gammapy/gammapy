@@ -1279,6 +1279,8 @@ class TemplateSpatialModel(SpatialModel):
     """
 
     tag = ["TemplateSpatialModel", "template"]
+    lon_0 = Parameter("lon_0", "0 deg", frozen=True)
+    lat_0 = Parameter("lat_0", "0 deg", min=-90, max=90, frozen=True)
 
     def __init__(
         self,
@@ -1336,7 +1338,31 @@ class TemplateSpatialModel(SpatialModel):
 
         self._interp_kwargs = interp_kwargs
         self.filename = filename
+        kwargs["frame"] = self.map.geom.frame
         super().__init__(**kwargs)
+
+    def __str__(self):
+        width = self.map.geom.width
+        data_min = np.nanmin(self.map.data)
+        data_max = np.nanmax(self.map.data)
+
+        prnt = (
+            f"{self.__class__.__name__} model summary:\n "
+            f"Reference position: {self.position} \n "
+            f"Map center: {self.map_center} \n "
+            f"Map width: {width} \n "
+            f"Data min: {data_min} \n"
+            f"Data max: {data_max} \n"
+            f"Data unit: {self.map.unit}"
+        )
+
+        if self.is_energy_dependent:
+            energy_min = self.map.geom.axes["energy_true"].center[0]
+            energy_max = self.map.geom.axes["energy_true"].center[-1]
+            prnt1 = f"Energy min: {energy_min} \n" f"Energy max: {energy_max} \n"
+            prnt = prnt + prnt1
+
+        return prnt
 
     def copy(self, copy_data=False, **kwargs):
         """Copy model.
@@ -1377,6 +1403,10 @@ class TemplateSpatialModel(SpatialModel):
         """
         return np.max(self.map.geom.width) / 2.0
 
+    @property
+    def map_center(self):
+        return self.map.geom.center_skydir
+
     @classmethod
     def read(cls, filename, normalize=True, **kwargs):
         """Read spatial template model from FITS image.
@@ -1395,15 +1425,20 @@ class TemplateSpatialModel(SpatialModel):
         m = Map.read(filename, **kwargs)
         return cls(m, normalize=normalize, filename=filename)
 
-    def evaluate(self, lon, lat, energy=None):
+    def evaluate(self, lon, lat, lon_0=None, lat_0=None, energy=None):
         """Evaluate the model at given coordinates.
 
         Note that, if the map data assume negative values, these are
         clipped to zero.
         """
+
+        # if lon_0 and lat_0:
+        #    offset_lon = np.sqrt(self.map_center**2 - lon_0**2)
+        #    offset_lat = np.sqrt(**2 - lat_0**2)
+
         coord = {
-            "lon": lon.to_value("deg"),
-            "lat": lat.to_value("deg"),
+            "lon": (lon - lon_0).to_value("deg"),
+            "lat": (lat - lat_0).to_value("deg"),
         }
         if energy is not None:
             coord["energy_true"] = energy
@@ -1413,20 +1448,11 @@ class TemplateSpatialModel(SpatialModel):
         return u.Quantity(val, self.map.unit, copy=False)
 
     @property
-    def position(self):
-        """Position as a `~astropy.coordinates.SkyCoord`."""
-        return self.map.geom.center_skydir
-
-    @property
     def position_lonlat(self):
         """Spatial model center position `(lon, lat)` in radians and frame of the model."""
         lon = self.position.data.lon.rad
         lat = self.position.data.lat.rad
         return lon, lat
-
-    @property
-    def frame(self):
-        return self.position.frame.name
 
     @classmethod
     def from_dict(cls, data):
