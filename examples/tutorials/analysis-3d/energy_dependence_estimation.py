@@ -1,8 +1,8 @@
 """
-Energy Dependence Estimation
+Energy dependence estimation
 ============================
 
-Learn how to test for energy dependent morphology in your dataset.
+Learn how to test for energy-dependent morphology in your dataset.
 
 Prerequisites
 -------------
@@ -236,7 +236,7 @@ display(results_table)
 #
 # We can also utilise the `~gammapy.estimators.energydependence.weighted_chi2_parameter` function for each parameter.
 #
-# The weighted chi-squared significance for the sigma values.
+# The weighted chi-squared significance for the ``sigma`` values.
 #
 
 display(
@@ -248,7 +248,7 @@ display(
 )
 
 ######################################################################
-# The weighted chi-squared significance for the lat_0 values.
+# The weighted chi-squared significance for the ``lat_0`` values.
 
 display(
     Table(
@@ -259,7 +259,7 @@ display(
 )
 
 ######################################################################
-# The weighted chi-squared significance for the lon_0 values.
+# The weighted chi-squared significance for the ``lon_0`` values.
 
 display(
     Table(
@@ -305,3 +305,6 @@ for i in range(len(lat_0)):
         kwargs_position={"color": colors[i]},
     )
 plt.show()
+
+
+# sphinx_gallery_thumbnail_number = 2
