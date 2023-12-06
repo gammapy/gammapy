@@ -206,12 +206,10 @@ def list_merged_PRs(filename, milestones, from_backports):
     for i, pr in enumerate(table):
         milestone = milestones[0]
         if from_backports and "Backport" in pr["title"]:
-            print("backport", pr["base"].split(".")[:-1])
             # check that the branch and milestone match
             if np.all(pr["base"].split(".")[:-1] == milestone.split(".")[:-1]):
                 pattern = r"#(\d+)"
                 parent_pr_number = int(re.search(pattern, pr["title"]).group(1))
-                print(parent_pr_number)
                 idx = np.where(table["number"] == parent_pr_number)[0]
                 valid[idx] = True
         elif pr["milestone"] == milestone:
