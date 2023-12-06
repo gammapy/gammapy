@@ -24,6 +24,7 @@ from .spatial import (
     TemplateSpatialModel,
 )
 from .spectral import (
+    EBL_DATA_BUILTIN,
     BrokenPowerLawSpectralModel,
     CompoundSpectralModel,
     ConstantSpectralModel,
@@ -128,6 +129,7 @@ __all__ = [
     "TemplateNPredModel",
     "TEMPORAL_MODEL_REGISTRY",
     "TemporalModel",
+    "EBL_DATA_BUILTIN",
 ]
 
 

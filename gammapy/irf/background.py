@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 
 
 class BackgroundIRF(IRF):
-    """Background IRF base class"""
+    """Background IRF base class."""
 
     default_interp_kwargs = dict(bounds_error=False, fill_value=0.0, values_scale="log")
     """Default Interpolation kwargs to extrapolate."""
@@ -29,9 +29,9 @@ class BackgroundIRF(IRF):
         Parameters
         ----------
         table : `~astropy.table.Table`
-            Table with background data
-        format : {"gadf-dl3"}
-            Format specification
+            Table with background data.
+        format : {"gadf-dl3"}, optional
+            Format specification. Default is "gadf-dl3".
 
         Returns
         -------
@@ -89,7 +89,7 @@ class BackgroundIRF(IRF):
 class Background3D(BackgroundIRF):
     """Background 3D.
 
-    Data format specification: :ref:`gadf:bkg_3d`
+    Data format specification: :ref:`gadf:bkg_3d`.
 
     Parameters
     ----------
@@ -98,11 +98,11 @@ class Background3D(BackgroundIRF):
     data : `~np.ndarray`
         Data array.
     unit : str or `~astropy.units.Unit`
-        Data unit usually ``s^-1 MeV^-1 sr^-1``
-    fov_alignment: `~gammapy.irf.FoVAlignment`
+        Data unit usually ``s^-1 MeV^-1 sr^-1``.
+    fov_alignment : `~gammapy.irf.FoVAlignment`
         The orientation of the field of view coordinate system.
     meta : dict
-        Meta data
+        Metadata dictionary.
 
     Examples
     --------
@@ -150,8 +150,8 @@ class Background3D(BackgroundIRF):
 
         Parameters
         ----------
-        figsize : tuple
-            Size of the figure.
+        figsize : tuple, optional
+            Size of the figure. Default is (10, 8).
 
         """
         return self.to_2d().peek(figsize)
@@ -159,18 +159,18 @@ class Background3D(BackgroundIRF):
     def plot_at_energy(
         self, energy=None, add_cbar=True, ncols=3, figsize=None, **kwargs
     ):
-        """Plot the background rate in Field of view coordinates at a given energy.
+        """Plot the background rate in FoV coordinates at a given energy.
 
         Parameters
         ----------
         energy : `~astropy.units.Quantity`
-            list of Energy
-        add_cbar : bool
-            Add color bar?
-        ncols : int
-            Number of columns to plot
-        figsize : tuple
-            Figure size
+            List of energies.
+        add_cbar : bool, optional
+            Add color bar. Default is True.
+        ncols : int, optional
+            Number of columns to plot. Default is 3.
+        figsize : tuple, optional
+            Figure size. Default is None.
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
         """
@@ -234,9 +234,9 @@ class Background2D(BackgroundIRF):
     data : `~np.ndarray`
         Data array.
     unit : str or `~astropy.units.Unit`
-        Data unit usually ``s^-1 MeV^-1 sr^-1``
+        Data unit usually ``s^-1 MeV^-1 sr^-1``.
     meta : dict
-        Meta data
+        Metadata dictionary.
     """
 
     tag = "bkg_2d"
@@ -244,8 +244,7 @@ class Background2D(BackgroundIRF):
     default_unit = u.s**-1 * u.MeV**-1 * u.sr**-1
 
     def to_3d(self):
-        """ "Convert to Background3D"""
-
+        """Convert to Background3D."""
         edges = np.concatenate(
             (
                 np.negative(self.axes["offset"].edges)[::-1][:-1],
@@ -270,18 +269,18 @@ class Background2D(BackgroundIRF):
     def plot_at_energy(
         self, energy=None, add_cbar=True, ncols=3, figsize=None, **kwargs
     ):
-        """Plot the background rate in Field of view coordinates at a given energy.
+        """Plot the background rate in FoV coordinates at a given energy.
 
         Parameters
         ----------
         energy : `~astropy.units.Quantity`
-            list of Energy
-        add_cbar : bool
-            Add color bar?
-        ncols : int
-            Number of columns to plot
-        figsize : tuple
-            Figure size
+            List of energy.
+        add_cbar : bool, optional
+            Add color bar. Default is True.
+        ncols : int, optional
+            Number of columns to plot. Default is 3.
+        figsize : tuple, optional
+            Figure size. Default is None.
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
         """
@@ -321,14 +320,14 @@ class Background2D(BackgroundIRF):
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`, optional
-            Axis
-        energy : `~astropy.units.Quantity`
-            Energy
+            Matplotlib axes. Default is None.
+        energy : `~astropy.units.Quantity`, optional
+            Energy. Default is None.
 
         Returns
         -------
         ax : `~matplotlib.axes.Axes`
-            Axis
+            Matplotlib axes.
         """
         ax = plt.gca() if ax is None else ax
 
@@ -361,16 +360,16 @@ class Background2D(BackgroundIRF):
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`, optional
-            Axis
-        offset : `~astropy.coordinates.Angle`
-            Offset
+            Matplotlib axes. Default is None.
+        offset : `~astropy.coordinates.Angle`, optional
+            Offset. Default is None.
         kwargs : dict
-            Forwarded tp plt.plot()
+            Forwarded to plt.plot().
 
         Returns
         -------
         ax : `~matplotlib.axes.Axes`
-            Axis
+            Matplotlib axes.
         """
         ax = plt.gca() if ax is None else ax
 
@@ -401,14 +400,14 @@ class Background2D(BackgroundIRF):
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`, optional
-            Axis
+            Matplotlib axes. Default is None.
         **kwargs : dict
-            Keyword arguments forwarded to `~matplotib.pyplot.plot`
+            Keyword arguments forwarded to `~matplotib.pyplot.plot`.
 
         Returns
         -------
         ax : `~matplotlib.axes.Axes`
-            Axis
+            Matplotlib axes.
         """
         ax = plt.gca() if ax is None else ax
 

@@ -40,9 +40,9 @@ def find_peaks(image, threshold, min_distance=1):
 
     The output table contains one row per peak and the following columns:
 
-    - ``x`` and ``y`` are the pixel coordinates (first pixel at zero)
-    - ``ra`` and ``dec`` are the RA / DEC sky coordinates (ICRS frame)
-    - ``value`` is the pixel value
+    - ``x`` and ``y`` are the pixel coordinates (first pixel at zero).
+    - ``ra`` and ``dec`` are the RA / DEC sky coordinates (ICRS frame).
+    - ``value`` is the pixel value.
 
     It is sorted by peak value, starting with the highest value.
 
@@ -54,19 +54,19 @@ def find_peaks(image, threshold, min_distance=1):
     Parameters
     ----------
     image : `~gammapy.maps.WcsNDMap`
-        Image like Map
+        Image like Map.
     threshold : float or array-like
         The data value or pixel-wise data values to be used for the
         detection threshold.  A 2D ``threshold`` must have the same
         shape as the map ``data``.
     min_distance : int or `~astropy.units.Quantity`
         Minimum distance between peaks. An integer value is interpreted
-        as pixels.
+        as pixels. Default is 1.
 
     Returns
     -------
     output : `~astropy.table.Table`
-        Table with parameters of detected peaks
+        Table with parameters of detected peaks.
     """
     # Input validation
 
@@ -123,26 +123,26 @@ def find_peaks(image, threshold, min_distance=1):
 
 
 def find_peaks_in_flux_map(maps, threshold, min_distance=1):
-    """Find local TS peaks for a given Map.
+    """Find local test statistic peaks for a given Map.
 
     Utilises the find_peaks function to find various parameters from FluxMaps.
 
     Parameters
     ----------
     maps : `~gammapy.estimators.map.FluxMaps`
-        Input flux map object
+        Input flux map object.
     threshold : float or array-like
-        The TS data value or pixel-wise TS data values to be used for the
-        detection threshold.  A 2D ``threshold`` must have the same
+        The test statistic data value or pixel-wise test statistic data values to be used for the
+        detection threshold.  A 2D ``threshold`` must have the same.
         shape as the map ``data``.
     min_distance : int or `~astropy.units.Quantity`
         Minimum distance between peaks. An integer value is interpreted
-        as pixels.
+        as pixels. Default is 1.
 
     Returns
     -------
     output : `~astropy.table.Table`
-        Table with parameters of detected peaks
+        Table with parameters of detected peaks.
     """
     quantity_for_peaks = maps["sqrt_ts"]
 
@@ -205,18 +205,18 @@ def estimate_exposure_reco_energy(dataset, spectral_model=None, normalize=True):
     Parameters
     ----------
     dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.MapDatasetOnOff`
-            the input dataset
-    spectral_model : `~gammapy.modeling.models.SpectralModel`
-            assumed spectral shape. If none, a Power Law of index 2 is assumed
+        The input dataset.
+    spectral_model : `~gammapy.modeling.models.SpectralModel`, optional
+        Assumed spectral shape. If None, a Power Law of index 2 is assumed. Default is None.
     normalize : bool
         Normalize the exposure to the total integrated flux of the spectral model.
         When not normalized it directly gives the predicted counts from the spectral
-        model.
+        model. Default is True.
 
     Returns
     -------
     exposure : `Map`
-        Exposure map in reconstructed energy
+        Exposure map in reconstructed energy.
     """
     if spectral_model is None:
         spectral_model = PowerLawSpectralModel()
@@ -256,12 +256,12 @@ def resample_energy_edges(dataset, conditions={}):
 
     Parameters
     ----------
-    dataset:`~gammapy.datasets.SpectrumDataset` or `~gammapy.datasets.SpectrumDatasetOnOff`
-            the input dataset
+    dataset :`~gammapy.datasets.SpectrumDataset` or `~gammapy.datasets.SpectrumDatasetOnOff`
+        The input dataset.
     conditions : dict
         Keyword arguments containing the per-bin conditions used to resample the axis.
         Available options are: 'counts_min', 'background_min', 'excess_min', 'sqrt_ts_min',
-        'npred_min', 'npred_background_min', 'npred_signal_min'.
+        'npred_min', 'npred_background_min', 'npred_signal_min'. Default is {}.
     Returns
     -------
     energy_edges : list of `~astropy.units.Quantity`
@@ -314,16 +314,15 @@ def resample_energy_edges(dataset, conditions={}):
 def compute_lightcurve_fvar(lightcurve, flux_quantity="flux"):
     r"""Compute the fractional excess variance of the input lightcurve.
 
-    Internally calls the `~gammapy.stats.compute_fvar` function
+    Internally calls the `~gammapy.stats.compute_fvar` function.
 
 
     Parameters
     ----------
     lightcurve : '~gammapy.estimators.FluxPoints'
-        the lightcurve object
+        The lightcurve object.
     flux_quantity : str
-        flux quantity to use for calculation. Should be 'dnde', 'flux', 'e2dnde' or 'eflux'. Default is 'flux'.
-        Useful in case of custom lightcurves computed outside gammapy
+        Flux quantity to use for calculation. Should be 'dnde', 'flux', 'e2dnde' or 'eflux'. Default is 'flux'.
 
     Returns
     -------
@@ -359,10 +358,9 @@ def compute_lightcurve_fpp(lightcurve, flux_quantity="flux"):
     Parameters
     ----------
     lightcurve : `~gammapy.estimators.FluxPoints`
-        the lightcurve object
+        The lightcurve object.
     flux_quantity : str
-        flux quantity to use for calculation. Should be 'dnde', 'flux', 'e2dnde' or 'eflux'. Default is 'flux'.
-        Useful in case of custom lightcurves computed outside gammapy
+        Flux quantity to use for calculation. Should be 'dnde', 'flux', 'e2dnde' or 'eflux'. Default is 'flux'.
 
     Returns
     -------
@@ -390,10 +388,9 @@ def compute_lightcurve_fpp(lightcurve, flux_quantity="flux"):
 
 
 def compute_lightcurve_doublingtime(lightcurve, flux_quantity="flux"):
-    r"""Compute the minimum characteristic flux doubling and halving
-    time for the input lightcurve.
+    r"""Compute the minimum characteristic flux doubling and halving time for the input lightcurve.
 
-    Internally calls the `~gammapy.stats.compute_flux_doubling` function
+    Internally calls the `~gammapy.stats.compute_flux_doubling` function.
 
     The characteristic doubling time  is estimated to obtain the
     minimum variability timescale for the light curves in which
@@ -442,10 +439,12 @@ def compute_lightcurve_doublingtime(lightcurve, flux_quantity="flux"):
             energies[1:],
             doubling_dict["doubling"],
             doubling_dict["doubling_err"],
-            doubling_dict["doubling_coord"],
+            lightcurve.geom.axes["time"].reference_time
+            + doubling_dict["doubling_coord"],
             doubling_dict["halving"],
             doubling_dict["halving_err"],
-            doubling_dict["halving_coord"],
+            lightcurve.geom.axes["time"].reference_time
+            + doubling_dict["halving_coord"],
         ],
         names=(
             "min_energy",

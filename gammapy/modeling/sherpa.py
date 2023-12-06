@@ -37,14 +37,14 @@ def optimize_sherpa(parameters, function, store_trace=False, **kwargs):
     parameters : `~gammapy.modeling.Parameters`
         Parameter list with starting values.
     function : callable
-        Likelihood function
+        Likelihood function.
     **kwargs : dict
         Options passed to the optimizer instance.
 
     Returns
     -------
     result : (factors, info, optimizer)
-        Tuple containing the best fit factors, some info and the optimizer instance.
+        Tuple containing the best fit factors, some information and the optimizer instance.
     """
     method = kwargs.pop("method", "simplex")
     optimizer = get_sherpa_optimizer(method)
