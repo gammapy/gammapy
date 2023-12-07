@@ -178,6 +178,7 @@ def select_nested_models(
         results = select_nested_models(fermi_datasets,
                                        parameters=[model.spectral_model.amplitude],
                                        null_values=[0],
+                                       n_free_parameters=3,
                                        n_sigma=4,
                                       )
     """
