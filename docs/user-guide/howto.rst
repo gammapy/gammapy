@@ -18,7 +18,7 @@ Please give feedback and suggest additions to this page!
 
 
 .. accordion-header::
-    :id: collapseHowToOne
+    :id: HowToGammapy
     :title: Spell and pronounce Gammapy
 
 The recommended spelling is "Gammapy" as proper name. The recommended
@@ -28,7 +28,7 @@ the english word "pie". You can listen to it `here <http://ipa-reader.xyz/?text=
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseHowToTwo
+    :id: HowToObs
     :title: Select observations
     :link: ../tutorials/starting/analysis_2.html#defining-the-datastore-and-selecting-observations
 
@@ -40,7 +40,7 @@ or also select observations based on other information available using the `~gam
 
 
 .. accordion-header::
-    :id: collapseHowToThree
+    :id: HowToObsMap
     :title: Make observation duration maps
     :link: ../tutorials/api/makers.html#observation-duration-and-effective-livetime
 
@@ -50,9 +50,8 @@ methods.
 
 .. accordion-footer::
 
-
 .. accordion-header::
-    :id: collapseHowToFour
+    :id: HowToGroupObs
     :title: Group observations
     :link: ../tutorials/api/observation_clustering.html
 
@@ -64,7 +63,7 @@ you group by can be adjusted according to each science case.
 
 
 .. accordion-header::
-    :id: collapseHowToFive
+    :id: HowToLivetimeMap
     :title: Make an on-axis equivalent livetime map
     :link: ../tutorials/data/hess.html#on-axis-equivalent-livetime
 
@@ -76,7 +75,7 @@ The on-axis equivalent number of observation hours on the source can be calculat
 
 
 .. accordion-header::
-    :id: collapseHowToEnergyEdges
+    :id: HowToEnergyEdges
     :title: Compute minimum number of counts of significance per bin
     :link: ../tutorials/analysis-1d/spectral_analysis.html#compute-flux-points
 
@@ -87,7 +86,7 @@ t o satisfy a minimum number of counts of significance per bin.
 
 
 .. accordion-header::
-    :id: collapseHowToSix
+    :id: HowToPlottingUnits
     :title: Choose units for plotting
 
 Units for plotting are handled with a combination of `matplotlib` and `astropy.units`.
@@ -111,7 +110,7 @@ you to define the x and y axis units using `astropy.units`. Here is a minimal ex
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseHowToSeven
+    :id: HowToSrcSig
     :title: Compute source significance
 
 Estimate the significance of a source, or more generally of an additional model
@@ -141,7 +140,7 @@ utilising the `~gammapy.makers.DatasetsMaker` to perform the loop internally.
 
 
 .. accordion-header::
-    :id: collapseHowToEight
+    :id: HowToSrcCumSig
     :title: Compute cumulative significance
     :link: ../tutorials/analysis-1d/spectral_analysis.html#source-statistic
 
@@ -154,7 +153,7 @@ access the total statistics with the ``info_table(cumulative=True)`` method of
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseHowToNine
+    :id: HowToCustomModel
     :title: Implement a custom model
     :link: ../tutorials/api/models.html#implementing-a-custom-model
 
@@ -163,7 +162,7 @@ Gammapy allows the flexibility of using user-defined models for analysis.
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseHowToTen
+    :id: HowToEDepSpatialModel
     :title: Implement energy dependent spatial models
     :link: ../tutorials/api/models.html#models-with-energy-dependent-morphology
 
@@ -173,7 +172,7 @@ such models within the modeling framework.
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseHowToEleven
+    :id: HowToElevenAstroSrcSpectra
     :title: Model astrophysical source spectra
 
 It is possible to combine Gammapy with astrophysical modeling codes, if they
@@ -186,7 +185,7 @@ H.E.S.S. or Fermi-LAT data).
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseSHowToTwelve
+    :id: HowToTempProfile
     :title: Model temporal profiles
     :link: ../tutorials/analysis-time/light_curve_simulation.html#fitting-temporal-models
 
@@ -197,7 +196,7 @@ one for each time bin.
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseHowToThirteen
+    :id: HowToFitConvergence
     :title: Improve fit convergence with constraints on the source position
 
 It happens that a 3D fit does not converge with warning messages indicating that the
@@ -219,7 +218,7 @@ explains how to add a validity range of a model parameter.
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseHowToFourteen
+    :id: HowToReduceMemory
     :title: Reduce memory budget for large datasets
 
 When dealing with surveys and large sky regions, the amount of memory required might become
@@ -238,7 +237,7 @@ by removing it from the list of options passed to the `~gammapy.makers.MapDatase
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseHowToFifteen
+    :id: HowToCopyDataStore
     :title: Copy part of a data store
 
 To share specific data from a database, it might be necessary to create a new data storage with
@@ -250,7 +249,7 @@ and build the associated observation and HDU tables.
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseHowToSixteen
+    :id: HowToInterpolateGeom
     :title: Interpolate onto a different geometry
     :link: ../tutorials/api/maps.html#filling-maps-from-interpolation
 
@@ -259,7 +258,7 @@ To interpolate maps onto a different geometry use `~gammapy.maps.Map.interp_to_g
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseHowToSeventeen
+    :id: HowToSuppressWarn
     :title: Suppress warnings
 
 In general it is not recommended to suppress warnings from code because they
@@ -280,7 +279,7 @@ warning like so:
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseHowToEighteen
+    :id: HowToProgressBar
     :title: Display a progress bar
 
 Gammapy provides the possibility of displaying a
@@ -310,7 +309,7 @@ The progress bar is available within the following:
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseHowToNineteen
+    :id: HowToChangePlotStyle
     :title: Change plotting style and color-blind friendly visualizations
 
 As the Gammapy visualisations are using the library `matplotlib` that provides color styles, it is possible to change the
@@ -348,7 +347,7 @@ or
 .. accordion-footer::
 
 .. accordion-header::
-    :id: collapseHowToTwenty
+    :id: HowToAddPhase
     :title: Add PHASE information to your data
 
 For doing pulsar analysis, you must compute the phase associated
@@ -385,14 +384,4 @@ using a dummy phase column.
     events_new.write("events.fits.gz", gti=obs.gti, overwrite=True)
 
 .. accordion-footer::
-
-.. accordion-header::
-    :id: collapseHowTo_ObservationMaps
-    :title: Make observation duration maps
-    :link: ../tutorials/api/makers.html#observation-duration-and-effective-livetime
-   
-Compute the absolute and acceptance corrected observation duration in the field of view
-
-.. accordion-footer::
-
 
