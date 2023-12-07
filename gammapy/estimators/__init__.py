@@ -25,7 +25,8 @@ __all__ = [
     "ImageProfile",
     "ImageProfileEstimator",
     "LightCurveEstimator",
-    "ParameterEstimator" "SensitivityEstimator",
+    "ParameterEstimator",
+    "SensitivityEstimator",
     "TSMapEstimator",
 ]
 
