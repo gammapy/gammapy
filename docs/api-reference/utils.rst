@@ -8,11 +8,19 @@ utils - Utilities
 
 .. currentmodule:: gammapy.utils
 
+.. automodapi:: gammapy.utils.array
+    :no-inheritance-diagram:
+    :include-all-objects:
+
 .. automodapi:: gammapy.utils.cluster
     :no-inheritance-diagram:
     :include-all-objects:
-    
+
 .. automodapi:: gammapy.utils.coordinates
+    :no-inheritance-diagram:
+    :include-all-objects:
+
+.. automodapi:: gammapy.utils.fits
     :no-inheritance-diagram:
     :include-all-objects:
 
@@ -24,7 +32,7 @@ utils - Utilities
     :no-inheritance-diagram:
     :include-all-objects:
 
-.. automodapi:: gammapy.utils.fits
+.. automodapi:: gammapy.utils.parallel
     :no-inheritance-diagram:
     :include-all-objects:
 
@@ -33,10 +41,6 @@ utils - Utilities
     :include-all-objects:
 
 .. automodapi:: gammapy.utils.regions
-    :no-inheritance-diagram:
-    :include-all-objects:
-
-.. automodapi:: gammapy.utils.parallel
     :no-inheritance-diagram:
     :include-all-objects:
     
