@@ -175,11 +175,17 @@ def select_nested_models(
         filename_models = "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_models.yaml"
         fermi_datasets = Datasets.read(filename=filename, filename_models=filename_models)
         model = fermi_datasets.models["Crab Nebula"]
+        # Number of parameters previously fit for the source of interest
+        n_free_parameters = len(model.parameters.free_parameters)
+        # Freeze spatial parameters to ensure another weaker source does not move from its position
+        # to replace the source of interest during the null hypothesis test.
+        # (with all parameters free you test N vs. N+1 models and not the detection of a specific source.)
+        fermi_datasets.models.freeze(model_type='spatial')
         results = select_nested_models(fermi_datasets,
-                                       parameters=[model.spectral_model.amplitude],
-                                       null_values=[0],
-                                       n_free_parameters=3,
-                                       n_sigma=4,
+                                      parameters=[model.spectral_model.amplitude],
+                                      null_values=[0],
+                                      n_free_parameters=n_free_parameters,
+                                      n_sigma=4,
                                       )
     """
     test = TestStatisticNested(parameters, null_values, n_sigma, n_free_parameters, fit)
