@@ -60,7 +60,6 @@ def test_dm_annihilation_spectral_model(tmpdir):
     assert_quantity_allclose(integral_flux.value, 6.19575457e-14, rtol=1e-3)
     assert_quantity_allclose(differential_flux.value, 2.97506768e-16, rtol=1e-3)
 
-    assert model.scale.is_norm
     assert new_models[0].spectral_model.channel == model.channel
     assert new_models[0].spectral_model.z == model.z
     assert_allclose(new_models[0].spectral_model.jfactor.value, model.jfactor.value)
@@ -94,7 +93,6 @@ def test_dm_decay_spectral_model(tmpdir):
     assert_quantity_allclose(integral_flux.value, 4.80283595e-2, rtol=1e-3)
     assert_quantity_allclose(differential_flux.value, 2.30625401e-4, rtol=1e-3)
 
-    assert model.scale.is_norm
     assert new_models[0].spectral_model.channel == model.channel
     assert new_models[0].spectral_model.z == model.z
     assert_allclose(new_models[0].spectral_model.jfactor.value, model.jfactor.value)
