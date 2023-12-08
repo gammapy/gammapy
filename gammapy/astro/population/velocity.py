@@ -27,9 +27,9 @@ class FaucherKaspi2006VelocityMaxwellian(Fittable1DModel):
     Parameters
     ----------
     amplitude : float
-        Value of the integral
+        Value of the integral.
     sigma : float
-        Velocity parameter (km s^-1)
+        Velocity parameter (km s^-1).
     """
 
     amplitude = Parameter()
@@ -47,25 +47,29 @@ class FaucherKaspi2006VelocityMaxwellian(Fittable1DModel):
 
 
 class FaucherKaspi2006VelocityBimodal(Fittable1DModel):
-    r"""Bimodal pulsar velocity distribution - Faucher & Kaspi (2006).
+    r"""Bimodal pulsar velocity distribution. - Faucher & Kaspi (2006).
 
     .. math::
         f(v) = A\sqrt{\frac{2}{\pi}} v^2 \left[\frac{w}{\sigma_1^3}
         \exp \left(-\frac{v^2}{2\sigma_1^2} \right) + \frac{1-w}{\sigma_2^3}
         \exp \left(-\frac{v^2}{2\sigma_2^2} \right) \right]
 
-    Reference: https://ui.adsabs.harvard.edu/abs/2006ApJ...643..332F (Formula (7))
+    Formula (7) [FaucherKaspi2006]_.
 
     Parameters
     ----------
     amplitude : float
-        Value of the integral
+        Value of the integral.
     sigma1 : float
-        See model formula
+        See model formula.
     sigma2 : float
-        See model formula
+        See model formula.
     w : float
-        See model formula
+        See model formula.
+
+    References
+    ----------
+    .. [FaucherKaspi2006] https://ui.adsabs.harvard.edu/abs/2006ApJ...643..332F
     """
 
     amplitude = Parameter()
@@ -93,14 +97,18 @@ class Paczynski1990Velocity(Fittable1DModel):
     .. math::
         f(v) = A\frac{4}{\pi} \frac{1}{v_0 \left[1 + (v / v_0) ^ 2 \right] ^ 2}
 
-    Reference: https://ui.adsabs.harvard.edu/abs/1990ApJ...348..485P (Formula (3))
+    Formula (3) [Paczynski1990]_.
 
     Parameters
     ----------
     amplitude : float
-        Value of the integral
+        Value of the integral.
     v_0 : float
-        Velocity parameter (km s^-1)
+        Velocity parameter (km s^-1).
+
+    References
+    ----------
+    .. [Paczynski1990] https://ui.adsabs.harvard.edu/abs/1990ApJ...348..485P
     """
 
     amplitude = Parameter()

@@ -1,3 +1,4 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Random probability distribution helpers."""
 from .inverse_cdf import InverseCDFSampler
 from .utils import (

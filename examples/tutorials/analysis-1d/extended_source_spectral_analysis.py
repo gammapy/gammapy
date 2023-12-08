@@ -251,7 +251,7 @@ plt.show()
 
 ######################################################################
 # Cumulative excess and significance
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # Finally, we can look at cumulative significance and number of excesses.
 # This is done with the `info_table` method of

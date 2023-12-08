@@ -7,7 +7,7 @@ from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.table import Table
 from gammapy.data import Observation
 from gammapy.data.pointing import FixedPointingInfo
-from gammapy.datasets import MapDataset, SpectrumDatasetOnOff
+from gammapy.datasets import FluxPointsDataset, MapDataset, SpectrumDatasetOnOff
 from gammapy.datasets.spectrum import SpectrumDataset
 from gammapy.estimators import FluxPoints, FluxPointsEstimator
 from gammapy.irf import EDispKernelMap, EffectiveAreaTable2D, load_irf_dict_from_file
@@ -19,11 +19,23 @@ from gammapy.modeling.models import (
     ExpCutoffPowerLawSpectralModel,
     FoVBackgroundModel,
     GaussianSpatialModel,
+    Models,
+    PiecewiseNormSpectralModel,
     PowerLawSpectralModel,
     SkyModel,
+    TemplateSpatialModel,
 )
 from gammapy.utils import parallel
 from gammapy.utils.testing import requires_data, requires_dependency
+
+
+@pytest.fixture()
+def fermi_datasets():
+    from gammapy.datasets import Datasets
+
+    filename = "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_datasets.yaml"
+    filename_models = "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_models.yaml"
+    return Datasets.read(filename=filename, filename_models=filename_models)
 
 
 # TODO: use pre-generated data instead
@@ -88,11 +100,11 @@ def create_fpe(model):
     dataset.models = model
     fpe = FluxPointsEstimator(
         energy_edges=energy_edges,
-        norm_n_values=11,
         source="source",
         selection_optional="all",
         fit=Fit(backend="minuit", optimize_opts=dict(tol=0.2, strategy=1)),
     )
+    fpe.norm.scan_n_values = 11
     datasets = [dataset]
     return datasets, fpe
 
@@ -146,10 +158,11 @@ def fpe_map_pwl():
     datasets = [dataset_1, dataset_2]
     fpe = FluxPointsEstimator(
         energy_edges=energy_edges,
-        norm_n_values=3,
         source="source",
         selection_optional="all",
     )
+    fpe.norm.scan_n_values = 3
+
     return datasets, fpe
 
 
@@ -163,10 +176,10 @@ def fpe_map_pwl_reoptimize():
     datasets = [dataset]
     fpe = FluxPointsEstimator(
         energy_edges=energy_edges,
-        norm_values=[0.8, 1, 1.2],
         reoptimize=True,
         source="source",
     )
+    fpe.norm.scan_values = [0.8, 1, 1.2]
     return datasets, fpe
 
 
@@ -460,11 +473,11 @@ def test_run_pwl_parameter_range(fpe_pwl):
     datasets, fpe = create_fpe(pl)
 
     fp = fpe.run(datasets)
+
     table_no_bounds = fp.to_table()
 
-    pl.amplitude.min = 0
-    pl.amplitude.max = 1e-12
-
+    fpe.norm.min = 0
+    fpe.norm.max = 1e4
     fp = fpe.run(datasets)
     table_with_bounds = fp.to_table()
 
@@ -577,6 +590,58 @@ def test_flux_points_parallel_ray(fpe_pwl):
     )
 
 
+@requires_dependency("ray")
+def test_flux_points_parallel_ray_actor_spectrum(fpe_pwl):
+    from gammapy.datasets.actors import DatasetsActor
+
+    datasets, fpe = fpe_pwl
+    with pytest.raises(TypeError):
+        DatasetsActor(datasets)
+
+
+@requires_data()
+@requires_dependency("ray")
+def test_flux_points_parallel_ray_actor_map(fpe_map_pwl):
+    from gammapy.datasets.actors import DatasetsActor
+
+    datasets, fpe = fpe_map_pwl
+    actors = DatasetsActor(datasets)
+
+    fp = fpe.run(actors)
+
+    table = fp.to_table()
+
+    actual = table["e_min"].data
+    assert_allclose(actual, [0.1, 1.178769, 8.48342], rtol=1e-5)
+
+    actual = table["e_max"].data
+    assert_allclose(actual, [1.178769, 8.483429, 100.0], rtol=1e-5)
+
+    actual = table["e_ref"].data
+    assert_allclose(actual, [0.343332, 3.162278, 29.126327], rtol=1e-5)
+
+    actual = table["norm"].data
+    assert_allclose(actual, [0.974726, 0.96342, 0.994251], rtol=1e-2)
+
+    actual = table["norm_err"].data
+    assert_allclose(actual, [0.067637, 0.052022, 0.087059], rtol=3e-2)
+
+    actual = table["counts"].data
+    assert_allclose(actual, [[44611, 0], [1923, 0], [282, 0]])
+
+    actual = table["norm_ul"].data
+    assert_allclose(actual, [1.111852, 1.07004, 1.17829], rtol=1e-2)
+
+    actual = table["sqrt_ts"].data
+    assert_allclose(actual, [16.681221, 28.408676, 21.91912], rtol=1e-2)
+
+    actual = table["norm_scan"][0]
+    assert_allclose(actual, [0.2, 1.0, 5])
+
+    actual = table["stat_scan"][0] - table["stat"][0]
+    assert_allclose(actual, [1.628398e02, 1.452456e-01, 2.008018e03], rtol=1e-2)
+
+
 def test_fpe_non_aligned_energy_axes():
     energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=10)
     geom_1 = RegionGeom.create("icrs;circle(0, 0, 0.1)", axes=[energy_axis])
@@ -609,3 +674,51 @@ def test_fpe_non_uniform_datasets():
 
     with pytest.raises(ValueError, match="same value of the 'TELESCOP' meta keyword"):
         fpe.run(datasets=[dataset_1, dataset_2])
+
+
+@requires_data()
+def test_flux_points_estimator_norm_spectral_model(fermi_datasets):
+
+    energy_edges = [10, 30, 100, 300, 1000] * u.GeV
+
+    model_ref = fermi_datasets.models["Crab Nebula"]
+    estimator = FluxPointsEstimator(
+        energy_edges=energy_edges,
+        source="Crab Nebula",
+        selection_optional=[],
+        reoptimize=True,
+    )
+    flux_points = estimator.run(fermi_datasets[0])
+    flux_points_dataset = FluxPointsDataset(data=flux_points, models=model_ref)
+    flux_pred_ref = flux_points_dataset.flux_pred()
+
+    models = Models([model_ref])
+    geom = fermi_datasets[0].exposure.geom.to_image()
+    energy_axis = MapAxis.from_energy_bounds(
+        3 * u.GeV, 1.7 * u.TeV, nbin=30, per_decade=True, name="energy_true"
+    )
+    geom = geom.to_cube([energy_axis])
+
+    model = models.to_template_sky_model(geom, name="test")
+    fermi_datasets.models = [fermi_datasets[0].background_model, model]
+    estimator = FluxPointsEstimator(
+        energy_edges=energy_edges, source="test", selection_optional=[], reoptimize=True
+    )
+    flux_points = estimator.run(fermi_datasets[0])
+
+    flux_points_dataset = FluxPointsDataset(data=flux_points, models=model)
+    flux_pred = flux_points_dataset.flux_pred()
+    assert_allclose(flux_pred, flux_pred_ref, rtol=2e-4)
+
+    # test model 2d
+    norms = (
+        model.spatial_model.map.data.sum(axis=(1, 2))
+        / model.spatial_model.map.data.sum()
+    )
+    model.spatial_model = TemplateSpatialModel(
+        model.spatial_model.map.reduce_over_axes(), normalize=False
+    )
+    model.spectral_model = PiecewiseNormSpectralModel(geom.axes[0].center, norms)
+    flux_points_dataset = FluxPointsDataset(data=flux_points, models=model)
+    flux_pred = flux_points_dataset.flux_pred()
+    assert_allclose(flux_pred, flux_pred_ref, rtol=2e-4)

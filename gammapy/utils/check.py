@@ -1,3 +1,4 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import os
 from gammapy.scripts.download import RELEASE, cli_download_datasets
@@ -7,12 +8,12 @@ log = logging.getLogger(__name__)
 
 
 def check_tutorials_setup(download_datasets_path="./gammapy-data"):
-    """Check tutorials setup and download data if not available
+    """Check tutorials setup and download data if not available.
 
     Parameters
     ----------
-    download_datasets_path : str
-        Path to download the data, if not present.
+    download_datasets_path : str, optional
+        Path to download the data. Default is "./gammapy-data".
     """
     if "GAMMAPY_DATA" not in os.environ:
         log.info(

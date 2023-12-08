@@ -9,10 +9,7 @@ from gammapy.modeling.models import (
     SPECTRAL_MODEL_REGISTRY,
     SpectralModel,
     TemplateNDSpectralModel,
-    TemplateSpectralModel,
 )
-from gammapy.utils.deprecation import deprecated
-from gammapy.utils.interpolation import LogScale
 from gammapy.utils.scripts import make_path
 
 __all__ = ["PrimaryFlux", "DarkMatterAnnihilationSpectralModel"]
@@ -26,12 +23,12 @@ class PrimaryFlux(TemplateNDSpectralModel):
     to the nearest available value. The spectra will be available as
     `~gammapy.modeling.models.TemplateNDSpectralModel` for a chosen dark matter mass and
     annihilation channel. Using a `~gammapy.modeling.models.TemplateNDSpectralModel`
-    allows the interpolation beween different dark matter masses.
+    allows the interpolation between different dark matter masses.
 
     Parameters
     ----------
     mDM : `~astropy.units.Quantity`
-        Dark matter particle mass as rest mass energy
+        Dark matter particle mass as rest mass energy.
     channel: str
         Annihilation channel. List available channels with `~gammapy.spectrum.PrimaryFlux.allowed_channels`.
 
@@ -141,7 +138,7 @@ class PrimaryFlux(TemplateNDSpectralModel):
 
     @property
     def channel(self):
-        """Annihilation channel (str)."""
+        """Annihilation channel as a string."""
         return self._channel
 
     @channel.setter
@@ -154,6 +151,7 @@ class PrimaryFlux(TemplateNDSpectralModel):
             self._channel = channel
 
     def evaluate(self, energy, **kwargs):
+        """Evaluate the primary flux."""
         mass = {"mass": self.mDM}
         kwargs.update(mass)
 
@@ -162,21 +160,6 @@ class PrimaryFlux(TemplateNDSpectralModel):
         dN_dlogx = super().evaluate(log10x, **kwargs)
         dN_dE = dN_dlogx / (energy * np.log(10))
         return dN_dE
-
-    @property
-    @deprecated("1.1", alternative="the `PrimaryFlux` class as the spectral model")
-    def table_model(self):
-        """Spectrum as `~gammapy.modeling.models.TemplateSpectralModel`."""
-        subtable = self.table[self.table["mDM"] == self.mDM.value]
-        energies = (10 ** subtable["Log[10,x]"]) * self.mDM
-        channel_name = self.channel_registry[self.channel]
-        dN_dlogx = subtable[channel_name]
-        dN_dE = dN_dlogx / (energies * np.log(10))
-        return TemplateSpectralModel(
-            energy=energies,
-            values=dN_dE,
-            interp_kwargs={"fill_value": np.log(LogScale.tiny)},
-        )
 
 
 class DarkMatterAnnihilationSpectralModel(SpectralModel):
@@ -192,30 +175,31 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
     Parameters
     ----------
     mass : `~astropy.units.Quantity`
-        Dark matter mass
+        Dark matter mass.
     channel : str
-        Annihilation channel for `~gammapy.astro.darkmatter.PrimaryFlux`, e.g. "b" for "bbar". See `PrimaryFlux.channel_registry` for more.
+        Annihilation channel for `~gammapy.astro.darkmatter.PrimaryFlux`, e.g. "b" for "bbar".
+        See `PrimaryFlux.channel_registry` for more.
     scale : float
-        Scale parameter for model fitting
+        Scale parameter for model fitting.
     jfactor : `~astropy.units.Quantity`
         Integrated J-Factor needed when `~gammapy.modeling.models.PointSpatialModel`
-        spatial model is used
+        is used.
     z: float
-        Redshift value
+        Redshift value.
     k: int
-        Type of dark matter particle (k:2 Majorana, k:4 Dirac)
+        Type of dark matter particle (k:2 Majorana, k:4 Dirac).
 
     Examples
     --------
     This is how to instantiate a `DarkMatterAnnihilationSpectralModel` model::
 
-        from astropy import units as u
-        from gammapy.astro.darkmatter import DarkMatterAnnihilationSpectralModel
+        >>> import astropy.units as u
+        >>> from gammapy.astro.darkmatter import DarkMatterAnnihilationSpectralModel
 
-        channel = "b"
-        massDM = 5000*u.Unit("GeV")
-        jfactor = 3.41e19 * u.Unit("GeV2 cm-5")
-        modelDM = DarkMatterAnnihilationSpectralModel(mass=massDM, channel=channel, jfactor=jfactor)  # noqa: E501
+        >>> channel = "b"
+        >>> massDM = 5000*u.Unit("GeV")
+        >>> jfactor = 3.41e19 * u.Unit("GeV2 cm-5")
+        >>> modelDM = DarkMatterAnnihilationSpectralModel(mass=massDM, channel=channel, jfactor=jfactor)  # noqa: E501
 
     References
     ----------
@@ -258,6 +242,7 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
         return flux
 
     def to_dict(self, full_output=False):
+        """Convert to dictionary."""
         data = super().to_dict(full_output=full_output)
         data["spectral"]["channel"] = self.channel
         data["spectral"]["mass"] = self.mass.to_string()
@@ -268,17 +253,17 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
 
     @classmethod
     def from_dict(cls, data):
-        """Create spectral model from dict
+        """Create spectral model from a dictionary.
 
         Parameters
         ----------
         data : dict
-            Dict with model data
+            Dictionary with model data.
 
         Returns
         -------
         model : `DarkMatterAnnihilationSpectralModel`
-            Dark matter annihilation spectral model
+            Dark matter annihilation spectral model.
         """
         data = data["spectral"]
         data.pop("type")
@@ -300,28 +285,29 @@ class DarkMatterDecaySpectralModel(SpectralModel):
     Parameters
     ----------
     mass : `~astropy.units.Quantity`
-        Dark matter mass
+        Dark matter mass.
     channel : str
-        Annihilation channel for `~gammapy.astro.darkmatter.PrimaryFlux`, e.g. "b" for "bbar". See `PrimaryFlux.channel_registry` for more.
+        Annihilation channel for `~gammapy.astro.darkmatter.PrimaryFlux`, e.g. "b" for "bbar".
+        See `PrimaryFlux.channel_registry` for more.
     scale : float
         Scale parameter for model fitting
     jfactor : `~astropy.units.Quantity`
         Integrated J-Factor needed when `~gammapy.modeling.models.PointSpatialModel`
-        spatial model is used
+        is used.
     z: float
-        Redshift value
+        Redshift value.
 
     Examples
     --------
     This is how to instantiate a `DarkMatterAnnihilationSpectralModel` model::
 
-        from astropy import units as u
-        from gammapy.astro.darkmatter import DarkMatterDecaySpectralModel
+        >>> import astropy.units as u
+        >>> from gammapy.astro.darkmatter import DarkMatterDecaySpectralModel
 
-        channel = "b"
-        massDM = 5000*u.Unit("GeV")
-        jfactor = 3.41e19 * u.Unit("GeV cm-2")
-        modelDM = DarkMatterDecaySpectralModel(mass=massDM, channel=channel, jfactor=jfactor)  # noqa: E501
+        >>> channel = "b"
+        >>> massDM = 5000*u.Unit("GeV")
+        >>> jfactor = 3.41e19 * u.Unit("GeV cm-2")
+        >>> modelDM = DarkMatterDecaySpectralModel(mass=massDM, channel=channel, jfactor=jfactor)  # noqa: E501
 
     References
     ----------
@@ -370,17 +356,17 @@ class DarkMatterDecaySpectralModel(SpectralModel):
 
     @classmethod
     def from_dict(cls, data):
-        """Create spectral model from dict
+        """Create spectral model from dictionary.
 
         Parameters
         ----------
         data : dict
-            Dict with model data
+            Dictionary with model data.
 
         Returns
         -------
         model : `DarkMatterDecaySpectralModel`
-            Dark matter decay spectral model
+            Dark matter decay spectral model.
         """
         data = data["spectral"]
         data.pop("type")

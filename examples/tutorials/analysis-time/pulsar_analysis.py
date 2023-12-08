@@ -15,7 +15,7 @@ order to build these products, we will use the
 
 This tutorial uses a simulated run of vel observation from the CTA DC1, which already contains a
 column for the pulsar phases. The phasing in itself is therefore not show here. It
-requires specific packages like Tempo2 or [PINT]((https://nanograv-pint.readthedocs.io). A gammapy
+requires specific packages like Tempo2 or `(PINT) <https://nanograv-pint.readthedocs.io>`__. A gammapy
 recipe shows how to compute phases with PINT in the framework of Gammapy.
 
 

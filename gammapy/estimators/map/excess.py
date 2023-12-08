@@ -20,7 +20,8 @@ log = logging.getLogger(__name__)
 
 
 def convolved_map_dataset_counts_statistics(dataset, kernel, mask, correlate_off):
-    """Return CountsDataset objects containing smoothed maps from the MapDataset"""
+    """Return CountsDataset objects containing smoothed maps from the MapDataset."""
+    # TODO: Add a full docstring
     # Kernel is modified later make a copy here
     kernel = copy.deepcopy(kernel)
     kernel_data = kernel.data / kernel.data.max()
@@ -71,7 +72,7 @@ class ExcessMapEstimator(Estimator):
 
         By default the excess estimator correlates the off counts as well to avoid
         artifacts at the edges of the :term:`FoV` for stacked on-off datasets.
-        However when the on-off dataset has been derived from a ring background
+        However, when the on-off dataset has been derived from a ring background
         estimate, this leads to the off counts being correlated twice. To avoid
         artifacts and the double correlation, the `ExcessMapEstimator` has to
         be applied per dataset and the resulting maps need to be stacked, taking
@@ -89,14 +90,12 @@ class ExcessMapEstimator(Estimator):
         Confidence level for the sensitivity expressed in number of sigma.
     gamma_min_sensitivity : float, optional
         Minimum number of gamma-rays. Default is 10.
-        Usde only for for sensitivity computation if `apply_threshold_sensitivity`is True.
     bkg_syst_fraction_sensitivity : float, optional
-        Fraction of background counts above which the number of gamma-rays is . Default is 0.05
-        Used only for for sensitivity computation if `apply_threshold_sensitivity`is True.
+        Fraction of background counts that are above the gamma-ray counts. Default is 0.05.
     apply_threshold_sensitivity : bool
-        If True use ``bkg_syst_fraction_sensitivity` and `gamma_min_sensitivity`
-        in sensitivity computation. Default is False which is setting used for the HGPS catalogue.
-    selection_optional : list of str
+        If True, use `bkg_syst_fraction_sensitivity` and `gamma_min_sensitivity` in the sensitivity computation.
+        Default is False which is the same setting as the HGPS catalog.
+    selection_optional : list of str, optional
         Which additional maps to estimate besides delta TS, significance and symmetric error.
         Available options are:
 
@@ -106,7 +105,7 @@ class ExcessMapEstimator(Estimator):
             * "sensitivity": estimate sensitivity for a given significance
 
         Default is None so the optional steps are not executed.
-    energy_edges : list of `~astropy.units.Quantity`
+    energy_edges : list of `~astropy.units.Quantity`, optional
         Edges of the target maps energy bins. The resulting bin edges won't be exactly equal to the input ones,
         but rather the closest values to the energy axis edges of the parent dataset.
         Default is None: apply the estimator in each energy bin of the parent dataset.
@@ -179,7 +178,7 @@ class ExcessMapEstimator(Estimator):
 
     @correlation_radius.setter
     def correlation_radius(self, correlation_radius):
-        """Sets radius"""
+        """Set radius."""
         self._correlation_radius = Angle(correlation_radius)
 
     def run(self, dataset):
@@ -191,12 +190,12 @@ class ExcessMapEstimator(Estimator):
         Parameters
         ----------
         dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.MapDatasetOnOff`
-            Map dataset
+            Map dataset.
 
         Returns
         -------
         maps : `FluxMaps`
-            Flux maps
+            Flux maps.
         """
         if not isinstance(dataset, MapDataset):
             raise ValueError(
@@ -230,7 +229,7 @@ class ExcessMapEstimator(Estimator):
         Returns
         -------
         kernel : `~astropy.convolution.Tophat2DKernel`
-            Kernel
+            Kernel.
         """
 
         pixel_size = np.mean(np.abs(dataset.counts.geom.wcs.wcs.cdelt))
@@ -252,8 +251,8 @@ class ExcessMapEstimator(Estimator):
 
         Returns
         -------
-        mask : `Map`
-            Mask map
+        mask : `~gammapy.maps.Map`
+            Mask map.
         """
         if dataset.mask_fit:
             mask = dataset.mask
@@ -269,17 +268,17 @@ class ExcessMapEstimator(Estimator):
 
         Parameters
         ----------
-        dataset : `MapDataset`
-            Map dataset
+        dataset : `~gammapy.datasets.MapDataset`
+            Map dataset.
         kernel : `~astropy.convolution.Tophat2DKernel`
-            Kernel
-        mask : `Map`
-            Mask map
+            Kernel.
+        mask : `~gammapy.maps.Map`
+            Mask map.
 
         Returns
         -------
         reco_exposure : `Map`
-            Reconstructed exposure map
+            Reconstructed exposure map.
         """
         if dataset.exposure:
             reco_exposure = estimate_exposure_reco_energy(
@@ -294,14 +293,14 @@ class ExcessMapEstimator(Estimator):
         return reco_exposure
 
     def estimate_excess_map(self, dataset):
-        """Estimate excess and ts maps for a single dataset.
+        """Estimate excess and test statistic maps for a single dataset.
 
         If exposure is defined, a flux map is also computed.
 
         Parameters
         ----------
-        dataset : `MapDataset`
-            Map dataset
+        dataset : `~gammapy.datasets.MapDataset`
+            Map dataset.
         """
 
         kernel = self.estimate_kernel(dataset)

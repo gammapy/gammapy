@@ -17,11 +17,14 @@ from gammapy.irf import (
 from gammapy.makers import WobbleRegionsFinder
 from gammapy.makers.utils import (
     _map_spectrum_weight,
+    guess_instrument_fov,
     make_counts_off_rad_max,
     make_counts_rad_max,
     make_edisp_kernel_map,
+    make_effective_livetime_map,
     make_map_background_irf,
     make_map_exposure_true_energy,
+    make_observation_time_map,
     make_theta_squared_table,
 )
 from gammapy.maps import HpxGeom, MapAxis, RegionGeom, WcsGeom, WcsNDMap
@@ -344,7 +347,6 @@ def test_make_edisp_kernel_map():
 
 @requires_data()
 def test_make_counts_rad_max(observations):
-
     pos = SkyCoord(083.6331144560900, +22.0144871383400, unit="deg", frame="icrs")
     on_region = PointSkyRegion(pos)
     energy_axis = MapAxis.from_energy_bounds(
@@ -358,7 +360,6 @@ def test_make_counts_rad_max(observations):
 
 @requires_data()
 def test_make_counts_off_rad_max(observations):
-
     pos = SkyCoord(83.6331, +22.0145, unit="deg", frame="icrs")
     on_region = PointSkyRegion(pos)
     energy_axis = MapAxis.from_energy_bounds(
@@ -388,8 +389,13 @@ class TestTheta2Table:
             events["TIME"] = [0.1, 0.2, 0.3, 0.4, 0.5] * u.s
 
             obs_info = dict(
+                OBS_ID=0,
                 DEADC=1,
+                GEOLON=16.500222222222224,
+                GEOLAT=-23.271777777777775,
+                ALTITUDE=1834.9999999997833,
             )
+
             meta = time_ref_to_dict("2010-01-01")
             obs_info.update(meta)
             events.meta.update(obs_info)
@@ -405,7 +411,6 @@ class TestTheta2Table:
             self.observations.append(
                 Observation(
                     events=EventList(events),
-                    obs_info=obs_info,
                     gti=gti,
                     pointing=pointing,
                 )
@@ -468,3 +473,60 @@ class TestTheta2Table:
         assert_allclose(theta2_table_two_obs["acceptance"], acceptance_two_obs)
         assert_allclose(theta2_table_two_obs["acceptance_off"], acceptance_off_two_obs)
         assert_allclose(theta2_table["alpha"], alpha_two_obs)
+
+
+@requires_data()
+def test_guess_instrument_fov(observations):
+    with pytest.raises(ValueError):
+        guess_instrument_fov(observations)
+
+    ds = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
+    obs_hess = ds.obs(23523)
+
+    assert_allclose(guess_instrument_fov(obs_hess), 2.5 * u.deg)
+
+    obs_no_aeff = obs_hess.copy(in_memory=True, aeff=None)
+    with pytest.raises(ValueError):
+        guess_instrument_fov(obs_no_aeff)
+
+
+@requires_data()
+def test_make_observation_time_map():
+    ds = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
+    obs_id = ds.obs_table["OBS_ID"][ds.obs_table["OBJECT"] == "MSH 15-5-02"][:3]
+    observations = ds.get_observations(obs_id)
+    source_pos = SkyCoord(228.32, -59.08, unit="deg")
+    geom = WcsGeom.create(
+        skydir=source_pos,
+        binsz=0.02,
+        width=(6, 6),
+        frame="icrs",
+        proj="CAR",
+    )
+    obs_time = make_observation_time_map(observations, geom, offset_max=2.5 * u.deg)
+    obs_time_center = obs_time.get_by_coord(source_pos)
+    assert_allclose(obs_time_center, 1.2847, rtol=1e-3)
+    assert obs_time.unit == u.hr
+
+
+@requires_data()
+def test_make_effective_livetime_map():
+    ds = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
+    obs_id = ds.obs_table["OBS_ID"][ds.obs_table["OBJECT"] == "MSH 15-5-02"][:3]
+    observations = ds.get_observations(obs_id)
+    source_pos = SkyCoord(228.32, -59.08, unit="deg")
+    energy_axis_true = MapAxis.from_energy_bounds(
+        10 * u.GeV, 1 * u.TeV, nbin=2, name="energy_true"
+    )
+    geom = WcsGeom.create(
+        skydir=source_pos,
+        binsz=0.02,
+        width=(6, 6),
+        frame="icrs",
+        proj="CAR",
+        axes=[energy_axis_true],
+    )
+    obs_time = make_effective_livetime_map(observations, geom, offset_max=2.5 * u.deg)
+    obs_time_center = obs_time.get_by_coord((source_pos, energy_axis_true.center))
+    assert_allclose(obs_time_center, [0, 1.2847], rtol=1e-3)
+    assert obs_time.unit == u.hr

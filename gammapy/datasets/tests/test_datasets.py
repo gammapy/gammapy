@@ -1,7 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import os
 import pytest
 from numpy.testing import assert_allclose
+from astropy.coordinates import SkyCoord
 from gammapy.datasets import Datasets, SpectrumDatasetOnOff
+from gammapy.datasets.tests.test_map import get_map_dataset
+from gammapy.maps import MapAxis, WcsGeom
+from gammapy.modeling.models import SkyModel
 from gammapy.modeling.tests.test_fit import MyDataset
 from gammapy.utils.testing import requires_data
 
@@ -87,3 +92,46 @@ def test_datasets_info_table():
     table = datasets_hess.info_table(cumulative=True)
     assert table["name"][0] == "stacked"
     assert table["name"][1] == "stacked"
+
+
+@requires_data()
+def test_datasets_write(tmp_path):
+    axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=2)
+    geom = WcsGeom.create(
+        skydir=(266.40498829, -28.93617776),
+        binsz=0.02,
+        width=(2, 2),
+        frame="icrs",
+        axes=[axis],
+    )
+
+    axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=3, name="energy_true")
+    geom_etrue = WcsGeom.create(
+        skydir=(266.40498829, -28.93617776),
+        binsz=0.02,
+        width=(2, 2),
+        frame="icrs",
+        axes=[axis],
+    )
+
+    dataset_1 = get_map_dataset(geom, geom_etrue, name="test-1")
+    datasets = Datasets([dataset_1])
+
+    model = SkyModel.create("pl", "point", name="src")
+    model.spatial_model.position = SkyCoord("266d", "-28.93d", frame="icrs")
+
+    dataset_1.models = [model]
+
+    datasets.write(
+        filename=tmp_path / "test",
+        filename_models=tmp_path / "test_model",
+        overwrite=False,
+    )
+    os.remove(tmp_path / "test-1.fits")
+
+    with pytest.raises(OSError):
+        datasets.write(
+            filename=tmp_path / "test",
+            filename_models=tmp_path / "test_model",
+            overwrite=False,
+        )

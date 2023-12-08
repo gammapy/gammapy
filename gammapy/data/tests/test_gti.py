@@ -130,6 +130,79 @@ def test_select_time(time_interval, expected_length, expected_times):
         assert_time_allclose(gti_selected.time_stop[-1], expected_times[1])
 
 
+def test_gti_delete_intervals():
+    gti = GTI.create(
+        Time(
+            [
+                "2020-01-01 01:00:00.000",
+                "2020-01-01 02:00:00.000",
+                "2020-01-01 03:00:00.000",
+                "2020-01-01 05:00:00.000",
+            ]
+        ),
+        Time(
+            [
+                "2020-01-01 01:45:00.000",
+                "2020-01-01 02:45:00.000",
+                "2020-01-01 03:45:00.000",
+                "2020-01-01 05:45:00.000",
+            ]
+        ),
+    )
+    interval = Time(["2020-01-01 02:20:00.000", "2020-01-01 05:20:00.000"])
+    interval2 = Time(["2020-01-01 05:30:00.000", "2020-01-01 08:20:00.000"])
+    interval3 = Time(["2020-01-01 05:50:00.000", "2020-01-01 09:20:00.000"])
+
+    gti_trim = gti.delete_interval(interval)
+
+    assert len(gti_trim.table) == 3
+
+    assert_time_allclose(
+        gti_trim.table["START"],
+        Time(
+            [
+                "2020-01-01 01:00:00.000",
+                "2020-01-01 02:00:00.000",
+                "2020-01-01 05:20:00.000",
+            ]
+        ),
+    )
+    assert_time_allclose(
+        gti_trim.table["STOP"],
+        Time(
+            [
+                "2020-01-01 01:45:00.000",
+                "2020-01-01 02:20:00.000",
+                "2020-01-01 05:45:00.000",
+            ]
+        ),
+    )
+
+    gti_trim2 = gti_trim.delete_interval(interval2)
+    assert_time_allclose(
+        gti_trim2.table["STOP"],
+        Time(
+            [
+                "2020-01-01 01:45:00.000",
+                "2020-01-01 02:20:00.000",
+                "2020-01-01 05:30:00.000",
+            ]
+        ),
+    )
+
+    gti_trim3 = gti_trim2.delete_interval(interval3)
+    assert_time_allclose(
+        gti_trim3.table["STOP"],
+        Time(
+            [
+                "2020-01-01 01:45:00.000",
+                "2020-01-01 02:20:00.000",
+                "2020-01-01 05:30:00.000",
+            ]
+        ),
+    )
+
+
 def test_gti_stack():
     time_ref = Time("2010-01-01")
     gti1 = make_gti({"START": [0, 2] * u.s, "STOP": [1, 3] * u.s}, time_ref=time_ref)

@@ -1,15 +1,36 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from typing import Optional, Union
-import numpy as np
-import astropy.units as u
-from astropy.coordinates import EarthLocation, SkyCoord
+from astropy.coordinates import EarthLocation
 from astropy.time import Time
-from pydantic import Field, ValidationError, validator
+from pydantic import Field, validator
 from gammapy.utils.fits import earth_location_from_dict
-from gammapy.utils.metadata import CreatorMetaData, MetaData
-from gammapy.utils.time import time_ref_from_dict
+from gammapy.utils.metadata import (
+    METADATA_FITS_KEYS,
+    CreatorMetaData,
+    MetaData,
+    ObsInfoMetaData,
+    PointingInfoMetaData,
+    TargetMetaData,
+)
 
 __all__ = ["ObservationMetaData"]
+
+OBSERVATION_METADATA_FITS_KEYS = {
+    "location": {
+        "input": lambda v: earth_location_from_dict(v),
+        "output": lambda v: {
+            "GEOLON": v.lon.deg,
+            "GEOLAT": v.lat.deg,
+            "ALTITUDE": v.height.to_value("m"),
+        },
+    },
+    "deadtime_fraction": {
+        "input": lambda v: 1 - v["DEADC"],
+        "output": lambda v: {"DEADC": 1 - v},
+    },
+}
+
+METADATA_FITS_KEYS["observation"] = OBSERVATION_METADATA_FITS_KEYS
 
 
 class ObservationMetaData(MetaData):
@@ -17,47 +38,43 @@ class ObservationMetaData(MetaData):
 
     Parameters
     ----------
-    telescope : str, optional
-        the telescope/observatory name
-    instrument : str, optional
-        the specific instrument used
-    observation_mode : str, optional
-        the observation mode
-    location : `~astropy.coordinates.EarthLocation` or str, optional
-        the observatory location
-    deadtime_fraction : float
-        the observation deadtime fraction. Default is 0.
-    time_start : Time, str
-        the observation start time
-    time_stop : Time, str
-        the observation stop time
-    reference_time : Time, str
-        the observation reference time
-    target_name : str
-        the observation target name
-    target_position : SkyCoord
-        the target coordinate
+    obs_info : `~gammapy.utils.ObsInfoMetaData`
+        The general observation information.
+    pointing : `~gammapy.utils.PointingInfoMetaData
+        The pointing metadata.
+    target : `~gammapy.utils.TargetMetaData
+        The target metadata.
     creation : `~gammapy.utils.CreatorMetaData`
-        the creation metadata
-    optional : dict
-        additional optional metadata
+        The creation metadata.
+    location : `~astropy.coordinates.EarthLocation` or str, optional
+        The observatory location.
+    deadtime_fraction : float
+        The observation deadtime fraction. Default is 0.
+    time_start : `~astropy.time.Time` or str
+        The observation start time.
+    time_stop : `~astropy.time.Time` or str
+        The observation stop time.
+    reference_time : `~astropy.time.Time` or str
+        The observation reference time.
+    optional : dict, optional
+        Additional optional metadata.
     """
 
-    telescope: Optional[str]
-    instrument: Optional[str]
-    observation_mode: Optional[str]
-    location: Optional[Union[str, EarthLocation]]
+    _tag = "observation"
+    obs_info: Optional[ObsInfoMetaData]
+    pointing: Optional[PointingInfoMetaData]
+    target: Optional[TargetMetaData]
+    location: Optional[Union[EarthLocation, str]]
     deadtime_fraction: float = Field(0.0, ge=0, le=1.0)
     time_start: Optional[Union[Time, str]]
     time_stop: Optional[Union[Time, str]]
     reference_time: Optional[Union[Time, str]]
-    target_name: Optional[str]
-    target_position: Optional[SkyCoord]
     creation: Optional[CreatorMetaData]
     optional: Optional[dict]
 
     @validator("location")
     def validate_location(cls, v):
+        """Validate the location value."""
         from gammapy.data import observatory_locations
 
         if isinstance(v, str) and v in observatory_locations.keys():
@@ -69,6 +86,7 @@ class ObservationMetaData(MetaData):
 
     @validator("time_start", "time_stop", "reference_time")
     def validate_time(cls, v):
+        """Validate the time value."""
         if isinstance(v, str):
             return Time(v)
         elif isinstance(v, Time) or v is None:
@@ -77,61 +95,11 @@ class ObservationMetaData(MetaData):
         else:
             raise ValueError("Incorrect time input value.")
 
-    @validator("target_position")
-    def validate_position(cls, v):
-        if v is None:
-            return SkyCoord(np.nan, np.nan, unit="deg", frame="icrs")
-        elif isinstance(v, SkyCoord):
-            return v
-        else:
-            raise ValidationError(
-                f"Incorrect position. Expect SkyCoord got {type(v)} instead."
-            )
-
     @classmethod
-    def from_header(cls, events_hdr, format="gadf"):
-        """Create and fill the observation metadata from the event list metadata.
+    def from_header(cls, header, format="gadf"):
+        meta = super(ObservationMetaData, cls).from_header(header, format)
 
-        Parameters
-        ----------
-        format : str
-            the header data format. Default is gadf.
-        """
-        # TODO: read really from events.meta once it is properly defined
-        if not format == "gadf":
-            raise ValueError(
-                f"Metadata creation from format {format} is not supported."
-            )
-
-        kwargs = {}
-        kwargs["telescope"] = events_hdr.get("TELESCOP")
-        kwargs["instrument"] = events_hdr.get("INSTRUME")
-        kwargs["observation_mode"] = events_hdr.get("OBS_MODE")
-
-        deadc = events_hdr.get("DEADC")
-        if deadc is None:
-            raise ValueError("No deadtime correction factor defined.")
-        kwargs["deadtime_fraction"] = 1 - deadc
-
-        if set(["GEOLON", "GEOLAT"]).issubset(set(events_hdr)):
-            kwargs["location"] = earth_location_from_dict(events_hdr)
-
-        reference_time = time_ref_from_dict(events_hdr)
-        kwargs["reference_time"] = reference_time
-        if "TIME_START" in events_hdr:
-            kwargs["time_start"] = reference_time + events_hdr.get("TIME_START") * u.s
-        if "TIME_STOP" in events_hdr:
-            kwargs["time_stop"] = reference_time + events_hdr.get("TIME_STOP") * u.s
-
-        kwargs["creation"] = CreatorMetaData.from_default()
-
-        # optional gadf entries that are defined attributes of the ObservationMetaData
-        kwargs["target_name"] = events_hdr.get("OBJECT")
-        if "RA_OBJ" in events_hdr and "DEC_OBJ" in events_hdr:
-            kwargs["target_position"] = SkyCoord(
-                events_hdr["RA_OBJ"], events_hdr["DEC_OBJ"], unit="deg", frame="icrs"
-            )
-
+        meta.creation = CreatorMetaData.from_default()
         # Include additional gadf keywords not specified as ObservationMetaData attributes
         optional_keywords = [
             "OBSERVER",
@@ -157,8 +125,8 @@ class ObservationMetaData(MetaData):
         ]
         optional = dict()
         for key in optional_keywords:
-            if key in events_hdr.keys():
-                optional[key] = events_hdr[key]
-        kwargs["optional"] = optional
+            if key in header.keys():
+                optional[key] = header[key]
+        meta.optional = optional
 
-        return cls(**kwargs)
+        return meta

@@ -22,26 +22,26 @@ class FoVBackgroundMaker(Maker):
     init. This also internally takes into account the dataset fit mask.
 
     If a SkyModel is set on the input dataset its parameters
-    are frozen during the fov re-normalization.
+    are frozen during the FoV re-normalization.
 
     If the requirement (greater than) of either min_counts or min_npred_background
-    is not satisfied, the background will not be normalised
+    is not satisfied, the background will not be normalised.
 
     Parameters
     ----------
-    method : str in ['fit', 'scale']
-        the normalization method to be applied. Default 'scale'.
+    method : str in ['fit', 'scale'], optional
+        The normalization method to be applied. Default 'scale'.
     exclusion_mask : `~gammapy.maps.WcsNDMap`
-        Exclusion mask
+        Exclusion mask.
     spectral_model : SpectralModel or str
         Reference norm spectral model to use for the `FoVBackgroundModel`, if
         none is defined on the dataset. By default, use pl-norm.
     min_counts : int
         Minimum number of counts, or residuals counts if a SkyModel is set,
-        required outside the exclusion region
+        required outside the exclusion region.
     min_npred_background : float
         Minimum number of predicted background counts required outside the
-        exclusion region
+        exclusion region.
     """
 
     tag = "FoVBackgroundMaker"
@@ -76,12 +76,12 @@ class FoVBackgroundMaker(Maker):
 
     @property
     def method(self):
-        """Method"""
+        """Method property."""
         return self._method
 
     @method.setter
     def method(self, value):
-        """Method setter"""
+        """Method setter."""
         if value not in self.available_methods:
             raise ValueError(
                 f"Not a valid method for FoVBackgroundMaker: {value}."
@@ -91,7 +91,7 @@ class FoVBackgroundMaker(Maker):
         self._method = value
 
     def make_default_fov_background_model(self, dataset):
-        """Add fov background model to the model definition
+        """Add FoV background model to the model definition.
 
         Parameters
         ----------
@@ -101,7 +101,7 @@ class FoVBackgroundMaker(Maker):
         Returns
         -------
         dataset : `~gammapy.datasets.MapDataset`
-            Map dataset including background model
+            Map dataset including background model.
 
         """
         bkg_model = FoVBackgroundModel(
@@ -116,7 +116,7 @@ class FoVBackgroundMaker(Maker):
         return dataset
 
     def make_exclusion_mask(self, dataset):
-        """Project input exclusion mask to dataset geom
+        """Project input exclusion mask to dataset geometry.
 
         Parameters
         ----------
@@ -126,7 +126,7 @@ class FoVBackgroundMaker(Maker):
         Returns
         -------
         mask : `~gammapy.maps.WcsNDMap`
-            Projected exclusion mask
+            Projected exclusion mask.
         """
         geom = dataset._geom
         if self.exclusion_mask:
@@ -136,8 +136,7 @@ class FoVBackgroundMaker(Maker):
         return mask
 
     def _make_masked_summed_counts(self, dataset):
-        """ "Compute the sums of the counts, npred, and background maps within the mask"""
-
+        """Compute the sums of the counts, npred, and background maps within the mask."""
         npred = dataset.npred()
         mask = dataset.mask & ~np.isnan(npred)
         count_tot = dataset.counts.data[mask].sum()
@@ -150,9 +149,7 @@ class FoVBackgroundMaker(Maker):
         }
 
     def _verify_requirements(self, dataset):
-        """ "Verify that the requirements of min_counts
-        and min_npred_background are satisfied"""
-
+        """Verify that the requirements of min_counts and min_npred_background are satisfied."""
         total = self._make_masked_summed_counts(dataset)
         not_bkg_tot = total["npred"] - total["bkg"]
 
@@ -222,7 +219,7 @@ class FoVBackgroundMaker(Maker):
         return dataset
 
     def make_background_fit(self, dataset):
-        """Fit the FoV background model on the dataset counts data
+        """Fit the FoV background model on the dataset counts data.
 
         Parameters
         ----------
@@ -232,10 +229,9 @@ class FoVBackgroundMaker(Maker):
         Returns
         -------
         dataset : `~gammapy.datasets.MapDataset`
-            Map dataset with fitted background model
+            Map dataset with fitted background model.
         """
         # freeze all model components not related to background model
-
         models = dataset.models.select(tag="sky-model")
 
         with models.restore_status(restore_values=False):
@@ -252,7 +248,7 @@ class FoVBackgroundMaker(Maker):
         return dataset
 
     def make_background_scale(self, dataset):
-        """Fit the FoV background model on the dataset counts data
+        """Fit the FoV background model on the dataset counts data.
 
         Parameters
         ----------
@@ -262,8 +258,7 @@ class FoVBackgroundMaker(Maker):
         Returns
         -------
         dataset : `~gammapy.datasets.MapDataset`
-            Map dataset with scaled background model
-
+            Map dataset with scaled background model.
         """
         total = self._make_masked_summed_counts(dataset)
         not_bkg_tot = total["npred"] - total["bkg"]

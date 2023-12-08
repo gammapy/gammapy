@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import logging
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
@@ -33,6 +34,8 @@ from gammapy.utils.testing import mpl_plot_check, requires_data, requires_depend
 def test_sky_point_source():
     geom = WcsGeom.create(skydir=(2.4, 2.3), npix=(10, 10), binsz=0.3)
     model = PointSpatialModel(lon_0="2.5 deg", lat_0="2.5 deg", frame="icrs")
+
+    assert model.is_energy_dependent is False
 
     assert model.evaluation_radius.unit == "deg"
     assert_allclose(model.evaluation_radius.value, 0)
@@ -434,6 +437,31 @@ def test_sky_diffuse_map_copy():
     model_copy.map.data += 1
     # Check that the original map has also been changed
     assert np.all(model.map.data == model_copy.map.data)
+
+
+def test_sky_diffuse_map_empty(caplog):
+    # define model map with 0 values
+    model_map = Map.create(map_type="wcs", width=(1, 1), binsz=0.5, unit="sr-1")
+
+    with caplog.at_level(logging.WARNING):
+        model = TemplateSpatialModel(model_map, normalize=True)
+        assert "Map values are all zeros. Check and fix this!" in [
+            _.message for _ in caplog.records
+        ]
+        assert np.all(np.isfinite(model.map.data))
+
+    axes = [MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=2)]
+    model_map = Map.create(
+        map_type="wcs", width=(1, 1), binsz=0.5, unit="sr-1", axes=axes
+    )
+    model_map.data[0, :, :] = 1
+    with caplog.at_level(logging.WARNING):
+        model = TemplateSpatialModel(model_map, normalize=True)
+        assert (
+            "Map values are all zeros in at least one energy bin. Check and fix this!"
+            in [_.message for _ in caplog.records]
+        )
+        assert np.all(np.isfinite(model.map.data))
 
 
 def test_evaluate_on_fk5_map():

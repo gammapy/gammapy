@@ -2,18 +2,33 @@
 import logging
 import numpy as np
 from astropy import units as u
+from astropy.io import fits
 from astropy.table import Table
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
-from gammapy.maps.axes import UNIT_STRING_FORMAT
-from gammapy.modeling.models import DatasetModels
+from gammapy.maps.axes import UNIT_STRING_FORMAT, MapAxis
+from gammapy.modeling.models import DatasetModels, Models, TemplateSpatialModel
 from gammapy.utils.scripts import make_name, make_path
 from .core import Dataset
 
 log = logging.getLogger(__name__)
 
 __all__ = ["FluxPointsDataset"]
+
+
+def _get_reference_model(model, energy_bounds, margin_percent=70):
+    if isinstance(model.spatial_model, TemplateSpatialModel):
+        geom = model.spatial_model.map.geom
+        emin = energy_bounds[0] * (1 - margin_percent / 100)
+        emax = energy_bounds[-1] * (1 + margin_percent / 100)
+        energy_axis = MapAxis.from_energy_bounds(
+            emin, emax, nbin=20, per_decade=True, name="energy_true"
+        )
+        geom = geom.to_image().to_cube([energy_axis])
+        return Models([model]).to_template_spectral_model(geom)
+    else:
+        return model.spectral_model
 
 
 class FluxPointsDataset(Dataset):
@@ -25,16 +40,16 @@ class FluxPointsDataset(Dataset):
     Parameters
     ----------
     models : `~gammapy.modeling.models.Models`
-        Models (only spectral part needs to be set)
+        Models (only spectral part needs to be set).
     data : `~gammapy.estimators.FluxPoints`
-        Flux points. Must be sorted along the energy axis
+        Flux points. Must be sorted along the energy axis.
     mask_fit : `numpy.ndarray`
-        Mask to apply for fitting
+        Mask to apply for fitting.
     mask_safe : `numpy.ndarray`
         Mask defining the safe data range. By default, upper limit values are excluded.
     meta_table : `~astropy.table.Table`
         Table listing information on observations used to create the dataset.
-        One line per observation for stacked datasets
+        One line per observation for stacked datasets.
 
     Examples
     --------
@@ -49,7 +64,7 @@ class FluxPointsDataset(Dataset):
     >>> model = SkyModel(spectral_model=PowerLawSpectralModel())
     >>> dataset.models = model
 
-    Make the fit
+    Make the fit:
 
     >>> fit = Fit()
     >>> result = fit.run([dataset])
@@ -78,7 +93,7 @@ class FluxPointsDataset(Dataset):
     spectral reference 1.0000e+00            TeV ... nan   True   False
 
     Note: In order to reproduce the example, you need the tests datasets folder.
-    You may download it with the command
+    You may download it with the command:
     ``gammapy download datasets --tests --out $GAMMAPY_DATA``
     """
 
@@ -128,17 +143,20 @@ class FluxPointsDataset(Dataset):
             models = DatasetModels(models)
             self._models = models.select(datasets_names=self.name)
 
-    def write(self, filename, overwrite=False, **kwargs):
+    def write(self, filename, overwrite=False, checksum=False, **kwargs):
         """Write flux point dataset to file.
 
         Parameters
         ----------
         filename : str
-            Filename to write to
-        overwrite : bool
-            Overwrite existing file
-        **kwargs : dict
-             Keyword arguments passed to `~astropy.table.Table.write`
+            Filename to write to.
+        overwrite : bool, optional
+            Overwrite existing file. Default is False.
+        checksum : bool
+            When True adds both DATASUM and CHECKSUM cards to the headers written to the FITS file.
+            Applies only if filename has .fits suffix. Default is False.
+        **kwargs : dict, optional
+             Keyword arguments passed to `~astropy.table.Table.write`.
         """
         table = self.data.to_table()
 
@@ -149,7 +167,17 @@ class FluxPointsDataset(Dataset):
 
         table["mask_fit"] = mask_fit
         table["mask_safe"] = self.mask_safe
-        table.write(make_path(filename), overwrite=overwrite, **kwargs)
+
+        filename = make_path(filename)
+
+        if "fits" in filename.suffixes:
+            primary_hdu = fits.PrimaryHDU()
+            hdu_table = fits.BinTableHDU(table, name="TABLE")
+            fits.HDUList([primary_hdu, hdu_table]).writeto(
+                filename, overwrite=overwrite, checksum=checksum
+            )
+        else:
+            table.write(make_path(filename), overwrite=overwrite, **kwargs)
 
     @classmethod
     def read(cls, filename, name=None, format="gadf-sed"):
@@ -158,16 +186,16 @@ class FluxPointsDataset(Dataset):
         Parameters
         ----------
         filename : str
-            Filename to read from
-        name : str
-            Name of the new dataset
+            Filename to read from.
+        name : str, optional
+            Name of the new dataset. Default is None.
         format : {"gadf-sed"}
-            Format of the dataset file
+            Format of the dataset file. Default is "gadf-sed".
 
         Returns
         -------
         dataset : `FluxPointsDataset`
-            FluxPointsDataset
+            FluxPointsDataset.
         """
         from gammapy.estimators import FluxPoints
 
@@ -196,7 +224,7 @@ class FluxPointsDataset(Dataset):
         Parameters
         ----------
         data : dict
-            Dict containing data to create dataset from
+            Dictionary containing data to create dataset from.
 
         Returns
         -------
@@ -269,7 +297,8 @@ class FluxPointsDataset(Dataset):
         """Compute predicted flux."""
         flux = 0.0
         for model in self.models:
-            flux_model = model.spectral_model(self.data.energy_ref)
+            reference_model = _get_reference_model(model, self._energy_bounds)
+            flux_model = reference_model(self.data.energy_ref)
 
             if model.temporal_model is not None:
                 integral = model.temporal_model.integral(
@@ -297,13 +326,14 @@ class FluxPointsDataset(Dataset):
         ----------
         method: {"diff", "diff/model"}
             Method used to compute the residuals. Available options are:
-                - `diff` (default): data - model
-                - `diff/model`: (data - model) / model
+                - `diff` (default): data - model.
+                - `diff/model`: (data - model) / model.
+            Default is "diff".
 
         Returns
         -------
         residuals : `~numpy.ndarray`
-            Residuals array
+            Residuals array.
         """
         fp = self.data
 
@@ -327,19 +357,19 @@ class FluxPointsDataset(Dataset):
 
         Parameters
         ----------
-        ax_spectrum : `~matplotlib.axes.Axes`
-            Axes to plot flux points and best fit model on
-        ax_residuals : `~matplotlib.axes.Axes`
-            Axes to plot residuals on
-        kwargs_spectrum : dict
-            Keyword arguments passed to `~FluxPointsDataset.plot_spectrum`
-        kwargs_residuals : dict
-            Keyword arguments passed to `~FluxPointsDataset.plot_residuals`
+        ax_spectrum : `~matplotlib.axes.Axes`, optional
+            Axes to plot flux points and best fit model on. Default is None.
+        ax_residuals : `~matplotlib.axes.Axes`, optional
+            Axes to plot residuals on. Default is None.
+        kwargs_spectrum : dict, optional
+            Keyword arguments passed to `~FluxPointsDataset.plot_spectrum`. Default is None.
+        kwargs_residuals : dict, optional
+            Keyword arguments passed to `~FluxPointsDataset.plot_residuals`. Default is None.
 
         Returns
         -------
         ax_spectrum, ax_residuals : `~matplotlib.axes.Axes`
-            Flux points, best fit model and residuals plots
+            Flux points, best fit model and residuals plots.
 
         Examples
         --------
@@ -390,17 +420,17 @@ class FluxPointsDataset(Dataset):
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`
-            Axes to plot on
+        ax : `~matplotlib.axes.Axes`, optional
+            Axes to plot on. Default is None.
         method : {"diff", "diff/model"}
-            Normalization used to compute the residuals, see `FluxPointsDataset.residuals`
+            Normalization used to compute the residuals, see `FluxPointsDataset.residuals`. Default is "diff".
         **kwargs : dict
-            Keyword arguments passed to `~matplotlib.axes.Axes.errorbar`
+            Keyword arguments passed to `~matplotlib.axes.Axes.errorbar`.
 
         Returns
         -------
         ax : `~matplotlib.axes.Axes`
-            Axes object
+            Axes object.
 
         """
         ax = ax or plt.gca()
@@ -447,18 +477,19 @@ class FluxPointsDataset(Dataset):
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`
-            Axes to plot on
-        kwargs_fp : dict
-            Keyword arguments passed to `gammapy.estimators.FluxPoints.plot` to configure the plot style
-        kwargs_model : dict
+        ax : `~matplotlib.axes.Axes`, optional
+            Axes to plot on. Default is None.
+        kwargs_fp : dict, optional
+            Keyword arguments passed to `gammapy.estimators.FluxPoints.plot` to configure the plot style.
+            Default is None.
+        kwargs_model : dict, optional
             Keyword arguments passed to `gammapy.modeling.models.SpectralModel.plot` and
-            `gammapy.modeling.models.SpectralModel.plot_error` to configure the plot style
+            `gammapy.modeling.models.SpectralModel.plot_error` to configure the plot style. Default is None.
 
         Returns
         -------
         ax : `~matplotlib.axes.Axes`
-            Axes object
+            Axes object.
 
         Examples
         --------

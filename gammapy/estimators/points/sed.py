@@ -6,8 +6,11 @@ from astropy import units as u
 from astropy.table import Table
 import gammapy.utils.parallel as parallel
 from gammapy.datasets import Datasets
+from gammapy.datasets.actors import DatasetsActor
+from gammapy.datasets.flux_points import _get_reference_model
 from gammapy.maps import MapAxis
 from gammapy.modeling import Fit
+from gammapy.utils.deprecation import deprecated_attribute
 from ..flux import FluxEstimator
 from .core import FluxPoints
 
@@ -49,16 +52,16 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
         Number of sigma to use for asymmetric error computation. Default is 1.
     n_sigma_ul : int
         Number of sigma to use for upper limit computation. Default is 2.
-    selection_optional : list of str
+    selection_optional : list of str, optional
         Which additional quantities to estimate. Available options are:
 
-            * "all": all the optional steps are executed
+            * "all": all the optional steps are executed.
             * "errn-errp": estimate asymmetric errors on flux.
             * "ul": estimate upper limits.
             * "scan": estimate fit statistic profiles.
 
         Default is None so the optional steps are not executed.
-    energy_edges : list of `~astropy.units.Quantity`
+    energy_edges : list of `~astropy.units.Quantity`, optional
         Edges of the flux points energy bins. The resulting bin edges won't be exactly equal to the input ones,
         but rather the closest values to the energy axis edges of the parent dataset.
         Default is None: apply the estimator in each energy bin of the parent dataset.
@@ -66,20 +69,35 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
     fit : `Fit`
         Fit instance specifying the backend and fit options.
     reoptimize : bool
-        Re-optimize other free model parameters. Default is False.
-        If True the available free parameters are fitted together with the norm of the source of interest in each bin independently, otherwise they are frozen at their current value.
+        If True the free parameters of the other models are fitted in each bin independently,
+        together with the norm of the source of interest
+        (but the other parameters of the source of interest are kept frozen).
+        If False only the norm of the source of interest if fitted,
+        and all other parameters are frozen at their current values.
     sum_over_energy_groups : bool
-        Whether to sum over the energy groups or fit the norm on the full energy
-        grid.
+        Whether to sum over the energy groups or fit the norm on the full energy grid.
     n_jobs : int
         Number of processes used in parallel for the computation. Default is one, unless
         `~gammapy.utils.parallel.N_JOBS_DEFAULT` was modified. The number of jobs is
         limited to the number of physical CPUs.
     parallel_backend : {"multiprocessing", "ray"}
         Which backend to use for multiprocessing.
+    norm : ~gammapy.modeling.Parameter` or dict
+        Norm parameter used for the fit
+        Default is None and a new parameter is created automatically,
+        with value=1, name="norm", scan_min=0.2, scan_max=5, and scan_n_values = 11.
+        By default the min and max are not set and derived from the source model,
+        unless the source model does not have one and only one norm parameter.
+        If a dict is given the entries should be a subset of
+        `~gammapy.modeling.Parameter` arguments.
     """
 
     tag = "FluxPointsEstimator"
+
+    norm_min = deprecated_attribute("norm_min", "1.2")
+    norm_max = deprecated_attribute("norm_max", "1.2")
+    norm_n_values = deprecated_attribute("norm_n_values", "1.2")
+    norm_values = deprecated_attribute("norm_values", "1.2")
 
     def __init__(
         self,
@@ -104,14 +122,16 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
         Parameters
         ----------
         datasets : `~gammapy.datasets.Datasets`
-            Datasets
+            Datasets.
 
         Returns
         -------
         flux_points : `FluxPoints`
             Estimated flux points.
         """
-        datasets = Datasets(datasets=datasets)
+
+        if not isinstance(datasets, DatasetsActor):
+            datasets = Datasets(datasets=datasets)
 
         if not datasets.energy_axes_are_aligned:
             raise ValueError("All datasets must have aligned energy axes.")
@@ -145,7 +165,7 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
         )
 
         table = Table(rows, meta=meta)
-        model = datasets.models[self.source]
+        model = _get_reference_model(datasets.models[self.source], self.energy_edges)
         return FluxPoints.from_table(
             table=table,
             reference_model=model.copy(),
@@ -158,21 +178,21 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
 
         Parameters
         ----------
-        datasets : `Datasets`
-            Datasets
+        datasets : `~gammapy.datasets.Datasets`
+            Datasets.
         energy_min, energy_max : `~astropy.units.Quantity`
             Energy bounds to compute the flux point for.
 
         Returns
         -------
         result : dict
-            Dict with results for the flux point.
+            Dictionary with results for the flux point.
         """
         datasets_sliced = datasets.slice_by_energy(
             energy_min=energy_min, energy_max=energy_max
         )
         if self.sum_over_energy_groups:
-            datasets_sliced = Datasets(
+            datasets_sliced = datasets_sliced.__class__(
                 [_.to_image(name=_.name) for _ in datasets_sliced]
             )
 
@@ -181,7 +201,9 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
             return super().run(datasets=datasets_sliced)
         else:
             log.warning(f"No dataset contribute in range {energy_min}-{energy_max}")
-            model = datasets.models[self.source].spectral_model
+            model = _get_reference_model(
+                datasets.models[self.source], self.energy_edges
+            )
             return self._nan_result(datasets, model, energy_min, energy_max)
 
     def _nan_result(self, datasets, model, energy_min, energy_max):

@@ -27,8 +27,9 @@ In general the flux can be estimated using two methods:
 #. **Based on model fitting:** given a (global) best fit model with multiple model components,
    the flux of the component of interest is re-fitted in the chosen energy, time or spatial
    region. The new flux is given as a ``norm`` with respect to the global reference model.
-   Optionally other component parameters in the global model can be re-optimised. This method
-   is also named **forward folding**.
+   Optionally the free parameters of the other models can be re-optimised
+   (but the other parameters of the source of interest are always kept frozen).
+   This method is also named **forward folding**.
 
 #. **Based on excess:** in the case of having one energy bin, neglecting the PSF and
    not re-optimising other parameters, one can estimate the significance based on the
