@@ -80,6 +80,7 @@ log = logging.getLogger(__name__)
 # And some gammapy specific imports
 #
 
+import warnings
 from gammapy.data import FixedPointingInfo, Observation, observatory_locations
 from gammapy.datasets import Datasets, FluxPointsDataset, SpectrumDataset
 from gammapy.estimators import LightCurveEstimator
@@ -91,6 +92,10 @@ from gammapy.modeling.models import (
     ExpDecayTemporalModel,
     PowerLawSpectralModel,
     SkyModel,
+)
+
+warnings.filterwarnings(
+    action="ignore", message="overflow encountered in exp", module="astropy"
 )
 
 ######################################################################
@@ -266,16 +271,11 @@ plt.show()
 # Fitting the obtained light curve
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# The fitting will proceed through a joint fit of the flux points. First,
-# we need to obtain a set of `FluxPointDatasets`, one for each time bin
-#
+# We will first convert the obtained light curve to a `FluxPointsDataset`
+# and fit it with a spectral and temporal model
 
 # Create the datasets by iterating over the returned lightcurve
-datasets = Datasets()
-
-for idx, fp in enumerate(lc_1d.iter_by_axis(axis_name="time")):
-    dataset = FluxPointsDataset(data=fp, name=f"time-bin-{idx}")
-    datasets.append(dataset)
+dataset_fp = FluxPointsDataset(data=lc_1d, name="dataset_lc")
 
 
 ######################################################################
@@ -290,18 +290,22 @@ spectral_model1 = PowerLawSpectralModel(
 )
 temporal_model1 = ExpDecayTemporalModel(t0="10 h", t_ref=gti_t0.mjd * u.d)
 
+
 model = SkyModel(
     spectral_model=spectral_model1,
     temporal_model=temporal_model1,
     name="model-test",
 )
 
-datasets.models = model
+dataset_fp.models = model
+print(dataset_fp)
+
 
 # %%time
-# Do a joint fit
+# Fit the dataset
 fit = Fit()
-result = fit.run(datasets=datasets)
+result = fit.run(dataset_fp)
+display(result.parameters.to_table())
 
 
 ######################################################################
