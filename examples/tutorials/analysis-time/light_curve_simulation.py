@@ -80,7 +80,7 @@ log = logging.getLogger(__name__)
 # And some gammapy specific imports
 #
 
-from gammapy.data import Observation, observatory_locations
+from gammapy.data import FixedPointingInfo, Observation, observatory_locations
 from gammapy.datasets import Datasets, FluxPointsDataset, SpectrumDataset
 from gammapy.estimators import LightCurveEstimator
 from gammapy.irf import load_irf_dict_from_file
@@ -133,8 +133,10 @@ energy_axis_true = MapAxis.from_edges(
 
 geom = RegionGeom.create("galactic;circle(0, 0, 0.11)", axes=[energy_axis])
 
-# Pointing position
-pointing = SkyCoord(0.5, 0.5, unit="deg", frame="galactic")
+# Pointing position to be supplied as a `FixedPointingInfo`
+pointing = FixedPointingInfo(
+    fixed_icrs=SkyCoord(0.5, 0.5, unit="deg", frame="galactic").icrs,
+)
 
 
 ######################################################################
