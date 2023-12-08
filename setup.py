@@ -6,7 +6,6 @@
 
 import os
 import sys
-from extension_helpers import get_extensions
 from setuptools import setup
 
 # First provide helpful messages if contributors try and run legacy commands
@@ -78,5 +77,4 @@ setup(
         "write_to": os.path.join("gammapy", "version.py"),
         "write_to_template": VERSION_TEMPLATE,
     },
-    ext_modules=get_extensions(),
 )
