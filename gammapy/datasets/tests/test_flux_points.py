@@ -135,7 +135,9 @@ def test_flux_point_dataset_with_time_axis(tmp_path):
         rtol=1e-3,
     )
     assert_allclose(flux_points_dataset.stat_sum(), 193.8093, rtol=1e-3)
-    assert_allclose(flux_points_dataset.residuals()[0][0], 9.94782173e-12, rtol=1e-5)
+    assert_allclose(
+        flux_points_dataset.residuals()[0][0].value, 9.94782173e-12, rtol=1e-5
+    )
     Datasets([flux_points_dataset]).write(
         filename=tmp_path / "tmp_datasets.yaml",
         filename_models=tmp_path / "tmp_models.yaml",
