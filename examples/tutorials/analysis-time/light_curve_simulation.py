@@ -313,20 +313,7 @@ display(result.parameters.to_table())
 # temporal model in relative units for one particular energy range
 #
 
-fig, ax = plt.subplots(
-    figsize=(8, 6),
-    gridspec_kw={"left": 0.16, "bottom": 0.2, "top": 0.98, "right": 0.98},
-)
-lc_1TeV_10TeV = lc_1d.slice_by_idx({"energy": slice(2, 3)})
-lc_1TeV_10TeV.plot(ax=ax, sed_type="norm", axis_name="time")
-
-time_range = lc_1TeV_10TeV.geom.axes["time"].time_bounds
-temporal_model1.plot(ax=ax, time_range=time_range, label="Best fit model")
-
-ax.set_yscale("linear")
-ax.legend()
-plt.show()
-
+dataset_fp.plot_spectrum(axis_name="time")
 
 ######################################################################
 # Fit the datasets
