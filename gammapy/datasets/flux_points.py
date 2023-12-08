@@ -282,7 +282,7 @@ class FluxPointsDataset(Dataset):
         # data section
         n_bins = 0
         if self.data is not None:
-            n_bins = np.product(self.data.geom.data_shape)
+            n_bins = np.prod(self.data.geom.data_shape)
         str_ += "\t{:32}: {} \n".format("Number of total flux points", n_bins)
 
         n_fit_bins = 0
