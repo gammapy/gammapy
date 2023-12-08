@@ -8,7 +8,12 @@ from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 from gammapy.maps.axes import UNIT_STRING_FORMAT, MapAxis
-from gammapy.modeling.models import DatasetModels, Models, TemplateSpatialModel
+from gammapy.modeling.models import (
+    DatasetModels,
+    Models,
+    SkyModel,
+    TemplateSpatialModel,
+)
 from gammapy.utils.scripts import make_name, make_path
 from .core import Dataset
 
@@ -109,8 +114,8 @@ class FluxPointsDataset(Dataset):
         name=None,
         meta_table=None,
     ):
-        if data.geom.ndim != 3 or not data.geom.has_energy_axis:
-            raise ValueError("FluxPointsDataset only supports an energy axis")
+        # if data.geom.ndim != 3 or not data.geom.has_energy_axis:
+        #    raise ValueError("FluxPointsDataset only supports an energy axis")
         self.data = data
         self.mask_fit = mask_fit
         self._name = make_name(name)
@@ -118,7 +123,7 @@ class FluxPointsDataset(Dataset):
         self.meta_table = meta_table
 
         if mask_safe is None:
-            mask_safe = (~data.is_ul).data[:, 0, 0]
+            mask_safe = (~data.is_ul).data
 
         self.mask_safe = mask_safe
 
@@ -298,26 +303,35 @@ class FluxPointsDataset(Dataset):
         flux = 0.0
         for model in self.models:
             reference_model = _get_reference_model(model, self._energy_bounds)
-            flux_model = reference_model(self.data.energy_ref)
-
-            if model.temporal_model is not None:
-                integral = model.temporal_model.integral(
-                    self.gti.time_start, self.gti.time_stop
-                )
-                flux_model *= np.sum(integral)
-
+            sky_model = SkyModel(
+                spectral_model=reference_model, temporal_model=model.temporal_model
+            )
+            flux_model = sky_model.evaluate_geom(
+                self.data.geom.as_energy_true, self.gti
+            )
             flux += flux_model
         return flux
+
+        #    flux_model = reference_model(self.data.energy_ref)
+
+        #    if model.temporal_model is not None:
+        #        integral = model.temporal_model.integral(
+        #            self.gti.time_start, self.gti.time_stop
+        #        )
+        #        flux_model *= np.sum(integral)
+
+        #    flux += flux_model
+        # return flux
 
     def stat_array(self):
         """Fit statistic array."""
         model = self.flux_pred()
-        data = self.data.dnde.quantity[:, 0, 0]
+        data = self.data.dnde.quantity
         try:
             sigma = self.data.dnde_err
         except AttributeError:
             sigma = (self.data.dnde_errn + self.data.dnde_errp) / 2
-        return ((data - model) / sigma.quantity[:, 0, 0]).to_value("") ** 2
+        return ((data - model) / sigma.quantity).to_value("") ** 2
 
     def residuals(self, method="diff"):
         """Compute flux point residuals.
@@ -339,9 +353,9 @@ class FluxPointsDataset(Dataset):
 
         model = self.flux_pred()
 
-        residuals = self._compute_residuals(fp.dnde.quantity[:, 0, 0], model, method)
+        residuals = self._compute_residuals(fp.dnde.quantity, model, method)
         # Remove residuals for upper_limits
-        residuals[fp.is_ul.data[:, 0, 0]] = np.nan
+        residuals[fp.is_ul.data] = np.nan
         return residuals
 
     def plot_fit(
