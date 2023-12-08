@@ -2,7 +2,6 @@
 import numpy as np
 import astropy.units as u
 from astropy.table import Table
-from gammapy.irf import EDispKernelMap, PSFMap
 from gammapy.utils.cluster import standard_scaler
 
 __all__ = ["get_irfs_features"]
@@ -47,6 +46,8 @@ def get_irfs_features(
     features : `~astropy.table.Table`
         Features table.
     """
+    from gammapy.irf import EDispKernelMap, PSFMap
+
     if names is None:
         names = ["edisp-bias", "edisp-res", "psf-radius"]
 
