@@ -213,8 +213,8 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
         1,
         unit="",
         interp="log",
-        is_norm=True,
     )
+    scale._is_norm = True
     tag = ["DarkMatterAnnihilationSpectralModel", "dm-annihilation"]
 
     def __init__(self, mass, channel, scale=scale.quantity, jfactor=1, z=0, k=2):
@@ -321,8 +321,9 @@ class DarkMatterDecaySpectralModel(SpectralModel):
         1,
         unit="",
         interp="log",
-        is_norm=True,
     )
+    scale._is_norm = True
+
     tag = ["DarkMatterDecaySpectralModel", "dm-decay"]
 
     def __init__(self, mass, channel, scale=scale.quantity, jfactor=1, z=0):
