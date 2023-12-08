@@ -61,7 +61,7 @@ import matplotlib.pyplot as plt
 
 # %matplotlib inline
 from IPython.display import display
-from gammapy.data import Observation, observatory_locations
+from gammapy.data import FixedPointingInfo, Observation, observatory_locations
 from gammapy.datasets import MapDataset
 from gammapy.irf import load_irf_dict_from_file
 from gammapy.makers import MapDatasetMaker, SafeMaskMaker
@@ -92,7 +92,12 @@ irfs = load_irf_dict_from_file(
 
 # Define the observation parameters (typically the observation duration and the pointing position):
 livetime = 2.0 * u.hr
-pointing = SkyCoord(0, 0, unit="deg", frame="galactic")
+pointing_position = SkyCoord(0, 0, unit="deg", frame="galactic")
+# We want to simulate an observation pointing at a fixed position in the sky.
+# For this, we use the `FixedPointingInfo` class
+pointing = FixedPointingInfo(
+    fixed_icrs=pointing_position.icrs,
+)
 
 # Define map geometry for binned simulation
 energy_reco = MapAxis.from_edges(

@@ -91,7 +91,12 @@ check_tutorials_setup()
 # Define simulation parameters parameters
 livetime = 1 * u.h
 
-pointing = SkyCoord(0, 0, unit="deg", frame="galactic")
+pointing_position = SkyCoord(0, 0, unit="deg", frame="galactic")
+# We want to simulate an observation pointing at a fixed position in the sky.
+# For this, we use the `FixedPointingInfo` class
+pointing = FixedPointingInfo(
+    fixed_icrs=pointing_position.icrs,
+)
 offset = 0.5 * u.deg
 
 # Reconstructed and true energy axis
