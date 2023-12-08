@@ -78,7 +78,31 @@ class EnergyDependenceEstimator(Estimator):
 
         self.fit = fit
 
-    def estimate_source_significance(self, datasets):
+    def _slice_datasets(self, datasets):
+        """Calculate a dataset for each energy slice.
+
+        Parameters
+        ----------
+        datasets : `~gammapy.datasets.Datasets`
+            Input datasets to use.
+
+        Returns
+        -------
+        slices_src : ``~gammapy.datasets.Datasets`
+            Sliced datasets.
+        """
+        model = datasets.models[self.source]
+
+        slices_src = Datasets()
+        for emin, emax in zip(self.energy_edges[:-1], self.energy_edges[1:]):
+            for dataset in datasets:
+                sliced_src = dataset.slice_by_energy(emin, emax)
+                bkg_sliced_model = FoVBackgroundModel(dataset_name=sliced_src.name)
+                sliced_src.models = [model.copy(), bkg_sliced_model]
+                slices_src.append(sliced_src)
+        return slices_src
+
+    def _estimate_source_significance(self, datasets):
         """Estimate the significance of the source above the background.
 
         Parameters
@@ -97,21 +121,7 @@ class EnergyDependenceEstimator(Estimator):
             * "df" : the degrees of freedom between null and alternative hypothesis
             * "significance" : significance of the result
         """
-        for dataset in datasets:
-            dataset.mask_fit = dataset.counts.geom.energy_mask(
-                energy_min=self.energy_edges[0], energy_max=None
-            )
-
-        model = datasets.models[self.source]
-
-        # Calculate the dataset for each energy slice
-        slices_src = Datasets()
-        for emin, emax in zip(self.energy_edges[:-1], self.energy_edges[1:]):
-            for dataset in datasets:
-                sliced_src = dataset.slice_by_energy(emin, emax)
-                bkg_sliced_model = FoVBackgroundModel(dataset_name=sliced_src.name)
-                sliced_src.models = [model.copy(), bkg_sliced_model]
-                slices_src.append(sliced_src)
+        slices_src = self._slice_datasets(datasets)
 
         # Norm is free and fit
         test_results = []
@@ -155,7 +165,7 @@ class EnergyDependenceEstimator(Estimator):
         Parameters
         ----------
         datasets : `~gammapy.datasets.Datasets`
-            Input dataset to use.
+            Input datasets to use.
 
         Returns
         -------
@@ -165,22 +175,10 @@ class EnergyDependenceEstimator(Estimator):
             * "df" : the degrees of freedom between fitting each energy band individually (sliced fit) and the joint fit
             * "result" : the results for the fitting each energy band individually (sliced fit) and the joint fit
         """
-        for dataset in datasets:
-            dataset.mask_fit = dataset.counts.geom.energy_mask(
-                energy_min=self.energy_edges[0], energy_max=None
-            )
-
         model = datasets.models[self.source]
 
         # Calculate the individually sliced components
-        slices_src = Datasets()
-        for emin, emax in zip(self.energy_edges[:-1], self.energy_edges[1:]):
-            for dataset in datasets:
-                sliced_src = dataset.slice_by_energy(emin, emax)
-                bkg_sliced_model = FoVBackgroundModel(dataset_name=sliced_src.name)
-                sliced_src.models = [model.copy(), bkg_sliced_model]
-                slices_src.append(sliced_src)
-
+        slices_src = self._slice_datasets(datasets)
         results_src = []
         for sliced in slices_src:
             results_src.append(self.fit.run(sliced))
@@ -242,13 +240,13 @@ class EnergyDependenceEstimator(Estimator):
 
         return dict(delta_ts=delta_ts_joint, df=df, result=result)
 
-    def run(self, dataset):
+    def run(self, datasets):
         """Run the energy-dependence estimator.
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.MapDataset`
-            Input dataset to use.
+        datasets : `~gammapy.datasets.Datasets`
+            Input datasets to use.
 
         Returns
         -------
@@ -256,13 +254,11 @@ class EnergyDependenceEstimator(Estimator):
             Dictionary with the various energy-dependence estimation values.
         """
 
-        if not isinstance(dataset, Datasets):
-            raise ValueError("Unsupported dataset type.")
+        if not isinstance(datasets, Datasets) or datasets.is_all_same_type is False:
+            raise ValueError("Unsupported datasets type.")
 
-        results = self.estimate_energy_dependence(dataset)
-        results = dict(
-            energy_dependence=results,
-            src_above_bkg=self.estimate_source_significance(dataset),
-        )
+        results = {}
+        results["energy_dependence"] = self.estimate_energy_dependence(datasets)
+        results["src_above_bkg"] = self._estimate_source_significance(datasets)
 
         return results

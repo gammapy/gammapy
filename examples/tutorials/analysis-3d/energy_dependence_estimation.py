@@ -201,24 +201,24 @@ estimator = EnergyDependenceEstimator(energy_edges=energy_edges, source="MSH1552
 # The results of the source signal above the background in each energy bin
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# The table shows the ∆(TS) value, the number of degrees of freedom (df)
+# Firstly, the estimator is run to produce the results.
+# The table here shows the ∆(TS) value, the number of degrees of freedom (df)
 # and the significance (σ) in each energy bin. The significance values here show that each
 # energy band has significant signal above the background.
 #
 
-result_bkg_src = estimator.estimate_source_significance(datasets)
-table_bkg_src = Table(result_bkg_src)
+results = estimator.run(datasets)
+table_bkg_src = Table(results["src_above_bkg"])
 display(table_bkg_src)
 
 ######################################################################
 # The results for testing energy dependence
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# Next, the estimator is run to produce the results of the energy-dependent estimator.
+# Next, the results of the energy-dependent estimator are shown.
 # The table shows the various free parameters for the joint fit for :math:`H_0` across the entire
 # energy band and for each energy bin shown for :math:`H_1`.
 
-results = estimator.run(datasets)
 ts = results["energy_dependence"]["delta_ts"]
 df = results["energy_dependence"]["df"]
 sigma = ts_to_sigma(ts, df=df)

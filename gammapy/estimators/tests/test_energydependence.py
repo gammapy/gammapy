@@ -1,8 +1,7 @@
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
-from astropy.coordinates import SkyCoord
-from astropy.coordinates.angle_utilities import angular_separation
+from astropy.coordinates import SkyCoord, angular_separation
 from gammapy.data import Observation, observatory_locations
 from gammapy.data.pointing import FixedPointingInfo, PointingMode
 from gammapy.datasets import Datasets, MapDataset
@@ -163,21 +162,21 @@ def test_edep():
     results_edep = results["energy_dependence"]["result"]
     assert_allclose(
         results_edep["lon_0"],
-        [5.59758936, 5.59883752, 5.59508081, 5.60370771] * u.deg,
+        [5.5998565, 5.6019022, 5.5950808, 5.6037077] * u.deg,
         atol=1e-5,
     )
     assert_allclose(
         results_edep["lat_0"],
-        [0.19058239, 0.20215059, 0.18426731, 0.17378267] * u.deg,
+        [0.19172701, 0.20034268, 0.18426731, 0.17378267] * u.deg,
         atol=1e-5,
     )
     assert_allclose(
         results_edep["sigma"],
-        [0.22264514, 0.25998229, 0.1891126, 0.18796409] * u.deg,
+        [0.24587518, 0.2803327, 0.1891126, 0.18796409] * u.deg,
         atol=1e-5,
     )
     assert_allclose(
-        results["energy_dependence"]["delta_ts"], 56.38850999822898, atol=1e-5
+        results["energy_dependence"]["delta_ts"], 106.24408925812168, atol=1e-5
     )
 
 
@@ -185,7 +184,7 @@ def test_significance():
     results_src = results["src_above_bkg"]
     assert_allclose(
         results_src["delta_ts"],
-        [1546.2458570901, 1168.6506571890714, 435.2570648315741],
+        [2829.929195159726, 1168.6506571890714, 435.2570648315741],
         atol=1e-5,
     )
     assert_allclose(
@@ -198,5 +197,5 @@ def test_significance():
 def test_chi2():
     results_edep = results["energy_dependence"]["result"]
     chi2_sigma = weighted_chi2_parameter(results_edep, parameter="sigma")
-    assert_allclose(chi2_sigma["chi2 sigma"], [52.510946417517644], atol=1e-5)
-    assert_allclose(chi2_sigma["significance"], [6.938700011859214], atol=1e-5)
+    assert_allclose(chi2_sigma["chi2 sigma"], [112.94799861481167], atol=1e-5)
+    assert_allclose(chi2_sigma["significance"], [10.382582300984913], atol=1e-5)
