@@ -154,7 +154,7 @@ def select_nested_models(
 
     Examples
     --------
-    ::
+    .. testcode::
 
         from gammapy.modeling.selection import select_nested_models
         from gammapy.datasets import Datasets, SpectrumDatasetOnOff
