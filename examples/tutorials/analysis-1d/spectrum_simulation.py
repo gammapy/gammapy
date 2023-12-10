@@ -60,7 +60,7 @@ import matplotlib.pyplot as plt
 # -----
 #
 from IPython.display import display
-from gammapy.data import Observation, observatory_locations
+from gammapy.data import FixedPointingInfo, Observation, observatory_locations
 from gammapy.datasets import Datasets, SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.irf import load_irf_dict_from_file
 from gammapy.makers import SpectrumDatasetMaker
@@ -109,7 +109,9 @@ energy_axis_true = MapAxis.from_edges(
 
 on_region_radius = Angle("0.11 deg")
 
-center = pointing.directional_offset_by(position_angle=0 * u.deg, separation=offset)
+center = pointing_position.directional_offset_by(
+    position_angle=0 * u.deg, separation=offset
+)
 on_region = CircleSkyRegion(center=center, radius=on_region_radius)
 
 # Define spectral model - a simple Power Law in this case
