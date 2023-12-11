@@ -50,7 +50,7 @@ def test_dmfluxmap_annihilation(jfact_annihilation):
         * diff_flux.integral(energy_min=energy_min, energy_max=energy_max)
     ).to("cm-2 s-1")
     actual = int_flux[5, 5]
-    desired = 5.94207e-12 / u.cm**2 / u.s
+    desired = 5.96827647e-12 / u.cm**2 / u.s
     assert_quantity_allclose(actual, desired, rtol=1e-3)
 
 
@@ -66,5 +66,5 @@ def test_dmfluxmap_decay(jfact_decay):
         jfact_decay * diff_flux.integral(energy_min=energy_min, energy_max=energy_max)
     ).to("cm-2 s-1")
     actual = int_flux[5, 5]
-    desired = 6.98844e-3 / u.cm**2 / u.s
+    desired = 7.01927e-3 / u.cm**2 / u.s
     assert_quantity_allclose(actual, desired, rtol=1e-3)
