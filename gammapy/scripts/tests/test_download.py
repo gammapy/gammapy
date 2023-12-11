@@ -58,7 +58,6 @@ def test_cli_download_notebooks_dev(tmp_path):
 @requires_dependency("tqdm")
 @pytest.mark.remote_data
 def test_cli_download_datasets(tmp_path):
-    # TODO: this test downloads all datasets which is really slow...
     option_out = f"--out={tmp_path}"
 
     args = ["download", "datasets", option_out]
