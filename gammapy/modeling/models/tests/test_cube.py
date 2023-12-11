@@ -459,7 +459,7 @@ class Test_Template_with_cube:
         assert model.map.unit == "cm-2 s-1 MeV-1 sr-1"
 
         # Check pixel inside map
-        val = model.evaluate(0 * u.deg, 0 * u.deg, 100 * u.GeV)
+        val = model.evaluate(0 * u.deg, 0 * u.deg, energy=100 * u.GeV)
         assert val.unit == "cm-2 s-1 MeV-1 sr-1"
         assert val.shape == (1,)
         assert_allclose(val.value, 1.395156e-12, rtol=1e-5)
