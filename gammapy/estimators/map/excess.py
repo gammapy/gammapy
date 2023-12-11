@@ -20,7 +20,7 @@ log = logging.getLogger(__name__)
 
 
 def convolved_map_dataset_counts_statistics(dataset, kernel, mask, correlate_off):
-    """Return CountsDataset objects containing smoothed maps from the MapDataset.
+    """Return a `CountsStatistic` object.
 
     Parameters
     ----------
@@ -35,8 +35,8 @@ def convolved_map_dataset_counts_statistics(dataset, kernel, mask, correlate_off
 
     Returns
     -------
-    counts_dataset : `~gammapy.stats.CashCountsStatistic` or `~gammapy.stats.WStatCountsStatistic`
-        The CountsDataset.
+    counts_statistic : `~gammapy.stats.CashCountsStatistic` or `~gammapy.stats.WStatCountsStatistic`
+        The counts statistic.
     """
     # Kernel is modified later make a copy here
     kernel = copy.deepcopy(kernel)
