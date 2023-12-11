@@ -1290,7 +1290,6 @@ class TemplateSpatialModel(SpatialModel):
         interp_kwargs=None,
         filename=None,
         copy_data=True,
-        parameters=None,
         **kwargs,
     ):
         if (map.data < 0).any():
@@ -1340,13 +1339,11 @@ class TemplateSpatialModel(SpatialModel):
         self._interp_kwargs = interp_kwargs
         self.filename = filename
         kwargs["frame"] = self.map.geom.frame
+        if not "lon_0" in kwargs:
+            kwargs["lon_0"] = self.map_center.data.lon
+        if not "lat_0" in kwargs:
+            kwargs["lat_0"] = self.map_center.data.lat
         super().__init__(**kwargs)
-        if parameters is None:
-            self.lon_0.quantity = self.map_center.data.lon
-            self.lat_0.quantity = self.map_center.data.lat
-        else:
-            self.lon_0 = parameters["lon_0"]
-            self.lat_0 = parameters["lat_0"]
 
     def __str__(self):
         width = self.map.geom.width
@@ -1467,12 +1464,9 @@ class TemplateSpatialModel(SpatialModel):
         normalize = data.get("normalize", True)
         m = Map.read(filename)
         pars = data.get("parameters")
-        parameters = (
-            pars
-            if pars is None
-            else _build_parameters_from_dict(pars, cls.default_parameters)
-        )
-        return cls(m, normalize=normalize, filename=filename, parameters=parameters)
+        if pars is not None: 
+                kwargs = {par.name:par for par in _build_parameters_from_dict(pars, cls.default_parameters)}
+        return cls(m, normalize=normalize, filename=filename, **kwargs)
 
     def to_dict(self, full_output=False):
         """Create dictionary for YAML serilisation."""
