@@ -431,6 +431,10 @@ class FixedPointingInfo:
             Pointing position in alt-az frame.
         """
         location = location if location is not None else self._location
+
+        if location is None:
+            return SkyCoord(self._legacy_altaz)
+
         frame = AltAz(location=location, obstime=obstime)
 
         if self.mode == PointingMode.POINTING:

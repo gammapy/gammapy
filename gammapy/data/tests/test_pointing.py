@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import logging
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
@@ -164,7 +163,7 @@ class TestFixedPointingInfo:
         assert_time_allclose(self.fpi._time_stop, expected)
 
     def test_fixed_altaz(self):
-        assert_time_allclose(self.fpi._fixed_altaz, None)
+        assert self.fpi._fixed_altaz is None
 
     def test_fixed_icrs(self):
         fixed_icrs = self.fpi._fixed_icrs
@@ -232,25 +231,21 @@ class TestPointingInfo:
         assert pos.name == "altaz"
 
 
-def test_altaz_without_location(caplog):
+def test_altaz_without_location():
     meta = {"ALT_PNT": 20.0, "AZ_PNT": 170.0}
     with pytest.warns(GammapyDeprecationWarning):
         pointing = FixedPointingInfo(meta)
 
-    with caplog.at_level(logging.WARNING):
-        with pytest.warns(GammapyDeprecationWarning):
-            altaz = pointing.altaz
-        assert altaz.alt.deg == 20.0
-        assert altaz.az.deg == 170.0
+    altaz = pointing.get_altaz()
+    assert altaz.alt.deg == 20.0
+    assert altaz.az.deg == 170.0
 
     with pytest.warns(GammapyDeprecationWarning):
         pointing = FixedPointingInfo({})
 
-    with caplog.at_level(logging.WARNING):
-        with pytest.warns(GammapyDeprecationWarning):
-            altaz = pointing.altaz
-        assert np.isnan(altaz.alt.value)
-        assert np.isnan(altaz.az.value)
+    altaz = pointing.get_altaz()
+    assert np.isnan(altaz.alt.value)
+    assert np.isnan(altaz.az.value)
 
 
 @pytest.mark.parametrize(
