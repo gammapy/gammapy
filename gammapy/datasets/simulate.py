@@ -583,6 +583,15 @@ class MapDatasetEventSampler:
 class SimulatedObservationMaker(MapDatasetEventSampler):
     """
     Sample event lists for a given observation and signal models.
+
+    Signal events are sampled from the given sky models and then
+    folded with the instrument response functions.
+    To improve performance, IRFs are evaluated on a pre-defined binning,
+    not at each individual event energy / coordinate.
+
+    Parameters
+    ----------
+
     """
 
     def __init__(
@@ -625,7 +634,7 @@ class SimulatedObservationMaker(MapDatasetEventSampler):
         if models is None:
             models = Models()
 
-        if observation.pointing.pointing_mode is not PointingMode.POINTING:
+        if observation.pointing.mode is not PointingMode.POINTING:
             raise NotImplementedError(
                 "Only observations with fixed pointing in ICRS are supported"
             )
@@ -644,7 +653,7 @@ class SimulatedObservationMaker(MapDatasetEventSampler):
         )
         if observation.edisp is not None:
             components.append("edisp")
-            axes["mira_axis"] = observation.edisp.axes["migra"]
+            axes["migra_axis"] = observation.edisp.axes["migra"]
         if observation.bkg is not None:
             components.append("background")
         if observation.psf is not None:
@@ -658,11 +667,10 @@ class SimulatedObservationMaker(MapDatasetEventSampler):
 
         maker = MapDatasetMaker(selection=components)
         dataset = maker.run(dataset, observation)
-        models.append(FoVBackgroundModel(dataset_name="simulated-dataset"))
         dataset.models = models
 
         events = None
-        if len(models) > 1:
+        if len(models) > 0:
             events = self.sample_sources(dataset)
 
             if len(events.table) > 0:
@@ -672,12 +680,17 @@ class SimulatedObservationMaker(MapDatasetEventSampler):
                 if dataset.edisp is not None:
                     events = self.sample_edisp(dataset.edisp, events)
 
+        # add background
         if dataset.background is not None:
+            dataset.models.append(FoVBackgroundModel(dataset_name="simulated-dataset"))
             events_bkg = self.sample_background(dataset)
             if events is not None:
                 events = EventList.from_stack([events_bkg, events])
             else:
                 events = events_bkg
+
+        if events is None:
+            events = EventList(Table())
 
         geom = dataset._geom
         selection = geom.contains(events.map_coord(geom))
