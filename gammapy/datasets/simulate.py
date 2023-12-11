@@ -582,7 +582,7 @@ class MapDatasetEventSampler:
 
 class SimulatedObservationMaker(MapDatasetEventSampler):
     """
-    Sample event lists for a given observation.
+    Sample event lists for a given observation and signal models.
     """
 
     def __init__(
@@ -600,18 +600,24 @@ class SimulatedObservationMaker(MapDatasetEventSampler):
         self.bin_size = map_bin_size
 
     def run(self, observation: Observation, models=None):
-        """Run the event sampler, applying IRF corrections.
+        """Sample events for given observation and signal models.
+
+        The signal distribution is sampled from the given models
+        in true coordinates and energy. The true quantities are
+        then folded with the IRFs to obtain the observable quantities.
 
         Parameters
         ----------
         observation : `~gammapy.data.Observation`
             Observation to be simulated.
         models : `~gammapy.modeling.Models`
+            Signal models to simulate.
+            Can be None to only sample background events.
 
         Returns
         -------
-        events : `~gammapy.data.EventList`
-            Event list.
+        observation : `~gammapy.data.Observation`
+            A copy of the input observation with event list filled.
         """
         # import here to prevent circular import
         from gammapy.makers import MapDatasetMaker
