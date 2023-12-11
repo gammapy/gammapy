@@ -80,10 +80,7 @@ class HDULocation:
         return hdu_list[self.hdu_name]
 
     def load(self):
-        """Load HDU as appropriate class.
-
-        TODO: this should probably go via an extensible registry.
-        """
+        """Load HDU as appropriate class."""
         from gammapy.irf import IRF_REGISTRY
 
         hdu_class = self.hdu_class
