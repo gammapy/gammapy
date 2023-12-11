@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-from astropy.coordinates import Angle
+from astropy.coordinates import Angle, SkyCoord
 from gammapy.datasets import MapDataset, MapDatasetOnOff
 from gammapy.estimators import TSMapEstimator
 from gammapy.irf import EDispKernelMap, PSFMap
@@ -13,6 +13,7 @@ from gammapy.modeling.models import (
     PointSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
+    TemplateSpatialModel,
 )
 from gammapy.utils.testing import requires_data, requires_dependency
 
@@ -341,3 +342,21 @@ def test_MapDatasetOnOff_error():
     ts_estimator = TSMapEstimator()
     with pytest.raises(TypeError):
         ts_estimator.run(dataset=dataset_on_off)
+
+
+@requires_data()
+def test_with_TemplateSpatialModel():
+    # Test for bug reported in 4920
+    dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
+    filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits"
+    model = TemplateSpatialModel.read(filename, normalize=False)
+    model.position = SkyCoord(0, 0, unit="deg", frame="galactic")
+    sky_model = SkyModel(spatial_model=model, spectral_model=PowerLawSpectralModel())
+    dataset.models = sky_model
+    estimator = TSMapEstimator(
+        model=sky_model,
+        energy_edges=[1.0, 5.0] * u.TeV,
+    )
+
+    result = estimator.run(dataset)
+    assert_allclose(result["sqrt_ts"].data[0, 120, 160], 22.342, rtol=1e-3)

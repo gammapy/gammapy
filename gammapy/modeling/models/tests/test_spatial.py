@@ -368,6 +368,12 @@ def test_sky_diffuse_map(caplog):
     with pytest.raises(TypeError):
         model.plot_grid()
 
+    # change central position
+    model.lon_0.value = 12.0
+    model.lat_0.value = 6
+    val = model([11.8, 12.8] * u.deg, 6.1 * u.deg)
+    assert_allclose(val.value, [2850.8103, 89.629447], rtol=1e-3)
+
 
 @requires_data()
 @requires_dependency("ipywidgets")

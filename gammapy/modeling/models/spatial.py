@@ -1340,6 +1340,8 @@ class TemplateSpatialModel(SpatialModel):
         self.filename = filename
         kwargs["frame"] = self.map.geom.frame
         super().__init__(**kwargs)
+        self.lon_0.quantity = self.map_center.data.lon
+        self.lat_0.quantity = self.map_center.data.lat
 
     def __str__(self):
         width = self.map.geom.width
@@ -1432,13 +1434,15 @@ class TemplateSpatialModel(SpatialModel):
         clipped to zero.
         """
 
-        # if lon_0 and lat_0:
-        #    offset_lon = np.sqrt(self.map_center**2 - lon_0**2)
-        #    offset_lat = np.sqrt(**2 - lat_0**2)
+        if lon_0 is None:
+            offset_lon, offset_lat = 0.0 * u.deg, 0.0 * u.deg
+        else:
+            offset_lon = lon_0 - self.map_center.data.lon
+            offset_lat = lat_0 - self.map_center.data.lat
 
         coord = {
-            "lon": (lon - lon_0).to_value("deg"),
-            "lat": (lat - lat_0).to_value("deg"),
+            "lon": (lon - offset_lon).to_value("deg"),
+            "lat": (lat - offset_lat).to_value("deg"),
         }
         if energy is not None:
             coord["energy_true"] = energy
