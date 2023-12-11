@@ -1352,7 +1352,7 @@ class TemplateSpatialModel(SpatialModel):
 
         prnt = (
             f"{self.__class__.__name__} model summary:\n "
-            f"Reference position: {self.position} \n "
+            f"Model center: {self.position} \n "
             f"Map center: {self.map_center} \n "
             f"Map width: {width} \n "
             f"Data min: {data_min} \n"
