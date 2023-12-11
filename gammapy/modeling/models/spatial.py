@@ -25,7 +25,7 @@ from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.interpolation import interpolation_scale
 from gammapy.utils.regions import region_circle_to_ellipse, region_to_frame
 from gammapy.utils.scripts import make_path
-from .core import ModelBase
+from .core import ModelBase, _build_parameters_from_dict
 
 __all__ = [
     "ConstantFluxSpatialModel",
@@ -1290,6 +1290,7 @@ class TemplateSpatialModel(SpatialModel):
         interp_kwargs=None,
         filename=None,
         copy_data=True,
+        parameters=None,
         **kwargs,
     ):
         if (map.data < 0).any():
@@ -1340,8 +1341,12 @@ class TemplateSpatialModel(SpatialModel):
         self.filename = filename
         kwargs["frame"] = self.map.geom.frame
         super().__init__(**kwargs)
-        self.lon_0.quantity = self.map_center.data.lon
-        self.lat_0.quantity = self.map_center.data.lat
+        if parameters is None:
+            self.lon_0.quantity = self.map_center.data.lon
+            self.lat_0.quantity = self.map_center.data.lat
+        else:
+            self.lon_0 = parameters["lon_0"]
+            self.lat_0 = parameters["lat_0"]
 
     def __str__(self):
         width = self.map.geom.width
@@ -1427,18 +1432,15 @@ class TemplateSpatialModel(SpatialModel):
         m = Map.read(filename, **kwargs)
         return cls(m, normalize=normalize, filename=filename)
 
-    def evaluate(self, lon, lat, lon_0=None, lat_0=None, energy=None):
+    def evaluate(self, lon, lat, energy=None, lon_0=None, lat_0=None):
         """Evaluate the model at given coordinates.
 
         Note that, if the map data assume negative values, these are
         clipped to zero.
         """
 
-        if lon_0 is None:
-            offset_lon, offset_lat = 0.0 * u.deg, 0.0 * u.deg
-        else:
-            offset_lon = lon_0 - self.map_center.data.lon
-            offset_lat = lat_0 - self.map_center.data.lat
+        offset_lon = 0.0 * u.deg if lon_0 is None else lon_0 - self.map_center.data.lon
+        offset_lat = 0.0 * u.deg if lat_0 is None else lat_0 - self.map_center.data.lat
 
         coord = {
             "lon": (lon - offset_lon).to_value("deg"),
@@ -1464,7 +1466,13 @@ class TemplateSpatialModel(SpatialModel):
         filename = data["filename"]
         normalize = data.get("normalize", True)
         m = Map.read(filename)
-        return cls(m, normalize=normalize, filename=filename)
+        pars = data.get("parameters")
+        parameters = (
+            pars
+            if pars is None
+            else _build_parameters_from_dict(pars, cls.default_parameters)
+        )
+        return cls(m, normalize=normalize, filename=filename, parameters=parameters)
 
     def to_dict(self, full_output=False):
         """Create dictionary for YAML serilisation."""
