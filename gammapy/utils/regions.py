@@ -242,7 +242,7 @@ def region_to_frame(region, frame):
     ----------
     region : `~regions.SkyRegion`
         Region to transform.
-    frame : "icrs" or "galactic"
+    frame : {"icrs", "galactic"}
         Frame to transform the region into.
 
     Returns

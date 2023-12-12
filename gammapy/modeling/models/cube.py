@@ -601,7 +601,7 @@ class SkyModel(ModelBase):
 
         Parameters
         ----------
-        model_type : {None, "spatial", "spectral", "temporal"}, optional
+        model_type : {None, "spatial", "spectral", "temporal"}
            Freeze all parameters or only spatial/spectral/temporal.
            Default is None, such that all parameters are frozen.
         """
@@ -616,7 +616,7 @@ class SkyModel(ModelBase):
 
         Parameters
         ----------
-        model_type : {None, "spatial", "spectral", "temporal"}, optional
+        model_type : {None, "spatial", "spectral", "temporal"}
            Restore frozen status to default for all parameters or only spatial/spectral/temporal.
            Default is None, such that all parameters are restored to default frozen status.
 
@@ -1043,7 +1043,7 @@ class TemplateNPredModel(ModelBase):
         width : tuple of `~astropy.coordinates.Angle`
             Angular sizes of the region in (lon, lat) in that specific order.
             If only one value is passed, a square region is extracted.
-        mode : {'trim', 'partial', 'strict'}, optional
+        mode : {'trim', 'partial', 'strict'}
             Mode option for Cutout2D, for details see `~astropy.nddata.utils.Cutout2D`.
             Default is "trim".
         name : str, optional

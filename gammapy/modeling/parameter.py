@@ -733,7 +733,7 @@ class Parameters(collections.abc.Sequence):
         ----------
         name : str or list, optional
             Name of the parameter. Default is None.
-        type : {None, spatial, spectral, temporal}, optional
+        type : {None, spatial, spectral, temporal}
             Type of models. Default is None.
         frozen : bool, optional
             Select frozen parameters if True, exclude them if False. Default is None.
