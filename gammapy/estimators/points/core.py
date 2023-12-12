@@ -121,7 +121,7 @@ class FluxPoints(FluxMaps):
             Filename.
         sed_type : {"dnde", "flux", "eflux", "e2dnde", "likelihood"}
             SED type.
-        format : {"gadf-sed", "lightcurve"}, optional
+        format : {"gadf-sed", "lightcurve"}
             Format string. Default is "gadf-sed".
         reference_model : `SpectralModel`
             Reference spectral model.
