@@ -231,23 +231,6 @@ class TestPointingInfo:
         assert pos.name == "altaz"
 
 
-def test_altaz_without_location():
-    meta = {"ALT_PNT": 20.0, "AZ_PNT": 170.0}
-    with pytest.warns(GammapyDeprecationWarning):
-        pointing = FixedPointingInfo(meta)
-
-    altaz = pointing.get_altaz()
-    assert altaz.alt.deg == 20.0
-    assert altaz.az.deg == 170.0
-
-    with pytest.warns(GammapyDeprecationWarning):
-        pointing = FixedPointingInfo({})
-
-    altaz = pointing.get_altaz()
-    assert np.isnan(altaz.alt.value)
-    assert np.isnan(altaz.az.value)
-
-
 @pytest.mark.parametrize(
     ("obs_mode"),
     [
