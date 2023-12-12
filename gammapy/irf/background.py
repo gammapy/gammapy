@@ -134,6 +134,7 @@ class Background3D(BackgroundIRF):
         This takes the values at Y = 0 and X >= 0.
         """
         # TODO: this is incorrect as it misses the Jacobian?
+
         idx_lon = self.axes["fov_lon"].coord_to_idx(0 * u.deg)[0]
         idx_lat = self.axes["fov_lat"].coord_to_idx(0 * u.deg)[0]
         data = self.quantity[:, idx_lon:, idx_lat].copy()
@@ -245,10 +246,16 @@ class Background2D(BackgroundIRF):
 
     def to_3d(self):
         """Convert to Background3D."""
+        offsets = self.axes["offset"].edges
+        edges_neg = np.negative(offsets)[::-1][:-1]
+        if (offsets < 0.0).any():
+            edges_pos = offsets[1:]
+        else:
+            edges_pos = offsets
         edges = np.concatenate(
             (
-                np.negative(self.axes["offset"].edges)[::-1][:-1],
-                self.axes["offset"].edges,
+                edges_neg,
+                edges_pos,
             )
         )
         fov_lat = MapAxis.from_edges(edges=edges, name="fov_lat")
