@@ -199,7 +199,7 @@ def test_wcsgeom_solid_angle():
     solid_angle = geom.solid_angle()
 
     # Check array size
-    assert solid_angle.shape == (2, npix, npix)
+    assert solid_angle.shape == (1, npix, npix)
 
     # Test at b = 0 deg
     assert solid_angle.unit == "sr"
