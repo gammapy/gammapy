@@ -574,7 +574,7 @@ class Observation:
             Path for the output file.
         overwrite : bool, optional
             Overwrite existing file. Default is False.
-        format : str, optional
+        format : {"gadf"}
             Output format, currently only "gadf" is supported. Default is "gadf".
         include_irfs : bool, optional
             Whether to include irf components in the output file. Default is True.
