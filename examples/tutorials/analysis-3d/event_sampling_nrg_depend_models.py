@@ -262,7 +262,8 @@ models = [model, bkg_model]
 path = Path("$GAMMAPY_DATA/cta-caldb")
 irf_filename = "Prod5-South-20deg-AverageAz-14MSTs37SSTs.180000s-v0.1.fits.gz"
 
-pointing = SkyCoord(100.0, 30.0, frame="icrs", unit="deg")
+pointing_position = SkyCoord(100.0, 30.0, frame="icrs", unit="deg")
+pointing = FixedPointingInfo(fixed_icrs=pointing_position.icrs)
 livetime = 1 * u.hr
 
 irfs = load_irf_dict_from_file(path / irf_filename)
@@ -285,7 +286,7 @@ energy_axis_true = MapAxis.from_energy_bounds(
 migra_axis = MapAxis.from_bounds(0.5, 2, nbin=150, node_type="edges", name="migra")
 
 geom = WcsGeom.create(
-    skydir=pointing,
+    skydir=pointing_position,
     width=(2, 2),
     binsz=0.02,
     frame="icrs",
