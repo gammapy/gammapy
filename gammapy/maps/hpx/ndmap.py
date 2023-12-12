@@ -117,7 +117,7 @@ class HpxNDMap(HpxMap):
             HEALPix NSIDE parameter for super pixel tiles. Default is 4.
         margin : Angle, optional
             Width margin of the WCS tile. Default is "0 deg".
-        method : {'nearest', 'linear'}, optional
+        method : {'nearest', 'linear'}
             Interpolation method. Default is "nearest".
         oversampling_factor : int, optional
             Oversampling factor. Default is 1.
@@ -551,7 +551,7 @@ class HpxNDMap(HpxMap):
         kernel : `~gammapy.irf.PSFKernel`
             Convolution kernel. The pixel size must be upsampled by a factor 2 or bigger
             with respect to the input map to prevent artifacts in the projection.
-        convolution_method : {"wcs-tan", ""}, optional
+        convolution_method : {"wcs-tan", ""}
             Convolution method. If "wcs-tan", project on WCS geometry and
             convolve with WCS kernel. See `~gammapy.maps.HpxNDMap.convolve_wcs`.
             If "", convolve map with a symmetrical WCS kernel. See `~gammapy.maps.HpxNDMap.convolve_full`.
@@ -868,7 +868,7 @@ class HpxNDMap(HpxMap):
         weights : `WcsNDMap`, optional
             Array to be used as weights. The geometry must be equivalent.
             Default is None.
-        method : {"nearest", "linear"}, optional
+        method : {"nearest", "linear"}
             How to interpolate if a position is given.
             Default is "neraest".
 
@@ -925,7 +925,7 @@ class HpxNDMap(HpxMap):
 
         Parameters
         ----------
-        method : {'raster','poly'}, optional
+        method : {'raster','poly'}
             Method for mapping HEALPix pixels to a two-dimensional
             image. Can be set to 'raster' (rasterization to cartesian
             image plane) or 'poly' (explicit polygons for each pixel).
@@ -1066,7 +1066,7 @@ class HpxNDMap(HpxMap):
 
         Parameters
         ----------
-        method : {'raster','poly'}, optional
+        method : {'raster','poly'}
             Method for mapping HEALPix pixels to a two-dimensional
             image. Can be set to 'raster' (rasterization to cartesian
             image plane) or 'poly' (explicit polygons for each pixel).

@@ -463,7 +463,7 @@ class RegionNDMap(Map):
         ----------
         filename : `pathlib.Path` or str
             Filename.
-        format : {"gadf", "ogip", "ogip-arf"}, optional
+        format : {"gadf", "ogip", "ogip-arf"}
             Which format to use. Default is "gadf".
         ogip_column : {None, "COUNTS", "QUALITY", "BACKSCAL"}, optional
             If format 'ogip' is chosen which table hdu column to read.
@@ -494,7 +494,7 @@ class RegionNDMap(Map):
             Filename.
         overwrite : bool, optional
             Overwrite existing file. Default is False.
-        format : {"gadf", "ogip", "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"}, optional
+        format : {"gadf", "ogip", "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"}
             Which format to use. Default is "gadf".
         hdu : str, optional
             Name of the HDU. Default is "SKYMAP".
@@ -512,7 +512,7 @@ class RegionNDMap(Map):
 
         Parameters
         ----------
-        format : {"gadf", "ogip", "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"}, optional
+        format : {"gadf", "ogip", "ogip-sherpa", "ogip-arf", "ogip-arf-sherpa"}
             Format specification. Default is "gadf".
         hdu : str, optional
             Name of the HDU with the map data, used for "gadf" format.
@@ -630,7 +630,7 @@ class RegionNDMap(Map):
         ----------
         hdulist : `~astropy.io.fits.HDUList`
             HDU list.
-        format : {"gadf", "ogip", "ogip-arf"}, optional
+        format : {"gadf", "ogip", "ogip-arf"}
             Format specification. Default is "gadf".
         ogip_column : {"COUNTS", "QUALITY", "BACKSCAL"}, optional
             If format 'ogip' is chosen which table HDU column to read.
@@ -712,7 +712,7 @@ class RegionNDMap(Map):
 
         Parameters
         ----------
-        format : {"gadf", "ogip", "ogip-arf", "ogip-arf-sherpa"}, optional
+        format : {"gadf", "ogip", "ogip-arf", "ogip-arf-sherpa"}
             Format specification. Default is "gadf".
 
         Returns

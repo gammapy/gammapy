@@ -201,7 +201,7 @@ class MapCoord:
         ----------
         data : tuple, dict, `~gammapy.maps.MapCoord` or `~astropy.coordinates.SkyCoord`
             Object containing coordinate arrays.
-        frame : {"icrs", "galactic", None}, optional
+        frame : {"icrs", "galactic", None}
             Set the coordinate system for longitude and latitude. If
             None longitude and latitude will be assumed to be in
             the coordinate system native to a given map geometry. Default is None.

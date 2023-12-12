@@ -678,7 +678,7 @@ class RegionGeom(Geom):
 
         Parameters
         ----------
-        format : {"gadf", "ogip", "ogip-sherpa"}, optional
+        format : {"gadf", "ogip", "ogip-sherpa"}
             HDU format. Default is "ogip".
         hdu_bands : str, optional
             Name or index of the HDU with the BANDS table.
@@ -754,7 +754,7 @@ class RegionGeom(Geom):
         ----------
         hdulist : `~astropy.io.fits.HDUList`
             HDU list.
-        format : {"ogip", "ogip-arf", "gadf"}, optional
+        format : {"ogip", "ogip-arf", "gadf"}
             HDU format. Default is "ogip".
         hdu : str, optional
             Name of the HDU. Default is None.
