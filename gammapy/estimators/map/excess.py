@@ -26,7 +26,7 @@ def convolved_map_dataset_counts_statistics(dataset, kernel, mask, correlate_off
     ----------
     dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.MapDatasetOnOff`
         Map dataset.
-    kernel : `~astropy.convolution.Tophat2DKernel`
+    kernel : `~astropy.convolution.Kernel`
         Kernel.
     mask : `~gammapy.maps.Map`
         Mask map.
