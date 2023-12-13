@@ -6,6 +6,7 @@ from astropy.io import fits
 from astropy.table import Column, Table
 from gammapy.utils.fits import earth_location_from_dict, earth_location_to_dict
 from gammapy.utils.scripts import make_path
+from gammapy.utils.testing import requires_data
 
 
 @pytest.fixture()
@@ -55,7 +56,7 @@ def test_table_fits_io_astropy(table):
     # that we still support, so we're not asserting on that here for now.
 
 
-# @requires_data()
+@requires_data()
 def test_earth_location_from_dict(header):
     location = earth_location_from_dict(header)
 
@@ -64,6 +65,7 @@ def test_earth_location_from_dict(header):
     assert_allclose(location.height.value, 1834.999999, rtol=1e-4)
 
 
+@requires_data()
 def test_earth_location_to_dict(header):
     location = earth_location_from_dict(header)
     loc_dict = earth_location_to_dict(location)
