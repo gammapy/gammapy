@@ -10,6 +10,7 @@ from gammapy.data import GTI
 from gammapy.datasets import Datasets
 from gammapy.datasets.actors import DatasetsActor
 from gammapy.estimators import FluxPoints, LightCurveEstimator
+from gammapy.estimators.points.lightcurve import parallel as parallel
 from gammapy.estimators.points.tests.test_sed import (
     simulate_map_dataset,
     simulate_spectrum_dataset,
@@ -749,6 +750,15 @@ def test_lightcurve_parallel_multiprocessing():
     assert_allclose(
         lightcurve.dnde_ul.data[0], [[[3.260703e-13]], [[1.159354e-14]]], rtol=1e-3
     )
+    assert estimator._get_n_child_jobs == 1
+
+    parallel.ALLOW_CHILD_JOBS = True
+    lightcurve = estimator.run(datasets)
+    assert_allclose(
+        lightcurve.dnde_ul.data[0], [[[3.260703e-13]], [[1.159354e-14]]], rtol=1e-3
+    )
+    assert estimator._get_n_child_jobs == 2
+    parallel.ALLOW_CHILD_JOBS = False
 
 
 @requires_data()
@@ -765,7 +775,17 @@ def test_lightcurve_parallel_ray():
         parallel_backend="ray",
     )
 
+    assert estimator.n_jobs == 2
     lightcurve = estimator.run(datasets)
     assert_allclose(
         lightcurve.dnde_ul.data[0], [[[3.260703e-13]], [[1.159354e-14]]], rtol=1e-3
     )
+    assert estimator._get_n_child_jobs == 1
+
+    parallel.ALLOW_CHILD_JOBS = True
+    lightcurve = estimator.run(datasets)
+    assert_allclose(
+        lightcurve.dnde_ul.data[0], [[[3.260703e-13]], [[1.159354e-14]]], rtol=1e-3
+    )
+    assert estimator._get_n_child_jobs == 2
+    parallel.ALLOW_CHILD_JOBS = False
