@@ -553,9 +553,6 @@ class TestFermi2FHLObject:
         assert "TemplateSpatialModel" in model.tag
         assert model.frame == "fk5"
         assert model.normalize
-        # TODO: have to check the extended template used for RX J1713,
-        # for now I guess it's the same than for 3FGL
-        # and added a copy with the name given by 2FHL in gammapy-extra
 
 
 @requires_data()

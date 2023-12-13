@@ -387,10 +387,7 @@ def test_arithmetics_inconsistent_geom():
         m_wcs += m_hpx
 
 
-# TODO: correct serialization for lin axis for energy
-# map_serialization_args = [("log"), ("lin")]
-
-map_serialization_args = [("log")]
+map_serialization_args = [("log"), ("lin")]
 
 
 @pytest.mark.parametrize(("interp"), map_serialization_args)

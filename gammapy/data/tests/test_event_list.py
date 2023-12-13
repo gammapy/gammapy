@@ -139,7 +139,6 @@ class TestEventListHESS:
         altaz = self.events.altaz
         assert_allclose(altaz[0].az.deg, 193.337965, atol=1e-3)
         assert_allclose(altaz[0].alt.deg, 53.258024, atol=1e-3)
-        # TODO: add asserts for frame properties
 
     def test_median_position(self):
         coord = self.events.galactic_median
