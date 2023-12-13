@@ -7,7 +7,7 @@ Using Gammapy
 =============
 
 To use Gammapy you need a basic knowledge of Python, Numpy, Astropy, as well as
-matplotlib for plotting. Many standard gamma-ray analyses can be done with few
+matplotlib for plotting. Many standard gamma-ray analyses can be done with a few
 lines of configuration and code, so you can get pretty far by copy and pasting
 and adapting the working examples from the Gammapy documentation. But
 eventually, if you want to script more complex analyses, or inspect analysis
@@ -18,7 +18,8 @@ Jupyter notebooks
 -----------------
 
 To learn more about Gammapy, and also for interactive data analysis in general,
-we recommend you use Jupyter notebooks. Assuming you have followed the steps above to install Gammapy and activate the conda environment, you can start
+we recommend you use Jupyter notebooks. Assuming you have followed the steps above to install
+Gammapy and activate the conda environment, you can start
 `JupyterLab`_ like this:
 
 .. code-block:: bash
@@ -75,7 +76,7 @@ method** from IPython:
     In [3]: CashCountsStatistic?
 
 Of course, you can also use the Gammapy online docs if you prefer, clicking in links
-(i.e. `gammapy.stats.CashCountsStatistic`) or using *search docs* field in the upper left.
+(i.e. `gammapy.stats.CashCountsStatistic`) or using *Search the docs* field in the upper left.
 
 As an example, here's how you can create `gammapy.data.DataStore` and
 `gammapy.data.EventList` objects and start exploring H.E.S.S. data:
@@ -121,7 +122,7 @@ Python scripts
 --------------
 
 Another common way to use Gammapy is to write a Python script.
-Try it and put the following code into a file called ``example.py``:
+Try it by putting the following code into a file called ``example.py``:
 
 .. testcode::
 
