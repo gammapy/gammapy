@@ -72,7 +72,6 @@ class MapEvaluator:
         self._init_position = None
         self.contributes = True
         self.psf_containment = None
-        self._geom = None
 
         if evaluation_mode not in {"local", "global"}:
             raise ValueError(f"Invalid evaluation_mode: {evaluation_mode!r}")
@@ -94,10 +93,11 @@ class MapEvaluator:
         self._cached_position = (0, 0)
         self._computation_cache = None
         self._spatial_oversampling_factor = 1
-        if self._exposure is not None:
-            self._geom = self._exposure.geom
-            if not self.geom.is_region or self.geom.region is not None:
-                self.update_spatial_oversampling_factor(self.geom)
+        if exposure is not None:
+            self._geom = exposure.geom
+            self.update_spatial_oversampling_factor(self.geom)
+        else:
+            self._geom = None
 
     def _repr_html_(self):
         try:
@@ -216,16 +216,15 @@ class MapEvaluator:
                     max_radius=PSF_MAX_RADIUS,
                 )
 
+        self._exposure = exposure
+        self._geom = exposure.geom
         if self.evaluation_mode == "local":
             self.contributes = self.model.contributes(mask=mask, margin=self.psf_width)
-            self._geom = exposure.geom.cutout(
-                position=self.model.position, width=self.cutout_width, odd_npix=True
-            )
-        self._exposure = exposure
-
-        if self.contributes:
-            if not self.geom.is_region or self.geom.region is not None:
-                self.update_spatial_oversampling_factor(self.geom)
+            if self.contributes and not self.geom.is_region:
+                self._geom = exposure.geom.cutout(
+                    position=self.model.position, width=self.cutout_width, odd_npix=True
+                )
+        self.update_spatial_oversampling_factor(self.geom)
 
         self.reset_cache_properties()
         self._computation_cache = None
@@ -242,8 +241,8 @@ class MapEvaluator:
     def exposure(self):
         if (
             self._exposure is not None
+            and self.evaluation_mode == "local"
             and self.contributes
-            and self.model.evaluation_radius is not None
         ):
             return self._exposure.cutout(
                 position=self.model.position, width=self.cutout_width, odd_npix=True
@@ -253,15 +252,17 @@ class MapEvaluator:
 
     def update_spatial_oversampling_factor(self, geom):
         """Update spatial oversampling_factor for model evaluation."""
-        res_scale = self.model.evaluation_bin_size_min
 
-        res_scale = res_scale.to_value("deg") if res_scale is not None else 0
+        if self.contributes and (not geom.is_region or geom.region is not None):
+            res_scale = self.model.evaluation_bin_size_min
 
-        if res_scale != 0:
-            if geom.is_region or geom.is_hpx:
-                geom = geom.to_wcs_geom()
-            factor = int(np.ceil(np.max(geom.pixel_scales.deg) / res_scale))
-            self._spatial_oversampling_factor = factor
+            res_scale = res_scale.to_value("deg") if res_scale is not None else 0
+
+            if res_scale != 0:
+                if geom.is_region or geom.is_hpx:
+                    geom = geom.to_wcs_geom()
+                factor = int(np.ceil(np.max(geom.pixel_scales.deg) / res_scale))
+                self._spatial_oversampling_factor = factor
 
     def compute_dnde(self):
         """Compute model differential flux at map pixel centers.
