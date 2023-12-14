@@ -27,7 +27,7 @@ from gammapy.modeling.models import (
 )
 from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.utils.scripts import read_yaml, write_yaml
-from gammapy.utils.testing import requires_data
+from gammapy.utils.testing import requires_data, requires_dependency
 
 
 @pytest.fixture(scope="session")
@@ -285,6 +285,7 @@ def test_absorption_io(tmp_path):
     read_yaml(tmp_path / "tmp.yaml")
 
 
+@requires_dependency("naima")
 def make_all_models():
     """Make an instance of each model, for testing."""
     yield Model.create("ConstantSpatialModel", "spatial")
