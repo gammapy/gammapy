@@ -156,7 +156,7 @@ class FluxPoints(FluxMaps):
             gti=gti,
         )
 
-    def write(self, filename, sed_type=None, format="gadf-sed", overwrite=False):
+    def write(self, filename, sed_type=None, overwrite=False):
         """Write flux points.
 
         Parameters
@@ -165,27 +165,14 @@ class FluxPoints(FluxMaps):
             Filename.
         sed_type : {"dnde", "flux", "eflux", "e2dnde", "likelihood"}, optional
             SED type. Default is None.
-        format : {"gadf-sed", "lightcurve", "binned-time-series", "profile"}
-            Format specification. The following formats are supported:
-
-            * "gadf-sed": format for SED flux points see :ref:`gadf:flux-points`
-                for details.
-            * "lightcurve": Gammapy internal format to store energy dependent
-                lightcurves. Basically a generalisation of the "gadf" format, but
-                currently there is no detailed documentation available.
-            * "binned-time-series": table format support by Astropy's
-                `~astropy.timeseries.BinnedTimeSeries`.
-            * "profile": Gammapy internal format to store energy dependent
-                flux profiles. Basically a generalisation of the "gadf" format, but
-                currently there is no detailed documentation available.
-            Default is "gadf-sed".
         overwrite : bool, optional
             Overwrite existing file. Default is False.
         """
         filename = make_path(filename)
+
         if sed_type is None:
             sed_type = self.sed_type_init
-        table = self.to_table(sed_type=sed_type, format=format)
+        table = self.to_table(sed_type=sed_type)
 
         # TODO: rather ugly - better method?
         if ".fits" not in filename.suffixes:
@@ -305,29 +292,23 @@ class FluxPoints(FluxMaps):
 
         return table
 
-    def to_table(self, sed_type=None, format="gadf-sed", formatted=False):
+    def _guess_format(self):
+        """Format of the FluxPoints object."""
+        names = self.geom.axes.names
+        if "time" in names:
+            return "lightcurve"
+        elif "projected-distance" in names:
+            return "profile"
+        else:
+            return "gadf-sed"
+
+    def to_table(self, sed_type=None, formatted=False):
         """Create table for a given SED type.
 
         Parameters
         ----------
         sed_type : {"likelihood", "dnde", "e2dnde", "flux", "eflux"}
             SED type to convert to. Default is `likelihood`.
-        format : {"gadf-sed", "lightcurve", "binned-time-series", "profile"}
-            Format specification. The following formats are supported:
-
-                * "gadf-sed": format for SED flux points see :ref:`gadf:flux-points`
-                  for details
-                * "lightcurve": Gammapy internal format to store energy dependent
-                  lightcurves. Basically a generalisation of the "gadf" format, but
-                  currently there is no detailed documentation available.
-                * "binned-time-series": table format support by Astropy's
-                  `~astropy.timeseries.BinnedTimeSeries`.
-                * "profile": Gammapy internal format to store energy dependent
-                  flux profiles. Basically a generalisation of the "gadf" format, but
-                  currently there is no detailed documentation available.
-
-                  Default is "gadf-sed".
-
         formatted : bool
             Formatted version with column formats applied. Numerical columns are
             formatted to .3f and .3e respectively. Default is False.
@@ -344,7 +325,7 @@ class FluxPoints(FluxMaps):
 
         >>> from gammapy.estimators import FluxPoints
         >>> fp = FluxPoints.read("$GAMMAPY_DATA/hawc_crab/HAWC19_flux_points.fits")
-        >>> table = fp.to_table(sed_type="flux", format="gadf-sed", formatted=True)
+        >>> table = fp.to_table(sed_type="flux", formatted=True)
         >>> print(table[:2])
         e_ref e_min e_max     flux      flux_err    flux_ul      ts    sqrt_ts is_ul
          TeV   TeV   TeV  1 / (cm2 s) 1 / (cm2 s) 1 / (cm2 s)
@@ -354,6 +335,8 @@ class FluxPoints(FluxMaps):
         """
         if sed_type is None:
             sed_type = self.sed_type_init
+
+        format = self._guess_format
 
         if format == "gadf-sed":
             # TODO: what to do with GTI info?
@@ -405,7 +388,7 @@ class FluxPoints(FluxMaps):
                 table_flat["time_max"] = [time_max.mjd]
 
                 fp = self.slice_by_idx(slices={"time": idx})
-                table = fp.to_table(sed_type=sed_type, format="gadf-sed")
+                table = fp.to_table(sed_type=sed_type)
 
                 for column in table.columns:
                     table_flat[column] = table[column][np.newaxis]
@@ -452,7 +435,7 @@ class FluxPoints(FluxMaps):
                 table_flat["x_ref"] = [(x_max + x_min) / 2]
 
                 fp = self.slice_by_idx(slices={"projected-distance": idx})
-                table = fp.to_table(sed_type=sed_type, format="gadf-sed")
+                table = fp.to_table(sed_type=sed_type)
 
                 for column in table.columns:
                     table_flat[column] = table[column][np.newaxis]
