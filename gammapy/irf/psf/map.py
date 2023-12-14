@@ -250,7 +250,6 @@ class PSFMap(IRFMap):
         kernel : `~gammapy.irf.PSFKernel`
             The resulting kernel.
         """
-        # TODO: try to simplify...is the oversampling needed?
         if position is None:
             position = self.psf_map.geom.center_skydir
 
@@ -267,27 +266,23 @@ class PSFMap(IRFMap):
             max_radius = np.max(radii)
 
         geom = geom.to_odd_npix(max_radius=max_radius)
-        geom_image = geom.to_image().upsample(factor=factor)
+        geom_image = geom.to_image()
         coords = geom_image.get_coord(sparse=True)
         rad = coords.skycoord.separation(geom.center_skydir)
 
         coords = {
+            self.energy_name: geom.axes[self.energy_name].center.reshape(
+                geom.data_shape_axes
+            ),
             "rad": rad,
             "skycoord": position,
         }
 
-        kernel_map = Map.from_geom(geom=geom)
-        for ie, energy in enumerate(geom.axes[self.energy_name].center):
-            # TODO: parallel
-            kernel_map_image = Map.from_geom(geom=geom_image)
-            coords[self.energy_name] = energy
-            data = self.psf_map.interp_by_coord(
-                coords=coords,
-                method="linear",
-            )
-            kernel_map_image.data = np.clip(data, 0, np.inf)
-            kernel_map_image = kernel_map_image.downsample(factor, preserve_counts=True)
-            kernel_map.data[ie, :, :] = kernel_map_image.data
+        data = self.psf_map.interp_by_coord(
+            coords=coords,
+            method="linear",
+        )
+        kernel_map = Map.from_geom(geom=geom, data=np.clip(data, 0, np.inf))
         return PSFKernel(kernel_map, normalize=True)
 
     def sample_coord(self, map_coord, random_state=0):
