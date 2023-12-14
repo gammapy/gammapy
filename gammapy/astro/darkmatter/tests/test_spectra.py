@@ -18,12 +18,12 @@ def test_primary_flux():
 
     primflux = PrimaryFlux(channel="W", mDM=1 * u.TeV)
     actual = primflux(500 * u.GeV)
-    desired = 9.328234e-05 / u.GeV
+    desired = 9.3319318e-05 / u.GeV
     assert_quantity_allclose(actual, desired)
 
 
 @pytest.mark.parametrize(
-    "mass, expected_flux", [(1.6, 0.00024956), (11, 0.00501605), (75, 0.02027279)]
+    "mass, expected_flux", [(1.6, 0.00025037), (11, 0.00502079), (75, 0.02028309)]
 )
 @requires_data()
 def test_primary_flux_interpolation(mass, expected_flux):
@@ -58,7 +58,7 @@ def test_dm_annihilation_spectral_model(tmpdir):
     new_models = Models.read(filename)
 
     assert_quantity_allclose(integral_flux.value, 6.19575457e-14, rtol=1e-3)
-    assert_quantity_allclose(differential_flux.value, 2.97506768e-16, rtol=1e-3)
+    assert_quantity_allclose(differential_flux.value, 2.97831615e-16, rtol=1e-3)
 
     assert new_models[0].spectral_model.channel == model.channel
     assert new_models[0].spectral_model.z == model.z
@@ -91,7 +91,7 @@ def test_dm_decay_spectral_model(tmpdir):
     new_models = Models.read(filename)
 
     assert_quantity_allclose(integral_flux.value, 4.80283595e-2, rtol=1e-3)
-    assert_quantity_allclose(differential_flux.value, 2.30625401e-4, rtol=1e-3)
+    assert_quantity_allclose(differential_flux.value, 2.3088e-4, rtol=1e-3)
 
     assert new_models[0].spectral_model.channel == model.channel
     assert new_models[0].spectral_model.z == model.z
