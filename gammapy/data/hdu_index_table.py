@@ -60,7 +60,7 @@ class HDUIndexTable(Table):
         table.meta["BASE_DIR"] = filename.parent.as_posix()
 
         # TODO: this is a workaround for the joint-crab validation with astropy>4.0.
-        # TODO: Remove when handling of empty columns is clarified
+        # should remove it when handling of empty columns is clarified
         table["FILE_DIR"].fill_value = ""
 
         return table.filled()
