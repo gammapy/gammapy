@@ -141,12 +141,12 @@ def make_base_catalog_galactic(
     """Make a catalog of Galactic sources, with basic source parameters.
 
     Choose a radial distribution, a velocity distribution, the number
-    of sources ``n_sources``, the maximal age ``max_age`` in years and the fraction
-    of the individual morphtypes. There's an option spiral arms. If set on
-    True a spiral arm modeling after Faucher&Kaspi is included.
+    of pulsars n_pulsars, the maximal age max_age[years] and the fraction
+    of the individual morphtypes. There's an option spiralarms. If set on
+    True a spiralarm modeling after Faucher&Kaspi is included.
 
-    ``max_age`` and ``n_sources`` effectively correspond to a SN rate:
-    SN_rate = ``n_sources`` / ``max_age``
+    max_age and n_sources effectively correspond to s SN rate:
+    SN_rate = n_sources / max_age
 
     Parameters
     ----------
@@ -259,21 +259,7 @@ def make_base_catalog_galactic(
 def add_snr_parameters(table):
     """Add SNR parameters to the table.
 
-    Parameters
-    ----------
-    table : `~astropy.table.Table`
-        Table that requires at least columns "age" and "n_ISM" to be defined.
-
-    Returns
-    -------
-    table : `~astropy.table.Table`
-        Table with the following entries:
-
-                * "E_SN" : SNR kinetic energy
-                * "r_out" : SNR outer radius
-                * "r_in" : SNR inner radius
-                * "L_SNR" : SNR photon rate above 1 TeV
-
+    TODO: document
     """
     # Read relevant columns
     age = table["age"].quantity
@@ -357,17 +343,7 @@ def add_pulsar_parameters(
 def add_pwn_parameters(table):
     """Add PWN parameters to the table.
 
-    Parameters
-    ----------
-    table : `~astropy.table.Table`
-        Table that requires at least the following columns to be defined:
-        "age", "E_SN", "n_ISM", "P0_birth" and "B_PSR".
-
-    Returns
-    -------
-    table : `~astropy.table.Table`
-        Table with the additional entry "r_out_PWN" which is the outer radius
-        of the PWN.
+    TODO: document
     """
     # Some of the computations (specifically `pwn.radius`) aren't vectorised
     # across all parameters; so here we loop over source parameters explicitly
