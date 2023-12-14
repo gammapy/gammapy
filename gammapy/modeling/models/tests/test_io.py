@@ -109,7 +109,6 @@ def test_dict_to_skymodels(models):
 
 @requires_data()
 def test_sky_models_io(tmpdir, models):
-    # TODO: maybe change to a test case where we create a model programmatically?
     models.covariance = np.eye(len(models.parameters))
     models.write(tmpdir / "tmp.yaml", full_output=True, overwrite_templates=False)
     models = Models.read(tmpdir / "tmp.yaml")
@@ -335,9 +334,27 @@ def make_all_models():
         norms=[3, 4] * u.cm,
     )
     yield Model.create("GaussianSpectralModel", "spectral")
-    # TODO: yield Model.create("EBLAbsorptionNormSpectralModel")
-    # TODO: yield Model.create("NaimaSpectralModel")
-    # TODO: yield Model.create("ScaleSpectralModel")
+    yield Model.create(
+        "EBLAbsorptionNormSpectralModel",
+        "spectral",
+        energy=[0, 1, 2] * u.keV,
+        param=[0, 1],
+        data=np.ones((2, 3)),
+        redshift=0.1,
+        alpha_norm=1.0,
+    )
+    import naima
+
+    particle_distribution = naima.models.PowerLaw(
+        amplitude=2e33 / u.eV, e_0=10 * u.TeV, alpha=2.5
+    )
+    radiative_model = naima.radiative.PionDecay(
+        particle_distribution, nh=1 * u.cm**-3
+    )
+    yield Model.create(
+        "NaimaSpectralModel", "spectral", radiative_model=radiative_model
+    )
+    yield Model.create("ScaleSpectralModel", "spectral", model=PowerLawSpectralModel())
     yield Model.create("ConstantTemporalModel", "temporal")
     yield Model.create("LinearTemporalModel", "temporal")
     yield Model.create("PowerLawTemporalModel", "temporal")

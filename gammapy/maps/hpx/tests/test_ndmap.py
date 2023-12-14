@@ -109,8 +109,10 @@ def test_hpxmap_read_write_fgst(tmp_path):
         assert hdulist["SKYMAP"].header["TTYPE1"] == "CHANNEL1"
 
     m2 = Map.read(path)
-    # TODO: add better asserts here
     assert m2 is not None
+    assert_allclose(m2.geom.axes["energy"].edges, axis.edges, atol=1e-3)
+    assert_allclose(m, m2, atol=1e-4)
+    assert_allclose(m.data, m2.data, atol=1e-4)
 
     # Test Model Cube
     m.write(path, format="fgst-template", overwrite=True)
@@ -121,8 +123,9 @@ def test_hpxmap_read_write_fgst(tmp_path):
         assert hdulist["SKYMAP"].header["TTYPE1"] == "ENERGY1"
 
     m2 = Map.read(path)
-    # TODO: add better asserts here
     assert m2 is not None
+    assert_allclose(m, m2, atol=1e-4)
+    assert_allclose(m.data, m2.data, atol=1e-4)
 
 
 @requires_data()
