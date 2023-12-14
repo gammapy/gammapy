@@ -16,6 +16,9 @@ from .kernel import PSFKernel
 __all__ = ["PSFMap", "RecoPSFMap"]
 
 
+PSF_UPSAMPLING_FACTOR = 4
+
+
 class IRFLikePSF(PSF):
     required_axes = ["energy_true", "rad", "lat_idx", "lon_idx"]
     tag = "irf_like_psf"
@@ -223,7 +226,7 @@ class PSFMap(IRFMap):
         return Map.from_geom(geom=geom, data=data.value, unit=data.unit)
 
     def get_psf_kernel(
-        self, geom, position=None, max_radius=None, containment=0.999, factor=4
+        self, geom, position=None, max_radius=None, containment=0.999, factor=None
     ):
         """Return a PSF kernel at the given position.
 
@@ -243,13 +246,17 @@ class PSFMap(IRFMap):
             across all energies is used. The radius can be overwritten using
             the `max_radius` argument. Default is 0.999.
         factor : int, optional
-            Oversampling factor to compute the PSF. Default is 4.
+            Oversampling factor to compute the PSF.
+            If None it is given by PSF_UPSAMPLING_FACTOR which is 4 by default.
 
         Returns
         -------
         kernel : `~gammapy.irf.PSFKernel`
             The resulting kernel.
         """
+        if factor is None:
+            factor = PSF_UPSAMPLING_FACTOR
+
         if position is None:
             position = self.psf_map.geom.center_skydir
 
@@ -265,9 +272,8 @@ class PSFMap(IRFMap):
             radii = self.containment_radius(**kwargs)
             max_radius = np.max(radii)
 
-        geom = geom.to_odd_npix(max_radius=max_radius)
-        geom_image = geom.to_image()
-        coords = geom_image.get_coord(sparse=True)
+        geom = geom.to_odd_npix(max_radius=max_radius).upsample(factor=factor)
+        coords = geom.to_image().get_coord(sparse=True)
         rad = coords.skycoord.separation(geom.center_skydir)
 
         coords = {
@@ -283,6 +289,7 @@ class PSFMap(IRFMap):
             method="linear",
         )
         kernel_map = Map.from_geom(geom=geom, data=np.clip(data, 0, np.inf))
+        kernel_map = kernel_map.downsample(factor=factor, preserve_counts=True)
         return PSFKernel(kernel_map, normalize=True)
 
     def sample_coord(self, map_coord, random_state=0):
