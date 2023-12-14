@@ -8,7 +8,7 @@ def test_galactic():
     y = Quantity(0, "kpc")
     z = Quantity(0, "kpc")
     reference = (
-        Quantity(8.5, "deg"),
+        Quantity(8.5, "kpc"),
         Quantity(0, "deg"),
         Quantity(0, "deg"),
     )
