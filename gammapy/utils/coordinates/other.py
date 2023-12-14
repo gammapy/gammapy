@@ -1,7 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Other coordinate and distance-related functions."""
 import numpy as np
-from astropy.units import Quantity, Unit
+from astropy.coordinates import Galactocentric
+from astropy.units import Unit
 
 __all__ = [
     "cartesian",
@@ -12,8 +13,7 @@ __all__ = [
     "velocity_glon_glat",
 ]
 
-# TODO: replace this with the default from the Galactocentric frame in astropy.coordinates
-D_SUN_TO_GALACTIC_CENTER = Quantity(8.5, "kpc")
+D_SUN_TO_GALACTIC_CENTER = Galactocentric().galcen_distance
 """Default assumed distance from the Sun to the Galactic center (`~astropy.units.Quantity`)"""
 
 
