@@ -159,37 +159,32 @@ print(dtime_table)
 
 time = lc_1d.geom.axes["time"].time_mid.mjd
 
-bayesian_edges = Time(
-    bayesian_blocks(
-        t=time, x=flux.flatten(), sigma=flux_err.flatten(), fitness="measures"
-    ),
-    format="mjd",
+bayesian_edges = bayesian_blocks(
+    t=time, x=flux.flatten(), sigma=flux_err.flatten(), fitness="measures"
 )
 
-# We can then (optionally) compute the new lightcurve and plot it
+# We can visualize the difference between the original lightcurve and the rebin with bayesian blocks
 
-time_intervalsB = [
-    Time([tstart, tstop])
-    for tstart, tstop in zip(bayesian_edges[:-1], bayesian_edges[1:])
-]
+bayesian_flux = []
+for _ in range(len(bayesian_edges) - 1):
+    mask = (time >= bayesian_edges[_]) & (time <= bayesian_edges[_ + 1])
+    bayesian_flux.append(flux.flatten()[mask].mean())
 
-lc_maker_1d = LightCurveEstimator(
-    energy_edges=[0.7, 20] * u.TeV,
-    source="pks2155",
-    selection_optional=["ul"],
-    time_intervals=time_intervalsB,
-)
-
-lc_b = lc_maker_1d.run(datasets)
+xerr = np.diff(bayesian_edges) / 2
+bayesian_x = bayesian_edges[:-1] + xerr
 
 fig, ax = plt.subplots(
     figsize=(8, 6),
     gridspec_kw={"left": 0.16, "bottom": 0.2, "top": 0.98, "right": 0.98},
 )
-
-lc_b.plot(marker="o", axis_name="time", sed_type="flux")
-lc_1d.plot(marker="o", axis_name="time", sed_type="flux")
-plt.legend()
+plt.plot(time, flux.flatten(), marker="+", linestyle="", color="teal")
+plt.errorbar(
+    bayesian_x,
+    bayesian_flux,
+    xerr=np.diff(bayesian_edges) / 2,
+    linestyle="",
+    color="orange",
+)
 plt.show()
 
 # The result giving a significance estimation for variability in the lightcurve is the number of *change points*, i.e. the number of internal bin edges: if at least one change point is identified by the algorithm, there is significant variability.
