@@ -4,7 +4,7 @@ import astropy.units as u
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FormatStrFormatter
-from gammapy.maps import Map, MapAxes, MapAxis, MapCoord, WcsGeom
+from gammapy.maps import HpxGeom, Map, MapAxes, MapAxis, MapCoord, WcsGeom
 from gammapy.maps.axes import UNIT_STRING_FORMAT
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.utils.gauss import Gauss2DPDF
@@ -17,6 +17,22 @@ __all__ = ["PSFMap", "RecoPSFMap"]
 
 
 PSF_UPSAMPLING_FACTOR = 4
+
+
+def _psf_upsampling_factor(
+    psf, geom, position, energy=None, precision_factor=10, max_factor=4
+):
+    if energy is None:
+        energy = geom.axes[psf.energy_name].center
+    psf_r68 = psf.containment_radius(
+        0.68, geom.axes[psf.energy_name].center, position=position
+    )
+    psf_r68 = np.percentile(psf_r68, 50)
+    base_factor = (2 * psf_r68 / geom.pixel_scales.max()).to_value("")
+    factor = np.minimum(int(np.ceil(precision_factor / base_factor)), max_factor)
+    if isinstance(geom, HpxGeom):
+        factor = int(2 ** np.ceil(np.log(factor) / np.log(2)))
+    return factor
 
 
 class IRFLikePSF(PSF):
@@ -248,7 +264,7 @@ class PSFMap(IRFMap):
         factor : int, optional
             Oversampling factor to compute the PSF.
             If None it is given by PSF_UPSAMPLING_FACTOR which is 4 by default.
-
+            If PSF_UPSAMPLING_FACTOR is set to None it will be automatically estimated.
         Returns
         -------
         kernel : `~gammapy.irf.PSFKernel`
@@ -256,6 +272,8 @@ class PSFMap(IRFMap):
         """
         if factor is None:
             factor = PSF_UPSAMPLING_FACTOR
+            if factor is None:
+                factor = _psf_upsampling_factor(self, geom, position)
 
         if position is None:
             position = self.psf_map.geom.center_skydir
