@@ -88,7 +88,7 @@ class MapAxis:
     nodes : `~numpy.ndarray` or `~astropy.units.Quantity`
         Array of node values.  These will be interpreted as either bin
         edges or centers according to ``node_type``.
-    interp : {'log', 'lin', 'sqrt'}
+    interp : {'lin', 'log', 'sqrt'}
         Interpolation method used to transform between axis and pixel
         coordinates. Default is 'lin'.
     name : str, optional

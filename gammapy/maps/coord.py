@@ -36,7 +36,7 @@ class MapCoord:
     ----------
     data : `dict` of `~numpy.ndarray`
         Dictionary of coordinate arrays.
-    frame : {"icrs", "galactic", None}
+    frame : {None, "icrs", "galactic"}
         Spatial coordinate system. If None then the coordinate system
         will be set to the native coordinate system of the geometry. Default is None.
     match_by_name : bool, optional

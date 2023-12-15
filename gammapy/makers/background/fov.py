@@ -29,7 +29,7 @@ class FoVBackgroundMaker(Maker):
 
     Parameters
     ----------
-    method : {'fit', 'scale'}
+    method : {'scale', 'fit'}
         The normalization method to be applied. Default 'scale'.
     exclusion_mask : `~gammapy.maps.WcsNDMap`
         Exclusion mask.

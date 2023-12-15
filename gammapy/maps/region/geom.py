@@ -678,7 +678,7 @@ class RegionGeom(Geom):
 
         Parameters
         ----------
-        format : {"gadf", "ogip", "ogip-sherpa"}
+        format : {"ogip", "gadf", "ogip-sherpa"}
             HDU format. Default is "ogip".
         hdu_bands : str, optional
             Name or index of the HDU with the BANDS table.
