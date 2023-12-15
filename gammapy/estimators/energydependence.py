@@ -94,11 +94,18 @@ class EnergyDependenceEstimator(Estimator):
         model = datasets.models[self.source]
 
         slices_src = Datasets()
-        for emin, emax in zip(self.energy_edges[:-1], self.energy_edges[1:]):
+        for i, (emin, emax) in enumerate(
+            zip(self.energy_edges[:-1], self.energy_edges[1:])
+        ):
             for dataset in datasets:
-                sliced_src = dataset.slice_by_energy(emin, emax)
+                sliced_src = dataset.slice_by_energy(
+                    emin, emax, name=f"{self.source}_{i}"
+                )
                 bkg_sliced_model = FoVBackgroundModel(dataset_name=sliced_src.name)
-                sliced_src.models = [model.copy(), bkg_sliced_model]
+                sliced_src.models = [
+                    model.copy(name=f"{sliced_src.name}"),
+                    bkg_sliced_model,
+                ]
                 slices_src.append(sliced_src)
         return slices_src
 
@@ -126,10 +133,14 @@ class EnergyDependenceEstimator(Estimator):
         # Norm is free and fit
         test_results = []
         for sliced in slices_src:
-            parameters = [param for param in sliced.models.parameters.free_parameters]
+            parameters = [
+                param for param in sliced.models[sliced.name].parameters.free_parameters
+            ]
             null_values = [0] + [
                 param.value
-                for param in sliced.models[0].spatial_model.parameters.free_parameters
+                for param in sliced.models[
+                    sliced.name
+                ].spatial_model.parameters.free_parameters
             ]
 
             test = TestStatisticNested(
