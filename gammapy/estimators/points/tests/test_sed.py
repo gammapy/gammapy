@@ -100,11 +100,11 @@ def create_fpe(model):
     dataset.models = model
     fpe = FluxPointsEstimator(
         energy_edges=energy_edges,
-        norm_n_values=11,
         source="source",
         selection_optional="all",
         fit=Fit(backend="minuit", optimize_opts=dict(tol=0.2, strategy=1)),
     )
+    fpe.norm.scan_n_values = 11
     datasets = [dataset]
     return datasets, fpe
 
@@ -158,10 +158,11 @@ def fpe_map_pwl():
     datasets = [dataset_1, dataset_2]
     fpe = FluxPointsEstimator(
         energy_edges=energy_edges,
-        norm_n_values=3,
         source="source",
         selection_optional="all",
     )
+    fpe.norm.scan_n_values = 3
+
     return datasets, fpe
 
 
@@ -175,10 +176,10 @@ def fpe_map_pwl_reoptimize():
     datasets = [dataset]
     fpe = FluxPointsEstimator(
         energy_edges=energy_edges,
-        norm_values=[0.8, 1, 1.2],
         reoptimize=True,
         source="source",
     )
+    fpe.norm.scan_values = [0.8, 1, 1.2]
     return datasets, fpe
 
 
@@ -472,11 +473,11 @@ def test_run_pwl_parameter_range(fpe_pwl):
     datasets, fpe = create_fpe(pl)
 
     fp = fpe.run(datasets)
+
     table_no_bounds = fp.to_table()
 
-    pl.amplitude.min = 0
-    pl.amplitude.max = 1e-12
-
+    fpe.norm.min = 0
+    fpe.norm.max = 1e4
     fp = fpe.run(datasets)
     table_with_bounds = fp.to_table()
 
@@ -587,6 +588,58 @@ def test_flux_points_parallel_ray(fpe_pwl):
         [[[2.629819e-12]], [[9.319243e-13]], [[9.004449e-14]]],
         rtol=1e-3,
     )
+
+
+@requires_dependency("ray")
+def test_flux_points_parallel_ray_actor_spectrum(fpe_pwl):
+    from gammapy.datasets.actors import DatasetsActor
+
+    datasets, fpe = fpe_pwl
+    with pytest.raises(TypeError):
+        DatasetsActor(datasets)
+
+
+@requires_data()
+@requires_dependency("ray")
+def test_flux_points_parallel_ray_actor_map(fpe_map_pwl):
+    from gammapy.datasets.actors import DatasetsActor
+
+    datasets, fpe = fpe_map_pwl
+    actors = DatasetsActor(datasets)
+
+    fp = fpe.run(actors)
+
+    table = fp.to_table()
+
+    actual = table["e_min"].data
+    assert_allclose(actual, [0.1, 1.178769, 8.48342], rtol=1e-5)
+
+    actual = table["e_max"].data
+    assert_allclose(actual, [1.178769, 8.483429, 100.0], rtol=1e-5)
+
+    actual = table["e_ref"].data
+    assert_allclose(actual, [0.343332, 3.162278, 29.126327], rtol=1e-5)
+
+    actual = table["norm"].data
+    assert_allclose(actual, [0.974726, 0.96342, 0.994251], rtol=1e-2)
+
+    actual = table["norm_err"].data
+    assert_allclose(actual, [0.067637, 0.052022, 0.087059], rtol=3e-2)
+
+    actual = table["counts"].data
+    assert_allclose(actual, [[44611, 0], [1923, 0], [282, 0]])
+
+    actual = table["norm_ul"].data
+    assert_allclose(actual, [1.111852, 1.07004, 1.17829], rtol=1e-2)
+
+    actual = table["sqrt_ts"].data
+    assert_allclose(actual, [16.681221, 28.408676, 21.91912], rtol=1e-2)
+
+    actual = table["norm_scan"][0]
+    assert_allclose(actual, [0.2, 1.0, 5])
+
+    actual = table["stat_scan"][0] - table["stat"][0]
+    assert_allclose(actual, [1.628398e02, 1.452456e-01, 2.008018e03], rtol=1e-2)
 
 
 def test_fpe_non_aligned_energy_axes():

@@ -26,7 +26,11 @@ from .core import Dataset
 from .evaluator import MapEvaluator
 from .utils import get_axes
 
-__all__ = ["MapDataset", "MapDatasetOnOff", "create_map_dataset_geoms"]
+__all__ = [
+    "MapDataset",
+    "MapDatasetOnOff",
+    "create_map_dataset_geoms",
+]
 
 log = logging.getLogger(__name__)
 
@@ -205,6 +209,9 @@ class MapDataset(Dataset):
         "mask_safe",
         "background",
     ]
+    # TODO: shoule be part of the LazyFitsData no ?
+    gti = None
+    meta_table = None
 
     def __init__(
         self,

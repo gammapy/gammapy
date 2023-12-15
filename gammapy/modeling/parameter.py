@@ -8,6 +8,7 @@ import logging
 import numpy as np
 from astropy import units as u
 from astropy.table import Table
+from gammapy.utils.deprecation import deprecated_attribute
 from gammapy.utils.interpolation import interpolation_scale
 
 __all__ = ["Parameter", "Parameters", "PriorParameter", "PriorParameters"]
@@ -97,6 +98,10 @@ class Parameter:
     prior : `~gammapy.modeling.models.Prior`
         Prior set on the parameter.
     """
+
+    norm_parameters = deprecated_attribute("norm_parameters", "1.2")
+
+    is_norm = deprecated_attribute("is_norm", "1.2")
 
     def __init__(
         self,
@@ -193,11 +198,6 @@ class Parameter:
     def prior_stat_sum(self):
         if self.prior is not None:
             return self.prior(self)
-
-    @property
-    def is_norm(self):
-        """Whether the parameter represents the norm of the model."""
-        return self._is_norm
 
     @property
     def type(self):
@@ -457,7 +457,7 @@ class Parameter:
             "frozen": self.frozen,
             "interp": self.interp,
             "scale_method": self.scale_method,
-            "is_norm": self.is_norm,
+            "is_norm": self._is_norm,
         }
 
         if self._link_label_io is not None:
@@ -602,7 +602,7 @@ class Parameters(collections.abc.Sequence):
     @property
     def norm_parameters(self):
         """List of norm parameters."""
-        return self.__class__([par for par in self._parameters if par.is_norm])
+        return self.__class__([par for par in self._parameters if par._is_norm])
 
     @property
     def free_parameters(self):

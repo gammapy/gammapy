@@ -1292,6 +1292,12 @@ class TemplateSpatialModel(SpatialModel):
     ):
         if (map.data < 0).any():
             log.warning("Map has negative values. Check and fix this!")
+        if (map.data == 0.0).all():
+            log.warning("Map values are all zeros. Check and fix this!")
+        if not map.geom.is_image and (map.data.sum(axis=(1, 2)) == 0).any():
+            log.warning(
+                "Map values are all zeros in at least one energy bin. Check and fix this!"
+            )
 
         if filename is not None:
             filename = str(make_path(filename))
@@ -1306,7 +1312,9 @@ class TemplateSpatialModel(SpatialModel):
                 # Normalize in each energy bin
                 data_sum = map.data.sum(axis=(1, 2)).reshape((-1, 1, 1))
 
-            data = map.data / data_sum
+            data = np.divide(
+                map.data, data_sum, out=np.zeros_like(map.data), where=data_sum != 0
+            )
             data /= map.geom.solid_angle().to_value("sr")
             map = map.copy(data=data, unit="sr-1")
 

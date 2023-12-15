@@ -335,7 +335,6 @@ class TestSpectrumMakerChain:
         assert_quantity_allclose(aeff_actual, results["aeff"], rtol=1e-3)
         assert_quantity_allclose(edisp_actual, results["edisp"], rtol=1e-3)
 
-        # TODO: Introduce assert_stats_allclose
         info = dataset.info_dict()
 
         assert info["counts"] == results["n_on"]

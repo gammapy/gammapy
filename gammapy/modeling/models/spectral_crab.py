@@ -21,7 +21,8 @@ class MeyerCrabSpectralModel(SpectralModel):
     Reference: https://ui.adsabs.harvard.edu/abs/2010A%26A...523A...2M, Appendix D
     """
 
-    norm = Parameter("norm", value=1, frozen=True, is_norm=True)
+    norm = Parameter("norm", value=1, frozen=True)
+    norm._is_norm = True
     coefficients = [-0.00449161, 0, 0.0473174, -0.179475, -0.53616, -10.2708]
 
     @staticmethod

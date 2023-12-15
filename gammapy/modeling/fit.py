@@ -145,9 +145,10 @@ class Fit:
 
     @staticmethod
     def _parse_datasets(datasets):
-        from gammapy.datasets import Datasets
+        from gammapy.datasets import Dataset, Datasets
 
-        datasets = Datasets(datasets)
+        if isinstance(datasets, (list, Dataset)):
+            datasets = Datasets(datasets)
         return datasets, datasets.parameters
 
     def run(self, datasets):
@@ -163,6 +164,7 @@ class Fit:
         fit_result : `FitResult`
             Fit result.
         """
+
         optimize_result = self.optimize(datasets=datasets)
 
         if self.backend not in registry.register["covariance"]:
@@ -293,7 +295,6 @@ class Fit:
         if optimize_result:
             optimize_result.models.covariance = matrix.data.copy()
 
-        # TODO: decide what to return, and fill the info correctly!
         return CovarianceResult(
             backend=backend,
             method=method,
@@ -660,49 +661,41 @@ class FitResult:
         """Minuit object."""
         return self.optimize_result.minuit
 
-    # TODO: is the convenience access needed?
     @property
     def parameters(self):
         """Best fit parameters of the optimization step."""
         return self.optimize_result.parameters
 
-    # TODO: is the convenience access needed?
     @property
     def models(self):
         """Best fit parameters of the optimization step."""
         return self.optimize_result.models
 
-    # TODO: is the convenience access needed?
     @property
     def total_stat(self):
         """Total stat of the optimization step."""
         return self.optimize_result.total_stat
 
-    # TODO: is the convenience access needed?
     @property
     def trace(self):
         """Parameter trace of the optimisation step."""
         return self.optimize_result.trace
 
-    # TODO: is the convenience access needed?
     @property
     def nfev(self):
         """Number of function evaluations of the optimisation step."""
         return self.optimize_result.nfev
 
-    # TODO: is the convenience access needed?
     @property
     def backend(self):
         """Optimizer backend used for the fit."""
         return self.optimize_result.backend
 
-    # TODO: is the convenience access needed?
     @property
     def method(self):
         """Optimizer method used for the fit."""
         return self.optimize_result.method
 
-    # TODO: is the convenience access needed?
     @property
     def message(self):
         """Optimizer status message."""

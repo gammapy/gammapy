@@ -105,7 +105,8 @@ class PrimaryFlux(TemplateNDSpectralModel):
             region=None, axes=[log10x_axis, mass_axis], data=self.table[channel_name]
         )
 
-        super().__init__(region_map)
+        interp_kwargs = {"extrapolate": True, "fill_value": 0, "values_scale": "lin"}
+        super().__init__(region_map, interp_kwargs=interp_kwargs)
         self.mDM = mDM
         self.mass.frozen = True
 
@@ -213,8 +214,8 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
         1,
         unit="",
         interp="log",
-        is_norm=True,
     )
+    scale._is_norm = True
     tag = ["DarkMatterAnnihilationSpectralModel", "dm-annihilation"]
 
     def __init__(self, mass, channel, scale=scale.quantity, jfactor=1, z=0, k=2):
@@ -321,8 +322,9 @@ class DarkMatterDecaySpectralModel(SpectralModel):
         1,
         unit="",
         interp="log",
-        is_norm=True,
     )
+    scale._is_norm = True
+
     tag = ["DarkMatterDecaySpectralModel", "dm-decay"]
 
     def __init__(self, mass, channel, scale=scale.quantity, jfactor=1, z=0):

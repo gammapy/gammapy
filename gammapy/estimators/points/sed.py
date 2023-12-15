@@ -6,9 +6,11 @@ from astropy import units as u
 from astropy.table import Table
 import gammapy.utils.parallel as parallel
 from gammapy.datasets import Datasets
+from gammapy.datasets.actors import DatasetsActor
 from gammapy.datasets.flux_points import _get_reference_model
 from gammapy.maps import MapAxis
 from gammapy.modeling import Fit
+from gammapy.utils.deprecation import deprecated_attribute
 from ..flux import FluxEstimator
 from .core import FluxPoints
 
@@ -80,9 +82,22 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
         limited to the number of physical CPUs.
     parallel_backend : {"multiprocessing", "ray"}
         Which backend to use for multiprocessing.
+    norm : ~gammapy.modeling.Parameter` or dict
+        Norm parameter used for the fit
+        Default is None and a new parameter is created automatically,
+        with value=1, name="norm", scan_min=0.2, scan_max=5, and scan_n_values = 11.
+        By default the min and max are not set and derived from the source model,
+        unless the source model does not have one and only one norm parameter.
+        If a dict is given the entries should be a subset of
+        `~gammapy.modeling.Parameter` arguments.
     """
 
     tag = "FluxPointsEstimator"
+
+    norm_min = deprecated_attribute("norm_min", "1.2")
+    norm_max = deprecated_attribute("norm_max", "1.2")
+    norm_n_values = deprecated_attribute("norm_n_values", "1.2")
+    norm_values = deprecated_attribute("norm_values", "1.2")
 
     def __init__(
         self,
@@ -114,7 +129,9 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
         flux_points : `FluxPoints`
             Estimated flux points.
         """
-        datasets = Datasets(datasets=datasets)
+
+        if not isinstance(datasets, DatasetsActor):
+            datasets = Datasets(datasets=datasets)
 
         if not datasets.energy_axes_are_aligned:
             raise ValueError("All datasets must have aligned energy axes.")
@@ -175,7 +192,7 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
             energy_min=energy_min, energy_max=energy_max
         )
         if self.sum_over_energy_groups:
-            datasets_sliced = Datasets(
+            datasets_sliced = datasets_sliced.__class__(
                 [_.to_image(name=_.name) for _ in datasets_sliced]
             )
 

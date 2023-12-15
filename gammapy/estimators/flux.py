@@ -2,10 +2,12 @@
 import logging
 import numpy as np
 from gammapy.datasets import Datasets
+from gammapy.datasets.actors import DatasetsActor
 from gammapy.estimators.parameter import ParameterEstimator
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling import Parameter
 from gammapy.modeling.models import ScaleSpectralModel
+from gammapy.utils.deprecation import deprecated_attribute, deprecated_renamed_argument
 
 log = logging.getLogger(__name__)
 
@@ -56,10 +58,29 @@ class FluxEstimator(ParameterEstimator):
         If False only the norm of the source of interest if fitted,
         and all other parameters are frozen at their current values.
         Default is False.
+    norm : ~gammapy.modeling.Parameter`
+    norm : ~gammapy.modeling.Parameter` or dict
+        Norm parameter used for the fit
+        Default is None and a new parameter is created automatically,
+        with value=1, name="norm", scan_min=0.2, scan_max=5, and scan_n_values = 11.
+        By default the min and max are not set and derived from the source model,
+        unless the source model does not have one and only one norm parameter.
+        If a dict is given the entries should be a subset of
+        `~gammapy.modeling.Parameter` arguments.
     """
 
     tag = "FluxEstimator"
 
+    norm_min = deprecated_attribute("norm_min", "1.2")
+    norm_max = deprecated_attribute("norm_max", "1.2")
+    norm_n_values = deprecated_attribute("norm_n_values", "1.2")
+    norm_values = deprecated_attribute("norm_values", "1.2")
+
+    @deprecated_renamed_argument(
+        ["norm_min", "norm_max", "norm_n_values", "norm_values"],
+        [None, None, None, None],
+        ["1.2", "1.2", "1.2", "1.2"],
+    )
     def __init__(
         self,
         source=0,
@@ -72,12 +93,32 @@ class FluxEstimator(ParameterEstimator):
         selection_optional=None,
         fit=None,
         reoptimize=False,
+        norm=None,
     ):
-        self.norm_values = norm_values
-        self.norm_min = norm_min
-        self.norm_max = norm_max
-        self.norm_n_values = norm_n_values
+
         self.source = source
+        if norm is None or isinstance(norm, dict):
+            norm_kwargs = dict(
+                name="norm",
+                value=1,
+                unit="",
+                interp="log",
+                frozen=False,
+                scan_min=norm_min,
+                scan_max=norm_max,
+                scan_n_values=norm_n_values,
+                scan_values=norm_values,
+            )
+            if isinstance(norm, dict):
+                norm_kwargs.update(norm)
+            try:
+                norm = Parameter(**norm_kwargs)
+            except TypeError as error:
+                raise TypeError(f"Invalid dict key for norm init : {error}")
+        if norm.name != "norm":
+            raise ValueError("norm.name is not 'norm'")
+        self.norm = norm
+
         super().__init__(
             null_value=0,
             n_sigma=n_sigma,
@@ -89,19 +130,12 @@ class FluxEstimator(ParameterEstimator):
 
     def _set_norm_parameter(self, norm=None, scaled_parameter=None):
         """Define properties of the norm spectral parameter."""
-        if norm is None:
-            norm = Parameter("norm", 1, unit="", interp="log")
 
-        norm.value = 1.0
-        norm.frozen = False
-
-        norm.min = scaled_parameter.min / scaled_parameter.value
-        norm.max = scaled_parameter.max / scaled_parameter.value
+        if np.isnan(self.norm.min):
+            norm.min = scaled_parameter.min / scaled_parameter.value
+        if np.isnan(self.norm.max):
+            norm.max = scaled_parameter.max / scaled_parameter.value
         norm.interp = scaled_parameter.interp
-        norm.scan_values = self.norm_values
-        norm.scan_min = self.norm_min
-        norm.scan_max = self.norm_max
-        norm.scan_n_values = self.norm_n_values
         return norm
 
     def get_scale_model(self, models):
@@ -122,15 +156,12 @@ class FluxEstimator(ParameterEstimator):
 
         norms = ref_model.parameters.norm_parameters
 
-        if len(norms) == 0 or len(norms.free_parameters) > 1:
-            raise ValueError(
-                f"{self.tag} requires one and only one free 'norm' or 'amplitude' parameter"
-                " in the model to run"
+        if len(norms.free_parameters) == 1:
+            self.norm = self._set_norm_parameter(
+                self.norm.copy(), norms.free_parameters[0]
             )
-        elif len(norms.free_parameters) == 1:
-            norms = norms.free_parameters
 
-        scale_model.norm = self._set_norm_parameter(scale_model.norm, norms[0])
+        scale_model.norm = self.norm.copy()
         return scale_model
 
     def estimate_npred_excess(self, datasets):
@@ -171,7 +202,8 @@ class FluxEstimator(ParameterEstimator):
         result : dict
             Dictionary with results for the flux point.
         """
-        datasets = Datasets(datasets)
+        if not isinstance(datasets, DatasetsActor):
+            datasets = Datasets(datasets)
         models = datasets.models.copy()
 
         model = self.get_scale_model(models)

@@ -296,7 +296,6 @@ def test_different_exposure_unit(sky_model, geom):
 @pytest.mark.parametrize(("edisp_mode"), ["edispmap", "edispkernelmap"])
 @requires_data()
 def test_to_spectrum_dataset(sky_model, geom, geom_etrue, edisp_mode):
-
     dataset_ref = get_map_dataset(geom, geom_etrue, edisp=edisp_mode)
 
     bkg_model = FoVBackgroundModel(dataset_name=dataset_ref.name)
@@ -730,6 +729,61 @@ def test_prior_stat_sum(sky_model, geom, geom_etrue):
 
     datasets.models.parameters["amplitude"].prior.weight = 100
     assert_allclose(datasets.stat_sum() - stat_sum_neg, 99, rtol=1e-3)
+
+
+@requires_data()
+@requires_dependency("ray")
+def test_map_fit_ray(sky_model, geom, geom_etrue):
+    from gammapy.datasets.actors import DatasetsActor
+
+    dataset_1 = get_map_dataset(geom, geom_etrue, name="test-1")
+    dataset_2 = get_map_dataset(geom, geom_etrue, name="test-2")
+    datasets = Datasets([dataset_1, dataset_2])
+
+    models = Models(datasets.models)
+    models.insert(0, sky_model)
+
+    models["test-1-bkg"].spectral_model.norm.value = 0.5
+    models["test-model"].spatial_model.sigma.frozen = True
+
+    datasets.models = models
+    dataset_2.counts = dataset_2.npred()
+    dataset_1.counts = dataset_1.npred()
+
+    models["test-1-bkg"].spectral_model.norm.value = 0.49
+    models["test-2-bkg"].spectral_model.norm.value = 0.99
+
+    actors = DatasetsActor(datasets)
+    fit = Fit()
+    result = fit.run(datasets=actors)
+
+    assert result.success
+    assert result.optimize_result.backend == "minuit"
+
+    npred = actors[0].npred().data.sum()
+    assert_allclose(npred, 7525.790688, rtol=1e-3)
+    assert_allclose(result.total_stat, 21625.845714, rtol=1e-3)
+
+    pars = models.parameters
+    assert_allclose(pars["lon_0"].value, 0.2, rtol=1e-2)
+    assert_allclose(pars["lon_0"].error, 0.002244, rtol=1e-2)
+
+    assert_allclose(pars["index"].value, 3, rtol=1e-2)
+    assert_allclose(pars["index"].error, 0.0242, rtol=1e-2)
+
+    assert_allclose(pars["amplitude"].value, 1e-11, rtol=1e-2)
+    assert_allclose(pars["amplitude"].error, 4.216e-13, rtol=1e-2)
+
+    # background norm 1
+    assert_allclose(pars[8].value, 0.5, rtol=1e-2)
+    assert_allclose(pars[8].error, 0.015811, rtol=1e-2)
+
+    # background norm 2
+    assert_allclose(pars[11].value, 1, rtol=1e-2)
+    assert_allclose(pars[11].error, 0.02147, rtol=1e-2)
+
+    with mpl_plot_check():
+        actors.plot_residuals()
 
 
 @requires_data()
@@ -1863,7 +1917,6 @@ def test_map_dataset_region_geom_npred():
 
 @requires_dependency("healpy")
 def test_map_dataset_create_hpx_geom(geom_hpx):
-
     dataset = MapDataset.create(**geom_hpx, binsz_irf=10 * u.deg)
 
     assert isinstance(dataset.counts.geom, HpxGeom)
@@ -1884,7 +1937,6 @@ def test_map_dataset_create_hpx_geom(geom_hpx):
 
 @requires_dependency("healpy")
 def test_map_dataset_create_hpx_geom_partial(geom_hpx_partial):
-
     dataset = MapDataset.create(**geom_hpx_partial, binsz_irf=2 * u.deg)
 
     assert isinstance(dataset.counts.geom, HpxGeom)
@@ -1905,7 +1957,6 @@ def test_map_dataset_create_hpx_geom_partial(geom_hpx_partial):
 
 @requires_dependency("healpy")
 def test_map_dataset_stack_hpx_geom(geom_hpx_partial, geom_hpx):
-
     dataset_all = MapDataset.create(**geom_hpx, binsz_irf=5 * u.deg)
 
     gti = GTI.create(start=0 * u.s, stop=30 * u.min)

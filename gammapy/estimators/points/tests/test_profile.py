@@ -5,6 +5,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
+import gammapy.utils.parallel as parallel
 from gammapy.data import GTI
 from gammapy.datasets import MapDatasetOnOff
 from gammapy.estimators import FluxPoints, FluxProfileEstimator
@@ -15,7 +16,7 @@ from gammapy.utils.regions import (
     make_concentric_annulus_sky_regions,
     make_orthogonal_rectangle_sky_regions,
 )
-from gammapy.utils.testing import requires_data
+from gammapy.utils.testing import requires_data, requires_dependency
 
 
 def get_simple_dataset_on_off():
@@ -219,3 +220,78 @@ def test_profile_with_model_or_mask():
     result = prof_maker.run(dataset)
     imp_prof = result.to_table(sed_type="flux", format="profile")
     assert_allclose(imp_prof[7]["npred_excess"], [[0]], rtol=1e-3)
+
+
+@requires_data()
+def test_profile_multiprocessing():
+    dataset = simulate_map_dataset(name="test-map-pwl")
+
+    geom = dataset.counts.geom
+    regions = make_concentric_annulus_sky_regions(
+        center=geom.center_skydir,
+        radius_max=0.2 * u.deg,
+    )
+
+    prof_maker = FluxProfileEstimator(
+        regions,
+        selection_optional="all",
+        energy_edges=[0.1, 10] * u.TeV,
+        n_sigma_ul=3,
+        sum_over_energy_groups=True,
+        n_jobs=2,
+        parallel_backend="multiprocessing",
+    )
+    result = prof_maker.run(dataset)
+    imp_prof = result.to_table(sed_type="flux", format="profile")
+    assert_allclose(imp_prof[7]["npred_excess"], [[-1.115967]], rtol=1e-3)
+
+
+@requires_data()
+@requires_dependency("ray")
+def test_profile_multiprocessing_ray_with_manager():
+    dataset = simulate_map_dataset(name="test-map-pwl")
+
+    geom = dataset.counts.geom
+    regions = make_concentric_annulus_sky_regions(
+        center=geom.center_skydir,
+        radius_max=0.2 * u.deg,
+    )
+
+    with parallel.multiprocessing_manager(backend="ray", pool_kwargs=dict(processes=2)):
+        prof_maker = FluxProfileEstimator(
+            regions,
+            selection_optional="all",
+            energy_edges=[0.1, 10] * u.TeV,
+            n_sigma_ul=3,
+            sum_over_energy_groups=True,
+        )
+        assert prof_maker.n_jobs == 2
+        assert prof_maker.parallel_backend == "ray"
+        result = prof_maker.run(dataset)
+        imp_prof = result.to_table(sed_type="flux", format="profile")
+        assert_allclose(imp_prof[7]["npred_excess"], [[-1.115967]], rtol=1e-3)
+
+
+@requires_data()
+@requires_dependency("ray")
+def test_profile_multiprocessing_ray():
+    dataset = simulate_map_dataset(name="test-map-pwl")
+
+    geom = dataset.counts.geom
+    regions = make_concentric_annulus_sky_regions(
+        center=geom.center_skydir,
+        radius_max=0.2 * u.deg,
+    )
+
+    prof_maker = FluxProfileEstimator(
+        regions,
+        selection_optional="all",
+        energy_edges=[0.1, 10] * u.TeV,
+        n_sigma_ul=3,
+        sum_over_energy_groups=True,
+        n_jobs=2,
+        parallel_backend="ray",
+    )
+    result = prof_maker.run(dataset)
+    imp_prof = result.to_table(sed_type="flux", format="profile")
+    assert_allclose(imp_prof[7]["npred_excess"], [[-1.115967]], rtol=1e-3)
