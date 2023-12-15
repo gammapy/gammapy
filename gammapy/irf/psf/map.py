@@ -20,7 +20,7 @@ __all__ = ["PSFMap", "RecoPSFMap"]
 PSF_MAX_OVERSAMPLING = 4
 
 
-def _psf_upsampling_factor(psf, geom, position, energy=None, precision_factor=10):
+def _psf_upsampling_factor(psf, geom, position, energy=None, precision_factor=12):
     if energy is None:
         energy = geom.axes[psf.energy_name].center
     psf_r68 = psf.containment_radius(
@@ -252,7 +252,7 @@ class PSFMap(IRFMap):
         max_radius=None,
         containment=0.999,
         factor=None,
-        precision_factor=10,
+        precision_factor=12,
     ):
         """Return a PSF kernel at the given position.
 
