@@ -171,7 +171,12 @@ class FluxProfileEstimator(FluxPointsEstimator):
                 .data
             )
         datasets_to_fit.models = SkyModel(self.spectrum, name="test-source")
-        return super().run(datasets_to_fit)
+        estimator = self.copy()
+        estimator.n_jobs = self._n_child_jobs
+        return estimator._run_flux_points(datasets_to_fit)
+
+    def _run_flux_points(self, datasets):
+        return super().run(datasets)
 
     @property
     def config_parameters(self):
