@@ -38,7 +38,7 @@ class ASmoothMapEstimator(Estimator):
         Smoothing kernel.
     spectrum : `SpectralModel`
         Spectral model assumption.
-    method : {'asmooth', 'lima'}
+    method : {'lima', 'asmooth'}
         Significance estimation method. Default is 'lima'.
     threshold : float
         Significance threshold. Default is 5.
