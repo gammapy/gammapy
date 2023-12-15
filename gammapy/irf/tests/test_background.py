@@ -431,7 +431,7 @@ def test_to2d_to3d():
     nbin = 21
     fov_lon_axis = MapAxis.from_bounds(-2 * u.deg, 2 * u.deg, nbin=nbin, name="fov_lon")
     fov_lat_axis = MapAxis.from_bounds(-2 * u.deg, 2 * u.deg, nbin=nbin, name="fov_lat")
-    data = np.ones((2, nbin, nbin))
+    data = np.ones((2, nbin, nbin)) * 1.5
     bkg = Background3D(
         axes=[energy_axis, fov_lon_axis, fov_lat_axis], data=data, unit="s-1 GeV-1 sr-1"
     )
@@ -439,3 +439,4 @@ def test_to2d_to3d():
     assert_allclose(bkg2d.axes["offset"].center[0].value, 0.0, atol=1e-5)
     bkg3d = bkg2d.to_3d()
     assert bkg3d.axes["fov_lon"].is_allclose(fov_lon_axis)
+    assert_allclose(bkg3d.data[0][10], bkg.data[0][10], rtol=1e-5)
