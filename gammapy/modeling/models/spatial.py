@@ -1617,7 +1617,7 @@ class PiecewiseNormSpatialModel(SpatialModel):
         Array with the initial norms of the model at energies ``energy``.
         Normalisation parameters are created for each value.
         Default is one at each node.
-    interp : {"log", "lin"}
+    interp : {"lin", "log"}
         Interpolation scaling. Default is "lin".
     """
 
