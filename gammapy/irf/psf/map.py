@@ -273,6 +273,7 @@ class PSFMap(IRFMap):
             the `max_radius` argument. Default is 0.999.
         factor : int, optional
             Oversampling factor to compute the PSF.
+            Default is None and it will be computed automatically.
         precision_factor : int, optional
             Minimal factor between the bin half-width of the geom and the R68% containment radius.
             Used only for the oversampling method. Default is 10.
