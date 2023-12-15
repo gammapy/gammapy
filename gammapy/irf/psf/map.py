@@ -302,13 +302,11 @@ class PSFMap(IRFMap):
             max_radius = np.max(radii)
 
         geom = geom.to_odd_npix(max_radius=max_radius).upsample(factor=factor)
-        coords = geom.to_image().get_coord(sparse=True)
+        coords = geom.get_coord(sparse=True)
         rad = coords.skycoord.separation(geom.center_skydir)
 
         coords = {
-            self.energy_name: geom.axes[self.energy_name].center.reshape(
-                geom.data_shape_axes
-            ),
+            self.energy_name: coords[self.energy_name],
             "rad": rad,
             "skycoord": position,
         }
