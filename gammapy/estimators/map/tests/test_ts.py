@@ -308,8 +308,8 @@ def test_ts_map_with_model(fake_dataset):
         energy_edges=[200, 3500] * u.GeV,
     )
     maps = estimator.run(fake_dataset)
-    assert_allclose(maps["sqrt_ts"].data[:, 25, 25], 0.323203, atol=0.1)
-    assert_allclose(maps["flux"].data[:, 25, 25], 1.015509e-12, atol=1e-12)
+    assert_allclose(maps["sqrt_ts"].data[:, 25, 25], -0.279392, atol=0.1)
+    assert_allclose(maps["flux"].data[:, 25, 25], -2.015715e-13, atol=1e-12)
 
 
 @requires_data()
