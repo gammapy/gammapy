@@ -286,6 +286,20 @@ def test_absorption_io(tmp_path):
 
 
 @requires_dependency("naima")
+def test_naima_model():
+    import naima
+
+    particle_distribution = naima.models.PowerLaw(
+        amplitude=2e33 / u.eV, e_0=10 * u.TeV, alpha=2.5
+    )
+    radiative_model = naima.radiative.PionDecay(
+        particle_distribution, nh=1 * u.cm**-3
+    )
+    yield Model.create(
+        "NaimaSpectralModel", "spectral", radiative_model=radiative_model
+    )
+
+
 def make_all_models():
     """Make an instance of each model, for testing."""
     yield Model.create("ConstantSpatialModel", "spatial")
@@ -343,17 +357,6 @@ def make_all_models():
         data=np.ones((2, 3)),
         redshift=0.1,
         alpha_norm=1.0,
-    )
-    import naima
-
-    particle_distribution = naima.models.PowerLaw(
-        amplitude=2e33 / u.eV, e_0=10 * u.TeV, alpha=2.5
-    )
-    radiative_model = naima.radiative.PionDecay(
-        particle_distribution, nh=1 * u.cm**-3
-    )
-    yield Model.create(
-        "NaimaSpectralModel", "spectral", radiative_model=radiative_model
     )
     yield Model.create("ScaleSpectralModel", "spectral", model=PowerLawSpectralModel())
     yield Model.create("ConstantTemporalModel", "temporal")
