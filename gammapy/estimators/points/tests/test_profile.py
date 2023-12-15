@@ -63,7 +63,7 @@ def test_profile_content():
     )
     result = prof_maker.run(mapdataset_onoff)
 
-    imp_prof = result.to_table(sed_type="flux", format="profile")
+    imp_prof = result.to_table(sed_type="flux")
     assert_allclose(imp_prof[7]["x_min"], 0.1462, atol=1e-4)
     assert_allclose(imp_prof[7]["x_ref"], 0.1575, atol=1e-4)
     assert_allclose(imp_prof[7]["counts"], [[100.0], [100.0]], atol=1e-2)
@@ -98,7 +98,7 @@ def test_radial_profile():
     )
     result = prof_maker.run(dataset)
 
-    imp_prof = result.to_table(sed_type="flux", format="profile")
+    imp_prof = result.to_table(sed_type="flux")
 
     assert_allclose(imp_prof[7]["x_min"], 0.14, atol=1e-4)
     assert_allclose(imp_prof[7]["x_ref"], 0.15, atol=1e-4)
@@ -135,7 +135,7 @@ def test_radial_profile_one_interval():
     )
     result = prof_maker.run(dataset)
 
-    imp_prof = result.to_table(sed_type="flux", format="profile")
+    imp_prof = result.to_table(sed_type="flux")
 
     assert_allclose(imp_prof[7]["counts"], [[1960]], atol=1e-5)
     assert_allclose(imp_prof[7]["npred_excess"], [[1568.0]], rtol=1e-3)
@@ -163,7 +163,7 @@ def test_serialisation(tmpdir):
     est = FluxProfileEstimator(regions, energy_edges=[0.1, 10] * u.TeV)
     result = est.run(dataset)
 
-    result.write(tmpdir / "profile.fits", format="profile")
+    result.write(tmpdir / "profile.fits")
 
     profile = FluxPoints.read(
         tmpdir / "profile.fits",
@@ -208,17 +208,17 @@ def test_profile_with_model_or_mask():
         sum_over_energy_groups=True,
     )
     result = prof_maker.run(dataset)
-    imp_prof = result.to_table(sed_type="flux", format="profile")
+    imp_prof = result.to_table(sed_type="flux")
     assert_allclose(imp_prof[7]["npred_excess"], [[-1.115967]], rtol=1e-3)
 
     dataset.models = None
     result = prof_maker.run(dataset)
-    imp_prof = result.to_table(sed_type="flux", format="profile")
+    imp_prof = result.to_table(sed_type="flux")
     assert_allclose(imp_prof[7]["npred_excess"], [[112.95312]], rtol=1e-3)
 
     dataset.mask_fit = ~geom.region_mask([regions[7]])
     result = prof_maker.run(dataset)
-    imp_prof = result.to_table(sed_type="flux", format="profile")
+    imp_prof = result.to_table(sed_type="flux")
     assert_allclose(imp_prof[7]["npred_excess"], [[0]], rtol=1e-3)
 
 
@@ -242,7 +242,7 @@ def test_profile_multiprocessing():
         parallel_backend="multiprocessing",
     )
     result = prof_maker.run(dataset)
-    imp_prof = result.to_table(sed_type="flux", format="profile")
+    imp_prof = result.to_table(sed_type="flux")
     assert_allclose(imp_prof[7]["npred_excess"], [[-1.115967]], rtol=1e-3)
 
 
@@ -268,7 +268,7 @@ def test_profile_multiprocessing_ray_with_manager():
         assert prof_maker.n_jobs == 2
         assert prof_maker.parallel_backend == "ray"
         result = prof_maker.run(dataset)
-        imp_prof = result.to_table(sed_type="flux", format="profile")
+        imp_prof = result.to_table(sed_type="flux")
         assert_allclose(imp_prof[7]["npred_excess"], [[-1.115967]], rtol=1e-3)
 
 
@@ -293,5 +293,5 @@ def test_profile_multiprocessing_ray():
         parallel_backend="ray",
     )
     result = prof_maker.run(dataset)
-    imp_prof = result.to_table(sed_type="flux", format="profile")
+    imp_prof = result.to_table(sed_type="flux")
     assert_allclose(imp_prof[7]["npred_excess"], [[-1.115967]], rtol=1e-3)

@@ -96,7 +96,7 @@ def test_lightcurve_properties_time(lc):
 
 
 def test_lightcurve_properties_flux(lc):
-    table = lc.to_table(sed_type="flux", format="lightcurve")
+    table = lc.to_table(sed_type="flux")
     flux = table["flux"].quantity
     assert flux.unit == "cm-2 s-1"
     assert_allclose(flux.value, [[1e-11], [3e-11]])
@@ -109,7 +109,7 @@ def test_lightcurve_properties_flux(lc):
 
 @pytest.mark.parametrize("sed_type", ["dnde", "flux", "likelihood"])
 def test_lightcurve_read_write(tmp_path, lc, sed_type):
-    lc.write(tmp_path / "tmp.fits", format="lightcurve", sed_type=sed_type)
+    lc.write(tmp_path / "tmp.fits", sed_type=sed_type)
 
     lc = FluxPoints.read(tmp_path / "tmp.fits", format="lightcurve")
     assert_allclose(lc.gti.time_start[0].mjd, 55197.000766, rtol=1e-5)
@@ -253,7 +253,7 @@ def test_lightcurve_estimator_spectrum_datasets():
     estimator.norm.scan_n_values = 3
 
     lightcurve = estimator.run(datasets)
-    table = lightcurve.to_table(format="lightcurve")
+    table = lightcurve.to_table()
     assert_allclose(table["time_min"], [55197.0, 55197.041667])
     assert_allclose(table["time_max"], [55197.041667, 55197.083333])
     assert_allclose(table["e_ref"], [[5.623413], [5.623413]])
@@ -313,7 +313,7 @@ def test_lightcurve_estimator_spectrum_datasets_2_energy_bins():
     )
     estimator.norm.scan_n_values = 3
     lightcurve = estimator.run(datasets)
-    table = lightcurve.to_table(format="lightcurve")
+    table = lightcurve.to_table()
 
     assert_allclose(table["time_min"], [55197.0, 55197.041667])
     assert_allclose(table["time_max"], [55197.041667, 55197.083333])
@@ -440,7 +440,7 @@ def test_lightcurve_estimator_spectrum_datasets_with_mask_fit():
     )
     estimator.norm.scan_n_values = 3
     lightcurve = estimator.run(datasets)
-    table = lightcurve.to_table(format="lightcurve")
+    table = lightcurve.to_table()
     assert_allclose(table["time_min"], [55197.0, 55197.041667])
     assert_allclose(table["time_max"], [55197.041667, 55197.083333])
     assert_allclose(table["stat"], [[6.603043], [0.421051]], rtol=1e-3)
@@ -458,7 +458,7 @@ def test_lightcurve_estimator_spectrum_datasets_default():
     )
     estimator.norm.scan_n_values = 3
     lightcurve = estimator.run(datasets)
-    table = lightcurve.to_table(format="lightcurve")
+    table = lightcurve.to_table()
     assert_allclose(table["time_min"], [55197.0, 55197.041667])
     assert_allclose(table["time_max"], [55197.041667, 55197.083333])
     assert_allclose(table["norm"], [[0.911963], [0.906931]], rtol=1e-3)
@@ -480,7 +480,7 @@ def test_lightcurve_estimator_spectrum_datasets_notordered():
     )
     estimator.norm.scan_n_values = 3
     lightcurve = estimator.run(datasets)
-    table = lightcurve.to_table(format="lightcurve")
+    table = lightcurve.to_table()
     assert_allclose(table["time_min"], [55197.0, 55197.041667])
     assert_allclose(table["time_max"], [55197.041667, 55197.083333])
     assert_allclose(table["norm"], [[0.911963], [0.906931]], rtol=1e-3)
@@ -498,7 +498,7 @@ def test_lightcurve_estimator_spectrum_datasets_largerbin():
     )
     estimator.norm.scan_n_values = 3
     lightcurve = estimator.run(datasets)
-    table = lightcurve.to_table(format="lightcurve")
+    table = lightcurve.to_table()
 
     assert_allclose(table["time_min"], [55197.0])
     assert_allclose(table["time_max"], [55197.083333])
@@ -529,7 +529,7 @@ def test_lightcurve_estimator_spectrum_datasets_emptybin():
     )
     estimator.norm.scan_n_values = 3
     lightcurve = estimator.run(datasets)
-    table = lightcurve.to_table(format="lightcurve")
+    table = lightcurve.to_table()
 
     assert_allclose(table["time_min"], [55197.0])
     assert_allclose(table["time_max"], [55197.083333])
@@ -606,7 +606,7 @@ def test_lightcurve_estimator_map_datasets():
         selection_optional=["scan"],
     )
     lightcurve = estimator.run(datasets)
-    table = lightcurve.to_table(format="lightcurve")
+    table = lightcurve.to_table()
     assert_allclose(table["time_min"], [55197.0, 55197.041667])
     assert_allclose(table["time_max"], [55197.041667, 55197.083333])
     assert_allclose(table["e_ref"], [[10.857111], [10.857111]])
@@ -631,7 +631,7 @@ def test_lightcurve_estimator_map_datasets():
         selection_optional=["scan"],
     )
     lightcurve2 = estimator2.run(datasets)
-    table = lightcurve2.to_table(format="lightcurve")
+    table = lightcurve2.to_table()
     assert_allclose(table["time_min"][0], [55197.0])
     assert_allclose(table["time_max"][0], [55197.083333])
     assert_allclose(table["e_ref"][0], [10.857111], rtol=1e-5)
@@ -665,7 +665,7 @@ def test_lightcurve_estimator_map_datasets_ray_actors():
         selection_optional=["scan"],
     )
     lightcurve = estimator.run(datasets)
-    table = lightcurve.to_table(format="lightcurve")
+    table = lightcurve.to_table()
     assert_allclose(table["time_min"], [55197.0, 55197.041667])
     assert_allclose(table["time_max"], [55197.041667, 55197.083333])
     assert_allclose(table["e_ref"], [[10.857111], [10.857111]])
@@ -690,7 +690,7 @@ def test_lightcurve_estimator_map_datasets_ray_actors():
         selection_optional=["scan"],
     )
     lightcurve2 = estimator2.run(datasets)
-    table = lightcurve2.to_table(format="lightcurve")
+    table = lightcurve2.to_table()
     assert_allclose(table["time_min"][0], [55197.0])
     assert_allclose(table["time_max"][0], [55197.083333])
     assert_allclose(table["e_ref"][0], [10.857111], rtol=1e-5)

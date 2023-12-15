@@ -156,7 +156,7 @@ class FluxPoints(FluxMaps):
             gti=gti,
         )
 
-    def write(self, filename, sed_type=None, overwrite=False):
+    def write(self, filename, sed_type=None, format=None, overwrite=False):
         """Write flux points.
 
         Parameters
@@ -165,6 +165,23 @@ class FluxPoints(FluxMaps):
             Filename.
         sed_type : {"dnde", "flux", "eflux", "e2dnde", "likelihood"}, optional
             SED type. Default is None.
+        format : {"gadf-sed", "lightcurve", "binned-time-series", "profile"}, optional
+            Format specification. The following formats are supported:
+
+                * "gadf-sed": format for SED flux points see :ref:`gadf:flux-points`
+                  for details
+                * "lightcurve": Gammapy internal format to store energy dependent
+                  lightcurves. Basically a generalisation of the "gadf" format, but
+                  currently there is no detailed documentation available.
+                * "binned-time-series": table format support by Astropy's
+                  `~astropy.timeseries.BinnedTimeSeries`.
+                * "profile": Gammapy internal format to store energy dependent
+                  flux profiles. Basically a generalisation of the "gadf" format, but
+                  currently there is no detailed documentation available.
+
+                If None, the format will be guessed by looking at the axes that are present in the object.
+                Default is None.
+
         overwrite : bool, optional
             Overwrite existing file. Default is False.
         """
@@ -172,7 +189,7 @@ class FluxPoints(FluxMaps):
 
         if sed_type is None:
             sed_type = self.sed_type_init
-        table = self.to_table(sed_type=sed_type)
+        table = self.to_table(sed_type=sed_type, format=format)
 
         # TODO: rather ugly - better method?
         if ".fits" not in filename.suffixes:
@@ -302,13 +319,30 @@ class FluxPoints(FluxMaps):
         else:
             return "gadf-sed"
 
-    def to_table(self, sed_type=None, formatted=False):
+    def to_table(self, sed_type=None, format=None, formatted=False):
         """Create table for a given SED type.
 
         Parameters
         ----------
         sed_type : {"likelihood", "dnde", "e2dnde", "flux", "eflux"}
             SED type to convert to. Default is `likelihood`.
+        format : {"gadf-sed", "lightcurve", "binned-time-series", "profile"}, optional
+            Format specification. The following formats are supported:
+
+                * "gadf-sed": format for SED flux points see :ref:`gadf:flux-points`
+                  for details
+                * "lightcurve": Gammapy internal format to store energy dependent
+                  lightcurves. Basically a generalisation of the "gadf" format, but
+                  currently there is no detailed documentation available.
+                * "binned-time-series": table format support by Astropy's
+                  `~astropy.timeseries.BinnedTimeSeries`.
+                * "profile": Gammapy internal format to store energy dependent
+                  flux profiles. Basically a generalisation of the "gadf" format, but
+                  currently there is no detailed documentation available.
+
+                If None, the format will be guessed by looking at the axes that are present in the object.
+                Default is None.
+
         formatted : bool
             Formatted version with column formats applied. Numerical columns are
             formatted to .3f and .3e respectively. Default is False.
@@ -336,7 +370,8 @@ class FluxPoints(FluxMaps):
         if sed_type is None:
             sed_type = self.sed_type_init
 
-        format = self._guess_format
+        if format is None:
+            format = self._guess_format()
 
         if format == "gadf-sed":
             # TODO: what to do with GTI info?
