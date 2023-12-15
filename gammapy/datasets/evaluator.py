@@ -69,7 +69,6 @@ class MapEvaluator:
         self.mask = mask
         self.gti = gti
         self.use_cache = use_cache
-        self._init_position = None
         self.contributes = True
         self.psf_containment = None
 
@@ -161,7 +160,12 @@ class MapEvaluator:
         is_circle_region = isinstance(geom.region, CircleSkyRegion)
         return is_point_model & is_circle_region
 
-    @property
+    @lazyproperty
+    def position(self):
+        """Latest evaluation position."""
+        return self.model.position
+
+    @lazyproperty
     def cutout_width(self):
         """Cutout width for the model component."""
         return self.psf_width + 2 * (self.model.evaluation_radius + CUTOUT_MARGIN)
@@ -185,11 +189,14 @@ class MapEvaluator:
         # TODO: simplify and clean up
         log.debug("Updating model evaluator")
 
+        del self.position
+        del self.cutout_width
+
         # lookup edisp
         if edisp:
             energy_axis = geom.axes["energy"]
             self.edisp = edisp.get_edisp_kernel(
-                position=self.model.position, energy_axis=energy_axis
+                position=self.position, energy_axis=energy_axis
             )
             del self._edisp_diagonal
 
@@ -210,7 +217,7 @@ class MapEvaluator:
                     geom_psf = geom_psf.to_wcs_geom()
 
                 self.psf = psf.get_psf_kernel(
-                    position=self.model.position,
+                    position=self.position,
                     geom=geom_psf,
                     containment=PSF_CONTAINMENT,
                     max_radius=PSF_MAX_RADIUS,
@@ -222,7 +229,7 @@ class MapEvaluator:
             self.contributes = self.model.contributes(mask=mask, margin=self.psf_width)
             if self.contributes and not self.geom.is_region:
                 self._geom = exposure.geom.cutout(
-                    position=self.model.position, width=self.cutout_width, odd_npix=True
+                    position=self.position, width=self.cutout_width, odd_npix=True
                 )
         self.update_spatial_oversampling_factor(self.geom)
 
@@ -245,7 +252,7 @@ class MapEvaluator:
             and self.contributes
         ):
             return self._exposure.cutout(
-                position=self.model.position, width=self.cutout_width, odd_npix=True
+                position=self.position, width=self.cutout_width, odd_npix=True
             )
         else:
             return self._exposure
