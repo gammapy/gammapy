@@ -277,7 +277,7 @@ class FixedPointingInfo:
 
         Parameters
         ----------
-        format : str, optional
+        format : {"gadf"}
             Format, currently only "gadf" is supported. Default is "gadf".
         version : str, optional
             Version of the ``format``, this function currently supports

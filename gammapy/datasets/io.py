@@ -64,8 +64,8 @@ class OGIPDatasetWriter(DatasetWriter):
         Filename.
     format : {"ogip", "ogip-sherpa"}
         Which format to use. Default is 'ogip'.
-    overwrite : bool
-        Overwrite existing files? Default is False.
+    overwrite : bool, optional
+        Overwrite existing files. Default is False.
     checksum : bool
         When True adds both DATASUM and CHECKSUM cards to the headers written to the files.
         Default is False.

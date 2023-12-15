@@ -30,7 +30,7 @@ class BackgroundIRF(IRF):
         ----------
         table : `~astropy.table.Table`
             Table with background data.
-        format : {"gadf-dl3"}, optional
+        format : {"gadf-dl3"}
             Format specification. Default is "gadf-dl3".
 
         Returns

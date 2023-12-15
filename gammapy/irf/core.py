@@ -411,7 +411,7 @@ class IRF(metaclass=abc.ABCMeta):
             HDU list.
         hdu : str
             HDU name.
-        format : {"gadf-dl3"}, optional
+        format : {"gadf-dl3"}
             Format specification. Default is "gadf-dl3".
 
         Returns
