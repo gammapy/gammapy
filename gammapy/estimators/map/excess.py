@@ -20,8 +20,24 @@ log = logging.getLogger(__name__)
 
 
 def convolved_map_dataset_counts_statistics(dataset, kernel, mask, correlate_off):
-    """Return CountsDataset objects containing smoothed maps from the MapDataset."""
-    # TODO: Add a full docstring
+    """Return a `CountsStatistic` object.
+
+    Parameters
+    ----------
+    dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.MapDatasetOnOff`
+        Map dataset.
+    kernel : `~astropy.convolution.Kernel`
+        Kernel.
+    mask : `~gammapy.maps.Map`
+        Mask map.
+    correlate_off : bool
+        Correlate OFF events.
+
+    Returns
+    -------
+    counts_statistic : `~gammapy.stats.CashCountsStatistic` or `~gammapy.stats.WStatCountsStatistic`
+        The counts statistic.
+    """
     # Kernel is modified later make a copy here
     kernel = copy.deepcopy(kernel)
     kernel_data = kernel.data / kernel.data.max()
@@ -80,8 +96,8 @@ class ExcessMapEstimator(Estimator):
 
     Parameters
     ----------
-    correlation_radius : ~astropy.coordinate.Angle
-        correlation radius to use
+    correlation_radius : `~astropy.coordinate.Angle`
+        Correlation radius to use.
     n_sigma : float
         Confidence level for the asymmetric errors expressed in number of sigma.
     n_sigma_ul : float
