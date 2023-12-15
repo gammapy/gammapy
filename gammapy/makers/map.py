@@ -25,8 +25,9 @@ class MapDatasetMaker(Maker):
 
     Parameters
     ----------
-    selection : {'counts', 'exposure', 'background', 'psf', 'edisp'}
-        List of str, selecting which maps to make.
+    selection : list of str, optional
+        Select which maps to make, the available options are:
+        'counts', 'exposure', 'background', 'psf', 'edisp'.
         By default, all maps are made.
     background_oversampling : int
         Background evaluation oversampling factor in energy.
