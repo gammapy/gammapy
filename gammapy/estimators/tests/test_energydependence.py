@@ -1,3 +1,4 @@
+import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
@@ -68,6 +69,7 @@ class MyCustomGaussianModel(SpatialModel):
         return 2 * np.max([self.sigma_1TeV.value, self.sigma_10TeV.value]) * u.deg
 
 
+@pytest.fixture()
 def create_dataset():
     source_lat = 0.2
     source_lon = 5.6
@@ -85,7 +87,7 @@ def create_dataset():
     )
     livetime = 10.0 * u.hr
     location = observatory_locations["cta_south"]
-    # TO DO: update to remove 'mode' in 1.3
+    # TODO: update to remove 'mode' in 1.3
     pointing = FixedPointingInfo(
         mode=PointingMode.POINTING,
         fixed_icrs=SkyCoord(source_lon, source_lat, unit="deg", frame="galactic").icrs,
@@ -124,78 +126,83 @@ def create_dataset():
     return dataset
 
 
-source_pos = SkyCoord(5.58, 0.2, unit="deg", frame="galactic")
-energy_edges = [1, 3, 5, 20] * u.TeV
-spectral_model = PowerLawSpectralModel(
-    index=2.94, amplitude=9.8e-12 * u.Unit("cm-2 s-1 TeV-1"), reference=1.0 * u.TeV
-)
-spatial_model = GaussianSpatialModel(
-    lon_0=source_pos.l, lat_0=source_pos.b, frame="galactic", sigma=0.2 * u.deg
-)
+@pytest.fixture()
+def create_model():
+    source_pos = SkyCoord(5.58, 0.2, unit="deg", frame="galactic")
 
-model = SkyModel(
-    spatial_model=spatial_model, spectral_model=spectral_model, name="source"
-)
-
-model.spatial_model.lon_0.frozen = False
-model.spatial_model.lat_0.frozen = False
-model.spatial_model.sigma.frozen = False
-
-model.spectral_model.amplitude.frozen = False
-model.spectral_model.index.frozen = True
-
-spatial_model.lon_0.min = source_pos.galactic.l.deg - 0.8
-spatial_model.lon_0.max = source_pos.galactic.l.deg + 0.8
-spatial_model.lat_0.min = source_pos.galactic.b.deg - 0.8
-spatial_model.lat_0.max = source_pos.galactic.b.deg + 0.8
-
-dataset = create_dataset()
-dataset.models = model
-
-datasets = Datasets([dataset])
-
-estimator = EnergyDependenceEstimator(energy_edges=energy_edges, source="source")
-results = estimator.run(datasets)
-
-
-def test_edep():
-    results_edep = results["energy_dependence"]["result"]
-    assert_allclose(
-        results_edep["lon_0"],
-        [5.5998565, 5.6019022, 5.5950808, 5.6037077] * u.deg,
-        atol=1e-5,
+    spectral_model = PowerLawSpectralModel(
+        index=2.94, amplitude=9.8e-12 * u.Unit("cm-2 s-1 TeV-1"), reference=1.0 * u.TeV
     )
-    assert_allclose(
-        results_edep["lat_0"],
-        [0.19172701, 0.20034268, 0.18426731, 0.17378267] * u.deg,
-        atol=1e-5,
-    )
-    assert_allclose(
-        results_edep["sigma"],
-        [0.24587518, 0.2803327, 0.1891126, 0.18796409] * u.deg,
-        atol=1e-5,
-    )
-    assert_allclose(
-        results["energy_dependence"]["delta_ts"], 106.24408925812168, atol=1e-5
+    spatial_model = GaussianSpatialModel(
+        lon_0=source_pos.l, lat_0=source_pos.b, frame="galactic", sigma=0.2 * u.deg
     )
 
-
-def test_significance():
-    results_src = results["src_above_bkg"]
-    assert_allclose(
-        results_src["delta_ts"],
-        [2829.929195159726, 1168.6506571890714, 435.2570648315741],
-        atol=1e-5,
-    )
-    assert_allclose(
-        results_src["significance"],
-        [np.inf, 33.88815235691276, 20.44481642577318],
-        atol=1e-5,
+    model = SkyModel(
+        spatial_model=spatial_model, spectral_model=spectral_model, name="source"
     )
 
+    model.spatial_model.lon_0.frozen = False
+    model.spatial_model.lat_0.frozen = False
+    model.spatial_model.sigma.frozen = False
 
-def test_chi2():
-    results_edep = results["energy_dependence"]["result"]
-    chi2_sigma = weighted_chi2_parameter(results_edep, parameter="sigma")
-    assert_allclose(chi2_sigma["chi2 sigma"], [112.94799861481167], atol=1e-5)
-    assert_allclose(chi2_sigma["significance"], [10.382582300984913], atol=1e-5)
+    model.spectral_model.amplitude.frozen = False
+    model.spectral_model.index.frozen = True
+
+    model.spatial_model.lon_0.min = source_pos.galactic.l.deg - 0.8
+    model.spatial_model.lon_0.max = source_pos.galactic.l.deg + 0.8
+    model.spatial_model.lat_0.min = source_pos.galactic.b.deg - 0.8
+    model.spatial_model.lat_0.max = source_pos.galactic.b.deg + 0.8
+
+    return model
+
+
+class TestEnergyDependentEstimator:
+    def __init__(self):
+        energy_edges = [1, 3, 5, 20] * u.TeV
+        dataset = create_dataset()
+        dataset.models = create_model()
+        datasets = Datasets([dataset])
+        estimator = EnergyDependenceEstimator(
+            energy_edges=energy_edges, source="source"
+        )
+        self.results = estimator.run(datasets)
+
+    def test_edep(self):
+        results_edep = self.results["energy_dependence"]["result"]
+        assert_allclose(
+            results_edep["lon_0"],
+            [5.5998565, 5.6019022, 5.5950808, 5.6037077] * u.deg,
+            atol=1e-5,
+        )
+        assert_allclose(
+            results_edep["lat_0"],
+            [0.19172701, 0.20034268, 0.18426731, 0.17378267] * u.deg,
+            atol=1e-5,
+        )
+        assert_allclose(
+            results_edep["sigma"],
+            [0.24587518, 0.2803327, 0.1891126, 0.18796409] * u.deg,
+            atol=1e-5,
+        )
+        assert_allclose(
+            self.results["energy_dependence"]["delta_ts"], 106.24408925812168, atol=1e-5
+        )
+
+    def test_significance(self):
+        results_src = self.results["src_above_bkg"]
+        assert_allclose(
+            results_src["delta_ts"],
+            [2829.929195159726, 1168.6506571890714, 435.2570648315741],
+            atol=1e-5,
+        )
+        assert_allclose(
+            results_src["significance"],
+            [np.inf, 33.88815235691276, 20.44481642577318],
+            atol=1e-5,
+        )
+
+    def test_chi2(self):
+        results_edep = self.results["energy_dependence"]["result"]
+        chi2_sigma = weighted_chi2_parameter(results_edep, parameter="sigma")
+        assert_allclose(chi2_sigma["chi2 sigma"], [112.94799861481167], atol=1e-5)
+        assert_allclose(chi2_sigma["significance"], [10.382582300984913], atol=1e-5)

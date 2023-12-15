@@ -67,7 +67,7 @@ class EnergyDependenceEstimator(Estimator):
 
     tag = "EnergyDependenceEstimator"
 
-    def __init__(self, energy_edges, source, fit=None):
+    def __init__(self, energy_edges, source=0, fit=None):
 
         self.energy_edges = energy_edges
         self.source = source
@@ -88,7 +88,7 @@ class EnergyDependenceEstimator(Estimator):
 
         Returns
         -------
-        slices_src : ``~gammapy.datasets.Datasets`
+        slices_src : `~gammapy.datasets.Datasets`
             Sliced datasets.
         """
         model = datasets.models[self.source]
