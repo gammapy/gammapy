@@ -489,8 +489,8 @@ class MapDataset(Dataset):
 
     def _background_parameters_changed(self):
         values = self.background_model.parameters.value
-        # TODO: possibly allow for a tolerance here?
-        changed = ~np.all(self._background_parameters_cached == values)
+        changed = not np.allclose(self._background_parameters_cached, values, atol=1e-4)
+
         if changed:
             self._background_parameters_cached = values
         return changed

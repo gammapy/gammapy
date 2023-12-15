@@ -47,14 +47,15 @@ def make_catalog_random_positions_cube(
 
     Parameters
     ----------
-    size : int
-        Number of sources.
+    size : int, optional
+        Number of sources. Default is 100.
     dimension : {1, 2, 3}
-        Number of dimensions.
-    distance_max : `~astropy.units.Quantity`
-        Maximum distance.
+        Number of dimensions. Default is 3.
+    distance_max : `~astropy.units.Quantity`, optional
+        Maximum distance. Default is "1 pc".
     random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
         Defines random number generator initialisation.
+        Default is 'random-seed'.
         Passed to `~gammapy.utils.random.get_random_state`.
 
     Returns
@@ -99,12 +100,13 @@ def make_catalog_random_positions_sphere(
 
     Parameters
     ----------
-    size : int
-        Number of sources.
-    distance_min, distance_max : `~astropy.units.Quantity`
-        Minimum and maximum distance.
+    size : int, optional
+        Number of sources. Default is 100.
+    distance_min, distance_max : `~astropy.units.Quantity`, optional
+        Minimum and maximum distance. Default is "0 pc" and "1 pc", respectively.
     random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
         Defines random number generator initialisation.
+        Default is "random-state".
         Passed to `~gammapy.utils.random.get_random_state`.
 
     Returns
@@ -141,29 +143,34 @@ def make_base_catalog_galactic(
     """Make a catalog of Galactic sources, with basic source parameters.
 
     Choose a radial distribution, a velocity distribution, the number
-    of pulsars n_pulsars, the maximal age max_age[years] and the fraction
-    of the individual morphtypes. There's an option spiralarms. If set on
-    True a spiralarm modeling after Faucher&Kaspi is included.
+    of sources ``n_sources`` and the maximum age ``max_age`` in years. If ``spiralarms``
+    is True a spiral arm modeling after Faucher&Kaspi is included.
 
-    max_age and n_sources effectively correspond to s SN rate:
-    SN_rate = n_sources / max_age
+    ``max_age`` and ``n_sources`` effectively correspond to a SN rate:
+    SN_rate = ``n_sources`` / ``max_age``
 
     Parameters
     ----------
     n_sources : int
         Number of sources to simulate.
-    rad_dis : callable
+    rad_dis : callable, optional
         Radial surface density distribution of sources.
-    vel_dis : callable
+        Default is "YK04".
+    vel_dis : callable, optional
         Proper motion velocity distribution of sources.
-    max_age : `~astropy.units.Quantity`
+        Default is "H05".
+    max_age : `~astropy.units.Quantity`, optional
         Maximal age of the source.
-    spiralarms : bool
+        Default is "1e6 yr".
+    spiralarms : bool, optional
         Include a spiral arm model in the catalog.
-    n_ISM : `~astropy.units.Quantity`
+        Default is True.
+    n_ISM : `~astropy.units.Quantity`, optional
         Density of the interstellar medium.
+        Default is "1 cm-3".
     random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
         Defines random number generator initialisation.
+        Default is "random-state".
         Passed to `~gammapy.utils.random.get_random_state`.
 
     Returns
@@ -259,7 +266,21 @@ def make_base_catalog_galactic(
 def add_snr_parameters(table):
     """Add SNR parameters to the table.
 
-    TODO: document
+    Parameters
+    ----------
+    table : `~astropy.table.Table`
+        Table that requires at least columns "age" and "n_ISM" to be defined.
+
+    Returns
+    -------
+    table : `~astropy.table.Table`
+        Table with the following entries:
+
+                * "E_SN" : SNR kinetic energy
+                * "r_out" : SNR outer radius
+                * "r_in" : SNR inner radius
+                * "L_SNR" : SNR photon rate above 1 TeV
+
     """
     # Read relevant columns
     age = table["age"].quantity
@@ -290,11 +311,19 @@ def add_pulsar_parameters(
 ):
     """Add pulsar parameters to the table.
 
-    For the initial normal distribution of period and logB can exist the following
-    Parameters: B_mean=12.05[log Gauss], B_stdv=0.55, P_mean=0.3[s], P_stdv=0.15.
+    For the initial normal distribution of period and logB is given with
+    the default values.
 
     Parameters
     ----------
+    B_mean : float, optional
+        The mean magnetic field. Default is 12.05 (log Gauss).
+    B_stdv : float, optional
+        The standard deviation magnetic field. Default is 0.55.
+    P_mean : float, optional
+        The mean period. Default is 0.3 (seconds).
+    P_stdv : float, optional
+        The standard deviation period. Default is 0.15.
     random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
         Defines random number generator initialisation.
         Passed to `~gammapy.utils.random.get_random_state`.
@@ -343,7 +372,17 @@ def add_pulsar_parameters(
 def add_pwn_parameters(table):
     """Add PWN parameters to the table.
 
-    TODO: document
+    Parameters
+    ----------
+    table : `~astropy.table.Table`
+        Table that requires at least the following columns to be defined:
+        "age", "E_SN", "n_ISM", "P0_birth" and "B_PSR".
+
+    Returns
+    -------
+    table : `~astropy.table.Table`
+        Table with the additional entry "r_out_PWN" which is the outer radius
+        of the PWN.
     """
     # Some of the computations (specifically `pwn.radius`) aren't vectorised
     # across all parameters; so here we loop over source parameters explicitly
