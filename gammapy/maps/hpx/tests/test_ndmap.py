@@ -111,8 +111,8 @@ def test_hpxmap_read_write_fgst(tmp_path):
     m2 = Map.read(path)
     assert m2 is not None
     assert_allclose(m2.geom.axes["energy"].edges, axis.edges, atol=1e-3)
-    assert_allclose(m, m2, atol=1e-4)
-    assert_allclose(m.data, m2.data, atol=1e-4)
+    assert m.geom.is_allclose(m2.geom)
+    assert m.is_allclose(m2)
 
     # Test Model Cube
     m.write(path, format="fgst-template", overwrite=True)
@@ -124,8 +124,8 @@ def test_hpxmap_read_write_fgst(tmp_path):
 
     m2 = Map.read(path)
     assert m2 is not None
-    assert_allclose(m, m2, atol=1e-4)
-    assert_allclose(m.data, m2.data, atol=1e-4)
+    assert  m.geom.is_allclose(m2)
+    assert m.is_allclose(m2)
 
 
 @requires_data()
