@@ -27,7 +27,7 @@ class DatasetsMaker(Maker, parallel.ParallelMixin):
     n_jobs : int, optional
         Number of processes to run in parallel.
         Default is one, unless `~gammapy.utils.parallel.N_JOBS_DEFAULT` was modified.
-    cutout_mode : {'trim', 'partial', 'strict'}, optional
+    cutout_mode : {'trim', 'partial', 'strict'}
         Used only to cutout the reference `MapDataset` around each processed observation.
         Mode is an option for Cutout2D, for details see `~astropy.nddata.utils.Cutout2D`.
         Default is "trim".

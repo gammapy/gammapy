@@ -62,7 +62,7 @@ class HpxMap(Map):
         map_type : {'hpx', 'hpx-sparse'}, optional
             Map type. Selects the class that will be used to
             instantiate the map. Default is "hpx".
-        frame : {"icrs", "galactic"}, optional
+        frame : {"icrs", "galactic"}
             Coordinate system, either Galactic ("galactic") or Equatorial ("icrs").
             Default is "icrs".
         data : `~numpy.ndarray`, optional
@@ -303,7 +303,7 @@ class HpxMap(Map):
             Set INDXSCHM to SPARSE and sparsify the map by only
             writing pixels with non-zero amplitude.
             Default is False.
-        format : {'fgst-ccube', 'fgst-template', 'gadf', None}, optional
+        format : {None, 'fgst-ccube', 'fgst-template', 'gadf'}
             FITS format convention. If None this will be set to the
             default convention of the map. Default is None.
 
