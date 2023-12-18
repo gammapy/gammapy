@@ -124,7 +124,7 @@ def test_hpxmap_read_write_fgst(tmp_path):
 
     m2 = Map.read(path)
     assert m2 is not None
-    assert  m.geom.is_allclose(m2)
+    assert m.geom.is_allclose(m2.geom)
     assert m.is_allclose(m2)
 
 
