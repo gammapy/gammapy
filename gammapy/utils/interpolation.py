@@ -113,8 +113,8 @@ class ScaledRegularGridInterpolator:
             Tuple of coordinate arrays of the form (x_1, x_2, x_3, ...). Arrays are
             broadcast internally.
         method : {None, "linear", "nearest"}
-            Linear or nearest neighbour interpolation. None will choose the default
-            defined on init.
+            Linear or nearest neighbour interpolation.
+            Default is None, which is `method` defined on init.
         clip : bool
             Clip values at zero after interpolation.
         """
@@ -248,7 +248,7 @@ def interpolate_profile(x, y, interp_scale="sqrt"):
         Array of x values.
     y : `~numpy.ndarray`
         Array of y values.
-    interp_scale : {"sqrt", "lin"}, optional
+    interp_scale : {"sqrt", "lin"}
         Interpolation scale applied to the profile. If the profile is
         of parabolic shape, a "sqrt" scaling is recommended. In other cases or
         for fine sampled profiles a "lin" can also be used.

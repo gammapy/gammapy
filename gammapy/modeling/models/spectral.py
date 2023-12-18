@@ -430,7 +430,7 @@ class SpectralModel(ModelBase):
             Plot energy bounds passed to MapAxis.from_energy_bounds.
         ax : `~matplotlib.axes.Axes`, optional
             Matplotlib axes. Default is None.
-        sed_type : {"dnde", "flux", "eflux", "e2dnde"}, optional
+        sed_type : {"dnde", "flux", "eflux", "e2dnde"}
             Evaluation methods of the model. Default is "dnde".
         energy_power : int, optional
             Power of energy to multiply flux axis with. Default is 0.
@@ -502,7 +502,7 @@ class SpectralModel(ModelBase):
             Plot energy bounds passed to `~gammapy.maps.MapAxis.from_energy_bounds`.
         ax : `~matplotlib.axes.Axes`, optional
             Matplotlib axes. Default is None.
-        sed_type : {"dnde", "flux", "eflux", "e2dnde"}, optional
+        sed_type : {"dnde", "flux", "eflux", "e2dnde"}
             Evaluation methods of the model. Default is "dnde".
         energy_power : int, optional
             Power of energy to multiply flux axis with. Default is 0.

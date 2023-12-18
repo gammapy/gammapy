@@ -700,7 +700,7 @@ class DatasetModels(collections.abc.Sequence):
             Name of the dataset. Default is None.
         tag : str or list, optional
             Model tag. Default is None.
-        model_type : {'None', 'spatial', 'spectral'}, optional
+        model_type : {'None', 'spatial', 'spectral'}
            Type of model, used together with "tag", if the tag is not unique. Default is None.
         frozen : bool, optional
             If True, select models with all parameters frozen; if False, exclude them.  Default is None.
@@ -733,7 +733,7 @@ class DatasetModels(collections.abc.Sequence):
             Name of the dataset. Default is None.
         tag : str or list of str, optional
             Model tag. Default is None.
-        model_type : {'None', 'spatial', 'spectral'}, optional
+        model_type : {'None', 'spatial', 'spectral'}
            Type of model, used together with "tag", if the tag is not unique. Default is None.
         frozen : bool, optional
             Select models with all parameters frozen if True, exclude them if False. Default is None.
@@ -909,7 +909,7 @@ class DatasetModels(collections.abc.Sequence):
 
         Parameters
         ----------
-        model_type : {None, "spatial", "spectral"}, optional
+        model_type : {None, "spatial", "spectral"}
            Freeze all parameters or only spatial or only spectral.
            Default is None.
         """
@@ -921,7 +921,7 @@ class DatasetModels(collections.abc.Sequence):
 
         Parameters
         ----------
-        model_type : {None, "spatial", "spectral"}, optional
+        model_type : {None, "spatial", "spectral"}
            Restore frozen status to default for all parameters or only spatial or only spectral.
            Default is None.
         """

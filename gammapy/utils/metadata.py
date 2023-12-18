@@ -84,7 +84,7 @@ class MetaData(BaseModel):
 
         Parameters
         ----------
-        format : {'gadf'}, optional
+        format : {'gadf'}
             Header format. Default is 'gadf'.
 
         Returns
@@ -129,7 +129,7 @@ class MetaData(BaseModel):
         ----------
         header : dict
             The header dictionary.
-        format : {'gadf'}, optional
+        format : {'gadf'}
             Header format. Default is 'gadf'.
         """
         if format != "gadf":
