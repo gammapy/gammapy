@@ -44,7 +44,7 @@ def lc():
     )
     gti = GTI.create("0h", "1h", "2010-01-01T00:00:00")
 
-    return FluxPoints.from_table(table=table, format="lightcurve", gti=gti)
+    return FluxPoints.from_table(table=table, gti=gti)
 
 
 @pytest.fixture(scope="session")
@@ -65,7 +65,7 @@ def lc_2d():
         ],
     )
 
-    return FluxPoints.from_table(table=table, format="lightcurve")
+    return FluxPoints.from_table(table=table)
 
 
 def test_lightcurve_str(lc):
@@ -111,7 +111,7 @@ def test_lightcurve_properties_flux(lc):
 def test_lightcurve_read_write(tmp_path, lc, sed_type):
     lc.write(tmp_path / "tmp.fits", sed_type=sed_type)
 
-    lc = FluxPoints.read(tmp_path / "tmp.fits", format="lightcurve")
+    lc = FluxPoints.read(tmp_path / "tmp.fits")
     assert_allclose(lc.gti.time_start[0].mjd, 55197.000766, rtol=1e-5)
 
     # Check if time-related info round-trips
@@ -283,9 +283,7 @@ def test_lightcurve_estimator_spectrum_datasets():
     assert table.meta["MJDREFI"] == 0
 
     # TODO: fix reference model I/O
-    fp = FluxPoints.from_table(
-        table=table, format="lightcurve", reference_model=PowerLawSpectralModel()
-    )
+    fp = FluxPoints.from_table(table=table, reference_model=PowerLawSpectralModel())
     assert fp.norm.geom.axes.names == ["energy", "time"]
     assert fp.counts.geom.axes.names == ["dataset", "energy", "time"]
     assert fp.stat_scan.geom.axes.names == ["norm", "energy", "time"]
@@ -407,9 +405,7 @@ def test_lightcurve_estimator_spectrum_datasets_2_energy_bins():
         rtol=1e-3,
     )
 
-    fp = FluxPoints.from_table(
-        table=table, format="lightcurve", reference_model=PowerLawSpectralModel()
-    )
+    fp = FluxPoints.from_table(table=table, reference_model=PowerLawSpectralModel())
     assert fp.norm.geom.axes.names == ["energy", "time"]
     assert fp.counts.geom.axes.names == ["dataset", "energy", "time"]
     assert fp.stat_scan.geom.axes.names == ["norm", "energy", "time"]

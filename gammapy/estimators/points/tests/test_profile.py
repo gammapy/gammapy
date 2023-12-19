@@ -167,7 +167,6 @@ def test_serialisation(tmpdir):
 
     profile = FluxPoints.read(
         tmpdir / "profile.fits",
-        format="profile",
         reference_model=PowerLawSpectralModel(),
     )
 
