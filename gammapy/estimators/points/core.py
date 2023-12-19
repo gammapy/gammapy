@@ -246,7 +246,7 @@ class FluxPoints(FluxMaps):
             Table.
         sed_type : {"dnde", "flux", "eflux", "e2dnde", "likelihood"}, optional
             SED type. Default is None.
-        format : {"gadf-sed", "lightcurve", "profile"}
+        format : {"gadf-sed", "lightcurve", "profile"}, optional
             Table format. If None, it is extracted from the table column content. Default is None.
         reference_model : `SpectralModel`, optional
             Reference spectral model. Default is None.
