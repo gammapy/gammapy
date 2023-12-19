@@ -97,7 +97,9 @@ def test_hpxmap_read_write(tmp_path, nside, nested, frame, region, axes):
 def test_hpxmap_read_write_fgst(tmp_path):
     path = tmp_path / "tmp.fits"
 
-    axis = MapAxis.from_bounds(100.0, 1000.0, 4, name="energy", unit="MeV")
+    axis = MapAxis.from_bounds(
+        100.0, 1000.0, 4, name="energy", unit="MeV", interp="log"
+    )
 
     # Test Counts Cube
     m = create_map(8, False, "galactic", None, [axis])
@@ -110,7 +112,7 @@ def test_hpxmap_read_write_fgst(tmp_path):
 
     m2 = Map.read(path)
     assert m2 is not None
-    assert_allclose(m2.geom.axes["energy"].edges, axis.edges, atol=1e-3)
+    assert m.geom.axes.is_allclose(m2.geom.axes)
     assert m.geom.is_allclose(m2.geom)
     assert m.is_allclose(m2)
 
@@ -124,8 +126,8 @@ def test_hpxmap_read_write_fgst(tmp_path):
 
     m2 = Map.read(path)
     assert m2 is not None
-    assert m.geom.is_allclose(m2.geom)
-    assert m.is_allclose(m2)
+    assert_allclose(m2.geom.axes["energy_true"].edges, axis.edges, atol=1e-3)
+    assert_allclose(m.data, m2.data)
 
 
 @requires_data()
