@@ -33,7 +33,7 @@ class AdaptiveRingBackgroundMaker(Maker):
     theta : `~astropy.units.Quantity`
         Integration radius used for alpha computation.
     method : {'fixed_width', 'fixed_r_in'}
-        Adaptive ring method.
+        Adaptive ring method. Default is 'fixed_width'.
     exclusion_mask : `~gammapy.maps.WcsNDMap`
         Exclusion mask.
 

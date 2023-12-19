@@ -38,10 +38,10 @@ class ASmoothMapEstimator(Estimator):
         Smoothing kernel.
     spectrum : `SpectralModel`
         Spectral model assumption.
-    method : {'asmooth', 'lima'}
-        Significance estimation method.
+    method : {'lima', 'asmooth'}
+        Significance estimation method. Default is 'lima'.
     threshold : float
-        Significance threshold.
+        Significance threshold. Default is 5.
     energy_edges : list of `~astropy.units.Quantity`, optional
         Edges of the target maps energy bins. The resulting bin edges won't be exactly equal to the input ones,
         but rather the closest values to the energy axis edges of the parent dataset.

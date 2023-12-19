@@ -266,7 +266,7 @@ class EDispKernel(IRF):
 
         Parameters
         ----------
-        format : {"ogip", "ogip-sherpa"}, optional
+        format : {"ogip", "ogip-sherpa"}
             Format to use. Default is "ogip".
 
         Returns
@@ -318,7 +318,7 @@ class EDispKernel(IRF):
 
         Parameters
         ----------
-        format : {"ogip", "ogip-sherpa"}, optional
+        format : {"ogip", "ogip-sherpa"}
             Format to use. Default is "ogip".
 
         Returns
@@ -387,7 +387,7 @@ class EDispKernel(IRF):
         ----------
         filename : str
             Filename.
-        format : {"ogip", "ogip-sherpa"}, optional
+        format : {"ogip", "ogip-sherpa"}
             Format to use. Default is "ogip".
 
         """

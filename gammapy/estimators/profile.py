@@ -22,10 +22,10 @@ class ImageProfileEstimator(Estimator):
     ----------
     x_edges : `~astropy.coordinates.Angle`, optional
         Coordinate edges to define a custom measurement grid.
-    method : ['sum', 'mean'], optional
-        Compute sum or mean within profile bins.
-    axis : ['lon', 'lat', 'radial'], optional
-        Along which axis to estimate the profile.
+    method : {'sum', 'mean'}
+        Compute sum or mean within profile bins. Default is 'sum'.
+    axis : {'lon', 'lat', 'radial'}
+        Along which axis to estimate the profile. Default is 'lon'.
     center : `~astropy.coordinates.SkyCoord`, optional
         Center coordinate for the radial profile option.
 

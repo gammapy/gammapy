@@ -16,10 +16,10 @@ class SpectrumDatasetMaker(MapDatasetMaker):
 
     Parameters
     ----------
-    selection : list
-        List of string, selecting which maps to make.
-        Available: 'counts', 'exposure', 'background', 'edisp'.
-        By default, all spectra are made.
+    selection : list of str, optional
+        Select which maps to make, the available options are:
+        'counts', 'exposure', 'background', 'edisp'.
+        By default, all maps are made.
     containment_correction : bool
         Apply containment correction for point sources and circular on regions.
     background_oversampling : int

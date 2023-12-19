@@ -214,7 +214,7 @@ class EffectiveAreaTable2D(IRF):
         energy_axis_true : `MapAxis`, optional
             Energy binning, analytic function is evaluated at log centers.
             Default is None.
-        instrument : {'HESS', 'HESS2', 'CTA'}, optional
+        instrument : {'HESS', 'HESS2', 'CTA'}
             Instrument name. Default is 'HESS'.
 
         Returns

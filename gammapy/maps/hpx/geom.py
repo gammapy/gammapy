@@ -825,7 +825,7 @@ class HpxGeom(Geom):
         nest : bool, optional
             Indexing scheme. If True, "NESTED" scheme. If False, "RING" scheme.
             Default is True.
-        frame : {"icrs", "galactic"}, optional
+        frame : {"icrs", "galactic"}
             Coordinate system, either Galactic ("galactic") or Equatorial ("icrs").
             Default is "icrs".
         region : str, optional

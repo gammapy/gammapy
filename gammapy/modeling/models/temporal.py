@@ -674,7 +674,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         Parameters:
             filename : str
                 Name of output file.
-            format : str, either "table" or "map"
+            format : {"table" or "map"}
                 If format is "table", it is serialised as a `~astropy.table.Table`.
                 If "map", then it is serialised as a `~gammapy.maps.RegionNDMap`.
                 Default is "table".

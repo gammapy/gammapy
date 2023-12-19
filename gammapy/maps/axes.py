@@ -88,9 +88,9 @@ class MapAxis:
     nodes : `~numpy.ndarray` or `~astropy.units.Quantity`
         Array of node values.  These will be interpreted as either bin
         edges or centers according to ``node_type``.
-    interp : str, optional
+    interp : {'lin', 'log', 'sqrt'}
         Interpolation method used to transform between axis and pixel
-        coordinates.  Valid options are 'log', 'lin', and 'sqrt'. Default is 'lin'.
+        coordinates. Default is 'lin'.
     name : str, optional
         Axis name. Default is "".
     node_type : str, optional
@@ -2213,7 +2213,7 @@ class TimeMapAxis:
         Reference time to use.
     name : str, optional
         Axis name. Default is "time".
-    interp : str, optional
+    interp : {'lin'}
         Interpolation method used to transform between axis and pixel
         coordinates. For now only 'lin' is supported. Default is 'lin'.
     """
@@ -2748,7 +2748,7 @@ class TimeMapAxis:
             Array of lower edge times.
         unit : `~astropy.units.Unit` or str, optional
             The unit to convert the edges to. Default is 'd' (day).
-        interp : str, optional
+        interp : {'lin'}
             Interpolation method used to transform between axis and pixel
             coordinates. Currently, only 'lin' is supported. Default is 'lin'.
         name : str, optional

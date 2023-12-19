@@ -150,13 +150,10 @@ class LazyFitsData(object):
             instance.__dict__[self.name] = value
 
 
-# TODO: add unit test
 def earth_location_from_dict(meta):
     """Create `~astropy.coordinates.EarthLocation` from FITS header dictionary."""
     lon = Angle(meta["GEOLON"], "deg")
     lat = Angle(meta["GEOLAT"], "deg")
-    # TODO: should we support both here?
-    # Check latest spec if ALTITUDE is used somewhere.
     if "GEOALT" in meta:
         height = Quantity(meta["GEOALT"], "meter")
     elif "ALTITUDE" in meta:
@@ -168,7 +165,7 @@ def earth_location_from_dict(meta):
 
 
 def earth_location_to_dict(location):
-    """Create `~astropy.coordinates.EarthLocation` from FITS header dictionary."""
+    """Convert `~astropy.coordinates.EarthLocation` to FITS header dictionary."""
     return {
         "GEOLON": location.lon.deg,
         "GEOLAT": location.lat.deg,
@@ -183,7 +180,7 @@ def skycoord_from_dict(header, frame="icrs", ext="PNT"):
     ----------
     header : dict
         The input dictionary.
-    frame : {"icrs", "galactic", "altaz"}, optional
+    frame : {"icrs", "galactic", "altaz"}
         The frame to use. Default is 'icrs'.
     ext: str, optional
         The keyword extension to apply to the keywords names. Default is 'PNT'.

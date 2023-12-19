@@ -213,7 +213,7 @@ def run_multiprocessing(
     pool_kwargs : dict, optional
         Keyword arguments passed to the pool. The number of processes is limited
         to the number of physical CPUs. Default is None.
-    method : {'starmap', 'apply_async'}, optional
+    method : {'starmap', 'apply_async'}
         Pool method to use. Default is "starmap".
     method_kwargs : dict, optional
         Keyword arguments passed to the method. Default is None.

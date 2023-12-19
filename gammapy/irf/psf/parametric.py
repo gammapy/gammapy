@@ -106,7 +106,7 @@ class ParametricPSF(PSF):
 
         Parameters
         ----------
-        format : {"gadf-dl3"}, optional
+        format : {"gadf-dl3"}
             Format specification. Default is "gadf-dl3".
 
 

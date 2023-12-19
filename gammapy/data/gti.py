@@ -149,7 +149,7 @@ class GTI:
         ----------
         table_hdu : `~astropy.io.fits.BinTableHDU`
             table hdu.
-        format : str, optional
+        format : {"gadf"}
             Input format, currently only "gadf" is supported. Default is "gadf".
         """
         if format != "gadf":
