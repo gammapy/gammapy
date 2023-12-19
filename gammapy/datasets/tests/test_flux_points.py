@@ -141,7 +141,6 @@ def test_flux_point_dataset_with_time_axis(tmp_path):
     Datasets([flux_points_dataset]).write(
         filename=tmp_path / "tmp_datasets.yaml",
         filename_models=tmp_path / "tmp_models.yaml",
-        format="lightcurve",
     )
 
     datasets = Datasets.read(

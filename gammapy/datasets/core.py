@@ -428,7 +428,6 @@ class Datasets(collections.abc.MutableSequence):
         overwrite=False,
         write_covariance=True,
         checksum=False,
-        **kwargs,
     ):
         """Serialize datasets to YAML and FITS files.
 

@@ -494,7 +494,7 @@ class FluxPointsDataset(Dataset):
             Keyword arguments passed to `gammapy.modeling.models.SpectralModel.plot` and
             `gammapy.modeling.models.SpectralModel.plot_error` to configure the plot style. Default is None.
         axis_name : str
-            Axis along which to plot the flux points for multiple axes. Default is energy
+            Axis along which to plot the flux points for multiple axes. Default is energy.
 
         Returns
         -------
