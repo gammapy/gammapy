@@ -110,9 +110,7 @@ class FluxPoints(FluxMaps):
     """
 
     @classmethod
-    def read(
-        cls, filename, sed_type=None, format="gadf-sed", reference_model=None, **kwargs
-    ):
+    def read(cls, filename, sed_type=None, format=None, reference_model=None, **kwargs):
         """Read precomputed flux points.
 
         Parameters
@@ -121,8 +119,9 @@ class FluxPoints(FluxMaps):
             Filename.
         sed_type : {"dnde", "flux", "eflux", "e2dnde", "likelihood"}
             SED type.
-        format : {"gadf-sed", "lightcurve"}
-            Format string. Default is "gadf-sed".
+        format : {"gadf-sed", "lightcurve", "profile"}, optional
+            Format string. If None, the format is extracted from the input.
+            Default is None.
         reference_model : `SpectralModel`
             Reference spectral model.
         **kwargs : dict, optional
@@ -223,9 +222,20 @@ class FluxPoints(FluxMaps):
 
         return table
 
+    @staticmethod
+    def _table_guess_format(table):
+        """Format of the table to be transformed to FluxPoints."""
+        names = table.colnames
+        if "time_min" in names:
+            return "lightcurve"
+        elif "x_min" in names:
+            return "profile"
+        else:
+            return "gadf-sed"
+
     @classmethod
     def from_table(
-        cls, table, sed_type=None, format="gadf-sed", reference_model=None, gti=None
+        cls, table, sed_type=None, format=None, reference_model=None, gti=None
     ):
         """Create flux points from a table. The table column names must be consistent with the
         sed_type.
@@ -237,7 +247,7 @@ class FluxPoints(FluxMaps):
         sed_type : {"dnde", "flux", "eflux", "e2dnde", "likelihood"}, optional
             SED type. Default is None.
         format : {"gadf-sed", "lightcurve", "profile"}
-            Table format. Default is "gadf-sed".
+            Table format. If None, it is extracted from the table column content. Default is None.
         reference_model : `SpectralModel`, optional
             Reference spectral model. Default is None.
         gti : `GTI`, optional
@@ -249,6 +259,9 @@ class FluxPoints(FluxMaps):
             Flux points.
         """
         table = table_standardise_units_copy(table)
+
+        if format is None:
+            format = cls._table_guess_format(table)
 
         if sed_type is None:
             sed_type = table.meta.get("SED_TYPE", None)
