@@ -1257,6 +1257,11 @@ class TemplateSpatialModel(SpatialModel):
     """Spatial sky map template model.
 
     For more information see :ref:`template-spatial-model`.
+    The center of the model position can be fit on the data.
+    In that case, the coordinate of every pixel is shifted in lon and lat
+    in the frame of the map. NOTE: planar distances are calculated, so
+    the results are correct only when the fitted position is close to the
+    map center.
 
     Parameters
     ----------
