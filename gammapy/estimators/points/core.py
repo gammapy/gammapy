@@ -436,7 +436,7 @@ class FluxPoints(FluxMaps):
                 table_flat["time_max"] = [time_max.mjd]
 
                 fp = self.slice_by_idx(slices={"time": idx})
-                table = fp.to_table(sed_type=sed_type)
+                table = fp.to_table(sed_type=sed_type, format="gadf-sed")
 
                 for column in table.columns:
                     table_flat[column] = table[column][np.newaxis]
@@ -483,7 +483,7 @@ class FluxPoints(FluxMaps):
                 table_flat["x_ref"] = [(x_max + x_min) / 2]
 
                 fp = self.slice_by_idx(slices={"projected-distance": idx})
-                table = fp.to_table(sed_type=sed_type)
+                table = fp.to_table(sed_type=sed_type, format="gadf-sed")
 
                 for column in table.columns:
                     table_flat[column] = table[column][np.newaxis]
