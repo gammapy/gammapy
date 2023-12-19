@@ -252,7 +252,7 @@ class MapDatasetEventSampler:
             Event list.
         """
 
-        events_all = []
+        events_all = EventList(Table())
         for idx, evaluator in enumerate(dataset.evaluators.values()):
             if evaluator.needs_update:
                 evaluator.update(
@@ -262,6 +262,8 @@ class MapDatasetEventSampler:
                     dataset._geom,
                     dataset.mask,
                 )
+            if not evaluator.contributes:
+                continue
 
             if evaluator.model.temporal_model is None:
                 temporal_model = ConstantTemporalModel()
@@ -284,9 +286,9 @@ class MapDatasetEventSampler:
                 table.meta["MID{:05d}".format(idx + 1)] = idx + 1
                 table.meta["MMN{:05d}".format(idx + 1)] = evaluator.model.name
 
-            events_all.append(EventList(table))
+            events_all.stack(EventList(table))
 
-        return EventList.from_stack(events_all)
+        return events_all
 
     def sample_background(self, dataset):
         """Sample background.
@@ -544,32 +546,24 @@ class MapDatasetEventSampler:
         events : `~gammapy.data.EventList`
             Event list.
         """
-        if len(dataset.models) > 1:
-            events_src = self.sample_sources(dataset)
-
-            if len(events_src.table) > 0:
-                if dataset.psf:
-                    events_src = self.sample_psf(dataset.psf, events_src)
-                else:
-                    events_src.table["RA"] = events_src.table["RA_TRUE"]
-                    events_src.table["DEC"] = events_src.table["DEC_TRUE"]
-
-                if dataset.edisp:
-                    events_src = self.sample_edisp(dataset.edisp, events_src)
-                else:
-                    events_src.table["ENERGY"] = events_src.table["ENERGY_TRUE"]
-
-            if dataset.background:
-                events_bkg = self.sample_background(dataset)
-                events = EventList.from_stack([events_bkg, events_src])
+        events_src = self.sample_sources(dataset)
+        if len(events_src.table) > 0:
+            if dataset.psf:
+                events_src = self.sample_psf(dataset.psf, events_src)
             else:
-                events = events_src
+                events_src.table["RA"] = events_src.table["RA_TRUE"]
+                events_src.table["DEC"] = events_src.table["DEC_TRUE"]
 
-        if len(dataset.models) == 1 and dataset.background_model is not None:
-            events_bkg = self.sample_background(dataset)
-            events = EventList.from_stack([events_bkg])
+            if dataset.edisp:
+                events_src = self.sample_edisp(dataset.edisp, events_src)
+            else:
+                events_src.table["ENERGY"] = events_src.table["ENERGY_TRUE"]
+
+        events_bkg = self.sample_background(dataset)
+        events = EventList.from_stack([events_bkg, events_src])
 
         events = self.event_det_coords(observation, events)
+        events.table.sort("TIME")
         events.table["EVENT_ID"] = np.arange(len(events.table))
         events.table.meta.update(
             self.event_list_meta(dataset, observation, self.keep_mc_id)
@@ -601,38 +595,37 @@ class SimulatedObservationMaker(MapDatasetEventSampler):
         map_width,
         map_bin_size=0.02 * u.deg,
         random_state="random-seed",
+        oversample_energy_factor=10,
+        t_delta=0.5 * u.s,
+        keep_mc_id=True,
     ):
         self.random_state = get_random_state(random_state)
         self.energy_axis_true = energy_axis_true
         self.energy_axis = energy_axis
         self.map_width = map_width
         self.bin_size = map_bin_size
+        self.oversample_energy_factor = oversample_energy_factor
+        self.t_delta = t_delta
+        self.keep_mc_id = keep_mc_id
 
-    def run(self, observation: Observation, models=None):
-        """Sample events for given observation and signal models.
-
-        The signal distribution is sampled from the given models
-        in true coordinates and energy. The true quantities are
-        then folded with the IRFs to obtain the observable quantities.
-
-        Parameters
-        ----------
-        observation : `~gammapy.data.Observation`
-            Observation to be simulated.
-        models : `~gammapy.modeling.Models`
-            Signal models to simulate.
-            Can be None to only sample background events.
-
-        Returns
-        -------
-        observation : `~gammapy.data.Observation`
-            A copy of the input observation with event list filled.
-        """
+    def _create_dataset(self, observation, models=None, dataset_name=None):
+        """create dataest used for sampling"""
         # import here to prevent circular import
         from gammapy.makers import MapDatasetMaker
 
         if models is None:
             models = Models()
+
+        if dataset_name is None:
+            dataset_name = "simulated-dataset"
+
+        if not np.any(
+            [
+                isinstance(m, FoVBackgroundModel) and m.dataset_name == dataset_name
+                for m in models
+            ]
+        ):
+            models.append(FoVBackgroundModel(dataset_name=dataset_name))
 
         if observation.pointing.mode is not PointingMode.POINTING:
             raise NotImplementedError(
@@ -661,42 +654,38 @@ class SimulatedObservationMaker(MapDatasetEventSampler):
 
         dataset = MapDataset.create(
             geom,
-            name="simulated-dataset",
+            name=dataset_name,
             **axes,
         )
 
         maker = MapDatasetMaker(selection=components)
         dataset = maker.run(dataset, observation)
         dataset.models = models
+        return dataset
 
-        events = None
-        if len(models) > 0:
-            events = self.sample_sources(dataset)
+    def run(self, observation: Observation, models=None, dataset_name=None):
+        """Sample events for given observation and signal models.
 
-            if len(events.table) > 0:
-                if dataset.psf is not None:
-                    events = self.sample_psf(dataset.psf, events)
+        The signal distribution is sampled from the given models
+        in true coordinates and energy. The true quantities are
+        then folded with the IRFs to obtain the observable quantities.
 
-                if dataset.edisp is not None:
-                    events = self.sample_edisp(dataset.edisp, events)
+        Parameters
+        ----------
+        observation : `~gammapy.data.Observation`
+            Observation to be simulated.
+        models : `~gammapy.modeling.Models`
+            Models to simulate.
+            Can be None to only sample background events.
 
-        # add background
-        if dataset.background is not None:
-            dataset.models.append(FoVBackgroundModel(dataset_name="simulated-dataset"))
-            events_bkg = self.sample_background(dataset)
-            if events is not None:
-                events = EventList.from_stack([events_bkg, events])
-            else:
-                events = events_bkg
+        Returns
+        -------
+        observation : `~gammapy.data.Observation`
+            A copy of the input observation with event list filled.
+        """
 
-        if events is None:
-            events = EventList(Table())
-
-        geom = dataset._geom
-        selection = geom.contains(events.map_coord(geom))
-        events = events.select_row_subset(selection)
-        events.table.sort("TIME")
-        events.table["EVENT_ID"] = np.arange(len(events.table))
+        dataset = self._create_dataset(observation, models, dataset_name)
+        events = super().run(dataset, observation)
 
         observation = deepcopy(observation)
         observation._events = events
