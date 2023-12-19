@@ -274,7 +274,7 @@ def test_run_pwl(fpe_pwl, tmpdir):
     assert_allclose(npred_excess_ul, [742.87486, 479.169719, 49.019125], rtol=1e-3)
 
     # test GADF I/O
-    fp.write(tmpdir / "test.fits", format="gadf-sed")
+    fp.write(tmpdir / "test.fits")
     fp_new = FluxPoints.read(tmpdir / "test.fits")
     assert fp_new.meta["sed_type_init"] == "likelihood"
 
@@ -317,7 +317,7 @@ def test_run_ecpl(fpe_ecpl, tmpdir):
     assert_allclose(actual, [7.678454, 4.735691, 0.399243], rtol=1e-2)
 
     # test GADF I/O
-    fp.write(tmpdir / "test.fits", format="gadf-sed")
+    fp.write(tmpdir / "test.fits")
     fp_new = FluxPoints.read(tmpdir / "test.fits")
     assert fp_new.meta["sed_type_init"] == "likelihood"
 
@@ -360,7 +360,7 @@ def test_run_map_pwl(fpe_map_pwl, tmpdir):
     assert_allclose(actual, [1.628398e02, 1.452456e-01, 2.008018e03], rtol=1e-2)
 
     # test GADF I/O
-    fp.write(tmpdir / "test.fits", format="gadf-sed")
+    fp.write(tmpdir / "test.fits")
     fp_new = FluxPoints.read(tmpdir / "test.fits")
     assert fp_new.meta["sed_type_init"] == "likelihood"
 
@@ -412,7 +412,7 @@ def test_flux_points_estimator_no_norm_scan(fpe_pwl, tmpdir):
     assert "stat_scan" not in fp._data
 
     # test GADF I/O
-    fp.write(tmpdir / "test.fits", format="gadf-sed")
+    fp.write(tmpdir / "test.fits")
     fp_new = FluxPoints.read(tmpdir / "test.fits")
     assert fp_new.meta["sed_type_init"] == "likelihood"
 
