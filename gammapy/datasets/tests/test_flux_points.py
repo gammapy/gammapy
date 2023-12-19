@@ -118,7 +118,7 @@ def test_flux_point_dataset_with_time_axis(tmp_path):
             Column([[False, False], [True, True]], "is_ul"),
         ],
     )
-    flux_points = FluxPoints.from_table(table=table, format="lightcurve")
+    flux_points = FluxPoints.from_table(table=table)
     flux_points_dataset = FluxPointsDataset(data=flux_points)
     temporal_model = ExpDecayTemporalModel()
     temporal_model.t_ref.value = Time(["2010-01-01"]).mjd
@@ -147,7 +147,6 @@ def test_flux_point_dataset_with_time_axis(tmp_path):
     datasets = Datasets.read(
         filename=tmp_path / "tmp_datasets.yaml",
         filename_models=tmp_path / "tmp_models.yaml",
-        format="lightcurve",
     )
 
     new_dataset = datasets[0]

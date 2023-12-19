@@ -148,9 +148,7 @@ class FluxPointsDataset(Dataset):
             models = DatasetModels(models)
             self._models = models.select(datasets_names=self.name)
 
-    def write(
-        self, filename, overwrite=False, checksum=False, format="gadf-sed", **kwargs
-    ):
+    def write(self, filename, overwrite=False, checksum=False, **kwargs):
         """Write flux point dataset to file.
 
         Parameters
@@ -162,18 +160,10 @@ class FluxPointsDataset(Dataset):
         checksum : bool
             When True adds both DATASUM and CHECKSUM cards to the headers written to the FITS file.
             Applies only if filename has .fits suffix. Default is False.
-        format : {"gadf-sed", "lightcurve"}
-            Format specification for contained fluxpoint. The following formats are supported:
-            * "gadf-sed": format for SED flux points see :ref:`gadf:flux-points`
-            for details.
-            * "lightcurve": Gammapy internal format to store energy dependent
-            lightcurves. Basically a generalisation of the "gadf" format, but
-            currently there is no detailed documentation available.
-            Default is "gadf-sed".
         **kwargs : dict, optional
              Keyword arguments passed to `~astropy.table.Table.write`.
         """
-        table = self.data.to_table(format=format)
+        table = self.data.to_table()
 
         if self.mask_fit is None:
             mask_fit = self.mask_safe
@@ -195,7 +185,7 @@ class FluxPointsDataset(Dataset):
             table.write(make_path(filename), overwrite=overwrite, **kwargs)
 
     @classmethod
-    def read(cls, filename, name=None, format="gadf-sed"):
+    def read(cls, filename, name=None):
         """Read pre-computed flux points and create a dataset.
 
         Parameters
@@ -204,14 +194,6 @@ class FluxPointsDataset(Dataset):
             Filename to read from.
         name : str, optional
             Name of the new dataset. Default is None.
-        format : {"gadf-sed", "lightcurve"}
-            Format specification for contained fluxpoint. The following formats are supported:
-            * "gadf-sed": format for SED flux points see :ref:`gadf:flux-points`
-            for details.
-            * "lightcurve": Gammapy internal format to store energy dependent
-            lightcurves. Basically a generalisation of the "gadf" format, but
-            currently there is no detailed documentation available.
-            Default is "gadf-sed".
         Returns
         -------
         dataset : `FluxPointsDataset`
@@ -232,27 +214,19 @@ class FluxPointsDataset(Dataset):
 
         return cls(
             name=make_name(name),
-            data=FluxPoints.from_table(table, format=format),
+            data=FluxPoints.from_table(table),
             mask_fit=mask_fit,
             mask_safe=mask_safe,
         )
 
     @classmethod
-    def from_dict(cls, data, format="gadf-sed", **kwargs):
+    def from_dict(cls, data, **kwargs):
         """Create flux point dataset from dict.
 
         Parameters
         ----------
         data : dict
             Dictionary containing data to create dataset from.
-        format : {"gadf-sed", "lightcurve"}
-            Format specification for contained fluxpoint. The following formats are supported:
-            * "gadf-sed": format for SED flux points see :ref:`gadf:flux-points`
-            for details.
-            * "lightcurve": Gammapy internal format to store energy dependent
-            lightcurves. Basically a generalisation of the "gadf" format, but
-            currently there is no detailed documentation available.
-            Default is "gadf-sed".
         Returns
         -------
         dataset : `FluxPointsDataset`
@@ -267,7 +241,7 @@ class FluxPointsDataset(Dataset):
         table.remove_columns(["mask_fit", "mask_safe"])
         return cls(
             name=data["name"],
-            data=FluxPoints.from_table(table, format=format),
+            data=FluxPoints.from_table(table),
             mask_fit=mask_fit,
             mask_safe=mask_safe,
         )

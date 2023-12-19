@@ -379,7 +379,7 @@ class Datasets(collections.abc.MutableSequence):
         return copy.deepcopy(self)
 
     @classmethod
-    def read(cls, filename, filename_models=None, lazy=True, cache=True, **kwargs):
+    def read(cls, filename, filename_models=None, lazy=True, cache=True):
         """De-serialize datasets from YAML and FITS files.
 
         Parameters
@@ -392,9 +392,6 @@ class Datasets(collections.abc.MutableSequence):
             Whether to lazy load data into memory. Default is True.
         cache : bool
             Whether to cache the data after loading. Default is True.
-        kwargs : dict
-            Keyword arguments passed to individual datasets write methods
-
 
         Returns
         -------
@@ -414,7 +411,7 @@ class Datasets(collections.abc.MutableSequence):
                 data["filename"] = str(make_path(path / data["filename"]))
 
             dataset_cls = DATASET_REGISTRY.get_cls(data["type"])
-            dataset = dataset_cls.from_dict(data, lazy=lazy, cache=cache, **kwargs)
+            dataset = dataset_cls.from_dict(data, lazy=lazy, cache=cache)
             datasets.append(dataset)
 
         datasets = cls(datasets)
@@ -448,9 +445,6 @@ class Datasets(collections.abc.MutableSequence):
         checksum : bool
             When True adds both DATASUM and CHECKSUM cards to the headers written to the FITS files.
             Default is False.
-        kwargs : dict
-            Keyword arguments passed to individual datasets write methods
-
         """
         path = make_path(filename)
 
@@ -460,7 +454,7 @@ class Datasets(collections.abc.MutableSequence):
             d = dataset.to_dict()
             filename = d["filename"]
             dataset.write(
-                path.parent / filename, overwrite=overwrite, checksum=checksum, **kwargs
+                path.parent / filename, overwrite=overwrite, checksum=checksum
             )
             data["datasets"].append(d)
 
