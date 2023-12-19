@@ -356,6 +356,7 @@ def test_with_TemplateSpatialModel():
     estimator = TSMapEstimator(
         model=sky_model,
         energy_edges=[1.0, 5.0] * u.TeV,
+        n_jobs=4,
     )
 
     result = estimator.run(dataset)
