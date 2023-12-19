@@ -303,20 +303,23 @@ class MapDatasetEventSampler:
         events : `gammapy.data.EventList`
             Background events.
         """
-        background = dataset.npred_background()
 
-        temporal_model = ConstantTemporalModel()
+        table = Table()
+        if dataset.background:
+            background = dataset.npred_background()
 
-        table = self._sample_coord_time(background, temporal_model, dataset.gti)
+            temporal_model = ConstantTemporalModel()
 
-        table["ENERGY"] = table["ENERGY_TRUE"]
-        table["RA"] = table["RA_TRUE"]
-        table["DEC"] = table["DEC_TRUE"]
+            table = self._sample_coord_time(background, temporal_model, dataset.gti)
 
-        if self.keep_mc_id:
-            table["MC_ID"] = 0
-            table.meta["MID{:05d}".format(0)] = 0
-            table.meta["MMN{:05d}".format(0)] = dataset.background_model.name
+            table["ENERGY"] = table["ENERGY_TRUE"]
+            table["RA"] = table["RA_TRUE"]
+            table["DEC"] = table["DEC_TRUE"]
+
+            if self.keep_mc_id:
+                table["MC_ID"] = 0
+                table.meta["MID{:05d}".format(0)] = 0
+                table.meta["MMN{:05d}".format(0)] = dataset.background_model.name
 
         return EventList(table)
 
