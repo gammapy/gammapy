@@ -1826,7 +1826,9 @@ class Map(abc.ABC):
         if self.data.shape != other.data.shape:
             return False
 
-        axes_eq = self.axes.is_allclose(other.axes, rtol=rtol_axes, atol=atol_axes)
+        axes_eq = self.geom.axes.is_allclose(
+            other.geom.axes, rtol=rtol_axes, atol=atol_axes
+        )
         data_eq = np.allclose(self.quantity, other.quantity, **kwargs)
         return axes_eq and data_eq
 
