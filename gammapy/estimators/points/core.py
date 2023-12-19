@@ -262,6 +262,7 @@ class FluxPoints(FluxMaps):
 
         if format is None:
             format = cls._table_guess_format(table)
+            log.info("Inferred format: " + format)
 
         if sed_type is None:
             sed_type = table.meta.get("SED_TYPE", None)
@@ -385,6 +386,7 @@ class FluxPoints(FluxMaps):
 
         if format is None:
             format = self._guess_format()
+            log.info("Inferred format: " + format)
 
         if format == "gadf-sed":
             # TODO: what to do with GTI info?
