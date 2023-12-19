@@ -563,7 +563,6 @@ class MapDatasetEventSampler:
         events = EventList.from_stack([events_bkg, events_src])
 
         events = self.event_det_coords(observation, events)
-        events.table.sort("TIME")
         events.table["EVENT_ID"] = np.arange(len(events.table))
         events.table.meta.update(
             self.event_list_meta(dataset, observation, self.keep_mc_id)
