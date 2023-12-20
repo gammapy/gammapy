@@ -25,7 +25,7 @@ from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.interpolation import interpolation_scale
 from gammapy.utils.regions import region_circle_to_ellipse, region_to_frame
 from gammapy.utils.scripts import make_path
-from .core import ModelBase
+from .core import ModelBase, _build_parameters_from_dict
 
 __all__ = [
     "ConstantFluxSpatialModel",
@@ -1257,6 +1257,11 @@ class TemplateSpatialModel(SpatialModel):
     """Spatial sky map template model.
 
     For more information see :ref:`template-spatial-model`.
+    The center of the model position can be fit on the data.
+    In that case, the coordinate of every pixel is shifted in lon and lat
+    in the frame of the map. NOTE: planar distances are calculated, so
+    the results are correct only when the fitted position is close to the
+    map center.
 
     Parameters
     ----------
@@ -1279,6 +1284,8 @@ class TemplateSpatialModel(SpatialModel):
     """
 
     tag = ["TemplateSpatialModel", "template"]
+    lon_0 = Parameter("lon_0", "0 deg", frozen=True)
+    lat_0 = Parameter("lat_0", "0 deg", min=-90, max=90, frozen=True)
 
     def __init__(
         self,
@@ -1336,7 +1343,35 @@ class TemplateSpatialModel(SpatialModel):
 
         self._interp_kwargs = interp_kwargs
         self.filename = filename
+        kwargs["frame"] = self.map.geom.frame
+        if "lon_0" not in kwargs:
+            kwargs["lon_0"] = self.map_center.data.lon
+        if "lat_0" not in kwargs:
+            kwargs["lat_0"] = self.map_center.data.lat
         super().__init__(**kwargs)
+
+    def __str__(self):
+        width = self.map.geom.width
+        data_min = np.nanmin(self.map.data)
+        data_max = np.nanmax(self.map.data)
+
+        prnt = (
+            f"{self.__class__.__name__} model summary:\n "
+            f"Model center: {self.position} \n "
+            f"Map center: {self.map_center} \n "
+            f"Map width: {width} \n "
+            f"Data min: {data_min} \n"
+            f"Data max: {data_max} \n"
+            f"Data unit: {self.map.unit}"
+        )
+
+        if self.is_energy_dependent:
+            energy_min = self.map.geom.axes["energy_true"].center[0]
+            energy_max = self.map.geom.axes["energy_true"].center[-1]
+            prnt1 = f"Energy min: {energy_min} \n" f"Energy max: {energy_max} \n"
+            prnt = prnt + prnt1
+
+        return prnt
 
     def copy(self, copy_data=False, **kwargs):
         """Copy model.
@@ -1377,6 +1412,10 @@ class TemplateSpatialModel(SpatialModel):
         """
         return np.max(self.map.geom.width) / 2.0
 
+    @property
+    def map_center(self):
+        return self.map.geom.center_skydir
+
     @classmethod
     def read(cls, filename, normalize=True, **kwargs):
         """Read spatial template model from FITS image.
@@ -1395,15 +1434,19 @@ class TemplateSpatialModel(SpatialModel):
         m = Map.read(filename, **kwargs)
         return cls(m, normalize=normalize, filename=filename)
 
-    def evaluate(self, lon, lat, energy=None):
+    def evaluate(self, lon, lat, energy=None, lon_0=None, lat_0=None):
         """Evaluate the model at given coordinates.
 
         Note that, if the map data assume negative values, these are
         clipped to zero.
         """
+
+        offset_lon = 0.0 * u.deg if lon_0 is None else lon_0 - self.map_center.data.lon
+        offset_lat = 0.0 * u.deg if lat_0 is None else lat_0 - self.map_center.data.lat
+
         coord = {
-            "lon": lon.to_value("deg"),
-            "lat": lat.to_value("deg"),
+            "lon": (lon - offset_lon).to_value("deg"),
+            "lat": (lat - offset_lat).to_value("deg"),
         }
         if energy is not None:
             coord["energy_true"] = energy
@@ -1413,20 +1456,11 @@ class TemplateSpatialModel(SpatialModel):
         return u.Quantity(val, self.map.unit, copy=False)
 
     @property
-    def position(self):
-        """Position as a `~astropy.coordinates.SkyCoord`."""
-        return self.map.geom.center_skydir
-
-    @property
     def position_lonlat(self):
         """Spatial model center position `(lon, lat)` in radians and frame of the model."""
         lon = self.position.data.lon.rad
         lat = self.position.data.lat.rad
         return lon, lat
-
-    @property
-    def frame(self):
-        return self.position.frame.name
 
     @classmethod
     def from_dict(cls, data):
@@ -1434,7 +1468,13 @@ class TemplateSpatialModel(SpatialModel):
         filename = data["filename"]
         normalize = data.get("normalize", True)
         m = Map.read(filename)
-        return cls(m, normalize=normalize, filename=filename)
+        pars = data.get("parameters")
+        if pars is not None:
+            parameters = _build_parameters_from_dict(pars, cls.default_parameters)
+            kwargs = {par.name: par for par in parameters}
+        else:
+            kwargs = {}
+        return cls(m, normalize=normalize, filename=filename, **kwargs)
 
     def to_dict(self, full_output=False):
         """Create dictionary for YAML serilisation."""
