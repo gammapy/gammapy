@@ -133,8 +133,7 @@ class TemporalModel(ModelBase):
 
         """
         diff = t_max - t_min
-        # TODO: this is a work-around for https://github.com/astropy/astropy/issues/10501
-        return u.Quantity(np.sum(diff.to_value("day")), "day")
+        return np.sum(diff).to(u.day)
 
     def plot(self, time_range, ax=None, n_points=100, **kwargs):
         """
