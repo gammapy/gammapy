@@ -60,7 +60,7 @@ import matplotlib.pyplot as plt
 # -----
 #
 from IPython.display import display
-from gammapy.data import Observation, observatory_locations
+from gammapy.data import FixedPointingInfo, Observation, observatory_locations
 from gammapy.datasets import Datasets, SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.irf import load_irf_dict_from_file
 from gammapy.makers import SpectrumDatasetMaker
@@ -91,7 +91,12 @@ check_tutorials_setup()
 # Define simulation parameters parameters
 livetime = 1 * u.h
 
-pointing = SkyCoord(0, 0, unit="deg", frame="galactic")
+pointing_position = SkyCoord(0, 0, unit="deg", frame="galactic")
+# We want to simulate an observation pointing at a fixed position in the sky.
+# For this, we use the `FixedPointingInfo` class
+pointing = FixedPointingInfo(
+    fixed_icrs=pointing_position.icrs,
+)
 offset = 0.5 * u.deg
 
 # Reconstructed and true energy axis
@@ -104,7 +109,9 @@ energy_axis_true = MapAxis.from_edges(
 
 on_region_radius = Angle("0.11 deg")
 
-center = pointing.directional_offset_by(position_angle=0 * u.deg, separation=offset)
+center = pointing_position.directional_offset_by(
+    position_angle=0 * u.deg, separation=offset
+)
 on_region = CircleSkyRegion(center=center, radius=on_region_radius)
 
 # Define spectral model - a simple Power Law in this case

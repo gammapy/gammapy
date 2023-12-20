@@ -37,7 +37,7 @@ import matplotlib.pyplot as plt
 # As usual, we’ll start with some setup …
 #
 from IPython.display import display
-from gammapy.data import Observation, observatory_locations
+from gammapy.data import FixedPointingInfo, Observation, observatory_locations
 from gammapy.datasets import SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.estimators import FluxPoints, SensitivityEstimator
 from gammapy.irf import load_irf_dict_from_file
@@ -83,7 +83,8 @@ irfs = load_irf_dict_from_file(
     "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
 )
 location = observatory_locations["cta_south"]
-pointing = SkyCoord("0 deg", "0 deg")
+pointing_position = SkyCoord("0 deg", "0 deg")
+pointing = FixedPointingInfo(fixed_icrs=pointing_position)
 livetime = 5.0 * u.h
 obs = Observation.create(
     pointing=pointing, irfs=irfs, livetime=livetime, location=location
