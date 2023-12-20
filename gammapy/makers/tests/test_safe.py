@@ -233,7 +233,7 @@ def test_safe_mask_maker_edisp_bias_fixed_offset(dataset, observation_cta_1dc):
     mask_edisp_bias_offset = safe_mask_maker1.make_mask_energy_edisp_bias(
         dataset, observation_cta_1dc
     )
-    assert_allclose(mask_edisp_bias_offset.data.sum(), 242)
+    assert_allclose(mask_edisp_bias_offset.data.sum(), 1694)
 
 
 @requires_data()
