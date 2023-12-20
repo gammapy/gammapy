@@ -873,7 +873,7 @@ def test_simulated_observation_maker(signal_model, tmp_path):
     )
 
     maker = SimulatedObservationMaker(
-        map_width=5 * u.deg,
+        spatial_width=5 * u.deg,
         energy_axis=MapAxis.from_energy_bounds(
             10 * u.GeV, 100 * u.TeV, nbin=5, per_decade=True
         ),
