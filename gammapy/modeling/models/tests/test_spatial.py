@@ -368,6 +368,22 @@ def test_sky_diffuse_map(caplog):
     with pytest.raises(TypeError):
         model.plot_grid()
 
+    # change central position
+    model.lon_0.value = 12.0
+    model.lat_0.value = 6
+    val = model([11.8, 12.8] * u.deg, 6.1 * u.deg)
+    assert_allclose(val.value, [2850.8103, 89.629447], rtol=1e-3)
+
+    # test to and from dict
+    dict1 = model.to_dict()
+    model2 = TemplateSpatialModel.from_dict(dict1)
+    assert_allclose(model2.lon_0.quantity, 12.0 * u.deg, rtol=1e-3)
+
+    # test dict without parameters
+    dict1["spatial"].pop("parameters")
+    model3 = TemplateSpatialModel.from_dict(dict1)
+    assert_allclose(model3.lon_0.quantity, 258.388 * u.deg, rtol=1e-3)
+
 
 @requires_data()
 @requires_dependency("ipywidgets")
