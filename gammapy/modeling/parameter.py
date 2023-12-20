@@ -560,7 +560,7 @@ class Parameter:
         self.factor = self.transform(self.value, update_scale=True)
 
     def reset_autoscale(self):
-        "reset sacling such as factor=value, scale=1"
+        "reset scaling such as factor=value, scale=1"
         self._factor = self._value
         self._scale = 1.0
 
