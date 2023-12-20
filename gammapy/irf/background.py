@@ -247,17 +247,9 @@ class Background2D(BackgroundIRF):
     def to_3d(self):
         """Convert to Background3D."""
         offsets = self.axes["offset"].edges
-        edges_neg = np.negative(offsets)[::-1][:-1]
-        if (offsets < 0.0).any():
-            edges_pos = offsets[1:]
-        else:
-            edges_pos = offsets
-        edges = np.concatenate(
-            (
-                edges_neg,
-                edges_pos,
-            )
-        )
+        edges_neg = np.negative(offsets)[::-1]
+        edges_neg = edges_neg[edges_neg <= 0]
+        edges = np.concatenate((edges_neg, offsets[offsets > 0]))
         fov_lat = MapAxis.from_edges(edges=edges, name="fov_lat")
         fov_lon = MapAxis.from_edges(edges=edges, name="fov_lon")
 
