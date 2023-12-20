@@ -28,14 +28,14 @@ class MapDatasetEventSampler:
 
     Parameters
     ----------
-    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
         Defines random number generator initialisation via the `~gammapy.utils.random.get_random_state` function.
-    oversample_energy_factor : int
+    oversample_energy_factor : int, optional
         Defines an oversampling factor for the energies; it is used only when sampling
         an energy-dependent time-varying source.
-    t_delta : `~astropy.units.Quantity`
+    t_delta : `~astropy.units.Quantity`, optional
         Time interval used to sample the time-dependent source.
-    keep_mc_id : bool
+    keep_mc_id : bool, optional
         Flag to tag sampled events from a given model with a Montecarlo identifier.
         Default is True. If set to False, no identifier will be assigned.
     """
@@ -587,15 +587,33 @@ class SimulatedObservationMaker(MapDatasetEventSampler):
 
     Parameters
     ----------
-
+    energy_axis_true : `~gammapy.maps.MapAxis`
+        True energy axis.
+    energy_axis : `~gammapy.maps.MapAxis`
+        Reconstructed energy axis.
+    spatial_width : float or `~astropy.units.Quantity`
+        Spatial window size. A float is assumed to be in degree.
+    spatial_spatial_bin_size : float or `~astropy.units.Quantity`, optional
+        Pixel size used for sampling. A float is assumed to be in degree.
+        Default is 0.01 degree.
+    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
+        Defines random number generator initialisation via the `~gammapy.utils.random.get_random_state` function.
+    oversample_energy_factor : int, optional
+        Defines an oversampling factor for the energies; it is used only when sampling
+        an energy-dependent time-varying source.
+    t_delta : `~astropy.units.Quantity`, optional
+        Time interval used to sample the time-dependent source.
+    keep_mc_id : bool, optional
+        Flag to tag sampled events from a given model with a Montecarlo identifier.
+        Default is True. If set to False, no identifier will be assigned.
     """
 
     def __init__(
         self,
         energy_axis_true,
         energy_axis,
-        map_width,
-        map_bin_size=0.02 * u.deg,
+        spatial_width,
+        spatial_bin_size=0.01 * u.deg,
         random_state="random-seed",
         oversample_energy_factor=10,
         t_delta=0.5 * u.s,
@@ -604,14 +622,15 @@ class SimulatedObservationMaker(MapDatasetEventSampler):
         self.random_state = get_random_state(random_state)
         self.energy_axis_true = energy_axis_true
         self.energy_axis = energy_axis
-        self.map_width = map_width
-        self.bin_size = map_bin_size
+        self.spatial_width = u.Quantity(spatial_width, "deg")
+        self.spatial_bin_size = u.Quantity(spatial_bin_size, "deg")
         self.oversample_energy_factor = oversample_energy_factor
         self.t_delta = t_delta
         self.keep_mc_id = keep_mc_id
 
     def _create_dataset(self, observation, models=None, dataset_name=None):
         """create dataest used for sampling"""
+
         # import here to prevent circular import
         from gammapy.makers import MapDatasetMaker
 
@@ -636,8 +655,11 @@ class SimulatedObservationMaker(MapDatasetEventSampler):
         pointing_icrs = observation.pointing.fixed_icrs
         geom = WcsGeom.create(
             skydir=pointing_icrs,
-            width=(self.map_width.to_value(u.deg), self.map_width.to_value(u.deg)),
-            binsz=self.bin_size.to_value(u.deg),
+            width=(
+                self.spatial_width.to_value(u.deg),
+                self.spatial_width.to_value(u.deg),
+            ),
+            binsz=self.spatial_bin_size.to_value(u.deg),
             frame="icrs",
             axes=[self.energy_axis],
         )
@@ -676,10 +698,13 @@ class SimulatedObservationMaker(MapDatasetEventSampler):
         ----------
         observation : `~gammapy.data.Observation`
             Observation to be simulated.
-        models : `~gammapy.modeling.Models`
+        models : `~gammapy.modeling.Models`, optional
             Models to simulate.
             Can be None to only sample background events.
-
+        dataset_name : str, optional
+            If `models` contains one or multiple `FoVBackgroundModel`
+            it should match the `dataset_name` of the background model to use.
+            Default is None.
         Returns
         -------
         observation : `~gammapy.data.Observation`
