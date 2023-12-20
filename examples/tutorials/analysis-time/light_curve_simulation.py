@@ -80,7 +80,8 @@ log = logging.getLogger(__name__)
 # And some gammapy specific imports
 #
 
-from gammapy.data import Observation, observatory_locations
+import warnings
+from gammapy.data import FixedPointingInfo, Observation, observatory_locations
 from gammapy.datasets import Datasets, FluxPointsDataset, SpectrumDataset
 from gammapy.estimators import LightCurveEstimator
 from gammapy.irf import load_irf_dict_from_file
@@ -91,6 +92,10 @@ from gammapy.modeling.models import (
     ExpDecayTemporalModel,
     PowerLawSpectralModel,
     SkyModel,
+)
+
+warnings.filterwarnings(
+    action="ignore", message="overflow encountered in exp", module="astropy"
 )
 
 ######################################################################
@@ -133,8 +138,10 @@ energy_axis_true = MapAxis.from_edges(
 
 geom = RegionGeom.create("galactic;circle(0, 0, 0.11)", axes=[energy_axis])
 
-# Pointing position
-pointing = SkyCoord(0.5, 0.5, unit="deg", frame="galactic")
+# Pointing position to be supplied as a `FixedPointingInfo`
+pointing = FixedPointingInfo(
+    fixed_icrs=SkyCoord(0.5, 0.5, unit="deg", frame="galactic").icrs,
+)
 
 
 ######################################################################
@@ -264,16 +271,11 @@ plt.show()
 # Fitting the obtained light curve
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# The fitting will proceed through a joint fit of the flux points. First,
-# we need to obtain a set of `FluxPointDatasets`, one for each time bin
-#
+# We will first convert the obtained light curve to a `FluxPointsDataset`
+# and fit it with a spectral and temporal model
 
 # Create the datasets by iterating over the returned lightcurve
-datasets = Datasets()
-
-for idx, fp in enumerate(lc_1d.iter_by_axis(axis_name="time")):
-    dataset = FluxPointsDataset(data=fp, name=f"time-bin-{idx}")
-    datasets.append(dataset)
+dataset_fp = FluxPointsDataset(data=lc_1d, name="dataset_lc")
 
 
 ######################################################################
@@ -288,18 +290,22 @@ spectral_model1 = PowerLawSpectralModel(
 )
 temporal_model1 = ExpDecayTemporalModel(t0="10 h", t_ref=gti_t0.mjd * u.d)
 
+
 model = SkyModel(
     spectral_model=spectral_model1,
     temporal_model=temporal_model1,
     name="model-test",
 )
 
-datasets.models = model
+dataset_fp.models = model
+print(dataset_fp)
+
 
 # %%time
-# Do a joint fit
+# Fit the dataset
 fit = Fit()
-result = fit.run(datasets=datasets)
+result = fit.run(dataset_fp)
+display(result.parameters.to_table())
 
 
 ######################################################################
@@ -307,20 +313,7 @@ result = fit.run(datasets=datasets)
 # temporal model in relative units for one particular energy range
 #
 
-fig, ax = plt.subplots(
-    figsize=(8, 6),
-    gridspec_kw={"left": 0.16, "bottom": 0.2, "top": 0.98, "right": 0.98},
-)
-lc_1TeV_10TeV = lc_1d.slice_by_idx({"energy": slice(2, 3)})
-lc_1TeV_10TeV.plot(ax=ax, sed_type="norm", axis_name="time")
-
-time_range = lc_1TeV_10TeV.geom.axes["time"].time_bounds
-temporal_model1.plot(ax=ax, time_range=time_range, label="Best fit model")
-
-ax.set_yscale("linear")
-ax.legend()
-plt.show()
-
+dataset_fp.plot_spectrum(axis_name="time")
 
 ######################################################################
 # Fit the datasets
