@@ -47,7 +47,7 @@ from astropy.coordinates import Angle, SkyCoord
 from astropy.time import Time
 from regions import CircleSkyRegion, PointSkyRegion
 import matplotlib.pyplot as plt
-from gammapy.data import Observation, observatory_locations
+from gammapy.data import FixedPointingInfo, Observation, observatory_locations
 from gammapy.datasets import MapDataset, MapDatasetEventSampler
 from gammapy.irf import load_irf_dict_from_file
 from gammapy.makers import MapDatasetMaker
@@ -112,7 +112,8 @@ plt.show()
 #
 
 # source position
-position = SkyCoord("100 deg", "30 deg", frame="icrs")
+pointing_position = SkyCoord("100 deg", "30 deg", frame="icrs")
+position = FixedPointingInfo(fixed_icrs=pointing_position.icrs)
 
 # time axis
 time_axis = MapAxis.from_bounds(0 * u.s, 3600 * u.s, nbin=5, name="time", interp="lin")
@@ -130,7 +131,7 @@ energy_axis = MapAxis.from_energy_bounds(
 
 # create the RegionNDMap containing fluxes
 m = RegionNDMap.create(
-    region=PointSkyRegion(center=position),
+    region=PointSkyRegion(center=pointing_position),
     axes=[energy_axis, time_axis],
     unit="cm-2s-1TeV-1",
 )
@@ -233,7 +234,7 @@ plt.show()
 # passed through the map.
 #
 
-spatial_model = PointSpatialModel.from_position(position)
+spatial_model = PointSpatialModel.from_position(pointing_position)
 spectral_model = ConstantSpectralModel(const="1 cm-2 s-1 TeV-1")
 
 model = SkyModel(
@@ -261,7 +262,8 @@ models = [model, bkg_model]
 path = Path("$GAMMAPY_DATA/cta-caldb")
 irf_filename = "Prod5-South-20deg-AverageAz-14MSTs37SSTs.180000s-v0.1.fits.gz"
 
-pointing = SkyCoord(100.0, 30.0, frame="icrs", unit="deg")
+pointing_position = SkyCoord(ra=100 * u.deg, dec=30 * u.deg)
+pointing = FixedPointingInfo(fixed_icrs=pointing_position)
 livetime = 1 * u.hr
 
 irfs = load_irf_dict_from_file(path / irf_filename)
@@ -284,7 +286,7 @@ energy_axis_true = MapAxis.from_energy_bounds(
 migra_axis = MapAxis.from_bounds(0.5, 2, nbin=150, node_type="edges", name="migra")
 
 geom = WcsGeom.create(
-    skydir=pointing,
+    skydir=pointing_position,
     width=(2, 2),
     binsz=0.02,
     frame="icrs",
