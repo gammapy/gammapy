@@ -153,6 +153,28 @@ class SafeMaskMaker(Maker):
 
         return dataset._geom.energy_mask(energy_min=energy_min, energy_max=energy_max)
 
+    def _get_offset(self, observation):
+        offset = self.fixed_offset
+        if offset is None:
+            if self.position:
+                offset = observation.get_pointing_icrs(observation.tmid).separation(
+                    self.position
+                )
+            else:
+                offset = 0.0 * u.deg
+        return offset
+
+    def _get_position(self, observation, geom):
+        if self.fixed_offset is not None and observation is not None:
+            pointing = observation.get_pointing_icrs(observation.tmid)
+            return pointing.directional_offset_by(
+                position_angle=0 * u.deg, separation=self.fixed_offset
+            )
+        elif self.position is not None:
+            return self.position
+        else:
+            return geom.center_skydir
+
     def make_mask_energy_aeff_max(self, dataset, observation=None):
         """Make safe energy mask from effective area maximum value.
 
@@ -168,17 +190,16 @@ class SafeMaskMaker(Maker):
         mask_safe : `~numpy.ndarray`
             Safe data range mask.
         """
+
+        if self.fixed_offset is not None and observation is None:
+            raise ValueError(
+                f"{observation} argument is mandatory with {self.fixed_offset}"
+            )
+
         geom, exposure = dataset._geom, dataset.exposure
 
         if self.irfs == "DL3":
-            offset = self.fixed_offset
-            if offset is None:
-                if self.position:
-                    offset = observation.get_pointing_icrs(observation.tmid).separation(
-                        self.position
-                    )
-                else:
-                    offset = 0.0 * u.deg
+            offset = self._get_offset(observation)
 
             values = observation.aeff.evaluate(
                 offset=offset, energy_true=observation.aeff.axes["energy_true"].edges
@@ -189,22 +210,7 @@ class SafeMaskMaker(Maker):
             energy_min = np.min(valid)
 
         else:
-            if self.fixed_offset is not None:
-                if observation:
-                    position = observation.get_pointing_icrs(
-                        observation.tmid
-                    ).directional_offset_by(
-                        position_angle=0.0 * u.deg, separation=self.fixed_offset
-                    )
-                else:
-                    raise ValueError(
-                        f"observation argument is mandatory with {self.fixed_offset}"
-                    )
-
-            elif self.position:
-                position = self.position
-            else:
-                position = geom.center_skydir
+            position = self._get_position(observation, geom)
 
             aeff = exposure.get_spectrum(position) / exposure.meta["livetime"]
             if not np.any(aeff.data > 0.0):
@@ -246,52 +252,24 @@ class SafeMaskMaker(Maker):
         mask_safe : `~numpy.ndarray`
             Safe data range mask.
         """
+
+        if self.fixed_offset is not None and observation is None:
+            raise ValueError(
+                f"{observation} argument is mandatory with {self.fixed_offset}"
+            )
+
         edisp, geom = dataset.edisp, dataset._geom
 
         if self.irfs == "DL3":
-            offset = self.fixed_offset
-            if offset is None:
-                if self.position:
-                    offset = observation.get_pointing_icrs(observation.tmid).separation(
-                        self.position
-                    )
-                else:
-                    offset = 0.0 * u.deg
-
-            edisp = observation.edisp.to_edisp_kernel(offset=offset)
-            energy_min = edisp.get_bias_energy(self.bias_percent / 100)[-1]
-
+            offset = self._get_offset(observation)
+            edisp = observation.edisp.to_edisp_kernel(offset)
         else:
-            position = None
-
-            if self.fixed_offset is not None:
-                if observation:
-                    pointing = observation.get_pointing_icrs(observation.tmid)
-                    position = pointing.directional_offset_by(
-                        position_angle=0 * u.deg, separation=self.fixed_offset
-                    )
-                else:
-                    raise ValueError(
-                        f"{observation} argument is mandatory with {self.fixed_offset}"
-                    )
-
-            if isinstance(edisp, EDispKernelMap):
-                if position:
-                    edisp = edisp.get_edisp_kernel(position=position)
-                else:
-                    edisp = edisp.get_edisp_kernel(position=self.position)
-            else:
-                e_reco = dataset._geom.axes["energy"]
-                if position:
-                    edisp = edisp.get_edisp_kernel(
-                        position=position, energy_axis=e_reco
-                    )
-                else:
-                    edisp = edisp.get_edisp_kernel(
-                        position=self.position, energy_axis=e_reco
-                    )
-
-            energy_min = edisp.get_bias_energy(self.bias_percent / 100)[0]
+            kwargs = dict()
+            kwargs["position"] = self._get_position(observation, geom)
+            if not isinstance(edisp, EDispKernelMap):
+                kwargs["energy_axis"] = dataset._geom.axes["energy"]
+            edisp = edisp.get_edisp_kernel(**kwargs)
+        energy_min = edisp.get_bias_energy(self.bias_percent / 100)[0]
         return geom.energy_mask(energy_min=energy_min)
 
     def make_mask_energy_bkg_peak(self, dataset, observation=None):
@@ -322,15 +300,13 @@ class SafeMaskMaker(Maker):
             background_spectrum = np.ravel(
                 bkg.integral(axis_name="offset", offset=bkg.axes["offset"].bounds[1])
             )
-            energy_min = bkg.axes["energy"].center[np.argmax(background_spectrum)]
-
+            energy_axis = bkg.axes["energy"]
         else:
             background_spectrum = dataset.npred_background().get_spectrum()
-            idx = np.argmax(background_spectrum.data, axis=0)
             energy_axis = geom.axes["energy"]
-            energy_min = energy_axis.edges[idx]
 
-        return geom.energy_mask(energy_min=energy_min)
+        idx = np.argmax(background_spectrum.data, axis=0)
+        return geom.energy_mask(energy_min=energy_axis.edges[idx])
 
     @staticmethod
     def make_mask_bkg_invalid(dataset):
