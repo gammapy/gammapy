@@ -262,8 +262,8 @@ models = [model, bkg_model]
 path = Path("$GAMMAPY_DATA/cta-caldb")
 irf_filename = "Prod5-South-20deg-AverageAz-14MSTs37SSTs.180000s-v0.1.fits.gz"
 
-pointing_position = SkyCoord(100.0, 30.0, frame="icrs", unit="deg")
-pointing = FixedPointingInfo(fixed_icrs=pointing_position.icrs)
+pointing_position = SkyCoord(ra=100 * u.deg, dec=30 * u.deg)
+pointing = FixedPointingInfo(fixed_icrs=pointing_position)
 livetime = 1 * u.hr
 
 irfs = load_irf_dict_from_file(path / irf_filename)
