@@ -698,6 +698,8 @@ class FoVBackgroundModel(ModelBase):
         """Model parameters."""
         parameters = []
         parameters.append(self.spectral_model.parameters)
+        if self.spatial_model is not None:
+            parameters.append(self.spatial_model.parameters)
         return Parameters.from_stack(parameters)
 
     def __str__(self):
@@ -708,6 +710,10 @@ class FoVBackgroundModel(ModelBase):
         str_ += "\t{:26}: {}\n".format(
             "Spectral model type", self.spectral_model.__class__.__name__
         )
+        if self.spatial_model is not None:
+            str_ += "\t{:26}: {}\n".format(
+                "Spatial model type", self.spatial_model.__class__.__name__
+            )
         str_ += "\tParameters:\n"
         info = _get_parameters_str(self.parameters)
         lines = info.split("\n")
@@ -759,6 +765,8 @@ class FoVBackgroundModel(ModelBase):
         kwargs.setdefault("spectral_model", self.spectral_model.copy())
         kwargs.setdefault("dataset_name", self.datasets_names[0])
         kwargs.setdefault("covariance_data", self.covariance.data.copy())
+        if self.spatial_model is not None:
+            kwargs.setdefault("spatial_model", self.spatial_model.copy())
         return self.__class__(**kwargs)
 
     def to_dict(self, full_output=False):

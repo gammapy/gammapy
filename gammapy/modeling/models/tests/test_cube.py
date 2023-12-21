@@ -1058,3 +1058,8 @@ def test_piecewise_spatial_model_background(background):
         spatial_model=spatial_model2, dataset_name="test"
     ).evaluate_geom(geom)
     assert_allclose(twice, reference * 2.0)
+
+    copied = FoVBackgroundModel(spatial_model=spatial_model, dataset_name="test").copy()
+    assert isinstance(copied.spatial_model, PiecewiseNormSpatialModel)
+
+    assert "Spatial model type" in copied.__str__()
