@@ -847,7 +847,7 @@ def test_MC_ID_flag(model_alternative):
 
 
 @requires_data()
-def test_simulated_observation_maker(signal_model, tmp_path):
+def test_observation_event_sampler(signal_model, tmp_path):
     from gammapy.datasets.simulate import ObservationEventSampler
 
     irfs = load_irf_dict_from_file(
@@ -872,8 +872,9 @@ def test_simulated_observation_maker(signal_model, tmp_path):
         ),
     )
 
-    maker = ObservationEventSampler(
+    dataset_kwargs = dict(
         spatial_width=5 * u.deg,
+        spatial_bin_size=0.01 * u.deg,
         energy_axis=MapAxis.from_energy_bounds(
             10 * u.GeV, 100 * u.TeV, nbin=5, per_decade=True
         ),
@@ -881,6 +882,7 @@ def test_simulated_observation_maker(signal_model, tmp_path):
             10 * u.GeV, 100 * u.TeV, nbin=5, per_decade=True, name="energy_true"
         ),
     )
+    maker = ObservationEventSampler(dataset_kwargs=dataset_kwargs)
 
     sim_obs = maker.run(obs, [signal_model])
     assert sim_obs.events is not None
