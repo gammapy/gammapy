@@ -8,7 +8,7 @@ from astropy.coordinates import SkyCoord, SkyOffsetFrame
 from astropy.table import Table
 from astropy.time import Time
 from gammapy import __version__
-from gammapy.data import EventList, Observation, PointingMode, observatory_locations
+from gammapy.data import EventList, PointingMode, observatory_locations
 from gammapy.maps import MapAxis, MapCoord, RegionNDMap, TimeMapAxis, WcsGeom
 from gammapy.modeling.models import (
     ConstantSpectralModel,
@@ -20,7 +20,7 @@ from gammapy.modeling.models import (
 from gammapy.utils.random import get_random_state
 from .map import MapDataset
 
-__all__ = ["MapDatasetEventSampler"]
+__all__ = ["MapDatasetEventSampler", "ObservationEventSampler"]
 
 
 class MapDatasetEventSampler:
@@ -576,11 +576,11 @@ class MapDatasetEventSampler:
         return events.select_row_subset(selection)
 
 
-class SimulatedObservationMaker(MapDatasetEventSampler):
+class ObservationEventSampler(MapDatasetEventSampler):
     """
     Sample event lists for a given observation and signal models.
 
-    Signal events are sampled from the predicted counts distribution given by the product of the sky models and the 
+    Signal events are sampled from the predicted counts distribution given by the product of the sky models and the
     expected exposure. They are then folded with the instrument response functions.
     To improve performance, IRFs are evaluated on a pre-defined binning,
     not at each individual event energy / coordinate.

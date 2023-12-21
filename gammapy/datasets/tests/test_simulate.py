@@ -848,7 +848,7 @@ def test_MC_ID_flag(model_alternative):
 
 @requires_data()
 def test_simulated_observation_maker(signal_model, tmp_path):
-    from gammapy.datasets.simulate import SimulatedObservationMaker
+    from gammapy.datasets.simulate import ObservationEventSampler
 
     irfs = load_irf_dict_from_file(
         "$GAMMAPY_DATA/cta-caldb/Prod5-South-20deg-AverageAz-14MSTs37SSTs.180000s-v0.1.fits.gz"
@@ -872,7 +872,7 @@ def test_simulated_observation_maker(signal_model, tmp_path):
         ),
     )
 
-    maker = SimulatedObservationMaker(
+    maker = ObservationEventSampler(
         spatial_width=5 * u.deg,
         energy_axis=MapAxis.from_energy_bounds(
             10 * u.GeV, 100 * u.TeV, nbin=5, per_decade=True
