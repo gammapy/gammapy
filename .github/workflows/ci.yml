@@ -59,7 +59,7 @@ jobs:
             allowed_fail: false
           - os: ubuntu-latest
             python: '3.9'
-            tox_env: 'py39-test-alldeps_noray-astropylts-numpy121'
+            tox_env: 'py39-test-alldeps_noray-astropy50-numpy121'
             allowed_fail: false
           - os: ubuntu-latest
             python: '3.9'
@@ -140,7 +140,7 @@ jobs:
       - name: check links
         continue-on-error: true
         run: |
-          tox -e linkcheck -- -j auto  
+          tox -e linkcheck -- -j auto
   conda-build:
     name: Linux python 3.9 conda-build all-deps
     runs-on: ubuntu-latest
