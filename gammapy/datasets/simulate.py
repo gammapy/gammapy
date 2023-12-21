@@ -580,8 +580,8 @@ class SimulatedObservationMaker(MapDatasetEventSampler):
     """
     Sample event lists for a given observation and signal models.
 
-    Signal events are sampled from the given sky models and then
-    folded with the instrument response functions.
+    Signal events are sampled from the predicted counts distribution given by the product of the sky models and the 
+    expected exposure. They are then folded with the instrument response functions.
     To improve performance, IRFs are evaluated on a pre-defined binning,
     not at each individual event energy / coordinate.
 
@@ -600,9 +600,9 @@ class SimulatedObservationMaker(MapDatasetEventSampler):
         Defines random number generator initialisation via the `~gammapy.utils.random.get_random_state` function.
     oversample_energy_factor : int, optional
         Defines an oversampling factor for the energies; it is used only when sampling
-        an energy-dependent time-varying source.
+        an energy-dependent time-varying source. Default is 10.
     t_delta : `~astropy.units.Quantity`, optional
-        Time interval used to sample the time-dependent source.
+        Time interval used to sample the time-dependent source. Default is 0.5 s.
     keep_mc_id : bool, optional
         Flag to tag sampled events from a given model with a Montecarlo identifier.
         Default is True. If set to False, no identifier will be assigned.
@@ -629,7 +629,7 @@ class SimulatedObservationMaker(MapDatasetEventSampler):
         self.keep_mc_id = keep_mc_id
 
     def _create_dataset(self, observation, models=None, dataset_name=None):
-        """create dataest used for sampling"""
+        """create dataset used for sampling."""
 
         # import here to prevent circular import
         from gammapy.makers import MapDatasetMaker
@@ -687,7 +687,7 @@ class SimulatedObservationMaker(MapDatasetEventSampler):
         dataset.models = models
         return dataset
 
-    def run(self, observation: Observation, models=None, dataset_name=None):
+    def run(self, observation, models=None, dataset_name=None):
         """Sample events for given observation and signal models.
 
         The signal distribution is sampled from the given models
@@ -700,7 +700,7 @@ class SimulatedObservationMaker(MapDatasetEventSampler):
             Observation to be simulated.
         models : `~gammapy.modeling.Models`, optional
             Models to simulate.
-            Can be None to only sample background events.
+            Can be None to only sample background events. Default is None.
         dataset_name : str, optional
             If `models` contains one or multiple `FoVBackgroundModel`
             it should match the `dataset_name` of the background model to use.
