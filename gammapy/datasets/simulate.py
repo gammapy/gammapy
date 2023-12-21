@@ -655,10 +655,7 @@ class SimulatedObservationMaker(MapDatasetEventSampler):
         pointing_icrs = observation.pointing.fixed_icrs
         geom = WcsGeom.create(
             skydir=pointing_icrs,
-            width=(
-                self.spatial_width.to_value(u.deg),
-                self.spatial_width.to_value(u.deg),
-            ),
+            width=self.spatial_width,
             binsz=self.spatial_bin_size.to_value(u.deg),
             frame="icrs",
             axes=[self.energy_axis],
