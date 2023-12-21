@@ -1,22 +1,26 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Simulate observations."""
 import html
+from copy import deepcopy
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord, SkyOffsetFrame
 from astropy.table import Table
 from astropy.time import Time
-import gammapy
-from gammapy.data import EventList, observatory_locations
-from gammapy.maps import MapAxis, MapCoord, RegionNDMap, TimeMapAxis
+from gammapy import __version__
+from gammapy.data import EventList, PointingMode, observatory_locations
+from gammapy.maps import MapAxis, MapCoord, RegionNDMap, TimeMapAxis, WcsGeom
 from gammapy.modeling.models import (
     ConstantSpectralModel,
     ConstantTemporalModel,
+    FoVBackgroundModel,
+    Models,
     PointSpatialModel,
 )
 from gammapy.utils.random import get_random_state
+from .map import MapDataset
 
-__all__ = ["MapDatasetEventSampler"]
+__all__ = ["MapDatasetEventSampler", "ObservationEventSampler"]
 
 
 class MapDatasetEventSampler:
@@ -24,14 +28,14 @@ class MapDatasetEventSampler:
 
     Parameters
     ----------
-    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
         Defines random number generator initialisation via the `~gammapy.utils.random.get_random_state` function.
-    oversample_energy_factor : int
+    oversample_energy_factor : int, optional
         Defines an oversampling factor for the energies; it is used only when sampling
         an energy-dependent time-varying source.
-    t_delta : `~astropy.units.Quantity`
+    t_delta : `~astropy.units.Quantity`, optional
         Time interval used to sample the time-dependent source.
-    keep_mc_id : bool
+    keep_mc_id : bool, optional
         Flag to tag sampled events from a given model with a Montecarlo identifier.
         Default is True. If set to False, no identifier will be assigned.
     """
@@ -248,7 +252,7 @@ class MapDatasetEventSampler:
             Event list.
         """
 
-        events_all = []
+        events_all = EventList(Table())
         for idx, evaluator in enumerate(dataset.evaluators.values()):
             if evaluator.needs_update:
                 evaluator.update(
@@ -258,6 +262,8 @@ class MapDatasetEventSampler:
                     dataset._geom,
                     dataset.mask,
                 )
+            if not evaluator.contributes:
+                continue
 
             if evaluator.model.temporal_model is None:
                 temporal_model = ConstantTemporalModel()
@@ -280,9 +286,9 @@ class MapDatasetEventSampler:
                 table.meta["MID{:05d}".format(idx + 1)] = idx + 1
                 table.meta["MMN{:05d}".format(idx + 1)] = evaluator.model.name
 
-            events_all.append(EventList(table))
+            events_all.stack(EventList(table))
 
-        return EventList.from_stack(events_all)
+        return events_all
 
     def sample_background(self, dataset):
         """Sample background.
@@ -297,20 +303,23 @@ class MapDatasetEventSampler:
         events : `gammapy.data.EventList`
             Background events.
         """
-        background = dataset.npred_background()
 
-        temporal_model = ConstantTemporalModel()
+        table = Table()
+        if dataset.background:
+            background = dataset.npred_background()
 
-        table = self._sample_coord_time(background, temporal_model, dataset.gti)
+            temporal_model = ConstantTemporalModel()
 
-        table["ENERGY"] = table["ENERGY_TRUE"]
-        table["RA"] = table["RA_TRUE"]
-        table["DEC"] = table["DEC_TRUE"]
+            table = self._sample_coord_time(background, temporal_model, dataset.gti)
 
-        if self.keep_mc_id:
-            table["MC_ID"] = 0
-            table.meta["MID{:05d}".format(0)] = 0
-            table.meta["MMN{:05d}".format(0)] = dataset.background_model.name
+            table["ENERGY"] = table["ENERGY_TRUE"]
+            table["RA"] = table["RA_TRUE"]
+            table["DEC"] = table["DEC_TRUE"]
+
+            if self.keep_mc_id:
+                table["MC_ID"] = 0
+                table.meta["MID{:05d}".format(0)] = 0
+                table.meta["MMN{:05d}".format(0)] = dataset.background_model.name
 
         return EventList(table)
 
@@ -442,7 +451,7 @@ class MapDatasetEventSampler:
         meta["EQUINOX"] = "J2000"
         meta["RADECSYS"] = "icrs"
 
-        meta["CREATOR"] = "Gammapy {}".format(gammapy.__version__)
+        meta["CREATOR"] = "Gammapy {}".format(__version__)
         meta["EUNIT"] = "TeV"
         meta["EVTVER"] = ""
 
@@ -540,30 +549,21 @@ class MapDatasetEventSampler:
         events : `~gammapy.data.EventList`
             Event list.
         """
-        if len(dataset.models) > 1:
-            events_src = self.sample_sources(dataset)
-
-            if len(events_src.table) > 0:
-                if dataset.psf:
-                    events_src = self.sample_psf(dataset.psf, events_src)
-                else:
-                    events_src.table["RA"] = events_src.table["RA_TRUE"]
-                    events_src.table["DEC"] = events_src.table["DEC_TRUE"]
-
-                if dataset.edisp:
-                    events_src = self.sample_edisp(dataset.edisp, events_src)
-                else:
-                    events_src.table["ENERGY"] = events_src.table["ENERGY_TRUE"]
-
-            if dataset.background:
-                events_bkg = self.sample_background(dataset)
-                events = EventList.from_stack([events_bkg, events_src])
+        events_src = self.sample_sources(dataset)
+        if len(events_src.table) > 0:
+            if dataset.psf:
+                events_src = self.sample_psf(dataset.psf, events_src)
             else:
-                events = events_src
+                events_src.table["RA"] = events_src.table["RA_TRUE"]
+                events_src.table["DEC"] = events_src.table["DEC_TRUE"]
 
-        if len(dataset.models) == 1 and dataset.background_model is not None:
-            events_bkg = self.sample_background(dataset)
-            events = EventList.from_stack([events_bkg])
+            if dataset.edisp:
+                events_src = self.sample_edisp(dataset.edisp, events_src)
+            else:
+                events_src.table["ENERGY"] = events_src.table["ENERGY_TRUE"]
+
+        events_bkg = self.sample_background(dataset)
+        events = EventList.from_stack([events_bkg, events_src])
 
         events = self.event_det_coords(observation, events)
         events.table["EVENT_ID"] = np.arange(len(events.table))
@@ -574,3 +574,143 @@ class MapDatasetEventSampler:
         geom = dataset._geom
         selection = geom.contains(events.map_coord(geom))
         return events.select_row_subset(selection)
+
+
+class ObservationEventSampler(MapDatasetEventSampler):
+    """
+    Sample event lists for a given observation and signal models.
+
+    Signal events are sampled from the predicted counts distribution given by the product of the sky models and the
+    expected exposure. They are then folded with the instrument response functions.
+    To improve performance, IRFs are evaluated on a pre-defined binning,
+    not at each individual event energy / coordinate.
+
+    Parameters
+    ----------
+    energy_axis_true : `~gammapy.maps.MapAxis`
+        True energy axis.
+    energy_axis : `~gammapy.maps.MapAxis`
+        Reconstructed energy axis.
+    spatial_width : float or `~astropy.units.Quantity`
+        Spatial window size. A float is assumed to be in degree.
+    spatial_spatial_bin_size : float or `~astropy.units.Quantity`, optional
+        Pixel size used for sampling. A float is assumed to be in degree.
+        Default is 0.01 degree.
+    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
+        Defines random number generator initialisation via the `~gammapy.utils.random.get_random_state` function.
+    oversample_energy_factor : int, optional
+        Defines an oversampling factor for the energies; it is used only when sampling
+        an energy-dependent time-varying source. Default is 10.
+    t_delta : `~astropy.units.Quantity`, optional
+        Time interval used to sample the time-dependent source. Default is 0.5 s.
+    keep_mc_id : bool, optional
+        Flag to tag sampled events from a given model with a Montecarlo identifier.
+        Default is True. If set to False, no identifier will be assigned.
+    """
+
+    def __init__(
+        self,
+        energy_axis_true,
+        energy_axis,
+        spatial_width,
+        spatial_bin_size=0.01 * u.deg,
+        random_state="random-seed",
+        oversample_energy_factor=10,
+        t_delta=0.5 * u.s,
+        keep_mc_id=True,
+    ):
+        self.random_state = get_random_state(random_state)
+        self.energy_axis_true = energy_axis_true
+        self.energy_axis = energy_axis
+        self.spatial_width = u.Quantity(spatial_width, "deg")
+        self.spatial_bin_size = u.Quantity(spatial_bin_size, "deg")
+        self.oversample_energy_factor = oversample_energy_factor
+        self.t_delta = t_delta
+        self.keep_mc_id = keep_mc_id
+
+    def _create_dataset(self, observation, models=None, dataset_name=None):
+        """create dataset used for sampling."""
+
+        # import here to prevent circular import
+        from gammapy.makers import MapDatasetMaker
+
+        if models is None:
+            models = Models()
+
+        if dataset_name is None:
+            dataset_name = "simulated-dataset"
+
+        if not np.any(
+            [
+                isinstance(m, FoVBackgroundModel) and m.dataset_name == dataset_name
+                for m in models
+            ]
+        ):
+            models.append(FoVBackgroundModel(dataset_name=dataset_name))
+
+        if observation.pointing.mode is not PointingMode.POINTING:
+            raise NotImplementedError(
+                "Only observations with fixed pointing in ICRS are supported"
+            )
+        pointing_icrs = observation.pointing.fixed_icrs
+        geom = WcsGeom.create(
+            skydir=pointing_icrs,
+            width=self.spatial_width,
+            binsz=self.spatial_bin_size.to_value(u.deg),
+            frame="icrs",
+            axes=[self.energy_axis],
+        )
+
+        components = ["exposure"]
+        axes = dict(
+            energy_axis_true=self.energy_axis_true,
+        )
+        if observation.edisp is not None:
+            components.append("edisp")
+            axes["migra_axis"] = observation.edisp.axes["migra"]
+        if observation.bkg is not None:
+            components.append("background")
+        if observation.psf is not None:
+            components.append("psf")
+
+        dataset = MapDataset.create(
+            geom,
+            name=dataset_name,
+            **axes,
+        )
+
+        maker = MapDatasetMaker(selection=components)
+        dataset = maker.run(dataset, observation)
+        dataset.models = models
+        return dataset
+
+    def run(self, observation, models=None, dataset_name=None):
+        """Sample events for given observation and signal models.
+
+        The signal distribution is sampled from the given models
+        in true coordinates and energy. The true quantities are
+        then folded with the IRFs to obtain the observable quantities.
+
+        Parameters
+        ----------
+        observation : `~gammapy.data.Observation`
+            Observation to be simulated.
+        models : `~gammapy.modeling.Models`, optional
+            Models to simulate.
+            Can be None to only sample background events. Default is None.
+        dataset_name : str, optional
+            If `models` contains one or multiple `FoVBackgroundModel`
+            it should match the `dataset_name` of the background model to use.
+            Default is None.
+        Returns
+        -------
+        observation : `~gammapy.data.Observation`
+            A copy of the input observation with event list filled.
+        """
+
+        dataset = self._create_dataset(observation, models, dataset_name)
+        events = super().run(dataset, observation)
+
+        observation = deepcopy(observation)
+        observation._events = events
+        return observation

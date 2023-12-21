@@ -8,6 +8,7 @@ from astropy.io import fits
 from astropy.table import Table
 from astropy.time import Time
 from gammapy.data import GTI, DataStore, Observation
+from gammapy.data.metadata import ObservationMetaData
 from gammapy.data.pointing import FixedPointingInfo
 from gammapy.datasets import MapDataset, MapDatasetEventSampler
 from gammapy.datasets.tests.test_map import get_map_dataset
@@ -30,7 +31,7 @@ LOCATION = EarthLocation(lon="-70d18m58.84s", lat="-24d41m0.34s", height="2000m"
 
 
 @pytest.fixture()
-def models():
+def signal_model():
     spatial_model = GaussianSpatialModel(
         lon_0="0 deg", lat_0="0 deg", sigma="0.2 deg", frame="galactic"
     )
@@ -50,15 +51,18 @@ def models():
     table.meta = dict(MJDREFI=t_ref.mjd, MJDREFF=0, TIMEUNIT="s", TIMESYS="utc")
     temporal_model = LightCurveTemplateTemporalModel.from_table(table)
 
-    model = SkyModel(
+    return SkyModel(
         spatial_model=spatial_model,
         spectral_model=spectral_model,
         temporal_model=temporal_model,
         name="test-source",
     )
 
+
+@pytest.fixture()
+def models(signal_model):
     bkg_model = FoVBackgroundModel(dataset_name="test")
-    return [model, bkg_model]
+    return [signal_model, bkg_model]
 
 
 @pytest.fixture()
@@ -840,3 +844,44 @@ def test_MC_ID_flag(model_alternative):
     assert "MID00002" not in meta.keys()
     assert "MID00003" not in meta.keys()
     assert "NMCIDS" not in meta.keys()
+
+
+@requires_data()
+def test_simulated_observation_maker(signal_model, tmp_path):
+    from gammapy.datasets.simulate import ObservationEventSampler
+
+    irfs = load_irf_dict_from_file(
+        "$GAMMAPY_DATA/cta-caldb/Prod5-South-20deg-AverageAz-14MSTs37SSTs.180000s-v0.1.fits.gz"
+    )
+    pointing = FixedPointingInfo(
+        fixed_icrs=SkyCoord(83.63311446, 22.01448714, unit="deg", frame="icrs"),
+    )
+    time_start = Time("2021-11-20T03:00:00")
+    time_stop = Time("2021-11-20T03:30:00")
+
+    obs = Observation(
+        obs_id=1,
+        **irfs,
+        location=LOCATION,
+        pointing=pointing,
+        gti=GTI.create(time_start, time_stop),
+        meta=ObservationMetaData(
+            time_start=time_start,
+            time_stop=time_stop,
+            dead_time_fraction=0.01,
+        ),
+    )
+
+    maker = ObservationEventSampler(
+        spatial_width=5 * u.deg,
+        energy_axis=MapAxis.from_energy_bounds(
+            10 * u.GeV, 100 * u.TeV, nbin=5, per_decade=True
+        ),
+        energy_axis_true=MapAxis.from_energy_bounds(
+            10 * u.GeV, 100 * u.TeV, nbin=5, per_decade=True, name="energy_true"
+        ),
+    )
+
+    sim_obs = maker.run(obs, [signal_model])
+    assert sim_obs.events is not None
+    assert len(sim_obs.events.table) > 0
