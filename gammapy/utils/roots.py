@@ -6,7 +6,12 @@ from scipy.optimize import RootResults, root_scalar
 import astropy.units as u
 from gammapy.utils.interpolation import interpolation_scale
 
-BAD_RES = RootResults(root=np.nan, iterations=0, function_calls=0, flag=0)
+try:
+    BAD_RES = RootResults(
+        root=np.nan, iterations=0, function_calls=0, flag=0, method="brentq"
+    )
+except TypeError:
+    BAD_RES = RootResults(root=np.nan, iterations=0, function_calls=0, flag=0)
 
 
 def find_roots(
