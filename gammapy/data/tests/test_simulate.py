@@ -2,23 +2,22 @@
 import pytest
 import astropy.units as u
 from astropy.coordinates import SkyCoord
-from gammapy.data import ObservationsEventsSampler
-from gammapy.utils.testing import requires_data
-from gammapy.irf import load_cta_irfs
-from gammapy.data import Observation
+from gammapy.data import FixedPointingInfo, Observation, ObservationsEventsSampler
+from gammapy.irf import load_irf_dict_from_file
 from gammapy.modeling.models import (
-    PowerLawSpectralModel,
-    PointSpatialModel,
-    SkyModel,
     Models,
+    PointSpatialModel,
+    PowerLawSpectralModel,
+    SkyModel,
 )
+from gammapy.utils.testing import requires_data
 
 
 @pytest.fixture(scope="session")
 def observations():
-    pointing = SkyCoord(0.0, 0.0, frame="galactic", unit="deg")
+    pointing = FixedPointingInfo(fixed_icrs=SkyCoord(0 * u.deg, 0 * u.deg))
     livetime = 0.5 * u.hr
-    irfs = load_cta_irfs(
+    irfs = load_irf_dict_from_file(
         "$GAMMAPY_DATA/cta-caldb/Prod5-South-20deg-AverageAz-14MSTs37SSTs.180000s-v0.1.fits.gz"
     )
     observations = [
@@ -50,31 +49,35 @@ def models():
 
 @requires_data()
 def test_observations_events_sampler(tmpdir, observations):
+    sampler_kwargs = dict(random_state=0)
+    dataset_kwargs = dict(
+        spatial_bin_size_min=0.1 * u.deg,
+        spatial_width_max=0.2 * u.deg,
+        energy_bin_per_decade_max=2,
+    )
     sampler = ObservationsEventsSampler(
-        models=None,
-        outdir=tmpdir,
-        prefix="test",
-        binsz_min=0.1 * u.deg,
-        width_max=0.2 * u.deg,
-        nbin_per_decade_max=2,
+        sampler_kwargs=sampler_kwargs,
+        dataset_kwargs=dataset_kwargs,
         n_jobs=1,
-        random_state=0,
+        outdir=tmpdir,
         overwrite=True,
     )
-    sampler.run(observations)
+    sampler.run(observations, models=None)
 
 
 @requires_data()
-def test_observations_events_sampler_parralel(tmpdir, observations, models):
+def test_observations_events_sampler_parallel(tmpdir, observations, models):
+    sampler_kwargs = dict(random_state=0)
+    dataset_kwargs = dict(
+        spatial_bin_size_min=0.1 * u.deg,
+        spatial_width_max=0.2 * u.deg,
+        energy_bin_per_decade_max=2,
+    )
     sampler = ObservationsEventsSampler(
-        models=models,
-        outdir=tmpdir,
-        prefix="test",
-        binsz_min=0.1 * u.deg,
-        width_max=0.2 * u.deg,
-        nbin_per_decade_max=2,
+        sampler_kwargs=sampler_kwargs,
+        dataset_kwargs=dataset_kwargs,
         n_jobs=2,
-        random_state=0,
+        outdir=tmpdir,
         overwrite=True,
     )
-    sampler.run(observations)
+    sampler.run(observations, models=models)
