@@ -808,7 +808,7 @@ class WcsGeom(Geom):
 
         The array has the same dimension as the WcsGeom object
         if the spatial shape is not unique along the extra axis,
-        otherwise the array shape matches of the spatial dimensions.
+        otherwise the array shape matches the spatial dimensions.
 
         To return solid angles for the spatial dimensions only use::
 
