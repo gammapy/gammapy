@@ -139,6 +139,11 @@ class WcsGeom(Geom):
         return self.axes.shape[::-1] + (1, 1)
 
     @property
+    def data_shape_image(self):
+        """Shape of data of the spatial axes and unit non-spatial axes."""
+        return (1,) * len(self.axes) + self.data_shape[len(self.axes) :]
+
+    @property
     def _shape(self):
         npix_shape = tuple([np.max(self.npix[0]), np.max(self.npix[1])])
         return npix_shape + self.axes.shape
@@ -801,7 +806,9 @@ class WcsGeom(Geom):
     def solid_angle(self):
         """Solid angle array as a `~astropy.units.Quantity` in ``sr``.
 
-        The array has the same dimension as the WcsGeom object.
+        The array has the same dimension as the WcsGeom object
+        if the spatial shape is not unique along the extra axis,
+        otherwise the array shape matches the spatial dimensions.
 
         To return solid angles for the spatial dimensions only use::
 
@@ -811,7 +818,10 @@ class WcsGeom(Geom):
 
     @lazyproperty
     def _solid_angle(self):
-        coord = self.get_coord(mode="edges").skycoord
+        if self.is_regular:
+            coord = self.to_image().get_coord(mode="edges").skycoord
+        else:
+            coord = self.get_coord(mode="edges").skycoord
 
         # define pixel corners
         low_left = coord[..., :-1, :-1]
@@ -838,7 +848,11 @@ class WcsGeom(Geom):
         area_up_left = 0.5 * up * left * np.sin(angle_up_left)
         # TODO: for non-negative cdelt a negative solid angle is returned
         #  find out why and fix properly
-        return np.abs(u.Quantity(area_low_right + area_up_left, "sr", copy=False))
+
+        value = np.abs(u.Quantity(area_low_right + area_up_left, "sr", copy=False))
+        if self.is_regular:
+            value = value.reshape(self.data_shape_image)
+        return value
 
     def bin_volume(self):
         """Bin volume as a `~astropy.units.Quantity`."""
