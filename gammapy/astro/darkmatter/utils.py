@@ -56,8 +56,8 @@ class JFactory:
         rmin = np.tan(unique_sep) * distance_val
         rmax = distance_val
         kwargs = {par.name: par.quantity for par in self.profile.parameters}
-        kwargs['r_s'] = kwargs['r_s'].to_value('cm')
-        kwargs['rho_s'] = kwargs['rho_s'].to_value('GeV/cm3')
+        kwargs["r_s"] = kwargs["r_s"].to_value("cm")
+        kwargs["rho_s"] = kwargs["rho_s"].to_value("GeV/cm3")
 
         val = [
             (

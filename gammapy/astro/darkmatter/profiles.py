@@ -31,8 +31,8 @@ class DMProfile(abc.ABC):
         """Call evaluate method of derived classes."""
         if kwargs == {}:
             kwargs = {par.name: par.quantity for par in self.parameters}
-            kwargs['r_s'] = kwargs['r_s'].to_value('cm')
-            kwargs['rho_s'] = kwargs['rho_s'].to_value('GeV/cm3')
+            kwargs["r_s"] = kwargs["r_s"].to_value("cm")
+            kwargs["rho_s"] = kwargs["rho_s"].to_value("GeV/cm3")
         return self.evaluate(radius, **kwargs)
 
     def _repr_html_(self):
@@ -43,19 +43,20 @@ class DMProfile(abc.ABC):
 
     def scale_to_local_density(self):
         """Scale to local density."""
-        scale = self.LOCAL_DENSITY.to_value('GeV/cm3') / self(self.DISTANCE_GC.to_value('cm'))
+        scale = self.LOCAL_DENSITY.to_value("GeV/cm3") / self(
+            self.DISTANCE_GC.to_value("cm")
+        )
         self.parameters["rho_s"].value *= scale
 
     @lazyproperty
     def DISTANCE_GC_CM(self):
-        return self.DISTANCE_GC.to_value('cm')
+        return self.DISTANCE_GC.to_value("cm")
 
     def _eval_substitution(self, radius, separation, squared, **kwargs):
         """Density at given radius together with the substitution part."""
         exponent = 2 if squared else 1
-        return (
-            self(radius, **kwargs) ** exponent
-            / np.sqrt(1 - (self.DISTANCE_GC_CM * np.sin(separation) / radius ) ** 2)
+        return self(radius, **kwargs) ** exponent / np.sqrt(
+            1 - (self.DISTANCE_GC_CM * np.sin(separation) / radius) ** 2
         )
 
     def integral(self, rmin, rmax, separation, ndecade, squared=True, **kwargs):
