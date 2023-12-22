@@ -806,7 +806,9 @@ class WcsGeom(Geom):
     def solid_angle(self):
         """Solid angle array as a `~astropy.units.Quantity` in ``sr``.
 
-        The array has the same dimension as the WcsGeom object.
+        The array has the same dimension as the WcsGeom object
+        if the spatial shape is not unique along the extra axis,
+        otherwise the array shape matches of the spatial dimensions.
 
         To return solid angles for the spatial dimensions only use::
 
