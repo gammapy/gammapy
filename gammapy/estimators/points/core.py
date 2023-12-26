@@ -3,6 +3,8 @@ import logging
 from copy import deepcopy
 import numpy as np
 from scipy import stats
+from scipy.interpolate import interp1d
+from scipy.optimize import minimize
 from astropy.io import fits
 from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
@@ -25,21 +27,22 @@ __all__ = ["FluxPoints"]
 log = logging.getLogger(__name__)
 
 
-def get_weighted_average(flux_point):
-    pass
-
-
 def combine_fluxpoints(flux_point, axis_name):
-    if not flux_point.has_stat_profiles:
-        log.warn(
-            "Stat profiles not present. "
-            "Weighted average will be computed. "
-            "Results only valid with Gaussian error"
-        )
-        fp = get_weighted_average(flux_point)
-    else:
-        fp = 1
-    return fp
+    value_scan = flux_point.stat_scan.geom.axes["norm"].center
+    stat_scan = np.sum(flux_point.stat_scan.data, axis=0).ravel()
+    f = interp1d(value_scan, stat_scan, kind="quadratic")
+    minimizer = minimize(f, x0=value_scan[int(len(value_scan) / 2)])
+    maps = dict()
+    maps["norm"], maps["norm_err"] = minimizer.x, np.sqrt(minimizer.hess_inv)
+
+    combined_fp = FluxPoints.from_maps(
+        maps=maps,
+        sed_type=flux_point.sed_type_init,
+        reference_model=flux_point.reference_model,
+        gti=flux_point.gti,
+        meta=flux_point.meta,
+    )
+    return combined_fp
 
 
 class FluxPoints(FluxMaps):
@@ -797,10 +800,10 @@ class FluxPoints(FluxMaps):
             if not isinstance(value, int):
                 raise ValueError("Only integer number of bins can be combined")
             idx = np.arange(0, nbin, value)
-            if idx[-1] < nbin - 1:
-                idx = np.append(idx, nbin - 1)
-            edges_min = ax.edges_min[idx]
-            edges_max = ax.edges_max[idx]
+            if idx[-1] < nbin:
+                idx = np.append(idx, nbin)
+            edges_min = ax.edges_min[idx[:-1]]
+            edges_max = ax.edges_max[idx[1:] - 1]
 
         elif method == "min_significance":
             if not isinstance(value, float):
@@ -840,7 +843,7 @@ class FluxPoints(FluxMaps):
             )
         else:
             edges = np.append(edges_min, edges_max[-1])
-            axis_new = MapAxis.from_edges(edges, name=axis_name)
+            axis_new = MapAxis.from_edges(edges, name=axis_name, interp=ax.interp)
         return axis_new
 
     def rebin_axis(self, method, value, axis_name="energy"):
@@ -863,6 +866,9 @@ class FluxPoints(FluxMaps):
                     Minimum TS desired
         axis_name : The axis name to combine along
         """
+
+        if not self.has_stat_profiles:
+            raise ValueError("Stat profiles not present, rebinning is not possible")
 
         fluxpoints = []
         axis_new = self.get_rebinned_axis(method, value, axis_name)
