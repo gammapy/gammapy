@@ -12,7 +12,7 @@ from astropy.time import Time
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from gammapy.data import GTI
-from gammapy.maps import MapAxis, Maps, RegionNDMap, TimeMapAxis
+from gammapy.maps import Map, MapAxis, Maps, RegionNDMap, TimeMapAxis
 from gammapy.maps.axes import UNIT_STRING_FORMAT, flat_if_equal
 from gammapy.modeling.models import TemplateSpectralModel
 from gammapy.modeling.models.spectral import scale_plot_flux
@@ -32,8 +32,14 @@ def combine_fluxpoints(flux_point, axis_name):
     stat_scan = np.sum(flux_point.stat_scan.data, axis=0).ravel()
     f = interp1d(value_scan, stat_scan, kind="quadratic")
     minimizer = minimize(f, x0=value_scan[int(len(value_scan) / 2)])
-    maps = dict()
-    maps["norm"], maps["norm_err"] = minimizer.x, np.sqrt(minimizer.hess_inv)
+    geom = flux_point.geom
+    maps = Maps()
+    maps["norm"] = Map.from_geom(geom, data=minimizer.x)
+    maps["norm_err"] = Map.from_geom(geom, data=np.sqrt(minimizer.hess_inv))
+    if "norm_ul" in flux_point.available_quantities:
+        delta_ts = flux_point.meta["n_sigma_ul"] ** 2
+        ul = stat_profile_ul_scipy(value_scan, stat_scan, delta_ts=delta_ts)
+        maps["ul"] = Map.from_geom(geom, data=ul)
 
     combined_fp = FluxPoints.from_maps(
         maps=maps,
@@ -846,7 +852,7 @@ class FluxPoints(FluxMaps):
             axis_new = MapAxis.from_edges(edges, name=axis_name, interp=ax.interp)
         return axis_new
 
-    def rebin_axis(self, method, value, axis_name="energy"):
+    def rebin_on_axis(self, method, value, axis_name="energy"):
         """Rebin the flux point object along the mentioned axis.
         The likelihoods in each bin are combined to compute the
         resultant maps.
