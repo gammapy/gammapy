@@ -11,7 +11,7 @@ from gammapy.maps.axes import UNIT_STRING_FORMAT
 from .core import IRF
 from .io import gadf_is_pointlike
 
-__all__ = ["Background3D", "Background2D"]
+__all__ = ["Background3D", "Background2D", "BackgroundIRF"]
 
 log = logging.getLogger(__name__)
 
