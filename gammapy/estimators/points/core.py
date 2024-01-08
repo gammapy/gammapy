@@ -789,120 +789,25 @@ class FluxPoints(FluxMaps):
         flux_points.meta["n_sigma_ul"] = n_sigma_ul
         return flux_points
 
-    def get_rebinned_axis(self, method, value, axis_name="energy"):
-        """Get the rebinned axis for rebinning
-         the flux point object along the mentioned axis.
+    def resample_axis(self, axis_new):
+        """Rebin the flux point object along the new axis.
         The likelihoods in each bin are combined to compute the
-        resultant maps.
+        resultant quantities.
+        Stat profiles must be present on the fluxpoints object for
+        this method to work.
+
+        For now, works only for flat fluxpoints.
 
         Parameters
         ----------
-        method : {"fixed_bins", "fixed_edges", "min_significance"}
-            The binning method requested. Options are
-            fixed_bins : Combine `value` adjacent bins together
-            fixed_edges : Combine bins within the given edges
-            min_significance : Combine bins to get a minimum significance in each bin
-        value : The value corresponding to the method
-            The relevant matches are
-            fixed_bins : int
-            fixed_edges : MapAxis edges for the relevant axis
-            min_sig : float
-                Minimum TS desired
-        axis_name : The axis name to combine along
-
-        Returns
-        -------
-        flux_points : `~gammapy.estimators.FluxPoints`
-            A new FluxPoints object with modified binning.
-        """
-        # TODO: Make fixed_bins and fixed_edges work for multidimensions
-        if not self.geom.axes.is_unidimensional:
-            raise ValueError(
-                "Rebinning is supported only for Unidimensional FluxPoints \n "
-                "Please use `iter_by_axis` to create Unidimensional FluxPoints"
-            )
-        ax = self.geom.axes[axis_name]
-        nbin = ax.nbin
-
-        if method == "fixed_bins":
-            if not isinstance(value, int):
-                raise ValueError("Only integer number of bins can be combined")
-            idx = np.arange(0, nbin, value)
-            if idx[-1] < nbin:
-                idx = np.append(idx, nbin)
-            edges_min = ax.edges_min[idx[:-1]]
-            edges_max = ax.edges_max[idx[1:] - 1]
-
-        elif method == "min_significance":
-            if not isinstance(value, float):
-                raise ValueError("Minimum significance must be a number")
-            e_min, e_max = ax.edges_min[0], ax.edges_max[0]
-            edges_min = np.zeros(nbin) * e_min.unit
-            edges_max = np.zeros(nbin) * e_max.unit
-            i, i1 = 0, 0
-            while e_max < ax.edges_max[-1]:
-                ts = self.ts.data[i]
-                e_min = ax.edges_min[i]
-                while ts < value**2 and i < ax.nbin - 1:
-                    i = i + 1
-                    ts = ts + self.ts.data[i]
-                e_max = ax.edges_max[i]
-                i = i + 1
-                edges_min[i1] = e_min
-                edges_max[i1] = e_max
-                i1 = i1 + 1
-            edges_max = edges_max[:i1]
-            edges_min = edges_min[:i1]
-
-        elif method == "fixed_edges":
-            if isinstance(value, Time):
-                edges_min = value[:-1] - ax.reference_time
-                edges_max = value[1:] - ax.reference_time
-            else:
-                edges_min, edges_max = value[:-1], value[1:]
-
-        else:
-            raise ValueError(
-                "Incorrect option. Choose from "
-                "{fixed_bins, fixed_edges, min_significance}"
-            )
-
-        if isinstance(ax, TimeMapAxis):
-            axis_new = TimeMapAxis.from_time_edges(
-                time_min=edges_min + ax.reference_time,
-                time_max=edges_max + ax.reference_time,
-            )
-        else:
-            edges = np.append(edges_min, edges_max[-1])
-            axis_new = MapAxis.from_edges(edges, name=axis_name, interp=ax.interp)
-        return axis_new
-
-    def rebin_on_axis(self, method, value, axis_name="energy"):
-        """Rebin the flux point object along the mentioned axis.
-        The likelihoods in each bin are combined to compute the
-        resultant maps.
-
-        Parameters
-        ----------
-        method : {"fixed_bins", "fixed_edges", "min_significance"}
-                The binning method requested. Options are
-                fixed_bins : Combine `value` number of adjacent bins together
-                fixed_edges : Combine bins within the given edges
-                min_significance : Combine bins to get a minimum significance in each bin
-        value : The value corresponding to the method
-                The relevant matches are
-                fixed_bins : int
-                fixed_edges : MapAxis edges for the relevant axis
-                min_sig : float
-                    Minimum TS desired
-        axis_name : The axis name to combine along
+        axis_new : `MapAxis` or `TimeMapAxis`
+            The new axis to resample along
         """
 
         if not self.has_stat_profiles:
             raise ValueError("Stat profiles not present, rebinning is not possible")
 
         fluxpoints = []
-        axis_new = self.get_rebinned_axis(method, value, axis_name)
         for emin, emax in zip(axis_new.edges_min, axis_new.edges_max):
             if isinstance(axis_new, TimeMapAxis):
                 emin = emin + axis_new.reference_time + 1e-5 * u.s  # TODO: 5003

@@ -14,6 +14,7 @@ from gammapy.estimators.utils import (
     compute_lightcurve_fvar,
     find_peaks,
     find_peaks_in_flux_map,
+    get_rebinned_axis,
     resample_energy_edges,
 )
 from gammapy.maps import Map, MapAxis
@@ -161,7 +162,6 @@ def lc():
 
 
 def test_compute_lightcurve_fvar():
-
     lightcurve = lc()
 
     fvar = compute_lightcurve_fvar(lightcurve)
@@ -173,7 +173,6 @@ def test_compute_lightcurve_fvar():
 
 
 def test_compute_lightcurve_fpp():
-
     lightcurve = lc()
 
     fpp = compute_lightcurve_fpp(lightcurve)
@@ -185,7 +184,6 @@ def test_compute_lightcurve_fpp():
 
 
 def test_compute_lightcurve_doublingtime():
-
     lightcurve = lc()
 
     dtime = compute_lightcurve_doublingtime(lightcurve)
@@ -199,3 +197,21 @@ def test_compute_lightcurve_doublingtime():
         dcoord,
         Time([[[55197.99960648]], [[55197.99960648]]], format="mjd", scale="utc"),
     )
+
+
+@requires_data()
+def test_get_rebinned_axis():
+    lc_1d = FluxPoints.read(
+        "$GAMMAPY_DATA/estimators/pks2155_hess_lc/pks2155_hess_lc.fits",
+        format="lightcurve",
+    )
+    axis_new = get_rebinned_axis(lc_1d, method="fixed-bins", value=2, axis_name="time")
+    assert_allclose(axis_new.bin_width[0], 20 * u.min)
+
+    axis_new = get_rebinned_axis(
+        lc_1d, method="min-sqrt-ts", value=50.0, axis_name="time"
+    )
+    assert_allclose(axis_new.bin_width, [50, 30, 30, 50, 110, 70] * u.min)
+
+    with pytest.raises(ValueError):
+        get_rebinned_axis(lc_1d, method="error", value=2, axis_name="time")

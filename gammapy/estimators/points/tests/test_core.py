@@ -10,6 +10,8 @@ from gammapy.catalog.fermi import SourceCatalog3FGL, SourceCatalog4FGL
 from gammapy.data import GTI
 from gammapy.estimators import FluxPoints
 from gammapy.estimators.map.core import DEFAULT_UNIT
+from gammapy.estimators.utils import get_rebinned_axis
+from gammapy.maps import MapAxis
 from gammapy.modeling.models import PowerLawSpectralModel, SpectralModel
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import (
@@ -380,47 +382,18 @@ def test_table_columns():
     assert_allclose(fp.n_dof.data.ravel(), table["n_dof"])
 =======
 @requires_data()
-def test_get_rebinned_axis():
+def test_resample_axis():
     lc_1d = FluxPoints.read(
         "$GAMMAPY_DATA/estimators/pks2155_hess_lc/pks2155_hess_lc.fits",
         format="lightcurve",
     )
-    axis_new = lc_1d.get_rebinned_axis(method="fixed_bins", value=2, axis_name="time")
-    assert_allclose(axis_new.bin_width[0], 20 * u.min)
-
-    axis_new = lc_1d.get_rebinned_axis(
-        method="min_significance", value=50.0, axis_name="time"
-    )
-    assert_allclose(axis_new.bin_width, [50, 30, 30, 50, 110, 70] * u.min)
-
-    axis_new = lc_1d.get_rebinned_axis(
-        method="fixed_edges",
-        value=Time(
-            [53945.86186556, 53945.94519889, 53946.03547667, 53946.09103222],
-            format="mjd",
-        ),
-        axis_name="time",
-    )
-    assert_allclose(axis_new.bin_width, [120, 130, 79.999992] * u.min)
-
-    with pytest.raises(ValueError):
-        lc_1d.get_rebinned_axis(method="error", value=2)
-
-
-@requires_data()
-def test_rebin_on_axis():
-    lc_1d = FluxPoints.read(
-        "$GAMMAPY_DATA/estimators/pks2155_hess_lc/pks2155_hess_lc.fits",
-        format="lightcurve",
-    )
-    l1 = lc_1d.rebin_on_axis(method="fixed_bins", value=5, axis_name="time")
+    axis_new = get_rebinned_axis(lc_1d, method="fixed-bins", value=5, axis_name="time")
+    l1 = lc_1d.resample_axis(axis_new=axis_new)
     assert_allclose(l1.norm.data.ravel()[0:2], [1.56321943, 2.12845751], rtol=1e-3)
-<<<<<<< HEAD
     assert_allclose(l1.norm_err.ravel()[0:2], [0.03904136, 0.03977413], rtol=1e-3)
     assert_allclose(l1.norm.data.ravel()[0:2], [50.58972379, 72.52995826], rtol=1e-3)
     assert l1.norm_err.ravel()[0] is True
->>>>>>> 09dc0f990 (test)
-=======
+
     assert_allclose(l1.norm_err.data.ravel()[0:2], [0.03904136, 0.03977413], rtol=1e-3)
     assert_allclose(l1.sqrt_ts.data.ravel()[0:2], [50.58972379, 72.52995826], rtol=1e-3)
     assert l1.success.data.ravel()[0]
@@ -429,5 +402,4 @@ def test_rebin_on_axis():
     table = Table.read(path)
     fp = FluxPoints.from_table(table)
     with pytest.raises(ValueError):
-        fp.rebin_on_axis(method="fixed_bins", value=5, axis_name="time")
->>>>>>> 4f798a8d1 (add more test)
+        fp.resample_axis(axis_new=MapAxis.from_nodes([0, 1, 2]))
