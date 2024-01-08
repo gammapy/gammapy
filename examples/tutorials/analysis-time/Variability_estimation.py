@@ -49,6 +49,7 @@ from gammapy.estimators.utils import (
     compute_lightcurve_fpp,
     compute_lightcurve_fvar,
 )
+from gammapy.maps import TimeMapAxis
 
 ######################################################################
 # Load the light curve for the PKS 2155-304 flare directly from `$GAMMAPY_DATA/estimators`.
@@ -192,7 +193,8 @@ bayesian_edges = bayesian_blocks(
 # We can visualize the difference between the original lightcurve and the rebin with bayesian blocks
 
 edges = Time(bayesian_edges, format="mjd")
-lc_rebin = lc_1d.rebin_on_axis(method="fixed_edges", value=edges, axis_name="time")
+axis_new = TimeMapAxis.from_time_edges(edges[:-1], edges[1:])
+lc_rebin = lc_1d.resample_axis(axis_new)
 ax = lc_1d.plot(label="original")
 lc_rebin.plot(ax=ax, label="rebinned")
 plt.show()
