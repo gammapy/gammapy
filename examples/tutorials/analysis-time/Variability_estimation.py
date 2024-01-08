@@ -41,6 +41,7 @@ approach which utilises the change points in Bayesian blocks as indicators of va
 
 import numpy as np
 from astropy.stats import bayesian_blocks
+from astropy.time import Time
 import matplotlib.pyplot as plt
 from gammapy.estimators import FluxPoints
 from gammapy.estimators.utils import (
@@ -190,32 +191,12 @@ bayesian_edges = bayesian_blocks(
 ######################################################################
 # We can visualize the difference between the original lightcurve and the rebin with bayesian blocks
 
-bayesian_flux = []
-for tmin, tmax in zip(bayesian_edges[:-1], bayesian_edges[1:]):
-    mask = (time >= tmin) & (time <= tmax)
-    bayesian_flux.append(
-        np.average(
-            flux.flatten()[mask], weights=1 / (flux_err.flatten()[mask] ** 2)
-        ).value
-    )
-
-xerr = np.diff(bayesian_edges) / 2
-bayesian_x = bayesian_edges[:-1] + xerr
-
-fig, ax = plt.subplots(
-    figsize=(8, 6),
-    gridspec_kw={"left": 0.16, "bottom": 0.2, "top": 0.98, "right": 0.98},
-)
-plt.plot(time, flux.flatten(), marker="+", linestyle="", color="teal")
-plt.errorbar(
-    bayesian_x,
-    bayesian_flux,
-    xerr=np.diff(bayesian_edges) / 2,
-    linestyle="",
-    color="orange",
-)
-plt.ylim(bottom=0)
+edges = Time(bayesian_edges, format="mjd")
+lc_rebin = lc_1d.rebin_on_axis(method="fixed_edges", value=edges, axis_name="time")
+ax = lc_1d.plot(label="original")
+lc_rebin.plot(ax=ax, label="rebinned")
 plt.show()
+
 
 ######################################################################
 # The result giving a significance estimation for variability in the lightcurve is the number of *change points*,
