@@ -5,6 +5,7 @@ import numpy as np
 from scipy import stats
 from scipy.interpolate import interp1d
 from scipy.optimize import minimize
+import astropy.units as u
 from astropy.io import fits
 from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
@@ -27,19 +28,40 @@ __all__ = ["FluxPoints"]
 log = logging.getLogger(__name__)
 
 
-def combine_fluxpoints(flux_point, axis_name):
+def squash_fluxpoints(flux_point, axis):
+
     value_scan = flux_point.stat_scan.geom.axes["norm"].center
     stat_scan = np.sum(flux_point.stat_scan.data, axis=0).ravel()
-    f = interp1d(value_scan, stat_scan, kind="quadratic")
-    minimizer = minimize(f, x0=value_scan[int(len(value_scan) / 2)])
-    geom = flux_point.geom
+    f = interp1d(value_scan, stat_scan, kind="quadratic", bounds_error=False)
+    minimizer = minimize(
+        f,
+        x0=value_scan[
+            int(len(value_scan) / 2),
+        ],
+        bounds=[(value_scan[0], value_scan[-1])],
+        method="L-BFGS-B",
+    )
+
     maps = Maps()
+    geom = flux_point.geom.to_image()
+    if axis.name != "energy":
+        geom = geom.to_cube([flux_point.geom.axes["energy"]])
+
     maps["norm"] = Map.from_geom(geom, data=minimizer.x)
-    maps["norm_err"] = Map.from_geom(geom, data=np.sqrt(minimizer.hess_inv))
+    maps["norm_err"] = Map.from_geom(geom, data=np.sqrt(minimizer.hess_inv.todense()))
+
     if "norm_ul" in flux_point.available_quantities:
-        delta_ts = flux_point.meta["n_sigma_ul"] ** 2
+        delta_ts = flux_point.meta.get("n_sigma_ul", 2) ** 2
         ul = stat_profile_ul_scipy(value_scan, stat_scan, delta_ts=delta_ts)
-        maps["ul"] = Map.from_geom(geom, data=ul)
+        maps["norm_ul"] = Map.from_geom(geom, data=ul.value)
+
+    maps["stat_scan"] = Map.from_geom(
+        geom=geom.to_cube([MapAxis.from_nodes(value_scan, name="norm")]), data=stat_scan
+    )
+
+    maps["ts"] = Map.from_geom(geom=geom, data=np.sum(flux_point.ts.data))
+
+    maps["success"] = Map.from_geom(geom=geom, data=minimizer.success, dtype=bool)
 
     combined_fp = FluxPoints.from_maps(
         maps=maps,
@@ -861,7 +883,7 @@ class FluxPoints(FluxMaps):
         ----------
         method : {"fixed_bins", "fixed_edges", "min_significance"}
                 The binning method requested. Options are
-                fixed_bins : Combine `value` adjacent bins together
+                fixed_bins : Combine `value` number of adjacent bins together
                 fixed_edges : Combine bins within the given edges
                 min_significance : Combine bins to get a minimum significance in each bin
         value : The value corresponding to the method
@@ -880,10 +902,10 @@ class FluxPoints(FluxMaps):
         axis_new = self.get_rebinned_axis(method, value, axis_name)
         for emin, emax in zip(axis_new.edges_min, axis_new.edges_max):
             if isinstance(axis_new, TimeMapAxis):
-                emin = emin + axis_new.reference_time
-                emax = emax + axis_new.reference_time
+                emin = emin + axis_new.reference_time + 1e-5 * u.s  # TODO: 5003
+                emax = emax + axis_new.reference_time + 1e-5 * u.s
             fp = self.slice_by_coord({axis_new.name: slice(emin, emax)})
-            fp_new = combine_fluxpoints(fp, axis_new)
+            fp_new = squash_fluxpoints(fp, axis_new)
             fluxpoints.append(fp_new)
 
         return self.__class__.from_stack(fluxpoints, axis=axis_new)
