@@ -837,9 +837,9 @@ class FluxPoints(FluxMaps):
             if not isinstance(value, float):
                 raise ValueError("Minimum significance must be a number")
             e_min, e_max = ax.edges_min[0], ax.edges_max[0]
-            edges_min = np.zeros[nbin] * e_min.unit
-            edges_max = np.zeros[nbin] * e_max.unit
-            i, i1 = 0
+            edges_min = np.zeros(nbin) * e_min.unit
+            edges_max = np.zeros(nbin) * e_max.unit
+            i, i1 = 0, 0
             while e_max < ax.edges_max[-1]:
                 ts = self.ts.data[i]
                 e_min = ax.edges_min[i]
@@ -855,8 +855,11 @@ class FluxPoints(FluxMaps):
             edges_min = edges_min[:i1]
 
         elif method == "fixed_edges":
-            edges_min = value[:-1]
-            edges_max = value[1:]
+            if isinstance(value, Time):
+                edges_min = value[:-1] - ax.reference_time
+                edges_max = value[1:] - ax.reference_time
+            else:
+                edges_min, edges_max = value[:-1], value[1:]
 
         else:
             raise ValueError(
