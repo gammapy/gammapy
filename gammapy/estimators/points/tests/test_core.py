@@ -403,6 +403,9 @@ def test_get_rebinned_axis():
     )
     assert_allclose(axis_new.bin_width, [120, 130, 79.999992] * u.min)
 
+    with pytest.raises(ValueError):
+        lc_1d.get_rebinned_axis(method="error", value=2)
+
 
 @requires_data()
 def test_rebin_on_axis():
@@ -412,7 +415,19 @@ def test_rebin_on_axis():
     )
     l1 = lc_1d.rebin_on_axis(method="fixed_bins", value=5, axis_name="time")
     assert_allclose(l1.norm.data.ravel()[0:2], [1.56321943, 2.12845751], rtol=1e-3)
+<<<<<<< HEAD
     assert_allclose(l1.norm_err.ravel()[0:2], [0.03904136, 0.03977413], rtol=1e-3)
     assert_allclose(l1.norm.data.ravel()[0:2], [50.58972379, 72.52995826], rtol=1e-3)
     assert l1.norm_err.ravel()[0] is True
 >>>>>>> 09dc0f990 (test)
+=======
+    assert_allclose(l1.norm_err.data.ravel()[0:2], [0.03904136, 0.03977413], rtol=1e-3)
+    assert_allclose(l1.sqrt_ts.data.ravel()[0:2], [50.58972379, 72.52995826], rtol=1e-3)
+    assert l1.success.data.ravel()[0]
+
+    path = make_path("$GAMMAPY_DATA/tests/spectrum/flux_points/flux_points.fits")
+    table = Table.read(path)
+    fp = FluxPoints.from_table(table)
+    with pytest.raises(ValueError):
+        fp.rebin_on_axis(method="fixed_bins", value=5, axis_name="time")
+>>>>>>> 4f798a8d1 (add more test)
