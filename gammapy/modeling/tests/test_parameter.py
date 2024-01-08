@@ -58,6 +58,7 @@ def test_parameter_scale():
 
     assert par.value == 420
     assert par.min == 400
+    assert_allclose(par.scale, 10)
     assert_allclose(par.factor_min, 40)
     assert par.max == 500
     assert_allclose(par.factor_max, 50)
