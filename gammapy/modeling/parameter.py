@@ -157,7 +157,6 @@ class Parameter:
         self.scan_values = scan_values
         self.scan_n_values = scan_n_values
         self.scan_n_sigma = scan_n_sigma
-        self.scale_method = scale_method
         self.prior = prior
 
     def __get__(self, instance, owner):
@@ -860,12 +859,16 @@ class PriorParameter(Parameter):
         min=np.nan,
         max=np.nan,
         error=0,
+        scale_method="scale10",
+        scale_interp="lin",
     ):
         if not isinstance(name, str):
             raise TypeError(f"Name must be string, got '{type(name)}' instead")
 
         self._name = name
-        self.scale = scale
+        self._scale_method = scale_method
+        self._scale_interp = scale_interp
+        self._scale = float(scale)
         self.min = min
         self.max = max
         self._error = error
@@ -876,6 +879,7 @@ class PriorParameter(Parameter):
         else:
             self.factor = value
             self.unit = unit
+
         self._type = "prior"
 
     def to_dict(self):
