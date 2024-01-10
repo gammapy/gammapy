@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import List, Optional, Union
 import yaml
 from pydantic import BaseModel, ConfigDict
-from pydantic.utils import deep_update
 from gammapy.makers import MapDatasetMaker
 from gammapy.utils.scripts import make_path, read_yaml
 from gammapy.utils.types import AngleType, EnergyType, PathType, TimeType
@@ -279,11 +278,8 @@ class AnalysisConfig(GammapyBaseConfig):
         else:
             raise TypeError(f"Invalid type: {config}")
 
-        config_new = deep_update(
-            self.model_dump(exclude_defaults=True),
-            other.model_dump(exclude_defaults=True),
-        )
-        return AnalysisConfig(**config_new)
+        data = self.model_copy(update=other.model_dump()).model_dump()
+        return AnalysisConfig(**data)
 
     @staticmethod
     def _get_doc_sections():
