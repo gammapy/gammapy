@@ -216,13 +216,19 @@ class PointingInfoMetaData(MetaData):
 
     _tag: ClassVar[Literal["pointing"]] = "pointing"
 
-    radec_mean: Optional[SkyCoordType] = None
-    altaz_mean: Optional[Union[SkyCoordType, AltAz]] = None
+    radec_mean: Optional[SkyCoord] = None
+    altaz_mean: Optional[Union[SkyCoord, AltAz]] = None
 
-    @field_validator("radec_mean", mode="after")
+    @field_validator("radec_mean", mode="before")
     def validate_radec_mean(cls, v):
-        if isinstance(v, SkyCoord):
+        if v is None:
+            return SkyCoord(np.nan, np.nan, unit="deg", frame="icrs")
+        elif isinstance(v, SkyCoord):
             return v.icrs
+        else:
+            raise ValueError(
+                f"Incorrect position. Expect SkyCoord in altaz frame got {type(v)} instead."
+            )
 
     @field_validator("altaz_mean", mode="before")
     @classmethod

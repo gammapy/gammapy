@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import html
-import json
 import logging
 from collections import defaultdict
 from enum import Enum
@@ -240,18 +239,17 @@ class AnalysisConfig(GammapyBaseConfig):
     def write(self, path, overwrite=False):
         """Write to YAML file."""
         path = make_path(path)
+
         if path.exists() and not overwrite:
             raise IOError(f"File exists already: {path}")
+
         path.write_text(self.to_yaml())
 
     def to_yaml(self):
         """Convert to YAML string."""
-        # Here using `dict()` instead of `json()` would be more natural.
-        # We should change this once pydantic adds support for custom encoders
-        # to `dict()`. See https://github.com/samuelcolvin/pydantic/issues/1043
-        config = json.loads(self.model_dump_json())
+        data = self.model_dump()
         return yaml.dump(
-            config, sort_keys=False, indent=4, width=80, default_flow_style=None
+            data, sort_keys=False, indent=4, width=80, default_flow_style=None
         )
 
     def set_logging(self):
@@ -261,7 +259,7 @@ class AnalysisConfig(GammapyBaseConfig):
         """
         self.general.log.level = self.general.log.level.upper()
         logging.basicConfig(**self.general.log.model_dump())
-        log.info("Setting logging config: {!r}".format(self.general.log.dict()))
+        log.info("Setting logging config: {!r}".format(self.general.log.model_dump()))
 
     def update(self, config=None):
         """Update config with provided settings.

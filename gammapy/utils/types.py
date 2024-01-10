@@ -105,9 +105,6 @@ TimeType = Annotated[
 ]
 
 
-PathType = Annotated[Path, BeforeValidator(make_path)]
-
-
 EarthLocationType = Annotated[
     EarthLocation,
     PlainSerializer(
@@ -122,4 +119,10 @@ SkyCoordType = Annotated[
         json_encode_sky_coord, return_type=str, when_used="json-unless-none"
     ),
     BeforeValidator(validate_sky_coord),
+]
+
+PathType = Annotated[
+    Path,
+    PlainSerializer(lambda p: str(p), return_type=str, when_used="json-unless-none"),
+    BeforeValidator(make_path),
 ]
