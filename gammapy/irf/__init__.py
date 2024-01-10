@@ -2,7 +2,7 @@
 """Instrument response functions (IRFs)."""
 from gammapy.utils.registry import Registry
 from .background import Background2D, Background3D, BackgroundIRF
-from .core import FoVAlignment, IRFMap
+from .core import IRF, FoVAlignment, IRFMap
 from .edisp import EDispKernel, EDispKernelMap, EDispMap, EnergyDispersion2D
 from .effective_area import EffectiveAreaTable2D
 from .io import load_irf_dict_from_file
@@ -30,6 +30,7 @@ __all__ = [
     "FoVAlignment",
     "IRF_REGISTRY",
     "IRFMap",
+    "IRF",
     "load_irf_dict_from_file",
     "ParametricPSF",
     "PSF3D",

@@ -93,7 +93,7 @@ def _get_fov_coords(pointing, irf, geom, use_region_center=True, obstime=None):
 
         coords["fov_lon"] = fov_lon
         coords["fov_lat"] = fov_lat
-        return coords
+    return coords
 
 
 def make_map_exposure_true_energy(
@@ -137,7 +137,7 @@ def make_map_exposure_true_energy(
         obstime=None,
     )
     coords["energy_true"] = geom.axes["energy_true"]
-    exposure = aeff.evaluate(coords)
+    exposure = aeff.evaluate(**coords)
 
     data = (exposure * livetime).to("m2 s")
     meta = {"livetime": livetime, "is_pointlike": aeff.is_pointlike}
@@ -264,6 +264,7 @@ def make_map_background_irf(
     data = (bkg_de * d_omega * ontime).to_value("")
 
     if not use_region_center:
+        region_coord, weights = geom.get_wcs_coord_and_weights()
         data = np.sum(weights * data, axis=2)
 
     bkg_map = Map.from_geom(geom, data=data)
@@ -352,6 +353,8 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None, use_region_center=T
 
     offset = coords.skycoord.separation(pointing)
 
+    coords
+
     # Compute EDisp values
     data = edisp.evaluate(
         offset=offset,
@@ -399,6 +402,15 @@ def make_edisp_kernel_map(
     edispmap : `~gammapy.irf.EDispKernelMap`
         the resulting EDispKernel map
     """
+
+    coords = _get_fov_coords(
+        pointing=pointing,
+        irf=edisp,
+        geom=geom,
+        use_region_center=use_region_center,
+    )
+    coords["energy_true"] = geom.axes["energy_true"].edges.reshape((-1, 1, 1))
+
     # Use EnergyDispersion2D migra axis.
     migra_axis = edisp.axes["migra"]
 
