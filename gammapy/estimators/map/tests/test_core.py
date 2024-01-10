@@ -487,3 +487,6 @@ def test_slice_by_coord():
     assert sliced_map.available_quantities == ref_map.available_quantities
     assert_allclose(sliced_map.gti.time_stop.value, 51545.3340, rtol=1e-3)
     assert sliced_map.reference_model == ref_map.reference_model
+
+    sliced_map2 = ref_map.slice_by_coord({"energy": slice(0.5 * u.TeV, 5.0 * u.TeV)})
+    assert sliced_map2.geom.axes["energy"].nbin == 1
