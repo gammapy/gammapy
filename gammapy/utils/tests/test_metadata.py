@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from typing import Optional
+from typing import ClassVar, Literal, Optional
 import pytest
 from numpy.testing import assert_allclose
 from astropy.coordinates import AltAz, SkyCoord
@@ -52,12 +52,12 @@ def test_creator_to_header():
 
 def test_subclass():
     class TestMetaData(MetaData):
-        _tag = "tag"
+        _tag: ClassVar[Literal["tag"]] = "tag"
         name: str
-        mode: Optional[SkyCoord]
-        creation: Optional[CreatorMetaData]
+        mode: Optional[SkyCoord] = None
+        creation: Optional[CreatorMetaData] = None
 
-    creator = CreatorMetaData.from_default()
+    creator = CreatorMetaData()
     test_meta = TestMetaData(name="test", creation=creator)
 
     assert test_meta.tag == "tag"
@@ -72,18 +72,15 @@ def test_subclass():
     assert "name: test" in yaml_str
     assert "creation:" in yaml_str
 
-    test_meta.extra = 3
-    assert test_meta.extra == 3
-
 
 def test_obs_info():
     obs_info = ObsInfoMetaData(obs_id="23523")
 
     assert obs_info.telescope is None
-    assert obs_info.obs_id == "23523"
+    assert obs_info.obs_id == 23523
 
     obs_info.obs_id = 23523
-    assert obs_info.obs_id == "23523"
+    assert obs_info.obs_id == 23523
 
     obs_info.instrument = "CTA-North"
     assert obs_info.instrument == "CTA-North"
@@ -94,7 +91,7 @@ def test_obs_info_from_header(hess_eventlist_header):
     meta = ObsInfoMetaData.from_header(hess_eventlist_header, format="gadf")
 
     assert meta.telescope == "HESS"
-    assert meta.obs_id == "23523"
+    assert meta.obs_id == 23523
     assert meta.observation_mode == "WOBBLE"
     assert meta.sub_array is None
 
@@ -104,7 +101,7 @@ def test_obs_info_to_header():
 
     header = obs_info.to_header("gadf")
 
-    assert header["OBS_ID"] == "23523"
+    assert header["OBS_ID"] == 23523
     assert header["TELESCOP"] == "CTA-South"
     assert "OBS_MODE" not in header
 
@@ -173,7 +170,7 @@ def test_target_metadata_from_header(hess_eventlist_header):
 
 def test_subclass_to_from_header():
     class TestMetaData(MetaData):
-        _tag = "test"
+        _tag: ClassVar[Literal["test"]] = "test"
         creation: Optional[CreatorMetaData]
         pointing: Optional[PointingInfoMetaData]
 
@@ -200,3 +197,6 @@ def test_subclass_to_from_header():
     assert_allclose(new.creation.date.decimalyear, 2022)
     assert_allclose(new.pointing.radec_mean.ra.deg, 83.6287)
     assert_allclose(new.pointing.altaz_mean.alt.deg, 45)
+    # no new attributes allowed
+    with pytest.raises(ValidationError):
+        test_meta.extra = 3

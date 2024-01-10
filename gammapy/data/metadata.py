@@ -1,8 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from typing import Optional, Union
-from astropy.coordinates import EarthLocation
-from astropy.time import Time
-from pydantic import Field, validator
+from typing import ClassVar, Literal, Optional
+from pydantic import Field
 from gammapy.utils.fits import earth_location_from_dict
 from gammapy.utils.metadata import (
     METADATA_FITS_KEYS,
@@ -12,6 +10,7 @@ from gammapy.utils.metadata import (
     PointingInfoMetaData,
     TargetMetaData,
 )
+from gammapy.utils.types import EarthLocationType, TimeType
 
 __all__ = ["ObservationMetaData"]
 
@@ -60,46 +59,23 @@ class ObservationMetaData(MetaData):
         Additional optional metadata.
     """
 
-    _tag = "observation"
-    obs_info: Optional[ObsInfoMetaData]
-    pointing: Optional[PointingInfoMetaData]
-    target: Optional[TargetMetaData]
-    location: Optional[Union[EarthLocation, str]]
+    _tag: ClassVar[Literal["observation"]] = "observation"
+    obs_info: Optional[ObsInfoMetaData] = None
+    pointing: Optional[PointingInfoMetaData] = None
+    target: Optional[TargetMetaData] = None
+    location: Optional[EarthLocationType] = None
     deadtime_fraction: float = Field(0.0, ge=0, le=1.0)
-    time_start: Optional[Union[Time, str]]
-    time_stop: Optional[Union[Time, str]]
-    reference_time: Optional[Union[Time, str]]
-    creation: Optional[CreatorMetaData]
-    optional: Optional[dict]
-
-    @validator("location")
-    def validate_location(cls, v):
-        """Validate the location value."""
-        from gammapy.data import observatory_locations
-
-        if isinstance(v, str) and v in observatory_locations.keys():
-            return observatory_locations[v]
-        elif v is None or isinstance(v, EarthLocation):
-            return v
-        else:
-            raise ValueError("Incorrect location value")
-
-    @validator("time_start", "time_stop", "reference_time")
-    def validate_time(cls, v):
-        """Validate the time value."""
-        if isinstance(v, str):
-            return Time(v)
-        elif isinstance(v, Time) or v is None:
-            # check size?
-            return v
-        else:
-            raise ValueError("Incorrect time input value.")
+    time_start: Optional[TimeType] = None
+    time_stop: Optional[TimeType] = None
+    reference_time: Optional[TimeType] = None
+    creation: Optional[CreatorMetaData] = None
+    optional: Optional[dict] = None
 
     @classmethod
     def from_header(cls, header, format="gadf"):
         meta = super(ObservationMetaData, cls).from_header(header, format)
 
-        meta.creation = CreatorMetaData.from_default()
+        meta.creation = CreatorMetaData()
         # Include additional gadf keywords not specified as ObservationMetaData attributes
         optional_keywords = [
             "OBSERVER",

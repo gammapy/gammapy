@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
-import numpy as np
 from numpy.testing import assert_allclose
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
@@ -57,8 +56,7 @@ def test_observation_metadata():
         meta.target.position = "J1749-2901"
 
     meta.target.position = None
-    assert isinstance(meta.target.position, SkyCoord)
-    assert np.isnan(meta.target.position.ra.deg)
+    assert meta.target.position is None
 
     input_bad = input.copy()
     input_bad["location"] = "bad"
@@ -81,7 +79,6 @@ def test_observation_metadata_from_header(hess_eventlist_header):
 
 @requires_data()
 def test_observation_metadata_bad(hess_eventlist_header):
-
     with pytest.raises(ValueError):
         ObservationMetaData.from_header(hess_eventlist_header, format="bad")
 
