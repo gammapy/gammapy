@@ -1129,8 +1129,8 @@ class FluxMaps:
         idx_intervals = []
 
         for key, interval in zip(slices.keys(), slices.values()):
-            axis = self.geom.axes[key]
 
+            axis = self.geom.axes[key]
             group = axis.group_table([interval.start, interval.stop])
 
             is_normal = group["bin_type"] == "normal   "
