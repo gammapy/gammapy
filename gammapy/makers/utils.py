@@ -124,11 +124,6 @@ def make_map_exposure_true_energy(
     map : `~gammapy.maps.WcsNDMap`
         Exposure map.
     """
-    if not use_region_center:
-        coords, weights = geom.get_wcs_coord_and_weights()
-    else:
-        coords, weights = geom.get_coord(sparse=True), None
-
     coords = _get_fov_coords(
         pointing=pointing,
         geom=geom,
@@ -136,14 +131,15 @@ def make_map_exposure_true_energy(
         irf=aeff,
         obstime=None,
     )
-    coords["energy_true"] = geom.axes["energy_true"]
+    coords["energy_true"] = geom.axes["energy_true"].center.reshape((-1, 1, 1))
     exposure = aeff.evaluate(**coords)
 
     data = (exposure * livetime).to("m2 s")
     meta = {"livetime": livetime, "is_pointlike": aeff.is_pointlike}
 
     if not use_region_center:
-        data = np.average(data, axis=1, weights=weights)
+        _, weights = geom.get_wcs_coord_and_weights()
+        data = np.average(data, axis=-1, weights=weights)
 
     return Map.from_geom(geom=geom, data=data.value, unit=data.unit, meta=meta)
 
@@ -299,17 +295,19 @@ def make_psf_map(psf, pointing, geom, exposure_map=None):
     psfmap : `~gammapy.irf.PSFMap`
         The resulting PSF map.
     """
-    coords = geom.get_coord(sparse=True)
+    coords = _get_fov_coords(
+        pointing=pointing,
+        irf=psf,
+        geom=geom,
+        use_region_center=True,
+        obstime=None,
+    )
 
-    # Compute separations with pointing position
-    offset = coords.skycoord.separation(pointing)
+    coords["energy_true"] = geom.axes["energy_true"].center.reshape((-1, 1, 1, 1))
+    coords["rad"] = geom.axes["rad"].center.reshape((1, -1, 1, 1))
 
     # Compute PSF values
-    data = psf.evaluate(
-        energy_true=coords["energy_true"],
-        offset=offset,
-        rad=coords["rad"],
-    )
+    data = psf.evaluate(**coords)
 
     # Create Map and fill relevant entries
     psf_map = Map.from_geom(geom, data=data.value, unit=data.unit)
@@ -345,25 +343,16 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None, use_region_center=T
     edispmap : `~gammapy.irf.EDispMap`
         The resulting energy dispersion map.
     """
-    # Compute separations with pointing position
-    if not use_region_center:
-        coords, weights = geom.get_wcs_coord_and_weights()
-    else:
-        coords, weights = geom.get_coord(sparse=True), None
-
-    offset = coords.skycoord.separation(pointing)
-
-    coords
+    coords = _get_fov_coords(pointing, edisp, geom, use_region_center=use_region_center)
+    coords["energy_true"] = geom.axes["energy_true"].center.reshape((-1, 1, 1, 1))
+    coords["migra"] = geom.axes["migra"].center.reshape((1, -1, 1, 1))
 
     # Compute EDisp values
-    data = edisp.evaluate(
-        offset=offset,
-        energy_true=coords["energy_true"],
-        migra=coords["migra"],
-    )
+    data = edisp.evaluate(**coords)
 
     if not use_region_center:
-        data = np.average(data, axis=2, weights=weights)
+        _, weights = geom.get_wcs_coord_and_weights()
+        data = np.average(data, axis=-1, weights=weights)
 
     # Create Map and fill relevant entries
     edisp_map = Map.from_geom(geom, data=data.to_value(""), unit="")
@@ -409,7 +398,7 @@ def make_edisp_kernel_map(
         geom=geom,
         use_region_center=use_region_center,
     )
-    coords["energy_true"] = geom.axes["energy_true"].edges.reshape((-1, 1, 1))
+    coords["energy_true"] = geom.axes["energy_true"].edges.reshape((-1, 1, 1, 1))
 
     # Use EnergyDispersion2D migra axis.
     migra_axis = edisp.axes["migra"]
