@@ -5,7 +5,7 @@ import logging
 from collections import defaultdict
 from enum import Enum
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import List, Optional
 import yaml
 from pydantic import BaseModel, ConfigDict
 from gammapy.makers import MapDatasetMaker
@@ -131,7 +131,7 @@ class ExcessMapConfig(GammapyBaseConfig):
 
 
 class BackgroundConfig(GammapyBaseConfig):
-    method: Union[BackgroundMethodEnum, None] = None
+    method: Optional[BackgroundMethodEnum] = None
     exclusion: Optional[PathType] = None
     parameters: dict = {}
 
