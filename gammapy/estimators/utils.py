@@ -464,17 +464,17 @@ def compute_lightcurve_doublingtime(lightcurve, flux_quantity="flux"):
     return table
 
 
-def get_edges_fixed_bins(fluxpoint, value, axis_name="energy"):
+def get_edges_fixed_bins(fluxpoint, group_size, axis_name="energy"):
     """Rebin the flux point to combine value adjacent bins
 
     Parameters
     ----------
     fluxpoint : `FluxPoints`
         The flux point to rebin
-    value : int
+    group_size : int
         Number of bins to combine
 
-    Returns:
+    Returns
     -------
     edges_min : `Quantity` or `Time`
     edges_max : `Quantity` or `Time`
@@ -483,9 +483,9 @@ def get_edges_fixed_bins(fluxpoint, value, axis_name="energy"):
 
     ax = fluxpoint.geom.axes[axis_name]
     nbin = ax.nbin
-    if not isinstance(value, int):
+    if not isinstance(group_size, int):
         raise ValueError("Only integer number of bins can be combined")
-    idx = np.arange(0, nbin, value)
+    idx = np.arange(0, nbin, group_size)
     if idx[-1] < nbin:
         idx = np.append(idx, nbin)
     edges_min = ax.edges_min[idx[:-1]]
@@ -493,7 +493,7 @@ def get_edges_fixed_bins(fluxpoint, value, axis_name="energy"):
     return edges_min, edges_max
 
 
-def get_edges_min_sqrt_ts(fluxpoint, value, axis_name="energy"):
+def get_edges_min_sqrt_ts(fluxpoint, sqrt_ts_threshold, axis_name="energy"):
     """Rebin the flux point to combine adjacent bins
        till a minimum significance is obtained
 
@@ -501,10 +501,10 @@ def get_edges_min_sqrt_ts(fluxpoint, value, axis_name="energy"):
     ----------
     fluxpoint : `FluxPoints`
             The flux point to rebin
-    value : float
+    sqrt_ts_threshold : float
         The minimum significance desired
 
-    Returns:
+    Returns
     -------
     edges_min : `Quantity` or `Time`
     edges_max : `Quantity` or `Time`
@@ -520,7 +520,7 @@ def get_edges_min_sqrt_ts(fluxpoint, value, axis_name="energy"):
     while e_max < ax.edges_max[-1]:
         ts = fluxpoint.ts.data[i]
         e_min = ax.edges_min[i]
-        while ts < value**2 and i < ax.nbin - 1:
+        while ts < sqrt_ts_threshold**2 and i < ax.nbin - 1:
             i = i + 1
             ts = ts + fluxpoint.ts.data[i]
         e_max = ax.edges_max[i]
@@ -540,25 +540,20 @@ RESAMPLE_METHODS = {
 }
 
 
-def get_rebinned_axis(fluxpoint, method, value, axis_name="energy"):
-    """Get the rebinned axis for rebinning
+def get_rebinned_axis(fluxpoint, axis_name="energy", **kwargs):
+    """Get the rebinned axis for resampling
      the flux point object along the mentioned axis.
-    The likelihoods in each bin are combined to compute the
-    resultant maps.
+
 
     Parameters
     ----------
-    method : {"fixed_bins", "fixed_edges", "min_significance"}
-        The binning method requested. Options are
-        fixed-bins : Combine `value` adjacent bins together
-        fixed-edges : Combine bins within the given edges
-        min-sqrt-ts : Combine bins to get a minimum significance in each bin
-    value : The value corresponding to the method
-        The relevant matches are
-        fixed-bins : int
-        fixed-edges : MapAxis edges for the relevant axis
-        min-sqrt-ts : float
-            Minimum TS desired
+    kwargs : Dict
+        keywords passed to get_edges_fixed_bins or
+        get_edges_min_sqrt_ts
+        Must contain the method key and
+        group_size if method is fixed-bins
+        or
+        sqrt_ts_threshold if method is min-sqrt-ts
     axis_name : The axis name to combine along
 
     Returns
@@ -573,11 +568,12 @@ def get_rebinned_axis(fluxpoint, method, value, axis_name="energy"):
             "Please use `iter_by_axis` to create Unidimensional FluxPoints"
         )
 
+    method = kwargs.pop("method")
     if method not in RESAMPLE_METHODS.keys():
         raise ValueError("Incorrect option. Choose from", RESAMPLE_METHODS.keys())
 
     edges_min, edges_max = RESAMPLE_METHODS[method](
-        fluxpoint=fluxpoint, value=value, axis_name=axis_name
+        fluxpoint=fluxpoint, axis_name=axis_name, **kwargs
     )
     ax = fluxpoint.geom.axes[axis_name]
 

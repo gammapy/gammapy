@@ -29,6 +29,7 @@ log = logging.getLogger(__name__)
 
 
 def squash_fluxpoints(flux_point, axis):
+    """Squash a FluxPoints object into one point"""
 
     value_scan = flux_point.stat_scan.geom.axes["norm"].center
     stat_scan = np.sum(flux_point.stat_scan.data, axis=0).ravel()
@@ -802,6 +803,11 @@ class FluxPoints(FluxMaps):
         ----------
         axis_new : `MapAxis` or `TimeMapAxis`
             The new axis to resample along
+
+        Returns
+        -------
+        flux_points : `~gammapy.estimators.FluxPoints`
+            A new FluxPoints object with modified axis.
         """
 
         if not self.has_stat_profiles:

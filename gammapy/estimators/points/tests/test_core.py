@@ -150,7 +150,6 @@ def test_compute_flux_points_dnde_exp(method):
 
 @requires_data()
 def test_fermi_to_dnde():
-
     catalog_4fgl = SourceCatalog4FGL("$GAMMAPY_DATA/catalogs/fermi/gll_psc_v20.fit.gz")
     src = catalog_4fgl["FGES J1553.8-5325"]
     fp = src.flux_points
@@ -230,7 +229,6 @@ class TestFluxPoints:
         assert flux_points_likelihood.sed_type_init == "likelihood"
 
     def test_plot(self, flux_points):
-
         fig = plt.figure()
         ax = fig.add_axes([0.2, 0.2, 0.7, 0.7])
         ax.xaxis.set_units(u.eV)
@@ -387,7 +385,9 @@ def test_resample_axis():
         "$GAMMAPY_DATA/estimators/pks2155_hess_lc/pks2155_hess_lc.fits",
         format="lightcurve",
     )
-    axis_new = get_rebinned_axis(lc_1d, method="fixed-bins", value=5, axis_name="time")
+    axis_new = get_rebinned_axis(
+        lc_1d, method="fixed-bins", group_size=5, axis_name="time"
+    )
     l1 = lc_1d.resample_axis(axis_new=axis_new)
     assert_allclose(l1.norm.data.ravel()[0:2], [1.56321943, 2.12845751], rtol=1e-3)
     assert_allclose(l1.norm_err.ravel()[0:2], [0.03904136, 0.03977413], rtol=1e-3)

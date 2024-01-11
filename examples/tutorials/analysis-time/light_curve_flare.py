@@ -310,7 +310,7 @@ plt.show()
 # Here, we rebin 4 adjacent bins together, to get 40 min bins
 #
 
-axis_new = get_rebinned_axis(lc_1d, method="fixed-bins", value=3, axis_name="time")
+axis_new = get_rebinned_axis(lc_1d, method="fixed-bins", group_size=3, axis_name="time")
 print(axis_new)
 
 lc_new = lc_1d.resample_axis(axis_new)

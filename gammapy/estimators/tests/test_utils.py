@@ -205,11 +205,13 @@ def test_get_rebinned_axis():
         "$GAMMAPY_DATA/estimators/pks2155_hess_lc/pks2155_hess_lc.fits",
         format="lightcurve",
     )
-    axis_new = get_rebinned_axis(lc_1d, method="fixed-bins", value=2, axis_name="time")
+    axis_new = get_rebinned_axis(
+        lc_1d, method="fixed-bins", group_size=2, axis_name="time"
+    )
     assert_allclose(axis_new.bin_width[0], 20 * u.min)
 
     axis_new = get_rebinned_axis(
-        lc_1d, method="min-sqrt-ts", value=50.0, axis_name="time"
+        lc_1d, method="min-sqrt-ts", sqrt_ts_threshold=50.0, axis_name="time"
     )
     assert_allclose(axis_new.bin_width, [50, 30, 30, 50, 110, 70] * u.min)
 
