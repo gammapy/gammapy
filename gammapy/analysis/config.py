@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import html
+import json
 import logging
 from collections import defaultdict
 from enum import Enum
@@ -247,7 +248,7 @@ class AnalysisConfig(GammapyBaseConfig):
 
     def to_yaml(self):
         """Convert to YAML string."""
-        data = self.model_dump()
+        data = json.loads(self.model_dump_json())
         return yaml.dump(
             data, sort_keys=False, indent=4, width=80, default_flow_style=None
         )
