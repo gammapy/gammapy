@@ -1,6 +1,6 @@
 from pathlib import Path
 from typing import Annotated
-from astropy.coordinates import Angle, EarthLocation, SkyCoord
+from astropy.coordinates import AltAz, Angle, EarthLocation, SkyCoord
 from astropy.time import Time
 from astropy.units import Quantity
 from pydantic import PlainSerializer
@@ -16,21 +16,6 @@ __all__ = [
     "EarthLocationType",
     "SkyCoordType",
 ]
-
-
-def json_encode_quantity(v):
-    """JSON encoder for `~astropy.units.Quantity`."""
-    return f"{v.value} {v.unit}"
-
-
-def json_encode_angle(v):
-    """JSON encoder for `~astropy.coordinates.Angle`."""
-    return f"{v.value} {v.unit}"
-
-
-def json_encode_time(v):
-    """JSON encoder for `~astropy.time.Time`."""
-    return f"{v.value}"
 
 
 def json_encode_earth_location(v):
@@ -55,8 +40,10 @@ def validate_angle(v):
 def validate_energy(v):
     """Validator for `~astropy.units.Quantity` with unit "energy"."""
     v = Quantity(v)
+
     if v.unit.physical_type != "energy":
         raise ValueError(f"Invalid unit for energy: {v.unit!r}")
+
     return v
 
 
@@ -84,45 +71,73 @@ def validate_sky_coord(v):
     return SkyCoord(v)
 
 
+def validate_sky_coord_icrs(v):
+    """Validator for `~astropy.coordinates.SkyCoord` in icrs."""
+    try:
+        return SkyCoord(v).icrs
+    except AttributeError:
+        raise ValueError(f"Cannot convert '{v!r}' to icrs")
+
+
+def validate_altaz_coord(v):
+    """Validator for `~astropy.coordinates.AltAz`."""
+    if isinstance(v, AltAz):
+        return SkyCoord(v)
+
+    return SkyCoord(v).altaz
+
+
+SERIALIZE_KWARGS = {
+    "when_used": "json-unless-none",
+    "return_type": str,
+}
+
+
 AngleType = Annotated[
     Angle,
-    PlainSerializer(json_encode_angle, return_type=str, when_used="json-unless-none"),
+    PlainSerializer(lambda v: f"{v.value} {v.unit}", **SERIALIZE_KWARGS),
     BeforeValidator(validate_angle),
 ]
 
 EnergyType = Annotated[
     Quantity,
-    PlainSerializer(
-        json_encode_quantity, return_type=str, when_used="json-unless-none"
-    ),
+    PlainSerializer(lambda v: f"{v.value} {v.unit}", **SERIALIZE_KWARGS),
     BeforeValidator(validate_energy),
 ]
 
 TimeType = Annotated[
     Time,
-    PlainSerializer(json_encode_time, return_type=str, when_used="json-unless-none"),
+    PlainSerializer(lambda v: f"{v.value}", **SERIALIZE_KWARGS),
     BeforeValidator(validate_time),
 ]
 
 
 EarthLocationType = Annotated[
     EarthLocation,
-    PlainSerializer(
-        json_encode_earth_location, return_type=str, when_used="json-unless-none"
-    ),
+    PlainSerializer(json_encode_earth_location, **SERIALIZE_KWARGS),
     BeforeValidator(validate_earth_location),
 ]
 
 SkyCoordType = Annotated[
     SkyCoord,
-    PlainSerializer(
-        json_encode_sky_coord, return_type=str, when_used="json-unless-none"
-    ),
+    PlainSerializer(json_encode_sky_coord, **SERIALIZE_KWARGS),
     BeforeValidator(validate_sky_coord),
+]
+
+ICRSSkyCoordType = Annotated[
+    SkyCoord,
+    PlainSerializer(json_encode_sky_coord, **SERIALIZE_KWARGS),
+    BeforeValidator(validate_sky_coord_icrs),
+]
+
+AltAzSkyCoordType = Annotated[
+    SkyCoord,
+    PlainSerializer(json_encode_sky_coord, **SERIALIZE_KWARGS),
+    BeforeValidator(validate_altaz_coord),
 ]
 
 PathType = Annotated[
     Path,
-    PlainSerializer(lambda p: str(p), return_type=str, when_used="json-unless-none"),
+    PlainSerializer(lambda p: str(p), **SERIALIZE_KWARGS),
     BeforeValidator(make_path),
 ]

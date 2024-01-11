@@ -1,15 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Metadata base container for Gammapy."""
 import json
-from typing import ClassVar, Literal, Optional, Union, get_args
-import numpy as np
-from astropy.coordinates import AltAz, SkyCoord
+from typing import ClassVar, Literal, Optional, get_args
+from astropy.coordinates import SkyCoord
 from astropy.time import Time
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from gammapy.utils.fits import skycoord_from_dict
 from gammapy.version import version
-from .types import SkyCoordType, TimeType
+from .types import AltAzSkyCoordType, ICRSSkyCoordType, SkyCoordType, TimeType
 
 __all__ = ["MetaData", "CreatorMetaData"]
 
@@ -216,33 +215,8 @@ class PointingInfoMetaData(MetaData):
 
     _tag: ClassVar[Literal["pointing"]] = "pointing"
 
-    radec_mean: Optional[SkyCoord] = None
-    altaz_mean: Optional[Union[SkyCoord, AltAz]] = None
-
-    @field_validator("radec_mean", mode="before")
-    def validate_radec_mean(cls, v):
-        if v is None:
-            return SkyCoord(np.nan, np.nan, unit="deg", frame="icrs")
-        elif isinstance(v, SkyCoord):
-            return v.icrs
-        else:
-            raise ValueError(
-                f"Incorrect position. Expect SkyCoord in altaz frame got {type(v)} instead."
-            )
-
-    @field_validator("altaz_mean", mode="before")
-    @classmethod
-    def validate_altaz_position(cls, v):
-        if v is None:
-            return SkyCoord(np.nan, np.nan, unit="deg", frame="altaz")
-        elif isinstance(v, AltAz):
-            return SkyCoord(v)
-        elif isinstance(v, SkyCoord):
-            return v.altaz
-
-        raise ValueError(
-            f"Incorrect position. Expect SkyCoord in altaz frame got {type(v)} instead."
-        )
+    radec_mean: Optional[ICRSSkyCoordType] = None
+    altaz_mean: Optional[AltAzSkyCoordType] = None
 
 
 class TargetMetaData(MetaData):
