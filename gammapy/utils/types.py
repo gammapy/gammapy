@@ -4,7 +4,7 @@ from astropy.coordinates import AltAz, Angle, EarthLocation, SkyCoord
 from astropy.time import Time
 from astropy.units import Quantity
 from pydantic import PlainSerializer
-from pydantic.functional_validators import BeforeValidator
+from pydantic.functional_validators import AfterValidator, BeforeValidator
 from .observers import observatory_locations
 from .scripts import make_path
 
@@ -32,9 +32,25 @@ def json_encode_sky_coord(v):
     return f"lon: {v.spherical.lon.value} {v.spherical.lon.unit}, lat: {v.spherical.lat.value} {v.spherical.lat.unit}, frame: {v.frame.name} "
 
 
+def json_encode_time(v):
+    """JSON encoder for `~astropy.time.Time`."""
+    if v.isscalar:
+        return v.value
+
+    return v.value.tolist()
+
+
 def validate_angle(v):
     """Validator for `~astropy.coordinates.Angle`."""
     return Angle(v)
+
+
+def validate_scalar(v):
+    """Validator for scalar values."""
+    if not v.isscalar:
+        raise ValueError(f"A scalar value is required: {v!r}")
+
+    return v
 
 
 def validate_energy(v):
@@ -92,22 +108,26 @@ SERIALIZE_KWARGS = {
     "return_type": str,
 }
 
+scalar_validator = AfterValidator(validate_scalar)
+
 
 AngleType = Annotated[
     Angle,
     PlainSerializer(lambda v: f"{v.value} {v.unit}", **SERIALIZE_KWARGS),
     BeforeValidator(validate_angle),
+    scalar_validator,
 ]
 
 EnergyType = Annotated[
     Quantity,
     PlainSerializer(lambda v: f"{v.value} {v.unit}", **SERIALIZE_KWARGS),
     BeforeValidator(validate_energy),
+    scalar_validator,
 ]
 
 TimeType = Annotated[
     Time,
-    PlainSerializer(lambda v: f"{v.value}", **SERIALIZE_KWARGS),
+    PlainSerializer(json_encode_time, when_used="json-unless-none"),
     BeforeValidator(validate_time),
 ]
 
@@ -116,24 +136,28 @@ EarthLocationType = Annotated[
     EarthLocation,
     PlainSerializer(json_encode_earth_location, **SERIALIZE_KWARGS),
     BeforeValidator(validate_earth_location),
+    scalar_validator,
 ]
 
 SkyCoordType = Annotated[
     SkyCoord,
     PlainSerializer(json_encode_sky_coord, **SERIALIZE_KWARGS),
     BeforeValidator(validate_sky_coord),
+    scalar_validator,
 ]
 
 ICRSSkyCoordType = Annotated[
     SkyCoord,
     PlainSerializer(json_encode_sky_coord, **SERIALIZE_KWARGS),
     BeforeValidator(validate_sky_coord_icrs),
+    scalar_validator,
 ]
 
 AltAzSkyCoordType = Annotated[
     SkyCoord,
     PlainSerializer(json_encode_sky_coord, **SERIALIZE_KWARGS),
     BeforeValidator(validate_altaz_coord),
+    scalar_validator,
 ]
 
 PathType = Annotated[
