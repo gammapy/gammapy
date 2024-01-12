@@ -2,7 +2,7 @@
 import html
 import json
 import logging
-from collections import defaultdict
+from collections import Mapping, defaultdict
 from enum import Enum
 from pathlib import Path
 from typing import List, Optional
@@ -18,6 +18,19 @@ CONFIG_PATH = Path(__file__).resolve().parent / "config"
 DOCS_FILE = CONFIG_PATH / "docs.yaml"
 
 log = logging.getLogger(__name__)
+
+
+def deep_update(d, u):
+    """Recursively update a nested dictionary.
+
+    Taken from: https://stackoverflow.com/a/3233356/19802442
+    """
+    for k, v in u.items():
+        if isinstance(v, Mapping):
+            d[k] = deep_update(d.get(k, {}), v)
+        else:
+            d[k] = v
+    return d
 
 
 class ReductionTypeEnum(str, Enum):
@@ -277,8 +290,11 @@ class AnalysisConfig(GammapyBaseConfig):
         else:
             raise TypeError(f"Invalid type: {config}")
 
-        data = self.model_copy(update=other.model_dump()).model_dump()
-        return AnalysisConfig(**data)
+        config_new = deep_update(
+            self.model_dump(exclude_defaults=True),
+            other.model_dump(exclude_defaults=True),
+        )
+        return AnalysisConfig(**config_new)
 
     @staticmethod
     def _get_doc_sections():
