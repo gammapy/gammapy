@@ -2,7 +2,8 @@
 import html
 import json
 import logging
-from collections import Mapping, defaultdict
+from collections import defaultdict
+from collections.abc import Mapping
 from enum import Enum
 from pathlib import Path
 from typing import List, Optional
