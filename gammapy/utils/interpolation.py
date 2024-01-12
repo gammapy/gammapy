@@ -239,8 +239,8 @@ class LinearScale(InterpolationScale):
         return values
 
 
-def interpolate_profile(x, y, interp_scale="sqrt", method="pchip", **kwargs):
-    """Helper function to interpolate one-dimensional profiles.
+def interpolate_profile(x, y):
+    """Helper function to interpolate one-dimensional profiles with quadratic spline.
 
     Parameters
     ----------
@@ -248,22 +248,10 @@ def interpolate_profile(x, y, interp_scale="sqrt", method="pchip", **kwargs):
         Array of x values.
     y : `~numpy.ndarray`
         Array of y values.
-    interp_scale : {"sqrt", "lin"}
-        Interpolation scale applied to the profile. If the profile is
-        of parabolic shape, a "sqrt" scaling is recommended. In other cases or
-        for fine sampled profiles a "lin" can also be used.
-        Default is "sqrt".
-    method : {“linear”, “nearest”, “slinear”, “cubic”, “quintic”, “pchip”}
-        The method of interpolation to perform.
-        Default is “pchip” (better for profile of parabolic shape).
-    **kwargs : dict
-        Keyword arguments passed to `RegularGridInterpolator`.
 
     Returns
     -------
-    interp : `ScaledRegularGridInterpolator`
+    interp : `interp1d`
         Interpolator.
     """
-    return ScaledRegularGridInterpolator(
-        points=(x,), values=(y,), values_scale=interp_scale, method=method, **kwargs
-    )
+    return scipy.interpolate.interp1d(x, y, kind="quadratic")
