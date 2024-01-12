@@ -87,11 +87,10 @@ jobs:
           python -m pip install tqdm requests
           python -m pip install -e .
           gammapy download datasets
-      - name: Print Python, pip, setuptools, and tox versions
+      - name: Print Python, pip, and tox versions
         run: |
           python -c "import sys; print(f'Python {sys.version}')"
           python -c "import pip; print(f'pip {pip.__version__}')"
-          python -c "import setuptools; print(f'setuptools {setuptools.__version__}')"
           python -c "import tox; print(f'tox {tox.__version__}')"
       - name: Run tests
         if: ${{ !matrix.gammapy_data_path }}
