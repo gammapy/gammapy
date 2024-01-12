@@ -239,8 +239,8 @@ class LinearScale(InterpolationScale):
         return values
 
 
-def interpolate_profile(x, y):
-    """Helper function to interpolate one-dimensional profiles with quadratic spline.
+def interpolate_profile(x, y, interp_scale="sqrt"):
+    """Helper function to interpolate one-dimensional profiles.
 
     Parameters
     ----------
@@ -248,10 +248,16 @@ def interpolate_profile(x, y):
         Array of x values.
     y : `~numpy.ndarray`
         Array of y values.
+    interp_scale : {"sqrt", "lin"}
+        Interpolation scale applied to the profile. If the profile is
+        of parabolic shape, a "sqrt" scaling is recommended. In other cases or
+        for fine sampled profiles a "lin" can also be used.
+        Default is "sqrt".
 
     Returns
     -------
     interp : `interp1d`
         Interpolator.
     """
-    return scipy.interpolate.interp1d(x, y, kind="quadratic")
+    method_dict = {"sqrt": "quadratic", "lin": "linear"}
+    return scipy.interpolate.interp1d(x, y, kind=method_dict[interp_scale])
