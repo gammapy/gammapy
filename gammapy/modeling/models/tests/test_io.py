@@ -132,6 +132,8 @@ def test_sky_models_checksum(tmpdir, models):
     yaml_content = file.read()
 
     assert "checksum: " in str(yaml_content)
+    print(yaml_content)
+    assert False
 
 
 @requires_data()

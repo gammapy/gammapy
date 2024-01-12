@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import yaml
 from gammapy.maps import Map, RegionGeom
 from gammapy.modeling import Covariance, Parameter, Parameters
-from gammapy.utils.check import add_checksum
+from gammapy.utils.check import add_checksum, verify_checksum
 from gammapy.utils.metadata import CreatorMetaData
 from gammapy.utils.scripts import make_name, make_path
 
@@ -411,16 +411,27 @@ class DatasetModels(collections.abc.Sequence):
         return [m.name for m in self._models]
 
     @classmethod
-    def read(cls, filename):
-        """Read from YAML file."""
+    def read(cls, filename, checksum=False):
+        """Read from YAML file.
+
+        Parameters
+        ----------
+        filename : str
+            input filename
+        checksum : bool
+            Whether to perform checksum verification. Default is False.
+        """
         yaml_str = make_path(filename).read_text()
         path, filename = split(filename)
-        return cls.from_yaml(yaml_str, path=path)
+        return cls.from_yaml(yaml_str, path=path, checksum=checksum)
 
     @classmethod
-    def from_yaml(cls, yaml_str, path=""):
+    def from_yaml(cls, yaml_str, path="", checksum=False):
         """Create from YAML string."""
         data = yaml.safe_load(yaml_str)
+        checksum_str = data.pop("checksum", None)
+        if checksum:
+            verify_checksum(yaml_str, checksum_str)
         # TODO : for now metadata are not kept. Add proper metadata creation.
         data.pop("metadata", None)
         return cls.from_dict(data, path=path)
