@@ -236,8 +236,7 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
             result.update({"norm_ul": np.nan})
 
         if "scan" in self.selection_optional:
-            norm = super()._set_norm_parameter()
-            norm_scan = norm.scan_values
+            norm_scan = self.norm.copy().scan_values
             result.update({"norm_scan": norm_scan, "stat_scan": np.nan * norm_scan})
 
         return result
