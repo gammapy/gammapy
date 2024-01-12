@@ -4,6 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy.table import Table
 from gammapy.modeling import Parameter, Parameters, PriorParameter, PriorParameters
+from gammapy.modeling.models import GaussianPrior
 
 
 def test_parameter_init():
@@ -102,7 +103,12 @@ def test_parameter_autoscale(method, value, factor, scale):
 
 @pytest.fixture()
 def pars():
-    return Parameters([Parameter("spam", 42, "deg"), Parameter("ham", 99, "TeV")])
+    return Parameters(
+        [
+            Parameter("spam", 42, "deg"),
+            Parameter("ham", 99, "TeV", prior=GaussianPrior()),
+        ]
+    )
 
 
 def test_parameters_basics(pars):
@@ -167,6 +173,7 @@ def test_parameters_to_table(pars, tmp_path):
     assert table["link"][1] == ""
 
     assert table["prior"][0] == ""
+    assert table["prior"][1] == "GaussianPrior"
     assert table["type"][1] == ""
 
     table.write(tmp_path / "test_parameters.fits")
