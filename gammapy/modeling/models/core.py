@@ -3,6 +3,7 @@ import collections.abc
 import copy
 import html
 import logging
+import warnings
 from os.path import split
 import numpy as np
 import astropy.units as u
@@ -431,7 +432,12 @@ class DatasetModels(collections.abc.Sequence):
         data = yaml.safe_load(yaml_str)
         checksum_str = data.pop("checksum", None)
         if checksum:
-            verify_checksum(yaml_str, checksum_str)
+            yaml_str = yaml.dump(
+                data, sort_keys=False, indent=4, width=80, default_flow_style=False
+            )
+            if not verify_checksum(yaml_str, checksum_str):
+                warnings.warn("Checksum verification failed.", UserWarning)
+
         # TODO : for now metadata are not kept. Add proper metadata creation.
         data.pop("metadata", None)
         return cls.from_dict(data, path=path)
