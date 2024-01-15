@@ -17,7 +17,19 @@ log = logging.getLogger(__name__)
 
 
 class BackgroundIRF(IRF):
-    """Background IRF base class."""
+    """Background IRF base class.
+
+    Parameters
+    ----------
+    axes : list of `MapAxis` or `MapAxes` object
+    data : `~np.ndarray`
+        Data array.
+    unit : str or `~astropy.units.Unit`
+        Data unit usually ``s^-1 MeV^-1 sr^-1``.
+    meta : dict
+        Metadata dictionary.
+
+    """
 
     default_interp_kwargs = dict(bounds_error=False, fill_value=0.0, values_scale="log")
     """Default Interpolation kwargs to extrapolate."""

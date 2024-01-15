@@ -7,7 +7,7 @@ Functions typically stored as multi-dimensional tables. For a list of
 IRF classes internally supported, see
 https://gamma-astro-data-formats.readthedocs.io/en/v0.3/irfs/full_enclosure/index.html
 
-This tutorial is intended for advanced users typically creating IRFs
+This tutorial is intended for advanced users typically creating IRFs.
 
 """
 
@@ -43,7 +43,7 @@ print(aeff)
 
 ######################################################################
 # We can see that the Effective Area Table is defined in terms of
-# “energy_true” and `offset` from the camera center
+# `energy_true` and `offset` from the camera center
 #
 
 # To see the IRF axes binning, eg, offset
@@ -56,7 +56,7 @@ print(aeff.data)
 print(aeff.evaluate(energy_true=[1, 10] * u.TeV, offset=[0.2, 2.5] * u.deg))
 
 
-# The peek methods give quick looks into the irfs
+# The peek method gives a quick look into the IRF
 aeff.peek()
 
 
@@ -70,11 +70,69 @@ edisp = EnergyDispersion2D.read(irf_filename, hdu="ENERGY DISPERSION")
 
 print(bkg)
 
-# To evaluate the irfs, pass the values for each axis
-ev = bkg.evaluate(energy=1 * u.TeV, fov_lon=[1, 2] * u.deg, fov_lat=[1, 2] * u.deg)
+
+######################################################################
+# Note that the background is given in FoV coordiantes with `fov_lon`
+# and `fov_lat` axis, and not in `offset` from the camera center. We
+# can also check the Field of view alignment. Currently, two possible
+# alignments are supported: alignment with the horizontal coordinate
+# system (ALTAZ) and alignment with the equatorial coordinate system
+# (RADEC).
+#
+
+bkg.fov_alignment
+
+
+######################################################################
+# To evaluate the IRFs, pass the values for each axis. To know the default
+# interpolation scheme for the data
+#
+
+bkg.interp_kwargs
+
+# Evaluate background
+energy = [1, 10, 100, 1000] * u.TeV
+fov_lon = [
+    1,
+    2,
+] * u.deg
+fov_lat = [1, 2] * u.deg
+ev = bkg.evaluate(
+    energy=energy.reshape(-1, 1, 1),
+    fov_lat=fov_lat.reshape(1, -1, 1),
+    fov_lon=fov_lon.reshape(1, 1, -1),
+)
 print(ev)
 
-# To evaluate the irfs, pass the values for each axis
+
+######################################################################
+# We can customise the interpolation scheme. Here, we adapt to fill
+# `nan` instead of `0` for extrapolated values
+#
+
+bkg.interp_kwargs["fill_value"] = np.nan
+
+ev2 = bkg.evaluate(
+    energy=energy.reshape(-1, 1, 1),
+    fov_lat=fov_lat.reshape(1, -1, 1),
+    fov_lon=fov_lon.reshape(1, 1, -1),
+)
+print(ev2)
+
+
+######################################################################
+# The interpolation scheme along each axis is taken from the `MapAxis`
+# specification. eg
+#
+
+print(
+    "Interpolation scheme for energy axis is: ",
+    bkg.axes["energy"].interp,
+    "and for the fov_lon axis is: ",
+    bkg.axes["fov_lon"].interp,
+)
+
+# Evaluate energy dispersion
 ev = edisp.evaluate(energy_true=1 * u.TeV, offset=[0, 1] * u.deg, migra=[1, 1.2])
 print(ev)
 
@@ -121,9 +179,6 @@ print(
 #
 # The main idea is that the list of required axes should be correctly
 # mentioned in the class definition.
-#
-# Asymmetric PSFs are not correctly supported at present in the data
-# reduction scheme.
 #
 
 
@@ -177,6 +232,13 @@ with quantity_support():
 fov_lat_axis.format_plot_xaxis(ax)
 fov_lon_axis.format_plot_yaxis(ax)
 ax.set_title("Asymmetric effective area")
+
+
+######################################################################
+# Unless specified, it is assumed these IRFs are in the RADEC frame
+#
+
+aeff_3d.fov_alignment
 
 
 ######################################################################
@@ -235,41 +297,11 @@ class EnergyDispersion3D(IRF):
     required_axes = ["energy_true", "migra", "fov_lon", "fov_lat"]
     default_unit = u.one
 
-    @classmethod
-    def from_gauss(
-        cls,
-        energy_axis_true,
-        migra_axis,
-        fov_lon_axis,
-        fov_lat_axis,
-        bias,
-        sigma,
-        pdf_threshold=1e-6,
-    ):
-        axes = MapAxes([energy_axis_true, migra_axis, fov_lon_axis, fov_lat_axis])
-        coords = axes.get_coord(mode="edges", axis_name="migra")
 
-        migra_min = coords["migra"][:, :-1, :]
-        migra_max = coords["migra"][:, 1:, :]
-
-        # Analytical formula for integral of Gaussian
-        s = np.sqrt(2) * sigma
-        t1 = (migra_max - 1 - bias) / s
-        t2 = (migra_min - 1 - bias) / s
-        pdf = (scipy.special.erf(t1) - scipy.special.erf(t2)) / 2
-        pdf = pdf / (migra_max - migra_min)
-
-        r1 = np.rollaxis(pdf, -1, 1)
-        r2 = np.rollaxis(r1, 0, -1)
-        data = r2 * np.ones(axes.shape)
-
-        data[data < pdf_threshold] = 0
-
-        return cls(
-            axes=axes,
-            data=data.value,
-        )
-
+######################################################################
+# Note that most functions defined on the inbuilt IRF classes can be
+# easily generalised to higher dimensions.
+#
 
 # Make a test case
 energy_axis_true = MapAxis.from_energy_bounds(
@@ -285,38 +317,38 @@ data = np.array(
     [
         [
             [
-                [4.99582964e-01, 4.99582964e-01, 4.99582964e-01],
-                [4.99582964e-01, 4.99582964e-01, 4.99582964e-01],
-                [4.99582964e-01, 4.99582964e-01, 4.99582964e-01],
+                [5.00e-01, 5.10e-01, 5.20e-01],
+                [6.00e-01, 6.10e-01, 6.30e-01],
+                [6.00e-01, 6.00e-01, 6.00e-01],
             ],
             [
-                [2.06259405e-04, 2.06259405e-04, 2.06259405e-04],
-                [2.06259405e-04, 2.06259405e-04, 2.06259405e-04],
-                [2.06259405e-04, 2.06259405e-04, 2.06259405e-04],
-            ],
-        ],
-        [
-            [
-                [5.00000000e-01, 5.00000000e-01, 5.00000000e-01],
-                [5.00000000e-01, 5.00000000e-01, 5.00000000e-01],
-                [5.00000000e-01, 5.00000000e-01, 5.00000000e-01],
-            ],
-            [
-                [0.00000000e00, 0.00000000e00, 0.00000000e00],
-                [0.00000000e00, 0.00000000e00, 0.00000000e00],
-                [0.00000000e00, 0.00000000e00, 0.00000000e00],
+                [2.0e-02, 2.0e-02, 2.0e-03],
+                [2.0e-02, 2.0e-02, 2.0e-03],
+                [2.0e-02, 2.0e-02, 2.0e-03],
             ],
         ],
         [
             [
-                [5.00000000e-01, 5.00000000e-01, 5.00000000e-01],
-                [5.00000000e-01, 5.00000000e-01, 5.00000000e-01],
-                [5.00000000e-01, 5.00000000e-01, 5.00000000e-01],
+                [5.00e-01, 5.10e-01, 5.20e-01],
+                [6.00e-01, 6.10e-01, 6.30e-01],
+                [6.00e-01, 6.00e-01, 6.00e-01],
             ],
             [
-                [0.00000000e00, 0.00000000e00, 0.00000000e00],
-                [0.00000000e00, 0.00000000e00, 0.00000000e00],
-                [0.00000000e00, 0.00000000e00, 0.00000000e00],
+                [2.0e-02, 2.0e-02, 2.0e-03],
+                [2.0e-02, 2.0e-02, 2.0e-03],
+                [2.0e-02, 2.0e-02, 2.0e-03],
+            ],
+        ],
+        [
+            [
+                [5.00e-01, 5.10e-01, 5.20e-01],
+                [6.00e-01, 6.10e-01, 6.30e-01],
+                [6.00e-01, 6.00e-01, 6.00e-01],
+            ],
+            [
+                [3.0e-02, 6.0e-02, 2.0e-03],
+                [3.0e-02, 5.0e-02, 2.0e-03],
+                [3.0e-02, 4.0e-02, 2.0e-03],
             ],
         ],
     ]
@@ -334,12 +366,13 @@ migra = np.array([0.98, 0.97, 0.7])
 fov_lon = [0.1, 1.5] * u.deg
 fov_lat = [0.0, 0.3] * u.deg
 
-edisp3d.evaluate(
+edisp_eval = edisp3d.evaluate(
     energy_true=energy.reshape(-1, 1, 1, 1),
     migra=migra.reshape(1, -1, 1, 1),
     fov_lon=fov_lon.reshape(1, 1, -1, 1),
     fov_lat=fov_lat.reshape(1, 1, 1, -1),
-)[0][2]
+)
+print(edisp_eval[0])
 
 
 ######################################################################
@@ -385,12 +418,13 @@ edispmap.edisp_map.data[3][1][3]
 # PSF
 # ---
 #
-# A higher dimensional PSF Table can also be created, as shown here.
-# Support for higher dimensional analystic PSF will come later
+# Asymmetric PSFs are not correctly supported at present in the data
+# reduction scheme. However, higher dimensional PSF Table can be created
+# as a data container, as shown here.
 #
 
 
-class PSFnD(IRF):
+class PSF_assym(IRF):
     tag = "psf_nd"
     required_axes = ["energy_true", "fov_lon", "fov_lat", "rad"]
     default_unit = u.sr**-1
@@ -410,18 +444,19 @@ data = 0.1 * np.ones((4, 3, 3, 2))
 for i in range(1, 4):
     data[i] = data[i - 1] * 1.5
 
-psfnd = PSFnD(
+
+psf_assym = PSF_assym(
     axes=[energy_axis, fov_lon_axis, fov_lat_axis, rad_axis],
     data=data,
 )
-print(psfnd)
+print(psf_assym)
 
 energy = [1, 2] * u.TeV
 rad = np.array([0.98, 0.97, 0.7]) * u.deg
 fov_lon = [0.1, 1.5] * u.deg
 fov_lat = [0.0, 0.3] * u.deg
 
-psfnd.evaluate(
+psf_assym.evaluate(
     energy_true=energy.reshape(-1, 1, 1, 1),
     rad=rad.reshape(1, -1, 1, 1),
     fov_lon=fov_lon.reshape(1, 1, -1, 1),
@@ -445,14 +480,16 @@ IRF_DL3_HDU_SPECIFICATION["psf_nd"] = {
     },
 }
 
-psfnd.write("test_psf.fits.gz", overwrite=True)
+psf_assym.write("test_psf.fits.gz", overwrite=True)
 
-psf_new = PSFnD.read("test_psf.fits.gz")
+psf_new = PSF_assym.read("test_psf.fits.gz")
 
-psf_new == psfnd
+psf_new == psf_assym
 
 
 ######################################################################
-# Support for asymmetric IRFs is priliminary at the moment, and will
-# evolve depending on feedback.
+# Containers for asymmetric analytic PSFs are not supported at present.
+#
+# **NOTE**: Support for asymmetric IRFs is priliminary at the moment, and
+# will evolve depending on feedback.
 #
