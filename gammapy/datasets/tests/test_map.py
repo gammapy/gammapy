@@ -31,7 +31,6 @@ from gammapy.maps import (
     WcsGeom,
     WcsNDMap,
 )
-from gammapy.maps.io import JsonQuantityEncoder
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
     DiskSpatialModel,
@@ -44,6 +43,7 @@ from gammapy.modeling.models import (
     UniformPrior,
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
+from gammapy.utils.types import JsonQuantityEncoder
 
 
 @pytest.fixture

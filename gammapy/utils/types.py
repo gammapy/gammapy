@@ -1,8 +1,9 @@
+import json
 from pathlib import Path
 from typing import Annotated
+from astropy import units as u
 from astropy.coordinates import AltAz, Angle, EarthLocation, SkyCoord
 from astropy.time import Time
-from astropy.units import Quantity
 from pydantic import PlainSerializer
 from pydantic.functional_validators import AfterValidator, BeforeValidator
 from .observers import observatory_locations
@@ -16,6 +17,34 @@ __all__ = [
     "EarthLocationType",
     "SkyCoordType",
 ]
+
+
+# TODO: replace by QuantityType and pydantic TypeAdapter
+class JsonQuantityEncoder(json.JSONEncoder):
+    """Support for quantities that JSON default encoder"""
+
+    def default(self, obj):
+        if isinstance(obj, u.Quantity):
+            return obj.to_string()
+
+        return json.JSONEncoder.default(self, obj)
+
+
+# TODO: replace by QuantityType and pydantic TypeAdapter
+class JsonQuantityDecoder(json.JSONDecoder):
+    """Support for quantities that JSON default encoder"""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(object_hook=self.object_hook, *args, **kwargs)
+
+    @staticmethod
+    def object_hook(data):
+        for key, value in data.items():
+            try:
+                data[key] = u.Quantity(value)
+            except TypeError:
+                continue
+        return data
 
 
 def json_encode_earth_location(v):
@@ -55,7 +84,7 @@ def validate_scalar(v):
 
 def validate_energy(v):
     """Validator for `~astropy.units.Quantity` with unit "energy"."""
-    v = Quantity(v)
+    v = u.Quantity(v)
 
     if v.unit.physical_type != "energy":
         raise ValueError(f"Invalid unit for energy: {v.unit!r}")
@@ -119,7 +148,7 @@ AngleType = Annotated[
 ]
 
 EnergyType = Annotated[
-    Quantity,
+    u.Quantity,
     PlainSerializer(lambda v: f"{v.value} {v.unit}", **SERIALIZE_KWARGS),
     BeforeValidator(validate_energy),
     scalar_validator,
