@@ -7,6 +7,7 @@ from collections.abc import Mapping
 from enum import Enum
 from pathlib import Path
 from typing import List, Optional
+from astropy import units as u
 import yaml
 from pydantic import BaseModel, ConfigDict
 from gammapy.makers import MapDatasetMaker
@@ -83,6 +84,7 @@ class GammapyBaseConfig(BaseModel):
         extra="forbid",
         validate_default=True,
         use_enum_values=True,
+        json_encoders={u.Quantity: lambda v: f"{v.value} {v.unit}"},
     )
 
     def _repr_html_(self):
