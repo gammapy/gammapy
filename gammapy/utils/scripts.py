@@ -6,6 +6,7 @@ from base64 import urlsafe_b64encode
 from pathlib import Path
 from uuid import uuid4
 import yaml
+from gammapy.utils.check import add_checksum
 
 __all__ = [
     "get_images_paths",
@@ -55,7 +56,7 @@ def read_yaml(filename, logger=None):
     return yaml.safe_load(text)
 
 
-def write_yaml(dictionary, filename, logger=None, sort_keys=True):
+def write_yaml(dictionary, filename, logger=None, sort_keys=True, checksum=False):
     """Write YAML file.
 
     Parameters
@@ -68,8 +69,13 @@ def write_yaml(dictionary, filename, logger=None, sort_keys=True):
         Logger. Default is None.
     sort_keys : bool, optional
         Whether to sort keys. Default is True.
+    checksum : bool, optional
+        Whether to add checksum keyword. Default is False.
     """
     text = yaml.safe_dump(dictionary, default_flow_style=False, sort_keys=sort_keys)
+
+    if checksum:
+        text = add_checksum(text, sort_keys=sort_keys)
 
     path = make_path(filename)
     path.parent.mkdir(exist_ok=True)

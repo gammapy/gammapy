@@ -1351,6 +1351,8 @@ def test_map_datasets_on_off_checksum(images, tmp_path):
         assert "CHECKSUM" in hdu.header
         assert "DATASUM" in hdu.header
 
+    Datasets.read(tmp_path / "test.yaml", lazy=False)
+
 
 def test_create_onoff(geom):
     # tests empty datasets created

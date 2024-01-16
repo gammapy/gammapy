@@ -41,10 +41,14 @@ def verify_checksum(yaml_content, checksum):
     return yaml_checksum(yaml_content) == checksum
 
 
-def add_checksum(yaml_str):
+def add_checksum(yaml_str, sort_keys=False, indent=4, width=50):
     """Append a checksum at the end of the yaml string."""
     checksum = {"checksum": yaml_checksum(yaml_str)}
     checksum = yaml.dump(
-        checksum, sort_keys=False, indent=4, width=80, default_flow_style=False
+        checksum,
+        sort_keys=sort_keys,
+        indent=indent,
+        width=width,
+        default_flow_style=False,
     )
     return yaml_str + checksum
