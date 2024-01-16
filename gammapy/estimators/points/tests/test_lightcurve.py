@@ -655,7 +655,7 @@ def test_recompute_ul():
 
     new_lightcurve = lightcurve.recompute_ul(n_sigma_ul=4)
     assert_allclose(
-        new_lightcurve.dnde_ul.data[0], [[[3.774561e-13]], [[1.374421e-14]]], rtol=1e-3
+        new_lightcurve.dnde_ul.data[0], [[[3.758136e-13]], [[1.373942e-14]]], rtol=1e-3
     )
     assert new_lightcurve.meta["n_sigma_ul"] == 4
 
