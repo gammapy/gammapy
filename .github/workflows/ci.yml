@@ -44,10 +44,6 @@ jobs:
             tox_env: 'py311-test-alldeps_noray'
             gammapy_data_path: /home/runner/work/gammapy/gammapy/gammapy-datasets/dev
             allowed_fail: false
-#          - os: ubuntu-latest
-#            python: '3.12' # fail for the time being, to be tested later
-#            tox_env: 'py312-test'
-#            allowed_fail: false
           - os: ubuntu-latest
             python: '3.10'
             tox_env: 'py310-test'
