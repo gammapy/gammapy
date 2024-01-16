@@ -1,5 +1,5 @@
 """
-Priors 
+Priors
 ======
 
 Learn how you can include prior knowledge into the fitting by setting
@@ -17,19 +17,20 @@ Prerequisites
 Context
 -------
 
-Generally, the set of parameters describing best the data is where
-the fit statistic :math:`2 x log L` has its global minimum. Depending on
+Generally, the set of parameters describing best the data is where the
+fit statistic :math:`2 x log L` has its global minimum. Depending on
 the type of background estimation, it is either the Cash fit statistic
 or the WStat (see :doc:`/user-guide/stats/fit_statistics` for more
 details).
 
-A prior on the value of some of the parameters can be added to this fit statistic. The prior is again
-a probability density function of the model parameters and can take different forms,
-including Gaussian distributions, uniform distributions, etc. The prior
-includes information or knowledge about the dataset or the parameters of
-the fit.
+A prior on the value of some of the parameters can be added to this fit
+statistic. The prior is again a probability density function of the
+model parameters and can take different forms, including Gaussian
+distributions, uniform distributions, etc. The prior includes
+information or knowledge about the dataset or the parameters of the fit.
 
-For now, only setting a prior on a single parameter is supported.
+Setting priors on mulitple parameters simultaneously is suppored,
+however, they for now cannot be correlated.
 
 The spectral dataset used here contains a simulated power-law source and
 its IRFs are based on HESS data of the Crab Nebula (similar to
@@ -103,14 +104,9 @@ model = SkyModel(spectral_model=pl_spectrum, name="simu-source")
 # the model predictions.
 #
 
-datasets = []
-for obs_id in [23523, 23526]:
-    dataset = SpectrumDatasetOnOff.read(
-        f"$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs{obs_id}.fits"
-    )
-    datasets.append(dataset)
-
-dataset = Datasets(datasets).stack_reduce(name="HESS")
+dataset = SpectrumDatasetOnOff.read(
+    f"$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits"
+)
 
 # Set model and fit range
 e_min = 0.66 * u.TeV
@@ -153,6 +149,7 @@ model_prior.parameters["index"].prior = gaussianprior
 # 2.1, a prior value > 0 is added to the cash statistics.
 #
 
+# For the visualisation, the values are appended to the list; this is not a necessity for the fitting
 prior_stat_sums = []
 with model_prior.parameters.restore_status():
     i_scan = np.linspace(1.8, 2.3, 100)
@@ -185,7 +182,7 @@ plt.show()
 # the model with the Gaussian prior set on its index to it. Both of the
 # datasets are fitted.
 #
-
+dataset1.fake()
 dataset1_prior = dataset1.copy()
 dataset1_prior.models = model_prior.copy(name="prior-model")
 
@@ -270,7 +267,7 @@ plt.errorbar(
     label="Best-Fit w/ Prior",
 )
 plt.legend()
-plt.ylim(-55.5, -50)
+# plt.ylim(31.5,35)
 plt.xlabel("Index")
 plt.ylabel("Fit Statistics [arb. unit]")
 plt.show()
@@ -346,7 +343,6 @@ plt.ylabel("Prior")
 plt.legend()
 plt.show()
 
-
 ######################################################################
 # Fitting Multiple Datasets with and without the Prior
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -406,8 +402,51 @@ plt.show()
 # stronger the weight, the less negative amplitudes.
 #
 # Note that the model parameters uncertainties are, per default, computed
-# symmetrical from the Hessian matrix. This can lead to incorrect
+# symmetrical. This can lead to incorrect
 # uncertainties, especially with asymmetrical priors like the previous
-# uniform. Calculating the uncertainties with the MINOS algorithm, which
-# computes profile-likelihood-based confidence intervals, is advised.
+# uniform. Calculating the uncertainties from the profile likelihood
+# is advised. For more details see the :doc:`/tutorials/api/fitting` tutorial.
 #
+
+######################################################################
+# Implementing a custom prior
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# For now, only ``GaussianPrior`` and `UniformPrior`` are implemented.
+# To add a use case specfific prior one has to create a prior subclass
+# containing:
+#
+# - a tag used for the serialization
+# - an instantiation of each PriorParameter with their unit and default values
+# - the evaluate function where the mathematical expression for the prior
+#    is defined.
+# As an example for a custom prior a Jeffrey prior for a scale parameter is choosen.
+# The only parameter is ``sigma`` and the evaluation method return the quared inverse of ``sigma``.
+#
+
+
+from gammapy.modeling import PriorParameter
+from gammapy.modeling.models import Prior
+
+
+class MyCostomPrior(Prior):
+    """Costom Prior.
+
+
+    Parameters
+    ----------
+    min : float
+        Minimum value.
+        Default is -inf.
+    max : float
+        Maxmimum value.
+        Default is inf.
+    """
+
+    tag = ["MyCostomPrior"]
+    sigma = PriorParameter(name="sigma", value=1, unit="")
+
+    @staticmethod
+    def evaluate(value, sigma):
+        """Evaluate the costom prior."""
+        return 1.0 / sigma**2
