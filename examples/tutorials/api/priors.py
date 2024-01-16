@@ -19,8 +19,8 @@ Context
 
 Generally, the set of parameters describing best the data is where
 the fit statistic :math:`2 x log L` has its global minimum. Depending on
-the type of background estimation, it is either the cash fit statistics
-or the wstat (see :doc:`/user-guide/stats/fit_statistics` for more
+the type of background estimation, it is either the Cash fit statistic
+or the WStat (see :doc:`/user-guide/stats/fit_statistics` for more
 details).
 
 A prior on the value of some of the parameters can be added to this fit statistic. The prior is again
@@ -178,7 +178,7 @@ plt.show()
 
 
 ######################################################################
-# Fitting an Asimov Dataset with and without the Prior
+# Fitting a Dataset with and without the Prior
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # Now, we copy the dataset consisting of the power-law source and assign
@@ -213,8 +213,8 @@ scan_prior = fit.stat_profile(
 
 ######################################################################
 # Now, we can compare the two Likelihood scans. In the first case, we did
-# not set any prior. This means that only the cash statistic itself is
-# getting minimized. The cash statistics minimum is the actual value of
+# not set any prior. This means that only the Cash Statistic itself is
+# getting minimized. The Cash statistics minimum is the actual value of
 # the index we used for the simulation (:math:`2.3`). Therefore, the
 # best-fit value was found to be :math:`2.3`. Note how the error bars
 # correspond to the :math:`1\sigma` error, i.e. where the stat sum equals
