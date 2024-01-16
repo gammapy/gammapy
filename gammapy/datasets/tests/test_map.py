@@ -1365,6 +1365,8 @@ def test_create_onoff(geom):
 def test_map_dataset_onoff_str(images):
     dataset = get_map_dataset_onoff(images)
     assert "MapDatasetOnOff" in str(dataset)
+    assert "counts_off" in str(dataset)
+    assert int(str(dataset)[-52:-48]) == 4273
 
 
 @requires_data()

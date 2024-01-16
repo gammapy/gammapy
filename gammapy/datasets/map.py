@@ -2089,19 +2089,24 @@ class MapDatasetOnOff(MapDataset):
     def __str__(self):
         str_ = super().__str__()
 
+        if self.mask_safe:
+            mask = self.mask_safe.data.astype(bool)
+        else:
+            mask = slice(None)
+
         counts_off = np.nan
         if self.counts_off is not None:
-            counts_off = np.sum(self.counts_off.data)
+            counts_off = np.sum(self.counts_off.data[mask])
         str_ += "\t{:32}: {:.0f} \n".format("Total counts_off", counts_off)
 
         acceptance = np.nan
         if self.acceptance is not None:
-            acceptance = np.sum(self.acceptance.data)
+            acceptance = np.sum(self.acceptance.data[mask])
         str_ += "\t{:32}: {:.0f} \n".format("Acceptance", acceptance)
 
         acceptance_off = np.nan
         if self.acceptance_off is not None:
-            acceptance_off = np.sum(self.acceptance_off.data)
+            acceptance_off = np.sum(self.acceptance_off.data[mask])
         str_ += "\t{:32}: {:.0f} \n".format("Acceptance off", acceptance_off)
 
         return str_.expandtabs(tabsize=2)
