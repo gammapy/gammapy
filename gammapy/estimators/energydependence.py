@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Implementation of energy dependent estimator tool."""
 import numpy as np
-from astropy.table import Table
 from gammapy.datasets import Datasets
 from gammapy.modeling import Fit
 from gammapy.modeling.models import FoVBackgroundModel
@@ -12,39 +11,60 @@ from .core import Estimator
 __all__ = ["weighted_chi2_parameter", "EnergyDependenceEstimator"]
 
 
-def weighted_chi2_parameter(results_edep, parameter="sigma"):
-    """Calculate the weighted chi-squared value for the parameter of interest.
+def weighted_chi2_parameter(results_edep, parameters=["sigma"]):
+    r"""Calculate the weighted chi-squared value for the parameter of interest.
+
+    The chi-squared parameter is defined as follows:
+
+    .. math::
+        \chi^2 = \sum_i \frac{(x_i - \bar{\mu})^2}{\sigma_i ^ 2}
+
+    where the :math:`x_i` and :math:`\sigma_i` are the value and error of the
+    parameter of interest, and the weighted mean is
+
+    .. math::
+        \bar{\mu} = \sum_i \frac{(x_i/ \sigma_i ^ 2)}{(1/\sigma_i ^ 2)}
+
 
     Parameters
     ----------
-    result_edep : dict
+    result_edep : `dict`
         Dictionary of results for the energy-dependent estimator.
-    parameter : str, optional
+    parameters : list of str, optional
         The model parameter to calculate the chi-squared value for.
-        Default is "sigma".
+        Default is ["sigma"].
 
     Returns
     -------
-    chi2_result : dict
+    chi2_result : `dict`
         Dictionary with the chi-squared value for parameter of interest.
+
+    Notes
+    -----
+    This chi-square should be utilised with caution as it does not take into
+    account any correlation between the parameters.
+    To properly utilise the chi-squared parameter one must ensure each of the parameters
+    are independent, which cannot be guaranteed in this use case.
+
     """
 
-    table_edep = Table(results_edep)
+    chi2_value = []
+    df = []
+    for parameter in parameters:
+        values = results_edep[parameter][1:]
+        errors = results_edep[f"{parameter}_err"][1:]
+        weights = 1 / errors**2
+        avg = np.average(values, weights=weights)
+        chi2_value += [np.sum((values - avg) ** 2 / errors**2).to_value()]
+        df += [len(values) - 1]
 
-    values = table_edep[parameter][1:]
-    errors = table_edep[f"{parameter}_err"][1:]
-
-    weights = 1 / errors**2
-    avg = np.average(values, weights=weights)
-
-    chi2_value = np.sum((values - avg) ** 2 / errors**2)
-    df = len(values) - 1
-    sigma_value = ts_to_sigma(chi2_value, df)
+    significance = [ts_to_sigma(chi2_value[i], df[i]) for i in range(len(chi2_value))]
 
     chi2_result = {}
-    chi2_result[f"chi2 {parameter}"] = [chi2_value]
-    chi2_result["df"] = [df]
-    chi2_result["significance"] = [sigma_value]
+    chi2_result["parameter"] = parameters
+    chi2_result["chi2"] = chi2_value
+    chi2_result["df"] = df
+    chi2_result["significance"] = significance
 
     return chi2_result
 
@@ -74,7 +94,7 @@ class EnergyDependenceEstimator(Estimator):
         self.num_energy_bands = len(self.energy_edges) - 1
 
         if fit is None:
-            fit = Fit(optimize_opts={"print_level": 1})
+            fit = Fit()
 
         self.fit = fit
 
@@ -103,7 +123,7 @@ class EnergyDependenceEstimator(Estimator):
                 )
                 bkg_sliced_model = FoVBackgroundModel(dataset_name=sliced_src.name)
                 sliced_src.models = [
-                    model.copy(name=f"{sliced_src.name}"),
+                    model.copy(name=f"{sliced_src.name}-model"),
                     bkg_sliced_model,
                 ]
                 slices_src.append(sliced_src)
@@ -119,14 +139,16 @@ class EnergyDependenceEstimator(Estimator):
 
         Returns
         -------
-        result_bkg_src : dict
+        result_bkg_src : `dict`
             Dictionary with the results of the null hypothesis with no source, and alternative
             hypothesis with the source added in. Entries are:
-            * "Emin" : the minimum energy of the energy band
-            * "Emax" : the maximum energy of the energy band
-            * "delta_ts" : difference in ts
-            * "df" : the degrees of freedom between null and alternative hypothesis
-            * "significance" : significance of the result
+
+                * "Emin" : the minimum energy of the energy band
+                * "Emax" : the maximum energy of the energy band
+                * "delta_ts" : difference in ts
+                * "df" : the degrees of freedom between null and alternative hypothesis
+                * "significance" : significance of the result
+
         """
         slices_src = self._slice_datasets(datasets)
 
@@ -134,12 +156,15 @@ class EnergyDependenceEstimator(Estimator):
         test_results = []
         for sliced in slices_src:
             parameters = [
-                param for param in sliced.models[sliced.name].parameters.free_parameters
+                param
+                for param in sliced.models[
+                    f"{sliced.name}-model"
+                ].parameters.free_parameters
             ]
             null_values = [0] + [
                 param.value
                 for param in sliced.models[
-                    sliced.name
+                    f"{sliced.name}-model"
                 ].spatial_model.parameters.free_parameters
             ]
 
@@ -182,9 +207,10 @@ class EnergyDependenceEstimator(Estimator):
         -------
         results : `dict`
             Dictionary with results of the energy-dependence test. Entries are:
-            * "delta_ts" : difference in ts between fitting each energy band individually (sliced fit) and the joint fit
-            * "df" : the degrees of freedom between fitting each energy band individually (sliced fit) and the joint fit
-            * "result" : the results for the fitting each energy band individually (sliced fit) and the joint fit
+
+                * "delta_ts" : difference in ts between fitting each energy band individually (sliced fit) and the joint fit
+                * "df" : the degrees of freedom between fitting each energy band individually (sliced fit) and the joint fit
+                * "result" : the results for the fitting each energy band individually (sliced fit) and the joint fit
         """
         model = datasets.models[self.source]
 
@@ -203,12 +229,14 @@ class EnergyDependenceEstimator(Estimator):
         # Calculate the joint fit
         parameters = model.spatial_model.parameters.free_parameters.names
         slice0 = slices_src[0]
-        for slice_j in slices_src[1:]:
+        for i, slice_j in enumerate(slices_src[1:]):
             for param in parameters:
                 setattr(
-                    slice_j.models[0].spatial_model,
+                    slice_j.models[f"{self.source}_{i+1}-model"].spatial_model,
                     param,
-                    slice0.models[0].spatial_model.parameters[param],
+                    slice0.models[f"{self.source}_0-model"].spatial_model.parameters[
+                        param
+                    ],
                 )
         result_joint = self.fit.run(slices_src)
 
@@ -261,7 +289,7 @@ class EnergyDependenceEstimator(Estimator):
 
         Returns
         -------
-        results : dict
+        results : `dict`
             Dictionary with the various energy-dependence estimation values.
         """
 

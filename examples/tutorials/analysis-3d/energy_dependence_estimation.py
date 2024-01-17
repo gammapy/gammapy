@@ -13,8 +13,26 @@ the :doc:`/tutorials/data/hess` and :doc:`/tutorials/analysis-2d/ring_background
 Context
 -------
 
-A tool to investigate the potential of energy-dependent morphology from spatial maps. This tutorial consists
-of two main steps.
+This tutorial introduces a method to investigate the potential of energy-dependent morphology from spatial maps.
+It is possible for gamma-ray sources to exhibit energy-dependent morphology, in which the spatial morphology of
+the gamma rays varies across different energy bands. This is plausible for different source types, including pulsar
+wind nebulae (PWNe) and supernova remnants. HESS J1825−137 is a well-known example of a PWNe which shows a clear
+energy-dependent gamma-ray morphology (see `Aharonian et al., 2006 <https://ui.adsabs.harvard.edu/abs/2019A%26A...621A.116H/abstract>`__,
+`H.E.S.S. Collaboration et al., 2019 <https://ui.adsabs.harvard.edu/abs/2006A%26A...460..365A/abstract>`__ and
+`Principe et al., 2020 <https://ui.adsabs.harvard.edu/abs/2020A%26A...640A..76P/abstract>`__.)
+
+Many different techniques of measuring this energy-dependence have been utilised over the years.
+The method shown here is to perform a morphological fit of extension and position in various energy slices and
+compare this with a global morphology fit.
+
+
+**Objective: Perform an energy-dependent morphology study of a mock source.**
+
+
+Tutorial overview
+-----------------
+
+This tutorial consists of two main steps.
 
 Firstly, the user defines the initial `~gammapy.modeling.models.SkyModel` based on previous investigations
 and selects the energy bands of interest to test for energy dependence. The null hypothesis is defined as
@@ -34,22 +52,12 @@ Setup
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
-from regions import CircleSkyRegion
 import matplotlib.pyplot as plt
 from IPython.display import display
-from gammapy.data import DataStore
-from gammapy.datasets import MapDataset
-from gammapy.estimators.energydependence import (
-    EnergyDependenceEstimator,
-    weighted_chi2_parameter,
-)
-from gammapy.makers import (
-    DatasetsMaker,
-    FoVBackgroundMaker,
-    MapDatasetMaker,
-    SafeMaskMaker,
-)
-from gammapy.maps import Map, MapAxis, WcsGeom
+from gammapy.datasets import Datasets, MapDataset
+from gammapy.estimators import EnergyDependenceEstimator
+from gammapy.estimators.energydependence import weighted_chi2_parameter
+from gammapy.maps import Map
 from gammapy.modeling.models import (
     GaussianSpatialModel,
     PowerLawSpectralModel,
@@ -68,74 +76,23 @@ check_tutorials_setup()
 # Obtain the data to use
 # ----------------------
 #
-# Create the data store and obtain the observations from the `H.E.S.S. DL3
-# DR1 <https://www.mpi-hd.mpg.de/hfm/HESS/pages/dl3-dr1/>`__ for MSH 1552.
+# Utilise the pre-defined dataset within `$GAMMAPY_DATA`.
 #
 # P.S.: do not forget to set up your environment variable `$GAMMAPY_DATA`
 # to your local directory.
 
-data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
-obs_id = data_store.obs_table["OBS_ID"][data_store.obs_table["OBJECT"] == "MSH 15-5-02"]
-observations = data_store.get_observations(obs_id)
-
-######################################################################
-# Setting the exclusion mask
-# --------------------------
-#
-# First, we define the energy range to obtain the dataset within. The geometry is also
-# defined, based on the position of MSH 1552 (the source of interest here).
-
-energy_axis = MapAxis.from_energy_bounds(0.2, 100, nbin=15, unit="TeV")
-energy_axis_true = MapAxis.from_energy_bounds(
-    0.05, 110, nbin=30, unit="TeV", name="energy_true"
+stacked_dataset = MapDataset.read(
+    "$GAMMAPY_DATA/estimators/mock_data/dataset_energy_dependent.fits.gz"
 )
+datasets = Datasets([stacked_dataset])
 
-source_pos = SkyCoord(320.33, -1.19, unit="deg", frame="galactic")
-geom = WcsGeom.create(
-    skydir=(source_pos.galactic.l.deg, source_pos.galactic.b.deg),
-    frame="galactic",
-    axes=[energy_axis],
-    width=5,
-    binsz=0.02,
-)
-regions = CircleSkyRegion(center=source_pos, radius=0.7 * u.deg)
-exclusion_mask = geom.region_mask(regions, inside=False)
-exclusion_mask.sum_over_axes().plot()
-plt.show()
-
-######################################################################
-# Data reduction loop
-# -------------------
-#
-# For further details on how the data reduction is performed see the
-# :doc:`/tutorials/api/makers` tutorial.
-# The data reduction steps can be combined using the `~gammapy.makers.DatasetsMaker`
-# class which takes as an input the list of makers.
-# We stack the dataset in this step.
-#
-
-safe_mask_maker = SafeMaskMaker(
-    methods=["aeff-default", "offset-max"], offset_max=2.5 * u.deg
-)
-
-dataset_maker = MapDatasetMaker()
-
-fov_bkg_maker = FoVBackgroundMaker(method="fit", exclusion_mask=exclusion_mask)
-
-global_dataset = MapDataset.create(geom, energy_axis_true=energy_axis_true)
-makers = [dataset_maker, safe_mask_maker, fov_bkg_maker]  # the order matters
-
-datasets_maker = DatasetsMaker(
-    makers, stack_datasets=True, n_jobs=1, cutout_mode="partial"
-)
-
-datasets = datasets_maker.run(global_dataset, observations)
 
 ######################################################################
 # Define the energy edges of interest. These will be utilised to
 # investigate the potential of energy-dependent morphology in the dataset.
 
-energy_edges = [0.3, 1, 5, 10] * u.TeV
+energy_edges = [1, 3, 5, 20] * u.TeV
+
 
 ######################################################################
 # Define the spectral and spatial models of interest. We utilise
@@ -146,28 +103,26 @@ energy_edges = [0.3, 1, 5, 10] * u.TeV
 # is performed, then the best fit model is utilised here for the initial parameters
 # in each model.
 
+source_position = SkyCoord(5.58, 0.2, unit="deg", frame="galactic")
+
 spectral_model = PowerLawSpectralModel(
-    index=2.26, amplitude=2.58e-12 * u.Unit("cm-2 s-1 TeV-1"), reference=1.0 * u.TeV
+    index=2.5, amplitude=9.8e-12 * u.Unit("cm-2 s-1 TeV-1"), reference=1.0 * u.TeV
 )
 
 spatial_model = GaussianSpatialModel(
-    lon_0=source_pos.l,
-    lat_0=source_pos.b,
+    lon_0=source_position.l,
+    lat_0=source_position.b,
     frame="galactic",
-    sigma=0.11 * u.deg,
-    e=0.8346,
-    phi=-2.914 * u.deg,
+    sigma=0.2 * u.deg,
 )
 
 # Limit the search for the position on the spatial model
-spatial_model.lon_0.min = source_pos.galactic.l.deg - 0.8
-spatial_model.lon_0.max = source_pos.galactic.l.deg + 0.8
-spatial_model.lat_0.min = source_pos.galactic.b.deg - 0.8
-spatial_model.lat_0.max = source_pos.galactic.b.deg + 0.8
+spatial_model.lon_0.min = source_position.galactic.l.deg - 0.8
+spatial_model.lon_0.max = source_position.galactic.l.deg + 0.8
+spatial_model.lat_0.min = source_position.galactic.b.deg - 0.8
+spatial_model.lat_0.max = source_position.galactic.b.deg + 0.8
 
-model = SkyModel(
-    spatial_model=spatial_model, spectral_model=spectral_model, name="MSH1552"
-)
+model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model, name="src")
 
 ######################################################################
 # Run Estimator
@@ -192,7 +147,7 @@ model.spectral_model.index.frozen = True
 
 datasets.models = model
 
-estimator = EnergyDependenceEstimator(energy_edges=energy_edges, source="MSH1552")
+estimator = EnergyDependenceEstimator(energy_edges=energy_edges, source="src")
 
 ######################################################################
 # Show the results tables
@@ -234,40 +189,25 @@ display(results_table)
 # The chi-squared value for each parameter of interest
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# We can also utilise the `~gammapy.estimators.energydependence.weighted_chi2_parameter` function for each parameter.
+# We can also utilise the `~gammapy.estimators.energydependence.weighted_chi2_parameter`
+# function for each parameter.
 #
-# The weighted chi-squared significance for the ``sigma`` values.
+# The weighted chi-squared significance for the ``sigma``, ``lat_0`` and ``lon_0`` values.
 #
 
 display(
     Table(
         weighted_chi2_parameter(
-            results["energy_dependence"]["result"], parameter="sigma"
+            results["energy_dependence"]["result"],
+            parameters=["sigma", "lat_0", "lon_0"],
         )
     )
 )
 
 ######################################################################
-# The weighted chi-squared significance for the ``lat_0`` values.
-
-display(
-    Table(
-        weighted_chi2_parameter(
-            results["energy_dependence"]["result"], parameter="lat_0"
-        )
-    )
-)
-
-######################################################################
-# The weighted chi-squared significance for the ``lon_0`` values.
-
-display(
-    Table(
-        weighted_chi2_parameter(
-            results["energy_dependence"]["result"], parameter="lon_0"
-        )
-    )
-)
+# Note: The chi-squared parameter does not include potential correlation between the
+# parameters, so it should be used cautiously.
+#
 
 
 ######################################################################
@@ -275,7 +215,7 @@ display(
 # --------------------
 
 empty_map = Map.create(
-    skydir=spatial_model.position, frame=spatial_model.frame, width=0.7, binsz=0.02
+    skydir=spatial_model.position, frame=spatial_model.frame, width=1, binsz=0.02
 )
 
 colors = ["red", "blue", "green", "magenta"]
