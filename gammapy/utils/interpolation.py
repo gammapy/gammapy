@@ -243,10 +243,8 @@ def interpolate_profile(x, y, interp_scale="sqrt"):
 
     Returns
     -------
-    interp : `ScaledRegularGridInterpolator`
-        Interpolator
+    interp : `interp1d`
+        Interpolator.
     """
-    sign = np.sign(np.gradient(y))
-    return ScaledRegularGridInterpolator(
-        points=(x,), values=sign * y, values_scale=interp_scale
-    )
+    method_dict = {"sqrt": "quadratic", "lin": "linear"}
+    return scipy.interpolate.interp1d(x, y, kind=method_dict[interp_scale])

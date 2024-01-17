@@ -520,7 +520,7 @@ def test_flux_points_recompute_ul(fpe_pwl):
     fp1 = fp.recompute_ul(n_sigma_ul=4)
     assert_allclose(
         fp1.flux_ul.data,
-        [[[2.93166296e-12]], [[1.05421128e-12]], [[1.22660055e-13]]],
+        [[[2.92877891e-12]], [[1.04993236e-12]], [[1.22089744e-13]]],
         rtol=1e-3,
     )
     assert fp1.meta["n_sigma_ul"] == 4
