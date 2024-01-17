@@ -945,6 +945,7 @@ def test_observations_events_sampler(tmpdir, observations):
 def test_observations_events_sampler_time(
     tmpdir, observations, energy_dependent_temporal_sky_model
 ):
+    models = Models(energy_dependent_temporal_sky_model)
     sampler_kwargs = dict(random_state=0)
     dataset_kwargs = dict(
         spatial_bin_size_min=0.1 * u.deg,
@@ -958,7 +959,7 @@ def test_observations_events_sampler_time(
         outdir=tmpdir,
         overwrite=True,
     )
-    sampler.run(observations, models=energy_dependent_temporal_sky_model)
+    sampler.run(observations, models=models)
 
 
 @requires_data()
@@ -976,4 +977,4 @@ def test_observations_events_sampler_parallel(tmpdir, observations, models_list)
         outdir=tmpdir,
         overwrite=True,
     )
-    sampler.run(observations, models=models)
+    sampler.run(observations, models=models_list)
