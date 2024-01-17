@@ -3,6 +3,7 @@ import pytest
 from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import SkyCoord
+from astropy.io import fits
 from astropy.table import Table
 from regions import CircleSkyRegion, RectangleSkyRegion
 from gammapy.data import GTI, EventList
@@ -82,6 +83,12 @@ class TestEventListBase:
             dummy_events.table.meta["HDUCLAS1"] = "events"
             dummy_events.write("test.fits", overwrite=True)
 
+    def test_write_checksum(self):
+        self.events.write("test.fits", overwrite=True, checksum=True)
+        hdu = fits.open("test.fits")["EVENTS"]
+        assert "CHECKSUM" in hdu.header
+        assert "DATASUM" in hdu.header
+
 
 @requires_data()
 class TestEventListHESS:
@@ -132,7 +139,6 @@ class TestEventListHESS:
         altaz = self.events.altaz
         assert_allclose(altaz[0].az.deg, 193.337965, atol=1e-3)
         assert_allclose(altaz[0].alt.deg, 53.258024, atol=1e-3)
-        # TODO: add asserts for frame properties
 
     def test_median_position(self):
         coord = self.events.galactic_median

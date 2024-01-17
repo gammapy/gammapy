@@ -1,8 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import html
 import logging
 import sys
+import numpy as np
 import astropy.units as u
-from astropy.coordinates import Angle, EarthLocation
+from astropy.coordinates import AltAz, Angle, EarthLocation, SkyCoord
 from astropy.io import fits
 from astropy.units import Quantity
 from .scripts import make_path
@@ -41,8 +43,14 @@ class HDULocation:
         self.cache = cache
         self.format = format
 
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
+
     def info(self, file=None):
-        """Print some summary info to stdout."""
+        """Print some summary information to stdout."""
         if not file:
             file = sys.stdout
         print(f"HDU_CLASS = {self.hdu_class}", file=file)
@@ -72,10 +80,7 @@ class HDULocation:
         return hdu_list[self.hdu_name]
 
     def load(self):
-        """Load HDU as appropriate class.
-
-        TODO: this should probably go via an extensible registry.
-        """
+        """Load HDU as appropriate class."""
         from gammapy.irf import IRF_REGISTRY
 
         hdu_class = self.hdu_class
@@ -145,13 +150,10 @@ class LazyFitsData(object):
             instance.__dict__[self.name] = value
 
 
-# TODO: add unit test
 def earth_location_from_dict(meta):
-    """Create `~astropy.coordinates.EarthLocation` from FITS header dict."""
+    """Create `~astropy.coordinates.EarthLocation` from FITS header dictionary."""
     lon = Angle(meta["GEOLON"], "deg")
     lat = Angle(meta["GEOLAT"], "deg")
-    # TODO: should we support both here?
-    # Check latest spec if ALTITUDE is used somewhere.
     if "GEOALT" in meta:
         height = Quantity(meta["GEOALT"], "meter")
     elif "ALTITUDE" in meta:
@@ -163,9 +165,44 @@ def earth_location_from_dict(meta):
 
 
 def earth_location_to_dict(location):
-    """Create `~astropy.coordinates.EarthLocation` from FITS header dict."""
+    """Convert `~astropy.coordinates.EarthLocation` to FITS header dictionary."""
     return {
         "GEOLON": location.lon.deg,
         "GEOLAT": location.lat.deg,
         "ALTITUDE": location.height.to_value(u.m),
     }
+
+
+def skycoord_from_dict(header, frame="icrs", ext="PNT"):
+    """Create `~astropy.coordinates.SkyCoord` from a dictionary of FITS keywords.
+
+    Parameters
+    ----------
+    header : dict
+        The input dictionary.
+    frame : {"icrs", "galactic", "altaz"}
+        The frame to use. Default is 'icrs'.
+    ext: str, optional
+        The keyword extension to apply to the keywords names. Default is 'PNT'.
+
+    Returns
+    -------
+    skycoord : `~astropy.coordinates.skycoord`
+        The input SkyCoord.
+    """
+
+    ext = "_" + ext if ext != "" else ""
+
+    if frame == "altaz":
+        alt = header.get("ALT" + ext, np.nan)
+        az = header.get("AZ" + ext, np.nan)
+        return AltAz(alt=alt * u.deg, az=az * u.deg)
+    elif frame == "icrs":
+        coords = header.get("RA" + ext, np.nan), header.get("DEC" + ext, np.nan)
+    elif frame == "galactic":
+        coords = header.get("GLON" + ext, np.nan), header.get("GLAT" + ext, np.nan)
+    else:
+        raise ValueError(
+            f"Unsupported frame {frame}. Select in 'icrs', 'galactic', 'altaz'."
+        )
+    return SkyCoord(coords[0], coords[1], unit="deg", frame=frame)

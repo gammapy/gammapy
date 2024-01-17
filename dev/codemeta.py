@@ -1,3 +1,4 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utility script to work with the codemeta.json file."""
 import json
 import logging

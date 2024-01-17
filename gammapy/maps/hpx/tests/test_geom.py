@@ -773,10 +773,10 @@ def test_hpx_geom_to_wcs_tiles():
     assert_allclose(tiles[0].width, [[21.987113], [21.987113]] * u.deg)
 
 
-def test_geom_repr():
+def test_geom_str():
     geom = HpxGeom(nside=8)
-    assert geom.__class__.__name__ in repr(geom)
-    assert "nside" in repr(geom)
+    assert geom.__class__.__name__ in str(geom)
+    assert "nside" in str(geom)
 
 
 hpx_equality_test_geoms = [

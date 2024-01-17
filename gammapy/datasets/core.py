@@ -2,6 +2,7 @@
 import abc
 import collections.abc
 import copy
+import html
 import logging
 import numpy as np
 from astropy import units as u
@@ -35,6 +36,12 @@ class Dataset(abc.ABC):
         "diff/sqrt(model)": "(data - model) / sqrt(model)",
     }
 
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
+
     @property
     @abc.abstractmethod
     def tag(self):
@@ -61,13 +68,15 @@ class Dataset(abc.ABC):
             return self.mask_safe
 
     def stat_sum(self):
-        """Total statistic given the current model parameters."""
+        """Total statistic given the current model parameters and priors."""
         stat = self.stat_array()
 
         if self.mask is not None:
             stat = stat[self.mask.data]
-
-        return np.sum(stat, dtype=np.float64)
+        prior_stat_sum = 0.0
+        if self.models is not None:
+            prior_stat_sum = self.models.parameters.prior_stat_sum()
+        return np.sum(stat, dtype=np.float64) + prior_stat_sum
 
     @abc.abstractmethod
     def stat_array(self):
@@ -78,8 +87,8 @@ class Dataset(abc.ABC):
 
         Parameters
         ----------
-        name : str
-            Name of the copied dataset
+        name : str, optional
+            Name of the copied dataset. Default is None.
 
         Returns
         -------
@@ -115,7 +124,7 @@ class Datasets(collections.abc.MutableSequence):
     Parameters
     ----------
     datasets : `Dataset` or list of `Dataset`
-        Datasets
+        Datasets.
     """
 
     def __init__(self, datasets=None):
@@ -230,7 +239,7 @@ class Datasets(collections.abc.MutableSequence):
         Parameters
         ----------
         time_min, time_max : `~astropy.time.Time`
-            Time interval
+            Time interval.
         atol : `~astropy.units.Quantity`
             Tolerance value for time comparison with different scale. Default 1e-6 sec.
 
@@ -262,12 +271,12 @@ class Datasets(collections.abc.MutableSequence):
         Parameters
         ----------
         energy_min, energy_max : `~astropy.units.Quantity`
-            Energy bounds to compute the flux point for
+            Energy bounds to compute the flux point for.
 
         Returns
         -------
         datasets : Datasets
-            Datasets
+            Datasets.
 
         """
         datasets = []
@@ -298,12 +307,12 @@ class Datasets(collections.abc.MutableSequence):
         Parameters
         ----------
         region : `~regions.SkyRegion`
-            Region definition
+            Region definition.
 
         Returns
         -------
         datasets : `Datasets`
-            List of `~gammapy.datasets.SpectrumDataset`
+            List of `~gammapy.datasets.SpectrumDataset`.
         """
         datasets = Datasets()
 
@@ -326,7 +335,7 @@ class Datasets(collections.abc.MutableSequence):
         Returns
         -------
         energy_min, energy_max : `~astropy.units.Quantity`
-            Energy range
+            Energy range.
         """
 
         energy_mins, energy_maxs = [], []
@@ -359,6 +368,12 @@ class Datasets(collections.abc.MutableSequence):
 
         return str_.expandtabs(tabsize=2)
 
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
+
     def copy(self):
         """A deep copy."""
         return copy.deepcopy(self)
@@ -369,19 +384,19 @@ class Datasets(collections.abc.MutableSequence):
 
         Parameters
         ----------
-        filename : str or `Path`
-            File path or name of datasets yaml file
-        filename_models : str or `Path`
-            File path or name of models yaml file
+        filename : str or `~pathlib.Path`
+            File path or name of datasets yaml file.
+        filename_models : str or `~pathlib.Path`, optional
+            File path or name of models yaml file. Default is None.
         lazy : bool
-            Whether to lazy load data into memory
+            Whether to lazy load data into memory. Default is True.
         cache : bool
-            Whether to cache the data after loading
+            Whether to cache the data after loading. Default is True.
 
         Returns
         -------
         dataset : `gammapy.datasets.Datasets`
-            Datasets
+            Datasets.
         """
         from . import DATASET_REGISTRY
 
@@ -407,20 +422,28 @@ class Datasets(collections.abc.MutableSequence):
         return datasets
 
     def write(
-        self, filename, filename_models=None, overwrite=False, write_covariance=True
+        self,
+        filename,
+        filename_models=None,
+        overwrite=False,
+        write_covariance=True,
+        checksum=False,
     ):
         """Serialize datasets to YAML and FITS files.
 
         Parameters
         ----------
-        filename : str or `Path`
-            File path or name of datasets yaml file
-        filename_models : str or `Path`
-            File path or name of models yaml file
-        overwrite : bool
-            overwrite datasets FITS files
+        filename : str or `~pathlib.Path`
+            File path or name of datasets yaml file.
+        filename_models : str or `~pathlib.Path`, optional
+            File path or name of models yaml file. Default is None.
+        overwrite : bool, optional
+            Overwrite existing file. Default is False.
         write_covariance : bool
-            save covariance or not
+            save covariance or not. Default is False.
+        checksum : bool
+            When True adds both DATASUM and CHECKSUM cards to the headers written to the FITS files.
+            Default is False.
         """
         path = make_path(filename)
 
@@ -429,8 +452,13 @@ class Datasets(collections.abc.MutableSequence):
         for dataset in self._datasets:
             d = dataset.to_dict()
             filename = d["filename"]
-            dataset.write(path.parent / filename, overwrite=overwrite)
+            dataset.write(
+                path.parent / filename, overwrite=overwrite, checksum=checksum
+            )
             data["datasets"].append(d)
+
+        if path.exists() and not overwrite:
+            raise IOError(f"File exists already: {path}")
 
         write_yaml(data, path, sort_keys=False)
 
@@ -449,15 +477,15 @@ class Datasets(collections.abc.MutableSequence):
 
         Parameters
         ----------
-        name : str
-            Name of the stacked dataset
-        nan_to_num: bool
-            Non-finite values are replaced by zero if True (default)
+        name : str, optional
+            Name of the stacked dataset. Default is None.
+        nan_to_num : bool
+            Non-finite values are replaced by zero if True. Default is True.
 
         Returns
         -------
         dataset : `~gammapy.datasets.Dataset`
-            the stacked dataset
+            The stacked dataset.
         """
         if not self.is_all_same_type:
             raise ValueError(
@@ -477,7 +505,7 @@ class Datasets(collections.abc.MutableSequence):
         Parameters
         ----------
         cumulative : bool
-            Cumulate info across all observations
+            Cumulate info across all observations. Default is False.
 
         Returns
         -------
@@ -521,7 +549,7 @@ class Datasets(collections.abc.MutableSequence):
 
     @property
     def meta_table(self):
-        """Meta table"""
+        """Meta table."""
         tables = [d.meta_table for d in self]
 
         if np.all([table is None for table in tables]):

@@ -7,7 +7,6 @@ from astropy.time import Time
 from regions import CircleSkyRegion
 import matplotlib.pyplot as plt
 from gammapy.data import EventList
-from gammapy.irf import EDispKernel
 from gammapy.maps import (
     LabelMapAxis,
     Map,
@@ -16,7 +15,6 @@ from gammapy.maps import (
     RegionNDMap,
     TimeMapAxis,
 )
-from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.utils.testing import mpl_plot_check, requires_data
 
 
@@ -266,18 +264,6 @@ def test_region_nd_map_fill_events_point_sky_region(point_region_map):
     region_map = Map.from_geom(point_region_map.geom)
     region_map.fill_events(events, weights=weights)
     assert_allclose(region_map.data.sum(), 0)
-
-
-def test_apply_edisp(point_region_map):
-    e_true = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3, name="energy_true")
-    e_reco = point_region_map.geom.axes[0]
-
-    edisp = EDispKernel.from_diagonal_response(
-        energy_axis_true=e_true, energy_axis=e_reco
-    )
-
-    with pytest.raises(GammapyDeprecationWarning):
-        point_region_map.apply_edisp(edisp)
 
 
 def test_region_nd_map_resample_axis():

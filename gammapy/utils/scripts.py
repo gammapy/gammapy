@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Utils to create scripts and command-line tools"""
+"""Utilities to create scripts and command-line tools."""
 import codecs
 import os.path
 from base64 import urlsafe_b64encode
@@ -25,7 +25,7 @@ def get_images_paths(folder=PATH_DOCS):
     Parameters
     ----------
     folder : str
-        Folder where to search
+        Folder where to search.
     """
     for i in Path(folder).rglob("images/*"):
         if not any(s in str(i) for s in SKIP):
@@ -38,14 +38,14 @@ def read_yaml(filename, logger=None):
     Parameters
     ----------
     filename : `~pathlib.Path`
-        Filename
+        Filename.
     logger : `~logging.Logger`
-        Logger
+        Logger.
 
     Returns
     -------
     data : dict
-        YAML file content as a dict
+        YAML file content as a dictionary.
     """
     path = make_path(filename)
     if logger is not None:
@@ -61,13 +61,13 @@ def write_yaml(dictionary, filename, logger=None, sort_keys=True):
     Parameters
     ----------
     dictionary : dict
-        Python dictionary
+        Python dictionary.
     filename : `~pathlib.Path`
-        Filename
-    logger : `~logging.Logger`
-        Logger
-    sort_keys : bool
-        Whether to sort keys.
+        Filename.
+    logger : `~logging.Logger`, optional
+        Logger. Default is None.
+    sort_keys : bool, optional
+        Whether to sort keys. Default is True.
     """
     text = yaml.safe_dump(dictionary, default_flow_style=False, sort_keys=sort_keys)
 
@@ -79,9 +79,11 @@ def write_yaml(dictionary, filename, logger=None, sort_keys=True):
 
 
 def make_name(name=None):
-    """Make a dataset name"""
+    """Make a dataset name."""
     if name is None:
         name = urlsafe_b64encode(codecs.decode(uuid4().hex, "hex")).decode()[:8]
+        while name[0] == "_":
+            name = urlsafe_b64encode(codecs.decode(uuid4().hex, "hex")).decode()[:8]
 
     if not isinstance(name, str):
         raise ValueError(
@@ -98,7 +100,7 @@ def make_path(path):
     Parameters
     ----------
     path : str, `pathlib.Path`
-        path to expand
+        Path to expand.
     """
     # TODO: raise error or warning if environment variables that don't resolve are used
     # e.g. "spam/$DAMN/ham" where `$DAMN` is not defined
@@ -112,21 +114,21 @@ def make_path(path):
 def recursive_merge_dicts(a, b):
     """Recursively merge two dictionaries.
 
-    Entries in b override entries in a. The built-in update function cannot be
+    Entries in 'b' override entries in 'a'. The built-in update function cannot be
     used for hierarchical dicts, see:
     http://stackoverflow.com/questions/3232943/update-value-of-a-nested-dictionary-of-varying-depth/3233356#3233356
 
     Parameters
     ----------
     a : dict
-        dictionary to be merged
+        Dictionary to be merged.
     b : dict
-        dictionary to be merged
+        Dictionary to be merged.
 
     Returns
     -------
     c : dict
-        merged dict
+        Merged dictionary.
 
     Examples
     --------

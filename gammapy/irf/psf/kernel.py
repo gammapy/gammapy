@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import html
 import numpy as np
 import astropy.units as u
 import matplotlib.pyplot as plt
@@ -18,7 +19,7 @@ class PSFKernel:
     Parameters
     ----------
     psf_kernel_map : `~gammapy.maps.Map`
-        PSF kernel stored in a Map
+        PSF kernel stored in a Map.
 
     Examples
     --------
@@ -58,8 +59,14 @@ class PSFKernel:
         if normalize:
             self.normalize()
 
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
+
     def normalize(self):
-        """Force normalisation of the kernel"""
+        """Force normalisation of the kernel."""
         data = self.psf_kernel_map.data
         if self.psf_kernel_map.geom.is_image:
             axis = (0, 1)
@@ -72,12 +79,12 @@ class PSFKernel:
 
     @property
     def data(self):
-        """Access the PSFKernel numpy array"""
+        """Access the PSFKernel numpy array."""
         return self._psf_kernel_map.data
 
     @property
     def psf_kernel_map(self):
-        """The map object holding the kernel (`~gammapy.maps.Map`)"""
+        """The map object holding the kernel as a `~gammapy.maps.Map`."""
         return self._psf_kernel_map
 
     @classmethod
@@ -88,23 +95,23 @@ class PSFKernel:
 
     @classmethod
     def from_spatial_model(cls, model, geom, max_radius=None, factor=4):
-        """Create PSF kernel from spatial model
+        """Create PSF kernel from spatial model.
 
         Parameters
         ----------
         geom : `~gammapy.maps.WcsGeom`
-            Map geometry
+            Map geometry.
         model : `~gammapy.modeling.models.SpatiaModel`
             Gaussian width.
-        max_radius : `~astropy.coordinates.Angle`
-            Desired kernel map size.
-        factor : int
-            Oversample factor to compute the PSF
+        max_radius : `~astropy.coordinates.Angle`, optional
+            Desired kernel map size. Default is None.
+        factor : int, optional
+            Oversample factor to compute the PSF. Default is 4.
 
         Returns
         -------
         kernel : `~gammapy.irf.PSFKernel`
-            the kernel Map with reduced geometry according to the max_radius
+            The kernel Map with reduced geometry according to the max_radius.
         """
         if max_radius is None:
             max_radius = model.evaluation_radius
@@ -122,25 +129,25 @@ class PSFKernel:
 
         This is used for testing and examples.
         The map geometry parameters (pixel size, energy bins) are taken from ``geom``.
-        The Gaussian width ``sigma`` is a scalar,
+        The Gaussian width ``sigma`` is a scalar.
 
         TODO : support array input if it should vary along the energy axis.
 
         Parameters
         ----------
         geom : `~gammapy.maps.WcsGeom`
-            Map geometry
+            Map geometry.
         sigma : `~astropy.coordinates.Angle`
             Gaussian width.
-        max_radius : `~astropy.coordinates.Angle`
-            Desired kernel map size.
-        factor : int
-            Oversample factor to compute the PSF
+        max_radius : `~astropy.coordinates.Angle`, optional
+            Desired kernel map size. Default is None.
+        factor : int, optional
+            Oversample factor to compute the PSF. Default is 4.
 
         Returns
         -------
         kernel : `~gammapy.irf.PSFKernel`
-            the kernel Map with reduced geometry according to the max_radius
+            The kernel Map with reduced geometry according to the max_radius.
         """
         from gammapy.modeling.models import GaussianSpatialModel
 
@@ -159,21 +166,21 @@ class PSFKernel:
 
         Parameters
         ----------
-        spectrum : `~gammapy.modeling.models.SpectralModel`
+        spectrum : `~gammapy.modeling.models.SpectralModel`, optional
             Spectral model to compute the weights.
             Default is power-law with spectral index of 2.
-        exposure : `~astropy.units.Quantity` or `~numpy.ndarray`
+        exposure : `~astropy.units.Quantity` or `~numpy.ndarray`, optional
             1D array containing exposure in each true energy bin.
             It must have the same size as the PSFKernel energy axis.
             Default is uniform exposure over energy.
-        keepdims : bool
+        keepdims : bool, optional
             If true, the resulting PSFKernel will keep an energy axis with one bin.
             Default is True.
 
         Returns
         -------
         weighted_kernel : `~gammapy.irf.PSFKernel`
-            the weighted kernel summed over energy
+            The weighted kernel summed over energy.
         """
         map = self.psf_kernel_map
 
@@ -205,7 +212,7 @@ class PSFKernel:
         return self.__class__(spectrum_weighted_kernel.sum_over_axes(keepdims=keepdims))
 
     def slice_by_idx(self, slices):
-        """Slice by idx"""
+        """Slice by index."""
         kernel = self.psf_kernel_map.slice_by_idx(slices=slices)
         return self.__class__(psf_kernel_map=kernel)
 
@@ -214,18 +221,20 @@ class PSFKernel:
 
         Parameters
         ----------
+        ax : `~matplotlib.axes.Axes`, optional
+            Matplotlib axes. Default is None.
         energy : `~astropy.units.Quantity`, optional
             If None, the PSF kernel is summed over the energy axis. Otherwise, the kernel
             corresponding to the energy bin including the given energy is shown.
-        ax : `~matplotlib.axes.Axes`, optional
-            Axis
+        add_cbar : bool, optional
+            Add a colorbar. Default is False.
         kwargs: dict
             Keyword arguments passed to `~matplotlib.axes.Axes.imshow`.
 
         Returns
         -------
         ax : `~matplotlib.axes.Axes`
-            Axis
+            Matplotlib axes.
         """
         ax = plt.gca() if ax is None else ax
 
@@ -244,8 +253,8 @@ class PSFKernel:
 
         Parameters
         ----------
-        figsize : tuple
-            Size of the figure.
+        figsize : tuple, optional
+            Size of the figure. Default is (15, 5).
         """
         fig, axes = plt.subplots(nrows=1, ncols=2, figsize=figsize)
 

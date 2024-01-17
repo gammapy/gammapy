@@ -8,7 +8,8 @@ from astropy.io import fits
 from astropy.table import Table
 from astropy.time import Time
 from gammapy.data import GTI, DataStore, Observation
-from gammapy.data.pointing import FixedPointingInfo, PointingMode
+from gammapy.data.metadata import ObservationMetaData
+from gammapy.data.pointing import FixedPointingInfo
 from gammapy.datasets import MapDataset, MapDatasetEventSampler
 from gammapy.datasets.tests.test_map import get_map_dataset
 from gammapy.irf import load_irf_dict_from_file
@@ -30,7 +31,7 @@ LOCATION = EarthLocation(lon="-70d18m58.84s", lat="-24d41m0.34s", height="2000m"
 
 
 @pytest.fixture()
-def models():
+def signal_model():
     spatial_model = GaussianSpatialModel(
         lon_0="0 deg", lat_0="0 deg", sigma="0.2 deg", frame="galactic"
     )
@@ -50,15 +51,18 @@ def models():
     table.meta = dict(MJDREFI=t_ref.mjd, MJDREFF=0, TIMEUNIT="s", TIMESYS="utc")
     temporal_model = LightCurveTemplateTemporalModel.from_table(table)
 
-    model = SkyModel(
+    return SkyModel(
         spatial_model=spatial_model,
         spectral_model=spectral_model,
         temporal_model=temporal_model,
         name="test-source",
     )
 
+
+@pytest.fixture()
+def models(signal_model):
     bkg_model = FoVBackgroundModel(dataset_name="test")
-    return [model, bkg_model]
+    return [signal_model, bkg_model]
 
 
 @pytest.fixture()
@@ -237,18 +241,39 @@ def test_sample_coord_time_energy(dataset, energy_dependent_temporal_sky_model):
     energy_dependent_temporal_sky_model.spatial_model = PointSpatialModel(
         lon_0="0 deg", lat_0="0 deg", frame="galactic"
     )
+    energy_dependent_temporal_sky_model.spectral_model.const.value = 2
+
     dataset.models = energy_dependent_temporal_sky_model
     evaluator = dataset.evaluators["test-source"]
 
+    expected = np.array([854.26361, 7.840697, 266.404988, -28.936178])
     events = sampler._sample_coord_time_energy(dataset, evaluator.model)
 
-    assert len(events) == 1254
+    assert len(events) == 2514
 
     assert_allclose(
         [events[0][0], events[0][1], events[0][2], events[0][3]],
-        [854.108591, 6.22904, 266.404988, -28.936178],
+        expected,
         rtol=1e-6,
     )
+
+
+@requires_data()
+def test_fail_sample_coord_time_energy(
+    dataset, models, energy_dependent_temporal_sky_model
+):
+    new_dataset = dataset.copy("my-dataset")
+    new_dataset.gti = GTI.create(
+        start=0 * u.s, stop=2.5 * u.s, reference_time=Time("2000-01-01").tt
+    )
+
+    new_dataset.models = energy_dependent_temporal_sky_model
+    new_dataset.models[0].temporal_model.map.data *= 1e20
+    evaluator = new_dataset.evaluators["test-source"]
+
+    sampler = MapDatasetEventSampler(random_state=0, oversample_energy_factor=1)
+    with pytest.raises(ValueError):
+        sampler._sample_coord_time_energy(new_dataset, evaluator.model)
 
 
 @requires_data()
@@ -337,7 +362,6 @@ def test_mde_sample_weak_src(dataset, models):
     )
     livetime = 10.0 * u.hr
     pointing = FixedPointingInfo(
-        mode=PointingMode.POINTING,
         fixed_icrs=SkyCoord(0, 0, unit="deg", frame="galactic").icrs,
     )
     obs = Observation.create(
@@ -430,7 +454,6 @@ def test_event_det_coords(dataset, models):
     )
     livetime = 1.0 * u.hr
     pointing = FixedPointingInfo(
-        mode=PointingMode.POINTING,
         fixed_icrs=SkyCoord(0, 0, unit="deg", frame="galactic").icrs,
     )
     obs = Observation.create(
@@ -466,7 +489,6 @@ def test_mde_run(dataset, models):
     )
     livetime = 1.0 * u.hr
     pointing = FixedPointingInfo(
-        mode=PointingMode.POINTING,
         fixed_icrs=SkyCoord(0, 0, unit="deg", frame="galactic").icrs,
     )
     obs = Observation.create(
@@ -567,7 +589,6 @@ def test_irf_alpha_config(dataset, models):
     )
     livetime = 1.0 * u.hr
     pointing = FixedPointingInfo(
-        mode=PointingMode.POINTING,
         fixed_icrs=SkyCoord(0, 0, unit="deg", frame="galactic").icrs,
     )
     obs = Observation.create(
@@ -591,7 +612,6 @@ def test_mde_run_switchoff(dataset, models):
     )
     livetime = 1.0 * u.hr
     pointing = FixedPointingInfo(
-        mode=PointingMode.POINTING,
         fixed_icrs=SkyCoord(0, 0, unit="deg", frame="galactic").icrs,
     )
     obs = Observation.create(
@@ -631,7 +651,6 @@ def test_events_datastore(tmp_path, dataset, models):
     )
     livetime = 10.0 * u.hr
     pointing = FixedPointingInfo(
-        mode=PointingMode.POINTING,
         fixed_icrs=SkyCoord(0, 0, unit="deg", frame="galactic").icrs,
     )
     obs = Observation.create(
@@ -662,7 +681,7 @@ def test_MC_ID(model_alternative):
     )
     livetime = 0.1 * u.hr
     skydir = SkyCoord(0, 0, unit="deg", frame="galactic")
-    pointing = FixedPointingInfo(mode=PointingMode.POINTING, fixed_icrs=skydir.icrs)
+    pointing = FixedPointingInfo(fixed_icrs=skydir.icrs)
     obs = Observation.create(
         obs_id=1001,
         pointing=pointing,
@@ -719,7 +738,7 @@ def test_MC_ID_NMCID(model_alternative):
     )
     livetime = 0.1 * u.hr
     skydir = SkyCoord(0, 0, unit="deg", frame="galactic")
-    pointing = FixedPointingInfo(mode=PointingMode.POINTING, fixed_icrs=skydir.icrs)
+    pointing = FixedPointingInfo(fixed_icrs=skydir.icrs)
     obs = Observation.create(
         obs_id=1001,
         pointing=pointing,
@@ -768,3 +787,101 @@ def test_MC_ID_NMCID(model_alternative):
     assert meta["MID00002"] == 2
     assert meta["MID00003"] == 3
     assert meta["NMCIDS"] == 4
+
+
+@requires_data()
+def test_MC_ID_flag(model_alternative):
+    irfs = load_irf_dict_from_file(
+        "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
+    )
+    livetime = 0.1 * u.hr
+    skydir = SkyCoord(0, 0, unit="deg", frame="galactic")
+    pointing = FixedPointingInfo(fixed_icrs=skydir.icrs)
+    obs = Observation.create(
+        obs_id=1001,
+        pointing=pointing,
+        livetime=livetime,
+        irfs=irfs,
+        location=LOCATION,
+    )
+
+    energy_axis = MapAxis.from_energy_bounds(
+        "1.0 TeV", "10 TeV", nbin=10, per_decade=True
+    )
+    energy_axis_true = MapAxis.from_energy_bounds(
+        "0.5 TeV", "20 TeV", nbin=20, per_decade=True, name="energy_true"
+    )
+    migra_axis = MapAxis.from_bounds(0.5, 2, nbin=150, node_type="edges", name="migra")
+
+    geom = WcsGeom.create(
+        skydir=skydir,
+        width=(2, 2),
+        binsz=0.06,
+        frame="icrs",
+        axes=[energy_axis],
+    )
+
+    empty = MapDataset.create(
+        geom,
+        energy_axis_true=energy_axis_true,
+        migra_axis=migra_axis,
+        name="test",
+    )
+    maker = MapDatasetMaker(selection=["exposure", "background", "psf", "edisp"])
+    dataset = maker.run(empty, obs)
+
+    model_alternative[0].spectral_model.parameters["amplitude"].value = 1e-16
+    dataset.models = model_alternative
+    sampler = MapDatasetEventSampler(random_state=0, keep_mc_id=False)
+    events = sampler.run(dataset=dataset, observation=obs)
+
+    meta = events.table.meta
+    assert len(events.table) == 47
+    assert "MC_ID" not in events.table.colnames
+    assert "MID00000" not in meta.keys()
+    assert "MMN00000" not in meta.keys()
+    assert "MID00001" not in meta.keys()
+    assert "MID00002" not in meta.keys()
+    assert "MID00003" not in meta.keys()
+    assert "NMCIDS" not in meta.keys()
+
+
+@requires_data()
+def test_simulated_observation_maker(signal_model, tmp_path):
+    from gammapy.datasets.simulate import ObservationEventSampler
+
+    irfs = load_irf_dict_from_file(
+        "$GAMMAPY_DATA/cta-caldb/Prod5-South-20deg-AverageAz-14MSTs37SSTs.180000s-v0.1.fits.gz"
+    )
+    pointing = FixedPointingInfo(
+        fixed_icrs=SkyCoord(83.63311446, 22.01448714, unit="deg", frame="icrs"),
+    )
+    time_start = Time("2021-11-20T03:00:00")
+    time_stop = Time("2021-11-20T03:30:00")
+
+    obs = Observation(
+        obs_id=1,
+        **irfs,
+        location=LOCATION,
+        pointing=pointing,
+        gti=GTI.create(time_start, time_stop),
+        meta=ObservationMetaData(
+            time_start=time_start,
+            time_stop=time_stop,
+            deadtime_fraction=0.01,
+        ),
+    )
+
+    maker = ObservationEventSampler(
+        spatial_width=5 * u.deg,
+        energy_axis=MapAxis.from_energy_bounds(
+            10 * u.GeV, 100 * u.TeV, nbin=5, per_decade=True
+        ),
+        energy_axis_true=MapAxis.from_energy_bounds(
+            10 * u.GeV, 100 * u.TeV, nbin=5, per_decade=True, name="energy_true"
+        ),
+    )
+
+    sim_obs = maker.run(obs, [signal_model])
+    assert sim_obs.events is not None
+    assert len(sim_obs.events.table) > 0

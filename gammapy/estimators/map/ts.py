@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Functions to compute TS images."""
+"""Functions to compute test statistic images."""
 import warnings
 from itertools import repeat
 import numpy as np
@@ -48,7 +48,7 @@ def _extract_array(array, shape, position):
 
 
 class TSMapEstimator(Estimator, parallel.ParallelMixin):
-    r"""Compute TS map from a MapDataset using different optimization methods.
+    r"""Compute test statistic map from a MapDataset using different optimization methods.
 
     The map is computed fitting by a single parameter norm fit. The fit is
     simplified by finding roots of the derivative of the fit statistics using
@@ -71,13 +71,13 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         Sample down the input maps to speed up the computation. Only integer
         values that are a multiple of 2 are allowed. Note that the kernel is
         not sampled down, but must be provided with the downsampled bin size.
-    threshold : float (None)
-        If the TS value corresponding to the initial flux estimate is not above
-        this threshold, the optimizing step is omitted to save computing time.
-    rtol : float (0.01)
+    threshold : float, optional
+        If the test statistic value corresponding to the initial flux estimate is not above
+        this threshold, the optimizing step is omitted to save computing time. Default is None.
+    rtol : float
         Relative precision of the flux estimate. Used as a stopping criterion for
-        the norm fit.
-    selection_optional : list of str
+        the norm fit. Default is 0.01.
+    selection_optional : list of str, optional
         Which maps to compute besides TS, sqrt(TS), flux and symmetric error on flux.
         Available options are:
 
@@ -86,7 +86,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
             * "ul": estimate upper limits on flux.
 
         Default is None so the optional steps are not executed.
-    energy_edges : list of `~astropy.units.Quantity`
+    energy_edges : list of `~astropy.units.Quantity`, optional
         Edges of the target maps energy bins. The resulting bin edges won't be exactly equal to the input ones,
         but rather the closest values to the energy axis edges of the parent dataset.
         Default is None: apply the estimator in each energy bin of the parent dataset.
@@ -200,7 +200,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
     @property
     def selection_all(self):
-        """Which quantities are computed"""
+        """Which quantities are computed."""
         selection = [
             "ts",
             "norm",
@@ -234,8 +234,8 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
         Returns
         -------
-        kernel : `Map`
-            Kernel map
+        kernel : `~gammapy.maps.Map`
+            Kernel map.
 
         """
         geom = dataset.exposure.geom
@@ -307,7 +307,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
     @staticmethod
     def estimate_mask_default(dataset):
-        """Compute default mask where to estimate TS values.
+        """Compute default mask where to estimate test statistic values.
 
         Parameters
         ----------
@@ -334,7 +334,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         return Map.from_geom(data=mask, geom=geom)
 
     def estimate_pad_width(self, dataset, kernel=None):
-        """Estimate pad width of the dataset
+        """Estimate pad width of the dataset.
 
         Parameters
         ----------
@@ -346,7 +346,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         Returns
         -------
         pad_width : tuple
-            Padding width
+            Padding width.
         """
         if kernel is None:
             kernel = self.estimate_kernel(dataset=dataset)
@@ -363,17 +363,17 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         return tuple(pad_width)
 
     def estimate_fit_input_maps(self, dataset):
-        """Estimate fit input maps
+        """Estimate fit input maps.
 
         Parameters
         ----------
         dataset : `MapDataset`
-            Map dataset
+            Map dataset.
 
         Returns
         -------
         maps : dict of `Map`
-            Maps dict
+            Maps dictionary.
         """
         # First create 2D map arrays
         counts = dataset.counts
@@ -408,12 +408,12 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         }
 
     def estimate_flux_map(self, dataset):
-        """Estimate flux and ts maps for single dataset
+        """Estimate flux and test statistic maps for single dataset.
 
         Parameters
         ----------
-        dataset : `MapDataset`
-            Map dataset
+        dataset : `~gammapy.datasets.MapDataset`
+            Map dataset.
         """
         maps = self.estimate_fit_input_maps(dataset=dataset)
 
@@ -452,10 +452,14 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
     def run(self, dataset):
         """
-        Run TS map estimation.
+        Run test statistic map estimation.
 
         Requires a MapDataset with counts, exposure and background_model
         properly set to run.
+
+        Notes
+        -----
+        The progress bar can be displayed for this function.
 
         Parameters
         ----------
@@ -467,11 +471,11 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         maps : dict
              Dictionary containing result maps. Keys are:
 
-                * ts : delta TS map
-                * sqrt_ts : sqrt(delta TS), or significance map
+                * ts : delta(TS) map
+                * sqrt_ts : sqrt(delta(TS)), or significance map
                 * flux : flux map
                 * flux_err : symmetric error map
-                * flux_ul : upper limit map
+                * flux_ul : upper limit map.
 
         """
         if dataset.stat_type != "cash":
@@ -525,16 +529,16 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
 # TODO: merge with MapDataset?
 class SimpleMapDataset:
-    """Simple map dataset
+    """Simple map dataset.
 
     Parameters
     ----------
     counts : `~numpy.ndarray`
-        Counts array
+        Counts array.
     background : `~numpy.ndarray`
-        Background array
+        Background array.
     model : `~numpy.ndarray`
-        Kernel array
+        Kernel array.
 
     """
 
@@ -552,21 +556,21 @@ class SimpleMapDataset:
         )
 
     def npred(self, norm):
-        """Predicted number of counts"""
+        """Predicted number of counts."""
         return self.background + norm * self.model
 
     def stat_sum(self, norm):
-        """Stat sum"""
+        """Statistics sum."""
         return cash_sum_cython(self.counts.ravel(), self.npred(norm).ravel())
 
     def stat_derivative(self, norm):
-        """Stat derivative"""
+        """Statistics derivative."""
         return f_cash_root_cython(
             norm, self.counts.ravel(), self.background.ravel(), self.model.ravel()
         )
 
     def stat_2nd_derivative(self, norm):
-        """Stat 2nd derivative"""
+        """Statistics 2nd derivative."""
         term_top = self.model**2 * self.counts
         term_bottom = (self.background + norm * self.model) ** 2
         mask = term_bottom == 0
@@ -589,7 +593,7 @@ class SimpleMapDataset:
 
 # TODO: merge with `FluxEstimator`?
 class BrentqFluxEstimator(Estimator):
-    """Single parameter flux estimator"""
+    """Single parameter flux estimator."""
 
     _available_selection_optional = ["errn-errp", "ul"]
     tag = "BrentqFluxEstimator"
@@ -611,17 +615,17 @@ class BrentqFluxEstimator(Estimator):
         self.ts_threshold = ts_threshold
 
     def estimate_best_fit(self, dataset):
-        """Estimate best fit norm parameter
+        """Estimate best fit norm parameter.
 
         Parameters
         ----------
         dataset : `SimpleMapDataset`
-            Simple map dataset
+            Simple map dataset.
 
         Returns
         -------
         result : dict
-            Result dict including 'norm' and 'norm_err'
+            Result dictionary including 'norm' and 'norm_err'.
         """
         # Compute norm bounds and assert counts > 0
         norm_min, norm_max, norm_min_total = dataset.norm_bounds
@@ -700,12 +704,12 @@ class BrentqFluxEstimator(Estimator):
         Parameters
         ----------
         dataset : `SimpleMapDataset`
-            Simple map dataset
+            Simple map dataset.
 
         Returns
         -------
         result : dict
-            Result dict including 'norm_ul'
+            Result dictionary including 'norm_ul'.
         """
         flux_ul = result["norm"] + self._confidence(
             dataset=dataset, n_sigma=self.n_sigma_ul, result=result, positive=True
@@ -719,12 +723,12 @@ class BrentqFluxEstimator(Estimator):
         Parameters
         ----------
         dataset : `SimpleMapDataset`
-            Simple map dataset
+            Simple map dataset.
 
         Returns
         -------
         result : dict
-            Result dict including 'norm_errp' and 'norm_errn'
+            Result dictionary including 'norm_errp' and 'norm_errn'.
         """
         flux_errn = self._confidence(
             dataset=dataset, result=result, n_sigma=self.n_sigma, positive=False
@@ -735,17 +739,17 @@ class BrentqFluxEstimator(Estimator):
         return {"norm_errn": flux_errn, "norm_errp": flux_errp}
 
     def estimate_default(self, dataset):
-        """Estimate default norm
+        """Estimate default norm.
 
         Parameters
         ----------
         dataset : `SimpleMapDataset`
-            Simple map dataset
+            Simple map dataset.
 
         Returns
         -------
         result : dict
-            Result dict including 'norm', 'norm_err' and "niter"
+            Result dictionary including 'norm', 'norm_err' and "niter".
         """
         norm = dataset.norm_guess
 
@@ -766,17 +770,17 @@ class BrentqFluxEstimator(Estimator):
         }
 
     def run(self, dataset):
-        """Run flux estimator
+        """Run flux estimator.
 
         Parameters
         ----------
         dataset : `SimpleMapDataset`
-            Simple map dataset
+            Simple map dataset.
 
         Returns
         -------
         result : dict
-            Result dict
+            Result dictionary.
         """
         if self.ts_threshold is not None:
             result = self.estimate_default(dataset)
@@ -799,7 +803,7 @@ class BrentqFluxEstimator(Estimator):
 
 
 def _ts_value(position, counts, exposure, background, kernel, norm, flux_estimator):
-    """Compute TS value at a given pixel position.
+    """Compute test statistic value at a given pixel position.
 
     Uses approach described in Stewart (2009).
 
@@ -808,13 +812,13 @@ def _ts_value(position, counts, exposure, background, kernel, norm, flux_estimat
     position : tuple (i, j)
         Pixel position.
     counts : `~numpy.ndarray`
-        Counts image
+        Counts image.
     background : `~numpy.ndarray`
-        Background image
+        Background image.
     exposure : `~numpy.ndarray`
-        Exposure image
+        Exposure image.
     kernel : `astropy.convolution.Kernel2D`
-        Source model kernel
+        Source model kernel.
     norm : `~numpy.ndarray`
         Norm image. The flux value at the given pixel position is used as
         starting value for the minimization.
@@ -822,7 +826,7 @@ def _ts_value(position, counts, exposure, background, kernel, norm, flux_estimat
     Returns
     -------
     TS : float
-        TS value at the given pixel position.
+        Test statistic value at the given pixel position.
     """
     dataset = SimpleMapDataset.from_arrays(
         counts=counts,

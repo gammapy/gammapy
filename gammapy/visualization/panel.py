@@ -81,7 +81,11 @@ class MapPanelPlotter:
         map : `~gammapy.maps.WcsNDMap`
             Map to plot.
         panel : int
-            Which panel to plot on (counted from top).
+            Which panel to plot on (counted from top). Default is 1.
+        panel_fov : int, optional
+            Field of view of the panel. Default is None.
+        kwargs : dict
+            Keyword arguments to be passed to `~map.plot`.
         """
         if panel_fov is None:
             panel_fov = panel

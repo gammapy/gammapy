@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Command line tool to download datasets and notebooks"""
+"""Command line tool to download datasets and notebooks."""
 import logging
 import tarfile
 import zipfile
@@ -21,7 +21,7 @@ if "dev" in __version__:
 
 
 class DownloadIndex:
-    """Download index"""
+    """Download index."""
 
     _notebooks_key = "notebooks"
     _datasets_key = "datasets"
@@ -33,7 +33,7 @@ class DownloadIndex:
 
     @lazyproperty
     def index(self):
-        """Index for a given release"""
+        """Index for a given release."""
         import requests
 
         response = requests.get(GAMMAPY_BASE_URL + self._index_json)
@@ -49,7 +49,7 @@ class DownloadIndex:
 
     @property
     def notebooks_url(self):
-        """Notebooks URL"""
+        """Notebooks URL."""
         return self.index[self._notebooks_key]
 
     @property
@@ -59,11 +59,16 @@ class DownloadIndex:
 
     @property
     def datasets_url(self):
-        """Datasets URL"""
+        """Datasets URL."""
         return self.index[self._datasets_key]
 
 
 def progress_download(source, destination):
+    """
+    Notes
+    -----
+    The progress bar can be displayed for this function.
+    """
     import requests
     from tqdm import tqdm
 
@@ -137,7 +142,7 @@ def show_info_datasets(outfolder, release):
     show_default=True,
 )
 def cli_download_notebooks(release, out):
-    """Download notebooks"""
+    """Download notebooks."""
     index = DownloadIndex(release=release)
 
     path = Path(out) / index.release
@@ -177,7 +182,7 @@ def cli_download_notebooks(release, out):
     show_default=True,
 )
 def cli_download_datasets(release, out):
-    """Download datasets"""
+    """Download datasets."""
     index = DownloadIndex(release=release)
 
     localfolder = Path(out) / index.release

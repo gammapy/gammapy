@@ -10,9 +10,9 @@ def apply_edisp(input_map, edisp):
     ----------
     input_map : `~gammapy.maps.Map`
         The map to be convolved with the energy dispersion.
-        It must have an axis named "energy_true"
+        It must have an axis named "energy_true".
     edisp : `gammapy.irf.EDispKernel`
-        Energy dispersion matrix
+        Energy dispersion matrix.
 
     Returns
     -------

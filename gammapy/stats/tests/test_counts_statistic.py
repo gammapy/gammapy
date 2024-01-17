@@ -29,12 +29,13 @@ def test_cash_basic(n_on, mu_bkg, result):
 
 
 values = [
-    (1, 2, [0.69829, 1.35767667]),
-    (5, 1, [1.915916, 2.581106]),
-    (10, 5, [2.838105, 3.504033]),
-    (100, 23, [9.669482, 10.336074]),
-    (1, 20, [0.69829, 1.357677]),
-    (5 * ref_array, 1 * ref_array, [1.915916, 2.581106]),
+    (0, 2, [0, 0.5, 0, 2]),
+    (1, 2, [0.69829, 1.35767667, 0.947531, 3.505241]),
+    (5, 1, [1.915916, 2.581106, 3.250479, 5.893762]),
+    (10, 5, [2.838105, 3.504033, 5.067606, 7.722498]),
+    (100, 23, [9.669482, 10.336074, 18.689488, 21.354971]),
+    (1, 20, [0.69829, 1.357677, 0.947531, 3.505241]),
+    (5 * ref_array, 1 * ref_array, [1.915916, 2.581106, 3.250479, 5.893762]),
 ]
 
 
@@ -46,6 +47,11 @@ def test_cash_errors(n_on, mu_bkg, result):
 
     assert_allclose(errn, result[0], atol=1e-5)
     assert_allclose(errp, result[1], atol=1e-5)
+
+    errn = stat.compute_errn(2)
+    errp = stat.compute_errp(2)
+    assert_allclose(errn, result[2], atol=1e-5)
+    assert_allclose(errp, result[3], atol=1e-5)
 
 
 values = [
