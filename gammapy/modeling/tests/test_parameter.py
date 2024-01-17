@@ -2,7 +2,9 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
+from astropy.table import Table
 from gammapy.modeling import Parameter, Parameters, PriorParameter, PriorParameters
+from gammapy.modeling.models import GaussianPrior
 
 
 def test_parameter_init():
@@ -101,7 +103,12 @@ def test_parameter_autoscale(method, value, factor, scale):
 
 @pytest.fixture()
 def pars():
-    return Parameters([Parameter("spam", 42, "deg"), Parameter("ham", 99, "TeV")])
+    return Parameters(
+        [
+            Parameter("spam", 42, "deg"),
+            Parameter("ham", 99, "TeV", prior=GaussianPrior()),
+        ]
+    )
 
 
 def test_parameters_basics(pars):
@@ -155,7 +162,7 @@ def test_parameters_getitem(pars):
         pars[Parameter("bam!", 99)]
 
 
-def test_parameters_to_table(pars):
+def test_parameters_to_table(pars, tmp_path):
     pars["ham"].error = 1e-10
     pars["spam"]._link_label_io = "test"
 
@@ -164,6 +171,49 @@ def test_parameters_to_table(pars):
     assert len(table.columns) == 11
     assert table["link"][0] == "test"
     assert table["link"][1] == ""
+
+    assert table["prior"][0] == ""
+    assert table["prior"][1] == "GaussianPrior"
+    assert table["type"][1] == ""
+
+    table.write(tmp_path / "test_parameters.fits")
+    Table.read(tmp_path / "test_parameters.fits")
+
+
+def test_parameters_create_table():
+    table = Parameters._create_default_table()
+
+    assert len(table) == 0
+    assert len(table.columns) == 11
+
+    assert table.colnames == [
+        "type",
+        "name",
+        "value",
+        "unit",
+        "error",
+        "min",
+        "max",
+        "frozen",
+        "is_norm",
+        "link",
+        "prior",
+    ]
+    assert table.dtype == np.dtype(
+        [
+            ("type", "<U1"),
+            ("name", "<U1"),
+            ("value", "<f8"),
+            ("unit", "<U1"),
+            ("error", "<f8"),
+            ("min", "<f8"),
+            ("max", "<f8"),
+            ("frozen", "?"),
+            ("is_norm", "?"),
+            ("link", "<U1"),
+            ("prior", "<U1"),
+        ]
+    )
 
 
 def test_parameters_set_parameter_factors(pars):

@@ -443,6 +443,8 @@ class Parameter:
         """Update parameters from a dictionary."""
         keys = ["value", "unit", "min", "max", "frozen", "prior"]
         for k in keys:
+            if k == "prior" and data[k] == "":
+                data[k] = None
             setattr(self, k, data[k])
 
     def to_dict(self):
@@ -662,22 +664,32 @@ class Parameters(collections.abc.Sequence):
 
         return data
 
+    @staticmethod
+    def _create_default_table():
+        name_to_type = {
+            "type": "str",
+            "name": "str",
+            "value": "float",
+            "unit": "str",
+            "error": "float",
+            "min": "float",
+            "max": "float",
+            "frozen": "bool",
+            "is_norm": "bool",
+            "link": "str",
+            "prior": "str",
+        }
+        return Table(names=name_to_type.keys(), dtype=name_to_type.values())
+
     def to_table(self):
         """Convert parameter attributes to `~astropy.table.Table`."""
-        rows = []
+        table = self._create_default_table()
+
         for p in self._parameters:
-            d = p.to_dict()
-            if "link" not in d:
-                d["link"] = ""
-            for key in ["scale_method", "interp"]:
-                if key in d:
-                    del d[key]
+            d = {k: v for k, v in p.to_dict().items() if k in table.colnames}
             if "prior" in d:
                 d["prior"] = d["prior"]["type"]
-            else:
-                d["prior"] = None
-            rows.append({**dict(type=p.type), **d})
-        table = Table(rows)
+            table.add_row(d)
 
         table["value"].format = ".4e"
         for name in ["error", "min", "max"]:
