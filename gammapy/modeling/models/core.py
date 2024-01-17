@@ -214,7 +214,6 @@ class ModelBase:
 
     @classmethod
     def from_dict(cls, data, **kwargs):
-
         key0 = next(iter(data))
 
         if key0 in ["spatial", "temporal", "spectral"]:
@@ -512,7 +511,7 @@ class DatasetModels(collections.abc.Sequence):
         text = yaml.dump(
             data, sort_keys=False, indent=4, width=80, default_flow_style=False
         )
-        creation = CreatorMetaData.from_default()
+        creation = CreatorMetaData()
         return text + creation.to_yaml()
 
     def update_link_label(self):

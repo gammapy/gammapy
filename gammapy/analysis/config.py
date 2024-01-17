@@ -3,17 +3,16 @@ import html
 import json
 import logging
 from collections import defaultdict
+from collections.abc import Mapping
 from enum import Enum
 from pathlib import Path
-from typing import List
-from astropy.coordinates import Angle
-from astropy.time import Time
-from astropy.units import Quantity
+from typing import List, Optional
+from astropy import units as u
 import yaml
-from pydantic import BaseModel
-from pydantic.utils import deep_update
+from pydantic import BaseModel, ConfigDict
 from gammapy.makers import MapDatasetMaker
 from gammapy.utils.scripts import make_path, read_yaml
+from gammapy.utils.types import AngleType, EnergyType, PathType, TimeType
 
 __all__ = ["AnalysisConfig"]
 
@@ -23,37 +22,17 @@ DOCS_FILE = CONFIG_PATH / "docs.yaml"
 log = logging.getLogger(__name__)
 
 
-class AngleType(Angle):
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
+def deep_update(d, u):
+    """Recursively update a nested dictionary.
 
-    @classmethod
-    def validate(cls, v):
-        return Angle(v)
-
-
-class EnergyType(Quantity):
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, v):
-        v = Quantity(v)
-        if v.unit.physical_type != "energy":
-            raise ValueError(f"Invalid unit for energy: {v.unit!r}")
-        return v
-
-
-class TimeType(Time):
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, v):
-        return Time(v)
+    Taken from: https://stackoverflow.com/a/3233356/19802442
+    """
+    for k, v in u.items():
+        if isinstance(v, Mapping):
+            d[k] = deep_update(d.get(k, {}), v)
+        else:
+            d[k] = v
+    return d
 
 
 class ReductionTypeEnum(str, Enum):
@@ -99,15 +78,14 @@ class MapSelectionEnum(str, Enum):
 
 
 class GammapyBaseConfig(BaseModel):
-    class Config:
-        validate_all = True
-        validate_assignment = True
-        extra = "forbid"
-        json_encoders = {
-            Angle: lambda v: f"{v.value} {v.unit}",
-            Quantity: lambda v: f"{v.value} {v.unit}",
-            Time: lambda v: f"{v.value}",
-        }
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        validate_assignment=True,
+        extra="forbid",
+        validate_default=True,
+        use_enum_values=True,
+        json_encoders={u.Quantity: lambda v: f"{v.value} {v.unit}"},
+    )
 
     def _repr_html_(self):
         try:
@@ -117,32 +95,32 @@ class GammapyBaseConfig(BaseModel):
 
 
 class SkyCoordConfig(GammapyBaseConfig):
-    frame: FrameEnum = None
-    lon: AngleType = None
-    lat: AngleType = None
+    frame: Optional[FrameEnum] = None
+    lon: Optional[AngleType] = None
+    lat: Optional[AngleType] = None
 
 
 class EnergyAxisConfig(GammapyBaseConfig):
-    min: EnergyType = None
-    max: EnergyType = None
-    nbins: int = None
+    min: Optional[EnergyType] = None
+    max: Optional[EnergyType] = None
+    nbins: Optional[int] = None
 
 
 class SpatialCircleConfig(GammapyBaseConfig):
-    frame: FrameEnum = None
-    lon: AngleType = None
-    lat: AngleType = None
-    radius: AngleType = None
+    frame: Optional[FrameEnum] = None
+    lon: Optional[AngleType] = None
+    lat: Optional[AngleType] = None
+    radius: Optional[AngleType] = None
 
 
 class EnergyRangeConfig(GammapyBaseConfig):
-    min: EnergyType = None
-    max: EnergyType = None
+    min: Optional[EnergyType] = None
+    max: Optional[EnergyType] = None
 
 
 class TimeRangeConfig(GammapyBaseConfig):
-    start: TimeType = None
-    stop: TimeType = None
+    start: Optional[TimeType] = None
+    stop: Optional[TimeType] = None
 
 
 class FluxPointsConfig(GammapyBaseConfig):
@@ -169,8 +147,8 @@ class ExcessMapConfig(GammapyBaseConfig):
 
 
 class BackgroundConfig(GammapyBaseConfig):
-    method: BackgroundMethodEnum = None
-    exclusion: Path = None
+    method: Optional[BackgroundMethodEnum] = None
+    exclusion: Optional[PathType] = None
     parameters: dict = {}
 
 
@@ -220,9 +198,9 @@ class DatasetsConfig(GammapyBaseConfig):
 
 
 class ObservationsConfig(GammapyBaseConfig):
-    datastore: Path = Path("$GAMMAPY_DATA/hess-dl3-dr1/")
+    datastore: PathType = Path("$GAMMAPY_DATA/hess-dl3-dr1/")
     obs_ids: List[int] = []
-    obs_file: Path = None
+    obs_file: Optional[PathType] = None
     obs_cone: SpatialCircleConfig = SpatialCircleConfig()
     obs_time: TimeRangeConfig = TimeRangeConfig()
     required_irf: List[RequiredHDUEnum] = ["aeff", "edisp", "psf", "bkg"]
@@ -230,18 +208,18 @@ class ObservationsConfig(GammapyBaseConfig):
 
 class LogConfig(GammapyBaseConfig):
     level: str = "info"
-    filename: Path = None
-    filemode: str = None
-    format: str = None
-    datefmt: str = None
+    filename: Optional[PathType] = None
+    filemode: Optional[str] = None
+    format: Optional[str] = None
+    datefmt: Optional[str] = None
 
 
 class GeneralConfig(GammapyBaseConfig):
     log: LogConfig = LogConfig()
     outdir: str = "."
     n_jobs: int = 1
-    datasets_file: Path = None
-    models_file: Path = None
+    datasets_file: Optional[PathType] = None
+    models_file: Optional[PathType] = None
 
 
 class AnalysisConfig(GammapyBaseConfig):
@@ -278,18 +256,17 @@ class AnalysisConfig(GammapyBaseConfig):
     def write(self, path, overwrite=False):
         """Write to YAML file."""
         path = make_path(path)
+
         if path.exists() and not overwrite:
             raise IOError(f"File exists already: {path}")
+
         path.write_text(self.to_yaml())
 
     def to_yaml(self):
         """Convert to YAML string."""
-        # Here using `dict()` instead of `json()` would be more natural.
-        # We should change this once pydantic adds support for custom encoders
-        # to `dict()`. See https://github.com/samuelcolvin/pydantic/issues/1043
-        config = json.loads(self.json())
+        data = json.loads(self.model_dump_json())
         return yaml.dump(
-            config, sort_keys=False, indent=4, width=80, default_flow_style=None
+            data, sort_keys=False, indent=4, width=80, default_flow_style=None
         )
 
     def set_logging(self):
@@ -298,8 +275,8 @@ class AnalysisConfig(GammapyBaseConfig):
         Calls ``logging.basicConfig``, i.e. adjusts global logging state.
         """
         self.general.log.level = self.general.log.level.upper()
-        logging.basicConfig(**self.general.log.dict())
-        log.info("Setting logging config: {!r}".format(self.general.log.dict()))
+        logging.basicConfig(**self.general.log.model_dump())
+        log.info("Setting logging config: {!r}".format(self.general.log.model_dump()))
 
     def update(self, config=None):
         """Update config with provided settings.
@@ -317,7 +294,8 @@ class AnalysisConfig(GammapyBaseConfig):
             raise TypeError(f"Invalid type: {config}")
 
         config_new = deep_update(
-            self.dict(exclude_defaults=True), other.dict(exclude_defaults=True)
+            self.model_dump(exclude_defaults=True),
+            other.model_dump(exclude_defaults=True),
         )
         return AnalysisConfig(**config_new)
 

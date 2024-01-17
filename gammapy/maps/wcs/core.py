@@ -3,8 +3,9 @@ import json
 import numpy as np
 import astropy.units as u
 from astropy.io import fits
+from gammapy.utils.types import JsonQuantityEncoder
 from ..core import Map
-from ..io import JsonQuantityEncoder, find_bands_hdu, find_hdu
+from ..io import find_bands_hdu, find_hdu
 from .geom import WcsGeom
 from .io import identify_wcs_format
 

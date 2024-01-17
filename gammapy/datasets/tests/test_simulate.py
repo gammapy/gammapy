@@ -868,7 +868,7 @@ def test_simulated_observation_maker(signal_model, tmp_path):
         meta=ObservationMetaData(
             time_start=time_start,
             time_stop=time_stop,
-            dead_time_fraction=0.01,
+            deadtime_fraction=0.01,
         ),
     )
 

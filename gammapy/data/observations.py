@@ -263,7 +263,7 @@ class Observation:
             time_start=gti.time_start[0],
             time_stop=gti.time_stop[-1],
             reference_time=reference_time,
-            creation=CreatorMetaData.from_default(),
+            creation=CreatorMetaData(),
             target=TargetMetaData(),
         )
 

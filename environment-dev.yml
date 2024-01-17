@@ -22,7 +22,7 @@ dependencies:
   - click
   - cython
   - numpy>1.20
-  - pydantic<2.0
+  - pydantic>=2.5
   - pyyaml
   - regions>=0.5
   - matplotlib>=3.4
@@ -79,6 +79,6 @@ dependencies:
   - memray
   - pip:
       - pytest-sphinx
-      - ray
+      - ray[default]>=2.9
       - PyGithub
       - pypandoc

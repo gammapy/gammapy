@@ -53,7 +53,6 @@ def test_observation(data_store):
 
 @requires_data()
 def test_observation_peek(data_store):
-
     obs = Observation.read(
         "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz"
     )
@@ -257,7 +256,7 @@ def test_observation_cta_1dc():
 
     assert_skycoord_allclose(obs.get_pointing_icrs(obs.tmid), pointing.fixed_icrs)
     assert_allclose(obs.observation_live_time_duration, 0.9 * ontime)
-    assert_allclose(obs.target_radec.ra.deg, np.nan)
+    assert obs.target_radec is None
 
     assert isinstance(obs.meta, ObservationMetaData)
     assert obs.meta.deadtime_fraction == 0.1
@@ -452,7 +451,6 @@ def test_observation_tmid():
 
 @requires_data()
 def test_observations_clustering(data_store):
-
     selection = dict(
         type="sky_circle",
         frame="icrs",

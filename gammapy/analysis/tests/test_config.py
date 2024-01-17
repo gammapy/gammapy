@@ -5,7 +5,7 @@ from astropy.coordinates import Angle
 from astropy.time import Time
 from astropy.units import Quantity
 from pydantic import ValidationError
-from gammapy.analysis.config import AnalysisConfig, FrameEnum, GeneralConfig
+from gammapy.analysis.config import AnalysisConfig, GeneralConfig
 from gammapy.utils.testing import assert_allclose
 
 CONFIG_PATH = Path(__file__).resolve().parent / ".." / "config"
@@ -47,7 +47,7 @@ def test_config_not_default_types():
         "radius": "1 deg",
     }
     config.fit.fit_range = {"min": "0.1 TeV", "max": "10 TeV"}
-    assert isinstance(config.observations.obs_cone.frame, FrameEnum)
+    assert config.observations.obs_cone.frame == "galactic"
     assert isinstance(config.observations.obs_cone.lon, Angle)
     assert isinstance(config.observations.obs_cone.lat, Angle)
     assert isinstance(config.observations.obs_cone.radius, Angle)
