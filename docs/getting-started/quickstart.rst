@@ -1,7 +1,7 @@
 .. _quickstart-setup:
 
-Quickstart Setup
-----------------
+Recommended Setup
+-----------------
 
 The best way to get started and learn Gammapy are the :ref:`tutorials`.
 You can download the Gammapy tutorial notebooks and the example
