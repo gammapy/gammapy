@@ -525,7 +525,7 @@ class Datasets(collections.abc.MutableSequence):
                 stacked.stack(dataset)
                 row = stacked.info_dict()
             else:
-                row = dataset.info_dict()
+                row = dataset.to_masked(name=dataset.name).info_dict()
 
             rows.append(row)
 
