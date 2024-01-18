@@ -8,6 +8,14 @@ def test_obscore_structure():
     obscore_default_tab = obscore_structure()
     assert len(obscore_default_tab.columns) == 29
     assert len(obscore_default_tab["dataproduct_type"]) == 0
+    assert obscore_default_tab.colnames[0] == "dataproduct_type"
+    assert obscore_default_tab.columns[0].dtype == "<U10"
+    assert obscore_default_tab.columns[0].meta["UCD"] == "meta.id"
+    assert obscore_default_tab.colnames[28] == "instrument_name"
+    assert (
+        obscore_default_tab.columns[28].meta["Utype"]
+        == "Provenance.ObsConfig.Instrument.name"
+    )
 
 
 @requires_data()
