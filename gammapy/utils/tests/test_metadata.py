@@ -3,6 +3,7 @@ from typing import ClassVar, Literal, Optional
 import pytest
 from numpy.testing import assert_allclose
 from astropy.coordinates import AltAz, SkyCoord
+from astropy.io import fits
 from pydantic import ValidationError
 from gammapy.utils.metadata import (
     METADATA_FITS_KEYS,
@@ -92,6 +93,9 @@ def test_obs_info():
 
     obs_info.obs_id = 23523
     assert obs_info.obs_id == 23523
+
+    with pytest.raises(ValidationError):
+        obs_info.obs_id = "ab"
 
     obs_info.instrument = "CTA-North"
     assert obs_info.instrument == "CTA-North"
