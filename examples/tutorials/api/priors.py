@@ -42,6 +42,7 @@ The tutorial addresses two examples:
 
 1. Including prior information about the sources index
 2. Encouraging positive amplitude values
+3. How to add a custom prior class
 
 In the first example, the Gaussian prior is used. It is shown how to set
 a prior on a model parameter and how it modifies the fit statistics. A
