@@ -69,7 +69,6 @@ class MapEvaluator:
         self.mask = mask
         self.gti = gti
         self.use_cache = use_cache
-        self._init_position = None
         self.contributes = True
         self.psf_containment = None
 
@@ -93,9 +92,8 @@ class MapEvaluator:
         self._cached_position = (0, 0)
         self._computation_cache = None
         self._spatial_oversampling_factor = 1
-        if self.exposure is not None:
-            if not self.geom.is_region or self.geom.region is not None:
-                self.update_spatial_oversampling_factor(self.geom)
+        if exposure is not None:
+            self.update_spatial_oversampling_factor(self.geom)
 
     def _repr_html_(self):
         try:
@@ -111,7 +109,10 @@ class MapEvaluator:
     @property
     def geom(self):
         """True energy map geometry (`~gammapy.maps.Geom`)."""
-        return self.exposure.geom
+        if self.exposure is not None:
+            return self.exposure.geom
+        else:
+            return None
 
     @property
     def _geom_reco(self):
@@ -159,7 +160,12 @@ class MapEvaluator:
         is_circle_region = isinstance(geom.region, CircleSkyRegion)
         return is_point_model & is_circle_region
 
-    @property
+    @lazyproperty
+    def position(self):
+        """Latest evaluation position."""
+        return self.model.position
+
+    @lazyproperty
     def cutout_width(self):
         """Cutout width for the model component."""
         return self.psf_width + 2 * (self.model.evaluation_radius + CUTOUT_MARGIN)
@@ -183,11 +189,14 @@ class MapEvaluator:
         # TODO: simplify and clean up
         log.debug("Updating model evaluator")
 
+        del self.position
+        del self.cutout_width
+
         # lookup edisp
         if edisp:
             energy_axis = geom.axes["energy"]
             self.edisp = edisp.get_edisp_kernel(
-                position=self.model.position, energy_axis=energy_axis
+                position=self.position, energy_axis=energy_axis
             )
             del self._edisp_diagonal
 
@@ -208,25 +217,20 @@ class MapEvaluator:
                     geom_psf = geom_psf.to_wcs_geom()
 
                 self.psf = psf.get_psf_kernel(
-                    position=self.model.position,
+                    position=self.position,
                     geom=geom_psf,
                     containment=PSF_CONTAINMENT,
                     max_radius=PSF_MAX_RADIUS,
                 )
 
+        self.exposure = exposure
         if self.evaluation_mode == "local":
             self.contributes = self.model.contributes(mask=mask, margin=self.psf_width)
-
-            if self.contributes:
-                self.exposure = exposure.cutout(
-                    position=self.model.position, width=self.cutout_width, odd_npix=True
+            if self.contributes and not self.geom.is_region:
+                self.exposure = exposure._cutout_view(
+                    position=self.position, width=self.cutout_width, odd_npix=True
                 )
-        else:
-            self.exposure = exposure
-
-        if self.contributes:
-            if not self.geom.is_region or self.geom.region is not None:
-                self.update_spatial_oversampling_factor(self.geom)
+        self.update_spatial_oversampling_factor(self.geom)
 
         self.reset_cache_properties()
         self._computation_cache = None
@@ -241,15 +245,17 @@ class MapEvaluator:
 
     def update_spatial_oversampling_factor(self, geom):
         """Update spatial oversampling_factor for model evaluation."""
-        res_scale = self.model.evaluation_bin_size_min
 
-        res_scale = res_scale.to_value("deg") if res_scale is not None else 0
+        if self.contributes and (not geom.is_region or geom.region is not None):
+            res_scale = self.model.evaluation_bin_size_min
 
-        if res_scale != 0:
-            if geom.is_region or geom.is_hpx:
-                geom = geom.to_wcs_geom()
-            factor = int(np.ceil(np.max(geom.pixel_scales.deg) / res_scale))
-            self._spatial_oversampling_factor = factor
+            res_scale = res_scale.to_value("deg") if res_scale is not None else 0
+
+            if res_scale != 0:
+                if geom.is_region or geom.is_hpx:
+                    geom = geom.to_wcs_geom()
+                factor = int(np.ceil(np.max(geom.pixel_scales.deg) / res_scale))
+                self._spatial_oversampling_factor = factor
 
     def compute_dnde(self):
         """Compute model differential flux at map pixel centers.
