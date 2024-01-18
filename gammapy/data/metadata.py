@@ -12,7 +12,7 @@ from gammapy.utils.metadata import (
 )
 from gammapy.utils.types import EarthLocationType, TimeType
 
-__all__ = ["ObservationMetaData"]
+__all__ = ["ObservationMetaData", "GTIMetaData"]
 
 OBSERVATION_METADATA_FITS_KEYS = {
     "location": {
@@ -104,5 +104,23 @@ class ObservationMetaData(MetaData):
             if key in header.keys():
                 optional[key] = header[key]
         meta.optional = optional
+
+        return meta
+
+
+class GTIMetaData(MetaData):
+    """Metadata containing information about the GTI.
+
+    Parameters
+    ----------
+    reference_time : Time, str
+        The GTI reference time.
+    """
+
+    _tag: ClassVar[Literal["GTI"]] = "GTI"
+    reference_time: Optional[TimeType] = None
+
+    def from_header(cls, header, format="gadf"):
+        meta = super(GTIMetaData, cls).from_header(header, format)
 
         return meta

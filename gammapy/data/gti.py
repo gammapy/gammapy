@@ -9,6 +9,7 @@ from astropy.table import Table, vstack
 from astropy.time import Time
 from gammapy.utils.scripts import make_path
 from gammapy.utils.time import TIME_REF_DEFAULT, time_ref_from_dict, time_ref_to_dict
+from .metadata import GTIMetaData
 
 __all__ = ["GTI"]
 
@@ -63,7 +64,8 @@ class GTI:
 
         if reference_time is None:
             reference_time = TIME_REF_DEFAULT
-        self._time_ref = Time(reference_time)
+
+        self._time_ref = GTIMetaData(Time(reference_time))
 
     def _repr_html_(self):
         try:
