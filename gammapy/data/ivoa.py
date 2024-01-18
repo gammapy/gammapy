@@ -253,12 +253,23 @@ def _obscore_row(
 
     Parameters
     ----------
+    base_dir : str or `~pathlib.Path`
+        Base directory of the data files.
     single_obsID : int
         single Observation ID
-
+    obs_publisher_did : str, optional
+        ID for the Dataset given by the publisher.
+        Default is None.
+    access_url : str, optional
+        URL used to download dataset.
+        Default is None.
+    obscore_template : dict, optional
+        Template for fixed values in the obscore Table.
+        Default is DEFAULT_OBSCORE_TEMPLATE
+    table : `~astropy.table.Table` with n rows
     Returns
     -------
-    table : `~astropy.table.Table`
+    tab : `~astropy.table.Table` with n+1 rows
     """
     base_dir = make_path(base_dir)
     data_store = DataStore.from_dir(base_dir)
@@ -282,14 +293,14 @@ def _obscore_row(
             "calib_level": obscore_template.get(
                 "calib_level", DEFAULT_OBSCORE_TEMPLATE["calib_level"]
             ),
-            "target_name": observation.obs_info["OBJECT"],
-            "obs_id": str(observation.obs_info["OBS_ID"]),
+            "target_name": observation.meta.target.name,
+            "obs_id": str(observation.meta.obs_info.obs_id),
             "obs_collection": obscore_template.get(
                 "obs_collection", DEFAULT_OBSCORE_TEMPLATE["obs_collection"]
             ),
             "obs_publisher_did": str(obs_publisher_did)
             + "#"
-            + str(observation.obs_info["OBS_ID"]),
+            + str(observation.meta.obs_info.obs_id),
             "access_url": str(access_url) + str(file_name[0]),
             "access_format": obscore_template.get(
                 "access_format", DEFAULT_OBSCORE_TEMPLATE["access_format"]
@@ -305,8 +316,8 @@ def _obscore_row(
             "t_exptime": observation.observation_live_time_duration.to_value("s"),
             "em_min": observation.events.energy.min().value,
             "em_max": observation.events.energy.max().value,
-            "facility_name": observation.obs_info["TELESCOP"],
-            "instrument_name": observation.obs_info["TELLIST"],
+            "facility_name": observation.meta.obs_info.telescope,
+            "instrument_name": observation.aeff.meta["INSTRUME"],
         }
     )
 
@@ -324,18 +335,27 @@ def to_obscore_table(
 
     Parameters
     ----------
+    base_dir : str or `~pathlib.Path`
+        Base directory of the data files.
     selected_obs : list or array of Observation ID(int)
-    (default of ``None`` means ``no observation ``)
-    If not given, the full obscore (for all the obs_ids in DataStore) table is returned.
-
-    **kwargs : `str` {obs_publisher_did, access_url}
-    Giving the values of these arguments is highly recommended.
-    If any of these are not given the corresponding obscore field is left empty and a warning is raised for each empty value.
+        Default is None (default of ``None`` means ``no observation ``).
+        If not given, the full obscore (for all the obs_ids in DataStore) table is returned.
+    obs_publisher_did : str, optional
+        ID for the Dataset given by the publisher.
+        Default is None. Giving the values of this argument is highly recommended.
+        If not the corresponding obscore field is filled by the Observation ID value and a warning is raised.
+    access_url : str, optional
+        URL used to download dataset.
+        Default is None. Giving the values of this argument is highly recommended.
+        If not the corresponding obscore field is filled by the Observation ID value and a warning is raised.
+    obscore_template : dict, optional
+        Template for fixed values in the obscore Table.
+        Default is DEFAULT_OBSCORE_TEMPLATE
 
     Returns
     -------
     obscore_tab : ~astropy.table.Table
-          Obscore table with number of rows = len(selected_obs)
+        Obscore table with number of rows = len(selected_obs)
     """
 
     if obs_publisher_did is None:
