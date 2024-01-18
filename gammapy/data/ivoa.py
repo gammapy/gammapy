@@ -382,11 +382,11 @@ def to_obscore_table(
     obs_publisher_did : str, optional
         ID for the Dataset given by the publisher.
         Default is None. Giving the values of this argument is highly recommended.
-        If not the corresponding obscore field is filled by the Observation ID value and a warning is raised.
+        If not the corresponding obscore field is filled by the Observation ID value.
     access_url : str, optional
         URL used to download dataset.
         Default is None. Giving the values of this argument is highly recommended.
-        If not the corresponding obscore field is filled by the Observation ID value and a warning is raised.
+        If not the corresponding obscore field is filled by the Observation ID value.
     obscore_template : dict, optional
         Template for fixed values in the obscore Table.
         Default is DEFAULT_OBSCORE_TEMPLATE
