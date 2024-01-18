@@ -380,11 +380,11 @@ def to_obscore_table(
         Default is None (default of ``None`` means ``no observation ``).
         If not given, the full obscore (for all the obs_ids in DataStore) table is returned.
     obs_publisher_did : str, optional
-        ID for the Dataset given by the publisher.
+        ID for the Dataset given by the publisher (check IVOA recommendations).
         Default is None. Giving the values of this argument is highly recommended.
         If not the corresponding obscore field is filled by the Observation ID value.
     access_url : str, optional
-        URL used to download dataset.
+        URL used to to access (download) dataset(check IVOA recommendations).
         Default is None. Giving the values of this argument is highly recommended.
         If not the corresponding obscore field is filled by the Observation ID value.
     obscore_template : dict, optional
@@ -395,16 +395,22 @@ def to_obscore_table(
     -------
     obscore_tab : ~astropy.table.Table
         Obscore table with number of rows = len(selected_obs)
+
+    References
+    -----------
+        * `IVOA ObsCore recommendations <https://www.ivoa.net/documents/ObsCore>`_
+        * `https://www.ivoa.net/documents/ObsCore and https://www.ivoa.net/documents/TAP/`_
+        * `IVOA identifiers <https://www.ivoa.net/documents/IVOAIdentifiers/20160523/REC-Identifiers-2.0.html>`_
     """
 
     if obs_publisher_did is None:
         log.warning(
-            "Insufficient publisher information: 'obs_publisher_did' obscore value will be empty. Giving this values is highly recommended. obs_publisher_did is the Dataset identifier given by the publisher. For more information about these arguments please check the IVOA recommendations: https://www.ivoa.net/documents/ObsCore and https://www.ivoa.net/documents/IVOAIdentifiers/20160523/REC-Identifiers-2.0.html"
+            "Insufficient publisher information: 'obs_publisher_did'. Giving this values is highly recommended."
         )
         obs_publisher_did = ""
     if access_url is None:
         log.warning(
-            "Insufficient publisher information: access_url' obscore value will be empty. Giving this values is highly recommended. access_url is the URL used to access (download) dataset. For more information about these arguments please check the IVOA recommendations: https://www.ivoa.net/documents/ObsCore and https://www.ivoa.net/documents/TAP/"
+            "Insufficient publisher information: 'access_url'. Giving this values is highly recommended."
         )
         access_url = ""
     if obscore_template is None:
