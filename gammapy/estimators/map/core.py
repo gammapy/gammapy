@@ -1120,10 +1120,12 @@ class FluxMaps:
         idx_intervals = []
 
         for key, interval in zip(slices.keys(), slices.values()):
-            imin = np.ravel(self.geom.axes[key].coord_to_idx(interval.start))[0]
-            imax = np.ravel(self.geom.axes[key].coord_to_idx(interval.stop))[0]
+            axis = self.geom.axes[key]
+            group = axis.group_table(edges=(interval.start(), interval.stop()))
 
-            idx_intervals.append(slice(imin, imax))
+            idx_intervals.append(
+                slice(int(group["idx_min"][0]), int(group["idx_max"][0]) + 1)
+            )
 
         return self.slice_by_idx(dict(zip(slices.keys(), idx_intervals)))
 
