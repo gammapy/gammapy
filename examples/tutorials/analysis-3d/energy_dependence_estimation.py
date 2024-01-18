@@ -1,6 +1,6 @@
 """
-Energy dependence estimation
-============================
+Morphological energy dependence estimation
+==========================================
 
 Learn how to test for energy-dependent morphology in your dataset.
 
@@ -55,7 +55,7 @@ from astropy.table import Table
 import matplotlib.pyplot as plt
 from IPython.display import display
 from gammapy.datasets import Datasets, MapDataset
-from gammapy.estimators import EnergyDependenceEstimator
+from gammapy.estimators import EnergyDependentMorphologyEstimator
 from gammapy.estimators.energydependence import weighted_chi2_parameter
 from gammapy.maps import Map
 from gammapy.modeling.models import (
@@ -147,7 +147,7 @@ model.spectral_model.index.frozen = True
 
 datasets.models = model
 
-estimator = EnergyDependenceEstimator(energy_edges=energy_edges, source="src")
+estimator = EnergyDependentMorphologyEstimator(energy_edges=energy_edges, source="src")
 
 ######################################################################
 # Show the results tables

@@ -4,7 +4,7 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 from gammapy.datasets import Datasets, MapDataset
 from gammapy.estimators.energydependence import (
-    EnergyDependenceEstimator,
+    EnergyDependentMorphologyEstimator,
     weighted_chi2_parameter,
 )
 from gammapy.modeling.models import (
@@ -54,7 +54,7 @@ class TestEnergyDependentEstimator:
         datasets = Datasets([stacked_dataset])
         datasets.models = create_model()
 
-        estimator = EnergyDependenceEstimator(
+        estimator = EnergyDependentMorphologyEstimator(
             energy_edges=energy_edges, source="source"
         )
         self.results = estimator.run(datasets)

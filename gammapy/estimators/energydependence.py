@@ -3,12 +3,12 @@
 import numpy as np
 from gammapy.datasets import Datasets
 from gammapy.modeling import Fit
-from gammapy.modeling.models import FoVBackgroundModel
+from gammapy.modeling.models import FoVBackgroundModel, Models
 from gammapy.modeling.selection import TestStatisticNested
 from gammapy.stats.utils import ts_to_sigma
 from .core import Estimator
 
-__all__ = ["weighted_chi2_parameter", "EnergyDependenceEstimator"]
+__all__ = ["weighted_chi2_parameter", "EnergyDependentMorphologyEstimator"]
 
 
 def weighted_chi2_parameter(results_edep, parameters=["sigma"]):
@@ -69,7 +69,7 @@ def weighted_chi2_parameter(results_edep, parameters=["sigma"]):
     return chi2_result
 
 
-class EnergyDependenceEstimator(Estimator):
+class EnergyDependentMorphologyEstimator(Estimator):
     """Test if there is any energy-dependent morphology in a map dataset for a given set of energy bins.
 
     Parameters
@@ -85,7 +85,7 @@ class EnergyDependenceEstimator(Estimator):
 
     """
 
-    tag = "EnergyDependenceEstimator"
+    tag = "EnergyDependentMorphologyEstimator"
 
     def __init__(self, energy_edges, source=0, fit=None):
 
@@ -113,6 +113,11 @@ class EnergyDependenceEstimator(Estimator):
         """
         model = datasets.models[self.source]
 
+        filtered_names = [name for name in datasets.models.names if name != self.source]
+        other_models = Models()
+        for name in filtered_names:
+            other_models.append(datasets.models[name])
+
         slices_src = Datasets()
         for i, (emin, emax) in enumerate(
             zip(self.energy_edges[:-1], self.energy_edges[1:])
@@ -124,6 +129,7 @@ class EnergyDependenceEstimator(Estimator):
                 bkg_sliced_model = FoVBackgroundModel(dataset_name=sliced_src.name)
                 sliced_src.models = [
                     model.copy(name=f"{sliced_src.name}-model"),
+                    *other_models,
                     bkg_sliced_model,
                 ]
                 slices_src.append(sliced_src)
