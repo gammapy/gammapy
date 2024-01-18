@@ -2973,6 +2973,28 @@ class TimeMapAxis:
 
         return header
 
+    def group_table(self, edges):
+        """Compute bin groups table for the map axis, given coarser bin edges.
+
+        Parameters
+        ----------
+        edges : `~astropy.units.Quantity`
+            Group bin edges.
+
+        Returns
+        -------
+        groups : `~astropy.table.Table`
+            Map axis group table.
+        """
+        edges = self.reference_time + edges
+
+        gti = self.to_gti()
+
+        time_intervals = [(edges[i], edges[i + 1]) for i in range(len(edges) - 1)]
+        groups = gti.group_table(time_intervals)
+
+        return groups
+
 
 class LabelMapAxis:
     """Map axis using labels.
