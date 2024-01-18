@@ -432,8 +432,6 @@ class MapEvaluator:
     def parameters_changed(self):
         """Parameters changed."""
         values = self.model.parameters.value
-        # TODO: possibly allow for a tolerance here?
-        # changed = not np.allclose(self._cached_parameter_values, values, rtol=1e-4)
         changed = ~np.all(self._cached_parameter_values == values)
 
         if changed:
@@ -469,8 +467,6 @@ class MapEvaluator:
             Whether spatial parameters changed.
         """
         values = self.model.spatial_model.parameters.value
-        # TODO: possibly allow for a tolerance here?
-        # changed = not np.allclose(self._cached_parameter_values_spatial, values, rtol=1e-3)
         changed = ~np.all(self._cached_parameter_values_spatial == values)
 
         if changed and reset:
