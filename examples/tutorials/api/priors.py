@@ -29,8 +29,8 @@ model parameters and can take different forms, including Gaussian
 distributions, uniform distributions, etc. The prior includes
 information or knowledge about the dataset or the parameters of the fit.
 
-Setting priors on mulitple parameters simultaneously is suppored,
-however, they for now cannot be correlated.
+Setting priors on mulitple parameters simultaneously is supported,
+However, for now, they should not be correlated.
 
 The spectral dataset used here contains a simulated power-law source and
 its IRFs are based on HESS data of the Crab Nebula (similar to
@@ -429,8 +429,8 @@ from gammapy.modeling import PriorParameter
 from gammapy.modeling.models import Prior
 
 
-class MyCostomPrior(Prior):
-    """Costom Prior.
+class MyCustomPrior(Prior):
+    """Custom Prior.
 
 
     Parameters
