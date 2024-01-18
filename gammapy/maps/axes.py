@@ -2974,19 +2974,21 @@ class TimeMapAxis:
         return header
 
     def group_table(self, edges):
-        """Compute bin groups table for the map axis, given coarser bin edges.
+        """Compute bin groups table for the TimeMapAxis, given coarser bin edges.
 
         Parameters
         ----------
-        edges : `~astropy.units.Quantity`
+        edges : `~astropy.units.Quantity` or `~astropy.time.Time`
             Group bin edges.
 
         Returns
         -------
         groups : `~astropy.table.Table`
-            Map axis group table.
+            Group table.
         """
-        edges = self.reference_time + edges
+        for _, edge in enumerate(edges):
+            if not isinstance(edge, Time):
+                edges[_] = self.reference_time + edges[_]
 
         gti = self.to_gti()
 

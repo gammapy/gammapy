@@ -1121,7 +1121,8 @@ class FluxMaps:
 
         for key, interval in zip(slices.keys(), slices.values()):
             axis = self.geom.axes[key]
-            group = axis.group_table(edges=(interval.start(), interval.stop()))
+
+            group = axis.group_table(edges=[interval.start, interval.stop])
 
             idx_intervals.append(
                 slice(int(group["idx_min"][0]), int(group["idx_max"][0]) + 1)
