@@ -489,9 +489,7 @@ class MapDataset(Dataset):
 
     def _background_parameters_changed(self):
         values = self.background_model.parameters.value
-        changed = not np.allclose(
-            self._background_parameters_cached, values, rtol=1e-15
-        )
+        changed = ~np.all(self._background_parameters_cached == values)
 
         if changed:
             self._background_parameters_cached = values
