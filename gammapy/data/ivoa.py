@@ -323,7 +323,7 @@ def _obscore_row(
     file_dir = data_store.hdu_table[obs_mask]["FILE_DIR"]
     file_name = data_store.hdu_table[obs_mask]["FILE_NAME"]
     path = make_path(str(hdu_dir) + "/" + str(file_dir[0]) + "/" + str(file_name[0]))
-    size = int(os.path.getsize(path.as_posix()) / 1000.0)
+    size = int(os.path.getsize(path.as_posix()) / 1024.0)
     tab.add_row(
         {
             "dataproduct_type": obscore_template.get(
