@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Metadata base container for Gammapy."""
 import json
-from typing import ClassVar, Literal, Optional, get_args
+from typing import ClassVar, Literal, Optional
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
 import yaml
@@ -84,8 +84,8 @@ class MetaData(BaseModel):
         header : dict
             The header dictionary.
         """
-        if format != "gadf":
-            raise ValueError(f"Metadata to header: format {format} is not supported.")
+        # if format != "gadf":
+        #     raise ValueError(f"Metadata to header: format {format} is not supported.")
 
         hdr_dict = {}
 
@@ -122,11 +122,13 @@ class MetaData(BaseModel):
         ----------
         header : dict
             The header dictionary.
-        format : {'gadf'}
+        format : {'gadf', 'gammapy'}
             Header format. Default is 'gadf'.
+
+        ToDo: add the storage of optional metadata
         """
-        if format != "gadf":
-            raise ValueError(f"Metadata from header: format {format} is not supported.")
+        # if format != "gadf":
+        #     raise ValueError(f"Metadata from header: format {format} is not supported.")
 
         fits_export_keys = METADATA_FITS_KEYS.get(cls._tag)
 
@@ -173,8 +175,9 @@ class CreatorMetaData(MetaData):
     ----------
     creator : str
         The software used to create the data contained in the parent object.
+        Default is the used Gammapy version.
     date : `~astropy.time.Time` or str
-        The creation date.
+        The creation date. Default is the current date.
     origin : str
         The organization at the origin of the data.
     """
