@@ -37,203 +37,242 @@ def obscore_structure():
         unit="",
         description="Data product (file content) primary type",
         dtype="U10",
-        meta={"Utype": "ObsDataset.dataProductType"},
+        meta={"Utype": "ObsDataset.dataProductType", "UCD": "meta.id"},
     )
     obscore_table[1] = Column(
         name="calib_level",
         unit="",
         description="Calibration level of the observation: in {0, 1, 2, 3, 4}",
         dtype="i4",
-        meta={"Utype": "ObsDataset.calibLevel"},
+        meta={"Utype": "ObsDataset.calibLevel", "UCD": "meta.code;obs.calib"},
     )
     obscore_table[2] = Column(
         name="target_name",
         unit="",
         description="Object of interest",
         dtype="U25",
-        meta={"Utype": "Target.name"},
+        meta={"Utype": "Target.name", "UCD": "meta.id;src"},
     )
     obscore_table[3] = Column(
         name="obs_id",
         unit="",
         description="Internal ID given by the ObsTAP service",
         dtype="U10",
-        meta={"Utype": "DataID.observationID"},
+        meta={"Utype": "DataID.observationID", "UCD": "meta.id"},
     )
     obscore_table[4] = Column(
         name="obs_collection",
         unit="",
         description="Name of the data collection",
         dtype="U10",
-        meta={"Utype": "DataID.collection"},
+        meta={"Utype": "DataID.collection", "UCD": "meta.id"},
     )
     obscore_table[5] = Column(
         name="obs_publisher_did",
         unit="",
         description="ID for the Dataset given by the publisher",
         dtype="U30",
-        meta={"Utype": "Curation.publisherDID"},
+        meta={"Utype": "Curation.publisherDID", "UCD": "meta.ref.uri;meta.curation"},
     )
     obscore_table[6] = Column(
         name="access_url",
         unit="",
         description="URL used to access dataset",
         dtype="U30",
-        meta={"Utype": "Access.reference"},
+        meta={"Utype": "Access.reference", "UCD": "meta.ref.url"},
     )
     obscore_table[7] = Column(
         name="access_format",
         unit="",
         description="Content format of the dataset",
         dtype="U30",
-        meta={"Utype": "Access.format"},
+        meta={"Utype": "Access.format", "UCD": "meta.code.mime"},
     )
     obscore_table[8] = Column(
         name="access_estsize",
         unit="kbyte",
         description="Estimated size of dataset: in kilobytes",
         dtype="i4",
-        meta={"Utype": "Access.size"},
+        meta={"Utype": "Access.size", "UCD": "phys.size;meta.file"},
     )
     obscore_table[9] = Column(
         name="s_ra",
         unit="deg",
         description="Central Spatial Position in ICRS Right ascension",
         dtype="f8",
-        meta={"Utype": "Char.SpatialAxis.Coverage.Location.Coord.Position2D.Value2.C1"},
+        meta={
+            "Utype": "Char.SpatialAxis.Coverage.Location.Coord.Position2D.Value2.C1",
+            "UCD": "pos.eq.ra",
+        },
     )
     obscore_table[10] = Column(
         name="s_dec",
         unit="deg",
         description="Central Spatial Position in ICRS Declination",
         dtype="f8",
-        meta={"Utype": "Char.SpatialAxis.Coverage.Location.Coord.Position2D.Value2.C2"},
+        meta={
+            "Utype": "Char.SpatialAxis.Coverage.Location.Coord.Position2D.Value2.C2",
+            "UCD": "pos.eq.dec",
+        },
     )
     obscore_table[11] = Column(
         name="s_fov",
         unit="deg",
         description="Estimated size of the covered region as the diameter of a containing circle",
         dtype="f8",
-        meta={"Utype": "Char.SpatialAxis.Coverage.Bounds.Extent.diameter"},
+        meta={
+            "Utype": "Char.SpatialAxis.Coverage.Bounds.Extent.diameter",
+            "UCD": "phys.angSize;instr.fov",
+        },
     )
     obscore_table[12] = Column(
         name="s_region",
         unit="",
         description="Sky region covered by the data product (expressed in ICRS frame)",
         dtype="U30",
-        meta={"Utype": "Char.SpatialAxis.Coverage.Support.Area"},
+        meta={
+            "Utype": "Char.SpatialAxis.Coverage.Support.Area",
+            "UCD": "pos.outline;obs.field",
+        },
     )
     obscore_table[13] = Column(
         name="s_resolution",
         unit="arcsec",
         description="Spatial resolution of data as FWHM of PSF",
         dtype="f8",
-        meta={"Utype": "Char.SpatialAxis.Resolution.refval.value"},
+        meta={
+            "Utype": "Char.SpatialAxis.Resolution.refval.value",
+            "UCD": "pos.angResolution",
+        },
     )
     obscore_table[14] = Column(
         name="s_xel1",
         unit="",
         description="Number of elements along the first coordinate of the spatial axis",
         dtype="i4",
-        meta={"Utype": "Char.SpatialAxis.numBins1"},
+        meta={"Utype": "Char.SpatialAxis.numBins1", "UCD": "meta.number"},
     )
     obscore_table[15] = Column(
         name="s_xel2",
         unit="",
         description="Number of elements along the second coordinate of the spatial axis",
         dtype="i4",
-        meta={"Utype": "Char.SpatialAxis.numBins2"},
+        meta={"Utype": "Char.SpatialAxis.numBins2", "UCD": "meta.number"},
     )
     obscore_table[16] = Column(
         name="t_xel",
         unit="",
         description="Number of elements along the time axis",
         dtype="i4",
-        meta={"Utype": "Char.TimeAxis.numBins"},
+        meta={"Utype": "Char.TimeAxis.numBins", "UCD": "meta.number"},
     )
     obscore_table[17] = Column(
         name="t_min",
         unit="d",
         description="Start time in MJD",
         dtype="f8",
-        meta={"Utype": "Char.TimeAxis.Coverage.Bounds.Limits.StartTime"},
+        meta={
+            "Utype": "Char.TimeAxis.Coverage.Bounds.Limits.StartTime",
+            "UCD": "time.start;obs.exposure",
+        },
     )
     obscore_table[18] = Column(
         name="t_max",
         unit="d",
         description="Stop time in MJD",
         dtype="f8",
-        meta={"Utype": "Char.TimeAxis.Coverage.Bounds.Limits.StopTime"},
+        meta={
+            "Utype": "Char.TimeAxis.Coverage.Bounds.Limits.StopTime",
+            "UCD": "time.end;obs.exposure",
+        },
     )
     obscore_table[19] = Column(
         name="t_exptime",
         unit="s",
         description="Total exposure time",
         dtype="f8",
-        meta={"Utype": "Char.TimeAxis.Coverage.Support.Extent"},
+        meta={
+            "Utype": "Char.TimeAxis.Coverage.Support.Extent",
+            "UCD": "time.duration;obs.exposure",
+        },
     )
     obscore_table[20] = Column(
         name="t_resolution",
         unit="s",
         description="Temporal resolution FWHM",
         dtype="f8",
-        meta={"Utype": "Char.TimeAxis.Resolution.Refval.valueResolution.Refval.value"},
+        meta={
+            "Utype": "Char.TimeAxis.Resolution.Refval.valueResolution.Refval.value",
+            "UCD": "time.resolution",
+        },
     )
     obscore_table[21] = Column(
         name="em_xel",
         unit="",
         description="Number of elements along the spectral axis",
         dtype="i4",
-        meta={"Utype": "Char.SpectralAxis. numBins"},
+        meta={"Utype": "Char.SpectralAxis. numBins", "UCD": "meta.number"},
     )
     obscore_table[22] = Column(
         name="em_min",
         unit="TeV",
         description="start in spectral coordinates",
         dtype="f8",
-        meta={"Utype": "Char.SpectralAxis.Coverage.Bounds.Limits.LoLimit"},
+        meta={
+            "Utype": "Char.SpectralAxis.Coverage.Bounds.Limits.LoLimit",
+            "UCD": "em.wl;stat.min",
+        },
     )
     obscore_table[23] = Column(
         name="em_max",
         unit="TeV",
         description="stop in spectral coordinates",
         dtype="f8",
-        meta={"Utype": "Char.SpectralAxis.Coverage.Bounds.Limits.HiLimit"},
+        meta={
+            "Utype": "Char.SpectralAxis.Coverage.Bounds.Limits.HiLimit",
+            "UCD": "em.wl;stat.max",
+        },
     )
     obscore_table[24] = Column(
         name="em_res_power",
         unit="",
         description="Value of the resolving power along the spectral axis(R)",
         dtype="f8",
-        meta={"Utype": "Char.SpectralAxis.Resolution.ResolPower.refVal"},
+        meta={
+            "Utype": "Char.SpectralAxis.Resolution.ResolPower.refVal",
+            "UCD": "spect.resolution",
+        },
     )
     obscore_table[25] = Column(
         name="o_ucd",
         unit="",
         description="Nature of the observable axis",
         dtype="U30",
-        meta={"Utype": "Char.ObservableAxis.ucd"},
+        meta={"Utype": "Char.ObservableAxis.ucd", "UCD": "meta.ucd"},
     )
     obscore_table[26] = Column(
         name="pol_xel",
         unit="",
         description="Number of elements along the polarization axis",
         dtype="i4",
-        meta={"Utype": "Char.PolarizationAxis.numBins"},
+        meta={"Utype": "Char.PolarizationAxis.numBins", "UCD": "meta.number"},
     )
     obscore_table[27] = Column(
         name="facility_name",
         unit="",
         description="The name of the facility, telescope space craft used for the observation",
         dtype="U10",
-        meta={"Utype": "Provenance.ObsConfig.Facility.name"},
+        meta={
+            "Utype": "Provenance.ObsConfig.Facility.name",
+            "UCD": "meta.id;instr.tel",
+        },
     )
     obscore_table[28] = Column(
         name="instrument_name",
         unit="",
         description="The name of the instrument used for the observation",
         dtype="U25",
-        meta={"Utype": "Provenance.ObsConfig.Instrument.name"},
+        meta={"Utype": "Provenance.ObsConfig.Instrument.name", "UCD": "meta.id;instr"},
     )
     tab_default = Table()
     for var in obscore_table:
