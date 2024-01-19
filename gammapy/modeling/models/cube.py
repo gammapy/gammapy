@@ -1004,7 +1004,7 @@ class TemplateNPredModel(ModelBase):
         elif os.path.isfile(make_path(self.filename)) and not overwrite:
             log.warning("Template file already exits, and overwrite is False")
         else:
-            self.map.write(self.filename)
+            self.map.write(self.filename, overwrite=overwrite)
 
     @classmethod
     def from_dict(cls, data, **kwargs):
