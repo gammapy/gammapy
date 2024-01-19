@@ -683,14 +683,14 @@ class DatasetModels(collections.abc.Sequence):
 
     def slice_by_energy(self, energy_min, energy_max, sum_over_energy_groups=False):
         """Copy models and slice TemplateNPredModel in energy range
-        
+
         Parameters
         ----------
         energy_min, energy_max : `~astropy.units.Quantity`
             Energy bounds of the slice
         sum_over_energy_groups : bool
             Whether to sum over the energy groups or not.
-        
+
         Returns
         -------
         models : `Models`
@@ -1162,7 +1162,11 @@ class Models(DatasetModels, collections.abc.MutableSequence):
         del self._models[self.index(key)]
 
     def __setitem__(self, key, model):
-        from gammapy.modeling.models import FoVBackgroundModel, SkyModel, TemplateNPredModel
+        from gammapy.modeling.models import (
+            FoVBackgroundModel,
+            SkyModel,
+            TemplateNPredModel,
+        )
 
         if isinstance(model, (SkyModel, FoVBackgroundModel, TemplateNPredModel)):
             self._models[self.index(key)] = model

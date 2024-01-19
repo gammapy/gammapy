@@ -1132,11 +1132,11 @@ class TemplateNPredModel(ModelBase):
         slices = {
             "energy": slice(int(group["idx_min"][0]), int(group["idx_max"][0]) + 1)
         }
-        
+
         model = self.copy(name=name)
         model.map = model.map.slice_by_idx(slices=slices)
         return model
-    
+
     def __str__(self):
         str_ = self.__class__.__name__ + "\n\n"
         str_ += "\t{:26}: {}\n".format("Name", self.name)

@@ -11,9 +11,6 @@ from gammapy.datasets.flux_points import _get_reference_model
 from gammapy.maps import MapAxis
 from gammapy.modeling import Fit
 from gammapy.utils.deprecation import deprecated_attribute
-from gammapy.modeling.models import Models
-from gammapy.utils.pbar import progress_bar
-from gammapy.utils.table import table_from_row_data
 from ..flux import FluxEstimator
 from .core import FluxPoints
 
