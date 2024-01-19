@@ -47,7 +47,7 @@ class SafeMaskMaker(Maker):
     offset_max : str or `~astropy.units.Quantity`
         Maximum offset cut.
     irfs : {"DL4", "DL3"}
-        Whether to use reprojected ("DL4") or raw ("DL3") irfs
+        Whether to use reprojected ("DL4") or raw ("DL3") irfs.
         Default is "DL4".
     """
 
