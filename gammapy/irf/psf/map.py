@@ -17,17 +17,18 @@ from .kernel import PSFKernel
 __all__ = ["PSFMap", "RecoPSFMap"]
 
 
-PSF_MAX_OVERSAMPLING = 4
+PSF_MAX_OVERSAMPLING = 4  # for backward compatibility
 
 
 def _psf_upsampling_factor(psf, geom, position, energy=None, precision_factor=12):
+    """Minimal factor between the bin half-width of the geom and the median R68% containment radius."""
     if energy is None:
         energy = geom.axes[psf.energy_name].center
     psf_r68 = psf.containment_radius(
         0.68, geom.axes[psf.energy_name].center, position=position
     )
-    psf_r68 = np.percentile(psf_r68, 50)
-    base_factor = (2 * psf_r68 / geom.pixel_scales.max()).to_value("")
+    psf_r68_median = np.percentile(psf_r68, 50)
+    base_factor = (2 * psf_r68_median / geom.pixel_scales.max()).to_value("")
     factor = np.minimum(
         int(np.ceil(precision_factor / base_factor)), PSF_MAX_OVERSAMPLING
     )
@@ -275,7 +276,7 @@ class PSFMap(IRFMap):
             Oversampling factor to compute the PSF.
             Default is None and it will be computed automatically.
         precision_factor : int, optional
-            Minimal factor between the bin half-width of the geom and the R68% containment radius.
+            Factor between the bin half-width of the geom and the median R68% containment radius.
             Used only for the oversampling method. Default is 10.
 
         Returns
