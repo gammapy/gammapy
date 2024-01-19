@@ -401,9 +401,18 @@ def test_run_template_npred(fpe_map_pwl, tmpdir):
     models.append(model)
     dataset.models = models
 
-    fpe.run(dataset)
+    fp = fpe.run(dataset)
+
+    table = fp.to_table()
+    actual = table["norm"].data
+    assert_allclose(actual, [0.974726, 0.96342, 0.994251], rtol=1e-2)
+
     fpe.sum_over_energy_groups = True
-    fpe.run(dataset)
+    fp = fpe.run(dataset)
+
+    table = fp.to_table()
+    actual = table["norm"].data
+    assert_allclose(actual, [0.955512, 0.965328, 0.995237], rtol=1e-2)
 
 
 @requires_data()
