@@ -737,3 +737,12 @@ def test_template_ND(tmpdir):
     assert len(template_new.parameters) == 2
     assert template_new.parameters["norm"].value == 2
     assert template_new.parameters["cste"].value == 0
+
+
+@requires_data()
+def test_template_spatial_parameters_copy():
+    filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits"
+    model = TemplateSpatialModel.read(filename, normalize=False)
+    model.position = SkyCoord(0, 0, unit="deg", frame="galactic")
+    model_copy = model.copy()
+    assert_allclose(model.parameters.value, model_copy.parameters.value)
