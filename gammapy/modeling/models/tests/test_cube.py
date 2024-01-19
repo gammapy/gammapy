@@ -249,6 +249,7 @@ def test_background_model_io(tmpdir, background):
     filename = str(tmpdir / "test-bkg-file.fits")
     bkg = TemplateNPredModel(background, filename=filename)
     bkg.spectral_model.norm.value = 2.0
+    bkg.write(overwrite=False)
     bkg.write(overwrite=True)
     bkg_dict = bkg.to_dict()
     bkg_read = bkg.from_dict(bkg_dict)
