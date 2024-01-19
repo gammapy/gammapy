@@ -65,7 +65,10 @@ class GTI:
         if reference_time is None:
             reference_time = TIME_REF_DEFAULT
 
-        self._time_ref = GTIMetaData(Time(reference_time))
+        meta = GTIMetaData()
+        meta.reference_time = reference_time
+
+        self._meta = meta
 
     def _repr_html_(self):
         try:
@@ -230,7 +233,7 @@ class GTI:
     @property
     def time_ref(self):
         """Time reference as a `~astropy.time.Time` object."""
-        return self._time_ref
+        return self._meta.reference_time
 
     @property
     def time_sum(self):
