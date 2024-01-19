@@ -400,6 +400,7 @@ def test_run_template_npred(fpe_map_pwl, tmpdir):
     model = TemplateNPredModel(dataset.background, datasets_names=[dataset.name])
     models.append(model)
     dataset.models = models
+    dataset.background.data = 0
 
     fp = fpe.run(dataset)
 
