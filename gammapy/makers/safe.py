@@ -88,7 +88,9 @@ class SafeMaskMaker(Maker):
             )
 
         if irfs not in ["DL3", "DL4"]:
-            ValueError("Invalid option for irfs: expected 'DL3' or 'DL4', got {irfs} instead.")
+            ValueError(
+                "Invalid option for irfs: expected 'DL3' or 'DL4', got {irfs} instead."
+            )
         self.irfs = irfs
 
     def make_mask_offset_max(self, dataset, observation):
