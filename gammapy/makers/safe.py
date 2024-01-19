@@ -48,7 +48,7 @@ class SafeMaskMaker(Maker):
         Maximum offset cut.
     irfs : str, "DL3" or "DL4"
         Whether to use reprojected ("DL4") or raw ("DL3") irfs
-        Default is "DL4"
+        Default is "DL4".
     """
 
     tag = "SafeMaskMaker"
