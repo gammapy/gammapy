@@ -46,7 +46,7 @@ class SafeMaskMaker(Maker):
         it uses the position of the center of the map by default.
     offset_max : str or `~astropy.units.Quantity`
         Maximum offset cut.
-    irfs : str, "DL3" or "DL4"
+    irfs : {"DL4", "DL3"}
         Whether to use reprojected ("DL4") or raw ("DL3") irfs
         Default is "DL4".
     """
