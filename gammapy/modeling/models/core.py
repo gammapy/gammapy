@@ -682,7 +682,7 @@ class DatasetModels(collections.abc.Sequence):
         )
 
     def slice_by_energy(self, energy_min, energy_max, sum_over_energy_groups=False):
-        """Copy models and slice TemplateNPredModel in energy range
+        """Copy models and slice TemplateNPredModel in energy range.
 
         Parameters
         ----------
@@ -694,7 +694,7 @@ class DatasetModels(collections.abc.Sequence):
         Returns
         -------
         models : `Models`
-            Sliced models
+            Sliced models.
         """
         models_sliced = Models(self.copy())
         for k, m in enumerate(models_sliced):

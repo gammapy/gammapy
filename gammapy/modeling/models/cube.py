@@ -1099,14 +1099,14 @@ class TemplateNPredModel(ModelBase):
         Parameters
         ----------
         energy_min, energy_max : `~astropy.units.Quantity`
-            Energy bounds of the slice.
+            Energy bounds of the slice.  Default is None.
         name : str
-            Name of the sliced model.
+            Name of the sliced model.  Default is None.
 
         Returns
         -------
         model : `TemplateNpredModel`
-            Sliced Model
+            Sliced Model.
 
         """
         name = make_name(name)
