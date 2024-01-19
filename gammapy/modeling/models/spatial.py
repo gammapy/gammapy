@@ -1393,6 +1393,8 @@ class TemplateSpatialModel(SpatialModel):
         kwargs.setdefault("normalize", self.normalize)
         kwargs.setdefault("interp_kwargs", self._interp_kwargs)
         kwargs.setdefault("filename", self.filename)
+        kwargs.setdefault("lon_0", self.parameters["lon_0"].copy())
+        kwargs.setdefault("lat_0", self.parameters["lat_0"].copy())
         return self.__class__(copy_data=copy_data, **kwargs)
 
     @property
