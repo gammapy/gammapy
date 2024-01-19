@@ -689,7 +689,7 @@ class DatasetModels(collections.abc.Sequence):
         energy_min, energy_max : `~astropy.units.Quantity`
             Energy bounds of the slice
         sum_over_energy_groups : bool
-            Whether to sum over the energy groups or not.
+            Whether to sum over the energy groups or not. Default is False.
 
         Returns
         -------
