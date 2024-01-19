@@ -420,12 +420,12 @@ class WcsNDMap(WcsMap):
         if mask.any():
             min_cut, max_cut = kwargs.pop("vmin", None), kwargs.pop("vmax", None)
             try:
+                norm = simple_norm(data[mask], stretch, vmin=min_cut, vmax=max_cut)
+            except TypeError:
                 # astropy <6.1
                 norm = simple_norm(
                     data[mask], stretch, min_cut=min_cut, max_cut=max_cut
                 )
-            except TypeError:
-                norm = simple_norm(data[mask], stretch, vmin=min_cut, vmax=max_cut)
             kwargs.setdefault("norm", norm)
 
         im = ax.imshow(data, **kwargs)
