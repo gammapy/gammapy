@@ -3,12 +3,13 @@ import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
+from astropy.nddata import NoOverlapError
 from regions import PointSkyRegion
 from gammapy.maps import HpxNDMap, Map, MapAxis, RegionNDMap
 from gammapy.maps.hpx.io import HPX_FITS_CONVENTIONS, HpxConv
 from gammapy.utils.scripts import make_path
 from gammapy.utils.time import time_ref_from_dict
-from . import LightCurveTemplateTemporalModel
+from . import LightCurveTemplateTemporalModel, Models, SkyModel, TemplateSpatialModel
 
 
 def _template_model_from_cta_sdc(filename):
@@ -84,3 +85,27 @@ def read_hermes_cube(filename):
         energy_nodes, interp="log", name="energy_true", node_type="center", unit="GeV"
     )
     return Map.from_stack(maps, axis=axis)
+
+
+def cutout_template_models(models, cutout_kwargs, datasets_names=None):
+    """apply cutout to template models"""
+    models_cut = Models()
+    for m in models:
+        if isinstance(m.spatial_model, TemplateSpatialModel):
+            try:
+                map_ = m.spatial_model.map.cutout(**cutout_kwargs)
+            except (NoOverlapError, ValueError):
+                continue
+            template_cut = TemplateSpatialModel(
+                map_,
+                normalize=m.spatial_model.normalize,
+            )
+            model_cut = SkyModel(
+                spatial_model=template_cut,
+                spectral_model=m.spectral_model,
+                datasets_names=datasets_names,
+            )
+            models_cut.append(model_cut)
+        else:
+            models_cut.append(m)
+    return models_cut
