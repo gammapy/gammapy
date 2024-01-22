@@ -23,6 +23,7 @@ from gammapy.modeling.models import (
     PiecewiseNormSpectralModel,
     PowerLawSpectralModel,
     SkyModel,
+    TemplateNPredModel,
     TemplateSpatialModel,
 )
 from gammapy.utils import parallel
@@ -390,6 +391,31 @@ def test_run_map_pwl_reoptimize(fpe_map_pwl_reoptimize):
     assert_allclose(actual, [9.788123, 0.486066, 17.603708], rtol=1e-2)
 
 
+@requires_dependency("iminuit")
+@requires_data()
+def test_run_template_npred(fpe_map_pwl, tmpdir):
+    datasets, fpe = fpe_map_pwl
+    dataset = datasets[0]
+    models = Models(dataset.models)
+    model = TemplateNPredModel(dataset.background, datasets_names=[dataset.name])
+    models.append(model)
+    dataset.models = models
+    dataset.background.data = 0
+
+    fp = fpe.run(dataset)
+
+    table = fp.to_table()
+    actual = table["norm"].data
+    assert_allclose(actual, [0.974726, 0.96342, 0.994251], rtol=1e-2)
+
+    fpe.sum_over_energy_groups = True
+    fp = fpe.run(dataset)
+
+    table = fp.to_table()
+    actual = table["norm"].data
+    assert_allclose(actual, [0.955512, 0.965328, 0.995237], rtol=1e-2)
+
+
 @requires_data()
 def test_reoptimize_no_free_parameters(fpe_pwl, caplog):
     datasets, fpe = fpe_pwl
@@ -678,7 +704,6 @@ def test_fpe_non_uniform_datasets():
 
 @requires_data()
 def test_flux_points_estimator_norm_spectral_model(fermi_datasets):
-
     energy_edges = [10, 30, 100, 300, 1000] * u.GeV
 
     model_ref = fermi_datasets.models["Crab Nebula"]

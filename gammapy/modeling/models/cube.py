@@ -1093,6 +1093,50 @@ class TemplateNPredModel(ModelBase):
         self.spectral_model.norm.value = 1
         self.spectral_model.tilt.value = 0
 
+    def slice_by_energy(self, energy_min=None, energy_max=None, name=None):
+        """Select and slice model template in energy range
+
+        Parameters
+        ----------
+        energy_min, energy_max : `~astropy.units.Quantity`
+            Energy bounds of the slice. Default is None.
+        name : str
+            Name of the sliced model. Default is None.
+
+        Returns
+        -------
+        model : `TemplateNpredModel`
+            Sliced Model.
+
+        """
+        name = make_name(name)
+
+        energy_axis = self.map._geom.axes["energy"]
+
+        if energy_min is None:
+            energy_min = energy_axis.bounds[0]
+
+        if energy_max is None:
+            energy_max = energy_axis.bounds[1]
+
+        if name is None:
+            name = self.name
+
+        energy_min, energy_max = u.Quantity(energy_min), u.Quantity(energy_max)
+
+        group = energy_axis.group_table(edges=[energy_min, energy_max])
+
+        is_normal = group["bin_type"] == "normal   "
+        group = group[is_normal]
+
+        slices = {
+            "energy": slice(int(group["idx_min"][0]), int(group["idx_max"][0]) + 1)
+        }
+
+        model = self.copy(name=name)
+        model.map = model.map.slice_by_idx(slices=slices)
+        return model
+
     def __str__(self):
         str_ = self.__class__.__name__ + "\n\n"
         str_ += "\t{:26}: {}\n".format("Name", self.name)

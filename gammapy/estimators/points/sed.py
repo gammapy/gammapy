@@ -197,7 +197,14 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
             )
 
         if len(datasets_sliced) > 0:
-            datasets_sliced.models = datasets.models.copy()
+            if datasets.models is not None:
+                models_sliced = datasets.models.slice_by_energy(
+                    energy_min=energy_min,
+                    energy_max=energy_max,
+                    sum_over_energy_groups=self.sum_over_energy_groups,
+                )
+                datasets_sliced.models = models_sliced
+
             return super().run(datasets=datasets_sliced)
         else:
             log.warning(f"No dataset contribute in range {energy_min}-{energy_max}")
