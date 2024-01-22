@@ -879,6 +879,26 @@ def test_time_map_axis_format_plot_xaxis(time_intervals):
     assert ax2.axes.axes.get_xlabel().split()[1] == "[mjd]"
 
 
+def test_time_group_table(time_intervals):
+    axis = TimeMapAxis(
+        time_intervals["t_min"],
+        time_intervals["t_max"],
+        time_intervals["t_ref"],
+        name="time",
+    )
+
+    groups = axis.group_table(edges=[5 * u.d - 1 * u.h, 6 * u.d + 2 * u.h])
+
+    assert_allclose(groups["idx_min"], [10])
+    assert_allclose(groups["idx_max"], [11])
+    assert_allclose(groups["time_min"], [58932.263158])
+    assert_allclose(groups["time_max"], [58932.83114])
+
+    groups2 = axis.group_table(edges=[11 * u.d, 12 * u.d])
+
+    assert_allclose(groups2["idx_min"], [-1])
+
+
 def test_single_valued_axis():
     # this will be interpreted as a scalar value
     # that is against the specifications, but we allow it nevertheless

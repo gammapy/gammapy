@@ -2978,24 +2978,50 @@ class TimeMapAxis:
 
         Parameters
         ----------
-        edges : `~astropy.units.Quantity` or `~astropy.time.Time`
-            Group bin edges.
+        edges : list of `~astropy.time.Time` or `~astropy.units.Quantity`
+            Start and stop time for each interval to compute the LC.
 
         Returns
         -------
         groups : `~astropy.table.Table`
             Group table.
         """
+
         for _, edge in enumerate(edges):
             if not isinstance(edge, Time):
                 edges[_] = self.reference_time + edges[_]
 
-        gti = self.to_gti()
-
         time_intervals = [(edges[i], edges[i + 1]) for i in range(len(edges) - 1)]
-        groups = gti.group_table(time_intervals)
+        group_table = Table(
+            names=("idx_min", "idx_max", "time_min", "time_max", "bin_type"),
+            dtype=("i8", "i8", "f8", "f8", "S10"),
+        )
 
-        return groups
+        for time_interval in time_intervals:
+            mask1 = self.time_min >= time_interval[0]
+            mask2 = self.time_max <= time_interval[1]
+            mask = mask1 & mask2
+            if np.any(mask):
+                idx_min = np.where(mask)[0][0]
+                idx_max = np.where(mask)[0][-1]
+                time_min = self.time_min[idx_min]
+                time_max = self.time_max[idx_max]
+                bin_type = "normal   "
+            else:
+                idx_min = idx_max = -1
+                time_min = self.time_min[idx_min]
+                time_max = self.time_max[idx_max]
+                if np.any(mask1):
+                    bin_type = "overflow"
+                elif np.any(mask2):
+                    bin_type = "underflow"
+                else:
+                    bin_type = "outflow"
+            group_table.add_row(
+                [idx_min, idx_max, time_min.mjd, time_max.mjd, bin_type]
+            )
+
+        return group_table
 
 
 class LabelMapAxis:

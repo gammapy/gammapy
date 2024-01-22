@@ -1124,6 +1124,9 @@ class FluxMaps:
 
             group = axis.group_table(edges=[interval.start, interval.stop])
 
+            is_normal = group["bin_type"] == "normal   "
+            group = group[is_normal]
+
             idx_intervals.append(
                 slice(int(group["idx_min"][0]), int(group["idx_max"][0]) + 1)
             )
