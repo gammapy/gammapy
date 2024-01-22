@@ -54,9 +54,19 @@ from astropy.convolution import convolve
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.table import Table
+from astropy.time import Time
 import matplotlib.pyplot as plt
+from IPython.display import display
 from gammapy.data import EventList
-from gammapy.maps import Map, MapAxis, WcsGeom, WcsNDMap
+from gammapy.maps import (
+    LabelMapAxis,
+    Map,
+    MapAxes,
+    MapAxis,
+    TimeMapAxis,
+    WcsGeom,
+    WcsNDMap,
+)
 
 ######################################################################
 # Check setup
@@ -265,6 +275,53 @@ print(energy_axis.unit)
 #
 
 print(energy_axis.center)
+
+######################################################################
+# Adding Non-contiguous axes
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Non-spatial map axes can also be handled through two other objects known as the `~gammapy.maps.TimeMapAxis`
+# and the `~gammapy.maps.LabelMapAxis`. The `~gammapy.maps.TimeMapAxis` object provides an axis for non-adjacent
+# time intervals.
+#
+
+time_map_axis = TimeMapAxis(
+    edges_min=[1, 10] * u.day,
+    edges_max=[2, 13] * u.day,
+    reference_time=Time("2020-03-19"),
+)
+
+print(time_map_axis)
+
+######################################################################
+# This `time_map_axis` can then be utilised in a similar way to the previous implementation to create
+# a `~gammapy.maps.Map`.
+#
+
+map_4d = Map.create(
+    binsz=0.02, width=(10, 5), frame="galactic", axes=[energy_axis, time_map_axis]
+)
+print(map_4d.geom)
+
+######################################################################
+# The `~gammapy.maps.LabelMapAxis` object allows for handling of labels for map axes.
+# It provides an axis for non-numeric entries.
+#
+
+label_axis = LabelMapAxis(
+    labels=["dataset-1", "dataset-2", "dataset-3"], name="dataset"
+)
+
+print(label_axis)
+
+######################################################################
+# Mixing the above axes types would be done like so:
+#
+
+axes = MapAxes(axes=[energy_axis, time_map_axis, label_axis])
+hdu = axes.to_table_hdu(format="gadf")
+table = Table.read(hdu)
+display(table)
 
 
 ######################################################################
