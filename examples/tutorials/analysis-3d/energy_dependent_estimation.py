@@ -56,7 +56,7 @@ import matplotlib.pyplot as plt
 from IPython.display import display
 from gammapy.datasets import Datasets, MapDataset
 from gammapy.estimators import EnergyDependentMorphologyEstimator
-from gammapy.estimators.energydependence import weighted_chi2_parameter
+from gammapy.estimators.energydependentmorphology import weighted_chi2_parameter
 from gammapy.maps import Map
 from gammapy.modeling.models import (
     GaussianSpatialModel,

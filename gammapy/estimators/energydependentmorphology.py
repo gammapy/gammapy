@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Implementation of energy dependent estimator tool."""
+"""Implementation of energy-dependent morphology estimator tool."""
 import numpy as np
 from gammapy.datasets import Datasets
 from gammapy.modeling import Fit
@@ -12,7 +12,7 @@ __all__ = ["weighted_chi2_parameter", "EnergyDependentMorphologyEstimator"]
 
 
 def weighted_chi2_parameter(results_edep, parameters=["sigma"]):
-    r"""Calculate the weighted chi-squared value for the parameter of interest.
+    r"""Calculate the weighted chi-squared value for the parameters of interest.
 
     The chi-squared parameter is defined as follows:
 
@@ -31,13 +31,13 @@ def weighted_chi2_parameter(results_edep, parameters=["sigma"]):
     result_edep : `dict`
         Dictionary of results for the energy-dependent estimator.
     parameters : list of str, optional
-        The model parameter to calculate the chi-squared value for.
+        The model parameters to calculate the chi-squared value for.
         Default is ["sigma"].
 
     Returns
     -------
     chi2_result : `dict`
-        Dictionary with the chi-squared value for parameter of interest.
+        Dictionary with the chi-squared values for the parameters of interest.
 
     Notes
     -----

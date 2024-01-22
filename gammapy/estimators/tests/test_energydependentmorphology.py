@@ -3,7 +3,7 @@ from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from gammapy.datasets import Datasets, MapDataset
-from gammapy.estimators.energydependence import (
+from gammapy.estimators.energydependentmorphology import (
     EnergyDependentMorphologyEstimator,
     weighted_chi2_parameter,
 )
