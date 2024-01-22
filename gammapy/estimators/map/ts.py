@@ -501,7 +501,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
                 dataset_sliced = dataset_sliced.to_image(name=dataset.name)
 
             if dataset_models is not None:
-                models_sliced = dataset_models.slice_by_energy(
+                models_sliced = dataset_models._slice_by_energy(
                     energy_min=energy_min,
                     energy_max=energy_max,
                     sum_over_energy_groups=self.sum_over_energy_groups,

@@ -198,7 +198,7 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
 
         if len(datasets_sliced) > 0:
             if datasets.models is not None:
-                models_sliced = datasets.models.slice_by_energy(
+                models_sliced = datasets.models._slice_by_energy(
                     energy_min=energy_min,
                     energy_max=energy_max,
                     sum_over_energy_groups=self.sum_over_energy_groups,

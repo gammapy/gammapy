@@ -681,7 +681,7 @@ class DatasetModels(collections.abc.Sequence):
             models=models, covariance_data=self.covariance.data.copy()
         )
 
-    def slice_by_energy(self, energy_min, energy_max, sum_over_energy_groups=False):
+    def _slice_by_energy(self, energy_min, energy_max, sum_over_energy_groups=False):
         """Copy models and slice TemplateNPredModel in energy range.
 
         Parameters
