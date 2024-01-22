@@ -81,6 +81,7 @@ VALID_QUANTITIES = [
     "is_ul",
     "counts",
     "success",
+    "n_dof",
 ]
 
 
@@ -95,6 +96,7 @@ OPTIONAL_QUANTITIES_COMMON = [
     "is_ul",
     "counts",
     "success",
+    "n_dof",
 ]
 
 
@@ -131,6 +133,7 @@ class FluxMaps:
         * ts : optional, the delta test statistic associated with the flux value.
         * sqrt_ts : optional, the square root of the test statistic, when relevant.
         * success : optional, a boolean tagging the validity of the estimation.
+        * n_dof : optional, the number of degrees of freedom used in TS computation
 
     reference_model : `~gammapy.modeling.models.SkyModel`, optional
         The reference model to use for conversions. If None, a model consisting
@@ -568,6 +571,12 @@ class FluxMaps:
         """Norm sensitivity."""
         self._check_quantity("norm_sensitivity")
         return self._data["norm_sensitivity"]
+
+    @property
+    def n_dof(self):
+        """Number of iterations of fit."""
+        self._check_quantity("n_dof")
+        return self._data["n_dof"]
 
     @property
     def dnde_ref(self):
