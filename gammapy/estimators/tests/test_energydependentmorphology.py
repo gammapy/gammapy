@@ -63,33 +63,33 @@ class TestEnergyDependentEstimator:
         results_edep = self.results["energy_dependence"]["result"]
         assert_allclose(
             results_edep["lon_0"],
-            [5.621402, 5.614581, 5.618528, 5.652494] * u.deg,
+            [5.6067162, 5.601791, 5.6180701, 5.5973948] * u.deg,
             atol=1e-5,
         )
         assert_allclose(
             results_edep["lat_0"],
-            [0.20073398, 0.21676375, 0.19342063, 0.20307733] * u.deg,
+            [0.20237541, 0.21819575, 0.18371523, 0.18106852] * u.deg,
             atol=1e-5,
         )
         assert_allclose(
             results_edep["sigma"],
-            [0.24192075, 0.27437636, 0.2260173, 0.16186429] * u.deg,
+            [0.21563528, 0.25686477, 0.19736596, 0.13505605] * u.deg,
             atol=1e-5,
         )
         assert_allclose(
-            self.results["energy_dependence"]["delta_ts"], 40.97162512721843, atol=1e-5
+            self.results["energy_dependence"]["delta_ts"], 75.61713199794758, atol=1e-5
         )
 
     def test_significance(self):
         results_src = self.results["src_above_bkg"]
         assert_allclose(
             results_src["delta_ts"],
-            [967.2115532823664, 643.2234423905393, 205.57393366298493],
+            [998.0521965029693, 712.8735641098574, 289.81556949490914],
             atol=1e-5,
         )
         assert_allclose(
             results_src["significance"],
-            [30.782094269119664, 24.995567112486306, 13.80497201427469],
+            [31.27752315246094, 26.34612970747113, 16.54625269423397],
             atol=1e-5,
         )
 
@@ -101,12 +101,12 @@ class TestEnergyDependentEstimator:
 
         assert_allclose(
             chi2_sigma["chi2"],
-            [49.90825463240661, 1.25911191815264, 2.4515685629074206],
+            [87.84278516393066, 4.605432972153188, 1.320491077667271],
             atol=1e-5,
         )
 
         assert_allclose(
             chi2_sigma["significance"],
-            [6.752420644157449, 0.623694332110968, 1.0504148916734348],
+            [9.107664118611664, 1.6449173252682943, 0.6484028260024965],
             atol=1e-5,
         )
