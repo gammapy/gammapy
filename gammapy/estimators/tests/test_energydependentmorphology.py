@@ -49,7 +49,7 @@ class TestEnergyDependentEstimator:
         energy_edges = [1, 3, 5, 20] * u.TeV
 
         stacked_dataset = MapDataset.read(
-            "$GAMMAPY_DATA/estimators/mock_data/dataset_energy_dependent.fits.gz"
+            "$GAMMAPY_DATA/estimators/mock_DL4/dataset_energy_dependent.fits.gz"
         )
         datasets = Datasets([stacked_dataset])
         datasets.models = create_model()

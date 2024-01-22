@@ -82,7 +82,7 @@ check_tutorials_setup()
 # to your local directory.
 
 stacked_dataset = MapDataset.read(
-    "$GAMMAPY_DATA/estimators/mock_data/dataset_energy_dependent.fits.gz"
+    "$GAMMAPY_DATA/estimators/mock_DL4/dataset_energy_dependent.fits.gz"
 )
 datasets = Datasets([stacked_dataset])
 
