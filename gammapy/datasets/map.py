@@ -192,20 +192,20 @@ def create_map_dataset_from_observation(
         it should match the `dataset_name` of the background model to use.
         Default is None. If None it is determined from the observation ID.
     energy_axis_true : `~gammapy.maps.MapAxis`, optional
-        True energy axis. Defalut is None.
+        True energy axis. Default is None.
         If None it is determined from the observation IRFs.
     energy_axis : `~gammapy.maps.MapAxis`, optional
-        Reconstructed energy axis. Defalut is None.
+        Reconstructed energy axis. Default is None.
         If None it is determined from the observation IRFs.
     energy_bin_per_decade_max : int, optional
         Maximal number of bin per decade in energy for the reference dataset
     spatial_width : `~astropy.units.Quantity`, optional
-        Spatial window size. Defalut is None.
+        Spatial window size. Default is None.
          If None it is determined from the observation offset max or rad max.
     spatial_width_max : `~astropy.quantity.Quantity`, optional
         Maximal spatial width. Default is 12 degree.
     spatial_bin_size : `~astropy.units.Quantity`, optional
-        Pixel size. Defalut is None.
+        Pixel size. Default is None.
         If None it is determined from the observation PSF R68.
     spatial_bin_size_min : `~astropy.quantity.Quantity`, optional
         Minimal spatial bin size. Default is 0.01 degree.
