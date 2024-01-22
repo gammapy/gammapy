@@ -48,7 +48,6 @@ def test_apply_edisp(region_map_true):
 
 @requires_data()
 def test_dataset_split():
-
     template_diffuse = TemplateSpatialModel.read(
         filename="$GAMMAPY_DATA/fermi-3fhl-gc/gll_iem_v06_gc.fits.gz",
         normalize=False,
@@ -69,7 +68,9 @@ def test_dataset_split():
     assert len(datasets) == 15
     assert len(datasets.models) == 1
 
-    datasets = split_dataset(dataset, width=width, margin=margin, split_template_models=True)
+    datasets = split_dataset(
+        dataset, width=width, margin=margin, split_template_models=True
+    )
     assert len(datasets.models) == len(datasets)
     assert len(datasets.parameters.free_parameters) == 1
     assert (
