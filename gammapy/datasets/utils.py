@@ -72,7 +72,7 @@ def get_nearest_valid_exposure_position(exposure, position=None):
     return mask_exposure.mask_nearest_position(position)
 
 
-def split_dataset(dataset, width, margin, split_templates=True):
+def split_dataset(dataset, width, margin, split_template_models=True):
     """Split dataset in multiple non-overlapping analysis regions.
 
     Parameters
@@ -86,7 +86,7 @@ def split_dataset(dataset, width, margin, split_templates=True):
         The margin should be defined such as sources outside the region of interest
         that contributes inside are well defined.
         The mask_fit in the margin region is False and unchanged elsewhere.
-    split_templates : bool, optional
+    split_template_models : bool, optional
         Apply cutout to template models or not. Default is True.
 
 
@@ -142,7 +142,7 @@ def split_dataset(dataset, width, margin, split_templates=True):
                 )
 
             # template models cutout (should limit memory usage in parallel)
-            if split_templates:
+            if split_template_models:
                 d.models = cutout_template_models(
                     dataset.models, cutout_kwargs, [d.name]
                 )
