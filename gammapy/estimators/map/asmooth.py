@@ -183,7 +183,12 @@ class ASmoothMapEstimator(Estimator):
             dataset_sliced = dataset.slice_by_energy(
                 energy_min=energy_min, energy_max=energy_max, name=dataset.name
             )
-            dataset_sliced.models = dataset.models
+            if dataset.models is not None:
+                models_sliced = dataset.models.slice_by_energy(
+                    energy_min=energy_min,
+                    energy_max=energy_max,
+                )
+                dataset_sliced.models = models_sliced
             result = self.estimate_maps(dataset_sliced)
             results.append(result)
 

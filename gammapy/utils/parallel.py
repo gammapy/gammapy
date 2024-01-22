@@ -44,6 +44,7 @@ class PoolMethodEnum(Enum):
 
 BACKEND_DEFAULT = ParallelBackendEnum.multiprocessing
 N_JOBS_DEFAULT = 1
+ALLOW_CHILD_JOBS = False
 POOL_KWARGS_DEFAULT = dict(processes=N_JOBS_DEFAULT)
 METHOD_DEFAULT = PoolMethodEnum.starmap
 METHOD_KWARGS_DEFAULT = {}
@@ -151,6 +152,8 @@ class multiprocessing_manager:
 class ParallelMixin:
     """Mixin class to handle parallel processing."""
 
+    _n_child_jobs = 1
+
     @property
     def n_jobs(self):
         """Number of jobs as an integer."""
@@ -169,6 +172,21 @@ class ParallelMixin:
             )
 
         self._n_jobs = value
+        if ALLOW_CHILD_JOBS:
+            self._n_child_jobs = value
+
+    def _update_child_jobs(self):
+        """needed because we can update only in the main process
+        otherwise global ALLOW_CHILD_JOBS has default value"""
+        if ALLOW_CHILD_JOBS:
+            self._n_child_jobs = self.n_jobs
+        else:
+            self._n_child_jobs = 1
+
+    @property
+    def _get_n_child_jobs(self):
+        """Number of allowed child jobs as an integer."""
+        return self._n_child_jobs
 
     @property
     def parallel_backend(self):
@@ -246,9 +264,8 @@ def run_multiprocessing(
             processes = cpu_count
 
         if multiprocessing.current_process().name != "MainProcess":
-            # subprocesses cannot have childs
+            # with multiprocessing subprocesses cannot have childs (but possible with ray)
             processes = 1
-    # TODO: check for ray
 
     if processes == 1:
         return run_loop(

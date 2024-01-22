@@ -8,17 +8,15 @@ from astropy.coordinates import SkyCoord, SkyOffsetFrame
 from astropy.table import Table
 from astropy.time import Time
 from gammapy import __version__
-from gammapy.data import EventList, PointingMode, observatory_locations
-from gammapy.maps import MapAxis, MapCoord, RegionNDMap, TimeMapAxis, WcsGeom
+from gammapy.data import EventList, observatory_locations
+from gammapy.maps import MapAxis, MapCoord, RegionNDMap, TimeMapAxis
 from gammapy.modeling.models import (
     ConstantSpectralModel,
     ConstantTemporalModel,
-    FoVBackgroundModel,
-    Models,
     PointSpatialModel,
 )
 from gammapy.utils.random import get_random_state
-from .map import MapDataset
+from .map import create_map_dataset_from_observation
 
 __all__ = ["MapDatasetEventSampler", "ObservationEventSampler"]
 
@@ -587,15 +585,6 @@ class ObservationEventSampler(MapDatasetEventSampler):
 
     Parameters
     ----------
-    energy_axis_true : `~gammapy.maps.MapAxis`
-        True energy axis.
-    energy_axis : `~gammapy.maps.MapAxis`
-        Reconstructed energy axis.
-    spatial_width : float or `~astropy.units.Quantity`
-        Spatial window size. A float is assumed to be in degree.
-    spatial_spatial_bin_size : float or `~astropy.units.Quantity`, optional
-        Pixel size used for sampling. A float is assumed to be in degree.
-        Default is 0.01 degree.
     random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
         Defines random number generator initialisation via the `~gammapy.utils.random.get_random_state` function.
     oversample_energy_factor : int, optional
@@ -606,83 +595,23 @@ class ObservationEventSampler(MapDatasetEventSampler):
     keep_mc_id : bool, optional
         Flag to tag sampled events from a given model with a Montecarlo identifier.
         Default is True. If set to False, no identifier will be assigned.
+    dataset_kwargs : dict, optional
+        Arguments passed to `~gammapy.datasets.create_map_dataset_from_observation()`
     """
 
     def __init__(
         self,
-        energy_axis_true,
-        energy_axis,
-        spatial_width,
-        spatial_bin_size=0.01 * u.deg,
         random_state="random-seed",
         oversample_energy_factor=10,
         t_delta=0.5 * u.s,
         keep_mc_id=True,
+        dataset_kwargs=None,
     ):
+        self.dataset_kwargs = dataset_kwargs
         self.random_state = get_random_state(random_state)
-        self.energy_axis_true = energy_axis_true
-        self.energy_axis = energy_axis
-        self.spatial_width = u.Quantity(spatial_width, "deg")
-        self.spatial_bin_size = u.Quantity(spatial_bin_size, "deg")
         self.oversample_energy_factor = oversample_energy_factor
         self.t_delta = t_delta
         self.keep_mc_id = keep_mc_id
-
-    def _create_dataset(self, observation, models=None, dataset_name=None):
-        """create dataset used for sampling."""
-
-        # import here to prevent circular import
-        from gammapy.makers import MapDatasetMaker
-
-        if models is None:
-            models = Models()
-
-        if dataset_name is None:
-            dataset_name = "simulated-dataset"
-
-        if not np.any(
-            [
-                isinstance(m, FoVBackgroundModel) and m.dataset_name == dataset_name
-                for m in models
-            ]
-        ):
-            models.append(FoVBackgroundModel(dataset_name=dataset_name))
-
-        if observation.pointing.mode is not PointingMode.POINTING:
-            raise NotImplementedError(
-                "Only observations with fixed pointing in ICRS are supported"
-            )
-        pointing_icrs = observation.pointing.fixed_icrs
-        geom = WcsGeom.create(
-            skydir=pointing_icrs,
-            width=self.spatial_width,
-            binsz=self.spatial_bin_size.to_value(u.deg),
-            frame="icrs",
-            axes=[self.energy_axis],
-        )
-
-        components = ["exposure"]
-        axes = dict(
-            energy_axis_true=self.energy_axis_true,
-        )
-        if observation.edisp is not None:
-            components.append("edisp")
-            axes["migra_axis"] = observation.edisp.axes["migra"]
-        if observation.bkg is not None:
-            components.append("background")
-        if observation.psf is not None:
-            components.append("psf")
-
-        dataset = MapDataset.create(
-            geom,
-            name=dataset_name,
-            **axes,
-        )
-
-        maker = MapDatasetMaker(selection=components)
-        dataset = maker.run(dataset, observation)
-        dataset.models = models
-        return dataset
 
     def run(self, observation, models=None, dataset_name=None):
         """Sample events for given observation and signal models.
@@ -708,7 +637,9 @@ class ObservationEventSampler(MapDatasetEventSampler):
             A copy of the input observation with event list filled.
         """
 
-        dataset = self._create_dataset(observation, models, dataset_name)
+        dataset = create_map_dataset_from_observation(
+            observation, models, dataset_name, **self.dataset_kwargs
+        )
         events = super().run(dataset, observation)
 
         observation = deepcopy(observation)

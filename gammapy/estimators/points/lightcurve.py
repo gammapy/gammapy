@@ -166,6 +166,7 @@ class LightCurveEstimator(FluxPointsEstimator):
                 parallel_datasets.append(datasets_to_fit)
 
         if self.n_jobs > 1:
+            self._update_child_jobs()
             rows = parallel.run_multiprocessing(
                 self.estimate_time_bin_flux,
                 zip(
@@ -225,7 +226,9 @@ class LightCurveEstimator(FluxPointsEstimator):
             Resulting flux points.
         """
 
-        fp = super().run(datasets)
+        estimator = self.copy()
+        estimator.n_jobs = self._n_child_jobs
+        fp = estimator._run_flux_points(datasets)
 
         if dataset_names:
             for name in ["counts", "npred", "npred_excess"]:
@@ -233,3 +236,6 @@ class LightCurveEstimator(FluxPointsEstimator):
                     fp._data[name], dataset_names=dataset_names
                 )
         return fp
+
+    def _run_flux_points(self, datasets):
+        return super().run(datasets)
