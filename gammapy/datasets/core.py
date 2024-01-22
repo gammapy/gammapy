@@ -505,7 +505,8 @@ class Datasets(collections.abc.MutableSequence):
         Parameters
         ----------
         cumulative : bool
-            Cumulate info across all observations. Default is False.
+            Cumulate info across all observations. If True, all the information that depend on a
+            model, such as 'stat_sum', will be lost. Default is False.
 
         Returns
         -------
@@ -515,19 +516,18 @@ class Datasets(collections.abc.MutableSequence):
         if not self.is_all_same_type:
             raise ValueError("Info table not supported for mixed dataset type.")
 
-        name = "stacked" if cumulative else self[0].name
-        stacked = self[0].to_masked(name=name)
+        rows = []
 
-        rows = [stacked.info_dict()]
-
-        for dataset in self[1:]:
-            if cumulative:
+        if cumulative:
+            name = "stacked"
+            stacked = self[0].to_masked(name=name)
+            rows.append(stacked.info_dict())
+            for dataset in self[1:]:
                 stacked.stack(dataset)
-                row = stacked.info_dict()
-            else:
-                row = dataset.info_dict()
-
-            rows.append(row)
+                rows.append(stacked.info_dict())
+        else:
+            for dataset in self:
+                rows.append(dataset.info_dict())
 
         return Table(rows)
 
