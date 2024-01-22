@@ -65,11 +65,11 @@ def test_dataset_split():
 
     width = 4 * u.deg
     margin = 1 * u.deg
-    datasets = split_dataset(dataset, width, margin, split_templates=False)
+    datasets = split_dataset(dataset, width, margin, split_template_models=False)
     assert len(datasets) == 15
     assert len(datasets.models) == 1
 
-    datasets = split_dataset(dataset, width=width, margin=margin, split_templates=True)
+    datasets = split_dataset(dataset, width=width, margin=margin, split_template_models=True)
     assert len(datasets.models) == len(datasets)
     assert len(datasets.parameters.free_parameters) == 1
     assert (
