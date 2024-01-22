@@ -4,9 +4,10 @@ import astropy.units as u
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FormatStrFormatter
-from gammapy.maps import Map, MapAxes, MapAxis, MapCoord, WcsGeom
+from gammapy.maps import HpxGeom, Map, MapAxes, MapAxis, MapCoord, WcsGeom
 from gammapy.maps.axes import UNIT_STRING_FORMAT
 from gammapy.modeling.models import PowerLawSpectralModel
+from gammapy.utils.deprecation import deprecated_renamed_argument
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from ..core import IRFMap
@@ -14,6 +15,26 @@ from .core import PSF
 from .kernel import PSFKernel
 
 __all__ = ["PSFMap", "RecoPSFMap"]
+
+
+PSF_MAX_OVERSAMPLING = 4  # for backward compatibility
+
+
+def _psf_upsampling_factor(psf, geom, position, energy=None, precision_factor=12):
+    """Minimal factor between the bin half-width of the geom and the median R68% containment radius."""
+    if energy is None:
+        energy = geom.axes[psf.energy_name].center
+    psf_r68 = psf.containment_radius(
+        0.68, geom.axes[psf.energy_name].center, position=position
+    )
+    psf_r68_median = np.percentile(psf_r68, 50)
+    base_factor = (2 * psf_r68_median / geom.pixel_scales.max()).to_value("")
+    factor = np.minimum(
+        int(np.ceil(precision_factor / base_factor)), PSF_MAX_OVERSAMPLING
+    )
+    if isinstance(geom, HpxGeom):
+        factor = int(2 ** np.ceil(np.log(factor) / np.log(2)))
+    return factor
 
 
 class IRFLikePSF(PSF):
@@ -222,8 +243,17 @@ class PSFMap(IRFMap):
         )
         return Map.from_geom(geom=geom, data=data.value, unit=data.unit)
 
+    @deprecated_renamed_argument(
+        "factor", "precision_factor", "v1.2", arg_in_kwargs=True
+    )
     def get_psf_kernel(
-        self, geom, position=None, max_radius=None, containment=0.999, factor=4
+        self,
+        geom,
+        position=None,
+        max_radius=None,
+        containment=0.999,
+        factor=None,
+        precision_factor=12,
     ):
         """Return a PSF kernel at the given position.
 
@@ -243,14 +273,20 @@ class PSFMap(IRFMap):
             across all energies is used. The radius can be overwritten using
             the `max_radius` argument. Default is 0.999.
         factor : int, optional
-            Oversampling factor to compute the PSF. Default is 4.
+            Oversampling factor to compute the PSF.
+            Default is None and it will be computed automatically.
+        precision_factor : int, optional
+            Factor between the bin half-width of the geom and the median R68% containment radius.
+            Used only for the oversampling method. Default is 10.
 
         Returns
         -------
         kernel : `~gammapy.irf.PSFKernel`
             The resulting kernel.
         """
-        # TODO: try to simplify...is the oversampling needed?
+        if factor is None:  # TODO: remove once deprecated
+            factor = _psf_upsampling_factor(self, geom, position, precision_factor)
+
         if position is None:
             position = self.psf_map.geom.center_skydir
 
@@ -266,9 +302,8 @@ class PSFMap(IRFMap):
             radii = self.containment_radius(**kwargs)
             max_radius = np.max(radii)
 
-        geom = geom.to_odd_npix(max_radius=max_radius)
-        geom_upsampled = geom.upsample(factor=factor)
-        coords = geom_upsampled.get_coord(sparse=True)
+        geom = geom.to_odd_npix(max_radius=max_radius).upsample(factor=factor)
+        coords = geom.get_coord(sparse=True)
         rad = coords.skycoord.separation(geom.center_skydir)
 
         coords = {
@@ -281,9 +316,8 @@ class PSFMap(IRFMap):
             coords=coords,
             method="linear",
         )
-
-        kernel_map = Map.from_geom(geom=geom_upsampled, data=np.clip(data, 0, np.inf))
-        kernel_map = kernel_map.downsample(factor, preserve_counts=True)
+        kernel_map = Map.from_geom(geom=geom, data=np.clip(data, 0, np.inf))
+        kernel_map = kernel_map.downsample(factor=factor, preserve_counts=True)
         return PSFKernel(kernel_map, normalize=True)
 
     def sample_coord(self, map_coord, random_state=0):

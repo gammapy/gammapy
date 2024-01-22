@@ -8,6 +8,7 @@ from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.table import Table
 from regions import CircleSkyRegion
+import gammapy.irf.psf.map as psf_map_module
 from gammapy.catalog import SourceCatalog3FHL
 from gammapy.data import GTI
 from gammapy.datasets import Datasets, MapDataset, MapDatasetOnOff
@@ -637,6 +638,21 @@ def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
 
     assert_allclose(stacked1.psf.psf_map, stacked.psf.psf_map)
     assert_allclose(stacked1.edisp.edisp_map, stacked.edisp.edisp_map)
+
+
+@requires_data()
+def test_map_auto_psf_upsampling(sky_model, geom, geom_etrue):
+    dataset_2 = get_map_dataset(geom, geom_etrue, name="test-2")
+    datasets = Datasets([dataset_2])
+
+    models = Models(datasets.models)
+    models.insert(0, sky_model)
+
+    datasets.models = models
+    psf_map_module.PSF_UPSAMPLING_FACTOR = None
+    npred = dataset_2.npred().data.sum()
+    assert_allclose(npred, 9525.340707, rtol=1e-3)
+    psf_map_module.PSF_UPSAMPLING_FACTOR = 4
 
 
 @requires_data()
