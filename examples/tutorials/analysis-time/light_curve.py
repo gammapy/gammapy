@@ -25,9 +25,8 @@ run-wise binning, nightly, weekly etc.
 **Objective: The Crab nebula is not known to be variable at TeV
 energies, so we expect constant brightness within statistical and
 systematic errors. Compute per-observation and nightly fluxes of the
-four Crab nebula observations from the H.E.S.S. first public test data
-release**\ `o <https://www.mpi-hd.mpg.de/hfm/HESS/pages/dl3-dr1/>`__\ **to
-check it.**
+four Crab nebula observations from the `H.E.S.S. first public test data
+release <https://www.mpi-hd.mpg.de/hfm/HESS/pages/dl3-dr1/>`__.**
 
 Proposed approach
 -----------------
@@ -87,7 +86,7 @@ check_tutorials_setup()
 # using the high level interface of Gammapy.
 #
 # From the high level interface, the data reduction for those observations
-# is performed as followed
+# is performed as follows.
 #
 
 

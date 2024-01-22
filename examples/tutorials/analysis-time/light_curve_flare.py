@@ -143,7 +143,7 @@ print(time_intervals[0].mjd)
 # Here we apply the list of time intervals to the observations with
 # `~gammapy.data.Observations.select_time()`.
 #
-# This will return a new list of Observations filtered by time_intervals.
+# This will return a new list of Observations filtered by `time_intervals`.
 # For each time interval, a new observation is created that converts the
 # intersection of the GTIs and time interval.
 #
@@ -217,7 +217,7 @@ safe_mask_masker = SafeMaskMaker(methods=["aeff-max"], aeff_percent=10)
 # Creation of the datasets
 # ~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# Now we perform the actual data reduction in the time_intervals.
+# Now we perform the actual data reduction in the `time_intervals`.
 #
 
 # %%time

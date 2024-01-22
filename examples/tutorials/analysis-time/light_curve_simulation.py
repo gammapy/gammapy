@@ -42,7 +42,7 @@ In summary, necessary steps are:
 
 -  Choose observation parameters including a list of
    `gammapy.data.GTI`
--  Define temporal and spectral models from :ref:model-gallery as per
+-  Define temporal and spectral models from :ref:`model-gallery` as per
    science case
 -  Perform the simulation (in 1D or 3D)
 -  Extract the light curve from the reduced dataset as shown
