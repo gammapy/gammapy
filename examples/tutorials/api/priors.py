@@ -421,7 +421,7 @@ plt.show()
 # - an instantiation of each PriorParameter with their unit and default values
 # - the evaluate function where the mathematical expression for the prior
 #    is defined.
-# As an example for a custom prior a Jeffrey prior for a scale parameter is choosen.
+# As an example for a custom prior a Jeffrey prior for a scale parameter is chosen.
 # The only parameter is ``sigma`` and the evaluation method return the quared inverse of ``sigma``.
 #
 
@@ -444,7 +444,7 @@ class MyCustomPrior(Prior):
         Default is inf.
     """
 
-    tag = ["MyCostomPrior"]
+    tag = ["MyCustomPrior"]
     sigma = PriorParameter(name="sigma", value=1, unit="")
 
     @staticmethod
