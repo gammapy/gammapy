@@ -78,9 +78,7 @@ def split_dataset(dataset, width, margin, split_templates=True):
     Parameters
     ----------
     dataset : `~gammapy.datasets.Dataset`
-        Dataset to split
-    split_templates : bool, optional
-        Apply cutout to template models or not. Default is True.
+        Dataset to split.
     width : `~astropy.coordinates.Angle`
         Angular size of the each sub-region.
     margin : `~astropy.coordinates.Angle`
@@ -88,6 +86,8 @@ def split_dataset(dataset, width, margin, split_templates=True):
         The margin should be defined such as sources outside the region of interest
         that contributes inside are well defined.
         The mask_fit in the margin region is False and unchanged elsewhere.
+    split_templates : bool, optional
+        Apply cutout to template models or not. Default is True.
 
 
     Returns
