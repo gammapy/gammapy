@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import os
 import pytest
+import numpy as np
 from numpy.testing import assert_allclose
 from astropy.coordinates import SkyCoord
 from gammapy.datasets import Datasets, SpectrumDatasetOnOff
@@ -88,10 +89,15 @@ def test_datasets_info_table():
     table = datasets_hess.info_table()
     assert table["name"][0] == "23523"
     assert table["name"][1] == "23526"
+    assert np.isnan(table["npred_signal"][0])
 
-    table = datasets_hess.info_table(cumulative=True)
-    assert table["name"][0] == "stacked"
-    assert table["name"][1] == "stacked"
+    table_cumul = datasets_hess.info_table(cumulative=True)
+    assert table_cumul["name"][0] == "stacked"
+    assert table_cumul["name"][1] == "stacked"
+    assert np.isnan(table_cumul["npred_signal"][0])
+    assert table_cumul["alpha"][1] == table_cumul["alpha"][0]
+
+    assert table["excess"].sum() == table_cumul["excess"][1]
 
 
 @requires_data()
