@@ -65,10 +65,11 @@ norm_err          Symmetric error on the norm derived from the Hessian matrix. G
 stat              Fit statistics value of the best fit hypothesis
 stat_null         Fit statistics value of the null hypothesis
 ts                Difference in fit statistics (`stat - stat_null` )
-sqrt_ts           Square root of ts time sign(norm), in case of one degree of freedom, corresponds to significance (Wilk's theorem)
+sqrt_ts           Square root of ts time sign(norm), in case of one degree of freedom (n_dof), corresponds to significance (Wilk's theorem)
 npred             Predicted counts of the best fit hypothesis. Equivalent to correlated counts for backward folding
 npred_excess      Predicted excess counts of the best fit hypothesis. Equivalent to correlated excess for backward folding
 npred_background  Predicted background counts of the best fit hypothesis. Equivalent to correlated excess for backward folding
+n_dof             Number of degrees of freedom. If not explicitly present, assumed to be one
 ================= =================================================
 
 In addition, the following optional quantities can be computed:
