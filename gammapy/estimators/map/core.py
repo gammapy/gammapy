@@ -574,7 +574,7 @@ class FluxMaps:
 
     @property
     def n_dof(self):
-        """Number of iterations of fit."""
+        """Number of degrees of freedom of the fit per energy bin."""
         self._check_quantity("n_dof")
         return self._data["n_dof"]
 
