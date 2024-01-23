@@ -51,8 +51,9 @@ In summary, we have to:
 -  Define the source model
 -  Extract the light curve from the reduced dataset
 
-Here, we will use the PKS 2155-304 observations from the H.E.S.S. first
-public test data release. We will use time intervals of 5 minutes
+Here, we will use the PKS 2155-304 observations from the
+`H.E.S.S. first public test data release <https://www.mpi-hd.mpg.de/hfm/HESS/pages/dl3-dr1/>`__.
+We will use time intervals of 5 minutes
 duration. The tutorial is implemented with the intermediate level API.
 
 Setup
@@ -183,7 +184,7 @@ print(short_observations[1].gti)
 # chosen.
 #
 # We need to define the ON extraction region. Its size follows typical
-# spectral extraction regions for HESS analyses.
+# spectral extraction regions for H.E.S.S. analyses.
 #
 
 # Target definition

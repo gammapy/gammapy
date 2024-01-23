@@ -1,14 +1,15 @@
 """
 Estimation of time variability in a lightcurve
 ==============================================
+
 Compute a series of time variability significance estimators for a lightcurve.
 
 Prerequisites
 -------------
 
-Understanding the light curve estimator, please refer to the :doc:`</tutorials/analysis-time/light_curve` tutorial.
+Understanding the light curve estimator, please refer to the :doc:`/tutorials/analysis-time/light_curve` tutorial.
 For more in-depth explanation on the creation of smaller observations for exploring time variability, refer to the
-:doc:`</tutorials/analysis-time/light_curve_flare` tutorial.
+:doc:`/tutorials/analysis-time/light_curve_flare` tutorial.
 
 Context
 -------
@@ -20,9 +21,10 @@ There are many ways to define the significance of the variability.
 **Objective: Estimate the level time variability in a lightcurve through different methods.**
 
 Proposed approach
--------------
+-----------------
+
 We will start by reading the pre-computed light curve for PKS 2155-304 that is stored in `$GAMMAPY_DATA`
-To learn how to compute such an object, see the :doc:`</tutorials/analysis-time/light_curve_flare` tutorial.
+To learn how to compute such an object, see the :doc:`/tutorials/analysis-time/light_curve_flare` tutorial.
 
 This tutorial will demonstrate how to compute different estimates which measure the significance of variability.
 These estimators range from basic ones that calculate the peak-to-trough variation, to more complex ones like
@@ -62,7 +64,8 @@ plt.show()
 # Methods to characterize variability
 # -----------------------------------
 #
-#  Amplitude maximum variation, relative variability amplitude and variability amplitude
+# The 3 methods shown here are: amplitude maximum variation, relative variability amplitude
+# and variability amplitude.
 #
 # The amplitude maximum variation is the simplest method to define variability (as described in
 # `Boller et al., 2016 <https://ui.adsabs.harvard.edu/abs/2016A&A...588A.103B/abstract>`__)

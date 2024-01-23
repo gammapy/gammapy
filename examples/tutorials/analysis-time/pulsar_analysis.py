@@ -1,6 +1,6 @@
 """
 Pulsar analysis
----------------
+===============
 
 Produce a phasogram, phased-resolved maps and spectra for pulsar analysis.
  
@@ -10,12 +10,12 @@ Introduction
 This notebook shows how to do a simple pulsar analysis with Gammapy. We will produce a
 phasogram, a phase-resolved map and a phase-resolved spectrum of the Vela pulsar. In
 order to build these products, we will use the
-`~PhaseBackgroundMaker` which takes into account the on and off phase to compute a
-`~MapDatasetOnOff` and a `~SpectrumDatasetOnOff` in the phase space.
+`~gammapy.makers.PhaseBackgroundMaker` which takes into account the on and off phase to compute a
+`~gammapy.datasets.MapDatasetOnOff` and a `~gammapy.datasets.SpectrumDatasetOnOff` in the phase space.
 
 This tutorial uses a simulated run of vel observation from the CTA DC1, which already contains a
 column for the pulsar phases. The phasing in itself is therefore not show here. It
-requires specific packages like Tempo2 or `(PINT) <https://nanograv-pint.readthedocs.io>`__. A gammapy
+requires specific packages like Tempo2 or `PINT <https://nanograv-pint.readthedocs.io>`__. A gammapy
 recipe shows how to compute phases with PINT in the framework of Gammapy.
 
 
@@ -59,8 +59,6 @@ warnings.filterwarnings("ignore")
 ######################################################################
 # Check setup
 # -----------
-
-
 from gammapy.utils.check import check_tutorials_setup
 
 check_tutorials_setup()
@@ -341,11 +339,11 @@ plt.show()
 #
 # We can also make a phase-resolved spectrum.
 # In order to do that, we are going to use the `~gammapy.makers.PhaseBackgroundMaker` to create a
-# `~gammapy.makers.SpectrumDatasetOnOff` with the ON and OFF taken in the phase space.
+# `~gammapy.datasets.SpectrumDatasetOnOff` with the ON and OFF taken in the phase space.
 # Note that this maker take the ON and OFF in the same spatial region.
 #
 # Here to create the `~gammapy.datasets.SpectrumDatasetOnOff`, we are going to redo the whole data reduction.
-# However, note that one can use the `to_spectrum_dataset()` method of `~gammapy.datasets.MapDatasetOnOff`
+# However, note that one can use the `~gammapy.datasets.MapDatasetOnOff.to_spectrum_dataset()` method
 # (with the `containment_correction` parameter set to True) if such a `~gammapy.datasets.MapDatasetOnOff`
 # has been created as shown above.
 
