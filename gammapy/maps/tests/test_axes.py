@@ -887,16 +887,27 @@ def test_time_group_table(time_intervals):
         name="time",
     )
 
-    groups = axis.group_table(edges=[5 * u.d - 1 * u.h, 6 * u.d + 2 * u.h])
-
+    groups = axis.group_table(interval_edges=[5 * u.d - 1 * u.h, 6 * u.d + 2 * u.h])
     assert_allclose(groups["idx_min"], [10])
     assert_allclose(groups["idx_max"], [11])
     assert_allclose(groups["time_min"], [58932.263158])
     assert_allclose(groups["time_max"], [58932.83114])
 
-    groups2 = axis.group_table(edges=[11 * u.d, 12 * u.d])
+    groups_overflow = axis.group_table(interval_edges=[11 * u.d, 12 * u.d])
+    assert_allclose(groups_overflow["idx_min"], [-1])
 
-    assert_allclose(groups2["idx_min"], [-1])
+    groups_timeedges = axis.group_table(
+        interval_edges=[
+            Time("2020-03-19") + 5 * u.d - 1 * u.h,
+            Time("2020-03-19") + 6 * u.d + 2 * u.h,
+        ]
+    )
+    assert_allclose(groups_timeedges["time_min"], [58932.263158])
+    assert_allclose(groups_timeedges["time_max"], [58932.83114])
+
+    groups_exactedges = axis.group_table(interval_edges=[3 * u.d, 7 * u.d + 1 * u.h])
+    assert_allclose(groups_exactedges["idx_min"], [6])
+    assert_allclose(groups_exactedges["idx_max"], [13])
 
 
 def test_single_valued_axis():

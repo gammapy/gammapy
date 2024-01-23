@@ -2973,12 +2973,12 @@ class TimeMapAxis:
 
         return header
 
-    def group_table(self, edges):
+    def group_table(self, interval_edges):
         """Compute bin groups table for the TimeMapAxis, given coarser bin edges.
 
         Parameters
         ----------
-        edges : list of `~astropy.time.Time` or `~astropy.units.Quantity`
+        interval_edges : list of `~astropy.time.Time` or `~astropy.units.Quantity`
             Start and stop time for each interval to compute the LC.
 
         Returns
@@ -2987,11 +2987,11 @@ class TimeMapAxis:
             Group table.
         """
 
-        for _, edge in enumerate(edges):
+        for _, edge in enumerate(interval_edges):
             if not isinstance(edge, Time):
-                edges[_] = self.reference_time + edges[_]
+                interval_edges[_] = self.reference_time + interval_edges[_]
 
-        time_intervals = [(edges[i], edges[i + 1]) for i in range(len(edges) - 1)]
+        time_intervals = list(zip(interval_edges[::2], interval_edges[1::2]))
         group_table = Table(
             names=("idx_min", "idx_max", "time_min", "time_max", "bin_type"),
             dtype=("i8", "i8", "f8", "f8", "S10"),
