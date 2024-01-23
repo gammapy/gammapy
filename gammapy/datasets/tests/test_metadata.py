@@ -1,23 +1,25 @@
 import pytest
-import numpy as np
 from numpy.testing import assert_allclose
 from astropy.coordinates import SkyCoord
 from pydantic import ValidationError
 from gammapy.datasets import MapDatasetMetaData
+from gammapy.utils.metadata import PointingInfoMetaData
 
 
-def test_mapdataset_meta_from_default():
-    meta = MapDatasetMetaData.from_default()
-
+def test_meta_default():
+    meta = MapDatasetMetaData()
     assert meta.creation.creator.split()[0] == "Gammapy"
+    assert meta.instrument is None
+    assert meta.event_type is None
 
 
 def test_mapdataset_metadata():
+    position = SkyCoord(83.6287, 22.0147, unit="deg", frame="icrs")
     input = {
         "telescope": "cta-north",
         "instrument": "lst",
         "observation_mode": "wobble",
-        "pointing": SkyCoord(83.6287, 22.0147, unit="deg", frame="icrs"),
+        "pointing": PointingInfoMetaData(radec_mean=position),
         "obs_ids": 112,
         "optional": dict(test=0.5, other=True),
     }
@@ -26,11 +28,12 @@ def test_mapdataset_metadata():
     assert meta.telescope == "cta-north"
     assert meta.instrument == "lst"
     assert meta.observation_mode == "wobble"
-    assert_allclose(meta.pointing.dec.value, 22.0147)
-    assert_allclose(meta.pointing.ra.deg, 83.6287)
-    assert meta.obs_ids == 112
+    assert_allclose(meta.pointing.radec_mean.dec.value, 22.0147)
+    assert_allclose(meta.pointing.radec_mean.ra.deg, 83.6287)
+    assert meta.obs_ids == "112"
     assert meta.optional["other"] is True
     assert meta.creation.creator.split()[0] == "Gammapy"
+    assert meta.event_type is None
 
     with pytest.raises(ValidationError):
         meta.pointing = 2.0
@@ -38,12 +41,8 @@ def test_mapdataset_metadata():
     with pytest.raises(ValidationError):
         meta.instrument = ["cta", "hess"]
 
-    meta.pointing = None
-    assert isinstance(meta.pointing, SkyCoord)
-    assert np.isnan(meta.pointing.ra.deg)
-
     input_bad = input.copy()
-    input_bad["obs_ids"] = "bad"
+    input_bad["bad"] = position
 
     with pytest.raises(ValueError):
         MapDatasetMetaData(**input_bad)
@@ -55,8 +54,12 @@ def test_mapdataset_metadata_lists():
         "instrument": "lst",
         "observation_mode": "wobble",
         "pointing": [
-            SkyCoord(83.6287, 22.0147, unit="deg", frame="icrs"),
-            SkyCoord(83.1287, 22.5147, unit="deg", frame="icrs"),
+            PointingInfoMetaData(
+                radec_mean=SkyCoord(83.6287, 22.0147, unit="deg", frame="icrs")
+            ),
+            PointingInfoMetaData(
+                radec_mean=SkyCoord(83.1287, 22.5147, unit="deg", frame="icrs")
+            ),
         ],
         "obs_ids": [111, 222],
     }
@@ -64,11 +67,11 @@ def test_mapdataset_metadata_lists():
     assert meta.telescope == "cta-north"
     assert meta.instrument == "lst"
     assert meta.observation_mode == "wobble"
-    assert_allclose(meta.pointing[0].dec.value, 22.0147)
-    assert_allclose(meta.pointing[1].ra.deg, 83.1287)
-    assert meta.obs_ids == [111, 222]
+    assert_allclose(meta.pointing[0].radec_mean.dec.value, 22.0147)
+    assert_allclose(meta.pointing[1].radec_mean.ra.deg, 83.1287)
+    assert meta.obs_ids == ["111", "222"]
     assert meta.optional is None
-    assert meta.event_type == -999
+    assert meta.event_type is None
 
 
 def test_mapdataset_metadata_stack():
@@ -76,7 +79,9 @@ def test_mapdataset_metadata_stack():
         "telescope": "a",
         "instrument": "H.E.S.S.",
         "observation_mode": "wobble",
-        "pointing": SkyCoord(83.6287, 22.5147, unit="deg", frame="icrs"),
+        "pointing": PointingInfoMetaData(
+            radec_mean=SkyCoord(83.6287, 22.5147, unit="deg", frame="icrs")
+        ),
         "obs_ids": 111,
         "optional": dict(test=0.5, other=True),
     }
@@ -85,7 +90,9 @@ def test_mapdataset_metadata_stack():
         "telescope": "b",
         "instrument": "H.E.S.S.",
         "observation_mode": "wobble",
-        "pointing": SkyCoord(83.6287, 22.0147, unit="deg", frame="icrs"),
+        "pointing": PointingInfoMetaData(
+            radec_mean=SkyCoord(83.6287, 22.0147, unit="deg", frame="icrs")
+        ),
         "obs_ids": 112,
         "optional": dict(test=0.1, other=False),
     }
@@ -97,7 +104,25 @@ def test_mapdataset_metadata_stack():
     assert meta.telescope == ["a", "b"]
     assert meta.instrument == "H.E.S.S."
     assert meta.observation_mode == ["wobble", "wobble"]
-    assert_allclose(meta.pointing[1].dec.deg, 22.0147)
-    assert meta.obs_ids == [111, 112]
+    assert_allclose(meta.pointing[1].radec_mean.dec.deg, 22.0147)
+    assert meta.obs_ids == ["111", "112"]
     assert meta.optional["other"] == [True, False]
-    assert len(meta.event_type) == 2
+    assert meta.event_type is None
+    assert meta.creation.creator.split()[0] == "Gammapy"
+
+
+def test_to_header():
+    input1 = {
+        "telescope": "a",
+        "instrument": "H.E.S.S.",
+        "observation_mode": "wobble",
+        "pointing": PointingInfoMetaData(
+            radec_mean=SkyCoord(83.6287, 22.5147, unit="deg", frame="icrs")
+        ),
+        "obs_ids": 111,
+        "optional": dict(test=0.5, other=True),
+    }
+    meta1 = MapDatasetMetaData(**input1)
+    hdr = meta1.to_header()
+    assert hdr["INSTRUM"] == "H.E.S.S."
+    assert hdr["OBS_IDS"] == "111"

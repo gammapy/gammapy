@@ -616,7 +616,7 @@ class MapDataset(Dataset):
     def meta(self):
         """Return metadata container."""
         if self._meta is None:
-            self._meta = MapDatasetMetaData.from_default()
+            self._meta = MapDatasetMetaData()
         return self._meta
 
     def npred(self):
@@ -1032,6 +1032,9 @@ class MapDataset(Dataset):
             self.meta_table = hstack_columns(self.meta_table, other.meta_table)
         elif other.meta_table:
             self.meta_table = other.meta_table.copy()
+
+        if self.meta and other.meta:
+            self.meta.stack(other.meta)
 
     def stat_array(self):
         """Statistic function value per bin given the current model parameters."""
