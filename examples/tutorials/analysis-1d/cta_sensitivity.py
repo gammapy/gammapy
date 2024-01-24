@@ -8,9 +8,9 @@ Introduction
 ------------
 
 This notebook explains how to estimate the CTA sensitivity for a
-point-like IRF at a fixed zenith angle and fixed offset using the full
+point-like IRF at a fixed zenith angle and fixed offset, using the full
 containment IRFs distributed for the CTA 1DC. The significance is
-computed for a 1D analysis (On-OFF regions) and the LiMa formula.
+computed for a 1D analysis (ON-OFF regions) with the Li&Ma formula.
 
 We use here an approximate approach with an energy dependent integration
 radius to take into account the variation of the PSF. We will first
@@ -25,12 +25,10 @@ We will be using the following Gammapy class:
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
-import matplotlib.pyplot as plt
 
-""
 # %matplotlib inline
-
 from regions import CircleSkyRegion
+import matplotlib.pyplot as plt
 
 ######################################################################
 # Setup
@@ -39,12 +37,7 @@ from regions import CircleSkyRegion
 # As usual, we’ll start with some setup …
 #
 from IPython.display import display
-from gammapy.data import (
-    FixedPointingInfo,
-    Observation,
-    PointingMode,
-    observatory_locations,
-)
+from gammapy.data import FixedPointingInfo, Observation, observatory_locations
 from gammapy.datasets import SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.estimators import FluxPoints, SensitivityEstimator
 from gammapy.irf import load_irf_dict_from_file
@@ -74,7 +67,7 @@ energy_axis_true = MapAxis.from_energy_bounds(
 )
 
 pointing = SkyCoord(ra=0 * u.deg, dec=0 * u.deg)
-pointing_info = FixedPointingInfo(fixed_icrs=pointing, mode=PointingMode.POINTING)
+pointing_info = FixedPointingInfo(fixed_icrs=pointing)
 offset = 0.5 * u.deg
 
 source_position = pointing.directional_offset_by(0 * u.deg, offset)
@@ -100,7 +93,18 @@ obs = Observation.create(
     pointing=pointing_info, irfs=irfs, livetime=livetime, location=location
 )
 
-spectrum_maker = SpectrumDatasetMaker(selection=["exposure", "edisp", "background"])
+
+######################################################################
+# Initiate and run the `~gammapy.makers.SpectrumDatasetMaker`.
+#
+# Note that here we ensure ``containment_correction=False`` which allows us to
+# apply our own containment correction in the next part of the tutorial.
+#
+
+spectrum_maker = SpectrumDatasetMaker(
+    selection=["exposure", "edisp", "background"],
+    containment_correction=False,
+)
 dataset = spectrum_maker.run(empty_dataset, obs)
 
 ######################################################################
@@ -109,15 +113,20 @@ dataset = spectrum_maker.run(empty_dataset, obs)
 # **Note**: In the calculation of the containment radius, we use the point spread function
 # which is defined dependent on true energy to compute the correction we apply in reconstructed
 # energy, thus neglecting the energy dispersion in this step.
+#
+# Start by correcting the exposure:
+#
 
 containment = 0.68
-
-# correct exposure
 dataset.exposure *= containment
 
-# correct background estimation
+######################################################################
+# Next, correct the background estimation.
+#
 # Warning: this neglects the energy dispersion by computing the containment
 # radius from the PSF in true energy but using the reco energy axis.
+#
+
 on_radii = obs.psf.containment_radius(
     energy_true=energy_axis.center, offset=0.5 * u.deg, fraction=containment
 )
@@ -126,7 +135,7 @@ dataset.background *= factor.value.reshape((-1, 1, 1))
 
 
 ######################################################################
-# And finally define a `SpectrumDatasetOnOff` with an alpha of ``0.2``.
+# Finally, define a `~gammapy.datasets.SpectrumDatasetOnOff` with an alpha of 0.2.
 # The off counts are created from the background model:
 #
 
@@ -140,7 +149,7 @@ dataset_on_off = SpectrumDatasetOnOff.from_spectrum_dataset(
 # -------------------
 #
 # We impose a minimal number of expected signal counts of 10 per bin and a
-# minimal significance of 5 per bin. The excess must also be larger than 5 % of the background.
+# minimal significance of 5 per bin. The excess must also be larger than 5% of the background.
 #
 # We assume an alpha of 0.2 (ratio between ON and OFF area). We then run the sensitivity estimator.
 #
@@ -157,20 +166,22 @@ sensitivity_table = sensitivity_estimator.run(dataset_on_off)
 # Results
 # -------
 #
-# The results are given as an Astropy table. A column criterion allows to
-# distinguish bins where the significance is limited by the signal
+# The results are given as a `~astropy.table.Table`, which can be written to
+# disk utilising the usual `~astropy.table.Table.write` method.
+# A column criterion allows us
+# to distinguish bins where the significance is limited by the signal
 # statistical significance from bins where the sensitivity is limited by
 # the number of signal counts. This is visible in the plot below.
+#
 
-from cycler import cycler
-
-# Show the results table
 display(sensitivity_table)
 
-# Save it to file (could use e.g. format of CSV or ECSV or FITS)
-# sensitivity_table.write('sensitivity.ecsv', format='ascii.ecsv')
 
+######################################################################
 # Plot the sensitivity curve
+#
+
+from cycler import cycler
 
 fig, ax = plt.subplots()
 
@@ -203,10 +214,10 @@ plt.show()
 # counts per bin and the ON region size cut (here the 68% containment
 # radius of the PSF).
 #
+# Plot expected number of counts for signal and background.
+#
 
-# Plot expected number of counts for signal and background
 fig, ax1 = plt.subplots()
-# ax1.plot( t["e_ref"], t["excess"],"o-", color="red", label="signal")
 ax1.plot(
     sensitivity_table["e_ref"],
     sensitivity_table["background"],
@@ -246,8 +257,11 @@ sensitivity_estimator = SensitivityEstimator(
 sensitivity_table = sensitivity_estimator.run(dataset_on_off1)
 print(sensitivity_table)
 
-# To get the integral flux, we convert to a `FluxPoints` object that does the conversion
-# internally
+
+######################################################################
+# To get the integral flux, we convert to a `~gammapy.estimators.FluxPoints` object
+# that does the conversion internally.
+#
 
 flux_points = FluxPoints.from_table(
     sensitivity_table, sed_type="e2dnde", reference_model=sensitivity_estimator.spectrum
@@ -261,7 +275,7 @@ print(
 # Exercises
 # ---------
 #
-# -  Also compute the sensitivity for a 20 hour observation
+# -  Compute the sensitivity for a 20 hour observation
 # -  Compare how the sensitivity differs between 5 and 20 hours by
 #    plotting the ratio as a function of energy.
 #
