@@ -60,8 +60,10 @@ def squash_fluxpoints(flux_point, axis):
     maps["stat_scan"] = Map.from_geom(
         geom=geom.to_cube([MapAxis.from_nodes(value_scan, name="norm")]), data=stat_scan
     )
-
-    maps["stat_null"] = Map.from_geom(geom, data=np.sum(flux_point.stat_null.data))
+    try:
+        maps["stat_null"] = Map.from_geom(geom, data=np.sum(flux_point.stat_null.data))
+    except AttributeError:
+        maps["stat_null"] = Map.from_geom(geom, data=f(0.0))
 
     maps["stat"] = Map.from_geom(geom, data=f(minimizer.x))
 

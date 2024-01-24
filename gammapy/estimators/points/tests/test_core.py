@@ -360,7 +360,6 @@ def test_fp_no_is_ul():
     assert "is_ul" not in fp_table.colnames
 
 
-<<<<<<< HEAD
 def test_table_columns():
     table = Table()
     table["e_min"] = np.array([10, 20, 30, 40]) * u.TeV
@@ -378,7 +377,8 @@ def test_table_columns():
 
     assert fp.available_quantities == ["norm", "n_dof"]
     assert_allclose(fp.n_dof.data.ravel(), table["n_dof"])
-=======
+
+
 @requires_data()
 def test_resample_axis():
     lc_1d = FluxPoints.read(
@@ -390,16 +390,18 @@ def test_resample_axis():
     )
     l1 = lc_1d.resample_axis(axis_new=axis_new)
     assert_allclose(l1.norm.data.ravel()[0:2], [1.56321943, 2.12845751], rtol=1e-3)
-    assert_allclose(l1.norm_err.ravel()[0:2], [0.03904136, 0.03977413], rtol=1e-3)
-    assert_allclose(l1.norm.data.ravel()[0:2], [50.58972379, 72.52995826], rtol=1e-3)
-    assert l1.norm_err.ravel()[0] is True
-
     assert_allclose(l1.norm_err.data.ravel()[0:2], [0.03904136, 0.03977413], rtol=1e-3)
-    assert_allclose(l1.sqrt_ts.data.ravel()[0:2], [50.58972379, 72.52995826], rtol=1e-3)
+    assert_allclose(l1.n_dof.data.ravel()[0], 7.0)
     assert l1.success.data.ravel()[0]
 
-    path = make_path("$GAMMAPY_DATA/tests/spectrum/flux_points/flux_points.fits")
-    table = Table.read(path)
-    fp = FluxPoints.from_table(table)
+    axis_new = get_rebinned_axis(
+        lc_1d, method="min-ts", ts_threshold=300, axis_name="time"
+    )
+    l1 = lc_1d.resample_axis(axis_new=axis_new)
+    assert_allclose(l1.norm_err.data.ravel()[0:2], [0.03904136, 0.03977413], rtol=1e-3)
+    assert_allclose(l1.ts.data.ravel()[0:2], [50.58972379, 72.52995826], rtol=1e-3)
+    assert l1.success.data.ravel()[0]
+    assert_allclose(l1.n_dof.data[0][0][0][0], 3)
+
     with pytest.raises(ValueError):
-        fp.resample_axis(axis_new=MapAxis.from_nodes([0, 1, 2]))
+        l1.resample_axis(axis_new=MapAxis.from_nodes([0, 1, 2]))

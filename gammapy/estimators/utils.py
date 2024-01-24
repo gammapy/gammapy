@@ -356,7 +356,6 @@ def compute_lightcurve_fpp(lightcurve, flux_quantity="flux"):
 
     Internally calls the `~gammapy.stats.compute_fpp` function
 
-
     Parameters
     ----------
     lightcurve : `~gammapy.estimators.FluxPoints`
@@ -540,7 +539,7 @@ def get_edges_min_ts(fluxpoint, ts_threshold, axis_name="energy"):
 
 RESAMPLE_METHODS = {
     "fixed-bins": get_edges_fixed_bins,
-    "min-sqrt-ts": get_edges_min_ts,
+    "min-ts": get_edges_min_ts,
 }
 
 
