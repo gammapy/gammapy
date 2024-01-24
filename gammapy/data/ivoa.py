@@ -1,10 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-import numpy as np
 from astropy.table import Column, Table
 from gammapy.data import DataStore
 
-__all__ = ["to_obscore_table", "obscore_structure"]
+__all__ = ["to_obscore_table"]
 
 
 log = logging.getLogger(__name__)
@@ -19,7 +18,7 @@ DEFAULT_OBSCORE_TEMPLATE = {
 }
 
 
-def obscore_structure():
+def empty_obscore_table():
     """Generate the Obscore default table.
 
     In case the obscore standard changes, this function should be changed according
@@ -30,8 +29,7 @@ def obscore_structure():
     table : `~astropy.table.Table`
        the empty table
     """
-    n_obscore_val = 29  # Number of obscore values
-    obscore_table = np.empty(n_obscore_val, dtype=object)
+    obscore_table = [None] * 29
     obscore_table[0] = Column(
         name="dataproduct_type",
         unit="",
@@ -274,10 +272,7 @@ def obscore_structure():
         dtype="U25",
         meta={"Utype": "Provenance.ObsConfig.Instrument.name", "UCD": "meta.id;instr"},
     )
-    tab_default = Table()
-    for var in obscore_table:
-        tab_default.add_column(var)
-    return tab_default
+    return Table(obscore_table)
 
 
 def observation_obscore_dict(observation):
@@ -369,7 +364,8 @@ def to_obscore_table(
     if selected_obs is None:
         selected_obs = data_store.obs_ids
 
-    obscore_table = obscore_structure()
+    obscore_table = empty_obscore_table()
+
     for obs_id in selected_obs:
         obscore_row = result.copy()
 

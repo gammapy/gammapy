@@ -1,11 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 
-from gammapy.data.ivoa import obscore_structure, to_obscore_table
+from gammapy.data.ivoa import empty_obscore_table, to_obscore_table
 from gammapy.utils.testing import requires_data
 
 
 def test_obscore_structure():
-    obscore_default_tab = obscore_structure()
+    obscore_default_tab = empty_obscore_table()
     assert len(obscore_default_tab.columns) == 29
     assert len(obscore_default_tab["dataproduct_type"]) == 0
     assert obscore_default_tab.colnames[0] == "dataproduct_type"
@@ -35,17 +35,12 @@ def test_to_obscore_table():
     assert obscore_tab["target_name"][0] == "MSH15-52"
     assert obscore_tab["obs_publisher_did"][1] == "ivo://padc.obspm/hess#47828"
     assert obscore_tab["t_resolution"][1] == 0.0
-    TEST_OBSCORE_TEMPLATE = {
-        "dataproduct_type": "event",
-        "calib_level": 2,
-        "obs_collection": "DL4",
-        "access_format": "application/fits",
-        "s_fov": 10.0,
-    }
+
     obscore_tab = to_obscore_table(
         path,
         [20136],
         obs_publisher_did="ivo://padc.obspm/hess",
-        obscore_template=TEST_OBSCORE_TEMPLATE,
+        obscore_template={"obs_collection": "DL4"},
     )
     assert obscore_tab["obs_collection"][0] == "DL4"
+    assert obscore_tab["calib_level"][0] == 2
