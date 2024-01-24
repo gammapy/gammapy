@@ -29,6 +29,7 @@ log = logging.getLogger(__name__)
 
 
 def _get_fov_coords(pointing, irf, geom, use_region_center=True, obstime=None):
+    # TODO: create dedicated coordinate handling see #5041
     coords = {}
     if isinstance(pointing, FixedPointingInfo):
         # for backwards compatibility, obstime should be required

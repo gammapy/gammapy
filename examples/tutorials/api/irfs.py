@@ -91,11 +91,9 @@ bkg.fov_alignment
 bkg.interp_kwargs
 
 # Evaluate background
+# Note that evaluate functions support  numpy-style broadcasting
 energy = [1, 10, 100, 1000] * u.TeV
-fov_lon = [
-    1,
-    2,
-] * u.deg
+fov_lon = [1, 2] * u.deg
 fov_lat = [1, 2] * u.deg
 ev = bkg.evaluate(
     energy=energy.reshape(-1, 1, 1),
@@ -425,7 +423,7 @@ edispmap.edisp_map.data[3][1][3]
 
 
 class PSF_assym(IRF):
-    tag = "psf_nd"
+    tag = "psf_assym"
     required_axes = ["energy_true", "fov_lon", "fov_lat", "rad"]
     default_unit = u.sr**-1
 
@@ -469,13 +467,13 @@ psf_assym.evaluate(
 # ~~~~~~~~~~~~~
 #
 
-IRF_DL3_HDU_SPECIFICATION["psf_nd"] = {
+IRF_DL3_HDU_SPECIFICATION["psf_assym"] = {
     "extname": "POINT SPREAD FUNCTION",
     "column_name": "MATRIX",
     "mandatory_keywords": {
         **COMMON_IRF_HEADERS,
         "HDUCLAS2": "PSF",
-        "HDUCLAS3": "FULL-ENCLOSURE",  # added here to have HDUCLASN in order
+        "HDUCLAS3": "FULL-ENCLOSURE",
         "HDUCLAS4": "PSFnD",
     },
 }
