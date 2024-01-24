@@ -18,6 +18,7 @@ from gammapy.maps.axes import UNIT_STRING_FORMAT, flat_if_equal
 from gammapy.modeling.models import TemplateSpectralModel
 from gammapy.modeling.models.spectral import scale_plot_flux
 from gammapy.modeling.scipy import stat_profile_ul_scipy
+from gammapy.utils.interpolation import interpolate_profile
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_standardise_units_copy
 from gammapy.utils.time import time_ref_to_dict
@@ -34,6 +35,7 @@ def squash_fluxpoints(flux_point, axis):
     value_scan = flux_point.stat_scan.geom.axes["norm"].center
     stat_scan = np.sum(flux_point.stat_scan.data, axis=0).ravel()
     f = interp1d(value_scan, stat_scan, kind="quadratic", bounds_error=False)
+    f = interpolate_profile(value_scan, stat_scan)
     minimizer = minimize(
         f,
         x0=value_scan[
@@ -50,7 +52,7 @@ def squash_fluxpoints(flux_point, axis):
 
     maps["norm"] = Map.from_geom(geom, data=minimizer.x)
     maps["norm_err"] = Map.from_geom(geom, data=np.sqrt(minimizer.hess_inv.todense()))
-    maps["n_dof"] = Map.from_geom(geom, data=axis.nbin)
+    maps["n_dof"] = Map.from_geom(geom, data=flux_point.geom.axes[axis.name].nbin)
 
     if "norm_ul" in flux_point.available_quantities:
         delta_ts = flux_point.meta.get("n_sigma_ul", 2) ** 2
@@ -63,11 +65,12 @@ def squash_fluxpoints(flux_point, axis):
     try:
         maps["stat_null"] = Map.from_geom(geom, data=np.sum(flux_point.stat_null.data))
     except AttributeError:
-        maps["stat_null"] = Map.from_geom(geom, data=f(0.0))
+        pass
 
     maps["stat"] = Map.from_geom(geom, data=f(minimizer.x))
 
-    maps["ts"] = maps["stat"] - maps["stat_null"]
+    # maps["ts"] = maps["stat"] - maps["stat_null"]
+    maps["ts"] = Map.from_geom(geom, data=np.sum(flux_point.ts.data))
     maps["success"] = Map.from_geom(geom=geom, data=minimizer.success, dtype=bool)
 
     combined_fp = FluxPoints.from_maps(

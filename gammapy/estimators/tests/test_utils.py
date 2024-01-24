@@ -211,7 +211,7 @@ def test_get_rebinned_axis():
     assert_allclose(axis_new.bin_width[0], 20 * u.min)
 
     axis_new = get_rebinned_axis(
-        lc_1d, method="min-sqrt-ts", sqrt_ts_threshold=50.0, axis_name="time"
+        lc_1d, method="min-ts", ts_threshold=2500.0, axis_name="time"
     )
     assert_allclose(axis_new.bin_width, [50, 30, 30, 50, 110, 70] * u.min)
 
