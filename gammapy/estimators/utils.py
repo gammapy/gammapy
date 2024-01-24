@@ -493,9 +493,13 @@ def get_edges_fixed_bins(fluxpoint, group_size, axis_name="energy"):
     return edges_min, edges_max
 
 
-def get_edges_min_sqrt_ts(fluxpoint, sqrt_ts_threshold, axis_name="energy"):
+def get_edges_min_ts(fluxpoint, ts_threshold, axis_name="energy"):
     """Rebin the flux point to combine adjacent bins
-       till a minimum significance is obtained
+       till a minimum TS is obtained
+
+    Note that to convert TS to significance, it is necessary to
+    take the number of degrees of freedom into account
+
 
     Parameters
     ----------
@@ -520,7 +524,7 @@ def get_edges_min_sqrt_ts(fluxpoint, sqrt_ts_threshold, axis_name="energy"):
     while e_max < ax.edges_max[-1]:
         ts = fluxpoint.ts.data[i]
         e_min = ax.edges_min[i]
-        while ts < sqrt_ts_threshold**2 and i < ax.nbin - 1:
+        while ts < ts_threshold and i < ax.nbin - 1:
             i = i + 1
             ts = ts + fluxpoint.ts.data[i]
         e_max = ax.edges_max[i]
@@ -536,24 +540,26 @@ def get_edges_min_sqrt_ts(fluxpoint, sqrt_ts_threshold, axis_name="energy"):
 
 RESAMPLE_METHODS = {
     "fixed-bins": get_edges_fixed_bins,
-    "min-sqrt-ts": get_edges_min_sqrt_ts,
+    "min-sqrt-ts": get_edges_min_ts,
 }
 
 
-def get_rebinned_axis(fluxpoint, axis_name="energy", **kwargs):
+def get_rebinned_axis(fluxpoint, axis_name="energy", method=None, **kwargs):
     """Get the rebinned axis for resampling
      the flux point object along the mentioned axis.
 
-
     Parameters
     ----------
+    fluxpoint : `gammapy.estimators.FluxPoints`
+        The fluxpoint object to rebin
+    method : str
+        The method to resample the axis. Supported options are
+        fixed_bins and min-ts
     kwargs : Dict
         keywords passed to get_edges_fixed_bins or
-        get_edges_min_sqrt_ts
-        Must contain the method key and
-        group_size if method is fixed-bins
-        or
-        sqrt_ts_threshold if method is min-sqrt-ts
+        get_edges_min_ts
+        if method is fixed-bins, keyword should be group_size
+        if method is min-ts, keyword should be ts_threshold
     axis_name : The axis name to combine along
 
     Returns
@@ -568,7 +574,6 @@ def get_rebinned_axis(fluxpoint, axis_name="energy", **kwargs):
             "Please use `iter_by_axis` to create Unidimensional FluxPoints"
         )
 
-    method = kwargs.pop("method")
     if method not in RESAMPLE_METHODS.keys():
         raise ValueError("Incorrect option. Choose from", RESAMPLE_METHODS.keys())
 

@@ -50,6 +50,7 @@ def squash_fluxpoints(flux_point, axis):
 
     maps["norm"] = Map.from_geom(geom, data=minimizer.x)
     maps["norm_err"] = Map.from_geom(geom, data=np.sqrt(minimizer.hess_inv.todense()))
+    maps["n_dof"] = Map.from_geom(geom, data=axis.nbin)
 
     if "norm_ul" in flux_point.available_quantities:
         delta_ts = flux_point.meta.get("n_sigma_ul", 2) ** 2
@@ -60,8 +61,11 @@ def squash_fluxpoints(flux_point, axis):
         geom=geom.to_cube([MapAxis.from_nodes(value_scan, name="norm")]), data=stat_scan
     )
 
-    maps["ts"] = Map.from_geom(geom=geom, data=np.sum(flux_point.ts.data))
+    maps["stat_null"] = Map.from_geom(geom, data=np.sum(flux_point.stat_null.data))
 
+    maps["stat"] = Map.from_geom(geom, data=f(minimizer.x))
+
+    maps["ts"] = maps["stat"] - maps["stat_null"]
     maps["success"] = Map.from_geom(geom=geom, data=minimizer.success, dtype=bool)
 
     combined_fp = FluxPoints.from_maps(
