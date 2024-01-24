@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Pulsar source models."""
+import html
 import numpy as np
 from astropy.units import Quantity
 
@@ -21,13 +22,13 @@ class SimplePulsar:
     Parameters
     ----------
     P : `~astropy.units.Quantity`
-        Rotation period (sec)
+        Rotation period (sec).
     P_dot : `~astropy.units.Quantity`
-        Rotation period derivative (sec sec^-1)
+        Rotation period derivative (sec sec^-1).
     I : `~astropy.units.Quantity`
-        Moment of inertia (g cm^2)
+        Moment of inertia (g cm^2).
     R : `~astropy.units.Quantity`
-        Radius of the pulsar (cm)
+        Radius of the pulsar (cm).
     """
 
     def __init__(self, P, P_dot, I=DEFAULT_I, R=DEFAULT_R):  # noqa: E741
@@ -36,9 +37,15 @@ class SimplePulsar:
         self.I = I  # noqa: E741
         self.R = R
 
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
+
     @property
     def luminosity_spindown(self):
-        r"""Spin-down luminosity (`~astropy.units.Quantity`).
+        r"""Spin-down luminosity as a `~astropy.units.Quantity`.
 
         .. math:: \dot{L} = 4\pi^2 I \frac{\dot{P}}{P^{3}}
         """
@@ -46,7 +53,7 @@ class SimplePulsar:
 
     @property
     def tau(self):
-        r"""Characteristic age (`~astropy.units.Quantity`).
+        r"""Characteristic age as a `~astropy.units.Quantity`.
 
         .. math:: \tau = \frac{P}{2\dot{P}}
         """
@@ -54,7 +61,7 @@ class SimplePulsar:
 
     @property
     def magnetic_field(self):
-        r"""Magnetic field strength at the polar cap (`~astropy.units.Quantity`).
+        r"""Magnetic field strength at the polar cap as a `~astropy.units.Quantity`.
 
         .. math:: B = 3.2 \cdot 10^{19} (P\dot{P})^{1/2} \text{ Gauss}
         """
@@ -67,15 +74,15 @@ class Pulsar:
     Parameters
     ----------
     P_0 : float
-        Period at birth
+        Period at birth.
     B : `~astropy.units.Quantity`
-        Magnetic field strength at the poles (Gauss)
+        Magnetic field strength at the poles (Gauss).
     n : float
-        Spin-down braking index
+        Spin-down braking index.
     I : float
-        Moment of inertia
+        Moment of inertia.
     R : float
-        Radius
+        Radius.
     """
 
     def __init__(
@@ -113,7 +120,7 @@ class Pulsar:
         Parameters
         ----------
         t : `~astropy.units.Quantity`
-            Time after birth of the pulsar
+            Time after birth of the pulsar.
         """
         t = Quantity(t, "yr")
         return self.L_0 * (1 + (t / self.tau_0)) ** self.beta
@@ -142,7 +149,7 @@ class Pulsar:
         Parameters
         ----------
         t : `~astropy.units.Quantity`
-            Time after birth of the pulsar
+            Time after birth of the pulsar.
         """
         t = Quantity(t, "yr")
         return self.P_0 * (1 + (t / self.tau_0)) ** (1.0 / (self.n - 1))

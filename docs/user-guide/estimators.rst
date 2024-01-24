@@ -27,8 +27,9 @@ In general the flux can be estimated using two methods:
 #. **Based on model fitting:** given a (global) best fit model with multiple model components,
    the flux of the component of interest is re-fitted in the chosen energy, time or spatial
    region. The new flux is given as a ``norm`` with respect to the global reference model.
-   Optionally other component parameters in the global model can be re-optimised. This method
-   is also named **forward folding**.
+   Optionally the free parameters of the other models can be re-optimised
+   (but the other parameters of the source of interest are always kept frozen).
+   This method is also named **forward folding**.
 
 #. **Based on excess:** in the case of having one energy bin, neglecting the PSF and
    not re-optimising other parameters, one can estimate the significance based on the
@@ -64,10 +65,11 @@ norm_err          Symmetric error on the norm derived from the Hessian matrix. G
 stat              Fit statistics value of the best fit hypothesis
 stat_null         Fit statistics value of the null hypothesis
 ts                Difference in fit statistics (`stat - stat_null` )
-sqrt_ts           Square root of ts time sign(norm), in case of one degree of freedom, corresponds to significance (Wilk's theorem)
+sqrt_ts           Square root of ts time sign(norm), in case of one degree of freedom (n_dof), corresponds to significance (Wilk's theorem)
 npred             Predicted counts of the best fit hypothesis. Equivalent to correlated counts for backward folding
 npred_excess      Predicted excess counts of the best fit hypothesis. Equivalent to correlated excess for backward folding
 npred_background  Predicted background counts of the best fit hypothesis. Equivalent to correlated excess for backward folding
+n_dof             Number of degrees of freedom. If not explicitly present, assumed to be one
 ================= =================================================
 
 In addition, the following optional quantities can be computed:
@@ -78,8 +80,8 @@ Quantity          Definition
 norm_errp         Positive error of the norm, given as absolute difference to the best fit norm
 norm_errn         Negative error of the norm, given as absolute difference to the best fit norm
 norm_ul           Upper limit of the norm
-norm_scan         Norm scan
-stat_scan         Fit statistics scan
+norm_scan         Norm parameter values used for the fit statistic scan
+stat_scan         Fit statistics values associated with norm_scan
 ================= =================================================
 
 To compute the error, asymmetric errors as well as upper limits one can

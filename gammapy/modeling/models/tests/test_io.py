@@ -27,7 +27,7 @@ from gammapy.modeling.models import (
 )
 from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.utils.scripts import read_yaml, write_yaml
-from gammapy.utils.testing import requires_data
+from gammapy.utils.testing import requires_data, requires_dependency
 
 
 @pytest.fixture(scope="session")
@@ -109,7 +109,6 @@ def test_dict_to_skymodels(models):
 
 @requires_data()
 def test_sky_models_io(tmpdir, models):
-    # TODO: maybe change to a test case where we create a model programmatically?
     models.covariance = np.eye(len(models.parameters))
     models.write(tmpdir / "tmp.yaml", full_output=True, overwrite_templates=False)
     models = Models.read(tmpdir / "tmp.yaml")
@@ -286,6 +285,21 @@ def test_absorption_io(tmp_path):
     read_yaml(tmp_path / "tmp.yaml")
 
 
+@requires_dependency("naima")
+def test_naima_model():
+    import naima
+
+    particle_distribution = naima.models.PowerLaw(
+        amplitude=2e33 / u.eV, e_0=10 * u.TeV, alpha=2.5
+    )
+    radiative_model = naima.radiative.PionDecay(
+        particle_distribution, nh=1 * u.cm**-3
+    )
+    yield Model.create(
+        "NaimaSpectralModel", "spectral", radiative_model=radiative_model
+    )
+
+
 def make_all_models():
     """Make an instance of each model, for testing."""
     yield Model.create("ConstantSpatialModel", "spatial")
@@ -335,9 +349,16 @@ def make_all_models():
         norms=[3, 4] * u.cm,
     )
     yield Model.create("GaussianSpectralModel", "spectral")
-    # TODO: yield Model.create("EBLAbsorptionNormSpectralModel")
-    # TODO: yield Model.create("NaimaSpectralModel")
-    # TODO: yield Model.create("ScaleSpectralModel")
+    yield Model.create(
+        "EBLAbsorptionNormSpectralModel",
+        "spectral",
+        energy=[0, 1, 2] * u.keV,
+        param=[0, 1],
+        data=np.ones((2, 3)),
+        redshift=0.1,
+        alpha_norm=1.0,
+    )
+    yield Model.create("ScaleSpectralModel", "spectral", model=PowerLawSpectralModel())
     yield Model.create("ConstantTemporalModel", "temporal")
     yield Model.create("LinearTemporalModel", "temporal")
     yield Model.create("PowerLawTemporalModel", "temporal")
@@ -444,7 +465,6 @@ def test_to_dict_not_default():
     assert "error" not in index_dict
     assert "interp" not in index_dict
     assert "scale_method" not in index_dict
-    assert "is_norm" not in index_dict
 
     model_2 = model.from_dict(mdict)
     assert model_2.index.min == model.index.min
@@ -483,3 +503,13 @@ def test_compound_models_io(tmp_path):
         "model.spectral.alpha",
         "model.spectral.beta",
     ]
+
+
+def test_meta_io(caplog, tmp_path):
+    m = PowerLawSpectralModel()
+    sk = SkyModel(spectral_model=m, name="model")
+    Models([sk]).write(tmp_path / "test.yaml")
+
+    sk_dict = read_yaml(tmp_path / "test.yaml")
+    assert "metadata" in sk_dict
+    assert "Gammapy" in sk_dict["metadata"]["creator"]

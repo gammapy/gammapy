@@ -51,7 +51,7 @@ Setup
 -----
 
 **IMPORTANT**: For this notebook you have to get the prepared `3fhl`
-dataset provided in your $GAMMAPY_DATA.
+dataset provided in your `$GAMMAPY_DATA`.
 
 Note that the `3fhl` dataset is high-energy only, ranging from 10 GeV
 to 2 TeV.

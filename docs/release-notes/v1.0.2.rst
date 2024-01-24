@@ -1,0 +1,88 @@
+.. include:: ../references.txt
+
+.. _gammapy_1p0p2_release:
+
+1.0.2 (December 6th, 2023)
+--------------------------
+
+Summary
+~~~~~~~
+
+- Released Dec 6th, 2023
+- 16 contributors
+- 60 pull requests since v1.0.1 (not all listed below)
+
+This is the second bug-fix of the v1.0 maintenance. Several bugs and typos in the documentation are corrected.
+
+- The ``FluxProfileEstimator`` has been fixed so that the models attached to the dataset are
+  properly taken into account.
+- A ``scale`` attribute has been added to ``TemporalModel`` classes to treat the ``t_ref``
+  parameter in a consistent manner via a ``TemporalModel.reference_time`` that converts the
+  parameter (defined in mjd) in a proper ``~astropy.time.Time``. It avoids comparing
+  inconsistent scales when evaluating temporal models.
+- The ``ExcessMapEstimator`` has been fixed to properly take into account the mask safe.
+- The ``wcs.array_shape`` definition in ``WcsGeom.create()`` was inconsistent with the ``WcsGeom`` shape.
+  This is now fixed.
+- The offset calculation in ``Background2D.to_3d()`` has been modified to compute
+  angular separation rather than cartesian distance.
+- The serialization of ``PiecewiseNormSpectralModel`` has been fixed to include interpolation
+  attribute.
+
+
+
+Contributors
+~~~~~~~~~~~~
+
+- Arnau Aguasca
+- Axel Donath
+- Kirsty Feijen
+- Claudio Galelli
+- Bruno Khélifi
+- Maximilian Linhoff
+- Simone Mender
+- Daniel Morcuende
+- Laura Olivera-Nieto
+- Fabio Pintore
+- Michael Punch
+- Maxime Regeard
+- Quentin Remy
+- Atreyee Sinha
+- Katrin Streil
+- Régis Terrier
+
+
+Pull Requests
+~~~~~~~~~~~~~
+
+This list is incomplete.
+
+- [#4937] Fix import of angular_separation for astropy 6 (Maximilian Linhoff)
+- [#4936] PiecewiseNormSpectralModel serialising interp (Katrin Streil)
+- [#4913] Fix NoOverlapError in SpatialModel.integrate_geom (Quentin Remy)
+- [#4876] Add missing @property on PointSpatialModel.is_energy_dependent (Quentin Remy)
+- [#4772] Fix plot spectrum function (Simone Mender)
+- [#4755] Separate units in pcolormesh (Régis Terrier)
+- [#4753] Removes size 1 array to scalar conversion deprecation warnings from numpy (Régis Terrier)
+- [#4728] Fixed offset calculation in Background2D.to_3d (Claudio Galelli)
+- [#4721] Exposing NormSpectralModels (Kirsty Feijen)
+- [#4681] Fix MapEvaluator for regions (Quentin Remy)
+- [#4677] Fix wcs.array_shape  definition in WcsGeom.create (Quentin Remy)
+- [#4657] Fix the FluxProfileEstimator to take into account models (Quentin Remy)
+- [#4653] Fix points scaling in TemplateNDSpectralModel (Quentin Remy)
+- [#4631] Impose pydantic <2.0 (Régis Terrier)
+- [#4619] Correct TemporalModel.plot() unit issue. (Régis Terrier)
+- [#4593] Make geom_exposure optional in MapDatasetOnOff.from_geoms (Atreyee Sinha)
+- [#4578] Fix ExcessMapEstimator to account for mask safe (Quentin Remy)
+- [#4574] Fixing if statements in OGIPDatasetWriter (Maxime Regeard)
+- [#4524] Corrected kwargs docstring of plot_grid() (Maxime Regeard)
+- [#4520] Support Astropy 5.3 (Axel Donath)
+- [#4500] Fix SpectrumDatasetOnOff.stat_sum to support when counts_off is None (Kirsty Feijen)
+- [#4486] Scale handling in temporal models (Atreyee Sinha)
+- [#4453] Add scale in temporal model (Atreyee Sinha)
+- [#4435] Fix wrong ticks in `rad_max` plot (Simone Mender)
+- [#4412] LightCurveTemplateModel serialisation (Atreyee Sinha)
+- [#4397] Fix plot_spectrum_datasets_off_regions with too many regions (Bruno Khélifi)
+- [#4394] Obs filter live time (Maxime Regeard)
+- [#4393] Iminuit output (Bruno Khélifi)
+- [#4382] Fix error message in interp_to_geom() (Axel Donath)
+- [#4380] Adapt default offset for plotting point like IRFs (Atreyee Sinha)

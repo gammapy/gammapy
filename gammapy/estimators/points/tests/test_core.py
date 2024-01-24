@@ -358,3 +358,22 @@ def test_fp_no_is_ul():
     fp = FluxPoints.from_table(table)
     fp_table = fp.to_table()
     assert "is_ul" not in fp_table.colnames
+
+
+def test_table_columns():
+    table = Table()
+    table["e_min"] = np.array([10, 20, 30, 40]) * u.TeV
+    table["e_max"] = np.array([20, 30, 40, 50]) * u.TeV
+    table["flux"] = np.array([42, 52, 62, 72]) / (u.s * u.cm * u.cm)
+    table["other"] = np.array([1, 2, 3, 4])
+    table["n_dof"] = np.array([1, 2, 1, 2])
+
+    # Get values
+    model = PowerLawSpectralModel()
+    table["e_ref"] = FluxPoints._energy_ref_lafferty(
+        model, table["e_min"], table["e_max"]
+    )
+    fp = FluxPoints.from_table(table, reference_model=model)
+
+    assert fp.available_quantities == ["norm", "n_dof"]
+    assert_allclose(fp.n_dof.data.ravel(), table["n_dof"])

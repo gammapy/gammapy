@@ -118,6 +118,7 @@ from gammapy.datasets import (
     SpectrumDatasetOnOff,
 )
 from gammapy.estimators import FluxPointsEstimator
+from gammapy.estimators.utils import resample_energy_edges
 from gammapy.makers import (
     ReflectedRegionsBackgroundMaker,
     SafeMaskMaker,
@@ -379,12 +380,14 @@ plt.show()
 # -------------------
 #
 # To round up our analysis we can compute flux points by fitting the norm
-# of the global model in energy bands. We’ll use a fixed energy binning
-# for now:
+# of the global model in energy bands.
+# We can utilise the `~gammapy.estimators.utils.resample_energy_edges`
+# for defining the energy bins in which the minimum number of `sqrt_ts` is 2.
+# To do so we first stack the individual datasets, only for obtaining the energies:
 #
 
-e_min, e_max = 0.7, 30
-energy_edges = np.geomspace(e_min, e_max, 11) * u.TeV
+dataset_stacked = Datasets(datasets).stack_reduce()
+energy_edges = resample_energy_edges(dataset_stacked, conditions={"sqrt_ts_min": 2})
 
 
 ######################################################################
@@ -449,7 +452,7 @@ dataset_stacked.models = model
 stacked_fit = Fit()
 result_stacked = stacked_fit.run([dataset_stacked])
 
-# make a copy to compare later
+# Make a copy to compare later
 model_best_stacked = model.copy()
 
 print(result_stacked)

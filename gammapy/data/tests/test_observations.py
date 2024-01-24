@@ -4,19 +4,21 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import EarthLocation, SkyCoord
+from astropy.io import fits
 from astropy.time import Time
 from astropy.units import Quantity
 from gammapy.data import (
     DataStore,
+    EventList,
     Observation,
     ObservationFilter,
     Observations,
 )
-from gammapy.data.pointing import FixedPointingInfo, PointingMode
+from gammapy.data.metadata import ObservationMetaData
+from gammapy.data.pointing import FixedPointingInfo
 from gammapy.data.utils import get_irfs_features
 from gammapy.irf import PSF3D, load_irf_dict_from_file
 from gammapy.utils.cluster import hierarchical_clustering
-from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.utils.fits import HDULocation
 from gammapy.utils.testing import (
     assert_skycoord_allclose,
@@ -41,13 +43,9 @@ def test_observation(data_store):
 
     c = SkyCoord(83.63333129882812, 21.51444435119629, unit="deg")
     assert_skycoord_allclose(obs.get_pointing_icrs(obs.tmid), c)
-    with pytest.warns(GammapyDeprecationWarning):
-        assert_skycoord_allclose(obs.pointing_radec, c)
 
     c = SkyCoord(22.558341, 41.950807, unit="deg")
     assert_skycoord_allclose(obs.get_pointing_altaz(obs.tmid), c)
-    with pytest.warns(GammapyDeprecationWarning):
-        assert_skycoord_allclose(obs.pointing_altaz, c)
 
     c = SkyCoord(83.63333129882812, 22.01444435119629, unit="deg")
     assert_skycoord_allclose(obs.target_radec, c)
@@ -55,7 +53,6 @@ def test_observation(data_store):
 
 @requires_data()
 def test_observation_peek(data_store):
-
     obs = Observation.read(
         "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz"
     )
@@ -196,6 +193,11 @@ def test_observations_mutation(data_store):
         obss[["1", "2"]]
 
 
+def test_empty_observations():
+    observations = Observations()
+    assert len(observations) == 0
+
+
 @requires_data()
 def test_observations_str(data_store):
     obs_ids = data_store.obs_table["OBS_ID"][:4]
@@ -232,7 +234,6 @@ def test_observations_select_time_time_intervals_list(data_store):
 def test_observation_cta_1dc():
     ontime = 5.0 * u.hr
     pointing = FixedPointingInfo(
-        mode=PointingMode.POINTING,
         fixed_icrs=SkyCoord(0, 0, unit="deg", frame="galactic").icrs,
     )
     irfs = load_irf_dict_from_file(
@@ -255,16 +256,17 @@ def test_observation_cta_1dc():
 
     assert_skycoord_allclose(obs.get_pointing_icrs(obs.tmid), pointing.fixed_icrs)
     assert_allclose(obs.observation_live_time_duration, 0.9 * ontime)
-    assert_allclose(obs.target_radec.ra, np.nan)
-    with pytest.warns(GammapyDeprecationWarning):
-        assert not np.isnan(obs.pointing_zen)
-    assert_allclose(obs.muoneff, 1)
+    assert obs.target_radec is None
+
+    assert isinstance(obs.meta, ObservationMetaData)
+    assert obs.meta.deadtime_fraction == 0.1
+    assert_allclose(obs.meta.location.height.to_value("m"), 2000)
+    assert "Gammapy" in obs.meta.creation.creator
 
 
 @requires_data()
 def test_observation_create_radmax():
     pointing = FixedPointingInfo(
-        mode=PointingMode.POINTING,
         fixed_icrs=SkyCoord(0, 0, unit="deg", frame="galactic").icrs,
     )
     obs = Observation.read("$GAMMAPY_DATA/joint-crab/dl3/magic/run_05029748_DL3.fits")
@@ -305,6 +307,16 @@ def test_observation_read():
     assert obs.available_hdus == ["events", "gti", "aeff", "edisp", "psf", "bkg"]
     assert_allclose(val.value, 278000.54120855, rtol=1e-5)
     assert val.unit == "m2"
+
+    assert isinstance(obs.meta, ObservationMetaData)
+    assert "Gammapy" in obs.meta.creation.creator
+
+    assert obs.meta.obs_info.telescope == "HESS"
+    assert obs.meta.obs_info.instrument == "H.E.S.S. Phase I"
+    assert obs.meta.target.name == "MSH15-52"
+    assert obs.meta.optional["N_TELS"] == 4
+    with pytest.raises(KeyError):
+        obs.meta.optional["BROKPIX"]
 
 
 @requires_data()
@@ -366,6 +378,8 @@ def test_observation_write(tmp_path):
         "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz"
     )
     path = tmp_path / "obs.fits.gz"
+
+    obs.meta.creation.origin = "test"
     obs.write(path)
     obs_read = obs.read(path)
 
@@ -390,6 +404,20 @@ def test_observation_write(tmp_path):
     assert obs_read.edisp is None
     assert obs_read.bkg is None
     assert obs_read.rad_max is None
+
+
+@requires_data()
+def test_observation_write_checksum(tmp_path):
+    obs = Observation.read(
+        "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz"
+    )
+    path = tmp_path / "obs.fits.gz"
+
+    obs.write(path, checksum=True)
+    hdul = fits.open(path)
+    for hdu in hdul:
+        assert "CHECKSUM" in hdu.header
+        assert "DATASUM" in hdu.header
 
 
 @requires_data()
@@ -423,7 +451,6 @@ def test_observation_tmid():
 
 @requires_data()
 def test_observations_clustering(data_store):
-
     selection = dict(
         type="sky_circle",
         frame="icrs",
@@ -536,3 +563,22 @@ def test_stack_observations(data_store, caplog):
 
     with pytest.raises(TypeError):
         Observations.from_stack([obs_1, ["a"]])
+
+
+@requires_data()
+def test_slice(data_store):
+    obs_1 = data_store.get_observations([20136, 20137, 20151])
+    assert isinstance(obs_1[0], Observation)
+    assert isinstance(obs_1[1:], Observations)
+
+
+@requires_data()
+def test_observations_generator(data_store):
+    """Test Observations.generator()"""
+    obs_1 = data_store.get_observations([20136, 20137, 20151])
+
+    for idx, obs in enumerate(obs_1.in_memory_generator()):
+        assert isinstance(obs, Observation)
+        assert obs.obs_id == obs_1[idx].obs_id
+        assert isinstance(obs.events, EventList)
+        assert isinstance(obs.psf, PSF3D)

@@ -60,7 +60,7 @@ def test_datasets_to_io(tmp_path):
         filename_models=tmp_path / "written_models.yaml",
     )
 
-    assert len(datasets.parameters) == 22
+    assert len(datasets.parameters) == 24
 
     assert len(datasets_read) == 2
     dataset0 = datasets_read[0]
@@ -98,7 +98,7 @@ def test_spectrum_datasets_to_io(tmp_path):
         filename_models=tmp_path / "written_models.yaml",
     )
 
-    assert len(datasets_read.parameters) == 19
+    assert len(datasets_read.parameters) == 21
 
     assert len(datasets_read) == 2
 

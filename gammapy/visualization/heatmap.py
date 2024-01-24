@@ -1,3 +1,4 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -18,21 +19,20 @@ def plot_heatmap(
 
     Parameters
     ----------
-    data
-        A 2D numpy array of shape (N, M).
-    row_labels
-        A list or array of length N with the labels for the rows.
-    col_labels
-        A list or array of length M with the labels for the columns.
-    ax
-        A `matplotlib.axes.Axes` instance to which the heatmap is plotted.  If
-        not provided, use current axes or create a new one.  Optional.
-    cbar_kw
-        A dictionary with arguments to `matplotlib.Figure.colorbar`.  Optional.
-    cbarlabel
-        The label for the colorbar.  Optional.
-    **kwargs
-        All other arguments are forwarded to `imshow`.
+    data : `~numpy.ndarray`
+        Data array.
+    row_labels : list or `~numpy.ndarray`
+        List or array of labels for the rows.
+    col_labels : list or `~numpy.ndarray`
+        List or array of labels for the columns.
+    ax : `matplotlib.axes.Axes`, optional
+        Axis instance to which the heatmap is plotted. Default is None. If None, the current one is used.
+    cbar_kw : dict, optional
+        A dictionary with arguments to `matplotlib.Figure.colorbar`. Default is None.
+    cbarlabel : str, optional
+        The label for the color bar. Default is "".
+    **kwargs : dict, optional
+        Other keyword arguments forwarded to `matplotlib.axes.Axes.imshow`.
     """
     if ax is None:
         ax = plt.gca()
@@ -87,21 +87,21 @@ def annotate_heatmap(
     ----------
     im
         The AxesImage to be labeled.
-    data
-        Data used to annotate.  If None, the image's data is used.  Optional.
-    valfmt
-        The format of the annotations inside the heatmap.  This should either
-        use the string format method, e.g. "$ {x:.2f}", or be a
-        `matplotlib.ticker.Formatter`.  Optional.
-    textcolors
-        A list or array of two color specifications.  The first is used for
-        values below a threshold, the second for those above.  Optional.
-    threshold
+    data : `~numpy.ndarray`, optional
+        Data used to annotate. Default is None. If None, the image's data is used.
+    valfmt : str format or `matplotlib.ticker.Formatter`, optional
+        The format of the annotations inside the heatmap. This should either
+        use the string format method, e.g. "$ {x:.2f}"
+        or be a `matplotlib.ticker.Formatter` instance. Default is "{x:.2f}".
+    textcolors : list or `~numpy.ndarray`, optional
+        Two color specifications.  The first is used for
+        values below a threshold, the second for those above. Default is ["black", "white"].
+    threshold : float, optional
         Value in data units according to which the colors from textcolors are
-        applied.  If None (the default) uses the middle of the colormap as
-        separation.  Optional.
-    **kwargs
-        All other arguments are forwarded to each call to `text` used to create
+        applied. Default is None. If None the middle of the colormap is used as
+        separation.
+    **kwargs : dict, optional
+        Other keyword arguments forwarded to each call to `text` used to create
         the text labels.
     """
     import matplotlib

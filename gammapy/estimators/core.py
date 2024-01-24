@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import abc
+import html
 import inspect
 from copy import deepcopy
 import numpy as np
@@ -31,7 +32,7 @@ class Estimator(abc.ABC):
 
     @selection_optional.setter
     def selection_optional(self, selection):
-        """Set optional selection"""
+        """Set optional selection."""
         available = self._available_selection_optional
 
         if selection is None:
@@ -46,7 +47,7 @@ class Estimator(abc.ABC):
                 raise ValueError(f"{difference} is not a valid method.")
 
     def _get_energy_axis(self, dataset):
-        """Energy axis"""
+        """Energy axis."""
         if self.energy_edges is None:
             energy_axis = dataset.counts.geom.axes["energy"].squash()
         else:
@@ -55,12 +56,12 @@ class Estimator(abc.ABC):
         return energy_axis
 
     def copy(self):
-        """Copy estimator"""
+        """Copy estimator."""
         return deepcopy(self)
 
     @property
     def config_parameters(self):
-        """Config parameters"""
+        """Configuration parameters."""
         pars = self.__dict__.copy()
         pars = {key.strip("_"): value for key, value in pars.items()}
         return pars
@@ -88,3 +89,9 @@ class Estimator(abc.ABC):
                 s += f"\t{name:{max_len}s}: {value}\n"
 
         return s.expandtabs(tabsize=2)
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"

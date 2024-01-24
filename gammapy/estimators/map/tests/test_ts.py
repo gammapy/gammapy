@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-from astropy.coordinates import Angle
+from astropy.coordinates import Angle, SkyCoord
 from gammapy.datasets import MapDataset, MapDatasetOnOff
 from gammapy.estimators import TSMapEstimator
 from gammapy.irf import EDispKernelMap, PSFMap
@@ -13,6 +13,7 @@ from gammapy.modeling.models import (
     PointSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
+    TemplateSpatialModel,
 )
 from gammapy.utils.testing import requires_data, requires_dependency
 
@@ -290,7 +291,7 @@ def test_ts_map_with_model(fake_dataset):
 
     assert_allclose(maps["sqrt_ts"].data[:, 25, 25], 18.369942, atol=0.1)
     assert_allclose(maps["flux"].data[:, 25, 25], 3.513e-10, atol=1e-12)
-    assert_allclose(maps["flux_err"].data[0, 0, 0], 2.494462e-11, rtol=1e-4)
+    assert_allclose(maps["flux_err"].data[0, 0, 0], 2.413244e-11, rtol=1e-4)
 
     fake_dataset.models = [model]
     maps = estimator.run(fake_dataset)
@@ -307,8 +308,8 @@ def test_ts_map_with_model(fake_dataset):
         energy_edges=[200, 3500] * u.GeV,
     )
     maps = estimator.run(fake_dataset)
-    assert_allclose(maps["sqrt_ts"].data[:, 25, 25], 0.323203, atol=0.1)
-    assert_allclose(maps["flux"].data[:, 25, 25], 1.015509e-12, atol=1e-12)
+    assert_allclose(maps["sqrt_ts"].data[:, 25, 25], -0.279392, atol=0.1)
+    assert_allclose(maps["flux"].data[:, 25, 25], -2.015715e-13, atol=1e-12)
 
 
 @requires_data()
@@ -341,3 +342,23 @@ def test_MapDatasetOnOff_error():
     ts_estimator = TSMapEstimator()
     with pytest.raises(TypeError):
         ts_estimator.run(dataset=dataset_on_off)
+
+
+@requires_data()
+def test_with_TemplateSpatialModel():
+    # Test for bug reported in 4920
+    dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
+    dataset = dataset.downsample(10)
+    filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits"
+    model = TemplateSpatialModel.read(filename, normalize=False)
+    model.position = SkyCoord(0, 0, unit="deg", frame="galactic")
+    sky_model = SkyModel(spatial_model=model, spectral_model=PowerLawSpectralModel())
+    dataset.models = sky_model
+    estimator = TSMapEstimator(
+        model=sky_model,
+        energy_edges=[1.0, 5.0] * u.TeV,
+        n_jobs=4,
+    )
+
+    result = estimator.run(dataset)
+    assert_allclose(result["sqrt_ts"].data[0, 12, 16], 22.932, rtol=1e-3)

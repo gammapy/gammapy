@@ -135,8 +135,8 @@ SOURCES_3FHL = [
 
 
 @requires_data()
-def test_4FGL_DR3():
-    cat = SourceCatalog4FGL("$GAMMAPY_DATA/catalogs/fermi/gll_psc_v28.fit.gz")
+def test_4FGL_DR4():
+    cat = SourceCatalog4FGL("$GAMMAPY_DATA/catalogs/fermi/gll_psc_v32.fit.gz")
     source = cat["4FGL J0534.5+2200"]
     model = source.spectral_model()
     fp = source.flux_points
@@ -210,6 +210,7 @@ class TestFermi4FGLObject:
         assert_allclose(p["sigma"].value, 0.27)
 
         model = self.cat["4FGL J1443.0-6227e"].spatial_model()
+        assert self.cat["4FGL J1443.0-6227e"].data_extended["version"] == 20
         assert "TemplateSpatialModel" in model.tag
         assert model.frame == "fk5"
         assert model.normalize
@@ -307,21 +308,21 @@ class TestFermi4FGLObject:
         assert table["flux_errn"].unit == "cm-2 s-1"
         assert_allclose(table["flux_errn"][0], 4.437058e-8, rtol=1e-3)
 
-    def test_lightcurve_dr2(self):
-        dr2 = SourceCatalog4FGL("$GAMMAPY_DATA/catalogs/fermi/gll_psc_v27.fit.gz")
+    def test_lightcurve_dr4(self):
+        dr2 = SourceCatalog4FGL("$GAMMAPY_DATA/catalogs/fermi/gll_psc_v32.fit.gz")
         source_dr2 = dr2[self.source_name]
         table = source_dr2.lightcurve(interval="1-year").to_table(
             format="lightcurve", sed_type="flux"
         )
 
         assert table["flux"].unit == "cm-2 s-1"
-        assert_allclose(table["flux"][0], 2.196788e-6, rtol=1e-3)
+        assert_allclose(table["flux"][0], 2.307773e-06, rtol=1e-3)
 
         assert table["flux_errp"].unit == "cm-2 s-1"
-        assert_allclose(table["flux_errp"][0], 2.312938e-8, rtol=1e-3)
+        assert_allclose(table["flux_errp"][0], 2.298336e-08, rtol=1e-3)
 
         assert table["flux_errn"].unit == "cm-2 s-1"
-        assert_allclose(table["flux_errn"][0], 2.312938e-8, rtol=1e-3)
+        assert_allclose(table["flux_errn"][0], 2.298336e-08, rtol=1e-3)
 
         with pytest.raises(ValueError):
             source_dr2.lightcurve(interval="2-month")
@@ -552,9 +553,6 @@ class TestFermi2FHLObject:
         assert "TemplateSpatialModel" in model.tag
         assert model.frame == "fk5"
         assert model.normalize
-        # TODO: have to check the extended template used for RX J1713,
-        # for now I guess it's the same than for 3FGL
-        # and added a copy with the name given by 2FHL in gammapy-extra
 
 
 @requires_data()

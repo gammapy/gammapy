@@ -1,12 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import html
 import re
 import numpy as np
 from astropy.utils import lazyproperty
 from gammapy.utils.array import is_power2
 from ..utils import INVALID_INDEX
 
-# Approximation of the size of HEALPIX pixels (in degrees) for a particular order.
-# Used to convert from HEALPIX to WCS-based projections.
+# Approximation of the size of HEALPix pixels (in degrees) for a particular order.
+# Used to convert from HEALPix to WCS-based projections.
 HPX_ORDER_TO_PIXSIZE = np.array(
     [32.0, 16.0, 8.0, 4.0, 2.0, 1.0, 0.50, 0.25, 0.1, 0.05, 0.025, 0.01, 0.005, 0.002]
 )
@@ -43,10 +44,14 @@ def ravel_hpx_index(idx, npix):
     Parameters
     ----------
     idx : tuple of `~numpy.ndarray`
+        Index array.
+    npix : `~numpy.ndarray`
+        Number of pixels.
 
     Returns
     -------
     idx : `~numpy.ndarray`
+        Index array.
     """
     if len(idx) == 1:
         return idx[0]
@@ -61,7 +66,7 @@ def ravel_hpx_index(idx, npix):
 
 
 def coords_to_vec(lon, lat):
-    """Converts longitude and latitude coordinates to a unit 3-vector.
+    """Convert longitude and latitude coordinates to a unit 3-vector.
 
     Returns
     -------
@@ -86,13 +91,13 @@ def get_nside_from_pix_size(pixsz):
 
     Parameters
     ----------
-    pix : `~numpy.ndarray`
+    pixsz : `~numpy.ndarray`
         Pixel size in degrees.
 
     Returns
     -------
     nside : `~numpy.ndarray`
-        NSIDE parameter.
+        HEALPix NSIDE parameter.
     """
     import healpy as hp
 
@@ -103,20 +108,33 @@ def get_nside_from_pix_size(pixsz):
 
 
 def get_pix_size_from_nside(nside):
-    """Estimate of the pixel size from the HEALPIX nside coordinate.
+    """Estimate of the pixel size from the HEALPix nside coordinate.
 
     This just uses a lookup table to provide a nice round number
-    for each HEALPIX order.
+    for each HEALPix order.
     """
     order = nside_to_order(nside)
     if np.any(order < 0) or np.any(order > 13):
-        raise ValueError(f"HEALPIX order must be 0 to 13. Got: {order!r}")
+        raise ValueError(f"HEALPix order must be 0 to 13. Got: {order!r}")
 
     return HPX_ORDER_TO_PIXSIZE[order]
 
 
 def match_hpx_pix(nside, nest, nside_pix, ipix_ring):
-    """TODO: document."""
+    """
+    Match to the HEALPix pixel number.
+
+    Parameters
+    ----------
+    nside : int or `~numpy.ndarray`
+        HEALPix NSIDE parameter, must be a power of 2.
+    nest : bool
+        Indexing scheme. If True, "NESTED" scheme. If False, "RING" scheme.
+    nside_pix : int or `~numpy.ndarray`
+        HEALPix NSIDE parameter of subpixel.
+    ipix_ring : int or `~numpy.ndarray`
+        HEALPix pixel number.
+    """
     import healpy as hp
 
     ipix_in = np.arange(12 * nside * nside)
@@ -158,18 +176,18 @@ def get_superpixels(idx, nside_subpix, nside_superpix, nest=True):
     idx : `~numpy.ndarray`
         Array of HEALPix pixel indices for subpixels of NSIDE
         ``nside_subpix``.
-    nside_subpix  : int or `~numpy.ndarray`
-        NSIDE of subpixel.
+    nside_subpix : int or `~numpy.ndarray`
+        HEALPix NSIDE parameter of subpixel.
     nside_superpix : int or `~numpy.ndarray`
-        NSIDE of superpixel.
-    nest : bool
-        If True, assume NESTED pixel ordering, otherwise, RING pixel
-        ordering.
+        HEALPix NSIDE parameter of superpixel.
+    nest : bool, optional
+        Indexing scheme. If True, "NESTED" scheme. If False, "RING" scheme.
+        Default is True.
 
     Returns
     -------
     idx_super : `~numpy.ndarray`
-        Indices of HEALpix pixels of nside ``nside_superpix`` that
+        Indices of HEALPix pixels of nside ``nside_superpix`` that
         contain pixel indices ``idx`` of nside ``nside_subpix``.
     """
     import healpy as hp
@@ -211,17 +229,17 @@ def get_subpixels(idx, nside_superpix, nside_subpix, nest=True):
         Array of HEALPix pixel indices for superpixels of NSIDE
         ``nside_superpix``.
     nside_superpix : int or `~numpy.ndarray`
-        NSIDE of superpixel.
-    nside_subpix  : int or `~numpy.ndarray`
-        NSIDE of subpixel.
-    nest : bool
-        If True, assume NESTED pixel ordering, otherwise, RING pixel
-        ordering.
+        HEALPix NSIDE parameter of superpixel.
+    nside_subpix : int or `~numpy.ndarray`
+        HEALPix NSIDE parameter of subpixel.
+    nest : bool, optional
+        Indexing scheme. If True, "NESTED" scheme. If False, "RING" scheme.
+        Default is True.
 
     Returns
     -------
     idx_sub : `~numpy.ndarray`
-        Indices of HEALpix pixels of nside ``nside_subpix`` contained
+        Indices of HEALPix pixels of nside ``nside_subpix`` contained
         within pixel indices ``idx`` of nside ``nside_superpix``.
     """
     import healpy as hp
@@ -258,7 +276,7 @@ def get_subpixels(idx, nside_superpix, nside_subpix, nest=True):
 
 
 class HpxToWcsMapping:
-    """Stores the indices need to convert from HEALPIX to WCS.
+    """Stores the indices need to convert from HEALPix to WCS.
 
     Parameters
     ----------
@@ -275,9 +293,15 @@ class HpxToWcsMapping:
         self._mult_val = mult_val
         self._npix = npix
 
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
+
     @property
     def hpx(self):
-        """HEALPIX projection."""
+        """HEALPix projection."""
         return self._hpx
 
     @property
@@ -287,12 +311,12 @@ class HpxToWcsMapping:
 
     @property
     def ipix(self):
-        """An array(nx,ny) of the global HEALPIX pixel indices for each WCS pixel."""
+        """An array(nx,ny) of the global HEALPix pixel indices for each WCS pixel."""
         return self._ipix
 
     @property
     def mult_val(self):
-        """An array(nx,ny) of 1/number of WCS pixels pointing at each HEALPIX pixel."""
+        """An array(nx,ny) of 1/number of WCS pixels pointing at each HEALPix pixel."""
         return self._mult_val
 
     @property
@@ -302,13 +326,12 @@ class HpxToWcsMapping:
 
     @lazyproperty
     def lmap(self):
-        """Array ``(nx, ny)`` mapping local HEALPIX pixel indices for each WCS pixel."""
-
+        """Array ``(nx, ny)`` mapping local HEALPix pixel indices for each WCS pixel."""
         return self.hpx.global_to_local(self.ipix, ravel=True)
 
     @property
     def valid(self):
-        """Array ``(nx, ny)`` of bool: which WCS pixel in inside the HEALPIX region."""
+        """Array ``(nx, ny)`` of bool: which WCS pixel in inside the HEALPix region."""
         return self.lmap >= 0
 
     @classmethod
@@ -325,7 +348,7 @@ class HpxToWcsMapping:
         Returns
         -------
         hpx2wcs : `~HpxToWcsMapping`
-            Mapping
+            Mapping.
 
         """
         import healpy as hp
@@ -334,14 +357,14 @@ class HpxToWcsMapping:
 
         # FIXME: Calculation of WCS pixel centers should be moved into a
         # method of WcsGeom
-        pix_crds = np.dstack(np.meshgrid(np.arange(npix[0]), np.arange(npix[1])))
+        pix_crds = np.dstack(np.meshgrid(np.arange(npix[0][0]), np.arange(npix[1][0])))
         pix_crds = pix_crds.swapaxes(0, 1).reshape((-1, 2))
         sky_crds = wcs.wcs.wcs_pix2world(pix_crds, 0)
         sky_crds *= np.radians(1.0)
         sky_crds[0:, 1] = (np.pi / 2) - sky_crds[0:, 1]
 
         mask = ~np.any(np.isnan(sky_crds), axis=1)
-        ipix = -1 * np.ones((len(hpx.nside), int(npix[0] * npix[1])), int)
+        ipix = -1 * np.ones((len(hpx.nside), int(npix[0][0] * npix[1][0])), int)
         m = mask[None, :] * np.ones_like(ipix, dtype=bool)
 
         ipix[m] = hp.ang2pix(
@@ -351,10 +374,10 @@ class HpxToWcsMapping:
             hpx.nest,
         ).flatten()
 
-        # Here we are counting the number of HEALPIX pixels each WCS pixel
+        # Here we are counting the number of HEALPix pixels each WCS pixel
         # points to and getting a multiplicative factor that tells use how
-        # to split up the counts in each HEALPIX pixel (by dividing the
-        # corresponding WCS pixels by the number of associated HEALPIX
+        # to split up the counts in each HEALPix pixel (by dividing the
+        # corresponding WCS pixels by the number of associated HEALPix
         # pixels).
         mult_val = np.ones_like(ipix, dtype=float)
         for i, t in enumerate(ipix):
@@ -371,18 +394,25 @@ class HpxToWcsMapping:
     def fill_wcs_map_from_hpx_data(
         self, hpx_data, wcs_data, normalize=True, fill_nan=True
     ):
-        """Fill the WCS map from the hpx data using the pre-calculated mappings.
+        """Fill the WCS map from the HEALPix data using the pre-calculated mappings.
 
         Parameters
         ----------
         hpx_data : `~numpy.ndarray`
-            The input HEALPIX data
+            The input HEALPix data.
         wcs_data : `~numpy.ndarray`
-            The data array being filled
-        normalize : bool
-            True -> preserve integral by splitting HEALPIX values between bins
-        fill_nan : bool
-            Fill pixels outside the HPX geometry with NaN.
+            The data array being filled.
+        normalize : bool, optional
+            If True, preserve integral by splitting HEALPix values between bins.
+            Default is True.
+        fill_nan : bool, optional
+            Fill pixels outside the HEALPix geometry with NaN.
+            Default is True.
+
+        Returns
+        -------
+        wcs_data : `~numpy.ndarray`
+            The WCS data array.
         """
         # FIXME: Do we want to flatten mapping arrays?
 
@@ -413,18 +443,23 @@ class HpxToWcsMapping:
         return wcs_data
 
     def fill_hpx_map_from_wcs_data(self, wcs_data, hpx_data, normalize=True):
-        """Fill the HPX map from the WCS data using the pre-calculated mappings.
+        """Fill the HEALPix map from the WCS data using the pre-calculated mappings.
 
         Parameters
         ----------
         wcs_data : `~numpy.ndarray`
-            The input WCS data
+            The input WCS data.
         hpx_data : `~numpy.ndarray`
-            The data array being filled
-        normalize : bool
-            True -> preserve integral by splitting HEALPIX values between bins
-        """
+            The data array being filled.
+        normalize : bool, optional
+            If True, preserve integral by splitting HEALPix values between bins.
+            Default is True.
 
+        Returns
+        -------
+        hpx_data : `~numpy.ndarray`
+            The HEALPix data array.
+        """
         shape = tuple([t.flat[0] for t in self._npix])
         if self.valid.ndim != 1:
             shape = hpx_data.shape[:-1] + shape

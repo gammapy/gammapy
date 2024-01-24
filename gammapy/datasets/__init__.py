@@ -1,9 +1,15 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 from gammapy.utils.registry import Registry
 from .core import Dataset, Datasets
 from .flux_points import FluxPointsDataset
 from .io import OGIPDatasetReader, OGIPDatasetWriter
-from .map import MapDataset, MapDatasetOnOff, create_map_dataset_geoms
-from .simulate import MapDatasetEventSampler
+from .map import (
+    MapDataset,
+    MapDatasetOnOff,
+    create_map_dataset_from_observation,
+    create_map_dataset_geoms,
+)
+from .simulate import MapDatasetEventSampler, ObservationEventSampler
 from .spectrum import SpectrumDataset, SpectrumDatasetOnOff
 
 DATASET_REGISTRY = Registry(
@@ -19,6 +25,7 @@ DATASET_REGISTRY = Registry(
 """Registry of dataset classes in Gammapy."""
 
 __all__ = [
+    "create_map_dataset_from_observation",
     "create_map_dataset_geoms",
     "Dataset",
     "DATASET_REGISTRY",
@@ -27,6 +34,7 @@ __all__ = [
     "MapDataset",
     "MapDatasetEventSampler",
     "MapDatasetOnOff",
+    "ObservationEventSampler",
     "OGIPDatasetWriter",
     "OGIPDatasetReader",
     "SpectrumDataset",

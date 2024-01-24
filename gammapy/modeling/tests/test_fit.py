@@ -180,11 +180,6 @@ def test_optimize(backend):
     assert len(result.trace) == result.nfev
 
 
-# TODO: add some extra covariance tests, in addition to run
-# Probably mainly if error message is OK if optimize didn't run first.
-# def test_covariance():
-
-
 @pytest.mark.parametrize("backend", ["minuit"])
 def test_confidence(backend):
     dataset = MyDataset()

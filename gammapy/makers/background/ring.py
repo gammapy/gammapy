@@ -23,7 +23,7 @@ class AdaptiveRingBackgroundMaker(Maker):
     r_in : `~astropy.units.Quantity`
         Inner radius of the ring.
     r_out_max : `~astropy.units.Quantity`
-        Maximal outer radius of the ring.
+        Maximum outer radius of the ring.
     width : `~astropy.units.Quantity`
         Width of the ring.
     stepsize : `~astropy.units.Quantity`
@@ -33,13 +33,13 @@ class AdaptiveRingBackgroundMaker(Maker):
     theta : `~astropy.units.Quantity`
         Integration radius used for alpha computation.
     method : {'fixed_width', 'fixed_r_in'}
-        Adaptive ring method.
+        Adaptive ring method. Default is 'fixed_width'.
     exclusion_mask : `~gammapy.maps.WcsNDMap`
-        Exclusion mask
+        Exclusion mask.
 
     See Also
     --------
-    RingBackgroundMaker
+    RingBackgroundMaker.
     """
 
     tag = "AdaptiveRingBackgroundMaker"
@@ -78,7 +78,7 @@ class AdaptiveRingBackgroundMaker(Maker):
         Returns
         -------
         kernels : list
-            List of `~astropy.convolution.Ring2DKernel`
+            List of `~astropy.convolution.Ring2DKernel`.
         """
         scale = image.geom.pixel_scales[0]
         r_in = (self.r_in / scale).to_value("")
@@ -147,7 +147,7 @@ class AdaptiveRingBackgroundMaker(Maker):
         return acceptance, acceptance_off, counts_off
 
     def make_cubes(self, dataset):
-        """Make acceptance, off acceptance, off counts cubes
+        """Make acceptance, off acceptance, off counts cubes.
 
         Parameters
         ----------
@@ -189,7 +189,7 @@ class AdaptiveRingBackgroundMaker(Maker):
         return cubes
 
     def run(self, dataset, observation=None):
-        """Run adaptive ring background maker
+        """Run adaptive ring background maker.
 
         Parameters
         ----------
@@ -223,19 +223,18 @@ class AdaptiveRingBackgroundMaker(Maker):
 
 
 class RingBackgroundMaker(Maker):
-    """Perform a local renormalisation of the existing background template, using a
-    ring kernel.
+    """Perform a local renormalisation of the existing background template, using a ring kernel.
 
-    Expected signal regions should be removed by passing an exclusion mask
+    Expected signal regions should be removed by passing an exclusion mask.
 
     Parameters
     ----------
     r_in : `~astropy.units.Quantity`
-        Inner ring radius
+        Inner ring radius.
     width : `~astropy.units.Quantity`
-        Ring width
+        Ring width.
     exclusion_mask : `~gammapy.maps.WcsNDMap`
-        Exclusion mask
+        Exclusion mask.
 
 
     Examples
@@ -244,7 +243,7 @@ class RingBackgroundMaker(Maker):
 
     See Also
     --------
-    AdaptiveRingBackgroundEstimator
+    AdaptiveRingBackgroundEstimator.
     """
 
     tag = "RingBackgroundMaker"
@@ -260,7 +259,7 @@ class RingBackgroundMaker(Maker):
         Parameters
         ----------
         image : `~gammapy.maps.WcsNDMap`
-            Input Map
+            Input map.
 
         Returns
         -------
@@ -276,7 +275,7 @@ class RingBackgroundMaker(Maker):
         return ring
 
     def make_maps_off(self, dataset):
-        """Make off maps
+        """Make off maps.
 
         Parameters
         ----------
@@ -312,7 +311,7 @@ class RingBackgroundMaker(Maker):
         return maps_off
 
     def run(self, dataset, observation=None):
-        """Run ring background maker
+        """Run ring background maker.
 
         Parameters
         ----------

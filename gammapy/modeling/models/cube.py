@@ -32,22 +32,21 @@ class SkyModel(ModelBase):
     """Sky model component.
 
     This model represents a factorised sky model.
-    It has `~gammapy.modeling.Parameters`
-    combining the spatial and spectral parameters.
+    It has `~gammapy.modeling.Parameters` combining the spatial and spectral parameters.
 
     Parameters
     ----------
     spectral_model : `~gammapy.modeling.models.SpectralModel`
-        Spectral model
+        Spectral model.
     spatial_model : `~gammapy.modeling.models.SpatialModel`
-        Spatial model (must be normalised to integrate to 1)
-    temporal_model : `~gammapy.modeling.models.temporalModel`
-        Temporal model
+        Spatial model (must be normalised to integrate to 1).
+    temporal_model : `~gammapy.modeling.models.TemporalModel`
+        Temporal model.
     name : str
-        Model identifier
+        Model identifier.
     apply_irf : dict
         Dictionary declaring which IRFs should be applied to this model. Options
-        are {"exposure": True, "psf": True, "edisp": True}
+        are {"exposure": True, "psf": True, "edisp": True}.
     datasets_names : list of str
         Which datasets this model is applied to.
     """
@@ -76,13 +75,6 @@ class SkyModel(ModelBase):
         self.apply_irf = apply_irf
         self.datasets_names = datasets_names
         self._check_unit()
-
-        is_norm = np.array([par.is_norm for par in spectral_model.parameters])
-
-        if not np.any(is_norm):
-            raise ValueError(
-                "Spectral model used with SkyModel requires a norm type parameter."
-            )
 
         super().__init__(covariance_data=covariance_data)
 
@@ -172,7 +164,7 @@ class SkyModel(ModelBase):
 
     @property
     def spatial_model(self):
-        """`~gammapy.modeling.models.SpatialModel`"""
+        """Spatial model as a `~gammapy.modeling.models.SpatialModel` object."""
         return self._spatial_model
 
     @spatial_model.setter
@@ -184,7 +176,7 @@ class SkyModel(ModelBase):
 
     @property
     def spectral_model(self):
-        """`~gammapy.modeling.models.SpectralModel`"""
+        """Spectral model as a `~gammapy.modeling.models.SpectralModel` object."""
         return self._spectral_model
 
     @spectral_model.setter
@@ -195,7 +187,7 @@ class SkyModel(ModelBase):
 
     @property
     def temporal_model(self):
-        """`~gammapy.modeling.models.TemporalModel`"""
+        """Temporal model as a `~gammapy.modeling.models.TemporalModel` object."""
         return self._temporal_model
 
     @temporal_model.setter
@@ -207,12 +199,12 @@ class SkyModel(ModelBase):
 
     @property
     def position(self):
-        """`~astropy.coordinates.SkyCoord`"""
+        """Position as a `~astropy.coordinates.SkyCoord`."""
         return getattr(self.spatial_model, "position", None)
 
     @property
     def position_lonlat(self):
-        """Spatial model center position `(lon, lat)` in rad and frame of the model"""
+        """Spatial model center position `(lon, lat)` in radians and frame of the model."""
         return getattr(self.spatial_model, "position_lonlat", None)
 
     @property
@@ -228,12 +220,12 @@ class SkyModel(ModelBase):
 
     @property
     def evaluation_radius(self):
-        """`~astropy.coordinates.Angle`"""
+        """Evaluation radius as an `~astropy.coordinates.Angle`."""
         return self.spatial_model.evaluation_radius
 
     @property
     def evaluation_region(self):
-        """`~astropy.coordinates.Angle`"""
+        """Evaluation region as an `~astropy.coordinates.Angle`."""
         return self.spatial_model.evaluation_region
 
     @property
@@ -263,12 +255,12 @@ class SkyModel(ModelBase):
         )
 
     def contributes(self, mask, margin="0 deg"):
-        """Check if a skymodel contributes within a mask map.
+        """Check if a sky model contributes within a mask map.
 
         Parameters
         ----------
         mask : `~gammapy.maps.WcsNDMap` of boolean type
-            Map containing a boolean mask
+            Map containing a boolean mask.
         margin : `~astropy.units.Quantity`
             Add a margin in degree to the source evaluation radius.
             Used to take into account PSF width.
@@ -277,7 +269,7 @@ class SkyModel(ModelBase):
         Returns
         -------
         models : `DatasetModels`
-            Selected models contributing inside the region where mask==True
+            Selected models contributing inside the region where mask is True.
         """
         from gammapy.datasets.evaluator import CUTOUT_MARGIN
 
@@ -310,16 +302,16 @@ class SkyModel(ModelBase):
         The model evaluation follows numpy broadcasting rules.
 
         Return differential surface brightness cube.
-        At the moment in units: ``cm-2 s-1 TeV-1 deg-2``
+        At the moment in units: ``cm-2 s-1 TeV-1 deg-2``.
 
         Parameters
         ----------
         lon, lat : `~astropy.units.Quantity`
-            Spatial coordinates
+            Spatial coordinates.
         energy : `~astropy.units.Quantity`
-            Energy coordinate
-        time: `~astropy.time.Time`
-            Time coordinate
+            Energy coordinate.
+        time: `~astropy.time.Time`, optional
+            Time coordinate. Default is None.
 
         Returns
         -------
@@ -345,14 +337,23 @@ class SkyModel(ModelBase):
     def evaluate_geom(self, geom, gti=None):
         """Evaluate model on `~gammapy.maps.Geom`."""
         coords = geom.get_coord(sparse=True)
+
         value = self.spectral_model(coords["energy_true"])
+
+        additional_axes = set(coords.axis_names) - {
+            "lon",
+            "lat",
+            "energy_true",
+            "time",
+        }
+        for axis in additional_axes:
+            value = value * np.ones_like(coords[axis])
 
         if self.spatial_model:
             value = value * self.spatial_model.evaluate_geom(geom)
 
         if self.temporal_model:
-            integral = self.temporal_model.integral(gti.time_start, gti.time_stop)
-            value = value * np.sum(integral)
+            value = self._compute_time_integral(value, geom, gti)
 
         return value
 
@@ -365,23 +366,27 @@ class SkyModel(ModelBase):
         Parameters
         ----------
         geom : `Geom` or `~gammapy.maps.RegionGeom`
-            Map geometry
-        gti : `GTI`
-            GIT table
-        oversampling_factor : int or None
+            Map geometry.
+        gti : `GTI`, optional
+            GIT table. Default is None.
+        oversampling_factor : int, optional
             The oversampling factor to use for spatial integration.
-            Default is None: the factor is estimated from the model minimal bin size
+            Default is None: the factor is estimated from the model minimal bin size.
 
         Returns
         -------
         flux : `Map`
-            Predicted flux map
+            Predicted flux map.
         """
         energy = geom.axes["energy_true"].edges
+        shape = len(geom.data_shape) * [
+            1,
+        ]
+        shape[geom.axes.index_data("energy_true")] = -1
         value = self.spectral_model.integral(
             energy[:-1],
             energy[1:],
-        ).reshape((-1, 1, 1))
+        ).reshape(shape)
 
         if self.spatial_model:
             value = (
@@ -392,22 +397,54 @@ class SkyModel(ModelBase):
             )
 
         if self.temporal_model:
-            integral = self.temporal_model.integral(gti.time_start, gti.time_stop)
-            value = value * np.sum(integral)
+            value = self._compute_time_integral(value, geom, gti)
+
+        value = value * np.ones(geom.data_shape)
 
         return Map.from_geom(geom=geom, data=value.value, unit=value.unit)
 
+    def _compute_time_integral(self, value, geom, gti):
+        """Multiply input value with time integral for the given geometry and GTI."""
+        if "time" in geom.axes.names:
+            if geom.axes.names[-1] != "time":
+                raise ValueError(
+                    "Incorrect axis order. The time axis must be the last axis"
+                )
+            time_axis = geom.axes["time"]
+
+            temp_eval = np.ones(time_axis.nbin)
+            for idx in range(time_axis.nbin):
+                if gti is None:
+                    t1, t2 = time_axis.time_min[idx], time_axis.time_max[idx]
+                else:
+                    gti_in_bin = gti.select_time(
+                        time_interval=[
+                            time_axis.time_min[idx],
+                            time_axis.time_max[idx],
+                        ]
+                    )
+                    t1, t2 = gti_in_bin.time_start, gti_in_bin.time_stop
+                integral = self.temporal_model.integral(t1, t2)
+                temp_eval[idx] = np.sum(integral)
+            value = (value.T * temp_eval).T
+
+        else:
+            if gti is not None:
+                integral = self.temporal_model.integral(gti.time_start, gti.time_stop)
+                value = value * np.sum(integral)
+        return value
+
     def copy(self, name=None, copy_data=False, **kwargs):
-        """Copy sky model
+        """Copy sky model.
 
         Parameters
         ----------
-        name : str
-            Assign a new name to the copied model.
-        copy_data : bool
-            Copy the data arrays attached to models.
+        name : str, optional
+            Assign a new name to the copied model. Default is None.
+        copy_data : bool, optional
+            Copy the data arrays attached to models. Default is False.
         **kwargs : dict
-            Keyword arguments forwarded to `SkyModel`
+            Keyword arguments forwarded to `SkyModel`.
 
         Returns
         -------
@@ -435,7 +472,7 @@ class SkyModel(ModelBase):
         return self.__class__(**kwargs)
 
     def to_dict(self, full_output=False):
-        """Create dict for YAML serilisation"""
+        """Create dictionary for YAML serilisation."""
         data = {}
         data["name"] = self.name
         data["type"] = self.tag[0]
@@ -457,8 +494,8 @@ class SkyModel(ModelBase):
         return data
 
     @classmethod
-    def from_dict(cls, data):
-        """Create SkyModel from dict"""
+    def from_dict(cls, data, **kwargs):
+        """Create SkyModel from dictionary."""
         from gammapy.modeling.models import (
             SPATIAL_MODEL_REGISTRY,
             SPECTRAL_MODEL_REGISTRY,
@@ -531,18 +568,18 @@ class SkyModel(ModelBase):
         Parameters
         ----------
         spectral_model : str
-            Tag to create spectral model
-        spatial_model : str
-            Tag to create spatial model
-        temporal_model : str
-            Tag to create temporal model
+            Tag to create spectral model.
+        spatial_model : str, optional
+            Tag to create spatial model. Default is None.
+        temporal_model : str, optional
+            Tag to create temporal model. Default is None.
         **kwargs : dict
-            Keyword arguments passed to `SkyModel`
+            Keyword arguments passed to `SkyModel`.
 
         Returns
         -------
         model : SkyModel
-            Sky model
+            Sky model.
         """
         spectral_model = Model.create(spectral_model, model_type="spectral")
 
@@ -560,13 +597,13 @@ class SkyModel(ModelBase):
         )
 
     def freeze(self, model_type=None):
-        """Freeze parameters depending on model type
+        """Freeze parameters depending on model type.
 
         Parameters
         ----------
         model_type : {None, "spatial", "spectral", "temporal"}
-           freeze all parameters or only or only spatial/spectral/temporal.
-           Default is None so all parameters are frozen.
+           Freeze all parameters or only spatial/spectral/temporal.
+           Default is None, such that all parameters are frozen.
         """
         if model_type is None:
             self.parameters.freeze_all()
@@ -575,13 +612,13 @@ class SkyModel(ModelBase):
             model.freeze()
 
     def unfreeze(self, model_type=None):
-        """Restore parameters frozen status to default depending on model type
+        """Restore parameters frozen status to default depending on model type.
 
         Parameters
         ----------
         model_type : {None, "spatial", "spectral", "temporal"}
-           restore frozen status to default for all parameters or only spatial/spectral/temporal
-           Default is None so all parameters are restore to default frozen status.
+           Restore frozen status to default for all parameters or only spatial/spectral/temporal.
+           Default is None, such that all parameters are restored to default frozen status.
 
         """
         if model_type is None:
@@ -594,7 +631,7 @@ class SkyModel(ModelBase):
 
 
 class FoVBackgroundModel(ModelBase):
-    """Field of view background model
+    """Field of view background model.
 
     The background model holds the correction parameters applied to
     the instrumental background attached to a `MapDataset` or
@@ -606,7 +643,7 @@ class FoVBackgroundModel(ModelBase):
         Normalized spectral model.
         Default is `~gammapy.modeling.models.PowerLawNormSpectralModel`
     dataset_name : str
-        Dataset name
+        Dataset name.
     spatial_model : `~gammapy.modeling.models.SpatialModel`
         Unitless Spatial model (unit is dropped on evaluation if defined).
         Default is None.
@@ -638,29 +675,31 @@ class FoVBackgroundModel(ModelBase):
 
     @staticmethod
     def contributes(*args, **kwargs):
-        """FoV background models always contribute"""
+        """FoV background models always contribute."""
         return True
 
     @property
     def spectral_model(self):
-        """Spectral norm model"""
+        """Spectral norm model."""
         return self._spectral_model
 
     @property
     def spatial_model(self):
-        """Spatial norm model"""
+        """Spatial norm model."""
         return self._spatial_model
 
     @property
     def name(self):
-        """Model name"""
+        """Model name."""
         return self.datasets_names[0] + "-bkg"
 
     @property
     def parameters(self):
-        """Model parameters"""
+        """Model parameters."""
         parameters = []
         parameters.append(self.spectral_model.parameters)
+        if self.spatial_model is not None:
+            parameters.append(self.spatial_model.parameters)
         return Parameters.from_stack(parameters)
 
     def __str__(self):
@@ -671,6 +710,10 @@ class FoVBackgroundModel(ModelBase):
         str_ += "\t{:26}: {}\n".format(
             "Spectral model type", self.spectral_model.__class__.__name__
         )
+        if self.spatial_model is not None:
+            str_ += "\t{:26}: {}\n".format(
+                "Spatial model type", self.spatial_model.__class__.__name__
+            )
         str_ += "\tParameters:\n"
         info = _get_parameters_str(self.parameters)
         lines = info.split("\n")
@@ -680,12 +723,12 @@ class FoVBackgroundModel(ModelBase):
         return str_.expandtabs(tabsize=2)
 
     def evaluate_geom(self, geom):
-        """Evaluate map"""
+        """Evaluate map."""
         coords = geom.get_coord(sparse=True)
         return self.evaluate(**coords._data)
 
     def evaluate(self, energy, lon=None, lat=None):
-        """Evaluate model"""
+        """Evaluate model."""
         value = self.spectral_model(energy)
         if self.spatial_model is not None:
             if lon is not None and lat is not None:
@@ -701,16 +744,18 @@ class FoVBackgroundModel(ModelBase):
             return value
 
     def copy(self, name=None, copy_data=False, **kwargs):
-        """Copy FoVBackgroundModel
+        """Copy the `FoVBackgroundModel` instance.
 
         Parameters
         ----------
-        name : str
+        name : str, optional
             Ignored, present for API compatibility.
-        copy_data : bool
+            Default is None.
+        copy_data : bool, optional
             Ignored, present for API compatibility.
+            Default is False.
         **kwargs : dict
-            Keyword arguments forwarded to `FoVBackgroundModel`
+            Keyword arguments forwarded to `FoVBackgroundModel`.
 
         Returns
         -------
@@ -720,6 +765,8 @@ class FoVBackgroundModel(ModelBase):
         kwargs.setdefault("spectral_model", self.spectral_model.copy())
         kwargs.setdefault("dataset_name", self.datasets_names[0])
         kwargs.setdefault("covariance_data", self.covariance.data.copy())
+        if self.spatial_model is not None:
+            kwargs.setdefault("spatial_model", self.spatial_model.copy())
         return self.__class__(**kwargs)
 
     def to_dict(self, full_output=False):
@@ -732,13 +779,13 @@ class FoVBackgroundModel(ModelBase):
         return data
 
     @classmethod
-    def from_dict(cls, data):
-        """Create model from dict
+    def from_dict(cls, data, **kwargs):
+        """Create model from dictionary.
 
         Parameters
         ----------
         data : dict
-            Data dictionary
+            Data dictionary.
         """
         from gammapy.modeling.models import (
             SPATIAL_MODEL_REGISTRY,
@@ -774,17 +821,17 @@ class FoVBackgroundModel(ModelBase):
         )
 
     def reset_to_default(self):
-        """Reset parameter values to default"""
+        """Reset parameter values to default."""
         values = self.spectral_model.default_parameters.value
         self.spectral_model.parameters.value = values
 
     def freeze(self, model_type="spectral"):
-        """Freeze model parameters"""
+        """Freeze model parameters."""
         if model_type is None or model_type == "spectral":
             self._spectral_model.freeze()
 
     def unfreeze(self, model_type="spectral"):
-        """Restore parameters frozen status to default"""
+        """Restore parameters frozen status to default."""
         if model_type is None or model_type == "spectral":
             self._spectral_model.unfreeze()
 
@@ -792,18 +839,18 @@ class FoVBackgroundModel(ModelBase):
 class TemplateNPredModel(ModelBase):
     """Background model.
 
-    Create a new map by a tilt and normalization on the available map
+    Create a new map by a tilt and normalization on the available map.
 
     Parameters
     ----------
     map : `~gammapy.maps.Map`
-        Background model map
+        Background model map.
     spectral_model : `~gammapy.modeling.models.SpectralModel`
-        Normalized spectral model,
-        default is `~gammapy.modeling.models.PowerLawNormSpectralModel`
+        Normalized spectral model.
+        Default is `~gammapy.modeling.models.PowerLawNormSpectralModel`.
     copy_data : bool
-        Create a deepcopy of the map data or directly use the original. True by
-        default, can be turned to False to save memory in case of large maps.
+        Create a deepcopy of the map data or directly use the original. Default is True.
+        Use False to save memory in case of large maps.
     spatial_model : `~gammapy.modeling.models.SpatialModel`
         Unitless Spatial model (unit is dropped on evaluation if defined).
         Default is None.
@@ -861,12 +908,14 @@ class TemplateNPredModel(ModelBase):
 
         Parameters
         ----------
-        name : str
+        name : str, optional
             Assign a new name to the copied model.
-        copy_data : bool
+            Default is None.
+        copy_data : bool, optional
             Copy the data arrays attached to models.
+            Default is False.
         **kwargs : dict
-            Keyword arguments forwarded to `TemplateNPredModel`
+            Keyword arguments forwarded to `TemplateNPredModel`.
 
         Returns
         -------
@@ -887,14 +936,14 @@ class TemplateNPredModel(ModelBase):
 
     @property
     def energy_center(self):
-        """True energy axis bin centers (`~astropy.units.Quantity`)"""
+        """True energy axis bin centers as a `~astropy.units.Quantity`."""
         energy_axis = self.map.geom.axes["energy"]
         energy = energy_axis.center
         return energy[:, np.newaxis, np.newaxis]
 
     @property
     def spectral_model(self):
-        """`~gammapy.modeling.models.SpectralModel`"""
+        """Spectral model as a `~gammapy.modeling.models.SpectralModel` object."""
         return self._spectral_model
 
     @spectral_model.setter
@@ -915,7 +964,7 @@ class TemplateNPredModel(ModelBase):
         Returns
         -------
         background_map : `~gammapy.maps.Map`
-            Background evaluated on the Map
+            Background evaluated on the Map.
         """
         value = self.spectral_model(self.energy_center).value
         back_values = self.map.data * value
@@ -941,15 +990,24 @@ class TemplateNPredModel(ModelBase):
         return data
 
     def write(self, overwrite=False):
+        """
+        Write the map.
+
+        Parameters
+        ----------
+        overwrite: bool, optional
+            Overwrite existing file.
+            Default is False, which will raise a warning if the template file exists already.
+        """
         if self.filename is None:
             raise IOError("Missing filename")
         elif os.path.isfile(make_path(self.filename)) and not overwrite:
             log.warning("Template file already exits, and overwrite is False")
         else:
-            self.map.write(self.filename)
+            self.map.write(self.filename, overwrite=overwrite)
 
     @classmethod
-    def from_dict(cls, data):
+    def from_dict(cls, data, **kwargs):
         from gammapy.modeling.models import (
             SPATIAL_MODEL_REGISTRY,
             SPECTRAL_MODEL_REGISTRY,
@@ -995,8 +1053,9 @@ class TemplateNPredModel(ModelBase):
             If only one value is passed, a square region is extracted.
         mode : {'trim', 'partial', 'strict'}
             Mode option for Cutout2D, for details see `~astropy.nddata.utils.Cutout2D`.
-        name : str
-            Name of the returned background model.
+            Default is "trim".
+        name : str, optional
+            Name of the returned background model. Default is None.
 
         Returns
         -------
@@ -1018,8 +1077,10 @@ class TemplateNPredModel(ModelBase):
         ----------
         other : `TemplateNPredModel`
             Other background model.
-        nan_to_num: bool
-            Non-finite values are replaced by zero if True (default).
+        weights : float, optional
+            Weights. Default is None.
+        nan_to_num: bool, optional
+            Non-finite values are replaced by zero if True. Default is True.
         """
         bkg = self.evaluate()
         if nan_to_num:
@@ -1031,6 +1092,50 @@ class TemplateNPredModel(ModelBase):
         # reset parameter values
         self.spectral_model.norm.value = 1
         self.spectral_model.tilt.value = 0
+
+    def slice_by_energy(self, energy_min=None, energy_max=None, name=None):
+        """Select and slice model template in energy range
+
+        Parameters
+        ----------
+        energy_min, energy_max : `~astropy.units.Quantity`
+            Energy bounds of the slice. Default is None.
+        name : str
+            Name of the sliced model. Default is None.
+
+        Returns
+        -------
+        model : `TemplateNpredModel`
+            Sliced Model.
+
+        """
+        name = make_name(name)
+
+        energy_axis = self.map._geom.axes["energy"]
+
+        if energy_min is None:
+            energy_min = energy_axis.bounds[0]
+
+        if energy_max is None:
+            energy_max = energy_axis.bounds[1]
+
+        if name is None:
+            name = self.name
+
+        energy_min, energy_max = u.Quantity(energy_min), u.Quantity(energy_max)
+
+        group = energy_axis.group_table(edges=[energy_min, energy_max])
+
+        is_normal = group["bin_type"] == "normal   "
+        group = group[is_normal]
+
+        slices = {
+            "energy": slice(int(group["idx_min"][0]), int(group["idx_max"][0]) + 1)
+        }
+
+        model = self.copy(name=name)
+        model.map = model.map.slice_by_idx(slices=slices)
+        return model
 
     def __str__(self):
         str_ = self.__class__.__name__ + "\n\n"
@@ -1047,21 +1152,21 @@ class TemplateNPredModel(ModelBase):
 
     @property
     def position(self):
-        """`~astropy.coordinates.SkyCoord`"""
+        """Position as a `~astropy.coordinates.SkyCoord`."""
         return self.map.geom.center_skydir
 
     @property
     def evaluation_radius(self):
-        """`~astropy.coordinates.Angle`"""
+        """Evaluation radius as a `~astropy.coordinates.Angle`."""
         return np.max(self.map.geom.width) / 2.0
 
     def freeze(self, model_type="spectral"):
-        """Freeze model parameters"""
+        """Freeze model parameters."""
         if model_type is None or model_type == "spectral":
             self._spectral_model.freeze()
 
     def unfreeze(self, model_type="spectral"):
-        """Restore parameters frozen status to default"""
+        """Restore parameters frozen status to default."""
         if model_type is None or model_type == "spectral":
             self._spectral_model.unfreeze()
 
@@ -1074,9 +1179,9 @@ def create_fermi_isotropic_diffuse_model(filename, **kwargs):
     Parameters
     ----------
     filename : str
-        filename
+        Filename.
     kwargs : dict
-        Keyword arguments forwarded to `TemplateSpectralModel`
+        Keyword arguments forwarded to `TemplateSpectralModel`.
 
     Returns
     -------

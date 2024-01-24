@@ -16,6 +16,14 @@ Version 1.1
 
    v1.1
 
+Version 1.0.2
+-------------
+
+.. toctree::
+   :maxdepth: 2
+
+   v1.0.2
+
 Version 1.0.1
 -------------
 

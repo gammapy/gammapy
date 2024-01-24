@@ -13,16 +13,15 @@ __all__ = ["PhaseBackgroundMaker"]
 class PhaseBackgroundMaker(Maker):
     """Background estimation with on and off phases.
 
-    TODO: For a usage example see future notebook.
-
     Parameters
     ----------
     on_phase : `tuple` or list of tuples
-        on-phase defined by the two edges of each interval (edges are excluded).
+        On-phase defined by the two edges of each interval (edges are excluded).
     off_phase : `tuple` or list of tuples
-        off-phase defined by the two edges of each interval (edges are excluded).
-    phase_column_name : `str`
-        The name of the column in the event file from which the phase informations are extracted. Default is 'PHASE'.
+        Off-phase defined by the two edges of each interval (edges are excluded).
+    phase_column_name : `str`, optional
+        The name of the column in the event file from which the phase information are extracted.
+        Default is 'PHASE'.
     """
 
     tag = "PhaseBackgroundMaker"
@@ -97,18 +96,18 @@ class PhaseBackgroundMaker(Maker):
         )
 
     def run(self, dataset, observation):
-        """Run all steps.
+        """Make on off dataset.
 
         Parameters
         ----------
-        dataset : `SpectrumDataset`
+        dataset : `SpectrumDataset` or `MapDataset`
             Input dataset.
         observation : `Observation`
             Data store observation.
 
         Returns
         -------
-        dataset_on_off : `SpectrumDatasetOnOff`
+        dataset_on_off : `SpectrumDatasetOnOff` or `MapDatasetOnOff`
             On off dataset.
         """
         counts_off = self.make_counts_off(dataset, observation)
@@ -135,13 +134,25 @@ class PhaseBackgroundMaker(Maker):
 
     @staticmethod
     def _check_intervals(intervals):
-        """Split phase intervals that go below phase 0 and above phase 1"""
+        """Split phase intervals that go below phase 0 and above phase 1.
+
+        Parameters
+        ----------
+        intervals: `tuple`or list of `tuple`
+            Phase interval or list of phase intervals to check.
+
+        Returns
+        -------
+        intervals: list of `tuple`
+            Phase interval checked.
+        """
         if isinstance(intervals, tuple):
             intervals = [intervals]
 
         for phase_interval in intervals:
             if phase_interval[0] % 1 > phase_interval[1] % 1:
                 intervals.remove(phase_interval)
-                intervals.append([phase_interval[0] % 1, 1])
-                intervals.append([0, phase_interval[1] % 1])
+                intervals.append((phase_interval[0] % 1, 1))
+                if phase_interval[1] % 1 != 0:
+                    intervals.append((0, phase_interval[1] % 1))
         return intervals

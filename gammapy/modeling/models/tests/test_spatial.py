@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import logging
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
@@ -27,12 +28,14 @@ from gammapy.modeling.models import (
     TemplateNDSpatialModel,
     TemplateSpatialModel,
 )
-from gammapy.utils.testing import mpl_plot_check, requires_data
+from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 
 def test_sky_point_source():
     geom = WcsGeom.create(skydir=(2.4, 2.3), npix=(10, 10), binsz=0.3)
     model = PointSpatialModel(lon_0="2.5 deg", lat_0="2.5 deg", frame="icrs")
+
+    assert model.is_energy_dependent is False
 
     assert model.evaluation_radius.unit == "deg"
     assert_allclose(model.evaluation_radius.value, 0)
@@ -333,6 +336,7 @@ def test_sky_diffuse_constant():
 
 
 @requires_data()
+@requires_dependency("ipywidgets")
 def test_sky_diffuse_map(caplog):
     filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits"  # noqa: E501
     model = TemplateSpatialModel.read(filename, normalize=False)
@@ -364,8 +368,25 @@ def test_sky_diffuse_map(caplog):
     with pytest.raises(TypeError):
         model.plot_grid()
 
+    # change central position
+    model.lon_0.value = 12.0
+    model.lat_0.value = 6
+    val = model([11.8, 12.8] * u.deg, 6.1 * u.deg)
+    assert_allclose(val.value, [2850.8103, 89.629447], rtol=1e-3)
+
+    # test to and from dict
+    dict1 = model.to_dict()
+    model2 = TemplateSpatialModel.from_dict(dict1)
+    assert_allclose(model2.lon_0.quantity, 12.0 * u.deg, rtol=1e-3)
+
+    # test dict without parameters
+    dict1["spatial"].pop("parameters")
+    model3 = TemplateSpatialModel.from_dict(dict1)
+    assert_allclose(model3.lon_0.quantity, 258.388 * u.deg, rtol=1e-3)
+
 
 @requires_data()
+@requires_dependency("ipywidgets")
 def test_sky_diffuse_map_3d():
     filename = "$GAMMAPY_DATA/fermi-3fhl-gc/gll_iem_v06_gc.fits.gz"
     model = TemplateSpatialModel.read(filename, normalize=False)
@@ -386,6 +407,12 @@ def test_sky_diffuse_map_3d():
 
     with pytest.raises(TypeError):
         model.plot()
+
+    with mpl_plot_check():
+        model.plot_grid()
+
+    with mpl_plot_check():
+        model.plot_interactive()
 
 
 def test_sky_diffuse_map_normalize():
@@ -426,6 +453,31 @@ def test_sky_diffuse_map_copy():
     model_copy.map.data += 1
     # Check that the original map has also been changed
     assert np.all(model.map.data == model_copy.map.data)
+
+
+def test_sky_diffuse_map_empty(caplog):
+    # define model map with 0 values
+    model_map = Map.create(map_type="wcs", width=(1, 1), binsz=0.5, unit="sr-1")
+
+    with caplog.at_level(logging.WARNING):
+        model = TemplateSpatialModel(model_map, normalize=True)
+        assert "Map values are all zeros. Check and fix this!" in [
+            _.message for _ in caplog.records
+        ]
+        assert np.all(np.isfinite(model.map.data))
+
+    axes = [MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=2)]
+    model_map = Map.create(
+        map_type="wcs", width=(1, 1), binsz=0.5, unit="sr-1", axes=axes
+    )
+    model_map.data[0, :, :] = 1
+    with caplog.at_level(logging.WARNING):
+        model = TemplateSpatialModel(model_map, normalize=True)
+        assert (
+            "Map values are all zeros in at least one energy bin. Check and fix this!"
+            in [_.message for _ in caplog.records]
+        )
+        assert np.all(np.isfinite(model.map.data))
 
 
 def test_evaluate_on_fk5_map():
@@ -605,7 +657,6 @@ def test_piecewise_spatial_model_gc():
 
 
 def test_piecewise_spatial_model():
-
     for lon in range(-360, 360):
         geom = WcsGeom.create(
             skydir=(lon, 2.3), npix=(2, 2), binsz=0.3, frame="galactic"
@@ -686,3 +737,12 @@ def test_template_ND(tmpdir):
     assert len(template_new.parameters) == 2
     assert template_new.parameters["norm"].value == 2
     assert template_new.parameters["cste"].value == 0
+
+
+@requires_data()
+def test_template_spatial_parameters_copy():
+    filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits"
+    model = TemplateSpatialModel.read(filename, normalize=False)
+    model.position = SkyCoord(0, 0, unit="deg", frame="galactic")
+    model_copy = model.copy()
+    assert_allclose(model.parameters.value, model_copy.parameters.value)
