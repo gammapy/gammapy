@@ -6,7 +6,7 @@ import astropy.units as u
 from astropy.coordinates import Angle, SkyOffsetFrame
 from astropy.table import Table
 from gammapy.data import FixedPointingInfo
-from gammapy.irf import EDispMap, FoVAlignment, PSFMap
+from gammapy.irf import BackgroundIRF, EDispMap, FoVAlignment, PSFMap
 from gammapy.maps import Map, RegionNDMap
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.stats import WStatCountsStatistic
@@ -26,6 +26,75 @@ __all__ = [
 ]
 
 log = logging.getLogger(__name__)
+
+
+def _get_fov_coords(pointing, irf, geom, use_region_center=True, obstime=None):
+    # TODO: create dedicated coordinate handling see #5041
+    coords = {}
+    if isinstance(pointing, FixedPointingInfo):
+        # for backwards compatibility, obstime should be required
+        if obstime is None:
+            if isinstance(obstime, BackgroundIRF):
+                warnings.warn(
+                    "Future versions of gammapy will require the obstime keyword for this function",
+                    DeprecationWarning,
+                )
+            obstime = pointing.obstime
+
+        pointing_icrs = pointing.get_icrs(obstime)
+    else:
+        pointing_icrs = pointing
+
+    if not use_region_center:
+        region_coord, weights = geom.get_wcs_coord_and_weights()
+        sky_coord = region_coord.skycoord
+
+    else:
+        image_geom = geom.to_image()
+        map_coord = image_geom.get_coord()
+        sky_coord = map_coord.skycoord
+
+    if irf.has_offset_axis:
+        coords["offset"] = sky_coord.separation(pointing_icrs)
+    else:
+        if irf.fov_alignment == FoVAlignment.ALTAZ:
+            if not isinstance(pointing, FixedPointingInfo) and isinstance(
+                irf, BackgroundIRF
+            ):
+                raise TypeError(
+                    "make_map_background_irf requires FixedPointingInfo if "
+                    "BackgroundIRF.fov_alignement is ALTAZ",
+                )
+
+            # for backwards compatibility, obstime should be required
+            if obstime is None:
+                warnings.warn(
+                    "Future versions of gammapy will require the obstime keyword for this function",
+                    DeprecationWarning,
+                )
+                obstime = pointing.obstime
+
+            pointing_altaz = pointing.get_altaz(obstime)
+            altaz_coord = sky_coord.transform_to(pointing_altaz.frame)
+
+            # Compute FOV coordinates of map relative to pointing
+            fov_lon, fov_lat = sky_to_fov(
+                altaz_coord.az, altaz_coord.alt, pointing_altaz.az, pointing_altaz.alt
+            )
+        elif irf.fov_alignment == FoVAlignment.RADEC:
+            # Create OffsetFrame
+            frame = SkyOffsetFrame(origin=pointing_icrs)
+            pseudo_fov_coord = sky_coord.transform_to(frame)
+            fov_lon = pseudo_fov_coord.lon
+            fov_lat = pseudo_fov_coord.lat
+        else:
+            raise ValueError(
+                f"Unsupported background coordinate system: {irf.fov_alignment!r}"
+            )
+
+        coords["fov_lon"] = fov_lon
+        coords["fov_lat"] = fov_lat
+    return coords
 
 
 def make_map_exposure_true_energy(
@@ -56,19 +125,22 @@ def make_map_exposure_true_energy(
     map : `~gammapy.maps.WcsNDMap`
         Exposure map.
     """
-    if not use_region_center:
-        coords, weights = geom.get_wcs_coord_and_weights()
-    else:
-        coords, weights = geom.get_coord(sparse=True), None
-
-    offset = coords.skycoord.separation(pointing)
-    exposure = aeff.evaluate(offset=offset, energy_true=coords["energy_true"])
+    coords = _get_fov_coords(
+        pointing=pointing,
+        geom=geom,
+        use_region_center=use_region_center,
+        irf=aeff,
+        obstime=None,
+    )
+    coords["energy_true"] = geom.axes["energy_true"].center.reshape((-1, 1, 1))
+    exposure = aeff.evaluate(**coords)
 
     data = (exposure * livetime).to("m2 s")
     meta = {"livetime": livetime, "is_pointlike": aeff.is_pointlike}
 
     if not use_region_center:
-        data = np.average(data, axis=1, weights=weights)
+        _, weights = geom.get_wcs_coord_and_weights()
+        data = np.average(data, axis=-1, weights=weights)
 
     return Map.from_geom(geom=geom, data=data.value, unit=data.unit, meta=meta)
 
@@ -167,76 +239,29 @@ def make_map_background_irf(
     if oversampling is not None:
         geom = geom.upsample(factor=oversampling, axis_name="energy")
 
-    coords = {"energy": geom.axes["energy"].edges.reshape((-1, 1, 1))}
-
-    if isinstance(pointing, FixedPointingInfo):
-        # for backwards compatibility, obstime should be required
-        if obstime is None:
-            warnings.warn(
-                "Future versions of gammapy will require the obstime keyword for this function",
-                DeprecationWarning,
-            )
-            obstime = pointing.obstime
-
-        pointing_icrs = pointing.get_icrs(obstime)
-    else:
-        pointing_icrs = pointing
-
     if not use_region_center:
         image_geom = geom.to_wcs_geom().to_image()
         region_coord, weights = geom.get_wcs_coord_and_weights()
         idx = image_geom.coord_to_idx(region_coord)
-        sky_coord = region_coord.skycoord
         d_omega = image_geom.solid_angle().T[idx]
     else:
         image_geom = geom.to_image()
-        map_coord = image_geom.get_coord()
-        sky_coord = map_coord.skycoord
         d_omega = image_geom.solid_angle()
 
-    if bkg.has_offset_axis:
-        coords["offset"] = sky_coord.separation(pointing_icrs)
-    else:
-        if bkg.fov_alignment == FoVAlignment.ALTAZ:
-            if not isinstance(pointing, FixedPointingInfo):
-                raise TypeError(
-                    "make_map_background_irf requires FixedPointingInfo if "
-                    "BackgroundIRF.fov_alignement is ALTAZ",
-                )
-
-            # for backwards compatibility, obstime should be required
-            if obstime is None:
-                warnings.warn(
-                    "Future versions of gammapy will require the obstime keyword for this function",
-                    DeprecationWarning,
-                )
-                obstime = pointing.obstime
-
-            pointing_altaz = pointing.get_altaz(obstime)
-            altaz_coord = sky_coord.transform_to(pointing_altaz.frame)
-
-            # Compute FOV coordinates of map relative to pointing
-            fov_lon, fov_lat = sky_to_fov(
-                altaz_coord.az, altaz_coord.alt, pointing_altaz.az, pointing_altaz.alt
-            )
-        elif bkg.fov_alignment == FoVAlignment.RADEC:
-            # Create OffsetFrame
-            frame = SkyOffsetFrame(origin=pointing_icrs)
-            pseudo_fov_coord = sky_coord.transform_to(frame)
-            fov_lon = pseudo_fov_coord.lon
-            fov_lat = pseudo_fov_coord.lat
-        else:
-            raise ValueError(
-                f"Unsupported background coordinate system: {bkg.fov_alignment!r}"
-            )
-
-        coords["fov_lon"] = fov_lon
-        coords["fov_lat"] = fov_lat
+    coords = _get_fov_coords(
+        pointing=pointing,
+        irf=bkg,
+        geom=geom,
+        use_region_center=use_region_center,
+        obstime=obstime,
+    )
+    coords["energy"] = geom.axes["energy"].edges.reshape((-1, 1, 1))
 
     bkg_de = bkg.integrate_log_log(**coords, axis_name="energy")
     data = (bkg_de * d_omega * ontime).to_value("")
 
     if not use_region_center:
+        region_coord, weights = geom.get_wcs_coord_and_weights()
         data = np.sum(weights * data, axis=2)
 
     bkg_map = Map.from_geom(geom, data=data)
@@ -271,17 +296,19 @@ def make_psf_map(psf, pointing, geom, exposure_map=None):
     psfmap : `~gammapy.irf.PSFMap`
         The resulting PSF map.
     """
-    coords = geom.get_coord(sparse=True)
+    coords = _get_fov_coords(
+        pointing=pointing,
+        irf=psf,
+        geom=geom,
+        use_region_center=True,
+        obstime=None,
+    )
 
-    # Compute separations with pointing position
-    offset = coords.skycoord.separation(pointing)
+    coords["energy_true"] = geom.axes["energy_true"].center.reshape((-1, 1, 1, 1))
+    coords["rad"] = geom.axes["rad"].center.reshape((1, -1, 1, 1))
 
     # Compute PSF values
-    data = psf.evaluate(
-        energy_true=coords["energy_true"],
-        offset=offset,
-        rad=coords["rad"],
-    )
+    data = psf.evaluate(**coords)
 
     # Create Map and fill relevant entries
     psf_map = Map.from_geom(geom, data=data.value, unit=data.unit)
@@ -317,23 +344,16 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None, use_region_center=T
     edispmap : `~gammapy.irf.EDispMap`
         The resulting energy dispersion map.
     """
-    # Compute separations with pointing position
-    if not use_region_center:
-        coords, weights = geom.get_wcs_coord_and_weights()
-    else:
-        coords, weights = geom.get_coord(sparse=True), None
-
-    offset = coords.skycoord.separation(pointing)
+    coords = _get_fov_coords(pointing, edisp, geom, use_region_center=use_region_center)
+    coords["energy_true"] = geom.axes["energy_true"].center.reshape((-1, 1, 1, 1))
+    coords["migra"] = geom.axes["migra"].center.reshape((1, -1, 1, 1))
 
     # Compute EDisp values
-    data = edisp.evaluate(
-        offset=offset,
-        energy_true=coords["energy_true"],
-        migra=coords["migra"],
-    )
+    data = edisp.evaluate(**coords)
 
     if not use_region_center:
-        data = np.average(data, axis=2, weights=weights)
+        _, weights = geom.get_wcs_coord_and_weights()
+        data = np.average(data, axis=-1, weights=weights)
 
     # Create Map and fill relevant entries
     edisp_map = Map.from_geom(geom, data=data.to_value(""), unit="")
@@ -372,6 +392,15 @@ def make_edisp_kernel_map(
     edispmap : `~gammapy.irf.EDispKernelMap`
         the resulting EDispKernel map
     """
+
+    coords = _get_fov_coords(
+        pointing=pointing,
+        irf=edisp,
+        geom=geom,
+        use_region_center=use_region_center,
+    )
+    coords["energy_true"] = geom.axes["energy_true"].edges.reshape((-1, 1, 1, 1))
+
     # Use EnergyDispersion2D migra axis.
     migra_axis = edisp.axes["migra"]
 
