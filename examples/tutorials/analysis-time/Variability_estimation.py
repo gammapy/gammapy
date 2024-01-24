@@ -64,8 +64,11 @@ plt.show()
 # Methods to characterize variability
 # -----------------------------------
 #
-# The 3 methods shown here are: amplitude maximum variation, relative variability amplitude
-# and variability amplitude.
+# The three methods shown here are:
+#
+# -  amplitude maximum variation
+# -  relative variability amplitude
+# -  variability amplitude.
 #
 # The amplitude maximum variation is the simplest method to define variability (as described in
 # `Boller et al., 2016 <https://ui.adsabs.harvard.edu/abs/2016A&A...588A.103B/abstract>`__)
@@ -138,8 +141,8 @@ print(variability_amplitude_significance)
 ######################################################################
 #  Fractional excess variance, point-to-point fractional variance and doubling/halving time
 # -----------------------------------------------------------------------------------------
-# The fractional excess variance as presented by
-# `Vaughan et al., 2003 <https://ui.adsabs.harvard.edu/abs/2003MNRAS.345.1271V/abstract>`__) is a simple but effective
+# The fractional excess variance, as presented by
+# `Vaughan et al., 2003 <https://ui.adsabs.harvard.edu/abs/2003MNRAS.345.1271V/abstract>`__, is a simple but effective
 # method to assess the significance of a time variability feature in an object, for example an AGN flare.
 # It is important to note that it requires Gaussian errors to be applicable.
 # The excess variance computation is implemented in `~gammapy.estimators.utils`.
@@ -149,7 +152,7 @@ print(fvar_table)
 
 ######################################################################
 # A similar estimator is the point-to-point fractional variance, as defined by
-# `Edelson et al., 2002 <https://ui.adsabs.harvard.edu/abs/2002ApJ...568..610E/abstract>`__
+# `Edelson et al., 2002 <https://ui.adsabs.harvard.edu/abs/2002ApJ...568..610E/abstract>`__,
 # which samples the lightcurve on smaller time granularity.
 # In general, the point-to-point fractional variance being higher than the fractional excess variance is indicative
 # of the presence of very short timescale variability.
@@ -175,7 +178,7 @@ print(dtime_table)
 # This implementation uses Gaussian statistics, as opposed to the `first introductory paper <https://iopscience.iop.org/article/10.1086/306064>`__
 # which is based on Poissonian statistics.
 #
-# By passing the flux and error on the flux as `measures` to the method we can obtain the list of optimal bin edges
+# By passing the flux and error on the flux as ``measures`` to the method we can obtain the list of optimal bin edges
 # defined by the bayesian blocks algorithm.
 
 time = lc_1d.geom.axes["time"].time_mid.mjd

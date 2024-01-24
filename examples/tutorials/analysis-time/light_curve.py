@@ -7,7 +7,7 @@ Compute per-observation and nightly fluxes of four Crab nebula observations.
 Prerequisites
 -------------
 
--  Knowledge of the high level interface to perform data reduction, see
+-  Knowledge of the high level interface to perform data reduction, see the
    :doc:`/tutorials/starting/analysis_1` tutorial.
 
 Context

@@ -166,7 +166,7 @@ display(model_simu.parameters.to_table())
 
 ######################################################################
 # Now, define the start and observation livetime wrt to the reference
-# time, `gti_t0`
+# time, ``gti_t0``
 #
 
 n_obs = 10
@@ -276,7 +276,7 @@ dataset_fp = FluxPointsDataset(data=lc_1d, name="dataset_lc")
 
 ######################################################################
 # We will fit the amplitude, spectral index and the decay time scale. Note
-# that `t_ref` should be fixed by default for the
+# that ``t_ref`` should be fixed by default for the
 # `~gammapy.modeling.models.ExpDecayTemporalModel`.
 #
 
@@ -318,7 +318,7 @@ dataset_fp.plot_spectrum(axis_name="time")
 # Here, we apply the models directly to the simulated datasets.
 #
 # For modelling and fitting more complex flares, you should attach the
-# relevant model to each group of `datasets`. The parameters of a model
+# relevant model to each group of ``datasets``. The parameters of a model
 # in a given group of dataset will be tied. For more details on joint
 # fitting in Gammapy, see the :doc:`/tutorials/analysis-3d/analysis_3d`.
 #
