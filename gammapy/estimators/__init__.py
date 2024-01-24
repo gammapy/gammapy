@@ -2,6 +2,7 @@
 """Estimators."""
 from gammapy.utils.registry import Registry
 from .core import Estimator
+from .energydependentmorphology import EnergyDependentMorphologyEstimator
 from .map import ASmoothMapEstimator, ExcessMapEstimator, FluxMaps, TSMapEstimator
 from .parameter import ParameterEstimator
 from .points import (
@@ -28,6 +29,7 @@ __all__ = [
     "ParameterEstimator",
     "SensitivityEstimator",
     "TSMapEstimator",
+    "EnergyDependentMorphologyEstimator",
 ]
 
 
