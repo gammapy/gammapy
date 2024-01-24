@@ -304,6 +304,78 @@ map_4d = Map.create(
 print(map_4d.geom)
 
 ######################################################################
+# It is possible to utilise the `~gammapy.maps.TimeMapAxis.slice` and
+# `~gammapy.maps.TimeMapAxis.squash` attributes to create new a
+# `~gammapy.maps.TimeMapAxis` as follows:
+
+print(time_map_axis.slice(1))
+
+print(time_map_axis.squash())
+
+
+######################################################################
+# Here we define a second `~gammapy.maps.TimeMapAxis` which contains only one time interval.
+# The `~gammapy.maps.TimeMapAxis.edges` method is shown which returns
+# `~astropy.units.Quantity` with respect to the reference time.
+# In this case the defined `~gammapy.maps.TimeMapAxis.edges_min` and `~gammapy.maps.TimeMapAxis.edges_max`.
+
+time_map_axis2 = TimeMapAxis(
+    edges_min=1 * u.d,
+    edges_max=11 * u.d,
+    reference_time=Time("2020-03-19"),
+)
+
+print(time_map_axis2.edges)
+
+######################################################################
+# The `~gammapy.maps.TimeMapAxis.time_edges` will return the `~astropy.time.Time` object directly
+
+print(time_map_axis2.time_edges)
+
+
+######################################################################
+# The `~gammapy.maps.TimeMapAxis.is_contiguous` method returns a boolean which indicates whether the
+# `~gammapy.maps.TimeMapAxis` is contiguous or not. This can be utilised on
+# the two previously defined `~gammapy.maps.TimeMapAxis` objects:
+
+print(time_map_axis.is_contiguous)
+
+print(time_map_axis2.is_contiguous)
+
+
+######################################################################
+# `~gammapy.maps.TimeMapAxis` also has both functionalities of `~gammapy.maps.TimeMapAxis.coord_to_pix`
+# and `~gammapy.maps.TimeMapAxis.coord_to_idx`.
+#
+# Start by choosing a time which we know is within the ``time_map_axis`` and see the results.
+
+time = Time(time_map_axis.time_max.mjd[0], format="mjd")
+
+print(time_map_axis.coord_to_pix(time))
+
+print(time_map_axis.coord_to_idx(time))
+
+
+######################################################################
+# This functionality can also be used with an array of `~astropy.time.Time` values.
+
+times = Time(time_map_axis.time_max.mjd, format="mjd")
+
+print(time_map_axis.coord_to_pix(times))
+
+print(time_map_axis.coord_to_idx(times))
+
+######################################################################
+# Note here we take a `~astropy.time.Time` which is outside the edges. For the
+# `~gammapy.maps.TimeMapAxis.coord_to_pix` method this will return ``nan`` and
+# for the `~gammapy.maps.TimeMapAxis.coord_to_idx` method it returns -1.
+
+print(time_map_axis.coord_to_pix(Time(time.mjd + 1, format="mjd")))
+
+print(time_map_axis.coord_to_idx(Time(time.mjd + 1, format="mjd")))
+
+
+######################################################################
 # The `~gammapy.maps.LabelMapAxis` object allows for handling of labels for map axes.
 # It provides an axis for non-numeric entries.
 #
@@ -313,6 +385,37 @@ label_axis = LabelMapAxis(
 )
 
 print(label_axis)
+
+######################################################################
+# The labels can be checked using the `~gammapy.maps.LabelMapAxis.center` attribute:
+print(label_axis.center)
+
+
+######################################################################
+# To obtain the position of the label, one can utilise the `~gammapy.maps.LabelMapAxis.coord_to_pix` attribute
+
+print(label_axis.coord_to_pix(["dataset-3"]))
+
+######################################################################
+# To adapt and create new axes the following attributes can be utilised:
+# `~gammapy.maps.LabelMapAxis.concatenate`, `~gammapy.maps.LabelMapAxis.slice` and
+# `~gammapy.maps.LabelMapAxis.squash`.
+#
+# Combining two different `~gammapy.maps.LabelMapAxis` is done in the following way:
+
+label_axis2 = LabelMapAxis(labels=["dataset-a", "dataset-b"], name="dataset")
+
+print(label_axis.concatenate(label_axis2))
+
+######################################################################
+# A new `~gammapy.maps.LabelMapAxis` can be created by slicing an already existing one.
+print(label_axis.slice([1]))
+
+######################################################################
+# A new axis object can be created by squashing the axis into a single bin.
+
+print(label_axis2.squash())
+
 
 ######################################################################
 # Mixing the above axes types would be done like so:
