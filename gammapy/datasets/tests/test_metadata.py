@@ -38,9 +38,6 @@ def test_mapdataset_metadata():
     with pytest.raises(ValidationError):
         meta.pointing = 2.0
 
-    with pytest.raises(ValidationError):
-        meta.instrument = ["cta", "hess"]
-
     input_bad = input.copy()
     input_bad["bad"] = position
 
@@ -102,10 +99,11 @@ def test_mapdataset_metadata_stack():
 
     meta = meta1.stack(meta2)
     assert meta.telescope == ["a", "b"]
-    assert meta.instrument == "H.E.S.S."
-    assert meta.observation_mode == ["wobble", "wobble"]
+    assert meta.instrument == ["H.E.S.S."]
+    assert meta.observation_mode == ["wobble"]
     assert_allclose(meta.pointing[1].radec_mean.dec.deg, 22.0147)
     assert meta.obs_ids == ["111", "112"]
+    assert meta.optional["test"] == [0.5, 0.1]
     assert meta.optional["other"] == [True, False]
     assert meta.event_type is None
     assert meta.creation.creator.split()[0] == "Gammapy"

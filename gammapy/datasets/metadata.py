@@ -53,7 +53,7 @@ class MapDatasetMetaData(MetaData):
 
     _tag: ClassVar[Literal["MapDataset"]] = "MapDataset"
     creation: Optional[CreatorMetaData] = CreatorMetaData()
-    instrument: Optional[str] = None
+    instrument: Optional[Union[str, list[str]]] = None
     telescope: Optional[Union[str, list[str]]] = None
     observation_mode: Optional[Union[str, list]] = None
     pointing: Optional[Union[PointingInfoMetaData, list[PointingInfoMetaData]]] = None
@@ -61,59 +61,44 @@ class MapDatasetMetaData(MetaData):
     event_type: Optional[Union[str, list[str]]] = None
     optional: Optional[dict] = None
 
+    def _stack_linear(self, obj_name, other, kwargs):
+        obj = getattr(self, obj_name)
+        if obj:
+            if not isinstance(obj, list):
+                obj = [obj]
+            obj.append(getattr(other, obj_name))
+        else:
+            obj = getattr(other, obj_name)
+        kwargs[obj_name] = obj
+        return kwargs
+
+    def _stack_unique(self, obj_name, other, kwargs):
+        obj = getattr(self, obj_name)
+        obj_other = getattr(other, obj_name)
+        if obj:
+            if not isinstance(obj, list):
+                obj = [obj]
+            if obj_other not in obj:
+                obj.append(obj_other)
+        else:
+            obj = obj_other
+        kwargs[obj_name] = obj
+        return kwargs
+
     def stack(self, other):
         kwargs = {}
         kwargs["creation"] = self.creation
-        kwargs["instrument"] = self.instrument
-        if self.instrument != other.instrument:
-            logging.warning(
-                f"Stacking data from different instruments {self.instrument} and {other.instrument}"
-            )
-        if self.telescope is not None:
-            tel = self.telescope
-            if isinstance(tel, str):
-                tel = [tel]
-            if other.telescope not in tel:
-                tel.append(other.telescope)
-        else:
-            tel = other.telescope
-        kwargs["telescope"] = tel
-
-        if self.observation_mode is not None:
-            observation_mode = self.observation_mode
-            if isinstance(observation_mode, str):
-                observation_mode = [observation_mode]
-            observation_mode.append(other.observation_mode)
-        else:
-            observation_mode = other.observation_mode
-        kwargs["observation_mode"] = observation_mode
-
-        if self.pointing is not None:
-            pointing = self.pointing
-            if isinstance(pointing, PointingInfoMetaData):
-                pointing = [pointing]
-            pointing.append(other.pointing)
-        else:
-            pointing = other.pointing
-        kwargs["pointing"] = pointing
-
-        if self.obs_ids is not None:
-            obs_ids = self.obs_ids
-            if isinstance(obs_ids, str):
-                obs_ids = [obs_ids]
-            obs_ids.append(other.obs_ids)
-        else:
-            obs_ids = other.obs_ids
-        kwargs["obs_ids"] = obs_ids
-
-        if self.event_type is not None:
-            event_type = self.event_type
-            if isinstance(event_type, str):
-                event_type = [event_type]
-            event_type.append(other.event_type)
-        else:
-            event_type = other.event_type
-        kwargs["event_type"] = event_type
+        linear_stack = ["pointing", "event_type", "obs_ids"]
+        for i in linear_stack:
+            kwargs = self._stack_linear(i, other, kwargs)
+        unique_stack = ["observation_mode", "instrument", "telescope"]
+        for i in unique_stack:
+            if i == "instrument":
+                if self.instrument != other.instrument:
+                    logging.warning(
+                        f"Stacking data from different instruments {self.instrument} and {other.instrument}"
+                    )
+            kwargs = self._stack_unique(i, other, kwargs)
 
         if self.optional:
             optional = self.optional
