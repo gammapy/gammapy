@@ -1,10 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-import os
 import numpy as np
 from astropy.table import Column, Table
 from gammapy.data import DataStore
-from gammapy.utils.scripts import make_path
 
 __all__ = ["to_obscore_table", "obscore_structure"]
 
@@ -22,8 +20,10 @@ DEFAULT_OBSCORE_TEMPLATE = {
 
 
 def obscore_structure():
-    """Generate the Obscore default table
-    In case the obscore standard changes, this function should be changed according to https://www.ivoa.net/documents/ObsCore
+    """Generate the Obscore default table.
+
+    In case the obscore standard changes, this function should be changed according
+    to https://www.ivoa.net/documents/ObsCore
 
     Returns
     -------
@@ -280,87 +280,31 @@ def obscore_structure():
     return tab_default
 
 
-def _obscore_row(
-    base_dir,
-    single_obsID,
-    obs_publisher_did,
-    access_url,
-    table,
-    obscore_template=DEFAULT_OBSCORE_TEMPLATE,
-):
-    """Generates an obscore row corresponding to a single obsID
+def observation_obscore_dict(observation):
+    """Generates an obscore dict from an observation.
 
     Parameters
     ----------
-    base_dir : str or `~pathlib.Path`
-        Base directory of the data files.
-    single_obsID : int
-        single Observation ID
-    obs_publisher_did : str, optional
-        ID for the Dataset given by the publisher.
-        Default is None.
-    access_url : str, optional
-        URL used to download dataset.
-        Default is None.
-    obscore_template : dict, optional
-        Template for fixed values in the obscore Table.
-        Default is DEFAULT_OBSCORE_TEMPLATE
-    table : `~astropy.table.Table` with n rows
+    observation : `~gammapy.data.Observation`
+        the observation
+
     Returns
     -------
-    tab : `~astropy.table.Table` with n+1 rows
+    result : dict
     """
-    base_dir = make_path(base_dir)
-    data_store = DataStore.from_dir(base_dir)
-
-    tab = table
-    observation = data_store.obs(single_obsID)
-    obs_mask = (data_store.hdu_table["OBS_ID"] == observation.obs_id) & (
-        data_store.hdu_table["HDU_TYPE"] == "events"
-    )
-
-    hdu_dir = data_store.hdu_table.base_dir
-    file_dir = data_store.hdu_table[obs_mask]["FILE_DIR"]
-    file_name = data_store.hdu_table[obs_mask]["FILE_NAME"]
-    path = make_path(str(hdu_dir) + "/" + str(file_dir[0]) + "/" + str(file_name[0]))
-    size = int(os.path.getsize(path.as_posix()) / 1024.0)
-    tab.add_row(
-        {
-            "dataproduct_type": obscore_template.get(
-                "dataproduct_type", DEFAULT_OBSCORE_TEMPLATE["dataproduct_type"]
-            ),
-            "calib_level": obscore_template.get(
-                "calib_level", DEFAULT_OBSCORE_TEMPLATE["calib_level"]
-            ),
-            "target_name": observation.meta.target.name,
-            "obs_id": str(observation.meta.obs_info.obs_id),
-            "obs_collection": obscore_template.get(
-                "obs_collection", DEFAULT_OBSCORE_TEMPLATE["obs_collection"]
-            ),
-            "obs_publisher_did": str(obs_publisher_did)
-            + "#"
-            + str(observation.meta.obs_info.obs_id),
-            "access_url": str(access_url) + str(file_name[0]),
-            "access_format": obscore_template.get(
-                "access_format", DEFAULT_OBSCORE_TEMPLATE["access_format"]
-            ),
-            "access_estsize": size,
-            "s_ra": observation.get_pointing_icrs(observation.tmid).ra.to_value("deg"),
-            "s_dec": observation.get_pointing_icrs(observation.tmid).dec.to_value(
-                "deg"
-            ),
-            "s_fov": obscore_template.get("s_fov", DEFAULT_OBSCORE_TEMPLATE["s_fov"]),
-            "t_min": observation.tstart.to_value("mjd"),
-            "t_max": observation.tstop.to_value("mjd"),
-            "t_exptime": observation.observation_live_time_duration.to_value("s"),
-            "em_min": observation.events.energy.min().value,
-            "em_max": observation.events.energy.max().value,
-            "facility_name": observation.meta.obs_info.telescope,
-            "instrument_name": observation.aeff.meta["INSTRUME"],
-        }
-    )
-
-    return tab
+    return {
+        "target_name": observation.meta.target.name,
+        "obs_id": str(observation.obs_id),
+        "s_ra": observation.get_pointing_icrs(observation.tmid).ra.to_value("deg"),
+        "s_dec": observation.get_pointing_icrs(observation.tmid).dec.to_value("deg"),
+        "t_min": observation.tstart.to_value("mjd"),
+        "t_max": observation.tstop.to_value("mjd"),
+        "t_exptime": observation.observation_live_time_duration.to_value("s"),
+        "em_min": observation.events.energy.min().value,
+        "em_max": observation.events.energy.max().value,
+        "facility_name": observation.meta.obs_info.telescope,
+        "instrument_name": observation.meta.obs_info.instrument,
+    }
 
 
 def to_obscore_table(
@@ -368,7 +312,7 @@ def to_obscore_table(
     selected_obs=None,
     obs_publisher_did=None,
     access_url=None,
-    obscore_template=DEFAULT_OBSCORE_TEMPLATE,
+    obscore_template=None,
 ):
     """Generate the complete obscore Table by adding one row per observation using _obscore_row()
 
@@ -405,35 +349,37 @@ def to_obscore_table(
 
     if obs_publisher_did is None:
         log.warning(
-            "Insufficient publisher information: 'obs_publisher_did'. Giving this values is highly recommended."
+            "Insufficient publisher information: 'obs_publisher_did'. Giving this value is highly recommended."
         )
         obs_publisher_did = ""
     if access_url is None:
         log.warning(
-            "Insufficient publisher information: 'access_url'. Giving this values is highly recommended."
+            "Insufficient publisher information: 'access_url'. Giving this value is highly recommended."
         )
         access_url = ""
+
     if obscore_template is None:
         log.info("No template provided, using DEFAULT_OBSCORE_TEMPLATE")
-        obscore_template = DEFAULT_OBSCORE_TEMPLATE
 
-    if not isinstance(obscore_template, dict):
-        log.warning("Template is not a dictionary, using DEFAULT_OBSCORE_TEMPLATE ")
-        obscore_template = DEFAULT_OBSCORE_TEMPLATE
+    result = DEFAULT_OBSCORE_TEMPLATE.copy()
+    if obscore_template is not None:
+        result.update(obscore_template)
 
+    data_store = DataStore.from_dir(base_dir)
     if selected_obs is None:
-        data_store = DataStore.from_dir(base_dir)
         selected_obs = data_store.obs_ids
 
-    obscore_tab = obscore_structure()
-    for i in range(0, len(selected_obs)):
-        obscore_row = _obscore_row(
-            base_dir,
-            selected_obs[i],
-            obs_publisher_did,
-            access_url,
-            obscore_tab,
-            obscore_template,
-        )
-        obscore_tab = obscore_row
-    return obscore_tab
+    obscore_table = obscore_structure()
+    for obs_id in selected_obs:
+        obscore_row = result.copy()
+
+        hdu_loc = data_store.hdu_table.hdu_location(obs_id, "events")
+        obscore_row["obs_publisher_did"] = (f"{obs_publisher_did}#{obs_id}",)
+        obscore_row["access_estsize"] = hdu_loc.path().stat().st_size / 1024.0
+        obscore_row["access_url"] = f"{access_url}{hdu_loc.file_name}"
+
+        observation = data_store.obs(obs_id)
+        obscore_row.update(observation_obscore_dict(observation))
+
+        obscore_table.add_row(obscore_row)
+    return obscore_table
