@@ -143,7 +143,7 @@ print(psf)
 # The PointSpreadFunction for the CTA DC1 is stored as a combination of 3
 # Gaussians. Other PSFs, like a `PSF_TABLE` and analytic expressions
 # like KING function are also supported. All PSF classes inherit from a
-# common base `PSF` class
+# common base `PSF` class.
 #
 
 print(psf.axes.names)
