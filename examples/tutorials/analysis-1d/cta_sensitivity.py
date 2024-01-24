@@ -128,7 +128,7 @@ dataset.exposure *= containment
 #
 
 on_radii = obs.psf.containment_radius(
-    energy_true=energy_axis.center, offset=0.5 * u.deg, fraction=containment
+    energy_true=energy_axis.center, offset=offset, fraction=containment
 )
 factor = (1 - np.cos(on_radii)) / (1 - np.cos(on_region_radius))
 dataset.background *= factor.value.reshape((-1, 1, 1))
