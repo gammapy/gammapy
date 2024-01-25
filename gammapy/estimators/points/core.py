@@ -822,11 +822,11 @@ class FluxPoints(FluxMaps):
             raise ValueError("Stat profiles not present, rebinning is not possible")
 
         fluxpoints = []
-        for emin, emax in zip(axis_new.edges_min, axis_new.edges_max):
+        for edge_min, edge_max in zip(axis_new.edges_min, axis_new.edges_max):
             if isinstance(axis_new, TimeMapAxis):
-                emin = emin + axis_new.reference_time + 1e-5 * u.s  # TODO: 5003
-                emax = emax + axis_new.reference_time + 1e-5 * u.s
-            fp = self.slice_by_coord({axis_new.name: slice(emin, emax)})
+                edge_min = edge_min + axis_new.reference_time + 1e-5 * u.s  # TODO: 5003
+                edge_max = edge_max + axis_new.reference_time + 1e-5 * u.s
+            fp = self.slice_by_coord({axis_new.name: slice(edge_min, edge_max)})
             fp_new = squash_fluxpoints(fp, axis_new)
             fluxpoints.append(fp_new)
 
