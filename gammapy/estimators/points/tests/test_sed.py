@@ -247,6 +247,15 @@ def test_run_pwl(fpe_pwl, tmpdir):
     actual = table["sqrt_ts"].data
     assert_allclose(actual, [18.568429, 18.054651, 7.057121], rtol=1e-2)
 
+    actual = table["ts"].data
+    assert_allclose(actual, [344.7866, 325.9704, 49.8029], rtol=1e-2)
+
+    actual = table["stat"].data
+    assert_allclose(actual, [2.76495, 13.11912, 3.70128], rtol=1e-2)
+
+    actual = table["stat_null"].data
+    assert_allclose(actual, [347.55159, 339.08952, 53.50424], rtol=1e-2)
+
     actual = table["norm_scan"][0][[0, 5, -1]]
     assert_allclose(actual, [0.2, 1.0, 5.0])
 
