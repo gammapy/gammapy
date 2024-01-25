@@ -399,7 +399,8 @@ def test_resample_axis():
     )
     l1 = lc_1d.resample_axis(axis_new=axis_new)
     assert_allclose(l1.norm_err.data.ravel()[0:2], [0.072236, 0.092942], rtol=1e-3)
-    assert_allclose(l1.ts.data.ravel()[0:2], [313.298954, 454.836247], rtol=1e-3)
+    assert_allclose(l1.ts.data.ravel()[0:2], [312.742222, 454.99609], rtol=1e-3)
+    assert_allclose(l1.stat_null.data.ravel()[0:2], [319.8675, 462.329], rtol=1e-3)
     assert l1.success.data.ravel()[0]
     assert_allclose(l1.n_dof.data[0][0][0][0], 2)
 

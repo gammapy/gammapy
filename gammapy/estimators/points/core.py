@@ -59,18 +59,17 @@ def squash_fluxpoints(flux_point, axis):
         ul = stat_profile_ul_scipy(value_scan, stat_scan, delta_ts=delta_ts)
         maps["norm_ul"] = Map.from_geom(geom, data=ul.value)
 
+    maps["stat"] = Map.from_geom(geom, data=f(minimizer.x))
+
     maps["stat_scan"] = Map.from_geom(
         geom=geom.to_cube([MapAxis.from_nodes(value_scan, name="norm")]), data=stat_scan
     )
     try:
         maps["stat_null"] = Map.from_geom(geom, data=np.sum(flux_point.stat_null.data))
+        maps["ts"] = maps["stat_null"] - maps["stat"]
     except AttributeError:
-        pass
+        maps["ts"] = Map.from_geom(geom, data=np.sum(flux_point.ts.data))
 
-    maps["stat"] = Map.from_geom(geom, data=f(minimizer.x))
-
-    # maps["ts"] = maps["stat"] - maps["stat_null"]
-    maps["ts"] = Map.from_geom(geom, data=np.sum(flux_point.ts.data))
     maps["success"] = Map.from_geom(geom=geom, data=minimizer.success, dtype=bool)
 
     combined_fp = FluxPoints.from_maps(
