@@ -307,7 +307,7 @@ plt.show()
 
 ######################################################################
 # Light curves once obtained can be rebinned.
-# Here, we rebin 4 adjacent bins together, to get 40 min bins
+# Here, we rebin 4 adjacent bins together, to get 30 min bins
 #
 
 axis_new = get_rebinned_axis(lc_1d, method="fixed-bins", group_size=3, axis_name="time")
