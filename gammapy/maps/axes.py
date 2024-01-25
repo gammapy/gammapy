@@ -3004,19 +3004,17 @@ class TimeMapAxis:
             if np.any(mask):
                 idx_min = np.where(mask)[0][0]
                 idx_max = np.where(mask)[0][-1]
-                time_min = self.time_min[idx_min]
-                time_max = self.time_max[idx_max]
                 bin_type = "normal   "
             else:
                 idx_min = idx_max = -1
-                time_min = self.time_min[idx_min]
-                time_max = self.time_max[idx_max]
                 if np.any(mask1):
                     bin_type = "overflow"
                 elif np.any(mask2):
                     bin_type = "underflow"
                 else:
                     bin_type = "outflow"
+            time_min = self.time_min[idx_min]
+            time_max = self.time_max[idx_max]
             group_table.add_row(
                 [idx_min, idx_max, time_min.mjd, time_max.mjd, bin_type]
             )
