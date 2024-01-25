@@ -491,5 +491,5 @@ def test_slice_by_coord():
     sliced_map2 = ref_map.slice_by_coord({"energy": slice(0.5 * u.TeV, 5.0 * u.TeV)})
     assert sliced_map2.geom.axes["energy"].nbin == 1
 
-    sliced_map3 = ref_map.slice_by_coord({"energy": slice(3.0 * u.TeV, 11.0 * u.TeV)})
+    sliced_map3 = ref_map.slice_by_coord({"energy": slice(1.0 * u.TeV, 10.0 * u.TeV)})
     assert sliced_map3.geom.axes["energy"].nbin == 1
