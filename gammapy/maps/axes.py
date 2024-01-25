@@ -2984,7 +2984,12 @@ class TimeMapAxis:
         Returns
         -------
         groups : `~astropy.table.Table`
-            Group table.
+            Group table. Bin groups are divided in:
+
+             *"normal" for the bins containing data
+             *"underflow" for the bins falling below the minimum axis threshold
+             *"overflow" for the bins falling above  the maximum axis threshold
+             *"outflow" for other states
         """
 
         for _, edge in enumerate(interval_edges):
