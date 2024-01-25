@@ -114,6 +114,7 @@ class ParameterEstimator(Estimator):
 
                 * "ts" : fit statistic difference with null hypothesis.
                 * "npred" : predicted number of counts per dataset.
+                * "stat_null" : total stat corresponding to the null hypothesis
         """
         npred = self.estimate_npred(datasets=datasets)
 
@@ -132,11 +133,9 @@ class ParameterEstimator(Estimator):
                 _ = self.fit.optimize(datasets=datasets)
 
             ts = datasets.stat_sum() - stat
+            stat_null = datasets.stat_sum()
 
-        return {
-            "ts": ts,
-            "npred": npred["npred"],
-        }
+        return {"ts": ts, "npred": npred["npred"], "stat_null": stat_null}
 
     def estimate_errn_errp(self, datasets, parameter):
         """Estimate parameter asymmetric errors.
