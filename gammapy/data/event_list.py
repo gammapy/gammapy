@@ -220,13 +220,13 @@ class EventList:
         info = self.__class__.__name__ + "\n"
         info += "-" * len(self.__class__.__name__) + "\n\n"
 
-        instrument = self.meta.instrument
+        instrument = self.table.meta.get("INSTRUME")
         info += f"\tInstrument       : {instrument}\n"
 
-        telescope = self.meta.telescope
+        telescope = self.table.meta.get("TELESCOP")
         info += f"\tTelescope        : {telescope}\n"
 
-        obs_id = self.meta.obs_id
+        obs_id = self.table.meta.get("OBS_ID", "")
         info += f"\tObs. ID          : {obs_id}\n\n"
 
         info += f"\tNumber of events : {len(self.table)}\n"
@@ -267,12 +267,12 @@ class EventList:
     @property
     def observation_time_start(self):
         """Observation start time (`~astropy.time.Time`)."""
-        return self.time_ref + self.meta.time_start
+        return self.time_ref + u.Quantity(self.table.meta["TSTART"], "second")
 
     @property
     def observation_time_stop(self):
         """Observation stop time (`~astropy.time.Time`)."""
-        return self.time_ref + self.meta.time_stop
+        return self.time_ref + u.Quantity(self.table.meta["TSTOP"], "second")
 
     @property
     def radec(self):
@@ -720,7 +720,7 @@ class EventList:
         - In Fermi-LAT it is automatically provided in the header of the event list.
         - In IACTs is computed as ``t_live = t_observation * (1 - f_dead)`` where ``f_dead`` is the dead-time fraction.
         """
-        return self.meta.live_time
+        return u.Quantity(self.table.meta["LIVETIME"], "second")
 
     @property
     def observation_dead_time_fraction(self):
@@ -1010,7 +1010,7 @@ class EventListChecker(Checker):
         self.event_list = event_list
 
     def _record(self, level="info", msg=None):
-        obs_id = self.meta.obs_id
+        obs_id = self.event_list.table.meta["OBS_ID"]
         return {"level": level, "obs_id": obs_id, "msg": msg}
 
     def check_meta(self):

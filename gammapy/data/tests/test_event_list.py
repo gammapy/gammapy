@@ -7,7 +7,6 @@ from astropy.io import fits
 from astropy.table import Table
 from regions import CircleSkyRegion, RectangleSkyRegion
 from gammapy.data import GTI, EventList
-from gammapy.data.metadata import EventListMetaData
 from gammapy.maps import MapAxis, WcsGeom
 from gammapy.utils.testing import mpl_plot_check, requires_data
 
@@ -89,13 +88,6 @@ class TestEventListBase:
         hdu = fits.open("test.fits")["EVENTS"]
         assert "CHECKSUM" in hdu.header
         assert "DATASUM" in hdu.header
-
-    def test_eventlist_read(self):
-        assert self.events.meta.telescope == "HESS"
-        assert self.events.meta.obs_id == "20136"
-        assert_allclose(self.events.meta.live_time, 1521.0269 * u.s, rtol=1e-5)
-
-        assert isinstance(self.events.meta, EventListMetaData)
 
 
 @requires_data()
