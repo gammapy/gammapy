@@ -114,6 +114,7 @@ grouped_observations = observations.group_by_label(labels)
 
 print(grouped_observations)
 
+######################################################################
 #
 # The results for each group of observations is shown visually below.
 #
@@ -162,7 +163,7 @@ ax.axvline(median_zenith.value, ls="--", color="black")
 # on the quantity when they are stacked at the dataset level.
 #
 # In this example, the irf features are computed for the `edisp-res` and
-# `psf-radius` at 1 TeV. This is stored as a `astropy.table.table.Table`, as shown below.
+# `psf-radius` at 1 TeV. This is stored as a `~astropy.table.table.Table`, as shown below.
 #
 
 source_position = SkyCoord(329.71693826 * u.deg, -30.2255890 * u.deg, frame="icrs")
@@ -183,10 +184,10 @@ print(scaled_features_irfs)
 
 ######################################################################
 # The `~gammapy.utils.cluster.hierarchical_clustering` then clusters
-# this table into `t=2` groups with a corresponding label for each group.
+# this table into ``t=2`` groups with a corresponding label for each group.
 # In this case, we choose to cluster the observations into two groups.
 # We can print this table to show the corresponding label which has been
-# added to the previous `feature_irfs` table.
+# added to the previous ``feature_irfs`` table.
 #
 # The arguments for `~scipy.cluster.hierarchy.fcluster` are passed as
 # a dictionary here.
@@ -196,7 +197,7 @@ features = hierarchical_clustering(scaled_features_irfs, fcluster_kwargs={"t": 2
 print(features)
 
 ######################################################################
-# Finally, `observations.group_by_label` creates a dictionary containing `t`
+# Finally, ``observations.group_by_label`` creates a dictionary containing ``t``
 # `~gammapy.data.Observations` objects by grouping the similar labels.
 #
 
@@ -227,8 +228,8 @@ ax.legend()
 
 
 ######################################################################
-# The groups here are divided by the quality of the IRFs values `edisp-res`
-# and `psf-radius`. The diamond and circular points indicate how the observations
+# The groups here are divided by the quality of the IRFs values ``edisp-res``
+# and ``psf-radius``. The diamond and circular points indicate how the observations
 # are grouped.
 #
 #
