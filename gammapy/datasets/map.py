@@ -1351,7 +1351,7 @@ class MapDataset(Dataset):
     @property
     def _counts_statistic(self):
         """Counts statistics of the dataset."""
-        return CashCountsStatistic(self.counts, self.background)
+        return CashCountsStatistic(self.counts, self.npred_background())
 
     def info_dict(self, in_safe_data_range=True):
         """Info dict with summary statistics, summed over energy.
@@ -1382,7 +1382,7 @@ class MapDataset(Dataset):
 
             if self.background:
                 summed_stat = self._counts_statistic[mask].sum()
-                background = summed_stat.n_bkg
+                background = self.background.data[mask].sum()
                 excess = summed_stat.n_sig
                 sqrt_ts = summed_stat.sqrt_ts
 
@@ -1404,7 +1404,9 @@ class MapDataset(Dataset):
         info["npred_background"] = float(npred_background)
 
         npred_signal = np.nan
-        if self.models:
+        if self.models and (
+            len(self.models) > 1 or not isinstance(self.models[0], FoVBackgroundModel)
+        ):
             npred_signal = self.npred_signal().data[mask].sum()
 
         info["npred_signal"] = float(npred_signal)
