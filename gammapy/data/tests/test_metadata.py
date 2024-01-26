@@ -4,7 +4,7 @@ from numpy.testing import assert_allclose
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from pydantic import ValidationError
-from gammapy.data import ObservationMetaData
+from gammapy.data import EventListMetaData, ObservationMetaData
 from gammapy.utils.metadata import ObsInfoMetaData, PointingInfoMetaData, TargetMetaData
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import requires_data
@@ -85,3 +85,22 @@ def test_observation_metadata_bad(hess_eventlist_header):
     hess_eventlist_header.pop("DEADC")
     with pytest.raises(KeyError):
         ObservationMetaData.from_header(hess_eventlist_header, format="gadf")
+
+
+def test_eventlist_metadata():
+    input = {
+        "event_class": "std",
+        "optional": {"DST_VER": "v1.0", "ANA_VER": "v2.2", "CAL_VER": "v1.9"},
+    }
+
+    meta = EventListMetaData(**input)
+
+    assert meta.event_class == "std"
+    assert meta.optional["DST_VER"] == "v1.0"
+    assert meta.optional["ANA_VER"] == "v2.2"
+    assert meta.optional["CAL_VER"] == "v1.9"
+
+    input_bad = input.copy()
+    input_bad["location"] = "bad"
+    with pytest.raises(ValueError):
+        EventListMetaData(**input_bad)
