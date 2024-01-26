@@ -54,9 +54,19 @@ from astropy.convolution import convolve
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.table import Table
+from astropy.time import Time
 import matplotlib.pyplot as plt
+from IPython.display import display
 from gammapy.data import EventList
-from gammapy.maps import Map, MapAxis, WcsGeom, WcsNDMap
+from gammapy.maps import (
+    LabelMapAxis,
+    Map,
+    MapAxes,
+    MapAxis,
+    TimeMapAxis,
+    WcsGeom,
+    WcsNDMap,
+)
 
 ######################################################################
 # Check setup
@@ -265,6 +275,186 @@ print(energy_axis.unit)
 #
 
 print(energy_axis.center)
+
+######################################################################
+# Adding Non-contiguous axes
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Non-spatial map axes can also be handled through two other objects known as the `~gammapy.maps.TimeMapAxis`
+# and the `~gammapy.maps.LabelMapAxis`.
+#
+
+
+######################################################################
+# TimeMapAxis
+# ^^^^^^^^^^^
+#
+# The `~gammapy.maps.TimeMapAxis` object provides an axis for non-adjacent
+# time intervals.
+#
+
+time_map_axis = TimeMapAxis(
+    edges_min=[1, 5, 10, 15] * u.day,
+    edges_max=[2, 7, 13, 18] * u.day,
+    reference_time=Time("2020-03-19"),
+)
+
+print(time_map_axis)
+
+######################################################################
+# This ``time_map_axis`` can then be utilised in a similar way to the previous implementation to create
+# a `~gammapy.maps.Map`.
+#
+
+map_4d = Map.create(
+    binsz=0.02, width=(10, 5), frame="galactic", axes=[energy_axis, time_map_axis]
+)
+print(map_4d.geom)
+
+######################################################################
+# It is possible to utilise the `~gammapy.maps.TimeMapAxis.slice` attrribute
+# to create new a `~gammapy.maps.TimeMapAxis`. Here we are slicing
+# between the first and third axis to extract the subsection of the axis
+# between indice 0 and 2.
+
+print(time_map_axis.slice([0, 2]))
+
+######################################################################
+# It is also possible to `~gammapy.maps.TimeMapAxis.squash` the axis,
+# which squashes the existing axis into one bin. This creates a new axis
+# between the extreme edges of the initial axis.
+
+print(time_map_axis.squash())
+
+
+######################################################################
+# The `~gammapy.maps.TimeMapAxis.is_contiguous` method returns a boolean
+# which indicates whether the `~gammapy.maps.TimeMapAxis` is contiguous or not.
+
+print(time_map_axis.is_contiguous)
+
+######################################################################
+# As we have a non-contiguous axis we can print the array of bin edges for both
+# the minimum axis edges (`~gammapy.maps.TimeMapAxis.edges_min`) and the maximum axis
+# edges (`~gammapy.maps.TimeMapAxis.edges_max`).
+
+print(time_map_axis.edges_min)
+
+print(time_map_axis.edges_max)
+
+######################################################################
+# Next, we use the `~gammapy.maps.TimeMapAxis.to_contiguous` functionality to
+# create a contiguous axis and expose `~gammapy.maps.TimeMapAxis.edges`. This
+# method returns a `~astropy.units.Quantity` with respect to the reference time.
+
+time_map_axis_contiguous = time_map_axis.to_contiguous()
+
+print(time_map_axis_contiguous.is_contiguous)
+
+print(time_map_axis_contiguous.edges)
+
+
+######################################################################
+# The `~gammapy.maps.TimeMapAxis.time_edges` will return the `~astropy.time.Time` object directly
+
+print(time_map_axis_contiguous.time_edges)
+
+
+######################################################################
+# `~gammapy.maps.TimeMapAxis` also has both functionalities of
+# `~gammapy.maps.TimeMapAxis.coord_to_pix` and `~gammapy.maps.TimeMapAxis.coord_to_idx`.
+# The `~gammapy.maps.TimeMapAxis.coord_to_idx` attribute will give the index of the
+# ``time`` specified, similarly for `~gammapy.maps.TimeMapAxis.coord_to_pix` which returns
+# the pixel. A linear interpolation is assumed.
+#
+# Start by choosing a time which we know is within the `~gammapy.maps.TimeMapAxis` and see the results.
+
+
+time = Time(time_map_axis.time_max.mjd[0], format="mjd")
+
+print(time_map_axis.coord_to_pix(time))
+
+print(time_map_axis.coord_to_idx(time))
+
+
+######################################################################
+# This functionality can also be used with an array of `~astropy.time.Time` values.
+
+times = Time(time_map_axis.time_max.mjd, format="mjd")
+
+print(time_map_axis.coord_to_pix(times))
+
+print(time_map_axis.coord_to_idx(times))
+
+######################################################################
+# Note here we take a `~astropy.time.Time` which is outside the edges.
+# A linear interpolation is assumed for both methods, therefore for a time
+# outside the ``time_map_axis`` there is no extrapolation and -1 is returned.
+#
+# Note: due to this, the `~gammapy.maps.TimeMapAxis.coord_to_pix` method will
+# return ``nan`` and the `~gammapy.maps.TimeMapAxis.coord_to_idx` method returns -1.
+
+print(time_map_axis.coord_to_pix(Time(time.mjd + 1, format="mjd")))
+
+print(time_map_axis.coord_to_idx(Time(time.mjd + 1, format="mjd")))
+
+
+######################################################################
+# LabelMapAxis
+# ^^^^^^^^^^^^
+#
+# The `~gammapy.maps.LabelMapAxis` object allows for handling of labels for map axes.
+# It provides an axis for non-numeric entries.
+#
+
+label_axis = LabelMapAxis(
+    labels=["dataset-1", "dataset-2", "dataset-3"], name="dataset"
+)
+
+print(label_axis)
+
+######################################################################
+# The labels can be checked using the `~gammapy.maps.LabelMapAxis.center` attribute:
+print(label_axis.center)
+
+
+######################################################################
+# To obtain the position of the label, one can utilise the `~gammapy.maps.LabelMapAxis.coord_to_pix` attribute
+
+print(label_axis.coord_to_pix(["dataset-3"]))
+
+######################################################################
+# To adapt and create new axes the following attributes can be utilised:
+# `~gammapy.maps.LabelMapAxis.concatenate`, `~gammapy.maps.LabelMapAxis.slice` and
+# `~gammapy.maps.LabelMapAxis.squash`.
+#
+# Combining two different `~gammapy.maps.LabelMapAxis` is done in the following way:
+
+label_axis2 = LabelMapAxis(labels=["dataset-a", "dataset-b"], name="dataset")
+
+print(label_axis.concatenate(label_axis2))
+
+######################################################################
+# A new `~gammapy.maps.LabelMapAxis` can be created by slicing an already existing one.
+# Here we are slicing between the second and third bins to extract the subsection.
+print(label_axis.slice([1, 2]))
+
+######################################################################
+# A new axis object can be created by squashing the axis into a single bin.
+
+print(label_axis.squash())
+
+
+######################################################################
+# Mixing the three previous axis types (`~gammapy.maps.MapAxis`,
+# `~gammapy.maps.TimeMapAxis` and `~gammapy.maps.LabelMapAxis`)
+# would be done like so:
+#
+
+axes = MapAxes(axes=[energy_axis, time_map_axis, label_axis])
+hdu = axes.to_table_hdu(format="gadf")
+table = Table.read(hdu)
+display(table)
 
 
 ######################################################################
