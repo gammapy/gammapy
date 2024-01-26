@@ -150,7 +150,7 @@ class EventListMetaData(MetaData):
         meta = super(EventListMetaData, cls).from_header(header, format)
 
         meta.creation = CreatorMetaData()
-        # Include additional gadf keywords not specified as ObservationMetaData attributes
+        # Include additional gadf keywords
         optional_keywords = [
             "DST_VER",
             "ANA_VER",

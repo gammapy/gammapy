@@ -58,7 +58,7 @@ class EventList:
     Parameters
     ----------
     table : `~astropy.table.Table`
-        Event list table
+        Event list table.
     meta : `~gammapy.data.EventListMetaData`
         The metadata. Default is None.
 
@@ -266,12 +266,12 @@ class EventList:
 
     @property
     def observation_time_start(self):
-        """Observation start time (`~astropy.time.Time`)."""
+        """Observation start time as a `~astropy.time.Time` object."""
         return self.time_ref + u.Quantity(self.table.meta["TSTART"], "second")
 
     @property
     def observation_time_stop(self):
-        """Observation stop time (`~astropy.time.Time`)."""
+        """Observation stop time as a `~astropy.time.Time` object."""
         return self.time_ref + u.Quantity(self.table.meta["TSTOP"], "second")
 
     @property
