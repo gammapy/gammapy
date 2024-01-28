@@ -15,7 +15,8 @@ handling multiple model components.
 **Note: Since gammapy v0.18, the responsibility of model management is
 left totally upon the user. All models, including background models,
 have to be explicitly defined.** To keep track of the used models, we
-define a global `Models` object (which is a collection of `SkyModel`
+define a global `~gammapy.modeling.models.Models` object (which is a collection of
+`~gammapy.modeling.models.SkyModel`
 objects) to which we append and delete models.
 
 Prerequisites
@@ -38,7 +39,7 @@ simulated CTA (DC1) data. We demonstrate
 -  Sharing a model between multiple datasets
 
 We then load models from the Fermi 3FHL catalog to show some convenience
-handling for multiple `Models` together
+handling for multiple `~gammapy.modeling.models.Models` together
 
 -  accessing models from a catalog
 -  selecting models contributing to a given region
@@ -85,7 +86,7 @@ check_tutorials_setup()
 # -----------------
 #
 # First, we read some precomputed Fermi and CTA datasets, and create a
-# `Datasets` object containing the two.
+# `~gammapy.datasets.Datasets` object containing the two.
 #
 
 fermi_dataset = MapDataset.read(
@@ -140,21 +141,22 @@ print(datasets)
 # ---------------------------------------
 #
 # For any IACT dataset (in this case `cta_dataset`) , we have to create
-# a `FoVBackgroundModel`. Note that `FoVBackgroundModel` must be
+# a `~gammapy.modeling.models.FoVBackgroundModel`. Note that
+# `~gammapy.modeling.models.FoVBackgroundModel` must be
 # specified to one dataset only
 #
 # For Fermi-LAT, the background contribution is taken from a diffuse
-# isotropic template. To convert this into a gammapy `SkyModel`, use the
-# helper function `create_fermi_isotropic_diffuse_model()`
+# isotropic template. To convert this into a gammapy `~gammapy.modeling.models.SkyModel`, use the
+# helper function `~gammapy.modeling.models.create_fermi_isotropic_diffuse_model`
 #
 # To attach a model on a particular dataset it is necessary to specify the
-# `datasets_names`. Otherwise, by default, the model will be applied to
-# all the datasets in `datasets`
+# ``datasets_names``. Otherwise, by default, the model will be applied to
+# all the datasets in ``datasets``
 #
 
 
 ######################################################################
-# First, we must create a global `Models` object which acts as the
+# First, we must create a global `~gammapy.modeling.models.Models` object which acts as the
 # container for all models used in a particular analysis
 #
 
@@ -247,7 +249,7 @@ catalog = SourceCatalog3FHL()
 
 ######################################################################
 # We first choose some relevant models from the catalog and create a new
-# `Models` object.
+# `~gammapy.modeling.models.Models` object.
 #
 
 gc_sep = catalog.positions.separation(SkyCoord(0, 0, unit="deg", frame="galactic"))
@@ -261,10 +263,10 @@ print(len(models_3fhl))
 # Selecting models contributing to a given region
 # -----------------------------------------------
 #
-# We now use `Models.select_region()` to get a subset of models
+# We now use `~gammapy.modeling.models.Models.select_region` to get a subset of models
 # contributing to a particular region. You can also use
-# `Models.select_mask()` to get models lying inside the `True` region
-# of a mask map\`
+# `~gammapy.modeling.models.Models.select_mask` to get models lying inside the `True` region
+# of a mask map`
 #
 
 region = CircleSkyRegion(
@@ -302,10 +304,7 @@ print("\n CTA dataset models: ", datasets[1].models.names)
 # Combining two Models
 # --------------------
 #
-
-
-######################################################################
-# `Models` can be extended simply as as python lists
+# `~gammapy.modeling.models.Models` can be extended simply as python lists
 #
 
 models.extend(models_selected)
@@ -316,8 +315,8 @@ print(len(models))
 # Selecting models from a list
 # ----------------------------
 #
-# A `Model` can be selected from a list of `Models` by specifying its
-# index or its name.
+# A `~gammapy.modeling.models.Model` can be selected from a list of
+# `~gammapy.modeling.models.Models` by specifying its index or its name.
 #
 
 model = models_3fhl[0]
@@ -329,8 +328,8 @@ print(model)
 
 
 ######################################################################
-# `Models.select` can be used to select all models satisfying a list of
-# conditions. To select all models applied on the cta_dataset with the
+# `~gammapy.modeling.models.Models.select` can be used to select all models satisfying a list of
+# conditions. To select all models applied on the ``cta_dataset`` with the
 # characters `1748` in the name
 #
 
@@ -339,10 +338,10 @@ print(models)
 
 
 ######################################################################
-# Note that `Models.select()` combines the different conditions with an
+# Note that `~gammapy.modeling.models.Models.select` combines the different conditions with an
 # `AND` operator. If one needs to combine conditions with a `OR`
-# operator, the `Models.selection_mask()` method can generate a boolean
-# array that can be used for selection. For ex:
+# operator, the `~gammapy.modeling.models.Models.selection_mask` method can generate a boolean
+# array that can be used for selection. For example:
 #
 
 selection_mask = models_3fhl.selection_mask(
@@ -357,11 +356,8 @@ print(models_OR)
 # Removing a model from a dataset
 # -------------------------------
 #
-
-
-######################################################################
 # Any addition or removal of a model must happen through the global models
-# object, which must then be re-applied on the dataset(s). Note that
+# object, which must then be re-applied on the dataset/s. Note that
 # operations **cannot** be directly performed on `dataset.models()`.
 #
 
@@ -387,8 +383,9 @@ print(datasets.models.names)
 # Plotting models on a (counts) map
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# The spatial regions of `Models` can be plotted on a given geom using
-# `Models.plot_regions()`. You can also use `Models.plot_positions()`
+# The spatial regions of `~gammapy.modeling.models.Models` can be plotted on a given geom using
+# `~gammapy.modeling.models.Models.plot_regions`. You can also use
+# `~gammapy.modeling.models.Models.plot_positions`
 # to plot the centers of each model.
 #
 
@@ -453,8 +450,8 @@ print(model.spatial_model.frozen)  # all spatial components are frozen
 
 
 ######################################################################
-# The same operations can be performed on `Models` directly - to perform
-# on a list of models at once, eg
+# The same operations can be performed on `~gammapy.modeling.models.Models`
+# directly - to perform on a list of models at once, e.g.
 #
 
 models_selected.freeze()  # freeze all parameters of all models
@@ -483,7 +480,8 @@ help(models_selected.unfreeze)
 
 
 ######################################################################
-# `Models` can be (independently of `Datasets`) written to/ read from
+# `~gammapy.modeling.models.Models` can be (independently of
+# `~gammapy.datasets.Datasets`) written to/ read from
 # a disk as yaml files. Datasets are always serialised along with their
 # associated models, ie, with yaml and fits files. eg:
 #

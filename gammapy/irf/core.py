@@ -38,7 +38,7 @@ class IRF(metaclass=abc.ABCMeta):
     """IRF base class for DL3 instrument response functions.
 
     Parameters
-    -----------
+    ----------
     axes : list of `MapAxis` or `MapAxes`
         Axes.
     data : `~numpy.ndarray` or `~astropy.units.Quantity`, optional
