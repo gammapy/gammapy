@@ -307,6 +307,8 @@ class MapDataset(Dataset):
     meta_table : `~astropy.table.Table`
         Table listing information on observations used to create the dataset.
         One line per observation for stacked datasets.
+    meta : `~gammapy.datasets.MapDatasetMetaData`
+        Associated meta data container
 
 
     Notes
@@ -390,8 +392,8 @@ class MapDataset(Dataset):
         mask_fit=None,
         gti=None,
         meta_table=None,
-        meta=None,
         name=None,
+        meta=None,
     ):
         self._name = make_name(name)
         self._evaluators = {}
@@ -422,7 +424,18 @@ class MapDataset(Dataset):
         self.gti = gti
         self.models = models
         self.meta_table = meta_table
-        self._meta = meta
+        if meta is None:
+            self._meta = MapDatasetMetaData()
+        else:
+            self._meta = meta
+
+    @property
+    def meta(self):
+        return self._meta
+
+    @meta.setter
+    def meta(self, value):
+        self._meta = value
 
     # TODO: keep or remove?
     @property
@@ -611,13 +624,6 @@ class MapDataset(Dataset):
         """Largest energy range among all pixels, defined by mask_safe and mask_fit."""
         energy_min_map, energy_max_map = self.energy_range
         return np.nanmin(energy_min_map.quantity), np.nanmax(energy_max_map.quantity)
-
-    @property
-    def meta(self):
-        """Return metadata container."""
-        if self._meta is None:
-            self._meta = MapDatasetMetaData()
-        return self._meta
 
     def npred(self):
         """Total predicted source and background counts.
@@ -2219,6 +2225,8 @@ class MapDatasetOnOff(MapDataset):
         One line per observation for stacked datasets.
     name : str
         Name of the dataset.
+    meta : `~gammapy.datasets.MapDatasetMetaData`
+        Associated meta data container
 
 
     See Also
@@ -2245,6 +2253,7 @@ class MapDatasetOnOff(MapDataset):
         mask_safe=None,
         gti=None,
         meta_table=None,
+        meta=None,
     ):
         self._name = make_name(name)
         self._evaluators = {}
@@ -2261,6 +2270,7 @@ class MapDatasetOnOff(MapDataset):
         self.models = models
         self.mask_safe = mask_safe
         self.meta_table = meta_table
+        self._meta = meta
 
     def __str__(self):
         str_ = super().__str__()
