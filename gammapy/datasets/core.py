@@ -505,8 +505,8 @@ class Datasets(collections.abc.MutableSequence):
         Parameters
         ----------
         cumulative : bool
-            Cumulate information across all datasets. If True, all information depending
-            on a model will be lost. Default is False.
+            Cumulate information across all datasets. If True, all model-dependent
+            information will be lost. Default is False.
 
         Returns
         -------
