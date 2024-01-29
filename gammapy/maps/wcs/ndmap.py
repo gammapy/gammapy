@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 import gammapy.utils.parallel as parallel
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.units import unit_from_fits_image_hdu
+from gammapy.visualization.utils import add_colorbar
 from ..geom import pix_tuple_to_idx
 from ..utils import INVALID_INDEX
 from .core import WcsMap
@@ -431,7 +432,8 @@ class WcsNDMap(WcsMap):
         im = ax.imshow(data, **kwargs)
 
         if add_cbar:
-            fig.colorbar(im, ax=ax, label=str(self.unit))
+            add_colorbar(im, ax, label=str(self.unit))
+            # fig.colorbar(im, ax=ax, label=str(self.unit))
 
         if self.geom.is_allsky:
             ax = self._plot_format_allsky(ax)

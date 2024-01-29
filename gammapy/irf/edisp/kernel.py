@@ -9,6 +9,7 @@ from matplotlib.colors import PowerNorm
 from gammapy.maps import MapAxis
 from gammapy.maps.axes import UNIT_STRING_FORMAT
 from gammapy.utils.scripts import make_path
+from gammapy.visualization.utils import add_colorbar
 from ..core import IRF
 
 __all__ = ["EDispKernel"]
@@ -546,7 +547,7 @@ class EDispKernel(IRF):
 
         if add_cbar:
             label = "Probability density (A.U.)"
-            ax.figure.colorbar(caxes, ax=ax, label=label)
+            add_colorbar(caxes, ax=ax, label=label)
 
         energy_axis_true.format_plot_xaxis(ax=ax)
         energy_axis.format_plot_yaxis(ax=ax)

@@ -7,6 +7,7 @@ from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from matplotlib.colors import PowerNorm
 from gammapy.maps import MapAxes, MapAxis, RegionGeom
+from gammapy.visualization.utils import add_colorbar
 from ..core import IRF
 
 __all__ = ["EnergyDispersion2D"]
@@ -259,7 +260,7 @@ class EnergyDispersion2D(IRF):
 
         if add_cbar:
             label = "Probability density [A.U]."
-            ax.figure.colorbar(caxes, ax=ax, label=label)
+            add_colorbar(caxes, ax=ax, label=label)
 
         return ax
 

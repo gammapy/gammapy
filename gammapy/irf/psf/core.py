@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 from gammapy.maps.axes import UNIT_STRING_FORMAT
 from gammapy.utils.array import array_stats_str
+from gammapy.visualization.utils import add_colorbar
 from ..core import IRF
 
 
@@ -218,7 +219,7 @@ class PSF(IRF):
 
         if add_cbar:
             label = f"Containment radius R{100 * fraction:.0f} ({containment.unit})"
-            ax.figure.colorbar(caxes, ax=ax, label=label)
+            add_colorbar(caxes, ax=ax, label=label)
 
         return ax
 

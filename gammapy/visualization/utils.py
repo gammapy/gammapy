@@ -6,8 +6,10 @@ from scipy.optimize import curve_fit
 from scipy.stats import norm
 from astropy.visualization import make_lupton_rgb
 import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 __all__ = [
+    "add_colorbar",
     "plot_contour_line",
     "plot_map_rgb",
     "plot_theta_squared_table",
@@ -24,6 +26,16 @@ ARTIST_TO_LINE_PROPERTIES = {
     "linewidth": "markerwidth",
     "lw": "markerwidth",
 }
+
+
+def add_colorbar(img, ax, label=None):
+    """Add colorbar to a given axis."""
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes(position="right", size="5%", pad="2%")
+    cbar = plt.colorbar(
+        img, cax=cax, orientation="vertical", use_gridspec=True, label=label
+    )
+    return cbar
 
 
 def plot_map_rgb(map_, ax=None, **kwargs):
@@ -120,7 +132,7 @@ def plot_contour_line(ax, x, y, **kwargs):
 
 
 def plot_theta_squared_table(table):
-    """Plot the theta2 distribution of counts, excess and signifiance.
+    """Plot the theta2 distribution of counts, excess and significance.
 
     Take the table containing the ON counts, the OFF counts, the acceptance,
     the off acceptance and the alpha (normalisation between ON and OFF)
@@ -200,7 +212,7 @@ def plot_distribution(
 
     Parameters
     ----------
-    wcs_map : an instance of `~gammapy.maps.WcsNDMap`
+    wcs_map : `~gammapy.maps.WcsNDMap`
         A map that contains data to be plotted.
     ax : `~matplotlib.axes.Axes` or list of `~matplotlib.axes.Axes`
         Axis object to plot on. If a list of Axis is provided it has to be the same length as the length of _map.data.

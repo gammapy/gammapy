@@ -5,6 +5,7 @@ from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from gammapy.maps import MapAxes, MapAxis
 from gammapy.maps.axes import UNIT_STRING_FORMAT
+from gammapy.visualization.utils import add_colorbar
 from .core import IRF
 
 __all__ = ["EffectiveAreaTable2D"]
@@ -174,7 +175,7 @@ class EffectiveAreaTable2D(IRF):
 
         if add_cbar:
             label = f"Effective Area [{aeff.unit.to_string(UNIT_STRING_FORMAT)}]"
-            ax.figure.colorbar(caxes, ax=ax, label=label)
+            add_colorbar(caxes, ax=ax, label=label)
 
         return ax
 

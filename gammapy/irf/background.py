@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 from gammapy.maps import MapAxes, MapAxis
 from gammapy.maps.axes import UNIT_STRING_FORMAT
+from gammapy.visualization.utils import add_colorbar
 from .core import IRF
 from .io import gadf_is_pointlike
 
@@ -224,7 +225,7 @@ class Background3D(BackgroundIRF):
             ax.set_title(str(ee))
             if add_cbar:
                 label = f"Background [{bkg_unit.to_string(UNIT_STRING_FORMAT)}]"
-                cbar = ax.figure.colorbar(caxes, ax=ax, label=label, fraction=cfraction)
+                cbar = add_colorbar(caxes, ax=ax, label=label)
                 cbar.formatter.set_powerlimits((0, 0))
 
             row, col = np.unravel_index(i, shape=(rows, cols))
@@ -323,7 +324,7 @@ class Background2D(BackgroundIRF):
             label = (
                 f"Background rate [{self.quantity.unit.to_string(UNIT_STRING_FORMAT)}]"
             )
-            ax.figure.colorbar(caxes, ax=ax, label=label)
+            add_colorbar(caxes, ax=ax, label=label)
 
     def plot_offset_dependence(self, ax=None, energy=None, **kwargs):
         """Plot background rate versus offset for a given energy.
