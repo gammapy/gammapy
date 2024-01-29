@@ -4,8 +4,8 @@
 ------------------------
 
 - Released February XX, 2024
-- YY contributors
-- ZZZ pull requests since v1.1 (not all listed below)
+- 24 contributors
+- 178 pull requests since v1.1 (not all listed below)
 - yz closed issues
 
 Summary
@@ -14,26 +14,55 @@ Summary
 New features
 ~~~~~~~~~~~~
 
-- A general scheme for metadata support has been introduced. The ``Metadata`` base
-  class has been designed according to PIG X.
-- Prototype support for asymmetric IRF. A tutorial exposing how to create such IRFs
-  has been added.
-- Added position as a parameter for the ``TemplateSpatialModel``. Add a caveat.
 - New helper classes have been added to perform event sampling.
 - A checksum option has been added on read and write methods in Gammapy. It follows the
   FITS standard and reuses the astropy methods and behavior. A checksum for yaml file
   has been introduced as well.
-- Added ``Prior`` class.
-- Added a function to remove a time interval from a ``GTI``.
 - Total observation time map.
-- Introduce timing utility functions: point to point flux variance
-- Update 4FGL to DR4
 
+*gammapy.catalogs*
+
+- Update 4FGL to DR4.
+- Added 1LHAASO catalog.
+
+*gammapy.data*
+
+- A general scheme for metadata support has been introduced. The ``Metadata`` base
+  class has been designed according to PIG X.
+- Added a function to remove a time interval from a ``GTI``.
+- Added function to export part of a ``DataStore`` to an IVAO compliant ObsCore table.
+
+*gammapy.makers*
+
+- Prototype support for asymmetric IRF in Gammapy's ``Maker`` classes.
+  A tutorial exposing how to create such IRFs has been added.
+
+*gammapy.maps*
+
+- Implement ``TimeMapAxis.pix_to_coord()``
+
+*gammapy.modeling*
+
+- Added ``Prior`` class.
+- Add function to determine pivot energy for all spectral models.
+- Added position as a parameter for the ``TemplateSpatialModel``. Add a caveat.
+
+*gammapy.estimators*
+
+- Add a ``slice_by_coord()`` function on ``FluxMaps``.
+- Introduce timing utility functions: point to point flux variance, fractional excess
+  variance
+- Add optional sensitivity estimation in ``ExcessMapEstimator``.
+
+*gammapy.visualization*
+
+- Add a plot function for the distribution of ``Map`` data.
 
 
 API changes
 ~~~~~~~~~~~
 
+- Freeze source parameters in ``FluxEstimator`` classes.
 - The ``norm`` parameter is now passed as an argument to the various flux estimators.
   ``Parameter.is_norm`` is now deprecated.
 - The default index of ``ExpCutoffPowerlawNormSpectralModel`` has been changed to 0
@@ -65,8 +94,113 @@ Documentation
 Contributors
 ~~~~~~~~~~~~
 
+- Fabio Acero
+- Juan Bernete
+- Noah Biederbeck
+- Axel Donath
+- Kirsty Feijen
+- Stefan Fröse
+- Claudio Galelli
+- Bruno Khélifi
+- Paula Kornecki
+- Maximilian Linhoff
+- Kurt McKee
+- Simone Mender
+- Daniel Morcuende
+- Laura Olivera-Nieto
+- Fabio Pintore
+- Michael Punch
+- Maxime Regeard
+- Quentin Remy
+- Clément Robert
+- Atreyee Sinha
+- Hanna Stapel
+- Katrin Streil
+- Régis Terrier
+- Tim Unbehaun
+
 Pull Requests
 ~~~~~~~~~~~~~
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
 
+- [#5044] Add stat_null computation on ParameterEstimator (Atreyee Sinha)
+- [#5040] Add degrees of freedom on FluxMaps (Atreyee Sinha)
+- [#5015] Examples of radially asymmetric IRFs (Atreyee Sinha)
+- [#4994] Spatial parameters in FovBackgroundModel (Katrin Streil)
+- [#4992] Adding a function to guess the format of a FluxPoints object for serialization (Claudio Galelli)
+- [#4989] Reduce memory usage of MapEvaluator (Quentin Remy)
+- [#4978] Support negative offset for Background2d.to_3d (Atreyee Sinha)
+- [#4975] Reduce memory usage of get_psf_kernel (Quentin Remy)
+- [#4973] Add position as a parameter for TemplateSpatialModel (Atreyee Sinha)
+- [#4971] Use `FixedPointingInfo` in notebook (Atreyee Sinha)
+- [#4970] Adapt FluxPointsDataset to fit light curves (Atreyee Sinha)
+- [#4942] Parallel support for FluxProfileEstimation (Quentin Remy)
+- [#4940] Fix MapEvaluator for the apply_edisp=False case (Quentin Remy)
+- [#4937] Fix import of angular_separation for astropy 6 (Maximilian Linhoff)
+- [#4936] PiecewiseNormSpectralModel serialising interp (Katrin Streil)
+- [#4917] Add new class to directly simulate observations (Maximilian Linhoff)
+- [#4904] Deprecate is_norm on parameter (Quentin Remy)
+- [#4902] Add norm attribute to estimators and deprecate previous norm related attributes (Quentin Remy)
+- [#4886] Introduce hierarchical metadata structures (Régis Terrier)
+- [#4879] Fix energy dependent temporal model simulation (Quentin Remy)
+- [#4854] Notebook to sphinx-gallery script (REGEARD Maxime)
+- [#4851] Parallel support for WcsNDMap map convolution (Quentin Remy)
+- [#4850] Add utility function to split dataset into multiple datasets (Quentin Remy)
+- [#4849] Add TimeMapAxis.to_gti() (Atreyee Sinha)
+- [#4847] Variability tutorial (Claudio Galelli)
+- [#4845] Add context manager for multiprocessing configuration (Quentin Remy)
+- [#4837] Add checksum argument to gammapy products write functions (Régis Terrier)
+- [#4835] Management of metadata for `Models` (Bruno Khélifi)
+- [#4834] Adding prior stat sum to datasets (Katrin Streil)
+- [#4829] Caching gti and radmax (REGEARD Maxime)
+- [#4828] Adapt SkyModel to evaluate on TimeMapAxis (Atreyee Sinha)
+- [#4822] Add a function to delete a time interval from GTI (Claudio Galelli)
+- [#4817] Computation of total observation time map (Atreyee Sinha)
+- [#4814] Introduce a function to compute the doubling/halving time for a lightcurve (Claudio Galelli)
+- [#4810] Adding a tutorial for observational clustering (Astro-Kirsty)
+- [#4808] adding `Observations` in memory generator (REGEARD Maxime)
+- [#4805] Description of the arguments of the class `Observation' (Bruno Khélifi)
+- [#4802] Adapt detect tutorial to include flux parameters in find peaks (Astro-Kirsty)
+- [#4785] Use interpolation for dark matter mass (Stefan Fröse)
+- [#4783] Add EnergyDependentMorphologyEstimator (Astro-Kirsty)
+- [#4770] Raise error if the predicted event number is too large in event sampling (Fabio PINTORE)
+- [#4759] Display the default model parameters in docstrings (Astro-Kirsty)
+- [#4753] Removes size 1 array to scalar conversion deprecation warnings from numpy (Régis Terrier)
+- [#4750] Support pydantic v2.0 (Axel Donath)
+- [#4741] Add Zhao profile (Stefan Fröse)
+- [#4740] Add DarkMatterDecaySpectralModel (Stefan Fröse)
+- [#4738] Introduce Observation metadata container (Régis Terrier)
+- [#4729] Change default index for  NormSpectralModel (Quentin Remy)
+- [#4726] Introduce a function to compute the point-to-point fractional variance (Claudio Galelli)
+- [#4714] Replace CashCountsStatistic error calculation by analytical expression (Régis Terrier)
+- [#4703] Update 4FGL catalog default  to DR4 (Quentin Remy)
+- [#4697] Deduce pointing mode from arguments in FixedPointingInfo (Maximilian Linhoff)
+- [#4677] Fix wcs.array_shape  definition in WcsGeom.create (Quentin Remy)
+- [#4671] Introduce metadata base class (Régis Terrier)
+- [#4669] Add the progress bar for the DataStore (Bruno Khélifi)
+- [#4668] Multidimensional geom support in SkyModel.integrate_geom and evaluate_geom (Régis Terrier)
+- [#4664] Add a faster reprojection method  : reproject_by_image (Quentin Remy)
+- [#4660] Add function to convert hermes maps to gammapy compatible format (Quentin Remy)
+- [#4657] Fix the FluxProfileEstimator to take into account models (Quentin Remy)
+- [#4638] Add a `from_stack` method on `Observations` (REGEARD Maxime)
+- [#4635] Add function to determine pivot energy for any spectral model (Astro-Kirsty)
+- [#4628] Match energy binning per decade to pyirf's (JBernete)
+- [#4620] Adding prior class (Katrin Streil)
+- [#4615] Improve sensitivity example (Maximilian Linhoff)
+- [#4608] Add a slice_by_coord function for FluxMaps (Claudio Galelli)
+- [#4599] Add a SafeMaskMaker at DL3 level (Atreyee Sinha)
+- [#4595] Add 1LHAASO to gammapy.catalog (Quentin Remy)
+- [#4584] Add optional sensitivity computation in ExcessMapEstimator (Quentin Remy)
+- [#4574] Fixing if statements in OGIPDatasetWriter (REGEARD Maxime)
+- [#4567] Freeze source parameters in FluxEstimator (Régis Terrier)
+- [#4561] Export Datastore to Obscore table (PaulaKx)
+- [#4546] Remove is_ul column in FluxPointsEstimator if no upper limit is defined (Astro-Kirsty)
+- [#4540] Add function to extract values from FluxMaps (Astro-Kirsty)
+- [#4501] Exposing computation of the fractional excess variance (Claudio Galelli)
+- [#4491] PIG 27 - Metadata structure (Régis Terrier)
+- [#4485] Implement TimeMapAxis.pix_to_coord (Atreyee Sinha)
+- [#4432] Serialise gti table to flux points object (Atreyee Sinha)
+- [#4408] Add plot function for 1D distribution of map data (REGEARD Maxime)
+- [#4381] PIG 16 - Model Priors API (Noah Biederbeck)
+- [#4217] FluxPointsDataset support model with spatial template and NormSpectralModel (Quentin Remy)
