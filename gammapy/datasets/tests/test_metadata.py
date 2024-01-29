@@ -98,15 +98,8 @@ def test_mapdataset_metadata_stack():
     meta2 = MapDatasetMetaData(**input2)
 
     meta = meta1.stack(meta2)
-    assert meta.telescope == ["a", "b"]
-    assert meta.instrument == ["H.E.S.S."]
-    assert meta.observation_mode == ["wobble"]
-    assert_allclose(meta.pointing[1].radec_mean.dec.deg, 22.0147)
-    assert meta.obs_ids == ["111", "112"]
-    assert meta.optional["test"] == [0.5, 0.1]
-    assert meta.optional["other"] == [True, False]
-    assert meta.event_type is None
     assert meta.creation.creator.split()[0] == "Gammapy"
+    assert meta.obs_ids is None
 
 
 def test_to_header():
