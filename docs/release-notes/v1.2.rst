@@ -14,11 +14,53 @@ Summary
 New features
 ~~~~~~~~~~~~
 
+- A general scheme for metadata support has been introduced. The ``Metadata`` base
+  class has been designed according to PIG X.
+- Prototype support for asymmetric IRF. A tutorial exposing how to create such IRFs
+  has been added.
+- Added position as a parameter for the ``TemplateSpatialModel``. Add a caveat.
+- New helper classes have been added to perform event sampling.
+- A checksum option has been added on read and write methods in Gammapy. It follows the
+  FITS standard and reuses the astropy methods and behavior. A checksum for yaml file
+  has been introduced as well.
+- Added ``Prior`` class.
+- Added a function to remove a time interval from a ``GTI``.
+- Total observation time map.
+- Introduce timing utility functions: point to point flux variance
+- Update 4FGL to DR4
+
+
+
 API changes
 ~~~~~~~~~~~
 
+- The ``norm`` parameter is now passed as an argument to the various flux estimators.
+  ``Parameter.is_norm`` is now deprecated.
+- The default index of ``ExpCutoffPowerlawNormSpectralModel`` has been changed to 0
+  for consistency with the ``PowerlawNormSpectralModel``.
+
 Bug fixes and improvements
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Correct ``MapDataset.info_dict()`` to use background model rather than IRF background when
+  giving excess counts and significance.
+- Import ray only when needed.
+- Added information on number of degrees of freedom on ``FluxMaps`` and ``FluxPoints`` objects.
+- Reduced memory usage of ``MapEvaluator`` and ``PSFMap.get_psf_kernel()``.
+- Added support for multiprocessing in ``FluxProfileEstimator``.
+- Added multiprocessing for ``WcsNDMap`` convolution.
+- Add a context manager for multiprocessing.
+- Add a faster reprojection method : ``reproject_by_image``.
+- Use interpolation for dardk matter mass. Add Zhao profile and
+  ``DarkMatterDecaySpectralModel``.
+- The asymmetric errors and upper limit calculations in ``CashCountsStatistic``
+  have been replaced by an equivalent analytical expression.
+
+
+Documentation
+~~~~~~~~~~~~~
+
+
 
 Contributors
 ~~~~~~~~~~~~
