@@ -1,6 +1,30 @@
 .. _gammapy_1p2_release:
 
-1.2 (unreleased)
-----------------
+1.2 (February XXth 2024)
+------------------------
 
-- No changes yet
+- Released February XX, 2024
+- YY contributors
+- ZZZ pull requests since v1.1 (not all listed below)
+- yz closed issues
+
+Summary
+~~~~~~~
+
+New features
+~~~~~~~~~~~~
+
+API changes
+~~~~~~~~~~~
+
+Bug fixes and improvements
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Contributors
+~~~~~~~~~~~~
+
+Pull Requests
+~~~~~~~~~~~~~
+
+This list is incomplete. Small improvements and bug fixes are not listed here.
+
