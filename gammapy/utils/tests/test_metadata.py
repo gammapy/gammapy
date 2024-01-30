@@ -50,6 +50,18 @@ def test_creator_to_header():
     assert header["CREATED"] == "2022-01-01 00:00:00.000"
 
 
+def test_creator_from_header():
+    # Create header with a 'bad' date
+    hdu = fits.PrimaryHDU()
+    hdu.header["CREATOR"] = "gammapy"
+    hdu.header["CREATED"] = "Tues 6 Feb"
+
+    meta = CreatorMetaData.from_header(hdu.header)
+
+    assert meta.date == hdu.header["CREATED"]
+    assert meta.creator == hdu.header["CREATOR"]
+
+
 def test_subclass():
     class TestMetaData(MetaData):
         _tag: ClassVar[Literal["tag"]] = "tag"
