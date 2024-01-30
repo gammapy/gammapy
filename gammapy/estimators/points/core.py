@@ -68,7 +68,9 @@ def squash_fluxpoints(flux_point, axis):
         maps["stat_null"] = Map.from_geom(geom, data=np.sum(flux_point.stat_null.data))
         maps["ts"] = maps["stat_null"] - maps["stat"]
     except AttributeError:
-        maps["ts"] = Map.from_geom(geom, data=np.sum(flux_point.ts.data))
+        log.info(
+            "Stat null info not present on original FluxPoints object. TS not computed"
+        )
 
     maps["success"] = Map.from_geom(geom=geom, data=minimizer.success, dtype=bool)
 
