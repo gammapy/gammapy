@@ -28,13 +28,36 @@ ARTIST_TO_LINE_PROPERTIES = {
 }
 
 
-def add_colorbar(img, ax, **kwargs):
-    """Add colorbar to a given axis."""
+def add_colorbar(img, ax, axes_loc=None, **kwargs):
+    """
+    Add colorbar to a given axis.
+
+    Parameters
+    ----------
+    img : `~matplotlib.image.AxesImage`
+        The image to plot the colorbar for.
+    ax : `~matplotlib.axes.Axes`
+        Matplotlib axes.
+    axes_loc : dict, optional
+        Keyword arguments passed to `~mpl_toolkits.axes_grid1.axes_divider.AxesDivider.append_axes`.
+    kwargs : dict, optional
+        Keyword arguments passed to `~matplotlib.pyplot.colorbar`.
+
+    Returns
+    -------
+    cbar : `~matplotlib.pyplot.colorbar`
+        The colorbar.
+    """
     kwargs.setdefault("use_gridspec", True)
     kwargs.setdefault("orientation", "vertical")
 
+    axes_loc = axes_loc or {}
+    axes_loc.setdefault("position", "right")
+    axes_loc.setdefault("size", "5%")
+    axes_loc.setdefault("pad", "2%")
+
     divider = make_axes_locatable(ax)
-    cax = divider.append_axes(position="right", size="5%", pad="2%")
+    cax = divider.append_axes(**axes_loc)
     cbar = plt.colorbar(img, cax=cax, **kwargs)
     return cbar
 
@@ -59,7 +82,7 @@ def plot_map_rgb(map_, ax=None, **kwargs):
     Returns
     -------
     ax : `~astropy.visualization.wcsaxes.WCSAxes`
-        WCS axis object
+        WCS axis object.
 
     Examples
     --------
@@ -98,7 +121,7 @@ def plot_map_rgb(map_, ax=None, **kwargs):
 
 
 def plot_contour_line(ax, x, y, **kwargs):
-    """Plot smooth curve from contour points"""
+    """Plot smooth curve from contour points."""
     xf = x
     yf = y
 

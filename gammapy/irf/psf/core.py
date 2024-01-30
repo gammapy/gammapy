@@ -172,7 +172,13 @@ class PSF(IRF):
         return ax
 
     def plot_containment_radius(
-        self, ax=None, fraction=0.68, add_cbar=True, kwargs_colorbar=None, **kwargs
+        self,
+        ax=None,
+        fraction=0.68,
+        add_cbar=True,
+        axes_loc=None,
+        kwargs_colorbar=None,
+        **kwargs,
     ):
         """Plot containment image with energy and theta axes.
 
@@ -185,8 +191,10 @@ class PSF(IRF):
             Default is 0.68.
         add_cbar : bool, optional
             Add a colorbar. Default is True.
+        axes_loc : dict, optional
+            Keyword arguments passed to `~mpl_toolkits.axes_grid1.axes_divider.AxesDivider.append_axes`.
         kwargs_colorbar : dict, optional
-            Keyword argument passed to ~gammapy.visualisation.utils.add_colorbar`.
+            Keyword arguments passed to `~matplotlib.pyplot.colorbar`.
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
 
@@ -226,7 +234,7 @@ class PSF(IRF):
         if add_cbar:
             label = f"Containment radius R{100 * fraction:.0f} ({containment.unit})"
             kwargs_colorbar.setdefault("label", label)
-            add_colorbar(caxes, ax=ax, **kwargs_colorbar)
+            add_colorbar(caxes, ax=ax, axes_loc=axes_loc, **kwargs_colorbar)
 
         return ax
 

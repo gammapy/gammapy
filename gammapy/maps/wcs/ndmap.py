@@ -374,6 +374,7 @@ class WcsNDMap(WcsMap):
         fig=None,
         add_cbar=False,
         stretch="linear",
+        axes_loc=None,
         kwargs_colorbar=None,
         **kwargs,
     ):
@@ -391,8 +392,10 @@ class WcsNDMap(WcsMap):
         stretch : str, optional
             Passed to `astropy.visualization.simple_norm`.
              Default is "linear".
+        axes_loc : dict, optional
+            Keyword arguments passed to `~mpl_toolkits.axes_grid1.axes_divider.AxesDivider.append_axes`.
         kwargs_colorbar : dict, optional
-            Keyword argument passed to ~gammapy.visualisation.utils.add_colorbar`.
+            Keyword arguments passed to `~matplotlib.pyplot.colorbar`.
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.pyplot.imshow`.
 
@@ -446,7 +449,7 @@ class WcsNDMap(WcsMap):
         if add_cbar:
             label = str(self.unit)
             kwargs_colorbar.setdefault("label", label)
-            add_colorbar(im, ax=ax, **kwargs_colorbar)
+            add_colorbar(im, ax=ax, axes_loc=axes_loc, **kwargs_colorbar)
 
         if self.geom.is_allsky:
             ax = self._plot_format_allsky(ax)

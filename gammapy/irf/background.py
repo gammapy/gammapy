@@ -176,6 +176,7 @@ class Background3D(BackgroundIRF):
         add_cbar=True,
         ncols=3,
         figsize=None,
+        axes_loc=None,
         kwargs_colorbar=None,
         **kwargs,
     ):
@@ -191,8 +192,10 @@ class Background3D(BackgroundIRF):
             Number of columns to plot. Default is 3.
         figsize : tuple, optional
             Figure size. Default is None.
+        axes_loc : dict, optional
+            Keyword arguments passed to `~mpl_toolkits.axes_grid1.axes_divider.AxesDivider.append_axes`.
         kwargs_colorbar : dict, optional
-            Keyword argument passed to ~gammapy.visualisation.utils.add_colorbar`.
+            Keyword arguments passed to `~matplotlib.pyplot.colorbar`.
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
         """
@@ -237,7 +240,7 @@ class Background3D(BackgroundIRF):
             if add_cbar:
                 label = f"Background [{bkg_unit.to_string(UNIT_STRING_FORMAT)}]"
                 kwargs_colorbar.setdefault("label", label)
-                cbar = add_colorbar(caxes, ax=ax, **kwargs_colorbar)
+                cbar = add_colorbar(caxes, ax=ax, axes_loc=axes_loc, **kwargs_colorbar)
                 cbar.formatter.set_powerlimits((0, 0))
 
             row, col = np.unravel_index(i, shape=(rows, cols))
@@ -313,7 +316,9 @@ class Background2D(BackgroundIRF):
             energy=energy, add_cbar=add_cbar, ncols=ncols, figsize=figsize, **kwargs
         )
 
-    def plot(self, ax=None, add_cbar=True, kwargs_colorbar=None, **kwargs):
+    def plot(
+        self, ax=None, add_cbar=True, axes_loc=None, kwargs_colorbar=None, **kwargs
+    ):
         """Plot energy offset dependence of the background model."""
         ax = plt.gca() if ax is None else ax
 
@@ -339,7 +344,7 @@ class Background2D(BackgroundIRF):
                 f"Background rate [{self.quantity.unit.to_string(UNIT_STRING_FORMAT)}]"
             )
             kwargs_colorbar.setdefault("label", label)
-            add_colorbar(caxes, ax=ax, **kwargs_colorbar)
+            add_colorbar(caxes, ax=ax, axes_loc=axes_loc, **kwargs_colorbar)
 
     def plot_offset_dependence(self, ax=None, energy=None, **kwargs):
         """Plot background rate versus offset for a given energy.
