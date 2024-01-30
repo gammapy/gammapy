@@ -13,6 +13,7 @@ from gammapy.modeling.models import (
     DiskSpatialModel,
     GaussianSpatialModel,
     Model,
+    Models,
     PointSpatialModel,
     SkyModel,
     TemplateSpatialModel,
@@ -1583,3 +1584,48 @@ class SourceCatalog3FHL(SourceCatalog):
         self.extended_sources_table = Table.read(filename, hdu="ExtendedSources")
         self.rois = Table.read(filename, hdu="ROIs")
         self.energy_bounds_table = Table.read(filename, hdu="EnergyBounds")
+
+
+class SourceCatalog2PC(SourceCatalog):
+    """Fermi-LAT 2nd pulsar catalog.
+
+    - https://ui.adsabs.harvard.edu/abs/2013ApJS..208...17A
+    - https://fermi.gsfc.nasa.gov/ssc/data/access/lat/2nd_PSR_catalog/
+
+    One source is represented by `~gammapy.catalog.SourceCatalogObject2PC`.
+
+    TODO  : Fix the UnitsWarning here ...
+    """
+
+    tag = "2PC"
+    description = "LAT 2nd pulsar catalog"
+    source_object_class = SourceCatalogObject2PC
+
+    def __init__(self, filename="$GAMMAPY_DATA/catalogs/fermi/2PC_catalog_v04.fits.gz"):
+        filename = make_path(filename)
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", u.UnitsWarning)
+            table_psr = Table.read(filename, hdu="PULSAR_CATALOG")
+            table_spectral = Table.read(filename, hdu="SPECTRAL")
+            table_off_peak = Table.read(filename, hdu="OFF_PEAK")
+
+        table_standardise_units_inplace(table_psr)
+        table_standardise_units_inplace(table_spectral)
+        table_standardise_units_inplace(table_off_peak)
+
+        source_name_key = "PSR_Name"
+        super().__init__(table=table_psr, source_name_key=source_name_key)
+
+        self.source_object_class._source_name_key = source_name_key
+
+        self.spectral_table = table_spectral
+        self.off_peak_table = table_off_peak
+
+    def to_models(self, **kwargs):
+        models = Models()
+        for m in self:
+            sky_model = m.sky_model()
+            if sky_model is not None:
+                models.append(sky_model)
+        return models
