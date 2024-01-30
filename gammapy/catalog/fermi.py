@@ -28,10 +28,12 @@ __all__ = [
     "SourceCatalog3FGL",
     "SourceCatalog3FHL",
     "SourceCatalog4FGL",
+    "SourceCatalog2PC",
     "SourceCatalogObject2FHL",
     "SourceCatalogObject3FGL",
     "SourceCatalogObject3FHL",
     "SourceCatalogObject4FGL",
+    "SourceCatalogObject2PC",
 ]
 
 log = logging.getLogger(__name__)
