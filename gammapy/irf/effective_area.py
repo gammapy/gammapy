@@ -150,7 +150,7 @@ class EffectiveAreaTable2D(IRF):
         ax.legend(loc="best")
         return ax
 
-    def plot(self, ax=None, add_cbar=True, **kwargs):
+    def plot(self, ax=None, add_cbar=True, kwargs_colorbar=None, **kwargs):
         """Plot effective area image."""
         ax = plt.gca() if ax is None else ax
 
@@ -167,6 +167,8 @@ class EffectiveAreaTable2D(IRF):
         kwargs.setdefault("vmin", vmin)
         kwargs.setdefault("vmax", vmax)
 
+        kwargs_colorbar = kwargs_colorbar or {}
+
         with quantity_support():
             caxes = ax.pcolormesh(energy.edges, offset.edges, aeff.value.T, **kwargs)
 
@@ -175,7 +177,8 @@ class EffectiveAreaTable2D(IRF):
 
         if add_cbar:
             label = f"Effective Area [{aeff.unit.to_string(UNIT_STRING_FORMAT)}]"
-            add_colorbar(caxes, ax=ax, label=label)
+            kwargs_colorbar.setdefault("label", label)
+            add_colorbar(caxes, ax=ax, **kwargs_colorbar)
 
         return ax
 

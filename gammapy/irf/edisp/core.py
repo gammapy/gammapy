@@ -216,7 +216,9 @@ class EnergyDispersion2D(IRF):
         ax.legend(loc="upper left")
         return ax
 
-    def plot_bias(self, ax=None, offset=None, add_cbar=False, **kwargs):
+    def plot_bias(
+        self, ax=None, offset=None, add_cbar=False, kwargs_colorbar=None, **kwargs
+    ):
         """Plot migration as a function of true energy for a given offset.
 
         Parameters
@@ -227,6 +229,9 @@ class EnergyDispersion2D(IRF):
             Offset. Default is None.
         add_cbar : bool, optional
             Add a colorbar to the plot. Default is False.
+        kwargs_colorbar : dict, optional
+            Keyword argument passed to ~gammapy.visualisation.utils.add_colorbar`.
+            Default is None.
         kwargs : dict
             Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
 
@@ -237,6 +242,8 @@ class EnergyDispersion2D(IRF):
         """
         kwargs.setdefault("cmap", "GnBu")
         kwargs.setdefault("norm", PowerNorm(gamma=0.5))
+
+        kwargs_colorbar = kwargs_colorbar or {}
 
         ax = plt.gca() if ax is None else ax
 
@@ -260,7 +267,8 @@ class EnergyDispersion2D(IRF):
 
         if add_cbar:
             label = "Probability density [A.U]."
-            add_colorbar(caxes, ax=ax, label=label)
+            kwargs_colorbar.setdefault("label", label)
+            add_colorbar(caxes, ax=ax, **kwargs_colorbar)
 
         return ax
 

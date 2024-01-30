@@ -171,7 +171,13 @@ class Background3D(BackgroundIRF):
         return self.to_2d().peek(figsize)
 
     def plot_at_energy(
-        self, energy=None, add_cbar=True, ncols=3, figsize=None, **kwargs
+        self,
+        energy=None,
+        add_cbar=True,
+        ncols=3,
+        figsize=None,
+        kwargs_colorbar=None,
+        **kwargs,
     ):
         """Plot the background rate in FoV coordinates at a given energy.
 
@@ -185,9 +191,13 @@ class Background3D(BackgroundIRF):
             Number of columns to plot. Default is 3.
         figsize : tuple, optional
             Figure size. Default is None.
+        kwargs_colorbar : dict, optional
+            Keyword argument passed to ~gammapy.visualisation.utils.add_colorbar`.
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
         """
+        kwargs_colorbar = kwargs_colorbar or {}
+
         n = len(energy)
         cols = min(ncols, n)
         rows = 1 + (n - 1) // cols
@@ -223,9 +233,11 @@ class Background3D(BackgroundIRF):
             self.axes["fov_lat"].format_plot_xaxis(ax)
             self.axes["fov_lon"].format_plot_yaxis(ax)
             ax.set_title(str(ee))
+
             if add_cbar:
                 label = f"Background [{bkg_unit.to_string(UNIT_STRING_FORMAT)}]"
-                cbar = add_colorbar(caxes, ax=ax, label=label)
+                kwargs_colorbar.setdefault("label", label)
+                cbar = add_colorbar(caxes, ax=ax, **kwargs_colorbar)
                 cbar.formatter.set_powerlimits((0, 0))
 
             row, col = np.unravel_index(i, shape=(rows, cols))
@@ -301,7 +313,7 @@ class Background2D(BackgroundIRF):
             energy=energy, add_cbar=add_cbar, ncols=ncols, figsize=figsize, **kwargs
         )
 
-    def plot(self, ax=None, add_cbar=True, **kwargs):
+    def plot(self, ax=None, add_cbar=True, kwargs_colorbar=None, **kwargs):
         """Plot energy offset dependence of the background model."""
         ax = plt.gca() if ax is None else ax
 
@@ -311,6 +323,8 @@ class Background2D(BackgroundIRF):
         kwargs.setdefault("cmap", "GnBu")
         kwargs.setdefault("edgecolors", "face")
         kwargs.setdefault("norm", LogNorm())
+
+        kwargs_colorbar = kwargs_colorbar or {}
 
         with quantity_support():
             caxes = ax.pcolormesh(
@@ -324,7 +338,8 @@ class Background2D(BackgroundIRF):
             label = (
                 f"Background rate [{self.quantity.unit.to_string(UNIT_STRING_FORMAT)}]"
             )
-            add_colorbar(caxes, ax=ax, label=label)
+            kwargs_colorbar.setdefault("label", label)
+            add_colorbar(caxes, ax=ax, **kwargs_colorbar)
 
     def plot_offset_dependence(self, ax=None, energy=None, **kwargs):
         """Plot background rate versus offset for a given energy.

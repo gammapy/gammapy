@@ -28,13 +28,14 @@ ARTIST_TO_LINE_PROPERTIES = {
 }
 
 
-def add_colorbar(img, ax, label=None):
+def add_colorbar(img, ax, **kwargs):
     """Add colorbar to a given axis."""
+    kwargs.setdefault("use_gridspec", True)
+    kwargs.setdefault("orientation", "vertical")
+
     divider = make_axes_locatable(ax)
     cax = divider.append_axes(position="right", size="5%", pad="2%")
-    cbar = plt.colorbar(
-        img, cax=cax, orientation="vertical", use_gridspec=True, label=label
-    )
+    cbar = plt.colorbar(img, cax=cax, **kwargs)
     return cbar
 
 
