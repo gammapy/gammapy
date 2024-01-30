@@ -13,6 +13,7 @@ from gammapy.modeling.models import (
     DiskSpatialModel,
     GaussianSpatialModel,
     Model,
+    Models,
     PointSpatialModel,
     SkyModel,
     TemplateSpatialModel,
@@ -1692,9 +1693,18 @@ class SourceCatalog3FHL(SourceCatalog):
 
 class SourceCatalog2PC(SourceCatalog):
     """Fermi-LAT 2nd pulsar catalog.
+<<<<<<< HEAD
     - https://ui.adsabs.harvard.edu/abs/2013ApJS..208...17A
     - https://fermi.gsfc.nasa.gov/ssc/data/access/lat/2nd_PSR_catalog/
     One source is represented by `~gammapy.catalog.SourceCatalogObject2PC`.
+=======
+
+    - https://ui.adsabs.harvard.edu/abs/2013ApJS..208...17A
+    - https://fermi.gsfc.nasa.gov/ssc/data/access/lat/2nd_PSR_catalog/
+
+    One source is represented by `~gammapy.catalog.SourceCatalogObject2PC`.
+
+>>>>>>> deab08cf4 (2P catalog class)
     TODO  : Fix the UnitsWarning here ...
     """
 
