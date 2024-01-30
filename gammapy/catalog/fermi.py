@@ -13,6 +13,7 @@ from gammapy.modeling.models import (
     DiskSpatialModel,
     GaussianSpatialModel,
     Model,
+    Models,
     PointSpatialModel,
     SkyModel,
     TemplateSpatialModel,
@@ -1676,3 +1677,50 @@ class SourceCatalog3FHL(SourceCatalog):
         self.extended_sources_table = Table.read(filename, hdu="ExtendedSources")
         self.rois = Table.read(filename, hdu="ROIs")
         self.energy_bounds_table = Table.read(filename, hdu="EnergyBounds")
+
+
+class SourceCatalog3PC(SourceCatalog):
+    """Fermi-LAT 3rd pulsar catalog.
+
+    - https://arxiv.org/abs/2307.11132
+    - https://fermi.gsfc.nasa.gov/ssc/data/access/lat/3rd_PSR_catalog/
+
+    One source is represented by `~gammapy.catalog.SourceCatalogObject3PC`.
+
+    TODO  : Fix the UnitsWarning here ...
+    """
+
+    tag = "3PC"
+    description = "LAT 3rd pulsar catalog"
+    source_object_class = SourceCatalogObject3PC
+
+    def __init__(
+        self, filename="$GAMMAPY_DATA/catalogs/fermi/3PC_Catalog+SEDs_20230803.fits.gz"
+    ):
+        filename = make_path(filename)
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", u.UnitsWarning)
+            table_psr = Table.read(filename, hdu="PULSARS_BIGFILE")
+            table_spectral = Table.read(filename, hdu="LAT_Point_Source_Catalog")
+            table_bigfile_config = Table.read(filename, hdu="BIGFILE_CONFIG")
+
+        table_standardise_units_inplace(table_psr)
+        table_standardise_units_inplace(table_spectral)
+        table_standardise_units_inplace(table_bigfile_config)
+
+        source_name_key = "PSRJ"
+        super().__init__(table=table_psr, source_name_key=source_name_key)
+
+        self.source_object_class._source_name_key = source_name_key
+
+        self.spectral_table = table_spectral
+        self.off_bigfile_config = table_bigfile_config
+
+    def to_models(self, **kwargs):
+        models = Models()
+        for m in self:
+            sky_model = m.sky_model()
+            if sky_model is not None:
+                models.append(sky_model)
+        return models
