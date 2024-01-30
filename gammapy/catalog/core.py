@@ -52,10 +52,11 @@ class SourceCatalogObject:
     _source_name_key = "Source_Name"
     _row_index_key = "_row_index"
 
-    def __init__(self, data, data_extended=None):
+    def __init__(self, data, data_extended=None, data_spectral=None):
         self.data = Bunch(**data)
         if data_extended:
             self.data_extended = Bunch(**data_extended)
+        self.data_spectral = Bunch(**data_spectral) if data_spectral else None
 
     def _repr_html_(self):
         try:
@@ -257,18 +258,44 @@ class SourceCatalog(abc.ABC):
             name_extended = data["Source_Name"].strip()
         else:
             name_extended = None
+
+        if self._source_name_key in data and self._source_name_key == "PSR_Name":
+            name_spectral = data[self._source_name_key].strip()
+        elif self._source_name_key in data and self._source_name_key == "PSRJ":
+            name_spectral = f"PSR{data[self._source_name_key].strip()}"
+        elif "Source_name" in data:
+            name_spectral = data["Source_name"].strip()
+        else:
+            name_spectral = None
+
         try:
             idx = self._lookup_extended_source_idx[name_extended]
             data_extended = table_row_to_dict(self.extended_sources_table[idx])
         except (KeyError, AttributeError):
             data_extended = None
 
-        source = self.source_object_class(data, data_extended)
+        try:
+            idx = self._lookup_spectral_source_idx[name_spectral]
+            data_spectral = table_row_to_dict(self.spectral_table[idx])
+        except (KeyError, AttributeError):
+            data_spectral = None
+
+        source = self.source_object_class(data, data_extended, data_spectral)
         return source
 
     @lazyproperty
+    def _lookup_spectral_source_idx(self):
+        if self._source_name_key == "PSRJ":
+            source_name_key = "NickName"
+        else:
+            source_name_key = self._source_name_key
+        names = [_.strip() for _ in self.spectral_table[source_name_key]]
+        idx = range(len(names))
+        return dict(zip(names, idx))
+
+    @lazyproperty
     def _lookup_extended_source_idx(self):
-        names = [_.strip() for _ in self.extended_sources_table["Source_Name"]]
+        names = [_.strip() for _ in self.extended_sources_table[self._source_name_key]]
         idx = range(len(names))
         return dict(zip(names, idx))
 
@@ -293,6 +320,8 @@ def _skycoord_from_table(table):
         lon, lat, frame = "RA", "DEC", "icrs"
     elif {"ra", "dec"}.issubset(keys):
         lon, lat, frame = "ra", "dec", "icrs"
+    elif {"RAJD", "DECJD"}.issubset(keys):
+        lon, lat, frame = "RAJD", "DECJD", "icrs"
     else:
         raise KeyError("No column GLON / GLAT or RA / DEC or RAJ2000 / DEJ2000 found.")
 
