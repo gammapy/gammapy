@@ -149,7 +149,6 @@ class EventListMetaData(MetaData):
     def from_header(cls, header, format="gadf"):
         meta = super(EventListMetaData, cls).from_header(header, format)
 
-        meta.creation = CreatorMetaData()
         # Include additional gadf keywords
         optional_keywords = [
             "DST_VER",

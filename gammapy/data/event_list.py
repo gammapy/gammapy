@@ -202,6 +202,7 @@ class EventList:
         """
         tables = [_.table for _ in event_lists]
         stacked_table = vstack_tables(tables, **kwargs)
+        log.warning("The meta information will be empty here.")
         return cls(stacked_table)
 
     def stack(self, other):
