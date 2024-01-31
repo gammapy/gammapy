@@ -198,7 +198,7 @@ class EventList:
         Parameters
         ----------
         event_lists : list
-            List of `~gammapy.data.EventList` to stack
+            List of `~gammapy.data.EventList` to stack.
         **kwargs : dict, optional
             Keyword arguments passed to `~astropy.table.vstack`.
         """
