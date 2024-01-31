@@ -20,7 +20,7 @@ def test_mapdataset_metadata():
         "instrument": "lst",
         "observation_mode": "wobble",
         "pointing": PointingInfoMetaData(radec_mean=position),
-        "obs_ids": 112,
+        "obs_id": 112,
         "optional": dict(test=0.5, other=True),
     }
     meta = MapDatasetMetaData(**input)
@@ -30,7 +30,7 @@ def test_mapdataset_metadata():
     assert meta.observation_mode == "wobble"
     assert_allclose(meta.pointing.radec_mean.dec.value, 22.0147)
     assert_allclose(meta.pointing.radec_mean.ra.deg, 83.6287)
-    assert meta.obs_ids == "112"
+    assert meta.obs_id == "112"
     assert meta.optional["other"] is True
     assert meta.creation.creator.split()[0] == "Gammapy"
     assert meta.event_type is None
@@ -58,7 +58,7 @@ def test_mapdataset_metadata_lists():
                 radec_mean=SkyCoord(83.1287, 22.5147, unit="deg", frame="icrs")
             ),
         ],
-        "obs_ids": [111, 222],
+        "obs_id": [111, 222],
     }
     meta = MapDatasetMetaData(**input)
     assert meta.telescope == "cta-north"
@@ -66,7 +66,7 @@ def test_mapdataset_metadata_lists():
     assert meta.observation_mode == "wobble"
     assert_allclose(meta.pointing[0].radec_mean.dec.value, 22.0147)
     assert_allclose(meta.pointing[1].radec_mean.ra.deg, 83.1287)
-    assert meta.obs_ids == ["111", "222"]
+    assert meta.obs_id == ["111", "222"]
     assert meta.optional is None
     assert meta.event_type is None
 
@@ -79,7 +79,7 @@ def test_mapdataset_metadata_stack():
         "pointing": PointingInfoMetaData(
             radec_mean=SkyCoord(83.6287, 22.5147, unit="deg", frame="icrs")
         ),
-        "obs_ids": 111,
+        "obs_id": 111,
         "optional": dict(test=0.5, other=True),
     }
 
@@ -90,7 +90,7 @@ def test_mapdataset_metadata_stack():
         "pointing": PointingInfoMetaData(
             radec_mean=SkyCoord(83.6287, 22.0147, unit="deg", frame="icrs")
         ),
-        "obs_ids": 112,
+        "obs_id": 112,
         "optional": dict(test=0.1, other=False),
     }
 
@@ -99,7 +99,7 @@ def test_mapdataset_metadata_stack():
 
     meta = meta1.stack(meta2)
     assert meta.creation.creator.split()[0] == "Gammapy"
-    assert meta.obs_ids is None
+    assert meta.obs_id is None
 
 
 def test_to_header():
@@ -110,10 +110,10 @@ def test_to_header():
         "pointing": PointingInfoMetaData(
             radec_mean=SkyCoord(83.6287, 22.5147, unit="deg", frame="icrs")
         ),
-        "obs_ids": 111,
+        "obs_id": 111,
         "optional": dict(test=0.5, other=True),
     }
     meta1 = MapDatasetMetaData(**input1)
     hdr = meta1.to_header()
     assert hdr["INSTRUM"] == "H.E.S.S."
-    assert hdr["OBS_IDS"] == "111"
+    assert hdr["OBS_ID"] == "111"
