@@ -50,7 +50,7 @@ def test_creator_to_header():
     assert header["CREATED"] == "2022-01-01 00:00:00.000"
 
 
-def test_creator_from_header():
+def test_creator_from_incorrect_header():
     # Create header with a 'bad' date
     hdu = fits.PrimaryHDU()
     hdu.header["CREATOR"] = "gammapy"
