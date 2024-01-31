@@ -586,7 +586,6 @@ def test_mde_run(dataset, models, tmp_path):
     path = tmp_path / "obs.fits.gz"
     obs.write(path)
     obs_back = Observation.read(path)
-    print(obs_back.observatory_earth_location)
     assert u.isclose(obs_back.observatory_earth_location.lon, LOCATION.lon)
     assert u.isclose(obs_back.observatory_earth_location.lat, LOCATION.lat)
     assert u.isclose(obs_back.observatory_earth_location.height, LOCATION.height)
