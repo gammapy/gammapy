@@ -5,6 +5,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.io import fits
+from astropy.table import Table
 from astropy.time import Time
 from astropy.units import Quantity
 from gammapy.data import (
@@ -582,3 +583,31 @@ def test_observations_generator(data_store):
         assert obs.obs_id == obs_1[idx].obs_id
         assert isinstance(obs.events, EventList)
         assert isinstance(obs.psf, PSF3D)
+
+
+@requires_data()
+def test_event_setter():
+    irfs = load_irf_dict_from_file(
+        "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
+    )
+    pointing = FixedPointingInfo(
+        fixed_icrs=SkyCoord(0 * u.deg, 0 * u.deg),
+    )
+    location = EarthLocation(lon="-70d18m58.84s", lat="-24d41m0.34s", height="2000m")
+    obs = Observation.create(
+        obs_id=1,
+        pointing=pointing,
+        livetime=20 * u.min,
+        irfs=irfs,
+        location=location,
+    )
+
+    assert obs.events is None
+
+    for invalid in (5, Table(), "foo"):
+        with pytest.raises(TypeError):
+            obs.events = invalid
+
+    events = EventList(Table())
+    obs.events = events
+    assert obs.events is events
