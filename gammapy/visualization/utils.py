@@ -53,7 +53,7 @@ def add_colorbar(img, ax, axes_loc=None, **kwargs):
     ::
 
         from gammapy.maps import Map
-        from gammapy.visualization.utils import add_colorbar
+        from gammapy.visualization import add_colorbar
         import matplotlib.pyplot as plt
         map_ = Map.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
         axes_loc = {"position": "right", "size": "2%", "pad": "10%"}
