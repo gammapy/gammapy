@@ -189,6 +189,7 @@ class EventList:
 
         hdu_all.writeto(filename, overwrite=overwrite, checksum=checksum)
 
+    # TODO: Pass metadata here. Also check that specific meta contents are consistent
     @classmethod
     def from_stack(cls, event_lists, **kwargs):
         """Stack (concatenate) list of event lists.
