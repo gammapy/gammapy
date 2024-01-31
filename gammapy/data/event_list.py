@@ -199,6 +199,8 @@ class EventList:
         ----------
         event_lists : list
             List of `~gammapy.data.EventList` to stack
+        **kwargs : dict, optional
+            Keyword arguments passed to `~astropy.table.vstack`.
         """
         tables = [_.table for _ in event_lists]
         stacked_table = vstack_tables(tables, **kwargs)
