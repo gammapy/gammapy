@@ -153,7 +153,26 @@ class EffectiveAreaTable2D(IRF):
     def plot(
         self, ax=None, add_cbar=True, axes_loc=None, kwargs_colorbar=None, **kwargs
     ):
-        """Plot effective area image."""
+        """Plot effective area image.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes`, optional
+            Matplotlib axes. Default is None.
+        add_cbar : bool, optional
+            Add a colorbar to the plot. Default is True.
+        axes_loc : dict, optional
+            Keyword arguments passed to `~mpl_toolkits.axes_grid1.axes_divider.AxesDivider.append_axes`.
+        kwargs_colorbar : dict, optional
+            Keyword arguments passed to `~matplotlib.pyplot.colorbar`.
+        kwargs : dict
+            Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`
+            Matplotlib axes.
+        """
         ax = plt.gca() if ax is None else ax
 
         energy = self.axes["energy_true"]
