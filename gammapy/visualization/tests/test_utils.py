@@ -9,11 +9,35 @@ from gammapy.maps import Map, MapAxis, WcsNDMap
 from gammapy.utils.random import get_random_state
 from gammapy.utils.testing import mpl_plot_check, requires_data
 from gammapy.visualization import (
+    add_colorbar,
     plot_contour_line,
     plot_distribution,
     plot_map_rgb,
     plot_theta_squared_table,
 )
+
+
+@requires_data()
+def test_add_colorbar():
+    map_ = Map.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
+
+    fig, ax = plt.subplots()
+    with mpl_plot_check():
+        img = ax.imshow(map_.sum_over_axes().data[0, :, :])
+        add_colorbar(img, ax=ax, label="Colorbar label")
+
+    axes_loc = {"position": "left", "size": "2%", "pad": "15%"}
+    fig, ax = plt.subplots()
+    with mpl_plot_check():
+        img = ax.imshow(map_.sum_over_axes().data[0, :, :])
+        add_colorbar(img, ax=ax, axes_loc=axes_loc)
+
+    kwargs = {"use_gridspec": False, "orientation": "horizontal"}
+    fig, ax = plt.subplots()
+    with mpl_plot_check():
+        img = ax.imshow(map_.sum_over_axes().data[0, :, :])
+        cbar = add_colorbar(img, ax=ax, **kwargs)
+        assert cbar.orientation == "horizontal"
 
 
 def test_map_panel_plotter():

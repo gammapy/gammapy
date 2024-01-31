@@ -47,6 +47,30 @@ def add_colorbar(img, ax, axes_loc=None, **kwargs):
     -------
     cbar : `~matplotlib.pyplot.colorbar`
         The colorbar.
+
+    Examples
+    --------
+    ::
+
+        from gammapy.maps import Map
+        from gammapy.visualization.utils import add_colorbar
+        import matplotlib.pyplot as plt
+        map_ = Map.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
+        axes_loc = {"position": "right", "size": "2%", "pad": "10%"}
+        kwargs_colorbar = {'label':'Colorbar label'}
+
+        # Example outside gammapy
+        fig = plt.figure(figsize=(6, 3))
+        ax = fig.add_subplot(111)
+        img = ax.imshow(map_.sum_over_axes().data[0,:,:])
+        add_colorbar(img, ax=ax, axes_loc=axes_loc, **kwargs_colorbar)
+
+        # `add_colorbar` is available for the `plot` function here:
+        fig = plt.figure(figsize=(6, 3))
+        ax = fig.add_subplot(111)
+        map_.sum_over_axes().plot(ax=ax, add_cbar=True, axes_loc=axes_loc,
+                                  kwargs_colorbar=kwargs_colorbar)
+
     """
     kwargs.setdefault("use_gridspec", True)
     kwargs.setdefault("orientation", "vertical")
