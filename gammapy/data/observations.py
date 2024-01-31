@@ -529,9 +529,10 @@ class Observation:
         return cls(
             events=events,
             gti=gti,
-            obs_id=obs_info.get("OBS_ID"),
+            obs_id=meta.obs_info.obs_id,
             pointing=FixedPointingInfo.from_fits_header(obs_info),
             meta=meta,
+            location=meta.location,
             **irf_dict,
         )
 

@@ -390,6 +390,8 @@ def test_observation_write(tmp_path):
     assert obs_read.edisp is not None
     assert obs_read.bkg is not None
     assert obs_read.rad_max is None
+    assert obs_read.obs_id == 23523
+    assert_allclose(obs_read.observatory_earth_location.lat.deg, -23.271778)
 
     # unsupported format
     with pytest.raises(ValueError):
