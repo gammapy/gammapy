@@ -503,3 +503,16 @@ def test_model_scale():
         model = GaussianTemporalModel(
             t_ref=50003.2503033 * u.d, sigma="2.43 day", scale="ms"
         )
+
+
+def test_templatetemporalmodelformat():
+    temporal_model = LightCurveTemplateTemporalModel.read(
+        "$GAMMAPY_DATA/gravitational_waves/GW_example_DC_map_file.fits.gz", format="map"
+    )
+    mod_dict = temporal_model.to_dict()
+    assert mod_dict["temporal"]["format"] == "map"
+
+    path = "$GAMMAPY_DATA/tests/models/light_curve/lightcrv_PKSB1222+216.fits"
+    temporal_model = LightCurveTemplateTemporalModel.read(path)
+    mod_dict = temporal_model.to_dict()
+    assert mod_dict["temporal"]["format"] == "table"

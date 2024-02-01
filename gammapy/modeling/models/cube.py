@@ -489,11 +489,7 @@ class SkyModel(ModelBase):
             data.update(self.spatial_model.to_dict(full_output))
 
         if self.temporal_model is not None:
-            if self.temporal_model.is_energy_dependent:
-                format = "map"
-                data.update(self.temporal_model.to_dict(full_output, format))
-            else:
-                data.update(self.temporal_model.to_dict(full_output))
+            data.update(self.temporal_model.to_dict(full_output))
 
         return data
 

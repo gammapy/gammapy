@@ -1073,25 +1073,3 @@ def test_piecewise_spatial_model_background(background):
     assert isinstance(copied.spatial_model, PiecewiseNormSpatialModel)
 
     assert "Spatial model type" in copied.__str__()
-
-
-def test_templatetemporalmodelformat():
-    pointing_position = SkyCoord("100 deg", "30 deg", frame="icrs")
-    spatial_model = PointSpatialModel.from_position(pointing_position)
-    spectral_model = ConstantSpectralModel(const="1 cm-2 s-1 TeV-1")
-    temporal_model = LightCurveTemplateTemporalModel.read(
-        "$GAMMAPY_DATA/gravitational_waves/GW_example_DC_map_file.fits.gz", format="map"
-    )
-    model = SkyModel(
-        spatial_model=spatial_model,
-        spectral_model=spectral_model,
-        temporal_model=temporal_model,
-        name="test",
-    )
-    mod_dict = model.to_dict()
-    assert mod_dict["temporal"]["format"] == "map"
-
-    path = "$GAMMAPY_DATA/tests/models/light_curve/lightcrv_PKSB1222+216.fits"
-    model.temporal_model = LightCurveTemplateTemporalModel.read(path)
-    mod_dict = model.to_dict()
-    assert mod_dict["temporal"]["format"] == "table"
