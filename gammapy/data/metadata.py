@@ -12,7 +12,7 @@ from gammapy.utils.metadata import (
 )
 from gammapy.utils.types import EarthLocationType, TimeType
 
-__all__ = ["ObservationMetaData", "GTIMetaData"]
+__all__ = ["ObservationMetaData", "GTIMetaData", "EventListMetaData"]
 
 OBSERVATION_METADATA_FITS_KEYS = {
     "location": {
@@ -30,6 +30,13 @@ OBSERVATION_METADATA_FITS_KEYS = {
 }
 
 METADATA_FITS_KEYS["observation"] = OBSERVATION_METADATA_FITS_KEYS
+
+
+EVENTLIST_METADATA_FITS_KEYS = {
+    "event_class": "EV_CLASS",
+}
+
+METADATA_FITS_KEYS["eventlist"] = EVENTLIST_METADATA_FITS_KEYS
 
 
 class ObservationMetaData(MetaData):
@@ -73,7 +80,7 @@ class ObservationMetaData(MetaData):
 
     @classmethod
     def from_header(cls, header, format="gadf"):
-        meta = super(ObservationMetaData, cls).from_header(header, format)
+        meta = super().from_header(header, format)
 
         meta.creation = CreatorMetaData()
         # Include additional gadf keywords not specified as ObservationMetaData attributes
@@ -121,6 +128,37 @@ class GTIMetaData(MetaData):
     reference_time: Optional[TimeType] = None
 
     def from_header(cls, header, format="gadf"):
-        meta = super(GTIMetaData, cls).from_header(header, format)
+        meta = super().from_header(header, format)
+
+        return meta
+
+
+class EventListMetaData(MetaData):
+    """Metadata containing information about the EventList.
+
+    Parameters
+    ----------
+    """
+
+    _tag: ClassVar[Literal["EventList"]] = "eventlist"
+    event_class: Optional[str] = None
+    creation: Optional[CreatorMetaData] = None
+    optional: Optional[dict] = None
+
+    @classmethod
+    def from_header(cls, header, format="gadf"):
+        meta = super().from_header(header, format)
+
+        # Include additional gadf keywords
+        optional_keywords = [
+            "DST_VER",
+            "ANA_VER",
+            "CAL_VER",
+        ]
+        optional = dict()
+        for key in optional_keywords:
+            if key in header.keys():
+                optional[key] = header[key]
+        meta.optional = optional
 
         return meta

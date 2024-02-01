@@ -22,6 +22,13 @@ class TestEventListBase:
         events = self.events.select_parameter("ENERGY", (0.8 * u.TeV, 5.0 * u.TeV))
         assert len(events.table) == 2716
 
+    def test_meta(self):
+        assert self.events.meta.event_class == "std"
+        assert self.events.meta.creation.creator == "SASH FITS::EventListWriter"
+        assert self.events.meta.creation.date is None
+        assert self.events.meta.creation.origin == "H.E.S.S. Collaboration"
+        assert self.events.table["EVENT_ID"][0] == 1808181231761
+
     def test_write(self):
         # Without GTI
         self.events.write("test.fits", overwrite=True)

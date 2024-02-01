@@ -18,6 +18,7 @@ from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_from_dict
 from .gti import GTI
+from .metadata import EventListMetaData
 
 __all__ = ["EventList"]
 
@@ -58,6 +59,8 @@ class EventList:
     ----------
     table : `~astropy.table.Table`
         Event list table.
+    meta : `~gammapy.data.EventListMetaData`
+        The metadata. Default is None.
 
     Examples
     --------
@@ -86,8 +89,9 @@ class EventList:
 
     """
 
-    def __init__(self, table):
+    def __init__(self, table, meta=None):
         self.table = table
+        self.meta = meta
 
     def _repr_html_(self):
         try:
@@ -111,7 +115,10 @@ class EventList:
         filename = make_path(filename)
         kwargs.setdefault("hdu", "EVENTS")
         table = Table.read(filename, **kwargs)
-        return cls(table=table)
+
+        meta = EventListMetaData.from_header(table.meta)
+
+        return cls(table=table, meta=meta)
 
     def to_table_hdu(self, format="gadf"):
         """
@@ -182,6 +189,7 @@ class EventList:
 
         hdu_all.writeto(filename, overwrite=overwrite, checksum=checksum)
 
+    # TODO: Pass metadata here. Also check that specific meta contents are consistent
     @classmethod
     def from_stack(cls, event_lists, **kwargs):
         """Stack (concatenate) list of event lists.
@@ -197,6 +205,7 @@ class EventList:
         """
         tables = [_.table for _ in event_lists]
         stacked_table = vstack_tables(tables, **kwargs)
+        log.warning("The meta information will be empty here.")
         return cls(stacked_table)
 
     def stack(self, other):
