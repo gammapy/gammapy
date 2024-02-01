@@ -7,6 +7,7 @@ from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from matplotlib.colors import PowerNorm
 from gammapy.maps import MapAxes, MapAxis, RegionGeom
+from gammapy.visualization.utils import add_colorbar
 from ..core import IRF
 
 __all__ = ["EnergyDispersion2D"]
@@ -215,7 +216,15 @@ class EnergyDispersion2D(IRF):
         ax.legend(loc="upper left")
         return ax
 
-    def plot_bias(self, ax=None, offset=None, add_cbar=False, **kwargs):
+    def plot_bias(
+        self,
+        ax=None,
+        offset=None,
+        add_cbar=False,
+        axes_loc=None,
+        kwargs_colorbar=None,
+        **kwargs,
+    ):
         """Plot migration as a function of true energy for a given offset.
 
         Parameters
@@ -226,6 +235,10 @@ class EnergyDispersion2D(IRF):
             Offset. Default is None.
         add_cbar : bool, optional
             Add a colorbar to the plot. Default is False.
+        axes_loc : dict, optional
+            Keyword arguments passed to `~mpl_toolkits.axes_grid1.axes_divider.AxesDivider.append_axes`.
+        kwargs_colorbar : dict, optional
+            Keyword arguments passed to `~matplotlib.pyplot.colorbar`.
         kwargs : dict
             Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
 
@@ -236,6 +249,8 @@ class EnergyDispersion2D(IRF):
         """
         kwargs.setdefault("cmap", "GnBu")
         kwargs.setdefault("norm", PowerNorm(gamma=0.5))
+
+        kwargs_colorbar = kwargs_colorbar or {}
 
         ax = plt.gca() if ax is None else ax
 
@@ -259,7 +274,8 @@ class EnergyDispersion2D(IRF):
 
         if add_cbar:
             label = "Probability density [A.U]."
-            ax.figure.colorbar(caxes, ax=ax, label=label)
+            kwargs_colorbar.setdefault("label", label)
+            add_colorbar(caxes, ax=ax, axes_loc=axes_loc, **kwargs_colorbar)
 
         return ax
 

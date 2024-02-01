@@ -9,6 +9,7 @@ from matplotlib.colors import PowerNorm
 from gammapy.maps import MapAxis
 from gammapy.maps.axes import UNIT_STRING_FORMAT
 from gammapy.utils.scripts import make_path
+from gammapy.visualization.utils import add_colorbar
 from ..core import IRF
 
 __all__ = ["EDispKernel"]
@@ -515,7 +516,9 @@ class EDispKernel(IRF):
 
         return var / norm
 
-    def plot_matrix(self, ax=None, add_cbar=False, **kwargs):
+    def plot_matrix(
+        self, ax=None, add_cbar=False, axes_loc=None, kwargs_colorbar=None, **kwargs
+    ):
         """Plot PDF matrix.
 
         Parameters
@@ -524,6 +527,12 @@ class EDispKernel(IRF):
             Matplotlib axes. Default is None.
         add_cbar : bool, optional
             Add a colorbar to the plot. Default is False.
+        axes_loc : dict, optional
+            Keyword arguments passed to `~mpl_toolkits.axes_grid1.axes_divider.AxesDivider.append_axes`.
+        kwargs_colorbar : dict, optional
+            Keyword arguments passed to `~matplotlib.pyplot.colorbar`.
+        kwargs : dict
+            Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
 
         Returns
         -------
@@ -533,6 +542,8 @@ class EDispKernel(IRF):
         kwargs.setdefault("cmap", "GnBu")
         norm = PowerNorm(gamma=0.5, vmin=0, vmax=1)
         kwargs.setdefault("norm", norm)
+
+        kwargs_colorbar = kwargs_colorbar or {}
 
         ax = plt.gca() if ax is None else ax
 
@@ -546,7 +557,8 @@ class EDispKernel(IRF):
 
         if add_cbar:
             label = "Probability density (A.U.)"
-            ax.figure.colorbar(caxes, ax=ax, label=label)
+            kwargs_colorbar.setdefault("label", label)
+            add_colorbar(caxes, ax=ax, axes_loc=axes_loc, **kwargs_colorbar)
 
         energy_axis_true.format_plot_xaxis(ax=ax)
         energy_axis.format_plot_yaxis(ax=ax)

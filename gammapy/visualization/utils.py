@@ -5,9 +5,12 @@ from scipy.interpolate import CubicSpline
 from scipy.optimize import curve_fit
 from scipy.stats import norm
 from astropy.visualization import make_lupton_rgb
+import matplotlib.axes as maxes
 import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 __all__ = [
+    "add_colorbar",
     "plot_contour_line",
     "plot_map_rgb",
     "plot_theta_squared_table",
@@ -24,6 +27,65 @@ ARTIST_TO_LINE_PROPERTIES = {
     "linewidth": "markerwidth",
     "lw": "markerwidth",
 }
+
+
+def add_colorbar(img, ax, axes_loc=None, **kwargs):
+    """
+    Add colorbar to a given axis.
+
+    Parameters
+    ----------
+    img : `~matplotlib.image.AxesImage`
+        The image to plot the colorbar for.
+    ax : `~matplotlib.axes.Axes`
+        Matplotlib axes.
+    axes_loc : dict, optional
+        Keyword arguments passed to `~mpl_toolkits.axes_grid1.axes_divider.AxesDivider.append_axes`.
+    kwargs : dict, optional
+        Keyword arguments passed to `~matplotlib.pyplot.colorbar`.
+
+    Returns
+    -------
+    cbar : `~matplotlib.pyplot.colorbar`
+        The colorbar.
+
+    Examples
+    --------
+    ::
+
+        from gammapy.maps import Map
+        from gammapy.visualization import add_colorbar
+        import matplotlib.pyplot as plt
+        map_ = Map.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
+        axes_loc = {"position": "right", "size": "2%", "pad": "10%"}
+        kwargs_colorbar = {'label':'Colorbar label'}
+
+        # Example outside gammapy
+        fig = plt.figure(figsize=(6, 3))
+        ax = fig.add_subplot(111)
+        img = ax.imshow(map_.sum_over_axes().data[0,:,:])
+        add_colorbar(img, ax=ax, axes_loc=axes_loc, **kwargs_colorbar)
+
+        # `add_colorbar` is available for the `plot` function here:
+        fig = plt.figure(figsize=(6, 3))
+        ax = fig.add_subplot(111)
+        map_.sum_over_axes().plot(ax=ax, add_cbar=True, axes_loc=axes_loc,
+                                  kwargs_colorbar=kwargs_colorbar)
+
+    """
+    kwargs.setdefault("use_gridspec", True)
+    kwargs.setdefault("orientation", "vertical")
+
+    axes_loc = axes_loc or {}
+    axes_loc.setdefault("position", "right")
+    axes_loc.setdefault("size", "5%")
+    axes_loc.setdefault("pad", "2%")
+    axes_loc.setdefault("axes_class", maxes.Axes)
+
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes(**axes_loc)
+    cbar = plt.colorbar(img, cax=cax, **kwargs)
+    return cbar
 
 
 def plot_map_rgb(map_, ax=None, **kwargs):
@@ -46,7 +108,7 @@ def plot_map_rgb(map_, ax=None, **kwargs):
     Returns
     -------
     ax : `~astropy.visualization.wcsaxes.WCSAxes`
-        WCS axis object
+        WCS axis object.
 
     Examples
     --------
@@ -85,7 +147,7 @@ def plot_map_rgb(map_, ax=None, **kwargs):
 
 
 def plot_contour_line(ax, x, y, **kwargs):
-    """Plot smooth curve from contour points"""
+    """Plot smooth curve from contour points."""
     xf = x
     yf = y
 
@@ -120,7 +182,7 @@ def plot_contour_line(ax, x, y, **kwargs):
 
 
 def plot_theta_squared_table(table):
-    """Plot the theta2 distribution of counts, excess and signifiance.
+    """Plot the theta2 distribution of counts, excess and significance.
 
     Take the table containing the ON counts, the OFF counts, the acceptance,
     the off acceptance and the alpha (normalisation between ON and OFF)
@@ -200,7 +262,7 @@ def plot_distribution(
 
     Parameters
     ----------
-    wcs_map : an instance of `~gammapy.maps.WcsNDMap`
+    wcs_map : `~gammapy.maps.WcsNDMap`
         A map that contains data to be plotted.
     ax : `~matplotlib.axes.Axes` or list of `~matplotlib.axes.Axes`
         Axis object to plot on. If a list of Axis is provided it has to be the same length as the length of _map.data.

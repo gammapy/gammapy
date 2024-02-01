@@ -295,7 +295,7 @@ background = (
 )
 
 fig, (ax1, ax2) = plt.subplots(
-    figsize=(11, 5), ncols=2, subplot_kw={"projection": counts.geom.wcs}
+    figsize=(11, 4), ncols=2, subplot_kw={"projection": counts.geom.wcs}
 )
 
 counts.plot(ax=ax1, add_cbar=True)
@@ -319,7 +319,7 @@ npred_excess = estimator_results.npred_excess
 sqrt_ts = estimator_results.sqrt_ts
 
 fig, (ax1, ax2) = plt.subplots(
-    figsize=(11, 5), ncols=2, subplot_kw={"projection": npred_excess.geom.wcs}
+    figsize=(11, 4), ncols=2, subplot_kw={"projection": npred_excess.geom.wcs}
 )
 
 npred_excess.plot(ax=ax1, add_cbar=True)
