@@ -48,7 +48,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Dispatch Gammapy Docs
-        uses: peter-evans/repository-dispatch@v2
+        uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.REMOTE_DISPATCH }}
           repository: gammapy/gammapy-docs
@@ -61,7 +61,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Dispatch Gammapy Webpage
-        uses: peter-evans/repository-dispatch@v2
+        uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.REMOTE_DISPATCH }}
           repository: gammapy/gammapy-webpage
