@@ -314,6 +314,7 @@ e_min, e_max = dataset_cta.energy_range
 e_min.plot(add_cbar=True)
 plt.show()
 
+# %%
 # To see the high energy threshold at each point
 
 e_max.plot(add_cbar=True)

@@ -137,6 +137,7 @@ for obs in grouped_observations["group_high_zenith"]:
 ax.set_ylabel("Muon efficiency")
 ax.set_xlabel("Zenith angle (deg)")
 ax.axvline(median_zenith.value, ls="--", color="black")
+plt.show()
 
 
 ######################################################################
@@ -225,6 +226,7 @@ ax.plot(
     label="Group 2",
 )
 ax.legend()
+plt.show()
 
 
 ######################################################################

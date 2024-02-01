@@ -276,6 +276,8 @@ plt.show()
 irfs["psf"].peek()
 plt.show()
 
+
+# %%
 # This is how for analysis you could slice out the PSF
 # at a given field of view offset
 irfs["psf"].plot_containment_radius_vs_energy(
