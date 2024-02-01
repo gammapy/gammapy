@@ -2123,7 +2123,7 @@ class MapDataset(Dataset):
         energy_axis = self._geom.axes["energy"].squash()
         return self.resample_energy_axis(energy_axis=energy_axis, name=name)
 
-    def peek(self, figsize=(12, 10)):
+    def peek(self, figsize=(12, 8)):
         """Quick-look summary plots.
 
         Parameters
@@ -2142,7 +2142,7 @@ class MapDataset(Dataset):
             nrows=2,
             subplot_kw={"projection": self._geom.wcs},
             figsize=figsize,
-            gridspec_kw={"hspace": 0.1, "wspace": 0.1},
+            gridspec_kw={"hspace": 0.25, "wspace": 0.1},
         )
 
         axes = axes.flat
