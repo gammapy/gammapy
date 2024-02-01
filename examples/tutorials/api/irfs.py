@@ -281,7 +281,8 @@ exposure_map = make_map_exposure_true_energy(
     pointing=pointing, livetime="42 h", aeff=aeff_3d, geom=geom
 )
 
-exposure_map.plot_grid(add_cbar=True)
+exposure_map.plot_grid(add_cbar=True, figsize=(17, 7))
+plt.show()
 
 
 ######################################################################
