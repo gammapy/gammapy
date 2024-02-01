@@ -80,7 +80,7 @@ class ObservationMetaData(MetaData):
 
     @classmethod
     def from_header(cls, header, format="gadf"):
-        meta = super(ObservationMetaData, cls).from_header(header, format)
+        meta = super().from_header(header, format)
 
         meta.creation = CreatorMetaData()
         # Include additional gadf keywords not specified as ObservationMetaData attributes
@@ -128,7 +128,7 @@ class GTIMetaData(MetaData):
     reference_time: Optional[TimeType] = None
 
     def from_header(cls, header, format="gadf"):
-        meta = super(GTIMetaData, cls).from_header(header, format)
+        meta = super().from_header(header, format)
 
         return meta
 
@@ -147,7 +147,7 @@ class EventListMetaData(MetaData):
 
     @classmethod
     def from_header(cls, header, format="gadf"):
-        meta = super(EventListMetaData, cls).from_header(header, format)
+        meta = super().from_header(header, format)
 
         # Include additional gadf keywords
         optional_keywords = [
