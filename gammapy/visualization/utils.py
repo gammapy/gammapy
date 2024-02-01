@@ -5,6 +5,7 @@ from scipy.interpolate import CubicSpline
 from scipy.optimize import curve_fit
 from scipy.stats import norm
 from astropy.visualization import make_lupton_rgb
+import matplotlib.axes as maxes
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
@@ -79,6 +80,7 @@ def add_colorbar(img, ax, axes_loc=None, **kwargs):
     axes_loc.setdefault("position", "right")
     axes_loc.setdefault("size", "5%")
     axes_loc.setdefault("pad", "2%")
+    axes_loc.setdefault("axes_class", maxes.Axes)
 
     divider = make_axes_locatable(ax)
     cax = divider.append_axes(**axes_loc)
