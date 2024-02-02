@@ -32,7 +32,7 @@ def test_mapdataset_metadata():
     assert meta.obs_info.observation_mode == "wobble"
     assert_allclose(meta.pointing.radec_mean.dec.value, 22.0147)
     assert_allclose(meta.pointing.radec_mean.ra.deg, 83.6287)
-    assert meta.obs_info.obs_id == "112"
+    assert meta.obs_info.obs_id == 112
     assert meta.optional["other"] is True
     assert meta.creation.creator.split()[0] == "Gammapy"
     assert meta.event_type is None
@@ -80,8 +80,8 @@ def test_mapdataset_metadata_lists():
     assert meta.obs_info[0].observation_mode == "wobble"
     assert_allclose(meta.pointing[0].radec_mean.dec.value, 22.0147)
     assert_allclose(meta.pointing[1].radec_mean.ra.deg, 83.1287)
-    assert meta.obs_info[0].obs_id == "111"
-    assert meta.obs_info[1].obs_id == "112"
+    assert meta.obs_info[0].obs_id == 111
+    assert meta.obs_info[1].obs_id == 112
     assert meta.optional is None
     assert meta.event_type is None
 
@@ -128,4 +128,4 @@ def test_to_header():
     meta1 = MapDatasetMetaData(**input1)
     hdr = meta1.to_header()
     assert hdr["OBS_INFO"]["instrument"] == "H.E.S.S."
-    assert hdr["OBS_INFO"]["obs_id"] == "111"
+    assert hdr["OBS_INFO"]["obs_id"] == 111

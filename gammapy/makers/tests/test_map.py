@@ -242,7 +242,7 @@ def test_make_meta_table(observations):
     meta = maker_obs._make_metadata(map_dataset_meta_table)
     assert meta.obs_info[0].observation_mode == "POINTING"
     assert meta.obs_info[0].telescope == "CTA"
-    assert meta.obs_info[0].obs_id == "110380"
+    assert meta.obs_info[0].obs_id == 110380
     assert_allclose(meta.pointing[0].radec_mean.dec.value, -29.6075)
 
 
@@ -553,11 +553,11 @@ def test_meta_data_creation(observations):
     dataset0 = maker.run(reference, observations[0])
     dataset1 = maker.run(reference, observations[1])
 
-    assert dataset0.meta.obs_info[0].obs_id == "110380"
-    assert dataset1.meta.obs_info[0].obs_id == "111140"
+    assert dataset0.meta.obs_info[0].obs_id == 110380
+    assert dataset1.meta.obs_info[0].obs_id == 111140
 
     # test stacking
     dataset0.stack(dataset1)
     stacked_meta = MapDatasetMetaData._from_meta_table(dataset0.meta_table)
-    assert stacked_meta.obs_info[0].obs_id == "110380"
-    assert stacked_meta.obs_info[1].obs_id == "111140"
+    assert stacked_meta.obs_info[0].obs_id == 110380
+    assert stacked_meta.obs_info[1].obs_id == 111140
