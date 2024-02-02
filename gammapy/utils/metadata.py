@@ -91,7 +91,7 @@ class MetaData(BaseModel):
 
         for key, item in fits_export_keys.items():
             value = self.model_dump().get(key)
-            if not isinstance(item, str):
+            if not isinstance(item, str) and value is not None:
                 # Not a one to one conversion
                 hdr_dict.update(item["output"](value))
             else:
