@@ -13,6 +13,7 @@ from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from gammapy.maps import MapAxis, MapCoord, RegionGeom, WcsNDMap
 from gammapy.maps.axes import UNIT_STRING_FORMAT
+from gammapy.utils.deprecation import deprecated
 from gammapy.utils.fits import earth_location_from_dict
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
@@ -139,6 +140,10 @@ class EventList:
 
         return fits.BinTableHDU(self.table, name="EVENTS")
 
+    @deprecated(
+        since="v1.2",
+        message="To write an EventList utilise Observation.write() with include_irfs=False",
+    )
     def write(self, filename, gti=None, overwrite=False, format="gadf", checksum=False):
         """Write the event list to a FITS file.
 

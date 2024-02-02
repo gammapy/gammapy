@@ -408,7 +408,7 @@ plt.show()
 #
 # The event sampler can also work with a template model. Here we use the
 # interstellar emission model map of the Fermi 3FHL, which can be found in
-# the GAMMAPY data repository.
+# the `$GAMMAPY_DATA` repository.
 #
 # We proceed following the same steps showed above and we finally have a
 # look at the event’s properties:
@@ -434,7 +434,7 @@ models_diffuse.write(file_model, overwrite=True)
 dataset.models = models_diffuse
 print(dataset.models)
 
-""
+
 # %%time
 sampler = MapDatasetEventSampler(random_state=0)
 events = sampler.run(dataset, observation)
