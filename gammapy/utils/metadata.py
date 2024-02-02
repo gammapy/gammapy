@@ -1,11 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Metadata base container for Gammapy."""
 import json
-from typing import ClassVar, Literal, Optional
+from typing import ClassVar, Literal, Optional, get_args
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
 import yaml
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 from gammapy.utils.fits import skycoord_from_dict
 from gammapy.version import version
 from .types import AltAzSkyCoordType, ICRSSkyCoordType, SkyCoordType, TimeType
@@ -84,8 +84,8 @@ class MetaData(BaseModel):
         header : dict
             The header dictionary.
         """
-        # if format != "gadf":
-        #     raise ValueError(f"Metadata to header: format {format} is not supported.")
+        if format != "gadf":
+            raise ValueError(f"Metadata to header: format {format} is not supported.")
 
         hdr_dict = {}
 
@@ -127,8 +127,8 @@ class MetaData(BaseModel):
 
         ToDo: add the storage of optional metadata
         """
-        # if format != "gadf":
-        #     raise ValueError(f"Metadata from header: format {format} is not supported.")
+        if format != "gadf":
+            raise ValueError(f"Metadata from header: format {format} is not supported.")
 
         fits_export_keys = METADATA_FITS_KEYS.get(cls._tag)
 
