@@ -459,7 +459,7 @@ def test_flux_map_iter_by_axis():
 
 
 def test_slice_by_coord():
-    axis1 = MapAxis.from_energy_edges((0.1, 1.0, 10.0), unit="TeV")
+    axis1 = MapAxis.from_energy_edges((0.1, 1.0, 5.0, 10.0), unit="TeV")
     axis2 = TimeMapAxis.from_time_bounds(
         Time(51544, format="mjd"), Time(51548, format="mjd"), 3
     )
@@ -490,3 +490,9 @@ def test_slice_by_coord():
 
     sliced_map2 = ref_map.slice_by_coord({"energy": slice(0.5 * u.TeV, 5.0 * u.TeV)})
     assert sliced_map2.geom.axes["energy"].nbin == 1
+
+    sliced_map3 = ref_map.slice_by_coord({"energy": slice(1.0 * u.TeV, 10.0 * u.TeV)})
+    assert sliced_map3.geom.axes["energy"].nbin == 2
+
+    sliced_map4 = ref_map.slice_by_coord({"time": slice(1 * u.d, 3 * u.d)})
+    assert sliced_map4.geom.axes["time"].nbin == 1
