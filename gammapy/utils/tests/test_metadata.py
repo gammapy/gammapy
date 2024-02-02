@@ -147,6 +147,9 @@ def test_pointing_info_to_header():
     assert_allclose(header["RA_PNT"], 83.6287)
     assert_allclose(header["AZ_PNT"], 20.0)
 
+    header = PointingInfoMetaData(radec_mean=position).to_header("gadf")
+    assert "AZ_PNT" not in header.keys()
+
     with pytest.raises(ValueError):
         PointingInfoMetaData(radec_mean=position, altaz_mean=altaz).to_header("bad")
 
@@ -159,7 +162,7 @@ def test_pointing_info_from_header(hess_eventlist_header):
     assert_allclose(meta.altaz_mean.alt.deg, 41.389789)
 
 
-def test_taget_metadata():
+def test_target_metadata():
     meta = TargetMetaData(
         name="center", position=SkyCoord(0.0, 0.0, unit="deg", frame="galactic")
     )
@@ -170,6 +173,10 @@ def test_taget_metadata():
 
     assert header["OBJECT"] == "center"
     assert_allclose(header["RA_OBJ"], 266.404988)
+
+    header = TargetMetaData(name="center").to_header("gadf")
+    assert header["OBJECT"] == "center"
+    assert "RA_OBJ" not in header.keys()
 
 
 @requires_data()
