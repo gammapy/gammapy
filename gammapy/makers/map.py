@@ -364,7 +364,7 @@ class MapDatasetMaker(Maker):
 
     @staticmethod
     def _make_metadata(table):
-        return MapDatasetMetaData.from_meta_table(table)
+        return MapDatasetMetaData._from_meta_table(table)
 
     def run(self, dataset, observation):
         """Make map dataset.

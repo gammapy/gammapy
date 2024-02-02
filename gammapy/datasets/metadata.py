@@ -6,6 +6,7 @@ from gammapy.utils.metadata import (
     METADATA_FITS_KEYS,
     CreatorMetaData,
     MetaData,
+    ObsInfoMetaData,
     PointingInfoMetaData,
 )
 
@@ -14,13 +15,9 @@ __all__ = ["MapDatasetMetaData"]
 MapDataset_METADATA_FITS_KEYS = {
     "MapDataset": {
         "creation": "CREATION",
-        "instrument": "INSTRUM",
-        "telescope": "TELESCOP",
-        "observation_mode": "OBS_MODE",
-        "pointing": "POINTING",
-        "obs_id": "OBS_ID",
         "event_types": "EVT_TYPE",
         "optional": "OPTIONAL",
+        "pointing": "POINTING",
     },
 }
 
@@ -28,24 +25,18 @@ METADATA_FITS_KEYS.update(MapDataset_METADATA_FITS_KEYS)
 
 
 class MapDatasetMetaData(MetaData):
-    """Metadata containing information about the GTI.
+    """Metadata containing information about the Dataset.
 
     Parameters
     ----------
     creation : `~gammapy.utils.CreatorMetaData`, optional
          The creation metadata.
-    instrument : str
-        the instrument used during observation.
-    telescope : str
-        The specific telescope subarray.
-    observation_mode : str
-        observing mode.
-    pointing : ~astropy.coordinates.SkyCoord
-        Telescope pointing direction.
-    obs_id : int
-        Observation id in the dataset.
-    event_types : int
+    obs_info : list of `~gammapy.utils.ObsInfoMetaData`
+        info about the observation.
+    event_types : list of int or str
         Event types used in analysis.
+    pointing: list of `~gammapy.utils.PointingInfoMetaData`
+        Telescope pointing directions.
     optional : dict
         Additional optional metadata.
     """
@@ -54,21 +45,18 @@ class MapDatasetMetaData(MetaData):
 
     _tag: ClassVar[Literal["MapDataset"]] = "MapDataset"
     creation: Optional[CreatorMetaData] = CreatorMetaData()
-    instrument: Optional[Union[str, list[str]]] = None
-    telescope: Optional[Union[str, list[str]]] = None
-    observation_mode: Optional[Union[str, list]] = None
+    obs_info: Optional[Union[ObsInfoMetaData, list[ObsInfoMetaData]]] = None
     pointing: Optional[Union[PointingInfoMetaData, list[PointingInfoMetaData]]] = None
-    obs_id: Optional[Union[str, list[str]]] = None
     event_type: Optional[Union[str, list[str]]] = None
     optional: Optional[dict] = None
 
     def stack(self, other):
         kwargs = {}
-        kwargs["creation"] = CreatorMetaData()
+        kwargs["creation"] = self.creation
         return self.__class__(**kwargs)
 
     @classmethod
-    def from_meta_table(cls, table):
+    def _from_meta_table(cls, table):
         """Create MapDatasetMetaData from MapDataset.meta_table
 
         Parameters
@@ -78,12 +66,22 @@ class MapDatasetMetaData(MetaData):
         """
         kwargs = {}
         kwargs["creation"] = CreatorMetaData()
-        if "TELESCOP" in table.colnames:
-            kwargs["telescope"] = table["TELESCOP"].data[0]
-        if "OBS_ID" in table.colnames:
-            kwargs["obs_id"] = table["OBS_ID"].data[0].astype(str)
-        if "OBS_MODE" in table.colnames:
-            kwargs["observation_mode"] = table["OBS_MODE"].data[0]
+        telescope = np.atleast_1d(table["TELESCOP"].data[0])
+        obs_id = np.atleast_1d(table["OBS_ID"].data[0].astype(str))
+        observation_mode = np.atleast_1d(table["OBS_MODE"].data[0])
+
+        obs_info = []
+        for i in range(len(obs_id)):
+            obs_meta = ObsInfoMetaData(
+                **{
+                    "telescope": telescope[i],
+                    "obs_id": obs_id[i],
+                    "observation_mode": observation_mode[i],
+                }
+            )
+            obs_info.append(obs_meta)
+        kwargs["obs_info"] = obs_info
+
         pointing_radec, pointing_altaz = None, None
         if "RA_PNT" in table.colnames:
             pointing_radec = SkyCoord(
@@ -100,6 +98,6 @@ class MapDatasetMetaData(MetaData):
         for pra, paz in zip(
             np.atleast_1d(pointing_radec), np.atleast_1d(pointing_altaz)
         ):
-            pointings = PointingInfoMetaData(radec_mean=pra, altaz_mean=paz)
+            pointings.append(PointingInfoMetaData(radec_mean=pra, altaz_mean=paz))
         kwargs["pointing"] = pointings
         return cls(**kwargs)
