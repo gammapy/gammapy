@@ -38,7 +38,7 @@ its IRFs are based on HESS data of the Crab Nebula (similar to
 that we can control the input and check the correctness of the fit
 results.
 
-The tutorial addresses two examples:
+The tutorial addresses three examples:
 
 1. Including prior information about the sources index
 2. Encouraging positive amplitude values
@@ -417,17 +417,16 @@ plt.show()
 # To add a use case specfific prior one has to create a prior subclass
 # containing:
 #
-# - a tag used for the serialization
+# - a tag and a _type used for the serialization
 # - an instantiation of each PriorParameter with their unit and default values
 # - the evaluate function where the mathematical expression for the prior
 #    is defined.
 # As an example for a custom prior a Jeffrey prior for a scale parameter is chosen.
 # The only parameter is ``sigma`` and the evaluation method return the quared inverse of ``sigma``.
-#
 
 
 from gammapy.modeling import PriorParameter
-from gammapy.modeling.models import Prior
+from gammapy.modeling.models import Model, Prior
 
 
 class MyCustomPrior(Prior):
@@ -446,8 +445,29 @@ class MyCustomPrior(Prior):
 
     tag = ["MyCustomPrior"]
     sigma = PriorParameter(name="sigma", value=1, unit="")
+    _type = "prior"
 
     @staticmethod
     def evaluate(value, sigma):
         """Evaluate the costom prior."""
-        return 1.0 / sigma**2
+        return value / sigma**2
+
+
+# The custom prior is added to the PRIOR_REGISTRY so that it can be serialised.
+
+from gammapy.modeling.models import PRIOR_REGISTRY
+
+PRIOR_REGISTRY.append(MyCustomPrior)
+
+# The custom prior is set on the index of a powerlaw spectral model and is evaluated.
+costomprior = MyCustomPrior(sigma=0.5)
+pwl = PowerLawSpectralModel()
+pwl.parameters["index"].prior = costomprior
+costomprior(pwl.parameters["index"])
+
+# The power law spectral model can be written into a dictionary.
+# If the a model is read in from this dictionary, the costum prior is still set on the index.
+
+print(pwl.to_dict())
+model_read = Model.from_dict(pwl.to_dict())
+model_read.parameters.prior
