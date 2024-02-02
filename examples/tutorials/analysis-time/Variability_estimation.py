@@ -41,7 +41,6 @@ approach which utilises the change points in Bayesian blocks as indicators of va
 
 import numpy as np
 from astropy.stats import bayesian_blocks
-from astropy.time import Time
 import matplotlib.pyplot as plt
 from gammapy.estimators import FluxPoints
 from gammapy.estimators.utils import (
@@ -49,7 +48,6 @@ from gammapy.estimators.utils import (
     compute_lightcurve_fpp,
     compute_lightcurve_fvar,
 )
-from gammapy.maps import TimeMapAxis
 
 ######################################################################
 # Load the light curve for the PKS 2155-304 flare directly from `$GAMMAPY_DATA/estimators`.
@@ -192,13 +190,32 @@ bayesian_edges = bayesian_blocks(
 ######################################################################
 # We can visualize the difference between the original lightcurve and the rebin with bayesian blocks
 
-edges = Time(bayesian_edges, format="mjd")
-axis_new = TimeMapAxis.from_time_edges(edges[:-1], edges[1:])
-lc_rebin = lc_1d.resample_axis(axis_new)
-ax = lc_1d.plot(label="original")
-lc_rebin.plot(ax=ax, label="rebinned")
-plt.show()
+bayesian_flux = []
+for tmin, tmax in zip(bayesian_edges[:-1], bayesian_edges[1:]):
+    mask = (time >= tmin) & (time <= tmax)
+    bayesian_flux.append(
+        np.average(
+            flux.flatten()[mask], weights=1 / (flux_err.flatten()[mask] ** 2)
+        ).value
+    )
 
+xerr = np.diff(bayesian_edges) / 2
+bayesian_x = bayesian_edges[:-1] + xerr
+
+fig, ax = plt.subplots(
+    figsize=(8, 6),
+    gridspec_kw={"left": 0.16, "bottom": 0.2, "top": 0.98, "right": 0.98},
+)
+plt.plot(time, flux.flatten(), marker="+", linestyle="", color="teal")
+plt.errorbar(
+    bayesian_x,
+    bayesian_flux,
+    xerr=np.diff(bayesian_edges) / 2,
+    linestyle="",
+    color="orange",
+)
+plt.ylim(bottom=0)
+plt.show()
 
 ######################################################################
 # The result giving a significance estimation for variability in the lightcurve is the number of *change points*,
