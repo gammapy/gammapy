@@ -127,5 +127,5 @@ def test_to_header():
     }
     meta1 = MapDatasetMetaData(**input1)
     hdr = meta1.to_header()
-    assert hdr["INSTRUME"] == "H.E.S.S."
-    assert hdr["OBS_ID"] == "111"
+    assert hdr["OBS_INFO"]["instrument"] == "H.E.S.S."
+    assert hdr["OBS_INFO"]["obs_id"] == "111"

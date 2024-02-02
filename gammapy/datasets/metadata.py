@@ -18,6 +18,7 @@ MapDataset_METADATA_FITS_KEYS = {
         "event_types": "EVT_TYPE",
         "optional": "OPTIONAL",
         "pointing": "POINTING",
+        "obs_info": "OBS_INFO",
     },
 }
 
