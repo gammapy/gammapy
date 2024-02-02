@@ -138,12 +138,11 @@ Writing event lists and GTIs to file
 ------------------------------------
 
 To write the events or GTIs separately, one can just save the underlying
-`astropy.table.Table`. There is also a ``write`` method available for
-`~gammapy.data.Observation` which will write the `~gammapy.data.EventList`
-if ``include_irfs`` is set to ``False``.
-It is usually best to save the events and their associated GTIs together in the
-same FITS file. This can be done using the `~gammapy.data.Observation.write`
-method:
+`astropy.table.Table`. To have an event file written in a correct DL3 format, it is 
+necessary to utilise the  ``write`` method available for`~gammapy.data.Observation`.
+It will write the `~gammapy.data.EventList` and their associated GTIs together in the
+same FITS file according to the format specifications. To avoid writing IRFs along the 
+``EventList`` one has to set ``include_irfs`` to ``False``. See the example below:
 
 .. testcode::
 
