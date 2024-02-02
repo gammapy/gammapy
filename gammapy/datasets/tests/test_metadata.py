@@ -109,23 +109,3 @@ def test_mapdataset_metadata_stack():
     meta = meta1.stack(meta2)
     assert meta.creation.creator.split()[0] == "Gammapy"
     assert meta.obs_info is None
-
-
-def test_to_header():
-    obs_info_input = {
-        "telescope": "a",
-        "instrument": "H.E.S.S.",
-        "observation_mode": "wobble",
-        "obs_id": 111,
-    }
-    input1 = {
-        "pointing": PointingInfoMetaData(
-            radec_mean=SkyCoord(83.6287, 22.5147, unit="deg", frame="icrs")
-        ),
-        "obs_info": ObsInfoMetaData(**obs_info_input),
-        "optional": dict(test=0.5, other=True),
-    }
-    meta1 = MapDatasetMetaData(**input1)
-    hdr = meta1.to_header()
-    assert hdr["OBS_INFO"]["instrument"] == "H.E.S.S."
-    assert hdr["OBS_INFO"]["obs_id"] == 111

@@ -602,6 +602,7 @@ def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
     dataset_new = MapDataset.read(tmp_path / "test.fits")
 
     assert dataset_new.name == "test"
+    assert_allclose(dataset.meta.creation.date.mjd, dataset_new.meta.creation.date.mjd)
 
     assert dataset_new.mask.data.dtype == bool
 

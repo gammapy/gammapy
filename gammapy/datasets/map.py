@@ -1356,6 +1356,7 @@ class MapDataset(Dataset):
 
         header = hdu_primary.header
         header["NAME"] = self.name
+        header.update(self.meta.to_header())
 
         hdulist = fits.HDUList([hdu_primary])
         if self.counts is not None:
@@ -1409,6 +1410,7 @@ class MapDataset(Dataset):
         """
         name = make_name(name)
         kwargs = {"name": name}
+        kwargs["meta"] = MapDatasetMetaData.from_header(hdulist["PRIMARY"].header)
 
         if "COUNTS" in hdulist:
             kwargs["counts"] = Map.from_hdulist(hdulist, hdu="counts", format=format)
@@ -2270,7 +2272,10 @@ class MapDatasetOnOff(MapDataset):
         self.models = models
         self.mask_safe = mask_safe
         self.meta_table = meta_table
-        self._meta = meta
+        if meta is None:
+            self._meta = MapDatasetMetaData()
+        else:
+            self._meta = meta
 
     def __str__(self):
         str_ = super().__str__()
