@@ -147,6 +147,9 @@ def test_pointing_info_to_header():
     assert_allclose(header["RA_PNT"], 83.6287)
     assert_allclose(header["AZ_PNT"], 20.0)
 
+    header = PointingInfoMetaData(radec_mean=position).to_header("gadf")
+    assert "AZ_PNT" not in header.keys()
+
     with pytest.raises(ValueError):
         PointingInfoMetaData(radec_mean=position, altaz_mean=altaz).to_header("bad")
 
