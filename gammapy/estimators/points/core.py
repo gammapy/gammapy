@@ -5,7 +5,6 @@ import numpy as np
 from scipy import stats
 from scipy.interpolate import interp1d
 from scipy.optimize import minimize
-import astropy.units as u
 from astropy.io import fits
 from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
@@ -30,7 +29,12 @@ log = logging.getLogger(__name__)
 
 
 def squash_fluxpoints(flux_point, axis):
-    """Squash a FluxPoints object into one point"""
+    """Squash a FluxPoints object into one point.
+    The log-likelihoods profiles in each bin are summed
+    to compute the resultant quantities. Stat profiles
+    must be present on the fluxpoints object for
+    this method to work.
+    """
 
     value_scan = flux_point.stat_scan.geom.axes["norm"].center
     stat_scan = np.sum(flux_point.stat_scan.data, axis=0).ravel()
@@ -802,8 +806,8 @@ class FluxPoints(FluxMaps):
 
     def resample_axis(self, axis_new):
         """Rebin the flux point object along the new axis.
-        The likelihoods in each bin are combined to compute the
-        resultant quantities.
+        The log-likelihoods profiles in each bin are summed
+        to compute the resultant quantities.
         Stat profiles must be present on the fluxpoints object for
         this method to work.
 
@@ -826,8 +830,8 @@ class FluxPoints(FluxMaps):
         fluxpoints = []
         for edge_min, edge_max in zip(axis_new.edges_min, axis_new.edges_max):
             if isinstance(axis_new, TimeMapAxis):
-                edge_min = edge_min + axis_new.reference_time + 1e-5 * u.s  # TODO: 5003
-                edge_max = edge_max + axis_new.reference_time + 1e-5 * u.s
+                edge_min = edge_min + axis_new.reference_time
+                edge_max = edge_max + axis_new.reference_time
             fp = self.slice_by_coord({axis_new.name: slice(edge_min, edge_max)})
             fp_new = squash_fluxpoints(fp, axis_new)
             fluxpoints.append(fp_new)
