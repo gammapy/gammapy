@@ -196,10 +196,9 @@ class ObsInfoMetaData(MetaData):
         The observation mode.
     """
 
-    model_config = ConfigDict(coerce_numbers_to_str=True)
     _tag: ClassVar[Literal["obs_info"]] = "obs_info"
 
-    obs_id: str
+    obs_id: int
     telescope: Optional[str] = None
     instrument: Optional[str] = None
     sub_array: Optional[str] = None

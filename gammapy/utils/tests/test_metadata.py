@@ -89,10 +89,10 @@ def test_obs_info():
     obs_info = ObsInfoMetaData(obs_id="23523")
 
     assert obs_info.telescope is None
-    assert obs_info.obs_id == "23523"
+    assert obs_info.obs_id == 23523
 
-    obs_info.obs_id = "23523"
-    assert obs_info.obs_id == "23523"
+    obs_info.obs_id = 23523
+    assert obs_info.obs_id == 23523
 
     obs_info.instrument = "CTA-North"
     assert obs_info.instrument == "CTA-North"
@@ -103,7 +103,7 @@ def test_obs_info_from_header(hess_eventlist_header):
     meta = ObsInfoMetaData.from_header(hess_eventlist_header, format="gadf")
 
     assert meta.telescope == "HESS"
-    assert meta.obs_id == "23523"
+    assert meta.obs_id == 23523
     assert meta.observation_mode == "WOBBLE"
     assert meta.sub_array is None
 
@@ -113,7 +113,7 @@ def test_obs_info_to_header():
 
     header = obs_info.to_header("gadf")
 
-    assert header["OBS_ID"] == "23523"
+    assert header["OBS_ID"] == 23523
     assert header["TELESCOP"] == "CTA-South"
     assert "OBS_MODE" not in header
 
