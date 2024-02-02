@@ -746,9 +746,19 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         format = data.get("format", "table")
         return cls.read(filename, format)
 
-    def to_dict(self, full_output=False, format="table"):
+    def _guess_format(self):
+        if self.is_energy_dependent:
+            format = "map"
+        else:
+            format = "table"
+        log.info("Inferred format: " + format)
+        return format
+
+    def to_dict(self, full_output=False, format=None):
         """Create dictionary for YAML serialisation."""
         data = super().to_dict(full_output)
+        if format is None:
+            format = self._guess_format()
         data["temporal"]["filename"] = self.filename
         data["temporal"]["format"] = format
         data["temporal"]["unit"] = str(self.map.unit)
