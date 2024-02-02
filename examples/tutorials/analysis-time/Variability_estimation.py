@@ -41,6 +41,7 @@ approach which utilises the change points in Bayesian blocks as indicators of va
 
 import numpy as np
 from astropy.stats import bayesian_blocks
+from astropy.time import Time
 import matplotlib.pyplot as plt
 from gammapy.estimators import FluxPoints
 from gammapy.estimators.utils import (
@@ -48,6 +49,7 @@ from gammapy.estimators.utils import (
     compute_lightcurve_fpp,
     compute_lightcurve_fvar,
 )
+from gammapy.maps import TimeMapAxis
 
 ######################################################################
 # Load the light curve for the PKS 2155-304 flare directly from `$GAMMAPY_DATA/estimators`.
@@ -203,7 +205,7 @@ print(ncp)
 axis_original = lc_1d.geom.axes["time"]
 bayesian_edges[0] = axis_original.time_edges[0].value
 bayesian_edges[-1] = axis_original.time_edges[-1].value
-edges = Time(bayesian_edges, format="mjd", scale=axis.reference_time.scale)
+edges = Time(bayesian_edges, format="mjd", scale=axis_original.reference_time.scale)
 axis_new = TimeMapAxis.from_time_edges(edges[:-1], edges[1:])
 
 # rebin the lightcurve
