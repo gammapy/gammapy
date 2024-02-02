@@ -504,6 +504,7 @@ def test_model_scale():
             t_ref=50003.2503033 * u.d, sigma="2.43 day", scale="ms"
         )
 
+
 @requires_data()
 def test_template_temporal_model_format():
     temporal_model = LightCurveTemplateTemporalModel.read(
