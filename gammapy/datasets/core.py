@@ -379,7 +379,7 @@ class Datasets(collections.abc.MutableSequence):
         return copy.deepcopy(self)
 
     @classmethod
-    def read(cls, filename, filename_models=None, lazy=True, cache=True):
+    def read(cls, filename, filename_models=None, lazy=True, cache=True, checksum=True):
         """De-serialize datasets from YAML and FITS files.
 
         Parameters
@@ -460,7 +460,7 @@ class Datasets(collections.abc.MutableSequence):
         if path.exists() and not overwrite:
             raise IOError(f"File exists already: {path}")
 
-        write_yaml(data, path, sort_keys=False)
+        write_yaml(data, path, sort_keys=False, checksum=checksum)
 
         if filename_models:
             self.models.write(

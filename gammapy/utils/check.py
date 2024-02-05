@@ -46,9 +46,9 @@ def add_checksum(yaml_str, sort_keys=False, indent=4, width=50):
     checksum = {"checksum": yaml_checksum(yaml_str)}
     checksum = yaml.dump(
         checksum,
-        sort_keys=sort_keys,
-        indent=indent,
-        width=width,
+        sort_keys=True,
+        indent=4,  # indent,
+        width=80,  # width,
         default_flow_style=False,
     )
     return yaml_str + checksum
