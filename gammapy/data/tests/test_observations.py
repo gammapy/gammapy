@@ -410,17 +410,27 @@ def test_observation_write(tmp_path):
 
 
 @requires_data()
-def test_observation_write_checksum(tmp_path):
+def test_observation_read_write_checksum(tmp_path):
     obs = Observation.read(
         "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz"
     )
-    path = tmp_path / "obs.fits.gz"
+    path = tmp_path / "obs.fits"
 
     obs.write(path, checksum=True)
-    hdul = fits.open(path)
-    for hdu in hdul:
-        assert "CHECKSUM" in hdu.header
-        assert "DATASUM" in hdu.header
+
+    with fits.open(path) as hdul:
+        for hdu in hdul:
+            assert "CHECKSUM" in hdu.header
+            assert "DATASUM" in hdu.header
+
+    with open(path, "r+b") as file:
+        chunk = file.read(10000)
+        index = chunk.find("EV_CLASS".encode("ascii"))
+        file.seek(index)
+        file.write("BAD__KEY".encode("ascii"))
+
+    with pytest.warns(UserWarning):
+        Observation.read(path, checksum=True)
 
 
 @requires_data()

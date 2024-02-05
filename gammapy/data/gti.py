@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import copy
 import html
+import warnings
 from operator import le, lt
 import numpy as np
 import astropy.units as u
@@ -149,8 +150,9 @@ class GTI:
             gti_hdu = hdulist[hdu]
             if checksum:
                 if gti_hdu.verify_checksum() != 1:
-                    raise UserWarning(
-                        f"Checksum verification failed for HDU {hdu} of {filename}."
+                    warnings.warn(
+                        f"Checksum verification failed for HDU {hdu} of {filename}.",
+                        UserWarning,
                     )
 
             return cls.from_table_hdu(gti_hdu, format=format)

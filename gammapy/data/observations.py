@@ -522,9 +522,9 @@ class Observation:
         """
         from gammapy.irf.io import load_irf_dict_from_file
 
-        events = EventList.read(event_file, checksum)
+        events = EventList.read(event_file, checksum=checksum)
 
-        gti = GTI.read(event_file, checksum)
+        gti = GTI.read(event_file, checksum=checksum)
 
         irf_file = irf_file if irf_file is not None else event_file
         irf_dict = load_irf_dict_from_file(irf_file)
