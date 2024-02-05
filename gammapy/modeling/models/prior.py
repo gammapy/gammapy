@@ -6,6 +6,8 @@ import astropy.units as u
 from gammapy.modeling import PriorParameter, PriorParameters
 from .core import ModelBase
 
+__all__ = ["GaussianPrior", "UniformPrior"]
+
 log = logging.getLogger(__name__)
 
 
