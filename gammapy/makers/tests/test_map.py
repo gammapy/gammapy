@@ -16,7 +16,7 @@ from gammapy.data import (
     Observation,
     ObservationTable,
 )
-from gammapy.datasets import MapDataset
+from gammapy.datasets import MapDataset, MapDatasetMetaData
 from gammapy.datasets.map import RAD_AXIS_DEFAULT
 from gammapy.irf import Background2D, EDispKernelMap, EDispMap, PSFMap
 from gammapy.makers import FoVBackgroundMaker, MapDatasetMaker, SafeMaskMaker
@@ -239,6 +239,12 @@ def test_make_meta_table(observations):
     assert_allclose(map_dataset_meta_table["OBS_ID"], 110380)
     assert map_dataset_meta_table["OBS_MODE"] == "POINTING"
 
+    meta = maker_obs._make_metadata(map_dataset_meta_table)
+    assert meta.obs_info[0].observation_mode == "POINTING"
+    assert meta.obs_info[0].telescope == "CTA"
+    assert meta.obs_info[0].obs_id == 110380
+    assert_allclose(meta.pointing[0].radec_mean.dec.value, -29.6075)
+
 
 @requires_data()
 def test_make_map_no_count(observations):
@@ -442,6 +448,7 @@ def test_minimal_datastore():
     assert_allclose(stacked.exposure.data.sum(), 6.01909e10)
     assert_allclose(stacked.counts.data.sum(), 1446)
     assert_allclose(stacked.background.data.sum(), 1445.9841)
+    assert stacked.meta.creation.creator.split()[0] == "Gammapy"
 
 
 @requires_data()
@@ -537,3 +544,20 @@ def test_make_background_2d(observations):
 
     map_dataset = maker_obs.run(reference, obs)
     assert_allclose(map_dataset.background.data.sum(), 17636.60091226549)
+
+
+@requires_data()
+def test_meta_data_creation(observations):
+    reference = MapDataset.create(geom=geom(ebounds=[0.1, 1, 10]))
+    maker = MapDatasetMaker()
+    dataset0 = maker.run(reference, observations[0])
+    dataset1 = maker.run(reference, observations[1])
+
+    assert dataset0.meta.obs_info[0].obs_id == 110380
+    assert dataset1.meta.obs_info[0].obs_id == 111140
+
+    # test stacking
+    dataset0.stack(dataset1)
+    stacked_meta = MapDatasetMetaData._from_meta_table(dataset0.meta_table)
+    assert stacked_meta.obs_info[0].obs_id == 110380
+    assert stacked_meta.obs_info[1].obs_id == 111140

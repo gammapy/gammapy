@@ -161,6 +161,10 @@ def test_pointing_info_from_header(hess_eventlist_header):
     assert_allclose(meta.radec_mean.ra.deg, 83.633333)
     assert_allclose(meta.altaz_mean.alt.deg, 41.389789)
 
+    meta = PointingInfoMetaData.from_header({})
+    assert meta.altaz_mean is None
+    assert meta.radec_mean is None
+
 
 def test_target_metadata():
     meta = TargetMetaData(

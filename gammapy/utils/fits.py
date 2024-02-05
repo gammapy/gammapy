@@ -2,7 +2,6 @@
 import html
 import logging
 import sys
-import numpy as np
 import astropy.units as u
 from astropy.coordinates import AltAz, Angle, EarthLocation, SkyCoord
 from astropy.io import fits
@@ -194,15 +193,22 @@ def skycoord_from_dict(header, frame="icrs", ext="PNT"):
     ext = "_" + ext if ext != "" else ""
 
     if frame == "altaz":
-        alt = header.get("ALT" + ext, np.nan)
-        az = header.get("AZ" + ext, np.nan)
-        return AltAz(alt=alt * u.deg, az=az * u.deg)
+        alt = header.get("ALT" + ext, None)
+        az = header.get("AZ" + ext, None)
+        return (
+            AltAz(alt=alt * u.deg, az=az * u.deg)
+            if (alt is not None and az is not None)
+            else None
+        )
     elif frame == "icrs":
-        coords = header.get("RA" + ext, np.nan), header.get("DEC" + ext, np.nan)
+        coords = header.get("RA" + ext, None), header.get("DEC" + ext, None)
     elif frame == "galactic":
-        coords = header.get("GLON" + ext, np.nan), header.get("GLAT" + ext, np.nan)
+        coords = header.get("GLON" + ext, None), header.get("GLAT" + ext, None)
     else:
         raise ValueError(
             f"Unsupported frame {frame}. Select in 'icrs', 'galactic', 'altaz'."
         )
-    return SkyCoord(coords[0], coords[1], unit="deg", frame=frame)
+    if coords[0] is not None and coords[1] is not None:
+        return SkyCoord(coords[0], coords[1], unit="deg", frame=frame)
+    else:
+        return None

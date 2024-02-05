@@ -25,6 +25,7 @@ from gammapy.utils.scripts import make_name, make_path
 from gammapy.utils.table import hstack_columns
 from .core import Dataset
 from .evaluator import MapEvaluator
+from .metadata import MapDatasetMetaData
 from .utils import get_axes
 
 __all__ = [
@@ -306,6 +307,8 @@ class MapDataset(Dataset):
     meta_table : `~astropy.table.Table`
         Table listing information on observations used to create the dataset.
         One line per observation for stacked datasets.
+    meta : `~gammapy.datasets.MapDatasetMetaData`
+        Associated meta data container
 
 
     Notes
@@ -390,6 +393,7 @@ class MapDataset(Dataset):
         gti=None,
         meta_table=None,
         name=None,
+        meta=None,
     ):
         self._name = make_name(name)
         self._evaluators = {}
@@ -420,6 +424,18 @@ class MapDataset(Dataset):
         self.gti = gti
         self.models = models
         self.meta_table = meta_table
+        if meta is None:
+            self._meta = MapDatasetMetaData()
+        else:
+            self._meta = meta
+
+    @property
+    def meta(self):
+        return self._meta
+
+    @meta.setter
+    def meta(self, value):
+        self._meta = value
 
     # TODO: keep or remove?
     @property
@@ -1023,6 +1039,9 @@ class MapDataset(Dataset):
         elif other.meta_table:
             self.meta_table = other.meta_table.copy()
 
+        if self.meta and other.meta:
+            self.meta.stack(other.meta)
+
     def stat_array(self):
         """Statistic function value per bin given the current model parameters."""
         return cash(n_on=self.counts.data, mu_on=self.npred().data)
@@ -1337,6 +1356,7 @@ class MapDataset(Dataset):
 
         header = hdu_primary.header
         header["NAME"] = self.name
+        header.update(self.meta.to_header())
 
         hdulist = fits.HDUList([hdu_primary])
         if self.counts is not None:
@@ -1390,6 +1410,7 @@ class MapDataset(Dataset):
         """
         name = make_name(name)
         kwargs = {"name": name}
+        kwargs["meta"] = MapDatasetMetaData.from_header(hdulist["PRIMARY"].header)
 
         if "COUNTS" in hdulist:
             kwargs["counts"] = Map.from_hdulist(hdulist, hdu="counts", format=format)
@@ -2206,6 +2227,8 @@ class MapDatasetOnOff(MapDataset):
         One line per observation for stacked datasets.
     name : str
         Name of the dataset.
+    meta : `~gammapy.datasets.MapDatasetMetaData`
+        Associated meta data container
 
 
     See Also
@@ -2232,6 +2255,7 @@ class MapDatasetOnOff(MapDataset):
         mask_safe=None,
         gti=None,
         meta_table=None,
+        meta=None,
     ):
         self._name = make_name(name)
         self._evaluators = {}
@@ -2248,6 +2272,10 @@ class MapDatasetOnOff(MapDataset):
         self.models = models
         self.mask_safe = mask_safe
         self.meta_table = meta_table
+        if meta is None:
+            self._meta = MapDatasetMetaData()
+        else:
+            self._meta = meta
 
     def __str__(self):
         str_ = super().__str__()
