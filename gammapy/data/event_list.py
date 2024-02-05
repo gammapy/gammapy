@@ -117,8 +117,14 @@ class EventList:
         """
         filename = make_path(filename)
 
-        hdulist = fits.open(filename, checksum=checksum)
-        table = Table(hdulist[hdu])
+        events_hdu = fits.open(filename)[hdu]
+        if checksum:
+            if events_hdu.verify_checksum() != 1:
+                raise UserWarning(
+                    f"Checksum verification failed for HDU {hdu} of {filename}."
+                )
+
+        table = Table.read(events_hdu)
         meta = EventListMetaData.from_header(table.meta)
 
         return cls(table=table, meta=meta)

@@ -502,7 +502,7 @@ class Observation:
         return obs
 
     @classmethod
-    def read(cls, event_file, irf_file=None):
+    def read(cls, event_file, irf_file=None, checksum=False):
         """Create an Observation from a Event List and an (optional) IRF file.
 
         Parameters
@@ -512,6 +512,8 @@ class Observation:
         irf_file : str or `~pathlib.Path`, optional
             Path to the FITS file containing the IRF components. Default is None.
             If None, the IRFs will be read from the event file.
+        checksum : bool
+            If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
 
         Returns
         -------
@@ -520,9 +522,9 @@ class Observation:
         """
         from gammapy.irf.io import load_irf_dict_from_file
 
-        events = EventList.read(event_file)
+        events = EventList.read(event_file, checksum)
 
-        gti = GTI.read(event_file)
+        gti = GTI.read(event_file, checksum)
 
         irf_file = irf_file if irf_file is not None else event_file
         irf_dict = load_irf_dict_from_file(irf_file)

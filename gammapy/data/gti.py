@@ -146,7 +146,14 @@ class GTI:
         """
         filename = make_path(filename)
         with fits.open(str(make_path(filename)), memmap=False) as hdulist:
-            return cls.from_table_hdu(hdulist[hdu], format=format)
+            gti_hdu = hdulist[hdu]
+            if checksum:
+                if gti_hdu.verify_checksum() != 1:
+                    raise UserWarning(
+                        f"Checksum verification failed for HDU {hdu} of {filename}."
+                    )
+
+            return cls.from_table_hdu(gti_hdu, format=format)
 
     @classmethod
     def from_table_hdu(cls, table_hdu, format="gadf"):
