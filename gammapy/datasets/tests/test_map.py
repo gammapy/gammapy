@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import json
+import warnings
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
@@ -1351,6 +1352,10 @@ def test_map_datasets_on_off_checksum(images, tmp_path):
     for hdu in hdul:
         assert "CHECKSUM" in hdu.header
         assert "DATASUM" in hdu.header
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        Datasets.read(tmp_path / "test.yaml", lazy=False)
 
 
 def test_create_onoff(geom):

@@ -3,6 +3,7 @@ import collections.abc
 import copy
 import html
 import logging
+import warnings
 from os.path import split
 import numpy as np
 import astropy.units as u
@@ -12,6 +13,7 @@ import matplotlib.pyplot as plt
 import yaml
 from gammapy.maps import Map, RegionGeom
 from gammapy.modeling import Covariance, Parameter, Parameters
+from gammapy.utils.check import add_checksum, verify_checksum
 from gammapy.utils.metadata import CreatorMetaData
 from gammapy.utils.scripts import make_name, make_path
 
@@ -410,16 +412,32 @@ class DatasetModels(collections.abc.Sequence):
         return [m.name for m in self._models]
 
     @classmethod
-    def read(cls, filename):
-        """Read from YAML file."""
+    def read(cls, filename, checksum=False):
+        """Read from YAML file.
+
+        Parameters
+        ----------
+        filename : str
+            input filename
+        checksum : bool
+            Whether to perform checksum verification. Default is False.
+        """
         yaml_str = make_path(filename).read_text()
         path, filename = split(filename)
-        return cls.from_yaml(yaml_str, path=path)
+        return cls.from_yaml(yaml_str, path=path, checksum=checksum)
 
     @classmethod
-    def from_yaml(cls, yaml_str, path=""):
+    def from_yaml(cls, yaml_str, path="", checksum=False):
         """Create from YAML string."""
         data = yaml.safe_load(yaml_str)
+        checksum_str = data.pop("checksum", None)
+        if checksum:
+            yaml_str = yaml.dump(
+                data, sort_keys=False, indent=4, width=80, default_flow_style=False
+            )
+            if not verify_checksum(yaml_str, checksum_str):
+                warnings.warn("Checksum verification failed.", UserWarning)
+
         # TODO : for now metadata are not kept. Add proper metadata creation.
         data.pop("metadata", None)
         return cls.from_dict(data, path=path)
@@ -468,6 +486,7 @@ class DatasetModels(collections.abc.Sequence):
         full_output=False,
         overwrite_templates=False,
         write_covariance=True,
+        checksum=False,
     ):
         """Write to YAML file.
 
@@ -483,6 +502,9 @@ class DatasetModels(collections.abc.Sequence):
             Overwrite templates FITS files. Default is False.
         write_covariance : bool, optional
             Whether to save the covariance. Default is True.
+        checksum : bool
+            When True adds a CHECKSUM entry to the file.
+            Default is False.
         """
         base_path, _ = split(path)
         path = make_path(path)
@@ -503,7 +525,10 @@ class DatasetModels(collections.abc.Sequence):
             self.write_covariance(base_path / filecovar, **kwargs)
             self._covar_file = filecovar
 
-        path.write_text(self.to_yaml(full_output, overwrite_templates))
+        yaml_str = self.to_yaml(full_output, overwrite_templates)
+        if checksum:
+            yaml_str = add_checksum(yaml_str)
+        path.write_text(yaml_str)
 
     def to_yaml(self, full_output=False, overwrite_templates=False):
         """Convert to YAML string."""

@@ -26,7 +26,7 @@ from gammapy.modeling.models import (
     TemplateNPredModel,
 )
 from gammapy.utils.deprecation import GammapyDeprecationWarning
-from gammapy.utils.scripts import read_yaml, write_yaml
+from gammapy.utils.scripts import make_path, read_yaml, write_yaml
 from gammapy.utils.testing import requires_data, requires_dependency
 
 
@@ -121,6 +121,31 @@ def test_sky_models_io(tmpdir, models):
     # TODO: not sure if we should just round-trip, or if we should
     # check YAML file content (e.g. against a ref file in the repo)
     # or check serialised dict content
+
+
+@requires_data()
+def test_sky_models_checksum(tmpdir, models):
+    import yaml
+
+    models.write(
+        tmpdir / "tmp.yaml", full_output=True, overwrite_templates=False, checksum=True
+    )
+    file = open(tmpdir / "tmp.yaml", "rb")
+    yaml_content = file.read()
+    file.close()
+
+    assert "checksum: " in str(yaml_content)
+
+    data = yaml.safe_load(yaml_content)
+    data["checksum"] = "bad"
+    yaml_str = yaml.dump(
+        data, sort_keys=False, indent=4, width=80, default_flow_style=False
+    )
+    path = make_path(tmpdir) / "bad_checksum.yaml"
+    path.write_text(yaml_str)
+
+    with pytest.warns(UserWarning):
+        Models.read(tmpdir / "bad_checksum.yaml", checksum=True)
 
 
 @requires_data()

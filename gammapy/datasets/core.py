@@ -379,7 +379,7 @@ class Datasets(collections.abc.MutableSequence):
         return copy.deepcopy(self)
 
     @classmethod
-    def read(cls, filename, filename_models=None, lazy=True, cache=True):
+    def read(cls, filename, filename_models=None, lazy=True, cache=True, checksum=True):
         """De-serialize datasets from YAML and FITS files.
 
         Parameters
@@ -392,6 +392,8 @@ class Datasets(collections.abc.MutableSequence):
             Whether to lazy load data into memory. Default is True.
         cache : bool
             Whether to cache the data after loading. Default is True.
+        checksum : bool
+            Whether to perform checksum verification. Default is False.
 
         Returns
         -------
@@ -401,7 +403,7 @@ class Datasets(collections.abc.MutableSequence):
         from . import DATASET_REGISTRY
 
         filename = make_path(filename)
-        data_list = read_yaml(filename)
+        data_list = read_yaml(filename, checksum=checksum)
 
         datasets = []
         for data in data_list["datasets"]:
@@ -417,7 +419,7 @@ class Datasets(collections.abc.MutableSequence):
         datasets = cls(datasets)
 
         if filename_models:
-            datasets.models = Models.read(filename_models)
+            datasets.models = Models.read(filename_models, checksum=checksum)
 
         return datasets
 
@@ -460,13 +462,14 @@ class Datasets(collections.abc.MutableSequence):
         if path.exists() and not overwrite:
             raise IOError(f"File exists already: {path}")
 
-        write_yaml(data, path, sort_keys=False)
+        write_yaml(data, path, sort_keys=False, checksum=checksum)
 
         if filename_models:
             self.models.write(
                 filename_models,
                 overwrite=overwrite,
                 write_covariance=write_covariance,
+                checksum=checksum,
             )
 
     def stack_reduce(self, name=None, nan_to_num=True):
