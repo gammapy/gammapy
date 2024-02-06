@@ -68,7 +68,7 @@ def test_from_header():
     assert meta.creation.origin == "Gammapy v2.3"
     assert meta.target.position == SkyCoord(123.5 * u.deg, -4.8 * u.deg, frame="icrs")
     assert meta.optional is None
-    # assert meta.optional["EPHEM"] == "fermi23.1"
+    # TODO: add for support: assert meta.optional["EPHEM"] == "fermi23.1"
 
 
 @requires_data()
