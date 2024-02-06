@@ -89,7 +89,7 @@ class ObservationMetaData(MetaData):
         format : str
             The header data format. Default is gadf.
         """
-        meta = super(ObservationMetaData, cls).from_header(header, format)
+        meta = super().from_header(header, format)
 
         meta.creation = CreatorMetaData()
         # Include additional gadf keywords not specified as ObservationMetaData attributes
