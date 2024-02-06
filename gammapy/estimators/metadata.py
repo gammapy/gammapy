@@ -71,7 +71,7 @@ class FluxMetaData(MetaData):
     sqrt_ts_threshold_ul: Optional[float] = None
     n_sigma_sensitivity: Optional[float] = None
     target: Optional[TargetMetaData] = None
-    # ToDo: add obs_ids: Optional[List[int]] and instrument: Optional[str], or a List[ObsInfoMetaData]
-    # ToDo : add dataset_names: Optional[List[str]]
+    # TODO: add obs_ids: Optional[List[int]] and instrument: Optional[str], or a List[ObsInfoMetaData]
+    # TODO : add dataset_names: Optional[List[str]]
     creation: Optional[CreatorMetaData] = CreatorMetaData()
     optional: Optional[dict] = None
