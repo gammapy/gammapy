@@ -79,6 +79,7 @@ def test_observation_metadata_from_header(hess_eventlist_header):
 
 @requires_data()
 def test_observation_metadata_bad(hess_eventlist_header):
+    # TODO: adapt with proper format handling
     with pytest.raises(ValueError):
         ObservationMetaData.from_header(hess_eventlist_header, format="bad")
 

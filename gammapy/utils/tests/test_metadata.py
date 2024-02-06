@@ -94,6 +94,9 @@ def test_obs_info():
     obs_info.obs_id = 23523
     assert obs_info.obs_id == 23523
 
+    with pytest.raises(ValidationError):
+        obs_info.obs_id = "ab"
+
     obs_info.instrument = "CTA-North"
     assert obs_info.instrument == "CTA-North"
 

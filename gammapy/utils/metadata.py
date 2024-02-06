@@ -10,7 +10,13 @@ from gammapy.utils.fits import skycoord_from_dict
 from gammapy.version import version
 from .types import AltAzSkyCoordType, ICRSSkyCoordType, SkyCoordType, TimeType
 
-__all__ = ["MetaData", "CreatorMetaData"]
+__all__ = [
+    "MetaData",
+    "CreatorMetaData",
+    "ObsInfoMetaData",
+    "PointingInfoMetaData",
+    "TargetMetaData",
+]
 
 METADATA_FITS_KEYS = {
     "creator": {
@@ -119,6 +125,7 @@ class MetaData(BaseModel):
         format : {'gadf'}
             Header format. Default is 'gadf'.
         """
+        # TODO: implement storage of optional metadata
         if format != "gadf":
             raise ValueError(f"Metadata from header: format {format} is not supported.")
 
@@ -167,8 +174,9 @@ class CreatorMetaData(MetaData):
     ----------
     creator : str
         The software used to create the data contained in the parent object.
+        Default is the used Gammapy version.
     date : `~astropy.time.Time` or str
-        The creation date.
+        The creation date. Default is the current date.
     origin : str
         The organization at the origin of the data.
     """
