@@ -122,7 +122,7 @@ class MetaData(BaseModel):
         ----------
         header : dict
             The header dictionary.
-        format : {'gadf', 'gammapy'}
+        format : {'gadf'}
             Header format. Default is 'gadf'.
 
         ToDo: add the storage of optional metadata
