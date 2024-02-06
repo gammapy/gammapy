@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import math
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
@@ -14,7 +15,7 @@ from . import LightCurveTemplateTemporalModel, Models, SkyModel, TemplateSpatial
 __all__ = ["read_hermes_cube"]
 
 
-def _template_model_from_cta_sdc(filename):
+def _template_model_from_cta_sdc(filename, t_ref=None):
     """To create a `LightCurveTemplateTemporalModel` from the energy-dependent temporal model files of the cta-sdc1.
 
     This format is subject to change.
@@ -35,8 +36,12 @@ def _template_model_from_cta_sdc(filename):
         )
         time_hdu = hdul["TIMES"]
         time_header = time_hdu.header
-        time_header.setdefault("MJDREFF", 0.5)
-        time_header.setdefault("MJDREFI", 55555)
+        if t_ref:
+            time_header.setdefault("MJDREFF", int(math.modf(t_ref)[1]))
+            time_header.setdefault("MJDREFI", math.modf(t_ref)[0])
+        else:
+            time_header.setdefault("MJDREFF", 0.5)
+            time_header.setdefault("MJDREFI", 55555)
         time_header.setdefault("scale", "tt")
         time_min = time_hdu.data["Initial Time"]
         time_max = time_hdu.data["Final Time"]
