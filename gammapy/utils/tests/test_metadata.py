@@ -4,6 +4,7 @@ import pytest
 from numpy.testing import assert_allclose
 from astropy.coordinates import AltAz, SkyCoord
 from astropy.io import fits
+from astropy.time import Time
 from pydantic import ValidationError
 from gammapy.utils.metadata import (
     METADATA_FITS_KEYS,
@@ -12,6 +13,7 @@ from gammapy.utils.metadata import (
     ObsInfoMetaData,
     PointingInfoMetaData,
     TargetMetaData,
+    TimeInfoMetaData,
 )
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import requires_data
@@ -190,6 +192,32 @@ def test_target_metadata():
 def test_target_metadata_from_header(hess_eventlist_header):
     meta = TargetMetaData.from_header(hess_eventlist_header, format="gadf")
 
+    assert meta.name == "Crab Nebula"
+    assert_allclose(meta.position.ra.deg, 83.63333333)
+
+
+def test_time_info_metadata():
+    meta = TimeInfoMetaData(
+        reference_time="2023-01-01 00:00:00",
+        time_start="2024-01-01 00:00:00",
+        time_stop="2024-01-01 12:00:00",
+    )
+
+    assert isinstance(meta.reference_time, Time)
+    delta = meta.time_stop - meta.time_start
+    assert_allclose(delta.to_value("h"), 12)
+
+    header = meta.to_header(format="gadf")
+    assert header["MJDREFI"] == 59945
+    assert header["TIMESYS"] == "tt"
+    assert_allclose(header["TSTART"], 31536000.000000257)
+
+
+@requires_data()
+def test_time_info_metadata_from_header(hess_eventlist_header):
+    meta = TimeInfoMetaData.from_header(hess_eventlist_header, format="gadf")
+
+    print(meta)
     assert meta.name == "Crab Nebula"
     assert_allclose(meta.position.ra.deg, 83.63333333)
 
