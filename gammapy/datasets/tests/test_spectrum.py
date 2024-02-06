@@ -6,6 +6,7 @@ import astropy.units as u
 from astropy.io import fits
 from astropy.table import Table
 from astropy.time import Time
+from astropy.utils.exceptions import AstropyUserWarning
 from gammapy.data import GTI
 from gammapy.datasets import Datasets, SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.irf import EDispKernelMap, EffectiveAreaTable2D
@@ -593,11 +594,24 @@ class TestSpectrumOnOff:
         dataset = self.dataset.copy(name="test")
         dataset.write(tmp_path / "test.fits", format="ogip", checksum=True)
 
-        for file in ["test.fits", "test_arf.fits", "test_rmf.fits", "test_bkg.fits"]:
-            hdul = fits.open(tmp_path / file)
-            for hdu in hdul:
-                assert "CHECKSUM" in hdu.header
-                assert "DATASUM" in hdu.header
+        for name in ["test.fits", "test_arf.fits", "test_rmf.fits", "test_bkg.fits"]:
+            # TODO: this shouldnot emit AstropyUserWarning
+            with fits.open(tmp_path / name, checksum=True) as hdul:
+                for hdu in hdul:
+                    assert "CHECKSUM" in hdu.header
+                    assert "DATASUM" in hdu.header
+
+        def replace_in_fits_header(filename, string):
+            with open(filename, "r+b") as file:
+                chunk = file.read(10000)
+                index = chunk.find(string.encode("ascii"))
+                file.seek(index)
+                file.write("bad".encode("ascii"))
+
+        path = tmp_path / "test.fits"
+        replace_in_fits_header(path, "unknown")
+        with pytest.warns(AstropyUserWarning):
+            SpectrumDatasetOnOff.read(path, checksum=True)
 
     def test_spectrum_dataset_onoff_fits_io(self, tmp_path):
         self.dataset.write(tmp_path / "test.fits", format="gadf")
