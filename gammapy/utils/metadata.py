@@ -124,9 +124,8 @@ class MetaData(BaseModel):
             The header dictionary.
         format : {'gadf'}
             Header format. Default is 'gadf'.
-
-        ToDo: add the storage of optional metadata
         """
+        # TODO: implement storage of optional metadata
         if format != "gadf":
             raise ValueError(f"Metadata from header: format {format} is not supported.")
 
