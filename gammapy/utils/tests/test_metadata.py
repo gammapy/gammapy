@@ -217,9 +217,8 @@ def test_time_info_metadata():
 def test_time_info_metadata_from_header(hess_eventlist_header):
     meta = TimeInfoMetaData.from_header(hess_eventlist_header, format="gadf")
 
-    print(meta)
-    assert meta.name == "Crab Nebula"
-    assert_allclose(meta.position.ra.deg, 83.63333333)
+    assert_allclose(meta.reference_time.mjd, 51910.00074287037)
+    assert_allclose(meta.time_start.mjd, 53343.92234009259)
 
 
 def test_subclass_to_from_header():

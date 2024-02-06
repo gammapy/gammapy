@@ -9,6 +9,7 @@ from gammapy.utils.metadata import (
     ObsInfoMetaData,
     PointingInfoMetaData,
     TargetMetaData,
+    TimeInfoMetaData,
 )
 from gammapy.utils.types import EarthLocationType, TimeType
 
@@ -56,12 +57,6 @@ class ObservationMetaData(MetaData):
         The observatory location.
     deadtime_fraction : float
         The observation deadtime fraction. Default is 0.
-    time_start : `~astropy.time.Time` or str
-        The observation start time.
-    time_stop : `~astropy.time.Time` or str
-        The observation stop time.
-    reference_time : `~astropy.time.Time` or str
-        The observation reference time.
     optional : dict, optional
         Additional optional metadata.
     """
@@ -72,9 +67,7 @@ class ObservationMetaData(MetaData):
     target: Optional[TargetMetaData] = None
     location: Optional[EarthLocationType] = None
     deadtime_fraction: float = Field(0.0, ge=0, le=1.0)
-    time_start: Optional[TimeType] = None
-    time_stop: Optional[TimeType] = None
-    reference_time: Optional[TimeType] = None
+    time_info: Optional[TimeInfoMetaData] = None
     creation: Optional[CreatorMetaData] = None
     optional: Optional[dict] = None
 

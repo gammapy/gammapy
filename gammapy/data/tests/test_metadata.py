@@ -30,12 +30,18 @@ def test_observation_metadata():
         "name": "Crab",
         "position": SkyCoord(83.6287, 22.0147, unit="deg", frame="icrs"),
     }
+    time_info = {
+        "reference_time": "2023-01-01 00:00:00",
+        "time_start": "2024-01-01 00:00:00",
+        "time_stop": "2024-01-01 00:30:00",
+    }
 
     input = {
         "obs_info": ObsInfoMetaData(**obs_info),
         "pointing": PointingInfoMetaData(),
         "location": "cta_north",
         "deadtime_fraction": 0.05,
+        "time_info": time_info,
         "target": TargetMetaData(**target),
         "optional": dict(test=0.5, other=True),
     }
@@ -47,6 +53,7 @@ def test_observation_metadata():
     assert_allclose(meta.location.lon.value, -17.892005)
     assert meta.target.name == "Crab"
     assert_allclose(meta.target.position.ra.deg, 83.6287)
+    assert_allclose(meta.time_info.time_stop.mjd, 60310.020833333)
     assert meta.optional["other"] is True
 
     with pytest.raises(ValidationError):
@@ -71,6 +78,8 @@ def test_observation_metadata_from_header(hess_eventlist_header):
 
     assert meta.obs_info.telescope == "HESS"
     assert_allclose(meta.pointing.altaz_mean.alt.deg, 41.389789)
+    assert_allclose(meta.time_info.time_start.mjd, 53343.92234)
+    assert_allclose(meta.time_info.time_stop.mjd, 53343.941866)
     assert meta.target.name == "Crab Nebula"
     assert_allclose(meta.location.lat.deg, -23.271778)
     assert "TELLIST" in meta.optional

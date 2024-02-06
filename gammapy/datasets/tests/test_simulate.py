@@ -875,8 +875,8 @@ def test_observation_event_sampler(signal_model, tmp_path):
         pointing=pointing,
         gti=GTI.create(time_start, time_stop),
         meta=ObservationMetaData(
-            time_start=time_start,
-            time_stop=time_stop,
+            #       time_start=time_start,
+            #       time_stop=time_stop,
             deadtime_fraction=0.01,
         ),
     )

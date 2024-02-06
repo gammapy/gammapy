@@ -256,17 +256,31 @@ class TimeInfoMetaData(MetaData):
     reference_time: Optional[TimeType] = None
 
     def to_header(self, format="gadf"):
+        if self.reference_time is None:
+            return {}
         result = time_ref_to_dict(self.reference_time)
-        result["TSTART"] = time_relative_to_ref(self.time_start, result).to_value("s")
-        result["TSTOP"] = time_relative_to_ref(self.time_stop, result).to_value("s")
+        if self.time_start is not None:
+            result["TSTART"] = time_relative_to_ref(self.time_start, result).to_value(
+                "s"
+            )
+        if self.time_stop is not None:
+            result["TSTOP"] = time_relative_to_ref(self.time_stop, result).to_value("s")
         return result
 
     @classmethod
     def from_header(cls, header, format="gadf"):
         kwargs = {}
-        kwargs["reference_time"] = time_ref_from_dict(header)
-        kwargs["time_start"] = time_relative_to_ref(header["TSTART"] * u.s, header)
-        kwargs["time_stop"] = time_relative_to_ref(header["TSTOP"] * u.s, header)
+        try:
+            time_ref = time_ref_from_dict(header)
+        except KeyError:
+            return cls()
+
+        kwargs["reference_time"] = time_ref
+        if "TSTART" in header:
+            kwargs["time_start"] = time_ref + header["TSTART"] * u.s
+        if "TSTOP" in header:
+            kwargs["time_stop"] = time_ref + header["TSTOP"] * u.s
+
         return cls(**kwargs)
 
 

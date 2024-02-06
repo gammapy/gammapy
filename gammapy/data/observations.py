@@ -17,7 +17,7 @@ from astropy.utils import lazyproperty
 import matplotlib.pyplot as plt
 from gammapy.utils.deprecation import GammapyDeprecationWarning, deprecated
 from gammapy.utils.fits import LazyFitsData, earth_location_to_dict
-from gammapy.utils.metadata import CreatorMetaData, TargetMetaData
+from gammapy.utils.metadata import CreatorMetaData, TargetMetaData, TimeInfoMetaData
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_to_dict, time_relative_to_ref
@@ -263,12 +263,16 @@ class Observation:
             location=location,
         )
 
-        meta = ObservationMetaData(
-            deadtime_fraction=deadtime_fraction,
-            location=location,
+        time_info = TimeInfoMetaData(
             time_start=gti.time_start[0],
             time_stop=gti.time_stop[-1],
             reference_time=reference_time,
+        )
+
+        meta = ObservationMetaData(
+            deadtime_fraction=deadtime_fraction,
+            location=location,
+            time_info=time_info,
             creation=CreatorMetaData(),
             target=TargetMetaData(),
         )
