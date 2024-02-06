@@ -283,12 +283,12 @@ class SourceCatalog(abc.ABC):
             name_spectral = None
         return name_spectral
 
-    def _get_source_name_key(self):
+    def _get_spectral_table_source_name_key(self):
         return self._source_name_key
 
     @lazyproperty
     def _lookup_spectral_source_idx(self):
-        source_name_key = self._get_source_name_key()
+        source_name_key = self._get_spectral_table_source_name_key()
         names = [_.strip() for _ in self.spectral_table[source_name_key]]
         idx = range(len(names))
         return dict(zip(names, idx))
