@@ -1726,3 +1726,6 @@ class SourceCatalog3PC(SourceCatalog):
             if sky_model is not None:
                 models.append(sky_model)
         return models
+
+    def _get_source_name_key(self):
+        return "NickName"
