@@ -249,7 +249,7 @@ class TimeInfoMetaData(MetaData):
     reference_time : `~astropy.time.Time` or str
         The observation reference time."""
 
-    _tag: ClassVar[Literal["pointing"]] = "time_info"
+    _tag: ClassVar[Literal["time_info"]] = "time_info"
 
     time_start: Optional[TimeType] = None
     time_stop: Optional[TimeType] = None
