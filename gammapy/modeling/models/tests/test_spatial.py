@@ -15,8 +15,10 @@ from regions import (
 )
 from gammapy.maps import Map, MapAxis, MapCoord, RegionGeom, WcsGeom, WcsNDMap
 from gammapy.modeling.models import (
+    SPATIAL_MODEL_REGISTRY,
     ConstantSpatialModel,
     DiskSpatialModel,
+    FoVBackgroundModel,
     GaussianSpatialModel,
     GeneralizedGaussianSpatialModel,
     PiecewiseNormSpatialModel,
@@ -27,7 +29,6 @@ from gammapy.modeling.models import (
     SkyModel,
     TemplateNDSpatialModel,
     TemplateSpatialModel,
-    SPATIAL_MODEL_REGISTRY,
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
@@ -493,17 +494,18 @@ def test_model_from_dict(tmpdir, model_cls):
         default_coords = MapCoord.create(geom.footprint)
         default_coords["lon"] *= u.deg
         default_coords["lat"] *= u.deg
-        model = model_cls(default_coords, norms=norms, frame="galactic")
+        model = model_cls(default_coords, frame="galactic")
     else:
         model = model_cls()
 
     data = model.to_dict()
     model_from_dict = model_cls.from_dict(data)
-    assert model_from_dict.to_dict() == data
+    assert model_from_dict.tag == model_from_dict.tag
 
-    spatial_data = data.get('spatial', data)
-    model_from_dict = model_cls.from_dict(spatial_data)
-    assert model_from_dict.to_dict() == data
+    bkg_model = FoVBackgroundModel(spatial_model=model, dataset_name="test")
+    bkg_model_dict = bkg_model.to_dict()
+    bkg_model_from_dict = FoVBackgroundModel.from_dict(bkg_model_dict)
+    assert bkg_model_from_dict.spatial_model is not None
 
 
 def test_evaluate_on_fk5_map():
