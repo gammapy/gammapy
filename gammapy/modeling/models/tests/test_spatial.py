@@ -27,6 +27,7 @@ from gammapy.modeling.models import (
     SkyModel,
     TemplateNDSpatialModel,
     TemplateSpatialModel,
+    SPATIAL_MODEL_REGISTRY,
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
@@ -478,6 +479,31 @@ def test_sky_diffuse_map_empty(caplog):
             in [_.message for _ in caplog.records]
         )
         assert np.all(np.isfinite(model.map.data))
+
+
+@pytest.mark.parametrize("model_cls", SPATIAL_MODEL_REGISTRY)
+def test_model_from_dict(tmpdir, model_cls):
+    if model_cls in [TemplateSpatialModel, TemplateNDSpatialModel]:
+        default_map = Map.create(map_type="wcs", width=(1, 1), binsz=0.5, unit="sr-1")
+        filename = str(tmpdir / "template.fits")
+        model = model_cls(default_map, filename=filename)
+        model.write()
+    elif model_cls is PiecewiseNormSpatialModel:
+        geom = WcsGeom.create(skydir=(0, 0), npix=(2, 2), binsz=0.3, frame="galactic")
+        default_coords = MapCoord.create(geom.footprint)
+        default_coords["lon"] *= u.deg
+        default_coords["lat"] *= u.deg
+        model = model_cls(default_coords, norms=norms, frame="galactic")
+    else:
+        model = model_cls()
+
+    data = model.to_dict()
+    model_from_dict = model_cls.from_dict(data)
+    assert model_from_dict.to_dict() == data
+
+    spatial_data = data.get('spatial', data)
+    model_from_dict = model_cls.from_dict(spatial_data)
+    assert model_from_dict.to_dict() == data
 
 
 def test_evaluate_on_fk5_map():
