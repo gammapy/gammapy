@@ -8,7 +8,6 @@ from astropy.io import fits
 from astropy.table import Table
 from astropy.time import Time
 from gammapy.data import GTI, DataStore, Observation, ObservationsEventsSampler
-from gammapy.data.metadata import ObservationMetaData
 from gammapy.data.pointing import FixedPointingInfo
 from gammapy.datasets import MapDataset, MapDatasetEventSampler
 from gammapy.datasets.tests.test_map import get_map_dataset
@@ -868,17 +867,14 @@ def test_observation_event_sampler(signal_model, tmp_path):
     time_start = Time("2021-11-20T03:00:00")
     time_stop = Time("2021-11-20T03:30:00")
 
-    obs = Observation(
-        obs_id=1,
-        **irfs,
-        location=LOCATION,
+    obs = Observation.create(
         pointing=pointing,
-        gti=GTI.create(time_start, time_stop),
-        meta=ObservationMetaData(
-            time_start=time_start,
-            time_stop=time_stop,
-            deadtime_fraction=0.01,
-        ),
+        location=LOCATION,
+        obs_id=1,
+        tstart=time_start,
+        tstop=time_stop,
+        irfs=irfs,
+        deadtime_fraction=0.01,
     )
 
     dataset_kwargs = dict(

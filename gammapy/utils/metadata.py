@@ -2,11 +2,17 @@
 """Metadata base container for Gammapy."""
 import json
 from typing import ClassVar, Literal, Optional, get_args
+import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 from gammapy.utils.fits import skycoord_from_dict
+from gammapy.utils.time import (
+    time_ref_from_dict,
+    time_ref_to_dict,
+    time_relative_to_ref,
+)
 from gammapy.version import version
 from .types import AltAzSkyCoordType, ICRSSkyCoordType, SkyCoordType, TimeType
 
@@ -15,6 +21,7 @@ __all__ = [
     "CreatorMetaData",
     "ObsInfoMetaData",
     "PointingInfoMetaData",
+    "TimeInfoMetaData",
     "TargetMetaData",
 ]
 
@@ -228,6 +235,53 @@ class PointingInfoMetaData(MetaData):
 
     radec_mean: Optional[ICRSSkyCoordType] = None
     altaz_mean: Optional[AltAzSkyCoordType] = None
+
+
+class TimeInfoMetaData(MetaData):
+    """General metadata information about the time range of an observation.
+
+    Parameters
+    ----------
+    time_start : `~astropy.time.Time` or str
+        The observation start time.
+    time_stop : `~astropy.time.Time` or str
+        The observation stop time.
+    reference_time : `~astropy.time.Time` or str
+        The observation reference time."""
+
+    _tag: ClassVar[Literal["time_info"]] = "time_info"
+
+    time_start: Optional[TimeType] = None
+    time_stop: Optional[TimeType] = None
+    reference_time: Optional[TimeType] = None
+
+    def to_header(self, format="gadf"):
+        if self.reference_time is None:
+            return {}
+        result = time_ref_to_dict(self.reference_time)
+        if self.time_start is not None:
+            result["TSTART"] = time_relative_to_ref(self.time_start, result).to_value(
+                "s"
+            )
+        if self.time_stop is not None:
+            result["TSTOP"] = time_relative_to_ref(self.time_stop, result).to_value("s")
+        return result
+
+    @classmethod
+    def from_header(cls, header, format="gadf"):
+        kwargs = {}
+        try:
+            time_ref = time_ref_from_dict(header)
+        except KeyError:
+            return cls()
+
+        kwargs["reference_time"] = time_ref
+        if "TSTART" in header:
+            kwargs["time_start"] = time_ref + header["TSTART"] * u.s
+        if "TSTOP" in header:
+            kwargs["time_stop"] = time_ref + header["TSTOP"] * u.s
+
+        return cls(**kwargs)
 
 
 class TargetMetaData(MetaData):
