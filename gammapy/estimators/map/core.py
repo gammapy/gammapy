@@ -987,7 +987,7 @@ class FluxMaps:
         return hdulist
 
     @classmethod
-    def from_hdulist(cls, hdulist, hdu_bands=None, sed_type=None):
+    def from_hdulist(cls, hdulist, hdu_bands=None, sed_type=None, checksum=False):
         """Create flux map dataset from list of HDUs.
 
         Parameters
@@ -1013,7 +1013,7 @@ class FluxMaps:
         filename = hdulist[0].header.get("MODEL", None)
 
         if filename:
-            reference_model = Models.read(filename)[0]
+            reference_model = Models.read(filename, checksum=checksum)[0]
         else:
             reference_model = None
 
@@ -1026,7 +1026,14 @@ class FluxMaps:
             maps=maps, sed_type=sed_type, reference_model=reference_model, gti=gti
         )
 
-    def write(self, filename, filename_model=None, overwrite=False, sed_type=None):
+    def write(
+        self,
+        filename,
+        filename_model=None,
+        overwrite=False,
+        sed_type=None,
+        checksum=False,
+    ):
         """Write flux map to file.
 
         Parameters
@@ -1063,7 +1070,7 @@ class FluxMaps:
         hdulist.writeto(filename, overwrite=overwrite)
 
     @classmethod
-    def read(cls, filename):
+    def read(cls, filename, checksum=False):
         """Read map dataset from file.
 
         Parameters
@@ -1076,8 +1083,10 @@ class FluxMaps:
         flux_maps : `~gammapy.estimators.FluxMaps`
             Flux maps object.
         """
-        with fits.open(str(make_path(filename)), memmap=False) as hdulist:
-            return cls.from_hdulist(hdulist)
+        with fits.open(
+            str(make_path(filename)), memmap=False, checksum=checksum
+        ) as hdulist:
+            return cls.from_hdulist(hdulist, checksum=checksum)
 
     def slice_by_idx(self, slices):
         """Slice flux maps by index.

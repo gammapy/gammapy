@@ -361,6 +361,29 @@ def test_flux_map_read_write_missing_reference_model(
         _ = FluxMaps.from_hdulist(hdulist)
 
 
+def test_flux_map_read_checksum(tmp_path, wcs_flux_map, reference_model):
+    fluxmap = FluxMaps(wcs_flux_map, reference_model)
+    fluxmap.write(
+        tmp_path / "tmp.fits",
+        filename_model=tmp_path / "test.yaml",
+        checksum=True,
+        overwrite=True,
+    )
+
+    path = tmp_path / "test.yaml"
+    text = path.read_text()
+    text.replace("1.0e-12", "1.2e-12")
+
+    with open(tmp_path / "test.yaml", "r+") as file:
+        lines = file.read()
+        lines.replace("1.0e-12", "1.2e-12")
+        file.seek(0)
+        file.write(lines)
+
+    with pytest.warns(UserWarning):
+        FluxMaps.read(tmp_path / "tmp.fits", checksum=True)
+
+
 @pytest.mark.xfail
 def test_flux_map_init_no_reference_model(wcs_flux_map, caplog):
     fluxmap = FluxMaps(data=wcs_flux_map)
