@@ -1047,6 +1047,9 @@ class FluxMaps:
             Overwrite existing file. Default is False.
         sed_type : str, optional
             Sed type to convert to. If None, set to "likelihood". Default is None.
+        checksum : bool, optional
+            When True adds both DATASUM and CHECKSUM cards to the headers written to the file.
+            Default is False.
         """
         if sed_type is None:
             sed_type = self.sed_type_init
@@ -1077,6 +1080,8 @@ class FluxMaps:
         ----------
         filename : str
             Filename to read from.
+        checksum : bool
+            If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
 
         Returns
         -------

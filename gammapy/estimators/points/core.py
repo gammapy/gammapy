@@ -173,7 +173,15 @@ class FluxPoints(FluxMaps):
     """
 
     @classmethod
-    def read(cls, filename, sed_type=None, format=None, reference_model=None, **kwargs):
+    def read(
+        cls,
+        filename,
+        sed_type=None,
+        format=None,
+        reference_model=None,
+        checksum=False,
+        **kwargs,
+    ):
         """Read precomputed flux points.
 
         Parameters
@@ -187,6 +195,8 @@ class FluxPoints(FluxMaps):
             Default is None.
         reference_model : `SpectralModel`
             Reference spectral model.
+        checksum : bool
+            If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
         **kwargs : dict, optional
             Keyword arguments passed to `astropy.table.Table.read`.
 
@@ -201,7 +211,7 @@ class FluxPoints(FluxMaps):
         try:
             table = Table.read(filename, **kwargs)
         except (IORegistryError, UnicodeDecodeError):
-            with fits.open(filename) as hdulist:
+            with fits.open(filename, checksum=checksum) as hdulist:
                 if "FLUXPOINTS" in hdulist:
                     fp = hdulist["FLUXPOINTS"]
                 else:
@@ -218,7 +228,9 @@ class FluxPoints(FluxMaps):
             gti=gti,
         )
 
-    def write(self, filename, sed_type=None, format=None, overwrite=False):
+    def write(
+        self, filename, sed_type=None, format=None, overwrite=False, checksum=False
+    ):
         """Write flux points.
 
         Parameters
@@ -246,6 +258,9 @@ class FluxPoints(FluxMaps):
 
         overwrite : bool, optional
             Overwrite existing file. Default is False.
+        checksum : bool, optional
+            When True adds both DATASUM and CHECKSUM cards to the headers written to the file.
+            Default is False.
         """
         filename = make_path(filename)
 
@@ -264,7 +279,7 @@ class FluxPoints(FluxMaps):
         if self.gti:
             hdu_all.append(self.gti.to_table_hdu())
 
-        hdu_all.writeto(filename, overwrite=overwrite)
+        hdu_all.writeto(filename, overwrite=overwrite, checksum=checksum)
 
     @staticmethod
     def _convert_loglike_columns(table):
