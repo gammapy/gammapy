@@ -223,6 +223,7 @@ class SpatialModel(ModelBase):
                 oversampling_factor = 1
 
         if oversampling_factor > 1:
+            integrated = Map.from_geom(wcs_geom)
             if self.evaluation_radius is not None:
                 # Is it still needed?
                 try:
@@ -233,7 +234,9 @@ class SpatialModel(ModelBase):
                     integrated = Map.from_geom(wcs_geom)
                 except (NoOverlapError, ValueError):
                     pass
+
             upsampled_geom = wcs_geom.upsample(oversampling_factor, axis_name=None)
+
             # assume the upsampled solid angles are approximately factor**2 smaller
             values = self.evaluate_geom(upsampled_geom) / oversampling_factor**2
             upsampled = Map.from_geom(upsampled_geom, unit=values.unit)
