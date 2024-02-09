@@ -223,6 +223,7 @@ class SpatialModel(ModelBase):
                 oversampling_factor = 1
 
         if oversampling_factor > 1:
+            integrated = Map.from_geom(wcs_geom)
             if self.evaluation_radius is not None:
                 # Is it still needed?
                 try:
@@ -230,6 +231,7 @@ class SpatialModel(ModelBase):
                         self.evaluation_radius.to_value("deg"), pix_scale
                     )
                     wcs_geom = wcs_geom.cutout(self.position, width)
+                    integrated = Map.from_geom(wcs_geom)
                 except (NoOverlapError, ValueError):
                     pass
 
@@ -243,9 +245,9 @@ class SpatialModel(ModelBase):
             if geom.is_region:
                 mask = geom.contains(upsampled_geom.get_coord()).astype("int")
 
-            integrated = upsampled.downsample(
+            integrated.quantity = upsampled.downsample(
                 oversampling_factor, preserve_counts=True, weights=mask
-            )
+            ).quantity
 
             # Finally stack result
             result._unit = integrated.unit
