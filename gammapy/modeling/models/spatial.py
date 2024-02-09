@@ -230,11 +230,10 @@ class SpatialModel(ModelBase):
                         self.evaluation_radius.to_value("deg"), pix_scale
                     )
                     wcs_geom = wcs_geom.cutout(self.position, width)
+                    integrated = Map.from_geom(wcs_geom)
                 except (NoOverlapError, ValueError):
                     pass
-
             upsampled_geom = wcs_geom.upsample(oversampling_factor, axis_name=None)
-
             # assume the upsampled solid angles are approximately factor**2 smaller
             values = self.evaluate_geom(upsampled_geom) / oversampling_factor**2
             upsampled = Map.from_geom(upsampled_geom, unit=values.unit)
@@ -243,9 +242,9 @@ class SpatialModel(ModelBase):
             if geom.is_region:
                 mask = geom.contains(upsampled_geom.get_coord()).astype("int")
 
-            integrated = upsampled.downsample(
+            integrated.quantity = upsampled.downsample(
                 oversampling_factor, preserve_counts=True, weights=mask
-            )
+            ).quantity
 
             # Finally stack result
             result._unit = integrated.unit
