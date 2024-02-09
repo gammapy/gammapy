@@ -380,6 +380,11 @@ def test_sky_diffuse_map(caplog):
     assert_allclose(model2.lon_0.quantity, 12.0 * u.deg, rtol=1e-3)
 
     # test dict without parameters
+    dict1["spatial"]["parameters"] = []
+    model3 = TemplateSpatialModel.from_dict(dict1)
+    assert_allclose(model3.lon_0.quantity, 258.388 * u.deg, rtol=1e-3)
+
+    # test dict without parameters
     dict1["spatial"].pop("parameters")
     model3 = TemplateSpatialModel.from_dict(dict1)
     assert_allclose(model3.lon_0.quantity, 258.388 * u.deg, rtol=1e-3)
