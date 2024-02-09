@@ -27,7 +27,7 @@ New features
 
 *gammapy.catalogs*
 
-- Update 4FGL to DR4.
+- Update 4FGL catalog to DR4.
 - Added 1LHAASO catalog.
 
 *gammapy.data*
