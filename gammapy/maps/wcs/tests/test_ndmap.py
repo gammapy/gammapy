@@ -452,7 +452,8 @@ def test_wcsmap_upsample_downsample_wcs(npix, binsz, frame, proj, skydir, axes):
         pix_scale = np.max(geom.pixel_scales.to_value("deg"))
 
         factor = 11
-        # alignment check fails for larger odd value, ok for even due to precision error on the position
+        # alignment check fails for larger odd value due to precision error on the position
+        # seems ok for even values
         m_up = m.upsample(factor, preserve_counts=True)
         m_down = m_up.downsample(factor, preserve_counts=True)
         m.stack(m_down)
