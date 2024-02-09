@@ -595,7 +595,7 @@ class TestSpectrumOnOff:
         dataset.write(tmp_path / "test.fits", format="ogip", checksum=True)
 
         for name in ["test.fits", "test_arf.fits", "test_rmf.fits", "test_bkg.fits"]:
-            # TODO: this shouldnot emit AstropyUserWarning
+            # TODO: this should not emit AstropyUserWarning
             with fits.open(tmp_path / name, checksum=True) as hdul:
                 for hdu in hdul:
                     assert "CHECKSUM" in hdu.header

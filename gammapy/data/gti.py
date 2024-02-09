@@ -136,7 +136,7 @@ class GTI:
 
         Parameters
         ----------
-        filename : `pathlib.Path`, str
+        filename : `pathlib.Path` or str
             Filename
         hdu : str
             hdu name. Default is "GTI".
