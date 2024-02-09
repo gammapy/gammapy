@@ -3,6 +3,7 @@ import collections
 import copy
 import html
 import logging
+import warnings
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import AltAz, Angle, SkyCoord, angular_separation
@@ -101,23 +102,33 @@ class EventList:
             return f"<pre>{html.escape(str(self))}</pre>"
 
     @classmethod
-    def read(cls, filename, **kwargs):
+    def read(cls, filename, hdu="EVENTS", checksum=False, **kwargs):
         """Read from FITS file.
 
         Format specification: :ref:`gadf:iact-events`
 
         Parameters
         ----------
-        filename : `pathlib.Path` or str
-            Filename.
-        **kwargs : dict, optional
-            Keyword arguments passed to `~astropy.table.Table.read`.
+        filename : `pathlib.Path`, str
+            Filename
+        hdu : str
+            Name of events HDU. Default is "EVENTS".
+        checksum : bool
+            If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
         """
         filename = make_path(filename)
-        kwargs.setdefault("hdu", "EVENTS")
-        table = Table.read(filename, **kwargs)
 
-        meta = EventListMetaData.from_header(table.meta)
+        with fits.open(filename) as hdulist:
+            events_hdu = hdulist[hdu]
+            if checksum:
+                if events_hdu.verify_checksum() != 1:
+                    warnings.warn(
+                        f"Checksum verification failed for HDU {hdu} of {filename}.",
+                        UserWarning,
+                    )
+
+            table = Table.read(events_hdu)
+            meta = EventListMetaData.from_header(table.meta)
 
         return cls(table=table, meta=meta)
 

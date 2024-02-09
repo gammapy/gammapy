@@ -8,6 +8,7 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.table import Table
+from astropy.utils.exceptions import AstropyUserWarning
 from regions import CircleSkyRegion
 import gammapy.irf.psf.map as psf_map_module
 from gammapy.catalog import SourceCatalog3FHL
@@ -1356,6 +1357,17 @@ def test_map_datasets_on_off_checksum(images, tmp_path):
     with warnings.catch_warnings():
         warnings.simplefilter("error")
         Datasets.read(tmp_path / "test.yaml", lazy=False)
+
+    path = tmp_path / "MapDatasetOnOff-test.fits"
+    # Modify counts map header to replace interpolation scheme
+    with open(path, "r+b") as file:
+        chunk = file.read(10000)
+        index = chunk.find("lin".encode("ascii"))
+        file.seek(index)
+        file.write("log".encode("ascii"))
+
+    with pytest.warns(AstropyUserWarning):
+        MapDatasetOnOff.read(path, checksum=True)
 
 
 def test_create_onoff(geom):

@@ -215,7 +215,13 @@ class Map(abc.ABC):
 
     @staticmethod
     def read(
-        filename, hdu=None, hdu_bands=None, map_type="auto", format=None, colname=None
+        filename,
+        hdu=None,
+        hdu_bands=None,
+        map_type="auto",
+        format=None,
+        colname=None,
+        checksum=False,
     ):
         """Read a map from a FITS file.
 
@@ -237,13 +243,17 @@ class Map(abc.ABC):
             input file. Default is 'auto'.
         colname : str, optional
             data column name to be used for HEALPix map.
+        checksum : bool
+            If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
 
         Returns
         -------
         map_out : `Map`
             Map object.
         """
-        with fits.open(str(make_path(filename)), memmap=False) as hdulist:
+        with fits.open(
+            str(make_path(filename)), memmap=False, checksum=checksum
+        ) as hdulist:
             return Map.from_hdulist(
                 hdulist, hdu, hdu_bands, map_type, format=format, colname=colname
             )

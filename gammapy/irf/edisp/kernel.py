@@ -247,7 +247,7 @@ class EDispKernel(IRF):
         return cls(axes=[energy_axis_true, energy_axis], data=pdf_matrix)
 
     @classmethod
-    def read(cls, filename, hdu1="MATRIX", hdu2="EBOUNDS"):
+    def read(cls, filename, hdu1="MATRIX", hdu2="EBOUNDS", checksum=False):
         """Read from file.
 
         Parameters
@@ -258,8 +258,12 @@ class EDispKernel(IRF):
             HDU containing the energy dispersion matrix. Default is "MATRIX".
         hdu2 : str, optional
             HDU containing the energy axis information. Default is "EBOUNDS".
+        checksum : bool
+            If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
         """
-        with fits.open(str(make_path(filename)), memmap=False) as hdulist:
+        with fits.open(
+            str(make_path(filename)), memmap=False, checksum=checksum
+        ) as hdulist:
             return cls.from_hdulist(hdulist, hdu1=hdu1, hdu2=hdu2)
 
     def to_hdulist(self, format="ogip", **kwargs):
@@ -381,7 +385,7 @@ class EDispKernel(IRF):
 
         return table
 
-    def write(self, filename, format="ogip", **kwargs):
+    def write(self, filename, format="ogip", checksum=False, **kwargs):
         """Write to file.
 
         Parameters
@@ -390,10 +394,14 @@ class EDispKernel(IRF):
             Filename.
         format : {"ogip", "ogip-sherpa"}
             Format to use. Default is "ogip".
+        checksum : bool
+            If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
 
         """
         filename = str(make_path(filename))
-        self.to_hdulist(format=format).writeto(filename, **kwargs)
+        hdulist = self.to_hdulist(format=format)
+
+        hdulist.writeto(filename, checksum=checksum, **kwargs)
 
     def get_resolution(self, energy_true):
         """Get energy resolution for a given true energy.

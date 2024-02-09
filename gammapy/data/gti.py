@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import copy
 import html
+import warnings
 from operator import le, lt
 import numpy as np
 import astropy.units as u
@@ -130,21 +131,31 @@ class GTI:
         return cls(table, reference_time=reference_time)
 
     @classmethod
-    def read(cls, filename, hdu="GTI", format="gadf"):
+    def read(cls, filename, hdu="GTI", format="gadf", checksum=False):
         """Read from FITS file.
 
         Parameters
         ----------
         filename : `pathlib.Path` or str
-            Filename.
-        hdu : str, optional
+            Filename
+        hdu : str
             hdu name. Default is "GTI".
-        format: str, optional
+        format: str
             Input format, currently only "gadf" is supported. Default is "gadf".
+        checksum : bool
+            If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
         """
         filename = make_path(filename)
         with fits.open(str(make_path(filename)), memmap=False) as hdulist:
-            return cls.from_table_hdu(hdulist[hdu], format=format)
+            gti_hdu = hdulist[hdu]
+            if checksum:
+                if gti_hdu.verify_checksum() != 1:
+                    warnings.warn(
+                        f"Checksum verification failed for HDU {hdu} of {filename}.",
+                        UserWarning,
+                    )
+
+            return cls.from_table_hdu(gti_hdu, format=format)
 
     @classmethod
     def from_table_hdu(cls, table_hdu, format="gadf"):

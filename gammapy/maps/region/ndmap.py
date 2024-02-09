@@ -456,7 +456,7 @@ class RegionNDMap(Map):
         self.data[idx[::-1]] = value
 
     @classmethod
-    def read(cls, filename, format="gadf", ogip_column=None, hdu=None):
+    def read(cls, filename, format="gadf", ogip_column=None, hdu=None, checksum=False):
         """Read from file.
 
         Parameters
@@ -471,6 +471,8 @@ class RegionNDMap(Map):
         hdu : str, optional
             Name or index of the HDU with the map data.
             Default is None.
+        checksum : bool
+            If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
 
         Returns
         -------
@@ -478,7 +480,7 @@ class RegionNDMap(Map):
             Region map.
         """
         filename = make_path(filename)
-        with fits.open(filename, memmap=False) as hdulist:
+        with fits.open(filename, memmap=False, checksum=checksum) as hdulist:
             return cls.from_hdulist(
                 hdulist, format=format, ogip_column=ogip_column, hdu=hdu
             )

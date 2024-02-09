@@ -127,7 +127,7 @@ class Maps(MutableMapping):
         return maps
 
     @classmethod
-    def read(cls, filename):
+    def read(cls, filename, checksum=False):
         """Read map dictionary from file.
 
         Because FITS keywords are case-insensitive, all key names will return as lower-case.
@@ -142,7 +142,9 @@ class Maps(MutableMapping):
         maps : `~gammapy.maps.Maps`
             Maps object.
         """
-        with fits.open(str(make_path(filename)), memmap=False) as hdulist:
+        with fits.open(
+            str(make_path(filename)), memmap=False, checksum=checksum
+        ) as hdulist:
             return cls.from_hdulist(hdulist)
 
     def write(self, filename, overwrite=False, checksum=False):

@@ -170,9 +170,9 @@ class OGIPDatasetWriter(DatasetWriter):
         kernel = dataset.edisp.get_edisp_kernel()
         kernel.write(
             filename=filename,
-            overwrite=self.overwrite,
             format=self.format,
             checksum=self.checksum,
+            overwrite=self.overwrite,
         )
 
     def write_arf(self, dataset, filename):
@@ -279,12 +279,15 @@ class OGIPDatasetReader(DatasetReader):
     ----------
     filename : str or `~pathlib.Path`
         OGIP PHA file to read.
+    checksum : bool
+        If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
     """
 
     tag = "ogip"
 
-    def __init__(self, filename):
+    def __init__(self, filename, checksum=False):
         self.filename = make_path(filename)
+        self.checksum = checksum
 
     def get_valid_path(self, filename):
         """Get absolute or relative path.
@@ -333,13 +336,15 @@ class OGIPDatasetReader(DatasetReader):
         return filenames
 
     @staticmethod
-    def read_pha(filename):
+    def read_pha(filename, checksum=False):
         """Read PHA file.
 
         Parameters
         ----------
         filename : str or `~pathlib.Path`
             PHA file name.
+        checksum : bool
+            If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
 
         Returns
         -------
@@ -348,7 +353,7 @@ class OGIPDatasetReader(DatasetReader):
         """
         data = {}
 
-        with fits.open(filename, memmap=False) as hdulist:
+        with fits.open(filename, memmap=False, checksum=checksum) as hdulist:
             data["counts"] = RegionNDMap.from_hdulist(hdulist, format="ogip")
             data["acceptance"] = RegionNDMap.from_hdulist(
                 hdulist, format="ogip", ogip_column="BACKSCAL"
@@ -364,20 +369,22 @@ class OGIPDatasetReader(DatasetReader):
         return data
 
     @staticmethod
-    def read_bkg(filename):
+    def read_bkg(filename, checksum=False):
         """Read PHA background file.
 
         Parameters
         ----------
         filename : str or `~pathlib.Path`
             PHA file name.
+        checksum : bool
+            If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
 
         Returns
         -------
         data : dict
             Dictionary with counts_off and acceptance_off.
         """
-        with fits.open(filename, memmap=False) as hdulist:
+        with fits.open(filename, memmap=False, checksum=checksum) as hdulist:
             counts_off = RegionNDMap.from_hdulist(hdulist, format="ogip")
             acceptance_off = RegionNDMap.from_hdulist(
                 hdulist, ogip_column="BACKSCAL", format="ogip"
@@ -385,7 +392,7 @@ class OGIPDatasetReader(DatasetReader):
         return {"counts_off": counts_off, "acceptance_off": acceptance_off}
 
     @staticmethod
-    def read_rmf(filename, exposure):
+    def read_rmf(filename, exposure, checksum=False):
         """Read RMF file.
 
         Parameters
@@ -394,13 +401,15 @@ class OGIPDatasetReader(DatasetReader):
             PHA file name.
         exposure : `RegionNDMap`
             Exposure map.
+        checksum : bool
+            If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
 
         Returns
         -------
         data : `EDispKernelMap`
             Dictionary with edisp.
         """
-        kernel = EDispKernel.read(filename)
+        kernel = EDispKernel.read(filename, checksum=checksum)
         edisp = EDispKernelMap.from_edisp_kernel(kernel, geom=exposure.geom)
 
         # TODO: resolve this separate handling of exposure for edisp
@@ -408,7 +417,7 @@ class OGIPDatasetReader(DatasetReader):
         return edisp
 
     @staticmethod
-    def read_arf(filename, livetime):
+    def read_arf(filename, livetime, checksum=False):
         """Read ARF file.
 
         Parameters
@@ -417,13 +426,15 @@ class OGIPDatasetReader(DatasetReader):
             PHA file name.
         livetime : `Quantity`
             Livetime.
+        checksum : bool
+            If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
 
         Returns
         -------
         data : `RegionNDMap`
             Exposure map.
         """
-        aeff = RegionNDMap.read(filename, format="ogip-arf")
+        aeff = RegionNDMap.read(filename, format="ogip-arf", checksum=checksum)
         exposure = aeff * livetime
         exposure.meta["livetime"] = livetime
         return exposure
@@ -436,20 +447,24 @@ class OGIPDatasetReader(DatasetReader):
         dataset : SpectrumDatasetOnOff
             Spectrum dataset.
         """
-        kwargs = self.read_pha(self.filename)
+        kwargs = self.read_pha(self.filename, checksum=self.checksum)
         pha_meta = kwargs["counts"].meta
 
         name = str(pha_meta["OBS_ID"])
         livetime = pha_meta["EXPOSURE"] * u.s
 
         filenames = self.get_filenames(pha_meta=pha_meta)
-        exposure = self.read_arf(filenames["arffile"], livetime=livetime)
+        exposure = self.read_arf(
+            filenames["arffile"], livetime=livetime, checksum=self.checksum
+        )
 
         if "bkgfile" in filenames:
-            bkg = self.read_bkg(filenames["bkgfile"])
+            bkg = self.read_bkg(filenames["bkgfile"], checksum=self.checksum)
             kwargs.update(bkg)
 
         if "rmffile" in filenames:
-            kwargs["edisp"] = self.read_rmf(filenames["rmffile"], exposure=exposure)
+            kwargs["edisp"] = self.read_rmf(
+                filenames["rmffile"], exposure=exposure, checksum=self.checksum
+            )
 
         return SpectrumDatasetOnOff(name=name, exposure=exposure, **kwargs)

@@ -1517,7 +1517,9 @@ class MapDataset(Dataset):
         return cls(**kwargs)
 
     @classmethod
-    def read(cls, filename, name=None, lazy=False, cache=True, format="gadf"):
+    def read(
+        cls, filename, name=None, lazy=False, cache=True, format="gadf", checksum=False
+    ):
         """Read a dataset from file.
 
         Parameters
@@ -1532,6 +1534,8 @@ class MapDataset(Dataset):
             Whether to cache the data after loading. Default is True.
         format : {"gadf"}
             Format of the dataset file. Default is "gadf".
+        checksum : bool
+            If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
 
         Returns
         -------
@@ -1549,7 +1553,9 @@ class MapDataset(Dataset):
                 name=ds_name, filename=filename, cache=cache, format=format
             )
         else:
-            with fits.open(str(make_path(filename)), memmap=False) as hdulist:
+            with fits.open(
+                str(make_path(filename)), memmap=False, checksum=checksum
+            ) as hdulist:
                 return cls.from_hdulist(hdulist, name=ds_name, format=format)
 
     @classmethod
