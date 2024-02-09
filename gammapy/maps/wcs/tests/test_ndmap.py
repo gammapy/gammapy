@@ -442,6 +442,44 @@ def test_wcsndmap_upsample(npix, binsz, frame, proj, skydir, axes):
     assert m.unit == m2.unit
 
 
+@pytest.mark.parametrize(
+    ("npix", "binsz", "frame", "proj", "skydir", "axes"), wcs_test_geoms
+)
+def test_wcsmap_upsample_downsample_wcs(npix, binsz, frame, proj, skydir, axes):
+    geom = WcsGeom.create(npix=npix, binsz=binsz, proj=proj, frame=frame)
+    if geom.is_regular:
+        m = WcsNDMap(geom, unit="m2")
+        pix_scale = np.max(geom.pixel_scales.to_value("deg"))
+
+        factor = 11
+        # alignment check fails for larger odd value, ok for even due to precision error on the position
+        m_up = m.upsample(factor, preserve_counts=True)
+        m_down = m_up.downsample(factor, preserve_counts=True)
+        m.stack(m_down)
+
+        assert_allclose(m.geom.center_skydir.l, m_down.geom.center_skydir.l, atol=1e-10)
+        assert_allclose(m.geom.center_skydir.b, m_down.geom.center_skydir.b, atol=1e-10)
+        assert_allclose(m.geom.data_shape, m_down.geom.data_shape)
+        assert m.geom.is_aligned(m_down.geom)
+
+        mcut = m.cutout(m.geom.center_skydir, 2 * pix_scale)
+        assert m.geom.is_aligned(mcut.geom)
+
+        factor = 49
+        mcut_up = mcut.upsample(factor, preserve_counts=True)
+        mcut_down = mcut_up.downsample(factor, preserve_counts=True)
+        m.stack(mcut_down)
+
+        assert_allclose(
+            m.geom.center_skydir.l, mcut_down.geom.center_skydir.l, atol=1e-10
+        )
+        assert_allclose(
+            m.geom.center_skydir.b, mcut_down.geom.center_skydir.b, atol=1e-10
+        )
+        assert_allclose(mcut.geom.data_shape, mcut_down.geom.data_shape)
+        assert m.geom.is_aligned(mcut_down.geom)
+
+
 def test_wcsndmap_upsample_axis():
     axis = MapAxis.from_edges([1, 2, 3, 4], name="test")
     geom = WcsGeom.create(npix=(2, 2), axes=[axis])
