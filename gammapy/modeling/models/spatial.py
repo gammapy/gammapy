@@ -1284,8 +1284,8 @@ class TemplateSpatialModel(SpatialModel):
     """
 
     tag = ["TemplateSpatialModel", "template"]
-    lon_0 = Parameter("lon_0", "0 deg", frozen=True)
-    lat_0 = Parameter("lat_0", "0 deg", min=-90, max=90, frozen=True)
+    lon_0 = Parameter("lon_0", np.nan, unit="deg", frozen=True)
+    lat_0 = Parameter("lat_0", np.nan, unit="deg", min=-90, max=90, frozen=True)
 
     def __init__(
         self,
@@ -1344,9 +1344,13 @@ class TemplateSpatialModel(SpatialModel):
         self._interp_kwargs = interp_kwargs
         self.filename = filename
         kwargs["frame"] = self.map.geom.frame
-        if "lon_0" not in kwargs:
+        if "lon_0" not in kwargs or (
+            isinstance(kwargs["lon_0"], Parameter) and np.isnan(kwargs["lon_0"].value)
+        ):
             kwargs["lon_0"] = self.map_center.data.lon
-        if "lat_0" not in kwargs:
+        if "lat_0" not in kwargs or (
+            isinstance(kwargs["lat_0"], Parameter) and np.isnan(kwargs["lat_0"].value)
+        ):
             kwargs["lat_0"] = self.map_center.data.lat
         super().__init__(**kwargs)
 
