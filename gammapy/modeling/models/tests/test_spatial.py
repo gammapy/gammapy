@@ -15,8 +15,10 @@ from regions import (
 )
 from gammapy.maps import Map, MapAxis, MapCoord, RegionGeom, WcsGeom, WcsNDMap
 from gammapy.modeling.models import (
+    SPATIAL_MODEL_REGISTRY,
     ConstantSpatialModel,
     DiskSpatialModel,
+    FoVBackgroundModel,
     GaussianSpatialModel,
     GeneralizedGaussianSpatialModel,
     PiecewiseNormSpatialModel,
@@ -478,6 +480,32 @@ def test_sky_diffuse_map_empty(caplog):
             in [_.message for _ in caplog.records]
         )
         assert np.all(np.isfinite(model.map.data))
+
+
+@pytest.mark.parametrize("model_cls", SPATIAL_MODEL_REGISTRY)
+def test_model_from_dict(tmpdir, model_cls):
+    if model_cls in [TemplateSpatialModel, TemplateNDSpatialModel]:
+        default_map = Map.create(map_type="wcs", width=(1, 1), binsz=0.5, unit="sr-1")
+        filename = str(tmpdir / "template.fits")
+        model = model_cls(default_map, filename=filename)
+        model.write()
+    elif model_cls is PiecewiseNormSpatialModel:
+        geom = WcsGeom.create(skydir=(0, 0), npix=(2, 2), binsz=0.3, frame="galactic")
+        default_coords = MapCoord.create(geom.footprint)
+        default_coords["lon"] *= u.deg
+        default_coords["lat"] *= u.deg
+        model = model_cls(default_coords, frame="galactic")
+    else:
+        model = model_cls()
+
+    data = model.to_dict()
+    model_from_dict = model_cls.from_dict(data)
+    assert model_from_dict.tag == model_from_dict.tag
+
+    bkg_model = FoVBackgroundModel(spatial_model=model, dataset_name="test")
+    bkg_model_dict = bkg_model.to_dict()
+    bkg_model_from_dict = FoVBackgroundModel.from_dict(bkg_model_dict)
+    assert bkg_model_from_dict.spatial_model is not None
 
 
 def test_evaluate_on_fk5_map():
