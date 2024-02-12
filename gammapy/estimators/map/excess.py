@@ -8,12 +8,11 @@ from gammapy.datasets import MapDataset, MapDatasetOnOff
 from gammapy.maps import Map
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from gammapy.stats import CashCountsStatistic, WStatCountsStatistic
-from gammapy.stats.utils import ts_to_sigma
 from ..core import Estimator
 from ..utils import estimate_exposure_reco_energy
 from .core import FluxMaps
 
-__all__ = ["ExcessMapEstimator", "get_joint_excess_maps"]
+__all__ = ["ExcessMapEstimator"]
 
 log = logging.getLogger(__name__)
 
@@ -75,45 +74,6 @@ def convolved_map_dataset_counts_statistics(dataset, kernel, mask, correlate_off
         npred = dataset.npred() * mask
         background_conv = npred.convolve(kernel_data)
         return CashCountsStatistic(n_on_conv.data, background_conv.data)
-
-
-def get_joint_excess_maps(estimator, datasets):
-    """Computes correlated excess and significance for a set of datasets.
-    The significance computation assumes that the model contains
-    one degree of freedom per valid bin in energy in each dataset.
-
-    Parameters
-    ----------
-    estimator : `~gammapy.estimator.ExcessMapEstimator`
-        Excess Map Estimator
-    dataset : `~gammapy.datasets.Datasets`
-        Datasets
-
-    """
-
-    geom = datasets[0].counts.geom.to_image()
-    for dataset in datasets[1:]:
-        if dataset.counts.geom.to_image() != geom:
-            raise ValueError
-
-    ts_sum = Map.from_geom(geom)
-    npred_excess_sum = Map.from_geom(geom)
-    significance = Map.from_geom(geom)
-
-    dof = 0
-    for dataset in datasets:
-        results = estimator.run(dataset)
-
-        dof += np.sum(results["ts"].data > 0, axis=0)
-        ts = results["ts"].reduce_over_axes()
-
-        npred_excess = results["npred_excess"].reduce_over_axes()
-
-        ts_sum += ts
-        npred_excess_sum += npred_excess
-
-    significance.data = ts_to_sigma(ts_sum.data, dof) * np.sign(npred_excess_sum.data)
-    return dict(ts=ts_sum, npred_excess=npred_excess_sum, significance=significance)
 
 
 class ExcessMapEstimator(Estimator):

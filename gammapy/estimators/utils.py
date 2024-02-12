@@ -6,16 +6,20 @@ from astropy.coordinates import SkyCoord
 from astropy.table import Table
 from gammapy.datasets import SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.datasets.map import MapEvaluator
-from gammapy.maps import MapAxis, TimeMapAxis, WcsNDMap
+from gammapy.maps import Map, MapAxis, TimeMapAxis, WcsNDMap
 from gammapy.modeling.models import (
     ConstantFluxSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
 )
 from gammapy.stats import compute_flux_doubling, compute_fpp, compute_fvar
+from gammapy.stats.utils import ts_to_sigma
 from .map.core import FluxMaps
+from .map.excess import ExcessMapEstimator
+from .map.ts import TSMapEstimator
 
 __all__ = [
+    "get_joint_excess_maps",
     "estimate_exposure_reco_energy",
     "find_peaks",
     "find_peaks_in_flux_map",
@@ -686,3 +690,72 @@ def get_rebinned_axis(fluxpoint, axis_name="energy", method=None, **kwargs):
         edges = np.append(edges_min, edges_max[-1])
         axis_new = MapAxis.from_edges(edges, name=axis_name, interp=ax.interp)
     return axis_new
+
+
+def get_joint_excess_maps(
+    estimator, datasets, energy_edges=None, sum_over_energy_groups=True
+):
+    """Computes correlated excess and significance for a set of datasets.
+    The significance computation assumes that the model contains
+    one degree of freedom per valid bin in energy in each dataset.
+    This method implemented here is valid under the assumption
+    that the TS in each independent bin follows a Chi2 distribution,
+    then the sum of the TS also follows a Chi2 distribution (with the sum of degree of freedom).
+
+    See, Zhen (2014): https://www.sciencedirect.com/science/article/abs/pii/S0167947313003204,
+    Lancaster (1961): https://onlinelibrary.wiley.com/doi/10.1111/j.1467-842X.1961.tb00058.x
+
+
+    Parameters
+    ----------
+    estimator : `~gammapy.estimator.ExcessMapEstimator`
+        Excess Map Estimator
+    dataset : `~gammapy.datasets.Datasets`
+        Datasets
+    energy_edges : list of `~astropy.units.Quantity`, optional
+        Edges of the target maps energy bins. The resulting bin edges won't be exactly equal to the input ones,
+        but rather the closest values to the energy axis edges of the parent dataset.
+        Default is None: apply the estimator in each energy bin of the parent dataset.
+        For further explanation see :ref:`estimators`.
+    sum_over_energy_groups : bool
+        Whether to sum over the energy groups or not. Default is True.
+
+    """
+
+    if not isinstance(estimator, (ExcessMapEstimator, TSMapEstimator)):
+        raise TypeError(
+            f"estimator type should be ExcessMapEstimator or TSMapEstimator), got {type(estimator)} instead."
+        )
+
+    geom = datasets[0].counts.geom.to_image()
+    ts_sum = Map.from_geom(geom)
+    ts_sum_sign = Map.from_geom(geom)
+    npred_excess_sum = Map.from_geom(geom)
+
+    dof = 0
+    results = dict()
+    for kd, d in enumerate(datasets):
+        if energy_edges is None:
+            energy_edges = d.counts.geom.axes[0].edges
+        if sum_over_energy_groups == True:
+            energy_edges = [energy_edges[0], energy_edges[-1]]
+
+        result = estimator.run(d)
+        results[d.anme] = result
+
+        dof += np.sum(result["ts"].data > 0, axis=0)  # one dof (norm) per valid bin
+        ts = result["ts"].reduce_over_axes()
+
+        npred_excess = result["npred_excess"].reduce_over_axes()
+
+        ts_sum += ts
+        ts_sum_sign += ts * np.sign(npred_excess)
+
+    significance = Map.from_geom(geom)
+    significance.data = ts_to_sigma(ts_sum.data, dof) * np.sign(ts_sum_sign)
+    return dict(
+        ts=ts_sum,
+        npred_excess=npred_excess_sum,
+        significance=significance,
+        estimator_results=results,
+    )
