@@ -49,7 +49,7 @@ authors:
 - given-names: Stefan
   family-names: Fröse
   affiliation: "Astroparticle Physics Group, TU Dortmund University, Germany"
-  orcid:
+  orcid: "https://orcid.org/0000-0003-1832-4129"
 - given-names: Claudio
   family-names: Galelli
   affiliation: Laboratoire Univers et Théories, Observatoire de Paris, Université PSL,\
