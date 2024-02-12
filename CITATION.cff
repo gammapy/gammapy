@@ -21,8 +21,8 @@ contact:
   name: "Coordination committee of the Gammapy project"
 identifiers:
 - description: "Zenodo repository of Gammapy"
-    type: doi
-    value: 10.5281/zenodo.4701488
+  type: doi
+  value: 10.5281/zenodo.4701488
 authors:
 - given-names: Fabio
   family-names: Acero
