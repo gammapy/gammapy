@@ -15,8 +15,6 @@ from gammapy.modeling.models import (
 from gammapy.stats import compute_flux_doubling, compute_fpp, compute_fvar
 from gammapy.stats.utils import ts_to_sigma
 from .map.core import FluxMaps
-from .map.excess import ExcessMapEstimator
-from .map.ts import TSMapEstimator
 
 __all__ = [
     "get_joint_excess_maps",
@@ -721,6 +719,8 @@ def get_joint_excess_maps(
         Whether to sum over the energy groups or not. Default is True.
 
     """
+    from .map.excess import ExcessMapEstimator
+    from .map.ts import TSMapEstimator
 
     if not isinstance(estimator, (ExcessMapEstimator, TSMapEstimator)):
         raise TypeError(
