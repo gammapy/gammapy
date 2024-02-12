@@ -36,7 +36,7 @@ authors:
 - given-names: Noah
   family-names: Biederbeck
   affiliation: "Astroparticle Physics Group, TU Dortmund University, Germany"
-  orcid:
+  orcid: "https://orcid.org/0000-0003-3708-9785"
 - given-names: Axel
   family-names: Donath
   affiliation: "Center for Astrophysics | Harvard & Smithsonian, USA"
