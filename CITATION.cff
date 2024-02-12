@@ -32,7 +32,7 @@ authors:
 - given-names: Juan
   family-names: Bernete
   affiliation: "Centro de Investigaciones Energéticas Medioambientales y Tecnológicas (CIEMAT), Madrid, Spain"
-  orcid:
+  orcid: "https://orcid.org/0000-0002-8108-7552"
 - given-names: Noah
   family-names: Biederbeck
   affiliation: "Astroparticle Physics Group, TU Dortmund University, Germany"
