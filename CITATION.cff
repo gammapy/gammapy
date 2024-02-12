@@ -69,10 +69,10 @@ authors:
   family-names: Linhoff
   affiliation: "Astroparticle Physics Group, TU Dortmund University, Germany"
   orcid: "https://orcid.org/0000-0001-7993-8189"
-- given-names: Kurt
-  family-names: McKee
-  affiliation:
-  orcid:
+- given-names: 'Kurt'
+  family-names: 'McKee'
+  affiliation: 'University of Chicago, USA'
+  orcid: 'https://orcid.org/0000-0002-8547-8489'
 - given-names: Simone
   family-names: Mender
   affiliation: "Astroparticle Physics Group, TU Dortmund University, Germany"
