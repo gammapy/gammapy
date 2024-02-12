@@ -737,7 +737,7 @@ def get_joint_excess_maps(
     for kd, d in enumerate(datasets):
         if energy_edges is None:
             energy_edges = d.counts.geom.axes[0].edges
-        if sum_over_energy_groups == True:
+        if sum_over_energy_groups:
             energy_edges = [energy_edges[0], energy_edges[-1]]
 
         result = estimator.run(d)
