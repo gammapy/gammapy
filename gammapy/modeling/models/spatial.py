@@ -222,17 +222,19 @@ class SpatialModel(ModelBase):
             else:
                 oversampling_factor = 1
 
-        if oversampling_factor > 1:
-            integrated = Map.from_geom(wcs_geom)
-            if self.evaluation_radius is not None:
-                try:
-                    width = 2 * np.maximum(
-                        self.evaluation_radius.to_value("deg"), pix_scale
-                    )
-                    wcs_geom = wcs_geom.cutout(self.position, width)
-                    integrated = Map.from_geom(wcs_geom)
-                except (NoOverlapError, ValueError):
-                    return result
+        contributes = True
+        integrated = Map.from_geom(wcs_geom)
+        if self.evaluation_radius is not None:
+            try:
+                width = 2 * np.maximum(
+                    self.evaluation_radius.to_value("deg"), pix_scale
+                )
+                wcs_geom = wcs_geom.cutout(self.position, width)
+                integrated = Map.from_geom(wcs_geom)
+            except (NoOverlapError, ValueError):
+                contributes = False
+
+        if contributes and oversampling_factor > 1:
 
             upsampled_geom = wcs_geom.upsample(oversampling_factor, axis_name=None)
 
