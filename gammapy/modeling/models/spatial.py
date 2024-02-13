@@ -202,7 +202,6 @@ class SpatialModel(ModelBase):
             Map containing the integral value in each spatial bin.
         """
         wcs_geom = geom
-        contributes = True
         mask = None
 
         if geom.is_region:
@@ -219,22 +218,19 @@ class SpatialModel(ModelBase):
                 )
                 wcs_geom = wcs_geom.cutout(self.position, width)
             except (NoOverlapError, ValueError):
-                contributes = False
+                oversampling_factor = 1
 
-        if contributes:
-            if oversampling_factor is None:
-                if self.evaluation_bin_size_min is not None:
-                    res_scale = self.evaluation_bin_size_min.to_value("deg")
-                    if res_scale > 0:
-                        oversampling_factor = np.minimum(
-                            int(np.ceil(pix_scale / res_scale)), MAX_OVERSAMPLING
-                        )
-                    else:
-                        oversampling_factor = MAX_OVERSAMPLING
+        if oversampling_factor is None:
+            if self.evaluation_bin_size_min is not None:
+                res_scale = self.evaluation_bin_size_min.to_value("deg")
+                if res_scale > 0:
+                    oversampling_factor = np.minimum(
+                        int(np.ceil(pix_scale / res_scale)), MAX_OVERSAMPLING
+                    )
                 else:
-                    oversampling_factor = 1
-        else:
-            oversampling_factor = 1
+                    oversampling_factor = MAX_OVERSAMPLING
+            else:
+                oversampling_factor = 1
 
         if oversampling_factor > 1:
             integrated = Map.from_geom(wcs_geom)
