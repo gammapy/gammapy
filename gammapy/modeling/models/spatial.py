@@ -216,7 +216,8 @@ class SpatialModel(ModelBase):
                 width = 2 * np.maximum(
                     self.evaluation_radius.to_value("deg"), pix_scale
                 )
-                wcs_geom = wcs_geom.cutout(self.position, width)
+                wcs_geom_cut = wcs_geom.cutout(self.position, width)
+                integrated = Map.from_geom(wcs_geom_cut)
             except (NoOverlapError, ValueError):
                 oversampling_factor = 1
 
@@ -233,7 +234,6 @@ class SpatialModel(ModelBase):
                 oversampling_factor = 1
 
         if oversampling_factor > 1:
-            integrated = Map.from_geom(wcs_geom)
             upsampled_geom = wcs_geom.upsample(oversampling_factor, axis_name=None)
 
             # assume the upsampled solid angles are approximately factor**2 smaller
