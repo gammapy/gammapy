@@ -130,7 +130,7 @@ authors:
   orcid: "https://orcid.org/0000-0002-7378-4024"
 preferred-citation:
   authors:
-  - family-names: "the Gammapy team"
+  - family-names: "The Gammapy team"
   title: "Gammapy: A Python package for gamma-ray astronomy"
   type: article
   doi: 10.1051/0004-6361/202346488
