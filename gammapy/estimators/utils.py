@@ -706,17 +706,25 @@ def get_joint_significance_maps(
 
     Parameters
     ----------
-    estimator : `~gammapy.estimator.ExcessMapEstimator`
-        Excess Map Estimator
+    estimator : `~gammapy.estimator.ExcessMapEstimator` or `~gammapy.estimator.TSMapEstimator`
+        Excess Map Estimator or TS Map Estimator
     dataset : `~gammapy.datasets.Datasets`
-        Datasets
+        Datasets containing only `~gammapy.maps.MapDataset`.
     energy_edges : list of `~astropy.units.Quantity`, optional
         Edges of the target maps energy bins. The resulting bin edges won't be exactly equal to the input ones,
         but rather the closest values to the energy axis edges of the parent dataset.
         Default is None: apply the estimator in each energy bin of the parent dataset.
         For further explanation see :ref:`estimators`.
     sum_over_energy_groups : bool
-        Whether to sum over the energy groups or not. Default is True.
+        Whether to sum over the energy groups or not. Default is True
+
+    Returns
+    -------
+    results : dict
+        Dictionary with keys :
+        - "significance" : joint significance map.
+        - "npred_excess" : summed excess map.
+        - "estimator_results" : dictionary containing the estimator results for each dataset.
 
     """
     from .map.excess import ExcessMapEstimator
@@ -749,8 +757,7 @@ def get_joint_significance_maps(
     significance = Map.from_geom(geom)
     significance.data = ts_to_sigma(ts_sum.data, dof) * np.sign(ts_sum_sign)
     return dict(
-        ts=ts_sum,
-        npred_excess=npred_excess_sum,
         significance=significance,
+        npred_excess=npred_excess_sum,
         estimator_results=results,
     )
