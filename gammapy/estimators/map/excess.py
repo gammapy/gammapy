@@ -129,6 +129,11 @@ class ExcessMapEstimator(Estimator):
     spectral_model : `~gammapy.modeling.models.SpectralModel`
         Spectral model used for the computation of the flux map.
         If None, a Power Law of index 2 is assumed (default).
+    sum_over_energy_groups : bool
+        Only used if energy_edges is None.
+        If False apply the estimator in each energy bin of the parent dataset.
+        If True apply the estimator in only one bin defined by the energy edges of the parent dataset.
+        Default is False.
 
     Examples
     --------
@@ -169,6 +174,7 @@ class ExcessMapEstimator(Estimator):
         gamma_min_sensitivity=10,
         bkg_syst_fraction_sensitivity=0.05,
         apply_threshold_sensitivity=False,
+        sum_over_energy_groups=False,
     ):
         self.correlation_radius = correlation_radius
         self.n_sigma = n_sigma
@@ -179,6 +185,7 @@ class ExcessMapEstimator(Estimator):
         self.apply_threshold_sensitivity = apply_threshold_sensitivity
         self.selection_optional = selection_optional
         self.energy_edges = energy_edges
+        self.sum_over_energy_groups = sum_over_energy_groups
         self.correlate_off = correlate_off
 
         if spectral_model is None:
