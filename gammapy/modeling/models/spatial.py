@@ -202,40 +202,42 @@ class SpatialModel(ModelBase):
             Map containing the integral value in each spatial bin.
         """
         wcs_geom = geom
+        contributes = True
         mask = None
 
         if geom.is_region:
             wcs_geom = geom.to_wcs_geom().to_image()
 
         result = Map.from_geom(geom=wcs_geom)
+        integrated = Map.from_geom(wcs_geom)
 
         pix_scale = np.max(wcs_geom.pixel_scales.to_value("deg"))
-        if oversampling_factor is None:
-            if self.evaluation_bin_size_min is not None:
-                res_scale = self.evaluation_bin_size_min.to_value("deg")
-                if res_scale > 0:
-                    oversampling_factor = np.minimum(
-                        int(np.ceil(pix_scale / res_scale)), MAX_OVERSAMPLING
-                    )
-                else:
-                    oversampling_factor = MAX_OVERSAMPLING
-            else:
-                oversampling_factor = 1
-
-        contributes = True
-        integrated = Map.from_geom(wcs_geom)
         if self.evaluation_radius is not None:
             try:
                 width = 2 * np.maximum(
                     self.evaluation_radius.to_value("deg"), pix_scale
                 )
                 wcs_geom = wcs_geom.cutout(self.position, width)
-                integrated = Map.from_geom(wcs_geom)
             except (NoOverlapError, ValueError):
                 contributes = False
 
-        if contributes and oversampling_factor > 1:
+        if contributes:
+            if oversampling_factor is None:
+                if self.evaluation_bin_size_min is not None:
+                    res_scale = self.evaluation_bin_size_min.to_value("deg")
+                    if res_scale > 0:
+                        oversampling_factor = np.minimum(
+                            int(np.ceil(pix_scale / res_scale)), MAX_OVERSAMPLING
+                        )
+                    else:
+                        oversampling_factor = MAX_OVERSAMPLING
+                else:
+                    oversampling_factor = 1
+        else:
+            oversampling_factor = 1
 
+        if oversampling_factor > 1:
+            integrated = Map.from_geom(wcs_geom)
             upsampled_geom = wcs_geom.upsample(oversampling_factor, axis_name=None)
 
             # assume the upsampled solid angles are approximately factor**2 smaller
