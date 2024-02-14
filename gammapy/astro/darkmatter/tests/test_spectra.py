@@ -46,7 +46,9 @@ def test_dm_annihilation_spectral_model(tmpdir):
     integral_flux = model.integral(energy_min=energy_min, energy_max=energy_max).to(
         "cm-2 s-1"
     )
-    differential_flux = model.evaluate(energy=1 * u.TeV, scale=1, jfactor=jfactor).to("cm-2 s-1 TeV-1")
+    differential_flux = model.evaluate(energy=1 * u.TeV, scale=1, jfactor=jfactor).to(
+        "cm-2 s-1 TeV-1"
+    )
 
     sky_model = SkyModel(
         spectral_model=model,
@@ -79,7 +81,9 @@ def test_dm_decay_spectral_model(tmpdir):
     integral_flux = model.integral(energy_min=energy_min, energy_max=energy_max).to(
         "cm-2 s-1"
     )
-    differential_flux = model.evaluate(energy=1 * u.TeV, scale=1, dfactor=dfactor).to("cm-2 s-1 TeV-1")
+    differential_flux = model.evaluate(energy=1 * u.TeV, scale=1, dfactor=dfactor).to(
+        "cm-2 s-1 TeV-1"
+    )
 
     sky_model = SkyModel(
         spectral_model=model,
