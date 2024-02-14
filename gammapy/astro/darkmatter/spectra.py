@@ -269,7 +269,9 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
         parameters = data.pop("parameters")
         parameters = {p["name"]: p for p in parameters}
         scale = parameters["scale"]["value"]
-        jfactor = u.Quantity(parameters["jfactor"]["value"], parameters["jfactor"]["unit"])
+        jfactor = u.Quantity(
+            parameters["jfactor"]["value"], parameters["jfactor"]["unit"]
+        )
         return cls(scale=scale, jfactor=jfactor, **data)
 
 
@@ -378,5 +380,7 @@ class DarkMatterDecaySpectralModel(SpectralModel):
         parameters = data.pop("parameters")
         parameters = {p["name"]: p for p in parameters}
         scale = parameters["scale"]["value"]
-        dfactor = u.Quantity(parameters["dfactor"]["value"], parameters["dfactor"]["unit"])
+        dfactor = u.Quantity(
+            parameters["dfactor"]["value"], parameters["dfactor"]["unit"]
+        )
         return cls(scale=scale, dfactor=dfactor, **data)
