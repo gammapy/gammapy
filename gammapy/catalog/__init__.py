@@ -4,12 +4,16 @@ from gammapy.utils.registry import Registry
 from .core import SourceCatalog, SourceCatalogObject
 from .fermi import (
     SourceCatalog2FHL,
+    SourceCatalog2PC,
     SourceCatalog3FGL,
     SourceCatalog3FHL,
+    SourceCatalog3PC,
     SourceCatalog4FGL,
     SourceCatalogObject2FHL,
+    SourceCatalogObject2PC,
     SourceCatalogObject3FGL,
     SourceCatalogObject3FHL,
+    SourceCatalogObject3PC,
     SourceCatalogObject4FGL,
 )
 from .gammacat import SourceCatalogGammaCat, SourceCatalogObjectGammaCat
