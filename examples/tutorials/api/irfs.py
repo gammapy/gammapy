@@ -12,7 +12,6 @@ This tutorial is intended for advanced users typically creating IRFs.
 """
 
 import numpy as np
-import scipy.special
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.visualization import quantity_support
@@ -25,8 +24,12 @@ from gammapy.irf import (
     EnergyDispersion2D,
 )
 from gammapy.irf.io import COMMON_IRF_HEADERS, IRF_DL3_HDU_SPECIFICATION
-from gammapy.makers.utils import make_edisp_kernel_map, make_map_exposure_true_energy
-from gammapy.maps import MapAxes, MapAxis, WcsGeom
+from gammapy.makers.utils import (
+    make_edisp_kernel_map,
+    make_map_exposure_true_energy,
+    make_psf_map,
+)
+from gammapy.maps import MapAxis, WcsGeom
 
 ######################################################################
 # Inbuilt Gammapy IRFs
@@ -80,7 +83,7 @@ print(bkg)
 # (RADEC).
 #
 
-bkg.fov_alignment
+print(bkg.fov_alignment)
 
 
 ######################################################################
@@ -88,7 +91,7 @@ bkg.fov_alignment
 # interpolation scheme for the data
 #
 
-bkg.interp_kwargs
+print(bkg.interp_kwargs)
 
 # Evaluate background
 # Note that evaluate functions support  numpy-style broadcasting
@@ -409,17 +412,22 @@ geom = WcsGeom.create(10, binsz=0.5, axes=[ereco, etrue], skydir=pointing)
 edispmap = make_edisp_kernel_map(edisp3d, pointing, geom)
 
 edispmap.peek()
+plt.show()
 
-edispmap.edisp_map.data[3][1][3]
+#
+print(edispmap.edisp_map.data[3][1][3])
 
 
 ######################################################################
 # PSF
 # ---
 #
-# Asymmetric PSFs are not correctly supported at present in the data
-# reduction scheme. However, higher dimensional PSF Table can be created
-# as a data container, as shown here.
+# There are two types of asymmetric PSFs that can be considered
+# - Asymmetry about the camera center: Such PSF Tables can be supported
+# - Asymmetry about the source position: These PSF models cannot be supported
+# correctly within the data reduction scheme at present
+# Also, analytic PSF models defined within the GADF scheme cannot be
+# directly generalised to the 3D case for use within Gammapy.
 #
 
 
@@ -483,12 +491,26 @@ psf_assym.write("test_psf.fits.gz", overwrite=True)
 
 psf_new = PSF_assym.read("test_psf.fits.gz")
 
-psf_new == psf_assym
+print(psf_new == psf_assym)
+
+######################################################################
+# Create DL4 product - `PSFMap`
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+
+rad = MapAxis.from_edges(np.linspace(0.5, 3.0, 10), unit="deg", name="rad")
+etrue = MapAxis.from_energy_bounds(0.5, 2, 6, unit="TeV", name="energy_true")
+geom = WcsGeom.create(10, binsz=0.5, axes=[rad, etrue], skydir=pointing)
+
+psfmap = make_psf_map(psf_assym, pointing, geom)
+
+psfmap.peek()
+plt.show()
 
 
 ######################################################################
 # Containers for asymmetric analytic PSFs are not supported at present.
 #
-# **NOTE**: Support for asymmetric IRFs is priliminary at the moment, and
+# **NOTE**: Support for asymmetric IRFs is preliminary at the moment, and
 # will evolve depending on feedback.
 #
