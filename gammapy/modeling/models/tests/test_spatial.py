@@ -427,7 +427,9 @@ def test_spatial_model_plot():
 
 def test_integrate_region_geom():
     center = SkyCoord("0d", "0d", frame="icrs")
-    model = GaussianSpatialModel(lon="0d", lat="0d", sigma=0.1 * u.deg, frame="icrs")
+    model = GaussianSpatialModel(
+        lon_0="0 deg", lat_0="0 deg", sigma=0.1 * u.deg, frame="icrs"
+    )
 
     radius_large = 1 * u.deg
     circle_large = CircleSkyRegion(center, radius_large)
@@ -436,7 +438,7 @@ def test_integrate_region_geom():
 
     geom_large, geom_small = (
         RegionGeom(region=circle_large),
-        RegionGeom(region=circle_small, binsz_wcs="0.01d"),
+        RegionGeom(region=circle_small, binsz_wcs="0.01 deg"),
     )
 
     integral_large, integral_small = (
@@ -448,29 +450,53 @@ def test_integrate_region_geom():
     assert_allclose(integral_small[0], 0.3953, rtol=0.001)
 
 
-def test_integrate_wcs_geom():
+# TODO: solve issue with small radii (e.g. 1e-5) and improve tolerance
+@pytest.mark.parametrize("width", np.geomspace(1e-4, 1e-1, 10) * u.deg)
+@pytest.mark.parametrize(
+    "model",
+    [
+        (GaussianSpatialModel, "sigma", 6e-3),
+        (DiskSpatialModel, "r_0", 0.4),
+        (GeneralizedGaussianSpatialModel, "r_0", 3e-4),
+    ],
+)
+def test_integrate_wcs_geom(width, model):
+    model_cls, param_name, tolerance = model
+    param_dict = {param_name: width}
+    spatial_model = model_cls(
+        lon_0="0.234 deg", lat_0="-0.172 deg", frame="icrs", **param_dict
+    )
+    geom = WcsGeom.create(skydir=(0, 0), npix=100, binsz=0.02)
+
+    integrated = spatial_model.integrate_geom(geom)
+
+    assert_allclose(integrated.data.sum(), 1, atol=tolerance)
+
+
+def test_integrate_geom_no_overlap():
     center = SkyCoord("0d", "0d", frame="icrs")
-    model_0_0d = GaussianSpatialModel(
-        lon="0.234d", lat="-0.172d", sigma=1e-4 * u.deg, frame="icrs"
+    model = GaussianSpatialModel(
+        lon_0="10.234 deg", lat_0="-0.172 deg", sigma=1e-2 * u.deg, frame="icrs"
     )
-
-    model_0_01d = GaussianSpatialModel(
-        lon="0.234d", lat="-0.172d", sigma=0.01 * u.deg, frame="icrs"
-    )
-    model_0_005d = GaussianSpatialModel(
-        lon="0.234d", lat="-0.172d", sigma=0.005 * u.deg, frame="icrs"
-    )
-
     geom = WcsGeom.create(skydir=center, npix=100, binsz=0.02)
 
-    # TODO: solve issue with small radii
-    integrated_0_0d = model_0_0d.integrate_geom(geom)
-    integrated_0_01d = model_0_01d.integrate_geom(geom)
-    integrated_0_005d = model_0_005d.integrate_geom(geom)
+    # This should not fail but return map filled with 0
+    integrated = model.integrate_geom(geom)
 
-    assert_allclose(integrated_0_0d.data.sum(), 1, atol=2e-4)
-    assert_allclose(integrated_0_01d.data.sum(), 1, atol=2e-4)
-    assert_allclose(integrated_0_005d.data.sum(), 1, atol=2e-4)
+    assert_allclose(integrated.data, 0.0)
+
+
+def test_integrate_geom_parameter_issue():
+    center = SkyCoord("0d", "0d", frame="icrs")
+    model = GaussianSpatialModel(
+        lon_0="0.234 deg", lat_0="-0.172 deg", sigma=np.nan * u.deg, frame="icrs"
+    )
+    geom = WcsGeom.create(skydir=center, npix=100, binsz=0.02)
+
+    # This should not fail but return map filled with nan
+    integrated = model.integrate_geom(geom)
+
+    assert_allclose(integrated.data, np.nan)
 
 
 def test_integrate_geom_energy_axis():
