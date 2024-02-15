@@ -37,6 +37,10 @@ authors:
   family-names: Biederbeck
   affiliation: "Astroparticle Physics Group, TU Dortmund University, Germany"
   orcid: "https://orcid.org/0000-0003-3708-9785"
+- given-names: Julia
+  family-names: Djuvsland
+  affiliation: "University of Bergen, Norway and Max Planck Institute for Nuclear Physics, Heidelberg, Germany"
+  orcid: "https://orcid.org/0000-0002-6488-8219"
 - given-names: Axel
   family-names: Donath
   affiliation: "Center for Astrophysics | Harvard & Smithsonian, USA"
@@ -60,6 +64,10 @@ authors:
   affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013\
     \ Paris, France"
   orcid: "https://orcid.org/0000-0001-6876-5577"
+- given-names: Jana
+  family-names: Konrad
+  affiliation: "Astroparticle Physics Group, TU Dortmund University, Germany"
+  orcid: "https://orcid.org/0009-0000-1257-4771"
 - given-names: Paula
   family-names: Kornecki
   affiliation: Laboratoire Univers et Théories, Observatoire de Paris, Université PSL,\
