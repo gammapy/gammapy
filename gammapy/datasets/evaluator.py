@@ -226,6 +226,13 @@ class MapEvaluator:
         self.exposure = exposure
         if self.evaluation_mode == "local":
             self.contributes = self.model.contributes(mask=mask, margin=self.psf_width)
+            if self.contributes and not self.model.contributes(mask=mask):
+                log.warning(
+                    "Model {m.name} is outside the target geom but contributes inside through the psf."
+                    "This contribution cannot be estimated precisely."
+                    "Consider extending the dataset geom and/or the masked margin in the mask_fit."
+                )
+
             if self.contributes and not self.geom.is_region:
                 self.exposure = exposure._cutout_view(
                     position=self.position, width=self.cutout_width, odd_npix=True
