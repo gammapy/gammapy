@@ -714,6 +714,7 @@ def get_joint_significance_maps(estimator, datasets):
     results : dict
         Dictionary with keys :
         - "significance" : joint significance map.
+        - "df" : degree of freedom map (one norm per valid bin).
         - "npred_excess" : summed excess map.
         - "estimator_results" : dictionary containing the estimator results for each dataset.
 
@@ -730,15 +731,14 @@ def get_joint_significance_maps(estimator, datasets):
     ts_sum = Map.from_geom(geom)
     ts_sum_sign = Map.from_geom(geom)
     npred_excess_sum = Map.from_geom(geom)
+    df = Map.from_geom(geom)
 
-    dof = 0
     results = dict()
     for kd, d in enumerate(datasets):
         result = estimator.run(d)
         results[d.name] = result
 
-        dof += np.sum(result["ts"].data > 0, axis=0)  # one dof (norm) per valid bin
-
+        df += np.sum(result["ts"].data > 0, axis=0)  # one dof (norm) per valid bin
         ts_sum += result["ts"].reduce_over_axes()
         ts_sum_sign += (
             result["ts"] * np.sign(result["npred_excess"])
@@ -746,9 +746,10 @@ def get_joint_significance_maps(estimator, datasets):
         npred_excess_sum += result["npred_excess"].reduce_over_axes()
 
     significance = Map.from_geom(geom)
-    significance.data = ts_to_sigma(ts_sum.data, dof) * np.sign(ts_sum_sign)
+    significance.data = ts_to_sigma(ts_sum.data, df.data) * np.sign(ts_sum_sign)
     return dict(
         significance=significance,
+        df=df,
         npred_excess=npred_excess_sum,
         estimator_results=results,
     )

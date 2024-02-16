@@ -388,3 +388,6 @@ def test_joint_ts_map(fake_dataset):
 
     assert_allclose(result["npred_excess"].data.sum(), 2 * 1140.364071, rtol=1e-3)
     assert_allclose(result["significance"].data[10, 10], 1.414529, rtol=1e-3)
+    assert_allclose(
+        result["df"].data, 2 * (~np.isnan(result["significance"].data)), rtol=1e-3
+    )
