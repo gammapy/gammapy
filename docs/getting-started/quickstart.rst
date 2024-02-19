@@ -11,8 +11,8 @@ and then just execute the following commands in the terminal:
 
 .. substitution-code-block:: bash
 
-    $ curl -O https://gammapy.org/download/install/gammapy-|release|-environment.yml
-    $ conda env create -f gammapy-|release|-environment.yml
+    curl -O https://gammapy.org/download/install/gammapy-|release|-environment.yml
+    conda env create -f gammapy-|release|-environment.yml
 
 .. note::
 
@@ -31,7 +31,7 @@ Once the environment has been created you can activate it using:
 
 .. substitution-code-block:: bash
 
-    $ conda activate gammapy-|release|
+    conda activate gammapy-|release|
 
 You can now proceed to download the Gammapy tutorial notebooks and the example
 datasets. The total size to download is ~180 MB. Select the location where you
@@ -39,10 +39,10 @@ want to install the datasets and proceed with the following commands:
 
 .. substitution-code-block:: bash
 
-    $ gammapy download notebooks
-    $ gammapy download datasets
-    $ conda env config vars set GAMMAPY_DATA=$PWD/gammapy-datasets/|release|
-    $ conda activate gammapy-|release|
+    gammapy download notebooks
+    gammapy download datasets
+    conda env config vars set GAMMAPY_DATA=$PWD/gammapy-datasets/|release|
+    conda activate gammapy-|release|
 
 
 The last conda commands will define the environment variable within the conda environment.
@@ -51,7 +51,7 @@ variable directly in your shell with:
 
 .. substitution-code-block:: bash
 
-    $ export GAMMAPY_DATA=$PWD/gammapy-datasets/|release|
+    export GAMMAPY_DATA=$PWD/gammapy-datasets/|release|
 
 .. note::
 
@@ -66,8 +66,8 @@ Finally start a notebook server by executing:
 
 .. code-block:: bash
 
-    $ cd notebooks
-    $ jupyter notebook
+    cd notebooks
+    jupyter notebook
 
 If you are new to conda, Python and Jupyter, maybe also read the :ref:`using-gammapy` guide.
 If you encountered any issues you can check the :ref:`troubleshoot` guide.
