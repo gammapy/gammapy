@@ -11,6 +11,8 @@ from gammapy.utils.scripts import make_path
 from gammapy.utils.time import time_ref_from_dict
 from . import LightCurveTemplateTemporalModel, Models, SkyModel, TemplateSpatialModel
 
+__all__ = ["read_hermes_cube"]
+
 
 def _template_model_from_cta_sdc(filename):
     """To create a `LightCurveTemplateTemporalModel` from the energy-dependent temporal model files of the cta-sdc1.
