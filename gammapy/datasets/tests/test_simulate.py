@@ -855,6 +855,22 @@ def test_MC_ID_flag(model_alternative):
 
 
 @requires_data()
+def test_large_event_number_sample_sources(dataset):
+    spatial_model = GaussianSpatialModel(
+        lon_0="0 deg", lat_0="0 deg", sigma="0.2 deg", frame="galactic"
+    )
+    spectral_model = PowerLawSpectralModel(amplitude="1e-6 cm-2 s-1 TeV-1")
+
+    dataset.models = [
+        SkyModel(spectral_model=spectral_model, spatial_model=spatial_model)
+    ]
+    print(dataset.npred().data.sum())
+    sampler = MapDatasetEventSampler(random_state=0)
+    sampler.sample_sources(dataset=dataset)
+    assert False
+
+
+@requires_data()
 def test_observation_event_sampler(signal_model, tmp_path):
     from gammapy.datasets.simulate import ObservationEventSampler
 
