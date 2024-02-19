@@ -17,6 +17,13 @@ Getting started
 Installation
 ------------
 
+If Gammapy is aimed to be used as a stand-alone project, it is recommended to follow the instructions in
+the :ref:`quickstart-setup`.
+
+Otherwise, you can use conda or pip to install Gammapy, while verifying the compatibility of the
+versions of the pre-installed librairies with the ones of the Gammapy dependencies. They can be
+found in `https://gammapy.org/download/install/gammapy-X.Y.Z-environment.yml`.
+
 .. panels::
     :column: col-lg-6 col-md-6 col-sm-12 col-xs-12 p-3
 
@@ -27,7 +34,7 @@ Installation
 
     .. code-block:: bash
 
-        $ conda install -c conda-forge gammapy
+        conda install -c conda-forge gammapy
 
     ---
 
@@ -39,7 +46,7 @@ Installation
 
     .. code-block:: bash
 
-        $ pip install gammapy
+        pip install gammapy
 
     ---
     :column: col-12 p-3
