@@ -8,12 +8,12 @@ abstract: 'Gammapy analyzes gamma-ray data and creates sky images, spectra and l
 type: software
 message: "If you use this software, please cite it using the metadata from this file."
 url: "https://gammapy.org/"
-date-released: 2023-06-13
+date-released: 2024-02-19
 keywords:
 - Astronomy
 - "Gamma-rays"
 - "Data analysis"
-version: v1.2
+version: v1.2rc1
 repository-code: "https://github.com/gammapy/gammapy"
 license: BSD-3-Clause
 contact:
@@ -26,12 +26,13 @@ identifiers:
 authors:
 - given-names: Fabio
   family-names: Acero
-  affiliation: "Université Paris-Saclay, Université Paris Cité, CEA, CNRS, AIM, F-91191\
-   \ Gif-sur-Yvette, France"
+  affiliation: "Université Paris-Saclay, Université Paris Cité, CEA, CNRS, AIM, F-91191
+    Gif-sur-Yvette, France"
   orcid: "https://orcid.org/0000-0002-6606-2816"
 - given-names: Juan
   family-names: Bernete
-  affiliation: "Centro de Investigaciones Energéticas Medioambientales y Tecnológicas (CIEMAT), Madrid, Spain"
+  affiliation: "Centro de Investigaciones Energéticas Medioambientales y Tecnológicas
+    (CIEMAT), Madrid, Spain"
   orcid: "https://orcid.org/0000-0002-8108-7552"
 - given-names: Noah
   family-names: Biederbeck
@@ -39,7 +40,8 @@ authors:
   orcid: "https://orcid.org/0000-0003-3708-9785"
 - given-names: Julia
   family-names: Djuvsland
-  affiliation: "University of Bergen, Norway and Max Planck Institute for Nuclear Physics, Heidelberg, Germany"
+  affiliation: "University of Bergen, Norway and Max Planck Institute for Nuclear
+    Physics, Heidelberg, Germany"
   orcid: "https://orcid.org/0000-0002-6488-8219"
 - given-names: Axel
   family-names: Donath
@@ -47,8 +49,8 @@ authors:
   orcid: "https://orcid.org/0000-0003-4568-7005"
 - given-names: Kirsty
   family-names: Feijen
-  affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013\
-    \ Paris, France"
+  affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
+    Paris, France"
   orcid: "https://orcid.org/0000-0003-1476-3714"
 - given-names: Stefan
   family-names: Fröse
@@ -56,13 +58,13 @@ authors:
   orcid: "https://orcid.org/0000-0003-1832-4129"
 - given-names: Claudio
   family-names: Galelli
-  affiliation: Laboratoire Univers et Théories, Observatoire de Paris, Université PSL,\
-    \ Université Paris Cité, CNRS, F-92190 Meudon, France
+  affiliation: Laboratoire Univers et Théories, Observatoire de Paris, Université
+    PSL,\ \ Université Paris Cité, CNRS, F-92190 Meudon, France
   orcid: "https://orcid.org/0000-0002-7372-9703"
 - given-names: Bruno
   family-names: Khélifi
-  affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013\
-    \ Paris, France"
+  affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
+    Paris, France"
   orcid: "https://orcid.org/0000-0001-6876-5577"
 - given-names: Jana
   family-names: Konrad
@@ -70,8 +72,8 @@ authors:
   orcid: "https://orcid.org/0009-0000-1257-4771"
 - given-names: Paula
   family-names: Kornecki
-  affiliation: Laboratoire Univers et Théories, Observatoire de Paris, Université PSL,\
-    \ Université Paris Cité, CNRS, F-92190 Meudon, France
+  affiliation: Laboratoire Univers et Théories, Observatoire de Paris, Université
+    PSL,\ \ Université Paris Cité, CNRS, F-92190 Meudon, France
   orcid: https://orcid.org/0000-0002-2706-7438
 - given-names: Maximilian
   family-names: Linhoff
@@ -87,8 +89,8 @@ authors:
   orcid: "https://orcid.org/0000-0002-0755-0609"
 - given-names: Daniel
   family-names: Morcuende
-  affiliation: Institute of Particle and Cosmos Physics, Instituto de Astrofísica de Andalucía,\
-    \ Universidad Complutense de Madrid
+  affiliation: Institute of Particle and Cosmos Physics, Instituto de Astrofísica
+    de Andalucía,\ \ Universidad Complutense de Madrid
   orcid: https://orcid.org/0000-0001-9400-0922
 - given-names: Laura
   family-names: Olivera-Nieto
@@ -100,13 +102,13 @@ authors:
   orcid: "https://orcid.org/0000-0002-3869-2925"
 - given-names: Michael
   family-names: Punch
-  affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013\
-    \ Paris, France"
+  affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
+    Paris, France"
   orcid: "https://orcid.org/0000-0002-4710-2165"
 - given-names: Maxime
   family-names: Regeard
-  affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013\
-    \ Paris, France"
+  affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
+    Paris, France"
   orcid: "https://orcid.org/0000-0002-3844-6003"
 - given-names: Quentin
   family-names: Remy
@@ -114,27 +116,27 @@ authors:
   orcid: "https://orcid.org/0000-0002-8815-6530"
 - given-names: Atreyee
   family-names: Sinha
-  affiliation: "EMFTEL department and IPARCOS, Universidad Complutense de Madrid,\
-    \ 28040 Madrid, Spain"
+  affiliation: "EMFTEL department and IPARCOS, Universidad Complutense de Madrid,
+    28040 Madrid, Spain"
   orcid: "https://orcid.org/0000-0002-9238-7163"
 - given-names: Hanna
   family-names: Stapel
-  affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013\
-    \ Paris, France"
+  affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
+    Paris, France"
 - given-names: "Katrin"
   family-names: Streil
-  affiliation: "Friedrich-Alexander-Universität Erlangen-Nürnberg, ECAP, Nikolaus-Fiebiger-Str.\
-    \ 2, 91058 Erlangen, Germany"
+  affiliation: "Friedrich-Alexander-Universität Erlangen-Nürnberg, ECAP, Nikolaus-Fiebiger-Str.
+    2, 91058 Erlangen, Germany"
   orcid: "https://orcid.org/0009-0005-7886-1825"
 - given-names: Régis
   family-names: Terrier
-  affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013\
-    \ Paris, France"
+  affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
+    Paris, France"
   orcid: "https://orcid.org/0000-0002-8219-4667"
 - given-names: Tim
   family-names: Unbehaun
-  affiliation: "Friedrich-Alexander-Universität Erlangen-Nürnberg, ECAP, Nikolaus-Fiebiger-Str.\
-    \ 2, 91058 Erlangen, Germany"
+  affiliation: "Friedrich-Alexander-Universität Erlangen-Nürnberg, ECAP, Nikolaus-Fiebiger-Str.
+    2, 91058 Erlangen, Germany"
   orcid: "https://orcid.org/0000-0002-7378-4024"
 preferred-citation:
   authors:
