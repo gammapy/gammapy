@@ -190,7 +190,7 @@ class EDispMap(IRFMap):
         edisp_map.quantity = data / migra_axis.bin_width.reshape((1, -1, 1, 1))
         return cls(edisp_map, exposure_map)
 
-    def sample_coord(self, map_coord, random_state=0, chunk_size=None):
+    def sample_coord(self, map_coord, random_state=0, chunk_size=10000):
         """Apply the energy dispersion corrections on the coordinates of a set of simulated events.
 
         Parameters
@@ -203,7 +203,7 @@ class EDispMap(IRFMap):
             Default is 0.
         chunk_size : int
             If set, this will slice the input MapCoord into smaller chunks of chunk_size elements.
-            Default is None.
+            Default is 10000.
 
         Returns
         -------

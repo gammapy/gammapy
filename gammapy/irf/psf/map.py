@@ -320,7 +320,7 @@ class PSFMap(IRFMap):
         kernel_map = kernel_map.downsample(factor=factor, preserve_counts=True)
         return PSFKernel(kernel_map, normalize=True)
 
-    def sample_coord(self, map_coord, random_state=0, chunk_size=None):
+    def sample_coord(self, map_coord, random_state=0, chunk_size=10000):
         """Apply PSF corrections on the coordinates of a set of simulated events.
 
         Parameters
@@ -332,7 +332,7 @@ class PSFMap(IRFMap):
             Passed to `~gammapy.utils.random.get_random_state`. Default is 0.
         chunk_size : int
             If set, this will slice the input MapCoord into smaller chunks of chunk_size elements.
-            Default is None.
+            Default is 10000.
 
         Returns
         -------

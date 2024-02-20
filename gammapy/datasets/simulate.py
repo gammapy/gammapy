@@ -37,9 +37,9 @@ class MapDatasetEventSampler:
     keep_mc_id : bool, optional
         Flag to tag sampled events from a given model with a Montecarlo identifier.
         Default is True. If set to False, no identifier will be assigned.
-    n_event_bunch : int, optional
+    n_event_bunch : int
         Size of events bunches to sample. If None, sample all events in memory.
-        Default is None.
+        Default is 10000.
     """
 
     def __init__(
@@ -48,7 +48,7 @@ class MapDatasetEventSampler:
         oversample_energy_factor=10,
         t_delta=0.5 * u.s,
         keep_mc_id=True,
-        n_event_bunch=None,
+        n_event_bunch=10000,
     ):
         self.random_state = get_random_state(random_state)
         self.oversample_energy_factor = oversample_energy_factor
@@ -579,7 +579,6 @@ class MapDatasetEventSampler:
 
         events.table["EVENT_ID"] = np.arange(len(events.table))
         if observation is not None:
-            print("det coords")
             events = self.event_det_coords(observation, events)
             events.table.meta.update(
                 self.event_list_meta(dataset, observation, self.keep_mc_id)
@@ -611,9 +610,9 @@ class ObservationEventSampler(MapDatasetEventSampler):
     keep_mc_id : bool, optional
         Flag to tag sampled events from a given model with a Montecarlo identifier.
         Default is True. If set to False, no identifier will be assigned.
-    n_event_bunch : int, optional
+    n_event_bunch : int
         Size of events bunches to sample. If None, sample all events in memory.
-        Default is None.
+        Default is 10000.
     dataset_kwargs : dict, optional
         Arguments passed to `~gammapy.datasets.create_map_dataset_from_observation()`
     """
@@ -624,7 +623,7 @@ class ObservationEventSampler(MapDatasetEventSampler):
         oversample_energy_factor=10,
         t_delta=0.5 * u.s,
         keep_mc_id=True,
-        n_event_bunch=None,
+        n_event_bunch=10000,
         dataset_kwargs=None,
     ):
         self.dataset_kwargs = dataset_kwargs
