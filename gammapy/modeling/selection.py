@@ -64,7 +64,7 @@ class TestStatisticNested:
         return sigma_to_ts(self.n_sigma, self.n_free_parameters)
 
     def run(self, datasets):
-        """Perform the alternative hypothesis testing.
+        """Perform the alternative hypothesis testing and apply model selection.
 
         Parameters
         ----------
@@ -84,16 +84,10 @@ class TestStatisticNested:
         for p in self.parameters:
             p.frozen = False
         fit_results = self.fit.run(datasets)
-        object_cache = [p.__dict__ for p in datasets.models.parameters]
-        prev_pars = [p.value for p in datasets.models.parameters]
         stat = datasets.stat_sum()
 
-        for p, val in zip(self.parameters, self.null_values):
-            if isinstance(val, Parameter):
-                p.__dict__ = val.__dict__
-            else:
-                p.value = val
-                p.frozen = True
+        object_cache, prev_pars = self._apply_null_hypothesis(datasets)
+
         if len(datasets.models.parameters.free_parameters) > 0:
             fit_results_null = self.fit.run(datasets)
         else:
@@ -113,17 +107,31 @@ class TestStatisticNested:
 
         ts = stat_null - stat
         if ts > self.ts_threshold:
-            # restore default model if preferred against null hypothesis
-            for p in self.parameters:
-                p.frozen = False
-            for kp, p in enumerate(datasets.models.parameters):
-                p.__dict__ = object_cache[kp]
-                p.value = prev_pars[kp]
+            self._restore_status(datasets, object_cache, prev_pars)
         return dict(
             ts=ts,
             fit_results=fit_results,
             fit_results_null=fit_results_null,
         )
+
+    def _apply_null_hypothesis(self, datasets):
+        object_cache = [p.__dict__ for p in datasets.models.parameters]
+        prev_pars = [p.value for p in datasets.models.parameters]
+        for p, val in zip(self.parameters, self.null_values):
+            if isinstance(val, Parameter):
+                p.__dict__ = val.__dict__
+            else:
+                p.value = val
+                p.frozen = True
+        return object_cache, prev_pars
+
+    def _restore_status(self, datasets, object_cache, prev_pars):
+        # restore default model if preferred against null hypothesis
+        for p in self.parameters:
+            p.frozen = False
+        for kp, p in enumerate(datasets.models.parameters):
+            p.__dict__ = object_cache[kp]
+            p.value = prev_pars[kp]
 
 
 def select_nested_models(
