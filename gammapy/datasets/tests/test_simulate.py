@@ -855,19 +855,21 @@ def test_MC_ID_flag(model_alternative):
 
 
 @requires_data()
-def test_large_event_number_sample_sources(dataset):
+def test_bunch_event_number_sample_sources(dataset):
     spatial_model = GaussianSpatialModel(
         lon_0="0 deg", lat_0="0 deg", sigma="0.2 deg", frame="galactic"
     )
-    spectral_model = PowerLawSpectralModel(amplitude="1e-6 cm-2 s-1 TeV-1")
+    spectral_model = PowerLawSpectralModel(amplitude="4e-10 cm-2 s-1 TeV-1")
 
     dataset.models = [
-        SkyModel(spectral_model=spectral_model, spatial_model=spatial_model)
+        SkyModel(spectral_model=spectral_model, spatial_model=spatial_model),
+        FoVBackgroundModel(dataset_name=dataset.name),
     ]
-    print(dataset.npred().data.sum())
-    sampler = MapDatasetEventSampler(random_state=0)
-    sampler.sample_sources(dataset=dataset)
-    assert False
+
+    sampler = MapDatasetEventSampler(random_state=0, n_event_bunch=1000)
+    events = sampler.run(dataset=dataset)
+
+    assert len(events.table) == 24128
 
 
 @requires_data()
