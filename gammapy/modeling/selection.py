@@ -90,20 +90,18 @@ class TestStatisticNested:
         return ts
 
     def ts(self, datasets):
-        """Perform the alternative hypothesis testing without appling model selection"""
-        n_sigma_cache = self.n_sigma
-        self.n_sigma = -np.inf
-        results = self.run(datasets)
-        self.n_sigma = n_sigma_cache
-        return results["ts"]
+        """Perform the alternative hypothesis testing."""
+        return self.run(datasets, apply_selection=False)["ts"]
 
-    def run(self, datasets):
+    def run(self, datasets, apply_selection=True):
         """Perform the alternative hypothesis testing and apply model selection.
 
         Parameters
         ----------
         datasets : `~gammapy.datasets.Datasets`
             Datasets.
+        apply_selection : bool
+            Apply or not the model selection. Default is True.
 
         Returns
         -------
@@ -115,6 +113,7 @@ class TestStatisticNested:
                 * "fit_results" : results for the best fit
                 * "fit_results_null" : fit results for the null hypothesis
         """
+
         for p in self.parameters:
             p.frozen = False
         fit_results = self.fit.run(datasets)
@@ -140,8 +139,8 @@ class TestStatisticNested:
         stat_null = datasets.stat_sum()
 
         ts = stat_null - stat
-        if ts > self.ts_threshold:
-            # restore default model if preferred against null hypothesis
+        if not apply_selection or ts > self.ts_threshold:
+            # restore default model if preferred against null hypothesis or if selection is ignored
             self._restore_status(datasets, object_cache, prev_pars)
         return dict(
             ts=ts,
@@ -161,7 +160,7 @@ class TestStatisticNested:
         return object_cache, prev_pars
 
     def _restore_status(self, datasets, object_cache, prev_pars):
-        """Restore parameters to given cached cached objects and values """
+        """Restore parameters to given cached cached objects and values"""
         for p in self.parameters:
             p.frozen = False
         for kp, p in enumerate(datasets.models.parameters):
