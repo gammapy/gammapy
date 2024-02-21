@@ -65,8 +65,8 @@ class TestStatisticNested:
         return np.sign(self.n_sigma) * sigma_to_ts(self.n_sigma, self.n_free_parameters)
 
     def ts_frozen(self, datasets):
-        """Perform the alternative hypothesis testing with all parameters frozen,
-        assuming that the non-null model is the true model.
+        """Perform the alternative hypothesis testing with all parameters frozen.
+        This implicitly assumes that the non-null model is a good representation of the true model.
         If the assumption is true the frozen_ts should tend to the asimov_ts.
         """
         stat = datasets.stat_sum()
