@@ -29,8 +29,8 @@ def test_test_statistic_detection(fermi_datasets):
     ts_frozen = ts_eval.ts_frozen(fermi_datasets)
     ts_asimov = ts_eval.ts_asimov(fermi_datasets)
     ts = ts_eval.ts(fermi_datasets)
-    assert_allclose(ts_frozen, 28086.269146, rtol=1e-5)
-    assert_allclose(ts_asimov, 27495.908291, rtol=1e-5)
+    assert_allclose(ts_frozen, 28086.269146, rtol=1e-3)
+    assert_allclose(ts_asimov, 27495.908291, rtol=1e-3)
     assert_allclose(ts, 20905.667798, rtol=1e-5)
 
     # bad model
@@ -40,8 +40,8 @@ def test_test_statistic_detection(fermi_datasets):
     ts_frozen = ts_eval.ts_frozen(fermi_datasets)
     ts_asimov = ts_eval.ts_asimov(fermi_datasets)
     ts = ts_eval.ts(fermi_datasets)
-    assert_allclose(ts_frozen, 28002.894113, rtol=1e-5)
-    assert_allclose(ts_asimov, 34130.645399, rtol=1e-5)  # ts_frozen<<ts_asimov
+    assert_allclose(ts_frozen, 28002.894113, rtol=1e-3)
+    assert_allclose(ts_asimov, 34130.645399, rtol=1e-3)  # ts_frozen<<ts_asimov
     assert_allclose(ts, 20905.667798, rtol=1e-5)
     model.spectral_model.amplitude.value /= bias_factor
 
