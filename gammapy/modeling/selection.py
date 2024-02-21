@@ -76,8 +76,8 @@ class TestStatisticNested:
         return stat_null - stat
 
     def ts_asimov(self, datasets):
-        """Perform the alternative hypothesis testing with all parameters frozen,
-        for the asimov dataset i.e the non-null model is the true model.
+        """Perform the alternative hypothesis testing with all parameters frozen in the the Asimov dataset.
+        The Asimov dataset is defined by counts=npred such as the non-null model is the true model.
         """
         counts_cache = [d.counts for d in datasets]
         for d in datasets:
