@@ -79,23 +79,23 @@ class TestStatisticNested:
         """Perform the alternative hypothesis testing with all parameters frozen,
         for the asimov dataset i.e the non-null model is the true model.
         """
-        counts_cahe = [d.counts for d in datasets]
+        counts_cache = [d.counts for d in datasets]
         for d in datasets:
             d.counts = d.npred()
 
         ts = self.ts_frozen(datasets)
 
         for kd, d in enumerate(datasets):
-            d.counts = counts_cahe[kd]
+            d.counts = counts_cache[kd]
         return ts
 
     def ts(self, datasets):
         """Perform the alternative hypothesis testing without appling model selection"""
         n_sigma_cache = self.n_sigma
         self.n_sigma = -np.inf
-        resutls = self.run(datasets)
+        results = self.run(datasets)
         self.n_sigma = n_sigma_cache
-        return resutls["ts"]
+        return results["ts"]
 
     def run(self, datasets):
         """Perform the alternative hypothesis testing and apply model selection.
@@ -141,6 +141,7 @@ class TestStatisticNested:
 
         ts = stat_null - stat
         if ts > self.ts_threshold:
+            # restore default model if preferred against null hypothesis
             self._restore_status(datasets, object_cache, prev_pars)
         return dict(
             ts=ts,
@@ -160,7 +161,7 @@ class TestStatisticNested:
         return object_cache, prev_pars
 
     def _restore_status(self, datasets, object_cache, prev_pars):
-        # restore default model if preferred against null hypothesis
+        """Restore parameters to given cached cached objects and values """
         for p in self.parameters:
             p.frozen = False
         for kp, p in enumerate(datasets.models.parameters):
