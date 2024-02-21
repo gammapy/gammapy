@@ -37,18 +37,21 @@ def _template_model_from_cta_sdc(filename, t_ref=None):
         time_hdu = hdul["TIMES"]
         time_header = time_hdu.header
         if t_ref:
-            time_header.setdefault("MJDREFF", int(math.modf(t_ref)[1]))
-            time_header.setdefault("MJDREFI", math.modf(t_ref)[0])
+            time_header.setdefault("MJDREFF", math.modf(t_ref.mjd)[0])
+            time_header.setdefault("MJDREFI", int(math.modf(t_ref.mjd)[1]))
+            scale = t_ref.scale
+            time_header.setdefault("scale", scale)
         else:
             time_header.setdefault("MJDREFF", 0.5)
             time_header.setdefault("MJDREFI", 55555)
-        time_header.setdefault("scale", "tt")
+            scale = "tt"
+            time_header.setdefault("scale", scale)
         time_min = time_hdu.data["Initial Time"]
         time_max = time_hdu.data["Final Time"]
         edges = np.append(time_min, time_max[-1]) * u.Unit(time_header["TUNIT1"])
         data = hdul["SPECTRA"]
 
-        time_ref = time_ref_from_dict(time_header)
+        time_ref = time_ref_from_dict(time_header, scale=scale)
         time_axis = MapAxis.from_edges(edges=edges, name="time", interp="log")
 
         reg_map = RegionNDMap.create(
