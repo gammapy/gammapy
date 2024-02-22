@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
+from scipy.stats import norm, uniform
 from astropy import units as u
 from astropy.io import fits
 from astropy.table import Table
@@ -14,6 +15,7 @@ from gammapy.modeling.models import (
     SkyModel,
     TemplateSpatialModel,
 )
+from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
 from .core import Dataset
 
@@ -55,6 +57,18 @@ class FluxPointsDataset(Dataset):
     meta_table : `~astropy.table.Table`
         Table listing information on observations used to create the dataset.
         One line per observation for stacked datasets.
+    sample_points : bool
+        Evaluate the statistic on samples
+        drawn from flux points as gaussian distribution
+        or uniform distribution between zero and upper limits.
+    n_samples : int
+        Number of samples to draw  per flux points. Defalut is 1000.
+        Used only if sample_points is True.
+        If odd, round up to next even number.
+    random_state: {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+        Defines random number generator initialisation.
+        Passed to `~gammapy.utils.random.get_random_state`. Default is 0.
+        Used only if sample_points is True.
 
     Examples
     --------
@@ -113,6 +127,9 @@ class FluxPointsDataset(Dataset):
         mask_safe=None,
         name=None,
         meta_table=None,
+        sample_points=False,
+        n_samples=1000,
+        random_state=0,
     ):
         if not data.geom.has_energy_axis:
             raise ValueError("FluxPointsDataset needs an energy axis")
@@ -122,7 +139,11 @@ class FluxPointsDataset(Dataset):
         self.models = models
         self.meta_table = meta_table
 
-        if mask_safe is None:
+        self.sample_points = sample_points
+        self.random_state = get_random_state(random_state)
+        self.n_samples = int(np.ceil(n_samples / 2.0) * 2)
+
+        if mask_safe is None and not self.sample_points:
             mask_safe = (~data.is_ul).data
 
         self.mask_safe = mask_safe
@@ -308,15 +329,69 @@ class FluxPointsDataset(Dataset):
             flux += flux_model
         return flux
 
+    def _generate_samples(self):
+        """generate samples"""
+        is_ul = self.data.is_ul.data.flatten()
+        n_points = len(is_ul)
+        samples = np.zeros(n_points * self.n_samples)
+        for k in range(n_points):
+            if not is_ul[k]:
+                loc = self.data.dnde.data.flatten()[k]
+                try:
+                    scale = self.data.dnde_err.data.flatten()[k]
+                    subsamples = norm.rvs(
+                        loc=loc,
+                        scale=scale,
+                        size=self.n_samples,
+                        random_state=self.random_state,
+                    )
+                except AttributeError:
+                    scalep = self.data.dnde_errp.data.flatten()[k]
+                    samplesp = norm.rvs(
+                        loc=loc,
+                        scale=scalep,
+                        size=self.n_samples,
+                        random_state=self.random_state,
+                    )
+                    samplesp[samplesp < loc] = 2 * loc - samplesp[samplesp < loc]
+                    samplesp = np.random.choice(samplesp, size=self.n_samples / 2)
+
+                    scalen = self.data.dnde_errn.data.flatten()[k]
+                    samplesn = norm.rvs(
+                        loc=loc,
+                        scale=scalen,
+                        size=self.n_samples,
+                        random_state=self.random_state,
+                    )
+                    samplesn[samplesn > loc] = 2 * loc - samplesn[samplesn > loc]
+                    samplesn = np.random.choice(samplesn, size=self.n_samples / 2)
+
+                    subsamples = np.concatenate(samplesn, samplesp)
+            else:
+                subsamples = uniform.rvs(
+                    loc=0,
+                    scale=self.data.dnde_ul.data.flatten()[k],
+                    size=self.n_samples,
+                    random_state=self.random_state,
+                )
+            samples[k * self.n_samples : (k + 1) * self.n_samples] = subsamples
+        return samples * self.data.dnde.unit
+
     def stat_array(self):
         """Fit statistic array."""
-        model = self.flux_pred()
-        data = self.data.dnde.quantity
-        try:
-            sigma = self.data.dnde_err
-        except AttributeError:
-            sigma = (self.data.dnde_errn + self.data.dnde_errp) / 2
-        return ((data - model) / sigma.quantity).to_value("") ** 2
+        if self.sample_points:
+            model = np.repeat(self.flux_pred(), self.n_samples)
+            data = self._generate_samples()
+            relative_abs_error = np.sum(np.abs(data - model)) / np.sum(model)
+            sigma = relative_abs_error * model
+        else:
+            model = self.flux_pred()
+            data = self.data.dnde.quantity
+            try:
+                sigma = self.data.dnde_err.quantity
+            except AttributeError:
+                sigma = (self.data.dnde_errn + self.data.dnde_errp).quantity / 2
+        return ((data - model) / sigma).to_value("") ** 2
 
     def residuals(self, method="diff"):
         """Compute flux point residuals.
