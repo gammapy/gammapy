@@ -47,6 +47,17 @@ class SourceCatalogObject:
     it doesn't hold a reference back to it, except for a key
     ``_row_index`` of type ``int`` that links to the catalog table
     row the source information comes from.
+
+    Parameters
+    ----------
+    data : dict
+        Dictionnary of data from a catalog for a given source.
+    data_extended : dict
+        Dictionnary of data from a catalog for a given source in the case where the
+        catalog contains an extended sources table (Fermi-LAT).
+    data_spectral : dict
+        Dictionnary of data from a catalof for a given source in the case where the
+        catalog contains a spectral table (Fermi-LAT 2PC and 3PC).
     """
 
     _source_name_key = "Source_Name"
@@ -288,6 +299,9 @@ class SourceCatalog(abc.ABC):
 
     @lazyproperty
     def _lookup_spectral_source_idx(self):
+        """Return a dictionnary of names-idx pairs corresponding to the
+        entry of the spectral table (for Fermi-LAT pulsar catalogs).
+        """
         source_name_key = self._get_spectral_table_source_name_key()
         names = [_.strip() for _ in self.spectral_table[source_name_key]]
         idx = range(len(names))
@@ -295,6 +309,9 @@ class SourceCatalog(abc.ABC):
 
     @lazyproperty
     def _lookup_extended_source_idx(self):
+        """Return a dictionnary of names-idx pairs corresponding to the
+        entry of the extended table (for Fermi-LAT catalogs).
+        """
         names = [_.strip() for _ in self.extended_sources_table[self._source_name_key]]
         idx = range(len(names))
         return dict(zip(names, idx))
