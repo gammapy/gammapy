@@ -5,6 +5,7 @@ from scipy.stats import norm, uniform
 from astropy import units as u
 from astropy.io import fits
 from astropy.table import Table
+from astropy.utils import lazyproperty
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
@@ -143,10 +144,11 @@ class FluxPointsDataset(Dataset):
         self.random_state = get_random_state(random_state)
         self.n_samples = int(np.ceil(n_samples / 2.0) * 2)
 
-        if mask_safe is None and not self.sample_points:
-            mask_safe = (~data.is_ul).data
+        if mask_safe is None:
+            mask_safe = (~data.is_ul).data & ~np.isnan(self.data.dnde)
 
         self.mask_safe = mask_safe
+        self._min_abs_error = np.inf
 
     @property
     def name(self):
@@ -329,23 +331,19 @@ class FluxPointsDataset(Dataset):
             flux += flux_model
         return flux
 
+    @lazyproperty
     def _generate_samples(self):
         """generate samples"""
         is_ul = self.data.is_ul.data.flatten()
         n_points = len(is_ul)
-        samples = np.zeros(n_points * self.n_samples)
+        samples = np.ones(n_points * self.n_samples) * np.nan
         for k in range(n_points):
+
             if not is_ul[k]:
+                if np.isnan(self.data.dnde.data.flatten()[k]):
+                    continue
                 loc = self.data.dnde.data.flatten()[k]
                 try:
-                    scale = self.data.dnde_err.data.flatten()[k]
-                    subsamples = norm.rvs(
-                        loc=loc,
-                        scale=scale,
-                        size=self.n_samples,
-                        random_state=self.random_state,
-                    )
-                except AttributeError:
                     scalep = self.data.dnde_errp.data.flatten()[k]
                     samplesp = norm.rvs(
                         loc=loc,
@@ -354,7 +352,7 @@ class FluxPointsDataset(Dataset):
                         random_state=self.random_state,
                     )
                     samplesp[samplesp < loc] = 2 * loc - samplesp[samplesp < loc]
-                    samplesp = np.random.choice(samplesp, size=self.n_samples / 2)
+                    samplesp = np.random.choice(samplesp, size=int(self.n_samples / 2))
 
                     scalen = self.data.dnde_errn.data.flatten()[k]
                     samplesn = norm.rvs(
@@ -364,10 +362,21 @@ class FluxPointsDataset(Dataset):
                         random_state=self.random_state,
                     )
                     samplesn[samplesn > loc] = 2 * loc - samplesn[samplesn > loc]
-                    samplesn = np.random.choice(samplesn, size=self.n_samples / 2)
+                    samplesn = np.random.choice(samplesn, size=int(self.n_samples / 2))
 
-                    subsamples = np.concatenate(samplesn, samplesp)
+                    subsamples = np.concatenate((samplesn, samplesp))
+
+                except AttributeError:
+                    scale = self.data.dnde_err.data.flatten()[k]
+                    subsamples = norm.rvs(
+                        loc=loc,
+                        scale=scale,
+                        size=self.n_samples,
+                        random_state=self.random_state,
+                    )
             else:
+                if np.isnan(self.data.dnde_ul.data.flatten()[k]):
+                    continue
                 subsamples = uniform.rvs(
                     loc=0,
                     scale=self.data.dnde_ul.data.flatten()[k],
@@ -375,15 +384,28 @@ class FluxPointsDataset(Dataset):
                     random_state=self.random_state,
                 )
             samples[k * self.n_samples : (k + 1) * self.n_samples] = subsamples
-        return samples * self.data.dnde.unit
+        samples[samples < 0] = np.nan
+        samples = samples * self.data.dnde.unit
+        return samples
 
     def stat_array(self):
         """Fit statistic array."""
         if self.sample_points:
             model = np.repeat(self.flux_pred(), self.n_samples)
-            data = self._generate_samples()
-            relative_abs_error = np.sum(np.abs(data - model)) / np.sum(model)
-            sigma = relative_abs_error * model
+            data = self._generate_samples
+
+            mask = np.isfinite(data)
+            if not np.all(np.isfinite(model)):
+                return np.inf * np.ones(model.shape)
+            mean_abs_error = np.sum(np.abs(data[mask] - model[mask])) / np.sum(mask)
+            if mean_abs_error < self._min_abs_error:
+                self._min_abs_error = mean_abs_error
+            sigma = self._min_abs_error
+
+            stat = ((data - model) / sigma).to_value("") ** 2
+            self.mask_safe = None
+            self.mask_fit = mask
+            return stat
         else:
             model = self.flux_pred()
             data = self.data.dnde.quantity
@@ -391,7 +413,7 @@ class FluxPointsDataset(Dataset):
                 sigma = self.data.dnde_err.quantity
             except AttributeError:
                 sigma = (self.data.dnde_errn + self.data.dnde_errp).quantity / 2
-        return ((data - model) / sigma).to_value("") ** 2
+            return ((data - model) / sigma).to_value("") ** 2
 
     def residuals(self, method="diff"):
         """Compute flux point residuals.
