@@ -235,7 +235,7 @@ html_theme_options = {
 
 # Theme style
 # html_style = ""
-#html_css_files = ["gammapy.css"]
+# html_css_files = ["gammapy.css"]
 
 gammapy_sphinx_ext_activate()
 
@@ -327,8 +327,8 @@ sphinx_gallery_conf = {
     },
 }
 
-html_static_path = ['_static']
+html_static_path = ["_static"]
 
 html_css_files = [
-    'custom.css',
+    "custom.css",
 ]
