@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
-from numpy.testing import assert_allclose
+from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from astropy.io import fits
@@ -9,6 +9,8 @@ from astropy.time import Time
 from regions import CircleSkyRegion
 from gammapy.maps import Map, MapAxis, TimeMapAxis, WcsGeom
 from gammapy.maps.utils import _check_binsz, _check_width
+from gammapy.utils.scripts import make_path
+from gammapy.utils.testing import requires_data
 
 axes1 = [MapAxis(np.logspace(0.0, 3.0, 3), interp="log", name="energy")]
 axes2 = [
@@ -106,6 +108,16 @@ def test_wcsgeom_read_write(tmp_path, npix, binsz, frame, proj, skydir, axes):
 
     assert_allclose(geom0.npix, geom1.npix)
     assert geom0.frame == geom1.frame
+
+
+@requires_data()
+def test_wcsgeom_from_header():
+    file_path = make_path("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
+    with fits.open(file_path, memmap=False) as hdulist:
+        geom2 = WcsGeom.from_header(hdulist[1].header, hdulist["COUNTS_BANDS"])
+
+    assert geom2.wcs.naxis == 2
+    assert_equal(geom2.wcs._naxis, (240, 320))
 
 
 def test_wcsgeom_to_hdulist():

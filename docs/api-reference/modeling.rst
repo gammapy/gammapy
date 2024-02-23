@@ -15,3 +15,7 @@ modeling - Models and fitting
 .. automodapi:: gammapy.modeling.models
     :no-inheritance-diagram:
     :include-all-objects:
+
+.. automodapi:: gammapy.modeling.models.utils
+    :no-inheritance-diagram:
+    :include-all-objects:

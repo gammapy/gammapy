@@ -238,7 +238,7 @@ excess_map = lima_maps["npred_excess"]
 
 # We can plot the excess and significance maps
 fig, (ax1, ax2) = plt.subplots(
-    figsize=(11, 5), subplot_kw={"projection": lima_maps.geom.wcs}, ncols=2
+    figsize=(11, 4), subplot_kw={"projection": lima_maps.geom.wcs}, ncols=2
 )
 
 ax1.set_title("Significance map")

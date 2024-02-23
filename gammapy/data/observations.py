@@ -17,7 +17,7 @@ from astropy.utils import lazyproperty
 import matplotlib.pyplot as plt
 from gammapy.utils.deprecation import GammapyDeprecationWarning, deprecated
 from gammapy.utils.fits import LazyFitsData, earth_location_to_dict
-from gammapy.utils.metadata import CreatorMetaData, TargetMetaData
+from gammapy.utils.metadata import CreatorMetaData, TargetMetaData, TimeInfoMetaData
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_to_dict, time_relative_to_ref
@@ -169,6 +169,12 @@ class Observation:
         events = self.obs_filter.filter_events(self._events)
         return events
 
+    @events.setter
+    def events(self, value):
+        if not isinstance(value, EventList):
+            raise TypeError(f"events must be an EventList instance, got: {type(value)}")
+        self._events = value
+
     @property
     def gti(self):
         """GTI of the observation as a `~gammapy.data.GTI`."""
@@ -257,12 +263,16 @@ class Observation:
             location=location,
         )
 
-        meta = ObservationMetaData(
-            deadtime_fraction=deadtime_fraction,
-            location=location,
+        time_info = TimeInfoMetaData(
             time_start=gti.time_start[0],
             time_stop=gti.time_stop[-1],
             reference_time=reference_time,
+        )
+
+        meta = ObservationMetaData(
+            deadtime_fraction=deadtime_fraction,
+            location=location,
+            time_info=time_info,
             creation=CreatorMetaData(),
             target=TargetMetaData(),
         )
@@ -492,7 +502,7 @@ class Observation:
         return obs
 
     @classmethod
-    def read(cls, event_file, irf_file=None):
+    def read(cls, event_file, irf_file=None, checksum=False):
         """Create an Observation from a Event List and an (optional) IRF file.
 
         Parameters
@@ -502,6 +512,8 @@ class Observation:
         irf_file : str or `~pathlib.Path`, optional
             Path to the FITS file containing the IRF components. Default is None.
             If None, the IRFs will be read from the event file.
+        checksum : bool
+            If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
 
         Returns
         -------
@@ -510,9 +522,9 @@ class Observation:
         """
         from gammapy.irf.io import load_irf_dict_from_file
 
-        events = EventList.read(event_file)
+        events = EventList.read(event_file, checksum=checksum)
 
-        gti = GTI.read(event_file)
+        gti = GTI.read(event_file, checksum=checksum)
 
         irf_file = irf_file if irf_file is not None else event_file
         irf_dict = load_irf_dict_from_file(irf_file)
@@ -523,9 +535,10 @@ class Observation:
         return cls(
             events=events,
             gti=gti,
-            obs_id=obs_info.get("OBS_ID"),
+            obs_id=meta.obs_info.obs_id,
             pointing=FixedPointingInfo.from_fits_header(obs_info),
             meta=meta,
+            location=meta.location,
             **irf_dict,
         )
 

@@ -3,6 +3,8 @@ import logging
 from copy import deepcopy
 import numpy as np
 from scipy import stats
+from scipy.interpolate import interp1d
+from scipy.optimize import minimize
 from astropy.io import fits
 from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
@@ -10,11 +12,12 @@ from astropy.time import Time
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from gammapy.data import GTI
-from gammapy.maps import MapAxis, Maps, RegionNDMap, TimeMapAxis
+from gammapy.maps import Map, MapAxis, Maps, RegionNDMap, TimeMapAxis
 from gammapy.maps.axes import UNIT_STRING_FORMAT, flat_if_equal
 from gammapy.modeling.models import TemplateSpectralModel
 from gammapy.modeling.models.spectral import scale_plot_flux
 from gammapy.modeling.scipy import stat_profile_ul_scipy
+from gammapy.utils.interpolation import interpolate_profile
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_standardise_units_copy
 from gammapy.utils.time import time_ref_to_dict
@@ -23,6 +26,66 @@ from ..map.core import DEFAULT_UNIT, FluxMaps
 __all__ = ["FluxPoints"]
 
 log = logging.getLogger(__name__)
+
+
+def squash_fluxpoints(flux_point, axis):
+    """Squash a FluxPoints object into one point.
+    The log-likelihoods profiles in each bin are summed
+    to compute the resultant quantities. Stat profiles
+    must be present on the fluxpoints object for
+    this method to work.
+    """
+
+    value_scan = flux_point.stat_scan.geom.axes["norm"].center
+    stat_scan = np.sum(flux_point.stat_scan.data, axis=0).ravel()
+    f = interp1d(value_scan, stat_scan, kind="quadratic", bounds_error=False)
+    f = interpolate_profile(value_scan, stat_scan)
+    minimizer = minimize(
+        f,
+        x0=value_scan[
+            int(len(value_scan) / 2),
+        ],
+        bounds=[(value_scan[0], value_scan[-1])],
+        method="L-BFGS-B",
+    )
+
+    maps = Maps()
+    geom = flux_point.geom.to_image()
+    if axis.name != "energy":
+        geom = geom.to_cube([flux_point.geom.axes["energy"]])
+
+    maps["norm"] = Map.from_geom(geom, data=minimizer.x)
+    maps["norm_err"] = Map.from_geom(geom, data=np.sqrt(minimizer.hess_inv.todense()))
+    maps["n_dof"] = Map.from_geom(geom, data=flux_point.geom.axes[axis.name].nbin)
+
+    if "norm_ul" in flux_point.available_quantities:
+        delta_ts = flux_point.meta.get("n_sigma_ul", 2) ** 2
+        ul = stat_profile_ul_scipy(value_scan, stat_scan, delta_ts=delta_ts)
+        maps["norm_ul"] = Map.from_geom(geom, data=ul.value)
+
+    maps["stat"] = Map.from_geom(geom, data=f(minimizer.x))
+
+    maps["stat_scan"] = Map.from_geom(
+        geom=geom.to_cube([MapAxis.from_nodes(value_scan, name="norm")]), data=stat_scan
+    )
+    try:
+        maps["stat_null"] = Map.from_geom(geom, data=np.sum(flux_point.stat_null.data))
+        maps["ts"] = maps["stat_null"] - maps["stat"]
+    except AttributeError:
+        log.info(
+            "Stat null info not present on original FluxPoints object. TS not computed"
+        )
+
+    maps["success"] = Map.from_geom(geom=geom, data=minimizer.success, dtype=bool)
+
+    combined_fp = FluxPoints.from_maps(
+        maps=maps,
+        sed_type=flux_point.sed_type_init,
+        reference_model=flux_point.reference_model,
+        gti=flux_point.gti,
+        meta=flux_point.meta,
+    )
+    return combined_fp
 
 
 class FluxPoints(FluxMaps):
@@ -110,7 +173,15 @@ class FluxPoints(FluxMaps):
     """
 
     @classmethod
-    def read(cls, filename, sed_type=None, format=None, reference_model=None, **kwargs):
+    def read(
+        cls,
+        filename,
+        sed_type=None,
+        format=None,
+        reference_model=None,
+        checksum=False,
+        **kwargs,
+    ):
         """Read precomputed flux points.
 
         Parameters
@@ -124,6 +195,8 @@ class FluxPoints(FluxMaps):
             Default is None.
         reference_model : `SpectralModel`
             Reference spectral model.
+        checksum : bool
+            If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
         **kwargs : dict, optional
             Keyword arguments passed to `astropy.table.Table.read`.
 
@@ -138,7 +211,7 @@ class FluxPoints(FluxMaps):
         try:
             table = Table.read(filename, **kwargs)
         except (IORegistryError, UnicodeDecodeError):
-            with fits.open(filename) as hdulist:
+            with fits.open(filename, checksum=checksum) as hdulist:
                 if "FLUXPOINTS" in hdulist:
                     fp = hdulist["FLUXPOINTS"]
                 else:
@@ -155,7 +228,9 @@ class FluxPoints(FluxMaps):
             gti=gti,
         )
 
-    def write(self, filename, sed_type=None, format=None, overwrite=False):
+    def write(
+        self, filename, sed_type=None, format=None, overwrite=False, checksum=False
+    ):
         """Write flux points.
 
         Parameters
@@ -183,6 +258,9 @@ class FluxPoints(FluxMaps):
 
         overwrite : bool, optional
             Overwrite existing file. Default is False.
+        checksum : bool, optional
+            When True adds both DATASUM and CHECKSUM cards to the headers written to the file.
+            Default is False.
         """
         filename = make_path(filename)
 
@@ -201,7 +279,7 @@ class FluxPoints(FluxMaps):
         if self.gti:
             hdu_all.append(self.gti.to_table_hdu())
 
-        hdu_all.writeto(filename, overwrite=overwrite)
+        hdu_all.writeto(filename, overwrite=overwrite, checksum=checksum)
 
     @staticmethod
     def _convert_loglike_columns(table):
@@ -740,3 +818,37 @@ class FluxPoints(FluxMaps):
             )
         flux_points.meta["n_sigma_ul"] = n_sigma_ul
         return flux_points
+
+    def resample_axis(self, axis_new):
+        """Rebin the flux point object along the new axis.
+        The log-likelihoods profiles in each bin are summed
+        to compute the resultant quantities.
+        Stat profiles must be present on the fluxpoints object for
+        this method to work.
+
+        For now, works only for flat fluxpoints.
+
+        Parameters
+        ----------
+        axis_new : `MapAxis` or `TimeMapAxis`
+            The new axis to resample along
+
+        Returns
+        -------
+        flux_points : `~gammapy.estimators.FluxPoints`
+            A new FluxPoints object with modified axis.
+        """
+
+        if not self.has_stat_profiles:
+            raise ValueError("Stat profiles not present, rebinning is not possible")
+
+        fluxpoints = []
+        for edge_min, edge_max in zip(axis_new.edges_min, axis_new.edges_max):
+            if isinstance(axis_new, TimeMapAxis):
+                edge_min = edge_min + axis_new.reference_time
+                edge_max = edge_max + axis_new.reference_time
+            fp = self.slice_by_coord({axis_new.name: slice(edge_min, edge_max)})
+            fp_new = squash_fluxpoints(fp, axis_new)
+            fluxpoints.append(fp_new)
+
+        return self.__class__.from_stack(fluxpoints, axis=axis_new)

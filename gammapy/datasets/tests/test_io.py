@@ -1,9 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import warnings
+import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
 from regions import CircleSkyRegion
 from gammapy.datasets import Datasets, SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.modeling.models import DatasetModels
+from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import requires_data
 
 
@@ -121,3 +124,47 @@ def test_ogip_writer(tmp_path):
     new_datasets = datasets.read(tmp_path / "written_datasets.yaml")
 
     assert new_datasets[0].counts_off is None
+
+
+@requires_data()
+def test_datasets_write_checksum(tmp_path):
+    filedata = "$GAMMAPY_DATA/tests/models/gc_example_datasets.yaml"
+    filemodel = "$GAMMAPY_DATA/tests/models/gc_example_models.yaml"
+
+    datasets = Datasets.read(
+        filename=filedata,
+        filename_models=filemodel,
+    )
+
+    filename = tmp_path / "written_datasets.yaml"
+    filename_models = tmp_path / "written_models.yaml"
+    datasets.write(
+        filename=filename,
+        filename_models=filename_models,
+        checksum=True,
+    )
+
+    assert "checksum" in filename.read_text()
+    assert "checksum" in filename_models.read_text()
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        Datasets.read(filename=filename, filename_models=filename_models, checksum=True)
+
+    # Remove checksum from datasets.yaml file
+    yaml_content = filename.read_text()
+    index = yaml_content.find("checksum")
+    bad = make_path(tmp_path) / "bad_checksum.yaml"
+    bad.write_text(yaml_content[:index])
+
+    with pytest.warns(UserWarning):
+        Datasets.read(filename=bad, filename_models=filename_models, checksum=True)
+
+    # Modify models yaml file
+    yaml_content = filename_models.read_text()
+    yaml_content = yaml_content.replace("name: gc", "name: bad")
+    bad = make_path(tmp_path) / "bad_models.yaml"
+    bad.write_text(yaml_content)
+
+    with pytest.warns(UserWarning):
+        Datasets.read(filename=filename, filename_models=bad, checksum=True)

@@ -25,6 +25,7 @@ from gammapy.utils.scripts import make_name, make_path
 from gammapy.utils.table import hstack_columns
 from .core import Dataset
 from .evaluator import MapEvaluator
+from .metadata import MapDatasetMetaData
 from .utils import get_axes
 
 __all__ = [
@@ -306,6 +307,8 @@ class MapDataset(Dataset):
     meta_table : `~astropy.table.Table`
         Table listing information on observations used to create the dataset.
         One line per observation for stacked datasets.
+    meta : `~gammapy.datasets.MapDatasetMetaData`
+        Associated meta data container
 
 
     Notes
@@ -390,6 +393,7 @@ class MapDataset(Dataset):
         gti=None,
         meta_table=None,
         name=None,
+        meta=None,
     ):
         self._name = make_name(name)
         self._evaluators = {}
@@ -420,6 +424,18 @@ class MapDataset(Dataset):
         self.gti = gti
         self.models = models
         self.meta_table = meta_table
+        if meta is None:
+            self._meta = MapDatasetMetaData()
+        else:
+            self._meta = meta
+
+    @property
+    def meta(self):
+        return self._meta
+
+    @meta.setter
+    def meta(self, value):
+        self._meta = value
 
     # TODO: keep or remove?
     @property
@@ -1023,6 +1039,9 @@ class MapDataset(Dataset):
         elif other.meta_table:
             self.meta_table = other.meta_table.copy()
 
+        if self.meta and other.meta:
+            self.meta.stack(other.meta)
+
     def stat_array(self):
         """Statistic function value per bin given the current model parameters."""
         return cash(n_on=self.counts.data, mu_on=self.npred().data)
@@ -1337,6 +1356,7 @@ class MapDataset(Dataset):
 
         header = hdu_primary.header
         header["NAME"] = self.name
+        header.update(self.meta.to_header())
 
         hdulist = fits.HDUList([hdu_primary])
         if self.counts is not None:
@@ -1390,6 +1410,7 @@ class MapDataset(Dataset):
         """
         name = make_name(name)
         kwargs = {"name": name}
+        kwargs["meta"] = MapDatasetMetaData.from_header(hdulist["PRIMARY"].header)
 
         if "COUNTS" in hdulist:
             kwargs["counts"] = Map.from_hdulist(hdulist, hdu="counts", format=format)
@@ -1496,7 +1517,9 @@ class MapDataset(Dataset):
         return cls(**kwargs)
 
     @classmethod
-    def read(cls, filename, name=None, lazy=False, cache=True, format="gadf"):
+    def read(
+        cls, filename, name=None, lazy=False, cache=True, format="gadf", checksum=False
+    ):
         """Read a dataset from file.
 
         Parameters
@@ -1511,6 +1534,8 @@ class MapDataset(Dataset):
             Whether to cache the data after loading. Default is True.
         format : {"gadf"}
             Format of the dataset file. Default is "gadf".
+        checksum : bool
+            If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
 
         Returns
         -------
@@ -1528,7 +1553,9 @@ class MapDataset(Dataset):
                 name=ds_name, filename=filename, cache=cache, format=format
             )
         else:
-            with fits.open(str(make_path(filename)), memmap=False) as hdulist:
+            with fits.open(
+                str(make_path(filename)), memmap=False, checksum=checksum
+            ) as hdulist:
                 return cls.from_hdulist(hdulist, name=ds_name, format=format)
 
     @classmethod
@@ -2123,7 +2150,7 @@ class MapDataset(Dataset):
         energy_axis = self._geom.axes["energy"].squash()
         return self.resample_energy_axis(energy_axis=energy_axis, name=name)
 
-    def peek(self, figsize=(12, 10)):
+    def peek(self, figsize=(12, 8)):
         """Quick-look summary plots.
 
         Parameters
@@ -2142,7 +2169,7 @@ class MapDataset(Dataset):
             nrows=2,
             subplot_kw={"projection": self._geom.wcs},
             figsize=figsize,
-            gridspec_kw={"hspace": 0.1, "wspace": 0.1},
+            gridspec_kw={"hspace": 0.25, "wspace": 0.1},
         )
 
         axes = axes.flat
@@ -2206,6 +2233,8 @@ class MapDatasetOnOff(MapDataset):
         One line per observation for stacked datasets.
     name : str
         Name of the dataset.
+    meta : `~gammapy.datasets.MapDatasetMetaData`
+        Associated meta data container
 
 
     See Also
@@ -2232,6 +2261,7 @@ class MapDatasetOnOff(MapDataset):
         mask_safe=None,
         gti=None,
         meta_table=None,
+        meta=None,
     ):
         self._name = make_name(name)
         self._evaluators = {}
@@ -2248,6 +2278,10 @@ class MapDatasetOnOff(MapDataset):
         self.models = models
         self.mask_safe = mask_safe
         self.meta_table = meta_table
+        if meta is None:
+            self._meta = MapDatasetMetaData()
+        else:
+            self._meta = meta
 
     def __str__(self):
         str_ = super().__str__()

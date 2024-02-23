@@ -6,7 +6,7 @@ from astropy.coordinates import SkyCoord
 from astropy.table import Table
 from gammapy.datasets import SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.datasets.map import MapEvaluator
-from gammapy.maps import WcsNDMap
+from gammapy.maps import MapAxis, TimeMapAxis, WcsNDMap
 from gammapy.modeling.models import (
     ConstantFluxSpatialModel,
     PowerLawSpectralModel,
@@ -23,6 +23,7 @@ __all__ = [
     "compute_lightcurve_fpp",
     "compute_lightcurve_doublingtime",
     "find_peaks_in_flux_map",
+    "get_rebinned_axis",
 ]
 
 
@@ -355,7 +356,6 @@ def compute_lightcurve_fpp(lightcurve, flux_quantity="flux"):
 
     Internally calls the `~gammapy.stats.compute_fpp` function
 
-
     Parameters
     ----------
     lightcurve : `~gammapy.estimators.FluxPoints`
@@ -461,3 +461,132 @@ def compute_lightcurve_doublingtime(lightcurve, flux_quantity="flux"):
     )
 
     return table
+
+
+def get_edges_fixed_bins(fluxpoint, group_size, axis_name="energy"):
+    """Rebin the flux point to combine value adjacent bins
+
+    Parameters
+    ----------
+    fluxpoint : `FluxPoints`
+        The flux point to rebin
+    group_size : int
+        Number of bins to combine
+
+    Returns
+    -------
+    edges_min : `Quantity` or `Time`
+    edges_max : `Quantity` or `Time`
+        Low and High edges of the new axis
+    """
+
+    ax = fluxpoint.geom.axes[axis_name]
+    nbin = ax.nbin
+    if not isinstance(group_size, int):
+        raise ValueError("Only integer number of bins can be combined")
+    idx = np.arange(0, nbin, group_size)
+    if idx[-1] < nbin:
+        idx = np.append(idx, nbin)
+    edges_min = ax.edges_min[idx[:-1]]
+    edges_max = ax.edges_max[idx[1:] - 1]
+    return edges_min, edges_max
+
+
+def get_edges_min_ts(fluxpoint, ts_threshold, axis_name="energy"):
+    """Rebin the flux point to combine adjacent bins
+       till a minimum TS is obtained
+
+    Note that to convert TS to significance, it is necessary to
+    take the number of degrees of freedom into account
+
+
+    Parameters
+    ----------
+    fluxpoint : `FluxPoints`
+            The flux point to rebin
+    sqrt_ts_threshold : float
+        The minimum significance desired
+
+    Returns
+    -------
+    edges_min : `Quantity` or `Time`
+    edges_max : `Quantity` or `Time`
+        Low and High edges of the new axis
+    """
+    ax = fluxpoint.geom.axes[axis_name]
+    nbin = ax.nbin
+
+    e_min, e_max = ax.edges_min[0], ax.edges_max[0]
+    edges_min = np.zeros(nbin) * e_min.unit
+    edges_max = np.zeros(nbin) * e_max.unit
+    i, i1 = 0, 0
+    while e_max < ax.edges_max[-1]:
+        ts = fluxpoint.ts.data[i]
+        e_min = ax.edges_min[i]
+        while ts < ts_threshold and i < ax.nbin - 1:
+            i = i + 1
+            ts = ts + fluxpoint.ts.data[i]
+        e_max = ax.edges_max[i]
+        i = i + 1
+        edges_min[i1] = e_min
+        edges_max[i1] = e_max
+        i1 = i1 + 1
+    edges_max = edges_max[:i1]
+    edges_min = edges_min[:i1]
+
+    return edges_min, edges_max
+
+
+RESAMPLE_METHODS = {
+    "fixed-bins": get_edges_fixed_bins,
+    "min-ts": get_edges_min_ts,
+}
+
+
+def get_rebinned_axis(fluxpoint, axis_name="energy", method=None, **kwargs):
+    """Get the rebinned axis for resampling
+     the flux point object along the mentioned axis.
+
+    Parameters
+    ----------
+    fluxpoint : `gammapy.estimators.FluxPoints`
+        The fluxpoint object to rebin
+    method : str
+        The method to resample the axis. Supported options are
+        fixed_bins and min-ts
+    kwargs : Dict
+        keywords passed to get_edges_fixed_bins or
+        get_edges_min_ts
+        if method is fixed-bins, keyword should be group_size
+        if method is min-ts, keyword should be ts_threshold
+    axis_name : The axis name to combine along
+
+    Returns
+    -------
+    axis_new : MapAxis or TimeMapAxis
+        The new axis
+    """
+    # TODO: Make fixed_bins and fixed_edges work for multidimensions
+    if not fluxpoint.geom.axes.is_unidimensional:
+        raise ValueError(
+            "Rebinning is supported only for Unidimensional FluxPoints \n "
+            "Please use `iter_by_axis` to create Unidimensional FluxPoints"
+        )
+
+    if method not in RESAMPLE_METHODS.keys():
+        raise ValueError("Incorrect option. Choose from", RESAMPLE_METHODS.keys())
+
+    edges_min, edges_max = RESAMPLE_METHODS[method](
+        fluxpoint=fluxpoint, axis_name=axis_name, **kwargs
+    )
+    ax = fluxpoint.geom.axes[axis_name]
+
+    if isinstance(ax, TimeMapAxis):
+        axis_new = TimeMapAxis.from_time_edges(
+            time_min=edges_min + ax.reference_time,
+            time_max=edges_max + ax.reference_time,
+        )
+    else:
+        edges = np.append(edges_min, edges_max[-1])
+        axis_new = MapAxis.from_edges(edges, name=axis_name, interp=ax.interp)
+    return axis_new

@@ -430,12 +430,15 @@ plt.show()
 # `binary_dilate` methods, respectively.
 #
 
+fig, (ax1, ax2) = plt.subplots(
+    figsize=(11, 5), ncols=2, subplot_kw={"projection": significance_mask_inv.geom.wcs}
+)
+
 mask = significance_mask_inv.binary_erode(width=0.2 * u.deg, kernel="disk")
-mask.plot()
-plt.show()
+mask.plot(ax=ax1)
 
 mask = significance_mask_inv.binary_dilate(width=0.2 * u.deg)
-mask.plot()
+mask.plot(ax=ax2)
 plt.show()
 
 

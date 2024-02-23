@@ -3,6 +3,7 @@ import collections
 import copy
 import html
 import logging
+import warnings
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import AltAz, Angle, SkyCoord, angular_separation
@@ -13,11 +14,13 @@ from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from gammapy.maps import MapAxis, MapCoord, RegionGeom, WcsNDMap
 from gammapy.maps.axes import UNIT_STRING_FORMAT
+from gammapy.utils.deprecation import deprecated
 from gammapy.utils.fits import earth_location_from_dict
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_from_dict
 from .gti import GTI
+from .metadata import EventListMetaData
 
 __all__ = ["EventList"]
 
@@ -58,6 +61,8 @@ class EventList:
     ----------
     table : `~astropy.table.Table`
         Event list table.
+    meta : `~gammapy.data.EventListMetaData`
+        The metadata. Default is None.
 
     Examples
     --------
@@ -86,8 +91,9 @@ class EventList:
 
     """
 
-    def __init__(self, table):
+    def __init__(self, table, meta=None):
         self.table = table
+        self.meta = meta
 
     def _repr_html_(self):
         try:
@@ -96,22 +102,35 @@ class EventList:
             return f"<pre>{html.escape(str(self))}</pre>"
 
     @classmethod
-    def read(cls, filename, **kwargs):
+    def read(cls, filename, hdu="EVENTS", checksum=False, **kwargs):
         """Read from FITS file.
 
         Format specification: :ref:`gadf:iact-events`
 
         Parameters
         ----------
-        filename : `pathlib.Path` or str
-            Filename.
-        **kwargs : dict, optional
-            Keyword arguments passed to `~astropy.table.Table.read`.
+        filename : `pathlib.Path`, str
+            Filename
+        hdu : str
+            Name of events HDU. Default is "EVENTS".
+        checksum : bool
+            If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
         """
         filename = make_path(filename)
-        kwargs.setdefault("hdu", "EVENTS")
-        table = Table.read(filename, **kwargs)
-        return cls(table=table)
+
+        with fits.open(filename) as hdulist:
+            events_hdu = hdulist[hdu]
+            if checksum:
+                if events_hdu.verify_checksum() != 1:
+                    warnings.warn(
+                        f"Checksum verification failed for HDU {hdu} of {filename}.",
+                        UserWarning,
+                    )
+
+            table = Table.read(events_hdu)
+            meta = EventListMetaData.from_header(table.meta)
+
+        return cls(table=table, meta=meta)
 
     def to_table_hdu(self, format="gadf"):
         """
@@ -132,6 +151,10 @@ class EventList:
 
         return fits.BinTableHDU(self.table, name="EVENTS")
 
+    @deprecated(
+        since="v1.2",
+        message="To write an EventList utilise Observation.write() with include_irfs=False",
+    )
     def write(self, filename, gti=None, overwrite=False, format="gadf", checksum=False):
         """Write the event list to a FITS file.
 
@@ -182,6 +205,7 @@ class EventList:
 
         hdu_all.writeto(filename, overwrite=overwrite, checksum=checksum)
 
+    # TODO: Pass metadata here. Also check that specific meta contents are consistent
     @classmethod
     def from_stack(cls, event_lists, **kwargs):
         """Stack (concatenate) list of event lists.
@@ -197,6 +221,7 @@ class EventList:
         """
         tables = [_.table for _ in event_lists]
         stacked_table = vstack_tables(tables, **kwargs)
+        log.warning("The meta information will be empty here.")
         return cls(stacked_table)
 
     def stack(self, other):

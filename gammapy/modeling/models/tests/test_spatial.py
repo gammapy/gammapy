@@ -15,8 +15,10 @@ from regions import (
 )
 from gammapy.maps import Map, MapAxis, MapCoord, RegionGeom, WcsGeom, WcsNDMap
 from gammapy.modeling.models import (
+    SPATIAL_MODEL_REGISTRY,
     ConstantSpatialModel,
     DiskSpatialModel,
+    FoVBackgroundModel,
     GaussianSpatialModel,
     GeneralizedGaussianSpatialModel,
     PiecewiseNormSpatialModel,
@@ -380,6 +382,11 @@ def test_sky_diffuse_map(caplog):
     assert_allclose(model2.lon_0.quantity, 12.0 * u.deg, rtol=1e-3)
 
     # test dict without parameters
+    dict1["spatial"]["parameters"] = []
+    model3 = TemplateSpatialModel.from_dict(dict1)
+    assert_allclose(model3.lon_0.quantity, 258.388 * u.deg, rtol=1e-3)
+
+    # test dict without parameters
     dict1["spatial"].pop("parameters")
     model3 = TemplateSpatialModel.from_dict(dict1)
     assert_allclose(model3.lon_0.quantity, 258.388 * u.deg, rtol=1e-3)
@@ -480,6 +487,32 @@ def test_sky_diffuse_map_empty(caplog):
         assert np.all(np.isfinite(model.map.data))
 
 
+@pytest.mark.parametrize("model_cls", SPATIAL_MODEL_REGISTRY)
+def test_model_from_dict(tmpdir, model_cls):
+    if model_cls in [TemplateSpatialModel, TemplateNDSpatialModel]:
+        default_map = Map.create(map_type="wcs", width=(1, 1), binsz=0.5, unit="sr-1")
+        filename = str(tmpdir / "template.fits")
+        model = model_cls(default_map, filename=filename)
+        model.write()
+    elif model_cls is PiecewiseNormSpatialModel:
+        geom = WcsGeom.create(skydir=(0, 0), npix=(2, 2), binsz=0.3, frame="galactic")
+        default_coords = MapCoord.create(geom.footprint)
+        default_coords["lon"] *= u.deg
+        default_coords["lat"] *= u.deg
+        model = model_cls(default_coords, frame="galactic")
+    else:
+        model = model_cls()
+
+    data = model.to_dict()
+    model_from_dict = model_cls.from_dict(data)
+    assert model_from_dict.tag == model_from_dict.tag
+
+    bkg_model = FoVBackgroundModel(spatial_model=model, dataset_name="test")
+    bkg_model_dict = bkg_model.to_dict()
+    bkg_model_from_dict = FoVBackgroundModel.from_dict(bkg_model_dict)
+    assert bkg_model_from_dict.spatial_model is not None
+
+
 def test_evaluate_on_fk5_map():
     # Check if spatial model can be evaluated on a map with FK5 frame
     # Regression test for GH-2402
@@ -548,7 +581,9 @@ def test_spatial_model_plot_error(model_class, extension_param):
 
 def test_integrate_region_geom():
     center = SkyCoord("0d", "0d", frame="icrs")
-    model = GaussianSpatialModel(lon="0d", lat="0d", sigma=0.1 * u.deg, frame="icrs")
+    model = GaussianSpatialModel(
+        lon_0="0 deg", lat_0="0 deg", sigma=0.1 * u.deg, frame="icrs"
+    )
 
     radius_large = 1 * u.deg
     circle_large = CircleSkyRegion(center, radius_large)
@@ -557,7 +592,7 @@ def test_integrate_region_geom():
 
     geom_large, geom_small = (
         RegionGeom(region=circle_large),
-        RegionGeom(region=circle_small, binsz_wcs="0.01d"),
+        RegionGeom(region=circle_small, binsz_wcs="0.01 deg"),
     )
 
     integral_large, integral_small = (
@@ -569,29 +604,53 @@ def test_integrate_region_geom():
     assert_allclose(integral_small[0], 0.3953, rtol=0.001)
 
 
-def test_integrate_wcs_geom():
+# TODO: solve issue with small radii (e.g. 1e-5) and improve tolerance
+@pytest.mark.parametrize("width", np.geomspace(1e-4, 1e-1, 10) * u.deg)
+@pytest.mark.parametrize(
+    "model",
+    [
+        (GaussianSpatialModel, "sigma", 6e-3),
+        (DiskSpatialModel, "r_0", 0.4),
+        (GeneralizedGaussianSpatialModel, "r_0", 3e-4),
+    ],
+)
+def test_integrate_wcs_geom(width, model):
+    model_cls, param_name, tolerance = model
+    param_dict = {param_name: width}
+    spatial_model = model_cls(
+        lon_0="0.234 deg", lat_0="-0.172 deg", frame="icrs", **param_dict
+    )
+    geom = WcsGeom.create(skydir=(0, 0), npix=100, binsz=0.02)
+
+    integrated = spatial_model.integrate_geom(geom)
+
+    assert_allclose(integrated.data.sum(), 1, atol=tolerance)
+
+
+def test_integrate_geom_no_overlap():
     center = SkyCoord("0d", "0d", frame="icrs")
-    model_0_0d = GaussianSpatialModel(
-        lon="0.234d", lat="-0.172d", sigma=1e-4 * u.deg, frame="icrs"
+    model = GaussianSpatialModel(
+        lon_0="10.234 deg", lat_0="-0.172 deg", sigma=1e-2 * u.deg, frame="icrs"
     )
-
-    model_0_01d = GaussianSpatialModel(
-        lon="0.234d", lat="-0.172d", sigma=0.01 * u.deg, frame="icrs"
-    )
-    model_0_005d = GaussianSpatialModel(
-        lon="0.234d", lat="-0.172d", sigma=0.005 * u.deg, frame="icrs"
-    )
-
     geom = WcsGeom.create(skydir=center, npix=100, binsz=0.02)
 
-    # TODO: solve issue with small radii
-    integrated_0_0d = model_0_0d.integrate_geom(geom)
-    integrated_0_01d = model_0_01d.integrate_geom(geom)
-    integrated_0_005d = model_0_005d.integrate_geom(geom)
+    # This should not fail but return map filled with 0
+    integrated = model.integrate_geom(geom)
 
-    assert_allclose(integrated_0_0d.data.sum(), 1, atol=2e-4)
-    assert_allclose(integrated_0_01d.data.sum(), 1, atol=2e-4)
-    assert_allclose(integrated_0_005d.data.sum(), 1, atol=2e-4)
+    assert_allclose(integrated.data, 0.0)
+
+
+def test_integrate_geom_parameter_issue():
+    center = SkyCoord("0d", "0d", frame="icrs")
+    model = GaussianSpatialModel(
+        lon_0="0.234 deg", lat_0="-0.172 deg", sigma=np.nan * u.deg, frame="icrs"
+    )
+    geom = WcsGeom.create(skydir=center, npix=100, binsz=0.02)
+
+    # This should not fail but return map filled with nan
+    integrated = model.integrate_geom(geom)
+
+    assert_allclose(integrated.data, np.nan)
 
 
 def test_integrate_geom_energy_axis():

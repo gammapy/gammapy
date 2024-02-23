@@ -803,7 +803,7 @@ class IRFMap:
         return output_class(irf_map, exposure_map)
 
     @classmethod
-    def read(cls, filename, format="gadf", hdu=None):
+    def read(cls, filename, format="gadf", hdu=None, checksum=False):
         """Read an IRF_map from file and create corresponding object.
 
         Parameters
@@ -814,6 +814,8 @@ class IRFMap:
             File format. Default is "gadf".
         hdu : str or int
             HDU location. Default is None.
+        checksum : bool
+            If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
 
         Returns
         -------
@@ -822,7 +824,8 @@ class IRFMap:
 
         """
         filename = make_path(filename)
-        with fits.open(filename, memmap=False) as hdulist:
+        # TODO: this will test all hdus and the one specifically of interest
+        with fits.open(filename, memmap=False, checksum=checksum) as hdulist:
             return cls.from_hdulist(hdulist, format=format, hdu=hdu)
 
     def to_hdulist(self, format="gadf"):

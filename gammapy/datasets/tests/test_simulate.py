@@ -8,7 +8,6 @@ from astropy.io import fits
 from astropy.table import Table
 from astropy.time import Time
 from gammapy.data import GTI, DataStore, Observation, ObservationsEventsSampler
-from gammapy.data.metadata import ObservationMetaData
 from gammapy.data.pointing import FixedPointingInfo
 from gammapy.datasets import MapDataset, MapDatasetEventSampler
 from gammapy.datasets.tests.test_map import get_map_dataset
@@ -483,7 +482,7 @@ def test_event_det_coords(dataset, models):
 
 
 @requires_data()
-def test_mde_run(dataset, models):
+def test_mde_run(dataset, models, tmp_path):
     irfs = load_irf_dict_from_file(
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     )
@@ -573,13 +572,22 @@ def test_mde_run(dataset, models):
     assert meta["MMN00000"] == "test-bkg"
     assert meta["MID00001"] == 1
     assert meta["NMCIDS"] == 2
-    assert_allclose(float(meta["ALT_PNT"]), float("-13.5345076464"), rtol=1e-7)
-    assert_allclose(float(meta["AZ_PNT"]), float("228.82981620065763"), rtol=1e-7)
+    assert_allclose(meta["ALT_PNT"], -13.5345076464, rtol=1e-7)
+    assert_allclose(meta["AZ_PNT"], 228.82981620065763, rtol=1e-7)
     assert meta["ORIGIN"] == "Gammapy"
     assert meta["TELESCOP"] == "CTA"
     assert meta["INSTRUME"] == "1DC"
     assert meta["N_TELS"] == ""
     assert meta["TELLIST"] == ""
+
+    # test writing out and reading back in works
+    obs.events = events
+    path = tmp_path / "obs.fits.gz"
+    obs.write(path)
+    obs_back = Observation.read(path)
+    assert u.isclose(obs_back.observatory_earth_location.lon, LOCATION.lon)
+    assert u.isclose(obs_back.observatory_earth_location.lat, LOCATION.lat)
+    assert u.isclose(obs_back.observatory_earth_location.height, LOCATION.height)
 
 
 @requires_data()
@@ -847,6 +855,24 @@ def test_MC_ID_flag(model_alternative):
 
 
 @requires_data()
+def test_bunch_event_number_sample_sources(dataset):
+    spatial_model = GaussianSpatialModel(
+        lon_0="0 deg", lat_0="0 deg", sigma="0.2 deg", frame="galactic"
+    )
+    spectral_model = PowerLawSpectralModel(amplitude="4e-10 cm-2 s-1 TeV-1")
+
+    dataset.models = [
+        SkyModel(spectral_model=spectral_model, spatial_model=spatial_model),
+        FoVBackgroundModel(dataset_name=dataset.name),
+    ]
+
+    sampler = MapDatasetEventSampler(random_state=0, n_event_bunch=1000)
+    events = sampler.run(dataset=dataset)
+
+    assert len(events.table) == 24128
+
+
+@requires_data()
 def test_observation_event_sampler(signal_model, tmp_path):
     from gammapy.datasets.simulate import ObservationEventSampler
 
@@ -859,17 +885,14 @@ def test_observation_event_sampler(signal_model, tmp_path):
     time_start = Time("2021-11-20T03:00:00")
     time_stop = Time("2021-11-20T03:30:00")
 
-    obs = Observation(
-        obs_id=1,
-        **irfs,
-        location=LOCATION,
+    obs = Observation.create(
         pointing=pointing,
-        gti=GTI.create(time_start, time_stop),
-        meta=ObservationMetaData(
-            time_start=time_start,
-            time_stop=time_stop,
-            deadtime_fraction=0.01,
-        ),
+        location=LOCATION,
+        obs_id=1,
+        tstart=time_start,
+        tstop=time_stop,
+        irfs=irfs,
+        deadtime_fraction=0.01,
     )
 
     dataset_kwargs = dict(

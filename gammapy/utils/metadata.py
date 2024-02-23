@@ -2,15 +2,28 @@
 """Metadata base container for Gammapy."""
 import json
 from typing import ClassVar, Literal, Optional, get_args
+import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
 import yaml
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 from gammapy.utils.fits import skycoord_from_dict
+from gammapy.utils.time import (
+    time_ref_from_dict,
+    time_ref_to_dict,
+    time_relative_to_ref,
+)
 from gammapy.version import version
 from .types import AltAzSkyCoordType, ICRSSkyCoordType, SkyCoordType, TimeType
 
-__all__ = ["MetaData", "CreatorMetaData"]
+__all__ = [
+    "MetaData",
+    "CreatorMetaData",
+    "ObsInfoMetaData",
+    "PointingInfoMetaData",
+    "TimeInfoMetaData",
+    "TargetMetaData",
+]
 
 METADATA_FITS_KEYS = {
     "creator": {
@@ -91,11 +104,11 @@ class MetaData(BaseModel):
 
         for key, item in fits_export_keys.items():
             value = self.model_dump().get(key)
-            if not isinstance(item, str):
-                # Not a one to one conversion
-                hdr_dict.update(item["output"](value))
-            else:
-                if value is not None:
+            if value is not None:
+                if not isinstance(item, str):
+                    # Not a one to one conversion
+                    hdr_dict.update(item["output"](value))
+                else:
                     hdr_dict[item] = value
 
         extra_keys = set(self.model_fields.keys()) - set(fits_export_keys.keys())
@@ -119,6 +132,7 @@ class MetaData(BaseModel):
         format : {'gadf'}
             Header format. Default is 'gadf'.
         """
+        # TODO: implement storage of optional metadata
         if format != "gadf":
             raise ValueError(f"Metadata from header: format {format} is not supported.")
 
@@ -147,7 +161,10 @@ class MetaData(BaseModel):
             except TypeError:
                 pass
 
-        return cls(**kwargs)
+        try:
+            return cls(**kwargs)
+        except ValidationError:
+            return cls.model_construct(**kwargs)
 
     def to_yaml(self):
         """Dump metadata content to yaml."""
@@ -164,8 +181,9 @@ class CreatorMetaData(MetaData):
     ----------
     creator : str
         The software used to create the data contained in the parent object.
+        Default is the used Gammapy version.
     date : `~astropy.time.Time` or str
-        The creation date.
+        The creation date. Default is the current date.
     origin : str
         The organization at the origin of the data.
     """
@@ -217,6 +235,53 @@ class PointingInfoMetaData(MetaData):
 
     radec_mean: Optional[ICRSSkyCoordType] = None
     altaz_mean: Optional[AltAzSkyCoordType] = None
+
+
+class TimeInfoMetaData(MetaData):
+    """General metadata information about the time range of an observation.
+
+    Parameters
+    ----------
+    time_start : `~astropy.time.Time` or str
+        The observation start time.
+    time_stop : `~astropy.time.Time` or str
+        The observation stop time.
+    reference_time : `~astropy.time.Time` or str
+        The observation reference time."""
+
+    _tag: ClassVar[Literal["time_info"]] = "time_info"
+
+    time_start: Optional[TimeType] = None
+    time_stop: Optional[TimeType] = None
+    reference_time: Optional[TimeType] = None
+
+    def to_header(self, format="gadf"):
+        if self.reference_time is None:
+            return {}
+        result = time_ref_to_dict(self.reference_time)
+        if self.time_start is not None:
+            result["TSTART"] = time_relative_to_ref(self.time_start, result).to_value(
+                "s"
+            )
+        if self.time_stop is not None:
+            result["TSTOP"] = time_relative_to_ref(self.time_stop, result).to_value("s")
+        return result
+
+    @classmethod
+    def from_header(cls, header, format="gadf"):
+        kwargs = {}
+        try:
+            time_ref = time_ref_from_dict(header)
+        except KeyError:
+            return cls()
+
+        kwargs["reference_time"] = time_ref
+        if "TSTART" in header:
+            kwargs["time_start"] = time_ref + header["TSTART"] * u.s
+        if "TSTOP" in header:
+            kwargs["time_stop"] = time_ref + header["TSTOP"] * u.s
+
+        return cls(**kwargs)
 
 
 class TargetMetaData(MetaData):

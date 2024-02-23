@@ -4,6 +4,7 @@ import pytest
 from numpy.testing import assert_allclose
 from astropy.coordinates import AltAz, SkyCoord
 from astropy.io import fits
+from astropy.time import Time
 from pydantic import ValidationError
 from gammapy.utils.metadata import (
     METADATA_FITS_KEYS,
@@ -12,6 +13,7 @@ from gammapy.utils.metadata import (
     ObsInfoMetaData,
     PointingInfoMetaData,
     TargetMetaData,
+    TimeInfoMetaData,
 )
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import requires_data
@@ -50,6 +52,18 @@ def test_creator_to_header():
     assert header["CREATED"] == "2022-01-01 00:00:00.000"
 
 
+def test_creator_from_incorrect_header():
+    # Create header with a 'bad' date
+    hdu = fits.PrimaryHDU()
+    hdu.header["CREATOR"] = "gammapy"
+    hdu.header["CREATED"] = "Tues 6 Feb"
+
+    meta = CreatorMetaData.from_header(hdu.header)
+
+    assert meta.date == hdu.header["CREATED"]
+    assert meta.creator == hdu.header["CREATOR"]
+
+
 def test_subclass():
     class TestMetaData(MetaData):
         _tag: ClassVar[Literal["tag"]] = "tag"
@@ -81,6 +95,9 @@ def test_obs_info():
 
     obs_info.obs_id = 23523
     assert obs_info.obs_id == 23523
+
+    with pytest.raises(ValidationError):
+        obs_info.obs_id = "ab"
 
     obs_info.instrument = "CTA-North"
     assert obs_info.instrument == "CTA-North"
@@ -135,6 +152,9 @@ def test_pointing_info_to_header():
     assert_allclose(header["RA_PNT"], 83.6287)
     assert_allclose(header["AZ_PNT"], 20.0)
 
+    header = PointingInfoMetaData(radec_mean=position).to_header("gadf")
+    assert "AZ_PNT" not in header.keys()
+
     with pytest.raises(ValueError):
         PointingInfoMetaData(radec_mean=position, altaz_mean=altaz).to_header("bad")
 
@@ -146,8 +166,12 @@ def test_pointing_info_from_header(hess_eventlist_header):
     assert_allclose(meta.radec_mean.ra.deg, 83.633333)
     assert_allclose(meta.altaz_mean.alt.deg, 41.389789)
 
+    meta = PointingInfoMetaData.from_header({})
+    assert meta.altaz_mean is None
+    assert meta.radec_mean is None
 
-def test_taget_metadata():
+
+def test_target_metadata():
     meta = TargetMetaData(
         name="center", position=SkyCoord(0.0, 0.0, unit="deg", frame="galactic")
     )
@@ -159,6 +183,10 @@ def test_taget_metadata():
     assert header["OBJECT"] == "center"
     assert_allclose(header["RA_OBJ"], 266.404988)
 
+    header = TargetMetaData(name="center").to_header("gadf")
+    assert header["OBJECT"] == "center"
+    assert "RA_OBJ" not in header.keys()
+
 
 @requires_data()
 def test_target_metadata_from_header(hess_eventlist_header):
@@ -166,6 +194,31 @@ def test_target_metadata_from_header(hess_eventlist_header):
 
     assert meta.name == "Crab Nebula"
     assert_allclose(meta.position.ra.deg, 83.63333333)
+
+
+def test_time_info_metadata():
+    meta = TimeInfoMetaData(
+        reference_time="2023-01-01 00:00:00",
+        time_start="2024-01-01 00:00:00",
+        time_stop="2024-01-01 12:00:00",
+    )
+
+    assert isinstance(meta.reference_time, Time)
+    delta = meta.time_stop - meta.time_start
+    assert_allclose(delta.to_value("h"), 12)
+
+    header = meta.to_header(format="gadf")
+    assert header["MJDREFI"] == 59945
+    assert header["TIMESYS"] == "tt"
+    assert_allclose(header["TSTART"], 31536000.000000257)
+
+
+@requires_data()
+def test_time_info_metadata_from_header(hess_eventlist_header):
+    meta = TimeInfoMetaData.from_header(hess_eventlist_header, format="gadf")
+
+    assert_allclose(meta.reference_time.mjd, 51910.00074287037)
+    assert_allclose(meta.time_start.mjd, 53343.92234009259)
 
 
 def test_subclass_to_from_header():

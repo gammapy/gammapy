@@ -78,6 +78,7 @@ log = logging.getLogger(__name__)
 from gammapy.data import DataStore
 from gammapy.datasets import Datasets, SpectrumDataset
 from gammapy.estimators import LightCurveEstimator
+from gammapy.estimators.utils import get_rebinned_axis
 from gammapy.makers import (
     ReflectedRegionsBackgroundMaker,
     SafeMaskMaker,
@@ -272,14 +273,17 @@ datasets.models = sky_model
 # We first create the `~gammapy.estimators.LightCurveEstimator` for the
 # list of datasets we just produced. We give the estimator the name of the
 # source component to be fitted.
-#
+# By default the likelihood scan is computed from 0.2 to 5.0.
+# Here, we increase the max value to 10.0, because we are
+# dealing with a large flare.
 
 lc_maker_1d = LightCurveEstimator(
     energy_edges=[0.7, 20] * u.TeV,
     source="pks2155",
     time_intervals=time_intervals,
-    selection_optional=None,
+    selection_optional="all",
 )
+lc_maker_1d.norm.scan_max = 10
 
 
 ######################################################################
@@ -298,4 +302,20 @@ lc_1d = lc_maker_1d.run(datasets)
 #
 plt.figure(figsize=(8, 6))
 lc_1d.plot(marker="o")
+plt.show()
+
+
+######################################################################
+# Light curves once obtained can be rebinned.
+# Here, we rebin 4 adjacent bins together, to get 30 min bins
+#
+
+axis_new = get_rebinned_axis(lc_1d, method="fixed-bins", group_size=3, axis_name="time")
+print(axis_new)
+
+lc_new = lc_1d.resample_axis(axis_new)
+plt.figure(figsize=(8, 6))
+ax = lc_1d.plot(label="original")
+lc_new.plot(ax=ax, label="rebinned")
+plt.legend()
 plt.show()

@@ -2,10 +2,12 @@
 """Utilities to create scripts and command-line tools."""
 import codecs
 import os.path
+import warnings
 from base64 import urlsafe_b64encode
 from pathlib import Path
 from uuid import uuid4
 import yaml
+from gammapy.utils.check import add_checksum, verify_checksum
 
 __all__ = [
     "get_images_paths",
@@ -32,7 +34,7 @@ def get_images_paths(folder=PATH_DOCS):
             yield i.resolve()
 
 
-def read_yaml(filename, logger=None):
+def read_yaml(filename, logger=None, checksum=False):
     """Read YAML file.
 
     Parameters
@@ -41,6 +43,8 @@ def read_yaml(filename, logger=None):
         Filename.
     logger : `~logging.Logger`
         Logger.
+    checksum : bool
+        Whether to perform checksum verification. Default is False.
 
     Returns
     -------
@@ -52,10 +56,18 @@ def read_yaml(filename, logger=None):
         logger.info(f"Reading {path}")
 
     text = path.read_text()
-    return yaml.safe_load(text)
+
+    data = yaml.safe_load(text)
+    checksum_str = data.pop("checksum", None)
+    if checksum:
+        index = text.find("checksum")
+        if not verify_checksum(text[:index], checksum_str):
+            warnings.warn(f"Checksum verification failed for {filename}.", UserWarning)
+
+    return data
 
 
-def write_yaml(dictionary, filename, logger=None, sort_keys=True):
+def write_yaml(dictionary, filename, logger=None, sort_keys=True, checksum=False):
     """Write YAML file.
 
     Parameters
@@ -68,8 +80,13 @@ def write_yaml(dictionary, filename, logger=None, sort_keys=True):
         Logger. Default is None.
     sort_keys : bool, optional
         Whether to sort keys. Default is True.
+    checksum : bool, optional
+        Whether to add checksum keyword. Default is False.
     """
     text = yaml.safe_dump(dictionary, default_flow_style=False, sort_keys=sort_keys)
+
+    if checksum:
+        text = add_checksum(text, sort_keys=sort_keys)
 
     path = make_path(filename)
     path.parent.mkdir(exist_ok=True)

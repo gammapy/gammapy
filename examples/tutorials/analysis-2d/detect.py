@@ -167,7 +167,7 @@ maps = estimator.run(dataset)
 
 fig, (ax1, ax2, ax3) = plt.subplots(
     ncols=3,
-    figsize=(15, 3),
+    figsize=(20, 3),
     subplot_kw={"projection": counts.geom.wcs},
     gridspec_kw={"left": 0.1, "right": 0.98},
 )
@@ -202,7 +202,7 @@ ax = maps["sqrt_ts"].plot(add_cbar=True)
 ax.scatter(
     sources["ra"],
     sources["dec"],
-    transform=plt.gca().get_transform("icrs"),
+    transform=ax.get_transform("icrs"),
     color="none",
     edgecolor="w",
     marker="o",

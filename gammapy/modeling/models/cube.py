@@ -802,7 +802,7 @@ class FoVBackgroundModel(ModelBase):
         spatial_data = data.get("spatial")
         if spatial_data is not None:
             model_class = SPATIAL_MODEL_REGISTRY.get_cls(spatial_data["type"])
-            spatial_model = model_class.from_dict(spatial_data)
+            spatial_model = model_class.from_dict({"spatial": spatial_data})
         else:
             spatial_model = None
 
@@ -1023,7 +1023,7 @@ class TemplateNPredModel(ModelBase):
         spatial_data = data.get("spatial")
         if spatial_data is not None:
             model_class = SPATIAL_MODEL_REGISTRY.get_cls(spatial_data["type"])
-            spatial_model = model_class.from_dict(spatial_data)
+            spatial_model = model_class.from_dict({"spatial": spatial_data})
         else:
             spatial_model = None
 

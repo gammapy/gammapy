@@ -15,6 +15,7 @@ from gammapy.modeling.models import (
     ConstantTemporalModel,
     PointSpatialModel,
 )
+from gammapy.utils.fits import earth_location_to_dict
 from gammapy.utils.random import get_random_state
 from .map import create_map_dataset_from_observation
 
@@ -36,6 +37,9 @@ class MapDatasetEventSampler:
     keep_mc_id : bool, optional
         Flag to tag sampled events from a given model with a Montecarlo identifier.
         Default is True. If set to False, no identifier will be assigned.
+    n_event_bunch : int
+        Size of events bunches to sample. If None, sample all events in memory.
+        Default is 10000.
     """
 
     def __init__(
@@ -44,11 +48,13 @@ class MapDatasetEventSampler:
         oversample_energy_factor=10,
         t_delta=0.5 * u.s,
         keep_mc_id=True,
+        n_event_bunch=10000,
     ):
         self.random_state = get_random_state(random_state)
         self.oversample_energy_factor = oversample_energy_factor
         self.t_delta = t_delta
         self.keep_mc_id = keep_mc_id
+        self.n_event_bunch = n_event_bunch
 
     def _repr_html_(self):
         try:
@@ -345,7 +351,9 @@ class MapDatasetEventSampler:
             frame="icrs",
         )
 
-        coords_reco = edisp_map.sample_coord(coord, self.random_state)
+        coords_reco = edisp_map.sample_coord(
+            coord, self.random_state, self.n_event_bunch
+        )
         events.table["ENERGY"] = coords_reco["energy"]
         return events
 
@@ -373,7 +381,8 @@ class MapDatasetEventSampler:
             frame="icrs",
         )
 
-        coords_reco = psf_map.sample_coord(coord, self.random_state)
+        coords_reco = psf_map.sample_coord(coord, self.random_state, self.n_event_bunch)
+
         events.table["RA"] = coords_reco["lon"] * u.deg
         events.table["DEC"] = coords_reco["lat"] * u.deg
         return events
@@ -502,22 +511,26 @@ class MapDatasetEventSampler:
         # Necessary for DataStore, but they should be ALT and AZ instead!
         telescope = observation.aeff.meta["TELESCOP"]
         instrument = observation.aeff.meta["INSTRUME"]
-        if telescope == "CTA":
-            if instrument == "Southern Array":
-                loc = observatory_locations["cta_south"]
-            elif instrument == "Northern Array":
-                loc = observatory_locations["cta_north"]
-            else:
-                loc = observatory_locations["cta_south"]
+        loc = observation.observatory_earth_location
+        if loc is None:
+            if telescope == "CTA":
+                if instrument == "Southern Array":
+                    loc = observatory_locations["cta_south"]
+                elif instrument == "Northern Array":
+                    loc = observatory_locations["cta_north"]
+                else:
+                    loc = observatory_locations["cta_south"]
 
-        else:
-            loc = observatory_locations[telescope.lower()]
+            else:
+                loc = observatory_locations[telescope.lower()]
+
+        meta.update(earth_location_to_dict(loc))
 
         # this is not really correct but maybe OK for now
         coord_altaz = observation.pointing.get_altaz(dataset.gti.time_start, loc)
 
-        meta["ALT_PNT"] = str(coord_altaz.alt.deg[0])
-        meta["AZ_PNT"] = str(coord_altaz.az.deg[0])
+        meta["ALT_PNT"] = coord_altaz.alt.deg[0]
+        meta["AZ_PNT"] = coord_altaz.az.deg[0]
 
         # TO DO: these keywords should be taken from the IRF of the dataset
         meta["ORIGIN"] = "Gammapy"
@@ -526,8 +539,8 @@ class MapDatasetEventSampler:
         meta["N_TELS"] = ""
         meta["TELLIST"] = ""
 
-        meta["CREATED"] = ""
-        meta["OBS_MODE"] = ""
+        meta["CREATED"] = Time.now().iso
+        meta["OBS_MODE"] = "POINTING"
         meta["EV_CLASS"] = ""
 
         return meta
@@ -548,6 +561,7 @@ class MapDatasetEventSampler:
             Event list.
         """
         events_src = self.sample_sources(dataset)
+
         if len(events_src.table) > 0:
             if dataset.psf:
                 events_src = self.sample_psf(dataset.psf, events_src)
@@ -563,11 +577,12 @@ class MapDatasetEventSampler:
         events_bkg = self.sample_background(dataset)
         events = EventList.from_stack([events_bkg, events_src])
 
-        events = self.event_det_coords(observation, events)
         events.table["EVENT_ID"] = np.arange(len(events.table))
-        events.table.meta.update(
-            self.event_list_meta(dataset, observation, self.keep_mc_id)
-        )
+        if observation is not None:
+            events = self.event_det_coords(observation, events)
+            events.table.meta.update(
+                self.event_list_meta(dataset, observation, self.keep_mc_id)
+            )
 
         geom = dataset._geom
         selection = geom.contains(events.map_coord(geom))
@@ -595,6 +610,9 @@ class ObservationEventSampler(MapDatasetEventSampler):
     keep_mc_id : bool, optional
         Flag to tag sampled events from a given model with a Montecarlo identifier.
         Default is True. If set to False, no identifier will be assigned.
+    n_event_bunch : int
+        Size of events bunches to sample. If None, sample all events in memory.
+        Default is 10000.
     dataset_kwargs : dict, optional
         Arguments passed to `~gammapy.datasets.create_map_dataset_from_observation()`
     """
@@ -605,12 +623,14 @@ class ObservationEventSampler(MapDatasetEventSampler):
         oversample_energy_factor=10,
         t_delta=0.5 * u.s,
         keep_mc_id=True,
+        n_event_bunch=10000,
         dataset_kwargs=None,
     ):
         self.dataset_kwargs = dataset_kwargs
         self.random_state = get_random_state(random_state)
         self.oversample_energy_factor = oversample_energy_factor
         self.t_delta = t_delta
+        self.n_event_bunch = n_event_bunch
         self.keep_mc_id = keep_mc_id
 
     def run(self, observation, models=None, dataset_name=None):

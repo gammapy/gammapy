@@ -187,7 +187,7 @@ class Parameter:
             if isinstance(value, dict):
                 from .models import Model
 
-                self._prior = Model.from_dict(value)
+                self._prior = Model.from_dict({"prior": value})
             elif isinstance(value, Prior):
                 self._prior = value
             else:

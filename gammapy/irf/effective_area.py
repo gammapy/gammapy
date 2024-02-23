@@ -5,6 +5,7 @@ from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from gammapy.maps import MapAxes, MapAxis
 from gammapy.maps.axes import UNIT_STRING_FORMAT
+from gammapy.visualization.utils import add_colorbar
 from .core import IRF
 
 __all__ = ["EffectiveAreaTable2D"]
@@ -149,8 +150,29 @@ class EffectiveAreaTable2D(IRF):
         ax.legend(loc="best")
         return ax
 
-    def plot(self, ax=None, add_cbar=True, **kwargs):
-        """Plot effective area image."""
+    def plot(
+        self, ax=None, add_cbar=True, axes_loc=None, kwargs_colorbar=None, **kwargs
+    ):
+        """Plot effective area image.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes`, optional
+            Matplotlib axes. Default is None.
+        add_cbar : bool, optional
+            Add a colorbar to the plot. Default is True.
+        axes_loc : dict, optional
+            Keyword arguments passed to `~mpl_toolkits.axes_grid1.axes_divider.AxesDivider.append_axes`.
+        kwargs_colorbar : dict, optional
+            Keyword arguments passed to `~matplotlib.pyplot.colorbar`.
+        kwargs : dict
+            Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`
+            Matplotlib axes.
+        """
         ax = plt.gca() if ax is None else ax
 
         energy = self.axes["energy_true"]
@@ -166,6 +188,8 @@ class EffectiveAreaTable2D(IRF):
         kwargs.setdefault("vmin", vmin)
         kwargs.setdefault("vmax", vmax)
 
+        kwargs_colorbar = kwargs_colorbar or {}
+
         with quantity_support():
             caxes = ax.pcolormesh(energy.edges, offset.edges, aeff.value.T, **kwargs)
 
@@ -174,7 +198,8 @@ class EffectiveAreaTable2D(IRF):
 
         if add_cbar:
             label = f"Effective Area [{aeff.unit.to_string(UNIT_STRING_FORMAT)}]"
-            ax.figure.colorbar(caxes, ax=ax, label=label)
+            kwargs_colorbar.setdefault("label", label)
+            add_colorbar(caxes, ax=ax, axes_loc=axes_loc, **kwargs_colorbar)
 
         return ax
 

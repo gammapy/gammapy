@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 from gammapy.maps import MapAxes, MapAxis
 from gammapy.maps.axes import UNIT_STRING_FORMAT
+from gammapy.visualization.utils import add_colorbar
 from .core import IRF
 from .io import gadf_is_pointlike
 
@@ -170,23 +171,36 @@ class Background3D(BackgroundIRF):
         return self.to_2d().peek(figsize)
 
     def plot_at_energy(
-        self, energy=None, add_cbar=True, ncols=3, figsize=None, **kwargs
+        self,
+        energy=1 * u.TeV,
+        add_cbar=True,
+        ncols=3,
+        figsize=None,
+        axes_loc=None,
+        kwargs_colorbar=None,
+        **kwargs,
     ):
         """Plot the background rate in FoV coordinates at a given energy.
 
         Parameters
         ----------
-        energy : `~astropy.units.Quantity`
-            List of energies.
+        energy : `~astropy.units.Quantity`, optional
+            List of energies. Default is 1 TeV.
         add_cbar : bool, optional
             Add color bar. Default is True.
         ncols : int, optional
             Number of columns to plot. Default is 3.
         figsize : tuple, optional
             Figure size. Default is None.
+        axes_loc : dict, optional
+            Keyword arguments passed to `~mpl_toolkits.axes_grid1.axes_divider.AxesDivider.append_axes`.
+        kwargs_colorbar : dict, optional
+            Keyword arguments passed to `~matplotlib.pyplot.colorbar`.
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
         """
+        kwargs_colorbar = kwargs_colorbar or {}
+
         n = len(energy)
         cols = min(ncols, n)
         rows = 1 + (n - 1) // cols
@@ -222,9 +236,11 @@ class Background3D(BackgroundIRF):
             self.axes["fov_lat"].format_plot_xaxis(ax)
             self.axes["fov_lon"].format_plot_yaxis(ax)
             ax.set_title(str(ee))
+
             if add_cbar:
                 label = f"Background [{bkg_unit.to_string(UNIT_STRING_FORMAT)}]"
-                cbar = ax.figure.colorbar(caxes, ax=ax, label=label, fraction=cfraction)
+                kwargs_colorbar.setdefault("label", label)
+                cbar = add_colorbar(caxes, ax=ax, axes_loc=axes_loc, **kwargs_colorbar)
                 cbar.formatter.set_powerlimits((0, 0))
 
             row, col = np.unravel_index(i, shape=(rows, cols))
@@ -278,14 +294,14 @@ class Background2D(BackgroundIRF):
         )
 
     def plot_at_energy(
-        self, energy=None, add_cbar=True, ncols=3, figsize=None, **kwargs
+        self, energy=1 * u.TeV, add_cbar=True, ncols=3, figsize=None, **kwargs
     ):
         """Plot the background rate in FoV coordinates at a given energy.
 
         Parameters
         ----------
-        energy : `~astropy.units.Quantity`
-            List of energy.
+        energy : `~astropy.units.Quantity`, optional
+            List of energy. Default is 1 TeV.
         add_cbar : bool, optional
             Add color bar. Default is True.
         ncols : int, optional
@@ -300,8 +316,29 @@ class Background2D(BackgroundIRF):
             energy=energy, add_cbar=add_cbar, ncols=ncols, figsize=figsize, **kwargs
         )
 
-    def plot(self, ax=None, add_cbar=True, **kwargs):
-        """Plot energy offset dependence of the background model."""
+    def plot(
+        self, ax=None, add_cbar=True, axes_loc=None, kwargs_colorbar=None, **kwargs
+    ):
+        """Plot energy offset dependence of the background model.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes`, optional
+            Matplotlib axes. Default is None.
+        add_cbar : bool, optional
+            Add a colorbar to the plot. Default is True.
+        axes_loc : dict, optional
+            Keyword arguments passed to `~mpl_toolkits.axes_grid1.axes_divider.AxesDivider.append_axes`.
+        kwargs_colorbar : dict, optional
+            Keyword arguments passed to `~matplotlib.pyplot.colorbar`.
+        kwargs : dict
+            Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`
+            Matplotlib axes.
+        """
         ax = plt.gca() if ax is None else ax
 
         energy_axis, offset_axis = self.axes["energy"], self.axes["offset"]
@@ -310,6 +347,8 @@ class Background2D(BackgroundIRF):
         kwargs.setdefault("cmap", "GnBu")
         kwargs.setdefault("edgecolors", "face")
         kwargs.setdefault("norm", LogNorm())
+
+        kwargs_colorbar = kwargs_colorbar or {}
 
         with quantity_support():
             caxes = ax.pcolormesh(
@@ -323,7 +362,8 @@ class Background2D(BackgroundIRF):
             label = (
                 f"Background rate [{self.quantity.unit.to_string(UNIT_STRING_FORMAT)}]"
             )
-            ax.figure.colorbar(caxes, ax=ax, label=label)
+            kwargs_colorbar.setdefault("label", label)
+            add_colorbar(caxes, ax=ax, axes_loc=axes_loc, **kwargs_colorbar)
 
     def plot_offset_dependence(self, ax=None, energy=None, **kwargs):
         """Plot background rate versus offset for a given energy.

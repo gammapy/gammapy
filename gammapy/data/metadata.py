@@ -9,10 +9,11 @@ from gammapy.utils.metadata import (
     ObsInfoMetaData,
     PointingInfoMetaData,
     TargetMetaData,
+    TimeInfoMetaData,
 )
 from gammapy.utils.types import EarthLocationType, TimeType
 
-__all__ = ["ObservationMetaData", "GTIMetaData"]
+__all__ = ["ObservationMetaData", "GTIMetaData", "EventListMetaData"]
 
 OBSERVATION_METADATA_FITS_KEYS = {
     "location": {
@@ -32,6 +33,13 @@ OBSERVATION_METADATA_FITS_KEYS = {
 METADATA_FITS_KEYS["observation"] = OBSERVATION_METADATA_FITS_KEYS
 
 
+EVENTLIST_METADATA_FITS_KEYS = {
+    "event_class": "EV_CLASS",
+}
+
+METADATA_FITS_KEYS["eventlist"] = EVENTLIST_METADATA_FITS_KEYS
+
+
 class ObservationMetaData(MetaData):
     """Metadata containing information about the Observation.
 
@@ -49,12 +57,6 @@ class ObservationMetaData(MetaData):
         The observatory location.
     deadtime_fraction : float
         The observation deadtime fraction. Default is 0.
-    time_start : `~astropy.time.Time` or str
-        The observation start time.
-    time_stop : `~astropy.time.Time` or str
-        The observation stop time.
-    reference_time : `~astropy.time.Time` or str
-        The observation reference time.
     optional : dict, optional
         Additional optional metadata.
     """
@@ -65,15 +67,22 @@ class ObservationMetaData(MetaData):
     target: Optional[TargetMetaData] = None
     location: Optional[EarthLocationType] = None
     deadtime_fraction: float = Field(0.0, ge=0, le=1.0)
-    time_start: Optional[TimeType] = None
-    time_stop: Optional[TimeType] = None
-    reference_time: Optional[TimeType] = None
+    time_info: Optional[TimeInfoMetaData] = None
     creation: Optional[CreatorMetaData] = None
     optional: Optional[dict] = None
 
     @classmethod
     def from_header(cls, header, format="gadf"):
-        meta = super(ObservationMetaData, cls).from_header(header, format)
+        """Create and fill the observation metadata from the event list metadata.
+
+        Parameters
+        ----------
+        header : dict
+            Input FITS header.
+        format : str
+            The header data format. Default is gadf.
+        """
+        meta = super().from_header(header, format)
 
         meta.creation = CreatorMetaData()
         # Include additional gadf keywords not specified as ObservationMetaData attributes
@@ -121,6 +130,37 @@ class GTIMetaData(MetaData):
     reference_time: Optional[TimeType] = None
 
     def from_header(cls, header, format="gadf"):
-        meta = super(GTIMetaData, cls).from_header(header, format)
+        meta = super().from_header(header, format)
+
+        return meta
+
+
+class EventListMetaData(MetaData):
+    """Metadata containing information about the EventList.
+
+    Parameters
+    ----------
+    """
+
+    _tag: ClassVar[Literal["EventList"]] = "eventlist"
+    event_class: Optional[str] = None
+    creation: Optional[CreatorMetaData] = None
+    optional: Optional[dict] = None
+
+    @classmethod
+    def from_header(cls, header, format="gadf"):
+        meta = super().from_header(header, format)
+
+        # Include additional gadf keywords
+        optional_keywords = [
+            "DST_VER",
+            "ANA_VER",
+            "CAL_VER",
+        ]
+        optional = dict()
+        for key in optional_keywords:
+            if key in header.keys():
+                optional[key] = header[key]
+        meta.optional = optional
 
         return meta

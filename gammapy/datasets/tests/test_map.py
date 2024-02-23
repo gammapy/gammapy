@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import json
+import warnings
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
@@ -7,6 +8,7 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.table import Table
+from astropy.utils.exceptions import AstropyUserWarning
 from regions import CircleSkyRegion
 import gammapy.irf.psf.map as psf_map_module
 from gammapy.catalog import SourceCatalog3FHL
@@ -602,6 +604,7 @@ def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
     dataset_new = MapDataset.read(tmp_path / "test.fits")
 
     assert dataset_new.name == "test"
+    assert_allclose(dataset.meta.creation.date.mjd, dataset_new.meta.creation.date.mjd)
 
     assert dataset_new.mask.data.dtype == bool
 
@@ -1350,6 +1353,21 @@ def test_map_datasets_on_off_checksum(images, tmp_path):
     for hdu in hdul:
         assert "CHECKSUM" in hdu.header
         assert "DATASUM" in hdu.header
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        Datasets.read(tmp_path / "test.yaml", lazy=False)
+
+    path = tmp_path / "MapDatasetOnOff-test.fits"
+    # Modify counts map header to replace interpolation scheme
+    with open(path, "r+b") as file:
+        chunk = file.read(10000)
+        index = chunk.find("lin".encode("ascii"))
+        file.seek(index)
+        file.write("log".encode("ascii"))
+
+    with pytest.warns(AstropyUserWarning):
+        MapDatasetOnOff.read(path, checksum=True)
 
 
 def test_create_onoff(geom):

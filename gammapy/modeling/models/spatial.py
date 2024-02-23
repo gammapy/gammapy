@@ -208,8 +208,19 @@ class SpatialModel(ModelBase):
             wcs_geom = geom.to_wcs_geom().to_image()
 
         result = Map.from_geom(geom=wcs_geom)
+        integrated = Map.from_geom(wcs_geom)
 
         pix_scale = np.max(wcs_geom.pixel_scales.to_value("deg"))
+        if self.evaluation_radius is not None:
+            try:
+                width = 2 * np.maximum(
+                    self.evaluation_radius.to_value("deg"), pix_scale
+                )
+                wcs_geom_cut = wcs_geom.cutout(self.position, width)
+                integrated = Map.from_geom(wcs_geom_cut)
+            except (NoOverlapError, ValueError):
+                oversampling_factor = 1
+
         if oversampling_factor is None:
             if self.evaluation_bin_size_min is not None:
                 res_scale = self.evaluation_bin_size_min.to_value("deg")
@@ -223,18 +234,9 @@ class SpatialModel(ModelBase):
                 oversampling_factor = 1
 
         if oversampling_factor > 1:
-            if self.evaluation_radius is not None:
-                # Is it still needed?
-                try:
-                    width = 2 * np.maximum(
-                        self.evaluation_radius.to_value("deg"), pix_scale
-                    )
-                    wcs_geom = wcs_geom.cutout(self.position, width)
-                except (NoOverlapError, ValueError):
-                    pass
-
-            upsampled_geom = wcs_geom.upsample(oversampling_factor, axis_name=None)
-
+            upsampled_geom = integrated.geom.upsample(
+                oversampling_factor, axis_name=None
+            )
             # assume the upsampled solid angles are approximately factor**2 smaller
             values = self.evaluate_geom(upsampled_geom) / oversampling_factor**2
             upsampled = Map.from_geom(upsampled_geom, unit=values.unit)
@@ -243,9 +245,9 @@ class SpatialModel(ModelBase):
             if geom.is_region:
                 mask = geom.contains(upsampled_geom.get_coord()).astype("int")
 
-            integrated = upsampled.downsample(
+            integrated.quantity = upsampled.downsample(
                 oversampling_factor, preserve_counts=True, weights=mask
-            )
+            ).quantity
 
             # Finally stack result
             result._unit = integrated.unit
@@ -1257,7 +1259,8 @@ class TemplateSpatialModel(SpatialModel):
     """Spatial sky map template model.
 
     For more information see :ref:`template-spatial-model`.
-    The center of the model position can be fit on the data.
+    By default the position of the model is fixed at the center of the map.
+    The position can be fittted by unfreezing the `lon_0` and `lat_0 `parameters.
     In that case, the coordinate of every pixel is shifted in lon and lat
     in the frame of the map. NOTE: planar distances are calculated, so
     the results are correct only when the fitted position is close to the
@@ -1284,8 +1287,8 @@ class TemplateSpatialModel(SpatialModel):
     """
 
     tag = ["TemplateSpatialModel", "template"]
-    lon_0 = Parameter("lon_0", "0 deg", frozen=True)
-    lat_0 = Parameter("lat_0", "0 deg", min=-90, max=90, frozen=True)
+    lon_0 = Parameter("lon_0", np.nan, unit="deg", frozen=True)
+    lat_0 = Parameter("lat_0", np.nan, unit="deg", min=-90, max=90, frozen=True)
 
     def __init__(
         self,
@@ -1344,9 +1347,13 @@ class TemplateSpatialModel(SpatialModel):
         self._interp_kwargs = interp_kwargs
         self.filename = filename
         kwargs["frame"] = self.map.geom.frame
-        if "lon_0" not in kwargs:
+        if "lon_0" not in kwargs or (
+            isinstance(kwargs["lon_0"], Parameter) and np.isnan(kwargs["lon_0"].value)
+        ):
             kwargs["lon_0"] = self.map_center.data.lon
-        if "lat_0" not in kwargs:
+        if "lat_0" not in kwargs or (
+            isinstance(kwargs["lat_0"], Parameter) and np.isnan(kwargs["lat_0"].value)
+        ):
             kwargs["lat_0"] = self.map_center.data.lat
         super().__init__(**kwargs)
 

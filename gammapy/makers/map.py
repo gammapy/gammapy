@@ -3,6 +3,7 @@ import logging
 import astropy.units as u
 from astropy.table import Table
 from regions import PointSkyRegion
+from gammapy.datasets import MapDatasetMetaData
 from gammapy.irf import EDispKernelMap, PSFMap, RecoPSFMap
 from gammapy.maps import Map
 from .core import Maker
@@ -361,6 +362,10 @@ class MapDatasetMaker(Maker):
 
         return meta_table
 
+    @staticmethod
+    def _make_metadata(table):
+        return MapDatasetMetaData._from_meta_table(table)
+
     def run(self, dataset, observation):
         """Make map dataset.
 
@@ -378,6 +383,7 @@ class MapDatasetMaker(Maker):
         """
         kwargs = {"gti": observation.gti}
         kwargs["meta_table"] = self.make_meta_table(observation)
+        kwargs["meta"] = self._make_metadata(kwargs["meta_table"])
 
         mask_safe = Map.from_geom(dataset.counts.geom, dtype=bool)
         mask_safe.data[...] = True

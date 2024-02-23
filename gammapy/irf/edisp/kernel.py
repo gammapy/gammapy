@@ -9,6 +9,7 @@ from matplotlib.colors import PowerNorm
 from gammapy.maps import MapAxis
 from gammapy.maps.axes import UNIT_STRING_FORMAT
 from gammapy.utils.scripts import make_path
+from gammapy.visualization.utils import add_colorbar
 from ..core import IRF
 
 __all__ = ["EDispKernel"]
@@ -246,7 +247,7 @@ class EDispKernel(IRF):
         return cls(axes=[energy_axis_true, energy_axis], data=pdf_matrix)
 
     @classmethod
-    def read(cls, filename, hdu1="MATRIX", hdu2="EBOUNDS"):
+    def read(cls, filename, hdu1="MATRIX", hdu2="EBOUNDS", checksum=False):
         """Read from file.
 
         Parameters
@@ -257,8 +258,12 @@ class EDispKernel(IRF):
             HDU containing the energy dispersion matrix. Default is "MATRIX".
         hdu2 : str, optional
             HDU containing the energy axis information. Default is "EBOUNDS".
+        checksum : bool
+            If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
         """
-        with fits.open(str(make_path(filename)), memmap=False) as hdulist:
+        with fits.open(
+            str(make_path(filename)), memmap=False, checksum=checksum
+        ) as hdulist:
             return cls.from_hdulist(hdulist, hdu1=hdu1, hdu2=hdu2)
 
     def to_hdulist(self, format="ogip", **kwargs):
@@ -380,7 +385,7 @@ class EDispKernel(IRF):
 
         return table
 
-    def write(self, filename, format="ogip", **kwargs):
+    def write(self, filename, format="ogip", checksum=False, **kwargs):
         """Write to file.
 
         Parameters
@@ -389,10 +394,14 @@ class EDispKernel(IRF):
             Filename.
         format : {"ogip", "ogip-sherpa"}
             Format to use. Default is "ogip".
+        checksum : bool
+            If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
 
         """
         filename = str(make_path(filename))
-        self.to_hdulist(format=format).writeto(filename, **kwargs)
+        hdulist = self.to_hdulist(format=format)
+
+        hdulist.writeto(filename, checksum=checksum, **kwargs)
 
     def get_resolution(self, energy_true):
         """Get energy resolution for a given true energy.
@@ -515,7 +524,9 @@ class EDispKernel(IRF):
 
         return var / norm
 
-    def plot_matrix(self, ax=None, add_cbar=False, **kwargs):
+    def plot_matrix(
+        self, ax=None, add_cbar=False, axes_loc=None, kwargs_colorbar=None, **kwargs
+    ):
         """Plot PDF matrix.
 
         Parameters
@@ -524,6 +535,12 @@ class EDispKernel(IRF):
             Matplotlib axes. Default is None.
         add_cbar : bool, optional
             Add a colorbar to the plot. Default is False.
+        axes_loc : dict, optional
+            Keyword arguments passed to `~mpl_toolkits.axes_grid1.axes_divider.AxesDivider.append_axes`.
+        kwargs_colorbar : dict, optional
+            Keyword arguments passed to `~matplotlib.pyplot.colorbar`.
+        kwargs : dict
+            Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
 
         Returns
         -------
@@ -533,6 +550,8 @@ class EDispKernel(IRF):
         kwargs.setdefault("cmap", "GnBu")
         norm = PowerNorm(gamma=0.5, vmin=0, vmax=1)
         kwargs.setdefault("norm", norm)
+
+        kwargs_colorbar = kwargs_colorbar or {}
 
         ax = plt.gca() if ax is None else ax
 
@@ -546,7 +565,8 @@ class EDispKernel(IRF):
 
         if add_cbar:
             label = "Probability density (A.U.)"
-            ax.figure.colorbar(caxes, ax=ax, label=label)
+            kwargs_colorbar.setdefault("label", label)
+            add_colorbar(caxes, ax=ax, axes_loc=axes_loc, **kwargs_colorbar)
 
         energy_axis_true.format_plot_xaxis(ax=ax)
         energy_axis.format_plot_yaxis(ax=ax)
