@@ -129,7 +129,7 @@ class FluxPointsDataset(Dataset):
         name=None,
         meta_table=None,
         sample_points=False,
-        n_samples=1000,
+        n_samples=100,
         random_state=0,
     ):
         if not data.geom.has_energy_axis:
@@ -352,7 +352,9 @@ class FluxPointsDataset(Dataset):
                         random_state=self.random_state,
                     )
                     samplesp[samplesp < loc] = 2 * loc - samplesp[samplesp < loc]
-                    samplesp = np.random.choice(samplesp, size=int(self.n_samples / 2))
+                    samplesp = self.random_state.choice(
+                        samplesp, size=int(self.n_samples / 2)
+                    )
 
                     scalen = self.data.dnde_errn.data.flatten()[k]
                     samplesn = norm.rvs(
@@ -362,7 +364,9 @@ class FluxPointsDataset(Dataset):
                         random_state=self.random_state,
                     )
                     samplesn[samplesn > loc] = 2 * loc - samplesn[samplesn > loc]
-                    samplesn = np.random.choice(samplesn, size=int(self.n_samples / 2))
+                    samplesn = self.random_state.choice(
+                        samplesn, size=int(self.n_samples / 2)
+                    )
 
                     subsamples = np.concatenate((samplesn, samplesp))
 
