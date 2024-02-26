@@ -126,18 +126,16 @@ class MapEvaluator:
     @property
     def needs_update(self):
         """Check whether the model component has drifted away from its support."""
-        # TODO: simplify and clean up
-        if isinstance(self.model, TemplateNPredModel):
-            return False
-        elif not self.contributes:
-            return False
-        elif self.exposure is None:
+        if self.exposure is None:
             return True
-        elif self.geom.is_region:
-            return False
-        elif self.evaluation_mode == "global" or self.model.evaluation_radius is None:
-            return False
-        elif not self.parameters_spatial_changed(reset=False):
+        elif (
+            isinstance(self.model, TemplateNPredModel)
+            or not self.contributes
+            or self.geom.is_region
+            or self.evaluation_mode == "global"
+            or self.model.evaluation_radius is None
+            or not self.parameters_spatial_changed(reset=False)
+        ):
             return False
         else:
             return self.irf_position_changed
@@ -203,10 +201,7 @@ class MapEvaluator:
         # lookup psf
         if psf and self.model.spatial_model:
             energy_name = psf.energy_name
-            if energy_name == "energy":
-                geom_psf = geom
-            else:
-                geom_psf = exposure.geom
+            geom_psf = geom if energy_name == "energy" else exposure.geom
 
             if self.use_psf_containment(geom=geom_psf):
                 energy_values = geom_psf.axes[energy_name].center.reshape((-1, 1, 1))
