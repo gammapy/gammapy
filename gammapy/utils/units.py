@@ -32,11 +32,11 @@ def standardise_unit(unit):
     --------
     >>> from gammapy.utils.units import standardise_unit
     >>> standardise_unit('ph cm-2 s-1')
-    Unit("1 / (cm2 s)")
+    Unit("1 / (s cm2)")
     >>> standardise_unit('ct cm-2 s-1')
-    Unit("1 / (cm2 s)")
+    Unit("1 / (s cm2)")
     >>> standardise_unit('cm-2 s-1')
-    Unit("1 / (cm2 s)")
+    Unit("1 / (s cm2)")
     """
     unit = u.Unit(unit)
     bases, powers = [], []

@@ -59,34 +59,36 @@ class PSFMap(IRFMap):
 
         from astropy.coordinates import SkyCoord
         from gammapy.maps import WcsGeom, MapAxis
-        from gammapy.data import Observation
+        from gammapy.data import Observation, FixedPointingInfo
         from gammapy.irf import load_irf_dict_from_file
         from gammapy.makers import MapDatasetMaker
 
         # Define observation
-        pointing = SkyCoord("0d", "0d")
+        pointing_position = SkyCoord(0, 0, unit="deg", frame="galactic")
+        pointing = FixedPointingInfo(
+            fixed_icrs=pointing_position.icrs,
+        )
         filename = "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
         irfs = load_irf_dict_from_file(filename)
         obs = Observation.create(pointing=pointing, irfs=irfs, livetime="1h")
 
-        # Create WcsGeom
         # Define energy axis. Note that the name is fixed.
         energy_axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=3, name="energy_true")
 
         # Define rad axis. Again note the axis name
         rad_axis = MapAxis.from_bounds(0, 0.5, nbin=100, name="rad", unit="deg")
 
+        # Create WcsGeom
         geom = WcsGeom.create(
-            binsz=0.25, width="5 deg", skydir=pointing, axes=[rad_axis, energy_axis]
+            binsz=0.25, width="5 deg", skydir=pointing_position, axes=[rad_axis, energy_axis]
         )
 
         maker = MapDatasetMaker()
-
         psf = maker.make_psf(geom=geom, observation=obs)
 
         # Get a PSF kernel at the center of the image
-        geom=exposure_geom.upsample(factor=10).drop("rad")
-        psf_kernel = psf_map.get_psf_kernel(geom=geom)
+        upsample_geom = geom.upsample(factor=10).drop("rad")
+        psf_kernel = psf.get_psf_kernel(geom=upsample_geom)
     """
 
     tag = "psf_map"
