@@ -99,7 +99,7 @@ class EDispMap(IRFMap):
 
         Parameters
         ----------
-        energy_axis : `MapAxis`
+        energy_axis : `~gammapy.maps.MapAxis`
             Reconstructed energy axis.
         position : `~astropy.coordinates.SkyCoord`
             The target position. Should be a single coordinates.
@@ -419,7 +419,7 @@ class EDispKernelMap(IRFMap):
 
         Parameters
         ----------
-        edisp : `~gammapy.irfs.EDispKernel`
+        edisp : `~gammapy.irf.EDispKernel`
             The input 1D kernel.
         geom : `~gammapy.maps.Geom`, optional
             The (2D) geometry object to use. If None, an all sky geometry with 2 bins is created.
@@ -502,7 +502,7 @@ class EDispKernelMap(IRFMap):
         )
 
     def resample_energy_axis(self, energy_axis, weights=None):
-        """Return a resampled EdispKernelMap.
+        """Return a resampled `EDispKernelMap`.
 
         Bins are grouped according to the edges of the reconstructed energy axis provided.
         The true energy is left unchanged.
