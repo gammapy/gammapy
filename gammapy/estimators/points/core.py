@@ -454,7 +454,7 @@ class FluxPoints(FluxMaps):
         >>> table = fp.to_table(sed_type="flux", formatted=True)
         >>> print(table[:2])
         e_ref e_min e_max     flux      flux_err    flux_ul      ts    sqrt_ts is_ul
-         TeV   TeV   TeV  1 / (cm2 s) 1 / (cm2 s) 1 / (cm2 s)
+         TeV   TeV   TeV  1 / (s cm2) 1 / (s cm2) 1 / (s cm2)
         ----- ----- ----- ----------- ----------- ----------- -------- ------- -----
         1.334 1.000 1.780   1.423e-11   3.135e-13         nan 2734.000  52.288 False
         2.372 1.780 3.160   5.780e-12   1.082e-13         nan 4112.000  64.125 False

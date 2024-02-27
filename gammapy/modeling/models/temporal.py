@@ -499,28 +499,29 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
     >>> print(light_curve)
     LightCurveTemplateTemporalModel model summary:
-    Reference time: 59000.5 MJD
-    Start time: 59000.5 MJD
-    End time: 61862.5 MJD
-    Norm min: 0.01551196351647377
+     Reference time: 59000.49919925926 MJD
+     Start time: 58999.99919925926 MJD
+     End time: 61862.99919925926 MJD
+     Norm min: 0.01551196351647377
     Norm max: 1.0
+
     <BLANKLINE>
 
     Compute ``norm`` at a given time:
 
+    >>> from astropy.time import Time
     >>> t = Time(59001.195, format="mjd")
     >>> light_curve.evaluate(t)
-    array(0.02287888)
+    <Quantity [0.02288737]>
 
     Compute mean ``norm`` in a given time interval:
 
-    >>> from astropy.time import Time
     >>> import astropy.units as u
     >>> t_r = Time(59000.5, format='mjd')
     >>> t_min = t_r + [1, 4, 8] * u.d
     >>> t_max = t_r + [1.5, 6, 9] * u.d
     >>> light_curve.integral(t_min, t_max)
-    array([0.0074388942, 0.0071144081, 0.0068115544])
+    <Quantity [0.00375698, 0.0143724 , 0.00688029]>
     """
 
     tag = ["LightCurveTemplateTemporalModel", "template"]
