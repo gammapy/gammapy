@@ -3,6 +3,15 @@
 Recommended Setup
 -----------------
 
+We recommend using :ref:`virtual environments <virtual-envs>`, to do so
+execute the following commands in the terminal:
+
+.. substitution-code-block:: bash
+
+    $ curl -O https://gammapy.org/download/install/gammapy-|release|-environment.yml
+    $ conda env create -f gammapy-|release|-environment.yml
+
+
 The best way to get started and learn Gammapy are the :ref:`tutorials`.
 You can download the Gammapy tutorial notebooks and the example
 datasets. The total size to download is ~180 MB. Select the location where you
