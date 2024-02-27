@@ -60,12 +60,12 @@ class FluxProfileEstimator(FluxPointsEstimator):
     >>> end_pos = SkyCoord("1d", "0d", frame='galactic')
 
     >>> regions = make_orthogonal_rectangle_sky_regions(
-                start_pos=start_pos,
-                end_pos=end_pos,
-                wcs=dataset.counts.geom.wcs,
-                height=2 * u.deg,
-                nbin=21
-            )
+    ...            start_pos=start_pos,
+    ...            end_pos=end_pos,
+    ...            wcs=dataset.counts.geom.wcs,
+    ...            height=2 * u.deg,
+    ...            nbin=21
+    ...        )
 
     >>> # set up profile estimator and run
     >>> prof_maker = FluxProfileEstimator(regions=regions, energy_edges=[10, 2000] * u.GeV)
@@ -77,7 +77,7 @@ class FluxProfileEstimator(FluxPointsEstimator):
       geom                   : RegionGeom
       axes                   : ['lon', 'lat', 'energy', 'projected-distance']
       shape                  : (1, 1, 1, 21)
-      quantities             : ['norm', 'norm_err', 'ts', 'npred', 'npred_excess', 'stat', 'counts', 'success']  # noqa: E501
+      quantities             : ['norm', 'norm_err', 'ts', 'npred', 'npred_excess', 'stat', 'stat_null', 'counts', 'success']
       ref. model             : pl
       n_sigma                : 1
       n_sigma_ul             : 2
