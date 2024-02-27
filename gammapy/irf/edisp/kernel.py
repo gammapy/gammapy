@@ -35,11 +35,9 @@ class EDispKernel(IRF):
 
     >>> from gammapy.maps import MapAxis
     >>> from gammapy.irf import EDispKernel
-    >>> energy = MapAxis.from_energy_bounds(0.1,10,10, unit='TeV')
-    >>> energy_true = MapAxis.from_energy_bounds(0.1,10,10, unit='TeV', name='energy_true')
-    >>> edisp = EDispKernel.from_gauss(
-    >>>     energy_axis_true=energy_true, energy_axis=energy, sigma=0.1, bias=0
-    >>> )
+    >>> energy = MapAxis.from_energy_bounds(0.1, 10, 10, unit='TeV')
+    >>> energy_true = MapAxis.from_energy_bounds(0.1, 10, 10, unit='TeV', name='energy_true')
+    >>> edisp = EDispKernel.from_gauss(energy_axis_true=energy_true, energy_axis=energy, sigma=0.1, bias=0)
 
     Have a quick look:
 

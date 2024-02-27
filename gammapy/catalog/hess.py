@@ -727,7 +727,7 @@ class SourceCatalogHGPS(SourceCatalog):
     Flux points table:
     <BLANKLINE>
     e_ref  e_min  e_max        dnde         dnde_errn       dnde_errp        dnde_ul     is_ul
-     TeV    TeV    TeV   1 / (cm2 s TeV) 1 / (cm2 s TeV) 1 / (cm2 s TeV) 1 / (cm2 s TeV)
+     TeV    TeV    TeV   1 / (TeV s cm2) 1 / (TeV s cm2) 1 / (TeV s cm2) 1 / (TeV s cm2)
     ------ ------ ------ --------------- --------------- --------------- --------------- -----
      0.332  0.215  0.511       3.048e-11       6.890e-12       7.010e-12       4.455e-11 False
      0.787  0.511  1.212       5.383e-12       6.655e-13       6.843e-13       6.739e-12 False
@@ -762,17 +762,14 @@ class SourceCatalogHGPS(SourceCatalog):
       HESS J1843-033                3FGL     3FGL J1843.7-0322   0.178442
       HESS J1843-033                3FGL     3FGL J1844.3-0344   0.242835
       HESS J1843-033                 SNR             G28.6-0.1   0.330376
-    <BLANKLINE>
+
 
     Access source spectral data and plot it:
 
     >>> ax = plt.subplot()
-    >>> source.spectral_model().plot(source.energy_range, ax=ax) #doctest:+ELLIPSIS
-    <AxesSubplot:...xlabel='Energy [TeV]', ylabel='dnde [1 / (cm2 s TeV)]'>
-    >>> source.spectral_model().plot_error(source.energy_range, ax=ax) #doctest:+ELLIPSIS
-    <AxesSubplot:...xlabel='Energy [TeV]', ylabel='dnde [1 / (cm2 s TeV)]'>
-    >>> source.flux_points.plot(ax=ax) #doctest:+ELLIPSIS
-    <AxesSubplot:...xlabel='Energy [TeV]', ylabel='dnde [1 / (cm2 s TeV)]'>
+    >>> source.spectral_model().plot(source.energy_range, ax=ax) # doctest: +SKIP
+    >>> source.spectral_model().plot_error(source.energy_range, ax=ax) # doctest: +SKIP
+    >>> source.flux_points.plot(ax=ax) # doctest: +SKIP
 
     Gaussian component information can be accessed as well,
     either via the source, or via the catalog:

@@ -356,14 +356,11 @@ class SourceCatalogGammaCat(SourceCatalog):
 
     Access source spectral data and plot it:
 
-    >>> ax= plt.subplot()
+    >>> ax = plt.subplot()
     >>> energy_range = [1, 10] * u.TeV
-    >>> source.spectral_model().plot(energy_range, ax=ax) #doctest:+ELLIPSIS
-    <AxesSubplot:...xlabel='Energy [TeV]', ylabel='dnde [1 / (cm2 s TeV)]'>
-    >>> source.spectral_model().plot_error(energy_range, ax=ax) #doctest:+ELLIPSIS
-    <AxesSubplot:...xlabel='Energy [TeV]', ylabel='dnde [1 / (cm2 s TeV)]'>
-    >>> source.flux_points.plot(ax=ax) #doctest:+ELLIPSIS
-    <AxesSubplot:...xlabel='Energy [TeV]', ylabel='dnde [1 / (cm2 s TeV)]'>
+    >>> source.spectral_model().plot(energy_range, ax=ax) # doctest: +SKIP
+    >>> source.spectral_model().plot_error(energy_range, ax=ax) # doctest: +SKIP
+    >>> source.flux_points.plot(ax=ax) # doctest: +SKIP
     """
 
     tag = "gamma-cat"

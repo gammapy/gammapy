@@ -146,7 +146,7 @@ class ExcessMapEstimator(Estimator):
       geom                   : WcsGeom
       axes                   : ['lon', 'lat', 'energy']
       shape                  : (320, 240, 1)
-      quantities             : ['npred', 'npred_excess', 'counts', 'ts', 'sqrt_ts', 'norm', 'norm_err']  # noqa: E501
+      quantities             : ['npred', 'npred_excess', 'counts', 'ts', 'sqrt_ts', 'norm', 'norm_err']
       ref. model             : pl
       n_sigma                : 1
       n_sigma_ul             : 2
