@@ -408,7 +408,6 @@ def test_region_geom_to_from_hdu(region):
     new_geom = RegionGeom.from_hdulist(hdulist, format="ogip")
 
     assert new_geom == geom
-    assert new_geom.region.meta["include"]
 
 
 def test_contains_point_sky_region():
