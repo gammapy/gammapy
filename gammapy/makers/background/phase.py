@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+from copy import deepcopy
 import numpy as np
 from regions import PointSkyRegion
 from gammapy.data import EventList
@@ -27,8 +28,8 @@ class PhaseBackgroundMaker(Maker):
     tag = "PhaseBackgroundMaker"
 
     def __init__(self, on_phase, off_phase, phase_column_name="PHASE"):
-        self.on_phase = self._check_intervals(on_phase)
-        self.off_phase = self._check_intervals(off_phase)
+        self.on_phase = self._check_intervals(deepcopy(on_phase))
+        self.off_phase = self._check_intervals(deepcopy(off_phase))
         self.phase_column_name = phase_column_name
 
     def __str__(self):
