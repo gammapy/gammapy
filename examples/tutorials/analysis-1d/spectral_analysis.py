@@ -387,7 +387,7 @@ plt.show()
 
 dataset_stacked = Datasets(datasets).stack_reduce()
 energy_edges = resample_energy_edges(dataset_stacked, conditions={"sqrt_ts_min": 2})
-
+energy_edges = energy_axis.edges
 
 ######################################################################
 # Now we create an instance of the
@@ -533,3 +533,122 @@ plt.show()
 # the :doc:`/tutorials/analysis-1d/extended_source_spectral_analysis`
 # tutorial.
 #
+#%%
+
+fig, ax = plt.subplots()
+
+plot_kwargs = {
+    "energy_bounds": [0.1, 30] * u.TeV,
+    "sed_type": "e2dnde",
+    "ax": ax,
+}
+
+flux_points_dataset.data.plot(energy_power=2, ax=ax)
+model_best_joint.spectral_model.plot(color="b", lw=0.5, **plot_kwargs, label="wstat")
+
+#%%
+
+flux_points_dataset.stat_type = "chi2"
+
+fit = Fit()
+result = fit.run([flux_points_dataset])
+print(result)
+model_best_fp = flux_points_dataset.models[0].copy()
+print(flux_points_dataset.models[0].parameters.to_table())
+
+flux_points_dataset.models[0].spectral_model.plot(
+    color="red", ls="--", **plot_kwargs, label="chi2"
+)
+
+
+stop
+flux_points_dataset.stat_type = "profile"
+fit = Fit()
+result = fit.run([flux_points_dataset])
+print(result)
+
+flux_points_dataset.models[0].spectral_model.plot(
+    color="g", ls=":", **plot_kwargs, label="profile"
+)
+flux_points_dataset.models[0].spectral_model.plot_error(facecolor="g", **plot_kwargs)
+model_best_fp_profile = flux_points_dataset.models[0].copy()
+plt.legend()
+plt.show()
+print(flux_points_dataset.models[0].parameters.to_table())
+
+
+#%%
+pars = []
+
+
+def fit_sample(k):
+    flux_points_dataset = FluxPointsDataset(
+        data=flux_points,
+        models=model_best_joint.copy(),
+        stat_type="chi2_samples",
+        stat_kwargs=dict(n_samples=100, random_state=k),
+    )
+    fit = Fit()
+    fit.run([flux_points_dataset])
+    return flux_points_dataset.models[0].parameters.free_parameters.value
+
+
+from gammapy.utils.parallel import run_multiprocessing
+
+results = run_multiprocessing(
+    fit_sample,
+    zip(
+        range(1000),
+    ),
+    backend="ray",
+    pool_kwargs=dict(processes=4),
+    task_name="fp sampling",
+)
+
+#%%
+import corner
+
+samples = np.array(results)
+ndim = samples.shape[1]
+# data fit parameters
+value0 = model_best_joint.parameters.free_parameters.value
+value1 = model_best_fp.parameters.free_parameters.value
+
+# fp samples fit parameters
+value2 = model_best_fp_profile.parameters.free_parameters.value
+
+# fp samples fit parameters
+value3 = np.median(samples, axis=0)
+
+# Make the base corner plot
+figure = corner.corner(samples)
+
+# Extract the axes
+axes = np.array(figure.axes).reshape((ndim, ndim))
+
+# Loop over the diagonal
+for i in range(ndim):
+    ax = axes[i, i]
+    ax.axvline(value0[i], color="b")
+    ax.axvline(value1[i], color="r")
+    ax.axvline(value2[i], color="g", ls="--")
+    ax.axvline(value3[i], color="c", ls="--")
+# Loop over the histograms
+for yi in range(ndim):
+    for xi in range(yi):
+        ax = axes[yi, xi]
+        ax.axvline(value0[xi], color="b")
+        ax.axvline(value1[xi], color="r")
+        ax.axvline(value2[xi], color="g", ls="--")
+        ax.axhline(value3[yi], color="c", ls="--")
+        ax.axhline(value0[yi], color="b")
+        ax.axhline(value1[yi], color="r")
+        ax.axhline(value2[yi], color="g", ls="--")
+        ax.axhline(value3[yi], color="c", ls="--")
+
+        # ax.plot(value0[xi], value0[yi], "sb")
+        # ax.plot(value1[xi], value1[yi], "sr")
+        # ax.plot(value2[xi], value2[yi], "sg")
+
+
+#%%
