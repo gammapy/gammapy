@@ -21,26 +21,18 @@ There are various ways for users to install Gammapy. We recommend setting up an
 environment using either conda or mamba. Here are two methods to quickly install Gammapy.
 
 .. panels::
-    :column: col-12 p-3
+    :column: col-lg-6 col-md-6 col-sm-12 col-xs-12 p-3
 
     Working with conda?
     ^^^^^^^^^^^^^^^^^^^
 
-    First set up and activate your environment:
-
-    .. code-block:: bash
-
-        $ conda create -n gammapy
-        $ conda activate gammapy
-
-    Gammapy can then be installed with `Anaconda <https://docs.continuum.io/anaconda/>`__:
+    Gammapy can be installed with `Anaconda <https://docs.continuum.io/anaconda/>`__:
 
     .. code-block:: bash
 
         $ conda install -c conda-forge gammapy
 
     ---
-    :column: col-12 p-3
 
     Prefer pip?
     ^^^^^^^^^^^

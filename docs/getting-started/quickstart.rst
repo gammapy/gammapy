@@ -11,6 +11,19 @@ execute the following commands in the terminal:
     $ curl -O https://gammapy.org/download/install/gammapy-|release|-environment.yml
     $ conda env create -f gammapy-|release|-environment.yml
 
+.. note::
+
+    On Windows, you have to open up the conda environment file and delete the
+    lines with ``sherpa`` and ``healpy``. Those are optional dependencies that
+    currently aren't available on Windows.
+
+.. note::
+
+    For Apple silicon M1 (`arm64`) architectures you also have to open the
+    environment file and delete the `sherpa` entry, as currently there are
+    no conda packages available. However you can later install `sherpa`
+    in the environment using `python -m pip install sherpa`.
+
 
 The best way to get started and learn Gammapy are the :ref:`tutorials`.
 You can download the Gammapy tutorial notebooks and the example
@@ -19,6 +32,7 @@ want to install the datasets and proceed with the following commands:
 
 .. substitution-code-block:: bash
 
+    $ conda activate gammapy-|release|
     $ gammapy download notebooks
     $ gammapy download datasets
     $ conda env config vars set GAMMAPY_DATA=$PWD/gammapy-datasets/|release|
