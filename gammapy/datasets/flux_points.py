@@ -5,7 +5,6 @@ from scipy.stats import norm, uniform
 from astropy import units as u
 from astropy.io import fits
 from astropy.table import Table
-from astropy.utils import lazyproperty
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
@@ -16,6 +15,7 @@ from gammapy.modeling.models import (
     SkyModel,
     TemplateSpatialModel,
 )
+from gammapy.utils.interpolation import interpolate_profile
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
 from .core import Dataset
@@ -117,7 +117,6 @@ class FluxPointsDataset(Dataset):
     ``gammapy download datasets --tests --out $GAMMAPY_DATA``
     """
 
-    stat_type = "chi2"
     tag = "FluxPointsDataset"
 
     def __init__(
@@ -128,9 +127,8 @@ class FluxPointsDataset(Dataset):
         mask_safe=None,
         name=None,
         meta_table=None,
-        sample_points=False,
-        n_samples=100,
-        random_state=0,
+        stat_type="chi2",
+        stat_kwargs=None,
     ):
         if not data.geom.has_energy_axis:
             raise ValueError("FluxPointsDataset needs an energy axis")
@@ -140,15 +138,59 @@ class FluxPointsDataset(Dataset):
         self.models = models
         self.meta_table = meta_table
 
-        self.sample_points = sample_points
-        self.random_state = get_random_state(random_state)
-        self.n_samples = int(np.ceil(n_samples / 2.0) * 2)
+        self.available_stat_type = dict(
+            chi2=self._stat_array_chi2_data,
+            profile=self._stat_array_profile,
+            chi2_samples=self._stat_array_chi2_samples,
+        )
+        if stat_type not in self.available_stat_type:
+            raise ValueError(
+                "Invalid stat_type: possible options are {list(self.available_stat_type.keys())}"
+            )
+
+        if stat_kwargs is None:
+            stat_kwargs = dict()
+        self.stat_kwargs = stat_kwargs
+
+        self.stat_type = stat_type
 
         if mask_safe is None:
-            mask_safe = (~data.is_ul).data & ~np.isnan(self.data.dnde)
-
+            mask_safe = np.ones(self.data.dnde.data.shape, dtype=bool)
         self.mask_safe = mask_safe
+
         self._min_abs_error = np.inf
+
+    @property
+    def stat_type(self):
+        return self._stat_type
+
+    @stat_type.setter
+    def stat_type(self, stat_type):
+        if stat_type == "chi2":
+            self.mask_valid = (~self.data.is_ul).data & np.isfinite(self.data.dnde)
+        elif stat_type == "chi2_samples":
+            self.stat_kwargs.setdefault("n_samples", 100)
+            self.stat_kwargs.setdefault("random_state", 0)
+            self.random_state = get_random_state(self.stat_kwargs["random_state"])
+            self.n_samples = int(np.ceil(self.stat_kwargs["n_samples"] / 2.0) * 2)
+            self._samples = self._generate_samples()
+            self.mask_valid = np.isfinite(self._samples)
+        elif stat_type == "profile":
+            self.stat_kwargs.setdefault("interp_scale", "sqrt")
+            self.stat_kwargs.setdefault("extrapolate", True)
+            self._profile_interpolators = self._get_profile_interpolators()
+        self._stat_type = stat_type
+
+    @property
+    def mask_safe(self):
+        if self.stat_type == "chi2_samples":
+            return np.repeat(self._mask_safe, self.n_samples) & self.mask_valid
+        else:
+            return self._mask_safe & self.mask_valid
+
+    @mask_safe.setter
+    def mask_safe(self, mask_safe):
+        self._mask_safe = mask_safe
 
     @property
     def name(self):
@@ -331,7 +373,61 @@ class FluxPointsDataset(Dataset):
             flux += flux_model
         return flux
 
-    @lazyproperty
+    def stat_array(self):
+        """Fit statistic array."""
+        return self.available_stat_type[self.stat_type]()
+
+    def _stat_array_chi2_data(self):
+        model = self.flux_pred()
+        data = self.data.dnde.quantity
+        try:
+            sigma = self.data.dnde_err.quantity
+        except AttributeError:
+            sigma = (self.data.dnde_errn + self.data.dnde_errp).quantity / 2
+        return ((data - model) / sigma).to_value("") ** 2
+
+    def _stat_array_profile(self):
+        model = (self.flux_pred() / self.data.dnde_ref).to_value("")
+        stat = np.zeros(model.shape)
+        for idx, interp in enumerate(self._profile_interpolators):
+            stat[idx] = interp(model[idx])
+        return stat
+
+    def _get_profile_interpolators(self):
+        value_scan = self.data.stat_scan.geom.axes["norm"].center
+        shape_axes = self.data.stat_scan.geom._shape[slice(3, None)]
+        interpolators = np.empty(shape_axes, dtype=object)
+        self.mask_valid = np.ones(self.data.dnde.data.shape, dtype=bool)
+        for idx in np.ndindex(shape_axes):
+            stat_scan = np.abs(
+                self.data.stat_scan.data[idx].squeeze()
+                - self.data.stat.data[idx].squeeze()
+            )
+            self.mask_valid[idx] = np.all(np.isfinite(stat_scan))
+            interpolators[idx] = interpolate_profile(
+                value_scan,
+                stat_scan,
+                interp_scale=self.stat_kwargs["interp_scale"],
+                extrapolate=self.stat_kwargs["extrapolate"],
+            )
+        return interpolators
+
+    def _stat_array_chi2_samples(self):
+        model = np.repeat(self.flux_pred(), self.n_samples)
+        data = self._samples
+
+        if not np.all(np.isfinite(model)):
+            return np.inf * np.ones(model.shape)
+        mean_abs_error = np.sum(
+            np.abs(data[self.mask_valid] - model[self.mask_valid])
+        ) / np.sum(self.mask_valid)
+        if mean_abs_error < self._min_abs_error:
+            self._min_abs_error = mean_abs_error
+        sigma = self._min_abs_error
+
+        stat = ((data - model) / sigma).to_value("") ** 2
+        return stat
+
     def _generate_samples(self):
         """generate samples"""
         is_ul = self.data.is_ul.data.flatten()
@@ -391,33 +487,6 @@ class FluxPointsDataset(Dataset):
         samples[samples < 0] = np.nan
         samples = samples * self.data.dnde.unit
         return samples
-
-    def stat_array(self):
-        """Fit statistic array."""
-        if self.sample_points:
-            model = np.repeat(self.flux_pred(), self.n_samples)
-            data = self._generate_samples
-
-            mask = np.isfinite(data)
-            if not np.all(np.isfinite(model)):
-                return np.inf * np.ones(model.shape)
-            mean_abs_error = np.sum(np.abs(data[mask] - model[mask])) / np.sum(mask)
-            if mean_abs_error < self._min_abs_error:
-                self._min_abs_error = mean_abs_error
-            sigma = self._min_abs_error
-
-            stat = ((data - model) / sigma).to_value("") ** 2
-            self.mask_safe = None
-            self.mask_fit = mask
-            return stat
-        else:
-            model = self.flux_pred()
-            data = self.data.dnde.quantity
-            try:
-                sigma = self.data.dnde_err.quantity
-            except AttributeError:
-                sigma = (self.data.dnde_errn + self.data.dnde_errp).quantity / 2
-            return ((data - model) / sigma).to_value("") ** 2
 
     def residuals(self, method="diff"):
         """Compute flux point residuals.
