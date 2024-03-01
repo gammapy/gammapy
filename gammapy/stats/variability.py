@@ -281,3 +281,60 @@ def structure_function(flux, flux_err, time, tdelta_precision=5):
 
     sf = factor / norm
     return sf, distances
+
+
+def TimmerAlgorithm(power_spectrum, even_freq=True):
+    """Implementation of the Timmer algorithm to simulate a time series from a power spectrum
+
+    Parameters
+    ----------
+    power_spectrum: `~numpy.ndarray`
+        array representing the power spectrum used to generate the time series.
+
+    even_freq: bool, optional
+        Parameter needed to distinguish between even and odd number of data points, for handling of the Nyquist frequency.
+        If True, the Nyquist frequency is real by definition. Default is True.
+
+    Returns
+    -------
+    time_series: `~numpy.ndarray`
+        Simulated time series.
+
+    References
+    ----------
+    ..[Timmer1995]"On generating power law noise", J. Timmer and M, Konig, section 3.
+    """
+    random_numbers = np.random.normal(
+        0, 1, len(power_spectrum) - 1
+    ) + 1j * np.random.normal(0, 1, len(power_spectrum) - 1)
+    fourier_coeffs = np.sqrt(0.5 * power_spectrum[:-1]) * random_numbers
+
+    # Nyquist frequency component handling
+    if even_freq == True:
+        # For even number of data points
+        fourier_coeffs = np.concatenate(
+            [
+                fourier_coeffs,
+                np.sqrt(0.5 * power_spectrum[-1]) * np.random.normal(0, 1, 1),
+            ]
+        )
+    else:
+        # For odd number of data points
+        fourier_coeffs = np.concatenate(
+            [
+                fourier_coeffs,
+                np.sqrt(0.5 * power_spectrum[-1])
+                * (np.random.normal(0, 1, 1) + 1j * np.random.normal(0, 1, 1)),
+            ]
+        )
+
+    # Complex conjugate for negative frequencies
+    fourier_coeffs = np.concatenate(
+        [fourier_coeffs, np.conjugate(fourier_coeffs[-2::-1])]
+    )
+    fourier_coeffs = np.insert(fourier_coeffs, 0, 0)
+
+    # Inverse Fourier Transform to obtain time series
+    time_series = np.fft.ifft(fourier_coeffs).real
+
+    return time_series
