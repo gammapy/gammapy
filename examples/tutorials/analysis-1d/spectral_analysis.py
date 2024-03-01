@@ -418,6 +418,22 @@ flux_points.plot(ax=ax, sed_type="e2dnde", color="darkorange")
 flux_points.plot_ts_profiles(ax=ax, sed_type="e2dnde")
 plt.show()
 
+######################################################################
+# We can also plot the flux distribution with the spectral model overlaid:
+#
+
+fig, ax = plt.subplots()
+flux_points.plot(ax=ax, sed_type="flux", color="darkorange")
+flux_points.plot_ts_profiles(ax=ax, sed_type="flux")
+axis = flux_points.energy_axis
+model_best_joint.spectral_model.plot(
+    ax=ax,
+    energy_bounds=(axis.edges_min[0], axis.edges_max[-1]),
+    sed_type="flux",
+    n_points=axis.nbin,
+)
+plt.show()
+
 
 ######################################################################
 # The final plot with the best fit model, flux points and residuals can be
