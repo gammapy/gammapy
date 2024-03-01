@@ -13,6 +13,7 @@ from .variability import (
     compute_fpp,
     compute_fvar,
     structure_function,
+    TimmerAlgorithm,
 )
 
 __all__ = [
@@ -31,4 +32,5 @@ __all__ = [
     "compute_flux_doubling",
     "compute_chisq",
     "structure_function",
+    "TimmerAlgorithm",
 ]

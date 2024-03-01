@@ -10,6 +10,7 @@ from astropy.time import Time
 from astropy.utils import lazyproperty
 from gammapy.maps import MapAxis, RegionNDMap, TimeMapAxis
 from gammapy.modeling import Parameter
+from gammapy.stats import TimmerAlgorithm
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.scripts import make_path
 from gammapy.utils.time import time_ref_from_dict, time_ref_to_dict
@@ -617,6 +618,27 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         m = RegionNDMap.create(region=None, axes=axes, data=table["NORM"])
 
         return cls(m, t_ref=t_ref, filename=filename)
+
+    def from_powerspectrum(cls, powerspectrum, map, **kwargs):
+        """Create a template model from a power spectrum using the Timmer algorithm.
+
+        Parameters
+        ----------
+        powerspectrum: `~numpy.ndarray`
+            Array representing the power spectrum from which to derive the model.
+        map:  `RegionNDMap`
+            Map containing the desired geometry of the model.
+
+        Returns
+        -------
+        model : `LightCurveTemplateTemporalModel`
+            Light curve template model.
+        """
+        evenness = map.geom.axes["time"].nbin % 2 == 0
+        time_series = TimmerAlgorithm(powerspectrum, evenness)
+        map.quantity = time_series
+
+        return cls(map, **kwargs)
 
     @classmethod
     def read(cls, filename, format="table"):

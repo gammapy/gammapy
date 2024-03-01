@@ -8,6 +8,7 @@ __all__ = [
     "compute_chisq",
     "compute_flux_doubling",
     "structure_function",
+    "TimmerAlgorithm",
 ]
 
 
@@ -289,7 +290,7 @@ def TimmerAlgorithm(power_spectrum, even_freq=True):
     Parameters
     ----------
     power_spectrum: `~numpy.ndarray`
-        array representing the power spectrum used to generate the time series.
+        Array representing the power spectrum used to generate the time series.
 
     even_freq: bool, optional
         Parameter needed to distinguish between even and odd number of data points, for handling of the Nyquist frequency.
