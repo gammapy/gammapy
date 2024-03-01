@@ -19,9 +19,10 @@ execute the following commands in the terminal:
 
 .. note::
 
-    For Apple silicon M1 (`arm64`) architectures you also have to open the
-    environment file and delete the `sherpa` entry, as currently there are
-    no conda packages available. However you can later install `sherpa`
+    For gammapy versions **prior to v1.2**, if you're using
+    Apple silicon M1 (`arm64`) architectures you have to open the
+    environment file and delete the `sherpa` entry. Currently there are
+    no conda packages available. You can then install `sherpa`
     in the environment using `python -m pip install sherpa`.
 
 
