@@ -380,23 +380,13 @@ plt.show()
 #
 # To round up our analysis we can compute flux points by fitting the norm
 # of the global model in energy bands.
-# We can utilise the `~gammapy.estimators.utils.resample_energy_edges`
-# for defining the energy bins in which the minimum number of `sqrt_ts` is 2.
-# To do so we first stack the individual datasets, only for obtaining the energies:
-#
-
-dataset_stacked = Datasets(datasets).stack_reduce()
-energy_edges = resample_energy_edges(dataset_stacked, conditions={"sqrt_ts_min": 2})
-energy_edges = energy_axis.edges
-
-######################################################################
-# Now we create an instance of the
+# We create an instance of the
 # `~gammapy.estimators.FluxPointsEstimator`, by passing the dataset and
 # the energy binning:
 #
 
 fpe = FluxPointsEstimator(
-    energy_edges=energy_edges, source="crab", selection_optional="all"
+    energy_edges=energy_axis.edges, source="crab", selection_optional="all"
 )
 flux_points = fpe.run(datasets=datasets)
 
@@ -430,7 +420,9 @@ plt.show()
 # quickly made like this:
 #
 
-flux_points_dataset = FluxPointsDataset(data=flux_points, models=model_best_joint)
+flux_points_dataset = FluxPointsDataset(
+    data=flux_points, models=model_best_joint.copy()
+)
 flux_points_dataset.plot_fit()
 plt.show()
 
@@ -504,6 +496,82 @@ plt.show()
 # sphinx_gallery_thumbnail_number = 5
 
 ######################################################################
+# A note on statistics
+# ---------
+#
+# Different statistic are available for the FluxPointDataset :
+# * chi2 : etimate from chi2 statistics.
+# * profile : estimate from interpolation of the likelihood profile.
+# * distrib : estimate from probability distributions,
+#             assumes that flux points correspond to asymmetric gaussians
+#             and upper limits complemantary error functions.
+# Default is `chi2`, in that case upper limits are ignored and the mean of asymetrics error is used.
+# So it is recommended to use `profile` if `stat_scan` is available on flux points.
+# The `distrib` case provides an approximation if the `profile` is not available
+# which allows to take into accounts upper limit and asymetrics error.
+#
+# In the example below we can see that the `profle` case match exactly the result
+# from the joint analysis (from the ON/OFF dataset using labelled as wstat).
+
+
+def plot_stat(fp_dataset):
+    fig, ax = plt.subplots()
+
+    plot_kwargs = {
+        "energy_bounds": [0.1, 30] * u.TeV,
+        "sed_type": "e2dnde",
+        "ax": ax,
+    }
+
+    fp_dataset.data.plot(energy_power=2, ax=ax)
+    model_best_joint.spectral_model.plot(
+        color="b", lw=0.5, **plot_kwargs, label="wstat"
+    )
+
+    stat_types = ["chi2", "profile", "distrib"]
+    colors = ["red", "g", "c"]
+    lss = ["--", ":", "--"]
+
+    for ks, stat in enumerate(stat_types):
+
+        fp_dataset.stat_type = stat
+
+        fit = Fit()
+        fit.run([fp_dataset])
+
+        fp_dataset.models[0].spectral_model.plot(
+            color=colors[ks], ls=lss[ks], **plot_kwargs, label=stat
+        )
+        fp_dataset.models[0].spectral_model.plot_error(
+            facecolor=colors[ks], **plot_kwargs
+        )
+        plt.legend()
+
+
+plot_stat(flux_points_dataset)
+
+######################################################################
+
+# In order to avoid discrepancies due to the treatment of upper limits
+# we can utilise the `~gammapy.estimators.utils.resample_energy_edges`
+# for defining energy bins in which the minimum number of `sqrt_ts` is 2.
+# In that case the all the statistics definitions gives equivalent results.
+#
+
+energy_edges = resample_energy_edges(dataset_stacked, conditions={"sqrt_ts_min": 2})
+
+fpe_no_ul = FluxPointsEstimator(
+    energy_edges=energy_edges, source="crab", selection_optional="all"
+)
+flux_points_no_ul = fpe_no_ul.run(datasets=datasets)
+flux_points_dataset_no_ul = FluxPointsDataset(
+    data=flux_points_no_ul,
+    models=model_best_joint.copy(),
+)
+
+plot_stat(flux_points_dataset_no_ul)
+
+######################################################################
 # Exercises
 # ---------
 #
@@ -533,122 +601,3 @@ plt.show()
 # the :doc:`/tutorials/analysis-1d/extended_source_spectral_analysis`
 # tutorial.
 #
-#%%
-
-fig, ax = plt.subplots()
-
-plot_kwargs = {
-    "energy_bounds": [0.1, 30] * u.TeV,
-    "sed_type": "e2dnde",
-    "ax": ax,
-}
-
-flux_points_dataset.data.plot(energy_power=2, ax=ax)
-model_best_joint.spectral_model.plot(color="b", lw=0.5, **plot_kwargs, label="wstat")
-
-#%%
-
-flux_points_dataset.stat_type = "chi2"
-
-fit = Fit()
-result = fit.run([flux_points_dataset])
-print(result)
-model_best_fp = flux_points_dataset.models[0].copy()
-print(flux_points_dataset.models[0].parameters.to_table())
-
-flux_points_dataset.models[0].spectral_model.plot(
-    color="red", ls="--", **plot_kwargs, label="chi2"
-)
-
-
-stop
-flux_points_dataset.stat_type = "profile"
-fit = Fit()
-result = fit.run([flux_points_dataset])
-print(result)
-
-flux_points_dataset.models[0].spectral_model.plot(
-    color="g", ls=":", **plot_kwargs, label="profile"
-)
-flux_points_dataset.models[0].spectral_model.plot_error(facecolor="g", **plot_kwargs)
-model_best_fp_profile = flux_points_dataset.models[0].copy()
-plt.legend()
-plt.show()
-print(flux_points_dataset.models[0].parameters.to_table())
-
-
-#%%
-pars = []
-
-
-def fit_sample(k):
-    flux_points_dataset = FluxPointsDataset(
-        data=flux_points,
-        models=model_best_joint.copy(),
-        stat_type="chi2_samples",
-        stat_kwargs=dict(n_samples=100, random_state=k),
-    )
-    fit = Fit()
-    fit.run([flux_points_dataset])
-    return flux_points_dataset.models[0].parameters.free_parameters.value
-
-
-from gammapy.utils.parallel import run_multiprocessing
-
-results = run_multiprocessing(
-    fit_sample,
-    zip(
-        range(1000),
-    ),
-    backend="ray",
-    pool_kwargs=dict(processes=4),
-    task_name="fp sampling",
-)
-
-#%%
-import corner
-
-samples = np.array(results)
-ndim = samples.shape[1]
-# data fit parameters
-value0 = model_best_joint.parameters.free_parameters.value
-value1 = model_best_fp.parameters.free_parameters.value
-
-# fp samples fit parameters
-value2 = model_best_fp_profile.parameters.free_parameters.value
-
-# fp samples fit parameters
-value3 = np.median(samples, axis=0)
-
-# Make the base corner plot
-figure = corner.corner(samples)
-
-# Extract the axes
-axes = np.array(figure.axes).reshape((ndim, ndim))
-
-# Loop over the diagonal
-for i in range(ndim):
-    ax = axes[i, i]
-    ax.axvline(value0[i], color="b")
-    ax.axvline(value1[i], color="r")
-    ax.axvline(value2[i], color="g", ls="--")
-    ax.axvline(value3[i], color="c", ls="--")
-# Loop over the histograms
-for yi in range(ndim):
-    for xi in range(yi):
-        ax = axes[yi, xi]
-        ax.axvline(value0[xi], color="b")
-        ax.axvline(value1[xi], color="r")
-        ax.axvline(value2[xi], color="g", ls="--")
-        ax.axhline(value3[yi], color="c", ls="--")
-        ax.axhline(value0[yi], color="b")
-        ax.axhline(value1[yi], color="r")
-        ax.axhline(value2[yi], color="g", ls="--")
-        ax.axhline(value3[yi], color="c", ls="--")
-
-        # ax.plot(value0[xi], value0[yi], "sb")
-        # ax.plot(value1[xi], value1[yi], "sr")
-        # ax.plot(value2[xi], value2[yi], "sg")
-
-
-#%%
