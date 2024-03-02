@@ -1,7 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
-from scipy.stats import norm, uniform
+from scipy.special import erfc
+from scipy.stats import norm
 from astropy import units as u
 from astropy.io import fits
 from astropy.table import Table
@@ -16,7 +17,6 @@ from gammapy.modeling.models import (
     TemplateSpatialModel,
 )
 from gammapy.utils.interpolation import interpolate_profile
-from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
 from .core import Dataset
 
@@ -58,18 +58,19 @@ class FluxPointsDataset(Dataset):
     meta_table : `~astropy.table.Table`
         Table listing information on observations used to create the dataset.
         One line per observation for stacked datasets.
-    sample_points : bool
-        Evaluate the statistic on samples
-        drawn from flux points as gaussian distribution
-        or uniform distribution between zero and upper limits.
-    n_samples : int
-        Number of samples to draw  per flux points. Defalut is 1000.
-        Used only if sample_points is True.
-        If odd, round up to next even number.
-    random_state: {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
-        Defines random number generator initialisation.
-        Passed to `~gammapy.utils.random.get_random_state`. Default is 0.
-        Used only if sample_points is True.
+    stat_type : bool
+        Method used to compute the statistics:
+        * chi2 : etimate from chi2 statistics.
+        * profile : estimate from interpolation of the likelihood profile.
+        * distrib : estimate from probability distributions
+                    assuming that flux points correspond to asymmetric gaussians
+                    and upper limits complemantary error functions.
+        Default is `chi2`, in that case upper limits are ignored and the mean of asymetrics error is used.
+        However it is recommended to use `profile` if `stat_scan` is available on flux points.
+    stat_kwargs : int
+        Exta arguments passed to the stat function
+        Used only if `stat_type=="distrib"`. In that case the default is :
+        `stat_kwargs={"interp_scale":"sqrt", "extrapolate":True}
 
     Examples
     --------
@@ -139,14 +140,10 @@ class FluxPointsDataset(Dataset):
         self.meta_table = meta_table
 
         self.available_stat_type = dict(
-            chi2=self._stat_array_chi2_data,
+            chi2=self._stat_array_chi2,
             profile=self._stat_array_profile,
-            chi2_samples=self._stat_array_chi2_samples,
+            distrib=self._stat_array_distrib,
         )
-        if stat_type not in self.available_stat_type:
-            raise ValueError(
-                "Invalid stat_type: possible options are {list(self.available_stat_type.keys())}"
-            )
 
         if stat_kwargs is None:
             stat_kwargs = dict()
@@ -158,35 +155,31 @@ class FluxPointsDataset(Dataset):
             mask_safe = np.ones(self.data.dnde.data.shape, dtype=bool)
         self.mask_safe = mask_safe
 
-        self._min_abs_error = np.inf
-
     @property
     def stat_type(self):
         return self._stat_type
 
     @stat_type.setter
     def stat_type(self, stat_type):
+
+        if stat_type not in self.available_stat_type:
+            raise ValueError(
+                "Invalid stat_type: possible options are {list(self.available_stat_type.keys())}"
+            )
+
         if stat_type == "chi2":
             self.mask_valid = (~self.data.is_ul).data & np.isfinite(self.data.dnde)
-        elif stat_type == "chi2_samples":
-            self.stat_kwargs.setdefault("n_samples", 100)
-            self.stat_kwargs.setdefault("random_state", 0)
-            self.random_state = get_random_state(self.stat_kwargs["random_state"])
-            self.n_samples = int(np.ceil(self.stat_kwargs["n_samples"] / 2.0) * 2)
-            self._samples = self._generate_samples()
-            self.mask_valid = np.isfinite(self._samples)
+        elif stat_type == "distrib":
+            self.mask_valid = self.data.is_ul.data | np.isfinite(self.data.dnde)
         elif stat_type == "profile":
             self.stat_kwargs.setdefault("interp_scale", "sqrt")
             self.stat_kwargs.setdefault("extrapolate", True)
-            self._profile_interpolators = self._get_profile_interpolators()
+            self._profile_interpolators = self._get_valid_profile_interpolators()
         self._stat_type = stat_type
 
     @property
     def mask_safe(self):
-        if self.stat_type == "chi2_samples":
-            return np.repeat(self._mask_safe, self.n_samples) & self.mask_valid
-        else:
-            return self._mask_safe & self.mask_valid
+        return self._mask_safe & self.mask_valid
 
     @mask_safe.setter
     def mask_safe(self, mask_safe):
@@ -377,7 +370,8 @@ class FluxPointsDataset(Dataset):
         """Fit statistic array."""
         return self.available_stat_type[self.stat_type]()
 
-    def _stat_array_chi2_data(self):
+    def _stat_array_chi2(self):
+        """Chi2 statistics."""
         model = self.flux_pred()
         data = self.data.dnde.quantity
         try:
@@ -387,13 +381,14 @@ class FluxPointsDataset(Dataset):
         return ((data - model) / sigma).to_value("") ** 2
 
     def _stat_array_profile(self):
+        """Estimate statitistic from interpolation of the likelihood profile."""
         model = (self.flux_pred() / self.data.dnde_ref).to_value("")
         stat = np.zeros(model.shape)
         for idx, interp in enumerate(self._profile_interpolators):
             stat[idx] = interp(model[idx])
         return stat
 
-    def _get_profile_interpolators(self):
+    def _get_valid_profile_interpolators(self):
         value_scan = self.data.stat_scan.geom.axes["norm"].center
         shape_axes = self.data.stat_scan.geom._shape[slice(3, None)]
         interpolators = np.empty(shape_axes, dtype=object)
@@ -412,81 +407,43 @@ class FluxPointsDataset(Dataset):
             )
         return interpolators
 
-    def _stat_array_chi2_samples(self):
-        model = np.repeat(self.flux_pred(), self.n_samples)
-        data = self._samples
+    def _stat_array_distrib(self):
+        """Estimate statistic from probability distributions,
+        assumes that flux points correspond to asymmetric gaussians
+        and upper limits complemantary error functions.
+        """
+        model = self.flux_pred()
 
-        if not np.all(np.isfinite(model)):
-            return np.inf * np.ones(model.shape)
-        mean_abs_error = np.sum(
-            np.abs(data[self.mask_valid] - model[self.mask_valid])
-        ) / np.sum(self.mask_valid)
-        if mean_abs_error < self._min_abs_error:
-            self._min_abs_error = mean_abs_error
-        sigma = self._min_abs_error
-
-        stat = ((data - model) / sigma).to_value("") ** 2
-        return stat
-
-    def _generate_samples(self):
-        """generate samples"""
         is_ul = self.data.is_ul.data.flatten()
         n_points = len(is_ul)
-        samples = np.ones(n_points * self.n_samples) * np.nan
+        stat = np.zeros(model.shape)
         for k in range(n_points):
+            value = model[k].to_value(self.data.dnde.unit)
 
             if not is_ul[k]:
                 if np.isnan(self.data.dnde.data.flatten()[k]):
                     continue
                 loc = self.data.dnde.data.flatten()[k]
                 try:
-                    scalep = self.data.dnde_errp.data.flatten()[k]
-                    samplesp = norm.rvs(
-                        loc=loc,
-                        scale=scalep,
-                        size=self.n_samples,
-                        random_state=self.random_state,
-                    )
-                    samplesp[samplesp < loc] = 2 * loc - samplesp[samplesp < loc]
-                    samplesp = self.random_state.choice(
-                        samplesp, size=int(self.n_samples / 2)
-                    )
-
-                    scalen = self.data.dnde_errn.data.flatten()[k]
-                    samplesn = norm.rvs(
-                        loc=loc,
-                        scale=scalen,
-                        size=self.n_samples,
-                        random_state=self.random_state,
-                    )
-                    samplesn[samplesn > loc] = 2 * loc - samplesn[samplesn > loc]
-                    samplesn = self.random_state.choice(
-                        samplesn, size=int(self.n_samples / 2)
-                    )
-
-                    subsamples = np.concatenate((samplesn, samplesp))
-
+                    if value >= loc:
+                        scale = self.data.dnde_errp.data.flatten()[k]
+                    else:
+                        scale = self.data.dnde_errn.data.flatten()[k]
                 except AttributeError:
                     scale = self.data.dnde_err.data.flatten()[k]
-                    subsamples = norm.rvs(
-                        loc=loc,
-                        scale=scale,
-                        size=self.n_samples,
-                        random_state=self.random_state,
+                stat[k] = -2 * (
+                    np.log(
+                        norm.pdf(value, loc=loc, scale=scale)
+                        / norm.pdf(loc, loc=loc, scale=scale)
                     )
+                )
             else:
                 if np.isnan(self.data.dnde_ul.data.flatten()[k]):
                     continue
-                subsamples = uniform.rvs(
-                    loc=0,
-                    scale=self.data.dnde_ul.data.flatten()[k],
-                    size=self.n_samples,
-                    random_state=self.random_state,
-                )
-            samples[k * self.n_samples : (k + 1) * self.n_samples] = subsamples
-        samples[samples < 0] = np.nan
-        samples = samples * self.data.dnde.unit
-        return samples
+                loc = 0
+                scale = self.data.dnde_ul.data.flatten()[k]
+                stat[k] = -2 * (np.log(erfc(-(loc - value) / scale) / 2 / erfc(0) / 2))
+        return stat
 
     def residuals(self, method="diff"):
         """Compute flux point residuals.
