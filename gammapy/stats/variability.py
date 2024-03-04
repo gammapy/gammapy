@@ -311,7 +311,7 @@ def TimmerAlgorithm(power_spectrum, even_freq=True):
     fourier_coeffs = np.sqrt(0.5 * power_spectrum[:-1]) * random_numbers
 
     # Nyquist frequency component handling
-    if even_freq == True:
+    if even_freq:
         # For even number of data points
         fourier_coeffs = np.concatenate(
             [
