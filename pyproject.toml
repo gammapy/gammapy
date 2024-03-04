@@ -1,17 +1,16 @@
 [build-system]
 requires = [
-	"setuptools >= 40.6.0",
-	"wheel",
+	"setuptools >= 65",
 	"Cython",
 	'oldest-supported-numpy',
-	'setuptools_scm[toml]',
+	'setuptools_scm[toml] >= 8',
 	"extension-helpers",
 ]
 build-backend = "setuptools.build_meta"
 
 [tool.black]
 line-length = 88
-target-version = ['py38', 'py39', 'py310']
+target-version = ['py38', 'py39', 'py310', 'py3.11', 'py312']
 include = '\.pyi?$'
 exclude = '''
 /(
