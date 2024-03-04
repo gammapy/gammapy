@@ -338,4 +338,9 @@ def TimmerAlgorithm(power_spectrum, even_freq=True):
     # Inverse Fourier Transform to obtain time series
     time_series = np.fft.ifft(fourier_coeffs).real
 
+    if time_series.max() < np.abs(time_series.min()):
+        time_series = -time_series
+
+    time_series = 0.5 + 0.5 * time_series / time_series.max()
+
     return time_series
