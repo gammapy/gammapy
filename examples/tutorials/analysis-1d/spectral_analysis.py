@@ -428,7 +428,7 @@ flux_points.plot_ts_profiles(ax=ax, sed_type="flux")
 axis = flux_points.energy_axis
 model_best_joint.spectral_model.plot(
     ax=ax,
-    energy_bounds=(axis.edges_min[0], axis.edges_max[-1]),
+    energy_bounds=axis.bounds,
     sed_type="flux",
     n_points=axis.nbin,
 )
