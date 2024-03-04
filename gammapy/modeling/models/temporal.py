@@ -619,6 +619,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
         return cls(m, t_ref=t_ref, filename=filename)
 
+    @classmethod
     def from_powerspectrum(cls, powerspectrum, map, **kwargs):
         """Create a template model from a power spectrum using the Timmer algorithm.
 
