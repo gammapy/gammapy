@@ -9,10 +9,8 @@ from .map import (
     create_map_dataset_from_observation,
     create_map_dataset_geoms,
 )
-from .simulate import MapDatasetEventSampler, ObservationEventSampler
-from .map import MapDataset, MapDatasetOnOff, create_map_dataset_geoms
 from .metadata import MapDatasetMetaData
-from .simulate import MapDatasetEventSampler
+from .simulate import MapDatasetEventSampler, ObservationEventSampler
 from .spectrum import SpectrumDataset, SpectrumDatasetOnOff
 
 DATASET_REGISTRY = Registry(

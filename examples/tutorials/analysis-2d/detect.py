@@ -41,7 +41,6 @@ We will work with the following functions and classes:
 
 """
 
-
 ######################################################################
 # Setup
 # -----
