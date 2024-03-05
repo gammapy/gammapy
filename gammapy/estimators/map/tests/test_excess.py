@@ -7,7 +7,7 @@ from gammapy.datasets import MapDataset, MapDatasetOnOff
 from gammapy.estimators import ExcessMapEstimator
 from gammapy.estimators.utils import (
     estimate_exposure_reco_energy,
-    get_joint_significance_maps,
+    get_combined_significance_maps,
 )
 from gammapy.irf import PSFMap
 from gammapy.maps import Map, MapAxis, WcsGeom
@@ -405,7 +405,7 @@ def test_joint_excess_map(simple_dataset):
     assert_allclose(result["npred_excess"].data.sum(), 2 * 19733.602, rtol=1e-3)
     assert_allclose(result["sqrt_ts"].data[0, 10, 10], 5.960441, rtol=1e-3)
 
-    result = get_joint_significance_maps(estimator, [simple_dataset, simple_dataset])
+    result = get_combined_significance_maps(estimator, [simple_dataset, simple_dataset])
 
     assert_allclose(result["npred_excess"].data.sum(), 2 * 19733.602, rtol=1e-3)
     assert_allclose(result["significance"].data[10, 10], 5.618187, rtol=1e-3)

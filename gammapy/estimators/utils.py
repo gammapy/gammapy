@@ -17,7 +17,7 @@ from gammapy.stats.utils import ts_to_sigma
 from .map.core import FluxMaps
 
 __all__ = [
-    "get_joint_significance_maps",
+    "get_combined_significance_maps",
     "estimate_exposure_reco_energy",
     "find_peaks",
     "find_peaks_in_flux_map",
@@ -690,7 +690,7 @@ def get_rebinned_axis(fluxpoint, axis_name="energy", method=None, **kwargs):
     return axis_new
 
 
-def get_joint_significance_maps(estimator, datasets):
+def get_combined_significance_maps(estimator, datasets):
     """Computes excess and significance for a set of datasets.
     The significance computation assumes that the model contains
     one degree of freedom per valid bin in energy in each dataset.

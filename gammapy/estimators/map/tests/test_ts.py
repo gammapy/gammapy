@@ -6,7 +6,7 @@ import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from gammapy.datasets import MapDataset, MapDatasetOnOff
 from gammapy.estimators import TSMapEstimator
-from gammapy.estimators.utils import get_joint_significance_maps
+from gammapy.estimators.utils import get_combined_significance_maps
 from gammapy.irf import EDispKernelMap, PSFMap
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling.models import (
@@ -384,7 +384,7 @@ def test_joint_ts_map(fake_dataset):
     assert_allclose(result["npred_excess"].data.sum(), 1140.364071, rtol=1e-3)
     assert_allclose(result["sqrt_ts"].data[0, 10, 10], 1.360219, rtol=1e-3)
 
-    result = get_joint_significance_maps(estimator, [fake_dataset, fake_dataset])
+    result = get_combined_significance_maps(estimator, [fake_dataset, fake_dataset])
 
     assert_allclose(result["npred_excess"].data.sum(), 2 * 1140.364071, rtol=1e-3)
     assert_allclose(result["significance"].data[10, 10], 1.414529, rtol=1e-3)
