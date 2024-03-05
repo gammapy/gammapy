@@ -141,7 +141,7 @@ class SensitivityEstimator(Estimator):
             excess.data.squeeze(), dataset.background.data.squeeze()
         )
         logging.warning(
-            "Table column name energy will be deprecated by e_ref since v1.2"
+            "Column 'energy' is deprecated since v1.2, it is replaced by column 'e_ref'."
         )
 
         return Table(

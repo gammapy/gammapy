@@ -42,7 +42,7 @@ def test_cta_sensitivity_estimator(spectrum_dataset, caplog):
     table = sens.run(dataset_on_off)
 
     warning_message = (
-        "Table column name energy will be " "deprecated by e_ref since v1.2"
+        "Column 'energy' is deprecated since v1.2, it is replaced by column 'e_ref'."
     )
     assert "WARNING" in [_.levelname for _ in caplog.records]
     assert warning_message in [_.message for _ in caplog.records]
@@ -99,9 +99,10 @@ def test_integral_estimation(spectrum_dataset, caplog):
         table, sed_type="e2dnde", reference_model=sens.spectrum
     )
     assert "WARNING" in [_.levelname for _ in caplog.records]
-    assert "Table column name energy will be deprecated by e_ref since v1.2" in [
-        _.message for _ in caplog.records
-    ]
+    assert (
+        "Column 'energy' is deprecated since v1.2, it is replaced by column 'e_ref'."
+        in [_.message for _ in caplog.records]
+    )
 
     assert_allclose(table["excess"].data.squeeze(), 270540, rtol=1e-3)
     assert_allclose(flux_points.flux.data.squeeze(), 7.52e-9, rtol=1e-3)
