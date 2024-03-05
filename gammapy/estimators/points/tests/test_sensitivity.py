@@ -98,11 +98,11 @@ def test_integral_estimation(spectrum_dataset, caplog):
     flux_points = FluxPoints.from_table(
         table, sed_type="e2dnde", reference_model=sens.spectrum
     )
-    assert "WARNING" in [_.levelname for _ in caplog.records]
-    assert (
+    warning_message = (
         "Column 'energy' is deprecated since v1.2, it is replaced by column 'e_ref'."
-        in [_.message for _ in caplog.records]
     )
+    assert "WARNING" in [_.levelname for _ in caplog.records]
+    assert warning_message in [_.message for _ in caplog.records]
 
     assert_allclose(table["excess"].data.squeeze(), 270540, rtol=1e-3)
     assert_allclose(flux_points.flux.data.squeeze(), 7.52e-9, rtol=1e-3)
