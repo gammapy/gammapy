@@ -36,7 +36,6 @@ an integrated power law.
 
 """
 
-
 # %matplotlib inline
 import astropy.units as u
 import matplotlib.pyplot as plt

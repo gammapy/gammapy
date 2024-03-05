@@ -1,4 +1,5 @@
 """Plot an energy dispersion from the HESS DL3 data release 1."""
+
 import matplotlib.pyplot as plt
 from gammapy.irf import EnergyDispersion2D
 

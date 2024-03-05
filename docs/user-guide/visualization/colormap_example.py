@@ -1,4 +1,5 @@
 """Plot significance image with HESS and MILAGRO colormap."""
+
 from astropy.visualization import LinearStretch
 from astropy.visualization.mpl_normalize import ImageNormalize
 import matplotlib.pyplot as plt

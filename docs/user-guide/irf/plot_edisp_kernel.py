@@ -1,4 +1,5 @@
 """Plot the energy dispersion at a given offset."""
+
 from astropy.coordinates import Angle
 import matplotlib.pyplot as plt
 from gammapy.irf import EnergyDispersion2D

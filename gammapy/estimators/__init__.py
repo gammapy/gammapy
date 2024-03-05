@@ -4,8 +4,8 @@ from gammapy.utils.registry import Registry
 from .core import Estimator
 from .energydependentmorphology import EnergyDependentMorphologyEstimator
 from .map import ASmoothMapEstimator, ExcessMapEstimator, FluxMaps, TSMapEstimator
-from .parameter import ParameterEstimator
 from .metadata import FluxMetaData
+from .parameter import ParameterEstimator
 from .points import (
     FluxPoints,
     FluxPointsEstimator,

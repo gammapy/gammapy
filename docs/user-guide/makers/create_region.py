@@ -1,4 +1,5 @@
 """Example how to compute and plot reflected regions."""
+
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion, EllipseAnnulusSkyRegion, RectangleSkyRegion

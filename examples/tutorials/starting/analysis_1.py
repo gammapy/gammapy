@@ -64,7 +64,6 @@ Finally, we will compare the results against a reference model.
 
 """
 
-
 ######################################################################
 # Setup
 # -----

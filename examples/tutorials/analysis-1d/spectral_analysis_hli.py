@@ -63,7 +63,6 @@ In summary, we have to:
 
 """
 
-
 from pathlib import Path
 
 # %matplotlib inline

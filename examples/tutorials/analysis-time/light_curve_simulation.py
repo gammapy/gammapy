@@ -57,7 +57,6 @@ As usual, we’ll start with some general imports…
 
 """
 
-
 import logging
 import numpy as np
 import astropy.units as u

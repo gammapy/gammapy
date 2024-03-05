@@ -1,4 +1,5 @@
 """Plot radial surface density distributions of Galactic sources."""
+
 import numpy as np
 import astropy.units as u
 import matplotlib.pyplot as plt
