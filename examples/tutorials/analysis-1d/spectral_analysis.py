@@ -510,8 +510,8 @@ plt.show()
 # The `distrib` case provides an approximation if the `profile` is not available
 # which allows to take into accounts upper limit and asymetrics error.
 #
-# In the example below we can see that the `profle` case match exactly the result
-# from the joint analysis (from the ON/OFF dataset using labelled as wstat).
+# In the example below we can see that the `profile` case matches exactly the result
+# from the joint analysis of the ON/OFF datasets using `wstat` (as labelled)).
 
 
 def plot_stat(fp_dataset):
