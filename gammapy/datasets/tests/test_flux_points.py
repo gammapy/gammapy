@@ -102,6 +102,19 @@ def test_flux_point_dataset_flux_pred(dataset):
     assert_allclose(dataset.flux_pred()[0].value, 0.000472, rtol=1e-3)
 
 
+@requires_data()
+def test_flux_point_dataset_stat(dataset):
+    dataset.stat_type = "chi2"
+    fit = Fit()
+    fit.run([dataset])
+    assert_allclose(dataset.stat_sum(), 25.205933, rtol=1e-3)
+
+    dataset.stat_type = "distrib"
+    fit = Fit()
+    fit.run([dataset])
+    assert_allclose(dataset.stat_sum(), 36.153428, rtol=1e-3)
+
+
 def test_flux_point_dataset_with_time_axis(tmp_path):
     meta = dict(TIMESYS="utc", SED_TYPE="flux")
 
@@ -157,6 +170,9 @@ def test_flux_point_dataset_with_time_axis(tmp_path):
         flux_points_dataset.plot_fit()
     with pytest.raises(ValueError):
         flux_points_dataset.plot_residuals()
+
+    flux_points_dataset.stat_type = "distrib"
+    assert_allclose(flux_points_dataset.stat_sum(), 193.8093, rtol=1e-3)
 
 
 @requires_data()
