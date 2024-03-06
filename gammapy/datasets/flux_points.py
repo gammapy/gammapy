@@ -67,9 +67,9 @@ class FluxPointsDataset(Dataset):
                     and upper limits complemantary error functions.
         Default is `chi2`, in that case upper limits are ignored and the mean of asymetrics error is used.
         However it is recommended to use `profile` if `stat_scan` is available on flux points.
-    stat_kwargs : int
-        Exta arguments passed to the stat function
-        Used only if `stat_type=="distrib"`. In that case the default is :
+    stat_kwargs : dict
+        Extra arguments specifying the interpolation scheme of the likelihood profile.
+        Used only if `stat_type=="profile"`. In that case the default is :
         `stat_kwargs={"interp_scale":"sqrt", "extrapolate":True}
 
     Examples
