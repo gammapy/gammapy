@@ -170,9 +170,9 @@ class FluxPointsDataset(Dataset):
             )
 
         if stat_type == "chi2":
-            self.mask_valid = (~self.data.is_ul).data & np.isfinite(self.data.dnde)
+            self._mask_valid = (~self.data.is_ul).data & np.isfinite(self.data.dnde)
         elif stat_type == "distrib":
-            self.mask_valid = (
+            self._mask_valid = (
                 self.data.is_ul.data & np.isfinite(self.data.dnde_ul)
             ) | np.isfinite(self.data.dnde)
         elif stat_type == "profile":
@@ -180,6 +180,10 @@ class FluxPointsDataset(Dataset):
             self.stat_kwargs.setdefault("extrapolate", True)
             self._profile_interpolators = self._get_valid_profile_interpolators()
         self._stat_type = stat_type
+
+    @property
+    def mask_valid(self):
+        return self._mask_valid
 
     @property
     def mask_safe(self):
@@ -396,13 +400,13 @@ class FluxPointsDataset(Dataset):
         value_scan = self.data.stat_scan.geom.axes["norm"].center
         shape_axes = self.data.stat_scan.geom._shape[slice(3, None)]
         interpolators = np.empty(shape_axes, dtype=object)
-        self.mask_valid = np.ones(self.data.dnde.data.shape, dtype=bool)
+        self._mask_valid = np.ones(self.data.dnde.data.shape, dtype=bool)
         for idx in np.ndindex(shape_axes):
             stat_scan = np.abs(
                 self.data.stat_scan.data[idx].squeeze()
                 - self.data.stat.data[idx].squeeze()
             )
-            self.mask_valid[idx] = np.all(np.isfinite(stat_scan))
+            self._mask_valid[idx] = np.all(np.isfinite(stat_scan))
             interpolators[idx] = interpolate_profile(
                 value_scan,
                 stat_scan,
