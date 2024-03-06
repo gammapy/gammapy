@@ -497,7 +497,7 @@ plt.show()
 
 ######################################################################
 # A note on statistics
-# ---------
+# --------------------
 #
 # Different statistic are available for the FluxPointDataset :
 # * chi2 : etimate from chi2 statistics.

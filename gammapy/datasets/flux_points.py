@@ -139,12 +139,6 @@ class FluxPointsDataset(Dataset):
         self.models = models
         self.meta_table = meta_table
 
-        self.available_stat_type = dict(
-            chi2=self._stat_array_chi2,
-            profile=self._stat_array_profile,
-            distrib=self._stat_array_distrib,
-        )
-
         if stat_kwargs is None:
             stat_kwargs = dict()
         self.stat_kwargs = stat_kwargs
@@ -154,6 +148,14 @@ class FluxPointsDataset(Dataset):
         if mask_safe is None:
             mask_safe = np.ones(self.data.dnde.data.shape, dtype=bool)
         self.mask_safe = mask_safe
+
+    @property
+    def available_stat_type(self):
+        return dict(
+            chi2=self._stat_array_chi2,
+            profile=self._stat_array_profile,
+            distrib=self._stat_array_distrib,
+        )
 
     @property
     def stat_type(self):
@@ -170,7 +172,9 @@ class FluxPointsDataset(Dataset):
         if stat_type == "chi2":
             self.mask_valid = (~self.data.is_ul).data & np.isfinite(self.data.dnde)
         elif stat_type == "distrib":
-            self.mask_valid = (self.data.is_ul.data & np.isfinite(self.data.dnde_ul) | np.isfinite(self.data.dnde)
+            self.mask_valid = (
+                self.data.is_ul.data & np.isfinite(self.data.dnde_ul)
+            ) | np.isfinite(self.data.dnde)
         elif stat_type == "profile":
             self.stat_kwargs.setdefault("interp_scale", "sqrt")
             self.stat_kwargs.setdefault("extrapolate", True)
@@ -414,35 +418,37 @@ class FluxPointsDataset(Dataset):
         """
         model = self.flux_pred()
 
-        is_ul = self.data.is_ul.data.flatten()
-        n_points = len(is_ul)
         stat = np.zeros(model.shape)
-        for k in range(n_points):
-            value = model[k].to_value(self.data.dnde.unit)
+        for idx in np.ndindex(model.shape):
+            value = model[idx].to_value(self.data.dnde.unit)
 
-            if not is_ul[k]:
-                if np.isnan(self.data.dnde.data.flatten()[k]):
+            if not self.data.is_ul.data[idx]:
+                if np.isnan(self.data.dnde.data[idx]):
                     continue
-                loc = self.data.dnde.data.flatten()[k]
+                loc = self.data.dnde.data[idx]
                 try:
                     if value >= loc:
-                        scale = self.data.dnde_errp.data.flatten()[k]
+                        scale = self.data.dnde_errp.data[idx]
                     else:
-                        scale = self.data.dnde_errn.data.flatten()[k]
+                        scale = self.data.dnde_errn.data[idx]
                 except AttributeError:
-                    scale = self.data.dnde_err.data.flatten()[k]
-                stat[k] = -2 * (
-                    np.log(
-                        norm.pdf(value, loc=loc, scale=scale)
-                        / norm.pdf(loc, loc=loc, scale=scale)
-                    )
+                    scale = self.data.dnde_err.data[idx]
+                stat[idx] = -2 * np.log(
+                    norm.pdf(value, loc=loc, scale=scale)
+                    / norm.pdf(loc, loc=loc, scale=scale)
                 )
+
             else:
-                if np.isnan(self.data.dnde_ul.data.flatten()[k]):
+                if np.isnan(self.data.dnde_ul.data[idx]):
                     continue
+
                 loc = 0
-                scale = self.data.dnde_ul.data.flatten()[k]
-                stat[k] = -2 * (np.log(erfc(-(loc - value) / scale) / 2 / erfc(0) / 2))
+                loc_lim = self.data.dnde_ul.data[idx]
+                scale = self.data.dnde_ul.data[idx]
+                stat[idx] = 2 * np.log(
+                    (erfc((loc_lim - value) / scale) / 2)
+                    / (erfc((loc_lim - loc) / scale) / 2)
+                )
         return stat
 
     def residuals(self, method="diff"):
