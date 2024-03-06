@@ -406,6 +406,7 @@ display(flux_points.to_table(sed_type="dnde", formatted=True))
 fig, ax = plt.subplots()
 flux_points.plot(ax=ax, sed_type="e2dnde", color="darkorange")
 flux_points.plot_ts_profiles(ax=ax, sed_type="e2dnde")
+ax.set_xlim(0.6, 40)
 plt.show()
 
 ######################################################################
@@ -423,7 +424,8 @@ plt.show()
 flux_points_dataset = FluxPointsDataset(
     data=flux_points, models=model_best_joint.copy()
 )
-flux_points_dataset.plot_fit()
+ax, _ = flux_points_dataset.plot_fit()
+ax.set_xlim(0.6, 40)
 plt.show()
 
 
