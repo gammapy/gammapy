@@ -170,7 +170,7 @@ class FluxPointsDataset(Dataset):
         if stat_type == "chi2":
             self.mask_valid = (~self.data.is_ul).data & np.isfinite(self.data.dnde)
         elif stat_type == "distrib":
-            self.mask_valid = self.data.is_ul.data | np.isfinite(self.data.dnde)
+            self.mask_valid = (self.data.is_ul.data & np.isfinite(self.data.dnde_ul) | np.isfinite(self.data.dnde)
         elif stat_type == "profile":
             self.stat_kwargs.setdefault("interp_scale", "sqrt")
             self.stat_kwargs.setdefault("extrapolate", True)
