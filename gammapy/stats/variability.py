@@ -330,6 +330,7 @@ def TimmerAlgorithm(
 
     frequencies = np.fft.fftfreq(npoints, spacing)
 
+    # To obtain real data only the positive or negative part of the frequency is necessary.
     real_frequencies = np.sort(np.abs(frequencies[frequencies < 0]))
 
     if type == "discrete":
