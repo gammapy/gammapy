@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 import scipy.stats as stats
+from gammapy.utils.random import get_random_state
 
 __all__ = [
     "compute_fvar",
@@ -284,17 +285,32 @@ def structure_function(flux, flux_err, time, tdelta_precision=5):
     return sf, distances
 
 
-def TimmerAlgorithm(power_spectrum, even_freq=True):
-    """Implementation of the Timmer algorithm to simulate a time series from a power spectrum
+def TimmerAlgorithm(
+    power_spectrum,
+    npoints,
+    spacing,
+    type="discrete",
+    random_state="random-seed",
+    normalization=1.0,
+):
+    """Implementation of the Timmer algorithm to simulate a time series from a power spectrum.
 
     Parameters
     ----------
-    power_spectrum: `~numpy.ndarray`
-        Array representing the power spectrum used to generate the time series.
-
-    even_freq: bool, optional
-        Parameter needed to distinguish between even and odd number of data points, for handling of the Nyquist frequency.
-        If True, the Nyquist frequency is real by definition. Default is True.
+    power_spectrum : float, `~numpy.ndarray`
+        Power spectrum used to generate the time series. It can either be presented analytically, as a parameter or set
+        of parameters of a function, or as a `~numpy.ndarray` describing the spectrum in a discrete manner.
+    npoints : float
+        Number of points in the output time series.
+    spacing : float
+        Sample spacing, inverse of the sampling rate.
+    type : {"discrete", "powerlaw", "white"}
+        Type of input periodogram. For `~numpy.ndarray` inputs, the type is "discrete". Default is "discrete"
+    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+        Defines random number generator initialisation.
+        Passed to `~gammapy.utils.random.get_random_state`. Default is "random-seed".
+    normalization : float
+        Normalization factor to be applied to the final time series
 
     Returns
     -------
@@ -305,18 +321,38 @@ def TimmerAlgorithm(power_spectrum, even_freq=True):
     ----------
     ..[Timmer1995]"On generating power law noise", J. Timmer and M, Konig, section 3.
     """
-    random_numbers = np.random.normal(
-        0, 1, len(power_spectrum) - 1
-    ) + 1j * np.random.normal(0, 1, len(power_spectrum) - 1)
-    fourier_coeffs = np.sqrt(0.5 * power_spectrum[:-1]) * random_numbers
+    if isinstance(power_spectrum, np.ndarray) and type != "discrete":
+        raise ValueError(
+            "Power spectrum input is an array but the requested type is not 'discrete'."
+        )
+
+    random_state = get_random_state(random_state)
+
+    frequencies = np.fft.fftfreq(npoints, spacing)
+
+    real_frequencies = np.sort(np.abs(frequencies[frequencies < 0]))
+
+    if type == "discrete":
+        periodogram = power_spectrum
+    elif type == "powerlaw":
+        periodogram = (1 / real_frequencies) ** power_spectrum
+    elif type == "white":
+        periodogram = np.full_like(real_frequencies, power_spectrum)
+    else:
+        raise ValueError("Power spectrum type not accepted!")
+
+    random_numbers = random_state.normal(
+        0, 1, len(periodogram) - 1
+    ) + 1j * random_state.normal(0, 1, len(periodogram) - 1)
+    fourier_coeffs = np.sqrt(0.5 * periodogram[:-1]) * random_numbers
 
     # Nyquist frequency component handling
-    if even_freq:
+    if npoints % 2 == 0:
         # For even number of data points
         fourier_coeffs = np.concatenate(
             [
                 fourier_coeffs,
-                np.sqrt(0.5 * power_spectrum[-1]) * np.random.normal(0, 1, 1),
+                np.sqrt(0.5 * periodogram[-1:]) * random_state.normal(0, 1),
             ]
         )
     else:
@@ -324,8 +360,8 @@ def TimmerAlgorithm(power_spectrum, even_freq=True):
         fourier_coeffs = np.concatenate(
             [
                 fourier_coeffs,
-                np.sqrt(0.5 * power_spectrum[-1])
-                * (np.random.normal(0, 1, 1) + 1j * np.random.normal(0, 1, 1)),
+                np.sqrt(0.5 * periodogram[-1:])
+                * (random_state.normal(0, 1) + 1j * random_state.normal(0, 1)),
             ]
         )
 
@@ -341,6 +377,6 @@ def TimmerAlgorithm(power_spectrum, even_freq=True):
     if time_series.max() < np.abs(time_series.min()):
         time_series = -time_series
 
-    time_series = 0.5 + 0.5 * time_series / time_series.max()
+    time_series = (0.5 + 0.5 * time_series / time_series.max()) * normalization
 
     return time_series

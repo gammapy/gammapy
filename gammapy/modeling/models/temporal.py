@@ -625,7 +625,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
         Parameters
         ----------
-        powerspectrum: `~numpy.ndarray`
+        powerspectrum: float, `~numpy.ndarray`
             Array representing the power spectrum from which to derive the model.
         map:  `RegionNDMap`
             Map containing the desired geometry of the model.
@@ -635,8 +635,14 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         model : `LightCurveTemplateTemporalModel`
             Light curve template model.
         """
-        evenness = map.geom.axes["time"].nbin % 2 == 0
-        time_series = TimmerAlgorithm(powerspectrum, evenness)
+
+        npoints = map.geom.axes["time"].nbin
+        spacing = (
+            (map.geom.axes["time"].edges_max - map.geom.axes["time"].edges_min)
+            .max()
+            .value
+        )
+        time_series = TimmerAlgorithm(powerspectrum, npoints, spacing)
         map.quantity = time_series
 
         return cls(map, **kwargs)
