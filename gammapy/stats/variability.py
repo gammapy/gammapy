@@ -7,6 +7,7 @@ __all__ = [
     "compute_fpp",
     "compute_chisq",
     "compute_flux_doubling",
+    "structure_function",
 ]
 
 
