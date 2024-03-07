@@ -83,6 +83,9 @@ class EnergyDependentMorphologyEstimator(Estimator):
         If None, the fit backend default is minuit.
         Default is None.
 
+    Examples
+    --------
+    For a usage example see :doc:`/tutorials/analysis-3d/energy_dependent_estimation` tutorial.
     """
 
     tag = "EnergyDependentMorphologyEstimator"
