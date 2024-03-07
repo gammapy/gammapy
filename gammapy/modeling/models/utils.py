@@ -90,7 +90,7 @@ def read_hermes_cube(filename):
 
 
 def cutout_template_models(models, cutout_kwargs, datasets_names=None):
-    """apply cutout to template models"""
+    """Apply cutout to template models."""
     models_cut = Models()
     for m in models:
         if isinstance(m.spatial_model, TemplateSpatialModel):
