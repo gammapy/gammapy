@@ -62,11 +62,17 @@ class FluxPointsDataset(Dataset):
         Method used to compute the statistics:
         * chi2 : etimate from chi2 statistics.
         * profile : estimate from interpolation of the likelihood profile.
-        * distrib : estimate from probability distributions
-                    assuming that flux points correspond to asymmetric gaussians
-                    and upper limits complemantary error functions.
+        * distrib : Assuming gaussian errors the likelihood is given by the
+                    probability density function of the normal distribution.
+                    For the upper limit case it is necessary to marginalize over the unknown measurement,
+                    So we integrate the normal distribution up to the upper limit value
+                    which gives the complementary error function.
+                    See eq. C7 of Mohanty et al (2013) :
+                    https://iopscience.iop.org/article/10.1088/0004-637X/773/2/168/pdf
+
         Default is `chi2`, in that case upper limits are ignored and the mean of asymetrics error is used.
         However it is recommended to use `profile` if `stat_scan` is available on flux points.
+        The `distrib` case provides an approximation if the profile is not available.
     stat_kwargs : dict
         Extra arguments specifying the interpolation scheme of the likelihood profile.
         Used only if `stat_type=="profile"`. In that case the default is :
