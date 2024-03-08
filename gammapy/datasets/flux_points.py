@@ -172,7 +172,7 @@ class FluxPointsDataset(Dataset):
 
         if stat_type not in self.available_stat_type:
             raise ValueError(
-                "Invalid stat_type: possible options are {list(self.available_stat_type.keys())}"
+                f"Invalid stat_type: possible options are {list(self.available_stat_type.keys())}"
             )
 
         if stat_type == "chi2":
