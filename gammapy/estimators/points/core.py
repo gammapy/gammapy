@@ -806,7 +806,7 @@ class FluxPoints(FluxMaps):
         flux_points = deepcopy(self)
 
         value_scan = self.stat_scan.geom.axes["norm"].center
-        shape_axes = self.stat_scan.geom._shape[slice(3, None)]
+        shape_axes = self.stat_scan.geom._shape[slice(3, None)][::-1]
         for idx in np.ndindex(shape_axes):
             stat_scan = np.abs(
                 self.stat_scan.data[idx].squeeze() - self.stat.data[idx].squeeze()
