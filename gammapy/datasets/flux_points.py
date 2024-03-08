@@ -426,39 +426,32 @@ class FluxPointsDataset(Dataset):
         assumes that flux points correspond to asymmetric gaussians
         and upper limits complementary error functions.
         """
-        model = self.flux_pred()
+        model = self.flux_pred().to_value(self.data.dnde.unit)
 
         stat = np.zeros(model.shape)
-        for idx in np.ndindex(model.shape):
-            value = model[idx].to_value(self.data.dnde.unit)
 
-            if not self.data.is_ul.data[idx]:
-                if np.isnan(self.data.dnde.data[idx]):
-                    continue
-                loc = self.data.dnde.data[idx]
-                try:
-                    if value >= loc:
-                        scale = self.data.dnde_errp.data[idx]
-                    else:
-                        scale = self.data.dnde_errn.data[idx]
-                except AttributeError:
-                    scale = self.data.dnde_err.data[idx]
-                stat[idx] = -2 * np.log(
-                    norm.pdf(value, loc=loc, scale=scale)
-                    / norm.pdf(loc, loc=loc, scale=scale)
-                )
+        mask_valid = ~np.isnan(self.data.dnde.data)
+        loc = self.data.dnde.data[mask_valid]
+        value = model[mask_valid]
+        try:
+            mask_p = (model >= self.data.dnde.data)[mask_valid]
+            scale = np.zeros(mask_valid.shape)
+            scale[mask_p] = self.data.dnde_errp.data[mask_valid][mask_p]
+            scale[~mask_p] = self.data.dnde_errn.data[mask_valid][~mask_p]
+        except AttributeError:
+            scale = self.data.dnde_err.data[mask_valid]
+        stat[mask_valid] = -2 * np.log(
+            norm.pdf(value, loc=loc, scale=scale) / norm.pdf(loc, loc=loc, scale=scale)
+        )
 
-            else:
-                if np.isnan(self.data.dnde_ul.data[idx]):
-                    continue
-
-                loc = 0
-                loc_lim = self.data.dnde_ul.data[idx]
-                scale = self.data.dnde_ul.data[idx]
-                stat[idx] = 2 * np.log(
-                    (erfc((loc_lim - value) / scale) / 2)
-                    / (erfc((loc_lim - loc) / scale) / 2)
-                )
+        mask_ul = self.data.is_ul.data & ~np.isnan(self.data.dnde_ul.data)
+        value = model[mask_ul]
+        loc_ul = self.data.dnde_ul.data[mask_ul]
+        scale_ul = self.data.dnde_ul.data[mask_ul]
+        stat[mask_ul] = 2 * np.log(
+            (erfc((loc_ul - value) / scale_ul) / 2)
+            / (erfc((loc_ul - 0) / scale_ul) / 2)
+        )
         return stat
 
     def residuals(self, method="diff"):
