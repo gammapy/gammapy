@@ -60,7 +60,7 @@ class FluxPointsDataset(Dataset):
         One line per observation for stacked datasets.
     stat_type : bool
         Method used to compute the statistics:
-        * chi2 : etimate from chi2 statistics.
+        * chi2 : estimate from chi2 statistics.
         * profile : estimate from interpolation of the likelihood profile.
         * distrib : Assuming gaussian errors the likelihood is given by the
                     probability density function of the normal distribution.
@@ -424,7 +424,7 @@ class FluxPointsDataset(Dataset):
     def _stat_array_distrib(self):
         """Estimate statistic from probability distributions,
         assumes that flux points correspond to asymmetric gaussians
-        and upper limits complemantary error functions.
+        and upper limits complementary error functions.
         """
         model = self.flux_pred()
 
