@@ -271,4 +271,4 @@ def structure_function(flux, flux_err, time):
             norm[i] = norm[i] + w
     sf = factor / norm
 
-    return sf
+    return sf, distances[distances > 0]
