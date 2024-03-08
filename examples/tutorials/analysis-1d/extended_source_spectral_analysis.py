@@ -150,12 +150,13 @@ on_region = CircleSkyRegion(target_position, radius)
 # Define the geometries
 # ~~~~~~~~~~~~~~~~~~~~~
 #
-# This part is especially important. - We have to define first energy
-# axes. They define the axes of the resulting
-# `~gammapy.datasets.SpectrumDatasetOnOff`. In particular, we have to be
-# careful to the true energy axis: it has to cover a larger range than the
-# reconstructed energy one. - Then we define the region geometry itself
-# from the on region.
+# This part is especially important.
+#
+# -  We have to define first energy axes. They define the axes of the resulting
+#    `~gammapy.datasets.SpectrumDatasetOnOff`. In particular, we have to be
+#    careful to the true energy axis: it has to cover a larger range than the
+#    reconstructed energy one.
+# -  Then we define the region geometry itself from the on region.
 #
 
 # The binning of the final spectrum is defined here.
