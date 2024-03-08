@@ -404,7 +404,7 @@ class FluxPointsDataset(Dataset):
 
     def _get_valid_profile_interpolators(self):
         value_scan = self.data.stat_scan.geom.axes["norm"].center
-        shape_axes = self.data.stat_scan.geom._shape[slice(3, None)]
+        shape_axes = self.data.stat_scan.geom._shape[slice(3, None)][::-1]
         interpolators = np.empty(shape_axes, dtype=object)
         self._mask_valid = np.ones(self.data.dnde.data.shape, dtype=bool)
         for idx in np.ndindex(shape_axes):
