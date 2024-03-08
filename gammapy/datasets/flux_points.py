@@ -435,7 +435,7 @@ class FluxPointsDataset(Dataset):
         value = model[mask_valid]
         try:
             mask_p = (model >= self.data.dnde.data)[mask_valid]
-            scale = np.zeros(mask_valid.shape)
+            scale = np.zeros(mask_p.shape)
             scale[mask_p] = self.data.dnde_errp.data[mask_valid][mask_p]
             scale[~mask_p] = self.data.dnde_errn.data[mask_valid][~mask_p]
         except AttributeError:
