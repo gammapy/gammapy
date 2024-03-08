@@ -51,7 +51,7 @@ class ObservationMetaData(MetaData):
         The pointing metadata.
     target : `~gammapy.utils.TargetMetaData
         The target metadata.
-    creation : `~gammapy.utils.CreatorMetaData`
+    creation : `~gammapy.utils.metadata.CreatorMetaData`
         The creation metadata.
     location : `~astropy.coordinates.EarthLocation` or str, optional
         The observatory location.
@@ -140,6 +140,10 @@ class EventListMetaData(MetaData):
 
     Parameters
     ----------
+    event_class : str
+        The event class metadata.
+    creation : `~gammapy.utils.metadata.CreatorMetaData`
+        The creation metadata.
     """
 
     _tag: ClassVar[Literal["EventList"]] = "eventlist"
