@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
+from scipy import stats
 from astropy import units as u
 from astropy.io import fits
 from astropy.utils import classproperty
@@ -800,6 +801,56 @@ class FluxMaps:
                 maps[quantity] = m
 
         return maps
+
+    @classmethod
+    def from_combination(cls, maps, **kwargs):
+        """Create flux maps by combining a list of flux maps with the same geometry.
+         Under the gaussian error approximation the likelihood is given by the gaussian distibution.
+         The product of gaussians is also a gaussian so can derive dnde, dnde_err, and ts.
+
+        Parameters
+        ----------
+        maps : list of `FluxMaps`
+            List of maps with the same geometry.
+
+        Returns
+        -------
+        flux_maps : `FluxMaps`
+            Combined flux map.
+        """
+
+        means = [map_.dnde.copy() for map_ in maps]
+        sigmas = [map_.dnde_err.copy() for map_ in maps]
+        mean = means[0]
+        sigma = sigmas[0]
+        for k in range(1, len(means)):
+
+            mean_k = means[k].quantity.to_value(mean.unit)
+            sigma_k = sigmas[k].quantity.to_value(sigma.unit)
+
+            mask_valid = np.isfinite(mean) & np.isfinite(sigma)
+            mask_valid_k = np.isfinite(mean_k) & np.isfinite(sigma_k)
+            mask = mask_valid & mask_valid_k
+            mask_k = ~mask_valid & mask_valid_k
+
+            mean.data[mask] = (
+                (mean.data * sigma_k**2 + mean_k * sigma.data**2)
+                / (sigma.data**2 + sigma_k**2)
+            )[mask]
+            sigma.data[mask] = (
+                sigma.data * sigma_k / np.sqrt(sigma.data**2 + sigma_k**2)
+            )[mask]
+
+            mean.data[mask_k] = mean_k[mask_k]
+            sigma.data[mask_k] = sigma_k[mask_k]
+
+        ts = -2 * np.log(
+            stats.norm.pdf(0, loc=mean, scale=sigma)
+            / stats.norm.pdf(mean, loc=mean, scale=sigma)
+        )
+
+        kwargs["sed_type"] = "dnde"
+        return cls.from_maps(dict(dnde=mean, dnde_err=sigma, ts=ts), **kwargs)
 
     @classmethod
     def from_stack(cls, maps, axis, meta=None):
