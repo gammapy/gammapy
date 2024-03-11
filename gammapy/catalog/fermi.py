@@ -377,9 +377,13 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
                 if de["version"] < 28:
                     path_extended = "$GAMMAPY_DATA/catalogs/fermi/LAT_extended_sources_8years/Templates/"
                 elif de["version"] < 32:
-                    path_extended = "$GAMMAPY_DATA/catalogs/fermi/LAT_extended_sources_12years/Templates/"
+                    path_extended = (
+                        "$GAMMAPY_DATA/catalogs/fermi/Extended_12years/Templates/"
+                    )
                 else:
-                    path_extended = "$GAMMAPY_DATA/catalogs/fermi/LAT_extended_sources_14years/Templates/"
+                    path_extended = (
+                        "$GAMMAPY_DATA/catalogs/fermi/Extended_14years/Templates/"
+                    )
                 path = make_path(path_extended)
                 with warnings.catch_warnings():  # ignore FITS units warnings
                     warnings.simplefilter("ignore", FITSFixedWarning)
