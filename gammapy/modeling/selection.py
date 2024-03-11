@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from gammapy.modeling import Fit, Parameter
 from gammapy.stats.utils import sigma_to_ts
+from .fit import FitResult, OptimizeResult
 
 __all__ = ["select_nested_models"]
 
@@ -92,7 +93,21 @@ class TestStatisticNested:
             else:
                 p.value = val
                 p.frozen = True
-        fit_results_null = self.fit.run(datasets)
+        if len(datasets.models.parameters.free_parameters) > 0:
+            fit_results_null = self.fit.run(datasets)
+        else:
+            fit_results_null = FitResult(
+                OptimizeResult(
+                    models=datasets.models.copy(),
+                    nfev=0,
+                    total_stat=datasets.stat_sum(),
+                    trace=None,
+                    backend=None,
+                    method=None,
+                    success=None,
+                    message=None,
+                )
+            )
         stat_null = datasets.stat_sum()
 
         ts = stat_null - stat
