@@ -396,10 +396,12 @@ class FluxPointsDataset(Dataset):
 
     def _stat_array_profile(self):
         """Estimate statitistic from interpolation of the likelihood profile."""
-        model = (self.flux_pred() / self.data.dnde_ref).to_value("")
+        model = np.zeros(self.data.dnde.data.shape) + (
+            self.flux_pred() / self.data.dnde_ref
+        ).to_value("")
         stat = np.zeros(model.shape)
-        for idx, interp in enumerate(self._profile_interpolators):
-            stat[idx] = interp(model[idx])
+        for idx in np.ndindex(self._profile_interpolators.shape):
+            stat[idx] = self._profile_interpolators[idx](model[idx])
         return stat
 
     def _get_valid_profile_interpolators(self):
@@ -426,7 +428,9 @@ class FluxPointsDataset(Dataset):
         assumes that flux points correspond to asymmetric gaussians
         and upper limits complementary error functions.
         """
-        model = self.flux_pred().to_value(self.data.dnde.unit)
+        model = np.zeros(self.data.dnde.data.shape) + self.flux_pred().to_value(
+            self.data.dnde.unit
+        )
 
         stat = np.zeros(model.shape)
 
