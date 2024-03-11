@@ -46,7 +46,6 @@ dependencies:
   - naima
   - pandas
   - reproject
-  - sherpa
   # dev dependencies
   - black=22.6.0
   - codespell
@@ -78,6 +77,7 @@ dependencies:
   - pyinstrument
   - memray
   - pip:
+      - sherpa
       - pytest-sphinx
       - ray[default]>=2.9
       - PyGithub
