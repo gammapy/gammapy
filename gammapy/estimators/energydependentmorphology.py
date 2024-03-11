@@ -74,7 +74,7 @@ class EnergyDependentMorphologyEstimator(Estimator):
 
     Parameters
     ----------
-    energy_edges : `~astropy.units.Quantity`
+    energy_edges : list of `~astropy.units.Quantity`
         Energy edges for the energy-dependence test.
     source : str or int
         For which source in the model to compute the estimator.
