@@ -1323,7 +1323,7 @@ class TemplateSpatialModel(SpatialModel):
                 data_sum = map.data.sum(axis=(1, 2)).reshape((-1, 1, 1))
 
             data = np.divide(
-                map.data,
+                map.data.astype(float),
                 data_sum,
                 out=np.zeros_like(map.data, dtype=float),
                 where=data_sum != 0,
