@@ -708,17 +708,24 @@ def test_recompute_ul():
     datasets = get_spectrum_datasets()
     selection = ["all"]
     estimator = LightCurveEstimator(
-        energy_edges=[1, 3, 30] * u.TeV, selection_optional=selection, n_sigma_ul=2
+        energy_edges=[1, 3, 10, 30] * u.TeV, selection_optional=selection, n_sigma_ul=2
     )
     lightcurve = estimator.run(datasets)
+
     assert_allclose(
-        lightcurve.dnde_ul.data[0], [[[3.260703e-13]], [[1.159354e-14]]], rtol=1e-3
+        lightcurve.dnde_ul.data[0],
+        [[[3.26070325e-13]], [[3.82484628e-14]], [[4.16433528e-15]]],
+        rtol=1e-3,
     )
 
     new_lightcurve = lightcurve.recompute_ul(n_sigma_ul=4)
+
     assert_allclose(
-        new_lightcurve.dnde_ul.data[0], [[[3.758136e-13]], [[1.373942e-14]]], rtol=1e-3
+        new_lightcurve.dnde_ul.data[0],
+        [[[3.75813611e-13]], [[4.63590079e-14]], [[5.64634904e-15]]],
+        rtol=1e-3,
     )
+
     assert new_lightcurve.meta["n_sigma_ul"] == 4
 
     # test if scan is not present
