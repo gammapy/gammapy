@@ -126,16 +126,17 @@ class MapEvaluator:
     @property
     def needs_update(self):
         """Check whether the model component has drifted away from its support."""
-        if self.exposure is None:
+        if isinstance(self.model, TemplateNPredModel):
+            return False
+        elif not self.contributes:
+            return False
+        elif self.exposure is None:
             return True
-        elif (
-            isinstance(self.model, TemplateNPredModel)
-            or not self.contributes
-            or self.geom.is_region
-            or self.evaluation_mode == "global"
-            or self.model.evaluation_radius is None
-            or not self.parameters_spatial_changed(reset=False)
-        ):
+        elif self.geom.is_region:
+            return False
+        elif self.evaluation_mode == "global" or self.model.evaluation_radius is None:
+            return False
+        elif not self.parameters_spatial_changed(reset=False):
             return False
         else:
             return self.irf_position_changed
