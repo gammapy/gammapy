@@ -494,7 +494,7 @@ class ReflectedRegionsBackgroundMaker(Maker):
         ----------
         dataset : `~gammapy.datasets.SpectrumDataset`
             Spectrum dataset.
-        observation : `~gammapy.observation.Observation`
+        observation : `~gammapy.data.Observation`
             Observation container.
 
         Returns
@@ -561,14 +561,14 @@ class ReflectedRegionsBackgroundMaker(Maker):
 
         Parameters
         ----------
-        dataset : `SpectrumDataset`
+        dataset : `~gammapy.datasets.SpectrumDataset`
             Spectrum dataset.
-        observation : `DatastoreObservation`
+        observation : `~gammapy.data.Observation`
             Data store observation.
 
         Returns
         -------
-        dataset_on_off : `SpectrumDatasetOnOff`
+        dataset_on_off : `~gammapy.datasets.SpectrumDatasetOnOff`
             On-Off dataset.
         """
         counts_off, acceptance_off = self.make_counts_off(dataset, observation)
