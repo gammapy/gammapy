@@ -3427,3 +3427,49 @@ class LabelMapAxis:
         return LabelMapAxis(
             labels=[self.center[0] + "..." + self.center[-1]], name=self._name
         )
+
+
+class PeriodicMapAxis(MapAxis):
+    """
+    A periodic MapAxis. Only linear interpolation is supported.
+
+    Parameters
+    ----------
+    nodes : `~numpy.ndarray` or `~astropy.units.Quantity`
+        Array of node values.  These will be interpreted as either bin
+        edges or centers according to ``node_type``.
+    name : str, optional
+        Axis name. Default is "".
+    node_type : str, optional
+        Flag indicating whether coordinate nodes correspond to pixel
+        edges (node_type = 'edges') or pixel centers (node_type =
+        'center').  'center' should be used where the map values are
+        defined at a specific coordinate (e.g. differential
+        quantities). 'edges' should be used where map values are
+        defined by an integral over coordinate intervals (e.g. a
+        counts histogram). Default is "edges".
+    unit : str, optional
+        String specifying the data units. Default is "".
+    """
+
+    def wrap_coords(self, coords):
+        """Wrap coords between axis edges"""
+        m1, m2 = self.edges_min[0], self.edges_max[-1]
+        coords_copy = copy.deepcopy(coords)
+        coords_copy[coords_copy >= m2] = (coords_copy[coords_copy >= m2] - m1) % (
+            m2 - m1
+        ) + m1
+        coords_copy[coords_copy < m1] = (coords_copy[coords_copy < m1] - m1) % (
+            m2 - m1
+        ) + m1
+        return coords_copy
+
+    def coord_to_idx(self, coords):
+        """wraps the coords between the axis edges"""
+        coords_new = self.wrap_coords(coords)
+        return super().coord_to_idx(coords_new)
+
+    def coord_to_pix(self, coords):
+        """wraps the coords between the axis edges"""
+        coords_new = self.wrap_coords(coords)
+        return super().coord_to_pix(coords_new)
