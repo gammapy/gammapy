@@ -11,6 +11,7 @@ from astropy.table import Table, vstack
 from astropy.time import Time
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
+from stingray import Lightcurve
 from gammapy.data import GTI
 from gammapy.maps import Map, MapAxis, Maps, RegionNDMap, TimeMapAxis
 from gammapy.maps.axes import UNIT_STRING_FORMAT, flat_if_equal
@@ -579,6 +580,26 @@ class FluxPoints(FluxMaps):
             table = self._format_table(table=table)
 
         return table
+
+    def to_stingray_lightcurve(self):
+        """Transform to a 'stingray.Lightcurve' object.
+        Only objects with format "lightcurve" and a single energy bin are allowed.
+        """
+        if self._guess_format() != "lightcurve":
+            raise ValueError("Wrong format: only lightcurves can be transformed.")
+
+        if self.geom.axes["energy"].nbin > 1:
+            raise ValueError("Only lightcurves with 1 energy bin are supported.")
+
+        counts = self.counts.data
+        axis = self.counts.geom.axes.index_data("dataset")
+        sum = np.nansum(counts, axis=axis).flatten()
+        time = self.geom.axes["time"].center
+        gti_obj = self.gti
+        gti = np.vstack([gti_obj.time_start.mjd, gti_obj.time_stop.mjd]).T
+        tref = self.geom.axes["time"].reference_time.mjd
+
+        return Lightcurve(time, sum, gti=gti, mjdref=tref)
 
     @staticmethod
     def _energy_ref_lafferty(model, energy_min, energy_max):
