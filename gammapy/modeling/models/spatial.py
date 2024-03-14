@@ -1259,8 +1259,8 @@ class TemplateSpatialModel(SpatialModel):
     """Spatial sky map template model.
 
     For more information see :ref:`template-spatial-model`.
-    By default the position of the model is fixed at the center of the map.
-    The position can be fittted by unfreezing the ``lon_0`` and ``lat_0`` parameters.
+    By default, the position of the model is fixed at the center of the map.
+    The position can be fitted by unfreezing the `lon_0` and `lat_0` parameters.
     In that case, the coordinate of every pixel is shifted in lon and lat
     in the frame of the map. NOTE: planar distances are calculated, so
     the results are correct only when the fitted position is close to the
@@ -1323,10 +1323,7 @@ class TemplateSpatialModel(SpatialModel):
                 data_sum = map.data.sum(axis=(1, 2)).reshape((-1, 1, 1))
 
             data = np.divide(
-                map.data.astype(float),
-                data_sum,
-                out=np.zeros_like(map.data, dtype=float),
-                where=data_sum != 0,
+                map.data, data_sum, out=np.zeros_like(map.data), where=data_sum != 0
             )
             data /= map.geom.solid_angle().to_value("sr")
             map = map.copy(data=data, unit="sr-1")
