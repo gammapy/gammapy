@@ -595,8 +595,9 @@ class FluxPoints(FluxMaps):
         axis = self.counts.geom.axes.index_data("dataset")
         sum = np.nansum(counts, axis=axis).flatten()
         time = self.geom.axes["time"].center
-        gti_obj = self.gti
-        gti = np.vstack([gti_obj.time_start.mjd, gti_obj.time_stop.mjd]).T
+        gti = self.gti
+        if gti is not None:
+            gti = np.vstack([gti.time_start.mjd, gti.time_stop.mjd]).T
         tref = self.geom.axes["time"].reference_time.mjd
 
         return Lightcurve(time, sum, gti=gti, mjdref=tref)
