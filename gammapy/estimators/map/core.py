@@ -828,8 +828,8 @@ class FluxMaps:
             mean_k = means[k].quantity.to_value(mean.unit)
             sigma_k = sigmas[k].quantity.to_value(sigma.unit)
 
-            mask_valid = np.isfinite(mean) & np.isfinite(sigma)
-            mask_valid_k = np.isfinite(mean_k) & np.isfinite(sigma_k)
+            mask_valid = np.isfinite(mean) & np.isfinite(sigma) & (sigma.data != 0)
+            mask_valid_k = np.isfinite(mean_k) & np.isfinite(sigma_k) & (sigma_k != 0)
             mask = mask_valid & mask_valid_k
             mask_k = ~mask_valid & mask_valid_k
 
