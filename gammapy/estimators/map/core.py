@@ -819,10 +819,17 @@ class FluxMaps:
             Combined flux map.
         """
 
-        means = [map_.dnde.copy() for map_ in maps]
-        sigmas = [map_.dnde_err.copy() for map_ in maps]
-        mean = means[0]
-        sigma = sigmas[0]
+        if isinstance(maps, cls):
+            geom = maps.dnde.sum_over_axes().geom
+            means = list(maps.dnde.copy().iter_by_image(keepdims=True))
+            sigmas = list(maps.dnde_err.copy().iter_by_image(keepdims=True))
+            mean = Map.from_geom(geom, data=means[0].data, unit=means[0].unit)
+            sigma = Map.from_geom(geom, data=sigmas[0].data, unit=sigmas[0].unit)
+        else:
+            means = [map_.dnde.copy() for map_ in maps]
+            sigmas = [map_.dnde_err.copy() for map_ in maps]
+            mean = means[0]
+            sigma = sigmas[0]
         for k in range(1, len(means)):
 
             mean_k = means[k].quantity.to_value(mean.unit)
