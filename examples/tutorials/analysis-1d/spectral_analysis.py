@@ -419,20 +419,10 @@ flux_points.plot_ts_profiles(ax=ax, sed_type="e2dnde")
 plt.show()
 
 ######################################################################
-# We can also plot the flux distribution with the spectral model overlaid:
+# Note: it is also possible to plot the flux distribution with the spectral model overlaid,
+# but you must ensure the axis binning is identical for the flux points and
+# integral flux.
 #
-
-fig, ax = plt.subplots()
-flux_points.plot(ax=ax, sed_type="flux", color="darkorange")
-flux_points.plot_ts_profiles(ax=ax, sed_type="flux")
-axis = flux_points.energy_axis
-model_best_joint.spectral_model.plot(
-    ax=ax,
-    energy_bounds=axis.bounds,
-    sed_type="flux",
-    n_points=axis.nbin,
-)
-plt.show()
 
 
 ######################################################################
