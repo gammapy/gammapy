@@ -610,7 +610,7 @@ class IRF(metaclass=abc.ABCMeta):
 
         Parameters
         ----------
-        other : `gammapy.irfs.IRF`
+        other : `~gammapy.irfs.IRF`
             The IRF to compare against.
         rtol_axes : float, optional
             Relative tolerance for the axis comparison.

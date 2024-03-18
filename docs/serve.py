@@ -5,6 +5,7 @@ Combination of these two SO (license CC-BY-SA 4.0) answers:
 https://stackoverflow.com/a/51295415/3838691
 https://stackoverflow.com/a/52531444/3838691
 """
+
 import time
 import webbrowser
 from functools import partial

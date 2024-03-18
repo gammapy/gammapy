@@ -43,6 +43,7 @@ from gammapy.utils.docs import SubstitutionCodeBlock, gammapy_sphinx_ext_activat
 
 # flake8: noqa
 
+
 # Add our custom directives to Sphinx
 def setup(app):
     """

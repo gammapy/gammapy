@@ -8,12 +8,36 @@ We recommend to create an isolated virtual environment for each version of Gamma
 control over additional packages that you may use in your analysis. This will also help you on improving
 reproducibility within the user community.
 
+
 Conda Environments
 ------------------
-For convenience we also provide, for each stable release of Gammapy,
-a YAML file that allows you to easily create a specific conda execution environment.
-See  :ref:`start installation quick instructions <quickstart-setup>` section. To create a new custom
-environment for your analysis with conda you can use:
+
+For convenience we provide, for each stable release of Gammapy,
+a pre-defined conda environment file, so you can
+get additional useful packages together with Gammapy in a virtual isolated
+environment. First install `Miniconda <https://docs.conda.io/en/latest/miniconda.html>`__
+and then just execute the following commands in the terminal:
+
+.. substitution-code-block:: bash
+
+    $ curl -O https://gammapy.org/download/install/gammapy-|release|-environment.yml
+    $ conda env create -f gammapy-|release|-environment.yml
+
+.. note::
+
+    On Windows, you have to open up the conda environment file and delete the
+    lines with ``sherpa`` and ``healpy``. Those are optional dependencies that
+    currently aren't available on Windows.
+
+Once the environment has been created you can activate it using:
+
+.. substitution-code-block:: bash
+
+    $ conda activate gammapy-|release|
+
+
+
+To create a new custom environment for your analysis with conda you can use:
 
 .. code-block:: bash
 

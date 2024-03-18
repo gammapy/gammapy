@@ -37,6 +37,9 @@ class MapDatasetEventSampler:
     keep_mc_id : bool, optional
         Flag to tag sampled events from a given model with a Montecarlo identifier.
         Default is True. If set to False, no identifier will be assigned.
+    n_event_bunch : int
+        Size of events bunches to sample. If None, sample all events in memory.
+        Default is 10000.
     """
 
     def __init__(
@@ -45,11 +48,13 @@ class MapDatasetEventSampler:
         oversample_energy_factor=10,
         t_delta=0.5 * u.s,
         keep_mc_id=True,
+        n_event_bunch=10000,
     ):
         self.random_state = get_random_state(random_state)
         self.oversample_energy_factor = oversample_energy_factor
         self.t_delta = t_delta
         self.keep_mc_id = keep_mc_id
+        self.n_event_bunch = n_event_bunch
 
     def _repr_html_(self):
         try:
@@ -346,7 +351,9 @@ class MapDatasetEventSampler:
             frame="icrs",
         )
 
-        coords_reco = edisp_map.sample_coord(coord, self.random_state)
+        coords_reco = edisp_map.sample_coord(
+            coord, self.random_state, self.n_event_bunch
+        )
         events.table["ENERGY"] = coords_reco["energy"]
         return events
 
@@ -374,7 +381,8 @@ class MapDatasetEventSampler:
             frame="icrs",
         )
 
-        coords_reco = psf_map.sample_coord(coord, self.random_state)
+        coords_reco = psf_map.sample_coord(coord, self.random_state, self.n_event_bunch)
+
         events.table["RA"] = coords_reco["lon"] * u.deg
         events.table["DEC"] = coords_reco["lat"] * u.deg
         return events
@@ -428,9 +436,9 @@ class MapDatasetEventSampler:
 
         meta["HDUCLAS1"] = "EVENTS"
         meta["EXTNAME"] = "EVENTS"
-        meta[
-            "HDUDOC"
-        ] = "https://github.com/open-gamma-ray-astro/gamma-astro-data-formats"
+        meta["HDUDOC"] = (
+            "https://github.com/open-gamma-ray-astro/gamma-astro-data-formats"
+        )
         meta["HDUVERS"] = "0.2"
         meta["HDUCLASS"] = "GADF"
 
@@ -461,15 +469,15 @@ class MapDatasetEventSampler:
         meta["DSREF1"] = ":GTI"
         meta["DSTYP2"] = "ENERGY"
         meta["DSUNI2"] = "TeV"
-        meta[
-            "DSVAL2"
-        ] = f'{dataset._geom.axes["energy"].edges.min().value}:{dataset._geom.axes["energy"].edges.max().value}'  # noqa: E501
+        meta["DSVAL2"] = (
+            f'{dataset._geom.axes["energy"].edges.min().value}:{dataset._geom.axes["energy"].edges.max().value}'  # noqa: E501
+        )
         meta["DSTYP3"] = "POS(RA,DEC)     "
 
         offset_max = np.max(dataset._geom.width).to_value("deg")
-        meta[
-            "DSVAL3"
-        ] = f"CIRCLE({fixed_icrs.ra.deg},{fixed_icrs.dec.deg},{offset_max})"  # noqa: E501
+        meta["DSVAL3"] = (
+            f"CIRCLE({fixed_icrs.ra.deg},{fixed_icrs.dec.deg},{offset_max})"  # noqa: E501
+        )
         meta["DSUNI3"] = "deg             "
         meta["NDSKEYS"] = " 3 "
 
@@ -553,6 +561,7 @@ class MapDatasetEventSampler:
             Event list.
         """
         events_src = self.sample_sources(dataset)
+
         if len(events_src.table) > 0:
             if dataset.psf:
                 events_src = self.sample_psf(dataset.psf, events_src)
@@ -568,11 +577,12 @@ class MapDatasetEventSampler:
         events_bkg = self.sample_background(dataset)
         events = EventList.from_stack([events_bkg, events_src])
 
-        events = self.event_det_coords(observation, events)
         events.table["EVENT_ID"] = np.arange(len(events.table))
-        events.table.meta.update(
-            self.event_list_meta(dataset, observation, self.keep_mc_id)
-        )
+        if observation is not None:
+            events = self.event_det_coords(observation, events)
+            events.table.meta.update(
+                self.event_list_meta(dataset, observation, self.keep_mc_id)
+            )
 
         geom = dataset._geom
         selection = geom.contains(events.map_coord(geom))
@@ -600,6 +610,9 @@ class ObservationEventSampler(MapDatasetEventSampler):
     keep_mc_id : bool, optional
         Flag to tag sampled events from a given model with a Montecarlo identifier.
         Default is True. If set to False, no identifier will be assigned.
+    n_event_bunch : int
+        Size of events bunches to sample. If None, sample all events in memory.
+        Default is 10000.
     dataset_kwargs : dict, optional
         Arguments passed to `~gammapy.datasets.create_map_dataset_from_observation()`
     """
@@ -610,12 +623,14 @@ class ObservationEventSampler(MapDatasetEventSampler):
         oversample_energy_factor=10,
         t_delta=0.5 * u.s,
         keep_mc_id=True,
+        n_event_bunch=10000,
         dataset_kwargs=None,
     ):
         self.dataset_kwargs = dataset_kwargs
         self.random_state = get_random_state(random_state)
         self.oversample_energy_factor = oversample_energy_factor
         self.t_delta = t_delta
+        self.n_event_bunch = n_event_bunch
         self.keep_mc_id = keep_mc_id
 
     def run(self, observation, models=None, dataset_name=None):

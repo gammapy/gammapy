@@ -33,10 +33,30 @@ class ParameterEstimator(Estimator):
             * "scan": estimate fit statistic profiles.
 
         Default is None so the optional steps are not executed.
-    fit : `Fit`
+    fit : `~gammapy.modeling.Fit`
         Fit instance specifying the backend and fit options.
     reoptimize : bool
         Re-optimize other free model parameters. Default is True.
+
+    Examples
+    --------
+    >>> from gammapy.datasets import SpectrumDatasetOnOff, Datasets
+    >>> from gammapy.modeling.models import SkyModel, PowerLawSpectralModel
+    >>> from gammapy.estimators import ParameterEstimator
+    >>>
+    >>> filename = "$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits"
+    >>> dataset = SpectrumDatasetOnOff.read(filename)
+    >>> datasets = Datasets([dataset])
+    >>> spectral_model = PowerLawSpectralModel(amplitude="3e-11 cm-2s-1TeV-1", index=2.7)
+    >>>
+    >>> model = SkyModel(spectral_model=spectral_model, name="Crab")
+    >>> model.spectral_model.amplitude.scan_n_values = 10
+    >>>
+    >>> for dataset in datasets:
+    ...     dataset.models = model
+    >>>
+    >>> estimator = ParameterEstimator(selection_optional="all")
+    >>> result = estimator.run(datasets, parameter="amplitude")
     """
 
     tag = "ParameterEstimator"

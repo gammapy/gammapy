@@ -10,7 +10,6 @@ This model parametrises an ExpDecay time model.
 
 """
 
-
 # %%
 # Example plot
 # ------------

@@ -1,4 +1,5 @@
 """Example how to write a command line tool with Click"""
+
 import click
 from gammapy.stats import CashCountsStatistic
 
