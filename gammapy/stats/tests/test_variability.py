@@ -7,6 +7,7 @@ from astropy.table import Column, Table
 from astropy.time import Time
 from gammapy.estimators import FluxPoints
 from gammapy.stats.variability import (
+    TKAlgorithm,
     compute_chisq,
     compute_flux_doubling,
     compute_fpp,
@@ -192,3 +193,10 @@ def test_structure_function():
         distances,
         [3600.0, 7000.0, 7200.0, 10800.0, 14200.0, 14400.0, 17800.0, 21400.0] * u.s,
     )
+
+
+def test_tk():
+    time_series = TKAlgorithm(3, 20, 1, type="powerlaw")
+
+    assert len(time_series) == 20
+    assert time_series.max() == 1

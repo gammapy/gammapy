@@ -293,7 +293,7 @@ def TimmerAlgorithm(
     random_state="random-seed",
     normalization=1.0,
 ):
-    """Implementation of the Timmer algorithm to simulate a time series from a power spectrum.
+    """Implementation of the Timmer-Koenig algorithm to simulate a time series from a power spectrum.
 
     Parameters
     ----------
