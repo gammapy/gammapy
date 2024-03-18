@@ -8,7 +8,7 @@ from .fit_statistics_cython import (
     norm_bounds_cython,
 )
 from .variability import (
-    TimmerAlgorithm,
+    TKAlgorithm,
     compute_chisq,
     compute_flux_doubling,
     compute_fpp,
@@ -30,5 +30,5 @@ __all__ = [
     "compute_fpp",
     "compute_flux_doubling",
     "compute_chisq",
-    "TimmerAlgorithm",
+    "TKAlgorithm",
 ]

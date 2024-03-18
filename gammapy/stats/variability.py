@@ -8,7 +8,7 @@ __all__ = [
     "compute_fpp",
     "compute_chisq",
     "compute_flux_doubling",
-    "TimmerAlgorithm",
+    "TKAlgorithm",
 ]
 
 
@@ -232,7 +232,7 @@ def compute_flux_doubling(flux, flux_err, coords, axis=0):
     return doubling_dict
 
 
-def TimmerAlgorithm(
+def TKAlgorithm(
     power_spectrum,
     npoints,
     spacing,
@@ -240,7 +240,7 @@ def TimmerAlgorithm(
     random_state="random-seed",
     normalization=1.0,
 ):
-    """Implementation of the Timmer algorithm to simulate a time series from a power spectrum.
+    """Implementation of the Timmer-Koenig algorithm to simulate a time series from a power spectrum.
 
     Parameters
     ----------

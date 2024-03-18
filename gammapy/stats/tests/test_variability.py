@@ -7,6 +7,7 @@ from astropy.table import Column, Table
 from astropy.time import Time
 from gammapy.estimators import FluxPoints
 from gammapy.stats.variability import (
+    TKAlgorithm,
     compute_chisq,
     compute_flux_doubling,
     compute_fpp,
@@ -143,3 +144,10 @@ def test_lightcurve_flux_doubling():
         [2271.34711286, 21743.98603654] * u.s,
     )
     assert_allclose(dtime_err, [425.92375713, 242.80234065] * u.s)
+
+
+def test_tk():
+    time_series = TKAlgorithm(3, 20, 1, type="powerlaw")
+
+    assert len(time_series) == 20
+    assert time_series.max() == 1
