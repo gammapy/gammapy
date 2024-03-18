@@ -257,7 +257,9 @@ def structure_function(flux, flux_err, time, tdelta_precision=5):
     https://academic.oup.com/mnras/article/404/2/931/968488
     """
 
-    dist_matrix = (time[np.newaxis, :] - time[:, np.newaxis]).round(decimals=5)
+    dist_matrix = (time[np.newaxis, :] - time[:, np.newaxis]).round(
+        decimals=tdelta_precision
+    )
     distances = np.unique(dist_matrix)
     distances = distances[distances > 0]
     shape = distances.shape + flux.shape[1:]
