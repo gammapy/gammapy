@@ -12,7 +12,12 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
 )
-from gammapy.stats import compute_flux_doubling, compute_fpp, compute_fvar
+from gammapy.stats import (
+    compute_flux_doubling,
+    compute_fpp,
+    compute_fvar,
+    structure_function,
+)
 from .map.core import FluxMaps
 
 __all__ = [
@@ -24,6 +29,7 @@ __all__ = [
     "compute_lightcurve_doublingtime",
     "find_peaks_in_flux_map",
     "get_rebinned_axis",
+    "compute_structure_function",
 ]
 
 
@@ -590,3 +596,29 @@ def get_rebinned_axis(fluxpoint, axis_name="energy", method=None, **kwargs):
         edges = np.append(edges_min, edges_max[-1])
         axis_new = MapAxis.from_edges(edges, name=axis_name, interp=ax.interp)
     return axis_new
+
+
+def compute_structure_function(lightcurve, flux_quantity="flux", tdelta_precision=5):
+    """Compute the discrete structure function for the given lightcurve.
+     Internally calls `~gammapy.stats.structure_function`.
+
+    Parameters
+    ----------
+    lightcurve : `~gammapy.estimators.FluxPoints`
+        The lightcurve object.
+    flux_quantity : str
+        Flux quantity to use for calculation. Should be 'dnde', 'flux', 'e2dnde' or 'eflux'. Default is 'flux'.
+    tdelta_precision : int
+        The number of decimal places to check to separate the time deltas. Default is 5.
+
+    Returns
+    -------
+    sf, distances : `~numpy.ndarray`, `~astropy.units.Quantity`
+        Discrete structure function and array of time distances.
+    """
+
+    flux = getattr(lightcurve, flux_quantity)
+    flux_err = getattr(lightcurve, flux_quantity + "_err")
+    coords = lightcurve.geom.axes["time"].center
+
+    return structure_function(flux.data, flux_err.data, coords, tdelta_precision)

@@ -247,8 +247,8 @@ def structure_function(flux, flux_err, time, tdelta_precision=5):
 
     Returns
     -------
-    sf : `~numpy.ndarray`
-        Discrete structure function.
+    sf, distances : `~numpy.ndarray`, `~astropy.units.Quantity`
+        Discrete structure function and array of time distances.
 
     References
     ----------
@@ -279,4 +279,4 @@ def structure_function(flux, flux_err, time, tdelta_precision=5):
             norm[i] = norm[i] + w
     sf = factor / norm
 
-    return sf, distances[distances > 0]
+    return sf, distances
