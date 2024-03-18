@@ -231,7 +231,7 @@ def compute_flux_doubling(flux, flux_err, coords, axis=0):
     return doubling_dict
 
 
-def structure_function(flux, flux_err, time):
+def structure_function(flux, flux_err, time, tdelta_precision=5):
     """Compute the discrete structure function for a variable source.
 
     Parameters
@@ -242,6 +242,8 @@ def structure_function(flux, flux_err, time):
         The error on measured fluxes.
     time : `~astropy.units.Quantity`
         The time coordinates at which the fluxes are measured.
+    tdelta_precision : int
+        The number of decimal places to check to separate the time deltas. Default is 5.
 
     Returns
     -------
@@ -255,18 +257,22 @@ def structure_function(flux, flux_err, time):
     https://academic.oup.com/mnras/article/404/2/931/968488
     """
 
-    factor = np.zeros(len(flux) - 1)
-    norm = np.zeros(len(flux) - 1)
     dist_matrix = (time[np.newaxis, :] - time[:, np.newaxis]).round(decimals=5)
     distances = np.unique(dist_matrix)
+    distances = distances[distances > 0]
+    shape = distances.shape + flux.shape[1:]
+    factor = np.zeros(shape)
+    norm = np.zeros(shape)
 
     for i, distance in enumerate(distances[distances > 0]):
         indexes = np.array(np.where(dist_matrix == distance))
         for index in indexes.T:
-            f = (flux[index[1]] - flux[index[0]]) ** 2
-            w = (flux[index[1]] / flux_err[index[1]]) * (
-                flux[index[0]] / flux_err[index[0]]
+            f = (flux[index[1], ...] - flux[index[0], ...]) ** 2
+            w = (flux[index[1], ...] / flux_err[index[1], ...]) * (
+                flux[index[0], ...] / flux_err[index[0], ...]
             )
+            f = np.nan_to_num(f)
+            w = np.nan_to_num(w)
             factor[i] = factor[i] + f * w
             norm[i] = norm[i] + w
     sf = factor / norm
