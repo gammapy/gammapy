@@ -99,7 +99,7 @@ class EDispMap(IRFMap):
 
         Parameters
         ----------
-        energy_axis : `MapAxis`
+        energy_axis : `~gammapy.maps.MapAxis`
             Reconstructed energy axis.
         position : `~astropy.coordinates.SkyCoord`
             The target position. Should be a single coordinates.
@@ -190,7 +190,7 @@ class EDispMap(IRFMap):
         edisp_map.quantity = data / migra_axis.bin_width.reshape((1, -1, 1, 1))
         return cls(edisp_map, exposure_map)
 
-    def sample_coord(self, map_coord, random_state=0):
+    def sample_coord(self, map_coord, random_state=0, chunk_size=10000):
         """Apply the energy dispersion corrections on the coordinates of a set of simulated events.
 
         Parameters
@@ -201,6 +201,9 @@ class EDispMap(IRFMap):
             Defines random number generator initialisation.
             Passed to `~gammapy.utils.random.get_random_state`.
             Default is 0.
+        chunk_size : int
+            If set, this will slice the input MapCoord into smaller chunks of chunk_size elements.
+            Default is 10000.
 
         Returns
         -------
@@ -210,21 +213,34 @@ class EDispMap(IRFMap):
         random_state = get_random_state(random_state)
         migra_axis = self.edisp_map.geom.axes["migra"]
 
-        coord = {
-            "skycoord": map_coord.skycoord.reshape(-1, 1),
-            "energy_true": map_coord["energy_true"].reshape(-1, 1),
-            "migra": migra_axis.center,
-        }
+        position = map_coord.skycoord
+        energy_true = map_coord["energy_true"]
 
-        pdf_edisp = self.edisp_map.interp_by_coord(coord)
+        size = position.size
+        energy_reco = np.ones(size) * map_coord["energy_true"].unit
+        chunk_size = size if chunk_size is None else chunk_size
+        index = 0
 
-        sample_edisp = InverseCDFSampler(pdf_edisp, axis=1, random_state=random_state)
-        pix_edisp = sample_edisp.sample_axis()
-        migra = migra_axis.pix_to_coord(pix_edisp)
+        while index < size:
+            chunk = slice(index, index + chunk_size, 1)
+            coord = {
+                "skycoord": position[chunk].reshape(-1, 1),
+                "energy_true": energy_true[chunk].reshape(-1, 1),
+                "migra": migra_axis.center,
+            }
 
-        energy_reco = map_coord["energy_true"] * migra
+            pdf_edisp = self.edisp_map.interp_by_coord(coord)
 
-        return MapCoord.create({"skycoord": map_coord.skycoord, "energy": energy_reco})
+            sample_edisp = InverseCDFSampler(
+                pdf_edisp, axis=1, random_state=random_state
+            )
+            pix_edisp = sample_edisp.sample_axis()
+            migra = migra_axis.pix_to_coord(pix_edisp)
+
+            energy_reco[chunk] = energy_true[chunk] * migra
+            index += chunk_size
+
+        return MapCoord.create({"skycoord": position, "energy": energy_reco})
 
     @classmethod
     def from_diagonal_response(cls, energy_axis_true, migra_axis=None):
@@ -403,7 +419,7 @@ class EDispKernelMap(IRFMap):
 
         Parameters
         ----------
-        edisp : `~gammapy.irfs.EDispKernel`
+        edisp : `~gammapy.irf.EDispKernel`
             The input 1D kernel.
         geom : `~gammapy.maps.Geom`, optional
             The (2D) geometry object to use. If None, an all sky geometry with 2 bins is created.
@@ -486,7 +502,7 @@ class EDispKernelMap(IRFMap):
         )
 
     def resample_energy_axis(self, energy_axis, weights=None):
-        """Return a resampled EdispKernelMap.
+        """Return a resampled `EDispKernelMap`.
 
         Bins are grouped according to the edges of the reconstructed energy axis provided.
         The true energy is left unchanged.

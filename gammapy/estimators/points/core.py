@@ -42,9 +42,7 @@ def squash_fluxpoints(flux_point, axis):
     f = interpolate_profile(value_scan, stat_scan)
     minimizer = minimize(
         f,
-        x0=value_scan[
-            int(len(value_scan) / 2),
-        ],
+        x0=value_scan[int(len(value_scan) / 2)],
         bounds=[(value_scan[0], value_scan[-1])],
         method="L-BFGS-B",
     )
@@ -454,7 +452,7 @@ class FluxPoints(FluxMaps):
         >>> table = fp.to_table(sed_type="flux", formatted=True)
         >>> print(table[:2])
         e_ref e_min e_max     flux      flux_err    flux_ul      ts    sqrt_ts is_ul
-         TeV   TeV   TeV  1 / (cm2 s) 1 / (cm2 s) 1 / (cm2 s)
+         TeV   TeV   TeV  1 / (s cm2) 1 / (s cm2) 1 / (s cm2)
         ----- ----- ----- ----------- ----------- ----------- -------- ------- -----
         1.334 1.000 1.780   1.423e-11   3.135e-13         nan 2734.000  52.288 False
         2.372 1.780 3.160   5.780e-12   1.082e-13         nan 4112.000  64.125 False
@@ -808,7 +806,7 @@ class FluxPoints(FluxMaps):
         flux_points = deepcopy(self)
 
         value_scan = self.stat_scan.geom.axes["norm"].center
-        shape_axes = self.stat_scan.geom._shape[slice(3, None)]
+        shape_axes = self.stat_scan.geom._shape[slice(3, None)][::-1]
         for idx in np.ndindex(shape_axes):
             stat_scan = np.abs(
                 self.stat_scan.data[idx].squeeze() - self.stat.data[idx].squeeze()

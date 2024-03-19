@@ -126,8 +126,8 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
     >>> model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
     >>> dataset = MapDataset.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc.fits.gz")
     >>> estimator = TSMapEstimator(
-                model, kernel_width="1 deg",energy_edges=[10, 100] * u.GeV, downsampling_factor=4
-            )
+    ...            model, kernel_width="1 deg", energy_edges=[10, 100] * u.GeV, downsampling_factor=4
+    ...        )
     >>> maps = estimator.run(dataset)
     >>> print(maps)
     FluxMaps
@@ -136,7 +136,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
       geom                   : WcsGeom
       axes                   : ['lon', 'lat', 'energy']
       shape                  : (400, 200, 1)
-      quantities             : ['ts', 'norm', 'niter', 'norm_err', 'npred', 'npred_excess', 'stat', 'stat_null', 'success']  # noqa: E501
+      quantities             : ['ts', 'norm', 'niter', 'norm_err', 'npred', 'npred_excess', 'stat', 'stat_null', 'success']
       ref. model             : pl
       n_sigma                : 1
       n_sigma_ul             : 2
@@ -148,6 +148,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
     ----------
     [Stewart2009]_
     """
+
     tag = "TSMapEstimator"
     _available_selection_optional = ["errn-errp", "ul"]
 

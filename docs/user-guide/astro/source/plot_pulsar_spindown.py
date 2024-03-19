@@ -1,4 +1,5 @@
 """Plot spin frequency of the pulsar with time."""
+
 import numpy as np
 from astropy.units import Quantity
 import matplotlib.pyplot as plt

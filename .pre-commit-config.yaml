@@ -6,7 +6,7 @@ repos:
       - id: isort
         args: ["--profile", "black", "--filter-files"]
   - repo: https://github.com/psf/black
-    rev: 22.6.0
+    rev: 24.2.0
     hooks:
       - id: black
   # https://black.readthedocs.io/en/stable/guides/using_black_with_other_tools.html?highlight=other%20tools#flake8

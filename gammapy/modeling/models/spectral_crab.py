@@ -58,18 +58,18 @@ def create_crab_spectral_model(reference="meyer"):
     Let's first import what we need::
 
         >>> import astropy.units as u
-        >>> from gammapy.modeling.models import PowerLaw, create_crab_spectral_model
+        >>> from gammapy.modeling.models import PowerLawSpectralModel, create_crab_spectral_model
 
     Plot the 'hess_ecpl' reference Crab spectrum between 1 TeV and 100 TeV::
 
         >>> crab_hess_ecpl = create_crab_spectral_model('hess_ecpl')
-        >>> crab_hess_ecpl.plot([1, 100] * u.TeV)
+        >>> crab_hess_ecpl.plot([1, 100] * u.TeV)  #doctest: +SKIP
 
     Use a reference crab spectrum as unit to measure a differential flux (at 10 TeV)::
 
         >>> pwl = PowerLawSpectralModel(
-                index=2.3, amplitude=1e-12 * u.Unit('1 / (cm2 s TeV)'), reference=1 * u.TeV
-            )
+        ...        index=2.3, amplitude=1e-12 * u.Unit('1 / (cm2 s TeV)'), reference=1 * u.TeV
+        ...    )
         >>> crab = create_crab_spectral_model('hess_pl')
         >>> energy = 10 * u.TeV
         >>> dnde_cu = (pwl(energy) / crab(energy)).to('%')

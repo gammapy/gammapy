@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import logging
 import numpy as np
 from astropy.table import Column, Table
 from gammapy.maps import Map
@@ -116,9 +115,9 @@ class SensitivityEstimator(Estimator):
         criterion = np.chararray(excess.shape, itemsize=12)
         criterion[is_gamma_limited] = "gamma"
         criterion[is_bkg_syst_limited] = "bkg"
-        criterion[
-            ~np.logical_or(is_gamma_limited, is_bkg_syst_limited)
-        ] = "significance"
+        criterion[~np.logical_or(is_gamma_limited, is_bkg_syst_limited)] = (
+            "significance"
+        )
         return criterion
 
     def run(self, dataset):
@@ -140,18 +139,9 @@ class SensitivityEstimator(Estimator):
         criterion = self._get_criterion(
             excess.data.squeeze(), dataset.background.data.squeeze()
         )
-        logging.warning(
-            "Table column name energy will be deprecated by e_ref since v1.2"
-        )
 
         return Table(
             [
-                Column(
-                    data=energy,
-                    name="energy",
-                    format="5g",
-                    description="Reconstructed Energy",
-                ),
                 Column(
                     data=energy,
                     name="e_ref",

@@ -1,4 +1,5 @@
 """Plot PWN evolution with time."""
+
 import numpy as np
 from astropy.constants import M_sun
 from astropy.units import Quantity

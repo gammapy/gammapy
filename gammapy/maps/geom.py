@@ -625,8 +625,9 @@ class Geom(abc.ABC):
 
         Returns
         -------
-        mask : `~numpy.ndarray`
-            Energy mask.
+        mask : `~gammapy.maps.Map`
+            Map containing the energy mask. The geometry of the map
+            is the same as the geometry of the instance which called this method.
         """
         from . import Map
 

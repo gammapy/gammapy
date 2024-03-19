@@ -28,7 +28,6 @@ in the CTA 1DC dataset shipped with Gammapy.
 
 """
 
-
 # Remove warnings
 import warnings
 import numpy as np

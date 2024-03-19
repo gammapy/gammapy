@@ -91,11 +91,11 @@ class FluxPointsDataset(Dataset):
         message    : Hesse terminated successfully.
 
     >>> print(result.parameters.to_table())
-      type      name     value         unit      ... max frozen is_norm link
-    -------- --------- ---------- -------------- ... --- ------ ------- ----
-    spectral     index 2.2159e+00                ... nan  False   False
-    spectral amplitude 2.1619e-13 cm-2 s-1 TeV-1 ... nan  False    True
-    spectral reference 1.0000e+00            TeV ... nan   True   False
+    type    name     value         unit      ... frozen is_norm link prior
+    ---- --------- ---------- -------------- ... ------ ------- ---- -----
+             index 2.2159e+00                ...  False   False
+         amplitude 2.1619e-13 TeV-1 s-1 cm-2 ...  False    True
+         reference 1.0000e+00            TeV ...   True   False
 
     Note: In order to reproduce the example, you need the tests datasets folder.
     You may download it with the command:
@@ -382,9 +382,9 @@ class FluxPointsDataset(Dataset):
         >>> model = SkyModel(spectral_model=PowerLawSpectralModel())
         >>> dataset = FluxPointsDataset(model, flux_points)
         >>> #configuring optional parameters
-        >>> kwargs_spectrum = {"kwargs_model": {"color":"red", "ls":"--"}, "kwargs_fp":{"color":"green", "marker":"o"}}  # noqa: E501
+        >>> kwargs_spectrum = {"kwargs_model": {"color":"red", "ls":"--"}, "kwargs_fp":{"color":"green", "marker":"o"}}
         >>> kwargs_residuals = {"color": "blue", "markersize":4, "marker":'s', }
-        >>> dataset.plot_fit(kwargs_residuals=kwargs_residuals, kwargs_spectrum=kwargs_spectrum) # doctest: +SKIP noqa: E501
+        >>> dataset.plot_fit(kwargs_residuals=kwargs_residuals, kwargs_spectrum=kwargs_spectrum) # doctest: +SKIP
         """
 
         if self.data.geom.ndim > 3:

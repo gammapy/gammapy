@@ -145,6 +145,9 @@ def test_4FGL_DR4():
     model_dnde = model(fp.energy_ref[not_ul])
     assert_quantity_allclose(model_dnde, fp_dnde, rtol=0.07)
 
+    models = cat.to_models()
+    assert len(models) == len(cat.table)
+
 
 @requires_data()
 class TestFermi4FGLObject:

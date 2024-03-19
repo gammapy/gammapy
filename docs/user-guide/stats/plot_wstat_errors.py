@@ -1,4 +1,5 @@
 """Example plot showing the profile of the WStat statistic and its connection to excess errors."""
+
 import numpy as np
 import matplotlib.pyplot as plt
 from gammapy.stats import WStatCountsStatistic

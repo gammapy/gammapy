@@ -101,15 +101,15 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject, abc.ABC):
         try:
             ss += "{:<16s} : {:.3f}\n".format("ASSOC_PROB_BAY", d["ASSOC_PROB_BAY"])
             ss += "{:<16s} : {:.3f}\n".format("ASSOC_PROB_LR", d["ASSOC_PROB_LR"])
-        except (KeyError):
+        except KeyError:
             pass
         try:
             ss += "{:<16s} : {}\n".format("Class1", d["CLASS1"])
-        except (KeyError):
+        except KeyError:
             ss += "{:<16s} : {}\n".format("Class", d["CLASS"])
         try:
             ss += "{:<16s} : {}\n".format("Class2", d["CLASS2"])
-        except (KeyError):
+        except KeyError:
             pass
         ss += "{:<16s} : {}\n".format("TeVCat flag", d.get("TEVCAT_FLAG", "N/A"))
         return ss
@@ -377,9 +377,13 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
                 if de["version"] < 28:
                     path_extended = "$GAMMAPY_DATA/catalogs/fermi/LAT_extended_sources_8years/Templates/"
                 elif de["version"] < 32:
-                    path_extended = "$GAMMAPY_DATA/catalogs/fermi/LAT_extended_sources_12years/Templates/"
+                    path_extended = (
+                        "$GAMMAPY_DATA/catalogs/fermi/Extended_12years/Templates/"
+                    )
                 else:
-                    path_extended = "$GAMMAPY_DATA/catalogs/fermi/LAT_extended_sources_14years/Templates/"
+                    path_extended = (
+                        "$GAMMAPY_DATA/catalogs/fermi/Extended_14years/Templates/"
+                    )
                 path = make_path(path_extended)
                 with warnings.catch_warnings():  # ignore FITS units warnings
                     warnings.simplefilter("ignore", FITSFixedWarning)

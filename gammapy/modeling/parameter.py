@@ -798,13 +798,11 @@ class Parameters(collections.abc.Sequence):
 
         Examples
         --------
-        ::
-
-            >>> from gammapy.modeling.models import PowerLawSpectralModel
-            >>> pwl = PowerLawSpectralModel(index=2)
-            >>> with pwl.parameters.restore_status():
-            >>>     pwl.parameters["index"].value = 3
-            >>> print(pwl.parameters["index"].value)
+        >>> from gammapy.modeling.models import PowerLawSpectralModel
+        >>> pwl = PowerLawSpectralModel(index=2)
+        >>> with pwl.parameters.restore_status():
+        ...     pwl.parameters["index"].value = 3
+        >>> print(pwl.parameters["index"].value) # doctest: +SKIP
         """
         return restore_parameters_status(self, restore_values)
 

@@ -35,11 +35,9 @@ class EDispKernel(IRF):
 
     >>> from gammapy.maps import MapAxis
     >>> from gammapy.irf import EDispKernel
-    >>> energy = MapAxis.from_energy_bounds(0.1,10,10, unit='TeV')
-    >>> energy_true = MapAxis.from_energy_bounds(0.1,10,10, unit='TeV', name='energy_true')
-    >>> edisp = EDispKernel.from_gauss(
-    >>>     energy_axis_true=energy_true, energy_axis=energy, sigma=0.1, bias=0
-    >>> )
+    >>> energy = MapAxis.from_energy_bounds(0.1, 10, 10, unit='TeV')
+    >>> energy_true = MapAxis.from_energy_bounds(0.1, 10, 10, unit='TeV', name='energy_true')
+    >>> edisp = EDispKernel.from_gauss(energy_axis_true=energy_true, energy_axis=energy, sigma=0.1, bias=0)
 
     Have a quick look:
 
@@ -168,32 +166,33 @@ class EDispKernel(IRF):
 
         Parameters
         ----------
-        energy_axis_true : `MapAxis`
+        energy_axis_true : `~gammapy.maps.MapAxis`
             True energy axis.
-        energy_axis : `MapAxis`, optional
+        energy_axis : `~gammapy.maps.MapAxis`, optional
             Reconstructed energy axis. Default is None.
 
         Examples
         --------
-        If ``energy_true`` equals ``energy``, you get a diagonal matrix::
+        If ``energy_true`` equals ``energy``, you get a diagonal matrix:
 
-            from gammapy.irf import EDispKernel
-            from gammapy.maps import MapAxis
+        >>> from gammapy.irf import EDispKernel
+        >>> from gammapy.maps import MapAxis
+        >>> import astropy.units as u
 
-            energy_true_axis = MapAxis.from_energy_edges(
-                    [0.5, 1, 2, 4, 6] * u.TeV, name="energy_true"
-                )
-            edisp = EDispKernel.from_diagonal_response(energy_true_axis)
-            edisp.plot_matrix()
+        >>> energy_true_axis = MapAxis.from_energy_edges(
+        ...            [0.5, 1, 2, 4, 6] * u.TeV, name="energy_true"
+        ...        )
+        >>> edisp = EDispKernel.from_diagonal_response(energy_true_axis)
+        >>> edisp.plot_matrix() # doctest: +SKIP
 
-        Example with different energy binnings::
+        Example with different energy binnings:
 
-            energy_true_axis = MapAxis.from_energy_edges(
-                    [0.5, 1, 2, 4, 6] * u.TeV, name="energy_true"
-                )
-            energy_axis = MapAxis.from_energy_edges([2, 4, 6] * u.TeV)
-            edisp = EDispKernel.from_diagonal_response(energy_true_axis, energy_axis)
-            edisp.plot_matrix()
+        >>> energy_true_axis = MapAxis.from_energy_edges(
+        ...     [0.5, 1, 2, 4, 6] * u.TeV, name="energy_true"
+        ... )
+        >>> energy_axis = MapAxis.from_energy_edges([2, 4, 6] * u.TeV)
+        >>> edisp = EDispKernel.from_diagonal_response(energy_true_axis, energy_axis)
+        >>> edisp.plot_matrix() # doctest: +SKIP
         """
         from .map import get_overlap_fraction
 

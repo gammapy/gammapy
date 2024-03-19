@@ -44,6 +44,46 @@ def get_irfs_features(
     -------
     features : `~astropy.table.Table`
         Features table.
+
+    Examples
+    --------
+    Compute the IRF features for "edisp-bias", "edisp-res" and "psf-radius" at 1 TeV::
+
+    >>> from gammapy.data.utils import get_irfs_features
+    >>> from gammapy.data import DataStore
+    >>> from gammapy.utils.cluster import standard_scaler
+    >>> from astropy.coordinates import SkyCoord
+    >>> import astropy.units as u
+
+    >>> selection = dict(
+    ...     type="sky_circle",
+    ...     frame="icrs",
+    ...     lon="329.716 deg",
+    ...     lat="-30.225 deg",
+    ...     radius="2 deg",
+    ... )
+
+    >>> data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
+    >>> obs_table = data_store.obs_table.select_observations(selection)
+    >>> obs = data_store.get_observations(obs_table["OBS_ID"][:3])
+
+    >>> position = SkyCoord(329.716 * u.deg, -30.225 * u.deg, frame="icrs")
+    >>> names = ["edisp-bias", "edisp-res", "psf-radius"]
+    >>> features_irfs = get_irfs_features(
+    ...     obs,
+    ...     energy_true="1 TeV",
+    ...     position=position,
+    ...     names=names,
+    ... )
+
+    >>> print(features_irfs)
+         edisp-bias     obs_id      edisp-res           psf-radius
+                                                       deg
+        ------------------- ------ ------------------- -------------------
+        0.11587179071752986  33787   0.368346217294295 0.14149953611195087
+        0.04897634344908595  33788 0.33983991887701287 0.11553325504064559
+          0.033176650892097  33789 0.32377509405904137 0.10262943822890519
+
     """
     from gammapy.irf import EDispKernelMap, PSFMap
 

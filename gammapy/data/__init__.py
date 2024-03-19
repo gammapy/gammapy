@@ -10,8 +10,8 @@ from .metadata import EventListMetaData, ObservationMetaData
 from .obs_table import ObservationTable
 from .observations import Observation, Observations
 from .pointing import FixedPointingInfo, PointingInfo, PointingMode
-from .utils import get_irfs_features
 from .simulate import ObservationsEventsSampler
+from .utils import get_irfs_features
 
 __all__ = [
     "DataStore",

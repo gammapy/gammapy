@@ -42,7 +42,6 @@ extract a light curve independently of the dataset type.
 
 """
 
-
 ######################################################################
 # Setup
 # -----

@@ -35,7 +35,6 @@ run the flux profile extraction using the `~gammapy.estimators.FluxProfileEstima
 
 """
 
-
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord

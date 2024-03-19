@@ -26,6 +26,23 @@ def test_test_statistic_detection(fermi_datasets):
 
 
 @requires_data()
+def test_test_statistic_detection_other_frozen(fermi_datasets):
+
+    with fermi_datasets.models.restore_status():
+        fermi_datasets.models.freeze()
+        model = fermi_datasets.models["Crab Nebula"]
+        results = select_nested_models(
+            fermi_datasets, [model.spectral_model.amplitude], [0]
+        )
+        results["fit_results_null"].nfev == 0
+        model.spectral_model.amplitude.value = 0
+        assert_allclose(
+            results["fit_results_null"].parameters.value,
+            fermi_datasets.models.parameters.value,
+        )
+
+
+@requires_data()
 def test_test_statistic_link(fermi_datasets):
 
     # TODO: better test with simulated data ?

@@ -1,4 +1,5 @@
 """Plot Milky Way spiral arm models."""
+
 import numpy as np
 from astropy.units import Quantity
 import matplotlib.pyplot as plt

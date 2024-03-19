@@ -111,6 +111,32 @@ the code as well as the output value produced.
             (10., 20.)>
         radius: 3.0 deg
 
+To allow the code block to be placed correctly over multiple lines utilise the "...":
+
+.. code-block:: text
+
+        Examples
+        --------
+        >>> from gammapy.maps import WcsGeom, MapAxis
+        >>> energy_axis_true = MapAxis.from_energy_bounds(
+        ...            0.5, 20, 10, unit="TeV", name="energy_true"
+        ...        )
+
+
+For a larger code block it is also possible to utilise the following syntax.
+
+.. code-block:: text
+
+        Examples
+        --------
+        ::
+
+            from gammapy.maps import MapAxis
+            from gammapy.irf import EnergyDispersion2D
+            filename = '$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz'
+            edisp2d = EnergyDispersion2D.read(filename, hdu="EDISP")
+
+
 In order to perform tests of these snippets of code present in the docstrings of the Python files, you may run the
 following command.
 

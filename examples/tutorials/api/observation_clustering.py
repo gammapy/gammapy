@@ -31,7 +31,6 @@ For completeness two different methods for grouping of observations are shown he
 
 """
 
-
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord

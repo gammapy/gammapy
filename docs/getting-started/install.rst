@@ -5,12 +5,12 @@
 Installation
 ============
 
-There are many ways to install Python and Gammapy as a user. On this page we list the most common ones.
-In general **we recommend to use virtual environments** when using Gammapy. This ways you have full
-control over additional packages that you may use in your analysis and you work with
-well defined computing environments, that you can share and allow **reproducibility of your
-scientific analysis results**. If you want to learn about using virtual environments see :ref:`virtual-envs`.
-You can also :ref:`install Gammapy for development <dev_setup>`.
+There are numerous ways to install Python and Gammapy as a user. On this page, we list the most common ones.
+In general, **we recommend using** :ref:`virtual environments <virtual-envs>` when using Gammapy. This
+way you have complete control over the additional packages that you may use in your analysis and you work with
+well defined computing environments. This enables you to easily share your work and ensure **reproducibility of your
+scientific analysis results**. You can also :ref:`install Gammapy for development <dev_setup>`.
+
 
 .. _anaconda:
 
@@ -35,28 +35,28 @@ To install a specific version of Gammapy just execute:
 
 .. code-block:: bash
 
-    $ conda install -c conda-forge gammapy=0.19
+    $ conda install -c conda-forge gammapy=1.0
 
-If you encountered any issues you can check the :ref:`troubleshoot` guide.
+If you encounter any issues you can check the :ref:`troubleshoot` guide.
 
 Using Mamba
 -----------
 Alternatively, you can use `Mamba <https://mamba.readthedocs.io/>`__ for the installation.
-Mamba is an alternative package manager that support most of conda’s command but offers higher installation
+Mamba is an alternative package manager that supports most of conda’s commands but offers higher installation
 speed and more reliable environment solutions. To install ``mamba`` in the Conda base environment:
 
 .. code-block:: bash
 
     $ conda install mamba -n base -c conda-forge
 
-then:
+Then install Gammapy through:
 
 .. code-block:: bash
 
     $ mamba install gammapy
 
-Mamba supports of the commands that are available for conda. So updating and installing specific versions
-works the same way as above except for replacing the ``conda`` with the ``mamba`` command.
+Mamba supports the same commands available in conda. Therefore, updating and installing specific versions
+follows the same process as above, just simply replace the ``conda`` command with the ``mamba`` command.
 
 .. _install-pip:
 
@@ -71,13 +71,6 @@ using `pip`_:
    $ python -m pip install gammapy
 
 This will install Gammapy with the required dependencies only.
-
-.. note::
-
-    For Apple silicon M1 (`arm64`) architectures you also have to open the
-    environment file and delete the `sherpa` entry, as currently there are
-    no conda packages available. However you can later install `sherpa`
-    in the environment using `python -m pip install sherpa`.
     
 To install Gammapy with all optional dependencies, you can specify:
 
@@ -86,25 +79,25 @@ To install Gammapy with all optional dependencies, you can specify:
    $ python -m pip install gammapy[all]
 
 
-To update an existing installation you can use:
+To update an existing installation use:
 
 .. code-block:: bash
 
    $ python -m pip install gammapy --upgrade
 
-To install a specific version of Gammapy you can use:
+To install a specific version of Gammapy use:
 
 .. code-block:: bash
 
-    $ python -m pip install gammapy==0.19
+    $ python -m pip install gammapy==1.0
 
-To install the current Gammapy **development** version using `pip`_ you can use:
+To install the current Gammapy **development** version with `pip`_ use:
 
 .. code-block:: bash
 
    $ python -m pip install git+https://github.com/gammapy/gammapy.git#egg=gammapy
 
-Or like this, if you want to study or edit the code locally:
+If you want to study or edit the code locally, use the following:
 
 .. code-block:: bash
 
@@ -112,7 +105,7 @@ Or like this, if you want to study or edit the code locally:
    $ cd gammapy
    $ python -m pip install .
 
-If you encountered any issues you can check the :ref:`troubleshoot` guide.
+If you encounter any issues you can check the :ref:`troubleshoot` guide.
 
 .. _install-other:
 
@@ -138,8 +131,8 @@ Example:
         python3-pip python3-matplotlib \
         ipython3-notebook python3-gammapy
 
-    $ python3 -m pip install antigravity
+    $ python3 -m pip install gammapy
 
 Note that the Linux package managers typically have release cycles of 6 months,
 or yearly or longer, meaning that you'll typically  get an older version of
-Gammapy. But you can always get a recent version via `pip` or `conda` (see above).
+Gammapy. However, you can always get the recent version via `pip` or `conda` (see above).

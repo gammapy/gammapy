@@ -109,6 +109,14 @@ def test_check_phase_intervals(pars):
     )
 
 
+def test_copy_interval():
+    on = (0.8, 1.2)
+    off = [(0.1, 0.3), (0.4, 0.5)]
+    PhaseBackgroundMaker(on_phase=on, off_phase=off)
+    assert on == (0.8, 1.2)
+    assert off == [(0.1, 0.3), (0.4, 0.5)]
+
+
 @requires_data()
 @pytest.mark.parametrize(
     "pars",

@@ -117,11 +117,11 @@ def plot_map_rgb(map_, ax=None, **kwargs):
     >>> import astropy.units as u
     >>> map_ = Map.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
     >>> axis_rgb = MapAxis.from_energy_edges(
-    >>>     [0.1, 0.2, 0.5, 10], unit=u.TeV, name="energy", interp="log"
-    >>> )
+    ...     [0.1, 0.2, 0.5, 10], unit=u.TeV, name="energy", interp="log"
+    ... )
     >>> map_ = map_.resample_axis(axis_rgb)
     >>> kwargs = {"stretch": 0.5, "Q": 1, "minimum": 0.15}
-    >>> plot_map_rgb(map_.smooth(0.08*u.deg), **kwargs)
+    >>> plot_map_rgb(map_.smooth(0.08*u.deg), **kwargs) #doctest: +SKIP
     """
     geom = map_.geom
     if len(geom.axes) != 1 or geom.axes[0].nbin != 3:

@@ -41,11 +41,12 @@ class GTI:
     >>> print(gti)
     GTI info:
     - Number of GTIs: 1
-    - Duration: 1687.0 s
-    - Start: 123890826.0 s MET
+    - Duration: 1687.0000000000016 s
+    - Start: 123890826.00000001 s MET
     - Start: 2004-12-04T22:08:10.184 (time standard: TT)
-    - Stop: 123892513.0 s MET
+    - Stop: 123892513.00000001 s MET
     - Stop: 2004-12-04T22:36:17.184 (time standard: TT)
+    <BLANKLINE>
 
     Load GTIs for a Fermi-LAT event list:
 
@@ -56,8 +57,9 @@ class GTI:
     - Duration: 183139597.9032163 s
     - Start: 239557417.49417615 s MET
     - Start: 2008-08-04T15:44:41.678 (time standard: TT)
-    - Stop: 460250000.0 s MET
+    - Stop: 460249999.99999994 s MET
     - Stop: 2015-08-02T23:14:24.184 (time standard: TT)
+    <BLANKLINE>
     """
 
     def __init__(self, table, reference_time=None):

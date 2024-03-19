@@ -83,6 +83,7 @@ Setup
 As usual, we’ll start with some general imports…
 
 """
+
 import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion

@@ -10,7 +10,6 @@ This model parametrises a constant time model.
 
 """
 
-
 # %%
 # Example plot
 # ------------

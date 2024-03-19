@@ -1,12 +1,12 @@
 .. _gammapy_1p2_release:
 
-1.2 (February XXth 2024)
+1.2 (February 29th 2024)
 ------------------------
 
-- Released February XX, 2024
-- 24 contributors
-- 178 pull requests since v1.1 (not all listed below)
-- yz closed issues
+- Released February 29, 2024
+- 25 contributors
+- 215 pull requests since v1.1 (not all listed below)
+- 69 closed issues
 
 Summary
 ~~~~~~~
@@ -14,28 +14,37 @@ Summary
 New features
 ~~~~~~~~~~~~
 
-- New helper classes have been added to perform event sampling.
+- Metadata containers have been introduced following PIG 25. Preliminary versions have
+  been designed for most data products from DL3 to DL5. They will progressively be
+  accessible on their `.meta` attributes.
+- Parameter prior support has been introduced following PIG 26. A few `Prior` classes
+  can be defined on `Parameter.prior` and the associated log-prior is added to the
+  total statistics during fitting.
+- Helper functions have been added to perform computation of lifetime and total
+  observation time maps.
+- A preliminary support for asymmetric IRFs has been introduced. A tutorial shows how to
+  implement new IRF classes to support non-axisymmetric IRFs.
+- Improved support for temporal analysis with the addition of helper functions to quantify
+  lightcurve variability.
+- New helper classes have been added to perform event sampling for a single or a set of
+  observations:
+  `~gammapy.datasets.ObservationEventSampler` and `~gammapy.data.ObservationsEventSampler`.
 - A checksum option has been added on read and write methods in Gammapy. It follows the
   FITS standard and reuses the astropy methods and behaviour. A checksum for yaml file
   has been introduced as well.
-- Computation of lifetime and total observation time maps.
-- Introduction of Metadata containers
-- Preliminary support for asymmetric IRFs
-- Improved support for temporal analysis
-- Addition of priors during likelihood fitting
 - Improved support for parallel processing
 
 *gammapy.catalogs*
 
-- Update 4FGL catalog to DR4.
+- Update the 4FGL catalog to include DR4.
 - Added 1LHAASO catalog.
 
 *gammapy.data*
 
 - A general scheme for metadata support has been introduced. The ``Metadata`` base
-  class has been designed according to PIG X.
+  class has been designed according to PIG 25.
 - Added a function to remove a time interval from a ``GTI``.
-- Added function to export part of a ``DataStore`` to an IVAO compliant ObsCore table.
+- Added function to export part of a ``DataStore`` to an IVOA compliant ObsCore table.
 
 *gammapy.makers*
 
@@ -49,8 +58,7 @@ New features
 
 *gammapy.modeling*
 
-- Added ``Prior`` class.
-- Add function to determine pivot energy for all spectral models.
+- Added a function to determine a pivot energy for all spectral models.
 - Added position as a parameter for the ``TemplateSpatialModel``. CAVEAT: results are correct only when the fitted position is close to the map center.
 - Added Spatial parameters in FoVBackgroundModels
 - SkyModel evaluation now supports a TimeMapAxis
@@ -63,10 +71,12 @@ New features
   variance, doubling/halving times for light curves
 - Add optional sensitivity estimation in ``ExcessMapEstimator``.
 - Added support for NormSpectralModels in FluxPointsDataset / FluxPoints computations
-- Fit status and degrees of freedom added for FluxMaps
-- Add EnergyDependentMorphologyEstimator
-- Add functionality to rebin flux points using likelihood profiles
-- GTI tables are serialised on FluxPoints objects
+- Fit status and degrees of freedom have been added to ``FluxMaps``.
+- Add a dedicated ``EnergyDependentMorphologyEstimator`` as well as a tutorial demonstrating
+  its usage.
+- Add functionality to rebin flux points using the likelihood profiles.
+- GTI tables are now serialised on FluxPoints objects.
+
 *gammapy.visualization*
 
 - Add a plot function for the distribution of ``Map`` data.
@@ -75,7 +85,7 @@ New features
 API changes
 ~~~~~~~~~~~
 
-- Freeze source parameters in ``FluxEstimator`` classes.
+- Source parameters are now frozen on init in ``FluxEstimator`` classes.
 - The ``norm`` parameter is now passed as an argument to the various flux estimators.
   ``Parameter.is_norm`` is now deprecated.
 - The default index of ``ExpCutoffPowerlawNormSpectralModel`` has been changed to 0
@@ -110,11 +120,13 @@ Contributors
 - Fabio Acero
 - Juan Bernete
 - Noah Biederbeck
+- Julia Djuvsland
 - Axel Donath
 - Kirsty Feijen
 - Stefan Fröse
 - Claudio Galelli
 - Bruno Khélifi
+- Jana Konrad
 - Paula Kornecki
 - Maximilian Linhoff
 - Kurt McKee
@@ -125,7 +137,6 @@ Contributors
 - Michael Punch
 - Maxime Regeard
 - Quentin Remy
-- Clément Robert
 - Atreyee Sinha
 - Hanna Stapel
 - Katrin Streil

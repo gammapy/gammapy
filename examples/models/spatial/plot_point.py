@@ -15,7 +15,6 @@ across 4 neighbouring pixels. This ensured that the center of mass position
 is conserved.
 """
 
-
 # %%
 # Example plot
 # ------------

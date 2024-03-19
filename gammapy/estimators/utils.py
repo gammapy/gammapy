@@ -18,12 +18,12 @@ from .map.core import FluxMaps
 __all__ = [
     "estimate_exposure_reco_energy",
     "find_peaks",
+    "find_peaks_in_flux_map",
     "resample_energy_edges",
+    "get_rebinned_axis",
     "compute_lightcurve_fvar",
     "compute_lightcurve_fpp",
     "compute_lightcurve_doublingtime",
-    "find_peaks_in_flux_map",
-    "get_rebinned_axis",
 ]
 
 
@@ -68,6 +68,30 @@ def find_peaks(image, threshold, min_distance=1):
     -------
     output : `~astropy.table.Table`
         Table with parameters of detected peaks.
+
+    Examples
+    --------
+    >>> import astropy.units as u
+    >>> from gammapy.datasets import MapDataset
+    >>> from gammapy.estimators import ExcessMapEstimator
+    >>> from gammapy.estimators.utils import find_peaks
+    >>>
+    >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
+    >>> estimator = ExcessMapEstimator(
+    ...     correlation_radius="0.1 deg", energy_edges=[0.1, 10] * u.TeV
+    ... )
+    >>> maps = estimator.run(dataset)
+    >>> # Find the peaks which are above 5 sigma
+    >>> sources = find_peaks(maps["sqrt_ts"], threshold=5, min_distance="0.25 deg")
+    >>> print(sources)
+    value   x   y      ra       dec
+                      deg       deg
+    ------ --- --- --------- ---------
+    32.191 161 118 266.41924 -28.98772
+      18.7 125 124 266.80571 -28.14079
+    9.4498 257 122 264.86178 -30.97529
+    9.3784 204 103 266.14201 -30.10041
+    5.3493 282 150 263.78083 -31.12704
     """
     # Input validation
 
@@ -126,11 +150,11 @@ def find_peaks(image, threshold, min_distance=1):
 def find_peaks_in_flux_map(maps, threshold, min_distance=1):
     """Find local test statistic peaks for a given Map.
 
-    Utilises the find_peaks function to find various parameters from FluxMaps.
+    Utilises the `~gammapy.estimators.utils.find_peaks` function to find various parameters from FluxMaps.
 
     Parameters
     ----------
-    maps : `~gammapy.estimators.map.FluxMaps`
+    maps : `~gammapy.estimators.FluxMaps`
         Input flux map object.
     threshold : float or array-like
         The test statistic data value or pixel-wise test statistic data values to be used for the
@@ -144,6 +168,30 @@ def find_peaks_in_flux_map(maps, threshold, min_distance=1):
     -------
     output : `~astropy.table.Table`
         Table with parameters of detected peaks.
+
+    Examples
+    --------
+    >>> import astropy.units as u
+    >>> from gammapy.datasets import MapDataset
+    >>> from gammapy.estimators import ExcessMapEstimator
+    >>> from gammapy.estimators.utils import find_peaks_in_flux_map
+    >>>
+    >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
+    >>> estimator = ExcessMapEstimator(
+    ...     correlation_radius="0.1 deg", energy_edges=[0.1, 10]*u.TeV
+    ... )
+    >>> maps = estimator.run(dataset)
+    >>> # Find the peaks which are above 5 sigma
+    >>> sources = find_peaks_in_flux_map(maps, threshold=5, min_distance=0.1*u.deg)
+    >>> print(sources[:4])
+     x   y      ra       dec    ...   norm  norm_err     flux      flux_err
+               deg       deg    ...                  1 / (s cm2) 1 / (s cm2)
+    --- --- --------- --------- ... ------- -------- ----------- -----------
+    158 135 266.05019 -28.70181 ... 0.28551  0.06450   2.827e-12   6.385e-13
+     92 133 267.07022 -27.31834 ... 0.37058  0.08342   3.669e-12   8.259e-13
+    176 134 265.80492 -29.09805 ... 0.30561  0.06549   3.025e-12   6.484e-13
+    282 150 263.78083 -31.12704 ... 0.55027  0.12611   5.448e-12   1.249e-12
+
     """
     quantity_for_peaks = maps["sqrt_ts"]
 
@@ -216,7 +264,7 @@ def estimate_exposure_reco_energy(dataset, spectral_model=None, normalize=True):
 
     Returns
     -------
-    exposure : `Map`
+    exposure : `~gammapy.maps.Map`
         Exposure map in reconstructed energy.
     """
     if spectral_model is None:
@@ -268,6 +316,26 @@ def resample_energy_edges(dataset, conditions={}):
     -------
     energy_edges : list of `~astropy.units.Quantity`
         Energy edges for the resampled energy axis.
+
+    Examples
+    --------
+    >>> from gammapy.datasets import Datasets, SpectrumDatasetOnOff
+    >>> from gammapy.estimators.utils import resample_energy_edges
+    >>>
+    >>> datasets = Datasets()
+    >>>
+    >>> for obs_id in [23523, 23526]:
+    ...     dataset = SpectrumDatasetOnOff.read(
+    ...         f"$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs{obs_id}.fits"
+    ...     )
+    ...     datasets.append(dataset)
+    >>>
+    >>> spectrum_dataset = Datasets(datasets).stack_reduce()
+    >>> # Resample the energy edges so the minimum sqrt_ts is 2
+    >>> resampled_energy_edges = resample_energy_edges(
+    ...     spectrum_dataset,
+    ...     conditions={"sqrt_ts_min": 2}
+    ... )
     """
     if not isinstance(dataset, (SpectrumDataset, SpectrumDatasetOnOff)):
         raise NotImplementedError(
@@ -464,20 +532,23 @@ def compute_lightcurve_doublingtime(lightcurve, flux_quantity="flux"):
 
 
 def get_edges_fixed_bins(fluxpoint, group_size, axis_name="energy"):
-    """Rebin the flux point to combine value adjacent bins
+    """Rebin the flux point to combine value adjacent bins.
 
     Parameters
     ----------
-    fluxpoint : `FluxPoints`
-        The flux point to rebin
+    fluxpoint : `~gammapy.estimators.FluxPoints`
+        The flux points object to rebin.
     group_size : int
-        Number of bins to combine
+        Number of bins to combine.
+    axis_name : str, optional
+        The axis name to combine along. Default is 'energy'.
 
     Returns
     -------
-    edges_min : `Quantity` or `Time`
-    edges_max : `Quantity` or `Time`
-        Low and High edges of the new axis
+    edges_min : `~astropy.units.Quantity` or `~astropy.time.Time`
+        Minimum bin edge for the new axis.
+    edges_max : `~astropy.units.Quantity` or `~astropy.time.Time`
+        Maximum bin edge for the new axis.
     """
 
     ax = fluxpoint.geom.axes[axis_name]
@@ -493,25 +564,27 @@ def get_edges_fixed_bins(fluxpoint, group_size, axis_name="energy"):
 
 
 def get_edges_min_ts(fluxpoint, ts_threshold, axis_name="energy"):
-    """Rebin the flux point to combine adjacent bins
-       till a minimum TS is obtained
+    """Rebin the flux point to combine adjacent bins until a minimum TS is obtained.
 
-    Note that to convert TS to significance, it is necessary to
-    take the number of degrees of freedom into account
+    Note that to convert TS to significance, it is necessary to take the number
+    of degrees of freedom into account.
 
 
     Parameters
     ----------
-    fluxpoint : `FluxPoints`
-            The flux point to rebin
-    sqrt_ts_threshold : float
-        The minimum significance desired
+    fluxpoint : `~gammapy.estimators.FluxPoints`
+        The flux points object to rebin.
+    ts_threshold : float
+        The minimum significance desired.
+    axis_name : str, optional
+        The axis name to combine along. Default is 'energy'.
 
     Returns
     -------
-    edges_min : `Quantity` or `Time`
-    edges_max : `Quantity` or `Time`
-        Low and High edges of the new axis
+    edges_min : `~astropy.units.Quantity` or `~astropy.time.Time`
+        Minimum bin edge for the new axis.
+    edges_max : `~astropy.units.Quantity` or `~astropy.time.Time`
+        Maximum bin edge for the new axis.
     """
     ax = fluxpoint.geom.axes[axis_name]
     nbin = ax.nbin
@@ -544,27 +617,50 @@ RESAMPLE_METHODS = {
 
 
 def get_rebinned_axis(fluxpoint, axis_name="energy", method=None, **kwargs):
-    """Get the rebinned axis for resampling
-     the flux point object along the mentioned axis.
+    """Get the rebinned axis for resampling the flux point object along the mentioned axis.
 
     Parameters
     ----------
-    fluxpoint : `gammapy.estimators.FluxPoints`
-        The fluxpoint object to rebin
+    fluxpoint : `~gammapy.estimators.FluxPoints`
+        The flux point object to rebin.
+    axis_name : str, optional
+        The axis name to combine along. Default is 'energy'.
     method : str
         The method to resample the axis. Supported options are
-        fixed_bins and min-ts
-    kwargs : Dict
-        keywords passed to get_edges_fixed_bins or
-        get_edges_min_ts
-        if method is fixed-bins, keyword should be group_size
-        if method is min-ts, keyword should be ts_threshold
-    axis_name : The axis name to combine along
+        'fixed_bins' and 'min-ts'.
+    kwargs : dict
+        Keywords passed to `get_edges_fixed_bins` or `get_edges_min_ts`.
+        If method is 'fixed-bins', keyword should be `group_size`.
+        If method is 'min-ts', keyword should be `ts_threshold`.
 
     Returns
     -------
-    axis_new : MapAxis or TimeMapAxis
-        The new axis
+    axis_new : `~gammapy.maps.MapAxis` or `~gammapy.maps.TimeMapAxis`
+        The new axis.
+
+    Examples
+    --------
+    >>> from gammapy.estimators.utils import get_rebinned_axis
+    >>> from gammapy.estimators import FluxPoints
+    >>>
+    >>> # Rebin lightcurve axis
+    >>> lc_1d = FluxPoints.read(
+    ...         "$GAMMAPY_DATA/estimators/pks2155_hess_lc/pks2155_hess_lc.fits",
+    ...         format="lightcurve",
+    ...     )
+    >>> # Rebin axis by combining adjacent bins as per the group_size
+    >>> new_axis = get_rebinned_axis(
+    ...     lc_1d, method="fixed-bins", group_size=2, axis_name="time"
+    ... )
+    >>>
+    >>> # Rebin HESS flux points axis
+    >>> fp = FluxPoints.read(
+    ...         "$GAMMAPY_DATA/estimators/crab_hess_fp/crab_hess_fp.fits"
+    ... )
+    >>> # Rebin according to a minimum significance
+    >>> axis_new = get_rebinned_axis(
+    ...     fp, method='min-ts', ts_threshold=4, axis_name='energy'
+    ... )
     """
     # TODO: Make fixed_bins and fixed_edges work for multidimensions
     if not fluxpoint.geom.axes.is_unidimensional:

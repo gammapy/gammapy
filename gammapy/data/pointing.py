@@ -319,7 +319,7 @@ class FixedPointingInfo:
         if self._time_start is not None:
             header["TSTART"] = time_to_fits_header(self._time_start, epoch=time_ref)
         if self._time_stop is not None:
-            header["TSTOP"] = time_to_fits_header(self._time_start, epoch=time_ref)
+            header["TSTOP"] = time_to_fits_header(self._time_stop, epoch=time_ref)
 
         if self._time_start is not None or self._time_stop is not None:
             header.update(time_ref_to_dict(time_ref))

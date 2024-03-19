@@ -50,8 +50,8 @@ class EffectiveAreaTable2D(IRF):
     >>> from gammapy.irf import EffectiveAreaTable2D
     >>> from gammapy.maps import MapAxis
     >>> energy_axis_true = MapAxis.from_energy_bounds(
-            "0.1 TeV", "100 TeV", nbin=30, name="energy_true"
-        )
+    ...        "0.1 TeV", "100 TeV", nbin=30, name="energy_true"
+    ...    )
     >>> offset_axis = MapAxis.from_bounds(0, 5, nbin=4, name="offset")
     >>> aeff = EffectiveAreaTable2D(axes=[energy_axis_true, offset_axis], data=1e10, unit="cm2")
     >>> print(aeff)
