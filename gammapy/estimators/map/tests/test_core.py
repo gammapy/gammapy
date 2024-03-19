@@ -2,12 +2,14 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
+from scipy import stats
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.time import Time
 from gammapy.data import GTI
 from gammapy.estimators import FluxMaps
+from gammapy.estimators.utils import joint_flux_maps
 from gammapy.maps import MapAxis, Maps, RegionGeom, TimeMapAxis, WcsNDMap
 from gammapy.modeling.models import (
     LogParabolaSpectralModel,
@@ -208,6 +210,46 @@ def test_map_properties(map_flux_estimate):
         fe.eflux_errp.quantity.value[:, 2, 2], [3.4538775e-11, 3.4538775e-11]
     )
     assert_allclose(fe.eflux_ul.quantity.value[:, 2, 2], [4.60517e-10, 4.60517e-10])
+
+
+def test_joint_flux_maps(map_flux_estimate, wcs_flux_map, reference_model):
+    model = SkyModel(PowerLawSpectralModel(amplitude="1e-10 cm-2s-1TeV-1", index=2))
+    fe = FluxMaps(data=map_flux_estimate, reference_model=model)
+    iE = 0
+    energy = fe.geom.axes[0].center[iE]
+
+    fe_new = joint_flux_maps([fe, fe])
+    ratio = model.spectral_model(
+        energy
+    ) / FluxMaps.reference_model_default.spectral_model(energy)
+    assert_allclose(fe_new.dnde.quantity, fe.dnde.quantity)
+    assert_allclose(
+        fe_new.dnde_err.quantity.value, fe.dnde_err.quantity.value / np.sqrt(2)
+    )
+    assert_allclose(
+        fe_new.norm.quantity.value[iE, :, :] / fe.norm.quantity.value[iE, :, :], ratio
+    )
+
+    fe_new = joint_flux_maps([fe, fe], reference_model=model)
+    assert_allclose(fe_new.dnde.quantity, fe.dnde.quantity)
+    assert_allclose(
+        fe_new.dnde_err.quantity.value, fe.dnde_err.quantity.value / np.sqrt(2)
+    )
+    assert_allclose(fe_new.norm.quantity, fe.norm.quantity)
+
+    fe = FluxMaps(wcs_flux_map, reference_model)
+    fe_new = joint_flux_maps([fe, fe], reference_model=reference_model)
+    assert_allclose(fe_new.dnde.quantity, fe.dnde.quantity)
+    assert_allclose(
+        fe_new.dnde_err.quantity.value, fe.dnde_err.quantity.value / np.sqrt(2)
+    )
+    assert_allclose(fe_new.norm.quantity, fe.norm.quantity)
+
+    ts = -2 * np.log(
+        stats.norm.pdf(0, loc=fe.dnde.data, scale=fe.dnde_err.data)
+        / stats.norm.pdf(fe.dnde.data, loc=fe.dnde.data, scale=fe.dnde_err.data)
+    )
+    assert_allclose(fe_new.ts, ts * 2)
 
 
 def test_flux_map_properties(wcs_flux_map, reference_model):
