@@ -775,38 +775,42 @@ def joint_flux_maps(maps, method="gaussian_errors", **kwargs):
     flux_maps : `FluxMaps`
         Joint flux map.
     """
+    if method == "gaussian_errors":
+        if isinstance(maps, FluxMaps):
+            geom = maps.dnde.sum_over_axes().geom
+            means = list(maps.dnde.copy().iter_by_image(keepdims=True))
+            sigmas = list(maps.dnde_err.copy().iter_by_image(keepdims=True))
+            mean = Map.from_geom(geom, data=means[0].data, unit=means[0].unit)
+            sigma = Map.from_geom(geom, data=sigmas[0].data, unit=sigmas[0].unit)
+        else:
+            means = [map_.dnde.copy() for map_ in maps]
+            sigmas = [map_.dnde_err.copy() for map_ in maps]
+            mean = means[0]
+            sigma = sigmas[0]
+        for k in range(1, len(means)):
 
-    if isinstance(maps, FluxMaps):
-        geom = maps.dnde.sum_over_axes().geom
-        means = list(maps.dnde.copy().iter_by_image(keepdims=True))
-        sigmas = list(maps.dnde_err.copy().iter_by_image(keepdims=True))
-        mean = Map.from_geom(geom, data=means[0].data, unit=means[0].unit)
-        sigma = Map.from_geom(geom, data=sigmas[0].data, unit=sigmas[0].unit)
+            mean_k = means[k].quantity.to_value(mean.unit)
+            sigma_k = sigmas[k].quantity.to_value(sigma.unit)
+
+            mask_valid = np.isfinite(mean) & np.isfinite(sigma) & (sigma.data != 0)
+            mask_valid_k = np.isfinite(mean_k) & np.isfinite(sigma_k) & (sigma_k != 0)
+            mask = mask_valid & mask_valid_k
+            mask_k = ~mask_valid & mask_valid_k
+
+            mean.data[mask] = (
+                (mean.data * sigma_k**2 + mean_k * sigma.data**2)
+                / (sigma.data**2 + sigma_k**2)
+            )[mask]
+            sigma.data[mask] = (
+                sigma.data * sigma_k / np.sqrt(sigma.data**2 + sigma_k**2)
+            )[mask]
+
+            mean.data[mask_k] = mean_k[mask_k]
+            sigma.data[mask_k] = sigma_k[mask_k]
     else:
-        means = [map_.dnde.copy() for map_ in maps]
-        sigmas = [map_.dnde_err.copy() for map_ in maps]
-        mean = means[0]
-        sigma = sigmas[0]
-    for k in range(1, len(means)):
-
-        mean_k = means[k].quantity.to_value(mean.unit)
-        sigma_k = sigmas[k].quantity.to_value(sigma.unit)
-
-        mask_valid = np.isfinite(mean) & np.isfinite(sigma) & (sigma.data != 0)
-        mask_valid_k = np.isfinite(mean_k) & np.isfinite(sigma_k) & (sigma_k != 0)
-        mask = mask_valid & mask_valid_k
-        mask_k = ~mask_valid & mask_valid_k
-
-        mean.data[mask] = (
-            (mean.data * sigma_k**2 + mean_k * sigma.data**2)
-            / (sigma.data**2 + sigma_k**2)
-        )[mask]
-        sigma.data[mask] = (
-            sigma.data * sigma_k / np.sqrt(sigma.data**2 + sigma_k**2)
-        )[mask]
-
-        mean.data[mask_k] = mean_k[mask_k]
-        sigma.data[mask_k] = sigma_k[mask_k]
+        raise ValueError(
+            f'Invalid method : {method}, available methods are : "gaussian_errors"'
+        )
 
     ts = -2 * np.log(
         stats.norm.pdf(0, loc=mean, scale=sigma)
