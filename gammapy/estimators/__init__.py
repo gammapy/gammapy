@@ -10,6 +10,7 @@ from .points import (
     FluxPoints,
     FluxPointsEstimator,
     FluxProfileEstimator,
+    LightCurve,
     LightCurveEstimator,
     SensitivityEstimator,
 )
@@ -22,6 +23,7 @@ __all__ = [
     "ExcessMapEstimator",
     "FluxMaps",
     "FluxPoints",
+    "LightCurve",
     "FluxPointsEstimator",
     "FluxProfileEstimator",
     "ImageProfile",
