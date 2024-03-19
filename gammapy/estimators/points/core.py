@@ -22,8 +22,13 @@ from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_standardise_units_copy
 from gammapy.utils.time import time_ref_to_dict
 from ..map.core import DEFAULT_UNIT, FluxMaps
+from ..utils import (
+    compute_lightcurve_doublingtime,
+    compute_lightcurve_fpp,
+    compute_lightcurve_fvar,
+)
 
-__all__ = ["FluxPoints"]
+__all__ = ["FluxPoints", "LightCurve"]
 
 log = logging.getLogger(__name__)
 
@@ -336,8 +341,15 @@ class FluxPoints(FluxMaps):
         """
         table = table_standardise_units_copy(table)
 
-        if format is None:
-            format = cls._table_guess_format(table)
+        guessed_format = cls._table_guess_format(table)
+
+        if format is not None and format != guessed_format:
+            raise ValueError(
+                "Requested format does not correspond to the table format."
+            )
+
+        else:
+            format = guessed_format
             log.info("Inferred format: " + format)
 
         if sed_type is None:
@@ -367,13 +379,24 @@ class FluxPoints(FluxMaps):
                 )
 
         meta = cls._get_meta_gadf(table)
-        return cls.from_maps(
-            maps=maps,
-            reference_model=reference_model,
-            meta=meta,
-            sed_type=sed_type,
-            gti=gti,
-        )
+
+        if format == "lightcurve":
+            return LightCurve.from_maps(
+                maps=maps,
+                reference_model=reference_model,
+                meta=meta,
+                sed_type=sed_type,
+                gti=gti,
+            )
+
+        else:
+            return cls.from_maps(
+                maps=maps,
+                reference_model=reference_model,
+                meta=meta,
+                sed_type=sed_type,
+                gti=gti,
+            )
 
     @staticmethod
     def _get_meta_gadf(table):
@@ -850,3 +873,79 @@ class FluxPoints(FluxMaps):
             fluxpoints.append(fp_new)
 
         return self.__class__.from_stack(fluxpoints, axis=axis_new)
+
+
+class LightCurve(FluxPoints):
+    """Specialized 'FluxPoints' heir class for lightcurves"""
+
+    @classmethod
+    def read(cls, filename, **kwargs):
+        kwargs.setdefault("format", "lightcurve")
+        return super().read(filename, **kwargs)
+
+    @classmethod
+    def from_table(cls, table, **kwargs):
+        table = table_standardise_units_copy(table)
+
+        if super()._table_guess_format(table) != "lightcurve":
+            raise ValueError("The input table is not a lightcurve!")
+
+        kwargs.setdefault("format", "lightcurve")
+
+        return super().from_table(table, **kwargs)
+
+    def to_stingray_lightcurve(self):
+        """Transform to a 'stingray.Lightcurve' object.
+        Only objects with a single energy bin are allowed.
+        """
+
+        if self.geom.axes["energy"].nbin > 1:
+            raise ValueError("Only lightcurves with 1 energy bin are supported.")
+
+        try:
+            from stingray import Lightcurve
+
+            counts = self.counts.data
+            axis = self.counts.geom.axes.index_data("dataset")
+            sum_on_dataset = np.nansum(counts, axis=axis).flatten()
+            time = self.geom.axes["time"].center
+            gti = self.gti
+            if gti is not None:
+                gti = np.vstack([gti.time_start.mjd, gti.time_stop.mjd]).T
+            tref = self.geom.axes["time"].reference_time.mjd
+
+            return Lightcurve(time, sum_on_dataset, gti=gti, mjdref=tref)
+
+        except ImportError:
+            raise ImportError("stingray is not installed in the environment.")
+
+    def write(self, filename, **kwargs):
+        format = kwargs.pop("format", None)
+        if format is None:
+            format = "lightcurve"
+        elif format not in ["lightcurve", "binned-time-series"]:
+            raise ValueError(
+                "Requested format is not supported as output for LightCurve"
+            )
+        kwargs.setdefault("format", format)
+        return super().write(filename, **kwargs)
+
+    def to_table(self, **kwargs):
+        format = kwargs.pop("format", None)
+        if format is None:
+            format = "lightcurve"
+        elif format not in ["lightcurve", "binned-time-series"]:
+            raise ValueError(
+                "Requested format is not supported as output for LightCurve"
+            )
+        kwargs.setdefault("format", format)
+        return super().to_table(**kwargs)
+
+    def fvar(self, flux_quantity="flux"):
+        return compute_lightcurve_fvar(self, flux_quantity)
+
+    def fpp(self, flux_quantity="flux"):
+        return compute_lightcurve_fpp(self, flux_quantity)
+
+    def doubling_time(self, flux_quantity="flux"):
+        return compute_lightcurve_doublingtime(self, flux_quantity)
