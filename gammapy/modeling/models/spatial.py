@@ -1277,7 +1277,7 @@ class TemplateSpatialModel(SpatialModel):
     interp_kwargs : dict
         Interpolation keyword arguments passed to `gammapy.maps.Map.interp_by_coord`.
         Default arguments are {'method': 'linear', 'fill_value': 0, "values_scale": "log"}.
-    Filename : str
+    filename : str
         Name of the map file.
     copy_data : bool
         Create a deepcopy of the map data or directly use the original. Default is True.
