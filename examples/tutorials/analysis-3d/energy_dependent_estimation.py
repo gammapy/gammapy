@@ -247,4 +247,4 @@ for i in range(len(lat_0)):
 plt.show()
 
 
-# sphinx_gallery_thumbnail_number = 2
+# sphinx_gallery_thumbnail_number = 1

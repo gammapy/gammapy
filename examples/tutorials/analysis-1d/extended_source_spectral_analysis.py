@@ -150,12 +150,13 @@ on_region = CircleSkyRegion(target_position, radius)
 # Define the geometries
 # ~~~~~~~~~~~~~~~~~~~~~
 #
-# This part is especially important. - We have to define first energy
-# axes. They define the axes of the resulting
-# `~gammapy.datasets.SpectrumDatasetOnOff`. In particular, we have to be
-# careful to the true energy axis: it has to cover a larger range than the
-# reconstructed energy one. - Then we define the region geometry itself
-# from the on region.
+# This part is especially important.
+#
+# -  We have to define first energy axes. They define the axes of the resulting
+#    `~gammapy.datasets.SpectrumDatasetOnOff`. In particular, we have to be
+#    careful to the true energy axis: it has to cover a larger range than the
+#    reconstructed energy one.
+# -  Then we define the region geometry itself from the on region.
 #
 
 # The binning of the final spectrum is defined here.
@@ -212,12 +213,12 @@ safe_mask_maker = SafeMaskMaker(methods=["aeff-max"], aeff_percent=10)
 # Perform the data reduction loop.
 # --------------------------------
 #
-# We can now run over selected observations. For each of them, we: -
-# create the `~gammapy.datasets.SpectrumDataset` - Compute the OFF via
-# the reflected background method and create a
-# `~gammapy.datasets.SpectrumDatasetOnOff` object - Run the safe mask
-# maker on it - Add the `~gammapy.datasets.SpectrumDatasetOnOff` to the
-# list.
+# We can now run over selected observations. For each of them, we:
+#
+# -   Create the `~gammapy.datasets.SpectrumDataset`
+# -  Compute the OFF via the reflected background method and create a `~gammapy.datasets.SpectrumDatasetOnOff` object
+# -  Run the safe mask maker on it
+# -  Add the `~gammapy.datasets.SpectrumDatasetOnOff` to the list.
 #
 
 # %%time

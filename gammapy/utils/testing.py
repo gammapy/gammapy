@@ -160,7 +160,7 @@ def assert_quantity_allclose(actual, desired, rtol=1.0e-7, atol=None, **kwargs):
     """Assert all-close for `~astropy.units.Quantity` objects.
 
     Notes
-    _____
+    -----
     Requires that ``unit`` is identical, not just that quantities
     are allclose taking different units into account.
 
