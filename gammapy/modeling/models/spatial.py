@@ -1323,7 +1323,10 @@ class TemplateSpatialModel(SpatialModel):
                 data_sum = map.data.sum(axis=(1, 2)).reshape((-1, 1, 1))
 
             data = np.divide(
-                map.data, data_sum, out=np.zeros_like(map.data), where=data_sum != 0
+                map.data.astype(float),
+                data_sum,
+                out=np.zeros_like(map.data, dtype=float),
+                where=data_sum != 0,
             )
             data /= map.geom.solid_angle().to_value("sr")
             map = map.copy(data=data, unit="sr-1")
