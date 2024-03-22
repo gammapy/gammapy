@@ -95,8 +95,7 @@ class SourceCatalogObjectFermiPCBase(SourceCatalogObject, abc.ABC):
 
     def _info_spectral_points(self):
         ss = "\n*** Spectral points ***\n\n"
-        flux_points_table = self.flux_points_table
-        if flux_points_table is None:
+        if self.flux_points_table is None:
             ss += "No spectral points available.\n"
             return ss
         lines = format_flux_points_table(self.flux_points_table).pformat(
@@ -135,12 +134,11 @@ class SourceCatalogObjectFermiPCBase(SourceCatalogObject, abc.ABC):
     @property
     def flux_points(self):
         """Flux points (`~gammapy.estimators.FluxPoints`)."""
-        flux_points_table = self.flux_points_table
-        if flux_points_table is None:
+        if self.flux_points_table is None:
             return None
 
         return FluxPoints.from_table(
-            table=flux_points_table,
+            table=self.flux_points_table,
             reference_model=self.sky_model(),
             format="gadf-sed",
         )
