@@ -55,7 +55,7 @@ class PSFMap(IRFMap):
 
     Examples
     --------
-    ::
+    .. testcode::
 
         from astropy.coordinates import SkyCoord
         from gammapy.maps import WcsGeom, MapAxis

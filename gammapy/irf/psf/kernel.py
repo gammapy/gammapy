@@ -23,7 +23,7 @@ class PSFKernel:
 
     Examples
     --------
-    ::
+    .. testcode::
 
         from gammapy.maps import Map, WcsGeom, MapAxis
         from gammapy.irf import PSFMap
@@ -31,7 +31,7 @@ class PSFKernel:
 
         # Define energy axis
         energy_axis_true = MapAxis.from_energy_bounds(
-            "0.1 TeV", "10 TeV", nbin=4, name="energy_true
+            "0.1 TeV", "10 TeV", nbin=3, name="energy_true"
         )
 
         # Create WcsGeom and map
@@ -50,7 +50,7 @@ class PSFKernel:
         # Do the convolution
         some_map_convolved = some_map.convolve(kernel)
 
-        some_map_convolved.plot_grid();
+        some_map_convolved.plot_grid() # doctest: +SKIP
     """
 
     def __init__(self, psf_kernel_map, normalize=True):

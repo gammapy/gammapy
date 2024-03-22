@@ -51,7 +51,7 @@ def add_colorbar(img, ax, axes_loc=None, **kwargs):
 
     Examples
     --------
-    ::
+    .. testcode::
 
         from gammapy.maps import Map
         from gammapy.visualization import add_colorbar
@@ -70,7 +70,7 @@ def add_colorbar(img, ax, axes_loc=None, **kwargs):
         fig = plt.figure(figsize=(6, 3))
         ax = fig.add_subplot(111)
         map_.sum_over_axes().plot(ax=ax, add_cbar=True, axes_loc=axes_loc,
-                                  kwargs_colorbar=kwargs_colorbar)
+                                  kwargs_colorbar=kwargs_colorbar)  # doctest: +SKIP
 
     """
     kwargs.setdefault("use_gridspec", True)
