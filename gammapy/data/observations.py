@@ -378,6 +378,8 @@ class Observation:
     @property
     def observatory_earth_location(self):
         """Observatory location as an `~astropy.coordinates.EarthLocation` object."""
+        if self._location is None:
+            return self.meta.location
         return self._location
 
     @lazyproperty
