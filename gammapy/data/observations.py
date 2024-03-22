@@ -97,6 +97,7 @@ class Observation:
             if meta is None:
                 meta = ObservationMetaData.from_header(obs_info)
 
+
         self.obs_id = obs_id
         self.aeff = aeff
         self.edisp = edisp
@@ -378,6 +379,8 @@ class Observation:
     @property
     def observatory_earth_location(self):
         """Observatory location as an `~astropy.coordinates.EarthLocation` object."""
+        if self._location is None:
+            return self.meta.location
         return self._location
 
     @lazyproperty
@@ -554,7 +557,6 @@ class Observation:
             Path for the output file.
         overwrite : bool, optional
             Overwrite existing file. Default is False.
-        format : {"gadf"}
             Output format, currently only "gadf" is supported. Default is "gadf".
         include_irfs : bool, optional
             Whether to include irf components in the output file. Default is True.
