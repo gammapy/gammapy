@@ -870,6 +870,13 @@ class FluxPoints(FluxMaps):
 class LightCurve(FluxPoints):
     """Specialized 'FluxPoints' heir class for lightcurves"""
 
+    def __init__(
+        self, data, reference_model, meta=None, gti=None, filter_success_nan=True
+    ):
+        if "time" not in data["norm"].geom.axes_names:
+            raise ValueError("Trying to build a lightcurve without time axis!")
+        super().__init__(data, reference_model, meta, gti, filter_success_nan)
+
     @classmethod
     def read(cls, filename, **kwargs):
         kwargs.setdefault("format", "lightcurve")
