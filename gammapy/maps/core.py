@@ -108,7 +108,9 @@ class Map(abc.ABC):
             raise TypeError("Map data must be a Numpy array. Set unit separately")
 
         if not value.shape == self.geom.data_shape:
-            value = value.reshape(self.geom.data_shape)
+            raise ValueError(
+                f"Input shape {value.shape} does not match expected shape from geometry {self.geom.data_shape}"
+            )
 
         self._data = value
 
