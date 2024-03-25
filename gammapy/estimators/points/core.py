@@ -341,16 +341,8 @@ class FluxPoints(FluxMaps):
         """
         table = table_standardise_units_copy(table)
 
-        guessed_format = cls._table_guess_format(table)
-
-        if format is not None and format != guessed_format:
-            raise ValueError(
-                "Requested format does not correspond to the table format."
-            )
-
-        else:
-            format = guessed_format
-            log.info("Inferred format: " + format)
+        format = cls._table_guess_format(table)
+        log.info("Inferred format: " + format)
 
         if sed_type is None:
             sed_type = table.meta.get("SED_TYPE", None)
@@ -940,6 +932,10 @@ class LightCurve(FluxPoints):
             )
         kwargs.setdefault("format", format)
         return super().to_table(**kwargs)
+
+    def plot(self, **kwargs):
+        kwargs.setdefault("axis_name", "time")
+        return super().plot(**kwargs)
 
     def fvar(self, flux_quantity="flux"):
         return compute_lightcurve_fvar(self, flux_quantity)
