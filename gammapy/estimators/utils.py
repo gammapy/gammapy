@@ -24,8 +24,6 @@ __all__ = [
     "compute_lightcurve_fvar",
     "compute_lightcurve_fpp",
     "compute_lightcurve_doublingtime",
-    "find_peaks_in_flux_map",
-    "get_rebinned_axis",
 ]
 
 
