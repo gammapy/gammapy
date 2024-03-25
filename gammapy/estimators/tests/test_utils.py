@@ -12,7 +12,6 @@ from gammapy.estimators.utils import (
     compute_lightcurve_doublingtime,
     compute_lightcurve_fpp,
     compute_lightcurve_fvar,
-    compute_structure_function,
     find_peaks,
     find_peaks_in_flux_map,
     get_rebinned_axis,
@@ -218,11 +217,3 @@ def test_get_rebinned_axis():
 
     with pytest.raises(ValueError):
         get_rebinned_axis(lc_1d, method="error", value=2, axis_name="time")
-
-
-def test_structure_function():
-    lightcurve = lc()
-    sf, distances = compute_structure_function(lightcurve)
-
-    assert_allclose(sf, [[[[4.0e-22]], [[9.0e-24]]]])
-    assert_allclose(distances, [388800.0] * u.s)
