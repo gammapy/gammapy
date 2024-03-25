@@ -11,6 +11,7 @@ from gammapy.stats.variability import (
     compute_flux_doubling,
     compute_fpp,
     compute_fvar,
+    structure_function,
 )
 from gammapy.utils.testing import assert_quantity_allclose
 
@@ -143,3 +144,51 @@ def test_lightcurve_flux_doubling():
         [2271.34711286, 21743.98603654] * u.s,
     )
     assert_allclose(dtime_err, [425.92375713, 242.80234065] * u.s)
+
+
+def test_structure_function():
+    flux = np.array(
+        [
+            [1e-11, 4e-12],
+            [3e-11, 2.5e-12],
+            [1e-11, 1e-12],
+            [0.8e-11, 0.8e-12],
+            [1e-11, 1e-12],
+        ]
+    )
+    flux_err = np.array(
+        [
+            [0.1e-11, 0.4e-12],
+            [0.3e-11, 0.2e-12],
+            [0.1e-11, 0.1e-12],
+            [0.08e-11, 0.8e-12],
+            [0.1e-11, 0.1e-12],
+        ]
+    )
+    time = (
+        np.array(
+            [6.31157019e08, 6.31160619e08, 6.31164219e08, 6.31171419e08, 6.31178419e08]
+        )
+        * u.s
+    )
+
+    sf, distances = structure_function(flux, flux_err, time)
+
+    assert_allclose(
+        sf,
+        [
+            [4.00000000e-22, 2.25000000e-24],
+            [4.00000000e-24, 4.00000000e-26],
+            [2.00000000e-24, 8.18545455e-24],
+            [4.84000000e-22, 2.89000000e-24],
+            [0.00000000e00, 0.00000000e00],
+            [4.00000000e-24, 1.02400000e-23],
+            [4.00000000e-22, 2.25000000e-24],
+            [0.00000000e00, 9.00000000e-24],
+        ],
+    )
+
+    assert_allclose(
+        distances,
+        [3600.0, 7000.0, 7200.0, 10800.0, 14200.0, 14400.0, 17800.0, 21400.0] * u.s,
+    )
