@@ -308,14 +308,14 @@ class TestSourceCatalogObjectHGPSComponent:
 
 
 class TestSourceCatalogLargeScaleHGPS:
-    def setup(self):
+    @pytest.fixture(scope="class")
+    def model(self):
         table = Table()
         table["GLON"] = [-30, -10, 10, 20] * u.deg
         table["Surface_Brightness"] = [0, 1, 10, 0] * u.Unit("cm-2 s-1 sr-1")
         table["GLAT"] = [-1, 0, 1, 0] * u.deg
         table["Width"] = [0.4, 0.5, 0.3, 1.0] * u.deg
-        self.table = table
-        self.model = SourceCatalogLargeScaleHGPS(table)
+        return SourceCatalogLargeScaleHGPS(table)
 
     def test_evaluate(self):
         x = np.linspace(-100, 20, 5)
