@@ -1,12 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 import scipy.stats as stats
+from gammapy.utils.random import get_random_state
 
 __all__ = [
     "compute_fvar",
     "compute_fpp",
     "compute_chisq",
     "compute_flux_doubling",
+    "TKAlgorithm",
 ]
 
 
@@ -228,3 +230,100 @@ def compute_flux_doubling(flux, flux_err, coords, axis=0):
     }
 
     return doubling_dict
+
+
+def TKAlgorithm(
+    power_spectrum,
+    npoints,
+    spacing,
+    type="discrete",
+    random_state="random-seed",
+    normalization=1.0,
+):
+    """Implementation of the Timmer-Koenig algorithm to simulate a time series from a power spectrum.
+
+    Parameters
+    ----------
+    power_spectrum : float, `~numpy.ndarray`
+        Power spectrum used to generate the time series. It can either be presented analytically, as a parameter or set
+        of parameters of a function, or as a `~numpy.ndarray` describing the spectrum in a discrete manner.
+    npoints : float
+        Number of points in the output time series.
+    spacing : float
+        Sample spacing, inverse of the sampling rate.
+    type : {"discrete", "powerlaw", "white"}
+        Type of input periodogram. For `~numpy.ndarray` inputs, the type is "discrete". Default is "discrete".
+        If 'type' = "discrete", 'powerspectrum' is expected to be  a `~numpy.ndarray` containing the discrete spectrum.
+        If 'type' = "powerlaw", 'powerspectrum' is expected to be  a float representing the power index.
+        If 'type' = "white", 'powerspectrum' is expected to be  a float representing the standard deviation.
+    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+        Defines random number generator initialisation.
+        Passed to `~gammapy.utils.random.get_random_state`. Default is "random-seed".
+    normalization : float
+        Normalization factor to be applied to the final time series
+
+    Returns
+    -------
+    time_series: `~numpy.ndarray`
+        Simulated time series.
+
+    References
+    ----------
+    ..[Timmer1995]"On generating power law noise", J. Timmer and M, Konig, section 3.
+    """
+    if isinstance(power_spectrum, np.ndarray) and type != "discrete":
+        raise ValueError(
+            "Power spectrum input is an array but the requested type is not 'discrete'."
+        )
+
+    random_state = get_random_state(random_state)
+
+    frequencies = np.fft.fftfreq(npoints, spacing)
+
+    # To obtain real data only the positive or negative part of the frequency is necessary.
+    real_frequencies = np.sort(np.abs(frequencies[frequencies < 0]))
+
+    if type == "discrete":
+        periodogram = power_spectrum
+    elif type == "powerlaw":
+        periodogram = (1 / real_frequencies) ** power_spectrum
+    elif type == "white":
+        periodogram = np.full_like(real_frequencies, power_spectrum)
+    else:
+        raise ValueError("Power spectrum type not accepted!")
+
+    random_numbers = random_state.normal(
+        0, 1, len(periodogram) - 1
+    ) + 1j * random_state.normal(0, 1, len(periodogram) - 1)
+    fourier_coeffs = np.sqrt(0.5 * periodogram[:-1]) * random_numbers
+
+    # Nyquist frequency component handling
+    if npoints % 2 == 0:
+        fourier_coeffs = np.concatenate(
+            [
+                fourier_coeffs,
+                np.sqrt(0.5 * periodogram[-1:]) * random_state.normal(0, 1),
+            ]
+        )
+    else:
+        fourier_coeffs = np.concatenate(
+            [
+                fourier_coeffs,
+                np.sqrt(0.5 * periodogram[-1:])
+                * (random_state.normal(0, 1) + 1j * random_state.normal(0, 1)),
+            ]
+        )
+
+    # Complex conjugate for negative frequencies
+    fourier_coeffs = np.concatenate(
+        [fourier_coeffs, np.conjugate(fourier_coeffs[-2::-1])]
+    )
+    fourier_coeffs = np.insert(fourier_coeffs, 0, 0)
+    time_series = np.fft.ifft(fourier_coeffs).real
+
+    if time_series.max() < np.abs(time_series.min()):
+        time_series = -time_series
+
+    time_series = (0.5 + 0.5 * time_series / time_series.max()) * normalization
+
+    return time_series
