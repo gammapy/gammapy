@@ -197,6 +197,9 @@ def test_structure_function():
 
 def test_tk():
     time_series = TKAlgorithm(3, 20, 1, type="powerlaw")
+    time_series2 = TKAlgorithm(3, 21, 1, type="white", normalization=5)
 
     assert len(time_series) == 20
     assert time_series.max() == 1
+    assert len(time_series2) == 20
+    assert time_series2.max() == 5
