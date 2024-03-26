@@ -252,7 +252,10 @@ def TKAlgorithm(
     spacing : float
         Sample spacing, inverse of the sampling rate.
     type : {"discrete", "powerlaw", "white"}
-        Type of input periodogram. For `~numpy.ndarray` inputs, the type is "discrete". Default is "discrete"
+        Type of input periodogram. For `~numpy.ndarray` inputs, the type is "discrete". Default is "discrete".
+        If 'type' = "discrete", 'powerspectrum' is expected to be  a `~numpy.ndarray` containing the discrete spectrum.
+        If 'type' = "powerlaw", 'powerspectrum' is expected to be  a float representing the power index.
+        If 'type' = "white", 'powerspectrum' is expected to be  a float representing the standard deviation.
     random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
         Defines random number generator initialisation.
         Passed to `~gammapy.utils.random.get_random_state`. Default is "random-seed".
@@ -296,7 +299,6 @@ def TKAlgorithm(
 
     # Nyquist frequency component handling
     if npoints % 2 == 0:
-        # For even number of data points
         fourier_coeffs = np.concatenate(
             [
                 fourier_coeffs,
@@ -304,7 +306,6 @@ def TKAlgorithm(
             ]
         )
     else:
-        # For odd number of data points
         fourier_coeffs = np.concatenate(
             [
                 fourier_coeffs,
@@ -318,8 +319,6 @@ def TKAlgorithm(
         [fourier_coeffs, np.conjugate(fourier_coeffs[-2::-1])]
     )
     fourier_coeffs = np.insert(fourier_coeffs, 0, 0)
-
-    # Inverse Fourier Transform to obtain time series
     time_series = np.fft.ifft(fourier_coeffs).real
 
     if time_series.max() < np.abs(time_series.min()):
