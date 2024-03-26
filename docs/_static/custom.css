@@ -50,7 +50,7 @@
 body {
   color: rgb(30, 37, 74);
   font-family: "Fira Sans", sans-serif;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 400;
   line-height: 20px;
 }
@@ -389,3 +389,40 @@ background-color: #d9edf7 !important;
 a.dropdown-item {
   color : black !important;
 }
+
+.nav-internal {
+  color : white !important;
+}
+
+.show {
+  color : white !important;
+}
+
+.btn {
+  color: white;
+}
+
+.dropdown-toggle {
+  color: white !important;
+  font-size: 14px;
+}
+
+.svg-inline--fa {
+  color: lightgrey ;
+}
+.fa-bars {
+  color: white !important;
+}
+
+#pst-page-navigation-heading-2{
+  color: red;
+}
+
+.bd-page-width {
+  max-width: 100rem;
+}
+
+.sphinx-bs{
+  color : white !important ;
+}
+
