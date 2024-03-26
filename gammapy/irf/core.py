@@ -650,7 +650,7 @@ class IRFMap:
         self._irf_map = irf_map
         self.exposure_map = exposure_map
         # TODO: only allow for limited set of additional axes?
-        irf_map.geom.axes[:2].assert_names(self.required_axes)
+        irf_map.geom.axes.assert_names(self.required_axes, allow_extra=True)
 
     @property
     @abc.abstractmethod

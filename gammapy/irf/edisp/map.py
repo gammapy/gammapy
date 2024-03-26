@@ -337,7 +337,7 @@ class EDispKernelMap(IRFMap):
             Energy dispersion kernel map.
         """
         # TODO: allow only list of additional axes
-        geom.axes[:2].assert_names(cls.required_axes)
+        geom.axes.assert_names(cls.required_axes, allow_extra=True)
         geom_exposure = geom.squash(axis_name="energy")
         exposure = Map.from_geom(geom_exposure, unit="m2 s")
 
