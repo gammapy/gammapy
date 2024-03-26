@@ -733,6 +733,26 @@ def test_axes_basics():
     assert new_axes != axes
 
 
+def test_map_axes_assert_names():
+    axis_a = MapAxis([1, 2, 3], name="axis_a")
+    axis_b = MapAxis([1, 2, 3, 4], name="axis_b")
+    axis_c = LabelMapAxis(["a", "b"], name="axis_c")
+
+    axes = MapAxes([axis_a, axis_b, axis_c])
+
+    axes.assert_names(["axis_a", "axis_b", "axis_c"])
+    axes.assert_names(["axis_a", "axis_b"], allow_extra=True)
+
+    with pytest.raises(ValueError):
+        axes.assert_names(["axis_a", "axis_b"])
+
+    with pytest.raises(ValueError):
+        axes.assert_names(["axis_c", "axis_b", "axis_a"])
+
+    with pytest.raises(ValueError):
+        axes.assert_names(["axis_b"], allow_extra=True)
+
+
 def test_axes_getitem():
     axis1 = MapAxis.from_bounds(1, 4, 3, name="a1")
     axis2 = axis1.copy(name="a2")
