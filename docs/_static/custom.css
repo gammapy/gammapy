@@ -1,6 +1,7 @@
  html {
   /* Font features used in this theme */
-
+  --pst-color-surface: #f3f4f5;
+  --pst-color-border: #d1d5da;
   /* Base font size - applied at body/html level */
   --pst-font-size-base: 14px;
 
@@ -64,6 +65,7 @@ p {
 .navbar {
   background-color: var(--gammapy-secondary) !important;
   color: white;
+
 }
 
 .navbar-light .navbar-nav li a.nav-link {
@@ -426,3 +428,13 @@ a.dropdown-item {
   color : white !important ;
 }
 
+.search-button-field {
+  align-items: center;
+  background-color: var(--pst-color-surface);
+  border: 1px solid var(--pst-color-border);
+  border-radius: 1.5em;
+  /*color: var(--pst-color-text-muted);*/
+  display: inline-flex;
+  padding: .5em;
+  background: var(--gammapy-secondary);
+}
