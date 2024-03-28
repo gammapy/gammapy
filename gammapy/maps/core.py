@@ -108,9 +108,12 @@ class Map(abc.ABC):
             raise TypeError("Map data must be a Numpy array. Set unit separately")
 
         if not value.shape == self.geom.data_shape:
-            raise ValueError(
-                f"Input shape {value.shape} does not match expected shape from geometry {self.geom.data_shape}"
-            )
+            try:
+                value = np.broadcast_to(value, self.geom.data_shape, subok=True)
+            except Exception:
+                raise ValueError(
+                    f"Input shape {value.shape} is not compatible with shape from geometry {self.geom.data_shape}"
+                ) from None
 
         self._data = value
 
