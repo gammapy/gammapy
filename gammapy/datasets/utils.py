@@ -39,7 +39,6 @@ def apply_edisp(input_map, edisp):
     ...     axes=[axis],
     ...     frame="galactic"
     ... )
-    >>> m.data = np.arange(m.data.size, dtype=float).reshape(m.geom.data_shape)
     >>> e_true = m.geom.axes[0]
     >>> e_reco = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3)
     >>> edisp = EDispKernel.from_diagonal_response(energy_axis_true=e_true, energy_axis=e_reco)
