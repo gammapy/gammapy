@@ -45,6 +45,7 @@ from gammapy.modeling.models import (
     SkyModel,
     UniformPrior,
 )
+from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 from gammapy.utils.types import JsonQuantityEncoder
 
@@ -164,10 +165,10 @@ def get_psf():
 def get_edisp(geom, geom_etrue):
     filename = "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz"
     edisp2d = EnergyDispersion2D.read(filename, hdu="EDISP")
-    energy = geom.axes["energy"].edges
-    energy_true = geom_etrue.axes["energy_true"].edges
+    energy_axis = geom.axes["energy"]
+    energy_axis_true = geom_etrue.axes["energy_true"]
     edisp_kernel = edisp2d.to_edisp_kernel(
-        offset="1.2 deg", energy=energy, energy_true=energy_true
+        offset="1.2 deg", energy_axis=energy_axis, energy_axis_true=energy_axis_true
     )
     edisp = EDispKernelMap.from_edisp_kernel(edisp_kernel)
     return edisp
@@ -541,21 +542,22 @@ def test_downsample_energy(geom, geom_etrue):
     mask.data[1:] = True
     counts += 1
     exposure = Map.from_geom(geom_etrue, unit="m2s")
-    edisp = EDispKernelMap.from_gauss(geom.axes[0], geom_etrue.axes[0], 0.1, 0.0)
-    dataset = MapDataset(
-        counts=counts,
-        exposure=exposure,
-        mask_safe=mask,
-        edisp=edisp,
-    )
-    dataset_downsampled = dataset.downsample(2, axis_name="energy")
-    dataset_resampled = dataset.resample_energy_axis(geom.axes[0].downsample(2))
+    with pytest.raises(GammapyDeprecationWarning):
+        edisp = EDispKernelMap.from_gauss(geom.axes[0], geom_etrue.axes[0], 0.1, 0.0)
+        dataset = MapDataset(
+            counts=counts,
+            exposure=exposure,
+            mask_safe=mask,
+            edisp=edisp,
+        )
+        dataset_downsampled = dataset.downsample(2, axis_name="energy")
+        dataset_resampled = dataset.resample_energy_axis(geom.axes[0].downsample(2))
 
-    assert dataset_downsampled.edisp.edisp_map.data.shape == (3, 1, 1, 2)
-    assert_allclose(
-        dataset_downsampled.edisp.edisp_map.data[:, :, 0, 0],
-        dataset_resampled.edisp.edisp_map.data[:, :, 0, 0],
-    )
+        assert dataset_downsampled.edisp.edisp_map.data.shape == (3, 1, 1, 2)
+        assert_allclose(
+            dataset_downsampled.edisp.edisp_map.data[:, :, 0, 0],
+            dataset_resampled.edisp.edisp_map.data[:, :, 0, 0],
+        )
 
 
 @requires_data()
