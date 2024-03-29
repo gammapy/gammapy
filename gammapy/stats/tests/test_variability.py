@@ -201,5 +201,5 @@ def test_tk():
 
     assert len(time_series) == 20
     assert time_series.max() == 1
-    assert len(time_series2) == 20
+    assert len(time_series2) == 21
     assert time_series2.max() == 5

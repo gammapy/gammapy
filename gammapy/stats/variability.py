@@ -358,6 +358,9 @@ def TimmerAlgorithm(
                 np.sqrt(0.5 * periodogram[-1:]) * random_state.normal(0, 1),
             ]
         )
+        fourier_coeffs = np.concatenate(
+            [fourier_coeffs, np.conjugate(fourier_coeffs[-2::-1])]
+        )
     else:
         fourier_coeffs = np.concatenate(
             [
@@ -366,11 +369,10 @@ def TimmerAlgorithm(
                 * (random_state.normal(0, 1) + 1j * random_state.normal(0, 1)),
             ]
         )
+        fourier_coeffs = np.concatenate(
+            [fourier_coeffs, np.conjugate(fourier_coeffs[-1::-1])]
+        )
 
-    # Complex conjugate for negative frequencies
-    fourier_coeffs = np.concatenate(
-        [fourier_coeffs, np.conjugate(fourier_coeffs[-2::-1])]
-    )
     fourier_coeffs = np.insert(fourier_coeffs, 0, 0)
     time_series = np.fft.ifft(fourier_coeffs).real
 
