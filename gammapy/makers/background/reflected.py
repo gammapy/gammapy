@@ -451,6 +451,9 @@ class ReflectedRegionsBackgroundMaker(Maker):
         if exclusion_mask and not exclusion_mask.is_mask:
             raise ValueError("Exclusion mask must contain boolean values")
 
+        if exclusion_mask and not exclusion_mask.geom.is_image:
+            raise ValueError("Exclusion mask must only contain spatial dimension")
+
         self.exclusion_mask = exclusion_mask
 
         if region_finder is None:
