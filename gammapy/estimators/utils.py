@@ -770,9 +770,10 @@ def joint_flux_maps(maps, method="gaussian_errors", **kwargs):
         * gaussian_errors :
             Under the gaussian error approximation the likelihood is given by the gaussian distibution.
             The product of gaussians is also a gaussian so can derive dnde, dnde_err, and ts.
+
     Returns
     -------
-    flux_maps : `FluxMaps`
+    flux_maps : `~gammapy.estimators.FluxMaps`
         Joint flux map.
     """
     if method == "gaussian_errors":
