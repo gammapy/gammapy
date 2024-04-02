@@ -141,7 +141,6 @@ class EnergyDispersion2D(IRF):
 
         offset = Angle(offset)
 
-        # TODO: expect directly MapAxis here?
         if energy is None:
             energy_axis = self.axes["energy_true"].copy(name="energy")
         else:
