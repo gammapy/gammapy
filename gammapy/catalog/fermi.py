@@ -1727,5 +1727,9 @@ class SourceCatalog3PC(SourceCatalog):
                 models.append(sky_model)
         return models
 
+    @property
     def _get_source_name_key(self):
         return "NickName"
+
+    def _get_name_spectral(self, data):
+        return f"PSR{data[self._source_name_key].strip()}"
