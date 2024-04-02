@@ -37,7 +37,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           body: |
             Gammapy is a Python package for gamma-ray astronomy. See [changelog for this release](https://github.com/gammapy/gammapy/blob/main/docs/release-notes/${{ github.ref_name }}.rst).
