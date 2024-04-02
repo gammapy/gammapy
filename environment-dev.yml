@@ -16,7 +16,7 @@ variables:
 
 dependencies:
   # core dependencies
-  - python=3.9
+  - python=3.11
   - pip
   - astropy
   - click
@@ -31,7 +31,7 @@ dependencies:
   - extension-helpers
   # test dependencies
   - codecov
-  - pytest=6
+  - pytest
   - pytest-astropy
   - pytest-cov
   - pytest-xdist
@@ -62,11 +62,11 @@ dependencies:
   - sphinx
   - sphinx-astropy
   - sphinx-click
-  - sphinx-gallery<0.13
-  - sphinx-panels
+  - sphinx-gallery
+  - sphinx-design
   - sphinx-copybutton
   - tox
-  - pydata-sphinx-theme==0.15.2
+  - pydata-sphinx-theme
   - pre-commit
   - twine
   - yamllint

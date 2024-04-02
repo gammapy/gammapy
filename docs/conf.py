@@ -124,11 +124,12 @@ extensions.extend(
         "sphinx.ext.mathjax",
         "sphinx_gallery.gen_gallery",
         "sphinx.ext.doctest",
-        "sphinx_panels",
+        "sphinx_design",
         "sphinx_copybutton",
         "sphinx_automodapi.smart_resolver",
     ]
 )
+print(extensions)
 
 nbsphinx_execute = "never"
 copybutton_prompt_text = r">>> |\.\.\. |\$ |In \[\d*\]: | {2,5}\.\.\.: | {5,8}: "
@@ -230,12 +231,10 @@ html_theme_options = {
         "json_url": "https://docs.gammapy.org/stable/switcher.json",
         "version_match": switch_version,
     },
-    "navbar_end": ["version-switcher", "navbar-icon-links"],
+    "navbar_end": ["version-switcher", "theme-switcher", "navbar-icon-links"],
+    "navigation_with_keys": True,
 }
 
-# Theme style
-# html_style = ""
-# html_css_files = ["gammapy.css"]
 
 gammapy_sphinx_ext_activate()
 
@@ -270,7 +269,7 @@ automodsumm_inherited_members = True
 # http://www.sphinx-doc.org/en/stable/config.html#confval-suppress_warnings
 suppress_warnings = ["ref.citation"]
 
-branch = "master" if switch_version == "dev" else f"v{switch_version}"
+branch = "main" if switch_version == "dev" else f"v{switch_version}"
 
 binder_config = {
     # Required keys
@@ -312,7 +311,7 @@ sphinx_gallery_conf = {
     "backreferences_dir": "gen_modules/backreferences",
     "doc_module": ("gammapy",),
     "exclude_implicit_doc": {},
-    "filename_pattern": "\.py",
+    "filename_pattern": r"\.py",
     "reset_modules": ("matplotlib",),
     "within_subsection_order": FileNameSortKey,
     "download_all_examples": True,
@@ -332,3 +331,7 @@ html_static_path = ["_static"]
 html_css_files = [
     "custom.css",
 ]
+
+html_context = {
+    "default_mode": "light",
+}
