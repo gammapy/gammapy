@@ -345,7 +345,6 @@ class IRF(metaclass=abc.ABCMeta):
         axis = self.axes[axis_name]
         axis_idx = self.axes.index(axis_name)
 
-        # TODO: the broadcasting should be done by axis.center, axis.bin_width etc.
         shape = [1] * len(self.axes)
         shape[axis_idx] = -1
 
