@@ -129,7 +129,7 @@ For a larger code block it is also possible to utilise the following syntax.
 
         Examples
         --------
-        ::
+        .. testcode::
 
             from gammapy.maps import MapAxis
             from gammapy.irf import EnergyDispersion2D

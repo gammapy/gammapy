@@ -162,7 +162,7 @@ class ParametricPSF(PSF):
             column = table[spec[name]]
             values = column.data[0].transpose()
 
-            # TODO: this fixes some files where sigma is written as zero
+            # This fixes some files where sigma is written as zero
             if "sigma" in name:
                 values[values == 0] = 1.0
 
