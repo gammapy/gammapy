@@ -21,9 +21,9 @@ There are various ways for users to install Gammapy. **We recommend setting up a
 environment using either conda or mamba.** Here are two methods to quickly install Gammapy.
 
 .. grid:: 1 2 2 2
-   :gutter: 2
+    :gutter: 2
 
-    .. grid-item:: Working with conda?
+    .. grid-item-card:: Working with conda?
 
         Gammapy can be installed with `Anaconda <https://docs.continuum.io/anaconda/>`__:
 
@@ -31,7 +31,7 @@ environment using either conda or mamba.** Here are two methods to quickly insta
 
             $ conda install -c conda-forge gammapy
 
-    .. grid-item:: Prefer pip?
+    .. grid-item-card:: Prefer pip?
 
         Gammapy can be installed via pip from `PyPI <https://pypi.org/project/gammapy/>`__.
 
@@ -39,7 +39,7 @@ environment using either conda or mamba.** Here are two methods to quickly insta
 
             $ pip install gammapy
 
-    .. grid-item:: In-depth instructions?
+    .. grid-item-card:: In-depth instructions?
         :columns: 12
 
         Update existing version? Working with virtual environments? Installing a specific version? Check the advanced
