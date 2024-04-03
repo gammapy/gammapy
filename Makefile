@@ -17,7 +17,6 @@ help:
 	@echo '     test               Run pytest'
 	@echo '     test-cov           Run pytest with coverage'
 	@echo ''
-	@echo '     docs-sphinx        Build docs (Sphinx only)'
 	@echo '     docs-show          Open local HTML docs in browser'
 	@echo ''
 	@echo '     trailing-spaces    Remove trailing spaces at the end of lines in *.py files'
@@ -61,7 +60,6 @@ help:
 	@echo '     make clean         Remove auto-generated files'
 	@echo '     pytest             Run Gammapy tests (give folder or filename and options)'
 	@echo '     make test-cov      Run all tests and measure coverage'
-	@echo '     make docs-sphinx   Build documentation locally'
 	@echo ''
 
 clean:
@@ -83,9 +81,6 @@ test:
 
 test-cov:
 	python -m pytest -v gammapy --cov=gammapy --cov-report=html
-
-docs-sphinx:
-	cd docs && python -m sphinx . _build/html -b html -j auto
 
 docs-show:
 	python docs/serve.py

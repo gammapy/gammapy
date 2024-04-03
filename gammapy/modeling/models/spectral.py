@@ -1515,15 +1515,17 @@ class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
     amplitude._is_norm = True
     reference = Parameter("reference", "1 TeV", frozen=True)
     expfactor = Parameter("expfactor", "1e-2")
-    index_1 = Parameter("index_1", 1.5)
-    index_2 = Parameter("index_2", 2)
+    index_1 = Parameter("index_1", "1.5")
+    index_2 = Parameter("index_2", "2")
 
     @staticmethod
     def evaluate(energy, amplitude, reference, expfactor, index_1, index_2):
         """Evaluate the model (static function)."""
         pwl = amplitude * (energy / reference) ** (-index_1)
         cutoff = np.exp(
-            expfactor / reference.unit**index_2 * (reference**index_2 - energy**index_2)
+            expfactor
+            / (1 * reference.unit) ** index_2
+            * (reference**index_2 - energy**index_2)
         )
         return pwl * cutoff
 
@@ -1558,8 +1560,8 @@ class SuperExpCutoffPowerLaw4FGLDR3SpectralModel(SpectralModel):
     amplitude._is_norm = True
     reference = Parameter("reference", "1 TeV", frozen=True)
     expfactor = Parameter("expfactor", "1e-2")
-    index_1 = Parameter("index_1", 1.5)
-    index_2 = Parameter("index_2", 2)
+    index_1 = Parameter("index_1", "1.5")
+    index_2 = Parameter("index_2", "2")
 
     @staticmethod
     def evaluate(energy, amplitude, reference, expfactor, index_1, index_2):
