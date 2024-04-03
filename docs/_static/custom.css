@@ -59,6 +59,7 @@ body {
   /* override variables of sphinx-design */
   --sd-color-secondary: var(--gammapy-secondary);
   --sd-color-secondary-highlight: #666;
+  --pst-color-secondary: var(--gammapy-secondary);
 }
 
 p {
