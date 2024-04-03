@@ -38,7 +38,7 @@ for `Fermi-LAT`_ and `HAWC`_ data analysis.
 
         +++
 
-        .. button-ref:: getting-started/index
+        .. button-ref:: getting-started
             :ref-type: ref
             :click-parent:
             :color: secondary
@@ -58,7 +58,7 @@ for `Fermi-LAT`_ and `HAWC`_ data analysis.
 
         +++
 
-        .. button-ref:: user-guide/index
+        .. button-ref:: user_guide
             :ref-type: ref
             :click-parent:
             :color: secondary
@@ -98,7 +98,7 @@ for `Fermi-LAT`_ and `HAWC`_ data analysis.
  
         +++
  
-        .. button-ref:: development/intro
+        .. button-ref:: dev_intro
             :ref-type: ref
             :click-parent:
             :color: secondary

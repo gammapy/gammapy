@@ -30,7 +30,7 @@ User guide
 
         +++
 
-        .. button-ref:: package
+        .. button-ref:: package_structure
             :ref-type: ref
             :click-parent:
             :color: secondary
@@ -48,7 +48,7 @@ User guide
 
         +++
 
-        .. button-ref:: howto
+        .. button-ref:: how_to
             :ref-type: ref
             :click-parent:
             :color: secondary
@@ -66,7 +66,7 @@ User guide
 
         +++
 
-        .. button-ref:: model-gallery/index
+        .. button-ref:: model-gallery
             :ref-type: ref
             :click-parent:
             :color: secondary
