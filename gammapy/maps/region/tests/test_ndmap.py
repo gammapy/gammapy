@@ -106,7 +106,7 @@ def test_region_nd_map_plot_two_axes():
     )
 
     m = RegionNDMap.create("icrs;circle(0, 0, 1)", axes=[energy_axis, time_axis])
-    m.data = 10 + np.random.random(m.data.size)
+    m.data = 10 + np.random.random(m.data.shape)
 
     with mpl_plot_check():
         m.plot(axis_name="energy")
