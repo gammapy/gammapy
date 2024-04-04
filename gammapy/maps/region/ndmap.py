@@ -816,7 +816,7 @@ class RegionNDMap(Map):
 
         elif format == "gadf":
             table = Table()
-            data = self.quantity.flatten()
+            data = self.quantity
             table["CHANNEL"] = np.arange(len(data), dtype=np.int16)
             table["DATA"] = data
         else:
