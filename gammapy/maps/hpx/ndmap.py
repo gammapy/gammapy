@@ -399,7 +399,7 @@ class HpxNDMap(HpxMap):
         if self.geom.is_allsky:
             idx = geom._ipix
         else:
-            idx = self.geom.to_image().global_to_local((geom._ipix,))
+            idx = self.geom.to_image().global_to_local((geom._ipix,))[0]
 
         data = self.data[..., idx]
         return self.__class__(geom=geom, data=data, unit=self.unit, meta=self.meta)
