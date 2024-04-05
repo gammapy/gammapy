@@ -142,8 +142,7 @@ def make_map_exposure_true_energy(
 
     if not use_region_center:
         _, weights = geom.get_wcs_coord_and_weights()
-        data = np.average(data, axis=-1, weights=weights)
-
+        data = np.average(data, axis=-1, weights=weights, keepdims=True)
     return Map.from_geom(geom=geom, data=data.value, unit=data.unit, meta=meta)
 
 
@@ -264,7 +263,7 @@ def make_map_background_irf(
 
     if not use_region_center:
         region_coord, weights = geom.get_wcs_coord_and_weights()
-        data = np.sum(weights * data, axis=2)
+        data = np.sum(weights * data, axis=2, keepdims=True)
 
     bkg_map = Map.from_geom(geom, data=data)
 
@@ -355,7 +354,7 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None, use_region_center=T
 
     if not use_region_center:
         _, weights = geom.get_wcs_coord_and_weights()
-        data = np.average(data, axis=-1, weights=weights)
+        data = np.average(data, axis=-1, weights=weights, keepdims=True)
 
     # Create Map and fill relevant entries
     edisp_map = Map.from_geom(geom, data=data.to_value(""), unit="")
