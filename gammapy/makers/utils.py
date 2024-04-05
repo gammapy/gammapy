@@ -8,6 +8,7 @@ from astropy.table import Table
 from gammapy.data import FixedPointingInfo
 from gammapy.irf import BackgroundIRF, EDispMap, FoVAlignment, PSFMap
 from gammapy.maps import Map, RegionNDMap
+from gammapy.maps.utils import broadcast_axis_values_to_geom
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.stats import WStatCountsStatistic
 from gammapy.utils.coordinates import sky_to_fov
@@ -132,8 +133,8 @@ def make_map_exposure_true_energy(
         irf=aeff,
         obstime=None,
     )
-    broadcast_shape = (-1,) + len(coords) * (1,)
-    coords["energy_true"] = geom.axes["energy_true"].center.reshape(broadcast_shape)
+
+    coords["energy_true"] = broadcast_axis_values_to_geom(geom, "energy_true")
     exposure = aeff.evaluate(**coords)
 
     data = (exposure * livetime).to("m2 s")
@@ -256,7 +257,7 @@ def make_map_background_irf(
         use_region_center=use_region_center,
         obstime=obstime,
     )
-    coords["energy"] = geom.axes["energy"].edges.reshape((-1, 1, 1))
+    coords["energy"] = broadcast_axis_values_to_geom(geom, "energy", False)
 
     bkg_de = bkg.integrate_log_log(**coords, axis_name="energy")
     data = (bkg_de * d_omega * ontime).to_value("")
