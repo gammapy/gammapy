@@ -692,7 +692,7 @@ class RegionNDMap(Map):
         geom = RegionGeom.from_hdulist(hdulist, format=format, hdu=hdu)
 
         table = Table.read(hdulist[hdu])
-        quantity = table[ogip_column].quantity
+        quantity = table[ogip_column].quantity.reshape(geom.data_shape)
 
         if ogip_column == "QUALITY":
             data, unit = np.logical_not(quantity.value.astype(bool)), ""

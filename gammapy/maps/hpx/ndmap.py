@@ -212,9 +212,10 @@ class HpxNDMap(HpxMap):
                         cnames.append(c)
             nbin = len(cnames)
             if nbin == 1:
-                map_out.data = hdu.data.field(cnames[0])
+                map_out.data = hdu.data.field(cnames[0]).reshape(geom.data_shape)
             else:
                 for idx, cname in enumerate(cnames):
+                    # TODO: check whether reshaping is needed here. Is this tested?
                     idx = np.unravel_index(idx, shape)
                     map_out.data[idx + (slice(None),)] = hdu.data.field(cname)
 
