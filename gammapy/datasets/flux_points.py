@@ -325,9 +325,9 @@ class FluxPointsDataset(Dataset):
         ----------
         method: {"diff", "diff/model"}
             Method used to compute the residuals. Available options are:
-                - `diff` (default): data - model.
-                - `diff/model`: (data - model) / model.
-            Default is "diff".
+
+            - ``"diff"`` (default): data - model.
+            - ``"diff/model"``: (data - model) / model.
 
         Returns
         -------
