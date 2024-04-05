@@ -306,8 +306,8 @@ def make_psf_map(psf, pointing, geom, exposure_map=None):
         obstime=None,
     )
 
-    coords["energy_true"] = geom.axes["energy_true"].center.reshape((-1, 1, 1, 1))
-    coords["rad"] = geom.axes["rad"].center.reshape((1, -1, 1, 1))
+    coords["energy_true"] = broadcast_axis_values_to_geom(geom, "energy_true")
+    coords["rad"] = broadcast_axis_values_to_geom(geom, "rad")
 
     # Compute PSF values
     data = psf.evaluate(**coords)
@@ -347,8 +347,8 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None, use_region_center=T
         The resulting energy dispersion map.
     """
     coords = _get_fov_coords(pointing, edisp, geom, use_region_center=use_region_center)
-    coords["energy_true"] = geom.axes["energy_true"].center.reshape((-1, 1, 1, 1))
-    coords["migra"] = geom.axes["migra"].center.reshape((1, -1, 1, 1))
+    coords["energy_true"] = broadcast_axis_values_to_geom(geom, "energy_true")
+    coords["migra"] = broadcast_axis_values_to_geom(geom, "migra")
 
     # Compute EDisp values
     data = edisp.evaluate(**coords)
