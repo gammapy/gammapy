@@ -41,12 +41,13 @@
   --pst-font-family-heading: var(--pst-font-family-base-system);
   --pst-font-family-monospace: var(--pst-font-family-monospace-system);
 }
+
 :root {
   --gammapy-primary: rgb(224, 10, 52);
   --gammapy-secondary: #1e254a;
-  /*--gammapy-secondary:green;*/
   --gammapy-lightgray: #f2f2f2;
 }
+
 
 body {
   color: rgb(30, 37, 74);
@@ -54,6 +55,11 @@ body {
   font-size: 15px;
   font-weight: 400;
   line-height: 20px;
+
+  /* override variables of sphinx-design */
+  --sd-color-secondary: var(--gammapy-secondary);
+  --sd-color-secondary-highlight: #666;
+  --pst-color-secondary: var(--gammapy-secondary);
 }
 
 p {
@@ -228,18 +234,18 @@ table.docutils {
   margin: 10px 0px;
 }
 
-.intro-card p.card-text {
+.intro-card p.sd-card-text {
   margin: 0px;
 }
 
-.intro-card .card-img-top {
+.intro-card .sd-card-img-top {
   height: 52px;
   width: 52px;
   margin-left: auto;
   margin-right: auto;
 }
 
-.intro-card .card-header {
+.intro-card .sd-card-header {
   border: none;
   background-color: white;
   color: #150458 !important;
@@ -248,12 +254,12 @@ table.docutils {
   padding: 2.5rem 0rem 0.5rem 0rem;
 }
 
-.intro-card .card-footer {
+.intro-card .sd-card-footer {
   border: none;
   background-color: white;
 }
 
-.intro-card .card-footer p.card-text {
+.intro-card .sd-card-footer p.sd-card-text {
   max-width: 220px;
   margin-left: auto;
   margin-right: auto;
@@ -280,16 +286,6 @@ table.docutils {
   margin-top: 0;
   margin-bottom: 0rem;
   color: #484848;
-}
-
-.btn-secondary {
-  background-color: var(--gammapy-secondary);
-  border-color: var(--gammapy-secondary);
-}
-
-.btn-secondary:hover {
-  background-color: #666;
-  border-color: #666;
 }
 
 .btn-group-sm > .btn,
@@ -327,12 +323,12 @@ table.docutils {
   font-size: 1.3rem;
 }
 
-.tutorial-card .card-header {
+.tutorial-card .sd-card-header {
   cursor: pointer;
   background-color: white;
 }
 
-.tutorial-card .card-body {
+.tutorial-card .sd-card-body {
   background-color: #f0f0f0;
 }
 

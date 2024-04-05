@@ -23,77 +23,89 @@ but can also be used to analyse data from existing imaging atmospheric Cherenkov
 (IACTs), such as `H.E.S.S.`_, `MAGIC`_ and `VERITAS`_. It also provides some support
 for `Fermi-LAT`_ and `HAWC`_ data analysis.
 
-.. panels::
-    :card: + intro-card text-center
-    :column: col-lg-6 col-md-6 col-sm-6 col-xs-12 d-flex
+.. grid:: 1 2 2 2
+    :gutter: 2
+    :class-container: sd-text-center
 
-    ---
-    :img-top: _static/index_getting_started.svg
+    .. grid-item-card:: Getting started
+        :img-top: _static/index_getting_started.svg
+        :class-card: intro-card 
+        :columns: 12 6 6 6
+        :shadow: md
 
-    Getting started
-    ^^^^^^^^^^^^^^^
+        New to *Gammapy*? Check out the getting started documents. They contain information
+        on how to install and start using *Gammapy* on your local desktop computer.
 
-    New to *Gammapy*? Check out the getting started documents. They contain information
-    on how to install and start using *Gammapy* on your local desktop computer.
+        +++
 
-    +++
+        .. button-ref:: getting-started
+            :ref-type: ref
+            :click-parent:
+            :color: secondary
+            :expand:
 
-    .. link-button:: getting-started/index
-            :type: ref
-            :text: To the quickstart docs
-            :classes: btn-block btn-secondary stretched-link
+            To the quickstart docs
+ 
+    .. grid-item-card:: User guide
+        :img-top: _static/index_user_guide.svg
+        :class-card: intro-card 
+        :columns: 12 6 6 6
+        :shadow: md
 
-    ---
-    :img-top: _static/index_user_guide.svg
+        The user guide provide in-depth information on the
+        key concepts of Gammapy with useful background information and explanation,
+        as well as tutorials in the form of Jupyter notebooks.
 
-    User guide
-    ^^^^^^^^^^
+        +++
 
-    The user guide provide in-depth information on the
-    key concepts of Gammapy with useful background information and explanation,
-    as well as tutorials in the form of Jupyter notebooks.
+        .. button-ref:: user_guide
+            :ref-type: ref
+            :click-parent:
+            :color: secondary
+            :expand:
 
-    +++
+            To the user guide
+ 
+    .. grid-item-card:: API reference
+        :img-top: _static/index_api.svg
+        :class-card: intro-card 
+        :columns: 12 6 6 6
+        :shadow: md
+ 
+        The reference guide contains a detailed description of
+        the Gammapy API. The reference describes how the methods work and which parameters can
+        be used. It assumes that you have an understanding of the key concepts.
+ 
+        +++
+ 
+        .. button-ref:: api-ref
+            :ref-type: ref
+            :click-parent:
+            :color: secondary
+            :expand:
+ 
+            To the reference guide
+ 
+    .. grid-item-card:: Developer guide
+        :img-top: _static/index_contribute.svg
+        :class-card: intro-card 
+        :columns: 12 6 6 6
+        :shadow: md
+ 
+        Saw a typo in the documentation? Want to improve
+        existing functionalities? The contributing guidelines will guide
+        you through the process of improving Gammapy.
+ 
+        +++
+ 
+        .. button-ref:: dev_intro
+            :ref-type: ref
+            :click-parent:
+            :color: secondary
+            :expand:
 
-    .. link-button:: user-guide/index
-            :type: ref
-            :text: To the user guide
-            :classes: btn-block btn-secondary stretched-link
-
-    ---
-    :img-top: _static/index_api.svg
-
-    API reference
-    ^^^^^^^^^^^^^
-
-    The reference guide contains a detailed description of
-    the Gammapy API. The reference describes how the methods work and which parameters can
-    be used. It assumes that you have an understanding of the key concepts.
-
-    +++
-
-    .. link-button:: api-ref
-            :type: ref
-            :text: To the reference guide
-            :classes: btn-block btn-secondary stretched-link
-
-    ---
-    :img-top: _static/index_contribute.svg
-
-    Developer guide
-    ^^^^^^^^^^^^^^^
-
-    Saw a typo in the documentation? Want to improve
-    existing functionalities? The contributing guidelines will guide
-    you through the process of improving Gammapy.
-
-    +++
-
-    .. link-button:: development/intro
-            :type: ref
-            :text: To the developer guide
-            :classes: btn-block btn-secondary stretched-link
-
+            To the developer guide
+ 
 
 .. toctree::
     :titlesonly:

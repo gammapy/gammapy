@@ -136,11 +136,7 @@ class GTIMetaData(MetaData):
 
 
 class EventListMetaData(MetaData):
-    """Metadata containing information about the EventList.
-
-    Parameters
-    ----------
-    """
+    """Metadata containing information about the EventList."""
 
     _tag: ClassVar[Literal["EventList"]] = "eventlist"
     event_class: Optional[str] = None

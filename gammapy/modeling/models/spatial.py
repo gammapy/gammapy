@@ -1260,7 +1260,7 @@ class TemplateSpatialModel(SpatialModel):
 
     For more information see :ref:`template-spatial-model`.
     By default the position of the model is fixed at the center of the map.
-    The position can be fittted by unfreezing the `lon_0` and `lat_0 `parameters.
+    The position can be fittted by unfreezing the ``lon_0`` and ``lat_0`` parameters.
     In that case, the coordinate of every pixel is shifted in lon and lat
     in the frame of the map. NOTE: planar distances are calculated, so
     the results are correct only when the fitted position is close to the

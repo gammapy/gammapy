@@ -16,67 +16,77 @@ User guide
     Gammapy recipes <https://gammapy.github.io/gammapy-recipes>
     references
 
-.. panels::
-    :card: + intro-card text-center
-    :column: col-lg-6 col-md-6 col-sm-6 col-xs-12 d-flex
+.. grid:: 1 2 2 2
+    :gutter: 2
+    :class-container: sd-text-center
 
-    ---
-    :img-top: ../_static/box.png
+    .. grid-item-card:: Analysis workflow and package structure
+        :img-top: ../_static/box.png
+        :columns: 12 6 6 6
+        :class-card: intro-card 
+        :shadow: md
 
-    Analysis workflow and package structure
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        An overview of the main concepts in Gammapy package.
 
-    An overview of the main concepts in Gammapy package.
+        +++
 
-    +++
+        .. button-ref:: package_structure
+            :ref-type: ref
+            :click-parent:
+            :color: secondary
+            :expand:
 
-    .. link-button:: package
-            :type: ref
-            :text: To the package overview
-            :classes: btn-block btn-secondary stretched-link
+            To the package overview
 
+    .. grid-item-card:: How To
+        :img-top: ../_static/index_contribute.svg
+        :columns: 12 6 6 6
+        :class-card: intro-card 
+        :shadow: md
 
-    ---
-    :img-top: ../_static/index_contribute.svg
+        A short “frequently asked question” entries for Gammapy.
 
-    How To
-    ^^^^^^
+        +++
 
-    A short “frequently asked question” entries for Gammapy.
+        .. button-ref:: how_to
+            :ref-type: ref
+            :click-parent:
+            :color: secondary
+            :expand:
 
-    +++
+            To the How To
 
-    .. link-button:: howto
-            :type: ref
-            :text: To the How To
-            :classes: btn-block btn-secondary stretched-link
+    .. grid-item-card:: Model gallery
+        :img-top: ../_static/galleryicon.png
+        :columns: 12 6 6 6
+        :class-card: intro-card 
+        :shadow: md
 
-    ---
-    :img-top: ../_static/galleryicon.png
+        Gammapy provides a large choice of spatial, spectral and temporal models.
 
-    Model gallery
-    ^^^^^^^^^^^^^
+        +++
 
-    Gammapy provides a large choice of spatial, spectral and temporal models.
+        .. button-ref:: model-gallery
+            :ref-type: ref
+            :click-parent:
+            :color: secondary
+            :expand:
 
-    +++
+            To the model gallery
 
-    .. link-button:: model-gallery/index
-            :type: ref
-            :text: To the model gallery
-            :classes: btn-block btn-secondary stretched-link
+    .. grid-item-card:: Gammapy recipes
+        :img-top: ../_static/glossaryicon.png
+        :columns: 12 6 6 6
+        :class-card: intro-card 
+        :shadow: md
 
-    ---
-    :img-top: ../_static/glossaryicon.png
+        A collection of **user contributed** notebooks covering aspects not present in the official tutorials.
 
-    Gammapy recipes
-    ^^^^^^^^^^^^^^^
+        +++
 
-    A collection of **user contributed** notebooks covering aspects not present in the official tutorials.
+        .. button-link:: https://gammapy.github.io/gammapy-recipes
+            :click-parent:
+            :color: secondary
+            :expand:
 
-    +++
-
-    .. link-button:: https://gammapy.github.io/gammapy-recipes
-            :type: url
-            :text: To the recipes
-            :classes: btn-block btn-secondary stretched-link
+            To the recipes
