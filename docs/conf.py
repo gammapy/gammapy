@@ -138,6 +138,7 @@ copybutton_prompt_is_regexp = True
 # This is added to the end of RST files - a good place to put substitutions to
 # be used globally.
 rst_epilog += """
+.. |Table| replace:: :class:`~astropy.table.Table`
 """
 
 # This is added to keep the links to PRs in release notes
@@ -160,7 +161,6 @@ else:
 
 substitutions = [
     ("|release|", release),
-    ("|Table|", ":class:`~astropy.table.Table`"),
 ]
 # -- Options for HTML output ---------------------------------------------------
 
