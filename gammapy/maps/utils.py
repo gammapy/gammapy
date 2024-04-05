@@ -100,3 +100,34 @@ def edges_from_lo_hi(edges_lo, edges_hi):
     except AttributeError:
         edges = np.insert(edges, len(edges), edges_hi[-1])
     return edges
+
+
+def broadcast_axis_values_to_geom(geom, axis_name, use_center=True):
+    """Reshape axis center array to the expected shape for broadcasting.
+
+    Parameters
+    ----------
+    geom : `~gammapy.maps.Geom`
+        the input Geom.
+    axis_name : str
+        input axis name. Must be part of the Geom non-spatial axes.
+    use_centers : bool
+        reshape center array if True, else use edges.
+
+    Returns
+    -------
+    array : `~numpy.array` or `~astropy.Quantity`
+        reshaped array.
+    """
+    if axis_name not in geom.axes.names:
+        raise ValueError(f"Can't find axis {axis_name} in input Geom.")
+
+    broadcast_shape = len(geom.data_shape) * [
+        1,
+    ]
+    broadcast_shape[geom.axes.index_data(axis_name)] = -1
+
+    if use_center:
+        return geom.axes[axis_name].center.reshape(broadcast_shape)
+    else:
+        return geom.axes[axis_name].edges.reshape(broadcast_shape)
