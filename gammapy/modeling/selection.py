@@ -67,7 +67,9 @@ class TestStatisticNested:
     def ts_frozen(self, datasets):
         """Perform the alternative hypothesis testing with all parameters frozen.
         This implicitly assumes that the non-null model is a good representation of the true model.
-        If the assumption is true the frozen_ts should tend to the asimov_ts.
+        For example for source detection this assumes that the background (including other sources) is known.
+        If the assumption is true the frozen_ts should tend to the asimov_ts (deviation would indicate a bad fit of the data).
+        Deviations between ts and frozen_ts can be used to identify potential sources of confusion depending on which parameters are let free for the ts computation (for example considereing diffuse background or nearby source).
         """
         stat = datasets.stat_sum()
         object_cache, prev_pars = self._apply_null_hypothesis(datasets)
