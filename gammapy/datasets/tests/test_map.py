@@ -208,7 +208,7 @@ def get_map_dataset(geom, geom_etrue, edisp="edispmap", name="test", **kwargs):
             energy_axis=e_reco, energy_axis_true=e_true
         )
         data = exposure.get_spectrum(geom.center_skydir).data
-        edisp.exposure_map.data = np.repeat(data, 2, axis=-1)
+        edisp.exposure_map.data = np.repeat(np.expand_dims(data, -1), 2, axis=-1)
     else:
         edisp = None
 
