@@ -202,7 +202,7 @@ def get_map_dataset(geom, geom_etrue, edisp="edispmap", name="test", **kwargs):
     if edisp == "edispmap":
         edisp = EDispMap.from_diagonal_response(energy_axis_true=e_true)
         data = exposure.get_spectrum(geom.center_skydir).data
-        edisp.exposure_map.data = np.repeat(data, 2, axis=-1)
+        edisp.exposure_map.data = np.repeat(np.expand_dims(data, -1), 2, axis=-1)
     elif edisp == "edispkernelmap":
         edisp = EDispKernelMap.from_diagonal_response(
             energy_axis=e_reco, energy_axis_true=e_true
