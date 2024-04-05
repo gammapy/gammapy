@@ -129,7 +129,6 @@ extensions.extend(
         "sphinx_automodapi.smart_resolver",
     ]
 )
-print(extensions)
 
 nbsphinx_execute = "never"
 copybutton_prompt_text = r">>> |\.\.\. |\$ |In \[\d*\]: | {2,5}\.\.\.: | {5,8}: "
