@@ -652,6 +652,7 @@ class RegionNDMap(Map):
             raise ValueError(f"Format not supported {format}")
 
         geom = RegionGeom.create(region=None, axes=axes)
+        data = data.reshape(geom.data_shape)
         return cls(geom=geom, data=data, unit=unit, meta=table.meta, dtype=data.dtype)
 
     @classmethod
