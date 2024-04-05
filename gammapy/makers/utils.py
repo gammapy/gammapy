@@ -132,7 +132,8 @@ def make_map_exposure_true_energy(
         irf=aeff,
         obstime=None,
     )
-    coords["energy_true"] = geom.axes["energy_true"].center.reshape((-1, 1, 1))
+    broadcast_shape = (-1,) + len(coords) * (1,)
+    coords["energy_true"] = geom.axes["energy_true"].center.reshape(broadcast_shape)
     exposure = aeff.evaluate(**coords)
 
     data = (exposure * livetime).to("m2 s")
