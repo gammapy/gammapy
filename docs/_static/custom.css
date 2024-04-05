@@ -300,15 +300,15 @@ table.docutils {
   margin-bottom: 20px;
 }
 
-.tutorial-card .sd-card-header.sd-card-link .btn {
+.tutorial-card .card-header.card-link .btn {
   margin-right: 12px;
 }
 
-.tutorial-card .sd-card-header.sd-card-link .btn:after {
+.tutorial-card .card-header.card-link .btn:after {
   content: "-";
 }
 
-.tutorial-card .sd-card-header.sd-card-link.collapsed .btn:after {
+.tutorial-card .card-header.card-link.collapsed .btn:after {
   content: "+";
 }
 

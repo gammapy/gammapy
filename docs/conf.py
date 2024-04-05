@@ -159,7 +159,10 @@ if "dev" in version:
 else:
     release = version
 
-substitutions = [("|release|", release)]
+substitutions = [
+    ("|release|", release),
+    ("|Table|", ":class:`~astropy.table.Table`"),
+]
 # -- Options for HTML output ---------------------------------------------------
 
 # A NOTE ON HTML THEMES
