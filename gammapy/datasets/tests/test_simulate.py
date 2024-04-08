@@ -591,6 +591,44 @@ def test_mde_run(dataset, models, tmp_path):
 
 
 @requires_data()
+def test_sampler_output(dataset, model_alternative, caplog):
+    irfs = load_irf_dict_from_file(
+        "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
+    )
+    livetime = 1 * u.hr
+    pointing = FixedPointingInfo(
+        fixed_icrs=SkyCoord(0, 0, unit="deg", frame="galactic").icrs,
+    )
+    obs = Observation.create(
+        obs_id=1001,
+        pointing=pointing,
+        livetime=livetime,
+        irfs=irfs,
+        location=LOCATION,
+    )
+
+    bkg_model = FoVBackgroundModel(dataset_name="test")
+    new_mod = Models([model_alternative[0], bkg_model])
+    dataset.models = new_mod
+    print(dataset)
+
+    sampler = MapDatasetEventSampler(random_state=0)
+    sampler.run(dataset=dataset, observation=obs)
+
+    captured = caplog.records
+
+    str = [
+        "Evaluating model: test-source",
+        "Evaluating background...",
+        "Event sampling completed.",
+    ]
+
+    assert captured[1].message == str[0]
+    assert captured[2].message == str[1]
+    assert captured[4].message == str[2]
+
+
+@requires_data()
 def test_irf_alpha_config(dataset, models):
     irfs = load_irf_dict_from_file(
         "$GAMMAPY_DATA/cta-caldb/Prod5-South-20deg-AverageAz-14MSTs37SSTs.180000s-v0.1.fits.gz"
