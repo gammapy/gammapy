@@ -25,6 +25,7 @@ def test__template_model_from_cta_sdc(tmp_path):
     assert_allclose(mod1.t_ref.value, mod.t_ref.value, rtol=1e-7)
 
 
+@requires_data()
 def test__template_model_from_cta_sdc_reference_time():
     filename = "$GAMMAPY_DATA/gravitational_waves/GW_example_DC_file.fits.gz"
     t_ref = Time("2028-01-01T00:00:00", format="isot", scale="utc")

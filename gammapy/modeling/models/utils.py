@@ -1,15 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import math
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.nddata import NoOverlapError
+from astropy.time import Time
 from regions import PointSkyRegion
 from gammapy.maps import HpxNDMap, Map, MapAxis, RegionNDMap
 from gammapy.maps.hpx.io import HPX_FITS_CONVENTIONS, HpxConv
 from gammapy.utils.scripts import make_path
-from gammapy.utils.time import time_ref_from_dict
+from gammapy.utils.time import time_ref_from_dict, time_ref_to_dict
 from . import LightCurveTemplateTemporalModel, Models, SkyModel, TemplateSpatialModel
 
 __all__ = ["read_hermes_cube"]
@@ -36,22 +36,16 @@ def _template_model_from_cta_sdc(filename, t_ref=None):
         )
         time_hdu = hdul["TIMES"]
         time_header = time_hdu.header
-        if t_ref:
-            time_header.setdefault("MJDREFF", math.modf(t_ref.mjd)[0])
-            time_header.setdefault("MJDREFI", int(math.modf(t_ref.mjd)[1]))
-            scale = t_ref.scale
-            time_header.setdefault("scale", scale)
-        else:
-            time_header.setdefault("MJDREFF", 0.5)
-            time_header.setdefault("MJDREFI", 55555)
-            scale = "tt"
-            time_header.setdefault("scale", scale)
+
+        if t_ref is None:
+            t_ref = Time(55555.5, format="mjd", scale="tt")
+        time_header.update(time_ref_to_dict(t_ref, t_ref.scale))
         time_min = time_hdu.data["Initial Time"]
         time_max = time_hdu.data["Final Time"]
         edges = np.append(time_min, time_max[-1]) * u.Unit(time_header["TUNIT1"])
         data = hdul["SPECTRA"]
 
-        time_ref = time_ref_from_dict(time_header, scale=scale)
+        time_ref = time_ref_from_dict(time_header, scale=t_ref.scale)
         time_axis = MapAxis.from_edges(edges=edges, name="time", interp="log")
 
         reg_map = RegionNDMap.create(
