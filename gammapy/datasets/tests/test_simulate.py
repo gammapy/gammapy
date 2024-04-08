@@ -610,7 +610,6 @@ def test_sampler_output(dataset, model_alternative, caplog):
     bkg_model = FoVBackgroundModel(dataset_name="test")
     new_mod = Models([model_alternative[0], bkg_model])
     dataset.models = new_mod
-    print(dataset)
 
     sampler = MapDatasetEventSampler(random_state=0)
     sampler.run(dataset=dataset, observation=obs)
