@@ -482,7 +482,7 @@ def test_event_det_coords(dataset, models):
 
 
 @requires_data()
-def test_mde_run(dataset, models, tmp_path):
+def test_mde_run(dataset, models, capsys, tmp_path):
     irfs = load_irf_dict_from_file(
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     )
@@ -501,6 +501,11 @@ def test_mde_run(dataset, models, tmp_path):
     dataset.models = models
     sampler = MapDatasetEventSampler(random_state=0)
     events = sampler.run(dataset=dataset, observation=obs)
+
+    captured = capsys.readouterr()
+    str = "Evaluating model: test-source\nEvaluating background...\nEvent sampling completed.\n"
+
+    assert captured.out == str
 
     dataset_bkg = dataset.copy(name="new-dataset")
     dataset_bkg.models = [FoVBackgroundModel(dataset_name=dataset_bkg.name)]
@@ -588,43 +593,6 @@ def test_mde_run(dataset, models, tmp_path):
     assert u.isclose(obs_back.observatory_earth_location.lon, LOCATION.lon)
     assert u.isclose(obs_back.observatory_earth_location.lat, LOCATION.lat)
     assert u.isclose(obs_back.observatory_earth_location.height, LOCATION.height)
-
-
-@requires_data()
-def test_sampler_output(dataset, model_alternative, caplog):
-    irfs = load_irf_dict_from_file(
-        "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
-    )
-    livetime = 1 * u.hr
-    pointing = FixedPointingInfo(
-        fixed_icrs=SkyCoord(0, 0, unit="deg", frame="galactic").icrs,
-    )
-    obs = Observation.create(
-        obs_id=1001,
-        pointing=pointing,
-        livetime=livetime,
-        irfs=irfs,
-        location=LOCATION,
-    )
-
-    bkg_model = FoVBackgroundModel(dataset_name="test")
-    new_mod = Models([model_alternative[0], bkg_model])
-    dataset.models = new_mod
-
-    sampler = MapDatasetEventSampler(random_state=0)
-    sampler.run(dataset=dataset, observation=obs)
-
-    captured = caplog.records
-
-    str = [
-        "Evaluating model: test-source",
-        "Evaluating background...",
-        "Event sampling completed.",
-    ]
-
-    assert captured[1].message == str[0]
-    assert captured[2].message == str[1]
-    assert captured[4].message == str[2]
 
 
 @requires_data()
