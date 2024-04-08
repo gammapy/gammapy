@@ -16,6 +16,7 @@ from .utils import get_irfs_features
 __all__ = [
     "DataStore",
     "EventList",
+    "EventListMetaData",
     "FixedPointingInfo",
     "GTI",
     "HDUIndexTable",
