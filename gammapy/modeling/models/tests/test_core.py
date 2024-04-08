@@ -346,6 +346,6 @@ def test_add_not_unique_models():
 
     with pytest.raises(
         ValueError,
-        match="Model names must be unique. Change the name of model 'source1'",
+        match="Model names must be unique. Models named 'source1' are duplicated.",
     ):
         models1.extend(models2)
