@@ -12,6 +12,7 @@ from gammapy.modeling.models import (
     Model,
     ModelBase,
     Models,
+    PointSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
 )
@@ -318,3 +319,33 @@ def test_to_template():
 
     assert_allclose(values_ref, values_direct, rtol=1e-5)
     assert_allclose(values_ref, values_from3d, rtol=1e-5)
+
+
+def test_add_not_unique_models():
+    spec_model1 = PowerLawSpectralModel()
+    spatial_model1 = PointSpatialModel()
+
+    model1 = SkyModel(
+        spectral_model=spec_model1, spatial_model=spatial_model1, name="source1"
+    )
+
+    model2 = SkyModel(
+        spectral_model=spec_model1, spatial_model=spatial_model1, name="source2"
+    )
+
+    model3 = SkyModel(
+        spectral_model=spec_model1, spatial_model=spatial_model1, name="source3"
+    )
+
+    model4 = SkyModel(
+        spectral_model=spec_model1, spatial_model=spatial_model1, name="source1"
+    )
+
+    models1 = Models([model1, model2])
+    models2 = Models([model3, model4])
+
+    with pytest.raises(
+        ValueError,
+        match="Model names must be unique. Change the name of model 'source1'",
+    ):
+        models1.extend(models2)

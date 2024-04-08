@@ -352,7 +352,11 @@ class DatasetModels(collections.abc.Sequence):
 
         for model in models:
             if model.name in unique_names:
-                raise (ValueError("Model names must be unique"))
+                raise (
+                    ValueError(
+                        f"Model names must be unique. Change the name of model '{model.name}'"
+                    )
+                )
             unique_names.append(model.name)
 
         self._models = models
@@ -656,7 +660,11 @@ class DatasetModels(collections.abc.Sequence):
             return Models([*self, *other])
         elif isinstance(other, ModelBase):
             if other.name in self.names:
-                raise (ValueError("Model names must be unique"))
+                raise (
+                    ValueError(
+                        f"Model names must be unique. Change the name of model '{other.name}'"
+                    )
+                )
             return Models([*self, other])
         else:
             raise TypeError(f"Invalid type: {other!r}")
@@ -1200,7 +1208,11 @@ class Models(DatasetModels, collections.abc.MutableSequence):
 
     def insert(self, idx, model):
         if model.name in self.names:
-            raise (ValueError("Model names must be unique"))
+            raise (
+                ValueError(
+                    f"Model names must be unique. Change the name of model '{model.name}'"
+                )
+            )
 
         self._models.insert(idx, model)
 
