@@ -276,6 +276,22 @@ def test_fail_sample_coord_time_energy(
 
 
 @requires_data()
+def test_negative_npred(dataset):
+    spatial_model = PointSpatialModel(lon_0="0 deg", lat_0="0 deg", frame="galactic")
+    spectral_model = PowerLawSpectralModel(amplitude="-4e-10 cm-2 s-1 TeV-1")
+
+    dataset.models = [
+        SkyModel(spectral_model=spectral_model, spatial_model=spatial_model),
+        FoVBackgroundModel(dataset_name=dataset.name),
+    ]
+
+    sampler = MapDatasetEventSampler(random_state=0, n_event_bunch=1000)
+    events = sampler.run(dataset=dataset)
+
+    assert len(events.table) == 15
+
+
+@requires_data()
 def test_sample_coord_time_energy_random_seed(
     dataset, energy_dependent_temporal_sky_model
 ):
