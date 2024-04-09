@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import logging
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
@@ -482,7 +483,7 @@ def test_event_det_coords(dataset, models):
 
 
 @requires_data()
-def test_mde_run(dataset, models, tmp_path):
+def test_mde_run(dataset, models, caplog, tmp_path):
     irfs = load_irf_dict_from_file(
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     )
@@ -499,8 +500,21 @@ def test_mde_run(dataset, models, tmp_path):
     )
 
     dataset.models = models
+
+    logging.getLogger().setLevel(logging.INFO)
     sampler = MapDatasetEventSampler(random_state=0)
     events = sampler.run(dataset=dataset, observation=obs)
+
+    captured = caplog.records
+    str = [
+        "Evaluating model: test-source",
+        "Evaluating background...",
+        "Event sampling completed.",
+    ]
+
+    assert captured[1].message == str[0]
+    assert captured[2].message == str[1]
+    assert captured[4].message == str[2]
 
     dataset_bkg = dataset.copy(name="new-dataset")
     dataset_bkg.models = [FoVBackgroundModel(dataset_name=dataset_bkg.name)]
