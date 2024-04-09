@@ -172,7 +172,7 @@ def test_structure_function():
         * u.s
     )
 
-    sf, distances = structure_function(flux, flux_err, time)
+    sf, sf_error, distances = structure_function(flux, flux_err, time)
 
     assert_allclose(
         sf,
