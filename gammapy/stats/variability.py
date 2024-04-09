@@ -242,7 +242,7 @@ def structure_function(flux, flux_err, time, tdelta_precision=5):
         The error on measured fluxes.
     time : `~astropy.units.Quantity`
         The time coordinates at which the fluxes are measured.
-    tdelta_precision : int
+    tdelta_precision : int, optional
         The number of decimal places to check to separate the time deltas. Default is 5.
 
     Returns
@@ -266,7 +266,7 @@ def structure_function(flux, flux_err, time, tdelta_precision=5):
     factor = np.zeros(shape)
     norm = np.zeros(shape)
 
-    for i, distance in enumerate(distances[distances > 0]):
+    for i, distance in enumerate(distances):
         indexes = np.array(np.where(dist_matrix == distance))
         for index in indexes.T:
             f = (flux[index[1], ...] - flux[index[0], ...]) ** 2
