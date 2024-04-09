@@ -1735,7 +1735,7 @@ class Map(abc.ABC):
             data.append(m.quantity.to_value(maps[0].unit))
 
         return cls.from_geom(
-            data=np.stack(data), geom=geom.to_cube(axes=[axis]), unit=maps[0].unit
+            data=np.concatenate(data), geom=geom.to_cube(axes=[axis]), unit=maps[0].unit
         )
 
     def split_by_axis(self, axis_name):
