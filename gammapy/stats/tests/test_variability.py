@@ -161,7 +161,7 @@ def test_structure_function():
             [0.1e-11, 0.4e-12],
             [0.3e-11, 0.2e-12],
             [0.1e-11, 0.1e-12],
-            [0.08e-11, 0.8e-12],
+            [0.08e-11, 0.08e-12],
             [0.1e-11, 0.1e-12],
         ]
     )
@@ -172,14 +172,14 @@ def test_structure_function():
         * u.s
     )
 
-    sf, sf_error, distances = structure_function(flux, flux_err, time)
+    sf, distances = structure_function(flux, flux_err, time)
 
     assert_allclose(
         sf,
         [
             [4.00000000e-22, 2.25000000e-24],
             [4.00000000e-24, 4.00000000e-26],
-            [2.00000000e-24, 8.18545455e-24],
+            [2.00000000e-24, 4.52000000e-24],
             [4.84000000e-22, 2.89000000e-24],
             [0.00000000e00, 0.00000000e00],
             [4.00000000e-24, 1.02400000e-23],

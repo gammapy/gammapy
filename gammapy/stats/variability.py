@@ -265,7 +265,6 @@ def structure_function(flux, flux_err, time, tdelta_precision=5):
     shape = distances.shape + flux.shape[1:]
     factor = np.zeros(shape)
     norm = np.zeros(shape)
-    error = np.zeros(shape)
 
     for i, distance in enumerate(distances):
         indexes = np.array(np.where(dist_matrix == distance))
@@ -280,10 +279,5 @@ def structure_function(flux, flux_err, time, tdelta_precision=5):
             factor[i] = factor[i] + f * w
             norm[i] = norm[i] + w
 
-            err = (w**2) * (25 * f - 2 * flux[index[1], ...] * flux[index[0], ...])
-            err = np.nan_to_num(err)
-
-            error[i] = error[i] + np.abs(err)
     sf = factor / norm
-    sf_error = np.sqrt(error / norm)
-    return sf, sf_error, distances
+    return sf, distances
