@@ -80,6 +80,17 @@ def _build_parameters_from_dict(data, default_parameters):
     return Parameters.from_dict(par_data)
 
 
+def _check_name_unique(model, names):
+    """Check if a model is not duplicated"""
+    if model.name in names:
+        raise (
+            ValueError(
+                f"Model names must be unique. Models named '{model.name}' are duplicated."
+            )
+        )
+    return
+
+
 class ModelBase:
     """Model base class."""
 
@@ -351,8 +362,7 @@ class DatasetModels(collections.abc.Sequence):
         unique_names = []
 
         for model in models:
-            if model.name in unique_names:
-                raise (ValueError("Model names must be unique"))
+            _check_name_unique(model, names=unique_names)
             unique_names.append(model.name)
 
         self._models = models
@@ -655,8 +665,7 @@ class DatasetModels(collections.abc.Sequence):
         if isinstance(other, (Models, list)):
             return Models([*self, *other])
         elif isinstance(other, ModelBase):
-            if other.name in self.names:
-                raise (ValueError("Model names must be unique"))
+            _check_name_unique(other, self.names)
             return Models([*self, other])
         else:
             raise TypeError(f"Invalid type: {other!r}")
@@ -1199,9 +1208,7 @@ class Models(DatasetModels, collections.abc.MutableSequence):
             raise TypeError(f"Invalid type: {model!r}")
 
     def insert(self, idx, model):
-        if model.name in self.names:
-            raise (ValueError("Model names must be unique"))
-
+        _check_name_unique(model, self.names)
         self._models.insert(idx, model)
 
     def set_prior(self, parameters, priors):
