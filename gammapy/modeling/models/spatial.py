@@ -1259,8 +1259,8 @@ class TemplateSpatialModel(SpatialModel):
     """Spatial sky map template model.
 
     For more information see :ref:`template-spatial-model`.
-    By default the position of the model is fixed at the center of the map.
-    The position can be fittted by unfreezing the ``lon_0`` and ``lat_0`` parameters.
+    By default, the position of the model is fixed at the center of the map.
+    The position can be fitted by unfreezing the `lon_0` and `lat_0` parameters.
     In that case, the coordinate of every pixel is shifted in lon and lat
     in the frame of the map. NOTE: planar distances are calculated, so
     the results are correct only when the fitted position is close to the
@@ -1277,7 +1277,7 @@ class TemplateSpatialModel(SpatialModel):
     interp_kwargs : dict
         Interpolation keyword arguments passed to `gammapy.maps.Map.interp_by_coord`.
         Default arguments are {'method': 'linear', 'fill_value': 0, "values_scale": "log"}.
-    Filename : str
+    filename : str
         Name of the map file.
     copy_data : bool
         Create a deepcopy of the map data or directly use the original. Default is True.

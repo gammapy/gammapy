@@ -177,7 +177,7 @@ plt.show()
 
 ######################################################################
 # Fitting a Dataset with and without the Prior
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # Now, we copy the dataset consisting of the power-law source and assign
 # the model with the Gaussian prior set on its index to it. Both of the
@@ -346,7 +346,7 @@ plt.show()
 
 ######################################################################
 # Fitting Multiple Datasets with and without the Prior
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # To showcase how the uniform prior affects the fit results, :math:`100`
 # datasets are created and fitted without and with the prior
@@ -411,7 +411,7 @@ plt.show()
 
 ######################################################################
 # Implementing a custom prior
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # For now, only ``GaussianPrior`` and `UniformPrior`` are implemented.
 # To add a use case specfific prior one has to create a prior subclass
