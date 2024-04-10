@@ -4,17 +4,18 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.nddata import NoOverlapError
+from astropy.time import Time
 from regions import PointSkyRegion
 from gammapy.maps import HpxNDMap, Map, MapAxis, RegionNDMap
 from gammapy.maps.hpx.io import HPX_FITS_CONVENTIONS, HpxConv
 from gammapy.utils.scripts import make_path
-from gammapy.utils.time import time_ref_from_dict
+from gammapy.utils.time import time_ref_from_dict, time_ref_to_dict
 from . import LightCurveTemplateTemporalModel, Models, SkyModel, TemplateSpatialModel
 
 __all__ = ["read_hermes_cube"]
 
 
-def _template_model_from_cta_sdc(filename):
+def _template_model_from_cta_sdc(filename, t_ref=None):
     """To create a `LightCurveTemplateTemporalModel` from the energy-dependent temporal model files of the cta-sdc1.
 
     This format is subject to change.
@@ -35,15 +36,16 @@ def _template_model_from_cta_sdc(filename):
         )
         time_hdu = hdul["TIMES"]
         time_header = time_hdu.header
-        time_header.setdefault("MJDREFF", 0.5)
-        time_header.setdefault("MJDREFI", 55555)
-        time_header.setdefault("scale", "tt")
+
+        if t_ref is None:
+            t_ref = Time(55555.5, format="mjd", scale="tt")
+        time_header.update(time_ref_to_dict(t_ref, t_ref.scale))
         time_min = time_hdu.data["Initial Time"]
         time_max = time_hdu.data["Final Time"]
         edges = np.append(time_min, time_max[-1]) * u.Unit(time_header["TUNIT1"])
         data = hdul["SPECTRA"]
 
-        time_ref = time_ref_from_dict(time_header)
+        time_ref = time_ref_from_dict(time_header, scale=t_ref.scale)
         time_axis = MapAxis.from_edges(edges=edges, name="time", interp="log")
 
         reg_map = RegionNDMap.create(
