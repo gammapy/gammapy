@@ -23,7 +23,7 @@ TS                   : 443007
 Significance (DC)    : 666
 Spectrum Type        : PLSuperExpCutoff4
 
-    * PLSuperExpCutoff4FGLDR3 b = 2/3 *
+    * SuperExpCutoffPowerLaw4FGLDR3 b = 2/3 *
 
     Amplitude            : 5.290e-10 1 / (MeV s cm2) +- 1.665e-12 1 / (MeV s cm2)
     Index 1              : 2.153 +- 0.002
@@ -31,7 +31,7 @@ Spectrum Type        : PLSuperExpCutoff4
     Reference            : 1760.385 MeV
     Expfactor            : 0.517 +- 0.003
 
-    * PLSuperExpCutoff b free *
+    * SuperExpCutoffPowerLaw4FGLDR3 b free *
 
     Amplitude            : 5.327e-10 1 / (MeV s cm2) +- 1.649e-12 1 / (MeV s cm2)
     Index 1              : 2.196 +- 0.004

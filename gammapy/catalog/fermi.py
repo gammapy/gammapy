@@ -1378,7 +1378,9 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
 
         if not isinstance(d["PLEC_Flux_Density_b23"], np.ma.core.MaskedConstant):
 
-            ss += "\n{}* PLSuperExpCutoff4FGLDR3 b = 2/3 *\n\n".format(indentation)
+            ss += "\n{}* SuperExpCutoffPowerLaw4FGLDR3 b = 2/3 *\n\n".format(
+                indentation
+            )
             ss += fmt_e.format(
                 indentation,
                 "Amplitude",
@@ -1404,7 +1406,7 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
 
         if not isinstance(d["PLEC_Flux_Density_bfr"], np.ma.core.MaskedConstant):
 
-            ss += "\n{}* PLSuperExpCutoff4FGLDR3 b free *\n\n".format(indentation)
+            ss += "\n{}* SuperExpCutoffPowerLaw4FGLDR3 b free *\n\n".format(indentation)
             ss += fmt_e.format(
                 indentation,
                 "Amplitude",
