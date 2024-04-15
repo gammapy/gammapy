@@ -136,10 +136,15 @@ class GTIMetaData(MetaData):
 
 
 class EventListMetaData(MetaData):
-    """Metadata containing information about the EventList.
+    """
+    Metadata containing information about the EventList.
 
     Parameters
     ----------
+    event_class : str
+        The event class metadata.
+    creation : `~gammapy.utils.metadata.CreatorMetaData`
+        The creation metadata.
     """
 
     _tag: ClassVar[Literal["EventList"]] = "eventlist"

@@ -14,16 +14,16 @@ def containment_region(map_, fraction=0.393, apply_union=True):
     ----------
     map_ : `~gammapy.maps.WcsNDMap`
         Map of integral quantities.
-    fraction : float
+    fraction : float, optional
         Containment fraction. Default is 0.393.
-    apply_union : bool
+    apply_union : bool, optional
         It True return a compound region otherwise return a list of polygon regions.
         Default is True. Note that compound regions cannot be written in ds9 format but can always be saved with numpy.savez.
 
     Returns
     -------
-    regions : list of ~regions.PolygonSkyRegion` or `~regions.CompoundSkyRegion`
-        regions from iso-contours matching containment fraction.
+    regions : list of `~regions.PolygonSkyRegion` or `~regions.CompoundSkyRegion`
+        Regions from iso-contours matching containment fraction.
     """
     from . import WcsNDMap
 

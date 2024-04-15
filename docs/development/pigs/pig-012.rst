@@ -128,8 +128,8 @@ later on eventual improvements, also taking user feedback into account.
 
 Prototype configuration file.
 
-::
-    
+.. code-block:: yaml
+
     analysis:
         process:
             # add options to allow either in-memory or disk-based processing
@@ -212,7 +212,7 @@ the scope of this PIG.
 
 **Session workflow**
 
-::
+.. code-block:: text
 
         $ mkdir analysis
         $ cd analysis
@@ -221,7 +221,7 @@ the scope of this PIG.
 Then the user would type ``ipython``, ``juypter notebook`` or write a script
 with the code below.
 
-::
+.. code-block:: python
 
         from gammapy.analysis import Analysis
 

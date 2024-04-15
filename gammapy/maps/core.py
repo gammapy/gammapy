@@ -554,7 +554,7 @@ class Map(abc.ABC):
             'constant' pads with a constant value. 'interp' pads with
             an extrapolated value. Default is 'constant'.
         cval : float, optional
-            Padding value when `mode`='consant'. Default is 0.
+            Padding value when ``mode='consant'``. Default is 0.
 
         Returns
         -------

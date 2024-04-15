@@ -298,14 +298,14 @@ plt.show()
 # best-fit value.
 #
 # Gammapy offers two ways of computing confidence contours, in the
-# dedicated methods `~gammapy.modeling.Fit.minos_contour` and `~gammapy.modeling.Fit.stat_profile`. In
+# dedicated methods `~gammapy.modeling.Fit.stat_contour` and `~gammapy.modeling.Fit.stat_profile`. In
 # the following sections we will describe them.
 #
 
 
 ######################################################################
-# An important point to keep in mind is: *what does a :math:`N\sigma`
-# confidence contour really mean?* The answer is it represents the points
+# An important point to keep in mind is: *what does a* :math:`N\sigma`
+# *confidence contour really mean?* The answer is it represents the points
 # of the parameter space for which the model likelihood is :math:`N\sigma`
 # above the minimum. But one always has to keep in mind that **1 standard
 # deviation in two dimensions has a smaller coverage probability than
@@ -429,7 +429,7 @@ plt.tight_layout()
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # This alternative method for the computation of confidence contours,
-# although more time consuming than `~gammapy.modeling.Fit.minos_contour()`, is expected
+# although more time consuming than `~gammapy.modeling.Fit.stat_contour()`, is expected
 # to be more stable. It consists of a generalization of
 # `~gammapy.modeling.Fit.stat_profile()` to a 2-dimensional parameter space. The algorithm
 # is very simple: - First, passing two arrays of parameters values, a

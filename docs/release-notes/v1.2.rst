@@ -16,9 +16,9 @@ New features
 
 - Metadata containers have been introduced following PIG 25. Preliminary versions have
   been designed for most data products from DL3 to DL5. They will progressively be
-  accessible on their `.meta` attributes.
-- Parameter prior support has been introduced following PIG 26. A few `Prior` classes
-  can be defined on `Parameter.prior` and the associated log-prior is added to the
+  accessible on their ``.meta`` attributes.
+- Parameter prior support has been introduced following PIG 26. A few ``Prior`` classes
+  can be defined on ``Parameter.prior`` and the associated log-prior is added to the
   total statistics during fitting.
 - Helper functions have been added to perform computation of lifetime and total
   observation time maps.
@@ -28,7 +28,7 @@ New features
   lightcurve variability.
 - New helper classes have been added to perform event sampling for a single or a set of
   observations:
-  `~gammapy.datasets.ObservationEventSampler` and `~gammapy.data.ObservationsEventSampler`.
+  ``gammapy.datasets.ObservationEventSampler`` and ``gammapy.data.ObservationsEventSampler``.
 - A checksum option has been added on read and write methods in Gammapy. It follows the
   FITS standard and reuses the astropy methods and behaviour. A checksum for yaml file
   has been introduced as well.

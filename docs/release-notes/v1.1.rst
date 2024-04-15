@@ -1,7 +1,7 @@
 .. _gammapy_1p1_release:
 
 1.1 (June 13th 2023)
--------------------
+--------------------
 
 - Released June 13th, 2023
 - 17 contributors

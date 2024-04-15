@@ -187,9 +187,9 @@ In this case, the citation scheme of Gammapy should be used by these authors.
 As the length of the author list is generally a constrain, the author list is reduced to the short list of contributors
 for the conference, followed by 'The Gammapy team' associated with a link to the Gammapy team webpage:
 
- ::
+.. code-block:: text
 
-  oo, ff, tt, for `the Gammapy team <https://gammapy.org/team.html>`_
+    oo, ff, tt, for `the Gammapy team <https://gammapy.org/team.html>`_
 
 If there is a corresponding author, the 'Gammapy Coordination Committee' associated with its usual mailing list, is
 used. Concerning the acknowledgement, the Astropy project should always be mentioned, and if possible our mandatory

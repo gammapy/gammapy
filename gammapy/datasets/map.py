@@ -1053,10 +1053,13 @@ class MapDataset(Dataset):
         ----------
         method : {"diff", "diff/model", "diff/sqrt(model)"}
             Method used to compute the residuals. Available options are:
-                - "diff" (default): data - model.
-                - "diff/model": (data - model) / model.
-                - "diff/sqrt(model)": (data - model) / sqrt(model).
+
+            - "diff" (default): data - model.
+            - "diff/model": (data - model) / model.
+            - "diff/sqrt(model)": (data - model) / sqrt(model).
+
             Default is "diff".
+
         **kwargs : dict, optional
             Keyword arguments forwarded to `Map.smooth()`.
 

@@ -127,6 +127,8 @@ a datastore and producing the reduced datasets.)
 
 You can manually edit this produced configuration file and the run the data reduction process::
 
+.. code-block:: text
+
     $ gammapy analysis run
 
     INFO:gammapy.analysis.config:Setting logging config: {'level': 'INFO', 'filename': None, 'filemode': None, 'format': None, 'datefmt': None}

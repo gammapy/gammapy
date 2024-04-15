@@ -308,8 +308,6 @@ class HpxGeom(Geom):
 
     def pix_to_idx(self, pix, clip=False):
         # FIXME: Look for better method to clip HPX indices
-        # TODO: copy idx to avoid modifying input pix?
-        # pix_tuple_to_idx seems to always make a copy!?
         idx = pix_tuple_to_idx(pix)
         idx_local = self.global_to_local(idx)
         for i, _ in enumerate(idx):
@@ -449,7 +447,6 @@ class HpxGeom(Geom):
         center : `~astropy.coordinates.SkyCoord`
             Center position.
         """
-        # TODO: simplify
         import healpy as hp
 
         if self.is_allsky:
@@ -458,9 +455,7 @@ class HpxGeom(Geom):
             idx = unravel_hpx_index(self._ipix, self.npix_max)
             nside = self._get_nside(idx)
             vec = hp.pix2vec(nside, idx[0], nest=self.nest)
-            vec = np.array([np.mean(t) for t in vec])
-            lonlat = hp.vec2ang(vec, lonlat=True)
-            lon, lat = lonlat[0], lonlat[1]
+            lon, lat = hp.vec2ang(np.mean(vec, axis=1), lonlat=True)
         else:
             tokens = parse_hpxregion(self.region)
             if tokens[0] in ["DISK", "DISK_INC"]:
@@ -475,8 +470,7 @@ class HpxGeom(Geom):
                 else:
                     raise ValueError(f"Invalid ordering scheme: {tokens[1]!r}")
                 theta, phi = hp.pix2ang(nside_pix, ipix_pix, nest_pix)
-                lat = np.degrees((np.pi / 2) - theta)
-                lon = np.degrees(phi)
+                lon, lat = np.degrees(phi), np.degrees((np.pi / 2) - theta)
 
         return SkyCoord(lon, lat, frame=self.frame, unit="deg")
 

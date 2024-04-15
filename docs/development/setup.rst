@@ -227,6 +227,8 @@ Code quality
 
 To run all tests and measure coverage, type the command ``make test-cov``::
 
+.. code-block:: text
+
     $ make test-cov
 
 Releases

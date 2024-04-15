@@ -183,7 +183,7 @@ please refer to it for more details.
 
 The tooltip is the text that appears when you hover over the thumbnail. It is taken from the first line 
 of the docstring of the tutorial. You can change it by editing the docstring. See e.g.
- `Analysis 1 Tutorial <https://github.com/gammapy/gammapy/blob/main/examples/tutorials/starting/analysis_1.py#L5>`__.
+`Analysis 1 Tutorial <https://github.com/gammapy/gammapy/blob/main/examples/tutorials/starting/analysis_1.py#L5>`__.
 
 
 Dealing with links
