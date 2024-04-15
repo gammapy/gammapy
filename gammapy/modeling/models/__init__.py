@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Built-in models in Gammapy."""
 from gammapy.utils.registry import Registry
+from .astromodels_wrapper import AstroPriorModel, AstroSpatialModel, AstroSpectralModel
 from .core import DatasetModels, Model, ModelBase, Models
 from .cube import (
     FoVBackgroundModel,
@@ -68,6 +69,9 @@ from .temporal import (
 from .utils import read_hermes_cube
 
 __all__ = [
+    "AstroPriorModel",
+    "AstroSpectralModel",
+    "AstroSpatialModel",
     "BrokenPowerLawSpectralModel",
     "CompoundSpectralModel",
     "ConstantFluxSpatialModel",
@@ -147,6 +151,7 @@ SPATIAL_MODEL_REGISTRY = Registry(
         PointSpatialModel,
         ShellSpatialModel,
         Shell2SpatialModel,
+        AstroSpatialModel,
     ]
 )
 """Registry of spatial model classes."""
@@ -175,6 +180,7 @@ SPECTRAL_MODEL_REGISTRY = Registry(
         PowerLawNormSpectralModel,
         LogParabolaNormSpectralModel,
         ExpCutoffPowerLawNormSpectralModel,
+        AstroSpectralModel,
     ]
 )
 """Registry of spectral model classes."""
@@ -198,6 +204,7 @@ PRIOR_REGISTRY = Registry(
     [
         UniformPrior,
         GaussianPrior,
+        AstroPriorModel,
     ]
 )
 """Registry of prior classes."""
