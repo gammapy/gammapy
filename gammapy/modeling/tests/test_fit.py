@@ -180,6 +180,25 @@ def test_optimize(backend):
     assert len(result.trace) == result.nfev
 
 
+@pytest.mark.parametrize("method", ["MINUIT", "SCIPY"])
+def test_optimize_3ml(method):
+    backend = "3ml"
+    dataset = MyDataset()
+
+    kwargs = {"method": method}
+
+    fit = Fit(store_trace=True, backend=backend, optimize_opts=kwargs)
+    result = fit.optimize([dataset])
+
+    pars = dataset.models.parameters
+
+    assert_allclose(result.total_stat, 0, atol=1)
+
+    assert_allclose(pars["x"].value, 2, rtol=1e-2)
+    assert_allclose(pars["y"].value, 3e2, rtol=1e-3)
+    assert_allclose(pars["z"].value, 4e-2, rtol=1e-2)
+
+
 @pytest.mark.parametrize("backend", ["minuit"])
 def test_confidence(backend):
     dataset = MyDataset()
