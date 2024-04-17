@@ -14,6 +14,7 @@ from .iminuit import (
 )
 from .scipy import confidence_scipy, optimize_scipy
 from .sherpa import optimize_sherpa
+from .threeML_wrapper import optimize_3ml
 
 __all__ = ["Fit"]
 
@@ -36,6 +37,7 @@ class Registry:
             "minuit": optimize_iminuit,
             "sherpa": optimize_sherpa,
             "scipy": optimize_scipy,
+            "3ml": optimize_3ml,
         },
         "covariance": {
             "minuit": covariance_iminuit,
