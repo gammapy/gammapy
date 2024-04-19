@@ -449,7 +449,7 @@ class SpectralModel(ModelBase):
 
         Notes
         -----
-        Either ``energy_bounds`` or ``map_axis`` must be defined.
+        Either ``energy_bounds`` or ``energy_axis`` must be defined.
         """
         from gammapy.estimators.map.core import DEFAULT_UNIT
 
@@ -535,7 +535,7 @@ class SpectralModel(ModelBase):
 
         Notes
         -----
-        Either ``energy_bounds`` or ``map_axis`` must be defined.
+        Either ``energy_bounds`` or ``energy_axis`` must be defined.
         """
         from gammapy.estimators.map.core import DEFAULT_UNIT
 
