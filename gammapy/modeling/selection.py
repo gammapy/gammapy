@@ -64,11 +64,10 @@ class TestStatisticNested:
         """
         return np.sign(self.n_sigma) * sigma_to_ts(self.n_sigma, self.n_free_parameters)
 
-    def ts_frozen(self, datasets):
-        """Perform the alternative hypothesis testing with all parameters frozen.
+    def ts_known_bkg(self, datasets):
+        """Perform the alternative hypothesis testing assuming known background (all parameters frozen).
         This implicitly assumes that the non-null model is a good representation of the true model.
-        For example for source detection this assumes that the background (including other sources) is known.
-        If the assumption is true the frozen_ts should tend to the asimov_ts (deviation would indicate a bad fit of the data).
+        If the assumption is true the ts_known_bkg should tend to the ts_asimov (deviation would indicate a bad fit of the data).
         Deviations between ts and frozen_ts can be used to identify potential sources of confusion depending on which parameters are let free for the ts computation
          (for example considereing diffuse background or nearby source).
         """
@@ -79,14 +78,14 @@ class TestStatisticNested:
         return stat_null - stat
 
     def ts_asimov(self, datasets):
-        """Perform the alternative hypothesis testing with all parameters frozen in the the Asimov dataset.
+        """Perform the alternative hypothesis testing in the Asimov dataset.
         The Asimov dataset is defined by counts=npred such as the non-null model is the true model.
         """
         counts_cache = [d.counts for d in datasets]
         for d in datasets:
             d.counts = d.npred()
 
-        ts = self.ts_frozen(datasets)
+        ts = self.ts_known_bkg(datasets)
 
         for kd, d in enumerate(datasets):
             d.counts = counts_cache[kd]
