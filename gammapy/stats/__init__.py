@@ -32,5 +32,5 @@ __all__ = [
     "compute_flux_doubling",
     "compute_chisq",
     "structure_function",
-    "TimmerAlgorithm",
+    "TimmerKonig_lightcurve_simulator",
 ]

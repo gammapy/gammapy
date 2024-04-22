@@ -9,7 +9,7 @@ __all__ = [
     "compute_chisq",
     "compute_flux_doubling",
     "structure_function",
-    "TimmerAlgorithm",
+    "TimmerKonig_lightcurve_simulator",
 ]
 
 
@@ -285,7 +285,7 @@ def structure_function(flux, flux_err, time, tdelta_precision=5):
     return sf, distances
 
 
-def TimmerAlgorithm(
+def TimmerKonig_lightcurve_simulator(
     power_spectrum,
     npoints,
     spacing,

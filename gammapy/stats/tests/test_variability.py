@@ -7,7 +7,7 @@ from astropy.table import Column, Table
 from astropy.time import Time
 from gammapy.estimators import FluxPoints
 from gammapy.stats.variability import (
-    TKAlgorithm,
+    TimmerKonig_lightcurve_simulator,
     compute_chisq,
     compute_flux_doubling,
     compute_fpp,
@@ -196,8 +196,10 @@ def test_structure_function():
 
 
 def test_tk():
-    time_series = TKAlgorithm(3, 20, 1, type="powerlaw")
-    time_series2 = TKAlgorithm(3, 21, 1, type="white", normalization=5)
+    time_series = TimmerKonig_lightcurve_simulator(3, 20, 1, type="powerlaw")
+    time_series2 = TimmerKonig_lightcurve_simulator(
+        3, 21, 1, type="white", normalization=5
+    )
 
     assert len(time_series) == 20
     assert time_series.max() == 1
