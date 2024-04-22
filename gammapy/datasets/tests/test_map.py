@@ -942,6 +942,41 @@ def test_create_with_migra(tmp_path):
     assert dataset_new.edisp.edisp_map.data.shape == (3, 50, 10, 10)
 
 
+def test_create_high_dimension():
+    # tests empty datasets created with additional axes
+    label_axis = LabelMapAxis(["a", "b"], name="type")
+    rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="rad")
+    migra_axis = MapAxis(nodes=np.linspace(0.0, 3.0, 51), unit="", name="migra")
+    e_reco = MapAxis.from_edges(
+        np.logspace(-1.0, 1.0, 3), name="energy", unit=u.TeV, interp="log"
+    )
+    e_true = MapAxis.from_edges(
+        np.logspace(-1.0, 1.0, 4), name="energy_true", unit=u.TeV, interp="log"
+    )
+    geom = WcsGeom.create(binsz=0.02, width=(2, 2), axes=[label_axis, e_reco])
+    empty_dataset = MapDataset.create(
+        geom=geom, energy_axis_true=e_true, rad_axis=rad_axis
+    )
+
+    assert empty_dataset.counts.data.shape == (2, 2, 100, 100)
+
+    assert empty_dataset.exposure.data.shape == (2, 3, 100, 100)
+
+    assert empty_dataset.psf.psf_map.data.shape == (2, 3, 50, 10, 10)
+    assert empty_dataset.psf.exposure_map.data.shape == (2, 3, 1, 10, 10)
+
+    assert empty_dataset.edisp.edisp_map.data.shape == (2, 3, 2, 10, 10)
+    assert empty_dataset.edisp.exposure_map.data.shape == (2, 3, 1, 10, 10)
+    assert_allclose(empty_dataset.edisp.edisp_map.data.sum(), 600)
+
+    empty_dataset2 = MapDataset.create(
+        geom=geom, energy_axis_true=e_true, rad_axis=rad_axis, migra_axis=migra_axis
+    )
+
+    assert empty_dataset2.edisp.edisp_map.data.shape == (2, 3, 50, 10, 10)
+    assert empty_dataset2.edisp.exposure_map.data.shape == (2, 3, 1, 10, 10)
+
+
 def test_stack(sky_model):
     axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=3)
     geom = WcsGeom.create(

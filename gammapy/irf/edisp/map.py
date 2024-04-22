@@ -336,7 +336,8 @@ class EDispKernelMap(IRFMap):
         edisp_map : `EDispKernelMap`
             Energy dispersion kernel map.
         """
-        geom.axes.assert_names(cls.required_axes)
+        # TODO: allow only list of additional axes
+        geom.axes.assert_names(cls.required_axes, allow_extra=True)
         geom_exposure = geom.squash(axis_name="energy")
         exposure = Map.from_geom(geom_exposure, unit="m2 s")
 
@@ -346,7 +347,7 @@ class EDispKernelMap(IRFMap):
         data = get_overlap_fraction(energy_axis, energy_axis_true)
 
         edisp_kernel_map = Map.from_geom(geom, unit="")
-        edisp_kernel_map.quantity += data.reshape(geom.data_shape_axes)
+        edisp_kernel_map.quantity += np.resize(data, geom.data_shape_axes)
         return cls(edisp_kernel_map=edisp_kernel_map, exposure_map=exposure)
 
     def get_edisp_kernel(self, position=None, energy_axis=None):

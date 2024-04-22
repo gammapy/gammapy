@@ -62,11 +62,10 @@ The setup
 import numpy as np
 from astropy import units as u
 import matplotlib.pyplot as plt
-from gammapy.datasets import Datasets, SpectrumDatasetOnOff
+from gammapy.datasets import SpectrumDatasetOnOff
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
     GaussianPrior,
-    Models,
     PowerLawSpectralModel,
     SkyModel,
     UniformPrior,
@@ -100,7 +99,7 @@ model = SkyModel(spectral_model=pl_spectrum, name="simu-source")
 ######################################################################
 # The data and background are read from pre-computed ON/OFF datasets of
 # HESS observations. For simplicity, we stack them together and transform
-# the dataset to a `SpectrumDataset`. Then we set the model and create
+# the dataset to a `~gammapy.datasets.SpectrumDataset`. Then we set the model and create
 # an Asimov dataset (dataset without statistics) by setting the counts as
 # the model predictions.
 #
@@ -413,16 +412,16 @@ plt.show()
 # Implementing a custom prior
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# For now, only ``GaussianPrior`` and `UniformPrior`` are implemented.
-# To add a use case specfific prior one has to create a prior subclass
+# For now, only ``GaussianPrior`` and ``UniformPrior`` are implemented.
+# To add a use case specific prior one has to create a prior subclass
 # containing:
 #
-# - a tag and a _type used for the serialization
-# - an instantiation of each PriorParameter with their unit and default values
-# - the evaluate function where the mathematical expression for the prior
-#    is defined.
+# -  a tag and a _type used for the serialization
+# -  an instantiation of each PriorParameter with their unit and default values
+# -  the evaluate function where the mathematical expression for the prior is defined.
+#
 # As an example for a custom prior a Jeffrey prior for a scale parameter is chosen.
-# The only parameter is ``sigma`` and the evaluation method return the quared inverse of ``sigma``.
+# The only parameter is ``sigma`` and the evaluation method return the squared inverse of ``sigma``.
 
 
 from gammapy.modeling import PriorParameter

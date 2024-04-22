@@ -134,7 +134,7 @@ dataset = datasets["Fermi-LAT"]
 # a `mask_fit` it is equal to the safe energy range.
 #
 
-print(f"Fit range : {dataset.energy_range}")
+print(f"Fit range : {dataset.energy_range_total}")
 
 
 ######################################################################
@@ -159,7 +159,7 @@ mask_energy = dataset.counts.geom.energy_mask(10 * u.GeV, 700 * u.GeV)
 #
 
 dataset.mask_fit = mask_energy
-print(f"Fit range : {dataset.energy_range}")
+print(f"Fit range : {dataset.energy_range_total}")
 
 
 ######################################################################
@@ -410,7 +410,7 @@ plt.show()
 
 
 ######################################################################
-# The NOT operator is represented by `~` symbol:
+# The NOT operator is represented by the ``~`` symbol:
 #
 
 significance_mask_inv = ~significance_mask
