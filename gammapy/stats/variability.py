@@ -297,16 +297,15 @@ def TimmerKonig_lightcurve_simulator(
 
     Parameters
     ----------
-    power_spectrum : float, `~numpy.ndarray`
-        Power spectrum used to generate the time series. It can either be presented analytically, as a parameter or set
-        of parameters of a function, or as a `~numpy.ndarray` describing the spectrum in a discrete manner.
+    power_spectrum : float
+        Power spectrum used to generate the time series, presented analytically, as a parameter or set
+        of parameters of a function.
     npoints : float
         Number of points in the output time series.
     spacing : float
         Sample spacing, inverse of the sampling rate.
-    type : {"discrete", "powerlaw", "white"}
-        Type of input periodogram. For `~numpy.ndarray` inputs, the type is "discrete". Default is "discrete".
-        If 'type' = "discrete", 'powerspectrum' is expected to be  a `~numpy.ndarray` containing the discrete spectrum.
+    type : {"powerlaw", "white"}
+        Type of input periodogram.  Default is "powerlaw".
         If 'type' = "powerlaw", 'powerspectrum' is expected to be  a float representing the power index.
         If 'type' = "white", 'powerspectrum' is expected to be  a float representing the standard deviation.
     random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
@@ -324,10 +323,6 @@ def TimmerKonig_lightcurve_simulator(
     ----------
     ..[Timmer1995]"On generating power law noise", J. Timmer and M, Konig, section 3.
     """
-    if isinstance(power_spectrum, np.ndarray) and type != "discrete":
-        raise ValueError(
-            "Power spectrum input is an array but the requested type is not 'discrete'."
-        )
 
     random_state = get_random_state(random_state)
 
@@ -336,9 +331,7 @@ def TimmerKonig_lightcurve_simulator(
     # To obtain real data only the positive or negative part of the frequency is necessary.
     real_frequencies = np.sort(np.abs(frequencies[frequencies < 0]))
 
-    if type == "discrete":
-        periodogram = power_spectrum
-    elif type == "powerlaw":
+    if type == "powerlaw":
         periodogram = (1 / real_frequencies) ** power_spectrum
     elif type == "white":
         periodogram = np.full_like(real_frequencies, power_spectrum)
