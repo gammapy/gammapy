@@ -2103,24 +2103,26 @@ class MapAxes(Sequence):
 
         return cls(axes_out, n_spatial_axes=n_spatial_axes)
 
-    def assert_names(self, required_names):
+    def assert_names(self, required_names, allow_extra=False):
         """Assert required axis names and order.
 
         Parameters
         ----------
         required_names : list of str
             Required names.
+        allow_extra : bool
+            Allow extra axes beyond required ones.
         """
         message = (
             "Incorrect axis order or names. Expected axis "
             f"order: {required_names}, got: {self.names}."
         )
 
-        if not len(self) == len(required_names):
+        if not allow_extra and not len(self) == len(required_names):
             raise ValueError(message)
 
         try:
-            for ax, required_name in zip(self, required_names):
+            for ax, required_name in zip(self[: len(required_names)], required_names):
                 ax.assert_name(required_name)
 
         except ValueError:

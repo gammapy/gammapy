@@ -648,7 +648,8 @@ class IRFMap:
     def __init__(self, irf_map, exposure_map):
         self._irf_map = irf_map
         self.exposure_map = exposure_map
-        irf_map.geom.axes.assert_names(self.required_axes)
+        # TODO: only allow for limited set of additional axes?
+        irf_map.geom.axes.assert_names(self.required_axes, allow_extra=True)
 
     @property
     @abc.abstractmethod
