@@ -194,6 +194,7 @@ class MapDatasetEventSampler:
 
         npred = self._evaluate_timevar_source(dataset, model=model)
         data = npred.data[np.isfinite(npred.data)]
+        data = np.clip(data, 0, None)
 
         try:
             n_events = self.random_state.poisson(np.sum(data))
@@ -228,6 +229,7 @@ class MapDatasetEventSampler:
             Table of sampled events.
         """
         data = npred.data[np.isfinite(npred.data)]
+        data = np.clip(data, 0, None)
         n_events = self.random_state.poisson(np.sum(data))
 
         coords = npred.sample_coord(n_events=n_events, random_state=self.random_state)
