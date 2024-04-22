@@ -9,7 +9,7 @@ from regions import CircleSkyRegion
 import matplotlib.pyplot as plt
 from gammapy.data import GTI, PointingMode
 from gammapy.irf import EDispKernelMap, EDispMap, PSFKernel, PSFMap, RecoPSFMap
-from gammapy.maps import LabelMapAxis, Map, MapAxis, WcsGeom
+from gammapy.maps import LabelMapAxis, Map, MapAxes, MapAxis, WcsGeom
 from gammapy.modeling.models import DatasetModels, FoVBackgroundModel, Models
 from gammapy.stats import (
     CashCountsStatistic,
@@ -65,7 +65,8 @@ def create_map_dataset_geoms(
     Parameters
     ----------
     geom : `~gammapy.maps.WcsGeom`
-        Reference target geometry in reconstructed energy, used for counts and background maps.
+        Reference target geometry with a reconstructed energy axis. It is used for counts and background maps.
+        Additional external data axes can be added to support e.g. event types.
     energy_axis_true : `~gammapy.maps.MapAxis`
         True energy axis used for IRF maps.
     migra_axis : `~gammapy.maps.MapAxis`
@@ -90,19 +91,28 @@ def create_map_dataset_geoms(
     else:
         energy_axis_true = geom.axes["energy"].copy(name="energy_true")
 
+    external_axes = geom.axes.drop("energy")
     geom_image = geom.to_image()
-    geom_exposure = geom_image.to_cube([energy_axis_true])
+    geom_exposure = geom_image.to_cube(MapAxes([energy_axis_true]) + external_axes)
     geom_irf = geom_image.to_binsz(binsz=binsz_irf)
 
     if reco_psf:
-        geom_psf = geom_irf.to_cube([rad_axis, geom.axes["energy"]])
+        geom_psf = geom_irf.to_cube(
+            MapAxes([rad_axis, geom.axes["energy"]]) + external_axes
+        )
     else:
-        geom_psf = geom_irf.to_cube([rad_axis, energy_axis_true])
+        geom_psf = geom_irf.to_cube(
+            MapAxes([rad_axis, energy_axis_true]) + external_axes
+        )
 
     if migra_axis:
-        geom_edisp = geom_irf.to_cube([migra_axis, energy_axis_true])
+        geom_edisp = geom_irf.to_cube(
+            MapAxes([migra_axis, energy_axis_true]) + external_axes
+        )
     else:
-        geom_edisp = geom_irf.to_cube([geom.axes["energy"], energy_axis_true])
+        geom_edisp = geom_irf.to_cube(
+            MapAxes([geom.axes["energy"], energy_axis_true]) + external_axes
+        )
 
     return {
         "geom": geom,
@@ -1053,10 +1063,13 @@ class MapDataset(Dataset):
         ----------
         method : {"diff", "diff/model", "diff/sqrt(model)"}
             Method used to compute the residuals. Available options are:
-                - "diff" (default): data - model.
-                - "diff/model": (data - model) / model.
-                - "diff/sqrt(model)": (data - model) / sqrt(model).
+
+            - "diff" (default): data - model.
+            - "diff/model": (data - model) / model.
+            - "diff/sqrt(model)": (data - model) / sqrt(model).
+
             Default is "diff".
+
         **kwargs : dict, optional
             Keyword arguments forwarded to `Map.smooth()`.
 

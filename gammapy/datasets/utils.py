@@ -5,6 +5,8 @@ from gammapy.maps import Map
 from gammapy.modeling.models.utils import cutout_template_models
 from . import Datasets
 
+__all__ = ["apply_edisp", "split_dataset"]
+
 
 def apply_edisp(input_map, edisp):
     """Apply energy dispersion to map. Requires "energy_true" axis.
@@ -14,13 +16,42 @@ def apply_edisp(input_map, edisp):
     input_map : `~gammapy.maps.Map`
         The map to be convolved with the energy dispersion.
         It must have an axis named "energy_true".
-    edisp : `gammapy.irf.EDispKernel`
+    edisp : `~gammapy.irf.EDispKernel`
         Energy dispersion matrix.
 
     Returns
     -------
     map : `~gammapy.maps.Map`
         Map with energy dispersion applied.
+
+    Examples
+    --------
+    >>> from gammapy.irf.edisp import EDispKernel
+    >>> from gammapy.datasets.utils import apply_edisp
+    >>> from gammapy.maps import MapAxis, Map
+    >>> import numpy as np
+    >>>
+    >>> axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=6, name="energy_true")
+    >>> m = Map.create(
+    ...     skydir=(0.8, 0.8),
+    ...     width=(1, 1),
+    ...     binsz=0.02,
+    ...     axes=[axis],
+    ...     frame="galactic"
+    ... )
+    >>> e_true = m.geom.axes[0]
+    >>> e_reco = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3)
+    >>> edisp = EDispKernel.from_diagonal_response(energy_axis_true=e_true, energy_axis=e_reco)
+    >>> map_edisp = apply_edisp(m, edisp)
+    >>> print(map_edisp)
+    WcsNDMap
+    <BLANKLINE>
+        geom  : WcsGeom
+        axes  : ['lon', 'lat', 'energy']
+        shape : (50, 50, 3)
+        ndim  : 3
+        unit  :
+        dtype : float64
     """
     # TODO: either use sparse matrix multiplication or something like edisp.is_diagonal
     if edisp is not None:
@@ -80,20 +111,41 @@ def split_dataset(dataset, width, margin, split_template_models=True):
     dataset : `~gammapy.datasets.Dataset`
         Dataset to split.
     width : `~astropy.coordinates.Angle`
-        Angular size of the each sub-region.
+        Angular size of each sub-region.
     margin : `~astropy.coordinates.Angle`
         Angular size to be added to the `width`.
         The margin should be defined such as sources outside the region of interest
-        that contributes inside are well defined.
+        that contributes inside are well-defined.
         The mask_fit in the margin region is False and unchanged elsewhere.
     split_template_models : bool, optional
         Apply cutout to template models or not. Default is True.
 
-
     Returns
     -------
     datasets : `~gammapy.datasets.Datasets`
-        Splitted datasets
+        Split datasets.
+
+    Examples
+    --------
+    >>> from gammapy.datasets import MapDataset
+    >>> from gammapy.datasets.utils import split_dataset
+    >>> from gammapy.modeling.models import GaussianSpatialModel, PowerLawSpectralModel, SkyModel
+    >>> import astropy.units as u
+    >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
+    >>> # Split the dataset
+    >>> width = 4 * u.deg
+    >>> margin = 1 * u.deg
+    >>> split_datasets = split_dataset(dataset, width, margin, split_template_models=False)
+    >>> # Apply a model and split the dataset
+    >>> spatial_model = GaussianSpatialModel()
+    >>> spectral_model = PowerLawSpectralModel()
+    >>> sky_model = SkyModel(
+    ...     spatial_model=spatial_model, spectral_model=spectral_model, name="test-model"
+    ... )
+    >>> dataset.models = [sky_model]
+    >>> split_datasets = split_dataset(
+    ...     dataset, width=width, margin=margin, split_template_models=True
+    ... )
     """
 
     if margin >= width / 2.0:

@@ -768,7 +768,7 @@ class RegionGeom(Geom):
         region_hdu = "REGION"
 
         if format == "gadf" and hdu:
-            region_hdu = hdu + "_" + region_hdu
+            region_hdu = f"{hdu}_{region_hdu}"
 
         if region_hdu in hdulist:
             try:
@@ -784,6 +784,7 @@ class RegionGeom(Geom):
             for region_pix in regions_pix:
                 # TODO: remove workaround once regions issue with fits serialization is sorted out
                 # see https://github.com/astropy/regions/issues/400
+                # requires update regions to >=v0.6
                 region_pix.meta["include"] = True
                 regions.append(region_pix.to_sky(wcs))
 

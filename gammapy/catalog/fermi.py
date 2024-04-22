@@ -41,6 +41,109 @@ def compute_flux_points_ul(quantity, quantity_errp):
     return 2 * quantity_errp + quantity
 
 
+class SourceCatalogObjectFermiPCBase(SourceCatalogObject, abc.ABC):
+    """Base class for Fermi-LAT Pulsar catalogs."""
+
+    def __str__(self):
+        return self.info()
+
+    def info(self, info="all"):
+
+        if info == "all":
+            info = "basic,more,position,pulsar,spectral,lightcurve"
+
+        ss = ""
+        ops = info.split(",")
+        if "basic" in ops:
+            ss += self._info_basic()
+        if "more" in ops:
+            ss += self._info_more()
+        if "pulsar" in ops:
+            ss += self._info_pulsar()
+        if "position" in ops:
+            ss += self._info_position()
+        if "spectral" in ops:
+            ss += self._info_spectral_fit()
+            ss += self._info_spectral_points()
+        if "lightcurve" in ops:
+            ss += self._info_phasogram()
+        return ss
+
+    def _info_basic(self):
+        ss = "\n*** Basic info ***\n\n"
+        ss += "Catalog row index (zero-based) : {}\n".format(self.row_index)
+        ss += "{:<20s} : {}\n".format("Source name", self.name)
+        return ss
+
+    def _info_more(self):
+        return ""
+
+    def _info_pulsar(self):
+        return "\n"
+
+    def _info_position(self):
+        source_pos = self.position
+        ss = "\n*** Position info ***\n\n"
+        ss += "{:<20s} : {:.3f}\n".format("RA", source_pos.ra)
+        ss += "{:<20s} : {:.3f}\n".format("DEC", source_pos.dec)
+        ss += "{:<20s} : {:.3f}\n".format("GLON", source_pos.galactic.l)
+        ss += "{:<20s} : {:.3f}\n".format("GLAT", source_pos.galactic.b)
+        return ss
+
+    def _info_spectral_fit(self):
+        return "\n"
+
+    def _info_spectral_points(self):
+        ss = "\n*** Spectral points ***\n\n"
+        if self.flux_points_table is None:
+            ss += "No spectral points available.\n"
+            return ss
+        lines = format_flux_points_table(self.flux_points_table).pformat(
+            max_width=-1, max_lines=-1
+        )
+        ss += "\n".join(lines)
+        ss += "\n"
+        return ss
+
+    def _info_phasogram(self):
+        return ""
+
+    def spatial_model(self):
+        source_pos = self.position
+        ra = source_pos.ra
+        dec = source_pos.dec
+
+        model = PointSpatialModel(lon_0=ra, lat_0=dec, frame="icrs")
+        return model
+
+    def sky_model(self, name=None):
+        """Sky model (`~gammapy.modeling.models.SkyModel`)."""
+        spectral_model = self.spectral_model()
+        if spectral_model is None:
+            return None
+
+        if name is None:
+            name = self.name
+
+        return SkyModel(
+            spatial_model=self.spatial_model(),
+            spectral_model=spectral_model,
+            name=name,
+        )
+
+    @property
+    def flux_points(self):
+        """Flux points (`~gammapy.estimators.FluxPoints`)."""
+        if self.flux_points_table is None:
+            return None
+
+        return FluxPoints.from_table(
+            table=self.flux_points_table,
+            reference_model=self.sky_model(),
+            format="gadf-sed",
+        )
+
+
 class SourceCatalogObjectFermiBase(SourceCatalogObject, abc.ABC):
     """Base class for Fermi-LAT catalogs."""
 

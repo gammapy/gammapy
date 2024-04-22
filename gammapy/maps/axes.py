@@ -887,8 +887,6 @@ class MapAxis:
         axis : `~MapAxis`
             Squashed axis object.
         """
-        # TODO: Decide on handling node_type=center
-        # See https://github.com/gammapy/gammapy/issues/1952
         return MapAxis.from_bounds(
             lo_bnd=self.edges[0].value,
             hi_bnd=self.edges[-1].value,
@@ -977,14 +975,11 @@ class MapAxis:
         groups : `~astropy.table.Table`
             Map axis group table.
         """
-        # TODO: try to simplify this code
         if self.node_type != "edges":
             raise ValueError("Only edge based map axis can be grouped")
 
-        edges_pix = self.coord_to_pix(edges)
-        edges_pix = np.clip(edges_pix, -0.5, self.nbin - 0.5)
-        edges_idx = np.round(edges_pix + 0.5) - 0.5
-        edges_idx = np.unique(edges_idx)
+        edges_pix = np.clip(self.coord_to_pix(edges), -0.5, self.nbin - 0.5)
+        edges_idx = np.unique(np.round(edges_pix + 0.5) - 0.5)
         edges_ref = self.pix_to_coord(edges_idx)
 
         groups = Table()
@@ -1011,7 +1006,6 @@ class MapAxis:
             groups.insert_row(0, vals=underflow)
 
         edge_idx_end, edge_ref_end = edges_idx[-1], edges_ref[-1]
-
         if edge_idx_end < (self.nbin - 0.5):
             overflow = {
                 "bin_type": "overflow",
@@ -2109,24 +2103,26 @@ class MapAxes(Sequence):
 
         return cls(axes_out, n_spatial_axes=n_spatial_axes)
 
-    def assert_names(self, required_names):
+    def assert_names(self, required_names, allow_extra=False):
         """Assert required axis names and order.
 
         Parameters
         ----------
         required_names : list of str
             Required names.
+        allow_extra : bool
+            Allow extra axes beyond required ones.
         """
         message = (
             "Incorrect axis order or names. Expected axis "
             f"order: {required_names}, got: {self.names}."
         )
 
-        if not len(self) == len(required_names):
+        if not allow_extra and not len(self) == len(required_names):
             raise ValueError(message)
 
         try:
-            for ax, required_name in zip(self, required_names):
+            for ax, required_name in zip(self[: len(required_names)], required_names):
                 ax.assert_name(required_name)
 
         except ValueError:
@@ -2376,13 +2372,12 @@ class TimeMapAxis:
 
     @property
     def time_format(self):
-        # TODO: The docsttring for time format and its setter are not showing up in the docs.
         """The time format to use for the axis."""
         return self._time_format
 
     @time_format.setter
     def time_format(self, val):
-        """The time format to use for the axis."""
+        # inherited docstring
         if val not in ["iso", "mjd"]:
             raise ValueError(f"Invalid time_format: {self.time_format}")
         self._time_format = val
@@ -2986,10 +2981,10 @@ class TimeMapAxis:
         groups : `~astropy.table.Table`
             Group table. Bin groups are divided in:
 
-             *"normal" for the bins containing data
-             *"underflow" for the bins falling below the minimum axis threshold
-             *"overflow" for the bins falling above  the maximum axis threshold
-             *"outflow" for other states
+            * "normal" for the bins containing data
+            * "underflow" for the bins falling below the minimum axis threshold
+            * "overflow" for the bins falling above  the maximum axis threshold
+            * "outflow" for other states
         """
 
         for _, edge in enumerate(interval_edges):

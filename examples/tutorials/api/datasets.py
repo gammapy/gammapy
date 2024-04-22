@@ -299,9 +299,9 @@ plt.show()
 ######################################################################
 # To access the energy range defined by the mask you can use:
 #
-# -`~gammapy.datasets.MapDataset.energy_range_safe` : energy range defined by the `~gammapy.datasets.MapDataset.mask_safe`
-# - `~gammapy.datasets.MapDataset.energy_range_fit` : energy range defined by the `~gammapy.datasets.MapDataset.mask_fit`
-# - `~gammapy.datasets.MapDataset.energy_range` : the final energy range used in likelihood computation
+# -  `~gammapy.datasets.MapDataset.energy_range_safe` : energy range defined by the `~gammapy.datasets.MapDataset.mask_safe`
+# -  `~gammapy.datasets.MapDataset.energy_range_fit` : energy range defined by the `~gammapy.datasets.MapDataset.mask_fit`
+# -  `~gammapy.datasets.MapDataset.energy_range` : the final energy range used in likelihood computation
 #
 # These methods return two maps, with the `min` and `max` energy
 # values at each spatial pixel
@@ -324,7 +324,7 @@ plt.show()
 ######################################################################
 # Just as for `~gammapy.maps.Map` objects it is possible to cutout a whole
 # `~gammapy.datasets.MapDataset`, which will perform the cutout for all maps in
-# parallel.Optionally one can provide a new name to the resulting dataset:
+# parallel. Optionally one can provide a new name to the resulting dataset:
 #
 
 cutout = dataset_cta.cutout(
@@ -417,8 +417,8 @@ plt.show()
 # ---------------
 #
 # `~gammapy.datasets.SpectrumDataset` inherits from a `~gammapy.datasets.MapDataset`, and is specially
-# adapted for 1D spectral analysis, and uses a `RegionGeom` instead of a
-# `WcsGeom`. A `~gammapy.datasets.MapDataset` can be converted to a `~gammapy.datasets.SpectrumDataset`,
+# adapted for 1D spectral analysis, and uses a `~gammapy.maps.RegionGeom` instead of a
+# `~gammapy.maps.WcsGeom`. A `~gammapy.datasets.MapDataset` can be converted to a `~gammapy.datasets.SpectrumDataset`,
 # by summing the `counts` and `background` inside the `on_region`,
 # which can then be used for classical spectral analysis. Containment
 # correction is feasible only for circular regions.
@@ -485,7 +485,7 @@ print(fp_dataset.data_shape())  # number of data points
 ######################################################################
 #
 # For an example of fitting `~gammapy.estimators.FluxPoints`, see :doc:`/tutorials/analysis-1d/sed_fitting`,
-# and for using source catalogs see :doc:`/tutorials/api/catalog`
+# and for using source catalogs see :doc:`/tutorials/api/catalog`.
 #
 
 
@@ -499,11 +499,12 @@ print(fp_dataset.data_shape())  # number of data points
 #
 # For modelling and fitting of a list of `~gammapy.datasets.Dataset` objects, you can
 # either:
-# (a) Do a joint fitting of all the datasets together OR
-# (b) Stack the datasets together, and then fit them.
+#
+# -  (A) Do a joint fitting of all the datasets together **OR**
+# -  (B) Stack the datasets together, and then fit them.
 #
 # `~gammapy.datasets.Datasets` is a convenient tool to handle joint fitting of
-# simultaneous datasets. As an example, please see :doc:`/tutorials/analysis-3d/analysis_mwl`
+# simultaneous datasets. As an example, please see :doc:`/tutorials/analysis-3d/analysis_mwl`.
 #
 # To see how stacking is performed, please see :ref:`stack`.
 #
