@@ -428,9 +428,9 @@ class SpectralModel(ModelBase):
         Parameters
         ----------
         energy_bounds : `~astropy.units.Quantity`
-            Plot energy bounds passed to `~gammapy.maps.MapAxis.from_energy_bounds`.
-        energy_axis : `~gammapy.maps.MapAxis`
-            Plot the energy axis.
+            Energy bounds between which the model is to be plotted.
+        energy_axis : `~gammapy.maps.MapAxis`, optional
+            Axis defining the energy bounds between which the model is to be plotted.
         ax : `~matplotlib.axes.Axes`, optional
             Matplotlib axes. Default is None.
         sed_type : {"dnde", "flux", "eflux", "e2dnde"}
@@ -450,13 +450,19 @@ class SpectralModel(ModelBase):
         Notes
         -----
         Either ``energy_bounds`` or ``energy_axis`` must be defined.
+        If ``energy_bounds`` is supplied, an ``energy_axis`` is created internally with ``n_points``
+        bins between the given bounds. If both are supplied, an error will occur.
         """
         from gammapy.estimators.map.core import DEFAULT_UNIT
 
         if self.is_norm_spectral_model:
             sed_type = "norm"
 
-        if energy_bounds is not None:
+        if energy_bounds is not None and energy_axis:
+            raise AttributeError(
+                "Both `energy_bounds` or `energy_axis` cannot be defined."
+            )
+        elif energy_bounds is not None:
             energy_min, energy_max = energy_bounds
             energy = MapAxis.from_energy_bounds(
                 energy_min,
@@ -514,9 +520,9 @@ class SpectralModel(ModelBase):
         Parameters
         ----------
         energy_bounds : `~astropy.units.Quantity`
-            Plot energy bounds passed to `~gammapy.maps.MapAxis.from_energy_bounds`.
-        energy_axis : `~gammapy.maps.MapAxis`
-            Plot the energy axis.
+            Energy bounds between which the model is to be plotted.
+        energy_axis : `~gammapy.maps.MapAxis`, optional
+            Axis defining the energy bounds between which the model is to be plotted.
         ax : `~matplotlib.axes.Axes`, optional
             Matplotlib axes. Default is None.
         sed_type : {"dnde", "flux", "eflux", "e2dnde"}
@@ -536,13 +542,19 @@ class SpectralModel(ModelBase):
         Notes
         -----
         Either ``energy_bounds`` or ``energy_axis`` must be defined.
+        If ``energy_bounds`` is supplied, an ``energy_axis`` is created internally with ``n_points``
+        bins between the given bounds. If both are supplied, an error will occur.
         """
         from gammapy.estimators.map.core import DEFAULT_UNIT
 
         if self.is_norm_spectral_model:
             sed_type = "norm"
 
-        if energy_bounds is not None:
+        if energy_bounds is not None and energy_axis:
+            raise AttributeError(
+                "Both `energy_bounds` or `energy_axis` cannot be defined."
+            )
+        elif energy_bounds is not None:
             energy_min, energy_max = energy_bounds
             energy = MapAxis.from_energy_bounds(
                 energy_min,

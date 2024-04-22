@@ -457,6 +457,12 @@ def test_model_plot():
     with pytest.raises(AttributeError):
         pwl.plot_error()
 
+    with pytest.raises(AttributeError):
+        pwl.plot(energy_bounds=(1 * u.TeV, 10 * u.TeV), energy_axis=energy_axis)
+
+    with pytest.raises(AttributeError):
+        pwl.plot_error(energy_bounds=(1 * u.TeV, 10 * u.TeV), energy_axis=energy_axis)
+
 
 def test_model_plot_sed_type():
     pwl = PowerLawSpectralModel(
