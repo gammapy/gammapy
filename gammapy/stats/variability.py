@@ -289,7 +289,7 @@ def TimmerKonig_lightcurve_simulator(
     power_spectrum,
     npoints,
     spacing,
-    type="discrete",
+    type="powerlaw",
     random_state="random-seed",
     normalization=1.0,
 ):
