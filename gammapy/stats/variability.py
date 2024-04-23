@@ -289,7 +289,7 @@ def TimmerKonig_lightcurve_simulator(
     power_spectrum,
     npoints,
     spacing,
-    type="powerlaw",
+    function="powerlaw",
     random_state="random-seed",
     normalization=1.0,
 ):
@@ -297,17 +297,19 @@ def TimmerKonig_lightcurve_simulator(
 
     Parameters
     ----------
-    power_spectrum : float
+    power_spectrum : float, function
         Power spectrum used to generate the time series, presented analytically, as a parameter or set
-        of parameters of a function.
+        of parameters of a function. If the type parameter is set to "custom", power_spectrum is expected to be
+        a function mapping the input frequencies to the periodogram.
     npoints : float
         Number of points in the output time series.
     spacing : float
         Sample spacing, inverse of the sampling rate.
-    type : {"powerlaw", "white"}
+    function : {"powerlaw", "white", "custom"}
         Type of input periodogram.  Default is "powerlaw".
         If 'type' = "powerlaw", 'powerspectrum' is expected to be  a float representing the power index.
         If 'type' = "white", 'powerspectrum' is expected to be  a float representing the standard deviation.
+        If 'type' = "custom", 'powerspectrum is expected to be a function of the input frequencies.
     random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
         Defines random number generator initialisation.
         Passed to `~gammapy.utils.random.get_random_state`. Default is "random-seed".
@@ -323,6 +325,8 @@ def TimmerKonig_lightcurve_simulator(
     ----------
     ..[Timmer1995]"On generating power law noise", J. Timmer and M, Konig, section 3.
     """
+    if function == "custom" and not isinstance(power_spectrum, type(lambda: None)):
+        raise ValueError("A custom power spectrum has to be provided as a function.")
 
     random_state = get_random_state(random_state)
 
@@ -331,12 +335,14 @@ def TimmerKonig_lightcurve_simulator(
     # To obtain real data only the positive or negative part of the frequency is necessary.
     real_frequencies = np.sort(np.abs(frequencies[frequencies < 0]))
 
-    if type == "powerlaw":
+    if function == "powerlaw":
         periodogram = (1 / real_frequencies) ** power_spectrum
-    elif type == "white":
+    elif function == "white":
         periodogram = np.full_like(real_frequencies, power_spectrum)
+    elif function == "custom":
+        periodogram = power_spectrum(real_frequencies)
     else:
-        raise ValueError("Power spectrum type not accepted!")
+        raise ValueError("Power spectrum function not accepted!")
 
     random_numbers = random_state.normal(
         0, 1, len(periodogram) - 1
