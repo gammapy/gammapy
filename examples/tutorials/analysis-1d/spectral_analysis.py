@@ -145,8 +145,7 @@ check_tutorials_setup()
 # Load Data
 # ---------
 #
-# First, we select and load some H.E.S.S. observations of the Crab nebula
-# (simulated events for now).
+# First, we select and load some H.E.S.S. observations of the Crab nebula.
 #
 # We will access the events, effective area, energy dispersion, livetime
 # and PSF for containment correction.
