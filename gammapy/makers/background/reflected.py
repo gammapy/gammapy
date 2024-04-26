@@ -436,7 +436,8 @@ class ReflectedRegionsBackgroundMaker(Maker):
         If not given, a `ReflectedRegionsFinder` will be created and
         any of the ``**kwargs`` will be forwarded to the `ReflectedRegionsFinder`.
     exclusion_mask : `~gammapy.maps.WcsNDMap`, optional
-        Exclusion mask.
+        Exclusion mask. The map must contain at max one non-spatial dimension, and this
+        dimension must be one bin.
     """
 
     tag = "ReflectedRegionsBackgroundMaker"
