@@ -203,7 +203,7 @@ def test_plot_models(caplog):
     models = Models.read("$GAMMAPY_DATA/tests/models/gc_example_models.yaml")
 
     with mpl_plot_check():
-        models.plot_positions()
+        models.plot_regions(linewidth=2)
         models.plot_regions()
 
     assert models.wcs_geom.data_shape == models.wcs_geom.wcs.array_shape
