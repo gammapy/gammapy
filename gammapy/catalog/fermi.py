@@ -1690,8 +1690,6 @@ class SourceCatalog3PC(SourceCatalog):
     - https://fermi.gsfc.nasa.gov/ssc/data/access/lat/3rd_PSR_catalog/
 
     One source is represented by `~gammapy.catalog.SourceCatalogObject3PC`.
-
-    TODO  : Fix the UnitsWarning here ...
     """
 
     tag = "3PC"
