@@ -100,7 +100,11 @@ def time_ref_from_dict(meta, format="mjd", scale="tt"):
         Time object with ``format='MJD'``.
     """
     scale = meta.get("TIMESYS", scale).lower()
-    return Time(meta["MJDREFI"], meta["MJDREFF"], format=format, scale=scale)
+
+    # some files seem to have MJDREFF as string, not as float
+    mjdrefi = float(meta["MJDREFI"])
+    mjdreff = float(meta["MJDREFF"])
+    return Time(mjdrefi, mjdreff, format=format, scale=scale)
 
 
 def time_ref_to_dict(time=None, scale="tt"):
