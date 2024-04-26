@@ -24,8 +24,8 @@ ARTIST_TO_LINE_PROPERTIES = {
     "ec": "markeredgecolor",
     "facecolor": "markerfacecolor",
     "fc": "markerfacecolor",
-    "linewidth": "markerwidth",
-    "lw": "markerwidth",
+    "linewidth": "markeredgewidth",
+    "lw": "markeredgewidth",
 }
 
 
