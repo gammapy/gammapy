@@ -437,31 +437,25 @@ def test_model_plot():
         pwl.plot((1 * u.TeV, 10 * u.TeV))
 
     with mpl_plot_check():
-        pwl.plot([0.08, 20] * u.TeV)
+        pwl.plot_error((1 * u.TeV, 10 * u.TeV))
 
     with mpl_plot_check():
-        pwl.plot_error((1 * u.TeV, 10 * u.TeV))
+        pwl.plot([0.08, 20] * u.TeV)
 
     with mpl_plot_check():
         pwl.plot_error([0.08, 20] * u.TeV)
 
     with mpl_plot_check():
-        pwl.plot(energy_axis=energy_axis)
+        pwl.plot([0.08 * u.TeV, 20 * u.TeV])
 
     with mpl_plot_check():
-        pwl.plot_error(energy_axis=energy_axis)
+        pwl.plot_error([0.08 * u.TeV, 20 * u.TeV])
 
-    with pytest.raises(AttributeError):
-        pwl.plot()
+    with mpl_plot_check():
+        pwl.plot(energy_bounds=energy_axis)
 
-    with pytest.raises(AttributeError):
-        pwl.plot_error()
-
-    with pytest.raises(AttributeError):
-        pwl.plot(energy_bounds=(1 * u.TeV, 10 * u.TeV), energy_axis=energy_axis)
-
-    with pytest.raises(AttributeError):
-        pwl.plot_error(energy_bounds=(1 * u.TeV, 10 * u.TeV), energy_axis=energy_axis)
+    with mpl_plot_check():
+        pwl.plot_error(energy_bounds=energy_axis)
 
 
 def test_model_plot_sed_type():
