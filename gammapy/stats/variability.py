@@ -289,44 +289,41 @@ def TimmerKonig_lightcurve_simulator(
     power_spectrum,
     npoints,
     spacing,
-    function="powerlaw",
+    t_ref=None,
     random_state="random-seed",
-    normalization=1.0,
 ):
     """Implementation of the Timmer-Koenig algorithm to simulate a time series from a power spectrum.
 
     Parameters
     ----------
-    power_spectrum : float, function
-        Power spectrum used to generate the time series, presented analytically, as a parameter or set
-        of parameters of a function. If the type parameter is set to "custom", power_spectrum is expected to be
+    power_spectrum : function
+        Power spectrum used to generate the time series. It is expected to be
         a function mapping the input frequencies to the periodogram.
     npoints : float
         Number of points in the output time series.
-    spacing : float
+    spacing : '~astropy.Quantity'
         Sample spacing, inverse of the sampling rate.
-    function : {"powerlaw", "white", "custom"}
-        Type of input periodogram.  Default is "powerlaw".
-        If 'type' = "powerlaw", 'powerspectrum' is expected to be  a float representing the power index.
-        If 'type' = "white", 'powerspectrum' is expected to be  a float representing the standard deviation.
-        If 'type' = "custom", 'powerspectrum is expected to be a function of the input frequencies.
+    t_ref : '~astropy.Time', optional
+        Reference time of the time axis. If provided, the axis will be returned as an '~astropy.Time' object.
     random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
         Defines random number generator initialisation.
         Passed to `~gammapy.utils.random.get_random_state`. Default is "random-seed".
-    normalization : float
-        Normalization factor to be applied to the final time series
 
     Returns
     -------
     time_series: `~numpy.ndarray`
         Simulated time series.
+    time_axis: '~astropy.Quantity', '~astropy.Time'
+        Time axis of the series in the same units as 'spacing', or as a '~astropy.Time' object if t-ref is defined.
 
     References
     ----------
     ..[Timmer1995]"On generating power law noise", J. Timmer and M, Konig, section 3.
     """
-    if function == "custom" and not isinstance(power_spectrum, type(lambda: None)):
-        raise ValueError("A custom power spectrum has to be provided as a function.")
+    if not callable(power_spectrum):
+        raise ValueError(
+            "The power spectrum has to be provided as a callable function."
+        )
 
     random_state = get_random_state(random_state)
 
@@ -335,18 +332,11 @@ def TimmerKonig_lightcurve_simulator(
     # To obtain real data only the positive or negative part of the frequency is necessary.
     real_frequencies = np.sort(np.abs(frequencies[frequencies < 0]))
 
-    if function == "powerlaw":
-        periodogram = (1 / real_frequencies) ** power_spectrum
-    elif function == "white":
-        periodogram = np.full_like(real_frequencies, power_spectrum)
-    elif function == "custom":
-        periodogram = power_spectrum(real_frequencies)
-    else:
-        raise ValueError("Power spectrum function not accepted!")
+    periodogram = power_spectrum(real_frequencies)
 
     real_part = random_state.normal(0, 1, len(periodogram) - 1)
     imaginary_part = random_state.normal(0, 1, len(periodogram) - 1)
-    fourier_coeffs = np.sqrt(0.5 * periodogram[:-1]) * (real_part +1j*imaginary_part)
+    fourier_coeffs = np.sqrt(0.5 * periodogram[:-1]) * (real_part + 1j * imaginary_part)
 
     # Nyquist frequency component handling
     if npoints % 2 == 0:
@@ -377,6 +367,11 @@ def TimmerKonig_lightcurve_simulator(
     if time_series.max() < np.abs(time_series.min()):
         time_series = -time_series
 
-    time_series = (0.5 + 0.5 * time_series / time_series.max()) * normalization
+    time_series = 0.5 + 0.5 * time_series / time_series.max()
 
-    return time_series
+    time_axis = np.linspace(0, npoints * spacing.value, npoints) * spacing.unit
+
+    if t_ref:
+        time_axis = t_ref + time_axis
+
+    return time_series, time_axis

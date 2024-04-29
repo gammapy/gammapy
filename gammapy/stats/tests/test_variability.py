@@ -196,16 +196,15 @@ def test_structure_function():
 
 
 def test_tk():
-    time_series = TimmerKonig_lightcurve_simulator(3, 20, 1, function="powerlaw")
-    time_series2 = TimmerKonig_lightcurve_simulator(
-        3, 21, 1, function="white", normalization=5
+    time_series, time_axis = TimmerKonig_lightcurve_simulator(
+        lambda x: x ** (-3), 20, 1 * u.s
     )
-    time_series3 = TimmerKonig_lightcurve_simulator(
-        lambda x: x**0.5, 10, 2, function="custom"
+    time_series2, time_axis2 = TimmerKonig_lightcurve_simulator(
+        lambda x: x**0.5, 21, 2 * u.h, t_ref=Time("2020-04-28")
     )
 
     assert len(time_series) == 20
-    assert time_series.max() == 1
+    assert isinstance(time_axis, u.Quantity) == True
+    assert time_axis.unit == u.s
     assert len(time_series2) == 21
-    assert time_series2.max() == 5
-    assert len(time_series3) == 10
+    assert isinstance(time_axis2, Time) == True
