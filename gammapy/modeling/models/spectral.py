@@ -487,8 +487,7 @@ class SpectralModel(ModelBase):
 
     def plot_error(
         self,
-        energy_bounds=None,
-        energy_axis=None,
+        energy_bounds,
         ax=None,
         sed_type="dnde",
         energy_power=0,
