@@ -344,10 +344,9 @@ def TimmerKonig_lightcurve_simulator(
     else:
         raise ValueError("Power spectrum function not accepted!")
 
-    random_numbers = random_state.normal(
-        0, 1, len(periodogram) - 1
-    ) + 1j * random_state.normal(0, 1, len(periodogram) - 1)
-    fourier_coeffs = np.sqrt(0.5 * periodogram[:-1]) * random_numbers
+    real_part = random_state.normal(0, 1, len(periodogram) - 1)
+    imaginary_part = random_state.normal(0, 1, len(periodogram) - 1)
+    fourier_coeffs = np.sqrt(0.5 * periodogram[:-1]) * (real_part +1j*imaginary_part)
 
     # Nyquist frequency component handling
     if npoints % 2 == 0:
