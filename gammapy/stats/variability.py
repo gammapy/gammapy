@@ -291,6 +291,7 @@ def TimmerKonig_lightcurve_simulator(
     spacing,
     t_ref=None,
     random_state="random-seed",
+    power_spectrum_params=None,
 ):
     """Implementation of the Timmer-Koenig algorithm to simulate a time series from a power spectrum.
 
@@ -308,6 +309,8 @@ def TimmerKonig_lightcurve_simulator(
     random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
         Defines random number generator initialisation.
         Passed to `~gammapy.utils.random.get_random_state`. Default is "random-seed".
+    power_spectrum_params : dict , optional
+        Dictionary of parameters to be provided to the power spectrum function.
 
     Returns
     -------
@@ -327,12 +330,15 @@ def TimmerKonig_lightcurve_simulator(
 
     random_state = get_random_state(random_state)
 
-    frequencies = np.fft.fftfreq(npoints, spacing)
+    frequencies = np.fft.fftfreq(npoints, spacing.value)
 
     # To obtain real data only the positive or negative part of the frequency is necessary.
     real_frequencies = np.sort(np.abs(frequencies[frequencies < 0]))
 
-    periodogram = power_spectrum(real_frequencies)
+    if power_spectrum_params:
+        periodogram = power_spectrum(real_frequencies, **power_spectrum_params)
+    else:
+        periodogram = power_spectrum(real_frequencies)
 
     real_part = random_state.normal(0, 1, len(periodogram) - 1)
     imaginary_part = random_state.normal(0, 1, len(periodogram) - 1)

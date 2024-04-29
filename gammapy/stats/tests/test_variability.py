@@ -203,8 +203,18 @@ def test_tk():
         lambda x: x**0.5, 21, 2 * u.h, t_ref=Time("2020-04-28")
     )
 
+    def temp(x, norm, index):
+        return norm * x ** (-index)
+
+    params = {"norm": 1.5, "index": 3}
+
+    time_series3, time_axis3 = TimmerKonig_lightcurve_simulator(
+        temp, 15, 1 * u.h, power_spectrum_params=params
+    )
+
     assert len(time_series) == 20
     assert isinstance(time_axis, u.Quantity) == True
     assert time_axis.unit == u.s
     assert len(time_series2) == 21
     assert isinstance(time_axis2, Time) == True
+    assert len(time_series3) == 15
