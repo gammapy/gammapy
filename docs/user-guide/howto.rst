@@ -324,8 +324,8 @@ should add into your notebooks or scripts the following lines after the Gammapy 
     # with XXXX from `print(plt.style.available)`
 
 Note that you can create your own style with matplotlib (see
-`here <https://matplotlib.org/stable/tutorials/introductory/customizing.html>`_ and
-`here <https://matplotlib.org/stable/tutorials/colors/colormaps.html>`_)
+`here <https://matplotlib.org/stable/tutorials/introductory/customizing.html>`__ and
+`here <https://matplotlib.org/stable/tutorials/colors/colormaps.html>`__)
 
 The CTA observatory released a document describing best practices for **data visualisation in a way friendly to
 color-blind people**:

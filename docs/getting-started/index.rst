@@ -29,7 +29,7 @@ environment using either conda or mamba.** Here are two methods to quickly insta
 
         .. code-block:: bash
 
-            $ conda install -c conda-forge gammapy
+            conda install -c conda-forge gammapy
 
     .. grid-item-card:: Prefer pip?
 
@@ -37,7 +37,7 @@ environment using either conda or mamba.** Here are two methods to quickly insta
 
         .. code-block:: bash
 
-            $ pip install gammapy
+            pip install gammapy
 
     .. grid-item-card:: In-depth instructions?
         :columns: 12
@@ -55,6 +55,7 @@ environment using either conda or mamba.** Here are two methods to quickly insta
 
 
 .. include:: quickstart.rst
+
 
 Tutorials Overview
 ------------------
