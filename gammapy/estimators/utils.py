@@ -693,7 +693,7 @@ def get_rebinned_axis(fluxpoint, axis_name="energy", method=None, **kwargs):
 def get_combined_significance_maps(estimator, datasets):
     """Computes excess and significance for a set of datasets.
     The significance computation assumes that the model contains
-    one degree of freedom per valid bin in energy in each dataset.
+    one degree of freedom per valid energy bin in each dataset.
     This method implemented here is valid under the assumption
     that the TS in each independent bin follows a Chi2 distribution,
     then the sum of the TS also follows a Chi2 distribution (with the sum of degree of freedom).
