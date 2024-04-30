@@ -50,6 +50,9 @@ class Estimator(abc.ABC):
         """Energy axis."""
         if self.energy_edges is None:
             energy_axis = dataset.counts.geom.axes["energy"].squash()
+            if getattr(self, "sum_over_energy_groups", False):
+                energy_edges = [energy_axis.edges[0], energy_axis.edges[1]]
+                energy_axis = MapAxis.from_energy_edges(energy_edges)
         else:
             energy_axis = MapAxis.from_energy_edges(self.energy_edges)
 
