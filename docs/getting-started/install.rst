@@ -23,19 +23,19 @@ execute this command in a terminal:
 
 .. code-block:: bash
 
-    $ conda install -c conda-forge gammapy
+    conda install -c conda-forge gammapy
 
 To update an existing installation you can use:
 
 .. code-block:: bash
 
-    $ conda update gammapy
+    conda update gammapy
 
 To install a specific version of Gammapy just execute:
 
 .. code-block:: bash
 
-    $ conda install -c conda-forge gammapy=1.0
+    conda install -c conda-forge gammapy=1.0
 
 If you encounter any issues you can check the :ref:`troubleshoot` guide.
 
@@ -47,13 +47,13 @@ speed and more reliable environment solutions. To install ``mamba`` in the Conda
 
 .. code-block:: bash
 
-    $ conda install mamba -n base -c conda-forge
+    conda install mamba -n base -c conda-forge
 
 Then install Gammapy through:
 
 .. code-block:: bash
 
-    $ mamba install gammapy
+    mamba install gammapy
 
 Mamba supports the same commands available in conda. Therefore, updating and installing specific versions
 follows the same process as above, just simply replace the ``conda`` command with the ``mamba`` command.
@@ -68,7 +68,7 @@ using `pip`_:
 
 .. code-block:: bash
 
-   $ python -m pip install gammapy
+   python -m pip install gammapy
 
 This will install Gammapy with the required dependencies only.
     
@@ -76,34 +76,34 @@ To install Gammapy with all optional dependencies, you can specify:
 
 .. code-block:: bash
 
-   $ python -m pip install gammapy[all]
+   python -m pip install gammapy[all]
 
 
 To update an existing installation use:
 
 .. code-block:: bash
 
-   $ python -m pip install gammapy --upgrade
+   python -m pip install gammapy --upgrade
 
 To install a specific version of Gammapy use:
 
 .. code-block:: bash
 
-    $ python -m pip install gammapy==1.0
+    python -m pip install gammapy==1.0
 
 To install the current Gammapy **development** version with `pip`_ use:
 
 .. code-block:: bash
 
-   $ python -m pip install git+https://github.com/gammapy/gammapy.git#egg=gammapy
+   python -m pip install git+https://github.com/gammapy/gammapy.git#egg=gammapy
 
 If you want to study or edit the code locally, use the following:
 
 .. code-block:: bash
 
-   $ git clone https://github.com/gammapy/gammapy.git
-   $ cd gammapy
-   $ python -m pip install .
+   git clone https://github.com/gammapy/gammapy.git
+   cd gammapy
+   python -m pip install .
 
 If you encounter any issues you can check the :ref:`troubleshoot` guide.
 
@@ -117,7 +117,7 @@ can install Gammapy via:
 
 .. code-block:: bash
 
-    $ sudo apt-get install python3-gammapy
+    sudo apt-get install python3-gammapy
 
 To get a more fully featured scientific Python environment, you can install
 other Python packages using the system package manager (``apt-get`` in this
@@ -127,11 +127,11 @@ Example:
 
 .. code-block:: bash
 
-    $ sudo apt-get install \
+    sudo apt-get install \
         python3-pip python3-matplotlib \
         ipython3-notebook python3-gammapy
 
-    $ python3 -m pip install gammapy
+    python3 -m pip install gammapy
 
 Note that the Linux package managers typically have release cycles of 6 months,
 or yearly or longer, meaning that you'll typically  get an older version of
