@@ -319,6 +319,22 @@ def TimmerKonig_lightcurve_simulator(
     time_axis: '~astropy.Quantity', '~astropy.Time'
         Time axis of the series in the same units as 'spacing', or as a '~astropy.Time' object if t-ref is defined.
 
+    Examples
+    --------
+    To pass the function to be used in the simlation one can use either the 'lambda' keyword or an extended definition.
+    Parameters of the function can be passed using the 'power_spectrum_params' keyword.
+    For example, these are three ways to pass a power law (red noise) with index 2:
+
+    >>> from gammapy.stats import TimmerKonig_lightcurve_simulator
+    >>> import astropy.units as u
+    >>> def powerlaw(x):
+    >>>     return x**(-2.5)
+    >>> def powerlaw_withparameters(x, i):
+    >>>     return x**(-i)
+    >>> ts, ta = TimmerKonig_lightcurve_simulator(lambda x: x**(-2,5), 20, 1*u.h)
+    >>> ts2, ta2 = TimmerKonig_lightcurve_simulator(powerlaw, 20, 1*u.h)
+    >>> ts3, ta3 = TimmerKonig_lightcurve_simulator(powerlaw_withparameters, 20, 1*u.h, power_spectrum_params={"i":2})
+
     References
     ----------
     ..[Timmer1995]"On generating power law noise", J. Timmer and M, Konig, section 3.
