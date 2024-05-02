@@ -103,10 +103,23 @@ class MapAxis:
         counts histogram). Default is "edges".
     unit : str, optional
         String specifying the data units. Default is "".
+    boundary_type : str, optional
+        Flag indicating boundary condition for the axis.
+        Available options are "monotonic" and "periodic".
+        "Periodic" boundary is only supported for interp = "lin".
+        Default is "monotonic".
     """
 
     # TODO: Cache an interpolation object?
-    def __init__(self, nodes, interp="lin", name="", node_type="edges", unit=""):
+    def __init__(
+        self,
+        nodes,
+        interp="lin",
+        name="",
+        node_type="edges",
+        unit="",
+        boundary_type="monotonic",
+    ):
         if not isinstance(name, str):
             raise TypeError(f"Name must be a string, got: {type(name)!r}")
 
@@ -122,11 +135,18 @@ class MapAxis:
         else:
             nodes = np.array(nodes)
 
+        available_boundary = {"periodic", "monotonic"}
+        if boundary_type not in available_boundary:
+            raise ValueError(f"Invalid boundary_type: {boundary_type}")
+        if boundary_type == "periodic" and interp != "lin":
+            raise ValueError("Periodic Axis only supports linear interpolation")
+
         self._name = name
         self._unit = u.Unit(unit)
         self._nodes = nodes.astype(float)
         self._node_type = node_type
         self._interp = interp
+        self._boundary_type = boundary_type
 
         if (self._nodes < 0).any() and interp != "lin":
             raise ValueError(
@@ -217,6 +237,7 @@ class MapAxis:
             and self._node_type == other._node_type
             and self._interp == other._interp
             and self.name.upper() == other.name.upper()
+            and self._boundary_type == other._boundary_type
         )
 
     def __eq__(self, other):
@@ -778,6 +799,18 @@ class MapAxis:
         values = self._transform.pix_to_coord(pix=pix)
         return u.Quantity(values, unit=self.unit, copy=False)
 
+    def _wrap_coords(self, coords):
+        """Wrap coords between axis edges for a periodic boundary condition"""
+        m1, m2 = self.edges_min[0], self.edges_max[-1]
+        coords_copy = copy.deepcopy(coords)
+        coords_copy[coords_copy >= m2] = (coords_copy[coords_copy >= m2] - m1) % (
+            m2 - m1
+        ) + m1
+        coords_copy[coords_copy < m1] = (coords_copy[coords_copy < m1] - m1) % (
+            m2 - m1
+        ) + m1
+        return coords_copy
+
     def pix_to_idx(self, pix, clip=False):
         """Convert pixel to index.
 
@@ -803,7 +836,7 @@ class MapAxis:
 
         return idx
 
-    def coord_to_pix(self, coord):
+    def _coord_to_pix(self, coord):
         """Transform axis to pixel coordinates.
 
         Parameters
@@ -820,7 +853,7 @@ class MapAxis:
         pix = self._transform.coord_to_pix(coord=coord)
         return np.array(pix + self._pix_offset, ndmin=1)
 
-    def coord_to_idx(self, coord, clip=False):
+    def _coord_to_idx(self, coord, clip=False):
         """Transform axis coordinate to bin index.
 
         Parameters
@@ -850,6 +883,45 @@ class MapAxis:
         idx[~np.isfinite(coord)] = INVALID_INDEX.int
 
         return idx
+
+    def coord_to_idx(self, coord, clip=False):
+        """Transform axis coordinate to bin index.
+
+        Parameters
+        ----------
+        coord : `~numpy.ndarray`
+            Array of axis coordinate values.
+        clip : bool, optional
+            Choose whether to clip the index to the valid range of the
+            axis. Default is False. If False, then indices for values outside the axis
+            range will be set to -1.
+
+        Returns
+        -------
+        idx : `~numpy.ndarray`
+            Array of bin indices.
+        """
+
+        if self._boundary_type == "periodic":
+            coord = self._wrap_coords(coord)
+        return self._coord_to_idx(coord)
+
+    def coord_to_pix(self, coord):
+        """Transform axis to pixel coordinates.
+
+        Parameters
+        ----------
+        coord : `~numpy.ndarray`
+            Array of axis coordinate values.
+
+        Returns
+        -------
+        pix : `~numpy.ndarray`
+            Array of pixel coordinate values.
+        """
+        if self._boundary_type == "periodic":
+            coord = self._wrap_coords(coord)
+        return self._coord_to_pix(coord)
 
     def slice(self, idx):
         """Create a new axis object by extracting a slice from this axis.
@@ -3427,49 +3499,3 @@ class LabelMapAxis:
         return LabelMapAxis(
             labels=[self.center[0] + "..." + self.center[-1]], name=self._name
         )
-
-
-class PeriodicMapAxis(MapAxis):
-    """
-    A periodic MapAxis. Only linear interpolation is supported.
-
-    Parameters
-    ----------
-    nodes : `~numpy.ndarray` or `~astropy.units.Quantity`
-        Array of node values.  These will be interpreted as either bin
-        edges or centers according to ``node_type``.
-    name : str, optional
-        Axis name. Default is "".
-    node_type : str, optional
-        Flag indicating whether coordinate nodes correspond to pixel
-        edges (node_type = 'edges') or pixel centers (node_type =
-        'center').  'center' should be used where the map values are
-        defined at a specific coordinate (e.g. differential
-        quantities). 'edges' should be used where map values are
-        defined by an integral over coordinate intervals (e.g. a
-        counts histogram). Default is "edges".
-    unit : str, optional
-        String specifying the data units. Default is "".
-    """
-
-    def wrap_coords(self, coords):
-        """Wrap coords between axis edges"""
-        m1, m2 = self.edges_min[0], self.edges_max[-1]
-        coords_copy = copy.deepcopy(coords)
-        coords_copy[coords_copy >= m2] = (coords_copy[coords_copy >= m2] - m1) % (
-            m2 - m1
-        ) + m1
-        coords_copy[coords_copy < m1] = (coords_copy[coords_copy < m1] - m1) % (
-            m2 - m1
-        ) + m1
-        return coords_copy
-
-    def coord_to_idx(self, coords):
-        """wraps the coords between the axis edges"""
-        coords_new = self.wrap_coords(coords)
-        return super().coord_to_idx(coords_new)
-
-    def coord_to_pix(self, coords):
-        """wraps the coords between the axis edges"""
-        coords_new = self.wrap_coords(coords)
-        return super().coord_to_pix(coords_new)

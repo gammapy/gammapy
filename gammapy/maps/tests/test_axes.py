@@ -8,14 +8,7 @@ from astropy.time import Time
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from gammapy.data import GTI
-from gammapy.maps import (
-    LabelMapAxis,
-    MapAxes,
-    MapAxis,
-    PeriodicMapAxis,
-    RegionNDMap,
-    TimeMapAxis,
-)
+from gammapy.maps import LabelMapAxis, MapAxes, MapAxis, RegionNDMap, TimeMapAxis
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import assert_time_allclose, mpl_plot_check, requires_data
 from gammapy.utils.time import time_ref_to_dict
@@ -991,13 +984,20 @@ def test_energy_bin_per_decade_not_strict_bounds():
     assert_allclose(axis.edges[0:-nbin] * 10.0, axis.edges[nbin:], rtol=1e-5, atol=0)
 
 
-def test_phase_map_axis():
-    axis1 = PeriodicMapAxis.from_bounds(-0.5, 0.5, 5)
+def test_periodic_map_axis():
+    axis1 = MapAxis.from_bounds(-0.5, 0.5, 5, boundary_type="periodic")
     coords = np.array([-1.0, -0.7, 0.1, 1.2])
-    assert_allclose(axis1.wrap_coords(coords), [0.0, 0.3, 0.1, 0.2], rtol=1e-5)
+    assert_allclose(axis1._wrap_coords(coords), [0.0, 0.3, 0.1, 0.2], rtol=1e-5)
 
-    idx = axis1.coord_to_idx(coords=coords)
+    idx = axis1.coord_to_idx(coord=coords)
     assert_allclose(idx, [2, 4, 2, 3], rtol=1e-5)
 
-    pix = axis1.coord_to_pix(coords=coords)
+    pix = axis1.coord_to_pix(coord=coords)
     assert_allclose(pix, [2.0, 3.5, 2.5, 3.0], rtol=1e-5)
+
+    with pytest.raises(ValueError):
+        axis1 = MapAxis.from_bounds(-0.5, 0.5, 5, boundary_type="other")
+    with pytest.raises(ValueError):
+        axis1 = MapAxis.from_bounds(
+            -0.5, 0.5, 5, boundary_type="periodic", interp="log"
+        )
