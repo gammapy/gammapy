@@ -147,6 +147,30 @@ def test_lightcurve_flux_doubling():
     assert_allclose(dtime_err, [425.92375713, 242.80234065] * u.s)
 
 
+def test_tk():
+    time_series, time_axis = TimmerKonig_lightcurve_simulator(
+        lambda x: x ** (-3), 20, 1 * u.s
+    )
+    time_series2, time_axis2 = TimmerKonig_lightcurve_simulator(
+        lambda x: x**0.5, 21, 2 * u.h
+    )
+
+    def temp(x, norm, index):
+        return norm * x ** (-index)
+
+    params = {"norm": 1.5, "index": 3}
+
+    time_series3, time_axis3 = TimmerKonig_lightcurve_simulator(
+        temp, 15, 1 * u.h, power_spectrum_params=params
+    )
+
+    assert len(time_series) == 20
+    assert isinstance(time_axis, u.Quantity)
+    assert time_axis.unit == u.s
+    assert len(time_series2) == 21
+    assert len(time_series3) == 15
+
+
 def test_structure_function():
     flux = np.array(
         [
@@ -193,28 +217,3 @@ def test_structure_function():
         distances,
         [3600.0, 7000.0, 7200.0, 10800.0, 14200.0, 14400.0, 17800.0, 21400.0] * u.s,
     )
-
-
-def test_tk():
-    time_series, time_axis = TimmerKonig_lightcurve_simulator(
-        lambda x: x ** (-3), 20, 1 * u.s
-    )
-    time_series2, time_axis2 = TimmerKonig_lightcurve_simulator(
-        lambda x: x**0.5, 21, 2 * u.h
-    )
-
-    def temp(x, norm, index):
-        return norm * x ** (-index)
-
-    params = {"norm": 1.5, "index": 3}
-
-    time_series3, time_axis3 = TimmerKonig_lightcurve_simulator(
-        temp, 15, 1 * u.h, power_spectrum_params=params
-    )
-
-    assert len(time_series) == 20
-    assert isinstance(time_axis, u.Quantity)
-    assert time_axis.unit == u.s
-    assert len(time_series2) == 21
-    assert isinstance(time_axis2, u.Quantity)
-    assert len(time_series3) == 15

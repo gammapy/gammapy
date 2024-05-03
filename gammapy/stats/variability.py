@@ -302,7 +302,7 @@ def TimmerKonig_lightcurve_simulator(
     npoints : float
         Number of points in the output time series.
     spacing : '~astropy.Quantity'
-        Sample spacing, inverse of the sampling rate.
+        Sample spacing, inverse of the sampling rate. Its units will be inherited by the resulting time axis.
     random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
         Defines random number generator initialisation.
         Passed to `~gammapy.utils.random.get_random_state`. Default is "random-seed".
@@ -314,8 +314,8 @@ def TimmerKonig_lightcurve_simulator(
     time_series: `~numpy.ndarray`
         Simulated time series.
     time_axis: '~astropy.Quantity'
-        Time axis of the series in the same units as 'spacing'.
-
+        Time axis of the series in the same units as 'spacing'. It will be defined with length 'npoints', from 0 to
+        'npoints'*'spacing'.
     Examples
     --------
     To pass the function to be used in the simlation one can use either the 'lambda' keyword or an extended definition.
@@ -391,3 +391,55 @@ def TimmerKonig_lightcurve_simulator(
     time_axis = np.linspace(0, npoints * spacing.value, npoints) * spacing.unit
 
     return time_series, time_axis
+
+
+def structure_function(flux, flux_err, time, tdelta_precision=5):
+    """Compute the discrete structure function for a variable source.
+
+    Parameters
+    ----------
+    flux : `~astropy.units.Quantity`
+        The measured fluxes.
+    flux_err : `~astropy.units.Quantity`
+        The error on measured fluxes.
+    time : `~astropy.units.Quantity`
+        The time coordinates at which the fluxes are measured.
+    tdelta_precision : int, optional
+        The number of decimal places to check to separate the time deltas. Default is 5.
+
+    Returns
+    -------
+    sf, distances : `~numpy.ndarray`, `~astropy.units.Quantity`
+        Discrete structure function and array of time distances.
+
+    References
+    ----------
+    .. [Emmanoulopoulos2010] "On the use of structure functions to study blazar variability:
+    caveats and problems", Emmanoulopoulos et al. (2010)
+    https://academic.oup.com/mnras/article/404/2/931/968488
+    """
+
+    dist_matrix = (time[np.newaxis, :] - time[:, np.newaxis]).round(
+        decimals=tdelta_precision
+    )
+    distances = np.unique(dist_matrix)
+    distances = distances[distances > 0]
+    shape = distances.shape + flux.shape[1:]
+    factor = np.zeros(shape)
+    norm = np.zeros(shape)
+
+    for i, distance in enumerate(distances):
+        indexes = np.array(np.where(dist_matrix == distance))
+        for index in indexes.T:
+            f = (flux[index[1], ...] - flux[index[0], ...]) ** 2
+            w = (flux[index[1], ...] / flux_err[index[1], ...]) * (
+                flux[index[0], ...] / flux_err[index[0], ...]
+            )
+
+            f = np.nan_to_num(f)
+            w = np.nan_to_num(w)
+            factor[i] = factor[i] + f * w
+            norm[i] = norm[i] + w
+
+    sf = factor / norm
+    return sf, distances
