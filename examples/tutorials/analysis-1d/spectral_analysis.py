@@ -505,7 +505,7 @@ plt.show()
 # * chi2 : estimate from chi2 statistics.
 # * profile : estimate from interpolation of the likelihood profile.
 # * distrib : estimate from probability distributions,
-#             assumes that flux points correspond to asymmetric gaussians
+#             assuming that flux points correspond to asymmetric gaussians
 #             and upper limits complementary error functions.
 # Default is `chi2`, in that case upper limits are ignored and the mean of asymetrics error is used.
 # So it is recommended to use `profile` if `stat_scan` is available on flux points.
@@ -513,7 +513,7 @@ plt.show()
 # which allows to take into accounts upper limit and asymetrics error.
 #
 # In the example below we can see that the `profile` case matches exactly the result
-# from the joint analysis of the ON/OFF datasets using `wstat` (as labelled)).
+# from the joint analysis of the ON/OFF datasets using `wstat` (as labelled).
 
 
 def plot_stat(fp_dataset):
