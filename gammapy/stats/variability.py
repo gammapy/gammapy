@@ -299,7 +299,7 @@ def TimmerKonig_lightcurve_simulator(
     power_spectrum : function
         Power spectrum used to generate the time series. It is expected to be
         a function mapping the input frequencies to the periodogram.
-    npoints : float
+    npoints : int
         Number of points in the output time series.
     spacing : '~astropy.Quantity'
         Sample spacing, inverse of the sampling rate. Its units will be inherited by the resulting time axis.
@@ -326,7 +326,7 @@ def TimmerKonig_lightcurve_simulator(
     >>> import astropy.units as u
     >>> def powerlaw(x):
     >>>     return x**(-2)
-    >>> def powerlaw_withparameters(x, i):
+    >>> def powerlaw_with_parameters(x, i):
     >>>     return x**(-i)
     >>> ts, ta = TimmerKonig_lightcurve_simulator(lambda x: x**(-2), 20, 1*u.h)
     >>> ts2, ta2 = TimmerKonig_lightcurve_simulator(powerlaw, 20, 1*u.h)
