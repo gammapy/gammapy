@@ -200,7 +200,7 @@ def test_tk():
         lambda x: x ** (-3), 20, 1 * u.s
     )
     time_series2, time_axis2 = TimmerKonig_lightcurve_simulator(
-        lambda x: x**0.5, 21, 2 * u.h, t_ref=Time("2020-04-28")
+        lambda x: x**0.5, 21, 2 * u.h
     )
 
     def temp(x, norm, index):
@@ -216,5 +216,5 @@ def test_tk():
     assert isinstance(time_axis, u.Quantity)
     assert time_axis.unit == u.s
     assert len(time_series2) == 21
-    assert isinstance(time_axis2, Time)
+    assert isinstance(time_axis2, u.Quantity)
     assert len(time_series3) == 15

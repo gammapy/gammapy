@@ -289,7 +289,6 @@ def TimmerKonig_lightcurve_simulator(
     power_spectrum,
     npoints,
     spacing,
-    t_ref=None,
     random_state="random-seed",
     power_spectrum_params=None,
 ):
@@ -304,8 +303,6 @@ def TimmerKonig_lightcurve_simulator(
         Number of points in the output time series.
     spacing : '~astropy.Quantity'
         Sample spacing, inverse of the sampling rate.
-    t_ref : '~astropy.Time', optional
-        Reference time of the time axis. If provided, the axis will be returned as an '~astropy.Time' object.
     random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
         Defines random number generator initialisation.
         Passed to `~gammapy.utils.random.get_random_state`. Default is "random-seed".
@@ -316,8 +313,8 @@ def TimmerKonig_lightcurve_simulator(
     -------
     time_series: `~numpy.ndarray`
         Simulated time series.
-    time_axis: '~astropy.Quantity', '~astropy.Time'
-        Time axis of the series in the same units as 'spacing', or as a '~astropy.Time' object if t-ref is defined.
+    time_axis: '~astropy.Quantity'
+        Time axis of the series in the same units as 'spacing'.
 
     Examples
     --------
@@ -392,8 +389,5 @@ def TimmerKonig_lightcurve_simulator(
     time_series = 0.5 + 0.5 * time_series / time_series.max()
 
     time_axis = np.linspace(0, npoints * spacing.value, npoints) * spacing.unit
-
-    if t_ref:
-        time_axis = t_ref + time_axis
 
     return time_series, time_axis
