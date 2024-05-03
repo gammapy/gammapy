@@ -213,8 +213,8 @@ def test_tk():
     )
 
     assert len(time_series) == 20
-    assert isinstance(time_axis, u.Quantity) == True
+    assert isinstance(time_axis, u.Quantity)
     assert time_axis.unit == u.s
     assert len(time_series2) == 21
-    assert isinstance(time_axis2, Time) == True
+    assert isinstance(time_axis2, Time)
     assert len(time_series3) == 15
