@@ -448,7 +448,7 @@ class SpectralModel(ModelBase):
 
         Notes
         -----
-        If ``energy_bounds`` is supplied as a tuple or Quantity, an ``energy_axis`` is created internally with
+        If ``energy_bounds`` is supplied as a list, tuple, or Quantity, an ``energy_axis`` is created internally with
         ``n_points`` bins between the given bounds.
         """
         from gammapy.estimators.map.core import DEFAULT_UNIT
@@ -529,7 +529,7 @@ class SpectralModel(ModelBase):
 
         Notes
         -----
-        If ``energy_bounds`` is supplied as a tuple or Quantity, an ``energy_axis`` is created internally with
+        If ``energy_bounds`` is supplied as a list, tuple, or Quantity, an ``energy_axis`` is created internally with
         ``n_points`` bins between the given bounds.
         """
         from gammapy.estimators.map.core import DEFAULT_UNIT
