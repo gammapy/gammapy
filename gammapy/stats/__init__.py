@@ -8,12 +8,12 @@ from .fit_statistics_cython import (
     norm_bounds_cython,
 )
 from .variability import (
+    TimmerKonig_lightcurve_simulator,
     compute_chisq,
     compute_flux_doubling,
     compute_fpp,
     compute_fvar,
     structure_function,
-    TimmerAlgorithm,
 )
 
 __all__ = [
