@@ -7,6 +7,7 @@ __all__ = [
     "compute_fpp",
     "compute_chisq",
     "compute_flux_doubling",
+    "structure_function",
 ]
 
 
@@ -228,3 +229,55 @@ def compute_flux_doubling(flux, flux_err, coords, axis=0):
     }
 
     return doubling_dict
+
+
+def structure_function(flux, flux_err, time, tdelta_precision=5):
+    """Compute the discrete structure function for a variable source.
+
+    Parameters
+    ----------
+    flux : `~astropy.units.Quantity`
+        The measured fluxes.
+    flux_err : `~astropy.units.Quantity`
+        The error on measured fluxes.
+    time : `~astropy.units.Quantity`
+        The time coordinates at which the fluxes are measured.
+    tdelta_precision : int, optional
+        The number of decimal places to check to separate the time deltas. Default is 5.
+
+    Returns
+    -------
+    sf, distances : `~numpy.ndarray`, `~astropy.units.Quantity`
+        Discrete structure function and array of time distances.
+
+    References
+    ----------
+    .. [Emmanoulopoulos2010] "On the use of structure functions to study blazar variability:
+    caveats and problems", Emmanoulopoulos et al. (2010)
+    https://academic.oup.com/mnras/article/404/2/931/968488
+    """
+
+    dist_matrix = (time[np.newaxis, :] - time[:, np.newaxis]).round(
+        decimals=tdelta_precision
+    )
+    distances = np.unique(dist_matrix)
+    distances = distances[distances > 0]
+    shape = distances.shape + flux.shape[1:]
+    factor = np.zeros(shape)
+    norm = np.zeros(shape)
+
+    for i, distance in enumerate(distances):
+        indexes = np.array(np.where(dist_matrix == distance))
+        for index in indexes.T:
+            f = (flux[index[1], ...] - flux[index[0], ...]) ** 2
+            w = (flux[index[1], ...] / flux_err[index[1], ...]) * (
+                flux[index[0], ...] / flux_err[index[0], ...]
+            )
+
+            f = np.nan_to_num(f)
+            w = np.nan_to_num(w)
+            factor[i] = factor[i] + f * w
+            norm[i] = norm[i] + w
+
+    sf = factor / norm
+    return sf, distances

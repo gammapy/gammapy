@@ -99,10 +99,12 @@ def time_ref_from_dict(meta, format="mjd", scale="tt"):
     time : `~astropy.time.Time`
         Time object with ``format='MJD'``.
     """
-    # Note: the float call here is to make sure we use 64-bit
-    mjd = float(meta["MJDREFI"]) + float(meta["MJDREFF"])
     scale = meta.get("TIMESYS", scale).lower()
-    return Time(mjd, format=format, scale=scale)
+
+    # some files seem to have MJDREFF as string, not as float
+    mjdrefi = float(meta["MJDREFI"])
+    mjdreff = float(meta["MJDREFF"])
+    return Time(mjdrefi, mjdreff, format=format, scale=scale)
 
 
 def time_ref_to_dict(time=None, scale="tt"):

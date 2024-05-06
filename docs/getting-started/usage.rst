@@ -24,7 +24,7 @@ Gammapy and activate the conda environment, you can start
 
 .. code-block:: bash
 
-    $ jupyter lab
+    jupyter lab
 
 This should open up JupyterLab app in your web browser, where you can
 create new Jupyter notebooks or open up existing ones. If you have downloaded the
@@ -140,7 +140,7 @@ You can run it with Python:
 
 .. code-block:: bash
 
-    $ python example.py
+    python example.py
     4.418007850646973 TeV
 
 If you want to continue with interactive data or results analysis after
@@ -148,6 +148,6 @@ running some Python code, use IPython like this:
 
 .. code-block:: bash
 
-    $ ipython -i example.py
+    ipython -i example.py
 
 For examples how to run Gammapy analyses from Python scripts, see :doc:`/tutorials/scripts/survey_map`.

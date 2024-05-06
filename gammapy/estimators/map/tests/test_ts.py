@@ -6,6 +6,7 @@ import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from gammapy.datasets import MapDataset, MapDatasetOnOff
 from gammapy.estimators import TSMapEstimator
+from gammapy.estimators.utils import get_combined_significance_maps
 from gammapy.irf import EDispKernelMap, PSFMap
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling.models import (
@@ -362,3 +363,31 @@ def test_with_TemplateSpatialModel():
 
     result = estimator.run(dataset)
     assert_allclose(result["sqrt_ts"].data[0, 12, 16], 22.932, rtol=1e-3)
+
+
+def test_joint_ts_map(fake_dataset):
+
+    model = fake_dataset.models["source"]
+    fake_dataset.models = [model]
+
+    stacked_dataset = fake_dataset.copy(name="copy")
+    stacked_dataset.counts *= 2
+    stacked_dataset.exposure *= 2
+    stacked_dataset.background *= 2
+    stacked_dataset.models = [model]
+    estimator = TSMapEstimator(
+        model=model, threshold=1, selection_optional=[], sum_over_energy_groups=True
+    )
+    assert estimator.sum_over_energy_groups
+
+    result = estimator.run(fake_dataset)
+    assert_allclose(result["npred_excess"].data.sum(), 1140.364071, rtol=1e-3)
+    assert_allclose(result["sqrt_ts"].data[0, 10, 10], 1.360219, rtol=1e-3)
+
+    result = get_combined_significance_maps(estimator, [fake_dataset, fake_dataset])
+
+    assert_allclose(result["npred_excess"].data.sum(), 2 * 1140.364071, rtol=1e-3)
+    assert_allclose(result["significance"].data[10, 10], 1.414529, rtol=1e-3)
+    assert_allclose(
+        result["df"].data, 2 * (~np.isnan(result["significance"].data)), rtol=1e-3
+    )

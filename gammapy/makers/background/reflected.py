@@ -436,7 +436,8 @@ class ReflectedRegionsBackgroundMaker(Maker):
         If not given, a `ReflectedRegionsFinder` will be created and
         any of the ``**kwargs`` will be forwarded to the `ReflectedRegionsFinder`.
     exclusion_mask : `~gammapy.maps.WcsNDMap`, optional
-        Exclusion mask.
+        Exclusion mask. The map must contain at max one non-spatial dimension, and this
+        dimension must be one bin.
     """
 
     tag = "ReflectedRegionsBackgroundMaker"
@@ -450,6 +451,13 @@ class ReflectedRegionsBackgroundMaker(Maker):
 
         if exclusion_mask and not exclusion_mask.is_mask:
             raise ValueError("Exclusion mask must contain boolean values")
+
+        if exclusion_mask and not exclusion_mask.geom.is_flat:
+            raise ValueError("Exclusion mask must only contain spatial dimension")
+
+        if exclusion_mask:
+            exclusion_mask = exclusion_mask.sum_over_axes(keepdims=False)
+            exclusion_mask.data = exclusion_mask.data.astype("bool")
 
         self.exclusion_mask = exclusion_mask
 
