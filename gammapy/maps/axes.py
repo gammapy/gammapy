@@ -799,10 +799,22 @@ class MapAxis:
         values = self._transform.pix_to_coord(pix=pix)
         return u.Quantity(values, unit=self.unit, copy=False)
 
-    def _wrap_coords(self, coords):
-        """Wrap coords between axis edges for a periodic boundary condition"""
+    def wrap_coord(self, coord):
+        """Wrap coords between axis edges for a periodic boundary condition
+
+        Parameters
+        ----------
+        coord : `~numpy.ndarray`
+            Array of axis coordinate values.
+
+        Returns
+        -------
+        coord : `~numpy.ndarray`
+            Wrapped array of axis coordinate values.
+        """
+
         m1, m2 = self.edges_min[0], self.edges_max[-1]
-        coords_copy = copy.deepcopy(coords)
+        coords_copy = copy.deepcopy(coord)
         coords_copy[coords_copy >= m2] = (coords_copy[coords_copy >= m2] - m1) % (
             m2 - m1
         ) + m1
@@ -836,7 +848,7 @@ class MapAxis:
 
         return idx
 
-    def _coord_to_pix(self, coord):
+    def coord_to_pix(self, coord):
         """Transform axis to pixel coordinates.
 
         Parameters
@@ -849,40 +861,11 @@ class MapAxis:
         pix : `~numpy.ndarray`
             Array of pixel coordinate values.
         """
+        if self._boundary_type == "periodic":
+            coord = self.wrap_coord(coord)
         coord = u.Quantity(coord, self.unit, copy=False).value
         pix = self._transform.coord_to_pix(coord=coord)
         return np.array(pix + self._pix_offset, ndmin=1)
-
-    def _coord_to_idx(self, coord, clip=False):
-        """Transform axis coordinate to bin index.
-
-        Parameters
-        ----------
-        coord : `~numpy.ndarray`
-            Array of axis coordinate values.
-        clip : bool, optional
-            Choose whether to clip the index to the valid range of the
-            axis. Default is False. If False, then indices for values outside the axis
-            range will be set to -1.
-
-        Returns
-        -------
-        idx : `~numpy.ndarray`
-            Array of bin indices.
-        """
-        coord = u.Quantity(coord, self.unit, copy=False, ndmin=1).value
-        edges = self.edges.value
-        idx = np.digitize(coord, edges) - 1
-
-        if clip:
-            idx = np.clip(idx, 0, self.nbin - 1)
-        else:
-            with np.errstate(invalid="ignore"):
-                idx[coord > edges[-1]] = INVALID_INDEX.int
-
-        idx[~np.isfinite(coord)] = INVALID_INDEX.int
-
-        return idx
 
     def coord_to_idx(self, coord, clip=False):
         """Transform axis coordinate to bin index.
@@ -901,27 +884,21 @@ class MapAxis:
         idx : `~numpy.ndarray`
             Array of bin indices.
         """
-
         if self._boundary_type == "periodic":
-            coord = self._wrap_coords(coord)
-        return self._coord_to_idx(coord)
+            coord = self.wrap_coord(coord)
+        coord = u.Quantity(coord, self.unit, copy=False, ndmin=1).value
+        edges = self.edges.value
+        idx = np.digitize(coord, edges) - 1
 
-    def coord_to_pix(self, coord):
-        """Transform axis to pixel coordinates.
+        if clip:
+            idx = np.clip(idx, 0, self.nbin - 1)
+        else:
+            with np.errstate(invalid="ignore"):
+                idx[coord > edges[-1]] = INVALID_INDEX.int
 
-        Parameters
-        ----------
-        coord : `~numpy.ndarray`
-            Array of axis coordinate values.
+        idx[~np.isfinite(coord)] = INVALID_INDEX.int
 
-        Returns
-        -------
-        pix : `~numpy.ndarray`
-            Array of pixel coordinate values.
-        """
-        if self._boundary_type == "periodic":
-            coord = self._wrap_coords(coord)
-        return self._coord_to_pix(coord)
+        return idx
 
     def slice(self, idx):
         """Create a new axis object by extracting a slice from this axis.
