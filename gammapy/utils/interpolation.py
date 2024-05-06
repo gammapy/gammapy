@@ -254,6 +254,9 @@ def interpolate_profile(x, y, interp_scale="sqrt", extrapolate=False):
         of parabolic shape, a "sqrt" scaling is recommended. In other cases or
         for fine sampled profiles a "lin" can also be used.
         Default is "sqrt".
+    extrapolate : bool
+        Extrapolate or not if the evaluation value is outside the range of x values.
+        Default is False.
 
     Returns
     -------
