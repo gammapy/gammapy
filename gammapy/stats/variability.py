@@ -355,30 +355,24 @@ def TimmerKonig_lightcurve_simulator(
 
     real_part = random_state.normal(0, 1, len(periodogram) - 1)
     imaginary_part = random_state.normal(0, 1, len(periodogram) - 1)
-    fourier_coeffs = np.sqrt(0.5 * periodogram[:-1]) * (real_part + 1j * imaginary_part)
 
     # Nyquist frequency component handling
     if npoints % 2 == 0:
-        fourier_coeffs = np.concatenate(
-            [
-                fourier_coeffs,
-                np.sqrt(0.5 * periodogram[-1:]) * random_state.normal(0, 1),
-            ]
-        )
-        fourier_coeffs = np.concatenate(
-            [fourier_coeffs, np.conjugate(fourier_coeffs[-2::-1])]
-        )
+        idx0 = -2
+        random_factor = random_state.normal(0, 1)
     else:
-        fourier_coeffs = np.concatenate(
-            [
-                fourier_coeffs,
-                np.sqrt(0.5 * periodogram[-1:])
-                * (random_state.normal(0, 1) + 1j * random_state.normal(0, 1)),
-            ]
-        )
-        fourier_coeffs = np.concatenate(
-            [fourier_coeffs, np.conjugate(fourier_coeffs[-1::-1])]
-        )
+        idx0 = -1
+        random_factor = random_state.normal(0, 1) + 1j * random_state.normal(0, 1)
+
+    fourier_coeffs = np.concatenate(
+        [
+            np.sqrt(0.5 * periodogram[:-1]) * (real_part + 1j * imaginary_part),
+            np.sqrt(0.5 * periodogram[-1:]) * random_factor,
+        ]
+    )
+    fourier_coeffs = np.concatenate(
+        [fourier_coeffs, np.conjugate(fourier_coeffs[idx0::-1])]
+    )
 
     fourier_coeffs = np.insert(fourier_coeffs, 0, 0)
     time_series = np.fft.ifft(fourier_coeffs).real
