@@ -377,10 +377,11 @@ def TimmerKonig_lightcurve_simulator(
     fourier_coeffs = np.insert(fourier_coeffs, 0, 0)
     time_series = np.fft.ifft(fourier_coeffs).real
 
-    if time_series.max() < np.abs(time_series.min()):
+    tmax = time_series.max()
+    if tmax < np.abs(time_series.min()):
         time_series = -time_series
 
-    time_series = 0.5 + 0.5 * time_series / time_series.max()
+    time_series = 0.5 + 0.5 * time_series / tmax
 
     time_axis = np.linspace(0, npoints * spacing.value, npoints) * spacing.unit
 
