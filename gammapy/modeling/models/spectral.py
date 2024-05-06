@@ -456,9 +456,7 @@ class SpectralModel(ModelBase):
         if self.is_norm_spectral_model:
             sed_type = "norm"
 
-        if (
-            isinstance(energy_bounds, (tuple, list, Quantity))
-        ):
+        if isinstance(energy_bounds, (tuple, list, Quantity)):
             energy_min, energy_max = energy_bounds
             energy = MapAxis.from_energy_bounds(
                 energy_min,
@@ -539,9 +537,7 @@ class SpectralModel(ModelBase):
         if self.is_norm_spectral_model:
             sed_type = "norm"
 
-        if (
-            isinstance(energy_bounds, (tuple, list, Quantity))
-        ):
+        if isinstance(energy_bounds, (tuple, list, Quantity)):
             energy_min, energy_max = energy_bounds
             energy = MapAxis.from_energy_bounds(
                 energy_min,
