@@ -17,6 +17,7 @@ from gammapy.maps.axes import UNIT_STRING_FORMAT, flat_if_equal
 from gammapy.modeling.models import TemplateSpectralModel
 from gammapy.modeling.models.spectral import scale_plot_flux
 from gammapy.modeling.scipy import stat_profile_ul_scipy
+from gammapy.stats import structure_function
 from gammapy.utils.interpolation import interpolate_profile
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_standardise_units_copy
@@ -951,3 +952,11 @@ class LightCurve(FluxPoints):
 
     def doubling_time(self, flux_quantity="flux"):
         return compute_lightcurve_doublingtime(self, flux_quantity)
+
+    def structure_function(self, flux_quantity="flux", tdelta_precision=5):
+
+        flux = getattr(self, flux_quantity)
+        flux_err = getattr(self, flux_quantity + "_err")
+        coords = self.geom.axes["time"].center
+
+        return structure_function(flux.data, flux_err.data, coords, tdelta_precision)
