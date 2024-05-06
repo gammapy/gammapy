@@ -827,6 +827,7 @@ def joint_flux_maps(maps, method="gaussian_errors", **kwargs):
         stats.norm.pdf(0, loc=mean, scale=sigma)
         / stats.norm.pdf(mean, loc=mean, scale=sigma)
     )
+    ts = Map.from_geom(mean.geom, data=ts)
 
     kwargs["sed_type"] = "dnde"
     return FluxMaps.from_maps(dict(dnde=mean, dnde_err=sigma, ts=ts), gti=gti, **kwargs)
