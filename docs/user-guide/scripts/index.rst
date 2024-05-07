@@ -125,9 +125,9 @@ a datastore and producing the reduced datasets.)
     INFO:gammapy.scripts.analysis:Configuration file produced: config.yaml
 
 
-You can manually edit this produced configuration file and the run the data reduction process::
+You can manually edit this produced configuration file and the run the data reduction process:
 
-.. code-block:: text
+.. code-block:: bash
 
     gammapy analysis run
 
