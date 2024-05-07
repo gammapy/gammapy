@@ -820,10 +820,8 @@ class MapAxis:
         """
 
         m1, m2 = self.edges_min[0], self.edges_max[-1]
-        coords_copy = copy.deepcopy(coord)
-        mask = np.where((coords_copy >= m2) | (coords_copy < m1))
-        coords_copy[mask] = (coords_copy[mask] - m1) % (m2 - m1) + m1
-        return coords_copy
+        out_of_range = (coords >= m2) | (coords < m1)
+        return np.where(out_of_range, (coords - m1) % (m2 - m1) + m1, coords)
 
     def pix_to_idx(self, pix, clip=False):
         """Convert pixel to index.
