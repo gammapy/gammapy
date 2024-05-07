@@ -228,7 +228,7 @@ To check for broken external links you can use ``tox``:
 
 .. code-block:: bash
 
-   $ tox -e linkcheck
+   tox -e linkcheck
 
 Include png files as images
 ----------------------------
