@@ -4,6 +4,7 @@ import html
 import inspect
 import logging
 from collections.abc import Sequence
+from enum import Enum
 import numpy as np
 import scipy
 import astropy.units as u
@@ -26,6 +27,11 @@ def flat_if_equal(array):
         return array[0]
     else:
         return array
+
+
+class BoundaryEnum(str, Enum):
+    monotonic = "monotonic"
+    periodic = "periodic"
 
 
 class AxisCoordInterpolator:
@@ -146,7 +152,7 @@ class MapAxis:
         self._nodes = nodes.astype(float)
         self._node_type = node_type
         self._interp = interp
-        self._boundary_type = boundary_type
+        self._boundary_type = BoundaryEnum(boundary_type).value
 
         if (self._nodes < 0).any() and interp != "lin":
             raise ValueError(
@@ -815,12 +821,8 @@ class MapAxis:
 
         m1, m2 = self.edges_min[0], self.edges_max[-1]
         coords_copy = copy.deepcopy(coord)
-        coords_copy[coords_copy >= m2] = (coords_copy[coords_copy >= m2] - m1) % (
-            m2 - m1
-        ) + m1
-        coords_copy[coords_copy < m1] = (coords_copy[coords_copy < m1] - m1) % (
-            m2 - m1
-        ) + m1
+        mask = np.where((coords_copy >= m2) | (coords_copy < m1))
+        coords_copy[mask] = (coords_copy[mask] - m1) % (m2 - m1) + m1
         return coords_copy
 
     def pix_to_idx(self, pix, clip=False):
@@ -861,7 +863,7 @@ class MapAxis:
         pix : `~numpy.ndarray`
             Array of pixel coordinate values.
         """
-        if self._boundary_type == "periodic":
+        if self._boundary_type == BoundaryEnum.periodic:
             coord = self.wrap_coord(coord)
         coord = u.Quantity(coord, self.unit, copy=False).value
         pix = self._transform.coord_to_pix(coord=coord)
@@ -884,7 +886,7 @@ class MapAxis:
         idx : `~numpy.ndarray`
             Array of bin indices.
         """
-        if self._boundary_type == "periodic":
+        if self._boundary_type == BoundaryEnum.periodic:
             coord = self.wrap_coord(coord)
         coord = u.Quantity(coord, self.unit, copy=False, ndmin=1).value
         edges = self.edges.value
