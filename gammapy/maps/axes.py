@@ -141,10 +141,9 @@ class MapAxis:
         else:
             nodes = np.array(nodes)
 
-        available_boundary = {"periodic", "monotonic"}
-        if boundary_type not in available_boundary:
+        if boundary_type not in list(BoundaryEnum):
             raise ValueError(f"Invalid boundary_type: {boundary_type}")
-        if boundary_type == "periodic" and interp != "lin":
+        if boundary_type == BoundaryEnum.periodic and interp != "lin":
             raise ValueError("Periodic Axis only supports linear interpolation")
 
         self._name = name
@@ -820,8 +819,8 @@ class MapAxis:
         """
 
         m1, m2 = self.edges_min[0], self.edges_max[-1]
-        out_of_range = (coords >= m2) | (coords < m1)
-        return np.where(out_of_range, (coords - m1) % (m2 - m1) + m1, coords)
+        out_of_range = (coord >= m2) | (coord < m1)
+        return np.where(out_of_range, (coord - m1) % (m2 - m1) + m1, coord)
 
     def pix_to_idx(self, pix, clip=False):
         """Convert pixel to index.
