@@ -431,12 +431,31 @@ def test_model_plot():
         amplitude=1e-12 * u.Unit("TeV-1 cm-2 s-1"), reference=1 * u.Unit("TeV"), index=2
     )
     pwl.amplitude.error = 0.1e-12 * u.Unit("TeV-1 cm-2 s-1")
+    energy_axis = MapAxis.from_energy_bounds(1 * u.TeV, 10 * u.TeV, 100)
 
     with mpl_plot_check():
         pwl.plot((1 * u.TeV, 10 * u.TeV))
 
     with mpl_plot_check():
         pwl.plot_error((1 * u.TeV, 10 * u.TeV))
+
+    with mpl_plot_check():
+        pwl.plot([0.08, 20] * u.TeV)
+
+    with mpl_plot_check():
+        pwl.plot_error([0.08, 20] * u.TeV)
+
+    with mpl_plot_check():
+        pwl.plot([0.08 * u.TeV, 20 * u.TeV])
+
+    with mpl_plot_check():
+        pwl.plot_error([0.08 * u.TeV, 20 * u.TeV])
+
+    with mpl_plot_check():
+        pwl.plot(energy_bounds=energy_axis)
+
+    with mpl_plot_check():
+        pwl.plot_error(energy_bounds=energy_axis)
 
 
 def test_model_plot_sed_type():

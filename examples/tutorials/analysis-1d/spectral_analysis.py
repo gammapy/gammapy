@@ -418,6 +418,12 @@ flux_points.plot(ax=ax, sed_type="e2dnde", color="darkorange")
 flux_points.plot_ts_profiles(ax=ax, sed_type="e2dnde")
 plt.show()
 
+######################################################################
+# Note: it is also possible to plot the flux distribution with the spectral model overlaid,
+# but you must ensure the axis binning is identical for the flux points and
+# integral flux.
+#
+
 
 ######################################################################
 # The final plot with the best fit model, flux points and residuals can be
