@@ -32,13 +32,13 @@ To execute the Gammapy CLI, type the command ``gammapy`` at your terminal shell
 
 .. code-block:: bash
 
-    $ gammapy --help
+    gammapy --help
 
 or equivalently, just type this:
 
 .. code-block:: bash
 
-    $ gammapy
+    gammapy
 
 Either way, the command should print some help text to the console and then
 exit:
@@ -60,10 +60,10 @@ exit:
       Examples
       --------
 
-      $ gammapy --help
-      $ gammapy --version
-      $ gammapy info --help
-      $ gammapy info
+      gammapy --help
+      gammapy --version
+      gammapy info --help
+      gammapy info
 
       Options:
       --log-level [debug|info|warning|error]
@@ -100,7 +100,7 @@ a datastore and producing the reduced datasets.)
 
 .. code-block:: bash
 
-    $ gammapy analysis --help
+    gammapy analysis --help
     Usage: gammapy analysis [OPTIONS] COMMAND [ARGS]...
 
     Automation of configuration driven data reduction process.
@@ -108,11 +108,11 @@ a datastore and producing the reduced datasets.)
     Examples
     --------
 
-    $ gammapy analysis config
-    $ gammapy analysis run
-    $ gammapy analysis config --overwrite
-    $ gammapy analysis config --filename myconfig.yaml
-    $ gammapy analysis run --filename myconfig.yaml
+    gammapy analysis config
+    gammapy analysis run
+    gammapy analysis config --overwrite
+    gammapy analysis config --filename myconfig.yaml
+    gammapy analysis run --filename myconfig.yaml
 
     Options:
     -h, --help  Show this message and exit.
@@ -121,15 +121,15 @@ a datastore and producing the reduced datasets.)
     config  Writes default configuration file.
     run     Performs automated data reduction process.
 
-    $ gammapy analysis config
+    gammapy analysis config
     INFO:gammapy.scripts.analysis:Configuration file produced: config.yaml
 
 
-You can manually edit this produced configuration file and the run the data reduction process::
+You can manually edit this produced configuration file and the run the data reduction process:
 
-.. code-block:: text
+.. code-block:: bash
 
-    $ gammapy analysis run
+    gammapy analysis run
 
     INFO:gammapy.analysis.config:Setting logging config: {'level': 'INFO', 'filename': None, 'filemode': None, 'format': None, 'datefmt': None}
     INFO:gammapy.analysis.core:Fetching observations.
@@ -186,7 +186,7 @@ execute it via:
 
 .. code-block:: bash
 
-    $ python significance.py
+    python significance.py
 
 If you want, you can also put the line ``#!/usr/bin/env python`` at the top of
 the script, make it executable via ``chmod +x significance.py`` and then you'll
@@ -213,7 +213,7 @@ you to set analysis parameters without having to edit the file, like this:
 
 .. code-block:: bash
 
-    $ python significance.py --help
+    python significance.py --help
       Usage: significance.py [OPTIONS] N_OBSERVED MU_BACKGROUND
 
       Compute significance for a Poisson count observation.
@@ -225,10 +225,10 @@ you to set analysis parameters without having to edit the file, like this:
       --value [sqrt_ts|p_value]  Square root TS or p_value
       --help                     Show this message and exit.
 
-    $ python significance.py 10 4.2
+    python significance.py 10 4.2
     2.39791813
 
-    $ python significance.py 10 4.2 --value p_value
+    python significance.py 10 4.2 --value p_value
     0.01648855015875024
 
 In Python, there are several ways to do command line argument parsing and to
@@ -290,7 +290,7 @@ This usually looks like this:
 
 .. code-block:: bash
 
-    $ gammapy
+    gammapy
     -bash: gammapy: command not found
 
 If you just installed Gammapy, search the install log for the message
@@ -306,7 +306,7 @@ installed, you can try calling it like this instead:
 
 .. code-block:: bash
 
-    $ python -m gammapy
+    python -m gammapy
 
 This also has the advantage that it avoids issues where users have multiple
 versions of Python and Gammapy installed and accidentally launch one they don't
@@ -318,18 +318,18 @@ Gammapy installed:
 
 .. code-block:: bash
 
-    $ which python
-    $ python -c 'import gammapy'
+    which python
+    python -c 'import gammapy'
 
 To see more information about your shell environment, these commands might be
 helpful:
 
 .. code-block:: bash
 
-    $ python -m site
-    $ python -m gammapy info
-    $ echo $PATH
-    $ conda info -a # if you're using conda
+    python -m site
+    python -m gammapy info
+    echo $PATH
+    conda info -a # if you're using conda
 
 If you're still stuck or have any question, feel free to ask for help with
 installation issues on the Gammapy mailing list of Slack any time!

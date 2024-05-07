@@ -301,21 +301,22 @@ def TimmerKonig_lightcurve_simulator(
         a function mapping the input frequencies to the periodogram.
     npoints : int
         Number of points in the output time series.
-    spacing : '~astropy.Quantity'
-        Sample spacing, inverse of the sampling rate. Its units will be inherited by the resulting time axis.
+    spacing : `~astropy.units.Quantity`
+        Sample spacing, inverse of the sampling rate. The units are inherited by the resulting time axis.
     random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
         Defines random number generator initialisation.
         Passed to `~gammapy.utils.random.get_random_state`. Default is "random-seed".
-    power_spectrum_params : dict , optional
+    power_spectrum_params : dict, optional
         Dictionary of parameters to be provided to the power spectrum function.
 
     Returns
     -------
-    time_series: `~numpy.ndarray`
+    time_series : `~numpy.ndarray`
         Simulated time series.
-    time_axis: '~astropy.Quantity'
+    time_axis : `~astropy.units.Quantity`
         Time axis of the series in the same units as 'spacing'. It will be defined with length 'npoints', from 0 to
         'npoints'*'spacing'.
+
     Examples
     --------
     To pass the function to be used in the simlation one can use either the 'lambda' keyword or an extended definition.
@@ -325,16 +326,18 @@ def TimmerKonig_lightcurve_simulator(
     >>> from gammapy.stats import TimmerKonig_lightcurve_simulator
     >>> import astropy.units as u
     >>> def powerlaw(x):
-    >>>     return x**(-2)
+    ...     return x**(-2)
     >>> def powerlaw_with_parameters(x, i):
-    >>>     return x**(-i)
+    ...     return x**(-i)
     >>> ts, ta = TimmerKonig_lightcurve_simulator(lambda x: x**(-2), 20, 1*u.h)
     >>> ts2, ta2 = TimmerKonig_lightcurve_simulator(powerlaw, 20, 1*u.h)
-    >>> ts3, ta3 = TimmerKonig_lightcurve_simulator(powerlaw_withparameters, 20, 1*u.h, power_spectrum_params={"i":2})
+    >>> ts3, ta3 = TimmerKonig_lightcurve_simulator(powerlaw_with_parameters,
+    ...                                            20, 1*u.h, power_spectrum_params={"i":2})
 
     References
     ----------
-    ..[Timmer1995]"On generating power law noise", J. Timmer and M, Konig, section 3.
+    .. [Timmer1995] "On generating power law noise", J. Timmer and M, Konig, section 3
+    https://ui.adsabs.harvard.edu/abs/1995A%26A...300..707T/abstract
     """
     if not callable(power_spectrum):
         raise ValueError(
