@@ -191,7 +191,7 @@ environment with the content present in `environment-dev.yml` see below:
 
 .. code-block:: bash
 
-    $ conda env update --file environment-dev.yml --prune
+    conda env update --file environment-dev.yml --prune
 
 
 When developing Gammapy you never want to work on the ``main`` branch, but

@@ -42,7 +42,7 @@ Gammapy is a Python package, so you can of course import and use it from Python:
 
 .. code-block:: bash
 
-    $ python
+    python
     Python 3.6.0 | packaged by conda-forge | (default, Feb 10 2017, 07:08:35)
     [GCC 4.2.1 Compatible Apple LLVM 7.3.0 (clang-703.0.31)] on darwin
     Type "help", "copyright", "credits" or "license" for more information.
@@ -58,7 +58,7 @@ IPython is nicer to use for interactive analysis:
 
 .. code-block:: bash
 
-    $ ipython
+    ipython
     Python 3.6.0 | packaged by conda-forge | (default, Feb 10 2017, 07:08:35)
     Type 'copyright', 'credits' or 'license' for more information
     IPython 6.5.0 -- An enhanced Interactive Python. Type '?' for help.
