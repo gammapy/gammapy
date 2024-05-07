@@ -51,16 +51,16 @@ def setup_iminuit(parameters, function, store_trace=False, **kwargs):
 
 
 def optimize_iminuit(parameters, function, store_trace=False, **kwargs):
-    """iminuit optimization
+    """iminuit optimization.
 
     Parameters
     ----------
     parameters : `~gammapy.modeling.Parameters`
-        Parameters with starting values
+        Parameters with starting values.
     function : callable
-        Likelihood function
-    store_trace : bool
-        Store trace of the fit
+        Likelihood function.
+    store_trace : bool, optional
+        Store trace of the fit. Default is False.
     **kwargs : dict
         Options passed to `iminuit.Minuit` constructor. If there is an entry
         'migrad_opts', those options will be passed to `iminuit.Minuit.migrad()`.
@@ -68,7 +68,7 @@ def optimize_iminuit(parameters, function, store_trace=False, **kwargs):
     Returns
     -------
     result : (factors, info, optimizer)
-        Tuple containing the best fit factors, some info and the optimizer instance.
+        Tuple containing the best fit factors, some information and the optimizer instance.
     """
     migrad_opts = kwargs.pop("migrad_opts", {})
 
@@ -91,7 +91,7 @@ def optimize_iminuit(parameters, function, store_trace=False, **kwargs):
 
 
 def covariance_iminuit(parameters, function, **kwargs):
-    minuit = kwargs["minuit"]
+    minuit = kwargs.get("minuit")
 
     if minuit is None:
         minuit, _ = setup_iminuit(
@@ -127,7 +127,7 @@ def confidence_iminuit(parameters, function, parameter, reoptimize, sigma, **kwa
     idx = parameters.free_parameters.index(parameter)
     var = _make_parname(idx, parameter)
 
-    message = "Minos terminated successfully."
+    message = "Minos terminated"
     cl = 2 * norm.cdf(sigma) - 1
 
     try:
@@ -141,6 +141,11 @@ def confidence_iminuit(parameters, function, parameter, reoptimize, sigma, **kwa
             "errn": np.nan,
             "nfev": 0,
         }
+
+    if info.is_valid:
+        message += " successfully."
+    else:
+        message += ", but result is invalid."
 
     return {
         "success": info.is_valid,
@@ -175,12 +180,17 @@ def contour_iminuit(parameters, function, x, y, numpoints, sigma, **kwargs):
     }
 
 
-# this code is copied from https://github.com/iminuit/iminuit/blob/master/iminuit/_minimize.py#L95
+# This code is copied from https://github.com/scikit-hep/iminuit/blob/v2.21.0/src/iminuit/minimize.py#L124-L136
 def _get_message(m, parameters):
-    message = "Optimization terminated successfully."
-    success = m.accurate
+    success = m.valid
     success &= np.all(np.isfinite([par.value for par in parameters]))
-    if not success:
+    if success:
+        message = "Optimization terminated successfully"
+        if m.accurate:
+            message += "."
+        else:
+            message += ", but uncertainties are unreliable."
+    else:
         message = "Optimization failed."
         fmin = m.fmin
         if fmin.has_reached_call_limit:

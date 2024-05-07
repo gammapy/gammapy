@@ -1,22 +1,26 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import collections
 import copy
+import html
 import logging
+import warnings
 import numpy as np
 from astropy import units as u
-from astropy.coordinates import AltAz, Angle, SkyCoord
-from astropy.coordinates.angle_utilities import angular_separation
+from astropy.coordinates import AltAz, Angle, SkyCoord, angular_separation
 from astropy.io import fits
 from astropy.table import Table
 from astropy.table import vstack as vstack_tables
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from gammapy.maps import MapAxis, MapCoord, RegionGeom, WcsNDMap
+from gammapy.maps.axes import UNIT_STRING_FORMAT
+from gammapy.utils.deprecation import deprecated
 from gammapy.utils.fits import earth_location_from_dict
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_from_dict
 from .gti import GTI
+from .metadata import EventListMetaData
 
 __all__ = ["EventList"]
 
@@ -56,7 +60,9 @@ class EventList:
     Parameters
     ----------
     table : `~astropy.table.Table`
-        Event list table
+        Event list table.
+    meta : `~gammapy.data.EventListMetaData`
+        The metadata. Default is None.
 
     Examples
     --------
@@ -85,11 +91,18 @@ class EventList:
 
     """
 
-    def __init__(self, table):
+    def __init__(self, table, meta=None):
         self.table = table
+        self.meta = meta
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     @classmethod
-    def read(cls, filename, **kwargs):
+    def read(cls, filename, hdu="EVENTS", checksum=False, **kwargs):
         """Read from FITS file.
 
         Format specification: :ref:`gadf:iact-events`
@@ -98,32 +111,51 @@ class EventList:
         ----------
         filename : `pathlib.Path`, str
             Filename
+        hdu : str
+            Name of events HDU. Default is "EVENTS".
+        checksum : bool
+            If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
         """
         filename = make_path(filename)
-        kwargs.setdefault("hdu", "EVENTS")
-        table = Table.read(filename, **kwargs)
-        return cls(table=table)
+
+        with fits.open(filename) as hdulist:
+            events_hdu = hdulist[hdu]
+            if checksum:
+                if events_hdu.verify_checksum() != 1:
+                    warnings.warn(
+                        f"Checksum verification failed for HDU {hdu} of {filename}.",
+                        UserWarning,
+                    )
+
+            table = Table.read(events_hdu)
+            meta = EventListMetaData.from_header(table.meta)
+
+        return cls(table=table, meta=meta)
 
     def to_table_hdu(self, format="gadf"):
         """
-        Convert event list to a `~astropy.io.fits.BinTableHDU`
+        Convert event list to a `~astropy.io.fits.BinTableHDU`.
 
         Parameters
         ----------
-        format: str
-            Output format, currently only "gadf" is supported
+        format : str, optional
+            Output format, currently only "gadf" is supported. Default is "gadf".
 
         Returns
         -------
-        hdu: `astropy.io.fits.BinTableHDU`
-            EventList converted to FITS representation
+        hdu : `astropy.io.fits.BinTableHDU`
+            EventList converted to FITS representation.
         """
         if format != "gadf":
             raise ValueError(f"Only the 'gadf' format supported, got {format}")
 
         return fits.BinTableHDU(self.table, name="EVENTS")
 
-    def write(self, filename, gti=None, overwrite=False, format="gadf"):
+    @deprecated(
+        since="v1.2",
+        message="To write an EventList utilise Observation.write() with include_irfs=False",
+    )
+    def write(self, filename, gti=None, overwrite=False, format="gadf", checksum=False):
         """Write the event list to a FITS file.
 
         If a GTI object is provided, it is saved into
@@ -131,18 +163,19 @@ class EventList:
 
         Parameters
         ----------
-        filename : `pathlib.Path`, str
-            Filename
-        gti : `~gammapy.data.GTI`
+        filename : `pathlib.Path` or str
+            Filename.
+        gti : `~gammapy.data.GTI`, optional
             Good Time Intervals object to save to the same file.
             Default is None.
-        overwrite : bool
-            Overwrite existing file?
+        overwrite : bool, optional
+            Overwrite existing file. Default is False.
         format : str, optional
-            FITS format convention.  By default files will be written
-            to the gamma-astro-data-formats (GADF) format.
+            FITS format convention. Default is "gadf".
+        checksum : bool, optional
+            When True adds both DATASUM and CHECKSUM cards to the headers written to the file.
+            Default is False.
         """
-
         if format != "gadf":
             raise ValueError(f"{format} is not a valid EventList format.")
 
@@ -170,8 +203,9 @@ class EventList:
             hdu_gti = gti.to_table_hdu(format=format)
             hdu_all.append(hdu_gti)
 
-        hdu_all.writeto(filename, overwrite=overwrite)
+        hdu_all.writeto(filename, overwrite=overwrite, checksum=checksum)
 
+    # TODO: Pass metadata here. Also check that specific meta contents are consistent
     @classmethod
     def from_stack(cls, event_lists, **kwargs):
         """Stack (concatenate) list of event lists.
@@ -181,10 +215,13 @@ class EventList:
         Parameters
         ----------
         event_lists : list
-            list of `~gammapy.data.EventList` to stack
+            List of `~gammapy.data.EventList` to stack.
+        **kwargs : dict, optional
+            Keyword arguments passed to `~astropy.table.vstack`.
         """
         tables = [_.table for _ in event_lists]
         stacked_table = vstack_tables(tables, **kwargs)
+        log.warning("The meta information will be empty here.")
         return cls(stacked_table)
 
     def stack(self, other):
@@ -195,7 +232,7 @@ class EventList:
         Parameters
         ----------
         other : `~gammapy.data.EventList`
-            Event list to stack to self
+            Event list to stack to self.
         """
         self.table = vstack_tables([self.table, other.table])
 
@@ -231,12 +268,12 @@ class EventList:
 
     @property
     def time_ref(self):
-        """Time reference (`~astropy.time.Time`)."""
+        """Time reference as a `~astropy.time.Time` object."""
         return time_ref_from_dict(self.table.meta)
 
     @property
     def time(self):
-        """Event times (`~astropy.time.Time`).
+        """Event times as a `~astropy.time.Time` object.
 
         Notes
         -----
@@ -249,23 +286,23 @@ class EventList:
 
     @property
     def observation_time_start(self):
-        """Observation start time (`~astropy.time.Time`)."""
+        """Observation start time as a `~astropy.time.Time` object."""
         return self.time_ref + u.Quantity(self.table.meta["TSTART"], "second")
 
     @property
     def observation_time_stop(self):
-        """Observation stop time (`~astropy.time.Time`)."""
+        """Observation stop time as a `~astropy.time.Time` object."""
         return self.time_ref + u.Quantity(self.table.meta["TSTOP"], "second")
 
     @property
     def radec(self):
-        """Event RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)."""
+        """Event RA / DEC sky coordinates as a `~astropy.coordinates.SkyCoord` object."""
         lon, lat = self.table["RA"], self.table["DEC"]
         return SkyCoord(lon, lat, unit="deg", frame="icrs")
 
     @property
     def galactic(self):
-        """Event Galactic sky coordinates (`~astropy.coordinates.SkyCoord`).
+        """Event Galactic sky coordinates as a `~astropy.coordinates.SkyCoord` object.
 
         Always computed from RA / DEC using Astropy.
         """
@@ -273,12 +310,12 @@ class EventList:
 
     @property
     def energy(self):
-        """Event energies (`~astropy.units.Quantity`)."""
+        """Event energies as a `~astropy.units.Quantity`."""
         return self.table["ENERGY"].quantity
 
     @property
     def galactic_median(self):
-        """Median position in radec"""
+        """Median position as a `~astropy.coordinates.SkyCoord` object."""
         galactic = self.galactic
         median_lon = np.median(galactic.l.wrap_at("180d"))
         median_lat = np.median(galactic.b)
@@ -289,18 +326,17 @@ class EventList:
 
         Parameters
         ----------
-        row_specifier : slice, int, or array of ints
+        row_specifier : slice or int or array of int
             Specification for rows to select,
-            passed on to ``self.table[row_specifier]``.
+            passed to ``self.table[row_specifier]``.
 
         Returns
         -------
         event_list : `EventList`
-            New event list with table row subset selected
+            New event list with table row subset selected.
 
         Examples
         --------
-
         >>> from gammapy.data import EventList
         >>> import numpy as np
         >>> filename = "$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_110380.fits"
@@ -325,7 +361,7 @@ class EventList:
         Parameters
         ----------
         energy_range : `~astropy.units.Quantity`
-            Energy range ``[energy_min, energy_max)``
+            Energy range ``[energy_min, energy_max)``.
 
         Returns
         -------
@@ -369,12 +405,12 @@ class EventList:
 
         Parameters
         ----------
-        regions : str, `~regions.Region` or list of `~regions.Region`
+        regions : str or `~regions.Region` or list of `~regions.Region`
             Region or list of regions (pixel or sky regions accepted).
-            A region can be defined as a string ind DS9 format as well.
+            A region can be defined as a string in the DS9 format as well.
             See http://ds9.si.edu/doc/ref/region.html for details.
-        wcs : `~astropy.wcs.WCS`
-            World coordinate system transformation
+        wcs : `~astropy.wcs.WCS`, optional
+            World coordinate system transformation. Default is None.
 
         Returns
         -------
@@ -393,8 +429,8 @@ class EventList:
         parameter : str
             Parameter used for the selection. Must be present in `self.table`.
         band : tuple or `astropy.units.Quantity`
-            Min and max value for the parameter to be selected (min <= parameter < max).
-            If parameter is not dimensionless you have to provide a Quantity.
+            Minimum and maximum value for the parameter to be selected (minimum <= parameter < maximum).
+            If parameter is not dimensionless, a Quantity is required.
 
         Returns
         -------
@@ -428,15 +464,15 @@ class EventList:
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes` or None
-            Axes
-        **kwargs : dict
-            Keyword arguments passed to `~matplotlib.pyplot.hist`
+        ax : `~matplotlib.axes.Axes`, optional
+            Matplotlib axes. Default is None
+        **kwargs : dict, optional
+            Keyword arguments passed to `~matplotlib.pyplot.hist`.
 
         Returns
         -------
-        ax : `~matplotlib.axes.Axes` or None
-            Axes
+        ax : `~matplotlib.axes.Axes`
+            Matplotlib axes.
         """
         ax = plt.gca() if ax is None else ax
 
@@ -455,19 +491,19 @@ class EventList:
         return ax
 
     def plot_time(self, ax=None, **kwargs):
-        """Plots an event rate time curve.
+        """Plot an event rate time curve.
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes` or None
-            Axes
-        **kwargs : dict
-            Keyword arguments passed to `~matplotlib.pyplot.errorbar`
+        ax : `~matplotlib.axes.Axes`, optional
+            Matplotlib axes. Default is None.
+        **kwargs : dict, optional
+            Keyword arguments passed to `~matplotlib.pyplot.errorbar`.
 
         Returns
         -------
         ax : `~matplotlib.axes.Axes`
-            Axes
+            Matplotlib axes.
         """
         ax = plt.gca() if ax is None else ax
 
@@ -475,7 +511,7 @@ class EventList:
         time = self.table["TIME"]
         time = time - np.min(time)
 
-        ax.set_xlabel("Time (sec)")
+        ax.set_xlabel(f"Time [{u.s.to_string(UNIT_STRING_FORMAT)}]")
         ax.set_ylabel("Counts")
         y, x_edges = np.histogram(time, bins=20)
 
@@ -489,7 +525,9 @@ class EventList:
 
         return ax
 
-    def plot_offset2_distribution(self, ax=None, center=None, **kwargs):
+    def plot_offset2_distribution(
+        self, ax=None, center=None, max_percentile=98, **kwargs
+    ):
         """Plot offset^2 distribution of the events.
 
         The distribution shown in this plot is for this quantity::
@@ -508,18 +546,21 @@ class EventList:
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes` (optional)
-            Axes
-        center : `astropy.coordinates.SkyCoord`
+        ax : `~matplotlib.axes.Axes`, optional
+            Matplotlib axes. Default is None.
+        center : `astropy.coordinates.SkyCoord`, optional
             Center position for the offset^2 distribution.
             Default is the observation pointing position.
-        **kwargs :
+        max_percentile : float, optional
+            Define the percentile of the offset^2 distribution used to define the maximum offset^2 value.
+            Default is 98.
+        **kwargs : dict, optional
             Extra keyword arguments are passed to `~matplotlib.pyplot.hist`.
 
         Returns
         -------
         ax : `~matplotlib.axes.Axes`
-            Axes
+            Matplotlib axes.
 
         Examples
         --------
@@ -552,33 +593,35 @@ class EventList:
             center = self._plot_center
 
         offset2 = center.separation(self.radec) ** 2
+        max2 = np.percentile(offset2, q=max_percentile)
 
         kwargs.setdefault("histtype", "step")
         kwargs.setdefault("bins", 30)
+        kwargs.setdefault("range", (0.0, max2.value))
 
         with quantity_support():
             ax.hist(offset2, **kwargs)
 
-        ax.set_xlabel(f"Offset^2 ({ax.xaxis.units})")
+        ax.set_xlabel(rf"Offset$^2$ [{ax.xaxis.units.to_string(UNIT_STRING_FORMAT)}]")
         ax.set_ylabel("Counts")
         return ax
 
     def plot_energy_offset(self, ax=None, center=None, **kwargs):
-        """Plot counts histogram with energy and offset axes
+        """Plot counts histogram with energy and offset axes.
 
         Parameters
         ----------
-        ax : `~matplotlib.pyplot.Axis`
-            Plot axis
-        center : `~astropy.coordinates.SkyCoord`
-            Sky coord from which offset is computed
-        **kwargs : dict
-            Keyword arguments forwarded to `~matplotlib.pyplot.pcolormesh`
+        ax : `~matplotlib.pyplot.Axis`, optional
+            Plot axis. Default is None.
+        center : `~astropy.coordinates.SkyCoord`, optional
+            Sky coord from which offset is computed. Default is None.
+        **kwargs : dict, optional
+            Keyword arguments forwarded to `~matplotlib.pyplot.pcolormesh`.
 
         Returns
         -------
         ax : `~matplotlib.pyplot.Axis`
-            Plot axis
+            Plot axis.
         """
         from matplotlib.colors import LogNorm
 
@@ -623,12 +666,12 @@ class EventList:
         Parameters
         ----------
         geom : `~gammapy.maps.Geom`
-            Geometry
+            Geometry.
 
         Returns
         -------
         coord : `~gammapy.maps.MapCoord`
-            Coordinates
+            Coordinates.
         """
         coord = {"skycoord": self.radec}
 
@@ -649,7 +692,7 @@ class EventList:
         Parameters
         ----------
         mask : `~gammapy.maps.Map`
-            Mask
+            Mask.
 
         Returns
         -------
@@ -675,14 +718,14 @@ class EventList:
 
     @property
     def observatory_earth_location(self):
-        """Observatory location (`~astropy.coordinates.EarthLocation`)."""
+        """Observatory location as an `~astropy.coordinates.EarthLocation` object."""
         return earth_location_from_dict(self.table.meta)
 
     @property
     def observation_time_duration(self):
-        """Observation time duration in seconds (`~astropy.units.Quantity`).
+        """Observation time duration in seconds as a `~astropy.units.Quantity`.
 
-        This is a keyword related to IACTs
+        This is a keyword related to IACTs.
         The wall time, including dead-time.
         """
         time_delta = (self.observation_time_stop - self.observation_time_start).sec
@@ -690,22 +733,20 @@ class EventList:
 
     @property
     def observation_live_time_duration(self):
-        """Live-time duration in seconds (`~astropy.units.Quantity`).
+        """Live-time duration in seconds as a `~astropy.units.Quantity`.
 
         The dead-time-corrected observation time.
 
         - In Fermi-LAT it is automatically provided in the header of the event list.
-        - In IACTs is computed as ``t_live = t_observation * (1 - f_dead)``
-
-        where ``f_dead`` is the dead-time fraction.
+        - In IACTs is computed as ``t_live = t_observation * (1 - f_dead)`` where ``f_dead`` is the dead-time fraction.
         """
         return u.Quantity(self.table.meta["LIVETIME"], "second")
 
     @property
     def observation_dead_time_fraction(self):
-        """Dead-time fraction (float).
+        """Dead-time fraction as a float.
 
-        This is a keyword related to IACTs
+        This is a keyword related to IACTs.
         Defined as dead-time over observation time.
 
         Dead-time is defined as the time during the observation
@@ -720,31 +761,31 @@ class EventList:
 
     @property
     def altaz_frame(self):
-        """ALT / AZ frame (`~astropy.coordinates.AltAz`)."""
+        """ALT / AZ frame as an `~astropy.coordinates.AltAz` object."""
         return AltAz(obstime=self.time, location=self.observatory_earth_location)
 
     @property
     def altaz(self):
-        """ALT / AZ position computed from RA / DEC (`~astropy.coordinates.SkyCoord`)."""
+        """ALT / AZ position computed from RA / DEC as a `~astropy.coordinates.SkyCoord` object."""
         return self.radec.transform_to(self.altaz_frame)
 
     @property
     def altaz_from_table(self):
-        """ALT / AZ position from table (`~astropy.coordinates.SkyCoord`)."""
+        """ALT / AZ position from table as a `~astropy.coordinates.SkyCoord` object."""
         lon = self.table["AZ"]
         lat = self.table["ALT"]
         return SkyCoord(lon, lat, unit="deg", frame=self.altaz_frame)
 
     @property
     def pointing_radec(self):
-        """Pointing RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)."""
+        """Pointing RA / DEC sky coordinates as a `~astropy.coordinates.SkyCoord` object."""
         info = self.table.meta
         lon, lat = info["RA_PNT"], info["DEC_PNT"]
         return SkyCoord(lon, lat, unit="deg", frame="icrs")
 
     @property
     def offset(self):
-        """Event offset from the array pointing position (`~astropy.coordinates.Angle`)."""
+        """Event offset from the array pointing position as an `~astropy.coordinates.Angle`."""
         position = self.radec
         center = self.pointing_radec
         offset = center.separation(position)
@@ -752,7 +793,7 @@ class EventList:
 
     @property
     def offset_from_median(self):
-        """Event offset from the median position (`~astropy.coordinates.Angle`)."""
+        """Event offset from the median position as an `~astropy.coordinates.Angle`."""
         position = self.radec
         center = self.galactic_median
         offset = center.separation(position)
@@ -764,7 +805,7 @@ class EventList:
         Parameters
         ----------
         offset_band : `~astropy.coordinates.Angle`
-            offset band ``[offset_min, offset_max)``
+            offset band ``[offset_min, offset_max)``.
 
         Returns
         -------
@@ -788,14 +829,14 @@ class EventList:
         return self.select_row_subset(mask)
 
     def select_rad_max(self, rad_max, position=None):
-        """Select energy dependent offset
+        """Select energy dependent offset.
 
         Parameters
         ----------
         rad_max : `~gamapy.irf.RadMax2D`
-            Rad max definition
-        position : `~astropy.coordinates.SkyCoord`
-            Center position. By default the pointing position is used.
+            Rad max definition.
+        position : `~astropy.coordinates.SkyCoord`, optional
+            Center position. Default is the pointing position.
 
         Returns
         -------
@@ -817,7 +858,7 @@ class EventList:
 
     @property
     def is_pointed_observation(self):
-        """Whether observation is pointed"""
+        """Whether observation is pointed."""
         return "RA_PNT" in self.table.meta
 
     def peek(self, allsky=False):
@@ -825,8 +866,8 @@ class EventList:
 
         Parameters
         ----------
-        allsky : bool
-            Whether to look at the events allsky
+        allsky : bool, optional
+            Whether to look at the events all-sky. Default is False.
         """
         import matplotlib.gridspec as gridspec
 
@@ -904,10 +945,10 @@ class EventList:
 
         Parameters
         ----------
-        ax : `~matplotlib.pyplot.Axes`
-            Axes to plot on.
-        allsky :  bool,
-            Whether to plot on an all sky geom
+        ax : `~matplotlib.pyplot.Axes`, optional
+            Matplotlib axes.
+        allsky :  bool, optional
+            Whether to plot on an all sky geom. Default is False.
         """
         if ax is None:
             ax = plt.gca()
@@ -915,19 +956,19 @@ class EventList:
         m.plot(ax=ax, stretch="sqrt")
 
     def copy(self):
-        """Copy event list (`EventList`)"""
+        """Copy event list (`EventList`)."""
         return copy.deepcopy(self)
 
 
 class EventListChecker(Checker):
     """Event list checker.
 
-    Data format specification: ref:`gadf:iact-events`
+    Data format specification: ref:`gadf:iact-events`.
 
     Parameters
     ----------
     event_list : `~gammapy.data.EventList`
-        Event list
+        Event list.
     """
 
     CHECKS = {

@@ -13,7 +13,6 @@ This model parametrises a generalized Gaussian time model.
 
 """
 
-
 # %%
 # Example plot
 # ------------

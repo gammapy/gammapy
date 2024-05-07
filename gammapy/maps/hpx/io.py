@@ -1,8 +1,10 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 import copy
+import html
 
 
 class HpxConv:
-    """Data structure to define how a HEALPIX map is stored to FITS."""
+    """Data structure to define how a HEALPix map is stored to FITS."""
 
     def __init__(self, convname, **kwargs):
         self.convname = convname
@@ -12,6 +14,12 @@ class HpxConv:
         self.bands_hdu = kwargs.get("bands_hdu", "EBOUNDS")
         self.quantity_type = kwargs.get("quantity_type", "integral")
         self.frame = kwargs.get("frame", "COORDSYS")
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     def colname(self, indx):
         return f"{self.colstring}{indx}"

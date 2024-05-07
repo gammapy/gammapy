@@ -117,8 +117,8 @@ fit_scipy = Fit(store_trace=True, optimize_opts=scipy_opts)
 # the `Fit.run()` method. In addition we have specified to store the
 # trace of parameter values of the fit.
 #
-# Note that, for now, covaraince matrix and errors are computed only for
-# the fitting with MINUIT. However depending on the problem other
+# Note that, for now, covariance matrix and errors are computed only for
+# the fitting with MINUIT. However, depending on the problem other
 # optimizers can better perform, so sometimes it can be useful to run a
 # pre-fit with alternative optimization methods.
 #
@@ -192,11 +192,11 @@ print(result_minuit)
 
 
 ######################################################################
-# If the fit is performed with minuit you can print detailed informations
+# If the fit is performed with minuit you can print detailed information
 # to check the convergence
 #
 
-print(fit.minuit)
+print(result_minuit.minuit)
 
 
 ######################################################################
@@ -236,9 +236,10 @@ for ax, par in zip(axes, datasets.parameters.free_parameters):
     name = datasets.models.parameters_unique_names[idx]
     profile = fit.stat_profile(datasets=datasets, parameter=par)
     ax.plot(profile[f"{name}_scan"], profile["stat_scan"] - total_stat)
-    ax.set_xlabel(f"{par.name} {par.unit}")
+    ax.set_xlabel(f"{par.name} [{par.unit}]")
     ax.set_ylabel("Delta TS")
     ax.set_title(f"{name}:\n {par.value:.1e} +- {par.error:.1e}")
+plt.show()
 
 
 ######################################################################
@@ -264,6 +265,7 @@ print(result_minuit.models.covariance)
 #
 
 result_minuit.models.covariance.plot_correlation()
+plt.show()
 
 # The covariance information is also propagated to the individual models
 # Therefore, one can also get the error on a specific parameter by directly
@@ -278,10 +280,10 @@ print(crab_model.spectral_model.alpha.error)
 # the envelope of the model taking into account parameter uncertainties.
 #
 
-plt.figure()
 energy_bounds = [1, 10] * u.TeV
 crab_spectrum.plot(energy_bounds=energy_bounds, energy_power=2)
 ax = crab_spectrum.plot_error(energy_bounds=energy_bounds, energy_power=2)
+plt.show()
 
 
 ######################################################################
@@ -296,14 +298,14 @@ ax = crab_spectrum.plot_error(energy_bounds=energy_bounds, energy_power=2)
 # best-fit value.
 #
 # Gammapy offers two ways of computing confidence contours, in the
-# dedicated methods `~gammapy.modeling.Fit.minos_contour` and `~gammapy.modeling.Fit.stat_profile`. In
+# dedicated methods `~gammapy.modeling.Fit.stat_contour` and `~gammapy.modeling.Fit.stat_profile`. In
 # the following sections we will describe them.
 #
 
 
 ######################################################################
-# An important point to keep in mind is: *what does a :math:`N\sigma`
-# confidence contour really mean?* The answer is it represents the points
+# An important point to keep in mind is: *what does a* :math:`N\sigma`
+# *confidence contour really mean?* The answer is it represents the points
 # of the parameter space for which the model likelihood is :math:`N\sigma`
 # above the minimum. But one always has to keep in mind that **1 standard
 # deviation in two dimensions has a smaller coverage probability than
@@ -318,7 +320,7 @@ ax = crab_spectrum.plot_error(energy_bounds=energy_bounds, energy_power=2)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # After the fit, MINUIT offers the possibility to compute the confidence
-# confours. gammapy provides an interface to this functionality through
+# contours. gammapy provides an interface to this functionality through
 # the `~gammapy.modeling.Fit` object using the `~gammapy.modeling.Fit.stat_contour` method. Here we defined a
 # function to automate the contour production for the different
 # parameter and confidence levels (expressed in terms of sigma):
@@ -427,7 +429,7 @@ plt.tight_layout()
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # This alternative method for the computation of confidence contours,
-# although more time consuming than `~gammapy.modeling.Fit.minos_contour()`, is expected
+# although more time consuming than `~gammapy.modeling.Fit.stat_contour()`, is expected
 # to be more stable. It consists of a generalization of
 # `~gammapy.modeling.Fit.stat_profile()` to a 2-dimensional parameter space. The algorithm
 # is very simple: - First, passing two arrays of parameters values, a

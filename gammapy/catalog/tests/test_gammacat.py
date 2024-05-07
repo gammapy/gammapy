@@ -5,7 +5,11 @@ from astropy import units as u
 from astropy.utils.data import get_pkg_data_filename
 from gammapy.catalog import SourceCatalogGammaCat
 from gammapy.utils.gauss import Gauss2DPDF
-from gammapy.utils.testing import assert_quantity_allclose, requires_data
+from gammapy.utils.testing import (
+    assert_quantity_allclose,
+    modify_unit_order_astropy_5_3,
+    requires_data,
+)
 
 SOURCES = [
     {
@@ -89,8 +93,11 @@ class TestSourceCatalogObjectGammaCat:
     @pytest.mark.parametrize("ref", SOURCES, ids=lambda _: _["name"])
     def test_str(self, gammacat, ref):
         actual = str(gammacat[ref["name"]])
-        expected = open(get_pkg_data_filename(ref["str_ref_file"])).read()
-        assert actual == expected
+
+        with open(get_pkg_data_filename(ref["str_ref_file"])) as fh:
+            expected = fh.read()
+
+        assert actual == modify_unit_order_astropy_5_3(expected)
 
     @pytest.mark.parametrize("ref", SOURCES, ids=lambda _: _["name"])
     def test_spectral_model(self, gammacat, ref):
@@ -148,7 +155,6 @@ class TestSourceCatalogObjectGammaCat:
         spatial_model = source.spatial_model()
         assert spatial_model.frame == "galactic"
 
-        # TODO: put better asserts on model properties
         # TODO: add a point and shell source -> separate list of sources for
         # morphology test parametrization?
         assert spatial_model.__class__.__name__ == ref["spatial_model"]

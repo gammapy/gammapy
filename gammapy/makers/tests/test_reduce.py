@@ -17,16 +17,25 @@ from gammapy.makers import (
     WobbleRegionsFinder,
 )
 from gammapy.maps import MapAxis, RegionGeom, WcsGeom
-from gammapy.utils.testing import requires_data
+from gammapy.utils.testing import requires_data, requires_dependency
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture()
 def observations_cta():
     data_store = DataStore.from_dir("$GAMMAPY_DATA/cta-1dc/index/gps/")
     return data_store.get_observations()[:3]
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture()
+def observations_cta_with_issue():
+    data_store = DataStore.from_dir("$GAMMAPY_DATA/cta-1dc/index/gps/")
+    list = data_store.get_observations()[:2]
+    empty_obs = Observation()
+    list.append(empty_obs)
+    return list
+
+
+@pytest.fixture()
 def observations_hess():
     datastore = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
     obs_ids = [23523, 23526, 23559, 23592]
@@ -46,7 +55,8 @@ def observations_magic_rad_max():
     return observations
 
 
-def get_mapdataset(name):
+@pytest.fixture()
+def map_dataset():
     skydir = SkyCoord(0, -1, unit="deg", frame="galactic")
     energy_axis = MapAxis.from_edges(
         [0.1, 1, 10], name="energy", unit="TeV", interp="log"
@@ -54,10 +64,11 @@ def get_mapdataset(name):
     geom = WcsGeom.create(
         skydir=skydir, binsz=0.5, width=(10, 5), frame="galactic", axes=[energy_axis]
     )
-    return MapDataset.create(geom, name=name)
+    return MapDataset.create(geom=geom)
 
 
-def get_spectrumdataset(name):
+@pytest.fixture()
+def spectrum_dataset():
     target_position = SkyCoord(ra=83.63, dec=22.01, unit="deg", frame="icrs")
     on_region_radius = Angle("0.11 deg")
     on_region = CircleSkyRegion(center=target_position, radius=on_region_radius)
@@ -71,7 +82,8 @@ def get_spectrumdataset(name):
 
     geom = RegionGeom.create(region=on_region, axes=[energy_axis])
     return SpectrumDataset.create(
-        geom=geom, energy_axis_true=energy_axis_true, name=name
+        geom=geom,
+        energy_axis_true=energy_axis_true,
     )
 
 
@@ -109,6 +121,21 @@ def exclusion_mask():
     return ~geom.region_mask([exclusion_region])
 
 
+@pytest.fixture()
+def full_exclusion_mask():
+    exclusion_region = CircleSkyRegion(
+        center=SkyCoord(183.604, -8.708, unit="deg", frame="galactic"),
+        radius=15 * u.deg,
+    )
+
+    skydir = SkyCoord(ra=83.63, dec=22.01, unit="deg", frame="icrs")
+    geom = WcsGeom.create(
+        npix=(150, 150), binsz=0.05, skydir=skydir, proj="TAN", frame="icrs"
+    )
+
+    return ~geom.region_mask([exclusion_region])
+
+
 @pytest.fixture(scope="session")
 def makers_map():
     return [
@@ -129,41 +156,52 @@ def makers_spectrum(exclusion_mask):
     ]
 
 
+@pytest.fixture()
+def makers_spectrum_large_region(full_exclusion_mask):
+    return [
+        SpectrumDatasetMaker(
+            containment_correction=True, selection=["counts", "exposure", "edisp"]
+        ),
+        ReflectedRegionsBackgroundMaker(exclusion_mask=full_exclusion_mask),
+        SafeMaskMaker(methods=["aeff-max"], aeff_percent=10),
+    ]
+
+
 @requires_data()
 @pytest.mark.parametrize(
     "pars",
     [
         {
-            "dataset": get_mapdataset(name="linear_staking"),
             "stack_datasets": True,
             "cutout_width": None,
             "n_jobs": 1,
+            "backend": None,
         },
         {
-            "dataset": get_mapdataset(name="parallel"),
             "stack_datasets": False,
             "cutout_width": None,
             "n_jobs": 2,
+            "backend": "multiprocessing",
         },
         {
-            "dataset": get_mapdataset(name="parallel_staking"),
             "stack_datasets": True,
             "cutout_width": None,
             "n_jobs": 2,
+            "backend": "multiprocessing",
         },
     ],
 )
-@requires_data()
-def test_datasets_maker_map(pars, observations_cta, makers_map):
+def test_datasets_maker_map(pars, observations_cta, makers_map, map_dataset):
     makers = DatasetsMaker(
         makers_map,
         stack_datasets=pars["stack_datasets"],
         cutout_mode="partial",
         cutout_width=pars["cutout_width"],
         n_jobs=pars["n_jobs"],
+        parallel_backend=pars["backend"],
     )
 
-    datasets = makers.run(pars["dataset"], observations_cta)
+    datasets = makers.run(map_dataset, observations_cta)
     if len(datasets) == 1:
         counts = datasets[0].counts
         assert counts.unit == ""
@@ -185,7 +223,46 @@ def test_datasets_maker_map(pars, observations_cta, makers_map):
 
 
 @requires_data()
-def test_datasets_maker_map_cutout_width(observations_cta, makers_map, tmp_path):
+def test_failure_datasets_maker_map(
+    observations_cta_with_issue, makers_map, map_dataset
+):
+    makers = DatasetsMaker(
+        makers_map,
+        stack_datasets=True,
+        cutout_mode="partial",
+        cutout_width="15 deg",
+        n_jobs=4,
+        parallel_backend="multiprocessing",
+    )
+
+    with pytest.raises(RuntimeError):
+        makers.run(map_dataset, observations_cta_with_issue)
+
+
+@requires_data()
+@requires_dependency("ray")
+def test_datasets_maker_map_ray(observations_cta, makers_map, map_dataset):
+    makers = DatasetsMaker(
+        makers_map,
+        stack_datasets=True,
+        cutout_mode="partial",
+        cutout_width=None,
+        n_jobs=2,
+        parallel_backend="ray",
+    )
+
+    datasets = makers.run(dataset=map_dataset, observations=observations_cta)
+    counts = datasets[0].counts
+    assert counts.unit == ""
+    assert_allclose(counts.data.sum(), 46716, rtol=1e-5)
+
+    exposure = datasets[0].exposure
+    assert exposure.unit == "m2 s"
+    assert_allclose(exposure.data.mean(), 1.350841e09, rtol=3e-3)
+
+
+@requires_data()
+def test_datasets_maker_map_cutout_width(observations_cta, makers_map, map_dataset):
     makers = DatasetsMaker(
         makers_map,
         stack_datasets=True,
@@ -193,7 +270,7 @@ def test_datasets_maker_map_cutout_width(observations_cta, makers_map, tmp_path)
         cutout_width="5 deg",
         n_jobs=1,
     )
-    datasets = makers.run(get_mapdataset(name="linear_staking_1deg"), observations_cta)
+    datasets = makers.run(map_dataset, observations_cta)
 
     counts = datasets[0].counts
 
@@ -206,8 +283,7 @@ def test_datasets_maker_map_cutout_width(observations_cta, makers_map, tmp_path)
 
 
 @requires_data()
-def test_datasets_maker_map_2steps(observations_cta, makers_map, tmp_path):
-
+def test_datasets_maker_map_2_steps(observations_cta, map_dataset):
     makers = DatasetsMaker(
         [MapDatasetMaker()],
         stack_datasets=False,
@@ -216,8 +292,7 @@ def test_datasets_maker_map_2steps(observations_cta, makers_map, tmp_path):
         n_jobs=1,
     )
 
-    dataset = get_mapdataset(name="2steps")
-    datasets = makers.run(dataset, observations_cta)
+    datasets = makers.run(map_dataset, observations_cta)
 
     makers_list = [
         SafeMaskMaker(methods=["offset-max"], offset_max="2 deg"),
@@ -230,7 +305,7 @@ def test_datasets_maker_map_2steps(observations_cta, makers_map, tmp_path):
         cutout_width="5 deg",
         n_jobs=1,
     )
-    datasets = makers.run(dataset, observations_cta, datasets)
+    datasets = makers.run(map_dataset, observations_cta, datasets)
 
     counts = datasets[0].counts
     assert counts.unit == ""
@@ -242,10 +317,9 @@ def test_datasets_maker_map_2steps(observations_cta, makers_map, tmp_path):
 
 
 @requires_data()
-def test_datasetsmaker_spectrum(observations_hess, makers_spectrum):
-
+def test_datasets_maker_spectrum(observations_hess, makers_spectrum, spectrum_dataset):
     makers = DatasetsMaker(makers_spectrum, stack_datasets=False, n_jobs=2)
-    datasets = makers.run(get_spectrumdataset(name="spec"), observations_hess)
+    datasets = makers.run(spectrum_dataset, observations_hess)
 
     counts = datasets[0].counts
     assert counts.unit == ""
@@ -255,6 +329,19 @@ def test_datasetsmaker_spectrum(observations_hess, makers_spectrum):
     exposure = datasets[0].exposure
     assert exposure.unit == "m2 s"
     assert_allclose(exposure.data.mean(), 3.94257338e08, rtol=3e-3)
+
+
+@requires_data()
+def test_datasets_maker_spectrum_large_region(
+    observations_hess, makers_spectrum_large_region, spectrum_dataset
+):
+    makers = DatasetsMaker(makers_spectrum_large_region, stack_datasets=True, n_jobs=4)
+    datasets = makers.run(spectrum_dataset, observations_hess)
+
+    counts = datasets[0].counts
+    assert counts.unit == ""
+    assert_allclose(counts.data.sum(), 0, rtol=1e-5)
+    assert_allclose(datasets[0].background.data.sum(), 0, rtol=1e-5)
 
 
 @requires_data()
@@ -366,13 +453,13 @@ def test_dataset_maker_spectrum_rad_max_all_excluded(
 
     # excludes all possible off regions
     exclusion_region = CircleSkyRegion(
-        center=observation.pointing_radec,
+        center=observation.get_pointing_icrs(observation.tmid),
         radius=1 * u.deg,
     )
     geom = WcsGeom.create(
         npix=(150, 150),
         binsz=0.05,
-        skydir=observation.pointing_radec,
+        skydir=observation.get_pointing_icrs(observation.tmid),
         proj="TAN",
         frame="icrs",
     )

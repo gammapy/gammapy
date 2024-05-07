@@ -7,7 +7,9 @@ from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from matplotlib.colors import PowerNorm
 from gammapy.maps import MapAxis
+from gammapy.maps.axes import UNIT_STRING_FORMAT
 from gammapy.utils.scripts import make_path
+from gammapy.visualization.utils import add_colorbar
 from ..core import IRF
 
 __all__ = ["EDispKernel"]
@@ -16,16 +18,16 @@ __all__ = ["EDispKernel"]
 class EDispKernel(IRF):
     """Energy dispersion matrix.
 
-    Data format specification: :ref:`gadf:ogip-rmf`
+    Data format specification: :ref:`gadf:ogip-rmf`.
 
     Parameters
     ----------
     energy_axis_true : `~gammapy.maps.MapAxis`
-        True energy axis. Its name must be "energy_true"
+        True energy axis. Its name must be "energy_true".
     energy_axis : `~gammapy.maps.MapAxis`
-        Reconstructed energy axis. Its name must be "energy"
+        Reconstructed energy axis. Its name must be "energy".
     data : array_like
-        2-dim energy dispersion matrix
+        2D energy dispersion matrix.
 
     Examples
     --------
@@ -33,11 +35,9 @@ class EDispKernel(IRF):
 
     >>> from gammapy.maps import MapAxis
     >>> from gammapy.irf import EDispKernel
-    >>> energy = MapAxis.from_energy_bounds(0.1,10,10, unit='TeV')
-    >>> energy_true = MapAxis.from_energy_bounds(0.1,10,10, unit='TeV', name='energy_true')
-    >>> edisp = EDispKernel.from_gauss(
-    >>>     energy_axis_true=energy_true, energy_axis=energy, sigma=0.1, bias=0
-    >>> )
+    >>> energy = MapAxis.from_energy_bounds(0.1, 10, 10, unit='TeV')
+    >>> energy_true = MapAxis.from_energy_bounds(0.1, 10, 10, unit='TeV', name='energy_true')
+    >>> edisp = EDispKernel.from_gauss(energy_axis_true=energy_true, energy_axis=energy, sigma=0.1, bias=0)
 
     Have a quick look:
 
@@ -63,7 +63,7 @@ class EDispKernel(IRF):
 
     @property
     def pdf_matrix(self):
-        """Energy dispersion PDF matrix (`~numpy.ndarray`).
+        """Energy dispersion PDF matrix as a `~numpy.ndarray`.
 
         Rows (first index): True Energy
         Columns (second index): Reco Energy
@@ -76,9 +76,9 @@ class EDispKernel(IRF):
         Parameters
         ----------
         lo_threshold : `~astropy.units.Quantity`
-            Low reco energy threshold
+            Low reconstructed energy threshold.
         hi_threshold : `~astropy.units.Quantity`
-            High reco energy threshold
+            High reconstructed energy threshold.
         """
         data = self.pdf_matrix.copy()
         energy = self.axes["energy"].edges
@@ -96,9 +96,9 @@ class EDispKernel(IRF):
         Parameters
         ----------
         lo_threshold : `~astropy.units.Quantity`, optional
-            Low reco energy threshold
+            Low reconstructed energy threshold. Default is None.
         hi_threshold : `~astropy.units.Quantity`, optional
-            High reco energy threshold
+            High reconstructed energy threshold. Default is None.
         """
         energy_axis = self.axes["energy"]
         lo_threshold = lo_threshold or energy_axis.edges[0]
@@ -114,25 +114,25 @@ class EDispKernel(IRF):
     def from_gauss(cls, energy_axis_true, energy_axis, sigma, bias, pdf_threshold=1e-6):
         """Create Gaussian energy dispersion matrix (`EnergyDispersion`).
 
-        Calls :func:`gammapy.irf.EnergyDispersion2D.from_gauss`
+        Calls :func:`gammapy.irf.EnergyDispersion2D.from_gauss`.
 
         Parameters
         ----------
         energy_axis_true : `~astropy.units.Quantity`
-            Bin edges of true energy axis
+            Bin edges of true energy axis.
         energy_axis : `~astropy.units.Quantity`
-            Bin edges of reconstructed energy axis
+            Bin edges of reconstructed energy axis.
         bias : float or `~numpy.ndarray`
-            Center of Gaussian energy dispersion, bias
+            Center of Gaussian energy dispersion, bias.
         sigma : float or `~numpy.ndarray`
-            RMS width of Gaussian energy dispersion, resolution
+            RMS width of Gaussian energy dispersion, resolution.
         pdf_threshold : float, optional
-            Zero suppression threshold
+            Zero suppression threshold. Default is 1e-6.
 
         Returns
         -------
         edisp : `EDispKernel`
-            Edisp kernel.
+            Energy dispersion kernel.
         """
         from .core import EnergyDispersion2D
 
@@ -155,7 +155,7 @@ class EDispKernel(IRF):
 
     @classmethod
     def from_diagonal_response(cls, energy_axis_true, energy_axis=None):
-        """Create energy dispersion from a diagonal response, i.e. perfect energy resolution
+        """Create energy dispersion from a diagonal response, i.e. perfect energy resolution.
 
         This creates the matrix corresponding to a perfect energy response.
         It contains ones where the energy_true center is inside the e_reco bin.
@@ -166,30 +166,33 @@ class EDispKernel(IRF):
 
         Parameters
         ----------
-        energy_axis_true, energy_axis : `MapAxis`
-            True and reconstructed energy axis
+        energy_axis_true : `~gammapy.maps.MapAxis`
+            True energy axis.
+        energy_axis : `~gammapy.maps.MapAxis`, optional
+            Reconstructed energy axis. Default is None.
 
         Examples
         --------
-        If ``energy_true`` equals ``energy``, you get a diagonal matrix::
+        If ``energy_true`` equals ``energy``, you get a diagonal matrix:
 
-            from gammapy.irf import EDispKernel
-            from gammapy.maps import MapAxis
+        >>> from gammapy.irf import EDispKernel
+        >>> from gammapy.maps import MapAxis
+        >>> import astropy.units as u
 
-            energy_true_axis = MapAxis.from_energy_edges(
-                    [0.5, 1, 2, 4, 6] * u.TeV, name="energy_true"
-                )
-            edisp = EDispKernel.from_diagonal_response(energy_true_axis)
-            edisp.plot_matrix()
+        >>> energy_true_axis = MapAxis.from_energy_edges(
+        ...            [0.5, 1, 2, 4, 6] * u.TeV, name="energy_true"
+        ...        )
+        >>> edisp = EDispKernel.from_diagonal_response(energy_true_axis)
+        >>> edisp.plot_matrix() # doctest: +SKIP
 
-        Example with different energy binnings::
+        Example with different energy binnings:
 
-            energy_true_axis = MapAxis.from_energy_edges(
-                    [0.5, 1, 2, 4, 6] * u.TeV, name="energy_true"
-                )
-            energy_axis = MapAxis.from_energy_edges([2, 4, 6] * u.TeV)
-            edisp = EDispKernel.from_diagonal_response(energy_true_axis, energy_axis)
-            edisp.plot_matrix()
+        >>> energy_true_axis = MapAxis.from_energy_edges(
+        ...     [0.5, 1, 2, 4, 6] * u.TeV, name="energy_true"
+        ... )
+        >>> energy_axis = MapAxis.from_energy_edges([2, 4, 6] * u.TeV)
+        >>> edisp = EDispKernel.from_diagonal_response(energy_true_axis, energy_axis)
+        >>> edisp.plot_matrix() # doctest: +SKIP
         """
         from .map import get_overlap_fraction
 
@@ -210,9 +213,9 @@ class EDispKernel(IRF):
         hdulist : `~astropy.io.fits.HDUList`
             HDU list with ``MATRIX`` and ``EBOUNDS`` extensions.
         hdu1 : str, optional
-            HDU containing the energy dispersion matrix, default: MATRIX
+            HDU containing the energy dispersion matrix. Default is "MATRIX".
         hdu2 : str, optional
-            HDU containing the energy axis information, default, EBOUNDS
+            HDU containing the energy axis information. Default is "EBOUNDS".
         """
         matrix_hdu = hdulist[hdu1]
         ebounds_hdu = hdulist[hdu2]
@@ -243,19 +246,23 @@ class EDispKernel(IRF):
         return cls(axes=[energy_axis_true, energy_axis], data=pdf_matrix)
 
     @classmethod
-    def read(cls, filename, hdu1="MATRIX", hdu2="EBOUNDS"):
+    def read(cls, filename, hdu1="MATRIX", hdu2="EBOUNDS", checksum=False):
         """Read from file.
 
         Parameters
         ----------
-        filename : `pathlib.Path`, str
-            File to read
+        filename : `pathlib.Path` or str
+            File to read.
         hdu1 : str, optional
-            HDU containing the energy dispersion matrix, default: MATRIX
+            HDU containing the energy dispersion matrix. Default is "MATRIX".
         hdu2 : str, optional
-            HDU containing the energy axis information, default, EBOUNDS
+            HDU containing the energy axis information. Default is "EBOUNDS".
+        checksum : bool
+            If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
         """
-        with fits.open(str(make_path(filename)), memmap=False) as hdulist:
+        with fits.open(
+            str(make_path(filename)), memmap=False, checksum=checksum
+        ) as hdulist:
             return cls.from_hdulist(hdulist, hdu1=hdu1, hdu2=hdu2)
 
     def to_hdulist(self, format="ogip", **kwargs):
@@ -264,7 +271,7 @@ class EDispKernel(IRF):
         Parameters
         ----------
         format : {"ogip", "ogip-sherpa"}
-            Format to use.
+            Format to use. Default is "ogip".
 
         Returns
         -------
@@ -273,7 +280,7 @@ class EDispKernel(IRF):
 
         Notes
         -----
-        For more info on the RMF FITS file format see:
+        For more information on the RMF FITS file format see:
         https://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/summary/cal_gen_92_002_summary.html
         """
         # Cannot use table_to_fits here due to variable length array
@@ -316,12 +323,12 @@ class EDispKernel(IRF):
         Parameters
         ----------
         format : {"ogip", "ogip-sherpa"}
-            Format to use.
+            Format to use. Default is "ogip".
 
         Returns
         -------
         table : `~astropy.table.Table`
-            Matrix table
+            Matrix table.
 
         """
         table = self.axes["energy_true"].to_table(format=format)
@@ -377,29 +384,33 @@ class EDispKernel(IRF):
 
         return table
 
-    def write(self, filename, format="ogip", **kwargs):
+    def write(self, filename, format="ogip", checksum=False, **kwargs):
         """Write to file.
 
         Parameters
         ----------
         filename : str
-            Filename
+            Filename.
         format : {"ogip", "ogip-sherpa"}
-            Format to use.
+            Format to use. Default is "ogip".
+        checksum : bool
+            If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
 
         """
         filename = str(make_path(filename))
-        self.to_hdulist(format=format).writeto(filename, **kwargs)
+        hdulist = self.to_hdulist(format=format)
+
+        hdulist.writeto(filename, checksum=checksum, **kwargs)
 
     def get_resolution(self, energy_true):
         """Get energy resolution for a given true energy.
 
-        The resolution is given as a percentage of the true energy
+        The resolution is given as a percentage of the true energy.
 
         Parameters
         ----------
         energy_true : `~astropy.units.Quantity`
-            True energy
+            True energy.
         """
         energy_axis_true = self.axes["energy_true"]
         var = self._get_variance(energy_true)
@@ -417,7 +428,7 @@ class EDispKernel(IRF):
         Parameters
         ----------
         energy_true : `~astropy.units.Quantity`
-            True energy
+            True energy.
         """
         energy_axis_true = self.axes["energy_true"]
         energy = self.get_mean(energy_true)
@@ -430,7 +441,7 @@ class EDispKernel(IRF):
         """Find energy corresponding to a given bias.
 
         In case the solution is not unique, provide the ``energy_min`` or ``energy_max`` arguments
-        to limit the solution to the given range.  By default the peak energy of the
+        to limit the solution to the given range. By default, the peak energy of the
         bias is chosen as ``energy_min``.
 
         Parameters
@@ -512,24 +523,34 @@ class EDispKernel(IRF):
 
         return var / norm
 
-    def plot_matrix(self, ax=None, add_cbar=False, **kwargs):
+    def plot_matrix(
+        self, ax=None, add_cbar=False, axes_loc=None, kwargs_colorbar=None, **kwargs
+    ):
         """Plot PDF matrix.
 
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`, optional
-            Axis
-        add_cbar : bool
-            Add a colorbar to the plot.
+            Matplotlib axes. Default is None.
+        add_cbar : bool, optional
+            Add a colorbar to the plot. Default is False.
+        axes_loc : dict, optional
+            Keyword arguments passed to `~mpl_toolkits.axes_grid1.axes_divider.AxesDivider.append_axes`.
+        kwargs_colorbar : dict, optional
+            Keyword arguments passed to `~matplotlib.pyplot.colorbar`.
+        kwargs : dict
+            Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
 
         Returns
         -------
         ax : `~matplotlib.axes.Axes`
-            Axis
+            Matplotlib axes.
         """
         kwargs.setdefault("cmap", "GnBu")
         norm = PowerNorm(gamma=0.5, vmin=0, vmax=1)
         kwargs.setdefault("norm", norm)
+
+        kwargs_colorbar = kwargs_colorbar or {}
 
         ax = plt.gca() if ax is None else ax
 
@@ -543,7 +564,8 @@ class EDispKernel(IRF):
 
         if add_cbar:
             label = "Probability density (A.U.)"
-            ax.figure.colorbar(caxes, ax=ax, label=label)
+            kwargs_colorbar.setdefault("label", label)
+            add_colorbar(caxes, ax=ax, axes_loc=axes_loc, **kwargs_colorbar)
 
         energy_axis_true.format_plot_xaxis(ax=ax)
         energy_axis.format_plot_yaxis(ax=ax)
@@ -557,14 +579,14 @@ class EDispKernel(IRF):
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`, optional
-            Plot axis
+            Matplotlib axes. Default is None.
         **kwargs : dict
-            Kwyrow
+            Keyword arguments.
 
         Returns
         -------
         ax : `~matplotlib.axes.Axes`, optional
-            Plot axis
+            Matplotlib axes.
         """
         ax = plt.gca() if ax is None else ax
 
@@ -574,7 +596,9 @@ class EDispKernel(IRF):
         with quantity_support():
             ax.plot(energy, bias, **kwargs)
 
-        ax.set_xlabel(f"$E_\\mathrm{{True}}$ [{ax.yaxis.units}]")
+        ax.set_xlabel(
+            f"$E_\\mathrm{{True}}$ [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]"
+        )
         ax.set_ylabel(
             "($E_\\mathrm{{Reco}} - E_\\mathrm{{True}}) / E_\\mathrm{{True}}$"
         )
@@ -586,8 +610,8 @@ class EDispKernel(IRF):
 
         Parameters
         ----------
-        figsize : tuple
-            Size of the figure.
+        figsize : tuple, optional
+            Size of the figure. Default is (15, 5).
 
         """
         fig, axes = plt.subplots(nrows=1, ncols=2, figsize=figsize)

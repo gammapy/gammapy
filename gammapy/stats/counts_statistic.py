@@ -1,6 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import abc
+import html
 import numpy as np
+from scipy.special import lambertw
 from scipy.stats import chi2
 from gammapy.utils.roots import find_roots
 from .fit_statistics import cash, wstat
@@ -9,7 +11,7 @@ __all__ = ["WStatCountsStatistic", "CashCountsStatistic"]
 
 
 class CountsStatistic(abc.ABC):
-    """Counts statistics base class"""
+    """Counts statistics base class."""
 
     @property
     @abc.abstractmethod
@@ -60,6 +62,41 @@ class CountsStatistic(abc.ABC):
         Here the value accounts only for the positive excess significance (i.e. one-sided).
         """
         return 0.5 * chi2.sf(self.ts, 1)
+
+    def __str__(self):
+        str_ = "\t{:32}: {{n_on:.2f}} \n".format("Total counts")
+        str_ += "\t{:32}: {{background:.2f}}\n".format("Total background counts")
+        str_ += "\t{:32}: {{excess:.2f}}\n".format("Total excess counts")
+        str_ += "\t{:32}: {{significance:.2f}}\n".format("Total significance")
+        str_ += "\t{:32}: {{p_value:.3f}}\n".format("p - value")
+        str_ += "\t{:32}: {{n_bins:.0f}}\n".format("Total number of bins")
+        info = self.info_dict()
+        info["n_bins"] = np.array(self.n_on).size
+        str_ = str_.format(**info)
+
+        return str_.expandtabs(tabsize=2)
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
+
+    def info_dict(self):
+        """A dictionary of the relevant quantities.
+
+        Returns
+        -------
+        info_dict : dict
+            Dictionary with summary information.
+        """
+        info_dict = {}
+        info_dict["n_on"] = self.n_on
+        info_dict["background"] = self.n_bkg
+        info_dict["excess"] = self.n_sig
+        info_dict["significance"] = self.sqrt_ts
+        info_dict["p_value"] = self.p_value
+        return info_dict
 
     def compute_errn(self, n_sigma=1.0):
         """Compute downward excess uncertainties.
@@ -134,7 +171,7 @@ class CountsStatistic(abc.ABC):
         ul = np.zeros_like(self.n_on, dtype="float")
 
         min_range = self.n_sig
-        max_range = self.n_sig + 2 * n_sigma * (self.error + 1)
+        max_range = min_range + 2 * n_sigma * (self.error + 1)
         it = np.nditer(ul, flags=["multi_index"])
 
         while not it.finished:
@@ -163,12 +200,12 @@ class CountsStatistic(abc.ABC):
         Parameters
         ----------
         significance : float
-            Significance
+            Significance.
 
         Returns
         -------
         n_sig : `numpy.ndarray`
-            Excess
+            Excess.
         """
 
         n_sig = np.zeros_like(self.n_bkg, dtype="float")
@@ -205,7 +242,7 @@ class CountsStatistic(abc.ABC):
         Returns
         -------
         stat : `~gammapy.stats.CountsStatistics`
-             the return stat object
+             The summed stat object.
         """
         pass
 
@@ -216,9 +253,9 @@ class CashCountsStatistic(CountsStatistic):
     Parameters
     ----------
     n_on : int
-        Measured counts
+        Measured counts.
     mu_bkg : float
-        Known level of background
+        Known level of background.
     """
 
     def __init__(self, n_on, mu_bkg):
@@ -227,12 +264,12 @@ class CashCountsStatistic(CountsStatistic):
 
     @property
     def n_bkg(self):
-        """Expected background counts"""
+        """Expected background counts."""
         return self.mu_bkg
 
     @property
     def n_sig(self):
-        """Excess"""
+        """Excess."""
         return self.n_on - self.n_bkg
 
     @property
@@ -242,13 +279,33 @@ class CashCountsStatistic(CountsStatistic):
 
     @property
     def stat_null(self):
-        """Stat value for null hypothesis, i.e. 0 expected signal counts"""
+        """Stat value for null hypothesis, i.e. 0 expected signal counts."""
         return cash(self.n_on, self.mu_bkg + 0)
 
     @property
     def stat_max(self):
-        """Stat value for best fit hypothesis, i.e. expected signal mu = n_on - mu_bkg"""
+        """Stat value for best fit hypothesis, i.e. expected signal mu = n_on - mu_bkg."""
         return cash(self.n_on, self.n_on)
+
+    def info_dict(self):
+        """A dictionary of the relevant quantities.
+
+        Returns
+        -------
+        info_dict : dict
+            Dictionary with summary info.
+        """
+        info_dict = super().info_dict()
+        info_dict["mu_bkg"] = self.mu_bkg
+        return info_dict
+
+    def __str__(self):
+        str_ = f"{self.__class__.__name__}\n"
+        str_ += super().__str__()
+        str_ += "\t{:32}: {:.2f} \n".format(
+            "Predicted background counts", self.info_dict()["mu_bkg"]
+        )
+        return str_.expandtabs(tabsize=2)
 
     def _stat_fcn(self, mu, delta=0, index=None):
         return cash(self.n_on[index], self.mu_bkg[index] + mu) - delta
@@ -266,6 +323,50 @@ class CashCountsStatistic(CountsStatistic):
     def __getitem__(self, key):
         return CashCountsStatistic(n_on=self.n_on[key], mu_bkg=self.n_bkg[key])
 
+    def compute_errn(self, n_sigma=1.0):
+        result = np.zeros_like(self.n_on, dtype="float")
+        c = n_sigma**2 / 2
+        mask = self.n_on > 0
+        on = self.n_on[mask]
+        result[mask] = on * (lambertw(-np.exp(-c / on - 1), k=0).real + 1)
+        result[~mask] = 0
+        return result
+
+    def compute_errp(self, n_sigma=1.0):
+        result = np.zeros_like(self.n_on, dtype="float")
+        c = n_sigma**2 / 2
+        mask = self.n_on > 0
+
+        on = self.n_on[mask]
+        result[mask] = -on * (lambertw(-np.exp(-c / on - 1), k=-1).real + 1)
+        result[~mask] = c
+        return result
+
+    def compute_upper_limit(self, n_sigma=3):
+        result = np.zeros_like(self.n_on, dtype="float")
+        c = n_sigma**2 / 2
+        mask = self.n_on > 0
+
+        on = self.n_on[mask]
+        result[mask] = (
+            -on * (lambertw(-np.exp(-c / on - 1), k=-1).real + 1) + self.n_sig[mask]
+        )
+
+        result[~mask] = c
+        return result
+
+    def n_sig_matching_significance(self, significance):
+        result = np.zeros_like(self.mu_bkg, dtype="float")
+        c = significance**2 / 2
+        mask = self.mu_bkg > 0
+
+        bkg = self.mu_bkg[mask]
+        branch = 0 if significance > 0 else -1
+        res = lambertw((c / bkg - 1) / np.exp(1), k=branch).real
+        result[mask] = bkg * (np.exp(res + 1) - 1)
+        result[~mask] = np.nan
+        return result
+
 
 class WStatCountsStatistic(CountsStatistic):
     """Class to compute statistics for Poisson distributed variable with unknown background.
@@ -273,13 +374,13 @@ class WStatCountsStatistic(CountsStatistic):
     Parameters
     ----------
     n_on : int
-        Measured counts in on region
+        Measured counts in on region.
     n_off : int
-        Measured counts in off region
+        Measured counts in off region.
     alpha : float
-        Acceptance ratio of on and off measurements
+        Acceptance ratio of on and off measurements.
     mu_sig : float
-        Expected signal counts in on region
+        Expected signal counts in on region.
     """
 
     def __init__(self, n_on, n_off, alpha, mu_sig=None):
@@ -294,7 +395,7 @@ class WStatCountsStatistic(CountsStatistic):
 
     @property
     def n_bkg(self):
-        """Known background computed alpha * n_off"""
+        """Known background computed alpha * n_off."""
         return self.alpha * self.n_off
 
     @property
@@ -309,16 +410,41 @@ class WStatCountsStatistic(CountsStatistic):
 
     @property
     def stat_null(self):
-        """Stat value for null hypothesis, i.e. mu_sig expected signal counts"""
+        """Stat value for null hypothesis, i.e. mu_sig expected signal counts."""
         return wstat(self.n_on, self.n_off, self.alpha, self.mu_sig)
 
     @property
     def stat_max(self):
-        """Stat value for best fit hypothesis
+        """Stat value for best fit hypothesis.
 
-        i.e. expected signal mu = n_on - alpha * n_off - mu_sig
+        i.e. expected signal mu = n_on - alpha * n_off - mu_sig.
         """
         return wstat(self.n_on, self.n_off, self.alpha, self.n_sig + self.mu_sig)
+
+    def info_dict(self):
+        """A dictionary of the relevant quantities.
+
+        Returns
+        -------
+        info_dict : dict
+            Dictionary with summary info.
+        """
+        info_dict = super().info_dict()
+        info_dict["n_off"] = self.n_off
+        info_dict["alpha"] = self.alpha
+        info_dict["mu_sig"] = self.mu_sig
+        return info_dict
+
+    def __str__(self):
+        str_ = f"{self.__class__.__name__}\n"
+        str_ += super().__str__()
+        info_dict = self.info_dict()
+        str_ += "\t{:32}: {:.2f} \n".format("Off counts", info_dict["n_off"])
+        str_ += "\t{:32}: {:.2f} \n".format("alpha ", info_dict["alpha"])
+        str_ += "\t{:32}: {:.2f} \n".format(
+            "Predicted signal counts", info_dict["mu_sig"]
+        )
+        return str_.expandtabs(tabsize=2)
 
     def _stat_fcn(self, mu, delta=0, index=None):
         return (

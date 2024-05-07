@@ -2,6 +2,7 @@
 import logging
 import numpy as np
 from gammapy.datasets import Datasets
+from gammapy.datasets.actors import DatasetsActor
 from gammapy.modeling import Fit
 from .core import Estimator
 
@@ -12,7 +13,7 @@ class ParameterEstimator(Estimator):
     """Model parameter estimator.
 
     Estimates a model parameter for a group of datasets. Compute best fit value,
-    symmetric and delta TS for a given null value. Additionally asymmetric errors
+    symmetric and delta(TS) for a given null value. Additionally asymmetric errors
     as well as parameter upper limit and fit statistic profile can be estimated.
 
     Parameters
@@ -22,20 +23,40 @@ class ParameterEstimator(Estimator):
     n_sigma_ul : int
         Sigma to use for upper limit computation. Default is 2.
     null_value : float
-        Which null value to use for the parameter
-    selection_optional : list of str
+        Which null value to use for the parameter.
+    selection_optional : list of str, optional
         Which additional quantities to estimate. Available options are:
 
-            * "all": all the optional steps are executed
+            * "all": all the optional steps are executed.
             * "errn-errp": estimate asymmetric errors on parameter best fit value.
             * "ul": estimate upper limits.
             * "scan": estimate fit statistic profiles.
 
         Default is None so the optional steps are not executed.
-    fit : `Fit`
+    fit : `~gammapy.modeling.Fit`
         Fit instance specifying the backend and fit options.
     reoptimize : bool
         Re-optimize other free model parameters. Default is True.
+
+    Examples
+    --------
+    >>> from gammapy.datasets import SpectrumDatasetOnOff, Datasets
+    >>> from gammapy.modeling.models import SkyModel, PowerLawSpectralModel
+    >>> from gammapy.estimators import ParameterEstimator
+    >>>
+    >>> filename = "$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits"
+    >>> dataset = SpectrumDatasetOnOff.read(filename)
+    >>> datasets = Datasets([dataset])
+    >>> spectral_model = PowerLawSpectralModel(amplitude="3e-11 cm-2s-1TeV-1", index=2.7)
+    >>>
+    >>> model = SkyModel(spectral_model=spectral_model, name="Crab")
+    >>> model.spectral_model.amplitude.scan_n_values = 10
+    >>>
+    >>> for dataset in datasets:
+    ...     dataset.models = model
+    >>>
+    >>> estimator = ParameterEstimator(selection_optional="all")
+    >>> result = estimator.run(datasets, parameter="amplitude")
     """
 
     tag = "ParameterEstimator"
@@ -62,24 +83,24 @@ class ParameterEstimator(Estimator):
         self.reoptimize = reoptimize
 
     def estimate_best_fit(self, datasets, parameter):
-        """Estimate parameter asymmetric errors
+        """Estimate parameter asymmetric errors.
 
         Parameters
         ----------
         datasets : `~gammapy.datasets.Datasets`
-            Datasets
+            Datasets.
         parameter : `Parameter`
-            For which parameter to get the value
+            For which parameter to get the value.
 
         Returns
         -------
         result : dict
-            Dict with the various parameter estimation values. Entries are:
+            Dictionary with the various parameter estimation values. Entries are:
 
-                * parameter.name: best fit parameter value
+                * parameter.name: best fit parameter value.
                 * "stat": best fit total stat.
-                * "success": boolean flag for fit success
-                * parameter.name_err: covariance-based error estimate on parameter value
+                * "success": boolean flag for fit success.
+                * parameter.name_err: covariance-based error estimate on parameter value.
         """
         value, total_stat, success, error = np.nan, 0.0, False, np.nan
 
@@ -97,22 +118,23 @@ class ParameterEstimator(Estimator):
         }
 
     def estimate_ts(self, datasets, parameter):
-        """Estimate parameter ts
+        """Estimate parameter ts.
 
         Parameters
         ----------
         datasets : `~gammapy.datasets.Datasets`
-            Datasets
+            Datasets.
         parameter : `Parameter`
-            For which parameter to get the value
+            For which parameter to get the value.
 
         Returns
         -------
         result : dict
-            Dict with the TS of the best fit value compared to the null hypothesis. Entries are:
+            Dictionary with the test statistic of the best fit value compared to the null hypothesis. Entries are:
 
-                * "ts" : fit statistic difference with null hypothesis
-                * "npred" : predicted number of counts per dataset
+                * "ts" : fit statistic difference with null hypothesis.
+                * "npred" : predicted number of counts per dataset.
+                * "stat_null" : total stat corresponding to the null hypothesis
         """
         npred = self.estimate_npred(datasets=datasets)
 
@@ -131,29 +153,27 @@ class ParameterEstimator(Estimator):
                 _ = self.fit.optimize(datasets=datasets)
 
             ts = datasets.stat_sum() - stat
+            stat_null = datasets.stat_sum()
 
-        return {
-            "ts": ts,
-            "npred": npred["npred"],
-        }
+        return {"ts": ts, "npred": npred["npred"], "stat_null": stat_null}
 
     def estimate_errn_errp(self, datasets, parameter):
-        """Estimate parameter asymmetric errors
+        """Estimate parameter asymmetric errors.
 
         Parameters
         ----------
         datasets : `~gammapy.datasets.Datasets`
-            Datasets
+            Datasets.
         parameter : `Parameter`
-            For which parameter to get the value
+            For which parameter to get the value.
 
         Returns
         -------
         result : dict
-            Dict with the parameter asymmetric errors. Entries are:
+            Dictionary with the parameter asymmetric errors. Entries are:
 
-                * {parameter.name}_errp : positive error on parameter value
-                * {parameter.name}_errn : negative error on parameter value
+                * {parameter.name}_errp : positive error on parameter value.
+                * {parameter.name}_errn : negative error on parameter value.
         """
         if not np.any(datasets.contributes_to_stat):
             return {
@@ -176,22 +196,22 @@ class ParameterEstimator(Estimator):
         }
 
     def estimate_scan(self, datasets, parameter):
-        """Estimate parameter stat scan.
+        """Estimate parameter statistic scan.
 
         Parameters
         ----------
         datasets : `~gammapy.datasets.Datasets`
-            The datasets used to estimate the model parameter
-        parameter : `Parameter`
-            For which parameter to get the value
+            The datasets used to estimate the model parameter.
+        parameter : `~gammapy.modeling.Parameter`
+            For which parameter to get the value.
 
         Returns
         -------
         result : dict
-            Dict with the parameter fit scan values. Entries are:
+            Dictionary with the parameter fit scan values. Entries are:
 
-                * parameter.name_scan : parameter values scan
-                * "stat_scan" : fit statistic values scan
+                * parameter.name_scan : parameter values scan.
+                * "stat_scan" : fit statistic values scan.
         """
         scan_values = parameter.scan_values
 
@@ -218,16 +238,16 @@ class ParameterEstimator(Estimator):
         Parameters
         ----------
         datasets : `~gammapy.datasets.Datasets`
-            The datasets used to estimate the model parameter
-        parameter : `Parameter`
-            For which parameter to get the value
+            The datasets used to estimate the model parameter.
+        parameter : `~gammapy.modeling.Parameter`
+            For which parameter to get the value.
 
         Returns
         -------
         result : dict
-            Dict with the parameter ULs. Entries are:
+            Dictionary with the parameter upper limits. Entries are:
 
-                * parameter.name_ul : upper limit on parameter value
+                * parameter.name_ul : upper limit on parameter value.
         """
         if not np.any(datasets.contributes_to_stat):
             return {f"{parameter.name}_ul": np.nan}
@@ -249,12 +269,12 @@ class ParameterEstimator(Estimator):
         Parameters
         ----------
         datasets : Datasets
-            Datasets
+            Datasets.
 
         Returns
         -------
         result : dict
-            Dict with an array with one entry per dataset with the sum of the
+            Dictionary with an array with one entry per dataset with the sum of the
             masked counts.
         """
         counts = []
@@ -271,13 +291,13 @@ class ParameterEstimator(Estimator):
 
         Parameters
         ----------
-        datasets : Datasets
-            Datasets
+        datasets : `~gammapy.datasets.Datasets`
+            Datasets.
 
         Returns
         -------
         result : dict
-            Dict with an array with one entry per dataset with the sum of the
+            Dictionary with an array with one entry per dataset with the sum of the
             masked npred.
         """
         npred = []
@@ -294,16 +314,17 @@ class ParameterEstimator(Estimator):
         Parameters
         ----------
         datasets : `~gammapy.datasets.Datasets`
-            The datasets used to estimate the model parameter
-        parameter : `str` or `Parameter`
-            For which parameter to run the estimator
+            The datasets used to estimate the model parameter.
+        parameter : `str` or `~gammapy.modeling.Parameter`
+            For which parameter to run the estimator.
 
         Returns
         -------
         result : dict
-            Dict with the various parameter estimation values.
+            Dictionary with the various parameter estimation values.
         """
-        datasets = Datasets(datasets)
+        if not isinstance(datasets, DatasetsActor):
+            datasets = Datasets(datasets)
         parameter = datasets.parameters[parameter]
 
         with datasets.parameters.restore_status():

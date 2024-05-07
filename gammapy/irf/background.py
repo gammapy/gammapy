@@ -2,20 +2,35 @@
 import logging
 import numpy as np
 import astropy.units as u
+from astropy.coordinates import angular_separation
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 from gammapy.maps import MapAxes, MapAxis
+from gammapy.maps.axes import UNIT_STRING_FORMAT
+from gammapy.visualization.utils import add_colorbar
 from .core import IRF
 from .io import gadf_is_pointlike
 
-__all__ = ["Background3D", "Background2D"]
+__all__ = ["Background3D", "Background2D", "BackgroundIRF"]
 
 log = logging.getLogger(__name__)
 
 
 class BackgroundIRF(IRF):
-    """Background IRF base class"""
+    """Background IRF base class.
+
+    Parameters
+    ----------
+    axes : list of `MapAxis` or `MapAxes` object
+    data : `~np.ndarray`
+        Data array.
+    unit : str or `~astropy.units.Unit`
+        Data unit usually ``s^-1 MeV^-1 sr^-1``.
+    meta : dict
+        Metadata dictionary.
+
+    """
 
     default_interp_kwargs = dict(bounds_error=False, fill_value=0.0, values_scale="log")
     """Default Interpolation kwargs to extrapolate."""
@@ -27,9 +42,9 @@ class BackgroundIRF(IRF):
         Parameters
         ----------
         table : `~astropy.table.Table`
-            Table with background data
+            Table with background data.
         format : {"gadf-dl3"}
-            Format specification
+            Format specification. Default is "gadf-dl3".
 
         Returns
         -------
@@ -87,7 +102,7 @@ class BackgroundIRF(IRF):
 class Background3D(BackgroundIRF):
     """Background 3D.
 
-    Data format specification: :ref:`gadf:bkg_3d`
+    Data format specification: :ref:`gadf:bkg_3d`.
 
     Parameters
     ----------
@@ -96,9 +111,11 @@ class Background3D(BackgroundIRF):
     data : `~np.ndarray`
         Data array.
     unit : str or `~astropy.units.Unit`
-        Data unit usually ``s^-1 MeV^-1 sr^-1``
+        Data unit usually ``s^-1 MeV^-1 sr^-1``.
+    fov_alignment : `~gammapy.irf.FoVAlignment`
+        The orientation of the field of view coordinate system.
     meta : dict
-        Meta data
+        Metadata dictionary.
 
     Examples
     --------
@@ -130,6 +147,7 @@ class Background3D(BackgroundIRF):
         This takes the values at Y = 0 and X >= 0.
         """
         # TODO: this is incorrect as it misses the Jacobian?
+
         idx_lon = self.axes["fov_lon"].coord_to_idx(0 * u.deg)[0]
         idx_lat = self.axes["fov_lat"].coord_to_idx(0 * u.deg)[0]
         data = self.quantity[:, idx_lon:, idx_lat].copy()
@@ -146,30 +164,43 @@ class Background3D(BackgroundIRF):
 
         Parameters
         ----------
-        figsize : tuple
-            Size of the figure.
+        figsize : tuple, optional
+            Size of the figure. Default is (10, 8).
 
         """
         return self.to_2d().peek(figsize)
 
     def plot_at_energy(
-        self, energy=None, add_cbar=True, ncols=3, figsize=None, **kwargs
+        self,
+        energy=1 * u.TeV,
+        add_cbar=True,
+        ncols=3,
+        figsize=None,
+        axes_loc=None,
+        kwargs_colorbar=None,
+        **kwargs,
     ):
-        """Plot the background rate in Field of view coordinates at a given energy.
+        """Plot the background rate in FoV coordinates at a given energy.
 
         Parameters
         ----------
-        energy : `~astropy.units.Quantity`
-            list of Energy
-        add_cbar : bool
-            Add color bar?
-        ncols : int
-            Number of columns to plot
-        figsize : tuple
-            Figure size
+        energy : `~astropy.units.Quantity`, optional
+            List of energies. Default is 1 TeV.
+        add_cbar : bool, optional
+            Add color bar. Default is True.
+        ncols : int, optional
+            Number of columns to plot. Default is 3.
+        figsize : tuple, optional
+            Figure size. Default is None.
+        axes_loc : dict, optional
+            Keyword arguments passed to `~mpl_toolkits.axes_grid1.axes_divider.AxesDivider.append_axes`.
+        kwargs_colorbar : dict, optional
+            Keyword arguments passed to `~matplotlib.pyplot.colorbar`.
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
         """
+        kwargs_colorbar = kwargs_colorbar or {}
+
         n = len(energy)
         cols = min(ncols, n)
         rows = 1 + (n - 1) // cols
@@ -197,15 +228,19 @@ class Background3D(BackgroundIRF):
             else:
                 ax = axes.flat[i]
             bkg = self.evaluate(energy=ee)
+            bkg_unit = bkg.unit
+            bkg = bkg.value
             with quantity_support():
                 caxes = ax.pcolormesh(X, Y, bkg.squeeze(), **kwargs)
 
             self.axes["fov_lat"].format_plot_xaxis(ax)
             self.axes["fov_lon"].format_plot_yaxis(ax)
             ax.set_title(str(ee))
+
             if add_cbar:
-                label = f"Background [{bkg.unit}]"
-                cbar = ax.figure.colorbar(caxes, ax=ax, label=label, fraction=cfraction)
+                label = f"Background [{bkg_unit.to_string(UNIT_STRING_FORMAT)}]"
+                kwargs_colorbar.setdefault("label", label)
+                cbar = add_colorbar(caxes, ax=ax, axes_loc=axes_loc, **kwargs_colorbar)
                 cbar.formatter.set_powerlimits((0, 0))
 
             row, col = np.unravel_index(i, shape=(rows, cols))
@@ -228,9 +263,9 @@ class Background2D(BackgroundIRF):
     data : `~np.ndarray`
         Data array.
     unit : str or `~astropy.units.Unit`
-        Data unit usually ``s^-1 MeV^-1 sr^-1``
+        Data unit usually ``s^-1 MeV^-1 sr^-1``.
     meta : dict
-        Meta data
+        Metadata dictionary.
     """
 
     tag = "bkg_2d"
@@ -238,20 +273,19 @@ class Background2D(BackgroundIRF):
     default_unit = u.s**-1 * u.MeV**-1 * u.sr**-1
 
     def to_3d(self):
-        """ "Convert to Background3D"""
-
-        edges = np.concatenate(
-            (
-                np.negative(self.axes["offset"].edges)[::-1][:-1],
-                self.axes["offset"].edges,
-            )
-        )
+        """Convert to Background3D."""
+        offsets = self.axes["offset"].edges
+        edges_neg = np.negative(offsets)[::-1]
+        edges_neg = edges_neg[edges_neg <= 0]
+        edges = np.concatenate((edges_neg, offsets[offsets > 0]))
         fov_lat = MapAxis.from_edges(edges=edges, name="fov_lat")
         fov_lon = MapAxis.from_edges(edges=edges, name="fov_lon")
 
         axes = MapAxes([self.axes["energy"], fov_lon, fov_lat])
         coords = axes.get_coord()
-        offset = np.sqrt(coords["fov_lat"] ** 2 + coords["fov_lon"] ** 2)
+        offset = angular_separation(
+            0 * u.rad, 0 * u.rad, coords["fov_lon"], coords["fov_lat"]
+        )
         data = self.evaluate(offset=offset, energy=coords["energy"])
 
         return Background3D(
@@ -260,20 +294,20 @@ class Background2D(BackgroundIRF):
         )
 
     def plot_at_energy(
-        self, energy=None, add_cbar=True, ncols=3, figsize=None, **kwargs
+        self, energy=1 * u.TeV, add_cbar=True, ncols=3, figsize=None, **kwargs
     ):
-        """Plot the background rate in Field of view coordinates at a given energy.
+        """Plot the background rate in FoV coordinates at a given energy.
 
         Parameters
         ----------
-        energy : `~astropy.units.Quantity`
-            list of Energy
-        add_cbar : bool
-            Add color bar?
-        ncols : int
-            Number of columns to plot
-        figsize : tuple
-            Figure size
+        energy : `~astropy.units.Quantity`, optional
+            List of energy. Default is 1 TeV.
+        add_cbar : bool, optional
+            Add color bar. Default is True.
+        ncols : int, optional
+            Number of columns to plot. Default is 3.
+        figsize : tuple, optional
+            Figure size. Default is None.
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
         """
@@ -282,8 +316,29 @@ class Background2D(BackgroundIRF):
             energy=energy, add_cbar=add_cbar, ncols=ncols, figsize=figsize, **kwargs
         )
 
-    def plot(self, ax=None, add_cbar=True, **kwargs):
-        """Plot energy offset dependence of the background model."""
+    def plot(
+        self, ax=None, add_cbar=True, axes_loc=None, kwargs_colorbar=None, **kwargs
+    ):
+        """Plot energy offset dependence of the background model.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes`, optional
+            Matplotlib axes. Default is None.
+        add_cbar : bool, optional
+            Add a colorbar to the plot. Default is True.
+        axes_loc : dict, optional
+            Keyword arguments passed to `~mpl_toolkits.axes_grid1.axes_divider.AxesDivider.append_axes`.
+        kwargs_colorbar : dict, optional
+            Keyword arguments passed to `~matplotlib.pyplot.colorbar`.
+        kwargs : dict
+            Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`
+            Matplotlib axes.
+        """
         ax = plt.gca() if ax is None else ax
 
         energy_axis, offset_axis = self.axes["energy"], self.axes["offset"]
@@ -292,6 +347,8 @@ class Background2D(BackgroundIRF):
         kwargs.setdefault("cmap", "GnBu")
         kwargs.setdefault("edgecolors", "face")
         kwargs.setdefault("norm", LogNorm())
+
+        kwargs_colorbar = kwargs_colorbar or {}
 
         with quantity_support():
             caxes = ax.pcolormesh(
@@ -302,8 +359,11 @@ class Background2D(BackgroundIRF):
         offset_axis.format_plot_yaxis(ax=ax)
 
         if add_cbar:
-            label = f"Background rate [{self.unit}]"
-            ax.figure.colorbar(caxes, ax=ax, label=label)
+            label = (
+                f"Background rate [{self.quantity.unit.to_string(UNIT_STRING_FORMAT)}]"
+            )
+            kwargs_colorbar.setdefault("label", label)
+            add_colorbar(caxes, ax=ax, axes_loc=axes_loc, **kwargs_colorbar)
 
     def plot_offset_dependence(self, ax=None, energy=None, **kwargs):
         """Plot background rate versus offset for a given energy.
@@ -311,14 +371,14 @@ class Background2D(BackgroundIRF):
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`, optional
-            Axis
-        energy : `~astropy.units.Quantity`
-            Energy
+            Matplotlib axes. Default is None.
+        energy : `~astropy.units.Quantity`, optional
+            Energy. Default is None.
 
         Returns
         -------
         ax : `~matplotlib.axes.Axes`
-            Axis
+            Matplotlib axes.
         """
         ax = plt.gca() if ax is None else ax
 
@@ -338,7 +398,9 @@ class Background2D(BackgroundIRF):
                 ax.plot(offset_axis.center, bkg, label=label, **kwargs)
 
         offset_axis.format_plot_xaxis(ax=ax)
-        ax.set_ylabel(f"Background rate ({ax.yaxis.units})")
+        ax.set_ylabel(
+            f"Background rate [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]"
+        )
         ax.set_yscale("log")
         ax.legend(loc="upper right")
         return ax
@@ -349,16 +411,16 @@ class Background2D(BackgroundIRF):
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`, optional
-            Axis
-        offset : `~astropy.coordinates.Angle`
-            Offset
+            Matplotlib axes. Default is None.
+        offset : `~astropy.coordinates.Angle`, optional
+            Offset. Default is None.
         kwargs : dict
-            Forwarded tp plt.plot()
+            Forwarded to plt.plot().
 
         Returns
         -------
         ax : `~matplotlib.axes.Axes`
-            Axis
+            Matplotlib axes.
         """
         ax = plt.gca() if ax is None else ax
 
@@ -377,7 +439,9 @@ class Background2D(BackgroundIRF):
 
         energy_axis.format_plot_xaxis(ax=ax)
         ax.set_yscale("log")
-        ax.set_ylabel(f"Background rate ({ax.yaxis.units})")
+        ax.set_ylabel(
+            f"Background rate [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]"
+        )
         ax.legend(loc="best")
         return ax
 
@@ -387,14 +451,14 @@ class Background2D(BackgroundIRF):
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`, optional
-            Axis
+            Matplotlib axes. Default is None.
         **kwargs : dict
-            Keyword arguments forwarded to `~matplotib.pyplot.plot`
+            Keyword arguments forwarded to `~matplotib.pyplot.plot`.
 
         Returns
         -------
         ax : `~matplotlib.axes.Axes`
-            Axis
+            Matplotlib axes.
         """
         ax = plt.gca() if ax is None else ax
 
@@ -402,13 +466,16 @@ class Background2D(BackgroundIRF):
         energy_axis = self.axes["energy"]
 
         bkg = self.integral(offset=offset_axis.bounds[1], axis_name="offset")
+        bkg = bkg.to(u.Unit("s-1") / energy_axis.unit)
 
         with quantity_support():
             ax.plot(energy_axis.center, bkg, label="integrated spectrum", **kwargs)
 
         energy_axis.format_plot_xaxis(ax=ax)
         ax.set_yscale("log")
-        ax.set_ylabel(f"Background rate ({ax.yaxis.units})")
+        ax.set_ylabel(
+            f"Background rate [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]"
+        )
         ax.legend(loc="best")
         return ax
 

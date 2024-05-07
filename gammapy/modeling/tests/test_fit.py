@@ -90,6 +90,7 @@ def test_run(backend):
     result = fit.run([dataset])
     pars = dataset.models.parameters
 
+    assert fit._minuit is not None
     assert result.success
     assert result.optimize_result.method == "migrad"
     assert result.covariance_result.method == "hesse"
@@ -177,11 +178,6 @@ def test_optimize(backend):
     assert_allclose(pars["z"].value, 4e-2, rtol=1e-2)
 
     assert len(result.trace) == result.nfev
-
-
-# TODO: add some extra covariance tests, in addition to run
-# Probably mainly if error message is OK if optimize didn't run first.
-# def test_covariance():
 
 
 @pytest.mark.parametrize("backend", ["minuit"])

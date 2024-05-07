@@ -6,11 +6,14 @@ jobs:
     name: Black check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: psf/black@stable
+        with:
+          version: "24.2.0"
   ci-runs:
     name: ${{ matrix.os }}, ${{ matrix.tox_env }}
     runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.allowed_fail }}
     env:
       PYTEST_ADDOPTS: --color=yes -n auto --dist=loadscope
     strategy:
@@ -18,62 +21,77 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            python: '3.8'
-            tox_env: 'py38-test-alldeps'
-          - os: ubuntu-latest
             python: '3.9'
             tox_env: 'py39-test-alldeps-cov'
-            gammapy_data_path: /home/runner/work/gammapy/gammapy/gammapy-datasets/dev
-          - os: macos-latest
-            python: '3.9'
-            tox_env: 'py39-test'
-            gammapy_data_path: /Users/runner/work/gammapy/gammapy/gammapy-datasets/dev
-          - os: windows-latest
-            python: '3.9'
-            tox_env: 'py39-test-alldeps'
-            gammapy_data_path:  D:\a\gammapy\gammapy\gammapy-datasets\dev
+            allowed_fail: false
           - os: ubuntu-latest
             python: '3.10'
-            tox_env: 'py310-test-alldeps'
+            tox_env: 'py310-test-alldeps_noray'
+            gammapy_data_path: /home/runner/work/gammapy/gammapy/gammapy-datasets/dev
+            allowed_fail: false
+          - os: macos-latest
+            python: '3.10'
+            tox_env: 'py310-test'
+            gammapy_data_path: /Users/runner/work/gammapy/gammapy/gammapy-datasets/dev
+            allowed_fail: false
+          - os: windows-latest
+            python: '3.10'
+            tox_env: 'py310-test-alldeps_noray'
+            gammapy_data_path:  D:\a\gammapy\gammapy\gammapy-datasets\dev
+            allowed_fail: false
           - os: ubuntu-latest
-            python: '3.9'
-            tox_env: 'py39-test'
+            python: '3.11'
+            tox_env: 'py311-test-alldeps_noray'
+            gammapy_data_path: /home/runner/work/gammapy/gammapy/gammapy-datasets/dev
+            allowed_fail: false
           - os: ubuntu-latest
-            python: '3.9'
+            python: '3.12'
+            tox_env: 'py312-test-alldeps_noray'
+            gammapy_data_path: /home/runner/work/gammapy/gammapy/gammapy-datasets/dev
+            allowed_fail: false
+          - os: ubuntu-latest
+            python: '3.10'
+            tox_env: 'py310-test'
+            allowed_fail: false
+          - os: ubuntu-latest
+            python: '3.10'
             tox_env: 'codestyle'
+            allowed_fail: false
           - os: ubuntu-latest
-            python: '3.8'
-            tox_env: 'py38-test-alldeps-astropylts-numpy120'
+            python: '3.9'
+            tox_env: 'py39-test-alldeps_noray-astropy50-numpy121'
+            allowed_fail: false
           - os: ubuntu-latest
-            python: '3.8'
+            python: '3.9'
             tox_env: 'oldestdeps'
+            allowed_fail: false
           - os: ubuntu-latest
-            python: '3.8'
+            python: '3.11'
             tox_env: 'devdeps'
+            allowed_fail: true
     steps:
       - name: Check out repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Set up Python ${{ matrix.python }}
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
       - name: Install base dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install 'tox<4'
+          python -m pip install tox
       - name: download datasets
         if: ${{ matrix.gammapy_data_path }}
         run: |
           python -m pip install tqdm requests
           python -m pip install -e .
           gammapy download datasets
-      - name: Print Python, pip, setuptools, and tox versions
+      - name: Print Python, pip, and tox versions
         run: |
           python -c "import sys; print(f'Python {sys.version}')"
           python -c "import pip; print(f'pip {pip.__version__}')"
-          python -c "import setuptools; print(f'setuptools {setuptools.__version__}')"
           python -c "import tox; print(f'tox {tox.__version__}')"
       - name: Run tests
         if: ${{ !matrix.gammapy_data_path }}
@@ -85,12 +103,12 @@ jobs:
         run: tox -e ${{ matrix.tox_env }} -- -n auto
       - name: Upload coverage to codecov
         if: "contains(matrix.tox_env, '-cov')"
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           file: ./coverage.xml
           verbose: true
   sphinx:
-    name: Linux python 3.8 sphinx all-deps
+    name: Linux python 3.9 sphinx all-deps
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -100,17 +118,17 @@ jobs:
       GAMMAPY_DATA: /home/runner/work/gammapy/gammapy/gammapy-datasets/dev
     steps:
       - name: Check out repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Set up Python ${{ matrix.python }}
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
       - name: Install base dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install 'tox<4'
+          python -m pip install tox
       - name: download datasets
         run: |
           python -m pip install tqdm requests
@@ -122,16 +140,16 @@ jobs:
       - name: check links
         continue-on-error: true
         run: |
-          tox -e linkcheck -- -j auto  
+          tox -e linkcheck -- -j auto
   conda-build:
-    name: Linux python 3.8 conda-build all-deps
+    name: Linux python 3.9 conda-build all-deps
     runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash -l {0}
     steps:
       - name: checkout repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: create and activate env
         uses: mamba-org/provision-with-micromamba@main
         with:

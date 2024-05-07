@@ -10,7 +10,7 @@ __all__ = ["SensitivityEstimator"]
 
 
 class SensitivityEstimator(Estimator):
-    """Estimate differential sensitivity.
+    """Estimate sensitivity.
 
     This class allows to determine for each reconstructed energy bin the flux
     associated to the number of gamma-ray events for which the significance is
@@ -21,13 +21,13 @@ class SensitivityEstimator(Estimator):
     Parameters
     ----------
     spectrum : `SpectralModel`
-        Spectral model assumption
+        Spectral model assumption. Default is Power Law with index 2.
     n_sigma : float, optional
         Minimum significance. Default is 5.
     gamma_min : float, optional
         Minimum number of gamma-rays. Default is 10.
     bkg_syst_fraction : float, optional
-        Fraction of background counts above which the number of gamma-rays is. Default is 0.05
+        Fraction of background counts above which the number of gamma-rays is. Default is 0.05.
 
     Examples
     --------
@@ -38,7 +38,11 @@ class SensitivityEstimator(Estimator):
     tag = "SensitivityEstimator"
 
     def __init__(
-        self, spectrum=None, n_sigma=5.0, gamma_min=10, bkg_syst_fraction=0.05
+        self,
+        spectrum=None,
+        n_sigma=5.0,
+        gamma_min=10,
+        bkg_syst_fraction=0.05,
     ):
 
         if spectrum is None:
@@ -55,12 +59,12 @@ class SensitivityEstimator(Estimator):
         Parameters
         ----------
         dataset : `SpectrumDataset`
-            Spectrum dataset
+            Spectrum dataset.
 
         Returns
         -------
-        excess : `RegionNDMap`
-            Minimal excess
+        excess : `~gammapy.maps.RegionNDMap`
+            Minimal excess.
         """
         n_off = dataset.counts_off.data
 
@@ -80,14 +84,14 @@ class SensitivityEstimator(Estimator):
         return excess
 
     def estimate_min_e2dnde(self, excess, dataset):
-        """Estimate dnde from given min. excess
+        """Estimate dnde from a given minimum excess.
 
         Parameters
         ----------
-        excess : `RegionNDMap`
-            Minimal excess
-        dataset : `SpectrumDataset`
-            Spectrum dataset
+        excess : `~gammapy.maps.RegionNDMap`
+            Minimal excess.
+        dataset : `~gammapy.datasets.SpectrumDataset`
+            Spectrum dataset.
 
         Returns
         -------
@@ -111,13 +115,13 @@ class SensitivityEstimator(Estimator):
         criterion = np.chararray(excess.shape, itemsize=12)
         criterion[is_gamma_limited] = "gamma"
         criterion[is_bkg_syst_limited] = "bkg"
-        criterion[
-            ~np.logical_or(is_gamma_limited, is_bkg_syst_limited)
-        ] = "significance"
+        criterion[~np.logical_or(is_gamma_limited, is_bkg_syst_limited)] = (
+            "significance"
+        )
         return criterion
 
     def run(self, dataset):
-        """Run the sensitivity estimation
+        """Run the sensitivity estimation.
 
         Parameters
         ----------
@@ -127,7 +131,7 @@ class SensitivityEstimator(Estimator):
         Returns
         -------
         sensitivity : `~astropy.table.Table`
-            Sensitivity table
+            Sensitivity table.
         """
         energy = dataset._geom.axes["energy"].center
         excess = self.estimate_min_excess(dataset)
@@ -140,9 +144,21 @@ class SensitivityEstimator(Estimator):
             [
                 Column(
                     data=energy,
-                    name="energy",
+                    name="e_ref",
                     format="5g",
-                    description="Reconstructed Energy",
+                    description="Energy center",
+                ),
+                Column(
+                    data=dataset._geom.axes["energy"].edges_min,
+                    name="e_min",
+                    format="5g",
+                    description="Energy edge low",
+                ),
+                Column(
+                    data=dataset._geom.axes["energy"].edges_max,
+                    name="e_max",
+                    format="5g",
+                    description="Energy edge high",
                 ),
                 Column(
                     data=e2dnde,
@@ -151,19 +167,19 @@ class SensitivityEstimator(Estimator):
                     description="Energy squared times differential flux",
                 ),
                 Column(
-                    data=excess.data.squeeze(),
+                    data=np.atleast_1d(excess.data.squeeze()),
                     name="excess",
                     format="5g",
                     description="Number of excess counts in the bin",
                 ),
                 Column(
-                    data=dataset.background.data.squeeze(),
+                    data=np.atleast_1d(dataset.background.data.squeeze()),
                     name="background",
                     format="5g",
                     description="Number of background counts in the bin",
                 ),
                 Column(
-                    data=criterion,
+                    data=np.atleast_1d(criterion),
                     name="criterion",
                     description="Sensitivity-limiting criterion",
                 ),

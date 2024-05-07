@@ -34,8 +34,8 @@ of predicted counts (`npred`) per bin of the given Sky model, and the
 output of the event-sampler will be a set of events having information
 about their true coordinates, true energies and times of arrival.
 
-To these events, IRF corrections (i.e. PSF and energy dispersion) can
-also further applied in order to obtain reconstructed coordinates and
+To these events, IRF corrections (i.e. PSF and energy dispersion) can
+also further be applied in order to obtain reconstructed coordinates and
 energies of the sampled events.
 
 At the end of this process, you will obtain an event-list in FITS
@@ -72,8 +72,8 @@ We will work with the following functions and classes:
 -  `~gammapy.modeling.models.SkyModel`
 -  `~gammapy.datasets.MapDatasetEventSampler`
 -  `~gammapy.data.EventList`
-"""
 
+"""
 
 ######################################################################
 # Setup
@@ -90,15 +90,17 @@ from astropy.io import fits
 from astropy.time import Time
 from regions import CircleSkyRegion
 import matplotlib.pyplot as plt
-
-# %matplotlib inline
 from IPython.display import display
-from gammapy.data import DataStore, Observation, observatory_locations
+from gammapy.data import (
+    DataStore,
+    FixedPointingInfo,
+    Observation,
+    observatory_locations,
+)
 from gammapy.datasets import MapDataset, MapDatasetEventSampler
-from gammapy.irf import load_cta_irfs
+from gammapy.irf import load_irf_dict_from_file
 from gammapy.makers import MapDatasetMaker
-from gammapy.maps import Map, MapAxis, WcsGeom
-from gammapy.modeling import Fit
+from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling.models import (
     ExpDecayTemporalModel,
     FoVBackgroundModel,
@@ -117,10 +119,9 @@ from gammapy.utils.check import check_tutorials_setup
 
 check_tutorials_setup()
 
-
 ######################################################################
 # Define an Observation
-# ~~~~~~~~~~~~~~~~~~~~~
+# ---------------------
 #
 # You can firstly create a `~gammapy.data.Observations` object that
 # contains the pointing position, the GTIs and the IRF you want to
@@ -131,21 +132,23 @@ check_tutorials_setup()
 # Galactic Center. We also fix the exposure time to 1 hr.
 #
 # Let’s start with some initial settings:
-#
 
 path = Path("$GAMMAPY_DATA/cta-caldb")
 irf_filename = "Prod5-South-20deg-AverageAz-14MSTs37SSTs.180000s-v0.1.fits.gz"
 
-pointing = SkyCoord(0.0, 0.0, frame="galactic", unit="deg")
+# telescope is pointing at a fixed position in ICRS for the observation
+pointing = FixedPointingInfo(
+    fixed_icrs=SkyCoord(0.0, 0.0, frame="galactic", unit="deg").icrs,
+)
 livetime = 1 * u.hr
+location = observatory_locations["cta_south"]
 
+
+irfs = load_irf_dict_from_file(path / irf_filename)
 
 ######################################################################
 # Now you can create the observation:
 #
-
-irfs = load_cta_irfs(path / irf_filename)
-location = observatory_locations["cta_south"]
 
 observation = Observation.create(
     obs_id=1001,
@@ -154,20 +157,20 @@ observation = Observation.create(
     irfs=irfs,
     location=location,
 )
-
+print(observation)
 
 ######################################################################
 # Define the MapDataset
-# ~~~~~~~~~~~~~~~~~~~~~
+# ---------------------
 #
 # Let’s generate the `~gammapy.datasets.Dataset` object (for more info
 # on `~gammapy.datasets.Dataset` objects, please checkout
 # :doc:`/tutorials/api/datasets` tutorial):
-# we define the energy axes (true and reconstruncted), the migration axis
+# we define the energy axes (true and reconstructed), the migration axis
 # and the geometry of the observation.
 #
 # *This is a crucial point for the correct configuration of the event
-# sampler. Indeed the spatial and energetic binning should be treaten
+# sampler. Indeed, the spatial and energetic binning should be treated
 # carefully and… the finer the better. For this reason, we suggest to
 # define the energy axes (true and reconstructed) by setting a minimum
 # binning of least 10-20 bins per decade for all the sources of interest.
@@ -187,13 +190,12 @@ energy_axis_true = MapAxis.from_energy_bounds(
 migra_axis = MapAxis.from_bounds(0.5, 2, nbin=150, node_type="edges", name="migra")
 
 geom = WcsGeom.create(
-    skydir=pointing,
+    skydir=pointing.fixed_icrs,
     width=(2, 2),
     binsz=0.02,
     frame="galactic",
     axes=[energy_axis],
 )
-
 
 ######################################################################
 # In the following, the dataset is created by selecting the effective
@@ -215,10 +217,9 @@ dataset = maker.run(empty, observation)
 Path("event_sampling").mkdir(exist_ok=True)
 dataset.write("./event_sampling/dataset.fits", overwrite=True)
 
-
 ######################################################################
 # Define the Sky model: a point-like source
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# -----------------------------------------
 #
 # Now let’s define a sky model for a point-like source centered 0.5
 # deg far from the Galactic Center and with a power-law spectrum. We then
@@ -257,7 +258,6 @@ models.write(file_model, overwrite=True)
 dataset.models = models
 print(dataset.models)
 
-
 ######################################################################
 # The next step shows how to sample the events with the
 # `~gammapy.datasets.MapDatasetEventSampler` class. The class requests a
@@ -272,7 +272,6 @@ print(dataset.models)
 sampler = MapDatasetEventSampler(random_state=0)
 events = sampler.run(dataset, observation)
 
-
 ######################################################################
 # The output of the event-sampler is an event list with coordinates,
 # energies (true and reconstructed) and time of arrivals of the source and
@@ -285,13 +284,12 @@ events = sampler.run(dataset, observation)
 print(f"Source events: {(events.table['MC_ID'] == 1).sum()}")
 print(f"Background events: {(events.table['MC_ID'] == 0).sum()}")
 
-
 ######################################################################
 # We can inspect the properties of the simulated events as follows:
 #
 
 events.select_offset([0, 1] * u.deg).peek()
-
+plt.show()
 
 ######################################################################
 # By default, the `~gammapy.datasets.MapDatasetEventSampler` fills the
@@ -300,7 +298,6 @@ events.select_offset([0, 1] * u.deg).peek()
 #
 
 events.table.meta["OBJECT"] = dataset.models[0].name
-
 
 ######################################################################
 # Let’s write the event list and its GTI extension to a FITS file. We make
@@ -312,52 +309,6 @@ hdu_evt = fits.BinTableHDU(events.table)
 hdu_gti = fits.BinTableHDU(dataset.gti.table, name="GTI")
 hdu_all = fits.HDUList([primary_hdu, hdu_evt, hdu_gti])
 hdu_all.writeto("./event_sampling/events_0001.fits", overwrite=True)
-
-
-######################################################################
-# Generate a skymap
-# ~~~~~~~~~~~~~~~~~
-#
-# A skymap of the simulated events can be obtained with:
-#
-
-counts = Map.from_geom(geom)
-counts.fill_events(events)
-plt.figure()
-counts.sum_over_axes().plot(add_cbar=True)
-
-
-######################################################################
-# Fit the simulated data
-# ~~~~~~~~~~~~~~~~~~~~~~
-#
-# We can now check the sake of the event sampling by fitting the data.
-#  We make use of the same
-# `~gammapy.modeling.models.Models` adopted for the simulation. Hence,
-# we firstly read the `~gammapy.datasets.Dataset` and the model file,
-# and we fill the `~gammapy.datasets.Dataset` with the sampled events.
-# We set the `counts` map to the `dataset`:
-#
-
-models_fit = Models.read("./event_sampling/point-pwl.yaml")
-
-dataset.counts = counts
-dataset.models = models_fit
-
-
-######################################################################
-# Let’s fit the data and look at the results:
-#
-
-# %%time
-fit = Fit()
-result = fit.run(dataset)
-print(result)
-
-
-######################################################################
-# The results looks great!
-#
 
 
 ######################################################################
@@ -378,14 +329,12 @@ t_ref = Time("2000-01-01T00:01:04.184")
 times = t_ref + livetime * np.linspace(0, 1, 100)
 expdecay_model = ExpDecayTemporalModel(t_ref=t_ref.mjd * u.d, t0=t0)
 
-
 ######################################################################
 # where we defined the time axis starting from the reference time
 # `t_ref` up to the requested exposure (`livetime`). The bin size of
 # the time-axis is quite arbitrary but, as above for spatial and energy
-# binnings, the finer the better.
+# binning, the finer the better.
 #
-
 
 ######################################################################
 # Then, we can create the sky model. Just for the sake of the example,
@@ -417,7 +366,6 @@ models.write(file_model, overwrite=True)
 dataset.models = models
 print(dataset.models)
 
-
 ######################################################################
 # And now, let’s simulate the variable source:
 #
@@ -428,7 +376,6 @@ events = sampler.run(dataset, observation)
 
 print(f"Source events: {(events.table['MC_ID'] == 1).sum()}")
 print(f"Background events: {(events.table['MC_ID'] == 0).sum()}")
-
 
 ######################################################################
 # We can now inspect the properties of the simulated source. To do that,
@@ -443,19 +390,17 @@ on_region = CircleSkyRegion(center=src_position, radius=on_region_radius)
 
 src_events = events.select_region(on_region)
 
-
 ######################################################################
 # Then we can have a quick look to the data with the `peek` function:
 #
 
 src_events.peek()
-
+plt.show()
 
 ######################################################################
 # In the right figure of the bottom panel, it is shown the source
 # lightcurve that follows a decay trend as expected.
 #
-
 
 ######################################################################
 # Extended source using a template
@@ -463,7 +408,7 @@ src_events.peek()
 #
 # The event sampler can also work with a template model. Here we use the
 # interstellar emission model map of the Fermi 3FHL, which can be found in
-# the GAMMAPY data repository.
+# the `$GAMMAPY_DATA` repository.
 #
 # We proceed following the same steps showed above and we finally have a
 # look at the event’s properties:
@@ -489,12 +434,13 @@ models_diffuse.write(file_model, overwrite=True)
 dataset.models = models_diffuse
 print(dataset.models)
 
+
 # %%time
 sampler = MapDatasetEventSampler(random_state=0)
 events = sampler.run(dataset, observation)
 
 events.select_offset([0, 1] * u.deg).peek()
-
+plt.show()
 
 ######################################################################
 # Simulate multiple event lists
@@ -502,7 +448,7 @@ events.select_offset([0, 1] * u.deg).peek()
 #
 # In some user case, you may want to sample events from a number of
 # observations. In this section, we show how to simulate a set of event
-# lists. For simplicity we consider only one point-like source, observed
+# lists. For simplicity, we consider only one point-like source, observed
 # three times for 1 hr and assuming the same pointing position.
 #
 # Let’s firstly define the time start and the livetime of each
@@ -518,7 +464,7 @@ irf_paths = [path / irf_filename] * n_obs
 events_paths = []
 
 for idx, tstart in enumerate(tstarts):
-    irfs = load_cta_irfs(irf_paths[idx])
+    irfs = load_irf_dict_from_file(irf_paths[idx])
     observation = Observation.create(
         obs_id=idx,
         pointing=pointing,
@@ -537,10 +483,9 @@ for idx, tstart in enumerate(tstarts):
     events_paths.append(path)
     events.table.write(path, overwrite=True)
 
-
 ######################################################################
 # You can now load the event list and the corresponding IRFs with
-# `DataStore.from_events_files` :
+# `DataStore.from_events_files`:
 #
 
 path = Path("./event_sampling/")
@@ -550,22 +495,20 @@ display(data_store.obs_table)
 
 
 ######################################################################
-# Then you can create the obervations from the data store and make your own
+# Then you can create the observations from the data store and make your own
 # analysis following the instructions in the
 # :doc:`/tutorials/starting/analysis_2` tutorial.
 #
 
 observations = data_store.get_observations()
 observations[0].peek()
-
 plt.show()
-
 
 ######################################################################
 # Exercises
 # ---------
 #
-# -  Try to sample events for an extended source (e.g. a radial gaussian
+# -  Try to sample events for an extended source (e.g. a radial gaussian
 #    morphology);
 # -  Change the spatial model and the spectrum of the simulated Sky model;
 # -  Include a temporal model in the simulation

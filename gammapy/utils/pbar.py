@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Utilities for progress bar display"""
+"""Utilities for progress bar display."""
 import logging
 
 log = logging.getLogger(__name__)
@@ -38,7 +38,6 @@ def progress_bar(iterable, desc=None):
     return tqdm(
         iterable_to_list,
         total=total,
-        mininterval=0,
         disable=not SHOW_PROGRESS_BAR,
         desc=desc,
     )

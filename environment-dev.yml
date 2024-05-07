@@ -16,27 +16,26 @@ variables:
 
 dependencies:
   # core dependencies
-  - python=3.8
+  - python=3.11
   - pip
   - astropy
   - click
   - cython
-  - numpy<1.23
-  - pydantic
+  - numpy>1.20
+  - pydantic>=2.5
   - pyyaml
   - regions>=0.5
   - matplotlib>=3.4
-  - scipy
+  - scipy!=1.10
   - iminuit>=2.8.0
   - extension-helpers
   # test dependencies
   - codecov
-  - pytest=6
+  - pytest
   - pytest-astropy
   - pytest-cov
   - pytest-xdist
-  - coverage=6.2
-  - pytest-xdist
+  - coverage
   - requests
   - tqdm
   # extra dependencies
@@ -47,13 +46,13 @@ dependencies:
   - naima
   - pandas
   - reproject
-  - sherpa
   # dev dependencies
-  - black
+  - black=22.6.0
   - codespell
   - flake8
   - isort
-  - jinja2=3.0
+  - jinja2
+  - jupytext
   - nbsphinx
   - numdifftools
   - pandoc
@@ -64,10 +63,10 @@ dependencies:
   - sphinx-astropy
   - sphinx-click
   - sphinx-gallery
-  - sphinx-panels
+  - sphinx-design
   - sphinx-copybutton
   - tox
-  - pydata-sphinx-theme==0.8.1
+  - pydata-sphinx-theme
   - pre-commit
   - twine
   - yamllint
@@ -75,5 +74,11 @@ dependencies:
   - h5py
   - ruamel.yaml
   - cffconvert
+  - pyinstrument
+  - memray
   - pip:
+      - sherpa
       - pytest-sphinx
+      - ray[default]>=2.9
+      - PyGithub
+      - pypandoc

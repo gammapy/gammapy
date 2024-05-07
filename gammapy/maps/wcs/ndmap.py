@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
+from itertools import repeat
 import numpy as np
 import scipy.interpolate
 import scipy.ndimage as ndi
@@ -9,16 +10,13 @@ from astropy.convolution import Tophat2DKernel
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.nddata import block_reduce
-from regions import (
-    PixCoord,
-    PointPixelRegion,
-    PointSkyRegion,
-    RectangleSkyRegion,
-    SkyRegion,
-)
+from regions import PixCoord, PointPixelRegion, PointSkyRegion, SkyRegion
+import matplotlib.colors as mpcolors
 import matplotlib.pyplot as plt
+import gammapy.utils.parallel as parallel
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.units import unit_from_fits_image_hdu
+from gammapy.visualization.utils import add_colorbar
 from ..geom import pix_tuple_to_idx
 from ..utils import INVALID_INDEX
 from .core import WcsMap
@@ -27,6 +25,9 @@ from .geom import WcsGeom
 __all__ = ["WcsNDMap"]
 
 log = logging.getLogger(__name__)
+
+
+C_MAP_MASK = mpcolors.ListedColormap(["black", "white"], name="mask")
 
 
 class WcsNDMap(WcsMap):
@@ -89,7 +90,7 @@ class WcsNDMap(WcsMap):
         Returns
         -------
         map : `WcsNDMap`
-            Wcs map
+            WCS map.
         """
         geom = WcsGeom.from_header(hdu.header, hdu_bands, format=format)
         shape = geom.axes.shape
@@ -126,15 +127,42 @@ class WcsNDMap(WcsMap):
         idx = pix_tuple_to_idx(idx)
         return self.data.T[idx]
 
-    def interp_by_coord(self, coords, method="linear", fill_value=None):
+    def interp_by_coord(
+        self, coords, method="linear", fill_value=None, values_scale="lin"
+    ):
+        """Interpolate map values at the given map coordinates.
 
+        Parameters
+        ----------
+        coords : tuple, dict or `~gammapy.maps.MapCoord`
+            Coordinate arrays for each dimension of the map. Tuple
+            should be ordered as (lon, lat, x_0, ..., x_n) where x_i
+            are coordinates for non-spatial dimensions of the map.
+            "lon" and "lat" are optional and will be taken at the center
+            of the region by default.
+        method : {"linear", "nearest"}
+            Method to interpolate data values. By default linear
+            interpolation is performed.
+        fill_value : None or float value
+            The value to use for points outside of the interpolation domain.
+            If None, values outside the domain are extrapolated.
+        values_scale : {"lin", "log", "sqrt"}
+            Optional value scaling. Default is "lin".
+
+        Returns
+        -------
+        vals : `~numpy.ndarray`
+            Interpolated pixel values.
+        """
         if self.geom.is_regular:
             pix = self.geom.coord_to_pix(coords)
-            return self.interp_by_pix(pix, method=method, fill_value=fill_value)
+            return self.interp_by_pix(
+                pix, method=method, fill_value=fill_value, values_scale=values_scale
+            )
         else:
             return self._interp_by_coord_griddata(coords, method=method)
 
-    def interp_by_pix(self, pix, method="linear", fill_value=None):
+    def interp_by_pix(self, pix, method="linear", fill_value=None, values_scale="lin"):
         if not self.geom.is_regular:
             raise ValueError("interp_by_pix only supported for regular geom.")
 
@@ -147,7 +175,12 @@ class WcsNDMap(WcsMap):
             data = self.data.T
 
         fn = ScaledRegularGridInterpolator(
-            grid_pix, data, fill_value=None, bounds_error=False, method=method
+            grid_pix,
+            data,
+            fill_value=None,
+            bounds_error=False,
+            method=method,
+            values_scale=values_scale,
         )
         interp_data = fn(tuple(pix), clip=False)
 
@@ -225,7 +258,7 @@ class WcsNDMap(WcsMap):
                 return self._pad_coadd(geom, pad_width, mode, cval, method)
 
     def _pad_np(self, geom, pad_width, mode, cval):
-        """Pad a map using ``numpy.pad``.
+        """Pad a map using `~numpy.pad`.
 
         This method only works for regular geometries but should be more
         efficient when working with large maps.
@@ -239,7 +272,7 @@ class WcsNDMap(WcsMap):
         return self._init_copy(geom=geom, data=data)
 
     def _pad_coadd(self, geom, pad_width, mode, cval, method):
-        """Pad a map manually by coadding the original map with the new map."""
+        """Pad a map manually by co-adding the original map with the new map."""
         idx_in = self.geom.get_idx(flat=True)
         idx_in = tuple([t + w for t, w in zip(idx_in, pad_width)])[::-1]
         idx_out = geom.get_idx(flat=True)[::-1]
@@ -270,8 +303,8 @@ class WcsNDMap(WcsMap):
         if self.geom.is_regular:
             slices = [slice(None)] * len(self.geom.axes)
             slices += [
-                slice(crop_width[1], int(self.geom.npix[1] - crop_width[1])),
-                slice(crop_width[0], int(self.geom.npix[0] - crop_width[0])),
+                slice(crop_width[1], int(self.geom.npix[1][0] - crop_width[1])),
+                slice(crop_width[0], int(self.geom.npix[0][0] - crop_width[0])),
             ]
             data = self.data[tuple(slices)]
             map_out = self._init_copy(geom=geom, data=data)
@@ -335,27 +368,41 @@ class WcsNDMap(WcsMap):
         data = block_reduce(self.data * weights, tuple(block_size), func=func)
         return self._init_copy(geom=geom, data=data.astype(self.data.dtype))
 
-    def plot(self, ax=None, fig=None, add_cbar=False, stretch="linear", **kwargs):
+    def plot(
+        self,
+        ax=None,
+        fig=None,
+        add_cbar=False,
+        stretch="linear",
+        axes_loc=None,
+        kwargs_colorbar=None,
+        **kwargs,
+    ):
         """
         Plot image on matplotlib WCS axes.
 
         Parameters
         ----------
         ax : `~astropy.visualization.wcsaxes.WCSAxes`, optional
-            WCS axis object to plot on.
-        fig : `~matplotlib.figure.Figure`
-            Figure object.
-        add_cbar : bool
-            Add color bar?
-        stretch : str
+            WCS axis object to plot on. Default is None.
+        fig : `~matplotlib.figure.Figure`, optional
+            Figure object. Default is None.
+        add_cbar : bool, optional
+            Add color bar. Default is False.
+        stretch : str, optional
             Passed to `astropy.visualization.simple_norm`.
+             Default is "linear".
+        axes_loc : dict, optional
+            Keyword arguments passed to `~mpl_toolkits.axes_grid1.axes_divider.AxesDivider.append_axes`.
+        kwargs_colorbar : dict, optional
+            Keyword arguments passed to `~matplotlib.pyplot.colorbar`.
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.pyplot.imshow`.
 
         Returns
         -------
         ax : `~astropy.visualization.wcsaxes.WCSAxes`
-            WCS axis object
+            WCS axes object.
         """
         from astropy.visualization import simple_norm
 
@@ -377,17 +424,32 @@ class WcsNDMap(WcsMap):
         kwargs.setdefault("origin", "lower")
         kwargs.setdefault("cmap", "afmhot")
 
+        kwargs_colorbar = kwargs_colorbar or {}
+
         mask = np.isfinite(data)
+
+        if self.is_mask:
+            kwargs.setdefault("vmin", 0)
+            kwargs.setdefault("vmax", 1)
+            kwargs["cmap"] = C_MAP_MASK
 
         if mask.any():
             min_cut, max_cut = kwargs.pop("vmin", None), kwargs.pop("vmax", None)
-            norm = simple_norm(data[mask], stretch, min_cut=min_cut, max_cut=max_cut)
+            try:
+                norm = simple_norm(data[mask], stretch, vmin=min_cut, vmax=max_cut)
+            except TypeError:
+                # astropy <6.1
+                norm = simple_norm(
+                    data[mask], stretch, min_cut=min_cut, max_cut=max_cut
+                )
             kwargs.setdefault("norm", norm)
 
         im = ax.imshow(data, **kwargs)
 
         if add_cbar:
-            fig.colorbar(im, ax=ax, label=str(self.unit))
+            label = str(self.unit)
+            kwargs_colorbar.setdefault("label", label)
+            add_colorbar(im, ax=ax, axes_loc=axes_loc, **kwargs_colorbar)
 
         if self.geom.is_allsky:
             ax = self._plot_format_allsky(ax)
@@ -399,14 +461,15 @@ class WcsNDMap(WcsMap):
         return ax
 
     def plot_mask(self, ax=None, **kwargs):
-        """Plot the mask as a shaded area
+        """Plot the mask as a shaded area.
 
         Parameters
         ----------
         ax : `~astropy.visualization.wcsaxes.WCSAxes`, optional
-            WCS axis object to plot on.
+            WCS axis object to plot on. Default is None.
+
         **kwargs : dict
-            Keyword arguments passed to `~matplotlib.pyplot.contourf`
+            Keyword arguments passed to `~matplotlib.pyplot.contourf`.
 
         Returns
         -------
@@ -476,10 +539,10 @@ class WcsNDMap(WcsMap):
         _, ymin = self.geom.to_image().coord_to_pix({"lon": 0, "lat": -90})
         _, ymax = self.geom.to_image().coord_to_pix({"lon": 0, "lat": 90})
 
-        ax.set_xlim(xmin, xmax)
-        ax.set_ylim(ymin, ymax)
+        ax.set_xlim(xmin[0], xmax[0])
+        ax.set_ylim(ymin[0], ymax[0])
 
-        ax.text(0, ymax, self.geom.frame + " coords")
+        ax.text(0, ymax[0], self.geom.frame + " coords")
 
         # Grid and ticks
         glon_spacing, glat_spacing = 45, 15
@@ -496,24 +559,53 @@ class WcsNDMap(WcsMap):
         lat.grid(alpha=0.2, linestyle="solid", color="w")
         return ax
 
+    def cutout_and_mask_region(self, region=None):
+        """Compute cutout and mask for a given region of the map.
+
+        The function will estimate the minimal size of the cutout, which encloses
+        the region.
+
+        Parameters
+        ----------
+        region: `~regions.Region`, optional
+             Extended region. Default is None.
+
+        Returns
+        -------
+        cutout, mask : tuple of `WcsNDMap`
+            Cutout and mask map.
+        """
+        from gammapy.maps import RegionGeom
+
+        if region is None:
+            region = self.geom.footprint_rectangle_sky_region
+
+        geom = RegionGeom.from_regions(regions=region, wcs=self.geom.wcs)
+        cutout = self.cutout(position=geom.center_skydir, width=geom.width)
+
+        mask = cutout.geom.to_image().region_mask([region])
+        return self.__class__(data=cutout.data, geom=cutout.geom, unit=self.unit), mask
+
     def to_region_nd_map(
         self, region=None, func=np.nansum, weights=None, method="nearest"
     ):
         """Get region ND map in a given region.
 
-        By default the whole map region is considered.
+        By default, the whole map region is considered.
 
         Parameters
         ----------
-        region: `~regions.Region` or `~astropy.coordinates.SkyCoord`
-             Region.
-        func : numpy.func
+        region: `~regions.Region` or `~astropy.coordinates.SkyCoord`, optional
+             Region. Default is None.
+        func : numpy.func, optional
             Function to reduce the data. Default is np.nansum.
             For boolean Map, use np.any or np.all.
-        weights : `WcsNDMap`
+        weights : `WcsNDMap`, optional
             Array to be used as weights. The geometry must be equivalent.
-        method : {"nearest", "linear"}
+            Default is None.
+        method : {"nearest", "linear"}, optional
             How to interpolate if a position is given.
+            Default is "nearest".
 
         Returns
         -------
@@ -522,29 +614,27 @@ class WcsNDMap(WcsMap):
         """
         from gammapy.maps import RegionGeom, RegionNDMap
 
-        if isinstance(region, SkyCoord):
-            region = PointSkyRegion(region)
-        elif region is None:
-            width, height = self.geom.width
-            region = RectangleSkyRegion(
-                center=self.geom.center_skydir, width=width[0], height=height[0]
-            )
+        if region is None:
+            region = self.geom.footprint_rectangle_sky_region
 
         if weights is not None:
             if not self.geom == weights.geom:
                 raise ValueError("Incompatible spatial geoms between map and weights")
 
-        geom = RegionGeom(region=region, axes=self.geom.axes, wcs=self.geom.wcs)
+        geom = RegionGeom.from_regions(
+            regions=region, axes=self.geom.axes, wcs=self.geom.wcs
+        )
 
-        if isinstance(region, PointSkyRegion):
+        if geom.is_all_point_sky_regions:
             coords = geom.get_coord()
             data = self.interp_by_coord(coords=coords, method=method)
+
             if weights is not None:
                 data *= weights.interp_by_coord(coords=coords, method=method)
             # Casting needed as interp_by_coord transforms boolean
             data = data.astype(self.data.dtype)
         else:
-            cutout = self.cutout(position=geom.center_skydir, width=geom.width)
+            cutout, mask = self.cutout_and_mask_region(region=region)
 
             if weights is not None:
                 weights_cutout = weights.cutout(
@@ -552,11 +642,102 @@ class WcsNDMap(WcsMap):
                 )
                 cutout.data *= weights_cutout.data
 
-            mask = cutout.geom.to_image().region_mask([region]).data
             idx_y, idx_x = np.where(mask)
             data = func(cutout.data[..., idx_y, idx_x], axis=-1)
 
         return RegionNDMap(geom=geom, data=data, unit=self.unit, meta=self.meta.copy())
+
+    def to_region_nd_map_histogram(
+        self, region=None, bins_axis=None, nbin=100, density=False
+    ):
+        """Convert map into region map by histogramming.
+
+        By default, it creates a linearly spaced axis with 100 bins between
+        (-max(abs(data)), max(abs(data))) within the given region.
+
+        Parameters
+        ----------
+        region: `~regions.Region`, optional
+            Region to histogram over. Default is None.
+        bins_axis : `MapAxis`, optional
+            Binning of the histogram. Default is None.
+        nbin : int, optional
+            Number of bins to use if no bins_axis is given.
+            Default is 100.
+        density : bool, optional
+            Normalize integral of the histogram to 1.
+            Default is False.
+
+
+        Examples
+        --------
+        This is how to use the method to create energy dependent histograms:
+
+        ::
+
+            from gammapy.maps import MapAxis, Map
+            import numpy as np
+
+            random_state = np.random.RandomState(seed=0)
+
+            energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3)
+
+            data = Map.create(axes=[energy_axis], width=10, unit="cm2 s-1", binsz=0.02)
+            data.data = random_state.normal(
+                size=data.data.shape, loc=0, scale=np.array([1.0, 2.0, 3.0]).reshape((-1, 1, 1))
+            )
+
+            hist = data.to_region_nd_map_histogram()
+            hist.plot(axis_name="bins")
+
+
+        Returns
+        -------
+        region_map : `RegionNDMap`
+            Region map with histogram.
+
+        """
+        from gammapy.maps import MapAxis, RegionGeom, RegionNDMap
+
+        if isinstance(region, (PointSkyRegion, SkyCoord)):
+            raise ValueError("Histogram method not supported for point regions")
+
+        cutout, mask = self.cutout_and_mask_region(region=region)
+        idx_y, idx_x = np.where(mask)
+        quantity = cutout.quantity[..., idx_y, idx_x]
+
+        value = np.abs(quantity).max()
+
+        if bins_axis is None:
+            bins_axis = MapAxis.from_bounds(
+                -value,
+                value,
+                nbin=nbin,
+                interp="lin",
+                unit=self.unit,
+                name="bins",
+            )
+
+        if not bins_axis.unit.is_equivalent(self.unit):
+            raise ValueError("Unit of bins_axis must be equivalent to unit of map.")
+
+        axes = [bins_axis] + list(self.geom.axes)
+        geom_hist = RegionGeom(region=region, axes=axes, wcs=self.geom.wcs)
+
+        # This is likely not the most efficient way to do this
+        data = np.apply_along_axis(
+            lambda a: np.histogram(a, bins=bins_axis.edges, density=density)[0],
+            axis=-1,
+            arr=quantity,
+        )
+
+        if density:
+            unit = 1.0 / bins_axis.unit
+            data = data.value
+        else:
+            unit = ""
+
+        return RegionNDMap.from_geom(geom=geom_hist, data=data, unit=unit)
 
     def mask_contains_region(self, region):
         """Check if input region is contained in a boolean mask map.
@@ -569,7 +750,7 @@ class WcsNDMap(WcsMap):
         Returns
         -------
         contained : bool
-            Whether region is contained in the mask
+            Whether region is contained in the mask.
         """
         if not self.is_mask:
             raise ValueError("mask_contains_region is only supported for boolean masks")
@@ -591,7 +772,7 @@ class WcsNDMap(WcsMap):
         return np.any(contains)
 
     def binary_erode(self, width, kernel="disk", use_fft=True):
-        """Binary erosion of boolean mask removing a given margin
+        """Binary erosion of boolean mask removing a given margin.
 
         Parameters
         ----------
@@ -600,17 +781,18 @@ class WcsNDMap(WcsMap):
             quantity is given it converted to pixels using ``geom.wcs.wcs.cdelt``.
             The width corresponds to radius in case of a disk kernel, and
             the side length in case of a box kernel.
-        kernel : {'disk', 'box'}
-            Kernel shape
-        use_fft : bool
-            Use `scipy.signal.fftconvolve` if True (default)
-            and `scipy.ndimage.binary_erosion` otherwise.
+        kernel : {'disk', 'box'}, optional
+            Kernel shape. Default is "disk".
+        use_fft : bool, optional
+            Use `scipy.signal.fftconvolve` if True. Otherwise, use
+            `scipy.ndimage.binary_erosion`.
+            Default is True.
 
 
         Returns
         -------
         map : `WcsNDMap`
-            Eroded mask map
+            Eroded mask map.
 
         """
         if not self.is_mask:
@@ -627,23 +809,24 @@ class WcsNDMap(WcsMap):
         return self._init_copy(data=data)
 
     def binary_dilate(self, width, kernel="disk", use_fft=True):
-        """Binary dilation of boolean mask adding a given margin
+        """Binary dilation of boolean mask adding a given margin.
 
         Parameters
         ----------
         width : tuple of `~astropy.units.Quantity`
             Angular sizes of the margin in (lon, lat) in that specific order.
             If only one value is passed, the same margin is applied in (lon, lat).
-        kernel : {'disk', 'box'}
-            Kernel shape
-        use_fft : bool
-            Use `scipy.signal.fftconvolve` if True (default)
-            and `scipy.ndimage.binary_dilation` otherwise.
+        kernel : {'disk', 'box'}, optional
+            Kernel shape. Default is "disk".
+        use_fft : bool, optional
+            Use `scipy.signal.fftconvolve` if True. Otherwise, use
+            `scipy.ndimage.binary_dilation`.
+            Default is True.
 
         Returns
         -------
         map : `WcsNDMap`
-            Dilated mask map
+            Dilated mask map.
         """
         if not self.is_mask:
             raise ValueError("Binary operations only supported for boolean masks")
@@ -659,7 +842,7 @@ class WcsNDMap(WcsMap):
     def convolve(self, kernel, method="fft", mode="same"):
         """Convolve map with a kernel.
 
-        If the kernel is two dimensional, it is applied to all image planes likewise.
+        If the kernel is two-dimensional, it is applied to all image planes likewise.
         If the kernel is higher dimensional, it should either match the map in the number of
         dimensions or the map must be an image (no non-spatial axes). In that case, the
         corresponding kernel is selected and applied to every image plane or to the single
@@ -669,10 +852,12 @@ class WcsNDMap(WcsMap):
         ----------
         kernel : `~gammapy.irf.PSFKernel` or `numpy.ndarray`
             Convolution kernel.
-        method : str
-            The method used by `~scipy.signal.convolve`. Default is 'fft'.
-        mode : str
-            The convolution mode used by `~scipy.signal.convolve`. Default is 'same'.
+        method : str, optional
+            The method used by `~scipy.signal.convolve`.
+            Default is 'fft'.
+        mode : str, optional
+            The convolution mode used by `~scipy.signal.convolve`.
+            Default is 'same'.
 
         Returns
         -------
@@ -680,8 +865,6 @@ class WcsNDMap(WcsMap):
             Convolved map.
         """
         from gammapy.irf import PSFKernel
-
-        convolve = scipy.signal.convolve
 
         if self.geom.is_image and not isinstance(kernel, PSFKernel):
             if kernel.ndim > 2:
@@ -709,8 +892,6 @@ class WcsNDMap(WcsMap):
                 "WcsNDMap.convolve: mode='valid' is not supported."
             )
 
-        data = np.empty(geom.data_shape, dtype=np.float32)
-
         shape_axes_kernel = kernel.shape[slice(0, -2)]
 
         if len(shape_axes_kernel) > 0:
@@ -721,17 +902,34 @@ class WcsNDMap(WcsMap):
                 )
 
         if self.geom.is_image and kernel.ndim == 3:
-            for idx in range(kernel.shape[0]):
-                data[idx] = convolve(
-                    self.data.astype(np.float32), kernel[idx], method=method, mode=mode
-                )
+            indexes = range(kernel.shape[0])
+            images = repeat(self.data.astype(np.float32))
         else:
-            for img, idx in self.iter_by_image_data():
-                ikern = Ellipsis if kernel.ndim == 2 else idx
-                data[idx] = convolve(
-                    img.astype(np.float32), kernel[ikern], method=method, mode=mode
-                )
+            indexes = list(self.iter_by_image_index())
+            images = (self.data[idx] for idx in indexes)
+        kernels = (
+            kernel[Ellipsis] if kernel.ndim == 2 else kernel[idx] for idx in indexes
+        )
+
+        convolved = parallel.run_multiprocessing(
+            self._convolve,
+            zip(
+                images,
+                kernels,
+                repeat(method),
+                repeat(mode),
+            ),
+            task_name="Convolution",
+        )
+        data = np.empty(geom.data_shape, dtype=np.float32)
+        for idx_res, idx in enumerate(indexes):
+            data[idx] = convolved[idx_res]
         return self._init_copy(data=data, geom=geom)
+
+    @staticmethod
+    def _convolve(image, kernel, method, mode):
+        """Convolve using `~scipy.signal.convolve` without kwargs for parallel evaluation."""
+        return scipy.signal.convolve(image, kernel, method=method, mode=mode)
 
     def smooth(self, width, kernel="gauss", **kwargs):
         """Smooth the map.
@@ -747,8 +945,8 @@ class WcsNDMap(WcsMap):
             It corresponds to the standard deviation in case of a Gaussian kernel,
             the radius in case of a disk kernel, and the side length in case
             of a box kernel.
-        kernel : {'gauss', 'disk', 'box'}
-            Kernel shape
+        kernel : {'gauss', 'disk', 'box'}, optional
+            Kernel shape. Default is "gauss".
         kwargs : dict
             Keyword arguments passed to `~ndi.uniform_filter`
             ('box'), `~ndi.gaussian_filter` ('gauss') or
@@ -792,15 +990,17 @@ class WcsNDMap(WcsMap):
         width : tuple of `~astropy.coordinates.Angle`
             Angular sizes of the region in (lon, lat) in that specific order.
             If only one value is passed, a square region is extracted.
-        mode : {'trim', 'partial', 'strict'}
+        mode : {'trim', 'partial', 'strict'}, optional
             Mode option for Cutout2D, for details see `~astropy.nddata.utils.Cutout2D`.
-        odd_npix : bool
+            Default is "trim".
+        odd_npix : bool, optional
             Force width to odd number of pixels.
+            Default is False.
 
         Returns
         -------
         cutout : `~gammapy.maps.WcsNDMap`
-            Cutout map
+            Cutout map.
         """
         geom_cutout = self.geom.cutout(
             position=position, width=width, mode=mode, odd_npix=odd_npix
@@ -818,18 +1018,53 @@ class WcsNDMap(WcsMap):
 
         return self._init_copy(geom=geom_cutout, data=data)
 
+    def _cutout_view(self, position, width, odd_npix=False):
+        """
+        Create a cutout around a given position without copy of the data.
+
+        Parameters
+        ----------
+        position : `~astropy.coordinates.SkyCoord`
+            Center position of the cutout region.
+        width : tuple of `~astropy.coordinates.Angle`
+            Angular sizes of the region in (lon, lat) in that specific order.
+            If only one value is passed, a square region is extracted.
+        odd_npix : bool, optional
+            Force width to odd number of pixels.
+            Default is False.
+
+        Returns
+        -------
+        cutout : `~gammapy.maps.WcsNDMap`
+            Cutout map.
+        """
+        geom_cutout = self.geom.cutout(
+            position=position, width=width, mode="trim", odd_npix=odd_npix
+        )
+        cutout_info = geom_cutout.cutout_slices(self.geom, mode="trim")
+
+        slices = cutout_info["parent-slices"]
+        parent_slices = Ellipsis, slices[0], slices[1]
+
+        return self.__class__.from_geom(
+            geom=geom_cutout, data=self.quantity[parent_slices]
+        )
+
     def stack(self, other, weights=None, nan_to_num=True):
         """Stack cutout into map.
 
         Parameters
         ----------
         other : `WcsNDMap`
-            Other map to stack
-        weights : `WcsNDMap`
+            Other map to stack.
+        weights : `WcsNDMap`, optional
             Array to be used as weights. The spatial geometry must be equivalent
             to `other` and additional axes must be broadcastable.
-        nan_to_num: bool
-            Non-finite values are replaced by zero if True (default).
+            Default is None.
+        nan_to_num: bool, optional
+            Non-finite values are replaced by zero if True.
+            Default is True.
+
         """
         if self.geom == other.geom:
             parent_slices, cutout_slices = None, None

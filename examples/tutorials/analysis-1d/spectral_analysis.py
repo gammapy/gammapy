@@ -118,6 +118,7 @@ from gammapy.datasets import (
     SpectrumDatasetOnOff,
 )
 from gammapy.estimators import FluxPointsEstimator
+from gammapy.estimators.utils import resample_energy_edges
 from gammapy.makers import (
     ReflectedRegionsBackgroundMaker,
     SafeMaskMaker,
@@ -144,11 +145,10 @@ check_tutorials_setup()
 # Load Data
 # ---------
 #
-# First, we select and load some H.E.S.S. observations of the Crab nebula
-# (simulated events for now).
+# First, we select and load some H.E.S.S. observations of the Crab nebula.
 #
 # We will access the events, effective area, energy dispersion, livetime
-# and PSF for containement correction.
+# and PSF for containment correction.
 #
 
 datastore = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
@@ -196,6 +196,7 @@ geom = WcsGeom.create(
 
 exclusion_mask = ~geom.region_mask([exclusion_region])
 exclusion_mask.plot()
+plt.show()
 
 
 ######################################################################
@@ -241,6 +242,7 @@ plt.figure()
 ax = exclusion_mask.plot()
 on_region.to_pixel(ax.wcs).plot(ax=ax, edgecolor="k")
 plot_spectrum_datasets_off_regions(ax=ax, datasets=datasets)
+plt.show()
 
 
 ######################################################################
@@ -256,7 +258,7 @@ info_table = datasets.info_table(cumulative=True)
 display(info_table)
 
 ######################################################################
-# And make the correpsonding plots
+# And make the corresponding plots
 
 fig, (ax_excess, ax_sqrt_ts) = plt.subplots(figsize=(10, 4), ncols=2, nrows=1)
 ax_excess.plot(
@@ -280,6 +282,7 @@ ax_sqrt_ts.plot(
 ax_sqrt_ts.set_title("Sqrt(TS)")
 ax_sqrt_ts.set_xlabel("Livetime [h]")
 ax_sqrt_ts.set_ylabel("Sqrt(TS)")
+plt.show()
 
 
 ######################################################################
@@ -359,10 +362,10 @@ display(result_joint.models.to_parameters_table())
 # `~SpectrumDataset.plot_fit()`
 #
 
-plt.figure()
 ax_spectrum, ax_residuals = datasets[0].plot_fit()
 ax_spectrum.set_ylim(0.1, 40)
 datasets[0].plot_masks(ax=ax_spectrum)
+plt.show()
 
 
 ######################################################################
@@ -376,12 +379,14 @@ datasets[0].plot_masks(ax=ax_spectrum)
 # -------------------
 #
 # To round up our analysis we can compute flux points by fitting the norm
-# of the global model in energy bands. We’ll use a fixed energy binning
-# for now:
+# of the global model in energy bands.
+# We can utilise the `~gammapy.estimators.utils.resample_energy_edges`
+# for defining the energy bins in which the minimum number of `sqrt_ts` is 2.
+# To do so we first stack the individual datasets, only for obtaining the energies:
 #
 
-e_min, e_max = 0.7, 30
-energy_edges = np.geomspace(e_min, e_max, 11) * u.TeV
+dataset_stacked = Datasets(datasets).stack_reduce()
+energy_edges = resample_energy_edges(dataset_stacked, conditions={"sqrt_ts_min": 2})
 
 
 ######################################################################
@@ -411,6 +416,13 @@ display(flux_points.to_table(sed_type="dnde", formatted=True))
 fig, ax = plt.subplots()
 flux_points.plot(ax=ax, sed_type="e2dnde", color="darkorange")
 flux_points.plot_ts_profiles(ax=ax, sed_type="e2dnde")
+plt.show()
+
+######################################################################
+# Note: it is also possible to plot the flux distribution with the spectral model overlaid,
+# but you must ensure the axis binning is identical for the flux points and
+# integral flux.
+#
 
 
 ######################################################################
@@ -420,13 +432,14 @@ flux_points.plot_ts_profiles(ax=ax, sed_type="e2dnde")
 
 flux_points_dataset = FluxPointsDataset(data=flux_points, models=model_best_joint)
 flux_points_dataset.plot_fit()
+plt.show()
 
 
 ######################################################################
 # Stack observations
 # ------------------
 #
-# And alternative approach to fitting the spectrum is stacking all
+# An alternative approach to fitting the spectrum is stacking all
 # observations first and the fitting a model. For this we first stack the
 # individual datasets:
 #
@@ -444,7 +457,7 @@ dataset_stacked.models = model
 stacked_fit = Fit()
 result_stacked = stacked_fit.run([dataset_stacked])
 
-# make a copy to compare later
+# Make a copy to compare later
 model_best_stacked = model.copy()
 
 print(result_stacked)

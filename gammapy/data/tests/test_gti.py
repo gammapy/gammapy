@@ -2,11 +2,50 @@
 import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
-from astropy.table import Table
+from astropy.table import QTable, Table
 from astropy.time import Time
 from gammapy.data import GTI
 from gammapy.utils.testing import assert_time_allclose, requires_data
-from gammapy.utils.time import time_ref_to_dict
+
+
+def make_gti(mets, time_ref="2010-01-01"):
+    """Create GTI from a dict of MET (assumed to be in seconds) and a reference time."""
+    time_ref = Time(time_ref)
+    times = {name: time_ref + met for name, met in mets.items()}
+    table = Table(times)
+    return GTI(table, reference_time=time_ref)
+
+
+def test_gti_table_validation():
+    start = Time([53090.123451203704], format="mjd", scale="tt")
+    stop = Time([53090.14291879629], format="mjd", scale="tt")
+
+    table = QTable([start, stop], names=["START", "STOP"])
+    validated = GTI._validate_table(table)
+    assert validated == table
+
+    bad_table = QTable([start, stop], names=["bad", "STOP"])
+    with pytest.raises(ValueError):
+        GTI._validate_table(bad_table)
+
+    with pytest.raises(TypeError):
+        GTI._validate_table([start, stop])
+
+    bad_table = QTable([[1], [2]], names=["START", "STOP"])
+    with pytest.raises(TypeError):
+        GTI._validate_table(bad_table)
+
+
+def test_simple_gti():
+    time_ref = Time("2010-01-01")
+    gti = make_gti({"START": [0, 2] * u.s, "STOP": [1, 3] * u.s}, time_ref=time_ref)
+
+    assert_allclose(gti.time_start.mjd - time_ref.mjd, [0, 2.3148146e-5])
+    assert_allclose(
+        (gti.time_stop - time_ref).to_value("d"), [1.15740741e-05, 3.4722222e-05]
+    )
+    assert_allclose(gti.time_delta.to_value("s"), [1, 1])
+    assert_allclose(gti.time_sum.to_value("s"), 2.0)
 
 
 @requires_data()
@@ -91,33 +130,103 @@ def test_select_time(time_interval, expected_length, expected_times):
         assert_time_allclose(gti_selected.time_stop[-1], expected_times[1])
 
 
-def make_gti(times, time_ref="2010-01-01"):
-    meta = time_ref_to_dict(time_ref)
-    table = Table(times, meta=meta)
-    return GTI(table)
+def test_gti_delete_intervals():
+    gti = GTI.create(
+        Time(
+            [
+                "2020-01-01 01:00:00.000",
+                "2020-01-01 02:00:00.000",
+                "2020-01-01 03:00:00.000",
+                "2020-01-01 05:00:00.000",
+            ]
+        ),
+        Time(
+            [
+                "2020-01-01 01:45:00.000",
+                "2020-01-01 02:45:00.000",
+                "2020-01-01 03:45:00.000",
+                "2020-01-01 05:45:00.000",
+            ]
+        ),
+    )
+    interval = Time(["2020-01-01 02:20:00.000", "2020-01-01 05:20:00.000"])
+    interval2 = Time(["2020-01-01 05:30:00.000", "2020-01-01 08:20:00.000"])
+    interval3 = Time(["2020-01-01 05:50:00.000", "2020-01-01 09:20:00.000"])
+
+    gti_trim = gti.delete_interval(interval)
+
+    assert len(gti_trim.table) == 3
+
+    assert_time_allclose(
+        gti_trim.table["START"],
+        Time(
+            [
+                "2020-01-01 01:00:00.000",
+                "2020-01-01 02:00:00.000",
+                "2020-01-01 05:20:00.000",
+            ]
+        ),
+    )
+    assert_time_allclose(
+        gti_trim.table["STOP"],
+        Time(
+            [
+                "2020-01-01 01:45:00.000",
+                "2020-01-01 02:20:00.000",
+                "2020-01-01 05:45:00.000",
+            ]
+        ),
+    )
+
+    gti_trim2 = gti_trim.delete_interval(interval2)
+    assert_time_allclose(
+        gti_trim2.table["STOP"],
+        Time(
+            [
+                "2020-01-01 01:45:00.000",
+                "2020-01-01 02:20:00.000",
+                "2020-01-01 05:30:00.000",
+            ]
+        ),
+    )
+
+    gti_trim3 = gti_trim2.delete_interval(interval3)
+    assert_time_allclose(
+        gti_trim3.table["STOP"],
+        Time(
+            [
+                "2020-01-01 01:45:00.000",
+                "2020-01-01 02:20:00.000",
+                "2020-01-01 05:30:00.000",
+            ]
+        ),
+    )
 
 
 def test_gti_stack():
     time_ref = Time("2010-01-01")
-    gti1 = make_gti({"START": [0, 2], "STOP": [1, 3]}, time_ref=time_ref)
+    gti1 = make_gti({"START": [0, 2] * u.s, "STOP": [1, 3] * u.s}, time_ref=time_ref)
     gt1_pre_stack = gti1.copy()
-    gti2 = make_gti({"START": [4], "STOP": [5]}, time_ref=time_ref + 10 * u.s)
+    gti2 = make_gti(
+        {"START": [4] * u.s, "STOP": [5] * u.s}, time_ref=time_ref + 10 * u.s
+    )
 
     gti1.stack(gti2)
 
     assert len(gti1.table) == 3
     assert_time_allclose(gt1_pre_stack.time_ref, gti1.time_ref)
-    assert_allclose(gti1.table["START"], [0, 2, 14])
-    assert_allclose(gti1.table["STOP"], [1, 3, 15])
+
+    assert_allclose(gti1.met_start.value, [0, 2, 14])
+    assert_allclose(gti1.met_stop.value, [1, 3, 15])
 
 
 def test_gti_union():
-    gti = make_gti({"START": [5, 6, 1, 2], "STOP": [8, 7, 3, 4]})
+    gti = make_gti({"START": [5, 6, 1, 2] * u.s, "STOP": [8, 7, 3, 4] * u.s})
 
     gti = gti.union()
 
-    assert_allclose(gti.table["START"], [1, 5])
-    assert_allclose(gti.table["STOP"], [4, 8])
+    assert_allclose(gti.met_start.value, [1, 5])
+    assert_allclose(gti.met_stop.value, [4, 8])
 
 
 def test_gti_create():
@@ -129,18 +238,21 @@ def test_gti_create():
 
     assert len(gti.table) == 2
     assert_allclose(gti.time_ref.mjd, time_ref.tt.mjd)
-    assert_allclose(gti.table["START"], start.to_value("s"))
+    start_met = (gti.time_start - gti.time_ref).to_value("s")
+    assert_allclose(start_met, start.to_value("s"))
 
 
 def test_gti_write(tmp_path):
-    gti = make_gti({"START": [5, 6, 1, 2], "STOP": [8, 7, 3, 4]})
+    time_ref = Time("2010-01-01", scale="tt")
+    time_ref.format = "mjd"
+    gti = make_gti({"START": [5, 6, 1, 2] * u.s, "STOP": [8, 7, 3, 4] * u.s}, time_ref)
 
     gti.write(tmp_path / "tmp.fits")
     new_gti = GTI.read(tmp_path / "tmp.fits")
 
     assert_time_allclose(new_gti.time_start, gti.time_start)
     assert_time_allclose(new_gti.time_stop, gti.time_stop)
-    assert new_gti.table.meta["MJDREFF"] == gti.table.meta["MJDREFF"]
+    assert_time_allclose(new_gti.time_ref, gti.time_ref)
 
 
 def test_gti_from_time():
@@ -150,5 +262,5 @@ def test_gti_from_time():
     ref = Time("2020-01-01T00:00:00")
     gti = GTI.create(start, stop, ref)
 
-    assert u.isclose(gti.table["START"], 20 * u.hour)
-    assert u.isclose(gti.table["STOP"], 20 * u.hour + 15 * u.min)
+    assert_time_allclose(gti.table["START"], start)
+    assert_time_allclose(gti.table["STOP"], stop)

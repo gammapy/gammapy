@@ -10,10 +10,12 @@ stable, so need to establish a bit what works and what doesn't.
 from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
 from astropy.coordinates import SkyCoord
-from regions import Regions
+from regions import CircleSkyRegion, EllipseSkyRegion, Regions
 from gammapy.utils.regions import (
     SphericalCircleSkyRegion,
     compound_region_center,
+    region_circle_to_ellipse,
+    region_to_frame,
     regions_to_compound_region,
 )
 
@@ -80,3 +82,23 @@ def test_spherical_circle_sky_region():
     coord = SkyCoord([20.1, 22] * u.deg, 20 * u.deg)
     mask = region.contains(coord)
     assert_equal(mask, [True, False])
+
+
+def test_region_to_frame():
+    region = EllipseSkyRegion(
+        center=SkyCoord(20, 17, unit="deg"),
+        height=0.3 * u.deg,
+        width=1.0 * u.deg,
+        angle=30 * u.deg,
+    )
+    region_new = region_to_frame(region, "galactic")
+    assert_allclose(region_new.angle, 20.946 * u.deg, rtol=1e-3)
+    assert_allclose(region_new.center.l, region.center.galactic.l, rtol=1e-3)
+
+
+def test_region_circle_to_ellipse():
+    region = CircleSkyRegion(center=SkyCoord(20, 17, unit="deg"), radius=1.0 * u.deg)
+    region_new = region_circle_to_ellipse(region)
+    assert_allclose(region_new.height, region.radius, rtol=1e-3)
+    assert_allclose(region_new.width, region.radius, rtol=1e-3)
+    assert_allclose(region_new.angle, 0.0 * u.deg, rtol=1e-3)

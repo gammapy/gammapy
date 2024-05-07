@@ -17,7 +17,16 @@ class HDUIndexTable(Table):
     See :ref:`gadf:hdu-index`.
     """
 
-    VALID_HDU_TYPE = ["events", "gti", "aeff", "edisp", "psf", "bkg", "rad_max"]
+    VALID_HDU_TYPE = [
+        "events",
+        "gti",
+        "aeff",
+        "edisp",
+        "psf",
+        "bkg",
+        "rad_max",
+        "pointing",
+    ]
     """Valid values for `HDU_TYPE`."""
 
     VALID_HDU_CLASS = [
@@ -31,6 +40,7 @@ class HDUIndexTable(Table):
         "bkg_2d",
         "bkg_3d",
         "rad_max_2d",
+        "pointing",
     ]
     """Valid values for `HDU_CLASS`."""
 
@@ -40,8 +50,10 @@ class HDUIndexTable(Table):
 
         Parameters
         ----------
-        filename : `pathlib.Path`, str
-            Filename
+        filename : `pathlib.Path` or str
+            Filename.
+        **kwargs : dict, optional
+            Keyword arguments passed to `~astropy.table.Table.read`.
         """
         filename = make_path(filename)
         table = super().read(filename, **kwargs)
@@ -64,16 +76,18 @@ class HDUIndexTable(Table):
         Parameters
         ----------
         obs_id : int
-            Observation ID
-        hdu_type : str
-            HDU type (see `~gammapy.data.HDUIndexTable.VALID_HDU_TYPE`)
-        hdu_class : str
-            HDU class (see `~gammapy.data.HDUIndexTable.VALID_HDU_CLASS`)
+            Observation ID.
+        hdu_type : str, optional
+            HDU type (see `~gammapy.data.HDUIndexTable.VALID_HDU_TYPE`). Default is None.
+        hdu_class : str, optional
+            HDU class (see `~gammapy.data.HDUIndexTable.VALID_HDU_CLASS`). Default is None.
+        warn_missing : bool, optional
+            Warn if no HDU is found matching the selection. Default is True.
 
         Returns
         -------
         location : `~gammapy.data.HDULocation`
-            HDU location
+            HDU location.
         """
         self._validate_selection(obs_id=obs_id, hdu_type=hdu_type, hdu_class=hdu_class)
 
@@ -126,11 +140,11 @@ class HDUIndexTable(Table):
         Parameters
         ----------
         obs_id : int
-            Observation ID
-        hdu_type : str
-            HDU type (see `~gammapy.data.HDUIndexTable.VALID_HDU_TYPE`)
-        hdu_class : str
-            HDU class (see `~gammapy.data.HDUIndexTable.VALID_HDU_CLASS`)
+            Observation ID.
+        hdu_type : str, optional
+            HDU type (see `~gammapy.data.HDUIndexTable.VALID_HDU_TYPE`). Default is None.
+        hdu_class : str, optional
+            HDU class (see `~gammapy.data.HDUIndexTable.VALID_HDU_CLASS`). Default is None.
 
         Returns
         -------
@@ -185,7 +199,7 @@ class HDUIndexTable(Table):
         return list(np.unique(np.sort([_.strip() for _ in self["HDU_CLASS"]])))
 
     def summary(self):
-        """Summary report (str)."""
+        """Summary report as a string."""
         obs_id = self.obs_id_unique
         return (
             "HDU index table:\n"

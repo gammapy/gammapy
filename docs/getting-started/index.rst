@@ -17,46 +17,45 @@ Getting started
 Installation
 ------------
 
-.. panels::
-    :column: col-lg-6 col-md-6 col-sm-12 col-xs-12 p-3
+There are various ways for users to install Gammapy. **We recommend setting up a virtual
+environment using either conda or mamba.** Here are two methods to quickly install Gammapy.
 
-    Working with conda?
-    ^^^^^^^^^^^^^^^^^^^
+.. grid:: 1 2 2 2
+    :gutter: 2
 
-    Gammapy can be installed with `Anaconda <https://docs.continuum.io/anaconda/>`__ or Miniconda:
+    .. grid-item-card:: Working with conda?
 
-    .. code-block:: bash
+        Gammapy can be installed with `Anaconda <https://docs.continuum.io/anaconda/>`__:
 
-        $ conda install -c conda-forge gammapy
+        .. code-block:: bash
 
-    ---
+            conda install -c conda-forge gammapy
 
-    Prefer pip?
-    ^^^^^^^^^^^
+    .. grid-item-card:: Prefer pip?
 
-    Gammapy can be installed via pip from `PyPI <https://pypi.org/project/gammapy/>`__.
+        Gammapy can be installed via pip from `PyPI <https://pypi.org/project/gammapy/>`__.
 
+        .. code-block:: bash
 
-    .. code-block:: bash
+            pip install gammapy
 
-        $ pip install gammapy
+    .. grid-item-card:: In-depth instructions?
+        :columns: 12
 
-    ---
-    :column: col-12 p-3
+        Update existing version? Working with virtual environments? Installing a specific version? Check the advanced
+        installation page.
 
-    In-depth instructions?
-    ^^^^^^^^^^^^^^^^^^^^^^
+        .. button-ref:: install
+            :ref-type: ref
+            :click-parent:
+            :color: secondary
+            :expand:
 
-    Update existing version? Working with virtual environments? Installing a specific version? Check the advanced
-    installation page.
-
-    .. link-button:: install
-        :type: ref
-        :text: Learn more
-        :classes: btn-secondary stretched-link
+            Learn more
 
 
 .. include:: quickstart.rst
+
 
 Tutorials Overview
 ------------------
@@ -75,9 +74,9 @@ so called "DL4". This is typically the case for `Fermi-LAT`_ data or data from
 Water Cherenkov Observatories. This data can be read directly using the
 `~gammapy.maps.Map` and `~gammapy.irf.core.IRFMap` classes.
 
-:link-badge:`../tutorials/data/cta.html,"CTA data tutorial",cls=badge-primary text-white`
-:link-badge:`../tutorials/data/hess.html,"HESS data tutorial",cls=badge-primary text-white`
-:link-badge:`../tutorials/data/fermi_lat.html,"Fermi-LAT data tutorial",cls=badge-primary text-white`
+:bdg-link-primary:`CTA data tutorial <../tutorials/data/cta.html>`
+:bdg-link-primary:`HESS data tutorial <../tutorials/data/hess.html>`
+:bdg-link-primary:`Fermi-LAT data tutorial <../tutorials/data/fermi_lat.html>`
 
 .. accordion-footer::
 
@@ -98,9 +97,9 @@ Flux points can be computed using the `~gammapy.estimators.FluxPointsEstimator`.
 
 |
 
-:link-badge:`../tutorials/analysis-1d/spectral_analysis.html,"1D analysis tutorial",cls=badge-primary text-white`
-:link-badge:`../tutorials/analysis-1d/spectral_analysis_rad_max.html,"1D analysis tutorial with point-like IRFs",cls=badge-primary text-white`
-:link-badge:`../tutorials/analysis-1d/extended_source_spectral_analysis.html,"1D analysis tutorial of extended sources",cls=badge-primary text-white`
+:bdg-link-primary:`1D analysis tutorial <../tutorials/analysis-1d/spectral_analysis.html>`
+:bdg-link-primary:`1D analysis tutorial with point-like IRFs <../tutorials/analysis-1d/spectral_analysis_rad_max.html>`
+:bdg-link-primary:`1D analysis tutorial of extended sources <../tutorials/analysis-1d/extended_source_spectral_analysis.html>`
 
 .. accordion-footer::
 
@@ -118,8 +117,8 @@ fixed spectral index, or following the classical ring background estimation.
 
 |
 
-:link-badge:`../tutorials/analysis-2d/modeling_2D.html,"2D analysis tutorial",cls=badge-primary text-white`
-:link-badge:`../tutorials/analysis-2d/ring_background.html,"2D analysis tutorial with ring background",cls=badge-primary text-white`
+:bdg-link-primary:`2D analysis tutorial <../tutorials/analysis-2d/modeling_2D.html>`
+:bdg-link-primary:`2D analysis tutorial with ring background <../tutorials/analysis-2d/ring_background.html>`
 
 .. accordion-footer::
 
@@ -138,8 +137,8 @@ Gammapy can also simulate events. Flux points can be computed using the
 
 |
 
-:link-badge:`../tutorials/analysis-3d/analysis_3d.html,"3D analysis tutorial",cls=badge-primary text-white`
-:link-badge:`../tutorials/analysis-3d/event_sampling.html,"3D analysis tutorial with event sampling",cls=badge-primary text-white`
+:bdg-link-primary:`3D analysis tutorial <../tutorials/analysis-3d/analysis_3d.html>`
+:bdg-link-primary:`3D analysis tutorial with event sampling <../tutorials/analysis-3d/event_sampling.html>`
 
 
 .. accordion-footer::
@@ -159,8 +158,8 @@ You can also compute light curves in multiple energy bands. In all cases the lig
 curve is computed using the `~gammapy.estimators.LightCurveEstimator`.
 
 
-:link-badge:`../tutorials/analysis-time/light_curve.html,"Light curve tutorial",cls=badge-primary text-white`
-:link-badge:`../tutorials/analysis-time/light_curve_flare.html,"Light curve tutorial for flares",cls=badge-primary text-white`
+:bdg-link-primary:`Light curve tutorial <../tutorials/analysis-time/light_curve.html>`
+:bdg-link-primary:`Light curve tutorial for flares <../tutorials/analysis-time/light_curve_flare.html>`
 
 
 .. accordion-footer::
@@ -176,8 +175,8 @@ in a "joint-likelihood" fit. This can be done at **multiple data levels** and
 independent dimensionality of the data. Gammapy can handle 1D and 3D datasets
 at the same time and can also include e.g. flux points in a combined likelihood fit.
 
-:link-badge:`../tutorials/analysis-3d/analysis_mwl.html,"Combined 1D / 3D analysis tutorial",cls=badge-primary text-white`
-:link-badge:`../tutorials/analysis-1d/sed_fitting.html,"SED fitting tutorial",cls=badge-primary text-white`
+:bdg-link-primary:`Combined 1D / 3D analysis tutorial <../tutorials/analysis-3d/analysis_mwl.html>`
+:bdg-link-primary:`SED fitting tutorial <../tutorials/analysis-1d/sed_fitting.html>`
 
 
 .. accordion-footer::

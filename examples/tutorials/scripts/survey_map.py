@@ -4,9 +4,11 @@ Survey Map Script
 
 Make a survey counts map using a script.
 
-We create an all-sky map in AIT projection
-for the HESS DL3 DR1 dataset.
+We create an all-sky map in AIT projection for the
+`H.E.S.S. DL3 DR1 <https://www.mpi-hd.mpg.de/hfm/HESS/pages/dl3-dr1/>`__
+dataset.
 """
+
 import logging
 from gammapy.data import DataStore
 from gammapy.maps import Map

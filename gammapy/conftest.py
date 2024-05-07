@@ -40,6 +40,7 @@ def pytest_configure(config):
     PYTEST_HEADER_MODULES["sherpa"] = "sherpa"
     PYTEST_HEADER_MODULES["gammapy"] = "gammapy"
     PYTEST_HEADER_MODULES["naima"] = "naima"
+    PYTEST_HEADER_MODULES["ray"] = "ray"
 
     print("")
     print("Gammapy test data availability:")

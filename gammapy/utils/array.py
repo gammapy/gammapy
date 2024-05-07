@@ -26,14 +26,14 @@ def array_stats_str(x, label=""):
     Parameters
     ----------
     x : array-like
-        Array
+        Array.
     label : str, optional
-        Label
+        Label.
 
     Returns
     -------
     stats_str : str
-        String with array stats
+        String with array stats.
     """
     x = np.asanyarray(x)
 
@@ -59,13 +59,13 @@ def shape_2N(shape, N=3):
     ----------
     shape : tuple
         Input shape.
-    N : int (default = 3), optional
-        Exponent of two.
+    N : int, optional
+        Exponent of two. Default is 3.
 
     Returns
     -------
-    new_shape : Tuple
-        New shape extended to integers divisible by 2^N
+    new_shape : tuple
+        New shape extended to integers divisible by 2^N.
     """
     shape = np.array(shape)
     new_shape = shape + (2**N - np.mod(shape, 2**N))
@@ -85,8 +85,8 @@ def shape_divisible_by(shape, factor):
 
     Returns
     -------
-    new_shape : Tuple
-        New shape extended to integers divisible by factor
+    new_shape : tuple
+        New shape extended to integers divisible by factor.
     """
     shape = np.array(shape)
     new_shape = shape + (shape % factor)
@@ -94,33 +94,33 @@ def shape_divisible_by(shape, factor):
 
 
 def round_up_to_odd(f):
-    """Round float to odd integer
+    """Round float to odd integer.
 
     Parameters
     ----------
     f : float
-        Float value
+        Float value.
 
     Returns
     -------
     int : int
-        Odd integer
+        Odd integer.
     """
     return (np.ceil(f) // 2 * 2 + 1).astype(int)
 
 
 def round_up_to_even(f):
-    """Round float to even integer
+    """Round float to even integer.
 
     Parameters
     ----------
     f : float
-        Float value
+        Float value.
 
     Returns
     -------
     int : int
-        Odd integer
+        Odd integer.
     """
     return (np.ceil(f + 1) // 2 * 2).astype(int)
 
@@ -134,9 +134,9 @@ def symmetric_crop_pad_width(shape, new_shape):
     Parameters
     ----------
     shape : tuple
-        Old shape
+        Old shape.
     new_shape : tuple or str
-        New shape
+        New shape.
     """
     xdiff = abs(shape[1] - new_shape[1])
     ydiff = abs(shape[0] - new_shape[0])
@@ -176,12 +176,12 @@ def scale_cube(data, kernels):
     ----------
     data : `~numpy.ndarray`
         Input data.
-    kernels: list of `~astropy.convolution.Kernel`
+    kernels : list of `~astropy.convolution.Kernel`
         List of convolution kernels.
 
     Returns
     -------
     cube : `~numpy.ndarray`
-        Array of the shape (len(kernels), data.shape)
+        Array of the shape (len(kernels), data.shape).
     """
     return np.dstack([_fftconvolve_wrap(kernel, data) for kernel in kernels])

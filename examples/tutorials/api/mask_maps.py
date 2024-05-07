@@ -25,7 +25,7 @@ template on the data themselves. To limit contamination by real photons,
 one has to exclude parts of the field-of-view where signal is expected
 to be large. To do so, one needs to provide an exclusion mask. The
 latter can be provided in a different geometry as it will be reprojected
-by the `Makers`.
+by the `~gammapy.makers.Makers`.
 
 We explain in more details these two types of masks below:
 
@@ -47,14 +47,13 @@ sub-section.
 
 The `mask_fit` also can be used to exclude sources or complex regions
 for which we don’t have good enough models. In that case the masking is
-an extra security, it is prefereable to include the available models
+an extra security, it is preferable to include the available models
 even if the sources are masked and frozen.
 
 Note that a dataset contains also a `mask_safe` attribute that is
 created and filled during data reduction. It is not to be modified
 directly by users. The `mask_safe` is defined only from the options
-passed to the `~gammapy.makers.SafeMaskMaker` (for more details see
-`Safe Data Range Handling`_).
+passed to the `~gammapy.makers.SafeMaskMaker`.
 
 Exclusion masks
 ~~~~~~~~~~~~~~~
@@ -75,12 +74,14 @@ Proposed approach
 
 Even if the use cases for exclusion masks and fit masks are different,
 the way to create these masks is exactly the same, so in the following
-we show how to work with masks in general: - Creating masks from scratch
-- Combining multiple masks - Extending and reducing an existing mask -
-Reading and writing masks
+we show how to work with masks in general:
+
+- Creating masks from scratch
+- Combining multiple masks
+- Extending and reducing an existing mask
+- Reading and writing masks
 
 """
-
 
 ######################################################################
 # Setup
@@ -133,7 +134,7 @@ dataset = datasets["Fermi-LAT"]
 # a `mask_fit` it is equal to the safe energy range.
 #
 
-print(f"Fit range : {dataset.energy_range}")
+print(f"Fit range : {dataset.energy_range_total}")
 
 
 ######################################################################
@@ -158,7 +159,7 @@ mask_energy = dataset.counts.geom.energy_mask(10 * u.GeV, 700 * u.GeV)
 #
 
 dataset.mask_fit = mask_energy
-print(f"Fit range : {dataset.energy_range}")
+print(f"Fit range : {dataset.energy_range_total}")
 
 
 ######################################################################
@@ -175,7 +176,7 @@ print(f"Fit range : {dataset.energy_range}")
 # we use the same frame to define the box to ensure a correct alignment.
 # We can now create the map. We use the `WcsGeom.region_mask` method
 # putting all pixels outside the regions to False (because we only want to
-# consider pixels inside the region. For convenience we can directly pass
+# consider pixels inside the region. For convenience, we can directly pass
 # a ds9 region string to the method:
 #
 
@@ -195,7 +196,8 @@ dataset.mask_fit &= mask_map
 # Let’s check the result and plot the full mask.
 #
 
-_ = dataset.mask_fit.plot_grid(ncols=5, vmin=0, vmax=1, figsize=(14, 3))
+dataset.mask_fit.plot_grid(ncols=5, vmin=0, vmax=1, figsize=(14, 3))
+plt.show()
 
 
 ######################################################################
@@ -231,7 +233,7 @@ mask_energy = Map.from_geom(dataset.counts.geom, data=mask_data)
 #
 # Masks are stored in `Map` objects. We must first define its geometry
 # and then we can determine which pixels to exclude. Here we consider a
-# region at the Galactic anticentre around the crab nebula.
+# region at the Galactic anti-centre around the crab nebula.
 #
 
 position = SkyCoord(83.633083, 22.0145, unit="deg", frame="icrs")
@@ -281,8 +283,8 @@ print(regions)
 
 # to define the exclusion mask we take the inverse
 mask_map = ~geom.region_mask(regions)
-plt.figure()
 mask_map.plot()
+plt.show()
 
 
 ######################################################################
@@ -321,8 +323,8 @@ regions = [CircleSkyRegion(position, exclusion_radius) for position in positions
 #
 
 mask_map_catalog = ~geom.region_mask(regions)
-plt.figure()
 mask_map_catalog.plot()
+plt.show()
 
 
 ######################################################################
@@ -363,8 +365,8 @@ significance_mask = result["sqrt_ts"] < 5.0
 
 invalid_pixels = np.isnan(result["sqrt_ts"].data)
 significance_mask.data[invalid_pixels] = True
-plt.figure()
 significance_mask.plot()
+plt.show()
 
 
 ######################################################################
@@ -394,8 +396,8 @@ significance_mask.plot()
 #
 
 mask = mask_map | mask_map_catalog
-plt.figure()
 mask.plot()
+plt.show()
 
 
 ######################################################################
@@ -403,17 +405,17 @@ mask.plot()
 #
 
 mask_map &= mask_map_catalog
-plt.figure()
 mask_map.plot()
+plt.show()
 
 
 ######################################################################
-# The NOT operator is represented by `~` symbol:
+# The NOT operator is represented by the ``~`` symbol:
 #
 
 significance_mask_inv = ~significance_mask
-plt.figure()
 significance_mask_inv.plot()
+plt.show()
 
 
 ######################################################################
@@ -427,13 +429,16 @@ significance_mask_inv.plot()
 # `binary_dilate` methods, respectively.
 #
 
-plt.figure()
-mask = significance_mask_inv.binary_erode(width=0.2 * u.deg, kernel="disk")
-mask.plot()
+fig, (ax1, ax2) = plt.subplots(
+    figsize=(11, 5), ncols=2, subplot_kw={"projection": significance_mask_inv.geom.wcs}
+)
 
-plt.figure()
+mask = significance_mask_inv.binary_erode(width=0.2 * u.deg, kernel="disk")
+mask.plot(ax=ax1)
+
 mask = significance_mask_inv.binary_dilate(width=0.2 * u.deg)
-mask.plot()
+mask.plot(ax=ax2)
+plt.show()
 
 
 ######################################################################
@@ -450,12 +455,12 @@ mask.plot()
 # get PSF 95% containment radius
 energy_true = dataset.exposure.geom.axes[0].center
 psf_r95 = dataset.psf.containment_radius(fraction=0.95, energy_true=energy_true)
+plt.show()
+
 # create mask_fit with margin based on PSF
 mask_fit = dataset.counts.geom.boundary_mask(psf_r95.max())
 dataset.mask_fit = mask_fit
-plt.figure()
 dataset.mask_fit.sum_over_axes().plot()
-
 plt.show()
 
 ######################################################################

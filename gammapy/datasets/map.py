@@ -1,15 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
+from scipy.stats import median_abs_deviation as mad
 import astropy.units as u
 from astropy.io import fits
 from astropy.table import Table
 from regions import CircleSkyRegion
 import matplotlib.pyplot as plt
-from gammapy.data import GTI
+from gammapy.data import GTI, PointingMode
 from gammapy.irf import EDispKernelMap, EDispMap, PSFKernel, PSFMap, RecoPSFMap
-from gammapy.maps import Map, MapAxis
-from gammapy.modeling.models import DatasetModels, FoVBackgroundModel
+from gammapy.maps import LabelMapAxis, Map, MapAxes, MapAxis, WcsGeom
+from gammapy.modeling.models import DatasetModels, FoVBackgroundModel, Models
 from gammapy.stats import (
     CashCountsStatistic,
     WStatCountsStatistic,
@@ -24,9 +25,15 @@ from gammapy.utils.scripts import make_name, make_path
 from gammapy.utils.table import hstack_columns
 from .core import Dataset
 from .evaluator import MapEvaluator
+from .metadata import MapDatasetMetaData
 from .utils import get_axes
 
-__all__ = ["MapDataset", "MapDatasetOnOff", "create_map_dataset_geoms"]
+__all__ = [
+    "MapDataset",
+    "MapDatasetOnOff",
+    "create_map_dataset_geoms",
+    "create_map_dataset_from_observation",
+]
 
 log = logging.getLogger(__name__)
 
@@ -39,7 +46,7 @@ MIGRA_AXIS_DEFAULT = MapAxis.from_bounds(
     0.2, 5, nbin=48, node_type="edges", name="migra"
 )
 
-BINSZ_IRF_DEFAULT = 0.2
+BINSZ_IRF_DEFAULT = 0.2 * u.deg
 
 EVALUATION_MODE = "local"
 USE_NPRED_CACHE = True
@@ -50,28 +57,32 @@ def create_map_dataset_geoms(
     energy_axis_true=None,
     migra_axis=None,
     rad_axis=None,
-    binsz_irf=None,
+    binsz_irf=BINSZ_IRF_DEFAULT,
+    reco_psf=False,
 ):
-    """Create map geometries for a `MapDataset`
+    """Create map geometries for a `MapDataset`.
 
     Parameters
     ----------
     geom : `~gammapy.maps.WcsGeom`
-        Reference target geometry in reco energy, used for counts and background maps
+        Reference target geometry with a reconstructed energy axis. It is used for counts and background maps.
+        Additional external data axes can be added to support e.g. event types.
     energy_axis_true : `~gammapy.maps.MapAxis`
-        True energy axis used for IRF maps
+        True energy axis used for IRF maps.
     migra_axis : `~gammapy.maps.MapAxis`
         If set, this provides the migration axis for the energy dispersion map.
-        If not set, an EDispKernelMap is produced instead. Default is None
+        If not set, an EDispKernelMap is produced instead. Default is None.
     rad_axis : `~gammapy.maps.MapAxis`
-        Rad axis for the psf map
+        Rad axis for the PSF map.
     binsz_irf : float
         IRF Map pixel size in degrees.
+    reco_psf : bool
+        Use reconstructed energy for the PSF geometry. Default is False.
 
     Returns
     -------
     geoms : dict
-        Dict with map geometries.
+        Dictionary with map geometries.
     """
     rad_axis = rad_axis or RAD_AXIS_DEFAULT
 
@@ -80,16 +91,28 @@ def create_map_dataset_geoms(
     else:
         energy_axis_true = geom.axes["energy"].copy(name="energy_true")
 
-    binsz_irf = binsz_irf if binsz_irf is not None else BINSZ_IRF_DEFAULT
+    external_axes = geom.axes.drop("energy")
     geom_image = geom.to_image()
-    geom_exposure = geom_image.to_cube([energy_axis_true])
+    geom_exposure = geom_image.to_cube(MapAxes([energy_axis_true]) + external_axes)
     geom_irf = geom_image.to_binsz(binsz=binsz_irf)
-    geom_psf = geom_irf.to_cube([rad_axis, energy_axis_true])
+
+    if reco_psf:
+        geom_psf = geom_irf.to_cube(
+            MapAxes([rad_axis, geom.axes["energy"]]) + external_axes
+        )
+    else:
+        geom_psf = geom_irf.to_cube(
+            MapAxes([rad_axis, energy_axis_true]) + external_axes
+        )
 
     if migra_axis:
-        geom_edisp = geom_irf.to_cube([migra_axis, energy_axis_true])
+        geom_edisp = geom_irf.to_cube(
+            MapAxes([migra_axis, energy_axis_true]) + external_axes
+        )
     else:
-        geom_edisp = geom_irf.to_cube([geom.axes["energy"], energy_axis_true])
+        geom_edisp = geom_irf.to_cube(
+            MapAxes([geom.axes["energy"], energy_axis_true]) + external_axes
+        )
 
     return {
         "geom": geom,
@@ -99,34 +122,207 @@ def create_map_dataset_geoms(
     }
 
 
-class MapDataset(Dataset):
+def _default_energy_axis(observation, energy_bin_per_decade_max=30):
+    # number of bins per decade estimated from the energy resolution
+    # such as diff(ereco.edges)/ereco.center ~ min(eres)
+    etrue = observation.psf.axes[0].edges  # only where psf is defined
+    eres = observation.edisp.to_edisp_kernel(0 * u.deg).get_resolution(etrue)
+    eres = eres[np.isfinite(eres)]
+    if eres.size > 0:
+        # remove outliers
+        beyond_mad = np.median(eres) - mad(eres) * eres.unit
+        eres[eres < beyond_mad] = np.nan
+        nbin_per_decade = np.nan_to_num(
+            int(np.rint(2.0 / np.nanmin(eres.value))), nan=np.inf
+        )
+        nbin_per_decade = np.minimum(nbin_per_decade, energy_bin_per_decade_max)
+    else:
+        nbin_per_decade = energy_bin_per_decade_max
+
+    energy_axis = MapAxis.from_energy_bounds(
+        etrue[0],
+        etrue[-1],
+        nbin=nbin_per_decade,
+        per_decade=True,
+        name="energy",
+    )
+    return energy_axis
+
+
+def _default_binsz(observation, spatial_bin_size_min=0.01 * u.deg):
+    # bin size estimated from the minimal r68 of the psf
+    etrue = observation.psf.axes[0].edges  # only where psf is defined
+    psf_r68 = observation.psf.containment_radius(
+        0.68, energy_true=etrue, offset=0.0 * u.deg
+    )
+    psf_r68 = psf_r68[np.isfinite(psf_r68)]
+    if psf_r68.size > 0:
+        # remove outliers
+        beyond_mad = np.median(psf_r68) - mad(psf_r68) * psf_r68.unit
+        psf_r68[psf_r68 < beyond_mad] = np.nan
+        binsz = np.nan_to_num(np.nanmin(psf_r68), nan=-np.inf)
+        binsz = np.maximum(binsz, spatial_bin_size_min)
+    else:
+        binsz = spatial_bin_size_min
+    return binsz
+
+
+def _default_width(observation, spatial_width_max=12 * u.deg):
+    # width estimated from the rad_max or the offset_max
+    if observation.rad_max is not None:
+        width = 2.0 * np.max(observation.rad_max)
+    else:
+        width = 2.0 * observation.psf.axes["offset"].edges[-1]
+    return np.minimum(width, spatial_width_max)
+
+
+def create_map_dataset_from_observation(
+    observation,
+    models=None,
+    dataset_name=None,
+    energy_axis_true=None,
+    energy_axis=None,
+    energy_bin_per_decade_max=30,
+    spatial_width=None,
+    spatial_width_max=12 * u.deg,
+    spatial_bin_size=None,
+    spatial_bin_size_min=0.01 * u.deg,
+):
+    """Create a MapDataset, if energy axes, spatial width or bin size are not given
+    they are determined automatically from the observation IRFs,
+    but the estimated value cannot exceed the given limits.
+
+    Parameters
+    ----------
+    observation : `~gammapy.data.Observation`
+        Observation to be simulated.
+    models : `~gammapy.modeling.Models`, optional
+        Models. Default is None.
+    dataset_name : str, optional
+        If `models` contains one or multiple `FoVBackgroundModel`
+        it should match the `dataset_name` of the background model to use.
+        Default is None. If None it is determined from the observation ID.
+    energy_axis_true : `~gammapy.maps.MapAxis`, optional
+        True energy axis. Default is None.
+        If None it is determined from the observation IRFs.
+    energy_axis : `~gammapy.maps.MapAxis`, optional
+        Reconstructed energy axis. Default is None.
+        If None it is determined from the observation IRFs.
+    energy_bin_per_decade_max : int, optional
+        Maximal number of bin per decade in energy for the reference dataset
+    spatial_width : `~astropy.units.Quantity`, optional
+        Spatial window size. Default is None.
+         If None it is determined from the observation offset max or rad max.
+    spatial_width_max : `~astropy.quantity.Quantity`, optional
+        Maximal spatial width. Default is 12 degree.
+    spatial_bin_size : `~astropy.units.Quantity`, optional
+        Pixel size. Default is None.
+        If None it is determined from the observation PSF R68.
+    spatial_bin_size_min : `~astropy.quantity.Quantity`, optional
+        Minimal spatial bin size. Default is 0.01 degree.
+
     """
-    Bundle together binned counts, background, IRFs, models and compute a likelihood.
-     Uses Cash statistics by default.
+    from gammapy.makers import MapDatasetMaker
+
+    if spatial_width is None:
+        spatial_width = _default_width(observation, spatial_width_max)
+    if spatial_bin_size is None:
+        spatial_bin_size = _default_binsz(observation, spatial_bin_size_min)
+    if energy_axis is None:
+        energy_axis = _default_energy_axis(observation, energy_bin_per_decade_max)
+    if energy_axis_true is None:
+        energy_axis_true = energy_axis.rename("energy_true")
+
+    if models is None:
+        models = Models()
+
+    if dataset_name is None:
+        dataset_name = f"obs_{observation.obs_id}"
+
+    if not np.any(
+        [
+            isinstance(m, FoVBackgroundModel) and m.datasets_names[0] == dataset_name
+            for m in models
+        ]
+    ):
+        models.append(FoVBackgroundModel(dataset_name=dataset_name))
+
+    if observation.pointing.mode is not PointingMode.POINTING:
+        raise NotImplementedError(
+            "Only observations with fixed pointing in ICRS are supported"
+        )
+    pointing_icrs = observation.pointing.fixed_icrs
+    geom = WcsGeom.create(
+        skydir=pointing_icrs,
+        width=spatial_width,
+        binsz=spatial_bin_size.to_value(u.deg),
+        frame="icrs",
+        axes=[energy_axis],
+    )
+
+    components = ["exposure"]
+    axes = dict(
+        energy_axis_true=energy_axis_true,
+    )
+    if observation.edisp is not None:
+        components.append("edisp")
+        axes["migra_axis"] = observation.edisp.axes["migra"]
+    if observation.bkg is not None:
+        components.append("background")
+    if observation.psf is not None:
+        components.append("psf")
+
+    dataset = MapDataset.create(
+        geom,
+        name=dataset_name,
+        **axes,
+    )
+
+    maker = MapDatasetMaker(selection=components)
+    dataset = maker.run(dataset, observation)
+    dataset.models = models
+    return dataset
+
+
+class MapDataset(Dataset):
+    """Main map dataset for likelihood fitting.
+
+    It bundles together binned counts, background, IRFs in the form of `~gammapy.maps.Map`.
+    A safe mask and a fit mask can be added to exclude bins during the analysis.
+    If models are assigned to it, it can compute predicted counts in each bin of the  counts `Map` and compute
+    the associated statistic function, here the Cash statistic (see `~gammapy.stats.cash`).
+
+    For more information see :ref:`datasets`.
 
     Parameters
     ----------
     models : `~gammapy.modeling.models.Models`
         Source sky models.
     counts : `~gammapy.maps.WcsNDMap` or `~gammapy.utils.fits.HDULocation`
-        Counts cube
+        Counts cube.
     exposure : `~gammapy.maps.WcsNDMap` or `~gammapy.utils.fits.HDULocation`
-        Exposure cube
+        Exposure cube.
     background : `~gammapy.maps.WcsNDMap` or `~gammapy.utils.fits.HDULocation`
-        Background cube
+        Background cube.
     mask_fit : `~gammapy.maps.WcsNDMap` or `~gammapy.utils.fits.HDULocation`
         Mask to apply to the likelihood for fitting.
     psf : `~gammapy.irf.PSFMap` or `~gammapy.utils.fits.HDULocation`
-        PSF kernel
+        PSF kernel.
     edisp : `~gammapy.irf.EDispMap` or `~gammapy.utils.fits.HDULocation`
         Energy dispersion kernel
     mask_safe : `~gammapy.maps.WcsNDMap` or `~gammapy.utils.fits.HDULocation`
         Mask defining the safe data range.
     gti : `~gammapy.data.GTI`
-        GTI of the observation or union of GTI if it is a stacked observation
+        GTI of the observation or union of GTI if it is a stacked observation.
     meta_table : `~astropy.table.Table`
         Table listing information on observations used to create the dataset.
         One line per observation for stacked datasets.
+    meta : `~gammapy.datasets.MapDatasetMetaData`
+        Associated meta data container
+
+
+    Notes
+    -----
 
     If an `HDULocation` is passed the map is loaded lazily. This means the
     map data is only loaded in memory as the corresponding data attribute
@@ -168,7 +364,7 @@ class MapDataset(Dataset):
 
     See Also
     --------
-    MapDatasetOnOff, SpectrumDataset, FluxPointsDataset
+    MapDatasetOnOff, SpectrumDataset, FluxPointsDataset.
     """
 
     stat_type = "cash"
@@ -190,6 +386,9 @@ class MapDataset(Dataset):
         "mask_safe",
         "background",
     ]
+    # TODO: shoule be part of the LazyFitsData no ?
+    gti = None
+    meta_table = None
 
     def __init__(
         self,
@@ -204,6 +403,7 @@ class MapDataset(Dataset):
         gti=None,
         meta_table=None,
         name=None,
+        meta=None,
     ):
         self._name = make_name(name)
         self._evaluators = {}
@@ -234,6 +434,18 @@ class MapDataset(Dataset):
         self.gti = gti
         self.models = models
         self.meta_table = meta_table
+        if meta is None:
+            self._meta = MapDatasetMetaData()
+        else:
+            self._meta = meta
+
+    @property
+    def meta(self):
+        return self._meta
+
+    @meta.setter
+    def meta(self, value):
+        self._meta = value
 
     # TODO: keep or remove?
     @property
@@ -291,12 +503,12 @@ class MapDataset(Dataset):
 
     @property
     def geoms(self):
-        """Map geometries
+        """Map geometries.
 
         Returns
         -------
         geoms : dict
-            Dict of map geometries involved in the dataset.
+            Dictionary of map geometries involved in the dataset.
         """
         geoms = {}
 
@@ -320,12 +532,12 @@ class MapDataset(Dataset):
 
     @property
     def excess(self):
-        """Observed excess: counts-background"""
+        """Observed excess: counts-background."""
         return self.counts - self.background
 
     @models.setter
     def models(self, models):
-        """Models setter"""
+        """Models setter."""
         self._evaluators = {}
 
         if models is not None:
@@ -346,12 +558,12 @@ class MapDataset(Dataset):
 
     @property
     def evaluators(self):
-        """Model evaluators"""
+        """Model evaluators."""
         return self._evaluators
 
     @property
     def _geom(self):
-        """Main analysis geometry"""
+        """Main analysis geometry."""
         if self.counts is not None:
             return self.counts.geom
         elif self.background is not None:
@@ -368,7 +580,7 @@ class MapDataset(Dataset):
 
     @property
     def data_shape(self):
-        """Shape of the counts or background data (tuple)"""
+        """Shape of the counts or background data (tuple)."""
         return self._geom.data_shape
 
     def _energy_range(self, mask_map=None):
@@ -424,12 +636,12 @@ class MapDataset(Dataset):
         return np.nanmin(energy_min_map.quantity), np.nanmax(energy_max_map.quantity)
 
     def npred(self):
-        """Total predicted source and background counts
+        """Total predicted source and background counts.
 
         Returns
         -------
         npred : `Map`
-            Total predicted counts
+            Total predicted counts.
         """
         npred_total = self.npred_signal()
 
@@ -439,7 +651,7 @@ class MapDataset(Dataset):
         return npred_total
 
     def npred_background(self):
-        """Predicted background counts
+        """Predicted background counts.
 
         The predicted background counts depend on the parameters
         of the `FoVBackgroundModel` defined in the dataset.
@@ -467,37 +679,43 @@ class MapDataset(Dataset):
 
     def _background_parameters_changed(self):
         values = self.background_model.parameters.value
-        # TODO: possibly allow for a tolerance here?
         changed = ~np.all(self._background_parameters_cached == values)
+
         if changed:
             self._background_parameters_cached = values
         return changed
 
-    def npred_signal(self, model_name=None):
+    def npred_signal(self, model_names=None, stack=True):
         """Model predicted signal counts.
 
-        If a model name is passed, predicted counts from that component are returned.
-        Else, the total signal counts are returned.
+        If a list of model name is passed, predicted counts from these components are returned.
+        If stack is set to True, a map of the sum of all the predicted counts is returned.
+        If stack is set to False, a map with an additional axis representing the models is returned.
 
         Parameters
         ----------
-        model_name: str
-            Name of  SkyModel for which to compute the npred for.
-            If none, the sum of all components (minus the background model)
-            is returned
+        model_names : list of str
+            List of name of  SkyModel for which to compute the npred.
+            If none, all the SkyModel predicted counts are computed.
+        stack : bool
+            Whether to stack the npred maps upon each other.
 
         Returns
         -------
-        npred_sig: `gammapy.maps.Map`
-            Map of the predicted signal counts
+        npred_sig : `gammapy.maps.Map`
+            Map of the predicted signal counts.
         """
         npred_total = Map.from_geom(self._geom, dtype=float)
 
         evaluators = self.evaluators
-        if model_name is not None:
-            evaluators = {model_name: self.evaluators[model_name]}
+        if model_names is not None:
+            if isinstance(model_names, str):
+                model_names = [model_names]
+            evaluators = {name: self.evaluators[name] for name in model_names}
 
-        for evaluator in evaluators.values():
+        npred_list = []
+        labels = []
+        for evaluator_name, evaluator in evaluators.items():
             if evaluator.needs_update:
                 evaluator.update(
                     self.exposure,
@@ -509,7 +727,17 @@ class MapDataset(Dataset):
 
             if evaluator.contributes:
                 npred = evaluator.compute_npred()
-                npred_total.stack(npred)
+                if stack:
+                    npred_total.stack(npred)
+                else:
+                    npred_geom = Map.from_geom(self._geom, dtype=float)
+                    npred_geom.stack(npred)
+                    labels.append(evaluator_name)
+                    npred_list.append(npred_geom)
+
+        if npred_list != []:
+            label_axis = LabelMapAxis(labels=labels, name="models")
+            npred_total = Map.from_stack(npred_list, axis=label_axis)
 
         return npred_total
 
@@ -525,28 +753,31 @@ class MapDataset(Dataset):
         **kwargs,
     ):
         """
-        Create a MapDataset object with zero filled maps according to the specified geometries
+        Create a MapDataset object with zero filled maps according to the specified geometries.
 
         Parameters
         ----------
         geom : `Geom`
-            geometry for the counts and background maps
+            Geometry for the counts and background maps.
         geom_exposure : `Geom`
-            geometry for the exposure map
+            Geometry for the exposure map. Default is None.
         geom_psf : `Geom`
-            geometry for the psf map
+            Geometry for the PSF map. Default is None.
         geom_edisp : `Geom`
-            geometry for the energy dispersion kernel map.
-            If geom_edisp has a migra axis, this will create an EDispMap instead.
+            Geometry for the energy dispersion kernel map.
+            If geom_edisp has a migra axis, this will create an EDispMap instead. Default is None.
         reference_time : `~astropy.time.Time`
-            the reference time to use in GTI definition
+            The reference time to use in GTI definition. Default is "2000-01-01".
         name : str
-            Name of the returned dataset.
+            Name of the returned dataset. Default is None.
+        kwargs : dict, optional
+            Keyword arguments to be passed.
+
 
         Returns
         -------
         dataset : `MapDataset` or `SpectrumDataset`
-            A dataset containing zero filled maps
+            A dataset containing zero filled maps.
         """
         name = make_name(name)
         kwargs = kwargs.copy()
@@ -582,10 +813,11 @@ class MapDataset(Dataset):
         energy_axis_true=None,
         migra_axis=None,
         rad_axis=None,
-        binsz_irf=None,
+        binsz_irf=BINSZ_IRF_DEFAULT,
         reference_time="2000-01-01",
         name=None,
         meta_table=None,
+        reco_psf=False,
         **kwargs,
     ):
         """Create a MapDataset object with zero filled maps.
@@ -593,28 +825,30 @@ class MapDataset(Dataset):
         Parameters
         ----------
         geom : `~gammapy.maps.WcsGeom`
-            Reference target geometry in reco energy, used for counts and background maps
-        energy_axis_true : `~gammapy.maps.MapAxis`
-            True energy axis used for IRF maps
-        migra_axis : `~gammapy.maps.MapAxis`
+            Reference target geometry in reco energy, used for counts and background maps.
+        energy_axis_true : `~gammapy.maps.MapAxis`, optional
+            True energy axis used for IRF maps. Default is None.
+        migra_axis : `~gammapy.maps.MapAxis`, optional
             If set, this provides the migration axis for the energy dispersion map.
-            If not set, an EDispKernelMap is produced instead. Default is None
-        rad_axis : `~gammapy.maps.MapAxis`
-            Rad axis for the psf map
+            If not set, an EDispKernelMap is produced instead. Default is None.
+        rad_axis : `~gammapy.maps.MapAxis`, optional
+            Rad axis for the PSF map. Default is None.
         binsz_irf : float
-            IRF Map pixel size in degrees.
+            IRF Map pixel size in degrees. Default is BINSZ_IRF_DEFAULT.
         reference_time : `~astropy.time.Time`
-            the reference time to use in GTI definition
-        name : str
-            Name of the returned dataset.
-        meta_table : `~astropy.table.Table`
+            The reference time to use in GTI definition. Default is "2000-01-01".
+        name : str, optional
+            Name of the returned dataset. Default is None.
+        meta_table : `~astropy.table.Table`, optional
             Table listing information on observations used to create the dataset.
-            One line per observation for stacked datasets.
+            One line per observation for stacked datasets. Default is None.
+        reco_psf : bool
+            Use reconstructed energy for the PSF geometry. Default is False.
 
         Returns
         -------
         empty_maps : `MapDataset`
-            A MapDataset containing zero filled maps
+            A MapDataset containing zero filled maps.
 
         Examples
         --------
@@ -623,15 +857,15 @@ class MapDataset(Dataset):
 
         >>> energy_axis = MapAxis.from_energy_bounds(1.0, 10.0, 4, unit="TeV")
         >>> energy_axis_true = MapAxis.from_energy_bounds(
-                    0.5, 20, 10, unit="TeV", name="energy_true"
-                )
+        ...            0.5, 20, 10, unit="TeV", name="energy_true"
+        ...        )
         >>> geom = WcsGeom.create(
-                    skydir=(83.633, 22.014),
-                    binsz=0.02, width=(2, 2),
-                    frame="icrs",
-                    proj="CAR",
-                    axes=[energy_axis]
-                )
+        ...            skydir=(83.633, 22.014),
+        ...            binsz=0.02, width=(2, 2),
+        ...            frame="icrs",
+        ...            proj="CAR",
+        ...            axes=[energy_axis]
+        ...        )
         >>> empty = MapDataset.create(geom=geom, energy_axis_true=energy_axis_true, name="empty")
         """
 
@@ -641,6 +875,7 @@ class MapDataset(Dataset):
             rad_axis=rad_axis,
             migra_axis=migra_axis,
             binsz_irf=binsz_irf,
+            reco_psf=reco_psf,
         )
 
         kwargs.update(geoms)
@@ -650,21 +885,21 @@ class MapDataset(Dataset):
 
     @property
     def mask_safe_image(self):
-        """Reduced mask safe"""
+        """Reduced safe mask."""
         if self.mask_safe is None:
             return None
         return self.mask_safe.reduce_over_axes(func=np.logical_or)
 
     @property
     def mask_fit_image(self):
-        """Reduced mask fit"""
+        """Reduced fit mask."""
         if self.mask_fit is None:
             return None
         return self.mask_fit.reduce_over_axes(func=np.logical_or)
 
     @property
     def mask_image(self):
-        """Reduced mask"""
+        """Reduced mask."""
         if self.mask is None:
             mask = Map.from_geom(self._geom.to_image(), dtype=bool)
             mask.data |= True
@@ -674,7 +909,7 @@ class MapDataset(Dataset):
 
     @property
     def mask_safe_psf(self):
-        """Mask safe for psf maps"""
+        """Safe mask for PSF maps."""
         if self.mask_safe is None or self.psf is None:
             return None
 
@@ -684,7 +919,7 @@ class MapDataset(Dataset):
 
     @property
     def mask_safe_edisp(self):
-        """Mask safe for edisp maps"""
+        """Safe mask for edisp maps."""
         if self.mask_safe is None or self.edisp is None:
             return None
 
@@ -701,19 +936,19 @@ class MapDataset(Dataset):
         return self.mask_safe.interp_to_geom(geom)
 
     def to_masked(self, name=None, nan_to_num=True):
-        """Return masked dataset
+        """Return masked dataset.
 
         Parameters
         ----------
-        name : str
-            Name of the masked dataset.
-        nan_to_num: bool
-            Non-finite values are replaced by zero if True (default).
+        name : str, optional
+            Name of the masked dataset. Default is None.
+        nan_to_num : bool
+            Non-finite values are replaced by zero if True. Default is True.
 
         Returns
         -------
         dataset : `MapDataset` or `SpectrumDataset`
-            Masked dataset
+            Masked dataset.
         """
         dataset = self.__class__.from_geoms(**self.geoms, name=name)
         dataset.stack(self, nan_to_num=nan_to_num)
@@ -726,7 +961,7 @@ class MapDataset(Dataset):
         each dataset safe mask are lost.
 
         The stacking of 2 datasets is implemented as follows. Here, :math:`k`
-        denotes a bin in reconstructed energy and :math:`j = {1,2}` is the dataset number
+        denotes a bin in reconstructed energy and :math:`j = {1,2}` is the dataset number.
 
         The ``mask_safe`` of each dataset is defined as:
 
@@ -741,25 +976,25 @@ class MapDataset(Dataset):
         .. math::
 
             \overline{\mathrm{n_{on}}}_k =  \mathrm{n_{on}}_{1k} \cdot \epsilon_{1k} +
-             \mathrm{n_{on}}_{2k} \cdot \epsilon_{2k}
+             \mathrm{n_{on}}_{2k} \cdot \epsilon_{2k}.
 
             \overline{bkg}_k = bkg_{1k} \cdot \epsilon_{1k} +
-             bkg_{2k} \cdot \epsilon_{2k}
+             bkg_{2k} \cdot \epsilon_{2k}.
 
         The stacked ``safe_mask`` is then:
 
         .. math::
 
-            \overline{\epsilon_k} = \epsilon_{1k} OR \epsilon_{2k}
+            \overline{\epsilon_k} = \epsilon_{1k} OR \epsilon_{2k}.
 
 
         Parameters
         ----------
-        other: `~gammapy.datasets.MapDataset` or `~gammapy.datasets.MapDatasetOnOff`
+        other : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.MapDatasetOnOff`
             Map dataset to be stacked with this one. If other is an on-off
             dataset alpha * counts_off is used as a background model.
-        nan_to_num: bool
-            Non-finite values are replaced by zero if True (default).
+        nan_to_num : bool
+            Non-finite values are replaced by zero if True. Default is True.
 
         """
         if self.counts and other.counts:
@@ -783,7 +1018,7 @@ class MapDataset(Dataset):
 
         if self.stat_type == "cash":
             if self.background and other.background:
-                background = self.npred_background() * self.mask_safe
+                background = self.npred_background()
                 background.stack(
                     other.npred_background(),
                     weights=other.mask_safe,
@@ -814,8 +1049,11 @@ class MapDataset(Dataset):
         elif other.meta_table:
             self.meta_table = other.meta_table.copy()
 
+        if self.meta and other.meta:
+            self.meta.stack(other.meta)
+
     def stat_array(self):
-        """Likelihood per bin given the current model parameters"""
+        """Statistic function value per bin given the current model parameters."""
         return cash(n_on=self.counts.data, mu_on=self.npred().data)
 
     def residuals(self, method="diff", **kwargs):
@@ -823,13 +1061,17 @@ class MapDataset(Dataset):
 
         Parameters
         ----------
-        method: {"diff", "diff/model", "diff/sqrt(model)"}
+        method : {"diff", "diff/model", "diff/sqrt(model)"}
             Method used to compute the residuals. Available options are:
-                - "diff" (default): data - model
-                - "diff/model": (data - model) / model
-                - "diff/sqrt(model)": (data - model) / sqrt(model)
-        **kwargs : dict
-            Keyword arguments forwarded to `Map.smooth()`
+
+            - "diff" (default): data - model.
+            - "diff/model": (data - model) / model.
+            - "diff/sqrt(model)": (data - model) / sqrt(model).
+
+            Default is "diff".
+
+        **kwargs : dict, optional
+            Keyword arguments forwarded to `Map.smooth()`.
 
         Returns
         -------
@@ -876,16 +1118,16 @@ class MapDataset(Dataset):
 
         Parameters
         ----------
-        ax : `~astropy.visualization.wcsaxes.WCSAxes`
-            Axes to plot on.
+        ax : `~astropy.visualization.wcsaxes.WCSAxes`, optional
+            Axes to plot on. Default is None.
         method : {"diff", "diff/model", "diff/sqrt(model)"}
-            Normalization used to compute the residuals, see `MapDataset.residuals`.
+            Normalization used to compute the residuals, see `MapDataset.residuals`. Default is "diff".
         smooth_kernel : {"gauss", "box"}
-            Kernel shape.
+            Kernel shape. Default is "gauss".
         smooth_radius: `~astropy.units.Quantity`, str or float
             Smoothing width given as quantity or float. If a float is given, it
-            is interpreted as smoothing width in pixels.
-        **kwargs : dict
+            is interpreted as smoothing width in pixels. Default is "0.1 deg".
+        **kwargs : dict, optional
             Keyword arguments passed to `~matplotlib.axes.Axes.imshow`.
 
         Returns
@@ -938,13 +1180,13 @@ class MapDataset(Dataset):
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`
-            Axes to plot on.
+        ax : `~matplotlib.axes.Axes`, optional
+            Axes to plot on. Default is None.
         method : {"diff", "diff/sqrt(model)"}
-            Normalization used to compute the residuals, see `SpectrumDataset.residuals`.
-        region: `~regions.SkyRegion` (required)
-            Target sky region.
-        **kwargs : dict
+            Normalization used to compute the residuals, see `SpectrumDataset.residuals`. Default is "diff".
+        region : `~regions.SkyRegion` (required)
+            Target sky region. Default is None.
+        **kwargs : dict, optional
             Keyword arguments passed to `~matplotlib.axes.Axes.errorbar`.
 
         Returns
@@ -1025,19 +1267,19 @@ class MapDataset(Dataset):
         The spectral residuals are extracted from the provided region, and the
         normalization used for its computation can be controlled using the method
         parameter. The region outline is overlaid on the residuals map. If no region is passed,
-        the residuals are computed for the entire map
+        the residuals are computed for the entire map.
 
         Parameters
         ----------
-        ax_spatial : `~astropy.visualization.wcsaxes.WCSAxes`
-            Axes to plot spatial residuals on.
-        ax_spectral : `~matplotlib.axes.Axes`
-            Axes to plot spectral residuals on.
-        kwargs_spatial : dict
-            Keyword arguments passed to `~MapDataset.plot_residuals_spatial`.
-        kwargs_spectral : dict
+        ax_spatial : `~astropy.visualization.wcsaxes.WCSAxes`, optional
+            Axes to plot spatial residuals on. Default is None.
+        ax_spectral : `~matplotlib.axes.Axes`, optional
+            Axes to plot spectral residuals on. Default is None.
+        kwargs_spatial : dict, optional
+            Keyword arguments passed to `~MapDataset.plot_residuals_spatial`. Default is None.
+        kwargs_spectral : dict, optional
             Keyword arguments passed to `~MapDataset.plot_residuals_spectral`.
-            The region should be passed as a dictionary key
+            The region should be passed as a dictionary key. Default is None.
 
         Returns
         -------
@@ -1053,8 +1295,8 @@ class MapDataset(Dataset):
         >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
         >>> reg = CircleSkyRegion(SkyCoord(0,0, unit="deg", frame="galactic"), radius=1.0 * u.deg)
         >>> kwargs_spatial = {"cmap": "RdBu_r", "vmin":-5, "vmax":5, "add_cbar": True}
-        >>> kwargs_spectral = {"region":reg, "markerfacecolor": "blue", "markersize": 8, "marker": "s"}  # noqa: E501
-        >>> dataset.plot_residuals(kwargs_spatial=kwargs_spatial, kwargs_spectral=kwargs_spectral) # doctest: +SKIP noqa: E501
+        >>> kwargs_spectral = {"region":reg, "markerfacecolor": "blue", "markersize": 8, "marker": "s"}
+        >>> dataset.plot_residuals(kwargs_spatial=kwargs_spatial, kwargs_spectral=kwargs_spectral) # doctest: +SKIP
         """
         ax_spatial, ax_spectral = get_axes(
             ax_spatial,
@@ -1080,13 +1322,20 @@ class MapDataset(Dataset):
         return ax_spatial, ax_spectral
 
     def stat_sum(self):
-        """Total likelihood given the current model parameters."""
+        """Total statistic function value given the current model parameters and priors."""
+        prior_stat_sum = 0.0
+        if self.models is not None:
+            prior_stat_sum = self.models.parameters.prior_stat_sum()
+
         counts, npred = self.counts.data.astype(float), self.npred().data
 
         if self.mask is not None:
-            return cash_sum_cython(counts[self.mask.data], npred[self.mask.data])
+            return (
+                cash_sum_cython(counts[self.mask.data], npred[self.mask.data])
+                + prior_stat_sum
+            )
         else:
-            return cash_sum_cython(counts.ravel(), npred.ravel())
+            return cash_sum_cython(counts.ravel(), npred.ravel()) + prior_stat_sum
 
     def fake(self, random_state="random-seed"):
         """Simulate fake counts for the current model and reduced IRFs.
@@ -1097,7 +1346,7 @@ class MapDataset(Dataset):
         ----------
         random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
                 Defines random number generator initialisation.
-                Passed to `~gammapy.utils.random.get_random_state`.
+                Passed to `~gammapy.utils.random.get_random_state`. Default is "random-seed".
         """
         random_state = get_random_state(random_state)
         npred = self.npred()
@@ -1120,6 +1369,7 @@ class MapDataset(Dataset):
 
         header = hdu_primary.header
         header["NAME"] = self.name
+        header.update(self.meta.to_header())
 
         hdulist = fits.HDUList([hdu_primary])
         if self.counts is not None:
@@ -1144,7 +1394,7 @@ class MapDataset(Dataset):
             hdulist += self.mask_fit.to_hdulist(hdu="mask_fit")[exclude_primary]
 
         if self.gti is not None:
-            hdulist.append(fits.BinTableHDU(self.gti.table, name="GTI"))
+            hdulist.append(self.gti.to_table_hdu())
 
         if self.meta_table is not None:
             hdulist.append(fits.BinTableHDU(self.meta_table, name="META_TABLE"))
@@ -1159,10 +1409,12 @@ class MapDataset(Dataset):
         ----------
         hdulist : `~astropy.io.fits.HDUList`
             List of HDUs.
-        name : str
-            Name of the new dataset.
+        name : str, optional
+            Name of the new dataset. Default is None.
+        lazy : bool
+            Whether to lazy load data into memory. Default is False.
         format : {"gadf"}
-            Format the hdulist is given in.
+            Format the hdulist is given in. Default is "gadf".
 
         Returns
         -------
@@ -1171,6 +1423,7 @@ class MapDataset(Dataset):
         """
         name = make_name(name)
         kwargs = {"name": name}
+        kwargs["meta"] = MapDatasetMetaData.from_header(hdulist["PRIMARY"].header)
 
         if "COUNTS" in hdulist:
             kwargs["counts"] = Map.from_hdulist(hdulist, hdu="counts", format=format)
@@ -1187,29 +1440,14 @@ class MapDataset(Dataset):
             )
 
         if "EDISP" in hdulist:
-            edisp_map = Map.from_hdulist(hdulist, hdu="edisp", format=format)
-
-            try:
-                exposure_map = Map.from_hdulist(
-                    hdulist, hdu="edisp_exposure", format=format
-                )
-            except KeyError:
-                exposure_map = None
-
-            if edisp_map.geom.axes[0].name == "energy":
-                kwargs["edisp"] = EDispKernelMap(edisp_map, exposure_map)
-            else:
-                kwargs["edisp"] = EDispMap(edisp_map, exposure_map)
+            kwargs["edisp"] = EDispMap.from_hdulist(
+                hdulist, hdu="edisp", exposure_hdu="edisp_exposure", format=format
+            )
 
         if "PSF" in hdulist:
-            psf_map = Map.from_hdulist(hdulist, hdu="psf", format=format)
-            try:
-                exposure_map = Map.from_hdulist(
-                    hdulist, hdu="psf_exposure", format=format
-                )
-            except KeyError:
-                exposure_map = None
-            kwargs["psf"] = PSFMap(psf_map, exposure_map)
+            kwargs["psf"] = PSFMap.from_hdulist(
+                hdulist, hdu="psf", exposure_hdu="psf_exposure", format=format
+            )
 
         if "MASK_SAFE" in hdulist:
             mask_safe = Map.from_hdulist(hdulist, hdu="mask_safe", format=format)
@@ -1222,7 +1460,7 @@ class MapDataset(Dataset):
             kwargs["mask_fit"] = mask_fit
 
         if "GTI" in hdulist:
-            gti = GTI(Table.read(hdulist, hdu="GTI"))
+            gti = GTI.from_table_hdu(hdulist["GTI"])
             kwargs["gti"] = gti
 
         if "META_TABLE" in hdulist:
@@ -1231,7 +1469,7 @@ class MapDataset(Dataset):
 
         return cls(**kwargs)
 
-    def write(self, filename, overwrite=False):
+    def write(self, filename, overwrite=False, checksum=False):
         """Write Dataset to file.
 
         A MapDataset is serialised using the GADF format with a WCS geometry.
@@ -1241,10 +1479,15 @@ class MapDataset(Dataset):
         ----------
         filename : str
             Filename to write to.
-        overwrite : bool
-            Overwrite file if it exists.
+        overwrite : bool, optional
+            Overwrite existing file. Default is False.
+        checksum : bool
+            When True adds both DATASUM and CHECKSUM cards to the headers written to the file.
+            Default is False.
         """
-        self.to_hdulist().writeto(str(make_path(filename)), overwrite=overwrite)
+        self.to_hdulist().writeto(
+            str(make_path(filename)), overwrite=overwrite, checksum=checksum
+        )
 
     @classmethod
     def _read_lazy(cls, name, filename, cache, format=format):
@@ -1267,7 +1510,7 @@ class MapDataset(Dataset):
             )
 
         kwargs["edisp"] = HDULocation(
-            hdu_class="edisp_kernel_map",
+            hdu_class="edisp_map",
             file_dir=path.parent,
             file_name=path.name,
             hdu_name="EDISP",
@@ -1287,21 +1530,25 @@ class MapDataset(Dataset):
         return cls(**kwargs)
 
     @classmethod
-    def read(cls, filename, name=None, lazy=False, cache=True, format="gadf"):
+    def read(
+        cls, filename, name=None, lazy=False, cache=True, format="gadf", checksum=False
+    ):
         """Read a dataset from file.
 
         Parameters
         ----------
         filename : str
             Filename to read from.
-        name : str
-            Name of the new dataset.
+        name : str, optional
+            Name of the new dataset. Default is None.
         lazy : bool
-            Whether to lazy load data into memory
+            Whether to lazy load data into memory. Default is False.
         cache : bool
-            Whether to cache the data after loading.
+            Whether to cache the data after loading. Default is True.
         format : {"gadf"}
-            Format of the dataset file.
+            Format of the dataset file. Default is "gadf".
+        checksum : bool
+            If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
 
         Returns
         -------
@@ -1319,7 +1566,9 @@ class MapDataset(Dataset):
                 name=ds_name, filename=filename, cache=cache, format=format
             )
         else:
-            with fits.open(str(make_path(filename)), memmap=False) as hdulist:
+            with fits.open(
+                str(make_path(filename)), memmap=False, checksum=checksum
+            ) as hdulist:
                 return cls.from_hdulist(hdulist, name=ds_name, format=format)
 
     @classmethod
@@ -1332,15 +1581,15 @@ class MapDataset(Dataset):
     @property
     def _counts_statistic(self):
         """Counts statistics of the dataset."""
-        return CashCountsStatistic(self.counts, self.background)
+        return CashCountsStatistic(self.counts, self.npred_background())
 
     def info_dict(self, in_safe_data_range=True):
-        """Info dict with summary statistics, summed over energy
+        """Info dict with summary statistics, summed over energy.
 
         Parameters
         ----------
         in_safe_data_range : bool
-            Whether to sum only in the safe energy range
+            Whether to sum only in the safe energy range. Default is True.
 
         Returns
         -------
@@ -1363,7 +1612,7 @@ class MapDataset(Dataset):
 
             if self.background:
                 summed_stat = self._counts_statistic[mask].sum()
-                background = summed_stat.n_bkg
+                background = self.background.data[mask].sum()
                 excess = summed_stat.n_sig
                 sqrt_ts = summed_stat.sqrt_ts
 
@@ -1385,7 +1634,9 @@ class MapDataset(Dataset):
         info["npred_background"] = float(npred_background)
 
         npred_signal = np.nan
-        if self.models:
+        if self.models and (
+            len(self.models) > 1 or not isinstance(self.models[0], FoVBackgroundModel)
+        ):
             npred_signal = self.npred_signal().data[mask].sum()
 
         info["npred_signal"] = float(npred_signal)
@@ -1458,16 +1709,16 @@ class MapDataset(Dataset):
         Parameters
         ----------
         on_region : `~regions.SkyRegion`
-            the input ON region on which to extract the spectrum
+            The input ON region on which to extract the spectrum.
         containment_correction : bool
-            Apply containment correction for point sources and circular on regions
-        name : str
-            Name of the new dataset.
+            Apply containment correction for point sources and circular on regions. Default is False.
+        name : str, optional
+            Name of the new dataset. Default is None.
 
         Returns
         -------
         dataset : `~gammapy.datasets.SpectrumDataset`
-            the resulting reduced dataset
+            The resulting reduced dataset.
         """
         from .spectrum import SpectrumDataset
 
@@ -1520,21 +1771,21 @@ class MapDataset(Dataset):
         """Integrate the map dataset in a given region.
 
         Counts and background of the dataset are integrated in the given region,
-        taking the safe mask into accounts. The exposure is averaged in the
+        taking the safe mask into account. The exposure is averaged in the
         region again taking the safe mask into account. The PSF and energy
         dispersion kernel are taken at the center of the region.
 
         Parameters
         ----------
         region : `~regions.SkyRegion`
-            Region from which to extract the spectrum
-        name : str
-            Name of the new dataset.
+            Region from which to extract the spectrum.
+        name : str, optional
+            Name of the new dataset. Default is None.
 
         Returns
         -------
         dataset : `~gammapy.datasets.MapDataset`
-            the resulting reduced dataset
+            The resulting reduced dataset.
         """
         name = make_name(name)
         kwargs = {"gti": self.gti, "name": name, "meta_table": self.meta_table}
@@ -1596,9 +1847,9 @@ class MapDataset(Dataset):
             Angular sizes of the region in (lon, lat) in that specific order.
             If only one value is passed, a square region is extracted.
         mode : {'trim', 'partial', 'strict'}
-            Mode option for Cutout2D, for details see `~astropy.nddata.utils.Cutout2D`.
-        name : str
-            Name of the new dataset.
+            Mode option for Cutout2D, for details see `~astropy.nddata.utils.Cutout2D`. Default is "trim".
+        name : str, optional
+            Name of the new dataset. Default is None.
 
         Returns
         -------
@@ -1642,10 +1893,10 @@ class MapDataset(Dataset):
         ----------
         factor : int
             Downsampling factor.
-        axis_name : str
-            Which non-spatial axis to downsample. By default only spatial axes are downsampled.
-        name : str
-            Name of the downsampled dataset.
+        axis_name : str, optional
+            Which non-spatial axis to downsample. By default only spatial axes are downsampled. Default is None.
+        name : str, optional
+            Name of the downsampled dataset. Default is None.
 
         Returns
         -------
@@ -1711,8 +1962,10 @@ class MapDataset(Dataset):
         ----------
         pad_width : {sequence, array_like, int}
             Number of pixels padded to the edges of each axis.
-        name : str
-            Name of the padded dataset.
+        mode : str
+            Pad mode. Default is "constant".
+        name : str, optional
+            Name of the padded dataset. Default is None.
 
         Returns
         -------
@@ -1754,17 +2007,17 @@ class MapDataset(Dataset):
         Parameters
         ----------
         slices : dict
-            Dict of axes names and integers or `slice` object pairs. Contains one
+            Dictionary of axes names and integers or `slice` object pairs. Contains one
             element for each non-spatial dimension. For integer indexing the
             corresponding axes is dropped from the map. Axes not specified in the
             dict are kept unchanged.
-        name : str
-            Name of the sliced dataset.
+        name : str, optional
+            Name of the sliced dataset. Default is None.
 
         Returns
         -------
         dataset : `MapDataset` or `SpectrumDataset`
-            Sliced dataset
+            Sliced dataset.
 
         Examples
         --------
@@ -1810,19 +2063,19 @@ class MapDataset(Dataset):
         return self.__class__(**kwargs)
 
     def slice_by_energy(self, energy_min=None, energy_max=None, name=None):
-        """Select and slice datasets in energy range
+        """Select and slice datasets in energy range.
 
         Parameters
         ----------
-        energy_min, energy_max : `~astropy.units.Quantity`
-            Energy bounds to compute the flux point for.
-        name : str
-            Name of the sliced dataset.
+        energy_min, energy_max : `~astropy.units.Quantity`, optional
+            Energy bounds to compute the flux point for. Default is None.
+        name : str, optional
+            Name of the sliced dataset. Default is None.
 
         Returns
         -------
         dataset : `MapDataset`
-            Sliced Dataset
+            Sliced Dataset.
 
         Examples
         --------
@@ -1856,7 +2109,7 @@ class MapDataset(Dataset):
         return self.slice_by_idx(slices, name=name)
 
     def reset_data_cache(self):
-        """Reset data cache to free memory space"""
+        """Reset data cache to free memory space."""
         for name in self._lazy_data_members:
             if self.__dict__.pop(name, False):
                 log.info(f"Clearing {name} cache for dataset {self.name}")
@@ -1870,12 +2123,12 @@ class MapDataset(Dataset):
         ----------
         energy_axis : `~gammapy.maps.MapAxis`
             New reconstructed energy axis.
-        name: str
-            Name of the new dataset.
+        name : str, optional
+            Name of the new dataset. Default is None.
 
         Returns
         -------
-        dataset: `MapDataset` or `SpectrumDataset`
+        dataset : `MapDataset` or `SpectrumDataset`
             Resampled dataset.
         """
         name = make_name(name)
@@ -1922,8 +2175,8 @@ class MapDataset(Dataset):
 
         Parameters
         ----------
-        name : str
-            Name of the new dataset.
+        name : str, optional
+            Name of the new dataset. Default is None.
 
         Returns
         -------
@@ -1933,13 +2186,13 @@ class MapDataset(Dataset):
         energy_axis = self._geom.axes["energy"].squash()
         return self.resample_energy_axis(energy_axis=energy_axis, name=name)
 
-    def peek(self, figsize=(12, 10)):
+    def peek(self, figsize=(12, 8)):
         """Quick-look summary plots.
 
         Parameters
         ----------
         figsize : tuple
-            Size of the figure.
+            Size of the figure. Default is (12, 10).
 
         """
 
@@ -1952,7 +2205,7 @@ class MapDataset(Dataset):
             nrows=2,
             subplot_kw={"projection": self._geom.wcs},
             figsize=figsize,
-            gridspec_kw={"hspace": 0.1, "wspace": 0.1},
+            gridspec_kw={"hspace": 0.25, "wspace": 0.1},
         )
 
         axes = axes.flat
@@ -1977,42 +2230,52 @@ class MapDataset(Dataset):
 
 
 class MapDatasetOnOff(MapDataset):
-    """Map dataset for on-off likelihood fitting. Uses wstat statistics.
+    """Map dataset for on-off likelihood fitting.
+
+    It bundles together the binned on and off counts, the binned IRFs as well as the on and off acceptances.
+
+    A safe mask and a fit mask can be added to exclude bins during the analysis.
+
+    It uses the Wstat statistic (see `~gammapy.stats.wstat`), therefore no background model is needed.
+
+    For more information see :ref:`datasets`.
 
     Parameters
     ----------
     models : `~gammapy.modeling.models.Models`
         Source sky models.
     counts : `~gammapy.maps.WcsNDMap`
-        Counts cube
+        Counts cube.
     counts_off : `~gammapy.maps.WcsNDMap`
-        Ring-convolved counts cube
+        Ring-convolved counts cube.
     acceptance : `~gammapy.maps.WcsNDMap`
-        Acceptance from the IRFs
+        Acceptance from the IRFs.
     acceptance_off : `~gammapy.maps.WcsNDMap`
-        Acceptance off
+        Acceptance off.
     exposure : `~gammapy.maps.WcsNDMap`
-        Exposure cube
+        Exposure cube.
     mask_fit : `~gammapy.maps.WcsNDMap`
         Mask to apply to the likelihood for fitting.
     psf : `~gammapy.irf.PSFKernel`
-        PSF kernel
+        PSF kernel.
     edisp : `~gammapy.irf.EDispKernel`
-        Energy dispersion
+        Energy dispersion.
     mask_safe : `~gammapy.maps.WcsNDMap`
         Mask defining the safe data range.
     gti : `~gammapy.data.GTI`
-        GTI of the observation or union of GTI if it is a stacked observation
+        GTI of the observation or union of GTI if it is a stacked observation.
     meta_table : `~astropy.table.Table`
         Table listing information on observations used to create the dataset.
         One line per observation for stacked datasets.
     name : str
         Name of the dataset.
+    meta : `~gammapy.datasets.MapDatasetMetaData`
+        Associated meta data container
 
 
     See Also
     --------
-    MapDataset, SpectrumDataset, FluxPointsDataset
+    MapDataset, SpectrumDataset, FluxPointsDataset.
 
     """
 
@@ -2034,6 +2297,7 @@ class MapDatasetOnOff(MapDataset):
         mask_safe=None,
         gti=None,
         meta_table=None,
+        meta=None,
     ):
         self._name = make_name(name)
         self._evaluators = {}
@@ -2050,30 +2314,39 @@ class MapDatasetOnOff(MapDataset):
         self.models = models
         self.mask_safe = mask_safe
         self.meta_table = meta_table
+        if meta is None:
+            self._meta = MapDatasetMetaData()
+        else:
+            self._meta = meta
 
     def __str__(self):
         str_ = super().__str__()
 
+        if self.mask_safe:
+            mask = self.mask_safe.data.astype(bool)
+        else:
+            mask = slice(None)
+
         counts_off = np.nan
         if self.counts_off is not None:
-            counts_off = np.sum(self.counts_off.data)
+            counts_off = np.sum(self.counts_off.data[mask])
         str_ += "\t{:32}: {:.0f} \n".format("Total counts_off", counts_off)
 
         acceptance = np.nan
         if self.acceptance is not None:
-            acceptance = np.sum(self.acceptance.data)
+            acceptance = np.sum(self.acceptance.data[mask])
         str_ += "\t{:32}: {:.0f} \n".format("Acceptance", acceptance)
 
         acceptance_off = np.nan
         if self.acceptance_off is not None:
-            acceptance_off = np.sum(self.acceptance_off.data)
+            acceptance_off = np.sum(self.acceptance_off.data[mask])
         str_ += "\t{:32}: {:.0f} \n".format("Acceptance off", acceptance_off)
 
         return str_.expandtabs(tabsize=2)
 
     @property
     def _geom(self):
-        """Main analysis geometry"""
+        """Main analysis geometry."""
         if self.counts is not None:
             return self.counts.geom
         elif self.counts_off is not None:
@@ -2089,30 +2362,30 @@ class MapDatasetOnOff(MapDataset):
 
     @property
     def alpha(self):
-        """Exposure ratio between signal and background regions
+        """Exposure ratio between signal and background regions.
 
-        See :ref:`wstat`
+        See :ref:`wstat`.
 
         Returns
         -------
         alpha : `Map`
-            Alpha map
+            Alpha map.
         """
         with np.errstate(invalid="ignore", divide="ignore"):
-            alpha = self.acceptance / self.acceptance_off
+            data = self.acceptance.quantity / self.acceptance_off.quantity
+        data = np.nan_to_num(data)
 
-        alpha.data = np.nan_to_num(alpha.data)
-        return alpha
+        return Map.from_geom(self._geom, data=data.to_value(""), unit="")
 
     def npred_background(self):
         """Predicted background counts estimated from the marginalized likelihood estimate.
 
-        See :ref:`wstat`
+        See :ref:`wstat`.
 
         Returns
         -------
         npred_background : `Map`
-            Predicted background counts
+            Predicted background counts.
         """
         mu_bkg = self.alpha.data * get_wstat_mu_bkg(
             n_on=self.counts.data,
@@ -2124,34 +2397,34 @@ class MapDatasetOnOff(MapDataset):
         return Map.from_geom(geom=self._geom, data=mu_bkg)
 
     def npred_off(self):
-        """Predicted counts in the off region; mu_bkg/alpha
+        """Predicted counts in the off region; mu_bkg/alpha.
 
-        See :ref:`wstat`
+        See :ref:`wstat`.
 
         Returns
         -------
         npred_off : `Map`
-            Predicted off counts
+            Predicted off counts.
         """
         return self.npred_background() / self.alpha
 
     @property
     def background(self):
-        """Computed as alpha * n_off
+        """Computed as alpha * n_off.
 
-        See :ref:`wstat`
+        See :ref:`wstat`.
 
         Returns
         -------
         background : `Map`
-            Background map
+            Background map.
         """
         if self.counts_off is None:
             return None
         return self.alpha * self.counts_off
 
     def stat_array(self):
-        """Likelihood per bin given the current model parameters"""
+        """Statistic function value per bin given the current model parameters."""
         mu_sig = self.npred_signal().data
         on_stat_ = wstat(
             n_on=self.counts.data,
@@ -2170,35 +2443,37 @@ class MapDatasetOnOff(MapDataset):
     def from_geoms(
         cls,
         geom,
-        geom_exposure,
+        geom_exposure=None,
         geom_psf=None,
         geom_edisp=None,
         reference_time="2000-01-01",
         name=None,
         **kwargs,
     ):
-        """Create an empty `MapDatasetOnOff` object according to the specified geometries
+        """Create an empty `MapDatasetOnOff` object according to the specified geometries.
 
         Parameters
         ----------
         geom : `gammapy.maps.WcsGeom`
-            geometry for the counts, counts_off, acceptance and acceptance_off maps
-        geom_exposure : `gammapy.maps.WcsGeom`
-            geometry for the exposure map
-        geom_psf : `gammapy.maps.WcsGeom`
-            geometry for the psf map
-        geom_edisp : `gammapy.maps.WcsGeom`
-            geometry for the energy dispersion kernel map.
-            If geom_edisp has a migra axis, this will create an EDispMap instead.
+            Geometry for the counts, counts_off, acceptance and acceptance_off maps.
+        geom_exposure : `gammapy.maps.WcsGeom`, optional
+            Geometry for the exposure map. Default is None.
+        geom_psf : `gammapy.maps.WcsGeom`, optional
+            Geometry for the PSF map. Default is None.
+        geom_edisp : `gammapy.maps.WcsGeom`, optional
+            Geometry for the energy dispersion kernel map.
+            If geom_edisp has a migra axis, this will create an EDispMap instead. Default is None.
         reference_time : `~astropy.time.Time`
-            the reference time to use in GTI definition
-        name : str
-            Name of the returned dataset.
+            The reference time to use in GTI definition. Default is "2000-01-01".
+        name : str, optional
+            Name of the returned dataset. Default is None.
+        **kwargs : dict, optional
+            Keyword arguments to be passed.
 
         Returns
         -------
         empty_maps : `MapDatasetOnOff`
-            A MapDatasetOnOff containing zero filled maps
+            A MapDatasetOnOff containing zero filled maps.
         """
         #  TODO: it seems the super() pattern does not work here?
         dataset = MapDataset.from_geoms(
@@ -2232,12 +2507,12 @@ class MapDatasetOnOff(MapDataset):
             Relative background efficiency in the on region.
         acceptance_off : `Map`
             Relative background efficiency in the off region.
-        counts_off : `Map`
+        counts_off : `Map`, optional
             Off counts map . If the dataset provides a background model,
             and no off counts are defined. The off counts are deferred from
-            counts_off / alpha.
-        name : str
-            Name of the returned dataset.
+            counts_off / alpha. Default is None.
+        name : str, optional
+            Name of the returned dataset. Default is None.
 
         Returns
         -------
@@ -2272,21 +2547,23 @@ class MapDatasetOnOff(MapDataset):
         )
 
     def to_map_dataset(self, name=None):
-        """Convert a MapDatasetOnOff to  MapDataset
+        """Convert a MapDatasetOnOff to a MapDataset.
 
-        The background model template is taken as alpha * counts_off
+        The background model template is taken as alpha * counts_off.
 
         Parameters
         ----------
-        name: str
-            Name of the new dataset
+        name : str, optional
+            Name of the new dataset. Default is None.
 
         Returns
         -------
-        dataset: `MapDataset`
-            Map dataset with cash statistics
+        dataset : `MapDataset`
+            Map dataset with cash statistics.
         """
         name = make_name(name)
+
+        background = self.counts_off * self.alpha if self.counts_off else None
 
         return MapDataset(
             counts=self.counts,
@@ -2297,13 +2574,13 @@ class MapDatasetOnOff(MapDataset):
             gti=self.gti,
             mask_fit=self.mask_fit,
             mask_safe=self.mask_safe,
-            background=self.counts_off * self.alpha,
+            background=background,
             meta_table=self.meta_table,
         )
 
     @property
     def _is_stackable(self):
-        """Check if the Dataset contains enough information to be stacked"""
+        """Check if the Dataset contains enough information to be stacked."""
         incomplete = (
             self.acceptance_off is None
             or self.acceptance is None
@@ -2324,20 +2601,20 @@ class MapDatasetOnOff(MapDataset):
         .. math::
             \alpha_\text{stacked} =
             \frac{1}{a_\text{off}} =
-            \frac{\alpha_1\text{OFF}_1 + \alpha_2\text{OFF}_2}{\text{OFF}_1 + OFF_2}
+            \frac{\alpha_1\text{OFF}_1 + \alpha_2\text{OFF}_2}{\text{OFF}_1 + OFF_2}.
 
         Parameters
         ----------
         other : `MapDatasetOnOff`
-            Other dataset
-        nan_to_num: bool
-            Non-finite values are replaced by zero if True (default).
+            Other dataset.
+        nan_to_num : bool
+            Non-finite values are replaced by zero if True. Default is True.
         """
         if not isinstance(other, MapDatasetOnOff):
             raise TypeError("Incompatible types for MapDatasetOnOff stacking")
 
         if not self._is_stackable or not other._is_stackable:
-            raise ValueError("Cannot stack incomplete MapDatsetOnOff.")
+            raise ValueError("Cannot stack incomplete MapDatasetOnOff.")
 
         geom = self.counts.geom
         total_off = Map.from_geom(geom)
@@ -2379,8 +2656,15 @@ class MapDatasetOnOff(MapDataset):
         super().stack(other, nan_to_num=nan_to_num)
 
     def stat_sum(self):
-        """Total likelihood given the current model parameters."""
-        return Dataset.stat_sum(self)
+        """Total statistic function value given the current model parameters.
+
+        If the off counts are passed as None and the elements of the safe mask are False, zero will be returned.
+        Otherwise, the stat sum will be calculated and returned.
+        """
+        if self.counts_off is None and not np.any(self.mask_safe.data):
+            return 0
+        else:
+            return Dataset.stat_sum(self)
 
     def fake(self, npred_background, random_state="random-seed"):
         """Simulate fake counts (on and off) for the current model and reduced IRFs.
@@ -2390,10 +2674,10 @@ class MapDatasetOnOff(MapDataset):
         Parameters
         ----------
         npred_background : `~gammapy.maps.Map`
-                Expected number of background counts in the on region
+                Expected number of background counts in the on region.
         random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
                 Defines random number generator initialisation.
-                Passed to `~gammapy.utils.random.get_random_state`.
+                Passed to `~gammapy.utils.random.get_random_state`. Default is "random-seed".
         """
         random_state = get_random_state(random_state)
         npred = self.npred_signal()
@@ -2452,10 +2736,10 @@ class MapDatasetOnOff(MapDataset):
         ----------
         hdulist : `~astropy.io.fits.HDUList`
             List of HDUs.
-        name : str
-            Name of the new dataset.
+        name : str, optional
+            Name of the new dataset. Default is None.
         format : {"gadf"}
-            Format the hdulist is given in.
+            Format the hdulist is given in. Default is "gadf".
 
         Returns
         -------
@@ -2522,7 +2806,7 @@ class MapDatasetOnOff(MapDataset):
             kwargs["mask_fit"] = mask_fit
 
         if "GTI" in hdulist:
-            gti = GTI(Table.read(hdulist, hdu="GTI"))
+            gti = GTI.from_table_hdu(hdulist["GTI"])
             kwargs["gti"] = gti
 
         if "META_TABLE" in hdulist:
@@ -2531,7 +2815,7 @@ class MapDatasetOnOff(MapDataset):
         return cls(**kwargs)
 
     def info_dict(self, in_safe_data_range=True):
-        """Basic info dict with summary statistics
+        """Basic info dict with summary statistics.
 
         If a region is passed, then a spectrum dataset is
         extracted, and the corresponding info returned.
@@ -2539,7 +2823,7 @@ class MapDatasetOnOff(MapDataset):
         Parameters
         ----------
         in_safe_data_range : bool
-            Whether to sum only in the safe energy range
+            Whether to sum only in the safe energy range. Default is True.
 
         Returns
         -------
@@ -2600,16 +2884,16 @@ class MapDatasetOnOff(MapDataset):
         Parameters
         ----------
         on_region : `~regions.SkyRegion`
-            the input ON region on which to extract the spectrum
+            The input ON region on which to extract the spectrum.
         containment_correction : bool
-            Apply containment correction for point sources and circular on regions
-        name : str
-            Name of the new dataset.
+            Apply containment correction for point sources and circular on regions. Default is False.
+        name : str, optional
+            Name of the new dataset. Default is None.
 
         Returns
         -------
         dataset : `~gammapy.datasets.SpectrumDatasetOnOff`
-            the resulting reduced dataset
+            The resulting reduced dataset.
         """
         from .spectrum import SpectrumDatasetOnOff
 
@@ -2650,9 +2934,9 @@ class MapDatasetOnOff(MapDataset):
             Angular sizes of the region in (lon, lat) in that specific order.
             If only one value is passed, a square region is extracted.
         mode : {'trim', 'partial', 'strict'}
-            Mode option for Cutout2D, for details see `~astropy.nddata.utils.Cutout2D`.
-        name : str
-            Name of the new dataset.
+            Mode option for Cutout2D, for details see `~astropy.nddata.utils.Cutout2D`. Default is "trim".
+        name : str, optional
+            Name of the new dataset. Default is None.
 
         Returns
         -------
@@ -2691,10 +2975,10 @@ class MapDatasetOnOff(MapDataset):
         ----------
         factor : int
             Downsampling factor.
-        axis_name : str
-            Which non-spatial axis to downsample. By default only spatial axes are downsampled.
-        name : str
-            Name of the downsampled dataset.
+        axis_name : str, optional
+            Which non-spatial axis to downsample. By default, only spatial axes are downsampled. Default is None.
+        name : str, optional
+            Name of the downsampled dataset. Default is None.
 
         Returns
         -------
@@ -2734,6 +3018,7 @@ class MapDatasetOnOff(MapDataset):
         )
 
     def pad(self):
+        """Not implemented for MapDatasetOnOff."""
         raise NotImplementedError
 
     def slice_by_idx(self, slices, name=None):
@@ -2744,12 +3029,12 @@ class MapDatasetOnOff(MapDataset):
         Parameters
         ----------
         slices : dict
-            Dict of axes names and integers or `slice` object pairs. Contains one
+            Dictionary of axes names and integers or `slice` object pairs. Contains one
             element for each non-spatial dimension. For integer indexing the
             corresponding axes is dropped from the map. Axes not specified in the
             dict are kept unchanged.
-        name : str
-            Name of the sliced dataset.
+        name : str, optional
+            Name of the sliced dataset. Default is None.
 
         Returns
         -------
@@ -2779,13 +3064,13 @@ class MapDatasetOnOff(MapDataset):
         ----------
         energy_axis : `~gammapy.maps.MapAxis`
             New reco energy axis.
-        name: str
-            Name of the new dataset.
+        name : str, optional
+            Name of the new dataset. Default is None.
 
         Returns
         -------
-        dataset: `SpectrumDataset`
-            Resampled spectrum dataset .
+        dataset : `SpectrumDataset`
+            Resampled spectrum dataset.
         """
         dataset = super().resample_energy_axis(energy_axis, name)
 

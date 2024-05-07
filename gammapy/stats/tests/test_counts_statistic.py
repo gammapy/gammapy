@@ -29,12 +29,13 @@ def test_cash_basic(n_on, mu_bkg, result):
 
 
 values = [
-    (1, 2, [0.69829, 1.35767667]),
-    (5, 1, [1.915916, 2.581106]),
-    (10, 5, [2.838105, 3.504033]),
-    (100, 23, [9.669482, 10.336074]),
-    (1, 20, [0.69829, 1.357677]),
-    (5 * ref_array, 1 * ref_array, [1.915916, 2.581106]),
+    (0, 2, [0, 0.5, 0, 2]),
+    (1, 2, [0.69829, 1.35767667, 0.947531, 3.505241]),
+    (5, 1, [1.915916, 2.581106, 3.250479, 5.893762]),
+    (10, 5, [2.838105, 3.504033, 5.067606, 7.722498]),
+    (100, 23, [9.669482, 10.336074, 18.689488, 21.354971]),
+    (1, 20, [0.69829, 1.357677, 0.947531, 3.505241]),
+    (5 * ref_array, 1 * ref_array, [1.915916, 2.581106, 3.250479, 5.893762]),
 ]
 
 
@@ -46,6 +47,11 @@ def test_cash_errors(n_on, mu_bkg, result):
 
     assert_allclose(errn, result[0], atol=1e-5)
     assert_allclose(errp, result[1], atol=1e-5)
+
+    errn = stat.compute_errn(2)
+    errp = stat.compute_errp(2)
+    assert_allclose(errn, result[2], atol=1e-5)
+    assert_allclose(errp, result[3], atol=1e-5)
 
 
 values = [
@@ -249,3 +255,32 @@ def test_wstat_sum():
     assert stat_sum.n_on.shape == (3,)
     assert_allclose(stat_sum.n_on, (20, 40, 60))
     assert_allclose(stat_sum.n_bkg, (10, 14, 26))
+
+
+def test_CountStatistic_str():
+    cash = CashCountsStatistic(n_on=4, mu_bkg=2)
+    assert "Predicted background counts" in str(cash)
+    assert "CashCountsStatistic" in str(cash)
+    assert "Total significance" in str(cash)
+
+    wstat = WStatCountsStatistic(n_on=5, n_off=4, alpha=0.2, mu_sig=2)
+    assert "Off counts" in str(wstat)
+    assert "alpha " in str(wstat)
+    assert "Total counts " in str(wstat)
+    assert "WStatCountsStatistic" in str(wstat)
+
+
+def test_counts_statistic_infodict():
+    c1 = CashCountsStatistic(n_on=[3, 6], mu_bkg=[2, 1])
+    info_dict = c1.sum().info_dict()
+    assert_allclose(info_dict["n_on"], 9)
+    assert_allclose(info_dict["significance"], 2.788, rtol=1e-3)
+
+    w1 = WStatCountsStatistic(n_on=[3, 6], n_off=[2, 1], alpha=[1, 2])
+    info_dict = w1.info_dict()
+    assert_allclose(info_dict["n_off"], [2, 1])
+    assert_allclose(info_dict["significance"], [0.44872, 1.14942], rtol=1e-3)
+
+    info_dict = w1.sum().info_dict()
+    assert_allclose(info_dict["excess"], 5.0)
+    assert_allclose(info_dict["significance"], 1.288731, rtol=1e-3)

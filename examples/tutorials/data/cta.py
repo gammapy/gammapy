@@ -50,7 +50,7 @@ observability and sensitivity, or how to analyse CTA data.
 Note that the FITS data and IRF format currently used by CTA is the one
 documented at https://gamma-astro-data-formats.readthedocs.io/, and is
 also used by H.E.S.S. and other imaging atmospheric Cherenkov telescopes
-(IACTs). So if you see other Gammapy tutorials using e.g. H.E.S.S.
+(IACTs). So if you see other Gammapy tutorials using e.g. H.E.S.S.
 example data, know that they also apply to CTA, all you have to do is to
 change the loaded data or IRFs to CTA.
 
@@ -67,7 +67,7 @@ from astropy import units as u
 import matplotlib.pyplot as plt
 from IPython.display import display
 from gammapy.data import DataStore, EventList
-from gammapy.irf import EffectiveAreaTable2D, load_cta_irfs
+from gammapy.irf import EffectiveAreaTable2D, load_irf_dict_from_file
 
 ######################################################################
 # Check setup
@@ -177,7 +177,7 @@ print(observation)
 # and the EVENTS header in `events.table.meta` can be used to look up
 # which `MC_ID` corresponds to which emission component.
 #
-# Events can be accessed from the observatiosn object like:
+# Events can be accessed from the observation object like:
 
 events = observation.events
 
@@ -200,7 +200,7 @@ display(events.table[:5])
 #
 
 events.peek()
-
+plt.show()
 
 ######################################################################
 # IRFs
@@ -239,7 +239,7 @@ print(observation.aeff)
 irf_filename = (
     "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
 )
-irfs = load_cta_irfs(irf_filename)
+irfs = load_irf_dict_from_file(irf_filename)
 print(irfs)
 
 
@@ -253,6 +253,7 @@ aeff = EffectiveAreaTable2D.read(irf_filename, hdu="EFFECTIVE AREA")
 print(aeff)
 
 irfs["aeff"].peek()
+plt.show()
 
 # What is the on-axis effective area at 10 TeV?
 print(aeff.evaluate(energy_true="10 TeV", offset="0 deg").to("km2"))
@@ -264,6 +265,7 @@ print(aeff.evaluate(energy_true="10 TeV", offset="0 deg").to("km2"))
 #
 
 irfs["edisp"].peek()
+plt.show()
 
 
 ######################################################################
@@ -272,13 +274,16 @@ irfs["edisp"].peek()
 #
 
 irfs["psf"].peek()
+plt.show()
 
+
+# %%
 # This is how for analysis you could slice out the PSF
 # at a given field of view offset
 irfs["psf"].plot_containment_radius_vs_energy(
     offset=[1] * u.deg, fraction=[0.68, 0.8, 0.95]
 )
-
+plt.show()
 
 ######################################################################
 # Background
@@ -288,6 +293,7 @@ irfs["psf"].plot_containment_radius_vs_energy(
 #
 
 irfs["bkg"].peek()
+plt.show()
 
 print(irfs["bkg"].evaluate(energy="3 TeV", fov_lon="1 deg", fov_lat="0 deg"))
 
@@ -299,7 +305,6 @@ print(irfs["bkg"].evaluate(energy="3 TeV", fov_lon="1 deg", fov_lat="0 deg"))
 irfs["bkg"].plot_at_energy(
     ["100 GeV", "500 GeV", "1 TeV", "3 TeV", "10 TeV", "100 TeV"]
 )
-
 plt.show()
 
 ######################################################################
@@ -311,10 +316,10 @@ plt.show()
 # XML model file format. We are currently developing a YAML based format
 # that improves upon the XML format, to be easier to write and read, add
 # relevant information (units for physical quantities), and omit useless
-# information (e.g. parameter scales in addition to values).
+# information (e.g. parameter scales in addition to values).
 #
 # If you must or want to read the XML model files, you can use
-# e.g. `ElementTree <https://docs.python.org/3/library/xml.etree.elementtree.html>`__
+# e.g. `ElementTree <https://docs.python.org/3/library/xml.etree.elementtree.html>`__
 # from the Python standard library, or
 # `xmltodict <https://github.com/martinblech/xmltodict>`__ if you
 # `pip install xmltodict`. Here’s an example how to load the information
@@ -368,10 +373,10 @@ plt.show()
 
 # !ls caldb/data/cta/prod3b-v2/bcf
 
-# irfs1 = load_cta_irfs("caldb/data/cta/prod3b-v2/bcf/South_z20_50h/irf_file.fits")
+# irfs1 = load_irf_dict_from_file("caldb/data/cta/prod3b-v2/bcf/South_z20_50h/irf_file.fits")
 # irfs1["aeff"].plot_energy_dependence()
 
-# irfs2 = load_cta_irfs("caldb/data/cta/prod3b-v2/bcf/South_z40_50h/irf_file.fits")
+# irfs2 = load_irf_dict_from_file("caldb/data/cta/prod3b-v2/bcf/South_z40_50h/irf_file.fits")
 # irfs2["aeff"].plot_energy_dependence()
 
 
@@ -382,7 +387,7 @@ plt.show()
 # -  Load the EVENTS file for `obs_id=111159` as a
 #    `~gammapy.data.EventList` object.
 # -  Use `~gammapy.data.EventList.table` to find the energy, sky coordinate and time of
-#    the highest-energy envent.
+#    the highest-energy event.
 # -  Use `~gammapy.data.EventList.pointing_radec` to find the pointing position of this
 #    observation, and use `astropy.coordinates.SkyCoord` methods to find
 #    the field of view offset of the highest-energy event.

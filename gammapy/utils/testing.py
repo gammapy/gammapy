@@ -1,11 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Utilities for testing"""
+"""Utilities for testing."""
 import os
 import sys
 from numpy.testing import assert_allclose
+import astropy
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
+from astropy.utils.introspection import minversion
 import matplotlib.pyplot as plt
 
 __all__ = [
@@ -17,6 +19,9 @@ __all__ = [
     "requires_data",
     "requires_dependency",
 ]
+
+
+ASTROPY_LT_5_3 = minversion(astropy, "5.3.dev")
 
 # Cache for `requires_dependency`
 _requires_dependency_cache = {}
@@ -54,7 +59,7 @@ def requires_dependency(name):
 
 
 def has_data(name):
-    """Is a certain set of data available?"""
+    """Check if certain set of data available."""
     if name == "gammapy-extra":
         return "GAMMAPY_EXTRA" in os.environ
     elif name == "gammapy-data":
@@ -104,16 +109,16 @@ def run_cli(cli, args, exit_code=0):
     Parameters
     ----------
     cli : click.Command
-        Click command
+        Click command.
     args : list of str
-        Argument list
-    exit_code : int
-        Expected exit code of the command
+        Argument list.
+    exit_code : int, optional
+        Expected exit code of the command. Default is 0.
 
     Returns
     -------
     result : `click.testing.Result`
-        Result
+        Result.
     """
     from click.testing import CliRunner
 
@@ -141,7 +146,7 @@ def assert_skycoord_allclose(actual, desired):
 def assert_time_allclose(actual, desired, atol=1e-3):
     """Assert all-close for `astropy.time.Time` objects.
 
-    atol is absolute tolerance in seconds.
+    atol : Absolute tolerance in seconds. Default is 1e-3.
     """
     assert isinstance(actual, Time)
     assert isinstance(desired, Time)
@@ -152,8 +157,10 @@ def assert_time_allclose(actual, desired, atol=1e-3):
 
 
 def assert_quantity_allclose(actual, desired, rtol=1.0e-7, atol=None, **kwargs):
-    """Assert all-close for `astropy.units.Quantity` objects.
+    """Assert all-close for `~astropy.units.Quantity` objects.
 
+    Notes
+    -----
     Requires that ``unit`` is identical, not just that quantities
     are allclose taking different units into account.
 
@@ -203,7 +210,7 @@ def _unquantify_allclose_arguments(actual, desired, rtol, atol):
 def mpl_plot_check():
     """Matplotlib plotting test context manager.
 
-    It create a new figure on __enter__ and calls savefig for the
+    Create a new figure on __enter__ and calls savefig for the
     current figure in __exit__. This will trigger a render of the
     Figure, which can sometimes raise errors if there is a problem.
 
@@ -237,3 +244,19 @@ class Checker:
         for check in checks:
             method = getattr(self, self.CHECKS[check])
             yield from method()
+
+
+UNIT_REPLACEMENTS_ASTROPY_5_3 = {
+    "cm2 s TeV": "TeV s cm2",
+    "1 / (cm2 s)": "1 / (s cm2)",
+    "erg / (cm2 s)": "erg / (s cm2)",
+}
+
+
+def modify_unit_order_astropy_5_3(expected_str):
+    """Modify unit order for tests with astropy >= 5.3."""
+    if ASTROPY_LT_5_3:
+        for old, new in UNIT_REPLACEMENTS_ASTROPY_5_3.items():
+            expected_str = expected_str.replace(old, new)
+
+    return expected_str

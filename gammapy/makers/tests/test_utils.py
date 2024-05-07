@@ -6,24 +6,38 @@ from astropy import units as u
 from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.table import Table
 from astropy.time import Time
-from gammapy.data import GTI, EventList, FixedPointingInfo, Observation
+from regions import PointSkyRegion
+from gammapy.data import GTI, DataStore, EventList, FixedPointingInfo, Observation
 from gammapy.irf import (
     Background2D,
     Background3D,
     EffectiveAreaTable2D,
     EnergyDispersion2D,
 )
+from gammapy.makers import WobbleRegionsFinder
 from gammapy.makers.utils import (
     _map_spectrum_weight,
+    guess_instrument_fov,
+    make_counts_off_rad_max,
+    make_counts_rad_max,
     make_edisp_kernel_map,
+    make_effective_livetime_map,
     make_map_background_irf,
     make_map_exposure_true_energy,
+    make_observation_time_map,
     make_theta_squared_table,
 )
-from gammapy.maps import HpxGeom, MapAxis, WcsGeom, WcsNDMap
+from gammapy.maps import HpxGeom, MapAxis, RegionGeom, WcsGeom, WcsNDMap
 from gammapy.modeling.models import ConstantSpectralModel
 from gammapy.utils.testing import requires_data
 from gammapy.utils.time import time_ref_to_dict
+
+
+@pytest.fixture(scope="session")
+def observations():
+    """Example observation list for testing."""
+    datastore = DataStore.from_dir("$GAMMAPY_DATA/magic/rad_max/data")
+    return datastore.get_observations(required_irf="point-like")[0]
 
 
 @pytest.fixture(scope="session")
@@ -100,28 +114,20 @@ def fixed_pointing_info():
 
 
 @pytest.fixture(scope="session")
-def fixed_pointing_info_aligned(fixed_pointing_info):
+def fixed_pointing_info_aligned():
     # Create Fixed Pointing Info aligned between sky and horizon coordinates
     # (removes rotation in FoV and results in predictable solid angles)
-    origin = SkyCoord(
-        0,
-        0,
-        unit="deg",
-        frame="icrs",
-        location=EarthLocation(lat=90 * u.deg, lon=0 * u.deg),
-        obstime=Time("2000-9-21 12:00:00"),
+    time_start = Time("2000-09-21 11:55:00")
+    time_stop = Time("2000-09-12 12:05:00")
+    location = EarthLocation(lat=90 * u.deg, lon=0 * u.deg)
+    fixed_icrs = SkyCoord(0 * u.deg, 0 * u.deg, frame="icrs")
+
+    return FixedPointingInfo(
+        fixed_icrs=fixed_icrs,
+        location=location,
+        time_start=time_start,
+        time_stop=time_stop,
     )
-    fpi = fixed_pointing_info
-    meta = fpi.meta.copy()
-    meta["RA_PNT"] = origin.icrs.ra
-    meta["DEC_PNT"] = origin.icrs.dec
-    meta["GEOLON"] = origin.location.lon
-    meta["GEOLAT"] = origin.location.lat
-    meta["ALTITUDE"] = origin.location.height
-    time_start = origin.obstime.datetime - fpi.time_ref.datetime
-    meta["TSTART"] = time_start.total_seconds()
-    meta["TSTOP"] = meta["TSTART"] + 60
-    return FixedPointingInfo(meta)
 
 
 @pytest.fixture(scope="session")
@@ -164,7 +170,7 @@ def bkg_3d_custom(symmetry="constant", fov_align="RADEC"):
         data=data,
         unit=u.Unit("s-1 MeV-1 sr-1"),
         interp_kwargs=dict(bounds_error=False, fill_value=None, values_scale="log"),
-        fov_alignment=fov_align
+        fov_alignment=fov_align,
         # allow extrapolation for symmetry tests
     )
 
@@ -172,7 +178,9 @@ def bkg_3d_custom(symmetry="constant", fov_align="RADEC"):
 @requires_data()
 def test_map_background_2d(bkg_2d, fixed_pointing_info):
     axis = MapAxis.from_edges([0.1, 1, 10], name="energy", unit="TeV", interp="log")
-    skydir = fixed_pointing_info.radec.galactic
+
+    obstime = Time("2020-01-01T20:00:00")
+    skydir = fixed_pointing_info.get_icrs(obstime).galactic
     geom = WcsGeom.create(
         npix=(3, 3), binsz=4, axes=[axis], skydir=skydir, frame="galactic"
     )
@@ -192,17 +200,20 @@ def test_map_background_2d(bkg_2d, fixed_pointing_info):
         ontime="42 s",
         bkg=bkg_2d,
         geom=geom,
+        obstime=obstime,
     )
     assert_allclose(bkg.data, bkg_fpi.data, rtol=1e-5)
 
 
 def make_map_background_irf_with_symmetry(fpi, symmetry="constant"):
     axis = MapAxis.from_edges([0.1, 1, 10], name="energy", unit="TeV", interp="log")
+    obstime = Time("2020-01-01T20:00:00")
     return make_map_background_irf(
         pointing=fpi,
         ontime="42 s",
         bkg=bkg_3d_custom(symmetry),
-        geom=WcsGeom.create(npix=(3, 3), binsz=4, axes=[axis], skydir=fpi.radec),
+        geom=WcsGeom.create(npix=(3, 3), binsz=4, axes=[axis], skydir=fpi.fixed_icrs),
+        obstime=obstime,
     )
 
 
@@ -249,9 +260,10 @@ def test_make_map_background_irf(bkg_3d, pars, fixed_pointing_info):
         geom=geom(
             map_type=pars["map_type"],
             ebounds=pars["ebounds"],
-            skydir=fixed_pointing_info.radec,
+            skydir=fixed_pointing_info.fixed_icrs,
         ),
         oversampling=10,
+        obstime=Time("2020-01-01T20:00"),
     )
 
     assert m.data.shape == pars["shape"]
@@ -303,7 +315,7 @@ def test_make_map_background_irf_asym(fixed_pointing_info_aligned):
 @requires_data()
 def test_make_map_background_irf_skycoord(fixed_pointing_info_aligned):
     axis = MapAxis.from_edges([0.1, 1, 10], name="energy", unit="TeV", interp="log")
-    position = fixed_pointing_info_aligned.radec
+    position = fixed_pointing_info_aligned.fixed_icrs
     with pytest.raises(TypeError):
         make_map_background_irf(
             pointing=position,
@@ -333,6 +345,38 @@ def test_make_edisp_kernel_map():
     assert_allclose(kernel.pdf_matrix[:, 2], (0.0, 0.0, 0.0, 0.0, 1.0, 1.0), atol=1e-14)
 
 
+@requires_data()
+def test_make_counts_rad_max(observations):
+    pos = SkyCoord(083.6331144560900, +22.0144871383400, unit="deg", frame="icrs")
+    on_region = PointSkyRegion(pos)
+    energy_axis = MapAxis.from_energy_bounds(
+        0.05, 100, nbin=6, unit="TeV", name="energy"
+    )
+    geome = RegionGeom.create(region=on_region, axes=[energy_axis])
+    counts = make_counts_rad_max(geome, observations.rad_max, observations.events)
+
+    assert_allclose(np.squeeze(counts.data), np.array([547, 188, 52, 8, 0, 0]))
+
+
+@requires_data()
+def test_make_counts_off_rad_max(observations):
+    pos = SkyCoord(83.6331, +22.0145, unit="deg", frame="icrs")
+    on_region = PointSkyRegion(pos)
+    energy_axis = MapAxis.from_energy_bounds(
+        0.05, 100, nbin=6, unit="TeV", name="energy"
+    )
+
+    region_finder = WobbleRegionsFinder(n_off_regions=3)
+    region_off, wcs = region_finder.run(on_region, pos)
+    geom_off = RegionGeom.from_regions(regions=region_off, axes=[energy_axis], wcs=wcs)
+
+    counts_off = make_counts_off_rad_max(
+        geom_off=geom_off, rad_max=observations.rad_max, events=observations.events
+    )
+
+    assert_allclose(np.squeeze(counts_off.data), np.array([1641, 564, 156, 24, 0, 0]))
+
+
 class TestTheta2Table:
     def setup_class(self):
         self.observations = []
@@ -342,19 +386,34 @@ class TestTheta2Table:
             events["DEC"] = sign * ([0.0, 0.05, 0.9, 10.0, 10.0] * u.deg)
             events["ENERGY"] = [1.0, 1.0, 1.5, 1.5, 10.0] * u.TeV
             events["OFFSET"] = [0.1, 0.1, 0.5, 1.0, 1.5] * u.deg
+            events["TIME"] = [0.1, 0.2, 0.3, 0.4, 0.5] * u.s
 
             obs_info = dict(
-                RA_PNT=0 * u.deg,
-                DEC_PNT=sign * 0.5 * u.deg,
+                OBS_ID=0,
                 DEADC=1,
+                GEOLON=16.500222222222224,
+                GEOLAT=-23.271777777777775,
+                ALTITUDE=1834.9999999997833,
             )
-            events.meta.update(obs_info)
+
             meta = time_ref_to_dict("2010-01-01")
-            gti_table = Table({"START": [1], "STOP": [3]}, meta=meta)
-            gti = GTI(gti_table)
+            obs_info.update(meta)
+            events.meta.update(obs_info)
+            gti = GTI.create(
+                start=[1] * u.s,
+                stop=[3] * u.s,
+                reference_time=Time("2010-01-01", scale="tt"),
+            )
+            pointing = FixedPointingInfo(
+                fixed_icrs=SkyCoord(0 * u.deg, sign * 0.5 * u.deg),
+            )
 
             self.observations.append(
-                Observation(events=EventList(events), obs_info=obs_info, gti=gti)
+                Observation(
+                    events=EventList(events),
+                    gti=gti,
+                    pointing=pointing,
+                )
             )
 
     def test_make_theta_squared_table(self):
@@ -414,3 +473,60 @@ class TestTheta2Table:
         assert_allclose(theta2_table_two_obs["acceptance"], acceptance_two_obs)
         assert_allclose(theta2_table_two_obs["acceptance_off"], acceptance_off_two_obs)
         assert_allclose(theta2_table["alpha"], alpha_two_obs)
+
+
+@requires_data()
+def test_guess_instrument_fov(observations):
+    with pytest.raises(ValueError):
+        guess_instrument_fov(observations)
+
+    ds = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
+    obs_hess = ds.obs(23523)
+
+    assert_allclose(guess_instrument_fov(obs_hess), 2.5 * u.deg)
+
+    obs_no_aeff = obs_hess.copy(in_memory=True, aeff=None)
+    with pytest.raises(ValueError):
+        guess_instrument_fov(obs_no_aeff)
+
+
+@requires_data()
+def test_make_observation_time_map():
+    ds = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
+    obs_id = ds.obs_table["OBS_ID"][ds.obs_table["OBJECT"] == "MSH 15-5-02"][:3]
+    observations = ds.get_observations(obs_id)
+    source_pos = SkyCoord(228.32, -59.08, unit="deg")
+    geom = WcsGeom.create(
+        skydir=source_pos,
+        binsz=0.02,
+        width=(6, 6),
+        frame="icrs",
+        proj="CAR",
+    )
+    obs_time = make_observation_time_map(observations, geom, offset_max=2.5 * u.deg)
+    obs_time_center = obs_time.get_by_coord(source_pos)
+    assert_allclose(obs_time_center, 1.2847, rtol=1e-3)
+    assert obs_time.unit == u.hr
+
+
+@requires_data()
+def test_make_effective_livetime_map():
+    ds = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
+    obs_id = ds.obs_table["OBS_ID"][ds.obs_table["OBJECT"] == "MSH 15-5-02"][:3]
+    observations = ds.get_observations(obs_id)
+    source_pos = SkyCoord(228.32, -59.08, unit="deg")
+    energy_axis_true = MapAxis.from_energy_bounds(
+        10 * u.GeV, 1 * u.TeV, nbin=2, name="energy_true"
+    )
+    geom = WcsGeom.create(
+        skydir=source_pos,
+        binsz=0.02,
+        width=(6, 6),
+        frame="icrs",
+        proj="CAR",
+        axes=[energy_axis_true],
+    )
+    obs_time = make_effective_livetime_map(observations, geom, offset_max=2.5 * u.deg)
+    obs_time_center = obs_time.get_by_coord((source_pos, energy_axis_true.center))
+    assert_allclose(obs_time_center, [0, 1.2847], rtol=1e-3)
+    assert obs_time.unit == u.hr

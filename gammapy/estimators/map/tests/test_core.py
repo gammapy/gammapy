@@ -333,7 +333,7 @@ def test_flux_map_read_write_gti(tmp_path, partial_wcs_flux_map, reference_model
     new_fluxmap = FluxMaps.read(tmp_path / "tmp.fits")
 
     assert len(new_fluxmap.gti.table) == 2
-    assert_allclose(gti.table["START"], start.to_value("s"))
+    assert_allclose(gti.met_start.to_value("s"), start.to_value("s"))
 
 
 @pytest.mark.xfail
@@ -354,11 +354,34 @@ def test_flux_map_read_write_missing_reference_model(
     fluxmap = FluxMaps(wcs_flux_map, reference_model)
     fluxmap.write(tmp_path / "tmp.fits")
 
-    hdulist = fits.open(tmp_path / "tmp.fits")
-    hdulist[0].header["MODEL"] = "non_existent"
+    with fits.open(tmp_path / "tmp.fits") as hdulist:
+        hdulist[0].header["MODEL"] = "non_existent"
 
     with pytest.raises(FileNotFoundError):
         _ = FluxMaps.from_hdulist(hdulist)
+
+
+def test_flux_map_read_checksum(tmp_path, wcs_flux_map, reference_model):
+    fluxmap = FluxMaps(wcs_flux_map, reference_model)
+    fluxmap.write(
+        tmp_path / "tmp.fits",
+        filename_model=tmp_path / "test.yaml",
+        checksum=True,
+        overwrite=True,
+    )
+
+    path = tmp_path / "test.yaml"
+    text = path.read_text()
+    text.replace("1.0e-12", "1.2e-12")
+
+    with open(tmp_path / "test.yaml", "r+") as file:
+        lines = file.read()
+        lines.replace("1.0e-12", "1.2e-12")
+        file.seek(0)
+        file.write(lines)
+
+    with pytest.warns(UserWarning):
+        FluxMaps.read(tmp_path / "tmp.fits", checksum=True)
 
 
 @pytest.mark.xfail
@@ -456,3 +479,43 @@ def test_flux_map_iter_by_axis():
     assert_allclose(split_maps[0].gti.time_stop.value, 51545.3340, rtol=1e-3)
 
     assert split_maps[0].reference_model == ref_map.reference_model
+
+
+def test_slice_by_coord():
+    axis1 = MapAxis.from_energy_edges((0.1, 1.0, 5.0, 10.0), unit="TeV")
+    axis2 = TimeMapAxis.from_time_bounds(
+        Time(51544, format="mjd"), Time(51548, format="mjd"), 3
+    )
+    geom = RegionGeom.create("galactic;circle(0, 0, 0.1)", axes=[axis1, axis2])
+
+    maps = Maps.from_geom(
+        geom=geom, names=["norm", "norm_err", "norm_errn", "norm_errp", "norm_ul"]
+    )
+    val = np.ones(geom.data_shape)
+
+    maps["norm"].data = val
+    maps["norm_err"].data = 0.1 * val
+    maps["norm_errn"].data = 0.2 * val
+    maps["norm_errp"].data = 0.15 * val
+    maps["norm_ul"].data = 2.0 * val
+
+    start = u.Quantity([1, 2, 3], "day")
+    stop = u.Quantity([1.5, 2.5, 3.9], "day")
+    gti = GTI.create(start, stop)
+    ref_map = FluxMaps(maps, gti=gti, reference_model=PowerLawSpectralModel())
+
+    sliced_map = ref_map.slice_by_coord(
+        {"time": slice(Time(51544, format="mjd"), Time(51546, format="mjd"))}
+    )
+    assert sliced_map.available_quantities == ref_map.available_quantities
+    assert_allclose(sliced_map.gti.time_stop.value, 51545.3340, rtol=1e-3)
+    assert sliced_map.reference_model == ref_map.reference_model
+
+    sliced_map2 = ref_map.slice_by_coord({"energy": slice(0.5 * u.TeV, 5.0 * u.TeV)})
+    assert sliced_map2.geom.axes["energy"].nbin == 1
+
+    sliced_map3 = ref_map.slice_by_coord({"energy": slice(1.0 * u.TeV, 10.0 * u.TeV)})
+    assert sliced_map3.geom.axes["energy"].nbin == 2
+
+    sliced_map4 = ref_map.slice_by_coord({"time": slice(1 * u.d, 3 * u.d)})
+    assert sliced_map4.geom.axes["time"].nbin == 1

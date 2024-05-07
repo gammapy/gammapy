@@ -7,14 +7,15 @@ on:
 
 jobs:
   release-pypi:
+    if: github.repository_owner == 'gammapy'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Update tags
-        run: git fetch --tags
+        run: git fetch --tags --force
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: 3.9
       - name: Install dependencies
@@ -27,35 +28,40 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.PYPI_TOKEN }}
+
   release-github:
+    if: github.repository_owner == 'gammapy' && !contains(github.ref_name, 'rc')
     needs: release-pypi
     runs-on: ubuntu-latest
-    if:  ${{ !contains(github.ref_name, 'rc') }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           body: |
             Gammapy is a Python package for gamma-ray astronomy. See [changelog for this release](https://github.com/gammapy/gammapy/blob/main/docs/release-notes/${{ github.ref_name }}.rst).
+
   dispatch-docs:
+    if: github.repository_owner == 'gammapy'
     needs: release-pypi
     runs-on: ubuntu-latest
     steps:
       - name: Dispatch Gammapy Docs
-        uses: peter-evans/repository-dispatch@v2
+        uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.REMOTE_DISPATCH }}
           repository: gammapy/gammapy-docs
           event-type: release
           client-payload: '{"release": "${{ github.ref_name }}"}'
+
   dispatch-webpage:
+    if: github.repository_owner == 'gammapy'
     needs: release-github
     runs-on: ubuntu-latest
     steps:
       - name: Dispatch Gammapy Webpage
-        uses: peter-evans/repository-dispatch@v2
+        uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.REMOTE_DISPATCH }}
           repository: gammapy/gammapy-webpage

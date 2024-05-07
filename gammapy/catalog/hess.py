@@ -47,7 +47,7 @@ class SourceCatalogObjectHGPSComponent(SourceCatalogObject):
         return f"{self.__class__.__name__}({self.name!r})"
 
     def __str__(self):
-        """Pretty-print source data"""
+        """Pretty-print source data."""
         d = self.data
         ss = "Component {}:\n".format(d["Component_ID"])
         fmt = "{:<20s} : {:8.3f} +/- {:.3f} deg\n"
@@ -64,11 +64,11 @@ class SourceCatalogObjectHGPSComponent(SourceCatalogObject):
 
     @property
     def name(self):
-        """Source name (str)"""
+        """Source name as a string."""
         return self.data[self._source_name_key]
 
     def spatial_model(self):
-        """Component spatial model (`~gammapy.modeling.models.GaussianSpatialModel`)."""
+        """Component spatial model as a `~gammapy.modeling.models.GaussianSpatialModel` object."""
         d = self.data
         tag = "GaussianSpatialModel"
         pars = {
@@ -101,7 +101,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
     @property
     def flux_points(self):
-        """Flux points (`~gammapy.estimators.FluxPoints`)."""
+        """Flux points as a `~gammapy.estimators.FluxPoints` object."""
         reference_model = SkyModel(spectral_model=self.spectral_model(), name=self.name)
         return FluxPoints.from_table(
             self.flux_points_table,
@@ -109,12 +109,12 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         )
 
     def info(self, info="all"):
-        """Info string.
+        """Information string.
 
         Parameters
         ----------
         info : {'all', 'basic', 'map', 'spec', 'flux_points', 'components', 'associations', 'id'}
-            Comma separated list of options
+            Comma separated list of options.
         """
         if info == "all":
             info = "basic,associations,id,map,spec,flux_points,components"
@@ -138,7 +138,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         return ss
 
     def _info_basic(self):
-        """Print basic info."""
+        """Print basic information."""
         d = self.data
         ss = "\n*** Basic info ***\n\n"
         ss += "Catalog row index (zero-based) : {}\n".format(self.row_index)
@@ -163,7 +163,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         return ss + "\n"
 
     def _info_map(self):
-        """Print info from map analysis."""
+        """Print information from map analysis."""
         d = self.data
         ss = "\n*** Info from map analysis ***\n\n"
 
@@ -268,7 +268,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         return ss
 
     def _info_spec(self):
-        """Print info from spectral analysis."""
+        """Print information from spectral analysis."""
         d = self.data
         ss = "\n*** Info from spectral analysis ***\n\n"
 
@@ -389,7 +389,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         return ss
 
     def _info_flux_points(self):
-        """Print flux point results"""
+        """Print flux point results."""
         d = self.data
         ss = "\n*** Flux points info ***\n\n"
         ss += "Number of flux points: {}\n".format(d["N_Flux_Points"])
@@ -401,7 +401,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         return ss + "\n"
 
     def _info_components(self):
-        """Print info about the components."""
+        """Print information about the components."""
         ss = "\n*** Gaussian component info ***\n\n"
         ss += "Number of components: {}\n".format(len(self.components))
         ss += "{:<20s} : {}\n\n".format("Spatial components", self.data["Components"])
@@ -414,7 +414,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
     @property
     def energy_range(self):
-        """Spectral model energy range (`~astropy.units.Quantity` with length 2)."""
+        """Spectral model energy range as a `~astropy.units.Quantity` with length 2."""
         energy_min, energy_max = (
             self.data["Energy_Range_Spec_Min"],
             self.data["Energy_Range_Spec_Max"],
@@ -429,7 +429,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         return u.Quantity([energy_min, energy_max], "TeV")
 
     def spectral_model(self, which="best"):
-        """Spectral model (`~gammapy.modeling.models.SpectralModel`).
+        """Spectral model as a `~gammapy.modeling.models.SpectralModel` object.
 
         One of the following models (given by ``Spectral_Model`` in the catalog):
 
@@ -439,7 +439,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         Parameters
         ----------
         which : {'best', 'pl', 'ecpl'}
-            Which spectral model
+            Which spectral model.
         """
         data = self.data
 
@@ -486,7 +486,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         return model
 
     def spatial_model(self):
-        """Spatial model (`~gammapy.modeling.models.SpatialModel`).
+        """Spatial model as a `~gammapy.modeling.models.SpatialModel` object.
 
         One of the following models (given by ``Spatial_Model`` in the catalog):
 
@@ -530,14 +530,13 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         Parameters
         ----------
         which : {'best', 'pl', 'ecpl'}
-            Which spectral model
+            Which spectral model.
 
         Returns
         -------
         sky_model : `~gammapy.modeling.models.Models`
            Models of the catalog object.
         """
-
         models = self.components_models(which=which)
         if len(models) > 1:
             geom = self._get_components_geom(models)
@@ -551,19 +550,18 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         Parameters
         ----------
         which : {'best', 'pl', 'ecpl'}
-            Which spectral model
+            Which spectral model.
 
         linked : bool
-             Each sub-component of a source is given as a different `SkyModel`
-             If True the spectral parameters except the mormalisation are linked.
-             Default is False
+             Each subcomponent of a source is given as a different `SkyModel`.
+             If True, the spectral parameters except the normalisation are linked.
+             Default is False.
 
         Returns
         -------
         sky_model : `~gammapy.modeling.models.Models`
            Models of the catalog object.
         """
-
         spatial_type = self.data["Spatial_Model"]
         missing_size = (
             spatial_type == "Gaussian" and self.spatial_model().sigma.value == 0
@@ -610,7 +608,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
     @property
     def flux_points_table(self):
-        """Flux points table (`~astropy.table.Table`)."""
+        """Flux points table as a `~astropy.table.Table`."""
         table = Table()
         table.meta["sed_type_init"] = "dnde"
         table.meta["n_sigma_ul"] = 2
@@ -645,7 +643,7 @@ class SourceCatalogHGPS(SourceCatalog):
 
         curl -O https://www.mpi-hd.mpg.de/hfm/HESS/hgps/data/hgps_catalog_v1.fits.gz
 
-    Then you can load it up like this:
+    Then you can load it like this:
 
     >>> import matplotlib.pyplot as plt
     >>> from gammapy.catalog import SourceCatalogHGPS
@@ -729,7 +727,7 @@ class SourceCatalogHGPS(SourceCatalog):
     Flux points table:
     <BLANKLINE>
     e_ref  e_min  e_max        dnde         dnde_errn       dnde_errp        dnde_ul     is_ul
-     TeV    TeV    TeV   1 / (cm2 s TeV) 1 / (cm2 s TeV) 1 / (cm2 s TeV) 1 / (cm2 s TeV)
+     TeV    TeV    TeV   1 / (TeV s cm2) 1 / (TeV s cm2) 1 / (TeV s cm2) 1 / (TeV s cm2)
     ------ ------ ------ --------------- --------------- --------------- --------------- -----
      0.332  0.215  0.511       3.048e-11       6.890e-12       7.010e-12       4.455e-11 False
      0.787  0.511  1.212       5.383e-12       6.655e-13       6.843e-13       6.739e-12 False
@@ -764,17 +762,14 @@ class SourceCatalogHGPS(SourceCatalog):
       HESS J1843-033                3FGL     3FGL J1843.7-0322   0.178442
       HESS J1843-033                3FGL     3FGL J1844.3-0344   0.242835
       HESS J1843-033                 SNR             G28.6-0.1   0.330376
-    <BLANKLINE>
+
 
     Access source spectral data and plot it:
 
     >>> ax = plt.subplot()
-    >>> source.spectral_model().plot(source.energy_range, ax=ax) #doctest:+ELLIPSIS
-    <AxesSubplot:...xlabel='Energy [TeV]', ylabel='dnde [1 / (cm2 s TeV)]'>
-    >>> source.spectral_model().plot_error(source.energy_range, ax=ax) #doctest:+ELLIPSIS
-    <AxesSubplot:...xlabel='Energy [TeV]', ylabel='dnde [1 / (cm2 s TeV)]'>
-    >>> source.flux_points.plot(ax=ax) #doctest:+ELLIPSIS
-    <AxesSubplot:...xlabel='Energy [TeV]', ylabel='dnde [1 / (cm2 s TeV)]'>
+    >>> source.spectral_model().plot(source.energy_range, ax=ax) # doctest: +SKIP
+    >>> source.spectral_model().plot_error(source.energy_range, ax=ax) # doctest: +SKIP
+    >>> source.flux_points.plot(ax=ax) # doctest: +SKIP
 
     Gaussian component information can be accessed as well,
     either via the source, or via the catalog:
@@ -815,31 +810,31 @@ class SourceCatalogHGPS(SourceCatalog):
 
     @property
     def table_components(self):
-        """Gaussian component table (`~astropy.table.Table`)"""
+        """Gaussian component table as a `~astropy.table.Table`."""
         return self._table_components
 
     @property
     def table_associations(self):
-        """Source association table (`~astropy.table.Table`)"""
+        """Source association table as a `~astropy.table.Table`."""
         return self._table_associations
 
     @property
     def table_identifications(self):
-        """Source identification table (`~astropy.table.Table`)"""
+        """Source identification table as a `~astropy.table.Table`."""
         return self._table_identifications
 
     @property
     def table_large_scale_component(self):
-        """Large scale component table (`~astropy.table.Table`)"""
+        """Large scale component table as a `~astropy.table.Table`."""
         return self._table_large_scale_component
 
     @property
     def large_scale_component(self):
-        """Large scale component model (`~gammapy.catalog.SourceCatalogLargeScaleHGPS`)."""
+        """Large scale component model as a `~gammapy.catalog.SourceCatalogLargeScaleHGPS` object."""
         return SourceCatalogLargeScaleHGPS(self.table_large_scale_component)
 
     def _make_source_object(self, index):
-        """Make `SourceCatalogObject` for given row index"""
+        """Make `SourceCatalogObject` for given row index."""
         source = super()._make_source_object(index)
 
         if source.data["Components"] != "":
@@ -868,38 +863,33 @@ class SourceCatalogHGPS(SourceCatalog):
         source.identification_info = table_row_to_dict(t[idx])
 
     def gaussian_component(self, row_idx):
-        """Gaussian component (`SourceCatalogObjectHGPSComponent`)."""
+        """Gaussian component as a `SourceCatalogObjectHGPSComponent` object."""
         data = table_row_to_dict(self.table_components[row_idx])
         data[SourceCatalogObject._row_index_key] = row_idx
         return SourceCatalogObjectHGPSComponent(data=data)
 
     def to_models(self, which="best", components_status="independent"):
-        """Create Models object from catalogue
+        """Create Models object from catalog.
 
         Parameters
         ----------
         which : {'best', 'pl', 'ecpl'}
-            Which spectral model
+            Which spectral model.
 
         components_status : {'independent', 'linked', 'merged'}
-            Relation between the sources components:
-                'independent' : each sub-component of a source is given as
-                                a different `SkyModel` (Default)
-                'linked' : each sub-component of a source is given as
-                           a different `SkyModel` but the spectral parameters
-                           except the mormalisation are linked.
-                'merged' : the sub-components are merged into a single `SkyModel`
-                           given as a `~gammapy.modeling.models.TemplateSpatialModel`
-                           with a `~gammapy.modeling.models.PowerLawNormSpectralModel`.
-                           In that case the relavtie weights between the components
-                           cannot be adjusted.
+            Relation between the sources components. Available options are:
+                * 'independent': each subcomponent of a source is given as a different `SkyModel` (Default).
+                * 'linked': each subcomponent of a source is given as a different `SkyModel` but the spectral
+                  parameters except the normalisation are linked.
+                * 'merged': the subcomponents are merged into a single `SkyModel` given as a
+                  `~gammapy.modeling.models.TemplateSpatialModel` with a `~gammapy.modeling.models.PowerLawNormSpectralModel`.
+                  In that case the relative weights between the components cannot be adjusted.
 
         Returns
         -------
         models : `~gammapy.modeling.models.Models`
             Models of the catalog.
         """
-
         models = []
         for source in self:
             if components_status == "merged":
@@ -927,7 +917,7 @@ class SourceCatalogLargeScaleHGPS:
         Table of Gaussian parameters.
         ``x``, ``amplitude``, ``mean``, ``stddev``.
     interp_kwargs : dict
-        Keyword arguments passed to `ScaledRegularGridInterpolator`
+        Keyword arguments passed to `ScaledRegularGridInterpolator`.
     """
 
     def __init__(self, table, interp_kwargs=None):

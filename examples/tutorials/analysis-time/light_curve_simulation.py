@@ -9,44 +9,44 @@ Prerequisites
 
 -  To understand how a single binned simulation works, please refer to
    :doc:`/tutorials/analysis-1d/spectrum_simulation` tutorial and 
-   :doc:`/tutorials/analysis-3d/simulate_3d` tutorial for 1D and 3D simulations
+   :doc:`/tutorials/analysis-3d/simulate_3d` tutorial for 1D and 3D simulations,
    respectively.
 -  For details of light curve extraction using gammapy, refer to the two
    tutorials :doc:`/tutorials/analysis-time/light_curve` and
-   :doc:`/tutorials/analysis-time/light_curve_flare` tutorial.
+   :doc:`/tutorials/analysis-time/light_curve_flare`.
 
 Context
 -------
 
 Frequently, studies of variable sources (eg: decaying GRB light curves,
-AGN flares, etc) require time variable simulations. For most use cases,
+AGN flares, etc.) require time variable simulations. For most use cases,
 generating an event list is an overkill, and it suffices to use binned
 simulations using a temporal model.
 
 **Objective: Simulate and fit a time decaying light curve of a source
-with CTA using the CTA 1DC response**
+with CTA using the CTA 1DC response.**
 
 Proposed approach
 -----------------
 
 We will simulate 10 spectral datasets within given time intervals (Good
 Time Intervals) following a given spectral (a power law) and temporal
-profile (an exponential decay, with a decay time of 6 hr ). These are
+profile (an exponential decay, with a decay time of 6 hr). These are
 then analysed using the light curve estimator to obtain flux points.
 
 Modelling and fitting of lightcurves can be done either - directly on
-the output of the `LighCurveEstimator` (at the DL5 level) - fit the
+the output of the `~gammapy.estimators.LightCurveEstimator` (at the DL5 level) - fit the
 simulated datasets (at the DL4 level)
 
-In summary, necessary steps are:
+In summary, the necessary steps are:
 
 -  Choose observation parameters including a list of
    `gammapy.data.GTI`
--  Define temporal and spectral models from :ref:model-gallery as per
+-  Define temporal and spectral models from the :ref:`model-gallery` as per
    science case
 -  Perform the simulation (in 1D or 3D)
 -  Extract the light curve from the reduced dataset as shown
-   in :doc:`/tutorials/analysis-time/light_curve` tutorial.
+   in :doc:`/tutorials/analysis-time/light_curve` tutorial
 -  Optionally, we show here how to fit the simulated datasets using a
    source model
 
@@ -57,7 +57,6 @@ As usual, we’ll start with some general imports…
 
 """
 
-
 import logging
 import numpy as np
 import astropy.units as u
@@ -66,11 +65,6 @@ from astropy.time import Time
 
 # %matplotlib inline
 import matplotlib.pyplot as plt
-
-######################################################################
-# Setup
-# -----
-#
 from IPython.display import display
 
 log = logging.getLogger(__name__)
@@ -80,10 +74,11 @@ log = logging.getLogger(__name__)
 # And some gammapy specific imports
 #
 
-from gammapy.data import Observation, observatory_locations
+import warnings
+from gammapy.data import FixedPointingInfo, Observation, observatory_locations
 from gammapy.datasets import Datasets, FluxPointsDataset, SpectrumDataset
 from gammapy.estimators import LightCurveEstimator
-from gammapy.irf import load_cta_irfs
+from gammapy.irf import load_irf_dict_from_file
 from gammapy.makers import SpectrumDatasetMaker
 from gammapy.maps import MapAxis, RegionGeom, TimeMapAxis
 from gammapy.modeling import Fit
@@ -91,6 +86,10 @@ from gammapy.modeling.models import (
     ExpDecayTemporalModel,
     PowerLawSpectralModel,
     SkyModel,
+)
+
+warnings.filterwarnings(
+    action="ignore", message="overflow encountered in exp", module="astropy"
 )
 
 ######################################################################
@@ -113,13 +112,14 @@ TimeMapAxis.time_format = "iso"
 # ------------------------
 #
 # We will simulate 10 spectra between 300 GeV and 10 TeV using an
-# `PowerLawSpectralModel` and a `ExpDecayTemporalModel`. The important
+# `~gammapy.modeling.models.PowerLawSpectralModel` and a
+# `~gammapy.modeling.models.ExpDecayTemporalModel`. The important
 # thing to note here is how to attach a different `GTI` to each dataset.
-# Since we use spectrum datasets here, we will use a `RegionGeom`.
+# Since we use spectrum datasets here, we will use a `~gammapy.maps.RegionGeom`.
 #
 
 # Loading IRFs
-irfs = load_cta_irfs(
+irfs = load_irf_dict_from_file(
     "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
 )
 
@@ -133,8 +133,10 @@ energy_axis_true = MapAxis.from_edges(
 
 geom = RegionGeom.create("galactic;circle(0, 0, 0.11)", axes=[energy_axis])
 
-# Pointing position
-pointing = SkyCoord(0.5, 0.5, unit="deg", frame="galactic")
+# Pointing position to be supplied as a `FixedPointingInfo`
+pointing = FixedPointingInfo(
+    fixed_icrs=SkyCoord(0.5, 0.5, unit="deg", frame="galactic").icrs,
+)
 
 
 ######################################################################
@@ -163,7 +165,7 @@ display(model_simu.parameters.to_table())
 
 ######################################################################
 # Now, define the start and observation livetime wrt to the reference
-# time, `gti_t0`
+# time, ``gti_t0``
 #
 
 n_obs = 10
@@ -218,7 +220,7 @@ display(datasets.info_table())
 # extraction. Only a spectral model needs to be defined in this case.
 # Since the estimator returns the integrated flux separately for each time
 # bin, the temporal model need not be accounted for at this stage. We
-# extract the lightcurve in 3 energy binsç
+# extract the lightcurve in 3 energy bins.
 #
 
 # Define the model:
@@ -243,6 +245,7 @@ fig, ax = plt.subplots(
     gridspec_kw={"left": 0.16, "bottom": 0.2, "top": 0.98, "right": 0.98},
 )
 lc_1d.plot(ax=ax, marker="o", axis_name="time", sed_type="flux")
+plt.show()
 
 
 ######################################################################
@@ -263,22 +266,17 @@ lc_1d.plot(ax=ax, marker="o", axis_name="time", sed_type="flux")
 # Fitting the obtained light curve
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# The fitting will proceed through a joint fit of the flux points. First,
-# we need to obtain a set of `FluxPointDatasets`, one for each time bin
-#
+# We will first convert the obtained light curve to a `~gammapy.datasets.FluxPointsDataset`
+# and fit it with a spectral and temporal model
 
 # Create the datasets by iterating over the returned lightcurve
-datasets = Datasets()
-
-for idx, fp in enumerate(lc_1d.iter_by_axis(axis_name="time")):
-    dataset = FluxPointsDataset(data=fp, name=f"time-bin-{idx}")
-    datasets.append(dataset)
+dataset_fp = FluxPointsDataset(data=lc_1d, name="dataset_lc")
 
 
 ######################################################################
 # We will fit the amplitude, spectral index and the decay time scale. Note
-# that `t_ref` should be fixed by default for the
-# `ExpDecayTemporalModel`.
+# that ``t_ref`` should be fixed by default for the
+# `~gammapy.modeling.models.ExpDecayTemporalModel`.
 #
 
 # Define the model:
@@ -287,18 +285,22 @@ spectral_model1 = PowerLawSpectralModel(
 )
 temporal_model1 = ExpDecayTemporalModel(t0="10 h", t_ref=gti_t0.mjd * u.d)
 
+
 model = SkyModel(
     spectral_model=spectral_model1,
     temporal_model=temporal_model1,
     name="model-test",
 )
 
-datasets.models = model
+dataset_fp.models = model
+print(dataset_fp)
+
 
 # %%time
-# Do a joint fit
+# Fit the dataset
 fit = Fit()
-result = fit.run(datasets=datasets)
+result = fit.run(dataset_fp)
+display(result.parameters.to_table())
 
 
 ######################################################################
@@ -306,19 +308,7 @@ result = fit.run(datasets=datasets)
 # temporal model in relative units for one particular energy range
 #
 
-fig, ax = plt.subplots(
-    figsize=(8, 6),
-    gridspec_kw={"left": 0.16, "bottom": 0.2, "top": 0.98, "right": 0.98},
-)
-lc_1TeV_10TeV = lc_1d.slice_by_idx({"energy": slice(2, 3)})
-lc_1TeV_10TeV.plot(ax=ax, sed_type="norm", axis_name="time")
-
-time_range = lc_1TeV_10TeV.geom.axes["time"].time_bounds
-temporal_model1.plot(ax=ax, time_range=time_range, label="Best fit model")
-
-ax.set_yscale("linear")
-ax.legend()
-
+dataset_fp.plot_spectrum(axis_name="time")
 
 ######################################################################
 # Fit the datasets
@@ -327,9 +317,9 @@ ax.legend()
 # Here, we apply the models directly to the simulated datasets.
 #
 # For modelling and fitting more complex flares, you should attach the
-# relevant model to each group of `datasets`. The parameters of a model
+# relevant model to each group of ``datasets``. The parameters of a model
 # in a given group of dataset will be tied. For more details on joint
-# fitting in Gammapy, see :doc:`/tutorials/analysis-3d/analysis_3d`
+# fitting in Gammapy, see the :doc:`/tutorials/analysis-3d/analysis_3d`.
 #
 
 # Define the model:
@@ -349,13 +339,12 @@ display(model2.parameters.to_table())
 datasets.models = model2
 
 # %%time
-# Do a joint fit
+# Perform a joint fit
 fit = Fit()
 result = fit.run(datasets=datasets)
 
 display(result.parameters.to_table())
 
-plt.show()
 ######################################################################
 # We see that the fitted parameters are consistent between fitting flux
 # points and datasets, and match well with the simulated ones
@@ -366,7 +355,7 @@ plt.show()
 # Exercises
 # ---------
 #
-# 1. Re-do the analysis with `MapDataset` instead of `SpectralDataset`
+# 1. Re-do the analysis with `~gammapy.datasets.MapDataset` instead of a `~gammapy.datasets.SpectrumDataset`
 # 2. Model the flare of PKS 2155-304 which you obtained using
 #    the :doc:`/tutorials/analysis-time/light_curve_flare` tutorial.
 #    Use a combination of a Gaussian and Exponential flare profiles.

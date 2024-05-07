@@ -1,11 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import html
 import logging
 import subprocess
+from copy import copy
 from pathlib import Path
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
+import gammapy.utils.time as tu
+from gammapy.utils.pbar import progress_bar
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
 from .hdu_index_table import HDUIndexTable
@@ -15,7 +19,7 @@ from .observations import Observation, ObservationChecker, Observations
 __all__ = ["DataStore"]
 
 ALL_IRFS = ["aeff", "edisp", "psf", "bkg", "rad_max"]
-ALL_HDUS = ["events", "gti"] + ALL_IRFS
+ALL_HDUS = ["events", "gti", "pointing"] + ALL_IRFS
 REQUIRED_IRFS = {
     "full-enclosure": {"aeff", "edisp", "psf", "bkg"},
     "point-like": {"aeff", "edisp"},
@@ -40,9 +44,9 @@ class DataStore:
     Parameters
     ----------
     hdu_table : `~gammapy.data.HDUIndexTable`
-        HDU index table
+        HDU index table.
     obs_table : `~gammapy.data.ObservationTable`
-        Observation index table
+        Observation index table.
 
     Examples
     --------
@@ -81,6 +85,12 @@ class DataStore:
     def __str__(self):
         return self.info(show=False)
 
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
+
     @property
     def obs_ids(self):
         """Return the sorted obs_ids contained in the datastore."""
@@ -94,17 +104,17 @@ class DataStore:
 
         Parameters
         ----------
-        filename : str, Path
-            FITS filename
-        hdu_hdu : str or int
-            FITS HDU name or number for the HDU index table
-        hdu_obs : str or int
-            FITS HDU name or number for the observation index table
+        filename : str or `~pathlib.Path`
+            FITS filename.
+        hdu_hdu : str or int, optional
+            FITS HDU name or number for the HDU index table. Default is "HDU_INDEX".
+        hdu_obs : str or int, optional
+            FITS HDU name or number for the observation index table. Default is "OBS_INDEX".
 
         Returns
         -------
         data_store : `DataStore`
-            Data store
+            Data store.
         """
         filename = make_path(filename)
 
@@ -122,28 +132,25 @@ class DataStore:
 
         Parameters
         ----------
-        base_dir : str, Path
+        base_dir : str or `~pathlib.Path`
             Base directory of the data files.
-        hdu_table_filename : str, Path
+        hdu_table_filename : str or `~pathlib.Path`, optional
             Filename of the HDU index file. May be specified either relative
-            to `base_dir` or as an absolute path. If None, the default filename
-            will be looked for.
-        obs_table_filename : str, Path
+            to `base_dir` or as an absolute path. If None, default is "hdu-index.fits.gz".
+        obs_table_filename : str or `~pathlib.Path`, optional
             Filename of the observation index file. May be specified either relative
-            to `base_dir` or as an absolute path. If None, the default filename
-            will be looked for.
+            to `base_dir` or as an absolute path. If None, default is obs-index.fits.gz.
 
         Returns
         -------
         data_store : `DataStore`
-            Data store
+            Data store.
 
         Examples
         --------
         >>> from gammapy.data import DataStore
         >>> data_store = DataStore.from_dir('$GAMMAPY_DATA/hess-dl3-dr1')
         """
-
         base_dir = make_path(base_dir)
 
         if hdu_table_filename:
@@ -191,24 +198,24 @@ class DataStore:
         - ``IRF`` (example: ``IRF = South_z20_50h``)
 
         This method is useful specifically if you want to load data simulated
-        with `ctobssim`_
+        with `ctobssim`_.
 
         .. _ctobssim: http://cta.irap.omp.eu/ctools/users/reference_manual/ctobssim.html
 
         Parameters
         ----------
-        events_paths : list of str or Path
-            List of paths to the events files
-        irfs_paths : str, Path, or list of str or Path
+        events_paths : list of str or `~pathlib.Path`
+            List of paths to the events files.
+        irfs_paths : str or `~pathlib.Path`, or list of str or list of `~pathlib.Path`, optional
             Path to the IRFs file. If a list is provided it must be the same length
-            than `events_paths`. If None the events files have to contain CALDB and
+            as `events_paths`. If None the events files have to contain CALDB and
             IRF header keywords to locate the IRF files, otherwise the IRFs are
             assumed to be contained in the events files.
 
         Returns
         -------
         data_store : `DataStore`
-            Data store
+            Data store.
 
         Examples
         --------
@@ -258,21 +265,21 @@ class DataStore:
         else:
             return s
 
-    def obs(self, obs_id, required_irf="full-enclosure"):
+    def obs(self, obs_id, required_irf="full-enclosure", require_events=True):
         """Access a given `~gammapy.data.Observation`.
 
         Parameters
         ----------
         obs_id : int
             Observation ID.
-        required_irf : list of str or str
+        required_irf : list of str or str, optional
             The list can include the following options:
 
             * `"events"` : Events
             * `"gti"` :  Good time intervals
             * `"aeff"` : Effective area
             * `"bkg"` : Background
-            * `"edisp"`: Energy dispersion
+            * `"edisp"` : Energy dispersion
             * `"psf"` : Point Spread Function
             * `"rad_max"` : Maximal radius
 
@@ -281,10 +288,14 @@ class DataStore:
             * `"full-enclosure"` : includes `["events", "gti", "aeff", "edisp", "psf", "bkg"]`
             * `"point-like"` : includes `["events", "gti", "aeff", "edisp"]`
 
+            Default is `"full-enclosure"`.
+        require_events : bool, optional
+            Require events and gti table or not. Default is True.
+
         Returns
         -------
         observation : `~gammapy.data.Observation`
-            Observation container
+            Observation container.
 
         """
         if obs_id not in self.hdu_table["OBS_ID"]:
@@ -302,7 +313,10 @@ class DataStore:
                 f"{difference} is not a valid hdu key. Choose from: {ALL_IRFS}"
             )
 
-        required_hdus = {"events", "gti"}.union(required_irf)
+        if require_events:
+            required_hdus = {"events", "gti"}.union(required_irf)
+        else:
+            required_hdus = required_irf
 
         missing_hdus = []
         for hdu in ALL_HDUS:
@@ -321,22 +335,37 @@ class DataStore:
                 f"Required HDUs {missing_hdus} not found in observation {obs_id}"
             )
 
+        # TODO: right now, gammapy doesn't support using the pointing table of GADF
+        # so we always pass the events location here to be read into a FixedPointingInfo
+        if "events" in kwargs:
+            pointing_location = copy(kwargs["events"])
+            pointing_location.hdu_class = "pointing"
+            kwargs["pointing"] = pointing_location
+
         return Observation(**kwargs)
 
     def get_observations(
-        self, obs_id=None, skip_missing=False, required_irf="full-enclosure"
+        self,
+        obs_id=None,
+        skip_missing=False,
+        required_irf="full-enclosure",
+        require_events=True,
     ):
         """Generate a `~gammapy.data.Observations`.
 
+        Notes
+        -----
+        The progress bar can be displayed for this function.
+
         Parameters
         ----------
-        obs_id : list
-            Observation IDs (default of ``None`` means "all")
-            If not given, all observations ordered by OBS_ID are returned.
+        obs_id : list, optional
+            Observation IDs.
+            If None, default is all observations ordered by OBS_ID are returned.
             This is not necessarily the order in the ``obs_table``.
         skip_missing : bool, optional
-            Skip missing observations, default: False
-        required_irf : list of str or str
+            Skip missing observations. Default is False.
+        required_irf : list of str or str, optional
             Runs will be added to the list of observations only if the
             required HDUs are present. Otherwise, the given run will be skipped
             The list can include the following options:
@@ -345,7 +374,7 @@ class DataStore:
             * `"gti"` :  Good time intervals
             * `"aeff"` : Effective area
             * `"bkg"` : Background
-            * `"edisp"`: Energy dispersion
+            * `"edisp"` : Energy dispersion
             * `"psf"` : Point Spread Function
             * `"rad_max"` : Maximal radius
 
@@ -356,20 +385,23 @@ class DataStore:
             * `"all-optional"` : no HDUs are required, only warnings will be emitted
               for missing HDUs among all possibilities.
 
+            Default is `"full-enclosure"`.
+        require_events : bool, optional
+            Require events and gti table or not. Default is True.
+
         Returns
         -------
         observations : `~gammapy.data.Observations`
-            Container holding a list of `~gammapy.data.Observation`
+            Container holding a list of `~gammapy.data.Observation`.
         """
-
         if obs_id is None:
             obs_id = self.obs_ids
 
         obs_list = []
 
-        for _ in obs_id:
+        for _ in progress_bar(obs_id, desc="Obs Id"):
             try:
-                obs = self.obs(_, required_irf)
+                obs = self.obs(_, required_irf, require_events)
             except ValueError as err:
                 if skip_missing:
                     log.warning(f"Skipping missing obs_id: {_!r}")
@@ -391,15 +423,15 @@ class DataStore:
         Parameters
         ----------
         obs_id : array-like, `~gammapy.data.ObservationTable`
-            List of observations to copy
-        outdir : str, Path
-            Directory for the new store
-        hdu_class : list of str
-            see :attr:`gammapy.data.HDUIndexTable.VALID_HDU_CLASS`
-        verbose : bool
-            Print copied files
-        overwrite : bool
-            Overwrite
+            List of observations to copy.
+        outdir : str or `~pathlib.Path`
+            Directory for the new store.
+        hdu_class : list of str, optional
+            see :attr:`gammapy.data.HDUIndexTable.VALID_HDU_CLASS`.
+        verbose : bool, optional
+            Print copied files. Default is False.
+        overwrite : bool, optional
+            Overwrite. Default is False.
         """
         outdir = make_path(outdir)
 
@@ -466,11 +498,11 @@ class DataStoreChecker(Checker):
         self.data_store = data_store
 
     def check_obs_table(self):
-        """Checks for the observation index table."""
+        """Check for the observation index table."""
         yield from ObservationTableChecker(self.data_store.obs_table).run()
 
     def check_hdu_table(self):
-        """Checks for the HDU index table."""
+        """Check for the HDU index table."""
         t = self.data_store.hdu_table
         m = t.meta
         if m.get("HDUCLAS1", "") != "INDEX":
@@ -519,7 +551,7 @@ class DataStoreChecker(Checker):
 class DataStoreMaker:
     """Create data store index tables.
 
-    This is a multi-step process coded as a class.
+    This is a multistep process coded as a class.
     Users will usually call this via `DataStore.from_events_files`.
     """
 
@@ -537,11 +569,13 @@ class DataStoreMaker:
         self._events_info = {}
 
     def run(self):
+        """Run all steps."""
         hdu_table = self.make_hdu_table()
         obs_table = self.make_obs_table()
         return DataStore(hdu_table=hdu_table, obs_table=obs_table)
 
     def get_events_info(self, events_path, irf_path=None):
+        """Read events header information."""
         if events_path not in self._events_info:
             self._events_info[events_path] = self.read_events_info(
                 events_path, irf_path
@@ -550,12 +584,13 @@ class DataStoreMaker:
         return self._events_info[events_path]
 
     def get_obs_info(self, events_path, irf_path=None):
+        """Read events header information and add some extra information."""
         # We could add or remove info here depending on what we want in the obs table
         return self.get_events_info(events_path, irf_path)
 
     @staticmethod
     def read_events_info(events_path, irf_path=None):
-        """Read mandatory events header info"""
+        """Read mandatory events header information."""
         log.debug(f"Reading {events_path}")
 
         with fits.open(events_path, memmap=False) as hdu_list:
@@ -608,27 +643,33 @@ class DataStoreMaker:
             info["IRF_FILENAME"] = str(caldb_irf.file_path)
         else:
             info["IRF_FILENAME"] = info["EVENTS_FILENAME"]
+
+        # Mandatory fields defining the time data
+        for name in tu.TIME_KEYWORDS:
+            info[name] = header.get(name, None)
+
         return info
 
     def make_obs_table(self):
+        """Make observation index table."""
         rows = []
+        time_rows = []
         for events_path, irf_path in zip(self.events_paths, self.irfs_paths):
             row = self.get_obs_info(events_path, irf_path)
             rows.append(row)
+            time_row = tu.extract_time_info(row)
+            time_rows.append(time_row)
 
         names = list(rows[0].keys())
         table = ObservationTable(rows=rows, names=names)
 
-        # TODO: Values copied from one of the EVENTS headers
-        # TODO: check consistency for all EVENTS files and handle inconsistent case
-        # Transform times to first ref time? Or raise error for now?
-        # Test by combining some HESS & CTA runs?
         m = table.meta
-        m["MJDREFI"] = 51544
-        m["MJDREFF"] = 5.0000000000e-01
-        m["TIMEUNIT"] = "s"
-        m["TIMESYS"] = "TT"
-        m["TIMEREF"] = "LOCAL"
+        if not tu.unique_time_info(time_rows):
+            raise RuntimeError(
+                "The time information in the EVENT header are not consistent between observations"
+            )
+        for name in tu.TIME_KEYWORDS:
+            m[name] = time_rows[0][name]
 
         m["HDUCLASS"] = "GADF"
         m["HDUDOC"] = "https://github.com/open-gamma-ray-astro/gamma-astro-data-formats"
@@ -639,6 +680,7 @@ class DataStoreMaker:
         return table
 
     def make_hdu_table(self):
+        """Make HDU index table."""
         rows = []
         for events_path, irf_path in zip(self.events_paths, self.irfs_paths):
             rows.extend(self.get_hdu_table_rows(events_path, irf_path))
@@ -658,6 +700,7 @@ class DataStoreMaker:
         return table
 
     def get_hdu_table_rows(self, events_path, irf_path=None):
+        """Make HDU index table rows for one observation."""
         events_info = self.get_obs_info(events_path, irf_path)
 
         info = dict(

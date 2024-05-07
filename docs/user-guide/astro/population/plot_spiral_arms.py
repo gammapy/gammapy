@@ -1,8 +1,10 @@
 """Plot Milky Way spiral arms."""
+
 import numpy as np
-from astropy.units import Quantity
+from astropy.units import Quantity, kpc
 import matplotlib.pyplot as plt
 from gammapy.astro.population import FaucherSpiral, simulate
+from gammapy.maps.axes import UNIT_STRING_FORMAT
 from gammapy.utils.coordinates import cartesian, polar
 
 catalog = simulate.make_base_catalog_galactic(
@@ -31,8 +33,8 @@ ax_cartesian.plot(
 )
 ax_cartesian.set_xlim(-20, 20)
 ax_cartesian.set_ylim(-20, 20)
-ax_cartesian.set_xlabel("x [kpc]", labelpad=2)
-ax_cartesian.set_ylabel("y [kpc]", labelpad=-4)
+ax_cartesian.set_xlabel(f"x [{kpc.to_string(UNIT_STRING_FORMAT)}]", labelpad=2)
+ax_cartesian.set_ylabel(f"y [{kpc.to_string(UNIT_STRING_FORMAT)}]", labelpad=-4)
 ax_cartesian.plot(
     0, 8, color="k", markersize=10, fillstyle="none", marker="*", linewidth=2
 )

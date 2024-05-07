@@ -1,4 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import html
+
 __all__ = ["Registry"]
 
 
@@ -22,3 +24,9 @@ class Registry(list):
             info += f"{item.__name__:{len_max}s}: {item.tag} \n"
 
         return info.expandtabs(tabsize=2)
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"

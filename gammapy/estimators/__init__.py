@@ -2,7 +2,10 @@
 """Estimators."""
 from gammapy.utils.registry import Registry
 from .core import Estimator
+from .energydependentmorphology import EnergyDependentMorphologyEstimator
 from .map import ASmoothMapEstimator, ExcessMapEstimator, FluxMaps, TSMapEstimator
+from .metadata import FluxMetaData
+from .parameter import ParameterEstimator
 from .points import (
     FluxPoints,
     FluxPointsEstimator,
@@ -24,8 +27,11 @@ __all__ = [
     "ImageProfile",
     "ImageProfileEstimator",
     "LightCurveEstimator",
+    "ParameterEstimator",
     "SensitivityEstimator",
     "TSMapEstimator",
+    "EnergyDependentMorphologyEstimator",
+    "FluxMetaData",
 ]
 
 
@@ -38,6 +44,7 @@ ESTIMATOR_REGISTRY = Registry(
         LightCurveEstimator,
         SensitivityEstimator,
         FluxProfileEstimator,
+        ParameterEstimator,
     ]
 )
 """Registry of estimator classes in Gammapy."""

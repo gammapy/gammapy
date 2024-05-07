@@ -1,0 +1,54 @@
+.. include:: ../references.txt
+
+.. _gammapy_1p0p1_release:
+
+1.0.1 (March 14th, 2023)
+------------------------
+
+Summary
+~~~~~~~
+
+- Released Mar 14th, 2023
+- 9 contributors
+- 31 pull requests since v1.0 (not all listed below)
+
+This is the first bug-fix after v1.0. Several minor bugs and typos in the documentation are corrected.
+
+- Few corrections have been made to improve the performance of the models evaluation in particular for 1d 
+  spectral analyses.
+- The "TIMESYS" keyword was not properly exported to the lightcurve table format. This is now corrected.
+- An issue with interpolation in scipy 1.10 is causing problems in Gammapy. This specific version is
+  excluded from dependencies. The minimal numpy version is now 1.21.
+- Models created from files with a parameter scale different than one were incorrect and this will be fixed 
+  by this patch. Note that by default gammapy always serializes the parameters with a scale of unity, so this bug 
+  affected only files written by hand with a scale different from one.
+- Datasets serialization now correctly supports PSF in reconstructed energies used in HAWC analyses.
+
+
+Contributors
+~~~~~~~~~~~~
+
+- Arnau Aguasca
+- Axel Donath
+- Bruno Khelifi
+- Maximilian Linhoff
+- Lars Mohrmann
+- Maxime Regeard
+- Quentin Remy
+- Atreyee Sinha
+- Régis Terrier
+
+Pull Requests
+~~~~~~~~~~~~~
+
+This list is incomplete.
+
+- [#4359] Fix interpolation values_scale in TemplateSpatialModel (Quentin Remy)
+- [#4344] Fix norm_only_changed in MapEvaluator (Quentin Remy)
+- [#4336] Change label units within parentheses to brackets (Arnau Aguasca)
+- [#4324] Fix Parameter init if scale is not one (Quentin Remy)
+- [#4301] Add TIMESYS to lightcurve table meta (Régis Terrier)
+- [#4275] Remove safe mask in background stacking (Atreyee Sinha)
+- [#4268] Add an HowTo for the fit non-convergence (Bruno Khelifi)
+- [#4231] Fix bug in safe mask computation for SpectrumDatasetOnOff (Lars Mohrmann)
+- [#4221] Fix wrong name in required hdus (Maximilian Linhoff)

@@ -2,7 +2,7 @@
 name: Feature request
 about: Suggest an idea to make Gammapy better!
 title: ''
-labels: feature
+labels: feature-request
 assignees: ''
 
 ---

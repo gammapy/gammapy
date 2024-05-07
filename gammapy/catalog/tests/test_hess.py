@@ -12,7 +12,11 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
 )
 from gammapy.utils.gauss import Gauss2DPDF
-from gammapy.utils.testing import assert_quantity_allclose, requires_data
+from gammapy.utils.testing import (
+    assert_quantity_allclose,
+    modify_unit_order_astropy_5_3,
+    requires_data,
+)
 
 SOURCES = [
     {"idx": 33, "name": "HESS J1713-397", "str_ref_file": "data/hess_j1713-397.txt"},
@@ -99,8 +103,11 @@ class TestSourceCatalogObjectHGPS:
     @pytest.mark.parametrize("ref", SOURCES)
     def test_str(cat, ref):
         actual = str(cat[ref["idx"]])
-        expected = open(get_pkg_data_filename(ref["str_ref_file"])).read()
-        assert actual == expected
+
+        with open(get_pkg_data_filename(ref["str_ref_file"])) as fh:
+            expected = fh.read()
+
+        assert actual == modify_unit_order_astropy_5_3(expected)
 
     @staticmethod
     def test_position(source):

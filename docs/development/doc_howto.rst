@@ -11,14 +11,16 @@ Documentation building
 
 Generating the HTML docs for Gammapy is straight-forward::
 
-    make docs-all
+    make docs-sphinx
     make docs-show
+
+Or one can equivalently use tox::
+
+     tox -e build_docs
 
 Generating the PDF docs is more complex.
 This should work::
 
-    # build the notebooks
-    python -m gammapy.utils.notebooks_process
     # build the latex file
     cd docs
     python -m sphinx . _build/latex -b latex -j auto
@@ -33,28 +35,6 @@ This should work::
     open gammapy.pdf
 
 You need a bunch or LaTeX stuff, specifically ``texlive-fonts-extra`` is needed.
-
-Jupyter notebooks present in ``docs/tutorials`` folder have stripped output cells.
-Although notebooks are code clean formatted, tested, and filled during the process of documentation
-building, where they are also converted to Sphinx formatted HTML files and ``.py`` scripts, 
-**you must always use stripped and clean formatted notebooks in your pull requests**.
-See :ref:`common-taks-notebooks` for the commands used for these tasks.
-
-The Sphinx formatted versions of the notebooks provide links to the raw ``.ipynb`` Jupyter
-files and ``.py`` script versions stored in ``docs/_static/notebooks`` folder, as well as
-a link pointing to its specific Binder space in the
-`gammapy-webpage <https://github.com/gammapy/gammapy-webpage>`__ repository (not for
-the deve version of the docs). Since notebooks are evolving with Gammapy features and documentation, 
-the different versions of the notebooks are linked to versioned Binder environments.
-
-Once the documentation is built you can optimize the speed of eventual re-building,
-for example in case you are modifying or adding new text, and you would like to check
-these changes are displayed nicely. For that purpose, you may run ``make docs-sphinx`` so
-that notebooks are not executed during the docs build.
-
-In the case one single notebook is modified or added to the documentation, you can
-execute the build doc process with the ``src`` parameter with value the name of the
-considered notebook. i.e. ``make docs-all src=docs/tutorials/my-notebook.ipynb``
 
 Check Python code
 -----------------
@@ -131,6 +111,32 @@ the code as well as the output value produced.
             (10., 20.)>
         radius: 3.0 deg
 
+To allow the code block to be placed correctly over multiple lines utilise the "...":
+
+.. code-block:: text
+
+        Examples
+        --------
+        >>> from gammapy.maps import WcsGeom, MapAxis
+        >>> energy_axis_true = MapAxis.from_energy_bounds(
+        ...            0.5, 20, 10, unit="TeV", name="energy_true"
+        ...        )
+
+
+For a larger code block it is also possible to utilise the following syntax.
+
+.. code-block:: text
+
+        Examples
+        --------
+        .. testcode::
+
+            from gammapy.maps import MapAxis
+            from gammapy.irf import EnergyDispersion2D
+            filename = '$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz'
+            edisp2d = EnergyDispersion2D.read(filename, hdu="EDISP")
+
+
 In order to perform tests of these snippets of code present in the docstrings of the Python files, you may run the
 following command.
 
@@ -150,161 +156,82 @@ Sphinx gallery extension
 The documentation built-in process uses the `sphinx-gallery <https://sphinx-gallery.github.io/stable/>`__
 extension to build galleries of illustrated examples on how to use Gammapy (i.e.
 :ref:`model-gallery`). The Python scripts used to produce the model gallery are placed in
-``examples/models`` and the configuration of the ``sphinx-gallery`` module is done in ``docs/conf.py``.
+``examples/models`` and ``examples/tutorials``. The configuration of the ``sphinx-gallery`` module is done in ``docs/conf.py``.
 
-Working with notebooks
-----------------------
-
-.. _common-taks-notebooks:
-
-Common tasks
-++++++++++++
-
-    * test with tutorials env: ``gammapy jupyter --src mynotebook.ipynb test --tutor``
-    * strip the output cells: ``gammapy jupyter --src mynotebook.ipynb strip``
-    * clean format code cells: ``gammapy jupyter --src mynotebook.ipynb  black``
-    * diff stripped notebooks: ``git diff mynotbook.pynb``
-  
-
-Add a notebook into a folder other than tutorials folder
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-Most of the Gammapy notebooks are placed in the ``tutorials`` folder, and are displayed in a
-:ref:`tutorials` Gallery. However, we can choose to place a notebook in a different folder of the
-documentation folder structure. In this way we can write some parts of the documentation as notebooks
-instead of RST files. Once we have placed the notebook in the folder we choose we can link it from the
-``index.rst`` file using the name of the notebook filename **without the extension** and the Sphinx
-``toctree`` directive as shown below.
-
-.. code-block:: text
-
-    .. toctree::
-
-        mynotebook
-
-
-.. _skip-nb-execution:
-
-Skip notebooks from being executed
-++++++++++++++++++++++++++++++++++
-
-You may choose if a notebook is not executed during the documentation building process, and hence
-it will be published without the output cells in its static HTML version. To do this you may add
-the following code to the notebook metadata:
-
-.. code-block:: javascript
-
-  "gammapy": {
-    "skip_run": true
-  }
 
 Choose a thumbnail and tooltip for the tutorial gallery
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-The Gammapy :ref:`tutorials` are Jupyter notebooks that are displayed as a gallery with picture thumbnails and tooltips.
-You can choose the thumbnail for the tutorial and add the tooltip editing the metadata of the code cell that produces
-the picture that you've chosen. You can open the notebook in a text editor, and edit the internal code there. It may
-sound risky, but it is much simpler. Then, find the code cell that produces the figure that you would like for the
-gallery, and then replace the ``"metadata": {},`` bit above the code cell with the snippet below:
+The Gammapy :ref:`tutorials` are Python scripts in the Sphinx Gallery format.
+They are displayed as a gallery with picture thumbnails and tooltips. You can
+choose the thumbnail for the tutorial by adding a comment before the plot:
 
-.. code-block:: javascript
+.. code-block:: python
 
-    "metadata": {
-     "nbsphinx-thumbnail": {
-      "tooltip": "Learn how to do perform a Fit in gammapy."
-     }},
+    # The next line sets the thumbnail for the second figure in the gallery
+    # (plot with negative exponential in orange)
+    # sphinx_gallery_thumbnail_number = 2
+    plt.figure()
+    plt.plot(x, -np.exp(-x), color='orange', linewidth=4)
+    plt.xlabel('$x$')
+    plt.ylabel(r'$-\exp(-x)$')
+    # To avoid matplotlib text output
+    plt.show()
 
-Note that you may write whatever you like after "tooltip".
+The example is taken from the `sphinx-gallery documentation <https://sphinx-gallery.github.io/stable/auto_examples/plot_4_choose_thumbnail.html>`__,
+please refer to it for more details. 
+
+The tooltip is the text that appears when you hover over the thumbnail. It is taken from the first line 
+of the docstring of the tutorial. You can change it by editing the docstring. See e.g.
+`Analysis 1 Tutorial <https://github.com/gammapy/gammapy/blob/main/examples/tutorials/starting/analysis_1.py#L5>`__.
+
 
 Dealing with links
 ------------------
 
-All Jupyter notebooks in Gammpay documentation are converted to HTML files using
-`nb_sphinx <http://nbsphinx.readthedocs.io/>`__ Sphinx extension which provides a source parser
-for ``.ipynb`` files.
+Links in tutorials are just handled via normal RST syntax.
 
-Links to notebooks
-++++++++++++++++++
+Links to other tutorials
+++++++++++++++++++++++++
 
-From docstrings and RST documentation files in Gammapy you can link to the built fixed-text HTML formatted
-versions of the notebooks and subsections providing its filename with the ``.ipynb`` file extension
-and the relative path to the folder where they are placed::
-
-    `Maps section in Gammapy overview tutorial <../tutorials/overview.ipynb#Maps>`__
-
-Links within notebooks
-++++++++++++++++++++++
-
-
-From MD cells in notebooks you can link to other notebooks, as well as to RST documentation files,
-and subsections using the Markdown syntax to declare links to resources, as shown in the examples below:
+From docstrings and RST documentation files in Gammapy you can link to other tutorials 
+and gallery examples by using RST syntax like this:
 
 .. code-block:: rst
 
-    - [Maps section in Gammapy overview tutorial](overview.ipynb#Maps)
-    - [Help!](../getting-started.rst#help)
+    :doc:`/tutorials/starting/analysis_2`
 
-You can also link to the Gammapy API reference documentation using the same Sphinx syntax that is used
-when writing RST files. All links to the API reference classes and methods should start with ``~gammapy.``
-and enclosed within quotation marks. This syntax will be translated into relative links to the API in the
-HTML formatted versions of the notebooks, and to absolute links pointing to the online Gammapy documentation
-in the ``.ipynb`` notebook files available to download. During the documentation building process a warning
-will be raised for each detected broken link to the API.
+This will link to the tutorial :doc:`/tutorials/starting/analysis_2` from the tutorial base folder. The file
+suffix will be automatically inferred by Sphinx.
 
-Examples:
 
-- `gammapy.maps`
-- `gammapy.maps.Geom`
-- `gammapy.maps.Geom.is_image`
-- `gammapy.maps.Geom.is_image()`
+API Links
++++++++++
 
-The example links above could be created within MD cells in notebooks with the syntax below:
+Links to Gammapy API are handled via normal Sphinx syntax in comments:
 
-.. code-block:: rst
+.. code-block:: python
 
-    - `~gammapy.maps`
-    - `~gammapy.maps.Geom`
-    - `~gammapy.maps.Geom.is_image`
-    - `~gammapy.maps.Geom.is_image()`
+   # Create an `~gammapy.analysis.AnalysisConfig` object and edit it to
+   # define the analysis configuration:
 
-When building the documentation of a release, the links declared in the MD cells as absolute links pointing
-to the ``dev`` version of the online Gammapy documentation will be transformed to relative links in the built
-HTML formatted notebooks and to absolute links pointing to that specific released version of the online docs
-in the downloadable ``.ipynb`` files.
+   config = AnalysisConfig()
+
+This will resolve to a link to the ``AnalysisConfig`` class in the API documentation.
 
 .. _dev-check_html_links:
 
 Check broken links
 ++++++++++++++++++
 
-To check for broken external links from the Sphinx documentation:
+To check for broken external links you can use ``tox``:
 
 .. code-block:: bash
 
-   $ cd docs; make linkcheck
-
-You may also use `brök <https://github.com/smallhadroncollider/brok>`__ software, which will also check
-the links present in the notebooks files.
-
-.. code-block:: bash
-
-   $ brok docs/tutorials/*.ipynb | grep "Failed|Could"
-
+   $ tox -e linkcheck
 
 Include png files as images
 ----------------------------
-
-In Jupyter notebooks
-++++++++++++++++++++
-
-You may include static images in notebooks using the following markdown directive:
-
-.. code-block:: rst
-
-    ![](images/my_static_image.png)
-
-Please note that your images should be placed inside a `images` folder, accessed with that relative
-path from your notebook.
 
 In the RST files
 ++++++++++++++++

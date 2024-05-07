@@ -4,6 +4,7 @@ from gammapy.astro.darkmatter import profiles
 from gammapy.utils.testing import assert_quantity_allclose
 
 dm_profiles = [
+    profiles.ZhaoProfile,
     profiles.NFWProfile,
     profiles.EinastoProfile,
     profiles.IsothermalProfile,

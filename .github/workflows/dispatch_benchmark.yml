@@ -1,0 +1,16 @@
+name: Run profiler on benchmarks
+on:
+  pull_request:
+    types:
+      - closed
+jobs:
+  dispatch-benchmarks:
+    if: ${{ (github.repository_owner == 'gammapy') && (github.event.pull_request.merged == true) && (contains(github.event.pull_request.labels.*.name, 'trigger-benchmarks')) }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch Gammapy Benchmarks
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.REMOTE_DISPATCH }}
+          repository: gammapy/gammapy-benchmarks
+          event-type: dev-benchmarks

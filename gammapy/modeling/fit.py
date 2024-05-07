@@ -1,9 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import html
 import itertools
 import logging
 import numpy as np
+from astropy.table import Table
 from gammapy.utils.pbar import progress_bar
-from gammapy.utils.table import table_from_row_data
 from .covariance import Covariance
 from .iminuit import (
     confidence_iminuit,
@@ -68,12 +69,12 @@ class Fit:
     """Fit class.
 
     The fit class provides a uniform interface to multiple fitting backends.
-    Currently available: "minuit", "sherpa" and "scipy"
+    Currently available: "minuit", "sherpa" and "scipy".
 
     Parameters
     ----------
     backend : {"minuit", "scipy" "sherpa"}
-        Global backend used for fitting, default : minuit
+        Global backend used for fitting. Default is "minuit".
     optimize_opts : dict
         Keyword arguments passed to the optimizer. For the `"minuit"` backend
         see https://iminuit.readthedocs.io/en/stable/reference.html#iminuit.Minuit
@@ -106,9 +107,9 @@ class Fit:
         Extra arguments passed to the backend. E.g. `iminuit.Minuit.minos` supports
         a ``maxcall`` option. For the scipy backend ``confidence_opts`` are forwarded
         to `~scipy.optimize.brentq`. If the confidence estimation fails, the bracketing
-        interval can be adapted by modifying the the upper bound of the interval (``b``) value.
+        interval can be adapted by modifying the upper bound of the interval (``b``) value.
     store_trace : bool
-        Whether to store the trace of the fit
+        Whether to store the trace of the fit.
     """
 
     def __init__(
@@ -136,16 +137,18 @@ class Fit:
         self.confidence_opts = confidence_opts
         self._minuit = None
 
-    @property
-    def minuit(self):
-        """Iminuit object"""
-        return self._minuit
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     @staticmethod
     def _parse_datasets(datasets):
-        from gammapy.datasets import Datasets
+        from gammapy.datasets import Dataset, Datasets
 
-        datasets = Datasets(datasets)
+        if isinstance(datasets, (list, Dataset)):
+            datasets = Datasets(datasets)
         return datasets, datasets.parameters
 
     def run(self, datasets):
@@ -159,15 +162,18 @@ class Fit:
         Returns
         -------
         fit_result : `FitResult`
-            Fit result
+            Fit result.
         """
+
         optimize_result = self.optimize(datasets=datasets)
 
         if self.backend not in registry.register["covariance"]:
             log.warning("No covariance estimate - not supported by this backend.")
             return FitResult(optimize_result=optimize_result)
 
-        covariance_result = self.covariance(datasets=datasets)
+        covariance_result = self.covariance(
+            datasets=datasets, optimize_result=optimize_result
+        )
 
         optimize_result.models.covariance = Covariance(
             optimize_result.models.parameters, covariance_result.matrix
@@ -189,7 +195,7 @@ class Fit:
         Returns
         -------
         optimize_result : `OptimizeResult`
-            Optimization result
+            Optimization result.
         """
         datasets, parameters = self._parse_datasets(datasets=datasets)
         datasets.parameters.check_limits()
@@ -217,7 +223,7 @@ class Fit:
             self._minuit = optimizer
             kwargs["method"] = "migrad"
 
-        trace = table_from_row_data(info.pop("trace"))
+        trace = Table(info.pop("trace"))
 
         if self.store_trace:
             idx = [
@@ -237,10 +243,11 @@ class Fit:
             backend=backend,
             method=kwargs.get("method", backend),
             trace=trace,
+            minuit=optimizer,
             **info,
         )
 
-    def covariance(self, datasets):
+    def covariance(self, datasets, optimize_result=None):
         """Estimate the covariance matrix.
 
         Assumes that the model parameters are already optimised.
@@ -249,17 +256,24 @@ class Fit:
         ----------
         datasets : `Datasets` or list of `Dataset`
             Datasets to optimize.
+        optimize_result : `OptimizeResult`, optional
+            Optimization result. Can be optionally used to pass the state of the IMinuit object
+            to the covariance estimation. This might save computation time in certain cases.
+            Default is None.
 
         Returns
         -------
         result : `CovarianceResult`
-            Results
+            Results.
         """
         datasets, unique_pars = self._parse_datasets(datasets=datasets)
         parameters = datasets.models.parameters
 
         kwargs = self.covariance_opts.copy()
-        kwargs["minuit"] = self.minuit
+
+        if optimize_result is not None and optimize_result.backend == "minuit":
+            kwargs["minuit"] = optimize_result.minuit
+
         backend = kwargs.pop("backend", self.backend)
         compute = registry.get("covariance", backend)
 
@@ -278,13 +292,15 @@ class Fit:
             )
             datasets.models.covariance = matrix
 
-        # TODO: decide what to return, and fill the info correctly!
+        if optimize_result:
+            optimize_result.models.covariance = matrix.data.copy()
+
         return CovarianceResult(
             backend=backend,
             method=method,
             success=info["success"],
             message=info["message"],
-            matrix=matrix.data.copy(),
+            matrix=optimize_result.models.covariance.data,
         )
 
     def confidence(self, datasets, parameter, sigma=1, reoptimize=True):
@@ -302,11 +318,12 @@ class Fit:
         datasets : `Datasets` or list of `Dataset`
             Datasets to optimize.
         parameter : `~gammapy.modeling.Parameter`
-            Parameter of interest
-        sigma : float
-            Number of standard deviations for the confidence level
-        reoptimize : bool
+            Parameter of interest.
+        sigma : float, optional
+            Number of standard deviations for the confidence level. Default is 1.
+        reoptimize : bool, optional
             Re-optimize other parameters, when computing the confidence region.
+            Default is True.
 
         Returns
         -------
@@ -341,6 +358,10 @@ class Fit:
         The method used is to vary one parameter, keeping all others fixed.
         So this is taking a "slice" or "scan" of the fit statistic.
 
+        Notes
+        -----
+        The progress bar can be displayed for this function.
+
         Parameters
         ----------
         datasets : `Datasets` or list of `Dataset`
@@ -348,14 +369,14 @@ class Fit:
         parameter : `~gammapy.modeling.Parameter`
             Parameter of interest. The specification for the scan, such as bounds
             and number of values is taken from the parameter object.
-        reoptimize : bool
-            Re-optimize other parameters, when computing the confidence region.
+        reoptimize : bool, optional
+            Re-optimize other parameters, when computing the confidence region. Default is False.
 
         Returns
         -------
         results : dict
             Dictionary with keys "parameter_name_scan", "stat_scan" and "fit_results". The latter contains an
-            empty list, if `reoptimize` is set to False
+            empty list, if `reoptimize` is set to False.
         """
         datasets, parameters = self._parse_datasets(datasets=datasets)
 
@@ -393,22 +414,26 @@ class Fit:
 
         Caveat: This method can be very computationally intensive and slow
 
-        See also: `Fit.stat_contour`
+        See also: `Fit.stat_contour`.
+
+        Notes
+        -----
+        The progress bar can be displayed for this function.
 
         Parameters
         ----------
         datasets : `Datasets` or list of `Dataset`
             Datasets to optimize.
         x, y : `~gammapy.modeling.Parameter`
-            Parameters of interest
-        reoptimize : bool
-            Re-optimize other parameters, when computing the confidence region.
+            Parameters of interest.
+        reoptimize : bool, optional
+            Re-optimize other parameters, when computing the confidence region. Default is False.
 
         Returns
         -------
         results : dict
             Dictionary with keys "x_values", "y_values", "stat" and "fit_results".
-            The latter contains an empty list, if `reoptimize` is set to False
+            The latter contains an empty list, if `reoptimize` is set to False.
         """
         datasets, parameters = self._parse_datasets(datasets=datasets)
 
@@ -469,17 +494,17 @@ class Fit:
         datasets : `Datasets` or list of `Dataset`
             Datasets to optimize.
         x, y : `~gammapy.modeling.Parameter`
-            Parameters of interest
-        numpoints : int
-            Number of contour points
-        sigma : float
-            Number of standard deviations for the confidence level
+            Parameters of interest.
+        numpoints : int, optional
+            Number of contour points. Default is 10.
+        sigma : float, optional
+            Number of standard deviations for the confidence level. Default is 1.
 
         Returns
         -------
         result : dict
             Dictionary containing the parameter values defining the contour, with the
-            boolean flag "success" and the info objects from ``mncontour``.
+            boolean flag "success" and the information objects from ``mncontour``.
         """
         datasets, parameters = self._parse_datasets(datasets=datasets)
 
@@ -511,7 +536,7 @@ class Fit:
 
 
 class FitStepResult:
-    """Fit result base class"""
+    """Fit result base class."""
 
     def __init__(self, backend, method, success, message):
         self._success = success
@@ -539,7 +564,7 @@ class FitStepResult:
         """Optimizer status message."""
         return self._message
 
-    def __repr__(self):
+    def __str__(self):
         return (
             f"{self.__class__.__name__}\n\n"
             f"\tbackend    : {self.backend}\n"
@@ -547,6 +572,12 @@ class FitStepResult:
             f"\tsuccess    : {self.success}\n"
             f"\tmessage    : {self.message}\n"
         )
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
 
 class CovarianceResult(FitStepResult):
@@ -558,33 +589,39 @@ class CovarianceResult(FitStepResult):
 
     @property
     def matrix(self):
-        """Covariance matrix (`~numpy.ndarray`)"""
+        """Covariance matrix as a `~numpy.ndarray`."""
         return self._matrix
 
 
 class OptimizeResult(FitStepResult):
     """Optimize result object."""
 
-    def __init__(self, models, nfev, total_stat, trace, **kwargs):
+    def __init__(self, models, nfev, total_stat, trace, minuit=None, **kwargs):
         self._models = models
         self._nfev = nfev
         self._total_stat = total_stat
         self._trace = trace
+        self._minuit = minuit
         super().__init__(**kwargs)
 
     @property
+    def minuit(self):
+        """Minuit object."""
+        return self._minuit
+
+    @property
     def parameters(self):
-        """Best fit parameters"""
+        """Best fit parameters."""
         return self.models.parameters
 
     @property
     def models(self):
-        """Best fit models"""
+        """Best fit models."""
         return self._models
 
     @property
     def trace(self):
-        """Parameter trace from the optimisation"""
+        """Parameter trace from the optimisation."""
         return self._trace
 
     @property
@@ -597,15 +634,15 @@ class OptimizeResult(FitStepResult):
         """Value of the fit statistic at minimum."""
         return self._total_stat
 
-    def __repr__(self):
-        str_ = super().__repr__()
-        str_ += f"\tnfev       : {self.nfev}\n"
-        str_ += f"\ttotal stat : {self.total_stat:.2f}\n\n"
-        return str_
+    def __str__(self):
+        string = super().__str__()
+        string += f"\tnfev       : {self.nfev}\n"
+        string += f"\ttotal stat : {self.total_stat:.2f}\n\n"
+        return string
 
 
 class FitResult:
-    """Fit result class
+    """Fit result class.
 
     Parameters
     ----------
@@ -617,55 +654,48 @@ class FitResult:
 
     def __init__(self, optimize_result=None, covariance_result=None):
         self._optimize_result = optimize_result
-
-        if covariance_result:
-            self.optimize_result.models.covariance = covariance_result.matrix
-
         self._covariance_result = covariance_result
 
-    # TODO: is the convenience access needed?
+    @property
+    def minuit(self):
+        """Minuit object."""
+        return self.optimize_result.minuit
+
     @property
     def parameters(self):
-        """Best fit parameters of the optimization step"""
+        """Best fit parameters of the optimization step."""
         return self.optimize_result.parameters
 
-    # TODO: is the convenience access needed?
     @property
     def models(self):
-        """Best fit parameters of the optimization step"""
+        """Best fit parameters of the optimization step."""
         return self.optimize_result.models
 
-    # TODO: is the convenience access needed?
     @property
     def total_stat(self):
-        """Total stat of the optimization step"""
+        """Total stat of the optimization step."""
         return self.optimize_result.total_stat
 
-    # TODO: is the convenience access needed?
     @property
     def trace(self):
-        """Parameter trace of the optimisation step"""
+        """Parameter trace of the optimisation step."""
         return self.optimize_result.trace
 
-    # TODO: is the convenience access needed?
     @property
     def nfev(self):
-        """Number of function evaluations of the optimisation step"""
+        """Number of function evaluations of the optimisation step."""
         return self.optimize_result.nfev
 
-    # TODO: is the convenience access needed?
     @property
     def backend(self):
         """Optimizer backend used for the fit."""
         return self.optimize_result.backend
 
-    # TODO: is the convenience access needed?
     @property
     def method(self):
         """Optimizer method used for the fit."""
         return self.optimize_result.method
 
-    # TODO: is the convenience access needed?
     @property
     def message(self):
         """Optimizer status message."""
@@ -673,7 +703,7 @@ class FitResult:
 
     @property
     def success(self):
-        """Total success flag"""
+        """Total success flag."""
         success = self.optimize_result.success
 
         if self.covariance_result:
@@ -683,20 +713,26 @@ class FitResult:
 
     @property
     def optimize_result(self):
-        """Optimize result"""
+        """Optimize result."""
         return self._optimize_result
 
     @property
     def covariance_result(self):
-        """Optimize result"""
+        """Optimize result."""
         return self._covariance_result
 
-    def __repr__(self):
-        str_ = ""
+    def __str__(self):
+        string = ""
         if self.optimize_result:
-            str_ += str(self.optimize_result)
+            string += str(self.optimize_result)
 
         if self.covariance_result:
-            str_ += str(self.covariance_result)
+            string += str(self.covariance_result)
 
-        return str_
+        return string
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"

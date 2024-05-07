@@ -1,8 +1,8 @@
 r"""
 .. _absorption-spectral-model:
 
-EBL absorbption spectral model
-==============================
+EBL absorption spectral model
+=============================
 
 This model evaluates absorbed spectral model.
 
@@ -15,6 +15,8 @@ where :math:`\tau(E, z)` is the optical depth predicted by the model
 (`~gammapy.modeling.models.EBLAbsorptionNormSpectralModel`), which depends on the energy of the gamma-rays and the
 redshift z of the source, and :math:`\alpha` is a scale factor
 (default: 1) for the optical depth.
+
+The available EBL models are defined in `~gammapy.modeling.models.EBL_DATA_BUILTIN`.
 """
 
 # %%
@@ -25,11 +27,15 @@ redshift z of the source, and :math:`\alpha` is a scale factor
 from astropy import units as u
 import matplotlib.pyplot as plt
 from gammapy.modeling.models import (
+    EBL_DATA_BUILTIN,
     EBLAbsorptionNormSpectralModel,
     Models,
     PowerLawSpectralModel,
     SkyModel,
 )
+
+# Print the available EBL models
+print(EBL_DATA_BUILTIN.keys())
 
 # Here we illustrate how to create and plot EBL absorption models for a redshift of 0.5
 # sphinx_gallery_thumbnail_number = 1

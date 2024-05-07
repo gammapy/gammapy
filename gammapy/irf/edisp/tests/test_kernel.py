@@ -1,7 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import warnings
+import pytest
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
+from astropy.io import fits
 from gammapy.irf import EDispKernel
 from gammapy.maps import MapAxis
 from gammapy.utils.testing import mpl_plot_check, requires_data
@@ -34,6 +37,12 @@ class TestEDispKernel:
         expected = [[0, 0], [0, 0], [1, 0], [0, 1]]
 
         assert_equal(edisp.pdf_matrix, expected)
+
+        # Test with different energy units
+        energy_axis = MapAxis.from_energy_edges([2000, 4000, 6000] * u.GeV)
+        edisp = EDispKernel.from_diagonal_response(energy_axis_true, energy_axis)
+        assert edisp.pdf_matrix.shape == (4, 2)
+        assert_allclose(edisp.pdf_matrix, expected, atol=1e-5)
 
         # Test square matrix
         edisp = EDispKernel.from_diagonal_response(energy_axis_true)
@@ -106,3 +115,22 @@ def test_get_bias_energy():
     edisp = EDispKernel.read(rmffile)
     thresh_lo = edisp.get_bias_energy(0.1)
     assert_allclose(thresh_lo.to("TeV").value, 0.9174, rtol=1e-4)
+
+
+@pytest.mark.xfail
+def test_io_ogip_checksum(tmp_path):
+    """Obs read from file"""
+    energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=100)
+    energy_axis_true = energy_axis.copy(name="energy_true")
+
+    edisp = EDispKernel.from_diagonal_response(
+        energy_axis=energy_axis, energy_axis_true=energy_axis_true
+    )
+    path = tmp_path / "test.fits"
+    edisp.write(path, checksum=True)
+
+    # TODO: why does this fail?
+    # MATRIX hdu checksum is changed.
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        fits.open(path, checksum=True)

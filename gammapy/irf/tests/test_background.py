@@ -4,7 +4,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-from gammapy.irf import Background2D, Background3D
+from gammapy.irf import Background2D, Background3D, FoVAlignment
 from gammapy.maps import MapAxis
 from gammapy.utils.testing import mpl_plot_check, requires_data
 
@@ -137,7 +137,6 @@ def test_plot_at_energy(bkg_3d):
 
 
 def test_background_3d_missing_values(bkg_3d_interp):
-
     res = bkg_3d_interp.evaluate(
         fov_lon=0.5 * u.deg,
         fov_lat=0.5 * u.deg,
@@ -151,7 +150,7 @@ def test_background_3d_missing_values(bkg_3d_interp):
         energy=999 * u.TeV,
     )
     assert_allclose(res.value, 8.796068e18)
-    # without missing value interplation
+    # without missing value interpolation
     # extrapolation within the last bin would give too high value
 
     bkg_3d_interp.interp_missing_data(axis_name="energy")
@@ -369,7 +368,7 @@ def test_to_3d(bkg_2d):
     assert bkg_3d.data.shape == (2, 6, 6)
     assert_allclose(bkg_3d.data[1, 3, 3], 2.31, rtol=0.1)
 
-    # assert you get back same after goint to 2d
+    # assert you get back same after joint to 2d
     # need high rtol due to interpolation effects?
     b2 = bkg_3d.to_2d()
     assert_allclose(bkg_2d.data, b2.data, rtol=0.2)
@@ -402,3 +401,42 @@ def test_eq(bkg_2d):
 
     bkg1.data[0][0] = 10
     assert not bkg1 == bkg_2d
+
+
+def test_write_bkg_3d():
+    e_reco = MapAxis.from_energy_bounds(0.1, 10, 6, unit="TeV", name="energy")
+    lon_axis = MapAxis.from_bounds(
+        -2.3, 2.3, 10, interp="lin", unit="deg", name="fov_lon"
+    )
+    lat_axis = MapAxis.from_bounds(
+        -2.3, 2.3, 10, interp="lin", unit="deg", name="fov_lat"
+    )
+    bg_3d = Background3D(
+        axes=[e_reco, lon_axis, lat_axis],
+        data=np.ones((6, 10, 10)),
+        unit=u.Unit("s-1 MeV-1 sr-1"),
+        fov_alignment=FoVAlignment.ALTAZ,
+    )
+    hduBackground = bg_3d.to_table_hdu()
+    hduBackground.writeto("background.fits", overwrite=True)
+    bg = Background3D.read("background.fits", hdu="BACKGROUND")
+
+    assert bg.fov_alignment.value == "ALTAZ"
+
+
+def test_to2d_to3d():
+    # Test for issue 4950
+    energy = [0.1, 10, 1000] * u.TeV
+    energy_axis = MapAxis.from_energy_edges(energy)
+    nbin = 21
+    fov_lon_axis = MapAxis.from_bounds(-2 * u.deg, 2 * u.deg, nbin=nbin, name="fov_lon")
+    fov_lat_axis = MapAxis.from_bounds(-2 * u.deg, 2 * u.deg, nbin=nbin, name="fov_lat")
+    data = np.ones((2, nbin, nbin)) * 1.5
+    bkg = Background3D(
+        axes=[energy_axis, fov_lon_axis, fov_lat_axis], data=data, unit="s-1 GeV-1 sr-1"
+    )
+    bkg2d = bkg.to_2d()
+    assert_allclose(bkg2d.axes["offset"].center[0].value, 0.0, atol=1e-5)
+    bkg3d = bkg2d.to_3d()
+    assert bkg3d.axes["fov_lon"].is_allclose(fov_lon_axis)
+    assert_allclose(bkg3d.data[0][10], bkg.data[0][10], rtol=1e-5)

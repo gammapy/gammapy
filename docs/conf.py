@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 #
-# Gammapt documentation build configuration file.
+# Gammapy documentation build configuration file.
 #
 # This file is execfile()d with the current directory set to its containing dir.
 #
@@ -42,6 +42,7 @@ from sphinx_gallery.sorting import ExplicitOrder, FileNameSortKey
 from gammapy.utils.docs import SubstitutionCodeBlock, gammapy_sphinx_ext_activate
 
 # flake8: noqa
+
 
 # Add our custom directives to Sphinx
 def setup(app):
@@ -123,7 +124,7 @@ extensions.extend(
         "sphinx.ext.mathjax",
         "sphinx_gallery.gen_gallery",
         "sphinx.ext.doctest",
-        "sphinx_panels",
+        "sphinx_design",
         "sphinx_copybutton",
         "sphinx_automodapi.smart_resolver",
     ]
@@ -137,6 +138,7 @@ copybutton_prompt_is_regexp = True
 # This is added to the end of RST files - a good place to put substitutions to
 # be used globally.
 rst_epilog += """
+.. |Table| replace:: :class:`~astropy.table.Table`
 """
 
 # This is added to keep the links to PRs in release notes
@@ -157,7 +159,9 @@ if "dev" in version:
 else:
     release = version
 
-substitutions = [("|release|", release)]
+substitutions = [
+    ("|release|", release),
+]
 # -- Options for HTML output ---------------------------------------------------
 
 # A NOTE ON HTML THEMES
@@ -229,12 +233,10 @@ html_theme_options = {
         "json_url": "https://docs.gammapy.org/stable/switcher.json",
         "version_match": switch_version,
     },
-    "navbar_end": ["version-switcher", "navbar-icon-links"],
+    "navbar_end": ["version-switcher", "theme-switcher", "navbar-icon-links"],
+    "navigation_with_keys": True,
 }
 
-# Theme style
-# html_style = ""
-html_css_files = ["gammapy.css"]
 
 gammapy_sphinx_ext_activate()
 
@@ -269,7 +271,7 @@ automodsumm_inherited_members = True
 # http://www.sphinx-doc.org/en/stable/config.html#confval-suppress_warnings
 suppress_warnings = ["ref.citation"]
 
-branch = "master" if switch_version == "dev" else f"v{switch_version}"
+branch = "main" if switch_version == "dev" else f"v{switch_version}"
 
 binder_config = {
     # Required keys
@@ -311,7 +313,7 @@ sphinx_gallery_conf = {
     "backreferences_dir": "gen_modules/backreferences",
     "doc_module": ("gammapy",),
     "exclude_implicit_doc": {},
-    "filename_pattern": "\.py",
+    "filename_pattern": r"\.py",
     "reset_modules": ("matplotlib",),
     "within_subsection_order": FileNameSortKey,
     "download_all_examples": True,
@@ -324,4 +326,14 @@ sphinx_gallery_conf = {
         # The module you locally document uses None
         "gammapy": None,
     },
+}
+
+html_static_path = ["_static"]
+
+html_css_files = [
+    "custom.css",
+]
+
+html_context = {
+    "default_mode": "light",
 }

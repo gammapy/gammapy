@@ -20,6 +20,7 @@ Setup
 
 import numpy as np
 from astropy import units as u
+from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
 import matplotlib.pyplot as plt
 from IPython.display import display
@@ -33,6 +34,7 @@ from gammapy.makers import (
     SafeMaskMaker,
     SpectrumDatasetMaker,
 )
+from gammapy.makers.utils import make_effective_livetime_map, make_observation_time_map
 from gammapy.maps import MapAxis, RegionGeom, WcsGeom
 
 ######################################################################
@@ -71,7 +73,7 @@ print(dataset_empty)
 
 ######################################################################
 # It is possible to compute the instrument response functions with
-# different spatial and energy binnings as compared to the counts and
+# different spatial and energy bins as compared to the counts and
 # background maps. For example, one can specify a true energy axis which
 # defines the energy binning of the IRFs:
 #
@@ -83,7 +85,7 @@ dataset_empty = MapDataset.create(geom=geom, energy_axis_true=energy_axis_true)
 
 
 ######################################################################
-# For the detail of the other options availables, you can always call the
+# For the detail of the other options available, you can always call the
 # help:
 #
 
@@ -103,8 +105,9 @@ obs = data_store.get_observations([23592])[0]
 maker = MapDatasetMaker()
 dataset = maker.run(dataset_empty, obs)
 print(dataset)
-plt.figure()
+
 dataset.counts.sum_over_axes().plot(stretch="sqrt", add_cbar=True)
+plt.show()
 
 
 ######################################################################
@@ -113,7 +116,7 @@ dataset.counts.sum_over_axes().plot(stretch="sqrt", add_cbar=True)
 # The `~gammapy.makers.MapDatasetMaker` has a `selection` parameter, in case some of
 # the maps should not be computed. There is also a
 # `background_oversampling` parameter that defines the oversampling
-# factor in energy used to compute the bakcground (default is None).
+# factor in energy used to compute the background (default is None).
 #
 # Safe data range handling
 # ------------------------
@@ -126,7 +129,7 @@ dataset.counts.sum_over_axes().plot(stretch="sqrt", add_cbar=True)
 # includes the pixel, while a value of `False` or `0` excludes a
 # pixels from the analysis. To compute safe data range masks according to
 # certain criteria, Gammapy provides a `~gammapy.makers.SafeMaskMaker` class. The
-# different criteria are given by the `methods`\ argument, available
+# different criteria are given by the `methods` argument, available
 # options are :
 #
 # -  aeff-default, uses the energy ranged specified in the DL3 data files,
@@ -144,7 +147,7 @@ dataset.counts.sum_over_axes().plot(stretch="sqrt", add_cbar=True)
 #
 # Note that currently some methods computing a safe energy range
 # ("aeff-default", "aeff-max" and "edisp-bias") determine a true energy range and
-#  apply it to reconstructed energy, effectively neglecting the energy dispersion.
+# apply it to reconstructed energy, effectively neglecting the energy dispersion.
 #
 # Multiple methods can be combined. Here is an example :
 #
@@ -156,8 +159,9 @@ safe_mask_maker = SafeMaskMaker(
 dataset = maker.run(dataset_empty, obs)
 dataset = safe_mask_maker.run(dataset, obs)
 print(dataset.mask_safe)
-plt.figure()
+
 dataset.mask_safe.sum_over_axes().plot()
+plt.show()
 
 
 ######################################################################
@@ -186,7 +190,7 @@ dataset.mask_safe.sum_over_axes().plot()
 # is incorrect and that some spectral corrections are necessary. This is
 # made possible thanks to the `~gammapy.makers.FoVBackgroundMaker`. This
 # technique is recommended in most 3D data reductions. For more details
-# and usage, see `fov_background <../../user-guide/makers/fov.rst>`__.
+# and usage, see the :doc:`FoV background </user-guide/makers/fov>`.
 #
 # Here we are going to use a `~gammapy.makers.FoVBackgroundMaker` that
 # will rescale the background model to the data excluding the region where
@@ -202,7 +206,7 @@ dataset = fov_bkg_maker.run(dataset)
 
 
 ######################################################################
-# Other backgrounds production methods are available as listed below.
+# Other backgrounds production methods available are listed below.
 #
 # Ring background
 # ~~~~~~~~~~~~~~~
@@ -210,14 +214,14 @@ dataset = fov_bkg_maker.run(dataset)
 # If the background model does not reproduce well the morphology, a
 # classical approach consists in applying local corrections by smoothing
 # the data with a ring kernel. This allows to build a set of OFF counts
-# taking into account the inperfect knowledge of the background. This is
+# taking into account the imperfect knowledge of the background. This is
 # implemented in the `~gammapy.makers.RingBackgroundMaker` which
 # transforms the Dataset in a `~gammapy.datasets.MapDatasetOnOff`. This technique is
 # mostly used for imaging, and should not be applied for 3D modeling and
 # fitting.
 #
 # For more details and usage, see
-# `ring_background <../../user-guide/makers/ring.rst>`__.
+# :doc:`Ring background </user-guide/makers/ring>`
 #
 # Reflected regions background
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -232,14 +236,14 @@ dataset = fov_bkg_maker.run(dataset)
 # This method is only used for 1D spectral analysis.
 #
 # For more details and usage, see
-# `reflected_background <../../user-guide/makers/reflected.rst>`__.
+# the :doc:`Reflected background </user-guide/makers/reflected>`
 #
 # Data reduction loop
 # -------------------
 #
 # The data reduction steps can be combined in a single loop to run a full
 # data reduction chain. For this the `MapDatasetMaker` is run first and
-# the output dataset is the passed on to the next maker step. Finally the
+# the output dataset is the passed on to the next maker step. Finally, the
 # dataset per observation is stacked into a larger map.
 #
 
@@ -259,7 +263,7 @@ safe_mask_maker = SafeMaskMaker(
 stacked = MapDataset.create(geom)
 
 for obs in observations:
-    local_dataset = stacked.cutout(obs.pointing_radec, width="6 deg")
+    local_dataset = stacked.cutout(obs.get_pointing_icrs(obs.tmid), width="6 deg")
     dataset = dataset_maker.run(local_dataset, obs)
     dataset = safe_mask_maker.run(dataset, obs)
     dataset = fov_bkg_maker.run(dataset)
@@ -280,11 +284,11 @@ print(stacked)
 # to zero, then data is added to the larger map dataset. To stack multiple
 # observations, the larger dataset must be created first.
 #
-# The data reduction loop shown above can be done throught the
+# The data reduction loop shown above can be done through the
 # `~gammapy.makers.DatasetsMaker` class that take as argument a list of makers. **Note
 # that the order of the makers list is important as it determines their
 # execution order.** Moreover the `stack_datasets` option offers the
-# possibily to stack or not the output datasets, and the `n_jobs` option
+# possibility to stack or not the output datasets, and the `n_jobs` option
 # allow to use multiple processes on run.
 #
 
@@ -299,7 +303,7 @@ print(datasets)
 # Spectrum dataset
 # ----------------
 #
-# The spectrum datasets represent 1D spectra along an energy axis whitin a
+# The spectrum datasets represent 1D spectra along an energy axis within a
 # given on region. The `~gammapy.datasets.SpectrumDataset` contains a counts spectrum, and
 # a background model. The `~gammapy.datasets.SpectrumDatasetOnOff` contains ON and OFF
 # count spectra, background is implicitly modeled via the OFF counts
@@ -307,7 +311,7 @@ print(datasets)
 #
 # The `~gammapy.datasets.SpectrumDatasetMaker` make spectrum dataset for a single
 # observation. In that case the irfs and background are computed at a
-# single fixed offset, which is recommend only for point-sources.
+# single fixed offset, which is recommended only for point-sources.
 #
 # Here is an example of data reduction loop to create
 # `~gammapy.datasets.SpectrumDatasetOnOff` datasets:
@@ -340,3 +344,95 @@ for observation in observations:
 print(datasets)
 
 plt.show()
+
+######################################################################
+# Observation duration and effective livetime
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# It can often be useful to know the total number of hours spent
+# in the given field of view (without correcting for the acceptance
+# variation). This can be computed using `make_observation_time_map`
+# as shown below
+#
+
+# Get the observations
+obs_id = data_store.obs_table["OBS_ID"][data_store.obs_table["OBJECT"] == "MSH 15-5-02"]
+observations = data_store.get_observations(obs_id)
+print("No. of observations: ", len(observations))
+
+# Define an energy range
+energy_min = 100 * u.GeV
+energy_max = 10.0 * u.TeV
+
+# Define an offset cut (the camera field of view)
+offset_max = 2.5 * u.deg
+
+# Define the geom
+source_pos = SkyCoord(228.32, -59.08, unit="deg")
+energy_axis_true = MapAxis.from_energy_bounds(
+    energy_min, energy_max, nbin=2, name="energy_true"
+)
+geom = WcsGeom.create(
+    skydir=source_pos,
+    binsz=0.02,
+    width=(6, 6),
+    frame="icrs",
+    proj="CAR",
+    axes=[energy_axis_true],
+)
+
+total_obstime = make_observation_time_map(observations, geom, offset_max=offset_max)
+
+
+plt.figure(figsize=(5, 5))
+ax = total_obstime.plot(add_cbar=True)
+# Add the pointing position on top
+for obs in observations:
+    ax.plot(
+        obs.get_pointing_icrs(obs.tmid).to_pixel(wcs=ax.wcs)[0],
+        obs.get_pointing_icrs(obs.tmid).to_pixel(wcs=ax.wcs)[1],
+        "+",
+        color="black",
+    )
+ax.set_title("Total observation time")
+plt.show()
+
+######################################################################
+# As the acceptance of IACT cameras vary within the field of
+# view, it can also be interesting to plot the on-axis equivalent
+# number of hours.
+#
+
+effective_livetime = make_effective_livetime_map(
+    observations, geom, offset_max=offset_max
+)
+
+
+axs = effective_livetime.plot_grid(add_cbar=True)
+# Add the pointing position on top
+for ax in axs:
+    for obs in observations:
+        ax.plot(
+            obs.get_pointing_icrs(obs.tmid).to_pixel(wcs=ax.wcs)[0],
+            obs.get_pointing_icrs(obs.tmid).to_pixel(wcs=ax.wcs)[1],
+            "+",
+            color="black",
+        )
+plt.show()
+
+######################################################################
+# To get the value of the observation time at a particular position,
+# use `get_by_coord`
+
+obs_time_src = total_obstime.get_by_coord(source_pos)
+effective_times_src = effective_livetime.get_by_coord(
+    (source_pos, energy_axis_true.center)
+)
+
+print(f"Time spent on position {source_pos}")
+print(f"Total observation time: {obs_time_src}* {total_obstime.unit}")
+print(
+    f"Effective livetime at {energy_axis_true.center[0]}: {effective_times_src[0]} * {effective_livetime.unit}"
+)
+print(
+    f"Effective livetime at {energy_axis_true.center[1]}: {effective_times_src[1]} * {effective_livetime.unit}"
+)

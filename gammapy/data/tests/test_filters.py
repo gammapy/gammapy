@@ -7,7 +7,7 @@ from astropy.time import Time
 from astropy.units import Quantity
 from gammapy.data import GTI, DataStore, EventList, ObservationFilter
 from gammapy.utils.regions import SphericalCircleSkyRegion
-from gammapy.utils.testing import assert_time_allclose, requires_data
+from gammapy.utils.testing import assert_allclose, assert_time_allclose, requires_data
 
 
 def test_event_filter_types():
@@ -78,3 +78,31 @@ def test_filter_gti(observation):
     assert isinstance(filtered_gti, GTI)
     assert_time_allclose(filtered_gti.time_start, time_filter[0])
     assert_time_allclose(filtered_gti.time_stop, time_filter[1])
+
+
+@pytest.mark.parametrize(
+    "pars",
+    [
+        {
+            "p_in": [
+                {"type": "custom", "opts": dict(parameter="PHASE", band=(0.2, 0.8))}
+            ],
+            "p_out": 0.6,
+        },
+        {
+            "p_in": [
+                {
+                    "type": "custom",
+                    "opts": dict(parameter="ENERGY", band=(0.1, 1) * u.TeV),
+                }
+            ],
+            "p_out": 1,
+        },
+        {
+            "p_in": [],
+            "p_out": 1,
+        },
+    ],
+)
+def test_check_filter_phase(pars):
+    assert_allclose(ObservationFilter._check_filter_phase(pars["p_in"]), pars["p_out"])

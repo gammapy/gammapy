@@ -217,13 +217,13 @@ def test_safe_mask_maker_dl3(spectrum_dataset_crab, observations_hess_dl3):
 
 @requires_data()
 def test_safe_mask_maker_dc1(spectrum_dataset_gc, observations_cta_dc1):
-    safe_mask_maker = SafeMaskMaker(methods=["edisp-bias", "aeff-max"])
-
-    obs = observations_cta_dc1[0]
+    safe_mask_maker = SafeMaskMaker(methods=["aeff-max"])
+    empty = SpectrumDataset.from_geoms(**spectrum_dataset_gc.geoms)
+    obs = observations_cta_dc1[1]
     maker = SpectrumDatasetMaker()
-    dataset = maker.run(spectrum_dataset_gc, obs)
+    dataset = maker.run(empty, obs)
     dataset = safe_mask_maker.run(dataset, obs)
-    assert_allclose(dataset.energy_range[0], 1, rtol=1e-3)
+    assert_allclose(dataset.energy_range[0].data, 1.0, rtol=1e-3)
     assert dataset.energy_range[0].unit == "TeV"
 
 
@@ -284,9 +284,7 @@ class TestSpectrumMakerChain:
         [
             (
                 dict(containment_correction=False),
-                dict(
-                    n_on=125, sigma=18.953014, aeff=580254.9 * u.m**2, edisp=0.235864
-                ),
+                dict(n_on=125, sigma=18.953014, aeff=580254.9 * u.m**2, edisp=0.235864),
             ),
             (
                 dict(containment_correction=True),
@@ -335,16 +333,13 @@ class TestSpectrumMakerChain:
         assert_quantity_allclose(aeff_actual, results["aeff"], rtol=1e-3)
         assert_quantity_allclose(edisp_actual, results["edisp"], rtol=1e-3)
 
-        # TODO: Introduce assert_stats_allclose
         info = dataset.info_dict()
 
         assert info["counts"] == results["n_on"]
         assert_allclose(info["sqrt_ts"], results["sigma"], rtol=1e-2)
 
-        gti_obs = obs.gti.table
-        gti_dataset = dataset.gti.table
-        assert_allclose(gti_dataset["START"], gti_obs["START"])
-        assert_allclose(gti_dataset["STOP"], gti_obs["STOP"])
+        assert_allclose(dataset.gti.met_start, obs.gti.met_start)
+        assert_allclose(dataset.gti.met_stop, obs.gti.met_stop)
 
     def test_compute_energy_threshold(
         self, spectrum_dataset_crab_fine, observations_hess_dl3

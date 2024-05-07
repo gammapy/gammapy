@@ -7,6 +7,14 @@ from .fit_statistics_cython import (
     f_cash_root_cython,
     norm_bounds_cython,
 )
+from .variability import (
+    TimmerKonig_lightcurve_simulator,
+    compute_chisq,
+    compute_flux_doubling,
+    compute_fpp,
+    compute_fvar,
+    structure_function,
+)
 
 __all__ = [
     "cash",
@@ -19,4 +27,10 @@ __all__ = [
     "norm_bounds_cython",
     "wstat",
     "WStatCountsStatistic",
+    "compute_fvar",
+    "compute_fpp",
+    "compute_flux_doubling",
+    "compute_chisq",
+    "structure_function",
+    "TimmerKonig_lightcurve_simulator",
 ]

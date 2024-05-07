@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Pulsar wind nebula (PWN) source models."""
+import html
 import numpy as np
 import scipy.optimize
 import astropy.constants
@@ -19,7 +20,7 @@ class PWN:
     pulsar : `~gammapy.astro.source.Pulsar`
         Pulsar model instance.
     snr : `~gammapy.astro.source.SNRTrueloveMcKee`
-        SNR model instance
+        SNR model instance.
     eta_e : float
         Fraction of energy going into electrons.
     eta_B : float
@@ -27,7 +28,7 @@ class PWN:
     age : `~astropy.units.Quantity`
         Age of the PWN.
     morphology : str
-        Morphology model of the PWN
+        Morphology model of the PWN.
     """
 
     def __init__(
@@ -48,6 +49,12 @@ class PWN:
         self.morphology = morphology
         if age is not None:
             self.age = Quantity(age, "yr")
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     def _radius_free_expansion(self, t):
         """Radius at age t during free expansion phase.
@@ -94,7 +101,7 @@ class PWN:
         Parameters
         ----------
         t : `~astropy.units.Quantity`
-            Time after birth of the SNR
+            Time after birth of the SNR.
         """
         t = Quantity(t, "yr")
         r_collision = self._radius_free_expansion(self._collision_time)
@@ -115,7 +122,7 @@ class PWN:
         Parameters
         ----------
         t : `~astropy.units.Quantity`
-            Time after birth of the SNR
+            Time after birth of the SNR.
         """
         t = Quantity(t, "yr")
         energy = self.pulsar.energy_integrated(t)

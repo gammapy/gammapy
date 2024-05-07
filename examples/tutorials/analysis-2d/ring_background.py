@@ -59,6 +59,7 @@ from gammapy.analysis import Analysis, AnalysisConfig
 from gammapy.datasets import MapDatasetOnOff
 from gammapy.estimators import ExcessMapEstimator
 from gammapy.makers import RingBackgroundMaker
+from gammapy.visualization import plot_distribution
 
 log = logging.getLogger(__name__)
 
@@ -150,7 +151,7 @@ analysis.get_datasets()
 # ------------------------------
 #
 # Since the ring background is extracted from real off events, we need to
-# use the wstat statistics in this case. For this, we will use the
+# use the Wstat statistics in this case. For this, we will use the
 # `MapDatasetOnOFF` and the `RingBackgroundMaker` classes.
 #
 
@@ -173,6 +174,7 @@ geom_image = geom.to_image().to_cube([energy_axis.squash()])
 regions = CircleSkyRegion(center=source_pos, radius=0.3 * u.deg)
 exclusion_mask = ~geom_image.region_mask([regions])
 exclusion_mask.sum_over_axes().plot()
+plt.show()
 
 
 ######################################################################
@@ -193,7 +195,7 @@ ring_maker = RingBackgroundMaker(
 # together to create a single stacked map for further analysis
 #
 
-#%%time
+# %%time
 energy_axis_true = analysis.datasets[0].exposure.geom.axes["energy_true"]
 stacked_on_off = MapDatasetOnOff.create(
     geom=geom_image, energy_axis_true=energy_axis_true, name="stacked"
@@ -236,7 +238,7 @@ excess_map = lima_maps["npred_excess"]
 
 # We can plot the excess and significance maps
 fig, (ax1, ax2) = plt.subplots(
-    figsize=(11, 5), subplot_kw={"projection": lima_maps.geom.wcs}, ncols=2
+    figsize=(11, 4), subplot_kw={"projection": lima_maps.geom.wcs}, ncols=2
 )
 
 ax1.set_title("Significance map")
@@ -244,10 +246,11 @@ significance_map.plot(ax=ax1, add_cbar=True)
 
 ax2.set_title("Excess map")
 excess_map.plot(ax=ax2, add_cbar=True)
+plt.show()
 
 
 ######################################################################
-# It is often important to look at the signficance distribution outside
+# It is often important to look at the significance distribution outside
 # the exclusion region to check that the background estimation is not
 # contaminated by gamma-ray events. This can be the case when exclusion
 # regions are not large enough. Typically, we expect the off distribution
@@ -256,41 +259,35 @@ excess_map.plot(ax=ax2, add_cbar=True)
 
 # create a 2D mask for the images
 significance_map_off = significance_map * exclusion_mask
-significance_all = significance_map.data[np.isfinite(significance_map.data)]
-significance_off = significance_map_off.data[np.isfinite(significance_map_off.data)]
 
-fig, ax = plt.subplots()
-ax.hist(
-    significance_all,
-    density=True,
-    alpha=0.5,
-    color="red",
-    label="all bins",
-    bins=21,
+kwargs_axes = {"xlabel": "Significance", "yscale": "log", "ylim": (1e-5, 1)}
+
+ax, _ = plot_distribution(
+    significance_map,
+    kwargs_hist={
+        "density": True,
+        "alpha": 0.5,
+        "color": "red",
+        "label": "all bins",
+        "bins": 21,
+    },
+    kwargs_axes=kwargs_axes,
 )
 
-ax.hist(
-    significance_off,
-    density=True,
-    alpha=0.5,
-    color="blue",
-    label="off bins",
-    bins=21,
+ax, res = plot_distribution(
+    significance_map_off,
+    ax=ax,
+    func="norm",
+    kwargs_hist={
+        "density": True,
+        "alpha": 0.5,
+        "color": "blue",
+        "label": "off bins",
+        "bins": 21,
+    },
+    kwargs_axes=kwargs_axes,
 )
 
-# Now, fit the off distribution with a Gaussian
-mu, std = norm.fit(significance_off)
-x = np.linspace(-8, 8, 50)
-p = norm.pdf(x, mu, std)
-ax.plot(x, p, lw=2, color="black")
-ax.legend()
-ax.set_xlabel("Significance")
-ax.set_yscale("log")
-ax.set_ylim(1e-5, 1)
-xmin, xmax = np.min(significance_all), np.max(significance_all)
-ax.set_xlim(xmin, xmax)
-
-print(f"Fit results: mu = {mu:.2f}, std = {std:.2f}")
 plt.show()
 
 # sphinx_gallery_thumbnail_number = 2

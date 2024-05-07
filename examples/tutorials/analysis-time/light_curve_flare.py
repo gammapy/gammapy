@@ -8,7 +8,7 @@ Prerequisites
 -------------
 
 -  Understanding of how the light curve estimator works, please refer to
-   the :doc:`light curve notebook </tutorials/analysis-time/light_curve`.
+   the :doc:`light curve notebook </tutorials/analysis-time/light_curve>`.
 
 Context
 -------
@@ -51,8 +51,9 @@ In summary, we have to:
 -  Define the source model
 -  Extract the light curve from the reduced dataset
 
-Here, we will use the PKS 2155-304 observations from the H.E.S.S. first
-public test data release. We will use time intervals of 5 minutes
+Here, we will use the PKS 2155-304 observations from the
+`H.E.S.S. first public test data release <https://www.mpi-hd.mpg.de/hfm/HESS/pages/dl3-dr1/>`__.
+We will use time intervals of 5 minutes
 duration. The tutorial is implemented with the intermediate level API.
 
 Setup
@@ -77,6 +78,7 @@ log = logging.getLogger(__name__)
 from gammapy.data import DataStore
 from gammapy.datasets import Datasets, SpectrumDataset
 from gammapy.estimators import LightCurveEstimator
+from gammapy.estimators.utils import get_rebinned_axis
 from gammapy.makers import (
     ReflectedRegionsBackgroundMaker,
     SafeMaskMaker,
@@ -143,7 +145,7 @@ print(time_intervals[0].mjd)
 # Here we apply the list of time intervals to the observations with
 # `~gammapy.data.Observations.select_time()`.
 #
-# This will return a new list of Observations filtered by time_intervals.
+# This will return a new list of Observations filtered by ``time_intervals``.
 # For each time interval, a new observation is created that converts the
 # intersection of the GTIs and time interval.
 #
@@ -183,7 +185,7 @@ print(short_observations[1].gti)
 # chosen.
 #
 # We need to define the ON extraction region. Its size follows typical
-# spectral extraction regions for HESS analyses.
+# spectral extraction regions for H.E.S.S. analyses.
 #
 
 # Target definition
@@ -217,7 +219,7 @@ safe_mask_masker = SafeMaskMaker(methods=["aeff-max"], aeff_percent=10)
 # Creation of the datasets
 # ~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# Now we perform the actual data reduction in the time_intervals.
+# Now we perform the actual data reduction in the ``time_intervals``.
 #
 
 # %%time
@@ -271,14 +273,17 @@ datasets.models = sky_model
 # We first create the `~gammapy.estimators.LightCurveEstimator` for the
 # list of datasets we just produced. We give the estimator the name of the
 # source component to be fitted.
-#
+# By default the likelihood scan is computed from 0.2 to 5.0.
+# Here, we increase the max value to 10.0, because we are
+# dealing with a large flare.
 
 lc_maker_1d = LightCurveEstimator(
     energy_edges=[0.7, 20] * u.TeV,
     source="pks2155",
     time_intervals=time_intervals,
-    selection_optional=None,
+    selection_optional="all",
 )
+lc_maker_1d.norm.scan_max = 10
 
 
 ######################################################################
@@ -297,4 +302,20 @@ lc_1d = lc_maker_1d.run(datasets)
 #
 plt.figure(figsize=(8, 6))
 lc_1d.plot(marker="o")
+plt.show()
+
+
+######################################################################
+# Light curves once obtained can be rebinned.
+# Here, we rebin 4 adjacent bins together, to get 30 min bins
+#
+
+axis_new = get_rebinned_axis(lc_1d, method="fixed-bins", group_size=3, axis_name="time")
+print(axis_new)
+
+lc_new = lc_1d.resample_axis(axis_new)
+plt.figure(figsize=(8, 6))
+ax = lc_1d.plot(label="original")
+lc_new.plot(ax=ax, label="rebinned")
+plt.legend()
 plt.show()

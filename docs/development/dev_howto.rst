@@ -341,10 +341,6 @@ log messages like this from any function or method:
 You should never log messages from the module level (i.e. on import) or configure the log
 level or format in Gammapy, that should be left to callers ... except from command line tools ...
 
-There is also the rare case of functions or classes with the main job to check
-and log things. For these you can optionally let the caller pass a logger when
-constructing the class to make it easier to configure the logging.
-See the `~gammapy.data.EventListDatasetChecker` as an example.
 
 Interpolation and extrapolation
 -------------------------------
@@ -536,6 +532,21 @@ Here's to commands to check for and fix this (see `here <http://stackoverflow.co
     $ git status
     $ cd astropy_helpers && git checkout -- . && cd ..
 
+Making a pull request that requires backport
+++++++++++++++++++++++++++++++++++++++++++++
+
+Some PRs will need to be backported to specific maintenance branches, for example
+bug fixes or correcting typos in doc-strings. There are a few ways this can be done,
+one of which involves the `meeseeksmachine <https://github.com/meeseeksmachine>`__.
+
+1. Add the backport label to automatically backport your PR. e.g. "``backport-v1.1.x``"
+
+2. If you forgot, on your merged PR make the comment: "``@meeseeksdev backport to [BRANCHNAME]``"
+
+3. If this does not work automatically, a set of instructions will be given to you as a comment in the PR to be backported. This involves using the "``cherry-pick``" git command. See `here <https://docs.astropy.org/en/latest/development/releasing.html#backporting-fixes-from-main>`__ for information.
+
+
+
 
 Release notes
 +++++++++++++
@@ -606,7 +617,7 @@ It will replace the old argument with the new one in a call to the function and 
 
     from gammapy.utils.deprecation import deprecated_renamed_argument
 
-    @deprecated_renamed_argument(["a", "b", ["x", "y"], ["1.1", "1.1"])
+    @deprecated_renamed_argument(["a", "b"], ["x", "y"], ["1.1", "1.1"])
     def deprecated_argument_function(x, y):
         return x + y
 
@@ -873,3 +884,72 @@ Example what to put as a test::
         assert str(p).startswith('Hi')
         assert p.info(add_location=True).endswith('Heidelberg')
 
+
+Output in Jupyter notebook cells
+++++++++++++++++++++++++++++++++
+
+In addition to the standard `repr` and `str` outputs, Jupyter notebook
+cells have the option to display nicely formatted (HTML) output, using
+the IPython rich display options (other output options also exist,
+such as LaTeX or SVG, but these are less used). This requires the
+implementation of a `_repr_html_(self)` method (note: single
+underscore) in a class.
+
+By default, this method can just return the string representation of
+the object (which may already produce a nicely formatted output). That
+is often nicer than the default, which is to return the `repr` output,
+which tends to be shorter and may miss details of the object. Thus,
+the following would be a good default for a new class::
+
+    def _repr_html_(self):
+        return f'<pre>html.escape(str(self))</pre>'
+
+The surrounding `<pre>` takes care that the formatting in HTML is the
+same as that for the normal `__str__` method, while `html.escape`
+handles escaping HTML special characters (<, >, &, " and ').
+
+Note that if no `__str__` method is implemented, `__repr__` is used,
+and ultimately, the Python built-in `__repr__` method serves as the
+final fallback (which looks like `<gammapy.data.event_list.EventList
+at 0x129602550>` or similar).
+
+If more specific HTML output is preferred (for example, output
+formatted in a HTML table or list), it is best to create a separate
+`to_html(self)` method in the class, which is more explicit (and can
+be documentated as part of the API), and let `_repr_html_` call this
+method::
+
+    def _repr_html_(self):
+        return self.to_html(self)
+
+Thus very similar to `__str__` calling `info()`, with optional
+parameters if needed.
+
+To allow for both options, the following default `_repr_html_` can be
+implemented instead::
+
+    def _repr_html_(self):
+        try:
+           return self.to_html(self)
+       except AttributeError:
+           return f'<pre>html.escape(str(self))</pre>'
+
+Nearly all base classes in Gammapy implement this default
+`_repr_html_`. If a new class derives from an existing Gammapy class,
+a default implementation is not needed, since it will rely on its
+(grand)parent. As a result, for specific HTML output, only the
+`to_html` method needs to be implented for the relevant class.
+
+Convert a jupyter notebook to python script in the sphinx-gallery format
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The tutorials in Gammapy are represented by python scripts written in the sphinx-gallery format. However, since they are
+displayed as jupyter notebooks in the documentation,
+it is usually easier to first create a tutorial in a jupyter notebook and then convert
+it into a python script. This can be done using ``ipynb_to_gallery.py`` script located in the ``dev`` folder. This
+script can be used as follows::
+
+    python dev/ipynb_to_gallery.py <path_to_notebook> (Optional)<path_to_script>
+
+If the path of the output file is not provided, the script will be written in the same folder as the notebook and with
+the same name.

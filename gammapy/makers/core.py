@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import abc
+import html
 import numpy as np
 
 __all__ = ["Maker"]
@@ -34,3 +35,9 @@ class Maker(abc.ABC):
                 s += f"\t{name:{max_len}s}: {value}\n"
 
         return s.expandtabs(tabsize=2)
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"

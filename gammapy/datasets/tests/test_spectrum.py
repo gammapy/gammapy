@@ -1,15 +1,17 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
-from numpy.testing import assert_allclose
+from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
+from astropy.io import fits
 from astropy.table import Table
 from astropy.time import Time
+from astropy.utils.exceptions import AstropyUserWarning
 from gammapy.data import GTI
 from gammapy.datasets import Datasets, SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.irf import EDispKernelMap, EffectiveAreaTable2D
 from gammapy.makers.utils import make_map_exposure_true_energy
-from gammapy.maps import MapAxis, RegionGeom, RegionNDMap, WcsGeom
+from gammapy.maps import LabelMapAxis, MapAxis, RegionGeom, RegionNDMap, WcsGeom
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
     ConstantSpectralModel,
@@ -21,7 +23,6 @@ from gammapy.modeling.models import (
 from gammapy.utils.random import get_random_state
 from gammapy.utils.regions import compound_region_to_regions
 from gammapy.utils.testing import assert_time_allclose, mpl_plot_check, requires_data
-from gammapy.utils.time import time_ref_to_dict
 
 
 def test_data_shape(spectrum_dataset):
@@ -126,8 +127,32 @@ def test_npred_models():
     npred_sig = spectrum_dataset.npred_signal()
     assert_allclose(npred_sig.data.sum(), 64.8)
 
-    npred_sig_model1 = spectrum_dataset.npred_signal(model_name=model_1.name)
+    npred_sig_model1 = spectrum_dataset.npred_signal(model_names=[model_1.name])
     assert_allclose(npred_sig_model1.data.sum(), 32.4)
+
+    assert_allclose(
+        spectrum_dataset.npred_signal(
+            model_names=[model_1.name, model_2.name]
+        ).data.sum(),
+        64.8,
+    )
+
+    npred_model1_not_stack = spectrum_dataset.npred_signal(
+        model_names=[model_1.name], stack=False
+    )
+    assert_allclose(npred_model1_not_stack.geom.data_shape, (1, 3, 1, 1))
+    assert_allclose(npred_model1_not_stack.data.sum(), 32.4)
+    assert isinstance(npred_model1_not_stack.geom.axes[-1], LabelMapAxis)
+    assert npred_model1_not_stack.geom.axes[-1].name == "models"
+    assert_equal(npred_model1_not_stack.geom.axes[-1].center, [model_1.name])
+
+    npred_all_models_not_stack = spectrum_dataset.npred_signal(
+        model_names=[model_1.name, model_2.name], stack=False
+    )
+    assert_allclose(npred_all_models_not_stack.geom.data_shape, (2, 3, 1, 1))
+    assert_allclose(
+        npred_all_models_not_stack.sum_over_axes(["models"]).data.sum(), 64.8
+    )
 
 
 def test_npred_spatial_model(spectrum_dataset):
@@ -149,7 +174,7 @@ def test_fit(spectrum_dataset):
     fit = Fit()
     result = fit.run(datasets=[spectrum_dataset])
     assert result.success
-    assert "minuit" in repr(result)
+    assert "minuit" in str(result)
 
     npred = spectrum_dataset.npred().data.sum()
     assert_allclose(npred, 907012.186399, rtol=1e-3)
@@ -565,6 +590,29 @@ class TestSpectrumOnOff:
         assert newdataset.edisp is None
         assert newdataset.gti is None
 
+    def test_to_ogip_files_checksum(self, tmp_path):
+        dataset = self.dataset.copy(name="test")
+        dataset.write(tmp_path / "test.fits", format="ogip", checksum=True)
+
+        for name in ["test.fits", "test_arf.fits", "test_rmf.fits", "test_bkg.fits"]:
+            # TODO: this should not emit AstropyUserWarning
+            with fits.open(tmp_path / name, checksum=True) as hdul:
+                for hdu in hdul:
+                    assert "CHECKSUM" in hdu.header
+                    assert "DATASUM" in hdu.header
+
+        def replace_in_fits_header(filename, string):
+            with open(filename, "r+b") as file:
+                chunk = file.read(10000)
+                index = chunk.find(string.encode("ascii"))
+                file.seek(index)
+                file.write("bad".encode("ascii"))
+
+        path = tmp_path / "test.fits"
+        replace_in_fits_header(path, "unknown")
+        with pytest.warns(AstropyUserWarning):
+            SpectrumDatasetOnOff.read(path, checksum=True)
+
     def test_spectrum_dataset_onoff_fits_io(self, tmp_path):
         self.dataset.write(tmp_path / "test.fits", format="gadf")
         d1 = SpectrumDatasetOnOff.read(tmp_path / "test.fits", format="gadf")
@@ -796,9 +844,7 @@ def _read_hess_obs():
 
 
 def make_gti(times, time_ref="2010-01-01"):
-    meta = time_ref_to_dict(time_ref)
-    table = Table(times, meta=meta)
-    return GTI(table)
+    return GTI.create(times["START"], times["STOP"], time_ref)
 
 
 @requires_data("gammapy-data")
@@ -835,8 +881,10 @@ def make_observation_list():
     )
 
     time_ref = Time("2010-01-01")
-    gti1 = make_gti({"START": [5, 6, 1, 2], "STOP": [8, 7, 3, 4]}, time_ref=time_ref)
-    gti2 = make_gti({"START": [14], "STOP": [15]}, time_ref=time_ref)
+    gti1 = make_gti(
+        {"START": [5, 6, 1, 2] * u.s, "STOP": [8, 7, 3, 4] * u.s}, time_ref=time_ref
+    )
+    gti2 = make_gti({"START": [14] * u.s, "STOP": [15] * u.s}, time_ref=time_ref)
 
     exposure = aeff * livetime
     exposure.meta["livetime"] = livetime
@@ -945,10 +993,9 @@ class TestSpectrumDatasetOnOffStack:
     def test_stack_gti(self):
         obs1, obs2 = make_observation_list()
         obs1.stack(obs2)
-        table_gti = Table({"START": [1.0, 5.0, 14.0], "STOP": [4.0, 8.0, 15.0]})
-        table_gti_stacked_obs = obs1.gti.table
-        assert_allclose(table_gti_stacked_obs["START"], table_gti["START"])
-        assert_allclose(table_gti_stacked_obs["STOP"], table_gti["STOP"])
+
+        assert_allclose(obs1.gti.met_start.value, [1.0, 5.0, 14.0])
+        assert_allclose(obs1.gti.met_stop.value, [4.0, 8.0, 15.0])
 
 
 @requires_data("gammapy-data")
@@ -1155,3 +1202,17 @@ class TestFit:
         profile = fit.stat_profile(datasets=[dataset], parameter="index")
         actual = values[np.argmin(profile["stat_scan"])]
         assert_allclose(actual, true_idx, rtol=0.01)
+
+
+def test_stat_sum():
+    axis = MapAxis.from_energy_bounds(0.1, 10, 5, unit="TeV")
+    geom = RegionGeom.create(None, axes=[axis])
+    dataset = SpectrumDatasetOnOff.create(geom)
+    dataset.counts_off = None
+
+    stat = dataset.stat_sum()
+    assert stat == 0
+
+    dataset.mask_safe.data[0] = True
+    with pytest.raises(AttributeError):
+        dataset.stat_sum()

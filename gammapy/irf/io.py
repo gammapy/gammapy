@@ -5,7 +5,7 @@ from gammapy.data.hdu_index_table import HDUIndexTable
 from gammapy.utils.fits import HDULocation
 from gammapy.utils.scripts import make_path
 
-__all__ = ["load_cta_irfs", "load_irf_dict_from_file"]
+__all__ = ["load_irf_dict_from_file"]
 
 log = logging.getLogger(__name__)
 
@@ -43,6 +43,7 @@ IRF_DL3_HDU_SPECIFICATION = {
             "HDUCLAS2": "BKG",
             "HDUCLAS3": "FULL-ENCLOSURE",  # added here to have HDUCLASN in order
             "HDUCLAS4": "BKG_3D",
+            "FOVALIGN": "RADEC",
         },
     },
     "bkg_2d": {
@@ -137,97 +138,77 @@ IRF_MAP_HDU_SPECIFICATION = {
 
 
 def gadf_is_pointlike(header):
-    """Check if a GADF IRF is pointlike based on the header"""
+    """Check if a GADF IRF is pointlike based on the header."""
     return header.get("HDUCLAS3") == "POINT-LIKE"
 
 
-def load_cta_irfs(filename):
-    """load CTA instrument response function and return a dictionary container.
+class UnknownHDUClass(IOError):
+    """Raised when a file contains an unknown HDUCLASS."""
 
-    The IRF format should be compliant with the one discussed
-    at http://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/.
 
-    The various IRFs are accessible with the following keys:
+def _get_hdu_type_and_class(header):
+    """Get gammapy hdu_type and class from FITS header.
 
-    - 'aeff' is a `~gammapy.irf.EffectiveAreaTable2D`
-    - 'edisp'  is a `~gammapy.irf.EnergyDispersion2D`
-    - 'psf' is a `~gammapy.irf.EnergyDependentMultiGaussPSF`
-    - 'bkg' is a  `~gammapy.irf.Background3D`
-
-    Parameters
-    ----------
-    filename : str
-        the input filename. Default is
-
-    Returns
-    -------
-    cta_irf : dict
-        the IRF dictionary
-
-    Examples
-    --------
-    Access the CTA 1DC IRFs stored in the gammapy datasets
-
-    >>> from gammapy.irf import load_cta_irfs
-    >>> filename = "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
-    >>> cta_irf = load_cta_irfs(filename)
-    >>> print(cta_irf['aeff'])
-    EffectiveAreaTable2D
-    --------------------
-    <BLANKLINE>
-      axes  : ['energy_true', 'offset']
-      shape : (42, 6)
-      ndim  : 2
-      unit  : m2
-      dtype : >f4
-    <BLANKLINE>
+    Contains a workaround to support CTA 1DC irf file.
     """
-    from .background import Background3D
-    from .edisp import EnergyDispersion2D
-    from .effective_area import EffectiveAreaTable2D
-    from .psf import EnergyDependentMultiGaussPSF
+    hdu_clas2 = header.get("HDUCLAS2", "")
+    hdu_clas4 = header.get("HDUCLAS4", "")
 
-    aeff = EffectiveAreaTable2D.read(filename, hdu="EFFECTIVE AREA")
-    bkg = Background3D.read(filename, hdu="BACKGROUND")
-    edisp = EnergyDispersion2D.read(filename, hdu="ENERGY DISPERSION")
-    psf = EnergyDependentMultiGaussPSF.read(filename, hdu="POINT SPREAD FUNCTION")
+    clas2_to_type = {"rpsf": "psf", "eff_area": "aeff"}
+    hdu_type = clas2_to_type.get(hdu_clas2.lower(), hdu_clas2.lower())
+    hdu_class = hdu_clas4.lower()
 
-    return dict(aeff=aeff, bkg=bkg, edisp=edisp, psf=psf)
+    if hdu_type not in HDUIndexTable.VALID_HDU_TYPE:
+        raise UnknownHDUClass(f"HDUCLAS2={hdu_clas2}, HDUCLAS4={hdu_clas4}")
+
+    # workaround for CTA 1DC files with non-compliant HDUCLAS4 names
+    if hdu_class not in HDUIndexTable.VALID_HDU_CLASS:
+        hdu_class = f"{hdu_type}_{hdu_class}"
+
+    if hdu_class not in HDUIndexTable.VALID_HDU_CLASS:
+        raise UnknownHDUClass(f"HDUCLAS2={hdu_clas2}, HDUCLAS4={hdu_clas4}")
+
+    return hdu_type, hdu_class
 
 
 def load_irf_dict_from_file(filename):
-    """Open a fits file and generate a dictionary containing the Gammapy objects
-    corresponding to the IRF components stored
+    """Load all available IRF components from given file into a dictionary.
+
+    If multiple IRFs of the same type are present, the first encountered is returned.
 
     Parameters
     ----------
-    filename : str, Path
-        path to the file containing the IRF components, if EVENTS and GTI HDUs
-        are included in the file, they are ignored
+    filename : str or `~pathlib.Path`
+        Path to the file containing the IRF components, if EVENTS and GTI HDUs
+        are included in the file, they are ignored.
 
     Returns
     -------
     irf_dict : dict of `~gammapy.irf.IRF`
-        dictionary with instances of the Gammapy objects corresponding
-        to the IRF components
+        Dictionary with instances of the Gammapy objects corresponding
+        to the IRF components.
     """
     from .rad_max import RadMax2D
 
     filename = make_path(filename)
-
-    hdulist = fits.open(make_path(filename))
-
     irf_dict = {}
-
     is_pointlike = False
 
-    for hdu in hdulist:
-        hdu_class = hdu.header.get("HDUCLAS1", "").lower()
+    with fits.open(filename) as hdulist:
+        for hdu in hdulist:
+            hdu_clas1 = hdu.header.get("HDUCLAS1", "").lower()
 
-        if hdu_class == "response":
-            hdu_class = hdu.header.get("HDUCLAS4", "").lower()
+            # not an IRF component
+            if hdu_clas1 != "response":
+                continue
 
-            is_pointlike |= hdu.header["HDUCLAS3"] == "POINT-LIKE"
+            is_pointlike |= hdu.header.get("HDUCLAS3") == "POINT-LIKE"
+
+            try:
+                hdu_type, hdu_class = _get_hdu_type_and_class(hdu.header)
+            except UnknownHDUClass as e:
+                log.warning("File has unknown class %s", e)
+                continue
 
             loc = HDULocation(
                 hdu_class=hdu_class,
@@ -236,19 +217,15 @@ def load_irf_dict_from_file(filename):
                 file_name=filename.name,
             )
 
-            for name in HDUIndexTable.VALID_HDU_TYPE:
-                if name in hdu_class:
-                    if name in irf_dict.keys():
-                        log.warning(f"more than one HDU of {name} type found")
-                        log.warning(
-                            f"loaded the {irf_dict[name].meta['EXTNAME']} HDU in the dictionary"
-                        )
-                        continue
-                    data = loc.load()
-                    # TODO: maybe introduce IRF.type attribute...
-                    irf_dict[name] = data
-        else:  # not an IRF component
-            continue
+            if hdu_type in irf_dict.keys():
+                log.warning(f"more than one HDU of {hdu_type} type found")
+                log.warning(
+                    f"loaded the {irf_dict[hdu_type].meta['EXTNAME']} HDU in the dictionary"
+                )
+                continue
+
+            data = loc.load()
+            irf_dict[hdu_type] = data
 
     if is_pointlike and "rad_max" not in irf_dict:
         irf_dict["rad_max"] = RadMax2D.from_irf(irf_dict["aeff"])

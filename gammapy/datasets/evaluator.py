@@ -1,14 +1,18 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import html
 import logging
 import numpy as np
 import astropy.units as u
-from astropy.coordinates.angle_utilities import angular_separation
+from astropy.coordinates import angular_separation
 from astropy.utils import lazyproperty
 from regions import CircleSkyRegion
 import matplotlib.pyplot as plt
+from gammapy.irf import EDispKernel
 from gammapy.maps import HpxNDMap, Map, RegionNDMap, WcsNDMap
 from gammapy.modeling.models import PointSpatialModel, TemplateNPredModel
+from .utils import apply_edisp
 
+PSF_MAX_RADIUS = None
 PSF_CONTAINMENT = 0.999
 CUTOUT_MARGIN = 0.1 * u.deg
 
@@ -19,22 +23,23 @@ class MapEvaluator:
     """Sky model evaluation on maps.
 
     Evaluates a sky model on a 3D map and returns a map of the predicted counts.
-    Convolution with IRFs will be performed as defined in the sky_model
+    The convolution with IRFs will be performed as defined in the sky_model. To do so, IRF kernels
+    are extracted at the position closest to the position of the model.
 
     Parameters
     ----------
     model : `~gammapy.modeling.models.SkyModel`
-        Sky model
+        Sky model.
     exposure : `~gammapy.maps.Map`
-        Exposure map
+        Exposure map.
     psf : `~gammapy.irf.PSFKernel`
-        PSF kernel
+        PSF kernel.
     edisp : `~gammapy.irf.EDispKernel`
-        Energy dispersion
+        Energy dispersion.
     mask : `~gammapy.maps.Map`
         Mask to apply to the likelihood for fitting.
     gti : `~gammapy.data.GTI`
-        GTI of the observation or union of GTI if it is a stacked observation
+        GTI of the observation or union of GTI if it is a stacked observation.
     evaluation_mode : {"local", "global"}
         Model evaluation mode.
         The "local" mode evaluates the model components on smaller grids to save computation time.
@@ -64,7 +69,6 @@ class MapEvaluator:
         self.mask = mask
         self.gti = gti
         self.use_cache = use_cache
-        self._init_position = None
         self.contributes = True
         self.psf_containment = None
 
@@ -87,12 +91,15 @@ class MapEvaluator:
         self._cached_parameter_values_spatial = None
         self._cached_position = (0, 0)
         self._computation_cache = None
-        self._neval = 0  # for debugging
-        self._renorm = 1
         self._spatial_oversampling_factor = 1
-        if self.exposure is not None:
-            if not self.geom.is_region or self.geom.region is not None:
-                self.update_spatial_oversampling_factor(self.geom)
+        if exposure is not None:
+            self.update_spatial_oversampling_factor(self.geom)
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     def reset_cache_properties(self):
         """Reset cached properties."""
@@ -101,13 +108,24 @@ class MapEvaluator:
 
     @property
     def geom(self):
-        """True energy map geometry (`~gammapy.maps.Geom`)"""
-        return self.exposure.geom
+        """True energy map geometry (`~gammapy.maps.Geom`)."""
+        if self.exposure is not None:
+            return self.exposure.geom
+        else:
+            return None
+
+    @property
+    def _geom_reco(self):
+        if self.edisp is not None:
+            energy_axis = self.edisp.axes["energy"].copy(name="energy")
+        else:
+            energy_axis = self.geom.axes["energy_true"].copy(name="energy")
+        geom = self.geom.to_image().to_cube(axes=[energy_axis])
+        return geom
 
     @property
     def needs_update(self):
         """Check whether the model component has drifted away from its support."""
-        # TODO: simplify and clean up
         if isinstance(self.model, TemplateNPredModel):
             return False
         elif not self.contributes:
@@ -125,7 +143,7 @@ class MapEvaluator:
 
     @property
     def psf_width(self):
-        """Width of the PSF"""
+        """Width of the PSF."""
         if self.psf is not None:
             psf_width = np.max(self.psf.psf_kernel_map.geom.width)
         else:
@@ -133,7 +151,7 @@ class MapEvaluator:
         return psf_width
 
     def use_psf_containment(self, geom):
-        """Use psf containment for point sources and circular regions"""
+        """Use PSF containment for point sources and circular regions."""
         if not geom.is_region:
             return False
 
@@ -141,9 +159,14 @@ class MapEvaluator:
         is_circle_region = isinstance(geom.region, CircleSkyRegion)
         return is_point_model & is_circle_region
 
-    @property
+    @lazyproperty
+    def position(self):
+        """Latest evaluation position."""
+        return self.model.position
+
+    @lazyproperty
     def cutout_width(self):
-        """Cutout width for the model component"""
+        """Cutout width for the model component."""
         return self.psf_width + 2 * (self.model.evaluation_radius + CUTOUT_MARGIN)
 
     def update(self, exposure, psf, edisp, geom, mask):
@@ -158,27 +181,28 @@ class MapEvaluator:
         edisp : `gammapy.irf.EDispMap`
             Edisp map.
         geom : `WcsGeom`
-            Counts geom
+            Counts geom.
         mask : `~gammapy.maps.Map`
             Mask to apply to the likelihood for fitting.
         """
         # TODO: simplify and clean up
         log.debug("Updating model evaluator")
 
+        del self.position
+        del self.cutout_width
+
         # lookup edisp
         if edisp:
             energy_axis = geom.axes["energy"]
             self.edisp = edisp.get_edisp_kernel(
-                position=self.model.position, energy_axis=energy_axis
+                position=self.position, energy_axis=energy_axis
             )
+            del self._edisp_diagonal
 
         # lookup psf
         if psf and self.model.spatial_model:
             energy_name = psf.energy_name
-            if energy_name == "energy":
-                geom_psf = geom
-            else:
-                geom_psf = exposure.geom
+            geom_psf = geom if energy_name == "energy" else exposure.geom
 
             if self.use_psf_containment(geom=geom_psf):
                 energy_values = geom_psf.axes[energy_name].center.reshape((-1, 1, 1))
@@ -189,40 +213,52 @@ class MapEvaluator:
                     geom_psf = geom_psf.to_wcs_geom()
 
                 self.psf = psf.get_psf_kernel(
-                    position=self.model.position,
+                    position=self.position,
                     geom=geom_psf,
                     containment=PSF_CONTAINMENT,
+                    max_radius=PSF_MAX_RADIUS,
                 )
 
+        self.exposure = exposure
         if self.evaluation_mode == "local":
             self.contributes = self.model.contributes(mask=mask, margin=self.psf_width)
-
-            if self.contributes:
-                self.exposure = exposure.cutout(
-                    position=self.model.position, width=self.cutout_width, odd_npix=True
+            if self.contributes and not self.model.contributes(mask=mask):
+                log.warning(
+                    f"Model {self.model.name} is outside the target geom but contributes inside through the psf."
+                    "This contribution cannot be estimated precisely."
+                    "Consider extending the dataset geom and/or the masked margin in the mask_fit."
                 )
-        else:
-            self.exposure = exposure
 
-        if self.contributes:
-            if not self.geom.is_region or self.geom.region is not None:
-                self.update_spatial_oversampling_factor(self.geom)
+            if self.contributes and not self.geom.is_region:
+                self.exposure = exposure._cutout_view(
+                    position=self.position, width=self.cutout_width, odd_npix=True
+                )
+        self.update_spatial_oversampling_factor(self.geom)
 
         self.reset_cache_properties()
         self._computation_cache = None
         self._cached_parameter_previous = None
 
+    @lazyproperty
+    def _edisp_diagonal(self):
+        return EDispKernel.from_diagonal_response(
+            energy_axis_true=self.edisp.axes["energy_true"],
+            energy_axis=self.edisp.axes["energy"],
+        )
+
     def update_spatial_oversampling_factor(self, geom):
-        """Update spatial oversampling_factor for model evaluation"""
-        res_scale = self.model.evaluation_bin_size_min
+        """Update spatial oversampling_factor for model evaluation."""
 
-        res_scale = res_scale.to_value("deg") if res_scale is not None else 0
+        if self.contributes and (not geom.is_region or geom.region is not None):
+            res_scale = self.model.evaluation_bin_size_min
 
-        if geom.is_region or geom.is_hpx:
-            geom = geom.to_wcs_geom()
-        if res_scale != 0:
-            factor = int(np.ceil(np.max(geom.pixel_scales.deg) / res_scale))
-            self._spatial_oversampling_factor = factor
+            res_scale = res_scale.to_value("deg") if res_scale is not None else 0
+
+            if res_scale != 0:
+                if geom.is_region or geom.is_hpx:
+                    geom = geom.to_wcs_geom()
+                factor = int(np.ceil(np.max(geom.pixel_scales.deg) / res_scale))
+                self._spatial_oversampling_factor = factor
 
     def compute_dnde(self):
         """Compute model differential flux at map pixel centers.
@@ -231,16 +267,16 @@ class MapEvaluator:
         -------
         model_map : `~gammapy.maps.Map`
             Sky cube with data filled with evaluated model values.
-            Units: ``cm-2 s-1 TeV-1 deg-2``
+            Units: ``cm-2 s-1 TeV-1 deg-2``.
         """
         return self.model.evaluate_geom(self.geom, self.gti)
 
     def compute_flux(self, *arg):
-        """Compute flux"""
+        """Compute flux."""
         return self.model.integrate_geom(self.geom, self.gti)
 
     def compute_flux_psf_convolved(self, *arg):
-        """Compute psf convolved and temporal model corrected flux."""
+        """Compute PSF convolved and temporal model corrected flux."""
         value = self.compute_flux_spectral()
 
         if self.model.spatial_model:
@@ -255,19 +291,19 @@ class MapEvaluator:
         return Map.from_geom(geom=self.geom, data=value.value, unit=value.unit)
 
     def compute_flux_spatial(self):
-        """Compute spatial flux using caching"""
+        """Compute spatial flux using caching."""
         if self.parameters_spatial_changed() or not self.use_cache:
             del self._compute_flux_spatial
         return self._compute_flux_spatial
 
     @lazyproperty
     def _compute_flux_spatial(self):
-        """Compute spatial flux
+        """Compute spatial flux.
 
         Returns
         ----------
         value: `~astropy.units.Quantity`
-            Psf-corrected, integrated flux over a given region.
+            PSF-corrected, integrated flux over a given region.
         """
         if self.geom.is_region:
             # We don't estimate spatial contributions if no psf are defined
@@ -293,7 +329,7 @@ class MapEvaluator:
         return value
 
     def _compute_flux_spatial_geom(self, geom):
-        """Compute spatial flux oversampling geom if necessary"""
+        """Compute spatial flux oversampling geom if necessary."""
         if not self.model.spatial_model.is_energy_dependent:
             geom = geom.to_image()
         value = self.model.spatial_model.integrate_geom(geom)
@@ -304,7 +340,7 @@ class MapEvaluator:
         return value
 
     def compute_flux_spectral(self):
-        """Compute spectral flux"""
+        """Compute spectral flux."""
         energy = self.geom.axes["energy_true"].edges
         value = self.model.spectral_model.integral(
             energy[:-1],
@@ -316,22 +352,22 @@ class MapEvaluator:
             return value.reshape((-1, 1, 1))
 
     def compute_temporal_norm(self):
-        """Compute temporal norm"""
+        """Compute temporal norm."""
         integral = self.model.temporal_model.integral(
             self.gti.time_start, self.gti.time_stop
         )
         return np.sum(integral)
 
     def apply_exposure(self, flux):
-        """Compute npred cube
+        """Compute npred cube.
 
-        For now just divide flux cube by exposure
+        For now just divide flux cube by exposure.
         """
         npred = (flux.quantity * self.exposure.quantity).to_value("")
         return Map.from_geom(self.geom, data=npred, unit="")
 
     def apply_psf(self, npred):
-        """Convolve npred cube with PSF"""
+        """Convolve npred cube with PSF."""
         tmp = npred.convolve(self.psf)
         return tmp
 
@@ -341,22 +377,33 @@ class MapEvaluator:
         Parameters
         ----------
         npred : `~gammapy.maps.Map`
-            Predicted counts in true energy bins
+            Predicted counts in true energy bins.
 
         Returns
         -------
         npred_reco : `~gammapy.maps.Map`
-            Predicted counts in reco energy bins
+            Predicted counts in reconstructed energy bins.
         """
-        return npred.apply_edisp(self.edisp)
+        if self.model.apply_irf["edisp"]:
+            return apply_edisp(npred, self.edisp)
+        else:
+            if "energy_true" in npred.geom.axes.names:
+                return apply_edisp(npred, self._edisp_diagonal)
+            else:
+                return npred
 
     @lazyproperty
     def _compute_npred(self):
-        """Compute npred"""
+        """Compute npred."""
         if isinstance(self.model, TemplateNPredModel):
             npred = self.model.evaluate()
         else:
-            if not self.parameter_norm_only_changed:
+            if (
+                self._norm_idx is not None
+                and self.model.parameters.value[self._norm_idx] == 0
+            ):
+                npred = Map.from_geom(self._geom_reco, data=0)
+            elif not self.parameter_norm_only_changed or not self.use_cache:
                 for method in self.methods_sequence:
                     values = method(self._computation_cache)
                     self._computation_cache = values
@@ -377,7 +424,7 @@ class MapEvaluator:
         Returns
         -------
         npred : `~gammapy.maps.Map`
-            Predicted counts on the map (in reco energy bins)
+            Predicted counts on the map (in reconstructed energy bins).
         """
         if self.parameters_changed or not self.use_cache:
             del self._compute_npred
@@ -386,10 +433,8 @@ class MapEvaluator:
 
     @property
     def parameters_changed(self):
-        """Parameters changed"""
+        """Parameters changed."""
         values = self.model.parameters.value
-
-        # TODO: possibly allow for a tolerance here?
         changed = ~np.all(self._cached_parameter_values == values)
 
         if changed:
@@ -399,25 +444,25 @@ class MapEvaluator:
 
     @property
     def parameter_norm_only_changed(self):
-        """Only norm parameter changed"""
+        """Only norm parameter changed."""
         norm_only_changed = False
         idx = self._norm_idx
         values = self.model.parameters.value
-        if idx and self._computation_cache is not None:
-            changed = self._cached_parameter_values_previous == values
-            norm_only_changed = sum(changed) == 1 and changed[idx]
+        if idx is not None and self._computation_cache is not None:
+            changed = self._cached_parameter_values_previous != values
+            norm_only_changed = np.count_nonzero(changed) == 1 and changed[idx]
 
         if not norm_only_changed:
             self._cached_parameter_values_previous = values
         return norm_only_changed
 
     def parameters_spatial_changed(self, reset=True):
-        """Parameters changed
+        """Parameters changed.
 
         Parameters
         ----------
         reset : bool
-            Reset cached values
+            Reset cached values. Default is True.
 
         Returns
         -------
@@ -425,8 +470,6 @@ class MapEvaluator:
             Whether spatial parameters changed.
         """
         values = self.model.spatial_model.parameters.value
-
-        # TODO: possibly allow for a tolerance here?
         changed = ~np.all(self._cached_parameter_values_spatial == values)
 
         if changed and reset:
@@ -436,7 +479,7 @@ class MapEvaluator:
 
     @property
     def irf_position_changed(self):
-        """Position for IRF changed"""
+        """Position for IRF changed."""
 
         # Here we do not use SkyCoord.separation to improve performance
         # (it avoids equivalence comparisons for frame and units)
@@ -455,7 +498,7 @@ class MapEvaluator:
 
     @lazyproperty
     def _norm_idx(self):
-        """norm index"""
+        """Norm index."""
         names = self.model.parameters.names
         ind = [idx for idx, name in enumerate(names) if name in ["norm", "amplitude"]]
         if len(ind) == 1:
@@ -470,7 +513,7 @@ class MapEvaluator:
 
     @lazyproperty
     def methods_sequence(self):
-        """order to apply irf"""
+        """Order to apply the IRFs."""
 
         if self.apply_psf_after_edisp:
             methods = [
@@ -489,21 +532,20 @@ class MapEvaluator:
             ]
         if not self.model.apply_irf["exposure"]:
             methods.remove(self.apply_exposure)
-        if not self.model.apply_irf["edisp"]:
-            methods.remove(self.apply_edisp)
         return methods
 
     def peek(self, figsize=(12, 15)):
         """Quick-look summary plots.
+
         Parameters
         ----------
         figsize : tuple
-            Size of the figure.
+            Size of the figure. Default is (12, 15).
         """
         if self.needs_update:
             raise AttributeError(
                 "The evaluator needs to be updated first. Execute "
-                "`MapDataset.npred_signal(model_name=...)` before calling this method."
+                "`MapDataset.npred_signal(model_names=...)` before calling this method."
             )
 
         nrows = 1

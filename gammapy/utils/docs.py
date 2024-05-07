@@ -36,9 +36,7 @@ log = logging.getLogger(__name__)
 
 
 class AccordionHeader(Directive):
-    """
-    Inserts HTML code to open an accordion box in the How To.
-    """
+    """Insert HTML code to open an accordion box in the How To."""
 
     option_spec = {"id": str, "title": str, "link": str}
 
@@ -46,8 +44,8 @@ class AccordionHeader(Directive):
         raw = f"""
             <div id="accordion" class="shadow tutorial-accordion">
         <div class="card tutorial-card">
-            <div class="card-header collapsed card-link" data-toggle="collapse"
-             data-target="#{self.options["id"]}">
+            <div class="card-header collapsed card-link" data-bs-toggle="collapse"
+             data-bs-target="#{self.options["id"]}">
                 <div class="d-flex flex-row tutorial-card-header-1">
                     <div class="d-flex flex-row tutorial-card-header-2">
                         <button class="btn btn-dark btn-sm"></button>
@@ -83,9 +81,7 @@ class AccordionHeader(Directive):
 
 
 class AccordionFooter(Directive):
-    """
-    Inserts HTML code to close an accordion box in the How To.
-    """
+    """Insert HTML code to close an accordion box in the How To."""
 
     def run(self):
         raw = """
@@ -110,7 +106,7 @@ class AccordionFooter(Directive):
 
 
 class HowtoHLI(Include):
-    """Directive to insert how-to for high-level interface"""
+    """Directive to insert how-to for high-level interface."""
 
     def run(self):
         raw = ""
@@ -135,7 +131,7 @@ class HowtoHLI(Include):
 
 
 class DocsImage(Image):
-    """Directive to add optional images from gammapy-data"""
+    """Directive to add optional images from gammapy-data."""
 
     def run(self):
         filename = self.arguments[0]
@@ -162,14 +158,10 @@ class DocsImage(Image):
 
 
 class SubstitutionCodeBlock(CodeBlock):
-    """
-    Similar to CodeBlock but replaces placeholders with variables.
-    """
+    """Similar to CodeBlock but replaces placeholders with variables."""
 
     def run(self):
-        """
-        Replace placeholders with given variables.
-        """
+        """Replace placeholders with given variables."""
         app = self.state.document.settings.env.app
         new_content = []
         self.content = self.content

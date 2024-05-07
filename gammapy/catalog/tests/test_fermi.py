@@ -23,6 +23,7 @@ from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.testing import (
     assert_quantity_allclose,
     assert_time_allclose,
+    modify_unit_order_astropy_5_3,
     requires_data,
 )
 
@@ -134,8 +135,8 @@ SOURCES_3FHL = [
 
 
 @requires_data()
-def test_4FGL_DR3():
-    cat = SourceCatalog4FGL("$GAMMAPY_DATA/catalogs/fermi/gll_psc_v28.fit.gz")
+def test_4FGL_DR4():
+    cat = SourceCatalog4FGL("$GAMMAPY_DATA/catalogs/fermi/gll_psc_v32.fit.gz")
     source = cat["4FGL J0534.5+2200"]
     model = source.spectral_model()
     fp = source.flux_points
@@ -143,6 +144,9 @@ def test_4FGL_DR3():
     fp_dnde = fp.dnde.quantity.squeeze()[not_ul]
     model_dnde = model(fp.energy_ref[not_ul])
     assert_quantity_allclose(model_dnde, fp_dnde, rtol=0.07)
+
+    models = cat.to_models()
+    assert len(models) == len(cat.table)
 
 
 @requires_data()
@@ -162,8 +166,11 @@ class TestFermi4FGLObject:
     @pytest.mark.parametrize("ref", SOURCES_4FGL, ids=lambda _: _["name"])
     def test_str(self, ref):
         actual = str(self.cat[ref["idx"]])
-        expected = open(get_pkg_data_filename(ref["str_ref_file"])).read()
-        assert actual == expected
+
+        with open(get_pkg_data_filename(ref["str_ref_file"])) as fh:
+            expected = fh.read()
+
+        assert actual == modify_unit_order_astropy_5_3(expected)
 
     @pytest.mark.parametrize("ref", SOURCES_4FGL, ids=lambda _: _["name"])
     def test_spectral_model(self, ref):
@@ -206,6 +213,7 @@ class TestFermi4FGLObject:
         assert_allclose(p["sigma"].value, 0.27)
 
         model = self.cat["4FGL J1443.0-6227e"].spatial_model()
+        assert self.cat["4FGL J1443.0-6227e"].data_extended["version"] == 20
         assert "TemplateSpatialModel" in model.tag
         assert model.frame == "fk5"
         assert model.normalize
@@ -303,21 +311,21 @@ class TestFermi4FGLObject:
         assert table["flux_errn"].unit == "cm-2 s-1"
         assert_allclose(table["flux_errn"][0], 4.437058e-8, rtol=1e-3)
 
-    def test_lightcurve_dr2(self):
-        dr2 = SourceCatalog4FGL("$GAMMAPY_DATA/catalogs/fermi/gll_psc_v27.fit.gz")
+    def test_lightcurve_dr4(self):
+        dr2 = SourceCatalog4FGL("$GAMMAPY_DATA/catalogs/fermi/gll_psc_v32.fit.gz")
         source_dr2 = dr2[self.source_name]
         table = source_dr2.lightcurve(interval="1-year").to_table(
             format="lightcurve", sed_type="flux"
         )
 
         assert table["flux"].unit == "cm-2 s-1"
-        assert_allclose(table["flux"][0], 2.196788e-6, rtol=1e-3)
+        assert_allclose(table["flux"][0], 2.307773e-06, rtol=1e-3)
 
         assert table["flux_errp"].unit == "cm-2 s-1"
-        assert_allclose(table["flux_errp"][0], 2.312938e-8, rtol=1e-3)
+        assert_allclose(table["flux_errp"][0], 2.298336e-08, rtol=1e-3)
 
         assert table["flux_errn"].unit == "cm-2 s-1"
-        assert_allclose(table["flux_errn"][0], 2.312938e-8, rtol=1e-3)
+        assert_allclose(table["flux_errn"][0], 2.298336e-08, rtol=1e-3)
 
         with pytest.raises(ValueError):
             source_dr2.lightcurve(interval="2-month")
@@ -349,8 +357,11 @@ class TestFermi3FGLObject:
     @pytest.mark.parametrize("ref", SOURCES_3FGL, ids=lambda _: _["name"])
     def test_str(self, ref):
         actual = str(self.cat[ref["idx"]])
-        expected = open(get_pkg_data_filename(ref["str_ref_file"])).read()
-        assert actual == expected
+
+        with open(get_pkg_data_filename(ref["str_ref_file"])) as fh:
+            expected = fh.read()
+
+        assert actual == modify_unit_order_astropy_5_3(expected)
 
     @pytest.mark.parametrize("ref", SOURCES_3FGL, ids=lambda _: _["name"])
     def test_spectral_model(self, ref):
@@ -483,8 +494,11 @@ class TestFermi2FHLObject:
     @pytest.mark.parametrize("ref", SOURCES_2FHL, ids=lambda _: _["name"])
     def test_str(self, ref):
         actual = str(self.cat[ref["idx"]])
-        expected = open(get_pkg_data_filename(ref["str_ref_file"])).read()
-        assert actual == expected
+
+        with open(get_pkg_data_filename(ref["str_ref_file"])) as fh:
+            expected = fh.read()
+
+        assert actual == modify_unit_order_astropy_5_3(expected)
 
     def test_spectral_model(self):
         model = self.source.spectral_model()
@@ -542,9 +556,6 @@ class TestFermi2FHLObject:
         assert "TemplateSpatialModel" in model.tag
         assert model.frame == "fk5"
         assert model.normalize
-        # TODO: have to check the extended template used for RX J1713,
-        # for now I guess it's the same than for 3FGL
-        # and added a copy with the name given by 2FHL in gammapy-extra
 
 
 @requires_data()
@@ -567,8 +578,11 @@ class TestFermi3FHLObject:
 
     def test_str(self):
         actual = str(self.cat["3FHL J2301.9+5855e"])  # an extended source
-        expected = open(get_pkg_data_filename("data/3fhl_j2301.9+5855e.txt")).read()
-        assert actual == expected
+
+        with open(get_pkg_data_filename("data/3fhl_j2301.9+5855e.txt")) as fh:
+            expected = fh.read()
+
+        assert actual == modify_unit_order_astropy_5_3(expected)
 
     def test_position(self):
         position = self.source.position

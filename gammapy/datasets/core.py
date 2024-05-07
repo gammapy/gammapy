@@ -2,6 +2,7 @@
 import abc
 import collections.abc
 import copy
+import html
 import logging
 import numpy as np
 from astropy import units as u
@@ -9,7 +10,6 @@ from astropy.table import Table, vstack
 from gammapy.data import GTI
 from gammapy.modeling.models import DatasetModels, Models
 from gammapy.utils.scripts import make_name, make_path, read_yaml, write_yaml
-from gammapy.utils.table import table_from_row_data
 
 log = logging.getLogger(__name__)
 
@@ -19,14 +19,15 @@ __all__ = ["Dataset", "Datasets"]
 
 class Dataset(abc.ABC):
     """Dataset abstract base class.
-
-    TODO: add tutorial how to create your own dataset types.
-
-    For now, see existing examples in Gammapy how this works:
+    For now, see existing examples of type of datasets:
 
     - `gammapy.datasets.MapDataset`
     - `gammapy.datasets.SpectrumDataset`
     - `gammapy.datasets.FluxPointsDataset`
+
+    For more information see :ref:`datasets`.
+
+    TODO: add tutorial how to create your own dataset types.
     """
 
     _residuals_labels = {
@@ -34,6 +35,12 @@ class Dataset(abc.ABC):
         "diff/model": "(data - model) / model",
         "diff/sqrt(model)": "(data - model) / sqrt(model)",
     }
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     @property
     @abc.abstractmethod
@@ -52,7 +59,7 @@ class Dataset(abc.ABC):
 
     @property
     def mask(self):
-        """Combined fit and safe mask"""
+        """Combined fit and safe mask."""
         if self.mask_safe is not None and self.mask_fit is not None:
             return self.mask_safe & self.mask_fit
         elif self.mask_fit is not None:
@@ -61,13 +68,15 @@ class Dataset(abc.ABC):
             return self.mask_safe
 
     def stat_sum(self):
-        """Total statistic given the current model parameters."""
+        """Total statistic given the current model parameters and priors."""
         stat = self.stat_array()
 
         if self.mask is not None:
             stat = stat[self.mask.data]
-
-        return np.sum(stat, dtype=np.float64)
+        prior_stat_sum = 0.0
+        if self.models is not None:
+            prior_stat_sum = self.models.parameters.prior_stat_sum()
+        return np.sum(stat, dtype=np.float64) + prior_stat_sum
 
     @abc.abstractmethod
     def stat_array(self):
@@ -78,8 +87,8 @@ class Dataset(abc.ABC):
 
         Parameters
         ----------
-        name : str
-            Name of the copied dataset
+        name : str, optional
+            Name of the copied dataset. Default is None.
 
         Returns
         -------
@@ -110,12 +119,12 @@ class Dataset(abc.ABC):
 
 
 class Datasets(collections.abc.MutableSequence):
-    """Dataset collection.
+    """Container class that holds a list of datasets.
 
     Parameters
     ----------
     datasets : `Dataset` or list of `Dataset`
-        Datasets
+        Datasets.
     """
 
     def __init__(self, datasets=None):
@@ -178,28 +187,28 @@ class Datasets(collections.abc.MutableSequence):
 
     @property
     def is_all_same_type(self):
-        """Whether all contained datasets are of the same type"""
+        """Whether all contained datasets are of the same type."""
         return len(set(_.__class__ for _ in self)) == 1
 
     @property
     def is_all_same_shape(self):
-        """Whether all contained datasets have the same data shape"""
+        """Whether all contained datasets have the same data shape."""
         return len(set(_.data_shape for _ in self)) == 1
 
     @property
     def is_all_same_energy_shape(self):
-        """Whether all contained datasets have the same data shape"""
+        """Whether all contained datasets have the same data shape."""
         return len(set(_.data_shape[0] for _ in self)) == 1
 
     @property
     def energy_axes_are_aligned(self):
-        """Whether all contained datasets have aligned energy axis"""
+        """Whether all contained datasets have aligned energy axis."""
         axes = [d.counts.geom.axes["energy"] for d in self]
         return np.all([axes[0].is_aligned(ax) for ax in axes])
 
     @property
     def contributes_to_stat(self):
-        """Stat contributions
+        """Stat contributions.
 
         Returns
         -------
@@ -217,7 +226,7 @@ class Datasets(collections.abc.MutableSequence):
         return np.array(contributions)
 
     def stat_sum(self):
-        """Compute joint likelihood"""
+        """Compute joint statistic function value."""
         stat_sum = 0
         # TODO: add parallel evaluation of likelihoods
         for dataset in self:
@@ -230,7 +239,7 @@ class Datasets(collections.abc.MutableSequence):
         Parameters
         ----------
         time_min, time_max : `~astropy.time.Time`
-            Time interval
+            Time interval.
         atol : `~astropy.units.Quantity`
             Tolerance value for time comparison with different scale. Default 1e-6 sec.
 
@@ -254,9 +263,9 @@ class Datasets(collections.abc.MutableSequence):
         return self.__class__(datasets)
 
     def slice_by_energy(self, energy_min, energy_max):
-        """Select and slice datasets in energy range
+        """Select and slice datasets in energy range.
 
-        The method keeps the current dataset names. Datasets, that do not
+        The method keeps the current dataset names. Datasets that do not
         contribute to the selected energy range are dismissed.
 
         Parameters
@@ -267,7 +276,7 @@ class Datasets(collections.abc.MutableSequence):
         Returns
         -------
         datasets : Datasets
-            Datasets
+            Datasets.
 
         """
         datasets = []
@@ -292,6 +301,9 @@ class Datasets(collections.abc.MutableSequence):
     def to_spectrum_datasets(self, region):
         """Extract spectrum datasets for the given region.
 
+        To get more detailed information, see the corresponding function associated to each dataset type:
+        `~gammapy.datasets.MapDataset.to_spectrum_dataset` or `~gammapy.datasets.MapDatasetOnOff.to_spectrum_dataset`.
+
         Parameters
         ----------
         region : `~regions.SkyRegion`
@@ -300,7 +312,7 @@ class Datasets(collections.abc.MutableSequence):
         Returns
         -------
         datasets : `Datasets`
-            List of `~gammapy.datasets.SpectrumDataset`
+            List of `~gammapy.datasets.SpectrumDataset`.
         """
         datasets = Datasets()
 
@@ -356,34 +368,42 @@ class Datasets(collections.abc.MutableSequence):
 
         return str_.expandtabs(tabsize=2)
 
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
+
     def copy(self):
         """A deep copy."""
         return copy.deepcopy(self)
 
     @classmethod
-    def read(cls, filename, filename_models=None, lazy=True, cache=True):
+    def read(cls, filename, filename_models=None, lazy=True, cache=True, checksum=True):
         """De-serialize datasets from YAML and FITS files.
 
         Parameters
         ----------
-        filename : str or `Path`
-            File path or name of datasets yaml file
-        filename_models : str or `Path`
-            File path or name of models fyaml ile
+        filename : str or `~pathlib.Path`
+            File path or name of datasets yaml file.
+        filename_models : str or `~pathlib.Path`, optional
+            File path or name of models yaml file. Default is None.
         lazy : bool
-            Whether to lazy load data into memory
+            Whether to lazy load data into memory. Default is True.
         cache : bool
-            Whether to cache the data after loading.
+            Whether to cache the data after loading. Default is True.
+        checksum : bool
+            Whether to perform checksum verification. Default is False.
 
         Returns
         -------
         dataset : `gammapy.datasets.Datasets`
-            Datasets
+            Datasets.
         """
         from . import DATASET_REGISTRY
 
         filename = make_path(filename)
-        data_list = read_yaml(filename)
+        data_list = read_yaml(filename, checksum=checksum)
 
         datasets = []
         for data in data_list["datasets"]:
@@ -399,25 +419,33 @@ class Datasets(collections.abc.MutableSequence):
         datasets = cls(datasets)
 
         if filename_models:
-            datasets.models = Models.read(filename_models)
+            datasets.models = Models.read(filename_models, checksum=checksum)
 
         return datasets
 
     def write(
-        self, filename, filename_models=None, overwrite=False, write_covariance=True
+        self,
+        filename,
+        filename_models=None,
+        overwrite=False,
+        write_covariance=True,
+        checksum=False,
     ):
         """Serialize datasets to YAML and FITS files.
 
         Parameters
         ----------
-        filename : str or `Path`
-            File path or name of datasets yaml file
-        filename_models : str or `Path`
-            File path or name of models yaml file
-        overwrite : bool
-            overwrite datasets FITS files
+        filename : str or `~pathlib.Path`
+            File path or name of datasets yaml file.
+        filename_models : str or `~pathlib.Path`, optional
+            File path or name of models yaml file. Default is None.
+        overwrite : bool, optional
+            Overwrite existing file. Default is False.
         write_covariance : bool
-            save covariance or not
+            save covariance or not. Default is False.
+        checksum : bool
+            When True adds both DATASUM and CHECKSUM cards to the headers written to the FITS files.
+            Default is False.
         """
         path = make_path(filename)
 
@@ -426,35 +454,41 @@ class Datasets(collections.abc.MutableSequence):
         for dataset in self._datasets:
             d = dataset.to_dict()
             filename = d["filename"]
-            dataset.write(path.parent / filename, overwrite=overwrite)
+            dataset.write(
+                path.parent / filename, overwrite=overwrite, checksum=checksum
+            )
             data["datasets"].append(d)
 
-        write_yaml(data, path, sort_keys=False)
+        if path.exists() and not overwrite:
+            raise IOError(f"File exists already: {path}")
+
+        write_yaml(data, path, sort_keys=False, checksum=checksum)
 
         if filename_models:
             self.models.write(
                 filename_models,
                 overwrite=overwrite,
                 write_covariance=write_covariance,
+                checksum=checksum,
             )
 
     def stack_reduce(self, name=None, nan_to_num=True):
         """Reduce the Datasets to a unique Dataset by stacking them together.
 
-        This works only if all Dataset are of the same type and if a proper
+        This works only if all datasets are of the same type and with aligned geometries, and if a proper
         in-place stack method exists for the Dataset type.
 
         Parameters
         ----------
-        name : str
-            Name of the stacked dataset.
-        nan_to_num: bool
-            Non-finite values are replaced by zero if True (default).
+        name : str, optional
+            Name of the stacked dataset. Default is None.
+        nan_to_num : bool
+            Non-finite values are replaced by zero if True. Default is True.
 
         Returns
         -------
         dataset : `~gammapy.datasets.Dataset`
-            the stacked dataset
+            The stacked dataset.
         """
         if not self.is_all_same_type:
             raise ValueError(
@@ -474,7 +508,8 @@ class Datasets(collections.abc.MutableSequence):
         Parameters
         ----------
         cumulative : bool
-            Cumulate info across all observations
+            Cumulate information across all datasets. If True, all model-dependent
+            information will be lost. Default is False.
 
         Returns
         -------
@@ -484,26 +519,25 @@ class Datasets(collections.abc.MutableSequence):
         if not self.is_all_same_type:
             raise ValueError("Info table not supported for mixed dataset type.")
 
-        name = "stacked" if cumulative else self[0].name
-        stacked = self[0].to_masked(name=name)
+        rows = []
 
-        rows = [stacked.info_dict()]
-
-        for dataset in self[1:]:
-            if cumulative:
+        if cumulative:
+            name = "stacked"
+            stacked = self[0].to_masked(name=name)
+            rows.append(stacked.info_dict())
+            for dataset in self[1:]:
                 stacked.stack(dataset)
-                row = stacked.info_dict()
-            else:
-                row = dataset.info_dict()
+                rows.append(stacked.info_dict())
+        else:
+            for dataset in self:
+                rows.append(dataset.info_dict())
 
-            rows.append(row)
-
-        return table_from_row_data(rows=rows)
+        return Table(rows)
 
     # TODO: merge with meta table?
     @property
     def gti(self):
-        """GTI table"""
+        """GTI table."""
         time_intervals = []
 
         for dataset in self:
@@ -518,7 +552,7 @@ class Datasets(collections.abc.MutableSequence):
 
     @property
     def meta_table(self):
-        """Meta table"""
+        """Meta table."""
         tables = [d.meta_table for d in self]
 
         if np.all([table is None for table in tables]):
