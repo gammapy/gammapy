@@ -395,8 +395,8 @@ def test_observation_write(tmp_path):
     assert obs_read.obs_id == 23523
     assert_allclose(obs_read.observatory_earth_location.lat.deg, -23.271778)
 
-    assert obs_read.events.table.meta["MJDREFF"] == mjdreff
-    assert obs_read.events.table.meta["MJDREFI"] == mjdrefi
+    assert_allclose(obs_read.events.table.meta["MJDREFF"], mjdreff)
+    assert_allclose(obs_read.events.table.meta["MJDREFI"], mjdrefi)
 
     # unsupported format
     with pytest.raises(ValueError):
