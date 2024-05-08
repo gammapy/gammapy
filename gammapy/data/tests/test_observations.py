@@ -378,10 +378,8 @@ def test_observation_write(tmp_path):
     obs = Observation.read(
         "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz"
     )
-    mjdreff, mjdrefi = (
-        obs.events.table.meta["MJDREFF"],
-        obs.events.table.meta["MJDREFI"],
-    )
+    mjdreff = obs.events.table.meta["MJDREFF"]
+    mjdrefi = obs.events.table.meta["MJDREFI"]
     path = tmp_path / "obs.fits.gz"
 
     obs.meta.creation.origin = "test"
