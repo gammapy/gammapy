@@ -11,6 +11,7 @@ import scipy.special
 import astropy.units as u
 from astropy import constants as const
 from astropy.table import Table
+from astropy.units import Quantity
 from astropy.utils.decorators import classproperty
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
@@ -426,8 +427,9 @@ class SpectralModel(ModelBase):
 
         Parameters
         ----------
-        energy_bounds : `~astropy.units.Quantity`
-            Plot energy bounds passed to MapAxis.from_energy_bounds.
+        energy_bounds : `~astropy.units.Quantity`, list of `~astropy.units.Quantity` or `~gammapy.maps.MapAxis`
+            Energy bounds between which the model is to be plotted. Or an
+            axis defining the energy bounds between which the model is to be plotted.
         ax : `~matplotlib.axes.Axes`, optional
             Matplotlib axes. Default is None.
         sed_type : {"dnde", "flux", "eflux", "e2dnde"}
@@ -443,20 +445,28 @@ class SpectralModel(ModelBase):
         -------
         ax : `~matplotlib.axes.Axes`, optional
             Matplotlib axes.
+
+        Notes
+        -----
+        If ``energy_bounds`` is supplied as a list, tuple, or Quantity, an ``energy_axis`` is created internally with
+        ``n_points`` bins between the given bounds.
         """
         from gammapy.estimators.map.core import DEFAULT_UNIT
-
-        ax = plt.gca() if ax is None else ax
 
         if self.is_norm_spectral_model:
             sed_type = "norm"
 
-        energy_min, energy_max = energy_bounds
-        energy = MapAxis.from_energy_bounds(
-            energy_min,
-            energy_max,
-            n_points,
-        )
+        if isinstance(energy_bounds, (tuple, list, Quantity)):
+            energy_min, energy_max = energy_bounds
+            energy = MapAxis.from_energy_bounds(
+                energy_min,
+                energy_max,
+                n_points,
+            )
+        elif isinstance(energy_bounds, MapAxis):
+            energy = energy_bounds
+
+        ax = plt.gca() if ax is None else ax
 
         if ax.yaxis.units is None:
             ax.yaxis.set_units(DEFAULT_UNIT[sed_type] * energy.unit**energy_power)
@@ -498,8 +508,9 @@ class SpectralModel(ModelBase):
 
         Parameters
         ----------
-        energy_bounds : `~astropy.units.Quantity`
-            Plot energy bounds passed to `~gammapy.maps.MapAxis.from_energy_bounds`.
+        energy_bounds : `~astropy.units.Quantity`, list of `~astropy.units.Quantity` or `~gammapy.maps.MapAxis`
+            Energy bounds between which the model is to be plotted. Or an
+            axis defining the energy bounds between which the model is to be plotted.
         ax : `~matplotlib.axes.Axes`, optional
             Matplotlib axes. Default is None.
         sed_type : {"dnde", "flux", "eflux", "e2dnde"}
@@ -515,20 +526,28 @@ class SpectralModel(ModelBase):
         -------
         ax : `~matplotlib.axes.Axes`, optional
             Matplotlib axes.
+
+        Notes
+        -----
+        If ``energy_bounds`` is supplied as a list, tuple, or Quantity, an ``energy_axis`` is created internally with
+        ``n_points`` bins between the given bounds.
         """
         from gammapy.estimators.map.core import DEFAULT_UNIT
-
-        ax = plt.gca() if ax is None else ax
 
         if self.is_norm_spectral_model:
             sed_type = "norm"
 
-        energy_min, energy_max = energy_bounds
-        energy = MapAxis.from_energy_bounds(
-            energy_min,
-            energy_max,
-            n_points,
-        )
+        if isinstance(energy_bounds, (tuple, list, Quantity)):
+            energy_min, energy_max = energy_bounds
+            energy = MapAxis.from_energy_bounds(
+                energy_min,
+                energy_max,
+                n_points,
+            )
+        elif isinstance(energy_bounds, MapAxis):
+            energy = energy_bounds
+
+        ax = plt.gca() if ax is None else ax
 
         kwargs.setdefault("facecolor", "black")
         kwargs.setdefault("alpha", 0.2)

@@ -5,7 +5,10 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.datasets import MapDataset, MapDatasetOnOff
 from gammapy.estimators import ExcessMapEstimator
-from gammapy.estimators.utils import estimate_exposure_reco_energy
+from gammapy.estimators.utils import (
+    estimate_exposure_reco_energy,
+    get_combined_significance_maps,
+)
 from gammapy.irf import PSFMap
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling.models import (
@@ -372,3 +375,40 @@ def test_incorrect_selection():
 def test_significance_map_estimator_incorrect_dataset():
     with pytest.raises(ValueError):
         ExcessMapEstimator("bad")
+
+
+def test_joint_excess_map(simple_dataset):
+    simple_dataset.exposure += 1e10 * u.cm**2 * u.s
+    axis = simple_dataset.exposure.geom.axes[0]
+    simple_dataset.psf = PSFMap.from_gauss(axis, sigma="0.05 deg")
+
+    model = SkyModel(
+        PowerLawSpectralModel(amplitude="1e-9 cm-2 s-1 TeV-1"),
+        GaussianSpatialModel(
+            lat_0=0.0 * u.deg, lon_0=0.0 * u.deg, sigma=0.1 * u.deg, frame="icrs"
+        ),
+        name="sky_model",
+    )
+
+    simple_dataset.models = [model]
+    simple_dataset.npred()
+
+    stacked_dataset = simple_dataset.copy(name="copy")
+    stacked_dataset.counts *= 2
+    stacked_dataset.exposure *= 2
+    stacked_dataset.background *= 2
+    stacked_dataset.models = [model]
+    estimator = ExcessMapEstimator(0.1 * u.deg, sum_over_energy_groups=True)
+    assert estimator.sum_over_energy_groups
+
+    result = estimator.run(stacked_dataset)
+    assert_allclose(result["npred_excess"].data.sum(), 2 * 19733.602, rtol=1e-3)
+    assert_allclose(result["sqrt_ts"].data[0, 10, 10], 5.960441, rtol=1e-3)
+
+    result = get_combined_significance_maps(estimator, [simple_dataset, simple_dataset])
+
+    assert_allclose(result["npred_excess"].data.sum(), 2 * 19733.602, rtol=1e-3)
+    assert_allclose(result["significance"].data[10, 10], 5.618187, rtol=1e-3)
+    assert_allclose(
+        result["df"].data, 2 * (~np.isnan(result["significance"].data)), rtol=1e-3
+    )

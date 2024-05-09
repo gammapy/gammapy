@@ -145,8 +145,7 @@ check_tutorials_setup()
 # Load Data
 # ---------
 #
-# First, we select and load some H.E.S.S. observations of the Crab nebula
-# (simulated events for now).
+# First, we select and load some H.E.S.S. observations of the Crab nebula.
 #
 # We will access the events, effective area, energy dispersion, livetime
 # and PSF for containment correction.
@@ -418,6 +417,12 @@ fig, ax = plt.subplots()
 flux_points.plot(ax=ax, sed_type="e2dnde", color="darkorange")
 flux_points.plot_ts_profiles(ax=ax, sed_type="e2dnde")
 plt.show()
+
+######################################################################
+# Note: it is also possible to plot the flux distribution with the spectral model overlaid,
+# but you must ensure the axis binning is identical for the flux points and
+# integral flux.
+#
 
 
 ######################################################################

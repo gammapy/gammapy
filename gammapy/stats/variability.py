@@ -1,12 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 import scipy.stats as stats
+from gammapy.utils.random import get_random_state
 
 __all__ = [
     "compute_fvar",
     "compute_fpp",
     "compute_chisq",
     "compute_flux_doubling",
+    "structure_function",
+    "TimmerKonig_lightcurve_simulator",
 ]
 
 
@@ -228,3 +231,161 @@ def compute_flux_doubling(flux, flux_err, coords, axis=0):
     }
 
     return doubling_dict
+
+
+def structure_function(flux, flux_err, time, tdelta_precision=5):
+    """Compute the discrete structure function for a variable source.
+
+    Parameters
+    ----------
+    flux : `~astropy.units.Quantity`
+        The measured fluxes.
+    flux_err : `~astropy.units.Quantity`
+        The error on measured fluxes.
+    time : `~astropy.units.Quantity`
+        The time coordinates at which the fluxes are measured.
+    tdelta_precision : int, optional
+        The number of decimal places to check to separate the time deltas. Default is 5.
+
+    Returns
+    -------
+    sf, distances : `~numpy.ndarray`, `~astropy.units.Quantity`
+        Discrete structure function and array of time distances.
+
+    References
+    ----------
+    .. [Emmanoulopoulos2010] "On the use of structure functions to study blazar variability:
+    caveats and problems", Emmanoulopoulos et al. (2010)
+    https://academic.oup.com/mnras/article/404/2/931/968488
+    """
+
+    dist_matrix = (time[np.newaxis, :] - time[:, np.newaxis]).round(
+        decimals=tdelta_precision
+    )
+    distances = np.unique(dist_matrix)
+    distances = distances[distances > 0]
+    shape = distances.shape + flux.shape[1:]
+    factor = np.zeros(shape)
+    norm = np.zeros(shape)
+
+    for i, distance in enumerate(distances):
+        indexes = np.array(np.where(dist_matrix == distance))
+        for index in indexes.T:
+            f = (flux[index[1], ...] - flux[index[0], ...]) ** 2
+            w = (flux[index[1], ...] / flux_err[index[1], ...]) * (
+                flux[index[0], ...] / flux_err[index[0], ...]
+            )
+
+            f = np.nan_to_num(f)
+            w = np.nan_to_num(w)
+            factor[i] = factor[i] + f * w
+            norm[i] = norm[i] + w
+
+    sf = factor / norm
+    return sf, distances
+
+
+def TimmerKonig_lightcurve_simulator(
+    power_spectrum,
+    npoints,
+    spacing,
+    random_state="random-seed",
+    power_spectrum_params=None,
+):
+    """Implementation of the Timmer-Koenig algorithm to simulate a time series from a power spectrum.
+
+    Parameters
+    ----------
+    power_spectrum : function
+        Power spectrum used to generate the time series. It is expected to be
+        a function mapping the input frequencies to the periodogram.
+    npoints : int
+        Number of points in the output time series.
+    spacing : `~astropy.units.Quantity`
+        Sample spacing, inverse of the sampling rate. The units are inherited by the resulting time axis.
+    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+        Defines random number generator initialisation.
+        Passed to `~gammapy.utils.random.get_random_state`. Default is "random-seed".
+    power_spectrum_params : dict, optional
+        Dictionary of parameters to be provided to the power spectrum function.
+
+    Returns
+    -------
+    time_series : `~numpy.ndarray`
+        Simulated time series.
+    time_axis : `~astropy.units.Quantity`
+        Time axis of the series in the same units as 'spacing'. It will be defined with length 'npoints', from 0 to
+        'npoints'*'spacing'.
+
+    Examples
+    --------
+    To pass the function to be used in the simlation one can use either the 'lambda' keyword or an extended definition.
+    Parameters of the function can be passed using the 'power_spectrum_params' keyword.
+    For example, these are three ways to pass a power law (red noise) with index 2:
+
+    >>> from gammapy.stats import TimmerKonig_lightcurve_simulator
+    >>> import astropy.units as u
+    >>> def powerlaw(x):
+    ...     return x**(-2)
+    >>> def powerlaw_with_parameters(x, i):
+    ...     return x**(-i)
+    >>> ts, ta = TimmerKonig_lightcurve_simulator(lambda x: x**(-2), 20, 1*u.h)
+    >>> ts2, ta2 = TimmerKonig_lightcurve_simulator(powerlaw, 20, 1*u.h)
+    >>> ts3, ta3 = TimmerKonig_lightcurve_simulator(powerlaw_with_parameters,
+    ...                                            20, 1*u.h, power_spectrum_params={"i":2})
+
+    References
+    ----------
+    .. [Timmer1995] "On generating power law noise", J. Timmer and M, Konig, section 3
+    https://ui.adsabs.harvard.edu/abs/1995A%26A...300..707T/abstract
+    """
+    if not callable(power_spectrum):
+        raise ValueError(
+            "The power spectrum has to be provided as a callable function."
+        )
+
+    random_state = get_random_state(random_state)
+
+    frequencies = np.fft.fftfreq(npoints, spacing.value)
+
+    # To obtain real data only the positive or negative part of the frequency is necessary.
+    real_frequencies = np.sort(np.abs(frequencies[frequencies < 0]))
+
+    if power_spectrum_params:
+        periodogram = power_spectrum(real_frequencies, **power_spectrum_params)
+    else:
+        periodogram = power_spectrum(real_frequencies)
+
+    real_part = random_state.normal(0, 1, len(periodogram) - 1)
+    imaginary_part = random_state.normal(0, 1, len(periodogram) - 1)
+
+    # Nyquist frequency component handling
+    if npoints % 2 == 0:
+        idx0 = -2
+        random_factor = random_state.normal(0, 1)
+    else:
+        idx0 = -1
+        random_factor = random_state.normal(0, 1) + 1j * random_state.normal(0, 1)
+
+    fourier_coeffs = np.concatenate(
+        [
+            np.sqrt(0.5 * periodogram[:-1]) * (real_part + 1j * imaginary_part),
+            np.sqrt(0.5 * periodogram[-1:]) * random_factor,
+        ]
+    )
+    fourier_coeffs = np.concatenate(
+        [fourier_coeffs, np.conjugate(fourier_coeffs[idx0::-1])]
+    )
+
+    fourier_coeffs = np.insert(fourier_coeffs, 0, 0)
+    time_series = np.fft.ifft(fourier_coeffs).real
+
+    tmax = time_series.max()
+    if tmax < np.abs(time_series.min()):
+        time_series = -time_series
+
+    time_series = 0.5 + 0.5 * time_series / tmax
+
+    time_axis = np.linspace(0, npoints * spacing.value, npoints) * spacing.unit
+
+    return time_series, time_axis
