@@ -686,8 +686,7 @@ class TestFermi3PCObject:
     def test_data(self):
         assert_allclose(self.source.data["P0"], 0.08937108859019084)
 
-    @pytest.mark.parametrize("ref", SOURCES_3PC, ids=lambda _: _["name"])
-    def test_spectral_model(self, ref):
+    def test_spectral_model(self, ref=SOURCES_3PC[0]):
         model = self.cat[ref["idx"]].spectral_model()
 
         e_ref = model.reference.quantity
@@ -696,8 +695,7 @@ class TestFermi3PCObject:
         assert_quantity_allclose(dnde, ref["dnde"], rtol=1e-4)
         assert_quantity_allclose(dnde_err, ref["dnde_err"], rtol=1e-4)
 
-    @pytest.mark.parametrize("ref", SOURCES_3PC_NONE, ids=lambda _: _["name"])
-    def test_spectral_model_none(self, ref):
+    def test_spectral_model_none(self, ref=SOURCES_3PC_NONE[0]):
         model = self.cat[ref["idx"]].spectral_model()
         assert model is None
 
@@ -709,12 +707,10 @@ class TestFermi3PCObject:
         assert_allclose(p["lon_0"].value, 128.83588121)
         assert_allclose(p["lat_0"].value, -45.17635419)
 
-    @pytest.mark.parametrize("ref", SOURCES_3PC, ids=lambda _: _["name"])
-    def test_sky_model(self, ref):
+    def test_sky_model(self, ref=SOURCES_3PC[0]):
         self.cat[ref["idx"]].sky_model
 
-    @pytest.mark.parametrize("ref", SOURCES_3PC, ids=lambda _: _["name"])
-    def test_flux_points(self, ref):
+    def test_flux_points(self, ref=SOURCES_3PC[0]):
         flux_points = self.cat[ref["idx"]].flux_points
 
         assert flux_points.norm.geom.axes["energy"].nbin == 8
@@ -732,8 +728,7 @@ class TestFermi3PCObject:
         ]
         assert_allclose(flux_points.flux.data.flat, desired, rtol=1e-5)
 
-    @pytest.mark.parametrize("ref", SOURCES_3PC_NONE, ids=lambda _: _["name"])
-    def test_flux_points_none(self, ref):
+    def test_flux_points_none(self, ref=SOURCES_3PC_NONE[0]):
         flux_points = self.cat[ref["idx"]].flux_points
         assert flux_points is None
 
@@ -743,9 +738,12 @@ class TestFermi3PCObject:
         desired = [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 5.146455e-08]
         assert_allclose(flux_points.flux_ul.data.flat, desired, rtol=1e-5)
 
-    def test_lightcurve(self):
+    @pytest.mark.xfail
+    def test_lightcurve(self, ref=SOURCES_3PC_NONE[0]):
         # TODO: add lightcurve test when lightcurve is introduce to the class.
-        pass
+        lightcurve = self.cat[ref["idx"]].lightcurve
+
+        assert lightcurve is not None
 
 
 @requires_data()

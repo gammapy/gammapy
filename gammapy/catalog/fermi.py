@@ -149,6 +149,11 @@ class SourceCatalogObjectFermiPCBase(SourceCatalogObject, abc.ABC):
             format="gadf-sed",
         )
 
+    @property
+    def lightcurve(self):
+        """Light-curve."""
+        pass
+
 
 class SourceCatalogObjectFermiBase(SourceCatalogObject, abc.ABC):
     """Base class for Fermi-LAT catalogs."""
@@ -1438,27 +1443,24 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
 
     def spectral_model(self):
         d = self.data_spectral
-        if d is None:
+        if d is None or d["SpectrumType"] != "PLSuperExpCutoff4":
             log.warning(f"No spectral model available for source {self.name}")
             return None
-        if d["SpectrumType"] == "PLSuperExpCutoff4":
-            tag = "SuperExpCutoffPowerLaw4FGLDR3SpectralModel"
-            pars = {
-                "reference": d["Pivot_Energy_bfr"],
-                "amplitude": d["PLEC_Flux_Density_bfr"],
-                "index_1": -d["PLEC_IndexS_bfr"],
-                "index_2": d["PLEC_Exp_Index_bfr"],
-                "expfactor": d["PLEC_ExpfactorS_bfr"],
-            }
-            errs = {
-                "amplitude": d["Unc_PLEC_Flux_Density_bfr"],
-                "index_1": d["Unc_PLEC_IndexS_bfr"],
-                "index_2": d["Unc_PLEC_Exp_Index_bfr"],
-                "expfactor": d["Unc_PLEC_ExpfactorS_bfr"],
-            }
-        else:
-            log.warning(f"No spectral model available for source {self.name}")
-            return None
+
+        tag = "SuperExpCutoffPowerLaw4FGLDR3SpectralModel"
+        pars = {
+            "reference": d["Pivot_Energy_bfr"],
+            "amplitude": d["PLEC_Flux_Density_bfr"],
+            "index_1": -d["PLEC_IndexS_bfr"],
+            "index_2": d["PLEC_Exp_Index_bfr"],
+            "expfactor": d["PLEC_ExpfactorS_bfr"],
+        }
+        errs = {
+            "amplitude": d["Unc_PLEC_Flux_Density_bfr"],
+            "index_1": d["Unc_PLEC_IndexS_bfr"],
+            "index_2": d["Unc_PLEC_Exp_Index_bfr"],
+            "expfactor": d["Unc_PLEC_ExpfactorS_bfr"],
+        }
 
         model = Model.create(tag, "spectral", **pars)
 
@@ -1469,7 +1471,8 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
 
     @property
     def flux_points_table(self):
-        """Flux points (`~astropy.table.Table`)."""
+        """Flux points (`~astropy.table.Table`). Flux point is an upper limit if
+        its significance is less than 2."""
         fp_data = self.data_spectral
         if fp_data is None:
             log.warning(f"No flux points available for source {self.name}")
