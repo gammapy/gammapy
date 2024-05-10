@@ -271,19 +271,23 @@ However the name of the axis must match the name of the corresponding map
 geometry axis.
 
 Note: it is possible to have an arbitrary number of additional non-spatial dimensions,
-however, the user must ensure that the array has been correctly broadcasted. Here, we
-demonstrate this using an energy array with length greater than 2.
+however, the user must ensure that the array has been correctly broadcasted.
 
 .. testcode::
 
-    energy = np.array([1000, 3000, 5000]).reshape(-1,1)
-    c = MapCoord.create(dict(skycoord=skycoord,energy=energy))
+    energy = np.array([1000, 3000, 5000])[:, np.newaxis, np.newaxis]
+    energy_true = np.arange(500, 6000, 500)[np.newaxis, : ,np.newaxis]
+    print(energy.shape)
+    print(energy_true.shape)
+    c = MapCoord.create(dict(skycoord=skycoord, energy=energy,energy_true=energy_true))
     print(c.shape)
 
 .. testoutput::
     :hide:
 
-    (3, 2)
+    (3, 1, 1)
+    (1, 11, 1)
+    (3, 11, 2)
 
 
 Using gammapy.maps
