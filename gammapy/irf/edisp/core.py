@@ -4,11 +4,10 @@ import numpy as np
 import scipy.special
 from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord
-from astropy.units import Quantity
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from matplotlib.colors import PowerNorm
-from gammapy.maps import MapAxes, MapAxis, RegionGeom
+from gammapy.maps import MapAxes, RegionGeom
 from gammapy.utils.deprecation import deprecated_renamed_argument
 from gammapy.visualization.utils import add_colorbar
 from ..core import IRF
@@ -153,21 +152,6 @@ class EnergyDispersion2D(IRF):
         from gammapy.makers.utils import make_edisp_kernel_map
 
         offset = Angle(offset)
-
-        if isinstance(energy_axis, Quantity):
-            log.warning(
-                "From v1.3 energy_axis should be given as a MapAxis, not a Quantity."
-            )
-            energy_axis = MapAxis.from_energy_edges(energy_axis)
-
-        if isinstance(energy_axis_true, Quantity):
-            log.warning(
-                "From v1.3 energy_axis_true should be given as a MapAxis, not a Quantity."
-            )
-            energy_axis_true = MapAxis.from_energy_edges(
-                energy_axis_true,
-                name="energy_true",
-            )
 
         if energy_axis is None:
             energy_axis = self.axes["energy_true"].copy(name="energy")

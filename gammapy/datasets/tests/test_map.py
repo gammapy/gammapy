@@ -45,7 +45,6 @@ from gammapy.modeling.models import (
     SkyModel,
     UniformPrior,
 )
-from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 from gammapy.utils.types import JsonQuantityEncoder
 
@@ -542,22 +541,21 @@ def test_downsample_energy(geom, geom_etrue):
     mask.data[1:] = True
     counts += 1
     exposure = Map.from_geom(geom_etrue, unit="m2s")
-    with pytest.raises(GammapyDeprecationWarning):
-        edisp = EDispKernelMap.from_gauss(geom.axes[0], geom_etrue.axes[0], 0.1, 0.0)
-        dataset = MapDataset(
-            counts=counts,
-            exposure=exposure,
-            mask_safe=mask,
-            edisp=edisp,
-        )
-        dataset_downsampled = dataset.downsample(2, axis_name="energy")
-        dataset_resampled = dataset.resample_energy_axis(geom.axes[0].downsample(2))
+    edisp = EDispKernelMap.from_gauss(geom.axes[0], geom_etrue.axes[0], 0.1, 0.0)
+    dataset = MapDataset(
+        counts=counts,
+        exposure=exposure,
+        mask_safe=mask,
+        edisp=edisp,
+    )
+    dataset_downsampled = dataset.downsample(2, axis_name="energy")
+    dataset_resampled = dataset.resample_energy_axis(geom.axes[0].downsample(2))
 
-        assert dataset_downsampled.edisp.edisp_map.data.shape == (3, 1, 1, 2)
-        assert_allclose(
-            dataset_downsampled.edisp.edisp_map.data[:, :, 0, 0],
-            dataset_resampled.edisp.edisp_map.data[:, :, 0, 0],
-        )
+    assert dataset_downsampled.edisp.edisp_map.data.shape == (3, 1, 1, 2)
+    assert_allclose(
+        dataset_downsampled.edisp.edisp_map.data[:, :, 0, 0],
+        dataset_resampled.edisp.edisp_map.data[:, :, 0, 0],
+    )
 
 
 @requires_data()

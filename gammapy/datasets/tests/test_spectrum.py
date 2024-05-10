@@ -20,7 +20,6 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
 )
-from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.utils.random import get_random_state
 from gammapy.utils.regions import compound_region_to_regions
 from gammapy.utils.testing import assert_time_allclose, mpl_plot_check, requires_data
@@ -296,73 +295,68 @@ def test_spectrum_dataset_stack_nondiagonal_no_bkg(spectrum_dataset):
     energy = spectrum_dataset.counts.geom.axes["energy"]
     geom = spectrum_dataset.counts.geom
 
-    with pytest.raises(GammapyDeprecationWarning):
-        edisp1 = EDispKernelMap.from_gauss(
-            energy_axis=energy,
-            energy_axis_true=energy.copy(name="energy_true"),
-            sigma=0.1,
-            bias=0,
-            geom=geom.to_image(),
-        )
-        edisp1.exposure_map.data += 1
+    edisp1 = EDispKernelMap.from_gauss(
+        energy_axis=energy,
+        energy_axis_true=energy.copy(name="energy_true"),
+        sigma=0.1,
+        bias=0,
+        geom=geom.to_image(),
+    )
+    edisp1.exposure_map.data += 1
 
-        aeff = EffectiveAreaTable2D.from_parametrization(
-            energy_axis_true=energy.copy(name="energy_true"), instrument="HESS"
-        )
+    aeff = EffectiveAreaTable2D.from_parametrization(
+        energy_axis_true=energy.copy(name="energy_true"), instrument="HESS"
+    )
 
-        livetime = 100 * u.s
+    livetime = 100 * u.s
 
-        geom_true = geom.as_energy_true
-        exposure = make_map_exposure_true_energy(
-            geom=geom_true,
-            livetime=livetime,
-            pointing=geom_true.center_skydir,
-            aeff=aeff,
-        )
+    geom_true = geom.as_energy_true
+    exposure = make_map_exposure_true_energy(
+        geom=geom_true, livetime=livetime, pointing=geom_true.center_skydir, aeff=aeff
+    )
 
-        geom = spectrum_dataset.counts.geom
-        counts = RegionNDMap.from_geom(geom=geom)
+    geom = spectrum_dataset.counts.geom
+    counts = RegionNDMap.from_geom(geom=geom)
 
-        gti = GTI.create(start=0 * u.s, stop=livetime)
-        spectrum_dataset1 = SpectrumDataset(
-            counts=counts,
-            exposure=exposure,
-            edisp=edisp1,
-            meta_table=Table({"OBS_ID": [0]}),
-            gti=gti.copy(),
-        )
+    gti = GTI.create(start=0 * u.s, stop=livetime)
+    spectrum_dataset1 = SpectrumDataset(
+        counts=counts,
+        exposure=exposure,
+        edisp=edisp1,
+        meta_table=Table({"OBS_ID": [0]}),
+        gti=gti.copy(),
+    )
 
-    with pytest.raises(GammapyDeprecationWarning):
-        edisp2 = EDispKernelMap.from_gauss(
-            energy_axis=energy,
-            energy_axis_true=energy.copy(name="energy_true"),
-            sigma=0.2,
-            bias=0.0,
-            geom=geom,
-        )
-        edisp2.exposure_map.data += 1
+    edisp2 = EDispKernelMap.from_gauss(
+        energy_axis=energy,
+        energy_axis_true=energy.copy(name="energy_true"),
+        sigma=0.2,
+        bias=0.0,
+        geom=geom,
+    )
+    edisp2.exposure_map.data += 1
 
-        gti2 = GTI.create(start=100 * u.s, stop=200 * u.s)
+    gti2 = GTI.create(start=100 * u.s, stop=200 * u.s)
 
-        spectrum_dataset2 = SpectrumDataset(
-            counts=counts,
-            exposure=exposure.copy(),
-            edisp=edisp2,
-            meta_table=Table({"OBS_ID": [1]}),
-            gti=gti2,
-        )
-        spectrum_dataset1.stack(spectrum_dataset2)
+    spectrum_dataset2 = SpectrumDataset(
+        counts=counts,
+        exposure=exposure.copy(),
+        edisp=edisp2,
+        meta_table=Table({"OBS_ID": [1]}),
+        gti=gti2,
+    )
+    spectrum_dataset1.stack(spectrum_dataset2)
 
-        assert_allclose(spectrum_dataset1.meta_table["OBS_ID"][0], [0, 1])
+    assert_allclose(spectrum_dataset1.meta_table["OBS_ID"][0], [0, 1])
 
-        assert spectrum_dataset1.background_model is None
-        assert_allclose(spectrum_dataset1.gti.time_sum.to_value("s"), 200)
-        assert_allclose(
-            spectrum_dataset1.exposure.quantity[2].to_value("m2 s"), 1573851.079861
-        )
-        kernel = edisp1.get_edisp_kernel()
-        assert_allclose(kernel.get_bias(1 * u.TeV), 0.0, atol=1.2e-3)
-        assert_allclose(kernel.get_resolution(1 * u.TeV), 0.1581, atol=1e-2)
+    assert spectrum_dataset1.background_model is None
+    assert_allclose(spectrum_dataset1.gti.time_sum.to_value("s"), 200)
+    assert_allclose(
+        spectrum_dataset1.exposure.quantity[2].to_value("m2 s"), 1573851.079861
+    )
+    kernel = edisp1.get_edisp_kernel()
+    assert_allclose(kernel.get_bias(1 * u.TeV), 0.0, atol=1.2e-3)
+    assert_allclose(kernel.get_resolution(1 * u.TeV), 0.1581, atol=1e-2)
 
 
 def test_peek(spectrum_dataset):
