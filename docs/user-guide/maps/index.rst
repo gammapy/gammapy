@@ -276,10 +276,10 @@ however, the user must ensure that the array has been correctly broadcasted.
 .. testcode::
 
     energy = np.array([1000, 3000, 5000])[:, np.newaxis, np.newaxis]
-    energy_true = np.arange(500, 6000, 500)[np.newaxis, : ,np.newaxis]
+    energy_true = np.arange(500, 6000, 500)[np.newaxis, :, np.newaxis]
     print(energy.shape)
     print(energy_true.shape)
-    c = MapCoord.create(dict(skycoord=skycoord, energy=energy,energy_true=energy_true))
+    c = MapCoord.create(dict(skycoord=skycoord, energy=energy, energy_true=energy_true))
     print(c.shape)
 
 .. testoutput::
