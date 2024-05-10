@@ -2,9 +2,11 @@
 import html
 import itertools
 import logging
-import os
 import numpy as np
 from astropy.table import Table
+import yaml
+from gammapy.utils.check import add_checksum
+from gammapy.utils.metadata import CreatorMetaData
 from gammapy.utils.pbar import progress_bar
 from gammapy.utils.scripts import make_path
 from .covariance import Covariance
@@ -723,23 +725,74 @@ class FitResult:
         """Optimize result."""
         return self._covariance_result
 
-    def write(self, filename, overwrite=False):
+    def to_dict(self, full_output=False, overwrite_templates=False):
+        """Convert to dictionary."""
+
+        models_dict = self.models.to_dict(
+            full_output=full_output, overwrite_templates=overwrite_templates
+        )
+
+        return {
+            "components": models_dict,
+            "covariance_result": {
+                "backend": self.covariance_result.backend,
+                "method": self.covariance_result.method,
+                "success": self.covariance_result.success,
+                "message": self.covariance_result.message,
+            },
+            "optimize_result": {
+                "backend": self.optimize_result.backend,
+                "method": self.optimize_result.method,
+                "success": self.optimize_result.success,
+                "message": self.optimize_result.message,
+                "nfev": self.optimize_result.nfev,
+                "total_stat": self.optimize_result._total_stat,
+            },
+        }
+
+    def to_yaml(self, full_output=False, overwrite_templates=False):
+        """Convert to YAML string."""
+        data = self.to_dict(
+            full_output=full_output, overwrite_templates=overwrite_templates
+        )
+        text = yaml.dump(
+            data, sort_keys=False, indent=4, width=80, default_flow_style=False
+        )
+        creation = CreatorMetaData()
+        return text + creation.to_yaml()
+
+    def write(
+        self,
+        path,
+        overwrite=False,
+        full_output=False,
+        overwrite_templates=False,
+        checksum=False,
+    ):
         """Write to file.
 
         Parameters
         ----------
-        filename : str
-            Input filename.
+        path : `pathlib.Path` or str
+            Path to write files.
         overwrite : bool, optional
             Overwrite existing file. Default is False.
+        full_output : bool, optional
+            Store full parameter output. Default is False.
+        overwrite_templates : bool, optional
+            Overwrite templates FITS files. Default is False.
+        checksum : bool, optional
+            When True adds a CHECKSUM entry to the file.
+            Default is False.
         """
-        path = make_path(filename)
-        if os.path.isfile(path) and not overwrite:
-            log.warning("File already exits, and overwrite is False")
-        else:
-            with open(path, "w") as file:
-                string = self.__str__()
-                file.write(string)
+        path = make_path(path)
+        if path.exists() and not overwrite:
+            raise IOError(f"File exists already: {path}")
+
+        yaml_str = self.to_yaml(full_output, overwrite_templates)
+        if checksum:
+            yaml_str = add_checksum(yaml_str)
+        path.write_text(yaml_str)
 
     def __str__(self):
         string = ""
