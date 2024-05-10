@@ -28,9 +28,10 @@ class MapCoord:
     """Represents a sequence of n-dimensional map coordinates.
 
     Contains coordinates for 2 spatial dimensions and an arbitrary
-    number of additional non-spatial dimensions.
+    number of additional non-spatial dimensions. Ensure correct broadcasting of the array
+    to allow for this.
 
-    For further information see :ref:`mapcoord`.
+    For further information and examples see :ref:`mapcoord`.
 
     Parameters
     ----------
