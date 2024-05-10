@@ -223,23 +223,27 @@ def test_joint_flux_maps(map_flux_estimate, wcs_flux_map, reference_model):
     energy = fe.geom.axes[0].center[iE]
 
     fe_new = joint_flux_maps([fe, fe])
+    assert_allclose(fe_new.dnde.quantity, fe.dnde.quantity)
+    assert_allclose(
+        fe_new.dnde_err.quantity.value, fe.dnde_err.quantity.value / np.sqrt(2)
+    )
+
+    fe_new = joint_flux_maps(
+        [fe, fe], reference_model=FluxMaps.reference_model_default.spectral_model
+    )
+    assert_allclose(fe_new.dnde.quantity, fe.dnde.quantity)
+    assert_allclose(
+        fe_new.dnde_err.quantity.value, fe.dnde_err.quantity.value / np.sqrt(2)
+    )
+
     ratio = model.spectral_model(
         energy
     ) / FluxMaps.reference_model_default.spectral_model(energy)
-    assert_allclose(fe_new.dnde.quantity, fe.dnde.quantity)
-    assert_allclose(
-        fe_new.dnde_err.quantity.value, fe.dnde_err.quantity.value / np.sqrt(2)
-    )
+
     assert_allclose(
         fe_new.norm.quantity.value[iE, :, :] / fe.norm.quantity.value[iE, :, :], ratio
     )
-
-    fe_new = joint_flux_maps([fe, fe], reference_model=model)
-    assert_allclose(fe_new.dnde.quantity, fe.dnde.quantity)
-    assert_allclose(
-        fe_new.dnde_err.quantity.value, fe.dnde_err.quantity.value / np.sqrt(2)
-    )
-    assert_allclose(fe_new.norm.quantity, fe.norm.quantity)
+    assert fe_new.meta == fe.meta
 
     fe = FluxMaps(wcs_flux_map, reference_model)
     fe_new = joint_flux_maps([fe, fe], reference_model=reference_model)

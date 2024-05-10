@@ -756,7 +756,7 @@ def get_combined_significance_maps(estimator, datasets):
     )
 
 
-def joint_flux_maps(maps, method="gaussian_errors", **kwargs):
+def joint_flux_maps(maps, method="gaussian_errors", reference_model=None):
     """Create a FluxMaps by combining a list of flux maps with the same geometry.
      This assumes the flux maps are independent measurements of the same true value.
      The GTI is stacked in the process.
@@ -765,12 +765,13 @@ def joint_flux_maps(maps, method="gaussian_errors", **kwargs):
     ----------
     maps : list of `~gammapy.estimators.FluxMaps`
         List of maps with the same geometry.
-    kwargs : dict
-        Options passed to `~gammapy.estimators.FluxMaps.from_maps`
     method : {"gaussian_errors"}
         * gaussian_errors :
             Under the gaussian error approximation the likelihood is given by the gaussian distibution.
             The product of gaussians is also a gaussian so can derive dnde, dnde_err, and ts.
+    reference_model : `~gammapy.modeling.models.SkyModel`, optional
+        Reference model to use for conversions.
+        If None, use the reference_model of the first FluxMaps in the list.
 
     Returns
     -------
@@ -789,6 +790,9 @@ def joint_flux_maps(maps, method="gaussian_errors", **kwargs):
         mean = Map.from_geom(geom, data=means[0].data, unit=means[0].unit)
         sigma = Map.from_geom(geom, data=sigmas[0].data, unit=sigmas[0].unit)
         gti = maps.gti
+        meta = maps.meta
+        if reference_model is None:
+            reference_model = maps.reference_model
     else:
         means = [map_.dnde.copy() for map_ in maps]
         sigmas = [map_.dnde_err.copy() for map_ in maps]
@@ -802,6 +806,16 @@ def joint_flux_maps(maps, method="gaussian_errors", **kwargs):
                 gti.stack(gtis[k])
         else:
             gti = None
+
+        if reference_model is None:
+            reference_model = maps[0].reference_model
+
+        # TODO : change this once we have stackable metadata objets
+        metas = [map_.meta for map_ in maps if map_.meta is not None]
+        meta = {}
+        if np.any(metas):
+            for data in metas:
+                meta.update(data)
 
     for k in range(1, len(means)):
 
@@ -830,5 +844,5 @@ def joint_flux_maps(maps, method="gaussian_errors", **kwargs):
     )
     ts = Map.from_geom(mean.geom, data=ts)
 
-    kwargs["sed_type"] = "dnde"
-    return FluxMaps.from_maps(dict(dnde=mean, dnde_err=sigma, ts=ts), gti=gti, **kwargs)
+    kwargs = dict(sed_type="dnde", gti=gti, reference_model=reference_model, meta=meta)
+    return FluxMaps.from_maps(dict(dnde=mean, dnde_err=sigma, ts=ts), **kwargs)
