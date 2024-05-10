@@ -759,10 +759,11 @@ def get_combined_significance_maps(estimator, datasets):
 def joint_flux_maps(maps, method="gaussian_errors", **kwargs):
     """Create a FluxMaps by combining a list of flux maps with the same geometry.
      This assumes the flux maps are independent measurements of the same true value.
+     The GTI is stacked in the process.
 
     Parameters
     ----------
-    maps : list of `~gammapy.estimators.FluxMaps` or ~gammapy.estimators.FluxMaps`
+    maps : list of `~gammapy.estimators.FluxMaps`
         List of maps with the same geometry.
     kwargs : dict
         Options passed to `~gammapy.estimators.FluxMaps.from_maps`
