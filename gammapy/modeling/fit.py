@@ -2,11 +2,9 @@
 import html
 import itertools
 import logging
-import os
 import numpy as np
 from astropy.table import Table
 from gammapy.utils.pbar import progress_bar
-from gammapy.utils.scripts import make_path
 from .covariance import Covariance
 from .iminuit import (
     confidence_iminuit,
@@ -17,7 +15,7 @@ from .iminuit import (
 from .scipy import confidence_scipy, optimize_scipy
 from .sherpa import optimize_sherpa
 
-__all__ = ["Fit", "FitResult"]
+__all__ = ["Fit", "FitResult", "OptimizeResult", "CovarianceResult"]
 
 log = logging.getLogger(__name__)
 
@@ -27,10 +25,6 @@ class Registry:
 
     Gives users the power to extend from their scripts.
     Used by `Fit` below.
-
-    Not sure if we should call it "backend" or "method" or something else.
-    Probably we will code up some methods, e.g. for profile analysis ourselves,
-    using scipy or even just Python / Numpy?
     """
 
     register = {
@@ -313,7 +307,7 @@ class Fit:
 
         For the scipy backend ``kwargs`` are forwarded to `~scipy.optimize.brentq`. If the
         confidence estimation fails, the bracketing interval can be adapted by modifying the
-        the upper bound of the interval (``b``) value.
+        upper bound of the interval (``b``) value.
 
         Parameters
         ----------
@@ -583,7 +577,15 @@ class FitStepResult:
 
 
 class CovarianceResult(FitStepResult):
-    """Covariance result object."""
+    """Covariance result object.
+
+    Parameters
+    ----------
+    matrix : `~numpy.ndarray`, optional
+        The covariance matrix. Default is None.
+    kwargs : dict
+        Extra ``kwargs`` are passed to the backend.
+    """
 
     def __init__(self, matrix=None, **kwargs):
         self._matrix = matrix
@@ -596,7 +598,23 @@ class CovarianceResult(FitStepResult):
 
 
 class OptimizeResult(FitStepResult):
-    """Optimize result object."""
+    """Optimize result object.
+
+    Parameters
+    ----------
+    models : `~gammapy.modeling.models.DatasetModels`
+        Best fit models.
+    nfev : int
+        Number of function evaluations.
+    total_stat : float
+        Value of the fit statistic at minimum.
+    trace : `~astropy.table.Table`
+        Parameter trace from the optimisation.
+    minuit : `~iminuit.minuit.Minuit`, optional
+        Minuit object. Default is None.
+    kwargs : dict
+        Extra ``kwargs`` are passed to the backend.
+    """
 
     def __init__(self, models, nfev, total_stat, trace, minuit=None, **kwargs):
         self._models = models
@@ -645,6 +663,8 @@ class OptimizeResult(FitStepResult):
 
 class FitResult:
     """Fit result class.
+
+    The fit result class provides the results from the optimisation and covariance of the fit.
 
     Parameters
     ----------
@@ -722,24 +742,6 @@ class FitResult:
     def covariance_result(self):
         """Optimize result."""
         return self._covariance_result
-
-    def write(self, filename, overwrite=False):
-        """Write to file.
-
-        Parameters
-        ----------
-        filename : str
-            Input filename.
-        overwrite : bool, optional
-            Overwrite existing file. Default is False.
-        """
-        path = make_path(filename)
-        if os.path.isfile(path) and not overwrite:
-            log.warning("File already exits, and overwrite is False")
-        else:
-            with open(path, "w") as file:
-                string = self.__str__()
-                file.write(string)
 
     def __str__(self):
         string = ""
