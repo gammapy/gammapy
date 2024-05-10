@@ -1099,7 +1099,7 @@ class FluxMaps:
         Parameters
         ----------
         slices : dict
-            Dict of axes names and integers or `slice` object pairs. Contains one
+            Dictionary of axes names and integers or `slice` object pairs. Contains one
             element for each non-spatial dimension. For integer indexing the
             corresponding axes is dropped from the map. Axes not specified in the
             dict are kept unchanged.
@@ -1108,6 +1108,16 @@ class FluxMaps:
         -------
         flux_maps : `FluxMaps`
             Sliced flux maps object.
+
+        Examples
+        --------
+        >>> from gammapy.datasets import MapDataset
+        >>> from gammapy.estimators import ExcessMapEstimator
+        >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
+        >>> estimator = ExcessMapEstimator(correlation_radius="0.1 deg")
+        >>> result = estimator.run(dataset)
+        >>> slices = {"energy": slice(0, 3)}
+        >>> sliced = result.slice_by_idx(slices)
         """
 
         data = {}
@@ -1128,7 +1138,7 @@ class FluxMaps:
         Parameters
         ----------
         slices : dict
-            Dict of axes names and `astropy.Quantity` or `astropy.Time` or `slice` object pairs.
+            Dictionary of axes names and `astropy.Quantity` or `astropy.Time` or `slice` object pairs.
             Contains one element for each non-spatial dimension. For integer indexing the
             corresponding axes is dropped from the map. Axes not specified in the
             dict are kept unchanged.
@@ -1138,6 +1148,16 @@ class FluxMaps:
         -------
         flux_maps : `FluxMaps`
             Sliced flux maps object.
+
+        Examples
+        --------
+        >>> from gammapy.datasets import MapDataset
+        >>> from gammapy.estimators import ExcessMapEstimator
+        >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
+        >>> estimator = ExcessMapEstimator(correlation_radius="0.1 deg")
+        >>> result = estimator.run(dataset)
+        >>> slices = {"energy": slice(0.5 * u.TeV, 5.0 * u.TeV)}
+        >>> sliced = result.slice_by_coord(slices)
         """
 
         idx_intervals = []

@@ -1903,6 +1903,22 @@ class MapAxes(Sequence):
         -------
         geom : `~Geom`
             Sliced geometry.
+
+        Examples
+        --------
+        >>> import astropy.units as u
+        >>> from astropy.time import Time
+        >>> from gammapy.maps import MapAxis, MapAxes, TimeMapAxis
+        >>> energy_axis = MapAxis.from_energy_bounds(1*u.TeV, 3*u.TeV, 6)
+        >>> time_ref = Time("1999-01-01T00:00:00.123456789")
+        >>> time_axis = TimeMapAxis(
+        ...     edges_min=[0, 1, 3] * u.d,
+        ...     edges_max=[0.8, 1.9, 5.4] * u.d,
+        ...     reference_time=time_ref,
+        ... )
+        >>> axes = MapAxes([energy_axis, time_axis])
+        >>> slices = {"energy": slice(0, 3), "time": slice(0, 1)}
+        >>> sliced_axes = axes.slice_by_idx(slices)
         """
         axes = []
         for ax in self:

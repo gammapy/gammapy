@@ -341,18 +341,27 @@ class Geom(abc.ABC):
     def slice_by_idx(self, slices):
         """Create a new geometry by slicing the non-spatial axes.
 
-        Parameters
-        ----------
-        slices : dict
-            Dictionary of axes names and integers or `slice` object pairs. Contains one
-            element for each non-spatial dimension. For integer indexing the
-            corresponding axes is dropped from the map. Axes not specified in the
-            dict are kept unchanged.
+                Parameters
+                ----------
+                slices : dict
+                    Dictionary of axes names and integers or `slice` object pairs. Contains one
+                    element for each non-spatial dimension. For integer indexing the
+                    corresponding axes is dropped from the map. Axes not specified in the
+                    dict are kept unchanged.
 
-        Returns
-        -------
-        geom : `~Geom`
-            Sliced geometry.
+                Returns
+                -------
+                geom : `~Geom`
+                    Sliced geometry.
+
+                Examples
+                --------
+                >>> from gammapy.maps import MapAxis, WcsGeom
+        >>> import astropy.units as u
+                >>> energy_axis = MapAxis.from_energy_bounds(1*u.TeV, 3*u.TeV, 6)
+                >>> geom = WcsGeom.create(skydir=(83.63, 22.01), axes=[energy_axis], width=5, binsz=0.02)
+                >>> slices = {"energy": slice(0, 2)}
+                >>> sliced_geom = geom.slice_by_idx(slices)
         """
         axes = self.axes.slice_by_idx(slices)
         return self._init_copy(axes=axes)
