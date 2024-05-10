@@ -2,9 +2,11 @@
 import html
 import itertools
 import logging
+import os
 import numpy as np
 from astropy.table import Table
 from gammapy.utils.pbar import progress_bar
+from gammapy.utils.scripts import make_path
 from .covariance import Covariance
 from .iminuit import (
     confidence_iminuit,
@@ -720,6 +722,24 @@ class FitResult:
     def covariance_result(self):
         """Optimize result."""
         return self._covariance_result
+
+    def write(self, filename, overwrite=False):
+        """Write to file.
+
+        Parameters
+        ----------
+        filename : str
+            Input filename.
+        overwrite : bool, optional
+            Overwrite existing file. Default is False.
+        """
+        path = make_path(filename)
+        if os.path.isfile(path) and not overwrite:
+            log.warning("File already exits, and overwrite is False")
+        else:
+            with open(path, "w") as file:
+                string = self.__str__()
+                file.write(string)
 
     def __str__(self):
         string = ""
