@@ -2767,7 +2767,7 @@ class TimeMapAxis:
 
         Parameters
         ----------
-        idx : slice
+        idx : `slice`
             Slice object selecting a sub-selection of the axis.
 
         Returns
@@ -2801,7 +2801,7 @@ class TimeMapAxis:
 
         Returns
         -------
-        axis : `~MapAxis`
+        axis : `~TimeMapAxis`
             Squashed time map axis object.
         """
         return TimeMapAxis(
