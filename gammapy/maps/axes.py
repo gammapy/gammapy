@@ -1901,8 +1901,8 @@ class MapAxes(Sequence):
 
         Returns
         -------
-        geom : `~Geom`
-            Sliced geometry.
+        axes : `~MapAxes`
+            Sliced axes.
 
         Examples
         --------

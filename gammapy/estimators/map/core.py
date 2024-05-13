@@ -1113,10 +1113,11 @@ class FluxMaps:
         --------
         >>> from gammapy.datasets import MapDataset
         >>> from gammapy.estimators import ExcessMapEstimator
+        >>> import astropy.units as u
         >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
-        >>> estimator = ExcessMapEstimator(correlation_radius="0.1 deg")
+        >>> estimator = ExcessMapEstimator(energy_edges=[0.1, 1, 10, 100]*u.TeV)
         >>> result = estimator.run(dataset)
-        >>> slices = {"energy": slice(0, 3)}
+        >>> slices = {"energy": slice(0, 1)}
         >>> sliced = result.slice_by_idx(slices)
         """
 
@@ -1153,8 +1154,9 @@ class FluxMaps:
         --------
         >>> from gammapy.datasets import MapDataset
         >>> from gammapy.estimators import ExcessMapEstimator
+        >>> import astropy.units as u
         >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
-        >>> estimator = ExcessMapEstimator(correlation_radius="0.1 deg")
+        >>> estimator = ExcessMapEstimator(energy_edges=[0.1, 1, 10, 100]*u.TeV)
         >>> result = estimator.run(dataset)
         >>> slices = {"energy": slice(0.5 * u.TeV, 5.0 * u.TeV)}
         >>> sliced = result.slice_by_coord(slices)
