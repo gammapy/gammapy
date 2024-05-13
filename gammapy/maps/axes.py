@@ -911,6 +911,15 @@ class MapAxis:
         -------
         axis : `MapAxis`
             Sliced axis object.
+
+        Examples
+        --------
+        >>> from gammapy.maps import MapAxis
+        >>> axis = MapAxis.from_bounds(
+        ...     10.0, 2e3, 6, interp="log", name="energy_true", unit="GeV"
+        ... )
+        >>> slices = slice(1, 3)
+        >>> sliced = axis.slice(slices)
         """
         center = self.center[idx].value
         idx = self.coord_to_idx(center)
@@ -2765,6 +2774,19 @@ class TimeMapAxis:
         -------
         axis : `~TimeMapAxis`
             Sliced time map axis object.
+
+        Examples
+        --------
+        >>> from gammapy.maps import TimeMapAxis
+        >>> import astropy.units as u
+        >>> from astropy.time import Time
+        >>> time_map_axis = TimeMapAxis(
+        ...     edges_min=[1, 5, 10, 15] * u.day,
+        ...     edges_max=[2, 7, 13, 18] * u.day,
+        ...     reference_time=Time("2020-03-19"),
+        ... )
+        >>> slices = slice(1, 3)
+        >>> sliced = time_map_axis.slice(slices)
         """
         return TimeMapAxis(
             self._edges_min[idx].copy(),
@@ -3423,6 +3445,15 @@ class LabelMapAxis:
         -------
         axis : `~LabelMapAxis`
             Sliced axis object.
+
+        Examples
+        --------
+        >>> from gammapy.maps import LabelMapAxis
+        >>> label_axis = LabelMapAxis(
+        ...     labels=["dataset-1", "dataset-2", "dataset-3", "dataset-4"], name="dataset"
+        ... )
+        >>> slices = slice(2, 4)
+        >>> sliced = label_axis.slice(slices)
         """
         return self.__class__(
             labels=self._labels[idx],
