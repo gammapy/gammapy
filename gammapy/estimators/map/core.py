@@ -1190,6 +1190,15 @@ class FluxMaps:
         -------
         flux_maps : `FluxMaps`
             Sliced flux maps object.
+
+        Examples
+        --------
+        >>> from gammapy.estimators import FluxPoints
+        >>> import astropy.units as u
+        >>> lc_1d = FluxPoints.read(
+        ...     "$GAMMAPY_DATA/estimators/pks2155_hess_lc/pks2155_hess_lc.fits", format="lightcurve"
+        ... )
+        >>> sliced = lc_1d.slice_by_time(time_min=2035.93*u.day, time_max=2036.05*u.day)
         """
 
         time_slice = slice(time_min, time_max)
@@ -1208,6 +1217,13 @@ class FluxMaps:
         -------
         flux_maps : `FluxMaps`
             Sliced flux maps object.
+
+        Examples
+        --------
+        >>> from gammapy.estimators import FluxPoints
+        >>> import astropy.units as u
+        >>> fp = FluxPoints.read("$GAMMAPY_DATA/estimators/crab_hess_fp/crab_hess_fp.fits")
+        >>> sliced = fp.slice_by_energy(energy_min=2*u.TeV, energy_max=10*u.TeV)
         """
 
         energy_slice = slice(energy_min, energy_max)
