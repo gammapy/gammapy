@@ -1111,14 +1111,11 @@ class FluxMaps:
 
         Examples
         --------
-        >>> from gammapy.datasets import MapDataset
-        >>> from gammapy.estimators import ExcessMapEstimator
+        >>> from gammapy.estimators import FluxPoints
         >>> import astropy.units as u
-        >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
-        >>> estimator = ExcessMapEstimator(energy_edges=[0.1, 1, 10, 100]*u.TeV)
-        >>> result = estimator.run(dataset)
-        >>> slices = {"energy": slice(0, 1)}
-        >>> sliced = result.slice_by_idx(slices)
+        >>> fp = FluxPoints.read("$GAMMAPY_DATA/estimators/crab_hess_fp/crab_hess_fp.fits")
+        >>> slices = {"energy": slice(0, 2)}
+        >>> sliced = fp.slice_by_idx(slices)
         """
 
         data = {}
@@ -1152,14 +1149,13 @@ class FluxMaps:
 
         Examples
         --------
-        >>> from gammapy.datasets import MapDataset
-        >>> from gammapy.estimators import ExcessMapEstimator
+        >>> from gammapy.estimators import FluxPoints
         >>> import astropy.units as u
-        >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
-        >>> estimator = ExcessMapEstimator(energy_edges=[0.1, 1, 10, 100]*u.TeV)
-        >>> result = estimator.run(dataset)
-        >>> slices = {"energy": slice(0.5 * u.TeV, 5.0 * u.TeV)}
-        >>> sliced = result.slice_by_coord(slices)
+        >>> lc_1d = FluxPoints.read(
+        ...     "$GAMMAPY_DATA/estimators/pks2155_hess_lc/pks2155_hess_lc.fits", format="lightcurve"
+        ... )
+        >>> slices = {"time": slice(2035.93*u.day, 2036.05*u.day)}
+        >>> sliced = lc_1d.slice_by_coord(slices)
         """
 
         idx_intervals = []
