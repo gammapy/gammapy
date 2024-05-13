@@ -1151,9 +1151,7 @@ class FluxMaps:
         --------
         >>> from gammapy.estimators import FluxPoints
         >>> import astropy.units as u
-        >>> lc_1d = FluxPoints.read(
-        ...     "$GAMMAPY_DATA/estimators/pks2155_hess_lc/pks2155_hess_lc.fits", format="lightcurve"
-        ... )
+        >>> lc_1d = FluxPoints.read("$GAMMAPY_DATA/estimators/pks2155_hess_lc/pks2155_hess_lc.fits")
         >>> slices = {"time": slice(2035.93*u.day, 2036.05*u.day)}
         >>> sliced = lc_1d.slice_by_coord(slices)
         """
@@ -1191,9 +1189,7 @@ class FluxMaps:
         --------
         >>> from gammapy.estimators import FluxPoints
         >>> import astropy.units as u
-        >>> lc_1d = FluxPoints.read(
-        ...     "$GAMMAPY_DATA/estimators/pks2155_hess_lc/pks2155_hess_lc.fits", format="lightcurve"
-        ... )
+        >>> lc_1d = FluxPoints.read("$GAMMAPY_DATA/estimators/pks2155_hess_lc/pks2155_hess_lc.fits")
         >>> sliced = lc_1d.slice_by_time(time_min=2035.93*u.day, time_max=2036.05*u.day)
         """
 
