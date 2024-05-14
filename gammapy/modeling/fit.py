@@ -733,7 +733,7 @@ class FitResult:
         )
 
         return {
-            "components": models_dict,
+            "models": models_dict,
             "covariance_result": {
                 "backend": self.covariance_result.backend,
                 "method": self.covariance_result.method,
