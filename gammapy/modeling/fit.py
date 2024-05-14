@@ -656,8 +656,8 @@ class OptimizeResult(FitStepResult):
     def to_dict(self):
         """Convert to dictionary."""
         output = super().to_dict()
-        output["nfev"] = (self.nfev,)
-        output["total_stat"] = (self.nfev,)
+        output["nfev"] = self.nfev
+        output["total_stat"] = self._total_stat
         return output
 
 
@@ -751,7 +751,7 @@ class FitResult:
         if self.optimize_result is not None:
             output["optimize_result"] = self.optimize_result.to_dict()
         if self.covariance_result is not None:
-            output["covariance_result"] = self.optimize_result.to_dict()
+            output["covariance_result"] = self.covariance_result.to_dict()
         output["models"] = models_dict
         return output
 
