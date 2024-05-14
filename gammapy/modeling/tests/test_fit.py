@@ -11,7 +11,7 @@ from gammapy.modeling.models import (
     Models,
     SkyModel,
 )
-from gammapy.utils.testing import requires_dependency
+from gammapy.utils.testing import requires_data, requires_dependency
 
 
 class MyModel(ModelBase):
@@ -322,6 +322,7 @@ def test_stat_contour():
     assert_allclose(dataset.models.parameters["y"].value, 300)
 
 
+@requires_data()
 def test_write(tmpdir):
     datasets = Datasets()
     for obs_id in [23523, 23526]:
