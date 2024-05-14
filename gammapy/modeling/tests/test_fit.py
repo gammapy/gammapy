@@ -5,6 +5,7 @@ from numpy.testing import assert_allclose
 from astropy.table import Table
 from gammapy.datasets import Dataset, Datasets, SpectrumDatasetOnOff
 from gammapy.modeling import Fit, Parameter
+from gammapy.modeling.fit import FitResult
 from gammapy.modeling.models import (
     LogParabolaSpectralModel,
     ModelBase,
@@ -348,3 +349,10 @@ def test_write(tmpdir):
     )
 
     result.write(path=tmpdir / "test-fit-result.yaml")
+
+    optimize_result = fit.optimize(datasets)
+    result = FitResult(optimize_result=optimize_result)
+
+    result_dict = result.to_dict()
+    assert "covariance_result" not in result_dict
+    result.write(path=tmpdir / "test-fit-result.yaml", overwrite=True)
