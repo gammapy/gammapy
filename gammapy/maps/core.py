@@ -769,6 +769,13 @@ class Map(abc.ABC):
         -------
         map_out : `Map`
             Sliced map object.
+
+        Examples
+        --------
+        >>> from gammapy.maps import Map
+        >>> m = Map.read("$GAMMAPY_DATA/fermi_3fhl/gll_iem_v06_cutout.fits")
+        >>> slices = {"energy": slice(0, 5)}
+        >>> sliced = m.slice_by_idx(slices)
         """
         geom = self.geom.slice_by_idx(slices)
         slices = tuple([slices.get(ax.name, slice(None)) for ax in self.geom.axes])

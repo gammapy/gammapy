@@ -911,6 +911,15 @@ class MapAxis:
         -------
         axis : `MapAxis`
             Sliced axis object.
+
+        Examples
+        --------
+        >>> from gammapy.maps import MapAxis
+        >>> axis = MapAxis.from_bounds(
+        ...     10.0, 2e3, 6, interp="log", name="energy_true", unit="GeV"
+        ... )
+        >>> slices = slice(1, 3)
+        >>> sliced = axis.slice(slices)
         """
         center = self.center[idx].value
         idx = self.coord_to_idx(center)
@@ -1901,8 +1910,24 @@ class MapAxes(Sequence):
 
         Returns
         -------
-        geom : `~Geom`
-            Sliced geometry.
+        axes : `~MapAxes`
+            Sliced axes.
+
+        Examples
+        --------
+        >>> import astropy.units as u
+        >>> from astropy.time import Time
+        >>> from gammapy.maps import MapAxis, MapAxes, TimeMapAxis
+        >>> energy_axis = MapAxis.from_energy_bounds(1*u.TeV, 3*u.TeV, 6)
+        >>> time_ref = Time("1999-01-01T00:00:00.123456789")
+        >>> time_axis = TimeMapAxis(
+        ...     edges_min=[0, 1, 3] * u.d,
+        ...     edges_max=[0.8, 1.9, 5.4] * u.d,
+        ...     reference_time=time_ref,
+        ... )
+        >>> axes = MapAxes([energy_axis, time_axis])
+        >>> slices = {"energy": slice(0, 3), "time": slice(0, 1)}
+        >>> sliced_axes = axes.slice_by_idx(slices)
         """
         axes = []
         for ax in self:
@@ -2742,13 +2767,26 @@ class TimeMapAxis:
 
         Parameters
         ----------
-        idx : slice
+        idx : `slice`
             Slice object selecting a sub-selection of the axis.
 
         Returns
         -------
         axis : `~TimeMapAxis`
             Sliced time map axis object.
+
+        Examples
+        --------
+        >>> from gammapy.maps import TimeMapAxis
+        >>> import astropy.units as u
+        >>> from astropy.time import Time
+        >>> time_map_axis = TimeMapAxis(
+        ...     edges_min=[1, 5, 10, 15] * u.day,
+        ...     edges_max=[2, 7, 13, 18] * u.day,
+        ...     reference_time=Time("2020-03-19"),
+        ... )
+        >>> slices = slice(1, 3)
+        >>> sliced = time_map_axis.slice(slices)
         """
         return TimeMapAxis(
             self._edges_min[idx].copy(),
@@ -2763,7 +2801,7 @@ class TimeMapAxis:
 
         Returns
         -------
-        axis : `~MapAxis`
+        axis : `~TimeMapAxis`
             Squashed time map axis object.
         """
         return TimeMapAxis(
@@ -3407,6 +3445,15 @@ class LabelMapAxis:
         -------
         axis : `~LabelMapAxis`
             Sliced axis object.
+
+        Examples
+        --------
+        >>> from gammapy.maps import LabelMapAxis
+        >>> label_axis = LabelMapAxis(
+        ...     labels=["dataset-1", "dataset-2", "dataset-3", "dataset-4"], name="dataset"
+        ... )
+        >>> slices = slice(2, 4)
+        >>> sliced = label_axis.slice(slices)
         """
         return self.__class__(
             labels=self._labels[idx],
