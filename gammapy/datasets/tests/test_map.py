@@ -1453,6 +1453,23 @@ def test_stack_onoff(images):
     assert_allclose(stacked.exposure.data, 2.0 * dataset.exposure.data)
 
 
+@requires_data()
+def test_stack_onoff_with_mask(images):
+    dataset = get_map_dataset_onoff(images)
+    stacked = dataset.copy()
+    dataset.mask_safe.data[0, 125:, 125:] = False
+    stacked.stack(dataset)
+
+    assert_allclose(stacked.counts.data.sum(), 8326)
+    assert_allclose(stacked.counts_off.data.sum(), 2 * dataset.counts_off.data.sum())
+    assert_allclose(
+        stacked.acceptance.data.sum(), dataset.data_shape[1] * dataset.data_shape[2]
+    )
+    assert_allclose(np.nansum(stacked.acceptance_off.data), 2.925793e08, rtol=1e-5)
+    assert_allclose(stacked.exposure.data, 2.0 * dataset.exposure.data)
+    assert False
+
+
 def test_dataset_cutout_aligned(geom):
     dataset = MapDataset.create(geom)
 
