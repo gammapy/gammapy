@@ -19,7 +19,7 @@ from .iminuit import (
 from .scipy import confidence_scipy, optimize_scipy
 from .sherpa import optimize_sherpa
 
-__all__ = ["Fit"]
+__all__ = ["Fit", "FitResult", "OptimizeResult", "CovarianceResult"]
 
 log = logging.getLogger(__name__)
 
@@ -315,7 +315,7 @@ class Fit:
 
         For the scipy backend ``kwargs`` are forwarded to `~scipy.optimize.brentq`. If the
         confidence estimation fails, the bracketing interval can be adapted by modifying the
-        the upper bound of the interval (``b``) value.
+        upper bound of the interval (``b``) value.
 
         Parameters
         ----------
@@ -594,7 +594,15 @@ class FitStepResult:
 
 
 class CovarianceResult(FitStepResult):
-    """Covariance result object."""
+    """Covariance result object.
+
+    Parameters
+    ----------
+    matrix : `~numpy.ndarray`, optional
+        The covariance matrix. Default is None.
+    kwargs : dict
+        Extra ``kwargs`` are passed to the backend.
+    """
 
     def __init__(self, matrix=None, **kwargs):
         self._matrix = matrix
@@ -607,7 +615,23 @@ class CovarianceResult(FitStepResult):
 
 
 class OptimizeResult(FitStepResult):
-    """Optimize result object."""
+    """Optimize result object.
+
+    Parameters
+    ----------
+    models : `~gammapy.modeling.models.DatasetModels`
+        Best fit models.
+    nfev : int
+        Number of function evaluations.
+    total_stat : float
+        Value of the fit statistic at minimum.
+    trace : `~astropy.table.Table`
+        Parameter trace from the optimisation.
+    minuit : `~iminuit.minuit.Minuit`, optional
+        Minuit object. Default is None.
+    kwargs : dict
+        Extra ``kwargs`` are passed to the backend.
+    """
 
     def __init__(self, models, nfev, total_stat, trace, minuit=None, **kwargs):
         self._models = models
@@ -664,11 +688,13 @@ class OptimizeResult(FitStepResult):
 class FitResult:
     """Fit result class.
 
+    The fit result class provides the results from the optimisation and covariance of the fit.
+
     Parameters
     ----------
-    optimize_result : `OptimizeResult`
+    optimize_result : `~OptimizeResult`
         Result of the optimization step.
-    covariance_result : `CovarianceResult`
+    covariance_result : `~CovarianceResult`
         Result of the covariance step.
     """
 
