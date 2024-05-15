@@ -25,6 +25,10 @@ class Registry:
 
     Gives users the power to extend from their scripts.
     Used by `Fit` below.
+
+    Not sure if we should call it "backend" or "method" or something else.
+    Probably we will code up some methods, e.g. for profile analysis ourselves,
+    using scipy or even just Python / Numpy?
     """
 
     register = {
