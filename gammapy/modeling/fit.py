@@ -583,6 +583,15 @@ class FitStepResult:
         except AttributeError:
             return f"<pre>{html.escape(str(self))}</pre>"
 
+    def to_dict(self):
+        """Convert to dictionary."""
+        return {
+            "backend": self.backend,
+            "method": self.method,
+            "success": self.success,
+            "message": self.message,
+        }
+
 
 class CovarianceResult(FitStepResult):
     """Covariance result object."""
@@ -643,6 +652,13 @@ class OptimizeResult(FitStepResult):
         string += f"\tnfev       : {self.nfev}\n"
         string += f"\ttotal stat : {self.total_stat:.2f}\n\n"
         return string
+
+    def to_dict(self):
+        """Convert to dictionary."""
+        output = super().to_dict()
+        output["nfev"] = self.nfev
+        output["total_stat"] = self._total_stat
+        return output
 
 
 class FitResult:
@@ -731,24 +747,13 @@ class FitResult:
         models_dict = self.models.to_dict(
             full_output=full_output, overwrite_templates=overwrite_templates
         )
-
-        return {
-            "models": models_dict,
-            "covariance_result": {
-                "backend": self.covariance_result.backend,
-                "method": self.covariance_result.method,
-                "success": self.covariance_result.success,
-                "message": self.covariance_result.message,
-            },
-            "optimize_result": {
-                "backend": self.optimize_result.backend,
-                "method": self.optimize_result.method,
-                "success": self.optimize_result.success,
-                "message": self.optimize_result.message,
-                "nfev": self.optimize_result.nfev,
-                "total_stat": self.optimize_result._total_stat,
-            },
-        }
+        output = {}
+        if self.optimize_result is not None:
+            output["optimize_result"] = self.optimize_result.to_dict()
+        if self.covariance_result is not None:
+            output["covariance_result"] = self.covariance_result.to_dict()
+        output["models"] = models_dict
+        return output
 
     def to_yaml(self, full_output=False, overwrite_templates=False):
         """Convert to YAML string."""
