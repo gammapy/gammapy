@@ -170,7 +170,7 @@ def bkg_3d_custom(symmetry="constant", fov_align="RADEC"):
         data=data,
         unit=u.Unit("s-1 MeV-1 sr-1"),
         interp_kwargs=dict(bounds_error=False, fill_value=None, values_scale="log"),
-        fov_alignment=fov_align
+        fov_alignment=fov_align,
         # allow extrapolation for symmetry tests
     )
 

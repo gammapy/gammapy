@@ -42,9 +42,7 @@ def squash_fluxpoints(flux_point, axis):
     f = interpolate_profile(value_scan, stat_scan)
     minimizer = minimize(
         f,
-        x0=value_scan[
-            int(len(value_scan) / 2),
-        ],
+        x0=value_scan[int(len(value_scan) / 2),],
         bounds=[(value_scan[0], value_scan[-1])],
         method="L-BFGS-B",
     )
