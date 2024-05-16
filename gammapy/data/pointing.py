@@ -18,6 +18,7 @@ from astropy.io import fits
 from astropy.table import Table
 from astropy.units import Quantity
 from astropy.utils import lazyproperty
+from gammapy.utils.compat import COPY_IF_NEEDED
 from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.utils.fits import earth_location_from_dict, earth_location_to_dict
 from gammapy.utils.scripts import make_path
@@ -442,8 +443,12 @@ class FixedPointingInfo:
             alt = self.fixed_altaz.alt
             az = self.fixed_altaz.az
             return SkyCoord(
-                alt=u.Quantity(np.full(obstime.shape, alt.deg), u.deg, copy=None),
-                az=u.Quantity(np.full(obstime.shape, az.deg), u.deg, copy=None),
+                alt=u.Quantity(
+                    np.full(obstime.shape, alt.deg), u.deg, copy=COPY_IF_NEEDED
+                ),
+                az=u.Quantity(
+                    np.full(obstime.shape, az.deg), u.deg, copy=COPY_IF_NEEDED
+                ),
                 frame=frame,
             )
 
