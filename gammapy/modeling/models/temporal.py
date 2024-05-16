@@ -10,6 +10,7 @@ from astropy.time import Time
 from astropy.utils import lazyproperty
 from gammapy.maps import MapAxis, RegionNDMap, TimeMapAxis
 from gammapy.modeling import Parameter
+from gammapy.utils.compat import COPY_IF_NEEDED
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.scripts import make_path
 from gammapy.utils.time import time_ref_from_dict, time_ref_to_dict
@@ -730,7 +731,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
             coords, method=self.method, values_scale=self.values_scale
         )
         val = np.clip(val, 0, a_max=None)
-        return u.Quantity(val, unit=self.map.unit, copy=None)
+        return u.Quantity(val, unit=self.map.unit, copy=COPY_IF_NEEDED)
 
     def integral(self, t_min, t_max, oversampling_factor=100, **kwargs):
         if self.is_energy_dependent:
