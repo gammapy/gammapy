@@ -6,6 +6,7 @@ from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from regions import PointSkyRegion
 import matplotlib.pyplot as plt
+from gammapy.utils.compat import COPY_IF_NEEDED
 from gammapy.utils.units import unit_from_fits_image_hdu
 from ..coord import MapCoord
 from ..geom import pix_tuple_to_idx
@@ -755,7 +756,9 @@ class HpxNDMap(HpxMap):
                 idx = np.clip(idx, 0, len(ax.center) - 2)
 
                 w = ax.center[idx + 1] - ax.center[idx]
-                c = u.Quantity(coords[ax.name], ax.center.unit, copy=None).value
+                c = u.Quantity(
+                    coords[ax.name], ax.center.unit, copy=COPY_IF_NEEDED
+                ).value
 
                 if i & (1 << j):
                     wt *= (c - ax.center[idx].value) / w.value
