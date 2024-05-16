@@ -1189,8 +1189,8 @@ def create_fermi_isotropic_diffuse_model(filename, **kwargs):
         Fermi isotropic diffuse sky model.
     """
     vals = np.loadtxt(make_path(filename))
-    energy = u.Quantity(vals[:, 0], "MeV", copy=False)
-    values = u.Quantity(vals[:, 1], "MeV-1 s-1 cm-2", copy=False)
+    energy = u.Quantity(vals[:, 0], "MeV", copy=None)
+    values = u.Quantity(vals[:, 1], "MeV-1 s-1 cm-2", copy=None)
 
     kwargs.setdefault("interp_kwargs", {"fill_value": None})
 

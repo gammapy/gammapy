@@ -670,8 +670,8 @@ class WcsGeom(Geom):
             coords = self._wcs.wcs_pix2world(pix[0], pix[1], 0)
 
         coords = (
-            u.Quantity(coords[0], unit="deg", copy=False),
-            u.Quantity(coords[1], unit="deg", copy=False),
+            u.Quantity(coords[0], unit="deg", copy=None),
+            u.Quantity(coords[1], unit="deg", copy=None),
         )
 
         coords += self.axes.pix_to_coord(pix[self._slice_non_spatial_axes])
@@ -847,7 +847,7 @@ class WcsGeom(Geom):
         # TODO: for non-negative cdelt a negative solid angle is returned
         #  find out why and fix properly
 
-        value = np.abs(u.Quantity(area_low_right + area_up_left, "sr", copy=False))
+        value = np.abs(u.Quantity(area_low_right + area_up_left, "sr", copy=None))
         if self.is_regular:
             value = value.reshape(self.data_shape_image)
         return value

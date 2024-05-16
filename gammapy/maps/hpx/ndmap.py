@@ -755,7 +755,7 @@ class HpxNDMap(HpxMap):
                 idx = np.clip(idx, 0, len(ax.center) - 2)
 
                 w = ax.center[idx + 1] - ax.center[idx]
-                c = u.Quantity(coords[ax.name], ax.center.unit, copy=False).value
+                c = u.Quantity(coords[ax.name], ax.center.unit, copy=None).value
 
                 if i & (1 << j):
                     wt *= (c - ax.center[idx].value) / w.value

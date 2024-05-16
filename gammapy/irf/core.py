@@ -205,7 +205,7 @@ class IRF(metaclass=abc.ABCMeta):
     @property
     def quantity(self):
         """Quantity as a `~astropy.units.Quantity` object."""
-        return u.Quantity(self.data, unit=self.unit, copy=False)
+        return u.Quantity(self.data, unit=self.unit, copy=None)
 
     @quantity.setter
     def quantity(self, val):
@@ -216,7 +216,7 @@ class IRF(metaclass=abc.ABCMeta):
         value : `~astropy.units.Quantity`
            Quantity.
         """
-        val = u.Quantity(val, copy=False)
+        val = u.Quantity(val, copy=None)
         self.data = val.value
         self._unit = val.unit
 
@@ -288,7 +288,7 @@ class IRF(metaclass=abc.ABCMeta):
         for key, value in kwargs.items():
             coord = kwargs.get(key, value)
             if coord is not None:
-                coords_default[key] = u.Quantity(coord, copy=False)
+                coords_default[key] = u.Quantity(coord, copy=None)
 
         data = self._interpolate(coords_default.values(), method=method)
 

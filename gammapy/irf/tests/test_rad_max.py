@@ -52,7 +52,7 @@ def test_rad_max_from_irf():
     )
     offset_axis = MapAxis.from_bounds(0 * u.deg, 3 * u.deg, nbin=o_bins, name="offset")
     aeff = EffectiveAreaTable2D(
-        data=u.Quantity(np.ones((e_bins, o_bins)), u.m**2, copy=False),
+        data=u.Quantity(np.ones((e_bins, o_bins)), u.m**2, copy=None),
         axes=[energy_axis, offset_axis],
         is_pointlike=True,
     )

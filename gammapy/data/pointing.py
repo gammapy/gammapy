@@ -442,8 +442,8 @@ class FixedPointingInfo:
             alt = self.fixed_altaz.alt
             az = self.fixed_altaz.az
             return SkyCoord(
-                alt=u.Quantity(np.full(obstime.shape, alt.deg), u.deg, copy=False),
-                az=u.Quantity(np.full(obstime.shape, az.deg), u.deg, copy=False),
+                alt=u.Quantity(np.full(obstime.shape, alt.deg), u.deg, copy=None),
+                az=u.Quantity(np.full(obstime.shape, az.deg), u.deg, copy=None),
                 frame=frame,
             )
 

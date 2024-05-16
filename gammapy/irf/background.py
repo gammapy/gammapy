@@ -73,7 +73,7 @@ class BackgroundIRF(IRF):
         data = table[bkg_name].quantity[0].T
 
         if data.unit == "" or isinstance(data.unit, u.UnrecognizedUnit):
-            data = u.Quantity(data.value, "s-1 MeV-1 sr-1", copy=False)
+            data = u.Quantity(data.value, "s-1 MeV-1 sr-1", copy=None)
             log.warning(
                 "Invalid unit found in background table! Assuming (s-1 MeV-1 sr-1)"
             )

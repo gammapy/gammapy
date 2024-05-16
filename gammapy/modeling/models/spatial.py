@@ -651,7 +651,7 @@ class GaussianSpatialModel(SpatialModel):
             norm = (1 / (2 * np.pi * sigma * minor_axis)).to_value("sr-1")
 
         exponent = -0.5 * ((1 - np.cos(sep)) / a)
-        return u.Quantity(norm * np.exp(exponent).value, "sr-1", copy=False)
+        return u.Quantity(norm * np.exp(exponent).value, "sr-1", copy=None)
 
     def to_region(self, x_sigma=1.5, **kwargs):
         r"""Model outline at a given number of :math:`\sigma`.
@@ -937,7 +937,7 @@ class DiskSpatialModel(SpatialModel):
         in_ellipse = DiskSpatialModel._evaluate_smooth_edge(
             sep - sigma_eff, sigma_eff * edge_width
         )
-        return u.Quantity(norm * in_ellipse, "sr-1", copy=False)
+        return u.Quantity(norm * in_ellipse, "sr-1", copy=None)
 
     def to_region(self, **kwargs):
         """Model outline as a `~regions.EllipseSkyRegion`."""
@@ -1465,7 +1465,7 @@ class TemplateSpatialModel(SpatialModel):
 
         val = self.map.interp_by_coord(coord, **self._interp_kwargs)
         val = np.clip(val, 0, a_max=None)
-        return u.Quantity(val, self.map.unit, copy=False)
+        return u.Quantity(val, self.map.unit, copy=None)
 
     @property
     def position_lonlat(self):
@@ -1617,7 +1617,7 @@ class TemplateNDSpatialModel(SpatialModel):
         val = self.map.interp_by_coord(coord, **self._interp_kwargs)
         val = np.clip(val, 0, a_max=None)
 
-        return u.Quantity(val, self.map.unit, copy=False)
+        return u.Quantity(val, self.map.unit, copy=None)
 
     def write(self, overwrite=False):
         """

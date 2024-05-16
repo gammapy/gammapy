@@ -128,7 +128,7 @@ class Map(abc.ABC):
     @property
     def quantity(self):
         """Map data as a `~astropy.units.Quantity` object."""
-        return u.Quantity(self.data, self.unit, copy=False)
+        return u.Quantity(self.data, self.unit, copy=None)
 
     @quantity.setter
     def quantity(self, val):
@@ -139,7 +139,7 @@ class Map(abc.ABC):
         val : `~astropy.units.Quantity`
            Quantity.
         """
-        val = u.Quantity(val, copy=False)
+        val = u.Quantity(val, copy=None)
 
         self.data = val.value
         self._unit = val.unit
@@ -1662,7 +1662,7 @@ class Map(abc.ABC):
         cumsum = self.cumsum(axis_name=axis_name)
         cumsum = cumsum.pad(pad_width=1, axis_name=axis_name, mode="edge")
         return u.Quantity(
-            cumsum.interp_by_coord(coords, **kwargs), cumsum.unit, copy=False
+            cumsum.interp_by_coord(coords, **kwargs), cumsum.unit, copy=None
         )
 
     def normalize(self, axis_name=None):
@@ -1872,7 +1872,7 @@ class Map(abc.ABC):
             else:
                 raise ValueError("Map Arithmetic: Inconsistent geometries.")
         else:
-            q = u.Quantity(other, copy=False)
+            q = u.Quantity(other, copy=None)
 
         out = self.copy() if copy else self
         out.quantity = operator(out.quantity, q)
@@ -1899,25 +1899,25 @@ class Map(abc.ABC):
         return self._arithmetics(np.add, other, copy=True)
 
     def __iadd__(self, other):
-        return self._arithmetics(np.add, other, copy=False)
+        return self._arithmetics(np.add, other, copy=None)
 
     def __sub__(self, other):
         return self._arithmetics(np.subtract, other, copy=True)
 
     def __isub__(self, other):
-        return self._arithmetics(np.subtract, other, copy=False)
+        return self._arithmetics(np.subtract, other, copy=None)
 
     def __mul__(self, other):
         return self._arithmetics(np.multiply, other, copy=True)
 
     def __imul__(self, other):
-        return self._arithmetics(np.multiply, other, copy=False)
+        return self._arithmetics(np.multiply, other, copy=None)
 
     def __truediv__(self, other):
         return self._arithmetics(np.true_divide, other, copy=True)
 
     def __itruediv__(self, other):
-        return self._arithmetics(np.true_divide, other, copy=False)
+        return self._arithmetics(np.true_divide, other, copy=None)
 
     def __le__(self, other):
         return self._arithmetics(np.less_equal, other, copy=True)
@@ -1950,13 +1950,13 @@ class Map(abc.ABC):
         return self._boolean_arithmetics(np.logical_xor, other, copy=True)
 
     def __iand__(self, other):
-        return self._boolean_arithmetics(np.logical_and, other, copy=False)
+        return self._boolean_arithmetics(np.logical_and, other, copy=None)
 
     def __ior__(self, other):
-        return self._boolean_arithmetics(np.logical_or, other, copy=False)
+        return self._boolean_arithmetics(np.logical_or, other, copy=None)
 
     def __ixor__(self, other):
-        return self._boolean_arithmetics(np.logical_xor, other, copy=False)
+        return self._boolean_arithmetics(np.logical_xor, other, copy=None)
 
     def __array__(self):
         return self.data

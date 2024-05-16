@@ -105,13 +105,13 @@ class MapCoord:
     @property
     def theta(self):
         """Theta co-latitude angle in radians."""
-        theta = u.Quantity(self.lat, unit="deg", copy=False).to_value("rad")
+        theta = u.Quantity(self.lat, unit="deg", copy=None).to_value("rad")
         return np.pi / 2.0 - theta
 
     @property
     def phi(self):
         """Phi longitude angle in radians."""
-        phi = u.Quantity(self.lon, unit="deg", copy=False).to_value("rad")
+        phi = u.Quantity(self.lon, unit="deg", copy=None).to_value("rad")
         return phi
 
     @property
@@ -257,10 +257,10 @@ class MapCoord:
             lon, lat, frame = skycoord_to_lonlat(self.skycoord, frame=frame)
             data = copy.deepcopy(self._data)
             if isinstance(self.lon, u.Quantity):
-                lon = u.Quantity(lon, unit="deg", copy=False)
+                lon = u.Quantity(lon, unit="deg", copy=None)
 
             if isinstance(self.lon, u.Quantity):
-                lat = u.Quantity(lat, unit="deg", copy=False)
+                lat = u.Quantity(lat, unit="deg", copy=None)
 
             data["lon"] = lon
             data["lat"] = lat
