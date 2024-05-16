@@ -22,7 +22,7 @@ jobs:
         include:
           - os: ubuntu-latest
             python: '3.11'
-            tox_env: 'py311-test-alldeps_noray-cov'
+            tox_env: 'py311-test-alldeps_noray'
             gammapy_data_path: /home/runner/work/gammapy/gammapy/gammapy-datasets/dev
             allowed_fail: false
           - os: ubuntu-latest
