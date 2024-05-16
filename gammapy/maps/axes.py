@@ -12,6 +12,7 @@ from astropy.table import Column, Table, hstack
 from astropy.time import Time
 from astropy.utils import lazyproperty
 import matplotlib.pyplot as plt
+from gammapy.utils.compat import COPY_IF_NEEDED
 from gammapy.utils.interpolation import interpolation_scale
 from gammapy.utils.time import time_ref_from_dict, time_ref_to_dict
 from .utils import INVALID_INDEX, INVALID_VALUE, edges_from_lo_hi
@@ -255,7 +256,7 @@ class MapAxis:
     def edges(self):
         """Return an array of bin edges."""
         pix = np.arange(self.nbin + 1, dtype=float) - 0.5
-        return u.Quantity(self.pix_to_coord(pix), self._unit, copy=False)
+        return u.Quantity(self.pix_to_coord(pix), self._unit, copy=COPY_IF_NEEDED)
 
     @property
     def edges_min(self):
@@ -427,7 +428,7 @@ class MapAxis:
     def center(self):
         """Return an array of bin centers."""
         pix = np.arange(self.nbin, dtype=float)
-        return u.Quantity(self.pix_to_coord(pix), self._unit, copy=False)
+        return u.Quantity(self.pix_to_coord(pix), self._unit, copy=COPY_IF_NEEDED)
 
     @lazyproperty
     def bin_width(self):
@@ -776,7 +777,7 @@ class MapAxis:
         """
         pix = pix - self._pix_offset
         values = self._transform.pix_to_coord(pix=pix)
-        return u.Quantity(values, unit=self.unit, copy=False)
+        return u.Quantity(values, unit=self.unit, copy=COPY_IF_NEEDED)
 
     def pix_to_idx(self, pix, clip=False):
         """Convert pixel to index.
@@ -816,7 +817,7 @@ class MapAxis:
         pix : `~numpy.ndarray`
             Array of pixel coordinate values.
         """
-        coord = u.Quantity(coord, self.unit, copy=False).value
+        coord = u.Quantity(coord, self.unit, copy=COPY_IF_NEEDED).value
         pix = self._transform.coord_to_pix(coord=coord)
         return np.array(pix + self._pix_offset, ndmin=1)
 
@@ -837,7 +838,7 @@ class MapAxis:
         idx : `~numpy.ndarray`
             Array of bin indices.
         """
-        coord = u.Quantity(coord, self.unit, copy=False, ndmin=1).value
+        coord = u.Quantity(coord, self.unit, copy=COPY_IF_NEEDED, ndmin=1).value
         edges = self.edges.value
         idx = np.digitize(coord, edges) - 1
 

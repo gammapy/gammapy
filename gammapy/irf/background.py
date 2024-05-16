@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 from gammapy.maps import MapAxes, MapAxis
 from gammapy.maps.axes import UNIT_STRING_FORMAT
+from gammapy.utils.compat import COPY_IF_NEEDED
 from gammapy.visualization.utils import add_colorbar
 from .core import IRF
 from .io import gadf_is_pointlike
@@ -73,7 +74,7 @@ class BackgroundIRF(IRF):
         data = table[bkg_name].quantity[0].T
 
         if data.unit == "" or isinstance(data.unit, u.UnrecognizedUnit):
-            data = u.Quantity(data.value, "s-1 MeV-1 sr-1", copy=False)
+            data = u.Quantity(data.value, "s-1 MeV-1 sr-1", copy=COPY_IF_NEEDED)
             log.warning(
                 "Invalid unit found in background table! Assuming (s-1 MeV-1 sr-1)"
             )
