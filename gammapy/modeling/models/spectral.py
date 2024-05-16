@@ -17,6 +17,7 @@ import matplotlib.pyplot as plt
 from gammapy.maps import MapAxis, RegionNDMap
 from gammapy.maps.axes import UNIT_STRING_FORMAT
 from gammapy.modeling import Parameter, Parameters
+from gammapy.utils.compat import COPY_IF_NEEDED
 from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.utils.integrate import trapz_loglog
 from gammapy.utils.interpolation import (
@@ -627,7 +628,7 @@ class SpectralModel(ModelBase):
 
         def f(x):
             # scale by 1e12 to achieve better precision
-            energy = u.Quantity(x, eunit, copy=False)
+            energy = u.Quantity(x, eunit, copy=COPY_IF_NEEDED)
             y = self(energy).to_value(value.unit)
             return 1e12 * (y - value.value)
 
@@ -1744,7 +1745,7 @@ class TemplateSpectralModel(SpectralModel):
         meta=None,
     ):
         self.energy = energy
-        self.values = u.Quantity(values, copy=False)
+        self.values = u.Quantity(values, copy=COPY_IF_NEEDED)
         self.meta = {} if meta is None else meta
         interp_kwargs = interp_kwargs or {}
         interp_kwargs.setdefault("values_scale", "log")
@@ -1804,7 +1805,9 @@ class TemplateSpectralModel(SpectralModel):
         # Get spectrum values (no interpolation, take closest value for param)
         table_spectra = Table.read(filename, hdu="SPECTRA")
         idx = np.abs(table_spectra["PARAMVAL"] - param).argmin()
-        values = u.Quantity(table_spectra[idx][1], "", copy=False)  # no dimension
+        values = u.Quantity(
+            table_spectra[idx][1], "", copy=COPY_IF_NEEDED
+        )  # no dimension
 
         kwargs.setdefault("interp_kwargs", {"values_scale": "lin"})
         return cls(energy=energy, values=values, **kwargs)
@@ -1906,7 +1909,7 @@ class TemplateNDSpectralModel(SpectralModel):
         ]
 
         val = self.map.interp_by_pix(pixels, **self._interp_kwargs)
-        return u.Quantity(val, self.map.unit, copy=False)
+        return u.Quantity(val, self.map.unit, copy=COPY_IF_NEEDED)
 
     def write(self, overwrite=False):
         """
@@ -2006,7 +2009,7 @@ class EBLAbsorptionNormSpectralModel(SpectralModel):
         # set values log centers
         self.param = param
         self.energy = energy
-        self.data = u.Quantity(data, copy=False)
+        self.data = u.Quantity(data, copy=COPY_IF_NEEDED)
 
         interp_kwargs = interp_kwargs or {}
         interp_kwargs.setdefault("points_scale", ("lin", "log"))
@@ -2100,10 +2103,10 @@ class EBLAbsorptionNormSpectralModel(SpectralModel):
         # Get energy values
         table_energy = Table.read(filename, hdu="ENERGIES")
         energy_lo = u.Quantity(
-            table_energy["ENERG_LO"], "keV", copy=False
+            table_energy["ENERG_LO"], "keV", copy=COPY_IF_NEEDED
         )  # unit not stored in file
         energy_hi = u.Quantity(
-            table_energy["ENERG_HI"], "keV", copy=False
+            table_energy["ENERG_HI"], "keV", copy=COPY_IF_NEEDED
         )  # unit not stored in file
         energy = np.sqrt(energy_lo * energy_hi)
 

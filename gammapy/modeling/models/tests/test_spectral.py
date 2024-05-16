@@ -32,6 +32,7 @@ from gammapy.modeling.models import (
     TemplateNDSpectralModel,
     TemplateSpectralModel,
 )
+from gammapy.utils.compat import COPY_IF_NEEDED
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import (
     assert_quantity_allclose,
@@ -1215,10 +1216,10 @@ def test_template_ND_EBL(tmpdir):
     # Get energy values
     table_energy = Table.read(filename, hdu="ENERGIES")
     energy_lo = u.Quantity(
-        table_energy["ENERG_LO"], "keV", copy=False
+        table_energy["ENERG_LO"], "keV", copy=COPY_IF_NEEDED
     )  # unit not stored in file
     energy_hi = u.Quantity(
-        table_energy["ENERG_HI"], "keV", copy=False
+        table_energy["ENERG_HI"], "keV", copy=COPY_IF_NEEDED
     )  # unit not stored in file
     energy = np.sqrt(energy_lo * energy_hi)
 

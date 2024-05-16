@@ -10,6 +10,7 @@ from astropy.io import fits
 from astropy.table import Table
 from astropy.utils import lazyproperty
 from gammapy.maps import Map, MapAxes, MapAxis, RegionGeom
+from gammapy.utils.compat import COPY_IF_NEEDED
 from gammapy.utils.integrate import trapz_loglog
 from gammapy.utils.interpolation import (
     ScaledRegularGridInterpolator,
@@ -205,7 +206,7 @@ class IRF(metaclass=abc.ABCMeta):
     @property
     def quantity(self):
         """Quantity as a `~astropy.units.Quantity` object."""
-        return u.Quantity(self.data, unit=self.unit, copy=False)
+        return u.Quantity(self.data, unit=self.unit, copy=COPY_IF_NEEDED)
 
     @quantity.setter
     def quantity(self, val):
@@ -216,7 +217,7 @@ class IRF(metaclass=abc.ABCMeta):
         value : `~astropy.units.Quantity`
            Quantity.
         """
-        val = u.Quantity(val, copy=False)
+        val = u.Quantity(val, copy=COPY_IF_NEEDED)
         self.data = val.value
         self._unit = val.unit
 
@@ -288,7 +289,7 @@ class IRF(metaclass=abc.ABCMeta):
         for key, value in kwargs.items():
             coord = kwargs.get(key, value)
             if coord is not None:
-                coords_default[key] = u.Quantity(coord, copy=False)
+                coords_default[key] = u.Quantity(coord, copy=COPY_IF_NEEDED)
 
         data = self._interpolate(coords_default.values(), method=method)
 
