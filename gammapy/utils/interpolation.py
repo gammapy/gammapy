@@ -5,6 +5,7 @@ from itertools import compress
 import numpy as np
 import scipy.interpolate
 from astropy import units as u
+from .compat import COPY_IF_NEEDED
 
 __all__ = [
     "interpolate_profile",
@@ -162,7 +163,7 @@ class InterpolationScale:
 
     def __call__(self, values):
         if hasattr(self, "_unit"):
-            values = u.Quantity(values, copy=False).to_value(self._unit)
+            values = u.Quantity(values, copy=COPY_IF_NEEDED).to_value(self._unit)
         else:
             if isinstance(values, u.Quantity):
                 self._unit = values.unit
@@ -178,7 +179,7 @@ class InterpolationScale:
     def inverse(self, values):
         values = self._inverse(values)
         if hasattr(self, "_unit"):
-            return u.Quantity(values, self._unit, copy=False)
+            return u.Quantity(values, self._unit, copy=COPY_IF_NEEDED)
         else:
             return values
 
