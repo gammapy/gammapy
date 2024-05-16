@@ -802,7 +802,7 @@ class MapAxis:
         """
         pix = pix - self._pix_offset
         values = self._transform.pix_to_coord(pix=pix)
-        return u.Quantity(values, unit=self.unit, copy=None)
+        return u.Quantity(values, unit=self.unit, copy=False)
 
     def wrap_coord(self, coord):
         """Wrap coords between axis edges for a periodic boundary condition
