@@ -31,7 +31,7 @@ class MeyerCrabSpectralModel(SpectralModel):
         polynomial = np.poly1d(MeyerCrabSpectralModel.coefficients)
         log_energy = np.log10(energy.to_value("TeV"))
         log_flux = polynomial(log_energy)
-        flux = u.Quantity(np.power(10, log_flux), "erg / (cm2 s)", copy=False)
+        flux = u.Quantity(np.power(10, log_flux), "erg / (cm2 s)", copy=None)
         return norm * flux / energy**2
 
 

@@ -730,7 +730,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
             coords, method=self.method, values_scale=self.values_scale
         )
         val = np.clip(val, 0, a_max=None)
-        return u.Quantity(val, unit=self.map.unit, copy=False)
+        return u.Quantity(val, unit=self.map.unit, copy=None)
 
     def integral(self, t_min, t_max, oversampling_factor=100, **kwargs):
         if self.is_energy_dependent:

@@ -162,7 +162,7 @@ class InterpolationScale:
 
     def __call__(self, values):
         if hasattr(self, "_unit"):
-            values = u.Quantity(values, copy=False).to_value(self._unit)
+            values = u.Quantity(values, copy=None).to_value(self._unit)
         else:
             if isinstance(values, u.Quantity):
                 self._unit = values.unit
@@ -178,7 +178,7 @@ class InterpolationScale:
     def inverse(self, values):
         values = self._inverse(values)
         if hasattr(self, "_unit"):
-            return u.Quantity(values, self._unit, copy=False)
+            return u.Quantity(values, self._unit, copy=None)
         else:
             return values
 

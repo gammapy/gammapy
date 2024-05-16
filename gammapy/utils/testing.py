@@ -174,9 +174,9 @@ def assert_quantity_allclose(actual, desired, rtol=1.0e-7, atol=None, **kwargs):
 
 
 def _unquantify_allclose_arguments(actual, desired, rtol, atol):
-    actual = u.Quantity(actual, subok=True, copy=False)
+    actual = u.Quantity(actual, subok=True, copy=None)
 
-    desired = u.Quantity(desired, subok=True, copy=False)
+    desired = u.Quantity(desired, subok=True, copy=None)
     try:
         desired = desired.to(actual.unit)
     except u.UnitsError:
@@ -189,7 +189,7 @@ def _unquantify_allclose_arguments(actual, desired, rtol, atol):
         # by default, we assume an absolute tolerance of 0
         atol = u.Quantity(0)
     else:
-        atol = u.Quantity(atol, subok=True, copy=False)
+        atol = u.Quantity(atol, subok=True, copy=None)
         try:
             atol = atol.to(actual.unit)
         except u.UnitsError:
@@ -198,7 +198,7 @@ def _unquantify_allclose_arguments(actual, desired, rtol, atol):
                 "are not convertible".format(atol.unit, actual.unit)
             )
 
-    rtol = u.Quantity(rtol, subok=True, copy=False)
+    rtol = u.Quantity(rtol, subok=True, copy=None)
     try:
         rtol = rtol.to(u.dimensionless_unscaled)
     except Exception:

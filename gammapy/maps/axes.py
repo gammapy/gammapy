@@ -281,7 +281,7 @@ class MapAxis:
     def edges(self):
         """Return an array of bin edges."""
         pix = np.arange(self.nbin + 1, dtype=float) - 0.5
-        return u.Quantity(self.pix_to_coord(pix), self._unit, copy=False)
+        return u.Quantity(self.pix_to_coord(pix), self._unit, copy=None)
 
     @property
     def edges_min(self):
@@ -453,7 +453,7 @@ class MapAxis:
     def center(self):
         """Return an array of bin centers."""
         pix = np.arange(self.nbin, dtype=float)
-        return u.Quantity(self.pix_to_coord(pix), self._unit, copy=False)
+        return u.Quantity(self.pix_to_coord(pix), self._unit, copy=None)
 
     @lazyproperty
     def bin_width(self):
@@ -802,7 +802,7 @@ class MapAxis:
         """
         pix = pix - self._pix_offset
         values = self._transform.pix_to_coord(pix=pix)
-        return u.Quantity(values, unit=self.unit, copy=False)
+        return u.Quantity(values, unit=self.unit, copy=None)
 
     def wrap_coord(self, coord):
         """Wrap coords between axis edges for a periodic boundary condition
@@ -862,7 +862,7 @@ class MapAxis:
         """
         if self._boundary_type == BoundaryEnum.periodic:
             coord = self.wrap_coord(coord)
-        coord = u.Quantity(coord, self.unit, copy=False).value
+        coord = u.Quantity(coord, self.unit, copy=None).value
         pix = self._transform.coord_to_pix(coord=coord)
         return np.array(pix + self._pix_offset, ndmin=1)
 
@@ -885,7 +885,7 @@ class MapAxis:
         """
         if self._boundary_type == BoundaryEnum.periodic:
             coord = self.wrap_coord(coord)
-        coord = u.Quantity(coord, self.unit, copy=False, ndmin=1).value
+        coord = u.Quantity(coord, self.unit, copy=None, ndmin=1).value
         edges = self.edges.value
         idx = np.digitize(coord, edges) - 1
 
