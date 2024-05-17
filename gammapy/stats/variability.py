@@ -289,6 +289,7 @@ def TimmerKonig_lightcurve_simulator(
     power_spectrum,
     npoints,
     spacing,
+    leakage_protection=1,
     random_state="random-seed",
     power_spectrum_params=None,
 ):
@@ -303,6 +304,8 @@ def TimmerKonig_lightcurve_simulator(
         Number of points in the output time series.
     spacing : `~astropy.units.Quantity`
         Sample spacing, inverse of the sampling rate. The units are inherited by the resulting time axis.
+    leakage_protection : int
+        Factor by which to multiply the length of the time series to avoid red noise leakage.
     random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
         Defines random number generator initialisation.
         Passed to `~gammapy.utils.random.get_random_state`. Default is "random-seed".
@@ -346,7 +349,7 @@ def TimmerKonig_lightcurve_simulator(
 
     random_state = get_random_state(random_state)
 
-    frequencies = np.fft.fftfreq(npoints, spacing.value)
+    frequencies = np.fft.fftfreq(npoints * leakage_protection, spacing.value)
 
     # To obtain real data only the positive or negative part of the frequency is necessary.
     real_frequencies = np.sort(np.abs(frequencies[frequencies < 0]))
@@ -387,5 +390,11 @@ def TimmerKonig_lightcurve_simulator(
     time_series = 0.5 + 0.5 * time_series / tmax
 
     time_axis = np.linspace(0, npoints * spacing.value, npoints) * spacing.unit
+
+    if leakage_protection > 1:
+        extract = random_state.randint(
+            npoints - 1, leakage_protection * npoints - npoints
+        )
+        time_series = np.take(time_series, range(extract, extract + npoints))
 
     return time_series, time_axis
