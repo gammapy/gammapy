@@ -1402,9 +1402,10 @@ class SourceCatalogObject2PC(SourceCatalogObjectFermiPCBase):
             ss += fmt_f.format(
                 indentation,
                 "Index 2",
+                d["PLEC_Exponential_Index"],
+                d["Unc_PLEC_Exponential_Index"],
             )
-            d["PLEC_Exponential_Index"],
-            d["Unc_PLEC_Exponential_Index"],
+
             ss += "{}{:<20s} : {:.3f}\n".format(
                 indentation, "Reference", d["PLEC_Scale"]
             )
