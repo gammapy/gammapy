@@ -282,7 +282,7 @@ class SourceCatalog(abc.ABC):
 
         try:
             idx = self._lookup_additional_table(
-                self.spectral_table[self._source_name_key]
+                self.spectral_table[self._get_source_name_key]
             )[name_spectral]
             data_spectral = table_row_to_dict(self.spectral_table[idx])
         except (KeyError, AttributeError):
@@ -290,6 +290,10 @@ class SourceCatalog(abc.ABC):
 
         source = self.source_object_class(data, data_extended, data_spectral)
         return source
+
+    @property
+    def _get_source_name_key(self):
+        return self._source_name_key
 
     def _get_name_spectral(self, data):
         if "Source_name" in data:
@@ -301,25 +305,6 @@ class SourceCatalog(abc.ABC):
     def _lookup_additional_table(self, selected_table):
         """"""
         names = [_.strip() for _ in selected_table]
-        idx = range(len(names))
-        return dict(zip(names, idx))
-
-    @lazyproperty
-    def _lookup_spectral_source_idx(self):
-        """Return a dictionary of names-idx pairs corresponding to the
-        entry of the spectral table (for Fermi-LAT pulsar catalogs).
-        """
-        source_name_key = self._get_spectral_table_source_name_key()
-        names = [_.strip() for _ in self.spectral_table[source_name_key]]
-        idx = range(len(names))
-        return dict(zip(names, idx))
-
-    @lazyproperty
-    def _lookup_extended_source_idx(self):
-        """Return a dictionary of names-idx pairs corresponding to the
-        entry of the extended table (for Fermi-LAT catalogs).
-        """
-        names = [_.strip() for _ in self.extended_sources_table[self._source_name_key]]
         idx = range(len(names))
         return dict(zip(names, idx))
 

@@ -5,6 +5,7 @@ from itertools import compress
 import numpy as np
 import scipy.interpolate
 from astropy import units as u
+from .compat import COPY_IF_NEEDED
 
 __all__ = [
     "interpolate_profile",
@@ -162,7 +163,7 @@ class InterpolationScale:
 
     def __call__(self, values):
         if hasattr(self, "_unit"):
-            values = u.Quantity(values, copy=False).to_value(self._unit)
+            values = u.Quantity(values, copy=COPY_IF_NEEDED).to_value(self._unit)
         else:
             if isinstance(values, u.Quantity):
                 self._unit = values.unit
@@ -178,7 +179,7 @@ class InterpolationScale:
     def inverse(self, values):
         values = self._inverse(values)
         if hasattr(self, "_unit"):
-            return u.Quantity(values, self._unit, copy=False)
+            return u.Quantity(values, self._unit, copy=COPY_IF_NEEDED)
         else:
             return values
 
@@ -239,7 +240,7 @@ class LinearScale(InterpolationScale):
         return values
 
 
-def interpolate_profile(x, y, interp_scale="sqrt"):
+def interpolate_profile(x, y, interp_scale="sqrt", extrapolate=False):
     """Helper function to interpolate one-dimensional profiles.
 
     Parameters
@@ -253,6 +254,9 @@ def interpolate_profile(x, y, interp_scale="sqrt"):
         of parabolic shape, a "sqrt" scaling is recommended. In other cases or
         for fine sampled profiles a "lin" can also be used.
         Default is "sqrt".
+    extrapolate : bool
+        Extrapolate or not if the evaluation value is outside the range of x values.
+        Default is False.
 
     Returns
     -------
@@ -260,4 +264,8 @@ def interpolate_profile(x, y, interp_scale="sqrt"):
         Interpolator.
     """
     method_dict = {"sqrt": "quadratic", "lin": "linear"}
-    return scipy.interpolate.interp1d(x, y, kind=method_dict[interp_scale])
+    kwargs = dict(kind=method_dict[interp_scale])
+    if extrapolate:
+        kwargs["bounds_error"] = False
+        kwargs["fill_value"] = "extrapolate"
+    return scipy.interpolate.interp1d(x, y, **kwargs)
