@@ -785,8 +785,6 @@ class TestFermi3PCObject:
         assert self.source.name == self.source_name
 
     def test_row_index(self):
-        assert self.source.row_index == 26
-
         assert self.source.row_index == 52
 
     @pytest.mark.parametrize(
