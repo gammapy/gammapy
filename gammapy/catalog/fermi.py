@@ -1332,9 +1332,7 @@ class SourceCatalogObject2PC(SourceCatalogObjectFermiPCBase):
     @property
     def _auxiliary_filename(self):
         return make_path(
-            "$GAMMAPY_DATA/catalogs/fermi/2PC_auxiliary/PSR"
-            + self.name
-            + "_2PC_data.fits.gz"
+            f"$GAMMAPY_DATA/catalogs/fermi/2PC_auxiliary/PSR{self.name}_2PC_data.fits.gz"
         )
 
     def _info_more(self):
@@ -1533,9 +1531,7 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
     @property
     def _auxiliary_filename(self):
         return make_path(
-            "$GAMMAPY_DATA/catalogs/fermi/3PC_auxiliary_20230728/"
-            + self.name
-            + "_3PC_data.fits.gz"
+            f"$GAMMAPY_DATA/catalogs/fermi/3PC_auxiliary_20230728/{self.name}_3PC_data.fits.gz"
         )
 
     def _info_pulsar(self):
