@@ -957,8 +957,11 @@ class MapDataset(Dataset):
     def stack(self, other, nan_to_num=True):
         r"""Stack another dataset in place. The original dataset is modified.
 
-        Safe mask is applied to compute the stacked counts data. Counts outside
-        each dataset safe mask are lost.
+        Safe mask is applied to the other dataset to compute the stacked counts data.
+        Counts outside the safe mask are lost.
+
+        Note that the masking is not applied to the current dataset. If masking needs
+        to be applied to it, use `~gammapy.MapDataset.to_masked()` first.
 
         The stacking of 2 datasets is implemented as follows. Here, :math:`k`
         denotes a bin in reconstructed energy and :math:`j = {1,2}` is the dataset number.
@@ -2572,8 +2575,15 @@ class MapDatasetOnOff(MapDataset):
     def stack(self, other, nan_to_num=True):
         r"""Stack another dataset in place.
 
-        The ``acceptance`` of the stacked dataset is given by the stacked acceptances weighted
-        by the respective mask_safe of the datasets.
+        Safe mask is applied to the other dataset to compute the stacked counts data.
+        Counts outside the safe mask are lost.
+
+        The ``acceptance`` of the stacked dataset is obtained by stacking the acceptance weighted
+        by the other mask_safe onto the current unwieghted acceptance.
+
+        Note that the masking is not applied to the current dataset. If masking needs
+        to be applied to it, use `~gammapy.MapDataset.to_masked()` first.
+
         The stacked ``acceptance_off`` is scaled so that:
 
         .. math::
