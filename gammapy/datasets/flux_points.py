@@ -145,6 +145,12 @@ class FluxPointsDataset(Dataset):
         self.models = models
         self.meta_table = meta_table
 
+        self._available_stat_type = dict(
+            chi2=self._stat_array_chi2,
+            profile=self._stat_array_profile,
+            distrib=self._stat_array_distrib,
+        )
+
         if stat_kwargs is None:
             stat_kwargs = dict()
         self.stat_kwargs = stat_kwargs
@@ -155,15 +161,9 @@ class FluxPointsDataset(Dataset):
             mask_safe = np.ones(self.data.dnde.data.shape, dtype=bool)
         self.mask_safe = mask_safe
 
-        self._available_stat_type = dict(
-            chi2=self._stat_array_chi2,
-            profile=self._stat_array_profile,
-            distrib=self._stat_array_distrib,
-        )
-
     @property
     def available_stat_type(self):
-        return self._available_stat_type.keys()
+        return list(self._available_stat_type.keys())
 
     @property
     def stat_type(self):
@@ -174,7 +174,7 @@ class FluxPointsDataset(Dataset):
 
         if stat_type not in self.available_stat_type:
             raise ValueError(
-                f"Invalid stat_type: possible options are {list(self.available_stat_type)}"
+                f"Invalid stat_type: possible options are {self.available_stat_type}"
             )
 
         if stat_type == "chi2":
