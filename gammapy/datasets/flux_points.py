@@ -58,7 +58,7 @@ class FluxPointsDataset(Dataset):
     meta_table : `~astropy.table.Table`
         Table listing information on observations used to create the dataset.
         One line per observation for stacked datasets.
-    stat_type : bool
+    stat_type : str
         Method used to compute the statistics:
         * chi2 : estimate from chi2 statistics.
         * profile : estimate from interpolation of the likelihood profile.
@@ -155,13 +155,15 @@ class FluxPointsDataset(Dataset):
             mask_safe = np.ones(self.data.dnde.data.shape, dtype=bool)
         self.mask_safe = mask_safe
 
-    @property
-    def available_stat_type(self):
-        return dict(
+        self._available_stat_type = dict(
             chi2=self._stat_array_chi2,
             profile=self._stat_array_profile,
             distrib=self._stat_array_distrib,
         )
+
+    @property
+    def available_stat_type(self):
+        return self._available_stat_type.keys()
 
     @property
     def stat_type(self):
@@ -172,7 +174,7 @@ class FluxPointsDataset(Dataset):
 
         if stat_type not in self.available_stat_type:
             raise ValueError(
-                f"Invalid stat_type: possible options are {list(self.available_stat_type.keys())}"
+                f"Invalid stat_type: possible options are {list(self.available_stat_type)}"
             )
 
         if stat_type == "chi2":
@@ -382,7 +384,7 @@ class FluxPointsDataset(Dataset):
 
     def stat_array(self):
         """Fit statistic array."""
-        return self.available_stat_type[self.stat_type]()
+        return self._available_stat_type[self.stat_type]()
 
     def _stat_array_chi2(self):
         """Chi2 statistics."""
